@@ -2789,7 +2789,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       exprt: Opt[BlockMemberSymbol],
       wd: io.Path,
       sessionImports: Seq[SessionBinding],
-      preservedSessionSymbols: Set[BoundSymbol],
+      preservedSessionSymbols: Set[ScopedSymbol],
   )(using Raise): CompiledWasmModule =
     for imprt <- p.imports do
       raise(

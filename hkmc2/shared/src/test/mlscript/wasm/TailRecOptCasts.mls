@@ -138,17 +138,16 @@ wideOf(2)
 //│         set id = 2;
 //│         continue loopLabel
 //│       2 =>
-//│         let w, scrut: ?, tmp: Tip⁰, tmp1: ?;
+//│         let scrut: ?, w: Wide⁰, tmp: ?;
 //│         set scrut = wasm⁰.le_impl﹖(param0, 0);
 //│         match scrut
 //│           true =>
 //│             let exitResult: Wide⁰;
-//│             set tmp = new Tip⁰();
-//│             define w as val w⁰: Wide⁰ = tmp;
-//│             set exitResult = w⁰;
+//│             set w = new Tip⁰();
+//│             set exitResult = w;
 //│             match tipOf$deferred
 //│               true =>
-//│                 set exitResult = (w⁰ as! Tip⁰);
+//│                 set exitResult = (w as! Tip⁰);
 //│                 end
 //│             match midOf$deferred
 //│               true =>
@@ -157,8 +156,8 @@ wideOf(2)
 //│                 return exitResult
 //│             end
 //│           else
-//│             set tmp1 = wasm⁰.minus_impl﹖(param0, 1);
-//│             set param0 = (tmp1 as! Int⁰);
+//│             set tmp = wasm⁰.minus_impl﹖(param0, 1);
+//│             set param0 = (tmp as! Int⁰);
 //│             set id = 0;
 //│             continue loopLabel
 //│         end
@@ -272,27 +271,27 @@ fun sccF(): Int31 = wasm.ref.i31(sccG())
 fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.272: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ║  l.271: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──       	    ^^^^
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.271: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
+//│ ║  l.270: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
 //│ ╙──       	    ^^^^
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.271: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
+//│ ║  l.270: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
 //│ ╙──       	    ^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
-//│ ║  l.272: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ║  l.271: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──       	    ^^^^
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
 //│ ╔══[COMPILATION ERROR] Wasm function `sccF` expects result to have type `(ref null i31)`, but got `(ref null any)`
-//│ ║  l.271: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
+//│ ║  l.270: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Wasm function `sccG` expects result to have type `i32`, but got `(ref null any)`
-//│ ║  l.272: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ║  l.271: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -310,6 +309,6 @@ fun bar(m: Int32) =
   foo(wasm.ref.i31(m))
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ╔══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
-//│ ║  l.310: 	  foo(wasm.ref.i31(m))
+//│ ║  l.309: 	  foo(wasm.ref.i31(m))
 //│ ╙──       	                   ^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy

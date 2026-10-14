@@ -1,6 +1,4 @@
 :.
-:js
-:deforest
 
 
 object A
@@ -465,7 +463,7 @@ k + 2
 //│ deforest > 	match: scrut¹
 //│ deforest > <<< fusing <<<
 //│ = 5
-//│ k = undefined
+//│ k = 3
 
 :expect 4
 fun test(a) = if a is
@@ -698,7 +696,6 @@ f(AA(1), BB(2))
 //│ = 3
 
 
-:deforest
 :expect 9
 fun g(k, x) = if k is
   A then x.AA#aa + x.AA#aa + x.AA#aa

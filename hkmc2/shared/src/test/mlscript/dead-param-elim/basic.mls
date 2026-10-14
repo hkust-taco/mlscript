@@ -31,9 +31,10 @@ private fun f(a)(b) = 0
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > f⁴#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > f⁴#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ @private define f⁴ as fun f⁵()(b) { return 0 }; return f⁵()(2)
+//│ @private define f⁴ as fun f⁵()() { return 0 }; return f⁵()()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -88,9 +89,10 @@ f(1, 2)
 private fun f(a)(b) = a
 f(1)(2)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > f¹⁴#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ @private define f¹⁴ as fun f¹⁵(a)(b) { return a }; return f¹⁵(1)(2)
+//│ @private define f¹⁴ as fun f¹⁵(a)() { return a }; return f¹⁵(1)()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -300,7 +302,7 @@ fun f(c) = Runtime.Tuple.get(c, 1) + 1
 //│       set tmp = Runtime⁰.Tuple⁰.get⁰(c, 1);
 //│       return +⁰(tmp, 1)
 //│     else
-//│       return runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:290:1", null, null, 1, 1, c, 0)
+//│       return runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:292:1", null, null, 1, 1, c, 0)
 //│   end
 //│ };
 //│ end

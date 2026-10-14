@@ -1,4 +1,4 @@
-:js
+:.
 :deforest logNonAffine
 
 
@@ -18,9 +18,17 @@ f(3)
 //│ deforest > call_res_for_g²
 //│ deforest > call_res_for_g¹
 //│ deforest > call_res_for_g⁰
+//│ deforest > cap_ub_(term:f,0)_for_f¹
+//│ deforest > cap_ub_(term:f,0)_for_f⁰
+//│ deforest > cap_ub_(term:g,0)_for_g¹
+//│ deforest > cap_ub_(term:g,0)_for_g⁰
+//│ deforest > f_for_f¹
+//│ deforest > f_for_f⁰
 //│ deforest > f_res_for_f²
 //│ deforest > f_res_for_f¹
 //│ deforest > f_res_for_f⁰
+//│ deforest > g_for_g¹
+//│ deforest > g_for_g⁰
 //│ deforest > g_res_for_g²
 //│ deforest > g_res_for_g¹
 //│ deforest > g_res_for_g⁰

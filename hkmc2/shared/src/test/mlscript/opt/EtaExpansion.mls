@@ -101,6 +101,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp, baseCall, tmp1, g$g;
+//│ @private
 //│ define g$g as fun g$g⁰(k, x)(eta$0$0) {
 //│   return k(x)(eta$0$0)
 //│ };
@@ -126,10 +127,10 @@ g(f, 1)(2) + g(h, 3)(4)
 :w
 fun h(x) = @affine(1) y => x + y
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.127: 	fun h(x) = @affine(1) y => x + y
+//│ ║  l.128: 	fun h(x) = @affine(1) y => x + y
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── This annotation is not supported on function literal terms.
-//│ ║  l.127: 	fun h(x) = @affine(1) y => x + y
+//│ ║  l.128: 	fun h(x) = @affine(1) y => x + y
 //│ ╙──       	                      ^^^^^^^^^^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -137,7 +138,7 @@ fun h(x) = @affine(1) y => x + y
 :w
 @affine(0) val v = 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.138: 	@affine(0) val v = 1
+//│ ║  l.139: 	@affine(0) val v = 1
 //│ ╙──       	^^^^^^^^^^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -146,10 +147,10 @@ fun h(x) = @affine(1) y => x + y
 :w
 fun h(x) = @affine(0) x
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.147: 	fun h(x) = @affine(0) x
+//│ ║  l.148: 	fun h(x) = @affine(0) x
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── This annotation is not supported on reference terms.
-//│ ║  l.147: 	fun h(x) = @affine(0) x
+//│ ║  l.148: 	fun h(x) = @affine(0) x
 //│ ╙──       	                      ^
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
@@ -278,3 +279,206 @@ app(returnRest2(0))
 //│ return app¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [2, 3]
+
+
+// a copy that expands a nested `g` must leave the in-place `g` owning its symbol's irDefn:
+// otherwise the later BlockSimplifier reads the copy's two-param-list `g`, so `g(x)` looks unsaturated, hence pure, and moves past `print`
+:flowBasedOpt poly
+:soir
+:noInline
+:expect 13
+@affine(1) fun k1(a)(b) = a + b
+fun k2(a)(b) = a * b
+fun f(k, x) =
+  fun g(y) =
+    if y > 1 do print("g")
+    k(y)
+  let h = g(x)
+  print("between")
+  h(2)
+f(k1, 1) + f(k2, 5)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, f$f;
+//│ @private
+//│ define f$f as fun f$f⁰(k, x) {
+//│   let g;
+//│   define g as fun g⁸(y)(eta$0$0) {
+//│     let scrut;
+//│     set scrut = >⁰(y, 1);
+//│     match scrut
+//│       true =>
+//│         do Predef⁰.print⁰("g");
+//│         return k(y)(eta$0$0)
+//│       else
+//│         return k(y)(eta$0$0)
+//│     end
+//│   };
+//│   do Predef⁰.print⁰("between");
+//│   return g⁸(x)(2)
+//│ };
+//│ @affine(1)
+//│ define k1⁰ as fun k1¹(a)(b) {
+//│   return +⁰(a, b)
+//│ };
+//│ define k2⁰ as fun k2¹(a)(b) {
+//│   return *⁰(a, b)
+//│ };
+//│ define f⁸ as fun f⁹(k, x) {
+//│   let g, h;
+//│   define g as fun g⁹(y) {
+//│     let scrut;
+//│     set scrut = >⁰(y, 1);
+//│     match scrut
+//│       true =>
+//│         do Predef⁰.print⁰("g");
+//│         return k(y)
+//│       else
+//│         return k(y)
+//│     end
+//│   };
+//│   set h = g⁹(x);
+//│   do Predef⁰.print⁰("between");
+//│   return h(2)
+//│ };
+//│ set tmp = f$f⁰(k1¹, 1);
+//│ set tmp1 = f⁹(k2¹, 5);
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ > between
+//│ > g
+//│ > between
+//│ = 13
+
+
+// the copy of `f` refreshes `b`, which `a` refers to before `b` is defined
+:flowBasedOpt poly
+:soir
+:noInline
+:expect 13
+@affine(1) fun k1(a)(b) = a + b
+fun k2(a)(b) = a * b
+fun f(k, x) =
+  fun a(y) = b(y)
+  fun b(y) = k(y)
+  let h = a(x)
+  h(2)
+f(k1, 1) + f(k2, 5)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, f$f;
+//│ @private
+//│ define f$f as fun f$f¹(k, x) {
+//│   let a, b;
+//│   define a as fun a⁰(y)(eta$0$0) {
+//│     return b⁰(y)(eta$0$0)
+//│   };
+//│   define b as fun b⁰(y)(eta$0$0) {
+//│     return k(y)(eta$0$0)
+//│   };
+//│   return a⁰(x)(2)
+//│ };
+//│ @affine(1)
+//│ define k1² as fun k1³(a)(b) {
+//│   return +⁰(a, b)
+//│ };
+//│ define k2² as fun k2³(a)(b) {
+//│   return *⁰(a, b)
+//│ };
+//│ define f¹⁰ as fun f¹¹(k, x) {
+//│   let a, b, h;
+//│   define a as fun a¹(y) {
+//│     return b¹(y)
+//│   };
+//│   define b as fun b¹(y) {
+//│     return k(y)
+//│   };
+//│   set h = a¹(x);
+//│   return h(2)
+//│ };
+//│ set tmp = f$f¹(k1³, 1);
+//│ set tmp1 = f¹¹(k2³, 5);
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 13
+
+
+// a copy of `f` selects a field of its nested `C` through an ascribed parameter before `C` is defined
+:flowBasedOpt poly
+:soir
+:noInline
+:expect 13
+@affine(1) fun k1(a)(b) = a + b
+fun k2(a)(b) = a * b
+fun f(k, x) =
+  fun get(o: C) = if o is C then o.x
+  fun g(y) = k(y)
+  class C(val x)
+  let h = g(get(new C(x)))
+  h(2)
+f(k1, 1) + f(k2, 5)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, f$f;
+//│ @private
+//│ define f$f as fun f$f²(k, x) {
+//│   let C, g, get, tmp2, tmp3;
+//│   define get as fun get⁰(o) {
+//│     match o
+//│       C⁰ =>
+//│         return o.x⁰
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   };
+//│   define g as fun g¹⁰(y)(eta$0$0) {
+//│     return k(y)(eta$0$0)
+//│   };
+//│   define C as class C⁰ {
+//│     val x¹;
+//│     constructor C¹(x1) {
+//│       define x¹ as val x⁰ = x1;
+//│       end
+//│     }
+//│   };
+//│   set tmp2 = new C⁰(x);
+//│   set tmp3 = get⁰(tmp2);
+//│   return g¹⁰(tmp3)(2)
+//│ };
+//│ @affine(1)
+//│ define k1⁴ as fun k1⁵(a)(b) {
+//│   return +⁰(a, b)
+//│ };
+//│ define k2⁴ as fun k2⁵(a)(b) {
+//│   return *⁰(a, b)
+//│ };
+//│ define f¹² as fun f¹³(k, x) {
+//│   let C, g, get, h, tmp2, tmp3;
+//│   define get as fun get¹(o) {
+//│     match o
+//│       C² =>
+//│         return o.x²
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   };
+//│   define g as fun g¹¹(y) {
+//│     return k(y)
+//│   };
+//│   define C as class C² {
+//│     val x³;
+//│     constructor C³(x1) {
+//│       define x³ as val x² = x1;
+//│       end
+//│     }
+//│   };
+//│   set tmp2 = new C²(x);
+//│   set tmp3 = get¹(tmp2);
+//│   set h = g¹¹(tmp3);
+//│   return h(2)
+//│ };
+//│ set tmp = f$f²(k1⁵, 1);
+//│ set tmp1 = f¹³(k2⁵, 5);
+//│ return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 13
+
+
+

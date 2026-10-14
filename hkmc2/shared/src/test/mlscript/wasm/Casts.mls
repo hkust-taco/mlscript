@@ -258,8 +258,8 @@ narrowUnitInVal(())
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define narrowUnitInVal⁰ as fun narrowUnitInVal¹(x) {
 //│   let y;
-//│   define y as val y⁰ = (x as! Unit⁰);
-//│   return y⁰
+//│   set y = (x as! Unit⁰);
+//│   return y
 //│ };
 //│ return narrowUnitInVal¹(runtime⁰.Unit⁰)
 //│ Wasm result:
@@ -285,8 +285,8 @@ narrowLocal(42)
 //│ };
 //│ define narrowLocal⁰ as fun narrowLocal¹(x) {
 //│   let y;
-//│   define y as val y¹ = (x as! Local¹);
-//│   return y¹
+//│   set y = (x as! Local¹);
+//│   return y
 //│ };
 //│ return narrowLocal¹(42)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
@@ -294,11 +294,7 @@ narrowLocal(42)
 //│ define Local as class Local¹ {
 //│   constructor Local⁰
 //│ };
-//│ define narrowLocal⁰ as fun narrowLocal¹(x) {
-//│   let y;
-//│   define y as val y¹ = (x as! Local¹);
-//│   return y¹
-//│ };
+//│ define narrowLocal⁰ as fun narrowLocal¹(x) { return (x as! Local¹) };
 //│ return narrowLocal¹(42)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

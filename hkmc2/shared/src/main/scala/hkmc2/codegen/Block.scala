@@ -63,10 +63,6 @@ type ScopedSymbol = LocalVarSymbol | BlockMemberSymbol
   */
 type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
 
-/** Symbols that may be bound by MIR binding forms such as `Scoped`.
-  */
-type BoundSymbol = ScopedSymbol | TermSymbol
-
 /** Symbols of lexical bindings required by MIR, including assignment destinations.
   * A `MemberRef` requires its block member binding regardless of the selected definition:
   * `Scoped` introduces that binding, and JS can store its class on the companion function.
@@ -153,7 +149,7 @@ sealed abstract class Block extends Product:
   // * Note: this function is only for rather fringe use-cases in the optimizer;
   // * it should not be used for scope analysis purposes
   // * (like it used to before we added Scoped blocks).
-  lazy val definedVars: Set[BoundSymbol] = this match
+  lazy val definedVars: Set[ScopedSymbol] = this match
     case _: Return | _: Throw | _: Unreachable => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
     case Assign(NoSymbol, r, rst) => rst.definedVars
@@ -199,9 +195,9 @@ sealed abstract class Block extends Product:
   
   lazy val freeVars: Set[FreeSymbol] = this match
     case Match(scrut, arms, dflt, rest) =>
-      scrut.freeVars ++ dflt.toList.flatMap(_.freeVars) ++ rest.freeVars
-      ++ arms.flatMap:
-        (pat, arm) => arm.freeVars -- pat.freeVars
+      scrut.freeVars ++ dflt.iterator.flatMap(_.freeVars) ++ rest.freeVars
+      ++ arms.iterator.flatMap:
+        (pat, arm) => arm.freeVars ++ pat.freeVars
     case Return(res) => res.freeVars
     case Throw(exc) => exc.freeVars
     case Label(label, _, body, rest) => (body.freeVars - label) ++ rest.freeVars 
@@ -1067,15 +1063,15 @@ sealed abstract class Result extends Located, HasErasedType:
     case _ => Nil
   
   lazy val freeVars: Set[FreeSymbol] = this match
-    case Call(fun, argss) => fun.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
-    case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
+    case Call(fun, argss) => fun.freeVars ++ argss.iterator.flatten.flatMap(_.value.freeVars).toSet
+    case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.iterator.flatten.flatMap(_.value.freeVars).toSet
     case Cast(value, _, _) => value.freeVars
     case Select(qual, name) => qual.freeVars
     case SuperSelect(qual, base, _) => qual.freeVars ++ base.freeVars
     case Lambda(params, body) => body.freeVars -- params.paramSyms
-    case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
+    case Tuple(mut, elems) => elems.iterator.flatMap(_.value.freeVars).toSet
     case Record(mut, args) =>
-      args.flatMap(arg => arg.idx.fold(Set.empty[FreeSymbol])(_.freeVars) ++ arg.value.freeVars).toSet
+      args.iterator.flatMap(arg => arg.idx.fold(Set.empty[FreeSymbol])(_.freeVars) ++ arg.value.freeVars).toSet
     case Value.SimpleRef(l) => Set.single(l)
     case Value.MemberRef(bms, disamb) => Set.single(bms)
     case Value.This(sym) => Set.empty

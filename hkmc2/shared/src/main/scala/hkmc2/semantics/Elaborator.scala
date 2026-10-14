@@ -130,9 +130,9 @@ object Elaborator:
     lazy val resolutionBoundaries: Set[ResolutionBoundary] =
       parent.fold(Set.empty[ResolutionBoundary])(_.resolutionBoundaries) ++ outer.resolutionBoundary.map(ResolutionBoundary(_))
     
-    def +(local: Str -> Symbol): Ctx =
+    def +(local: Str -> RefSymbol): Ctx =
       copy(env = env + local.mapSecond(Ctx.RefElem(_)))
-    def ++(locals: IterableOnce[Str -> Symbol]): Ctx =
+    def ++(locals: IterableOnce[Str -> RefSymbol]): Ctx =
       copy(env = env ++ locals.mapValues(Ctx.RefElem(_)))
     def elem_++(locals: IterableOnce[Str -> Ctx.Elem]): Ctx =
       copy(env = env ++ locals.iterator.filter: kv =>
@@ -140,7 +140,7 @@ object Elaborator:
         // * but they should be allowed to shadow previous imports.
         env.get(kv._1).forall(_.isImport))
     
-    def withMembers(members: Iterable[Str -> MemberSymbol]): Ctx =
+    def withMembers(members: Iterable[Str -> BlockMemberSymbol]): Ctx =
       copy(env = env ++ members.map:
         case (nme, sym) =>
           val elem = outer.inner match
@@ -434,6 +434,8 @@ object Elaborator:
         */
       val primitivelyRepresentedRoots: Set[TypeSymbol] = Set(Num, Str, Bool)
   
+  type RefSymbol = LocalVarSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol | LabelSymbol
+  
   object Ctx:
     /** The opening site is diagnostic metadata, excluded from equality so
       * reopening the same receiver still contributes only one candidate.
@@ -446,7 +448,7 @@ object Elaborator:
       def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term
       def symbol: Opt[Symbol]
       def isImport: Bool
-    final case class RefElem(sym: Symbol) extends Elem:
+    final case class RefElem(sym: RefSymbol) extends Elem:
       val nme = sym.nme
       def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
         if config.language.useNewResolution then
@@ -491,7 +493,7 @@ object Elaborator:
       def symbol = base.symbol
       def isImport: Bool = false
       def nme: Str = base.nme
-    given Conversion[Symbol, Elem] = RefElem(_)
+    given Conversion[RefSymbol, Elem] = RefElem(_)
     val empty: Ctx = Ctx(OuterCtx.LocalScope("top-level"), N, Map.empty, Mode.Full, Map.empty, Nil)
     
   /** The interpretation required by the enclosing syntax. Class and pattern

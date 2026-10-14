@@ -155,9 +155,11 @@ g() + g()
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp, tmp1, g$g, g$g1;
+//│ @private
 //│ define g$g as fun g$g⁰() {
 //│   return 2
 //│ };
+//│ @private
 //│ define g$g1 as fun g$g¹() {
 //│   return 2
 //│ };
@@ -216,13 +218,16 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp, lambda, tmp1, lambda$lambda, app$app, app_ctor$ctor;
+//│ @private
 //│ define lambda$lambda as fun lambda$lambda⁰() {
 //│   return 2
 //│ };
+//│ @private
 //│ define app$app as fun app$app⁰(k) {
 //│   do app_ctor$ctor⁰();
 //│   return k()
 //│ };
+//│ @private
 //│ define app_ctor$ctor as fun app_ctor$ctor⁰() {
 //│   return undefined
 //│ };

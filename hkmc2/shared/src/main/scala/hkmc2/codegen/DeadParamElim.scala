@@ -8,7 +8,7 @@ import hkmc2.codegen.flowAnalysis.*
 import scala.collection.mutable.{LinkedHashMap, Buffer}
 
 
-type ConcreteCallSiteId = ConcreteId[ResultId]
+type ConcreteCallSiteId = ConcreteId[CallId]
 
 
 
@@ -50,21 +50,10 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver, traceLogge
   
   // handle clashes for dead param elim
   val (liveParams, liveCallSiteParams) =
-    def isSyntheticRoot(prodFun: ProdFun): Bool =
-      val instId = prodFun.instantiationId.get
-      collector.synthesizedInstIdToFunSym.get(instId).exists: rootFunSym =>
-        prodFun.exprId match
-          case (funSym: TermSymbol, _) =>
-            (collector.funToSccRep(funSym), collector.funToSccRep(rootFunSym)) match
-            case S(rep1) -> S(rep2) => rep1 is rep2
-            case _ => false
-          case _ => false
-    end isSyntheticRoot
-    
     val prodRoots = Buffer.empty[(ProdFun, Int)]
     val consRoots = Buffer.empty[(ConsFun, Int)]
     for prodFun <- prodFuns do
-      if isSyntheticRoot(prodFun) || prodFun.dests.contains(UnknownCons) then
+      if prodFun.dests.contains(UnknownCons) then
         prodFun.params.indices.foreach: i =>
           prodRoots += prodFun -> i
       else

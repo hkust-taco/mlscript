@@ -87,12 +87,14 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case Import(sym = sym: VarSymbol) => sym
       .toSet
     
-    def definedValues(includeNonTerms: Bool): Ls[(Str, BoundSymbol, N)] =
+    def definedValues(includeNonTerms: Bool): Ls[(Str, ScopedSymbol, N)] =
       import Elaborator.Ctx.*
       curCtx.env.iterator.flatMap:
-        case (nme, e @ (_: RefElem | SelElem(base = RefElem(_: InnerSymbol)))) =>
+        case (nme, e @ (_: RefElem)) =>
           e.symbol match
-          case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts, N))
+          case S(ts: TermSymbol) =>
+            softAssert(false, s"Unexpected term symbol in the top-level environment: ${ts.showDbg}")
+            N
           case S(ts: BlockMemberSymbol)
             if includeNonTerms
             || ts.trmImplTree.exists(t => t.k.isInstanceOf[syntax.ValLike] && (t.k isnt syntax.Ins))
@@ -208,10 +210,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       }
   end processTerm
   
-  type ComputeDefinedValues = (includeNonTerms: Bool) => Ls[(Str, ValueSymbol, Opt[Str])]
+  type ComputeDefinedValues = (includeNonTerms: Bool) => Ls[(Str, ScopedSymbol, Opt[Str])]
   
   def processIRBlock
-        (pgrm: Program, definedValues: ComputeDefinedValues, symbolsToPreserve: Set[BoundSymbol])
+        (pgrm: Program, definedValues: ComputeDefinedValues, symbolsToPreserve: Set[ScopedSymbol])
         (using Config, Raise, Elaborator.Ctx): Unit =
     
     if js.isSet then
@@ -222,8 +224,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
       
       val importedSymbols: Set[ScopedSymbol] = pgrm.imports.iterator.map(_._1).toSet
-      val exportedScoped = symbolsToPreserve.collect:
-        case sym: ScopedSymbol if !importedSymbols.contains(sym) => sym
+      val exportedScoped = symbolsToPreserve -- importedSymbols
       
       val resSym = new TempSymbol(N, erasedType = N, "block$res")
       

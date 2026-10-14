@@ -60,7 +60,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
   override def processIRBlock(
       pgrm: Program,
       definedValues: ComputeDefinedValues,
-      symbolsToPreserve: Set[BoundSymbol],
+      symbolsToPreserve: Set[ScopedSymbol],
   )(using Config, Raise, Elaborator.Ctx): Unit =
     
     super.processIRBlock(pgrm, definedValues, symbolsToPreserve)

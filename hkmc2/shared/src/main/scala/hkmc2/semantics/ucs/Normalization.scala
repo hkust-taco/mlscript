@@ -329,7 +329,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         Assign(sym, r, lowerSplit(tl, cont))
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
       subTerm_nonTail(scrut): sr =>
-        tl.log(s"Binding scrut $scrut to $sr (${summon[LoweringCtx].map})") 
+        tl.log(s"Binding scrut $scrut to $sr (${summon[LoweringCtx].localVals})")
         def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
             S(lowerSplit(restSplit, cont)),
             End()

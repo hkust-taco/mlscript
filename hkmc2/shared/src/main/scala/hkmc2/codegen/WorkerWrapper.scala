@@ -116,6 +116,6 @@ class WorkerWrapper
 end WorkerWrapper
 
 object WorkerWrapper:
-  def apply(symbolsToPreserve: Set[BoundSymbol], tl: TL, printer: Program => Str)(p: Program)
+  def apply(symbolsToPreserve: Set[ScopedSymbol], tl: TL, printer: Program => Str)(p: Program)
       (using DebugPrinter, State, Config, Raise): Program =
     (new WorkerWrapper(tl, printer)).applyProgram(p)

@@ -1,6 +1,4 @@
 :.
-:js
-:deforest
 
 
 
@@ -675,7 +673,6 @@ lastFilter(id(1 :: 2 :: 3 :: 4 :: 5 :: Nil), x => (x % 2 == 0))
 //│ = Some(4)
 
 // should prevent processing a function body more than once
-:deforest
 fun g() = f()
 fun f() = g() + g()
 [f, g]
@@ -685,7 +682,6 @@ fun f() = g() + g()
 
 
 // should prevent processing a function body more than once
-:deforest
 fun h1() = g()
 fun h2() = g()
 fun g() = f()
@@ -698,7 +694,6 @@ fun f() = h1() + h2()
 
 
 // should prevent processing a function body more than once
-:deforest
 fun h1() = g()
 fun h2() = g() + h1()
 fun g() = f()
@@ -710,7 +705,6 @@ fun f() = h1() + h2()
 
 
 // should prevent processing a function body more than once
-:deforest
 fun main() = if
   false then f() + g()
   else 0
@@ -732,7 +726,6 @@ main
 
 
 
-:deforest
 fun f() =
   if B is
     B then h1() + h2()
@@ -758,7 +751,6 @@ f
 //│ = fun f$f
 
 
-:deforest
 fun h1() = g()
 fun h2() = g() + h2()
 fun g() = f()
@@ -768,7 +760,6 @@ fun f() = h1() + h2()
 //│ deforest > <<< fusing <<<
 //│ = [fun h1, fun h2, fun g, fun f]
 
-:deforest
 fun g() = f()
 fun f() = g()
 [g, f]
@@ -778,7 +769,6 @@ fun f() = g()
 
 
 
-:deforest
 fun g() = 0
 fun f() = f() + g()
 [f, g]
@@ -787,7 +777,6 @@ fun f() = f() + g()
 //│ = [fun f, fun g]
 
 
-:deforest
 fun h(x) = if x is
   A then 0
   else f()
@@ -863,7 +852,6 @@ f
 //│ = fun f$f
 
 
-:deforest
 fun h(x) = if x is
   A then 0
   else f()
@@ -895,8 +883,6 @@ f
 
 
 
-:deforest
-:lift
 fun f() =
   fun h(x) = if x is
     A then 0
@@ -924,5 +910,133 @@ f
 //│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁷
 //│ deforest > <<< fusing <<<
 //│ = fun f$f
+
+
+
+
+// a ctor in f's in-place body flowing to a match in g's, with f and g in one scc group
+:soir
+:noInline
+:noTailRec
+data class A(x)
+fun f(x) = if x < 0 then 0 else g(A(x))
+fun g(a) = if a is A(y) then f(y - 1) else 1
+f(3)
+//│ deforest > >>> fusing >>>
+//│ deforest > A¹(x⁸) ->
+//│ deforest > 	match: a⁸
+//│ deforest > 	fields: a⁸.x⁹
+//│ deforest > A¹(x⁸) ->
+//│ deforest > 	match: a⁸
+//│ deforest > 	fields: a⁸.x⁹
+//│ deforest > <<< fusing <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let f$g, f$f, f$g1, f$a_A, f$a_A1;
+//│ @private
+//│ define f$g as fun f$g⁰(a) {
+//│   return a(undefined, undefined, undefined)
+//│ };
+//│ @private
+//│ define f$f as fun f$f⁰(x) {
+//│   let scrut, tmp;
+//│   set scrut = <⁰(x, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = f$a_A⁰(x);
+//│       return f$g¹(tmp)
+//│   end
+//│ };
+//│ @private
+//│ define f$g1 as fun f$g¹(a) {
+//│   return a(undefined, undefined, undefined)
+//│ };
+//│ @affine(1) @private
+//│ define f$a_A as fun f$a_A¹(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
+//│   set fv_tmp = -⁰(A_x, 1);
+//│   return f⁰(fv_tmp)
+//│ };
+//│ @affine(1) @private
+//│ define f$a_A1 as fun f$a_A⁰(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
+//│   set fv_tmp = -⁰(A_x, 1);
+//│   return f$f⁰(fv_tmp)
+//│ };
+//│ define f¹ as fun f⁰(x) {
+//│   let scrut, tmp;
+//│   set scrut = <⁰(x, 0);
+//│   match scrut
+//│     true =>
+//│       return 0
+//│     else
+//│       set tmp = f$a_A¹(x);
+//│       return f$g⁰(tmp)
+//│   end
+//│ };
+//│ define g⁰ as fun g¹(a) {
+//│   let arg$A$0$, tmp;
+//│   match a
+//│     A² =>
+//│       set arg$A$0$ = a.x⁹;
+//│       set tmp = -⁰(arg$A$0$, 1);
+//│       return f⁰(tmp)
+//│     else
+//│       return 1
+//│   end
+//│ };
+//│ @data
+//│ define A³ as class A² {
+//│   val x¹⁰;
+//│   constructor A¹(x) { define x¹⁰ as val x⁹ = x; end }
+//│ };
+//│ return f$f⁰(3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+:expect 0
+f(3)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 0

@@ -66,6 +66,8 @@ private fun choose(x)(y) = if false then x else y
 private fun m() = choose(f)(g)(1)(2)
 m()
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > g⁰#1 @ <root> -> eliminable: {0}
+//│ dead-param-elim > f⁰#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 
@@ -79,6 +81,8 @@ private fun choose(x)(y) = if false then x else y
 private fun m() = choose(f)(g)(1, 2)
 m()
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > g⁰#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > f⁰#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 

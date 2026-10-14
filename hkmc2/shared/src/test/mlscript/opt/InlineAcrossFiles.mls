@@ -67,3 +67,18 @@ FilePrivateFunctions.largeFunction(0)
 //│ return FilePrivateFunctions.largeFunction(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
+
+
+// File-level vals keep their private export symbols when referenced by inlined imported methods.
+import "../../mlscript-compile/LocalValsExport.mls"
+
+:expect 42
+:sjs
+LocalValsExport.add(1)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ import { _$_modulePrivate_$_stored as stored } from "./../../mlscript-compile/LocalValsExport.mjs";
+//│ let tmp1;
+//│ tmp1 = stored[0] + 1;
+//│ return tmp1 + 1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42

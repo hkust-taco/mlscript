@@ -197,10 +197,10 @@ final case class CompiledWasmModule(
   *   The session bindings accumulated while compiling the current module.
   */
 final class SessionExportCtx(
-    val symbolsToExport: Set[BoundSymbol],
+    val symbolsToExport: Set[ScopedSymbol],
     val collectedBindings: ArrayBuf[SessionBinding],
 ):
-  def shouldExport(sym: BoundSymbol): Bool = symbolsToExport(sym)
+  def shouldExport(sym: ScopedSymbol): Bool = symbolsToExport(sym)
 
   def emit(binding: SessionBinding): Unit =
     collectedBindings += binding

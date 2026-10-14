@@ -76,6 +76,7 @@ wrapper(42, 0)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let wrapper$wrapper;
+//│ @private
 //│ define wrapper$wrapper as fun wrapper$wrapper⁰(val1) {
 //│   let A, tmp, tmp1;
 //│   define A as class A⁰ {
