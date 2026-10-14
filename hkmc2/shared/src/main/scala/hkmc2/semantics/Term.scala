@@ -321,7 +321,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case Lit(lit: Literal)
   
   // --- NEW ---
-  case SimpleRef(sym: codegen.SimpleSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
+  case SimpleRef(sym: SimpleRefSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case SelfRef(sym: InnerSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case MemberRef(sym: MemberSymbol)(val tree: Tree.Ident, val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl
   /** A direct reference to an inherited implementation, retaining the lexical receiver. */

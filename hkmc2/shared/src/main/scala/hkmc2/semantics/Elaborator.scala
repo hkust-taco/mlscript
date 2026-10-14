@@ -434,7 +434,7 @@ object Elaborator:
         */
       val primitivelyRepresentedRoots: Set[TypeSymbol] = Set(Num, Str, Bool)
   
-  type RefSymbol = LocalVarSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol | LabelSymbol
+  type RefSymbol = SimpleRefSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
   
   object Ctx:
     /** The opening site is diagnostic metadata, excluded from equality so
@@ -451,17 +451,17 @@ object Elaborator:
     final case class RefElem(sym: RefSymbol) extends Elem:
       val nme = sym.nme
       def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
+        // * Note: due to symbolic ops, we may have `id.name =/= nme`;
+        // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
         if config.language.useNewResolution then
           sym match
-          case sym: codegen.SimpleSymbol =>
+          case sym: SimpleRefSymbol =>
             Term.SimpleRef(sym)(id)
           case sym: InnerSymbol =>
             Term.SelfRef(sym)(id)
           case sym: MemberSymbol =>
             Term.MemberRef(sym)(id, FlowSymbol.memSym(sym))
         else
-          // * Note: due to symbolic ops, we may have `id.name =/= nme`;
-          // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
           sym.ref(id)
       def symbol = S(sym)
       def isImport: Bool = false

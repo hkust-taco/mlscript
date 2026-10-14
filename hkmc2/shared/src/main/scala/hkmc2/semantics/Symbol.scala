@@ -235,6 +235,8 @@ class SplitSymbol(val body: Split, name: Str = "split")(using State) extends Loc
   def toLoc = body.toLoc
   override def prefix: Str = "split:"
 
+type SimpleRefSymbol = LocalVarSymbol | BuiltinSymbol | LabelSymbol
+
 sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(name) with LocalSymbol with HasErasedType:
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
   var decl: Opt[Declaration] = N
