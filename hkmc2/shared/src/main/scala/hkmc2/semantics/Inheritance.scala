@@ -23,10 +23,10 @@ object Inheritance:
     d.body.isEmpty && !isExternal(d) && !d.tsym.isInstanceOf[ClassCtorSymbol]
 
   /** A foreign declaration also supplies the implementation of its nested declarations. */
-  def isExternal(d: Definition): Bool = d.hasDeclareModifier.nonEmpty || (d match
+  def isExternal(d: Definition): Bool = d.hasDeclareModifier.nonEmpty || d.match
     case td: TermDefinition => td.owner.exists(_.asDefnSym.defn.exists(isExternal))
     case cd: ClassLikeDef => cd.owner.exists(_.asDefnSym.defn.exists(isExternal))
-    case _ => false)
+    case _ => false
 
   def isOpen(d: TermDefinition): Bool = d.body.isEmpty || hasModifier(d, Keyword.`open`)
 
