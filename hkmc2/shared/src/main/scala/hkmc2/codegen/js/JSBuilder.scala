@@ -78,13 +78,35 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   
   private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
     privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.name}$$accessorSymbol"))
+  
+  /** The owner whose JS class contains the members of `owner`. Lowering emits the members of a module
+    * that has a companion class as static members of this class (see the `case mod: ModuleOrObjectDef`
+    * in `Lowering.block`). The class and its companion module thus share a single namespace of JS
+    * private names, in which JS forbids duplicates, even between static and instance members; and each
+    * of them can access the private members of the other directly, without accessors.
+    */
+  private def jsClassOwner(owner: InnerSymbol): InnerSymbol = owner match
+    case mod: semantics.ModuleOrObjectSymbol => mod.defn match
+      case S(defn) if defn.kind is syntax.Mod => defn.classCompanion.getOrElse(mod)
+      case _ => mod
+    case _ => owner
+  
+  /** The JS private name of `ts`, a private member of `owner`. */
+  private def privateName(ts: semantics.TermSymbol, owner: InnerSymbol)(using Raise): Str =
+    jsClassOwner(owner).privatesScope.allocateOrGetName(ts)
+  
+  /** Whether the code of an owner in `owners` can access the JS private names of `owner`'s members,
+    * i.e., whether one of these owners is emitted in the same JS class as `owner` (see `jsClassOwner`). */
+  private def privateNamesInScope(owner: InnerSymbol, owners: Iterable[InnerSymbol]): Bool =
+    val cls = jsClassOwner(owner)
+    owners.exists(jsClassOwner(_) is cls)
 
   private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     ts.owner.collect:
       case owner if ts.isPrivate =>
-        val privateName = owner.privatesScope.allocateOrGetName(ts)
-        if scope.inScopeOwners(owner)
-        then doc".#$privateName"
+        val name = privateName(ts, owner)
+        if privateNamesInScope(owner, scope.inScopeOwners)
+        then doc".#$name"
         else doc"[${scope.lookup_!(getPrivateAccessorSymbol(ts), loc)}]"
 
   private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
@@ -108,7 +130,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       body
       owners = oldOwners
     def needsAccessor(ts: semantics.TermSymbol): Bool =
-      ts.isPrivate && ts.owner.exists(owner => !owners.exists(_ is owner))
+      ts.isPrivate && ts.owner.exists(owner => !privateNamesInScope(owner, owners))
     def note(sym: Opt[DefinitionSymbol[?]]): Unit =
       sym match
       case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
@@ -139,10 +161,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             applyBlock(cls.preCtor)
             applyBlock(cls.ctor)
             cls.methods.foreach(applyDefn)
-          // * The companion's members are generated in a scope nested in the scope enclosing the class,
-          // * not in the class's own scope (see `modDoc` below), so `selectPrivateField` accesses the private
-          // * members of the class through accessors there, even though they are emitted in the same JS class.
-          cls.companion.foreach(applyClsLikeBody)
+            cls.companion.foreach(applyClsLikeBody)
         case _ => super.applyDefn(defn)
       def applyClsLikeBody(body: ClsLikeBody): Unit =
         withOwner(body.isym):
@@ -595,7 +614,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             
             def mkMethodName(td: FunDefn, owner: InnerSymbol): Document =
               if td.dSym.isPrivate
-              then doc"#${owner.privatesScope.allocateOrGetName(td.dSym)}"
+              then doc"#${privateName(td.dSym, owner)}"
               else doc"${td.sym.nme}"
 
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str, owner: InnerSymbol)(using Scope): Document =
@@ -621,8 +640,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                       syntax.LetBind, S(isym), Tree.Ident(sym.nme), erasedType = sym.erasedType)
               val allPrivFlds = privFlds ++ mutPubFields.map(_._2)
               val privDecls = allPrivFlds.map: fld =>
-                val nme = isym.privatesScope.allocateOrGetName(fld)
-                doc" # $mtdPrefix#$nme;"
+                doc" # $mtdPrefix#${privateName(fld, isym)};"
               def termSymOwnerQual(ts: TermSymbol) =
                 ts.owner match
                 case S(owner) =>

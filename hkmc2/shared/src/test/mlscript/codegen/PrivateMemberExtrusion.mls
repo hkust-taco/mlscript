@@ -128,8 +128,8 @@ f.g()(1)
 
 
 
-// * Although the members of a class's companion module are emitted in the same JS class,
-// * they access the private members of the class through accessors.
+// * The members of a class's companion module are emitted in the same JS class,
+// * so they access each other's private members directly.
 
 :sjs
 :expect [3, 30]
@@ -163,10 +163,10 @@ module Pair with
 //│     return n * k
 //│   }
 //│   static sumOf(p2) {
-//│     return p2[sum$accessorSymbol]
+//│     return p2.#sum
 //│   }
 //│   static scaledOf(p2, k) {
-//│     return p2[scaled$accessorSymbol](k)
+//│     return p2.#scaled(k)
 //│   }
 //│   #sum;
 //│   get [sum$accessorSymbol]() { return this.#sum; }
@@ -189,3 +189,15 @@ module Pair with
 //│ return globalThis.Object.freeze([ inlinedVal, inlinedVal1 ])
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [3, 30]
+
+// * They share the same namespace of JS private names, in which JS forbids duplicates.
+
+:expect [1, 2]
+class Foo with
+  private val x = 1
+  fun getX = x
+module Foo with
+  private val x = 2
+  fun getX = x
+[(new Foo).getX, Foo.getX]
+//│ = [1, 2]
