@@ -1,3 +1,4 @@
+:.
 :js
 :noModuleCheck
 
@@ -54,9 +55,16 @@ val Test = "oops"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ Test = "oops"
 
+:e
 :re
 Test.foo()
-//│ ═══[RUNTIME ERROR] TypeError: Test2.foo is not a function
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.60: 	Test.foo()
+//│ ║        	^^^^^^^^
+//│ ╟── String literal does not contain member 'foo'
+//│ ║  l.52: 	val Test = "oops"
+//│ ╙──      	           ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :sjs
@@ -78,10 +86,10 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[COMPILATION ERROR] Name 'x' is already used
-//│ ║  l.79: 	  let x = 2
+//│ ║  l.87: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.78: 	  val x = 1
+//│ ║  l.86: 	  val x = 1
 //│ ╙──      	  ^^^^^^^^^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Test4;
@@ -185,7 +193,7 @@ module Whoops with
     val w: module Whoops = this
     fun g() = f()
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'module Whoops' at an unrelated type 'module Whoops.Whoops'
-//│ ║  l.182: 	  val v: module Whoops = this
+//│ ║  l.190: 	  val v: module Whoops = this
 //│ ╙──       	                         ^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Whoops2;
@@ -230,7 +238,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[COMPILATION ERROR] Name not found: Runtime
-//│ ║  l.231: 	Runtime
+//│ ║  l.239: 	Runtime
 //│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

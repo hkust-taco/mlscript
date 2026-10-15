@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations
@@ -5,7 +6,7 @@ open annotations
 :ge
 yield 1
 //│ ╔══[COMPILATION ERROR] Yield expressions are not allowed in this context.
-//│ ║  l.6: 	yield 1
+//│ ║  l.7: 	yield 1
 //│ ╙──     	^^^^^^^
 //│ = 1
 
@@ -13,10 +14,10 @@ yield 1
 @generator
 () => 3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.13: 	@generator
+//│ ║  l.14: 	@generator
 //│ ║        	^^^^^^^^^^
 //│ ╟── This annotation is not supported on function literal terms.
-//│ ║  l.14: 	() => 3
+//│ ║  l.15: 	() => 3
 //│ ╙──      	^^^^^^^
 //│ = fun
 
@@ -27,21 +28,21 @@ class C with
   fun f =
     yield 1
 //│ ╔══[COMPILATION ERROR] Generators are not supported on functions without a parameter list
-//│ ║  l.26: 	  @generator
+//│ ║  l.27: 	  @generator
 //│ ║        	  ^^^^^^^^^^
-//│ ║  l.27: 	  fun f =
+//│ ║  l.28: 	  fun f =
 //│ ║        	^^^^^^^^^
-//│ ║  l.28: 	    yield 1
+//│ ║  l.29: 	    yield 1
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Yield expressions are not allowed in this context.
-//│ ║  l.28: 	    yield 1
+//│ ║  l.29: 	    yield 1
 //│ ╙──      	    ^^^^^^^
 
 :ge
 @generator
 fun bad = 1
 //│ ╔══[COMPILATION ERROR] Generators are not supported on functions without a parameter list
-//│ ║  l.41: 	@generator
+//│ ║  l.42: 	@generator
 //│ ║        	^^^^^^^^^^
-//│ ║  l.42: 	fun bad = 1
+//│ ║  l.43: 	fun bad = 1
 //│ ╙──      	^^^^^^^^^^^

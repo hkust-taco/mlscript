@@ -1,5 +1,4 @@
-:js
-:deforest
+:.
 
 data class X(a)
 data class Y(b)
@@ -85,15 +84,15 @@ f(p())
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
 //│   let y, arg$X$0$, arg$Y$0$;
-//│   return x(y, arg$X$0$, arg$Y$0$)
+//│   return x(arg$X$0$, arg$Y$0$, y)
 //│ };
 //│ @affine(1) @private
-//│ define f$x_X as fun f$x_X⁰(X_a)(fv_y, fv_arg$X$0$, fv_arg$Y$0$) {
+//│ define f$x_X as fun f$x_X⁰(X_a)(fv_arg$X$0$, fv_arg$Y$0$, fv_y) {
 //│   set fv_arg$X$0$ = X_a;
-//│   return fv_arg$X$0$(fv_y, fv_arg$Y$0$)
+//│   return fv_arg$X$0$(fv_arg$Y$0$, fv_y)
 //│ };
 //│ @affine(1) @private
-//│ define f$arg$X$0$_Y as fun f$arg$X$0$_Y⁰(Y_b)(fv_y, fv_arg$Y$0$) {
+//│ define f$arg$X$0$_Y as fun f$arg$X$0$_Y⁰(Y_b)(fv_arg$Y$0$, fv_y) {
 //│   set fv_arg$Y$0$ = Y_b;
 //│   set fv_y = fv_arg$Y$0$;
 //│   return fv_y
@@ -359,14 +358,13 @@ f()
 //│ deforest > 	match: scrut³
 //│ deforest > <<< fusing <<<
 //│ = 1
-//│ f = undefined
-//│ x = undefined
+//│ f = fun f
+//│ x = 1
 
-:fixme
 f()
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
-//│ ═══[RUNTIME ERROR] TypeError: f10 is not a function
+//│ = 1
 
 
 :expect B(0)
@@ -386,3 +384,53 @@ dtor(A(B(0)))
 //│ deforest > <<< fusing <<<
 //│ = B(0)
 
+
+// local `val`s are lowered to be the same as let bindings
+// so deforest should handle them correctly
+fun f(d) = if d is
+  A(x) then
+    val v = x
+    print(v)
+f(A(1))
+//│ deforest > >>> fusing >>>
+//│ deforest > A⁰(1) ->
+//│ deforest > 	match: d⁰
+//│ deforest > 	fields: d⁰.x⁸
+//│ deforest > <<< fusing <<<
+//│ > 1
+
+:noInline
+fun k(n) =
+  val v = n
+  if A(1) is
+    A(a) then a + v
+//│ deforest > >>> fusing >>>
+//│ deforest > A⁰(1) ->
+//│ deforest > 	match: scrut⁴
+//│ deforest > 	fields: scrut⁴.x⁸
+//│ deforest > <<< fusing <<<
+
+:noInline
+k(10)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 11
+
+
+// this should work as we lift before deforest
+:expect Local(2)
+data class Global(x)
+fun test() =
+  data class Local(x)
+  if Global(1) is
+    Global(x) then Local(x + 1)
+test()
+//│ deforest > >>> fusing >>>
+//│ deforest > Global⁰(1) ->
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.x¹⁴
+//│ deforest > Global⁰(1) ->
+//│ deforest > 	match: scrut⁵
+//│ deforest > 	fields: scrut⁵.x¹⁴
+//│ deforest > <<< fusing <<<
+//│ = Local(2)

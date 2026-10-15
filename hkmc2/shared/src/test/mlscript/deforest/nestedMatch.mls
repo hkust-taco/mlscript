@@ -1,5 +1,4 @@
-:js
-:deforest
+:.
 
 object A
 object B
@@ -589,7 +588,6 @@ test(B, B) + test(A, A)
 
 
 // this misalign is fine
-:deforest
 :expect 20
 fun prodDouble(x) = if x is
   0 then Nil
@@ -614,7 +612,6 @@ sum(prodDouble(4))
 
 
 // this misalign prevents fusion (consumer destructures 2 elements per step, producer emits 1)
-:deforest
 :expect 10
 fun prod(x) = if x is
   0 then Nil

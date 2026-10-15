@@ -1,12 +1,12 @@
+:.
 :js
 
 
 :e
 constructor()
-//│ ╔══[COMPILATION ERROR] Unsupported constructor in this position.
-//│ ║  l.5: 	constructor()
+//│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
+//│ ║  l.6: 	constructor()
 //│ ╙──     	^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 constructor(x, y)

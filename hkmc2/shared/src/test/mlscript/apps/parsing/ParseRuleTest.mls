@@ -1,0 +1,32 @@
+:.
+:js
+
+import "../../../mlscript-compile/apps/parsing/ParseRule.mls"
+import "../../../mlscript-compile/apps/parsing/Keywords.mls"
+
+open ParseRule { Choice, rule }
+
+// Sequencing combines different result types and exposes the resulting rule interface.
+:expect Some("xxx")
+val first: ParseRule.ParseRule[Str] = rule("first", Choice.end("x"))
+val second: ParseRule.ParseRule[Int] = rule("second", Choice.end(3))
+first.andThen(second, (text, count) => text.repeat(count)).endChoice
+//│ = Some("xxx")
+//│ first = ParseRule("first", Cons(End("x"), Nil))
+//│ second = ParseRule("second", Cons(End(3), Nil))
+
+// Recursion beneath a keyword preserves the result type of its continuation.
+:expect true
+val prefixed: ParseRule.ParseRule[Str] = rule("prefixed", Choice.keyword(Keywords._let)(Choice.end("x")))
+prefixed.andThen(second, (text, count) => text.repeat(count)).display.includes("let")
+//│ = true
+//│ prefixed = ParseRule(
+//│   "prefixed",
+//│   Cons(
+//│     Keyword(
+//│       Keyword(`let`, 3, 1),
+//│       ParseRule("`let` keyword", Cons(End("x"), Nil))
+//│     ),
+//│     Nil
+//│   )
+//│ )

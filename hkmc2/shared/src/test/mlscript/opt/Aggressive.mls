@@ -1,3 +1,4 @@
+:.
 :js
 
 #config(inlining: None, liftDefns: Some(LiftDefns), flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: true)))

@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./Predef.mls"
 import "./StrOps.mls"
 
@@ -8,7 +10,7 @@ module TreeTracer with ...
 class TreeTracer with
   mut val steps = 0
   mut val enabled = false
-  fun output(outie, innie, innieAlt, message) = if enabled do
+  fun output(outie, innie, innieAlt, message: Str) = if enabled do
     let lines = message.split("\n")
     lines.forEach of (line, i, xs) => if
       let postfix = if lines.length > 1 then " ↵" else ""

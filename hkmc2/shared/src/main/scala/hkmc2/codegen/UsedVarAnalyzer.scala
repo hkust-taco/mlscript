@@ -485,27 +485,28 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
   val shallowAccesses: Map[ScopedInfo, AccessInfo] =
     scopeData.scopeTree.root.allChildren.map(obj => obj.toInfo -> findAccessesShallow(obj)).toMap
   
-  // Optimization: Find all nodes which are accessed by their children
-  // See the comment for findAccesses
-  private val allEdges =
-    for 
-      (src, accesses) <- shallowAccesses
-      refd <- accesses.refdDefns
-      if src =/= refd
-    yield
-      (src, refd)
-  
-  private val accessedByChild = allEdges
-    .groupBy(_._2) // group by edge destination
-    .map:
-      case (_: Unit) -> _ => () -> false
-      case d -> edges =>
-        val par = scopeData.getNode(d).ancestor.get.obj.toInfo
-        d -> edges.exists:
-          case a -> b => a =/= par
-    .collect:
-      case d -> true => d
-    .toSet
+  private val accessedByChild: Set[DefinitionSymbol[? <: Definition] | LabelSymbol | ScopeUID | Unit] =
+    // Optimization: Find all nodes which are accessed by their children
+    // See the comment for findAccesses
+    val allEdges =
+      for 
+        (src, accesses) <- shallowAccesses.iterator
+        refd <- accesses.refdDefns
+        if src =/= refd
+      yield
+        (src, refd)
+    allEdges.toBuffer
+      .groupBy(_._2) // group by edge destination
+      .iterator
+      .map:
+        case (_: Unit) -> _ => () -> false
+        case d -> edges =>
+          val par = scopeData.getNode(d).ancestor.get.obj.toInfo
+          d -> edges.exists:
+            case a -> b => a =/= par
+      .collect:
+        case d -> true => d
+      .toSet
   
   // Searching from the root makes no sense. We instead start searching from each scope nested in the top-level
   private val (m1, m2) = scopeData.scopeTree.root.children.map(findAccesses).unzip

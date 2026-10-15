@@ -6,10 +6,11 @@ import hkmc2.utils.*, shorthands.*
 import syntax.{Literal, Tree, Keyword}, utils.*
 import Message.MessageContext
 import Elaborator.{Ctx, State, ctx}
-import codegen.Lowering
+import codegen.{Lowering, Erasure}
 
 
-class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, Config) extends TermSynthesizer:
+class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, Config, Erasure) extends TermSynthesizer:
+
   import Normalization.*, Mode.*
   import tl.*
 
@@ -100,7 +101,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     /** Check if any branch in the split tests the given scrutinee. */
     private def referencesScrutinee(scrutinee: Term.Ref): Bool = split match
       case Split.Cons(Branch(thatScrutinee, _, continuation), tail) =>
-        (scrutinee === thatScrutinee) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
+        (scrutinee.sym is thatScrutinee.sym) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
       case Split.Let(_, _, tail) => tail.referencesScrutinee(scrutinee)
       case Split.Else(_) | Split.End => false
       case Split.LetSplit(_, tail) => tail.referencesScrutinee(scrutinee)
@@ -230,7 +231,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         rec(tail).map(newTail => split.copy(tail = newTail))
       case split @ Split.Cons(head @ Branch(thatScrutinee, thatPattern, continuation), tail) =>
         log(s"CASE Cons ${head.showDbg}")
-        if scrutinee === thatScrutinee then mode match
+        if scrutinee.sym is thatScrutinee.sym then mode match
           case + =>
             log(s"Case 1.1: $scrutinee === $thatScrutinee")
             if thatPattern =:= pattern then
@@ -328,7 +329,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         Assign(sym, r, lowerSplit(tl, cont))
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
       subTerm_nonTail(scrut): sr =>
-        tl.log(s"Binding scrut $scrut to $sr (${summon[LoweringCtx].map})") 
+        tl.log(s"Binding scrut $scrut to $sr (${summon[LoweringCtx].localVals})")
         def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
             S(lowerSplit(restSplit, cont)),
             End()
@@ -640,14 +641,6 @@ object Normalization:
       !compareCasePattern(lhs, rhs) && !compareCasePattern(rhs, lhs)
     case _ => false
   
-  /** Get the parent class-like symbol from the extends clause of a class or module. */
-  private def getParentClassLikeSymbol(sym: ClassSymbol | ModuleOrObjectSymbol)
-      : Opt[ClassSymbol | ModuleOrObjectSymbol] =
-    val ext: Opt[Term.New] = sym match
-      case cls: ClassSymbol => cls.defn.flatMap(_.ext)
-      case mod: ModuleOrObjectSymbol => mod.defn.flatMap(_.ext)
-    ext.flatMap(nw => nw.cls.resolvedSym.flatMap(_.asClsOrMod))
-  
   /** Check if `child` is a subclass of `parent` by traversing the class hierarchy.
     * Uses a visited set to avoid infinite loops in case of cyclic inheritance.
     * TODO: Cache the subclasses set!! */
@@ -657,7 +650,7 @@ object Normalization:
   ): Bool =
     def go(sym: ClassSymbol | ModuleOrObjectSymbol,
         visited: Set[ClassSymbol | ModuleOrObjectSymbol]): Bool =
-      !visited.contains(sym) && (getParentClassLikeSymbol(sym) match
+      !visited.contains(sym) && (sym.irClassHeader.flatMap(_.parent).flatMap(_.asClsOrMod) match
         case S(parentSym) =>
           (parentSym is parent) || go(parentSym, visited + sym)
         case N => false)
@@ -675,3 +668,5 @@ object Normalization:
   enum Mode:
     case +
     case -
+
+end Normalization

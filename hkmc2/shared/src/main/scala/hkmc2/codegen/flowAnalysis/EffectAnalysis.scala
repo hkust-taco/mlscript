@@ -34,12 +34,13 @@ object EffectAnalysis:
       case Select(_, name) => name.name
       case _ => "<dynamic>"
 
-    def showCall(id: ConcreteId[ResultId]): Str =
-      val call = id.exprId.getResult match
-        case Call(fun, _) => s"call ${showPath(fun)}@${id.exprId.showRefSite}"
-        case Instantiate(_, cls, _) => s"instantiate ${showPath(cls)}@${id.exprId.showRefSite}"
-        case other => s"call $other@${id.exprId.showRefSite}"
-      s"$call @ ${id.instId.showInstId}"
+    def showCall(id: ConcreteId[CallId]): Str =
+      val (exprId, whichArgList) = id.exprId
+      val call = exprId.getResult match
+        case Call(fun, _) => s"call ${showPath(fun)}@${exprId.showRefSite}"
+        case Instantiate(_, cls, _) => s"instantiate ${showPath(cls)}@${exprId.showRefSite}"
+        case other => s"call $other@${exprId.showRefSite}"
+      s"$call#$whichArgList @ ${id.instId.showInstId}"
 
     tl.log(">>> effect-analysis results >>>")
     solver.functionEffectVars.iterator.map: (id, effect) =>

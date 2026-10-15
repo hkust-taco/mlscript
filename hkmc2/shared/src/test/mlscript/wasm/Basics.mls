@@ -1,3 +1,4 @@
+:.
 
 :global
 :wasm
@@ -33,7 +34,7 @@ x
 fun foo() = 42
 foo
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.34: 	foo
+//│ ║  l.35: 	foo
 //│ ╙──      	^^^
 
 :ge
@@ -41,7 +42,7 @@ class Foo with
   val x = 1
 let f = Foo
 //│ ╔══[COMPILATION ERROR] Plain class references are not supported in Wasm; instantiate the class instead.
-//│ ║  l.42: 	let f = Foo
+//│ ║  l.43: 	let f = Foo
 //│ ╙──      	        ^^^
 
 
@@ -437,7 +438,7 @@ fun bar() = 42
 fun foo() = bar
 foo()()
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.437: 	fun foo() = bar
+//│ ║  l.438: 	fun foo() = bar
 //│ ╙──       	            ^^^
 
 
@@ -449,8 +450,8 @@ fun takeTop(m: Int32) = m
 takeTop(1)
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.449: 	takeTop(1)
+//│ ║  l.450: 	takeTop(1)
 //│ ╙──       	        ^
 //│ ╔══[COMPILATION ERROR] Wasm function `takeTop` expects result to have type `(ref null any)`, but got `i32`
-//│ ║  l.448: 	fun takeTop(m: Int32) = m
+//│ ║  l.449: 	fun takeTop(m: Int32) = m
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^

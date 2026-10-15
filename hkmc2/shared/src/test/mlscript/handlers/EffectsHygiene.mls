@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -16,16 +17,16 @@ fun foo(h): Object =
     module A
     A
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.16: 	    module A
+//│ ║  l.17: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.13: 	    module A
+//│ ║  l.14: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.13: 	    module A
+//│ ║  l.14: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.16: 	    module A
+//│ ║  l.17: 	    module A
 //│ ╙──      	           ^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo;

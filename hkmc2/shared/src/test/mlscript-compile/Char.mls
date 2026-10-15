@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 
 module Char with
   pattern AnyChar = (Str as s where s.length is 1) => s

@@ -1,14 +1,15 @@
+:.
 :js
 
 
 module M with
-  fun (~) concat(a, b) = a + b
+  fun (~~) concat(a, b) = a + b
 
 open M
 
 :sjs
 fun foo() =
-  "a" ~ "b" ~ "c"
+  "a" ~~ "b" ~~ "c"
 foo()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo; foo = function foo() { return "abc" }; return "abc"
@@ -21,7 +22,7 @@ let name = "_"
 let display(balance) = balance
 //│ display = fun display
 
-"b" ~ display("-")
+"b" ~~ display("-")
 //│ = "b-"
 
 

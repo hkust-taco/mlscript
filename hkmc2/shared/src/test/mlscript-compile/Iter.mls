@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 #config(liftDefns: Some(LiftDefns))
 
 import "./Option.mls"
@@ -9,24 +11,24 @@ open Stack { Nil, Cons }
 
 module Iter with ...
 
-class IterableBase with
+open class IterableBase with
   set this.(Symbol.iterator) = iterator
-  fun iterator() = throw new Error("Not implemented: iterator()")
+  open fun iterator() = throw new Error("Not implemented: iterator()")
 
   // require that subclasses are immutable
-  fun toArray() = [...this]
+  fun toArray(): Array = [...this]
   
   let array = null
   
-  fun asArray =
+  fun asArray: Array =
     if array is null then
       set array = toArray() Object.freeze()
       array
     else array
   
   // * Functions that create a fresh new result
-  fun at(idx) = asArray.at(idx)
-  fun concat(...xs) = asArray.concat(...xs)
+  open fun at(idx) = asArray.at(idx)
+  open fun concat(...xs) = asArray.concat(...xs)
   fun copyWithin(...args) = asArray.copyWithin(...args)
   fun entries() = asArray.entries()
   fun every(...args) = asArray.every(...args)
@@ -46,13 +48,13 @@ class IterableBase with
   fun map(...args) = asArray.map(...args)
   fun reduce(...args) = asArray.reduce(...args)
   fun reduceRight(...args) = asArray.reduceRight(...args)
-  fun slice(...args) = asArray.slice(...args)
+  open fun slice(...args) = asArray.slice(...args)
   fun some(...args) = asArray.some(...args)
   fun toLocaleString(...args) = asArray.toLocaleString(...args)
   fun toReversed() = asArray.toReversed()
   fun toSorted(...args) = asArray.toSorted(...args)
   fun toSpliced(...args) = asArray.toSpliced(...args)
-  fun toString() = asArray.toString()
+  open fun toString() = asArray.toString()
   // `with` is an mls keyword
   fun id"with"(...args) = asArray.with(...args)
   
@@ -66,17 +68,17 @@ class IterableBase with
   fun splice(...args) = toArray().splice(...args)
   fun unshift(...args) = toArray().unshift(...args)
   
-  fun length = asArray.length
+  open fun length = asArray.length
   fun values() = iterator()
 
-// * Implements the `Iterable` protocol.
+// * Implements the `IterableImpl` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol
-class Iterable(mk) extends IterableBase with
-  fun iterator() = mk()
+class IterableImpl(mk: () -> Iterator) extends IterableBase with
+  override fun iterator() = mk()
 
 // * Implements the `Iterator` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
-class Iterator(val next)
+class IteratorImpl(val next: Function)
 
 module Result with
   class Next(val value) with
@@ -87,7 +89,7 @@ module Result with
 
 // A helper function to detect if `Symbol.iterator` is on an object, and if not,
 // indicate the object's class in the error message, which is useful for debugging.
-fun getIterator(something) =
+fun getIterator(something): Iterator =
   let test = something.(Symbol.iterator)
   if test is undefined then
     throw TypeError of "Not an iterable: " + if
@@ -98,12 +100,12 @@ fun getIterator(something) =
       else prototype.constructor.name
   else test.call(something)
 
-fun adaptIterable(iterable, makeNext) = Iterable of () =>
+fun adaptIterable(iterable, makeNext: Function) = IterableImpl of () =>
   let iterator = getIterator of iterable
-  Iterator of makeNext of iterator
+  IteratorImpl of makeNext of iterator
 
-fun mapping(xs, op) =
-  xs adaptIterable of iterator => () =>
+fun mapping(xs, op: Function) =
+  xs adaptIterable of (iterator: Iterator) => () =>
     let next = iterator.next()
     if next.done then
       Result.Done
@@ -113,14 +115,14 @@ fun mapping(xs, op) =
 fun withMap(op) = _ mapping(op)
 
 fun flattening(xss) =
-  Iterable of () =>
+  IterableImpl of () =>
     let iterableIterator = getIterator of xss
-    // Get the first `Iterator` from the first `Iterable`.
+    // Get the first `Iterator` from the first `IterableImpl`.
     let currentIterator = if
       let firstIterableResult = iterableIterator.next()
       firstIterableResult.done then None
       else Some of getIterator of firstIterableResult.value
-    // Recursively skip empty `Iterable`s and get the next `Iterator` and value.
+    // Recursively skip empty `IterableImpl`s and get the next `Iterator` and value.
     fun skipEmptyIterables() = if
       let nextIterableResult = iterableIterator.next()
       nextIterableResult.done then None
@@ -128,7 +130,7 @@ fun flattening(xss) =
       let nextResult = nextIterator.next()
       nextResult.done then skipEmptyIterables()
       else Some of [nextIterator, nextResult.value]
-    Iterator of () =>
+    IteratorImpl of () =>
       if currentIterator is
         None then Result.Done // No more `Iterator`s means we're done.
         Some(iterator) and
@@ -142,8 +144,8 @@ fun flattening(xss) =
               Result.Done
           else Result.Next of next.value
 
-fun filtering(xs, op) =
-  xs adaptIterable of iterator => () =>
+fun filtering(xs, op: Function) =
+  xs adaptIterable of (iterator: Iterator) => () =>
     let next = iterator.next()
     while next.done is false and op(next.value) is false do
       set next = iterator.next()
@@ -174,7 +176,7 @@ fun zippingWithIndex(xs) =
     set i = i + 1
     [x, j]
 
-fun foldingImpl(iterator, acc, op) =
+fun foldingImpl(iterator: Iterator, acc, op: Function) =
   let next = iterator.next()
   while next.done is false do
     set acc = op(acc, next.value)
@@ -182,10 +184,10 @@ fun foldingImpl(iterator, acc, op) =
   acc
 
 fun appended(xs, ys) =
-  Iterable of () =>
+  IterableImpl of () =>
     let xsIterator = getIterator of xs
     let currentIterator = xsIterator
-    Iterator of () => if
+    IteratorImpl of () => if
       let next = currentIterator.next()
       next.done and
         currentIterator == xsIterator and
@@ -198,18 +200,18 @@ fun appended(xs, ys) =
 
 fun withAppended(xs) = _ appended(xs)
 
-fun reduced(xs, op) =
+fun reduced(xs, op: Function) =
   let iterator = getIterator of xs
   let next = iterator.next()
   if next.done do
     throw new Error("Empty iterator")
   foldingImpl(iterator, next.value, op)
 
-fun folded(xs, z, op) =
+fun folded(xs, z, op: Function) =
   let iterator = getIterator of xs
   foldingImpl(iterator, z, op)
 
-fun rightFolded(xs, z, op) =
+fun rightFolded(xs, z, op: Function) =
   let iterator = getIterator of xs
   fun go() = if
     let next = iterator.next()
@@ -229,7 +231,7 @@ fun joined(xs, sep) =
       String(next.value)
       (acc, x) => acc + sep + String(x)
 
-fun firstDefined(xs, op) =
+fun firstDefined(xs, op: Function) =
   let iterator = getIterator of xs
   let next = iterator.next()
   let result = None
@@ -240,7 +242,7 @@ fun firstDefined(xs, op) =
   result
 
 // `exists` is a keyword
-fun some(xs, op) =
+fun some(xs, op: Function) =
   let iterator = getIterator of xs
   let next = iterator.next()
   while next.done is false do
@@ -249,7 +251,7 @@ fun some(xs, op) =
   false
 
 // `forall` is a keyword
-fun every(xs, op) =
+fun every(xs, op: Function) =
   let iterator = getIterator of xs
   let next = iterator.next()
   while next.done is false do
@@ -257,7 +259,7 @@ fun every(xs, op) =
     set next = iterator.next()
   true
 
-fun each(xs, op) =
+fun each(xs, op: Function) =
   let iterator = getIterator of xs
   let next = iterator.next()
   while next.done is false do
@@ -266,9 +268,9 @@ fun each(xs, op) =
 
 fun toArray(view) = Array.from(view)
 
-fun fromStack(stack) = Iterable of () =>
+fun fromStack(stack) = IterableImpl of () =>
   let current = stack
-  Iterator of () => if current is
+  IteratorImpl of () => if current is
     Cons(head, tail) then
       set current = tail
       Result.Next of head

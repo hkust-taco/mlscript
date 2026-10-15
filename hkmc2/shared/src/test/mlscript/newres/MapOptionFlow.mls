@@ -1,0 +1,31 @@
+:.
+
+import "../../mlscript-compile/MutMap.mls"
+import "../../mlscript-compile/Option.mls"
+open Option
+
+// A fresh map retains its inserted values through the curried get API and
+// the higher-order pipe helper. Some itself needs no nested class pattern.
+:expect 42
+class Box(val value: Int)
+val m = MutMap.empty
+m |> MutMap.insert("x", Box(42))
+private fun read() = if m |> MutMap.get("x") is Some(b) then b.value else 0
+read()
+//│ = 42
+//│ m = MutMap(Map(1) {"x" => Box(42)})
+
+// An explicitly exposed map supplies the same element interface.
+:expect [42, 42, 0]
+class Box(val value: Int)
+val m: MutMap.MutMap[Str, Box] = MutMap.empty
+m |> MutMap.insert("x", Box(42))
+val piped = if m |> MutMap.get("x") is Some(b) then b.value else 0
+val direct = if MutMap.get("x")(m) is Some(b) then b.value else 0
+val absent = if m |> MutMap.get("absent") is Some(b) then b.value else 0
+[piped, direct, absent]
+//│ = [42, 42, 0]
+//│ absent = 0
+//│ direct = 42
+//│ m = MutMap(Map(1) {"x" => Box(42)})
+//│ piped = 42
