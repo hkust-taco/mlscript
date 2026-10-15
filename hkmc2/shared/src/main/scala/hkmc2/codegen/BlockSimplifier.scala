@@ -1145,6 +1145,12 @@ class BlockSimplifier
     
     override def applyPath(v: Path)(k: Path => Block): Block =
       v match
+      case c: Cast if !inDryRun =>
+        applyResult(c):
+          case p: Path => k(p)
+          case r =>
+            val tmp = TempSymbol(N, erasedType = r.erasedValueType, "cast")
+            Scoped(Set.single(tmp), Assign(tmp, r, k(tmp.asPath)))
       case Value.SimpleRef(loc: LocalVar) if !inDryRun && !capturedVars(loc) =>
         
         val rs = accessAssignedResults(loc)
@@ -1182,6 +1188,16 @@ class BlockSimplifier
     override def applyResult(r: Result)(k: Result => Block): Block =
       // Some partial evaluation – TODO: move to IR smart constructors
       r match
+      
+      // * Propagation and inlining can expose an operand already below the cast target.
+      // * Recheck after rewriting the operand, including checked casts: the subtype proof
+      // * makes that check redundant. Keep every narrowing cast and its evaluation order.
+      case c @ Cast(value, target, check) if !inDryRun =>
+        applyResult(value): value2 =>
+          if ErasedType.needsCast(value2.erasedValueType_!.canonicalize, target.canonicalize).contains(false) then
+            registerChange(s"rm redundant cast ${c.showDbg}")
+            k(value2)
+          else k(if value2 is value then c else Cast(value2, target, check)(c.toLoc))
       
       // * Try to propagate pure calls
       case Value.SimpleRef(loc: LocalVar) if !inDryRun && !capturedVars(loc) =>

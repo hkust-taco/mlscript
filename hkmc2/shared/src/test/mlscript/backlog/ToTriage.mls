@@ -139,7 +139,7 @@ fun oops = undefined
 // * The compiled value of undefined is unspecified; JS call checking may reject it.
 :noInline
 print(oops)
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ > ()
 
 // ——— ——— ———
 

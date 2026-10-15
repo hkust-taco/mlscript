@@ -71,7 +71,7 @@ f(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ @private define f⁰ as fun f¹(a) { return (a as! Int⁰) }; return (42 as! Int⁰)
+//│ @private define f⁰ as fun f¹(a) { return a }; return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 

@@ -215,7 +215,7 @@ fun labelContinueFiltersPath(limit) =
 //│             continue loop
 //│         end
 //│     end
-//│   return (acc as! Int⁰)
+//│   return acc
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

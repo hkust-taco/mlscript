@@ -31,32 +31,35 @@ in
 //│ !! Change triggered { x⁰ ~> 2 }
 //│ !! Change triggered { y⁰ ~> 2 }
 //│ !! Change triggered { tmp:tmp⁰ ~> 3 }
+//│ !! Change triggered { rm redundant cast Cast(tmp:tmp⁰, ValueLike(?), checked) }
 //│ !! Change triggered { x¹ ~> 3 }
+//│ !! Change triggered { y⁰ ~> 3 }
+//│ !! Change triggered { tmp:tmp¹ ~> 6 }
 //│ ▶ VP:
 //│ >  let x, y, x1, tmp, tmp1;
 //│ >  set x = 2;
 //│ >  set y = 2;
 //│ >  set x1 = 3;
 //│ >  set tmp = 3;
-//│ >  set y = (3 as! Int⁰);
-//│ >  set tmp1 = +⁰(3, y);
-//│ >  return Predef⁰.print⁰(tmp1)
+//│ >  set y = 3;
+//│ >  set tmp1 = 6;
+//│ >  return Predef⁰.print⁰(6)
 //│ ⬤ Simplif. iter. 2
 //│ !! Change triggered { rm x⁰ = 2 }
+//│ !! Change triggered { rm y⁰ = 2 }
 //│ !! Change triggered { rm x¹ = 3 }
 //│ !! Change triggered { rm tmp:tmp⁰ = 3 }
+//│ !! Change triggered { rm y⁰ = 3 }
+//│ !! Change triggered { rm tmp:tmp¹ = 6 }
 //│ ▶ DCE:
-//│ >  let y, tmp; set y = 2; set y = (3 as! Int⁰); set tmp = +⁰(3, y); return Predef⁰.print⁰(tmp)
+//│ >  return Predef⁰.print⁰(6)
 //│ Captured variables: HashSet()
-//│ !! Change triggered { rm ass y⁰ = 2 }
-//│ ▶ VP:
-//│ >  let y, tmp; set y = (3 as! Int⁰); set tmp = +⁰(3, y); return Predef⁰.print⁰(tmp)
 //│ ⬤ Simplif. iter. 3
 //│ Captured variables: HashSet()
 //│ ⬤ Simplif. iter. 1
 //│ Captured variables: HashSet()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let y, tmp; set y = (3 as! Int⁰); set tmp = +⁰(3, y); return Predef⁰.print⁰(tmp)
+//│ return Predef⁰.print⁰(6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 6
 

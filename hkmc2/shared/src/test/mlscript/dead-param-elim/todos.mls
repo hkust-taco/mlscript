@@ -124,9 +124,7 @@ sumPlus(enum(3))
 //│ };
 //│ @inline @affine(1) @private
 //│ define sumPlus$ls_Nil as fun sumPlus$ls_Nil⁰()(fv_tmp, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_t, fv_h, fv_tmp1, fv_r) {
-//│   let fv_r1;
-//│   set fv_r1 = (0 as! Int⁰);
-//│   return +⁰(fv_r1, 1)
+//│   return 1
 //│ };
 //│ @inline @affine(1) @private
 //│ define sumPlus$ls_Cons as fun sumPlus$ls_Cons⁰(Cons_h, Cons_t)(fv_tmp, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_t, fv_h, fv_tmp1, fv_r) {
