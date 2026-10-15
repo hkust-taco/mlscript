@@ -79,7 +79,7 @@ object FlowAnalysis:
     mono: Bool,
     nonAffineTracking: Bool,
     accumulatorTracking: Bool,
-    logEffects: Bool = true,
+    logEffects: Bool,
   )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
@@ -91,7 +91,6 @@ object FlowAnalysis:
     )
     val solver = new FlowConstraintSolver(constrCol)
     val tl = summon[TraceLogger]
-    // Inference is unconditional; logging must not affect optimization decisions.
     if logEffects then tl.scoped(TraceScope.Effects):
       if tl.doTrace then EffectAnalysis(solver)
     solver
@@ -740,7 +739,8 @@ class FlowConstraintsCollector(
 
   // * This is for effect analysis. The nonlocal variables that are potentially shared. 
   // * If a function accesses a nonlocal, it is conservatively considered unsafe for eta-expansion. 
-  private val nonlocals = preAnalyzer.res.capturedVars.valuesIterator.flatten.toSet - eState.runtimeSymbol
+  private val nonlocals = preAnalyzer.res.capturedVars.valuesIterator.flatten
+    .filterNot(_ == eState.runtimeSymbol).toSet
   
   locally {
     val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
