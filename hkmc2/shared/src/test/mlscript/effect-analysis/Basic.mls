@@ -97,6 +97,19 @@ fun node_pure() = leaf_pure()
 
 
 // * @pure is trusted to be pure.
+@pure fun leaf_pure()() = unsafe()
+fun node_pure() = leaf_pure()()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function leaf_pure⁰#0 @ <root> -> Pure
+//│ flow-analysis > function leaf_pure⁰#1 @ <root> -> Pure
+//│ flow-analysis > function node_pure⁰#0 @ <root> -> Pure
+//│ flow-analysis > call leaf_pure⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call leaf_pure⁰@result⁰#1 @ <root> -> Pure
+//│ flow-analysis > call unsafe@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * @pure is trusted to be pure.
 @pure declare fun leaf_pure(): Anything
 fun node_pure() = leaf_pure()
 //│ flow-analysis > >>> effect-analysis results >>>
@@ -149,17 +162,17 @@ fun node_pure_4(xs) = leaf_pure_2(1, 2, 3)
 
 
 // ? See below...
-fun pure() = 42
+fun leaf_pure() = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function pure⁰#0 @ <root> -> Pure
+//│ flow-analysis > function leaf_pure⁰#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 // ? It seems that flow analysis runs per-block separately...
 // ? Is that intended? pure() is seen as a unknwon function in leaf_pure.
-fun leaf_pure(x) = pure()
+fun node_pure(x) = leaf_pure()
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function leaf_pure⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call pure⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node_pure⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_pure⁰@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
