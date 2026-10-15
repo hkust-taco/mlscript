@@ -317,6 +317,7 @@ object FlowAnalysisBasedRewrite:
         mono = optCfg.mono,
         nonAffineTracking = optCfg.config.effectiveTrackNonAffine,
         accumulatorTracking = optCfg.config.effectiveTrackAccumulator,
+        logEffects = optCfg.config.logEffects,
       )
     
     val etaExpansionSolver =

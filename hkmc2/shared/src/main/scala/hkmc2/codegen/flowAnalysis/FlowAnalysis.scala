@@ -112,7 +112,7 @@ object FlowAnalysis:
       override def doTrace: Bool = scope match
         case S(TraceScope.NonAffineSyms) => cfg.logNonAffine
         case S(TraceScope.AccumulatorSym) => cfg.logAccumulator
-        case S(TraceScope.Effects) => cfg.debug || cfg.logEffects
+        case S(TraceScope.Effects) => cfg.logEffects
         case _ => cfg.debug
 
       override def emitDbg(str: Str): Unit =

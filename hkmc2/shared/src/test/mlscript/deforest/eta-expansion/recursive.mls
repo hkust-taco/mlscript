@@ -7,8 +7,6 @@
 
 data class (::) Cons(h, t)
 data object Nil
-//│ deforest > >>> effect-analysis results >>>
-//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
@@ -22,24 +20,6 @@ fun sum(ls, acc) = if ls is
   Nil then acc
   h :: t then sum(t, h + acc)
 sum(enum(5), 0)
-//│ deforest > >>> effect-analysis results >>>
-//│ deforest > function enum⁰#0 @ enum² -> UnsafeEta
-//│ deforest > function enum⁰#0 @ enum¹ -> UnsafeEta
-//│ deforest > function sum⁰#0 @ sum² -> UnsafeEta
-//│ deforest > function sum⁰#0 @ sum¹ -> UnsafeEta
-//│ deforest > call +⁰@result⁰ @ sum² -> Pure
-//│ deforest > call +⁰@result⁰ @ sum¹ -> Pure
-//│ deforest > call -⁰@result³ @ enum² -> Pure
-//│ deforest > call -⁰@result³ @ enum¹ -> Pure
-//│ deforest > call <⁰@result² @ enum² -> Pure
-//│ deforest > call <⁰@result² @ enum¹ -> Pure
-//│ deforest > call enum⁰@result⁴ @ enum² -> UnsafeEta
-//│ deforest > call enum⁰@result⁴ @ enum¹ -> UnsafeEta
-//│ deforest > call enum⁰@result⁶ @ <root> -> UnsafeEta
-//│ deforest > call sum⁰@result¹ @ sum² -> UnsafeEta
-//│ deforest > call sum⁰@result¹ @ sum¹ -> UnsafeEta
-//│ deforest > call sum⁰@result⁵ @ <root> -> UnsafeEta
-//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls⁰
@@ -123,29 +103,6 @@ fun len(ls) = if ls is
   Nil then 0
   h :: t then 1 + len(t)
 len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
-//│ deforest > >>> effect-analysis results >>>
-//│ deforest > function append⁰#0 @ append² -> UnsafeEta
-//│ deforest > function append⁰#0 @ flatten².append¹ -> UnsafeEta
-//│ deforest > function append⁰#0 @ flatten⁰.append¹ -> UnsafeEta
-//│ deforest > function flatten¹#0 @ flatten² -> UnsafeEta
-//│ deforest > function flatten¹#0 @ flatten⁰ -> UnsafeEta
-//│ deforest > function len⁰#0 @ len² -> UnsafeEta
-//│ deforest > function len⁰#0 @ len¹ -> UnsafeEta
-//│ deforest > call +⁰@result¹ @ len² -> Pure
-//│ deforest > call +⁰@result¹ @ len¹ -> Pure
-//│ deforest > call append⁰@result³ @ append² -> UnsafeEta
-//│ deforest > call append⁰@result³ @ flatten².append¹ -> UnsafeEta
-//│ deforest > call append⁰@result³ @ flatten⁰.append¹ -> UnsafeEta
-//│ deforest > call append⁰@result⁴ @ flatten² -> UnsafeEta
-//│ deforest > call append⁰@result⁴ @ flatten⁰ -> UnsafeEta
-//│ deforest > call flatten¹@result² @ flatten² -> UnsafeEta
-//│ deforest > call flatten¹@result² @ flatten⁰ -> UnsafeEta
-//│ deforest > call flatten¹@result⁶ @ <root> -> UnsafeEta
-//│ deforest > call id@result⁷ @ <root> -> UnsafeEta
-//│ deforest > call len⁰@result⁰ @ len² -> UnsafeEta
-//│ deforest > call len⁰@result⁰ @ len¹ -> UnsafeEta
-//│ deforest > call len⁰@result⁵ @ <root> -> UnsafeEta
-//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: ls¹
@@ -251,9 +208,6 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 // the analysis shouldn't stackoverflow
 :flowBasedOpt debugEta
 fun f(x) = f
-//│ deforest > >>> effect-analysis results >>>
-//│ deforest > function f⁰#0 @ f¹ -> Pure
-//│ deforest > <<< effect-analysis results <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
