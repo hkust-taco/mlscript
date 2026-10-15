@@ -66,6 +66,13 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       case _: ProdFun => false -> ErasedType.Function(S(false))
       case UnknownProd => false -> fallback
 
+  // A proved cast can disappear when fusion changes its operand's representation.
+  // Keep other casts: even a check known to succeed can still narrow a physical anyref
+  // slot for Wasm. Unknown/failing casts expose their inputs and therefore prevent fusion.
+  private lazy val fusedCasts = constraintSolver.provenCastSources.iterator.collect:
+    case (id, sources) if sources.exists(representation(_, N, Set.empty)._1) => id
+  .toSet
+
   private lazy val changedSlots =
     val candidates = LinkedHashMap.empty[(InstantiationId, Symbol), Buffer[(Bool, ErasedValueType)]]
     for (sym, instId, v) <- collector.symbolFlows do sym match
@@ -426,6 +433,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     
     override def applyResult(r: Result)(k: Result => Block): Block =
       r match
+      case c: Cast if fusedCasts(c.uid.concreteId) => applyResult(c.value)(k)
       case s@TrackableSelect(from, _, _) =>
         if branchSelSyms.isDefinedAt(s.uid.concreteId) then
           k(branchSelSyms(s.uid.concreteId).subst.asSimpleRef)
@@ -465,6 +473,12 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     override def applyPath(p: Path)(k: Path => Block): Block =
       p match
       case PolyFnRef(specializedRef) => k(specializedRef)
+      case c: Cast if fusedCasts(c.uid.concreteId) =>
+        applyResult(c.value):
+          case p: Path => k(p)
+          case r =>
+            val tmp = TempSymbol(N, r.erasedValueType, "fused")
+            Scoped(Set.single(tmp), Assign(tmp, r, k(tmp.asPath)))
       case ctor@CtorProducer(_, args, _) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
         assert(args.isEmpty)
         val (branchFunBms, branchFunTSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))

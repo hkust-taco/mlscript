@@ -78,7 +78,7 @@ object FlowAnalysis:
     mono: Bool,
     nonAffineTracking: Bool,
     accumulatorTracking: Bool,
-  )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
+  )(using TraceLogger, Elaborator.State, Elaborator.Ctx, Raise, SymbolPrinter) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
     val constrCol = new FlowConstraintsCollector(pre, mono, nonAffineTracking, accumulatorTracking)
@@ -268,6 +268,16 @@ class ConsFun(
   val srcs = MutSet.empty[ProdFun | MarkerProdStrat]
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
+
+/** A cast observes an object's representation only when its success cannot be proved.
+  * Its origin is retained through scheme copies so every producer of one physical cast
+  * participates in the same proof, including multiple instances of a recursive scheme.
+  */
+class CastConsumer(
+  val exprId: ResultId,
+  val instantiationId: Opt[InstantiationId],
+  val target: ErasedValueType,
+) extends ConsStrat with StratWithOrigin[ResultId]
 
 case object UnknownCons extends MarkerConsStrat
 
@@ -682,7 +692,7 @@ class FlowConstraintsCollector(
   val mono: Bool,
   val nonAffineTracking: Bool,
   val accumulatorTracking: Bool,
-):
+)(using val eCtx: Elaborator.Ctx):
   given FlowPreAnalyzer = preAnalyzer
   given Raise = preAnalyzer.raise
   given fState: FlowAnalysis.State = preAnalyzer.fState
@@ -856,6 +866,7 @@ class FlowConstraintsCollector(
           new ConsFun(c.exprId, updateInstantiationId(c.instantiationId))(
             c.params.map(duplicateProdStrat),
             duplicateConsStrat(c.res))
+        case c: CastConsumer => new CastConsumer(c.exprId, updateInstantiationId(c.instantiationId), c.target)
         case UnknownCons => UnknownCons
         case NonAffine => NonAffine
         case Accumulator => Accumulator
@@ -1082,9 +1093,9 @@ class FlowConstraintsCollector(
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(fld), UnknownCons)
             UnknownProd
-          case Cast(value, _, _) =>
+          case c @ Cast(value, target, _) =>
             val valueStrat = processResult(value)
-            cc.constrain(valueStrat, UnknownCons)
+            cc.constrain(valueStrat, new CastConsumer(c.uid, instId, target))
             valueStrat
           case Value.MemberRef(_, disamb) => generatedVars(disamb)
           case Value.SimpleRef(sym) => generatedVars(sym)
@@ -1094,6 +1105,7 @@ class FlowConstraintsCollector(
 end FlowConstraintsCollector
 
 class FlowConstraintSolver(val collector: FlowConstraintsCollector):
+  given Elaborator.Ctx = collector.eCtx
   given tl: TraceLogger = collector.tl
   given fState: FlowAnalysis.State = collector.fState
   given eState: Elaborator.State = collector.eState
@@ -1106,6 +1118,17 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   val consumersWithSrcs = mutable.Buffer.empty[ConcreteCtorConsumer]
   val prodFunsWithDests = mutable.Buffer.empty[ProdFun]
   val consFunsWithSrcs = mutable.Buffer.empty[ConsFun]
+  
+  private class CastEvidence:
+    val sources = LinkedHashSet.empty[ProdStrat]
+    var succeeds = true
+  private val castEvidence = LinkedHashMap.empty[ConcreteId[ResultId], CastEvidence]
+  
+  // A producer can be fused through a cast only if all of that cast's inputs pass.
+  // If any input is unknown or incompatible, the solver exposes every input below.
+  lazy val provenCastSources: Map[ConcreteId[ResultId], Set[ProdStrat]] = castEvidence.iterator.collect:
+    case (id, evidence) if evidence.succeeds && evidence.sources.nonEmpty => id -> evidence.sources.toSet
+  .toMap
   
   private def addCtorDest(c: Ctor, d: ConcreteCtorConsumer | MarkerConsStrat): Unit =
     if c.dests.isEmpty then ctorsWithDests += c
@@ -1285,6 +1308,22 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         for l <- p.lowerBounds do handle(l, c)
       case (p, c: StratVar) => if c.lowerBounds.add(p) then
         for u <- c.upperBounds do handle(p, u)
+      case (p, c: CastConsumer) =>
+        val evidence = castEvidence.getOrElseUpdate(c.concreteId, new CastEvidence)
+        if evidence.sources.add(p) then
+          val actual = p match
+            case c: Ctor => c.ctor match
+              case cls: (ClassSymbol | ModuleOrObjectSymbol) => S(ErasedType.ValueLike(S(false), cls))
+              case _: Int => S(ErasedType.Array)
+            case _: ProdFun => S(ErasedType.Function(S(false)))
+            case UnknownProd => N
+            case _: StratVar => lastWords("cast producer variable was not propagated")
+          val succeeds = actual.exists: tpe =>
+            ErasedType.needsCast(tpe.canonicalize, c.target.canonicalize).contains(false)
+          if evidence.succeeds && !succeeds then
+            evidence.succeeds = false
+            evidence.sources.toList.foreach(handle(_, UnknownCons))
+          else if !evidence.succeeds then handle(p, UnknownCons)
       case _ => () // ignore other cases
     end handle
     

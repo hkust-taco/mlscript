@@ -7,7 +7,7 @@ data class Box(x)
 //│ = {}
 
 
-// a cast observes its operand even when the cast's result is unused, so the allocation must remain live
+// A cast proved to succeed does not keep an otherwise-unused allocation live.
 :flowBasedOpt mono
 :soir
 fun cast() =
@@ -29,7 +29,7 @@ fun cast() =
   42
 cast()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define cast² as fun cast³() { do Box⁰(1); return 42 }; return cast³()
+//│ define cast² as fun cast³() { do (undefined as! Box⁰); return 42 }; return cast³()
 //│ Wasm result:
 //│ = 42
 
@@ -55,8 +55,7 @@ f()
 
 
 
-// although dead param elim removes the param, the checked cast output due to
-// the call to `take` still consumes the `Box(1)` so the allocation is not removed
+// A known identity call also permits removal of its unused argument and allocation.
 :flowBasedOpt mono
 :soir
 fun f() =

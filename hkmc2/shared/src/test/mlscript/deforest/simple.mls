@@ -803,6 +803,8 @@ apply(f)
 //│ deforest > AA⁰(inner⁰) ->
 //│ deforest > 	match: x³⁰
 //│ deforest > 	fields: x³⁰.aa⁰
+//│ deforest > AA⁰(0) ->
+//│ deforest > 	match: y1⁰
 //│ deforest > <<< fusing <<<
 //│ = 0
 

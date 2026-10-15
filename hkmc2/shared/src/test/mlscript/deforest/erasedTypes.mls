@@ -214,3 +214,59 @@ pass(Box(42)).v
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
+
+
+// The cast from a physical Any result is proved by all incoming constructors.
+// Field fusion changes the result, argument, and intermediate slots to Int together.
+:deforest mono
+:expect 42
+private fun makeOpaqueBox(): Any = Box(42)
+private fun projectOpaqueBox(box: Box): Int = box.v
+projectOpaqueBox(makeOpaqueBox())
+//│ deforest > >>> fusing >>>
+//│ deforest > Box¹(42) ->
+//│ deforest > 	select: v
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰;
+//│ @private
+//│ define makeOpaqueBox⁰ as fun makeOpaqueBox¹(): Int⁰ {
+//│   let Box_v: Int⁰;
+//│   set Box_v = 42;
+//│   return Box_v
+//│ };
+//│ @private
+//│ define projectOpaqueBox⁰ as fun projectOpaqueBox¹(box: Int⁰): Int⁰ {
+//│   return box
+//│ };
+//│ set tmp = makeOpaqueBox¹();
+//│ return projectOpaqueBox¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// One unknown input prevents fusion of every producer of the same cast.
+:deforest mono
+:expect 43
+private fun mixedBox(x: Any): Int =
+  val b: Box = x
+  b.v
+mixedBox(Box(1)) + mixedBox(hide(Box(42)))
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Box², tmp1: Int⁰, tmp2: Box², tmp3: Unknown, tmp4: Int⁰;
+//│ @private
+//│ define mixedBox⁰ as fun mixedBox¹(x: Unknown): Int⁰ {
+//│   let b: Box²;
+//│   set b = (x as! Box²);
+//│   return b.v¹
+//│ };
+//│ set tmp = Box¹(1);
+//│ set tmp1 = mixedBox¹(tmp);
+//│ set tmp2 = Box¹(42);
+//│ set tmp3 = Predef⁰.hide⁰(tmp2);
+//│ set tmp4 = mixedBox¹(tmp3);
+//│ return +⁰(tmp1, tmp4)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 43
