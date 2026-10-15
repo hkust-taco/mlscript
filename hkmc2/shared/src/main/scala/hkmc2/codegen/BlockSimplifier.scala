@@ -1208,6 +1208,30 @@ class BlockSimplifier
         case N =>
           super.applyResult(r)(k)
       
+      // Evaluate checked/effectful arguments at the original call site, leaving the
+      // partial application pure so later applications can combine with it. Snapshot
+      // earlier arguments too: a later argument may change the locals they read.
+      // A direct member reference needs no such snapshot of the function itself.
+      case c @ Call(fun: Value.MemberRef, argss) if !inDryRun && c.isKnownUnsaturatedCall &&
+          argss.forall(_.forall(_.spread.isEmpty)) && !c.isPure =>
+        val lastImpure = argss.flatten.lastIndexWhere(a => !a.value.isPure)
+        def rewriteLists(rest: Ls[Ls[Arg]], index: Int)(k: Ls[Ls[Arg]] => Block): Block = rest match
+          case Nil => k(Nil)
+          case args :: tail =>
+            def rewriteArgs(rest: Ls[Arg], index: Int)(k: Ls[Arg] => Block): Block = rest match
+              case Nil => k(Nil)
+              case arg :: tail => applyArg(arg): arg2 =>
+                if index <= lastImpure then
+                  val tmp = TempSymbol(N, erasedType = arg2.value.erasedValueType, "arg")
+                  Scoped(Set.single(tmp), Assign(tmp, arg2.value,
+                    rewriteArgs(tail, index + 1)(args => k(arg2.copy(value = tmp.asPath) :: args))))
+                else rewriteArgs(tail, index + 1)(args => k(arg2 :: args))
+            rewriteArgs(args, index): args2 =>
+              rewriteLists(tail, index + args.size)(tail2 => k(args2 :: tail2))
+        registerChange(s"hoist partial-call arguments ${c.showDbg}")
+        rewriteLists(argss, 0): argss2 =>
+          k(Call(fun, argss2.ne_!)(c.metadata, c.toLoc))
+      
       // * Try to combine pure calls (typically unsaturated calls) assigned to a variable into the current call
       case c @ Call(Value.SimpleRef(loc: LocalVar), argss) if !inDryRun && !capturedVars(loc) =>
         assignedPureCallPrefix(loc) match

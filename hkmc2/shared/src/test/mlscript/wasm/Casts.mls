@@ -324,3 +324,16 @@ liftedNarrow(42)
 //│ return liftedNarrow¹(42)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// Discarding a partial application must still execute its checked argument.
+:noInline
+:re
+fun opaquePartialArg(x: Any): Any = x
+fun discardPartial() =
+  fun checkedPartialArg(x: Box)(y: Int): Int = y
+  let unusedPartial = checkedPartialArg(opaquePartialArg("not a box"))
+  42
+discardPartial()
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

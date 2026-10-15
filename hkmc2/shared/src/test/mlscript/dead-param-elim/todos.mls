@@ -104,23 +104,19 @@ sumPlus(enum(3))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let enum$enum, enum$enum$worker;
-//│ @inline @private
-//│ define enum$enum as fun enum$enum⁰(x)(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6) {
-//│   return enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6)
-//│ };
+//│ let enum$enum$worker;
 //│ @private
 //│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6) {
-//│   let scrut, tmp, tmp1;
+//│   let scrut, tmp;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
 //│     true =>
 //│       return 1
 //│     else
-//│       let fv_tmp, inlinedVal, fv_r;
+//│       let arg, fv_tmp, fv_r, inlinedVal;
 //│       set tmp = -⁰(x, 1);
-//│       set tmp1 = enum$enum⁰((tmp as! Int⁰));
-//│       set inlinedVal = tmp1(undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│       set arg = (tmp as! Int⁰);
+//│       set inlinedVal = enum$enum$worker⁰(arg, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
 //│       set fv_tmp = +⁰(x, inlinedVal);
 //│       set fv_r = (fv_tmp as! Int⁰);
 //│       return +⁰(fv_r, 1)
