@@ -2,6 +2,7 @@
 :noInline
 
 
+
 data class Box(x)
 //│ Wasm result:
 //│ = {}
