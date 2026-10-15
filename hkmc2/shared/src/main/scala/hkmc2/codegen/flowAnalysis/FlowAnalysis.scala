@@ -92,7 +92,7 @@ object FlowAnalysis:
     val solver = new FlowConstraintSolver(constrCol)
     val tl = summon[TraceLogger]
     if logEffects then tl.scoped(TraceScope.Effects):
-      if tl.doTrace then EffectAnalysis(solver)
+      if tl.doTrace then EffectAnalysis.logResults(solver)
     solver
 
   private[flowAnalysis] def isPureCall(call: Call): Bool = call.fun match

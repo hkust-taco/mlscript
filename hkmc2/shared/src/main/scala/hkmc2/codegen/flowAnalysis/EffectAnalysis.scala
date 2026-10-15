@@ -5,17 +5,10 @@ package flowAnalysis
 import hkmc2.semantics.*
 import hkmc2.utils.*, shorthands.*
 import utils.*
-import scala.collection.immutable.*
 
 
 enum EffectSummary:
   case Pure, UnsafeEta
-
-
-case class EffectAnalysisResult(
-  latentEffects: Map[ConcreteId[FunId], EffectSummary],
-  callEffects: Map[ConcreteId[ResultId], EffectSummary],
-)
 
 
 object EffectAnalysis:
@@ -26,27 +19,10 @@ object EffectAnalysis:
     then EffectSummary.Pure
     else EffectSummary.UnsafeEta
 
-  def apply(solver: FlowConstraintSolver)(using tl: TraceLogger): EffectAnalysisResult =
+  def logResults(solver: FlowConstraintSolver)(using tl: TraceLogger): Unit =
     given fState: FlowAnalysis.State = solver.fState
     given raise: Raise = solver.preAnalyzer.raise
     given symbolPrinter: SymbolPrinter = solver.preAnalyzer.traceSymbolPrinter
-
-
-    val result = EffectAnalysisResult(
-      solver.functionEffectVars.iterator.map((id, effect) => id -> summarize(effect)).to(SeqMap),
-      solver.callEffectVars.iterator.map((id, effect) => id -> summarize(effect)).to(SeqMap),
-    )
-
-    if tl.doTrace then logResult(result)
-    result
-  end apply
-
-  private def logResult(result: EffectAnalysisResult)(using
-    tl: TraceLogger,
-    fState: FlowAnalysis.State,
-    symbolPrinter: SymbolPrinter,
-    raise: Raise,
-  ): Unit =
     given ShowCfg = ShowCfg.internal
 
     def showFunction(id: ConcreteId[FunId]): Str =
@@ -66,12 +42,12 @@ object EffectAnalysis:
       s"$call @ ${id.instId.showInstId}"
 
     tl.log(">>> effect-analysis results >>>")
-    result.latentEffects.iterator.map: (id, effect) =>
-      s"${showFunction(id)} -> $effect"
+    solver.functionEffectVars.iterator.map: (id, effect) =>
+      s"${showFunction(id)} -> ${summarize(effect)}"
     .toSeq.sorted.foreach(tl.log(_))
-    result.callEffects.iterator.map: (id, effect) =>
-      s"${showCall(id)} -> $effect"
+    solver.callEffectVars.iterator.map: (id, effect) =>
+      s"${showCall(id)} -> ${summarize(effect)}"
     .toSeq.sorted.foreach(tl.log(_))
     tl.log("<<< effect-analysis results <<<")
-  end logResult
+  end logResults
 end EffectAnalysis
