@@ -190,7 +190,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│ define lambda as fun lambda⁰(c) {
 //│   return 2
 //│ };
-//│ set tmp = app¹((lambda⁰ as! Function⁰));
+//│ set tmp = app¹(lambda⁰);
 //│ define lambda1 as fun lambda¹(c) {
 //│   match c
 //│     C¹ =>
@@ -199,7 +199,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│       return 0
 //│   end
 //│ };
-//│ set tmp1 = app¹((lambda¹ as! Function⁰));
+//│ set tmp1 = app¹(lambda¹);
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
@@ -217,16 +217,19 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│ dead-constructor-elim > eliminable: Call(member:C²‹term:C⁰›, [[1]])
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let lambda, tmp, lambda1, tmp1, app_ctor$ctor, app$app;
+//│ let tmp, lambda, tmp1, lambda$lambda, app$app, app_ctor$ctor;
 //│ @private
-//│ define app_ctor$ctor as fun app_ctor$ctor⁰() {
-//│   return undefined
+//│ define lambda$lambda as fun lambda$lambda⁰() {
+//│   return 2
 //│ };
 //│ @private
 //│ define app$app as fun app$app⁰(k) {
-//│   let tmp2;
-//│   set tmp2 = app_ctor$ctor⁰();
-//│   return (k(tmp2) as! Int⁰)
+//│   do app_ctor$ctor⁰();
+//│   return (k() as! Int⁰)
+//│ };
+//│ @private
+//│ define app_ctor$ctor as fun app_ctor$ctor⁰() {
+//│   return undefined
 //│ };
 //│ define ctor⁰ as fun ctor¹() {
 //│   return C⁰(1)
@@ -236,11 +239,8 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│   set tmp2 = ctor¹();
 //│   return (k(tmp2) as! Int⁰)
 //│ };
+//│ set tmp = app$app⁰(lambda$lambda⁰);
 //│ define lambda as fun lambda²(c) {
-//│   return 2
-//│ };
-//│ set tmp = app$app⁰((lambda² as! Function⁰));
-//│ define lambda1 as fun lambda³(c) {
 //│   match c
 //│     C¹ =>
 //│       return 1
@@ -248,7 +248,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│       return 0
 //│   end
 //│ };
-//│ set tmp1 = app³((lambda³ as! Function⁰));
+//│ set tmp1 = app³(lambda²);
 //│ return +⁰(tmp, tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
@@ -264,10 +264,10 @@ q()
 //│ define q⁰ as fun q¹() {
 //│   let tmp, lambda;
 //│   set tmp = new D⁰();
-//│   define lambda as fun lambda⁴(b) {
+//│   define lambda as fun lambda³(b) {
 //│     return Predef⁰.print⁰(b)
 //│   };
-//│   return tmp.app⁴(lambda⁴)
+//│   return tmp.app⁴(lambda³)
 //│ };
 //│ return q¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

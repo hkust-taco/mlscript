@@ -561,10 +561,14 @@ map(x => if x is A then 1 else 0, A :: B :: Nil)
 //│ deforest > 	match: xs_map¹
 //│ deforest > 	fields: xs_map¹.h⁰
 //│ deforest > 	fields: xs_map¹.t⁰
+//│ deforest > A⁰ ->
+//│ deforest > 	match: x³
 //│ deforest > Cons⁰(B⁰, Nil⁰) ->
 //│ deforest > 	match: xs_map¹
 //│ deforest > 	fields: xs_map¹.h⁰
 //│ deforest > 	fields: xs_map¹.t⁰
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x³
 //│ deforest > Nil⁰ ->
 //│ deforest > 	match: xs_map¹
 //│ deforest > <<< fusing <<<
@@ -583,34 +587,34 @@ fun c(x) = if x is
 c(T(A, T(B, L, L), T(A, L, L)))
 //│ deforest > >>> fusing >>>
 //│ deforest > T⁰(A⁰, tmp²⁸, tmp²⁹) ->
-//│ deforest > 	match: x³
-//│ deforest > 	fields: x³.n⁴
-//│ deforest > 	fields: x³.l⁰
-//│ deforest > 	fields: x³.r⁰
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.n⁴
+//│ deforest > 	fields: x⁴.l⁰
+//│ deforest > 	fields: x⁴.r⁰
 //│ deforest > A⁰ ->
 //│ deforest > 	match: n⁵
 //│ deforest > T⁰(A⁰, L⁰, L⁰) ->
-//│ deforest > 	match: x³
-//│ deforest > 	fields: x³.n⁴
-//│ deforest > 	fields: x³.l⁰
-//│ deforest > 	fields: x³.r⁰
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.n⁴
+//│ deforest > 	fields: x⁴.l⁰
+//│ deforest > 	fields: x⁴.r⁰
 //│ deforest > A⁰ ->
 //│ deforest > 	match: n⁵
 //│ deforest > L⁰ ->
-//│ deforest > 	match: x³
+//│ deforest > 	match: x⁴
 //│ deforest > L⁰ ->
-//│ deforest > 	match: x³
+//│ deforest > 	match: x⁴
 //│ deforest > T⁰(B⁰, L⁰, L⁰) ->
-//│ deforest > 	match: x³
-//│ deforest > 	fields: x³.n⁴
-//│ deforest > 	fields: x³.l⁰
-//│ deforest > 	fields: x³.r⁰
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.n⁴
+//│ deforest > 	fields: x⁴.l⁰
+//│ deforest > 	fields: x⁴.r⁰
 //│ deforest > B⁰ ->
 //│ deforest > 	match: n⁵
 //│ deforest > L⁰ ->
-//│ deforest > 	match: x³
+//│ deforest > 	match: x⁴
 //│ deforest > L⁰ ->
-//│ deforest > 	match: x³
+//│ deforest > 	match: x⁴
 //│ deforest > <<< fusing <<<
 //│ = T(0, T(1, L, L), T(0, L, L))
 
@@ -785,65 +789,65 @@ fun f() =
 f
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁴
+//│ deforest > 	match: x⁵
 //│ deforest > <<< fusing <<<
 //│ = fun f$f
 
@@ -858,21 +862,21 @@ fun f() =
 f
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁵
+//│ deforest > 	match: x⁶
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁵
+//│ deforest > 	match: x⁶
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁵
+//│ deforest > 	match: x⁶
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁵
+//│ deforest > 	match: x⁶
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁵
+//│ deforest > 	match: x⁶
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁵
+//│ deforest > 	match: x⁶
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁵
+//│ deforest > 	match: x⁶
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁵
+//│ deforest > 	match: x⁶
 //│ deforest > <<< fusing <<<
 //│ = fun f$f
 
@@ -887,65 +891,65 @@ fun f() =
 f
 //│ deforest > >>> fusing >>>
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > B⁰ ->
-//│ deforest > 	match: x⁶
+//│ deforest > 	match: x⁷
 //│ deforest > <<< fusing <<<
 //│ = fun f$f
 
@@ -961,12 +965,12 @@ fun f(x) = if x < 0 then 0 else g(A(x))
 fun g(a) = if a is A(y) then f(y - 1) else 1
 f(3)
 //│ deforest > >>> fusing >>>
-//│ deforest > A¹(x⁷) ->
+//│ deforest > A¹(x⁸) ->
 //│ deforest > 	match: a⁸
-//│ deforest > 	fields: a⁸.x⁸
-//│ deforest > A¹(x⁷) ->
+//│ deforest > 	fields: a⁸.x⁹
+//│ deforest > A¹(x⁸) ->
 //│ deforest > 	match: a⁸
-//│ deforest > 	fields: a⁸.x⁸
+//│ deforest > 	fields: a⁸.x⁹
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let f$g, f$f, f$g1, f$a_A, f$a_A1;
@@ -1015,7 +1019,7 @@ f(3)
 //│   let arg$A$0$, tmp;
 //│   match a
 //│     A² =>
-//│       set arg$A$0$ = a.x⁸;
+//│       set arg$A$0$ = a.x⁹;
 //│       set tmp = -⁰(arg$A$0$, 1);
 //│       return f⁰((tmp as! Int⁰))
 //│     else
@@ -1023,7 +1027,10 @@ f(3)
 //│   end
 //│ };
 //│ @data
-//│ define A³ as class A² { val x⁹; constructor A¹(x) { define x⁹ as val x⁸ = x; end } };
+//│ define A³ as class A² {
+//│   val x¹⁰;
+//│   constructor A¹(x) { define x¹⁰ as val x⁹ = x; end }
+//│ };
 //│ return f$f⁰(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0

@@ -820,7 +820,13 @@ private[codegen] object InlinerBodySummary:
 
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
-    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasedType = N)
+    // * Generated callables have a known function representation even when their result is unknown.
+    // * In particular, lowering a lambda must not introduce a checked Function cast that makes
+    // * its uses opaque to dead-parameter elimination and deforestation.
+    // * Definitions without parameter lists are getters, whose value representation is still unknown.
+    val erasedType = Option.when(params.nonEmpty):
+      ErasedType.FuncRef(S(false), params.map(_.params.map(_.sym.erasedType)), N)
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasedType)
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
 

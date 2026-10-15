@@ -908,11 +908,11 @@ val g: Int -> Int = (x: Int) => x
 //│ define lambda as fun lambda²(x: Int⁰): ? {
 //│   return x
 //│ };
-//│ do applyF¹((lambda² as! Function⁰));
+//│ do applyF¹(lambda²);
 //│ define lambda1 as fun lambda³(x: Int⁰): ? {
 //│   return x
 //│ };
-//│ define g² as val g³: Function⁰ = (lambda³ as! Function⁰);
+//│ define g² as val g³: Function⁰ = lambda³;
 //│ end
 
 

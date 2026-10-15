@@ -49,7 +49,7 @@ let f = case
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ set f⁰ = (lambda⁰ as! Function⁰);
+//│ set f⁰ = lambda⁰;
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun
