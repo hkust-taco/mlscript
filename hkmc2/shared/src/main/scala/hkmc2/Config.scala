@@ -21,13 +21,13 @@ case class Config(
   baseDir: io.Path,
   language: Language,
   sanityChecks: Opt[SanityChecks],
+  checkCasts: Bool,
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
   patMatConsequentSharingThreshold: Opt[Int],
   stageCode: Bool,
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
-  etaExpansion: Opt[EtaExpansion],
   qqEnabled: Bool,
   funcToCls: Bool,
   commentGeneratedCode: Bool,
@@ -60,7 +60,7 @@ case class Config(
   
   def deadBranchRemoval: Bool = optimizer.deadBranchRemoval
   
-  def deadParamElim: Opt[DeadParamElim] = optimizer.deadParamElim
+  def flowBasedOpt: Opt[FlowBasedOpt] = optimizer.flowBasedOpt
   
   def mapOptimizer(f: Optimizer => Optimizer): Config = copy(optimizer = f(optimizer))
   
@@ -74,13 +74,13 @@ object Config:
     baseDir = baseDir,
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
+    checkCasts = true,
     effectHandlers = N,
     liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
     target = CompilationTarget.JS,
     rewriteWhileLoops = false,
     stageCode = false,
-    etaExpansion = S(EtaExpansion.default),
     qqEnabled = false,
     funcToCls = false,
     commentGeneratedCode = false,
@@ -97,6 +97,9 @@ object Config:
   case class Language(
     allowUnresolvedAccesses: Bool,
     useNewResolution: Bool,
+    strictResolution: Bool, // Reject multiple resolved selection targets as well as missing targets
+    // Unknown inputs admitted by a public interface are checked regardless of this flag.
+    eagerResolution: Bool, // Reject selections whose prefixes have shapes that do not support them, even though the selection might have other valid targets
     typeCheck: Opt[TypeChecking],
   )(val versionName: Str)
   
@@ -105,6 +108,8 @@ object Config:
     val v0_2_x = Language(
       typeCheck = N,
       useNewResolution = false,
+      strictResolution = false,
+      eagerResolution = false,
       allowUnresolvedAccesses = true,
     )(
       versionName = "0.2.x",
@@ -113,6 +118,8 @@ object Config:
     val v0_3_x = Language(
       typeCheck = N,
       useNewResolution = true,
+      strictResolution = false,
+      eagerResolution = false,
       allowUnresolvedAccesses = false,
     )(
       versionName = "0.3.x",
@@ -147,7 +154,9 @@ object Config:
     showOptimizedIR: Bool,
     showUids: Bool,
     out: DebugOutput,
-  )
+  ):
+    // New resolution is interleaved with elaboration and shares its trace logger.
+    def traceElaboration(language: Language): Bool = elaboration || (language.useNewResolution && resolution)
   object Debug:
     val default = Debug(
       parsing = false,
@@ -195,12 +204,30 @@ object Config:
     trackAccumulator: Bool,
     logNonAffine: Bool,
     logAccumulator: Bool,
+    // `debug` turns on all three at once
+    debugEta: Bool = false,
+    debugDpe: Bool = false,
+    debugDce: Bool = false,
   ):
+    def effectiveDebugEta: Bool = debug || debugEta
+    def effectiveDebugDpe: Bool = debug || debugDpe
+    def effectiveDebugDce: Bool = debug || debugDce
+
     def effectiveTrackNonAffine: Bool =
       trackNonAffine || logNonAffine
 
     def effectiveTrackAccumulator: Bool =
       trackAccumulator || logAccumulator
+  
+  object FlowAnalysisConfig:
+    val defaultMono = FlowAnalysisConfig(
+      debug = false,
+      mono = true,
+      trackNonAffine = false,
+      trackAccumulator = false,
+      logNonAffine = false,
+      logAccumulator = false,
+    )
   
   case class Deforest(config: FlowAnalysisConfig):
     export config.{
@@ -223,45 +250,30 @@ object Config:
       logAccumulator = false,
     ))
 
-  case class DeadParamElim(config: FlowAnalysisConfig):
-    export config.{
-      debug,
-      mono,
-      trackNonAffine,
-      trackAccumulator,
-      logNonAffine,
-      logAccumulator,
-      effectiveTrackNonAffine,
-      effectiveTrackAccumulator,
-    }
-  object DeadParamElim:
-    val default = DeadParamElim(FlowAnalysisConfig(
-      debug = false,
-      mono = true,
-      trackNonAffine = false,
-      trackAccumulator = false,
-      logNonAffine = false,
-      logAccumulator = false,
-    ))
+  case class FlowBasedOpt(config: FlowAnalysisConfig):
+    export config.{debug, mono, effectiveDebugEta, effectiveDebugDpe, effectiveDebugDce}
+  object FlowBasedOpt:
+    val default = FlowBasedOpt(FlowAnalysisConfig.defaultMono)
+    def withDebug(debug: Bool) =
+      FlowBasedOpt(default.config.copy(debug = debug))
 
-  case class EtaExpansion(config: FlowAnalysisConfig):
-    export config.debug
-  object EtaExpansion:
-    def withDebug(debug: Bool): EtaExpansion =
-      EtaExpansion(FlowAnalysisConfig(
-        debug = debug,
-        mono = true,
-        trackNonAffine = false,
-        trackAccumulator = false,
-        logNonAffine = false,
-        logAccumulator = false,
-      ))
-    val default: EtaExpansion = withDebug(debug = false)
-  
   /** `altSmallThreshold` is the alternative threshold for inlining things into @inline functions.
     * Normally, we avoid inlining into @inline functions as that could lead to unexpected code bloat. */
   case class Inliner(inlineThreshold: Int, altSmallThreshold: Int = 2)
   
+  /** File directives apply to the whole compilation unit, including elaboration.
+    * Read them before constructing the elaborator so its resolver agrees with lowering.
+    * Elaboration still records SetConfig statements and reports directive errors once. */
+  def elaborationConfig(prgm: syntax.Tree.Block)(using Config): Config =
+    import syntax.Tree.*
+    given Raise = _ => ()
+    def modifier(tree: syntax.Tree): Config => Config = tree match
+      case App(Directive(prefix, _), args) => modifier(Directive(prefix, args))
+      case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args)
+      case Directive(Ident("lang"), Tup(args)) => ConfigParser.parseLanguageDirective(args)
+      case _ => identity
+    prgm.desugStmts.foldLeft(config)((cfg, tree) => modifier(tree)(cfg))
+
   def extractConfigFromStats(prgm: semantics.Term.Blk)(using Config) =
     // Extract cumulative config modifications from SetConfig statements
     val configModify = prgm.stats.collect:
@@ -277,7 +289,7 @@ object Config:
     deadBranchRemoval: Bool,
     deadCodeElim: Bool,
     dataFlowAnalysis: Bool,
-    deadParamElim: Opt[DeadParamElim],
+    flowBasedOpt: Opt[FlowBasedOpt],
   )
   
   object Optimizer:
@@ -298,7 +310,7 @@ object Config:
       deadBranchRemoval = default.deadBranchRemoval,
       deadCodeElim = true,
       dataFlowAnalysis = true,
-      deadParamElim = S(DeadParamElim.default),
+      flowBasedOpt = S(FlowBasedOpt.default),
     )
 
 end Config
@@ -424,20 +436,6 @@ object ConfigParser:
             source = Diagnostic.Source.Compilation))
           N
 
-  private def withLanguage(
-    base: Config.Language,
-    allowUnresolvedAccesses: Bool,
-    useNewResolution: Bool,
-    typeCheck: Opt[Config.TypeChecking],
-  ): Config.Language =
-    Config.Language(
-      allowUnresolvedAccesses,
-      useNewResolution,
-      typeCheck,
-    )(
-      base.versionName,
-    )
-
   private def parsedLanguageModifier[A](
     value: Tree,
   )(
@@ -450,13 +448,19 @@ object ConfigParser:
   private def parseLanguageFieldModifier(tree: Tree)(using Raise): Opt[Config.Language => Config.Language] = tree match
     case NamedArg("allowUnresolvedAccesses", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        language => withLanguage(language, v, language.useNewResolution, language.typeCheck)
+        lang => lang.copy(allowUnresolvedAccesses = v)(lang.versionName)
     case NamedArg("useNewResolution", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        language => withLanguage(language, language.allowUnresolvedAccesses, v, language.typeCheck)
+        lang => lang.copy(useNewResolution = v)(lang.versionName)
+    case NamedArg("strictResolution", value) =>
+      parsedLanguageModifier(value)(parseBool): v =>
+        lang => lang.copy(strictResolution = v)(lang.versionName)
+    case NamedArg("eagerResolution", value) =>
+      parsedLanguageModifier(value)(parseBool): v =>
+        lang => lang.copy(eagerResolution = v)(lang.versionName)
     case NamedArg("typeCheck", value) =>
       parsedLanguageModifier(value)(tree => parseOpt(tree)(parseTypeChecking)): v =>
-        language => withLanguage(language, language.allowUnresolvedAccesses, language.useNewResolution, v)
+        lang => lang.copy(typeCheck = v)(lang.versionName)
     case other =>
       unsupported("Language", other)
       N
@@ -661,6 +665,9 @@ object ConfigParser:
       var trackAccumulator = base.trackAccumulator
       var logNonAffine = base.logNonAffine
       var logAccumulator = base.logAccumulator
+      var debugEta = base.debugEta
+      var debugDpe = base.debugDpe
+      var debugDce = base.debugDce
       args.foreach:
         case NamedArg("debug", value) =>
           setFrom(value)(parseBool)(v => debug = v)
@@ -674,6 +681,12 @@ object ConfigParser:
           setFrom(value)(parseBool)(v => logNonAffine = v)
         case NamedArg("logAccumulator", value) =>
           setFrom(value)(parseBool)(v => logAccumulator = v)
+        case NamedArg("debugEta", value) =>
+          setFrom(value)(parseBool)(v => debugEta = v)
+        case NamedArg("debugDpe", value) =>
+          setFrom(value)(parseBool)(v => debugDpe = v)
+        case NamedArg("debugDce", value) =>
+          setFrom(value)(parseBool)(v => debugDce = v)
         case other =>
           unsupported(passName, other)
       S(Config.FlowAnalysisConfig(
@@ -683,6 +696,9 @@ object ConfigParser:
         trackAccumulator,
         logNonAffine,
         logAccumulator,
+        debugEta,
+        debugDpe,
+        debugDce,
       ))
     case _ =>
       expect(s"${passName}(...)")(tree)
@@ -697,29 +713,15 @@ object ConfigParser:
     ).map:
       Config.Deforest.apply
 
-  private def parseDeadParamElim(tree: Tree, current: Opt[Config.DeadParamElim])(using Raise): Opt[Config.DeadParamElim] =
+  private def parseFlowBasedOpt(tree: Tree, current: Opt[Config.FlowBasedOpt])(using Raise): Opt[Config.FlowBasedOpt] =
     parseFlowAnalysisConfig(
       tree,
-      "DeadParamElim",
+      "FlowBasedOpt",
       current.map(_.config),
-      Config.DeadParamElim.default.config
+      Config.FlowBasedOpt.default.config
     ).map:
-      Config.DeadParamElim.apply
+      Config.FlowBasedOpt.apply
 
-  private def parseEtaExpansion(tree: Tree, current: Opt[Config.EtaExpansion])(using Raise): Opt[Config.EtaExpansion] =
-    tree match
-    case Call("EtaExpansion", args) =>
-      var debug = current.getOrElse(Config.EtaExpansion.default).debug
-      args.foreach:
-        case NamedArg("debug", value) =>
-          setFrom(value)(parseBool)(v => debug = v)
-        case other =>
-          unsupported("EtaExpansion", other)
-      S(Config.EtaExpansion.withDebug(debug))
-    case _ =>
-      expect("EtaExpansion(...)")(tree)
-      N
-  
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
     case "language" => parseLanguageOverride(value)
@@ -751,16 +753,14 @@ object ConfigParser:
       optionalFieldWithCurrent(value)(_.deforest)(
         (tree, current) => parseDeforest(tree, current)
       )(v => _.mapOptimizer(_.copy(deforest = v)))
-    case "etaExpansion" =>
-      optionalFieldWithCurrent(value)(_.etaExpansion)(
-        (tree, current) => parseEtaExpansion(tree, current)
-      )(v => _.copy(etaExpansion = v))
-    case "deadParamElim" =>
-      optionalFieldWithCurrent(value)(_.deadParamElim)(
-        (tree, current) => parseDeadParamElim(tree, current)
-      )(v => _.mapOptimizer(_.copy(deadParamElim = v)))
+    case "flowBasedOpt" =>
+      optionalFieldWithCurrent(value)(_.flowBasedOpt)(
+        (tree, current) => parseFlowBasedOpt(tree, current)
+      )(v => _.mapOptimizer(_.copy(flowBasedOpt = v)))
     case "sanityChecks" =>
       optionalField(value)(_ => S(Config.SanityChecks(light = true, checkUnreachable = true)))(v => _.copy(sanityChecks = v))
+    case "checkCasts" =>
+      parsedField(value)(parseBool)(v => _.copy(checkCasts = v))
     case "patMatConsequentSharingThreshold" =>
       parsedField(value)(parseInt)(v => _.copy(patMatConsequentSharingThreshold = S(v)))
     case "inlining" =>

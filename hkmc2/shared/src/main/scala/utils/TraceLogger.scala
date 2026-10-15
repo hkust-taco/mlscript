@@ -68,3 +68,4 @@ abstract class TraceLogger(using val debugPrinter: DebugPrinter):
     scope = S(flag)
     try thunk finally scope = oldScope
 
+

@@ -7,7 +7,7 @@ fun selected_debug(x) = x
 fun unrelated(x) = x
 //│ | Resolving definition: TermDefinition(Fun,member:selected_debug,term:selected_debug,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)
 //│ | | Resolving function definition TermDefinition(Fun,member:selected_debug,term:selected_debug,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)
-//│ | | Resolving parameter x
+//│ | | Resolving parameter x⁰
 //│ | | Traversing term: Ref(x) (expect = NonModule)
 //│ | | | Resolving resolvable term: Ref(x), (prefer = NonModule, inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
 //│ | | | | Resolving symbol for term: Ref(x) (prefer = NonModule)
@@ -155,3 +155,46 @@ fun command_shown_ir(x) = x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define command_shown_ir⁰ as fun command_shown_ir¹(x) { return x }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// Local values lower to assignments; their debug scope must end before the next value.
+#lang(0.3.x)
+
+:expect 3
+fun debug_local_values() =
+  @dbg('lowering, showUids: false) val selected_local = 1
+  val unrelated_local = 2
+  selected_local + unrelated_local
+debug_local_values()
+//│ Lowering.term 1
+//│ = 3
+
+
+// New resolution shares elaboration tracing and skips the legacy resolver's tree traversal.
+:expect 3
+@dbg('resolution, 'showElaboratedTree, showUids: false) fun selected_new(x) = x
+fun unrelated_new(x) = x
+selected_new(3)
+//│ Processing term definition App(Ident(selected_new),Tup(List(Ident(x))))
+//│ Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
+//│ Elab term Ident(x)
+//│ | Elab subterm Ident(x)
+//│ | ~> x¹
+//│ ~> x¹
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ TermDefinition:
+//│   k = Fun
+//│   sym = member:selected_new⁰
+//│   tsym = term:selected_new¹
+//│   params = Ls of
+//│     ParamList:
+//│       params = Ls of
+//│         Param:
+//│           sym = x¹
+//│           modulefulness = Modulefulness of N
+//│   body = S of SimpleRef of x¹
+//│   modulefulness = Modulefulness of N
+//│   annotations = Ls of
+//│     Debug of ...
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3

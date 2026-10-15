@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -13,7 +14,7 @@
 :ge // Shouldn't allow using `Int` in term position
 1 : Int
 //│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
-//│ ║  l.14: 	1 : Int
+//│ ║  l.15: 	1 : Int
 //│ ╙──      	    ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -60,5 +61,37 @@ bar(1, 2)
   3
 )
 //│ = [1, 2, 3]
+
+
+// The `wasm` module is compiler fiction: it may only appear as the prefix of an intrinsic call. Naming it
+// alone, or selecting into it at any depth, is an error - and a complete intrinsic call is rejected too when
+// the target is JS rather than Wasm.
+:e
+wasm
+//│ ╔══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ║  l.70: 	wasm
+//│ ╙──      	^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+wasm.i32
+//│ ╔══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ║  l.77: 	wasm.i32
+//│ ╙──      	^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+wasm.i32.const
+//│ ╔══[COMPILATION ERROR] Module 'wasm' is virtual (i.e., "compiler fiction"); cannot be used directly
+//│ ║  l.84: 	wasm.i32.const
+//│ ╙──      	^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+wasm.i32.const(42)
+//│ ╔══[COMPILATION ERROR] WebAssembly intrinsics are not available when targeting JS
+//│ ║  l.91: 	wasm.i32.const(42)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

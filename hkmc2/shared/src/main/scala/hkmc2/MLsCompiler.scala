@@ -18,10 +18,12 @@ class ParserSetup(file: io.Path, forceDebugParsing: Bool, outputHandler: DebugOu
     val lexer = new syntax.Lexer(origin, dbg = dbg):
       override protected def doPrintDbg(msg: => Str): Unit = outputHandler.emit(out, msg)
     val tokens = lexer.bracketedTokens
+    
     if dbg then outputHandler.emit(out, syntax.Lexer.printTokens(tokens))
     val rules = syntax.ParseRules()
     val parser = new syntax.Parser(origin, tokens, rules, raise, dbg = dbg):
       def doPrintDbg(msg: => Str): Unit = if this.dbg then outputHandler.emit(out, msg)
+    
     parser.parseAll(parser.block(allowNewlines = true))
 
   private val discoveryResult = parse(dbg = false, Config.DebugOutput.StdIO)

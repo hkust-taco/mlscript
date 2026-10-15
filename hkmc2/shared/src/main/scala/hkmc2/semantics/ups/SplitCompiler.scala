@@ -7,6 +7,7 @@ import Message.MessageContext
 import ucs.{TermSynthesizer, FlatPattern, error, warn, safeRef}, ucs.extractors.*
 import syntax.{Fun, Keyword, Tree}, Tree.{Ident, StrLit}, Keyword.{`as`, `=>`}
 import collection.mutable.{Buffer, HashMap}, collection.immutable.SeqMap
+import codegen.{ErasedType, PrimitiveType}
 import Elaborator.{Ctx, State, ctx}, utils.TL
 import semantics.Pattern as SP // "SP" is short for "semantic patterns"
 import Term.Ref
@@ -23,28 +24,28 @@ object SplitCompiler:
     private val tupleLead: HashMap[Int, SymbolScrut[?]] = HashMap.empty
     private val tupleLast: HashMap[Int, SymbolScrut[?]] = HashMap.empty
     
-    def apply(): Term.Ref
+    def apply()(using State): Term.Ref
 
     def getSubScrutinee(cs: ClassSymbol | PatternSymbol)(i: Int)(using State): SymbolScrut[?] =
       val scrutinees = subScrutinees.getOrElseUpdate(cs, Buffer.empty)
       while scrutinees.size <= i do
-        scrutinees += TempSymbol(N, s"arg$$${cs.nme}$$${scrutinees.size}$$").toScrut
+        scrutinees += TempSymbol(N, erasedType = N, s"arg$$${cs.nme}$$${scrutinees.size}$$").toScrut
       scrutinees(i)
     def getTupleLeadSubScrutinee(index: Int)(using State): SymbolScrut[?] =
-      tupleLead.getOrElseUpdate(index, TempSymbol(N, s"element$index$$").toScrut)
+      tupleLead.getOrElseUpdate(index, TempSymbol(N, erasedType = N, s"element$index$$").toScrut)
     def getTupleLastSubScrutinee(index: Int)(using State): SymbolScrut[?] =
-      tupleLast.getOrElseUpdate(index, TempSymbol(N, s"lastElement$index$$").toScrut)
+      tupleLast.getOrElseUpdate(index, TempSymbol(N, erasedType = N, s"lastElement$index$$").toScrut)
     def getFieldScrutinee(fieldName: Ident)(using State): SymbolScrut[?] =
-      fields.getOrElseUpdate(fieldName, TempSymbol(N, s"field_${fieldName.name}$$").toScrut)
+      fields.getOrElseUpdate(fieldName, TempSymbol(N, erasedType = N, s"field_${fieldName.name}$$").toScrut)
   
   object Scrut:
     def from(ref: Term.Ref): RefScrut = RefScrut(() => ref)
   
   class RefScrut(make: () => Term.Ref) extends Scrut:
-    def apply(): Ref = make()
+    def apply()(using State): Ref = make()
   
   class SymbolScrut[SymbolType <: LocalVarSymbol](val symbol: SymbolType) extends Scrut:
-    def apply(): Ref = symbol.ref()
+    def apply()(using State): Ref = symbol.ref()
   
   extension [SymbolType <: LocalVarSymbol](symbol: SymbolType)
     def toScrut: SymbolScrut[SymbolType] = SymbolScrut(symbol)
@@ -109,8 +110,8 @@ object SplitCompiler:
     private var _hasBeenUsed = false
     private lazy val symbol =
       _hasBeenUsed = true
-      TempSymbol(N, nameHint.getOrElse("output"))
-    def apply(): Ref = symbol.safeRef
+      TempSymbol(N, erasedType = N, nameHint.getOrElse("output"))
+    def apply()(using State): Ref = symbol.safeRef
     def toList: Ls[TempSymbol] = if _hasBeenUsed then symbol :: Nil else Nil
     def toLet(term: => Term, tail: Split): Split =
       if _hasBeenUsed then Split.Let(symbol, term, tail) else tail
@@ -118,8 +119,10 @@ object SplitCompiler:
 import SplitCompiler.*
 
 /** This class compiles a pattern to a split that matches the pattern. */
-class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesizer:
+class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise, Config) extends TermSynthesizer:
   import tl.*, SP.*
+  
+  val newResolution: Bool = config.language.useNewResolution
   
   private lazy val lteq = State.builtinOpsMap("<=")
   private lazy val lt = State.builtinOpsMap("<")
@@ -312,7 +315,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   
     def makePatternBindings(using State): Ls[(TempSymbol, SP)] =
       patterns.iterator.zipWithIndex.map:
-        case (pattern, index) => new TempSymbol(N, s"patternArgument${index}$$") -> pattern
+        case (pattern, index) => new TempSymbol(N, erasedType = N, s"patternArgument${index}$$") -> pattern
       .toList
   
   /**
@@ -580,11 +583,11 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       // Then, we can call the `unapply` method.
       val unapplyArguments = patternBindings.map(_._1.safeRef |> fld) :+ fld(scrutinee())
       val unapplyCall = app(sel(patternTerm, "unapply").resolve, tup(unapplyArguments*), s"result of unapply")
-      val unapplyResult = TempSymbol(N, "unapplyResult")
+      val unapplyResult = TempSymbol(N, erasedType = N, "unapplyResult")
       val wrapUnapply = Split.Let(unapplyResult, unapplyCall, _)
       // Then, we need to destruct the produced `MatchSuccess`.
-      val outputSymbol = TempSymbol(N, "output").toScrut // TODO: We can use `LazyScrut` for this, but the match result pattern's parameters requires a symbol.
-      val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This can be automatically removed when no transformation is used.
+      val outputSymbol = TempSymbol(N, erasedType = N, "output").toScrut // TODO: We can use `LazyScrut` for this, but the match result pattern's parameters requires a symbol.
+      val bindingsSymbol = TempSymbol(N, erasedType = N, "bindings") // TODO: This can be automatically removed when no transformation is used.
       val wrapDestruction = (consequent: Split) =>
         val pattern = matchSuccessPattern(S(outputSymbol.symbol :: bindingsSymbol :: Nil))
         Branch(unapplyResult.safeRef, pattern, consequent) ~: alternative
@@ -599,6 +602,27 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       // Here we go!
       wrapPatternArgumentDefinitions(wrapUnapply(wrapDestruction(wrapExtractionArguments(consequent))))
   
+  /** Validate recorded constructor candidates for both full and prefix matching. */
+  private def resolvedConstructor(ctor: Constructor): Opt[Symbol] =
+    val target = ctor.target.withoutCaptures
+    val ambiguousReceiver = target match
+      case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.sizeCompare(1) > 0
+      case _ => false
+    val erroneousTarget = target match
+      case ref: NewResolvable => ref.isErroneous
+      case Term.Error() => true
+      case _ => false
+    val targets = ctor.resolvedTargets.distinct
+    if ctor.isErroneous || erroneousTarget then N
+    else if ambiguousReceiver || targets.sizeCompare(1) > 0 then
+      error(msg"Constructor pattern is ambiguous." -> ctor.toLoc)
+      N
+    else targets match
+      case sym :: Nil => S(sym)
+      case _ =>
+        error(msg"Cannot use this ${target.describe} as a pattern." -> ctor.toLoc)
+        N
+
   /** Report errors when pattern parameters are used incorrectly. */
   private def validatePatternParameter[A](
       parameterTerm: Term,
@@ -632,8 +656,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       val unapplyTerm = sel(parameterTerm, "unapply").resolve
       val unapplyCall = app(unapplyTerm, tup(fld(scrutinee())), s"result of unapply")
       tempLet(s"matchSuccess_${parameterSymbol.name}", unapplyCall): matchSuccessSymbol =>
-        val outputSymbol = TempSymbol(N, "output").toScrut
-        val bindingsSymbol = TempSymbol(N, "bindings").toScrut
+        val outputSymbol = TempSymbol(N, erasedType = N, "output").toScrut
+        val bindingsSymbol = TempSymbol(N, erasedType = N, "bindings").toScrut
         val pattern = matchSuccessPattern(S(Ls(outputSymbol.symbol, bindingsSymbol.symbol)))
         val consequent = makeConsequent(outputSymbol, SeqMap.empty)
         Branch(matchSuccessSymbol.safeRef, pattern, consequent) ~: alternative
@@ -648,6 +672,17 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
    */
   def makeMatchSplit(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
     pattern match
+      case ctor @ Constructor(target, arguments) if newResolution =>
+        resolvedConstructor(ctor) match
+          case S(classSymbol: ClassSymbol) =>
+            makeMatchClassSplit(scrutinee, target, classSymbol, arguments, outputNeeded)
+          case S(objectSymbol: ModuleOrObjectSymbol) =>
+            makeMatchObjectSplit(pattern.toLoc, scrutinee, target, objectSymbol, arguments)
+          case S(patternSymbol: PatternSymbol) =>
+            makeMatchPatternSplit(scrutinee, target, patternSymbol, arguments)
+          case S(symbol: VarSymbol) =>
+            makeMatchPatternParameterSplit(scrutinee, target, symbol, arguments, pattern.toLoc)
+          case _ => RejectSplit
       case Constructor(target, arguments) => target.resolvedSym match
         case S(symbol: VarSymbol) =>
           makeMatchPatternParameterSplit(scrutinee, target, symbol, arguments, pattern.toLoc)
@@ -688,11 +723,21 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         // to be a function that takes a diagnostic information generation
         // function.
         val outputSymbol = new LazyScrut()
-        makeMatchSplit(scrutinee, pattern, false)(
-          (_output, _bindings) => alternative, // The output and bindings are discarded.
-          // The place where the diagnostic information should be stored.
-          outputSymbol.toLet(scrutinee(), makeConsequent(outputSymbol, SeqMap.empty) ~~: alternative)
-        )
+        val success = outputSymbol.toLet(scrutinee(), makeConsequent(outputSymbol, SeqMap.empty) ~~: alternative)
+        if alternative.isFull then
+          makeMatchSplit(scrutinee, pattern, false)(
+            (_output, _bindings) => alternative, // The output and bindings are discarded.
+            success)
+        else
+          // An unfinished split means fallthrough, not a committed rejection.
+          // Swapping it into the inner pattern's consequent would let a match
+          // fall through to `success` (notably when a while loop should exit).
+          // Complete both inner outcomes before branching on the match result.
+          val test = Term.SynthIf(makeMatchSplit(scrutinee, pattern, false)(
+            (_output, _bindings) => Split.Else(Term.Lit(Tree.BoolLit(true))),
+            Split.Else(Term.Lit(Tree.BoolLit(false)))))
+          tempLet("negated", test): result =>
+            Branch(result.safeRef, FlatPattern.Lit(Tree.BoolLit(false)), success) ~: alternative
       // Note that we might duplicate the alternative split here.
       case Wildcard() => (makeConsequent, alternative) => makeConsequent(scrutinee, SeqMap.empty) ~~: alternative
       case Literal(literal) => (makeConsequent, alternative) =>
@@ -730,7 +775,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         val trailingSize = trailing.size
         val (trailSubScrutinees, makeConsequent0) = trailing.folded(makeConsequent):
           index => scrutinee.getTupleLastSubScrutinee(trailingSize - index)
-        val spreadSubScrutinee = TempSymbol(N, "middleElements")
+        val spreadSubScrutinee = TempSymbol(N, erasedType = S(ErasedType.Array), "middleElements")
         val makeConsequent1: MakeConsequent = (outerOutput, outerBindings) =>
           makeMatchSplit(spreadSubScrutinee.toScrut, spread, false)(
             (spreadOutput, spreadBindings) => makeConsequent0(
@@ -792,8 +837,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           val symbols = pattern.variables.symbols
           val params = parameters.map:
             case (_, parameterSymbol) =>
-              Param(FldFlags.empty, parameterSymbol, N, Modulefulness.none)
-          val lambdaSymbol = new TempSymbol(N, "transform")
+              Param.simple(parameterSymbol)
+          val lambdaSymbol = new TempSymbol(N, erasedType = N, "transform")
           // Next, we need to elaborate the pattern into a split. Note that
           // `makeMatchSplit` returns a function that takes a split as the
           // consequence. `makeMatchSplit` also takes a list of symbols so that
@@ -801,7 +846,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           // consequence split.
           (makeConsequent, alternative) => Split.Let(
             sym = lambdaSymbol,
-            term = Term.Lam(PlainParamList(params), transform.mkClone),
+            term = Term.Lam(PlainParamList(params)(N), transform.mkClone),
             // Declare the lambda function at the outermost level. Even if there
             // are multiple disjunctions in the consequent, we will not need to
             // repeat the `transform` term.
@@ -811,7 +856,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
               (_output, bindings) =>
                 val arguments = symbols.iterator.map(bindings).map(_() |> fld).toSeq
                 val resultTerm = app(lambdaSymbol.safeRef, tup(arguments*), "the transform's result")
-                val resultSymbol = TempSymbol(N, "transformResult")
+                val resultSymbol = TempSymbol(N, erasedType = N, "transformResult")
                 Split.Let(resultSymbol, resultTerm, makeConsequent(resultSymbol.toScrut, SeqMap.empty)),
               alternative))
       case Annotated(pattern, annotations) =>
@@ -837,7 +882,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       case Guarded(pattern, guard) => (makeConsequent, alternative) =>
         makeMatchSplit(scrutinee, pattern, true)(
           (output, bindings) =>
-            val guardSymbol = TempSymbol(N, "guardResult")
+            val guardSymbol = TempSymbol(N, erasedType = N, "guardResult")
             val branch = Branch(guardSymbol.ref(), makeConsequent(output, bindings))
             val innermost = Split.Let(guardSymbol, guard, branch ~: Split.End)
             // The creation of bindings here is repeated with the creation of
@@ -858,8 +903,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       matchParametersWithArguments(defn, arguments)
     warnOnDiscardedExtractionOutputs(patternSymbol, extractionMatches)
     if shouldReject then RejectPrefixSplit else (makeConsequent, alternative) =>
-      val outputSymbol = TempSymbol(N, "output").toScrut
-      val remainingSymbol = TempSymbol(N, "remaining").toScrut
+      val outputSymbol = TempSymbol(N, erasedType = N, "output").toScrut
+      val remainingSymbol = TempSymbol(N, erasedType = N, "remaining").toScrut
       val (extractionArguments, makeConsequentForArguments) =
         extractionMatches.fold((N, makeConsequent)):
           _.folded(makeConsequent)(scrutinee.getSubScrutinee(patternSymbol)).mapFirst(S(_))
@@ -870,8 +915,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         val args = tup(patternBindings.map(_._1.safeRef) :+ scrutinee())
         app(sel(patternTerm, method), args, s"result of $method")
       val split = tempLet("unapplyResult", unapplyCall): matchSuccessSymbol =>
-        val outputPairSymbol = TempSymbol(N, "outputPair")
-        val bindingsSymbol = TempSymbol(N, "bindings")
+        val outputPairSymbol = TempSymbol(N, erasedType = N, "outputPair")
+        val bindingsSymbol = TempSymbol(N, erasedType = N, "bindings")
         Branch(
           matchSuccessSymbol.safeRef,
           matchSuccessPattern(S(outputPairSymbol :: bindingsSymbol :: Nil)),
@@ -896,12 +941,12 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       val unapplyCall = app(unapplyTerm, tup(fld(scrutinee())), s"result of unapply")
       tempLet(s"matchSuccess_${parameterSymbol.name}", unapplyCall): matchSuccessSymbol =>
         // Destruct the `MatchSuccess` produced by the `unapply` method.
-        val outputPairSymbol = TempSymbol(N, "outputPair").toScrut
-        val bindingsSymbol = TempSymbol(N, "bindings").toScrut
+        val outputPairSymbol = TempSymbol(N, erasedType = N, "outputPair").toScrut
+        val bindingsSymbol = TempSymbol(N, erasedType = N, "bindings").toScrut
         val pattern = matchSuccessPattern(S(Ls(outputPairSymbol.symbol, bindingsSymbol.symbol)))
         // Destruct the first field of the `MatchSuccess` as a pair.
-        val outputSymbol = TempSymbol(N, "output").toScrut // Denotes the pattern's output.
-        val remainingSymbol = TempSymbol(N, "remaining").toScrut // Denotes the remaining value.
+        val outputSymbol = TempSymbol(N, erasedType = N, "output").toScrut // Denotes the pattern's output.
+        val remainingSymbol = TempSymbol(N, erasedType = N, "remaining").toScrut // Denotes the remaining value.
         // Assemble the `Split`s in order from inside to outside.
         val consequent1 = makeConsequent(outputSymbol, remainingSymbol, SeqMap.empty)
         val consequent2 = makeTupleBranch(outputPairSymbol(),
@@ -915,42 +960,43 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       scrutinee: Scrut,
       pattern: SP,
   )(using Raise): MakePrefixSplit = pattern match
-    case Constructor(target, arguments) => target.resolvedSym match
-      // The case when the target refers to a pattern parameter.
-      case S(symbol: VarSymbol) =>
-        makeMatchPrefixPatternParameterSplit(scrutinee, target, symbol, arguments, pattern.toLoc)
-      case symbolOption => symbolOption.flatMap(_.asClsLike) match
-        case S(symbol: PatternSymbol) =>
-          makeMatchPrefixPatternSplit(scrutinee, target, symbol, arguments)
-        // We accept the string class as a valid string pattern as it literally
-        // means all strings.
-        case S(symbol: ClassSymbol) if symbol is ctx.builtins.Str =>
-          arguments match
-            case S(args) if args.nonEmpty =>
-              error(
-                msg"`${symbol.name}` does not take any arguments." -> target.toLoc,
-                msg"But the pattern has ${"sub-pattern" countBy args.size}." -> Loc(args)
-              )
-              RejectPrefixSplit
-            case _ => (makeConsequent, alternative) =>
-              val nonEmptySymbol = TempSymbol(N, "nonEmpty")
-              val nonEmptyTerm = app(
-                this.lt.safeRef,
-                tup(fld(int(0)), fld(sel(scrutinee(), "length"))),
-                "string is not empty"
-              )
-              val outputSymbol = TempSymbol(N, "stringHead")
-              val outputTerm = callStringGet(scrutinee(), 0, "head")
-              val remainsSymbol = TempSymbol(N, "stringTail")
-              val remainsTerm = callStringDrop(scrutinee(), 1, "tail")
-              Split.Let(nonEmptySymbol, nonEmptyTerm,
-                Branch(nonEmptySymbol.safeRef,
-                  Split.Let(outputSymbol, outputTerm,
-                    Split.Let(remainsSymbol, remainsTerm,
-                      makeConsequent(outputSymbol.toScrut, remainsSymbol.toScrut, SeqMap.empty)))
-                ) ~: alternative)
-        case S(_: ModuleOrObjectSymbol) | S(_: ClassSymbol) | N =>
-          RejectPrefixSplit
+    case ctor @ Constructor(target, arguments) =>
+      (if newResolution then resolvedConstructor(ctor) else target.resolvedSym) match
+        // The case when the target refers to a pattern parameter.
+        case S(symbol: VarSymbol) =>
+          makeMatchPrefixPatternParameterSplit(scrutinee, target, symbol, arguments, pattern.toLoc)
+        case symbolOption => symbolOption.flatMap(_.asClsLike) match
+          case S(symbol: PatternSymbol) =>
+            makeMatchPrefixPatternSplit(scrutinee, target, symbol, arguments)
+          // We accept the string class as a valid string pattern as it literally
+          // means all strings.
+          case S(symbol: ClassSymbol) if symbol is ctx.builtins.Str =>
+            arguments match
+              case S(args) if args.nonEmpty =>
+                error(
+                  msg"`${symbol.name}` does not take any arguments." -> target.toLoc,
+                  msg"But the pattern has ${"sub-pattern" countBy args.size}." -> Loc(args)
+                )
+                RejectPrefixSplit
+              case _ => (makeConsequent, alternative) =>
+                val nonEmptySymbol = TempSymbol(N, erasedType = S(ErasedType.Bool), "nonEmpty")
+                val nonEmptyTerm = app(
+                  this.lt.safeRef,
+                  tup(fld(int(0)), fld(sel(scrutinee(), "length"))),
+                  "string is not empty"
+                )
+                val outputSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "stringHead")
+                val outputTerm = callStringGet(scrutinee(), 0, "head")
+                val remainsSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "stringTail")
+                val remainsTerm = callStringDrop(scrutinee(), 1, "tail")
+                Split.Let(nonEmptySymbol, nonEmptyTerm,
+                  Branch(nonEmptySymbol.safeRef,
+                    Split.Let(outputSymbol, outputTerm,
+                      Split.Let(remainsSymbol, remainsTerm,
+                        makeConsequent(outputSymbol.toScrut, remainsSymbol.toScrut, SeqMap.empty)))
+                  ) ~: alternative)
+          case S(_: ModuleOrObjectSymbol) | S(_: ClassSymbol) | N =>
+            RejectPrefixSplit
     case Composition(true, left, right) =>
       val makeLeft = makeStringPrefixMatchSplit(scrutinee, left)
       val makeRight = makeStringPrefixMatchSplit(scrutinee, right)
@@ -965,7 +1011,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       makeStringPrefixMatchSplit(scrutinee, left)(
         (leftOutput, leftRemains, leftBindings) => makeMatchSplit(scrutinee, right)(
           (rightOutput, rightBindings) => 
-            val productSymbol = TempSymbol(N, "product")
+            val productSymbol = TempSymbol(N, erasedType = S(ErasedType.Array), "product")
             val productTerm = tup(leftOutput() |> fld, rightOutput() |> fld)
             Split.Let(productSymbol, productTerm, makeConsequent(
               productSymbol.toScrut, leftRemains, leftBindings ++ rightBindings)),
@@ -984,7 +1030,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     case Wildcard() => (makeConsequent, alternative) => 
       // Because the wildcard pattern always matches, we can match the entire
       // string and returns an empty string as the remaining value.
-      val emptyStringSymbol = TempSymbol(N, "emptyString")
+      val emptyStringSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "emptyString")
       makeConsequent(scrutinee, emptyStringSymbol.toScrut, SeqMap.empty)
       Branch(scrutinee(), FlatPattern.ClassLike(ctx.builtins.Str.safeRef, ctx.builtins.Str, N, false)(Tree.Dummy),
         Split.Let(emptyStringSymbol, str(""),
@@ -993,12 +1039,12 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     case Literal(prefix: StrLit) => (makeConsequent, alternative) =>
       // Check if the scrutinee is the same as the literal. If so, we return
       // an empty string as the remaining value.
-      val isLeadingSymbol = TempSymbol(N, "isLeading")
+      val isLeadingSymbol = TempSymbol(N, erasedType = S(ErasedType.Bool), "isLeading")
       val isLeadingTerm = callStringStartsWith(
         scrutinee(), Term.Lit(prefix), "the result of startsWith")
-      val outputSymbol = TempSymbol(N, "consumed")
+      val outputSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "consumed")
       val outputTerm = callStringTake(scrutinee(), prefix.value.length, "the consumed part of input")
-      val remainsSymbol = TempSymbol(N, "remains")
+      val remainsSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "remains")
       val remainsTerm = callStringDrop(scrutinee(), prefix.value.length, "the remaining input")
       Split.Let(isLeadingSymbol, isLeadingTerm,
         Branch(isLeadingSymbol.safeRef,
@@ -1010,9 +1056,9 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     case Literal(_) => RejectPrefixSplit
     case Range(lower: StrLit, upper: StrLit, rightInclusive) => (makeConsequent, alternative) =>
       // Check if the string is not empty. Then 
-      val stringHeadSymbol = TempSymbol(N, "stringHead")
-      val stringTailSymbol = TempSymbol(N, "stringTail")
-      val nonEmptySymbol = TempSymbol(N, "nonEmpty")
+      val stringHeadSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "stringHead")
+      val stringTailSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "stringTail")
+      val nonEmptySymbol = TempSymbol(N, erasedType = S(ErasedType.Bool), "nonEmpty")
       val nonEmptyTerm = app(this.lt.safeRef, tup(fld(int(0)), fld(sel(scrutinee(), "length"))), "string is not empty")
       Split.Let(nonEmptySymbol, nonEmptyTerm, // `0 < string.length`
         Branch(nonEmptySymbol.safeRef,
@@ -1070,18 +1116,18 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         val symbols = pattern.variables.symbols
         val params = parameters.map:
           case (_, parameterSymbol) =>
-            Param(FldFlags.empty, parameterSymbol, N, Modulefulness.none)
-        val lambdaSymbol = new TempSymbol(N, "transform")
+            Param.simple(parameterSymbol)
+        val lambdaSymbol = new TempSymbol(N, erasedType = N, "transform")
         (makeConsequent, alternative) => Split.Let(
           sym = lambdaSymbol,
-          term = Term.Lam(PlainParamList(params), transform),
+          term = Term.Lam(PlainParamList(params)(N), transform),
           tail = make(
             // Note that the output is not used. Semantically, the `transform`
             // term can only access the matched values by bindings.
             (_output, remains, bindings) =>
               val arguments = symbols.iterator.map(bindings).map(_() |> fld).toSeq
               val resultTerm = app(lambdaSymbol.safeRef, tup(arguments*), "the transform's result")
-              val resultSymbol = TempSymbol(N, "transformResult")
+              val resultSymbol = TempSymbol(N, erasedType = N, "transformResult")
               Split.Let(resultSymbol, resultTerm, makeConsequent(resultSymbol.toScrut, remains, SeqMap.empty)),
             alternative))
     case Guarded(pattern, guard) =>
@@ -1089,7 +1135,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       make.whenAccept:
         (makeConsequent, alternative) => make(
           (output, remains, bindings) =>
-            val guardSymbol = TempSymbol(N, "guardResult")
+            val guardSymbol = TempSymbol(N, erasedType = N, "guardResult")
             val branch = Branch(guardSymbol.ref(), makeConsequent(output, remains, bindings))
             val innermost = Split.Let(guardSymbol, guard, branch ~: Split.End)
             // The creation of bindings here is repeated with the creation of
@@ -1156,13 +1202,13 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       outputPattern: Opt[SP],
       outputNeeded: Bool
   ): MakeSplit = (makeConsequent, alternative) =>
-    val matcherSymbol = TempSymbol(N, "fixedPointMatcher")
+    val matcherSymbol = TempSymbol(N, erasedType = N, "fixedPointMatcher")
     val matcherBody = Term.Blk(
       machine.prelude :+ Term.SynthWhile(machine.loop), machine.result)
     val callTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "fixed-point match result")
     Split.Let(matcherSymbol, Term.Lam(machine.params, matcherBody),
       tempLet("fixedPointResult", callTerm): resultSymbol =>
-        val outputSymbol = TempSymbol(N, "output").toScrut
+        val outputSymbol = TempSymbol(N, erasedType = N, "output").toScrut
         val consequent = outputPattern match
           case N => makeConsequent(outputSymbol, SeqMap.empty)
           case S(subPattern) =>
@@ -1203,18 +1249,18 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     val (matcherSymbol, implementations) = compiler.buildMatcher(synonym, resultMode)
     val innermostSplit = resultMode match
       case ResultMode.MatchOnly =>
-        val resultSymbol = TempSymbol(N, "matchSuccess")
+        val resultSymbol = TempSymbol(N, erasedType = S(ErasedType.Bool), "matchSuccess")
         val resultTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "result of matcher function")
         Split.Let(resultSymbol, resultTerm,
           Branch(resultSymbol.safeRef, makeConsequent(scrutinee, SeqMap.empty)) ~: alternative)
       case ResultMode.Full =>
         // 1. Bind the call result to a variable.
-        val recordSymbol = TempSymbol(N, "matchRecord")
+        val recordSymbol = TempSymbol(N, erasedType = N, "matchRecord")
         val recordTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee())), "result of matcher function")
         val f1 = Split.Let(recordSymbol, recordTerm, _)
         // 2. Check if the direct result is a `MatchSuccess` and bind the output.
-        val outputSymbol = TempSymbol(N, "patternOutput")
-        val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This is useless.
+        val outputSymbol = TempSymbol(N, erasedType = N, "patternOutput")
+        val bindingsSymbol = TempSymbol(N, erasedType = N, "bindings") // TODO: This is useless.
         val consequent = makeConsequent(outputSymbol.toScrut, SeqMap.empty)
         val pattern = matchSuccessPattern(S(outputSymbol :: bindingsSymbol :: Nil))
         val branch = Branch(recordSymbol.safeRef, pattern, consequent)
@@ -1246,10 +1292,10 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   ): (BlockMemberSymbol, ParamList, Split) =
     val sym = BlockMemberSymbol(name, Nil)
     // Pattern parameters are passed as objects.
-    val patternInputs = patternParameters.map(_.copy(flags = FldFlags.empty))
+    val patternInputs = patternParameters.map(p => p.copy(flags = FldFlags.empty)(p.toLoc))
     // The last parameter is the scrutinee.
-    val scrutParam = Param(FldFlags.empty, scrut, N, Modulefulness.none)
-    val ps = PlainParamList(patternInputs :+ scrutParam)
+    val scrutParam = Param.simple(scrut)
+    val ps = PlainParamList(patternInputs :+ scrutParam)(N)
     (sym, ps, topmost)
   
   /** Translate a list of extractor/matching functions for the given pattern.
@@ -1273,7 +1319,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       s"compilePattern >>> $blk"
   ):
     val unapply = scoped("ucs:translation"):
-      val inputSymbol = VarSymbol(Ident("input"))
+      val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
       val topmost = makeMatchSplit(inputSymbol.toScrut, pd.pattern, true)(
         makeConsequent = (output, bindings) =>
           def getBinding(p: Param) = bindings.get(p.sym).fold(Term.Error().withLocOf(p))(_())
@@ -1300,7 +1346,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       // We don't report errors here because they have been already reported in
       // the translation of `unapply` function.
       given Raise = Function.const(())
-      val inputSymbol = VarSymbol(Ident("input"))
+      val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
       val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pd.pattern)
         ((consumedOutput, remainingOutput, bindings) => Split.Else:
           makeMatchSuccess(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
@@ -1316,12 +1362,12 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       scrut: VarSymbol,
       topmost: Split
   ): Ls[Statement] =
-    val fieldSymbol = TempSymbol(N, name)
-    val decl = LetDecl(fieldSymbol, Nil)
-    val param = Param(FldFlags.empty, scrut, N, Modulefulness.none)
-    val paramList = PlainParamList(param :: Nil)
+    val fieldSymbol = TempSymbol(N, erasedType = N, name)
+    val decl = LetDecl(fieldSymbol, Nil)(N)
+    val param = Param.simple(scrut)
+    val paramList = PlainParamList(param :: Nil)(N)
     val lambda = Term.Lam(paramList, Term.SynthIf(topmost))
-    val defineVar = DefineVar(fieldSymbol, lambda)
+    val defineVar = DefineVar(fieldSymbol, lambda)(N)
     val field = RcdField(str(name), fieldSymbol.safeRef)
     decl :: defineVar :: field :: Nil
   
@@ -1337,7 +1383,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       case _ => N
     term.getOrElse:
       val unapply = scoped("ucs:translation"):
-        val inputSymbol = VarSymbol(Ident("input"))
+        val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
         val topmost = makeMatchSplit(inputSymbol.toScrut, pattern, true)
           ((output, bindings) => Split.Else(makeMatchSuccess(output())), failure)
         log(s"Translated `unapply`: ${topmost.prettyPrint}")
@@ -1346,7 +1392,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         // We don't report errors here because they have been already reported in
         // the translation of `unapply` function.
         given Raise = Function.const(())
-        val inputSymbol = VarSymbol(Ident("input"))
+        val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
         val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pattern)
           ((consumedOutput, remainingOutput, bindings) => Split.Else:
             makeMatchSuccess(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)

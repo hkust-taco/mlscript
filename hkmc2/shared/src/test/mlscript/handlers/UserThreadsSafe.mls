@@ -3,7 +3,7 @@
 :lift
 
 
-class ThreadEffect with
+abstract class ThreadEffect with
   // task queue
   val tasks = mut []
   fun drain() =

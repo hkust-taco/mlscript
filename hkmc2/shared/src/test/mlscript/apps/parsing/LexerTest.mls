@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../../mlscript-compile/apps/parsing/Lexer.mls"
@@ -5,13 +6,13 @@ import "../../../mlscript-compile/apps/parsing/Token.mls"
 import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Iter.mls"
 
-fun lines(...strs) = strs.join("\n")
+fun lines(...strs: Array[Str]) = strs.join("\n")
 
 open Lexer { lex }
 open Stack
 
 fun printLexed(text) = print of
-  lex(text, false)
+  lex(text, noWhitespace: false)
     Iter.fromStack()
     Iter.mapping of Token.display
     Iter.joined of "\n"
@@ -240,10 +241,7 @@ fun take(pattern P, idx: Str, acc: Str) =
       set idx = idx + 1
       set acc = acc + ch
     else [acc, idx]
-//│ ╔══[COMPILATION ERROR] Name not found: str
-//│ ║  l.238: 	  while idx < str.length and str.charAt(idx) is ch and ch is P
-//│ ╙──       	              ^^^
-//│ ╔══[COMPILATION ERROR] Name not found: str
-//│ ║  l.238: 	  while idx < str.length and str.charAt(idx) is ch and ch is P
-//│ ╙──       	                             ^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'length' has no resolved target
+//│ ║  l.239: 	  while idx < str.length and str.charAt(idx) is ch and ch is P
+//│ ╙──       	              ^^^^^^^^^^
 

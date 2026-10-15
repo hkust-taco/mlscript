@@ -1,3 +1,4 @@
+:.
 :js
 
 fun parseIntegerSimple(str) = if str is

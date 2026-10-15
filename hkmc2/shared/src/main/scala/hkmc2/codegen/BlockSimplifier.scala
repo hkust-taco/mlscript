@@ -1,7 +1,7 @@
 package hkmc2
 package codegen
 
-import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer, LinkedHashSet}
 import scala.annotation.tailrec
 import sourcecode.{Line, FileName}
 
@@ -10,7 +10,6 @@ import hkmc2.utils.*
 
 import semantics.*
 import semantics.Elaborator.{State, Ctx, ctx}
-import hkmc2.utils.algorithms.partitionScc
 import hkmc2.syntax.Literal
 import hkmc2.{codegen => argss}
 
@@ -19,7 +18,7 @@ import hkmc2.{codegen => argss}
   * typically, these will be top-level symbols that are being exported from a diff-test block;
   * we don't want to eliminate these. */
 class BlockSimplifier
-    (symbolsToPreserve: Set[BoundSymbol], tl: TL, printer: Program => Str)
+    (symbolsToPreserve: Set[ScopedSymbol], tl: TL, printer: Program => Str)
     (using DebugPrinter, State, Config, Raise, Ctx):
   import tl.*
   
@@ -83,7 +82,7 @@ class BlockSimplifier
         do ()
       
       if summon[Config].optimizer.dataFlowAnalysis then
-        val vp = new DataFlowAnalysis(LocalVars.analyze(res.main))
+        val vp = new DataFlowAnalysis(localVars(res.main))
         res = vp.apply(res)
         changed ||= vp.changed
         if vp.changed then log("▶ VP:\n" + printRes)
@@ -125,27 +124,24 @@ class BlockSimplifier
   // * Only such variables can be assigned directly in the IR
   type LocalVar = LocalVarSymbol
   
-  object LocalVars extends CachedAnalysis[Block, Set[LocalVar]]:
-    
-    def analyzeUncached(block: Block): Set[LocalVar] =
-      def paramsOf(paramLists: IterableOnce[ParamList]): Iterator[LocalVar] =
-        paramLists.iterator.flatMap(_.paramSyms).collect:
-          case v: LocalVar => v
-      def default =
-        block.subBlocks.iterator.flatMap(analyze)
-      block match
-      case Define(fd: FunDefn, rest) =>
-        (paramsOf(fd.params) ++ default).toSet
-      case Define(cd: ClsLikeDefn, rest) =>
-        (paramsOf(cd.paramsOpt.iterator ++ cd.auxParams.iterator) ++
-          paramsOf(cd.methods.iterator.flatMap(_.params)) ++
-          paramsOf(cd.companion.iterator.flatMap(_.methods).flatMap(_.params)) ++
-          default).toSet
-      case Scoped(syms, rest) =>
-        (rest.analyze.iterator ++ syms.iterator.collect { case v: LocalVar => v }).toSet
-      case _ => default.toSet
-    
-  end LocalVars
+  def localVars(block: Block): Set[LocalVar] =
+    val locals: MutSet[LocalVar] = MutSet.empty[LocalVar]
+    def paramsOf(paramLists: IterableOnce[ParamList]): Unit =
+      locals ++= paramLists.iterator.flatMap(_.paramSyms)
+    def rec(current: Block): Unit =
+      current match
+      case Define(fd: FunDefn, _) =>
+        paramsOf(fd.params)
+      case Define(cd: ClsLikeDefn, _) =>
+        paramsOf(cd.paramsOpt.iterator ++ cd.auxParams.iterator)
+        paramsOf(cd.methods.iterator.flatMap(_.params))
+        paramsOf(cd.companion.iterator.flatMap(_.methods).flatMap(_.params))
+      case Scoped(syms, _) =>
+        locals ++= syms.iterator.collect { case v: LocalVar => v }
+      case _ => ()
+      current.subBlocks.foreach(child => rec(child))
+    rec(block)
+    locals.toSet
   
   
   // ——————————————————————————————————————————————————————————————————————————————————————————— //
@@ -185,8 +181,30 @@ class BlockSimplifier
               usedVars += loc
             case Value.MemberRef(loc, _) =>
               usedVars += loc
+            case Cast(_, target, _) => markCastTarget(target)
             case _ =>
           super.applyPath(p)
+
+        /** Marks the class a cast tests against at run time as used.
+          *
+          * A `Cast` stores its target as an `ErasedValueType` rather than a path, so no `Value.Ref` records the
+          * dependency and a class used only as a cast target is dropped as an unused pure definition, leaving the
+          * backend a cast it cannot emit. This cannot live in `Result.freeVars`: resolving a target to its
+          * `BlockMemberSymbol` needs a `Ctx` that the context-free `lazy val` does not have.
+          *
+          * Both traversal entry points must call this: `applyResult` matches `Cast` before its `Path` case, so
+          * `applyPath` never sees a returned or assigned cast, only the ones a `ValDefn` binds.
+          */
+        def markCastTarget(target: ErasedValueType): Unit =
+          target.canonicalize match
+            case ErasedType.AnyRef(_, tpeSym) => usedVars += tpeSym.bms.get
+            case _ =>
+
+        override def applyResult(r: Result): Unit =
+          r match
+            case Cast(_, target, _) => markCastTarget(target)
+            case _ =>
+          super.applyResult(r)
         
         override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
           privateVars ++= defn.privateFields
@@ -271,7 +289,7 @@ class BlockSimplifier
       case Value.SimpleRef(loc: LocalVarSymbol) if localVars.contains(loc) && !definedVars.contains(loc) =>
         registerChange(s"${loc.showDbg} is never assigned; replacing read with undefined")
         // if !symbolsToPreserve(loc) then removedLocals += loc
-        k(Value.Lit(syntax.Tree.UnitLit(false)))
+        k(Value.Lit(syntax.Tree.UnitLit(false))(v.toLoc))
       case _ => super.applyValue(v)(k)
     
     override def applyBlock(b: Block): Block = b match
@@ -279,7 +297,7 @@ class BlockSimplifier
       case Assign(lhs: LocalVarSymbol, rhs, rst) if localVars(lhs) && !usedVars(lhs) && !symbolsToPreserve(lhs) =>
         registerChange(s"rm ${lhs.showDbg} = ${rhs.showDbg}")
         applyResult(rhs)(r => Assign.discard(r, applyBlock(rst)))
-
+      
       // * Discard writes to private fields that are never read
       case assign @ AssignField(lhs, _, rhs, rst) =>
         assign.symbol match
@@ -289,7 +307,9 @@ class BlockSimplifier
             applyResult(rhs): rhs2 =>
               Assign.discard(lhs2, Assign.discard(rhs2, applyBlock(rst)))
         case _ => super.applyBlock(b)
-
+      case Define(defn: ValDefn, rest) if privateFieldsToRemove(defn.tsym) =>
+        Assign.discard(defn.rhs, applyBlock(rest))
+      
       // * Remove local pure definitions that are never read (and are not preserved)
       case Define(defn, rest) =>
         val defnSym = defn.sym
@@ -535,8 +555,8 @@ class BlockSimplifier
     // *   - `false` means no known value.
     // *   - `true` means definitely uninitialized,
     // *     meaning any variable access can be replaced by `undefined`, ie, `Value.Lit(UnitLit(false))`.
-    // *   - `Value` means this exact value is still available for propagation.
-    type KnownValue = Bool | Value
+    // *   - `Value`/`Cast` means this exact value is still available for propagation.
+    type KnownValue = Bool | Value | Cast
     
     // * The propagated value fact for an assignment, plus equivalent
     // * references that could be substituted while their requirements hold.
@@ -551,9 +571,9 @@ class BlockSimplifier
         (l, r) match
         case (false, _) | (_, false) => false
         case (true, true) => true
-        case (true, v: Value) => v
-        case (v: Value, true) => v
-        case (v1: Value, v2: Value) if v1 === v2 => v1
+        case (true, v: (Value | Cast)) => v
+        case (v: (Value | Cast), true) => v
+        case (v1: (Value | Cast), v2: (Value | Cast)) if v1 === v2 => v1
         case _ => false
       
       def mergeRefs(l: List[TrackedRef], r: List[TrackedRef]): List[TrackedRef] =
@@ -590,7 +610,17 @@ class BlockSimplifier
         rhsRequirements: Set[LocalVar -> AssignInfo],
       )(val originalAssignment: Assign)
       case Merge(asst1: AssignInfo, asst2: AssignInfo)
-      
+
+      // * These nodes form a shared DAG (through `Merge`) and are always compared by object identity in
+      // * this analysis (see the `is` uses throughout and the `IdentityHashMap`s in dead-assignment removal).
+      // * The default *structural* `hashCode`/`equals` would re-traverse the shared substructure on every
+      // * insertion into a requirement or `assigns` set, which is exponential in the DAG's sharing.
+      // * We therefore give `AssignInfo` reference semantics, consistent with how it is otherwise compared.
+      final override def hashCode: Int = System.identityHashCode(this)
+      final override def equals(that: Any): Bool = that match
+        case that: AnyRef => this eq that
+        case _ => false
+
       override def toString: String = this match
         case Unknown => "?"
         case Uninitialized => "∅"
@@ -649,6 +679,12 @@ class BlockSimplifier
         case Assigned(lhs, rhs, opt, _) =>
           val litValue = rhs match
             case v @ Value.Lit(_) => v
+            // * A cast of a literal propagates as the whole `Cast`, not as the bare literal: dropping the node
+            // * would lose its target in the one position a backend reads off the value rather than off the
+            // * slot - a `return`, which Wasm validates against the declared result instead of coercing into it.
+            // * Consumers wanting the literal look through the cast with `litThroughUncheckedCasts`.
+            // * A *checked* cast is excluded: propagating it would duplicate a test that can throw.
+            case c @ Cast(Value.Lit(_), _, false) => c
             case _ => false
           val refs = opt match
             case S((r @ Value.SimpleRef(lv: LocalVar)) -> rhs) =>
@@ -827,7 +863,7 @@ class BlockSimplifier
           registerChange(s"immediate assigned call prefix ${lhs.showDbg} ~> ${path.showDbg}")
           applyPath(path): path2 =>
             val lhs2 = recordAssignmentFact(lhs, path2, ass)
-            val combined = Call(path2, argss)(call.metadata).withLocOf(call)
+            val combined = Call(path2, argss)(call.metadata, call.toLoc)
             val res = applyBlock(Assign(nextLhs, combined, rst))
             // * Note that it is incorrect to eliminate the `lhs` assignment even if `!rst.freeVars(lhs)`,
             // * because the assignment may be visible from an outer block
@@ -842,7 +878,7 @@ class BlockSimplifier
           registerChange(s"immediate returned call prefix ${lhs.showDbg} ~> ${path.showDbg}")
           applyPath(path): path2 =>
             val lhs2 = recordAssignmentFact(lhs, path2, ass)
-            val combined = Call(path2, argss)(call.metadata).withLocOf(call)
+            val combined = Call(path2, argss)(call.metadata, call.toLoc)
             val res = applyBlock(Return(combined))
             if symbolsToPreserve(lhs) then Assign(lhs2, path2, res) else res
 
@@ -1107,7 +1143,7 @@ class BlockSimplifier
         super.applyScopedBlock(b)
     
     
-    override def applyValue(v: Value)(k: Value => Block): Block =
+    override def applyPath(v: Path)(k: Path => Block): Block =
       v match
       case Value.SimpleRef(loc: LocalVar) if !inDryRun && !capturedVars(loc) =>
         
@@ -1121,8 +1157,8 @@ class BlockSimplifier
         analysis.litValue match
         case true =>
           registerChange(s"${loc.showDbg} ~> undefined")
-          return k(Value.Lit(syntax.Tree.UnitLit(false)))
-        case lit: Value =>
+          return k(Value.Lit(syntax.Tree.UnitLit(false))(v.toLoc))
+        case lit: (Value | Cast) =>
           registerChange(s"${loc.showDbg} ~> ${lit.showDbg}")
           return k(lit)
         case false =>
@@ -1133,7 +1169,7 @@ class BlockSimplifier
             registerChange(s"${loc.showDbg} ~> ${v2.showDbg} (via ${refs.map(_.showDbg).mkString(", ")})")
             k(v2)
         
-      case _ => super.applyValue(v)(k)
+      case _ => super.applyPath(v)(k)
     
     
     private def assignedPureCallPrefix(loc: LocalVar): Opt[Call] =
@@ -1167,7 +1203,7 @@ class BlockSimplifier
               prefix.metadata.mayRaiseEffects || c.metadata.mayRaiseEffects,
               prefix.metadata.annotations ++ c.metadata.annotations,
             ),
-          ).withLocOf(c)
+            c.toLoc)
           super.applyResult(combined)(k)
         case N => super.applyResult(r)(k)
       
@@ -1237,41 +1273,13 @@ class BlockSimplifier
         case Begin(sub, rest) => loop(sub, shape)(loop(rest, _)(k))
         case _ => N
       loop(body, N)(identity)
-    
-    def isSubtypeOf(actual: ClassLikeSymbol, expected: ClassLikeSymbol): Opt[Bool] =
-      def parentOf(sym: ClassLikeSymbol): Opt[Opt[ClassLikeSymbol]] =
-        (sym match
-          case sym: ClassSymbol => sym.irClsLikeDefn
-          case sym: ModuleOrObjectSymbol => sym.irClsLikeDefn
-        ).flatMap: defn =>
-          defn.parentPath match
-            case S(parent) => getInstCtorShape(parent).map(S(_))
-            case N => S(N)
-        .orElse:
-          // FIXME: remove this fallback once imported classes have their `irClsLikeDefn` properly linked
-          (sym match
-            case sym: ClassSymbol => sym.defn
-            case sym: ModuleOrObjectSymbol => sym.defn
-          ).flatMap: defn =>
-            defn.ext match
-              case S(parent) => parent.cls.resolvedSym.flatMap(_.asClsOrMod).map(S(_))
-              case N => S(N)
-      @tailrec
-      def loop(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Opt[Bool] =
-        if cur is expected then S(true)
-        else if seen(cur) then N
-        else parentOf(cur) match
-          case S(S(parent)) => loop(parent, seen + cur)
-          case S(N) => S(false)
-          case N => N
-      loop(actual, Set.empty)
-    
+
     /** Return whether a known shape matches a case, or `None` if deciding would
       * require reasoning that this optimization deliberately does not attempt. */
     def matches(cse: Case, shape: Shape): Opt[Bool] = (cse, shape) match
       case (Case.Lit(expected), actual: Literal) => S(expected == actual)
       case (Case.Lit(_), _: ClassLikeSymbol) => S(false)
-      case (Case.Cls(expected, _), actual: ClassLikeSymbol) => isSubtypeOf(actual, expected)
+      case (Case.Cls(expected: TypeSymbol, _), actual: TypeSymbol) => ErasedType.isSubtypeOf(actual, expected)
       case _ => N
     
     def select(shape: Shape, arms: Ls[Case -> Block], dflt: Opt[Block]): Opt[Selected] =
@@ -1409,9 +1417,9 @@ class BlockSimplifier
       // * TODO: once bad actors like the current pattern compiler stop duplicating symbols,
       // *  we can remove this ugly workaround.
       def hasDuplicateBoundSymbols(fun: FunDefn): Bool =
-        val seen = MutSet.empty[BoundSymbol | LabelSymbol | ClassCtorSymbol]
+        val seen = MutSet.empty[ScopedSymbol | TermSymbol | LabelSymbol | ClassCtorSymbol]
         var found = false
-        def register(sym: BoundSymbol | LabelSymbol | ClassCtorSymbol): Unit =
+        def register(sym: ScopedSymbol | TermSymbol | LabelSymbol | ClassCtorSymbol): Unit =
           if seen(sym) then found = true
           else seen += sym
         def registerParamList(pl: ParamList): Unit =
@@ -1466,7 +1474,7 @@ class BlockSimplifier
             if args.size < params.params.size then return N
             val (fixedArgs, restArgs) = args.splitAt(params.params.size)
             S(fixedArgs.zip(params.params).map((arg, param) => (param.sym, arg.value)) ++
-              List((params.restParam.get.sym, Tuple(true, restArgs))))
+              List((params.restParam.get.sym, Tuple(true, restArgs)(N))))
       
       /** Match multiple argument lists against multiple parameter lists.
         * Returns None if any arg list fails to match its corresponding param list,
@@ -1530,6 +1538,10 @@ class BlockSimplifier
         def canBeInlineEliminated: Bool =
           isPrivate && !isMethod && !defn.noInline && useCount <= 1 && !disallowElimination && !isLoopBreaker
             && !isPatternHelper && !hasDuplicateBindings
+            // Class/module references still need the function object that owns their `.class`.
+            // Term-only use counts cannot establish that this shared binding is dead;
+            // ordinary DCE can remove it once neither interpretation is referenced.
+            && defn.sym.asClsOrMod.isEmpty
           // false
         
         def inlineCost(newBlk: Block, threshold: Int): Opt[Int] =
@@ -1581,7 +1593,7 @@ class BlockSimplifier
         var map: InlinerMap = Map.empty
         val useCnt = MutMap.WithDefault(MutMap.empty[TermSymbol, Int], _ => 0)
         val usages = MutMap.WithDefault(MutMap.empty[TermSymbol, List[(Option[TermSymbol], Call)]], _ => Nil)
-        val summaryEdges = Buffer.empty[(TermSymbol, TermSymbol)]
+        val summaryAdjLists = MutMap.empty[TermSymbol, Set[TermSymbol]]
         val disallowElimination = MutMap.WithDefault(MutMap.empty[TermSymbol, Bool], _ => false)
         // * Non-local definitions are registered before being appended to this worklist. Recursive
         // * references therefore terminate immediately, while advancing an index discovers the
@@ -1640,9 +1652,8 @@ class BlockSimplifier
         def applyFunctionBody(f: FunDefn, isNonLocal: Bool): Unit =
           if analyzedFunctionBodies.add(f.dSym) then
             val summary = f.getOrComputeInlinerBodySummary
-            summary.transitiveCallTargets.foreach: callee =>
-              summaryEdges.append((f.dSym, callee))
-              registerNonLocalFunction(callee)
+            summaryAdjLists(f.dSym) = summary.transitiveCallTargets
+            summary.transitiveCallTargets.foreach(registerNonLocalFunction)
             nested(S(f.dSym), f.inline, isNonLocal):
               if isNonLocal then replayBodySummary(summary)
               else applyBlock(f.body)
@@ -1696,8 +1707,18 @@ class BlockSimplifier
           registerNonLocalFunction(ts)
 
         override def applyResult(r: Result): Unit = r match
-          case c @ Call(TermSymbolPath(ts), argss) =>
+          case c @ Call(fun @ TermSymbolPath(ts), argss) =>
             observeCall(ts, c, currentCallGraphSource)
+            // A resolved method call still uses its receiver (and a super call its parent)
+            // as ordinary values. In particular, a function whose only use is as such a
+            // receiver, as in `(x => x).apply(...)`, is not dead.
+            fun match
+              case Select(qual, _) => applyPath(qual)
+              case SuperSelect(qual, base, _) => applyPath(qual); applyPath(base)
+              // Otherwise, `fun` is a direct `Value.MemberRef` to `ts`: the call target itself,
+              // which `observeCall` records. Traversing it as a value would count `ts` again and
+              // set `disallowElimination`, preventing every directly called function from being inlined.
+              case _ => ()
             argss.foreach(_.foreach(applyArg))
           case _ => super.applyResult(r)
         
@@ -1721,7 +1742,11 @@ class BlockSimplifier
           map.foreach: (sym, info) =>
             info.useCount = useCnt(sym)
             info.disallowElimination = info.disallowElimination || disallowElimination(sym)
-          val edges = summaryEdges.filter((from, to) => map.contains(from) && map.contains(to))
+          val adjList = MutMap.empty[TermSymbol, LinkedHashSet[TermSymbol]]
+          summaryAdjLists.foreach: (from, tos) =>
+            if map.contains(from) then
+              for to <- tos if map.contains(to) do
+                adjList.getOrElseUpdate(from, LinkedHashSet.empty).add(to)
           usages.foreach: (sym, calls) =>
             calls.foreach: (caller, call) =>
               if map.contains(sym) then
@@ -1731,7 +1756,7 @@ class BlockSimplifier
                 caller.foreach: caller =>
                   softAssert(map.contains(caller),
                     s"Call-graph source ${caller.showDbg} was not registered before traversal")
-                  edges.append((caller, sym))
+                  adjList.getOrElseUpdate(caller, LinkedHashSet.empty).add(sym)
 
           def pickLoopBreaker(sccComp: Ls[TermSymbol]): TermSymbol =
             sccComp.minBy: sym =>
@@ -1739,7 +1764,10 @@ class BlockSimplifier
 
           @tailrec
           def assignLoopBreakers(): Unit =
-            val sccs = partitionScc(edges.filterNot((from, to) => map(to).isLoopBreaker), map.keys)
+            val sccs = SccAnalysis.sccsFrom(
+              (from: TermSymbol) => adjList.getOrElse(from, Nil)
+                .iterator.filterNot(to => map(to).isLoopBreaker),
+              map.keys)
             if sccs.forall(_.sizeIs == 1) then return
             sccs.foreach: sccComp =>
               if sccComp.sizeIs > 1 then
@@ -1747,8 +1775,8 @@ class BlockSimplifier
                 // can still disappear while their workers stop recursive expansion.
                 map(pickLoopBreaker(sccComp))._isLoopBreaker = true
             assignLoopBreakers()
-          edges.foreach: (from, to) =>
-            if from === to then
+          for (from, tos) <- adjList do
+            if tos.contains(from) then
               map(from)._isLoopBreaker = true
           assignLoopBreakers()
           map
@@ -1890,7 +1918,11 @@ class BlockSimplifier
                 def go(acc: Block => Block, args: List[(VarSymbol, Result)], mapping: Map[Symbol, Symbol]): Block =
                   args match
                   case Nil =>
-                    val resSym = TempSymbol(N, "inlinedVal")
+                    val resSym = TempSymbol(
+                      N,
+                      erasedType = if extraArgss.isEmpty then call.erasedValueType else N,
+                      "inlinedVal",
+                    )
                     val copier = Copier(resSym, mapping, thisMapping)
                     val newBlk = copier.applyBlock(blk)
                     if extraArgss.isEmpty then
@@ -1899,10 +1931,10 @@ class BlockSimplifier
                       acc(Scoped(Set(resSym), newBlk(
                         k(Call(resSym.asSimpleRef, extraArgss.ne_!)(
                           call.metadata.copy(
-                            annotations = call.metadata.annotations.filterNot(_ == Annot.TailCall),
-                          ))))))
+                            annotations = call.metadata.annotations.filterNot(_.isInstanceOf[Annot.TailCall]),
+                          ), call.toLoc)))))
                   case (sym, value) :: argRest =>
-                    val newSym = VarSymbol(sym.id)
+                    val newSym = VarSymbol(sym.id, erasedType = sym.erasedType)
                     go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))
                 go(blockBuilder, matchedArgs, Map.empty)
         

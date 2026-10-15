@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -123,7 +124,7 @@ M.d
 
 fun f(x) = if x is M.D then 1 else 0
 
-M.D.class
+M.D!class
 //│ = class D
 
 M is M.D

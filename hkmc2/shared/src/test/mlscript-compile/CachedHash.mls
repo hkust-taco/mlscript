@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 class CachedHash with
   let _hash = null
   fun hash() = if _hash !== null then _hash else

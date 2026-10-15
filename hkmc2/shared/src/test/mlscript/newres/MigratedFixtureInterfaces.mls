@@ -1,0 +1,93 @@
+:.
+:js
+
+import "../../mlscript-compile/Rendering.mls"
+import "../../mlscript-compile/Runtime.mls"
+import "../../mlscript-compile/LazyFingerTree.mls"
+
+// Callback adapters retain their result interfaces through an imported module.
+:expect [4, 5]
+class Box(val value: Int)
+[3, 4].map(Rendering.pass1((n: Int) => Box(n + 1))).map((box, ...) => box.value)
+//│ = [4, 5]
+
+:expect 6
+Rendering.render([1, 2]).length
+//│ = 6
+
+// Lazy splices expose indexing and iteration before and after materialization.
+:expect [0, 1, 2, 3]
+[...LazyFingerTree.concat(LazyFingerTree.mk(0, 1), [2, 3])]
+//│ = [0, 1, 2, 3]
+
+:expect 4
+LazyFingerTree.concat([1, 2], [3, 4]).materialize().length
+//│ = 4
+
+:expect [2, 3]
+Runtime.Tuple.slice([1, 2, 3, 4], 1, 1)
+//│ = [2, 3]
+
+// Host collections retain typed values when used through declared interfaces.
+:expect "value"
+fun lookup(map: WeakMap[Object, Str], key: Object) = if map.get(key) is
+  Str as value then value
+  else "missing"
+val key = new Object
+val map = new WeakMap
+map.set(key, "value")
+lookup(map, key)
+//│ = "value"
+//│ key = {}
+//│ map = WeakMap { <items unknown> }
+
+// This runtime primitive preserves undefined; user-call instrumentation forbids returning it.
+:noSanityCheck
+:expect true
+Runtime.Tuple.get([undefined], 0) is undefined
+//│ = true
+
+// Tuple runtime operations also support lazy views.
+:expect 2
+Runtime.Tuple.get(LazyFingerTree.mk(1, 2), -1)
+//│ = 2
+
+import "../../mlscript-compile/Term.mls"
+
+let termContext = Term.Context(new Map(), new Map(), new Set(), true)
+let termSymbol = Term.Symbol("x")
+//│ termContext = Context(Map(0) {}, Map(0) {}, Set(0) {}, true)
+//│ termSymbol = Symbol("x")
+
+:expect "(x_0) =>\n  x_0"
+Term.show(Term.Lam([termSymbol], Term.Ref(termSymbol)), termContext)
+//│ = "(x_0) =>\n  x_0"
+
+:expect ["null", "undefined", "true", "42"]
+[null, undefined, true, 42].map((lit, ...rest) => Term.show(Term.Lit(lit), termContext))
+//│ = ["null", "undefined", "true", "42"]
+
+:expect "undefined"
+Term.showPattern(Term.LitPattern(undefined), termContext)
+//│ = "undefined"
+
+// Shared read interfaces retain element types without invariant Array[Any] annotations.
+:expect [4, 5, 6]
+class Item(val value: Int)
+fun firstValue(xs: Indexable[Item]) = xs.at(0).value
+fun iteratedValue(xs: IterableIndexable[Item]) = xs.iterator().next().value.value
+[firstValue([Item(4)]), firstValue(LazyFingerTree.mk(Item(5))),
+ iteratedValue(LazyFingerTree.concat([Item(6)]).materialize())]
+//│ = [4, 5, 6]
+
+// Iterator is covariant: a more specific iterator remains usable through its base interface.
+:expect 7
+class SpecialItem extends Item(7)
+fun iteratorValue(xs: Iterator[Item]) = xs.next().value.value
+val items: Set[SpecialItem] = new Set
+items.add(new SpecialItem)
+val specialized: Iterator[SpecialItem] = items.values()
+iteratorValue(specialized)
+//│ = 7
+//│ items = Set(1) {SpecialItem { value: 7 }}
+//│ specialized = Iterator {}

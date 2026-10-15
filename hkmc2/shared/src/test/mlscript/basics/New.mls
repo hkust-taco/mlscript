@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -14,59 +15,73 @@ new
 //│ = Foo
 
 :e
-:w
 new
   Foo
   Foo
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found block.
-//│ ║  l.20: 	  Foo
-//│ ║        	  ^^^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ╔══[WARNING] Pure expression in statement position
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.18: 	new
+//│ ║        	^^^
 //│ ║  l.19: 	  Foo
+//│ ║        	^^^^^
+//│ ║  l.20: 	  Foo
+//│ ║        	^^^^^
+//│ ╟── Invalid class expression: block
+//│ ║  l.20: 	  Foo
 //│ ╙──      	  ^^^
-//│ = Foo
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // * Interesting... it tries to call `Foo()` and instantiate the resulting class value...
 :e
 :re
 new
   Foo()
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found application.
-//│ ║  l.34: 	  Foo()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.37: 	  Foo()
 //│ ║        	  ^^^^^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
+//│ ╟── Class 'Foo' must be instantiated with 'new'.
+//│ ║  l.5: 	class Foo
+//│ ╙──     	      ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.36: 	new
+//│ ║        	^^^
+//│ ║  l.37: 	  Foo()
+//│ ║        	^^^^^^^
+//│ ╟── Invalid class expression: application
+//│ ║  l.37: 	  Foo()
+//│ ╙──      	  ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new
   Foo
     ()
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (unit).
-//│ ║  l.44: 	    ()
+//│ ║  l.57: 	    ()
 //│ ╙──      	    ^^
 //│ = Foo
 
 :e
-:w
 :re
 new
   Foo
   ()
-//│ ╔══[COMPILATION ERROR] Expected a statically known class; found block.
-//│ ║  l.55: 	  ()
-//│ ║        	  ^^
-//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.54: 	  Foo
-//│ ╙──      	  ^^^
-//│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.65: 	new
+//│ ║        	^^^
+//│ ║  l.66: 	  Foo
+//│ ║        	^^^^^
+//│ ║  l.67: 	  ()
+//│ ║        	^^^^
+//│ ╟── Invalid class expression: block
+//│ ║  l.67: 	  ()
+//│ ╙──      	  ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new Foo
   ()
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (unit).
-//│ ║  l.67: 	  ()
+//│ ║  l.82: 	  ()
 //│ ╙──      	  ^^
 //│ = Foo
 
@@ -79,10 +94,24 @@ data class Foo(a,b,c)
 new Foo(...xs)
 //│ = Foo(1, 2, 3)
 
+:e
 new Foo(...[1, 2])
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.98: 	new Foo(...[1, 2])
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Foo' expected 3 arguments, but got 2
+//│ ║  l.92: 	data class Foo(a,b,c)
+//│ ╙──      	     ^^^^^^^^^^^^^^^^
 //│ = Foo(1, 2, undefined)
 
+:e
 new Foo(...[1, 2, 3, 4])
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.108: 	new Foo(...[1, 2, 3, 4])
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Foo' expected 3 arguments, but got 4
+//│ ║  l.92: 	data class Foo(a,b,c)
+//│ ╙──      	     ^^^^^^^^^^^^^^^^
 //│ = Foo(1, 2, 3)
 
 

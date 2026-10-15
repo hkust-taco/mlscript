@@ -61,7 +61,7 @@ foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.55: 	fun foo[A](using Foo[A])(using A) = 42
-//│ ║        	                               ^
+//│ ║        	                         ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -75,7 +75,7 @@ foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
-//│ ║        	                 ^
+//│ ║        	           ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -90,7 +90,7 @@ foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
-//│ ║        	                 ^
+//│ ║        	           ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -104,7 +104,7 @@ foo
 //│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
-//│ ║        	                 ^
+//│ ║        	           ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -118,7 +118,7 @@ foo
 //│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
-//│ ║        	                 ^
+//│ ║        	           ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -131,7 +131,7 @@ foo
 //│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
-//│ ║        	                 ^
+//│ ║        	           ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

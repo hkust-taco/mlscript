@@ -1,3 +1,4 @@
+:.
 :js
 
 // Integer list pipelines fused by a fixed-point pattern. `MapInc` and
@@ -32,26 +33,28 @@ fun withCounting(f) =
   print("Constructed " + (numObjectConstructed - before) + " object(s)")
   result
 
+type Printable = {toString: () -> Str}
+
 object Nil
-data class Cons(val head, val tail) with
+data class Cons(val head, val tail: Printable) with
   print("new: " + this.toString())
   set numObjectConstructed += 1
-  fun toString() = render(head) + " :: " + tail.toString()
+  fun toString(): Str = render(head) + " :: " + tail.toString()
 
-data class MapInc(val source) with
+data class MapInc(val source: Printable) with
   print("new: " + this.toString())
   set numObjectConstructed += 1
-  fun toString() = "map (+ 1) (" + source.toString() + ")"
+  fun toString(): Str = "map (+ 1) (" + source.toString() + ")"
 
-data class FilterNonZero(val source) with
+data class FilterNonZero(val source: Printable) with
   print("new: " + this.toString())
   set numObjectConstructed += 1
-  fun toString() = "filter (!= 0) (" + source.toString() + ")"
+  fun toString(): Str = "filter (!= 0) (" + source.toString() + ")"
 
 data class Item(val value) with
   print("new: " + this.toString())
   set numObjectConstructed += 1
-  fun toString() = render(value)
+  fun toString(): Str = render(value)
 
 pattern Ctx(pattern Hole) =
   | Hole

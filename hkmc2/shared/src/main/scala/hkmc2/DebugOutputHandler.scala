@@ -20,3 +20,21 @@ final class DebugOutputHandler(fs: io.FileSystem, baseDir: io.Path, stdIO: Str =
       val contents = fileContents.getOrElseUpdate(file, new StringBuilder)
       contents.append(line).append('\n')
       fs.write(file, contents.result())
+
+object DebugOutputHandler:
+
+  /** Inspect the elaborated tree directly: new resolution runs during elaboration and does not
+    * traverse the legacy resolver, but annotated definitions still need their tree displayed. */
+  def showElaboratedDefinitions(block: semantics.Term.Blk, config: Config)
+      (display: (semantics.Definition, Config.DebugOutput) => Unit): Unit =
+    def visit(statement: semantics.Statement): Unit =
+      statement match
+        case defn: semantics.Definition =>
+          val modifiers = defn.annotations.collect:
+            case semantics.Annot.Debug(modify) => modify
+          if modifiers.nonEmpty then
+            val localConfig = modifiers.foldLeft(config)((cfg, modify) => modify(cfg))
+            if localConfig.debug.showElaboratedTree then display(defn, localConfig.debug.out)
+        case _ => ()
+      statement.subStatements.foreach(visit)
+    visit(block)

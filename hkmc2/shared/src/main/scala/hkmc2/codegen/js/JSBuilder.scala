@@ -29,6 +29,7 @@ abstract class CodeBuilder:
 
 class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   import JSBuilder.*
+  private given PostCondAnalysis = new PostCondAnalysis
   
   def checkMLsCalls: Bool = false
   def checkSelections: Bool = false
@@ -57,7 +58,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Operand(prec: Int)
   
   def mkErr(errMsg: Message)(using Raise, Scope): Document =
-    doc"throw globalThis.Error(${result(Value.Lit(syntax.Tree.StrLit(errMsg.show)))})"
+    doc"throw globalThis.Error(${result(Value.Lit(syntax.Tree.StrLit(errMsg.show))(N))})"
   
   def errExpr(errMsg: Message)(using Raise, Scope): Document =
     raise(ErrorReport(errMsg -> N :: Nil,
@@ -76,7 +77,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case _ => false
   
   private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
-    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, s"${ts.name}$$accessorSymbol"))
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.name}$$accessorSymbol"))
 
   private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     ts.owner.collect:
@@ -273,11 +274,17 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     paramLists match
     case Nil => body
     case params :: Nil =>
-      Return(Lambda(params, body)(if generator then Annot.Generator :: Nil else Nil))
+      Return(Lambda(params, body)(if generator then Annot.Generator()(N) :: Nil else Nil, N))
     case params :: rest =>
-      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil))
+      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil, N))
 
-  def subexpression(r: Result)(using Raise, Scope): Document = r match
+  /** Looks through the casts that a JS program does not materialize. */
+  @tailrec
+  private def throughCasts(r: Result): Result = r match
+    case Cast(value, _, _) => throughCasts(value)
+    case _ => r
+  
+  def subexpression(r: Result)(using Raise, Scope): Document = throughCasts(r) match
     case _: Lambda => doc"(${result(r)})"
     case _ => result(r)
   
@@ -291,11 +298,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   // For use as the qualifier of a field selection
   def resultQual(r: Result)(using Raise, Scope): Document =
     val res = result(r)
-    if r.isInstanceOf[Value.Lit] then doc"(${res})" else res
+    if throughCasts(r).isInstanceOf[Value.Lit] then doc"(${res})" else res
   
   def resultInst(r: Result)(using Raise, Scope): Document = 
     val res = result(r)
-    r match
+    throughCasts(r) match
     case s: Select if s.sanitize => doc"(${res})"
     case _ => res
   
@@ -313,6 +320,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if l.nullary then l.nme
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
+    case Cast(value, _, _) => result(value)
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
       if l.binary then
         val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"
@@ -332,6 +340,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Call(s @ Select(_, Elaborator.ctx.builtins.BuiltInOpIdent(jsOp)), (lhs :: rhs :: Nil) :: Nil) =>
       val res = doc"${operand(lhs)} ${jsOp} ${operand(rhs)}"
       if needsParens(jsOp) then doc"(${res})" else res
+    case c @ Call(fun: SuperSelect, argss) =>
+      val first = argss.head.map(argument)
+      val base = doc"${result(fun)}.call(${(result(fun.qual) :: first).mkDocument(", ")})"
+      val calls = argss.tail.foldLeft(base): (acc, args) =>
+        doc"${acc}(${args.map(argument).mkDocument(", ")})"
+      if c.metadata.isMlsFun then
+        if checkMLsCalls then doc"$runtimeVar.checkCall($calls)" else calls
+      else doc"$runtimeVar.safeCall($calls)"
     case c @ Call(fun, argss) =>
       val base = subexpression(fun)
       val calls = argss.foldLeft(base): (acc, args) =>
@@ -344,12 +360,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       else doc"$runtimeVar.safeCall(${calls})"
     case lam @ Lambda(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod, isLambda = true)
-      if lam.annot.contains(Annot.Generator)
+      if lam.annot.exists(_.isInstanceOf[Annot.Generator])
       then
         // JavaScript has no generator arrows, so bind `this` to preserve the
         // lexical-`this` behavior of the Lambda IR.
         doc"(function* ($params) ${ braced(bodyDoc) }).bind(this)"
       else doc"($params) => ${ braced(bodyDoc) }"
+    case s @ SuperSelect(qual, base, id) =>
+      doc"Reflect.get(${resultQual(base)}.prototype, ${makeStringLiteral(id.name)}, ${result(qual)})"
     case s @ Select(qual, id) => 
       val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
@@ -495,7 +513,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case AssignDynField(p, f, ai, r, rst) =>
       doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst, endSemi)}"
     case Define(defn, rst) =>
-      def mkThis(sym: InnerSymbol): Document =
+      inline def mkThis(sym: InnerSymbol): Document =
         result(sym.asThis)
       val resJS = defn match
       case ValDefn(tsym, sym, p) =>
@@ -552,7 +570,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // * In JS, `let x = (0, function (args) {...})` makes the function anonymous;
               // * otherwise, using `let x = function (args) {...}` would name the function `x`,
               // * which is not meaningful, here.
-              doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
+              doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, $functionKeyword ($params) ${ braced(bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
@@ -566,12 +584,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val ctorParams = backendParamList.paramSyms.map(p => p -> scope.allocateName(p))
             val sourceParamsOpt = isym.defn.flatMap(_.paramsOpt)
             
-            // * Whether the class should be "lifted" to a "class" property of the companion term
-            // * should currently be consistent with whether the class has source parameters.
-            // * This currently fails for faulty input programs (such as `object O(x)`);
-            // * we should make sure such programs fail compilation before they reach this point.
-            softTODO(sourceParamsOpt.isDefined === isym.shouldBeLifted,
-              s"$sourceParamsOpt.isDefined =/= ${isym.shouldBeLifted}")
+            // Parameterized classes have a generated constructor function; bare classes can
+            // instead have an explicit function companion. Both own their `.class` property.
+            // Invalid parameterized objects can still reach this point without a constructor.
+            softTODO(sourceParamsOpt.isEmpty || isym.shouldBeLifted,
+              s"Missing constructor function for parameterized class ${isym.nme}")
             
             def mkMethodName(td: FunDefn, owner: InnerSymbol): Document =
               if td.dSym.isPrivate
@@ -598,7 +615,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 pubFlds.collect:
                   case (_, sym) if sym.k is MutVal =>
                     sym -> TermSymbol(
-                      syntax.LetBind, S(isym), Tree.Ident(sym.nme))
+                      syntax.LetBind, S(isym), Tree.Ident(sym.nme), erasedType = sym.erasedType)
               val allPrivFlds = privFlds ++ mutPubFields.map(_._2)
               val privDecls = allPrivFlds.map: fld =>
                 val nme = isym.privatesScope.allocateOrGetName(fld)
@@ -810,7 +827,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case SpecializedSwitch(scrut, cases, dflt, rest) =>
       val switchBod = cases.foldLeft(doc""): (acc, arm) =>
         val needsBreak = arm.isInstanceOf[SwitchCase.ExplicitBreak]
-        acc :: doc" # case ${result(Value.Lit(arm.litValue))}: #{ ${
+        acc :: doc" # case ${result(Value.Lit(arm.litValue)(arm.litValue.toLoc))}: #{ ${
           // * Note: we use `block` here so that Scoped nodes will create proper brace sections,
           // * necessary since `case` clauses do not create a new scope,
           // * so something like `switch (x) { case 1: let y = 1; break; case 2: let y = 2 }` is ill-formed!
@@ -823,9 +840,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       doc" # switch (${result(scrut)}) { #{ ${bodWithDflt} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, arms @ hd :: tl, els, rest) =>
       val sd = result(scrut)
-      // * Parenthesize the scrutinee for property access when it's a numeric literal,
-      // * since things like `12.length` are invalid JS (the `.` is parsed as a decimal point).
-      def sdProp = scrut match
+      // * Parenthesize the scrutinee for property access when it's a numeric literal, since things like `12.length`
+      // * are invalid JS (the `.` is parsed as a decimal point).
+      def sdProp = throughCasts(scrut) match
         case Value.Lit(Tree.IntLit(_) | Tree.DecLit(_)) => doc"($sd)"
         case _ => sd
       def cond(cse: Case) = cse match
@@ -842,9 +859,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.Symbol => doc"typeof $sd === 'symbol'"
           case Elaborator.ctx.builtins.TypedArray =>
             doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
-          case _: ModuleOrObjectSymbol => doc"$sd instanceof ${result(pth)}.class"
-            // * ^ Note that modules are currently not valid patterns;
-            // *    this case is just for objects, which have their class stored in a `.class` property.
+          case modOrObj: ModuleOrObjectSymbol =>
+            if modOrObj.tree.k is syntax.Mod then
+              // * A module value is the module's singleton binding, so the test is identity rather than `instanceof`
+              // * (`M.class` does not exist for modules).
+              doc"$sd === ${result(pth)}"
+            else
+              doc"$sd instanceof ${result(pth)}.class"
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sdProp.length ${if inf then ">=" else "==="} ${len}"
         case Case.Field(name = n, safe = false) =>
@@ -989,7 +1010,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     :: locally:
       exprt match
       case S(sym) =>
-        doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
+        doc"\nexport default ${scope.lookup_!(sym, sym.toLoc)};\n"
       case N => doc""
   
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
@@ -1170,14 +1191,17 @@ object JSBuilder:
       * This helper is used at reference sites (MemberRef, Select) to decide whether to append `.class`
       * when accessing a class value. It returns true only for class/module/object symbols,
       * not for term symbols — so constructor calls like `Foo(args)` which resolve to the term
-      * symbol are not affected. */
+      * symbol are not affected. Elaboration rejects arbitrary values and parameterless
+      * functions as companions: the class property belongs to a compiler-created function,
+      * never to an existing value. Foreign declarations use their native binding instead. */
     def shouldBeLifted: Bool =
       val bsym = dsym.asBlkMember
       (
         (dsym.asTrm orElse bsym.flatMap(_.asTrm)).isDefined ||
         (dsym.asCls orElse bsym.flatMap(_.asCls)).flatMap(_.defn).exists(_.paramsOpt.isDefined)
       ) && 
-        (dsym.asModOrObj orElse dsym.asCls).isDefined
+        (dsym.asModOrObj orElse dsym.asCls).isDefined &&
+        dsym.defn.forall(_.hasDeclareModifier.isEmpty)
   
 end JSBuilder
 
@@ -1195,7 +1219,7 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
   override def checkSelections: Bool = instrument
   override def freezeDefinitions: Bool = instrument
   
-  val functionParamVarargSymbol = semantics.TempSymbol(N, "args")
+  val functionParamVarargSymbol = semantics.TempSymbol(N, erasedType = N, "args")
   
   override def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
     // * We used to instrument `fun f(x, y) = x + y` into something like

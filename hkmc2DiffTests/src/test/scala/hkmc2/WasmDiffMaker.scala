@@ -51,17 +51,23 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
+  override def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
+    if trees.nonEmpty && js.isSet && wasm.isSet && config.target == CompilationTarget.Wasm then
+      raise(WarningReport(
+        msg"Enabling both :js and :wasm is not currently supported; disable one before compiling this block." -> N :: Nil))
+    super.processTrees(trees)
+
   override def processIRBlock(
       pgrm: Program,
       definedValues: ComputeDefinedValues,
-      symbolsToPreserve: Set[BoundSymbol],
+      symbolsToPreserve: Set[ScopedSymbol],
   )(using Config, Raise, Elaborator.Ctx): Unit =
     
     super.processIRBlock(pgrm, definedValues, symbolsToPreserve)
     
     val outerRaise: Raise = summon
 
-    if wasm.isSet then
+    if wasm.isSet && config.target == CompilationTarget.Wasm then
 
       val reportedMessages = mutable.Set.empty[Str]
 
@@ -73,24 +79,13 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
           errored = true
           outerRaise(d)
         case d => outerRaise(d)
-      val sessionImportSymbols = mutable.LinkedHashSet.from[Symbol](pgrm.main.freeVars)
-      new BlockTraverser:
-        override def applyPath(p: Path): Unit = p match
-          case sel: Select =>
-            sel.symbol.foreach:
-              case sym: ModuleOrObjectSymbol => sessionImportSymbols += sym
-              case _ => ()
-            super.applyPath(sel)
-          case _ =>
-            super.applyPath(p)
-      .applyBlock(pgrm.main)
       val sessionImports = mutable.LinkedHashMap.empty[Str, SessionBinding]
-      sessionImportSymbols.iterator.foreach: sym =>
+      SessionBinding.referencedSymbols(pgrm.main).foreach: sym =>
         sessionImportsBySymbol.get(sym).foreach: bindings =>
           bindings.foreach: (bindingKey, binding) =>
             sessionImports.update(bindingKey, binding)
       val CompiledWasmModule(modWat, mainFnNme, systemMemMinPages, sessionExports) = ltl.givenIn:
-        WatBuilder().program(pgrm, N, wd, sessionImports.values.toSeq, symbolsToPreserve)
+        WatBuilder.fresh.program(pgrm, N, wd, sessionImports.values.toSeq, symbolsToPreserve)
       val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then
@@ -160,7 +155,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
         val intrinsicWatJsLit = JSBuilder.makeStringLiteral(
           ltl.givenIn:
             baseScp.nest.givenIn:
-              WatBuilder().intrinsicSupportModule().mkString(output.ColWidth),
+              WatBuilder.intrinsicSupportModuleWat.mkString(output.ColWidth),
         )
         host.execute(
           doc"""(() => {

@@ -1,0 +1,200 @@
+:.
+
+// Values keep their identity across generic scopes whose binders they cannot
+// observe (see NewResolver.shapeSupport). Each block also checks that the
+// bindings a value does depend on survive that pruning.
+
+// A value produced outside every generic scope passes through unused binders.
+:expect 1
+class Item(val value: Int)
+private fun f1[A](value) = f2(value)
+private fun f2[B](value) = f3(value)
+private fun f3[C](value) = value
+f1(Item(1)).value
+//│ = 1
+
+// The same chain with annotated parameters and results.
+:expect 2
+class Item(val value: Int)
+private fun f1[A](value: Item): Item = f2(value)
+private fun f2[B](value: Item): Item = f3(value)
+private fun f3[C](value: Item): Item = value
+f1(Item(2)).value
+//│ = 2
+
+// A chain whose binders the value does depend on still resolves through them.
+:expect [3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+private fun f1[A](value: A): A = f2(value)
+private fun f2[B](value: B): B = f3(value)
+private fun f3[C](value: C): C = value
+[f1(First(3)).first, f1(Second(4)).second]
+//│ = [3, 4]
+
+// Branching call paths would otherwise multiply one value into a candidate
+// per combination of irrelevant bindings; the invalid alternative is still seen.
+:e
+class Item(val value: Int)
+class Other(val other: Int)
+private fun g1[G1](x) = x
+private fun h1[H1](x) = x
+private fun g2[G2](x) = x
+private fun h2[H2](x) = x
+private fun f2(flag, value) = if flag then g2(value) else h2(value)
+private fun f1(flag, value) = if flag then g1(f2(flag, value)) else h1(f2(flag, value))
+private fun choose(flag) = if flag then Item(5) else Other(6)
+f1(true, choose(true)).value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.47: 	f1(true, choose(true)).value
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Other' does not contain member 'value'
+//│ ║  l.46: 	private fun choose(flag) = if flag then Item(5) else Other(6)
+//│ ╙──      	                                                     ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A generic constructor applied in a non-generic scope keeps its own binders,
+// with inferred and explicit arguments and through `new`.
+:expect [7, 8, 9]
+class First(val first: Int)
+class Second(val second: Int)
+class Third(val third: Int)
+class Box[T](val item: T)
+private fun wrap[W](value) = value
+fun make() = [Box(First(7)), Box[Second](Second(8)), new Box[Third](Third(9))]
+[wrap(make()).0.item.first, wrap(make()).1.item.second, wrap(make()).2.item.third]
+//│ = [7, 8, 9]
+
+// A constructor applied inside a generic scope depends on that scope.
+:expect [10, 11]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val item: T)
+private fun boxed[A](value: A) = Box(value)
+private fun again[B](value) = value
+[again(boxed(First(10))).item.first, again(boxed(Second(11))).item.second]
+//│ = [10, 11]
+
+// Returned closures retain the captures of their own activation only.
+:expect [12, 13]
+class First(val first: Int)
+class Second(val second: Int)
+private fun capture[A](value: A) = () => value
+private fun pass[P](f) = f
+[pass(capture(First(12)))().first, pass(capture(Second(13)))().second]
+//│ = [12, 13]
+
+// Nested local classes instantiated at different sites keep distinct captures.
+:expect [14, 15]
+class First(val first: Int)
+class Second(val second: Int)
+private fun local[A](value: A) =
+  class Local(val item: A)
+  new Local(value)
+private fun pass[P](x) = x
+[pass(local(First(14))).item.first, pass(local(Second(15))).item.second]
+//│ = [14, 15]
+
+// A partial application keeps the binders its first parameter list bound.
+:expect [16, 17]
+class First(val first: Int)
+class Second(val second: Int)
+private fun pair[A](left: A)(right: A) = [left, right]
+private fun pass[P](x) = x
+[pass(pair(First(16)))(First(0)).0.first, pass(pair(Second(0)))(Second(17)).1.second]
+//│ = [16, 17]
+
+// A stored explicit specialization keeps its consumed binder group.
+:expect [18, 19]
+class First(val first: Int)
+class Second(val second: Int)
+private fun identity[A](value: A) = value
+private fun pass[P](x) = x
+private val first = pass(identity[First])
+private val second = pass(identity[Second])
+[first(First(18)).first, second(Second(19)).second]
+//│ = [18, 19]
+//│ first = fun identity
+//│ second = fun identity
+
+// Tuples, records, spreads, and rest views carry generic values through
+// scopes that cannot observe them.
+:expect [20, 21, 22, 23]
+class Item(val value: Int)
+private fun pass[P](x) = x
+private fun tuple[A](value: A) = [value, value]
+private fun record[B](value: B) = {field: value}
+private fun spread[C](xs) = [...xs, Item(23)]
+private fun rest[D](xs) = if xs is [_, ...tail] then tail else xs
+[ pass(tuple(Item(20))).0.value,
+  pass(record(Item(21))).field.value,
+  pass(spread([Item(22)])).0.value,
+  pass(rest(spread([Item(0)]))).0.value ]
+//│ = [20, 21, 22, 23]
+
+// Recursion rebinding the same parameter keeps the inner activation's binding.
+:expect 24
+class Item(val value: Int)
+private fun deep[A](value: A, n: Int): A = if n > 0 then deep(value, n - 1) else value
+deep(Item(24), 3).value
+//│ = 24
+
+// Binders with the same name in different definitions stay separate.
+:expect [25, 26]
+class First(val first: Int)
+class Second(val second: Int)
+private fun inner[A](left, other: A) = [left, other]
+private fun wrapper[A](value: A) = inner(value, Second(26))
+[wrapper(First(25)).0.first, wrapper(First(0)).1.second]
+//│ = [25, 26]
+
+// A generic scope cannot make an invalid selection valid.
+:e
+class Item(val value: Int)
+private fun f1[A](value) = f2(value)
+private fun f2[B](value) = value
+f1(Item(27)).missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.156: 	f1(Item(27)).missing
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Item' does not contain member 'missing'
+//│ ║  l.156: 	f1(Item(27)).missing
+//│ ╙──       	   ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// An annotated interface still restricts a value passing through unused binders.
+:e
+class Item(val value: Int) with
+  val extra = 1
+class Base
+private fun f1[A](value: Base): Base = f2(value)
+private fun f2[B](value: Base): Base = value
+f1(Item(28)).extra
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.172: 	f1(Item(28)).extra
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.170: 	private fun f1[A](value: Base): Base = f2(value)
+//│ ╙──       	                                ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Imported generic definitions carry the metadata their exporting unit recorded.
+import "../../mlscript-compile/GenericLibrary.mls"
+
+:expect [29, 30]
+class First(val first: Int)
+class Second(val second: Int)
+private fun pass[P](x) = x
+[pass(GenericLibrary.identity(First(29))).first,
+ pass(GenericLibrary.inferred(Second(30))).second]
+//│ = [29, 30]
+
+// A legacy exporter's generic class records its definition metadata too.
+// (Reading a legacy field has no resolved target regardless of generic scopes.)
+import "../../mlscript-compile/Stack.mls"
+
+:expect [true, true]
+class Item(val value: Int)
+private fun pass[P](x) = x
+[Stack.isEmpty(pass(Stack.Nil)), pass(Stack.Cons(Item(31), Stack.Nil)) is Stack.Cons]
+//│ = [true, true]

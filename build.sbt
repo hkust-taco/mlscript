@@ -22,6 +22,17 @@ ThisBuild / scalacOptions ++= Seq(
   else                "-Wconf:any:warning",
 )
 
+// CI runners have few physical cores. Compile tests have a wall-clock time limit
+// (see TimeOutTests), which measures contention as much as compilation time when
+// other test tasks run at the same time: the dependencies of `hkmc2AllTests/test`
+// are unordered relative to each other, so sbt would run the JS tests, the
+// subproject runners, and the JVM suites together. Run one test task at a time
+// on CI; ScalaTest still runs the tests of a `ParallelTestExecution` suite in parallel.
+Global / concurrentRestrictions ++= {
+  if (insideCI.value) Seq(Tags.limit(Tags.Test, 1))
+  else Nil
+}
+
 // ThisBuild / wartremoverWarnings ++= Warts.unsafe
 
 lazy val root = project.in(file("."))

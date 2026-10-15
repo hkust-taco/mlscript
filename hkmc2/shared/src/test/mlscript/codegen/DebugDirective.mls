@@ -8,8 +8,8 @@ fun do_not_debug_me(x) = x
 //│ Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
 //│ Elab term Ident(x)
 //│ | Elab subterm Ident(x)
-//│ | ~> Ref(x)
-//│ ~> Ref(x)
+//│ | ~> x⁰
+//│ ~> x⁰
 
 
 // Named flags can be explicitly disabled, and StdIO is the default destination.
@@ -27,7 +27,7 @@ fun file_debug_config(x) = x
 // A top-level directive persists into the following block.
 #dbg(elaboration: true, showUids: false)
 //│ Elab block List(App(Directive(Ident(dbg),Tup(List())),Tup(List(InfixApp(Ident(elaboration),Keywrd(keyword ':'),[...] LocalScope(block:6)
-//│ ~> Blk(List(SetConfig(...)),Lit(UnitLit(false)))
+//│ ~> { #config(...); }
 
 fun persistently_debugged(x) = x
 //│ Elab block List(TermDef(Fun,App(Ident(persistently_debugged),Tup(List(Ident(x)))),Some(Ident(x)))) LocalScope(block:7)
@@ -35,8 +35,8 @@ fun persistently_debugged(x) = x
 //│ | Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
 //│ | Elab term Ident(x)
 //│ | | Elab subterm Ident(x)
-//│ | | ~> Ref(x)
-//│ | ~> Ref(x)
-//│ ~> Blk(List(TermDefinition(Fun,member:persistently_debugged,term:persistently_debugged,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(),None)),Lit(UnitLit(false)))
+//│ | | ~> x¹
+//│ | ~> x¹
+//│ ~> { fun member:persistently_debugged(x¹) = x¹; }
 
 #dbg(elaboration: false)

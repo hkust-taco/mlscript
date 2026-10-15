@@ -10,20 +10,22 @@ type TypMod = Int
 module TypMod with
   val whoami = "module"
 
-:fixme
+:e
 fun TrmMod = 42
 module TrmMod with
   val whoami = "module"
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'TrmMod'
+//│ ╔══[COMPILATION ERROR] A module companion must be a function with a parameter list
 //│ ║  l.14: 	fun TrmMod = 42
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── with module of the same name
+//│ ╟── Arbitrary values cannot be overloaded with module 'TrmMod'
 //│ ║  l.15: 	module TrmMod with
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.16: 	  val whoami = "module"
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 
+:e
 fun f: ClsMod = 42
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'ClsMod'
 
 :rt
 f
@@ -74,9 +76,10 @@ f
 :e
 fun f: TrmMod = 42
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
-//│ ║  l.75: 	fun f: TrmMod = 42
+//│ ║  l.77: 	fun f: TrmMod = 42
 //│ ║        	       ^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'module TrmMod'
 
 :sjs
 fun f = TrmMod
@@ -99,13 +102,13 @@ fun assertModule(module m: ClsMod): module ClsMod = m
 assertModule(ClsMod).whoami
 //│ = "module"
 
+:breakme
 assertModule(TypMod).whoami
 //│ = "module"
 
-:fixme
 :noInline
 print(assertModule(TrmMod).whoami)
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
+//│ > undefined
 
 // TODO: handle
 print(assertModule(TrmMod).whoami)
@@ -138,10 +141,10 @@ module Foo
 :e
 fun f(x: Foo): Foo = x
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.139: 	fun f(x: Foo): Foo = x
+//│ ║  l.142: 	fun f(x: Foo): Foo = x
 //│ ╙──       	         ^^^
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.139: 	fun f(x: Foo): Foo = x
+//│ ║  l.142: 	fun f(x: Foo): Foo = x
 //│ ╙──       	               ^^^
 
 fun f(x: Foo[Int]): Foo[Int] = x
@@ -151,10 +154,10 @@ fun f(module x: Foo): module Foo = x
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.152: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.155: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.152: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.155: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 
 

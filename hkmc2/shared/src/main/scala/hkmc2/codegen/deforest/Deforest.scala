@@ -15,7 +15,8 @@ sealed abstract class FinalDest
 case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
 case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
 
-class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val cfg: Config):
+class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Config, Elaborator.Ctx)
+  extends FlowAnalysisSolverResult:
   given preAnalyzer: FlowPreAnalyzer = constraintSolver.preAnalyzer
   given fState: FlowAnalysis.State = constraintSolver.fState
   given eState: Elaborator.State = constraintSolver.eState
@@ -43,11 +44,19 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
   
   val finalCtorDests = LinkedHashMap.empty[CtorDtorId, FinalDest]
   val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
-  val fusingCtorInfo = MutMap.empty[CtorDtorId, ConcreteProducer]
-  val fusingDtorInfo = MutMap.empty[CtorDtorId, ConcreteConsumer]
-  
+  val fusingCtorInfo = MutMap.empty[CtorDtorId, Ctor]
+  val fusingDtorInfo = MutMap.empty[CtorDtorId, ConcreteCtorConsumer]
+
+  def hasWorkToDo: Bool = finalCtorDests.nonEmpty || finalDtorSrcs.nonEmpty
+
+  def polyInstIds: Iterator[InstantiationId] = finalCtorDests.iterator.flatMap:
+    case (ctor, FinalDestSel(dtors, _)) =>
+      (dtors + ctor).toList.sortBy(_.exprId.uid).map(_.instId)
+    case (ctor, FinalDestMatch(dtor, _)) =>
+      ctor.instId :: dtor.instId :: Nil
+
   locally {
-    def mergeDests(dests: Set[ConcreteConsumer | MarkerConsStrat]): Opt[FinalDest] =
+    def mergeDests(dests: Set[ConcreteCtorConsumer | MarkerConsStrat]): Opt[FinalDest] =
       def selsSelectingTheSameSymbol(sels: Set[FieldSel]) =
         sels.map(s => s.field).size == 1
       if dests.exists(_.isInstanceOf[MarkerConsStrat]) then
@@ -78,20 +87,20 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
 
     val prodRoots =
       for
-        (ctor, dests) <- constraintSolver.ctorDests
-        if mergeDests(dests).isEmpty
+        ctor <- constraintSolver.ctorsWithDests
+        if mergeDests(ctor.dests.toSet).isEmpty
       yield ctor
     val consRoots =
       for
-        (dtor, srcs) <- constraintSolver.dtorSrcs
-        if srcs.contains(UnknownProd)
+        dtor <- constraintSolver.consumersWithSrcs
+        if dtor.srcs.contains(UnknownProd)
       yield dtor
 
-    val result = FlowWebComputation[ConcreteProducer, ConcreteConsumer](
-      p => constraintSolver.ctorDests(p).collect:
-        case c: ConcreteConsumer => c,
-      c => constraintSolver.dtorSrcs(c).collect:
-        case p: ConcreteProducer => p,
+    val result = FlowWebComputation[Ctor, ConcreteCtorConsumer](
+      p => p.dests.collect:
+        case c: ConcreteCtorConsumer => c,
+      c => c.srcs.collect:
+        case p: Ctor => p,
       prodRoots,
       consRoots,
     )
@@ -99,18 +108,18 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using val
     val toRemoveDtor = result.markedConsumers
 
     for
-      (ctor, dests) <- constraintSolver.ctorDests
+      ctor <- constraintSolver.ctorsWithDests
       if !toRemoveCtor(ctor)
     do
-      finalCtorDests(ctor.concreteId) = mergeDests(dests).get
+      finalCtorDests(ctor.concreteId) = mergeDests(ctor.dests.toSet).get
       fusingCtorInfo(ctor.concreteId) = ctor
     for
-      (dtor, srcs) <- constraintSolver.dtorSrcs
+      dtor <- constraintSolver.consumersWithSrcs
       if !toRemoveDtor(dtor)
     do
       finalDtorSrcs(dtor.concreteId) =
-        // srcs are always ConcreteProducers after constraint solving
-        srcs.map(_.asInstanceOf[ConcreteProducer].concreteId)
+        // srcs are always Ctors after constraint solving
+        dtor.srcs.iterator.map(_.asInstanceOf[Ctor].concreteId).toSet
       fusingDtorInfo(dtor.concreteId) = dtor
   }
 
@@ -128,10 +137,11 @@ end DeforestFusionSolver
 
 
 object Deforest:
-  def apply(p: Program)(using
+  def apply(p: Program, additionalTopLevelSymbols: Set[LocalVarSymbol])(using
     cfg: Config,
     tl: TL,
     raise: Raise,
+    eCtx: Elaborator.Ctx,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
   ): Program =
@@ -144,8 +154,8 @@ object Deforest:
       accumulatorTracking = dCfg.effectiveTrackAccumulator,
     )
     val solver = new DeforestFusionSolver(flowAnalysisRes)
-    if solver.finalCtorDests.isEmpty && solver.finalDtorSrcs.isEmpty then p
+    if !solver.hasWorkToDo then p
     else
-      val rewrite = new DeforestRewriter(solver)
+      val rewrite = new DeforestRewriter(solver, additionalTopLevelSymbols)
       rewrite()
 

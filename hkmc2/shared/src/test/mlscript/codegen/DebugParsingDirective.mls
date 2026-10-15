@@ -3,55 +3,55 @@
 
 #dbg('parsing)
 //│ ┊#┊dbg┊(⟨┊'parsing┊⟩)┊
-//│ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:419]
-//│ │ ? blockOfImpl		inspects ┊#┊dbg┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:333]
-//│ │ ! blockOfImpl		consumes ┊#┊    [at syntax/Parser.scala:360]
-//│ │ @ parseRule(39,'#' directive keyword ::= Expr('#' directive body ::= End()),allowNewlines = true)    [at syntax/Parser.scala:373]
-//│ │ │ @ simpleExpr(39)    [at syntax/Parser.scala:422]
-//│ │ │ │ ! simpleExprImpl		consumes ┊dbg┊    [at syntax/Parser.scala:650]
-//│ │ │ │ @ exprCont(39,`Ident(dbg)`,true)    [at syntax/Parser.scala:665]
-//│ │ │ │ │ ? exprContImpl		inspects ┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:879]
-//│ │ │ │ │ @ exprJux(39,`Ident(dbg)`,false)    [at syntax/Parser.scala:1151]
-//│ │ │ │ │ │ ? exprJuxImpl		inspects ┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:1158]
+//│ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:455]
+//│ │ ? blockOfImpl		inspects ┊#┊dbg┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:340]
+//│ │ ! blockOfImpl		consumes ┊#┊    [at syntax/Parser.scala:367]
+//│ │ @ parseRule(39,'#' directive keyword ::= Expr('#' directive body ::= End()),allowNewlines = true)    [at syntax/Parser.scala:380]
+//│ │ │ @ simpleExpr(39)    [at syntax/Parser.scala:429]
+//│ │ │ │ ! simpleExprImpl		consumes ┊dbg┊    [at syntax/Parser.scala:657]
+//│ │ │ │ @ exprCont(39,`Ident(dbg)`,true)    [at syntax/Parser.scala:672]
+//│ │ │ │ │ ? exprContImpl		inspects ┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:931]
+//│ │ │ │ │ @ exprJux(39,`Ident(dbg)`,false)    [at syntax/Parser.scala:1203]
+//│ │ │ │ │ │ ? exprJuxImpl		inspects ┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:1210]
 //│ │ │ │ │ │ stops at BRACKETS(Round,List((IDENT('parsing,false),Loc(5,13,DebugParsingDirective.mls:+4))))
 //│ │ │ │ │ = Ident(dbg)
 //│ │ │ │ = Ident(dbg)
 //│ │ │ = Ident(dbg)
-//│ │ │ @ parseRule(39,'#' directive body ::= End(),allowNewlines = true)    [at syntax/Parser.scala:424]
+//│ │ │ @ parseRule(39,'#' directive body ::= End(),allowNewlines = true)    [at syntax/Parser.scala:431]
 //│ │ │ = Some(())
 //│ │ = Some(Directive(Ident(dbg),Tup(List())))
-//│ │ @ exprCont(1,`Directive(Ident(dbg),Tup(List()))`,true)    [at syntax/Parser.scala:374]
-//│ │ │ ? exprContImpl		inspects ┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:879]
-//│ │ │ ! exprContImpl		consumes ┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:1083]
-//│ │ │ > @ concludeWith(())    [at syntax/Parser.scala:1084]
-//│ │ │ > │ @ blockOf(start of expression,allowNewlines = false)    [at syntax/Parser.scala:303]
-//│ │ │ > │ │ ? blockOfImpl		inspects ┊'parsing┊    [at syntax/Parser.scala:333]
-//│ │ │ > │ │ @ simpleExpr(1)    [at syntax/Parser.scala:422]
-//│ │ │ > │ │ │ ! simpleExprImpl		consumes ┊'parsing┊    [at syntax/Parser.scala:650]
-//│ │ │ > │ │ │ @ exprCont(1,`Ident('parsing)`,false)    [at syntax/Parser.scala:665]
-//│ │ │ > │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:879]
-//│ │ │ > │ │ │ │ @ exprJux(1,`Ident('parsing)`,false)    [at syntax/Parser.scala:1151]
-//│ │ │ > │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1158]
+//│ │ @ exprCont(1,`Directive(Ident(dbg),Tup(List()))`,true)    [at syntax/Parser.scala:381]
+//│ │ │ ? exprContImpl		inspects ┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:931]
+//│ │ │ ! exprContImpl		consumes ┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:1133]
+//│ │ │ > @ concludeWith(())    [at syntax/Parser.scala:1134]
+//│ │ │ > │ @ blockOf(start of expression,allowNewlines = false)    [at syntax/Parser.scala:310]
+//│ │ │ > │ │ ? blockOfImpl		inspects ┊'parsing┊    [at syntax/Parser.scala:340]
+//│ │ │ > │ │ @ simpleExpr(1)    [at syntax/Parser.scala:429]
+//│ │ │ > │ │ │ ! simpleExprImpl		consumes ┊'parsing┊    [at syntax/Parser.scala:657]
+//│ │ │ > │ │ │ @ exprCont(1,`Ident('parsing)`,false)    [at syntax/Parser.scala:672]
+//│ │ │ > │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:931]
+//│ │ │ > │ │ │ │ @ exprJux(1,`Ident('parsing)`,false)    [at syntax/Parser.scala:1203]
+//│ │ │ > │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1210]
 //│ │ │ > │ │ │ │ │ stops at the end of input
 //│ │ │ > │ │ │ │ = Ident('parsing)
 //│ │ │ > │ │ │ = Ident('parsing)
 //│ │ │ > │ │ = Ident('parsing)
-//│ │ │ > │ │ @ parseRule(1,expression ::= End(),allowNewlines = false)    [at syntax/Parser.scala:424]
+//│ │ │ > │ │ @ parseRule(1,expression ::= End(),allowNewlines = false)    [at syntax/Parser.scala:431]
 //│ │ │ > │ │ = Some(())
-//│ │ │ > │ │ ? blockOfImpl		inspects ┊┊    [at syntax/Parser.scala:406]
+//│ │ │ > │ │ ? blockOfImpl		inspects ┊┊    [at syntax/Parser.scala:413]
 //│ │ │ > │ = List(Ident('parsing))
-//│ │ │ > │ ? concludeWithImpl		inspects ┊┊    [at syntax/Parser.scala:267]
+//│ │ │ > │ ? concludeWithImpl		inspects ┊┊    [at syntax/Parser.scala:274]
 //│ │ │ > │ Concluded with List(Ident('parsing))
 //│ │ │ > = List(Ident('parsing))
-//│ │ │ @ exprCont(1,`App(Directive(Ident(dbg),Tup(List())),Tup(List(Ident('parsing))))`,true)    [at syntax/Parser.scala:1086]
-//│ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:879]
-//│ │ │ │ @ exprJux(1,`App(Directive(Ident(dbg),Tup(List())),Tup(List(Ident('parsing))))`,false)    [at syntax/Parser.scala:1151]
-//│ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1158]
+//│ │ │ @ exprCont(1,`App(Directive(Ident(dbg),Tup(List())),Tup(List(Ident('parsing))))`,true)    [at syntax/Parser.scala:1136]
+//│ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:931]
+//│ │ │ │ @ exprJux(1,`App(Directive(Ident(dbg),Tup(List())),Tup(List(Ident('parsing))))`,false)    [at syntax/Parser.scala:1203]
+//│ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1210]
 //│ │ │ │ │ stops at the end of input
 //│ │ │ │ = App(Directive(Ident(dbg),Tup(List())),Tup(List(Ident('parsing))))
 //│ │ │ = App(Directive(Ident(dbg),Tup(List())),Tup(List(Ident('parsing))))
 //│ │ = App(Directive(Ident(dbg),Tup(List())),Tup(List(Ident('parsing))))
 //│ = List(App(Directive(Ident(dbg),Tup(List())),Tup(List(Ident('parsing)))))
-//│ ? parseAll		inspects ┊┊    [at syntax/Parser.scala:254]
+//│ ? parseAll		inspects ┊┊    [at syntax/Parser.scala:261]
 
 #dbg(parsing: false)
