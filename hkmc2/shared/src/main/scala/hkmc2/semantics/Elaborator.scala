@@ -445,12 +445,12 @@ object Elaborator:
 
     abstract class Elem:
       def nme: Str
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term
       def symbol: Opt[Symbol]
       def isImport: Bool
     final case class RefElem(sym: RefSymbol) extends Elem:
       val nme = sym.nme
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
         if config.language.useNewResolution then
@@ -460,35 +460,41 @@ object Elaborator:
           case sym: InnerSymbol =>
             Term.SelfRef(sym)(id)
           case sym: MemberSymbol =>
-            Term.MemberRef(sym)(id, FlowSymbol.memSym(sym))
+            // A reference can invoke a by-name definition, instantiating its
+            // binders at this site (see NewResolver.instantiateByName).
+            val ref = Term.MemberRef(sym)(id, FlowSymbol.memSym(sym))
+            rctx.recordLexicalBinders(ref, ctx.typeBinders)
+            ref
         else
           sym.ref(id)
       def symbol = S(sym)
       def isImport: Bool = false
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[MemberSymbol], isImport: Bool) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         // * Same remark as in RefElem#ref
         val prefix = base.ref(Ident(base.nme))
         val name = new Ident(nme).withLocOf(id)
         if config.language.useNewResolution then
           val res = new Term.NewSel(prefix, name, N)(FlowSymbol.synthSel(nme)).withLocOf(id)
+          rctx.recordLexicalBinders(res, ctx.typeBinders)
           summon[NewResolver].newSel(res)
           res
         else
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
     final case class WildcardElem(nme: Str, sources: Ls[OpenSource]) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         // Each ref is fresh. Locate its outer capture at the opening site too;
         // a chained wildcard reference may already have attached this location.
         val prefixes = sources.map(source => source.elem.ref(source.id).withoutLoc.withLocOf(source.id))
         val res = new Term.UnresolvedRef(prefixes, id)(FlowSymbol.synthSel(nme)).withLocOf(id)
+        rctx.recordLexicalBinders(res, ctx.typeBinders)
         summon[NewResolver].unresolvedRef(res)
         res
       def symbol: Opt[Symbol] = N
       def isImport: Bool = true
     final case class CaptElem(base: Elem, thru: DefinitionSymbol[?]) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, NewResolverState): Term =
+      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         Term.Capture(base.ref(id), thru)
       def symbol = base.symbol
       def isImport: Bool = false
@@ -620,7 +626,7 @@ object Elaborator:
     case Private(sym: BlockMemberSymbol, modulePath: Str)
   
   class State:
-    lazy val newResolverState: NewResolverState = new NewResolverState(this)
+    val newResolverState: NewResolverState = new NewResolverState(this)
     val suid = new Uid.Symbol.State
     given State = this
     private var _compilationUnit: Opt[CompilationUnit] = N
@@ -758,7 +764,7 @@ extends Importer:
   import tl.*
   given TraceLogger = tl
   private given NewResolver = this
-  private given NewResolverState = state.newResolverState.withReporter(raise)
+  private given ResolutionContext = state.newResolverState.context.withReporter(raise)
   
   val newResolution: Bool = config.language.useNewResolution
   
@@ -899,7 +905,7 @@ extends Importer:
     app(
       Term.Sel(handlerSymbol.ref(callSiteId), mtdTree)(
         S(state.nonLocalRet), FlowSymbol.sel(callSiteId.name), N, S(summon)),
-      Term.Tup(argTerms.map(term => PlainFld(term)))(argTree),
+      withTypeBinders(Term.Tup(argTerms.map(term => PlainFld(term)))(argTree)),
     )(Tree.DummyApp, N, rs)
   
   private def mkNonLocalContinueInvocation(
@@ -1117,7 +1123,7 @@ extends Importer:
       val op = term(ident, Trm)
       val split = term(lhs, Trm).reference: lhs =>
         val mk2 = (rhs: Term) =>
-          val args = Term.Tup(PlainFld(lhs()) :: PlainFld(rhs) :: Nil)(DummyTup)
+          val args = withTypeBinders(Term.Tup(PlainFld(lhs()) :: PlainFld(rhs) :: Nil)(DummyTup))
           app(op, args)(Tree.DummyApp, N, FlowSymbol("‹operator-split›"))
         termSplit(rhss, mk2 andThen mk)
       (ctx, split)
@@ -1227,10 +1233,52 @@ extends Importer:
         Param.simple(sym)
       .toList
     if params.isEmpty then st
-    else Term.Lam(PlainParamList(params)(N), st)
+    else withTypeBinders(Term.Lam(PlainParamList(params)(N), st))
   
-  private def app(lt: Term, rt: Term)(tree: Tree.App, typ: Opt[typing.Type], resSym: FlowSymbol): Term =
-    val res = new Term.App(lt, rt)(tree, typ, resSym)
+  /** Record the explicit type binders in scope where `term` is written, for
+    * new resolution's binder-support analysis (see NewResolver.shapeSupport).
+    * Every lambda, tuple, record, application, construction, type application,
+    * pattern target, and async expression is recorded where it is created, before
+    * any listener can build its shape: `app` and `mkNew` install resolution
+    * listeners immediately, and a tuple is observed as soon as the application
+    * consuming it is. References and selections, which can invoke a by-name
+    * definition at their site, are recorded too.
+    * Legacy-resolution units record these too, since new-resolution consumers
+    * can import their syntax.
+    */
+  private def withTypeBinders(term: Term)(using Ctx): term.type =
+    rctx.recordLexicalBinders(term, ctx.typeBinders)
+    term
+  
+  /** Record the type binders and resolution scopes enclosing a class-like
+    * definition before elaborating its members, for new resolution (see
+    * NewResolver.lexicalBinders and NewResolver.splitReceiverPath). Named type
+    * definitions, anonymous refinements, and effect handler classes all have
+    * members whose shapes resolution can observe. Legacy-resolution units
+    * record these too, since new-resolution consumers can import them.
+    */
+  private def recordDefinitionScope(symbol: AnyDefinitionSymbol)(using Ctx): Unit =
+    rctx.state.lexicalTypeBinders(symbol) = ctx.typeBinders
+    rctx.state.lexicalBoundaries(symbol) = ctx.resolutionBoundaries
+  
+  /** A record field is a term definition (see RcdField.apply) written where its
+    * record is. A structural projection of the field can instantiate a by-name
+    * member there (see NewResolverState.siteBinders).
+    */
+  private def recordFieldScope(field: RcdField)(using Ctx): RcdField =
+    rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
+    field
+  
+  /** An async expression wraps the values of `target` in a promise, whose payload
+    * reads the binders in scope where the expression is written (see
+    * NewResolver.resultType).
+    */
+  private def annotated(annotation: Annot, target: Term)(using Ctx): Term.Annotated = annotation match
+    case _: Annot.Async => withTypeBinders(new Term.Annotated(annotation, target))
+    case _ => Term.Annotated(annotation, target)
+  
+  private def app(lt: Term, rt: Term)(tree: Tree.App, typ: Opt[typing.Type], resSym: FlowSymbol)(using Ctx): Term =
+    val res = withTypeBinders(new Term.App(lt, rt)(tree, typ, resSym))
     if newResolution then listenTerm(lt)(shape => appShape(shape, rt, res))
     res
   
@@ -1274,14 +1322,17 @@ extends Importer:
     def error = Term.Error().withLocOf(tree)
     
     def mkNew(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])(typ: Opt[typing.Type]): Term.New =
-      val res = new Term.New(cls, args, rft)(FlowSymbol.neww(), typ).withLocOf(tree)
+      val res = withTypeBinders(new Term.New(cls, args, rft)(FlowSymbol.neww(), typ).withLocOf(tree))
       rft.foreach: (symbol, body) =>
         // An anonymous refinement is a concrete subclass too. Publish its declaration
         // so override lookup, super references and implementation checks use the same graph.
         // The written class and arguments occur outside the anonymous class's scope.
         // Its synthetic extends clause crosses that boundary just like a named class.
+        // Being written in that outer scope, it records the outer type binders,
+        // which `resolveNew` consults when instantiating the parent class.
         def captured(term: Term): Term = if newResolution then Term.Capture(term, symbol) else term
-        val parent = new Term.New(captured(cls), args.map(captured), N)(FlowSymbol.neww(), typ).withLocOf(tree)
+        val parent = withTypeBinders(
+          new Term.New(captured(cls), args.map(captured), N)(FlowSymbol.neww(), typ).withLocOf(tree))
         if newResolution then resolveNew(parent)
         val definition = ClassDef.Plain(ctx.getOuter, syntax.Cls, symbol,
           BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N)(tree.toLoc)
@@ -1293,8 +1344,8 @@ extends Importer:
     def elaborateProjection(prefix: Term, cls: Term, name: Ident): Term =
       // The qualifier denotes a class even when its source is a stored constructor.
       // Resolve that interpretation on the qualifier itself, as for explicit `.class`.
-      val qualifier = new Term.NewSel(cls, new Ident("class").withLocOf(cls), N)(FlowSymbol.sel("class")).withLocOf(cls)
-      val res = new Term.NewSel(prefix, name, S(qualifier))(FlowSymbol.selProj(name.name)).withLocOf(tree)
+      val qualifier = withTypeBinders(new Term.NewSel(cls, new Ident("class").withLocOf(cls), N)(FlowSymbol.sel("class")).withLocOf(cls))
+      val res = withTypeBinders(new Term.NewSel(prefix, name, S(qualifier))(FlowSymbol.selProj(name.name)).withLocOf(tree))
       newSel(res)
       interpretRef(res, interp)
 
@@ -1327,7 +1378,7 @@ extends Importer:
         val loc = tree.toLoc.getOrElse(???)
         Term.Lit(StrLit(loc.origin.fileName.toString))
       else if newResolution then
-        val res = new Term.NewSel(preTrm, tree.name, N)(FlowSymbol.sel(tree.name.name)).withLocOf(tree)
+        val res = withTypeBinders(new Term.NewSel(preTrm, tree.name, N)(FlowSymbol.sel(tree.name.name)).withLocOf(tree))
         newSel(res)
         interpretRef(res, interp)
       else
@@ -1393,6 +1444,7 @@ extends Importer:
       log(s"Processing `handle` statement $id (${sym}) ${ctx.outer}")
       
       val derivedClsSym = ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident(s"Handler$$${id.name}$$"))
+      recordDefinitionScope(derivedClsSym)
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil), N,
@@ -1454,13 +1506,13 @@ extends Importer:
       val baseInterp = interp match
         case Trm | Receiver | Specialization => Specialization
         case _ => interp
-      val result = Term.TyApp(subterm(lhs, baseInterp), targs.map {
+      val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map {
         case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
         case Modified(kw @ Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe))).mkLocWith(kw)
         case Tup(Modified(in @ Keywrd(Keyword.`in`), arg1) :: Modified(out @ Keywrd(Keyword.`out`), arg2) :: Nil) =>
           Term.WildcardTy(S(subterm(arg1, Tpe)), S(subterm(arg2, Tpe))).mkLocWith(in, out)
         case arg => subterm(arg, Tpe)
-      })(N).withLocOf(tree)
+      })(N).withLocOf(tree))
       // A term specialization must validate its arguments even when unused.
       // Type and constructor interpretations have their own argument checks.
       if newResolution && interp == Trm then listenTerm(result)(_ => ())
@@ -1507,7 +1559,7 @@ extends Importer:
       case Tup(_) =>
         ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
           val (syms, nestCtx) = funParams(lhs)
-          Term.Lam(syms, term(rhs, Trm)(using nestCtx))
+          withTypeBinders(Term.Lam(syms, term(rhs, Trm)(using nestCtx)))
       case TyTup(tys) =>
         val constraints = tys.flatMap(maybeConstraint)
         val body = term(rhs, interp)
@@ -1522,8 +1574,8 @@ extends Importer:
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       block(Block(tree :: Nil), hasResult = false, resultInterp = interp)._1
     case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>
-      app(State.builtinOpsMap("!").ref(new Ident("not").withLocOf(kw)), Term.Tup(
-        PlainFld(subterm(rhs)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
+      app(State.builtinOpsMap("!").ref(new Ident("not").withLocOf(kw)), withTypeBinders(Term.Tup(
+        PlainFld(subterm(rhs)) :: Nil)(DummyTup)))(DummyApp, N, FlowSymbol("not-app"))
     case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
       ifLike(Keyword.`if`, IfLikeForm.ReturningIf, shorthandSplit(tree), tree.toLoc)
     case InfixApp(Sel(pre, idn: Ident), Keywrd(Keyword.`#`), idp: Ident) =>
@@ -1615,7 +1667,7 @@ extends Importer:
       val lt = subterm(lhs)
       val ot = subterm(op)
       val rts = rhss.map(r => PlainFld(subterm(r)))
-      app(ot, Term.Tup(PlainFld(lt) :: rts)(DummyTup))(
+      app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
         DummyApp, N, sym)
     case SynthSel(pre, nme) =>
       val preTrm = subterm(pre)
@@ -1655,7 +1707,9 @@ extends Importer:
     case sel @ Sel(id @ Ident("super"), nme) =>
       (ctx.getOuter, ctx.getReceiver) match
         case (S(owner: (ClassSymbol | ModuleOrObjectSymbol)), S(receiver)) =>
-          val res = new Term.Super(receiver.ref(id), owner, nme)(FlowSymbol.sel(nme.name)).withLocOf(sel)
+          // Like other written selections, a by-name member selected through
+          // `super` is instantiated at this site, within its type binders.
+          val res = withTypeBinders(new Term.Super(receiver.ref(id), owner, nme)(FlowSymbol.sel(nme.name)).withLocOf(sel))
           resolveSuper(res)
           interpretRef(res, interp)
         case _ =>
@@ -1688,20 +1742,20 @@ extends Importer:
           Param.simple(args)
       )(N)
       val rs = FlowSymbol.app()
-      Term.Lam(ps,
+      withTypeBinders(Term.Lam(ps,
         app(
           if newResolution then elaborateProjection(self.ref(), c, nme)
           else Term.SelProj(self.ref(), c, nme)(f, FlowSymbol.selProj(nme.name), N, S(summon)),
           args.ref())(
           App(nme, Tup(Nil)) // FIXME
           , N, rs)
-      )
+      ))
     case tree @ Tup(TermDef(Ins, f, N) :: fs) =>
-      Term.CtxTup((f :: fs).map(fld(_, interp.elements)))(tree)
+      withTypeBinders(Term.CtxTup((f :: fs).map(fld(_, interp.elements)))(tree))
     case Modified(kw @ Keywrd(Keyword.`mut`), tree @ Tup(fields)) =>
-      Term.Mut(Term.Tup(fields.map(fld(_, interp.elements)))(tree)).mkLocWith(kw)
+      Term.Mut(withTypeBinders(new Term.Tup(fields.map(fld(_, interp.elements)))(tree))).mkLocWith(kw)
     case tree @ Tup(fields) =>
-      Term.Tup(fields.map(fld(_, interp.elements)))(tree)
+      withTypeBinders(Term.Tup(fields.map(fld(_, interp.elements)))(tree))
       
     case DynamicNew(Apps(c, args)) =>
       val (mut, c2) = c match
@@ -1715,6 +1769,7 @@ extends Importer:
     case ProperNew(body, rfto) => // TODO handle Under
       lazy val bodo = rfto.map: rft =>
         val clsSym = new ClassSymbol(DummyTypeDef(syntax.Cls), Ident("$anon"))
+        recordDefinitionScope(clsSym)
         ctx.nestInner(clsSym).givenIn:
           clsSym ->
             // TODO integrate context inherited from cls
@@ -1760,7 +1815,7 @@ extends Importer:
       val scrut = VarSymbol(Ident("caseScrut"), erasedType = N)
       val body = caseSplit(scrut, tree)
       val params = Param.simple(scrut) :: Nil
-      Term.Lam(PlainParamList(params)(N), body).mkLocWith(kw)
+      withTypeBinders(Term.Lam(PlainParamList(params)(N), body)).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
@@ -1787,7 +1842,7 @@ extends Importer:
     case PrefixApp(kw @ Keywrd(Keyword.`yield` | Keyword.`yield*`), body) =>
       if ctx.inGenerator then
         val synthIdent = new Tree.Ident(kw.kw.name).withLocOf(kw)
-        app(ident(synthIdent, Trm).get, Term.Tup(PlainFld(subterm(body)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("yield"))
+        app(ident(synthIdent, Trm).get, withTypeBinders(Term.Tup(PlainFld(subterm(body)) :: Nil)(DummyTup)))(DummyApp, N, FlowSymbol("yield"))
       else
         raise:
           ErrorReport(msg"Yield expressions are not allowed in this context." -> tree.toLoc :: Nil)
@@ -1835,11 +1890,11 @@ extends Importer:
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
       blockOrRcd(body, hasResult = true, resultInterp = interp) match
       case (Blk(Nil, Term.UnitVal()), ctx) =>
-        Rcd(mut = true, Nil).withLocOf(body)
+        withTypeBinders(Rcd(mut = true, Nil)).withLocOf(body)
       case (blk: Blk, ctx) =>
         raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
         blk
-      case (rcd: Rcd, ctx) => rcd.copy(mut = true).withLocOf(rcd)
+      case (rcd: Rcd, ctx) => withTypeBinders(rcd.copy(mut = true)).withLocOf(rcd)
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
@@ -1857,13 +1912,13 @@ extends Importer:
           val res = go(acc, lhs :: Nil)
           val sym = FlowSymbol.app()
           val fl = Fld(FldFlags.empty, res, N)
-          val ap_ = app(subterm(f), Term.Tup(
-            fl :: args.map(fld(_, Trm)))(tup))(ap, N, sym)
+          val ap_ = app(subterm(f), withTypeBinders(Term.Tup(
+            fl :: args.map(fld(_, Trm)))(tup)))(ap, N, sym)
           go(ap_, trees)
         case (ap @ App(f, tup @ Tup(args))) :: trees =>
           val sym = FlowSymbol.app()
           go(app(subterm(f),
-              Term.Tup(Fld(FldFlags.empty, acc, N) :: args.map(fld(_, Trm)))(tup)
+              withTypeBinders(Term.Tup(Fld(FldFlags.empty, acc, N) :: args.map(fld(_, Trm)))(tup))
             )(ap, N, sym), trees)
         case Block(sts) :: trees =>
           go(acc, sts ::: trees)
@@ -1900,7 +1955,7 @@ extends Importer:
         sym.ref()
     case Annotated(lhs, rhs) =>
       annot(lhs).fold(subterm(rhs, interp))(ann =>
-        Term.Annotated(ann, subterm(rhs, interp)))
+        annotated(ann, subterm(rhs, interp)))
     case Keywrd(kw) =>
       raise(ErrorReport(msg"Unexpected keyword '${kw.name}' in this position." -> tree.toLoc :: Nil))
       error
@@ -2176,27 +2231,27 @@ extends Importer:
           case id: Ident if fieldInterpretation == Tpe =>
             // Record type fields declare interfaces, not local value bindings.
             // Keep their types directly so lookup never follows initializer flow.
-            RcdField.signature(Term.Lit(StrLit(id.name)).withLocOf(id), rhs_t) :: acc
+            recordFieldScope(RcdField.signature(Term.Lit(StrLit(id.name)).withLocOf(id), rhs_t)) :: acc
           case id: Ident =>
             val sym = new VarSymbol(id, erasedType = N)
             newCtx += id.name -> sym
-            RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), sym.ref(id))
+            recordFieldScope(RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), sym.ref(id)))
               :: defineVar(sym, rhs_t)(Loc(rlhs, rhs))
               :: LetDecl(sym, annotations)(id.toLoc)
               :: acc
           case lit: Literal =>
             reportUnusedAnnotations
             val field = Term.Lit(lit).withLocOf(lit)
-            (if fieldInterpretation == Tpe
+            recordFieldScope(if fieldInterpretation == Tpe
               then RcdField.signature(field, rhs_t)
               else RcdField(field, rhs_t)
             ) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
-            RcdField(term(inner, Trm), rhs_t) :: acc
+            recordFieldScope(RcdField(term(inner, Trm), rhs_t)) :: acc
           case _ =>
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
-            RcdField(Term.Error().withLocOf(rlhs), rhs_t) :: acc
+            recordFieldScope(RcdField(Term.Error().withLocOf(rlhs), rhs_t)) :: acc
         newCtx.givenIn:
           go(sts, Nil, newAcc)(N)
       case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts
@@ -2273,6 +2328,8 @@ extends Importer:
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             
             val tsym = TermSymbol(k, owner, id) // TODO?
+            // Recorded before the definition's own type parameters enter scope.
+            rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
             
             val tdf = ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn: newCtx ?=>
               
@@ -2376,8 +2433,7 @@ extends Importer:
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
         
         val outerCtx = ctx
-        rstate.lexicalTypeBinders(td.symbol) = ctx.typeBinders
-        rstate.lexicalBoundaries(td.symbol) = ctx.resolutionBoundaries
+        recordDefinitionScope(td.symbol)
         
         var newCtx = S(td.symbol).collectFirst:
             case s: InnerSymbol => s
@@ -2456,6 +2512,8 @@ extends Importer:
             p.fldSym = S(fsym)
             fsym.tsym = S(tsym)
             tsym.defn = S(fdef)
+            // A generated field is written inside its class, like a member.
+            rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
             fsym.complete()
             fdef :: Nil
           
@@ -2463,6 +2521,7 @@ extends Importer:
           def paramBinding(p: Param): Ls[Statement] =
             val psym = TermSymbol(LetBind, owner, p.sym.id)
             psym.sourceAliases = p.sym.sourceAliases
+            rctx.state.lexicalTypeBinders(psym) = ctx.typeBinders
             val decl = LetDecl(psym, Nil)(p.toLoc) // TODO: never use term symbols on LetDecl LHS
             val defn = defineVar(psym, p.sym.ref())(p.toLoc)
             p.fldSym = S(psym)
@@ -2693,7 +2752,7 @@ extends Importer:
         // TODO reject plain term statements? Currently, `(1, 2)` is allowed to elaborate (tho it should be rejected in type checking later)
         val interpretation = if sts.isEmpty then resultInterp else Trm
         val res = annotations.foldLeft(term(st, interpretation)):
-          case (acc, ann) => Term.Annotated(ann, acc)
+          case (acc, ann) => annotated(ann, acc)
         sts match
         case Nil => (mkBlk(acc, S(res), hasResult), ctx)
         case _ => go(sts, Nil, res :: acc)(N)
@@ -2733,12 +2792,12 @@ extends Importer:
     res
   
   
-  def mkBlk(acc: Ls[Statement], res: Opt[Term], hasResult: Bool): Blk | Rcd =
+  def mkBlk(acc: Ls[Statement], res: Opt[Term], hasResult: Bool)(using Ctx): Blk | Rcd =
     // TODO forbid certain kinds of terms in records
     val isRcd = acc.exists:
       case _: (RcdField | RcdSpread) => true
       case _ => false
-    if isRcd then Term.Rcd(mut = false, (res.toList ::: acc).reverse)
+    if isRcd then withTypeBinders(new Term.Rcd(mut = false, (res.toList ::: acc).reverse))
     else Blk(acc.reverse, res.getOrElse:
       if hasResult
         then unit
@@ -2900,7 +2959,10 @@ extends Importer:
         case S(bi) => S(bi.ref(id))
         case N => N
     def constructor(target: Term, arguments: Opt[Ls[Pattern]], source: Tree): Pattern.Constructor =
-      val res = new Constructor(target, arguments)
+      // Constructor tests synthesize nominal interfaces with omitted type
+      // arguments. Record the lexical scope of their bounds before
+      // constructorPattern registers resolution listeners.
+      val res = new Constructor(withTypeBinders(target), arguments)
       if newResolution then res.withLocOf(source)
       constructorPattern(res)
       res
@@ -3086,7 +3148,7 @@ extends Importer:
     // TODO handle name clashes
     if newResolution then
       InterfaceExposure(this).check(exports, Nil)
-    rstate.completeBlock(res)
+    rctx.completeBlock(res)
     (res, newCtx)
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
@@ -3103,7 +3165,7 @@ extends Importer:
       else
         // Explicit annotations still check callbacks whose signatures they hide.
         InterfaceExposure(this).check(Nil, Nil)
-    rstate.completeBlock(res)
+    rctx.completeBlock(res)
     (res, ctx)
   
   def computeVariances(s: Statement): Unit =

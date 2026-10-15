@@ -11,7 +11,7 @@ class TypeRelationTest extends AnyFunSuite:
   private class Harness:
     import io.PlatformPath.given
     given owner: Elaborator.State = new Elaborator.State
-    given state: NewResolverState = owner.newResolverState
+    given state: ResolutionContext = owner.newResolverState.context
     given Raise = diagnostic => fail(diagnostic.theMsg)
     given DebugPrinter = new DebugPrinter
     given trace: TraceLogger = new TraceLogger:
@@ -28,7 +28,7 @@ class TypeRelationTest extends AnyFunSuite:
       (symbol, tpe(TypeShape.Parameter(symbol, symbol.inferenceHost)))
     def observe(reference: ContextualType): ArrayBuffer[TermShape] =
       val values = ArrayBuffer.empty[TermShape]
-      InstanceShape(reference.tpe).exit(reference.marks) match
+      resolver.instanceShape(reference.tpe).exit(reference.marks) match
         case value: TermShape => resolver.listenInstanceViews(value)(values += _)
         case NoShape => fail("A type reference cannot be unreachable")
       values
@@ -74,17 +74,17 @@ class TypeRelationTest extends AnyFunSuite:
       val inside = h.resolver.transportType(outside, entry :: Nil)
       h.resolver.publishParameter(a, first)
       val observed = h.observe(ContextualType(inside, Nil))
-      def expected(values: List[TermShape], path: List[Marks]): Set[TermShape] =
+      def expected(values: List[TermShape], path: List[Marks]): Set[ShapeIdentity.Key] =
         values.flatMap: value =>
           value.exit(path) match
-            case shape: TermShape => Some(shape)
+            case shape: TermShape => Some(ShapeIdentity.key(shape))
             case NoShape => None
         .toSet
-      assert(observed.toSet == expected(List(first), List(exit, entry)))
+      assert(observed.map(ShapeIdentity.key(_)).toSet == expected(List(first), List(exit, entry)))
       h.resolver.publishParameter(a, second)
-      assert(observed.toSet == expected(List(first, second), List(exit, entry)))
+      assert(observed.map(ShapeIdentity.key(_)).toSet == expected(List(first, second), List(exit, entry)))
       val consumed = h.resolver.transportType(inside, consumer :: Nil)
-      assert(h.observe(ContextualType(consumed, Nil)).toSet ==
+      assert(h.observe(ContextualType(consumed, Nil)).map(ShapeIdentity.key(_)).toSet ==
         expected(List(first, second), List(exit, entry, consumer)))
 
   test("alias argument normalization reaches a fixed point without changing its marks"):
@@ -110,7 +110,7 @@ class TypeRelationTest extends AnyFunSuite:
       assert(current == original)
     val value = DynShape()
     h.resolver.publishParameter(target, value)
-    assert(seen.toList == List(MarkedShape.enter(value, owner, path.id)))
+    assert(seen.toList.map(ShapeIdentity.key(_)) == List(MarkedShape.enter(value, owner, path.id)).map(ShapeIdentity.key(_)))
     assert(target.inferenceHost.listeners.size == before)
     assert(h.state.allocatedTypeInstanceCount == 0)
 
@@ -142,7 +142,7 @@ class TypeRelationTest extends AnyFunSuite:
     h.resolver.publishParameter(target, early)
     val seen = h.observe(ContextualType(actual, Nil))
     h.resolver.publishParameter(target, late)
-    assert(seen.toList == List(early, late).map(MarkedShape.enter(_, owner, N)))
+    assert(seen.toList.map(ShapeIdentity.key(_)) == List(early, late).map(MarkedShape.enter(_, owner, N)).map(ShapeIdentity.key(_)))
     val count = target.inferenceHost.listeners.size
     (1 to 1000).foreach: _ =>
       assert(h.resolver.declaredType(application.resolution, Map(argument -> actual)) == expected)
@@ -171,9 +171,9 @@ class TypeRelationTest extends AnyFunSuite:
         assert(current eq first)
       val value = DynShape()
       h.resolver.publishParameter(target, value)
-      if output then assert(observed.toList == List(MarkedShape.enter(value, scope, site)))
+      if output then assert(observed.toList.map(ShapeIdentity.key(_)) == List(MarkedShape.enter(value, scope, site)).map(ShapeIdentity.key(_)))
       else assert(!observed.exists(_.applicationHead._1.isInstanceOf[DynShape]))
-      if input then assert(inputObserved.toList == List(MarkedShape.enter(value, scope, site)))
+      if input then assert(inputObserved.toList.map(ShapeIdentity.key(_)) == List(MarkedShape.enter(value, scope, site)).map(ShapeIdentity.key(_)))
       else assert(inputObserved.isEmpty)
       assert(target.inferenceHost.listeners.size == before)
       assert(h.state.allocatedTypeInstanceCount == 0)
@@ -198,9 +198,9 @@ class TypeRelationTest extends AnyFunSuite:
     (1 to 1000).foreach: _ =>
       current = h.resolver.declaredType(source.resolution, Map(a -> current))
       assert(current eq expected)
-      h.resolver.listenInstanceViews(InstanceShape(current))(_ => ())
+      h.resolver.listenInstanceViews(h.resolver.instanceShape(current))(_ => ())
     h.resolver.publishParameter(b, late)
-    assert(seen.toSet == Set(MarkedShape.enter(early, owner, path.id), late))
+    assert(seen.toSet.map(ShapeIdentity.key(_)) == Set(MarkedShape.enter(early, owner, path.id), late).map(ShapeIdentity.key(_)))
     assert((target.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(h.state.allocatedTypeInstanceCount == 0)
 
@@ -365,17 +365,17 @@ class TypeRelationTest extends AnyFunSuite:
     val source = h.tpe(TypeShape.Abstract).resolution
     val hole = h.resolver.omittedType(source, parameter)
     val output = new TermShapeHost
-    h.resolver.listenInstanceViews(InstanceShape(hole))(output.publish)
+    h.resolver.listenInstanceViews(h.resolver.instanceShape(hole))(output.publish)
     val exporter = ArrayBuffer.empty[TermShape]
     val detach = output.inferenceHost.observe(exporter += _)
-    val left = new Elaborator.State().newResolverState.inGraph(h.state)
-    val right = new Elaborator.State().newResolverState.inGraph(h.state)
+    val left = new Elaborator.State().newResolverState.context.inGraph(h.state)
+    val right = new Elaborator.State().newResolverState.context.inGraph(h.state)
     assert(h.resolver.omittedType(source, parameter)(using left) eq hole)
     assert(h.resolver.omittedType(source, parameter)(using right) eq hole)
     val leftValues = ArrayBuffer.empty[TermShape]
     val rightValues = ArrayBuffer.empty[TermShape]
-    h.resolver.listenInstanceViews(InstanceShape(hole))(leftValues += _)(using left)
-    h.resolver.listenInstanceViews(InstanceShape(hole))(rightValues += _)(using right)
+    h.resolver.listenInstanceViews(h.resolver.instanceShape(hole)(using left))(leftValues += _)(using left)
+    h.resolver.listenInstanceViews(h.resolver.instanceShape(hole)(using right))(rightValues += _)(using right)
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(first)), Nil), ContextualType(hole, Nil))(using left)
@@ -398,12 +398,12 @@ class TypeRelationTest extends AnyFunSuite:
     val symbol = ClassSymbol(Tree.TypeDef(Cls, name, N), name)
     val defn = ClassDef.Plain(N, Cls, symbol, BlockMemberSymbol("Closed", Nil), Nil, N,
       ObjBody(Term.Blk(Nil, Term.UnitVal())), N, Nil, Nil, N)(N)
-    h.state.lexicalTypeBinders(symbol) = Set.empty
+    h.state.state.lexicalTypeBinders(symbol) = Set.empty
     val original = NominalInstanceView(defn, Map.empty, N)(N, ShapeProvenance.empty)(h.resolver)
     val scheme = h.tpe(TypeShape.Top).resolution
     val substitutions = (1 to 16).map: index =>
       val (parameter, _) = h.parameter(s"A$index")
-      h.state.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter))
+      h.state.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter), S(Set.empty))
     val host = new TermShapeHost
     var current: TermShape = original
     (1 to 1000).foreach: index =>
@@ -425,7 +425,7 @@ class TypeRelationTest extends AnyFunSuite:
     val expected = ContextualType(h.tpe(TypeShape.Tuple(result.resolution :: Nil)), Nil)
     val seen = h.observe(ContextualType(result, Nil))
     def tuple(value: TermShape): TermShape =
-      InstanceShape(h.tpe(TypeShape.Tuple(h.tpe(TypeShape.Inferred(value)).resolution :: Nil)))
+      h.resolver.instanceShape(h.tpe(TypeShape.Tuple(h.tpe(TypeShape.Inferred(value)).resolution :: Nil)))
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     val left = tuple(first)
@@ -454,12 +454,12 @@ class TypeRelationTest extends AnyFunSuite:
     val second = DynShape()
     h.state.markExplicitTypeArgument(a)
     h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(first)), Nil), ContextualType(at, Nil))
-    h.resolver.publishParameter(a, InstanceShape(one))
-    h.resolver.publishParameter(a, InstanceShape(two))
+    h.resolver.publishParameter(a, h.resolver.instanceShape(one))
+    h.resolver.publishParameter(a, h.resolver.instanceShape(two))
     h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(second)), Nil), ContextualType(at, Nil))
     for target <- List(one, two); bound <- List(first, second) do
-      assert(h.state.typeConstraints((target, bound, Nil)))
-    assert(a.currentShapes.toSet == Set(InstanceShape(one), InstanceShape(two)))
+      assert(h.state.hasTypeConstraint(target, bound, Nil))
+    assert(a.currentShapes.toSet == Set(h.resolver.instanceShape(one), h.resolver.instanceShape(two)))
 
 
   test("supplied parameter references forward input obligations across marked contexts"):
@@ -477,11 +477,14 @@ class TypeRelationTest extends AnyFunSuite:
     val bound = IntroShape(Term.UnitVal(), N)
     h.state.markExplicitTypeArgument(a)
     h.state.markExplicitTypeArgument(b)
-    h.resolver.publishParameter(a, InstanceShape(bt).exit(sourceMarks).enter(targetMarks))
-    h.resolver.publishParameter(b, InstanceShape(concrete).enter(sourceMarks))
+    h.resolver.publishParameter(a, h.resolver.instanceShape(bt).exit(sourceMarks).enter(targetMarks))
+    h.resolver.publishParameter(b, h.resolver.instanceShape(concrete).enter(sourceMarks))
     h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, targetMarks))
-    assert(h.state.typeConstraints((concrete, bound, Nil)))
-    assert(b.currentShapes.toSet == Set(InstanceShape(concrete).enter(sourceMarks)))
+    assert(h.state.hasTypeConstraint(concrete, bound, Nil))
+    val expected = h.resolver.instanceShape(concrete).enter(sourceMarks) match
+      case value: TermShape => ShapeIdentity.key(value)
+      case NoShape => fail("Expected a transported value")
+    assert(b.currentShapes.map(ShapeIdentity.key(_)).toSet == Set(expected))
 
   test("a supplied argument receives only obligations for its marked activation"):
     val h = new Harness
@@ -494,11 +497,11 @@ class TypeRelationTest extends AnyFunSuite:
     val two = h.tpe(TypeShape.Abstract)
     val bound = IntroShape(Term.UnitVal(), N)
     h.state.markExplicitTypeArgument(a)
-    h.resolver.publishParameter(a, InstanceShape(one).enter(firstMarks))
-    h.resolver.publishParameter(a, InstanceShape(two).enter(secondMarks))
+    h.resolver.publishParameter(a, h.resolver.instanceShape(one).enter(firstMarks))
+    h.resolver.publishParameter(a, h.resolver.instanceShape(two).enter(secondMarks))
     h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, firstMarks))
-    assert(h.state.typeConstraints((one, bound, Nil)))
-    assert(!h.state.typeConstraints((two, bound, Nil)))
+    assert(h.state.hasTypeConstraint(one, bound, Nil))
+    assert(!h.state.hasTypeConstraint(two, bound, Nil))
 
   test("supplied reference cycles saturate without expanding their arguments"):
     val h = new Harness
@@ -510,19 +513,30 @@ class TypeRelationTest extends AnyFunSuite:
     val lower = ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil)
     h.state.markExplicitTypeArgument(a)
     h.state.markExplicitTypeArgument(b)
-    h.resolver.publishParameter(a, InstanceShape(bt))
-    h.resolver.publishParameter(b, InstanceShape(at))
+    h.resolver.publishParameter(a, h.resolver.instanceShape(bt))
+    h.resolver.publishParameter(b, h.resolver.instanceShape(at))
     h.resolver.constrainTypes(lower, ContextualType(at, Nil))
-    h.resolver.publishParameter(b, InstanceShape(concrete))
-    assert(h.state.typeConstraints((concrete, bound, Nil)))
+    h.resolver.publishParameter(b, h.resolver.instanceShape(concrete))
+    assert(h.state.hasTypeConstraint(concrete, bound, Nil))
     val counts = (a.inferenceHost.listeners.size, b.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
       h.resolver.constrainTypes(lower, ContextualType(at, Nil))
-      h.resolver.publishParameter(a, InstanceShape(bt))
-      h.resolver.publishParameter(b, InstanceShape(at))
+      h.resolver.publishParameter(a, h.resolver.instanceShape(bt))
+      h.resolver.publishParameter(b, h.resolver.instanceShape(at))
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
-    assert(a.currentShapes.toSet == Set(InstanceShape(bt)))
-    assert(b.currentShapes.toSet == Set(InstanceShape(at), InstanceShape(concrete)))
+    // Candidates compare by identity: republishing must not add equal copies.
+    assert(a.currentShapes.toList == List(h.resolver.instanceShape(bt)))
+    assert(b.currentShapes.toList == List(h.resolver.instanceShape(at), h.resolver.instanceShape(concrete)))
+
+  test("repeated deferred views reuse source identities for synthesized interfaces"):
+    val h = new Harness
+    import h.given
+    val (a, at) = h.parameter("A")
+    val substitution = h.state.instantiateTypeParameters(at.resolution, FlowSymbol.app(), List(a), None)
+    val tuple = TupleShape(Term.UnitVal(), TupleShape.TypedField(at, Nil) :: Nil)(h.resolver)
+    val view = h.resolver.instantiateShape(tuple, substitution)
+    (1 to 1000).foreach: _ =>
+      assert(h.resolver.instantiateShape(tuple, substitution) eq view)
 
   test("importers extend a cyclic relation without mutating the exporter or one another"):
     val h = new Harness
@@ -534,15 +548,15 @@ class TypeRelationTest extends AnyFunSuite:
     h.resolver.constrainTypes(ar, br)
     h.resolver.constrainTypes(br, ar)
     val output = new TermShapeHost
-    h.resolver.listenInstanceViews(InstanceShape(bt))(output.publish)
+    h.resolver.listenInstanceViews(h.resolver.instanceShape(bt))(output.publish)
     val exporter = ArrayBuffer.empty[TermShape]
     val detach = output.inferenceHost.observe(exporter += _)
-    val left = new Elaborator.State().newResolverState.inGraph(h.state)
-    val right = new Elaborator.State().newResolverState.inGraph(h.state)
+    val left = new Elaborator.State().newResolverState.context.inGraph(h.state)
+    val right = new Elaborator.State().newResolverState.context.inGraph(h.state)
     val leftValues = ArrayBuffer.empty[TermShape]
     val rightValues = ArrayBuffer.empty[TermShape]
-    h.resolver.listenInstanceViews(InstanceShape(bt))(leftValues += _)(using left)
-    h.resolver.listenInstanceViews(InstanceShape(bt))(rightValues += _)(using right)
+    h.resolver.listenInstanceViews(h.resolver.instanceShape(bt)(using left))(leftValues += _)(using left)
+    h.resolver.listenInstanceViews(h.resolver.instanceShape(bt)(using right))(rightValues += _)(using right)
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     h.resolver.publishParameter(a, first)(using left)

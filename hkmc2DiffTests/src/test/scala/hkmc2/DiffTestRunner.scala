@@ -1,7 +1,6 @@
 package hkmc2
 
 import org.scalatest.{funsuite, ParallelTestExecution}
-import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 import os.up
 
@@ -48,9 +47,8 @@ object DiffTestRunner:
     
     def filter(file: os.RelPath): Bool = true
     
-    val TimeLimit =
-      if sys.env.get("CI").isDefined then Span(60, Seconds)
-      else Span(25, Seconds)
+    // Benchmark states override this limit.
+    val TimeLimit = TimeOutTests.TimeLimit
     
   end State
   

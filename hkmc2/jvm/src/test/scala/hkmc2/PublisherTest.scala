@@ -4,17 +4,35 @@ import org.scalatest.funsuite.AnyFunSuite
 import scala.collection.mutable.ArrayBuffer
 
 import hkmc2.utils.*
-import hkmc2.semantics.{Elaborator, NewResolverState, Term, VarSymbol, DynShape, OpaqueTypeShape, TermShape}
+import hkmc2.semantics.{Elaborator, ResolutionContext, Term, VarSymbol, DynShape, OpaqueTypeShape, TermShape}
 
 
 class PublisherTest extends AnyFunSuite:
   private class IntHost extends Host[Int]:
     def showDbg(using DebugPrinter): String = "integer shapes"
-    def publish(shape: Int)(using NewResolverState): Unit =
+    def publish(shape: Int)(using ResolutionContext): Unit =
       if currentShapes.add(shape) then notifyShapeListeners(shape)
 
+  test("candidate iteration distinguishes a snapshot from draining appended values"):
+    given ResolutionContext = new Elaborator.State().newResolverState.context
+    val candidates = Candidates(summon[CandidateKey[Int]])
+    candidates.add(1)
+    val snapshot = candidates.snapshot
+    candidates.add(2)
+    assert(snapshot.toList == List(1))
+    val visited = ArrayBuffer.empty[Int]
+    candidates.foreach: value =>
+      visited += value
+      candidates.add(value + 2)
+    assert(visited.toList == List(1, 2))
+    visited.clear()
+    candidates.foreachGrowing: value =>
+      visited += value
+      if value < 6 then candidates.add(value + 1)
+    assert(visited.toList == List(1, 2, 3, 4, 5, 6))
+
   test("subscribing during notification replays each shape exactly once"):
-    given NewResolverState = new Elaborator.State().newResolverState
+    given ResolutionContext = new Elaborator.State().newResolverState.context
     val host = new IntHost
     val original = ArrayBuffer.empty[Int]
     val added = ArrayBuffer.empty[Int]
@@ -30,7 +48,7 @@ class PublisherTest extends AnyFunSuite:
     assert(last.toList == List(1, 2))
 
   test("publishing during replay does not replay the newly published shape again"):
-    given NewResolverState = new Elaborator.State().newResolverState
+    given ResolutionContext = new Elaborator.State().newResolverState.context
     val host = new IntHost
     host.publish(1)
     host.publish(2)
@@ -42,13 +60,13 @@ class PublisherTest extends AnyFunSuite:
     assert(received.toList == List(1, 3, 2, 4))
 
   test("imported listeners route captured destinations through each consumer state"):
-    val original = new Elaborator.State().newResolverState
-    val first = new Elaborator.State().newResolverState
-    val second = new Elaborator.State().newResolverState
+    val original = new Elaborator.State().newResolverState.context
+    val first = new Elaborator.State().newResolverState.context
+    val second = new Elaborator.State().newResolverState.context
     val source = new IntHost
     val target = new IntHost
     locally:
-      given NewResolverState = original
+      given ResolutionContext = original
       // Include a cycle: each consumer must install a host copy before invoking
       // listeners that can immediately return to that same host.
       source.subscribeToShapes(target.publish)
@@ -66,9 +84,9 @@ class PublisherTest extends AnyFunSuite:
     assert(target.shapeListeners.size == targetListeners)
 
   test("imports lazily retain exporter-private inference on third-party hosts"):
-    val declaration = new Elaborator.State().newResolverState
-    val exporter = new Elaborator.State().newResolverState
-    val consumer = new Elaborator.State().newResolverState
+    val declaration = new Elaborator.State().newResolverState.context
+    val exporter = new Elaborator.State().newResolverState.context
+    val consumer = new Elaborator.State().newResolverState.context
     val source = new IntHost
     val target = new IntHost
     source.publish(1)(using declaration)
@@ -91,16 +109,16 @@ class PublisherTest extends AnyFunSuite:
     assert(target.currentShapes(using exporter).toList == List(1, 2))
 
   test("re-exported listeners retain intermediate exporters' private destinations"):
-    val declaration = new Elaborator.State().newResolverState
-    val exporter = new Elaborator.State().newResolverState
-    val middle = new Elaborator.State().newResolverState
-    val consumer = new Elaborator.State().newResolverState
+    val declaration = new Elaborator.State().newResolverState.context
+    val exporter = new Elaborator.State().newResolverState.context
+    val middle = new Elaborator.State().newResolverState.context
+    val consumer = new Elaborator.State().newResolverState.context
     val source = new IntHost
     val target = new IntHost
     val referencedTarget = new IntHost
     val reference = referencedTarget.inferenceHost(using declaration)
     locally:
-      given NewResolverState = declaration
+      given ResolutionContext = declaration
       source.subscribeToShapes: shape =>
         target.publish(shape)
         reference.publish(shape)
@@ -120,14 +138,14 @@ class PublisherTest extends AnyFunSuite:
 
   test("completing a block freezes its nodes while retaining symbol and elimination flow"):
     given owner: Elaborator.State = new Elaborator.State
-    given state: NewResolverState = owner.newResolverState
+    given state: ResolutionContext = owner.newResolverState.context
     val variable = new VarSymbol(new syntax.Tree.Ident("x"))
     val use = Term.NewSel(Term.SimpleRef(variable)(new syntax.Tree.Ident("x")),
       new syntax.Tree.Ident("value"), None)(semantics.FlowSymbol.sel("value"))
     use.hasDynamicTarget = true
     variable.subscribeToShapes: shape =>
       if use.currentShapes.add(shape) then use.notifyShapeListeners(shape)
-    def publish(shape: TermShape)(using NewResolverState): Unit =
+    def publish(shape: TermShape)(using ResolutionContext): Unit =
       if variable.currentShapes.add(shape) then variable.notifyShapeListeners(shape)
     val before = DynShape()
     val after = OpaqueTypeShape(Term.UnitVal())(semantics.TypeInterfaceReason.Unavailable(Term.UnitVal()))
@@ -149,7 +167,7 @@ class PublisherTest extends AnyFunSuite:
     state.recordResolution(use, true)(fail("An unchanged decision must not be written again"))
 
   test("temporary observers replay once, detach, and are not inherited by consumers"):
-    given original: NewResolverState = new Elaborator.State().newResolverState
+    given original: ResolutionContext = new Elaborator.State().newResolverState.context
     val host = new IntHost
     val observed = ArrayBuffer.empty[Int]
     val routed = ArrayBuffer.empty[Int]
@@ -157,7 +175,7 @@ class PublisherTest extends AnyFunSuite:
     host.subscribeToShapes(routed += _)
     val detach = host.inferenceHost.observe(observed += _)
     host.publish(2)
-    val consumer = new Elaborator.State().newResolverState
+    val consumer = new Elaborator.State().newResolverState.context
     host.publish(3)(using consumer)
     assert(observed.toList == List(1, 2))
     assert(routed.toList == List(1, 2, 3))
@@ -177,7 +195,11 @@ class PublisherTest extends AnyFunSuite:
     val source = Term.UnitVal()
     val first = UnknownValueShape(source, fromPublicInterface = false)(provenance)
     val second = UnknownValueShape(source, fromPublicInterface = false)(provenance)
-    assert(Set(first, second).size == 1)
+    // Publication compares semantic keys; the witnesses remain distinct objects.
+    given ResolutionContext = new Elaborator.State().newResolverState.context
+    val candidates = Candidates(summon[CandidateKey[semantics.ShapeEvent]])
+    assert(candidates.add(first))
+    assert(!candidates.add(second))
     assert(RecordShape.Unknown(first) == RecordShape.Unknown(second))
     assert(evaluated == 0)
     first.provenance.diagnostic(msg"Operation failed", None)

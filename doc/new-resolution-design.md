@@ -12,9 +12,11 @@ ports and implementation gaps belong in the [migration worklist](new-resolution-
 ## Inference ownership and completed references
 
 [`NewResolverState`](../hkmc2/shared/src/main/scala/hkmc2/semantics/NewResolverState.scala)
-owns the inference graph and caches. Listeners have type
-`TermShape => NewResolverState ?=> Unit`, so imported callbacks access hosts
-through the consuming state. Importing copies accessed hosts' candidates and
+owns the inference graph and caches, once per compilation unit. Listeners have
+type `TermShape => ResolutionContext ?=> Unit`. An immutable `ResolutionContext`
+selects the consuming state, import path, and active substitution; changing the
+substitution never creates another resolver state. Imported callbacks access hosts
+through that context. Importing copies accessed hosts' candidates and
 listeners lazily; caches consult individual source entries on demand. It must
 not copy or enumerate an exporter's entire resolver maps.
 
@@ -177,6 +179,29 @@ spreads and unique wildcard opens; competing wildcard receivers still need
 disambiguation. Class projections, constructor patterns, and type references require
 known, unambiguous identities. See `newres/Dynamic.mls`, `Records.mls`,
 `SpreadCalls.mls`, and `loose/Targets.mls`.
+
+## Candidate identity
+
+Graph producers compare by identity. Tuples, records, and declared-type instances
+must be built through their canonical factories because their identities anchor
+inference hosts. Immutable views use `ShapeIdentity.key` to compare their source
+and effective substitution without including diagnostic witnesses. Member lookup
+uses the observation itself so that errors retain its diagnostic evidence.
+
+`ValueKey` caches hashes of immutable fields; keys must never include live
+publisher contents or inferred bounds. `DeclaredType` interns semantic references
+in the consuming unit while retaining each observation's witnesses. Importing
+normalizes references without changing the exporter, and cross-unit equality
+visits each shared reference pair once to avoid exponential traversal of type DAGs.
+
+`instantiateShape` projects substitutions onto the value's binder support before
+constructing a view. Captured bindings take precedence over incoming bindings;
+activation environments remain separate. See
+[binder support](new-resolution-type-value-flow.md#shared-bodies-and-contextual-constraints).
+
+`Candidates` deduplicates with the payload type's key and preserves publication
+order. Ordinary iteration and subscription replay use a snapshot; `foreachGrowing`
+also visits candidates appended during callbacks.
 
 ## Recursive getter results
 

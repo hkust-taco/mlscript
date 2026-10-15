@@ -565,7 +565,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       copy.typeInterpretation = source.typeInterpretation
       copy
     def copyShapes(source: ShapeHost, copy: ShapeHost): copy.type =
-      copy.shapes ++= source.shapes
+      copy.shapes.copyFrom(source.shapes)
       copy
     def copyResolution(source: Resolvable, copy: Resolvable): copy.type =
       copy.isErroneous = source.isErroneous

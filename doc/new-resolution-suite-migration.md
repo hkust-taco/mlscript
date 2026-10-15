@@ -13,7 +13,6 @@ and implementation contracts are in the [design notes](new-resolution-design.md)
 
 | Fixtures | Remaining work |
 | --- | --- |
-| `FingerTreeList` | New resolution exceeds the compilation time limit around recursive trees and tuple spreads. |
 | `CSP`, `QuoteExample1` | Quasiquote type selections and wildcard-reference lowering are unsupported. |
 | `parsing/Lexer` | Token constructors with trailing `using` parameters need automatic contextual argument insertion. `newres/LexerMigration` reproduces the missing behavior. |
 | `parsing/ParseRule` | Recursive rule inference exceeds the compilation time limit when compiling consumers. Callback inputs exposed by `Iter.mapping` also leave `rule.map` with an unknown receiver. |

@@ -1,6 +1,4 @@
-// #lang(0.3.x)
-// ^ Can't be used yet due to spreads;
-//    needs the perf. fixes at `LPTK/new-resolution-no-hashing`
+#lang(0.3.x)
 
 import "./Option.mls"
 import "./Iter.mls"
@@ -34,18 +32,18 @@ object Nil
 data class View[T](e1: T, rest: FingerTree[T])
 
 class FingerTree[T] extends IterableBase with
-  fun iterator() =
+  override fun iterator() =
     let current = this
     IteratorImpl of () => if popFront(current) is
       Nil then Result.Done
       View(head, tail) then
         set current = tail
         Result.Next of head
-  fun toString(): Str = "[" + this joined(", ") + "]"
-  fun length: Int = FingerTreeList.length(this)
-  fun at(i: Int): T = get(i)(this)
-  fun concat(other: FingerTree[T] | Array[T]): FingerTree[T] = FingerTreeList.concat(this, other)
-  fun slice(beg: Int, end: Int): FingerTree[T] = 
+  open override fun toString(): Str = "[" + this joined(", ") + "]"
+  override fun length: Int = FingerTreeList.length(this)
+  override fun at(i: Int): T = get(i)(this)
+  override fun concat(other: FingerTree[T] | Array[T]): FingerTree[T] = FingerTreeList.concat(this, other)
+  override fun slice(beg: Int, end: Int): FingerTree[T] = 
     let len = this.length
     set beg = normIdxSlice(beg, len)
     set end = normIdxSlice(end, len)
@@ -58,14 +56,14 @@ class FingerTree[T] extends IterableBase with
     FingerTreeList.dropLeftRight(beg, len - end)(this)
 
 object Empty extends FingerTree[Nothing] with
-  fun toString(): Str = "[" + this joined(", ") + "]"
+  override fun toString(): Str = "[" + this joined(", ") + "]"
 
 class Single[T](val e: T) extends FingerTree[T] with
-  fun toString(): Str = "[" + this joined(", ") + "]"
+  override fun toString(): Str = "[" + this joined(", ") + "]"
 
 // prefix and suffix are at most length 4
 class Deep[T](val size: Int, val prefix: Array[T], val middle: FingerTree[Node[T]], val suffix: Array[T]) extends FingerTree[T] with
-  fun toString(): Str = "[" + [...this].join(", ") + "]"
+  override fun toString(): Str = "[" + [...this].join(", ") + "]"
 
 // amortized O(log n)
 fun concatMiddle(ft1, middle, ft2) = if [ft1, middle, ft2] is

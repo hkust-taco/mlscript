@@ -215,6 +215,23 @@ to instance-symbol substitutions through deferred tuples, records, callbacks, an
 closures. They do not copy expanded argument candidates into a new body graph.
 Shape substitution is memoized so repeated observations reuse aggregate identities.
 
+`NewResolver.shapeSupport` determines which ambient type binders a value can
+observe. The elaborator records lexical binders before installing listeners;
+constructed instances and partial applications also need their declaration's
+own binders. Synthesized aggregates include the support of their contents.
+
+Instance bounds and inferred hosts contain templates written at their source
+sites. Support is closed over those sites, including instances retained by
+nested values. `projectType` removes irrelevant retained bindings; `project`
+selects additional ambient bindings, preserving existing captures. An unknown
+scope retains every binding. The analysis follows the finite source graph,
+never live inference bounds. Applied type-argument counts are recorded when the
+application is interpreted so dependency summaries do not depend on observation
+order.
+
+Activation environments are not projected: they select which body's events a
+listener accepts, independently of what the delivered value can observe.
+
 ### Value views, consumed schemes, and activation events
 
 The similarly named forms in
@@ -313,12 +330,13 @@ has a next argument list, even when that list itself accepts zero arguments.
 Consuming the last list exposes the result instead of constructing an empty
 callable view. Mapping parameter types preserves nonemptiness with `ne_map`.
 
-Value captures and body activations use the opaque `TypeSubstitution`, whose
-underlying immutable map remains available for reads. Its constructor derives
+Value captures and body activations use `TypeSubstitution`, which wraps an
+immutable map with a cached hash. Its constructor derives
 each key from the instance's original binder. `withOverrides` combines two valid
-substitutions with the right operand taking precedence, and `without` removes
-shadowed binders. Both preserve the substitution type; arbitrary map updates do
-not. This rules out mismatched binder/instance pairs without runtime validation
+substitutions with the right operand taking precedence, `without` removes
+shadowed binders, and `restrictTo` retains only the binders in a view's support.
+These operations preserve the substitution type; arbitrary map updates do not.
+This rules out mismatched binder/instance pairs without runtime validation
 at every `DeclaredType` construction.
 
 Consequently, `shapeParts` can decode one outer marking and one view with an
@@ -471,6 +489,14 @@ own saved environments. Synthetic formula/argument/selection nodes follow their
 saved references instead of reading an ambient binding map. This removes irrelevant
 bindings without freezing inference candidates or treating forward references as closed.
 
+Instances are projected by a second analysis over the same graph
+(`NewResolver.instanceDependencies`): synthesized reference nodes do instantiate
+their retained references with the ambient instances, so those references' free
+binders and retained instance sites count, as do the sites of directly referenced
+instances and the template scopes of inferred and omitted-argument hosts and of
+generic type uses that omit arguments. A pending target leaves this set
+unbounded, which retains every binding.
+
 [Regular structural types](new-resolution-regular-types.md) specifies guarded alias
 recursion, alias reduction, Boolean normalization, and the conservative
 constructor-cycle rejection check.
@@ -542,11 +568,16 @@ normalization, including substitutions that identify atoms (`TypeFormulaTest`).
 transport, and wildcard identity loss across nested and sibling scopes.
 These algebraic checks cover combinations that worksheet examples cannot exhaust.
 `PublisherTest` checks exporter immutability.
+`SubstitutionGrowthTest` bounds the views and activation contexts allocated for
+generated chains of generic identities, and checks the substitution laws on
+shapes: transitive site dependencies, nested and captured instances, bounds
+published after a view exists, and observation-order independence.
 
 Worksheet coverage under `newres` includes `MutableArrays`, `ContextualInference`,
 `InstantiationSites`, `StoredSpecializations`, `SpecializationCaptures`,
 `TypeArgumentVariance`, `VarianceSubstitution`, `VarianceSoundness`, `VarianceAliases`,
-`AnnotationContexts`, and `TypeGraphTermination`. `Promises` covers async fulfillment,
-nested adoption, constructor inference, generic call isolation, and escaping payloads. Deferred cases
-retain explicit regression expectations;
+`AnnotationContexts`, `TypeGraphTermination`, `IrrelevantBinders`, `BinderSupport`, and `ArraySpreadViews`.
+`Promises` covers async fulfillment, nested adoption, constructor inference,
+generic call isolation, and escaping payloads. Deferred cases retain explicit
+regression expectations;
 see the [future-work reference](new-resolution-future-work.md).

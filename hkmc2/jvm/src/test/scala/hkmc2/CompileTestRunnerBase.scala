@@ -1,7 +1,6 @@
 package hkmc2
 
 import org.scalatest.{funsuite, ParallelTestExecution}
-import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 
 import hkmc2.utils.*, shorthands.*
@@ -18,7 +17,7 @@ abstract class CompileTestRunnerBase(
 ) extends TimeOutTests, ParallelTestExecution:
   
   
-  val timeLimit = Span(25, Seconds)
+  val timeLimit = TimeOutTests.TimeLimit
   
   
   given CompilerCtx = cctx

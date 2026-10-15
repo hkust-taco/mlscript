@@ -19,7 +19,7 @@ class Importer extends NewResolver:
   import tl.*
 
 
-  def importPath(path: Str, alias: Opt[syntax.Tree.Ident])(loc: Opt[Loc])(using cfg: Config, rs: NewResolverState): Import =
+  def importPath(path: Str, alias: Opt[syntax.Tree.Ident])(loc: Opt[Loc])(using cfg: Config, ctx: Elaborator.Ctx, rs: ResolutionContext): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     
@@ -69,7 +69,9 @@ class Importer extends NewResolver:
             // binding. Publish its shapes so selection and opens can follow it.
             if newResolution then sym match
               case local: VarSymbol =>
-                pipeTerm(Term.MemberRef(importedSym)(local.id, FlowSymbol.memSym(importedSym)), local)
+                val ref = Term.MemberRef(importedSym)(local.id, FlowSymbol.memSym(importedSym))
+                rctx.recordLexicalBinders(ref, ctx.typeBinders)
+                pipeTerm(ref, local)
               case _: BlockMemberSymbol => ()
 
             val jsFile = file.up / io.RelPath(file.baseName + ".mjs")

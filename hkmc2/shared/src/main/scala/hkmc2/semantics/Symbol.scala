@@ -282,8 +282,15 @@ class VarSymbol(val id: Ident)(using State)
 /** A source type binder instantiated at a static application site. Its inference
   * host starts empty: the source binder's checking witnesses and subscriptions
   * belong to the generic definition, not to any of its applications.
+  *
+  * `siteBinders` are the explicit type binders in scope at the instantiation
+  * site, or N for a synthesized site with no source scope. The bounds published
+  * to an instance are templates written at its site (supplied type arguments,
+  * argument shapes observed there), so reading them through a substitution also
+  * reads those binders (see NewResolver.closure).
   */
-final class TypeParameterInstance(val origin: VarSymbol)(using State) extends VarSymbol(origin.id):
+final class TypeParameterInstance(val origin: VarSymbol, val siteBinders: Opt[Set[VarSymbol]])(using State)
+    extends VarSymbol(origin.id):
   require(!origin.isInstanceOf[TypeParameterInstance], "Instantiate original type binders only")
   decl = origin.decl
   val reference: Term.SimpleRef = Term.SimpleRef(this)(origin.id)

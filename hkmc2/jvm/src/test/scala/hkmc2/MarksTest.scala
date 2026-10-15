@@ -10,12 +10,26 @@ import hkmc2.utils.*, shorthands.*
   * in particular, check all wildcard/identified combinations and regroupings.
   */
 class MarksTest extends AnyFunSuite:
+  // Mark laws compare transported values, independently of wrapper allocation.
+  private def key(shape: TermShape | NoShape)(using ResolutionContext): Opt[ShapeIdentity.Key] = shape match
+    case NoShape => N
+    case value: TermShape => S(ShapeIdentity.key(value))
   private class Harness:
-    given Elaborator.State = new Elaborator.State
+    import io.PlatformPath.given
+    given owner: Elaborator.State = new Elaborator.State
+    given ResolutionContext = owner.newResolverState.context
+    given Raise = diagnostic => fail(diagnostic.theMsg)
     given DebugPrinter = new DebugPrinter
     given TraceLogger = new TraceLogger:
       override def doTrace: Boolean = false
-    val value = DynShape()
+    // Path normalization needs a value that retains scope exits. Dynamic values
+    // omit those exits because they carry no references into their source scope.
+    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    resolution.publish(TypeShape.Bottom)
+    given Config = Config.default(TestFolders.mainTestDir(os.pwd))
+    given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
+    val resolver = Elaborator(summon[TraceLogger], TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
+    val value = resolver.instanceShape(DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N))
     val outer = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("outer")))
     val left = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("left")))
     val right = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("right")))
@@ -36,15 +50,16 @@ class MarksTest extends AnyFunSuite:
   test("scope transport agrees with matching activation stacks"):
     val h = new Harness
     import h.given
-    for from <- h.scopes; to <- h.scopes; origin <- h.sites; leaving <- h.sites; arriving <- h.sites do
-      val input = h.value.exit(h.entries(from, origin))
+    for value <- List[TermShape](h.value, DynShape())
+        from <- h.scopes; to <- h.scopes; origin <- h.sites; leaving <- h.sites; arriving <- h.sites do
+      val input = value.exit(h.entries(from, origin))
       val path = h.path(from, to, leaving, arriving)
       // Exiting consumes the entire input stack. A capture matches either site;
       // otherwise different identified activations have disjoint value flow.
       val compatible = from.isEmpty || origin.isEmpty || leaving.isEmpty || origin == leaving
-      val expected = if compatible then h.value.exit(h.entries(to, arriving)) else NoShape
-      assert(input.exit(path) == expected)
-      assert(input.exit(h.normalized(path)) == expected)
+      val expected = if compatible then value.exit(h.entries(to, arriving)) else NoShape
+      assert(key(input.exit(path)) == key(expected))
+      assert(key(input.exit(h.normalized(path))) == key(expected))
 
   test("normalizing fragments preserves composition and argument transport reverses their order"):
     val h = new Harness
@@ -54,11 +69,11 @@ class MarksTest extends AnyFunSuite:
       val q = h.path(via, to, second, second)
       val parts = h.normalized(p) ::: h.normalized(q)
       val input = h.value.exit(h.entries(from, first))
-      assert(input.exit(p ::: q) == input.exit(parts))
-      assert(input.exit(parts) == input.exit(h.normalized(p)).exit(h.normalized(q)))
+      assert(key(input.exit(p ::: q)) == key(input.exit(parts)))
+      assert(key(input.exit(parts)) == key(input.exit(h.normalized(p)).exit(h.normalized(q))))
       val output = h.value.exit(h.entries(to, second))
-      assert(output.enter(parts) == output.enter(h.normalized(q)).enter(h.normalized(p)))
-      assert(output.enter(p ::: q) == output.enter(parts))
+      assert(key(output.enter(parts)) == key(output.enter(h.normalized(q)).enter(h.normalized(p))))
+      assert(key(output.enter(p ::: q)) == key(output.enter(parts)))
 
   test("regrouping three normalized paths preserves filtering"):
     val h = new Harness
@@ -71,7 +86,7 @@ class MarksTest extends AnyFunSuite:
       val p = h.value.exit(h.path(start, middle, a, b))
       val q = h.value.exit(h.path(middle, finish, c, a))
       val r = h.value.exit(h.path(finish, start, b, c))
-      assert(compose(compose(p, q), r) == compose(p, compose(q, r)))
+      assert(key(compose(compose(p, q), r)) == key(compose(p, compose(q, r))))
 
   test("wildcard exit followed by entry preserves provenance but loses the consumed site"):
     val h = new Harness
@@ -79,12 +94,12 @@ class MarksTest extends AnyFunSuite:
     val scope = List(h.outer)
     val source = h.value.exit(h.entries(scope, h.sites(1)))
     val transferred = source.exit(h.path(scope, scope, N, N))
-    assert(transferred != source)
-    assert(source.exit(h.exits(scope, h.sites(2))) == NoShape)
-    assert(transferred.exit(h.exits(scope, h.sites(2))) == h.value)
+    assert(key(transferred) != key(source))
+    assert(key(source.exit(h.exits(scope, h.sites(2)))) == key(NoShape))
+    assert(key(transferred.exit(h.exits(scope, h.sites(2)))) == key(h.value))
     val uncancelled = h.value.exit(h.path(scope, scope, N, N))
-    assert(uncancelled != h.value)
-    assert(uncancelled.exit(h.exits(scope, h.sites(2))) == h.value.exit(h.exits(scope, N)))
+    assert(key(uncancelled) != key(h.value))
+    assert(key(uncancelled.exit(h.exits(scope, h.sites(2)))) == key(h.value.exit(h.exits(scope, N))))
 
   test("arbitrary lexical walks preserve stack semantics and have a lexical depth bound"):
     val h = new Harness
