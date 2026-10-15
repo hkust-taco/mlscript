@@ -126,3 +126,66 @@ f.g()(1)
 //│ = 179
 
 
+
+
+// * Although the members of a class's companion module are emitted in the same JS class,
+// * they access the private members of the class through accessors.
+
+:sjs
+:expect [3, 30]
+class Pair(val fst, val snd) with
+  private val sum = fst + snd
+  private fun scaled(k) = Pair.scale(sum, k)
+module Pair with
+  private fun scale(n, k) = n * k
+  fun sumOf(p: Pair) = p.sum
+  fun scaledOf(p: Pair, k) = p.scaled(k)
+[Pair.sumOf(Pair(1, 2)), Pair.scaledOf(Pair(1, 2), 10)]
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ const sum$accessorSymbol = globalThis.Symbol("sum");
+//│ const scaled$accessorSymbol = globalThis.Symbol("scaled");
+//│ let Pair1, tmp3, tmp4, p, inlinedVal, p1, inlinedVal1;
+//│ Pair1 = function Pair(fst, snd) {
+//│   return globalThis.Object.freeze(new Pair.class(fst, snd));
+//│ };
+//│ (class Pair {
+//│   static {
+//│     Pair1.class = this
+//│   }
+//│   constructor(fst, snd) {
+//│     let tmp5;
+//│     this.fst = fst;
+//│     this.snd = snd;
+//│     tmp5 = this.fst + this.snd;
+//│     this.#sum = tmp5;
+//│   }
+//│   static #scale(n, k) {
+//│     return n * k
+//│   }
+//│   static sumOf(p2) {
+//│     return p2[sum$accessorSymbol]
+//│   }
+//│   static scaledOf(p2, k) {
+//│     return p2[scaled$accessorSymbol](k)
+//│   }
+//│   #sum;
+//│   get [sum$accessorSymbol]() { return this.#sum; }
+//│   set [sum$accessorSymbol](value) { this.#sum = value; }
+//│   get [scaled$accessorSymbol]() { return this.#scaled; }
+//│   #scaled(k) {
+//│     let n;
+//│     n = this.#sum;
+//│     return n * k
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Pair", ["fst", "snd"]];
+//│ });
+//│ tmp3 = Pair1(1, 2);
+//│ p = tmp3;
+//│ inlinedVal = p[sum$accessorSymbol];
+//│ tmp4 = Pair1(1, 2);
+//│ p1 = tmp4;
+//│ inlinedVal1 = p1[scaled$accessorSymbol](10);
+//│ return globalThis.Object.freeze([ inlinedVal, inlinedVal1 ])
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [3, 30]

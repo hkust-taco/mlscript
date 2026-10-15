@@ -139,7 +139,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             applyBlock(cls.preCtor)
             applyBlock(cls.ctor)
             cls.methods.foreach(applyDefn)
-            cls.companion.foreach(applyClsLikeBody)
+          // * The companion's members are generated in a scope nested in the scope enclosing the class,
+          // * not in the class's own scope (see `modDoc` below), so `selectPrivateField` accesses the private
+          // * members of the class through accessors there, even though they are emitted in the same JS class.
+          cls.companion.foreach(applyClsLikeBody)
         case _ => super.applyDefn(defn)
       def applyClsLikeBody(body: ClsLikeBody): Unit =
         withOwner(body.isym):
