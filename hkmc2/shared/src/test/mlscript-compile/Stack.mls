@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 
 
 type Stack[A] = Stack.{ Cons[A] | Nil }
@@ -17,7 +19,7 @@ fun reverseAndAppend(xs, tail) = if xs is
 
 fun reverse(xs) = reverseAndAppend(xs, Nil)
 
-fun fromArray(arr) =
+fun fromArray(arr: Array) =
   let 
     ls = Nil
     i = arr.length - 1
@@ -70,7 +72,7 @@ fun (:::) concat(xs, ys) = if
 
 fun (:+) append(xs, y) = xs ::: y :: Nil
 
-fun filter(xs, f) = if xs is
+fun filter(xs, f: Function) = if xs is
   head :: tail and
     f(head) then head :: filter(tail, f)
     else filter(tail, f)

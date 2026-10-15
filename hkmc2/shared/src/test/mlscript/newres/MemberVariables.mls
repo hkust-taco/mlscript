@@ -1,0 +1,39 @@
+:.
+
+// Module let initializers feed reads in nested functions.
+:expect [3, 5]
+module TextCell with
+  let text = "abc"
+  fun setText(value: Str) = set text = value
+  fun length() = text.length
+val first = TextCell.length()
+TextCell.setText("hello")
+[first, TextCell.length()]
+//│ = [3, 5]
+//│ first = 3
+
+// Reading a let initialized from a parameter refers to the let's storage,
+// not the parameter's symbol, and preserves each receiver's type argument.
+:expect [7, "other"]
+class Cell[A](value: A) with
+  let stored = value
+  fun get() = stored
+class NumberBox(val number: Int)
+class TextBox(val text: Str)
+[Cell(NumberBox(7)).get().number, Cell(TextBox("other")).get().text]
+//│ = [7, "other"]
+
+// All assignments contribute, including those inside exposed functions.
+:e
+module Changing with
+  let value = "before"
+  fun replace() = set value = 42
+  fun length() = value.length
+Changing.length()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.31: 	  fun length() = value.length
+//│ ║        	                 ^^^^^^^^^^^^
+//│ ╟── Integer literal does not contain member 'length'
+//│ ║  l.30: 	  fun replace() = set value = 42
+//│ ╙──      	                              ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

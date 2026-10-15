@@ -27,7 +27,7 @@ trait TermSynthesizer(using State):
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
     (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).resolve
   protected final def `new`(cls: Term, args: Ls[Term], label: Str): Term.New = 
-    Term.New(cls, args, N)(N)
+    Term.New(cls, args, N)(FlowSymbol.neww(), N)
   protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(false, fields.toList)
   
   protected final def splitLet(sym: LocalVarSymbol, term: Term)(inner: Split): Split =

@@ -124,6 +124,10 @@ object TrackableFieldSelect:
         owner <- tSym.owner
         cls <- owner.asCls
         if cls.tree.clsParams.size === 1
+        // The fields of external classes are not initialized from constructor arguments
+        // visible in the IR. For instance, `Array`'s `length` field is also read on tuples,
+        // which are not constructed as `Array` instances.
+        if !cls.defn.exists(Inheritance.isExternal)
       yield s.qual -> (tSym, cls)
     case _ => N
 
@@ -155,6 +159,7 @@ object MemberRefTo:
       locally:
         p match
           case Select(qual, _) => S(qual)
+          case SuperSelect(qual, _, _) => S(qual)
           case _ => N
 
 object CtorProducer:
@@ -602,7 +607,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
         if ctxTracker.isEnclosingMatchScrutSym(disamb) =>
           applyValueMemberRef(v, recordAffinity = false)
       case _ => applyPath(qual)
-    case p: Select =>
+    case p: (Select | SuperSelect) =>
       super.applyPath(p)
     case c: Cast => applyResult(c.value)
     case v: Value => applyValue(v)
@@ -1050,6 +1055,10 @@ class FlowConstraintsCollector(
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
             case None => generatedVars(f)
+          case s @ SuperSelect(qual, base, _) =>
+            cc.constrain(processResult(qual), UnknownCons)
+            cc.constrain(processResult(base), UnknownCons)
+            generatedVars(s.symbol)
           case s@Select(qual, name) =>
             cc.constrain(processResult(qual), UnknownCons)
             s.symbol.fold(UnknownProd): selSym =>
@@ -1095,6 +1104,20 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   private def addFunSrc(c: ConsFun, p: ProdFun | MarkerProdStrat): Unit =
     if c.srcs.isEmpty then consFunsWithSrcs += c
     c.srcs += p
+  
+  /** Whether instances of `cls` may have the fields of `ancestor` through inheritance.
+    * A class whose parent chain is not known is assumed to possibly inherit them.
+    * TODO: cache inheritance set in header object to avoid retraversals, here and elsewhere (eg erased types). */
+  private def mayInheritFields(cls: CtorCls, ancestor: CtorCls): Bool = (cls, ancestor) match
+    case (cls: ClassLikeSymbol, ancestor: ClassLikeSymbol) =>
+      def go(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Bool = cur.irClassHeader match
+        case N => true
+        case S(ClassHeader(N)) => false
+        case S(ClassHeader(S(parent))) => parent.asClsOrMod match
+          case S(parent) => (parent is ancestor) || !seen(parent) && go(parent, seen + parent)
+          case N => true
+      go(cls, Set(cls))
+    case _ => false
   
   object AllUpperBounds extends
     SccAnalysis.NoopHandling[StratVar]
@@ -1174,6 +1197,14 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
           handle(
             c.args.find(_._1 is d.field).get._2,
             d.consVar)
+        // An inherited field is initialized by a parent constructor, which can receive any
+        // of the subclass constructor's arguments. This analysis does not relate them to
+        // the field, so the instance and the selected value must be treated as unknown.
+        // Otherwise, eg, dead-parameter elimination would drop the argument that the field holds.
+        // TODO: Properly track value flows through class constructors (current and inherited)
+        else if mayInheritFields(c.ctor, d.selectsFrom) then
+          handle(c, UnknownCons)
+          handle(UnknownProd, d)
       case (c: Ctor, UnknownCons) =>
         addCtorDest(c, UnknownCons)
         for (_, argProd) <- c.args do handle(argProd, UnknownCons)

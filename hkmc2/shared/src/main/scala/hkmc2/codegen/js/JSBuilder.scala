@@ -340,6 +340,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Call(s @ Select(_, Elaborator.ctx.builtins.BuiltInOpIdent(jsOp)), (lhs :: rhs :: Nil) :: Nil) =>
       val res = doc"${operand(lhs)} ${jsOp} ${operand(rhs)}"
       if needsParens(jsOp) then doc"(${res})" else res
+    case c @ Call(fun: SuperSelect, argss) =>
+      val first = argss.head.map(argument)
+      val base = doc"${result(fun)}.call(${(result(fun.qual) :: first).mkDocument(", ")})"
+      val calls = argss.tail.foldLeft(base): (acc, args) =>
+        doc"${acc}(${args.map(argument).mkDocument(", ")})"
+      if c.metadata.isMlsFun then
+        if checkMLsCalls then doc"$runtimeVar.checkCall($calls)" else calls
+      else doc"$runtimeVar.safeCall($calls)"
     case c @ Call(fun, argss) =>
       val base = subexpression(fun)
       val calls = argss.foldLeft(base): (acc, args) =>
@@ -358,6 +366,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         // lexical-`this` behavior of the Lambda IR.
         doc"(function* ($params) ${ braced(bodyDoc) }).bind(this)"
       else doc"($params) => ${ braced(bodyDoc) }"
+    case s @ SuperSelect(qual, base, id) =>
+      doc"Reflect.get(${resultQual(base)}.prototype, ${makeStringLiteral(id.name)}, ${result(qual)})"
     case s @ Select(qual, id) => 
       val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
@@ -503,7 +513,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case AssignDynField(p, f, ai, r, rst) =>
       doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst, endSemi)}"
     case Define(defn, rst) =>
-      def mkThis(sym: InnerSymbol): Document =
+      inline def mkThis(sym: InnerSymbol): Document =
         result(sym.asThis)
       val resJS = defn match
       case ValDefn(tsym, sym, p) =>
@@ -574,12 +584,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val ctorParams = backendParamList.paramSyms.map(p => p -> scope.allocateName(p))
             val sourceParamsOpt = isym.defn.flatMap(_.paramsOpt)
             
-            // * Whether the class should be "lifted" to a "class" property of the companion term
-            // * should currently be consistent with whether the class has source parameters.
-            // * This currently fails for faulty input programs (such as `object O(x)`);
-            // * we should make sure such programs fail compilation before they reach this point.
-            softTODO(sourceParamsOpt.isDefined === isym.shouldBeLifted,
-              s"$sourceParamsOpt.isDefined =/= ${isym.shouldBeLifted}")
+            // Parameterized classes have a generated constructor function; bare classes can
+            // instead have an explicit function companion. Both own their `.class` property.
+            // Invalid parameterized objects can still reach this point without a constructor.
+            softTODO(sourceParamsOpt.isEmpty || isym.shouldBeLifted,
+              s"Missing constructor function for parameterized class ${isym.nme}")
             
             def mkMethodName(td: FunDefn, owner: InnerSymbol): Document =
               if td.dSym.isPrivate
@@ -1001,7 +1010,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     :: locally:
       exprt match
       case S(sym) =>
-        doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
+        doc"\nexport default ${scope.lookup_!(sym, sym.toLoc)};\n"
       case N => doc""
   
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
@@ -1182,14 +1191,17 @@ object JSBuilder:
       * This helper is used at reference sites (MemberRef, Select) to decide whether to append `.class`
       * when accessing a class value. It returns true only for class/module/object symbols,
       * not for term symbols — so constructor calls like `Foo(args)` which resolve to the term
-      * symbol are not affected. */
+      * symbol are not affected. Elaboration rejects arbitrary values and parameterless
+      * functions as companions: the class property belongs to a compiler-created function,
+      * never to an existing value. Foreign declarations use their native binding instead. */
     def shouldBeLifted: Bool =
       val bsym = dsym.asBlkMember
       (
         (dsym.asTrm orElse bsym.flatMap(_.asTrm)).isDefined ||
         (dsym.asCls orElse bsym.flatMap(_.asCls)).flatMap(_.defn).exists(_.paramsOpt.isDefined)
       ) && 
-        (dsym.asModOrObj orElse dsym.asCls).isDefined
+        (dsym.asModOrObj orElse dsym.asCls).isDefined &&
+        dsym.defn.forall(_.hasDeclareModifier.isEmpty)
   
 end JSBuilder
 

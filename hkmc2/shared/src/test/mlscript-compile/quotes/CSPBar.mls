@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./../Example.mls"
 module CSPBar with ...
 fun res =

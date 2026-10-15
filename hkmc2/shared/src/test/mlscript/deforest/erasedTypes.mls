@@ -1,3 +1,4 @@
+:.
 :global
 :sir
 :siret
@@ -6,6 +7,7 @@
 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ import "..." as Predef; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Deforestation extracts a fusing match's branches and continuation into new functions, renaming the symbols
 // that cross into them. A rename stands for the same slot as the symbol it replaces, so it takes that
@@ -35,6 +37,7 @@ data class Pair(a: Int, b: Str)
 //│   }
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // A fused field selection is replaced by a symbol standing for the constructor argument (`Box_v`), which is both
@@ -70,6 +73,7 @@ fun selected(n: Int, k: Str) =
 //│   return b(arg$Box$0$, x, k)
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // The code following the match becomes a separate continuation function, whose free variables are typed the
@@ -106,6 +110,7 @@ fun withRest(n: Int, k: Str) =
 //│   return b(arg$Box$0$, x, tmp, r, k)
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // A constructor field that no branch selects still becomes a parameter, so that the branch function takes the
@@ -136,3 +141,4 @@ fun noFields(n: Int, s: Str) =
 //│   return p()
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

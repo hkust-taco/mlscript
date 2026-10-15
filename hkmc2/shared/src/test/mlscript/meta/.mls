@@ -1,3 +1,4 @@
+:..
 :js
 console.log("Imported from '" + source.file.slice(source.file.lastIndexOf("/src/") + 1) + "'")
 40 + 2

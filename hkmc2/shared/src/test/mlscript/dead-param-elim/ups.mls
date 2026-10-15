@@ -1,10 +1,11 @@
+:.
 :js
 :flowBasedOpt debugDpe
 
 
 :ucs ups
 pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
-//│ elaborated pattern body: [x] => x⁰ ∨ [x, ...Middle as m, y] => m⁰
+//│ elaborated pattern body: [x‹x⁰›] => x¹ ∨ [x‹x²›, ...member:Middle⁰ as m‹m⁰›, y‹y⁰›] => m¹
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > lambda⁰#0 @ <root> -> eliminable: {0, 1}
 //│ dead-param-elim > <<< dead-param-elim results <<<

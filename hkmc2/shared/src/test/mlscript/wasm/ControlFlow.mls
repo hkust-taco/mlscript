@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 if 1 === 2 do 2 + 2

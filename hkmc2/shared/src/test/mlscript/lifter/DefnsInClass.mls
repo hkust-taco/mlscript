@@ -1,3 +1,4 @@
+:..
 :.
 // NOTE: due to conflict between flow analysis and lifter
 :flowBasedOpt off

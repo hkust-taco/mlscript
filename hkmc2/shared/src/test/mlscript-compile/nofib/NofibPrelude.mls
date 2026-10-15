@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open Predef
 
@@ -33,7 +35,7 @@ fun _internal_cons_to_str(ls) = if ls is
   Nil then ""
   h :: Nil then render(h)
   h :: t then render(h) + "," + _internal_cons_to_str(t)
-fun ltList(xs, ys, lt, gt) = if xs is
+fun ltList(xs, ys, lt: Function, gt: Function) = if xs is
   Nil and
     ys is Nil then false
     else true
@@ -52,20 +54,20 @@ abstract class LzList[out T]: LzCons[T] | LzNil
 data class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
 object LzNil extends LzList
 
-fun ltTup2(t1, t2, lt1, gt1, lt2) = if t1 is [a, b] and t2 is [c, d] and
+fun ltTup2(t1, t2, lt1: Function, gt1: Function, lt2: Function) = if t1 is [a, b] and t2 is [c, d] and
   lt1(a, c) then true
   gt1(a, c) then false
   else lt2(b, d)
 fun eqTup2(t1, t2) = if t1 is [a, b] and t2 is [c, d] then a == c and b == d
 
-fun compose(f, g) = x => f(g(x))
+fun compose(f: Function, g: Function) = x => f(g(x))
 
 fun snd(x) = if x is [f, s] then s
 fun fst(x) = if x is [f, s] then f
 
-fun until(p, f, i) = if p(i) then i else until(p, f, f(i))
+fun until(p: Function, f: Function, i) = if p(i) then i else until(p, f, f(i))
 
-fun flip(f, x, y) = f(y)(x)
+fun flip[A, B, C](f: B -> A -> C, x: A, y: B): C = f(y)(x)
 
 fun power(a, n) = globalThis.Math.pow(a, n)
 
@@ -86,13 +88,13 @@ fun abs(x) = globalThis.Math.abs(x)
 fun head(l) = if l is h :: t then h
 fun tail(l) = if l is h :: t then t
 
-fun while_(p, f, x) = if p(x) then while_(p, f, f(x)) else x
+fun while_(p: Function, f: Function, x) = if p(x) then while_(p, f, f(x)) else x
 
 fun reverse(l) =
   fun r(l', l) = if l is x :: xs then r(x :: l', xs) else l'
   r(Nil, l)
 
-fun map(f, xs) = if xs is
+fun map[A, B](f: A -> B, xs: List[A]): List[B] = if xs is
   x :: xs then f(x) :: map(f, xs)
   Nil then Nil
 
@@ -107,7 +109,7 @@ fun listEq(xs, ys) = if
   xs is hx :: tx and ys is hy :: ty and (hx == hy) then listEq(tx, ty)
   else false
 
-fun listEqBy(f, a, b) = if a is
+fun listEqBy(f: Function, a, b) = if a is
   Nil and b is Nil then true
   x :: xs and b is y :: ys then f(x, y) && listEqBy(f, xs, ys)
   else false
@@ -155,13 +157,13 @@ fun concat(ls) = if ls is
   Nil then Nil
   x :: xs then append(x, concat(xs))
 
-fun filter(f, ls) = if ls is
+fun filter(f: Function, ls) = if ls is
   Nil then Nil
   h :: t and
     f(h) then h :: filter(f, t)
     else filter(f, t)
 
-fun all(p, ls) = if ls is
+fun all(p: Function, ls) = if ls is
   Nil then true
   h :: t and
     p(h) then all(p, t)
@@ -173,46 +175,46 @@ fun orList(ls) = if ls is
     h then true
     else orList(t)
 
-fun leaveWhile(f, ls) = if ls is
+fun leaveWhile(f: Function, ls) = if ls is
   Nil then Nil
   h :: t and
     f(h) then leaveWhile(f, t)
     else h :: t
 
-fun foldl(f, a, xs) = if xs is
+fun foldl[A, B](f: (B, A) -> B, a: B, xs: List[A]): B = if xs is
   Nil then a
   h :: t then foldl(f, f(a, h), t)
 
-fun scanl(f, q, ls) = if ls is
+fun scanl(f: Function, q, ls) = if ls is
   Nil then q :: Nil
   x :: xs then q :: scanl(f, f(q, x), xs)
 
-fun scanr(f, q, ls) = if ls is
+fun scanr(f: Function, q, ls) = if ls is
   Nil then q :: Nil
   x :: xs and scanr(f, q, xs) is q :: t then f(x, q) :: q :: t
 
-fun foldr(f, z, xs) = if xs is
+fun foldr[A, B](f: (A, B) -> B, z: B, xs: List[A]): B = if xs is
   Nil then z
   h :: t then f(h, foldr(f, z, t))
 
 fun foldl1(f, ls) = if
   ls is x :: xs then foldl(f, x, xs)
 
-fun foldr1(f, ls) = if ls is
+fun foldr1[A](f: (A, A) -> A, ls: List[A]): A = if ls is
   x :: Nil then x
   x :: xs then f(x, foldr1(f, xs))
 
 fun maximum(xs) = foldl1((x, y) => if x > y then x else y, xs)
 
-fun nubBy(eq, ls) = if ls is
+fun nubBy(eq: Function, ls) = if ls is
   Nil then Nil
   h :: t then h :: nubBy(eq, filter(y => not(eq(h, y)), t))
 
-fun zipWith(f, xss, yss) = if
+fun zipWith(f: Function, xss, yss) = if
   xss is x :: xs and yss is y :: ys then f(x, y) :: zipWith(f, xs, ys)
   else Nil
 
-fun deleteBy(eq, x, ys) = if ys is
+fun deleteBy(eq: Function, x, ys) = if ys is
   Nil then Nil
   y :: ys and
     eq(x, y) then ys
@@ -261,31 +263,31 @@ fun transpose(xss) =
     Nil :: xss then transpose(xss)
     (x :: xs) :: xss and unzip(lscomp(xss)) is [hds, tls] then combine(x, hds, xs, tls)
 
-fun break_(p, ls) = if ls is
+fun break_(p: Function, ls) = if ls is
   Nil then [Nil, Nil]
   x :: xs and
     p(x) then [Nil, x :: xs]
     break_(p, xs) is [ys, zs] then [x :: ys, zs]
 
-fun flatMap(f, ls) = if ls is
+fun flatMap(f: Function, ls) = if ls is
   Nil then Nil
   h :: t then append(f(h), flatMap(f, t))
 
 // =====================
 
-fun map_lz(f, ls) = lazy of () =>
+fun map_lz(f: Function, ls) = lazy of () =>
   if force(ls) is
     LzNil then LzNil
     LzCons(h, t) then LzCons(f(h), map_lz(f, t))
 
-fun filter_lz(p, ls) = lazy of () =>
+fun filter_lz(p: Function, ls) = lazy of () =>
   if force(ls) is
     LzNil then LzNil
     LzCons(h, t) and
       p(h) then LzCons(h, filter_lz(p, t))
       else force(filter_lz(p, t))
 
-fun nubBy_lz(eq, ls) = lazy of () =>
+fun nubBy_lz(eq: Function, ls) = lazy of () =>
   if force(ls) is
     LzNil then LzNil
     LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter_lz(y => not(eq(h, y)), t)))
@@ -320,15 +322,15 @@ fun zip_lz_lz(xs, ys) = if
   force(xs) is LzCons(x, xs) and force(ys) is LzCons(y, ys) then lazy of () => LzCons([x, y], zip_lz_lz(xs, ys))
   else lazy of () => LzNil
 
-fun zipWith_lz_lz(f, xss, yss) = lazy of () => if
+fun zipWith_lz_lz(f: Function, xss, yss) = lazy of () => if
   force(xss) is LzCons(x, xs) and (force(yss)) is LzCons(y, ys) then LzCons(f(x, y), zipWith_lz_lz(f, xs, ys))
   else LzNil
 
-fun zipWith_lz_nl(f, xss, yss) = if
+fun zipWith_lz_nl(f: Function, xss, yss) = if
   force(xss) is LzCons(x, xs) and yss is y :: ys then f(x, y) :: zipWith_lz_nl(f, xs, ys)
   else Nil
 
-fun iterate(f, x) = lazy of () => LzCons(x, iterate(f, f(x)))
+fun iterate(f: Function, x) = lazy of () => LzCons(x, iterate(f, f(x)))
 
 fun append_nl_lz(xs, ys) = if xs is
   Nil then ys
@@ -359,8 +361,8 @@ fun tan(x) = globalThis.Math.tan(x)
 fun sin(x) = globalThis.Math.sin(x)
 fun cos(x) = globalThis.Math.cos(x)
 fun round(x) = globalThis.Math.round(x)
-fun int_of_char(x) = x.charCodeAt(0)
-fun nofibStringToList(s) =
+fun int_of_char(x: Str) = x.charCodeAt(0)
+fun nofibStringToList(s: Str) =
   fun go(i) = if i < s.length then s.charAt(i) :: go(i + 1) else Nil
   go(0)
 fun nofibListToString(ls) = if ls is

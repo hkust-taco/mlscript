@@ -1,0 +1,88 @@
+:.
+
+// A base-class method can run on a subclass. Matching this must expose the
+// subclass's declared fields, including recursive fields of the base type.
+:expect 3
+data class Expr with
+  constructor
+    Lit(value: Int)
+    Add(lhs: Expr, rhs: Expr)
+  fun eval: Int = if this is
+    Lit(value) then value
+    Add(lhs, rhs) then lhs.eval + rhs.eval
+Add(Lit(1), Lit(2)).eval
+//│ = 3
+
+// The receiver can be captured by a nested function; aliases and nested
+// constructor patterns must retain the subclass interface and lexical path.
+:expect [3, 0, 4]
+class Reader with
+  fun read(): Int =
+    let self = this
+    fun nested() = if self is Text as text then text.value.length else 0
+    nested()
+  fun first(): Int = if this is Pair(Text as text, _) then text.value.length else 0
+class Text(val value: Str) extends Reader
+class Pair(val left: Reader, val right: Reader) extends Reader
+[Text("abc").read(), (new Reader).read(), Pair(Text("four"), Text("five")).first()]
+//│ = [3, 0, 4]
+
+// Each enclosing generic activation retains its own field type when a local
+// subclass is matched by an inherited method.
+:expect [5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A](item: A) =
+  class Parent with
+    fun read() = if this is Child(items) then items.0 else item
+  class Child(val items: Array[A]) extends Parent
+  Child([item])
+[make(First(5)).read().first, make(Second(6)).read().second]
+//│ = [5, 6]
+
+// A concrete allocation is not an abstract self reference. An impossible
+// subclass branch must not add an extra candidate to the result.
+:expect 7
+class ConcreteBase
+class ConcreteChild extends ConcreteBase
+let result = if new ConcreteBase is ConcreteChild as child then child else [7]
+result.0
+//│ = 7
+//│ result = [7]
+
+// Refinement supplies the declared field interface, not arbitrary members.
+:e
+data class Bad with
+  constructor
+    Entry(text: Str)
+  fun read = if this is Entry(text) then text.absent
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.58: 	  fun read = if this is Entry(text) then text.absent
+//│ ║        	                                         ^^^^^^^^^^^
+//│ ╟── Value of type 'Str' does not contain member 'absent'
+//│ ║  l.57: 	    Entry(text: Str)
+//│ ╙──      	                ^^^
+
+// A generic subclass's omitted argument stays abstract even when a local
+// allocation happens to supply a string.
+:e
+class Parent with
+  fun read = if this is Child(item) then item.length else 0
+class Child[A](val item: A) extends Parent
+Child("abc").read
+//│ ╔══[COMPILATION ERROR] This selection of member 'length' has no resolved target
+//│ ║  l.70: 	  fun read = if this is Child(item) then item.length else 0
+//│ ╙──      	                                         ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Exercise the imported recursive methods whose pattern bindings previously
+// needed casts, including nested aliases in the pretty-printer.
+:expect [true, true, "x y", "(λx. x) y", true, false]
+import "../../mlscript-compile/ups/EvaluationContext.mls"
+open EvaluationContext
+let term = App(Var("x"), Var("y"))
+[term.freeVars.has("x"), term.freeVars.has("y"), term.show,
+ App(Abs(Var("x"), Var("x")), Var("y")).show,
+ term.equals(App(Var("x"), Var("y"))), term.equals(App(Var("x"), Var("z")))]
+//│ = [true, true, "x y", "(λx. x) y", true, false]
+//│ term = App(Var("x"), Var("y"))

@@ -1,30 +1,32 @@
 
 
-type Option[A] = Option.{ Some(A) | None }
+#lang(0.3.x)
+
+type Option[A] = Option.{ Some[A] | None }
 
 module Option with ...
 
 
-data class Some[T](value)
+data class Some[T](value: T)
 object None
 
-fun isDefined(x) = if x is
+fun isDefined[A](x: Option[A]): Bool = if x is
   Some then true
   None then false
 
 data class Both(fst, snd)
 
 
-fun getOrElse(opt, default) = if opt is
+fun getOrElse[A](opt: Option[A], default: A): A = if opt is
   Some(value) then value
   None then default
 
-fun flatMap(opt, f) = if opt is
+fun flatMap[A, B](opt: Option[A], f: A -> Option[B]): Option[B] = if opt is
   Some(value) then f(value)
   None then None
 
 module unsafe with
-  fun get(opt) = if opt is
+  fun get[A](opt: Option[A]): A = if opt is
     Some(value) then value
     None then throw Error("None.get")
 

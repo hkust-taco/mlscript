@@ -1,0 +1,129 @@
+:.
+
+// A by-name invocation allocates storage before the returned closure is called.
+// Later calls through one stored result share that storage and its type instance.
+:expect [1, 2]
+private fun make[A] =
+  let cells = mut []
+  (value: A) =>
+    cells.push(value)
+    cells.length
+private val shared = make
+[shared(1), shared(2)]
+//│ = [1, 2]
+//│ shared = fun
+
+// Distinct by-name invocation sites create distinct storage, even in one class.
+:expect [1, 1, 2]
+class Factory with
+  fun make[A] =
+    let cells = mut []
+    (value: A) =>
+      cells.push(value)
+      cells.length
+private val factory = new Factory
+private val left = factory.make
+private val right = factory.make
+[left(1), right(2), left(3)]
+//│ = [1, 1, 2]
+//│ factory = Factory
+//│ left = fun
+//│ right = fun
+
+// One stored result cannot acquire independent element types on its later calls.
+// The second invocation returns the first inserted value, which has no .second.
+:ge
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A] =
+  let cells = mut []
+  (value: A) =>
+    cells.push(value)
+    cells.0
+private val shared = make
+shared(First(1))
+shared(Second(2)).second
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.45: 	shared(Second(2)).second
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.44: 	shared(First(1))
+//│ ╙──      	       ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ shared = fun
+
+// An annotated result must not re-generalize the by-name definition's binder.
+// Both calls use one allocated array; the result of the second is still First.
+:e
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A]: A -> A =
+  let cells = mut []
+  (value: A) =>
+    cells.push(value)
+    cells.0
+private val shared = make
+shared(First(3))
+shared(Second(4)).second
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.67: 	shared(Second(4)).second
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.66: 	shared(First(3))
+//│ ╙──      	       ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ shared = fun
+
+// Explicit arguments instantiate the invocation, before the returned closure is used.
+:expect [5, 6]
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A]: A -> A = (value: A) => value
+private val left = make[First]
+private val right = make[Second]
+[left(First(5)).first, right(Second(6)).second]
+//│ = [5, 6]
+//│ left = fun
+//│ right = fun
+
+// A selected by-name method consumes its own binders while retaining its receiver.
+:expect [7, 8]
+class First(val first: Int)
+class Second(val second: Int)
+class Factory with
+  fun make[A]: A -> A = (value: A) => value
+private val factory = new Factory
+private val left = factory.make[First]
+private val right = factory.make[Second]
+[left(First(7)).first, right(Second(8)).second]
+//│ = [7, 8]
+//│ factory = Factory
+//│ left = fun
+//│ right = fun
+
+// An explicit invocation inside a generic body retains its enclosing captures.
+:expect [9, 10]
+class First(val first: Int)
+class Second(val second: Int)
+private fun make[A]: A -> A = (value: A) => value
+private fun wrap[T](value: T) = make[T](value)
+[wrap[First](First(9)).first, wrap[Second](Second(10)).second]
+//│ = [9, 10]
+
+// Separate signatures bind the by-name definition, not its returned closure.
+:e
+class First(val first: Int)
+class Second(val second: Int)
+private fun make: [A] -> A -> A
+private fun make = value => value
+private val shared = make
+shared(First(11))
+shared(Second(12)).second
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.121: 	shared(Second(12)).second
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.120: 	shared(First(11))
+//│ ╙──       	       ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ shared = fun

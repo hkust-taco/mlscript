@@ -1,3 +1,4 @@
+:.
 :js
 :patMatConsequentSharingThreshold 5
 
@@ -335,7 +336,7 @@ fun foo(x, y, z) = if
 //│ >    y is 2 then "_2_"
 //│ >    else "___"
 
-fun expensive_call(str) = Math.pow(2, str.length)
+fun expensive_call(str: Str) = Math.pow(2, str.length)
 
 :sir
 fun foo(x, y, z) = if x is
@@ -362,19 +363,19 @@ fun foo(x, y, z) = if x is
 //│               return "001"
 //│             else
 //│               set value = "hello";
-//│               return expensive_call⁰(value)
+//│               return expensive_call⁰((value as! Str⁰))
 //│           end
 //│         1 =>
 //│           return "01"
 //│         else
 //│           set value = "hello";
-//│           return expensive_call⁰(value)
+//│           return expensive_call⁰((value as! Str⁰))
 //│       end
 //│     1 =>
 //│       return "1"
 //│     else
 //│       set value = "hello";
-//│       return expensive_call⁰(value)
+//│       return expensive_call⁰((value as! Str⁰))
 //│   end
 //│ };
 //│ end
@@ -500,11 +501,11 @@ fun foo1(x, y, z) = if
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    let-split σ =
-//│ >      z is A then (member:Predef¹.)print‹member:print›(2)
-//│ >      else (member:Predef¹.)print‹member:print›(3)
-//│ >    x is A and
-//│ >      let tmp:scrut = member:pred⁰(x¹)
-//│ >      tmp:scrut is true then (member:Predef¹.)print‹member:print›(1)
+//│ >      z is member:A¹^term:foo1⁰ then member:Predef¹.print^term:foo1⁰(2)
+//│ >      else member:Predef¹.print^term:foo1⁰(3)
+//│ >    x is member:A¹^term:foo1⁰ and
+//│ >      let tmp:scrut = member:pred⁰^term:foo1⁰(x¹)
+//│ >      tmp:scrut is true then member:Predef¹.print^term:foo1⁰(1)
 //│ >      $σ
 //│ >    $σ
 
@@ -519,15 +520,15 @@ fun foo2(x, y, z) = if
 //│ >  ‹if|while›
 //│ >    let-split σ =
 //│ >      let-split σ =
-//│ >        z is A then (member:Predef¹.)print‹member:print›(3)
-//│ >        else (member:Predef¹.)print‹member:print›(4)
-//│ >      y is A and
-//│ >        let tmp:scrut = member:pred⁰(y²)
-//│ >        tmp:scrut is true then (member:Predef¹.)print‹member:print›(2)
+//│ >        z is member:A¹^term:foo2⁰ then member:Predef¹.print^term:foo2⁰(3)
+//│ >        else member:Predef¹.print^term:foo2⁰(4)
+//│ >      y is member:A¹^term:foo2⁰ and
+//│ >        let tmp:scrut = member:pred⁰^term:foo2⁰(y²)
+//│ >        tmp:scrut is true then member:Predef¹.print^term:foo2⁰(2)
 //│ >        $σ
 //│ >      $σ
-//│ >    x is A and
-//│ >      let tmp:scrut = member:pred⁰(x²)
-//│ >      tmp:scrut is true then (member:Predef¹.)print‹member:print›(1)
+//│ >    x is member:A¹^term:foo2⁰ and
+//│ >      let tmp:scrut = member:pred⁰^term:foo2⁰(x²)
+//│ >      tmp:scrut is true then member:Predef¹.print^term:foo2⁰(1)
 //│ >      $σ
 //│ >    $σ

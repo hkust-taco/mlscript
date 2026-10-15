@@ -1,0 +1,50 @@
+:.
+
+// An annotated receiver cannot import its constructor parameter's capture context.
+class Box(val value)
+fun read(box: Box) = box.value
+read(Box(42))
+//│ Wasm result:
+//│ = 42
+
+// A declared field type supplies the next receiver independently of observed calls.
+class Item(val value)
+class Box(val item: Item)
+fun read(box: Box) = box.item.value
+read(Box(Item(42)))
+//│ Wasm result:
+//│ = 42
+
+// Function constraints resolve this example; first-class anonymous functions remain unsupported in WASM.
+:fixme
+class Foo[X](val f: X -> X)
+fun test[A](x: Foo[[A, Int]]) = x.f
+test(new Foo(arg => [arg.0 + 1, arg.1 + 2]))([1, 2])
+//│ ═══[COMPILATION ERROR] WatBuilder::returningTerm for FunDefn(...) where `!sym.nameIsMeaningful` not implemented yet
+//│ ╔══[COMPILATION ERROR] Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type
+//│ ║  l.22: 	test(new Foo(arg => [arg.0 + 1, arg.1 + 2]))([1, 2])
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Static tuple projections lower to WASM array accesses.
+:expect 42
+let xs = [1, 42]
+xs.1
+//│ Wasm result:
+//│ = 42
+
+// Tuple writes use the same zero-based indexed representation.
+:expect 42
+let xs = mut [1, 2]
+set xs.0 = 42
+xs.0
+//│ Wasm result:
+//│ = 42
+
+// Calling a function loaded from a tuple still needs WASM callable representation support.
+:fixme
+:expect 42
+fun increment(x: Int): Int = x + 1
+[increment].0(41)
+//│ ╔══[COMPILATION ERROR] Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type
+//│ ║  l.47: 	[increment].0(41)
+//│ ╙──      	^^^^^^^^^^^^^^^^^

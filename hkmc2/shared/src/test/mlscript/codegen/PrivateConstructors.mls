@@ -1,0 +1,20 @@
+:.
+:js
+
+
+:todo
+class Foo with
+  private constructor(val x, val y)
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.7: 	  private constructor(val x, val y)
+//│ ║       	  ^^^^^^^
+//│ ╟── A target term is expected at the end of block
+//│ ║  l.7: 	  private constructor(val x, val y)
+//│ ╙──     	                                   ^
+
+:breakme
+:e
+new Foo(1, 2)
+//│ = Foo
+
+

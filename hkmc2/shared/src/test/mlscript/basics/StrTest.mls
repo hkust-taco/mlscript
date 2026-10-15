@@ -1,8 +1,10 @@
+:.
 :js
 
 import "../../mlscript-compile/StrOps.mls"
 
 open StrOps
+open StrOps { concat2, ~ }
 
 
 :sjs
@@ -27,32 +29,40 @@ concat of
 
 :e
 (~)("a", "b", "c")
-//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 3
-//│ ║  l.29: 	(~)("a", "b", "c")
-//│ ╙──      	   ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.31: 	(~)("a", "b", "c")
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── Function 'concat2' expected 2 arguments, but got 3
+//│ ║  in ../../mlscript-compile/StrOps.mls
+//│ ║  l.6: 	fun (~) concat2(a, b) = a + b
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = "ab"
 
 
 :e
 (~)("a")
-//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.37: 	(~)("a")
-//│ ╙──      	   ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.43: 	(~)("a")
+//│ ║        	^^^^^^^^
+//│ ╟── Function 'concat2' expected 2 arguments, but got 1
+//│ ║  in ../../mlscript-compile/StrOps.mls
+//│ ║  l.6: 	fun (~) concat2(a, b) = a + b
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = "aundefined"
 
 :ge
 ~"a"
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.44: 	~"a"
-//│ ╙──      	 ^^^
+//│ ║  l.54: 	~"a"
+//│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :ge
 ~("a", "b")
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.52: 	~("a", "b")
-//│ ╙──      	       ^^^
+//│ ║  l.62: 	~("a", "b")
+//│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -60,14 +70,14 @@ concat of
 :ge
 ~ of "a", "b"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'of' keyword instead
-//│ ║  l.61: 	~ of "a", "b"
+//│ ║  l.71: 	~ of "a", "b"
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.61: 	~ of "a", "b"
+//│ ║  l.71: 	~ of "a", "b"
 //│ ╙──      	     ^^^
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.61: 	~ of "a", "b"
-//│ ╙──      	     ^^^
+//│ ║  l.71: 	~ of "a", "b"
+//│ ╙──      	^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 (~) of "a", "b"

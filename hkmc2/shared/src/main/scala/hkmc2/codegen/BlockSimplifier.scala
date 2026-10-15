@@ -1538,6 +1538,10 @@ class BlockSimplifier
         def canBeInlineEliminated: Bool =
           isPrivate && !isMethod && !defn.noInline && useCount <= 1 && !disallowElimination && !isLoopBreaker
             && !isPatternHelper && !hasDuplicateBindings
+            // Class/module references still need the function object that owns their `.class`.
+            // Term-only use counts cannot establish that this shared binding is dead;
+            // ordinary DCE can remove it once neither interpretation is referenced.
+            && defn.sym.asClsOrMod.isEmpty
           // false
         
         def inlineCost(newBlk: Block, threshold: Int): Opt[Int] =
@@ -1703,8 +1707,18 @@ class BlockSimplifier
           registerNonLocalFunction(ts)
 
         override def applyResult(r: Result): Unit = r match
-          case c @ Call(TermSymbolPath(ts), argss) =>
+          case c @ Call(fun @ TermSymbolPath(ts), argss) =>
             observeCall(ts, c, currentCallGraphSource)
+            // A resolved method call still uses its receiver (and a super call its parent)
+            // as ordinary values. In particular, a function whose only use is as such a
+            // receiver, as in `(x => x).apply(...)`, is not dead.
+            fun match
+              case Select(qual, _) => applyPath(qual)
+              case SuperSelect(qual, base, _) => applyPath(qual); applyPath(base)
+              // Otherwise, `fun` is a direct `Value.MemberRef` to `ts`: the call target itself,
+              // which `observeCall` records. Traversing it as a value would count `ts` again and
+              // set `disallowElimination`, preventing every directly called function from being inlined.
+              case _ => ()
             argss.foreach(_.foreach(applyArg))
           case _ => super.applyResult(r)
         

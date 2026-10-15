@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -17,7 +19,7 @@ fun qsort(le, ls, r) = if ls is
   x :: Nil then x :: r
   x :: xs then qpart(le, x, xs, Nil, Nil, r)
 
-fun qpart(le, x, ls, rlt, rge, r) = if ls is
+fun qpart(le: Function, x, ls, rlt, rge, r) = if ls is
   Nil then rqsort(le, rlt, x :: rqsort(le, rge, r))
   y :: ys and
     le(x, y) then qpart(le, x, ys, rlt, y :: rge, r)
@@ -28,7 +30,7 @@ fun rqsort(le, ls, r) = if ls is
   x :: Nil then x :: r
   x :: xs then rqpart(le, x, xs, Nil, Nil, r)
 
-fun rqpart(le, x, ls, rle, rgt, r) = if ls is
+fun rqpart(le: Function, x, ls, rle, rgt, r) = if ls is
   Nil then rqsort(le, rle, x :: qsort(le, rgt, r))
   y :: ys and
     le(y, x) then rqpart(le, x, ys, y :: rle, rgt, r)
@@ -54,21 +56,21 @@ data class Node[out T](lab: T, children: List[Node[T]])
 
 fun label(n) = if n is Node(l, _) then l
 
-fun mapTree(f, n) = if n is Node(l, c) then Node(f(l), map((x => mapTree(f, x)), c))
+fun mapTree(f: Function, n) = if n is Node(l, c) then Node(f(l), map((x => mapTree(f, x)), c))
 
-fun foldTree(f, n) = if n is Node(l, c) then f(l, map((x => foldTree(f, x)), c))
+fun foldTree(f: Function, n) = if n is Node(l, c) then f(l, map((x => foldTree(f, x)), c))
 
-fun filterTree(p, t) =
+fun filterTree(p: Function, t) =
   fun f1(a, cs) = Node(a, filter(x => p(label(x)), cs))
   foldTree(f1, t)
 
-fun prune(p, t) = filterTree(x => not(p(x)), t)
+fun prune(p: Function, t) = filterTree(x => not(p(x)), t)
 
 fun leaves(t) = if t is
   Node(leaf, Nil) then leaf :: Nil
   Node(_, cs) then concat(map(leaves, cs))
 
-fun initTree(f, x) = Node(x, map(y => initTree(f, y), f(x)))
+fun initTree(f: Function, x) = Node(x, map(y => initTree(f, y), f(x)))
 
 // -- Figure 3.  Simple backtracking solver for CSPs.
 fun mkTree(csp) = if csp is CSP(vars, vals, rel) then
@@ -122,7 +124,7 @@ fun knownSolution(c) = if c is
 
 fun checkComplete(csp, s) = if complete(csp, s) then Known(Nil) else Unknown
 
-fun search(labeler, csp) =
+fun search(labeler: Function, csp) =
   map of
     fst
     filter of

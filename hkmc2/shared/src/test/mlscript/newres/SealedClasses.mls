@@ -1,0 +1,142 @@
+:.
+
+import "../../mlscript-compile/SealedClasses.mls"
+
+// Worksheet blocks and nested scopes still belong to the same compilation unit.
+class Local { fun value() = 3 }
+
+:expect [3, 3, 3]
+class LocalChild extends Local
+module Nested with
+  class LocalChild extends Local
+[(new LocalChild).value(), (new Nested.LocalChild).value(),
+ (new Local with { fun extra() = 4 }).value()]
+//│ = [3, 3, 3]
+
+// A sealed class can still be constructed outside its defining unit.
+:expect 1
+(new SealedClasses.Closed).value()
+//│ = 1
+
+:expect [2, 4, 1]
+class OpenChild extends SealedClasses.Open
+class AbstractChild extends SealedClasses.Abstract { fun value() = 4 }
+class IndirectChild extends SealedClasses.OpenChild
+[(new OpenChild).value(), (new AbstractChild).value(), (new IndirectChild).value()]
+//│ = [2, 4, 1]
+
+:e
+class Invalid extends SealedClasses.Closed
+//│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
+//│ ║  l.29: 	class Invalid extends SealedClasses.Closed
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
+//│ ║  in ../../mlscript-compile/SealedClasses.mls
+//│ ║  l.3: 	  class Closed { fun value() = 1 }
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Neither modifier on the subclass grants access to a sealed parent.
+:e
+open class InvalidOpen extends SealedClasses.Closed
+//│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
+//│ ║  l.40: 	open class InvalidOpen extends SealedClasses.Closed
+//│ ║        	                               ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
+//│ ║  in ../../mlscript-compile/SealedClasses.mls
+//│ ║  l.3: 	  class Closed { fun value() = 1 }
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+abstract class InvalidAbstract extends SealedClasses.Closed
+//│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
+//│ ║  l.50: 	abstract class InvalidAbstract extends SealedClasses.Closed
+//│ ║        	                                       ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
+//│ ║  in ../../mlscript-compile/SealedClasses.mls
+//│ ║  l.3: 	  class Closed { fun value() = 1 }
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Openness is not inherited by subclasses.
+:e
+class InvalidGrandchild extends SealedClasses.ClosedChild
+//│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'ClosedChild' outside its compilation unit
+//│ ║  l.61: 	class InvalidGrandchild extends SealedClasses.ClosedChild
+//│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'ClosedChild' is defined here; declare it 'open' or 'abstract' to allow external subclasses
+//│ ║  in ../../mlscript-compile/SealedClasses.mls
+//│ ║  l.8: 	  class ClosedChild extends Open
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+object InvalidObject extends SealedClasses.Closed
+//│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
+//│ ║  l.71: 	object InvalidObject extends SealedClasses.Closed
+//│ ║        	                             ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
+//│ ║  in ../../mlscript-compile/SealedClasses.mls
+//│ ║  l.3: 	  class Closed { fun value() = 1 }
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+new SealedClasses.Closed with { fun extra() = 4 }
+//│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
+//│ ║  l.81: 	new SealedClasses.Closed with { fun extra() = 4 }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
+//│ ║  in ../../mlscript-compile/SealedClasses.mls
+//│ ║  l.3: 	  class Closed { fun value() = 1 }
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = $anon
+
+:e
+let storedParent = SealedClasses.Closed
+class InvalidStored extends storedParent
+//│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
+//│ ║  l.93: 	class InvalidStored extends storedParent
+//│ ║        	                            ^^^^^^^^^^^^
+//│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
+//│ ║  in ../../mlscript-compile/SealedClasses.mls
+//│ ║  l.3: 	  class Closed { fun value() = 1 }
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ storedParent = class Closed
+
+:e
+class InvalidAlias extends SealedClasses.alias
+//│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
+//│ ║  l.104: 	class InvalidAlias extends SealedClasses.alias
+//│ ║         	                           ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
+//│ ║  in ../../mlscript-compile/SealedClasses.mls
+//│ ║  l.3: 	  class Closed { fun value() = 1 }
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+class InvalidNested extends SealedClasses.Nested.Closed
+//│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
+//│ ║  l.114: 	class InvalidNested extends SealedClasses.Nested.Closed
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
+//│ ║  in ../../mlscript-compile/SealedClasses.mls
+//│ ║  l.11: 	    class Closed
+//│ ╙──      	    ^^^^^^^^^^^^
+
+// The prelude's universal superclass is explicitly open.
+:expect 5
+class ExplicitObject extends Object { fun value() = 5 }
+(new ExplicitObject).value()
+//│ = 5
+
+:e
+class InvalidParameterized extends SealedClasses.Parameterized[Int](1)
+//│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Parameterized' outside its compilation unit
+//│ ║  l.130: 	class InvalidParameterized extends SealedClasses.Parameterized[Int](1)
+//│ ║         	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Parameterized' is defined here; declare it 'open' or 'abstract' to allow external subclasses
+//│ ║  in ../../mlscript-compile/SealedClasses.mls
+//│ ║  l.12: 	  class Parameterized[A](val item: A)
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:expect 7
+class OpenParameterized extends SealedClasses.OpenParameterized[Int](7)
+(new OpenParameterized).item
+//│ = 7

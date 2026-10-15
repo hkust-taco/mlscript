@@ -212,6 +212,14 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     // search for unliftable classes and build the extends graph
     new BlockTraverser:
       this.applyScopedObject(s.obj)
+      override def applyPath(p: Path): Unit = p match
+        // A direct superclass reference, like an extends or Instantiate operand, does not
+        // let the class escape as a value. Its receiver still needs ordinary capture analysis.
+        case sel @ SuperSelect(qual, RefOfDefn(S(cls: ClassSymbol), _), _) =>
+          applyPath(qual)
+          cls.traverse
+          sel.symbol.traverse
+        case _ => super.applyPath(p)
       override def applyCase(cse: Case): Unit =
         cse match
           case Case.Cls(cls: (ClassSymbol | ModuleOrObjectSymbol), _) =>
@@ -1181,7 +1189,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     val cls = obj.cls
     
     val flattenedSym = BlockMemberSymbol(obj.cls.sym.nme + "$", Nil, true)
-    val flattenedDSym = TermSymbol.fromFunBms(flattenedSym, N, erasedType = N)
+    val flattenedDSym = TermSymbol(syntax.Fun, N, Tree.Ident(flattenedSym.nme))
     
     // Contains *all* parameters, and applies them all at once in a single `Instantiate`
     def mkFlattenedDefn: FunDefn =
@@ -1199,7 +1207,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       // * The flattened definition takes every parameter list at once and returns an instance of the
       // * class, so its erased type is only known here, once the parameter lists are assembled.
-      flattenedDSym.populateErasedType(ErasedType.FuncRef(
+      flattenedDSym.erasedType = S(ErasedType.FuncRef(
         rsc = S(false),
         paramLists = allParamLists.map(_.params.map(_.sym.erasedType)),
         ret = cls.instanceType,

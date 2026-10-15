@@ -1,10 +1,13 @@
+#lang(0.3.x)
+
 import "../../MutMap.mls"
 import "../../Predef.mls"
 
 open Predef
 module Examples with...
 
-val examples = MutMap.empty
+type Example = {name: Str, source: Str}
+val examples: MutMap.MutMap[Str, Example] = MutMap.empty
 
 examples |> MutMap.insert of
   "hanoi"

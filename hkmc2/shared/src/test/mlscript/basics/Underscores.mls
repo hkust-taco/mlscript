@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -14,7 +15,7 @@ _
 :e
 y: _
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder.
-//│ ║  l.15: 	y: _
+//│ ║  l.16: 	y: _
 //│ ╙──      	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ y = undefined
@@ -53,14 +54,14 @@ open Iter
 
 filtering of [], _ =>
   1
-//│ = Iterable(_)
+//│ = IterableImpl(_)
 
 print(_)
 //│ = fun
 
 
 :sjs
-let test = _.f(0, _, 2)
+let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test, test1;
 //│ test1 = function test(_0, _1) { return runtime.safeCall(_0.f(0, _1, 2)) };
@@ -68,9 +69,25 @@ let test = _.f(0, _, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ test = fun test
 
+:e
 :re
 test(f: print)(1)
-//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 2 arguments but got 1
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.74: 	test(f: print)(1)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature expected 2 arguments, but got 1
+//│ ║  l.64: 	let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.74: 	test(f: print)(1)
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── Value with no known interface cannot be called like a function.
+//│ ║  l.64: 	let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
+//│ ║        	                                                                   ^^
+//│ ╟── No member interface is known for this type.
+//│ ║  l.64: 	let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
+//│ ╙──      	                                                                   ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 test((f: print), 1)
 //│ > 0 1 2
@@ -139,7 +156,7 @@ mkObj(1, 2)
 :re
 let mkObj = x: _, y: _, z: 3
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder.
-//│ ║  l.140: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.157: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                     ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mkObj = fun mkObj
