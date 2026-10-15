@@ -319,7 +319,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   private def lowerSplit
       (split: Split, cont: Result => Block)
       (using form: IfLikeForm)
-      (using LoweringCtx)
+      (using Config, LoweringCtx)
       : Block =
     split match
     case Split.Let(sym, trm, tl) =>
@@ -424,9 +424,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * Make a block that throws the match error. We might add the information of
     * match failure in the future.
     */
-  private def throwMatchErrorBlock =
+  private def throwMatchErrorBlock(using Config) =
     Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error), N)(false),
-        (Value.Lit(syntax.Tree.StrLit("match error"))(N).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, N)) // TODO add failed-match scrutinee info
+        (Value.Lit(syntax.Tree.StrLit("match error"))(N).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, N), // TODO add failed-match scrutinee info
+      annotations = if config.aggressive then Annot.Pure()(N) :: Nil else Nil)
 
   /** Gives a lowering temp the join of the representations of the results stored into it.
     *

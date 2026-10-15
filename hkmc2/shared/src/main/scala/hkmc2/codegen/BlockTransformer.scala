@@ -43,9 +43,9 @@ class BlockTransformer(subst: SymbolSubst):
     case Return(res) =>
       applyResult(res): res2 =>
         if res2 is res then b else Return(res2)
-    case Throw(exc) =>
+    case Throw(exc, annotations) =>
       applyResult(exc): exc2 =>
-        if exc2 is exc then b else Throw(exc2)
+        if exc2 is exc then b else Throw(exc2, annotations)
     case Match(scrut, arms, dflt, rst) =>
       def applySub(b: Block) = if rst.isEmpty then applySubBlock(b) else applySubBlockNonTail(b)
       applyPath(scrut): scrut2 =>

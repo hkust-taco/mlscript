@@ -33,6 +33,7 @@ case class Config(
   commentGeneratedCode: Bool,
   noFreeze: Bool,
   noModuleCheck: Bool,
+  aggressive: Bool,
   optimizer: Optimizer,
 ):
   
@@ -85,6 +86,7 @@ object Config:
     commentGeneratedCode = false,
     noFreeze = false,
     noModuleCheck = false,
+    aggressive = false,
     optimizer = Optimizer.FastOpt,
   )
   object default:
@@ -611,6 +613,8 @@ object ConfigParser:
       parsedField(value)(parseBool)(v => _.copy(noFreeze = v))
     case "noModuleCheck" =>
       parsedField(value)(parseBool)(v => _.copy(noModuleCheck = v))
+    case "aggressive" =>
+      parsedField(value)(parseBool)(v => _.copy(aggressive = v))
     case "rewriteWhileLoops" =>
       parsedField(value)(parseBool)(v => _.copy(rewriteWhileLoops = v))
     case "stageCode" =>

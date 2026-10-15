@@ -556,7 +556,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case Define(defn, rest) =>
       applyDefn(defn)
       applyBlock(rest)
-    case Throw(exc) => applyResult(exc)
+    case Throw(exc, _) => applyResult(exc)
     case Break(label) => ()
     case Continue(label) => ()
     case TryBlock(sub, finallyDo, rest) =>
@@ -977,9 +977,12 @@ class FlowConstraintsCollector(
       val instId = cc.instId
       b match
       case Return(res) => cc.constrain(processResult(res), blkRes)
-      case Throw(exc) =>
-        markUnsafeEta()
-        constrainOpaqueResult(exc)
+      case Throw(exc, annotations) =>
+        if annotations.exists(_.isInstanceOf[Annot.Pure]) then
+          constrainOpaqueResult(exc)(using cc, N)
+        else
+          markUnsafeEta()
+          constrainOpaqueResult(exc)
       case Match(scrut, arms, dflt, rest) =>
         val scrutStrat = processResult(scrut)
         cc.constrain(scrutStrat, new Dtor(scrut.uid, instId))

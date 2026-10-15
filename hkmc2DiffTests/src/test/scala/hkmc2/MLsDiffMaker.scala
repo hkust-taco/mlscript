@@ -86,6 +86,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val noCheckCasts = NullaryCommand("noCheckCasts")
   val noFreeze = NullaryCommand("noFreeze")
   val noModuleCheck = NullaryCommand("noModuleCheck")
+  val aggressive = NullaryCommand("aggressive")
+  val noAggressive = NullaryCommand("noAggressive")
   val effectHandlers = Command("effectHandlers")(_.trim)
   val effectHandlersOptions = Set("debug", "")
   val stackSafe = Command("stackSafe")(_.trim)
@@ -177,6 +179,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
       noModuleCheck = noModuleCheck.isSet,
+      aggressive = aggressive.isSet && noAggressive.isUnset,
       optimizer = Optimizer(
         deforest = Opt.when(deforest.isSet):
           val flags = parseFlags(deforest.get)
