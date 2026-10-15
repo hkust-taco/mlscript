@@ -112,13 +112,23 @@ export default $default;
     WasmGraph(support, done.iterator.map { case (art, (path, compiled)) => (art, path, compiled) }.toVector)
 
   private def facade(abi: FileInterface): Str =
+    def constructor(sym: ValueSymbol): Opt[AbiFunction] =
+      sym.asCls.flatMap(cls => abi.functions.find(_.sym == cls))
+    def function(sym: ValueSymbol): Opt[AbiFunction] =
+      abi.functions.find(_.sym == sym).orElse(constructor(sym))
+    def callable(f: AbiFunction): Str =
+      s"((...args) => invoke(wasmExports[${makeStringLiteral(f.name)}], ...args))"
     def value(sym: ValueSymbol): Str =
       val singleton = abi.classes.find(_.sym == sym).flatMap(_.singleton).flatMap { case (_, idx, _) =>
         abi.globals.find(_.index == idx).map(g => s"wasmExports[${makeStringLiteral(g.name)}].value")
       }
       singleton.getOrElse:
-        abi.functions.find(_.sym == sym) match
-          case S(f) => s"((...args) => invoke(wasmExports[${makeStringLiteral(f.name)}], ...args))"
+        function(sym) match
+          case S(f) =>
+            // A function companion and its class have separate ABI identities. Keep the
+            // function callable and expose the constructor through the companion's `.class`.
+            constructor(sym).filter(_.sym != f.sym).fold(callable(f)): ctor =>
+              s"Object.assign(${callable(f)}, { class: ${callable(ctor)} })"
           case N =>
             abi.globals.find(_.sym == sym).map(g => s"wasmExports[${makeStringLiteral(g.name)}].value")
               .getOrElse(lastWords(s"Missing WASM default export binding for $sym"))
@@ -126,7 +136,7 @@ export default $default;
       abi.namespaces.find(_.sym == sym) match
         case S(ns) =>
           ns.members.toVector.sortBy(_._1).map: (name, member) =>
-            if abi.functions.exists(_.sym == member) then s"[${makeStringLiteral(name)}]: ${value(member)}"
+            if function(member).nonEmpty then s"[${makeStringLiteral(name)}]: ${value(member)}"
             else s"get [${makeStringLiteral(name)}]() { return ${value(member)}; }"
           .mkString("{ ", ", ", " }")
         case N => value(sym)

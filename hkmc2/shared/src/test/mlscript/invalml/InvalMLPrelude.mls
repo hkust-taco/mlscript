@@ -4,7 +4,7 @@ open annotations
 declare class Any
 declare class Anything
 declare class Nothing
-declare class Object
+declare open class Object
 
 declare class Unit
 declare class Bool
@@ -169,6 +169,7 @@ declare module debug with
   fun printStack
 
 declare module annotations with
+  object pure
   object untyped
   object tailrec
   object tailcall
@@ -177,7 +178,6 @@ declare module annotations with
   object compile
   object buffered
   object bufferable
-  object mayNotRaiseEffects
   object generator
   object async
 

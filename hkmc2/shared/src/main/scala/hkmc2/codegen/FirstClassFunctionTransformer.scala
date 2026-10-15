@@ -30,11 +30,11 @@ class FirstClassFunctionTransformer
     val args = params.params.map(_.sym.asSimpleRef.asArg) :::
       params.restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef))
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, args ne_:: Nil)(CallMetadata.defaultMlsFun)))(N, annotations = Nil)
+      Return(Call(p, args ne_:: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
-      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function))(false)),
+      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function), N)(false)),
       callDef :: Nil, Nil, Nil, Assign.discard(
-        Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun),
+        Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun, N),
         End()), End(), None, None)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
@@ -63,7 +63,7 @@ class FirstClassFunctionTransformer
     val clsDef = generateFCFunctionClass(p, params)
     val tmp = new TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)))
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
-    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil)(InstantiateMetadata.empty), k(tmp.asSimpleRef))))
+    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil)(InstantiateMetadata.empty, p.toLoc), k(tmp.asSimpleRef.withLoc(p.toLoc)))))
   
   override def applyPath(p: Path)(k: Path => Block): Block = p match
     case ref @ Value.MemberRef(l, disamb) => disamb match
@@ -80,7 +80,7 @@ class FirstClassFunctionTransformer
               ErrorReport(msg"Cannot get ${s.nme}'s parameter list."
                 -> sel.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
-            PlainParamList(Nil)
+            PlainParamList(Nil)(N)
           etaExpandPath(sel, params)(k)
       case Some(_) => k(p)
       case _ =>
@@ -94,7 +94,7 @@ class FirstClassFunctionTransformer
       def call(f: Path) =
         if (f is fun) && (argss is argss2)
         then c
-        else Call(f, argss2.ne_!)(c.metadata)
+        else Call(f, argss2.ne_!)(c.metadata, c.toLoc)
       fun match
         case ref @ Value.SimpleRef(sym) => sym match
           case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))

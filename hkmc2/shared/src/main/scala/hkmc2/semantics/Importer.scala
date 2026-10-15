@@ -14,12 +14,12 @@ import Elaborator.*
 import hkmc2.syntax.LetBind
 
 
-class Importer:
+class Importer extends NewResolver:
   self: Elaborator =>
   import tl.*
 
 
-  def importPath(path: Str, alias: Opt[syntax.Tree.Ident])(using cfg: Config): Import =
+  def importPath(path: Str, alias: Opt[syntax.Tree.Ident])(loc: Opt[Loc])(using cfg: Config, ctx: Elaborator.Ctx, rs: ResolutionContext): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     
@@ -42,7 +42,8 @@ class Importer:
       file.ext match
       
       case "mjs" | "js" =>
-        Import(sym, file.toString, file)
+        if newResolution then sym.currentShapes.add(DynShape())
+        Import(sym, file.toString, file)(loc)
         
       case "mls" =>
         def reportCycle(files: Ls[io.Path]): Import =
@@ -50,7 +51,7 @@ class Importer:
             ErrorReport:
                 msg"Circular imports of `mls` files are not yet supported" -> N
                 :: files.map(f => msg"  importing ${f.toString}" -> N)
-          Import(sym, path, file)
+          Import(sym, path, file)(loc)
 
         if cctx.beingCompiled.contains(file) then
           reportCycle(cctx.allFilesBeingImported :+ file)
@@ -66,15 +67,19 @@ class Importer:
             // Keeping its symbol also preserves statically known class/module information.
             val sym = importedSym
 
+            // New resolution also follows this original symbol's published shapes directly;
+            // no local alias symbol needs a separate shape subscription.
+
             val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
             cctx.recordSourceImport(sym, file, artifact)
-            Import(sym, jsFile.toString, file)
+            Import(sym, jsFile.toString, file)(loc)
         
       case _ =>
         if file.ext =/= "mls" then raise:
           ErrorReport(msg"Unsupported file extension: ${file.ext}" -> N :: Nil)
-        Import(sym, path, file)
+        Import(sym, path, file)(loc)
       
     else
-      Import(sym, path, file)
+      if newResolution then sym.currentShapes.add(DynShape())
+      Import(sym, path, file)(loc)
     

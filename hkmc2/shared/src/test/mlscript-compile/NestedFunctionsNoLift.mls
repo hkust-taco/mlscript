@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 #config(liftDefns: None)
 
 import "./Predef.mls"

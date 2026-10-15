@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 :wat
@@ -191,7 +190,7 @@ c.Counter#get()
 
 class GetterOnly() with
   fun f = 1
-GetterOnly().f()
+GetterOnly().f
 //│ Wasm result:
 //│ = 1
 
@@ -201,8 +200,8 @@ class A(val x) with
   fun get() = x
 A(1).get
 //│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
-//│ ║  l.202: 	A(1).get
-//│ ╙──       	    ^^^^
+//│ ║  l.201: 	A(1).get
+//│ ╙──       	^^^^^^^^
 
 
 // Method result types are taken from the return annotation, so primitives stay unboxed

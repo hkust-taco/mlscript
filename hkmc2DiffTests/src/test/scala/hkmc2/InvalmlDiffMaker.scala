@@ -19,7 +19,7 @@ abstract class InvalMLDiffMaker extends JSBackendDiffMaker:
       if file =/= invalPreludeFile then
         curCtx = Elaborator.State.init
         given Config = mkConfig
-        importFile(invalPreludeFile, verbose = false)
+        importFile(invalPreludeFile, verbose = false, includeDirectives = false)
   
   
   override def init(): Unit =
@@ -27,6 +27,7 @@ abstract class InvalMLDiffMaker extends JSBackendDiffMaker:
 
   lazy val invalCtx =
     given Elaborator.Ctx = curCtx
+    given Config = mkConfig
     invalml.InvalCtx.init(_ => die)
   
   var invalmlTyper: Opt[InvalTyper] = None
@@ -36,8 +37,10 @@ abstract class InvalMLDiffMaker extends JSBackendDiffMaker:
     super.processTerm(trm, inImport)
     if invalmlOpt.isSet then
       given Scope = Scope.empty(Scope.Cfg.default)
+      given Elaborator.Ctx = curCtx
+      // Typing may lower patterns even when executable code generation is disabled.
+      given codegen.Erasure = codegen.Erasure(trm)
       if invalmlTyper.isEmpty then
-        given Elaborator.Ctx = curCtx
         invalmlTyper = S(InvalTyper())
       given hkmc2.invalml.InvalCtx = invalCtx.copy(raise = summon)
       val typer = invalmlTyper.get

@@ -1,17 +1,20 @@
-:js
+:.
 
 data class (::) Cons(h, t)
 data object Nil
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 fun lseq(l1, l2) = if
   l1 is Nil and l2 is Nil then true
   l1 is x :: xs and l2 is y :: ys and x == y then lseq(xs, ys)
   else false
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 
-:deforest
 fun dl(ls) = if ls is
   Nil then Nil
   x :: Nil then Nil
@@ -29,7 +32,6 @@ fix
 
 
 
-:deforest
 fun dl(ls) = if ls is
   Nil then Nil
   x :: Nil then Nil
@@ -46,7 +48,6 @@ fix
 
 
 
-:deforest
 fun dl(ls) = if ls is
   Nil then Nil
   x :: xs then dlHelper(x, xs)
@@ -66,7 +67,6 @@ fix
 
 
 
-:deforest
 :expect Nil
 fun dlHelper(prev, rest) = if rest is
   Nil then Nil
@@ -85,7 +85,6 @@ id(fix(Nil, 1000))
 
 
 
-:deforest
 :expect Nil
 fun dlHelper(prev, rest) = if rest is
   Nil then Nil
@@ -105,7 +104,6 @@ fix(2 :: 3 :: Nil)
 
 
 
-:deforest
 :expect Nil
 fun f(x) = if x is
   Nil then Nil

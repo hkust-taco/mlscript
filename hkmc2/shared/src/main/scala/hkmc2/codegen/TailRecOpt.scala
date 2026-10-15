@@ -255,7 +255,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       val rest =
         restArgs match
           case Arg(S(SpreadKind.Eager), value) :: Nil => value
-          case _ => Tuple(true, restArgs)
+          case _ => Tuple(true, restArgs)(N)
       CallArgsResult.Success(hd.appended(rest))
     else
       CallArgsResult.Success(hd)
@@ -279,11 +279,11 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     
     val tupleSym = TempSymbol(N, erasedType = S(ErasedType.Array), "argList")
   
-    val tupleRes = Tuple(false, args)
+    val tupleRes = Tuple(false, args)(N)
     
     // Main args
     def mainArgs(rest: List[Path]) = (0 until paramList.size).toList.foldRight(rest):
-      case (n, acc) => DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(n)), true) :: acc
+      case (n, acc) => DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(n))(N), true)(N) :: acc
     
     // If the rest param exists, append a slice
     val (initialBlk: (Block => Block), pathList: List[Path]) =
@@ -295,10 +295,10 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
             .sel(Tree.Ident("Tuple"), State.tupleSymbol)
             .sel(Tree.Ident("slice"), State.tupleSliceSymbol),
           (tupleSym.asSimpleRef.asArg
-            :: Value.Lit(Tree.IntLit(paramList.length)).asArg
-            :: Value.Lit(Tree.IntLit(0)).asArg
+            :: Value.Lit(Tree.IntLit(paramList.length))(N).asArg
+            :: Value.Lit(Tree.IntLit(0))(N).asArg
             :: Nil) ne_:: Nil
-        )(CallMetadata.defaultMlsFun)
+        )(CallMetadata.defaultMlsFun, N)
         val blk = blockBuilder
           .assignScoped(tupleSym, tupleRes)
           .assignScoped(sliceResSym, sliceRes)
@@ -474,7 +474,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val curIdSym = VarSymbol(Tree.Ident("id"), erasedType = S(ErasedType.Int))
     
     val loopDefnPath = owner match
-      case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym))(false)
+      case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym), N)(false)
       case None => bms.asMemberRef(dSym)
     
     def rewriteKnownCall(callee: FunDefn, flattenedArgs: List[Path]) =
@@ -486,9 +486,9 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       val args = paramSyms.map: s =>
         argsMap.get(s) match
           case Some(pth) => Arg(N, pth)
-          case None => Arg(N, Value.Lit(Tree.UnitLit(false)))
-      val argsWithId = if funsLen > 1 then Value.Lit(Tree.IntLit(dSymIds(callee.dSym))).asArg :: args else args
-      Call(loopDefnPath, argsWithId ne_:: Nil)(CallMetadata.defaultMlsFun)
+          case None => Arg(N, Value.Lit(Tree.UnitLit(false))(N))
+      val argsWithId = if funsLen > 1 then Value.Lit(Tree.IntLit(dSymIds(callee.dSym)))(N).asArg :: args else args
+      Call(loopDefnPath, argsWithId ne_:: Nil)(CallMetadata.defaultMlsFun, N)
     
     class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst.Id):
       val params = f.allParamSyms
@@ -557,7 +557,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
                     Match(
                       o.flag.asSimpleRef,
                       Case.Lit(Tree.BoolLit(true)) ->
-                        Assign(slot, Cast(ref, o.tpe, config.checkCasts), End()) :: Nil,
+                        Assign(slot, Cast(ref, o.tpe, config.checkCasts)(N), End()) :: Nil,
                       N,
                       acc)))
       
@@ -585,12 +585,12 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
               val cont =
                 val resume =
                   if funsLen === 1 then Continue(loopSym)
-                  else Assign(curIdSym, Value.Lit(Tree.IntLit(dSymIds(calleeSym))), Continue(loopSym))
+                  else Assign(curIdSym, Value.Lit(Tree.IntLit(dSymIds(calleeSym)))(N), Continue(loopSym))
                 // Directly emitting the jump causes the return coercion to be dropped, so we record the cast and defer
                 // its emission to the loop's exit.
                 deferredCasts.get(f.dSym) match
                   case S(o) if retCoercion.exists(t => !alwaysSucceedsAtExits(t)) =>
-                    Assign(o.flag, Value.Lit(Tree.BoolLit(true)), resume)
+                    Assign(o.flag, Value.Lit(Tree.BoolLit(true))(N), resume)
                   case _ => resume
               // In some cases, we could have assignments like this:
               // param0 = whatever
@@ -741,7 +741,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       else Scoped(
         deferredCasts.iterator.map(_._2.flag).toSet,
         deferredCasts.foldRight[Block](labelled):
-          case ((_, o), acc) => Assign(o.flag, Value.Lit(Tree.BoolLit(false)), acc))
+          case ((_, o), acc) => Assign(o.flag, Value.Lit(Tree.BoolLit(false))(N), acc))
     
     if !hasWrapper then
       val f = funs.head
@@ -759,16 +759,16 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         val newBod = Return(
           coerceToDeclaredReturn(rewriteKnownCall(f, paramArgs), f.dSym),
         )
-        val annots = if f.inline then f.annotations else Annot.Inline :: f.annotations 
+        val annots = if f.inline then f.annotations else Annot.Inline()(N) :: f.annotations
         FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(N, annots)
       val newParamLists =
         val initial = paramSyms.map(Param.simple(_))
         if funsLen > 1 then
-          PlainParamList(Param.simple(curIdSym) :: initial) :: Nil
+          PlainParamList(Param.simple(curIdSym) :: initial)(N) :: Nil
         else
-          PlainParamList(initial) :: Nil
+          PlainParamList(initial)(N) :: Nil
       val annotations = 
-        if funsLen == 1 && funs.head.inline then Annot.Inline :: Annot.Private :: Nil
+        if funsLen == 1 && funs.head.inline then Annot.Inline()(N) :: Annot.Private :: Nil
         else Annot.Private :: Nil
       val loopDefn = FunDefn(
         owner, bms, dSym,

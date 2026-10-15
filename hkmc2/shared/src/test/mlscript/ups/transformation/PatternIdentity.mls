@@ -1,0 +1,72 @@
+:js
+
+open annotations { compile }
+
+data class Box(value)
+
+// Repeated uses of the same named transformation are separate evaluations.
+// Compiled field matchers currently identify them by structurally equal
+// patterns and reuse a single result, incorrectly sharing allocated objects.
+pattern Allocate = _ => Box(0)
+pattern Twice = Box(Allocate) & Box(Allocate)
+
+fun compiled(x) = if x is @compile Twice as [a, b] then
+  [a.value.value, b.value.value, a.value === b.value]
+else false
+
+fun ordinary(x) = if x is Twice as [a, b] then
+  [a.value.value, b.value.value, a.value === b.value]
+else false
+
+:expect [0, 0, false]
+ordinary(Box(123))
+//│ = [0, 0, false]
+
+:fixme
+:expect [0, 0, false]
+compiled(Box(123))
+//│ ═══[RUNTIME ERROR] Expected: '[0, 0, false]', got: '[0, 0, true]'
+//│ = [0, 0, true]
+
+// Substitution shares the representation of P, but its two uses still denote
+// separate matches. Comparing pattern objects by identity alone cannot prevent
+// result sharing here; evaluation occurrences must remain distinct.
+pattern TwiceArgument(pattern P) = Box(P) & Box(P)
+
+:expect [0, 0, false]
+if Box(123) is TwiceArgument(Allocate) as [a, b] then
+  [a.value.value, b.value.value, a.value === b.value]
+else false
+//│ = [0, 0, false]
+
+:fixme
+:expect [0, 0, false]
+if Box(123) is @compile TwiceArgument(Allocate) as [a, b] then
+  [a.value.value, b.value.value, a.value === b.value]
+else false
+//│ ═══[RUNTIME ERROR] Expected: '[0, 0, false]', got: '[0, 0, true]'
+//│ = [0, 0, true]
+
+// Result sharing also drops observable effects: both occurrences must run.
+let calls = 0
+fun tick() =
+  set calls = calls + 1
+  calls
+pattern Count = _ => tick()
+pattern CountTwice = Box(Count) & Box(Count)
+//│ calls = 0
+
+fun countCompiled(x) = if x is @compile CountTwice as [a, b] then [a.value, b.value] else false
+fun countOrdinary(x) = if x is CountTwice as [a, b] then [a.value, b.value] else false
+
+:expect [1, 2]
+countOrdinary(Box(0))
+//│ = [1, 2]
+
+set calls = 0
+
+:fixme
+:expect [1, 2]
+countCompiled(Box(0))
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: '[1, 1]'
+//│ = [1, 1]

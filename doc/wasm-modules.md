@@ -49,6 +49,7 @@ wdtest Modules
 wdtest DiamondImports
 wdtest FileInheritance
 wdtest TypedFileImports
+wdtest OverloadedFileImports
 wdtest ModuleErrors
 hkmc2AllTests/test
 ```
@@ -66,6 +67,8 @@ then extends it again in a later block. Compiled callers check inherited fields,
 type tests, and virtual dispatch on these worksheet instances with inlining disabled.
 `TypedFileImports.mls` covers concrete reference and unboxed numeric signatures,
 typed globals, and recursive class layouts across those same boundaries.
+`OverloadedFileImports.mls` checks that function companions and constructors retain
+separate identities through aliases, inherited fields, virtual dispatch, and `super` calls.
 Cache identity, output restoration, and concurrent requests
 are tested by `CompilerCacheTest` because they require controlling the compiler
 session and filesystem.
@@ -84,11 +87,14 @@ session and filesystem.
   top-level classes.
 - Classes support the backend's existing field layouts, constructors, imported
   base initializers, direct methods, virtual methods, and nominal class tests.
+  A class extended outside its compilation unit must be declared `open` or `abstract`.
   Structurally equal classes from different sources retain different RTTI objects.
 - Host function defaults and module methods are callable wrappers. Module fields
   are live getters. Class constructor defaults return opaque WASM GC objects;
   object defaults are opaque GC objects themselves. This is not a JavaScript
   object-field or prototype mapping. Host getters do not expose assignment.
+  An explicit function companion remains callable; its `.class` property wraps
+  the separate class constructor.
 - Signatures and storage retain the typed IR representation, including concrete
   class references and unboxed `Int32`, `Int64`, `Float32`, and `Float64` values.
   JavaScript callers use `BigInt` for `Int64` arguments and results. Arbitrary
@@ -96,7 +102,7 @@ session and filesystem.
   exceptions crossing a host wrapper are unwrapped using the shared exception tag.
 - First-class standalone module values, arbitrary `.mjs`/bare imports from WASM
   source, mixed source targets, and precompiled imports without source interfaces
-  are rejected. Existing unsupported backend features, including class companions,
+  are rejected. Existing unsupported backend features, including companion modules on classes,
   object methods/inheritance, closures, and several exception forms, retain
   explicit diagnostics. This change does not promise those language features.
 

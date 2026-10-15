@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 #config(noFreeze: true)
 #config(noModuleCheck: true)
 

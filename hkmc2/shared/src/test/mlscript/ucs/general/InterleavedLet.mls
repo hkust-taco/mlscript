@@ -1,3 +1,4 @@
+:.
 :js
 
 abstract class List[out T]

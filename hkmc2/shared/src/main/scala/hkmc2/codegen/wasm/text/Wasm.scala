@@ -6,13 +6,22 @@ package text
 import hkmc2.utils.*, shorthands.*
 
 import document.*
-import semantics.{BlockMemberSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol}, Elaborator.State
+import semantics.{BlockMemberSymbol, ClassCtorSymbol, ClassSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol}, Elaborator.State
 import utils.Scope
 
 import scala.collection.Map
 
 /** Symbols that can represent an importable or exportable Wasm construct. */
-private[text] type ExternSymbol = BlockMemberSymbol | TempSymbol
+private[text] type ExternSymbol = BlockMemberSymbol | ClassSymbol | TempSymbol
+
+private[text] object ExternSymbol:
+  /** Class constructors and explicit function companions share a source name but
+    * have distinct Wasm functions. Imports and calls must use the same identity. */
+  def forReference(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?]): BlockMemberSymbol | ClassSymbol =
+    disamb match
+      case cls: ClassSymbol => cls
+      case ctor: ClassCtorSymbol => ctor.associatedCls
+      case _ => bms
 
 /** Symbols that can be lowered into a global or local slot in a Wasm function (i.e. parameters and locals). */
 private[text] type SlotSymbol = InnerSymbol | ScopedSymbol
@@ -30,8 +39,8 @@ extension (doc: Document)
   * use the same allocator as ordinary names: a suffix is not a reservation of that spelling. */
 private[text] final class WasmScope(using State):
   private val scope = Scope.empty(Scope.Cfg.default)
-  private val bindings = scala.collection.mutable.Map.empty[(ScopedSymbol, Opt[Str] -> Opt[Str]), Str]
-  def allocateOrGetNameWrapped(sym: ScopedSymbol, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
+  private val bindings = scala.collection.mutable.Map.empty[(ScopedSymbol | ClassSymbol, Opt[Str] -> Opt[Str]), Str]
+  def allocateOrGetNameWrapped(sym: ScopedSymbol | ClassSymbol, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
     bindings.getOrElseUpdate((sym, wrap), {
       val hint = wrap._1.fold("")(_ + "_") + sym.nme + wrap._2.fold("")("_" + _)
       val ascii = hint.flatMap(c => if c <= 127 then c.toString else f"_u${c.toInt}%04x")
@@ -315,7 +324,7 @@ object ExternType:
     def toWat: Document = doc"(tag ${id.toWat} ${typeUse.toWat})"
 end ExternType
 
-sealed abstract class ExternType(val sym: ScopedSymbol) extends ToWat:
+sealed abstract class ExternType(val sym: ScopedSymbol | ClassSymbol) extends ToWat:
 
   /** Symbolic identifier for the extern declaration. */
   val id: SymIdx

@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -7,7 +8,7 @@ let n = 0
 :e
 n is 0 | 1
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
-//│ ║  l.8: 	n is 0 | 1
+//│ ║  l.9: 	n is 0 | 1
 //│ ╙──     	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -18,13 +19,17 @@ n is (0 | 1)
 :e
 if 5 is a & b then a
 //│ ╔══[COMPILATION ERROR] Name not found: b
-//│ ║  l.19: 	if 5 is a & b then a
+//│ ║  l.20: 	if 5 is a & b then a
 //│ ╙──      	            ^
+//│ ╔══[COMPILATION ERROR] Resolution error in composition
+//│ ║  l.20: 	if 5 is a & b then a
+//│ ║        	   ^^^^^^^^^^
+//│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.19: 	if 5 is a & b then a
+//│ ║  l.20: 	if 5 is a & b then a
 //│ ╙──      	                   ^
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composition)
-//│ ║  l.19: 	if 5 is a & b then a
+//│ ║  l.20: 	if 5 is a & b then a
 //│ ╙──      	   ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -35,9 +40,9 @@ if 5 is (a & b) as c then [a, b, c]
 :e
 if 5 is ~a then a
 //│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.36: 	if 5 is ~a then a
+//│ ║  l.41: 	if 5 is ~a then a
 //│ ╙──      	                ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Error: match error
 
 if 5 is ~Bool as c then c
 //│ = 5

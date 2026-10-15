@@ -1,31 +1,32 @@
+:.
 :js
 
 
 :e
 pattern P
 //│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
-//│ ║  l.5: 	pattern P
+//│ ║  l.6: 	pattern P
 //│ ╙──     	^^^^^^^^^
 
 :e
 pattern Foo1[A]: ...
 //│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
-//│ ║  l.11: 	pattern Foo1[A]: ...
+//│ ║  l.12: 	pattern Foo1[A]: ...
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 
 :fixme
 pattern Foo2[pattern A]: ...
 //│ ╔══[COMPILATION ERROR] Unsupported type parameter type definition
-//│ ║  l.17: 	pattern Foo2[pattern A]: ...
+//│ ║  l.18: 	pattern Foo2[pattern A]: ...
 //│ ╙──      	             ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
-//│ ║  l.17: 	pattern Foo2[pattern A]: ...
+//│ ║  l.18: 	pattern Foo2[pattern A]: ...
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 pattern Foo(pattern T)
 //│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
-//│ ║  l.26: 	pattern Foo(pattern T)
+//│ ║  l.27: 	pattern Foo(pattern T)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 
 

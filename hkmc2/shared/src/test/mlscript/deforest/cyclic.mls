@@ -1,4 +1,4 @@
-:js
+:.
 
 data class A(x)
 data class B(x)
@@ -8,7 +8,8 @@ data class (::) Cons(h, t)
 object Nil
 object None
 data class Some(x)
-
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
 
 :expect 0
@@ -16,6 +17,13 @@ fun f(x) = if x is
   A(_) then f(A(2))
   else 0
 f(Nil)
+//│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: x⁰
+//│ deforest > A⁰(2) ->
+//│ deforest > 	match: x⁰
+//│ deforest > 	fields: x⁰.x¹
+//│ deforest > <<< fusing <<<
 //│ = 0
 
 
@@ -25,6 +33,14 @@ fun f(x) =
     A(x) then x
   if res > 0 then f(A(res - 1)) else 0
 f(A(4))
+//│ deforest > >>> fusing >>>
+//│ deforest > A⁰(tmp⁰) ->
+//│ deforest > 	match: x²
+//│ deforest > 	fields: x².x¹
+//│ deforest > A⁰(4) ->
+//│ deforest > 	match: x²
+//│ deforest > 	fields: x².x¹
+//│ deforest > <<< fusing <<<
 //│ = 0
 
 
@@ -32,11 +48,16 @@ f(A(4))
 fun f(x, b) = if x is
   Nil then if b then f(Nil, false) else 0
 f(Nil, false)
+//│ deforest > >>> fusing >>>
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: x³
+//│ deforest > Nil⁰ ->
+//│ deforest > 	match: x³
+//│ deforest > <<< fusing <<<
 //│ = 0
 
 
 
-:deforest
 fun f(a) = if a is
   C then C
   else D
@@ -52,7 +73,6 @@ fun f(a) = if a is
 //│ = 0
 
 
-:deforest
 :expect Some(2)
 fun maxOpt(ls) = if ls is
   Nil then None
@@ -66,7 +86,6 @@ maxOpt(id(1 :: 2 :: Nil))
 //│ = Some(2)
 
 
-:deforest
 :soir
 :expect Some(2)
 fun modSome(x, m) = if x is
@@ -76,21 +95,21 @@ fun modSome(x, m) = if x is
   None then None
 modSome(Some(17), 3)
 //│ deforest > >>> fusing >>>
-//│ deforest > Some⁰(tmp⁰) ->
-//│ deforest > 	match: x⁰
-//│ deforest > 	fields: x⁰.x¹
+//│ deforest > Some⁰(tmp¹) ->
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.x⁵
 //│ deforest > Some⁰(17) ->
-//│ deforest > 	match: x⁰
-//│ deforest > 	fields: x⁰.x¹
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.x⁵
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let Some_x, fv_m, fv_scrut, fv_tmp, inlinedVal;
+//│ let Some_x, fv_scrut, fv_m, fv_tmp, inlinedVal;
 //│ define modSome⁰ as fun modSome¹(x, m) {
 //│   loop loopLabel:
 //│     let scrut, arg$Some$0$, tmp, tmp1;
 //│     match x
 //│       Some¹ =>
-//│         set arg$Some$0$ = x.x¹;
+//│         set arg$Some$0$ = x.x⁵;
 //│         set scrut = >=⁰(arg$Some$0$, m);
 //│         match scrut
 //│           true =>
@@ -128,7 +147,6 @@ modSome(Some(17), 3)
 //│ = Some(2)
 
 
-:deforest
 :expect Some(3)
 fun maxOpt2(ls, x) = if ls is
   Nil then x
@@ -142,7 +160,6 @@ maxOpt2(id(1 :: 2 :: 3 :: Nil), None)
 //│ deforest > <<< fusing <<<
 //│ = Some(3)
 
-:deforest
 :expect Nil
 fun zipWith(xsys, f) = if xsys is
   [hx :: tx, hy :: ty] then f(hx, hy) :: zipWith([tx, ty], f)
@@ -153,7 +170,7 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > 	match: xsys⁰
 //│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 0)
 //│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 1)
-//│ deforest > [tmp¹, tmp²] ->
+//│ deforest > [tmp², tmp³] ->
 //│ deforest > 	match: xsys⁰
 //│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 0)
 //│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 1)

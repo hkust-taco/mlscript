@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../mlscript-compile/ObjectBuffer.mls"
@@ -48,51 +49,57 @@ class A2(x) with
 @buffered
 class B0(x)
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.48: 	@buffered
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.49: 	@buffered
+//│ ║        	^^^^^^^^^
+//│ ║  l.50: 	class B0(x)
+//│ ╙──      	^^^^^^^^^^^
 
 :ge
 @buffered
 @buffered
 class B1(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.55: 	@buffered
+//│ ║  l.58: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.56: 	@buffered
+//│ ║  l.59: 	@buffered
 //│ ╙──      	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.55: 	@buffered
+//│ ║  l.58: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.56: 	@buffered
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.59: 	@buffered
+//│ ║        	^^^^^^^^^
+//│ ║  l.60: 	class B1(x)
+//│ ╙──      	^^^^^^^^^^^
 
 :ge
 @buffered
 @bufferable
 class B2(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.70: 	@buffered
+//│ ║  l.75: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.71: 	@bufferable
+//│ ║  l.76: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
-//│ ║  l.70: 	@buffered
+//│ ║  l.75: 	@buffered
 //│ ║        	^^^^^^^^^
-//│ ║  l.71: 	@bufferable
+//│ ║  l.76: 	@bufferable
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.77: 	class B2(x)
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 module B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.85: 	@bufferable
+//│ ║  l.92: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 object B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.92: 	@bufferable
+//│ ║  l.99: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 
@@ -164,3 +171,94 @@ class A with
   fun f(y) = x + y + z
 
 
+
+// The declaration span includes nested modifiers and multiline annotations.
+:ge
+@buffered
+@untyped
+public data class LocatedBuffer(x)
+//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
+//│ ║  l.177: 	@buffered
+//│ ║         	^^^^^^^^^
+//│ ║  l.178: 	@untyped
+//│ ║         	^^^^^^^^
+//│ ║  l.179: 	public data class LocatedBuffer(x)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// The following declaration starts a fresh span.
+:ge
+@buffered
+class NextLocatedBuffer(x)
+//│ ╔══[COMPILATION ERROR] Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead.
+//│ ║  l.190: 	@buffered
+//│ ║         	^^^^^^^^^
+//│ ║  l.191: 	class NextLocatedBuffer(x)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// A buffered method keeps all its original argument lists and result interface.
+@annotations.buffered
+class Curried with
+  constructor(value: Str)
+  fun append(suffix: Str)(last: Str): Str = value + suffix + last
+  fun valueLength: Int = value.length
+  fun echo[T](value: T): T = value
+
+:expect "abc"
+let curried = buf.mkNew(Curried)("a")
+Curried.append(buf, curried)("b")("c").toLowerCase()
+//│ = "abc"
+//│ curried = 6
+
+:expect "1.0"
+Curried.valueLength(buf, curried).toFixed(1)
+//│ = "1.0"
+
+:expect ["ABC", "12.0"]
+[Curried.echo(buf, curried)("abc").toUpperCase(), Curried.echo(buf, curried)(12).toFixed(1)]
+//│ = ["ABC", "12.0"]
+
+// Even a zero-sized class must run its constructor.
+:expect 1
+let initialized = 0
+@buffered
+class Empty with
+  set initialized += 1
+let empty = buf.mkNew(Empty)
+initialized
+//│ = 1
+//│ empty = 0
+//│ initialized = 1
+
+// Generated static members belong only to annotated classes and exclude fields.
+:e
+Curried.missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.235: 	Curried.missing
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ╟── Class value does not contain member 'missing'
+//│ ║  l.201: 	class Curried with
+//│ ╙──       	      ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+Curried.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.245: 	Curried.value
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── Class value does not contain member 'value'
+//│ ║  l.201: 	class Curried with
+//│ ╙──       	      ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+class Ordinary with
+  fun append(value: Str) = value
+Ordinary.append
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.257: 	Ordinary.append
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ╟── Class value does not contain member 'append'
+//│ ║  l.255: 	class Ordinary with
+//│ ╙──       	      ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

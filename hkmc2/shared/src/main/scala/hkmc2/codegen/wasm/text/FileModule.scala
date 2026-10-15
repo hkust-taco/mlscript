@@ -12,12 +12,12 @@ import scala.collection.mutable
   * before rebuilding any edge. No backend context or mutable IR definition is retained. */
 final case class AbiType(
     index: TypeIdx,
-    sym: BlockMemberSymbol | TempSymbol,
+    sym: ExternSymbol,
     wrap: Opt[Str] -> Opt[Str],
     body: CompType,
     tag: Opt[Int],
 )
-final case class AbiFunction(sym: BlockMemberSymbol | TempSymbol, wrap: Opt[Str] -> Opt[Str], name: Str, ty: TypeIdx)
+final case class AbiFunction(sym: ExternSymbol, wrap: Opt[Str] -> Opt[Str], name: Str, ty: TypeIdx)
 final case class AbiGlobal(index: GlobalIdx, sym: ScopedSymbol, wrap: Opt[Str] -> Opt[Str], name: Str, ty: GlobalType)
 final case class AbiClass(
     sym: BlockMemberSymbol,
@@ -46,7 +46,7 @@ final case class FileCompilation(imports: Vector[FileImport], aliases: Map[Scope
 final class FileExportNames(using State):
   private val scope = utils.Scope.empty(utils.Scope.Cfg.default)
   private val names = mutable.Map.empty[(ValueSymbol, Str, Opt[Str] -> Opt[Str]), Str]
-  def apply(sym: ScopedSymbol, kind: Str, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
+  def apply(sym: ScopedSymbol | ClassSymbol, kind: Str, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
     names.getOrElseUpdate((sym, kind, wrap),
       scope.allocateName(TempSymbol(N, erasedType = N, wrap._1.fold("")(_ + "_") + sym.nme + wrap._2.fold("")("_" + _))))
 

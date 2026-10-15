@@ -2,6 +2,6 @@
 
 import "./Base.mls"
 
-class Derived(val own: Int64) extends Base(wasm.i64.mul(own, wasm.i64.const(2))) with
+open class Derived(val own: Int64) extends Base(wasm.i64.mul(own, wasm.i64.const(2))) with
   fun add(x: Int64): Int64 = wasm.i64.sub(own, x)
   fun choose(x: Base): Base = this

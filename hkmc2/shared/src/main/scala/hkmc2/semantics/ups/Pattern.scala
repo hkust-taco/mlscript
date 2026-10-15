@@ -204,47 +204,43 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Extract(pattern, correspondence, term) =>
       Extract[L](pattern.map(f), correspondence, term)
   
-  /** A simplified reduce for ``Pattern``.
-    * It is designed to be used when we want to
-    * compute a single value, starting from the leaves.
-    * It silently goes through ``Not``, ``Extract``, ``Rename`` and ``Synonym``.
-    * The function must provide all the other base cases, and how
-    * a list is merged (for ``And`` and ``Or`` nodes)
+  /** Visit tests of the current scrutinee in source order. Constructor,
+    * record and tuple children test other scrutinees; synonyms must be
+    * expanded before their bodies can be traversed here.
     */
-  def reduce[A](merge: List[A] => A)(f: PartialFunction[Pattern[K], A]): A = this match
-    case p: NonCompositional[? <: K] =>
-      if f.isDefinedAt(p) then f(p) else merge(Nil)
-    case And(patterns) => merge(patterns.map(_.reduce(merge)(f)))
-    case Or(patterns) => merge(patterns.map(_.reduce(merge)(f)))
-    case Not(pattern) => pattern.reduce(merge)(f)
-    case Rename(pattern, _) => pattern.reduce(merge)(f)
-    case Extract(pattern, _, _) => pattern.reduce(merge)(f)
+  private def components: Iterator[NonCompositional[? <: K]] = this match
+    case p: NonCompositional[? <: K] => Iterator.single(p)
+    case And(patterns) => patterns.iterator.flatMap(_.components)
+    case Or(patterns) => patterns.iterator.flatMap(_.components)
+    case Not(pattern) => pattern.components
+    case Rename(pattern, _) => pattern.components
+    case Extract(pattern, _, _) => pattern.components
 
-  def heads: Set[Head] = reduce[Set[Head]](_.toSet.flatten):
-    case Literal(lit) => Set(lit)
-    case ClassLike(head, _) => Set(head)
+  // Keep source traversal order here. The compiler deduplicates these iterators
+  // before emitting branches; hash iteration order must not order generated code.
+  def heads: Iterator[Head] = components.collect:
+    case Literal(lit) => lit
+    case ClassLike(head, _) => head
 
-  def fields: Set[Ident | Int] = reduce[Set[Ident | Int]](_.toSet.flatten):
-    case MatchedClassLike(_, entries) => entries.keys.toSet
-    case Record(entries) => entries.keys.toSet
+  def fields: Iterator[Ident | Int] = components.flatMap:
+    case MatchedClassLike(_, entries) => entries.keysIterator
+    case Record(entries) => entries.keysIterator
     case Tuple(leading, spread) =>
       val n = leading.size + spread.fold(0)(_._3.size)
-      val subfields = Range(0, n).toSet[Ident | Int]
       // if this is strict, then a condition is imposed on field n
-      if spread.isEmpty then subfields + n else subfields
+      Iterator.range(0, if spread.isEmpty then n + 1 else n)
+    case _ => Iterator.empty
 
-  def collectSubPatterns(field: Ident | Int): Set[Pat] = field match
-    case id: Ident => this.reduce[Set[Pat]](_.toSet.flatten):
+  def collectSubPatterns(field: Ident | Int): Iterator[Pat] = field match
+    case id: Ident => components.flatMap:
         // TODO: raise a warning
-      case ClassLike(_, arguments) => /* TODO:raise a warning */ arguments match
-        case None => Set()
-        case Some(arguments) =>
-          arguments.find((id1, _) => id1 === id).map((_, p) => p).toSet
-      case MatchedClassLike(_, entries) => entries.get(id).toSet
-      case Record(entries) => entries.get(id).toSet
-      case Tuple(leading, spread) => Set()
-    case n: Int => this.reduce[Set[Pat]](_.toSet.flatten):
-      case Tuple(leading, S(_, _, trailing)) => trailing.lift(n).toSet
+      case ClassLike(_, arguments) => arguments.iterator.flatMap(_.get(id))
+      case MatchedClassLike(_, entries) => entries.get(id).iterator
+      case Record(entries) => entries.get(id).iterator
+      case _ => Iterator.empty
+    case n: Int => components.flatMap:
+      case Tuple(leading, S(_, _, trailing)) => trailing.lift(n).iterator
+      case _ => Iterator.empty
   
   /** Simplify the pattern by removing `Never` patterns. */
   def simplify: Pattern[K] = this match
@@ -454,6 +450,10 @@ object Pattern:
     * @param correspondence The correspondence between symbols in the pattern
     *        and symbols in the transformation term.
     * @param term The term to be applied to the extracted values.
+    *        Its identity is part of the pattern's equality: distinct source
+    *        transformations must not be conflated by comparing their syntax.
+    *        Instantiation and specialization preserve this term, so recursive
+    *        uses of the same transformation can still reuse a matcher.
     */
   final case class Extract[+K <: Kind.Complete](
       pattern: Pattern[K],

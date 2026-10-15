@@ -1,6 +1,6 @@
-:js
-:lift
-:ignore // FIXME: Lifting should not require scope flattening (which doesn't handle loops)
+:..
+:.
+// :ignore // used to be ON with comment: Lifting should not require scope flattening (which doesn't handle loops)
 
 
 let fs = mut []
@@ -81,7 +81,9 @@ fun foo() =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 2
-foo()()
+foo() as Function
+|>
+  _()
 //│ = 2
 
 

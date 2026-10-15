@@ -1,0 +1,95 @@
+:invalml
+
+
+class Cell[T](val get: () -> T, val put: T -> ())
+class Holder[T](val cell: Cell[T])
+class Receiver[T](val accept: Cell[T] -> ())
+class Sink[in T](val put: T -> ())
+class SinkHolder[T](val sink: Sink[T])
+
+
+// Widening a holder of an Int cell must not permit writing a string to that cell.
+:e
+fun corrupt: Holder[in Int out (Int | Str)] -> ()
+fun corrupt(holder) = holder.Holder#cell.Cell#put("wrong")
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
+//│ ║  l.14: 	fun corrupt(holder) = holder.Holder#cell.Cell#put("wrong")
+//│ ║        	                                                  ^^^^^^^
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  'T1
+//│ ╙── because: cannot constrain  Str  <:  Int
+
+// A receiver may write an Int or Str, so it cannot accept a cell restricted to Int.
+:e
+fun corruptInput: (Receiver[in Int out (Int | Str)], Cell[Int]) -> ()
+fun corruptInput(receiver, cell) = receiver.Receiver#accept(cell)
+//│ ╔══[COMPILATION ERROR] Type error in reference with expected type Cell[in 'T out 'T]
+//│ ║  l.25: 	fun corruptInput(receiver, cell) = receiver.Receiver#accept(cell)
+//│ ║        	                                                            ^^^^
+//│ ╟── because: cannot constrain  Cell[Int]  <:  Cell[in 'T out 'T]
+//│ ╟── because: cannot constrain  'T  <:  Int
+//│ ╙── because: cannot constrain  Str  <:  Int
+
+// Declaration-site contravariance must select the input bound of the holder.
+:e
+fun corruptSink: SinkHolder[in Int out (Int | Str)] -> ()
+fun corruptSink(holder) = holder.SinkHolder#sink.Sink#put("wrong")
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
+//│ ║  l.36: 	fun corruptSink(holder) = holder.SinkHolder#sink.Sink#put("wrong")
+//│ ║        	                                                          ^^^^^^^
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  'T1
+//│ ╙── because: cannot constrain  Str  <:  Int
+
+// These writes remain valid through the same projected interfaces.
+fun write: Holder[in Int out (Int | Str)] -> ()
+fun write(holder) = holder.Holder#cell.Cell#put(1)
+
+fun writeSink: SinkHolder[in Int out (Int | Str)] -> ()
+fun writeSink(holder) = holder.SinkHolder#sink.Sink#put(2)
+
+
+// Positive nested projections retain the full input/output interval.
+(holder: Holder[in Int out (Int | Str)]) => holder.Holder#cell
+//│ Type: (Holder[in Int out Int ∨ Str]) ->{⊥} Cell[in Int out Str ∨ Int]
+
+(receiver: Receiver[in Int out (Int | Str)]) => receiver.Receiver#accept
+//│ Type: (Receiver[in Int out Int ∨ Str]) ->{⊥} (Cell[in Str ∨ Int out Int]) ->{⊥} ()
+
+(holder: SinkHolder[in Int out (Int | Str)]) => holder.SinkHolder#sink
+//│ Type: (SinkHolder[in Int out Int ∨ Str]) ->{⊥} Sink[in Int]
+
+// Boolean argument expressions must retain the substitution and its polarity.
+class UnionHolder[T](val cell: Cell[T | Str])
+class IntersectionHolder[T](val cell: Cell[T & (Int | Str)])
+
+fun writeUnion: UnionHolder[in Int out (Int | Bool)] -> ()
+fun writeUnion(holder) = holder.UnionHolder#cell.Cell#put("allowed")
+
+:e
+fun corruptUnion: UnionHolder[in Int out (Int | Bool)] -> ()
+fun corruptUnion(holder) = holder.UnionHolder#cell.Cell#put(true)
+//│ ╔══[COMPILATION ERROR] Type error in boolean literal with expected type 'T
+//│ ║  l.71: 	fun corruptUnion(holder) = holder.UnionHolder#cell.Cell#put(true)
+//│ ║        	                                                            ^^^^
+//│ ╟── because: cannot constrain  Bool  <:  'T
+//│ ╟── because: cannot constrain  Bool  <:  Str ∨ 'T1
+//│ ╟── because: cannot constrain  Bool ∧ ¬{Str}  <:  'T1
+//│ ╙── because: cannot constrain  Bool ∧ ¬{Str}  <:  Int
+
+:e
+fun corruptIntersection: IntersectionHolder[in Int out Any] -> ()
+fun corruptIntersection(holder) = holder.IntersectionHolder#cell.Cell#put("wrong")
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
+//│ ║  l.82: 	fun corruptIntersection(holder) = holder.IntersectionHolder#cell.Cell#put("wrong")
+//│ ║        	                                                                          ^^^^^^^
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  'T1
+//│ ╙── because: cannot constrain  Str  <:  Int
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type 'T
+//│ ║  l.82: 	fun corruptIntersection(holder) = holder.IntersectionHolder#cell.Cell#put("wrong")
+//│ ║        	                                                                          ^^^^^^^
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╟── because: cannot constrain  Str  <:  Int ∨ 'T1
+//│ ╟── because: cannot constrain  Str ∧ ¬{Int}  <:  'T1
+//│ ╙── because: cannot constrain  Str ∧ ¬{Int}  <:  Int

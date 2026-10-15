@@ -21,6 +21,7 @@ import "../../mlscript-compile/wasm/modules/entry.mjs"
 import "../../mlscript-compile/wasm/modules/FileNames.mjs"
 import "../../mlscript-compile/wasm/modules/Exceptions.mjs"
 import "../../mlscript-compile/wasm/Box.mjs"
+import "../../mlscript-compile/wasm/modules/Overloaded.mjs"
 
 :expect 42
 Answer()
@@ -160,3 +161,12 @@ FileNames.escapedPath()
 :re
 Exceptions()
 //│ ═══[RUNTIME ERROR] 42
+
+// The host wrapper exposes both a function companion and its class constructor.
+:expect 42
+Overloaded(41)
+//│ = 42
+
+:expect "object"
+typeof(Overloaded.class(41))
+//│ = "object"

@@ -1,3 +1,4 @@
+:.
 :js
 
 // * It looks like trying to support both infix `do` and prefix `do` is a problem;
@@ -20,13 +21,13 @@ while
   do
     print(arrMatches)
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
-//│ ║  l.18: 	    let arrMatches = true
+//│ ║  l.19: 	    let arrMatches = true
 //│ ║        	        ^^^^^^^^^^^^^^^^^
-//│ ║  l.19: 	    arrMatches
+//│ ║  l.20: 	    arrMatches
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.20: 	  do
+//│ ║  l.21: 	  do
 //│ ║        	^^^^
-//│ ║  l.21: 	    print(arrMatches)
+//│ ║  l.22: 	    print(arrMatches)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -49,7 +50,7 @@ if
   do
     ()
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (null)
-//│ ║  l.48: 	  arrMatches !== null
+//│ ║  l.49: 	  arrMatches !== null
 //│ ╙──      	                 ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 

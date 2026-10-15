@@ -1,0 +1,49 @@
+:.
+
+import "../../mlscript-compile/Option.mls"
+open Option
+
+// Some extraction retains the option's declared element interface.
+:expect 42
+class Box(val value: Int)
+fun read(x: Option[Box]) = if x is Some(b) then b.value else 0
+read(Some(Box(42)))
+//│ = 42
+
+// A class test refines a structural interface without a redundant cast.
+:expect 42
+class Box(val value: Int)
+fun read(x: {value: Int}) = if x is Box as b then b.value else 0
+read(Box(42))
+//│ = 42
+
+// Null is rejected by the Array test; it must not contribute an unknown
+// element type alongside Array[Str]. Exercise both runtime branches.
+:expect [1, 0]
+fun read(x: Array[Str] | null) = if x is Array as xs then xs.0.length else 0
+[read(["x"]), read(null)]
+//│ = [1, 0]
+
+// Refinement must not grant an absent member to the matched interface.
+:e
+class Box(val value: Int)
+fun read(x: {value: Int}) = if x is Box as b then b.missing else 0
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.30: 	fun read(x: {value: Int}) = if x is Box as b then b.missing else 0
+//│ ║        	                                                  ^^^^^^^^^
+//│ ╟── Value of type 'Box' does not contain member 'missing'
+//│ ║  l.30: 	fun read(x: {value: Int}) = if x is Box as b then b.missing else 0
+//│ ╙──      	                                    ^^^
+
+// A class pattern inside that same class retains the lexical captures needed
+// by subsequent field reads and assignments through a structural interface.
+:expect 3
+class Buffer(val items: Array[Int]) with
+  fun read(value: {length: Int}) =
+    let values = value
+    if values is Buffer as buffer do
+      set values = buffer.items
+    if values is Array as values then values.length else 0
+  fun length = items.length
+Buffer([1, 2, 3]).read(Buffer([4, 5, 6]))
+//│ = 3

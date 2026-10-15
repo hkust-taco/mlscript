@@ -14,8 +14,9 @@ import hkmc2.utils.*, shorthands.*
   */
 class ReportFormatter(
   output: Str => Unit,
+  basePath: io.Path,
   val colorize: Bool,
-  val wrap: Opt[(=> Unit) => Unit] = N
+  val wrap: Opt[(=> Unit) => Unit] = N,
 ):
   val MaxLineCount = 5
   
@@ -65,6 +66,7 @@ class ReportFormatter(
           s"$headChar══[INTERNAL ERROR] "
       val lastMsgNum = diag.allMsgs.size - 1
       var globalLineNum = blockLineNum
+      var curPath: io.Path = null
       diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
         val isLastMsg = msgNum =:= lastMsgNum
         val msgStr = msg.showIn(using sctx)
@@ -73,6 +75,12 @@ class ReportFormatter(
           if !onlyOneLine then text("╙──")
         else text(s"${if isLastMsg && loco.isEmpty then "╙──" else "╟──"} ${msgStr}")
         loco.foreach { loc =>
+          val org = loc.origin
+          val path = loc.origin.fileName
+          if (curPath isnt null) && curPath =/= path then
+            text(s"║  in ${path.relativeTo(basePath).getOrElse(path)}${
+              if org.startLineNum > 0 then s":${org.startLineNum}" else ""}")
+          curPath = path
           val (startLineNum, startLineStr, startLineCol) =
             loc.origin.fph.getLineColAt(loc.spanStart)
           badLines += startLineNum

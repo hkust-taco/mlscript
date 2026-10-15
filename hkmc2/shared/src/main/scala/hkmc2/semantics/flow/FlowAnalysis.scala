@@ -30,6 +30,22 @@ case class ConcreteProd(path: Path, ctor: ProdCtor)
 enum SelectionTarget:
   case ObjectMember(sym: MemberSymbol)
   case CompanionMember(comp: Term, sym: MemberSymbol)
+  
+  def describe: Str = this match
+    case ObjectMember(sym) => s"member ${sym.nme}" // TODO: more info (owner)
+    case CompanionMember(_, sym) => s"companion member ${sym.nme}"
+  
+  def loc: Opt[Loc] = this match
+    case ObjectMember(sym) => sym.toLoc
+    case CompanionMember(_, sym) => sym.toLoc
+  
+  import hkmc2.document.*
+  import hkmc2.document.Document.*
+  def show(using Scope, ShowCfg, Raise): Document =
+    this match
+    case ObjectMember(sym) => sym.showName
+    case CompanionMember(comp, sym) => doc"${comp.show}.${sym.showName}"
+end SelectionTarget
 
 
 /** This is a very sketchy exploration/proof of concept of flow analysis
@@ -157,7 +173,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case sel @ AnySel(pre, nme, cls) =>
       log(s"Selection ${sel.showDbg} ${sel.typ}")
       checkLDS(pre): pre_t =>
-        sel.resolvedSym match
+        sel.legacyResolvedSym match
         case S(sym: BlockMemberSymbol) =>
           log(s"RES ${sym.nme} in ${sel.showDbg}")
           getFlowSymOrType(sym)
@@ -174,7 +190,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case nw @ New(cls, args, rft) =>
       rft match
       case N =>
-        cls.resolvedSym.flatMap(_.asCls) match
+        cls.legacyResolvedSym.flatMap(_.asCls) match
         case N =>
           log(s"Unresolved or invalid class symbol in ${cls.showDbg}")
           P.Unknown(nw)
@@ -239,6 +255,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   def typeType(t: Term): Type =
   trace[Type](s"Typing consumer: ${t.showDbg}", post = res => s": ${res.showDbg}"):
     t match
+    case Capture(base, _) => typeType(base)
     case Ref(sym: VarSymbol) => Type.Ref(sym, Nil) // unparameterized type variable
     case Ref(cls: ClassSymbol) => Type.Ref(cls, Nil)
     case Ref(ts: BlockMemberSymbol) =>

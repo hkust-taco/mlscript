@@ -1,5 +1,4 @@
-:js
-:deforest
+:.
 
 
 object A
@@ -295,11 +294,11 @@ fun p(a) = c1(a) + c2(a)
 p(AA(1))
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
 
@@ -461,10 +460,10 @@ if A is
 k + 2
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut¹
 //│ deforest > <<< fusing <<<
 //│ = 5
-//│ k = undefined
+//│ k = 3
 
 :expect 4
 fun test(a) = if a is
@@ -559,17 +558,17 @@ f(id(A)) + f(A)
 //│ deforest > 	match: x²²
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, f_8$f, f_8$x_A, f_8$x_rest, deforest$lam;
+//│ let tmp, tmp1, tmp2, f$f, f$x_A, f$x_rest, deforest$lam;
 //│ @private
-//│ define f_8$f as fun f_8$f⁰(x) {
+//│ define f$f as fun f$f⁰(x) {
 //│   return x()
 //│ };
 //│ @affine(1) @private
-//│ define f_8$x_A as fun f_8$x_A⁰()() {
+//│ define f$x_A as fun f$x_A⁰()() {
 //│   return 1
 //│ };
 //│ @private
-//│ define f_8$x_rest as fun f_8$x_rest⁰() {
+//│ define f$x_rest as fun f$x_rest⁰() {
 //│   return null
 //│ };
 //│ define f⁰ as fun f¹(x) {
@@ -582,8 +581,8 @@ f(id(A)) + f(A)
 //│ };
 //│ set tmp = Predef⁰.id⁰(A⁰);
 //│ set tmp1 = f¹(tmp);
-//│ set deforest$lam = f_8$x_A⁰();
-//│ set tmp2 = f_8$f⁰(deforest$lam);
+//│ set deforest$lam = f$x_A⁰();
+//│ set tmp2 = f$f⁰(deforest$lam);
 //│ return +⁰(tmp1, tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
@@ -657,13 +656,13 @@ print(c(p(true)) + c(p(false)))
 c(B)
 //│ deforest > >>> fusing >>>
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut²
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut²
 //│ deforest > B⁰ ->
 //│ deforest > 	match: x²⁶
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut²
 //│ deforest > new AA¹(2) ->
 //│ deforest > 	match: x²⁶
 //│ deforest > 	fields: x²⁶.aa⁰
@@ -671,7 +670,7 @@ c(B)
 //│ deforest > 	match: x²⁶
 //│ deforest > 	fields: x²⁶.bb⁰
 //│ deforest > A⁰ ->
-//│ deforest > 	match: A⁰
+//│ deforest > 	match: scrut²
 //│ deforest > new AA¹(2) ->
 //│ deforest > 	match: x²⁶
 //│ deforest > 	fields: x²⁶.aa⁰
@@ -697,7 +696,6 @@ f(AA(1), BB(2))
 //│ = 3
 
 
-:deforest
 :expect 9
 fun g(k, x) = if k is
   A then x.AA#aa + x.AA#aa + x.AA#aa
@@ -856,25 +854,25 @@ fun g(b) =
 [f(3), g(true)]
 //│ deforest > >>> fusing >>>
 //│ deforest > BB⁰(0) ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: scrut³
 //│ deforest > D⁰ ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: scrut³
 //│ deforest > AA⁰(0) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > C⁰ ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > BB⁰(0) ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: scrut³
 //│ deforest > D⁰ ->
-//│ deforest > 	match: scrut⁰
+//│ deforest > 	match: scrut³
 //│ deforest > AA⁰(0) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > AA⁰(1) ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > C⁰ ->
-//│ deforest > 	match: scrut¹
+//│ deforest > 	match: scrut⁴
 //│ deforest > <<< fusing <<<
 //│ = [D, AA(1)]
 

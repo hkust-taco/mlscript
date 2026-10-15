@@ -46,7 +46,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
     finally initializingPrelude = false
 
   override def processTerm(blk: Blk, inImport: Bool)(using Config, Raise): Unit =
-    if wasm.isSet && !inImport && !initializingPrelude then
+    if wasm.isSet && config.target == CompilationTarget.Wasm && !inImport && !initializingPrelude then
       val compiler = new WasmCompiler(using cctx, ltl)
       val report = summon[Raise]
       val throwingRaise: Raise = diagnostic =>
@@ -91,17 +91,23 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
   lazy val prettifyBinaryenWat = (content: Str) =>
     content.substring(2, content.length() - 2).replace("\\\\n", "\n").replace("\\\\\"", "\"")
 
+  override def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
+    if trees.nonEmpty && js.isSet && wasm.isSet && config.target == CompilationTarget.Wasm then
+      raise(WarningReport(
+        msg"Enabling both :js and :wasm is not currently supported; disable one before compiling this block." -> N :: Nil))
+    super.processTrees(trees)
+
   override def processIRBlock(
       pgrm: Program,
       definedValues: ComputeDefinedValues,
-      symbolsToPreserve: Set[BoundSymbol],
+      symbolsToPreserve: Set[ScopedSymbol],
   )(using Config, Raise, Elaborator.Ctx): Unit =
     
     super.processIRBlock(pgrm, definedValues, symbolsToPreserve)
     
     val outerRaise: Raise = summon
 
-    if wasm.isSet && !initializingPrelude then
+    if wasm.isSet && config.target == CompilationTarget.Wasm && !initializingPrelude then
 
       val reportedMessages = mutable.Set.empty[Str]
 

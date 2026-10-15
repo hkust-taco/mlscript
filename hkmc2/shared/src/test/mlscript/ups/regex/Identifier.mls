@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations
@@ -138,7 +139,7 @@ pattern Word = Letter ~ (Word | "")
 :e
 fun isWord(x) = x is @compile Word
 //│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
-//│ ║  l.120: 	pattern Word = Letter ~ (Word | "")
+//│ ║  l.121: 	pattern Word = Letter ~ (Word | "")
 //│ ╙──       	               ^^^^^^^^^^^^^^^^^^^
 
 // Unsupported patterns are equivalent to `Never`.
