@@ -110,8 +110,8 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     case N =>
       val targets = EtaTargets(pf.params.size, pf.restParam.isDefined, Set.single(pf))
       if !processing.contains(pf) then
-        // It'd be unsound if eta-expansion postpones the evaluation of a
-        // function if it may have or observe (side) effects.
+        // It'd be unsound if eta-expansion postponed the evaluation of a function
+        // that may have or observe (side) effects.
         val safe = pf.effect.exists(EffectAnalysis.summarize(_) == EffectSummary.Pure)
         val res = targets :: (if safe then funResShape(pf.res) else Nil)
         cache(pf) = res
