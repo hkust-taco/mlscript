@@ -1,9 +1,6 @@
 :.
 :noInline
 
-:global
-:wasm
-
 
 data class Box(x)
 //│ Wasm result:

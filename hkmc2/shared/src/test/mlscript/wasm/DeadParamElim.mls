@@ -1,9 +1,6 @@
 :.
 :noInline
 
-:global
-:wasm
-
 
 data class Box(x)
 //│ Wasm result:
@@ -28,3 +25,5 @@ f(0)
 //│ return f¹(0)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
