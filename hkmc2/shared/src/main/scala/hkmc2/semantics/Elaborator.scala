@@ -685,7 +685,8 @@ object Elaborator:
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       val bsym = BlockMemberSymbol("ret", Nil, true)
-      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N, auxCtorParams = Nil)(N)
+      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N,
+        auxCtorParams = Nil, ctorAnnotations = Nil)(N)
       sym.defn = S(defn)
       Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), FlowSymbol.synthSel(id.name), N, N)
     val nonLocalRet =
@@ -736,6 +737,8 @@ object Elaborator:
     * `App(Bra(Round, Block(x, y)), Tup(u, v))`.
     * An empty first parameter list is parsed as the unit literal:
     * `constructor()(x)` becomes `App(Unt(), Tup(x))`.
+    * A bare `constructor` declaration, which is parsed as `Empty()`, has no parameter lists;
+    * it is only useful with modifiers, as in `private constructor`.
     */
   private object ConstructorParamDecl:
     def mkTup(inner: Tree): Tree = inner match
@@ -744,6 +747,8 @@ object Elaborator:
       case other => Tup(other :: Nil)
 
     def unapply(tree: Tree): Opt[Ls[Tree]] = tree match
+      case Empty() =>
+        S(Nil)
       case Unt() =>
         S(Tup(Nil) :: Nil)
       case Bra(Round, inner) =>
@@ -753,6 +758,17 @@ object Elaborator:
       case App(lhs, Bra(Round, inner)) =>
         unapply(lhs).map(_ :+ mkTup(inner))
       case _ => N
+  
+  /** Extracts the annotations and the parameter lists of a (desugared) constructor declaration,
+    * as in `private constructor(x)`, where `private` desugars into an annotation. */
+  private object ConstructorDecl:
+    def unapply(tree: Tree): Opt[(Ls[Tree], Ls[Tree])] = tree match
+      case PossiblyAnnotated(annotations, Constructor(ConstructorParamDecl(paramLists))) => S(annotations, paramLists)
+      case _ => N
+  
+  /** The modifiers supported on constructor declarations, as in `private constructor(x)`.
+    * Class definitions record them in ClassDef.ctorAnnotations. */
+  private val constructorModifiers: Set[Keyword] = Set(Keyword.`private`)
   
 end Elaborator
 
@@ -1326,6 +1342,9 @@ extends Importer:
     
     def mkNew(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])(typ: Opt[typing.Type]): Term.New =
       val res = withTypeBinders(new Term.New(cls, args, rft)(FlowSymbol.neww(), typ).withLocOf(tree))
+      // The synthetic parent of an anonymous refinement (below) instantiates the same class at the same site,
+      // so only this expression accesses the class's constructor.
+      if newResolution then rctx.recordAccessSite(res, ctx.scope)
       rft.foreach: (symbol, body) =>
         // An anonymous refinement is a concrete subclass too. Publish its declaration
         // so override lookup, super references and implementation checks use the same graph.
@@ -1338,7 +1357,7 @@ extends Importer:
           new Term.New(captured(cls), args.map(captured), N)(FlowSymbol.neww(), typ).withLocOf(tree))
         if newResolution then resolveNew(parent)
         val definition = ClassDef.Plain(ctx.getOuter, syntax.Cls, symbol,
-          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N)(tree.toLoc)
+          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N, ctorAnnotations = Nil)(tree.toLoc)
         symbol.defn = S(definition)
         registerInheritance(definition)
       if newResolution then resolveNew(res)
@@ -1453,7 +1472,7 @@ extends Importer:
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil), N,
-        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil)(hd.toLoc))
+        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil, ctorAnnotations = Nil)(hd.toLoc))
       
       val elabed = ctx.nestInner(derivedClsSym).givenIn:
         block(sts_, hasResult = false)._1
@@ -2115,9 +2134,11 @@ extends Importer:
       // advancing to another statement starts a fresh span.
       val statementLoc = sourceLoc.orElse(sts.headOption.flatMap(_.toLoc))
       /** Call this function when the following term cannot be annotated. */
-      def reportUnusedAnnotations: Unit = if annotations.nonEmpty then raise:
+      def reportUnusedAnnotations: Unit = reportUnused(annotations)
+      /** Call this function when the following term cannot be annotated with `unused`. */
+      def reportUnused(unused: Ls[Annot]): Unit = if unused.nonEmpty then raise:
         WarningReport:
-          msg"This annotation has no effect" -> (annotations.foldLeft[Opt[Loc]](N):
+          msg"This annotation has no effect" -> (unused.foldLeft[Opt[Loc]](N):
             case (acc, ann) => acc match
               case N => ann.toLoc
               case S(loc) => S(loc ++ ann.toLoc)
@@ -2129,23 +2150,27 @@ extends Importer:
       case Nil =>
         reportUnusedAnnotations
         (mkBlk(acc, N, hasResult), ctx)
-      // * Annotations on constructor declarations, as in `private constructor()`, are not supported yet,
-      // * so the two cases below report them as unused. They must not be passed on to the next statement,
+      // * Annotations on constructor declarations must not be passed on to the next statement,
       // * which they would otherwise silently modify (e.g., by making the following class member private).
-      // * Note that annotated constructor declarations are currently ignored altogether,
-      // * as only unannotated ones are desugared into sibling classes (in `BlockImpl.desugStmts`)
-      // * or have their parameters extracted (in the `Cls` case of type definitions below).
+      // * Constructor blocks support no annotations: they are desugared into sibling classes
+      // * (in `BlockImpl.desugStmts`) only when unannotated.
       case Constructor(Block(ctors)) :: sts =>
         // TODO properly handle (it currently desugars to sibling classes)
         reportUnusedAnnotations
         go(sts, Nil, acc)(N)
       case (ctorParams @ Constructor(ConstructorParamDecl(_))) :: sts =>
-        // constructor(x, y) or constructor(x, y)(u, v) syntax: params are extracted during class elaboration
-        reportUnusedAnnotations
-        ctx.getOuter match
+        // * `constructor`, `constructor(x, y)`, or `constructor(x, y)(u, v)` in a class body:
+        // * the `Cls` case of type definitions below extracts their parameter lists,
+        // * as well as their modifiers, which apply to the class's whole constructor.
+        // * Only the body of the class itself can declare its constructor, not a nested block.
+        ctx.outer.inner match
         case S(_: ClassSymbol) =>
+          reportUnused(annotations.filterNot:
+            case Annot.Modifier(kw) => constructorModifiers.contains(kw)
+            case _ => false)
           go(sts, Nil, acc)(N)
         case _ =>
+          reportUnusedAnnotations
           raise(ErrorReport(msg"'constructor(...)' declarations are only allowed in class bodies"
             -> ctorParams.toLoc :: Nil))
           go(sts, Nil, acc)(N)
@@ -2683,15 +2708,18 @@ extends Importer:
               md
         case Cls =>
           val clsSym = td.symbol.asInstanceOf[ClassSymbol] // TODO: improve `asInstanceOf`
-          // Extract constructor(...) param lists from the class body
-          // Handles both single param lists: constructor(x, y)
-          // and multi param lists: constructor(x, y)(u, v)
-          val auxCtorParamTrees: Ls[Tree] = body match
-            case S(blk: Block) => blk.stmts.flatMap:
-              case Constructor(ConstructorParamDecl(paramTrees)) =>
-                paramTrees
-              case _ => Nil
+          // Extract the param lists and modifiers of the constructor declarations in the class body.
+          // Handles single param lists: constructor(x, y),
+          // multi param lists: constructor(x, y)(u, v),
+          // and modified declarations, possibly without param lists: private constructor
+          // The statement loop (see `go`) reports the unsupported annotations of these declarations.
+          val ctorDecls: Ls[(Ls[Tree], Ls[Tree])] = body match
+            case S(blk: Block) => blk.desugStmts.collect:
+              case ConstructorDecl(annotationTrees, paramTrees) => (annotationTrees, paramTrees)
             case _ => Nil
+          val auxCtorParamTrees: Ls[Tree] = ctorDecls.flatMap(_._2)
+          val ctorAnnotations = ctorDecls.flatMap(_._1).collect:
+            case kw @ Keywrd(mod) if constructorModifiers.contains(mod) => Annot.Modifier(mod)(kw.toLoc)
           val auxCtorPss = auxCtorParamTrees.map: ps =>
             val (res, newCtx2) =
               given Ctx = newCtx
@@ -2733,7 +2761,8 @@ extends Importer:
               else N
               val cd =
                 val (bod, c) = mkBody(auxCtorPss)
-                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp, auxCtorParams = auxCtorPss)(statementLoc)
+                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp,
+                  auxCtorParams = auxCtorPss, ctorAnnotations = ctorAnnotations)(statementLoc)
               clsSym.defn = S(cd)
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")

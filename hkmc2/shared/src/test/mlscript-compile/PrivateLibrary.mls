@@ -1,10 +1,11 @@
 #lang(0.3.x)
 
-// * Private members accessed from other files (see `newres/PrivateMembers.mls`).
+// * Private members and constructors accessed from other files (see `newres/PrivateMembers.mls`).
 
 module PrivateLibrary with
   
   class Counter(val start: Int) with
+    private constructor
     private val next = start + 1
     fun peek = next
   

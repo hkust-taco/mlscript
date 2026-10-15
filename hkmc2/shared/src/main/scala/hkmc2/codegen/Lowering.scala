@@ -362,6 +362,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   stagedAnnots,
                   Nil,
                   N,
+                  Nil,
                 )(mod.toLoc)
                 // Link the class to the module's member symbol. A module overloaded with a
                 // function is stored in the function's `.class` property, as references to the

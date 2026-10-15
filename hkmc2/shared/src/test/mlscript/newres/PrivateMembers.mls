@@ -264,7 +264,7 @@ Counter.make(1).next
 //│ ║         	               ^^^^^
 //│ ╟── private member declared here
 //│ ║  in ../../mlscript-compile/PrivateLibrary.mls
-//│ ║  l.7: 	    private val next = start + 1
+//│ ║  l.8: 	    private val next = start + 1
 //│ ╙──     	                ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -275,7 +275,18 @@ Registry.size
 //│ ║         	        ^^^^^
 //│ ╟── private member declared here
 //│ ║  in ../../mlscript-compile/PrivateLibrary.mls
-//│ ║  l.15: 	    private val size = 3
+//│ ║  l.16: 	    private val size = 3
 //│ ╙──      	                ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+Counter(1)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Counter' outside the class
+//│ ║  l.283: 	Counter(1)
+//│ ║         	^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  in ../../mlscript-compile/PrivateLibrary.mls
+//│ ║  l.7: 	    private constructor
+//│ ╙──     	    ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

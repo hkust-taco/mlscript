@@ -81,9 +81,9 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
   private[semantics] val missingMembers = mutable.LinkedHashMap.empty[Identity[NewSel],
     mutable.ListBuffer[(Bool, () => Ls[(Message, Opt[Loc])])]]
-  // The references and selections written in this unit's current block,
+  // The references, selections, and instantiations written in this unit's current block,
   // with the lexical scope in which each is written (see ResolutionContext.checkAccess).
-  private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable, SrcScope)]
+  private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable | New, SrcScope)]
   private[semantics] val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
   private[semantics] val shapeIdentities = mutable.HashMap.empty[ShapeIdentity.View, ShapeIdentity.View]
   private[semantics] val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
@@ -466,32 +466,48 @@ final class ResolutionContext private[semantics] (
 
   /** Check the accessibility of the definitions that `term`, written in `scope`, refers to once
     * its block is complete, as its targets are only final then (see checkAccess). The elaborator
-    * records the references and selections written in the source.
+    * records the references, selections, and instantiations written in the source.
     */
-  def recordAccessSite(term: NewResolvable, scope: SrcScope): Unit =
+  def recordAccessSite(term: NewResolvable | New, scope: SrcScope): Unit =
     state.accessSites += ((term, scope))
 
   /** Private members are only accessible from within their owner and its companion (see
     * SrcScope.canAccessPrivatesOf); member lookups performed elsewhere skip them in favor of
     * inherited members (see MemberLookup.visibleFrom), so a reference written there only
     * targets a private member when there is no such alternative, which is an error.
+    * Likewise, a private constructor is only accessible from within its class and its companion.
+    * Both referring to the class's constructor function and instantiating the class with `new`,
+    * including in another class's `extends` clause, access its constructor. Instantiating
+    * a class through a variable also accesses the constructor of each class that the variable
+    * may hold; calling a constructor function held by a variable does not, as the reference
+    * that produced this function already did.
     */
-  private def checkAccess(term: NewResolvable, scope: SrcScope): Unit = if !hasError(term) then
+  private def checkAccess(term: NewResolvable | New, scope: SrcScope): Unit = if !hasError(term) then
     val loc = term match
       case ref: MemberRef => ref.tree.toLoc
       case sel: NewSel => sel.id.toLoc
       case ref: UnresolvedRef => ref.id.toLoc
       case sup: Super => sup.id.toLoc
-    val violations = term.resolvedTargets.distinct.flatMap:
-      case member: TermSymbol if member.isExplicitlyPrivate => member.owner match
-        // * Like TermSymbol.isPrivate, ignore the definitions owned by the global object.
-        case S(_: TopLevelSymbol) | N => Nil
-        case S(owner) => owner.asDefnSym.defn match
-          case S(ownerDefn) if !scope.canAccessPrivatesOf(ownerDefn) =>
-            ErrorReport(msg"Cannot access private member '${member.nme}' outside its declaring owner" -> loc ::
-              msg"private member declared here" -> member.toLoc :: Nil, source = Diagnostic.Source.Compilation) :: Nil
-          case _ => Nil
+      case nw: New => nw.toLoc
+    def checkConstructor(cls: ClassDef): Ls[Diagnostic] = cls.privateCtor match
+      case S(modifier) if !scope.canAccessPrivatesOf(cls) =>
+        ErrorReport(msg"Cannot access the private constructor of class '${cls.sym.nme}' outside the class" -> loc ::
+          msg"private constructor declared here" -> modifier.toLoc :: Nil, source = Diagnostic.Source.Compilation) :: Nil
       case _ => Nil
+    val violations = term match
+      case nw: New =>
+        ClassValueShape.targetsOf(nw).map(ClassValueShape.definitionOf).distinct.flatMap(checkConstructor)
+      case ref: NewResolvable => ref.resolvedTargets.distinct.flatMap:
+        case ctor: ClassCtorSymbol => ctor.associatedCls.defn.toList.flatMap(checkConstructor)
+        case member: TermSymbol if member.isExplicitlyPrivate => member.owner match
+          // * Like TermSymbol.isPrivate, ignore the definitions owned by the global object.
+          case S(_: TopLevelSymbol) | N => Nil
+          case S(owner) => owner.asDefnSym.defn match
+            case S(ownerDefn) if !scope.canAccessPrivatesOf(ownerDefn) =>
+              ErrorReport(msg"Cannot access private member '${member.nme}' outside its declaring owner" -> loc ::
+                msg"private member declared here" -> member.toLoc :: Nil, source = Diagnostic.Source.Compilation) :: Nil
+            case _ => Nil
+        case _ => Nil
     if violations.nonEmpty then
       markError(term)
       violations.foreach(report)

@@ -366,6 +366,10 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
           :: doc"${cld.ctorSym.fold(doc"")("fun "::_.showName::doc" # ")}${cld.kind.str} ${cld.bsym.showName}::${cld.sym.showName}"
           :: (if cld.tparams.isEmpty then doc""
             else doc"[${cld.tparams.map(_.sym.showName).mkDocument(", ")}]")
+          :: (cld match
+            case cd: ClassDef if cd.ctorAnnotations.nonEmpty =>
+              doc" ${cd.ctorAnnotations.map(_.show :: " ").mkDocument()}constructor"
+            case _ => doc"")
           :: cld.paramsOpt.map(_.show).toList.mkDocument()
           :: cld.auxParams.map(_.show).mkDocument()
           :: cld.ext.fold(doc"")(e => doc" extends ${e.show}")
