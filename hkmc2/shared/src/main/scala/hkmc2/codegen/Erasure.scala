@@ -179,9 +179,11 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           parentClasses(extension).foreach(Inheritance.validateParent(cls, _, extension))
         cls.sym match
           case sym: ClassLikeSymbol if sym.irClassHeader.isEmpty =>
-            sym.irClassHeader = cls.ext match
-              case N => S(ClassHeader(N, N))
-              case S(parent) => parentClass(parent).flatMap(_.sym.asClsOrMod).map(p => ClassHeader(S(p), N))
+            val parent = cls.ext match
+              case N => ClassHeader.Parent.Root
+              case S(parent) => parentClass(parent).flatMap(_.sym.asClsOrMod)
+                .fold(ClassHeader.Parent.Unknown)(ClassHeader.Parent.Known(_))
+            sym.irClassHeader = S(ClassHeader(parent, N))
           case _ => ()
       case _ => ()
 

@@ -1110,12 +1110,13 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     * TODO: cache inheritance set in header object to avoid retraversals, here and elsewhere (eg erased types). */
   private def mayInheritFields(cls: CtorCls, ancestor: CtorCls): Bool = (cls, ancestor) match
     case (cls: ClassLikeSymbol, ancestor: ClassLikeSymbol) =>
-      def go(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Bool = cur.irClassHeader match
-        case N => true
-        case S(ClassHeader(N, _)) => false
-        case S(ClassHeader(S(parent), _)) => parent.asClsOrMod match
-          case S(parent) => (parent is ancestor) || !seen(parent) && go(parent, seen + parent)
-          case N => true
+      def go(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Bool =
+        cur.irClassHeader.fold(ClassHeader.Parent.Unknown)(_.parent) match
+          case ClassHeader.Parent.Unknown => true
+          case ClassHeader.Parent.Root => false
+          case ClassHeader.Parent.Known(parent) => parent.asClsOrMod match
+            case S(parent) => (parent is ancestor) || !seen(parent) && go(parent, seen + parent)
+            case N => true
       go(cls, Set(cls))
     case _ => false
   

@@ -29,9 +29,10 @@ This means that if a program fragment containing definitions is rewritten at all
 then the rewritten version must be kept as the "currently valid" version, and the old one must no longer be reused,
 as a given symbol can never correspond to more than one IR definition.
 
-Class-like symbols also retain a nominal `ClassHeader`: erasure publishes these before executable bodies,
+Class-like symbols also retain a `ClassHeader`: erasure publishes these before executable bodies,
 including for external declarations, and rewritten IR class definitions refresh them. This lets inheritance
 queries operate solely on IR even when a parent has no executable definition or has not been lowered yet.
+An unknown parent is recorded inside the header, independently of its other metadata.
 The header also links a companion module to its containing class, including the synthetic class of a
 standalone module. The distinct instance and static receivers share that class as their member container.
 
@@ -850,12 +851,25 @@ object ValDefn:
       ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasedType = rhs.erasedValueType), sym, rhs)(configOverride, annotations)
 
 
-/** The nominal hierarchy of a class, available independently of its executable body.
-  * An absent header means an unknown parent; a header with no parent denotes a root.
+/** Class metadata, available independently of its executable body.
+  * An absent header means metadata has not been published. A published header records the parent
+  * as unknown, absent (a root), or known, independently of the remaining metadata.
   * `companionClass` is installed by `ClsLikeDefn` for modules attached to a class, including
   * standalone modules with synthetic classes. Other inner symbols are their own member containers.
   */
-final case class ClassHeader(parent: Opt[TypeSymbol], companionClass: Opt[InnerSymbol])
+final case class ClassHeader(parent: ClassHeader.Parent, companionClass: Opt[InnerSymbol])
+
+object ClassHeader:
+  enum Parent:
+    case Unknown
+    case Root
+    case Known(symbol: TypeSymbol)
+
+    /** The parent symbol, if known. This projection does not distinguish roots from unknown parents;
+      * analyses that need to prove the absence of ancestors must inspect the three cases directly. */
+    def knownSymbol: Opt[TypeSymbol] = this match
+      case Known(symbol) => S(symbol)
+      case Unknown | Root => N
 
 /*
   The following explains the difference between paramsOpt, auxParams, privateFields and publicFields.
@@ -914,15 +928,17 @@ final case class ClsLikeDefn(
   require(k isnt syntax.Mod)
   isym match
     case sym: ClassLikeSymbol =>
-      sym.irClassHeader = parentPath match
-      case N => S(ClassHeader(N, N))
-      case S(parent) => parent.targetSymbol.flatMap(_.asTpe).map(p => ClassHeader(S(p), N))
+      val parent = parentPath match
+        case N => ClassHeader.Parent.Root
+        case S(parent) => parent.targetSymbol.flatMap(_.asTpe)
+          .fold(ClassHeader.Parent.Unknown)(ClassHeader.Parent.Known(_))
+      sym.irClassHeader = S(ClassHeader(parent, N))
     case _ => ()
   methods.foreach: m =>
     m.dSym.irDefn = S(m)
   companion.foreach: c =>
     c.isym match
-      case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(N, S(isym)))
+      case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym)))
       case _ => ()
     c.methods.foreach: m =>
       m.dSym.irDefn = S(m)
