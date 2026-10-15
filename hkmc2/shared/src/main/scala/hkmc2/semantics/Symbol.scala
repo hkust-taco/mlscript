@@ -501,7 +501,8 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol, HasErasedType:
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
   /** Published by erasure before class bodies are lowered, including for external declarations.
-    * Full IR class definitions refresh this header when rewritten, just as they own `irDefn`.
+    * Full IR class definitions attach companion modules to their containing class and refresh
+    * these headers when rewritten, just as they own `irDefn`.
     * Keeping the header separately is necessary for forward parents and declarations without
     * executable bodies; consumers must not reconstruct it from semantic terms.
     */
@@ -577,6 +578,9 @@ sealed trait InnerSymbol(using State) extends Symbol, ShapePublisher:
   // ensure that any implementation of InnerSymbol is also a DefinitionSymbol.
   self: DefinitionSymbol[? <: ClassLikeDef] =>
   val privatesScope: Scope = Scope.empty(Scope.Cfg.default) // * Scope for private members of this symbol
+  /** The IR class containing this owner's members, shared by instance and static receivers. */
+  def irClassContainer: InnerSymbol =
+    asClsOrMod.flatMap(_.irClassHeader.flatMap(_.companionClass)).getOrElse(this)
   // TODO(Derppening): Can we meaningfully infer the erased type of `this` from the definition?
   val thisProxy: TempSymbol = TempSymbol(N, erasedType = N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol

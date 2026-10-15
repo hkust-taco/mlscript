@@ -180,8 +180,8 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         cls.sym match
           case sym: ClassLikeSymbol if sym.irClassHeader.isEmpty =>
             sym.irClassHeader = cls.ext match
-              case N => S(ClassHeader(N))
-              case S(parent) => parentClass(parent).flatMap(_.sym.asClsOrMod).map(p => ClassHeader(S(p)))
+              case N => S(ClassHeader(N, N))
+              case S(parent) => parentClass(parent).flatMap(_.sym.asClsOrMod).map(p => ClassHeader(S(p), N))
           case _ => ()
       case _ => ()
 

@@ -201,3 +201,48 @@ module Foo with
   fun getX = x
 [(new Foo).getX, Foo.getX]
 //│ = [1, 2]
+
+
+// * Inlining refreshes the module and class symbols, which must still share a private namespace.
+
+open annotations { inline, noInline }
+
+:expect [[1, 2], [3, 4]]
+@inline fun makePair(n) =
+  class Local with
+    let x = n
+    @noInline fun getX = x
+  module Local with
+    let x = n + 1
+    @noInline fun getX = x
+  [(new Local).getX, Local.getX]
+[makePair(1), makePair(3)]
+//│ = [[1, 2], [3, 4]]
+
+
+// * Standalone modules keep their synthetic class containers after inlining.
+
+:expect [1, 3]
+@inline fun moduleValue(n) =
+  module Local with
+    let x = n
+    @noInline fun getX = x
+  Local.getX
+[moduleValue(1), moduleValue(3)]
+//│ = [1, 3]
+
+
+// * FIXME: SymbolRefresher does not refresh the owned member symbol of a nested module.
+
+:fixme
+:expect [3, 7]
+@inline fun moduleSum(n) =
+  module Local with
+    let x = n
+    module Nested with
+      let y = n + 1
+      @noInline fun sum = x + y
+    @noInline fun read = Nested.sum
+  Local.read
+[moduleSum(1), moduleSum(3)]
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:Nested for ClsLikeDefn is a free variable for this block

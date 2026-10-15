@@ -1112,8 +1112,8 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     case (cls: ClassLikeSymbol, ancestor: ClassLikeSymbol) =>
       def go(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Bool = cur.irClassHeader match
         case N => true
-        case S(ClassHeader(N)) => false
-        case S(ClassHeader(S(parent))) => parent.asClsOrMod match
+        case S(ClassHeader(N, _)) => false
+        case S(ClassHeader(S(parent), _)) => parent.asClsOrMod match
           case S(parent) => (parent is ancestor) || !seen(parent) && go(parent, seen + parent)
           case N => true
       go(cls, Set(cls))

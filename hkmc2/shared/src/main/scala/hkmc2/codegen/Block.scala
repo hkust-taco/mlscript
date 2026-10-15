@@ -32,6 +32,8 @@ as a given symbol can never correspond to more than one IR definition.
 Class-like symbols also retain a nominal `ClassHeader`: erasure publishes these before executable bodies,
 including for external declarations, and rewritten IR class definitions refresh them. This lets inheritance
 queries operate solely on IR even when a parent has no executable definition or has not been lowered yet.
+The header also links a companion module to its containing class, including the synthetic class of a
+standalone module. The distinct instance and static receivers share that class as their member container.
 
 Moreover, we generally assume that in a given program, no symbol is every bound more than once
 by any binding form, such as Scoped, Label, Define. (This is currently not completely enforced, though.)
@@ -850,8 +852,10 @@ object ValDefn:
 
 /** The nominal hierarchy of a class, available independently of its executable body.
   * An absent header means an unknown parent; a header with no parent denotes a root.
+  * `companionClass` is installed by `ClsLikeDefn` for modules attached to a class, including
+  * standalone modules with synthetic classes. Other inner symbols are their own member containers.
   */
-final case class ClassHeader(parent: Opt[TypeSymbol])
+final case class ClassHeader(parent: Opt[TypeSymbol], companionClass: Opt[InnerSymbol])
 
 /*
   The following explains the difference between paramsOpt, auxParams, privateFields and publicFields.
@@ -911,12 +915,15 @@ final case class ClsLikeDefn(
   isym match
     case sym: ClassLikeSymbol =>
       sym.irClassHeader = parentPath match
-      case N => S(ClassHeader(N))
-      case S(parent) => parent.targetSymbol.flatMap(_.asTpe).map(p => ClassHeader(S(p)))
+      case N => S(ClassHeader(N, N))
+      case S(parent) => parent.targetSymbol.flatMap(_.asTpe).map(p => ClassHeader(S(p), N))
     case _ => ()
   methods.foreach: m =>
     m.dSym.irDefn = S(m)
   companion.foreach: c =>
+    c.isym match
+      case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(N, S(isym)))
+      case _ => ()
     c.methods.foreach: m =>
       m.dSym.irDefn = S(m)
   val defnSym = S(isym)
@@ -931,9 +938,6 @@ final case class ClsLikeBody(
     ctor: Block,
     annotations: Ls[Annot],
 ):
-  isym match
-    case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(N))
-    case _ => ()
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
     case _ => false

@@ -79,35 +79,20 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
     privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.name}$$accessorSymbol"))
   
-  /** The owner whose JS class contains the members of `owner`. Lowering emits the members of a module
-    * that has a companion class as static members of this class (see the `case mod: ModuleOrObjectDef`
-    * in `Lowering.block`). The class and its companion module thus share a single namespace of JS
-    * private names, in which JS forbids duplicates, even between static and instance members; and each
-    * of them can access the private members of the other directly, without accessors.
-    */
-  private def jsClassOwner(owner: InnerSymbol): InnerSymbol = owner match
-    case mod: semantics.ModuleOrObjectSymbol => mod.defn match
-      case S(defn) if defn.kind is syntax.Mod => defn.classCompanion.getOrElse(mod)
-      case _ => mod
-    case _ => owner
+  /** Private names belong to the containing IR class, shared by its instance and static members.
+    * Accesses outside that class's lexical scope need an accessor. */
+  private def privateScopeIn(owner: InnerSymbol, classes: Set[InnerSymbol]): Opt[Scope] =
+    val cls = owner.irClassContainer
+    Option.when(classes(cls))(cls.privatesScope)
   
-  /** The JS private name of `ts`, a private member of `owner`. */
-  private def privateName(ts: semantics.TermSymbol, owner: InnerSymbol)(using Raise): Str =
-    jsClassOwner(owner).privatesScope.allocateOrGetName(ts)
   
-  /** Whether the code of an owner in `owners` can access the JS private names of `owner`'s members,
-    * i.e., whether one of these owners is emitted in the same JS class as `owner` (see `jsClassOwner`). */
-  private def privateNamesInScope(owner: InnerSymbol, owners: Iterable[InnerSymbol]): Bool =
-    val cls = jsClassOwner(owner)
-    owners.exists(jsClassOwner(_) is cls)
 
   private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     ts.owner.collect:
       case owner if ts.isPrivate =>
-        val name = privateName(ts, owner)
-        if privateNamesInScope(owner, scope.inScopeOwners)
-        then doc".#$name"
-        else doc"[${scope.lookup_!(getPrivateAccessorSymbol(ts), loc)}]"
+        privateScopeIn(owner, scope.inScopeClasses) match
+        case S(privates) => doc".#${privates.allocateOrGetName(ts)}"
+        case N => doc"[${scope.lookup_!(getPrivateAccessorSymbol(ts), loc)}]"
 
   private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
     val accessors = (
@@ -123,14 +108,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
 
   private def collectExternalPrivateAccessors(p: Program)(using State): Unit =
     privateAccessorSymbols.clear()
-    var owners: List[InnerSymbol] = Nil
-    def withOwner(owner: InnerSymbol)(body: => Unit): Unit =
-      val oldOwners = owners
-      owners = owner :: owners
+    var classes: Set[InnerSymbol] = Set.empty
+    def withClass(cls: InnerSymbol)(body: => Unit): Unit =
+      val oldClasses = classes
+      classes += cls
       body
-      owners = oldOwners
+      classes = oldClasses
     def needsAccessor(ts: semantics.TermSymbol): Bool =
-      ts.isPrivate && ts.owner.exists(owner => !privateNamesInScope(owner, owners))
+      ts.isPrivate && ts.owner.exists(owner => privateScopeIn(owner, classes).isEmpty)
     def note(sym: Opt[DefinitionSymbol[?]]): Unit =
       sym match
       case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
@@ -156,7 +141,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         case _ => super.applyBlock(b)
       override def applyDefn(defn: Defn): Unit = defn match
         case cls: ClsLikeDefn =>
-          withOwner(cls.isym):
+          withClass(cls.isym):
             cls.parentPath.foreach(applyPath)
             applyBlock(cls.preCtor)
             applyBlock(cls.ctor)
@@ -164,9 +149,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             cls.companion.foreach(applyClsLikeBody)
         case _ => super.applyDefn(defn)
       def applyClsLikeBody(body: ClsLikeBody): Unit =
-        withOwner(body.isym):
-          applyBlock(body.ctor)
-          body.methods.foreach(applyDefn)
+        applyBlock(body.ctor)
+        body.methods.foreach(applyDefn)
     collector.applyBlock(p.main)
 
   private def modulePrivateExportName(sym: BlockMemberSymbol)(using Raise): Str =
@@ -612,35 +596,35 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             softTODO(sourceParamsOpt.isEmpty || isym.shouldBeLifted,
               s"Missing constructor function for parameterized class ${isym.nme}")
             
-            def mkMethodName(td: FunDefn, owner: InnerSymbol): Document =
+            def mkMethodName(td: FunDefn): Document =
               if td.dSym.isPrivate
-              then doc"#${privateName(td.dSym, owner)}"
+              then doc"#${isym.privatesScope.allocateOrGetName(td.dSym)}"
               else doc"${td.sym.nme}"
 
-            def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str, owner: InnerSymbol)(using Scope): Document =
+            def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
               mtds.map:
                 case td @ FunDefn(params = ps :: pss, body = bod) =>
                   val result = curriedFunctionBody(pss, bod, td.generator)
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result, isLambda = false)
                   val generatorPrefix = if td.generator && pss.isEmpty then "*" else ""
-                  doc" # $mtdPrefix$generatorPrefix${mkMethodName(td, owner)}($params) ${ braced(bodyDoc) }"
+                  doc" # $mtdPrefix$generatorPrefix${mkMethodName(td)}($params) ${ braced(bodyDoc) }"
                 case td @ FunDefn(params = Nil, body = bod) =>
-                  doc" # ${mtdPrefix}get ${mkMethodName(td, owner)}() ${ braced(body(bod, endSemi = true)) }"
+                  doc" # ${mtdPrefix}get ${mkMethodName(td)}() ${ braced(body(bod, endSemi = true)) }"
               .mkDocument(doc"")
             
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
                   methods: Ls[FunDefn],
-                  mtdPrefix: Str, isym: InnerSymbol)(using Scope): Document =
+                  mtdPrefix: Str, owner: InnerSymbol)(using Scope): Document =
               // * Note: the non-mut-val parts of `pubFlds` are not used because in JS, fields are not declared
               val mutPubFields =
                 pubFlds.collect:
                   case (_, sym) if sym.k is MutVal =>
                     sym -> TermSymbol(
-                      syntax.LetBind, S(isym), Tree.Ident(sym.nme), erasedType = sym.erasedType)
+                      syntax.LetBind, S(owner), Tree.Ident(sym.nme), erasedType = sym.erasedType)
               val allPrivFlds = privFlds ++ mutPubFields.map(_._2)
               val privDecls = allPrivFlds.map: fld =>
-                doc" # $mtdPrefix#${privateName(fld, isym)};"
+                doc" # $mtdPrefix#${isym.privatesScope.allocateOrGetName(fld)};"
               def termSymOwnerQual(ts: TermSymbol) =
                 ts.owner match
                 case S(owner) =>
@@ -686,7 +670,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   val ctorCode = if mod.ctor.isEmpty then doc"" else doc" # static " :: braced:
                     body(mod.ctor, endSemi = true)
                   privs :: ctorCode :: {
-                    mkMethods(mod.methods, mtdPrefix, mod.isym)
+                    mkMethods(mod.methods, mtdPrefix)
                   }
                 // * Note that `thisProxy` might be defined at this point,
                 // * if the module accesses the self-reference of an outer definition.
@@ -762,7 +746,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     .mkDocument(" ")
                   else doc""
                 } :: {
-                  mkMethods(mtds, mtdPrefix, isym)
+                  mkMethods(mtds, mtdPrefix)
                 } :: {
                   // * If this class has a `toString` implementation, then delegate
                   // * `prettyPrint` to `toString`.
