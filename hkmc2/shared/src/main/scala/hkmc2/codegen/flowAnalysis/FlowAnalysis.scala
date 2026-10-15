@@ -1289,8 +1289,6 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
         p.effect.foreach(effect => functionEffectVars(p.concreteId) = effect)
         registerFunctionEffects(p.res)
       case _ => ()
-    // Trusted metadata overrides all inferred contributions, not just unknown callees.
-    // Keep c.effect registered so a trusted-pure call still has a Pure summary.
     def inferredCallEffect(c: ConsFun): Opt[StratVar] =
       c.exprId.exprId.getResult match
         case call: Call if FlowAnalysis.isPureCall(call, c.exprId.whichArgList) => N
