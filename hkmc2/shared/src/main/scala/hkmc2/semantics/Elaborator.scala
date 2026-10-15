@@ -464,6 +464,7 @@ object Elaborator:
             // binders at this site (see NewResolver.instantiateByName).
             val ref = Term.MemberRef(sym)(id, FlowSymbol.memSym(sym))
             rctx.recordLexicalBinders(ref, ctx.typeBinders)
+            rctx.recordAccessSite(ref, ctx.scope)
             ref
         else
           sym.ref(id)
@@ -477,7 +478,8 @@ object Elaborator:
         if config.language.useNewResolution then
           val res = new Term.NewSel(prefix, name, N)(FlowSymbol.synthSel(nme)).withLocOf(id)
           rctx.recordLexicalBinders(res, ctx.typeBinders)
-          summon[NewResolver].newSel(res)
+          rctx.recordAccessSite(res, ctx.scope)
+          summon[NewResolver].newSel(res, ctx.scope)
           res
         else
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
@@ -489,7 +491,8 @@ object Elaborator:
         val prefixes = sources.map(source => source.elem.ref(source.id).withoutLoc.withLocOf(source.id))
         val res = new Term.UnresolvedRef(prefixes, id)(FlowSymbol.synthSel(nme)).withLocOf(id)
         rctx.recordLexicalBinders(res, ctx.typeBinders)
-        summon[NewResolver].unresolvedRef(res)
+        rctx.recordAccessSite(res, ctx.scope)
+        summon[NewResolver].unresolvedRef(res, ctx.scope)
         res
       def symbol: Opt[Symbol] = N
       def isImport: Bool = true
@@ -1346,7 +1349,8 @@ extends Importer:
       // Resolve that interpretation on the qualifier itself, as for explicit `.class`.
       val qualifier = withTypeBinders(new Term.NewSel(cls, new Ident("class").withLocOf(cls), N)(FlowSymbol.sel("class")).withLocOf(cls))
       val res = withTypeBinders(new Term.NewSel(prefix, name, S(qualifier))(FlowSymbol.selProj(name.name)).withLocOf(tree))
-      newSel(res)
+      rctx.recordAccessSite(res, ctx.scope)
+      newSel(res, ctx.scope)
       interpretRef(res, interp)
 
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
@@ -1379,7 +1383,8 @@ extends Importer:
         Term.Lit(StrLit(loc.origin.fileName.toString))
       else if newResolution then
         val res = withTypeBinders(new Term.NewSel(preTrm, tree.name, N)(FlowSymbol.sel(tree.name.name)).withLocOf(tree))
-        newSel(res)
+        rctx.recordAccessSite(res, ctx.scope)
+        newSel(res, ctx.scope)
         interpretRef(res, interp)
       else
         Term.Sel(preTrm, tree.name)(sym, FlowSymbol.sel(tree.name.name), N, S(summon))
@@ -1710,6 +1715,7 @@ extends Importer:
           // Like other written selections, a by-name member selected through
           // `super` is instantiated at this site, within its type binders.
           val res = withTypeBinders(new Term.Super(receiver.ref(id), owner, nme)(FlowSymbol.sel(nme.name)).withLocOf(sel))
+          if newResolution then rctx.recordAccessSite(res, ctx.scope)
           resolveSuper(res)
           interpretRef(res, interp)
         case _ =>

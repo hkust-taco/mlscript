@@ -81,6 +81,9 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
   private[semantics] val missingMembers = mutable.LinkedHashMap.empty[Identity[NewSel],
     mutable.ListBuffer[(Bool, () => Ls[(Message, Opt[Loc])])]]
+  // The references and selections written in this unit's current block,
+  // with the lexical scope in which each is written (see ResolutionContext.checkAccess).
+  private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable, SrcScope)]
   private[semantics] val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
   private[semantics] val shapeIdentities = mutable.HashMap.empty[ShapeIdentity.View, ShapeIdentity.View]
   private[semantics] val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
@@ -455,9 +458,43 @@ final class ResolutionContext private[semantics] (
         markError(selection)
         reportResolutionError(selection, messages)
     state.missingMembers.clear()
+    state.accessSites.foreach(checkAccess)
+    state.accessSites.clear()
     state.pending.foreach: (key, value) =>
       if !key.value.isInstanceOf[Symbol] && state.completedNodes.add(key) then value.completed = true
     state.pending.clear()
+
+  /** Check the accessibility of the definitions that `term`, written in `scope`, refers to once
+    * its block is complete, as its targets are only final then (see checkAccess). The elaborator
+    * records the references and selections written in the source.
+    */
+  def recordAccessSite(term: NewResolvable, scope: SrcScope): Unit =
+    state.accessSites += ((term, scope))
+
+  /** Private members are only accessible from within their owner and its companion (see
+    * SrcScope.canAccessPrivatesOf); member lookups performed elsewhere skip them in favor of
+    * inherited members (see MemberLookup.visibleFrom), so a reference written there only
+    * targets a private member when there is no such alternative, which is an error.
+    */
+  private def checkAccess(term: NewResolvable, scope: SrcScope): Unit = if !hasError(term) then
+    val loc = term match
+      case ref: MemberRef => ref.tree.toLoc
+      case sel: NewSel => sel.id.toLoc
+      case ref: UnresolvedRef => ref.id.toLoc
+      case sup: Super => sup.id.toLoc
+    val violations = term.resolvedTargets.distinct.flatMap:
+      case member: TermSymbol if member.isExplicitlyPrivate => member.owner match
+        // * Like TermSymbol.isPrivate, ignore the definitions owned by the global object.
+        case S(_: TopLevelSymbol) | N => Nil
+        case S(owner) => owner.asDefnSym.defn match
+          case S(ownerDefn) if !scope.canAccessPrivatesOf(ownerDefn) =>
+            ErrorReport(msg"Cannot access private member '${member.nme}' outside its declaring owner" -> loc ::
+              msg"private member declared here" -> member.toLoc :: Nil, source = Diagnostic.Source.Compilation) :: Nil
+          case _ => Nil
+      case _ => Nil
+    if violations.nonEmpty then
+      markError(term)
+      violations.foreach(report)
 
   def canResolve(host: Publisher[?]): Bool =
     data(host)

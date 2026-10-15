@@ -1,0 +1,18 @@
+#lang(0.3.x)
+
+// * Private members accessed from other files (see `newres/PrivateMembers.mls`).
+
+module PrivateLibrary with
+  
+  class Counter(val start: Int) with
+    private val next = start + 1
+    fun peek = next
+  
+  module Counter with
+    fun make(start: Int) = Counter(start)
+    fun nextOf(counter: Counter) = counter.next
+  
+  module Registry with
+    private val size = 3
+    fun count = size
+

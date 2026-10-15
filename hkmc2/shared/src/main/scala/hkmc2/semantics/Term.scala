@@ -304,6 +304,15 @@ case class SrcScope(outer: Elaborator.OuterCtx, parent: Opt[SrcScope]):
           (base, inner :: path)
       case _: (Function | LocalScope | NonReturnContext) | LambdaOrHandlerBlock =>
         (this, Nil)
+  
+  /** Whether code written in this scope can access the private members of `owner`: whether it is nested in the
+    * definition of `owner` or of one of its companions, which are the other class-like definitions of its block member
+    * symbol. These are found through `owner`, whose definition is complete, unlike the definitions enclosing this scope,
+    * which may still be in the process of being elaborated. Notably, a subclass of `owner` cannot access these members. */
+  def canAccessPrivatesOf(owner: ClassLikeDef): Bool =
+    def grantsAccess(inner: InnerSymbol): Bool =
+      (inner is owner.sym) || owner.bsym.asCls.exists(_ is inner) || owner.bsym.asModOrObj.exists(_ is inner)
+    outer.inner.exists(grantsAccess) || parent.exists(_.canAccessPrivatesOf(owner))
 
 object SrcScope:
   given s: Ctx => SrcScope = summon[Ctx].scope

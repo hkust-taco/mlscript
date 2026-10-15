@@ -445,9 +445,14 @@ enum MemberLookup:
   case Dynamic(marks: Ls[Marks])
   case Missing
   case Unknown(reason: MemberLookup.Uncertainty, fromPublicInterface: Bool, provenance: ShapeProvenance)
+  /** A private member of `owner`, found by `own`, which only hides the members of the same name that `owner`
+    * inherits, found by `inherited`, from the code that can access the private members of `owner`.
+    * Which members a lookup finds thus depends on where it is performed: see `visibleFrom`. */
+  case Private(own: MemberLookup, owner: ClassLikeDef, inherited: MemberLookup)
   
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
     case Contextual(source, instances) => Contextual(source.withMarks(marks), instances)
+    case Private(own, owner, inherited) => Private(own.withMarks(marks), owner, inherited.withMarks(marks))
     case Found(member, inner) => Found(member, inner ::: marks)
     case Declared(member, bindings, inner, annotation, positive) => Declared(member, bindings, inner ::: marks, annotation, positive)
     case Typed(field, tpe, inner) => Typed(field, tpe, inner ::: marks)
@@ -458,6 +463,7 @@ enum MemberLookup:
   /** The receiver's annotation remains the diagnostic origin when lookup visits a parent. */
   def withAnnotation(annotation: Opt[Term]): MemberLookup = this match
     case Contextual(source, instances) => Contextual(source.withAnnotation(annotation), instances)
+    case Private(own, owner, inherited) => Private(own.withAnnotation(annotation), owner, inherited.withAnnotation(annotation))
     case Declared(member, bindings, marks, _, positive) => Declared(member, bindings, marks, annotation, positive)
     case _ => this
 
@@ -467,15 +473,38 @@ enum MemberLookup:
       case Missing | Unknown(_, _, _) | Dynamic(_) => this
       case _ => Contextual(this, instances)
 
+  /** The members found by this lookup when it is performed by code that can access the private members of the
+    * class-like definitions satisfying `canAccess` (see SrcScope.canAccessPrivatesOf). Inaccessible private members
+    * do not hide inherited members, just like JavaScript's private class elements do not hide inherited properties.
+    * When there are no such inherited members, the lookup only finds the inaccessible private member
+    * if `reportInaccessible` is set, so that its consumer reports the illegal access (see ResolutionContext.checkAccess)
+    * rather than a missing member; otherwise, the lookup finds no member.
+    */
+  def visibleFrom(canAccess: ClassLikeDef => Bool, reportInaccessible: Bool): MemberLookup = this match
+    case Contextual(source, instances) => source.visibleFrom(canAccess, reportInaccessible).instantiate(instances)
+    case Private(own, owner, inherited) =>
+      if canAccess(owner) then own
+      else inherited.visibleFrom(canAccess, reportInaccessible) match
+        case Missing if reportInaccessible => own
+        case visible => visible
+    case _ => this
+
 object MemberLookup:
   enum Uncertainty:
     case ValueShape, RecordOverwrite
   
-  /** Own members take precedence over inherited ones, including unknown spreads. */
+  /** Own members take precedence over inherited ones, including unknown spreads,
+    * except for private members as seen from outside their class (see Private). */
   def inClass(defn: ClassLikeDef, ext: Opt[TermShape], name: Str)(using ResolutionContext): MemberLookup =
+    def inherited = ext.fold[MemberLookup](Missing)(_.getMember(name))
     defn.body.members.get(name) match
-      case S(member) => Found(member, Nil)
-      case N => ext.fold[MemberLookup](Missing)(_.getMember(name))
+      case S(member) => own(defn, member, Found(member, Nil), inherited)
+      case N => inherited
+  
+  /** The lookup `found` of a member of `defn`'s body, wrapped in `Private` if the member is private,
+    * in which case `inherited` looks up the members of the same name that `defn` inherits. */
+  def own(defn: ClassLikeDef, member: BlockMemberSymbol, found: MemberLookup, inherited: => MemberLookup): MemberLookup =
+    if member.asTrm.exists(_.isExplicitlyPrivate) then Private(found, defn, inherited) else found
 
 end MemberLookup
 
@@ -1151,7 +1180,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
           case Missing => N
           case Found(member: RecordMember, inner) =>
             S(Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil))
-          case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _, _) | Typed(_, _, _) | Indexed(_, _) =>
+          case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _, _) | Typed(_, _, _) | Indexed(_, _) | Private(_, _, _) =>
             // Record spreads recursively look up RecordShapes, which only create RecordMembers.
             lastWords("Record lookup returned a nominal member")
         spread(shape.getMember(name)).getOrElse(loop(rest))
