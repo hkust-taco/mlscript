@@ -376,7 +376,7 @@ f(0)
 //│ define g as fun g⁵(x) {
 //│   let tmp;
 //│   set tmp = +⁰(x, 1);
-//│   set x = tmp;
+//│   set x = (tmp as! Int⁰);
 //│   return x
 //│ };
 //│ define f⁷ as fun f⁸(x) {
@@ -387,7 +387,7 @@ f(0)
 //│       return g⁵(x)
 //│     else
 //│       set tmp = +⁰(x, 1);
-//│       set x = tmp;
+//│       set x = (tmp as! Int⁰);
 //│       return x
 //│   end
 //│ };
@@ -597,10 +597,10 @@ h(1)
 //│   match scrut
 //│     true =>
 //│       set tmp = -⁰(c, 1);
-//│       set tmp1 = f1⁰(tmp);
+//│       set tmp1 = f1⁰((tmp as! Int⁰));
 //│       set tmp2 = -⁰(c, 1);
-//│       set tmp3 = f2⁰(tmp2);
-//│       return +⁰(tmp1, tmp3)
+//│       set tmp3 = f2⁰((tmp2 as! Int⁰));
+//│       return (+⁰(tmp1, tmp3) as! Int⁰)
 //│     else
 //│       return 1
 //│   end

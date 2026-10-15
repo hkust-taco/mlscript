@@ -81,26 +81,26 @@ example()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let example2;
 //│ example2 = function example() {
-//│   let x2, get_x, old1, tmp4, tmp5, get_x1;
-//│   x2 = 0;
+//│   let x3, get_x, old1, tmp4, tmp5, get_x1;
+//│   x3 = 0;
 //│   get_x1 = function get_x() {
-//│     return x2
+//│     return x3
 //│   };
 //│   get_x = get_x1;
-//│   old1 = x2;
+//│   old1 = x3;
 //│   try {
 //│     {
 //│       let inlinedVal;
-//│       tmp4 = x2 + 1;
-//│       x2 = tmp4;
-//│       Predef.print(x2);
-//│       inlinedVal = x2;
+//│       tmp4 = x3 + 1;
+//│       x3 = tmp4;
+//│       Predef.print(x3);
+//│       inlinedVal = x3;
 //│       Predef.print(inlinedVal);
 //│     }
 //│   } finally {
-//│     x2 = old1;
+//│     x3 = old1;
 //│   }
-//│   Predef.print(x2);
+//│   Predef.print(x3);
 //│   tmp5 = runtime.safeCall(get_x());
 //│   return Predef.print(tmp5)
 //│ };
@@ -133,13 +133,13 @@ example()
 //│   set old = x;
 //│   try
 //│     set tmp1 = +⁰(x, 1);
-//│     set x = tmp1;
+//│     set x = (tmp1 as! Int⁰);
 //│     do Predef⁰.print⁰(x);
 //│     set tmp2 = x;
 //│     set tmp = tmp2;
 //│     end
 //│   finally
-//│     set x = old;
+//│     set x = (old as! Int⁰);
 //│     end;
 //│     do Predef⁰.print⁰(x);
 //│   set tmp3 = get_x();

@@ -453,7 +453,7 @@ class ClassCtorSymbol(
   override val k: syntax.Fun.type,
   override val owner: Opt[InnerSymbol],
   val associatedCls: ClassSymbol,
-)(using State) extends TermSymbol(k, owner, associatedCls.id, N):
+)(using State) extends TermSymbol(k, owner, associatedCls.id):
   override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
   override def mayRaiseEffects(using Config) =
     super.mayRaiseEffects || config.checkInstantiateEffect

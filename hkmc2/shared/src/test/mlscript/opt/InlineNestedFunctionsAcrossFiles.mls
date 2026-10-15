@@ -28,7 +28,7 @@ NestedFunctionsNoLift.not_recursive(4)
 //│     else
 //│       set tmp = -⁰(i, 1);
 //│       set tmp1 = loop⁰(tmp);
-//│       return +⁰(tmp1, 1)
+//│       return (+⁰(tmp1, 1) as! Int⁰)
 //│   end
 //│ };
 //│ return loop⁰(4)

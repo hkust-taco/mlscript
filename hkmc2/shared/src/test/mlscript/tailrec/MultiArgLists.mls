@@ -32,8 +32,8 @@ loop(1000)(0)
 //│       else
 //│         set tmp = -⁰(x, 1);
 //│         set tmp1 = +⁰(y, x);
-//│         set x = tmp;
-//│         set y = tmp1;
+//│         set x = (tmp as! Int⁰);
+//│         set y = (tmp1 as! Int⁰);
 //│         continue loopLabel
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
@@ -63,7 +63,7 @@ count(0)(100)
 //│         return start1
 //│       else
 //│         set tmp = +⁰(start1, 1);
-//│         set start1 = tmp;
+//│         set start1 = (tmp as! Int⁰);
 //│         continue loopLabel
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
@@ -84,7 +84,7 @@ count(0)(100)
 //│         break inlinedLbl
 //│       else
 //│         set tmp = +⁰(start, 1);
-//│         set start = tmp;
+//│         set start = (tmp as! Int⁰);
 //│         continue loopLabel
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
@@ -375,8 +375,8 @@ fun f = loop(1000)(0)
 //│         else
 //│           set tmp = -⁰(x1, 1);
 //│           set tmp1 = +⁰(y1, x1);
-//│           set x1 = tmp;
-//│           set y1 = tmp1;
+//│           set x1 = (tmp as! Int⁰);
+//│           set y1 = (tmp1 as! Int⁰);
 //│           continue loopLabel
 //│       end
 //│     unreachable /* Rest of abortive labelled block */
@@ -397,8 +397,8 @@ fun f = loop(1000)(0)
 //│         else
 //│           set tmp = -⁰(x, 1);
 //│           set tmp1 = +⁰(y, x);
-//│           set x = tmp;
-//│           set y = tmp1;
+//│           set x = (tmp as! Int⁰);
+//│           set y = (tmp1 as! Int⁰);
 //│           continue loopLabel
 //│       end
 //│     unreachable /* Rest of abortive labelled block */
@@ -429,11 +429,11 @@ loop(5)(5)
 //│         match scrut1
 //│           true =>
 //│             set tmp = -⁰(y, 1);
-//│             set tmp1 = loop$tailrec¹(5, tmp);
-//│             return +⁰(1, tmp1)
+//│             set tmp1 = loop$tailrec¹(5, (tmp as! Int⁰));
+//│             return (+⁰(1, tmp1) as! Int⁰)
 //│           else
 //│             set tmp2 = -⁰(x, 1);
-//│             set x = tmp2;
+//│             set x = (tmp2 as! Int⁰);
 //│             continue loopLabel
 //│         end
 //│     end

@@ -44,12 +44,11 @@ class Foo(a) with
 //│     Foo1.class = this
 //│   }
 //│   constructor(a) {
-//│     let tmp, lambda$here;
+//│     let tmp;
 //│     this.#a = a;
 //│     tmp = this.#a + 1;
 //│     this.#b = tmp;
-//│     lambda$here = lambda$(this);
-//│     this.f = lambda$here;
+//│     this.f = lambda$(this);
 //│   }
 //│   #a;
 //│   #b;

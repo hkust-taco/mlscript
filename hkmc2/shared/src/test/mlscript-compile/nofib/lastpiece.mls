@@ -8,6 +8,9 @@ open NofibPrelude
 
 module lastpiece with ...
 
+// The port uses Haskell strings, represented by linked lists of characters.
+type String = List[Char]
+
 
 
 fun isSome(x) = x is Some

@@ -71,7 +71,7 @@ f(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ @private define f⁰ as fun f¹(a) { return a }; return 42
+//│ @private define f⁰ as fun f¹(a) { return (a as! Int⁰) }; return (42 as! Int⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -111,9 +111,7 @@ private fun main1() = main((a) => 0, (a) => a + 1)
 main1()
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > apply⁰#0 @ main1⁰.main⁰.apply¹ -> eliminable: {1}
-//│ dead-param-elim > lambda⁰#0 @ main1⁰ -> eliminable: {0}
 //│ dead-param-elim > apply⁰#0 @ main1¹.main⁰.apply¹ -> eliminable: {1}
-//│ dead-param-elim > lambda⁰#0 @ main1¹ -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 1
 

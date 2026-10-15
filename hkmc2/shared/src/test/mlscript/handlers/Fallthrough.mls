@@ -19,7 +19,7 @@ fun f() =
 //│ let f;
 //│ runtime.resetEffects();
 //│ f = function f() {
-//│   let tmp, pc;
+//│   let tmp, tmp1, tmp2, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
@@ -40,7 +40,9 @@ fun f() =
 //│           return runtime.unwind(f, 6, "Fallthrough.mls:12:19", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 6:
-//│         runtime.resumeValue;
+//│         tmp1 = runtime.resumeValue;
+//│         tmp2 = tmp + tmp1;
+//│         tmp2;
 //│         pc = 5;
 //│       case 5:
 //│         runtime.resumeValue = 0;

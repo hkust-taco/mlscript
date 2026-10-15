@@ -57,7 +57,7 @@ fun selected(n: Int, k: Str) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let selected$b_Box, selected$b_rest;
 //│ @affine(1) @private
-//│ define selected$b_Box as fun selected$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_x: ?, fv_k: Str⁰): ? {
+//│ define selected$b_Box as fun selected$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_x: Int⁰, fv_k: Str⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_x = fv_arg$Box$0$;
 //│   return [fv_x, fv_k]
@@ -66,8 +66,8 @@ fun selected(n: Int, k: Str) =
 //│ define selected$b_rest as fun selected$b_rest⁰(): ? {
 //│   return null
 //│ };
-//│ define selected⁰ as fun selected¹(n: Int⁰, k: Str⁰): ? {
-//│   let b: ?, x: ?, arg$Box$0$: ?, Box_v: Int⁰;
+//│ define selected⁰ as fun selected¹(n: Int⁰, k: Str⁰): Array⁰ {
+//│   let b: Box², x: Int⁰, arg$Box$0$: ?, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set b = selected$b_Box⁰(Box_v);
 //│   return b(arg$Box$0$, x, k)
@@ -92,19 +92,19 @@ fun withRest(n: Int, k: Str) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let withRest$b_Box, withRest$b_rest;
 //│ @affine(1) @private
-//│ define withRest$b_Box as fun withRest$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_x: ?, fv_tmp: ?, fv_r: ?, fv_k: Str⁰): ? {
+//│ define withRest$b_Box as fun withRest$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_x: Int⁰, fv_tmp: Int⁰, fv_r: Int⁰, fv_k: Str⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_x = fv_arg$Box$0$;
 //│   set fv_tmp = fv_x;
 //│   return withRest$b_rest⁰(fv_r, fv_tmp, fv_k)
 //│ };
 //│ @private
-//│ define withRest$b_rest as fun withRest$b_rest⁰(fv_r: ?, fv_tmp: ?, fv_k: Str⁰): ? {
+//│ define withRest$b_rest as fun withRest$b_rest⁰(fv_r: Int⁰, fv_tmp: Int⁰, fv_k: Str⁰): ? {
 //│   set fv_r = fv_tmp;
 //│   return [fv_r, fv_k]
 //│ };
-//│ define withRest⁰ as fun withRest¹(n: Int⁰, k: Str⁰): ? {
-//│   let b: ?, r: ?, x: ?, arg$Box$0$: ?, tmp: ?, Box_v: Int⁰;
+//│ define withRest⁰ as fun withRest¹(n: Int⁰, k: Str⁰): Array⁰ {
+//│   let b: Box², r: Int⁰, x: Int⁰, arg$Box$0$: ?, tmp: Int⁰, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set b = withRest$b_Box⁰(Box_v);
 //│   return b(arg$Box$0$, x, tmp, r, k)
@@ -133,8 +133,8 @@ fun noFields(n: Int, s: Str) =
 //│ define noFields$p_rest as fun noFields$p_rest⁰(): ? {
 //│   return null
 //│ };
-//│ define noFields⁰ as fun noFields¹(n: Int⁰, s: Str⁰): ? {
-//│   let p: ?, Pair_a: Int⁰, Pair_b: Str⁰;
+//│ define noFields⁰ as fun noFields¹(n: Int⁰, s: Str⁰): Int⁰ {
+//│   let p: Pair², Pair_a: Int⁰, Pair_b: Str⁰;
 //│   set Pair_a = n;
 //│   set Pair_b = s;
 //│   set p = noFields$p_Pair⁰(Pair_a, Pair_b);

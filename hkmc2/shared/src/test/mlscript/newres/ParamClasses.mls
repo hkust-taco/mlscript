@@ -132,7 +132,9 @@ val fv = Foo(1)
 //│   fun get⁰::get¹ ‹flow:get⁰› = fv¹^get¹.a⁴, val fv¹::fv² ‹flow:fv⁰› = Foo⁴^fv²(1)‹app⁵›
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp;
-//│ define get⁰ as fun get¹() { return fv⁰.a⁰ };
+//│ define get⁰ as fun get¹() {
+//│   return (fv⁰.a⁰ as! Int⁰)
+//│ };
 //│ set tmp = Foo⁰(1);
 //│ define fv¹ as val fv⁰ = tmp;
 //│ end
@@ -229,17 +231,17 @@ let g = f(1)
 :e
 g(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.230: 	g(2)
+//│ ║  l.232: 	g(2)
 //│ ║         	^^^^
 //│ ╟── Instance of class 'Foo' cannot receive more argument lists.
-//│ ║  l.226: 	let g = f(1)
+//│ ║  l.228: 	let g = f(1)
 //│ ╙──       	        ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 let f = new Foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.240: 	let f = new Foo()
+//│ ║  l.242: 	let f = new Foo()
 //│ ║         	        ^^^^^^^^^
 //│ ╟── Class 'Foo' expected 1 argument, but got 0
 //│ ║  l.80: 	class Foo(val a) {
@@ -254,10 +256,10 @@ let f = new Foo()
 :e
 new 42
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.255: 	new 42
+//│ ║  l.257: 	new 42
 //│ ║         	^^^^^^
 //│ ╟── Invalid class expression: integer literal
-//│ ║  l.255: 	new 42
+//│ ║  l.257: 	new 42
 //│ ╙──       	    ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -46,7 +46,7 @@ let x = undefined in
   print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let x, scrut;
-//│ set x = undefined;
+//│ set x = (undefined as!! Int⁰);
 //│ set scrut = Predef⁰.hide⁰(false);
 //│ match scrut
 //│   true =>

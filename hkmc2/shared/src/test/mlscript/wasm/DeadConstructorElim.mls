@@ -16,7 +16,7 @@ fun cast() =
   42
 cast()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define cast⁰ as fun cast¹() { let x; set x = Box⁰(1); do (x as! Box¹); return 42 }; return cast¹()
+//│ define cast⁰ as fun cast¹() { return 42 }; return cast¹()
 //│ Wasm result:
 //│ = 42
 
@@ -45,7 +45,7 @@ f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define f⁰ as fun f¹() {
 //│   let mk;
-//│   define mk as fun mk⁰() { return (Box⁰(1) as! Box¹) };
+//│   define mk as fun mk⁰() { return undefined };
 //│   do mk⁰();
 //│   return 42
 //│ };
@@ -66,12 +66,8 @@ fun f() =
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define f² as fun f³() {
-//│   let take, tmp;
-//│   define take as fun take⁰() {
-//│     return undefined
-//│   };
-//│   set tmp = Box⁰(1);
-//│   do (tmp as! Box¹);
+//│   let take;
+//│   define take as fun take⁰() { return undefined };
 //│   do take⁰();
 //│   return 42
 //│ };

@@ -104,21 +104,41 @@ sumPlus(enum(3))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let enum$enum$worker;
+//│ let enum$enum, sumPlus$ls_Nil, sumPlus$ls_Cons, sumPlus$ls_Cons$worker, enum$enum$worker;
+//│ @inline @private
+//│ define enum$enum as fun enum$enum⁰(x)(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6) {
+//│   return enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6)
+//│ };
 //│ @private
 //│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6) {
-//│   let scrut, tmp;
+//│   let scrut, tmp, tmp1;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
 //│     true =>
-//│       return 1
+//│       return (sumPlus$ls_Nil⁰() as! Object⁰)(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6)
 //│     else
-//│       let fv_tmp, inlinedVal;
 //│       set tmp = -⁰(x, 1);
-//│       set inlinedVal = enum$enum$worker⁰(tmp, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
-//│       set fv_tmp = +⁰(x, inlinedVal);
-//│       return +⁰(fv_tmp, 1)
+//│       set tmp1 = enum$enum⁰((tmp as! Int⁰));
+//│       return (sumPlus$ls_Cons⁰(x, tmp1) as! Object⁰)(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6)
 //│   end
+//│ };
+//│ @inline @affine(1) @private
+//│ define sumPlus$ls_Nil as fun sumPlus$ls_Nil⁰()(fv_tmp, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_t, fv_h, fv_tmp1, fv_r) {
+//│   let fv_r1;
+//│   set fv_r1 = (0 as! Int⁰);
+//│   return +⁰(fv_r1, 1)
+//│ };
+//│ @inline @affine(1) @private
+//│ define sumPlus$ls_Cons as fun sumPlus$ls_Cons⁰(Cons_h, Cons_t)(fv_tmp, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_t, fv_h, fv_tmp1, fv_r) {
+//│   return sumPlus$ls_Cons$worker⁰(Cons_h, Cons_t, fv_tmp, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_t, fv_h, fv_tmp1, fv_r)
+//│ };
+//│ @affine(1) @private
+//│ define sumPlus$ls_Cons$worker as fun sumPlus$ls_Cons$worker⁰(Cons_h, Cons_t, fv_tmp, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_t, fv_h, fv_tmp1, fv_r) {
+//│   let inlinedVal, fv_r1;
+//│   set inlinedVal = Cons_t(undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│   set fv_tmp = +⁰(Cons_h, inlinedVal);
+//│   set fv_r1 = (fv_tmp as! Int⁰);
+//│   return +⁰(fv_r1, 1)
 //│ };
 //│ define enum⁰ as fun enum¹(x) {
 //│   let scrut, tmp, tmp1;
@@ -128,24 +148,26 @@ sumPlus(enum(3))
 //│       return Nil⁰
 //│     else
 //│       set tmp = -⁰(x, 1);
-//│       set tmp1 = enum¹(tmp);
+//│       set tmp1 = enum¹((tmp as! Int⁰));
 //│       return Cons⁰(x, tmp1)
 //│   end
 //│ };
 //│ define sumPlus⁰ as fun sumPlus¹(ls) {
-//│   let arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│   let r, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
 //│   match ls
 //│     Nil⁰ =>
-//│       return 1
+//│       set tmp = 0;
+//│       end
 //│     Cons¹ =>
 //│       set arg$Cons$0$ = ls.h⁰;
 //│       set arg$Cons$1$ = ls.t⁰;
 //│       set tmp1 = sumPlus¹(arg$Cons$1$);
 //│       set tmp = +⁰(arg$Cons$0$, tmp1);
-//│       return +⁰(tmp, 1)
+//│       end
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
-//│   end
+//│   set r = (tmp as! Int⁰);
+//│   return +⁰(r, 1)
 //│ };
 //│ return enum$enum$worker⁰(3, undefined, undefined, undefined, undefined, undefined, undefined, undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -11,7 +11,7 @@ data class Box(x)
 :re
 :flowBasedOpt mono
 :soir
-fun f(o) =
+fun f(o: Any) =
   fun take(b: Box) = 0
   take(o)
 f(0)

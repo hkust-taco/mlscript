@@ -289,7 +289,7 @@ wasm.f64.add(Boxed(wasm.i64.const(1), wasm.f64.const(1.5)).f, wasm.f64.const(0.2
 //│   (func $entry (export "entry") (type $entry) (result f64)
 //│     (local $tmp i64)
 //│     (local $tmp1 f64)
-//│     (local $tmp2 (ref null any))
+//│     (local $tmp2 (ref null $Boxed))
 //│     (local $tmp3 f64)
 //│     (block (result f64)
 //│       (local.set $tmp

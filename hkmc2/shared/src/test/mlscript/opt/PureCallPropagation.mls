@@ -171,7 +171,7 @@ fun scopedPrefixFoo(x)(y) = x + y
 //│       end
 //│     true =>
 //│       let x;
-//│       set x = Predef⁰.hide⁰(0);
+//│       set x = (Predef⁰.hide⁰(0) as! Int⁰);
 //│       set f = scopedPrefixFoo¹(x);
 //│       end
 //│     else

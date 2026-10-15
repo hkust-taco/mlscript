@@ -52,3 +52,99 @@ module Right with
 //│ ╟── candidate: type alias
 //│ ║  l.42: 	    type Number = Str
 //│ ╙──      	         ^^^^^^
+
+
+// Stored function values retain a value representation through bindings and record fields.
+:noInline
+:expect 42
+private fun increment(value) = value + 1
+let stored = increment
+let record = {apply: stored}
+record.apply(41)
+//│ = 42
+//│ record = {apply: fun increment}
+//│ stored = fun increment
+
+
+// A class value in a binding is a constructor object, distinct from an instance.
+:noInline
+:expect 42
+private class Box(val value)
+let factory = Box
+factory(42).value
+//│ = 42
+//│ factory = fun Box { class: class Box }
+
+
+// Preserve curried physical parameter lists and partially applied function values.
+:noInline
+:expect 42
+private fun add(x)(y) = x + y
+let plusOne = add(1)
+plusOne(41)
+//│ = 42
+//│ plusOne = fun
+
+
+// Nested functions' returns do not contribute to the enclosing function's result.
+:noInline
+:expect 42
+private fun enclosing() =
+  fun inner() = return "inner"
+  inner()
+  return 42
+enclosing()
+//│ = 42
+
+
+// Contextual declared shapes must retain their generic call-site substitutions.
+:noInline
+:expect [42, "text"]
+private fun identity[A](value: A): A = value
+private fun forward(value) = identity(value)
+[forward(42), forward("text")]
+//│ = [42, "text"]
+
+
+// Unknown from an exported input absorbs concrete references without changing their ABI.
+:noInline
+:expect [42, "text"]
+fun exported(value) = value
+[exported(42), exported("text")]
+//│ = [42, "text"]
+
+
+// Named tuple fields have source slots even though resolution synthesizes their declarations.
+:noInline
+:expect 42
+let tuple = [answer: 42]
+tuple.0.answer
+//│ = 42
+//│ tuple = [{answer: 42}]
+
+
+// Pattern bindings and lambda inputs also receive the observed runtime shapes.
+:noInline
+:expect 42
+let apply = (value) => if value is [head, ..tail] then head else 0
+apply([42, 1])
+//│ = 42
+//│ apply = fun
+
+
+// A later worksheet block can add shapes without rewriting a compiled declaration's slot.
+:noInline
+fun reused(value) = value
+reused(42)
+//│ = 42
+
+:expect "next"
+reused("next")
+//│ = "next"
+
+
+// Imported source definitions keep the representation assigned by their defining unit.
+:expect 36
+import "../../mlscript-compile/NamedFieldLibrary.mjs"
+NamedFieldLibrary.select(NamedFieldLibrary.fields.0)
+//│ = 36

@@ -13,7 +13,7 @@ in
   set x = hide(2)
   print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = Predef⁰.hide⁰(2); return Predef⁰.print⁰(tmp)
+//│ let x, tmp; set tmp = Predef⁰.hide⁰(2); set x = (tmp as! Int⁰); return Predef⁰.print⁰(x)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 
@@ -27,13 +27,17 @@ in
   set x += 1
   print(x)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2;
+//│ let x, tmp, tmp1, tmp2, tmp3;
 //│ set tmp = Predef⁰.hide⁰(2);
-//│ do Predef⁰.print⁰(tmp);
-//│ do Predef⁰.hide⁰(3);
-//│ set tmp1 = Predef⁰.hide⁰(4);
-//│ set tmp2 = +⁰(tmp1, 1);
-//│ return Predef⁰.print⁰(tmp2)
+//│ set x = (tmp as! Int⁰);
+//│ do Predef⁰.print⁰(x);
+//│ set tmp1 = Predef⁰.hide⁰(3);
+//│ do (tmp1 as! Int⁰);
+//│ set tmp2 = Predef⁰.hide⁰(4);
+//│ set x = (tmp2 as! Int⁰);
+//│ set tmp3 = +⁰(x, 1);
+//│ set x = (tmp3 as! Int⁰);
+//│ return Predef⁰.print⁰(x)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 //│ > 5
@@ -159,7 +163,7 @@ let x = 1 in
     set y = 3
   y
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let y; try set y = 3; end finally end; return y
+//│ let y, old; set old = 1; try set y = 3; end finally do (old as! Int⁰); end; return y
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

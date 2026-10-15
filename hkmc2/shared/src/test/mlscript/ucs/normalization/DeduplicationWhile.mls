@@ -43,7 +43,7 @@ while true and true and false do print(1) else print(2)
 //│       set tmp = Predef⁰.print⁰(2);
 //│       break σ$x
 //│     continue lbl
-//│   return runtime⁰.Unit⁰
+//│   end
 //│ };
 //│ return lambda⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

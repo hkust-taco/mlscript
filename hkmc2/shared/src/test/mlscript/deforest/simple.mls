@@ -580,7 +580,7 @@ f(id(A)) + f(A)
 //│   end
 //│ };
 //│ set tmp = Predef⁰.id⁰(A⁰);
-//│ set tmp1 = f¹(tmp);
+//│ set tmp1 = f¹((tmp as! A⁰));
 //│ set deforest$lam = f$x_A⁰();
 //│ set tmp2 = f$f⁰(deforest$lam);
 //│ return +⁰(tmp1, tmp2)
@@ -803,8 +803,6 @@ apply(f)
 //│ deforest > AA⁰(inner⁰) ->
 //│ deforest > 	match: x³⁰
 //│ deforest > 	fields: x³⁰.aa⁰
-//│ deforest > AA⁰(0) ->
-//│ deforest > 	match: y1⁰
 //│ deforest > <<< fusing <<<
 //│ = 0
 

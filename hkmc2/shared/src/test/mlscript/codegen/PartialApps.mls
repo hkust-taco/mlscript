@@ -188,7 +188,12 @@ let j = _.x.y(1, _) in j((x: y: tuple), 0)
 
 data class C(a, b, c)
 
+// Without parentheses the placeholder abstracts over the whole pipeline, which calls a C instance.
+:ge
 2 |> C(1, _, 3) |> print
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ║  l.193: 	2 |> C(1, _, 3) |> print
+//│ ╙──       	     ^^^^^^^^^^
 //│ = fun
 
 2 |> (C(1, _, 3)) |> print
@@ -237,7 +242,7 @@ _ - _ of 1, 2
 :pe
 |> 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.238: 	|> 1
+//│ ║  l.243: 	|> 1
 //│ ╙──       	   ^
 //│ = fun pipeInto
 
@@ -245,7 +250,7 @@ _ - _ of 1, 2
 :re
 |> (1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.246: 	|> (1)
+//│ ║  l.251: 	|> (1)
 //│ ║         	^^^^^^
 //│ ╟── Function 'pipeInto' expected 2 arguments, but got 1
 //│ ║  in ../../mlscript-compile/Predef.mls
@@ -294,10 +299,10 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.295: 	let f = if _ then 1 else 0
+//│ ║  l.300: 	let f = if _ then 1 else 0
 //│ ║         	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.295: 	let f = if _ then 1 else 0
+//│ ║  l.300: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f23; f23 = 1;

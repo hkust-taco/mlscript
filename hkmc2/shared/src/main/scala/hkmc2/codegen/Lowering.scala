@@ -323,7 +323,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   ),
                 )(using LoweringCtx.nestFunc(N))
             case syntax.Fun =>
-              val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+              val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), summon[Erasure].bodyResultType(td))
               val cfgOverride = td.extraAnnotations.collectFirst:
                 case Annot.Config(modify) => modify(config)
               Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations),
@@ -1249,7 +1249,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             N
           case Some(bod) =>
             reportAnnotations(td, td.annotations)
-            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), summon[Erasure].bodyResultType(td))
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
       loweringCtx.collectScopedSym(lhs)
@@ -1661,7 +1661,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val mtds = clsBody.methods
       .flatMap: td =>
         td.body.map: bod =>
-          val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+          val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), summon[Erasure].bodyResultType(td))
           reportAnnotations(td, td.extraAnnotations)
           val cfgOverride = td.extraAnnotations.collectFirst:
             case Annot.Config(modify) => modify(config)

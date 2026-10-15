@@ -13,12 +13,15 @@ in
       set emptyItemCount = 0
       print(emptyItemCount')
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let scrut, emptyItemCount';
 //│ set emptyItemCount⁰ = 0;
-//│ set emptyItemCount⁰ = 1;
-//│ match true
+//│ set emptyItemCount⁰ = (1 as! Int⁰);
+//│ set scrut = >⁰(emptyItemCount⁰, 0);
+//│ match scrut
 //│   true =>
+//│     set emptyItemCount' = emptyItemCount⁰;
 //│     set emptyItemCount⁰ = 0;
-//│     return Predef⁰.print⁰(1)
+//│     return Predef⁰.print⁰(emptyItemCount')
 //│   else
 //│     throw new globalThis⁰.Error⁰("match error")
 //│ end

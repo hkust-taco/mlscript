@@ -86,7 +86,7 @@ FieldChild().x
 //│   (import "repl" "FieldBase_typeinfo" (global $FieldBase_typeinfo (ref $FieldBase_typeinfo)))
 //│   (import "repl" "FieldChild_typeinfo" (global $FieldChild_typeinfo (ref $FieldChild_typeinfo)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
-//│     (local $tmp (ref null any))
+//│     (local $tmp (ref null $FieldChild))
 //│     (block (result (ref null i31))
 //│       (local.set $tmp
 //│         (call $FieldChild_FieldChild))

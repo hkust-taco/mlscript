@@ -76,7 +76,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│   return *⁰(a, b)
 //│ };
 //│ define g⁴ as fun g⁵(k, x) {
-//│   return k(x)
+//│   return (k(x) as! Function⁰)
 //│ };
 //│ set baseCall = g⁵(f⁵, 1);
 //│ set tmp = baseCall(2);
@@ -103,7 +103,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│ let tmp, baseCall, tmp1, g$g;
 //│ @private
 //│ define g$g as fun g$g⁰(k, x)(eta$0$0) {
-//│   return k(x)(eta$0$0)
+//│   return (k(x) as! Function⁰)(eta$0$0)
 //│ };
 //│ @affine(1)
 //│ define f⁶ as fun f⁷(a)(b) {
@@ -113,7 +113,7 @@ g(f, 1)(2) + g(h, 3)(4)
 //│   return *⁰(a, b)
 //│ };
 //│ define g⁶ as fun g⁷(k, x) {
-//│   return k(x)
+//│   return (k(x) as! Function⁰)
 //│ };
 //│ set tmp = g$g⁰(f⁷, 1)(2);
 //│ set baseCall = g⁷(h⁵, 3);
@@ -274,7 +274,9 @@ app(returnRest2(0))
 //│   return rest2¹()(...eta$0$rest)
 //│ };
 //│ @private
-//│ define app⁰ as fun app¹(f) { return f(2, 3) };
+//│ define app⁰ as fun app¹(f) {
+//│   return (f(2, 3) as! Array⁰)
+//│ };
 //│ set tmp = returnRest2¹();
 //│ return app¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -308,9 +310,9 @@ f(k1, 1) + f(k2, 5)
 //│     match scrut
 //│       true =>
 //│         do Predef⁰.print⁰("g");
-//│         return k(y)(eta$0$0)
+//│         return (k(y) as! Function⁰)(eta$0$0)
 //│       else
-//│         return k(y)(eta$0$0)
+//│         return (k(y) as! Function⁰)(eta$0$0)
 //│     end
 //│   };
 //│   do Predef⁰.print⁰("between");
@@ -331,9 +333,9 @@ f(k1, 1) + f(k2, 5)
 //│     match scrut
 //│       true =>
 //│         do Predef⁰.print⁰("g");
-//│         return k(y)
+//│         return (k(y) as! Function⁰)
 //│       else
-//│         return k(y)
+//│         return (k(y) as! Function⁰)
 //│     end
 //│   };
 //│   set h = g⁹(x);
@@ -372,7 +374,7 @@ f(k1, 1) + f(k2, 5)
 //│     return b⁰(y)(eta$0$0)
 //│   };
 //│   define b as fun b⁰(y)(eta$0$0) {
-//│     return k(y)(eta$0$0)
+//│     return (k(y) as! Function⁰)(eta$0$0)
 //│   };
 //│   return a⁰(x)(2)
 //│ };
@@ -389,7 +391,7 @@ f(k1, 1) + f(k2, 5)
 //│     return b¹(y)
 //│   };
 //│   define b as fun b¹(y) {
-//│     return k(y)
+//│     return (k(y) as! Function⁰)
 //│   };
 //│   set h = a¹(x);
 //│   return h(2)
@@ -429,7 +431,7 @@ f(k1, 1) + f(k2, 5)
 //│     end
 //│   };
 //│   define g as fun g¹⁰(y)(eta$0$0) {
-//│     return k(y)(eta$0$0)
+//│     return (k(y) as! Function⁰)(eta$0$0)
 //│   };
 //│   define C as class C⁰ {
 //│     val x¹;
@@ -460,7 +462,7 @@ f(k1, 1) + f(k2, 5)
 //│     end
 //│   };
 //│   define g as fun g¹¹(y) {
-//│     return k(y)
+//│     return (k(y) as! Function⁰)
 //│   };
 //│   define C as class C² {
 //│     val x³;

@@ -601,9 +601,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         
         (sym -> varSym, p, vd)
     
+    val ctorSym = ClassCtorSymbol(syntax.Fun, N, clsSym)
+    ctorSym.erasedType = N
     val defn = ClsLikeDefn(
       None, clsSym, BlockMemberSymbol(nme, Nil),
-      S(ClassCtorSymbol(syntax.Fun, N, clsSym)),
+      S(ctorSym),
       syntax.Cls,
       N,
       PlainParamList(sortedVars.iterator.map(_.param).toList)(N) :: Nil, None, Nil, Nil,

@@ -32,33 +32,31 @@ in
 //│ !! Change triggered { y⁰ ~> 2 }
 //│ !! Change triggered { tmp:tmp⁰ ~> 3 }
 //│ !! Change triggered { x¹ ~> 3 }
-//│ !! Change triggered { y⁰ ~> 3 }
-//│ !! Change triggered { tmp:tmp¹ ~> 6 }
 //│ ▶ VP:
 //│ >  let x, y, x1, tmp, tmp1;
 //│ >  set x = 2;
 //│ >  set y = 2;
 //│ >  set x1 = 3;
 //│ >  set tmp = 3;
-//│ >  set y = 3;
-//│ >  set tmp1 = 6;
-//│ >  return Predef⁰.print⁰(6)
+//│ >  set y = (3 as! Int⁰);
+//│ >  set tmp1 = +⁰(3, y);
+//│ >  return Predef⁰.print⁰(tmp1)
 //│ ⬤ Simplif. iter. 2
 //│ !! Change triggered { rm x⁰ = 2 }
-//│ !! Change triggered { rm y⁰ = 2 }
 //│ !! Change triggered { rm x¹ = 3 }
 //│ !! Change triggered { rm tmp:tmp⁰ = 3 }
-//│ !! Change triggered { rm y⁰ = 3 }
-//│ !! Change triggered { rm tmp:tmp¹ = 6 }
 //│ ▶ DCE:
-//│ >  return Predef⁰.print⁰(6)
+//│ >  let y, tmp; set y = 2; set y = (3 as! Int⁰); set tmp = +⁰(3, y); return Predef⁰.print⁰(tmp)
 //│ Captured variables: HashSet()
+//│ !! Change triggered { rm ass y⁰ = 2 }
+//│ ▶ VP:
+//│ >  let y, tmp; set y = (3 as! Int⁰); set tmp = +⁰(3, y); return Predef⁰.print⁰(tmp)
 //│ ⬤ Simplif. iter. 3
 //│ Captured variables: HashSet()
 //│ ⬤ Simplif. iter. 1
 //│ Captured variables: HashSet()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ return Predef⁰.print⁰(6)
+//│ let y, tmp; set y = (3 as! Int⁰); set tmp = +⁰(3, y); return Predef⁰.print⁰(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 6
 
@@ -70,7 +68,7 @@ let last = peek
 set peek = 1
 last
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ set peek⁰ = Predef⁰.hide⁰(4); set last⁰ = peek⁰; set peek⁰ = 1; return last⁰
+//│ set peek⁰ = (Predef⁰.hide⁰(4) as! Int⁰); set last⁰ = peek⁰; set peek⁰ = 1; return last⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
 //│ last = 4
