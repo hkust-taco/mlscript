@@ -973,7 +973,7 @@ f(3)
 //│ deforest > 	fields: a⁸.x⁹
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f$g, f$f, f$g1, f$a_A, f$a_A1;
+//│ let f$a_A, f$a_A1, f$g, f$f, f$g1;
 //│ @private
 //│ define f$g as fun f$g⁰(a) {
 //│   return a(undefined, undefined, undefined)

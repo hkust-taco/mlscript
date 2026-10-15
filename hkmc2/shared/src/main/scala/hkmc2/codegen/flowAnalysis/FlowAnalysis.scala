@@ -722,6 +722,14 @@ class FlowConstraintsCollector(
   private val generatedVars: collection.Map[Symbol, StratVar] =
     preAnalyzer.res.generatedVars.withDefaultValue(preAnalyzer.res.primitiveStratVar)
   
+  // Keep the solved flows for each physical copy of a symbol. A representation-changing
+  // rewrite needs locals as well as parameters; the original scheme variables have no
+  // solved bounds, and variables copied through several schemes retain the full path.
+  val symbolFlows = mutable.Buffer.empty[(Symbol, InstantiationId, StratVar)]
+  private val symbolVarInstantiations = MutMap.empty[StratVar, InstantiationId]
+  for (sym, v) <- preAnalyzer.res.generatedVars if mono || v.generatedForFun.isEmpty do
+    symbolFlows += ((sym, Nil, v))
+  
   locally {
     val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
 
@@ -820,7 +828,14 @@ class FlowConstraintsCollector(
       def duplicateVarState(s: StratVar) =
         if s.generatedForFun.fold(false):
           forFun => funToSccRep(forFun).fold(false)(_ is groupRep)
-        then stratVarMap.getOrElseUpdate(s, freshVar(s.name, s.sourceSymbol, cc.forFun))
+        then stratVarMap.getOrElseUpdate(s, {
+          val v = freshVar(s.name, s.sourceSymbol, cc.forFun)
+          s.sourceSymbol.foreach: sym =>
+            val instId = referSite :: symbolVarInstantiations.getOrElse(s, Nil)
+            symbolVarInstantiations(v) = instId
+            if cc.forFunGroup.isEmpty then symbolFlows += ((sym, instId, v))
+          v
+        })
         else s
       def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
         case v: StratVar => duplicateVarState(v)

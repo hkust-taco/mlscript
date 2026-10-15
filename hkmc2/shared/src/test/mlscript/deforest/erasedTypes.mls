@@ -67,7 +67,7 @@ fun selected(n: Int, k: Str) =
 //│   return null
 //│ };
 //│ define selected⁰ as fun selected¹(n: Int⁰, k: Str⁰): Array⁰ {
-//│   let b: Box², x: Int⁰, arg$Box$0$: ?, Box_v: Int⁰;
+//│   let x: Int⁰, arg$Box$0$: ?, b: Function⁰, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set b = selected$b_Box⁰(Box_v);
 //│   return b(arg$Box$0$, x, k)
@@ -104,7 +104,7 @@ fun withRest(n: Int, k: Str) =
 //│   return [fv_r, fv_k]
 //│ };
 //│ define withRest⁰ as fun withRest¹(n: Int⁰, k: Str⁰): Array⁰ {
-//│   let b: Box², r: Int⁰, x: Int⁰, arg$Box$0$: ?, tmp: Int⁰, Box_v: Int⁰;
+//│   let r: Int⁰, x: Int⁰, arg$Box$0$: ?, tmp: Int⁰, b: Function⁰, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set b = withRest$b_Box⁰(Box_v);
 //│   return b(arg$Box$0$, x, tmp, r, k)
@@ -134,7 +134,7 @@ fun noFields(n: Int, s: Str) =
 //│   return null
 //│ };
 //│ define noFields⁰ as fun noFields¹(n: Int⁰, s: Str⁰): Int⁰ {
-//│   let p: Pair², Pair_a: Int⁰, Pair_b: Str⁰;
+//│   let p: Function⁰, Pair_a: Int⁰, Pair_b: Str⁰;
 //│   set Pair_a = n;
 //│   set Pair_b = s;
 //│   set p = noFields$p_Pair⁰(Pair_a, Pair_b);
@@ -142,3 +142,75 @@ fun noFields(n: Int, s: Str) =
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// Fusion changes the physical parameter and result slots even without making a polyvariant copy.
+:deforest mono
+:expect 42
+private fun produce(n: Int): Box = if n == 0 then Box(42) else produce(n - 1)
+private fun consume(box: Box): Int = if box is Box(value) then value
+consume(produce(2))
+//│ deforest > >>> fusing >>>
+//│ deforest > Box¹(42) ->
+//│ deforest > 	match: box⁰
+//│ deforest > 	fields: box⁰.v¹
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let $box_Box, $box_rest, tmp: Function⁰;
+//│ @affine(1) @private
+//│ define $box_Box as fun $box_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_value: Int⁰): ? {
+//│   set fv_arg$Box$0$ = Box_v;
+//│   set fv_value = fv_arg$Box$0$;
+//│   return fv_value
+//│ };
+//│ @private
+//│ define $box_rest as fun $box_rest⁰(): ? {
+//│   return null
+//│ };
+//│ @private
+//│ define produce⁰ as fun produce¹(n: Int⁰): Function⁰ {
+//│   let scrut: ?, tmp1: ?;
+//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   match scrut
+//│     true =>
+//│       let Box_v: Int⁰;
+//│       set Box_v = 42;
+//│       return $box_Box⁰(Box_v)
+//│     else
+//│       set tmp1 = -⁰(n, 1);
+//│       return produce¹((tmp1 as! Int⁰))
+//│   end
+//│ };
+//│ @private
+//│ define consume⁰ as fun consume¹(box: Function⁰): Int⁰ {
+//│   let value: Int⁰, arg$Box$0$: ?;
+//│   return box(arg$Box$0$, value)
+//│ };
+//│ set tmp = produce¹(2);
+//│ return consume¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// Projecting a fused field replaces a nominal slot by the field's representation.
+:deforest mono
+:expect 42
+private fun pass(box: Box): Box = box
+pass(Box(42)).v
+//│ deforest > >>> fusing >>>
+//│ deforest > Box¹(42) ->
+//│ deforest > 	select: v
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰, tmp1: Int⁰, Box_v: Int⁰;
+//│ @private
+//│ define pass⁰ as fun pass¹(box: Int⁰): Int⁰ {
+//│   return box
+//│ };
+//│ set Box_v = 42;
+//│ set tmp = Box_v;
+//│ set tmp1 = pass¹(tmp);
+//│ return tmp1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+

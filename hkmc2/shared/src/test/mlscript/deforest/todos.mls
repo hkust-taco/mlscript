@@ -48,7 +48,7 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > 	fields: arg$AA$0$¹.x¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, test$test, test$test1, test$x_dflt, test$x_rest, test$x_AA, test$x_rest1, test$arg$AA$0$_AA, test$arg$AA$0$_rest, test$arg$AA$0$_AA1, test$arg$AA$0$_rest1, AA_x, AA_x1, AA_x2, deforest$lam;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, test$x_dflt, test$x_rest, test$x_AA, test$x_rest1, test$arg$AA$0$_AA, test$arg$AA$0$_rest, test$arg$AA$0$_AA1, test$arg$AA$0$_rest1, test$test, test$test1, tmp8, tmp9, tmp10, AA_x, AA_x1, AA_x2, deforest$lam;
 //│ @private
 //│ define test$test as fun test$test⁰(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
@@ -56,8 +56,8 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ };
 //│ @private
 //│ define test$test1 as fun test$test¹(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
-//│   return x(arg$AA$0$, arg$AA$0$1, arg$AA$0$2, a, tmp11, t, tmp12, tmp13, tmp14)
+//│   let t, a, arg$AA$0$, tmp11, tmp12, tmp13, tmp14, arg$AA$0$1, arg$AA$0$2;
+//│   return x(arg$AA$0$1, arg$AA$0$2, arg$AA$0$, a, tmp11, t, tmp12, tmp13, tmp14)
 //│ };
 //│ @affine(1) @private
 //│ define test$x_dflt as fun test$x_dflt⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
@@ -158,16 +158,16 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ set tmp3 = f¹(p⁰);
 //│ set tmp4 = +⁰(tmp2, tmp3);
 //│ set AA_x = 10;
-//│ set tmp5 = test$arg$AA$0$_AA¹(AA_x);
-//│ set AA_x1 = tmp5;
-//│ set tmp6 = test$arg$AA$0$_AA⁰(AA_x1);
-//│ set AA_x2 = tmp6;
-//│ set tmp7 = test$x_AA⁰(AA_x2);
-//│ set tmp8 = test$test¹(tmp7);
-//│ set tmp9 = +⁰(tmp4, tmp8);
+//│ set tmp8 = test$arg$AA$0$_AA¹(AA_x);
+//│ set AA_x1 = tmp8;
+//│ set tmp9 = test$arg$AA$0$_AA⁰(AA_x1);
+//│ set AA_x2 = tmp9;
+//│ set tmp10 = test$x_AA⁰(AA_x2);
+//│ set tmp5 = test$test¹(tmp10);
+//│ set tmp6 = +⁰(tmp4, tmp5);
 //│ set deforest$lam = test$x_dflt⁰();
-//│ set tmp10 = test$test⁰(deforest$lam);
-//│ return +⁰(tmp9, tmp10)
+//│ set tmp7 = test$test⁰(deforest$lam);
+//│ return +⁰(tmp6, tmp7)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 78
 //│ p = AA(AA(AA(10)))
@@ -234,7 +234,7 @@ f(D(1))
 //│ deforest > 	match: d⁰
 //│ deforest > 	fields: d⁰.x³
 //│ deforest > <<< fusing <<<
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:269': deforestation copying the definition O
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:358': deforestation copying the definition O
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:O for ClsLikeDefn is a free variable for this block
@@ -252,7 +252,7 @@ E(y).get()
 //│ deforest > AA⁰(0) ->
 //│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:269': deforestation copying the definition E
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:358': deforestation copying the definition E
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:E for ClsLikeDefn is a free variable for this block

@@ -104,7 +104,7 @@ sumPlus(enum(3))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let enum$enum, sumPlus$ls_Nil, sumPlus$ls_Cons, sumPlus$ls_Cons$worker, enum$enum$worker;
+//│ let enum$enum, enum$enum$worker;
 //│ @inline @private
 //│ define enum$enum as fun enum$enum⁰(x)(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6) {
 //│   return enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6)
@@ -115,28 +115,16 @@ sumPlus(enum(3))
 //│   set scrut = <⁰(x, 0);
 //│   match scrut
 //│     true =>
-//│       return (sumPlus$ls_Nil⁰() as! Object⁰)(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6)
+//│       return 1
 //│     else
+//│       let fv_tmp, inlinedVal, fv_r;
 //│       set tmp = -⁰(x, 1);
 //│       set tmp1 = enum$enum⁰((tmp as! Int⁰));
-//│       return (sumPlus$ls_Cons⁰(x, tmp1) as! Object⁰)(eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6)
+//│       set inlinedVal = tmp1(undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│       set fv_tmp = +⁰(x, inlinedVal);
+//│       set fv_r = (fv_tmp as! Int⁰);
+//│       return +⁰(fv_r, 1)
 //│   end
-//│ };
-//│ @inline @affine(1) @private
-//│ define sumPlus$ls_Nil as fun sumPlus$ls_Nil⁰()(fv_tmp, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_t, fv_h, fv_tmp1, fv_r) {
-//│   return 1
-//│ };
-//│ @inline @affine(1) @private
-//│ define sumPlus$ls_Cons as fun sumPlus$ls_Cons⁰(Cons_h, Cons_t)(fv_tmp, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_t, fv_h, fv_tmp1, fv_r) {
-//│   return sumPlus$ls_Cons$worker⁰(Cons_h, Cons_t, fv_tmp, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_t, fv_h, fv_tmp1, fv_r)
-//│ };
-//│ @affine(1) @private
-//│ define sumPlus$ls_Cons$worker as fun sumPlus$ls_Cons$worker⁰(Cons_h, Cons_t, fv_tmp, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_t, fv_h, fv_tmp1, fv_r) {
-//│   let inlinedVal, fv_r1;
-//│   set inlinedVal = Cons_t(undefined, undefined, undefined, undefined, undefined, undefined, undefined);
-//│   set fv_tmp = +⁰(Cons_h, inlinedVal);
-//│   set fv_r1 = (fv_tmp as! Int⁰);
-//│   return +⁰(fv_r1, 1)
 //│ };
 //│ define enum⁰ as fun enum¹(x) {
 //│   let scrut, tmp, tmp1;
