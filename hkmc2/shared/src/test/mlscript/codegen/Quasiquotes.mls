@@ -138,3 +138,13 @@ fun id(x) = x
 
 `id`(`42)
 //│ = App(fun id, Tup([Lit(42)]))
+
+
+// Quoted references to local vals must use the same variable as their initializer.
+fun quotedLocal() =
+  val fn = `+
+  `fn`(`1, `2)
+
+:expect App(Builtin("+"), Tup([Lit(1), Lit(2)]))
+quotedLocal()
+//│ = App(Builtin("+"), Tup([Lit(1), Lit(2)]))

@@ -1,3 +1,4 @@
+:.
 :js
 :noInline
 
@@ -16,27 +17,27 @@ noFlag(42)
 //│ = 0
 
 
-:deadParamElim
+:flowBasedOpt
 private fun bareFlag(a) = 0
 bareFlag(42)
 //│ = 0
 
 
-:deadParamElim mono debug
+:flowBasedOpt mono debugDpe
 private fun monoDebug(a) = 0
 monoDebug(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun monoDebug#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > monoDebug⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 
 
-:deadParamElim debug mono
+:flowBasedOpt debugDpe mono
 :soir
 private fun debugMono(a) = 0
 debugMono(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun debugMono#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > debugMono⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private define debugMono⁰ as fun debugMono¹() { return 0 }; return debugMono¹()
@@ -44,14 +45,14 @@ debugMono(42)
 //│ = 0
 
 
-:deadParamElim mono poly
+:flowBasedOpt mono poly
 private fun conflictTest(a) = 0
 conflictTest(42)
-//│ /!!!\ ':deadParamElim' flags 'mono' and 'poly' conflict
+//│ /!!!\ ':flowBasedOpt' flags 'mono' and 'poly' conflict
 //│ = 0
 
-// :deadParamElim off — disable DPE, dead param should NOT be eliminated
-:deadParamElim off
+// :flowBasedOpt off — disable DPE, dead param should NOT be eliminated
+:flowBasedOpt off
 :soir
 private fun dpeOff(a) = 0
 dpeOff(42)
@@ -62,8 +63,8 @@ dpeOff(42)
 
 
 
-:deadParamElim foo
+:flowBasedOpt foo
 private fun unknownFlag(a) = 0
 unknownFlag(42)
-//│ /!!!\ Unknown ':deadParamElim' flags: foo
+//│ /!!!\ Unknown ':flowBasedOpt' flags: foo
 //│ = 0

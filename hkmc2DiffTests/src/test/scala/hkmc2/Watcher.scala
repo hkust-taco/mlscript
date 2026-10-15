@@ -95,12 +95,12 @@ class Watcher(dirs: Ls[File]):
   
   def go(file: File) =
     // println(s"go $file")
-    val isMls = file.toString.endsWith(".mls")
+    val path = os.Path(file.pathAsString)
+    val isMls = TestFolders.isTestSource(path)
     if file.toString.endsWith(".scala") then
       watcher.close()
     else if isMls || file.toString.endsWith(".cmd") then
       Thread.sleep(100)
-      val path = os.Path(file.pathAsString)
       val basePath = path.segments.drop(dirPaths.head.segmentCount).toList.init
       val relativeName = basePath.map(_ + "/").mkString + path.baseName
       val rootPath = os.pwd/os.up

@@ -1,0 +1,20 @@
+:.
+
+// Explicit imports override the builtin unary ~ under the new open semantics.
+:expect "ab"
+module Strings with
+  fun (~) concat(left: Str, right: Str): Str = left + right
+open Strings { concat, ~ }
+"a" ~ "b"
+//│ = "ab"
+
+// Lexer supplies a LineLookupTable instance, but new resolution does not yet
+// insert the trailing contextual argument at calls to Token's factory methods.
+:fixme
+:expect 5
+class Context(val value: Int)
+private fun make(value: Int)(using context: Context): Int = value + context.value
+using Context = Context(2)
+make(3)
+//│ ═══[RUNTIME ERROR] Expected: '5', got: 'fun'
+//│ = fun

@@ -30,10 +30,13 @@ module Ex with
 //│             k = Ins
 //│             sym = member:instance$Ident(Int)⁰
 //│             tsym = term:instance$Ident(Int)¹
-//│             sign = S of Resolved{sym=class:Int⁰}:
-//│               t = Ref{sym=member:Int¹} of member:Int¹
-//│               sym = class:Int⁰
+//│             sign = S of Capture:
+//│               base = Resolved{sym=class:Int⁰}:
+//│                 t = Ref{sym=member:Int¹} of member:Int¹
+//│                 sym = class:Int⁰
+//│               thru = term:instance$Ident(Int)¹
 //│             body = S of Lit of IntLit of 1
+//│             flags = (result annotation)
 //│             modulefulness = Modulefulness of N
 //│         res = App:
 //│           lhs = Resolved{sym=term:get⁰}:

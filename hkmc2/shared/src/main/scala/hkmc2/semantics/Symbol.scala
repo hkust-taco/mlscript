@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 
 import scala.collection.mutable
-import scala.collection.mutable.{Set => MutSet}
+import scala.collection.mutable.Buffer
 
 import hkmc2.utils.*, shorthands.*
 import syntax.*
@@ -10,7 +10,7 @@ import hkmc2.utils.*
 
 import Elaborator.State
 import Tree.Ident
-import hkmc2.codegen.{ErasedType, ErasedFuncSignature, ErasedValueType}
+import hkmc2.codegen.{ErasedType, ErasedFuncSignature, ErasedValueType, HasDelayedErasedType}
 import hkmc2.utils.SymbolSubst
 import sourcecode.{FileName, Line}
 
@@ -187,14 +187,23 @@ object FlowSymbol:
     // FlowSymbol("‹app-res›")
     // FlowSymbol("@")
     FlowSymbol("app")
-
+  
+  def pat()(using State) =
+    FlowSymbol("pat")
+  
+  def neww()(using State) =
+    FlowSymbol("new")
+  
   def sel(nme: Str)(using State) =
     FlowSymbol(s"⋅$nme")
   def synthSel(nme: Str)(using State) =
     FlowSymbol(s"(⋅)$nme")
   def selProj(nme: Str)(using State) =
     FlowSymbol(s"#⋅$nme")
-
+  
+  def memSym(sym: MemberSymbol)(using State) =
+    FlowSymbol(sym.nme)
+  
   def lds(nme: Str)(using State) =
     FlowSymbol(s"Ɛ⋅$nme")
   
@@ -204,7 +213,8 @@ class ConcreteFlowSymbol(label: Str)(using State) extends FlowSymbol(label):
   def subst(using s: SymbolSubst): FlowSymbol = s.mapFlowSym(this)
 
 
-sealed trait LocalSymbol extends Symbol
+sealed trait LocalSymbol extends Symbol, ShapeHost
+
 sealed trait NamedSymbol extends Symbol:
   def name: Str
   def id: Ident
@@ -225,6 +235,8 @@ class SplitSymbol(val body: Split, name: Str = "split")(using State) extends Loc
   def subst(using s: SymbolSubst): SplitSymbol = this // SplitSymbols are not substituted
   def toLoc = body.toLoc
   override def prefix: Str = "split:"
+
+type SimpleRefSymbol = LocalVarSymbol | BuiltinSymbol | LabelSymbol
 
 sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(name) with LocalSymbol:
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
@@ -272,14 +284,34 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
   def subst(using sub: SymbolSubst): InstSymbol = sub.mapInstSym(this)
 
 
-class VarSymbol(val id: Ident, override val erasedType: Opt[ErasedValueType])(using State)
+class VarSymbol(val id: Ident)(using State)
     extends LocalVarSymbol(id.name)
+    with HasDelayedErasedType[ErasedValueType]
     with NamedSymbol:
+  def this(id: Ident, erasedType: Opt[ErasedValueType])(using State) =
+    this(id)
+    this.erasedType = erasedType
   val name: Str = id.name
   var sourceAliases: Ls[Str] = Nil
   override def toLoc: Opt[Loc] = id.toLoc
   // override def toString: Str = s"$name@$uid"
   override def subst(using s: SymbolSubst): VarSymbol = s.mapVarSym(this)
+
+/** A source type binder instantiated at a static application site. Its inference
+  * host starts empty: the source binder's checking witnesses and subscriptions
+  * belong to the generic definition, not to any of its applications.
+  *
+  * `siteBinders` are the explicit type binders in scope at the instantiation
+  * site, or N for a synthesized site with no source scope. The bounds published
+  * to an instance are templates written at its site (supplied type arguments,
+  * argument shapes observed there), so reading them through a substitution also
+  * reads those binders (see NewResolver.closure).
+  */
+final class TypeParameterInstance(val origin: VarSymbol, val siteBinders: Opt[Set[VarSymbol]])(using State)
+    extends VarSymbol(origin.id):
+  require(!origin.isInstanceOf[TypeParameterInstance], "Instantiate original type binders only")
+  decl = origin.decl
+  val reference: Term.SimpleRef = Term.SimpleRef(this)(origin.id)
 
 class BuiltinSymbol
     (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool, val isPure: Bool)(using State)
@@ -319,7 +351,23 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   var tsym: Opt[TermSymbol] = N
   var sourceAliases: Ls[Str] = Nil
   
-  def toLoc: Option[Loc] = Loc(trees)
+  private var defnListeners: Buffer[() => Unit] = Buffer.empty
+  def complete(): Unit = if defnListeners isnt null then
+    val listeners = defnListeners
+    // Completion callbacks may request this member again. Publish completion
+    // first so reentrant listeners run immediately instead of mutating the queue.
+    defnListeners = null // free memory and prevent further listening
+    listeners.foreach(_())
+  /** Called when all the symbols covered by this BMS are present, with their definitions set. */
+  def onComplete(f: () => Unit): Unit =
+    if defnListeners is null then
+      f()
+    else
+      defnListeners += f
+  
+  // For constructor and record fields, trees is empty because the member was
+  // synthesized. Use the source location of its TermSymbol to locate diagnostics.
+  def toLoc: Option[Loc] = Loc(trees).orElse(tsym.flatMap(_.toLoc))
   
   def symbols = tsym.toList ::: trees.collect:
     case t: Tree.TypeDef => t.symbol
@@ -361,17 +409,36 @@ end BlockMemberSymbol
 sealed abstract class MemberSymbol(using State) extends Symbol:
   def nme: Str
   def subst(using SymbolSubst): MemberSymbol
+  
+  /** Resolution publishes direct override edges; only resolver subscriptions may observe the
+    * growing graph. Erasure/lowering read the completed declaration identities, never value flow.
+    * The host uses the same consumer-local copies as other inference publishers on imported code.
+    * These edges belong to source declarations and are consumed before/while lowering. MIR
+    * symbol refreshing does not copy them: lowered selections already contain their chosen target.
+    */
+  private[semantics] val overrideLinks: OverrideLinks = new OverrideLinks
+  def overriddenMembers(using codegen.Erasure): Ls[TermSymbol] = overrideLinks.members
 
 
-class TermSymbol(
-    val k: TermDefKind,
-    val owner: Opt[InnerSymbol],
-    val id: Tree.Ident,
-    private var erasure: Opt[ErasedValueType | ErasedFuncSignature],
-)(using State)
+class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident)(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
     with NamedSymbol:
+  // Source declarations are initialized after resolution by Erasure. Generated MIR symbols can
+  // initialize this same slot directly, retaining the distinction between signatures and value types.
+  private var assignedErasure: Opt[ErasedValueType | ErasedFuncSignature] = null
+  def this(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident,
+      erasure: Opt[ErasedValueType | ErasedFuncSignature])(using State) =
+    this(k, owner, id)
+    initializeErasure(erasure)
+  def isErased: Bool = assignedErasure != null
+  private def erasure: Opt[ErasedValueType | ErasedFuncSignature] =
+    assert(isErased, s"Erasure of $this read before initialization")
+    assignedErasure
+  def initializeErasure(value: Opt[ErasedValueType | ErasedFuncSignature]): Unit =
+    assert(!isErased, "Erasure initialized more than once")
+    assert(value != null, "An initialized erasure cannot be null")
+    assignedErasure = value
   
   var sourceAliases: Ls[Str] = Nil
   def nme: Str = id.name
@@ -402,7 +469,8 @@ class TermSymbol(
   
   /** Sets the erased type, or raises a soft assertion if this term already has an erased type or signature. */
   def erasedType_=(newType: Opt[ErasedValueType])(using Line, FileName, Raise): Unit =
-    initErasure(this, erasure, newType)(erasure = _)
+    if !isErased then initializeErasure(newType)
+    else initErasure(this, erasure, newType)(assignedErasure = _)
   
   /** The erased signature of a `fun` definition with parameter lists, or `N` if this term has none. */
   def erasedSignature: Opt[ErasedFuncSignature] = erasure match
@@ -411,7 +479,8 @@ class TermSymbol(
   
   /** Sets the erased signature, or raises a soft assertion if this term already has an erased type or signature. */
   def erasedSignature_=(newSignature: Opt[ErasedFuncSignature])(using Line, FileName, Raise): Unit =
-    initErasure(this, erasure, newSignature)(erasure = _)
+    if !isErased then initializeErasure(newSignature)
+    else initErasure(this, erasure, newSignature)(assignedErasure = _)
   
   /** Creates a symbol with the same erased type or signature as this one. */
   def withSameErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)(using State): TermSymbol =
@@ -496,6 +565,13 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol:
   val tree: Tree.TypeDef
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
+  /** Published by erasure before class bodies are lowered, including for external declarations.
+    * Full IR class definitions refresh this header when rewritten, just as they own `irDefn`.
+    * Keeping the header separately is necessary for forward parents and declarations without
+    * executable bodies; consumers must not reconstruct it from semantic terms.
+    */
+  var irClassHeader: Opt[codegen.ClassHeader] = N
+
 
 type AnyDefinitionSymbol = DefinitionSymbol[?]
 
@@ -514,8 +590,14 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
   def defn_=(d: S[Defn]): Unit =
     require(_defn.isEmpty, s"Cannot reassign defn of ${this} from ${_defn} to ${d}")
     _defn = d
+    defnListeners.foreach(_(d.value))
+    defnListeners = null // free memory and prevent further listening
+  
   var decl: Opt[Declaration] = N // NOTE: currently only assigned for class params and only used by deforestation; may want to just remove it once deforestation is improved
   def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) 
+  
+  // TODO: rm
+  private[semantics] var defnListeners: Buffer[Defn => Unit] = Buffer.empty
   
   // * Although the IR is immutable,
   // * we consider that a given symbol is *owned* by the IR Defn node that defines it.
@@ -554,7 +636,7 @@ end DefinitionSymbol
   * One overloaded `BlockMemberSymbol` may correspond to multiple `InnerSymbol`s
   * A `Ref(_: InnerSymbol)` represents a `this`-like reference to the current object. */
   // TODO prevent from appearing in Ref
-sealed trait InnerSymbol(using State) extends Symbol:
+sealed trait InnerSymbol(using State) extends Symbol, ShapePublisher:
   // Ideally, InnerSymbol should extend DefinitionSymbol, but that requires us to specify the type
   // parameter to all occurrences of InnerSymbol. So, we use a self-type annotation instead to
   // ensure that any implementation of InnerSymbol is also a DefinitionSymbol.

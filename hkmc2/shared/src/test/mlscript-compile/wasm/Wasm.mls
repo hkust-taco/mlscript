@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "binaryen"
 
 import "../Predef.mls"
@@ -6,7 +8,7 @@ import "../Runtime.mls"
 module Wasm with ...
 
 // WebAssembly utilities
-fun instantiateWasmBinary(modBuf, importObject): WebAssembly.Instance =
+fun instantiateWasmBinary(modBuf, importObject): dyn =
   assert WebAssembly.validate of modBuf
   let mod = new WebAssembly.Module(modBuf)
   new WebAssembly.Instance(mod, importObject)
@@ -15,7 +17,7 @@ fun dumpWasmModImpExp(wasmMod) =
   console.log of "Imports: %s", WebAssembly.Module.imports(wasmMod)
   console.log of "Exports: %s", WebAssembly.Module.exports(wasmMod)
 
-fun dumpWasmInstImpExp(wasmInst) =
+fun dumpWasmInstImpExp(wasmInst: dyn) =
   console.log of "Imports: %s", wasmInst.imports
   console.log of "Exports: %s", wasmInst.exports
 
@@ -33,7 +35,7 @@ fun binaryenFmtWat(wat, foldExprs): String =
   mod.dispose()
   fmtWat
 
-fun binaryenCompileToModule(wat, importObject): WebAssembly.Instance =
+fun binaryenCompileToModule(wat, importObject): dyn =
   let mod = binaryen.parseText of wat, binaryen.Features.All
 
   // Note: it seems `mod.validate()` sometimes returns `1` instead of `true`; so we don't use `assert` here
@@ -44,7 +46,7 @@ fun binaryenCompileToModule(wat, importObject): WebAssembly.Instance =
 
   instantiateWasmBinary of modBuf, importObject
 
-fun unwrapWasmException(err, tag) =
+fun unwrapWasmException(err: dyn, tag) =
   if (
     err !== null &&
     err !== undefined &&
@@ -55,7 +57,7 @@ fun unwrapWasmException(err, tag) =
   then err.getArg(tag, 0)
   else err
 
-fun binaryenRunFunc(wat, importObject, func): Any =
+fun binaryenRunFunc(wat, importObject, func: Function): Any =
   let wasmInst = binaryenCompileToModule of wat, importObject
   let exnTag = wasmInst.exports.mlx_exn
   Runtime.try_catch of

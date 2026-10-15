@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations { compile }
@@ -262,8 +263,8 @@ pattern Steps = @compile (Step as Steps | _)
 //│     match unapplyResult1
 //│       MatchSuccess⁰ =>
 //│         set outputPair = unapplyResult1.output⁰;
-//│         set output = runtime⁰.Tuple⁰.get⁰(outputPair, 0);
-//│         set remaining = runtime⁰.Tuple⁰.get⁰(outputPair, 1);
+//│         set output = runtime⁰.Tuple⁰.get⁰((outputPair as! Unknown), 0);
+//│         set remaining = runtime⁰.Tuple⁰.get⁰((outputPair as! Unknown), 1);
 //│         set unapplyResult = Steps¹.unapply﹖(output);
 //│         match unapplyResult
 //│           MatchSuccess⁰ =>

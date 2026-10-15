@@ -1,3 +1,4 @@
+:.
 :js
 :todo
 
@@ -15,22 +16,22 @@ fun typeTerm(_, set ctx) =
   print(ctx)
   ctx = 123
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found set
-//│ ║  l.14: 	fun typeTerm(_, set ctx) =
+//│ ║  l.15: 	fun typeTerm(_, set ctx) =
 //│ ╙──      	                    ^^^
 //│ ╔══[COMPILATION ERROR] Name not found: ctx
-//│ ║  l.15: 	  print(ctx)
+//│ ║  l.16: 	  print(ctx)
 //│ ╙──      	        ^^^
 //│ ╔══[COMPILATION ERROR] Name not found: ctx
-//│ ║  l.16: 	  ctx = 123
+//│ ║  l.17: 	  ctx = 123
 //│ ╙──      	  ^^^
 
 fun typeTerm(_, let ctx) =
   ctx = 123
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found let
-//│ ║  l.27: 	fun typeTerm(_, let ctx) =
+//│ ║  l.28: 	fun typeTerm(_, let ctx) =
 //│ ╙──      	                    ^^^
 //│ ╔══[COMPILATION ERROR] Name not found: ctx
-//│ ║  l.28: 	  ctx = 123
+//│ ║  l.29: 	  ctx = 123
 //│ ╙──      	  ^^^
 
 

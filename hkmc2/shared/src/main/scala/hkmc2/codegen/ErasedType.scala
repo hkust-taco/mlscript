@@ -149,18 +149,8 @@ object ErasedType:
     * - `S(N)` for a root class with no parent.
     * - `N` for a class whose parent chain is not available in the IR (e.g. an unlinked import).
     */
-  private def parentOf(sym: BaseTypeSymbol)(using Ctx, State): Opt[Opt[TypeSymbol]] =
-    sym.asClsOrMod.flatMap: sym =>
-      sym.irClsLikeDefn.flatMap: defn =>
-        defn.parentPath match
-        case S(parent) => parent.targetSymbol.collect { case s: TypeSymbol => s }.map(S(_))
-        case N => S(N)
-      .orElse:
-        // FIXME: remove this fallback once imported classes have their `irClsLikeDefn` properly linked
-        sym.defn.flatMap: defn =>
-          defn.ext match
-            case S(parent) => parent.cls.resolvedSym.flatMap(_.asClsOrMod).map(S(_))
-            case N => S(N)
+  private def parentOf(sym: BaseTypeSymbol): Opt[Opt[TypeSymbol]] =
+    sym.asClsOrMod.flatMap(_.irClassHeader.map(_.parent))
 
   /** A symbol's ancestors, nearest first, starting with the symbol itself and following its single parent chain.
     *
@@ -247,46 +237,51 @@ object ErasedType:
 
   /** Erases a type-annotated term to an [[ErasedValueType]].
     *
-    * Note that the resulting erased type is **not** canonicalized to avoid using `ctx.builtins` during elaboration
-    * of `Prelude`.
+    * Used by the legacy resolver after resolution. Canonicalization is separate and may inspect the
+    * nominal hierarchy published by Erasure.
     */
-  def eraseSign(sign: Term): Opt[ErasedValueType] = eraseSign(sign, rsc = S(false))
+  def eraseSign(sign: Term)(using Erasure): Opt[ErasedValueType] = eraseSign(sign, S(false), _.resolvedSym)
 
   /** Whether erasing the `target` term under a resource modifier denoting `rsc` keeps the modifier.
     *
     * The modifier is dropped when `target` has no erased counterpart (e.g. a negation type), or when `target` erases to
     * a type that is never a resource (`()`).
     */
-  def keepsRsc(target: Term, rsc: Opt[Bool]): Bool = eraseSign(target, rsc).exists:
+  def keepsRsc(target: Term, rsc: Opt[Bool], symbolOf: Term => Opt[Symbol]): Bool = eraseSign(target, rsc, symbolOf).exists:
     case h: HasRsc => h.rsc === rsc
     case _ => false
 
   /** Erases `sign` under the resource-ness gathered from the modifiers wrapping it so far. */
-  private def eraseSign(sign: Term, rsc: Opt[Bool]): Opt[ErasedValueType] = sign match
+  private def eraseSign(sign: Term, rsc: Opt[Bool], symbolOf: Term => Opt[Symbol]): Opt[ErasedValueType] = sign match
     // * The resource modifiers reach here as annotations.
     // * Note that this arm has to be part of the recursion: a union erases its members by recursive call, and each
     // * carries its own modifier, so `rsc C | rsc D` would otherwise erase to nothing at all.
     case Term.Annotated(Annot.Resource(own), target) =>
-      eraseSign(target, CanonicalErasedValueType.combineRsc(rsc, S(own)))
+      eraseSign(target, CanonicalErasedValueType.combineRsc(rsc, S(own)), symbolOf)
+    case Capture(base, _) => eraseSign(base, rsc, symbolOf)
     case CompType(lhs, rhs, true) =>
       // * A union is kept as a transient `Union` surface form; `canonicalize` collapses it to the members' LUB.
       for
-        l <- eraseSign(lhs, rsc)
-        r <- eraseSign(rhs, rsc)
+        l <- eraseSign(lhs, rsc, symbolOf)
+        r <- eraseSign(rhs, rsc, symbolOf)
       yield ErasedType.union(l, r)
     // * An intersection is never decomposed: narrowing to one member would call for a GLB, which this lattice
     // * cannot express.
     case CompType(_, _, false) => S(ErasedType.Unknown(rsc))
+    case DynTy() => S(ErasedType.Unknown(rsc))
     case UnitVal() => S(ErasedType.Unit)
     // * A written function type denotes a function value, and every function value is a `Function`.
     case FunTy(_, _, _) => S(ErasedType.Function(rsc))
     // * Quantification erases away: what a `forall` denotes is what its body denotes.
-    case Forall(_, _, body) => eraseSign(body, rsc)
+    case Forall(_, _, body) => eraseSign(body, rsc, symbolOf)
     // * A type parameter has no erased counterpart, so a reference to one erases to the top type under the modifier
     // * written on it. `rsc` starts as `S(false)` and no syntax writes a non-resource modifier, so `S(false)` here
     // * means that the reference is unannotated: it then erases to nothing, as it did before resource modifiers.
-    case Ref(sym: VarSymbol) if ModuleChecker.isTypeParam(sym) && rsc =/= S(false) => S(ErasedType.Unknown(rsc))
-    case _ => sign.symbol.flatMap(_.asTpe).map(sym => ErasedType.ValueLike(rsc, sym))
+    case _ if symbolOf(sign).exists:
+      case sym: VarSymbol => ModuleChecker.isTypeParam(sym)
+      case _ => false
+    => if rsc =/= S(false) then S(ErasedType.Unknown(rsc)) else N
+    case _ => symbolOf(sign).flatMap(_.asTpe).map(sym => ErasedType.ValueLike(rsc, sym))
 
   /** Whether `actual` is a subtype of `expected`, walking the class hierarchy.
     *
@@ -528,6 +523,9 @@ object CanonicalErasedValueType:
     * with the ones written inside it as described in [[combineRsc]].
     */
   def resolveTpeSymAlias(tpeSym: TypeSymbol)(using Ctx): Ls[AliasMember] =
+    resolveTpeSymAlias(tpeSym, _.symbol)
+
+  def resolveTpeSymAlias(tpeSym: TypeSymbol, symbolOf: Term => Opt[Symbol])(using Ctx): Ls[AliasMember] =
     def resolveSym(cur: TypeSymbol, seen: Set[TypeAliasSymbol]): Ls[AliasMember] = cur match
       case als: TypeAliasSymbol => als.defn.flatMap(_.rhs) match
         case S(rhs) if !seen(als) => alternatives(rhs, seen + als, N)
@@ -543,9 +541,10 @@ object CanonicalErasedValueType:
       // * As in `ErasedType.eraseSign`, quantification erases away, and a written function type denotes a function
       // * value, which is a `Function`.
       case Term.Forall(_, _, body) => alternatives(body, seen, ownRsc)
+      case Term.Capture(base, _) => alternatives(base, seen, ownRsc)
       case Term.FunTy(_, _, _) => AliasMember(S(ctx.builtins.Function), ownRsc) :: Nil
       case _ =>
-        tpe.symbol.flatMap(_.asTpe).fold(AliasMember(N, N) :: Nil)(resolveSym(_, seen))
+        symbolOf(tpe).flatMap(_.asTpe).fold(AliasMember(N, N) :: Nil)(resolveSym(_, seen))
           .map(m => m.copy(ownRsc = ownRsc.map(combineRsc(_, m.ownRsc)).orElse(m.ownRsc)))
     resolveSym(tpeSym, Set.empty)
 
@@ -572,3 +571,19 @@ object CanonicalErasedValueType:
         // * A primitive has no resource-ness, so `rsc` is dropped.
         case S(prim) => ErasedType.Primitive(prim)
         case _ => ErasedType.AnyRef(rsc, base)
+
+/** Erased types of source declarations are initialized by Erasure after resolution finishes.
+  * `null` means no representation has been assigned; `N` is an initialized, unknown representation.
+  * The checked getter also protects derived values from caching an early `N`.
+  * IR-generated symbols may initialize the same slot directly at construction.
+  */
+trait HasDelayedErasedType[T <: ErasedValueType]:
+  private var assignedErasedType: Opt[T] = null
+  final def isErased: Bool = assignedErasedType != null
+  final def erasedType: Opt[T] =
+    assert(isErased, "Erased type read before erasure")
+    assignedErasedType
+  final def erasedType_=(value: Opt[T]): Unit =
+    assert(!isErased, "Erased type initialized more than once")
+    assert(value != null, "An initialized erased type cannot be null")
+    assignedErasedType = value

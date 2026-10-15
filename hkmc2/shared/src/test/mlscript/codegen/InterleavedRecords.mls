@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -71,7 +72,7 @@ let rcd =
   a: 0
   42
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.72: 	  42
+//│ ║  l.73: 	  42
 //│ ╙──      	  ^^
 //│ > Hello!
 //│ rcd = {a: 0}

@@ -1,0 +1,6 @@
+val stored = [40]
+
+module LocalValsExport with
+  fun add(value) =
+    val adjustment = 1
+    stored.0 + adjustment + value

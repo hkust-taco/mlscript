@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 // In this example, the function call is equivalent to `useBox((id(new Box(42) as!! Box)))`.
@@ -53,9 +52,8 @@ useBox(id(new Box(42)))
 //│       (local.get $a)))
 //│   (func $useBox (export "useBox") (type $useBox) (param $b (ref $Box)) (result (ref null i31))
 //│     (return
-//│       (ref.cast (ref i31)
-//│         (struct.get $Box $v
-//│           (local.get $b)))))
+//│       (struct.get $Box $v
+//│         (local.get $b))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref $Box))
 //│     (local $tmp1 (ref null any))
@@ -151,10 +149,10 @@ wasm.ref.i31(wasm.i32.const(7))
 :noInline
 wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'rsc? Unknown'
-//│ ║  l.152: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.150: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Unknown' at an unrelated type 'Int32'
-//│ ║  l.152: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.150: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
@@ -178,9 +176,7 @@ unpack(toObj())
 // where `Unknown` cannot be cast to a primitive and is rejected.
 :e
 fun test: Function = id
-//│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.180: 	fun test: Function = id
-//│ ╙──       	                     ^^
+//│ ═══[COMPILATION ERROR] Returning function instances is not supported
 
 :fixme
 fun test: Function = new Object
@@ -221,7 +217,7 @@ fun test: Function = castToA(123)
 :e
 castToA(wasm.i32.const(123))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'rsc? Unknown'
-//│ ║  l.222: 	castToA(wasm.i32.const(123))
+//│ ║  l.218: 	castToA(wasm.i32.const(123))
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 123
@@ -260,8 +256,8 @@ narrowUnitInVal(())
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define narrowUnitInVal⁰ as fun narrowUnitInVal¹(x) {
 //│   let y;
-//│   define y as val y⁰ = (x as! Unit⁰);
-//│   return y⁰
+//│   set y = (x as! Unit⁰);
+//│   return y
 //│ };
 //│ return narrowUnitInVal¹(runtime⁰.Unit⁰)
 //│ Wasm result:
@@ -287,8 +283,8 @@ narrowLocal(42)
 //│ };
 //│ define narrowLocal⁰ as fun narrowLocal¹(x) {
 //│   let y;
-//│   define y as val y¹ = (x as! Local¹);
-//│   return y¹
+//│   set y = (x as! Local¹);
+//│   return y
 //│ };
 //│ return narrowLocal¹(42)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
@@ -296,11 +292,7 @@ narrowLocal(42)
 //│ define Local as class Local¹ {
 //│   constructor Local⁰
 //│ };
-//│ define narrowLocal⁰ as fun narrowLocal¹(x) {
-//│   let y;
-//│   define y as val y¹ = (x as! Local¹);
-//│   return y¹
-//│ };
+//│ define narrowLocal⁰ as fun narrowLocal¹(x) { return (x as! Local¹) };
 //│ return narrowLocal¹(42)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

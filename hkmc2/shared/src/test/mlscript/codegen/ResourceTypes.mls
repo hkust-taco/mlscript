@@ -222,7 +222,7 @@ new rsc C()
 //│ return new rsc C²()
 //│ ╔══[COMPILATION ERROR] WatBuilder::result for a resource Instantiate(...) is not implemented yet
 //│ ║  l.220: 	new rsc C()
-//│ ╙──       	        ^
+//│ ╙──       	^^^^^^^^^^^
 
 :wasm
 :ge
@@ -234,9 +234,7 @@ fun rscPartialWasm(a) = rsc curriedWasm(a)
 //│ };
 //│ define rscPartialWasm⁰ as fun rscPartialWasm¹(a: ?): ? { return rsc curriedWasm¹(a) };
 //│ end
-//│ ╔══[COMPILATION ERROR] WatBackend::result for Lambda expression not implemented yet
-//│ ║  l.229: 	fun curriedWasm(x)(y) = y
-//│ ╙──       	                  ^^^
+//│ ═══[COMPILATION ERROR] WatBackend::result for Lambda expression not implemented yet
 //│ ╔══[COMPILATION ERROR] WatBuilder::result for a resource Call(...) is not implemented yet
 //│ ║  l.230: 	fun rscPartialWasm(a) = rsc curriedWasm(a)
 //│ ╙──       	                            ^^^^^^^^^^^^^^
@@ -248,10 +246,10 @@ fun rscPartialWasm(a) = rsc curriedWasm(a)
 :w
 fun mkNewOutside() = rsc (new C())
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.249: 	fun mkNewOutside() = rsc (new C())
+//│ ║  l.247: 	fun mkNewOutside() = rsc (new C())
 //│ ║         	                     ^^^
-//│ ╟── This annotation is not supported on object creation terms.
-//│ ║  l.249: 	fun mkNewOutside() = rsc (new C())
+//│ ╟── This annotation is not supported on object instantiation terms.
+//│ ║  l.247: 	fun mkNewOutside() = rsc (new C())
 //│ ╙──       	                          ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define mkNewOutside⁰ as fun mkNewOutside¹(): ? { return new C²() }; end
@@ -259,10 +257,10 @@ fun mkNewOutside() = rsc (new C())
 :w
 fun mkNewOutsideBare() = rsc new C()
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.260: 	fun mkNewOutsideBare() = rsc new C()
+//│ ║  l.258: 	fun mkNewOutsideBare() = rsc new C()
 //│ ║         	                         ^^^
-//│ ╟── This annotation is not supported on object creation terms.
-//│ ║  l.260: 	fun mkNewOutsideBare() = rsc new C()
+//│ ╟── This annotation is not supported on object instantiation terms.
+//│ ║  l.258: 	fun mkNewOutsideBare() = rsc new C()
 //│ ╙──       	                             ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define mkNewOutsideBare⁰ as fun mkNewOutsideBare¹(): ? { return new C²() }; end
@@ -270,10 +268,10 @@ fun mkNewOutsideBare() = rsc new C()
 :w
 fun mkMutNewOutside() = rsc (new mut C())
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.271: 	fun mkMutNewOutside() = rsc (new mut C())
+//│ ║  l.269: 	fun mkMutNewOutside() = rsc (new mut C())
 //│ ║         	                        ^^^
-//│ ╟── This annotation is not supported on mutable object creation terms.
-//│ ║  l.271: 	fun mkMutNewOutside() = rsc (new mut C())
+//│ ╟── This annotation is not supported on mutable object instantiation terms.
+//│ ║  l.269: 	fun mkMutNewOutside() = rsc (new mut C())
 //│ ╙──       	                             ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define mkMutNewOutside⁰ as fun mkMutNewOutside¹(): ? { return new mut C²() }; end
@@ -281,10 +279,10 @@ fun mkMutNewOutside() = rsc (new mut C())
 :w
 fun newMaybeOutside() = rsc? (new C())
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.282: 	fun newMaybeOutside() = rsc? (new C())
+//│ ║  l.280: 	fun newMaybeOutside() = rsc? (new C())
 //│ ║         	                        ^^^^
-//│ ╟── This annotation is not supported on object creation terms.
-//│ ║  l.282: 	fun newMaybeOutside() = rsc? (new C())
+//│ ╟── This annotation is not supported on object instantiation terms.
+//│ ║  l.280: 	fun newMaybeOutside() = rsc? (new C())
 //│ ╙──       	                              ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define newMaybeOutside⁰ as fun newMaybeOutside¹(): ? { return new C²() }; end
@@ -292,10 +290,10 @@ fun newMaybeOutside() = rsc? (new C())
 :w
 fun newDynOutside() = rsc (new! C())
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.293: 	fun newDynOutside() = rsc (new! C())
+//│ ║  l.291: 	fun newDynOutside() = rsc (new! C())
 //│ ║         	                      ^^^
-//│ ╟── This annotation is not supported on dynamic object creation terms.
-//│ ║  l.293: 	fun newDynOutside() = rsc (new! C())
+//│ ╟── This annotation is not supported on dynamic object instantiation terms.
+//│ ║  l.291: 	fun newDynOutside() = rsc (new! C())
 //│ ╙──       	                           ^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define newDynOutside⁰ as fun newDynOutside¹(): ? { return new C¹() }; end
@@ -303,10 +301,10 @@ fun newDynOutside() = rsc (new! C())
 :w
 fun newRefinedOutside() = rsc (new Q with {})
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.304: 	fun newRefinedOutside() = rsc (new Q with {})
+//│ ║  l.302: 	fun newRefinedOutside() = rsc (new Q with {})
 //│ ║         	                          ^^^
-//│ ╟── This annotation is not supported on object creation terms.
-//│ ║  l.304: 	fun newRefinedOutside() = rsc (new Q with {})
+//│ ╟── This annotation is not supported on object instantiation terms.
+//│ ║  l.302: 	fun newRefinedOutside() = rsc (new Q with {})
 //│ ╙──       	                               ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define newRefinedOutside⁰ as fun newRefinedOutside¹(): ? {
@@ -319,10 +317,10 @@ fun newRefinedOutside() = rsc (new Q with {})
 :w
 fun newRscTwice() = rsc (new rsc C())
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.320: 	fun newRscTwice() = rsc (new rsc C())
+//│ ║  l.318: 	fun newRscTwice() = rsc (new rsc C())
 //│ ║         	                    ^^^
-//│ ╟── This annotation is not supported on object creation terms.
-//│ ║  l.320: 	fun newRscTwice() = rsc (new rsc C())
+//│ ╟── This annotation is not supported on object instantiation terms.
+//│ ║  l.318: 	fun newRscTwice() = rsc (new rsc C())
 //│ ╙──       	                         ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define newRscTwice⁰ as fun newRscTwice¹(): ? { return new rsc C²() }; end
@@ -330,10 +328,10 @@ fun newRscTwice() = rsc (new rsc C())
 :w
 fun newMaybeOverRsc() = rsc? (new rsc C())
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.331: 	fun newMaybeOverRsc() = rsc? (new rsc C())
+//│ ║  l.329: 	fun newMaybeOverRsc() = rsc? (new rsc C())
 //│ ║         	                        ^^^^
-//│ ╟── This annotation is not supported on object creation terms.
-//│ ║  l.331: 	fun newMaybeOverRsc() = rsc? (new rsc C())
+//│ ╟── This annotation is not supported on object instantiation terms.
+//│ ║  l.329: 	fun newMaybeOverRsc() = rsc? (new rsc C())
 //│ ╙──       	                              ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define newMaybeOverRsc⁰ as fun newMaybeOverRsc¹(): ? { return new rsc C²() }; end
@@ -381,7 +379,7 @@ fun t(b: Box[rsc C]) = b
 :ge
 fun q(x: C) = useRsc(x)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'rsc C'
-//│ ║  l.382: 	fun q(x: C) = useRsc(x)
+//│ ║  l.380: 	fun q(x: C) = useRsc(x)
 //│ ╙──       	                     ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define q⁰ as fun q¹(x: C²): ? { return useRsc¹(x) }; end
@@ -393,8 +391,10 @@ fun q(x: C) = useRsc(x)
 :w
 fun u() = rsc 1
 //│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.392: 	fun u() = rsc 1
+//│ ║         	          ^^^
 //│ ╟── This annotation is not supported on integer literal terms.
-//│ ║  l.394: 	fun u() = rsc 1
+//│ ║  l.392: 	fun u() = rsc 1
 //│ ╙──       	              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define u⁰ as fun u¹(): ? { return 1 }; end
@@ -846,6 +846,8 @@ fun handledRsc() =
 //│ ║         	                 ^^^^^^^^^
 //│ ╙── The 'handle' keyword requires a statically known class.
 //│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.841: 	  handle h = rsc RscEffect with
+//│ ║         	             ^^^
 //│ ╟── This annotation is not supported on reference terms.
 //│ ║  l.841: 	  handle h = rsc RscEffect with
 //│ ╙──       	                 ^^^^^^^^^

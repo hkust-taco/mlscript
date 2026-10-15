@@ -1,0 +1,92 @@
+:.
+
+// Named values form one record after all positional values, even when interleaved.
+:expect [3, 5, 7]
+private fun named(fields) = [fields.a, fields.b, fields.c]
+named(a: 3, b: 5, c: 7)
+//│ = [3, 5, 7]
+
+:expect [1, 2, 3, 4]
+private fun mixed(x, y, fields) = [x, y, fields.a, fields.b]
+mixed(a: 3, 1, b: 4, 2)
+//│ = [1, 2, 3, 4]
+
+:expect [2, 4, 6]
+let inner = [2, a: 4]
+let combined = [b: 6, ...inner]
+[combined.0, combined.1.a, combined.2.b]
+//│ = [2, 4, 6]
+//│ combined = [2, {a: 4}, {b: 6}]
+//│ inner = [2, {a: 4}]
+
+:expect [8, 9]
+private fun forward(...xs) = named(...xs)
+let result = forward(a: 7, b: 8, c: 9)
+[result.1, result.2]
+//│ = [8, 9]
+//│ result = [7, 8, 9]
+
+// Field values retain function-call marks through returned tuples and record spreads.
+:expect ["LEFT", 3]
+fun pack(x) = [value: x]
+let left = pack("left")
+let right = pack([1, 2, 3])
+[({...left.0}).value.toUpperCase(), ({...right.0}).value.length]
+//│ = ["LEFT", 3]
+//│ left = [{value: "left"}]
+//│ right = [{value: [1, 2, 3]}]
+
+:expect 12
+let overwritten = [a: {old: 0}, a: {answer: 12}]
+overwritten.0.a.answer
+//│ = 12
+//│ overwritten = [{a: {answer: 12}}]
+
+// Packing must not reorder or repeat evaluation of values or computed keys.
+:expect ["abcde", 2, 4, 1, 3, 5]
+let log = ""
+fun tick(tag: Str, value) = {
+  set log += tag
+  value
+}
+let evaluated = [a: tick("a", 1), tick("b", 2), (tick("c", "c")): 3,
+  tick("d", 4), e: tick("e", 5)]
+[log, evaluated.0, evaluated.1, evaluated.2.("a"), evaluated.2.("c"), evaluated.2.e]
+//│ = ["abcde", 2, 4, 1, 3, 5]
+//│ evaluated = [2, 4, {a: 1, c: 3, e: 5}]
+//│ log = "abcde"
+
+:e
+fun one(fields: {a: Int}) = fields.a
+one(1, a: 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.61: 	one(1, a: 2)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Function 'one' expected 1 argument, but got 2
+//│ ║  l.60: 	fun one(fields: {a: Int}) = fields.a
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+let key = "a"
+[a: {answer: 1}, (key): {other: 2}].0.a.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.71: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
+//│ ╟── This computed key can overwrite the selected member.
+//│ ║  l.71: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
+//│ ╙──      	                  ^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
+//│ ║  l.71: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ key = "a"
+
+:expect 13
+[(key): 0, a: 13].0.a
+//│ = 13
+
+:expect [42, 43]
+class Box(val fields)
+[Box(answer: 42).fields.answer, (new Box(answer: 43)).fields.answer]
+//│ = [42, 43]

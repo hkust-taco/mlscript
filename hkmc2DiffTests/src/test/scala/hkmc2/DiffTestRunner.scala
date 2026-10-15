@@ -1,7 +1,6 @@
 package hkmc2
 
 import org.scalatest.{funsuite, ParallelTestExecution}
-import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 import os.up
 
@@ -42,17 +41,14 @@ object DiffTestRunner:
     // To be overridden in subproject-specific State classes
     def testDir: os.Path = dir
     
-    val validExt = Set("mls")
-    
     val allFiles = os.walk(testDir)
       .filter(_.toIO.isFile)
-      .filter(_.ext in validExt)
+      .filter(TestFolders.isTestSource)
     
     def filter(file: os.RelPath): Bool = true
     
-    val TimeLimit =
-      if sys.env.get("CI").isDefined then Span(60, Seconds)
-      else Span(25, Seconds)
+    // Benchmark states override this limit.
+    val TimeLimit = TimeOutTests.TimeLimit
     
   end State
   
@@ -68,7 +64,7 @@ object DiffTestRunner:
         val filePath = os.RelPath(gitStr.drop(3))
         if prefix =:= "A " || prefix =:= "M " || prefix =:= "R " || prefix =:= "D " then
           N // * Disregard modified files that are staged
-        else if filePath.ext =/= "mls" then N
+        else if !TestFolders.isTestSource(filePath) then N
         else S(filePath)
       }.toSet catch
         case err: Throwable =>

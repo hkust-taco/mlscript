@@ -1,7 +1,6 @@
-:js
+:.
 
 
-:deforest
 :expect 123
 module M with
   data class XX(a)
@@ -28,7 +27,6 @@ M.f(M.p())
 
 
 
-:deforest
 :expect 5056
 module DeforestList with
   data object Nil
@@ -66,7 +64,6 @@ DeforestList.res + DeforestList.main()
 
 
 
-:deforest
 :expect 5056
 module DeforestList with
   data object Nil
@@ -104,7 +101,6 @@ DeforestList.res + DeforestList.main()
 
 
 
-:deforest
 :expect 3
 module MMM with
   data object A
@@ -125,7 +121,6 @@ MMM.f()
 
 
 
-:deforest
 :expect X
 module M with
   data object X
@@ -144,7 +139,6 @@ M.f(M.X)
 //│ = X
 
 
-:deforest
 :expect [D, A]
 data object A
 data class B(b)
@@ -196,8 +190,9 @@ module O with
     val x = 3
     fun g() = 23
     data class C(x)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
 
-:deforest
 :noInline
 private fun f(module I: O.I) = I.C(3)
 private fun g(x, module I: O.I) = if x is
@@ -211,7 +206,6 @@ g(f(O.I), O.I)
 //│ = 5
 
 
-:deforest
 :noInline
 private fun f(module O: O) = O.I.C(3)
 private fun g(x, module O: O) = if x is

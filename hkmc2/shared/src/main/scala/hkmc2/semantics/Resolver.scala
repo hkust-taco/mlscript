@@ -360,7 +360,7 @@ class Resolver(tl: TraceLogger)
   trace(s"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
       val TermDefinition(_k, _sym, _tsym, 
-        pss, tps, sign, body, TermDefFlags(isMethod), modulefulness, annotations, comp
+        pss, tps, sign, body, TermDefFlags(isMethod, _), modulefulness, annotations, comp
       ) = tdf
       /** 
        * Add the contextual parameters in pss to the ICtx so that they
@@ -426,7 +426,7 @@ class Resolver(tl: TraceLogger)
     defn match
     
     // Case: instance definition. Add the instance to the context.
-    case defn @ TermDefinition(k = Ins, sym = sym, tsym = tsym, flags = TermDefFlags(isMethod), sign = sign) =>
+    case defn @ TermDefinition(k = Ins, sym = sym, tsym = tsym, flags = TermDefFlags(isMethod, _), sign = sign) =>
       softAssert(defn.owner.isEmpty)
       log(s"Resolving instance definition ${defn.showDbg}")
       traverseTermDef(defn)
@@ -461,7 +461,7 @@ class Resolver(tl: TraceLogger)
     // Case: Type alias definition. Its right-hand side is not traversed as a signature, so the resource modifiers in
     // it are checked separately.
     case defn: TypeDef =>
-      defn.rhs.foreach(checkAllRscModifiers)
+      defn.rhs.foreach(resourceModifiers.checkAllRscModifiers)
       defn.subTerms.foreach(traverse(_, expect = NonModule(N)))
       ictx
     
@@ -535,7 +535,7 @@ class Resolver(tl: TraceLogger)
   def resolve(t: Resolvable, prefer: Expect, inAppPrefix: Bool, inCtxPrefix: Bool, inTyPrefix: Bool)(using ICtx): (Opt[CallableDefinition], ICtx) =
   trace[(Opt[CallableDefinition], ICtx)](
     s"Resolving resolvable term: ${t}, (prefer = ${prefer}, inAppPrefix = ${inAppPrefix}, inCtxPrefix = ${inCtxPrefix}, inTyPrefix = ${inTyPrefix})", 
-    _ => s"~> ${t.expanded} (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
+    _ => s"~> ${t.expanded} (sym = ${t.legacyResolvedSym}, typ = ${t.resolvedTyp})"
   ):
     // Resolve the sub-resolvable-terms of the term. 
     val (defn, newICtx1) = 
@@ -600,7 +600,7 @@ class Resolver(tl: TraceLogger)
         (N, ictx)
     
     t.expandedResolvableIn: t =>
-      log(s"Resolving resolvable term ${t} with sym = ${t.resolvedSym}, typ = ${t.resolvedTyp}")
+      log(s"Resolving resolvable term ${t} with sym = ${t.legacyResolvedSym}, typ = ${t.resolvedTyp}")
       
       // Fill the context with possibly the type arguments information.
       val newICtx2 = newICtx1.givenIn:
@@ -858,7 +858,7 @@ class Resolver(tl: TraceLogger)
   def resolveSymbol(t: Resolvable, prefer: Expect, sign: Bool)(using ictx: ICtx): Unit =
   trace[Unit](
     s"Resolving symbol for term: ${t} (prefer = ${prefer})", 
-    _ => s"-> (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
+    _ => s"-> (sym = ${t.legacyResolvedSym}, typ = ${t.resolvedTyp})"
   ):
     // If the term has an expansion already, it is likely that there is
     // an internal error because otherwise we should resolve the symbol
@@ -889,30 +889,11 @@ class Resolver(tl: TraceLogger)
         log(s"Resolving symbol for selection ${t}, defn = ${lhs.defn}")
         
         val clsDefn = cls.flatMap: sym =>
-          sym.resolvedSym.flatMap(_.asCls).map: clsSym =>
+          sym.legacyResolvedSym.flatMap(_.asCls).map: clsSym =>
             clsSym.defn.getOrElse(die)
         
-        // Singleton Definitions
-        lhs.singletonDefn.foreach: defn =>
-          val fsym = defn.body.members.get(id.name)
-          fsym match
-            case S(bms: BlockMemberSymbol) =>
-              log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
-              disambSym(prefer, sign)(bms) match
-                case S(ds) =>
-                  checkPrivateAccess(t, ds)
-                  t.expand(S(t.withSym(bms).resolved(ds)))
-                case N =>
-                  log(s"Unable to disambiguate ${bms}")
-                  t.expand(S(t.withSym(bms)))
-              log(s"Resolved symbol for ${t}: ${bms}")
-            case N => 
-              t.expand(S(t.withSym(ErrorSymbol(id.name, Tree.Dummy))))
-              raise: 
-                ErrorReport(
-                  msg"${defn.kind.desc.capitalize} '${defn.sym.nme}' " +
-                  msg"does not contain member '${id.name}'" -> t.toLoc :: Nil,
-                  extraInfo = S(defn))
+        // Modules and objects are class-like definitions too. Resolve the
+        // selection once, using the explicit projection class when present.
         
         // Class-Like Definitions
         (clsDefn orElse lhs.typDefn).foreach: 
@@ -935,16 +916,25 @@ class Resolver(tl: TraceLogger)
                     t.expand(S(t.withSym(bms)))
                 log(s"Resolved symbol for ${t}: ${bms}")
               case N =>
-                // TODO @Harry: Appropriately resolve all selections on classes.
-                // - MLscript programs selecting JS members without properly defining them.
-                // - Inherited members.
+                defn match
+                  case defn: ModuleOrObjectDef =>
+                    t.expand(S(t.withSym(ErrorSymbol(id.name, Tree.Dummy))))
+                    raise:
+                      ErrorReport(
+                        msg"${defn.kind.desc.capitalize} '${defn.sym.nme}' " +
+                        msg"does not contain member '${id.name}'" -> t.toLoc :: Nil,
+                        extraInfo = S(defn))
+                  case _ =>
+                    // TODO @Harry: Appropriately resolve all selections on classes.
+                    // - MLscript programs selecting JS members without properly defining them.
+                    // - Inherited members.
           case defn =>
             log(s"Unsupported selection from definition: ${defn}")
       
       case t @ Term.New(cls, _, N) =>
         // cls is already resolved, so the symbol should be present;
         // otherwise, there is already an error raised.
-        cls.resolvedSym match
+        cls.legacyResolvedSym match
           case S(clsSym: ClassSymbol) =>
             t.expand(S(t.duplicate.resolved(clsSym)))
           case S(sym) =>
@@ -963,7 +953,7 @@ class Resolver(tl: TraceLogger)
    */
   def resolveType(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit = t.expandedResolvableIn: t =>
     trace[Unit](
-      s"Resolving the type for term: ${t} (prefer = ${prefer}, sym = ${t.resolvedSym})", 
+      s"Resolving the type for term: ${t} (prefer = ${prefer}, sym = ${t.legacyResolvedSym})",
       _ => s"-> typ = ${t.resolvedTyp}"
     ):
       def disambSym(bms: BlockMemberSymbol): Opt[DefinitionSymbol[?]] = prefer match
@@ -974,7 +964,7 @@ class Resolver(tl: TraceLogger)
         case _: PatternConstructor => TODO("disambSym for PatternConstructor")
       
       t match
-      case Term.New(cls, _, N) => cls.resolvedSym match
+      case Term.New(cls, _, N) => cls.legacyResolvedSym match
         case S(clsSym: ClassSymbol) =>
           val ty = Type.Ref(clsSym, Nil)
           t.expand(S(t.withTyp(ty)))
@@ -983,7 +973,7 @@ class Resolver(tl: TraceLogger)
           // otherwise, there is already an error raised.
           ()
       case t @ Apps(base: Resolvable, ass) => 
-        val decl = base.resolvedSym match
+        val decl = base.legacyResolvedSym match
           case S(bms: BlockMemberSymbol) => 
             val disambBms = disambSym(bms)
             log(s"Disambiguate ${bms} (${bms.asTrm}) into ${disambBms} (defn = ${disambBms.map(_.defn)}), preferring ${prefer}")
@@ -1056,6 +1046,8 @@ class Resolver(tl: TraceLogger)
           else NonModule(S(msg"Non-module parameter must have a non-module type.")),
       )
   
+  private lazy val resourceModifiers = new ResourceModifierChecker(_.symbol)
+  
   /**
    * Traverse through a term that is expected to be a type. In this
    * process, it reports any non-type terms, checks if the term
@@ -1072,8 +1064,16 @@ class Resolver(tl: TraceLogger)
       
       // * Traverse through the sub-terms.
       t match
+      // Captures retain lexical scopes for consumers using new resolution;
+      // they do not change the type interpreted by legacy resolution.
+      case Term.Capture(base, _) =>
+        traverseSign(base, expect, inAppPrefix)
+        break()
       case Term.Ref(_) =>
       case Term.Lit(_) =>
+      case Term.Rcd(_, stats) => stats.foreach:
+        case field: RcdField => traverseSign(field.rhs, expect = NonModule(N))
+        case stat => raise(ErrorReport(msg"Expected a field declaration in record type." -> stat.toLoc :: Nil))
       case Term.UnitVal() =>
       // Literals with operators. e.g., -42
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) =>
@@ -1091,25 +1091,25 @@ class Resolver(tl: TraceLogger)
       
       // Intersection type, which may not contain resource modifiers yet.
       case Term.CompType(lhs, rhs, false) =>
-        checkRscInIntersection(lhs, rhs)
+        resourceModifiers.checkRscInIntersection(lhs, rhs)
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
       // Function type, whose parameters may not contain resource modifiers yet.
       case Term.FunTy(lhs, _, _) =>
-        checkRscInFunParams(lhs)
+        resourceModifiers.checkRscInFunParams(lhs)
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
       // Complex type: Wildcard type, Composed type, Negation type,
       // Forall type, Tuple type (including a function type's parameter
       // list, whose resource modifiers are checked here)
-      case t: (Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
+      case t: (Term.DynTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
       
       // A resource modifier does not affect resolution: traverse its target type, then check the types that the
       // modifier applies to.
       case Term.Annotated(Annot.Resource(rsc), target) =>
         traverseSign(target, expect = expect, inAppPrefix = inAppPrefix)
-        checkRscModifier(rsc, target)
+        resourceModifiers.checkRscModifier(rsc, target)
         break()
       
       // t is not a type.
@@ -1177,6 +1177,7 @@ class Resolver(tl: TraceLogger)
       Type.Error
     
     t match
+      case Term.Capture(base, _) => resolveSign(base, expect)
       // If the term is a type application, e.g., T[A, ...], resolve the
       // type constructor and arguments respectively.
       case Term.TyApp(con, args) => resolveSign(con, expect = expect) match
@@ -1195,7 +1196,7 @@ class Resolver(tl: TraceLogger)
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) => if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support Lit with operator
-      case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup | Term.Lit) =>
+      case _: (Term.DynTy | Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup | Term.Rcd | Term.Lit) =>
         if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support complex types
@@ -1203,7 +1204,7 @@ class Resolver(tl: TraceLogger)
       case Term.Annotated(Annot.Resource(_), target) => resolveSign(target, expect = expect)
       
       // Otherwise, resolve the term directly.
-      case _ => t.resolvedSym match
+      case _ => t.legacyResolvedSym match
         // A VarSymbol is probably a type parameter.
         case S(sym: VarSymbol) if ModuleChecker.isTypeParam(sym) =>
           if expect.module 
@@ -1221,128 +1222,6 @@ class Resolver(tl: TraceLogger)
         case N =>
           raise(ErrorReport(msg"Expected a type, got a non-type ${t.describe}" -> t.toLoc :: Nil))
           Type.Error
-  
-  /** The types that a resource modifier wrapping `t` applies to, as `ErasedType.eraseSign` reads them. */
-  private def rscReach(t: Term): Ls[Term] = t match
-    case Term.CompType(lhs, rhs, true) => rscReach(lhs) ::: rscReach(rhs)
-    case Term.Forall(_, _, body) => rscReach(body)
-    case _ => t :: Nil
-  
-  /**
-   * The members that the type `t` denotes: those of the alias it refers to, the type itself, or none if the type does
-   * not have a symbol (such as a function type or an intersection).
-   */
-  private def aliasMembers(t: Term): Ls[codegen.CanonicalErasedValueType.AliasMember] =
-    t.symbol.flatMap(_.asTpe).toList.flatMap(codegen.CanonicalErasedValueType.resolveTpeSymAlias)
-  
-  /**
-   * Checks a type that a resource modifier denoting `rsc` applies to is valid: it must not denote a primitive type
-   * (directly or through an alias). This is an error under `rsc`, and a warning under `rsc?`, which then has no effect.
-   *
-   * A member of a union, written or through an alias, combines its own modifier with `rsc`.
-   */
-  private def checkRscTarget(t: Term, rsc: Opt[Bool]): Unit = t match
-    // A union member with a modifier of its own is already checked under that modifier. It is checked again only when
-    // this modifier is `rsc` and the member's is not, as this one then overrides it.
-    case Term.Annotated(Annot.Resource(own), target) =>
-      if rsc === S(true) && own =/= S(true) then
-        rscReach(target).filter(codegen.ErasedType.keepsRsc(_, own)).foreach(checkRscTarget(_, rsc))
-    // An erroneous type, or a reference to a non-type, is already reported. A type parameter has nothing to check.
-    case Term.Error() => ()
-    case _ if t.symbol.exists(_.asTpe.isEmpty) => ()
-    // A modifier that erasure would silently drop is rejected.
-    case _ if !codegen.ErasedType.keepsRsc(t, rsc) =>
-      raise(ErrorReport(msg"Resource modifiers on this type are not supported yet." -> t.toLoc :: Nil))
-    case _ =>
-      val members = aliasMembers(t)
-      // A member is checked here when this modifier decides its resource-ness: always under `rsc`, which overrides the
-      // member's own modifier, unless that is `rsc` too. Otherwise, the member's own modifier decides it, and is
-      // checked where its alias is defined.
-      val decided = members.filter(m => m.ownRsc.isEmpty || rsc === S(true) && m.ownRsc =/= S(S(true)))
-      val prims = decided.flatMap(_.sym).flatMap(codegen.PrimitiveType.of).distinct
-      prims.foreach: prim =>
-        val nme = prim.sym.nme
-        rsc match
-        case S(true) =>
-          raise(ErrorReport(msg"Primitive type '${nme}' cannot be a resource." -> t.toLoc :: Nil))
-        case N =>
-          raise(WarningReport(
-            msg"Primitive type '${nme}' is never a resource, so 'rsc?' has no effect." -> t.toLoc :: Nil))
-        // No syntax writes a non-resource modifier.
-        case S(false) => lastWords(s"a resource modifier denoting a non-resource on '$t'")
-  
-  /**
-   * Checks a resource modifier denoting `rsc` on `target`:
-   *
-   * - a type takes at most one modifier written directly on it (e.g. `rsc rsc? C`), while one on a union's member or
-   *   inside an alias combines with it instead;
-   * - `rsc?` has no effect on a type whose members are all resources of their own, so it is reported as a warning.
-   *
-   * Also see `checkRscTarget` for the checks on each type that the modifier applies to.
-   */
-  private def checkRscModifier(rsc: Opt[Bool], target: Term): Unit =
-    def directlyModified(t: Term): Opt[Term] = t match
-      case Term.Forall(_, _, body) => directlyModified(body)
-      case mod @ Term.Annotated(Annot.Resource(_), _) => S(mod)
-      case _ => N
-    directlyModified(target) match
-    // Only the nested modifier is reported here - its target is checked under its own modifier.
-    case S(mod) => raise(ErrorReport(msg"A type takes at most one resource modifier." -> mod.toLoc :: Nil))
-    case N =>
-      val reached = rscReach(target)
-      reached.foreach(checkRscTarget(_, rsc))
-      def isOwnResource(t: Term): Bool = t match
-        case Term.Annotated(Annot.Resource(own), _) => own === S(true)
-        case _ =>
-          val members = aliasMembers(t)
-          members.nonEmpty && members.forall(_.ownRsc === S(S(true)))
-      if rsc.isEmpty && reached.forall(isOwnResource) then
-        raise(WarningReport(
-          msg"Every member of this type is a resource, so 'rsc?' has no effect." -> target.toLoc :: Nil))
-  
-  /**
-   * Checks the operands of an intersection type: a resource modifier inside one is not supported yet, as
-   * `ErasedType.eraseSign` never decomposes an intersection, so the modifier would be silently lost.
-   */
-  private def checkRscInIntersection(lhs: Term, rhs: Term): Unit =
-    rejectRscModifiersIn(lhs :: rhs :: Nil, "an intersection type")
-  
-  /**
-   * Checks the parameters of a function type: a resource modifier on one is not supported yet, as a function type
-   * erases to `Function` without its parameter types, so the modifier would be silently lost.
-   */
-  private def checkRscInFunParams(params: Term): Unit = params match
-    case params: Term.Tup => rejectRscModifiersIn(params.subTerms.toList, "the parameters of a function type")
-    case param => rejectRscModifiersIn(param :: Nil, "the parameters of a function type")
-  
-  /**
-   * Reports each resource modifier on a term in `ts` or reached through it by `rscReach` (a union's members, a
-   * `forall`'s body), as not supported inside the type that `ts` belongs to (e.g. "an intersection type").
-   */
-  private def rejectRscModifiersIn(ts: Ls[Term], what: Str): Unit =
-    ts.flatMap(rscReach).foreach:
-      case mod @ Term.Annotated(Annot.Resource(_), _) =>
-        raise(ErrorReport(msg"Resource modifiers inside ${what} are not supported yet." -> mod.toLoc :: Nil))
-      case _ => ()
-  
-  /**
-   * Checks every resource modifier within the type `t`, at any depth.
-   *
-   * This is intended for the right-hand side of a type alias: it is not traversed as a signature, so this runs the
-   * resource modifier checks that `traverseSign` would.
-   *
-   * The arguments of a type application are skipped: `resolve` already traverses them as signatures, which checks
-   * them, so checking them here too would report every error twice.
-   */
-  private def checkAllRscModifiers(t: Term): Unit =
-    t match
-    case Term.Annotated(Annot.Resource(rsc), target) => checkRscModifier(rsc, target)
-    case Term.CompType(lhs, rhs, false) => checkRscInIntersection(lhs, rhs)
-    case Term.FunTy(lhs, _, _) => checkRscInFunParams(lhs)
-    case _ => ()
-    t match
-    case Term.TyApp(con: Resolvable, _) => checkAllRscModifiers(con)
-    case _ => t.subTerms.foreach(checkAllRscModifiers)
 
 end Resolver
 
@@ -1398,6 +1277,6 @@ object ModuleChecker:
       case N => false
     case _ => false
   
-  def isStaticClass(t: Term): Bool = t.resolvedSym.exists(_.asCls.isDefined)
+  def isStaticClass(t: Term): Bool = t.legacyResolvedSym.exists(_.asCls.isDefined)
 
 end ModuleChecker

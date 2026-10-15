@@ -1,0 +1,179 @@
+:js
+:noInline
+
+
+// Local vals and lets should produce the same scoped assignments, including call initializers.
+:sir
+fun withVal =
+  val x = 1
+  val y = id(x + 1)
+  print(y)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define withVal⁰ as fun withVal¹() {
+//│   let x, y, tmp;
+//│   set x = 1;
+//│   set tmp = +⁰(x, 1);
+//│   set y = Predef⁰.id⁰(tmp);
+//│   return Predef⁰.print⁰(y)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:sir
+fun withLet =
+  let x = 1
+  let y = id(x + 1)
+  print(y)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define withLet⁰ as fun withLet¹() {
+//│   let x, y, tmp;
+//│   set x = 1;
+//│   set tmp = +⁰(x, 1);
+//│   set y = Predef⁰.id⁰(tmp);
+//│   return Predef⁰.print⁰(y)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+withVal
+withLet
+//│ > 2
+//│ > 2
+
+
+// Hoisted functions must capture the variable allocated for a later val definition.
+fun makeAdder(start) =
+  fun add(n) = x + n
+  val x = start
+  add
+
+let add = makeAdder(40)
+//│ add = fun add
+
+:expect 42
+add(2)
+//│ = 42
+
+
+// Forward references still need a scoped binding when an early return skips the initializer.
+:sir
+fun earlyCapture() =
+  fun get(read) = if read then x else 42
+  return get
+  val x = 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define earlyCapture⁰ as fun earlyCapture¹() {
+//│   let get, x;
+//│   define get as fun get⁰(read) {
+//│     match read
+//│       true =>
+//│         return x
+//│       else
+//│         return 42
+//│     end
+//│   };
+//│   return get⁰
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let get = earlyCapture()
+//│ get = fun get
+
+:expect 42
+get(false)
+//│ = 42
+
+
+// Recursive initializers must refer to the same binding as subsequent reads.
+:sir
+fun countDown(n) =
+  val loop = x =>
+    if x === 0 then 0 else 1 + loop(x - 1)
+  loop(n)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define countDown⁰ as fun countDown¹(n) {
+//│   let loop, lambda;
+//│   define lambda as fun lambda⁰(x) {
+//│     let scrut, tmp, tmp1;
+//│     set scrut = ===⁰(x, 0);
+//│     match scrut
+//│       true =>
+//│         return 0
+//│       else
+//│         set tmp = -⁰(x, 1);
+//│         set tmp1 = loop(tmp);
+//│         return +⁰(1, tmp1)
+//│     end
+//│   };
+//│   set loop = lambda⁰;
+//│   return loop(n)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 5
+countDown(5)
+//│ = 5
+
+
+// A nested scope gets its own binding, which can escape in a closure.
+fun nested(seed) =
+  val x = seed
+  let read = scope.locally of (
+    val x = 20
+    fun get() = x
+    get
+  )
+  x + read()
+
+:expect 42
+nested(22)
+//│ = 42
+
+
+// Initializers run exactly once, in source order.
+fun initialized() =
+  let count = 0
+  fun next() =
+    set count += 1
+    count
+  val first = next()
+  val second = next()
+  [first, second, first, count]
+
+:expect [1, 2, 1, 2]
+initialized()
+//│ = [1, 2, 1, 2]
+
+
+// Local type annotations still determine the binding's representation and casts.
+:sir
+:siret
+fun typed(input): Int =
+  val x: Int = input
+  x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define typed⁰ as fun typed¹(input: ?): Int⁰ { let x: Int⁰; set x = (input as! Int⁰); return x }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 42
+typed(42)
+//│ = 42
+
+
+// An early return in an initializer uses the enclosing function's declared return type.
+:sir
+:siret
+fun earlyReturn(input): Int =
+  val x =
+    return input
+  x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define earlyReturn⁰ as fun earlyReturn¹(input: ?): Int⁰ { let x: ?; return (input as! Int⁰) }; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 42
+earlyReturn(42)
+//│ = 42
+

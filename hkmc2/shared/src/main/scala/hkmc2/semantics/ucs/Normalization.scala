@@ -6,10 +6,11 @@ import hkmc2.utils.*, shorthands.*
 import syntax.{Literal, Tree, Keyword}, utils.*
 import Message.MessageContext
 import Elaborator.{Ctx, State, ctx}
-import codegen.Lowering
+import codegen.{Lowering, Erasure}
 
 
-class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, Config) extends TermSynthesizer:
+class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, Config, Erasure) extends TermSynthesizer:
+
   import Normalization.*, Mode.*
   import tl.*
 
@@ -100,7 +101,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     /** Check if any branch in the split tests the given scrutinee. */
     private def referencesScrutinee(scrutinee: Term.Ref): Bool = split match
       case Split.Cons(Branch(thatScrutinee, _, continuation), tail) =>
-        (scrutinee === thatScrutinee) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
+        (scrutinee.sym is thatScrutinee.sym) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
       case Split.Let(_, _, tail) => tail.referencesScrutinee(scrutinee)
       case Split.Else(_) | Split.End => false
       case Split.LetSplit(_, tail) => tail.referencesScrutinee(scrutinee)
@@ -230,7 +231,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         rec(tail).map(newTail => split.copy(tail = newTail))
       case split @ Split.Cons(head @ Branch(thatScrutinee, thatPattern, continuation), tail) =>
         log(s"CASE Cons ${head.showDbg}")
-        if scrutinee === thatScrutinee then mode match
+        if scrutinee.sym is thatScrutinee.sym then mode match
           case + =>
             log(s"Case 1.1: $scrutinee === $thatScrutinee")
             if thatPattern =:= pattern then
@@ -328,7 +329,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         Assign(sym, r, lowerSplit(tl, cont))
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
       subTerm_nonTail(scrut): sr =>
-        tl.log(s"Binding scrut $scrut to $sr (${summon[LoweringCtx].map})") 
+        tl.log(s"Binding scrut $scrut to $sr (${summon[LoweringCtx].localVals})")
         def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
             S(lowerSplit(restSplit, cont)),
             End()
@@ -348,7 +349,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
                   Case.Cls(ctorSym, st) -> lowerSplit(tail, cont)
                 case (param, arg) :: args =>
                   val (cse, blk) = mkArgs(args)
-                  (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param))(false), blk))
+                  (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param), N)(false), blk))
               mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
             symbol match
               case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
@@ -370,12 +371,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
-              Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym))(false)),
+              Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym), N)(false)),
               entries.foldRight(lowerSplit(tail, cont)):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
                     Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
-                    Assign(fieldSymbol, Select(sr, fieldName)(N)(false), blk)
+                    Assign(fieldSymbol, Select(sr, fieldName)(N, N)(false), blk)
                   )
             )
     case Split.Else(els) =>
@@ -425,8 +426,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * match failure in the future.
     */
   private def throwMatchErrorBlock =
-    Throw(Instantiate(Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error))(false),
-        (Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, mut = false, rsc = false)) // TODO add failed-match scrutinee info
+    Throw(Instantiate(Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error), N)(false),
+        (Value.Lit(syntax.Tree.StrLit("match error"))(N).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, mut = false, rsc = false, N)) // TODO add failed-match scrutinee info
 
   /** Gives a lowering temp the join of the representations of the results stored into it.
     *
@@ -512,7 +513,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
       // as shouldRewriteWhile is always true when effect handler lowering is on
       lazy val loopCont = if config.shouldRewriteWhile
-        then Return(Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false))
+        then Return(Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N))
         else Continue(loopLabel)
       val cont =
         form match
@@ -549,14 +550,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =
-              Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))(false)
+              Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol), N)(false)
             val blk = blockBuilder
-              .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
-              .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false))
+              .define(FunDefn(N, f, tSym, PlainParamList(Nil)(N) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
+              .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N))
             if summon[LoweringCtx].mayRet then
               blk
                 .assign(isReturned, Call(State.builtinOpsMap("!==").asSimpleRef,
-                  (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false))
+                  (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, N))
                 .ifthen(isReturned.asSimpleRef, Case.Lit(Tree.BoolLit(true)),
                   Return(loopResult.asSimpleRef),
                   N
@@ -642,14 +643,6 @@ object Normalization:
       !compareCasePattern(lhs, rhs) && !compareCasePattern(rhs, lhs)
     case _ => false
   
-  /** Get the parent class-like symbol from the extends clause of a class or module. */
-  private def getParentClassLikeSymbol(sym: ClassSymbol | ModuleOrObjectSymbol)
-      : Opt[ClassSymbol | ModuleOrObjectSymbol] =
-    val ext: Opt[Term.New] = sym match
-      case cls: ClassSymbol => cls.defn.flatMap(_.ext)
-      case mod: ModuleOrObjectSymbol => mod.defn.flatMap(_.ext)
-    ext.flatMap(nw => nw.cls.resolvedSym.flatMap(_.asClsOrMod))
-  
   /** Check if `child` is a subclass of `parent` by traversing the class hierarchy.
     * Uses a visited set to avoid infinite loops in case of cyclic inheritance.
     * TODO: Cache the subclasses set!! */
@@ -659,7 +652,7 @@ object Normalization:
   ): Bool =
     def go(sym: ClassSymbol | ModuleOrObjectSymbol,
         visited: Set[ClassSymbol | ModuleOrObjectSymbol]): Bool =
-      !visited.contains(sym) && (getParentClassLikeSymbol(sym) match
+      !visited.contains(sym) && (sym.irClassHeader.flatMap(_.parent).flatMap(_.asClsOrMod) match
         case S(parentSym) =>
           (parentSym is parent) || go(parentSym, visited + sym)
         case N => false)
@@ -677,3 +670,5 @@ object Normalization:
   enum Mode:
     case +
     case -
+
+end Normalization

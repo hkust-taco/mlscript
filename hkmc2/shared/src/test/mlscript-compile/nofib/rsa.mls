@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -16,7 +18,7 @@ fun z_div(x, y) = x / y
 fun z_mod(x, y) = x % y
 fun z_equal(x, y) = x === y
 fun z_sqr(x) = x * x
-fun int_if_char(c) = c.codePointAt(0)
+fun int_if_char(c: Str) = c.codePointAt(0)
 
 val const0 = z_of_int(0)
 //│ const0 = 0

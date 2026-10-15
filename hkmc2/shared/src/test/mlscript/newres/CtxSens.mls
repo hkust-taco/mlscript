@@ -1,0 +1,123 @@
+:.
+
+
+:sr
+module A {
+  val u = 1
+}
+module B {
+  val u = 2
+}
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   module A⁰::A¹ { val u⁰::u¹ ‹flow:u⁰› = 1 }, module B⁰::B¹ { val u²::u³ ‹flow:u¹› = 2 }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+fun foo(x) = x
+
+// :de
+:sr
+foo(A).u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   foo⁰(A⁰)‹app⁰›.u⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+foo(A).u
+//│ = 1
+
+// * We now preserve context sensitivity
+:sr
+foo(B).u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   foo⁰(B⁰)‹app¹›.u²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+
+// :de
+:sr
+fun bar(y) =
+  foo(y)
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun bar⁰::bar¹(y⁰) ‹flow:bar⁰› = foo⁰^bar¹(y⁰)‹app²›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// :de
+// FIXME: Forwarding through a captured function loses the caller activation.
+:fixme
+:sr
+bar(A).u
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.50: 	bar(A).u
+//│ ║        	^^^^^^^^
+//│ ╟── Cannot resolve member 'u' of a value with unknown shape.
+//│ ╟── Parameter 'y' admits values of unknown shape.
+//│ ║  l.40: 	fun bar(y) =
+//│ ║        	        ^
+//│ ╟── 'bar' is exposed by this compilation unit.
+//│ ║  l.40: 	fun bar(y) =
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.41: 	  foo(y)
+//│ ╙──      	^^^^^^^^
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   bar⁰(A⁰)‹app³›.u⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// * As expected, we currently lose context sensitivity when going through the call of a captured function (foo)
+:todo
+:sr
+bar(B).u
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.71: 	bar(B).u
+//│ ║        	^^^^^^^^
+//│ ╟── Cannot resolve member 'u' of a value with unknown shape.
+//│ ╟── Parameter 'y' admits values of unknown shape.
+//│ ║  l.40: 	fun bar(y) =
+//│ ║        	        ^
+//│ ╟── 'bar' is exposed by this compilation unit.
+//│ ║  l.40: 	fun bar(y) =
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.41: 	  foo(y)
+//│ ╙──      	^^^^^^^^
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   bar⁰(B⁰)‹app⁴›.u‹u², u⁰›
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:sr
+class Foo(val a) {
+  val b = A
+}
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun Foo⁰
+//│   class Foo¹::Foo²(val a⁰) { val a¹::a² ‹flow:a⁰› = a⁰^a², val b⁰::b¹ ‹flow:b⁰› = A⁰^Foo²^b¹ }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let x = Foo(A)
+//│ x = Foo(class A { u: 1 })
+
+:sr
+x.a.u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   x⁰.a¹.u⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+:sr
+x.b.u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   x⁰.b⁰.u⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1
+
+:sr
+Foo(B).a.u
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   Foo¹(B⁰)‹app⁵›.a¹.u²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 2
+
+

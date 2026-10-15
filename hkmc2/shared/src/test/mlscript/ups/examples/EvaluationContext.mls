@@ -1,3 +1,4 @@
+:.
 :js
 
 // This is an interesting experiment in evaluation context.
@@ -21,7 +22,7 @@ data class Term with
   let _freeVars = None
   
   // Compute free variables. Retrieve the cache if it exists.
-  fun freeVars = if _freeVars is
+  fun freeVars: Set[Str] = if _freeVars is
     Some(fv) then fv
     None then
       let fv = if this is
@@ -149,7 +150,7 @@ id_x <~> succ
 zero <~> false_
 //│ = true
 
-fun subst(term, name, target) = if term is
+fun subst(term, name, target: Term) = if term is
   Var(name') and
     name === name' then target
     else term
@@ -231,7 +232,7 @@ redex of id_x
 redex of Var("a")
 //│ ═══[RUNTIME ERROR] Error: match error
 
-fun step(term) =
+fun step(term): Term =
   if term is ByValue.Context(ByValue.Redex) as [subterm, remake] then remake(subterm)
 
 :re
@@ -258,7 +259,7 @@ step(App(App(id_a, id_b), id_x)).show
 step(App(id_x, id_y)).show
 //│ = "λy. y"
 
-fun evalByValue(term) =
+fun evalByValue(term: Term): Term =
   while term is
     ByValue.Context(ByValue.Redex) as [subterm, remake] then
       set term = remake(subterm)
@@ -281,16 +282,16 @@ fun evalByValue'(term) =
       set term = remake(subterm)
     else term
 //│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.214: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
+//│ ║  l.215: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
 //│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.217: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+//│ ║  l.218: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.282: 	    else term
+//│ ║  l.283: 	    else term
 //│ ╙──       	         ^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.282: 	    else term
+//│ ║  l.283: 	    else term
 //│ ╙──       	         ^^^^
 
 object ByName with
@@ -317,7 +318,14 @@ print of t.show
 
 import "../../../mlscript-compile/Runtime.mls"
 
-fun stepByStep(system, term, maxSteps) =
+// An evaluation system supplies a redex pattern and a context matcher. Its
+// successful output is a reduced subterm together with a reconstruction function.
+type EvaluationSystem = {
+  Redex: Runtime.Pattern[Term, Term],
+  Context: { unapply: (Runtime.Pattern[Term, Term], Term) -> Runtime.MatchResult[[Term, Term -> Term]] }
+}
+
+fun stepByStep(system: EvaluationSystem, term: Term, maxSteps: Int) =
   let numSteps = 0
   print of "Term: " + term.show
   while numSteps < maxSteps and system.Context.unapply(system.Redex, term) is

@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -6,17 +7,22 @@
 fun Foo(x) = new Foo(x, 0)
 data class Foo(x, y)
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.6: 	fun Foo(x) = new Foo(x, 0)
+//│ ║  l.7: 	fun Foo(x) = new Foo(x, 0)
 //│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.7: 	data class Foo(x, y)
+//│ ║  l.8: 	data class Foo(x, y)
 //│ ╙──     	     ^^^^^^^^^^^^^^^
 
 :fixme
 Foo(123)
-//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.16: 	Foo(123)
-//│ ╙──      	   ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.17: 	Foo(123)
+//│ ║        	^^^^^^^^
+//│ ╟── Class 'Foo' expected 2 arguments, but got 1
+//│ ║  l.7: 	fun Foo(x) = new Foo(x, 0)
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	data class Foo(x, y)
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
 //│ = Foo(123, undefined)
 
 

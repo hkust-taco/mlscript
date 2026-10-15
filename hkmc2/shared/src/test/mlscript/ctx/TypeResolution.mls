@@ -1,3 +1,4 @@
+:.
 
 class Foo with
   val foo: Foo = new Foo
@@ -6,10 +7,8 @@ class Foo with
 new Foo
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = New{typ=class:Foo⁰}:
-//│     cls = Resolved{sym=class:Foo⁰}:
-//│       t = Ref{sym=member:Foo¹} of member:Foo¹
-//│       sym = class:Foo⁰
+//│   res = New:
+//│     cls = MemberRef of member:Foo⁰
 
 // * TODO: dynamic new-expression should also be resolvable for its type
 :rt
@@ -17,9 +16,7 @@ new! Foo
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   res = DynNew:
-//│     cls = Resolved{sym=class:Foo⁰}:
-//│       t = Ref{sym=member:Foo¹} of member:Foo¹
-//│       sym = class:Foo⁰
+//│     cls = MemberRef of member:Foo⁰
 
 val foo: Foo = new Foo
 
@@ -27,21 +24,15 @@ val foo: Foo = new Foo
 foo
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Resolved{sym=term:foo⁰,typ=class:Foo⁰}:
-//│     t = Ref{sym=member:foo¹} of member:foo¹
-//│     sym = term:foo⁰
+//│   res = MemberRef of member:foo⁰
 
 :rt
 foo.foo
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Resolved{sym=term:Foo⁰/foo²,typ=class:Foo⁰}:
-//│     t = Sel{sym=member:foo³}:
-//│       prefix = Resolved{sym=term:foo⁰,typ=class:Foo⁰}:
-//│         t = Ref{sym=member:foo¹} of member:foo¹
-//│         sym = term:foo⁰
-//│       nme = Ident of "foo"
-//│     sym = term:Foo⁰/foo²
+//│   res = NewSel:
+//│     prefix = MemberRef of member:foo⁰
+//│     id = Ident of "foo"
 
 class Foo2[A, B] with
   val foo: Foo2[Int, Str] = new Foo2
@@ -50,10 +41,8 @@ class Foo2[A, B] with
 new Foo2
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = New{typ=class:Foo2⁰}:
-//│     cls = Resolved{sym=class:Foo2⁰}:
-//│       t = Ref{sym=member:Foo2¹} of member:Foo2¹
-//│       sym = class:Foo2⁰
+//│   res = New:
+//│     cls = MemberRef of member:Foo2⁰
 
 // * TODO: dynamic new-expression should also be resolvable for its type
 :rt
@@ -61,9 +50,7 @@ new! Foo2
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
 //│   res = DynNew:
-//│     cls = Resolved{sym=class:Foo2⁰}:
-//│       t = Ref{sym=member:Foo2¹} of member:Foo2¹
-//│       sym = class:Foo2⁰
+//│     cls = MemberRef of member:Foo2⁰
 
 val foo: Foo2[Str, Int] = new Foo2
 
@@ -71,21 +58,15 @@ val foo: Foo2[Str, Int] = new Foo2
 foo
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Resolved{sym=term:foo⁴,typ=class:Foo2⁰[class:Str⁰, class:Int⁰]}:
-//│     t = Ref{sym=member:foo⁵} of member:foo⁵
-//│     sym = term:foo⁴
+//│   res = MemberRef of member:foo¹
 
 :rt
 foo.foo
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Resolved{sym=term:Foo2⁰/foo⁶,typ=class:Foo2⁰[class:Int⁰, class:Str⁰]}:
-//│     t = Sel{sym=member:foo⁷}:
-//│       prefix = Resolved{sym=term:foo⁴,typ=class:Foo2⁰[class:Str⁰, class:Int⁰]}:
-//│         t = Ref{sym=member:foo⁵} of member:foo⁵
-//│         sym = term:foo⁴
-//│       nme = Ident of "foo"
-//│     sym = term:Foo2⁰/foo⁶
+//│   res = NewSel:
+//│     prefix = MemberRef of member:foo¹
+//│     id = Ident of "foo"
 
 :rt
 fun f(x: Foo) = x
@@ -101,11 +82,11 @@ fun f(x: Foo) = x
 //│           params = Ls of
 //│             Param:
 //│               sym = x⁰
-//│               sign = S of Resolved{sym=class:Foo⁰}:
-//│                 t = Ref{sym=member:Foo¹} of member:Foo¹
-//│                 sym = class:Foo⁰
+//│               sign = S of Capture:
+//│                 base = MemberRef of member:Foo⁰
+//│                 thru = term:f¹
 //│               modulefulness = Modulefulness of N
-//│       body = S of Ref{sym=x⁰,typ=class:Foo⁰} of x⁰
+//│       body = S of SimpleRef of x⁰
 //│       modulefulness = Modulefulness of N
 //│   res = Lit of UnitLit of false
 
@@ -116,17 +97,13 @@ object O
 M
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│     t = Ref{sym=member:M¹} of member:M¹
-//│     sym = module:M⁰
+//│   res = MemberRef of member:M⁰
 
 :rt
 O
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Resolved{sym=object:O⁰,typ=object:O⁰}:
-//│     t = Ref{sym=member:O¹} of member:O¹
-//│     sym = object:O⁰
+//│   res = MemberRef of member:O⁰
 
 val m: module M = M
 val o: O = O
@@ -135,17 +112,13 @@ val o: O = O
 m
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Resolved{sym=term:m⁰,typ=module:M⁰}:
-//│     t = Ref{sym=member:m¹} of member:m¹
-//│     sym = term:m⁰
+//│   res = MemberRef of member:m⁰
 
 :rt
 o
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk:
-//│   res = Resolved{sym=term:o⁰,typ=object:O⁰}:
-//│     t = Ref{sym=member:o¹} of member:o¹
-//│     sym = term:o⁰
+//│   res = MemberRef of member:o⁰
 
 :rt
 fun f(module m: M): module M = m
@@ -160,16 +133,17 @@ fun f(module m: M): module M = m
 //│         ParamList:
 //│           params = Ls of
 //│             Param:
-//│               sym = m²
-//│               sign = S of Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│                 t = Ref{sym=member:M¹} of member:M¹
-//│                 sym = module:M⁰
-//│               modulefulness = Modulefulness of S of module:M⁰
-//│       sign = S of Resolved{sym=module:M⁰,typ=module:M⁰}:
-//│         t = Ref{sym=member:M¹} of member:M¹
-//│         sym = module:M⁰
-//│       body = S of Ref{sym=m²,typ=module:M⁰} of m²
-//│       modulefulness = Modulefulness of S of module:M⁰
+//│               sym = m¹
+//│               sign = S of Capture:
+//│                 base = MemberRef of member:M⁰
+//│                 thru = term:f³
+//│               modulefulness = Modulefulness of N
+//│       sign = S of Capture:
+//│         base = MemberRef of member:M⁰
+//│         thru = term:f³
+//│       body = S of SimpleRef of m¹
+//│       flags = (result annotation)
+//│       modulefulness = Modulefulness of N
 //│   res = Lit of UnitLit of false
 
 :rt
@@ -185,12 +159,12 @@ fun f(o: O) = o
 //│         ParamList:
 //│           params = Ls of
 //│             Param:
-//│               sym = o²
-//│               sign = S of Resolved{sym=object:O⁰,typ=object:O⁰}:
-//│                 t = Ref{sym=member:O¹} of member:O¹
-//│                 sym = object:O⁰
+//│               sym = o¹
+//│               sign = S of Capture:
+//│                 base = MemberRef of member:O⁰
+//│                 thru = term:f⁵
 //│               modulefulness = Modulefulness of N
-//│       body = S of Ref{sym=o²,typ=object:O⁰} of o²
+//│       body = S of SimpleRef of o¹
 //│       modulefulness = Modulefulness of N
 //│   res = Lit of UnitLit of false
 
@@ -204,22 +178,20 @@ class Foo with
 //│   stats = Ls of
 //│     Plain:
 //│       kind = Cls
-//│       sym = class:Foo²
-//│       bsym = member:Foo³
+//│       sym = class:Foo¹
+//│       bsym = member:Foo²
 //│       body = ObjBody of Blk:
 //│         stats = Ls of
 //│           TermDefinition:
 //│             k = ImmutVal
-//│             sym = member:foo⁸
-//│             tsym = term:Foo²/foo⁹
+//│             sym = member:foo²
+//│             tsym = term:Foo¹/foo³
 //│             body = S of Lit of IntLit of 42
 //│             flags = (method)
 //│             modulefulness = Modulefulness of N
-//│         res = Resolved{sym=term:Foo²/foo⁹}:
-//│           t = SynthSel{sym=member:foo⁸}:
-//│             prefix = Ref{sym=class:Foo²,typ=class:Foo²} of class:Foo²
-//│             nme = Ident of "foo"
-//│           sym = term:Foo²/foo⁹
+//│         res = NewSel:
+//│           prefix = SelfRef of class:Foo¹
+//│           id = Ident of "foo"
 //│   res = Lit of UnitLit of false
 
 // The explicit `this` (class:Foo) in the Sel(class:Foo, "foo") should be resolved correctly.
@@ -232,20 +204,18 @@ class Foo with
 //│   stats = Ls of
 //│     Plain:
 //│       kind = Cls
-//│       sym = class:Foo⁴
-//│       bsym = member:Foo⁵
+//│       sym = class:Foo³
+//│       bsym = member:Foo⁴
 //│       body = ObjBody of Blk:
 //│         stats = Ls of
 //│           TermDefinition:
 //│             k = ImmutVal
-//│             sym = member:foo¹⁰
-//│             tsym = term:Foo⁴/foo¹¹
+//│             sym = member:foo⁴
+//│             tsym = term:Foo³/foo⁵
 //│             body = S of Lit of IntLit of 42
 //│             flags = (method)
 //│             modulefulness = Modulefulness of N
-//│         res = Resolved{sym=term:Foo⁴/foo¹¹}:
-//│           t = Sel{sym=member:foo¹⁰}:
-//│             prefix = Ref{sym=class:Foo⁴,typ=class:Foo⁴} of class:Foo⁴
-//│             nme = Ident of "foo"
-//│           sym = term:Foo⁴/foo¹¹
+//│         res = NewSel:
+//│           prefix = SelfRef of class:Foo³
+//│           id = Ident of "foo"
 //│   res = Lit of UnitLit of false

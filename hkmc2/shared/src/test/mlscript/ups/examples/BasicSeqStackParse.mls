@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -20,7 +21,7 @@ data class Expr with
     Op(lhs: Expr, op: Str, rhs: Expr)
 
 
-fun go(stack, input) = if stack is
+fun go(stack: Array[Any], input: Array[Str]) = if stack is
   [..rest, Expr as e1, "+", Expr as e2] then
     go([..rest, Op(e1, "+", e2)], input)
   [..rest, Ident as id] then
@@ -38,7 +39,7 @@ fun go(stack, input) = if stack is
       Error: stack
 
 let Space = new RegExp of "(\\s+)"
-fun parse(input) =
+fun parse(input: Str) =
   let input = input.split(Space)
     \filtering of (_ !== "")
     \filtering of (_ \every of (_ !== " "))

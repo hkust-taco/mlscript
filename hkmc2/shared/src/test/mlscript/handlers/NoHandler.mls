@@ -1,3 +1,4 @@
+:.
 :js
 
 abstract class Effect with
@@ -8,10 +9,10 @@ handle h = Effect with
   fun perform(arg)(k) = k(arg)
 h.perform("k")
 //│ ╔══[COMPILATION ERROR] Effect handlers are not enabled
-//│ ║  l.7: 	handle h = Effect with
+//│ ║  l.8: 	handle h = Effect with
 //│ ║       	           ^^^^^^^^^^^
-//│ ║  l.8: 	  fun perform(arg)(k) = k(arg)
+//│ ║  l.9: 	  fun perform(arg)(k) = k(arg)
 //│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.9: 	h.perform("k")
-//│ ╙──     	^^^^^^^^^^^^^^
+//│ ║  l.10: 	h.perform("k")
+//│ ╙──      	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

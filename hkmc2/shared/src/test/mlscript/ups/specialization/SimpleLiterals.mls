@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations { compile }
@@ -52,6 +53,6 @@ pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 :todo
 let res = "1" is @compile ManyZero
 //│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
-//│ ║  l.49: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+//│ ║  l.50: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
 //│ res = false

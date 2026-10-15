@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -200,7 +201,7 @@ fun labelContinueFiltersPath(limit) =
 //│         end
 //│       else
 //│         set tmp = %⁰(i, 2);
-//│         set scrut1 = Predef⁰.equals⁰(tmp, 0);
+//│         set scrut1 = Predef⁰.equals⁰((tmp as! Unknown), 0);
 //│         match scrut1
 //│           true =>
 //│             set tmp1 = +⁰(i, 1);

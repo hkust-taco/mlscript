@@ -30,11 +30,11 @@ class FirstClassFunctionTransformer
     val args = params.params.map(_.sym.asSimpleRef.asArg) :::
       params.restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef))
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, args ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false)))(N, annotations = Nil)
+      Return(Call(p, args ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, N)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
-      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function))(false)),
+      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function), N)(false)),
       callDef :: Nil, Nil, Nil, Assign.discard(
-        Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun, rsc = false),
+        Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun, rsc = false, N),
         End()), End(), None, None)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
@@ -69,7 +69,7 @@ class FirstClassFunctionTransformer
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
     // TODO: Instantiate the wrapper as a resource iff `p` is one, once the resource-ness of other function values is
     //       resolved.
-    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(cls, Nil :: Nil)(InstantiateMetadata.empty, mut = false, rsc), k(tmp.asSimpleRef))))
+    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(cls, Nil :: Nil)(InstantiateMetadata.empty, mut = false, rsc, p.toLoc), k(tmp.asSimpleRef.withLoc(p.toLoc)))))
   
   override def applyPath(p: Path)(k: Path => Block): Block = p match
     case ref @ Value.MemberRef(l, disamb) => disamb match
@@ -87,7 +87,7 @@ class FirstClassFunctionTransformer
               ErrorReport(msg"Cannot get ${s.nme}'s parameter list."
                 -> sel.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
-            PlainParamList(Nil)
+            PlainParamList(Nil)(N)
           etaExpandPath(sel, params, s.irFunDefn.exists(_.rsc))(k)
       case Some(_) => k(p)
       case _ =>
@@ -101,7 +101,7 @@ class FirstClassFunctionTransformer
       def call(f: Path) =
         if (f is fun) && (argss is argss2)
         then c
-        else Call(f, argss2.ne_!)(c.metadata, c.rsc)
+        else Call(f, argss2.ne_!)(c.metadata, c.rsc, c.toLoc)
       fun match
         case ref @ Value.SimpleRef(sym) => sym match
           case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))

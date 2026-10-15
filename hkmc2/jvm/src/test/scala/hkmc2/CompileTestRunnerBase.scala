@@ -1,7 +1,6 @@
 package hkmc2
 
 import org.scalatest.{funsuite, ParallelTestExecution}
-import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 
 import hkmc2.utils.*, shorthands.*
@@ -18,7 +17,7 @@ abstract class CompileTestRunnerBase(
 ) extends TimeOutTests, ParallelTestExecution:
   
   
-  val timeLimit = Span(25, Seconds)
+  val timeLimit = TimeOutTests.TimeLimit
   
   
   given CompilerCtx = cctx
@@ -31,12 +30,11 @@ abstract class CompileTestRunnerBase(
   
   val mainTestDir: os.Path = TestFolders.mainTestDir(workingDir)
   
-  val validExt = Set("mls")
   
   for dir <- compileDirs do {
     val allFiles = os.walk(dir)
       .filter(_.toIO.isFile)
-      .filter(_.ext in validExt)
+      .filter(TestFolders.isTestSource)
     
     lazy val compileTestFiles = allFiles.filter: file =>
       file.segments.contains("mlscript-compile")

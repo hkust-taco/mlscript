@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -36,7 +37,7 @@ fun f() =
 //│         if (runtime.curEffect === null) {
 //│           pc = 6;
 //│         } else {
-//│           return runtime.unwind(f, 6, "Fallthrough.mls:11:19", null, null, 1, 0, 1, tmp)
+//│           return runtime.unwind(f, 6, "Fallthrough.mls:12:19", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 6:
 //│         runtime.resumeValue;
@@ -46,7 +47,7 @@ fun f() =
 //│         if (runtime.curEffect === null) {
 //│           pc = 4;
 //│         } else {
-//│           return runtime.unwind(f, 4, "Fallthrough.mls:12:11", null, null, 1, 0, 1, tmp)
+//│           return runtime.unwind(f, 4, "Fallthrough.mls:13:11", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 4:
 //│         runtime.resumeValue;
@@ -54,7 +55,7 @@ fun f() =
 //│         if (runtime.curEffect === null) {
 //│           pc = 3;
 //│         } else {
-//│           return runtime.unwind(f, 3, "Fallthrough.mls:13:11", null, null, 1, 0, 1, tmp)
+//│           return runtime.unwind(f, 3, "Fallthrough.mls:14:11", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 3:
 //│         runtime.resumeValue;
@@ -62,7 +63,7 @@ fun f() =
 //│         if (runtime.curEffect === null) {
 //│           pc = 2;
 //│         } else {
-//│           return runtime.unwind(f, 2, "Fallthrough.mls:14:11", null, null, 1, 0, 1, tmp)
+//│           return runtime.unwind(f, 2, "Fallthrough.mls:15:11", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 2:
 //│         runtime.resumeValue;
@@ -70,7 +71,7 @@ fun f() =
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
 //│         } else {
-//│           return runtime.unwind(f, 1, "Fallthrough.mls:15:11", null, null, 1, 0, 1, tmp)
+//│           return runtime.unwind(f, 1, "Fallthrough.mls:16:11", null, null, 1, 0, 1, tmp)
 //│         }
 //│       case 1:
 //│         return runtime.resumeValue;
@@ -81,7 +82,7 @@ fun f() =
 //│             pc = 7;
 //│             continue main
 //│           }
-//│           return runtime.unwind(f, 7, "Fallthrough.mls:11:13", null, null, 1, 0, 1, tmp);
+//│           return runtime.unwind(f, 7, "Fallthrough.mls:12:13", null, null, 1, 0, 1, tmp);
 //│         }
 //│         pc = 5;
 //│         continue main;

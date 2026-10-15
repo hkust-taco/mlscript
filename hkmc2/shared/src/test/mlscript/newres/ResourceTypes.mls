@@ -1,0 +1,182 @@
+#lang(0.3.x, strictResolution: true)
+
+:global
+:sir
+:siret
+
+// Resource modifiers affect erasure while preserving the nominal interface used by resolution.
+class Cell(val value: Int)
+type ResourceCell = rsc Cell
+type MixedCell = ResourceCell | Cell
+fun read(cell: rsc Cell): Int = cell.value
+fun maybeRead(cell: rsc? Cell): Int = cell.value
+fun throughAlias(cell: ResourceCell): Int = read(cell)
+fun throughUnion(cell: rsc? MixedCell): Int = maybeRead(cell)
+fun allocate(): ResourceCell = new rsc Cell(7)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define read⁰ as fun read¹(cell: rsc Cell⁰): Int⁰ {
+//│   return cell.value⁰
+//│ };
+//│ define maybeRead⁰ as fun maybeRead¹(cell: rsc? Cell⁰): Int⁰ {
+//│   return cell.value⁰
+//│ };
+//│ define throughAlias⁰ as fun throughAlias¹(cell: rsc Cell⁰): Int⁰ {
+//│   return read¹(cell)
+//│ };
+//│ define throughUnion⁰ as fun throughUnion¹(cell: rsc? Cell⁰): Int⁰ {
+//│   return maybeRead¹(cell)
+//│ };
+//│ define allocate⁰ as fun allocate¹(): rsc Cell⁰ {
+//│   return new rsc Cell⁰(7)
+//│ };
+//│ define Cell¹ as class Cell⁰ {
+//│   val value¹: Int⁰;
+//│   constructor Cell²(value: Int⁰) { define value¹ as val value⁰: Int⁰ = value; end }
+//│ };
+//│ end
+
+// An outer resource modifier overrides the non-resource branch of an alias.
+fun allResources(cell: rsc MixedCell): Int = read(cell)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define allResources⁰ as fun allResources¹(cell: rsc Cell⁰): Int⁰ { return read¹(cell) }; end
+
+:ge
+fun rejectResource(cell: rsc Cell): Cell = cell
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'rsc Cell' at an unrelated type 'Cell'
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rejectResource⁰ as fun rejectResource¹(cell: rsc Cell⁰): Cell⁰ { return cell }; end
+
+// Shared standalone signatures must use the implementation's lexical boundary,
+// even when the declaration and implementation appear in either order.
+:js
+fun first: Int -> Int -> Int
+fun first(x)(y) = x + y
+fun second(x)(y) = x + y
+fun second: Int -> Int -> Int
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define first⁰ as fun first¹(x: ?)(y: ?): Int⁰ {
+//│   return (+⁰(x, y) as! Int⁰)
+//│ };
+//│ define second⁰ as fun second¹(x: ?)(y: ?): Int⁰ { return (+⁰(x, y) as! Int⁰) };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:js
+:expect 15
+first(3)(4) + second(3)(5)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰, tmp1: Int⁰; set tmp = first¹(3)(4); set tmp1 = second¹(3)(5); return +⁰(tmp, tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 15
+
+// Modifiers on a returned function value are kept after consuming the definition's arrows.
+fun makeResource: Int -> rsc (Int -> Int)
+fun makeResource(x) = rsc (y => x + y)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define makeResource⁰ as fun makeResource¹(x: ?): rsc Function⁰ {
+//│   let lambda;
+//│   @private @rsc
+//│   define lambda as fun lambda⁰(y: ?): ? { return +⁰(x, y) };
+//│   return lambda⁰
+//│ };
+//│ end
+
+:ge
+fun badSignature: rsc (Int -> Int)
+fun badSignature(x) = x
+//│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
+//│ ║  l.85: 	fun badSignature: rsc (Int -> Int)
+//│ ╙──      	                       ^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define badSignature⁰ as fun badSignature¹(x: ?): Int⁰ { return (x as! Int⁰) }; end
+
+// New-resolution annotations retain the same rejection and warning policies as legacy ones.
+:ge
+fun primitive(value: rsc Int32): Int32 = value
+//│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
+//│ ║  l.95: 	fun primitive(value: rsc Int32): Int32 = value
+//│ ╙──      	                         ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define primitive⁰ as fun primitive¹(value: Int32): Int32 { return value }; end
+
+:w
+fun maybePrimitive(value: rsc? Int32): Int32 = value
+//│ ╔══[WARNING] Primitive type 'Int32' is never a resource, so 'rsc?' has no effect.
+//│ ║  l.103: 	fun maybePrimitive(value: rsc? Int32): Int32 = value
+//│ ╙──       	                               ^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define maybePrimitive⁰ as fun maybePrimitive¹(value: Int32): Int32 { return value }; end
+
+:ge
+fun nested(value: rsc rsc? Cell) = value
+//│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
+//│ ║  l.111: 	fun nested(value: rsc rsc? Cell) = value
+//│ ╙──       	                           ^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define nested⁰ as fun nested¹(value: rsc Cell⁰): ? { return value }; end
+
+:ge
+fun intersection(value: Cell & rsc Cell) = value
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
+//│ ║  l.119: 	fun intersection(value: Cell & rsc Cell) = value
+//│ ╙──       	                                   ^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define intersection⁰ as fun intersection¹(value: Unknown): ? { return value }; end
+
+:ge
+fun functionParameter(value: (rsc Cell) -> Int) = value
+//│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
+//│ ║  l.127: 	fun functionParameter(value: (rsc Cell) -> Int) = value
+//│ ╙──       	                                  ^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define functionParameter⁰ as fun functionParameter¹(value: Function⁰): ? { return value }; end
+
+:ge
+fun unitResource(value: rsc ()) = value
+//│ ╔══[COMPILATION ERROR] Resource modifiers on this type are not supported yet.
+//│ ║  l.135: 	fun unitResource(value: rsc ()) = value
+//│ ╙──       	                            ^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define unitResource⁰ as fun unitResource¹(value: Unit⁰): ? { return value }; end
+
+// Typed rest parameters gained syntax upstream; their resource modifiers must reach erasure too.
+fun rest(...values: rsc? Array[Cell]) = values
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define rest⁰ as fun rest¹(...values: rsc? Array⁰): ? { return values }; end
+
+// An unmodified type parameter does not promise that its argument is a non-resource.
+:js
+:expect 14
+class GenericCell(val value: Int)
+fun identity[A](value: A): A = value
+fun resourceIdentity[A](value: rsc A): rsc A = value
+fun readGeneric(cell: rsc GenericCell): Int = cell.value
+readGeneric(identity[GenericCell](new rsc GenericCell(7))) +
+  readGeneric(resourceIdentity[GenericCell](new rsc GenericCell(7)))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: rsc GenericCell⁰, tmp1: rsc? Unknown, tmp2: Int⁰, tmp3: rsc GenericCell⁰, tmp4: rsc Unknown, tmp5: Int⁰;
+//│ define identity⁰ as fun identity¹(value: rsc? Unknown): rsc? Unknown {
+//│   return value
+//│ };
+//│ define resourceIdentity⁰ as fun resourceIdentity¹(value: rsc Unknown): rsc Unknown {
+//│   return value
+//│ };
+//│ define readGeneric⁰ as fun readGeneric¹(cell: rsc GenericCell⁰): Int⁰ {
+//│   return cell.value²
+//│ };
+//│ define GenericCell¹ as class GenericCell⁰ {
+//│   val value³: Int⁰;
+//│   constructor GenericCell²(value: Int⁰) {
+//│     define value³ as val value²: Int⁰ = value;
+//│     end
+//│   }
+//│ };
+//│ set tmp = new rsc GenericCell⁰(7);
+//│ set tmp1 = identity¹(tmp);
+//│ set tmp2 = readGeneric¹((tmp1 as! rsc GenericCell⁰));
+//│ set tmp3 = new rsc GenericCell⁰(7);
+//│ set tmp4 = resourceIdentity¹(tmp3);
+//│ set tmp5 = readGeneric¹((tmp4 as! rsc GenericCell⁰));
+//│ return +⁰(tmp2, tmp5)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 14
