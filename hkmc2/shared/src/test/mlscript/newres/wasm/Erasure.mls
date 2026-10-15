@@ -1,12 +1,16 @@
 :.
+open wasm { i32 }
+open i32 { const }
+//│ Wasm result:
+//│ = {}
 
 
 
 
 // Erasure must prepare an unboxed call target before lowering the caller's body.
 :expect 42
-fun caller(): Number = later(wasm.i32.const(41))
-fun later(value: Number): Number = wasm.i32.add(value, wasm.i32.const(1))
+fun caller(): Number = later(const(41))
+fun later(value: Number): Number = wasm.i32.add(value, const(1))
 type Number = LaterNumber
 type LaterNumber = Int32
 caller()
@@ -19,7 +23,7 @@ caller()
 class Box(val value: Number) with
   fun get(): Number = value
 type Number = Int32
-Box(wasm.i32.const(42)).get()
+Box(const(42)).get()
 //│ Wasm result:
 //│ = 42
 
@@ -31,7 +35,7 @@ private class Slot(val value)
 private fun roundtrip(value) =
   let saved = value
   Slot(saved).value
-let input = wasm.i32.const(42)
+let input = const(42)
 roundtrip(input)
 //│ Wasm result:
 //│ = 42
@@ -81,8 +85,8 @@ roundtrip(input)
 :expect 42
 private fun caller() = later(true)
 private fun later(flag) =
-  if flag do return wasm.i32.const(42)
-  wasm.i32.const(99)
+  if flag do return const(42)
+  const(99)
 caller()
 //│ Wasm result:
 //│ = 42
@@ -93,8 +97,8 @@ caller()
 :expect 42
 private fun repeat(again, value) =
   if again then repeat(false, value) else value
-let first = repeat(true, wasm.i32.const(40))
-let second = repeat(false, wasm.i32.const(2))
+let first = repeat(true, const(40))
+let second = repeat(false, const(2))
 wasm.i32.add(first, second)
 //│ Wasm result:
 //│ = 42
@@ -103,8 +107,8 @@ wasm.i32.add(first, second)
 // Assignments inside nested functions contribute to the storage slot.
 :noInline
 :expect 42
-let value = wasm.i32.const(1)
-private fun update() = set value = wasm.i32.const(42)
+let value = const(1)
+private fun update() = set value = const(42)
 update()
 value
 //│ Wasm result:
@@ -116,7 +120,7 @@ value
 :expect 42
 private class Box with
   constructor(val value)
-new Box(wasm.i32.const(42)).value
+new Box(const(42)).value
 //│ Wasm result:
 //│ = 42
 
@@ -128,7 +132,7 @@ private fun choose(flag) = if flag then Left() else Right()
 private class Left() extends Parent()
 private class Right() extends Parent()
 private class Parent() with
-  val value = wasm.i32.const(42)
+  val value = const(42)
 choose(true).value
 //│ Wasm result:
 //│ = 42
@@ -139,7 +143,7 @@ choose(true).value
 :expect 42
 fun identity: Int32 -> Int32
 fun identity(value) = value
-identity(wasm.i32.const(42))
+identity(const(42))
 //│ Wasm result:
 //│ = 42
 
@@ -148,7 +152,7 @@ identity(wasm.i32.const(42))
 :noInline
 :expect 42
 private class Getter() with
-  fun value = wasm.i32.const(42)
+  fun value = const(42)
 Getter().value
 //│ Wasm result:
 //│ = 42
@@ -156,14 +160,14 @@ Getter().value
 
 // A nonempty join must not ignore an incompatible concrete alternative.
 :ge
-let value = wasm.i32.const(1)
+let value = const(1)
 set value = wasm.i64.const(2)
 value
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
-//│ ║  l.160: 	set value = wasm.i64.const(2)
+//│ ║  l.164: 	set value = wasm.i64.const(2)
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
-//│ ║  l.159: 	let value = wasm.i32.const(1)
+//│ ║  l.163: 	let value = const(1)
 //│ ╙──       	    ^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i64` to `(ref null any)` in a different type hierarchy
@@ -172,11 +176,11 @@ value
 // External callers already contribute Unknown; it conflicts with an unboxed input.
 :ge
 fun exported(value) = value
-exported(wasm.i32.const(42))
+exported(const(42))
 //│ ═══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.175: 	exported(wasm.i32.const(42))
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^^
+//│ ║  l.179: 	exported(const(42))
+//│ ╙──       	         ^^^^^^^^^
 //│ Wasm result:
 //│ = 42
 
@@ -184,7 +188,7 @@ exported(wasm.i32.const(42))
 // Mutable fields admit unknown writes even when the only local initializer is numeric.
 :ge
 private class Mutable(mut val value)
-Mutable(wasm.i32.const(42)).value
+Mutable(const(42)).value
 //│ ═══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Unknown`
@@ -194,8 +198,8 @@ Mutable(wasm.i32.const(42)).value
 :noInline
 :expect 42
 private class Mutable(mut val value: Int32)
-let cell = Mutable(wasm.i32.const(1))
-set cell.value = wasm.i32.const(42)
+let cell = Mutable(const(1))
+set cell.value = const(42)
 cell.value
 //│ Wasm result:
 //│ = 42
@@ -203,11 +207,11 @@ cell.value
 
 // Explicit Any keeps its declared representation and rejects an unboxed initializer.
 :ge
-val annotated: Any = wasm.i32.const(42)
+val annotated: Any = const(42)
 annotated
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.206: 	val annotated: Any = wasm.i32.const(42)
-//│ ╙──       	                     ^^^^^^^^^^^^^^^^^^
+//│ ║  l.210: 	val annotated: Any = const(42)
+//│ ╙──       	                     ^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 
 
@@ -218,8 +222,8 @@ annotated
 private fun choose(flag, value) =
   if flag do return value
   undefined
-let unused = choose(false, wasm.i32.const(1))
-choose(true, wasm.i32.const(42))
+let unused = choose(false, const(1))
+choose(true, const(42))
 //│ Wasm result:
 //│ = 42
 
@@ -252,7 +256,7 @@ private fun discard() =
   fun i64(value: Int64) = value
   fun f32(value: Float32) = value
   fun f64(value: Float64) = value
-  val a = i32(wasm.i32.const(1))
+  val a = i32(const(1))
   val b = i64(wasm.i64.const(2))
   val c = f32(wasm.f32.const(3.0))
   val d = f64(wasm.f64.const(4.0))
@@ -292,13 +296,13 @@ discard()
 // Returning undefined in an unboxed representation must still execute the call's effects.
 :noInline
 :expect 42
-let calls = wasm.i32.const(0)
+let calls = const(0)
 private fun absent(): Int64 =
-  set calls = wasm.i32.add(calls, wasm.i32.const(1))
+  set calls = wasm.i32.add(calls, const(1))
   undefined
 private fun consume(value: Int64): Int32 = calls
 let count = consume(absent())
-wasm.i32.add(count, wasm.i32.const(41))
+wasm.i32.add(count, const(41))
 //│ Wasm result:
 //│ = 42
 
@@ -307,7 +311,7 @@ wasm.i32.add(count, wasm.i32.const(41))
 :noInline
 :expect 42
 private fun choose(flag) =
-  let value = if flag then wasm.i32.const(42) else undefined
+  let value = if flag then const(42) else undefined
   value
 let unused = choose(false)
 choose(true)
@@ -321,7 +325,7 @@ choose(true)
 private fun loop(flag) =
   while flag
     then set flag = false
-    else return wasm.i32.const(42)
+    else return const(42)
 loop(true)
 //│ Wasm result:
 //│ = 42
@@ -331,7 +335,7 @@ loop(true)
 :noInline
 :expect 42
 private fun early() =
-  if true then return wasm.i32.const(42)
+  if true then return const(42)
   "unreachable"
 early()
 //│ Wasm result:
