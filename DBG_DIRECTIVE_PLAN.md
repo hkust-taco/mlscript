@@ -18,7 +18,7 @@
   - `#dbg(elaboration: true)`.
 - Support a selectable debug destination:
   - `StdIO`, which is the default and may be omitted;
-  - `File("out.mls")`, resolved relative to the active configuration's base directory.
+  - `File("out.mls")`, resolved relative to the active configuration's base directory unless absolute, as for imports.
 - Support the annotation form on individual definitions, for example
   `@dbg('elaboration) fun foo() = ...`, without requiring file-wide tracing.
   Parsing and optimization traces require `#dbg`; requesting them through `@dbg` warns.

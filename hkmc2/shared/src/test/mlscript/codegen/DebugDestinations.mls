@@ -106,16 +106,12 @@ fs.rmSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsCommand.log",
 val absoluteDebugFile = "/tmp/mlscript-DebugDestinationsAbsolute.log"
 fs.rmSync(absoluteDebugFile, {force: true})
 
-:fixme
 @dbg('lowering, showUids: false, out: File("/tmp/mlscript-DebugDestinationsAbsolute.log"))
 fun absolute_file() = 1801
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: /tmp/mlscript-DebugDestinationsAbsolute.log is not a relative path
 
-:fixme
 :expect true
 fs.existsSync(absoluteDebugFile) and fs.readFileSync(absoluteDebugFile, "utf8").includes("Lowering.term 1801\n")
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :silent
 fs.rmSync(absoluteDebugFile, {force: true})

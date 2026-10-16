@@ -16,7 +16,7 @@ final class DebugOutputHandler(fs: io.FileSystem, baseDir: io.Path, stdIO: Str =
   def emit(out: Config.DebugOutput, line: Str): Unit = out match
     case Config.DebugOutput.StdIO => stdIO(line)
     case Config.DebugOutput.File(path) =>
-      val file = baseDir / io.RelPath(path)
+      val file = io.Path.resolve(baseDir, path)
       if writtenFiles(file) then fs.append(file, line + '\n')
       else
         fs.write(file, line + '\n')
