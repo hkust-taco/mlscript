@@ -13,10 +13,13 @@ enum EffectSummary:
 
 object EffectAnalysis:
   
-  def summarize(effectVar: StratVar): EffectSummary =
-    if effectVar.lowerBounds.forall(_.isInstanceOf[StratVar])
-    then EffectSummary.Pure
-    else EffectSummary.UnsafeEta
+  def summarize(effectVar: StratVar | NoProd): EffectSummary =
+    effectVar match
+    case NoProd => EffectSummary.Pure
+    case effectVar: StratVar =>
+      if effectVar.lowerBounds.forall(_.isInstanceOf[StratVar])
+      then EffectSummary.Pure
+      else EffectSummary.UnsafeEta
   
   def logResults(solver: FlowConstraintSolver)(using tl: TraceLogger): Unit =
     given fState: FlowAnalysis.State = solver.fState
