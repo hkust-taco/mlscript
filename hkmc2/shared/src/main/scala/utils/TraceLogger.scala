@@ -11,8 +11,9 @@ def tl(using TL): TL = summon
 abstract class TraceLogger(using val debugPrinter: DebugPrinter):
   def doTrace: Bool = true
   /** Tracing requested independently of the [[Config.Debug]] settings, such as by diff-test
-    * commands, which trace a whole phase. Definition-local `@dbg` annotations can neither disable
-    * nor redirect it: their overrides only decide whether the phase is traced *in addition* to it.
+    * commands, which trace a whole phase. Definition-local `@dbg` annotations cannot disable it.
+    * If the phase is also enabled in [[Config.Debug]], its selected destination is used;
+    * tracing enabled only by this flag goes to `StdIO`.
     * Implementations should include it in [[doTrace]], which also governs code outside annotations. */
   protected def doForceTrace: Bool = false
   protected def defaultDebugOutput: Config.DebugOutput = Config.DebugOutput.StdIO
