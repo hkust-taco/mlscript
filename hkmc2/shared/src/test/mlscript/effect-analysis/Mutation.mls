@@ -296,9 +296,7 @@ fun mutate_local_loop(again) =
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
-// * Regressions
-
-// * A getter from an earlier block is unsafe.
+// * [todo:harry-0] A getter from an earlier block is unsafe.
 let state = 0
 module M with
   fun get = set state = 42

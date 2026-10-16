@@ -94,7 +94,8 @@ object FlowAnalysis:
     if logEffects then tl.scoped(TraceScope.Effects):
       if tl.doTrace then EffectAnalysis.logResults(solver)
     solver
-
+  
+  // * FIXME: not all symbols have irDefn; add and look up an irHeader instead
   private[flowAnalysis] def isPureCall(call: Call, whichArgList: Int): Bool = call.fun match
     case Value.SimpleRef(b: BuiltinSymbol) => whichArgList == 0 && b.isPure
     case p => p.targetSymbol.exists:
@@ -978,6 +979,7 @@ class FlowConstraintsCollector(
       cc.constrain(processResult(r), UnknownCons)
 
     def markUnsafeEta()(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): Unit =
+      // TODO: don't register such constraints unless a flag is on
       currentEffect.foreach(e => cc.constrain(UnsafeEta, e))
 
     def processBlock(b: Block)(using cc: ConstraintsCollector, blkRes: ConsStrat, currentEffect: Opt[StratVar]): Unit =
@@ -1064,7 +1066,8 @@ class FlowConstraintsCollector(
       def handleCallLike(callId: CallId, fStrat: ProdStrat, args: List[Arg]): ProdStrat =
         val argsStrat = args.map(a => processResult(a.value))
         if args.exists(_.spread.isDefined) then
-          // TODO: preserve callee-effect precision for spread calls without modeling their argument flow.
+          // TODO: preserve callee-effect precision for spread calls
+          // * Needs to address [todo:effectful-spreads]
           markUnsafeEta()
           cc.constrain(fStrat, UnknownCons)
           argsStrat.foreach(arg => cc.constrain(arg, UnknownCons))
@@ -1138,7 +1141,8 @@ class FlowConstraintsCollector(
           UnknownProd
         case p: Path =>
           p match
-          case refSite@FunRef(f, selectedFrom) =>
+          case refSite @ FunRef(f, selectedFrom) =>
+            // ? [todo:harry-0]
             // ? It's a special case for module getters but I'm not sure if
             // ? this is good enough. It just conservatively marks it unsafe.
             if f.irFunDefn.fold(!f.isPure)(_.params.isEmpty) then markUnsafeEta()
@@ -1153,7 +1157,7 @@ class FlowConstraintsCollector(
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(base), UnknownCons)
             generatedVars(s.symbol)
-          case s@Select(qual, name) =>
+          case s @ Select(qual, name) =>
             markUnsafeEta()
             cc.constrain(processResult(qual), UnknownCons)
             s.symbol.fold(UnknownProd): selSym =>
