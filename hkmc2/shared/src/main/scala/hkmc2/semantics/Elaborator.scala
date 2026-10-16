@@ -2351,6 +2351,16 @@ extends Importer:
                   msg"Illegal ${k.desc} member name: '${id.name}'" -> nme.toLoc
                   :: illegalMemberNameTail
               return go(sts, Nil, acc)(N)
+            // A value is the result of evaluating its body once, so it cannot take parameters;
+            // lowering relies on this. Drop them, so that uses of them in the body are reported.
+            val paramLists = td.paramLists match
+              case pss @ (_ :: _) if k.isInstanceOf[Val] =>
+                raise:
+                  ErrorReport:
+                    msg"${k.desc.capitalize} definitions cannot have parameter lists" -> Loc(pss)
+                    :: Nil
+                Nil
+              case pss => pss
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             
             val tsym = TermSymbol(k, owner, id) // TODO?
@@ -2369,7 +2379,7 @@ extends Importer:
               if newResolution then tps.foreach(ps => registerTypeParameters(tsym, ps.map(_.sym)))
               // * Add parameters to context
               var newCtx = newCtx1
-              val pss = td.paramLists.map: ps =>
+              val pss = paramLists.map: ps =>
                 val (res, newCtx2) = funParams(ps)(using newCtx)
                 newCtx = newCtx2
                 res

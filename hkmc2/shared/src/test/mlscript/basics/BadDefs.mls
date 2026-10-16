@@ -86,14 +86,36 @@ trait F
 
 
 // Value definitions do not take parameter lists.
-:fixme
-val badValue(x) = x
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+:e
+val badValue(arg) = arg
+//│ ╔══[COMPILATION ERROR] Value definitions cannot have parameter lists
+//│ ║  l.90: 	val badValue(arg) = arg
+//│ ╙──      	            ^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: arg
+//│ ║  l.90: 	val badValue(arg) = arg
+//│ ╙──      	                    ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ badValue = undefined
 
-:fixme
+:e
 fun localBadValue() =
-  val badLocal(x) = x
+  val badLocal(arg) = arg
   badLocal
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ ╔══[COMPILATION ERROR] Value definitions cannot have parameter lists
+//│ ║  l.102: 	  val badLocal(arg) = arg
+//│ ╙──       	              ^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: arg
+//│ ║  l.102: 	  val badLocal(arg) = arg
+//│ ╙──       	                      ^^^
+
+:e
+class BadValueMember with
+  mut val badMember(arg)(arg2) = arg
+//│ ╔══[COMPILATION ERROR] Mutable value definitions cannot have parameter lists
+//│ ║  l.113: 	  mut val badMember(arg)(arg2) = arg
+//│ ╙──       	                   ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: arg
+//│ ║  l.113: 	  mut val badMember(arg)(arg2) = arg
+//│ ╙──       	                                 ^^^
 
 
