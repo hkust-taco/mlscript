@@ -3225,8 +3225,16 @@ class NewResolver:
     * through the overriding member. The parent shape retains generic arguments and scope marks.
     */
   def resolveSuper(sup: Super)(using ResolutionContext): Unit =
+    def privateMember(member: BlockMemberSymbol)(using ResolutionContext): Unit =
+      rctx.markError(sup)
+      rctx.report(ErrorReport(msg"Private member '${sup.id.name}' is not available through 'super'" -> sup.id.toLoc ::
+        member.symbols.map(symbol => msg"private member declared here" -> symbol.toLoc),
+        source = Diagnostic.Source.Compilation))
     def receive(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
       case MemberLookup.Contextual(source, substitution) => receive(source, instances.withOverrides(substitution))
+      // Only found when the parent inherits no member of the same name (see `completed` below).
+      case MemberLookup.Found(member: BlockMemberSymbol, _) if MemberLookup.isPrivateName(member) => privateMember(member)
+      case MemberLookup.Declared(member, _, _, _, _) if MemberLookup.isPrivateName(member) => privateMember(member)
       case MemberLookup.Found(member, marks) => publishMember(sup, member, sup.resSym, marks, instances)
       case MemberLookup.Declared(member, bindings, marks, annotation, positive) =>
         publishDeclared(sup, member, sup.resSym, bindings, marks, annotation, positive, instances)
@@ -3240,6 +3248,8 @@ class NewResolver:
           case _ => Nil
         // Like in JavaScript, private members are not available through `super`, even where they are accessible:
         // `super` looks up the members inherited by the parent class (see also Lowering.superReference).
+        // When the parent inherits no member of the same name, still find its private member,
+        // so as to report that it is unavailable rather than missing.
         receive(info.withMarks(captures(sup.receiver)).visibleFrom(_ => false, reportInaccessible = true),
           TypeSubstitution.empty)
     sup.owner.asDefnSym.defn match

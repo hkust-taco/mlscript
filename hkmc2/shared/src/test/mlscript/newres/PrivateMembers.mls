@@ -129,7 +129,7 @@ class Derived extends Base with
 :e
 class Derived extends Base with
   fun get = super.secret
-//│ ╔══[COMPILATION ERROR] Cannot access private member 'secret' outside its declaring owner
+//│ ╔══[COMPILATION ERROR] Private member 'secret' is not available through 'super'
 //│ ║  l.131: 	  fun get = super.secret
 //│ ║         	                 ^^^^^^^
 //│ ╟── private member declared here
@@ -298,10 +298,10 @@ class SuperOuter with
   private fun secret = 1
   class SuperInner extends SuperOuter with
     fun get = super.secret
-//│ ╔══[COMPILATION ERROR] Super reference 'secret' requires one inherited implementation
+//│ ╔══[COMPILATION ERROR] Private member 'secret' is not available through 'super'
 //│ ║  l.300: 	    fun get = super.secret
-//│ ║         	              ^^^^^^^^^^^^
-//│ ╟── Candidate 'secret' is declared here
+//│ ║         	                   ^^^^^^^
+//│ ╟── private member declared here
 //│ ║  l.298: 	  private fun secret = 1
 //│ ╙──       	              ^^^^^^
 
