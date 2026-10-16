@@ -250,8 +250,7 @@ open annotations { inline, noInline }
 
 // A selection that may refer both to an accessible private member and to other members
 // cannot be compiled to a single property access, as private members are not properties.
-:fixme
-:expect ["B", "B", "A"]
+:e
 class PublicBase with
   fun f = "A"
 class PrivateOverride extends PublicBase with
@@ -260,8 +259,16 @@ class PrivateOverride extends PublicBase with
   fun pick(flag) = (if flag then this else new PublicBase).f
 let po = new PrivateOverride
 [po.viaThis, po.pick(true), po.pick(false)]
-//│ ═══[RUNTIME ERROR] Expected: '["B", "B", "A"]', got: '["B", "A", "A"]'
-//│ = ["B", "A", "A"]
+//│ ╔══[COMPILATION ERROR] This reference may target a private member, which cannot be selected together with other members
+//│ ║  l.259: 	  fun pick(flag) = (if flag then this else new PublicBase).f
+//│ ║         	                                                          ^^
+//│ ╟── private member 'f' declared here
+//│ ║  l.257: 	  private fun f = "B"
+//│ ║         	              ^
+//│ ╟── other target: function 'f'
+//│ ║  l.255: 	  fun f = "A"
+//│ ╙──       	      ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ po = PrivateOverride
 
 // The shape of `that` is inferred from the call, which selects the private member.

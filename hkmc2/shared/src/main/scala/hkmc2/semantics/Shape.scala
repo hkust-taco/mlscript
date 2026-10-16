@@ -505,8 +505,12 @@ object MemberLookup:
     * available even when its class is private; checkAccess checks the interpretation actually selected.
     * An entirely private name instead permits lookup of the inherited member outside its owner. */
   def own(defn: ClassLikeDef, member: BlockMemberSymbol, found: MemberLookup, inherited: => MemberLookup): MemberLookup =
-    if member.symbols.nonEmpty && member.symbols.forall(_.defn.exists(_.visibility is Visibility.Private))
-    then Private(found, defn, inherited) else found
+    if isPrivateName(member) then Private(found, defn, inherited) else found
+
+  /** Whether all the definitions of `member` are private. Only such member names are found through `Private`,
+    * and only they are stored privately at runtime (see codegen.MemberStorage), out of reach of property accesses. */
+  def isPrivateName(member: BlockMemberSymbol): Bool =
+    member.symbols.nonEmpty && member.symbols.forall(_.defn.exists(_.visibility is Visibility.Private))
 
 end MemberLookup
 

@@ -481,6 +481,8 @@ final class ResolutionContext private[semantics] (
     * a class through a variable also accesses the constructor of each class that the variable
     * may hold; calling a constructor function held by a variable does not, as the reference
     * that produced this function already did.
+    * Finally, a reference that may target an accessible private member must target only that member:
+    * see checkPrivateMix below.
     */
   private def checkAccess(term: NewResolvable | New, scope: SrcScope): Unit = if !hasError(term) then
     val loc = term match
@@ -489,25 +491,57 @@ final class ResolutionContext private[semantics] (
       case ref: UnresolvedRef => ref.id.toLoc
       case sup: Super => sup.id.toLoc
       case nw: New => nw.toLoc
+    def declaredAt(definition: Definition): Opt[Loc] = definition match
+      case td: TermDefinition => td.tsym.toLoc
+      case _ => definition.sym.toLoc
     def checkPrivate(kind: Str, definition: Definition, owner: Opt[InnerSymbol]): Ls[Diagnostic] =
       if definition.visibility isnt Visibility.Private then Nil else owner match
         // File-private definitions are handled by compilation-unit exports.
         case S(_: TopLevelSymbol) | N => Nil
         case S(owner) => owner.asDefnSym.defn match
           case S(ownerDefn) if !scope.canAccessPrivatesOf(ownerDefn) =>
-            val declaredAt = definition match
-              case td: TermDefinition => td.tsym.toLoc
-              case _ => definition.sym.toLoc
             ErrorReport(msg"Cannot access private $kind '${definition.bsym.nme}' outside its declaring owner" -> loc ::
-              msg"private $kind declared here" -> declaredAt :: Nil,
+              msg"private $kind declared here" -> declaredAt(definition) :: Nil,
               source = Diagnostic.Source.Compilation) :: Nil
           case _ => Nil
+    /** The definition of `target` if it is a member stored privately at runtime (see MemberLookup.isPrivateName),
+      * along with a description of its kind. */
+    def privateMember(target: DefinitionSymbol[?]): Opt[(Str, Definition)] =
+      def owned(kind: Str, definition: Definition, owner: Opt[InnerSymbol]) = owner match
+        case S(_: TopLevelSymbol) | N => N
+        case S(_) => Option.when(MemberLookup.isPrivateName(definition.bsym))(kind -> definition)
+      target match
+        case ctor: ClassCtorSymbol => privateMember(ctor.associatedCls)
+        case member: TermSymbol => member.defn.flatMap(owned("member", _, member.owner))
+        case member: InnerSymbol => member.asDefnSym.defn.flatMap:
+          case definition: ClassLikeDef => owned(member.asDefnSym.describeKind, definition, definition.owner)
+          case _ => N
+        case _ => N
+    /** Lowering compiles a reference with several targets, or with a receiver of unknown shape, to a property access
+      * (see Lowering.newSelection). That access never reaches a private member, which is not a property of its
+      * receiver, so it would silently select another member for the receivers whose private member is accessible.
+      * Since private members are never overridden, no other target can stand for a private target either. */
+    def checkPrivateMix(ref: NewResolvable): Ls[Diagnostic] =
+      val targets = ref.resolvedTargets.distinct
+      val privates = targets.flatMap(privateMember)
+      val dynamic = ref match
+        case sel: NewSel => sel.hasDynamicTarget
+        case _ => false
+      if privates.isEmpty || targets.sizeIs == 1 && !dynamic then Nil
+      else
+        val others = targets.filter(privateMember(_).isEmpty)
+        ErrorReport(
+          msg"This reference may target a private member, which cannot be selected together with other members" -> loc ::
+          privates.map((kind, definition) => msg"private $kind '${definition.bsym.nme}' declared here" -> declaredAt(definition)) :::
+          others.map(target => msg"other target: ${target.describeKind} '${target.nme}'" -> target.toLoc) :::
+          (if dynamic then msg"The receiver may also have a shape whose members are unknown" -> N :: Nil else Nil),
+          source = Diagnostic.Source.Compilation) :: Nil
     def checkConstructor(cls: ClassDef): Ls[Diagnostic] = cls.privateCtor match
       case S(modifier) if !scope.canAccessPrivatesOf(cls) =>
         ErrorReport(msg"Cannot access the private constructor of class '${cls.sym.nme}' outside the class" -> loc ::
           msg"private constructor declared here" -> modifier.toLoc :: Nil, source = Diagnostic.Source.Compilation) :: Nil
       case _ => Nil
-    val violations = term match
+    val accessViolations = term match
       case nw: New =>
         ClassValueShape.targetsOf(nw).map(ClassValueShape.definitionOf).distinct.flatMap(checkConstructor)
       case ref: NewResolvable => ref.resolvedTargets.distinct.flatMap:
@@ -517,6 +551,12 @@ final class ResolutionContext private[semantics] (
         case member: InnerSymbol => member.asDefnSym.defn.toList.flatMap: definition =>
           checkPrivate(member.asDefnSym.describeKind, definition, definition.owner)
         case _ => Nil
+    // An inaccessible private target, reported above, already explains why the reference is rejected.
+    val violations =
+      if accessViolations.nonEmpty then accessViolations
+      else term match
+        case ref: NewResolvable => checkPrivateMix(ref)
+        case _: New => Nil
     if violations.nonEmpty then
       markError(term)
       violations.foreach(report)
