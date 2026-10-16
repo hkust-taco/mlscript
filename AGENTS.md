@@ -121,7 +121,12 @@ it seems AI agent toolings like `apply_patch` reliably removes them anyway, whic
 (note: this is discussed at https://github.com/openai/codex/issues/21121#issuecomment-4608911199).
 
 **Important:** When working on a PR, make sure to check the diff of the whole PR (including all commits)
-to ensure that no needless empty-line changes are included in the PR. If you find any, please remove them.
+for accidental empty-line or indentation changes introduced by AI agents. Distinguish that diff noise
+from intentional edits by the user or other human contributors by checking the initial worktree diff
+and commit history. Preserve intentional contributor edits, including added indentation on empty lines,
+even when they are whitespace-only or differ from the PR base. Reviewing the whole PR is not permission
+to undo other contributors' changes. Only clean up whitespace changes known to be accidental;
+if their origin or intent is uncertain, preserve them.
 
 
 ## Manipulating IR representations

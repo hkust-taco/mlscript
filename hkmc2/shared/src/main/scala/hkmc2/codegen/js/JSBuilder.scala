@@ -73,7 +73,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   
   private def getPrivateAccessorSymbol(ts: DefinitionSymbol[?]): semantics.TempSymbol =
     privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.nme}$$accessorSymbol"))
-
+  
   /** Private names belong to the containing IR class, shared by its instance and static members.
     * Accesses outside that class's lexical scope need an accessor. */
   private def privateScopeIn(owner: InnerSymbol, inScopeClasses: Set[InnerSymbol]): Opt[Scope] =
@@ -137,7 +137,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           cls.companion.foreach: body =>
             applyBlock(body.ctor)
             body.methods.foreach(applyDefn)
-
+  
   private def modulePrivateExportName(sym: BlockMemberSymbol)(using Raise): Str =
     sym.getState.compilationUnitPrivateName(sym).getOrElse:
       raise:
@@ -147,12 +147,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           source = Diagnostic.Source.Compilation,
         )
       "‹MISSING_PRIVATE_EXPORT_NAME›"
-
+  
   private def relativeImportPath(path: Str, wd: io.Path): Str =
     if path.startsWith("/")
     then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
     else path
-
+  
   private case class Imports(
     defaults: Ls[ImportSymbol -> Str],
     privates: Ls[BlockMemberSymbol -> Str],
