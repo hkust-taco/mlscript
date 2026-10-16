@@ -86,16 +86,4 @@ print(1701)
 //│ ~> Resolved(Ref(member:DebugParent),class:DebugParent)
 //│ Lowering.term { } (in stmt)
 //│ Lowering.term undefined (in stmt)
-//│ Lowering.term (member:Predef⁰.)print‹member:print›(1701)
-//│ Expanding term App(SynthSel(Ref(member:Predef),Ident(print)),Tup(List(Fld(‹›,Lit(IntLit(1701)),None))))
-//│ ~> App(SynthSel(Ref(member:Predef),Ident(print)),Tup(List(Fld(‹›,Lit(IntLit(1701)),None))))
-//│ Expanding term SynthSel(Ref(member:Predef),Ident(print))
-//│ ~> Resolved(SynthSel(Ref(member:Predef),Ident(print)),term:Predef/print)
-//│ Lowering.term (member:Predef⁰.)print‹term:Predef/print› – symbol term:Predef/print
-//│ Expanding term Resolved(SynthSel(Ref(member:Predef),Ident(print)),term:Predef/print)
-//│ ~> Resolved(SynthSel(Ref(member:Predef),Ident(print)),term:Predef/print)
-//│ Lowering.term member:Predef⁰ – symbol module:Predef
-//│ Expanding term Ref(member:Predef)
-//│ ~> Resolved(Ref(member:Predef),module:Predef)
-//│ Lowering.term 1701
 //│ > 1701

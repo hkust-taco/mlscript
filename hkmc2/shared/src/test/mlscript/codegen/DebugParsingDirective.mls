@@ -3,7 +3,7 @@
 
 #dbg('parsing)
 //│ ┊#┊dbg┊(⟨┊'parsing┊⟩)┊
-//│ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:55]
+//│ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:66]
 //│ │ ? blockOfImpl		inspects ┊#┊dbg┊(⟨┊'parsing┊⟩)┊    [at syntax/Parser.scala:340]
 //│ │ ! blockOfImpl		consumes ┊#┊    [at syntax/Parser.scala:367]
 //│ │ @ parseRule(39,'#' directive keyword ::= Expr('#' directive body ::= End()),allowNewlines = true)    [at syntax/Parser.scala:380]

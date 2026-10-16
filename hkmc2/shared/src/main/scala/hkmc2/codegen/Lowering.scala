@@ -117,6 +117,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
   private def debugLowering[T](annotations: Ls[Annot])(thunk: => T): T =
     DebugOutputHandler.traceDefinition(annotations, config, _.lowering)(thunk)
+
+  /** Trace a definition whose lowering continues, through `k`, with the statements that follow it. */
+  private def debugLoweringThen[R](annotations: Ls[Annot])(lower: (R => Block) => Block)(k: R => Block): Block =
+    DebugOutputHandler.traceDefinitionThen(annotations, config, _.lowering)(lower)(k)
   
   extension (t: Term)
     def instantiated = t match
@@ -318,22 +322,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             case knd: syntax.Val =>
               assert(td.params.isEmpty)
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
-              def lowerValue[R <: Result](lower: (R => Block) => Block)(k: R => Block): Block =
-                DebugOutputHandler.definitionConfig(td.extraAnnotations, tl.debugConfig(config)) match
-                  case S(localConfig) =>
-                    State.scopedDebug(localConfig.debug.lowering, localConfig.debug.showUids):
-                      tl.scopedDebug(localConfig.debug.lowering, localConfig.debug):
-                        // The continuation lowers sibling statements, outside this value's debug scope.
-                        lower: r =>
-                          State.inOuterDebugScope:
-                            tl.inOuterDebugScope(k(r))
-                  case N => lower(k)
               localVal match
                 case S(sym) =>
-                  lowerValue[Result](term_nonTail(bod)(_)):
+                  debugLoweringThen[Result](td.extraAnnotations)(term_nonTail(bod)(_)):
                     r => defineSymbol(sym, r, blockImpl(stats, res))
                 case N =>
-                  lowerValue[Path](k => subTerm_nonTail(bod)(k)(using LoweringCtx.nestFunc(N))): r =>
+                  debugLoweringThen[Path](td.extraAnnotations)(k => subTerm_nonTail(bod)(k)(using LoweringCtx.nestFunc(N))): r =>
                     Define(
                       ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
                       blockImpl(stats, res),
@@ -407,12 +401,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 msg"Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead." -> defn.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation
               ))
-          def defineClass(parent: Opt[Path], parentParams: Ls[ParamList]): Block =
+          def lowerClass(parent: Opt[Path], parentParams: Ls[ParamList]): ClsLikeDefn =
             val base = parent.getOrElse(
               Select(State.globalThisSymbol.asThis, Tree.Ident("Object"))(S(ctx.builtins.Object), defn.toLoc)(false))
             // Class and module companions share one lowered definition, so class tracing may
             // include its companion. Explicit module debug settings still override that scope.
-            val clsDef = debugLowering(defn.extraAnnotations)(LoweringCtx.withSuperBase(defn.sym, base).givenIn {
+            debugLowering(defn.extraAnnotations)(LoweringCtx.withSuperBase(defn.sym, base).givenIn {
               val (mtds, publicFlds, privateFlds, ctor) = defn match
                 case pd: PatternDef =>
                   // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
@@ -452,14 +446,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, parent,
                 mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable)(cfgOverride, defn.annotations)
             })
-            Define(clsDef, blockImpl(stats, res))
           defn.ext match
-          case N => defineClass(N, Nil)
+          case N => Define(lowerClass(N, Nil), blockImpl(stats, res))
           case S(ext) =>
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
-            debugLowering(defn.extraAnnotations):
+            // Evaluating the superclass is part of the class definition, so it is traced with it,
+            // but the statements following the class are not.
+            debugLoweringThen[ClsLikeDefn](defn.extraAnnotations)(define =>
               classOf(ext.cls, ext): (clsp, params) =>
-                withClassParent(clsp)(parent => defineClass(S(parent), params))
+                withClassParent(clsp)(parent => define(lowerClass(S(parent), params)))
+            )(Define(_, blockImpl(stats, res)))
         case td: TypeDef => // * Type definitions are erased
           blockImpl(stats, res)
     

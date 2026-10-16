@@ -22,7 +22,7 @@
 - Support the annotation form on individual definitions, for example
   `@dbg('elaboration) fun foo() = ...`, without requiring file-wide tracing.
   Parsing and optimization traces require `#dbg`; requesting them through `@dbg` warns.
-  Class lowering traces may also include companion definitions and the continuation of superclass evaluation.
+  Class lowering traces may also include companion definitions and superclass evaluation, but not the statements after the class.
 - File output clears each destination on first use in a compiler session, then appends across
   compilation units. Concurrent debug writes are best effort.
 - Keep the feature available in diff-test files as well as through `MLsCompiler`.

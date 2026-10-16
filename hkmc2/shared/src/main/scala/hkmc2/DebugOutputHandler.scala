@@ -32,13 +32,24 @@ object DebugOutputHandler:
 
   /** Keep trace routing and symbol printing in the same definition-local scope. */
   def traceDefinition[T](annotations: Ls[semantics.Annot], base: Config, enabled: Config.Debug => Bool)
-      (thunk: => T)(using state: semantics.Elaborator.State, tl: utils.TL): T =
+      (thunk: => T)(using semantics.Elaborator.State, utils.TL): T =
+    traceDefinitionThen[T, T](annotations, base, enabled)(k => k(thunk))(identity)
+
+  /** Like [[traceDefinition]], for a definition processed in continuation-passing style, where the
+    * continuation `k` processes the statements that follow the definition: `process` runs in the
+    * definition's debug scope, but `k` runs back in the enclosing one, so that the definition's
+    * settings do not leak to its siblings. */
+  def traceDefinitionThen[R, T](annotations: Ls[semantics.Annot], base: Config, enabled: Config.Debug => Bool)
+      (process: (R => T) => T)(k: R => T)(using state: semantics.Elaborator.State, tl: utils.TL): T =
     definitionConfig(annotations, tl.debugConfig(base)) match
       case S(localConfig) =>
         val debug = localConfig.debug
         state.scopedDebug(enabled(debug), debug.showUids):
-          tl.scopedDebug(enabled(debug), debug)(thunk)
-      case N => thunk
+          tl.scopedDebug(enabled(debug), debug):
+            process: r =>
+              state.inOuterDebugScope:
+                tl.inOuterDebugScope(k(r))
+      case N => process(k)
 
   /** Discover directives without committing diagnostics from a parse that may be repeated.
     * A traced parse reports its own diagnostics, in trace order; otherwise replay discovery's
