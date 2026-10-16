@@ -9,45 +9,45 @@ fs.rmSync(debugDir + "DebugModuleElaboration.log", {force: true})
 fs.rmSync(debugDir + "DebugClassLowering.log", {force: true})
 
 
-// FIXME: parsing traces currently inspect only #dbg, ignoring definition annotations.
-:fixme
-:expect true
+// Parsing needs a file-level directive; the annotation warns and does not create a log.
+:w
+:expect false
 @dbg('parsing, out: File("DebugLocalParsing.log")) fun parse_selected(x) = x
 fs.existsSync(debugDir + "DebugLocalParsing.log")
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ ╔══[WARNING] Debugging aspect 'parsing' is not supported in @dbg; use #dbg(parsing: true) instead.
+//│ ║  l.15: 	@dbg('parsing, out: File("DebugLocalParsing.log")) fun parse_selected(x) = x
+//│ ╙──      	     ^^^^^^^^
 //│ = false
 
 
-// FIXME: optimization trace loggers never consult definition-local debug settings.
-:fixme
-:expect true
+// Optimization passes do not support definition-local tracing either.
+:w
+:expect false
 @dbg('optimizations, out: File("DebugLocalOptimization.log"))
 fun optimize_selected(x) = ((y) => y)(x)
 fs.existsSync(debugDir + "DebugLocalOptimization.log")
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ ╔══[WARNING] Debugging aspect 'optimizations' is not supported in @dbg; use #dbg(optimizations: true) instead.
+//│ ║  l.26: 	@dbg('optimizations, out: File("DebugLocalOptimization.log"))
+//│ ╙──      	     ^^^^^^^^^^^^^^
 //│ = false
 
 
-// FIXME: type definitions bypass the elaborator's definition-local trace scope.
-:fixme
+// Module elaboration honors definition-local tracing.
 :expect true
 @dbg('elaboration, out: File("DebugModuleElaboration.log"))
 module ElaborationSelected with
   fun member(x) = x
 fs.existsSync(debugDir + "DebugModuleElaboration.log")
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 
-// FIXME: lowering a class bypasses its definition-local trace scope.
-:fixme
+// Class lowering honors definition-local tracing.
 :expect true
 @dbg('lowering, out: File("DebugClassLowering.log"))
 class LoweringSelected(x) with
   fun member() = x
 fs.existsSync(debugDir + "DebugClassLowering.log")
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 
 :silent
@@ -55,3 +55,26 @@ fs.rmSync(debugDir + "DebugLocalParsing.log", {force: true})
 fs.rmSync(debugDir + "DebugLocalOptimization.log", {force: true})
 fs.rmSync(debugDir + "DebugModuleElaboration.log", {force: true})
 fs.rmSync(debugDir + "DebugClassLowering.log", {force: true})
+
+
+// Unsupported local settings also warn when explicitly disabled.
+:w
+@dbg(parsing: false, optimizations: false) fun disabled_local(x) = x
+//│ ╔══[WARNING] Debugging aspect 'parsing' is not supported in @dbg; use #dbg(parsing: false) instead.
+//│ ║  l.62: 	@dbg(parsing: false, optimizations: false) fun disabled_local(x) = x
+//│ ╙──      	     ^^^^^^^^^^^^^^
+//│ ╔══[WARNING] Debugging aspect 'optimizations' is not supported in @dbg; use #dbg(optimizations: false) instead.
+//│ ║  l.62: 	@dbg(parsing: false, optimizations: false) fun disabled_local(x) = x
+//│ ╙──      	                     ^^^^^^^^^^^^^^^^^^^^
+
+
+// A warning about one phase does not prevent a supported phase from tracing.
+:w
+:expect 57
+@dbg('parsing, 'lowering, showUids: false) fun mixed_local() = 57
+mixed_local()
+//│ ╔══[WARNING] Debugging aspect 'parsing' is not supported in @dbg; use #dbg(parsing: true) instead.
+//│ ║  l.74: 	@dbg('parsing, 'lowering, showUids: false) fun mixed_local() = 57
+//│ ╙──      	     ^^^^^^^^
+//│ Lowering.term 57
+//│ = 57

@@ -20,7 +20,11 @@
   - `StdIO`, which is the default and may be omitted;
   - `File("out.mls")`, resolved relative to the active configuration's base directory.
 - Support the annotation form on individual definitions, for example
-  `@dbg('elaboration) fun foo() = ...`, without enabling the same phase for unrelated definitions.
+  `@dbg('elaboration) fun foo() = ...`, without requiring file-wide tracing.
+  Parsing and optimization traces require `#dbg`; requesting them through `@dbg` warns.
+  Class lowering traces may also include companion definitions and the continuation of superclass evaluation.
+- File output clears each destination on first use in a compiler session, then appends across
+  compilation units. Concurrent debug writes are best effort.
 - Keep the feature available in diff-test files as well as through `MLsCompiler`.
 - Diagnose unknown flags, malformed boolean values, malformed destinations, and unsupported arguments.
 

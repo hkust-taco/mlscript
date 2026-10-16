@@ -31,6 +31,9 @@ class CompilerCtx(
       * symbols they define — must not depend on which of them is compiled or imported first. */
     val rootConfig: Config,
 ):
+  private val outputHandler: DebugOutputHandler = importing match
+    case S((_, parent)) => parent.outputHandler
+    case N => DebugOutputHandler(fs, rootConfig.baseDir, println)
   
   def allFilesBeingImported: Ls[io.Path] =
     importing match
@@ -85,7 +88,6 @@ class CompilerCtx(
           includeZero = true,
         ))
       )
-      val outputHandler = DebugOutputHandler(fs, rootConfig.baseDir, println)
 
       val parse =
         given CompilerCtx = this
@@ -279,7 +281,6 @@ class CompilerCtx(
         given Config = rootConfig
         given CompilerCtx = this
         given DebugPrinter = new DebugPrinter
-        val outputHandler = DebugOutputHandler(fs, rootConfig.baseDir, println)
         val parse = ParserSetup(file, outputHandler)
         val elaborationConfig = Config.elaborationConfig(parse.resultBlk)
         stateDebug = CompilerCtx.debugTracingEnabled(elaborationConfig.debug)

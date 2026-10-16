@@ -1,0 +1,26 @@
+:js
+
+
+// Generate imported units after test discovery; they are fixtures, not standalone diff tests.
+:silent
+val debugImportDir = "hkmc2/shared/src/test/mlscript/codegen/"
+fs.writeFileSync(debugImportDir + "DebugImports.log", "old session contents")
+fs.writeFileSync(debugImportDir + "DebugImportA.mls", "@dbg('lowering, showUids: false, out: File(\"mlscript/codegen/DebugImports.log\"))\nmodule DebugImportA with\n  fun value() = 2101\n")
+fs.writeFileSync(debugImportDir + "DebugImportB.mls", "import \"./DebugImportA.mls\"\n@dbg('lowering, showUids: false, out: File(\"mlscript/codegen/DebugImports.log\"))\nmodule DebugImportB with\n  fun value() = 2102\n")
+
+
+// Importing B also compiles A. Both must contribute to the same log in this session.
+:noCodeGen
+import "./DebugImportB.mls"
+
+
+:silent
+:expect true
+val importLog = fs.readFileSync(debugImportDir + "DebugImports.log", "utf8")
+importLog.includes("Lowering.term 2101") && importLog.includes("Lowering.term 2102") && not(importLog.includes("old session contents"))
+
+
+:silent
+fs.rmSync(debugImportDir + "DebugImportA.mls", {force: true})
+fs.rmSync(debugImportDir + "DebugImportB.mls", {force: true})
+fs.rmSync(debugImportDir + "DebugImports.log", {force: true})

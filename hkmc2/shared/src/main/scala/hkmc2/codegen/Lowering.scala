@@ -410,7 +410,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           def defineClass(parent: Opt[Path], parentParams: Ls[ParamList]): Block =
             val base = parent.getOrElse(
               Select(State.globalThisSymbol.asThis, Tree.Ident("Object"))(S(ctx.builtins.Object), defn.toLoc)(false))
-            val clsDef = LoweringCtx.withSuperBase(defn.sym, base).givenIn:
+            // Class and module companions share one lowered definition, so class tracing may
+            // include its companion. Explicit module debug settings still override that scope.
+            val clsDef = debugLowering(defn.extraAnnotations)(LoweringCtx.withSuperBase(defn.sym, base).givenIn {
               val (mtds, publicFlds, privateFlds, ctor) = defn match
                 case pd: PatternDef =>
                   // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
@@ -440,7 +442,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                       )
                     case N =>
                     val (mtds, publicFlds, privateFlds, ctor) =
-                      gatherMembers(mod.body)
+                      debugLowering(mod.extraAnnotations)(gatherMembers(mod.body))
                     S(ClsLikeBody(mod.sym, mtds, privateFlds, publicFlds, ctor, mod.annotations))
                   case _ => N
                 case _ => N
@@ -449,13 +451,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               val cfgOverride = definitionConfigOverride(defn.extraAnnotations)
               ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, parent,
                 mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable)(cfgOverride, defn.annotations)
+            })
             Define(clsDef, blockImpl(stats, res))
           defn.ext match
           case N => defineClass(N, Nil)
           case S(ext) =>
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
-            classOf(ext.cls, ext): (clsp, params) =>
-              withClassParent(clsp)(parent => defineClass(S(parent), params))
+            debugLowering(defn.extraAnnotations):
+              classOf(ext.cls, ext): (clsp, params) =>
+                withClassParent(clsp)(parent => defineClass(S(parent), params))
         case td: TypeDef => // * Type definitions are erased
           blockImpl(stats, res)
     

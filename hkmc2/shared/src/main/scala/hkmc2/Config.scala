@@ -275,7 +275,7 @@ object Config:
       case App(Directive(prefix, _), args) => modifier(Directive(prefix, args))
       case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args)
       case Directive(Ident("lang"), Tup(args)) => ConfigParser.parseLanguageDirective(args)
-      case Directive(Ident("dbg"), Tup(args)) => ConfigParser.parseDebugDirective(args)
+      case Directive(Ident("dbg"), Tup(args)) => ConfigParser.parseDebugDirective(args, definitionLocal = false)
       case _ => identity
     trees.foldLeft(config)((cfg, tree) => modifier(tree)(cfg))
 
@@ -534,7 +534,11 @@ object ConfigParser:
       expect("StdIO or File(\"path\")")(tree)
       N
 
-  private def updateDebugFlag(name: Str, value: Bool, tree: Tree)(using Raise): Config.Debug => Config.Debug =
+  private def updateDebugFlag(name: Str, value: Bool, tree: Tree, definitionLocal: Bool)(using Raise): Config.Debug => Config.Debug =
+    if definitionLocal && (name === "parsing" || name === "optimizations") then
+      raise(WarningReport(
+        msg"Debugging aspect '${name}' is not supported in @dbg; use #dbg(${name}: ${value.toString}) instead." -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
     name match
       case "parsing" => _.copy(parsing = value)
       case "showParsedTree" => _.copy(showParsedTree = value)
@@ -553,27 +557,27 @@ object ConfigParser:
           source = Diagnostic.Source.Compilation))
         identity
 
-  private def parseDebugArg(arg: Tree)(using Raise): Config.Debug => Config.Debug = arg match
+  private def parseDebugArg(arg: Tree, definitionLocal: Bool)(using Raise): Config.Debug => Config.Debug = arg match
     case Quoted(Ident(name)) =>
-      updateDebugFlag(name, true, arg)
+      updateDebugFlag(name, true, arg, definitionLocal)
     case Ident(name) if name.startsWith("'") =>
-      updateDebugFlag(name.drop(1), true, arg)
+      updateDebugFlag(name.drop(1), true, arg, definitionLocal)
     case NamedArg("out", value) =>
       parseDebugOutput(value) match
         case S(out) => _.copy(out = out)
         case N => identity
     case NamedArg(name, value) =>
       parseBool(value) match
-        case S(enabled) => updateDebugFlag(name, enabled, arg)
+        case S(enabled) => updateDebugFlag(name, enabled, arg, definitionLocal)
         case N => identity
     case _ =>
       unsupported("debugging", arg)
       identity
 
   /** Parse `#dbg(...)` and `@dbg(...)` arguments into a cumulative debug configuration. */
-  def parseDebugDirective(args: Ls[Tree])(using Raise): Config => Config =
+  def parseDebugDirective(args: Ls[Tree], definitionLocal: Bool)(using Raise): Config => Config =
     val modifyDebug = args.foldLeft(identity[Config.Debug]): (acc, arg) =>
-      val modify = parseDebugArg(arg)
+      val modify = parseDebugArg(arg, definitionLocal)
       debug => modify(acc(debug))
     new (Config => Config):
       def apply(cfg: Config): Config = cfg.copy(debug = modifyDebug(cfg.debug))
@@ -583,7 +587,7 @@ object ConfigParser:
   def discoverDebugFromAnnotations(annotations: Ls[Tree], base: Config): Opt[Config] =
     given Raise = _ => ()
     val modifiers = annotations.collect:
-      case App(Ident("dbg"), Tup(args)) => parseDebugDirective(args)
+      case App(Ident("dbg"), Tup(args)) => parseDebugDirective(args, definitionLocal = true)
     if modifiers.isEmpty then N
     else S(modifiers.foldLeft(base)((cfg, modify) => modify(cfg)))
 

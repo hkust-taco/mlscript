@@ -825,7 +825,7 @@ extends Importer:
       val modify = ConfigParser.parseOverrides(args)
       S(Annot.Config(modify)(tree.toLoc))
     case App(Ident("dbg"), Tup(args)) =>
-      val modify = ConfigParser.parseDebugDirective(args)
+      val modify = ConfigParser.parseDebugDirective(args, definitionLocal = true)
       S(Annot.Debug(modify)(tree.toLoc))
     case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
       S(Annot.Affine(whichParamList.toInt)(tree.toLoc))
@@ -2490,7 +2490,7 @@ extends Importer:
           case Annot.Modifier(Keyword.`data`) => true
           case _ => false
         
-        val pss = td.paramLists.map: ps =>
+        val pss = debugElaboration(annotations)(td.paramLists.map { ps =>
           val (res, newCtx2) =
             given Ctx = newCtx
             params(ps, isDataClass, k is Pat)
@@ -2500,6 +2500,7 @@ extends Importer:
             raise(ErrorReport(
               msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
           res.copy(restParam = N)(res.toLoc)
+        })
         
         def withFields(extraParams: Ls[ParamList])(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
           softAssert(pss.sizeCompare(td.clsParams) === 0,
@@ -2606,7 +2607,7 @@ extends Importer:
               msg"Illegal body of ${k.desc} definition (should be a block; found ${t.describe})." -> t.toLoc :: Nil))
             (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
         
-        val defn = k match
+        val defn = debugElaboration(annotations)(k match
         case Als =>
           val alsSym = td.symbol.asInstanceOf[TypeAliasSymbol] // TODO improve `asInstanceOf`
           // newCtx.nest(S(alsSym)).givenIn:
@@ -2747,6 +2748,7 @@ extends Importer:
               clsSym.defn = S(cd)
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
+        )
         go(sts, Nil, defn :: acc)(N)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)(statementLoc)
@@ -2764,7 +2766,7 @@ extends Importer:
         go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case Directive(Ident("dbg"), Tup(args)) :: sts =>
         reportUnusedAnnotations
-        val modify = ConfigParser.parseDebugDirective(args)
+        val modify = ConfigParser.parseDebugDirective(args, definitionLocal = false)
         go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case Directive(Ident(name), _) :: sts =>
         raise(ErrorReport(
