@@ -69,8 +69,9 @@ object DebugOutputHandler:
     val discovery = run(false, Config.DebugOutput.StdIO)(using diagnostics += _)
     val effectiveConfig = Config.elaborationConfig(discovery)
     val result =
-      if forceDebug || effectiveConfig.debug.parsing then
-        run(true, effectiveConfig.debug.out)
+      // As for `TraceLogger.doForceTrace`, a parse traced only because of `forceDebug` uses `StdIO`.
+      if effectiveConfig.debug.parsing then run(true, effectiveConfig.debug.out)
+      else if forceDebug then run(true, Config.DebugOutput.StdIO)
       else
         diagnostics.foreach(summon[Raise])
         // Token display is a legacy diff-test option. Re-lexing does not report diagnostics twice.

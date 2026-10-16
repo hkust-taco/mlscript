@@ -73,14 +73,29 @@ fs.rmSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsCommand.log",
 :noCodeGen
 :dp
 1
+//│ ┊1┊
+//│ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:66]
+//│ │ ? blockOfImpl		inspects ┊1┊    [at syntax/Parser.scala:340]
+//│ │ @ simpleExpr(1)    [at syntax/Parser.scala:429]
+//│ │ │ ! simpleExprImpl		consumes ┊1┊    [at syntax/Parser.scala:674]
+//│ │ │ @ exprCont(1,`IntLit(1)`,true)    [at syntax/Parser.scala:675]
+//│ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:931]
+//│ │ │ │ @ exprJux(1,`IntLit(1)`,false)    [at syntax/Parser.scala:1203]
+//│ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1210]
+//│ │ │ │ │ stops at the end of input
+//│ │ │ │ = IntLit(1)
+//│ │ │ = IntLit(1)
+//│ │ = IntLit(1)
+//│ │ @ parseRule(1,expression ::= End(),allowNewlines = true)    [at syntax/Parser.scala:431]
+//│ │ = Some(())
+//│ = List(IntLit(1))
+//│ ? parseAll		inspects ┊┊    [at syntax/Parser.scala:261]
 
 #dbg(out: StdIO)
 
-:fixme
 :expect false
 fs.existsSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsCommand.log")
-//│ ═══[RUNTIME ERROR] Expected: 'false', got: 'true'
-//│ = true
+//│ = false
 
 :silent
 fs.rmSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsCommand.log", {force: true})
