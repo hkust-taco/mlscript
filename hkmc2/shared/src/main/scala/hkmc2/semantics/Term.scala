@@ -810,9 +810,9 @@ enum Visibility:
 
 object Visibility:
   def of(annotations: Ls[Annot]): Visibility = annotations.collectFirst:
-    case Annot.Modifier(Keyword.`private`) => Visibility.Private
-    case Annot.Modifier(Keyword.`public`) => Visibility.Public
-  .getOrElse(Visibility.Public)
+      case Annot.Modifier(Keyword.`private`) => Visibility.Private
+      case Annot.Modifier(Keyword.`public`) => Visibility.Public
+    .getOrElse(Visibility.Public)
 
 /** `isMethod` distinguishes methods from functions. `hasResultAnnotation` records whether a
   * signature describes just the result; erasure consumes leading arrows only for full signatures.

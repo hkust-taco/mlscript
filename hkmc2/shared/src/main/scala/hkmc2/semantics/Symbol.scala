@@ -585,7 +585,9 @@ sealed trait InnerSymbol(using State) extends Symbol, ShapePublisher:
   // ensure that any implementation of InnerSymbol is also a DefinitionSymbol.
   self: DefinitionSymbol[? <: ClassLikeDef] =>
   val privatesScope: Scope = Scope.empty(Scope.Cfg.default) // * Scope for private members of this symbol
-  /** The IR class containing this owner's members, shared by instance and static receivers. */
+  /** The IR class containing this owner's members, shared by instance and static receivers.
+    * This is needed because in the IR,
+    * a module actually stores its members as static members of its companion class. */
   def irClassContainer: InnerSymbol =
     asClsOrMod.flatMap(_.irClassHeader.flatMap(_.companionClass)).getOrElse(this)
   // TODO(Derppening): Can we meaningfully infer the erased type of `this` from the definition?
