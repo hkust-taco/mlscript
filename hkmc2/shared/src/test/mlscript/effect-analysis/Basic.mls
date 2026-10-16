@@ -140,6 +140,20 @@ fun box_unsafe(box: Box) = box.unsafe()
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
+// * Getters
+// TODO: Getters are now always unsafe.
+module M with
+  fun leaf_pure = 42
+  fun leaf_unsafe = unsafe()
+fun node_pure() = M.leaf_pure
+fun node_unsafe() = M.leaf_unsafe
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node_pure⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function node_unsafe⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call unsafe@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
 // * Spreading is conservatively unsafe.
 @pure
 fun leaf_pure_1(...xs) = unsafe()
@@ -218,4 +232,19 @@ fun node() =
 //│ flow-analysis > call x¹@result²#0 @ node⁰.leaf_pure_private¹ -> Pure
 //│ flow-analysis > call x⁰@result⁰#0 @ leaf_pure_public² -> UnsafeEta
 //│ flow-analysis > call x⁰@result⁰#0 @ node⁰.leaf_pure_public¹ -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Getters
+// TODO: Getters are now always unsafe.
+module M with
+  fun leaf_pure = 42
+  fun leaf_unsafe = unsafe()
+fun node_pure() = M.leaf_pure
+fun node_unsafe() = M.leaf_unsafe
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node_pure⁰#0 @ node_pure¹ -> UnsafeEta
+//│ flow-analysis > function node_unsafe⁰#0 @ node_unsafe¹ -> UnsafeEta
+//│ flow-analysis > call unsafe@result⁰#0 @ leaf_unsafe⁰ -> UnsafeEta
+//│ flow-analysis > call unsafe@result⁰#0 @ node_unsafe¹.leaf_unsafe¹ -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<

@@ -784,15 +784,7 @@ class FlowConstraintsCollector(
           ConstraintsCollector(Some(groupRep), N).givenIn: cc ?=>
             for funSym <- groupedFuns do
               given ConstraintsCollector = cc.forActualRootFun(funSym)
-              val fun = preAnalyzer.res.funSymToFunDefn(funSym)
-              val thisFunVar = generatedVars(fun.dSym)
-              val funProdStrat = mkFunProdStrat(
-                s"${funSym.nme}_res",
-                fun.params.ne_!,
-                fun.body,
-                (fun.dSym, -1),
-                fun.annotations)
-              cc.constrain(funProdStrat, thisFunVar)
+              processFunctionBody(preAnalyzer.res.funSymToFunDefn(funSym))
             if nonAffineTracking then
               for
                 sym <- preAnalyzer.res.nonAffineSyms
@@ -960,17 +952,20 @@ class FlowConstraintsCollector(
       val isRoot = preAnalyzer.res.rootFunDefns.contains(fun.dSym)
       if mono || !isRoot then
         given ConstraintsCollector = if isRoot then cc.forActualRootFun(fun.dSym) else cc
-        fun.params match
-        case Nil =>
-          val p = processBlock(fun.body)(using cc, generatedVars(fun.dSym), S(generatedEffects(fun.dSym)))
-        case nel: NELs[?] =>
-          val funProdStrat = mkFunProdStrat(
-            s"${fun.dSym.nme}_res",
-            nel,
-            fun.body,
-            (fun.dSym, -1),
-            fun.annotations)
-          cc.constrain(funProdStrat, generatedVars(fun.dSym))
+        processFunctionBody(fun)
+
+    def processFunctionBody(fun: FunDefn)(using cc: ConstraintsCollector): Unit =
+      fun.params match
+      case Nil =>
+        processBlock(fun.body)(using cc, generatedVars(fun.dSym), S(generatedEffects(fun.dSym)))
+      case nel: NELs[?] =>
+        val funProdStrat = mkFunProdStrat(
+          s"${fun.dSym.nme}_res",
+          nel,
+          fun.body,
+          (fun.dSym, -1),
+          fun.annotations)
+        cc.constrain(funProdStrat, generatedVars(fun.dSym))
     
     def processClsLikeDefn(cls: ClsLikeDefn)(using cc: ConstraintsCollector): Unit =
       cls.privateFields.foreach(sym => generatedVars(sym).constrainOpaque)
