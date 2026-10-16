@@ -808,6 +808,12 @@ final case class SetConfig(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[
 enum Visibility:
   case Public, Private
 
+object Visibility:
+  def of(annotations: Ls[Annot]): Visibility = annotations.collectFirst:
+    case Annot.Modifier(Keyword.`private`) => Visibility.Private
+    case Annot.Modifier(Keyword.`public`) => Visibility.Public
+  .getOrElse(Visibility.Public)
+
 /** `isMethod` distinguishes methods from functions. `hasResultAnnotation` records whether a
   * signature describes just the result; erasure consumes leading arrows only for full signatures.
   */
@@ -988,10 +994,7 @@ sealed abstract class Declaration extends Located:
 sealed abstract class Definition extends Declaration, Statement:
   val annotations: Ls[Annot]
   def bsym: BlockMemberSymbol
-  def visibility: Visibility = annotations.collectFirst:
-    case Annot.Modifier(Keyword.`private`) => Visibility.Private
-    case Annot.Modifier(Keyword.`public`) => Visibility.Public
-  .getOrElse(Visibility.Public)
+  def visibility: Visibility = Visibility.of(annotations)
   def hasDeclareModifier: Opt[Annot.Modifier] = Annot.declareModifierOf(annotations)
   def hasStagedModifier: Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`staged`) => mod

@@ -350,8 +350,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               mod.classCompanion match
               case S(comp) => comp.defn.getOrElse(wat("Module companion without definition", mod.companion))
               case N =>
-                val stagedAnnots = mod.annotations.collect:
-                  case a @ Annot.Modifier(Keyword.`staged`) => a
+                val classAnnots = mod.annotations.collect:
+                  case a @ Annot.Modifier(Keyword.`staged` | Keyword.`private` | Keyword.`public`) => a
                 val clsSym = new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id)
                 val clsDef = ClassDef.Plain(mod.owner, syntax.Cls, clsSym,
                   mod.bsym,
@@ -359,7 +359,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   N,
                   ObjBody(Blk(Nil, UnitVal())),
                   S(mod.sym),
-                  stagedAnnots,
+                  classAnnots,
                   Nil,
                   N,
                   Nil,

@@ -457,6 +457,7 @@ class ClassCtorSymbol(
   val associatedCls: ClassSymbol,
 )(using State) extends TermSymbol(k, owner, associatedCls.id, N):
   // Constructor functions occupy the class binding, not a private method slot.
+  // MemberStorage determines that binding's runtime privacy from the class and module.
   // Their source accessibility is checked through the class and its constructor modifiers.
   override def isPrivate: Bool = false
   override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)

@@ -174,11 +174,15 @@ new Box
 
 
 // Entirely private names are omitted by wildcard opens, including generated constructors.
+:expect 5
 module Hidden with
   private class Alone
   private class Point(val x: Int)
   fun point(x: Int) = Point(x)
+Hidden.point(5).x
+//│ = 5
 
+:noInline
 :expect 5
 Hidden.point(5).x
 //│ = 5
@@ -186,20 +190,20 @@ Hidden.point(5).x
 :e
 Hidden.Point(5)
 //│ ╔══[COMPILATION ERROR] Cannot access private class 'Point' outside its declaring owner
-//│ ║  l.187: 	Hidden.Point(5)
+//│ ║  l.191: 	Hidden.Point(5)
 //│ ║         	      ^^^^^^
 //│ ╟── private class declared here
-//│ ║  l.179: 	  private class Point(val x: Int)
+//│ ║  l.180: 	  private class Point(val x: Int)
 //│ ╙──       	                ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new Hidden.Alone
 //│ ╔══[COMPILATION ERROR] Cannot access private class 'Alone' outside its declaring owner
-//│ ║  l.197: 	new Hidden.Alone
+//│ ║  l.201: 	new Hidden.Alone
 //│ ║         	          ^^^^^^
 //│ ╟── private class declared here
-//│ ║  l.178: 	  private class Alone
+//│ ║  l.179: 	  private class Alone
 //│ ╙──       	                ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -208,14 +212,14 @@ open Hidden
 :e
 Alone
 //│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: Alone
-//│ ║  l.209: 	Alone
+//│ ║  l.213: 	Alone
 //│ ╙──       	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 Point(5)
 //│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: Point
-//│ ║  l.216: 	Point(5)
+//│ ║  l.220: 	Point(5)
 //│ ╙──       	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -248,20 +252,20 @@ module Secrets with
 :e
 Secrets.Convert.twice(3)
 //│ ╔══[COMPILATION ERROR] Cannot access private module 'Convert' outside its declaring owner
-//│ ║  l.249: 	Secrets.Convert.twice(3)
+//│ ║  l.253: 	Secrets.Convert.twice(3)
 //│ ║         	       ^^^^^^^^
 //│ ╟── private module declared here
-//│ ║  l.230: 	  private module Convert with
+//│ ║  l.234: 	  private module Convert with
 //│ ╙──       	                 ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new Secrets.Entry
 //│ ╔══[COMPILATION ERROR] Cannot access private class 'Entry' outside its declaring owner
-//│ ║  l.259: 	new Secrets.Entry
+//│ ║  l.263: 	new Secrets.Entry
 //│ ║         	           ^^^^^^
 //│ ╟── private class declared here
-//│ ║  l.226: 	  private class Entry with
+//│ ║  l.230: 	  private class Entry with
 //│ ╙──       	                ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -272,10 +276,10 @@ module BadClassFunction with
   class Entry
   private fun Entry() = new Entry
 //│ ╔══[COMPILATION ERROR] Public class 'Entry' cannot have a private companion
-//│ ║  l.272: 	  class Entry
+//│ ║  l.276: 	  class Entry
 //│ ║         	  ^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.273: 	  private fun Entry() = new Entry
+//│ ║  l.277: 	  private fun Entry() = new Entry
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -283,10 +287,10 @@ module BadFunctionClass with
   private fun Entry() = new Entry
   class Entry
 //│ ╔══[COMPILATION ERROR] Public class 'Entry' cannot have a private companion
-//│ ║  l.284: 	  class Entry
+//│ ║  l.288: 	  class Entry
 //│ ║         	  ^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.283: 	  private fun Entry() = new Entry
+//│ ║  l.287: 	  private fun Entry() = new Entry
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -294,10 +298,10 @@ module BadClassModule with
   class Entry
   private module Entry
 //│ ╔══[COMPILATION ERROR] Public class 'Entry' cannot have a private companion
-//│ ║  l.294: 	  class Entry
+//│ ║  l.298: 	  class Entry
 //│ ║         	  ^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.295: 	  private module Entry
+//│ ║  l.299: 	  private module Entry
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -305,10 +309,10 @@ module BadModuleClass with
   private module Entry
   class Entry
 //│ ╔══[COMPILATION ERROR] Public class 'Entry' cannot have a private companion
-//│ ║  l.306: 	  class Entry
+//│ ║  l.310: 	  class Entry
 //│ ║         	  ^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.305: 	  private module Entry
+//│ ║  l.309: 	  private module Entry
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -317,12 +321,12 @@ module BadModuleFunction with
     fun twice(x: Int) = x + x
   private fun Convert(x: Int) = x
 //│ ╔══[COMPILATION ERROR] Public module 'Convert' cannot have a private companion
-//│ ║  l.316: 	  module Convert with
+//│ ║  l.320: 	  module Convert with
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^
-//│ ║  l.317: 	    fun twice(x: Int) = x + x
+//│ ║  l.321: 	    fun twice(x: Int) = x + x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.318: 	  private fun Convert(x: Int) = x
+//│ ║  l.322: 	  private fun Convert(x: Int) = x
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -331,12 +335,12 @@ module BadFunctionModule with
   module Convert with
     fun twice(x: Int) = x + x
 //│ ╔══[COMPILATION ERROR] Public module 'Convert' cannot have a private companion
-//│ ║  l.331: 	  module Convert with
+//│ ║  l.335: 	  module Convert with
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^
-//│ ║  l.332: 	    fun twice(x: Int) = x + x
+//│ ║  l.336: 	    fun twice(x: Int) = x + x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.330: 	  private fun Convert(x: Int) = x
+//│ ║  l.334: 	  private fun Convert(x: Int) = x
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -354,10 +358,10 @@ Public.make().value
 :e
 new Public
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Public' outside the class
-//│ ║  l.355: 	new Public
+//│ ║  l.359: 	new Public
 //│ ║         	^^^^^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.345: 	  private constructor
+//│ ║  l.349: 	  private constructor
 //│ ╙──       	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -419,9 +423,7 @@ module Reverse with
 //│ = [37, 41]
 
 
-// TODO: nested classes without function companions still use public JS fields, so the private
-// class overwrites the inherited public class even though lookup selects the inherited definition.
-:fixme
+// Private nested classes occupy distinct storage from inherited public classes.
 :expect [43, 47]
 class BaseTypes with
   class Entry with
@@ -432,8 +434,7 @@ class DerivedTypes extends BaseTypes with
   fun own() = new Entry
 let derived = new DerivedTypes
 [(new derived.Entry).value, derived.own().value]
-//│ ═══[RUNTIME ERROR] Expected: '[43, 47]', got: '[47, 47]'
-//│ = [47, 47]
+//│ = [43, 47]
 //│ derived = DerivedTypes { Entry: class Entry }
 
 
@@ -447,7 +448,7 @@ import "../../mlscript-compile/PrivateLibrary.mls"
 :e
 new PrivateLibrary.Hidden
 //│ ╔══[COMPILATION ERROR] Cannot access private class 'Hidden' outside its declaring owner
-//│ ║  l.448: 	new PrivateLibrary.Hidden
+//│ ║  l.449: 	new PrivateLibrary.Hidden
 //│ ║         	                  ^^^^^^^
 //│ ╟── private class declared here
 //│ ║  in ../../mlscript-compile/PrivateLibrary.mls
@@ -458,7 +459,7 @@ new PrivateLibrary.Hidden
 :e
 new PrivateLibrary.Implementation
 //│ ╔══[COMPILATION ERROR] Cannot access private class 'Implementation' outside its declaring owner
-//│ ║  l.459: 	new PrivateLibrary.Implementation
+//│ ║  l.460: 	new PrivateLibrary.Implementation
 //│ ║         	                  ^^^^^^^^^^^^^^^
 //│ ╟── private class declared here
 //│ ║  in ../../mlscript-compile/PrivateLibrary.mls

@@ -650,10 +650,7 @@ sealed abstract class Defn:
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
     case _ => false
-  lazy val visibility: Visibility = annotations.collectFirst:
-    case Annot.Modifier(Keyword.`private`) => Visibility.Private
-    case Annot.Modifier(Keyword.`public`) => Visibility.Public
-  .getOrElse(Visibility.Public)
+  lazy val visibility: Visibility = Visibility.of(annotations)
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]
   
@@ -960,6 +957,7 @@ final case class ClsLikeBody(
     ctor: Block,
     annotations: Ls[Annot],
 ):
+  lazy val visibility: Visibility = Visibility.of(annotations)
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
     case _ => false

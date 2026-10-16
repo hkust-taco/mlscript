@@ -27,3 +27,12 @@ module PrivateLibrary with
   module Implementation with
     fun make() = new Implementation
 
+  private class Point(val value: Int)
+  private class Alone with
+    fun value = 73
+  private module Service with
+    fun value() = 79
+  fun point(x: Int) = Point(x)
+  fun alone() = new Alone
+  fun service() = Service.value()
+
