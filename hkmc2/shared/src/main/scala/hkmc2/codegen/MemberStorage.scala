@@ -22,7 +22,7 @@ object MemberStorage:
   /** An absent owner denotes ordinary public/local storage. Read current IR definitions so
     * copied classes and synthetic modules do not depend on stale semantic definitions.
     * For the symbols that still have source definitions, this must agree with `sourcePrivateDefinition`. */
-  def privateOwner(sym: AnyDefinitionSymbol)(using Raise): Opt[InnerSymbol] =
+  def privateOwner(sym: AnyDefinitionSymbol)(using Raise, Config): Opt[InnerSymbol] =
     val stored = symbol(sym)
     val owner = stored match
       case term: TermSymbol => term.owner.filter(_ => term.isPrivate)
@@ -32,13 +32,12 @@ object MemberStorage:
         then definition.owner.filterNot(_.isInstanceOf[TopLevelSymbol])
         else N
       case _ => N
-    // A class-like binding without an IR definition, such as a foreign declaration's, has no storage to compare.
-    val decided = stored match
-      case cls: InnerSymbol => cls.asDefnSym.irClsLikeDefn.isDefined
-      case _ => true
-    // The two may disagree for the names that Elaborator rejects, which still reach code generation.
-    if decided && sym.defn.exists(definition => Visibility.publicWithPrivateCompanion(definition.bsym).isEmpty) then
-      softAssert(owner.isDefined === sourcePrivateDefinition(sym).isDefined,
+    if config.checkInvariants && sym.defn.isDefined then
+      // A class-like binding without an IR definition, such as a foreign declaration's, has no storage to compare.
+      val decided = stored match
+        case cls: InnerSymbol => cls.asDefnSym.irClsLikeDefn.isDefined
+        case _ => true
+      if decided then softAssert(owner.isDefined === sourcePrivateDefinition(sym).isDefined,
         s"The runtime storage of '${sym.nme}' is ${if owner.isDefined then "private" else "public"
           }, unlike what its source definitions imply")
     owner
@@ -49,9 +48,11 @@ object MemberStorage:
     * All the definitions of a member name share its runtime binding (see `symbol`), except type aliases,
     * which have no runtime storage, so this binding is private when all these definitions are private.
     * `privateOwner` instead reads the visibility of the IR definition that owns the binding. The two agree only
-    * thanks to the following invariants, which `privateOwner` checks for the symbols that have source definitions:
-    * - a public class or module cannot have a private companion (see Visibility.publicWithPrivateCompanion),
-    *   so a private function companion implies that the class-like definitions of its name are private;
+    * thanks to the following invariants, which `privateOwner` checks for the symbols that have source definitions
+    * when `Config.checkInvariants` is set:
+    * - a public class or module cannot have a private companion, so a private function companion implies that the
+    *   class-like definitions of its name are private; Elaborator marks the definitions of the names it rejects
+    *   for this reason as erroneous, and these are not compiled (see `Lowering.erroneousRef`);
     * - the definition of a class's constructor function carries the visibility modifiers of the class (see Elaborator);
     * - lowering copies visibility modifiers onto IR definitions,
     *   including onto the class that it creates for a standalone module (see Lowering).

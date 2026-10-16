@@ -282,15 +282,19 @@ module BadClassFunction with
 //│ ║  l.277: 	  private fun Entry() = new Entry
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+:re
+new BadClassFunction.Entry
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 :e
 module BadFunctionClass with
   private fun Entry() = new Entry
   class Entry
 //│ ╔══[COMPILATION ERROR] Public class 'Entry' cannot have a private companion
-//│ ║  l.288: 	  class Entry
+//│ ║  l.292: 	  class Entry
 //│ ║         	  ^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.287: 	  private fun Entry() = new Entry
+//│ ║  l.291: 	  private fun Entry() = new Entry
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -298,10 +302,10 @@ module BadClassModule with
   class Entry
   private module Entry
 //│ ╔══[COMPILATION ERROR] Public class 'Entry' cannot have a private companion
-//│ ║  l.298: 	  class Entry
+//│ ║  l.302: 	  class Entry
 //│ ║         	  ^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.299: 	  private module Entry
+//│ ║  l.303: 	  private module Entry
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -309,10 +313,10 @@ module BadModuleClass with
   private module Entry
   class Entry
 //│ ╔══[COMPILATION ERROR] Public class 'Entry' cannot have a private companion
-//│ ║  l.310: 	  class Entry
+//│ ║  l.314: 	  class Entry
 //│ ║         	  ^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.309: 	  private module Entry
+//│ ║  l.313: 	  private module Entry
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -321,12 +325,12 @@ module BadModuleFunction with
     fun twice(x: Int) = x + x
   private fun Convert(x: Int) = x
 //│ ╔══[COMPILATION ERROR] Public module 'Convert' cannot have a private companion
-//│ ║  l.320: 	  module Convert with
+//│ ║  l.324: 	  module Convert with
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^
-//│ ║  l.321: 	    fun twice(x: Int) = x + x
+//│ ║  l.325: 	    fun twice(x: Int) = x + x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.322: 	  private fun Convert(x: Int) = x
+//│ ║  l.326: 	  private fun Convert(x: Int) = x
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -335,12 +339,12 @@ module BadFunctionModule with
   module Convert with
     fun twice(x: Int) = x + x
 //│ ╔══[COMPILATION ERROR] Public module 'Convert' cannot have a private companion
-//│ ║  l.335: 	  module Convert with
+//│ ║  l.339: 	  module Convert with
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^
-//│ ║  l.336: 	    fun twice(x: Int) = x + x
+//│ ║  l.340: 	    fun twice(x: Int) = x + x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Private companion declared here
-//│ ║  l.334: 	  private fun Convert(x: Int) = x
+//│ ║  l.338: 	  private fun Convert(x: Int) = x
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -358,10 +362,10 @@ Public.make().value
 :e
 new Public
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Public' outside the class
-//│ ║  l.359: 	new Public
+//│ ║  l.363: 	new Public
 //│ ║         	^^^^^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.349: 	  private constructor
+//│ ║  l.353: 	  private constructor
 //│ ╙──       	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -448,7 +452,7 @@ import "../../mlscript-compile/PrivateLibrary.mls"
 :e
 new PrivateLibrary.Hidden
 //│ ╔══[COMPILATION ERROR] Cannot access private class 'Hidden' outside its declaring owner
-//│ ║  l.449: 	new PrivateLibrary.Hidden
+//│ ║  l.453: 	new PrivateLibrary.Hidden
 //│ ║         	                  ^^^^^^^
 //│ ╟── private class declared here
 //│ ║  in ../../mlscript-compile/PrivateLibrary.mls
@@ -459,7 +463,7 @@ new PrivateLibrary.Hidden
 :e
 new PrivateLibrary.Implementation
 //│ ╔══[COMPILATION ERROR] Cannot access private class 'Implementation' outside its declaring owner
-//│ ║  l.460: 	new PrivateLibrary.Implementation
+//│ ║  l.464: 	new PrivateLibrary.Implementation
 //│ ║         	                  ^^^^^^^^^^^^^^^
 //│ ╟── private class declared here
 //│ ║  in ../../mlscript-compile/PrivateLibrary.mls
