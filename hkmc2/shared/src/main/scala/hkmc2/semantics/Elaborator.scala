@@ -2151,7 +2151,7 @@ extends Importer:
         reportUnusedAnnotations
         (mkBlk(acc, N, hasResult), ctx)
       // * Constructor blocks support no annotations: they are desugared into sibling classes
-      // * (in `BlockImpl.desugStmts`) only when unannotated.
+      // * (in `BlockImpl.desugStmts`), which ignores their annotations.
       case Constructor(Block(ctors)) :: sts =>
         // TODO properly handle (it currently desugars to sibling classes)
         reportUnusedAnnotations

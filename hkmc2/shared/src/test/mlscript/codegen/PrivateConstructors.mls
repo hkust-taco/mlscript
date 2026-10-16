@@ -51,14 +51,9 @@ class Bar with
 //│ = 42
 
 // * The annotation is ignored, but the constructors of the block are still defined.
-:fixme
 :expect true
-Baz is Bar
-//│ ╔══[COMPILATION ERROR] Name not found: Baz
-//│ ║  l.56: 	Baz is Bar
-//│ ╙──      	^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
+(new Baz) is Bar
+//│ = true
 
 :e
 :w
@@ -66,13 +61,13 @@ module M with
   private constructor(x)
   fun foo = 42
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.66: 	  private constructor(x)
+//│ ║  l.61: 	  private constructor(x)
 //│ ║        	  ^^^^^^^
 //│ ╟── Annotations are not supported on constructor terms.
-//│ ║  l.66: 	  private constructor(x)
+//│ ║  l.61: 	  private constructor(x)
 //│ ╙──      	          ^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
-//│ ║  l.66: 	  private constructor(x)
+//│ ║  l.61: 	  private constructor(x)
 //│ ╙──      	          ^^^^^^^^^^^^^^
 
 :expect 42
@@ -93,10 +88,10 @@ class Foo { private constructor }
 :e
 new Foo
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
-//│ ║  l.94: 	new Foo
+//│ ║  l.89: 	new Foo
 //│ ║        	^^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.88: 	class Foo { private constructor }
+//│ ║  l.83: 	class Foo { private constructor }
 //│ ╙──      	            ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -109,11 +104,11 @@ class Foo { private constructor(val x) }
 :e
 new Foo(1)
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
-//│ ║  l.110: 	new Foo(1)
+//│ ║  l.105: 	new Foo(1)
 //│ ║         	^^^^^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.104: 	class Foo { private constructor(val x) }
-//│ ╙──       	            ^^^^^^^
+//│ ║  l.99: 	class Foo { private constructor(val x) }
+//│ ╙──      	            ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sr
@@ -125,20 +120,20 @@ class Foo(val x) { private constructor }
 :e
 Foo(1)
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
-//│ ║  l.126: 	Foo(1)
+//│ ║  l.121: 	Foo(1)
 //│ ║         	^^^
 //│ ╟── private constructor declared here
-//│ ║  l.120: 	class Foo(val x) { private constructor }
+//│ ║  l.115: 	class Foo(val x) { private constructor }
 //│ ╙──       	                   ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new Foo(1)
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
-//│ ║  l.136: 	new Foo(1)
+//│ ║  l.131: 	new Foo(1)
 //│ ║         	^^^^^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.120: 	class Foo(val x) { private constructor }
+//│ ║  l.115: 	class Foo(val x) { private constructor }
 //│ ╙──       	                   ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -155,20 +150,20 @@ class Foo(val x) { private constructor(val y) }
 :e
 Foo(1)(2)
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
-//│ ║  l.156: 	Foo(1)(2)
+//│ ║  l.151: 	Foo(1)(2)
 //│ ║         	^^^
 //│ ╟── private constructor declared here
-//│ ║  l.146: 	class Foo(val x) { private constructor(val y) }
+//│ ║  l.141: 	class Foo(val x) { private constructor(val y) }
 //│ ╙──       	                   ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 new Foo(1)(2)
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
-//│ ║  l.166: 	new Foo(1)(2)
+//│ ║  l.161: 	new Foo(1)(2)
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.146: 	class Foo(val x) { private constructor(val y) }
+//│ ║  l.141: 	class Foo(val x) { private constructor(val y) }
 //│ ╙──       	                   ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -200,10 +195,10 @@ Foo.ctor(1).x
 :e
 let mk = Foo
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
-//│ ║  l.201: 	let mk = Foo
+//│ ║  l.196: 	let mk = Foo
 //│ ║         	         ^^^
 //│ ╟── private constructor declared here
-//│ ║  l.179: 	  private constructor
+//│ ║  l.174: 	  private constructor
 //│ ╙──       	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mk = undefined
@@ -211,10 +206,10 @@ let mk = Foo
 :e
 class Bar extends Foo(1)
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
-//│ ║  l.212: 	class Bar extends Foo(1)
+//│ ║  l.207: 	class Bar extends Foo(1)
 //│ ║         	                  ^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.179: 	  private constructor
+//│ ║  l.174: 	  private constructor
 //│ ╙──       	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -222,12 +217,12 @@ class Bar extends Foo(1)
 new Foo(1) with
   fun foo = 42
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
-//│ ║  l.222: 	new Foo(1) with
+//│ ║  l.217: 	new Foo(1) with
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.223: 	  fun foo = 42
+//│ ║  l.218: 	  fun foo = 42
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.179: 	  private constructor
+//│ ║  l.174: 	  private constructor
 //│ ╙──       	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -235,10 +230,10 @@ new Foo(1) with
 module Other with
   class Bar extends Foo(1)
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
-//│ ║  l.236: 	  class Bar extends Foo(1)
+//│ ║  l.231: 	  class Bar extends Foo(1)
 //│ ║         	                    ^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.179: 	  private constructor
+//│ ║  l.174: 	  private constructor
 //│ ╙──       	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -264,10 +259,10 @@ let cls = Baz
 :e
 new cls
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Baz' outside the class
-//│ ║  l.265: 	new cls
+//│ ║  l.260: 	new cls
 //│ ║         	^^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.259: 	  private constructor
+//│ ║  l.254: 	  private constructor
 //│ ╙──       	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -282,10 +277,10 @@ class Qux with
 :e
 new Qux(1)(2)
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Qux' outside the class
-//│ ║  l.283: 	new Qux(1)(2)
+//│ ║  l.278: 	new Qux(1)(2)
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.278: 	  private constructor(x)
+//│ ║  l.273: 	  private constructor(x)
 //│ ╙──       	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -301,10 +296,10 @@ if Point.origin is Point(px, py) then px + py
 :e
 Point(1, 2)
 //│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Point' outside the class
-//│ ║  l.302: 	Point(1, 2)
+//│ ║  l.297: 	Point(1, 2)
 //│ ║         	^^^^^
 //│ ╟── private constructor declared here
-//│ ║  l.293: 	  private constructor
+//│ ║  l.288: 	  private constructor
 //│ ╙──       	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -315,10 +310,10 @@ Point(1, 2)
 class Foo with
   declare constructor(x)
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.316: 	  declare constructor(x)
+//│ ║  l.311: 	  declare constructor(x)
 //│ ║         	  ^^^^^^^
 //│ ╟── Annotations are not supported on constructor terms.
-//│ ║  l.316: 	  declare constructor(x)
+//│ ║  l.311: 	  declare constructor(x)
 //│ ╙──       	          ^^^^^^^^^^^^^^
 
 // * Constructors can only be declared directly in class bodies.
@@ -330,12 +325,12 @@ class Foo with
     private constructor
     42
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.330: 	    private constructor
+//│ ║  l.325: 	    private constructor
 //│ ║         	    ^^^^^^^
 //│ ╟── Annotations are not supported on constructor terms.
-//│ ║  l.330: 	    private constructor
+//│ ║  l.325: 	    private constructor
 //│ ╙──       	            ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
-//│ ║  l.330: 	    private constructor
+//│ ║  l.325: 	    private constructor
 //│ ╙──       	            ^^^^^^^^^^^
 
