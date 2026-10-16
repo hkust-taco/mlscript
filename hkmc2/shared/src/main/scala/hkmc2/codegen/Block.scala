@@ -29,9 +29,14 @@ This means that if a program fragment containing definitions is rewritten at all
 then the rewritten version must be kept as the "currently valid" version, and the old one must no longer be reused,
 as a given symbol can never correspond to more than one IR definition.
 
-Class-like symbols also retain a nominal `ClassHeader`: erasure publishes these before executable bodies,
+Class-like symbols also retain a `ClassHeader`: erasure publishes these before executable bodies,
 including for external declarations, and rewritten IR class definitions refresh them. This lets inheritance
 queries operate solely on IR even when a parent has no executable definition or has not been lowered yet.
+An unknown parent is recorded inside the header, independently of its other metadata.
+The header also links a companion module to its containing class, including the synthetic class of a
+standalone module. The distinct instance and static receivers share that class as their member container.
+It also records the function companion carrying the runtime class value. This symbol is an explicit
+`ClsLikeDefn` operand so transformations preserve and refresh it along with other IR references.
 
 Moreover, we generally assume that in a given program, no symbol is every bound more than once
 by any binding form, such as Scoped, Label, Define. (This is currently not completely enforced, though.)
@@ -610,6 +615,7 @@ object HandleBlock:
       End(),
       N,
       N,
+      N,
     )(N, Nil)
 
     blockBuilder
@@ -644,10 +650,7 @@ sealed abstract class Defn:
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
     case _ => false
-  lazy val visibility: Visibility = annotations.collectFirst:
-    case Annot.Modifier(Keyword.`private`) => Visibility.Private
-    case Annot.Modifier(Keyword.`public`) => Visibility.Public
-  .getOrElse(Visibility.Public)
+  lazy val visibility: Visibility = Visibility.of(annotations)
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]
   
@@ -682,7 +685,7 @@ sealed abstract class Defn:
         // * they need to be declared with `let` in JS, which is why we add them here.
         vd.sym.optionIf(tsym.owner.isEmpty)
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
-        methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
+        methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
       preCtor.freeVars
         ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
         -- auxParams.flatMap(_.paramSyms)
@@ -693,7 +696,7 @@ sealed abstract class Defn:
   lazy val size: Int = this match
     case FunDefn(_, _, _, params, body) => 1 + body.size
     case ValDefn(_, _, rhs) => 1
-    case ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
+    case ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
       1 + methods.map(_.size).sum + preCtor.size + ctor.size + stat.fold(0)(_.size)
   
 
@@ -848,10 +851,27 @@ object ValDefn:
       ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasedType = rhs.erasedValueType), sym, rhs)(configOverride, annotations)
 
 
-/** The nominal hierarchy of a class, available independently of its executable body.
-  * An absent header means an unknown parent; a header with no parent denotes a root.
+/** Class metadata, available independently of its executable body.
+  * An absent header means metadata has not been published. A published header records the parent
+  * as unknown, absent (a root), or known, independently of the remaining metadata.
+  * `companionClass` is installed by `ClsLikeDefn` for modules attached to a class, including
+  * standalone modules with synthetic classes. Other inner symbols are their own member containers.
+  * `termCompanion` identifies the function carrying this class/module's runtime value. Accessing
+  * that value must use the function's storage, including its private name, before selecting `.class`.
   */
-final case class ClassHeader(parent: Opt[TypeSymbol])
+final case class ClassHeader(parent: ClassHeader.Parent, companionClass: Opt[InnerSymbol], termCompanion: Opt[TermSymbol])
+
+object ClassHeader:
+  enum Parent:
+    case Unknown
+    case Root
+    case Known(symbol: TypeSymbol)
+
+    /** The parent symbol, if known. This projection does not distinguish roots from unknown parents;
+      * analyses that need to prove the absence of ancestors must inspect the three cases directly. */
+    def knownSymbol: Opt[TypeSymbol] = this match
+      case Known(symbol) => S(symbol)
+      case Unknown | Root => N
 
 /*
   The following explains the difference between paramsOpt, auxParams, privateFields and publicFields.
@@ -903,6 +923,7 @@ final case class ClsLikeDefn(
     ctor: Block,
     companion: Opt[ClsLikeBody],
     bufferable: Option[Bool],
+    termCompanion: Opt[TermSymbol],
 )(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
@@ -910,13 +931,18 @@ final case class ClsLikeDefn(
   require(k isnt syntax.Mod)
   isym match
     case sym: ClassLikeSymbol =>
-      sym.irClassHeader = parentPath match
-      case N => S(ClassHeader(N))
-      case S(parent) => parent.targetSymbol.flatMap(_.asTpe).map(p => ClassHeader(S(p)))
+      val parent = parentPath match
+        case N => ClassHeader.Parent.Root
+        case S(parent) => parent.targetSymbol.flatMap(_.asTpe)
+          .fold(ClassHeader.Parent.Unknown)(ClassHeader.Parent.Known(_))
+      sym.irClassHeader = S(ClassHeader(parent, N, termCompanion))
     case _ => ()
   methods.foreach: m =>
     m.dSym.irDefn = S(m)
   companion.foreach: c =>
+    c.isym match
+      case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym), termCompanion))
+      case _ => ()
     c.methods.foreach: m =>
       m.dSym.irDefn = S(m)
   val defnSym = S(isym)
@@ -931,9 +957,7 @@ final case class ClsLikeBody(
     ctor: Block,
     annotations: Ls[Annot],
 ):
-  isym match
-    case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(N))
-    case _ => ()
+  lazy val visibility: Visibility = Visibility.of(annotations)
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
     case _ => false

@@ -150,15 +150,9 @@ object ErasedType:
     */
   def Function(rsc: Opt[Bool]): ErasedValueType = ErasedType.ValueLike(rsc, ctx.builtins.Function)
 
-  /** Determines the direct parent of a class-like symbol.
-    *
-    * Returns:
-    * - `S(S(parent))` for a class with a resolvable parent.
-    * - `S(N)` for a root class with no parent.
-    * - `N` for a class whose parent chain is not available in the IR (e.g. an unlinked import).
-    */
-  private def parentOf(sym: BaseTypeSymbol): Opt[Opt[TypeSymbol]] =
-    sym.asClsOrMod.flatMap(_.irClassHeader.map(_.parent))
+  /** Determines the direct parent from published metadata, treating a missing header as unknown. */
+  private def parentOf(sym: BaseTypeSymbol): ClassHeader.Parent =
+    sym.irClassHeader.fold(ClassHeader.Parent.Unknown)(_.parent)
 
   /** A symbol's ancestors, nearest first, starting with the symbol itself and following its single parent chain.
     *
@@ -184,9 +178,9 @@ object ErasedType:
       if seen(cur) then AncestorChain(acc.reverse, complete = false)
       else cur match
         case base @ (_: ClassSymbol | _: ModuleOrObjectSymbol) => parentOf(base) match
-          case S(S(parent)) => loop(parent, seen + cur, cur :: acc)
-          case S(N) => AncestorChain((cur :: acc).reverse, complete = true)
-          case N => AncestorChain((cur :: acc).reverse, complete = false)
+          case ClassHeader.Parent.Known(parent) => loop(parent, seen + cur, cur :: acc)
+          case ClassHeader.Parent.Root => AncestorChain((cur :: acc).reverse, complete = true)
+          case ClassHeader.Parent.Unknown => AncestorChain((cur :: acc).reverse, complete = false)
         case _: TypeAliasSymbol => AncestorChain((cur :: acc).reverse, complete = false)
     loop(sym, Set.empty, Nil)
 

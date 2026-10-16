@@ -141,3 +141,21 @@ PrivateObject.inc()
 //│ ═══[RUNTIME ERROR] TypeError: PrivateObject1[inc$accessorSymbol1] is not a function
 
 
+module Strange {
+  public private fun weird = 1
+  private public fun odd = 2
+}
+
+Strange.weird
+//│ = 1
+
+:e
+Strange.odd
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'odd' outside its declaring owner
+//│ ║  l.153: 	Strange.odd
+//│ ║         	       ^^^^
+//│ ╟── private member declared here
+//│ ║  l.146: 	  private public fun odd = 2
+//│ ╙──       	                     ^^^
+
+

@@ -397,7 +397,7 @@ class TypeRelationTest extends AnyFunSuite:
     val name: Tree.Ident = Tree.Ident("Closed")
     val symbol = ClassSymbol(Tree.TypeDef(Cls, name, N), name)
     val defn = ClassDef.Plain(N, Cls, symbol, BlockMemberSymbol("Closed", Nil), Nil, N,
-      ObjBody(Term.Blk(Nil, Term.UnitVal())), N, Nil, Nil, N)(N)
+      ObjBody(Term.Blk(Nil, Term.UnitVal())), N, Nil, Nil, N, Nil)(N)
     h.state.state.lexicalTypeBinders(symbol) = Set.empty
     val original = NominalInstanceView(defn, Map.empty, N)(N, ShapeProvenance.empty)(h.resolver)
     val scheme = h.tpe(TypeShape.Top).resolution

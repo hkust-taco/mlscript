@@ -464,6 +464,7 @@ object Elaborator:
             // binders at this site (see NewResolver.instantiateByName).
             val ref = Term.MemberRef(sym)(id, FlowSymbol.memSym(sym))
             rctx.recordLexicalBinders(ref, ctx.typeBinders)
+            rctx.recordAccessSite(ref, ctx.scope)
             ref
         else
           sym.ref(id)
@@ -477,7 +478,8 @@ object Elaborator:
         if config.language.useNewResolution then
           val res = new Term.NewSel(prefix, name, N)(FlowSymbol.synthSel(nme)).withLocOf(id)
           rctx.recordLexicalBinders(res, ctx.typeBinders)
-          summon[NewResolver].newSel(res)
+          rctx.recordAccessSite(res, ctx.scope)
+          summon[NewResolver].newSel(res, ctx.scope)
           res
         else
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
@@ -489,7 +491,8 @@ object Elaborator:
         val prefixes = sources.map(source => source.elem.ref(source.id).withoutLoc.withLocOf(source.id))
         val res = new Term.UnresolvedRef(prefixes, id)(FlowSymbol.synthSel(nme)).withLocOf(id)
         rctx.recordLexicalBinders(res, ctx.typeBinders)
-        summon[NewResolver].unresolvedRef(res)
+        rctx.recordAccessSite(res, ctx.scope)
+        summon[NewResolver].unresolvedRef(res, ctx.scope)
         res
       def symbol: Opt[Symbol] = N
       def isImport: Bool = true
@@ -682,7 +685,8 @@ object Elaborator:
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       val bsym = BlockMemberSymbol("ret", Nil, true)
-      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N, auxCtorParams = Nil)(N)
+      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N,
+        auxCtorParams = Nil, ctorAnnotations = Nil)(N)
       sym.defn = S(defn)
       Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), FlowSymbol.synthSel(id.name), N, N)
     val nonLocalRet =
@@ -733,6 +737,8 @@ object Elaborator:
     * `App(Bra(Round, Block(x, y)), Tup(u, v))`.
     * An empty first parameter list is parsed as the unit literal:
     * `constructor()(x)` becomes `App(Unt(), Tup(x))`.
+    * A bare `constructor` declaration, which is parsed as `Empty()`, has no parameter lists;
+    * it is only useful with modifiers, as in `private constructor`.
     */
   private object ConstructorParamDecl:
     def mkTup(inner: Tree): Tree = inner match
@@ -741,6 +747,8 @@ object Elaborator:
       case other => Tup(other :: Nil)
 
     def unapply(tree: Tree): Opt[Ls[Tree]] = tree match
+      case Empty() =>
+        S(Nil)
       case Unt() =>
         S(Tup(Nil) :: Nil)
       case Bra(Round, inner) =>
@@ -750,6 +758,17 @@ object Elaborator:
       case App(lhs, Bra(Round, inner)) =>
         unapply(lhs).map(_ :+ mkTup(inner))
       case _ => N
+  
+  /** Extracts the annotations and the parameter lists of a (desugared) constructor declaration,
+    * as in `private constructor(x)`, where `private` desugars into an annotation. */
+  private object ConstructorDecl:
+    def unapply(tree: Tree): Opt[(Ls[Tree], Ls[Tree])] = tree match
+      case PossiblyAnnotated(annotations, Constructor(ConstructorParamDecl(paramLists))) => S(annotations, paramLists)
+      case _ => N
+  
+  /** The modifiers supported on constructor declarations, as in `private constructor(x)`.
+    * Class definitions record them in ClassDef.ctorAnnotations. */
+  private val constructorModifiers: Set[Keyword] = Set.single(Keyword.`private`)
   
 end Elaborator
 
@@ -1323,6 +1342,9 @@ extends Importer:
     
     def mkNew(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])(typ: Opt[typing.Type]): Term.New =
       val res = withTypeBinders(new Term.New(cls, args, rft)(FlowSymbol.neww(), typ).withLocOf(tree))
+      // The synthetic parent of an anonymous refinement (below) instantiates the same class at the same site,
+      // so only this expression accesses the class's constructor.
+      if newResolution then rctx.recordAccessSite(res, ctx.scope)
       rft.foreach: (symbol, body) =>
         // An anonymous refinement is a concrete subclass too. Publish its declaration
         // so override lookup, super references and implementation checks use the same graph.
@@ -1335,7 +1357,7 @@ extends Importer:
           new Term.New(captured(cls), args.map(captured), N)(FlowSymbol.neww(), typ).withLocOf(tree))
         if newResolution then resolveNew(parent)
         val definition = ClassDef.Plain(ctx.getOuter, syntax.Cls, symbol,
-          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N)(tree.toLoc)
+          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N, ctorAnnotations = Nil)(tree.toLoc)
         symbol.defn = S(definition)
         registerInheritance(definition)
       if newResolution then resolveNew(res)
@@ -1346,7 +1368,8 @@ extends Importer:
       // Resolve that interpretation on the qualifier itself, as for explicit `.class`.
       val qualifier = withTypeBinders(new Term.NewSel(cls, new Ident("class").withLocOf(cls), N)(FlowSymbol.sel("class")).withLocOf(cls))
       val res = withTypeBinders(new Term.NewSel(prefix, name, S(qualifier))(FlowSymbol.selProj(name.name)).withLocOf(tree))
-      newSel(res)
+      rctx.recordAccessSite(res, ctx.scope)
+      newSel(res, ctx.scope)
       interpretRef(res, interp)
 
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
@@ -1379,7 +1402,8 @@ extends Importer:
         Term.Lit(StrLit(loc.origin.fileName.toString))
       else if newResolution then
         val res = withTypeBinders(new Term.NewSel(preTrm, tree.name, N)(FlowSymbol.sel(tree.name.name)).withLocOf(tree))
-        newSel(res)
+        rctx.recordAccessSite(res, ctx.scope)
+        newSel(res, ctx.scope)
         interpretRef(res, interp)
       else
         Term.Sel(preTrm, tree.name)(sym, FlowSymbol.sel(tree.name.name), N, S(summon))
@@ -1448,7 +1472,7 @@ extends Importer:
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil), N,
-        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil)(hd.toLoc))
+        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil, ctorAnnotations = Nil)(hd.toLoc))
       
       val elabed = ctx.nestInner(derivedClsSym).givenIn:
         block(sts_, hasResult = false)._1
@@ -1710,6 +1734,7 @@ extends Importer:
           // Like other written selections, a by-name member selected through
           // `super` is instantiated at this site, within its type binders.
           val res = withTypeBinders(new Term.Super(receiver.ref(id), owner, nme)(FlowSymbol.sel(nme.name)).withLocOf(sel))
+          if newResolution then rctx.recordAccessSite(res, ctx.scope)
           resolveSuper(res)
           interpretRef(res, interp)
         case _ =>
@@ -2109,9 +2134,11 @@ extends Importer:
       // advancing to another statement starts a fresh span.
       val statementLoc = sourceLoc.orElse(sts.headOption.flatMap(_.toLoc))
       /** Call this function when the following term cannot be annotated. */
-      def reportUnusedAnnotations: Unit = if annotations.nonEmpty then raise:
+      def reportUnusedAnnotations: Unit = reportUnused(annotations)
+      /** Call this function when the following term cannot be annotated with `unusedAnnots`. */
+      def reportUnused(unusedAnnots: Ls[Annot]): Unit = if unusedAnnots.nonEmpty then raise:
         WarningReport:
-          msg"This annotation has no effect" -> (annotations.foldLeft[Opt[Loc]](N):
+          msg"This annotation has no effect" -> (unusedAnnots.foldLeft[Opt[Loc]](N):
             case (acc, ann) => acc match
               case N => ann.toLoc
               case S(loc) => S(loc ++ ann.toLoc)
@@ -2123,18 +2150,28 @@ extends Importer:
       case Nil =>
         reportUnusedAnnotations
         (mkBlk(acc, N, hasResult), ctx)
+      // * Constructor blocks support no annotations: they are desugared into sibling classes
+      // * (in `BlockImpl.desugStmts`), which ignores their annotations.
       case Constructor(Block(ctors)) :: sts =>
         // TODO properly handle (it currently desugars to sibling classes)
-        go(sts, annotations, acc)(N)
+        reportUnusedAnnotations
+        go(sts, Nil, acc)(N)
       case (ctorParams @ Constructor(ConstructorParamDecl(_))) :: sts =>
-        // constructor(x, y) or constructor(x, y)(u, v) syntax: params are extracted during class elaboration
-        ctx.getOuter match
+        // * `constructor`, `constructor(x, y)`, or `constructor(x, y)(u, v)` in a class body:
+        // * the `Cls` case of type definitions below extracts their parameter lists,
+        // * as well as their modifiers, which apply to the class's whole constructor.
+        // * Only the body of the class itself can declare its constructor, not a nested block.
+        ctx.outer.inner match
         case S(_: ClassSymbol) =>
-          go(sts, annotations, acc)(N)
+          reportUnused(annotations.filterNot:
+            case Annot.Modifier(kw) => constructorModifiers.contains(kw)
+            case _ => false)
+          go(sts, Nil, acc)(N)
         case _ =>
+          reportUnusedAnnotations
           raise(ErrorReport(msg"'constructor(...)' declarations are only allowed in class bodies"
             -> ctorParams.toLoc :: Nil))
-          go(sts, annotations, acc)(N)
+          go(sts, Nil, acc)(N)
       case Open(bod) :: sts =>
         reportUnusedAnnotations
         bod match
@@ -2669,15 +2706,18 @@ extends Importer:
               md
         case Cls =>
           val clsSym = td.symbol.asInstanceOf[ClassSymbol] // TODO: improve `asInstanceOf`
-          // Extract constructor(...) param lists from the class body
-          // Handles both single param lists: constructor(x, y)
-          // and multi param lists: constructor(x, y)(u, v)
-          val auxCtorParamTrees: Ls[Tree] = body match
-            case S(blk: Block) => blk.stmts.flatMap:
-              case Constructor(ConstructorParamDecl(paramTrees)) =>
-                paramTrees
-              case _ => Nil
+          // Extract the param lists and modifiers of the constructor declarations in the class body.
+          // Handles single param lists: constructor(x, y),
+          // multi param lists: constructor(x, y)(u, v),
+          // and modified declarations, possibly without param lists: private constructor
+          // The statement loop (see `go`) reports the unsupported annotations of these declarations.
+          val ctorDecls: Ls[(Ls[Tree], Ls[Tree])] = body match
+            case S(blk: Block) => blk.desugStmts.collect:
+              case ConstructorDecl(annotationTrees, paramTrees) => (annotationTrees, paramTrees)
             case _ => Nil
+          val auxCtorParamTrees: Ls[Tree] = ctorDecls.flatMap(_._2)
+          val ctorAnnotations = ctorDecls.flatMap(_._1).collect:
+            case kw @ Keywrd(mod) if constructorModifiers.contains(mod) => Annot.Modifier(mod)(kw.toLoc)
           val auxCtorPss = auxCtorParamTrees.map: ps =>
             val (res, newCtx2) =
               given Ctx = newCtx
@@ -2708,7 +2748,7 @@ extends Importer:
                     TermDefFlags.empty,
                     Modulefulness.none,
                     annotations.collect:
-                      case a @ Annot.Modifier(Keyword.`declare`) => a
+                      case a @ Annot.Modifier(Keyword.`declare` | Keyword.`private` | Keyword.`public`) => a
                     ,
                     S(clsSym),
                   )(statementLoc)
@@ -2719,7 +2759,8 @@ extends Importer:
               else N
               val cd =
                 val (bod, c) = mkBody(auxCtorPss)
-                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp, auxCtorParams = auxCtorPss)(statementLoc)
+                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp,
+                  auxCtorParams = auxCtorPss, ctorAnnotations = ctorAnnotations)(statementLoc)
               clsSym.defn = S(cd)
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
@@ -2763,6 +2804,21 @@ extends Importer:
     
     members.valuesIterator.foreach(_.complete())
     members.valuesIterator.foreach: bms =>
+      // Check completed definitions so declaration order cannot affect visibility. A public
+      // class/module cannot be reached through a private companion; a public companion may
+      // hide its implementation class. Constructor privacy is independent of class visibility.
+      // None of the definitions of a rejected name is compiled, nor are references to them
+      // (see Lowering.erroneousRef and MemberStorage.sourcePrivateDefinition).
+      def checkCompanion(definition: Definition, companion: Definition): Unit =
+        if (definition.visibility is Visibility.Public) && (companion.visibility is Visibility.Private) then
+          raise:
+            ErrorReport(
+              msg"Public ${definition.describeRef} cannot have a private companion" -> definition.toLoc ::
+                msg"Private companion declared here" -> companion.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation)
+          bms.symbols.foreach(_.defn.foreach(_.isErroneous = true))
+      bms.asCls.flatMap(_.defn).foreach: cls =>
+        bms.asMod.flatMap(_.defn).foreach(checkCompanion(cls, _))
       bms.symbols.foreach:
         case sym: (ClassLikeSymbol & InnerSymbol) =>
           sym.defn.foreach: d => // erroneous code may not have a defn even after the BMS is completed
@@ -2770,8 +2826,9 @@ extends Importer:
             // A declaration supplies no fresh function object to hold a companion.
             // Generated constructor functions also have no source body, but lowering creates them.
             // Foreign class-like declarations produce no companion initialization at all.
-            if d.hasDeclareModifier.isEmpty then
-              bms.asTrm.filterNot(_.isInstanceOf[ClassCtorSymbol]).flatMap(_.defn).foreach: term =>
+            bms.asTrm.filterNot(_.isInstanceOf[ClassCtorSymbol]).flatMap(_.defn).foreach: term =>
+              checkCompanion(d, term)
+              if d.hasDeclareModifier.isEmpty then
                 if term.body.isEmpty || term.hasDeclareModifier.isDefined then raise:
                   ErrorReport:
                     msg"A term declaration cannot have an implemented ${sym.describeKind} companion" -> term.toLoc

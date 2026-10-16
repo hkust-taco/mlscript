@@ -120,8 +120,13 @@ while we often leave some there for easier future editing by programmers,
 it seems AI agent toolings like `apply_patch` reliably removes them anyway, which is okay
 (note: this is discussed at https://github.com/openai/codex/issues/21121#issuecomment-4608911199).
 
+When removing a block of code separated by empty lines, remove the separating empty lines as well,
+eg, `A\nB\nC` -> `A\nC` (not `A\n\nC`) and `A\n\nB\nC` -> `A\n\nC` (not `A\nC` nor `A\n\n\nC`).
+
 **Important:** When working on a PR, make sure to check the diff of the whole PR (including all commits)
-to ensure that no needless empty-line changes are included in the PR. If you find any, please remove them.
+for accidental empty-line or indentation changes introduced by AI agents. Distinguish that diff noise
+from intentional edits by the user or other human contributors by checking the commit history.
+Preserve intentional contributor edits, including added indentation on empty lines.
 
 
 ## Manipulating IR representations

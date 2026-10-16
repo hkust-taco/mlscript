@@ -650,7 +650,7 @@ object Normalization:
   ): Bool =
     def go(sym: ClassSymbol | ModuleOrObjectSymbol,
         visited: Set[ClassSymbol | ModuleOrObjectSymbol]): Bool =
-      !visited.contains(sym) && (sym.irClassHeader.flatMap(_.parent).flatMap(_.asClsOrMod) match
+      !visited.contains(sym) && (sym.irClassHeader.flatMap(_.parent.knownSymbol).flatMap(_.asClsOrMod) match
         case S(parentSym) =>
           (parentSym is parent) || go(parentSym, visited + sym)
         case N => false)
