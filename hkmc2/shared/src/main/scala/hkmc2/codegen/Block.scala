@@ -128,7 +128,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) =>
       s"""|Define(${defn.showDbg})
           |${rest.showDbg}""".stripMargin
-    case Throw(exc) => s"Throw(${exc.showDbg})"
+    case Throw(exc, _) => s"Throw(${exc.showDbg})"
     case Scoped(syms, body) =>
       s"""|Scoped(${syms.toList.map(_.showDbg).sorted.mkString(", ")}) {
           |${body.showDbg}
@@ -175,7 +175,7 @@ sealed abstract class Block extends Product:
   
   lazy val size: Int = 1 + this.match
     case Return(r: Result) => r.size
-    case Throw(r: Result) => r.size
+    case Throw(r: Result, _) => r.size
     case _: End | _: Break | _: Continue | _: Unreachable => 0
     case Begin(sub, rst) => sub.size + rst.size
     case Assign(_, r, rst) => r.size + rst.size
@@ -204,7 +204,7 @@ sealed abstract class Block extends Product:
       ++ arms.iterator.flatMap:
         (pat, arm) => arm.freeVars ++ pat.freeVars
     case Return(res) => res.freeVars
-    case Throw(exc) => exc.freeVars
+    case Throw(exc, _) => exc.freeVars
     case Label(label, _, body, rest) => (body.freeVars - label) ++ rest.freeVars 
     case Break(label) => Set.single(label)
     case Continue(label) => Set.single(label)
@@ -236,7 +236,7 @@ sealed abstract class Block extends Product:
     
     // TODO rm Lam from results and thus the need for these cases
     case Return(r) => r.subBlocks
-    case Throw(r) => r.subBlocks
+    case Throw(r, _) => r.subBlocks
     
     case _: Return | _: Throw | _: Break | _: Continue | _: End | _: Unreachable => Nil
   
@@ -402,7 +402,7 @@ case class Match(
 
 case class Return(res: Result) extends BlockTail
 
-case class Throw(exc: Result) extends BlockTail
+case class Throw(exc: Result, annotations: Ls[Annot]) extends BlockTail
 
 object Throw:
   /** Throws a runtime `Error` carrying `msg`.
@@ -414,7 +414,7 @@ object Throw:
     mut = false,
     State.globalThisSymbol.asThis.selN(Tree.Ident("Error")),
     (Value.Lit(Tree.StrLit(msg))(N).asArg :: Nil) :: Nil,
-  )(InstantiateMetadata.empty, N))
+  )(InstantiateMetadata.empty, N), annotations = Nil)
 
 case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block)
 extends Block with NonBlockTail with ProductWithTail

@@ -33,7 +33,7 @@ object ImplctRet extends TailOp(transfersControl = false):
     case Value.Lit(Tree.UnitLit(false)) => End()
     case _ => Return(r)
 object Thrw extends TailOp(transfersControl = true):
-  def apply(r: Result): Block = Throw(r)
+  def apply(r: Result): Block = Throw(r, annotations = Nil)
 
 
 class LoweringCtx(
@@ -75,7 +75,7 @@ import LoweringCtx.loweringCtx
 object Lowering:
   
   def compError: Block =
-    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error."))(N))
+    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error."))(N), annotations = Nil)
   
   def fail(err: ErrorReport)(using Raise): Block =
     raise(err)
