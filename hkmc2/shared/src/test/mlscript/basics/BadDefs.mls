@@ -85,3 +85,15 @@ trait F
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 
+// Value definitions do not take parameter lists.
+:fixme
+val badValue(x) = x
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+
+:fixme
+fun localBadValue() =
+  val badLocal(x) = x
+  badLocal
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+
+

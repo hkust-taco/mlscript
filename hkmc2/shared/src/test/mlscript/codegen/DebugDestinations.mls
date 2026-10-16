@@ -61,3 +61,46 @@ fs.readFileSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsParse.l
 
 :silent
 fs.rmSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsParse.log", {force: true})
+
+
+// Diff-test commands write to the test output, even when #dbg selects a file destination.
+:silent
+fs.rmSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsCommand.log", {force: true})
+
+:noCodeGen
+#dbg(out: File("DebugDestinationsCommand.log"))
+
+:noCodeGen
+:dp
+1
+
+#dbg(out: StdIO)
+
+:fixme
+:expect false
+fs.existsSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsCommand.log")
+//│ ═══[RUNTIME ERROR] Expected: 'false', got: 'true'
+//│ = true
+
+:silent
+fs.rmSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsCommand.log", {force: true})
+
+
+// Absolute file destinations are not resolved against the base directory, as for imports.
+:silent
+val absoluteDebugFile = "/tmp/mlscript-DebugDestinationsAbsolute.log"
+fs.rmSync(absoluteDebugFile, {force: true})
+
+:fixme
+@dbg('lowering, showUids: false, out: File("/tmp/mlscript-DebugDestinationsAbsolute.log"))
+fun absolute_file() = 1801
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: /tmp/mlscript-DebugDestinationsAbsolute.log is not a relative path
+
+:fixme
+:expect true
+fs.existsSync(absoluteDebugFile) and fs.readFileSync(absoluteDebugFile, "utf8").includes("Lowering.term 1801\n")
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+:silent
+fs.rmSync(absoluteDebugFile, {force: true})
