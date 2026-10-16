@@ -69,7 +69,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     raise(ErrorReport(errMsg -> N :: Nil,
       source = Diagnostic.Source.Compilation))
     doc" # ${mkErr(errMsg)};"
-
   
   private def getPrivateAccessorSymbol(ts: DefinitionSymbol[?]): semantics.TempSymbol =
     privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.nme}$$accessorSymbol"))
