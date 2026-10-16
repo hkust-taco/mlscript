@@ -128,7 +128,9 @@ object Config:
       v0_3_x,
     ).map(l => l.versionName -> l).toMap
     
-    val default = v0_2_x
+    val default = v0_2_x.copy()(versionName = "default")
+    
+    val latest = v0_3_x
     
   end Language
   
