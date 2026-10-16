@@ -178,12 +178,12 @@ class AbstractSuper extends Abstract { fun foo() = super.foo() }
 :e
 class PrivateBase { private fun secret() = 1 }
 class PrivateSuper extends PrivateBase { fun f() = super.secret() }
-//│ ╔══[COMPILATION ERROR] Private member 'secret' is not available through 'super'
+//│ ╔══[COMPILATION ERROR] Resolution error in super reference
 //│ ║  l.180: 	class PrivateSuper extends PrivateBase { fun f() = super.secret() }
-//│ ║         	                                                        ^^^^^^^
-//│ ╟── private member declared here
-//│ ║  l.179: 	class PrivateBase { private fun secret() = 1 }
-//│ ╙──       	                                ^^^^^^
+//│ ║         	                                                   ^^^^^^^^^^^^
+//│ ╟── No inherited member 'secret' is available through 'super'
+//│ ║  l.180: 	class PrivateSuper extends PrivateBase { fun f() = super.secret() }
+//│ ╙──       	                                                   ^^^^^^^^^^^^
 
 :e
 class ConcreteMissing { fun foo() }
@@ -434,7 +434,7 @@ let changingParent = makeParent(4)
 class SavedParent extends changingParent { override fun f() = super.f() }
 set changingParent = makeParent(9)
 (new SavedParent).f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3370'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3360'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 4
@@ -449,7 +449,7 @@ let changingHolder = Holder(5)
 class SavedNestedParent extends changingHolder.Parent { override fun f() = super.f() }
 set changingHolder = Holder(11)
 (new SavedNestedParent).f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3370'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3360'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 5

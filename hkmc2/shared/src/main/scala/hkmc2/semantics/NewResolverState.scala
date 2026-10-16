@@ -504,32 +504,34 @@ final class ResolutionContext private[semantics] (
               msg"private $kind declared here" -> declaredAt(definition) :: Nil,
               source = Diagnostic.Source.Compilation) :: Nil
           case _ => Nil
-    /** The definition of `target` if it is a member stored privately at runtime (see MemberLookup.isPrivateName),
+    /** The definition of `target` if it is a member stored privately at runtime,
       * along with a description of its kind. */
     def privateMember(target: DefinitionSymbol[?]): Opt[(Str, Definition)] =
       def owned(kind: Str, definition: Definition, owner: Opt[InnerSymbol]) = owner match
         case S(_: TopLevelSymbol) | N => N
-        case S(_) => Option.when(MemberLookup.isPrivateName(definition.bsym))(kind -> definition)
+        case S(_) =>
+          // A public type alias keeps the name visible during lookup, but supplies no runtime storage.
+          val symbols = definition.bsym.symbols.filterNot(_.isInstanceOf[TypeAliasSymbol])
+          Option.when(symbols.nonEmpty && symbols.forall(_.defn.exists(_.visibility is Visibility.Private)))(kind -> definition)
       target match
         case ctor: ClassCtorSymbol => privateMember(ctor.associatedCls)
         case member: TermSymbol => member.defn.flatMap(owned("member", _, member.owner))
-        case member: InnerSymbol => member.asDefnSym.defn.flatMap:
-          case definition: ClassLikeDef => owned(member.asDefnSym.describeKind, definition, definition.owner)
-          case _ => N
+        case member: InnerSymbol => member.asDefnSym.defn.flatMap: definition =>
+          owned(member.asDefnSym.describeKind, definition, definition.owner)
         case _ => N
     /** Lowering compiles a reference with several targets, or with a receiver of unknown shape, to a property access
-      * (see Lowering.newSelection). That access never reaches a private member, which is not a property of its
-      * receiver, so it would silently select another member for the receivers whose private member is accessible.
+      * (see Lowering.newSelection and Lowering.openSelection). That access cannot reach private storage, so it would
+      * silently select another member for the receivers whose private member is accessible.
       * Since private members are never overridden, no other target can stand for a private target either. */
     def checkPrivateMix(ref: NewResolvable): Ls[Diagnostic] =
       val targets = ref.resolvedTargets.distinct
-      val privates = targets.flatMap(privateMember)
+      val (privates, others) = targets.partitionMap(target => privateMember(target).toLeft(target))
       val dynamic = ref match
         case sel: NewSel => sel.hasDynamicTarget
+        case ref: UnresolvedRef => ref.dynamicPrefixes.nonEmpty
         case _ => false
       if privates.isEmpty || targets.sizeIs == 1 && !dynamic then Nil
       else
-        val others = targets.filter(privateMember(_).isEmpty)
         ErrorReport(
           msg"This reference may target a private member, which cannot be selected together with other members" -> loc ::
           privates.map((kind, definition) => msg"private $kind '${definition.bsym.nme}' declared here" -> declaredAt(definition)) :::

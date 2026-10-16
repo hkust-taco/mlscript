@@ -129,12 +129,12 @@ class Derived extends Base with
 :e
 class Derived extends Base with
   fun get = super.secret
-//│ ╔══[COMPILATION ERROR] Private member 'secret' is not available through 'super'
+//│ ╔══[COMPILATION ERROR] Resolution error in super reference
 //│ ║  l.131: 	  fun get = super.secret
-//│ ║         	                 ^^^^^^^
-//│ ╟── private member declared here
-//│ ║  l.117: 	  private fun secret = 1
-//│ ╙──       	              ^^^^^^
+//│ ║         	            ^^^^^^^^^^^^
+//│ ╟── No inherited member 'secret' is available through 'super'
+//│ ║  l.131: 	  fun get = super.secret
+//│ ╙──       	            ^^^^^^^^^^^^
 
 class Outer with
   private val v = 1
@@ -298,10 +298,22 @@ class SuperOuter with
   private fun secret = 1
   class SuperInner extends SuperOuter with
     fun get = super.secret
-//│ ╔══[COMPILATION ERROR] Private member 'secret' is not available through 'super'
+//│ ╔══[COMPILATION ERROR] Resolution error in super reference
 //│ ║  l.300: 	    fun get = super.secret
-//│ ║         	                   ^^^^^^^
-//│ ╟── private member declared here
-//│ ║  l.298: 	  private fun secret = 1
-//│ ╙──       	              ^^^^^^
+//│ ║         	              ^^^^^^^^^^^^
+//│ ╟── No inherited member 'secret' is available through 'super'
+//│ ║  l.300: 	    fun get = super.secret
+//│ ╙──       	              ^^^^^^^^^^^^
 
+
+// * `super` skips private members of the parent to find an inherited public member.
+
+:expect 1
+class SuperPublic with
+  fun secret = 1
+class SuperPrivate extends SuperPublic with
+  private fun secret = 2
+class SuperChild extends SuperPrivate with
+  fun get = super.secret
+(new SuperChild).get
+//│ = 1

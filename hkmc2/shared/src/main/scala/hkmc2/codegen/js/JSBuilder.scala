@@ -1174,7 +1174,6 @@ object JSBuilder:
     }.mkString
   
   extension (dsym: DefinitionSymbol[?])
-
     /** In JS, when a class is overloaded with a term (either explicitly, or because it has a primary parameter list),
       * then its class value is stored in a `.class` property of the term.
       * 
