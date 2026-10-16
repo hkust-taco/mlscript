@@ -621,9 +621,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   case cls: ClsLikeDefn =>
                     val stored = MemberStorage.symbol(cls.isym)
                     if (stored is cls.isym) && MemberStorage.privateOwner(stored).contains(owner) then
+                      // Each class symbol has one binding in the IR; duplicate visits violate that invariant.
+                      softAssert(!classFields.contains(stored), s"Duplicate private class field '${stored.nme}'")
                       classFields += stored
                   case _ => super.applyDefn(defn)
-              val allPrivFlds = privFlds ++ mutPubFields.map(_._2) ++ classFields.toList.distinct
+              val allPrivFlds = privFlds ++ mutPubFields.map(_._2) ++ classFields.toList
               val privDecls = allPrivFlds.map: fld =>
                 doc" # $mtdPrefix#${isym.privatesScope.allocateOrGetName(fld)};"
               def privateOwnerQual(sym: DefinitionSymbol[?]) =
