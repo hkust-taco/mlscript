@@ -20,14 +20,54 @@ object MemberStorage:
     case _ => sym
   
   /** An absent owner denotes ordinary public/local storage. Read current IR definitions so
-    * copied classes and synthetic modules do not depend on stale semantic definitions. */
-  def privateOwner(sym: AnyDefinitionSymbol): Opt[InnerSymbol] = symbol(sym) match
-    case term: TermSymbol => term.owner.filter(_ => term.isPrivate)
-    case cls: InnerSymbol => cls.asDefnSym.irClsLikeDefn.flatMap: definition =>
-      if (definition.visibility is Visibility.Private)
-      && definition.companion.forall(_.visibility is Visibility.Private)
-      then definition.owner.filterNot(_.isInstanceOf[TopLevelSymbol])
-      else N
-    case _ => N
+    * copied classes and synthetic modules do not depend on stale semantic definitions.
+    * For the symbols that still have source definitions, this must agree with `sourcePrivateDefinition`. */
+  def privateOwner(sym: AnyDefinitionSymbol)(using Raise): Opt[InnerSymbol] =
+    val stored = symbol(sym)
+    val owner = stored match
+      case term: TermSymbol => term.owner.filter(_ => term.isPrivate)
+      case cls: InnerSymbol => cls.asDefnSym.irClsLikeDefn.flatMap: definition =>
+        if (definition.visibility is Visibility.Private)
+        && definition.companion.forall(_.visibility is Visibility.Private)
+        then definition.owner.filterNot(_.isInstanceOf[TopLevelSymbol])
+        else N
+      case _ => N
+    // A class-like binding without an IR definition, such as a foreign declaration's, has no storage to compare.
+    val decided = stored match
+      case cls: InnerSymbol => cls.asDefnSym.irClsLikeDefn.isDefined
+      case _ => true
+    // The two may disagree for the names that Elaborator rejects, which still reach code generation.
+    if decided && sym.defn.exists(definition => Visibility.publicWithPrivateCompanion(definition.bsym).isEmpty) then
+      softAssert(owner.isDefined === sourcePrivateDefinition(sym).isDefined,
+        s"The runtime storage of '${sym.nme}' is ${if owner.isDefined then "private" else "public"
+          }, unlike what its source definitions imply")
+    owner
+  
+  /** The counterpart of `privateOwner` for code that runs before lowering, when IR definitions do not exist yet:
+    * the source definition of `sym` if `sym` is stored privately. ResolutionContext.checkAccess uses it to reject
+    * the references that lowering would compile to property accesses, which cannot reach private storage.
+    * All the definitions of a member name share its runtime binding (see `symbol`), except type aliases,
+    * which have no runtime storage, so this binding is private when all these definitions are private.
+    * `privateOwner` instead reads the visibility of the IR definition that owns the binding. The two agree only
+    * thanks to the following invariants, which `privateOwner` checks for the symbols that have source definitions:
+    * - a public class or module cannot have a private companion (see Visibility.publicWithPrivateCompanion),
+    *   so a private function companion implies that the class-like definitions of its name are private;
+    * - the definition of a class's constructor function carries the visibility modifiers of the class (see Elaborator);
+    * - lowering copies visibility modifiers onto IR definitions,
+    *   including onto the class that it creates for a standalone module (see Lowering).
+    */
+  def sourcePrivateDefinition(sym: AnyDefinitionSymbol): Opt[Definition] =
+    def privatelyStored(definition: Definition, owner: Opt[InnerSymbol]): Opt[Definition] = owner match
+      case S(_: TopLevelSymbol) | N => N
+      case S(_) =>
+        val stored = definition.bsym.symbols.filter:
+          case _: TypeAliasSymbol => false
+          case _ => true
+        Option.when(stored.nonEmpty && stored.forall(_.defn.exists(_.visibility is Visibility.Private)))(definition)
+    sym match
+      case ctor: ClassCtorSymbol => sourcePrivateDefinition(ctor.associatedCls)
+      case member: TermSymbol => member.defn.flatMap(privatelyStored(_, member.owner))
+      case member: InnerSymbol => member.asDefnSym.defn.flatMap(definition => privatelyStored(definition, definition.owner))
+      case _ => N
   
 end MemberStorage

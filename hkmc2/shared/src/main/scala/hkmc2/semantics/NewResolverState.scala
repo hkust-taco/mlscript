@@ -507,18 +507,12 @@ final class ResolutionContext private[semantics] (
     /** The definition of `target` if it is a member stored privately at runtime,
       * along with a description of its kind. */
     def privateMember(target: DefinitionSymbol[?]): Opt[(Str, Definition)] =
-      def owned(kind: Str, definition: Definition, owner: Opt[InnerSymbol]) = owner match
-        case S(_: TopLevelSymbol) | N => N
-        case S(_) =>
-          // A public type alias keeps the name visible during lookup, but supplies no runtime storage.
-          val symbols = definition.bsym.symbols.filterNot(_.isInstanceOf[TypeAliasSymbol])
-          Option.when(symbols.nonEmpty && symbols.forall(_.defn.exists(_.visibility is Visibility.Private)))(kind -> definition)
-      target match
-        case ctor: ClassCtorSymbol => privateMember(ctor.associatedCls)
-        case member: TermSymbol => member.defn.flatMap(owned("member", _, member.owner))
-        case member: InnerSymbol => member.asDefnSym.defn.flatMap: definition =>
-          owned(member.asDefnSym.describeKind, definition, definition.owner)
-        case _ => N
+      codegen.MemberStorage.sourcePrivateDefinition(target).map: definition =>
+        val kind = target match
+          case ctor: ClassCtorSymbol => ctor.associatedCls.describeKind
+          case _: TermSymbol => "member"
+          case _ => target.describeKind
+        kind -> definition
     /** Lowering compiles a reference with several targets, or with a receiver of unknown shape, to a property access
       * (see Lowering.newSelection and Lowering.openSelection). That access cannot reach private storage, so it would
       * silently select another member for the receivers whose private member is accessible.

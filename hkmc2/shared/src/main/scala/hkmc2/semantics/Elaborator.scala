@@ -2804,17 +2804,13 @@ extends Importer:
     
     members.valuesIterator.foreach(_.complete())
     members.valuesIterator.foreach: bms =>
-      // Check completed definitions so declaration order cannot affect visibility. A public
-      // class/module cannot be reached through a private companion; a public companion may
-      // hide its implementation class. Constructor privacy is independent of class visibility.
-      def checkCompanion(definition: Definition, companion: Definition): Unit =
-        if (definition.visibility is Visibility.Public) && (companion.visibility is Visibility.Private) then raise:
+      // Check completed definitions so declaration order cannot affect visibility.
+      Visibility.publicWithPrivateCompanion(bms).foreach: (definition, companion) =>
+        raise:
           ErrorReport(
             msg"Public ${definition.describeRef} cannot have a private companion" -> definition.toLoc ::
               msg"Private companion declared here" -> companion.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
-      bms.asCls.flatMap(_.defn).foreach: cls =>
-        bms.asMod.flatMap(_.defn).foreach(checkCompanion(cls, _))
       bms.symbols.foreach:
         case sym: (ClassLikeSymbol & InnerSymbol) =>
           sym.defn.foreach: d => // erroneous code may not have a defn even after the BMS is completed
@@ -2822,9 +2818,8 @@ extends Importer:
             // A declaration supplies no fresh function object to hold a companion.
             // Generated constructor functions also have no source body, but lowering creates them.
             // Foreign class-like declarations produce no companion initialization at all.
-            bms.asTrm.filterNot(_.isInstanceOf[ClassCtorSymbol]).flatMap(_.defn).foreach: term =>
-              checkCompanion(d, term)
-              if d.hasDeclareModifier.isEmpty then
+            if d.hasDeclareModifier.isEmpty then
+              bms.asTrm.filterNot(_.isInstanceOf[ClassCtorSymbol]).flatMap(_.defn).foreach: term =>
                 if term.body.isEmpty || term.hasDeclareModifier.isDefined then raise:
                   ErrorReport:
                     msg"A term declaration cannot have an implemented ${sym.describeKind} companion" -> term.toLoc

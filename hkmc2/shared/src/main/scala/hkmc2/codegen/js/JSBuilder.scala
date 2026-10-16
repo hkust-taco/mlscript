@@ -98,7 +98,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     privateAccessorSymbols.iterator.toList.sortBy(_._1.uid).foreach: (_, sym) =>
       scope.allocateOrGetName(sym)
 
-  private def collectExternalPrivateAccessors(p: Program)(using State): Unit =
+  private def collectExternalPrivateAccessors(p: Program)(using State, Raise): Unit =
     privateAccessorSymbols.clear()
     var inScopeClasses: Set[InnerSymbol] = Set.empty
     def withClass(cls: InnerSymbol)(body: => Unit): Unit =

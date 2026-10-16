@@ -813,6 +813,22 @@ object Visibility:
       case Annot.Modifier(Keyword.`private`) => Visibility.Private
       case Annot.Modifier(Keyword.`public`) => Visibility.Public
     .getOrElse(Visibility.Public)
+  
+  /** The pairs of a public definition of `bms` and a private companion, which Elaborator rejects:
+    * a public class or module cannot be reached through a private companion module or function,
+    * whereas a public companion may hide its implementation class.
+    * Constructor privacy is independent of class visibility.
+    * Code generation relies on this to store a name privately exactly when all its definitions are private
+    * (see codegen.MemberStorage.sourcePrivateDefinition). */
+  def publicWithPrivateCompanion(bms: BlockMemberSymbol): Ls[(Definition, Definition)] =
+    val functionCompanions = bms.asTrm.filterNot(_.isInstanceOf[ClassCtorSymbol]).flatMap(_.defn).toList
+    val pairs: Ls[(Definition, Definition)] =
+      bms.asCls.flatMap(_.defn).toList.flatMap(cls => bms.asMod.flatMap(_.defn).map(cls -> _)) :::
+      bms.symbols.flatMap:
+        case sym: (ClassLikeSymbol & InnerSymbol) => sym.defn.toList.flatMap(d => functionCompanions.map(d -> _))
+        case _ => Nil
+    pairs.filter: (definition, companion) =>
+      (definition.visibility is Visibility.Public) && (companion.visibility is Visibility.Private)
 
 /** `isMethod` distinguishes methods from functions. `hasResultAnnotation` records whether a
   * signature describes just the result; erasure consumes leading arrows only for full signatures.
