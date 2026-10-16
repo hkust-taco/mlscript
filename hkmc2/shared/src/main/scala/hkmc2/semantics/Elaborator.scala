@@ -768,7 +768,7 @@ object Elaborator:
   
   /** The modifiers supported on constructor declarations, as in `private constructor(x)`.
     * Class definitions record them in ClassDef.ctorAnnotations. */
-  private val constructorModifiers: Set[Keyword] = Set(Keyword.`private`)
+  private val constructorModifiers: Set[Keyword] = Set.single(Keyword.`private`)
   
 end Elaborator
 
@@ -2135,10 +2135,10 @@ extends Importer:
       val statementLoc = sourceLoc.orElse(sts.headOption.flatMap(_.toLoc))
       /** Call this function when the following term cannot be annotated. */
       def reportUnusedAnnotations: Unit = reportUnused(annotations)
-      /** Call this function when the following term cannot be annotated with `unused`. */
-      def reportUnused(unused: Ls[Annot]): Unit = if unused.nonEmpty then raise:
+      /** Call this function when the following term cannot be annotated with `unusedAnnots`. */
+      def reportUnused(unusedAnnots: Ls[Annot]): Unit = if unusedAnnots.nonEmpty then raise:
         WarningReport:
-          msg"This annotation has no effect" -> (unused.foldLeft[Opt[Loc]](N):
+          msg"This annotation has no effect" -> (unusedAnnots.foldLeft[Opt[Loc]](N):
             case (acc, ann) => acc match
               case N => ann.toLoc
               case S(loc) => S(loc ++ ann.toLoc)
@@ -2150,8 +2150,6 @@ extends Importer:
       case Nil =>
         reportUnusedAnnotations
         (mkBlk(acc, N, hasResult), ctx)
-      // * Annotations on constructor declarations must not be passed on to the next statement,
-      // * which they would otherwise silently modify (e.g., by making the following class member private).
       // * Constructor blocks support no annotations: they are desugared into sibling classes
       // * (in `BlockImpl.desugStmts`) only when unannotated.
       case Constructor(Block(ctors)) :: sts =>

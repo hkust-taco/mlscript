@@ -81,12 +81,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   
   /** Private names belong to the containing IR class, shared by its instance and static members.
     * Accesses outside that class's lexical scope need an accessor. */
-  private def privateScopeIn(owner: InnerSymbol, classes: Set[InnerSymbol]): Opt[Scope] =
+  private def privateScopeIn(owner: InnerSymbol, inScopeClasses: Set[InnerSymbol]): Opt[Scope] =
     val cls = owner.irClassContainer
-    Option.when(classes(cls))(cls.privatesScope)
+    Option.when(inScopeClasses.contains(cls))(cls.privatesScope)
   
-  
-
   private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     ts.owner.collect:
       case owner if ts.isPrivate =>
@@ -108,14 +106,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
 
   private def collectExternalPrivateAccessors(p: Program)(using State): Unit =
     privateAccessorSymbols.clear()
-    var classes: Set[InnerSymbol] = Set.empty
+    var inScopeClasses: Set[InnerSymbol] = Set.empty
     def withClass(cls: InnerSymbol)(body: => Unit): Unit =
-      val oldClasses = classes
-      classes += cls
+      val oldClasses = inScopeClasses
+      inScopeClasses += cls
       body
-      classes = oldClasses
+      inScopeClasses = oldClasses
     def needsAccessor(ts: semantics.TermSymbol): Bool =
-      ts.isPrivate && ts.owner.exists(owner => privateScopeIn(owner, classes).isEmpty)
+      ts.isPrivate && ts.owner.exists(privateScopeIn(_, inScopeClasses).isEmpty)
     def note(sym: Opt[DefinitionSymbol[?]]): Unit =
       sym match
       case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
@@ -126,7 +124,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
         getPrivateAccessorSymbol(ts)
       case _ =>
-    object collector extends BlockTraverser:
+    new BlockTraverser:
+      applyBlock(p.main)
       override def applyPath(p: Path): Unit = p match
         case sel @ Select(qual, _) =>
           applyPath(qual)
@@ -139,20 +138,16 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           noteAssign(assign.symbol)
           applyBlock(rest)
         case _ => super.applyBlock(b)
-      override def applyDefn(defn: Defn): Unit = defn match
-        case cls: ClsLikeDefn =>
-          withClass(cls.isym):
-            cls.parentPath.foreach(applyPath)
-            applyBlock(cls.preCtor)
-            applyBlock(cls.ctor)
-            cls.methods.foreach(applyDefn)
-            cls.companion.foreach(applyClsLikeBody)
-        case _ => super.applyDefn(defn)
-      def applyClsLikeBody(body: ClsLikeBody): Unit =
-        applyBlock(body.ctor)
-        body.methods.foreach(applyDefn)
-    collector.applyBlock(p.main)
-
+      override def applyClsLikeDefn(cls: ClsLikeDefn): Unit =
+        withClass(cls.isym):
+          cls.parentPath.foreach(applyPath)
+          applyBlock(cls.preCtor)
+          applyBlock(cls.ctor)
+          cls.methods.foreach(applyDefn)
+          cls.companion.foreach: body =>
+            applyBlock(body.ctor)
+            body.methods.foreach(applyDefn)
+  
   private def modulePrivateExportName(sym: BlockMemberSymbol)(using Raise): Str =
     sym.getState.compilationUnitPrivateName(sym).getOrElse:
       raise:
@@ -162,17 +157,18 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           source = Diagnostic.Source.Compilation,
         )
       "‹MISSING_PRIVATE_EXPORT_NAME›"
-
+  
   private def relativeImportPath(path: Str, wd: io.Path): Str =
     if path.startsWith("/")
     then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
     else path
-
+  
   private case class Imports(
     defaults: Ls[ImportSymbol -> Str],
     privates: Ls[BlockMemberSymbol -> Str],
   ):
     def symbols: Ls[ImportSymbol] = defaults.map(_._1) ::: privates.map(_._1)
+  end Imports
   
   
   /** Recovers imports that are not necessarily recorded in `p.imports`.
