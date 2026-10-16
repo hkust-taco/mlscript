@@ -132,3 +132,50 @@ import "../../mlscript-compile/PrivateLibrary.mls"
 :expect [83, 73, 79]
 [PrivateLibrary.point(83).value, PrivateLibrary.alone().value, PrivateLibrary.service()]
 //│ = [83, 73, 79]
+
+
+// Each diff-test block is emitted as a separate program, so a body accessing private storage
+// that is defined in an earlier block must not be inlined: the accessors of that storage
+// only exist for the accesses of the program that defines it.
+
+module InlinedVal with
+  private val secret = 1
+  fun get(x) = x + secret
+
+:fixme
+:expect 2
+InlinedVal.get(1)
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'NaN'
+//│ = NaN
+
+module InlinedObject with
+  private object Obj with
+    fun value = 2
+  fun get(x) = x + Obj.value
+
+:fixme
+:expect 3
+InlinedObject.get(1)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'value')
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+
+module InlinedClass with
+  private class Cls with
+    fun value = 3
+  fun get(x) = x + (new Cls).value
+
+:fixme
+:expect 4
+InlinedClass.get(1)
+//│ ═══[RUNTIME ERROR] TypeError: InlinedClass1[Cls$accessorSymbol] is not a constructor
+//│ ═══[RUNTIME ERROR] Expected: '4', got: 'undefined'
+
+module InlinedPattern with
+  private pattern Small = 0 | 1
+  fun isSmall(x) = x is Small
+
+:fixme
+:expect true
+InlinedPattern.isSmall(0)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'

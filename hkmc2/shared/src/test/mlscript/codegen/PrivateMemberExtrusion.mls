@@ -246,3 +246,33 @@ open annotations { inline, noInline }
   Local.read
 [moduleSum(1), moduleSum(3)]
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:Nested for ClsLikeDefn is a free variable for this block
+
+
+// A selection that may refer both to an accessible private member and to other members
+// cannot be compiled to a single property access, as private members are not properties.
+:fixme
+:expect ["B", "B", "A"]
+class PublicBase with
+  fun f = "A"
+class PrivateOverride extends PublicBase with
+  private fun f = "B"
+  fun viaThis = this.f
+  fun pick(flag) = (if flag then this else new PublicBase).f
+let po = new PrivateOverride
+[po.viaThis, po.pick(true), po.pick(false)]
+//│ ═══[RUNTIME ERROR] Expected: '["B", "B", "A"]', got: '["B", "A", "A"]'
+//│ = ["B", "A", "A"]
+//│ po = PrivateOverride
+
+// The shape of `that` is inferred from the call, which selects the private member.
+:expect ["B", "B"]
+class PublicBase2 with
+  fun f = "A"
+class PrivateOverride2 extends PublicBase2 with
+  private fun f = "B"
+  fun viaThis = this.f
+  fun viaParam(that) = that.f
+let po2 = new PrivateOverride2
+[po2.viaThis, po2.viaParam(po2)]
+//│ = ["B", "B"]
+//│ po2 = PrivateOverride2
