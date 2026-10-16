@@ -12,10 +12,14 @@ abstract class TraceLogger(using val debugPrinter: DebugPrinter):
   def doTrace: Bool = true
   protected def defaultDebugOutput: Config.DebugOutput = Config.DebugOutput.StdIO
 
-  private var debugOverrides: Ls[(Bool, Config.DebugOutput)] = Nil
+  private var debugOverrides: Ls[(Bool, Config.Debug)] = Nil
 
   /** Whether tracing is enabled after applying the innermost definition-local override. */
   final def isTracing: Bool = debugOverrides.headOption.fold(doTrace)(_._1)
+
+  /** An inner annotation changes only the settings it names in the enclosing debug scope. */
+  final def debugConfig(base: Config): Config =
+    debugOverrides.headOption.fold(base)(entry => base.copy(debug = entry._2))
   
   protected val noPostTrace: Any => Str = _ => ""
   
@@ -44,13 +48,13 @@ abstract class TraceLogger(using val debugPrinter: DebugPrinter):
     if isTracing then emitDbg(
       if noIndent then msg.toString
       else "| " * indent + msg.toString.indentNewLines("| " * indent + ">  "),
-      debugOverrides.headOption.fold(defaultDebugOutput)(_._2),
+      debugOverrides.headOption.fold(defaultDebugOutput)(_._2.out),
     )
 
   /** Temporarily select both tracing enablement and its destination.
     * Definition annotations use this to avoid leaking debug settings to sibling definitions. */
-  def scopedDebug[T](enabled: Bool, out: Config.DebugOutput)(thunk: => T): T =
-    debugOverrides ::= enabled -> out
+  def scopedDebug[T](enabled: Bool, debug: Config.Debug)(thunk: => T): T =
+    debugOverrides ::= enabled -> debug
     try thunk finally debugOverrides = debugOverrides.tail
 
   /** Run a continuation under the debug scope that surrounded the current local scope. */

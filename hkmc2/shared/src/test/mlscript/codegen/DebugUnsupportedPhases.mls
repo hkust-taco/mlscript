@@ -1,0 +1,57 @@
+:js
+
+
+:silent
+val debugDir = "hkmc2/shared/src/test/mlscript/codegen/"
+fs.rmSync(debugDir + "DebugLocalParsing.log", {force: true})
+fs.rmSync(debugDir + "DebugLocalOptimization.log", {force: true})
+fs.rmSync(debugDir + "DebugModuleElaboration.log", {force: true})
+fs.rmSync(debugDir + "DebugClassLowering.log", {force: true})
+
+
+// FIXME: parsing traces currently inspect only #dbg, ignoring definition annotations.
+:fixme
+:expect true
+@dbg('parsing, out: File("DebugLocalParsing.log")) fun parse_selected(x) = x
+fs.existsSync(debugDir + "DebugLocalParsing.log")
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+
+// FIXME: optimization trace loggers never consult definition-local debug settings.
+:fixme
+:expect true
+@dbg('optimizations, out: File("DebugLocalOptimization.log"))
+fun optimize_selected(x) = ((y) => y)(x)
+fs.existsSync(debugDir + "DebugLocalOptimization.log")
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+
+// FIXME: type definitions bypass the elaborator's definition-local trace scope.
+:fixme
+:expect true
+@dbg('elaboration, out: File("DebugModuleElaboration.log"))
+module ElaborationSelected with
+  fun member(x) = x
+fs.existsSync(debugDir + "DebugModuleElaboration.log")
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+
+// FIXME: lowering a class bypasses its definition-local trace scope.
+:fixme
+:expect true
+@dbg('lowering, out: File("DebugClassLowering.log"))
+class LoweringSelected(x) with
+  fun member() = x
+fs.existsSync(debugDir + "DebugClassLowering.log")
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+
+:silent
+fs.rmSync(debugDir + "DebugLocalParsing.log", {force: true})
+fs.rmSync(debugDir + "DebugLocalOptimization.log", {force: true})
+fs.rmSync(debugDir + "DebugModuleElaboration.log", {force: true})
+fs.rmSync(debugDir + "DebugClassLowering.log", {force: true})

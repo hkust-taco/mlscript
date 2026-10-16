@@ -1,0 +1,63 @@
+:js
+
+
+:silent
+val debugFile = "hkmc2/shared/src/test/mlscript/codegen/DebugDestinations.log"
+fs.rmSync(debugFile, {force: true})
+
+
+// Nested annotations inherit the enclosing phase and destination. Siblings do not.
+@dbg('lowering, showUids: false, out: File("DebugDestinations.log"))
+fun selected_file() =
+  @dbg(showUids: false) fun nested_file() = 42
+  @dbg(lowering: false) fun muted_file() = 43
+  nested_file()
+fun unrelated_file() = 44
+
+
+:silent
+:expect true
+let trace = fs.readFileSync(debugFile, "utf8")
+trace.includes("Lowering.term 42\n") and
+  not(trace.includes("Lowering.term 43\n")) and
+  not(trace.includes("Lowering.term 44\n"))
+
+
+// Methods route to the same output handler as free functions.
+module FileMethods with
+  @dbg('lowering, showUids: false, out: File("DebugDestinations.log"))
+  fun selected() = 45
+  fun unrelated() = 46
+
+:silent
+:expect true
+let trace = fs.readFileSync(debugFile, "utf8")
+trace.includes("Lowering.term 42\n") and
+  trace.includes("Lowering.term 45\n") and
+  not(trace.includes("Lowering.term 46\n"))
+
+
+:silent
+fs.rmSync(debugFile, {force: true})
+
+
+// A discovery parse and its traced replay must report each syntax error only once.
+:noCodeGen
+:pe
+#dbg('parsing, out: File("DebugDestinationsParse.log"))
+fun broken(x) = )
+//│ ╔══[PARSE ERROR] Unexpected closing parenthesis
+//│ ║  l.48: 	fun broken(x) = )
+//│ ╙──      	                ^
+//│ ╔══[PARSE ERROR] Expected expression or block after 'fun' binding equals sign; found end of input instead
+//│ ║  l.48: 	fun broken(x) = )
+//│ ╙──      	                ^
+
+#dbg(parsing: false, out: StdIO)
+
+:silent
+:expect true
+fs.readFileSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsParse.log", "utf8").includes("blockOf")
+
+:silent
+fs.rmSync("hkmc2/shared/src/test/mlscript/codegen/DebugDestinationsParse.log", {force: true})

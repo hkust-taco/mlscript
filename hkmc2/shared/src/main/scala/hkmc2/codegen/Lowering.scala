@@ -115,11 +115,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     if modifiers.isEmpty then N
     else S(modifiers.foldLeft(config)((cfg, modify) => modify(cfg)))
 
-  private def definitionDebugConfig(annotations: Ls[Annot]): Opt[Config] =
-    val modifiers = annotations.collect:
-      case Annot.Debug(modify) => modify
-    if modifiers.isEmpty then N
-    else S(modifiers.foldLeft(config)((cfg, modify) => modify(cfg)))
+  private def debugLowering[T](annotations: Ls[Annot])(thunk: => T): T =
+    DebugOutputHandler.traceDefinition(annotations, config, _.lowering)(thunk)
   
   extension (t: Term)
     def instantiated = t match
@@ -322,10 +319,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               assert(td.params.isEmpty)
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
               def lowerValue[R <: Result](lower: (R => Block) => Block)(k: R => Block): Block =
-                definitionDebugConfig(td.extraAnnotations) match
+                DebugOutputHandler.definitionConfig(td.extraAnnotations, tl.debugConfig(config)) match
                   case S(localConfig) =>
                     State.scopedDebug(localConfig.debug.lowering, localConfig.debug.showUids):
-                      tl.scopedDebug(localConfig.debug.lowering, localConfig.debug.out):
+                      tl.scopedDebug(localConfig.debug.lowering, localConfig.debug):
                         // The continuation lowers sibling statements, outside this value's debug scope.
                         lower: r =>
                           State.inOuterDebugScope:
@@ -343,12 +340,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                     )
             case syntax.Fun =>
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
-              val (paramLists, bodyBlock) = definitionDebugConfig(td.extraAnnotations) match
-                case S(localConfig) =>
-                  State.scopedDebug(localConfig.debug.lowering, localConfig.debug.showUids):
-                    tl.scopedDebug(localConfig.debug.lowering, localConfig.debug.out):
-                      setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
-                case N => setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+              val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
+                setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
               Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations),
                 blockImpl(stats, res))
             case syntax.LetBind | syntax.HandlerBind | syntax.RecordField => fail:
@@ -1683,7 +1676,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val mtds = clsBody.methods
       .flatMap: td =>
         td.body.map: bod =>
-          val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+          val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
+            setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
           reportAnnotations(td, td.extraAnnotations)
           val cfgOverride = definitionConfigOverride(td.extraAnnotations)
           FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations)

@@ -125,37 +125,19 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       Printer()
     val print = (p: codegen.Program) =>
       blockPrinter.worksheet(p)(using irPrintingScp).mkString(output.ColWidth)
-    def forEachDefinitionDebug(
-        program: codegen.Program,
-        isEnabled: Config.Debug => Bool,
-    )(display: (Defn, Config) => Unit): Unit =
-      def visit(defn: Defn): Unit =
-        defn.configOverride.foreach: localConfig =>
-          if isEnabled(localConfig.debug) then display(defn, localConfig)
-      new BlockTraverser:
-        override def applyFunDefn(fun: FunDefn): Unit =
-          visit(fun)
-          super.applyFunDefn(fun)
-        override def applyValDefn(defn: ValDefn): Unit =
-          visit(defn)
-          super.applyValDefn(defn)
-        override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
-          visit(defn)
-          super.applyClsLikeDefn(defn)
-      .applyProgram(program)
     def showDefinitionDebugIR(
         title: Str,
         program: codegen.Program,
         isEnabled: Config.Debug => Bool,
     ): Unit =
-      forEachDefinitionDebug(program, isEnabled): (defn, localConfig) =>
+      DebugOutputHandler.forEachIRDefinition(program, isEnabled): (defn, out) =>
         val ir = blockPrinter.printDefinition(defn)(using irPrintingScp).mkString(output.ColWidth)
-        outputDebugSection(title, ir, localConfig.debug.out)
+        outputDebugSection(title, ir, out)
     def showDefinitionDebugTree(title: Str, program: codegen.Program): Unit =
-      forEachDefinitionDebug(program, _.showLoweredTree): (defn, localConfig) =>
+      DebugOutputHandler.forEachIRDefinition(program, _.showLoweredTree): (defn, out) =>
         val tree = defn match
           case product: Product => product.showAsTree
-        outputDebugSection(title, tree, localConfig.debug.out)
+        outputDebugSection(title, tree, out)
     
     Config.extractConfigFromStats(blk).givenIn {
     val loweringState = summon[Elaborator.State]

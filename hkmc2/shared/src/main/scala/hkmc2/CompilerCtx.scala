@@ -63,12 +63,6 @@ class CompilerCtx(
         (file: io.Path, prelude: Ctx)
         (using TL, Raise)
         : Artifact =
-    getElaboratedBlock(file, prelude, forceDebugParsing = false)
-
-  def getElaboratedBlock
-        (file: io.Path, prelude: Ctx, forceDebugParsing: Bool)
-        (using TL, Raise)
-        : Artifact =
     
     val lastMod = fs.getLastChangedTimestamp(file)
     
@@ -95,9 +89,9 @@ class CompilerCtx(
 
       val parse =
         given CompilerCtx = this
-        ParserSetup(file, forceDebugParsing, outputHandler)
+        ParserSetup(file, outputHandler)
       val parsed = parse.resultBlk
-      val phaseConfig = parse.effectiveConfig.givenIn(Config.elaborationConfig(parsed))
+      val phaseConfig = Config.elaborationConfig(parsed)
       stateDebug = CompilerCtx.debugTracingEnabled(phaseConfig.debug)
       stateShowUids = phaseConfig.debug.showUids
       def traceLogger(enabled: Bool) = new TraceLogger:
@@ -191,38 +185,20 @@ class CompilerCtx(
           codegen.Printer().worksheet(p)(using irPrintingScp).mkString(100)
         def showDebugIR(title: Str, program: codegen.Program): Unit =
           outputHandler.emit(artifactConfig.debug.out, s"${title}\n${printer(program)}")
-        def forEachDefinitionDebug(
-            program: codegen.Program,
-            isEnabled: Config.Debug => Bool,
-        )(display: (codegen.Defn, Config) => Unit): Unit =
-          def visit(defn: codegen.Defn): Unit =
-            defn.configOverride.foreach: localConfig =>
-              if isEnabled(localConfig.debug) then display(defn, localConfig)
-          new codegen.BlockTraverser:
-            override def applyFunDefn(fun: codegen.FunDefn): Unit =
-              visit(fun)
-              super.applyFunDefn(fun)
-            override def applyValDefn(defn: codegen.ValDefn): Unit =
-              visit(defn)
-              super.applyValDefn(defn)
-            override def applyClsLikeDefn(defn: codegen.ClsLikeDefn): Unit =
-              visit(defn)
-              super.applyClsLikeDefn(defn)
-          .applyProgram(program)
         def showDefinitionDebugIR(
             title: Str,
             program: codegen.Program,
             isEnabled: Config.Debug => Bool,
         ): Unit =
           val blockPrinter = codegen.Printer()
-          forEachDefinitionDebug(program, isEnabled): (defn, localConfig) =>
+          DebugOutputHandler.forEachIRDefinition(program, isEnabled): (defn, out) =>
             val ir = blockPrinter.printDefinition(defn)(using irPrintingScp).mkString(100)
-            outputHandler.emit(localConfig.debug.out, s"${title}\n${ir}")
+            outputHandler.emit(out, s"${title}\n${ir}")
         def showDefinitionDebugTree(title: Str, program: codegen.Program): Unit =
-          forEachDefinitionDebug(program, _.showLoweredTree): (defn, localConfig) =>
+          DebugOutputHandler.forEachIRDefinition(program, _.showLoweredTree): (defn, out) =>
             val tree = defn match
               case product: Product => product.showAsTree
-            outputHandler.emit(localConfig.debug.out, s"${title}\n${tree}")
+            outputHandler.emit(out, s"${title}\n${tree}")
         val pipeline = new codegen.CompilationPipeline:
           override def extraSymbolsToPreserveFrom(prog: codegen.Program): Set[codegen.ScopedSymbol] =
             collectCompilationUnitSymbols(prog)
@@ -279,12 +255,6 @@ class CompilerCtx(
         (file: io.Path)
         (using tl: TL, raise: Raise)
         : PreludeArtifact =
-    getPrelude(file, forceDebugParsing = false)
-
-  def getPrelude
-        (file: io.Path, forceDebugParsing: Bool)
-        (using tl: TL, raise: Raise)
-        : PreludeArtifact =
     // The prelude context is shared so every compilation unit sees the same prelude
     // symbols. Callers still elaborate their own files with a fresh State; the frozen
     // State remains the owner captured by the prelude symbols themselves.
@@ -298,7 +268,7 @@ class CompilerCtx(
         // * See the corresponding assertion in `getElaboratedBlock` above.
         softAssert(art.config === rootConfig,
           s"Cached prelude for $file was elaborated under a different root configuration")
-        !forceDebugParsing && art.lastChangedTimestamp >= lastMod,
+        art.lastChangedTimestamp >= lastMod,
       create =
         var stateDebug = false
         var stateShowUids = true
@@ -310,8 +280,8 @@ class CompilerCtx(
         given CompilerCtx = this
         given DebugPrinter = new DebugPrinter
         val outputHandler = DebugOutputHandler(fs, rootConfig.baseDir, println)
-        val parse = ParserSetup(file, forceDebugParsing, outputHandler)
-        val elaborationConfig = parse.effectiveConfig.givenIn(Config.elaborationConfig(parse.resultBlk))
+        val parse = ParserSetup(file, outputHandler)
+        val elaborationConfig = Config.elaborationConfig(parse.resultBlk)
         stateDebug = CompilerCtx.debugTracingEnabled(elaborationConfig.debug)
         stateShowUids = elaborationConfig.debug.showUids
         val etl = new TraceLogger:

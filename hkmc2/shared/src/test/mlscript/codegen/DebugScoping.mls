@@ -1,0 +1,31 @@
+:js
+
+
+// A method must use the same definition-local lowering trace as a free function.
+#dbg(showUids: false)
+module DebugMethods with
+  @dbg('lowering) fun selected(x) = x
+  fun sibling(x) = x
+//│ Lowering.term x⁰ – symbol x
+//│ Expanding term Ref(x)
+//│ ~> Ref(x)
+
+:expect 7
+DebugMethods.selected(7)
+//│ = 7
+
+
+// Changing only UID display should retain the outer definition's trace flag.
+@dbg('lowering, showUids: false) fun debug_outer() =
+  @dbg(showUids: false) fun debug_inner() = 42
+  debug_inner()
+//│ Lowering.term { fun member:debug_inner() = 42; member:debug_inner⁰() }
+//│ Lowering.term 42
+//│ Lowering.term member:debug_inner⁰()
+//│ Expanding term App(Ref(member:debug_inner),Tup(List()))
+//│ ~> App(Ref(member:debug_inner),Tup(List()))
+//│ Expanding term Ref(member:debug_inner)
+//│ ~> Resolved(Ref(member:debug_inner),term:debug_inner)
+//│ Lowering.term member:debug_inner⁰‹term:debug_inner› – symbol term:debug_inner
+//│ Expanding term Resolved(Ref(member:debug_inner),term:debug_inner)
+//│ ~> Resolved(Ref(member:debug_inner),term:debug_inner)

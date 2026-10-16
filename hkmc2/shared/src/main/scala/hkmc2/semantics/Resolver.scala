@@ -357,14 +357,7 @@ class Resolver(tl: TraceLogger)
   end traverse
   
   def traverseDefn(defn: Definition)(using ICtx): ICtx =
-    val modifiers = defn.annotations.collect:
-      case Annot.Debug(modify) => modify
-    if modifiers.isEmpty then traverseDefnImpl(defn)
-    else
-      val localConfig = modifiers.foldLeft(cfg)((config, modify) => modify(config))
-      state.scopedDebug(localConfig.debug.resolution, localConfig.debug.showUids):
-        tl.scopedDebug(localConfig.debug.resolution, localConfig.debug.out):
-          traverseDefnImpl(defn)
+    DebugOutputHandler.traceDefinition(defn.annotations, cfg, _.resolution)(traverseDefnImpl(defn))(using state, tl)
 
   private def traverseDefnImpl(defn: Definition)(using ICtx): ICtx =
   trace(s"Resolving definition: $defn"):

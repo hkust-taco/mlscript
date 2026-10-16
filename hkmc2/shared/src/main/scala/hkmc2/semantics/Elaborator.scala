@@ -784,14 +784,7 @@ extends Importer:
   val newResolution: Bool = config.language.useNewResolution
 
   private def debugElaboration[T](annotations: Ls[Annot])(thunk: => T): T =
-    val modifiers = annotations.collect:
-      case Annot.Debug(modify) => modify
-    if modifiers.isEmpty then thunk
-    else
-      val localConfig = modifiers.foldLeft(config)((cfg, modify) => modify(cfg))
-      val enabled = localConfig.debug.traceElaboration(localConfig.language)
-      state.scopedDebug(enabled, localConfig.debug.showUids):
-        tl.scopedDebug(enabled, localConfig.debug.out)(thunk)
+    DebugOutputHandler.traceDefinition(annotations, config, _.traceElaboration(config.language))(thunk)(using state, tl)
   
   lazy val illegalMemberNameTail =
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
@@ -2358,74 +2351,76 @@ extends Importer:
             // Recorded before the definition's own type parameters enter scope.
             rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
             
-            val tdf = debugElaboration(annotations):
+            val elaborateDefinition: Ctx ?=> TermDefinition = newCtx ?=>
+              
               log(s"Processing term definition $nme")
-              ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn: newCtx ?=>
-                
-                // * Add type parameters to context
-                val (tps, newCtx1) = td.typeParams match
-                  case S(t) =>
-                    val (tps, ctx) = typeParams(t)
-                    (S(tps), ctx)
-                  case N => (N, ctx)
-                if newResolution then tps.foreach(ps => registerTypeParameters(tsym, ps.map(_.sym)))
-                // * Add parameters to context
-                var newCtx = newCtx1
-                val pss = td.paramLists.map: ps =>
-                  val (res, newCtx2) = funParams(ps)(using newCtx)
-                  newCtx = newCtx2
-                  res
-                
-                // * Elaborate signature
-                val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
-                val s = st.map:
-                  // unwrap possible module modifier
-                  // e.g, `fun f: module M`
-                  //              ^^^^^^
-                  case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
-                  case st => term(st, Tpe)(using newCtx)
-                
-                if newResolution && td.annotatedResultType.isEmpty then
-                  s.foreach(registerParameterSignature(pss, _))
-                
-                val body: Opt[Term] = rhs match
-                  case N => N
-                  case _ if ctx.mode is Mode.Light => S(Term.Missing)
-                  case S(rhs) => S:
-                    val nonLocalRetHandler = TempSymbol(N, erasedType = N, s"nonLocalRetHandler$$${id.name}")
-                    val hasGeneratorAnnotation = annotations.exists(_.isInstanceOf[Annot.Generator])
-                    val hasAsyncAnnotation = annotations.exists(_.isInstanceOf[Annot.Async])
-                    if pss.isEmpty && hasGeneratorAnnotation then
-                      raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> statementLoc :: Nil))
-                    newCtx.nest(OuterCtx.Function(nonLocalRetHandler, S(tsym))(pss.nonEmpty && hasGeneratorAnnotation, hasAsyncAnnotation)).givenIn: newCtx ?=>
-                      val b = term(rhs, Trm)(using newCtx)
-                      if nonLocalRetHandler.directRefs.isEmpty then b else
-                        mkEffectHandleAbortive(
-                          nonLocalRetHandler,
-                          "‹non-local return effect›",
-                          EffectHandlerMethodSpec("ret", S("value"), requireEffectMethodValue("ret", _)) :: Nil,
-                          b,
-                        )
-                val r = FlowSymbol(s"‹result of ${sym}›")
-                
-                val mfn = st match
-                  // st.isModified(Mod) indicates if the function marks
-                  // its result as "module". e.g, `fun f: module M`
-                  //                                      ^^^^^^
-                  case S(st) if st.isModified(Mod) =>
-                    Modulefulness.ofSign(s)(true)
-                  case _ =>
-                    Modulefulness.none
-                
-                // Retain the source signature's meaning; Erasure decides which arrows are physical parameters.
-                if newResolution then s.foreach(registerSignature)
-                val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
-                  TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(statementLoc)
-                sym.tsym = S(tsym)
-                tsym.defn = S(tdf)
-                if newResolution then checkDeclaredResult(tdf)
-                
-                tdf
+              // * Add type parameters to context
+              val (tps, newCtx1) = td.typeParams match
+                case S(t) =>
+                  val (tps, ctx) = typeParams(t)
+                  (S(tps), ctx)
+                case N => (N, ctx)
+              if newResolution then tps.foreach(ps => registerTypeParameters(tsym, ps.map(_.sym)))
+              // * Add parameters to context
+              var newCtx = newCtx1
+              val pss = td.paramLists.map: ps =>
+                val (res, newCtx2) = funParams(ps)(using newCtx)
+                newCtx = newCtx2
+                res
+              
+              // * Elaborate signature
+              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
+              val s = st.map:
+                // unwrap possible module modifier
+                // e.g, `fun f: module M`
+                //              ^^^^^^
+                case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
+                case st => term(st, Tpe)(using newCtx)
+              
+              if newResolution && td.annotatedResultType.isEmpty then
+                s.foreach(registerParameterSignature(pss, _))
+              
+              val body: Opt[Term] = rhs match
+                case N => N
+                case _ if ctx.mode is Mode.Light => S(Term.Missing)
+                case S(rhs) => S:
+                  val nonLocalRetHandler = TempSymbol(N, erasedType = N, s"nonLocalRetHandler$$${id.name}")
+                  val hasGeneratorAnnotation = annotations.exists(_.isInstanceOf[Annot.Generator])
+                  val hasAsyncAnnotation = annotations.exists(_.isInstanceOf[Annot.Async])
+                  if pss.isEmpty && hasGeneratorAnnotation then
+                    raise(ErrorReport(msg"Generators are not supported on functions without a parameter list" -> statementLoc :: Nil))
+                  newCtx.nest(OuterCtx.Function(nonLocalRetHandler, S(tsym))(pss.nonEmpty && hasGeneratorAnnotation, hasAsyncAnnotation)).givenIn: newCtx ?=>
+                    val b = term(rhs, Trm)(using newCtx)
+                    if nonLocalRetHandler.directRefs.isEmpty then b else
+                      mkEffectHandleAbortive(
+                        nonLocalRetHandler,
+                        "‹non-local return effect›",
+                        EffectHandlerMethodSpec("ret", S("value"), requireEffectMethodValue("ret", _)) :: Nil,
+                        b,
+                      )
+              val r = FlowSymbol(s"‹result of ${sym}›")
+              
+              val mfn = st match
+                // st.isModified(Mod) indicates if the function marks
+                // its result as "module". e.g, `fun f: module M`
+                //                                      ^^^^^^
+                case S(st) if st.isModified(Mod) =>
+                  Modulefulness.ofSign(s)(true)
+                case _ =>
+                  Modulefulness.none
+              
+              // Retain the source signature's meaning; Erasure decides which arrows are physical parameters.
+              if newResolution then s.foreach(registerSignature)
+              val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
+                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(statementLoc)
+              sym.tsym = S(tsym)
+              tsym.defn = S(tdf)
+              if newResolution then checkDeclaredResult(tdf)
+              
+              tdf
+            
+            val tdf = debugElaboration(annotations):
+              ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn(elaborateDefinition)
             
             go(sts, Nil, tdf :: acc)(N)
           case L(d) =>

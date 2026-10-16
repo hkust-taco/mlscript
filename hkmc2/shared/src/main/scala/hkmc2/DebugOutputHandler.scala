@@ -23,6 +23,63 @@ final class DebugOutputHandler(fs: io.FileSystem, baseDir: io.Path, stdIO: Str =
 
 object DebugOutputHandler:
 
+  def definitionConfig(annotations: Ls[semantics.Annot], base: Config): Opt[Config] =
+    val modifiers = annotations.collect:
+      case semantics.Annot.Debug(modify) => modify
+    if modifiers.isEmpty then N
+    else S(modifiers.foldLeft(base)((cfg, modify) => modify(cfg)))
+
+  /** Keep trace routing and symbol printing in the same definition-local scope. */
+  def traceDefinition[T](annotations: Ls[semantics.Annot], base: Config, enabled: Config.Debug => Bool)
+      (thunk: => T)(using state: semantics.Elaborator.State, tl: utils.TL): T =
+    definitionConfig(annotations, tl.debugConfig(base)) match
+      case S(localConfig) =>
+        val debug = localConfig.debug
+        state.scopedDebug(enabled(debug), debug.showUids):
+          tl.scopedDebug(enabled(debug), debug)(thunk)
+      case N => thunk
+
+  /** Discover directives without committing diagnostics from a parse that may be repeated.
+    * A traced parse reports its own diagnostics, in trace order; otherwise replay discovery's
+    * diagnostics exactly once. Both compiler entry points use this path. */
+  def parse(origin: Origin, forceDebug: Bool, showTokens: Bool, output: (Config.DebugOutput, Str) => Unit)
+      (using semantics.Elaborator.State, Config, Raise): (Ls[syntax.Tree], Config) =
+    def run(dbg: Bool, out: Config.DebugOutput)(using Raise): Ls[syntax.Tree] =
+      val lexer = new syntax.Lexer(origin, dbg):
+        override protected def doPrintDbg(msg: => Str): Unit = output(out, msg)
+      val tokens = lexer.bracketedTokens
+      if dbg then output(out, syntax.Lexer.printTokens(tokens))
+      val parser = new syntax.Parser(origin, tokens, syntax.ParseRules(), summon[Raise], dbg):
+        def doPrintDbg(msg: => Str): Unit = if this.dbg then output(out, msg)
+      parser.parseAll(parser.block(allowNewlines = true))
+
+    val diagnostics = mutable.ListBuffer.empty[Diagnostic]
+    val discovery = run(false, Config.DebugOutput.StdIO)(using diagnostics += _)
+    val effectiveConfig = Config.elaborationConfig(discovery)
+    val result =
+      if forceDebug || effectiveConfig.debug.parsing then
+        run(true, effectiveConfig.debug.out)
+      else
+        diagnostics.foreach(summon[Raise])
+        // Token display is a legacy diff-test option. Re-lexing does not report diagnostics twice.
+        if showTokens then
+          val lexer = new syntax.Lexer(origin, false)(using _ => ())
+          output(Config.DebugOutput.StdIO, syntax.Lexer.printTokens(lexer.bracketedTokens))
+        discovery
+    result -> effectiveConfig
+
+  def showParsedDefinitions(trees: Ls[syntax.Tree], config: Config)
+      (display: (syntax.Tree, Config.DebugOutput) => Unit): Unit =
+    def visit(tree: syntax.Tree): Unit = tree match
+      case syntax.PossiblyAnnotated(annotations, target) =>
+        ConfigParser.discoverDebugFromAnnotations(annotations, config).foreach: localConfig =>
+          if localConfig.debug.showParsedTree then display(tree, localConfig.debug.out)
+        target.children.foreach:
+          case child: syntax.Tree => visit(child)
+          case _ => ()
+      case _ => ()
+    trees.foreach(visit)
+
   /** Inspect the elaborated tree directly: new resolution runs during elaboration and does not
     * traverse the legacy resolver, but annotated definitions still need their tree displayed. */
   def showElaboratedDefinitions(block: semantics.Term.Blk, config: Config)
@@ -30,11 +87,26 @@ object DebugOutputHandler:
     def visit(statement: semantics.Statement): Unit =
       statement match
         case defn: semantics.Definition =>
-          val modifiers = defn.annotations.collect:
-            case semantics.Annot.Debug(modify) => modify
-          if modifiers.nonEmpty then
-            val localConfig = modifiers.foldLeft(config)((cfg, modify) => modify(cfg))
+          definitionConfig(defn.annotations, config).foreach: localConfig =>
             if localConfig.debug.showElaboratedTree then display(defn, localConfig.debug.out)
         case _ => ()
       statement.subStatements.foreach(visit)
     visit(block)
+
+  /** Methods are visited directly by BlockTraverser, without passing through applyDefn. */
+  def forEachIRDefinition(program: codegen.Program, isEnabled: Config.Debug => Bool)
+      (display: (codegen.Defn, Config.DebugOutput) => Unit): Unit =
+    def visit(defn: codegen.Defn): Unit =
+      defn.configOverride.foreach: localConfig =>
+        if isEnabled(localConfig.debug) then display(defn, localConfig.debug.out)
+    new codegen.BlockTraverser:
+      override def applyFunDefn(fun: codegen.FunDefn): Unit =
+        visit(fun)
+        super.applyFunDefn(fun)
+      override def applyValDefn(defn: codegen.ValDefn): Unit =
+        visit(defn)
+        super.applyValDefn(defn)
+      override def applyClsLikeDefn(defn: codegen.ClsLikeDefn): Unit =
+        visit(defn)
+        super.applyClsLikeDefn(defn)
+    .applyProgram(program)

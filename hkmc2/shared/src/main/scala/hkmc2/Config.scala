@@ -265,14 +265,19 @@ object Config:
     * Read them before constructing the elaborator so its resolver agrees with lowering.
     * Elaboration still records SetConfig statements and reports directive errors once. */
   def elaborationConfig(prgm: syntax.Tree.Block)(using Config): Config =
+    elaborationConfig(prgm.desugStmts)
+
+  /** The parser uses the raw trees to discover tracing before constructing a block's symbols. */
+  def elaborationConfig(trees: Ls[syntax.Tree])(using Config): Config =
     import syntax.Tree.*
     given Raise = _ => ()
     def modifier(tree: syntax.Tree): Config => Config = tree match
       case App(Directive(prefix, _), args) => modifier(Directive(prefix, args))
       case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args)
       case Directive(Ident("lang"), Tup(args)) => ConfigParser.parseLanguageDirective(args)
+      case Directive(Ident("dbg"), Tup(args)) => ConfigParser.parseDebugDirective(args)
       case _ => identity
-    prgm.desugStmts.foldLeft(config)((cfg, tree) => modifier(tree)(cfg))
+    trees.foldLeft(config)((cfg, tree) => modifier(tree)(cfg))
 
   def extractConfigFromStats(prgm: semantics.Term.Blk)(using Config) =
     // Extract cumulative config modifications from SetConfig statements
@@ -573,21 +578,6 @@ object ConfigParser:
     new (Config => Config):
       def apply(cfg: Config): Config = cfg.copy(debug = modifyDebug(cfg.debug))
       override def toString: Str = "..."
-
-  /** Apply top-level debug directives before phase execution begins.
-    *
-    * Parsing itself uses this after a quiet discovery parse, then repeats the parse when requested.
-    * Other phases use it directly before elaborating the parsed block. */
-  def extractDebugFromTrees(trees: Ls[Tree])(using Raise, Config): Config =
-    trees.foldLeft(config):
-      case (cfg, Directive(Ident("dbg"), Tup(args))) => parseDebugDirective(args)(cfg)
-      case (cfg, App(Directive(Ident("dbg"), _), Tup(args))) => parseDebugDirective(args)(cfg)
-      case (cfg, _) => cfg
-
-  /** Discovery variant used before normal elaboration reports directive diagnostics. */
-  def discoverDebugFromTrees(trees: Ls[Tree])(using Config): Config =
-    given Raise = _ => ()
-    extractDebugFromTrees(trees)
 
   /** Apply `@dbg(...)` syntax annotations without reporting diagnostics during the discovery parse. */
   def discoverDebugFromAnnotations(annotations: Ls[Tree], base: Config): Opt[Config] =

@@ -440,39 +440,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     val baseConfig = configModify(mkConfig)
     given Config = baseConfig
     
-    def parse(dbg: Bool, out: Config.DebugOutput): Ls[syntax.Tree] =
-      val lexer = new syntax.Lexer(origin, dbg = dbg):
-        override protected def doPrintDbg(msg: => Str): Unit = debugOutputHandler.emit(out, msg)
-      val tokens = lexer.bracketedTokens
-      
-      if showParse.isSet || dbg then
-        if dbg then debugOutputHandler.emit(out, syntax.Lexer.printTokens(tokens))
-        else output(syntax.Lexer.printTokens(tokens))
-      
-      val rules = syntax.ParseRules()
-      val p = new syntax.Parser(origin, tokens, rules, raise, dbg = dbg):
-        def doPrintDbg(msg: => Str): Unit = if this.dbg then debugOutputHandler.emit(out, msg)
-      p.parseAll(p.block(allowNewlines = true))
-
-    val discoveryResult = parse(dbg = false, Config.DebugOutput.StdIO)
-    val phaseConfig = ConfigParser.discoverDebugFromTrees(discoveryResult)
+    val (res, phaseConfig) = DebugOutputHandler.parse(
+      origin, dbgParsing.isSet, showParse.isSet, debugOutputHandler.emit)
     activeDebug = phaseConfig.debug
-    val res =
-      if dbgParsing.isSet || phaseConfig.debug.parsing then
-        parse(dbg = true, phaseConfig.debug.out)
-      else discoveryResult
-
-    def showSelectedParsedTrees(): Unit =
-      def visit(tree: syntax.Tree): Unit = tree match
-        case syntax.PossiblyAnnotated(annotations, target) =>
-          ConfigParser.discoverDebugFromAnnotations(annotations, phaseConfig).foreach: localConfig =>
-            if localConfig.debug.showParsedTree then
-              outputDebugSection("Parsed tree", tree.showAsTree, localConfig.debug.out)
-          target.children.foreach:
-            case child: syntax.Tree => visit(child)
-            case _ => ()
-        case _ => ()
-      res.foreach(visit)
     
     // If parsed tree is displayed, don't show the string serialization.
     if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet && !phaseConfig.debug.showParsedTree then
@@ -483,7 +453,8 @@ abstract class MLsDiffMaker extends DiffMaker:
       res.foreach(t => output(t.showAsTree))
     else if phaseConfig.debug.showParsedTree then
       outputDebugSection("Parsed tree", res.map(_.showAsTree).mkString("\n"), phaseConfig.debug.out)
-    else showSelectedParsedTrees()
+    else DebugOutputHandler.showParsedDefinitions(res, phaseConfig): (tree, out) =>
+      outputDebugSection("Parsed tree", tree.showAsTree, out)
     
     // if showParse.isSet then
     //   output(s"AST: $res")
@@ -509,10 +480,9 @@ abstract class MLsDiffMaker extends DiffMaker:
       case _ => ()
   
   def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
-    val phaseConfig = ConfigParser.discoverDebugFromTrees(trees)
-    activeDebug = phaseConfig.debug
     val blk = new syntax.Tree.Block(trees)
-    val elaborationConfig = phaseConfig.givenIn(Config.elaborationConfig(blk))
+    val elaborationConfig = Config.elaborationConfig(blk)
+    activeDebug = elaborationConfig.debug
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
@@ -526,20 +496,20 @@ abstract class MLsDiffMaker extends DiffMaker:
       Elaborator(etl, file.up, prelude)
     val (e, newCtx) = elaborationConfig.givenIn:
       if elaborationConfig.language.useNewResolution && elaborationConfig.debug.resolution then
-        etl.scopedDebug(true, elaborationConfig.debug.out)(elab.topLevel(blk))
+        etl.scopedDebug(true, elaborationConfig.debug)(elab.topLevel(blk))
       else elab.topLevel(blk)
     curCtx = newCtx
     
     extractConfig(e.stats)
     
     // If elaborated tree is displayed, don't show the string serialization.
-    if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet && !phaseConfig.debug.showElaboratedTree then
+    if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet && !elaborationConfig.debug.showElaboratedTree then
       output(s"Elab: ${e.showDbg}")
     if showElaboratedTree.isSet then
       outputSeparator(s"Elaborated tree")
       output(e.showAsTree)
-    else if phaseConfig.debug.showElaboratedTree then
-      outputDebugSection("Elaborated tree", e.showAsTree, phaseConfig.debug.out)
+    else if elaborationConfig.debug.showElaboratedTree then
+      outputDebugSection("Elaborated tree", e.showAsTree, elaborationConfig.debug.out)
     else DebugOutputHandler.showElaboratedDefinitions(e, elaborationConfig): (defn, out) =>
       outputDebugSection("Elaborated tree", defn.showAsTree, out)
     
