@@ -108,7 +108,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case qual => save(qual)(p => k(sel.copy(qual = p)(sel.symbol, sel.toLoc)(sel.sanitize)))
       case _ => save(parent)(k)
 
-
   private def definitionConfigOverride(annotations: Ls[Annot]): Opt[Config] =
     val modifiers = annotations.collect:
       case Annot.Config(modify) => modify
