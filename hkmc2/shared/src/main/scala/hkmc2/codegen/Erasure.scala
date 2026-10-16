@@ -20,28 +20,34 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     assert(completed.exists(_ is statement), "Lowering requires completed erasure of this program")
 
   /** Erase an interpretation registered during elaboration, without installing new listeners. */
-  private def erase(resolution: TypeResolution, seen: Set[TypeResolution]): ErasedValueType =
+  private def erase(resolution: TypeResolution, seen: Set[TypeResolution], outerRsc: Opt[Bool]): ErasedValueType =
     import TypeShape.*
-    if seen(resolution) || resolution.hasErrors then ErasedType.Unknown
+    val rsc = resolution.source match
+      case Annotated(Annot.Resource(own), _) => CanonicalErasedValueType.combineRsc(outerRsc, S(own))
+      case _ => outerRsc
+    if seen(resolution) || resolution.hasErrors then ErasedType.Unknown(rsc)
     else
       val next = seen + resolution
       resolution.shapes.toList match
         case Nominal(defn) :: Nil => defn.sym match
-          case symbol: (ClassSymbol | ModuleOrObjectSymbol) => ErasedType.ValueLike(S(false), symbol)
-          case _ => ErasedType.Unknown
-        case Alias(_, rhs) :: Nil => rhs.fold(ErasedType.Unknown)(erase(_, next))
-        case Union(left, right) :: Nil => ErasedType.union(erase(left, next), erase(right, next))
-        case Reference(base, _, _, _) :: Nil => erase(base, next)
-        case Applied(base, _) :: Nil => erase(base, next)
-        case Function(_, _) :: Nil => ErasedType.Function(S(false))
-        case Polymorphic(_, _, body) :: Nil => erase(body, next)
+          case symbol: (ClassSymbol | ModuleOrObjectSymbol) => ErasedType.ValueLike(rsc, symbol)
+          case _ => ErasedType.Unknown(rsc)
+        case Alias(_, rhs) :: Nil => rhs.fold(ErasedType.Unknown(rsc))(erase(_, next, rsc))
+        case Union(left, right) :: Nil => ErasedType.union(erase(left, next, rsc), erase(right, next, rsc))
+        case Reference(base, _, _, _) :: Nil => erase(base, next, rsc)
+        case Applied(base, _) :: Nil => erase(base, next, rsc)
+        case Function(_, _) :: Nil => ErasedType.Function(rsc)
+        case Polymorphic(_, _, body) :: Nil => erase(body, next, rsc)
+        // A bare type parameter can stand for either a resource or a non-resource. Only
+        // an explicit resource modifier constrains it; the default for nominal types does not.
+        case Parameter(_, _) :: Nil => ErasedType.Unknown(if rsc === S(false) then N else rsc)
         case Unit :: Nil => ErasedType.Unit
-        case _ => ErasedType.Unknown
+        case _ => ErasedType.Unknown(rsc)
 
   private def eraseSignature(sign: Term): Opt[ErasedValueType] =
     if config.language.useNewResolution then
       assert(sign.typeInterpretation.isDefined, "Signature was not registered during elaboration")
-      S(erase(sign.typeInterpretation.get, Set.empty))
+      S(erase(sign.typeInterpretation.get, Set.empty, S(false)))
     else ErasedType.eraseSign(sign)
 
   private def declaredType(sign: Opt[Term], modulefulness: Modulefulness): Opt[ErasedValueType] =
@@ -59,32 +65,39 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
             case (Fld(_, t, _), S(rest)) => S(eraseSignature(t) :: rest)
             case _ => N
       case single => S(eraseSignature(single) :: Nil)
-    sign match
-      case Forall(_, _, body) => splitSignature(body)
-      case FunTy(lhs, rhs, _) => paramsOf(lhs).map: ps =>
-        splitSignature(rhs) match
+    Elaborator.Sig.parse(sign) match
+      case Elaborator.Sig.Arrow(_, _, lhs, rhs) => paramsOf(lhs).map: ps =>
+        splitSignature(rhs.tpe) match
           case S((rest, ret)) => (ps :: rest, ret)
-          case N => (ps :: Nil, rhs)
+          case N => (ps :: Nil, rhs.tpe)
       case _ => N
 
-  private def definitionType(td: TermDefinition): Opt[ErasedType] =
+  private def definitionType(td: TermDefinition): Opt[ErasedValueType | ErasedFuncSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
     // An ordinary paramless function instead returns the value denoted by the entire signature.
     val sigShape =
       if (td.k is syntax.Fun) && td.params.isEmpty && declared then td.sign.flatMap(splitSignature)
       else N
+    val consumedParamLists =
+      if (td.k is syntax.Fun) && !td.flags.hasResultAnnotation then td.params.length
+      else sigShape.fold(0)(_._1.length)
+    td.sign.foreach: sign =>
+      Elaborator.Sig.parse(sign).stripParams(consumedParamLists)._2.foreach: mod =>
+        raise(ErrorReport(
+          msg"Resource modifiers apply to function values, not to a function definition's parameter lists." ->
+            mod.toLoc :: Nil))
     val resultSign = sigShape.map(_._2).orElse(td.resultSignature)
     def fullResult(res: TypeResolution, count: Int, seen: Set[TypeResolution]): ErasedValueType =
-      if seen(res) then ErasedType.Unknown
-      else if count == 0 then erase(res, Set.empty)
+      if seen(res) then ErasedType.Unknown(N)
+      else if count == 0 then erase(res, Set.empty, S(false))
       else res.shapes.toList match
         case TypeShape.Alias(_, S(rhs)) :: Nil => fullResult(rhs, count, seen + res)
         case TypeShape.Reference(base, _, _, _) :: Nil => fullResult(base, count, seen + res)
         case TypeShape.Applied(base, _) :: Nil => fullResult(base, count, seen + res)
         case TypeShape.Polymorphic(_, _, body) :: Nil => fullResult(body, count, seen + res)
         case TypeShape.Function(_, ret) :: Nil => fullResult(ret, count - 1, seen + res)
-        case _ => ErasedType.Unknown
+        case _ => ErasedType.Unknown(N)
     val resultType =
       if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
           && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
@@ -100,7 +113,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         val physicalParamLists =
           if paramLists.isEmpty && td.owner.isEmpty && !declared then Nil :: Nil else paramLists
         if physicalParamLists.isEmpty then resultType
-        else S(ErasedType.FuncRef(rsc = S(false), physicalParamLists, resultType))
+        else S(ErasedFuncSignature.Signature(physicalParamLists, resultType))
       case _: syntax.Val => resultType
       case _ => N
 
@@ -246,6 +259,21 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         (direct ::: app.shapes.toList.flatMap(constructed)).distinct.foreach(checkConstruction(app, _))
       case _ => ()
 
+    if config.language.useNewResolution then
+      val checker = new ResourceModifierChecker(_.resolvedSym)
+      val checkedTypes = mutable.Set.empty[Identity[Term]]
+      def checkType(term: Term): Unit = if checkedTypes.add(Identity(term)) then
+        checker.checkNode(term)
+        term.subTerms.foreach(checkType)
+      // Check source types once, including unused aliases and shared signatures. Expressions
+      // may carry the same annotation syntax, but are validated separately by lowering.
+      statements.foreach:
+        case td: TermDefinition => td.sign.foreach(checkType)
+        case td: TypeDef => td.rhs.foreach(checkType)
+        case term: Term if term.typeInterpretation.nonEmpty => checkType(term)
+        case _ => ()
+      parameters.foreach(_.sign.foreach(checkType))
+
     parameters.foreach: p =>
       if !p.sym.isErased then p.sym.erasedType = declaredType(p.sign, p.modulefulness)
       // Public fields have a BlockMemberSymbol; private/auxiliary constructor fields have a TermSymbol.
@@ -257,7 +285,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       field.foreach: sym =>
         if !sym.isErased then sym.erasedType = p.sym.erasedType
     statements.foreach:
-      case td: TermDefinition if !td.tsym.isErased => td.tsym.erasedType = definitionType(td)
+      case td: TermDefinition if !td.tsym.isErased => td.tsym.initializeErasure(definitionType(td))
       case _ => ()
     statements.foreach:
       case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.erasedType = N

@@ -23,15 +23,11 @@ continuation = function continuation(Runtime2, resume, value) {
 };
 lambda$4 = (undefined, function (Runtime2, promise) {
   return (resume) => {
-    let continuation$here;
-    continuation$here = continuation$(Runtime2, resume);
-    return runtime.safeCall(promise.then(continuation$here))
+    return runtime.safeCall(promise.then(continuation$(Runtime2, resume)))
   }
 });
 lambda3 = (undefined, function (Runtime2, promise, resume) {
-  let continuation$here;
-  continuation$here = continuation$(Runtime2, resume);
-  return runtime.safeCall(promise.then(continuation$here))
+  return runtime.safeCall(promise.then(continuation$(Runtime2, resume)))
 });
 (class Capture$scope32 {
   static {
@@ -623,9 +619,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         globalThis.Object.freeze(this);
       }
       delay() {
-        let lambda$here;
-        lambda$here = lambda$1(Runtime);
-        return Runtime.mkEffect(this, lambda$here)
+        return Runtime.mkEffect(this, lambda$1(Runtime))
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "StackDelayHandler"];
@@ -1171,9 +1165,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     }
   }
   static await(promise) {
-    let lambda$here;
-    lambda$here = lambda$4(Runtime, promise);
-    return Runtime.mkEffect(Runtime.AsyncEffectMarker, lambda$here)
+    return Runtime.mkEffect(Runtime.AsyncEffectMarker, lambda$4(Runtime, promise))
   }
   static toJsAsync(thunk) {
     let r, scrut;

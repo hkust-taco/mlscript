@@ -226,7 +226,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val importedSymbols: Set[ScopedSymbol] = pgrm.imports.iterator.map(_._1).toSet
       val exportedScoped = symbolsToPreserve -- importedSymbols
       
-      val resSym = new TempSymbol(N, erasedType = N, "block$res")
+      val resSym = TempSymbol(N, initErasedType = N, "block$res")
       
       val resNme = nestedScp.allocateName(resSym)
       
@@ -306,7 +306,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               NoSymbol,
               Call(
                 Elaborator.State.runtimeSymbol.asSimpleRef.selSN("printRaw"),
-                (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N),
+                (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, N),
               End())
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)

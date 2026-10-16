@@ -50,7 +50,7 @@ fun f2(x, y) = x + y
 unchecked(f2)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f21;
-//│ f21 = function f2(x, y) { return x + y }; block$res6 = runtime.safeCall(f21(2));
+//│ f21 = function f2(x2, y) { return x2 + y }; block$res6 = runtime.safeCall(f21(2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -58,7 +58,8 @@ unchecked(f2)(2)
 :re
 unchecked(f)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ block$res7 = runtime.safeCall(f1(2));
+//│ let x2;
+//│ x2 = f1; block$res7 = runtime.safeCall(x2(2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
@@ -68,16 +69,18 @@ unchecked(f)(2)
 fun f(x)(y, z) = x + y + z
 unchecked(f)(3)(4)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let f3;
-//│ f3 = function f(x) {
+//│ let f3, callPrefix, inlinedVal;
+//│ f3 = function f(x3) {
 //│   runtime.checkArgs("f", 1, true, arguments.length);
 //│   return (y, z) => {
 //│     let tmp;
-//│     tmp = x + y;
+//│     tmp = x3 + y;
 //│     return tmp + z
 //│   }
 //│ };
-//│ block$res8 = runtime.safeCall(f3(3)(4));
+//│ inlinedVal = f3;
+//│ callPrefix = runtime.safeCall(inlinedVal(3));
+//│ block$res8 = runtime.safeCall(callPrefix(4));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -119,16 +122,16 @@ data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 unchecked(Cls(1, 2)).f(3, 4)(5)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let Cls5, tmp2, callPrefix;
-//│ Cls5 = function Cls(x, y) {
-//│   return globalThis.Object.freeze(new Cls.class(x, y));
+//│ let Cls5, tmp2, callPrefix1, inlinedVal3;
+//│ Cls5 = function Cls(x3, y) {
+//│   return globalThis.Object.freeze(new Cls.class(x3, y));
 //│ };
 //│ globalThis.Object.freeze(class Cls4 {
 //│   static {
 //│     Cls5.class = this
 //│   }
-//│   constructor(x, y) {
-//│     this.x = x;
+//│   constructor(x3, y) {
+//│     this.x = x3;
 //│     this.y = y;
 //│   }
 //│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
@@ -147,8 +150,9 @@ unchecked(Cls(1, 2)).f(3, 4)(5)
 //│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]];
 //│ });
 //│ tmp2 = runtime.checkCall(Cls5(1, 2));
-//│ callPrefix = runtime.safeCall(tmp2.f(3, 4));
-//│ block$res13 = runtime.safeCall(callPrefix(5));
+//│ inlinedVal3 = tmp2;
+//│ callPrefix1 = runtime.safeCall(inlinedVal3.f(3, 4));
+//│ block$res13 = runtime.safeCall(callPrefix1(5));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -182,9 +186,10 @@ if unchecked(M.A(1)).y is
   x and x == 1 then x
   else 0
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let scrut, scrut1, tmp3;
+//│ let scrut, scrut1, tmp3, inlinedVal4;
 //│ tmp3 = runtime.checkCall(M1.A(1));
-//│ scrut = runtime.checkSelect(tmp3.y, "y", tmp3);
+//│ inlinedVal4 = tmp3;
+//│ scrut = runtime.checkSelect(inlinedVal4.y, "y", inlinedVal4);
 //│ scrut1 = runtime.checkCall(Predef.equals(scrut, 1));
 //│ if (scrut1 === true) { block$res18 = scrut; } else { block$res18 = 0; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -218,7 +223,7 @@ unchecked(M.A(2)).y > 1
 // :ssjs
 :re
 unchecked(M.A(1)).g(0)
-//│ ═══[RUNTIME ERROR] TypeError: tmp8.g is not a function
+//│ ═══[RUNTIME ERROR] TypeError: inlinedVal9.g is not a function
 
 
 

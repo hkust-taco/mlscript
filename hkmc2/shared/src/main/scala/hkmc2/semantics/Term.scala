@@ -87,6 +87,28 @@ object Annot:
   
   val Private = Modifier(Keyword.`private`)(N)
   
+  /** Matches a resource modifier, yielding the resource-ness it denotes. */
+  object Resource:
+    def unapply(annot: Annot): Opt[Opt[Bool]] = annot match
+      case Modifier(Keyword.`rsc`) => S(S(true))
+      case Modifier(Keyword.`rsc?`) => S(N)
+      case _ => N
+    
+    /** Reports the resource modifier `kw` on the declaration of a type parameter. */
+    def unsupportedOnTyParam(kw: Keyword, loc: Opt[Loc]): ErrorReport =
+      ErrorReport(msg"'${kw.name}' modifiers on type parameters are not supported yet." -> loc :: Nil)
+  
+  /** Reports that an annotation written at `annotLoc` has no effect on `receiver`,
+    * because of `reason` or, by default, because `receiver` does not support it.
+    */
+  def noEffect(annotLoc: Opt[Loc], receiver: Term, reason: Opt[Message]): WarningReport =
+    val message = reason match
+      case N => msg"This annotation is not supported on ${receiver.describe} terms."
+      case S(value) => value
+    WarningReport(
+      msg"This annotation has no effect." -> annotLoc ::
+      message -> receiver.toLoc :: Nil)
+  
   /** The `declare` modifier in `annotations`, if present. */
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`declare`) => mod
@@ -777,7 +799,7 @@ object RcdField:
     val id = new Tree.Ident(name)
     id.withLocOf(field)
     val sym = new BlockMemberSymbol(name, Nil)
-    val tsym = TermSymbol(RecordField, N, id, erasedType = N)
+    val tsym = TermSymbol(RecordField, N, id, erasure = N)
     sym.tsym = S(tsym)
     // Value-field lookup removes the synthetic definition's capture mark, leaving
     // enclosing call-site marks intact. A structural type field instead refers
@@ -874,12 +896,8 @@ final case class TermDefinition(
     * includes the arrows corresponding to the definition's written parameter lists.
     */
   def resultSignature: Opt[Term] =
-    def strip(sign: Term, count: Int): Term = (sign, count) match
-      case (Term.Forall(_, _, body), _) => strip(body, count)
-      case (Term.FunTy(_, rhs, _), n) if n > 0 => strip(rhs, n - 1)
-      case _ => sign
     sign.map: sign =>
-      if (k is syntax.Fun) && !flags.hasResultAnnotation then strip(sign, params.length)
+      if (k is syntax.Fun) && !flags.hasResultAnnotation then Elaborator.Sig.parse(sign).stripParams(params.length)._1
       else sign
   def visibility: Visibility = annotations
     .collectFirst:

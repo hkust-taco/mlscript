@@ -102,7 +102,7 @@ class FlowAnalysisBasedRewrite(
           lastWords("not the same shape?")
     
     private def etaCall(base: Path): Result =
-      Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect, N)
+      Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect, rsc = false, N)
     
     
     override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
@@ -141,10 +141,12 @@ class FlowAnalysisBasedRewrite(
           case p: Path =>
             Return(etaCall(p).withLocOf(res2))
           case c @ Call(fun, argss) =>
+            // Applying more arguments produces a different value, so the partial application
+            // resource flag does not carry over to the result.
             Return(
-              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata, c.toLoc))
+              Call(fun, (argss ++ activeEtaArgss).ne_!)(c.metadata, rsc = false, c.toLoc))
           case _ =>
-            val tmp = TempSymbol(N, erasedType = N, "eta$res")
+            val tmp = TempSymbol(N, initErasedType = N, "eta$res")
             Scoped(
               Set.single(tmp),
               Assign(tmp, res2, Return(etaCall(tmp.asPath).withLocOf(res2))))
@@ -165,7 +167,7 @@ class FlowAnalysisBasedRewrite(
             case arg :: tl =>
               applyArg(arg): arg2 =>
                 if idx < lastImpureEliminableIdx then
-                  val tmp = TempSymbol(N, erasedType = arg2.value.erasedValueType, "arg")
+                  val tmp = TempSymbol(N, initErasedType = arg2.value.erasedType, "arg")
                   Scoped(
                     Set.single(tmp),
                     Assign(tmp, arg2.value, rec(tl, idx + 1, true, arg2.copy(value = tmp.asPath) :: accRev)))
@@ -192,15 +194,15 @@ class FlowAnalysisBasedRewrite(
           rewriteArgss(argss.iterator.zipWithIndex): argss2 =>
             k(
               if (fun2 is fun) && argss2.corresponds(argss)(_ is _) then c
-              else Call(fun2, argss2.ne_!)(c.metadata, c.toLoc)
+              else Call(fun2, argss2.ne_!)(c.metadata, c.rsc, c.toLoc)
             )
-      case i@Instantiate(mut, cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
+      case i@Instantiate(cls, args :: restArgss) if args.forall(_.spread.isEmpty) =>
         val eliminable = deadParamElimSolver.eliminableCallSiteArgs(ConcreteId((i.uid, 0), instId))
         applyPath(cls): cls2 =>
           rewriteArgs(args, eliminable): args2 =>
             k(
               if (cls2 is cls) && (args2 is args) then i
-              else Instantiate(mut, cls2, args2 :: restArgss)(i.metadata, i.toLoc)
+              else Instantiate(cls2, args2 :: restArgss)(i.metadata, i.mut, i.rsc, i.toLoc)
             )
       case _ => super.applyResult(r)(k)
     
@@ -239,9 +241,9 @@ class FlowAnalysisBasedRewrite(
         withEtaArgss(etaParams.map(_.args)):
           applyFunBodyLikeBlock(lam.body)
       val wrappedBody = etaParams.map(_.params).foldRight(body2): (params, body) =>
-        Return(Lambda(params, body)(Nil, N))
+        Return(Lambda(params, body)(Nil, rsc = false, N))
       if (params2 is lam.params) && (wrappedBody is lam.body) then lam
-      else Lambda(params2, wrappedBody)(lam.annot, lam.toLoc)
+      else Lambda(params2, wrappedBody)(lam.annot, lam.rsc, lam.toLoc)
     
   end Rewriter
   
@@ -249,6 +251,13 @@ class FlowAnalysisBasedRewrite(
   // ====== start: implements the abstract members of `PolyInstantiationRewrite` ======
   def solvers: Iterable[FlowAnalysisSolverResult] =
     deadParamElimSolver :: etaExpansionSolver :: deadConstructorElimSolver :: Nil
+  
+  override def specializedSignature(fun: TermSymbol, instId: InstantiationId, sig: ErasedFuncSignature): ErasedFuncSignature =
+    val paramLists = sig.paramLists.zipWithIndex.map: (pl, i) =>
+      val eliminable = deadParamElimSolver.eliminableParams(ConcreteId((fun, i), instId))
+      pl.zipWithIndex.collect:
+        case (t, j) if !eliminable(j) => t
+    ErasedFuncSignature.Signature(paramLists, sig.ret)
   
   def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
   

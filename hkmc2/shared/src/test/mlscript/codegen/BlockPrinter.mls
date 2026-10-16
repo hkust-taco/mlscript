@@ -84,8 +84,8 @@ case
 //│     Array(0) =>
 //│       return Predef⁰.print⁰("empty")
 //│     Array(1+) =>
-//│       set element0$ = runtime⁰.Tuple⁰.get⁰(caseScrut, 0);
-//│       set middleElements = runtime⁰.Tuple⁰.slice⁰(caseScrut, 1, 0);
+//│       set element0$ = runtime⁰.Tuple⁰.get⁰((caseScrut as! Unknown), 0);
+//│       set middleElements = runtime⁰.Tuple⁰.slice⁰((caseScrut as! Unknown), 1, 0);
 //│       set xs = middleElements;
 //│       set x = element0$;
 //│       return Predef⁰.print⁰("non-empty", x)
@@ -127,7 +127,7 @@ let x = x + 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let x, x1, scrut, tmp;
 //│ set x = 1;
-//│ set scrut = Predef⁰.equals⁰(x, 0);
+//│ set scrut = Predef⁰.equals⁰((x as! Unknown), 0);
 //│ match scrut
 //│   true =>
 //│     set tmp = 1;

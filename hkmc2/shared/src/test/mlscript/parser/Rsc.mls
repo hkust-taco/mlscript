@@ -1,0 +1,128 @@
+:parseOnly
+
+
+// The two resource modifiers, on their own.
+
+rsc A
+//│ Parsed:
+//│ 	Modified(Keywrd(keyword 'rsc'),Ident(A))
+
+rsc? A
+//│ Parsed:
+//│ 	Modified(Keywrd(keyword 'rsc?'),Ident(A))
+
+
+// `rsc` binds tighter than `|` and `&`.
+
+rsc A | B
+//│ Parsed:
+//│ 	InfixApp(Modified(Keywrd(keyword 'rsc'),Ident(A)),Keywrd(keyword '|'),Ident(B))
+
+rsc A & B
+//│ Parsed:
+//│ 	InfixApp(Modified(Keywrd(keyword 'rsc'),Ident(A)),Keywrd(keyword '&'),Ident(B))
+
+
+// ...but looser than `->`, so `rsc (A) -> B` denotes a resource *function*.
+
+rsc A -> B
+//│ Parsed:
+//│ 	Modified(Keywrd(keyword 'rsc'),InfixApp(Tup(List(Ident(A))),Keywrd(keyword '->'),Ident(B)))
+
+rsc (A, B) -> C
+//│ Parsed:
+//│ 	Modified(Keywrd(keyword 'rsc'),InfixApp(Tup(List(Ident(A), Ident(B))),Keywrd(keyword '->'),Ident(C)))
+
+
+// Marking a single parameter as a resource does not need parentheses:
+// the parameter list already delimits it.
+
+(rsc A, B) -> C
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Modified(Keywrd(keyword 'rsc'),Ident(A)), Ident(B))),Keywrd(keyword '->'),Ident(C))
+
+
+// Application binds tightest, so the type argument is included.
+
+rsc List[A]
+//│ Parsed:
+//│ 	Modified(Keywrd(keyword 'rsc'),App(Ident(List),TyTup(List(Ident(A)))))
+
+F[rsc A]
+//│ Parsed:
+//│ 	App(Ident(F),TyTup(List(Modified(Keywrd(keyword 'rsc'),Ident(A)))))
+
+F[rsc? A]
+//│ Parsed:
+//│ 	App(Ident(F),TyTup(List(Modified(Keywrd(keyword 'rsc?'),Ident(A)))))
+
+
+// The modifier stops at a comma, so `y` is not swallowed.
+
+fun f(x: rsc A, y: B) = 0
+//│ Parsed:
+//│ 	TermDef(Fun,App(Ident(f),Tup(List(InfixApp(Ident(x),Keywrd(keyword ':'),Modified(Keywrd(keyword 'rsc'),Ident(A))), InfixApp(Ident(y),Keywrd(keyword ':'),Ident(B))))),Some(IntLit(0)))
+
+
+// Nesting. The resolver rejects this, as a type takes at most one resource modifier.
+
+rsc rsc? A
+//│ Parsed:
+//│ 	Modified(Keywrd(keyword 'rsc'),Modified(Keywrd(keyword 'rsc?'),Ident(A)))
+
+
+// The `rsc?` fusion in `preprocessTokens` requires the two tokens to be adjacent:
+// an intervening `SPACE` token blocks it, as it does for `new!` and `yield*`. So
+// this is `rsc` applied to a juxtaposition.
+
+rsc ? A
+//│ Parsed:
+//│ 	Modified(Keywrd(keyword 'rsc'),Jux(Ident(?),Ident(A)))
+
+
+// Resource modifiers on a type-parameter *declaration* are deferred along with the
+// rest of the generic forms: they parse, but the elaborator rejects them.
+
+class C[rsc A]
+//│ Parsed:
+//│ 	TypeDef(Cls,App(Ident(C),TyTup(List(Modified(Keywrd(keyword 'rsc'),Ident(A))))),None)
+
+abstract class List[rsc? A]
+//│ Parsed:
+//│ 	Modified(Keywrd(keyword 'abstract'),TypeDef(Cls,App(Ident(List),TyTup(List(Modified(Keywrd(keyword 'rsc?'),Ident(A))))),None))
+
+
+// Instantiation. Unlike `mut`, `rsc` parses looser than application, so its operand is the
+// class together with its argument lists.
+
+new rsc C()
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),App(Ident(C),Tup(List())))),None)
+
+new rsc C
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),Ident(C))),None)
+
+new rsc C(1)(2)
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),App(App(Ident(C),Tup(List(IntLit(1)))),Tup(List(IntLit(2)))))),None)
+
+new rsc? C()
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc?'),App(Ident(C),Tup(List())))),None)
+
+new mut rsc C()
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'mut'),Modified(Keywrd(keyword 'rsc'),App(Ident(C),Tup(List()))))),None)
+
+new rsc mut C()
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),App(Modified(Keywrd(keyword 'mut'),Ident(C)),Tup(List())))),None)
+
+new! rsc C()
+//│ Parsed:
+//│ 	PrefixApp(Keywrd(keyword 'new!'),Modified(Keywrd(keyword 'rsc'),App(Ident(C),Tup(List()))))
+
+new rsc C with {}
+//│ Parsed:
+//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),Ident(C))),Some(Block(List())))

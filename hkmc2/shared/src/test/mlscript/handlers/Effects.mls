@@ -196,11 +196,12 @@ fun f() = case [...x, y, z] then x
 //│ define lambda as fun lambda⁰(caseScrut) {
 //│   match caseScrut
 //│     Array(2+) =>
-//│       let inlinedVal, tmp;
-//│       set tmp = -⁰(caseScrut.length⁰, 2);
-//│       set inlinedVal = caseScrut.slice⁰(0, tmp);
-//│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
-//│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
+//│       let xs, inlinedVal, tmp;
+//│       set xs = (caseScrut as! Unknown);
+//│       set tmp = -⁰(xs.length⁰, 2);
+//│       set inlinedVal = xs.slice⁰(0, tmp);
+//│       do runtime⁰.Tuple⁰.get⁰((caseScrut as! Unknown), -2);
+//│       do runtime⁰.Tuple⁰.get⁰((caseScrut as! Unknown), -1);
 //│       return inlinedVal
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -480,28 +481,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.475: 	    module A with
+//│ ║  l.476: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.471: 	    module A with
+//│ ║  l.472: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.467: 	    module A with
+//│ ║  l.468: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.463: 	    module A with
+//│ ║  l.464: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.463: 	    module A with
+//│ ║  l.464: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.467: 	    module A with
+//│ ║  l.468: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.471: 	    module A with
+//│ ║  l.472: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.475: 	    module A with
+//│ ║  l.476: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

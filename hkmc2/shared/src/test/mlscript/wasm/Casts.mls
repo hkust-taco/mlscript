@@ -148,10 +148,10 @@ wasm.ref.i31(wasm.i32.const(7))
 :ge
 :noInline
 wasm.ref.i31(id(wasm.i32.const(7)))
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'rsc? Unknown'
 //│ ║  l.150: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc? Unknown' at an unrelated type 'Int32'
 //│ ║  l.150: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
@@ -176,9 +176,7 @@ unpack(toObj())
 // where `Unknown` cannot be cast to a primitive and is rejected.
 :e
 fun test: Function = id
-//│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.178: 	fun test: Function = id
-//│ ╙──       	                     ^^
+//│ ═══[COMPILATION ERROR] Returning function instances is not supported
 
 :fixme
 fun test: Function = new Object
@@ -218,8 +216,8 @@ fun test: Function = castToA(123)
 
 :e
 castToA(wasm.i32.const(123))
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.220: 	castToA(wasm.i32.const(123))
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'rsc? Unknown'
+//│ ║  l.218: 	castToA(wasm.i32.const(123))
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 123

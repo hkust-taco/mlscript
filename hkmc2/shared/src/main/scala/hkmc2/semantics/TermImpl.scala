@@ -143,6 +143,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case Unquoted(term) => "unquoted term"
       case New(cls, args, rft) => "object instantiation"
       case DynNew(cls, args) => "dynamic object instantiation"
+      case Mut(underlying) => s"mutable ${underlying.describe}"
       case SelProj(pre, cls, proj) => "field selection"
       case Asc(term, ty) => "type ascription"
       case CompType(lhs, rhs, pol) => if pol then "alternation" else "composition"

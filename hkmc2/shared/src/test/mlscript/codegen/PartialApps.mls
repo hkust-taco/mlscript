@@ -276,12 +276,13 @@ _ - _ of 1, 2
 :sjs
 1 \ (_ - 2)()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let lambda33, args;
+//│ let lambda33, f25, args;
 //│ lambda33 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
+//│ f25 = lambda33;
 //│ args = [];
-//│ return runtime.safeCall(lambda33(1, ...args))
+//│ return runtime.safeCall(f25(1, ...args))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
 
@@ -294,13 +295,13 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.295: 	let f = if _ then 1 else 0
+//│ ║  l.296: 	let f = if _ then 1 else 0
 //│ ║         	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.295: 	let f = if _ then 1 else 0
+//│ ║  l.296: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f23; f23 = 1;
+//│ let f27; f27 = 1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = 1
 
@@ -310,8 +311,8 @@ fun f(x) =
     0 then 1
     _ then 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f24;
-//│ f24 = function f(x3) {
+//│ let f28;
+//│ f28 = function f(x3) {
 //│   let scrut;
 //│   scrut = Predef.equals(x3, 0);
 //│   if (scrut === true) { return 1 }

@@ -112,6 +112,10 @@ class NewResolver:
           case Capture(base, _: TypeAliasSymbol) => typeResolution(base).listen(result.publish)
           case Capture(base, thru) => result.publish(TypeShape.Reference(typeResolution(base),
             EntryMark(ResolutionBoundary(thru), N, NoMarks) :: Nil, Map.empty, TypeSubstitution.empty))
+          // Resource modifiers change representation, not member resolution. Retain a
+          // transparent graph edge so erasure can read the modifier at its own source node.
+          case Annotated(Annot.Resource(_), target) =>
+            result.publish(TypeShape.Reference(typeResolution(target), Nil, Map.empty, TypeSubstitution.empty))
           case TyApp(base, args) =>
             rctx.recordAppliedTypeArguments(base.withoutCaptures, args.length)
             result.publish(TypeShape.Applied(typeResolution(base), args.map(typeResolution)))
@@ -170,6 +174,8 @@ class NewResolver:
   def registerSignature(sign: Term)(using ResolutionContext): Unit =
     sign.typeInterpretation = S(typeResolution(sign))
     sign match
+      case Annotated(Annot.Resource(_), target) => registerSignature(target)
+      case Capture(base, _) => registerSignature(base)
       case Forall(params, _, body) =>
         params.foreach: param =>
           param.lb.foreach(registerSignature)

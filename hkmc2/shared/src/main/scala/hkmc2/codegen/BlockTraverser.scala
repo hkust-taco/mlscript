@@ -60,9 +60,9 @@ class BlockTraverser:
   
   def applyResult(r: Result): Unit = r match
     case r @ Call(fun, argss) => applyPath(fun); argss.foreach(_.foreach(applyArg))
-    case Instantiate(mut, cls, argss) => applyPath(cls); argss.foreach(_.foreach(applyArg))
+    case Instantiate(cls, argss) => applyPath(cls); argss.foreach(_.foreach(applyArg))
     case Cast(value, target, _) => applyResult(value)
-    case l @ Lambda(params, body) => applyLam(l)
+    case l: Lambda => applyLam(l)
     case Tuple(mut, elems) => elems.foreach(applyArg)
     case Record(mut, fields) => fields.foreach:
       case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)

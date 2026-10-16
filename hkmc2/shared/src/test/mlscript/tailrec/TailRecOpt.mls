@@ -235,7 +235,7 @@ fun f(x, y) =
 //│   loop loopLabel:
 //│     let scrut, tmp;
 //│     do Predef⁰.print⁰(y);
-//│     set scrut = Predef⁰.equals⁰(x, 0);
+//│     set scrut = Predef⁰.equals⁰((x as! Unknown), 0);
 //│     match scrut
 //│       true =>
 //│         return 0

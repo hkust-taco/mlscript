@@ -25,7 +25,7 @@ loop(1000)(0)
 //│ define loop$tailrec as fun loop$tailrec⁰(x, y) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
-//│     set scrut = Predef⁰.equals⁰(x, 0);
+//│     set scrut = Predef⁰.equals⁰((x as! Unknown), 0);
 //│     match scrut
 //│       true =>
 //│         return y
@@ -57,7 +57,7 @@ count(0)(100)
 //│ define count$tailrec as fun count$tailrec⁰(start1, stop1) {
 //│   loop loopLabel:
 //│     let scrut, tmp;
-//│     set scrut = Predef⁰.equals⁰(start1, stop1);
+//│     set scrut = Predef⁰.equals⁰((start1 as! Unknown), (stop1 as! Unknown));
 //│     match scrut
 //│       true =>
 //│         return start1
@@ -77,7 +77,7 @@ count(0)(100)
 //│ block inlinedLbl:
 //│   loop loopLabel:
 //│     let scrut, tmp;
-//│     set scrut = Predef⁰.equals⁰(start, stop);
+//│     set scrut = Predef⁰.equals⁰((start as! Unknown), (stop as! Unknown));
 //│     match scrut
 //│       true =>
 //│         set inlinedVal = start;
@@ -104,7 +104,7 @@ fun odd(n)(dummy) = if n == 0 then [false, dummy] else even(n - 1)(dummy + 1)
 //│     match id
 //│       0 =>
 //│         let scrut, tmp, tmp1;
-//│         set scrut = Predef⁰.equals⁰(param0, 0);
+//│         set scrut = Predef⁰.equals⁰((param0 as! Unknown), 0);
 //│         match scrut
 //│           true =>
 //│             return [true, param1]
@@ -118,7 +118,7 @@ fun odd(n)(dummy) = if n == 0 then [false, dummy] else even(n - 1)(dummy + 1)
 //│         end
 //│       1 =>
 //│         let scrut, tmp, tmp1;
-//│         set scrut = Predef⁰.equals⁰(param0, 0);
+//│         set scrut = Predef⁰.equals⁰((param0 as! Unknown), 0);
 //│         match scrut
 //│           true =>
 //│             return [false, param1]
@@ -286,10 +286,11 @@ fun f(a)(...z) = if z is
 //│       Array(0) =>
 //│         return a
 //│       Array(1+) =>
-//│         let inlinedVal, tmp1;
-//│         do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│         set tmp1 = -¹(z.length⁰, 0);
-//│         set inlinedVal = z.slice⁰(1, tmp1);
+//│         let xs, inlinedVal, tmp1;
+//│         do runtime⁰.Tuple⁰.get⁰((z as! Unknown), 0);
+//│         set xs = (z as! Unknown);
+//│         set tmp1 = -¹(xs.length⁰, 0);
+//│         set inlinedVal = xs.slice⁰(1, tmp1);
 //│         set tmp = +⁰(a, 1);
 //│         set a = tmp;
 //│         set z = inlinedVal;
@@ -367,7 +368,7 @@ fun f = loop(1000)(0)
 //│   block inlinedLbl:
 //│     loop loopLabel:
 //│       let scrut, tmp, tmp1;
-//│       set scrut = Predef⁰.equals⁰(x1, 0);
+//│       set scrut = Predef⁰.equals⁰((x1 as! Unknown), 0);
 //│       match scrut
 //│         true =>
 //│           set inlinedVal = y1;
@@ -389,7 +390,7 @@ fun f = loop(1000)(0)
 //│   block inlinedLbl:
 //│     loop loopLabel:
 //│       let scrut, tmp, tmp1;
-//│       set scrut = Predef⁰.equals⁰(x, 0);
+//│       set scrut = Predef⁰.equals⁰((x as! Unknown), 0);
 //│       match scrut
 //│         true =>
 //│           set inlinedVal = y;
@@ -493,10 +494,11 @@ fun f(n)(a)(...z) =
 //│           Array(0) =>
 //│             return a
 //│           Array(1+) =>
-//│             let inlinedVal, tmp2;
-//│             do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│             set tmp2 = -¹(z.length⁰, 0);
-//│             set inlinedVal = z.slice⁰(1, tmp2);
+//│             let xs, inlinedVal, tmp2;
+//│             do runtime⁰.Tuple⁰.get⁰((z as! Unknown), 0);
+//│             set xs = (z as! Unknown);
+//│             set tmp2 = -¹(xs.length⁰, 0);
+//│             set inlinedVal = xs.slice⁰(1, tmp2);
 //│             set tmp1 = +⁰(a, 1);
 //│             set res = f$tailrec³(n, tmp1, inlinedVal);
 //│             do Predef⁰.print⁰("hi!");

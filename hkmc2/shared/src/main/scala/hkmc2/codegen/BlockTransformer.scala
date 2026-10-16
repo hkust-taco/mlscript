@@ -164,12 +164,12 @@ class BlockTransformer(subst: SymbolSubst):
       applyPath(fun): fun2 =>
         applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
           k(if (fun2 is fun) && (argss2 is argss) then r
-            else Call(fun2, argss2.ne_!)(r.metadata, r.toLoc))
-    case r @ Instantiate(mut, cls, argss) =>
+            else Call(fun2, argss2.ne_!)(r.metadata, r.rsc, r.toLoc))
+    case r @ Instantiate(cls, argss) =>
       applyPath(cls): cls2 =>
         applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
           k(if (cls2 is cls) && (argss2 is argss) then r
-            else Instantiate(mut, cls2, argss2)(r.metadata, r.toLoc))
+            else Instantiate(cls2, argss2)(r.metadata, r.mut, r.rsc, r.toLoc))
     case l: Lambda => k(applyLam(l))
     case Tuple(mut, elems) =>
       applyArgs(elems): elems2 =>
@@ -333,7 +333,7 @@ class BlockTransformer(subst: SymbolSubst):
   def applyLam(lam: Lambda): Lambda =
     val params2 = applyParamList(lam.params)
     val body2 = applyFunBodyLikeBlock(lam.body)
-    if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot, lam.toLoc)
+    if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)(lam.annot, lam.rsc, lam.toLoc)
   
   def applyListOf[A](ls: List[A], f: (A, (A => Block)) => Block)(k: List[A] => Block): Block =
     def rec(ls: List[A], k: List[A] => Block): Block = ls match

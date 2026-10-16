@@ -8,7 +8,7 @@ fun test_before(n, acc) = if n == 0 then acc else test_before(n - 1, n + acc)
 //│ define test_before⁰ as fun test_before¹(n, acc) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
-//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│     match scrut
 //│       true =>
 //│         return acc
@@ -32,7 +32,7 @@ fun test_after(n, acc) = if n == 0 then acc else test_after(n - 1, n + acc)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define test_after⁰ as fun test_after¹(n, acc) {
 //│   let scrut, tmp, tmp1;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│   match scrut
 //│     true =>
 //│       return acc
@@ -54,7 +54,7 @@ fun test_reenabled(n, acc) = if n == 0 then acc else test_reenabled(n - 1, n + a
 //│ define test_reenabled⁰ as fun test_reenabled¹(n, acc) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
-//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│     match scrut
 //│       true =>
 //│         return acc
@@ -78,7 +78,7 @@ fun foo(n, acc) = if n == 0 then acc else foo(n - 1, n + acc)
 //│ @config(...)
 //│ define foo⁰ as fun foo¹(n, acc) {
 //│   let scrut, tmp, tmp1;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│   match scrut
 //│     true =>
 //│       return acc
@@ -98,7 +98,7 @@ fun bar(n, acc) = if n == 0 then acc else bar(n - 1, n + acc)
 //│ define bar⁰ as fun bar¹(n, acc) {
 //│   loop loopLabel:
 //│     let scrut, tmp, tmp1;
-//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│     match scrut
 //│       true =>
 //│         return acc

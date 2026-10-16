@@ -383,7 +383,10 @@ class Resolver(tl: TraceLogger)
       
       pss.foreach(_.allParams.foreach(traverseParam(_)))
       tps.getOrElse(Nil).flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
-      sign.foreach(traverseSign(_,
+      // * A declaration shares its elaborated signature with the definition consuming it, which resolves it.
+      val signResolvedByDefinition =
+        body.isEmpty && pss.isEmpty && Elaborator.sharedSignatureDefinition(_sym).isDefined
+      if !signResolvedByDefinition then sign.foreach(traverseSign(_,
         expect = if modulefulness.modified
           then Module(S(msg"${tdf.k.desc.capitalize} marked as returning a 'module' must have a module return type."))
           else NonModule(S(msg"${tdf.k.desc.capitalize} must be marked as returning a 'module' in order to have a module return type."))
@@ -453,6 +456,13 @@ class Resolver(tl: TraceLogger)
         case _: ClassLikeDef => ()
       
       traverseClassLikeDef(defn)
+      ictx
+    
+    // Case: Type alias definition. Its right-hand side is not traversed as a signature, so the resource modifiers in
+    // it are checked separately.
+    case defn: TypeDef =>
+      defn.rhs.foreach(resourceModifiers.checkAllRscModifiers)
+      defn.subTerms.foreach(traverse(_, expect = NonModule(N)))
       ictx
     
     // Case: other definition forms. Just traverse through the sub-terms.
@@ -1036,6 +1046,8 @@ class Resolver(tl: TraceLogger)
           else NonModule(S(msg"Non-module parameter must have a non-module type.")),
       )
   
+  private lazy val resourceModifiers = new ResourceModifierChecker(_.symbol)
+  
   /**
    * Traverse through a term that is expected to be a type. In this
    * process, it reports any non-type terms, checks if the term
@@ -1059,7 +1071,6 @@ class Resolver(tl: TraceLogger)
         break()
       case Term.Ref(_) =>
       case Term.Lit(_) =>
-      case Term.Tup(_) => t.subTerms.foreach(traverse(_, expect = NonModule(N)))
       case Term.Rcd(_, stats) => stats.foreach:
         case field: RcdField => traverseSign(field.rhs, expect = NonModule(N))
         case stat => raise(ErrorReport(msg"Expected a field declaration in record type." -> stat.toLoc :: Nil))
@@ -1078,10 +1089,28 @@ class Resolver(tl: TraceLogger)
         traverseSign(con, expect = expect, inAppPrefix = true)
         targs.foreach(traverseSign(_, expect = Expect.NonModule(S("Type arguments should be non-moduleful types."))))
       
-      // Complex type: Function type, Wildcard type, Composed type,
-      // Negation type, Forall type, 
-      case t: (Term.DynTy | Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
+      // Intersection type, which may not contain resource modifiers yet.
+      case Term.CompType(lhs, rhs, false) =>
+        resourceModifiers.checkRscInIntersection(lhs, rhs)
         t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
+      
+      // Function type, whose parameters may not contain resource modifiers yet.
+      case Term.FunTy(lhs, _, _) =>
+        resourceModifiers.checkRscInFunParams(lhs)
+        t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
+      
+      // Complex type: Wildcard type, Composed type, Negation type,
+      // Forall type, Tuple type (including a function type's parameter
+      // list, whose resource modifiers are checked here)
+      case t: (Term.DynTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Constrained | Term.Tup) =>
+        t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
+      
+      // A resource modifier does not affect resolution: traverse its target type, then check the types that the
+      // modifier applies to.
+      case Term.Annotated(Annot.Resource(rsc), target) =>
+        traverseSign(target, expect = expect, inAppPrefix = inAppPrefix)
+        resourceModifiers.checkRscModifier(rsc, target)
+        break()
       
       // t is not a type.
       case _ => 
@@ -1171,6 +1200,8 @@ class Resolver(tl: TraceLogger)
         if expect.module
         then raiseError()
         else Type.NotImplemented // TODO: Support complex types
+      
+      case Term.Annotated(Annot.Resource(_), target) => resolveSign(target, expect = expect)
       
       // Otherwise, resolve the term directly.
       case _ => t.legacyResolvedSym match

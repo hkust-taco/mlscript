@@ -166,7 +166,7 @@ object CtorProducer:
   /** Extracts result forms that produce a concrete `Ctor` flow strategy. */
   def unapply(r: Result)(using Elaborator.State): Opt[(ctorCls: CtorCls, args: Ls[Arg], selectedFrom: Opt[Path])] =
     r match
-    case Instantiate(_, MemberRefTo(cls: ClassSymbol, qual), argss) => S(cls, argss.flatten, qual)
+    case Instantiate(MemberRefTo(cls: ClassSymbol, qual), argss) => S(cls, argss.flatten, qual)
     case Call(MemberRefTo(cls: ClassCtorSymbol, qual), argss) => S(cls.associatedCls, argss.flatten, qual)
     case MemberRefTo(ctor: ModuleOrObjectSymbol, qual) => S(ctor, Nil, qual)
     case Tuple(_, args) => S(args.size, args, N)
@@ -565,7 +565,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case Call(fun, argss) =>
       applyPath(fun)
       argss.foreach(_.foreach(applyArg))
-    case Instantiate(mut, cls, argss) =>
+    case Instantiate(cls, argss) =>
       applyPath(cls)
       argss.foreach(_.foreach(applyArg))
     case l: Lambda =>
@@ -1033,7 +1033,7 @@ class FlowConstraintsCollector(
           // each later arg list applies the result of the previous one
           argss.iterator.zipWithIndex.foldLeft(processResult(fun)):
             case (fStrat, (args, whichArgList)) => handleCallLike((c.uid, whichArgList), fStrat, args)
-        case i@Instantiate(_, cls, argss) =>
+        case i@Instantiate(cls, argss) =>
           constrainOpaqueResult(cls)
           argss.flatten.foreach(a => constrainOpaqueResult(a.value))
           UnknownProd

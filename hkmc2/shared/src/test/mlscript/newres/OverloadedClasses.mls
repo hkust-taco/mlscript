@@ -18,7 +18,6 @@ let y = new Bar()
 //│   main = Assign:
 //│     lhs = x⁰
 //│     rhs = Instantiate:
-//│       mut = false
 //│       cls = MemberRef{disamb=class:Bar⁰}:
 //│         bms = member:Bar¹
 //│         disamb = class:Bar⁰
@@ -27,7 +26,6 @@ let y = new Bar()
 //│     rest = Assign: \
 //│     lhs = y⁰
 //│     rhs = Instantiate:
-//│       mut = false
 //│       cls = MemberRef{disamb=class:Bar⁰}:
 //│         bms = member:Bar¹
 //│         disamb = class:Bar⁰
@@ -57,7 +55,6 @@ let y = new Bar()
 //│   main = Assign:
 //│     lhs = x¹
 //│     rhs = Instantiate:
-//│       mut = false
 //│       cls = MemberRef{disamb=class:Bar²}:
 //│         bms = member:Bar³
 //│         disamb = class:Bar²
@@ -66,7 +63,6 @@ let y = new Bar()
 //│     rest = Assign: \
 //│     lhs = y¹
 //│     rhs = Instantiate:
-//│       mut = false
 //│       cls = MemberRef{disamb=class:Bar²}:
 //│         bms = member:Bar³
 //│         disamb = class:Bar²
@@ -123,7 +119,6 @@ let x = new Foo.Bar()
 //│     body = Assign:
 //│       lhs = x²
 //│       rhs = Instantiate:
-//│         mut = false
 //│         cls = Select{sym=class:Bar⁵}:
 //│           qual = MemberRef{disamb=module:Foo²}:
 //│             bms = member:Foo⁰
@@ -134,7 +129,6 @@ let x = new Foo.Bar()
 //│       rest = Assign: \
 //│       lhs = x³
 //│       rhs = Instantiate:
-//│         mut = false
 //│         cls = Select{sym=class:Bar⁵}:
 //│           qual = MemberRef{disamb=module:Foo²}:
 //│             bms = member:Foo⁰
