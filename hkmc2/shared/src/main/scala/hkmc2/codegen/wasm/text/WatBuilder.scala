@@ -481,6 +481,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       ctor = End(""),
       companion = N,
       bufferable = N,
+      termCompanion = N,
     )(N, Nil)
 
   /** Registers the synthetic `Unit` singleton. */
@@ -679,7 +680,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       if seen(parent) then N else
         parent.defn.flatMap(_.body.members.get(methodDef.sym.nme)) match
           case S(member) => member.asTrm.filter(_.k is syntax.Fun).flatMap(_.bms)
-          case N => parent.irClassHeader.flatMap(_.parent).flatMap(_.asClsOrMod).flatMap(lookup(_, seen + parent))
+          case N => parent.irClassHeader.flatMap(_.parent.knownSymbol).flatMap(_.asClsOrMod).flatMap(lookup(_, seen + parent))
     resolveParentSym(defn).flatMap(_.asClsOrMod).flatMap(lookup(_, Set.empty))
 
   /** True when a method introduces a new virtual slot at its declaring class if not already inherited. */

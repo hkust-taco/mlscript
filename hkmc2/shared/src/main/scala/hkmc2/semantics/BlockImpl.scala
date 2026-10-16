@@ -24,7 +24,8 @@ trait BlockImpl(using Elaborator.State):
       case syntax.Desugared(PossiblyAnnotated(anns, td: TypeDef)) :: stmts =>
         val ctors = td.withPart.toList.flatMap:
           case Block(sts) => sts.flatMap:
-            case Constructor(Block(ctors)) => ctors
+            // * Annotations on constructor blocks have no effect; `Elaborator.blockOrRcd` reports them as unused.
+            case syntax.Desugared(PossiblyAnnotated(_, Constructor(Block(ctors)))) => ctors
             case _ => Nil
           case _ => Nil
         // A temporary solution for ADTs, which desugars ADTs to normal class definitions.

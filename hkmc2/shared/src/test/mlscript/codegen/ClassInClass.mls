@@ -28,7 +28,7 @@ data class Outer(a, b) with
 //│     this.a = a;
 //│     this.b = b;
 //│     const this$Outer = this;
-//│     this.Inner = function Inner(c) {
+//│     this$Outer.Inner = function Inner(c) {
 //│       return globalThis.Object.freeze(new Inner.class(c));
 //│     };
 //│     (class Inner {
