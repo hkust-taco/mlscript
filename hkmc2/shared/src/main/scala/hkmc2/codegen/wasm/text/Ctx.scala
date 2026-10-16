@@ -506,12 +506,15 @@ object FunctionCtx:
   *   The parameters of this function.
   * @param thisSym
   *   The implicit `this` parameter symbol if this function is generated from a non-static method, or `N` otherwise.
+  * @param resultType
+  *   The physical result slot, used to represent undefined returns and bridge virtual overrides.
   * @param paramTypes
   *   When set, overrides the loaded type of each param slot at its position (index 0 = `this`).
   */
 class FunctionCtx(
     _params: Ls[ParamList],
     thisSym: Opt[InnerSymbol],
+    val resultType: Opt[ValType],
     paramTypes: Opt[Seq[ValType]] = N,
 )(using Ctx, Raise, State):
 
@@ -619,9 +622,10 @@ end FunctionCtx
 def genFuncBody[T](
     params: Ls[ParamList],
     thisSym: Opt[InnerSymbol],
+    resultType: Opt[ValType],
     paramTypes: Opt[Seq[ValType]] = N,
 )(mkBody: FunctionCtx ?=> T)(using Ctx, Raise, State): T -> FunctionCtx =
-  val funcCtx = FunctionCtx(params, thisSym, paramTypes)
+  val funcCtx = FunctionCtx(params, thisSym, resultType, paramTypes)
   val result = mkBody(using funcCtx)
   result -> funcCtx
 

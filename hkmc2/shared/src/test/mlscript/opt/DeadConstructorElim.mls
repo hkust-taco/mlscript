@@ -3,7 +3,7 @@
 :flowBasedOpt debugDce
 
 
-data class A(x)
+data class A(x: Any)
 data class B(y)
 data class C(z)
 class P(x) with
@@ -185,7 +185,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│ define app⁰ as fun app¹(k) {
 //│   let tmp2;
 //│   set tmp2 = C⁰(1);
-//│   return k(tmp2)
+//│   return (k(tmp2) as! Int⁰)
 //│ };
 //│ define lambda as fun lambda⁰(c) {
 //│   return 2
@@ -225,7 +225,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│ @private
 //│ define app$app as fun app$app⁰(k) {
 //│   do app_ctor$ctor⁰();
-//│   return k()
+//│   return (k() as! Int⁰)
 //│ };
 //│ @private
 //│ define app_ctor$ctor as fun app_ctor$ctor⁰() {
@@ -237,7 +237,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 //│ define app² as fun app³(k) {
 //│   let tmp2;
 //│   set tmp2 = ctor¹();
-//│   return k(tmp2)
+//│   return (k(tmp2) as! Int⁰)
 //│ };
 //│ set tmp = app$app⁰(lambda$lambda⁰);
 //│ define lambda as fun lambda²(c) {

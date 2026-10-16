@@ -29,15 +29,15 @@ c
 //│         match scrut1
 //│           true =>
 //│             set tmp1 = +⁰(c⁰, 1);
-//│             set c⁰ = tmp1;
+//│             set c⁰ = (tmp1 as! Int⁰);
 //│             set tmp2 = +⁰(y, 1);
-//│             set y = tmp2;
+//│             set y = (tmp2 as! Int⁰);
 //│             continue lbl1
 //│           else
 //│             end
 //│         end
 //│       set tmp = +⁰(x⁰, 1);
-//│       set x⁰ = tmp;
+//│       set x⁰ = (tmp as! Int⁰);
 //│       continue lbl
 //│     else
 //│       end

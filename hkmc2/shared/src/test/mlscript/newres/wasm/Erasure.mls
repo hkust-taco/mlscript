@@ -1,12 +1,16 @@
 :.
+open wasm { i32 }
+open i32 { const }
+//│ Wasm result:
+//│ = {}
 
 
 
 
 // Erasure must prepare an unboxed call target before lowering the caller's body.
 :expect 42
-fun caller(): Number = later(wasm.i32.const(41))
-fun later(value: Number): Number = wasm.i32.add(value, wasm.i32.const(1))
+fun caller(): Number = later(const(41))
+fun later(value: Number): Number = wasm.i32.add(value, const(1))
 type Number = LaterNumber
 type LaterNumber = Int32
 caller()
@@ -19,6 +23,320 @@ caller()
 class Box(val value: Number) with
   fun get(): Number = value
 type Number = Int32
-Box(wasm.i32.const(42)).get()
+Box(const(42)).get()
+//│ Wasm result:
+//│ = 42
+
+
+// i32: infer bindings, function inputs/results, and constructor fields together.
+:noInline
+:expect 42
+private class Slot(val value)
+private fun roundtrip(value) =
+  let saved = value
+  Slot(saved).value
+let input = const(42)
+roundtrip(input)
+//│ Wasm result:
+//│ = 42
+
+
+// i64: infer bindings, function inputs/results, and constructor fields together.
+:noInline
+:expect 4294967296
+private class Slot(val value)
+private fun roundtrip(value) =
+  let saved = value
+  Slot(saved).value
+let input = wasm.i64.const(4294967296)
+roundtrip(input)
+//│ Wasm result:
+//│ = 4294967296n
+
+
+// f32: infer bindings, function inputs/results, and constructor fields together.
+:noInline
+:expect 1.5
+private class Slot(val value)
+private fun roundtrip(value) =
+  let saved = value
+  Slot(saved).value
+let input = wasm.f32.const(1.5)
+roundtrip(input)
+//│ Wasm result:
+//│ = 1.5
+
+
+// f64: infer bindings, function inputs/results, and constructor fields together.
+:noInline
+:expect 2.25
+private class Slot(val value)
+private fun roundtrip(value) =
+  let saved = value
+  Slot(saved).value
+let input = wasm.f64.const(2.25)
+roundtrip(input)
+//│ Wasm result:
+//│ = 2.25
+
+
+// A forward call and all return paths contribute to the same result slot.
+:noInline
+:expect 42
+private fun caller() = later(true)
+private fun later(flag) =
+  if flag do return const(42)
+  const(99)
+caller()
+//│ Wasm result:
+//│ = 42
+
+
+// Recursive and independent callers share one physical parameter representation.
+:noInline
+:expect 42
+private fun repeat(again, value) =
+  if again then repeat(false, value) else value
+let first = repeat(true, const(40))
+let second = repeat(false, const(2))
+wasm.i32.add(first, second)
+//│ Wasm result:
+//│ = 42
+
+
+// Assignments inside nested functions contribute to the storage slot.
+:noInline
+:expect 42
+let value = const(1)
+private fun update() = set value = const(42)
+update()
+value
+//│ Wasm result:
+//│ = 42
+
+
+// Auxiliary constructor parameters have the same representation as their generated fields.
+:noInline
+:expect 42
+private class Box with
+  constructor(val value)
+new Box(const(42)).value
+//│ Wasm result:
+//│ = 42
+
+
+// Publish forward parent headers before joining different nominal instances.
+:noInline
+:expect 42
+private fun choose(flag) = if flag then Left() else Right()
+private class Left() extends Parent()
+private class Right() extends Parent()
+private class Parent() with
+  val value = const(42)
+choose(true).value
+//│ Wasm result:
+//│ = 42
+
+
+// A separate full signature supplies an unboxed parameter without a parameter annotation.
+:noInline
+:expect 42
+fun identity: Int32 -> Int32
+fun identity(value) = value
+identity(const(42))
+//│ Wasm result:
+//│ = 42
+
+
+// A getter's inferred result remains an implicitly invoked value.
+:noInline
+:expect 42
+private class Getter() with
+  fun value = const(42)
+Getter().value
+//│ Wasm result:
+//│ = 42
+
+
+// A nonempty join must not ignore an incompatible concrete alternative.
+:ge
+let value = const(1)
+set value = wasm.i64.const(2)
+value
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.164: 	set value = wasm.i64.const(2)
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.163: 	let value = const(1)
+//│ ╙──       	    ^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i64` to `(ref null any)` in a different type hierarchy
+
+
+// External callers already contribute Unknown; it conflicts with an unboxed input.
+:ge
+fun exported(value) = value
+exported(const(42))
+//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.179: 	exported(const(42))
+//│ ╙──       	         ^^^^^^^^^
+//│ Wasm result:
+//│ = 42
+
+
+// Mutable fields admit unknown writes even when the only local initializer is numeric.
+:ge
+private class Mutable(mut val value)
+Mutable(const(42)).value
+//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Unknown`
+
+
+// An explicit mutable-field annotation supplies the storage interface.
+:noInline
+:expect 42
+private class Mutable(mut val value: Int32)
+let cell = Mutable(const(1))
+set cell.value = const(42)
+cell.value
+//│ Wasm result:
+//│ = 42
+
+
+// Explicit Any keeps its declared representation and rejects an unboxed initializer.
+:ge
+val annotated: Any = const(42)
+annotated
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.210: 	val annotated: Any = const(42)
+//│ ╙──       	                     ^^^^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+
+
+// Undefined contributes no representation constraint to the result slot.
+// Its value is unspecified, so only the concrete branch's result is asserted.
+:noInline
+:expect 42
+private fun choose(flag, value) =
+  if flag do return value
+  undefined
+let unused = choose(false, const(1))
+choose(true, const(42))
+//│ Wasm result:
+//│ = 42
+
+
+// An explicit undefined value inhabits all four unboxed types and nominal references.
+// Exercise parameter, result, field, and local slots without observing the unspecified values.
+:noInline
+:expect 42
+private class Missing(val a: Int32, val b: Int64, val c: Float32, val d: Float64)
+private fun empty(): Missing = undefined
+private fun pass(a: Int32, b: Int64, c: Float32, d: Float64): Int32 =
+  val missing = Missing(a, b, c, d)
+  let local = missing.a
+  set local = undefined
+  local
+let missing = empty()
+let unspecified = pass(undefined, undefined, undefined, undefined)
+42
+//│ Wasm result:
+//│ = 42
+
+
+// Dead-parameter elimination may replace a typed return with undefined.
+:noInline
+:flowBasedOpt mono
+:soir
+:expect 42
+private fun discard() =
+  fun i32(value: Int32) = value
+  fun i64(value: Int64) = value
+  fun f32(value: Float32) = value
+  fun f64(value: Float64) = value
+  val a = i32(const(1))
+  val b = i64(wasm.i64.const(2))
+  val c = f32(wasm.f32.const(3.0))
+  val d = f64(wasm.f64.const(4.0))
+  42
+discard()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define discard⁰ as fun discard¹() {
+//│   let f64, f32, i64, i32;
+//│   define i32 as fun i32⁰() {
+//│     return undefined
+//│   };
+//│   define i64 as fun i64⁰() {
+//│     return undefined
+//│   };
+//│   define f32 as fun f32⁰() {
+//│     return undefined
+//│   };
+//│   define f64 as fun f64⁰() {
+//│     return undefined
+//│   };
+//│   do wasm⁰.i32¹.const⁰(1);
+//│   do i32⁰();
+//│   do wasm⁰.i64¹.const¹(2);
+//│   do i64⁰();
+//│   do wasm⁰.f32¹.const²(3.0);
+//│   do f32⁰();
+//│   do wasm⁰.f64¹.const³(4.0);
+//│   do f64⁰();
+//│   return 42
+//│ };
+//│ return discard¹()
+//│ Wasm result:
+//│ = 42
+
+
+// Returning undefined in an unboxed representation must still execute the call's effects.
+:noInline
+:expect 42
+let calls = const(0)
+private fun absent(): Int64 =
+  set calls = wasm.i32.add(calls, const(1))
+  undefined
+private fun consume(value: Int64): Int32 = calls
+let count = consume(absent())
+wasm.i32.add(count, const(41))
+//│ Wasm result:
+//│ = 42
+
+
+// A branch's undefined value leaves the conditional temporary's representation unconstrained.
+:noInline
+:expect 42
+private fun choose(flag) =
+  let value = if flag then const(42) else undefined
+  value
+let unused = choose(false)
+choose(true)
+//│ Wasm result:
+//│ = 42
+
+
+// Exhaustive loop branches repeat or explicitly return; they never return Unit.
+:noInline
+:expect 42
+private fun loop(flag) =
+  while flag
+    then set flag = false
+    else return const(42)
+loop(true)
+//│ Wasm result:
+//│ = 42
+
+
+// A returning conditional can make the remainder unreachable, even when it has another representation.
+:noInline
+:expect 42
+private fun early() =
+  if true then return const(42)
+  "unreachable"
+early()
 //│ Wasm result:
 //│ = 42

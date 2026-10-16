@@ -1,0 +1,88 @@
+:.
+
+
+:expect 123
+:sir
+:siret
+let x = wasm.i32.const(123)
+x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ set x⁰ = wasm⁰.i32⁰.const⁰(123); return x⁰
+//│ Wasm result:
+//│ = 123
+
+:sir
+:siret
+42
+  wasm.i32.const()
+  wasm.i32.eqz()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int32; set tmp = wasm⁰.i32⁰.const⁰(42); return wasm⁰.i32⁰.eqz⁰(tmp)
+//│ Wasm result:
+//│ = 0
+
+:sir
+:siret
+42
+  wasm.i32.const()
+  wasm.i32.eqz()
+  wasm.i32.eqz()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int32, tmp1: Int32;
+//│ set tmp = wasm⁰.i32⁰.const⁰(42);
+//│ set tmp1 = wasm⁰.i32⁰.eqz⁰(tmp);
+//│ return wasm⁰.i32⁰.eqz⁰(tmp1)
+//│ Wasm result:
+//│ = 1
+
+
+:sir
+:siret
+let x = 42 + 1 as Int
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ set x¹ = (wasm⁰.plus_impl﹖(42, 1) as! Int⁰); end
+//│ Wasm result:
+//│ = {}
+
+:sir
+:siret
+// :wat
+private fun f(a) = a
+f(42)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private define f⁰ as fun f¹(a: Int⁰): Int⁰ { return a }; return f¹(42)
+//│ Wasm result:
+//│ = 42
+
+:sir
+:siret
+// :wat
+private fun f(a) = a
+f(42 + 1)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ?;
+//│ @private
+//│ define f² as fun f³(a: ?): ? { return a };
+//│ set tmp = wasm⁰.plus_impl﹖(42, 1);
+//│ return f³(tmp)
+//│ Wasm result:
+//│ = 43
+
+:sir
+:siret
+// :wat
+private fun f(a) = a
+let x = 42 + 1
+f(x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private define f⁴ as fun f⁵(a: ?): ? { return a }; set x² = wasm⁰.plus_impl﹖(42, 1); return f⁵(x²)
+//│ Wasm result:
+//│ = 43
+
+
+:todo
+"a" + 1
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: unreachable
+
+

@@ -33,6 +33,40 @@ class NewResolver:
   // These results carry no value flow or lexical context. Reuse one immutable
   // shape so repeated subscriptions do not manufacture distinct unit candidates.
   private lazy val unitResultShape = IntroShape(unit, N)
+
+  /** Observe source slots while inference is still open. Interface exposure can subsequently
+    * add unknown inputs, and these subscriptions retain those alternatives too. Expanding an
+    * InstanceShape here uses the resolver's contextual type interpreter; erasure must not
+    * reconstruct substitutions or install new listeners after the block has been completed.
+    */
+  def prepareErasure(root: Statement)(using ResolutionContext): Unit =
+    val declarations = new ErasureDeclarations(root)
+    def variable(symbol: VarSymbol): Unit = if !symbol.isErased then
+      val ref = SimpleRef(symbol)(symbol.id)
+      observeErasure(symbol)(listenTerm(ref))
+    declarations.parameters.values.foreach: p =>
+      variable(p.sym)
+    declarations.variables.foreach:
+      case symbol: VarSymbol => variable(symbol)
+      case symbol: TermSymbol if !symbol.isErased => observeErasure(symbol)(listenMemberVariable(symbol))
+      case _ => ()
+    declarations.statements.foreach:
+      case td: TermDefinition => observeErasureDefinition(td, declarations.mutableFields(td.tsym))
+      case _ => ()
+
+  private def observeErasure(symbol: Symbol)(connect: Listener => Unit)(using ResolutionContext): Unit =
+    if symbol.getState is rctx.owner then rctx.state.erasureInputs.register(symbol): publish =>
+      connect(shape => listenInstanceViews(shape)(publish))
+
+  private def observeErasureDefinition(td: TermDefinition, mutableField: Bool)(using ResolutionContext): Unit =
+    if !td.tsym.isErased then observeErasure(td.tsym): publish =>
+      // The function body returns its payload. AsyncLowering wraps that body later;
+      // the callable's promise representation is assigned separately by Erasure.
+      td.body.foreach(body => listenResult(body)(publish))
+      // Mutable fields admit replacements not represented by initializer flow.
+      // Keep the resolver's unknown-write alternative when choosing their storage.
+      if (td.k is syntax.MutVal) || mutableField then
+        td.body.foreach(body => publish(UnknownValueShape.at(body)))
   
   /** Interpret types through completed symbolic candidates, independently of term overloads. */
   def typeResolution(term: Term)(using rs: ResolutionContext): TypeResolution =
@@ -3732,15 +3766,27 @@ class NewResolver:
       case _: Definition => normal
       case term: Term => resultFlow(term)
       case _ => sequence(stat.subTerms)
-    def split(branches: SimpleSplit, onEnd: ResultFlow): ResultFlow = branches match
-      case SimpleSplit.Else(value) => resultFlow(value)
+    def irrefutable(pattern: Pattern): Bool = pattern match
+      case Pattern.Wildcard() => true
+      case Pattern.Alias(inner, _) => irrefutable(inner)
+      case Pattern.Annotated(inner, _) => irrefutable(inner)
+      case Pattern.Composition(true, left, right) => irrefutable(left) || irrefutable(right)
+      case Pattern.Composition(false, left, right) => irrefutable(left) && irrefutable(right)
+      case _ => false
+    def split(branches: SimpleSplit, onEnd: ResultFlow, repeats: Bool): ResultFlow = branches match
+      case SimpleSplit.Else(value) =>
+        val flow = resultFlow(value)
+        if repeats then flow.copy(normal = false) else flow
       case SimpleSplit.End => onEnd
-      case SimpleSplit.Cons(SimpleSplit.Head.Let(_, value), tail) => resultFlow(value).andThen(split(tail, onEnd))
+      case SimpleSplit.Cons(SimpleSplit.Head.Let(_, value), tail) => resultFlow(value).andThen(split(tail, onEnd, repeats))
       case SimpleSplit.Cons(SimpleSplit.Head.Match(scrutinee, pattern, consequent), tail) =>
         // A failed pattern can skip its guards. Retain that path as well as
         // any control transfer from a guard which is evaluated.
         val guards = pattern.subTerms.foldLeft(normal)((flow, term) => flow.or(resultFlow(term)))
-        resultFlow(scrutinee).andThen(guards.andThen(split(consequent, onEnd).or(split(tail, onEnd))))
+        val alternative = split(tail, onEnd, repeats)
+        val matched = split(consequent, alternative, repeats)
+        resultFlow(scrutinee).andThen(guards.andThen(
+          if irrefutable(pattern) then matched else matched.or(alternative)))
     def quoted(term: Term, depth: Int): ResultFlow = term match
       // Only splices crossing back to the current stage execute now. Nested
       // quotations delay their own splices, including any returns they contain.
@@ -3765,9 +3811,9 @@ class NewResolver:
         if last.normal then first.or(last.copy(normal = false)) else last
       case IfLike(_, form, branches) =>
         // Falling off an imperative split returns unit; falling off a returning
-        // split throws a match error. A loop may finish without running its body.
-        val flow = split(branches, if form.isImperative then normal else ResultFlow(false, Map.empty))
-        if form == IfLikeForm.While then flow.or(normal) else flow
+        // split throws a match error. A loop's completed branch starts another
+        // iteration; only falling off the split can produce a normal unit result.
+        split(branches, if form.isImperative then normal else ResultFlow(false, Map.empty), form == IfLikeForm.While)
       case Quoted(body) => quoted(body, 1)
       case _: Lam | _: Unquoted | _: FunTy | _: Forall | _: Constrained | _: WildcardTy
           | _: CompType | _: Neg | _: DynTy => normal
@@ -3779,6 +3825,8 @@ class NewResolver:
       case Asc(value, _) => resultFlow(value)
       case TyApp(value, _) => resultFlow(value)
       case _ => sequence(term.subTerms)
+
+  protected def completesNormally(term: Term): Bool = resultFlow(term).normal
 
   /** Function results include explicit returns, whereas listenTerm observes only
     * normal completion. Share this rule between calls, result checking, getters,
@@ -3940,7 +3988,11 @@ class NewResolver:
           assert(graph != null, "A tuple producer must have an inference owner")
           val defining = rctx.inGraph(graph.nn.context)
           val record = defining.state.namedTupleRecords.getOrElseUpdate(new Identity(tuple), {
-            val record: Rcd = Rcd(false, fields.map((key, value) => RcdField(key, value)(using rctx.owner)))
+            val record: Rcd = Rcd(false, fields.map((key, value) =>
+              val field = RcdField.source(key, value)(using rctx.owner)
+              lexicalBinders(tuple).foreach(binders => rctx.state.lexicalTypeBinders(field.tsym) = binders)
+              observeErasureDefinition(field.tsym.defn.get, false)
+              field))
             record.withLocOf(tuple)
             // The record's fields are the tuple's own field expressions, so its
             // lexical scope is the tuple's.

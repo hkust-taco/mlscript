@@ -59,7 +59,7 @@ let x: int -> int -> int = fun x y -> x + y
 //│ >             argument = Ident of "y"
 //│ >         body = App:
 //│ >           callee = Ident of "+"
-//│ >           argument = Stack of 
+//│ >           argument = Tuple of Stack of 
 //│ >             Ident of "x"
 //│ >             Ident of "y"
 //│ >   body = None
@@ -337,14 +337,14 @@ let x = !true
 """
 //│ > App:
 //│ >   callee = Ident of "*"
-//│ >   argument = Stack of 
+//│ >   argument = Tuple of Stack of 
 //│ >     App:
 //│ >       callee = Ident of "-"
 //│ >       argument = Literal#Integer of "2"
 //│ >     Literal#Integer of "3"
 //│ > App:
 //│ >   callee = Ident of "*"
-//│ >   argument = Stack of 
+//│ >   argument = Tuple of Stack of 
 //│ >     App:
 //│ >       callee = Ident of "~"
 //│ >       argument = Literal#Integer of "2"
@@ -429,7 +429,7 @@ f -1
 """
 //│ > App:
 //│ >   callee = Ident of "-"
-//│ >   argument = Stack of 
+//│ >   argument = Tuple of Stack of 
 //│ >     Ident of "f"
 //│ >     Literal#Integer of "1"
 //│ > «f - 1»
@@ -440,7 +440,7 @@ f :: -1
 """
 //│ > App:
 //│ >   callee = Ident of "::"
-//│ >   argument = Stack of 
+//│ >   argument = Tuple of Stack of 
 //│ >     Ident of "f"
 //│ >     App:
 //│ >       callee = Ident of "-"

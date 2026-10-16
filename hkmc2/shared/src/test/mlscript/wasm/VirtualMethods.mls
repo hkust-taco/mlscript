@@ -32,7 +32,7 @@ callF(B())
 //│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
 //│   (type $B_init (func (param $this (ref $B)) (result (ref $B))))
 //│   (type $B_ctor (func (result (ref $B))))
-//│   (type $callF (func (param $a (ref $A)) (result (ref null any))))
+//│   (type $callF (func (param $a (ref null $A)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $times_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
@@ -92,7 +92,7 @@ callF(B())
 //│         (local.get $x)
 //│         (ref.i31
 //│           (i32.const 2)))))
-//│   (func $callF (export "callF") (type $callF) (param $a (ref $A)) (result (ref null any))
+//│   (func $callF (export "callF") (type $callF) (param $a (ref null $A)) (result (ref null any))
 //│     (local $receiver (ref null any))
 //│     (return
 //│       (block (result (ref null any))
@@ -109,19 +109,15 @@ callF(B())
 //│                 (ref.cast (ref $Object)
 //│                   (local.get $receiver)))))))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $tmp (ref null any))
-//│     (local $a (ref $A))
+//│     (local $tmp (ref null $B))
 //│     (local $receiver (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $tmp
 //│         (call $B_ctor))
-//│       (local.set $a
-//│         (ref.cast (ref $A)
-//│           (local.get $tmp)))
 //│       (return
 //│         (block (result (ref null any))
 //│           (local.set $receiver
-//│             (local.get $a))
+//│             (local.get $tmp))
 //│           (call_ref $virtual2
 //│             (ref.cast (ref $A)
 //│               (local.get $receiver))
@@ -191,7 +187,7 @@ callPrim(W())
 //│   (type $W_typeinfo (sub $V_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
 //│   (type $W_init (func (param $this (ref $W)) (result (ref $W))))
 //│   (type $W_ctor (func (result (ref $W))))
-//│   (type $callPrim (func (param $a (ref $V)) (result i32)))
+//│   (type $callPrim (func (param $a (ref null $V)) (result i32)))
 //│   (type $entry (func (result i32)))
 //│   (global $n32 (export "n32") (mut i32) (i32.const 0))
 //│   (global $V_typeinfo (export "V_typeinfo") (ref $V_typeinfo) (struct.new $V_typeinfo
@@ -242,7 +238,7 @@ callPrim(W())
 //│   (func $W_f (type $virtual2) (param $this (ref $V)) (param $m i32) (result i32)
 //│     (return
 //│       (local.get $m)))
-//│   (func $callPrim (export "callPrim") (type $callPrim) (param $a (ref $V)) (result i32)
+//│   (func $callPrim (export "callPrim") (type $callPrim) (param $a (ref null $V)) (result i32)
 //│     (local $receiver (ref null any))
 //│     (return
 //│       (block (result i32)
@@ -259,8 +255,7 @@ callPrim(W())
 //│                   (local.get $receiver)))))))))
 //│   (func $entry (export "entry") (type $entry) (result i32)
 //│     (local $tmp i32)
-//│     (local $tmp1 (ref null any))
-//│     (local $a (ref $V))
+//│     (local $tmp1 (ref null $W))
 //│     (local $receiver (ref null any))
 //│     (block (result i32)
 //│       (local.set $tmp
@@ -269,13 +264,10 @@ callPrim(W())
 //│         (local.get $tmp))
 //│       (local.set $tmp1
 //│         (call $W_ctor))
-//│       (local.set $a
-//│         (ref.cast (ref $V)
-//│           (local.get $tmp1)))
 //│       (return
 //│         (block (result i32)
 //│           (local.set $receiver
-//│             (local.get $a))
+//│             (local.get $tmp1))
 //│           (call_ref $virtual2
 //│             (ref.cast (ref $V)
 //│               (local.get $receiver))
@@ -305,10 +297,10 @@ class M2() extends M1() with
   override fun f(m: Int32): Int = 0
 M2().f(1)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.306: 	M2().f(1)
+//│ ║  l.298: 	M2().f(1)
 //│ ╙──       	       ^
 //│ ╔══[COMPILATION ERROR] Overriding method `f` declares result as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.305: 	  override fun f(m: Int32): Int = 0
+//│ ║  l.297: 	  override fun f(m: Int32): Int = 0
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -320,8 +312,8 @@ class N2() extends N1() with
   override fun g(m): Int32 = 0
 N2().g(1)
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null any)`, but the method it overrides declares `i32`
-//│ ║  l.320: 	  override fun g(m): Int32 = 0
+//│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null i31)`, but the method it overrides declares `i32`
+//│ ║  l.312: 	  override fun g(m): Int32 = 0
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^
 
 
@@ -359,8 +351,8 @@ readChild(new Child())
 //│   (type $Child_typeinfo (sub $Parent_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual1))))))
 //│   (type $Child_init (func (param $this (ref $Child)) (result (ref $Child))))
 //│   (type $Child_ctor (func (result (ref $Child))))
-//│   (type $readChild (func (param $c (ref $Child)) (result (ref $Child))))
-//│   (type $entry (func (result (ref $Child))))
+//│   (type $readChild (func (param $c (ref null $Child)) (result (ref null $Child))))
+//│   (type $entry (func (result (ref null $Child))))
 //│   (global $Parent_typeinfo (export "Parent_typeinfo") (ref $Parent_typeinfo) (struct.new $Parent_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)
@@ -409,13 +401,13 @@ readChild(new Child())
 //│   (func $Child_get (type $virtual1) (param $this (ref $Parent)) (result (ref null any))
 //│     (return
 //│       (call $Child_ctor)))
-//│   (func $readChild (export "readChild") (type $readChild) (param $c (ref $Child)) (result (ref $Child))
+//│   (func $readChild (export "readChild") (type $readChild) (param $c (ref null $Child)) (result (ref null $Child))
 //│     (local $receiver (ref null any))
 //│     (return
-//│       (block (result (ref $Child))
+//│       (block (result (ref null $Child))
 //│         (local.set $receiver
 //│           (local.get $c))
-//│         (ref.cast (ref $Child)
+//│         (ref.cast (ref null $Child)
 //│           (call_ref $virtual1
 //│             (ref.cast (ref $Parent)
 //│               (local.get $receiver))
@@ -424,9 +416,9 @@ readChild(new Child())
 //│                 (struct.get $Object $$typeinfo
 //│                   (ref.cast (ref $Object)
 //│                     (local.get $receiver))))))))))
-//│   (func $entry (export "entry") (type $entry) (result (ref $Child))
-//│     (local $tmp (ref $Child))
-//│     (block (result (ref $Child))
+//│   (func $entry (export "entry") (type $entry) (result (ref null $Child))
+//│     (local $tmp (ref null $Child))
+//│     (block (result (ref null $Child))
 //│       (local.set $tmp
 //│         (call $Child_ctor))
 //│       (return

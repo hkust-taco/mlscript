@@ -117,7 +117,7 @@ let result = if source is
 //│ define source⁰ as fun source¹() {
 //│   let tmp1;
 //│   set tmp1 = +⁰(reads⁰, 1);
-//│   set reads⁰ = tmp1;
+//│   set reads⁰ = (tmp1 as! Int⁰);
 //│   return reads⁰
 //│ };
 //│ set reads⁰ = 0;

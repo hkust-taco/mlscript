@@ -23,7 +23,7 @@ done
 //│ >   body = Some of While:
 //│ >     condition = App:
 //│ >       callee = Ident of "<"
-//│ >       argument = Stack of 
+//│ >       argument = Tuple of Stack of 
 //│ >         Ident of "x"
 //│ >         Literal#Integer of "10"
 //│ >     body = Sequence of Stack of 
@@ -38,7 +38,7 @@ done
 //│ >         lhs = Ident of "x"
 //│ >         rhs = App:
 //│ >           callee = Ident of "+"
-//│ >           argument = Stack of 
+//│ >           argument = Tuple of Stack of 
 //│ >             Ident of "x"
 //│ >             Literal#Integer of "1"
 //│ > «let x = 0 in while x < 10 do print_int x; print_newline (); x <- x + 1 done»

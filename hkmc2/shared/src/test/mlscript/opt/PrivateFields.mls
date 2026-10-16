@@ -24,7 +24,7 @@ object Foo with
 //│     let res, tmp;
 //│     set res = Foo¹.this.state⁰;
 //│     set tmp = +⁰(Foo¹.this.state⁰, 1);
-//│     set Foo¹.this.state⁰ = tmp;
+//│     set Foo¹.this.state⁰ = (tmp as! Int⁰);
 //│     return res
 //│   }
 //│   method test2⁰ = fun test2¹ {
@@ -72,7 +72,7 @@ module Bar with
 //│     let res, tmp;
 //│     set res = Bar².this.state¹;
 //│     set tmp = +⁰(Bar².this.state¹, 1);
-//│     set Bar².this.state¹ = tmp;
+//│     set Bar².this.state¹ = (tmp as! Int⁰);
 //│     return res
 //│   }
 //│   method test2² = fun test2³ {

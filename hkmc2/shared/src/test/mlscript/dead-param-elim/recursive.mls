@@ -24,7 +24,7 @@ countdown(5, 42)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return countdown¹(tmp)
+//│       return countdown¹((tmp as! Int⁰))
 //│   end
 //│ };
 //│ return countdown¹(5)
@@ -51,7 +51,7 @@ countdown(5)
 //│         return 0
 //│       else
 //│         set tmp = -⁰(n, 1);
-//│         set n = tmp;
+//│         set n = (tmp as! Int⁰);
 //│         continue loopLabel
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
@@ -102,7 +102,7 @@ ping(5, 99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return ping¹(tmp)
+//│       return ping¹((tmp as! Int⁰))
 //│   end
 //│ };
 //│ return ping¹(5)
@@ -138,7 +138,7 @@ ping(5, 99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return ping³(tmp, unused)
+//│       return ping³((tmp as! Int⁰), unused)
 //│   end
 //│ };
 //│ return ping³(5, 99)
@@ -209,7 +209,7 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return ping⁵(tmp)()
+//│       return ping⁵((tmp as! Int⁰))()
 //│   end
 //│ };
 //│ return ping⁵(5)()
@@ -268,7 +268,7 @@ class Test(a) with
 //│         return 0
 //│       else
 //│         set tmp = -⁰(n, 1);
-//│         return pong⁷(tmp)
+//│         return pong⁷((tmp as! Int⁰))
 //│     end
 //│   }
 //│ };

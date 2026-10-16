@@ -133,13 +133,13 @@ example()
 //│   set old = x;
 //│   try
 //│     set tmp1 = +⁰(x, 1);
-//│     set x = tmp1;
+//│     set x = (tmp1 as! Int⁰);
 //│     do Predef⁰.print⁰(x);
 //│     set tmp2 = x;
 //│     set tmp = tmp2;
 //│     end
 //│   finally
-//│     set x = old;
+//│     set x = (old as! Int⁰);
 //│     end;
 //│     do Predef⁰.print⁰(x);
 //│   set tmp3 = get_x();

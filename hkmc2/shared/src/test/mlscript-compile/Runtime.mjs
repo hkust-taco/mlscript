@@ -206,7 +206,9 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       }
       #_reified;
       resumeWith(value) {
-        return Runtime._try(lambda$(Runtime, this, value))
+        let lambda$here;
+        lambda$here = lambda$(Runtime, this, value);
+        return Runtime._try(lambda$here)
       }
       raise() {
         Runtime.curEffect = this.reified;
@@ -668,7 +670,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     throw runtime.safeCall(globalThis.Error(tmp3))
   }
   static checkArgs(functionName, expected, isUB, got) {
-    let scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
+    let name, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
     tmp = got < expected;
     if (tmp === false) {
       if (isUB === true) {
@@ -688,7 +690,8 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       } else {
         tmp4 = "";
       }
-      tmp5 = "Function" + tmp4;
+      name = tmp4;
+      tmp5 = "Function" + name;
       tmp6 = tmp5 + " expected ";
       if (isUB === true) {
         tmp7 = "";
@@ -810,18 +813,18 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     throw Runtime.CustomStackError(tmp4)
   }
   static showStackTrace(header, tr, debug, showLocals) {
-    let msg, curHandler, atTail;
+    let msg, curHandler, atTail, tmp;
     msg = header;
     curHandler = tr.contTrace;
     atTail = true;
     if (debug === true) {
       lbl: while (true) {
-        let scrut, cur, scrut1, tmp, tmp1;
+        let scrut, cur, scrut1, tmp1, tmp2;
         scrut = curHandler !== null;
         if (scrut === true) {
           cur = curHandler.next;
           lbl1: while (true) {
-            let scrut2, curLocals, loc, scrut3, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10;
+            let scrut2, curLocals, loc, localsMsg, scrut3, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
             scrut2 = cur !== null;
             if (scrut2 === true) {
               curLocals = cur.getLocals;
@@ -829,22 +832,24 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
               if (showLocals === true) {
                 scrut3 = curLocals.length > 0;
                 if (scrut3 === true) {
-                  tmp2 = runtime.safeCall(curLocals.map(lambda));
-                  tmp3 = runtime.safeCall(tmp2.join(", "));
-                  tmp4 = " with locals: " + tmp3;
+                  tmp3 = runtime.safeCall(curLocals.map(lambda));
+                  tmp4 = runtime.safeCall(tmp3.join(", "));
+                  tmp5 = " with locals: " + tmp4;
                 } else {
-                  tmp4 = "";
+                  tmp5 = "";
                 }
               } else {
-                tmp4 = "";
+                tmp5 = "";
               }
-              tmp5 = "\n\tat " + cur.getNme;
-              tmp6 = tmp5 + " (";
-              tmp7 = tmp6 + loc;
-              tmp8 = tmp7 + ")";
-              tmp9 = msg + tmp8;
-              tmp10 = tmp9 + tmp4;
+              localsMsg = tmp5;
+              tmp6 = "\n\tat " + cur.getNme;
+              tmp7 = tmp6 + " (";
+              tmp8 = tmp7 + loc;
+              tmp9 = tmp8 + ")";
+              tmp10 = msg + tmp9;
               msg = tmp10;
+              tmp11 = msg + localsMsg;
+              msg = tmp11;
               cur = cur.next;
               atTail = false;
               continue lbl1
@@ -854,9 +859,9 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
           curHandler = curHandler.nextHandler;
           scrut1 = curHandler !== null;
           if (scrut1 === true) {
-            tmp = "\n\twith handler " + curHandler.handler["constructor"]["name"];
-            tmp1 = msg + tmp;
-            msg = tmp1;
+            tmp1 = "\n\twith handler " + curHandler.handler["constructor"]["name"];
+            tmp2 = msg + tmp1;
+            msg = tmp2;
             atTail = false;
             continue lbl
           }
@@ -865,19 +870,21 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         break;
       }
       if (atTail === true) {
-        return msg + "\n\tat tail position"
+        tmp = msg + "\n\tat tail position";
+        return tmp
       }
       return msg;
     }
     return header;
   }
   static showFunctionContChain(cont, hl, vis, reps) {
-    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope30$cap;
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope30$cap, lambda$here;
     scope30$cap = new Capture$scope301(undefined);
     if (cont instanceof Runtime.FunctionContFrame.class) {
       tmp = cont["constructor"]["name"] + "(pc=";
       scope30$cap.result$0 = tmp + cont.saved.at(1);
-      runtime.safeCall(hl.forEach(lambda$2(scope30$cap, cont)));
+      lambda$here = lambda$2(scope30$cap, cont);
+      runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
         tmp1 = reps + 1;
@@ -902,11 +909,12 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return "(NOT CONT)";
   }
   static showHandlerContChain(cont, hl, vis, reps) {
-    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope32$cap;
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope32$cap, lambda$here;
     scope32$cap = new Capture$scope321(undefined);
     if (cont instanceof Runtime.HandlerContFrame.class) {
       scope32$cap.result$0 = cont.handler["constructor"]["name"];
-      runtime.safeCall(hl.forEach(lambda$3(scope32$cap, cont)));
+      lambda$here = lambda$3(scope32$cap, cont);
+      runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
         tmp = reps + 1;
@@ -1243,15 +1251,6 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       Runtime.stackLimit = old;
     }
     return tmp
-  }
-  static plus_impl(lhs, rhs) {
-    if (lhs instanceof Runtime.Int31.class) {
-      if (rhs instanceof Runtime.Int31.class) {
-        return lhs + rhs
-      }
-      return Runtime.unreachable;
-    }
-    return Runtime.unreachable;
   }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Runtime"];

@@ -171,7 +171,7 @@ fun scopedPrefixFoo(x)(y) = x + y
 //│       end
 //│     true =>
 //│       let x;
-//│       set x = Predef⁰.hide⁰(0);
+//│       set x = (Predef⁰.hide⁰(0) as! Int⁰);
 //│       set f = scopedPrefixFoo¹(x);
 //│       end
 //│     else
@@ -183,3 +183,30 @@ fun scopedPrefixFoo(x)(y) = x + y
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
+
+
+// A checked argument stays at the partial application site; the remaining pure
+// call prefix can still combine after the source variable changes.
+:expect 13
+:soir
+:inlineThreshold 0
+private fun checkedPrefix(x: Int)(y: Int): Int = x + y
+private fun capturePrefix(n: Any) =
+  let f = checkedPrefix(n)
+  set n = 20
+  f(3)
+capturePrefix(10)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline @private
+//│ define checkedPrefix⁰ as fun checkedPrefix¹(x)(y) {
+//│   return (+⁰(x, y) as! Int⁰)
+//│ };
+//│ @private
+//│ define capturePrefix⁰ as fun capturePrefix¹(n) {
+//│   let arg;
+//│   set arg = (n as! Int⁰);
+//│   return (+⁰(arg, 3) as! Int⁰)
+//│ };
+//│ return capturePrefix¹(10)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 13

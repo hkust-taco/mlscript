@@ -136,7 +136,7 @@ c.x
 :w
 fun oops = undefined
 
-// * This used to throw, but we now emit `Unit` upon compiling MIR's `return undefined`
+// * The compiled value of undefined is unspecified; JS call checking may reject it.
 :noInline
 print(oops)
 //│ > ()

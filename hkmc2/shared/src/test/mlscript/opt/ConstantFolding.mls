@@ -31,6 +31,7 @@ in
 //│ !! Change triggered { x⁰ ~> 2 }
 //│ !! Change triggered { y⁰ ~> 2 }
 //│ !! Change triggered { tmp:tmp⁰ ~> 3 }
+//│ !! Change triggered { rm redundant cast Cast(tmp:tmp⁰, ValueLike(?), checked) }
 //│ !! Change triggered { x¹ ~> 3 }
 //│ !! Change triggered { y⁰ ~> 3 }
 //│ !! Change triggered { tmp:tmp¹ ~> 6 }
@@ -70,7 +71,7 @@ let last = peek
 set peek = 1
 last
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ set peek⁰ = Predef⁰.hide⁰(4); set last⁰ = peek⁰; set peek⁰ = 1; return last⁰
+//│ set peek⁰ = (Predef⁰.hide⁰(4) as! Int⁰); set last⁰ = peek⁰; set peek⁰ = 1; return last⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 4
 //│ last = 4

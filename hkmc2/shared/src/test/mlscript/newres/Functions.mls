@@ -210,6 +210,10 @@ callid1(Predef)
 //│ | | = IntroShape(1)
 //│ | = IntroShape(1)
 //│ ~> { fun member:callid1(p⁰) = p⁰.id(1); member:callid1⁰(member:Predef⁰) }
+//│ listenTerm: trm = p⁰
+//│ listen: trm = p⁰
+//│ listenTerm: trm = p⁰.id(1)
+//│ listen: trm = p⁰.id(1)
 //│ listenTerm: trm = member:callid1⁰(member:Predef⁰)
 //│ listen: trm = member:callid1⁰(member:Predef⁰)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
@@ -272,27 +276,27 @@ f.name
 :e
 (x => x).foo
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.273: 	(x => x).foo
+//│ ║  l.277: 	(x => x).foo
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── Function literal does not contain member 'foo'
-//│ ║  l.273: 	(x => x).foo
+//│ ║  l.277: 	(x => x).foo
 //│ ╙──       	 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 f is Int -> Int
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator '->').
-//│ ║  l.283: 	f is Int -> Int
+//│ ║  l.287: 	f is Int -> Int
 //│ ╙──       	     ^^^^^^^^^^
 //│ = true
 
 :fixme
 (f as Int -> Int).apply
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.290: 	(f as Int -> Int).apply
+//│ ║  l.294: 	(f as Int -> Int).apply
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature does not contain member 'apply'
-//│ ║  l.290: 	(f as Int -> Int).apply
+//│ ║  l.294: 	(f as Int -> Int).apply
 //│ ╙──       	      ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

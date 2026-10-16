@@ -69,6 +69,7 @@ object NewResolverState:
 final class NewResolverState(val owner: Elaborator.State):
   import NewResolverState.{Cache, Seen}
 
+  private[hkmc2] val erasureInputs = new ErasureInputs
   val context: ResolutionContext = new ResolutionContext(this, N, N, TypeSubstitution.empty)
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
   private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]

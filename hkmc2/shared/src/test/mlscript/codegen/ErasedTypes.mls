@@ -796,7 +796,7 @@ val over: Int = thunk(2)
 //│   define lambda as fun lambda⁰(b: Int⁰): ? {
 //│     return +⁰(b, 1)
 //│   };
-//│   return (lambda⁰ as! Function⁰)
+//│   return lambda⁰
 //│ };
 //│ set tmp = thunk¹();
 //│ set tmp1 = tmp(2);
@@ -903,16 +903,16 @@ val g: Int -> Int = (x: Int) => x
 //│   define lambda2 as fun lambda¹(x: Int⁰): ? {
 //│     return x
 //│   };
-//│   return (lambda¹ as! Function⁰)
+//│   return lambda¹
 //│ };
 //│ define lambda as fun lambda²(x: Int⁰): ? {
 //│   return x
 //│ };
-//│ do applyF¹((lambda² as! Function⁰));
+//│ do applyF¹(lambda²);
 //│ define lambda1 as fun lambda³(x: Int⁰): ? {
 //│   return x
 //│ };
-//│ define g² as val g³: Function⁰ = (lambda³ as! Function⁰);
+//│ define g² as val g³: Function⁰ = lambda³;
 //│ end
 
 
@@ -1052,7 +1052,7 @@ module Plain with
 //│     let lambda;
 //│     @private
 //│     define lambda as fun lambda⁴(x: Int⁰): ? { return x };
-//│     return (lambda⁴ as! Function⁰)
+//│     return lambda⁴
 //│   }
 //│ };
 //│ end

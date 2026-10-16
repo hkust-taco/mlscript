@@ -228,7 +228,7 @@ main
 //│       true =>
 //│         do Predef⁰.print⁰(x);
 //│         set tmp = -⁰(x, 1);
-//│         set x = tmp;
+//│         set x = (tmp as! Int⁰);
 //│         continue lbl
 //│       else
 //│         end
@@ -334,7 +334,7 @@ print(res)
 //│ match scrut
 //│   true =>
 //│     let y;
-//│     set y = Predef⁰.hide⁰(1);
+//│     set y = (Predef⁰.hide⁰(1) as! Int⁰);
 //│     set res¹ = y;
 //│     return Predef⁰.print⁰(res¹)
 //│   else
@@ -347,7 +347,7 @@ print(res)
 //│ match scrut
 //│   true =>
 //│     let y;
-//│     set y = Predef⁰.hide⁰(1);
+//│     set y = (Predef⁰.hide⁰(1) as! Int⁰);
 //│     set res¹ = y;
 //│     return Predef⁰.print⁰(y)
 //│   else
@@ -372,7 +372,7 @@ hide of print(res)
 //│ match scrut
 //│   true =>
 //│     let y;
-//│     set y = Predef⁰.hide⁰(1);
+//│     set y = (Predef⁰.hide⁰(1) as! Int⁰);
 //│     set res² = y;
 //│     end
 //│   else
@@ -386,7 +386,7 @@ hide of print(res)
 //│ match scrut
 //│   true =>
 //│     let y;
-//│     set y = Predef⁰.hide⁰(1);
+//│     set y = (Predef⁰.hide⁰(1) as! Int⁰);
 //│     set res² = y;
 //│     end
 //│   else

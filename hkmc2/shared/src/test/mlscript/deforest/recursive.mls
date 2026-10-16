@@ -973,7 +973,7 @@ f(3)
 //│ deforest > 	fields: a⁸.x⁹
 //│ deforest > <<< fusing <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let f$g, f$f, f$g1, f$a_A, f$a_A1;
+//│ let f$a_A, f$a_A1, f$g, f$f, f$g1;
 //│ @private
 //│ define f$g as fun f$g⁰(a) {
 //│   return a(undefined, undefined, undefined)
@@ -997,12 +997,12 @@ f(3)
 //│ @affine(1) @private
 //│ define f$a_A as fun f$a_A¹(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
 //│   set fv_tmp = -⁰(A_x, 1);
-//│   return f⁰(fv_tmp)
+//│   return f⁰((fv_tmp as! Int⁰))
 //│ };
 //│ @affine(1) @private
 //│ define f$a_A1 as fun f$a_A⁰(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
 //│   set fv_tmp = -⁰(A_x, 1);
-//│   return f$f⁰(fv_tmp)
+//│   return f$f⁰((fv_tmp as! Int⁰))
 //│ };
 //│ define f¹ as fun f⁰(x) {
 //│   let scrut, tmp;
@@ -1021,7 +1021,7 @@ f(3)
 //│     A² =>
 //│       set arg$A$0$ = a.x⁹;
 //│       set tmp = -⁰(arg$A$0$, 1);
-//│       return f⁰(tmp)
+//│       return f⁰((tmp as! Int⁰))
 //│     else
 //│       return 1
 //│   end
