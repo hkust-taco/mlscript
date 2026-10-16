@@ -724,8 +724,14 @@ object Elaborator:
     // whether symbol identities are useful in that trace, so both settings share the same scope.
     private var debugOverrides = Ls.empty[(Bool, Bool)]
     protected def doDbg: Bool = false
+    /** Debugging requested independently of the [[Config.Debug]] settings, such as by diff-test
+      * commands; as for `TraceLogger.doForceTrace`, definition-local overrides cannot disable it.
+      * Implementations should include it in [[doDbg]]. */
+    protected def doForceDbg: Bool = false
     protected def doShowUids: Bool = true
-    final def dbg: Bool = debugOverrides.headOption.map(_._1).getOrElse(doDbg)
+    final def dbg: Bool = debugOverrides match
+      case (enabled, _) :: _ => enabled || doForceDbg
+      case Nil => doDbg
     final def showUids: Bool = debugOverrides.headOption.map(_._2).getOrElse(doShowUids)
     def scopedDebug[T](enabled: Bool, showUids: Bool)(thunk: => T): T =
       debugOverrides ::= enabled -> showUids

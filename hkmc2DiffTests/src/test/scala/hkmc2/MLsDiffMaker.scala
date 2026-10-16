@@ -245,14 +245,16 @@ abstract class MLsDiffMaker extends DiffMaker:
 
   given Elaborator.State = new Elaborator.State:
     override protected def doDbg: Bool =
-      dbgParsing.isSet
-      // || dbgElab.isSet
-      || dbgResolving.isSet
+      doForceDbg
       || activeDebug.parsing
       || activeDebug.elaboration
       || activeDebug.resolution
       || activeDebug.lowering
       || activeDebug.optimizations
+    override protected def doForceDbg: Bool =
+      dbgParsing.isSet
+      // || dbgElab.isSet
+      || dbgResolving.isSet
       || debug.isSet
     override protected def doShowUids: Bool = activeDebug.showUids
   
@@ -285,8 +287,9 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   val etl = new TraceLogger:
-    override def doTrace = dbgElab.isSet || activeDebug.elaboration || scope.exists:
+    override protected def doForceTrace = dbgElab.isSet || scope.exists:
       showUCS.get.getOrElse(Set.empty).contains
+    override def doTrace = doForceTrace || activeDebug.elaboration
     override protected def defaultDebugOutput: Config.DebugOutput =
       if activeDebug.elaboration then activeDebug.out else Config.DebugOutput.StdIO
     override def emitDbg(str: String): Unit = output(str)
@@ -297,7 +300,8 @@ abstract class MLsDiffMaker extends DiffMaker:
       if isTracing then super.trace(pre, post)(thunk) else thunk
   
   val rtl = new TraceLogger:
-    override def doTrace = dbgResolving.isSet || activeDebug.resolution
+    override protected def doForceTrace = dbgResolving.isSet
+    override def doTrace = doForceTrace || activeDebug.resolution
     override protected def defaultDebugOutput: Config.DebugOutput =
       if activeDebug.resolution then activeDebug.out else Config.DebugOutput.StdIO
     override def emitDbg(str: String): Unit = output(str)

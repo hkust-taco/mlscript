@@ -10,12 +10,25 @@ def tl(using TL): TL = summon
 
 abstract class TraceLogger(using val debugPrinter: DebugPrinter):
   def doTrace: Bool = true
+  /** Tracing requested independently of the [[Config.Debug]] settings, such as by diff-test
+    * commands, which trace a whole phase. Definition-local `@dbg` annotations can neither disable
+    * nor redirect it: their overrides only decide whether the phase is traced *in addition* to it.
+    * Implementations should include it in [[doTrace]], which also governs code outside annotations. */
+  protected def doForceTrace: Bool = false
   protected def defaultDebugOutput: Config.DebugOutput = Config.DebugOutput.StdIO
 
   private var debugOverrides: Ls[(Bool, Config.Debug)] = Nil
 
   /** Whether tracing is enabled after applying the innermost definition-local override. */
-  final def isTracing: Bool = debugOverrides.headOption.fold(doTrace)(_._1)
+  final def isTracing: Bool = debugOverrides match
+    case (enabled, _) :: _ => enabled || doForceTrace
+    case Nil => doTrace
+
+  /** An override that does not enable the phase leaves only forced tracing, which goes to `StdIO`. */
+  private def debugOutput: Config.DebugOutput = debugOverrides match
+    case (true, debug) :: _ => debug.out
+    case (false, _) :: _ => Config.DebugOutput.StdIO
+    case Nil => defaultDebugOutput
 
   /** An inner annotation changes only the settings it names in the enclosing debug scope. */
   final def debugConfig(base: Config): Config =
@@ -48,7 +61,7 @@ abstract class TraceLogger(using val debugPrinter: DebugPrinter):
     if isTracing then emitDbg(
       if noIndent then msg.toString
       else "| " * indent + msg.toString.indentNewLines("| " * indent + ">  "),
-      debugOverrides.headOption.fold(defaultDebugOutput)(_._2.out),
+      debugOutput,
     )
 
   /** Temporarily select both tracing enablement and its destination.

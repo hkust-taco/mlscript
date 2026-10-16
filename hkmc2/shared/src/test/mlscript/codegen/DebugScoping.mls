@@ -35,6 +35,7 @@ DebugMethods.selected(7)
 // enable the corresponding phase must not mute them inside that definition.
 :dl
 @dbg(showUids: false) fun command_lowering() = 1601
+//│ Lowering.term 1601
 //│ Lowering.term undefined
 //│ avoidNames Scoped(Set(member:command_lowering),Define(FunDefn(None,member:command_lowering,term:command_lowerin...
 //│ | avoidNames Define(FunDefn(None,member:command_lowering,term:command_lowering,List(ParamList(‹›,List(),None)),Re...
@@ -45,6 +46,12 @@ DebugMethods.selected(7)
 :de
 @dbg('lowering) fun command_elaboration(x) = x
 //│ Elab block List(Annotated(App(Ident(dbg),Tup(List(Ident('lowering)))),TermDef(Fun,App(Ident(command_elaboration[...] LocalScope(block:6)
+//│ | Processing term definition App(Ident(command_elaboration),Tup(List(Ident(x))))
+//│ | Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
+//│ | Elab term Ident(x)
+//│ | | Elab subterm Ident(x)
+//│ | | ~> x¹
+//│ | ~> x¹
 //│ ~> { fun member:command_elaboration(x¹) = x¹; }
 
 :noCodeGen
@@ -52,6 +59,19 @@ DebugMethods.selected(7)
 @dbg('lowering) fun command_resolution(x) = x
 //│ Traversing block: Blk(List(TermDefinition(Fun,member:command_resolution,term:command_resolution,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)),Lit(UnitLit(false)))
 //│ | Traversing statement: TermDefinition(Fun,member:command_resolution,term:command_resolution,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)
+//│ | Resolving definition: TermDefinition(Fun,member:command_resolution,term:command_resolution,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)
+//│ | | Resolving function definition TermDefinition(Fun,member:command_resolution,term:command_resolution,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)
+//│ | | Resolving parameter x²
+//│ | | Traversing term: Ref(x) (expect = NonModule)
+//│ | | | Resolving resolvable term: Ref(x), (prefer = NonModule, inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
+//│ | | | | Resolving symbol for term: Ref(x) (prefer = NonModule)
+//│ | | | | -> (sym = Some(x), typ = None)
+//│ | | | | Resolving the type for term: Ref(x) (prefer = NonModule, sym = Some(x))
+//│ | | | | | Declaration: Some(Param(‹›,x,None,Modulefulness(None)))
+//│ | | | | -> typ = None
+//│ | | | | Resolving resolvable term Ref(x) with sym = Some(x), typ = None
+//│ | | | ~> Ref(x) (sym = Some(x), typ = None)
+//│ | | | Checking Ref(x): expect NonModule, evalsToModule = false, evalsToStaticClass = false
 //│ | Traversing term: Lit(UnitLit(false)) (expect = Any)
 //│ | | Checking Lit(UnitLit(false)): expect Any, evalsToModule = false, evalsToStaticClass = false
 
