@@ -179,7 +179,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case ValDefn(tsym, sym, rhs) =>
       doc"val ${print(tsym)}${erasedTypeAnnot(tsym)} = ${print(rhs)}"
     case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
-        privateFields, publicFields, preCtor, ctor, mod, bufferable)
+        privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion)
     => scope.nest.givenIn:
       val ctorParams = printParamLists(paramsOpt.toList)
       val docStaged = if cls.isStaged then doc"staged " else doc""

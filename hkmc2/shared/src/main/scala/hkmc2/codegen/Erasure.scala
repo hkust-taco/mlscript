@@ -183,7 +183,8 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
               case N => ClassHeader.Parent.Root
               case S(parent) => parentClass(parent).flatMap(_.sym.asClsOrMod)
                 .fold(ClassHeader.Parent.Unknown)(ClassHeader.Parent.Known(_))
-            sym.irClassHeader = S(ClassHeader(parent, N))
+            val termCompanion = if cls.hasDeclareModifier.isDefined then N else cls.bsym.asTrm
+            sym.irClassHeader = S(ClassHeader(parent, N, termCompanion))
           case _ => ()
       case _ => ()
 

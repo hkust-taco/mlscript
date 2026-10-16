@@ -1410,6 +1410,9 @@ class BlockSimplifier
         (new BlockTraverser:
           override def applySymbol(sym: Symbol): Unit = sym match
             case ts: TermSymbol if ts.isPrivate => found = true
+            // A class/module selection also reads its function companion's storage.
+            // The same cross-unit accessor restriction applies to this implicit access.
+            case cls: ClassLikeSymbol if cls.irTermCompanion.exists(_.isPrivate) => found = true
             case _ =>
         ).applyBlock(blk)
         found

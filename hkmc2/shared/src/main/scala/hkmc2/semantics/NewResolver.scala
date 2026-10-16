@@ -3721,7 +3721,7 @@ class NewResolver:
     * the module overload. Keep that choice through captures so nested functions
     * and opened names use the same interpretation as direct references.
     */
-  private def valueTarget(member: BlockMemberSymbol, receiver: Bool): Opt[DefinitionSymbol[?]] =
+  private[semantics] def valueTarget(member: BlockMemberSymbol, receiver: Bool): Opt[DefinitionSymbol[?]] =
     if receiver then member.asModOrObj.orElse(member.asTrm).orElse(member.asCls).orElse(member.asPat)
     else member.asTrm.orElse(member.asModOrObj).orElse(member.asCls).orElse(member.asPat)
 

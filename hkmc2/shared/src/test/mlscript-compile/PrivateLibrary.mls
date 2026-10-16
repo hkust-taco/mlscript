@@ -17,3 +17,13 @@ module PrivateLibrary with
     private val size = 3
     fun count = size
 
+  private class Hidden with
+    fun value = 53
+  private fun Hidden() = new Hidden
+  fun hidden() = new Hidden
+
+  private class Implementation with
+    fun value = 59
+  module Implementation with
+    fun make() = new Implementation
+

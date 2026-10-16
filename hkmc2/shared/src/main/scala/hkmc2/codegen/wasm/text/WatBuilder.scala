@@ -481,6 +481,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       ctor = End(""),
       companion = N,
       bufferable = N,
+      termCompanion = N,
     )(N, Nil)
 
   /** Registers the synthetic `Unit` singleton. */

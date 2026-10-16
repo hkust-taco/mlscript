@@ -419,13 +419,15 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def showPrefix(using Scope, ShowCfg, Raise): Str =
     "term:" + owner.map(_.showName + "/").getOrElse("")
   def isExplicitlyPrivate: Bool = defn.exists(_.visibility is Visibility.Private)
-  lazy val isPrivate: Bool =
+  def isPrivate: Bool =
     // Top-level term symbols have `owner = None`, but the synthetic global
     // object itself is represented by a `TopLevelSymbol`; excluding it here
     // keeps global definitions and builtins out of JS `#` private lowering if a
     // generated symbol is ever attached to the global owner.
     owner.exists(!_.isInstanceOf[TopLevelSymbol]) &&
-      ((k is LetBind) || isExplicitlyPrivate)
+      // Refreshed IR symbols have no source definition. Their current definition
+      // retains visibility, including after a method is copied by the inliner.
+      ((k is LetBind) || irDefn.fold(isExplicitlyPrivate)(_.visibility is Visibility.Private))
   
   /** The erased type of this term's return value.
     *
@@ -454,6 +456,9 @@ class ClassCtorSymbol(
   override val owner: Opt[InnerSymbol],
   val associatedCls: ClassSymbol,
 )(using State) extends TermSymbol(k, owner, associatedCls.id, N):
+  // Constructor functions occupy the class binding, not a private method slot.
+  // Their source accessibility is checked through the class and its constructor modifiers.
+  override def isPrivate: Bool = false
   override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
   override def mayRaiseEffects(using Config) =
     super.mayRaiseEffects || config.checkInstantiateEffect
@@ -507,6 +512,7 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol, HasErasedType:
     * executable bodies; consumers must not reconstruct it from semantic terms.
     */
   var irClassHeader: Opt[codegen.ClassHeader] = N
+  def irTermCompanion: Opt[TermSymbol] = irClassHeader.flatMap(_.termCompanion)
 
 
 type AnyDefinitionSymbol = DefinitionSymbol[?]

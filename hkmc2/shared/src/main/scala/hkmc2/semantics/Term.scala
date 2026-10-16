@@ -890,11 +890,6 @@ final case class TermDefinition(
     sign.map: sign =>
       if (k is syntax.Fun) && !flags.hasResultAnnotation then strip(sign, params.length)
       else sign
-  def visibility: Visibility = annotations
-    .collectFirst:
-      case Annot.Modifier(Keyword.`private`) => Visibility.Private
-      case Annot.Modifier(Keyword.`public`) => Visibility.Public
-    .getOrElse(Visibility.Public)
   lazy val mayRaiseEffects: Bool =
     annotations.forall:
       case Annot.Pure() => false
@@ -993,6 +988,10 @@ sealed abstract class Declaration extends Located:
 sealed abstract class Definition extends Declaration, Statement:
   val annotations: Ls[Annot]
   def bsym: BlockMemberSymbol
+  def visibility: Visibility = annotations.collectFirst:
+    case Annot.Modifier(Keyword.`private`) => Visibility.Private
+    case Annot.Modifier(Keyword.`public`) => Visibility.Public
+  .getOrElse(Visibility.Public)
   def hasDeclareModifier: Opt[Annot.Modifier] = Annot.declareModifierOf(annotations)
   def hasStagedModifier: Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`staged`) => mod

@@ -489,6 +489,19 @@ final class ResolutionContext private[semantics] (
       case ref: UnresolvedRef => ref.id.toLoc
       case sup: Super => sup.id.toLoc
       case nw: New => nw.toLoc
+    def checkPrivate(kind: Str, definition: Definition, owner: Opt[InnerSymbol]): Ls[Diagnostic] =
+      if definition.visibility isnt Visibility.Private then Nil else owner match
+        // File-private definitions are handled by compilation-unit exports.
+        case S(_: TopLevelSymbol) | N => Nil
+        case S(owner) => owner.asDefnSym.defn match
+          case S(ownerDefn) if !scope.canAccessPrivatesOf(ownerDefn) =>
+            val declaredAt = definition match
+              case td: TermDefinition => td.tsym.toLoc
+              case _ => definition.sym.toLoc
+            ErrorReport(msg"Cannot access private $kind '${definition.bsym.nme}' outside its declaring owner" -> loc ::
+              msg"private $kind declared here" -> declaredAt :: Nil,
+              source = Diagnostic.Source.Compilation) :: Nil
+          case _ => Nil
     def checkConstructor(cls: ClassDef): Ls[Diagnostic] = cls.privateCtor match
       case S(modifier) if !scope.canAccessPrivatesOf(cls) =>
         ErrorReport(msg"Cannot access the private constructor of class '${cls.sym.nme}' outside the class" -> loc ::
@@ -498,15 +511,11 @@ final class ResolutionContext private[semantics] (
       case nw: New =>
         ClassValueShape.targetsOf(nw).map(ClassValueShape.definitionOf).distinct.flatMap(checkConstructor)
       case ref: NewResolvable => ref.resolvedTargets.distinct.flatMap:
-        case ctor: ClassCtorSymbol => ctor.associatedCls.defn.toList.flatMap(checkConstructor)
-        case member: TermSymbol if member.isExplicitlyPrivate => member.owner match
-          // * Like TermSymbol.isPrivate, ignore the definitions owned by the global object.
-          case S(_: TopLevelSymbol) | N => Nil
-          case S(owner) => owner.asDefnSym.defn match
-            case S(ownerDefn) if !scope.canAccessPrivatesOf(ownerDefn) =>
-              ErrorReport(msg"Cannot access private member '${member.nme}' outside its declaring owner" -> loc ::
-                msg"private member declared here" -> member.toLoc :: Nil, source = Diagnostic.Source.Compilation) :: Nil
-            case _ => Nil
+        case ctor: ClassCtorSymbol => ctor.associatedCls.defn.toList.flatMap: cls =>
+          checkPrivate("class", cls, cls.owner) ::: checkConstructor(cls)
+        case member: TermSymbol => member.defn.toList.flatMap(checkPrivate("member", _, member.owner))
+        case member: InnerSymbol => member.asDefnSym.defn.toList.flatMap: definition =>
+          checkPrivate(member.asDefnSym.describeKind, definition, definition.owner)
         case _ => Nil
     if violations.nonEmpty then
       markError(term)

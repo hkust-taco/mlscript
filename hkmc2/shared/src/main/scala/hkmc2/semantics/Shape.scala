@@ -501,10 +501,12 @@ object MemberLookup:
       case S(member) => own(defn, member, Found(member, Nil), inherited)
       case N => inherited
   
-  /** The lookup `found` of a member of `defn`'s body, wrapped in `Private` if the member is private,
-    * in which case `inherited` looks up the members of the same name that `defn` inherits. */
+  /** Hide a name only when all its definitions are private. A public companion keeps the name
+    * available even when its class is private; checkAccess checks the interpretation actually selected.
+    * An entirely private name instead permits lookup of the inherited member outside its owner. */
   def own(defn: ClassLikeDef, member: BlockMemberSymbol, found: MemberLookup, inherited: => MemberLookup): MemberLookup =
-    if member.asTrm.exists(_.isExplicitlyPrivate) then Private(found, defn, inherited) else found
+    if member.symbols.nonEmpty && member.symbols.forall(_.defn.exists(_.visibility is Visibility.Private))
+    then Private(found, defn, inherited) else found
 
 end MemberLookup
 

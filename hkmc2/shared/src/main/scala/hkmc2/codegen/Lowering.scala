@@ -434,7 +434,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               val cfgOverride = defn.extraAnnotations.collectFirst:
                 case Annot.Config(modify) => modify(config)
               ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, parent,
-                mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable)(cfgOverride, defn.annotations)
+                mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable, defn.bsym.asTrm)(cfgOverride, defn.annotations)
             Define(clsDef, blockImpl(stats, res))
           defn.ext match
           case N => defineClass(N, Nil)
@@ -1434,7 +1434,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
               val pctor = parentConstructor(params, as, nw.toLoc)
               ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(parent),
-                mtds, privateFlds, publicFlds, pctor, ctor, N, N)(N, Nil)
+                mtds, privateFlds, publicFlds, pctor, ctor, N, N, N)(N, Nil)
             val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)
             Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       

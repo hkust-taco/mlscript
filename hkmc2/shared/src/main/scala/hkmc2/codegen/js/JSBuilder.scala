@@ -78,7 +78,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   
   private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
     privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.name}$$accessorSymbol"))
-  
+
   /** Private names belong to the containing IR class, shared by its instance and static members.
     * Accesses outside that class's lexical scope need an accessor. */
   private def privateScopeIn(owner: InnerSymbol, inScopeClasses: Set[InnerSymbol]): Opt[Scope] =
@@ -115,7 +115,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     def needsAccessor(ts: semantics.TermSymbol): Bool =
       ts.isPrivate && ts.owner.exists(privateScopeIn(_, inScopeClasses).isEmpty)
     def note(sym: Opt[DefinitionSymbol[?]]): Unit =
-      sym match
+      sym.flatMap(_.storageTerm) match
       case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
         getPrivateAccessorSymbol(ts)
       case _ =>
@@ -147,7 +147,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           cls.companion.foreach: body =>
             applyBlock(body.ctor)
             body.methods.foreach(applyDefn)
-  
+
   private def modulePrivateExportName(sym: BlockMemberSymbol)(using Raise): Str =
     sym.getState.compilationUnitPrivateName(sym).getOrElse:
       raise:
@@ -157,12 +157,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           source = Diagnostic.Source.Compilation,
         )
       "‹MISSING_PRIVATE_EXPORT_NAME›"
-  
+
   private def relativeImportPath(path: Str, wd: io.Path): Str =
     if path.startsWith("/")
     then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
     else path
-  
+
   private case class Imports(
     defaults: Ls[ImportSymbol -> Str],
     privates: Ls[BlockMemberSymbol -> Str],
@@ -375,9 +375,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       val dotClass = s.symbol match
         case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
-      val field = s.symbol match
-        case S(ts: semantics.TermSymbol) => selectPrivateField(ts, s.toLoc)
-        case _ => N
+      val field = s.symbol.flatMap(_.storageTerm).flatMap(selectPrivateField(_, s.toLoc))
       val name = symbolicSuffixBase(id.name).getOrElse(id.name)
       val fieldDoc = field.getOrElse:
         if isValidFieldName(name)
@@ -575,7 +573,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, $functionKeyword ($params) ${ braced(bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
-              privFlds, pubFlds, preCtor, ctor, modo, bufferable)
+              privFlds, pubFlds, preCtor, ctor, modo, bufferable, termCompanion)
           =>
             // After ClassParamFlattener, all classes have paramsOpt = N and exactly one auxParams entry.
             assert(paramsOpt.isEmpty,
@@ -702,7 +700,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 }$singletonFreeze"
             
             val ctorBod = {{
-                val extraPath = if isym.shouldBeLifted then ".class" else ""
                 doc" # static " :: braced:
                   val v = result(isym.asThis)
                   if isSingleton
@@ -710,9 +707,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   else
                     ownr match
                     case S(owner) =>
-                      doc" # ${result(owner.asThis)}.${sym.nme}$extraPath = $v"
+                      val target = Select(owner.asThis, Tree.Ident(sym.nme))(S(isym), isym.toLoc)(false)
+                      doc" # ${result(target)} = $v"
                     case N =>
-                      doc" # ${scope.lookup_!(sym, sym.toLoc)}$extraPath = $v"
+                      doc" # ${result(sym.asMemberRef(isym))} = $v"
               }} :: (
                 if ctorCode.isEmpty then doc""
                 else doc" # constructor(${ctorParams.unzip._2.mkDocument(", ")}) " :: braced(ctorCode)
@@ -1186,6 +1184,11 @@ object JSBuilder:
     }.mkString
   
   extension (dsym: DefinitionSymbol[?])
+    /** Class and module values share the storage of their function companion. Keep the symbol
+      * in the IR so private selections and accessor discovery agree after symbol refreshing. */
+    def storageTerm: Opt[TermSymbol] = dsym.asTrm.orElse:
+      dsym.asClsOrMod.flatMap(_.irTermCompanion)
+
     /** In JS, when a class is overloaded with a term (either explicitly, or because it has a primary parameter list),
       * then its class value is stored in a `.class` property of the term.
       * 
@@ -1196,13 +1199,7 @@ object JSBuilder:
       * functions as companions: the class property belongs to a compiler-created function,
       * never to an existing value. Foreign declarations use their native binding instead. */
     def shouldBeLifted: Bool =
-      val bsym = dsym.asBlkMember
-      (
-        (dsym.asTrm orElse bsym.flatMap(_.asTrm)).isDefined ||
-        (dsym.asCls orElse bsym.flatMap(_.asCls)).flatMap(_.defn).exists(_.paramsOpt.isDefined)
-      ) && 
-        (dsym.asModOrObj orElse dsym.asCls).isDefined &&
-        dsym.defn.forall(_.hasDeclareModifier.isEmpty)
+      dsym.asClsOrMod.isDefined && dsym.storageTerm.isDefined
   
 end JSBuilder
 
