@@ -88,6 +88,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   val newResolution: Bool = config.language.useNewResolution
   val strictResolution: Bool = config.language.strictResolution
   
+  /** Whether a reference cannot be compiled: either an error was reported for it, or it targets a definition
+    * marked as erroneous, such as one of the definitions of a name rejected by Elaborator.
+    * Erroneous definitions are not lowered (see `blockImpl` and `gatherMembers`). */
+  private def erroneousRef(ref: NewResolvable): Bool =
+    ref.isErroneous || ref.resolvedTargets.exists(_.defn.exists(_.isErroneous))
+  
   /** Lower the parent before the class body and share its value with every super reference.
     * Definition references are stable; classOf already saves computed class values in temporaries.
     * Other paths (notably a class selected through a mutable receiver) must be read here, once,
@@ -307,6 +313,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           imp.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
         blockImpl(stats, res)
+      case (d: Definition) :: stats if d.isErroneous =>
+        // * References to erroneous definitions are not compiled either (see `erroneousRef`).
+        blockImpl(stats, res)
       case (d: Declaration) :: stats =>
         d match
         case td: TermDefinition =>
@@ -360,8 +369,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               mod.classCompanion match
               case S(comp) => comp.defn.getOrElse(wat("Module companion without definition", mod.companion))
               case N =>
-                val stagedAnnots = mod.annotations.collect:
-                  case a @ Annot.Modifier(Keyword.`staged`) => a
+                val classAnnots = mod.annotations.collect:
+                  case a @ Annot.Modifier(Keyword.`staged` | Keyword.`private` | Keyword.`public`) => a
                 val clsSym = new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), mod.sym.id)
                 val clsDef = ClassDef.Plain(mod.owner, syntax.Cls, clsSym,
                   mod.bsym,
@@ -369,9 +378,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   N,
                   ObjBody(Blk(Nil, UnitVal())),
                   S(mod.sym),
-                  stagedAnnots,
+                  classAnnots,
                   Nil,
                   N,
+                  Nil,
                 )(mod.toLoc)
                 // Link the class to the module's member symbol. A module overloaded with a
                 // function is stored in the function's `.class` property, as references to the
@@ -444,7 +454,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 inScopedBlock(parentConstructor(parentParams, ext.args, ext.toLoc))
               val cfgOverride = definitionConfigOverride(defn.extraAnnotations)
               ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, parent,
-                mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable)(cfgOverride, defn.annotations)
+                mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable, defn.bsym.asTrm)(cfgOverride, defn.annotations)
             })
           defn.ext match
           case N => Define(lowerClass(N, Nil), blockImpl(stats, res))
@@ -708,7 +718,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val dynamic = ref.dynamicPrefixes.distinct
     val candidates = ref.resolvedMembers.distinct.filterNot((prefix, _) => dynamic.contains(prefix))
       .map((prefix, member) => prefix -> S(member)) ::: dynamic.map(_ -> N)
-    if ref.isErroneous then compError else candidates match
+    if erroneousRef(ref) then compError else candidates match
       case (prefix, N) :: Nil => k(prefix, N, N)
       case (prefix, member @ S(_)) :: Nil => ref.resolvedTargets.distinct match
         case target :: Nil => k(prefix, member, S(target))
@@ -732,7 +742,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * its runtime receiver, property name, and optional static definition. */
   private def newSelection(sel: NewSel)(k: (Term, Tree.Ident, Opt[DefinitionSymbol[?]]) => Block)(using LoweringCtx): Block =
     val NewSel(prefix, id, _) = sel
-    if !checkProjection(sel) || sel.isErroneous then compError
+    if erroneousRef(sel) || !checkProjection(sel) then compError
     else if sel.tupleIndex.nonEmpty && sel.resolvedTargets.nonEmpty then fail:
       ErrorReport(msg"This selection has both tuple and nominal member targets" -> sel.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
@@ -770,7 +780,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case N => Select(prefix, name)(target, sel.toLoc)(false)
 
   private def superReference(sup: st.Super)(k: Path => Block)(using LoweringCtx): Block =
-    if sup.isErroneous then compError else sup.resolvedTargets.distinct match
+    if erroneousRef(sup) then compError else sup.resolvedTargets.distinct match
       case (target: TermSymbol) :: Nil if !target.isPrivate && target.defn.exists(d => !Inheritance.isAbstract(d)) =>
         subTerm_nonTail(sup.receiver): receiver =>
           // Fields live on the receiver; only methods/getters have a base implementation
@@ -1056,7 +1066,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case t @ st.SelfRef(sym) =>
       ref(t, annots, N, inStmtPos = inStmtPos)(k)
     case t @ st.MemberRef(bms) =>
-      if t.isErroneous then compError else t.resolvedTargets.distinct match
+      if erroneousRef(t) then compError else t.resolvedTargets.distinct match
       case Nil =>
         fail:
           ErrorReport(msg"Member reference '${bms.nme}' has no resolved target" -> t.toLoc :: Nil,
@@ -1292,7 +1302,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         subTerm(rhs): r =>
           assignSymbol(resolvedSelectionSymbol.getOrElse(sym), sym, r, k(unit), trm.toLoc)
       case ref: MemberRef =>
-        if ref.isErroneous then compError else ref.resolvedTargets.distinct match
+        if erroneousRef(ref) then compError else ref.resolvedTargets.distinct match
           case target :: Nil =>
             subTerm(rhs): r =>
               assignSymbol(target, ref.sym, r, k(unit), trm.toLoc)
@@ -1448,7 +1458,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
               val pctor = parentConstructor(params, as, nw.toLoc)
               ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(parent),
-                mtds, privateFlds, publicFlds, pctor, ctor, N, N)(N, Nil)
+                mtds, privateFlds, publicFlds, pctor, ctor, N, N, N)(N, Nil)
             val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)
             Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
@@ -1674,6 +1684,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   def gatherMembers(clsBody: ObjBody)(using LoweringCtx)
   : (Ls[FunDefn], Ls[BlockMemberSymbol -> TermSymbol], Ls[TermSymbol], Block) =
     val mtds = clsBody.methods
+      .filterNot(_.isErroneous) // * See `erroneousRef`.
       .flatMap: td =>
         td.body.map: bod =>
           val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):

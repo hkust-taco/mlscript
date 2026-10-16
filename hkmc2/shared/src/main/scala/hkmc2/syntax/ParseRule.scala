@@ -354,9 +354,11 @@ class ParseRules(using State):
     ,
     keepKw(`constructor`):
       ParseRule("constructor keyword")(
-        exprOrBlk(
+        (exprOrBlk(
           ParseRule(s"constructor block")(end(()))
-        ) { case (body, _) => Constructor(body) }*
+        ) { case (body, _) => Constructor(body) } :+
+          // * A bare `constructor` declaration adds no parameter list, as in `private constructor`.
+          end(Constructor(Empty())))*
       )
     .map { case (kw, c) => c.mkLocWith(kw) }
     ,

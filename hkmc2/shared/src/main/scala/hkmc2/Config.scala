@@ -35,6 +35,8 @@ case class Config(
   noModuleCheck: Bool,
   debug: Debug,
   optimizer: Optimizer,
+  // Check internal invariants whose checks are too costly to always run, such as MemberStorage.privateOwner's.
+  checkInvariants: Bool,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -88,6 +90,7 @@ object Config:
     noModuleCheck = false,
     debug = Debug.default,
     optimizer = Optimizer.FastOpt,
+    checkInvariants = false,
   )
   object default:
     val patMatConsequentSharingThreshold = S(15)

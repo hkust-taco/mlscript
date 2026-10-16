@@ -31,10 +31,11 @@ case class Scope
   
   lazy val parent: Opt[Scope] = parentOrCfg.toOption
   lazy val cfg: Cfg = parentOrCfg.fold(identity, _.cfg)
-  // * Track every owner whose `this` is currently in lexical scope so codegen can tell
-  // * whether a private field access stays inside the declaring owner or needs an accessor.
-  lazy val inScopeOwners: Set[InnerSymbol] =
-    parent.fold(Set.empty[InnerSymbol])(_.inScopeOwners) ++ curThis.iterator.flatten
+  // * Instance and static receivers share the private names of their containing IR class.
+  // * Keep that class in lexical scope even when a nested function rebinds `this`.
+  lazy val inScopeClasses: Set[InnerSymbol] =
+    parent.fold(Set.empty[InnerSymbol])(_.inScopeClasses) ++ curThis.iterator.flatten
+      .map(_.irClassContainer)
   
   private val existingNames = MutMap.empty[Str, Symbol]
   
