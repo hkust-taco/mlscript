@@ -1,0 +1,93 @@
+:.
+:js
+
+#lang(0.3.x)
+
+
+// * With the new underscore syntax, '_' placeholders must be delimited
+// * either by a prefix '=>' or by the RHS of an operator whose name ends with '>'.
+
+:e
+_ + 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.11: 	_ + 1
+//│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+(_ + 1)
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.18: 	(_ + 1)
+//│ ╙──      	 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+let f = => _ + 1
+//│ f = fun f
+
+:expect 4
+f(3)
+//│ = 4
+
+
+:expect 4
+3 |> _ + 1
+//│ = 4
+
+:expect 7
+3
+  |> _ * 2
+  |> _ + 1
+//│ = 7
+
+:expect 7
+let g = (=> _ * 2) >> _ + 1
+g(3)
+//│ = 7
+//│ g = fun
+
+// * Each operator RHS delimits its own lambda.
+:expect 7
+3 |> _ + (2 |> _ * 2)
+//│ = 7
+
+let xs = [1]
+//│ xs = [1]
+
+set xs |>= _.concat of [2]
+
+:expect [1, 2]
+xs
+//│ = [1, 2]
+
+
+// * Operators not ending with '>' do not delimit placeholders.
+
+:e
+3 |. _ + 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.66: 	3 |. _ + 1
+//│ ╙──      	     ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+3 + _
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.73: 	3 + _
+//│ ╙──      	    ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// * Only the RHS of the operator is delimited.
+:e
+_ |> f
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.81: 	_ |> f
+//│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+(=> _ + 1) << _ * 2
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.88: 	(=> _ + 1) << _ * 2
+//│ ╙──      	              ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+

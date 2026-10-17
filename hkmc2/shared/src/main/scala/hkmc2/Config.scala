@@ -139,7 +139,9 @@ object Config:
       v0_3_x,
     ).map(l => l.versionName -> l).toMap
     
-    val default = v0_2_x.copy()(versionName = "default")
+    // * The version name of the default language must compare lower than all numbered versions,
+    // * since version-gated features are enabled by comparing version names (see `Language`).
+    val default = v0_2_x.copy()(versionName = "0")
     
     val latest = v0_3_x
     

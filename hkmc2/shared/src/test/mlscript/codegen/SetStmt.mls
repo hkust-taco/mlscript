@@ -7,24 +7,16 @@ let g = [0]
 set g = g.concat of [1]
 
 set g |>= (_.concat of [2])
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:1982)
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.9: 	set g |>= (_.concat of [2])
-//│ ╙──     	           ^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 g
-//│ = [0, 1]
+//│ = [0, 1, 2]
 
 set g.0 += 1
 
 set g.0 = g.0 + 1
 
 g
-//│ = [2, 1]
+//│ = [2, 1, 2]
 
 set g.0 |>= Math.sign
 
@@ -32,37 +24,18 @@ set g.0 |>= Math.sign
 // its body would pass a number to the pipe operator as a function.
 :e
 set g.2 |>= Math.pow(_, 5)
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.34: 	set g.2 |>= Math.pow(_, 5)
-//│ ╙──      	                     ^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Num' at an unrelated type 'Function'
-//│ ║  l.34: 	set g.2 |>= Math.pow(_, 5)
+//│ ║  l.26: 	set g.2 |>= Math.pow(_, 5)
 //│ ╙──      	            ^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = fun
 
 g
-//│ = [1, 1]
+//│ = [1, 1, 2]
 
 
 // Parenthesizing the callback scopes the placeholder to Math.pow.
 set g.2 |>= (Math.pow(_, 5))
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:1982)
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.48: 	set g.2 |>= (Math.pow(_, 5))
-//│ ╙──      	                      ^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: coerceTo (Block.scala:1200)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Num' at an unrelated type 'Function'
-//│ ║  l.48: 	set g.2 |>= (Math.pow(_, 5))
-//│ ╙──      	             ^^^^^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect [1, 1, 32]
 g
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processIRBlock (JSBackendDiffMaker.scala:321)
-//│ ═══[RUNTIME ERROR] Expected: '[1, 1, 32]', got: '[1, 1]'
-//│ = [1, 1]
+//│ = [1, 1, 32]

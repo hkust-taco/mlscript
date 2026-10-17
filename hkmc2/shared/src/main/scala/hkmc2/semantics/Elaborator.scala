@@ -1693,7 +1693,14 @@ extends Importer:
       val sym = FlowSymbol.app()
       val lt = subterm(lhs)
       val ot = subterm(op)
-      val rts = rhss.map(r => PlainFld(subterm(r)))
+      // * With the new underscore syntax, the RHS of an operator whose name ends with `>`
+      // * (such as `|>` and `>>`) delimits its own implicit lambda, as if prefixed by `=>`,
+      // * so that, eg, `x |> _ + 1` means `x |> (y => y + 1)`.
+      val rhsDelimitsUnders = lang.newUnderscoreAndApplicationSyntax && op.match
+        case Ident(name) => name.endsWith(">")
+        case _ => false
+      val rts = rhss.map: r =>
+        PlainFld(if rhsDelimitsUnders then term(r, Trm, forceUnderCtx = true) else subterm(r))
       app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
         DummyApp, N, sym)
     case SynthSel(pre, nme) =>
