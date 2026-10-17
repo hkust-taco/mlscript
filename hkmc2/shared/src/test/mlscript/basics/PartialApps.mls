@@ -36,122 +36,128 @@ id(.)
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-fun incr = _ + 1
-fun add = _ + _
+fun incr = => _ + 1
+fun add = => _ + _
 
 passTo(2, incr)()
 //│ = 3
 
-// TODO disallow
-:breakme
-passTo(2, incr(_))()
+passTo(2, => incr(_))()
 //│ = 3
 
-passTo(2, incr @ _)()
+passTo(2, => incr @ _)()
 //│ = 3
 
-:fixme
-passTo(2, incr(.) @ _)()
+:todo
+passTo(2, => incr(.) @ _)()
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.54: 	passTo(2, incr(.) @ _)()
-//│ ╙──      	               ^
+//│ ║  l.52: 	passTo(2, => incr(.) @ _)()
+//│ ╙──      	                  ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.54: 	passTo(2, incr(.) @ _)()
-//│ ╙──      	               ^
+//│ ║  l.52: 	passTo(2, => incr(.) @ _)()
+//│ ╙──      	                  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:breakme
-passTo(2, (incr(_)) @ _)()
+passTo(2, => (=> incr(_)) @ _)()
 //│ = 3
 
-:breakme
-passTo(2, add(_, 2))()
+passTo(2, => add(_, 2))()
 //│ = 4
 
-:fixme
+:todo
 passTo(2, add(., 2))()
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.72: 	passTo(2, add(., 2))()
+//│ ║  l.68: 	passTo(2, add(., 2))()
 //│ ╙──      	              ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.72: 	passTo(2, add(., 2))()
+//│ ║  l.68: 	passTo(2, add(., 2))()
 //│ ╙──      	              ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.72: 	passTo(2, add(., 2))()
+//│ ║  l.68: 	passTo(2, add(., 2))()
 //│ ║        	          ^^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = _ + _
-//│ ╙──      	            ^
+//│ ║  l.40: 	fun add = => _ + _
+//│ ╙──      	             ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:breakme
-passTo(1, incr(_) + _)(2)
+passTo(1, => incr(_) + _)(2)
 //│ = 4
 
-:breakme
-passTo(1, (incr(_)) @ _ + _)(2)
+passTo(1, => (=> incr(_)) @ _ + _)(2)
 //│ = 4
 
-passTo(1, (add(_, 1)) @ _ + _)(2)
+passTo(1, => (=> add(_, 1)) @ _ + _)(2)
 //│ = 4
 
-:fixme
+:todo
 passTo(1, incr(.) @ _ + _)(2)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.99: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
 //│ ╙──      	               ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.99: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
 //│ ╙──      	               ^
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ║        	                    ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ║        	                        ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:fixme
+:todo
 passTo(1, add(., 1) @ _ + _)(2)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.109: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
 //│ ╙──       	              ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.109: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
 //│ ╙──       	              ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.109: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
 //│ ║         	          ^^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = _ + _
-//│ ╙──      	            ^
+//│ ║  l.40: 	fun add = => _ + _
+//│ ╙──      	             ^^^^^
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║         	                      ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║         	                          ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-:breakme
 :sjs
-let f = add(_, 1)
+let f = => add(_, 1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f, f1; f1 = function f(_0) { return _0 + 1 }; f = f1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun f
 
-:fixme
+:todo
 let f = add(., 1)
+f(1)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.134: 	let f = add(., 1)
+//│ ║  l.143: 	let f = add(., 1)
 //│ ╙──       	            ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.134: 	let f = add(., 1)
+//│ ║  l.143: 	let f = add(., 1)
 //│ ╙──       	            ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.134: 	let f = add(., 1)
+//│ ║  l.143: 	let f = add(., 1)
 //│ ║         	        ^^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = _ + _
-//│ ╙──      	            ^
+//│ ║  l.40: 	fun add = => _ + _
+//│ ╙──      	             ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ f = undefined
 
-:fixme
-f(1)
-//│ ═══[RUNTIME ERROR] TypeError: f2 is not a function
-
-let f = add of _, 1
+let f = => add of _, 1
 //│ f = fun f
 
 f(1)

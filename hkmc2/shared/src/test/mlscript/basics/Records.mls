@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -16,7 +17,7 @@ let r = {}
 :w
 {1, 2}
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.17: 	{1, 2}
+//│ ║  l.18: 	{1, 2}
 //│ ╙──      	 ^
 //│ = 2
 
@@ -73,10 +74,10 @@ let rcd =
   bar =
     "..."
 //│ ╔══[COMPILATION ERROR] Name not found: foo
-//│ ║  l.72: 	  foo = 1
+//│ ║  l.73: 	  foo = 1
 //│ ╙──      	  ^^^
 //│ ╔══[COMPILATION ERROR] Name not found: bar
-//│ ║  l.73: 	  bar =
+//│ ║  l.74: 	  bar =
 //│ ╙──      	  ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ rcd = undefined
@@ -85,16 +86,27 @@ let rcd =
 // * How about this syntax?
 
 :todo
-let rcd = new with
-  foo = 1
-  bar =
-    "..."
+let rcd = new {
+    foo = 1
+    bar =
+      "..."
+  }
 //│ ╔══[COMPILATION ERROR] Name not found: foo
-//│ ║  l.89: 	  foo = 1
-//│ ╙──      	  ^^^
+//│ ║  l.90: 	    foo = 1
+//│ ╙──      	    ^^^
 //│ ╔══[COMPILATION ERROR] Name not found: bar
-//│ ║  l.90: 	  bar =
-//│ ╙──      	  ^^^
+//│ ║  l.91: 	    bar =
+//│ ╙──      	    ^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.89: 	let rcd = new {
+//│ ║        	          ^^^^^
+//│ ║  l.90: 	    foo = 1
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.91: 	    bar =
+//│ ║        	^^^^^^^^^
+//│ ║  l.92: 	      "..."
+//│ ║        	^^^^^^^^^^^
+//│ ╙── Invalid class expression: block
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ rcd = undefined
 
@@ -135,18 +147,22 @@ m0.get(41)
 
 :e
 {get(k): _}
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.149: 	{get(k): _}
+//│ ║         	         ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.137: 	{get(k): _}
+//│ ║  l.149: 	{get(k): _}
 //│ ╙──       	 ^^^^^^
-//│ = fun
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 
 :silent
 import "../../mlscript-compile/Iter.mls"
 let graphics = new Set of tuple of
-  "circle", "ellipse", "image", "line", "path"
-  "polygon", "polyline", "rect", "text", "use"
+  'circle, 'ellipse, 'image, 'line, 'path
+  'polygon, 'polyline, 'rect, 'text, 'use
 
 fun showProps(x, y, props) = Object.entries(props)
   Iter.mapping of case
@@ -159,19 +175,19 @@ fun output(i, s) = print of "  ".repeat(i) + s
 
 fun t(kind, props) =
   if graphics.has(kind) then
-    (args) => output of args.i, kind + " " + showProps(args.x, args.y, props)
+    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
   else
     (...children) => (args) =>
-      output of args.i, kind + " " + showProps(args.x, args.y, props) + " with"
+      output of args.'i, kind + " " + showProps(args.'x, args.'y, props) + " with"
       children Iter.each of child => child of
-        x: args.x + props.x
-        y: args.y + props.y
-        i: args.i + 1
+        x: args.'x + props.'x
+        y: args.'y + props.'y
+        i: args.'i + 1
 
-let display = t("group", x: 20, y: 20) of
-  t("circle", x: 30, y: 30, r: 42)
-  t("rect", x: 40, y: 40, width: 80, height: 90)
-  t("ellipse", x: 50, y: 50, rx: 40, ry: 60)
+let display = t('group, x: 20, y: 20) of
+  t('circle, x: 30, y: 30, r: 42)
+  t('rect, x: 40, y: 40, width: 80, height: 90)
+  t('ellipse, x: 50, y: 50, rx: 40, ry: 60)
 //│ display = fun
 
 display(x: 11, y: 22, i: 2)
@@ -180,30 +196,54 @@ display(x: 11, y: 22, i: 2)
 //│ >       rect x: 71, y: 82, width: 80, height: 90
 //│ >       ellipse x: 81, y: 92, rx: 40, ry: 60
 
-let display = t("group", x: 0, y: 0) of
-  t("circle", x: 10, y: 10, r: 42)
+let display = t('group, x: 0, y: 0) of
+  t('circle, x: 10, y: 10, r: 42)
 //│ display = fun
 
 display(x: 88, y: 99, i: 0)
 //│ > group x: 88, y: 99 with
 //│ >   circle x: 98, y: 109, r: 42
 
-:todo
-t("group")
-//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.192: 	t("group")
-//│ ╙──       	 ^^^^^^^^^
+:todo // * Make second parameter optional
+t('group)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.208: 	t('group)
+//│ ║         	^^^^^^^^^
+//│ ╟── Function 't' expected 2 arguments, but got 1
+//│ ║  l.176: 	fun t(kind, props) =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.177: 	  if graphics.has(kind) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.178: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.179: 	  else
+//│ ║         	^^^^^^
+//│ ║  l.180: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
-:todo
-t("group")
-//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.199: 	t("group")
-//│ ╙──       	 ^^^^^^^^^
+:todo // * Make second parameter optional
+t('group)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.226: 	t('group)
+//│ ║         	^^^^^^^^^
+//│ ╟── Function 't' expected 2 arguments, but got 1
+//│ ║  l.176: 	fun t(kind, props) =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.177: 	  if graphics.has(kind) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.178: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.179: 	  else
+//│ ║         	^^^^^^
+//│ ║  l.180: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 let empty = Object.create of null
 //│ empty = {}
 
-t("group", empty)
+t('group, empty)
 //│ = fun
+
+

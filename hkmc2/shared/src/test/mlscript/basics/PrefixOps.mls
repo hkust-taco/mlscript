@@ -167,3 +167,30 @@ let x = |
 //│ ╙──       	         ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = undefined
+
+
+// * Applying the result of a prefix operator application
+
+let f = 3
+//│ f = 3
+
+:re
+(- f)(2)
+//│ ═══[RUNTIME ERROR] TypeError: tmp is not a function
+
+:re
+(+ f)(2)
+//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a function
+
+fun neg(x)(y) = - x
+
+:expect -3
+neg(f)(0)
+//│ = -3
+
+:sjs
+fun test(x) = (- x)(2)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let test1; test1 = function test(x6) { let tmp2; tmp2 = - x6; return runtime.safeCall(tmp2(2)) };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
