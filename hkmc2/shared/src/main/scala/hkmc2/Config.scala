@@ -102,7 +102,9 @@ object Config:
     // Unknown inputs admitted by a public interface are checked regardless of this flag.
     eagerResolution: Bool, // Reject selections whose prefixes have shapes that do not support them, even though the selection might have other valid targets
     typeCheck: Opt[TypeChecking],
-  )(val versionName: Str)
+  )(val versionName: Str):
+    def newUnderscoreAndApplicationSyntax: Bool = versionName > "0.3.1"
+  end Language
   
   object Language:
     
@@ -116,18 +118,24 @@ object Config:
       versionName = "0.2.x",
     )
     
-    val v0_3_x = Language(
+    val v0_3_1 = Language(
       typeCheck = N,
       useNewResolution = true,
       strictResolution = false,
       eagerResolution = false,
       allowUnresolvedAccesses = false,
     )(
+      versionName = "0.3.1",
+    )
+    
+    val v0_3_x = v0_3_1.copy(
+    )(
       versionName = "0.3.x",
     )
     
     val presets: Map[Str, Language] = Ls(
       v0_2_x,
+      v0_3_1,
       v0_3_x,
     ).map(l => l.versionName -> l).toMap
     

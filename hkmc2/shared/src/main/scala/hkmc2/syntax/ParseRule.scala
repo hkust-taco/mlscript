@@ -407,6 +407,7 @@ class ParseRules(using State):
     prefixed(`yield`),
     prefixed(`yield*`),
     prefixed(`import`),
+    prefixed(`=>`),
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),

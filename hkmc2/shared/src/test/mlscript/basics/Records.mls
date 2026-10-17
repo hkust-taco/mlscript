@@ -135,10 +135,13 @@ m0.get(41)
 
 :e
 {get(k): _}
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.137: 	{get(k): _}
+//│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
 //│ ║  l.137: 	{get(k): _}
 //│ ╙──       	 ^^^^^^
-//│ = fun
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 
@@ -191,14 +194,14 @@ display(x: 88, y: 99, i: 0)
 :todo
 t("group")
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.192: 	t("group")
+//│ ║  l.195: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo
 t("group")
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.199: 	t("group")
+//│ ║  l.202: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 

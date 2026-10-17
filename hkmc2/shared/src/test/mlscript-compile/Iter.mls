@@ -112,7 +112,7 @@ fun mapping(xs, op: Function) =
     else
       Result.Next of op(next.value)
 
-fun withMap(op) = _ mapping(op)
+fun withMap(op) = => _ mapping(op)
 
 fun flattening(xss) =
   IterableImpl of () =>
@@ -153,21 +153,21 @@ fun filtering(xs, op: Function) =
       Result.Done
     else Result.Next of next.value
 
-fun withFilter(op) = _ filtering(op)
+fun withFilter(op) = => _ filtering(op)
 
 fun taking(xs, n) =
   filtering of xs, _ =>
     set n -= 1
     n >= 0
 
-fun withMax(n) = _ taking(n)
+fun withMax(n) = => _ taking(n)
 
 fun leaving(xs, n) =
   filtering of xs, _ =>
     set n -= 1
     n < 0
 
-fun withoutAtLeast(n) = _ leaving(n)
+fun withoutAtLeast(n) = => _ leaving(n)
 
 fun zippingWithIndex(xs) =
   let i = 0
@@ -198,7 +198,7 @@ fun appended(xs, ys) =
         else Result.Done
       else Result.Next of next.value
 
-fun withAppended(xs) = _ appended(xs)
+fun withAppended(xs) = => _ appended(xs)
 
 fun reduced(xs, op: Function) =
   let iterator = getIterator of xs

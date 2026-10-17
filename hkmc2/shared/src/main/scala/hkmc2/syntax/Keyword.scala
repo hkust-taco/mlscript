@@ -176,7 +176,7 @@ object Keyword:
   // * Currently, the precedence of normal operators starts at the maximum precedence of keywords,
   // * so we need to start the precedence of `=>` to account for that.
   val `=>` = Keyword("=>", S(maxPrec.get + charPrecList.length), lamRhsPrec)
-
+  
   // * `new` is a strange keyword:
   // * it has a very high precedence that sits between that of selection and that of application.
   // * Indeed, `new Foo().bar` should parse as `(new Foo()).bar`, not `new (Foo().bar)`,
@@ -207,7 +207,7 @@ object Keyword:
   
   type Prefix =
     `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `yield`.type |
-    `yield*`.type | `import`.type | `|`.type | `&`.type
+    `yield*`.type | `import`.type | `|`.type | `&`.type | `=>`.type
   
   type Infix =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type |

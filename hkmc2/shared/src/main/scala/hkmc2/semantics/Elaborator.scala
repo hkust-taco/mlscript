@@ -785,7 +785,8 @@ extends Importer:
   private given NewResolver = this
   private given ResolutionContext = state.newResolverState.context.withReporter(raise)
   
-  val newResolution: Bool = config.language.useNewResolution
+  val lang = config.language
+  val newResolution: Bool = lang.useNewResolution
   
   lazy val illegalMemberNameTail =
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
@@ -1243,10 +1244,12 @@ extends Importer:
   // Callers specify the interpretation at each elaboration entry point. Keeping
   // it explicit (rather than implicit) prevents a target's interpretation from
   // leaking into its value operands.
-  def term(tree: Tree, interp: Interpretation): Ctxl[Term] =
+  def term(tree: Tree, interp: Interpretation, forceUnderCtx: Bool = false): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
-    val unders = mutable.ArrayBuffer.empty[VarSymbol]
-    given UnderCtx = new UnderCtx(S(unders))
+    lazy val unders = mutable.ArrayBuffer.empty[VarSymbol]
+    given UnderCtx = if forceUnderCtx || !lang.newUnderscoreAndApplicationSyntax
+      then new UnderCtx(S(unders))
+      else new UnderCtx(N)
     val st = subterm(tree, interp)
     val params = unders.iterator.map: sym =>
         Param.simple(sym)
@@ -1923,6 +1926,8 @@ extends Importer:
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
+    case PrefixApp(Keywrd(Keyword.`=>`), body) if lang.newUnderscoreAndApplicationSyntax =>
+      term(body, interp, forceUnderCtx = true)
     case PrefixApp(kw, body) =>
       raise(ErrorReport(msg"Illegal position for prefix keyword '${kw.name}'." -> kw.toLoc :: Nil))
       subterm(body)
@@ -1972,7 +1977,11 @@ extends Importer:
     case und: Under =>
       summon[UnderCtx].unders match
       case N =>
-        raise(ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil))
+        raise:
+          if lang.newUnderscoreAndApplicationSyntax then
+            ErrorReport(
+              msg"Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda." -> tree.toLoc :: Nil)
+          else ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil)
         error
       case S(unds) =>
         val sym = VarSymbol(Ident("_" + unds.size), erasedType = N)

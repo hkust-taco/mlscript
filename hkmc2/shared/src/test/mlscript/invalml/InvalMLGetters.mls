@@ -51,7 +51,7 @@ fun test2() =
   fun funny = case
     0 then 0
     n then funny(n - 1) + 1
-  funny(_)
+  => funny(_)
 
 test2
 //│ = fun test2

@@ -531,7 +531,7 @@ print("abc")
 foo(print)
 //│ > abc
 
-foo(print(_))
+foo(=> print(_))
 //│ > abc
 
 :sir

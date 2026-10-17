@@ -23,7 +23,7 @@
 //│ ╔══[COMPILATION ERROR] Unknown language version '1.0.x'
 //│ ║  l.22: 	#lang(1.0.x)
 //│ ║        	      ^^^^^
-//│ ╙── Available language versions: 0.2.x, 0.3.x
+//│ ╙── Available language versions: 0.2.x, 0.3.1, 0.3.x
 
 
 :e

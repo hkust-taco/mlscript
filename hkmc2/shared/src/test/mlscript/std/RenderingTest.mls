@@ -92,10 +92,10 @@ let xs = [1, 2]
 map(renderAsStr)(xs)
 //│ = ["[1, 2]"]
 
-map(renderAsStr(_))(xs)
+map(=> renderAsStr(_))(xs)
 //│ = ["[1, 2]"]
 
-map(_ + 1)(...xs)
+map(=> _ + 1)(...xs)
 //│ = [2, 3]
 
 renderAsStr of new RegExp("test")

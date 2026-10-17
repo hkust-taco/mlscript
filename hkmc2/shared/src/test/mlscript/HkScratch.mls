@@ -1,3 +1,4 @@
+:.
 :js
 // :de
 // :sjs
@@ -7,5 +8,36 @@
 :global
 // :d
 // :todo
+
+import "../mlscript-compile/Iter.mls"
+
+#lang(0.3.x)
+
+:e
+[1, 2, 3] |. Iter.mapping(_ + 1)
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.17: 	[1, 2, 3] |. Iter.mapping(_ + 1)
+//│ ╙──      	                          ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// :dp
+// :de
+// :sjs
+let f = => _ + 1
+//│ f = fun f
+
+:expect 4
+f(3)
+//│ = 4
+
+:todo
+:expect 4
+3 |> _ + 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.35: 	3 |> _ + 1
+//│ ╙──      	     ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '4', got: 'undefined'
+
 
 
