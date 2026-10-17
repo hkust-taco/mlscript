@@ -248,7 +248,6 @@ abstract class MLsDiffMaker extends DiffMaker:
     override protected def doDbg: Bool =
       doForceDbg
       || activeDebug.elaboration
-      || activeDebug.resolution
       || activeDebug.lowering
       || activeDebug.optimizations
     override protected def doForceDbg: Bool =
@@ -296,17 +295,15 @@ abstract class MLsDiffMaker extends DiffMaker:
     override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
       debugOutputHandler.emit(out, str)
     override def trace[T](pre: => Str, post: T => Str = noPostTrace)(thunk: => T): T =
-      // Avoid accumulating indentation outside selectively-enabled elaboration scopes.
-      if isTracing then super.trace(pre, post)(thunk) else thunk
+      // * This override is for avoiding to increase the indentation when tracing if isTracing is false,
+      // * so that selectively-enabled tracing doesn't get strange indentation.
+      // * Perhaps this should be the default behavior of TraceLogger.
+      if isTracing then super.trace(pre, post)(thunk)
+      else thunk
   
   val rtl = new TraceLogger:
-    override protected def doForceTrace = dbgResolving.isSet
-    override def doTrace = doForceTrace || activeDebug.resolution
-    override protected def defaultDebugOutput: Config.DebugOutput =
-      if activeDebug.resolution then activeDebug.out else Config.DebugOutput.StdIO
+    override def doTrace = dbgResolving.isSet
     override def emitDbg(str: String): Unit = output(str)
-    override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
-      debugOutputHandler.emit(out, str)
   
   val ftl = new TraceLogger:
     override def doTrace = dbgFlow.isSet
@@ -507,10 +504,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val elab =
       given Config = elaborationConfig
       Elaborator(etl, file.up, prelude)
-    val (e, newCtx) = elaborationConfig.givenIn:
-      if elaborationConfig.language.useNewResolution && elaborationConfig.debug.resolution then
-        etl.scopedDebug(true, elaborationConfig.debug)(elab.topLevel(blk))
-      else elab.topLevel(blk)
+    val (e, newCtx) = elaborationConfig.givenIn(elab.topLevel(blk))
     curCtx = newCtx
     
     extractConfig(e.stats)
@@ -521,10 +515,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     if showElaboratedTree.isSet then
       outputSeparator(s"Elaborated tree")
       output(e.showAsTree)
-    else if elaborationConfig.debug.showElaboratedTree then
-      outputDebugSection("Elaborated tree", e.showAsTree, elaborationConfig.debug.out)
-    else DebugOutputHandler.showElaboratedDefinitions(e, elaborationConfig): (defn, out) =>
-      outputDebugSection("Elaborated tree", defn.showAsTree, out)
+    else DebugOutputHandler.showElaboratedTree(e, elaborationConfig)(outputDebugSection)
+    DebugOutputHandler.showElaboratedTerm(e, elaborationConfig, output.ColWidth)(outputDebugSection)(using flowScp)
     
     if showResl.isSet then
       import semantics.ShowCfg

@@ -332,15 +332,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               assert(td.params.isEmpty)
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
               localVal match
-                case S(sym) =>
-                  debugLoweringThen[Result](td.extraAnnotations)(term_nonTail(bod)(_)):
-                    r => defineSymbol(sym, r, blockImpl(stats, res))
-                case N =>
-                  debugLoweringThen[Path](td.extraAnnotations)(k => subTerm_nonTail(bod)(k)(using LoweringCtx.nestFunc(N))): r =>
-                    Define(
-                      ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
-                      blockImpl(stats, res),
-                    )
+              case S(sym) =>
+                debugLoweringThen[Result](td.extraAnnotations)(term_nonTail(bod)(_)): r =>
+                  defineSymbol(sym, r, blockImpl(stats, res))
+              case N =>
+                debugLoweringThen[Path](td.extraAnnotations)(k => subTerm_nonTail(bod)(k)(using LoweringCtx.nestFunc(N))): r =>
+                  // Assign(td.sym, r,
+                  //   term(st.Blk(stats, res))(k)))
+                  Define(
+                    ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
+                    blockImpl(stats, res),
+                  )
             case syntax.Fun =>
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
               val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):

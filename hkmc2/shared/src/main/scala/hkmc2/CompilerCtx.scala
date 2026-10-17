@@ -88,6 +88,8 @@ class CompilerCtx(
           includeZero = true,
         ))
       )
+      val backendTL = new TraceLogger:
+        override def doTrace: Bool = false
 
       val parse =
         given CompilerCtx = this
@@ -101,10 +103,9 @@ class CompilerCtx(
         override protected def defaultDebugOutput: Config.DebugOutput = phaseConfig.debug.out
         override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
           outputHandler.emit(out, str)
-      val etl = traceLogger(phaseConfig.debug.traceElaboration(phaseConfig.language))
+      val etl = traceLogger(phaseConfig.debug.elaboration)
       val ltl = traceLogger(phaseConfig.debug.lowering)
       val dtl = traceLogger(phaseConfig.debug.optimizations)
-      val rtl = traceLogger(phaseConfig.debug.resolution)
 
       given Elaborator.Ctx = prelude
       val artifactCtx = derive(parse.origin.fileName, dependencies)
@@ -133,13 +134,15 @@ class CompilerCtx(
         state.initRuntimeSymbolsFromBlock(blk0)
 
       val artifactConfig = Config.extractConfigFromStats(blk0)
-      if artifactConfig.debug.showElaboratedTree then
-        outputHandler.emit(artifactConfig.debug.out, s"Elaborated tree\n${blk0.showAsTree}")
-      else DebugOutputHandler.showElaboratedDefinitions(blk0, artifactConfig): (defn, out) =>
-        outputHandler.emit(out, s"Elaborated tree\n${defn.showAsTree}")
+      def display(title: Str, contents: Str, out: Config.DebugOutput): Unit =
+        outputHandler.emit(out, s"${title}\n${contents}")
+      DebugOutputHandler.showElaboratedTree(blk0, artifactConfig)(display)
+      DebugOutputHandler.showElaboratedTerm(blk0, artifactConfig, 100)(display)(using
+        Scope.empty(Scope.Cfg.default.copy(escapeChars = false, useSuperscripts = true, includeZero = true)),
+        summon[Raise])
       if !artifactConfig.language.useNewResolution then artifactConfig.givenIn:
         given Elaborator.State = state
-        val resolver = Resolver(rtl)
+        val resolver = Resolver(backendTL)
         resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
       def findQuote(t: semantics.Statement): Bool = t match
         case Term.Quoted(_) | Term.Unquoted(_) => true
@@ -186,8 +189,6 @@ class CompilerCtx(
         val blockPrinter = codegen.Printer()
         val printer = (p: codegen.Program) =>
           blockPrinter.worksheet(p)(using irPrintingScp).mkString(100)
-        def display(title: Str, contents: Str, out: Config.DebugOutput): Unit =
-          outputHandler.emit(out, s"${title}\n${contents}")
         val pipeline = new codegen.CompilationPipeline:
           override def extraSymbolsToPreserveFrom(prog: codegen.Program): Set[codegen.ScopedSymbol] =
             collectCompilationUnitSymbols(prog)
@@ -269,7 +270,7 @@ class CompilerCtx(
         stateDebug = CompilerCtx.debugTracingEnabled(elaborationConfig.debug)
         stateShowUids = elaborationConfig.debug.showUids
         val etl = new TraceLogger:
-          override def doTrace: Bool = elaborationConfig.debug.traceElaboration(elaborationConfig.language)
+          override def doTrace: Bool = elaborationConfig.debug.elaboration
           override protected def defaultDebugOutput: Config.DebugOutput = elaborationConfig.debug.out
           override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
             outputHandler.emit(out, str)
@@ -294,7 +295,7 @@ object CompilerCtx:
   inline def get(using cctx: CompilerCtx) = cctx
 
   private def debugTracingEnabled(debug: Config.Debug): Bool =
-    debug.elaboration || debug.resolution || debug.lowering || debug.optimizations
+    debug.elaboration || debug.lowering || debug.optimizations
 
 
   /** Collect import provenance after elaboration has assembled all user and synthetic imports.

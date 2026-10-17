@@ -37,7 +37,7 @@ fun persistently_debugged(x) = x
 
 module Main with
   // The IR of `foo1` should be shown
-  @dbg('showParsedTree, 'showElaboratedTree, 'showLoweredTree, 'showOptimizedIR)
+  @dbg('showParsedTree, 'showElaboratedTree, 'showElaboratedTerm, 'showLoweredTree, 'showOptimizedIR)
   fun foo1 = 2 + 2
   // The IR of `foo2` should NOT be shown
   fun foo2 = 2 + 2
@@ -48,6 +48,7 @@ module Main with
 //│     rhs = Tup of Ls of
 //│       Ident of "'showParsedTree"
 //│       Ident of "'showElaboratedTree"
+//│       Ident of "'showElaboratedTerm"
 //│       Ident of "'showLoweredTree"
 //│       Ident of "'showOptimizedIR"
 //│   target = TermDef:
@@ -73,6 +74,8 @@ module Main with
 //│   modulefulness = Modulefulness of N
 //│   annotations = Ls of
 //│     Debug of ...
+//│ —————————————| Elaborated term |————————————————————————————————————————————————————————————————————
+//│ @dbg(...) fun foo1⁰::foo1¹ ‹flow:foo1⁰› = +(2, 2)‹app⁰›
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ FunDefn:
 //│   owner = S of module:Main⁰
@@ -87,8 +90,18 @@ Main.foo1
 //│ = 4
 
 
+// The readable elaborated term distinguishes symbols that share a name.
+@dbg('showElaboratedTerm)
+fun shadowing(x) =
+  let x = x + 1
+  x
+//│ —————————————| Elaborated term |————————————————————————————————————————————————————————————————————
+//│ @dbg(...) fun shadowing⁰::shadowing¹(x⁰) ‹flow:shadowing⁰› = { let x¹, x¹ = +(x⁰, 1)‹app¹›, x¹ }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
 // Whole-program displays and optimization tracing use the same settings.
-#dbg('showParsedTree, 'showElaboratedTree, 'showLoweredTree, 'showIR, 'showOptimizedIR, 'optimizations)
+#dbg('showParsedTree, 'showElaboratedTree, 'showElaboratedTerm, 'showLoweredTree, 'showIR, 'showOptimizedIR, 'optimizations)
 42
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ App:
@@ -98,6 +111,7 @@ Main.foo1
 //│   rhs = Tup of Ls of
 //│     Ident of "'showParsedTree"
 //│     Ident of "'showElaboratedTree"
+//│     Ident of "'showElaboratedTerm"
 //│     Ident of "'showLoweredTree"
 //│     Ident of "'showIR"
 //│     Ident of "'showOptimizedIR"
@@ -108,6 +122,8 @@ Main.foo1
 //│   stats = Ls of
 //│     SetConfig of ...
 //│   res = Lit of IntLit of 42
+//│ —————————————| Elaborated term |————————————————————————————————————————————————————————————————————
+//│ #config(...), 42
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
 //│   main = Return of Lit of IntLit of 42
@@ -122,4 +138,4 @@ Main.foo1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
-#dbg(showParsedTree: false, showElaboratedTree: false, showLoweredTree: false, showIR: false, showOptimizedIR: false, optimizations: false)
+#dbg(showParsedTree: false, showElaboratedTree: false, showElaboratedTerm: false, showLoweredTree: false, showIR: false, showOptimizedIR: false, optimizations: false)

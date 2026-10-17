@@ -63,18 +63,40 @@ object DebugOutputHandler:
       case _ => ()
     trees.foreach(visit)
 
-  /** Inspect the elaborated tree directly: new resolution runs during elaboration and does not
-    * traverse the legacy resolver, but annotated definitions still need their tree displayed. */
-  def showElaboratedDefinitions(block: semantics.Term.Blk, config: Config)
-      (display: (semantics.Definition, Config.DebugOutput) => Unit): Unit =
+  def showElaboratedTree(block: semantics.Term.Blk, config: Config)
+      (display: (Str, Str, Config.DebugOutput) => Unit)(using DebugPrinter): Unit =
+    showElaborated(block, config, _.showElaboratedTree, "Elaborated tree", _.showAsTree, _.showAsTree)(display)
+
+  /** Print elaborated terms in readable form, with the settings of the `:sr` diff-test command.
+    * `showFlowSymbols` also disambiguates symbol names, which a readable form needs; before flow
+    * analysis, it shows selections as unresolved (`ˀˀˀ`). Erased types are not computed yet. */
+  def showElaboratedTerm(block: semantics.Term.Blk, config: Config, width: Int)
+      (display: (Str, Str, Config.DebugOutput) => Unit)(using utils.Scope, Raise): Unit =
+    given semantics.ShowCfg = semantics.ShowCfg(
+      showErasedTypes = false,
+      showExpansionMappings = true,
+      showFlowSymbols = true,
+      debug = false,
+    )
+    showElaborated(block, config, _.showElaboratedTerm, "Elaborated term",
+      _.showTopLevel.mkString(width), _.show.mkString(width))(display)
+
+  /** Display the whole block if the file's settings select it, and otherwise each annotated
+    * definition that selects it, including definitions nested in other definitions.
+    * Inspect the elaborated tree directly: new resolution runs during elaboration and does not
+    * traverse the legacy resolver, but annotated definitions still need to be displayed. */
+  private def showElaborated(block: semantics.Term.Blk, config: Config, isEnabled: Config.Debug => Bool, title: Str,
+      showBlock: semantics.Term.Blk => Str, showDefinition: semantics.Definition => Str)
+      (display: (Str, Str, Config.DebugOutput) => Unit): Unit =
     def visit(statement: semantics.Statement): Unit =
       statement match
         case defn: semantics.Definition =>
           definitionConfig(defn.annotations, config).foreach: localConfig =>
-            if localConfig.debug.showElaboratedTree then display(defn, localConfig.debug.out)
+            if isEnabled(localConfig.debug) then display(title, showDefinition(defn), localConfig.debug.out)
         case _ => ()
       statement.subStatements.foreach(visit)
-    visit(block)
+    if isEnabled(config.debug) then display(title, showBlock(block), config.debug.out)
+    else visit(block)
 
   /** Use the same selection and formatting in the compiler and diff-test pipelines. */
   def showIR(program: codegen.Program, optimized: Bool, printer: codegen.Printer, width: Int)

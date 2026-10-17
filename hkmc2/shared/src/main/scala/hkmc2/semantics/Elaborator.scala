@@ -813,7 +813,7 @@ extends Importer:
   val newResolution: Bool = lang.useNewResolution
   
   private def debugElaboration[T](annotations: Ls[Annot])(thunk: => T): T =
-    DebugOutputHandler.traceDefinition(annotations, config, _.traceElaboration(config.language))(thunk)(using state, tl)
+    DebugOutputHandler.traceDefinition(annotations, config, _.elaboration)(thunk)(using state, tl)
   
   lazy val illegalMemberNameTail =
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N

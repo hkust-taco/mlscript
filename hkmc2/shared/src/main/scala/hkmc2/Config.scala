@@ -203,7 +203,7 @@ object Config:
     showParsedTree: Bool,
     elaboration: Bool,
     showElaboratedTree: Bool,
-    resolution: Bool,
+    showElaboratedTerm: Bool,
     lowering: Bool,
     showLoweredTree: Bool,
     optimizations: Bool,
@@ -211,15 +211,13 @@ object Config:
     showOptimizedIR: Bool,
     showUids: Bool,
     out: DebugOutput,
-  ):
-    // New resolution is interleaved with elaboration and shares its trace logger.
-    def traceElaboration(language: Language): Bool = elaboration || (language.useNewResolution && resolution)
+  )
   object Debug:
     val default = Debug(
       showParsedTree = false,
       elaboration = false,
       showElaboratedTree = false,
-      resolution = false,
+      showElaboratedTerm = false,
       lowering = false,
       showLoweredTree = false,
       optimizations = false,
@@ -599,7 +597,7 @@ object ConfigParser:
       case "showParsedTree" => _.copy(showParsedTree = value)
       case "elaboration" => _.copy(elaboration = value)
       case "showElaboratedTree" => _.copy(showElaboratedTree = value)
-      case "resolution" => _.copy(resolution = value)
+      case "showElaboratedTerm" => _.copy(showElaboratedTerm = value)
       case "lowering" => _.copy(lowering = value)
       case "showLoweredTree" => _.copy(showLoweredTree = value)
       case "optimizations" => _.copy(optimizations = value)

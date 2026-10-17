@@ -2051,12 +2051,11 @@ The following aspects trace a phase of the compiler:
 | Aspect | Traces |
 |---|---|
 | `elaboration` | elaboration of syntax trees into terms |
-| `resolution` | name resolution |
 | `lowering` | lowering of terms into the intermediate representation (IR) |
 | `optimizations` | the optimization passes run on the IR |
 
 With the new name resolution (`#lang(0.3.x)`), names are resolved during elaboration,
-so enabling `resolution` traces elaboration as well.
+so `elaboration` traces name resolution as well.
 
 Parser tracing is available through the diff-test command `:dp`.
 Source directives are read after parsing and cannot enable parser tracing.
@@ -2066,7 +2065,8 @@ The following aspects display a program representation, without tracing:
 | Aspect | Displays |
 |---|---|
 | `showParsedTree` | the syntax tree produced by the parser |
-| `showElaboratedTree` | the elaborated term tree |
+| `showElaboratedTree` | the elaborated term, as a tree |
+| `showElaboratedTerm` | the elaborated term, in readable form |
 | `showLoweredTree` | the IR produced by lowering, as a tree |
 | `showIR` | the IR produced by lowering, in readable form |
 | `showOptimizedIR` | the IR after optimizations, in readable form |
