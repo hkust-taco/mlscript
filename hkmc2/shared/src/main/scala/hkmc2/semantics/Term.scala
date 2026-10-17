@@ -304,6 +304,8 @@ case class SrcScope(outer: Elaborator.OuterCtx, parent: Opt[SrcScope]):
           (base, inner :: path)
       case _: (Function | LocalScope | NonReturnContext) | LambdaOrHandlerBlock =>
         (this, Nil)
+      case _: ImplicitLambda =>
+        lastWords("Implicit lambda scopes are not source scopes (see `Ctx.scope`)")
   
   /** Whether code written in this scope can access the private members of `owner`: whether it is nested in the
     * definition of `owner` or of one of its companions, which are the other class-like definitions of its block member

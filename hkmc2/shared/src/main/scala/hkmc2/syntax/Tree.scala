@@ -486,6 +486,14 @@ object Apps:
     case App(Apps(base, args), arg: Tup) => S(base, args :+ arg)
     case t => S(t, Nil)
     
+/** The application of a prefix operator, such as `-x`, which the parser represents as a call `-(x)`
+  * (see `Parser.prefixOps`), but which is not a call with an argument list. */
+object PrefixOpApp:
+  /** Returns the operator and the singleton tuple of its operand. */
+  def unapply(t: Tree): Opt[(Ident, Tup)] = t match
+    case App(op @ Ident(name), operands @ Tup(_ :: Nil)) if Parser.prefixOps.contains(name) => S(op, operands)
+    case _ => N
+    
 object PossiblyAnnotated:
   def apply(anns: Ls[Tree], t: Tree): Tree = anns.foldRight(t)(Annotated(_, _))
   def unapply(t: Tree): Opt[(Ls[Tree], Tree)] = t match

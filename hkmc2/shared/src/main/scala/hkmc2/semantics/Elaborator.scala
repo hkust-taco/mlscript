@@ -51,6 +51,9 @@ object Elaborator:
     case LocalScope(nameHint: Str)
     case LambdaOrHandlerBlock
     case NonReturnContext(sym: Opt[DefinitionSymbol[?]])
+    /** The scope of a term that delimits an implicit lambda (see `delimitedTerm`), which is a lambda scope
+      * if the term contains `_` placeholders, and is otherwise transparent (see `ImplicitLambdaProbe`). */
+    case ImplicitLambda(probe: ImplicitLambdaProbe)
     
     def showDbg: Str = this match
       case Function(retSym, sym) => s"fun:${retSym.nme}${sym.fold("")(s => s"‹${s}›")}"
@@ -58,6 +61,7 @@ object Elaborator:
       case LocalScope(hint) => hint
       case LambdaOrHandlerBlock => "LambdaOrHandlerBlock"
       case NonReturnContext(sym) => s"NonReturnContext(${sym})"
+      case ImplicitLambda(_) => "ImplicitLambda"
     
     /** Functions and instantiated class bodies cross lexical resolution boundaries.
       * Function's NonReturnContext already supplies its boundary, so Function must
@@ -76,6 +80,36 @@ object Elaborator:
     def inner: Opt[InnerSymbol] = this match
       case InnerScope(inner) => S(inner)
       case _ => N
+  
+  /** Tracks whether a term that delimits an implicit lambda (see `delimitedTerm`), whose scope is
+    * `OuterCtx.ImplicitLambda`, is a lambda, which is only certain once the term has been elaborated:
+    * it is a lambda iff `placeholders`, which collects the `_` placeholders it delimits, is then non-empty.
+    *
+    * Some constructs are elaborated differently inside a lambda: `return` is a non-local return,
+    * `break` and `continue` cross a boundary, and the lambda is not part of the enclosing generator or async function
+    * (which affects `yield` and the constructs that depend on instrumentation).
+    * When such a construct queries the scope of a term that is not fully elaborated yet,
+    * the term is assumed to be a lambda iff one of its placeholders has already been found.
+    * This assumption is only wrong if a placeholder is found later, as in `=> f(return 1, _)`,
+    * in which case `delimitedTerm` reports an error rather than silently miscompiling the construct.
+    * To avoid spurious errors, the scope only makes this assumption when the answer to the query depends on it.
+    *
+    * An alternative would be to determine syntactically whether a term contains placeholders before elaborating it,
+    * but which placeholders a term delimits depends on the elaboration of all of its subterms.
+    *
+    * Note: this mutable state is created and checked by `delimitedTerm` for the term it elaborates,
+    * and only updated by the queries of `Ctx` that cross the corresponding `OuterCtx.ImplicitLambda` scope. */
+  final class ImplicitLambdaProbe(placeholders: collection.IndexedSeq[VarSymbol]):
+    private var assumedNonLambdaSite: Opt[Located] = N
+    
+    def isKnownLambda: Bool = placeholders.nonEmpty
+    
+    /** Records that the elaboration of the construct at `site` assumes that the term is not a lambda. */
+    def assumeNonLambda(site: Located): Unit =
+      if assumedNonLambdaSite.isEmpty then assumedNonLambdaSite = S(site)
+    
+    /** The first construct elaborated assuming that the term was not a lambda, if it turned out to be one. */
+    def mispredictedSite: Opt[Located] = if isKnownLambda then assumedNonLambdaSite else N
   
   /** Label metadata threaded through elaboration. */
   final case class LabelBinding(
@@ -120,7 +154,12 @@ object Elaborator:
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
     
-    lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
+    // * Implicit lambda scopes are not source scopes, so that whether a term is a lambda
+    // * does not have to be known when references in it record their scope.
+    lazy val scope: SrcScope = outer match
+      case _: OuterCtx.ImplicitLambda =>
+        parent.fold(lastWords("Implicit lambda scope without a parent"))(_.scope)
+      case _ => SrcScope(outer, parent.map(_.scope))
 
     /** A nominal member can refer to enclosing binders even when its own
       * signature does not mention them, for example through a local type alias.
@@ -193,12 +232,16 @@ object Elaborator:
       val inherited = parent.toList.flatMap(_.visibleWildcardOpens)
       wildcardOpens ::: inherited.map(source => Ctx.OpenSource(capture(source.elem))(source.id))
     
-    def lookupLabel(name: Str): LabelLookup =
+    /** Looks up the label `name`, used by the construct at `site` (see `ImplicitLambdaProbe`). */
+    def lookupLabel(name: Str, site: Located): LabelLookup =
+      // * The implicit lambda scopes crossed so far, from the innermost one, which are only consulted
+      // * if a label is found and the lookup result depends on them.
       @tailrec
       def go(
           current: Opt[Ctx],
           crossedFunction: Bool,
           crossedLambdaOrHandler: Bool,
+          crossedImplicitLambdas: Ls[ImplicitLambdaProbe],
       ): LabelLookup = current match
         case N => LabelLookup.NotFound
         case S(ctx) =>
@@ -208,7 +251,12 @@ object Elaborator:
                 case S(labelSym: LabelSymbol) =>
                   ctx.labels.get(labelSym) match
                     case S(binding) =>
-                      if crossedFunction || crossedLambdaOrHandler
+                      def crossedLambda =
+                        crossedLambdaOrHandler || crossedImplicitLambdas.exists(_.isKnownLambda) || {
+                          crossedImplicitLambdas.foreach(_.assumeNonLambda(site))
+                          false
+                        }
+                      if crossedFunction || crossedLambda
                       then LabelLookup.AcrossBoundary(binding)
                       else LabelLookup.Found(binding)
                     case N =>
@@ -225,8 +273,11 @@ object Elaborator:
               val nextCrossedLambdaOrHandler = crossedLambdaOrHandler || (ctx.outer match
                 case OuterCtx.LambdaOrHandlerBlock => true
                 case _ => false)
-              go(ctx.parent, nextCrossedFunction, nextCrossedLambdaOrHandler)
-      go(S(this), false, false)
+              val nextCrossedImplicitLambdas = ctx.outer match
+                case OuterCtx.ImplicitLambda(probe) => crossedImplicitLambdas :+ probe
+                case _ => crossedImplicitLambdas
+              go(ctx.parent, nextCrossedFunction, nextCrossedLambdaOrHandler, nextCrossedImplicitLambdas)
+      go(S(this), false, false, Nil)
     
     // Explicit `this` must carry the same intervening captures as a lexical
     // member reference; inherited member results can retain the receiver's scope.
@@ -237,24 +288,43 @@ object Elaborator:
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
       case OuterCtx.Function(rsym, _) => S(rsym)
       case _ => parent.flatMap(_.getNonLocalRetHandler)
-    def getRetHandler: ReturnHandler = outer match
+    
+    /** Answers a query of the construct at `site` in the implicit lambda scope of `probe`,
+      * where `asLambda` and `asNonLambda` are the answers if the scope is or is not a lambda scope,
+      * consulting `probe` only if they differ (see `ImplicitLambdaProbe`). */
+    private def inImplicitLambda[A](probe: ImplicitLambdaProbe, site: Located)(asLambda: => A, asNonLambda: => A): A =
+      if probe.isKnownLambda then asLambda
+      else
+        val (lambdaAnswer, nonLambdaAnswer) = (asLambda, asNonLambda)
+        if lambdaAnswer =/= nonLambdaAnswer then probe.assumeNonLambda(site)
+        nonLambdaAnswer
+    
+    // * The following queries take the `site` of the construct that depends on their answer (see `ImplicitLambdaProbe`).
+    
+    def getRetHandler(site: Located): ReturnHandler =
+      def nonLocal = getNonLocalRetHandler.fold(ReturnHandler.NotInFunction)(ReturnHandler.Required(_))
+      def inherited = parent.fold(ReturnHandler.NotInFunction)(_.getRetHandler(site))
+      outer match
       case OuterCtx.Function(rsym, _) => ReturnHandler.Direct
-      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope) =>
-        getNonLocalRetHandler.fold(ReturnHandler.NotInFunction)(ReturnHandler.Required(_))
+      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope) => nonLocal
       case OuterCtx.NonReturnContext(_) => ReturnHandler.Forbidden
-      case _: OuterCtx.LocalScope =>
-        parent.fold(ReturnHandler.NotInFunction)(_.getRetHandler)
-    def inGenerator: Bool = outer match
+      case _: OuterCtx.LocalScope => inherited
+      case OuterCtx.ImplicitLambda(probe) => inImplicitLambda(probe, site)(nonLocal, inherited)
+    def inGenerator(site: Located): Bool =
+      def inherited = parent.fold(false)(_.inGenerator(site))
+      outer match
       case f: OuterCtx.Function => f.isGenerator
-      case _: OuterCtx.LocalScope =>
-        parent.fold(false)(_.inGenerator)
+      case _: OuterCtx.LocalScope => inherited
       case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext) => false
-    def inAsync: Bool = outer match
+      case OuterCtx.ImplicitLambda(probe) => inImplicitLambda(probe, site)(false, inherited)
+    def inAsync(site: Located): Bool =
+      def inherited = parent.fold(false)(_.inAsync(site))
+      outer match
       case f: OuterCtx.Function => f.isAsync
-      case _: OuterCtx.LocalScope =>
-        parent.fold(false)(_.inAsync)
+      case _: OuterCtx.LocalScope => inherited
       case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext) => false
-    def potentiallyInstrumented(using Config): Bool = config.effectHandlers.isDefined || inAsync
+      case OuterCtx.ImplicitLambda(probe) => inImplicitLambda(probe, site)(false, inherited)
+    def potentiallyInstrumented(site: Located)(using Config): Bool = config.effectHandlers.isDefined || inAsync(site)
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
     // * and that built-in symbols like Int and Str be imported into another nested context on top of it.
@@ -521,6 +591,12 @@ object Elaborator:
     def elements: Interpretation = this match
       case Tpe => Tpe
       case _ => Trm
+    
+    /** Whether `.` placeholders can be bound in terms with this interpretation, which must denote values
+      * (see `Elaborator.DotPlaceholders`): eg, `C(.)` does not denote a lambda as a type or a pattern. */
+    def allowsPartialApps: Bool = this match
+      case Trm | Receiver => true
+      case Specialization | Clss | Ptrn | Tpe => false
 
   enum Mode:
     case Full
@@ -1263,7 +1339,18 @@ extends Importer:
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
     val unders = mutable.ArrayBuffer.empty[VarSymbol]
     given UnderCtx = UnderCtx(S(unders))
-    val st = subterm(tree, interp)
+    // * The term is elaborated in an implicit lambda scope, which is a lambda scope if it has placeholders,
+    // * so that, eg, a `return` in `=> f(_, return 1)` is a non-local return (see `ImplicitLambdaProbe`).
+    val probe = ImplicitLambdaProbe(unders)
+    val st = ctx.nest(OuterCtx.ImplicitLambda(probe)).givenIn:
+      subterm(tree, interp)
+    probe.mispredictedSite.foreach: site =>
+      raise:
+        ErrorReport(
+          msg"Unsupported control flow before the first '_' placeholder of an implicit lambda." -> site.toLoc
+          :: msg"The implicit lambda is introduced by this placeholder." -> unders.head.toLoc
+          :: msg"Use an explicit lambda instead, or place a '_' placeholder before the control flow." -> N
+          :: Nil)
     if unders.isEmpty then st
     else
       val params = unders.iterator.map(Param.simple).toList
@@ -1337,9 +1424,13 @@ extends Importer:
     * Parentheses are not transparent, as they delimit subexpressions: `(f \ a) \ b` means `f(a)(b)`.
     * With the new underscore syntax, the argument delimits its own implicit lambda, as if prefixed by `=>`,
     * so that `xs.map \ _ + 1` means `xs.map(x => x + 1)`; this is done here rather than in
-    * `Tree.desugared`, which does not know the language version. */
+    * `Tree.desugared`, which does not know the language version.
+    * An argument that is a `.` placeholder is left as is, so that `f(a) \ .` means `x => f(a, x)`
+    * (see `DotPlaceholders`). */
   private def backslashApp(lhs: Tree, rhs: Tree): Tree.App =
-    def delimited(value: Tree): Tree = PrefixApp(new Keywrd(Keyword.`=>`), value).withLocOf(value)
+    def delimited(value: Tree): Tree = value match
+      case Keywrd(Keyword.`.`) => value
+      case _ => PrefixApp(new Keywrd(Keyword.`=>`), value).withLocOf(value)
     // * Field-shaped arguments, such as `key: a` and `...xs` (see `fld`), are not expressions,
     // * so only their values delimit implicit lambdas.
     val arg =
@@ -1351,11 +1442,108 @@ extends Importer:
     def withAppendedArg(lhs: Tree): Opt[Tree.App] = lhs.desugared match
       case InfixApp(lhs, Keywrd(Keyword.backslash), rhs) => withAppendedArg(backslashApp(lhs, rhs))
       // * Prefix operator applications, such as `-x`, are not calls with argument lists.
-      case App(Ident(op), _) if Parser.prefixOps.contains(op) => N
+      case PrefixOpApp(_, _) => N
       case App(f, Tup(args)) => S(App(f, Tup(args :+ arg)))
       case Bra(BracketKind.Curly, Block(stmt :: Nil)) => withAppendedArg(stmt)
       case _ => N
     withAppendedArg(lhs).getOrElse(App(lhs, Tup(arg :: Nil)))
+  
+  /** Lean-style partial applications use `.` placeholders, each of which stands for a new lambda parameter.
+    * Placeholders are bound by the closest enclosing *delimiter*, which turns into a lambda
+    * with one parameter per placeholder that it binds, from left to right:
+    *  - An argument list binds its arguments that are placeholders, possibly named,
+    *    and the lambda wraps the whole application or instantiation:
+    *    `pow(., 2)` means `x => pow(x, 2)`, `f(., a, .)` means `(x, y) => f(x, a, y)`,
+    *    `f(key: .)` means `x => f(key: x)`, and `new C(., 1)` means `x => new C(x, 1)`.
+    *    Similarly, an array literal binds its elements that are placeholders: `[., 1]` means `x => [x, 1]`.
+    *  - Any other argument or array element binds the placeholders in it: `f(. + 1)` means `f(x => x + 1)`.
+    *  - Parentheses bind the placeholders in them: `(.)` means `x => x`, and `(. + 1)` means `x => x + 1`.
+    *
+    * Placeholders are only found in the subexpressions that `inExpr` traverses (operands, callees,
+    * selection prefixes, etc.), which do not include the arguments of nested applications:
+    * in `f(g(.))`, the placeholder is bound by the argument list of `g`, so it means `f(x => g(x))`.
+    * Placeholders anywhere else, as in `. + 1` or `f(y => . + y)`, are illegal (see the `Keywrd` case of `subterm`).
+    *
+    * As in the equivalent `=> pow(_, 2)`, the function and the other arguments of a partial application
+    * are evaluated each time the lambda is called, not when it is created.
+    * Underscore placeholders are not delimited by partial applications,
+    * so that `=> f(., _)` means `y => (x => f(x, y))`.
+    *
+    * Delimiters find their placeholders syntactically, before elaboration, and replace them by references
+    * to their parameters. This way, they know whether they create a lambda before elaborating their contents,
+    * which must then be elaborated in a lambda context (see `partialAppLambda`). */
+  private class DotPlaceholders:
+    private val paramBuffer = mutable.ListBuffer.empty[VarSymbol]
+    
+    def params: Ls[VarSymbol] = paramBuffer.toList
+    
+    private def param(placeholder: Tree): Tree =
+      val id = new Ident("_" + paramBuffer.size).withLocOf(placeholder)
+      val sym = VarSymbol(id, erasedType = N)
+      paramBuffer += sym
+      Tree.Trm(sym.ref(id)).withLocOf(placeholder)
+    
+    /** Replaces the arguments of an argument list (or the elements of an array literal) that are placeholders. */
+    def bareArgs(args: Ls[Tree]): Ls[Tree] = args.mapConserve:
+      case placeholder @ Keywrd(Keyword.`.`) => param(placeholder)
+      case arg @ InfixApp(key, kw @ Keywrd(Keyword.`:`), placeholder @ Keywrd(Keyword.`.`)) =>
+        InfixApp(key, kw, param(placeholder)).withLocOf(arg)
+      case arg => arg
+    
+    /** Replaces the placeholders found in `tree` without crossing another delimiter. */
+    def inExpr(tree: Tree): Tree = tree match
+    case Keywrd(Keyword.`.`) => param(tree)
+    case _ =>
+      val numParams = paramBuffer.size
+      val res = tree match
+        case OpApp(lhs, op, rhss) => OpApp(inExpr(lhs), op, rhss.map(inExpr))
+        case PrefixOpApp(op, operands) => App(op, Tup(operands.fields.map(inExpr)))
+        case App(lhs, rhs) => App(inExpr(lhs), rhs)
+        case Sel(pre, nme) => Sel(inExpr(pre), nme)
+        case DynAccess(obj, fld, dyn) => DynAccess(inExpr(obj), fld, dyn)
+        case TyApp(lhs, targs) => TyApp(inExpr(lhs), targs)
+        case InfixApp(lhs, kw @ Keywrd(Keyword.`is`), rhs) => InfixApp(inExpr(lhs), kw, rhs)
+        case InfixApp(lhs, kw @ Keywrd(Keyword.`and` | Keyword.`or`), rhs) => InfixApp(inExpr(lhs), kw, inExpr(rhs))
+        case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) => PrefixApp(kw, inExpr(rhs))
+        // * Prefix `=>` delimits underscore placeholders, but not `.` placeholders,
+        // * so that the argument of `f(a) \ . + 1`, which is `=> . + 1` in the new syntax (see `backslashApp`),
+        // * means `x => x + 1`.
+        case PrefixApp(kw @ Keywrd(Keyword.`=>`), body) => PrefixApp(kw, inExpr(body))
+        case _ => tree
+      if paramBuffer.size === numParams then tree else res.withLocOf(tree)
+  
+  /** Elaborates `body` as the body of a lambda with parameters `params`, if any, in a lambda context,
+    * so that, eg, a `return` in `body` is not mistaken for a return from the enclosing function.
+    * See `DotPlaceholders`. */
+  private def partialAppLambda(params: Ls[VarSymbol])(body: Ctx ?=> Term)(using Ctx): Term =
+    if params.isEmpty then body
+    else ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
+      withTypeBinders(Term.Lam(PlainParamList(params.map(Param.simple))(N), body))
+  
+  /** Elaborates an argument list or array literal with arguments `args` and interpretation `interp`,
+    * binding the arguments that are `.` placeholders (see `DotPlaceholders`). */
+  private def bindingBareDots(interp: Interpretation, args: Ls[Tree])(elab: Ls[Tree] => Ctx ?=> Term)
+      (using Ctx): Term =
+    val dots = DotPlaceholders()
+    val newArgs = if interp.allowsPartialApps then dots.bareArgs(args) else args
+    partialAppLambda(dots.params)(elab(newArgs))
+  
+  /** Like `bindingBareDots`, but for the possibly multiple argument lists of an instantiation, as in `new C(.)(.)`,
+    * which bind their placeholder arguments together. */
+  private def bindingBareDotsOfArgLists(interp: Interpretation, argLists: Ls[Tup])(elab: Ls[Tup] => Ctx ?=> Term)
+      (using Ctx): Term =
+    val dots = DotPlaceholders()
+    val newArgLists = if !interp.allowsPartialApps then argLists else argLists.map: argList =>
+      val newArgs = dots.bareArgs(argList.fields)
+      if newArgs is argList.fields then argList else new Tup(newArgs).withLocOf(argList)
+    partialAppLambda(dots.params)(elab(newArgLists))
+  
+  /** Elaborates `tree` with interpretation `interp`, delimiting the `.` placeholders it contains
+    * (see `DotPlaceholders`). */
+  private def dotDelimited(interp: Interpretation, tree: Tree)(elab: Tree => Ctx ?=> Term)(using Ctx): Term =
+    val dots = DotPlaceholders()
+    val newTree = if interp.allowsPartialApps then dots.inExpr(tree) else tree
+    partialAppLambda(dots.params)(elab(newTree))
   
   private def assignment(lhs: Term, rhs: Term): Term.Assgn =
     // Resolve the term interpretation of the l-value before lowering. The
@@ -1428,12 +1616,25 @@ extends Importer:
       newSel(res, ctx.scope)
       interpretRef(res, interp)
 
+    /** Elaborates an application whose argument list is `args`,
+      * binding the arguments that are `.` placeholders (see `DotPlaceholders`).
+      * Note: `args` must not be elaborated as a `Tup` tree beforehand,
+      * as that would bind its placeholders as the elements of an array literal. */
+    def elabApp(tree: App, lhs: Tree, args: Tree): Term =
+      def mk(args: Tree)(using Ctx): Term =
+        val sym = FlowSymbol.app()
+        val lt = subterm(lhs)
+        val rt = subterm(args)
+        app(lt, rt)(tree, N, sym)
+      args match
+      case Tup(fields) =>
+        bindingBareDots(interp, fields): newFields =>
+          mk(if newFields is fields then args else Tup(newFields).withLocOf(args))
+      case _ => mk(args)
+    
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
     def mkNonLabelSelectionApp(tree: App, sel: Sel, args: Ls[Tree]): Term =
-      val sym = FlowSymbol.app()
-      val lt = subterm(sel)
-      val rt = subterm(Tup(args))
-      app(lt, rt)(tree, N, sym)
+      elabApp(tree, sel, Tup(args))
     
     def elaborateSelection(tree: Sel): Term =
       // `.class` chooses the class overload before requesting a receiver value.
@@ -1476,8 +1677,11 @@ extends Importer:
       // * In the old syntax, parentheses delimit underscore lambdas, so `e` is elaborated with `term`.
       // * In the new syntax, only `=>` and the RHS of operators ending with `>` delimit them,
       // * so parentheses are transparent, and `x |> (_ + 1)` means `x |> (y => y + 1)`.
-      if lang.newUnderscoreAndApplicationSyntax then subterm(e, interp)
-      else term(e, interp)
+      // * Parentheses delimit `.` placeholders (see `DotPlaceholders`).
+      def elabInner(e: Tree)(using Ctx): Term =
+        if lang.newUnderscoreAndApplicationSyntax then subterm(e, interp)
+        else term(e, interp)
+      if k is Round then dotDelimited(interp, e)(elabInner(_)) else elabInner(e)
     case b: Block =>
       ctx.nestLocal("‹block›").givenIn:
         block(b, hasResult = true, resultInterp = interp)._1 match
@@ -1503,7 +1707,7 @@ extends Importer:
       error
     case LetLike(Keywrd(`set`), lhs, S(rhs), S(bod)) =>
       // * Backtracking assignment
-      if ctx.potentiallyInstrumented then
+      if ctx.potentiallyInstrumented(tree) then
         raise(ErrorReport(
           msg"Backtracking assignment is not supported with effect handlers enabled" ->
             tree.toLoc :: Nil))
@@ -1702,17 +1906,19 @@ extends Importer:
           rhs.splitOn(acc)
       subterm(tree, interp)
     case tree @ App(sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")), Tup(args)) =>
-      val value = args match
+      // * Only elaborated if this is a `break`: otherwise, `args` are elaborated as an ordinary argument list,
+      // * as in `obj.break(., 1)` where `obj` is not a label.
+      lazy val value = args match
         case Nil => N
         case arg :: Nil => S(subterm(arg))
         case _ =>
           raise(ErrorReport(msg"'break' expects at most one argument." -> tree.toLoc :: Nil))
           N
-      ctx.lookupLabel(labelName) match
+      ctx.lookupLabel(labelName, tree) match
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, value)
       case LabelLookup.AcrossBoundary(binding) =>
-        if !ctx.potentiallyInstrumented then
+        if !ctx.potentiallyInstrumented(tree) then
           mkNonLabelSelectionApp(tree, sel, args)
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
@@ -1728,13 +1934,13 @@ extends Importer:
     case tree @ App(sel @ Sel(labelId @ Ident(labelName), nme @ Ident("continue")), Tup(args)) =>
       def checkNoArgs: Unit = if args.nonEmpty then raise:
         ErrorReport(msg"'continue' does not take arguments." -> tree.toLoc :: Nil)
-      ctx.lookupLabel(labelName) match
+      ctx.lookupLabel(labelName, tree) match
       case LabelLookup.Found(binding) =>
         checkNoArgs
         Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(binding) =>
         checkNoArgs
-        if !ctx.potentiallyInstrumented then
+        if !ctx.potentiallyInstrumented(tree) then
           raise:
             ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1743,11 +1949,14 @@ extends Importer:
           mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
         mkNonLabelSelectionApp(tree, sel, args)
-    case tree @ App(lhs, rhs) =>
-      val sym = FlowSymbol.app()
-      val lt = subterm(lhs)
-      val rt = subterm(rhs)
-      app(lt, rt)(tree, N, sym)
+    case tree @ App(lhs, rhs) => tree match
+      // * The operand of a prefix operator, as in `-x`, is not an argument list, so `- .` is not a partial application.
+      // * The operand is elaborated directly, as elaborating its `Tup` tree would bind it as an array literal element.
+      case PrefixOpApp(_, operands) =>
+        val sym = FlowSymbol.app()
+        val lt = subterm(lhs)
+        app(lt, withTypeBinders(Term.Tup(operands.fields.map(fld(_, Trm)))(operands)))(tree, N, sym)
+      case _ => elabApp(tree, lhs, rhs)
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol.app()
       val (lhsDelimitsUnders, rhsDelimitsUnders) = underscoreDelimitingSides(op)
@@ -1764,11 +1973,11 @@ extends Importer:
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
-      ctx.lookupLabel(labelName) match
+      ctx.lookupLabel(labelName, tree) match
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, N)
       case LabelLookup.AcrossBoundary(binding) =>
-        if !ctx.potentiallyInstrumented then
+        if !ctx.potentiallyInstrumented(tree) then
           raise:
             ErrorReport(msg"Non-local 'break' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1779,11 +1988,11 @@ extends Importer:
       case LabelLookup.NotFound =>
         elaborateSelection(sel)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
-      ctx.lookupLabel(labelName) match
+      ctx.lookupLabel(labelName, tree) match
       case LabelLookup.Found(binding) =>
         Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(binding) =>
-        if !ctx.potentiallyInstrumented then
+        if !ctx.potentiallyInstrumented(tree) then
           raise:
             ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1841,17 +2050,23 @@ extends Importer:
       ))
     case tree @ Tup(TermDef(Ins, f, N) :: fs) =>
       withTypeBinders(Term.CtxTup((f :: fs).map(fld(_, interp.elements)))(tree))
+    // * Note: the argument lists of applications and instantiations, which are also `Tup` trees,
+    // * bind their placeholder arguments before they are elaborated here,
+    // * so only array literals bind placeholders here.
     case Modified(kw @ Keywrd(Keyword.`mut`), tree @ Tup(fields)) =>
-      Term.Mut(withTypeBinders(new Term.Tup(fields.map(fld(_, interp.elements)))(tree))).mkLocWith(kw)
+      bindingBareDots(interp, fields): newFields =>
+        Term.Mut(withTypeBinders(new Term.Tup(newFields.map(fld(_, interp.elements)))(tree))).mkLocWith(kw)
     case tree @ Tup(fields) =>
-      withTypeBinders(Term.Tup(fields.map(fld(_, interp.elements)))(tree))
+      bindingBareDots(interp, fields): newFields =>
+        withTypeBinders(Term.Tup(newFields.map(fld(_, interp.elements)))(tree))
       
     case DynamicNew(Apps(c, args)) =>
       val (mut, c2) = c match
         case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
         case c => (false, c)
-      val base = new Term.DynNew(subterm(c2), args.map(subterm(_))).withLocOf(tree)
-      if mut then Term.Mut(base) else base
+      bindingBareDotsOfArgLists(interp, args): newArgs =>
+        val base = new Term.DynNew(subterm(c2), newArgs.map(subterm(_))).withLocOf(tree)
+        if mut then Term.Mut(base) else base
     // case New(c, rfto) =>
     //   assert(rfto.isEmpty)
     //   Term.New(cls(subterm(c), inAppPrefix = inAppPrefix), params.map(subterm(_)), bodo).withLocOf(tree)
@@ -1869,12 +2084,13 @@ extends Importer:
         val (mut, c2) = c match
           case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
           case c => (false, c)
-        val inner = mkNew(
-          subterm(c2, Clss), // * Note: we'll catch bad `new` targets during type checking
-          args.map(subterm(_)),
-          bodo
-        )(N)
-        if mut then Term.Mut(inner) else inner
+        bindingBareDotsOfArgLists(interp, args): newArgs =>
+          val inner = mkNew(
+            subterm(c2, Clss), // * Note: we'll catch bad `new` targets during type checking
+            newArgs.map(subterm(_)),
+            bodo
+          )(N)
+          if mut then Term.Mut(inner) else inner
       case N =>
         val objectRef = ctx.builtins.Object.bms.get.ref(Ident("Object"))
         mkNew(objectRef, Nil, bodo)(N)
@@ -1906,10 +2122,10 @@ extends Importer:
       val params = Param.simple(scrut) :: Nil
       withTypeBinders(Term.Lam(PlainParamList(params)(N), body)).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
-      ctx.getRetHandler match
+      ctx.getRetHandler(tree) match
       case ReturnHandler.Required(sym) =>
         log(s"Non-local return: $sym")
-        if !ctx.potentiallyInstrumented then
+        if !ctx.potentiallyInstrumented(tree) then
           raise:
             ErrorReport(msg"Non-local return statements are only supported with effect handlers enabled." -> tree.toLoc :: Nil)
           error
@@ -1929,7 +2145,7 @@ extends Importer:
     case PrefixApp(kw @ Keywrd(Keyword.`throw`), body) =>
       Term.Throw(subterm(body)).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`yield` | Keyword.`yield*`), body) =>
-      if ctx.inGenerator then
+      if ctx.inGenerator(tree) then
         val synthIdent = new Tree.Ident(kw.kw.name).withLocOf(kw)
         app(ident(synthIdent, Trm).get, withTypeBinders(Term.Tup(PlainFld(subterm(body)) :: Nil)(DummyTup)))(DummyApp, N, FlowSymbol("yield"))
       else
@@ -2057,6 +2273,13 @@ extends Importer:
     case Annotated(lhs, rhs) =>
       annot(lhs).fold(subterm(rhs, interp))(ann =>
         annotated(ann, subterm(rhs, interp)))
+    case Keywrd(Keyword.`.`) =>
+      raise:
+        ErrorReport(
+          msg"Illegal position for '.' partial application placeholder." -> tree.toLoc
+          :: msg"A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`" -> N
+          :: Nil)
+      error
     case Keywrd(kw) =>
       raise(ErrorReport(msg"Unexpected keyword '${kw.name}' in this position." -> tree.toLoc :: Nil))
       error
@@ -2074,7 +2297,11 @@ extends Importer:
   
   def arg(tree: Tree, interp: Interpretation)(using UnderCtx): Ctxl[Term] = tree match
     case u: Under => subterm(tree, interp) // Note: currently `f(a, _, c)` is treated the same as `f of a, _, c`
-    case _ => term(tree, interp)
+    // * A `.` placeholder argument is bound by its argument list, which has replaced it if it supports
+    // * partial applications; otherwise, `subterm` reports it as illegal (see `DotPlaceholders`).
+    case Keywrd(Keyword.`.`) => subterm(tree, interp)
+    // * Other arguments delimit the `.` placeholders in them, so that `f(. + 1)` means `f(x => x + 1)`.
+    case _ => dotDelimited(interp, tree)(term(_, interp))
   def fld(tree: Tree, interp: Interpretation)(using UnderCtx): Ctxl[Elem] = tree match
     case InfixApp(id: Ident, Keywrd(Keyword.`:`), rhs) =>
       Fld(FldFlags.empty, Term.Lit(StrLit(id.name).withLocOf(id)), S(arg(rhs, interp)))

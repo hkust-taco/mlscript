@@ -364,6 +364,46 @@ getValue(...)
   |> _.someOtherField
 ```
 
+### Partial applications
+
+Each `.` placeholder stands for a new lambda parameter (left to right).
+A placeholder is bound by the closest of the following enclosing *delimiters*,
+which turns into a lambda:
+
+* an argument list, for the arguments that are lone placeholders;
+  the lambda then wraps the whole application or instantiation;
+* an array literal, for the elements that are lone placeholders;
+* any other argument or array element;
+* parentheses.
+
+```fs
+pow(., 2)          // means `x => pow(x, 2)`, like `=> pow(_, 2)`
+f(., a, .)         // means `(x, y) => f(x, a, y)`
+f of ., a          // means `x => f(x, a)`
+f(a) \ .           // means `x => f(a, x)`
+f(key: .)          // means `x => f(key: x)`
+new C(., 1)        // means `x => new C(x, 1)`
+[., 1]             // means `x => [x, 1]`
+f(. + 1)           // means `f(x => x + 1)`
+f(., . + 1)        // means `x => f(x, y => y + 1)`
+f(g(.))            // means `f(x => g(x))`
+(.)                // means `x => x`
+xs |> (. * 2)      // means `xs |> (x => x * 2)`
+```
+
+Within a delimiter, placeholders can occur in operands (`. + 1`, `not .`, `. is Some`),
+callees (`.(x)`), and selection prefixes (`. .name`), but not in nested argument lists,
+which are delimiters themselves, nor in lambda bodies, blocks, or other expressions:
+`. + 1` alone and `f(y => . + y)` are illegal.
+Note that `-.` is an operator; write `- .` to negate a placeholder.
+
+As with underscore lambdas, the function and the other arguments of a partial application
+are evaluated each time the lambda is called.
+Unlike underscore lambdas, partial applications can be used without
+a delimiting `=>`, `\`, or pipe operator,
+and underscores are delimited outside of them,
+so that `=> f(., _)` means `y => (x => f(x, y))`.
+
 ### Function Declarations (without definition)
 
 ```mlscript
