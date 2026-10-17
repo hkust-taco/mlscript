@@ -43,6 +43,11 @@ arr
   |> Iter.toArray
 //│ = ["0!", "1!", "3!"]
 
+arr
+  .map \ => _ + "!" |! drop _ |! drop _
+  .filter \ => _ != "2!" |! drop _ |! drop _
+//│ = ["0!", "1!", "3!"]
+
 ["abc", "01234"]
   |> Iter.withMap of (s: Str) => s.toUpperCase()
   |> Iter.flattening
@@ -51,7 +56,7 @@ arr
 //│ = ["A", "B", "C", "1", "2", "3", "4"]
 
 ["abc", "01234"]
-  |> Iter.withMap \ (s: Str) => s.toUpperCase()
+  |> Iter.withMap \ => _.Str#toUpperCase()
   |> Iter.flattening
   |> Iter.withFilter \ => _ != "0"
   |> Iter.toArray
@@ -62,6 +67,13 @@ mkStr of
   "1"
   "2"
   "3"
+//│ = "0123"
+
+mkStr
+  \ "0"
+  \ "1"
+  \ "2"
+  \ "3"
 //│ = "0123"
 
 mkStr of

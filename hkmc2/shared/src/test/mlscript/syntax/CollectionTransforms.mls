@@ -1,0 +1,145 @@
+:.
+:js
+
+
+fun Seq[A](...xs: A) = new Seq(xs)
+class Seq[out A] {
+  
+  // constructor(val ...xs: A) // TODO: support
+  constructor(val elements: Array[A])
+  
+  fun map[B](f: A -> B): Seq[B] = new Seq \ elements.map \ pass1 \ f
+  
+  fun groupMapReduce[B, C](getKey: A -> B, getValue: A -> C, reduce: (C, C) -> C): Map[B, C] =
+    let groups = new Map[B, C]
+    elements.forEach \ pass1 \ e =>
+      let
+        key = getKey(e)
+        value = getValue(e)
+      if groups.has(key) then
+        let oldValue = groups.get(key)
+        groups.set(key, reduce(oldValue, value))
+      else
+        groups.set(key, value)
+    groups
+  
+  override fun toString() = "Seq(" + elements.map(pass1 \ renderAsStr).join(", ") + ")"
+}
+
+
+let xs = Seq(1, 2, 3)
+//│ xs = Seq(1, 2, 3)
+
+xs.map(=> _ + 1).map(=> _ * 2).map(=> _ - 1)
+//│ = Seq(3, 5, 7)
+
+xs
+  .map(=> _ + 1)
+  .map(=> _ * 2)
+  .map(=> _ - 1)
+//│ = Seq(3, 5, 7)
+
+xs
+  .map \ => _ + 1
+  .map \ => _ * 2
+  .map \ => _ - 1
+//│ = Seq(3, 5, 7)
+
+xs
+  .map \ x => x + 1
+  .map \ x => x * 2
+  .map \ x => x - 1
+//│ = Seq(3, 5, 7)
+
+
+let xs = Seq
+  \ (key: "A", value: 1)
+  \ (key: "B", value: 2)
+  \ (key: "A", value: 3)
+  \ (key: "B", value: 4)
+//│ xs = Seq({key: "A", value: 1}, {key: "B", value: 2}, {key: "A", value: 3}, {key: "B", value: 4})
+
+xs.groupMapReduce
+  \ => _.'key
+  \ => _.'value
+  \ => _ + _
+//│ = Map(2) {"A" => 4, "B" => 6}
+
+:fixme
+xs.groupMapReduce
+  \ => _.key
+  \ => _.value
+  \ => _ + _
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.70: 	  \ => _.key
+//│ ║        	       ^^^^^
+//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
+//│ ║  l.6: 	class Seq[out A] {
+//│ ║       	              ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.5: 	fun Seq[A](...xs: A) = new Seq(xs)
+//│ ╙──     	        ^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.71: 	  \ => _.value
+//│ ║        	       ^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.6: 	class Seq[out A] {
+//│ ║       	              ^
+//│ ╟── Type parameter 'A' does not specify a member interface.
+//│ ║  l.5: 	fun Seq[A](...xs: A) = new Seq(xs)
+//│ ╙──     	        ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+:fixme // ?
+let xs = Seq
+  \ { key: "A", value: 1 }
+  \ { key: "B", value: 2 }
+//│ ╔══[PARSE ERROR] Unexpected comma in this position
+//│ ║  l.96: 	  \ { key: "A", value: 1 }
+//│ ╙──      	              ^
+//│ ╔══[PARSE ERROR] Unexpected comma in this position
+//│ ║  l.97: 	  \ { key: "B", value: 2 }
+//│ ╙──      	              ^
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.96: 	  \ { key: "A", value: 1 }
+//│ ╙──      	      ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.97: 	  \ { key: "B", value: 2 }
+//│ ╙──      	      ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ xs = undefined
+
+
+fun Seq[A](...xs: A): Seq[A] = new Seq(xs)
+class Seq[out A] {
+  constructor(val elements: Array[A])
+  fun map[B](f: A -> B) = new Seq \ elements.map \ pass1 \ f
+}
+
+let xs = Seq(1, 2, 3)
+//│ xs = Seq { elements: [1, 2, 3] }
+
+:fixme
+xs.map(=> _ + 1).map(=> _ * 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.124: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'map' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.124: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ╙──       	^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+declare fun Seq[A](...xs: A): Seq[A]
+declare class Seq[out A] {
+  fun map[B](f: A -> B): Seq[B]
+}
+
+(x: Seq[{k: {k: Int}}]) => x.map(=> _.k).map(=> _.k)
+//│ = fun
+
+
+
+

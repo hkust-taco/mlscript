@@ -7,6 +7,34 @@ import "../../mlscript-compile/Iter.mls"
 
 fun inc(x) = x + 1
 
+
+:expect 2
+inc \ 1
+//│ = 2
+
+inc() \ 1
+//│ = 2
+
+inc()\1
+//│ = 2
+
+inc \ inc \ 1
+//│ = 3
+
+inc() \ inc() \ 1
+//│ = 3
+
+inc() \inc() \1
+//│ = 3
+
+inc()\ inc()\ 1
+//│ = 3
+
+inc() \
+  inc() \ 42
+//│ = 44
+
+
 1 |.inc()
 //│ = 2
 
@@ -50,10 +78,6 @@ fun inc(x) = x + 1
 // * `f(args) \ a` means `f(args, a)`, and `f \ a` means `f(a)`
 
 fun add(x, y) = x + y
-
-:expect 2
-inc \ 1
-//│ = 2
 
 :expect 3
 add(1) \ 2
