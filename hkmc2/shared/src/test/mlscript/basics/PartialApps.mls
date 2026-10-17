@@ -8,7 +8,7 @@
 //│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
 //│ ║  l.7: 	.
 //│ ║       	^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -17,7 +17,7 @@
 //│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
 //│ ║  l.16: 	. //
 //│ ║        	^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -172,74 +172,206 @@ fun foo() =
 //│ ╙──       	                   ^^^^^^^^
 
 
-// * Illegal placeholders
+// * Arguments that are not themselves placeholders delimit the placeholders in them
 
-:e
-. + 1
-//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
-//│ ║  l.178: 	. + 1
-//│ ║         	^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-
-:e
 tuple(. + 1)
-//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
-//│ ║  l.186: 	tuple(. + 1)
-//│ ║         	      ^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = [fun]
 
-:e
-(.)
-//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
-//│ ║  l.194: 	(.)
-//│ ║         	 ^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+tuple(. + 1).0(1)
+//│ = 2
 
-:e
-[.]
-//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
-//│ ║  l.202: 	[.]
-//│ ║         	 ^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+passTo(2, . * 10)()
+//│ = 20
 
+tuple(1, . + ., 3).1(1, 2)
+//│ = 3
+
+tuple(- .).0(1)
+//│ = -1
+
+tuple(.(1)).0(x => x + 1)
+//│ = 2
+
+tuple(. .a).0({a: 1})
+//│ = 1
+
+tuple(not .).0(true)
+//│ = false
+
+tuple(. is Str).0("a")
+//│ = true
+
+tuple(. > 0 and . < 10).0(1, 2)
+//│ = true
+
+// * A bare placeholder argument is still bound by its argument list
+tuple(., . + 1)(1).1(2)
+//│ = 3
+
+tuple(key: . + 1).0.key(1)
+//│ = 2
+
+// * Explicit lambdas are not traversed, so their bodies cannot contain placeholders
 :e
-tuple((.))
+tuple(y => . + y)
 //│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
-//│ ║  l.210: 	tuple((.))
-//│ ║         	       ^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ║  l.216: 	tuple(y => . + y)
+//│ ║         	           ^
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
+//│ = [fun]
+
+// * Prefix `=>` only delimits underscore placeholders
+tuple(=> . + _).0(1)(2)
+//│ = 3
+
+
+// * Parentheses delimit the placeholders in them
+
+(.)(1)
+//│ = 1
+
+(. + 1)(1)
+//│ = 2
+
+(- .)(1)
+//│ = -1
+
+tuple((.)).0(1)
+//│ = 1
+
+let f = (. * 2)
+f(21)
+//│ = 42
+//│ f = fun f
+
+1 |> (. + 1)
+//│ = 2
+
+
+// * Array literals bind their placeholder elements
+
+[., 1](0)
+//│ = [0, 1]
+
+[., 1, .](0, 2)
+//│ = [0, 1, 2]
+
+[. + 1, 2]
+//│ = [fun, 2]
+
+(mut [., 1])(0)
+//│ = [0, 1]
+
+
+// * Instantiations bind their placeholder arguments
 
 data class Foo(a, b)
 
 Foo(., 1)(0)
 //│ = Foo(0, 1)
 
-:e
-new Foo(., 1)
-//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
-//│ ║  l.223: 	new Foo(., 1)
-//│ ║         	        ^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+(new Foo(., 1))(0)
+//│ = Foo(0, 1)
 
-:e
-.(1)
-//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
-//│ ║  l.231: 	.(1)
-//│ ║         	^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+new Foo(. + 1, 1).a(1)
+//│ = 2
 
-:e
+data class Bar(a)(b)
+
+(new Bar(.)(.))(1, 2)
+//│ = Bar(1)
+
+
+// * `break` on a value that is not a label is an ordinary method call
+let obj = new Object with
+  fun break(x, y) = [x, y]
+//│ obj = $anon
+
+obj.break(., 1)(0)
+//│ = [0, 1]
+
+
+// * Backslash arguments
+
 tuple(1) \ .
+//│ = fun
+
+(tuple(1) \ .)(2)
+//│ = [1, 2]
+
+(tuple(1) \ . + 1).1(2)
+//│ = 3
+
+
+// * Illegal placeholders
+
+:e
+. + 1
 //│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
-//│ ║  l.239: 	tuple(1) \ .
-//│ ║         	           ^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ║  l.309: 	. + 1
+//│ ║         	^
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+- .
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.317: 	- .
+//│ ║         	  ^
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+1 |> . + 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.325: 	1 |> . + 1
+//│ ║         	     ^
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+{a: .}
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.333: 	{a: .}
+//│ ║         	    ^
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+tuple(...xs, ... .)
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.341: 	tuple(...xs, ... .)
+//│ ║         	                 ^
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+let x = .
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.349: 	let x = .
+//│ ║         	        ^
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ x = undefined
+
+// * Placeholders are only bound in value positions
+
+:e
+fun foo(x: [Int, .]) = x
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.360: 	fun foo(x: [Int, .]) = x
+//│ ║         	                 ^
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
+
+:e
+class Baz extends Foo(., 1)
+//│ ╔══[COMPILATION ERROR] Unexpected shape of extension clause: function literal
+//│ ║  l.367: 	class Baz extends Foo(., 1)
+//│ ╙──       	                  ^^^^^^^^^
+
+:e
+fun foo(x) = if x is Foo(., 1) then 0 else 1
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern ('.' keyword).
+//│ ║  l.373: 	fun foo(x) = if x is Foo(., 1) then 0 else 1
+//│ ╙──       	                         ^
 

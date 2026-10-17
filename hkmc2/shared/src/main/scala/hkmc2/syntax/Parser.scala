@@ -773,8 +773,8 @@ abstract class Parser(
         else new Keywrd(Keyword.`..`)
       Spread(kw.withLoc(S(loc)), bod)
     // * A lone `.` in expression position is a partial application placeholder, as in `pow(., 2)`.
-    // * The elaborator only accepts it as an argument of an application (see `Elaborator.partialAppArgs`);
-    // * we still parse continuations like `. + 1` so that it can report a precise error.
+    // * Its continuations are parsed as usual, as in `. + 1`;
+    // * the elaborator determines which lambda it belongs to, if any (see `Elaborator.DotPlaceholders`).
     case (PERIOD, loc) :: _ =>
       consume
       exprCont(new Keywrd(Keyword.`.`).withLoc(S(loc)), prec, allowNewlines = allowNewlines)

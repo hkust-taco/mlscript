@@ -58,7 +58,7 @@ obj
 //│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
 //│ ║  l.57: 	  .("a")
 //│ ║        	  ^
-//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ╙── A '.' placeholder must be in an argument or in parentheses, as in `pow(., 2)` or `(. + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
