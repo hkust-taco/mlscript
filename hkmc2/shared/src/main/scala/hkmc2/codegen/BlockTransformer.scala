@@ -309,9 +309,12 @@ class BlockTransformer(subst: SymbolSubst):
       val sym2 = p.sym.subst
       if sym2 is p.sym then p else p.copy(sym = sym2)(p.toLoc)
     val params2 = pl.params.mapConserve(applyParam)
-    val rest2 = pl.restParam.mapConserve(applyParam)
-    if (params2 is pl.params) && (rest2 is pl.restParam)
-      then pl else ParamList(pl.flags, params2, rest2)(pl.toLoc)
+    val variadic2 = pl.variadic.mapConserve: v =>
+      val param2 = applyParam(v.param)
+      val trailing2 = v.trailing.mapConserve(applyParam)
+      if (param2 is v.param) && (trailing2 is v.trailing) then v else Variadic(param2, trailing2)
+    if (params2 is pl.params) && (variadic2 is pl.variadic)
+      then pl else ParamList(pl.flags, params2, variadic2)(pl.toLoc)
   
   def applyCase(cse: Case)(k: Case => Block): Block = cse match
     case Case.Lit(lit) => k(cse)

@@ -41,7 +41,7 @@ class FlowAnalysisBasedRewrite(
           case (param, i) =>
             if eliminable(i) then removed.add(param.sym)
             else keptParams.append(param)
-        ParamList(pl.flags, keptParams.toList, pl.restParam)(pl.toLoc) -> removed.toSet
+        ParamList.withRest(pl.flags, keptParams.toList, pl.restParam)(pl.toLoc) -> removed.toSet
     
     private def filterFunParams(funSym: TermSymbol, params: Ls[ParamList]): (Ls[ParamList], Set[VarSymbol]) =
       val removed = MutSet.empty[VarSymbol]
@@ -99,7 +99,7 @@ class FlowAnalysisBasedRewrite(
               .toList
               val restParam = Option.when(targets.hasRestParam)(etaParam("rest"))
               EtaParamList(
-                ParamList(ParamListFlags.empty, params, restParam)(N),
+                ParamList.withRest(ParamListFlags.empty, params, restParam)(N),
                 params.map(p => Arg(N, p.sym.asSimpleRef)) :::
                   restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef)),
               )

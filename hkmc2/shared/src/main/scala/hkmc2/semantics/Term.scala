@@ -1297,28 +1297,52 @@ final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulef
   def showDbg(using DebugPrinter): Str =
     flags.show(true) + sym.showDbg + flags.showOptMarker + sign.fold("")(": " + _.showDbg)
 
-final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])
+/** A variadic parameter, as in `fun f(x, ...xs, y, z)`, which receives the arguments passed between
+  * the leading parameters (`x`) and the `trailing` ones (`y` and `z`). The trailing parameters are
+  * always required. When there are no trailing parameters, the variadic parameter is a rest parameter.
+  * Lowering desugars trailing parameters into a rest parameter (see `Lowering.setupFunctionDef`). */
+final case class Variadic(param: Param, trailing: Ls[Param]):
+  def map(f: Param => Param): Variadic = Variadic(f(param), trailing.map(f))
+  def allParams: Ls[Param] = param :: trailing
+
+/** `params` are the leading parameters, which may end with optional parameters. */
+final case class ParamList(flags: ParamListFlags, params: Ls[Param], variadic: Opt[Variadic])
 (val toLoc: Opt[Loc]) extends Located:
-  def foreach(f: Param => Unit): Unit = (params.iterator ++ restParam).foreach(f)
-  /** The number of required parameters, which precede all optional parameters. */
-  lazy val paramCountLB: Int = FldFlags.requiredPrefixLength(params.map(_.flags))
-  /** The number of positional parameters, including optional ones but excluding the rest parameter. */
-  def paramCountMax: Int = params.length
-  def hasOptParams: Bool = paramCountLB < paramCountMax
-  def paramCountUB: Bool = restParam.isEmpty
-  lazy val paramSyms = params.map(_.sym) ++ restParam.map(_.sym)
-  lazy val allParams = params ++ restParam.toList
-  def subTerms: Ls[Term] = params.flatMap(_.subTerms) ++ restParam.toList.flatMap(_.subTerms)
+  def foreach(f: Param => Unit): Unit = allParams.foreach(f)
+  def trailingParams: Ls[Param] = variadic.fold(Nil)(_.trailing)
+  /** The number of required leading parameters, which precede all optional parameters. */
+  lazy val leadingRequiredCount: Int = FldFlags.requiredPrefixLength(params.map(_.flags))
+  /** The minimum number of arguments: the required leading and trailing parameters. */
+  def paramCountLB: Int = leadingRequiredCount + trailingParams.length
+  /** The maximum number of arguments, when there is no variadic parameter. */
+  def paramCountMax: Int = params.length + trailingParams.length
+  def hasOptParams: Bool = leadingRequiredCount < params.length
+  def paramCountUB: Bool = variadic.isEmpty
+  /** The rest parameter, for parameter lists without trailing parameters after their variadic parameter.
+    * This is the case of all parameter lists after lowering (see `Lowering.setupFunctionDef`),
+    * so code generation passes use this accessor rather than `variadic`.
+    * Ignoring trailing parameters would silently miscompile, so this is a hard assertion. */
+  def restParam: Opt[Param] = variadic.map: v =>
+    assert(v.trailing.isEmpty, s"Unexpected trailing parameters after a variadic parameter: ${v.trailing}")
+    v.param
+  lazy val allParams: Ls[Param] = params ::: variadic.fold(Nil)(_.allParams)
+  lazy val paramSyms = allParams.map(_.sym)
+  def subTerms: Ls[Term] = allParams.flatMap(_.subTerms)
   def show(using Scope, ShowCfg, Raise): Document =
     flags.show
     :: doc"(" :: (
       params.map(_.show)
       :::
-      restParam.map(p => doc"...${p.show}").toList
+      variadic.toList.flatMap(v => doc"...${v.param.show}" :: v.trailing.map(_.show))
     ).mkDocument(", ")
     :: doc")"
   def showDbg(using DebugPrinter): Str = flags.showDbg
-    + (params.map(_.showDbg) ++ restParam.toList.map("..." + _.showDbg)).mkString("(", ", ", ")")
+    + (params.map(_.showDbg) ++ variadic.toList.flatMap(v => ("..." + v.param.showDbg) :: v.trailing.map(_.showDbg)))
+      .mkString("(", ", ", ")")
+object ParamList:
+  /** A parameter list with an optional rest parameter, as it appears after lowering. */
+  def withRest(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])(toLoc: Opt[Loc]): ParamList =
+    ParamList(flags, params, restParam.map(Variadic(_, Nil)))(toLoc)
 object PlainParamList:
   def apply(params: Ls[Param])(toLoc: Opt[Loc]) =
     ParamList(ParamListFlags.empty, params, N)(toLoc)

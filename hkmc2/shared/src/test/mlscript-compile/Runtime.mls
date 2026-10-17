@@ -40,6 +40,11 @@ fun checkArgs(functionName: Str, expected: Int, got: Int) =
       + (if expected === 1 then "" else "s")
       + " but got " + got
 
+// Checks the arguments of a function whose variadic parameter is followed by trailing parameters.
+// Lowering gathers all the arguments after the `leading` ones into `args` (see `Lowering.lowerTrailingParams`).
+fun checkVariadicArgs(functionName: Str, expected: Int, leading: Int, args: Array) =
+  checkArgs(functionName, expected, leading + args.length)
+
 fun checkSelect(sel, nme, qual) =
   if sel === undefined then
     throw Error("Access to required field '" + nme + "' yielded 'undefined'")
@@ -109,6 +114,13 @@ module Tuple with
       throw RangeError("Tuple.get: negative index out of bounds")
     // Raw indexing preserves undefined elements; a foreign method call would normalize them to Unit.
     xs![i]
+  
+  // The `i`th element of `xs` if it precedes its last `trailing` elements, and `undefined` otherwise.
+  // This gives the arguments of the optional parameters preceding a variadic parameter
+  // that has trailing parameters (see `Lowering.lowerTrailingParams`).
+  @pure
+  fun getLeading(xs: Indexable, i: Int, trailing: Int) =
+    if i < xs.length - trailing then xs![i] else undefined
   
   @pure
   fun isArrayLike(xs) = Iter.isArrayLike(xs)

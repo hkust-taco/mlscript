@@ -738,29 +738,33 @@ final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSym
   override def getMemberThrough(name: Str, receiver: Marks)(using ResolutionContext): MemberLookup =
     resolver.nominalMember(this, name, receiver)
 
-/** Parameter types and arity exposed by one list in a declared calling interface.
-  * `paramFlags` gives the flags of each positional parameter, which may be optional
-  * (their types then already include `undefined`; see `Elaborator.optionalType`) or droppable.
-  * A rest annotation describes the whole trailing array; hasRest also distinguishes
-  * an unannotated rest parameter from a fixed-arity list, and restDroppable tells
-  * whether the rest parameter is droppable.
+/** The variadic parameter of a declared calling interface. A `rest` annotation describes the whole
+  * array of arguments it receives, and `trailing` gives the types of the (required) parameters following it.
   */
-final class DeclaredParams(val params: Ls[Opt[DeclaredType]], val paramFlags: Ls[FldFlags], val hasRest: Bool, val restDroppable: Bool,
-    val rest: Opt[DeclaredType]) extends ValueKey:
-  require(hasRest || !restDroppable)
+final case class DeclaredVariadic(rest: Opt[DeclaredType], droppable: Bool, trailing: Ls[Opt[DeclaredType]]):
+  def mapTypes(f: DeclaredType => DeclaredType): DeclaredVariadic =
+    DeclaredVariadic(rest.map(f), droppable, trailing.map(_.map(f)))
+
+/** Parameter types and arity exposed by one list in a declared calling interface.
+  * `params` and `paramFlags` give the types and flags of the leading parameters, which may be optional
+  * (their types then already include `undefined`; see `Elaborator.optionalType`) or droppable.
+  * The variadic parameter, if any, also distinguishes an unannotated rest parameter from a fixed-arity list.
+  */
+final class DeclaredParams(val params: Ls[Opt[DeclaredType]], val paramFlags: Ls[FldFlags], val variadic: Opt[DeclaredVariadic])
+    extends ValueKey:
   require(paramFlags.length == params.length)
+  def hasRest: Bool = variadic.isDefined
+  def rest: Opt[DeclaredType] = variadic.flatMap(_.rest)
+  def trailing: Ls[Opt[DeclaredType]] = variadic.fold(Nil)(_.trailing)
   /** The number of leading required (i.e., non-optional) parameters. */
-  lazy val required: Int = FldFlags.requiredPrefixLength(paramFlags)
-  override def toString: Str = s"DeclaredParams($params, $paramFlags, $hasRest, $restDroppable, $rest)"
-  protected val valueHash: Int =
-    ValueKey.hash(ValueKey.tag(this), params.hashCode, paramFlags.hashCode, hasRest.hashCode, restDroppable.hashCode, rest.hashCode)
+  lazy val leadingRequired: Int = FldFlags.requiredPrefixLength(paramFlags)
+  override def toString: Str = s"DeclaredParams($params, $paramFlags, $variadic)"
+  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), params.hashCode, paramFlags.hashCode, variadic.hashCode)
   protected def sameValue(other: ValueKey): Bool = other match
-    case that: DeclaredParams =>
-      params == that.params && paramFlags == that.paramFlags && hasRest == that.hasRest
-        && restDroppable == that.restDroppable && rest == that.rest
+    case that: DeclaredParams => params == that.params && paramFlags == that.paramFlags && variadic == that.variadic
     case _ => false
   def mapTypes(f: DeclaredType => DeclaredType): DeclaredParams =
-    DeclaredParams(params.map(_.map(f)), paramFlags, hasRest, restDroppable, rest.map(f))
+    DeclaredParams(params.map(_.map(f)), paramFlags, variadic.map(_.mapTypes(f)))
 
 /** Async lowering wraps the result only after all written parameter lists have
   * been applied. A separate signature can encode those lists as nested arrows,

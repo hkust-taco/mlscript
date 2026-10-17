@@ -537,9 +537,11 @@ object Elaborator:
       str: ModuleOrObjectSymbol,
       unreachable: TermSymbol,
       assertFail: TermSymbol,
+      checkVariadicArgs: TermSymbol,
       continue: ModuleOrObjectSymbol,
       toJsAsync: TermSymbol,
       tupleGet: TermSymbol,
+      tupleGetLeading: TermSymbol,
       tupleSlice: TermSymbol,
       tupleLazySlice: TermSymbol,
       strStartsWith: TermSymbol,
@@ -588,9 +590,11 @@ object Elaborator:
         str = str,
         unreachable = term("unreachable"),
         assertFail = term("assertFail"),
+        checkVariadicArgs = term("checkVariadicArgs"),
         continue = modOrObj("Continue"),
         toJsAsync = term("toJsAsync"),
         tupleGet = moduleMember(tuple, "get"),
+        tupleGetLeading = moduleMember(tuple, "getLeading"),
         tupleSlice = moduleMember(tuple, "slice"),
         tupleLazySlice = moduleMember(tuple, "lazySlice"),
         strStartsWith = moduleMember(str, "startsWith"),
@@ -697,9 +701,11 @@ object Elaborator:
       BlockMemberSymbol(id.name, Nil, true)
     def unreachableSymbol: TermSymbol = runtimeSymbols.unreachable
     def assertFailSymbol: TermSymbol = runtimeSymbols.assertFail
+    def checkVariadicArgsSymbol: TermSymbol = runtimeSymbols.checkVariadicArgs
     def continueSymbol: ModuleOrObjectSymbol = runtimeSymbols.continue
     def toJsAsyncSymbol: TermSymbol = runtimeSymbols.toJsAsync
     def tupleGetSymbol: TermSymbol = runtimeSymbols.tupleGet
+    def tupleGetLeadingSymbol: TermSymbol = runtimeSymbols.tupleGetLeading
     def tupleSliceSymbol: TermSymbol = runtimeSymbols.tupleSlice
     def tupleLazySliceSymbol: TermSymbol = runtimeSymbols.tupleLazySlice
     def strStartsWithSymbol: TermSymbol = runtimeSymbols.strStartsWith
@@ -1411,12 +1417,19 @@ extends Importer:
           case field @ InfixApp(Optional(id: Ident), Keywrd(Keyword.`:`), rhs) =>
             Fld(FldFlags.empty.copy(opt = true), Term.Lit(StrLit(id.name).withLocOf(id)), S(optionalType(arg(rhs, Tpe), field.toLoc)))
           case field => fld(field, Tpe)
-        fields.lazyZip(elems).foldLeft(false):
-          case (seenOpt, (field, Fld(flags, _, _))) =>
-            if seenOpt && !flags.opt then
+        // * Check the same constraints as `params`, tracking whether an optional parameter (`seenOpt`)
+        // * and a variadic parameter (`seenVariadic`) were seen.
+        fields.lazyZip(elems).foldLeft((false, false)):
+          case ((seenOpt, seenVariadic), (field, Fld(flags, _, _))) =>
+            if flags.opt && seenVariadic then
+              raise(ErrorReport(msg"Optional parameters cannot follow a variadic parameter." -> field.toLoc :: Nil))
+            else if seenOpt && !flags.opt && !seenVariadic then
               raise(ErrorReport(msg"A required parameter cannot follow an optional parameter." -> field.toLoc :: Nil))
-            seenOpt || flags.opt
-          case (seenOpt, _) => seenOpt
+            (seenOpt || flags.opt, seenVariadic)
+          case ((seenOpt, seenVariadic), (field, _: Spd)) =>
+            if seenVariadic then
+              raise(ErrorReport(msg"A parameter list cannot have more than one variadic parameter." -> field.toLoc :: Nil))
+            (seenOpt, true)
         withTypeBinders(Term.Tup(elems)(tree))
       case _ => subterm(lhs, Tpe)
     
@@ -1849,7 +1862,7 @@ extends Importer:
           N
       val self = VarSymbol(Ident("self"), erasedType = N)
       val args = VarSymbol(Ident("args"), erasedType = N)
-      val ps = ParamList(ParamListFlags.empty,
+      val ps = ParamList.withRest(ParamListFlags.empty,
         Param.simple(self) :: Nil,
         S:
           Param.simple(args)
@@ -2613,11 +2626,7 @@ extends Importer:
             given Ctx = newCtx
             params(ps, isDataClass, k is Pat, inFunction = false)
           newCtx = newCtx2
-          // Spread parameters are not supported in class parameters.
-          res.restParam.foreach: rp =>
-            raise(ErrorReport(
-              msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
-          res.copy(restParam = N)(res.toLoc)
+          withoutVariadic(res)
         
         def withFields(extraParams: Ls[ParamList])(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
           softAssert(pss.sizeCompare(td.clsParams) === 0,
@@ -2831,10 +2840,7 @@ extends Importer:
               // implicitly `val`: they only become fields when explicitly marked.
               params(ps, false, false, inFunction = false)
             newCtx = newCtx2
-            res.restParam.foreach: rp =>
-              raise(ErrorReport(
-                msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
-            res.copy(restParam = N)(res.toLoc)
+            withoutVariadic(res)
           newCtx.givenIn:
             trace(s"Processing class definition $nme"):
               val comp = sym.asMod
@@ -3016,6 +3022,13 @@ extends Importer:
             if sym.currentShapes.add(shape) then sym.notifyShapeListeners(shape)
         (p, spd, aliases)
   
+  /** Variadic parameters are not supported in class parameters. Report them and keep their trailing parameters. */
+  def withoutVariadic(ps: ParamList): ParamList = ps.variadic match
+    case S(v) =>
+      raise(ErrorReport(msg"Spread parameters are not supported in class parameters." -> v.param.toLoc :: Nil))
+      ps.copy(params = ps.params ::: v.trailing, variadic = N)(ps.toLoc)
+    case N => ps
+  
   /** The type of an optional parameter or optional function type parameter annotated with `tpe`,
     * where `loc` is the location of the optional parameter, which explains the `undefined` part. */
   def optionalType(tpe: Term, loc: Opt[Loc]): Term =
@@ -3044,7 +3057,7 @@ extends Importer:
         raise(ErrorReport(msg"Illegal function parameter modifiers: ${
           p.flags.show(false)}" -> p.sym.toLoc :: Nil))
     ps_ctx._1.params.foreach(checkFlags)
-    ps_ctx._1.restParam.foreach(checkFlags)
+    ps_ctx._1.variadic.foreach(_.allParams.foreach(checkFlags))
     ps_ctx
   
   /** Elaborate a subtyping constraint. */
@@ -3075,9 +3088,13 @@ extends Importer:
    */
   def params(t: Tree, inDataClass: Bool, inPattern: Bool, inFunction: Bool): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>
-      def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx, flags: ParamListFlags): (ParamList, Ctx) =
+      // * `acc` accumulates the leading parameters in reverse order, and `variadic` the variadic
+      // * parameter together with the trailing parameters following it, also in reverse order.
+      def go(ps: Ls[Tree], acc: Ls[Param], variadic: Opt[(Param, Ls[Param])], ctx: Ctx, flags: ParamListFlags)
+          : (ParamList, Ctx) =
         ps match
-        case Nil => (ParamList(flags, acc.reverse, N)(t.toLoc), ctx)
+        case Nil =>
+          (ParamList(flags, acc.reverse, variadic.map((p, trailing) => Variadic(p, trailing.reverse)))(t.toLoc), ctx)
         case hd :: tl =>
           val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam
@@ -3087,32 +3104,37 @@ extends Importer:
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
             if p.flags.droppable && !inFunction then
               raise(ErrorReport(msg"Droppable parameters are only supported in function and lambda parameter lists." -> hd.toLoc :: Nil))
+            // * The arguments of a call are assigned to the parameters as follows: the required leading
+            // * parameters and the trailing parameters (which are all required) take the first and last
+            // * arguments, the optional leading parameters take the remaining ones from left to right,
+            // * and the variadic parameter takes the rest (see `ParamList` and `Lowering.setupFunctionDef`).
             if p.flags.opt then
               if !inFunction then
                 raise(ErrorReport(msg"Optional parameters are only supported in function and lambda parameter lists." -> hd.toLoc :: Nil))
               else if inUsing then
                 raise(ErrorReport(msg"Contextual parameters cannot be optional." -> hd.toLoc :: Nil))
               else if spd.isDefined then
-                raise(ErrorReport(msg"Rest parameters cannot be optional." -> hd.toLoc :: Nil))
-            // * Required parameters must precede optional ones, so that the arguments of a call
-            // * can be assigned to the parameters positionally (see `ParamList.paramCountLB`).
-            else if spd.isEmpty && acc.exists(_.flags.opt) then
+                raise(ErrorReport(msg"Variadic parameters cannot be optional." -> hd.toLoc :: Nil))
+              else if variadic.isDefined then
+                raise(ErrorReport(msg"Optional parameters cannot follow a variadic parameter." -> hd.toLoc :: Nil))
+            else if spd.isEmpty && variadic.isEmpty && acc.exists(_.flags.opt) then
               raise(ErrorReport(msg"A required parameter cannot follow an optional parameter." -> hd.toLoc :: Nil))
             val bindings = (p.sym.name -> p.sym) :: aliases.map(_ -> p.sym)
             val newCtx = if !inPattern || p.flags.pat then ctx ++ bindings else ctx
             val newFlags = flags.copy(ctx = inUsing)
-            spd match
-            case S(spd) =>
+            (spd, variadic) match
+            case (S(spd), N) =>
               if spd is SpreadKind.Lazy then
                 raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
-              if tl.isEmpty then
-                (ParamList(flags, acc.reverse, S(p))(t.toLoc), newCtx)
-              else
-                raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
-                go(tl, p :: acc, newCtx, newFlags)
-            case N => go(tl, p :: acc, newCtx, newFlags)
-          case L(d) => raise(d); go(tl, acc, ctx, flags)
-      go(ps, Nil, ctx, ParamListFlags.empty)
+              go(tl, acc, S(p -> Nil), newCtx, newFlags)
+            case (S(_), S((vp, trailing))) =>
+              raise(ErrorReport(msg"A parameter list cannot have more than one variadic parameter." -> hd.toLoc :: Nil))
+              // * Keep the parameter as a trailing one so that its references remain bound.
+              go(tl, acc, S(vp -> (p :: trailing)), newCtx, newFlags)
+            case (N, S((vp, trailing))) => go(tl, acc, S(vp -> (p :: trailing)), newCtx, newFlags)
+            case (N, N) => go(tl, p :: acc, N, newCtx, newFlags)
+          case L(d) => raise(d); go(tl, acc, variadic, ctx, flags)
+      go(ps, Nil, N, ctx, ParamListFlags.empty)
     case _ =>
       raise:
         ErrorReport:

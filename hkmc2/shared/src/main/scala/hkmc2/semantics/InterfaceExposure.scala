@@ -95,7 +95,8 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
   private def parameters(lists: Ls[(ParamList, Ls[Marks])], path: Path)(using ResolutionContext): Unit =
     lists.foreach: (params, marks) =>
       params.params.foreach(parameter(_, marks, path))
-      params.restParam.foreach: rest =>
+      params.trailingParams.foreach(parameter(_, marks, path))
+      params.variadic.map(_.param).foreach: rest =>
         val ref = SimpleRef(rest.sym)(rest.sym.id)
         val unknown = UnknownValueShape(ref, fromPublicInterface = true)(path.via(
           msg"Rest parameter '${rest.sym.nme}' admits elements of unknown shape." -> rest.toLoc))
@@ -184,7 +185,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         // still admit unknown shapes even when local callers supplied evidence.
         val unknown = UnknownValueShape(callable.source, fromPublicInterface = true)(path)
         callable.paramLists.foreach: params =>
-          (params.params.flatten ::: params.rest.toList).foreach: input =>
+          (params.params.flatten ::: params.rest.toList ::: params.trailing.flatten).foreach: input =>
             unknown.enter(marks) match
               case value: TermShape => resolver.exposeTypeHoles(input, value, marks)
               case NoShape => ()

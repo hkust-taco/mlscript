@@ -248,7 +248,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       C.Flow(p.flow)
   
   def typeParamList(ps: ParamList): Ls[C] =
-    if ps.restParam.nonEmpty then
+    if ps.variadic.nonEmpty then
       ??? // TODO
     ps.params.map(typeParam)
   

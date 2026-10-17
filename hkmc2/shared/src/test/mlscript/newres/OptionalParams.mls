@@ -413,7 +413,7 @@ fun bad(x?, y) = x
 
 :e
 fun bad(...xs?) = xs
-//│ ╔══[COMPILATION ERROR] Rest parameters cannot be optional.
+//│ ╔══[COMPILATION ERROR] Variadic parameters cannot be optional.
 //│ ║  l.415: 	fun bad(...xs?) = xs
 //│ ╙──       	        ^^^^^^
 

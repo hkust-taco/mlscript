@@ -922,7 +922,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
   private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(Tree.Ident(p.sym.nme), erasedType = p.sym.erasedType))(p.toLoc)
   private def dupParams(plist: List[Param]): List[Param] = plist.map(dupParam)
   private def dupParamList(plist: ParamList): ParamList =
-    plist.copy(params = dupParams(plist.params), restParam = plist.restParam.map(dupParam))(plist.toLoc)
+    plist.copy(params = dupParams(plist.params), variadic = plist.variadic.map(_.map(dupParam)))(plist.toLoc)
   
   /* CONCRETE IMPLS */
   
