@@ -1050,7 +1050,9 @@ extends Importer:
     * function, which takes a `Ctx` and returns a `SimpleSplit` representing
     * the _alternative_ split, and returns a `SimpleSplit` representing the
     * split of the given trees. */
-  private def termSplit(ts: Ls[Tree], mk: Term => Term): Ctxl[SimpleSplit] =
+  /** Desugar a list of trees as a term split, where `mk` wraps the trees of scrutinees
+    * in the prefixes of the enclosing operator splits (see the `OpApp` case of `termBranch`). */
+  private def termSplit(ts: Ls[Tree], mk: Tree => Tree): Ctxl[SimpleSplit] =
     val (_, splits) = ts.foldLeft((ctx, Ls[SimpleSplit]())):
       case ((curCtx, splits), t) =>
         termBranch(t, mk)(using curCtx).mapSecond(_ :: splits)
@@ -1121,9 +1123,9 @@ extends Importer:
           mkMatch(scrutineeRef(), pattern, innerSplit) ~: End
     split
   
-  private def termBranch(t: Tree, mk: Term => Term): Ctxl[(Ctx, SimpleSplit)] = branch.appOrElse(t):
+  private def termBranch(t: Tree, mk: Tree => Tree): Ctxl[(Ctx, SimpleSplit)] = branch.appOrElse(t):
     case block: Block => (ctx, termSplit(block.desugStmts, mk))
-    case lhs is rhs => (ctx, mk(term(lhs, Trm)).reference(patternBranch(_, rhs, identity)))
+    case lhs is rhs => (ctx, term(mk(lhs), Trm).reference(patternBranch(_, rhs, identity)))
     // Several matches followed by `and`, `do`, or `then`.
     case matchesTree ~> consequent =>
       val (coda, patternTree) :: matches = disaggregate(matchesTree)
@@ -1133,22 +1135,20 @@ extends Importer:
           case R((kw, tree)) => Else(term(tree, Trm))(S(kw))
       val split = coda match
         case Under() => innerSplit
-        case coda => mk(term(coda, Trm)).reference: scrutinee =>
+        case coda => term(mk(coda), Trm).reference: scrutinee =>
           val pattern = this.pattern(patternTree)
           val innerCtx = ctx ++ pattern.variables.allocate
           mkMatch(scrutinee(), pattern, innerSplit(using innerCtx)) ~: End
       (ctx, split)
     // Handle splits on binary operators.
+    // * Each branch scrutinee `rhs` is elaborated as the tree `lhs op rhs`, as in the non-split form,
+    // * so that, eg, the RHS of `|>` delimits underscore lambdas (see the `OpApp` case of `subterm`).
     case OpApp(lhs, ident: Ident, rhss) =>
-      val op = term(ident, Trm)
       val split = term(lhs, Trm).reference: lhs =>
-        val mk2 = (rhs: Term) =>
-          val args = withTypeBinders(Term.Tup(PlainFld(lhs()) :: PlainFld(rhs) :: Nil)(DummyTup))
-          app(op, args)(Tree.DummyApp, N, FlowSymbol("‹operator-split›"))
-        termSplit(rhss, mk2 andThen mk)
+        termSplit(rhss, ((rhs: Tree) => OpApp(Tree.Trm(lhs()), ident, rhs :: Nil)) andThen mk)
       (ctx, split)
     case OpSplit(lhs, rhss) =>
-      val split = mk(term(lhs, Trm)).reference: lhs =>
+      val split = term(mk(lhs), Trm).reference: lhs =>
         val (_, splits) = rhss.foldLeft((ctx, Ls[SimpleSplit]())):
           case ((curCtx, splits), t) =>
             operatorBranch(lhs, t)(using curCtx).mapSecond(_ :: splits)
@@ -2813,7 +2813,13 @@ extends Importer:
       case (st: Tree) :: sts =>
         // TODO reject plain term statements? Currently, `(1, 2)` is allowed to elaborate (tho it should be rejected in type checking later)
         val interpretation = if sts.isEmpty then resultInterp else Trm
-        val res = annotations.foldLeft(term(st, interpretation)):
+        // * In the old syntax, each term statement delimits its own underscore lambdas.
+        // * In the new syntax, blocks are transparent like parentheses, so that, eg,
+        // * the placeholder in `x |>` followed by an indented `_ + 1` is delimited by `|>`.
+        val st_t =
+          if lang.newUnderscoreAndApplicationSyntax then subterm(st, interpretation)
+          else term(st, interpretation)
+        val res = annotations.foldLeft(st_t):
           case (acc, ann) => annotated(ann, acc)
         sts match
         case Nil => (mkBlk(acc, S(res), hasResult), ctx)
