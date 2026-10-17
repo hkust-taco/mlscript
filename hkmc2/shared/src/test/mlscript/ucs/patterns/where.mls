@@ -1,5 +1,7 @@
 :js
 
+#lang(0.2.x)
+
 data class Pair[A, B](fst: A, snd: B)
 
 
@@ -55,10 +57,10 @@ bar(Pair(4, 3))
 fun baz(p) = p is
   (Pair(a, b) | Int) where a > b
 //│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.56: 	  (Pair(a, b) | Int) where a > b
+//│ ║  l.58: 	  (Pair(a, b) | Int) where a > b
 //│ ╙──      	                           ^
 //│ ╔══[COMPILATION ERROR] Name not found: b
-//│ ║  l.56: 	  (Pair(a, b) | Int) where a > b
+//│ ║  l.58: 	  (Pair(a, b) | Int) where a > b
 //│ ╙──      	                               ^
 
 
@@ -108,21 +110,21 @@ fun get(p, m) = if p is
   Pair(k, v) where m.get(k) is w then v === w
   else false
 //│ ╔══[COMPILATION ERROR] Name not found: w
-//│ ║  l.108: 	  Pair(k, v) where m.get(k) is w then v === w
+//│ ║  l.110: 	  Pair(k, v) where m.get(k) is w then v === w
 //│ ╙──       	                                            ^
 
 :fixme // TODO?
 fun get(p, m) =
   p is Pair(k, v) where m.get(k) is w and v === w
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'where' here
-//│ ║  l.116: 	  p is Pair(k, v) where m.get(k) is w and v === w
+//│ ║  l.118: 	  p is Pair(k, v) where m.get(k) is w and v === w
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :fixme // TODO?
 fun get(p, m) =
   p is Pair(k, v) where m.get(k) is w where v === w
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'where' here
-//│ ║  l.123: 	  p is Pair(k, v) where m.get(k) is w where v === w
+//│ ║  l.125: 	  p is Pair(k, v) where m.get(k) is w where v === w
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -144,7 +146,7 @@ C1(m0).P.unapply(Pair(3, 5))
 class C2(m) with
   pattern P = Pair(k, v) where m.get(k) is w where v === w
 //│ ╔══[COMPILATION ERROR] Name not found: w
-//│ ║  l.145: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
+//│ ║  l.147: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
 //│ ╙──       	                                                         ^
 
 :re

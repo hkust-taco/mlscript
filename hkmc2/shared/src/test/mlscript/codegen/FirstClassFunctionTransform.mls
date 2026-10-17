@@ -1,6 +1,8 @@
 :js
 :ftc
 
+#lang(0.2.x)
+
 
 :sir
 fun aux(f) = f(1) + f(10)
@@ -56,7 +58,7 @@ x => x
 :noInline
 x => x
 //│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.57: 	x => x
+//│ ║  l.59: 	x => x
 //│ ╙──      	^
 //│ = class anonymous
 
@@ -116,10 +118,10 @@ let f = foo in bar(f)
 bar([foo].0)
 bar([foo, x => x].1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if 0 is a function.
-//│ ║  l.116: 	bar([foo].0)
+//│ ║  l.118: 	bar([foo].0)
 //│ ╙──       	    ^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if 1 is a function.
-//│ ║  l.117: 	bar([foo, x => x].1)
+//│ ║  l.119: 	bar([foo, x => x].1)
 //│ ╙──       	    ^^^^^^^^^^^^^^^
 //│ = 0
 
@@ -134,7 +136,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.135: 	[foo, x => x].(i)(0)
+//│ ║  l.137: 	[foo, x => x].(i)(0)
 //│ ╙──       	^^^^^^^^^^^^^^^^
 
 
@@ -148,10 +150,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.148: 	foo.("f")(0)
+//│ ║  l.150: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.149: 	foo.("h")(1)
+//│ ║  l.151: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -396,7 +398,7 @@ foo.Foo#x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.397: 	foo.f(0)
+//│ ║  l.399: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -414,7 +416,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.415: 	foo.x(0)
+//│ ║  l.417: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 

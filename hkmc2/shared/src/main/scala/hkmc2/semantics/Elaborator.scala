@@ -1420,7 +1420,11 @@ extends Importer:
       case Curly =>
       case _ =>
         raise(ErrorReport(msg"Unsupported ${k.name} in this position" -> tree.toLoc :: Nil))
-      term(e, interp) // * not `subterm` as `e` could be a lambda shorthand
+      // * In the old syntax, parentheses delimit underscore lambdas, so `e` is elaborated with `term`.
+      // * In the new syntax, only `=>` and the RHS of operators ending with `>` delimit them,
+      // * so parentheses are transparent, and `x |> (_ + 1)` means `x |> (y => y + 1)`.
+      if lang.newUnderscoreAndApplicationSyntax then subterm(e, interp)
+      else term(e, interp)
     case b: Block =>
       ctx.nestLocal("‹block›").givenIn:
         block(b, hasResult = true, resultInterp = interp)._1 match
@@ -1696,8 +1700,9 @@ extends Importer:
       // * With the new underscore syntax, the RHS of an operator whose name ends with `>`
       // * (such as `|>` and `>>`) delimits its own implicit lambda, as if prefixed by `=>`,
       // * so that, eg, `x |> _ + 1` means `x |> (y => y + 1)`.
+      // * The builtin comparison `>` is excluded, so that `x |> 100 > _` means `x |> (y => 100 > y)`.
       val rhsDelimitsUnders = lang.newUnderscoreAndApplicationSyntax && op.match
-        case Ident(name) => name.endsWith(">")
+        case Ident(name) => name.endsWith(">") && name =/= ">"
         case _ => false
       val rts = rhss.map: r =>
         PlainFld(if rhsDelimitsUnders then term(r, Trm, forceUnderCtx = true) else subterm(r))
