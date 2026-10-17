@@ -103,14 +103,6 @@ add3(1)
 :sjs
 fun test(x) = - x \ 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let test;
-//│ test = function test(x) {
-//│   let lambda3, callPrefix;
-//│   lambda3 = (undefined, function (arg1, arg2) {
-//│     return arg1 - arg2
-//│   });
-//│   callPrefix = runtime.safeCall(lambda3(x));
-//│   return runtime.safeCall(callPrefix(2))
-//│ };
+//│ let test; test = function test(x) { let tmp5; tmp5 = - x; return runtime.safeCall(tmp5(2)) };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

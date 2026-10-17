@@ -1138,6 +1138,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       @tailrec
       def collectAppChain(expr: st, args: Ls[Term]): (st, Ls[Term]) =
         expr.instantiated match
+        // * Applications of builtin operators, such as `- x` in `(- x)(2)`, are lowered as primitive
+        // * operations by the dedicated case above, so they cannot be part of a curried call chain;
+        // * otherwise, the operator would be lowered as a function value, which, for operators that are
+        // * both unary and binary like `-`, is the binary one.
+        case app @ st.App(Ref(_: BuiltinSymbol), _) => (app, args)
         case st.App(inner, innerArg) => collectAppChain(inner, innerArg :: args)
         case st.TyApp(inner, _) => collectAppChain(inner, args) // type args are erased
         case expr => (expr, args)
