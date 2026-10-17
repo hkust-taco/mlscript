@@ -42,6 +42,7 @@ enum Annot extends Located:
   // Buffered classes expose generated allocation and access methods on the class value.
   case Bufferable(keepInstances: Bool)(val toLoc: Opt[Loc])
   case Config(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc])
+  case Debug(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc])
   // Marks if a function or lambda is one-shot, i.e. called at most once.
   // Functions with multiple parameter lists are considered here as a chain of
   // function values. `whichParamList` is the zero-based index of the parameter
@@ -61,7 +62,7 @@ enum Annot extends Located:
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
     case _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
-      | Generator() | Async() | RaiseEffects() | Pure() | _: Bufferable | _: Config | _: Affine => Vector.empty
+      | Generator() | Async() | RaiseEffects() | Pure() | _: Bufferable | _: Config | _: Debug | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped() => doc"@untyped"
@@ -78,6 +79,7 @@ enum Annot extends Located:
     case Bufferable(keepInstances) => if keepInstances then doc"@bufferable" else doc"@buffered"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
+    case Debug(_) => doc"@dbg(...)"
   
   def mkClone(using State, Erasure): Annot = this match
     case Trm(trm) => Trm(trm.mkClone)(toLoc)

@@ -23,10 +23,7 @@ class Importer extends NewResolver:
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     
-    val file =
-      if path.startsWith("/")
-      then io.Path(path)
-      else wd / io.RelPath(path)
+    val file = io.Path.resolve(wd, path)
     
     val nme = file.baseName
     val id = alias.getOrElse(new syntax.Tree.Ident(nme)) // TODO loc

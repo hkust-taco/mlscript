@@ -727,10 +727,31 @@ object Elaborator:
       "globalThis" -> globalThisSymbol,
     ))
     val superSymbol = builtinOpsMap("super")
-    def dbg: Bool = false
+    // Definition-local debug annotations may independently change whether tracing is active and
+    // whether symbol identities are useful in that trace, so both settings share the same scope.
+    private var debugOverrides = Ls.empty[(Bool, Bool)]
+    protected def doDbg: Bool = false
+    /** Debugging requested independently of the [[Config.Debug]] settings, such as by diff-test
+      * commands; as for `TraceLogger.doForceTrace`, definition-local overrides cannot disable it.
+      * Implementations should include it in [[doDbg]]. */
+    protected def doForceDbg: Bool = false
+    protected def doShowUids: Bool = true
+    final def dbg: Bool = debugOverrides match
+      case (enabled, _) :: _ => enabled || doForceDbg
+      case Nil => doDbg
+    final def showUids: Bool = debugOverrides.headOption.map(_._2).getOrElse(doShowUids)
+    def scopedDebug[T](enabled: Bool, showUids: Bool)(thunk: => T): T =
+      debugOverrides ::= enabled -> showUids
+      try thunk finally debugOverrides = debugOverrides.tail
+    /** Restore symbol printing for the continuation outside a definition-local debug annotation. */
+    def inOuterDebugScope[T](thunk: => T): T = debugOverrides match
+      case _ :: outer =>
+        val current = debugOverrides
+        debugOverrides = outer
+        try thunk finally debugOverrides = current
+      case Nil => thunk
     def dbgUid(uid: Uid[Symbol]): Str =
-      if dbg then s"‹$uid›" else ""
-      // ^ we do not display the uid by default to avoid polluting diff-test outputs
+      if dbg && showUids then s"‹$uid›" else ""
   transparent inline def State(using state: State): State = state
   
   /** Extracts all parameter lists from a `constructor(...)...` declaration.
@@ -791,6 +812,9 @@ extends Importer:
   val lang = config.language
   val newResolution: Bool = lang.useNewResolution
   
+  private def debugElaboration[T](annotations: Ls[Annot])(thunk: => T): T =
+    DebugOutputHandler.traceDefinition(annotations, config, _.traceElaboration(config.language))(thunk)(using state, tl)
+  
   lazy val illegalMemberNameTail =
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
     :: Nil
@@ -829,6 +853,9 @@ extends Importer:
     case App(Ident("config"), Tup(args)) =>
       val modify = ConfigParser.parseOverrides(args)
       S(Annot.Config(modify)(tree.toLoc))
+    case App(Ident("dbg"), Tup(args)) =>
+      val modify = ConfigParser.parseDebugDirective(args, definitionLocal = true)
+      S(Annot.Debug(modify)(tree.toLoc))
     case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
       S(Annot.Affine(whichParamList.toInt)(tree.toLoc))
     case _ => term(tree, Trm) match
@@ -2415,7 +2442,6 @@ extends Importer:
             -> lhs.toLoc :: Nil)) // TODO BE
           go(sts, Nil, Term.Error().withLocOf(lhs) :: acc)(N)
       case (td @ TermDef(k, nme, rhs)) :: sts =>
-        log(s"Processing term definition $nme")
         td.symbName match
         case S(L(d)) => raise(d)
         case _ => ()
@@ -2438,14 +2464,25 @@ extends Importer:
                   msg"Illegal ${k.desc} member name: '${id.name}'" -> nme.toLoc
                   :: illegalMemberNameTail
               return go(sts, Nil, acc)(N)
+            // A value is the result of evaluating its body once, so it cannot take parameters;
+            // lowering relies on this. Drop them, so that uses of them in the body are reported.
+            val paramLists = td.paramLists match
+              case pss @ (_ :: _) if k.isInstanceOf[Val] =>
+                raise:
+                  ErrorReport:
+                    msg"${k.desc.capitalize} definitions cannot have parameter lists" -> Loc(pss)
+                    :: Nil
+                Nil
+              case pss => pss
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             
             val tsym = TermSymbol(k, owner, id) // TODO?
             // Recorded before the definition's own type parameters enter scope.
             rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
             
-            val tdf = ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn: newCtx ?=>
+            val elaborateDefinition: Ctx ?=> TermDefinition = newCtx ?=>
               
+              log(s"Processing term definition $nme")
               // * Add type parameters to context
               val (tps, newCtx1) = td.typeParams match
                 case S(t) =>
@@ -2455,7 +2492,7 @@ extends Importer:
               if newResolution then tps.foreach(ps => registerTypeParameters(tsym, ps.map(_.sym)))
               // * Add parameters to context
               var newCtx = newCtx1
-              val pss = td.paramLists.map: ps =>
+              val pss = paramLists.map: ps =>
                 val (res, newCtx2) = funParams(ps)(using newCtx)
                 newCtx = newCtx2
                 res
@@ -2510,6 +2547,9 @@ extends Importer:
               if newResolution then checkDeclaredResult(tdf)
               
               tdf
+            
+            val tdf = debugElaboration(annotations):
+              ctx.nest(OuterCtx.NonReturnContext(S(tsym))).givenIn(elaborateDefinition)
             
             go(sts, Nil, tdf :: acc)(N)
           case L(d) =>
@@ -2579,7 +2619,7 @@ extends Importer:
           case Annot.Modifier(Keyword.`data`) => true
           case _ => false
         
-        val pss = td.paramLists.map: ps =>
+        val pss = debugElaboration(annotations)(td.paramLists.map { ps =>
           val (res, newCtx2) =
             given Ctx = newCtx
             params(ps, isDataClass, k is Pat)
@@ -2589,6 +2629,7 @@ extends Importer:
             raise(ErrorReport(
               msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
           res.copy(restParam = N)(res.toLoc)
+        })
         
         def withFields(extraParams: Ls[ParamList])(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
           softAssert(pss.sizeCompare(td.clsParams) === 0,
@@ -2695,7 +2736,7 @@ extends Importer:
               msg"Illegal body of ${k.desc} definition (should be a block; found ${t.describe})." -> t.toLoc :: Nil))
             (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
         
-        val defn = k match
+        val defn = debugElaboration(annotations)(k match
         case Als =>
           val alsSym = td.symbol.asInstanceOf[TypeAliasSymbol] // TODO improve `asInstanceOf`
           // newCtx.nest(S(alsSym)).givenIn:
@@ -2840,6 +2881,7 @@ extends Importer:
               clsSym.defn = S(cd)
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
+        )
         go(sts, Nil, defn :: acc)(N)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)(statementLoc)
@@ -2854,6 +2896,10 @@ extends Importer:
       case (directive @ Directive(Ident("lang"), Tup(args))) :: sts =>
         reportUnusedAnnotations
         val modify = ConfigParser.parseLanguageDirective(args)
+        go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
+      case Directive(Ident("dbg"), Tup(args)) :: sts =>
+        reportUnusedAnnotations
+        val modify = ConfigParser.parseDebugDirective(args, definitionLocal = false)
         go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case Directive(Ident(name), _) :: sts =>
         raise(ErrorReport(

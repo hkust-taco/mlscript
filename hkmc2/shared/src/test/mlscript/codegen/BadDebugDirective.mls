@@ -1,0 +1,42 @@
+:js
+
+
+:e
+#dbg('unknown)
+//│ ╔══[COMPILATION ERROR] Unknown debugging aspect 'unknown'
+//│ ║  l.5: 	#dbg('unknown)
+//│ ╙──     	     ^^^^^^^^
+
+
+:e
+#dbg(elaboration: 1)
+//│ ╔══[COMPILATION ERROR] Expected a boolean value
+//│ ║  l.12: 	#dbg(elaboration: 1)
+//│ ╙──      	                  ^
+
+
+:e
+#dbg(out: File(1))
+//│ ╔══[COMPILATION ERROR] Expected StdIO or File("path")
+//│ ║  l.19: 	#dbg(out: File(1))
+//│ ╙──      	          ^^^^^^^
+
+
+// Parsing happens before directives can be read.
+:e
+#dbg('parsing)
+//│ ╔══[COMPILATION ERROR] Unknown debugging aspect 'parsing'
+//│ ║  l.27: 	#dbg('parsing)
+//│ ╙──      	     ^^^^^^^^
+
+
+// Unsupported local phases warn without suppressing supported ones.
+:w
+:expect 57
+@dbg('optimizations, 'lowering, showUids: false) fun mixed_local() = 57
+mixed_local()
+//│ ╔══[WARNING] Debugging aspect 'optimizations' is not supported in @dbg; use #dbg(optimizations: true) instead.
+//│ ║  l.36: 	@dbg('optimizations, 'lowering, showUids: false) fun mixed_local() = 57
+//│ ╙──      	     ^^^^^^^^^^^^^^
+//│ Lowering.term 57
+//│ = 57

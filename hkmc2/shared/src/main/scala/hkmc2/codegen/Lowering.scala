@@ -113,6 +113,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               Value.SimpleRef(_: TempSymbol) => k(sel)
           case qual => save(qual)(p => k(sel.copy(qual = p)(sel.symbol, sel.toLoc)(sel.sanitize)))
       case _ => save(parent)(k)
+
+  private def definitionConfigOverride(annotations: Ls[Annot]): Opt[Config] =
+    val modifiers = annotations.collect:
+      case Annot.Config(modify) => modify
+      case Annot.Debug(modify) => modify
+    if modifiers.isEmpty then N
+    else S(modifiers.foldLeft(config)((cfg, modify) => modify(cfg)))
+
+  private def debugLowering[T](annotations: Ls[Annot])(thunk: => T): T =
+    DebugOutputHandler.traceDefinition(annotations, config, _.lowering)(thunk)
+
+  /** Trace a definition whose lowering continues, through `k`, with the statements that follow it. */
+  private def debugLoweringThen[R](annotations: Ls[Annot])(lower: (R => Block) => Block)(k: R => Block): Block =
+    DebugOutputHandler.traceDefinitionThen(annotations, config, _.lowering)(lower)(k)
   
   extension (t: Term)
     def instantiated = t match
@@ -315,26 +329,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case S(bod) =>
             td.k match
             case knd: syntax.Val =>
+              assert(td.params.isEmpty)
+              val cfgOverride = definitionConfigOverride(td.extraAnnotations)
               localVal match
-              case S(sym) =>
-                term_nonTail(bod): r =>
-                  defineSymbol(sym, r, blockImpl(stats, res))
-              case N =>
-                assert(td.params.isEmpty)
-                val cfgOverride = td.extraAnnotations.collectFirst:
-                  case Annot.Config(modify) => modify(config)
-                subTerm_nonTail(bod)(r =>
-                  // Assign(td.sym, r,
-                  //   term(st.Blk(stats, res))(k)))
-                  Define(
-                    ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
-                    blockImpl(stats, res),
-                  ),
-                )(using LoweringCtx.nestFunc(N))
+                case S(sym) =>
+                  debugLoweringThen[Result](td.extraAnnotations)(term_nonTail(bod)(_)):
+                    r => defineSymbol(sym, r, blockImpl(stats, res))
+                case N =>
+                  debugLoweringThen[Path](td.extraAnnotations)(k => subTerm_nonTail(bod)(k)(using LoweringCtx.nestFunc(N))): r =>
+                    Define(
+                      ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
+                      blockImpl(stats, res),
+                    )
             case syntax.Fun =>
-              val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
-              val cfgOverride = td.extraAnnotations.collectFirst:
-                case Annot.Config(modify) => modify(config)
+              val cfgOverride = definitionConfigOverride(td.extraAnnotations)
+              val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
+                setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
               Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations),
                 blockImpl(stats, res))
             case syntax.LetBind | syntax.HandlerBind | syntax.RecordField => fail:
@@ -401,10 +411,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 msg"Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead." -> defn.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation
               ))
-          def defineClass(parent: Opt[Path], parentParams: Ls[ParamList]): Block =
+          def lowerClass(parent: Opt[Path], parentParams: Ls[ParamList]): ClsLikeDefn =
             val base = parent.getOrElse(
               Select(State.globalThisSymbol.asThis, Tree.Ident("Object"))(S(ctx.builtins.Object), defn.toLoc)(false))
-            val clsDef = LoweringCtx.withSuperBase(defn.sym, base).givenIn:
+            // Class and module companions share one lowered definition, so class tracing may
+            // include its companion. Explicit module debug settings still override that scope.
+            debugLowering(defn.extraAnnotations)(LoweringCtx.withSuperBase(defn.sym, base).givenIn {
               val (mtds, publicFlds, privateFlds, ctor) = defn match
                 case pd: PatternDef =>
                   // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
@@ -434,23 +446,26 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                       )
                     case N =>
                     val (mtds, publicFlds, privateFlds, ctor) =
-                      gatherMembers(mod.body)
+                      debugLowering(mod.extraAnnotations)(gatherMembers(mod.body))
                     S(ClsLikeBody(mod.sym, mtds, privateFlds, publicFlds, ctor, mod.annotations))
                   case _ => N
                 case _ => N
               val pctor = defn.ext.fold[Block](End()): ext =>
                 inScopedBlock(parentConstructor(parentParams, ext.args, ext.toLoc))
-              val cfgOverride = defn.extraAnnotations.collectFirst:
-                case Annot.Config(modify) => modify(config)
+              val cfgOverride = definitionConfigOverride(defn.extraAnnotations)
               ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, parent,
                 mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable, defn.bsym.asTrm)(cfgOverride, defn.annotations)
-            Define(clsDef, blockImpl(stats, res))
+            })
           defn.ext match
-          case N => defineClass(N, Nil)
+          case N => Define(lowerClass(N, Nil), blockImpl(stats, res))
           case S(ext) =>
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
-            classOf(ext.cls, ext): (clsp, params) =>
-              withClassParent(clsp)(parent => defineClass(S(parent), params))
+            // Evaluating the superclass is part of the class definition, so it is traced with it,
+            // but the statements following the class are not.
+            debugLoweringThen[ClsLikeDefn](defn.extraAnnotations)(define =>
+              classOf(ext.cls, ext): (clsp, params) =>
+                withClassParent(clsp)(parent => define(lowerClass(S(parent), params)))
+            )(Define(_, blockImpl(stats, res)))
         case td: TypeDef => // * Type definitions are erased
           blockImpl(stats, res)
     
@@ -1677,10 +1692,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       .filterNot(_.isErroneous) // * See `erroneousRef`.
       .flatMap: td =>
         td.body.map: bod =>
-          val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+          val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
+            setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
           reportAnnotations(td, td.extraAnnotations)
-          val cfgOverride = td.extraAnnotations.collectFirst:
-            case Annot.Config(modify) => modify(config)
+          val cfgOverride = definitionConfigOverride(td.extraAnnotations)
           FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations)
     val publicFlds = clsBody.publicFlds.collect:
       case f if !f.tsym.isPrivate =>
@@ -1882,6 +1897,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case TermDefinition(k = syntax.Fun) => ()
         case _ => warn(a)
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
+      case _: Annot.Debug => () // Debug annotations are handled during definition lowering
       case annot => warn(annot)
   
   def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =

@@ -46,13 +46,22 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)(using throw _)
   
   val ltl = new TraceLogger:
-    override def doTrace = debugLowering.isSet || scope.exists:
+    override protected def doForceTrace = debugLowering.isSet || scope.exists:
       showUCS.get.getOrElse(Set.empty).contains
+    override def doTrace = doForceTrace || activeDebug.lowering
+    override protected def defaultDebugOutput: Config.DebugOutput =
+      if activeDebug.lowering then activeDebug.out else Config.DebugOutput.StdIO
     override def emitDbg(str: String): Unit = output(str)
+    override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
+      debugOutputHandler.emit(out, str)
   
   val dtl = new TraceLogger:
-    override def doTrace = debugOptimizations.isSet
+    override def doTrace = debugOptimizations.isSet || activeDebug.optimizations
+    override protected def defaultDebugOutput: Config.DebugOutput =
+      if activeDebug.optimizations then activeDebug.out else Config.DebugOutput.StdIO
     override def emitDbg(str: String): Unit = output(str)
+    override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
+      debugOutputHandler.emit(out, str)
   
   val replTL = new TraceLogger:
     override def doTrace = showRepl.isSet
@@ -173,19 +182,17 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             if showLoweredTree.isSet then
               outputSeparator("Lowered IR Tree")
               output(prog.showAsTree)
+            else DebugOutputHandler.showLoweredTree(prog)(outputDebugSection)
             if showIR.isSet || showIRLines.isSet then
-              given ShowCfg = ShowCfg(
-                showErasedTypes = showIRErasedTypes.isSet,
-                showExpansionMappings = false,
-                showFlowSymbols = true,
-                debug = debug.isSet,
-              )
-              val irStr = Printer().worksheet(prog)(using irPrintingScp).mkString(output.ColWidth)
+              val irStr = print(prog)
               val sloc = irStr.count(_ == '\n') + 1
               if showIRLines.isSet then output(s"Lines of IR: ${sloc}")
               if showIR.isSet then
                 outputSeparator("Lowered IR")
                 output(irStr)
+              else if config.debug.showIR then
+                outputDebugSection("Lowered IR", irStr, config.debug.out)
+            else DebugOutputHandler.showIR(prog, false, blockPrinter, output.ColWidth)(outputDebugSection)(using config, irPrintingScp)
             super.preOptimizeHook(prog)
         customPipeline.run(lowered, print, symbolsToPreserve, dtl)
       
@@ -194,13 +201,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       if showOptimizedIR.isSet then
         outputSeparator("Optimized IR")
-        given ShowCfg = ShowCfg(
-          showErasedTypes = showIRErasedTypes.isSet,
-          showExpansionMappings = false,
-          showFlowSymbols = true,
-          debug = debug.isSet,
-        )
-        output(Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth))
+        output(print(optimized))
+      else DebugOutputHandler.showIR(optimized, true, blockPrinter, output.ColWidth)(outputDebugSection)(using config, irPrintingScp)
       if showOptimizedTree.isSet then
         outputSeparator("Optimized IR Tree")
         output(optimized.showAsTree)

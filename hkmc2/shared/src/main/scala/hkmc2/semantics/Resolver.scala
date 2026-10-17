@@ -357,6 +357,9 @@ class Resolver(tl: TraceLogger)
   end traverse
   
   def traverseDefn(defn: Definition)(using ICtx): ICtx =
+    DebugOutputHandler.traceDefinition(defn.annotations, cfg, _.resolution)(traverseDefnImpl(defn))(using state, tl)
+
+  private def traverseDefnImpl(defn: Definition)(using ICtx): ICtx =
   trace(s"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
       val TermDefinition(_k, _sym, _tsym, 

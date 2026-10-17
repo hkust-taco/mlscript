@@ -1,0 +1,159 @@
+:js
+
+
+// A method must use the same definition-local lowering trace as a free function.
+#dbg(showUids: false)
+module DebugMethods with
+  @dbg('lowering) fun selected(x) = x
+  fun sibling(x) = x
+//│ Lowering.term x⁰ – symbol x
+//│ Expanding term Ref(x)
+//│ ~> Ref(x)
+
+:expect 7
+DebugMethods.selected(7)
+//│ = 7
+
+
+// Changing only UID display should retain the outer definition's trace flag.
+@dbg('lowering, showUids: false) fun debug_outer() =
+  @dbg(showUids: false) fun debug_inner() = 42
+  @dbg(lowering: false) fun debug_muted() = 43
+  debug_inner()
+//│ Lowering.term { fun member:debug_inner() = 42; fun member:debug_muted() = 43; member:debug_inner⁰() }
+//│ Lowering.term 42
+//│ Lowering.term member:debug_inner⁰()
+//│ Expanding term App(Ref(member:debug_inner),Tup(List()))
+//│ ~> App(Ref(member:debug_inner),Tup(List()))
+//│ Expanding term Ref(member:debug_inner)
+//│ ~> Resolved(Ref(member:debug_inner),term:debug_inner)
+//│ Lowering.term member:debug_inner⁰‹term:debug_inner› – symbol term:debug_inner
+//│ Expanding term Resolved(Ref(member:debug_inner),term:debug_inner)
+//│ ~> Resolved(Ref(member:debug_inner),term:debug_inner)
+
+
+// Diff-test debug commands trace the whole block. A definition's @dbg annotation that does not
+// enable the corresponding phase must not mute them inside that definition.
+:dl
+@dbg(showUids: false) fun command_lowering() = 1601
+//│ Lowering.term 1601
+//│ Lowering.term undefined
+//│ avoidNames Scoped(Set(member:command_lowering),Define(FunDefn(None,member:command_lowering,term:command_lowerin...
+//│ | avoidNames Define(FunDefn(None,member:command_lowering,term:command_lowering,List(ParamList(‹›,List(),None)),Re...
+//│ | | avoidNames Return(Lit(IntLit(1601)))...
+//│ | | avoidNames End()...
+
+:noCodeGen
+:de
+@dbg('lowering) fun command_elaboration(x) = x
+//│ Elab block List(Annotated(App(Ident(dbg),Tup(List(Ident('lowering)))),TermDef(Fun,App(Ident(command_elaboration[...] LocalScope(block:6)
+//│ | Processing term definition App(Ident(command_elaboration),Tup(List(Ident(x))))
+//│ | Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
+//│ | Elab term Ident(x)
+//│ | | Elab subterm Ident(x)
+//│ | | ~> x¹
+//│ | ~> x¹
+//│ ~> { fun member:command_elaboration(x¹) = x¹; }
+
+:noCodeGen
+:dr
+@dbg('lowering) fun command_resolution(x) = x
+//│ Traversing block: Blk(List(TermDefinition(Fun,member:command_resolution,term:command_resolution,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)),Lit(UnitLit(false)))
+//│ | Traversing statement: TermDefinition(Fun,member:command_resolution,term:command_resolution,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)
+//│ | Resolving definition: TermDefinition(Fun,member:command_resolution,term:command_resolution,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)
+//│ | | Resolving function definition TermDefinition(Fun,member:command_resolution,term:command_resolution,List(ParamList(‹›,List(Param(‹›,x,None,Modulefulness(None))),None)),None,None,Some(Ref(x)),‹›,Modulefulness(None),List(Debug(...)),None)
+//│ | | Resolving parameter x²
+//│ | | Traversing term: Ref(x) (expect = NonModule)
+//│ | | | Resolving resolvable term: Ref(x), (prefer = NonModule, inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
+//│ | | | | Resolving symbol for term: Ref(x) (prefer = NonModule)
+//│ | | | | -> (sym = Some(x), typ = None)
+//│ | | | | Resolving the type for term: Ref(x) (prefer = NonModule, sym = Some(x))
+//│ | | | | | Declaration: Some(Param(‹›,x,None,Modulefulness(None)))
+//│ | | | | -> typ = None
+//│ | | | | Resolving resolvable term Ref(x) with sym = Some(x), typ = None
+//│ | | | ~> Ref(x) (sym = Some(x), typ = None)
+//│ | | | Checking Ref(x): expect NonModule, evalsToModule = false, evalsToStaticClass = false
+//│ | Traversing term: Lit(UnitLit(false)) (expect = Any)
+//│ | | Checking Lit(UnitLit(false)): expect Any, evalsToModule = false, evalsToStaticClass = false
+
+
+// A class's lowering trace covers the evaluation of its superclass,
+// but not the statements that follow the class definition.
+class DebugParent
+@dbg('lowering, showUids: false) class DebugChild extends DebugParent
+print(1701)
+//│ Lowering.term member:DebugParent⁰ – symbol class:DebugParent
+//│ Expanding term Ref(member:DebugParent)
+//│ ~> Resolved(Ref(member:DebugParent),class:DebugParent)
+//│ Lowering.term { } (in stmt)
+//│ Lowering.term undefined (in stmt)
+//│ > 1701
+
+
+// Local values lower to assignments; their debug scope must end before the next value.
+#lang(0.3.x)
+
+:expect 3
+fun debug_local_values() =
+  @dbg('lowering, showUids: false) val selected_local = 1
+  val unrelated_local = 2
+  selected_local + unrelated_local
+debug_local_values()
+//│ Lowering.term 1
+//│ = 3
+
+
+// New resolution traces through elaboration, without visiting the legacy resolver.
+@dbg('resolution, showUids: false) fun selected_new() = 3
+fun unrelated_new() = 4
+//│ Processing term definition App(Ident(selected_new),Tup(List()))
+//│ Elab term IntLit(3)
+//│ | Elab subterm IntLit(3)
+//│ | ~> 3
+//│ ~> 3
+
+
+// Classes and their companions share lowering, while each elaboration annotation is scoped.
+@dbg('elaboration, 'lowering, showUids: false)
+class DebugCompanion(value: Int) with
+  fun answer() = 1101
+@dbg('elaboration, showUids: false)
+module DebugCompanion with
+  fun answer() = 1102
+//│ Elaborating ParamTree: ParamTree(‹›,Ident(value),Some(Ident(Int)),None,Set())
+//│ Elab term Ident(Int)
+//│ | Elab subterm Ident(Int)
+//│ | | listen: trm = member:Int⁰
+//│ | ~> member:Int⁰^class:DebugCompanion⁰
+//│ ~> member:Int⁰^class:DebugCompanion⁰
+//│ transportType type of member:Int⁰ (previous = List(), marks = List(↘⟨class:DebugCompanion⁰⟩ϵ))
+//│ | .exit InstanceShape(missing) (↘⟨class:DebugCompanion⁰⟩ϵ)
+//│ | | .exit InstanceShape(missing) (ϵ)
+//│ | | = InstanceShape(missing)
+//│ | = MarkedShape(InstanceShape(missing), ↘⟨class:DebugCompanion⁰⟩ϵ)
+//│ Processing class definition Ident(DebugCompanion)
+//│ | Companion: Some(module:DebugCompanion)
+//│ | Elab block List(TermDef(Fun,App(Ident(answer),Tup(List())),Some(IntLit(1101)))) InnerScope(class:DebugCompanion)
+//│ | | Processing term definition App(Ident(answer),Tup(List()))
+//│ | | Elab term IntLit(1101)
+//│ | | | Elab subterm IntLit(1101)
+//│ | | | ~> 1101
+//│ | | ~> 1101
+//│ | ~> { method fun member:answer() = 1101; }
+//│ Processing module/object definition Ident(DebugCompanion)
+//│ | Companion: Some(class:DebugCompanion)
+//│ | Elab block List(TermDef(Fun,App(Ident(answer),Tup(List())),Some(IntLit(1102)))) InnerScope(module:DebugCompanion)
+//│ | | Processing term definition App(Ident(answer),Tup(List()))
+//│ | | Elab term IntLit(1102)
+//│ | | | Elab subterm IntLit(1102)
+//│ | | | ~> 1102
+//│ | | ~> 1102
+//│ | ~> { fun member:answer() = 1102; }
+//│ Lowering.term 1101
+//│ Lowering.term { val member:value = value⁰^term:DebugCompanion⁰/value¹; } (in stmt)
+//│ Lowering.term value⁰^term:DebugCompanion⁰/value¹ – symbol value
+//│ Lowering.term value⁰ – symbol value
+//│ Lowering.term undefined (in stmt)
+//│ Lowering.term 1102
+//│ Lowering.term { } (in stmt)
+//│ Lowering.term undefined (in stmt)
