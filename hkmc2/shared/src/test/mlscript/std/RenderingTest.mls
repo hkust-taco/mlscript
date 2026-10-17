@@ -93,10 +93,10 @@ let xs = [1, 2]
 map(renderAsStr)(xs)
 //│ = ["[1, 2]"]
 
-map(renderAsStr(_))(xs)
+map(=> renderAsStr(_))(xs)
 //│ = ["[1, 2]"]
 
-map(_ + 1)(...xs)
+map(=> _ + 1)(...xs)
 //│ = [2, 3]
 
 renderAsStr of new RegExp("test")
@@ -261,15 +261,8 @@ let functionWithProperties = Object.assign(x => x, "kind": "Callable")
 functionWithProperties
 //│ = fun { kind: "Callable" }
 
-functionWithProperties.kind
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: newSelection (Lowering.scala:737)
-//│ ╔══[COMPILATION ERROR] This selection of member 'kind' has no resolved target
-//│ ║  l.264: 	functionWithProperties.kind
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+functionWithProperties.'kind
+//│ = "Callable"
 
 //   ___  _     _           _
 //  / _ \| |__ (_) ___  ___| |_
@@ -347,7 +340,7 @@ open Stack
 :ge
 renderAsStr of 1 :: 2 :: 3 :: 4
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Stack.Base'
-//│ ║  l.348: 	renderAsStr of 1 :: 2 :: 3 :: 4
+//│ ║  l.341: 	renderAsStr of 1 :: 2 :: 3 :: 4
 //│ ╙──       	                              ^
 //│ = "Cons(1, Cons(2, Cons(3, 4)))"
 
@@ -361,27 +354,9 @@ class Origin with
 renderAsStr of new Origin
 //│ = "Origin { x: 0, y: 0 }"
 
-class Point(x: Num, y: Num) with
-  val x = x
-  val y = y
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: extractMembers (Term.scala:941)
-//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'x'.
-//│ ╟── Defined at: 
-//│ ║  l.364: 	class Point(x: Num, y: Num) with
-//│ ║         	            ^^^^^^
-//│ ╟── Defined at: 
-//│ ║  l.365: 	  val x = x
-//│ ╙──       	  ^^^^^^^^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: extractMembers (Term.scala:941)
-//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'y'.
-//│ ╟── Defined at: 
-//│ ║  l.364: 	class Point(x: Num, y: Num) with
-//│ ║         	                    ^^^^^^
-//│ ╟── Defined at: 
-//│ ║  l.366: 	  val y = y
-//│ ╙──       	  ^^^^^^^^^
+class Point(x': Num, y': Num) with
+  val x = x'
+  val y = y'
 
 // Note that we do not display members defined in the body.
 // Some classes define lots of members, so doing so could be problematic.
@@ -424,17 +399,8 @@ renderAsStr of Null
 //│ = "pattern Null"
 
 // FIXME?
-:re
-renderAsStr of Null.class
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: reportResolutionError (NewResolverState.scala:328)
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.428: 	renderAsStr of Null.class
-//│ ║         	               ^^^^^^^^^^
-//│ ╟── Pattern 'Null' does not contain member 'class'
-//│ ║  l.421: 	pattern Null = null
-//│ ╙──       	        ^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+renderAsStr of Null.'class
+//│ = "undefined"
 
 declare class Iterator
 
@@ -451,18 +417,8 @@ class RangeIterator(val start: Int, val end: Int) extends Iterator with
 renderAsStr of RangeIterator(0, 1)
 //│ = "RangeIterator(0, 1)"
 
-renderAsStr of RangeIterator(0, 5).toArray()
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: reportResolutionError (NewResolverState.scala:328)
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.454: 	renderAsStr of RangeIterator(0, 5).toArray()
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance of class 'RangeIterator' does not contain member 'toArray'
-//│ ║  l.454: 	renderAsStr of RangeIterator(0, 5).toArray()
-//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+renderAsStr of RangeIterator(0, 5).'toArray()
+//│ = "[0, 1, 2, 3, 4]"
 
 //  __  __ _
 // |  \/  (_)___  ___
@@ -493,15 +449,8 @@ let asyncFun = globalThis.eval("async () => {}")
 renderAsStr of asyncFun
 //│ = "fun"
 
-renderAsStr of Object.getPrototypeOf(asyncFun).constructor
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: newSelection (Lowering.scala:737)
-//│ ╔══[COMPILATION ERROR] This selection of member 'constructor' has no resolved target
-//│ ║  l.496: 	renderAsStr of Object.getPrototypeOf(asyncFun).constructor
-//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+renderAsStr of Object.getPrototypeOf(asyncFun).'constructor
+//│ = "class AsyncFunction"
 
 renderAsStr of renderAsStr
 //│ = "fun renderAsStr"
@@ -527,22 +476,11 @@ Test
 new Test
 //│ = Test
 
-set Test.prototype.(Symbols.prettyPrint) = () => "Test pretty print!"
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: reportResolutionError (NewResolverState.scala:328)
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.530: 	set Test.prototype.(Symbols.prettyPrint) = () => "Test pretty print!"
-//│ ║         	    ^^^^^^^^^^^^^^
-//│ ╟── Class value does not contain member 'prototype'
-//│ ║  l.522: 	class Test
-//│ ╙──       	      ^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+set Test.'prototype.(Symbols.prettyPrint) = () => "Test pretty print!"
 
 Test
 //│ = class Test
 
 new Test
-//│ = Test
+//│ = Test pretty print!
 

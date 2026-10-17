@@ -68,18 +68,18 @@ test @ x => x + 1
 test @ (x) => x + 1
 //│ = 43
 
-test @ (_ + 1)
+test @ (=> _ + 1)
 //│ = 43
 
-test @ {_ + 1}
+test @ {=> _ + 1}
 //│ = 43
 
 test @
-  _ + 1
+  => _ + 1
 //│ = 43
 
-// * Note: this lambda shorthand includes the whole term, as `_ + 1` is not delimited/parenthesized
-test @ _ + 1
+// * Note: this lambda shorthand includes the whole term
+=> test @ _ + 1
 //│ = fun
 
 
@@ -90,13 +90,13 @@ pipeInto of 1, inc
 pipeInto @ 1, inc
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
-pipeInto(1, _) @ inc
+=> pipeInto(1, _) @ inc
 //│ = fun
 
-(pipeInto(1, _)) @ inc
+(=> pipeInto(1, _)) @ inc
 //│ = 2
 
-(pipeInto of 1, _) @ inc
+(=> pipeInto of 1, _) @ inc
 //│ = 2
 
 1 pipeInto(inc)
@@ -112,7 +112,7 @@ pipeInto(1, _) @ inc
 //│ ╙──       	  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
 
-(1 pipeInto(_)) @ inc
+(=> 1 pipeInto(_)) @ inc
 //│ = 2
 
 

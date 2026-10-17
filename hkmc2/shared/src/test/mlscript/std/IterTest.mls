@@ -13,25 +13,25 @@ let arr = [
 ]
 //│ arr = ["0", "1", "2", "3"]
 
-{Iter.joined(_, "")} of arr
+{=> Iter.joined(_, "")} of arr
 //│ = "0123"
 
 arr Iter.joined("")
 //│ = "0123"
 
-arr \ Iter.mapping(_ + "!") \ Iter.toArray()
+arr \ Iter.mapping(=> _ + "!") \ Iter.toArray()
 //│ = ["0!", "1!", "2!", "3!"]
 
 arr
-  |> Iter.withMap of _ + "!"
-  |> Iter.withFilter of _ != "2!"
+  |> Iter.withMap of => _ + "!"
+  |> Iter.withFilter of => _ != "2!"
   |> Iter.toArray
 //│ = ["0!", "1!", "3!"]
 
 ["abc", "01234"]
   |> Iter.withMap of (s: Str) => s.toUpperCase()
   |> Iter.flattening
-  |> Iter.withFilter of _ != "0"
+  |> Iter.withFilter of => _ != "0"
   |> Iter.toArray
 //│ = ["A", "B", "C", "1", "2", "3", "4"]
 
@@ -50,7 +50,7 @@ mkStr of
 //│ 
 //│ = "01"
 
-fun xs = [1, 2, 3] Iter.mapping(_ + "!" !> print)
+fun xs = [1, 2, 3] Iter.mapping(=> _ + "!" !> print)
 
 xs
 //│ = IterableImpl(_)

@@ -29,10 +29,10 @@ print(1, 2, 3)
 1 \ print()
 //│ > 1
 
-1 \ (print(_))()
+1 \ (=> print(_))()
 //│ > 1
 
-{1 \ print(_)}(2)
+{=> 1 \ print(_)}(2)
 //│ > 1 2
 
 1
@@ -52,7 +52,7 @@ print(1, 2, 3)
 print <| 2 + 2
 //│ > 4
 
-(_ * 2) <| 2 + 2 |> (_ + 1)
+(=> _ * 2) <| 2 + 2 |> (_ + 1)
 //│ = 9
 
 2 + 2 !> print
@@ -67,7 +67,7 @@ print <! 2 + 2 |> (_ + 1)
 //│ > 4
 //│ = 5
 
-(_ + 1) <| 2 + 2 !> print
+(=> _ + 1) <| 2 + 2 !> print
 //│ > 4
 //│ = 5
 
@@ -132,8 +132,8 @@ Symbols
 // * Function composition is associative
 
 let
-  f = ((_ + 1) >> (_ * 2)) >> (_ - 1)
-  g = (_ + 1) >> ((_ * 2) >> (_ - 1))
+  f = ((=> _ + 1) >> (_ * 2)) >> (_ - 1)
+  g = (=> _ + 1) >> ((=> _ * 2) >> (_ - 1))
 //│ f = fun
 //│ g = fun
 
@@ -242,6 +242,9 @@ Iter.joined(_, "") of [
   "2"
   "3"
 ]
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.239: 	Iter.joined(_, "") of [
+//│ ╙──       	            ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.239: 	Iter.joined(_, "") of [
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
@@ -257,7 +260,7 @@ Iter.joined(_, "") of [
 //│ ║  in ../../mlscript-compile/Iter.mls
 //│ ║  l.226: 	  if next.done then "" else
 //│ ╙──       	                    ^^
-//│ = fun
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 mkStr of

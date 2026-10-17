@@ -41,8 +41,8 @@ fun go(stack: Array[Any], input: Array[Str]) = if stack is
 let Space = new RegExp of "(\\s+)"
 fun parse(input: Str) =
   let input = input.split(Space)
-    \filtering of (_ !== "")
-    \filtering of (_ \every of (_ !== " "))
+    \filtering of (=> _ !== "")
+    \filtering of (=> _ \every of (=> _ !== " "))
     \toArray()
   go([], input)
 //│ Space = /(\s+)/

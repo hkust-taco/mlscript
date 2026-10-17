@@ -1,6 +1,8 @@
 :.
 :js
 
+#lang(0.3.1)
+
 
 :sjs
 _
@@ -15,7 +17,7 @@ _
 :e
 y: _
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder.
-//│ ║  l.16: 	y: _
+//│ ║  l.18: 	y: _
 //│ ╙──      	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ y = undefined
@@ -73,19 +75,19 @@ let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 :re
 test(f: print)(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.74: 	test(f: print)(1)
+//│ ║  l.76: 	test(f: print)(1)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature expected 2 arguments, but got 1
-//│ ║  l.64: 	let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
+//│ ║  l.66: 	let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 //│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.74: 	test(f: print)(1)
+//│ ║  l.76: 	test(f: print)(1)
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Value with no known interface cannot be called like a function.
-//│ ║  l.64: 	let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
+//│ ║  l.66: 	let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 //│ ║        	                                                                   ^^
 //│ ╟── No member interface is known for this type.
-//│ ║  l.64: 	let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
+//│ ║  l.66: 	let test = (_.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 //│ ╙──      	                                                                   ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -156,7 +158,7 @@ mkObj(1, 2)
 :re
 let mkObj = x: _, y: _, z: 3
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder.
-//│ ║  l.157: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.159: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                     ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mkObj = fun mkObj

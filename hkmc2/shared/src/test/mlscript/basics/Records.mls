@@ -147,10 +147,13 @@ m0.get(41)
 
 :e
 {get(k): _}
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.149: 	{get(k): _}
+//│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
 //│ ║  l.149: 	{get(k): _}
 //│ ╙──       	 ^^^^^^
-//│ = fun
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 
@@ -176,28 +179,9 @@ fun t(kind, props) =
     (...children) => (args) =>
       output of args.'i, kind + " " + showProps(args.'x, args.'y, props) + " with"
       children Iter.each of child => child of
-        x: args.'x + props.x
-        y: args.'y + props.y
+        x: args.'x + props.'x
+        y: args.'y + props.'y
         i: args.'i + 1
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: reportResolutionError (NewResolverState.scala:328)
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.178: 	      children Iter.each of child => child of
-//│ ║         	                                     ^^^^^^^^
-//│ ║  l.179: 	        x: args.'x + props.x
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.180: 	        y: args.'y + props.y
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.181: 	        i: args.'i + 1
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Parameter 'child' admits values of unknown shape.
-//│ ║  l.178: 	      children Iter.each of child => child of
-//│ ║         	                            ^^^^^
-//│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  in ../../mlscript-compile/Iter.mls
-//│ ║  l.261: 	fun each(xs, op: Function) =
-//│ ║         	                 ^^^^^^^^
-//│ ╙── The 'Function' type does not specify parameter types.
 
 let display = t('group, x: 20, y: 20) of
   t('circle, x: 30, y: 30, r: 42)
@@ -206,10 +190,10 @@ let display = t('group, x: 20, y: 20) of
 //│ display = fun
 
 display(x: 11, y: 22, i: 2)
-//│ > group x: 31, y: 42 with
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ >     group x: 31, y: 42 with
+//│ >       circle x: 61, y: 72, r: 42
+//│ >       rect x: 71, y: 82, width: 80, height: 90
+//│ >       ellipse x: 81, y: 92, rx: 40, ry: 60
 
 let display = t("group", x: 0, y: 0) of
   t("circle", x: 10, y: 10, r: 42)
@@ -217,9 +201,25 @@ let display = t("group", x: 0, y: 0) of
 
 display(x: 88, y: 99, i: 0)
 //│ > group x: 88, y: 99 with
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ >   circle x: 98, y: 109, r: 42
+
+:todo
+t("group")
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.207: 	t("group")
+//│ ║         	^^^^^^^^^^
+//│ ╟── Function 't' expected 2 arguments, but got 1
+//│ ║  l.175: 	fun t(kind, props) =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.176: 	  if graphics.has(kind) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.177: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.178: 	  else
+//│ ║         	^^^^^^
+//│ ║  l.179: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo
 t("group")
@@ -227,33 +227,15 @@ t("group")
 //│ ║  l.225: 	t("group")
 //│ ║         	^^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
-//│ ║  l.172: 	fun t(kind, props) =
+//│ ║  l.175: 	fun t(kind, props) =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.173: 	  if graphics.has(kind) then
+//│ ║  l.176: 	  if graphics.has(kind) then
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.174: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
+//│ ║  l.177: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.175: 	  else
+//│ ║  l.178: 	  else
 //│ ║         	^^^^^^
-//│ ║  l.176: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
-
-:todo
-t("group")
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.243: 	t("group")
-//│ ║         	^^^^^^^^^^
-//│ ╟── Function 't' expected 2 arguments, but got 1
-//│ ║  l.172: 	fun t(kind, props) =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.173: 	  if graphics.has(kind) then
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.174: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.175: 	  else
-//│ ║         	^^^^^^
-//│ ║  l.176: 	... (more lines omitted) ...
+//│ ║  l.179: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 

@@ -1,15 +1,17 @@
 :.
 :js
 
+#lang(0.3.1)
+
 
 :pe
 :re
 .
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.7: 	.
+//│ ║  l.9: 	.
 //│ ╙──     	^
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.7: 	.
+//│ ║  l.9: 	.
 //│ ╙──     	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -17,10 +19,10 @@
 :re
 . //
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.18: 	. //
+//│ ║  l.20: 	. //
 //│ ╙──      	^
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.18: 	. //
+//│ ║  l.20: 	. //
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -28,10 +30,10 @@
 :fixme
 id(.)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.29: 	id(.)
+//│ ║  l.31: 	id(.)
 //│ ╙──      	   ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.29: 	id(.)
+//│ ║  l.31: 	id(.)
 //│ ╙──      	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -53,10 +55,10 @@ passTo(2, incr @ _)()
 :fixme
 passTo(2, incr(.) @ _)()
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.54: 	passTo(2, incr(.) @ _)()
+//│ ║  l.56: 	passTo(2, incr(.) @ _)()
 //│ ╙──      	               ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.54: 	passTo(2, incr(.) @ _)()
+//│ ║  l.56: 	passTo(2, incr(.) @ _)()
 //│ ╙──      	               ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -71,16 +73,16 @@ passTo(2, add(_, 2))()
 :fixme
 passTo(2, add(., 2))()
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.72: 	passTo(2, add(., 2))()
+//│ ║  l.74: 	passTo(2, add(., 2))()
 //│ ╙──      	              ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.72: 	passTo(2, add(., 2))()
+//│ ║  l.74: 	passTo(2, add(., 2))()
 //│ ╙──      	              ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.72: 	passTo(2, add(., 2))()
+//│ ║  l.74: 	passTo(2, add(., 2))()
 //│ ║        	          ^^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = _ + _
+//│ ║  l.42: 	fun add = _ + _
 //│ ╙──      	            ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -98,26 +100,26 @@ passTo(1, (add(_, 1)) @ _ + _)(2)
 :fixme
 passTo(1, incr(.) @ _ + _)(2)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.99: 	passTo(1, incr(.) @ _ + _)(2)
-//│ ╙──      	               ^
+//│ ║  l.101: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ╙──       	               ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.99: 	passTo(1, incr(.) @ _ + _)(2)
-//│ ╙──      	               ^
+//│ ║  l.101: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ╙──       	               ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme
 passTo(1, add(., 1) @ _ + _)(2)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.109: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
 //│ ╙──       	              ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.109: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
 //│ ╙──       	              ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.109: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
 //│ ║         	          ^^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = _ + _
+//│ ║  l.42: 	fun add = _ + _
 //│ ╙──      	            ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -133,16 +135,16 @@ let f = add(_, 1)
 :fixme
 let f = add(., 1)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.134: 	let f = add(., 1)
+//│ ║  l.136: 	let f = add(., 1)
 //│ ╙──       	            ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.134: 	let f = add(., 1)
+//│ ║  l.136: 	let f = add(., 1)
 //│ ╙──       	            ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.134: 	let f = add(., 1)
+//│ ║  l.136: 	let f = add(., 1)
 //│ ║         	        ^^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = _ + _
+//│ ║  l.42: 	fun add = _ + _
 //│ ╙──      	            ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ f = undefined
