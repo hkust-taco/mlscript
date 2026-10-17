@@ -1337,7 +1337,7 @@ extends Importer:
         case _ => delimited(rhs)
       else rhs
     def withAppendedArg(lhs: Tree): Opt[Tree.App] = lhs.desugared match
-      case OpApp(lhs, Ident("\\"), rhs :: Nil) => withAppendedArg(backslashApp(lhs, rhs))
+      case InfixApp(lhs, Keywrd(Keyword.backslash), rhs) => withAppendedArg(backslashApp(lhs, rhs))
       // * Prefix operator applications, such as `-x`, are not calls with argument lists.
       case App(Ident(op), _) if Parser.prefixOps.contains(op) => N
       case App(f, Tup(args)) => S(App(f, Tup(args :+ arg)))
@@ -1670,6 +1670,8 @@ extends Importer:
       Term.CompType(subterm(lhs, Tpe), subterm(rhs, Tpe), true)//.withLocOf(tree)
     case InfixApp(lhs, op @ Keywrd(Keyword.`&`), rhs) =>
       Term.CompType(subterm(lhs, Tpe), subterm(rhs, Tpe), false)//.withLocOf(tree)
+    case tree @ InfixApp(lhs, Keywrd(Keyword.backslash), rhs) =>
+      subterm(backslashApp(lhs, rhs).withLocOf(tree), interp)
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
@@ -1734,8 +1736,6 @@ extends Importer:
       val lt = subterm(lhs)
       val rt = subterm(rhs)
       app(lt, rt)(tree, N, sym)
-    case tree @ OpApp(lhs, Ident("\\"), rhs :: Nil) =>
-      subterm(backslashApp(lhs, rhs).withLocOf(tree), interp)
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol.app()
       val (lhsDelimitsUnders, rhsDelimitsUnders) = underscoreDelimitingSides(op)

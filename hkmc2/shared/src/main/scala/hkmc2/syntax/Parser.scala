@@ -79,12 +79,6 @@ object Parser:
   final def opPrec(opStr: Str): (Int, Int) = opStr match
     case "+." | "-." | "*." =>
       (precOf(opStr.head), precOf(opStr.head))
-    // * `f \ a` means `f(a)` (see `Elaborator.backslashApp`). `\` binds as tightly as selection on the left
-    // * and, on the right, as loosely as the body of a lambda `x => ...`, so that, eg,
-    // * `xs |> f \ a + 1` means `xs |> f(a + 1)` and `f \ key: a` means `f(key: a)`;
-    // * this also makes it right-associative, so that `f \ g \ a` means `f(g(a))`.
-    case "\\" =>
-      (SelPrec, Keyword.lamRhsPrec.get)
     case _ if opStr.exists(_.isLetter) =>
       (Keyword.maxPrec.get, Keyword.maxPrec.get)
     case _ =>
@@ -400,7 +394,9 @@ abstract class Parser(
                   p.blockOf(subRule.map(e => parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)), annotations, allowNewlines)
                 } ++ blockContOf(rule)
               case _ =>
-                TODO(cur)
+                // * The keyword cannot start an expression, as in `\{ ... }` (`\` being an infix-only keyword)
+                err(msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found '${kw.name}' keyword instead" -> S(loc) :: Nil)
+                annotations.annotate(errExpr) :: blockContOf(rule)
             case _ =>
               prefixRules.getKwAlt(kw, S(loc)) match
               case S(subRule) =>
@@ -905,6 +901,15 @@ abstract class Parser(
       case _ => opPrec(id.name)._1
     case _ => Int.MinValue
   
+  /** The left precedence of keyword `kw` when it starts a new line continuing the preceding expression.
+   *  Like symbolic operators starting new lines (see `exprContImpl`), `\` only continues expressions
+   *  parsed at the top level (`prec <= NoElsePrec`), so that `f` followed by lines `\ a` and `\ b`
+   *  means `(f \ a) \ b`, rather than `f \ (a \ b)`: the argument `a` does not extend to the next line,
+   *  even when it ends with an operand parsed with a lower precedence, as in `\ key: a`.
+   *  (Indented chains of `\` are parsed as operator splits, as `\` is `InfixSplittable`.) */
+  private def newlineLeftPrec(kw: Keyword): Int =
+    if kw is Keyword.backslash then NoElsePrec + 1 else kw.leftPrecOrMin
+  
   /** Whether a block starting with `toks` continues the preceding expression with an infix operator,
    *  as in `foo { + 1 }`, `foo { .bar }`, `foo { as T }`, or `foo { and bar }`.
    *  Such blocks are handled by the corresponding cases of `exprContImpl`
@@ -1148,7 +1153,7 @@ abstract class Parser(
         exprCont(res, prec, allowNewlines = allowNewlines)
       
       case (_: NEWLINE_COMMA, _) :: (KEYWORD(kw), _) :: _
-      if kw.canStartInfixOnNewLine && kw.leftPrecOrMin > prec
+      if kw.canStartInfixOnNewLine && newlineLeftPrec(kw) > prec
       && infixRules.kwAlts.contains(kw.name)
       && (kw isnt Keyword.`do`) // This is to avoid the following case:
         //  ```

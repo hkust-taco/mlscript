@@ -500,6 +500,7 @@ class ParseRules(using State):
     makeInfixRule(`where`),
     makeInfixRule(`with`),
     makeInfixRule(`#`),
+    makeInfixRule(backslash),
   )
 
 end ParseRules
