@@ -81,8 +81,8 @@ class ParseRules(using State):
     Expr(ParseRule("expression")(end(())))((l, _: Unit) => l)
   
   def prefixed(kw: Keyword.Prefix): Alt[Tree] = prefixed(kw, standaloneExpr)
-  def prefixed(kw: Keyword.Prefix, body: Alt[Tree]) =
-    Kw(kw)(ParseRule(s"prefix keyword '${kw.name}'")(body))((k, r) => Tree.PrefixApp(k, r))
+  def prefixed(kw: Keyword.Prefix, body: Alt[Tree]*) =
+    Kw(kw)(ParseRule(s"prefix keyword '${kw.name}'")(body*))((k, r) => Tree.PrefixApp(k, r))
   
   def modified(kw: Keyword.Modifier): Alt[Tree] = modified(kw, standaloneExpr)
   def modified(kw: Keyword.Modifier, body: Alt[Tree]) =
@@ -407,7 +407,12 @@ class ParseRules(using State):
     prefixed(`yield`),
     prefixed(`yield*`),
     prefixed(`import`),
-    prefixed(`=>`),
+    // * A prefix `=>` followed by an indented or curly-brace block takes the whole block as its body,
+    // * so that `=> { x: _, y: _ }` means `(a, b) => { x: a, y: b }`.
+    // * Without the block alternative, the parser would distribute the keyword over the block's elements
+    // * (see the handling of prefix keywords followed by blocks in `Parser.parseRuleImpl`),
+    // * so the above would mean `{ (=> x: _), (=> y: _) }`, where each lambda is a separate block statement.
+    prefixed(`=>`, standaloneExprOrBlk*),
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),

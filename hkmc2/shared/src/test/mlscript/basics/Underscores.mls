@@ -195,19 +195,29 @@ let mkObj =
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mkObj = undefined
 
-// * Note: a prefix '=>' followed by an indented block is distributed over the block's comma-separated elements,
-// * so this is parsed as `(=> x: _), (=> y: _), z: 3`, which evaluates to the record `{z: 3}`
-// * TODO: should the prefix '=>' apply to the whole block instead?
-:w
+// * A prefix '=>' followed by an indented or curly-brace block takes the whole block as its body.
 let mkObj = =>
   x: _, y: _, z: 3
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.203: 	  x: _, y: _, z: 3
-//│ ╙──       	  ^^^^
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.203: 	  x: _, y: _, z: 3
-//│ ╙──       	        ^^^^
-//│ mkObj = {z: 3}
+//│ mkObj = fun mkObj
+
+mkObj(1, 2)
+//│ = {x: 1, y: 2, z: 3}
+
+let mkObj = => { x: _, y: _, z: 3 }
+//│ mkObj = fun mkObj
+
+mkObj(1, 2)
+//│ = {x: 1, y: 2, z: 3}
+
+let mkObj = => {
+  x: _
+  y: _
+  z: 3
+}
+//│ mkObj = fun mkObj
+
+mkObj(1, 2)
+//│ = {x: 1, y: 2, z: 3}
 
 let mkObj = => (
   x: _, y: _, z: 3
@@ -216,6 +226,15 @@ let mkObj = => (
 
 mkObj(1, 2)
 //│ = {x: 1, y: 2, z: 3}
+
+let f = =>
+  print(_)
+  _ + 1
+//│ f = fun f
+
+f(1, 2)
+//│ > 1
+//│ = 3
 
 
 let obj = f: => _ + 1
@@ -237,7 +256,7 @@ f(2)
 :e
 x => _
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.238: 	x => _
+//│ ║  l.257: 	x => _
 //│ ║         	     ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ = fun
