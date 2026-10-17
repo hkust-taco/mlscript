@@ -22,7 +22,6 @@ val charPrecList: List[Str] = List(
     ",",
     // ^ for keywords
     ";",
-    "\\", // * right precedence of `\` (see `opPrec`)
     // "=", // higher than || means `a == 1 || b` parses surprisingly
     "@",
     ":",
@@ -41,7 +40,7 @@ val charPrecList: List[Str] = List(
     "", // Precedence of application
     "", // Precedence of `new`
     // ".",
-    ".",
+    ". \\",
   )
 
 
@@ -80,11 +79,12 @@ object Parser:
   final def opPrec(opStr: Str): (Int, Int) = opStr match
     case "+." | "-." | "*." =>
       (precOf(opStr.head), precOf(opStr.head))
-    // * `f \ a` means `f(a)` (see `Tree.desugared`). `\` binds as tightly as selection on the left
-    // * and more loosely than other operators on the right, so that `xs |> f \ a + 1` means `xs |> f(a + 1)`;
+    // * `f \ a` means `f(a)` (see `Elaborator.backslashApp`). `\` binds as tightly as selection on the left
+    // * and, on the right, as loosely as the body of a lambda `x => ...`, so that, eg,
+    // * `xs |> f \ a + 1` means `xs |> f(a + 1)` and `f \ key: a` means `f(key: a)`;
     // * this also makes it right-associative, so that `f \ g \ a` means `f(g(a))`.
     case "\\" =>
-      (SelPrec, precOf('\\'))
+      (SelPrec, Keyword.lamRhsPrec.get)
     case _ if opStr.exists(_.isLetter) =>
       (Keyword.maxPrec.get, Keyword.maxPrec.get)
     case _ =>

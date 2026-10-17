@@ -1327,9 +1327,14 @@ extends Importer:
     * so that `xs.map \ _ + 1` means `xs.map(x => x + 1)`; this is done here rather than in
     * `Tree.desugared`, which does not know the language version. */
   private def backslashApp(lhs: Tree, rhs: Tree): Tree.App =
+    def delimited(value: Tree): Tree = PrefixApp(new Keywrd(Keyword.`=>`), value).withLocOf(value)
+    // * Field-shaped arguments, such as `key: a` and `...xs` (see `fld`), are not expressions,
+    // * so only their values delimit implicit lambdas.
     val arg =
-      if lang.newUnderscoreAndApplicationSyntax
-      then PrefixApp(new Keywrd(Keyword.`=>`), rhs).withLocOf(rhs)
+      if lang.newUnderscoreAndApplicationSyntax then rhs match
+        case InfixApp(key, kw @ Keywrd(Keyword.`:`), value) => InfixApp(key, kw, delimited(value)).withLocOf(rhs)
+        case Spread(kw, S(value)) => Spread(kw, S(delimited(value))).withLocOf(rhs)
+        case _ => delimited(rhs)
       else rhs
     def withAppendedArg(lhs: Tree): Opt[Tree.App] = lhs.desugared match
       case OpApp(lhs, Ident("\\"), rhs :: Nil) => withAppendedArg(backslashApp(lhs, rhs))

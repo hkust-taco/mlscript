@@ -206,18 +206,37 @@ id \
   value: 1
 //│ = {key: "A", value: 1}
 
-:e
 id
   \ key: "A"
   \ value: 1
-//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.210: 	id
-//│ ║         	^^
-//│ ║  l.211: 	  \ key: "A"
-//│ ║         	^^^^^^^^^^^^
-//│ ║  l.212: 	  \ value: 1
-//│ ╙──       	^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = {key: "A", value: 1}
+
+
+// * The argument of `\` extends as far as the body of a lambda `x => ...`,
+// * so it includes keyword operators such as `:`, `is`, and `and`, but not `then` and `else`
+
+:expect true
+id \ 1 is Int
+//│ = true
+
+:expect false
+id \ true and false
+//│ = false
+
+:expect 1
+if id \ true then 1 else 2
+//│ = 1
+
+:expect [1, 2, 3]
+tuple(1) \ ...[2, 3]
+//│ = [1, 2, 3]
+
+// * Only the values of named arguments delimit placeholders
+fun call(f) = f.'op(2)
+
+:expect 3
+call \ op: _ + 1
+//│ = 3
 
 
 // * Trickier interactions between `\` and other delimiters
@@ -238,7 +257,7 @@ twice
 :e
 twice(_, 1) <| _ |> _ * 2
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.239: 	twice(_, 1) <| _ |> _ * 2
+//│ ║  l.258: 	twice(_, 1) <| _ |> _ * 2
 //│ ║         	               ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
