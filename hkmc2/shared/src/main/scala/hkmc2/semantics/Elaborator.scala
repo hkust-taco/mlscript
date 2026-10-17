@@ -51,6 +51,9 @@ object Elaborator:
     case LocalScope(nameHint: Str)
     case LambdaOrHandlerBlock
     case NonReturnContext(sym: Opt[DefinitionSymbol[?]])
+    /** The scope of a term that delimits an implicit lambda (see `delimitedTerm`), which is a lambda scope
+      * if the term contains `_` placeholders, and is otherwise transparent (see `ImplicitLambdaProbe`). */
+    case ImplicitLambda(probe: ImplicitLambdaProbe)
     
     def showDbg: Str = this match
       case Function(retSym, sym) => s"fun:${retSym.nme}${sym.fold("")(s => s"‹${s}›")}"
@@ -58,6 +61,7 @@ object Elaborator:
       case LocalScope(hint) => hint
       case LambdaOrHandlerBlock => "LambdaOrHandlerBlock"
       case NonReturnContext(sym) => s"NonReturnContext(${sym})"
+      case ImplicitLambda(_) => "ImplicitLambda"
     
     /** Functions and instantiated class bodies cross lexical resolution boundaries.
       * Function's NonReturnContext already supplies its boundary, so Function must
@@ -76,6 +80,36 @@ object Elaborator:
     def inner: Opt[InnerSymbol] = this match
       case InnerScope(inner) => S(inner)
       case _ => N
+  
+  /** Tracks whether a term that delimits an implicit lambda (see `delimitedTerm`), whose scope is
+    * `OuterCtx.ImplicitLambda`, is a lambda, which is only certain once the term has been elaborated:
+    * it is a lambda iff `placeholders`, which collects the `_` placeholders it delimits, is then non-empty.
+    *
+    * Some constructs are elaborated differently inside a lambda: `return` is a non-local return,
+    * `break` and `continue` cross a boundary, and the lambda is not part of the enclosing generator or async function
+    * (which affects `yield` and the constructs that depend on instrumentation).
+    * When such a construct queries the scope of a term that is not fully elaborated yet,
+    * the term is assumed to be a lambda iff one of its placeholders has already been found.
+    * This assumption is only wrong if a placeholder is found later, as in `=> f(return 1, _)`,
+    * in which case `delimitedTerm` reports an error rather than silently miscompiling the construct.
+    * To avoid spurious errors, the scope only makes this assumption when the answer to the query depends on it.
+    *
+    * An alternative would be to determine syntactically whether a term contains placeholders before elaborating it,
+    * but which placeholders a term delimits depends on the elaboration of all of its subterms.
+    *
+    * Note: this mutable state is created and checked by `delimitedTerm` for the term it elaborates,
+    * and only updated by the queries of `Ctx` that cross the corresponding `OuterCtx.ImplicitLambda` scope. */
+  final class ImplicitLambdaProbe(placeholders: collection.IndexedSeq[VarSymbol]):
+    private var assumedNonLambdaSite: Opt[Located] = N
+    
+    def isKnownLambda: Bool = placeholders.nonEmpty
+    
+    /** Records that the elaboration of the construct at `site` assumes that the term is not a lambda. */
+    def assumeNonLambda(site: Located): Unit =
+      if assumedNonLambdaSite.isEmpty then assumedNonLambdaSite = S(site)
+    
+    /** The first construct elaborated assuming that the term was not a lambda, if it turned out to be one. */
+    def mispredictedSite: Opt[Located] = if isKnownLambda then assumedNonLambdaSite else N
   
   /** Label metadata threaded through elaboration. */
   final case class LabelBinding(
@@ -120,7 +154,12 @@ object Elaborator:
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
     
-    lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
+    // * Implicit lambda scopes are not source scopes, so that whether a term is a lambda
+    // * does not have to be known when references in it record their scope.
+    lazy val scope: SrcScope = outer match
+      case _: OuterCtx.ImplicitLambda =>
+        parent.fold(lastWords("Implicit lambda scope without a parent"))(_.scope)
+      case _ => SrcScope(outer, parent.map(_.scope))
 
     /** A nominal member can refer to enclosing binders even when its own
       * signature does not mention them, for example through a local type alias.
@@ -193,12 +232,16 @@ object Elaborator:
       val inherited = parent.toList.flatMap(_.visibleWildcardOpens)
       wildcardOpens ::: inherited.map(source => Ctx.OpenSource(capture(source.elem))(source.id))
     
-    def lookupLabel(name: Str): LabelLookup =
+    /** Looks up the label `name`, used by the construct at `site` (see `ImplicitLambdaProbe`). */
+    def lookupLabel(name: Str, site: Located): LabelLookup =
+      // * The implicit lambda scopes crossed so far, from the innermost one, which are only consulted
+      // * if a label is found and the lookup result depends on them.
       @tailrec
       def go(
           current: Opt[Ctx],
           crossedFunction: Bool,
           crossedLambdaOrHandler: Bool,
+          crossedImplicitLambdas: Ls[ImplicitLambdaProbe],
       ): LabelLookup = current match
         case N => LabelLookup.NotFound
         case S(ctx) =>
@@ -208,7 +251,12 @@ object Elaborator:
                 case S(labelSym: LabelSymbol) =>
                   ctx.labels.get(labelSym) match
                     case S(binding) =>
-                      if crossedFunction || crossedLambdaOrHandler
+                      def crossedLambda =
+                        crossedLambdaOrHandler || crossedImplicitLambdas.exists(_.isKnownLambda) || {
+                          crossedImplicitLambdas.foreach(_.assumeNonLambda(site))
+                          false
+                        }
+                      if crossedFunction || crossedLambda
                       then LabelLookup.AcrossBoundary(binding)
                       else LabelLookup.Found(binding)
                     case N =>
@@ -225,8 +273,11 @@ object Elaborator:
               val nextCrossedLambdaOrHandler = crossedLambdaOrHandler || (ctx.outer match
                 case OuterCtx.LambdaOrHandlerBlock => true
                 case _ => false)
-              go(ctx.parent, nextCrossedFunction, nextCrossedLambdaOrHandler)
-      go(S(this), false, false)
+              val nextCrossedImplicitLambdas = ctx.outer match
+                case OuterCtx.ImplicitLambda(probe) => crossedImplicitLambdas :+ probe
+                case _ => crossedImplicitLambdas
+              go(ctx.parent, nextCrossedFunction, nextCrossedLambdaOrHandler, nextCrossedImplicitLambdas)
+      go(S(this), false, false, Nil)
     
     // Explicit `this` must carry the same intervening captures as a lexical
     // member reference; inherited member results can retain the receiver's scope.
@@ -237,24 +288,43 @@ object Elaborator:
     def getNonLocalRetHandler: Opt[TempSymbol] = outer match
       case OuterCtx.Function(rsym, _) => S(rsym)
       case _ => parent.flatMap(_.getNonLocalRetHandler)
-    def getRetHandler: ReturnHandler = outer match
+    
+    /** Answers a query of the construct at `site` in the implicit lambda scope of `probe`,
+      * where `asLambda` and `asNonLambda` are the answers if the scope is or is not a lambda scope,
+      * consulting `probe` only if they differ (see `ImplicitLambdaProbe`). */
+    private def inImplicitLambda[A](probe: ImplicitLambdaProbe, site: Located)(asLambda: => A, asNonLambda: => A): A =
+      if probe.isKnownLambda then asLambda
+      else
+        val (lambdaAnswer, nonLambdaAnswer) = (asLambda, asNonLambda)
+        if lambdaAnswer =/= nonLambdaAnswer then probe.assumeNonLambda(site)
+        nonLambdaAnswer
+    
+    // * The following queries take the `site` of the construct that depends on their answer (see `ImplicitLambdaProbe`).
+    
+    def getRetHandler(site: Located): ReturnHandler =
+      def nonLocal = getNonLocalRetHandler.fold(ReturnHandler.NotInFunction)(ReturnHandler.Required(_))
+      def inherited = parent.fold(ReturnHandler.NotInFunction)(_.getRetHandler(site))
+      outer match
       case OuterCtx.Function(rsym, _) => ReturnHandler.Direct
-      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope) =>
-        getNonLocalRetHandler.fold(ReturnHandler.NotInFunction)(ReturnHandler.Required(_))
+      case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope) => nonLocal
       case OuterCtx.NonReturnContext(_) => ReturnHandler.Forbidden
-      case _: OuterCtx.LocalScope =>
-        parent.fold(ReturnHandler.NotInFunction)(_.getRetHandler)
-    def inGenerator: Bool = outer match
+      case _: OuterCtx.LocalScope => inherited
+      case OuterCtx.ImplicitLambda(probe) => inImplicitLambda(probe, site)(nonLocal, inherited)
+    def inGenerator(site: Located): Bool =
+      def inherited = parent.fold(false)(_.inGenerator(site))
+      outer match
       case f: OuterCtx.Function => f.isGenerator
-      case _: OuterCtx.LocalScope =>
-        parent.fold(false)(_.inGenerator)
+      case _: OuterCtx.LocalScope => inherited
       case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext) => false
-    def inAsync: Bool = outer match
+      case OuterCtx.ImplicitLambda(probe) => inImplicitLambda(probe, site)(false, inherited)
+    def inAsync(site: Located): Bool =
+      def inherited = parent.fold(false)(_.inAsync(site))
+      outer match
       case f: OuterCtx.Function => f.isAsync
-      case _: OuterCtx.LocalScope =>
-        parent.fold(false)(_.inAsync)
+      case _: OuterCtx.LocalScope => inherited
       case _: (OuterCtx.LambdaOrHandlerBlock.type | OuterCtx.InnerScope | OuterCtx.NonReturnContext) => false
-    def potentiallyInstrumented(using Config): Bool = config.effectHandlers.isDefined || inAsync
+      case OuterCtx.ImplicitLambda(probe) => inImplicitLambda(probe, site)(false, inherited)
+    def potentiallyInstrumented(site: Located)(using Config): Bool = config.effectHandlers.isDefined || inAsync(site)
     
     // * Invariant: We expect that the top-level context only contain hard-coded symbols like `globalThis`
     // * and that built-in symbols like Int and Str be imported into another nested context on top of it.
@@ -1269,7 +1339,18 @@ extends Importer:
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
     val unders = mutable.ArrayBuffer.empty[VarSymbol]
     given UnderCtx = UnderCtx(S(unders))
-    val st = subterm(tree, interp)
+    // * The term is elaborated in an implicit lambda scope, which is a lambda scope if it has placeholders,
+    // * so that, eg, a `return` in `=> f(_, return 1)` is a non-local return (see `ImplicitLambdaProbe`).
+    val probe = ImplicitLambdaProbe(unders)
+    val st = ctx.nest(OuterCtx.ImplicitLambda(probe)).givenIn:
+      subterm(tree, interp)
+    probe.mispredictedSite.foreach: site =>
+      raise:
+        ErrorReport(
+          msg"Unsupported control flow before the first '_' placeholder of an implicit lambda." -> site.toLoc
+          :: msg"The implicit lambda is introduced by this placeholder." -> unders.head.toLoc
+          :: msg"Use an explicit lambda instead, or place a '_' placeholder before the control flow." -> N
+          :: Nil)
     if unders.isEmpty then st
     else
       val params = unders.iterator.map(Param.simple).toList
@@ -1626,7 +1707,7 @@ extends Importer:
       error
     case LetLike(Keywrd(`set`), lhs, S(rhs), S(bod)) =>
       // * Backtracking assignment
-      if ctx.potentiallyInstrumented then
+      if ctx.potentiallyInstrumented(tree) then
         raise(ErrorReport(
           msg"Backtracking assignment is not supported with effect handlers enabled" ->
             tree.toLoc :: Nil))
@@ -1833,11 +1914,11 @@ extends Importer:
         case _ =>
           raise(ErrorReport(msg"'break' expects at most one argument." -> tree.toLoc :: Nil))
           N
-      ctx.lookupLabel(labelName) match
+      ctx.lookupLabel(labelName, tree) match
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, value)
       case LabelLookup.AcrossBoundary(binding) =>
-        if !ctx.potentiallyInstrumented then
+        if !ctx.potentiallyInstrumented(tree) then
           mkNonLabelSelectionApp(tree, sel, args)
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
@@ -1853,13 +1934,13 @@ extends Importer:
     case tree @ App(sel @ Sel(labelId @ Ident(labelName), nme @ Ident("continue")), Tup(args)) =>
       def checkNoArgs: Unit = if args.nonEmpty then raise:
         ErrorReport(msg"'continue' does not take arguments." -> tree.toLoc :: Nil)
-      ctx.lookupLabel(labelName) match
+      ctx.lookupLabel(labelName, tree) match
       case LabelLookup.Found(binding) =>
         checkNoArgs
         Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(binding) =>
         checkNoArgs
-        if !ctx.potentiallyInstrumented then
+        if !ctx.potentiallyInstrumented(tree) then
           raise:
             ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1892,11 +1973,11 @@ extends Importer:
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
-      ctx.lookupLabel(labelName) match
+      ctx.lookupLabel(labelName, tree) match
       case LabelLookup.Found(binding) =>
         Term.Break(binding.labelSymbol, binding.resultSymbol, N)
       case LabelLookup.AcrossBoundary(binding) =>
-        if !ctx.potentiallyInstrumented then
+        if !ctx.potentiallyInstrumented(tree) then
           raise:
             ErrorReport(msg"Non-local 'break' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -1907,11 +1988,11 @@ extends Importer:
       case LabelLookup.NotFound =>
         elaborateSelection(sel)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>
-      ctx.lookupLabel(labelName) match
+      ctx.lookupLabel(labelName, tree) match
       case LabelLookup.Found(binding) =>
         Term.Continue(binding.labelSymbol)
       case LabelLookup.AcrossBoundary(binding) =>
-        if !ctx.potentiallyInstrumented then
+        if !ctx.potentiallyInstrumented(tree) then
           raise:
             ErrorReport(msg"Non-local 'continue' is only supported with effect handlers enabled."
               -> labelId.toLoc :: Nil)
@@ -2041,10 +2122,10 @@ extends Importer:
       val params = Param.simple(scrut) :: Nil
       withTypeBinders(Term.Lam(PlainParamList(params)(N), body)).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
-      ctx.getRetHandler match
+      ctx.getRetHandler(tree) match
       case ReturnHandler.Required(sym) =>
         log(s"Non-local return: $sym")
-        if !ctx.potentiallyInstrumented then
+        if !ctx.potentiallyInstrumented(tree) then
           raise:
             ErrorReport(msg"Non-local return statements are only supported with effect handlers enabled." -> tree.toLoc :: Nil)
           error
@@ -2064,7 +2145,7 @@ extends Importer:
     case PrefixApp(kw @ Keywrd(Keyword.`throw`), body) =>
       Term.Throw(subterm(body)).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`yield` | Keyword.`yield*`), body) =>
-      if ctx.inGenerator then
+      if ctx.inGenerator(tree) then
         val synthIdent = new Tree.Ident(kw.kw.name).withLocOf(kw)
         app(ident(synthIdent, Trm).get, withTypeBinders(Term.Tup(PlainFld(subterm(body)) :: Nil)(DummyTup)))(DummyApp, N, FlowSymbol("yield"))
       else

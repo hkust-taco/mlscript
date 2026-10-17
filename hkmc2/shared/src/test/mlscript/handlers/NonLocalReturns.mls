@@ -111,6 +111,25 @@ fun f() =
 f()
 //│ = 2
 
+:expect 2
+fun f() =
+  // * An implicit lambda is a lambda, so this is a non-local return
+  let g = tuple(_, return 2)
+  g(1)
+  print("Bad")
+  3
+f()
+//│ = 2
+
+:expect 5
+do lbl:
+  // * Similarly, this is a non-local break
+  let g = tuple(_, lbl.break(5))
+  g(0)
+  print("Bad")
+  0
+//│ = 5
+
 // broken due to handlers currently not handling `object` properly
 :fixme
 :expect 100
@@ -120,12 +139,12 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.118: 	  object A with
+//│ ║  l.137: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.118: 	  object A with
+//│ ║  l.137: 	  object A with
 //│ ╙──       	         ^
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_20 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_22 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 // ctor cannot raise effect, so error is expected.
@@ -136,7 +155,7 @@ fun f() =
     return 100
   new A
 f()
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_22 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_24 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme
@@ -147,12 +166,12 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.145: 	  object A with
+//│ ║  l.164: 	  object A with
 //│ ╙──       	         ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.145: 	  object A with
+//│ ║  l.164: 	  object A with
 //│ ╙──       	         ^
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_24 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_26 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme
@@ -163,5 +182,5 @@ fun f() =
   new A
   4
 f()
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_26 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_28 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
