@@ -356,16 +356,16 @@ enum Tree extends AutoLocated:
       ProperNew(bodo, S(rhs)).withLocOf(this)
     
     // * `f(args) \ a` means `f(args, a)`, and `f \ a` means `f(a)`.
-    // * Brackets around the LHS are transparent, so that `{f \ a} \ b` means `f(a, b)`,
+    // * Braces around the LHS are transparent, so that `{f \ a} \ b` means `f(a, b)`,
     // * which is also what the operator split of `f` on lines `\ a` and `\ b` means,
     // * as it is elaborated as `(f \ a) \ b` (`\` being otherwise right-associative).
+    // * Parentheses are not transparent, as they delimit subexpressions: `(f \ a) \ b` means `f(a)(b)`.
     case OpApp(lhs, Ident("\\"), rhs :: Nil) =>
       def withAppendedArg(lhs: Tree): Opt[Tree] = lhs.desugared match
         // * Prefix operator applications, such as `-x`, are not calls with argument lists.
         case App(Ident(op), _) if Parser.prefixOps.contains(op) => N
         case App(f, Tup(args)) => S(App(f, Tup(args :+ rhs)))
-        case Bra(BracketKind.Round | BracketKind.Curly, inner) => withAppendedArg(inner)
-        case Block(stmt :: Nil) => withAppendedArg(stmt) // * as in `{f \ a}`
+        case Bra(BracketKind.Curly, Block(stmt :: Nil)) => withAppendedArg(stmt)
         case _ => N
       withAppendedArg(lhs).getOrElse(App(lhs, Tup(rhs :: Nil))).withLocOf(this)
     

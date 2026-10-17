@@ -78,8 +78,8 @@ object Parser:
   
   final def opCharPrec(opChar: Char): Int = precOf(opChar)
   final def opPrec(opStr: Str): (Int, Int) = opStr match
-    // * `x .\ f(a)` means `f(x, a)` (see `Predef.passTo`), so it must parse as `(x .\ f)(a)`
-    case "+." | "-." | "*." | ".\\" =>
+    // * `x .| f(a)` means `f(x, a)` (see `Predef.passTo`), so it must parse as `(x .| f)(a)`
+    case "+." | "-." | "*." | ".|" =>
       (precOf(opStr.head), precOf(opStr.head))
     case _ if opStr.exists(_.isLetter) =>
       (Keyword.maxPrec.get, Keyword.maxPrec.get)

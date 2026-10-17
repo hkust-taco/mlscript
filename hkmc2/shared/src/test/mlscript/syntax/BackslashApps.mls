@@ -7,41 +7,41 @@ import "../../mlscript-compile/Iter.mls"
 
 fun inc(x) = x + 1
 
-1 .\inc()
+1 .|inc()
 //│ = 2
 
-1.\inc()
+1.|inc()
 //│ = 2
 
-1 .\inc() .\inc()
+1 .|inc() .|inc()
 //│ = 3
 
-1 .\inc().\inc()
+1 .|inc().|inc()
 //│ = 3
 
 42
-  .\inc()
-  .\inc()
+  .|inc()
+  .|inc()
 //│ = 44
 
 
-[1, 2, 3] .\Iter.mapping(inc) .\Iter.toStack()
+[1, 2, 3] .|Iter.mapping(inc) .|Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 [1, 2, 3]
-  .\Iter.mapping(inc)
-  .\Iter.toStack()
+  .|Iter.mapping(inc)
+  .|Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 [1, 2, 3]
-  .\Iter.mapping @ x => x + 1
-  .\Iter.toStack()
+  .|Iter.mapping @ x => x + 1
+  .|Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 [1, 2, 3]
-  .\Iter.mapping @
+  .|Iter.mapping @
     => _ + 1
-  .\Iter.toStack()
+  .|Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 
@@ -72,13 +72,16 @@ print \ id \ 0
 inc \ 1 + 2
 //│ = 4
 
-// * Brackets around the LHS are transparent
+// * Braces around the LHS are transparent
 :expect 3
 {add \ 1} \ 2
 //│ = 3
 
+// * Parentheses are not, as they delimit subexpressions: this means `addCurried(1)(2)`
+fun addCurried(x)(y) = x + y
+
 :expect 3
-(add \ 1) \ 2
+(addCurried \ 1) \ 2
 //│ = 3
 
 // * Operator splits are left-associative, so this means `{add \ 1} \ 2`
