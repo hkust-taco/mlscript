@@ -739,21 +739,23 @@ final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSym
     resolver.nominalMember(this, name, receiver)
 
 /** Parameter types and arity exposed by one list in a declared calling interface.
-  * The first `required` positional parameters are required; the remaining ones are optional,
-  * and their types already include `undefined` (see `Elaborator.optionalType`).
+  * `paramFlags` gives the flags of each positional parameter, which may be optional
+  * (their types then already include `undefined`; see `Elaborator.optionalType`) or droppable.
   * A rest annotation describes the whole trailing array; hasRest also distinguishes
   * an unannotated rest parameter from a fixed-arity list.
   */
-final class DeclaredParams(val params: Ls[Opt[DeclaredType]], val required: Int, val hasRest: Bool, val rest: Opt[DeclaredType]) extends ValueKey:
-  require(required <= params.length)
-  override def toString: Str = s"DeclaredParams($params, $required, $hasRest, $rest)"
-  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), params.hashCode, required.hashCode, hasRest.hashCode, rest.hashCode)
+final class DeclaredParams(val params: Ls[Opt[DeclaredType]], val paramFlags: Ls[FldFlags], val hasRest: Bool, val rest: Opt[DeclaredType]) extends ValueKey:
+  require(paramFlags.length == params.length)
+  /** The number of leading required (i.e., non-optional) parameters. */
+  lazy val required: Int = FldFlags.requiredPrefixLength(paramFlags)
+  override def toString: Str = s"DeclaredParams($params, $paramFlags, $hasRest, $rest)"
+  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), params.hashCode, paramFlags.hashCode, hasRest.hashCode, rest.hashCode)
   protected def sameValue(other: ValueKey): Bool = other match
     case that: DeclaredParams =>
-      params == that.params && required == that.required && hasRest == that.hasRest && rest == that.rest
+      params == that.params && paramFlags == that.paramFlags && hasRest == that.hasRest && rest == that.rest
     case _ => false
   def mapTypes(f: DeclaredType => DeclaredType): DeclaredParams =
-    DeclaredParams(params.map(_.map(f)), required, hasRest, rest.map(f))
+    DeclaredParams(params.map(_.map(f)), paramFlags, hasRest, rest.map(f))
 
 /** Async lowering wraps the result only after all written parameter lists have
   * been applied. A separate signature can encode those lists as nested arrows,

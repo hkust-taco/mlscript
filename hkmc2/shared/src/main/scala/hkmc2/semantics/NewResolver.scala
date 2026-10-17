@@ -1410,9 +1410,9 @@ class NewResolver:
                     val fixed = fields.collect { case fld: Fld => fld }
                     DeclaredParams(fixed.map: fld =>
                       S(declaredType(typeResolution(fld.term), current.withPolarity(!current.positive)))
-                    , FldFlags.requiredPrefixLength(fixed.map(_.flags))
+                    , fixed.map(_.flags)
                     , fields.exists(!_.isInstanceOf[Fld]), N)
-                  case single => DeclaredParams(S(declaredType(typeResolution(single), current.withPolarity(!current.positive))) :: Nil, 1, false, N)
+                  case single => DeclaredParams(S(declaredType(typeResolution(single), current.withPolarity(!current.positive))) :: Nil, FldFlags.empty :: Nil, false, N)
                 publish(CallableTypeShape(source, ps ne_:: Nil,
                   S(declaredType(ret, current)), N, N, N, N))
               case TypeShape.Polymorphic(params, _, body) =>
@@ -1708,7 +1708,7 @@ class NewResolver:
             listenTypeViews(signature(td.sign.get, positive))(publish)
           else td.params match
             case params: NELs[ParamList] => publish(CallableTypeShape(source,
-              params.ne_map(ps => DeclaredParams(ps.params.map(_.sign.map(signature(_, !positive))), ps.paramCountLB,
+              params.ne_map(ps => DeclaredParams(ps.params.map(_.sign.map(signature(_, !positive))), ps.params.map(_.flags),
                 ps.restParam.nonEmpty, ps.restParam.flatMap(_.sign).map(signature(_, !positive)))),
               result, N, N, S(td), N))
             case Nil if td.asyncAnnotation.nonEmpty =>
@@ -2034,7 +2034,7 @@ class NewResolver:
         case Marked(callable: CallableTypeShape, expectedContext) => remaining match
           case (params, _) :: tail =>
             val declared = callable.paramLists.head
-            if callbackArityMismatch(Arity(params), Arity(declared)) then
+            if callbackArityMismatch(Arity(params), declared) then
               resolError(expected.resolution.source, msg"Callback parameter list does not match its declared function type." -> actual.toLoc :: Nil)
             else
               params.params.zip(declared.params).foreach: (param, sign) =>
@@ -2073,7 +2073,7 @@ class NewResolver:
           case Marked(wanted: CallableTypeShape, expectedContext) =>
             val domain = givenType.paramLists.head
             val expectedDomain = wanted.paramLists.head
-            if callbackArityMismatch(Arity(domain), Arity(expectedDomain)) then
+            if callbackArityMismatch(Arity(domain), expectedDomain) then
               resolError(expected.resolution.source, msg"Callback parameter list does not match its declared function type." -> actual.toLoc :: Nil)
             else
               domain.params.zip(expectedDomain.params).foreach:
@@ -2091,15 +2091,18 @@ class NewResolver:
           case _ => ()
       case _ => matchLists(expected, actual.unappliedParams)
 
-  /** Whether a callback accepting `actual` arguments is definitely incompatible with a function type
-    * through which `expected` arguments are passed. Like JavaScript functions, MLscript functions
-    * ignore extra arguments (`runtime.checkArgs` only checks that enough arguments are passed),
-    * so a callback may declare fewer parameters than its expected type, optional or not.
-    * Conversely, a callback may require a parameter that its expected type marks optional.
-    * We only reject callbacks that require more arguments than can ever be passed to them;
-    * finer mismatches are left to type checking. */
-  private def callbackArityMismatch(actual: Arity, expected: Arity): Bool =
-    !expected.hasRest && actual.required > expected.positional
+  /** Whether a callback accepting `actual` arguments is incompatible with the parameters of its
+    * `expected` function type. The callback must not require an argument that callers may omit
+    * (i.e., more arguments than the required parameters of `expected`), and it must accept the
+    * arguments of a rest parameter of `expected`. Since functions ignore extra arguments
+    * (`runtime.checkArgs` only checks that enough arguments are passed), the callback may omit
+    * trailing parameters of `expected`, but only those marked droppable, as in `(T, drop Int) -> U`:
+    * other parameters are meant to be used by implementations. Callback parameters beyond those
+    * of `expected` must be optional, in which case they are always `undefined`. */
+  private def callbackArityMismatch(actual: Arity, expected: DeclaredParams): Bool =
+    actual.required > expected.required
+      || expected.hasRest && !actual.hasRest
+      || !actual.hasRest && expected.paramFlags.drop(actual.positional).exists(!_.droppable)
   
   private def listenSignatureResult(tpe: DeclaredType, count: Int)(listener: Listener)(using ResolutionContext): Unit =
     if count == 0 then listenTypeInstances(tpe)(listener)

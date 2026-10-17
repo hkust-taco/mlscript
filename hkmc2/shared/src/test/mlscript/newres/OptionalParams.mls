@@ -212,6 +212,47 @@ app((x, y?) => [x, y])
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 4 arguments but got 3
 
+// A callback may not require an argument that callers may omit.
+:e
+fun app(f: (Int, Int?) -> Any) = f(1)
+app((x, y) => [x, y])
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.217: 	fun app(f: (Int, Int?) -> Any) = f(1)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.218: 	app((x, y) => [x, y])
+//│ ╙──       	    ^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
+
+// A callback may only omit droppable parameters.
+:e
+fun app(f: (Int, Int?) -> Any) = f(1)
+app(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.229: 	fun app(f: (Int, Int?) -> Any) = f(1)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.230: 	app(x => x)
+//│ ╙──       	    ^^^^^^
+//│ = 1
+
+:e
+fun app(f: (Int, Int) -> Any) = f(1, 2)
+app(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.240: 	fun app(f: (Int, Int) -> Any) = f(1, 2)
+//│ ║         	           ^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.241: 	app(x => x)
+//│ ╙──       	    ^^^^^^
+//│ = 1
+
+// Extra callback parameters must be optional; they are then always `undefined`.
+:expect [1, 2, undefined]
+fun app(f: (Int, Int) -> Any) = f(1, 2)
+app((x, y, z?) => [x, y, z])
+//│ = [1, 2, undefined]
+
 
 // *** Droppable parameters ***
 
@@ -269,14 +310,20 @@ let xs = [1, 2]
 :e
 class D(drop x)
 //│ ╔══[COMPILATION ERROR] Droppable parameters are only supported in function and lambda parameter lists.
-//│ ║  l.270: 	class D(drop x)
+//│ ║  l.311: 	class D(drop x)
 //│ ╙──       	        ^^^^^^
 
 :e
 fun bad(drop ...xs) = xs
 //│ ╔══[COMPILATION ERROR] Rest parameters cannot be droppable.
-//│ ║  l.276: 	fun bad(drop ...xs) = xs
+//│ ║  l.317: 	fun bad(drop ...xs) = xs
 //│ ╙──       	        ^^^^^^^^^^
+
+:e
+fun app(f: (Int, drop ...Int) -> Int) = f(1)
+//│ ╔══[COMPILATION ERROR] Rest parameters cannot be droppable.
+//│ ║  l.323: 	fun app(f: (Int, drop ...Int) -> Int) = f(1)
+//│ ╙──       	                      ^^^^^^
 
 
 // *** Separate signatures ***
@@ -288,10 +335,10 @@ fun sig(x, y?) = x
 fun sig2: (Int, Int?) -> Int
 fun sig2(x, y) = x
 //│ ╔══[COMPILATION ERROR] Parameter 'y' is required...
-//│ ║  l.289: 	fun sig2(x, y) = x
+//│ ║  l.336: 	fun sig2(x, y) = x
 //│ ║         	            ^
 //│ ╟── ...but the corresponding parameter of the function's signature is optional.
-//│ ║  l.288: 	fun sig2: (Int, Int?) -> Int
+//│ ║  l.335: 	fun sig2: (Int, Int?) -> Int
 //│ ╙──       	                ^^^^
 
 
@@ -350,31 +397,31 @@ sum(3)
 :e
 fun bad(x?, y) = x
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.351: 	fun bad(x?, y) = x
+//│ ║  l.398: 	fun bad(x?, y) = x
 //│ ╙──       	            ^
 
 :e
 fun bad(...xs?) = xs
 //│ ╔══[COMPILATION ERROR] Rest parameters cannot be optional.
-//│ ║  l.357: 	fun bad(...xs?) = xs
+//│ ║  l.404: 	fun bad(...xs?) = xs
 //│ ╙──       	        ^^^^^^
 
 :e
 class C(x?)
 //│ ╔══[COMPILATION ERROR] Optional parameters are only supported in function and lambda parameter lists.
-//│ ║  l.363: 	class C(x?)
+//│ ║  l.410: 	class C(x?)
 //│ ╙──       	        ^^
 
 :e
 fun bad(using x?: Int) = x
 //│ ╔══[COMPILATION ERROR] Contextual parameters cannot be optional.
-//│ ║  l.369: 	fun bad(using x?: Int) = x
+//│ ║  l.416: 	fun bad(using x?: Int) = x
 //│ ╙──       	        ^^^^^^^^^^^^^
 
 :e
 let t = [1, 2?]
 //│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
-//│ ║  l.375: 	let t = [1, 2?]
+//│ ║  l.422: 	let t = [1, 2?]
 //│ ╙──       	            ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ t = undefined
@@ -382,13 +429,13 @@ let t = [1, 2?]
 :e
 fun first(t: [Int, Int?]) = t.0
 //│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
-//│ ║  l.383: 	fun first(t: [Int, Int?]) = t.0
+//│ ║  l.430: 	fun first(t: [Int, Int?]) = t.0
 //│ ╙──       	                   ^^^^
 
 :e
 fun app(f: (Int?, Int) -> Int) = f(1, 2)
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.389: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
+//│ ║  l.436: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
 //│ ╙──       	                  ^^^
 
 // Other operators starting with `?` are unaffected.
@@ -401,9 +448,9 @@ undefined ?? 1
 :e
 sig()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.402: 	sig()
+//│ ║  l.449: 	sig()
 //│ ║         	^^^^^
 //│ ╟── Function 'sig' expected 1 to 2 arguments, but got 0
-//│ ║  l.285: 	fun sig(x, y?) = x
+//│ ║  l.332: 	fun sig(x, y?) = x
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'sig' expected at least 1 argument but got 0

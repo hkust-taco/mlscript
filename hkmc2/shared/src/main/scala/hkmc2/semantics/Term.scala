@@ -1264,17 +1264,8 @@ final case class Spd(k: SpreadKind, term: Term) extends Elem:
 
 final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol)(val toLoc: Opt[Loc]) extends Declaration:
   
-  // * For variance analysis
-  var isCovariant: Bool = true
-  var isContravariant: Bool = true
-  
   def showDbg: Str =
-    // (if isContravariant then "in " else "") +
-    // (if isCovariant then "out " else "") +
-    (if isCovariant then
-      if isContravariant then "" else "out "
-      else if isContravariant then "in " else "in out ") +
-    "‹" + flags.show + "›" + sym
+    vce.fold("")(if _ then "out " else "in ") + "‹" + flags.show + "›" + sym
 
 
 object Param:
