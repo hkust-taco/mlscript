@@ -262,3 +262,87 @@ twice(_, 1) <| _ |> _ * 2
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+
+import "../../mlscript-compile/Stack.mls"
+open Stack
+
+:e
+fun findFirst(xs) \ f = ???
+//│ ╔══[COMPILATION ERROR] Expected a valid function definition head; found infix operator '\' instead
+//│ ║  l.270: 	fun findFirst(xs) \ f = ???
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^
+
+fun findFirst(xs, f) = if xs is
+  Nil then []
+  Cons(x, xs') and
+    f(x) then [x]
+    else findFirst(xs', f)
+
+:silent
+let nums = 1 :: 2 :: 3 :: 4 :: 5 :: Nil
+
+nums |. findFirst \ _ * 6 is 24
+//│ = [4]
+
+nums |> findFirst(_) \ _ * 6 is 24
+//│ = [4]
+
+findFirst
+  \ nums
+  \ _ * 6 is 24
+//│ = [4]
+
+
+:expect true
+(tuple(1, 2) \ 3) == tuple(1, 2, 3)
+//│ = true
+
+:expect [1, 2, false]
+tuple(1, 2) \ 3 == tuple(1, 2, 3)
+//│ = [1, 2, false]
+
+tuple() \ 1
+== tuple(1)
+//│ = true
+
+// Also allowed:
+tuple \ 1
+== tuple(1)
+//│ = true
+
+tuple(1, 2) \ 3
+== tuple(1, 2, 3)
+//│ = true
+
+:e
+tuple(1) \ 2
+  \ 3
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.318: 	tuple(1) \ 2
+//│ ║         	           ^
+//│ ║  l.319: 	  \ 3
+//│ ║         	^^^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.318: 	tuple(1) \ 2
+//│ ╙──       	           ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+tuple(1) \ 2
+\ 3
+== tuple(1, 2, 3)
+//│ = true
+
+tuple
+  \ 1
+  \ 2
+  \ 3
+== tuple(1, 2, 3)
+//│ = true
+
+tuple
+\ 1
+\ 2
+== tuple of 1, 2
+//│ = true
+
+
