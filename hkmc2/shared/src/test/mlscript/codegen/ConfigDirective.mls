@@ -222,3 +222,4 @@ applyTwice(fst, Pair(1, 2))
   allowUnresolvedAccesses: false,
   useNewResolution: true,
   typeCheck: None))
+//│ Type: undefined
