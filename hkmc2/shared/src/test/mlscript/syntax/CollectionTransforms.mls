@@ -2,7 +2,7 @@
 :js
 
 
-fun Seq[A](...xs: A) = new Seq(xs)
+fun Seq[A](...xs: Array[A]) = new Seq(xs)
 class Seq[out A] {
   
   // constructor(val ...xs: A) // TODO: support
@@ -81,35 +81,10 @@ xs.groupMapReduce
 //│ = Map(2) {"A" => 4, "B" => 6}
 
 xs.groupMapReduce
-  \ _.'key
-  \ _.'value
-  \ _ + _
-//│ = Map(2) {"A" => 4, "B" => 6}
-
-:fixme
-xs.groupMapReduce
   \ _.key
   \ _.value
   \ _ + _
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.91: 	  \ _.key
-//│ ║        	    ^^^^^
-//│ ╟── Cannot resolve member 'key' of a value with unknown shape.
-//│ ║  l.6: 	class Seq[out A] {
-//│ ║       	              ^
-//│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.5: 	fun Seq[A](...xs: A) = new Seq(xs)
-//│ ╙──     	        ^
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.92: 	  \ _.value
-//│ ║        	    ^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.6: 	class Seq[out A] {
-//│ ║       	              ^
-//│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.5: 	fun Seq[A](...xs: A) = new Seq(xs)
-//│ ╙──     	        ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = Map(2) {"A" => 4, "B" => 6}
 
 
 let xs = Seq
@@ -118,7 +93,7 @@ let xs = Seq
 //│ xs = Seq({key: "A", value: 1}, {key: "B", value: 2})
 
 
-fun Seq[A](...xs: A): Seq[A] = new Seq(xs)
+fun Seq[A](...xs: Array[A]): Seq[A] = new Seq(xs)
 class Seq[out A] {
   constructor(val elements: Array[A])
   fun map[B](f: A -> B) = new Seq \ elements.map \ pass1 \ f
@@ -130,11 +105,11 @@ let xs = Seq(1, 2, 3)
 :fixme
 xs.map(=> _ + 1).map(=> _ * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.131: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ║  l.106: 	xs.map(=> _ + 1).map(=> _ * 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'map' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.131: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ║  l.106: 	xs.map(=> _ + 1).map(=> _ * 2)
 //│ ╙──       	^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

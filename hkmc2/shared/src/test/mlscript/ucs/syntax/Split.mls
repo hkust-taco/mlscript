@@ -98,7 +98,7 @@ if x +
 //│                 kw = Keywrd of keyword 'then'
 //│                 rhs = IntLit of 9
 
-:todo
+:pe
 if
   x
   is
