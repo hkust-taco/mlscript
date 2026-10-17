@@ -64,7 +64,7 @@ fun f() = 1
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f() {
-//│   runtime.checkArgs("f", 0, true, arguments.length);
+//│   runtime.checkArgs("f", 0, arguments.length);
 //│   return 1
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -81,7 +81,7 @@ f(x) = x + 1
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f1, f2;
 //│ f2 = function f(x1) {
-//│   runtime.checkArgs("f", 1, true, arguments.length);
+//│   runtime.checkArgs("f", 1, arguments.length);
 //│   return x1 + 1
 //│ };
 //│ f1 = f2;
@@ -140,7 +140,7 @@ fun f() =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f3;
 //│ f3 = function f() {
-//│   runtime.checkArgs("f", 0, true, arguments.length);
+//│   runtime.checkArgs("f", 0, arguments.length);
 //│   foo2 = 42;
 //│   return runtime.Unit
 //│ };
@@ -166,7 +166,7 @@ fun f() = foo = 0
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f4;
 //│ f4 = function f() {
-//│   runtime.checkArgs("f", 0, true, arguments.length);
+//│   runtime.checkArgs("f", 0, arguments.length);
 //│   return foo2
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

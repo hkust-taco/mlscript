@@ -11,7 +11,7 @@ foo()
 //│ ╟── Function 'foo' expected 1 argument, but got 0
 //│ ║  l.4: 	private fun foo(x) = x + 1
 //│ ╙──     	        ^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
 :e
 foo(1, 2)
@@ -21,7 +21,7 @@ foo(1, 2)
 //│ ╟── Function 'foo' expected 1 argument, but got 2
 //│ ║  l.4: 	private fun foo(x) = x + 1
 //│ ╙──     	        ^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 2
+//│ = 2
 
 
 :sr

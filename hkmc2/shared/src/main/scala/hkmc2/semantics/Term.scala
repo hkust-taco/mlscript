@@ -1199,18 +1199,34 @@ case class TypeDef(
 
 
 // TODO Store optional source locations for the flags instead of booleans
-final case class FldFlags(mut: Bool, spec: Bool, pat: Bool, isVal: Bool):
+/** `opt` marks an optional parameter (`y?`) or an optional function type parameter (`Int?`),
+  * whose argument may be omitted by callers, in which case the parameter is `undefined`.
+  * Unlike the other flags, which are prefix modifiers, it is written as a postfix `?`,
+  * so it is not part of `show` and is printed by `showOptMarker` after the name instead.
+  * `droppable` marks a parameter (`drop y`) or function type parameter (`drop Int`) whose argument
+  * is always passed but which implementations may ignore, such as the index passed by `Array#map`
+  * to its callback. Since functions ignore extra arguments (see `Runtime.checkArgs`),
+  * it currently does not affect resolution or code generation. */
+final case class FldFlags(mut: Bool, spec: Bool, pat: Bool, isVal: Bool, opt: Bool, droppable: Bool):
   def show(addSpace: Bool = false): Str =
     val flags = Buffer.empty[String]
     if mut then flags += "mut"
     if spec then flags += "spec"
     if pat then flags += "pattern"
     if isVal then flags += "val"
+    if droppable then flags += "drop"
     flags.mkString(" ") + (if addSpace && flags.nonEmpty then " " else "")
-  override def toString: String = "‹" + show(false) + "›"
+  def showOptMarker: Str = if opt then "?" else ""
+  override def toString: String = "‹" + show(false) + showOptMarker + "›"
 
 object FldFlags:
-  val empty: FldFlags = FldFlags(false, false, false, false)
+  val empty: FldFlags = FldFlags(false, false, false, false, false, false)
+  /** The number of required (i.e., non-optional) parameters at the start of a parameter list.
+    * Elaboration reports required parameters following optional ones; these are counted as optional,
+    * since arguments are assigned to parameters positionally. */
+  def requiredPrefixLength(flags: Ls[FldFlags]): Int = flags.indexWhere(_.opt) match
+    case -1 => flags.length
+    case n => n
   object benign:
     // * Some flags like `mut` and `module` are "benign" in the sense that they don't affect code-gen
     def unapply(flags: FldFlags): Bool =
@@ -1232,7 +1248,7 @@ enum IfLikeForm:
 sealed abstract class Elem extends AutoLocated:
   def subTerms: Ls[Term] = this match
     case Fld(_, term, asc) => term :: asc.toList
-    case Spd(_, term) => term :: Nil
+    case Spd(_, term, _) => term :: Nil
   def show(using Scope, ShowCfg, Raise): Document
   def showDbg(using DebugPrinter): Str
 object Elem:
@@ -1241,24 +1257,18 @@ final case class Fld(flags: FldFlags, term: Term, asc: Opt[Term]) extends Elem, 
 object PlainFld:
   def apply(term: Term) = Fld(FldFlags.empty, term, N)
   def unapply(fld: Fld): Opt[Term] = S(fld.term)
-final case class Spd(k: SpreadKind, term: Term) extends Elem:
-  def show(using Scope, ShowCfg, Raise): Document = k.str :: term.show
-  def showDbg(using DebugPrinter): Str = k.str + term.showDbg
+/** `droppable` marks the rest parameter of a function type, as in `(Int, drop ...Array[Int]) -> Int`,
+  * whose arguments implementations may ignore (see `FldFlags.droppable`). */
+final case class Spd(k: SpreadKind, term: Term, droppable: Bool) extends Elem:
+  private def dropStr = if droppable then "drop " else ""
+  def show(using Scope, ShowCfg, Raise): Document = dropStr :: k.str :: term.show
+  def showDbg(using DebugPrinter): Str = dropStr + k.str + term.showDbg
   def children: Vector[Located] = Vector.single(term)
 
 final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol)(val toLoc: Opt[Loc]) extends Declaration:
   
-  // * For variance analysis
-  var isCovariant: Bool = true
-  var isContravariant: Bool = true
-  
   def showDbg: Str =
-    // (if isContravariant then "in " else "") +
-    // (if isCovariant then "out " else "") +
-    (if isCovariant then
-      if isContravariant then "" else "out "
-      else if isContravariant then "in " else "in out ") +
-    "‹" + flags.show + "›" + sym
+    vce.fold("")(if _ then "out " else "in ") + "‹" + flags.show + "›" + sym
 
 
 object Param:
@@ -1282,28 +1292,57 @@ final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulef
   
   
   def show(using Scope, ShowCfg, Raise): Document =
-    doc"${flags.show(true)}${sym.showName}${sign.fold(doc"")(": " :: _.show)}"
+    doc"${flags.show(true)}${sym.showName}${flags.showOptMarker}${sign.fold(doc"")(": " :: _.show)}"
   
-  def showDbg(using DebugPrinter): Str = flags.show(true) + sym.showDbg + sign.fold("")(": " + _.showDbg)
+  def showDbg(using DebugPrinter): Str =
+    flags.show(true) + sym.showDbg + flags.showOptMarker + sign.fold("")(": " + _.showDbg)
 
-final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])
+/** A variadic parameter, as in `fun f(x, ...xs, y, z)`, which receives the arguments passed between
+  * the leading parameters (`x`) and the `trailing` ones (`y` and `z`). The trailing parameters are
+  * always required. When there are no trailing parameters, the variadic parameter is a rest parameter.
+  * Lowering desugars trailing parameters into a rest parameter (see `Lowering.setupFunctionDef`). */
+final case class Variadic(param: Param, trailing: Ls[Param]):
+  def map(f: Param => Param): Variadic = Variadic(f(param), trailing.map(f))
+  def allParams: Ls[Param] = param :: trailing
+
+/** `params` are the leading parameters, which may end with optional parameters. */
+final case class ParamList(flags: ParamListFlags, params: Ls[Param], variadic: Opt[Variadic])
 (val toLoc: Opt[Loc]) extends Located:
-  def foreach(f: Param => Unit): Unit = (params.iterator ++ restParam).foreach(f)
-  def paramCountLB: Int = params.length
-  def paramCountUB: Bool = restParam.isEmpty
-  lazy val paramSyms = params.map(_.sym) ++ restParam.map(_.sym)
-  lazy val allParams = params ++ restParam.toList
-  def subTerms: Ls[Term] = params.flatMap(_.subTerms) ++ restParam.toList.flatMap(_.subTerms)
+  def foreach(f: Param => Unit): Unit = allParams.foreach(f)
+  def trailingParams: Ls[Param] = variadic.fold(Nil)(_.trailing)
+  /** The number of required leading parameters, which precede all optional parameters. */
+  lazy val leadingRequiredCount: Int = FldFlags.requiredPrefixLength(params.map(_.flags))
+  /** The minimum number of arguments: the required leading and trailing parameters. */
+  def paramCountLB: Int = leadingRequiredCount + trailingParams.length
+  /** The maximum number of arguments, when there is no variadic parameter. */
+  def paramCountMax: Int = params.length + trailingParams.length
+  def hasOptParams: Bool = leadingRequiredCount < params.length
+  def paramCountUB: Bool = variadic.isEmpty
+  /** The rest parameter, for parameter lists without trailing parameters after their variadic parameter.
+    * This is the case of all parameter lists after lowering (see `Lowering.setupFunctionDef`),
+    * so code generation passes use this accessor rather than `variadic`.
+    * Ignoring trailing parameters would silently miscompile, so this is a hard assertion. */
+  def restParam: Opt[Param] = variadic.map: v =>
+    assert(v.trailing.isEmpty, s"Unexpected trailing parameters after a variadic parameter: ${v.trailing}")
+    v.param
+  lazy val allParams: Ls[Param] = params ::: variadic.fold(Nil)(_.allParams)
+  lazy val paramSyms = allParams.map(_.sym)
+  def subTerms: Ls[Term] = allParams.flatMap(_.subTerms)
   def show(using Scope, ShowCfg, Raise): Document =
     flags.show
     :: doc"(" :: (
       params.map(_.show)
       :::
-      restParam.map(p => doc"...${p.show}").toList
+      variadic.toList.flatMap(v => doc"...${v.param.show}" :: v.trailing.map(_.show))
     ).mkDocument(", ")
     :: doc")"
   def showDbg(using DebugPrinter): Str = flags.showDbg
-    + (params.map(_.showDbg) ++ restParam.toList.map("..." + _.showDbg)).mkString("(", ", ", ")")
+    + (params.map(_.showDbg) ++ variadic.toList.flatMap(v => ("..." + v.param.showDbg) :: v.trailing.map(_.showDbg)))
+      .mkString("(", ", ", ")")
+object ParamList:
+  /** A parameter list with an optional rest parameter, as it appears after lowering. */
+  def withRest(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])(toLoc: Opt[Loc]): ParamList =
+    ParamList(flags, params, restParam.map(Variadic(_, Nil)))(toLoc)
 object PlainParamList:
   def apply(params: Ls[Param])(toLoc: Opt[Loc]) =
     ParamList(ParamListFlags.empty, params, N)(toLoc)

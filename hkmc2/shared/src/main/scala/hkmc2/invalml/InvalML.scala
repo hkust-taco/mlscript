@@ -140,7 +140,9 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             error(msg"Variable not found: ${sym.nme}" -> ty.toLoc :: Nil)
     case FunTy(Term.Tup(params), ret, eff) =>
       PolyFunType(params.map {
-        case Fld(_, p, _) => typeAndSubstType(p, !pol)
+        case Fld(flags, p, _) =>
+          if flags.opt then error(msg"Optional parameters are not supported by InvalML." -> p.toLoc :: Nil)
+          typeAndSubstType(p, !pol)
         case spd: Spd => lastWords(s"unexpected spread in function type parameters: $spd")
       }, typeAndSubstType(ret, pol), eff.map(e => typeAndSubstType(e, pol) match {
         case t: Type => t

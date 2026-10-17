@@ -660,11 +660,12 @@ class Resolver(tl: TraceLogger)
               case _ => (false, 0)
               
               (ps.paramCountUB, argCountUB) match
-                case (true, true) => if ps.paramCountLB != argCountLB then
-                  raise(ErrorReport(msg"Expected ${ps.paramCountLB.toString()} arguments, " +
+                // * The legacy resolver does not describe optional parameters in its messages.
+                case (true, true) => if ps.paramCountLB > argCountLB || ps.paramCountMax < argCountLB then
+                  raise(ErrorReport(msg"Expected ${ps.paramCountMax.toString()} arguments, " +
                     msg"got ${argCountLB.toString()}" -> as.toLoc :: Nil))
-                case (true, false) => if ps.paramCountLB < argCountLB then
-                  raise(ErrorReport(msg"Expected ${ps.paramCountLB.toString()} arguments, " +
+                case (true, false) => if ps.paramCountMax < argCountLB then
+                  raise(ErrorReport(msg"Expected ${ps.paramCountMax.toString()} arguments, " +
                     msg"got at least ${argCountLB.toString()}" -> as.toLoc :: Nil))
                 case (false, true) => if ps.paramCountLB > argCountLB then
                   raise(ErrorReport(msg"Expected at least ${ps.paramCountLB.toString()} arguments, " +
@@ -720,7 +721,7 @@ class Resolver(tl: TraceLogger)
               val args = as match
                 case Term.Tup(args) => args
                 case Term.CtxTup(args) => args
-                case spd => Spd(SpreadKind.Eager, spd) :: Nil
+                case spd => Spd(SpreadKind.Eager, spd, false) :: Nil
               
               // The lhs of the App is already traversed by the recursive
               // `traverse` or `resolve` at the beginning.

@@ -33,13 +33,13 @@
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.26: 	1::x()
 //│ ║        	 ^^^^^
-//│ ╟── Function literal expected 1 argument, but got 0
+//│ ╟── Function literal expected at least 1 argument, but got 0
 //│ ║  l.26: 	1::x()
 //│ ╙──      	   ^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let lambda1;
 //│ lambda1 = (undefined, function (self, ...args) {
-//│   runtime.checkArgs("", 1, false, arguments.length);
+//│   runtime.checkArgs("", 1, arguments.length);
 //│   throw "This code cannot be run as its compilation yielded an error."
 //│ });
 //│ block$res2 = runtime.safeCall(lambda1());

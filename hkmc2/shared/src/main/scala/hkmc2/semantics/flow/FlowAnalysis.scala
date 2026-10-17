@@ -248,7 +248,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       C.Flow(p.flow)
   
   def typeParamList(ps: ParamList): Ls[C] =
-    if ps.restParam.nonEmpty then
+    if ps.variadic.nonEmpty then
       ??? // TODO
     ps.params.map(typeParam)
   
@@ -264,7 +264,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       Type.Tup:
         fields.map:
           case f: Fld => typeType(f.term)
-          case Spd(eager, term) => (???, typeType(term))
+          case Spd(eager, term, _) => (???, typeType(term))
     case FunTy(lhs, rhs, _) =>
       Type.Fun(typeType(lhs), typeType(rhs), N)
     case _ => TODO(t)

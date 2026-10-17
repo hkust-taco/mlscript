@@ -27,6 +27,6 @@ foo(id of x => 1, id of y => 2)
 //│ ╟── Function 'foo' expected 2 arguments, but got 1
 //│ ║  l.6: 	fun foo(f, g) = f(g(1))
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'id' expected 1 argument but got 2
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 2 arguments but got 1
 
 

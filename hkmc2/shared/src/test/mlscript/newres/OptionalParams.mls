@@ -1,0 +1,467 @@
+:.
+open annotations
+
+
+// *** Syntax ***
+
+:pt
+fun foo(x, y?) = [x, y]
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ TermDef:
+//│   k = Fun
+//│   head = App:
+//│     lhs = Ident of "foo"
+//│     rhs = Tup of Ls of
+//│       Ident of "x"
+//│       Optional of Ident of "y"
+//│   rhs = S of Tup of Ls of
+//│     Ident of "x"
+//│     Ident of "y"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:pt
+fun foo(x, y?: Int | Str, z?) = [x, y, z]
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ TermDef:
+//│   k = Fun
+//│   head = App:
+//│     lhs = Ident of "foo"
+//│     rhs = Tup of Ls of
+//│       Ident of "x"
+//│       InfixApp:
+//│         lhs = Optional of Ident of "y"
+//│         kw = Keywrd of keyword ':'
+//│         rhs = InfixApp:
+//│           lhs = Ident of "Int"
+//│           kw = Keywrd of keyword '|'
+//│           rhs = Ident of "Str"
+//│       Optional of Ident of "z"
+//│   rhs = S of Tup of Ls of
+//│     Ident of "x"
+//│     Ident of "y"
+//│     Ident of "z"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:pt
+fun app(f: (Int, x: Int, Int?, y?: Int) -> Int) = f(1, 2)
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ TermDef:
+//│   k = Fun
+//│   head = App:
+//│     lhs = Ident of "app"
+//│     rhs = Tup of Ls of
+//│       InfixApp:
+//│         lhs = Ident of "f"
+//│         kw = Keywrd of keyword ':'
+//│         rhs = InfixApp:
+//│           lhs = Tup of Ls of
+//│             Ident of "Int"
+//│             InfixApp:
+//│               lhs = Ident of "x"
+//│               kw = Keywrd of keyword ':'
+//│               rhs = Ident of "Int"
+//│             Optional of Ident of "Int"
+//│             InfixApp:
+//│               lhs = Optional of Ident of "y"
+//│               kw = Keywrd of keyword ':'
+//│               rhs = Ident of "Int"
+//│           kw = Keywrd of keyword '->'
+//│           rhs = Ident of "Int"
+//│   rhs = S of App:
+//│     lhs = Ident of "f"
+//│     rhs = Tup of Ls of
+//│       IntLit of 1
+//│       IntLit of 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// *** Calls ***
+
+fun foo(x, y?) = [x, y]
+
+:expect [1, undefined]
+foo(1)
+//│ = [1, undefined]
+
+:expect [1, 2]
+foo(1, 2)
+//│ = [1, 2]
+
+:e
+foo()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.91: 	foo()
+//│ ║        	^^^^^
+//│ ╟── Function 'foo' expected 1 to 2 arguments, but got 0
+//│ ║  l.80: 	fun foo(x, y?) = [x, y]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
+
+:e
+foo(1, 2, 3)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.101: 	foo(1, 2, 3)
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── Function 'foo' expected 1 to 2 arguments, but got 3
+//│ ║  l.80: 	fun foo(x, y?) = [x, y]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+//│ = [1, 2]
+
+// Extra arguments are ignored at runtime, as in JavaScript.
+:expect [1, 2]
+fun call(f: Function, ...args) = f(...args)
+call(foo, 1, 2, 3)
+//│ = [1, 2]
+
+:re
+call(foo)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
+
+fun bar(x, y?, ...zs) = [x, y, zs]
+
+:expect [[1, undefined, []], [1, 2, []], [1, 2, [3, 4]]]
+[bar(1), bar(1, 2), bar(1, 2, 3, 4)]
+//│ = [[1, undefined, []], [1, 2, []], [1, 2, [3, 4]]]
+
+:expect [1, undefined]
+((x, y?) => [x, y])(1)
+//│ = [1, undefined]
+
+
+// *** Body typing ***
+
+// Without an argument, an optional parameter is `undefined`.
+:e
+fun len(s?: Str) = s.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.135: 	fun len(s?: Str) = s.length
+//│ ║         	                   ^^^^^^^^
+//│ ╟── Undefined literal does not contain member 'length'
+//│ ║  l.135: 	fun len(s?: Str) = s.length
+//│ ╙──       	        ^^^^^^^
+
+:expect [0, 3]
+fun len(s?: Str) = if s is ~undefined as s then s.length else 0
+[len(), len("abc")]
+//│ = [0, 3]
+
+:e
+fun len(s?) = s.length
+len("abc")
+len()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.149: 	fun len(s?) = s.length
+//│ ║         	              ^^^^^^^^
+//│ ╟── Undefined literal does not contain member 'length'
+//│ ║  l.149: 	fun len(s?) = s.length
+//│ ║         	        ^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── Parameter 's' admits values of unknown shape.
+//│ ║  l.149: 	fun len(s?) = s.length
+//│ ║         	        ^^
+//│ ╟── 'len' is exposed by this compilation unit.
+//│ ║  l.149: 	fun len(s?) = s.length
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// *** Callbacks ***
+
+:expect [2, 3, 4]
+[1, 2, 3].map(x => x + 1)
+//│ = [2, 3, 4]
+
+// A larger body is lowered to a function definition, which checks its arguments at runtime.
+:expect [2, 3, 4]
+[1, 2, 3].map(x =>
+  let y = x + 1
+  let z = y * 2
+  let w = z - y
+  w)
+//│ = [2, 3, 4]
+
+:expect [1, 3, 5]
+[1, 2, 3].map((x, i) => x + i)
+//│ = [1, 3, 5]
+
+:expect [2, 3, 4]
+fun inc(x) = x + 1
+[1, 2, 3].map(inc)
+//│ = [2, 3, 4]
+
+:expect [[2, 3], 6, true]
+let xs = [1, 2, 3]
+[xs.filter(x => x > 1), xs.reduce((acc, x) => acc + x, 0), xs.every(x => x > 0)]
+//│ = [[2, 3], 6, true]
+//│ xs = [1, 2, 3]
+
+:expect [1, undefined]
+fun app(f: (Int, Int?) -> Any) = f(1)
+app((x, y?) => [x, y])
+//│ = [1, undefined]
+
+// A callback requiring more arguments than can ever be passed to it is rejected.
+:e
+[1, 2, 3].map((a, b, c, d) => a)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.260: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  in OptionalParams.mls:205
+//│ ║  l.205: 	[1, 2, 3].map((a, b, c, d) => a)
+//│ ╙──       	              ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 4 arguments but got 3
+
+// A callback may not require an argument that callers may omit.
+:e
+fun app(f: (Int, Int?) -> Any) = f(1)
+app((x, y) => [x, y])
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.217: 	fun app(f: (Int, Int?) -> Any) = f(1)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.218: 	app((x, y) => [x, y])
+//│ ╙──       	    ^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
+
+// A callback may only omit droppable parameters.
+:e
+fun app(f: (Int, Int?) -> Any) = f(1)
+app(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.229: 	fun app(f: (Int, Int?) -> Any) = f(1)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.230: 	app(x => x)
+//│ ╙──       	    ^^^^^^
+//│ = 1
+
+:e
+fun app(f: (Int, Int) -> Any) = f(1, 2)
+app(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.240: 	fun app(f: (Int, Int) -> Any) = f(1, 2)
+//│ ║         	           ^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.241: 	app(x => x)
+//│ ╙──       	    ^^^^^^
+//│ = 1
+
+// Extra callback parameters must be optional; they are then always `undefined`.
+:expect [1, 2, undefined]
+fun app(f: (Int, Int) -> Any) = f(1, 2)
+app((x, y, z?) => [x, y, z])
+//│ = [1, 2, undefined]
+
+
+// *** Droppable parameters ***
+
+:pt
+fun app(f: (Int, drop Int, drop x: Int) -> Int) = f(1, 2, 3)
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ TermDef:
+//│   k = Fun
+//│   head = App:
+//│     lhs = Ident of "app"
+//│     rhs = Tup of Ls of
+//│       InfixApp:
+//│         lhs = Ident of "f"
+//│         kw = Keywrd of keyword ':'
+//│         rhs = InfixApp:
+//│           lhs = Tup of Ls of
+//│             Ident of "Int"
+//│             PrefixApp:
+//│               kw = Keywrd of keyword 'drop'
+//│               rhs = Ident of "Int"
+//│             PrefixApp:
+//│               kw = Keywrd of keyword 'drop'
+//│               rhs = InfixApp:
+//│                 lhs = Ident of "x"
+//│                 kw = Keywrd of keyword ':'
+//│                 rhs = Ident of "Int"
+//│           kw = Keywrd of keyword '->'
+//│           rhs = Ident of "Int"
+//│   rhs = S of App:
+//│     lhs = Ident of "f"
+//│     rhs = Tup of Ls of
+//│       IntLit of 1
+//│       IntLit of 2
+//│       IntLit of 3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 1
+fun first(x, drop y) = x
+first(1, 2)
+//│ = 1
+
+// Droppable parameters are always passed, so they do not include `undefined`.
+:expect [1, 3, 5]
+fun cb(f: (Int, drop Int) -> Int) = f(1, 2)
+[cb(x => x), cb((x, i) => x + i), cb((x, i, ...rest) => x + i + rest.length + 2)]
+//│ = [1, 3, 5]
+
+// Callbacks of Array methods may use or drop the index and array arguments.
+:expect [[2, 3], [1, 3], 3]
+let xs = [1, 2]
+[xs.map(x => x + 1), xs.map((x, i) => x + i), xs.reduce((acc, x, i, arr) => acc + arr.length - i, 0)]
+//│ = [[2, 3], [1, 3], 3]
+//│ xs = [1, 2]
+
+:e
+class D(drop x)
+//│ ╔══[COMPILATION ERROR] Droppable parameters are only supported in function and lambda parameter lists.
+//│ ║  l.311: 	class D(drop x)
+//│ ╙──       	        ^^^^^^
+
+// Rest parameters may also be droppable.
+:expect 1
+fun first(x, drop ...xs) = x
+first(1, 2, 3)
+//│ = 1
+
+// Callbacks may omit a droppable rest parameter, but not a non-droppable one.
+:expect [1, 3]
+fun app(f: (Int, drop ...Array[Int]) -> Int) = f(1, 2, 3)
+[app(x => x), app((x, ...xs) => x + xs.length)]
+//│ = [1, 3]
+
+:e
+fun app(f: (Int, ...Array[Int]) -> Int) = f(1, 2, 3)
+app(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in function type
+//│ ║  l.329: 	fun app(f: (Int, ...Array[Int]) -> Int) = f(1, 2, 3)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.330: 	app(x => x)
+//│ ╙──       	    ^^^^^^
+//│ = 1
+
+
+// *** Separate signatures ***
+
+fun sig: (Int, Int?) -> Int
+fun sig(x, y?) = x
+
+:e
+fun sig2: (Int, Int?) -> Int
+fun sig2(x, y) = x
+//│ ╔══[COMPILATION ERROR] Parameter 'y' is required...
+//│ ║  l.347: 	fun sig2(x, y) = x
+//│ ║         	            ^
+//│ ╟── ...but the corresponding parameter of the function's signature is optional.
+//│ ║  l.346: 	fun sig2: (Int, Int?) -> Int
+//│ ╙──       	                ^^^^
+
+
+// *** Optimizations ***
+
+:expect 6
+@tailrec fun sum(n, acc?) =
+  if n == 0 then acc else sum(n - 1, (if acc is Int then acc else 0) + n)
+sum(3)
+//│ = 6
+
+// The omitted optional argument must be reset in each iteration.
+:soir
+:expect [[undefined], [undefined]]
+@tailrec fun last(n, prev?) =
+  if n == 0 then [prev] else if n == 1 then last(n - 1) else last(n - 1, n)
+[last(1), last(3)]
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1;
+//│ @tailrec
+//│ define last⁰ as fun last¹(n, prev) {
+//│   loop loopLabel:
+//│     let scrut, scrut1, tmp2, tmp3;
+//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         return [prev]
+//│       else
+//│         set scrut1 = Predef⁰.equals⁰(n, 1);
+//│         match scrut1
+//│           true =>
+//│             set tmp2 = -⁰(n, 1);
+//│             set n = tmp2;
+//│             set prev = undefined;
+//│             continue loopLabel
+//│           else
+//│             let n_tmp;
+//│             set tmp3 = -⁰(n, 1);
+//│             set n_tmp = n;
+//│             set n = tmp3;
+//│             set prev = n_tmp;
+//│             continue loopLabel
+//│         end
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ set tmp = last¹(1);
+//│ set tmp1 = last¹(3);
+//│ return [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [[undefined], [undefined]]
+
+
+// *** Errors ***
+
+:e
+fun bad(x?, y) = x
+//│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
+//│ ║  l.409: 	fun bad(x?, y) = x
+//│ ╙──       	            ^
+
+:e
+fun bad(...xs?) = xs
+//│ ╔══[COMPILATION ERROR] Variadic parameters cannot be optional.
+//│ ║  l.415: 	fun bad(...xs?) = xs
+//│ ╙──       	        ^^^^^^
+
+:e
+class C(x?)
+//│ ╔══[COMPILATION ERROR] Optional parameters are only supported in function and lambda parameter lists.
+//│ ║  l.421: 	class C(x?)
+//│ ╙──       	        ^^
+
+:e
+fun bad(using x?: Int) = x
+//│ ╔══[COMPILATION ERROR] Contextual parameters cannot be optional.
+//│ ║  l.427: 	fun bad(using x?: Int) = x
+//│ ╙──       	        ^^^^^^^^^^^^^
+
+:e
+let t = [1, 2?]
+//│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
+//│ ║  l.433: 	let t = [1, 2?]
+//│ ╙──       	            ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ t = undefined
+
+:e
+fun first(t: [Int, Int?]) = t.0
+//│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
+//│ ║  l.441: 	fun first(t: [Int, Int?]) = t.0
+//│ ╙──       	                   ^^^^
+
+:e
+fun app(f: (Int?, Int) -> Int) = f(1, 2)
+//│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
+//│ ║  l.447: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
+//│ ╙──       	                  ^^^
+
+// Other operators starting with `?` are unaffected.
+:expect 1
+fun (??) orElse(x, y) = if x is undefined then y else x
+undefined ?? 1
+//│ = 1
+
+// A separate signature determines how many arguments can be passed.
+:e
+sig()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.460: 	sig()
+//│ ║         	^^^^^
+//│ ╟── Function 'sig' expected 1 to 2 arguments, but got 0
+//│ ║  l.343: 	fun sig(x, y?) = x
+//│ ╙──       	^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'sig' expected at least 1 argument but got 0

@@ -642,7 +642,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     arg match
     case Tup(fs) =>
       if fs.exists(e => e match
-        case Spd(SpreadKind.Lazy, _) => true // is lazy spread
+        case Spd(SpreadKind.Lazy, _, _) => true // is lazy spread
         case _ => false)
       then
         raise(ErrorReport(
@@ -1637,7 +1637,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case Fld(_, t, _) :: rest => quote(t): r2 =>
           val l = loweringCtx.registerTempSymbol(N, erasedType = N)
           Assign(l, r2, rec(rest, l.asSimpleRef :: xs)(k))
-        case Spd(eager, term) :: rest =>
+        case Spd(eager, term, _) :: rest =>
           fail:
             ErrorReport(
               msg"Unsupported spread in quasiquote application" ->
@@ -1849,8 +1849,49 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedType])
       (using LoweringCtx): (List[ParamList], Block) =
-    val scopedBody = inScopedBlock(returnedTerm(bodyTerm, returnType))
-    (paramLists, scopedBody)
+    val (loweredParamLists, prologues) = paramLists.map(lowerTrailingParams(_, name)).unzip
+    val scopedBody = inScopedBlock:
+      prologues.foldRight(returnedTerm(bodyTerm, returnType))((prologue, body) => prologue(body))
+    (loweredParamLists, scopedBody)
+  
+  /** Lower a parameter list whose variadic parameter has trailing parameters, as in `fun f(x, y?, ...xs, z)`,
+    * which JavaScript does not support. The lowered parameter list keeps the required leading parameters (`x`)
+    * and gathers all the other arguments into a fresh rest parameter `args`, from which the returned prologue
+    * extracts the other parameters, following the assignment described in `Elaborator.params`:
+    * the trailing parameters (`z`) take the last arguments, the optional parameters (`y`) take the remaining
+    * ones from left to right, and the variadic parameter (`xs`) takes the rest.
+    * Passes running after lowering thus only see rest parameters (see `ParamList.restParam`). */
+  protected def lowerTrailingParams(ps: ParamList, name: Opt[Str]): (ParamList, LoweringCtx ?=> Block => Block) =
+    ps.variadic match
+    case S(Variadic(variadicParam, trailing @ (_ :: _))) =>
+      val (required, optional) = ps.params.splitAt(ps.leadingRequiredCount)
+      val argsSym = VarSymbol(Tree.Ident("args"), erasedType = S(ErasedType.Array))
+      val loweredParams = ParamList.withRest(ps.flags, required, S(Param.simple(argsSym)))(ps.toLoc)
+      val args = argsSym.asSimpleRef
+      def int(n: Int): Path = Value.Lit(Tree.IntLit(n))(N)
+      val tuple = State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("Tuple"), State.tupleSymbol)
+      def tupleCall(nme: Str, sym: TermSymbol, as: Ls[Path]): Result =
+        Call(tuple.sel(Tree.Ident(nme), sym), as.map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+      val k = trailing.length
+      val extractions: Ls[(VarSymbol, Result)] =
+        optional.zipWithIndex.map: (p, i) =>
+          p.sym -> tupleCall("getLeading", State.tupleGetLeadingSymbol, args :: int(i) :: int(k) :: Nil)
+        ::: (variadicParam.sym -> tupleCall("slice", State.tupleSliceSymbol, args :: int(optional.length) :: int(k) :: Nil))
+        :: trailing.zipWithIndex.map: (p, i) =>
+          p.sym -> tupleCall("get", State.tupleGetSymbol, args :: int(i - k) :: Nil)
+      // * The sanity check emitted by the code generator only knows about the lowered parameter list,
+      // * so we check that the arguments of the trailing parameters are present here.
+      val check = Option.when(config.sanityChecks.isDefined):
+        Call(State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("checkVariadicArgs"), State.checkVariadicArgsSymbol),
+          (Value.Lit(Tree.StrLit(name.getOrElse("")))(N) :: int(ps.paramCountLB) :: int(required.length) :: args :: Nil)
+            .map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+      val prologue: LoweringCtx ?=> Block => Block = body =>
+        extractions.foreach((sym, _) => loweringCtx.collectScopedSym(sym))
+        val extracted = extractions.foldRight(body):
+          case ((sym, res), rest) => Assign(sym, res, rest)
+        check.fold(extracted)(Assign.discard(_, extracted))
+      (loweredParams, prologue)
+    case _ => (ps, body => body)
   
   
   // TODO: reduce duplication between the two `reportAnnotations`
@@ -1950,8 +1991,9 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       softTODO(paramLists.sizeIs <= 1,
         s"instrumenting '${name.getOrElse("[arrow function]")}' collapses its parameter lists, " +
         "so its erased type no longer describes what it is compiled to")
-      val (ps, bod) = handleMultipleParamLists(paramLists, bodyTerm)
-      val instrumentedBody = setupFunctionBody(ps, bod, name, returnType)
+      val (unloweredPs, bod) = handleMultipleParamLists(paramLists, bodyTerm)
+      val (ps, prologue) = lowerTrailingParams(unloweredPs, name)
+      val instrumentedBody = inScopedBlock(prologue(setupFunctionBody(ps, bod, name, returnType)))
       (ps :: Nil, instrumentedBody)
     else
       super.setupFunctionDef(paramLists, bodyTerm, name, returnType)

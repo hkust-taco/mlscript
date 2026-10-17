@@ -30,7 +30,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
     val flags = paramss.headOption.fold(ParamListFlags.empty)(_.flags)
     val (init, last) = paramss.splitAt(paramss.length - 1)
     val params = init.flatMap(_.allParams) ::: last.flatMap(_.params)
-    ParamList(flags, params, last.flatMap(_.restParam).headOption)(Loc(paramss))
+    ParamList.withRest(flags, params, last.flatMap(_.restParam).headOption)(Loc(paramss))
   
   /** Normalize class params so that `paramsOpt = N` and `auxParams` has exactly one element. */
   private def flattenClsParams(cls: ClsLikeDefn): ClsLikeDefn =

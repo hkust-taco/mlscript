@@ -537,9 +537,11 @@ object Elaborator:
       str: ModuleOrObjectSymbol,
       unreachable: TermSymbol,
       assertFail: TermSymbol,
+      checkVariadicArgs: TermSymbol,
       continue: ModuleOrObjectSymbol,
       toJsAsync: TermSymbol,
       tupleGet: TermSymbol,
+      tupleGetLeading: TermSymbol,
       tupleSlice: TermSymbol,
       tupleLazySlice: TermSymbol,
       strStartsWith: TermSymbol,
@@ -588,9 +590,11 @@ object Elaborator:
         str = str,
         unreachable = term("unreachable"),
         assertFail = term("assertFail"),
+        checkVariadicArgs = term("checkVariadicArgs"),
         continue = modOrObj("Continue"),
         toJsAsync = term("toJsAsync"),
         tupleGet = moduleMember(tuple, "get"),
+        tupleGetLeading = moduleMember(tuple, "getLeading"),
         tupleSlice = moduleMember(tuple, "slice"),
         tupleLazySlice = moduleMember(tuple, "lazySlice"),
         strStartsWith = moduleMember(str, "startsWith"),
@@ -697,9 +701,11 @@ object Elaborator:
       BlockMemberSymbol(id.name, Nil, true)
     def unreachableSymbol: TermSymbol = runtimeSymbols.unreachable
     def assertFailSymbol: TermSymbol = runtimeSymbols.assertFail
+    def checkVariadicArgsSymbol: TermSymbol = runtimeSymbols.checkVariadicArgs
     def continueSymbol: ModuleOrObjectSymbol = runtimeSymbols.continue
     def toJsAsyncSymbol: TermSymbol = runtimeSymbols.toJsAsync
     def tupleGetSymbol: TermSymbol = runtimeSymbols.tupleGet
+    def tupleGetLeadingSymbol: TermSymbol = runtimeSymbols.tupleGetLeading
     def tupleSliceSymbol: TermSymbol = runtimeSymbols.tupleSlice
     def tupleLazySliceSymbol: TermSymbol = runtimeSymbols.tupleLazySlice
     def strStartsWithSymbol: TermSymbol = runtimeSymbols.strStartsWith
@@ -1396,6 +1402,37 @@ extends Importer:
     
     def error = Term.Error().withLocOf(tree)
     
+    /** Elaborate the parameters of a function type. Unlike other tuples, these may be marked optional,
+      * as in `(Int, Int?) -> Int`, in which case the parameter type also includes `undefined`,
+      * or droppable, as in `(Int, drop Int) -> Int`. */
+    def funTyParams(lhs: Tree): Term = lhs match
+      case tree @ Tup(fields) =>
+        val elems = fields.map:
+          case PrefixApp(Keywrd(Keyword.`drop`), field) => fld(field, Tpe) match
+            case f: Fld => f.copy(flags = f.flags.copy(droppable = true))
+            case spd: Spd => spd.copy(droppable = true)
+          case opt @ Optional(t) =>
+            Fld(FldFlags.empty.copy(opt = true), optionalType(term(t, Tpe), opt.toLoc), N)
+          // * Mirrors the elaboration of named fields in `fld`.
+          case field @ InfixApp(Optional(id: Ident), Keywrd(Keyword.`:`), rhs) =>
+            Fld(FldFlags.empty.copy(opt = true), Term.Lit(StrLit(id.name).withLocOf(id)), S(optionalType(arg(rhs, Tpe), field.toLoc)))
+          case field => fld(field, Tpe)
+        // * Check the same constraints as `params`, tracking whether an optional parameter (`seenOpt`)
+        // * and a variadic parameter (`seenVariadic`) were seen.
+        fields.lazyZip(elems).foldLeft((false, false)):
+          case ((seenOpt, seenVariadic), (field, Fld(flags, _, _))) =>
+            if flags.opt && seenVariadic then
+              raise(ErrorReport(msg"Optional parameters cannot follow a variadic parameter." -> field.toLoc :: Nil))
+            else if seenOpt && !flags.opt && !seenVariadic then
+              raise(ErrorReport(msg"A required parameter cannot follow an optional parameter." -> field.toLoc :: Nil))
+            (seenOpt || flags.opt, seenVariadic)
+          case ((seenOpt, seenVariadic), (field, _: Spd)) =>
+            if seenVariadic then
+              raise(ErrorReport(msg"A parameter list cannot have more than one variadic parameter." -> field.toLoc :: Nil))
+            (seenOpt, true)
+        withTypeBinders(Term.Tup(elems)(tree))
+      case _ => subterm(lhs, Tpe)
+    
     def mkNew(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])(typ: Opt[typing.Type]): Term.New =
       val res = withTypeBinders(new Term.New(cls, args, rft)(FlowSymbol.neww(), typ).withLocOf(tree))
       // The synthetic parent of an anonymous refinement (below) instantiates the same class at the same site,
@@ -1635,9 +1672,9 @@ extends Importer:
             QuantVar(sym, ub.map(ub => subterm(ub, Tpe)), lb.map(lb => subterm(lb, Tpe)))
         Term.Forall(bds, outer, subterm(body, Tpe))
     case InfixApp(lhs, Keywrd(Keyword.`->`), Effectful(eff, rhs)) =>
-      Term.FunTy(subterm(lhs, Tpe), subterm(rhs, Tpe), S(subterm(eff, Tpe)))
+      Term.FunTy(funTyParams(lhs), subterm(rhs, Tpe), S(subterm(eff, Tpe)))
     case InfixApp(lhs, Keywrd(Keyword.`->`), rhs) =>
-      Term.FunTy(subterm(lhs, Tpe), subterm(rhs, Tpe), N)
+      Term.FunTy(funTyParams(lhs), subterm(rhs, Tpe), N)
     case InfixApp(lhs, Keywrd(Keyword.`=>`), rhs) =>
       lhs match
       case Tup(_) =>
@@ -1825,7 +1862,7 @@ extends Importer:
           N
       val self = VarSymbol(Ident("self"), erasedType = N)
       val args = VarSymbol(Ident("args"), erasedType = N)
-      val ps = ParamList(ParamListFlags.empty,
+      val ps = ParamList.withRest(ParamListFlags.empty,
         Param.simple(self) :: Nil,
         S:
           Param.simple(args)
@@ -2035,6 +2072,9 @@ extends Importer:
     case Spread(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> kw.toLoc :: Nil))
       error
+    case Optional(body) =>
+      raise(ErrorReport(msg"Illegal position for an optional marker '?': only parameters and function type parameters can be optional." -> tree.toLoc :: Nil))
+      error
     case und: Under =>
       summon[UnderCtx].unders match
       case N =>
@@ -2081,9 +2121,9 @@ extends Importer:
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       Fld(FldFlags.empty, term(lhs, interp), S(arg(rhs, interp)))
     case Spread(Keywrd(Keyword.`..`), S(trm)) =>
-      Spd(SpreadKind.Lazy, arg(trm, interp))
+      Spd(SpreadKind.Lazy, arg(trm, interp), false)
     case Spread(Keywrd(Keyword.`...`), S(trm)) =>
-      Spd(SpreadKind.Eager, arg(trm, interp))
+      Spd(SpreadKind.Eager, arg(trm, interp), false)
     case _ =>
       val t = arg(tree, interp)
       var flags = FldFlags.empty
@@ -2469,6 +2509,8 @@ extends Importer:
                 case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
                 case st => term(st, Tpe)(using newCtx)
               
+              if td.annotatedResultType.isEmpty then
+                s.foreach(checkSignatureOptionality(pss, _))
               if newResolution && td.annotatedResultType.isEmpty then
                 s.foreach(registerParameterSignature(pss, _))
               
@@ -2582,13 +2624,9 @@ extends Importer:
         val pss = td.paramLists.map: ps =>
           val (res, newCtx2) =
             given Ctx = newCtx
-            params(ps, isDataClass, k is Pat)
+            params(ps, isDataClass, k is Pat, inFunction = false)
           newCtx = newCtx2
-          // Spread parameters are not supported in class parameters.
-          res.restParam.foreach: rp =>
-            raise(ErrorReport(
-              msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
-          res.copy(restParam = N)(res.toLoc)
+          withoutVariadic(res)
         
         def withFields(extraParams: Ls[ParamList])(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
           softAssert(pss.sizeCompare(td.clsParams) === 0,
@@ -2720,9 +2758,10 @@ extends Importer:
             val allParams = ps.fold(Nil):
               _.params.flatMap:
                 // Only `pat` flag is `true`.
-                case p @ Param(flags = FldFlags(false, false, true, false)) => S(p)
+                // (Optional and droppable parameters were already reported by `params`.)
+                case p @ Param(flags = FldFlags(false, false, true, false, _, _)) => S(p)
                 // All flags are `false`.
-                case p @ Param(flags = FldFlags(false, false, false, false)) => S(p)
+                case p @ Param(flags = FldFlags(false, false, false, false, _, _)) => S(p)
                 case Param(flags, sym, _, _) =>
                   raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with modifiers: ${
                     flags.show(false)}" -> sym.toLoc :: Nil))
@@ -2799,12 +2838,9 @@ extends Importer:
               given Ctx = newCtx
               // Unlike main parameters, constructor(...) parameters of data classes are not
               // implicitly `val`: they only become fields when explicitly marked.
-              params(ps, false, false)
+              params(ps, false, false, inFunction = false)
             newCtx = newCtx2
-            res.restParam.foreach: rp =>
-              raise(ErrorReport(
-                msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
-            res.copy(restParam = N)(res.toLoc)
+            withoutVariadic(res)
           newCtx.givenIn:
             trace(s"Processing class definition $nme"):
               val comp = sym.asMod
@@ -2971,8 +3007,11 @@ extends Importer:
             new Ident(base).withLocOf(id) -> (id.name :: Nil)
           case N =>
             id -> Nil
-        val sig = sign.map(term(_, Tpe))
-        val mfn = Modulefulness.ofSign(sig)(Mod in modifiers)
+        val writtenSig = sign.map(term(_, Tpe))
+        val mfn = Modulefulness.ofSign(writtenSig)(Mod in modifiers)
+        // * The argument of an optional parameter may be omitted, in which case the parameter is `undefined`,
+        // * so the annotation of `y?: T` denotes `T | undefined` both for callers and in the body.
+        val sig = if flg.opt then writtenSig.map(optionalType(_, t.toLoc)) else writtenSig
         if newResolution then sig.foreach(registerSignature)
         val sym = VarSymbol(canonicalId)
         sym.sourceAliases = aliases
@@ -2983,14 +3022,42 @@ extends Importer:
             if sym.currentShapes.add(shape) then sym.notifyShapeListeners(shape)
         (p, spd, aliases)
   
+  /** Variadic parameters are not supported in class parameters. Report them and keep their trailing parameters. */
+  def withoutVariadic(ps: ParamList): ParamList = ps.variadic match
+    case S(v) =>
+      raise(ErrorReport(msg"Spread parameters are not supported in class parameters." -> v.param.toLoc :: Nil))
+      ps.copy(params = ps.params ::: v.trailing, variadic = N)(ps.toLoc)
+    case N => ps
+  
+  /** The type of an optional parameter or optional function type parameter annotated with `tpe`,
+    * where `loc` is the location of the optional parameter, which explains the `undefined` part. */
+  def optionalType(tpe: Term, loc: Opt[Loc]): Term =
+    Term.CompType(tpe, Term.Lit(Tree.UnitLit(false).withLoc(loc)), true)
+  
+  /** A separate signature, as in `fun f: (Int, Int?) -> Int` followed by `fun f(x, y?) = ...`,
+    * determines how the function can be called, so it must agree with the implementation's
+    * parameter lists on which parameters are optional. */
+  def checkSignatureOptionality(pss: Ls[ParamList], sign: Term): Unit = (pss, sign) match
+    case (_, Term.Forall(_, _, body)) => checkSignatureOptionality(pss, body)
+    case (ps :: pss, Term.FunTy(Term.Tup(fields), rhs, _)) =>
+      ps.params.lazyZip(fields).foreach:
+        case (p, fld @ Fld(flags, _, _)) if p.flags.opt != flags.opt =>
+          def describe(opt: Bool) = if opt then "optional" else "required"
+          raise(ErrorReport(
+            msg"Parameter '${p.sym.name}' is ${describe(p.flags.opt)}..." -> p.toLoc ::
+            msg"...but the corresponding parameter of the function's signature is ${describe(flags.opt)}." -> fld.toLoc :: Nil))
+        case _ => ()
+      checkSignatureOptionality(pss, rhs)
+    case _ => ()
+  
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
-    val ps_ctx = params(t, inDataClass = false, inPattern = false)
+    val ps_ctx = params(t, inDataClass = false, inPattern = false, inFunction = true)
     def checkFlags(p: Param): Unit =
       if p.flags.isVal || p.flags.mut then
         raise(ErrorReport(msg"Illegal function parameter modifiers: ${
           p.flags.show(false)}" -> p.sym.toLoc :: Nil))
     ps_ctx._1.params.foreach(checkFlags)
-    ps_ctx._1.restParam.foreach(checkFlags)
+    ps_ctx._1.variadic.foreach(_.allParams.foreach(checkFlags))
     ps_ctx
   
   /** Elaborate a subtyping constraint. */
@@ -3016,12 +3083,18 @@ extends Importer:
    * @param inPattern Whether the parameter list belongs to a pattern definition.
    *                  If `inPattern` is `true`, only parameters with `pat` flag
    *                  will be added to the context.
+   * @param inFunction Whether the parameter list belongs to a function or lambda,
+   *                   whose parameters may be optional or droppable.
    */
-  def params(t: Tree, inDataClass: Bool, inPattern: Bool): Ctxl[(ParamList, Ctx)] = t match
+  def params(t: Tree, inDataClass: Bool, inPattern: Bool, inFunction: Bool): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>
-      def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx, flags: ParamListFlags): (ParamList, Ctx) =
+      // * `acc` accumulates the leading parameters in reverse order, and `variadic` the variadic
+      // * parameter together with the trailing parameters following it, also in reverse order.
+      def go(ps: Ls[Tree], acc: Ls[Param], variadic: Opt[(Param, Ls[Param])], ctx: Ctx, flags: ParamListFlags)
+          : (ParamList, Ctx) =
         ps match
-        case Nil => (ParamList(flags, acc.reverse, N)(t.toLoc), ctx)
+        case Nil =>
+          (ParamList(flags, acc.reverse, variadic.map((p, trailing) => Variadic(p, trailing.reverse)))(t.toLoc), ctx)
         case hd :: tl =>
           val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam
@@ -3029,21 +3102,39 @@ extends Importer:
           case R((p, spd, aliases)) =>
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
+            if p.flags.droppable && !inFunction then
+              raise(ErrorReport(msg"Droppable parameters are only supported in function and lambda parameter lists." -> hd.toLoc :: Nil))
+            // * The arguments of a call are assigned to the parameters as follows: the required leading
+            // * parameters and the trailing parameters (which are all required) take the first and last
+            // * arguments, the optional leading parameters take the remaining ones from left to right,
+            // * and the variadic parameter takes the rest (see `ParamList` and `Lowering.setupFunctionDef`).
+            if p.flags.opt then
+              if !inFunction then
+                raise(ErrorReport(msg"Optional parameters are only supported in function and lambda parameter lists." -> hd.toLoc :: Nil))
+              else if inUsing then
+                raise(ErrorReport(msg"Contextual parameters cannot be optional." -> hd.toLoc :: Nil))
+              else if spd.isDefined then
+                raise(ErrorReport(msg"Variadic parameters cannot be optional." -> hd.toLoc :: Nil))
+              else if variadic.isDefined then
+                raise(ErrorReport(msg"Optional parameters cannot follow a variadic parameter." -> hd.toLoc :: Nil))
+            else if spd.isEmpty && variadic.isEmpty && acc.exists(_.flags.opt) then
+              raise(ErrorReport(msg"A required parameter cannot follow an optional parameter." -> hd.toLoc :: Nil))
             val bindings = (p.sym.name -> p.sym) :: aliases.map(_ -> p.sym)
             val newCtx = if !inPattern || p.flags.pat then ctx ++ bindings else ctx
             val newFlags = flags.copy(ctx = inUsing)
-            spd match
-            case S(spd) =>
+            (spd, variadic) match
+            case (S(spd), N) =>
               if spd is SpreadKind.Lazy then
                 raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
-              if tl.isEmpty then
-                (ParamList(flags, acc.reverse, S(p))(t.toLoc), newCtx)
-              else
-                raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
-                go(tl, p :: acc, newCtx, newFlags)
-            case N => go(tl, p :: acc, newCtx, newFlags)
-          case L(d) => raise(d); go(tl, acc, ctx, flags)
-      go(ps, Nil, ctx, ParamListFlags.empty)
+              go(tl, acc, S(p -> Nil), newCtx, newFlags)
+            case (S(_), S((vp, trailing))) =>
+              raise(ErrorReport(msg"A parameter list cannot have more than one variadic parameter." -> hd.toLoc :: Nil))
+              // * Keep the parameter as a trailing one so that its references remain bound.
+              go(tl, acc, S(vp -> (p :: trailing)), newCtx, newFlags)
+            case (N, S((vp, trailing))) => go(tl, acc, S(vp -> (p :: trailing)), newCtx, newFlags)
+            case (N, N) => go(tl, p :: acc, N, newCtx, newFlags)
+          case L(d) => raise(d); go(tl, acc, variadic, ctx, flags)
+      go(ps, Nil, N, ctx, ParamListFlags.empty)
     case _ =>
       raise:
         ErrorReport:
@@ -3293,7 +3384,6 @@ extends Importer:
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = UnderCtx.none
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
-    computeVariances(res)
     if newResolution then
       if config.language.strictResolution then
         val exports = res.stats.collect:
@@ -3307,115 +3397,4 @@ extends Importer:
     rctx.completeBlock(res)
     (res, ctx)
   
-  def computeVariances(s: Statement): Unit =
-    val trav = VarianceTraverser()
-    def go(s: Statement): Unit = s match
-      case TermDefinition(k, sym, tsym, pss, _, sign, body, r, _, _, _) =>
-        pss.foreach(ps => ps.params.foreach(trav.traverseType(S(false))))
-        sign.foreach(trav.traverseType(S(true)))
-        body match
-          case S(b) =>
-            go(b)
-          case N =>
-      case ClassDef(sym, tps, pso, body) =>
-        pso.foreach: ps =>
-          ps.foreach: p =>
-            p.sign.foreach(trav.traverseType(S(true)))
-        body.blk.stats.foreach(go)
-        // s.subStatements.foreach(go)
-      case _ =>
-        s.subStatements.foreach(go)
-    while trav.changed do
-      trav.changed = false
-      go(s)
-  
-  class VarianceTraverser(var changed: Bool = true) extends Traverser:
-    override def traverseType(pol: Pol)(trm: Term): Unit = trm match
-      case Term.TyApp(lhs, targs) =>
-        lhs.symbol.flatMap(sym => sym.asTpe) match
-          case S(sym: ClassSymbol) =>
-            sym.defn match
-            case S(td: ClassDef) =>
-              td.tparams.zip(targs).foreach:
-                case (tp, targ) =>
-                  if !tp.isContravariant then traverseType(pol)(targ)
-                  if !tp.isCovariant then traverseType(pol.!)(targ)
-            case N =>
-              // TODO(sym->sym.uid)
-          case S(sym: ModuleOrObjectSymbol) =>
-            sym.defn match
-            case S(td: ModuleOrObjectDef) =>
-              td.tparams.zip(targs).foreach:
-                case (tp, targ) =>
-                  if !tp.isContravariant then traverseType(pol)(targ)
-                  if !tp.isCovariant then traverseType(pol.!)(targ)
-            case N =>
-              // TODO(sym->sym.uid)
-          case S(sym: TypeAliasSymbol) =>
-            // TODO dedup with above...
-            sym.defn match
-            case S(td: semantics.TypeDef) =>
-              td.tparams.zip(targs).foreach:
-                case (tp, targ) =>
-                  if !tp.isContravariant then traverseType(pol)(targ)
-                  if !tp.isCovariant then traverseType(pol.!)(targ)
-            case N =>
-              TODO(sym->sym.uid)
-          // case S(sym) => ???
-          case N =>
-            log(s"No symbol found $lhs ${lhs.symbol}")
-            // ???
-            () // TODO
-      case Term.Ref(sym: VarSymbol) =>
-        sym.decl match
-          case S(ty: TyParam) =>
-            if pol =/= S(true) && ty.isCovariant then
-              changed = true
-              ty.isCovariant = false
-            if pol =/= S(false) && ty.isContravariant then
-              changed = true
-              ty.isContravariant = false
-          case S(decl) =>
-            lastWords(s"VarSymbol ${sym.name} has unexpected declaration: $decl")
-          case N =>
-            lastWords(s"VarSymbol ${sym.name} has no declaration")
-      case _ => super.traverseType(pol)(trm)
-  abstract class Traverser:
-    def traverseType(pol: Pol)(trm: Term): Unit = trm match
-      case Term.Lit(_) | Term.UnitVal() | Term.Error =>
-      case Term.TyApp(lhs, targs) =>
-        // lhs.resolveSymbol
-        // targs.foreach(traverseType(pol))
-        ???
-      case r: Term.Ref =>
-      case Term.FunTy(l, r, e) =>
-        traverseType(pol.!)(l)
-        traverseType(pol)(r)
-        e.foreach(e => traverseType(pol)(e))
-      case Term.Forall(_, _, body) =>
-        traverseType(pol)(body)
-      case Term.WildcardTy(in, out) =>
-        in.foreach(t => traverseType(pol.!)(t))
-        out.foreach(t => traverseType(pol)(t))
-      case Term.CompType(lhs, rhs, _) => () // TODO:
-      case Term.SynthSel(bse, nme) =>
-        traverseType(pol)(bse) // FIXME: probably wrong for what we want to do
-      case Term.Tup(fields) =>
-        // fields.foreach(f => traverseType(pol)(f.value))
-        fields.foreach(traverseType(pol))
-      // case _ => ???
-      case Term.Neg(ty) =>
-        traverseType(pol.!)(ty)
-      case _ =>
-        // TODO
-    def traverseType(pol: Pol)(f: Elem): Unit = f match
-      case f: Fld =>
-        traverseType(pol)(f.term)
-        f.asc.foreach(traverseType(pol))
-      case _: Spd => TODO("variance traversal of spread elements")
-    def traverseType(pol: Pol)(f: Param): Unit =
-      f.sign.foreach(traverseType(pol))
 end Elaborator
-
-type Pol = Opt[Bool]
-extension (p: Pol) def ! : Pol = p.map(!_)

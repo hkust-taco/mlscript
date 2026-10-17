@@ -106,7 +106,7 @@ i(print)(2)
 //│ ╟── Function literal expected 2 arguments, but got 1
 //│ ║  l.91: 	let i = _(0, 1, _)
 //│ ╙──      	        ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'i' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'i' expected at least 2 arguments but got 1
 
 // :re
 i((x, y, z) => x + y + z, 2)
@@ -150,7 +150,7 @@ i((...args) => [...args], _)(2)
 //│ ║  in PartialApps.mls:145
 //│ ║  l.145: 	123 |> (_ + 1 >> _ * 2)
 //│ ╙──       	        ^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
 
 (_ + 1 + _ * 2) of 123, 456
 //│ = 1036

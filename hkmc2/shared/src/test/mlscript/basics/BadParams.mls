@@ -52,16 +52,16 @@ fun f(val x) = x
 
 :e
 (...x, ...y) => x
-//│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
+//│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
 //│ ║  l.54: 	(...x, ...y) => x
-//│ ╙──      	 ^^^^
+//│ ╙──      	       ^^^^
 //│ = fun
 
 :e
 (..., ...y) => y
-//│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
+//│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
 //│ ║  l.61: 	(..., ...y) => y
-//│ ╙──      	 ^^^
+//│ ╙──      	      ^^^^
 //│ = fun
 
 

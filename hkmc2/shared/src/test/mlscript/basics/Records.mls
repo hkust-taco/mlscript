@@ -220,7 +220,7 @@ t('group)
 //│ ║         	^^^^^^
 //│ ║  l.180: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 't' expected at least 2 arguments but got 1
 
 :todo // * Make second parameter optional
 t('group)
@@ -238,7 +238,7 @@ t('group)
 //│ ║         	^^^^^^
 //│ ║  l.180: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 't' expected at least 2 arguments but got 1
 
 let empty = Object.create of null
 //│ empty = {}
