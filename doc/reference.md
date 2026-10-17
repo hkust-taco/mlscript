@@ -248,16 +248,6 @@ fun foo(x: Int): Int = x + 1
 fun bar(x: Int, y: Str): Bool = x > 0
 ```
 
-### Multi-Body `fun`
-
-Multiple functions can be defined under a single `fun` keyword:
-
-```mlscript
-fun
-  min(x, y) = if x < y then x else y
-  max(x, y) = if x > y then x else y
-```
-
 ### Recursive Functions
 
 Functions are recursive by default:
@@ -268,6 +258,31 @@ fun fact(n) =
 
 Mutual recursion uses sequential `fun` definitions in the same block.
 
+### Trailing arguments
+
+The `\` keyword, which binds very strongly on the left and very loosely on the right, can be used to provide extra arguments in a call. Representative examples:
+
+```fs
+tuple() \ 1 + 1
+== tuple(1 + 1)
+
+// Also allowed:
+tuple \ 1 + 1
+== tuple(1 + 1)
+
+tuple(1, 2) \ 3
+== tuple(1, 2, 3)
+
+tuple(1)
+  \ 2
+== tuple(1, 2)
+
+tuple
+  \ 1
+  \ 2
+ == tuple(1, 2)
+```
+
 ### Lambdas
 
 ```mlscript
@@ -276,16 +291,78 @@ x => x + 1
 () => 42
 ```
 
-**Underscore lambda shorthand** — each `_` becomes a new anonymous parameter (left to right):
-```mlscript
-_ + 1            // x => x + 1
-_ + _            // (x, y) => x + y
-_.f(0, _, 2)     // (x, y) => x.f(0, y, 2)
+### Underscore lambda shorthand
+
+Each `_` becomes a new anonymous parameter (left to right).
+
+Only a few places can introduce underscore lambdas:
+* the RHS of the `\` keyword;
+* the RHS of any operator that ends with `>` (except the builtin `>`);
+* symmetrically, the LHS of any operator that begins with `<` (except the builtins `<` and `<=`)
+
+This means we can write things like
+```fs
+42 |> _ + 1
+
+_.getKey <|
+  let r = result()
+  print(r)
+  r.field
+
+number
+  |> _ + 1
+  |> Math.pow(_, 2)
+  .toHexString
+
+xs.map \ _ + 1
+
+xs.reduce \ f(_) + _
+
+xs.foldLeft(0) \ getValue(_) + _
+==
+xs.foldLeft(0, (x, y) => getValue(x) + y)
+
+xs.foldLeft(0) \ getValue(_.key) + _
+==
+xs.foldLeft(0, (x, y) => getValue(x.key) + y)
+
+f >> g(_) + 1
 ```
 
-**Lambdas in block position:**
-```mlscript
-{_ + 1}          // x => x + 1
+Moreover, `=>` can be used in prefix position, which lets the parameter list be inferred implicitly:
+
+```fs
+xs.map(=> _ + 1)
+
+let f =
+  => _ + 1
+xs.map(f)
+
+// This is admittedly a bit strange-looking, but we quickly get used to it:
+let f = => _ + 1 in xs.map(f)
+```
+
+### More examples
+
+```fs
+xs
+  .map \ _ + 1
+  .map \ _ * 2
+
+xs
+  .map \ x =>
+    print(x)
+    doThings(x)
+  .filter \ _ < 100
+
+xs.groupMapReduce
+  \ _.key
+  \ _.value
+  \ _ + _
+
+getValue(...)
+  !> print(_.someField)  // `!>` is Scala's `tap`
+  |> _.someOtherField
 ```
 
 ### Function Declarations (without definition)
@@ -329,13 +406,6 @@ x \f(args)       // receiver syntax: f(x, args)
 x f(args)        // "juxtaposition" syntax: f(x, args) – will probably be removed in the future
 f(1, 2, a: 3, 4, b: 5)  // named argument (becomes record, as in f(1, 2, 4, {a: 3, b: 5}))
 f(using x)       // pass context/implicit argument
-```
-
-**Block as function argument** (using `@`):
-```mlscript
-test @ {_ + 1}      // passes lambda {_ + 1} to test
-test @              // indented block as arg
-  _ + 1
 ```
 
 ### `case` — Anonymous Pattern-Matching Function
@@ -390,14 +460,6 @@ and  or  not        // boolean keywords
 ```
 
 Note: `==` is a deep structural equality (compares arrays and class fields recursively), while `===` is JavaScript strict equality.
-
-### Operator Precedence
-
-Operator sections with `_`:
-```mlscript
-(_ + 1)           // right section: x => x + 1
-(1 + _)           // left section:  y => 1 + y
-```
 
 ### Comma-Operators
 
@@ -612,14 +674,6 @@ fun f(): module M = M
 ### Extending Modules
 
 Modules cannot extend classes. Objects can extend classes.
-
-### Multiple `object`/`module` Declarations Under One Keyword
-
-```mlscript
-object
-  A extends Foo
-  B extends Foo
-```
 
 ---
 
@@ -1647,16 +1701,21 @@ abstract
 
 ```mlscript
 [1, 2, 3]
-  .map(_ + 1)
-  .filter(_ > 1)
+  .map \ _ + 1
+  .filter \ _ > 1
 ```
 
-### Backslash `\` at Start of Line
+### `|. ` for piping the first argument
 
 ```mlscript
 42
-  \inc()          // inc(42)
-  \inc()          // inc(inc(42))
+  |. inc()          // inc(42)
+  |. inc()          // inc(inc(42))
+
+// parses as
+((42
+  |. inc)()
+  |. inc)()
 ```
 
 ### Parenthesis Matching

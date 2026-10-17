@@ -71,11 +71,11 @@ class MLsCompiler
     
     given Elaborator.State = artifact.state
     given Config = artifact.config
-    if config.language.versionName === Config.Language.default.versionName then
+    if config.language.version.isEmpty then
       raise:
         import hkmc2.Message.MessageContext
         WarningReport(msg"Missing language version specification for file `${file.relativeToOrSame(config.baseDir).toString}`" -> artifact.tree.toLoc.map(_.left)
-          :: msg"Specify a version with #lang; the latest available is #lang(${Config.Language.latest.versionName})" -> N :: Nil)
+          :: msg"Specify a version with #lang; the latest available is #lang(${Config.Language.latestVersion.name})" -> N :: Nil)
     given Elaborator.Ctx = artifact.ctx
     val jsb = compilerTL.givenIn:
       codegen.js.JSBuilder()

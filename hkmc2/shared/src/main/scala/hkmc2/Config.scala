@@ -97,6 +97,41 @@ object Config:
     val deadBranchRemoval = false // TODO
     val inlineThreshold = 10
   
+  /** A language version, as named in `#lang` directives (e.g., `0.3.1` or `0.3.x`).
+    * A `patch` of `N` stands for the `x` of a version like `0.3.x`, which denotes the latest state
+    * of its minor series and is thus newer than every numbered patch of that series
+    * (e.g., `0.3.1 < 0.3.x < 0.4.0`).
+    * Version-gated features are enabled by comparing versions with the ordering defined here.
+    * Version names must not be compared as strings, since that would make `0.10.x` older than `0.3.1`;
+    * nor can versions be plain `(Int, Int, Opt[Int])` tuples compared with the standard tuple ordering,
+    * since `Option`'s standard ordering puts `None` first, which would make `0.3.x` older than `0.3.1`. */
+  case class Version(major: Int, minor: Int, patch: Opt[Int]) extends Ordered[Version]:
+    def compare(that: Version): Int =
+      if major =/= that.major then major.compare(that.major)
+      else if minor =/= that.minor then minor.compare(that.minor)
+      else (patch, that.patch) match
+        case (S(p1), S(p2)) => p1.compare(p2)
+        case (S(_), N) => -1
+        case (N, S(_)) => 1
+        case (N, N) => 0
+    def name: Str = s"$major.$minor.${patch.fold("x")(_.toString)}"
+  end Version
+  
+  object Version:
+    // * Only accept canonical version names, so that each version has exactly one name
+    // * (e.g., reject `0.03.1` as an alias of `0.3.1`).
+    private val component = "0|[1-9][0-9]*"
+    private val VersionName = s"($component)\\.($component)\\.($component|x)".r
+    def parse(name: Str): Opt[Version] = name match
+      case VersionName(majorName, minorName, patchName) =>
+        for
+          major <- majorName.toIntOption
+          minor <- minorName.toIntOption
+          patch <- if patchName === "x" then S(N) else patchName.toIntOption.map(S(_))
+        yield Version(major, minor, patch)
+      case _ => N
+  end Version
+  
   case class Language(
     allowUnresolvedAccesses: Bool,
     useNewResolution: Bool,
@@ -104,7 +139,14 @@ object Config:
     // Unknown inputs admitted by a public interface are checked regardless of this flag.
     eagerResolution: Bool, // Reject selections whose prefixes have shapes that do not support them, even though the selection might have other valid targets
     typeCheck: Opt[TypeChecking],
-  )(val versionName: Str)
+  )(
+    // * `N` when no version was specified with `#lang` (see `Language.default`),
+    // * in which case no version-gated feature is enabled.
+    val version: Opt[Version],
+  ):
+    def newUnderscoreAndApplicationSyntax: Bool =
+      version.exists(_ > Language.v0_3_1.version.get)
+  end Language
   
   object Language:
     
@@ -115,27 +157,38 @@ object Config:
       eagerResolution = false,
       allowUnresolvedAccesses = true,
     )(
-      versionName = "0.2.x",
+      version = S(Version(0, 2, N)),
     )
     
-    val v0_3_x = Language(
+    val v0_3_1 = Language(
       typeCheck = N,
       useNewResolution = true,
       strictResolution = false,
       eagerResolution = false,
       allowUnresolvedAccesses = false,
     )(
-      versionName = "0.3.x",
+      version = S(Version(0, 3, S(1))),
     )
     
-    val presets: Map[Str, Language] = Ls(
+    val v0_3_x = v0_3_1.copy(
+    )(
+      version = S(Version(0, 3, N)),
+    )
+    
+    val presets: Map[Version, Language] = Ls(
       v0_2_x,
+      v0_3_1,
       v0_3_x,
-    ).map(l => l.versionName -> l).toMap
+    ).map: lang =>
+      lang.version.getOrElse(lastWords("language presets must specify a version")) -> lang
+    .toMap
     
-    val default = v0_2_x.copy()(versionName = "default")
+    // * The language used when no version is specified with `#lang`.
+    // * It behaves like the oldest preset, but has no version, so that a missing `#lang` can be reported.
+    val default = v0_2_x.copy()(version = N)
     
-    val latest = v0_3_x
+    val latestVersion = Version(0, 3, N)
+    val latest = presets(latestVersion)
     
   end Language
   
@@ -434,12 +487,12 @@ object ConfigParser:
 
   private def parseLanguagePreset(tree: Tree)(using Raise): Opt[Config.Language] =
     parseVersionName(tree).flatMap: name =>
-      Config.Language.presets.get(name) match
+      Config.Version.parse(name).flatMap(Config.Language.presets.get) match
         case S(language) => S(language)
         case N =>
           raise(ErrorReport(
             msg"Unknown language version '${name}'" -> tree.toLoc ::
-              msg"Available language versions: ${Config.Language.presets.keys.toList.sorted.mkString(", ")}" -> N ::
+              msg"Available language versions: ${Config.Language.presets.keys.toList.sorted.map(_.name).mkString(", ")}" -> N ::
               Nil,
             source = Diagnostic.Source.Compilation))
           N
@@ -456,19 +509,19 @@ object ConfigParser:
   private def parseLanguageFieldModifier(tree: Tree)(using Raise): Opt[Config.Language => Config.Language] = tree match
     case NamedArg("allowUnresolvedAccesses", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        lang => lang.copy(allowUnresolvedAccesses = v)(lang.versionName)
+        lang => lang.copy(allowUnresolvedAccesses = v)(lang.version)
     case NamedArg("useNewResolution", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        lang => lang.copy(useNewResolution = v)(lang.versionName)
+        lang => lang.copy(useNewResolution = v)(lang.version)
     case NamedArg("strictResolution", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        lang => lang.copy(strictResolution = v)(lang.versionName)
+        lang => lang.copy(strictResolution = v)(lang.version)
     case NamedArg("eagerResolution", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        lang => lang.copy(eagerResolution = v)(lang.versionName)
+        lang => lang.copy(eagerResolution = v)(lang.version)
     case NamedArg("typeCheck", value) =>
       parsedLanguageModifier(value)(tree => parseOpt(tree)(parseTypeChecking)): v =>
-        lang => lang.copy(typeCheck = v)(lang.versionName)
+        lang => lang.copy(typeCheck = v)(lang.version)
     case other =>
       unsupported("Language", other)
       N
