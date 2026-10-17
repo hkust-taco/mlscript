@@ -1,6 +1,5 @@
+:.
 :js
-
-#lang(0.2.x)
 
 
 render(())
@@ -162,7 +161,7 @@ class Foo
 renderAsStr of Foo
 //│ = "class Foo"
 
-set Foo.bar = (direction: "vertical")
+set Foo.'bar = (direction: "vertical")
 
 renderAsStr of Foo
 //│ = "class Foo"
@@ -183,7 +182,7 @@ renderAsStr of test
 renderAsStr of [42, 100, test]
 //│ = "[42, 100, fun test]"
 
-set test.test = test
+set test.'test = test
 
 renderAsStr of test
 //│ = "fun test { test: ref'1 } as ref'1"
@@ -263,7 +262,14 @@ functionWithProperties
 //│ = fun { kind: "Callable" }
 
 functionWithProperties.kind
-//│ = "Callable"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: newSelection (Lowering.scala:737)
+//│ ╔══[COMPILATION ERROR] This selection of member 'kind' has no resolved target
+//│ ║  l.264: 	functionWithProperties.kind
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 //   ___  _     _           _
 //  / _ \| |__ (_) ___  ___| |_
@@ -341,7 +347,7 @@ open Stack
 :ge
 renderAsStr of 1 :: 2 :: 3 :: 4
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Stack.Base'
-//│ ║  l.342: 	renderAsStr of 1 :: 2 :: 3 :: 4
+//│ ║  l.348: 	renderAsStr of 1 :: 2 :: 3 :: 4
 //│ ╙──       	                              ^
 //│ = "Cons(1, Cons(2, Cons(3, 4)))"
 
@@ -358,6 +364,24 @@ renderAsStr of new Origin
 class Point(x: Num, y: Num) with
   val x = x
   val y = y
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: extractMembers (Term.scala:941)
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'x'.
+//│ ╟── Defined at: 
+//│ ║  l.364: 	class Point(x: Num, y: Num) with
+//│ ║         	            ^^^^^^
+//│ ╟── Defined at: 
+//│ ║  l.365: 	  val x = x
+//│ ╙──       	  ^^^^^^^^^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: extractMembers (Term.scala:941)
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'y'.
+//│ ╟── Defined at: 
+//│ ║  l.364: 	class Point(x: Num, y: Num) with
+//│ ║         	                    ^^^^^^
+//│ ╟── Defined at: 
+//│ ║  l.366: 	  val y = y
+//│ ╙──       	  ^^^^^^^^^
 
 // Note that we do not display members defined in the body.
 // Some classes define lots of members, so doing so could be problematic.
@@ -402,7 +426,15 @@ renderAsStr of Null
 // FIXME?
 :re
 renderAsStr of Null.class
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'class' yielded 'undefined'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: reportResolutionError (NewResolverState.scala:328)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.428: 	renderAsStr of Null.class
+//│ ║         	               ^^^^^^^^^^
+//│ ╟── Pattern 'Null' does not contain member 'class'
+//│ ║  l.421: 	pattern Null = null
+//│ ╙──       	        ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 declare class Iterator
 
@@ -420,7 +452,17 @@ renderAsStr of RangeIterator(0, 1)
 //│ = "RangeIterator(0, 1)"
 
 renderAsStr of RangeIterator(0, 5).toArray()
-//│ = "[0, 1, 2, 3, 4]"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: reportResolutionError (NewResolverState.scala:328)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.454: 	renderAsStr of RangeIterator(0, 5).toArray()
+//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'RangeIterator' does not contain member 'toArray'
+//│ ║  l.454: 	renderAsStr of RangeIterator(0, 5).toArray()
+//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 //  __  __ _
 // |  \/  (_)___  ___
@@ -452,7 +494,14 @@ renderAsStr of asyncFun
 //│ = "fun"
 
 renderAsStr of Object.getPrototypeOf(asyncFun).constructor
-//│ = "class AsyncFunction"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: newSelection (Lowering.scala:737)
+//│ ╔══[COMPILATION ERROR] This selection of member 'constructor' has no resolved target
+//│ ║  l.496: 	renderAsStr of Object.getPrototypeOf(asyncFun).constructor
+//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 renderAsStr of renderAsStr
 //│ = "fun renderAsStr"
@@ -479,10 +528,21 @@ new Test
 //│ = Test
 
 set Test.prototype.(Symbols.prettyPrint) = () => "Test pretty print!"
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: reportResolutionError (NewResolverState.scala:328)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.530: 	set Test.prototype.(Symbols.prettyPrint) = () => "Test pretty print!"
+//│ ║         	    ^^^^^^^^^^^^^^
+//│ ╟── Class value does not contain member 'prototype'
+//│ ║  l.522: 	class Test
+//│ ╙──       	      ^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 Test
 //│ = class Test
 
 new Test
-//│ = Test pretty print!
+//│ = Test
 
