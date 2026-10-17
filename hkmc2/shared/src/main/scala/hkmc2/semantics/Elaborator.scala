@@ -2047,9 +2047,13 @@ extends Importer:
           else ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil)
         error
       case S(unds) =>
-        val sym = VarSymbol(Ident("_" + unds.size), erasedType = N)
+        // * The placeholder both declares its implicit lambda parameter and refers to it,
+        // * so the parameter and the reference are both located at the `_`,
+        // * which lets diagnostics about either point to it.
+        val id = new Ident("_" + unds.size).withLocOf(und)
+        val sym = VarSymbol(id, erasedType = N)
         unds += sym
-        sym.ref()
+        sym.ref(id)
     case Annotated(lhs, rhs) =>
       annot(lhs).fold(subterm(rhs, interp))(ann =>
         annotated(ann, subterm(rhs, interp)))

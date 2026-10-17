@@ -149,7 +149,7 @@ i((...args) => [...args], _)(2)
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  in PartialApps.mls:145
 //│ ║  l.145: 	123 |> (_ + 1 >> _ * 2)
-//│ ╙──       	          ^^^^^^^^^^^^
+//│ ╙──       	        ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 (_ + 1 + _ * 2) of 123, 456
