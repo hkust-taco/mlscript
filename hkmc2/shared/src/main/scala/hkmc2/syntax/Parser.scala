@@ -22,7 +22,7 @@ val charPrecList: List[Str] = List(
     ",",
     // ^ for keywords
     ";",
-    "\\", // `f \ a` means `f(a)`; right-associative (see `opPrec`) and binding looser than other operators
+    "\\", // * right precedence of `\` (see `opPrec`)
     // "=", // higher than || means `a == 1 || b` parses surprisingly
     "@",
     ":",
@@ -78,14 +78,18 @@ object Parser:
   
   final def opCharPrec(opChar: Char): Int = precOf(opChar)
   final def opPrec(opStr: Str): (Int, Int) = opStr match
-    // * `x .| f(a)` means `f(x, a)` (see `Predef.passTo`), so it must parse as `(x .| f)(a)`
-    case "+." | "-." | "*." | ".|" =>
+    case "+." | "-." | "*." =>
       (precOf(opStr.head), precOf(opStr.head))
+    // * `f \ a` means `f(a)` (see `Tree.desugared`). `\` binds as tightly as selection on the left
+    // * and more loosely than other operators on the right, so that `xs |> f \ a + 1` means `xs |> f(a + 1)`;
+    // * this also makes it right-associative, so that `f \ g \ a` means `f(g(a))`.
+    case "\\" =>
+      (SelPrec, precOf('\\'))
     case _ if opStr.exists(_.isLetter) =>
       (Keyword.maxPrec.get, Keyword.maxPrec.get)
     case _ =>
       val r = opStr.last
-      (precOf(opStr.head), precOf(r) - (if r === ',' || r === ':' || opStr === "\\" then 1 else 0))
+      (precOf(opStr.head), precOf(r) - (if r === ',' || r === ':' then 1 else 0))
   val prefixOps: Set[Str] = Set("!", "+", "-", "~", "@", "|", "&")
   
   type Indent_Curly = Curly.type | Indent.type
