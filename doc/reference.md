@@ -364,6 +364,27 @@ getValue(...)
   |> _.someOtherField
 ```
 
+### Partial applications
+
+An argument that is a lone `.` turns the application into a lambda,
+with one parameter per `.` placeholder (left to right):
+
+```fs
+pow(., 2)          // means `x => pow(x, 2)`, like `=> pow(_, 2)`
+f(., a, .)         // means `(x, y) => f(x, a, y)`
+f of ., a          // means `x => f(x, a)`
+f(key: .)          // means `x => f(key: x)`
+```
+
+As with underscore lambdas, the function and the other arguments are evaluated
+each time the lambda is called.
+Placeholders must be direct arguments of an application:
+`f(. + 1)` and `(.)` are illegal, and in `f(g(.))`, the placeholder belongs to `g(.)`.
+Unlike underscore lambdas, partial applications can be used anywhere,
+without a delimiting `=>`, `\`, or pipe operator.
+Underscores in a partial application are delimited outside of it,
+so that `=> f(., _)` means `y => (x => f(x, y))`.
+
 ### Function Declarations (without definition)
 
 ```mlscript

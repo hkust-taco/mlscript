@@ -2,38 +2,31 @@
 :js
 
 
-:pe
+:e
 :re
 .
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
 //│ ║  l.7: 	.
-//│ ╙──     	^
-//│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.7: 	.
-//│ ╙──     	^
+//│ ║       	^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:pe
+:e
 :re
 . //
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.18: 	. //
-//│ ╙──      	^
-//│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.18: 	. //
-//│ ╙──      	^
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.16: 	. //
+//│ ║        	^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-:fixme
+:sjs
 id(.)
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.29: 	id(.)
-//│ ╙──      	   ^
-//│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.29: 	id(.)
-//│ ╙──      	   ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let lambda; lambda = (undefined, function (_0) { return _0 }); return lambda
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
 
 
 fun incr = => _ + 1
@@ -48,15 +41,8 @@ passTo(2, => incr(_))()
 passTo(2, => incr @ _)()
 //│ = 3
 
-:todo
 passTo(2, => incr(.) @ _)()
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.52: 	passTo(2, => incr(.) @ _)()
-//│ ╙──      	                  ^
-//│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.52: 	passTo(2, => incr(.) @ _)()
-//│ ╙──      	                  ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 3
 
 passTo(2, => (=> incr(_)) @ _)()
 //│ = 3
@@ -64,21 +50,8 @@ passTo(2, => (=> incr(_)) @ _)()
 passTo(2, => add(_, 2))()
 //│ = 4
 
-:todo
 passTo(2, add(., 2))()
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.68: 	passTo(2, add(., 2))()
-//│ ╙──      	              ^
-//│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.68: 	passTo(2, add(., 2))()
-//│ ╙──      	              ^
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.68: 	passTo(2, add(., 2))()
-//│ ║        	          ^^^^^^^^^
-//│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = => _ + _
-//│ ╙──      	             ^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 4
 
 passTo(1, => incr(_) + _)(2)
 //│ = 4
@@ -89,47 +62,11 @@ passTo(1, => (=> incr(_)) @ _ + _)(2)
 passTo(1, => (=> add(_, 1)) @ _ + _)(2)
 //│ = 4
 
-:todo
-passTo(1, incr(.) @ _ + _)(2)
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
-//│ ╙──      	               ^
-//│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
-//│ ╙──      	               ^
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
-//│ ║        	                    ^
-//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
-//│ ║        	                        ^
-//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+passTo(1, => incr(.) @ _ + _)(2)
+//│ = 4
 
-:todo
-passTo(1, add(., 1) @ _ + _)(2)
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ╙──       	              ^
-//│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ╙──       	              ^
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ║         	          ^^^^^^^^^
-//│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = => _ + _
-//│ ╙──      	             ^^^^^
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ║         	                      ^
-//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ║         	                          ^
-//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+passTo(1, => add(., 1) @ _ + _)(2)
+//│ = 4
 
 
 :sjs
@@ -139,23 +76,10 @@ let f = => add(_, 1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = fun f
 
-:todo
 let f = add(., 1)
 f(1)
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.143: 	let f = add(., 1)
-//│ ╙──       	            ^
-//│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.143: 	let f = add(., 1)
-//│ ╙──       	            ^
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.143: 	let f = add(., 1)
-//│ ║         	        ^^^^^^^^^
-//│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = => _ + _
-//│ ╙──      	             ^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ f = undefined
+//│ = 2
+//│ f = fun f
 
 let f = => add of _, 1
 //│ f = fun f
@@ -163,4 +87,159 @@ let f = => add of _, 1
 f(1)
 //│ = 2
 
+
+tuple(.)(1)
+//│ = [1]
+
+tuple(1, ., 3)(2)
+//│ = [1, 2, 3]
+
+let f = tuple(0, ., 3, .)
+//│ f = fun f
+
+f(2, 4)
+//│ = [0, 2, 3, 4]
+
+(tuple of .)(1)
+//│ = [1]
+
+(tuple of ., ., .)(1, 2, 3)
+//│ = [1, 2, 3]
+
+tuple |> apply of ., 1, 2, 3
+//│ = [1, 2, 3]
+
+Math.pow(., 2)(3)
+//│ = 9
+
+// * Partial applications can be curried
+tuple(.)(.)(1)
+//│ = [1]
+
+// * Underscore placeholders are delimited outside of the partial application
+(=> tuple of ., _, .)(2)(1, 3)
+//│ = [1, 2, 3]
+
+(=> tuple(_, .))(1)(2)
+//│ = [1, 2]
+
+// * A placeholder belongs to the closest enclosing application
+tuple(tuple(.))
+//│ = [fun]
+
+tuple(tuple(.)).[0](1)
+//│ = [1]
+
+:sjs
+let xs = [1, 2]
+tuple(...xs, .)(3)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let xs1; xs1 = globalThis.Object.freeze([ 1, 2 ]); return Predef.tuple(...xs1, 3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [1, 2, 3]
+//│ xs = [1, 2]
+
+// * The function and the other arguments are evaluated each time the partial application is called
+let f = tuple(print("eval"), .)
+//│ f = fun f
+
+f(1)
+f(2)
+//│ > eval
+//│ > eval
+//│ = [(), 2]
+
+
+// * Named arguments (which are passed as a record) can be placeholders
+fun foo(r) = r
+
+foo(x: ., y: 1)(0)
+//│ = {x: 0, y: 1}
+
+foo(x: ., y: .)(0, 1)
+//│ = {x: 0, y: 1}
+
+
+// * The partial application is a lambda, so a `return` in it is a non-local return
+// * (see also `handlers/NonLocalReturns.mls`)
+:e
+fun foo() =
+  let f = tuple(., return 2)
+  f(1)
+  3
+//│ ╔══[COMPILATION ERROR] Non-local return statements are only supported with effect handlers enabled.
+//│ ║  l.167: 	  let f = tuple(., return 2)
+//│ ╙──       	                   ^^^^^^^^
+
+
+// * Illegal placeholders
+
+:e
+. + 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.178: 	. + 1
+//│ ║         	^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+tuple(. + 1)
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.186: 	tuple(. + 1)
+//│ ║         	      ^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+(.)
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.194: 	(.)
+//│ ║         	 ^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+[.]
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.202: 	[.]
+//│ ║         	 ^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+tuple((.))
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.210: 	tuple((.))
+//│ ║         	       ^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+data class Foo(a, b)
+
+Foo(., 1)(0)
+//│ = Foo(0, 1)
+
+:e
+new Foo(., 1)
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.223: 	new Foo(., 1)
+//│ ║         	        ^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+.(1)
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.231: 	.(1)
+//│ ║         	^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+tuple(1) \ .
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
+//│ ║  l.239: 	tuple(1) \ .
+//│ ║         	           ^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

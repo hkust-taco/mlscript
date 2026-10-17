@@ -55,21 +55,16 @@ obj .("a")
 :fixme
 obj
   .("a")
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ╔══[COMPILATION ERROR] Illegal position for '.' partial application placeholder.
 //│ ║  l.57: 	  .("a")
-//│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.57: 	  .("a")
-//│ ╙──      	  ^
-//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
-//│ ║  l.57: 	  .("a")
-//│ ╙──      	  ^
-//│ = {a: 1}
+//│ ║        	  ^
+//│ ╙── A '.' placeholder must be an argument of an application, as in `pow(., 2)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
 obj. ("a")
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.70: 	obj. ("a")
+//│ ║  l.65: 	obj. ("a")
 //│ ╙──      	   ^
 //│ = {a: 1}
 
@@ -82,21 +77,18 @@ obj ."a"
 :fixme
 obj
   ."a"
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.84: 	  ."a"
-//│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.84: 	  ."a"
-//│ ╙──      	  ^
-//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
-//│ ║  l.84: 	  ."a"
+//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ║  l.79: 	  ."a"
+//│ ╙──      	   ^^^
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side ('.' keyword).
+//│ ║  l.79: 	  ."a"
 //│ ╙──      	  ^
 //│ = {a: 1}
 
 :pe
 obj. "a"
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.97: 	obj. "a"
+//│ ║  l.89: 	obj. "a"
 //│ ╙──      	   ^
 //│ = {a: 1}
 
@@ -112,7 +104,7 @@ obj." "
 :w
 obj."¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.113: 	obj."¯\_(ツ)_/¯"
+//│ ║  l.105: 	obj."¯\_(ツ)_/¯"
 //│ ╙──       	       ^
 //│ = 2
 
@@ -124,21 +116,21 @@ obj."¯\\_(ツ)_/¯"
 :w
 "¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.125: 	"¯\_(ツ)_/¯"
+//│ ║  l.117: 	"¯\_(ツ)_/¯"
 //│ ╙──       	   ^
 //│ = "¯_(ツ)_/¯"
 
 :w
 let obj = "¯\_(ツ)_/¯": 2
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.132: 	let obj = "¯\_(ツ)_/¯": 2
+//│ ║  l.124: 	let obj = "¯\_(ツ)_/¯": 2
 //│ ╙──       	             ^
 //│ obj = {"¯_(ツ)_/¯": 2}
 
 :w
 obj."¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.139: 	obj."¯\_(ツ)_/¯"
+//│ ║  l.131: 	obj."¯\_(ツ)_/¯"
 //│ ╙──       	       ^
 //│ = 2
 

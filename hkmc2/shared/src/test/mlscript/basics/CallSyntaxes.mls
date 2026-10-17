@@ -24,16 +24,8 @@ tuple(123, 456)
 123 |> (tuple(_, 456))
 //│ = [123, 456]
 
-// * Maybe later support this syntax?
-:pe
-:re
+// * Partial application syntax (see `PartialApps.mls`)
 123 |> tuple(., 456)
-//│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.30: 	123 |> tuple(., 456)
-//│ ╙──      	             ^
-//│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.30: 	123 |> tuple(., 456)
-//│ ╙──      	             ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = [123, 456]
 
 

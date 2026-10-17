@@ -1357,6 +1357,34 @@ extends Importer:
       case _ => N
     withAppendedArg(lhs).getOrElse(App(lhs, Tup(arg :: Nil)))
   
+  /** Lean-style partial applications: an argument that is a `.` placeholder, as in `pow(., 2)`,
+    * turns the application into a lambda with one parameter per placeholder (from left to right),
+    * so that `pow(., 2)` means `x => pow(x, 2)` and `f(., a, .)` means `(x, y) => f(x, a, y)`.
+    * Named arguments can also be placeholders, as in `f(key: .)`.
+    *
+    * As in the equivalent `=> pow(_, 2)`, the function and the other arguments are evaluated
+    * each time the lambda is called, not when it is created.
+    * The placeholder does not reach into argument subexpressions: in `f(g(.))`, it belongs to `g(.)`,
+    * and in `f(. + 1)`, it is illegal (see the `Keywrd` case of `subterm`).
+    * `_` placeholders in the application are not delimited by the partial application,
+    * so that `=> f(., _)` means `y => (x => f(x, y))`.
+    *
+    * Returns the lambda parameters together with the arguments where each placeholder has been replaced
+    * by a reference to its parameter, or `N` if no argument is a placeholder. */
+  private def partialAppArgs(args: Ls[Tree]): Opt[(Ls[VarSymbol], Ls[Tree])] =
+    val params = mutable.ListBuffer.empty[VarSymbol]
+    def param(placeholder: Tree): Tree =
+      val id = new Ident("_" + params.size).withLocOf(placeholder)
+      val sym = VarSymbol(id, erasedType = N)
+      params += sym
+      Tree.Trm(sym.ref(id)).withLocOf(placeholder)
+    val newArgs = args.mapConserve:
+      case placeholder @ Keywrd(Keyword.`.`) => param(placeholder)
+      case arg @ InfixApp(key, kw @ Keywrd(Keyword.`:`), placeholder @ Keywrd(Keyword.`.`)) =>
+        InfixApp(key, kw, param(placeholder)).withLocOf(arg)
+      case arg => arg
+    if params.isEmpty then N else S((params.toList, newArgs))
+  
   private def assignment(lhs: Term, rhs: Term): Term.Assgn =
     // Resolve the term interpretation of the l-value before lowering. The
     // selected definition is recorded even when its value publishes no shape.
@@ -1744,10 +1772,22 @@ extends Importer:
       case LabelLookup.NotFound =>
         mkNonLabelSelectionApp(tree, sel, args)
     case tree @ App(lhs, rhs) =>
-      val sym = FlowSymbol.app()
-      val lt = subterm(lhs)
-      val rt = subterm(rhs)
-      app(lt, rt)(tree, N, sym)
+      def elabApp(argsTree: Tree)(using Ctx): Term =
+        val sym = FlowSymbol.app()
+        val lt = subterm(lhs)
+        val rt = subterm(argsTree)
+        app(lt, rt)(tree, N, sym)
+      val partialApp = rhs match
+        case Tup(args) => partialAppArgs(args)
+        case _ => N
+      partialApp match
+      case S((params, newArgs)) =>
+        // * The application is evaluated in the body of the lambda, so it must be elaborated in a lambda context,
+        // * so that, eg, a `return` among the arguments is not mistaken for a return from the enclosing function.
+        ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
+          val body = elabApp(Tup(newArgs).withLocOf(rhs))
+          withTypeBinders(Term.Lam(PlainParamList(params.map(Param.simple))(N), body))
+      case N => elabApp(rhs)
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol.app()
       val (lhsDelimitsUnders, rhsDelimitsUnders) = underscoreDelimitingSides(op)
@@ -2057,6 +2097,13 @@ extends Importer:
     case Annotated(lhs, rhs) =>
       annot(lhs).fold(subterm(rhs, interp))(ann =>
         annotated(ann, subterm(rhs, interp)))
+    case Keywrd(Keyword.`.`) =>
+      raise:
+        ErrorReport(
+          msg"Illegal position for '.' partial application placeholder." -> tree.toLoc
+          :: msg"A '.' placeholder must be an argument of an application, as in `pow(., 2)`" -> N
+          :: Nil)
+      error
     case Keywrd(kw) =>
       raise(ErrorReport(msg"Unexpected keyword '${kw.name}' in this position." -> tree.toLoc :: Nil))
       error

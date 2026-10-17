@@ -58,6 +58,9 @@ object Keyword:
 
   val eqPrec = nextPrec
   val `=` = Keyword("=", eqPrec, eqPrec)
+  /** The partial application placeholder, as in `pow(., 2)`. The lexer never produces it as an identifier;
+    * the parser creates it from a `PERIOD` token in expression position. */
+  val `.` = Keyword(".", N, N)
   val `..` = Keyword("..", N, N)
   val `...` = Keyword("...", N, N)
   // val `;` = Keyword(";", ascPrec, eqPrec)
