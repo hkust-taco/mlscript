@@ -271,7 +271,7 @@ _ - _ of 1, 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda32;
 //│ lambda32 = (undefined, function (_0) { return _0 - 2 });
-//│ return Predef.passToLo(1, lambda32)
+//│ return Predef.passTo(1, lambda32)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = fun
 
