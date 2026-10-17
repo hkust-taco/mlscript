@@ -55,6 +55,9 @@ print <| 2 + 2
 (_ * 2) <| 2 + 2 |> (_ + 1)
 //│ = 9
 
+_ * 2 <| 2 + 2 |> _ + 1
+//│ = 9
+
 2 + 2 !> print
 //│ > 4
 //│ = 4
@@ -189,7 +192,7 @@ foldr(tuple)(0, 1, 2, 3)
 :todo
 foldr(+)()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.190: 	foldr(+)()
+//│ ║  l.193: 	foldr(+)()
 //│ ║         	^^^^^^^^^^
 //│ ╟── Function 'foldr' expected 1 argument, but got 0
 //│ ║  in ../../mlscript-compile/Predef.mls
