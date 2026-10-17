@@ -1248,7 +1248,7 @@ enum IfLikeForm:
 sealed abstract class Elem extends AutoLocated:
   def subTerms: Ls[Term] = this match
     case Fld(_, term, asc) => term :: asc.toList
-    case Spd(_, term) => term :: Nil
+    case Spd(_, term, _) => term :: Nil
   def show(using Scope, ShowCfg, Raise): Document
   def showDbg(using DebugPrinter): Str
 object Elem:
@@ -1257,9 +1257,12 @@ final case class Fld(flags: FldFlags, term: Term, asc: Opt[Term]) extends Elem, 
 object PlainFld:
   def apply(term: Term) = Fld(FldFlags.empty, term, N)
   def unapply(fld: Fld): Opt[Term] = S(fld.term)
-final case class Spd(k: SpreadKind, term: Term) extends Elem:
-  def show(using Scope, ShowCfg, Raise): Document = k.str :: term.show
-  def showDbg(using DebugPrinter): Str = k.str + term.showDbg
+/** `droppable` marks the rest parameter of a function type, as in `(Int, drop ...Array[Int]) -> Int`,
+  * whose arguments implementations may ignore (see `FldFlags.droppable`). */
+final case class Spd(k: SpreadKind, term: Term, droppable: Bool) extends Elem:
+  private def dropStr = if droppable then "drop " else ""
+  def show(using Scope, ShowCfg, Raise): Document = dropStr :: k.str :: term.show
+  def showDbg(using DebugPrinter): Str = dropStr + k.str + term.showDbg
   def children: Vector[Located] = Vector.single(term)
 
 final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol)(val toLoc: Opt[Loc]) extends Declaration:

@@ -1404,9 +1404,7 @@ extends Importer:
         val elems = fields.map:
           case PrefixApp(Keywrd(Keyword.`drop`), field) => fld(field, Tpe) match
             case f: Fld => f.copy(flags = f.flags.copy(droppable = true))
-            case spd: Spd =>
-              raise(ErrorReport(msg"Rest parameters cannot be droppable." -> field.toLoc :: Nil))
-              spd
+            case spd: Spd => spd.copy(droppable = true)
           case opt @ Optional(t) =>
             Fld(FldFlags.empty.copy(opt = true), optionalType(term(t, Tpe), opt.toLoc), N)
           // * Mirrors the elaboration of named fields in `fld`.
@@ -2110,9 +2108,9 @@ extends Importer:
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       Fld(FldFlags.empty, term(lhs, interp), S(arg(rhs, interp)))
     case Spread(Keywrd(Keyword.`..`), S(trm)) =>
-      Spd(SpreadKind.Lazy, arg(trm, interp))
+      Spd(SpreadKind.Lazy, arg(trm, interp), false)
     case Spread(Keywrd(Keyword.`...`), S(trm)) =>
-      Spd(SpreadKind.Eager, arg(trm, interp))
+      Spd(SpreadKind.Eager, arg(trm, interp), false)
     case _ =>
       val t = arg(tree, interp)
       var flags = FldFlags.empty
@@ -3087,11 +3085,8 @@ extends Importer:
           case R((p, spd, aliases)) =>
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
-            if p.flags.droppable then
-              if !inFunction then
-                raise(ErrorReport(msg"Droppable parameters are only supported in function and lambda parameter lists." -> hd.toLoc :: Nil))
-              else if spd.isDefined then
-                raise(ErrorReport(msg"Rest parameters cannot be droppable." -> hd.toLoc :: Nil))
+            if p.flags.droppable && !inFunction then
+              raise(ErrorReport(msg"Droppable parameters are only supported in function and lambda parameter lists." -> hd.toLoc :: Nil))
             if p.flags.opt then
               if !inFunction then
                 raise(ErrorReport(msg"Optional parameters are only supported in function and lambda parameter lists." -> hd.toLoc :: Nil))

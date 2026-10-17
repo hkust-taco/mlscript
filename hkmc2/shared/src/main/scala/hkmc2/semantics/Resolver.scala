@@ -721,7 +721,7 @@ class Resolver(tl: TraceLogger)
               val args = as match
                 case Term.Tup(args) => args
                 case Term.CtxTup(args) => args
-                case spd => Spd(SpreadKind.Eager, spd) :: Nil
+                case spd => Spd(SpreadKind.Eager, spd, false) :: Nil
               
               // The lhs of the App is already traversed by the recursive
               // `traverse` or `resolve` at the beginning.

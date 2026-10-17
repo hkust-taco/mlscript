@@ -642,7 +642,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     arg match
     case Tup(fs) =>
       if fs.exists(e => e match
-        case Spd(SpreadKind.Lazy, _) => true // is lazy spread
+        case Spd(SpreadKind.Lazy, _, _) => true // is lazy spread
         case _ => false)
       then
         raise(ErrorReport(
@@ -1637,7 +1637,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case Fld(_, t, _) :: rest => quote(t): r2 =>
           val l = loweringCtx.registerTempSymbol(N, erasedType = N)
           Assign(l, r2, rec(rest, l.asSimpleRef :: xs)(k))
-        case Spd(eager, term) :: rest =>
+        case Spd(eager, term, _) :: rest =>
           fail:
             ErrorReport(
               msg"Unsupported spread in quasiquote application" ->

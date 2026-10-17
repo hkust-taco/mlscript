@@ -742,20 +742,25 @@ final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSym
   * `paramFlags` gives the flags of each positional parameter, which may be optional
   * (their types then already include `undefined`; see `Elaborator.optionalType`) or droppable.
   * A rest annotation describes the whole trailing array; hasRest also distinguishes
-  * an unannotated rest parameter from a fixed-arity list.
+  * an unannotated rest parameter from a fixed-arity list, and restDroppable tells
+  * whether the rest parameter is droppable.
   */
-final class DeclaredParams(val params: Ls[Opt[DeclaredType]], val paramFlags: Ls[FldFlags], val hasRest: Bool, val rest: Opt[DeclaredType]) extends ValueKey:
+final class DeclaredParams(val params: Ls[Opt[DeclaredType]], val paramFlags: Ls[FldFlags], val hasRest: Bool, val restDroppable: Bool,
+    val rest: Opt[DeclaredType]) extends ValueKey:
+  require(hasRest || !restDroppable)
   require(paramFlags.length == params.length)
   /** The number of leading required (i.e., non-optional) parameters. */
   lazy val required: Int = FldFlags.requiredPrefixLength(paramFlags)
-  override def toString: Str = s"DeclaredParams($params, $paramFlags, $hasRest, $rest)"
-  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), params.hashCode, paramFlags.hashCode, hasRest.hashCode, rest.hashCode)
+  override def toString: Str = s"DeclaredParams($params, $paramFlags, $hasRest, $restDroppable, $rest)"
+  protected val valueHash: Int =
+    ValueKey.hash(ValueKey.tag(this), params.hashCode, paramFlags.hashCode, hasRest.hashCode, restDroppable.hashCode, rest.hashCode)
   protected def sameValue(other: ValueKey): Bool = other match
     case that: DeclaredParams =>
-      params == that.params && paramFlags == that.paramFlags && hasRest == that.hasRest && rest == that.rest
+      params == that.params && paramFlags == that.paramFlags && hasRest == that.hasRest
+        && restDroppable == that.restDroppable && rest == that.rest
     case _ => false
   def mapTypes(f: DeclaredType => DeclaredType): DeclaredParams =
-    DeclaredParams(params.map(_.map(f)), paramFlags, hasRest, rest.map(f))
+    DeclaredParams(params.map(_.map(f)), paramFlags, hasRest, restDroppable, rest.map(f))
 
 /** Async lowering wraps the result only after all written parameter lists have
   * been applied. A separate signature can encode those lists as nested arrows,

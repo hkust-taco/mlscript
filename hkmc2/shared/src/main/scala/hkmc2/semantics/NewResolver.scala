@@ -1411,8 +1411,9 @@ class NewResolver:
                     DeclaredParams(fixed.map: fld =>
                       S(declaredType(typeResolution(fld.term), current.withPolarity(!current.positive)))
                     , fixed.map(_.flags)
-                    , fields.exists(!_.isInstanceOf[Fld]), N)
-                  case single => DeclaredParams(S(declaredType(typeResolution(single), current.withPolarity(!current.positive))) :: Nil, FldFlags.empty :: Nil, false, N)
+                    , fields.exists(!_.isInstanceOf[Fld])
+                    , fields.exists { case spd: Spd => spd.droppable; case _ => false }, N)
+                  case single => DeclaredParams(S(declaredType(typeResolution(single), current.withPolarity(!current.positive))) :: Nil, FldFlags.empty :: Nil, false, false, N)
                 publish(CallableTypeShape(source, ps ne_:: Nil,
                   S(declaredType(ret, current)), N, N, N, N))
               case TypeShape.Polymorphic(params, _, body) =>
@@ -1709,7 +1710,7 @@ class NewResolver:
           else td.params match
             case params: NELs[ParamList] => publish(CallableTypeShape(source,
               params.ne_map(ps => DeclaredParams(ps.params.map(_.sign.map(signature(_, !positive))), ps.params.map(_.flags),
-                ps.restParam.nonEmpty, ps.restParam.flatMap(_.sign).map(signature(_, !positive)))),
+                ps.restParam.nonEmpty, ps.restParam.exists(_.flags.droppable), ps.restParam.flatMap(_.sign).map(signature(_, !positive)))),
               result, N, N, S(td), N))
             case Nil if td.asyncAnnotation.nonEmpty =>
               publish(promiseShape(td.asyncAnnotation.get, result.getOrElse(extremeType(true))))
@@ -2093,15 +2094,15 @@ class NewResolver:
 
   /** Whether a callback accepting `actual` arguments is incompatible with the parameters of its
     * `expected` function type. The callback must not require an argument that callers may omit
-    * (i.e., more arguments than the required parameters of `expected`), and it must accept the
-    * arguments of a rest parameter of `expected`. Since functions ignore extra arguments
-    * (`runtime.checkArgs` only checks that enough arguments are passed), the callback may omit
-    * trailing parameters of `expected`, but only those marked droppable, as in `(T, drop Int) -> U`:
+    * (i.e., more arguments than the required parameters of `expected`). Since functions ignore
+    * extra arguments (`runtime.checkArgs` only checks that enough arguments are passed),
+    * the callback may omit trailing parameters of `expected`, including its rest parameter,
+    * but only those marked droppable, as in `(T, drop Int, drop ...Array[Any]) -> U`:
     * other parameters are meant to be used by implementations. Callback parameters beyond those
     * of `expected` must be optional, in which case they are always `undefined`. */
   private def callbackArityMismatch(actual: Arity, expected: DeclaredParams): Bool =
     actual.required > expected.required
-      || expected.hasRest && !actual.hasRest
+      || !actual.hasRest && expected.hasRest && !expected.restDroppable
       || !actual.hasRest && expected.paramFlags.drop(actual.positional).exists(!_.droppable)
   
   private def listenSignatureResult(tpe: DeclaredType, count: Int)(listener: Listener)(using ResolutionContext): Unit =
@@ -4027,7 +4028,7 @@ class NewResolver:
           // fields into one trailing record. Shape positions must match that layout.
           case Fld(_, _, S(_)) :: rest => expand(rest, reversed)
           case (field: Fld) :: rest => expand(rest, TupleShape.Field(field, Nil) :: reversed)
-          case Spd(_, term) :: rest =>
+          case Spd(_, term, _) :: rest =>
             val spreadKey = new Object
             listenTermViews(term): sh =>
               if rctx.state.spreadInputs.getOrElseUpdate(spreadKey, mutable.Set.empty).add(ShapeIdentity.key(sh)) then sh match
