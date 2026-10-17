@@ -672,8 +672,6 @@ abstract class Parser(
     case (LITVAL(lit), loc) :: _ =>
       consume
       exprCont(lit.asTree.withLoc(S(loc)), prec, allowNewlines = allowNewlines)
-    // case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
-    //   ???
     case (br @ BRACKETS(bk @ (Round | Curly | Square), toks), loc) :: _ =>
       consume
       val ps = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
