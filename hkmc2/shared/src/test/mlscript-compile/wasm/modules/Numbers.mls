@@ -1,0 +1,5 @@
+#config(target: CompilationTarget.Wasm)
+
+module Numbers with
+  val value = 40
+  fun answer() = value + 2

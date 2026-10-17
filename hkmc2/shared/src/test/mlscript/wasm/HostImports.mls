@@ -1,0 +1,21 @@
+
+:global
+:js
+
+import "../../mlscript-compile/wasm/Shared.mjs"
+
+:expect "separate λ module"
+Shared.word()
+//│ = "separate λ module"
+
+:expect 1
+Shared.next()
+//│ = 1
+
+:expect 2
+Shared.next()
+//│ = 2
+
+:re
+Shared.fail()
+//│ ═══[RUNTIME ERROR] 42

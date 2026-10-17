@@ -1,0 +1,7 @@
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+import "./Base.mls"
+
+open class Derived(val value) extends Base(value * 2) with
+  fun answer(x) = value + x
+  virtual fun extra(x) = value * x

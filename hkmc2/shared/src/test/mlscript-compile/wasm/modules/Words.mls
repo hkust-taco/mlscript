@@ -1,0 +1,5 @@
+#config(target: CompilationTarget.Wasm)
+
+#config(inlining: None)
+module Words with
+  fun word() = "dependency"

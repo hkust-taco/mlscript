@@ -1,0 +1,14 @@
+#config(target: CompilationTarget.Wasm)
+
+#config(inlining: None)
+import "./Answer.mls"
+import "./Increment.mls" as Inc
+
+module Functions with
+  fun answer() = Answer()
+  fun increment() = Inc(41)
+  fun recursive() = even(10)
+
+// Forward references and mutually recursive functions retain the boxed-value ABI.
+fun even(n) = if n === 0 then 42 else odd(n - 1)
+fun odd(n) = if n === 0 then 0 else even(n - 1)

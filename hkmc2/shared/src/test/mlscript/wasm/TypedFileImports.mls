@@ -1,0 +1,95 @@
+
+:global
+:wasm
+:noInline
+
+// Concrete references and i64 values must retain their representations across files.
+import "../../mlscript-compile/wasm/modules/typed/Base.mls" as BaseAlias
+import "../../mlscript-compile/wasm/modules/typed/Derived.mls" as DerivedAlias
+import "../../mlscript-compile/wasm/modules/typed/Operations.mls" as Ops
+//│ Wasm result:
+//│ = {}
+
+:expect 40n
+Ops.read(Ops.initial)
+//│ Wasm result:
+//│ = 40n
+
+:expect 18n
+Ops.dispatch(Ops.initial)
+//│ Wasm result:
+//│ = 18n
+
+:expect 42n
+Ops.read(Ops.choose(Ops.make(wasm.i64.const(21)), Ops.initial))
+//│ Wasm result:
+//│ = 42n
+
+:expect 1n
+Ops.next()
+//│ Wasm result:
+//│ = 1n
+
+:expect 1n
+Ops.count
+//│ Wasm result:
+//│ = 1n
+
+// The virtual slot includes a concrete Base reference in both its parameter and
+// result, so importing its metadata must relocate those type edges too.
+class Leaf(val ownLeaf: Int64) extends DerivedAlias(ownLeaf) with
+  fun add(x: Int64): Int64 = wasm.i64.add(ownLeaf, x)
+  fun choose(x: BaseAlias): BaseAlias = x
+let leaf = new Leaf(wasm.i64.const(30))
+//│ Wasm result:
+//│ = {}
+
+:expect 60n
+Ops.read(leaf)
+//│ Wasm result:
+//│ = 60n
+
+:expect 32n
+Ops.dispatch(leaf)
+//│ Wasm result:
+//│ = 32n
+
+:expect 40n
+Ops.read(Ops.choose(leaf, Ops.initial))
+//│ Wasm result:
+//│ = 40n
+
+:expect 1
+if leaf is BaseAlias and leaf is DerivedAlias then 1 else 0
+//│ Wasm result:
+//│ = 1
+
+// Later worksheet instances also import the typed virtual table and initializer.
+class Last(x: Int64) extends Leaf(x)
+let last = new Last(wasm.i64.const(40))
+//│ Wasm result:
+//│ = {}
+
+:expect 42n
+Ops.dispatch(last)
+//│ Wasm result:
+//│ = 42n
+
+:expect 80n
+Ops.read(last)
+//│ Wasm result:
+//│ = 80n
+
+// Start by demanding B, although the exporting module declares A first. Both
+// mutually recursive layouts must keep their original group and member order.
+import "../../mlscript-compile/wasm/modules/typed/Recursive.mls" as Rec
+//│ Wasm result:
+//│ = {}
+
+:expect 42n
+fun readCycle(b: Rec.B): Int64 =
+  val a: Rec.A = b.a
+  a.value
+readCycle(Rec.make().b)
+//│ Wasm result:
+//│ = 42n

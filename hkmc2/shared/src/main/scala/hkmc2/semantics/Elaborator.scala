@@ -823,7 +823,7 @@ extends Importer:
       | Keyword.`private`
     )) => S(Annot.Modifier(kw)(tree.toLoc))
     case App(Ident("config"), Tup(args)) =>
-      val modify = ConfigParser.parseOverrides(args)
+      val modify = ConfigParser.parseOverrides(args, allowCompilationTarget = false)
       S(Annot.Config(modify)(tree.toLoc))
     case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
       S(Annot.Affine(whichParamList.toInt)(tree.toLoc))
@@ -1913,7 +1913,7 @@ extends Importer:
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       error
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
-      blockOrRcd(body, hasResult = true, resultInterp = interp) match
+      blockOrRcd(body, hasResult = true, resultInterp = interp, isTopLevel = false) match
       case (Blk(Nil, Term.UnitVal()), ctx) =>
         withTypeBinders(Rcd(mut = true, Nil)).withLocOf(body)
       case (blk: Blk, ctx) =>
@@ -2021,7 +2021,10 @@ extends Importer:
     block(new Block(sts), hasResult, Trm)
   
   def block(blk: Block, hasResult: Bool, resultInterp: Interpretation)(using UnderCtx): Ctxl[(Blk, Ctx)] =
-    blockOrRcd(blk, hasResult, resultInterp) match
+    block(blk, hasResult, resultInterp, isTopLevel = false)
+
+  private def block(blk: Block, hasResult: Bool, resultInterp: Interpretation, isTopLevel: Bool)(using UnderCtx): Ctxl[(Blk, Ctx)] =
+    blockOrRcd(blk, hasResult, resultInterp, isTopLevel) match
     case (blk: Blk, ctx) => (blk, ctx)
     case (rcd: Rcd, ctx) => (Blk(Nil, rcd), ctx)
   
@@ -2043,7 +2046,7 @@ extends Importer:
   // * for these, elaborate with `hasResult = false`, which uses `undefined` as the result
   // * when there is no other result available. This is fine since the value is never used.
   // * These useless trailing `undefined`s are then removed by `Lowering`.
-  def blockOrRcd(blk: Block, hasResult: Bool, resultInterp: Interpretation)(using UnderCtx)
+  def blockOrRcd(blk: Block, hasResult: Bool, resultInterp: Interpretation, isTopLevel: Bool)(using UnderCtx)
     : Ctxl[(Blk | Rcd, Ctx)]
     = trace[(Blk | Rcd, Ctx)](
         pre = s"Elab block ${blk.desugStmts.toString.truncate(100, "[...]")} ${ctx.outer}", r => s"~> ${r._1.showDbg}"
@@ -2239,7 +2242,7 @@ extends Importer:
         val (newCtx, newAcc) = pathAndAlias match
           case S((StrLit(path), alias)) =>
             val stmt = importPath(path, alias)(statementLoc)
-            (ctx + (stmt.sym.nme -> stmt.sym),
+            (ctx + (alias.fold(stmt.sym.nme)(_.name) -> stmt.sym),
               stmt :: acc)
           case S((pathArg, _)) =>
             raise(ErrorReport(
@@ -2773,7 +2776,7 @@ extends Importer:
         go(Directive(prefix, args) :: sts, annotations, acc)(statementLoc)
       case (directive @ Directive(Ident("config"), Tup(args))) :: sts =>
         reportUnusedAnnotations
-        val modify = ConfigParser.parseOverrides(args)
+        val modify = ConfigParser.parseOverrides(args, allowCompilationTarget = isTopLevel)
         go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case (directive @ Directive(Ident("lang"), Tup(args))) :: sts =>
         reportUnusedAnnotations
@@ -3201,7 +3204,7 @@ extends Importer:
   
   def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
-    val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
+    val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm, isTopLevel = true)
     // TODO handle name clashes
     if newResolution then
       InterfaceExposure(this).check(exports, Nil)
@@ -3210,7 +3213,7 @@ extends Importer:
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = new UnderCtx(N)
-    val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
+    val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm, isTopLevel = true)
     computeVariances(res)
     if newResolution then
       if config.language.strictResolution then

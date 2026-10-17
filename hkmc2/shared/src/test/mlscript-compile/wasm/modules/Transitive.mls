@@ -1,0 +1,4 @@
+#config(target: CompilationTarget.Wasm)
+
+import "./PrivateHelpers.mls" as Alias
+fun Transitive(x) = Alias.answer(x)

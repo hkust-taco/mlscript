@@ -9,7 +9,7 @@ import document.*
 import semantics.*
 import semantics.Elaborator
 import semantics.Term.Blk
-import text.{SessionBinding, CompiledWasmModule, WatBuilder}
+import text.{WatBuilder, FileImport, FileCompilation, CompiledWasmFile, FileInterface}
 import Diagnostic.Source
 import Message.MessageContext
 
@@ -31,9 +31,49 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
     utils.Scope.empty(utils.Scope.Cfg.default)
   private val wasmReplImportsNme = s"${wasmSuppNme}ReplImports"
   private val wasmReplImportsRef = s"globalThis.$wasmReplImportsNme"
-  private val sessionImportsBySymbol = mutable.Map.empty[Symbol, mutable.LinkedHashMap[Str, SessionBinding]]
+  private val worksheetInterfaces = mutable.ArrayBuffer.empty[FileInterface]
   private var wasmSessionInitialized = false
-  private var wasmSessionMemPages = 0
+  private val linkedFiles = mutable.LinkedHashMap.empty[CompilerCache.Artifact, (io.Path, CompiledWasmFile)]
+  private val fileAliases = mutable.Map.empty[ScopedSymbol, ScopedSymbol]
+  private val wasmFileRuntimeNme = s"${wasmSuppNme}FileRuntime"
+  private var initializingPrelude = false
+
+  override def init(): Unit =
+    // The harness imports the JS predef for name resolution. It is not a user WASM
+    // dependency, even when :wasm precedes the first block in the worksheet.
+    initializingPrelude = true
+    try super.init()
+    finally initializingPrelude = false
+
+  override def processTerm(blk: Blk, inImport: Bool)(using Config, Raise): Unit =
+    if wasm.isSet && config.target == CompilationTarget.Wasm && !inImport && !initializingPrelude then
+      val compiler = new WasmCompiler(using cctx, ltl)
+      val report = summon[Raise]
+      val throwingRaise: Raise = diagnostic =>
+        report(diagnostic)
+        diagnostic match
+          case _: ErrorReport => throw diagnostic
+          case _ => ()
+      def collect(statement: semantics.Statement)(using Raise): Unit =
+        statement match
+          case imp: semantics.Import if imp.file.ext == "mls" =>
+            val artifact = cctx.getElaboratedBlock(imp.file, prelude)(using ltl, summon[Raise])
+            if artifact.config.target != CompilationTarget.Wasm then
+              raise(ErrorReport(msg"Cannot import JavaScript source into a WASM worksheet" -> imp.sym.toLoc :: Nil,
+                source = Source.Compilation))
+            else
+              val graph = compiler.compile(imp.file, artifact, _ => summon[Raise])
+              graph.files.foreach: (art, path, compiled) =>
+                linkedFiles(art) = path -> compiled
+                art.sourceImports.foreach: dep =>
+                  dep.artifact.compilationUnit.defaultExport.foreach(sym => fileAliases(dep.sym) = sym)
+              artifact.compilationUnit.defaultExport.foreach(sym => fileAliases(imp.sym) = sym)
+          case _ => ()
+        statement.subStatements.foreach(collect)
+      try collect(blk)(using throwingRaise)
+      catch case _: Diagnostic => return // The emitter has already reported this diagnostic.
+    super.processTerm(blk, inImport)
+
 
   final lazy val wasmSuppFile: io.Path = predefFile.up / "wasm" / "Wasm.mjs"
   final lazy val wasmSuppNme = baseScp.allocateName(Elaborator.State.wasmSymbol)(using throw _)
@@ -67,7 +107,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
     
     val outerRaise: Raise = summon
 
-    if wasm.isSet && config.target == CompilationTarget.Wasm then
+    if wasm.isSet && config.target == CompilationTarget.Wasm && !initializingPrelude then
 
       val reportedMessages = mutable.Set.empty[Str]
 
@@ -79,13 +119,16 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
           errored = true
           outerRaise(d)
         case d => outerRaise(d)
-      val sessionImports = mutable.LinkedHashMap.empty[Str, SessionBinding]
-      SessionBinding.referencedSymbols(pgrm.main).foreach: sym =>
-        sessionImportsBySymbol.get(sym).foreach: bindings =>
-          bindings.foreach: (bindingKey, binding) =>
-            sessionImports.update(bindingKey, binding)
-      val CompiledWasmModule(modWat, mainFnNme, systemMemMinPages, sessionExports) = ltl.givenIn:
-        WatBuilder.fresh.program(pgrm, N, wd, sessionImports.values.toSeq, symbolsToPreserve)
+      val compiled = ltl.givenIn:
+        val runtime = new WasmCompiler(using cctx, ltl).runtime()
+        val fileImports = Vector(FileImport("system", runtime.compiled.interface)) ++
+          linkedFiles.values.toVector.zipWithIndex.map { case ((_, compiled), i) => FileImport(s"module$i", compiled.interface) } ++
+          worksheetInterfaces.toVector.zipWithIndex.map((abi, i) => FileImport(s"repl$i", abi))
+        WatBuilder.fresh.worksheetModule(pgrm, wd, symbolsToPreserve,
+          FileCompilation(fileImports, fileAliases.toMap, runtime = false))
+      val modWat = compiled.module.wat
+      val mainFnNme = compiled.module.entryName
+      val systemMemMinPages = compiled.module.systemMemMinPages
       val modWatJsLit = JSBuilder.makeStringLiteral(modWat.mkString(output.ColWidth))
 
       if wat.isSet then
@@ -151,58 +194,38 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
         if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
       end mkQuery
 
+      def executeSetup(script: Str): Bool = host.execute(script) match
+        case ReplHost.Result(content) if !content.startsWith(ReplHost.uncaughtErrorHead) => true
+        case other =>
+          raise(ErrorReport(msg"Failed to initialize WASM imports: ${other.toString}" -> N :: Nil,
+            source = Source.Runtime))
+          false
+
       if !wasmSessionInitialized then
-        val intrinsicWatJsLit = JSBuilder.makeStringLiteral(
-          ltl.givenIn:
-            baseScp.nest.givenIn:
-              WatBuilder.intrinsicSupportModuleWat.mkString(output.ColWidth),
-        )
-        host.execute(
-          doc"""(() => {
-            # const mem = new WebAssembly.Memory({ initial: ${systemMemMinPages} });
-            # const decodeUtf16 = new TextDecoder("utf-16le");
-            # const system = {
-            #   mem,
-            #   mlx_str_from_utf16: (ptr, byteLen) =>
-            #     decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen)),
-            # };
-            # const intrinsicModule = $wasmSuppNme.binaryenCompileToModule($intrinsicWatJsLit, {});
-            # Object.assign(system, intrinsicModule.exports);
-            # $wasmReplImportsRef = {
-            #   repl: Object.create(null),
-            #   system,
-            # };
-            # })();"""
-            .stripBreaks
-            .mkString(output.ColWidth),
-        ) match
-          case ReplHost.Result(_) =>
-            wasmSessionInitialized = true
-            wasmSessionMemPages = systemMemMinPages
-          case r =>
-            output(s"Failed to initialize wasm REPL session object: $r")
-        end match
-      else if systemMemMinPages > wasmSessionMemPages then
-        host.execute(
-          doc"""(() => {
-            # const extraPages = ${systemMemMinPages - wasmSessionMemPages};
-            # $wasmReplImportsRef.system.mem.grow(extraPages);
-            # })();"""
-            .stripBreaks
-            .mkString(output.ColWidth),
-        ) match
-          case ReplHost.Result(_) =>
-            wasmSessionMemPages = systemMemMinPages
-          case r =>
-            output(s"Failed to grow wasm REPL session memory: $r")
-      end if
-      val exportAssignments = sessionExports.flatMap(_.exportNameOpt.toSeq).map: exportName =>
-        s"""$wasmReplImportsRef.repl["$exportName"] = exports["$exportName"];"""
+        val runtime = new WasmCompiler(using cctx, ltl).runtime()
+        val runtimeUrl = JSBuilder.makeStringLiteral(new java.io.File(runtime.path.toString).toURI.toASCIIString)
+        if !executeSetup(s"const $wasmFileRuntimeNme = await import($runtimeUrl); $wasmReplImportsRef = Object.create(null);") then return
+        wasmSessionInitialized = true
+      var loaded = true
+      linkedFiles.values.toVector.zipWithIndex.foreach:
+        case ((source, _), i) =>
+          val out = source.up / (source.baseName + ".mjs")
+          val url = JSBuilder.makeStringLiteral(new java.io.File(out.toString).toURI.toASCIIString)
+          if loaded then loaded = executeSetup(s"$wasmReplImportsRef.module$i = (await import($url)).wasmExports;")
+      if !loaded then return
+      // Each instance retains its own decoder closure and literal memory. Replacing the
+      // import object's system property must never overwrite an earlier block's string pool.
+      if !executeSetup(s"""(() => {
+        const mem = new WebAssembly.Memory({ initial: $systemMemMinPages });
+        const decode = new TextDecoder("utf-16le");
+        $wasmReplImportsRef.system = {
+          ...$wasmFileRuntimeNme.system, mem,
+          mlx_str_from_utf16: (ptr, length) => decode.decode(new Uint8Array(mem.buffer, ptr, length)),
+        };
+      })();""") then return
+      val blockIndex = worksheetInterfaces.size
       val jsBody =
-        if exportAssignments.nonEmpty then
-          s"""const result = exports["$mainFnNme"](); ${exportAssignments.mkString(" ")} return result;"""
-        else
-          s"""return exports["$mainFnNme"]();"""
+        s"""const result = exports["$mainFnNme"](); $wasmReplImportsRef.repl$blockIndex = exports; return result;"""
       val jsStr =
         s"""wasm.binaryenPrintFuncRes($modWatJsLit, $wasmReplImportsRef, exports => { $jsBody });"""
       output("Wasm result:")
@@ -211,11 +234,12 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
         val result = out.lastIndexOf('\n') match
           case n if n >= 0 => out.substring(0, n)
           case _ => ""
-        sessionExports.foreach: binding =>
-          binding.bindingSyms.foreach: sym =>
-            sessionImportsBySymbol
-              .getOrElseUpdate(sym, mutable.LinkedHashMap.empty)
-              .update(binding.bindingKey, binding)
+        worksheetInterfaces += compiled.interface
+        expect.get match
+          case S(expected) if result =/= expected => raise:
+            ErrorReport(msg"Expected: '$expected', got: '$result'" -> N :: Nil,
+              source = Source.Runtime)
+          case _ => ()
         output(s"= $result")
     end if
 

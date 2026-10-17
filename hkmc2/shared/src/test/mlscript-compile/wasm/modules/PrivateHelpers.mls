@@ -1,0 +1,12 @@
+#config(target: CompilationTarget.Wasm)
+
+// Keep this large enough that inlining answer leaves a reference to a private helper.
+fun helper(x) =
+  if x < -10 then 0
+  else if x < -9 then 1
+  else if x < -8 then 2
+  else if x < -7 then 3
+  else x + 1
+
+module PrivateHelpers with
+  fun answer(x) = helper(x)

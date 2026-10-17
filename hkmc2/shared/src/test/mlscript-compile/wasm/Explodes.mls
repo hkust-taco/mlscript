@@ -1,0 +1,4 @@
+#config(target: Wasm)
+
+module Explodes with
+  val value = throw 42

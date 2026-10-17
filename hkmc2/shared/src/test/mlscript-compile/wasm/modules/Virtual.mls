@@ -1,0 +1,10 @@
+#config(target: CompilationTarget.Wasm)
+
+#config(inlining: None)
+import "./Base.mls"
+import "./Call.mls"
+
+class Child() extends Base() with
+  fun answer(x) = x * 2
+
+fun Virtual() = Call(new Child())

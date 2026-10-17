@@ -1,0 +1,12 @@
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+import "./Counter.mls"
+open Counter { Cell }
+module Right with
+  val value = Counter.next()
+  fun increment(x) =
+    if x is Counter.Cell then new Counter.Cell(x.Cell#value + 1)
+    else new Counter.Other(-1)
+  fun other(x) = new Counter.Other(x)
+  fun read(x) = if x is Counter.Cell then x.Cell#value else -1
+  fun isCell(x) = x is Counter.Cell

@@ -1,0 +1,15 @@
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+import "./Base.mls"
+import "./Derived.mls"
+
+module Operations with
+  mut val count: Int64 = wasm.i64.const(0)
+  val initial: Derived = new Derived(wasm.i64.const(20))
+  fun make(x: Int64): Derived = new Derived(x)
+  fun read(x: Base): Int64 = x.value
+  fun dispatch(x: Base): Int64 = x.add(wasm.i64.const(2))
+  fun choose(x: Base, y: Base): Base = x.choose(y)
+  fun next(): Int64 =
+    set count = wasm.i64.add(count, wasm.i64.const(1))
+    count

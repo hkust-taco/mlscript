@@ -1,0 +1,16 @@
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+import "./Base.mls"
+import "./Derived.mls"
+
+// These functions run in their own WASM instance, including when the argument
+// was constructed by a subclass defined in a later worksheet block.
+module Operations with
+  fun make(x) = new Derived(x)
+  fun readBase(x: Base) = x.baseValue
+  fun readDerived(x: Derived) = x.value
+  fun baseMethod(x: Base) = x.baseField()
+  fun dispatchBase(x: Base) = x.answer(2)
+  fun dispatchDerived(x: Derived) = x.extra(3)
+  fun isBase(x) = x is Base
+  fun isDerived(x) = x is Derived

@@ -1,0 +1,5 @@
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+open class Base(val value: Int64) with
+  virtual fun add(x: Int64): Int64 = wasm.i64.add(value, x)
+  virtual fun choose(x: Base): Base = x

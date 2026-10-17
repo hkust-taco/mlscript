@@ -59,15 +59,15 @@ if Bar(true) is
 //│   (global $Baz_typeinfo (export "Baz_typeinfo") (ref $Baz_typeinfo) (struct.new $Baz_typeinfo
 //│     (i32.const 2)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $Bar_init (type $Bar_init) (param $this (ref $Bar)) (param $y (ref null any)) (result (ref $Bar))
+//│   (func $Bar_init (export "Bar_init") (type $Bar_init) (param $this (ref $Bar)) (param $y (ref null any)) (result (ref $Bar))
 //│     (block (result (ref $Bar))
-//│       (struct.set $Bar $y
+//│       (struct.set $Bar 1
 //│         (local.get $this)
 //│         (local.get $y))
 //│       (return
 //│         (ref.cast (ref $Bar)
 //│           (local.get $this)))))
-//│   (func $Bar_ctor (export "Bar") (type $Bar_ctor) (param $y (ref null any)) (result (ref $Bar))
+//│   (func $Bar_ctor (export "Bar_ctor") (type $Bar_ctor) (param $y (ref null any)) (result (ref $Bar))
 //│     (local $this (ref $Bar))
 //│     (block (result (ref $Bar))
 //│       (local.set $this
@@ -80,15 +80,15 @@ if Bar(true) is
 //│           (local.get $y)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Baz_init (type $Baz_init) (param $this (ref $Baz)) (param $z (ref null any)) (result (ref $Baz))
+//│   (func $Baz_init (export "Baz_init") (type $Baz_init) (param $this (ref $Baz)) (param $z (ref null any)) (result (ref $Baz))
 //│     (block (result (ref $Baz))
-//│       (struct.set $Baz $z
+//│       (struct.set $Baz 1
 //│         (local.get $this)
 //│         (local.get $z))
 //│       (return
 //│         (ref.cast (ref $Baz)
 //│           (local.get $this)))))
-//│   (func $Baz_ctor (export "Baz") (type $Baz_ctor) (param $z (ref null any)) (result (ref $Baz))
+//│   (func $Baz_ctor (export "Baz_ctor") (type $Baz_ctor) (param $z (ref null any)) (result (ref $Baz))
 //│     (local $this (ref $Baz))
 //│     (block (result (ref $Baz))
 //│       (local.set $this
@@ -127,7 +127,7 @@ if Bar(true) is
 //│             (if
 //│               (block (result i32)
 //│                 (local.set $currentTypeInfo
-//│                   (struct.get $Object $$typeinfo
+//│                   (struct.get $Object 0
 //│                     (ref.cast (ref $Object)
 //│                       (local.get $scrut))))
 //│                 (local.set $targetTypeInfo
@@ -155,7 +155,7 @@ if Bar(true) is
 //│                               (i32.const 1)))
 //│                           (br $typeInfo))))
 //│                     (local.set $currentTypeInfo
-//│                       (struct.get $TypeInfoBase $$parent
+//│                       (struct.get $TypeInfoBase 1
 //│                         (ref.cast (ref $TypeInfoBase)
 //│                           (local.get $currentTypeInfo))))
 //│                     (br $typeInfo_cont)))
@@ -165,7 +165,7 @@ if Bar(true) is
 //│               (then
 //│                 (block $arm
 //│                   (local.set $arg$Bar$0$
-//│                     (struct.get $Bar $y
+//│                     (struct.get $Bar 1
 //│                       (ref.cast (ref $Bar)
 //│                         (local.get $scrut))))
 //│                   (block $match1
@@ -193,7 +193,7 @@ if Bar(true) is
 //│             (if
 //│               (block (result i32)
 //│                 (local.set $currentTypeInfo1
-//│                   (struct.get $Object $$typeinfo
+//│                   (struct.get $Object 0
 //│                     (ref.cast (ref $Object)
 //│                       (local.get $scrut))))
 //│                 (local.set $targetTypeInfo1
@@ -221,7 +221,7 @@ if Bar(true) is
 //│                               (i32.const 1)))
 //│                           (br $typeInfo))))
 //│                     (local.set $currentTypeInfo1
-//│                       (struct.get $TypeInfoBase $$parent
+//│                       (struct.get $TypeInfoBase 1
 //│                         (ref.cast (ref $TypeInfoBase)
 //│                           (local.get $currentTypeInfo1))))
 //│                     (br $typeInfo_cont)))
@@ -231,7 +231,7 @@ if Bar(true) is
 //│               (then
 //│                 (block $arm
 //│                   (return
-//│                     (struct.get $Baz $z
+//│                     (struct.get $Baz 1
 //│                       (ref.cast (ref $Baz)
 //│                         (local.get $scrut)))))))))
 //│         (return

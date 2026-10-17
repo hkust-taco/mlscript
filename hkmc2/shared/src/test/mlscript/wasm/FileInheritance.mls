@@ -1,0 +1,120 @@
+
+:global
+:wasm
+:noInline
+
+// Base.mls -> Derived.mls -> worksheet Grandchild -> later worksheet Leaf.
+// Operations.mls must recognize and dispatch on instances from every level.
+import "../../mlscript-compile/wasm/modules/inheritance/Base.mls" as BaseAlias
+import "../../mlscript-compile/wasm/modules/inheritance/Derived.mls" as DerivedAlias
+import "../../mlscript-compile/wasm/modules/inheritance/Operations.mls"
+//│ Wasm result:
+//│ = {}
+
+class Grandchild(val own) extends DerivedAlias(own + 1) with
+  fun answer(x) = own - x
+  fun extra(x) = own + x
+let child = new Grandchild(20)
+//│ Wasm result:
+//│ = {}
+
+:expect 42
+Operations.readBase(child)
+//│ Wasm result:
+//│ = 42
+
+:expect 21
+Operations.readDerived(child)
+//│ Wasm result:
+//│ = 21
+
+:expect 42
+Operations.baseMethod(child)
+//│ Wasm result:
+//│ = 42
+
+:wat
+:expect 18
+Operations.dispatchBase(child)
+//│ Wat:
+//│ (module
+//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase1 (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase1)))))
+//│   (type $Object1 (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
+//│   (type $Base (sub $Object1 (struct (field $$typeinfo (mut (ref $TypeInfoBase1))) (field $baseValue (mut (ref null any))))))
+//│   (type $dispatchBase (func (param $x (ref $Base)) (result (ref null any))))
+//│   (type $entry (func (result (ref null any))))
+//│   (import "module2" "dispatchBase" (func $dispatchBase (type $dispatchBase)))
+//│   (import "repl1" "child" (global $child (mut (ref null any))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│     (return
+//│       (call_ref $dispatchBase
+//│         (ref.cast (ref $Base)
+//│           (global.get $child))
+//│         (ref.func $dispatchBase))))
+//│   (elem $entry declare func $entry))
+//│ Wasm result:
+//│ = 18
+
+:expect 23
+Operations.dispatchDerived(child)
+//│ Wasm result:
+//│ = 23
+
+:expect 1
+Operations.isBase(child)
+//│ Wasm result:
+//│ = 1
+
+:expect 1
+Operations.isDerived(child)
+//│ Wasm result:
+//│ = 1
+
+:expect 42
+child.BaseAlias#baseValue
+//│ Wasm result:
+//│ = 42
+
+:expect 21
+child.DerivedAlias#value
+//│ Wasm result:
+//│ = 21
+
+:expect 0
+if Operations.make(21) is Grandchild then 1 else 0
+//│ Wasm result:
+//│ = 0
+
+// This block imports Grandchild's layout, initializer, and inherited virtual table
+// from the earlier worksheet, as well as its separately compiled ancestors.
+class Leaf(x) extends Grandchild(x)
+let leaf = new Leaf(20)
+//│ Wasm result:
+//│ = {}
+
+:expect 42
+Operations.readBase(leaf)
+//│ Wasm result:
+//│ = 42
+
+:expect 20
+leaf.Grandchild#own
+//│ Wasm result:
+//│ = 20
+
+:expect 18
+Operations.dispatchBase(leaf)
+//│ Wasm result:
+//│ = 18
+
+:expect 23
+Operations.dispatchDerived(leaf)
+//│ Wasm result:
+//│ = 23
+
+:expect 1
+if leaf is BaseAlias and leaf is DerivedAlias and leaf is Grandchild then 1 else 0
+//│ Wasm result:
+//│ = 1

@@ -1,0 +1,8 @@
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+module Recursive with
+  class A() with
+    val value: Int64 = wasm.i64.const(42)
+    val b: B = new B(this)
+  class B(val a: A)
+  fun make(): A = new A()

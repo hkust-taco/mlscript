@@ -260,18 +260,18 @@ wasm.f64.add(Boxed(wasm.i64.const(1), wasm.f64.const(1.5)).f, wasm.f64.const(0.2
 //│   (global $Boxed_typeinfo (export "Boxed_typeinfo") (ref $Boxed_typeinfo) (struct.new $Boxed_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $Boxed_init (type $Boxed_init) (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))
+//│   (func $Boxed_init (export "Boxed_init") (type $Boxed_init) (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))
 //│     (block (result (ref $Boxed))
-//│       (struct.set $Boxed $i
+//│       (struct.set $Boxed 1
 //│         (local.get $this)
 //│         (local.get $i))
-//│       (struct.set $Boxed $f
+//│       (struct.set $Boxed 2
 //│         (local.get $this)
 //│         (local.get $f))
 //│       (return
 //│         (ref.cast (ref $Boxed)
 //│           (local.get $this)))))
-//│   (func $Boxed_ctor (export "Boxed") (type $Boxed_ctor) (param $i i64) (param $f f64) (result (ref $Boxed))
+//│   (func $Boxed_ctor (export "Boxed_ctor") (type $Boxed_ctor) (param $i i64) (param $f f64) (result (ref $Boxed))
 //│     (local $this (ref $Boxed))
 //│     (block (result (ref $Boxed))
 //│       (local.set $this
@@ -304,7 +304,7 @@ wasm.f64.add(Boxed(wasm.i64.const(1), wasm.f64.const(1.5)).f, wasm.f64.const(0.2
 //│         (f64.const 0.25))
 //│       (return
 //│         (f64.add
-//│           (struct.get $Boxed $f
+//│           (struct.get $Boxed 2
 //│             (ref.cast (ref $Boxed)
 //│               (local.get $tmp2)))
 //│           (local.get $tmp3)))))

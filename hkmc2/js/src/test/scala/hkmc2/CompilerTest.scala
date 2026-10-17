@@ -51,6 +51,25 @@ class CompilerTest extends AnyFunSuite:
 
     assert(fs.readCount(inputPath) == 1,
       "The first compilation should parse the source once and the second should reuse its artifact")
+
+  test("WASM artifacts use the virtual filesystem and invalidate with their dependencies"):
+    val fs = new CountingFileSystem(loadStandardLibrary())
+    given CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
+    val compiler = MLsCompiler(_ => diagnostic => fail(diagnostic.toString))
+    val a = Path("/A.mls")
+    val b = Path("/B.mls")
+    fs.write(a, "#config(target: Wasm)\nfun A() = 41")
+    fs.write(b, "#config(target: Wasm)\nimport \"./A.mls\"\nfun B() = A()")
+    compiler.compileModule(b)
+    val before = fs.read(Path("/B.wat"))
+    compiler.compileModule(a)
+    assert(fs.readCount(a) == 1 && fs.readCount(b) == 1)
+    assert(fs.exists(Path("/std/RuntimeWasm.wat")))
+    assert(fs.read(Path("/B.mjs")).contains("await import(\"./A.mjs\")"))
+    fs.write(a, "#config(target: Wasm)\nfun A() = 42")
+    compiler.compileModule(b)
+    assert(fs.readCount(a) == 2 && fs.readCount(b) == 2)
+    assert(fs.read(Path("/B.wat")) != before, "Inlined dependency changes must regenerate the importer")
   
   test("compiler can compile a simple program"):
     val (fs, compiler) = createCompiler()

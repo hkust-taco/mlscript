@@ -1,0 +1,5 @@
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+open class Base(val baseValue) with
+  virtual fun answer(x) = baseValue + x
+  fun baseField() = baseValue

@@ -1,0 +1,9 @@
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+import "./Counter.mls"
+open Counter { Cell }
+module Left with
+  val value = Counter.next()
+  fun make(x) = new Counter.Cell(x)
+  fun read(x) = if x is Counter.Cell then x.Cell#value else -1
+  fun isCell(x) = x is Counter.Cell

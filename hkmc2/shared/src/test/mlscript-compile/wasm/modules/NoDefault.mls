@@ -1,0 +1,4 @@
+#config(target: Wasm)
+
+// An entry-only file can compile, but cannot be imported as a source default.
+fun helper() = 42

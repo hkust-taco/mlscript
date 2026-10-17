@@ -177,3 +177,71 @@ class CompilerCacheTest extends AnyFunSuite:
     finally
       executionContext.shutdownNow()
       os.remove.all(tempDir)
+
+
+  test("WASM roots share cached dependencies and restore deleted outputs"):
+    import io.PlatformPath.given
+    val tempDir = os.temp.dir(prefix = "wasm-cache-")
+    val fixtures = TestFolders.compileTestDir(os.pwd)/"wasm"/"modules"/"diamond"
+    val executor = Executors.newFixedThreadPool(2)
+    val executionContext = ExecutionContext.fromExecutorService(executor)
+    try
+      os.list(fixtures).filter(_.ext == "mls").foreach: source =>
+        os.copy(source, tempDir/source.last)
+      val left: io.Path = tempDir/"Left.mls"
+      val right: io.Path = tempDir/"Right.mls"
+      val counterWat: io.Path = tempDir/"Counter.wat"
+      val reads = TrieMap.empty[io.Path, AtomicInteger]
+      val writes = TrieMap.empty[io.Path, AtomicInteger]
+      val bothRootsLocked = new CountDownLatch(2)
+      val fs = new io.FileSystem:
+        def read(path: io.Path): String =
+          reads.getOrElseUpdate(path, new AtomicInteger).incrementAndGet()
+          if path == left || path == right then
+            bothRootsLocked.countDown()
+            assert(bothRootsLocked.await(startupTimeout.toMillis, TimeUnit.MILLISECONDS))
+          io.FileSystem.default.read(path)
+        def write(path: io.Path, content: String): Unit =
+          writes.getOrElseUpdate(path, new AtomicInteger).incrementAndGet()
+          io.FileSystem.default.write(path, content)
+        def exists(path: io.Path): Boolean = io.FileSystem.default.exists(path)
+        def getLastChangedTimestamp(path: io.Path): Long = io.FileSystem.default.getLastChangedTimestamp(path)
+      given CompilerCtx = CompilerCtx.fresh(fs, TestFolders.compilerPaths(os.pwd), Config.default(TestFolders.mainTestDir(os.pwd)))
+      val compiler = MLsCompiler(_ => diagnostic => fail(diagnostic.toString))
+      val requests = List(left, right).map: root =>
+        Future(compiler.compileModule(root))(using executionContext)
+      Await.result(Future.sequence(requests), 30.seconds)
+      assert(writes(counterWat).get() == 1, "Concurrent roots should materialize their shared dependency once")
+      val oldCounter = os.read(tempDir/"Counter.wat")
+      val oldLeft = os.read(tempDir/"Left.mjs")
+      os.remove(tempDir/"Counter.wat")
+      os.remove(tempDir/"Left.mjs")
+      compiler.compileModule(left)
+      assert(reads.filter(_._1.ext == "mls").values.forall(_.get() == 1),
+        "Regenerating backend outputs must reuse frontend artifacts")
+      assert(os.read(tempDir/"Counter.wat") == oldCounter)
+      assert(os.read(tempDir/"Left.mjs") == oldLeft)
+    finally
+      executionContext.shutdownNow()
+      os.remove.all(tempDir)
+
+  test("cached frontend and backend failures do not become successful compilations"):
+    import io.PlatformPath.given
+    val tempDir = os.temp.dir(prefix = "compiler-cached-errors-")
+    try
+      // These requests exercise cache/error state, not source-language diagnostic wording
+      // (which is covered by the normal ModuleErrors diff test).
+      os.write(tempDir/"Nested.mls", "fun Nested() =\n  #config(target: Wasm)\n  42")
+      os.write(tempDir/"Dynamic.mls", "#config(target: Wasm)\nmodule M with\n  val value = 42\nfun Dynamic() = M")
+      val wasmSource = TestFolders.compileTestDir(os.pwd)/"wasm"/"modules"/"Answer.mls"
+      val quoted = codegen.js.JSBuilder.makeStringLiteral(wasmSource.toString)
+      os.write(tempDir/"Mixed.mls", s"import $quoted\nfun Mixed() = Answer()")
+      given CompilerCtx = TestFolders.compilerCtx(os.pwd)
+      val diagnostics = collection.mutable.ArrayBuffer.empty[Diagnostic]
+      val compiler = MLsCompiler(_ => diagnostic => { diagnostics += diagnostic; () })
+      for _ <- 0 until 2; name <- List("Nested", "Dynamic", "Mixed") do
+        diagnostics.clear()
+        compiler.compileModule(tempDir/s"$name.mls")
+        assert(diagnostics.exists(_.isInstanceOf[ErrorReport]), s"Errors for $name must be reported on every request")
+        assert(!os.exists(tempDir/s"$name.mjs"))
+    finally os.remove.all(tempDir)

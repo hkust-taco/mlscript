@@ -1,0 +1,18 @@
+#config(target: CompilationTarget.Wasm)
+
+#config(inlining: None)
+import "./Left.mls"
+import "./Right.mls"
+
+// Left initializes before Right; repeated imports reuse the same Counter instance.
+module Main with
+  fun result() = Left.value * 10 + Right.value
+  // The same shared class crosses both branches in each direction.
+  fun leftToRight() = Right.read(Left.make(42))
+  fun roundTrip() = Left.read(Right.increment(Left.make(41)))
+  fun leftRecognizesRight() = Left.isCell(Right.increment(Left.make(41)))
+  fun rightRecognizesLeft() = Right.isCell(Left.make(42))
+  // Other has the same fields, but must retain a distinct nominal identity.
+  fun leftRecognizesOther() = Left.isCell(Right.other(42))
+  fun rightRecognizesOther() = Right.isCell(Right.other(42))
+  fun rejectsOtherField() = Left.read(Right.other(42))
