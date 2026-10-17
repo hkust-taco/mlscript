@@ -161,8 +161,8 @@ m0.get(41)
 :silent
 import "../../mlscript-compile/Iter.mls"
 let graphics = new Set of tuple of
-  "circle", "ellipse", "image", "line", "path"
-  "polygon", "polyline", "rect", "text", "use"
+  'circle, 'ellipse, 'image, 'line, 'path
+  'polygon, 'polyline, 'rect, 'text, 'use
 
 fun showProps(x, y, props) = Object.entries(props)
   Iter.mapping of case
@@ -196,19 +196,19 @@ display(x: 11, y: 22, i: 2)
 //│ >       rect x: 71, y: 82, width: 80, height: 90
 //│ >       ellipse x: 81, y: 92, rx: 40, ry: 60
 
-let display = t("group", x: 0, y: 0) of
-  t("circle", x: 10, y: 10, r: 42)
+let display = t('group, x: 0, y: 0) of
+  t('circle, x: 10, y: 10, r: 42)
 //│ display = fun
 
 display(x: 88, y: 99, i: 0)
 //│ > group x: 88, y: 99 with
 //│ >   circle x: 98, y: 109, r: 42
 
-:todo
-t("group")
+:todo // * Make second parameter optional
+t('group)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.208: 	t("group")
-//│ ║         	^^^^^^^^^^
+//│ ║  l.208: 	t('group)
+//│ ║         	^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
 //│ ║  l.176: 	fun t(kind, props) =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
@@ -222,11 +222,11 @@ t("group")
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
-:todo
-t("group")
+:todo // * Make second parameter optional
+t('group)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.226: 	t("group")
-//│ ║         	^^^^^^^^^^
+//│ ║  l.226: 	t('group)
+//│ ║         	^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
 //│ ║  l.176: 	fun t(kind, props) =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
@@ -243,5 +243,7 @@ t("group")
 let empty = Object.create of null
 //│ empty = {}
 
-t("group", empty)
+t('group, empty)
 //│ = fun
+
+
