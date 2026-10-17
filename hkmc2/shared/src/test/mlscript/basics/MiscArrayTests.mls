@@ -5,7 +5,7 @@
 let xs = [0, 1, 2]
 //│ xs = [0, 1, 2]
 
-xs \print()
+xs .\print()
 //│ > [0, 1, 2]
 
 :re
@@ -18,7 +18,7 @@ xs
 let xs = mut [...xs]
 //│ xs = [0, 1, 2]
 
-let f = xs \print
+let f = xs .\print
 //│ f = fun
 
 f()
@@ -50,14 +50,14 @@ xs.map((x, ..._) => x * 2)
 
 fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
 
-xs \map(x => x * 2) \print()
+xs .\map(x => x * 2) .\print()
 //│ > [4, 2, 0]
 
 // * Note: the RHS of this `\` is a self-contained block, thus implicitly parenthesized.
 :sjs
 :e
 :re
-xs \
+xs .\
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.61: 	  map(x => x * 2)
@@ -77,7 +77,7 @@ xs \
 
 :e
 :re
-xs\
+xs.\
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.81: 	  map(x => x * 2)
@@ -89,12 +89,12 @@ xs\
 
 :pt
 xs
-  \ map(f)
+  .\ map(f)
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ App:
 //│   lhs = OpApp:
 //│     lhs = Ident of "xs"
-//│     op = Ident of "\\"
+//│     op = Ident of ".\\"
 //│     rhss = Ls of
 //│       Ident of "map"
 //│   rhs = Tup of Ls of
@@ -106,12 +106,12 @@ xs
 //│ = [(), (), ()]
 
 xs
-  \map(x => x * 2)
+  .\map(x => x * 2)
 //│ = [4, 2, 0]
 
 xs
-  \map(x => x * 2)
-  \print()
+  .\map(x => x * 2)
+  .\print()
 //│ > [4, 2, 0]
 
 fun f = print(0)

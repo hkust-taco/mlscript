@@ -7,41 +7,107 @@ import "../../mlscript-compile/Iter.mls"
 
 fun inc(x) = x + 1
 
-1 \inc()
+1 .\inc()
 //│ = 2
 
-1\inc()
+1.\inc()
 //│ = 2
 
-1 \inc() \inc()
+1 .\inc() .\inc()
 //│ = 3
 
-1 \inc()\inc()
+1 .\inc().\inc()
 //│ = 3
 
 42
-  \inc()
-  \inc()
+  .\inc()
+  .\inc()
 //│ = 44
 
 
-[1, 2, 3] \Iter.mapping(inc) \Iter.toStack()
+[1, 2, 3] .\Iter.mapping(inc) .\Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 [1, 2, 3]
-  \Iter.mapping(inc)
-  \Iter.toStack()
+  .\Iter.mapping(inc)
+  .\Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 [1, 2, 3]
-  \Iter.mapping @ x => x + 1
-  \Iter.toStack()
+  .\Iter.mapping @ x => x + 1
+  .\Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 [1, 2, 3]
-  \Iter.mapping @
+  .\Iter.mapping @
     => _ + 1
-  \Iter.toStack()
+  .\Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
+
+
+
+// * `f(args) \ a` means `f(args, a)`, and `f \ a` means `f(a)`
+
+fun add(x, y) = x + y
+
+:expect 2
+inc \ 1
+//│ = 2
+
+:expect 3
+add(1) \ 2
+//│ = 3
+
+:expect [2, 3, 4]
+[1, 2, 3].map \ (x, ...) => x + 1
+//│ = [2, 3, 4]
+
+// * `\` is right-associative
+print \ id \ 0
+//│ > 0
+
+// * `\` binds looser than other operators
+:expect 4
+inc \ 1 + 2
+//│ = 4
+
+// * Brackets around the LHS are transparent
+:expect 3
+{add \ 1} \ 2
+//│ = 3
+
+:expect 3
+(add \ 1) \ 2
+//│ = 3
+
+// * Operator splits are left-associative, so this means `{add \ 1} \ 2`
+:expect 3
+add
+  \ 1
+  \ 2
+//│ = 3
+
+fun add3(x, y, z) = x + y + z
+
+:expect 6
+add3(1)
+  \ 2
+  \ 3
+//│ = 6
+
+// * Prefix operator applications are not argument lists, so this means `(- x)(2)`, not `-(x, 2)`
+:sjs
+fun test(x) = - x \ 2
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let test;
+//│ test = function test(x) {
+//│   let lambda3, callPrefix;
+//│   lambda3 = (undefined, function (arg1, arg2) {
+//│     return arg1 - arg2
+//│   });
+//│   callPrefix = runtime.safeCall(lambda3(x));
+//│   return runtime.safeCall(callPrefix(2))
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

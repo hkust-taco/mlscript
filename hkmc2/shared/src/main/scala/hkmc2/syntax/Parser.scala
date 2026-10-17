@@ -22,6 +22,7 @@ val charPrecList: List[Str] = List(
     ",",
     // ^ for keywords
     ";",
+    "\\", // `f \ a` means `f(a)`; right-associative (see `opPrec`) and binding looser than other operators
     // "=", // higher than || means `a == 1 || b` parses surprisingly
     "@",
     ":",
@@ -40,7 +41,7 @@ val charPrecList: List[Str] = List(
     "", // Precedence of application
     "", // Precedence of `new`
     // ".",
-    ". \\",
+    ".",
   )
 
 
@@ -77,13 +78,14 @@ object Parser:
   
   final def opCharPrec(opChar: Char): Int = precOf(opChar)
   final def opPrec(opStr: Str): (Int, Int) = opStr match
-    case "+." | "-." | "*." =>
+    // * `x .\ f(a)` means `f(x, a)` (see `Predef.passTo`), so it must parse as `(x .\ f)(a)`
+    case "+." | "-." | "*." | ".\\" =>
       (precOf(opStr.head), precOf(opStr.head))
     case _ if opStr.exists(_.isLetter) =>
       (Keyword.maxPrec.get, Keyword.maxPrec.get)
     case _ =>
       val r = opStr.last
-      (precOf(opStr.head), precOf(r) - (if r === ',' || r === ':' then 1 else 0))
+      (precOf(opStr.head), precOf(r) - (if r === ',' || r === ':' || opStr === "\\" then 1 else 0))
   val prefixOps: Set[Str] = Set("!", "+", "-", "~", "@", "|", "&")
   
   type Indent_Curly = Curly.type | Indent.type
