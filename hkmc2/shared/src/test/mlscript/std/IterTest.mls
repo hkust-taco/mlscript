@@ -19,6 +19,17 @@ let arr = [
 arr Iter.joined("")
 //│ = "0123"
 
+[1, 2, 3] |. Iter.mapping(=> _ + 1)
+//│ = IterableImpl(_)
+
+:e
+[1, 2, 3] |. Iter.mapping(_ + 1)
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.26: 	[1, 2, 3] |. Iter.mapping(_ + 1)
+//│ ║        	                          ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 arr |. Iter.mapping(=> _ + "!") |. Iter.toArray()
 //│ = ["0!", "1!", "2!", "3!"]
 

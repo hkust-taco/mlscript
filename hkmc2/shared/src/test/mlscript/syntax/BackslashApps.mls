@@ -154,6 +154,12 @@ fun applyTo3(f) = f(3)
 applyTo3 \ _ + 1
 //│ = 4
 
+applyTo3 { \ _ + 1 }
+//│ = 4
+
+applyTo3 \ { _ + 1 }
+//│ = 4
+
 fun twice(f, x) = f(f(x))
 
 :expect 12
@@ -257,7 +263,7 @@ twice
 :e
 twice(_, 1) <| _ |> _ * 2
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.258: 	twice(_, 1) <| _ |> _ * 2
+//│ ║  l.264: 	twice(_, 1) <| _ |> _ * 2
 //│ ║         	               ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -269,7 +275,7 @@ open Stack
 :e
 fun findFirst(xs) \ f = ???
 //│ ╔══[COMPILATION ERROR] Expected a valid function definition head; found infix operator '\' instead
-//│ ║  l.270: 	fun findFirst(xs) \ f = ???
+//│ ║  l.276: 	fun findFirst(xs) \ f = ???
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
 
 fun findFirst(xs, f) = if xs is
@@ -318,12 +324,12 @@ tuple(1, 2) \ 3
 tuple(1) \ 2
   \ 3
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.318: 	tuple(1) \ 2
+//│ ║  l.324: 	tuple(1) \ 2
 //│ ║         	           ^
-//│ ║  l.319: 	  \ 3
+//│ ║  l.325: 	  \ 3
 //│ ║         	^^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.318: 	tuple(1) \ 2
+//│ ║  l.324: 	tuple(1) \ 2
 //│ ╙──       	           ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
