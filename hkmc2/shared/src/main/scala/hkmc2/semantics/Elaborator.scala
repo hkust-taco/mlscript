@@ -1318,6 +1318,28 @@ extends Importer:
       (name.startsWith("<") && name =/= "<" && name =/= "<=", name.endsWith(">") && name =/= ">")
     case _ => (false, false)
   
+  /** `f(args) \ a` means `f(args, a)`, and `f \ a` means `f(a)`; returns the corresponding application tree.
+    * Braces around the LHS are transparent, so that `{f \ a} \ b` means `f(a, b)`,
+    * which is also what the operator split of `f` on lines `\ a` and `\ b` means,
+    * as it is elaborated as `(f \ a) \ b` (`\` being otherwise right-associative).
+    * Parentheses are not transparent, as they delimit subexpressions: `(f \ a) \ b` means `f(a)(b)`.
+    * With the new underscore syntax, the argument delimits its own implicit lambda, as if prefixed by `=>`,
+    * so that `xs.map \ _ + 1` means `xs.map(x => x + 1)`; this is done here rather than in
+    * `Tree.desugared`, which does not know the language version. */
+  private def backslashApp(lhs: Tree, rhs: Tree): Tree.App =
+    val arg =
+      if lang.newUnderscoreAndApplicationSyntax
+      then PrefixApp(new Keywrd(Keyword.`=>`), rhs).withLocOf(rhs)
+      else rhs
+    def withAppendedArg(lhs: Tree): Opt[Tree.App] = lhs.desugared match
+      case OpApp(lhs, Ident("\\"), rhs :: Nil) => withAppendedArg(backslashApp(lhs, rhs))
+      // * Prefix operator applications, such as `-x`, are not calls with argument lists.
+      case App(Ident(op), _) if Parser.prefixOps.contains(op) => N
+      case App(f, Tup(args)) => S(App(f, Tup(args :+ arg)))
+      case Bra(BracketKind.Curly, Block(stmt :: Nil)) => withAppendedArg(stmt)
+      case _ => N
+    withAppendedArg(lhs).getOrElse(App(lhs, Tup(arg :: Nil)))
+  
   private def assignment(lhs: Term, rhs: Term): Term.Assgn =
     // Resolve the term interpretation of the l-value before lowering. The
     // selected definition is recorded even when its value publishes no shape.
@@ -1707,6 +1729,8 @@ extends Importer:
       val lt = subterm(lhs)
       val rt = subterm(rhs)
       app(lt, rt)(tree, N, sym)
+    case tree @ OpApp(lhs, Ident("\\"), rhs :: Nil) =>
+      subterm(backslashApp(lhs, rhs).withLocOf(tree), interp)
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol.app()
       val (lhsDelimitsUnders, rhsDelimitsUnders) = underscoreDelimitingSides(op)

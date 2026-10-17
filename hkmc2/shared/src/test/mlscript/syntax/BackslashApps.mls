@@ -145,3 +145,72 @@ fun test(x) =
 //│ let test; test = function test(x) { let tmp6; tmp6 = - x; return runtime.safeCall(tmp6(2)) };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
+
+// * The argument of `\` delimits its own placeholders
+
+fun applyTo3(f) = f(3)
+
+:expect 4
+applyTo3 \ _ + 1
+//│ = 4
+
+fun twice(f, x) = f(f(x))
+
+:expect 12
+twice
+  \ _ * 2
+  \ 3
+//│ = 12
+
+fun call2(f, x, y) = f(x, y)
+
+:expect 3
+call2
+  \ _ + _
+  \ 1
+  \ 2
+//│ = 3
+
+// * Explicit lambdas still work
+:expect 12
+twice
+  \ => _ * 2
+  \ 3
+//│ = 12
+
+:expect 12
+twice
+  \ x => x * 2
+  \ 3
+//│ = 12
+
+// * The innermost delimiter wins: here, `_` is bound by `\`, not by `|>`
+fun applyTo(f)(x) = f(x)
+
+:expect 6
+3 |> applyTo \ _ * 2
+//│ = 6
+
+
+// * Trickier interactions between `\` and other delimiters
+
+// * The three placeholders form a single lambda, absorbing the extra arguments passed by `Array#map`
+[1, 2, 3].map \ _ + 1 |! drop _ |! drop _
+//│ = [2, 3, 4]
+
+// * The RHS of `|>` delimits `_ * 2`, while the `_` in `_ + 1` is delimited by `\`,
+// * so the callback is `x => (x + 1) |> (y => y * 2)`
+:expect 18
+twice
+  \ _ + 1 |> _ * 2
+  \ 3
+//│ = 18
+
+// * `<|` delimits `twice(_, 1)`, but the LHS of `|>` is not delimited
+:e
+twice(_, 1) <| _ |> _ * 2
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ║  l.211: 	twice(_, 1) <| _ |> _ * 2
+//│ ╙──       	               ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
