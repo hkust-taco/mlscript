@@ -17,7 +17,7 @@
 \{ Int }
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
 //│ ║  l.17: 	\{ Int }
-//│ ╙──      	 ^^^^^^^
+//│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe

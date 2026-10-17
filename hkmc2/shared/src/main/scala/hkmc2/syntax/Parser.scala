@@ -386,11 +386,11 @@ abstract class Parser(
           rule.exprAlt match
           case S(exprAlt) =>
             yeetSpaces match
-            case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ =>
+            case (br @ BRACKETS(_: Indent_Curly, toks), _) :: _ =>
               consume
               prefixRules.getKwAlt(kw, S(loc)) match
               case S(subRule) if subRule.blkAlt.isEmpty =>
-                rec(toks, S(tok.innerLoc), tok.describe).concludeWith { p =>
+                rec(toks, S(br.innerLoc), br.describe).concludeWith { p =>
                   p.blockOf(subRule.map(e => parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)), annotations, allowNewlines)
                 } ++ blockContOf(rule)
               case _ =>
