@@ -1142,9 +1142,9 @@ extends Importer:
       (ctx, split)
     // Handle splits on binary operators.
     // * Each branch scrutinee `rhs` is elaborated as the tree `lhs op rhs`, as in the non-split form,
-    // * so that, eg, the RHS of `|>` delimits underscore lambdas (see the `OpApp` case of `subterm`).
+    // * so that, eg, the RHS of `|>` delimits underscore lambdas (see `underscoreDelimitingSides`).
     case OpApp(lhs, ident: Ident, rhss) =>
-      val split = term(lhs, Trm).reference: lhs =>
+      val split = term(lhs, Trm, forceUnderCtx = underscoreDelimitingSides(ident)._1).reference: lhs =>
         termSplit(rhss, ((rhs: Tree) => OpApp(Tree.Trm(lhs()), ident, rhs :: Nil)) andThen mk)
       (ctx, split)
     case OpSplit(lhs, rhss) =>
@@ -1303,6 +1303,20 @@ extends Importer:
     val res = withTypeBinders(new Term.App(lt, rt)(tree, typ, resSym))
     if newResolution then listenTerm(lt)(shape => appShape(shape, rt, res))
     res
+  
+  /** With the new underscore syntax, some operator operands delimit their own implicit lambdas,
+    * as if prefixed by `=>`:
+    *  - the RHS of an operator whose name ends with `>` (such as `|>` and `>>`),
+    *    so that `x |> _ + 1` means `x |> (y => y + 1)`;
+    *  - the LHS of an operator whose name starts with `<` (such as `<|` and `<<`),
+    *    so that `_ + 1 <| x` means `(y => y + 1) <| x`.
+    * The builtin comparisons `>`, `<`, and `<=` are excluded,
+    * so that, eg, `x |> (100 > _)` means `x |> (y => 100 > y)`.
+    * Returns whether the LHS and whether the RHS of `op` delimit implicit lambdas. */
+  private def underscoreDelimitingSides(op: Tree): (Bool, Bool) = op match
+    case Ident(name) if lang.newUnderscoreAndApplicationSyntax =>
+      (name.startsWith("<") && name =/= "<" && name =/= "<=", name.endsWith(">") && name =/= ">")
+    case _ => (false, false)
   
   private def assignment(lhs: Term, rhs: Term): Term.Assgn =
     // Resolve the term interpretation of the l-value before lowering. The
@@ -1695,15 +1709,9 @@ extends Importer:
       app(lt, rt)(tree, N, sym)
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol.app()
-      val lt = subterm(lhs)
+      val (lhsDelimitsUnders, rhsDelimitsUnders) = underscoreDelimitingSides(op)
+      val lt = if lhsDelimitsUnders then term(lhs, Trm, forceUnderCtx = true) else subterm(lhs)
       val ot = subterm(op)
-      // * With the new underscore syntax, the RHS of an operator whose name ends with `>`
-      // * (such as `|>` and `>>`) delimits its own implicit lambda, as if prefixed by `=>`,
-      // * so that, eg, `x |> _ + 1` means `x |> (y => y + 1)`.
-      // * The builtin comparison `>` is excluded, so that `x |> 100 > _` means `x |> (y => 100 > y)`.
-      val rhsDelimitsUnders = lang.newUnderscoreAndApplicationSyntax && op.match
-        case Ident(name) => name.endsWith(">") && name =/= ">"
-        case _ => false
       val rts = rhss.map: r =>
         PlainFld(if rhsDelimitsUnders then term(r, Trm, forceUnderCtx = true) else subterm(r))
       app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(

@@ -52,7 +52,7 @@ print(1, 2, 3)
 print <| 2 + 2
 //│ > 4
 
-(=> _ * 2) <| 2 + 2 |> (_ + 1)
+(_ * 2) <| 2 + 2 |> (_ + 1)
 //│ = 9
 
 2 + 2 !> print
@@ -67,7 +67,7 @@ print <! 2 + 2 |> (_ + 1)
 //│ > 4
 //│ = 5
 
-(=> _ + 1) <| 2 + 2 !> print
+(_ + 1) <| 2 + 2 !> print
 //│ > 4
 //│ = 5
 
@@ -249,14 +249,7 @@ Iter.joined(_, "") <| [
   "2"
   "3"
 ]
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:1994)
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.246: 	Iter.joined(_, "") <| [
-//│ ╙──       	            ^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = "0123"
 
 
 mkStr of
