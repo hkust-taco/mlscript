@@ -192,6 +192,12 @@ fun applyTo(f)(x) = f(x)
 //│ = 6
 
 
+// * Record literals can be passed as arguments
+:expect {key: "A", value: 1}
+id \ { key: "A", value: 1 }
+//│ = {key: "A", value: 1}
+
+
 // * Trickier interactions between `\` and other delimiters
 
 // * The three placeholders form a single lambda, absorbing the extra arguments passed by `Array#map`
@@ -210,7 +216,7 @@ twice
 :e
 twice(_, 1) <| _ |> _ * 2
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.211: 	twice(_, 1) <| _ |> _ * 2
+//│ ║  l.217: 	twice(_, 1) <| _ |> _ * 2
 //│ ║         	               ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -815,13 +815,15 @@ abstract class Parser(
       cur match // `true | false | Tree`
       case Nil => false
       case (_: NEWLINE_COMMA | SPACE, _) :: _ => consume; true
+      // * Items are parsed with `CommaPrecNext` so that commas separate them (see below),
+      // * as in `x \ { key: "A", value: 1 }`, instead of being reported as unexpected.
       case (KEYWORD(kw), loc) :: _ if kw isnt Keyword.__ =>
         prefixRules.getKwAlt(kw, S(loc)) match
         case S(subRule) =>
           consume
           parseRule(CommaPrecNext, subRule, allowNewlines = false).getOrElse(errExpr)
-        case N => expr(0, allowNewlines = false)
-      case _ => expr(0, allowNewlines = false)
+        case N => expr(CommaPrecNext, allowNewlines = false)
+      case _ => expr(CommaPrecNext, allowNewlines = false)
     item match
       case true => splitItem(acc) // continue
       case false => printDbg(s"! end of split"); acc // break
