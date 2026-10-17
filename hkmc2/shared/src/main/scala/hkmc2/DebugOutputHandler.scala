@@ -51,36 +51,6 @@ object DebugOutputHandler:
                 tl.inOuterDebugScope(k(r))
       case N => process(k)
 
-  /** Discover directives without committing diagnostics from a parse that may be repeated.
-    * A traced parse reports its own diagnostics, in trace order; otherwise replay discovery's
-    * diagnostics exactly once. Both compiler entry points use this path. */
-  def parse(origin: Origin, forceDebug: Bool, showTokens: Bool, output: (Config.DebugOutput, Str) => Unit)
-      (using semantics.Elaborator.State, Config, Raise): (Ls[syntax.Tree], Config) =
-    def run(dbg: Bool, out: Config.DebugOutput)(using Raise): Ls[syntax.Tree] =
-      val lexer = new syntax.Lexer(origin, dbg):
-        override protected def doPrintDbg(msg: => Str): Unit = output(out, msg)
-      val tokens = lexer.bracketedTokens
-      if dbg then output(out, syntax.Lexer.printTokens(tokens))
-      val parser = new syntax.Parser(origin, tokens, syntax.ParseRules(), summon[Raise], dbg):
-        def doPrintDbg(msg: => Str): Unit = if this.dbg then output(out, msg)
-      parser.parseAll(parser.block(allowNewlines = true))
-
-    val diagnostics = mutable.ListBuffer.empty[Diagnostic]
-    val discovery = run(false, Config.DebugOutput.StdIO)(using diagnostics += _)
-    val effectiveConfig = Config.elaborationConfig(discovery)
-    val result =
-      // As for `TraceLogger.doForceTrace`, a parse traced only because of `forceDebug` uses `StdIO`.
-      if effectiveConfig.debug.parsing then run(true, effectiveConfig.debug.out)
-      else if forceDebug then run(true, Config.DebugOutput.StdIO)
-      else
-        diagnostics.foreach(summon[Raise])
-        // Token display is a legacy diff-test option. Re-lexing does not report diagnostics twice.
-        if showTokens then
-          val lexer = new syntax.Lexer(origin, false)(using _ => ())
-          output(Config.DebugOutput.StdIO, syntax.Lexer.printTokens(lexer.bracketedTokens))
-        discovery
-    result -> effectiveConfig
-
   def showParsedDefinitions(trees: Ls[syntax.Tree], config: Config)
       (display: (syntax.Tree, Config.DebugOutput) => Unit): Unit =
     def visit(tree: syntax.Tree): Unit = tree match
@@ -106,8 +76,27 @@ object DebugOutputHandler:
       statement.subStatements.foreach(visit)
     visit(block)
 
+  /** Use the same selection and formatting in the compiler and diff-test pipelines. */
+  def showIR(program: codegen.Program, optimized: Bool, printer: codegen.Printer, width: Int)
+      (display: (Str, Str, Config.DebugOutput) => Unit)(using Config, utils.Scope): Unit =
+    val title = if optimized then "Optimized IR" else "Lowered IR"
+    val isEnabled: Config.Debug => Bool = if optimized then _.showOptimizedIR else _.showIR
+    if isEnabled(config.debug) then
+      display(title, printer.worksheet(program).mkString(width), config.debug.out)
+    else forEachIRDefinition(program, isEnabled): (defn, out) =>
+      display(title, printer.printDefinition(defn).mkString(width), out)
+
+  def showLoweredTree(program: codegen.Program)(display: (Str, Str, Config.DebugOutput) => Unit)
+      (using Config, DebugPrinter): Unit =
+    if config.debug.showLoweredTree then
+      display("Lowered IR Tree", program.showAsTree, config.debug.out)
+    else forEachIRDefinition(program, _.showLoweredTree): (defn, out) =>
+      val tree = defn match
+        case product: Product => product.showAsTree
+      display("Lowered IR Tree", tree, out)
+
   /** Methods are visited directly by BlockTraverser, without passing through applyDefn. */
-  def forEachIRDefinition(program: codegen.Program, isEnabled: Config.Debug => Bool)
+  private def forEachIRDefinition(program: codegen.Program, isEnabled: Config.Debug => Bool)
       (display: (codegen.Defn, Config.DebugOutput) => Unit): Unit =
     def visit(defn: codegen.Defn): Unit =
       defn.configOverride.foreach: localConfig =>

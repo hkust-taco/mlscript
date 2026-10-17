@@ -147,7 +147,6 @@ object Config:
     case File(path: Str)
 
   case class Debug(
-    parsing: Bool,
     showParsedTree: Bool,
     elaboration: Bool,
     showElaboratedTree: Bool,
@@ -164,7 +163,6 @@ object Config:
     def traceElaboration(language: Language): Bool = elaboration || (language.useNewResolution && resolution)
   object Debug:
     val default = Debug(
-      parsing = false,
       showParsedTree = false,
       elaboration = false,
       showElaboratedTree = false,
@@ -272,7 +270,7 @@ object Config:
   def elaborationConfig(prgm: syntax.Tree.Block)(using Config): Config =
     elaborationConfig(prgm.desugStmts)
 
-  /** The parser uses the raw trees to discover tracing before constructing a block's symbols. */
+  /** Read directives from parsed trees before elaboration or tree display. */
   def elaborationConfig(trees: Ls[syntax.Tree])(using Config): Config =
     import syntax.Tree.*
     given Raise = _ => ()
@@ -540,12 +538,11 @@ object ConfigParser:
       N
 
   private def updateDebugFlag(name: Str, value: Bool, tree: Tree, definitionLocal: Bool)(using Raise): Config.Debug => Config.Debug =
-    if definitionLocal && (name === "parsing" || name === "optimizations") then
+    if definitionLocal && name === "optimizations" then
       raise(WarningReport(
         msg"Debugging aspect '${name}' is not supported in @dbg; use #dbg(${name}: ${value.toString}) instead." -> tree.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
     name match
-      case "parsing" => _.copy(parsing = value)
       case "showParsedTree" => _.copy(showParsedTree = value)
       case "elaboration" => _.copy(elaboration = value)
       case "showElaboratedTree" => _.copy(showElaboratedTree = value)
@@ -588,7 +585,7 @@ object ConfigParser:
       def apply(cfg: Config): Config = cfg.copy(debug = modifyDebug(cfg.debug))
       override def toString: Str = "..."
 
-  /** Apply `@dbg(...)` syntax annotations without reporting diagnostics during the discovery parse. */
+  /** Select parsed-tree displays without duplicating diagnostics reported by elaboration. */
   def discoverDebugFromAnnotations(annotations: Ls[Tree], base: Config): Opt[Config] =
     given Raise = _ => ()
     val modifiers = annotations.collect:

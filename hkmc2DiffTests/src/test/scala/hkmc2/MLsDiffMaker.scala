@@ -247,7 +247,6 @@ abstract class MLsDiffMaker extends DiffMaker:
   given Elaborator.State = new Elaborator.State:
     override protected def doDbg: Bool =
       doForceDbg
-      || activeDebug.parsing
       || activeDebug.elaboration
       || activeDebug.resolution
       || activeDebug.lowering
@@ -445,8 +444,17 @@ abstract class MLsDiffMaker extends DiffMaker:
     val baseConfig = configModify(mkConfig)
     given Config = baseConfig
     
-    val (res, phaseConfig) = DebugOutputHandler.parse(
-      origin, dbgParsing.isSet, showParse.isSet, debugOutputHandler.emit)
+    val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet):
+      override protected def doPrintDbg(msg: => Str): Unit = output(msg)
+    val tokens = lexer.bracketedTokens
+    
+    if showParse.isSet || dbgParsing.isSet then
+      output(syntax.Lexer.printTokens(tokens))
+    
+    val parser = new syntax.Parser(origin, tokens, syntax.ParseRules(), raise, dbg = dbgParsing.isSet):
+      def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
+    val res = parser.parseAll(parser.block(allowNewlines = true))
+    val phaseConfig = Config.elaborationConfig(res)
     activeDebug = phaseConfig.debug
     
     // If parsed tree is displayed, don't show the string serialization.

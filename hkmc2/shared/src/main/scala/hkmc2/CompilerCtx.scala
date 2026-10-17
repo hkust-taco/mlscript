@@ -183,37 +183,20 @@ class CompilerCtx(
           useSuperscripts = false,
           includeZero = false,
         ))
+        val blockPrinter = codegen.Printer()
         val printer = (p: codegen.Program) =>
-          codegen.Printer().worksheet(p)(using irPrintingScp).mkString(100)
-        def showDebugIR(title: Str, program: codegen.Program): Unit =
-          outputHandler.emit(artifactConfig.debug.out, s"${title}\n${printer(program)}")
-        def showDefinitionDebugIR(
-            title: Str,
-            program: codegen.Program,
-            isEnabled: Config.Debug => Bool,
-        ): Unit =
-          val blockPrinter = codegen.Printer()
-          DebugOutputHandler.forEachIRDefinition(program, isEnabled): (defn, out) =>
-            val ir = blockPrinter.printDefinition(defn)(using irPrintingScp).mkString(100)
-            outputHandler.emit(out, s"${title}\n${ir}")
-        def showDefinitionDebugTree(title: Str, program: codegen.Program): Unit =
-          DebugOutputHandler.forEachIRDefinition(program, _.showLoweredTree): (defn, out) =>
-            val tree = defn match
-              case product: Product => product.showAsTree
-            outputHandler.emit(out, s"${title}\n${tree}")
+          blockPrinter.worksheet(p)(using irPrintingScp).mkString(100)
+        def display(title: Str, contents: Str, out: Config.DebugOutput): Unit =
+          outputHandler.emit(out, s"${title}\n${contents}")
         val pipeline = new codegen.CompilationPipeline:
           override def extraSymbolsToPreserveFrom(prog: codegen.Program): Set[codegen.ScopedSymbol] =
             collectCompilationUnitSymbols(prog)
           override def preOptimizeHook(prog: codegen.Program): Unit =
-            if artifactConfig.debug.showLoweredTree then
-              outputHandler.emit(artifactConfig.debug.out, s"Lowered IR Tree\n${prog.showAsTree}")
-            else showDefinitionDebugTree("Lowered IR Tree", prog)
-            if artifactConfig.debug.showIR then showDebugIR("Lowered IR", prog)
-            else showDefinitionDebugIR("Lowered IR", prog, _.showIR)
+            DebugOutputHandler.showLoweredTree(prog)(display)
+            DebugOutputHandler.showIR(prog, false, blockPrinter, 100)(display)(using artifactConfig, irPrintingScp)
         val optimized = ltl.givenIn:
           pipeline.run(lowered, printer, exportedSymbol.toSet, dtl)
-        if artifactConfig.debug.showOptimizedIR then showDebugIR("Optimized IR", optimized)
-        else showDefinitionDebugIR("Optimized IR", optimized, _.showOptimizedIR)
+        DebugOutputHandler.showIR(optimized, true, blockPrinter, 100)(display)(using artifactConfig, irPrintingScp)
         optimized
 
       // Every compilation unit is lowered, so that its symbols carry the IR definitions an
@@ -311,7 +294,7 @@ object CompilerCtx:
   inline def get(using cctx: CompilerCtx) = cctx
 
   private def debugTracingEnabled(debug: Config.Debug): Bool =
-    debug.parsing || debug.elaboration || debug.resolution || debug.lowering || debug.optimizations
+    debug.elaboration || debug.resolution || debug.lowering || debug.optimizations
 
 
   /** Collect import provenance after elaboration has assembled all user and synthetic imports.

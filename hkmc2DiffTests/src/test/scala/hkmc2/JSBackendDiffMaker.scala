@@ -126,19 +126,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       Printer()
     val print = (p: codegen.Program) =>
       blockPrinter.worksheet(p)(using irPrintingScp).mkString(output.ColWidth)
-    def showDefinitionDebugIR(
-        title: Str,
-        program: codegen.Program,
-        isEnabled: Config.Debug => Bool,
-    ): Unit =
-      DebugOutputHandler.forEachIRDefinition(program, isEnabled): (defn, out) =>
-        val ir = blockPrinter.printDefinition(defn)(using irPrintingScp).mkString(output.ColWidth)
-        outputDebugSection(title, ir, out)
-    def showDefinitionDebugTree(title: Str, program: codegen.Program): Unit =
-      DebugOutputHandler.forEachIRDefinition(program, _.showLoweredTree): (defn, out) =>
-        val tree = defn match
-          case product: Product => product.showAsTree
-        outputDebugSection(title, tree, out)
     
     Config.extractConfigFromStats(blk).givenIn {
     val loweringState = summon[Elaborator.State]
@@ -192,20 +179,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             passIdx += 1
             showPipelineStage(s"pipeline #${passIdx} ${passName}", after)
           override def preOptimizeHook(prog: Program) =
-            if showLoweredTree.isSet || config.debug.showLoweredTree then
-              if showLoweredTree.isSet then
-                outputSeparator("Lowered IR Tree")
-                output(prog.showAsTree)
-              else outputDebugSection("Lowered IR Tree", prog.showAsTree, config.debug.out)
-            else showDefinitionDebugTree("Lowered IR Tree", prog)
-            if showIR.isSet || showIRLines.isSet || config.debug.showIR then
-              given ShowCfg = ShowCfg(
-                showErasedTypes = showIRErasedTypes.isSet,
-                showExpansionMappings = false,
-                showFlowSymbols = true,
-                debug = debug.isSet,
-              )
-              val irStr = Printer().worksheet(prog)(using irPrintingScp).mkString(output.ColWidth)
+            if showLoweredTree.isSet then
+              outputSeparator("Lowered IR Tree")
+              output(prog.showAsTree)
+            else DebugOutputHandler.showLoweredTree(prog)(outputDebugSection)
+            if showIR.isSet || showIRLines.isSet then
+              val irStr = print(prog)
               val sloc = irStr.count(_ == '\n') + 1
               if showIRLines.isSet then output(s"Lines of IR: ${sloc}")
               if showIR.isSet then
@@ -213,26 +192,17 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                 output(irStr)
               else if config.debug.showIR then
                 outputDebugSection("Lowered IR", irStr, config.debug.out)
-            else showDefinitionDebugIR("Lowered IR", prog, _.showIR)
+            else DebugOutputHandler.showIR(prog, false, blockPrinter, output.ColWidth)(outputDebugSection)(using config, irPrintingScp)
             super.preOptimizeHook(prog)
         customPipeline.run(lowered, print, symbolsToPreserve, dtl)
       
       if checkIR.isSet then
         BlockChecker().applyProgram(optimized)
       
-      if showOptimizedIR.isSet || config.debug.showOptimizedIR then
-        given ShowCfg = ShowCfg(
-          showErasedTypes = showIRErasedTypes.isSet,
-          showExpansionMappings = false,
-          showFlowSymbols = true,
-          debug = debug.isSet,
-        )
-        val irStr = Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth)
-        if showOptimizedIR.isSet then
-          outputSeparator("Optimized IR")
-          output(irStr)
-        else outputDebugSection("Optimized IR", irStr, config.debug.out)
-      else showDefinitionDebugIR("Optimized IR", optimized, _.showOptimizedIR)
+      if showOptimizedIR.isSet then
+        outputSeparator("Optimized IR")
+        output(print(optimized))
+      else DebugOutputHandler.showIR(optimized, true, blockPrinter, output.ColWidth)(outputDebugSection)(using config, irPrintingScp)
       if showOptimizedTree.isSet then
         outputSeparator("Optimized IR Tree")
         output(optimized.showAsTree)

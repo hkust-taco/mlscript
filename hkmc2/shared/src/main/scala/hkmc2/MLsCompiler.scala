@@ -14,8 +14,15 @@ class ParserSetup(file: io.Path, outputHandler: DebugOutputHandler)
   val fph = new FastParseHelpers(block)
   val origin = Origin(file, 0, fph)
   
-  val (result, effectiveConfig) = DebugOutputHandler.parse(
-    origin, forceDebug = false, showTokens = false, outputHandler.emit)
+  val lexer = new syntax.Lexer(origin, dbg = false)
+  val tokens = lexer.bracketedTokens
+  
+  val rules = syntax.ParseRules()
+  val parser = new syntax.Parser(origin, tokens, rules, raise, dbg = false):
+    def doPrintDbg(msg: => Str): Unit = ()
+  
+  val result = parser.parseAll(parser.block(allowNewlines = true))
+  val effectiveConfig = Config.elaborationConfig(result)
 
   if effectiveConfig.debug.showParsedTree then
     outputHandler.emit(

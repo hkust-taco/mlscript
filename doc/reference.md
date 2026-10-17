@@ -1991,7 +1991,6 @@ The following aspects trace a phase of the compiler:
 
 | Aspect | Traces |
 |---|---|
-| `parsing` | lexing and parsing |
 | `elaboration` | elaboration of syntax trees into terms |
 | `resolution` | name resolution |
 | `lowering` | lowering of terms into the intermediate representation (IR) |
@@ -1999,6 +1998,9 @@ The following aspects trace a phase of the compiler:
 
 With the new name resolution (`#lang(0.3.x)`), names are resolved during elaboration,
 so enabling `resolution` traces elaboration as well.
+
+Parser tracing is available through the diff-test command `:dp`.
+Source directives are read after parsing and cannot enable parser tracing.
 
 The following aspects display a program representation, without tracing:
 
@@ -2088,9 +2090,8 @@ The statements that follow an annotated definition are not affected by its annot
 The lowering trace of an annotated class also covers the evaluation of its superclass, if any,
 and its companion module, if any, which is compiled together with the class.
 
-The `parsing` and `optimizations` aspects cannot be selected per definition,
-as these phases process whole files.
-Setting them in `@dbg` produces a warning and has no effect; use `#dbg` instead.
+The `optimizations` aspect cannot be selected per definition, as optimization passes process whole files.
+Setting it in `@dbg` produces a warning and has no effect; use `#dbg` instead.
 
 Currently, the destination selected by an enclosing `@dbg` annotation only applies to traces:
 the displays requested by the annotation of a nested definition use the file's destination.
