@@ -105,6 +105,9 @@ object Elaborator:
   /** Context used to keep track of underscores representing lambda shorthands, eg in `_ + 1`. */
   // TODO later: use TempSymbol instead of VarSymbol? (currently, trying that creates lot of problems)
   class UnderCtx(val unders: Opt[mutable.ArrayBuffer[VarSymbol]])
+  object UnderCtx:
+    /** The context of terms that do not delimit implicit lambdas, where `_` placeholders are illegal. */
+    val none: UnderCtx = UnderCtx(N)
   
   case class Ctx(
       outer: OuterCtx,
@@ -1144,7 +1147,8 @@ extends Importer:
     // * Each branch scrutinee `rhs` is elaborated as the tree `lhs op rhs`, as in the non-split form,
     // * so that, eg, the RHS of `|>` delimits underscore lambdas (see `underscoreDelimitingSides`).
     case OpApp(lhs, ident: Ident, rhss) =>
-      val split = term(lhs, Trm, forceUnderCtx = underscoreDelimitingSides(ident)._1).reference: lhs =>
+      val lhsTerm = if underscoreDelimitingSides(ident)._1 then delimitedTerm(lhs, Trm) else term(lhs, Trm)
+      val split = lhsTerm.reference: lhs =>
         termSplit(rhss, ((rhs: Tree) => OpApp(Tree.Trm(lhs()), ident, rhs :: Nil)) andThen mk)
       (ctx, split)
     case OpSplit(lhs, rhss) =>
@@ -1244,18 +1248,26 @@ extends Importer:
   // Callers specify the interpretation at each elaboration entry point. Keeping
   // it explicit (rather than implicit) prevents a target's interpretation from
   // leaking into its value operands.
-  def term(tree: Tree, interp: Interpretation, forceUnderCtx: Bool = false): Ctxl[Term] =
+  // * In the old underscore syntax, every term delimits the implicit lambda of its `_` placeholders.
+  // * In the new syntax, only some positions do (see `delimitedTerm`), and placeholders elsewhere are illegal.
+  def term(tree: Tree, interp: Interpretation): Ctxl[Term] =
+    if lang.newUnderscoreAndApplicationSyntax then
+      trace[Term](s"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
+        given UnderCtx = UnderCtx.none
+        subterm(tree, interp)
+    else delimitedTerm(tree, interp)
+  
+  /** Elaborate `tree` as a term that delimits an implicit lambda, whose parameters are the `_` placeholders
+    * of `tree` that are not delimited by one of its subterms, as in the body of `=> _ + 1`. */
+  def delimitedTerm(tree: Tree, interp: Interpretation): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
-    lazy val unders = mutable.ArrayBuffer.empty[VarSymbol]
-    given UnderCtx = if forceUnderCtx || !lang.newUnderscoreAndApplicationSyntax
-      then new UnderCtx(S(unders))
-      else new UnderCtx(N)
+    val unders = mutable.ArrayBuffer.empty[VarSymbol]
+    given UnderCtx = UnderCtx(S(unders))
     val st = subterm(tree, interp)
-    val params = unders.iterator.map: sym =>
-        Param.simple(sym)
-      .toList
-    if params.isEmpty then st
-    else withTypeBinders(Term.Lam(PlainParamList(params)(N), st))
+    if unders.isEmpty then st
+    else
+      val params = unders.iterator.map(Param.simple).toList
+      withTypeBinders(Term.Lam(PlainParamList(params)(N), st))
   
   /** Record the explicit type binders in scope where `term` is written, for
     * new resolution's binder-support analysis (see NewResolver.shapeSupport).
@@ -1739,10 +1751,10 @@ extends Importer:
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol.app()
       val (lhsDelimitsUnders, rhsDelimitsUnders) = underscoreDelimitingSides(op)
-      val lt = if lhsDelimitsUnders then term(lhs, Trm, forceUnderCtx = true) else subterm(lhs)
+      val lt = if lhsDelimitsUnders then delimitedTerm(lhs, Trm) else subterm(lhs)
       val ot = subterm(op)
       val rts = rhss.map: r =>
-        PlainFld(if rhsDelimitsUnders then term(r, Trm, forceUnderCtx = true) else subterm(r))
+        PlainFld(if rhsDelimitsUnders then delimitedTerm(r, Trm) else subterm(r))
       app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
         DummyApp, N, sym)
     case SynthSel(pre, nme) =>
@@ -1976,7 +1988,7 @@ extends Importer:
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
     case PrefixApp(Keywrd(Keyword.`=>`), body) if lang.newUnderscoreAndApplicationSyntax =>
-      term(body, interp, forceUnderCtx = true)
+      delimitedTerm(body, interp)
     case PrefixApp(kw, body) =>
       raise(ErrorReport(msg"Illegal position for prefix keyword '${kw.name}'." -> kw.toLoc :: Nil))
       subterm(body)
@@ -3266,7 +3278,7 @@ extends Importer:
       (Nil, ctx)
   
   def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] =
-    given UnderCtx = new UnderCtx(N)
+    given UnderCtx = UnderCtx.none
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
     if newResolution then
@@ -3275,7 +3287,7 @@ extends Importer:
     (res, newCtx)
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
-    given UnderCtx = new UnderCtx(N)
+    given UnderCtx = UnderCtx.none
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     computeVariances(res)
     if newResolution then
