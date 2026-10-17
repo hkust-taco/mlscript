@@ -209,8 +209,9 @@ twice
 // * `<|` delimits `twice(_, 1)`, but the LHS of `|>` is not delimited
 :e
 twice(_, 1) <| _ |> _ * 2
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
 //│ ║  l.211: 	twice(_, 1) <| _ |> _ * 2
-//│ ╙──       	               ^
+//│ ║         	               ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

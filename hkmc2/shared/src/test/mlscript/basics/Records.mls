@@ -147,9 +147,10 @@ m0.get(41)
 
 :e
 {get(k): _}
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
 //│ ║  l.149: 	{get(k): _}
-//│ ╙──       	         ^
+//│ ║         	         ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
 //│ ║  l.149: 	{get(k): _}
 //│ ╙──       	 ^^^^^^
@@ -206,36 +207,36 @@ display(x: 88, y: 99, i: 0)
 :todo
 t("group")
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.207: 	t("group")
+//│ ║  l.208: 	t("group")
 //│ ║         	^^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
-//│ ║  l.175: 	fun t(kind, props) =
+//│ ║  l.176: 	fun t(kind, props) =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.176: 	  if graphics.has(kind) then
+//│ ║  l.177: 	  if graphics.has(kind) then
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.177: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
+//│ ║  l.178: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.178: 	  else
+//│ ║  l.179: 	  else
 //│ ║         	^^^^^^
-//│ ║  l.179: 	... (more lines omitted) ...
+//│ ║  l.180: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo
 t("group")
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.225: 	t("group")
+//│ ║  l.226: 	t("group")
 //│ ║         	^^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
-//│ ║  l.175: 	fun t(kind, props) =
+//│ ║  l.176: 	fun t(kind, props) =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.176: 	  if graphics.has(kind) then
+//│ ║  l.177: 	  if graphics.has(kind) then
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.177: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
+//│ ║  l.178: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.178: 	  else
+//│ ║  l.179: 	  else
 //│ ║         	^^^^^^
-//│ ║  l.179: 	... (more lines omitted) ...
+//│ ║  l.180: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 

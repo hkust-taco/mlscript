@@ -2024,7 +2024,9 @@ extends Importer:
         raise:
           if lang.newUnderscoreAndApplicationSyntax then
             ErrorReport(
-              msg"Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda." -> tree.toLoc :: Nil)
+              msg"Illegal position for '_' placeholder" -> tree.toLoc
+              :: msg"Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`" -> N
+              :: Nil)
           else ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil)
         error
       case S(unds) =>

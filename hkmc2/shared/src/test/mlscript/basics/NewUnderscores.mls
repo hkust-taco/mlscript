@@ -10,16 +10,18 @@
 
 :e
 _ + 1
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
 //│ ║  l.12: 	_ + 1
-//│ ╙──      	^
+//│ ║        	^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 (_ + 1)
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.19: 	(_ + 1)
-//│ ╙──      	 ^
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.20: 	(_ + 1)
+//│ ║        	 ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 let f = => _ + 1
@@ -41,9 +43,10 @@ f(3)
 
 :e
 3 > _
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.43: 	3 > _
-//│ ╙──      	    ^
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.45: 	3 > _
+//│ ║        	    ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // * Parentheses are transparent: they neither delimit nor block placeholders.
@@ -99,16 +102,18 @@ k(3)
 
 :e
 _ < 3
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.101: 	_ < 3
-//│ ╙──       	^
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.104: 	_ < 3
+//│ ║         	^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 _ <= 3
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.108: 	_ <= 3
-//│ ╙──       	^
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.112: 	_ <= 3
+//│ ║         	^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -116,31 +121,35 @@ _ <= 3
 
 :e
 3 |. _ + 1
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.118: 	3 |. _ + 1
-//│ ╙──       	     ^
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.123: 	3 |. _ + 1
+//│ ║         	     ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 3 + _
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.125: 	3 + _
-//│ ╙──       	    ^
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.131: 	3 + _
+//│ ║         	    ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // * Only the RHS of the operator is delimited.
 :e
 _ |> f
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.133: 	_ |> f
-//│ ╙──       	^
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.140: 	_ |> f
+//│ ║         	^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 (=> _ + 1) << _ * 2
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.140: 	(=> _ + 1) << _ * 2
-//│ ╙──       	              ^
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.148: 	(=> _ + 1) << _ * 2
+//│ ║         	              ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

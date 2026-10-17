@@ -51,6 +51,15 @@ xs
   .map \ x => x - 1
 //│ = Seq(3, 5, 7)
 
+:e
+xs
+  .map \ x => _ + 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.56: 	  .map \ x => _ + 1
+//│ ║        	              ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 
 let xs = Seq
   \ (key: "A", value: 1)
@@ -58,6 +67,18 @@ let xs = Seq
   \ (key: "A", value: 3)
   \ (key: "B", value: 4)
 //│ xs = Seq({key: "A", value: 1}, {key: "B", value: 2}, {key: "A", value: 3}, {key: "B", value: 4})
+
+xs.groupMapReduce
+  \ x => x.'key
+  \ x => x.'value
+  \ (x, y) => x + y
+//│ = Map(2) {"A" => 4, "B" => 6}
+
+xs.groupMapReduce
+  \ => _.'key
+  \ => _.'value
+  \ => _ + _
+//│ = Map(2) {"A" => 4, "B" => 6}
 
 xs.groupMapReduce
   \ _.'key
@@ -71,7 +92,7 @@ xs.groupMapReduce
   \ _.value
   \ _ + _
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.70: 	  \ _.key
+//│ ║  l.91: 	  \ _.key
 //│ ║        	    ^^^^^
 //│ ╟── Cannot resolve member 'key' of a value with unknown shape.
 //│ ║  l.6: 	class Seq[out A] {
@@ -80,7 +101,7 @@ xs.groupMapReduce
 //│ ║  l.5: 	fun Seq[A](...xs: A) = new Seq(xs)
 //│ ╙──     	        ^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.71: 	  \ _.value
+//│ ║  l.92: 	  \ _.value
 //│ ║        	    ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ║  l.6: 	class Seq[out A] {
@@ -96,17 +117,17 @@ let xs = Seq
   \ { key: "A", value: 1 }
   \ { key: "B", value: 2 }
 //│ ╔══[PARSE ERROR] Unexpected comma in this position
-//│ ║  l.96: 	  \ { key: "A", value: 1 }
-//│ ╙──      	              ^
+//│ ║  l.117: 	  \ { key: "A", value: 1 }
+//│ ╙──       	              ^
 //│ ╔══[PARSE ERROR] Unexpected comma in this position
-//│ ║  l.97: 	  \ { key: "B", value: 2 }
-//│ ╙──      	              ^
+//│ ║  l.118: 	  \ { key: "B", value: 2 }
+//│ ╙──       	              ^
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.96: 	  \ { key: "A", value: 1 }
-//│ ╙──      	      ^^^^^^^^^^^^^^^
+//│ ║  l.117: 	  \ { key: "A", value: 1 }
+//│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.97: 	  \ { key: "B", value: 2 }
-//│ ╙──      	      ^^^^^^^^^^^^^^^
+//│ ║  l.118: 	  \ { key: "B", value: 2 }
+//│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = undefined
 
@@ -123,11 +144,11 @@ let xs = Seq(1, 2, 3)
 :fixme
 xs.map(=> _ + 1).map(=> _ * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.124: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ║  l.145: 	xs.map(=> _ + 1).map(=> _ * 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'map' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.124: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ║  l.145: 	xs.map(=> _ + 1).map(=> _ * 2)
 //│ ╙──       	^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

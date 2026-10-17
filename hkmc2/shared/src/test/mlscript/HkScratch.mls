@@ -15,9 +15,10 @@ import "../mlscript-compile/Iter.mls"
 
 :e
 [1, 2, 3] |. Iter.mapping(_ + 1)
-//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
 //│ ║  l.17: 	[1, 2, 3] |. Iter.mapping(_ + 1)
-//│ ╙──      	                          ^
+//│ ║        	                          ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // :dp
@@ -38,20 +39,20 @@ f(3)
 :todo
 fun (|>) pipeIntoMulti[A, B](...(xs: A), f: (...A) -> B): B = f(...xs)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found spread
-//│ ║  l.39: 	fun (|>) pipeIntoMulti[A, B](...(xs: A), f: (...A) -> B): B = f(...xs)
+//│ ║  l.40: 	fun (|>) pipeIntoMulti[A, B](...(xs: A), f: (...A) -> B): B = f(...xs)
 //│ ╙──      	                             ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: xs
-//│ ║  l.39: 	fun (|>) pipeIntoMulti[A, B](...(xs: A), f: (...A) -> B): B = f(...xs)
+//│ ║  l.40: 	fun (|>) pipeIntoMulti[A, B](...(xs: A), f: (...A) -> B): B = f(...xs)
 //│ ╙──      	                                                                   ^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: variance traversal of spread elements (of class String)
 
 :todo
 fun (<|) pipeFromMulti[A, B](f: (...A) -> B, ...(xs: A)): B = f(...xs)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found spread
-//│ ║  l.49: 	fun (<|) pipeFromMulti[A, B](f: (...A) -> B, ...(xs: A)): B = f(...xs)
+//│ ║  l.50: 	fun (<|) pipeFromMulti[A, B](f: (...A) -> B, ...(xs: A)): B = f(...xs)
 //│ ╙──      	                                             ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: xs
-//│ ║  l.49: 	fun (<|) pipeFromMulti[A, B](f: (...A) -> B, ...(xs: A)): B = f(...xs)
+//│ ║  l.50: 	fun (<|) pipeFromMulti[A, B](f: (...A) -> B, ...(xs: A)): B = f(...xs)
 //│ ╙──      	                                                                   ^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: variance traversal of spread elements (of class String)
 
