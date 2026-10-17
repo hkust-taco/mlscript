@@ -197,6 +197,28 @@ fun applyTo(f)(x) = f(x)
 id \ { key: "A", value: 1 }
 //│ = {key: "A", value: 1}
 
+id \
+  key: "A", value: 1
+//│ = {key: "A", value: 1}
+
+id \
+  key: "A"
+  value: 1
+//│ = {key: "A", value: 1}
+
+:e
+id
+  \ key: "A"
+  \ value: 1
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.210: 	id
+//│ ║         	^^
+//│ ║  l.211: 	  \ key: "A"
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.212: 	  \ value: 1
+//│ ╙──       	^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 
 // * Trickier interactions between `\` and other delimiters
 
@@ -216,7 +238,7 @@ twice
 :e
 twice(_, 1) <| _ |> _ * 2
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.217: 	twice(_, 1) <| _ |> _ * 2
+//│ ║  l.239: 	twice(_, 1) <| _ |> _ * 2
 //│ ║         	               ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
