@@ -35,4 +35,24 @@ f(3)
 //│ = 4
 
 
+:todo
+fun (|>) pipeIntoMulti[A, B](...(xs: A), f: (...A) -> B): B = f(...xs)
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found spread
+//│ ║  l.39: 	fun (|>) pipeIntoMulti[A, B](...(xs: A), f: (...A) -> B): B = f(...xs)
+//│ ╙──      	                             ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: xs
+//│ ║  l.39: 	fun (|>) pipeIntoMulti[A, B](...(xs: A), f: (...A) -> B): B = f(...xs)
+//│ ╙──      	                                                                   ^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: variance traversal of spread elements (of class String)
+
+:todo
+fun (<|) pipeFromMulti[A, B](f: (...A) -> B, ...(xs: A)): B = f(...xs)
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found spread
+//│ ║  l.49: 	fun (<|) pipeFromMulti[A, B](f: (...A) -> B, ...(xs: A)): B = f(...xs)
+//│ ╙──      	                                             ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: xs
+//│ ║  l.49: 	fun (<|) pipeFromMulti[A, B](f: (...A) -> B, ...(xs: A)): B = f(...xs)
+//│ ╙──      	                                                                   ^^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: variance traversal of spread elements (of class String)
+
 

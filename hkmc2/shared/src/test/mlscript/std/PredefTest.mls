@@ -235,31 +235,27 @@ fold(+) of
 
 import "../../mlscript-compile/Iter.mls"
 
-:e
-Iter.joined(_, "") of [
+(=> Iter.joined(_, "")) of [
   "0"
   "1"
   "2"
   "3"
 ]
+//│ = "0123"
+
+Iter.joined(_, "") <| [
+  "0"
+  "1"
+  "2"
+  "3"
+]
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:1994)
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder; use '=>' to introduce an implicit lambda.
-//│ ║  l.239: 	Iter.joined(_, "") of [
+//│ ║  l.246: 	Iter.joined(_, "") <| [
 //│ ╙──       	            ^
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.239: 	Iter.joined(_, "") of [
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.240: 	  "0"
-//│ ║         	^^^^^
-//│ ║  l.241: 	  "1"
-//│ ║         	^^^^^
-//│ ║  l.242: 	  "2"
-//│ ║         	^^^^^
-//│ ║  l.243: 	... (more lines omitted) ...
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── String literal cannot be called like a function.
-//│ ║  in ../../mlscript-compile/Iter.mls
-//│ ║  l.226: 	  if next.done then "" else
-//│ ╙──       	                    ^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:280)
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
