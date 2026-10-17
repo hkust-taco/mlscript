@@ -1209,10 +1209,12 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
     // * which was very verbose, in addition to possibly making things quite inefficient.
     // * Now, we no longer instrument lambdas (which affects extra parameter lists),
     // * and we instead use the JS builtin `arguments` array to get the number of received arguments, as in
-    // * `function f(x, y) { runtime.checkArgs("f", 2, true, arguments.length); x + y }`
+    // * `function f(x, y) { runtime.checkArgs("f", 2, arguments.length); x + y }`
     // * The idea is that later on, we'll add a runtime type sanity check as well anyway,
     // * which will check arguments against the erased parameter type,
     // * including checking they are not `undefined`, which should achieve most of the benefit.
+    // * Following JavaScript, extra arguments are ignored, so we only check for missing arguments
+    // * (optional parameters are not counted in `paramCountLB`; missing optional arguments are `undefined`).
     /*
     if instrument then
       val paramsList = params.params.map(p => scope.allocateName(p.sym))
@@ -1229,7 +1231,7 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
     */
     if instrument && !isLambda then
       val functionName = JSBuilder.makeStringLiteral(name.fold("")(n => s"${JSBuilder.escapeStringCharacters(n)}"))
-      val checkArgsNum = doc"\n$runtimeVar.checkArgs($functionName, ${params.paramCountLB}, ${params.paramCountUB.toString}, arguments.length);"
+      val checkArgsNum = doc"\n$runtimeVar.checkArgs($functionName, ${params.paramCountLB}, arguments.length);"
       val paramsList = params.params.map(p => scope.allocateName(p.sym))
         .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
         .mkDocument(", ")

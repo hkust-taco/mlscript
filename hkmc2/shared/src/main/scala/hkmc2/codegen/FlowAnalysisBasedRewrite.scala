@@ -69,7 +69,7 @@ class FlowAnalysisBasedRewrite(
       
       
       def eliminableParamsOf(targets: EtaTargets): Set[Int] =
-        val paramInfos = targets.prodFuns.map(pf => pf.params.size -> pf.restParam.isDefined)
+        val paramInfos = targets.prodFuns.map(_.paramInfo)
         assert(paramInfos.forall(_ === targets.paramInfo),
           s"eta expansion level disagrees with its targets on arity: ${targets.pp} -> $paramInfos")
         val eliminable = targets.prodFuns.map: target =>
@@ -82,15 +82,20 @@ class FlowAnalysisBasedRewrite(
       
       etaExpansionSolver.etaExpandedFunShape.get(id).toList.flatMap: targetShape =>
         val existingShape = existingParams.map: pl =>
-          pl.params.size -> pl.restParam.isDefined
+          (pl.params.size, pl.paramCountLB, pl.restParam.isDefined)
         if targetShape.map(_.paramInfo).startsWith(existingShape) then
           targetShape.drop(existingShape.size).zipWithIndex.map:
             case (targets, idx) =>
               val eliminable = eliminableParamsOf(targets)
               def etaParam(name: Str): Param =
                 Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = N))
+              // * The expanded parameters corresponding to optional parameters of the targets must
+              // * remain optional, since callers may omit their arguments.
+              def optionalEtaParam(name: Str): Param =
+                val sym = new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = N)
+                Param(FldFlags.empty.copy(opt = true), sym, N, Modulefulness.none)(N)
               val params = (0 until targets.paramCount).iterator.filterNot(eliminable).map: i =>
-                etaParam(i.toString)
+                if i < targets.requiredParamCount then etaParam(i.toString) else optionalEtaParam(i.toString)
               .toList
               val restParam = Option.when(targets.hasRestParam)(etaParam("rest"))
               EtaParamList(

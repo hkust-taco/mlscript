@@ -7,7 +7,7 @@ declare type Nothing
 declare open class Object {
   fun toString(): Str
 }
-declare fun Object(...args): Object // TODO: use an optional parameter when supported
+declare fun Object(value?): Object
 declare module Object {
   fun entries(target): Array[[Str, Any]]
   fun getOwnPropertyDescriptor(target, key): Object | undefined
@@ -30,7 +30,7 @@ declare module JSON {
 
 declare class Number: Num
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/Number
-declare fun Number(...args): Number // TODO: use an optional parameter when supported
+declare fun Number(value?): Number
 declare module Number {
   val
     MIN_VALUE: Num
@@ -59,7 +59,7 @@ declare module Function
 
 declare class String
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/String
-declare fun String(...args): Str // TODO: use an optional parameter when supported
+declare fun String(value?): Str
 declare module String {
   fun
     fromCharCode
@@ -96,7 +96,7 @@ declare class Map[K, V] {
   fun keys(): Iterator[K]
   fun values(): Iterator[V]
   fun entries(): Iterator[[K, V]]
-  fun forEach(f: (V, K, Map[K, V]) -> Any): undefined
+  fun forEach(f: (V, drop K, drop Map[K, V]) -> Any): undefined
 }
 
 declare class Iterator[out T] {
@@ -122,15 +122,15 @@ declare class Error {
   val stack: Str | undefined
 }
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Error
-declare fun Error(...args): Error // TODO: use optional parameters when supported
+declare fun Error(message?, options?): Error
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError/TypeError
 declare class TypeError extends Error
-declare fun TypeError(...args): TypeError
+declare fun TypeError(message?, options?): TypeError
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError/RangeError
 declare class RangeError extends Error
-declare fun RangeError(...args): RangeError
+declare fun RangeError(message?, options?): RangeError
 
 declare class Date
 declare module Date
@@ -180,11 +180,10 @@ declare module BigUint64Array
 // Awaited recursively unwraps promises, as JavaScript's promise resolution does.
 declare type Awaited[out A]
 // Follow TypeScript's Promise declarations, translating void returns to undefined.
-// Optional parameters and default type arguments are not supported yet: callers
-// must supply the first callback, and then's rejection callback uses a rest list.
+// Default type arguments are not supported yet: callers must supply the first callback.
 // Structural PromiseLike values and tuple-mapped all results remain unsupported.
 declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
-  fun id"then"[B, C](onFulfilled: Awaited[A] -> (B | Promise[B]), ...onRejected: Array[(Any -> (C | Promise[C])) | undefined | null]): Promise[Awaited[B | C]]
+  fun id"then"[B, C](onFulfilled: Awaited[A] -> (B | Promise[B]), onRejected?: (Any -> (C | Promise[C])) | null): Promise[Awaited[B | C]]
   fun id"catch"[B](onRejected: (Any -> (B | Promise[B])) | undefined | null): Promise[Awaited[A | B]]
   fun id"finally"(onFinally: (() -> undefined) | undefined | null): Promise[A]
 }
@@ -259,22 +258,22 @@ declare class Array[T](val length: Int) {
   fun pop(): T | undefined
   fun shift(): T | undefined
   fun concat(...arrays): Array[Any]
-  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
-  fun forEach(f: (T, Int, Array[T]) -> Any): undefined
-  fun filter(f: (T, Int, Array[T]) -> Bool): Array[T]
-  fun find(f: (T, Int, Array[T]) -> Bool, ...thisArg): T | undefined
-  fun findIndex(f: (T, Int, Array[T]) -> Bool, ...thisArg): Int
-  fun findLast(f: (T, Int, Array[T]) -> Bool, ...thisArg): T | undefined
-  fun findLastIndex(f: (T, Int, Array[T]) -> Bool, ...thisArg): Int
+  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+  fun forEach(f: (T, drop Int, drop Array[T]) -> Any): undefined
+  fun filter(f: (T, drop Int, drop Array[T]) -> Bool): Array[T]
+  fun find(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): T | undefined
+  fun findIndex(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): Int
+  fun findLast(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): T | undefined
+  fun findLastIndex(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): Int
   fun flat(...depth): Array[Any]
-  fun flatMap[U](f: (T, Int, Array[T]) -> (U | Array[U]), ...thisArg): Array[U]
-  fun every(f: (T, Int, Array[T]) -> Bool): Bool
-  fun some(f: (T, Int, Array[T]) -> Bool): Bool
+  fun flatMap[U](f: (T, drop Int, drop Array[T]) -> (U | Array[U]), ...thisArg): Array[U]
+  fun every(f: (T, drop Int, drop Array[T]) -> Bool): Bool
+  fun some(f: (T, drop Int, drop Array[T]) -> Bool): Bool
   // Without an initial value, the first element becomes the accumulator, so the
   // accumulator type would also have to include T. Methods cannot be overloaded
   // by arity, so only the form with an initial value is declared.
-  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
-  fun reduceRight[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
+  fun reduce[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
+  fun reduceRight[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
   fun indexOf(value: T, ...from): Int
   fun lastIndexOf(value: T, ...from): Int
   fun includes(value: T, ...from): Bool
@@ -283,7 +282,7 @@ declare class Array[T](val length: Int) {
 }
 declare module Array {
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
-  fun from(...args): Array[Any] // TODO: use optional parameters when supported
+  fun from(items, mapFn?, thisArg?): Array[Any]
   fun
     concat
     isArray

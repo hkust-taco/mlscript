@@ -29,15 +29,13 @@ fun unreachable = throw Error("unreachable")
 fun assertFail(file: Str, line: Str) = throw Error("Assertion failed (" + file + ":" + line + ")")
 
 
-fun checkArgs(functionName: Str, expected: Int, isUB: Bool, got: Int) =
-  if got < expected || isUB && got > expected do
+// As in JavaScript, functions ignore extra arguments, so only missing arguments are checked.
+// This lets functions with fewer parameters be passed as callbacks to, e.g., `Array#map`.
+// The `expected` count does not include optional parameters, nor the rest parameter.
+fun checkArgs(functionName: Str, expected: Int, got: Int) =
+  if got < expected do
     let name = if functionName.length > 0 then " '" + functionName + "'" else ""
-    // throw globalThis.Error("Function" + name + " expected "
-    //   + (if isUB then "" else "at least ")
-    //   + expected
-    //   + " argument(s) but got " + got)
-    throw Error of "Function" + name + " expected "
-      + (if isUB then "" else "at least " )
+    throw Error of "Function" + name + " expected at least "
       + expected + " argument"
       + (if expected === 1 then "" else "s")
       + " but got " + got

@@ -621,6 +621,11 @@ def genFuncBody[T](
     thisSym: Opt[InnerSymbol],
     paramTypes: Opt[Seq[ValType]] = N,
 )(mkBody: FunctionCtx ?=> T)(using Ctx, Raise, State): T -> FunctionCtx =
+  // * Wasm functions have a fixed arity, so calls cannot omit the arguments of optional parameters.
+  params.foreach: ps =>
+    if ps.hasOptParams then raise(ErrorReport(
+      msg"Optional parameters are not supported by the WebAssembly backend." -> ps.toLoc :: Nil,
+      source = Diagnostic.Source.Compilation))
   val funcCtx = FunctionCtx(params, thisSym, paramTypes)
   val result = mkBody(using funcCtx)
   result -> funcCtx

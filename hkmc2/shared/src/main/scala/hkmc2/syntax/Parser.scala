@@ -1086,6 +1086,26 @@ abstract class Parser(
         consume
         consume
         exprCont(MemberProj(acc, new Ident(id).withLoc(S(l1))).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
+      
+      // * Postfix `?` marks an optional parameter, as in `fun f(x, y?)` or `(Int, Int?) -> Int`.
+      // * The marker applies to the whole parameter (so `Int | Str?` means `(Int | Str)?`),
+      // * so it is only recognized below the precedence of `=` (i.e., not within operator operands),
+      // * and only when it ends the element. In `y?: Int`, the lexer merges `?` and `:` into a single
+      // * `?:` operator token, which we split back into the marker followed by the `:` keyword.
+      // * Other operators starting with `?`, such as `??` and `?>`, are distinct operator tokens.
+      case (OP("?"), l0) :: rest
+      if prec < Keyword.eqPrec.get && (NOISE.get(rest) match
+        case Nil | (_: NEWLINE_COMMA, _) :: _ => true
+        case _ => false
+      ) =>
+        consume
+        exprCont(Optional(acc).withLoc(acc.toLoc.fold(S(l0))(l => S(l ++ l0))), prec, allowNewlines = allowNewlines)
+      case (OP("?:"), l0) :: _ if prec < Keyword.eqPrec.get =>
+        consume
+        val markerLoc = Loc(l0.spanStart, l0.spanStart + 1, l0.origin)
+        cur = (IDENT(":", true), Loc(l0.spanStart + 1, l0.spanEnd, l0.origin)) :: cur
+        exprCont(Optional(acc).withLoc(acc.toLoc.fold(S(markerLoc))(l => S(l ++ markerLoc))), prec, allowNewlines = allowNewlines)
+      
       case (OP(opStr), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
         val v = Ident(opStr).withLoc(S(l0))

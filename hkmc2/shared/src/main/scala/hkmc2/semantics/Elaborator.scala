@@ -1396,6 +1396,32 @@ extends Importer:
     
     def error = Term.Error().withLocOf(tree)
     
+    /** Elaborate the parameters of a function type. Unlike other tuples, these may be marked optional,
+      * as in `(Int, Int?) -> Int`, in which case the parameter type also includes `undefined`,
+      * or droppable, as in `(Int, drop Int) -> Int`. */
+    def funTyParams(lhs: Tree): Term = lhs match
+      case tree @ Tup(fields) =>
+        val elems = fields.map:
+          case PrefixApp(Keywrd(Keyword.`drop`), field) => fld(field, Tpe) match
+            case f: Fld => f.copy(flags = f.flags.copy(droppable = true))
+            case spd: Spd =>
+              raise(ErrorReport(msg"Rest parameters cannot be droppable." -> field.toLoc :: Nil))
+              spd
+          case opt @ Optional(t) =>
+            Fld(FldFlags.empty.copy(opt = true), optionalType(term(t, Tpe), opt.toLoc), N)
+          // * Mirrors the elaboration of named fields in `fld`.
+          case field @ InfixApp(Optional(id: Ident), Keywrd(Keyword.`:`), rhs) =>
+            Fld(FldFlags.empty.copy(opt = true), Term.Lit(StrLit(id.name).withLocOf(id)), S(optionalType(arg(rhs, Tpe), field.toLoc)))
+          case field => fld(field, Tpe)
+        fields.lazyZip(elems).foldLeft(false):
+          case (seenOpt, (field, Fld(flags, _, _))) =>
+            if seenOpt && !flags.opt then
+              raise(ErrorReport(msg"A required parameter cannot follow an optional parameter." -> field.toLoc :: Nil))
+            seenOpt || flags.opt
+          case (seenOpt, _) => seenOpt
+        withTypeBinders(Term.Tup(elems)(tree))
+      case _ => subterm(lhs, Tpe)
+    
     def mkNew(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])(typ: Opt[typing.Type]): Term.New =
       val res = withTypeBinders(new Term.New(cls, args, rft)(FlowSymbol.neww(), typ).withLocOf(tree))
       // The synthetic parent of an anonymous refinement (below) instantiates the same class at the same site,
@@ -1635,9 +1661,9 @@ extends Importer:
             QuantVar(sym, ub.map(ub => subterm(ub, Tpe)), lb.map(lb => subterm(lb, Tpe)))
         Term.Forall(bds, outer, subterm(body, Tpe))
     case InfixApp(lhs, Keywrd(Keyword.`->`), Effectful(eff, rhs)) =>
-      Term.FunTy(subterm(lhs, Tpe), subterm(rhs, Tpe), S(subterm(eff, Tpe)))
+      Term.FunTy(funTyParams(lhs), subterm(rhs, Tpe), S(subterm(eff, Tpe)))
     case InfixApp(lhs, Keywrd(Keyword.`->`), rhs) =>
-      Term.FunTy(subterm(lhs, Tpe), subterm(rhs, Tpe), N)
+      Term.FunTy(funTyParams(lhs), subterm(rhs, Tpe), N)
     case InfixApp(lhs, Keywrd(Keyword.`=>`), rhs) =>
       lhs match
       case Tup(_) =>
@@ -2034,6 +2060,9 @@ extends Importer:
         error
     case Spread(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> kw.toLoc :: Nil))
+      error
+    case Optional(body) =>
+      raise(ErrorReport(msg"Illegal position for an optional marker '?': only parameters and function type parameters can be optional." -> tree.toLoc :: Nil))
       error
     case und: Under =>
       summon[UnderCtx].unders match
@@ -2469,6 +2498,8 @@ extends Importer:
                 case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
                 case st => term(st, Tpe)(using newCtx)
               
+              if td.annotatedResultType.isEmpty then
+                s.foreach(checkSignatureOptionality(pss, _))
               if newResolution && td.annotatedResultType.isEmpty then
                 s.foreach(registerParameterSignature(pss, _))
               
@@ -2582,7 +2613,7 @@ extends Importer:
         val pss = td.paramLists.map: ps =>
           val (res, newCtx2) =
             given Ctx = newCtx
-            params(ps, isDataClass, k is Pat)
+            params(ps, isDataClass, k is Pat, inFunction = false)
           newCtx = newCtx2
           // Spread parameters are not supported in class parameters.
           res.restParam.foreach: rp =>
@@ -2720,9 +2751,10 @@ extends Importer:
             val allParams = ps.fold(Nil):
               _.params.flatMap:
                 // Only `pat` flag is `true`.
-                case p @ Param(flags = FldFlags(false, false, true, false)) => S(p)
+                // (Optional and droppable parameters were already reported by `params`.)
+                case p @ Param(flags = FldFlags(false, false, true, false, _, _)) => S(p)
                 // All flags are `false`.
-                case p @ Param(flags = FldFlags(false, false, false, false)) => S(p)
+                case p @ Param(flags = FldFlags(false, false, false, false, _, _)) => S(p)
                 case Param(flags, sym, _, _) =>
                   raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with modifiers: ${
                     flags.show(false)}" -> sym.toLoc :: Nil))
@@ -2799,7 +2831,7 @@ extends Importer:
               given Ctx = newCtx
               // Unlike main parameters, constructor(...) parameters of data classes are not
               // implicitly `val`: they only become fields when explicitly marked.
-              params(ps, false, false)
+              params(ps, false, false, inFunction = false)
             newCtx = newCtx2
             res.restParam.foreach: rp =>
               raise(ErrorReport(
@@ -2971,8 +3003,11 @@ extends Importer:
             new Ident(base).withLocOf(id) -> (id.name :: Nil)
           case N =>
             id -> Nil
-        val sig = sign.map(term(_, Tpe))
-        val mfn = Modulefulness.ofSign(sig)(Mod in modifiers)
+        val writtenSig = sign.map(term(_, Tpe))
+        val mfn = Modulefulness.ofSign(writtenSig)(Mod in modifiers)
+        // * The argument of an optional parameter may be omitted, in which case the parameter is `undefined`,
+        // * so the annotation of `y?: T` denotes `T | undefined` both for callers and in the body.
+        val sig = if flg.opt then writtenSig.map(optionalType(_, t.toLoc)) else writtenSig
         if newResolution then sig.foreach(registerSignature)
         val sym = VarSymbol(canonicalId)
         sym.sourceAliases = aliases
@@ -2983,8 +3018,29 @@ extends Importer:
             if sym.currentShapes.add(shape) then sym.notifyShapeListeners(shape)
         (p, spd, aliases)
   
+  /** The type of an optional parameter or optional function type parameter annotated with `tpe`,
+    * where `loc` is the location of the optional parameter, which explains the `undefined` part. */
+  def optionalType(tpe: Term, loc: Opt[Loc]): Term =
+    Term.CompType(tpe, Term.Lit(Tree.UnitLit(false).withLoc(loc)), true)
+  
+  /** A separate signature, as in `fun f: (Int, Int?) -> Int` followed by `fun f(x, y?) = ...`,
+    * determines how the function can be called, so it must agree with the implementation's
+    * parameter lists on which parameters are optional. */
+  def checkSignatureOptionality(pss: Ls[ParamList], sign: Term): Unit = (pss, sign) match
+    case (_, Term.Forall(_, _, body)) => checkSignatureOptionality(pss, body)
+    case (ps :: pss, Term.FunTy(Term.Tup(fields), rhs, _)) =>
+      ps.params.lazyZip(fields).foreach:
+        case (p, fld @ Fld(flags, _, _)) if p.flags.opt != flags.opt =>
+          def describe(opt: Bool) = if opt then "optional" else "required"
+          raise(ErrorReport(
+            msg"Parameter '${p.sym.name}' is ${describe(p.flags.opt)}..." -> p.toLoc ::
+            msg"...but the corresponding parameter of the function's signature is ${describe(flags.opt)}." -> fld.toLoc :: Nil))
+        case _ => ()
+      checkSignatureOptionality(pss, rhs)
+    case _ => ()
+  
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
-    val ps_ctx = params(t, inDataClass = false, inPattern = false)
+    val ps_ctx = params(t, inDataClass = false, inPattern = false, inFunction = true)
     def checkFlags(p: Param): Unit =
       if p.flags.isVal || p.flags.mut then
         raise(ErrorReport(msg"Illegal function parameter modifiers: ${
@@ -3016,8 +3072,10 @@ extends Importer:
    * @param inPattern Whether the parameter list belongs to a pattern definition.
    *                  If `inPattern` is `true`, only parameters with `pat` flag
    *                  will be added to the context.
+   * @param inFunction Whether the parameter list belongs to a function or lambda,
+   *                   whose parameters may be optional or droppable.
    */
-  def params(t: Tree, inDataClass: Bool, inPattern: Bool): Ctxl[(ParamList, Ctx)] = t match
+  def params(t: Tree, inDataClass: Bool, inPattern: Bool, inFunction: Bool): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>
       def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx, flags: ParamListFlags): (ParamList, Ctx) =
         ps match
@@ -3029,6 +3087,22 @@ extends Importer:
           case R((p, spd, aliases)) =>
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
+            if p.flags.droppable then
+              if !inFunction then
+                raise(ErrorReport(msg"Droppable parameters are only supported in function and lambda parameter lists." -> hd.toLoc :: Nil))
+              else if spd.isDefined then
+                raise(ErrorReport(msg"Rest parameters cannot be droppable." -> hd.toLoc :: Nil))
+            if p.flags.opt then
+              if !inFunction then
+                raise(ErrorReport(msg"Optional parameters are only supported in function and lambda parameter lists." -> hd.toLoc :: Nil))
+              else if inUsing then
+                raise(ErrorReport(msg"Contextual parameters cannot be optional." -> hd.toLoc :: Nil))
+              else if spd.isDefined then
+                raise(ErrorReport(msg"Rest parameters cannot be optional." -> hd.toLoc :: Nil))
+            // * Required parameters must precede optional ones, so that the arguments of a call
+            // * can be assigned to the parameters positionally (see `ParamList.paramCountLB`).
+            else if spd.isEmpty && acc.exists(_.flags.opt) then
+              raise(ErrorReport(msg"A required parameter cannot follow an optional parameter." -> hd.toLoc :: Nil))
             val bindings = (p.sym.name -> p.sym) :: aliases.map(_ -> p.sym)
             val newCtx = if !inPattern || p.flags.pat then ctx ++ bindings else ctx
             val newFlags = flags.copy(ctx = inUsing)

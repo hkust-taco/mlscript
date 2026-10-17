@@ -117,7 +117,7 @@ sum2(..arr)
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
 //│ ║  l.86: 	sum2(..arr)
 //│ ╙──      	    ^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 2
+//│ ═══[RUNTIME ERROR] Error: match error
 
 
 fun map2(f) = case

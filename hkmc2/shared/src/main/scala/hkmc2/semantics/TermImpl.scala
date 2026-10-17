@@ -60,8 +60,8 @@ trait UnresolvedRefImpl extends NewResolvableImpl:
 trait FldImpl:
   self: Fld =>
   def children: Vector[Located] = self.term +: self.asc.toVector
-  def show(using Scope, ShowCfg, Raise): Document = flags.show(true) :: self.term.show
-  def showDbg(using DebugPrinter): Str = flags.show(true) + self.term.showDbg
+  def show(using Scope, ShowCfg, Raise): Document = flags.show(true) :: self.term.show :: flags.showOptMarker
+  def showDbg(using DebugPrinter): Str = flags.show(true) + self.term.showDbg + flags.showOptMarker
   def describe: Str =
     (if self.flags.spec then "specialized " else "") +
     (if self.flags.mut then "mutable " else "") +

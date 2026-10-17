@@ -30,8 +30,10 @@ class WorkerWrapper
   private def withoutInline(annotations: Ls[Annot]): Ls[Annot] =
     annotations.filterNot(_.isInstanceOf[Annot.Inline])
   
+  // * Optional parameters are excluded because uncurrying concatenates the parameter lists,
+  // * so the arguments of a later list would be assigned to the omitted optional parameters.
   private def isPlainParamList(params: ParamList): Bool =
-    params.flags == ParamListFlags.empty && params.restParam.isEmpty
+    params.flags == ParamListFlags.empty && params.restParam.isEmpty && !params.hasOptParams
   
   private def effectiveConfig(fun: FunDefn): Config =
     fun.configOverride.getOrElse(config)

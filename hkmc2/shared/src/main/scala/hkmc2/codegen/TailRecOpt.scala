@@ -251,14 +251,22 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       case _ => a.value
     if hasSpread then return CallArgsResult.ForceSpread
     
+    // * Arguments in excess of the parameters are ignored at runtime (as in JavaScript);
+    // * the general path evaluates them and only extracts the arguments matching the parameters.
+    if hd.length > paramList.params.length then return CallArgsResult.ForceSpread
+    
+    // * Optional parameters whose arguments are omitted must be reset to `undefined`,
+    // * rather than keeping the values they had in the previous iteration.
+    val hdPadded = hd ++ List.fill(paramList.params.length - hd.length)(Value.Lit(Tree.UnitLit(false))(N))
+    
     if paramList.restParam.isDefined then
       val rest =
         restArgs match
           case Arg(S(SpreadKind.Eager), value) :: Nil => value
           case _ => Tuple(true, restArgs)(N)
-      CallArgsResult.Success(hd.appended(rest))
+      CallArgsResult.Success(hdPadded.appended(rest))
     else
-      CallArgsResult.Success(hd)
+      CallArgsResult.Success(hdPadded)
   
   /**
     * Applies a parameter list to an argument list, both of which could contain arbitrary spreads.

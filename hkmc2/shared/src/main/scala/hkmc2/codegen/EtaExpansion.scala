@@ -10,9 +10,12 @@ import utils.*
 import hkmc2.codegen.flowAnalysis.*
 import semantics.*
 
-case class EtaTargets(paramCount: Int, hasRestParam: Bool, prodFuns: Set[ProdFun]):
-  def paramInfo: (Int, Bool) = paramCount -> hasRestParam
-  def ppParamInfo: Str = if hasRestParam then s"$paramCount+rest" else s"$paramCount"
+/** `requiredParamCount` is the number of leading parameters that are not optional. */
+case class EtaTargets(paramCount: Int, requiredParamCount: Int, hasRestParam: Bool, prodFuns: Set[ProdFun]):
+  def paramInfo: (Int, Int, Bool) = (paramCount, requiredParamCount, hasRestParam)
+  def ppParamInfo: Str =
+    val opt = if requiredParamCount < paramCount then s"(${paramCount - requiredParamCount} optional)" else ""
+    if hasRestParam then s"$paramCount$opt+rest" else s"$paramCount$opt"
   def pp: Str = s"$ppParamInfo${prodFuns.map(_.exprId).mkString("<", ", ", ">")}"
 
 abstract class EtaExpansionResult extends FlowAnalysisSolverResult:
@@ -88,7 +91,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
                   case S(prevRes) => prevRes.zip(curRes).map: (a, b) =>
                     assert(a.paramInfo === b.paramInfo,
                       s"eta expansion targets disagree on arity: ${a.pp} vs ${b.pp}")
-                    EtaTargets(a.paramCount, a.hasRestParam, a.prodFuns ++ b.prodFuns)
+                    EtaTargets(a.paramCount, a.requiredParamCount, a.hasRestParam, a.prodFuns ++ b.prodFuns)
                 go(S(mergedRes))
               else Nil
             case UnknownProd => Nil
@@ -108,7 +111,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     cache.get(pf) match
     case S(res) => res
     case N =>
-      val targets = EtaTargets(pf.params.size, pf.restParam.isDefined, Set.single(pf))
+      val targets = EtaTargets(pf.params.size, pf.requiredParamCount, pf.restParam.isDefined, Set.single(pf))
       if !processing.contains(pf) then
         val res = targets :: funResShape(pf.res)
         cache(pf) = res

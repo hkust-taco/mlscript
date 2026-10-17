@@ -100,7 +100,7 @@ four(...[1, 2], ...[3, 4], 5)
 //│ ╟── Function 'four' expected 4 arguments, but got 5
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
+//│ = [1, 2, 3, 4]
 
 // Opaque values are left to the runtime spread operation to validate.
 :re
@@ -196,7 +196,7 @@ four(...arr)
 //│ ╟── Function 'four' expected 4 arguments, but got 2
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 2
+//│ ═══[RUNTIME ERROR] Error: Function 'four' expected at least 4 arguments but got 2
 
 
 // Exact call arity anchors known suffixes and prefixes around opaque spreads.
@@ -277,7 +277,7 @@ four(...opaque([]), 1, 2, 3, 4, 5)
 //│ ╟── Function 'four' expected 4 arguments, but got at least 5
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
+//│ = [1, 2, 3, 4]
 
 // Rest arity may be valid while the callable argument remains unknown.
 :e

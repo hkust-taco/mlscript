@@ -1199,18 +1199,34 @@ case class TypeDef(
 
 
 // TODO Store optional source locations for the flags instead of booleans
-final case class FldFlags(mut: Bool, spec: Bool, pat: Bool, isVal: Bool):
+/** `opt` marks an optional parameter (`y?`) or an optional function type parameter (`Int?`),
+  * whose argument may be omitted by callers, in which case the parameter is `undefined`.
+  * Unlike the other flags, which are prefix modifiers, it is written as a postfix `?`,
+  * so it is not part of `show` and is printed by `showOptMarker` after the name instead.
+  * `droppable` marks a parameter (`drop y`) or function type parameter (`drop Int`) whose argument
+  * is always passed but which implementations may ignore, such as the index passed by `Array#map`
+  * to its callback. Since functions ignore extra arguments (see `Runtime.checkArgs`),
+  * it currently does not affect resolution or code generation. */
+final case class FldFlags(mut: Bool, spec: Bool, pat: Bool, isVal: Bool, opt: Bool, droppable: Bool):
   def show(addSpace: Bool = false): Str =
     val flags = Buffer.empty[String]
     if mut then flags += "mut"
     if spec then flags += "spec"
     if pat then flags += "pattern"
     if isVal then flags += "val"
+    if droppable then flags += "drop"
     flags.mkString(" ") + (if addSpace && flags.nonEmpty then " " else "")
-  override def toString: String = "‹" + show(false) + "›"
+  def showOptMarker: Str = if opt then "?" else ""
+  override def toString: String = "‹" + show(false) + showOptMarker + "›"
 
 object FldFlags:
-  val empty: FldFlags = FldFlags(false, false, false, false)
+  val empty: FldFlags = FldFlags(false, false, false, false, false, false)
+  /** The number of required (i.e., non-optional) parameters at the start of a parameter list.
+    * Elaboration reports required parameters following optional ones; these are counted as optional,
+    * since arguments are assigned to parameters positionally. */
+  def requiredPrefixLength(flags: Ls[FldFlags]): Int = flags.indexWhere(_.opt) match
+    case -1 => flags.length
+    case n => n
   object benign:
     // * Some flags like `mut` and `module` are "benign" in the sense that they don't affect code-gen
     def unapply(flags: FldFlags): Bool =
@@ -1282,14 +1298,19 @@ final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulef
   
   
   def show(using Scope, ShowCfg, Raise): Document =
-    doc"${flags.show(true)}${sym.showName}${sign.fold(doc"")(": " :: _.show)}"
+    doc"${flags.show(true)}${sym.showName}${flags.showOptMarker}${sign.fold(doc"")(": " :: _.show)}"
   
-  def showDbg(using DebugPrinter): Str = flags.show(true) + sym.showDbg + sign.fold("")(": " + _.showDbg)
+  def showDbg(using DebugPrinter): Str =
+    flags.show(true) + sym.showDbg + flags.showOptMarker + sign.fold("")(": " + _.showDbg)
 
 final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])
 (val toLoc: Opt[Loc]) extends Located:
   def foreach(f: Param => Unit): Unit = (params.iterator ++ restParam).foreach(f)
-  def paramCountLB: Int = params.length
+  /** The number of required parameters, which precede all optional parameters. */
+  lazy val paramCountLB: Int = FldFlags.requiredPrefixLength(params.map(_.flags))
+  /** The number of positional parameters, including optional ones but excluding the rest parameter. */
+  def paramCountMax: Int = params.length
+  def hasOptParams: Bool = paramCountLB < paramCountMax
   def paramCountUB: Bool = restParam.isEmpty
   lazy val paramSyms = params.map(_.sym) ++ restParam.map(_.sym)
   lazy val allParams = params ++ restParam.toList

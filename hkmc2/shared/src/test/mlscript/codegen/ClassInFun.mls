@@ -80,6 +80,6 @@ test()
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.40: 	  Foo(x, x + 1)
 //│ ╙──      	^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
+//│ ═══[RUNTIME ERROR] Error: Function 'test' expected at least 1 argument but got 0
 
 

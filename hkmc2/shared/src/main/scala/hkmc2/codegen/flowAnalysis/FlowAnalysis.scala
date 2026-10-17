@@ -236,10 +236,13 @@ class ProdFun(
   val instantiationId: Opt[InstantiationId]
 )(
   val params: Ls[ConsStrat],
+  /** The number of leading `params` that are not optional (see `ParamList.paramCountLB`). */
+  val requiredParamCount: Int,
   val restParam: Opt[ConsStrat],
   val res: ProdStrat,
   val capturedVarUpperbound: StratVar
 ) extends ProdStrat with StratWithOrigin[FunId]:
+  def paramInfo: (Int, Int, Bool) = (params.size, requiredParamCount, restParam.isDefined)
   val dests = MutSet.empty[ConsFun | MarkerConsStrat]
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
@@ -827,6 +830,7 @@ class FlowConstraintsCollector(
         case p: ProdFun =>
           new ProdFun(p.exprId, updateInstantiationId(p.instantiationId))(
             p.params.map(duplicateConsStrat),
+            p.requiredParamCount,
             p.restParam.map(duplicateConsStrat),
             duplicateProdStrat(p.res),
             duplicateVarState(p.capturedVarUpperbound))
@@ -876,9 +880,13 @@ class FlowConstraintsCollector(
             lambdaExprId
           case other => lastWords(s"unexpected funLamId shape: $other")
       val res = freshVar(resName, cc.forFun)
-      params.foreach:
-        _.restParam.foreach: p =>
+      params.foreach: ps =>
+        ps.restParam.foreach: p =>
           generatedVars(p.sym).constrainOpaque
+        // * The argument of an optional parameter may be omitted, in which case the parameter is
+        // * `undefined`, a value that is not tracked by the analysis.
+        ps.params.drop(ps.paramCountLB).foreach: p =>
+          cc.constrain(UnknownProd, generatedVars(p.sym))
       val funValueStrat = params.zipWithIndex.foldRight[ProdStrat](res):
         case ((ps, whichParamList), acc) =>
           val plFunId = paramListFunId(whichParamList)
@@ -890,6 +898,7 @@ class FlowConstraintsCollector(
             cc.constrain(capturedSymStrat, capUB)
           new ProdFun(plFunId, cc.instId)(
             ps.params.map(p => generatedVars(p.sym)),
+            ps.paramCountLB,
             ps.restParam.map(p => generatedVars(p.sym)),
             acc,
             capUB)
