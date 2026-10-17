@@ -142,7 +142,8 @@ object Config:
     // * in which case no version-gated feature is enabled.
     val version: Opt[Version],
   ):
-    def newUnderscoreAndApplicationSyntax: Bool = version.exists(_ > Version(0, 3, S(1)))
+    def newUnderscoreAndApplicationSyntax: Bool =
+      version.exists(_ > Language.v0_3_1.version.get)
   end Language
   
   object Language:
