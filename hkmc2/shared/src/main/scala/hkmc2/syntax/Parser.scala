@@ -892,6 +892,8 @@ abstract class Parser(
    * which is `Int.MinValue` (see `Keyword.rightPrecOrMin`). A sentinel like -1 would then make the body
    * `{ fun f: Int }` be parsed as an operator split instead of as a refinement of `A`. */
   private def opSplitLeftPrec(tok: Stroken): Int = tok match
+    // An annotation may be the first member of a class/record body.
+    case IDENT("@", _) => Int.MinValue
     case SELECT(_, _) => SelPrec
     case id @ (IDENT(_, true) | KEYWORD(_: Keyword.InfixSplittable)) => id match
       case KEYWORD(Keyword.`of`) => AppPrec

@@ -35,12 +35,6 @@ new
 :re
 new
   Foo()
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.37: 	  Foo()
-//│ ║        	  ^^^^^
-//│ ╟── Class 'Foo' must be instantiated with 'new'.
-//│ ║  l.5: 	class Foo
-//│ ╙──     	      ^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.36: 	new
 //│ ║        	^^^
@@ -49,6 +43,12 @@ new
 //│ ╟── Invalid class expression: application
 //│ ║  l.37: 	  Foo()
 //│ ╙──      	  ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.37: 	  Foo()
+//│ ║        	  ^^^^^
+//│ ╟── Class 'Foo' must be instantiated with 'new'.
+//│ ║  l.5: 	class Foo
+//│ ╙──     	      ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e

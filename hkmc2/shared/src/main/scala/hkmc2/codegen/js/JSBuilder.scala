@@ -79,6 +79,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     val cls = owner.irClassContainer
     Option.when(inScopeClasses.contains(cls))(cls.privatesScope)
   
+  private def symbolKey(sym: DefinitionSymbol[?]): Opt[WellKnownSymbol] =
+    sym.defn.collect { case td: TermDefinition => td }.flatMap(td => MemberKey.symbol(td))
+
   private def selectPrivateField(sym: DefinitionSymbol[?], loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     val stored = MemberStorage.symbol(sym)
     MemberStorage.privateOwner(stored).map: owner =>
@@ -358,13 +361,16 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         doc"(function* ($params) ${ braced(bodyDoc) }).bind(this)"
       else doc"($params) => ${ braced(bodyDoc) }"
     case s @ SuperSelect(qual, base, id) =>
-      doc"Reflect.get(${resultQual(base)}.prototype, ${makeStringLiteral(id.name)}, ${result(qual)})"
+      val key = symbolKey(s.symbol).fold(doc"${makeStringLiteral(id.name)}")(key => doc"globalThis.Symbol.${key.name}")
+      doc"Reflect.get(${resultQual(base)}.prototype, $key, ${result(qual)})"
     case s @ Select(qual, id) => 
       val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
         case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
-      val field = s.symbol.flatMap(selectPrivateField(_, s.toLoc))
+      val field = s.symbol.flatMap(selectPrivateField(_, s.toLoc)).orElse(
+        s.symbol.flatMap(symbolKey)
+          .map(key => doc"[globalThis.Symbol.${key.name}]"))
       val name = symbolicSuffixBase(id.name).getOrElse(id.name)
       val fieldDoc = field.getOrElse:
         if isValidFieldName(name)
@@ -495,7 +501,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         } = ${result(r)};${returningTerm(rst, endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match
-        case S(member: DefinitionSymbol[?]) => selectPrivateField(member, n.toLoc)
+        case S(member: DefinitionSymbol[?]) => selectPrivateField(member, n.toLoc).orElse(
+          symbolKey(member).map(key => doc"[globalThis.Symbol.${key.name}]"))
         case _ => N
       val name = symbolicSuffixBase(n.name).getOrElse(n.name)
       doc" # ${result(p)}${field.getOrElse(fieldSelect(name))} = ${result(r)};${returningTerm(rst, endSemi)}"
@@ -588,7 +595,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             def mkMethodName(td: FunDefn): Document =
               if td.dSym.isPrivate
               then doc"#${isym.privatesScope.allocateOrGetName(td.dSym)}"
-              else doc"${td.sym.nme}"
+              else symbolKey(td.dSym).fold(doc"${td.sym.nme}")(
+                key => doc"[globalThis.Symbol.${key.name}]")
 
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
               mtds.map:

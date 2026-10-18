@@ -135,7 +135,7 @@ object Config:
     useNewResolution: Bool,
     strictResolution: Bool, // Reject multiple resolved selection targets as well as missing targets
     // Unknown inputs admitted by a public interface are checked regardless of this flag.
-    eagerResolution: Bool, // Reject selections whose prefixes have shapes that do not support them, even though the selection might have other valid targets
+    eagerResolution: Bool, // Reject invalid selection/call candidates even when other candidates supply valid targets
     typeCheck: Opt[TypeChecking],
   )(
     // * `N` when no version was specified with `#lang` (see `Language.default`),

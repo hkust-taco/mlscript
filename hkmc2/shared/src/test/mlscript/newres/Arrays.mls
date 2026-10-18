@@ -134,15 +134,15 @@ new Array[Int](1, 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 2
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.240: 	declare class Array[T](val length: Int) {
+//│ ║  l.244: 	declare class Array[T](val length: Int) {
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.241: 	  fun join(...separators): Str
+//│ ║  l.245: 	  @jsSymbol("iterator") fun iterator(): Iterator[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.246: 	  fun join(...separators): Str
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.242: 	  fun reverse(): Array[T]
+//│ ║  l.247: 	  fun reverse(): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.243: 	  fun sort(...compare): Array[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.244: 	... (more lines omitted) ...
+//│ ║  l.248: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2]
 
@@ -153,15 +153,15 @@ new Array[Int]()
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.240: 	declare class Array[T](val length: Int) {
+//│ ║  l.244: 	declare class Array[T](val length: Int) {
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.241: 	  fun join(...separators): Str
+//│ ║  l.245: 	  @jsSymbol("iterator") fun iterator(): Iterator[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.246: 	  fun join(...separators): Str
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.242: 	  fun reverse(): Array[T]
+//│ ║  l.247: 	  fun reverse(): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.243: 	  fun sort(...compare): Array[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.244: 	... (more lines omitted) ...
+//│ ║  l.248: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
@@ -224,7 +224,7 @@ class Total(val total: Int)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'reduce' expected 2 arguments, but got 1
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.274: 	  fun reduce[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
+//│ ║  l.279: 	  fun reduce[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 3
 

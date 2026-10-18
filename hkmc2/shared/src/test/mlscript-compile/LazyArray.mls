@@ -61,7 +61,7 @@ class LazyArr extends IterableBase with
 // Note: Ideally `underlying` should be typed as `IterableBase`, but `Array` currently does not extend it.
 class View(val underlying: Indexable, val start: Int, val end: Int) extends LazyArr with
 
-  override fun iterator() =
+  @jsSymbol("iterator") override fun iterator() =
     let idx = start
     let until = underlying.length - end
     IteratorImpl of () =>
@@ -87,7 +87,7 @@ object SpliceMarker
 class Splice(val bits: Array, val len: Int) extends LazyArr with
   let materialized = null
 
-  override fun iterator() =
+  @jsSymbol("iterator") override fun iterator() =
     let idx = 0
     let uitr = null
     

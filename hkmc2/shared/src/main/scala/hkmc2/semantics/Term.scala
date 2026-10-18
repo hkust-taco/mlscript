@@ -25,6 +25,7 @@ final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
 enum Annot extends Located:
   val toLoc: Opt[Loc]
 
+  case JsSymbol(key: WellKnownSymbol)(val toLoc: Opt[Loc])
   case Untyped()(val toLoc: Opt[Loc])
   case Modifier(mod: Keyword)(val toLoc: Opt[Loc])
   case Trm(trm: Term)(val toLoc: Opt[Loc])
@@ -60,10 +61,11 @@ enum Annot extends Located:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
+    case _: JsSymbol | _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
       | Generator() | Async() | RaiseEffects() | Pure() | _: Bufferable | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
+    case JsSymbol(key) => doc"@jsSymbol(\"${key.name}\")"
     case Untyped() => doc"@untyped"
     case Inline() => doc"@inline"
     case NoInline() => doc"@noInline"
@@ -767,7 +769,7 @@ final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot
   * to evaluate its value. Computed keys also have an identity, but cannot be
   * selected statically until their key is known. Cloning preserves this identity.
   */
-final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol) extends Statement, AutoLocated:
+final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val key: Opt[MemberKey]) extends Statement, AutoLocated:
   // The two-argument RcdField.apply sets sym.tsym and its definition before
   // constructing this node. Lowering clones reuse the same initialized symbols.
   val tsym: TermSymbol = sym.tsym.get
@@ -777,9 +779,11 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol) extend
     case _ => ()
 
 object RcdField:
-  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false)
-  def signature(field: Term, sign: Term)(using State): RcdField = make(field, sign, true)
-  private def make(field: Term, rhs: Term, signature: Bool)(using State): RcdField =
+  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, N)
+  def signature(field: Term, sign: Term)(using State): RcdField = make(field, sign, true, N)
+  def signature(field: Term, sign: Term, symbol: WellKnownSymbol)(using State): RcdField =
+    make(field, sign, true, S(symbol))
+  private def make(field: Term, rhs: Term, signature: Bool, symbol: Opt[WellKnownSymbol])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"
@@ -793,9 +797,11 @@ object RcdField:
     // directly to its written type: projection does not invoke a value definition.
     tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N,
       if signature then S(rhs) else N,
-      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, Nil, N)(field.toLoc))
+      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc))
     sym.complete()
-    RcdField(field, rhs, sym)
+    RcdField(field, rhs, sym)(symbol.orElse(field match
+      case Term.Lit(Tree.StrLit(name)) => S(name)
+      case _ => N))
 final case class RcdSpread(rcd: Term) extends Statement, AutoLocated
 
 final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(val toLoc: Opt[Loc]) extends Statement

@@ -124,6 +124,26 @@ class SubstitutionGrowthTest extends AnyFunSuite:
         assert(m.views <= 2 * k + 4)
         assert(m.activations <= 2 * k + 4)
 
+  // Each spread observes both branches of a recursive iterable producer. The
+  // element hosts must join those flows instead of enumerating their product.
+  // Diff tests check the resulting members; only this test observes graph size.
+  test("recursive iterable spreads keep inference growth bounded"):
+    for k <- List(2, 6, 10, 14) do
+      val spreads = List.fill(k)("...xs").mkString(", ")
+      val m = measure(s"Iterable_$k",
+        s"""#lang(0.3.x)
+           |
+           |class Item(val value: Int)
+           |private fun forward[A](xs: Iterable[A] | Array[A], n: Int): Iterable[A] | Array[A] =
+           |  if n == 0 then xs else forward([$spreads], n - 1)
+           |fun use(xs: Iterable[Item]) = [...forward(xs, 2)].map(x => x.value)
+           |""".stripMargin)
+      withClue(s"recursive iterable with $k spreads: $m"):
+        assert(m.largestSubstitution <= 4)
+        assert(m.views <= 80 * k + 300)
+        assert(m.activations <= 20 * k + 100)
+        assert(m.typeInstances <= 8 * k + 20)
+
   /** Shapes and instances for the substitution laws below. */
   private class Harness:
     given owner: Elaborator.State = new Elaborator.State

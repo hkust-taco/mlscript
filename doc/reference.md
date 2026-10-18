@@ -1381,6 +1381,25 @@ intersection as a union. Unions and intersections of function signatures likewis
 contribute every component's parameter and result flows; an uncertain parameter
 position retains its possible element types rather than becoming an opaque unknown.
 
+Argument and array spreads follow the JavaScript iteration protocol:
+`value[Symbol.iterator]().next().value`. Arrays, strings, native collections,
+and user iterables use the same resolution path. Every known alternative of the
+operand, iterator method, and step result contributes its element flows. A step
+known to have `done: true` contributes no element. Missing or opaque protocol
+parts remain accepted and contribute uncertainty alongside any known flows;
+resolution does not prove that a value can be iterated. Precise tuple spreads
+retain their fixed positions.
+
+`@jsSymbol("iterator")` on a public method gives its source name to the
+`Symbol.iterator` property. The prelude's `Array.iterator()` and
+`Iterable[A].iterator()` aliases therefore call the native symbol property.
+Class implementations and their overrides use the same annotation. A record
+can implement the protocol with a computed `(Symbol.iterator)` field; record
+types can declare that computed field or annotate a named field with
+`@jsSymbol("iterator")`. A plain string-keyed `iterator` field alone does not
+implement JavaScript iteration. Currently `iterator` is the supported well-known
+symbol.
+
 With new resolution (`#lang(0.3.x)`), annotations determine the interface available
 to member lookup and calls. A receiver annotated `Base` exposes Base's declared
 members and preserves virtual dispatch; concrete arguments cannot add subclass
@@ -1400,6 +1419,12 @@ declared parameter interface when checking returned functions.
 Worksheet blocks perform this exposed-interface check only under
 `#lang(strictResolution: true)`. Non-strict resolution allows multiple selection
 or call targets, but still rejects missing targets and known invalid operations.
+With `eagerResolution: false`, member selections and applications accept a known
+valid target alongside other candidates. This tolerates correlations lost across
+conditional branches or recursion; every known result still propagates. Eager
+resolution instead diagnoses each invalid candidate. A call with no callable
+target is rejected in either mode, and external inputs with no declared callable
+interface remain invalid.
 
 Generic parameters remain opaque regardless of strict mode, visibility, or local
 callers. For example, `private fun read[A](x: A) = x.a` is invalid because `A`

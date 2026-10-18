@@ -145,7 +145,7 @@ input and output parts:
 | `out U` | `Nothing` | `U` |
 | `in T out U` | `T` | `U` |
 
-Declaration variance applies to an unqualified argument. A written wildcard
+Nominal declaration variance applies to an unqualified argument. A written wildcard
 supplies its own parts and overrides declaration variance. Comparing actual `a`
 with expected `b` installs `a.output <: b.output` and `b.input <: a.input`.
 Missing wildcard parts are actual top/bottom types, not inference holes.
@@ -199,12 +199,26 @@ type checker. The annotated-array case in `VarianceSoundness.mls` resolves
 normally and, with type checking disabled, records the unsafe runtime write.
 InvalML regressions check rejection of the corresponding concrete mismatch.
 
-Aliases bind both argument interpretations before interpreting their bodies at the
-enclosing polarity. This avoids applying the enclosing reversal twice:
-`Identity[T]`, for `type Identity[A] = A`, must behave like `T` in either polarity.
-Captured enclosing binders retain their own bindings. Nominal applications instead
-retain the argument pair composed with the application's polarity, since member
-signatures subsequently interpret that pair from the member's positive interface.
+Alias formals start a new substitution scope. References to already-bound
+enclosing parameters inside an argument still select their bounds according to
+their position in the enclosing signature. A fresh, unbound parameter remains
+itself. Apply declaration variance (or the written wildcard) to that interpreted
+argument, then select its endpoint according to its occurrence inside the alias body.
+For `type Source[out T] = {item: T}`, both `Source[A]` and
+`Source[in Nothing out A]` expose `A` in `item`, including when the application
+occurs in a function domain. The enclosing domain affects the interpretation
+of `A`, not whether the occurrence of `T` in `{item: T}` selects its output.
+
+The implementation keeps the alias body's enclosing polarity so captured outer
+binders retain their interpretation. It therefore reverses only the new formal
+bindings' stored endpoint pairs when that polarity is negative. A globally
+negative occurrence of `T` then selects the original output endpoint, while a
+further domain reversal inside the alias selects the original input endpoint.
+This also keeps `Identity[A]` equivalent to `A` in both polarities.
+Nominal applications retain their composed argument pairs directly: member
+signatures subsequently interpret them from the member's positive interface.
+`TransparentAliasPolarity.mls` covers shorthand and explicit projections;
+`VarianceAliases.mls` covers captured binders and nested identity aliases.
 
 `DeclaredType.positive` records this lexical polarity, independently of a later
 constraint's direction. `TypeShape.Wildcard` retains written parts;
@@ -217,6 +231,33 @@ selected type; an invariant argument makes separate selections for its two parts
 Selections are cached by argument reference and polarity; selecting an existing
 selection is idempotent. Forwarding cycles retain subscriptions but stop repeated observation.
 For a fixed argument-reference set, selection adds at most two nodes per reference.
+
+### Iteration and synthesized applications
+
+Resolution is a best-effort check, not a type checker. Implicit spread observations
+must propagate known flows without rejecting an opaque or inconvenient protocol.
+They inspect every union and intersection component independently, just like
+constraint inspection. An unknown alternative joins the known elements; it never
+replaces them. Definitively completed iterator results supply no element, while
+a missing or unknown `done` still permits observing `value`.
+
+Each non-tuple spread operand owns one `IterationFlow`: stable sites for selecting
+`Symbol.iterator`, calling it, selecting and calling `next`, and reading `done`
+and `value`, plus one deferred element host. These observations use ordinary
+member scope transport and call instantiation. The implicit zero-argument calls
+omit compatibility diagnostics but retain argument and result flow. Tuple
+construction sees one unknown-length segment per operand, regardless of the
+number of incoming iterator or element alternatives. This prevents products of
+alternatives from multiplying through recursive spreads. Imported producers keep
+their canonical sites while publisher storage remains local to each consumer.
+
+Arrays use this same protocol through the prelude's symbol-keyed method. Direct
+Array element-bound observation remains useful for array patterns and rest
+constraints, where the operation describes Array storage rather than iteration.
+The `appliedTypes` table interns synthesized applications by constructor symbol
+and contextual arguments, sharing the mechanism for `Array[T]` and `Awaited[T]`.
+It reifies symbolic argument references before observation; caching their current
+values instead would lose later bounds and caller-specific substitutions.
 
 ## Shared bodies and contextual constraints
 

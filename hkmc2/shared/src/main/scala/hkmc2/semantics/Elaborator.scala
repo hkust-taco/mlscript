@@ -832,6 +832,8 @@ extends Importer:
       | Keyword.`public`
       | Keyword.`private`
     )) => S(Annot.Modifier(kw)(tree.toLoc))
+    case App(Ident("jsSymbol"), Tup(StrLit("iterator") :: Nil)) =>
+      S(Annot.JsSymbol(WellKnownSymbol.Iterator)(tree.toLoc))
     case App(Ident("config"), Tup(args)) =>
       val modify = ConfigParser.parseOverrides(args)
       S(Annot.Config(modify)(tree.toLoc))
@@ -1307,7 +1309,17 @@ extends Importer:
     */
   private def recordFieldScope(field: RcdField)(using Ctx): RcdField =
     rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
-    field
+    def isSymbolModule(prefix: Term): Bool = prefix.withoutCaptures match
+      case ref: NewRefImpl => ref.sym is ctx.builtins.SymbolModule.bms
+      case Term.Ref(symbol) => symbol is ctx.builtins.SymbolModule.bms
+      case _ => false
+    val key = field.field.withoutCaptures match
+      case selection: Term.NewSel if selection.id.name == "iterator" && isSymbolModule(selection.prefix) =>
+        S(WellKnownSymbol.Iterator)
+      case selection: Term.Sel if selection.nme.name == "iterator" && isSymbolModule(selection.prefix) =>
+        S(WellKnownSymbol.Iterator)
+      case _ => field.key
+    field.copy()(key)
   
   /** An async expression wraps the values of `target` in a promise, whose payload
     * reads the binders in scope where the expression is written (see
@@ -2390,7 +2402,10 @@ extends Importer:
           case id: Ident if fieldInterpretation == Tpe =>
             // Record type fields declare interfaces, not local value bindings.
             // Keep their types directly so lookup never follows initializer flow.
-            recordFieldScope(RcdField.signature(Term.Lit(StrLit(id.name)).withLocOf(id), rhs_t)) :: acc
+            reportUnused(annotations.filterNot(_.isInstanceOf[Annot.JsSymbol]))
+            val field = Term.Lit(StrLit(id.name)).withLocOf(id)
+            recordFieldScope(MemberKey.symbol(annotations).fold(RcdField.signature(field, rhs_t))(
+              key => RcdField.signature(field, rhs_t, key))) :: acc
           case id: Ident =>
             val sym = new VarSymbol(id, erasedType = N)
             newCtx += id.name -> sym
@@ -2407,7 +2422,9 @@ extends Importer:
             ) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
-            recordFieldScope(RcdField(term(inner, Trm), rhs_t)) :: acc
+            val key = term(inner, Trm)
+            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t)
+              else RcdField(key, rhs_t)) :: acc
           case _ =>
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
             recordFieldScope(RcdField(Term.Error().withLocOf(rlhs), rhs_t)) :: acc

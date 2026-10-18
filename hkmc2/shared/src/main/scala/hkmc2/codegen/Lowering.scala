@@ -1922,6 +1922,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case a: Annot.Affine => target match
         case TermDefinition(k = syntax.Fun) => ()
         case _ => warn(a)
+      case a: Annot.JsSymbol => target match
+        case td: TermDefinition if (td.k is syntax.Fun) && td.flags.isMethod && !td.tsym.isPrivate => ()
+        case _ => warn(a, S(msg"Only public methods may implement a well-known symbol."))
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
       case annot => warn(annot)
   

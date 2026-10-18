@@ -103,7 +103,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case d: Definition => ???
     case imp: Import => Import(imp.sym, imp.str, imp.file)(imp.toLoc)
     case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))(toLoc)
-    case RcdField(field, rhs, sym) => RcdField(field.mkClone, rhs.mkClone, sym)
+    case f @ RcdField(field, rhs, sym) => RcdField(field.mkClone, rhs.mkClone, sym)(f.key)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
     case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)(toLoc)
     case sc: SetConfig => sc

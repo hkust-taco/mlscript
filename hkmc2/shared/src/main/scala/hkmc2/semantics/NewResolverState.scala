@@ -9,6 +9,13 @@ import Term.*
 inline def rctx(using context: ResolutionContext): ResolutionContext = context
 
 object NewResolverState:
+  /** Diagnostics wait for all this block's candidates. Calls record validity
+    * independently of their results: a callable that only throws is still callable.
+    */
+  final class PendingCheck:
+    var callable: Bool = false
+    val problems = mutable.ListBuffer.empty[(Bool, () => Ls[(Message, Opt[Loc])])]
+
   /** Tables belong to a compilation unit; a context only selects a namespace.
     * An inherited lookup is read-only. Mutable values are copied into the
     * consumer's table before use, so extending an imported graph cannot change
@@ -79,8 +86,7 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
   private[semantics] val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
   private[semantics] val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
-  private[semantics] val missingMembers = mutable.LinkedHashMap.empty[Identity[NewSel],
-    mutable.ListBuffer[(Bool, () => Ls[(Message, Opt[Loc])])]]
+  private[semantics] val pendingChecks = mutable.LinkedHashMap.empty[Identity[NewSel | App], NewResolverState.PendingCheck]
   // The references, selections, and instantiations written in this unit's current block,
   // with the lexical scope in which each is written (see ResolutionContext.checkAccess).
   private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable | New, SrcScope)]
@@ -88,7 +94,7 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val shapeIdentities = mutable.HashMap.empty[ShapeIdentity.View, ShapeIdentity.View]
   private[semantics] val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
   private[semantics] val typeReferences = new DeclaredType.References(substitutions)
-  val membersCache: Cache[(TermShape, Str), MemberLookup] =
+  val membersCache: Cache[(TermShape, MemberKey), MemberLookup] =
     new Cache(_.membersCache, identity)
   // Shape components of cache keys use ShapeIdentity.key, like hosts' candidates.
   val spreadInputs: Cache[Object, mutable.Set[ShapeIdentity.Key]] =
@@ -116,8 +122,8 @@ final class NewResolverState(val owner: Elaborator.State):
   // Adopted canonical producers are not newly allocated (see canonical).
   private[semantics] var allocatedShapeViews: Int = 0
   private[semantics] var largestShapeViewSubstitution: Int = 0
-  // The inferred element type of each array spread (see the tuple listener).
-  private[semantics] val spreadElements: Cache[Identity[Term], TypeResolution] =
+  // Stable iteration observations and joined elements for each spread operand.
+  private[semantics] val spreadElements: Cache[Identity[Term], IterationFlow] =
     new Cache(_.spreadElements, identity)
   val introShapes: Cache[Identity[IntroTerm], IntroShape] =
     new Cache(_.introShapes, identity)
@@ -149,8 +155,6 @@ final class NewResolverState(val owner: Elaborator.State):
   // candidates. Register each host before following recursive function results.
   val resultTypes: Cache[(Identity[Term], TypeSubstitution), DeclaredType] =
     new Cache(_.resultTypes, identity)
-  val awaitedTypes: Cache[DeclaredType, DeclaredType] =
-    new Cache(_.awaitedTypes, identity)
   // Keyed like inference candidates (see ShapeIdentity), so each candidate has one awaited type.
   val awaitedValues: Cache[(ShapeIdentity.Key, TypeSubstitution), DeclaredType] =
     new Cache(_.awaitedValues, identity)
@@ -267,8 +271,9 @@ final class NewResolverState(val owner: Elaborator.State):
     new Seen(_.exposedTypeHoles)
   val signatureParameters: Cache[VarSymbol, DeclaredType] =
     new Cache(_.signatureParameters, identity)
-  val arrayTypes: Cache[DeclaredType, DeclaredType] =
-    new Cache(_.arrayTypes, identity)
+  // Synthesized applications share their type graph, including the symbolic arguments.
+  val appliedTypes: Cache[(ClassSymbol | TypeAliasSymbol, Ls[DeclaredType]), DeclaredType] =
+    new Cache(_.appliedTypes, identity)
   val contextualTypes: Cache[ContextualType, DeclaredType] =
     new Cache(_.contextualTypes, identity)
   val tupleArrayParents: Cache[Identity[TupleShape], NominalInstanceView] =
@@ -393,20 +398,27 @@ final class ResolutionContext private[semantics] (
   /** Number of lazily copied graph nodes, for isolation/scale regressions. */
   private[hkmc2] def copiedHostCount: Int = state.copies.size
 
-  // A receiver shape can lack a member that another shape supplies later in
-  // inference. Retain lazy witnesses by selection, including those from later
-  // activations of completed syntax, and report them together at block completion.
-  // Eager problems invalidate the selection immediately, regardless of its targets;
+  // A candidate can lack a member or be non-callable while another candidate
+  // supplies a target later in inference. Retain lazy witnesses by use site,
+  // including later activations of completed syntax, and report them together
+  // at block completion. Eager problems invalidate the use immediately;
   // delaying their report lets the same error include every relevant witness.
   private def hasSelectionTarget(selection: NewSel): Bool =
     selection.resolvedTargets.nonEmpty || selection.hasDynamicTarget || selection.tupleIndex.nonEmpty
+  private def pendingCheck(term: NewSel | App): NewResolverState.PendingCheck =
+    state.pendingChecks.getOrElseUpdate(new Identity(term), new NewResolverState.PendingCheck)
+  def callable(application: App): Unit = pendingCheck(application).callable = true
+  def nonCallable(application: App, eager: Bool)(messages: => Ls[(Message, Opt[Loc])]): Unit =
+    if !hasError(application) then
+      if eager then markError(application)
+      pendingCheck(application).problems += ((eager, () => messages))
   def missingMember(selection: NewSel, eager: Bool)(messages: => Ls[(Message, Opt[Loc])]): Unit =
-    val key = new Identity(selection)
+    val key = new Identity[NewSel | App](selection)
     // Accumulate witnesses for this block's error without replaying errors on
     // completed selections or adding follow-on errors to unrelated failures.
-    if !hasError(selection) || state.missingMembers.contains(key) then
+    if !hasError(selection) || state.pendingChecks.contains(key) then
       if eager then markError(selection)
-      state.missingMembers.getOrElseUpdate(key, mutable.ListBuffer.empty) += ((eager, () => messages))
+      pendingCheck(selection).problems += ((eager, () => messages))
 
   /** Seal the decisions and original host data read by erasure/lowering. The
     * inference graph keeps private, live host data and all its listeners, so
@@ -455,16 +467,18 @@ final class ResolutionContext private[semantics] (
         case _ => ()
       statement.subStatements.foreach(visit)
     visit(block)
-    state.missingMembers.foreach: (key, problems) =>
-      val selection = key.value
-      val unresolved = !hasSelectionTarget(selection)
-      val messages = problems.iterator.collect:
+    state.pendingChecks.foreach: (key, check) =>
+      val term = key.value
+      val unresolved = term match
+        case selection: NewSel => !hasSelectionTarget(selection)
+        case _: App => !check.callable
+      val messages = check.problems.iterator.collect:
         case (eager, messages) if eager || unresolved => messages()
       .flatten.toList.distinct
       if messages.nonEmpty then
-        markError(selection)
-        reportResolutionError(selection, messages)
-    state.missingMembers.clear()
+        markError(term)
+        reportResolutionError(term, messages)
+    state.pendingChecks.clear()
     state.accessSites.foreach(checkAccess)
     state.accessSites.clear()
     state.pending.foreach: (key, value) =>
@@ -610,7 +624,7 @@ final class ResolutionContext private[semantics] (
     canonical(key._1, _.recordShapes, key)(shapeView(key._3)(make))
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
     canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
-  def spreadElementType(spread: Term)(make: => TypeResolution): TypeResolution =
+  def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
     canonical(spread, _.spreadElements, new Identity(spread))(make)
   def memberVariable(symbol: TermSymbol): ShapeHost =
     state.memberVariables.getOrElseUpdate(symbol,

@@ -1,0 +1,47 @@
+:.
+
+// Abstract members are implemented by their runtime key, even with another alias.
+:expect [17]
+abstract class AbstractSource {
+  @jsSymbol("iterator") fun iterator(): Iterator[Int]
+}
+class ConcreteSource extends AbstractSource {
+  @jsSymbol("iterator") override fun iterate() = [17].iterator()
+}
+[...(new ConcreteSource)]
+//│ = [17]
+
+// Both source aliases remain available when structural interfaces are combined.
+:expect [18, 18]
+type SourceOne = {@jsSymbol("iterator") first: () -> Iterator[Int]}
+type SourceTwo = {@jsSymbol("iterator") second: () -> Iterator[Int]}
+private fun both(xs: SourceOne & SourceTwo) = [xs.first().next().value, xs.second().next().value]
+both([18])
+//│ = [18, 18]
+
+// A source alias and a string property with the same name are distinct targets.
+:e
+private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
+//│ ╔══[COMPILATION ERROR] This selection of member 'first' is ambiguous, as it has multiple resolved targets
+//│ ║  l.24: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
+//│ ║        	                                                                      ^^^^^^^^
+//│ ╟── target: record field 'first'
+//│ ║  l.16: 	type SourceOne = {@jsSymbol("iterator") first: () -> Iterator[Int]}
+//│ ║        	                                        ^^^^^
+//│ ╟── target: record field 'first'
+//│ ║  l.24: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
+//│ ╙──      	                                       ^^^^^
+
+// An unused annotation must not rename a field behind its source-level name.
+:w
+:expect [19, 19]
+class Plain {
+  @jsSymbol("iterator") val value = 19
+}
+let plain = new Plain
+[plain.value, plain.("value")]
+//│ ╔══[WARNING] Only public methods may implement a well-known symbol.
+//│ ║  l.39: 	  @jsSymbol("iterator") val value = 19
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^
+//│ = [19, 19]
+//│ plain = Plain { value: 19 }

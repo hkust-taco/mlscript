@@ -75,6 +75,7 @@ declare class RegExp {
 declare module RegExp
 
 declare class Set[V] {
+  @jsSymbol("iterator") fun iterator(): Iterator[V]
   val size: Int
   fun add(value: V): Set[V]
   fun has(value: V): Bool
@@ -87,6 +88,7 @@ declare class Set[V] {
 declare module Set
 
 declare class Map[K, V] {
+  @jsSymbol("iterator") fun iterator(): Iterator[[K, V]]
   val size: Int
   fun get(key: K): V | undefined
   fun has(key: K): Bool
@@ -100,6 +102,7 @@ declare class Map[K, V] {
 }
 
 declare class Iterator[out T] {
+  @jsSymbol("iterator") fun iterator(): Iterator[T]
   fun next(): { value: T, done: Bool }
 }
 
@@ -203,6 +206,7 @@ declare class Num {
 }
 declare class Int extends Num
 declare class Str {
+  @jsSymbol("iterator") fun iterator(): Iterator[Str]
   val length: Int
   fun toString(): Str
   fun at(index: Int): Str | undefined
@@ -239,6 +243,7 @@ declare class Class
 // the `.class` storage used by generated MLscript constructor functions.
 // The `val length` parameter also supports matching with `Array(length)`.
 declare class Array[T](val length: Int) {
+  @jsSymbol("iterator") fun iterator(): Iterator[T]
   fun join(...separators): Str
   fun reverse(): Array[T]
   fun sort(...compare): Array[T]
@@ -605,6 +610,6 @@ declare open class HTMLElement {
 // Shared read interfaces for arrays, strings, and lazy views. Element types are
 // covariant, so using these interfaces does not widen an invariant collection.
 type Indexable[out A] = {length: Int, at: Int -> A, slice: Function}
-type Iterable[out A] = {iterator: () -> Iterator[A]}
+type Iterable[out A] = {@jsSymbol("iterator") iterator: () -> Iterator[A]}
 type IterableIndexable[out A] = Indexable[A] & Iterable[A]
 
