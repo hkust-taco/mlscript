@@ -116,6 +116,17 @@ object Parser:
     def unapply(ts: Ls[TokLoc]): S[Ls[TokLoc]] =
       S(get(ts))
   
+  /** Whether `id`, followed by the tokens `rest`, is a keyword used as a key, as in `class: e` or `true: e`.
+    * An alphanumeric keyword followed by a colon is parsed as an identifier, so that record fields and
+    * named arguments can have any name. This does not make anything ambiguous: no keyword-introduced
+    * syntax continues with a colon, and expressions are ascribed with `as` rather than with a colon. */
+  private def isKeywordKey(id: IDENT, rest: Ls[TokLoc]): Bool =
+    def colonFollows(ts: Ls[TokLoc]): Bool = ts match
+      case (SPACE, _) :: ts => colonFollows(ts)
+      case (IDENT(":", _), _) :: _ => true
+      case _ => false
+    !id.symbolic && Keyword.all.contains(id.name) && colonFollows(rest)
+  
   extension (loc: Loc)
     def showStart: String =
       loc.origin.fph.getLineColAt(loc.spanStart) match
@@ -361,7 +372,7 @@ abstract class Parser(
         errExpr :: Nil
       case _ =>
         blockOf(rule, a :: annotations, allowNewlines = allowNewlines)
-    case (tok @ (id: IDENT), loc) :: _ if id.name =/= ":" =>
+    case (tok @ (id: IDENT), loc) :: rest if id.name =/= ":" && !isKeywordKey(id, rest) =>
       Keyword.all.get(id.name) match
       case S(kw) =>
         consume
@@ -460,12 +471,11 @@ abstract class Parser(
     //     case N =>
     //      err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found end of phrase instead" -> S(loc.left) :: Nil)
     //       N
+    case (tok @ (id: IDENT), loc) :: rest if isKeywordKey(id, rest) =>
+      tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
-      case S(Keyword.`:`) if rule.getKwAlt(Keyword.`:`, S(loc)).isEmpty =>
-        // encountering `:` should lead to parsing an expr (likely a pun)
-        tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
-      case N =>
+      case S(Keyword.`:`) | N =>
         // encountering `:` should lead to parsing an expr (likely a pun)
         tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
       case S(kw) =>
@@ -649,6 +659,9 @@ abstract class Parser(
       consume
       val id = Tree.Ident(name).withLoc(S(loc))
       exprCont(id, prec, allowNewlines = true)
+    case (tok @ IDENT(nme, _), loc) :: rest if isKeywordKey(tok, rest) =>
+      consume
+      exprCont(Tree.Ident(nme).withLoc(S(loc)), prec, allowNewlines = allowNewlines)
     case (IDENT(nme, sym), loc) :: _ =>
       Keyword.all.get(nme) match
       case S(kw) => // * Expressions starting with keywords should be handled in parseRule
