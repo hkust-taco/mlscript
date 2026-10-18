@@ -267,6 +267,8 @@ final class NewResolverState(val owner: Elaborator.State):
     new Seen(_.exposedTypeHoles)
   val signatureParameters: Cache[VarSymbol, DeclaredType] =
     new Cache(_.signatureParameters, identity)
+  val arrayTypes: Cache[DeclaredType, DeclaredType] =
+    new Cache(_.arrayTypes, identity)
   val contextualTypes: Cache[ContextualType, DeclaredType] =
     new Cache(_.contextualTypes, identity)
   val tupleArrayParents: Cache[Identity[TupleShape], NominalInstanceView] =

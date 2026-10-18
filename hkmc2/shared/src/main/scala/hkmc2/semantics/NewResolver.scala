@@ -17,8 +17,9 @@ import hkmc2.syntax.LetBind
   * Shape propagation helps find targets and diagnose obvious mistakes; it does
   * not prove type safety, even in strict mode. Leave complicated or expensive
   * compatibility checks to a later type-checking pass and accept those cases
-  * leniently. In particular, optional arguments and spreads need not retain
-  * every possible length or correlation between alternatives.
+  * leniently. This does not permit dropping flows: selections and ambiguity
+  * detection need every possible target. Approximate complicated relationships
+  * by joining their flows, even when lengths or correlations are lost.
   */
 class NewResolver:
   self: Elaborator =>
@@ -1471,10 +1472,23 @@ class NewResolver:
   // publish inferred alternatives for parameters behind this boundary.
   private def signatureParameters(using rs: ResolutionContext) = rs.state.signatureParameters
   def registerParameterSignature(paramLists: Ls[ParamList], sign: Term)(using ResolutionContext): Unit =
+    paramLists.flatMap(_.allParams).filter(_.sign.isEmpty).foreach: param =>
+      val resolution = new TypeResolution(sign, messages => resolError(sign, messages))
+      // Components can arrive later through aliases. Keep one endpoint for every
+      // parameter so existing observations and input constraints see all of them.
+      // Its templates may mention binders inside any quantified component.
+      rctx.recordTemplateBinders(resolution, N)
+      // Bottom contributes no values and keeps this accumulating union distinct
+      // from a single immutable reference that normalization could substitute away.
+      resolution.publish(TypeShape.Bottom)
+      val tpe = declaredType(resolution, Map.empty)
+      signatureParameters(param.sym) = tpe
+      listenTypeInstances(tpe): shape =>
+        if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
     // Check only signatures that explicitly specify one calling convention,
-    // following aliases and quantifiers but leaving unions, intersections, and
-    // inferred types to type checking. Rejecting one possible view of a compound
-    // signature would turn this best-effort check into a false incompatibility.
+    // following aliases and quantifiers. Compound signatures still contribute
+    // every component's flows, but rejecting one possible layout would turn this
+    // best-effort check into a false incompatibility.
     def singleArrow(res: TypeResolution, seen: Set[TypeResolution])(using ResolutionContext): Bool =
       if seen(res) then false else
         def next(inner: TypeResolution): Bool = singleArrow(inner, seen + res)
@@ -1486,28 +1500,32 @@ class NewResolver:
           case TypeShape.Alias(_, S(rhs)) :: Nil => next(rhs)
           case TypeShape.Polymorphic(_, _, body) :: Nil => next(body)
           case _ => false
-    def bind(paramLists: Ls[ParamList], tpe: DeclaredType)(using ResolutionContext): Unit = paramLists match
+    def bind(paramLists: Ls[ParamList], tpe: DeclaredType, checkLayout: Bool)(using ResolutionContext): Unit = paramLists match
       case Nil => ()
-      case ps :: tail => listenTypeViews(tpe):
+      case ps :: tail => listenTypeViews(tpe, mergeIntersections = false):
         case Marked(callable: CallableTypeShape, marks) =>
           val declared = callable.paramLists.head
+          // Once alternatives have been approximated, a later curried list is
+          // still part of those alternatives, even if this component is one arrow.
+          val check = checkLayout && singleArrow(tpe.resolution, Set.empty)
           if Arity(ps) != Arity(declared) then
-            if singleArrow(tpe.resolution, Set.empty) then
+            if check then
               rctx.report(ErrorReport(
                 msg"Implementation parameter list does not match its separate signature." -> ps.toLoc ::
                 msg"The signature has different required, optional, variadic, or trailing parameter positions." -> sign.toLoc :: Nil))
-          else
-            // Matching layouts let every implementation parameter inherit its
-            // annotation, including the whole rest array and trailing parameters.
-            ps.allParams.zip(declared.allParams).foreach: (param, sign) =>
-              if param.sign.isEmpty then sign.foreach: tpe =>
-                val contextual = transportType(tpe, marks :: Nil)
-                signatureParameters(param.sym) = contextual
-                listenTypeInstances(contextual): shape =>
-                  if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
-            callable.result.foreach(tpe => bind(tail, transportType(tpe, marks :: Nil)))
+          val params = ps.allParams
+          zipDeclaredParameters(Arity(ps), declared): (index, tpe) =>
+            val param = params(index)
+            val component = transportType(tpe, marks :: Nil)
+            if param.sign.isEmpty then
+              signatureParameters.get(param.sym).get.resolution.publish(TypeShape.Combined(TypeFormula.atom(component)))
+            else
+              // An inline annotation keeps its interface, but its inferred type
+              // arguments still receive constraints from the separate signature.
+              constrainParameter(param, instanceShape(component), Nil)
+          callable.result.foreach(tpe => bind(tail, transportType(tpe, marks :: Nil), check))
         case _ => ()
-    bind(paramLists, declaredType(typeResolution(sign), Map.empty))
+    bind(paramLists, declaredType(typeResolution(sign), Map.empty), true)
 
   /** Synthesized constructor fields retain their source declaration on the symbol. */
   private[semantics] def resultSignature(td: TermDefinition)(using ResolutionContext): Opt[Term] = td.tsym.decl match
@@ -2078,24 +2096,24 @@ class NewResolver:
         case _ => ()
       case _ => ()
     def matchLists(expected: DeclaredType, remaining: Ls[(ParamList, Ls[Marks])])(using ResolutionContext): Unit =
-      listenTypeViews(expected):
+      listenTypeViews(expected, mergeIntersections = false):
         case Marked(callable: CallableTypeShape, expectedContext) => remaining match
           case (params, _) :: tail =>
             val declared = callable.paramLists.head
             if callbackArityMismatch(Arity(params), declared) then
               arityError(expected)
-            else
-              val allParams = params.allParams
-              zipCallbackArguments(context, Arity(params), declared, callable.source, expectedContext)(
-                (index, shape) => constrainParameterIn(allParams(index), shape, context, instances, site),
-                index => constrainOmittedParameterIn(allParams(index), context, instances))
-              callable.result.foreach: ret =>
-                tail match
-                  case Nil => results: shape =>
-                    shape.exit(context).enter(expectedContext) match
-                      case value: TermShape => inferTypeArguments(ret, value, marks, site)
-                      case NoShape => ()
-                  case _ => matchLists(ret, tail)
+            // Diagnostics must not disconnect parameter or result constraints.
+            val allParams = params.allParams
+            zipCallbackArguments(context, Arity(params), declared, callable.source, expectedContext)(
+              (index, shape) => constrainParameterIn(allParams(index), shape, context, instances, site),
+              index => constrainOmittedParameterIn(allParams(index), context, instances))
+            callable.result.foreach: ret =>
+              tail match
+                case Nil => results: shape =>
+                  shape.exit(context).enter(expectedContext) match
+                    case value: TermShape => inferTypeArguments(ret, value, marks, site)
+                    case NoShape => ()
+                case _ => matchLists(ret, tail)
           case Nil => ()
         case Marked(record: RecordTypeShape, _) =>
           constrainRecord(record.fields.iterator.map((name, tpe) => record.declarations(name) -> tpe).toList,
@@ -2103,30 +2121,29 @@ class NewResolver:
         case _ => ()
     actual match
       case Marked(_: UnknownValueShape, _) =>
-        listenTypeViews(expected):
+        listenTypeViews(expected, mergeIntersections = false):
           case Marked(callable: CallableTypeShape, _) =>
             callable.result.foreach(ret => inferTypeArguments(ret, actual, marks, site))
           case _ => ()
       case Marked(givenType: CallableTypeShape, actualContext) =>
-        listenTypeViews(expected):
+        listenTypeViews(expected, mergeIntersections = false):
           case Marked(wanted: CallableTypeShape, expectedContext) =>
             val domain = givenType.paramLists.head
             val expectedDomain = wanted.paramLists.head
             if callbackArityMismatch(Arity(domain), expectedDomain) then
               arityError(expected)
-            else
-              val allParams = domain.allParams
-              zipCallbackArguments(actualContext :: Nil, Arity(domain), expectedDomain, wanted.source, expectedContext)(
-                (index, shape) => allParams(index).foreach: tpe =>
-                  shape match
-                    case value: TermShape => inferTypeArguments(tpe, value, context, site)
-                    case NoShape => ()
-                , _ => ())
-              wanted.result.foreach: ret =>
-                def receive(shape: TermShape)(using ResolutionContext): Unit = shape.exit(actualContext).enter(expectedContext) match
-                  case value: TermShape => inferTypeArguments(ret, value, marks, site)
+            val allParams = domain.allParams
+            zipCallbackArguments(actualContext :: Nil, Arity(domain), expectedDomain, wanted.source, expectedContext)(
+              (index, shape) => allParams(index).foreach: tpe =>
+                shape match
+                  case value: TermShape => inferTypeArguments(tpe, value, context, site)
                   case NoShape => ()
-                listenCallableResult(givenType)(receive)
+              , _ => ())
+            wanted.result.foreach: ret =>
+              def receive(shape: TermShape)(using ResolutionContext): Unit = shape.exit(actualContext).enter(expectedContext) match
+                case value: TermShape => inferTypeArguments(ret, value, marks, site)
+                case NoShape => ()
+              listenCallableResult(givenType)(receive)
           case _ => ()
       case _ => matchLists(expected, actual.unappliedParams)
 
@@ -2140,9 +2157,72 @@ class NewResolver:
       || !actual.hasRest && expected.variadic.exists(!_.droppable)
       || !actual.hasRest && expected.paramFlags.drop(actual.leading).exists(!_.droppable)
 
-  /** Fixed callback interfaces describe an ordinary argument tuple. For variable
-    * layouts, propagate the positions we can cheaply align, leaving ambiguous
-    * middle positions unknown instead of inventing positional correspondences.
+  /** Approximate a declared argument list without choosing a compound signature's
+    * branch or enumerating spread lengths. Equal layouts retain whole parameter
+    * annotations. Otherwise align a guaranteed prefix and suffix, and join all
+    * remaining flows at every possible middle position. In particular, an unknown
+    * position must not erase a known element type or a symbolic inference endpoint.
+    */
+  private def zipDeclaredParameters(arity: Arity, declared: DeclaredParams)(
+      publish: (Int, DeclaredType) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+    def assign(index: Int, sign: Opt[DeclaredType]): Unit = sign.foreach(publish(index, _))
+    if arity == Arity(declared) then
+      declared.allParams.zipWithIndex.foreach((sign, index) => assign(index, sign))
+    else
+      val sharedTail = arity.trailing.min(declared.trailing.length)
+      val alignedTail = arity.trailing == declared.trailing.length
+      val prefix = if alignedTail then arity.leading.min(declared.params.length)
+        else arity.leadingRequired.min(declared.leadingRequired)
+      declared.params.take(prefix).zipWithIndex.foreach((sign, index) => assign(index, sign))
+      declared.trailing.takeRight(sharedTail).zipWithIndex.foreach: (sign, index) =>
+        assign(arity.leading + 1 + arity.trailing - sharedTail + index, sign)
+      val positions = (prefix until arity.leading) ++
+        (arity.leading + 1 until arity.leading + 1 + arity.trailing - sharedTail)
+      val middle = declared.params.drop(prefix) ::: declared.trailing.dropRight(sharedTail)
+      middle.foreach(sign => positions.foreach(assign(_, sign)))
+      def restElement(element: DeclaredType, marks: Marks)(using ResolutionContext): Unit =
+        val tpe = transportType(element, marks :: Nil)
+        positions.foreach(index => publish(index, tpe))
+        if arity.hasRest then publish(arity.leading, arrayType(tpe))
+      declared.rest.foreach: rest =>
+        listenTypeViews(rest, mergeIntersections = false):
+          case Marked(array: NominalInstanceView, marks) =>
+            arrayElementType(array).foreach(restElement(_, marks))
+          case Marked(tuple: TupleShape, marks) =>
+            tuple.segments.foreach: segment =>
+              listenTupleField(segment.element):
+                // Written tuple types retain their symbolic element endpoints.
+                case Marked(instance: InstanceShape, inner) =>
+                  restElement(transportType(instance.tpe, inner :: Nil), marks)
+                case _ => arrayElementType(tuple.arrayParent).foreach(restElement(_, marks))
+          case _ => ()
+      if arity.hasRest then
+        // Slicing can change a tuple-typed rest's length. Keep its element types
+        // above, but widen the length to avoid false arity errors on forwarding.
+        // Scalar middle inputs likewise contribute an Array of their declared type.
+        middle.flatten.foreach(tpe => publish(arity.leading, arrayType(tpe)))
+        if middle.flatten.isEmpty then
+          // Even an empty or still-unresolved rest supplies the Array interface.
+          publish(arity.leading, arrayType(extremeType(false)))
+
+  private def arrayType(element: DeclaredType)(using ResolutionContext): DeclaredType =
+    rctx.state.arrayTypes.getOrElseUpdate(element, {
+      val cls = prelude.builtins.Array.defn.get
+      softAssert(cls.tparams.length == 1, "The builtin Array must have one element type parameter")
+      val head = Term.Ref(cls.sym)(new Tree.Ident(cls.sym.nme).withLocOf(element.resolution.source), N)
+      rctx.recordLexicalBinders(head, Set.empty)
+      rctx.recordAppliedTypeArguments(head, 1)
+      val constructor = new TypeResolution(head, element.resolution.fail)
+      constructor.publish(TypeShape.Nominal(cls))
+      val argument = new TypeResolution(element.resolution.source, element.resolution.fail)
+      argument.publish(TypeShape.Combined(TypeFormula.atom(element)))
+      val resolution = new TypeResolution(element.resolution.source, element.resolution.fail)
+      resolution.publish(TypeShape.Applied(constructor, argument :: Nil))
+      declaredType(resolution, Map.empty)
+    })
+
+  /** Fixed callback interfaces describe an ordinary argument tuple. Variable
+    * layouts use the same flow approximation as separate signatures.
     */
   private def zipCallbackArguments(mss: Ls[Marks], arity: Arity, declared: DeclaredParams, source: Term, marks: Marks)(
       publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit,
@@ -2150,37 +2230,20 @@ class NewResolver:
     def fields(types: Ls[Opt[DeclaredType]]): Ls[TupleShape.Fixed] = types.map:
       case S(tpe) => TupleShape.TypedField(tpe, Nil)
       case N => TupleShape.UnknownField(source, Nil)
-    def assign(index: Int, sign: Opt[DeclaredType]): Unit = sign.foreach: tpe =>
-      listenTypeInstances(tpe)(shape => publish(index, shape.exit(marks).enter(mss)))
-    if !declared.hasRest && declared.leadingRequired == declared.params.length then
+    if !declared.hasRest && declared.leadingRequired == declared.params.length && arity.required <= declared.params.length then
       zipTupleShapes(mss, arity, TupleShape(source, fields(declared.params))(this), marks)(publish, omitted)
     else
-      val alignedTail = arity.trailing == declared.trailing.length
-      val prefix = if alignedTail then arity.leading else arity.leadingRequired.min(declared.leadingRequired)
-      declared.params.take(prefix).zipWithIndex.foreach((sign, index) => assign(index, sign))
-      val suffix = declared.trailing.takeRight(arity.trailing)
-      suffix.zipWithIndex.foreach: (sign, index) =>
-        assign(arity.leading + 1 + arity.trailing - suffix.length + index, sign)
-      if alignedTail then
-        // Extra optional implementation parameters receive a rest element or undefined.
-        (declared.params.length until arity.leading).foreach: index =>
-          omitted(index)
-          declared.rest.foreach: rest =>
-            listenTypeInstances(rest)(listenInstanceViews(_): array =>
-              listenArrayElements(array)(shape => publish(index, shape.exit(marks).enter(mss)))
-              ())
-      if arity.hasRest then
-        val tuple = if alignedTail then
-          val suffix = if declared.hasRest
-            then TupleShape.Unknown(source, TupleShape.UnknownField(source, Nil)) :: Nil
-            else Nil
-          TupleShape(source, fields(declared.params.drop(arity.leading)) ::: suffix)(this)
-        else TupleShape.unknown(source)(this)
-        publish(arity.leading, tuple.exit(marks).enter(mss))
+      zipDeclaredParameters(arity, declared): (index, tpe) =>
+        listenTypeInstances(tpe)(shape => publish(index, shape.exit(marks).enter(mss)))
+      // Aligned optional annotations already include undefined. Only synthesize
+      // omissions for extra positions, or when differing tails can shift inputs.
+      val supplied = if arity.trailing == declared.trailing.length then declared.params.length
+        else Arity(declared).required - arity.trailing
+      (arity.leadingRequired.max(supplied) until arity.leading).foreach(omitted(_))
   
   private def listenSignatureResult(tpe: DeclaredType, count: Int)(listener: Listener)(using ResolutionContext): Unit =
     if count == 0 then listenTypeInstances(tpe)(listener)
-    else listenTypeViews(tpe):
+    else listenTypeViews(tpe, mergeIntersections = false):
       case Marked(callable: CallableTypeShape, marks) =>
         callable.result.foreach(tpe => listenSignatureResult(transportType(tpe, marks :: Nil), count - 1)(listener))
       case _ => ()
@@ -2547,13 +2610,11 @@ class NewResolver:
     if unknownCount == 0 then
       ((knownCount - trailing) until expectedCount).foreach(omitted(_))
     if hasRest then
-      val exactTrailing = tuple.segments.reverse.takeWhile(_.isInstanceOf[TupleShape.Fixed]).take(trailing)
-      val segments = tuple.segments.dropRight(exactTrailing.length)
       // If consumption reaches an unknown segment, some subsequent fields
-      // may have been consumed too. Approximate that optional prefix with an
-      // unknown segment, retaining the suffix that must remain. Publishing
-      // separate concrete tails here would turn uncertainty into false arity
-      // failures when the rest tuple is spread into another call.
+      // may have been consumed too. Widen their lengths, keeping every field's
+      // deferred element flow. Replacing them with an opaque unknown would lose
+      // member targets and ambiguities; retaining them as fixed fields would
+      // invent a minimum length when the rest is spread into another call.
       def drop(xs: Ls[TupleShape.Segment], count: Int, approximate: Bool)(using ResolutionContext): Ls[TupleShape.Segment] =
         if count == 0 then xs
         else xs match
@@ -2565,8 +2626,10 @@ class NewResolver:
             if approximate then unknown :: Nil else Nil
           case (_: TupleShape.Unknown) :: rest =>
             val suffix = drop(rest, count, false)
-            if approximate then TupleShape.Unknown(tuple.source, TupleShape.UnknownField(tuple.source, Nil)) :: suffix else suffix
-      val remaining = drop(segments, expectedCount, true)
+            if approximate then
+              xs.take(xs.length - suffix.length).map(segment => TupleShape.Unknown(tuple.source, segment.element)) ::: suffix
+            else suffix
+      val remaining = drop(drop(tuple.segments, expectedCount, true).reverse, trailing, true).reverse
       val rest = if expectedCount == 0 && trailing == 0 then tuple else TupleShape.restView(tuple, remaining)(this)
       publish(expectedCount, rest.exit(marks).enter(mss))
   

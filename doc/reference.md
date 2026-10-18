@@ -1371,8 +1371,15 @@ finds targets for names, members, and calls, and catches some obvious mistakes.
 Successful resolution does not establish type safety, including in strict mode;
 a later type-checking pass will cover the remaining cases. When precise tracking
 or checking would be too complicated or expensive, resolution accepts the case
-leniently. For example, it need not enumerate possible spread lengths to track
-every way an optional parameter could receive `undefined`.
+leniently.
+
+**Leniency does not permit dropping flows.** Resolution uses them to find member
+targets and detect ambiguities. When exact tracking is impractical, it joins all
+possible flows, even if this loses correlations or precise argument counts. For
+example, `S & T <: U` contributes both `S <: U` and `T <: U`, approximating the
+intersection as a union. Unions and intersections of function signatures likewise
+contribute every component's parameter and result flows; an uncertain parameter
+position retains its possible element types rather than becoming an opaque unknown.
 
 With new resolution (`#lang(0.3.x)`), annotations determine the interface available
 to member lookup and calls. A receiver annotated `Base` exposes Base's declared

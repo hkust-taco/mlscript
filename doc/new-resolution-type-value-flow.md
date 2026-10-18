@@ -36,6 +36,16 @@ alternative constraint sets or forming products of intersection candidates.
 They deliberately approximate type inference; diagnosing concrete incompatibilities
 such as `Str <: Int` belongs to type checking, not resolution.
 
+This distinction also applies to separate function signatures and callback
+layouts. Skipping an uncertain compatibility check must not skip its flows.
+Every callable component contributes its domain to the implementation parameters,
+and later curried lists remain connected even when an earlier layout differs.
+Each implementation parameter has a shared annotation endpoint that accumulates
+these components; replacing it with the last component would disconnect earlier
+constraints. Matching positions stay precise. Uncertain middle positions receive
+the union of their possible inputs, including typed rest elements. Rest slicing
+may widen lengths, but retains the deferred types of every possible element.
+
 ## Instance wrappers and interface observations
 
 `InstanceShape(DeclaredType)` describes an instance of a type. Parameter/result
