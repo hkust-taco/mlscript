@@ -1420,7 +1420,8 @@ class NewResolver:
                     val leadingFlds = leading.collect { case fld: Fld => fld }
                     DeclaredParams(leadingFlds.map(paramType), leadingFlds.map(_.flags), variadic match
                       case (spd: Spd) :: trailing =>
-                        S(DeclaredVariadic(N, spd.droppable, trailing.collect { case fld: Fld => paramType(fld) }))
+                        S(DeclaredVariadic(S(declaredType(typeResolution(spd.term), current.withPolarity(!current.positive))),
+                          spd.droppable, trailing.collect { case fld: Fld => paramType(fld) }))
                       case _ => N)
                   case single =>
                     DeclaredParams(S(declaredType(typeResolution(single), current.withPolarity(!current.positive))) :: Nil,
@@ -2054,6 +2055,16 @@ class NewResolver:
                 sign.foreach: tpe =>
                   listenTypeInstances(tpe): shape =>
                     constrainParameterIn(param, shape.exit(expectedContext).enter(context), context, instances)
+              // The interface may supply fewer fixed arguments than the implementation
+              // accepts. Extra optional parameters receive either a rest element or
+              // undefined; a positional zip alone leaves their bodies unobserved.
+              params.params.drop(declared.params.length).foreach: param =>
+                constrainOmittedParameterIn(param, context, instances)
+                declared.rest.foreach: rest =>
+                  listenTypeInstances(rest)(listenInstanceViews(_): array =>
+                    listenArrayElements(array): shape =>
+                      constrainParameterIn(param, shape.exit(expectedContext).enter(context), context, instances)
+                    ())
               params.variadic.map(_.param).foreach: rest =>
                 val fields = declared.params.drop(params.params.length).map:
                   case S(tpe) => TupleShape.TypedField(tpe, Nil)
@@ -2404,14 +2415,16 @@ class NewResolver:
     val params = ps.allParams
     zipArgumentShapes(mss, Arity(ps), args, src, funSh)(
       (index, shape) => constrainParameterIn(params(index), shape, mss, instances),
-      // An optional parameter whose argument is omitted is `undefined` at runtime.
-      // Annotated optional parameters already include `undefined` in their declared type.
-      index =>
-        val param = params(index)
-        if param.sign.isEmpty then
-          val omitted = rctx.state.omittedArguments.getOrElseUpdate(new Identity(param),
-            Lit(Tree.UnitLit(false).withLoc(param.toLoc)))
-          listenTerm(omitted)(constrainParameterIn(param, _, mss, instances)))
+      index => constrainOmittedParameterIn(params(index), mss, instances))
+
+  // Annotated optional parameters already include undefined in their declared type.
+  // Reuse the same witness for direct calls and callback interfaces.
+  private def constrainOmittedParameterIn(param: Param, marks: Ls[Marks],
+      instances: TypeSubstitution)(using ResolutionContext): Unit =
+    if parameterSignature(param).isEmpty then
+      val omitted = rctx.state.omittedArguments.getOrElseUpdate(new Identity(param),
+        Lit(Tree.UnitLit(false).withLoc(param.toLoc)))
+      listenTerm(omitted)(constrainParameterIn(param, _, marks, instances))
 
   private[semantics] def constrainParameter(p: Param, shape: TermShape | NoShape, marks: Ls[Marks])(using ResolutionContext): Unit =
     constrainParameterIn(p, shape, marks, rctx.instances)
