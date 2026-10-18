@@ -1497,7 +1497,9 @@ class NewResolver:
                 msg"Implementation parameter list does not match its separate signature." -> ps.toLoc ::
                 msg"The signature has different required, optional, variadic, or trailing parameter positions." -> sign.toLoc :: Nil))
           else
-            if !declared.hasRest then ps.params.zip(declared.params).foreach: (param, sign) =>
+            // Matching layouts let every implementation parameter inherit its
+            // annotation, including the whole rest array and trailing parameters.
+            ps.allParams.zip(declared.allParams).foreach: (param, sign) =>
               if param.sign.isEmpty then sign.foreach: tpe =>
                 val contextual = transportType(tpe, marks :: Nil)
                 signatureParameters(param.sym) = contextual

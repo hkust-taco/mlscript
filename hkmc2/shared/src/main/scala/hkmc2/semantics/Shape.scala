@@ -756,6 +756,8 @@ final class DeclaredParams(val params: Ls[Opt[DeclaredType]], val paramFlags: Ls
   def hasRest: Bool = variadic.isDefined
   def rest: Opt[DeclaredType] = variadic.flatMap(_.rest)
   def trailing: Ls[Opt[DeclaredType]] = variadic.fold(Nil)(_.trailing)
+  /** The same leading, rest, and trailing order as `ParamList.allParams`. */
+  def allParams: Ls[Opt[DeclaredType]] = params ::: variadic.toList.flatMap(v => v.rest :: v.trailing)
   /** The number of leading required (i.e., non-optional) parameters. */
   lazy val leadingRequired: Int = FldFlags.requiredPrefixLength(paramFlags)
   override def toString: Str = s"DeclaredParams($params, $paramFlags, $variadic)"
