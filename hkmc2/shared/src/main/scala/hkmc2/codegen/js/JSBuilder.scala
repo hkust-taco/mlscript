@@ -79,9 +79,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     val cls = owner.irClassContainer
     Option.when(inScopeClasses.contains(cls))(cls.privatesScope)
   
-  private def symbolKey(sym: DefinitionSymbol[?]): Opt[WellKnownSymbol] =
-    sym.defn.collect { case td: TermDefinition => td }.flatMap(td => MemberKey.symbol(td))
-
   private def selectPrivateField(sym: DefinitionSymbol[?], loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
     val stored = MemberStorage.symbol(sym)
     MemberStorage.privateOwner(stored).map: owner =>
@@ -131,6 +128,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           applyBlock(rest)
         case _ => super.applyBlock(b)
       override def applyClsLikeDefn(cls: ClsLikeDefn): Unit =
+        cls.methodKeys.valuesIterator.foreach(applyPath)
+        cls.companion.foreach(_.methodKeys.valuesIterator.foreach(applyPath))
         withClass(cls.isym):
           cls.parentPath.foreach(applyPath)
           applyBlock(cls.preCtor)
@@ -360,17 +359,15 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         // lexical-`this` behavior of the Lambda IR.
         doc"(function* ($params) ${ braced(bodyDoc) }).bind(this)"
       else doc"($params) => ${ braced(bodyDoc) }"
-    case s @ SuperSelect(qual, base, id) =>
-      val key = symbolKey(s.symbol).fold(doc"${makeStringLiteral(id.name)}")(key => doc"globalThis.Symbol.${key.name}")
-      doc"Reflect.get(${resultQual(base)}.prototype, $key, ${result(qual)})"
+    case s @ SuperSelect(qual, base, key) =>
+      doc"Reflect.get(${resultQual(base)}.prototype, ${result(key)}, ${result(qual)})"
+    case KeyedSelect(qual, key, _) => doc"${resultQual(qual)}[${result(key)}]"
     case s @ Select(qual, id) => 
       val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
         case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
-      val field = s.symbol.flatMap(selectPrivateField(_, s.toLoc)).orElse(
-        s.symbol.flatMap(symbolKey)
-          .map(key => doc"[globalThis.Symbol.${key.name}]"))
+      val field = s.symbol.flatMap(selectPrivateField(_, s.toLoc))
       val name = symbolicSuffixBase(id.name).getOrElse(id.name)
       val fieldDoc = field.getOrElse:
         if isValidFieldName(name)
@@ -501,8 +498,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         } = ${result(r)};${returningTerm(rst, endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match
-        case S(member: DefinitionSymbol[?]) => selectPrivateField(member, n.toLoc).orElse(
-          symbolKey(member).map(key => doc"[globalThis.Symbol.${key.name}]"))
+        case S(member: DefinitionSymbol[?]) => selectPrivateField(member, n.toLoc)
         case _ => N
       val name = symbolicSuffixBase(n.name).getOrElse(n.name)
       doc" # ${result(p)}${field.getOrElse(fieldSelect(name))} = ${result(r)};${returningTerm(rst, endSemi)}"
@@ -568,7 +564,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // * which is not meaningful, here.
               doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, $functionKeyword ($params) ${ braced(bodyDoc) });"
             
-          case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
+          case cls @ ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable, termCompanion)
           =>
             // After ClassParamFlattener, all classes have paramsOpt = N and exactly one auxParams entry.
@@ -592,22 +588,22 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               case S(owner) => doc"${result(owner.asThis)}${selectPrivateField(isym, isym.toLoc).getOrElse(fieldSelect(sym.nme))}"
               case N => scope.lookup_!(sym, sym.toLoc)
             
-            def mkMethodName(td: FunDefn): Document =
+            def mkMethodName(td: FunDefn, keys: Map[TermSymbol, Path]): Document =
               if td.dSym.isPrivate
               then doc"#${isym.privatesScope.allocateOrGetName(td.dSym)}"
-              else symbolKey(td.dSym).fold(doc"${td.sym.nme}")(
-                key => doc"[globalThis.Symbol.${key.name}]")
+              else keys.get(td.dSym).fold(doc"${td.sym.nme}")(
+                key => outerScope.givenIn { doc"[${result(key)}]" })
 
-            def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
+            def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str, keys: Map[TermSymbol, Path])(using Scope): Document =
               mtds.map:
                 case td @ FunDefn(params = ps :: pss, body = bod) =>
                   val result = curriedFunctionBody(pss, bod, td.generator)
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result, isLambda = false)
                   val generatorPrefix = if td.generator && pss.isEmpty then "*" else ""
-                  doc" # $mtdPrefix$generatorPrefix${mkMethodName(td)}($params) ${ braced(bodyDoc) }"
+                  doc" # $mtdPrefix$generatorPrefix${mkMethodName(td, keys)}($params) ${ braced(bodyDoc) }"
                 case td @ FunDefn(params = Nil, body = bod) =>
-                  doc" # ${mtdPrefix}get ${mkMethodName(td)}() ${ braced(body(bod, endSemi = true)) }"
+                  doc" # ${mtdPrefix}get ${mkMethodName(td, keys)}() ${ braced(body(bod, endSemi = true)) }"
               .mkDocument(doc"")
             
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
@@ -674,7 +670,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   val ctorCode = if mod.ctor.isEmpty then doc"" else doc" # static " :: braced:
                     body(mod.ctor, endSemi = true)
                   privs :: ctorCode :: {
-                    mkMethods(mod.methods, mtdPrefix)
+                    mkMethods(mod.methods, mtdPrefix, mod.methodKeys)
                   }
                 // * Note that `thisProxy` might be defined at this point,
                 // * if the module accesses the self-reference of an outer definition.
@@ -746,7 +742,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     .mkDocument(" ")
                   else doc""
                 } :: {
-                  mkMethods(mtds, mtdPrefix)
+                  mkMethods(mtds, mtdPrefix, cls.methodKeys)
                 } :: {
                   // * If this class has a `toString` implementation, then delegate
                   // * `prettyPrint` to `toString`.

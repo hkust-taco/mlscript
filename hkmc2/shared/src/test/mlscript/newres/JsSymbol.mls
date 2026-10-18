@@ -1,0 +1,261 @@
+:.
+
+// The key's declared type is intentionally Any: the resolver does not type-check it.
+module Keys {
+  @annotations.fresh val first: Any = Symbol("first")
+  @annotations.fresh val second = Symbol("second")
+}
+
+:expect [41, 42, 42]
+open class Base {
+  @annotations.jsSymbol(Keys.first) open fun read() = 41
+}
+class Child extends Base {
+  @annotations.jsSymbol(Keys.first) override fun read() = super.read() + 1
+}
+[(new Base).read(), (new Child).read(), (new Child).(Keys.first)()]
+//│ = [41, 42, 42]
+
+// Structural signatures and computed record fields use the same key identity.
+:expect [43, 44]
+type Reader = {@annotations.jsSymbol(Keys.second) read: () -> Int}
+private fun read(value: Reader) = value.read()
+[read({(Keys.second): () => 43}), read({(Keys.second): () => 44})]
+//│ = [43, 44]
+
+// An immutable value may occur in the middle of a stable path.
+:expect 45
+class KeyHolder {
+  @annotations.fresh val key = Symbol("held")
+}
+val holder = new KeyHolder
+class Held {
+  @annotations.jsSymbol(holder.key) fun read() = 45
+}
+(new Held).read()
+//│ = 45
+//│ holder = KeyHolder { key: Symbol("held") }
+
+// Local keys must survive substitution, and are evaluated separately on each call.
+:expect [46, 47]
+private fun local(value) =
+  @annotations.fresh val key = Symbol("local")
+  class Local {
+    @annotations.jsSymbol(key) fun read() = value
+  }
+  (new Local).read()
+[local(46), local(47)]
+//│ = [46, 47]
+
+// The same property key cannot be overridden under a different source name.
+:e
+class Renamed extends Base {
+  @annotations.jsSymbol(Keys.first) override fun other() = 0
+}
+//│ ╔══[COMPILATION ERROR] Member 'other' uses the same @jsSymbol key as inherited member 'read'; overrides must keep the inherited name.
+//│ ║  l.53: 	  @annotations.jsSymbol(Keys.first) override fun other() = 0
+//│ ║        	                                                 ^^^^^
+//│ ╟── The inherited member is declared here.
+//│ ║  l.11: 	  @annotations.jsSymbol(Keys.first) open fun read() = 41
+//│ ╙──      	                                         ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Member 'other' is marked 'override' but overrides no inherited member
+//│ ║  l.53: 	  @annotations.jsSymbol(Keys.first) override fun other() = 0
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+class DifferentKey extends Base {
+  @annotations.jsSymbol(Keys.second) override fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Overriding member 'read' must use the same @jsSymbol annotation as its parent.
+//│ ║  l.67: 	  @annotations.jsSymbol(Keys.second) override fun read() = 0
+//│ ║        	                                                  ^^^^
+//│ ╟── The inherited member is declared here.
+//│ ║  l.11: 	  @annotations.jsSymbol(Keys.first) open fun read() = 41
+//│ ╙──      	                                             ^^^^
+
+:e
+class Duplicate {
+  @annotations.jsSymbol(Keys.first) fun read() = 0
+  @annotations.jsSymbol(Keys.first) fun other() = 1
+}
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member 'Keys.first'.
+//│ ╟── Member 'read' is defined here.
+//│ ║  l.78: 	  @annotations.jsSymbol(Keys.first) fun read() = 0
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Member 'other' is defined here.
+//│ ║  l.79: 	  @annotations.jsSymbol(Keys.first) fun other() = 1
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+val ordinary = Symbol("ordinary")
+//│ ordinary = Symbol("ordinary")
+
+:e
+class Unmarked {
+  @annotations.jsSymbol(ordinary) fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.94: 	  @annotations.jsSymbol(ordinary) fun read() = 0
+//│ ║        	                        ^^^^^^^^
+//│ ╟── @jsSymbol requires a val marked @annotations.fresh.
+//│ ║  l.94: 	  @annotations.jsSymbol(ordinary) fun read() = 0
+//│ ║        	                        ^^^^^^^^
+//│ ╟── The referenced member is declared here.
+//│ ║  l.89: 	val ordinary = Symbol("ordinary")
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+class Literal {
+  @annotations.jsSymbol("iterator") fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Resolution error in string literal
+//│ ║  l.108: 	  @annotations.jsSymbol("iterator") fun read() = 0
+//│ ║         	                        ^^^^^^^^^^
+//│ ╟── @jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh.
+//│ ║  l.108: 	  @annotations.jsSymbol("iterator") fun read() = 0
+//│ ╙──       	                        ^^^^^^^^^^
+
+:e
+class Call {
+  @annotations.jsSymbol(Symbol("called")) fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.119: 	  @annotations.jsSymbol(Symbol("called")) fun read() = 0
+//│ ║         	                        ^^^^^^^^^^^^^^^^
+//│ ╟── @jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh.
+//│ ║  l.119: 	  @annotations.jsSymbol(Symbol("called")) fun read() = 0
+//│ ╙──       	                        ^^^^^^^^^^^^^^^^
+
+let changing = holder
+//│ changing = KeyHolder { key: Symbol("held") }
+
+:e
+class MutablePrefix {
+  @annotations.jsSymbol(changing.key) fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.133: 	  @annotations.jsSymbol(changing.key) fun read() = 0
+//│ ║         	                        ^^^^^^^^^^^^
+//│ ╟── @jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh.
+//│ ║  l.133: 	  @annotations.jsSymbol(changing.key) fun read() = 0
+//│ ╙──       	                        ^^^^^^^^^^^^
+
+// Iterator only promises next; iterable implementations supply their own method.
+import "../../mlscript-compile/Iter.mjs"
+
+:expect [48, 49]
+let count = 48
+let iterator = Iter.IteratorImpl(() =>
+  if count <= 49 then
+    let value = count
+    set count = count + 1
+    {value: value, done: false}
+  else {done: true})
+[...iterator]
+//│ = [48, 49]
+//│ count = 50
+//│ iterator = IteratorImpl(fun)
+
+:e
+private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.159: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
+//│ ║         	                                                       ^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Iterator' does not contain member 'iterator'
+//│ ║  l.159: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
+//│ ╙──       	                                      ^^^^^^^^^^^^^
+
+// The annotation is a prelude declaration, usable through ordinary opens.
+:expect [50, 51]
+private fun opened() =
+  open annotations { jsSymbol }
+  class Opened {
+    @jsSymbol(Keys.first) fun read() = 50
+  }
+  (new Opened).read()
+private fun wildcard() =
+  open annotations
+  class Wildcard {
+    @jsSymbol(Keys.second) fun read() = 51
+  }
+  (new Wildcard).read()
+[opened(), wildcard()]
+//│ = [50, 51]
+
+// A user function with the same spelling does not change a method's key.
+:w
+:expect 52
+private fun shadowed() =
+  fun jsSymbol(key) = key
+  class Ordinary {
+    @jsSymbol(Keys.first) fun read() = 52
+  }
+  (new Ordinary).("read")()
+shadowed()
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.190: 	    @jsSymbol(Keys.first) fun read() = 52
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^
+//│ = 52
+
+// An escaping instance must retain the key chosen by its creating invocation.
+// FIXME: Named selection needs a runtime witness for a key outside the caller's scope.
+// Hoisting the key would incorrectly share it between different invocations.
+:fixme
+:expect [53, 54]
+@annotations.noInline
+private fun escaping(value) =
+  @annotations.fresh val localKey = Symbol("escaping")
+  class Escaped {
+    @annotations.jsSymbol(localKey) fun read() = value
+  }
+  new Escaped
+[escaping(53).read(), escaping(54).read()]
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'localKey'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.206: 	  @annotations.fresh val localKey = Symbol("escaping")
+//│ ╙──       	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'localKey'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.206: 	  @annotations.fresh val localKey = Symbol("escaping")
+//│ ╙──       	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: localKey is not defined
+//│ ═══[RUNTIME ERROR] Expected: '[53, 54]', got: 'undefined'
+
+// Imported keys must keep their defining module alive through IR transformations.
+import "../../mlscript-compile/SymbolKeyLibrary.mls"
+
+:expect [55, 56]
+[(new SymbolKeyLibrary.Reader).read(), SymbolKeyLibrary.make(56).read()]
+//│ = [55, 56]
+
+// Direct immutable receiver aliases identify the same fresh field.
+:expect 57
+val holderAlias = holder
+open class HeldBase {
+  @annotations.jsSymbol(holder.key) open fun read() = 0
+}
+class HeldChild extends HeldBase {
+  @annotations.jsSymbol(holderAlias.key) override fun read() = 57
+}
+(new HeldChild).read()
+//│ = 57
+//│ holderAlias = KeyHolder { key: Symbol("held") }
+
+// A selected receiver alias must replace its entire path, including its prefix.
+:expect 58
+module Aliases {
+  val nested = holder
+}
+class SelectedAlias extends HeldBase {
+  @annotations.jsSymbol(Aliases.nested.key) override fun read() = 58
+}
+(new SelectedAlias).read()
+//│ = 58
+
+// Reading and assigning through a structural alias use the same symbol property.
+:expect 59
+type Cell = {@annotations.jsSymbol(Keys.first) value: Int}
+private fun update(cell: Cell) =
+  set cell.value = 59
+  cell.value
+update(mut {(Keys.first): 0})
+//│ = 59

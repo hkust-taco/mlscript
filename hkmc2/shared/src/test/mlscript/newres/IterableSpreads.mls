@@ -28,7 +28,7 @@ class Box(val value: Int)
 // User methods can implement the same protocol without a result annotation.
 :expect ["6"]
 class Single(val item: Int) {
-  @jsSymbol("iterator") fun iterate() =
+  @annotations.jsSymbol(Symbol.iterator) fun iterate() =
     let pending = true
     {next: () => if pending then
       set pending = false
@@ -108,13 +108,13 @@ characters("ab")
 // Inherited source aliases dispatch through the overriding symbol property.
 :expect [10, 10, 11]
 open class Parent {
-  @jsSymbol("iterator") open fun iterator() = [Box(0)].iterator()
+  @annotations.jsSymbol(Symbol.iterator) open fun iterator() = [Box(0)].iterator()
 }
 class Child extends Parent {
-  @jsSymbol("iterator") override fun iterate() = [Box(10)].iterator()
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator() = [Box(10)].iterator()
 }
 class ViaSuper extends Parent {
-  @jsSymbol("iterator") override fun iterator() = super.iterator()
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator() = super.iterator()
 }
 [...(new Child), ...(new Child).iterator(), ...(new ViaSuper)].map(x => if x.value == 0 then 11 else x.value)
 //│ = [10, 10, 11]
@@ -207,16 +207,16 @@ fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
 // Reject two aliases for the same property instead of inferring the wrong body.
 :e
 class Duplicate {
-  @jsSymbol("iterator") fun first() = [Box(1)].iterator()
-  @jsSymbol("iterator") fun second() = [Box(2)].iterator()
+  @annotations.jsSymbol(Symbol.iterator) fun first() = [Box(1)].iterator()
+  @annotations.jsSymbol(Symbol.iterator) fun second() = [Box(2)].iterator()
 }
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member 'Symbol.iterator'.
 //│ ╟── Member 'first' is defined here.
-//│ ║  l.210: 	  @jsSymbol("iterator") fun first() = [Box(1)].iterator()
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.210: 	  @annotations.jsSymbol(Symbol.iterator) fun first() = [Box(1)].iterator()
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'second' is defined here.
-//│ ║  l.211: 	  @jsSymbol("iterator") fun second() = [Box(2)].iterator()
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.211: 	  @annotations.jsSymbol(Symbol.iterator) fun second() = [Box(2)].iterator()
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // An override must keep the runtime key declared by its parent.
 :e
@@ -227,5 +227,5 @@ class MissingSymbol extends Parent {
 //│ ║  l.224: 	  override fun iterator() = [Box(3)].iterator()
 //│ ║         	               ^^^^^^^^
 //│ ╟── The inherited member is declared here.
-//│ ║  l.111: 	  @jsSymbol("iterator") open fun iterator() = [Box(0)].iterator()
-//│ ╙──       	                                 ^^^^^^^^
+//│ ║  l.111: 	  @annotations.jsSymbol(Symbol.iterator) open fun iterator() = [Box(0)].iterator()
+//│ ╙──       	                                                  ^^^^^^^^

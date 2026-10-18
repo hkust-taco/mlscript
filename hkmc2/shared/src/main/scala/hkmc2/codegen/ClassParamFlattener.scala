@@ -43,6 +43,7 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
     cls.copy(paramsOpt = N, auxParams = flatAux :: Nil)(
       cls.configOverride,
       cls.annotations,
+      cls.methodKeys,
     )
   
   private def classPathFor(fun: Path, cls: ClassSymbol): Opt[Path] = fun match

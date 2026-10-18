@@ -25,7 +25,8 @@ final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
 enum Annot extends Located:
   val toLoc: Opt[Loc]
 
-  case JsSymbol(key: WellKnownSymbol)(val toLoc: Opt[Loc])
+  case JsSymbol(key: SymbolKey)(val toLoc: Opt[Loc])
+  case Fresh()(val toLoc: Opt[Loc])
   case Untyped()(val toLoc: Opt[Loc])
   case Modifier(mod: Keyword)(val toLoc: Opt[Loc])
   case Trm(trm: Term)(val toLoc: Opt[Loc])
@@ -61,11 +62,13 @@ enum Annot extends Located:
   
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
-    case _: JsSymbol | _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
+    case JsSymbol(key) => Vector.single(key.term)
+    case Fresh() | _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
       | Generator() | Async() | RaiseEffects() | Pure() | _: Bufferable | _: Config | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
-    case JsSymbol(key) => doc"@jsSymbol(\"${key.name}\")"
+    case JsSymbol(key) => doc"@jsSymbol(${key.term.show})"
+    case Fresh() => doc"@annotations.fresh"
     case Untyped() => doc"@untyped"
     case Inline() => doc"@inline"
     case NoInline() => doc"@noInline"
@@ -83,6 +86,7 @@ enum Annot extends Located:
   
   def mkClone(using State, Erasure): Annot = this match
     case Trm(trm) => Trm(trm.mkClone)(toLoc)
+    case JsSymbol(key) => JsSymbol(key.copy()(key.term.mkClone))(toLoc)
     case _ => this
 
 object Annot:
@@ -781,9 +785,9 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val ke
 object RcdField:
   def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, N)
   def signature(field: Term, sign: Term)(using State): RcdField = make(field, sign, true, N)
-  def signature(field: Term, sign: Term, symbol: WellKnownSymbol)(using State): RcdField =
+  def signature(field: Term, sign: Term, symbol: SymbolKey)(using State): RcdField =
     make(field, sign, true, S(symbol))
-  private def make(field: Term, rhs: Term, signature: Bool, symbol: Opt[WellKnownSymbol])(using State): RcdField =
+  private def make(field: Term, rhs: Term, signature: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"

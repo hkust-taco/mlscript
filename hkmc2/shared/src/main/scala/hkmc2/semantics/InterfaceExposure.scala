@@ -201,6 +201,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         resolver.arrayElementType(nominal).foreach: binding =>
           watch((ShapeIdentity.key(shape), "array elements"))(listener => { resolver.listenArrayElements(shape)(listener); () }): element =>
             emit(element, path.via(msg"This value is stored in this array." -> binding.resolution.source.toLoc))
+      case view: IntersectionView => view.values.foreach(value => emit(value.exit(marks), path))
       // Structural annotations hide initializer implementations. Unknown and
       // dynamic values have no static graph.
       case _: (RecordTypeShape | OpaqueTypeShape | UnknownValueShape | RigidTypeShape | DynShape | ErrShape) => ()

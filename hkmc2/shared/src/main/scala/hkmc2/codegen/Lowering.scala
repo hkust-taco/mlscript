@@ -435,7 +435,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                     case N =>
                     val (mtds, publicFlds, privateFlds, ctor) =
                       gatherMembers(mod.body)
-                    S(ClsLikeBody(mod.sym, mtds, privateFlds, publicFlds, ctor, mod.annotations))
+                    S(ClsLikeBody(mod.sym, mtds, privateFlds, publicFlds, ctor, mod.annotations)(methodKeys(mod.body)))
                   case _ => N
                 case _ => N
               val pctor = defn.ext.fold[Block](End()): ext =>
@@ -443,7 +443,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               val cfgOverride = defn.extraAnnotations.collectFirst:
                 case Annot.Config(modify) => modify(config)
               ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, parent,
-                mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable, defn.bsym.asTrm)(cfgOverride, defn.annotations)
+                mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable, defn.bsym.asTrm)(cfgOverride, defn.annotations, methodKeys(defn.body))
             Define(clsDef, blockImpl(stats, res))
           defn.ext match
           case N => defineClass(N, Nil)
@@ -759,10 +759,54 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             source = Diagnostic.Source.Compilation)
         else k(prefix, memberIdent(id, N), N)
 
+  /** Stable keys contain only references and immutable selections: lowering them
+    * cannot introduce a call. Keep the resulting paths in the IR, rather than
+    * consulting source annotations during code generation after symbols change.
+    */
+  private def lowerSymbolKey(key: SymbolKey)(using LoweringCtx): Path =
+    def target(sym: Symbol, receiver: Bool): DefinitionSymbol[?] = sym match
+      case bms: BlockMemberSymbol =>
+        (if receiver then bms.asMod.orElse(bms.asTrm) else bms.asTrm).getOrElse(
+          lastWords("A validated symbol path must denote a module or immutable val"))
+      case sym: TermSymbol => sym
+      case sym: ModuleOrObjectSymbol => sym
+      case _ => lastWords("Invalid symbol path root")
+    val first = key.path.head
+    val firstTarget = target(first, key.path.tail.nonEmpty)
+    val root: Path = first match
+      case bms: BlockMemberSymbol if firstTarget.defn.exists(_.hasDeclareModifier.nonEmpty) =>
+        Select(State.globalThisSymbol.asThis, Tree.Ident(bms.nme))(S(firstTarget), key.term.toLoc)(false)
+      case bms: BlockMemberSymbol => loweringCtx(bms.asMemberRef(firstTarget))
+      case sym: TermSymbol => loweringCtx.localVals.get(sym).fold[Path](sym.asPath)(_.asSimpleRef)
+      case sym: ModuleOrObjectSymbol if sym.defn.exists(_.hasDeclareModifier.nonEmpty) =>
+        Select(State.globalThisSymbol.asThis, sym.id)(S(sym), key.term.toLoc)(false)
+      case sym: ModuleOrObjectSymbol => sym.defn.get.bsym.asMemberRef(sym)
+      case _ => lastWords("Invalid symbol path root")
+    key.path.tail.zipWithIndex.foldLeft(root): (prefix, entry) =>
+      val (sym, index) = entry
+      Select(prefix, Tree.Ident(sym.nme))(S(target(sym, index < key.path.length - 2)), key.term.toLoc)(false)
+
+  private def methodKeys(body: ObjBody)(using LoweringCtx): Map[TermSymbol, Path] =
+    body.methods.filterNot(_.isErroneous).flatMap: method =>
+      MemberKey.symbol(method).map(key => method.tsym -> lowerSymbolKey(key))
+    .toMap
+
+  private def namedSelection(prefix: Path, name: Tree.Ident, target: Opt[DefinitionSymbol[?]],
+      loc: Opt[Loc], sanitize: Bool)(using LoweringCtx): Path = target match
+    case S(sym: TermSymbol) if sym.defn.flatMap(MemberKey.symbol).nonEmpty =>
+      KeyedSelect(prefix, lowerSymbolKey(sym.defn.flatMap(MemberKey.symbol).get), sym)(loc)
+    case _ => Select(prefix, name)(target, loc)(sanitize)
+
+  private def assignNamedField(prefix: Path, name: Tree.Ident, value: Path, rest: Block)
+      (target: Opt[DefinitionSymbol[?]])(using LoweringCtx): Block =
+    namedSelection(prefix, name, target, name.toLoc, false) match
+      case KeyedSelect(_, key, _) => AssignDynField(prefix, key, false, value, rest)
+      case _ => AssignField(prefix, name, value, rest)(target)
+
   private def selectionPath(sel: NewSel, prefix: Path, name: Tree.Ident,
-      target: Opt[DefinitionSymbol[?]]): Path = sel.tupleIndex match
+      target: Opt[DefinitionSymbol[?]])(using LoweringCtx): Path = sel.tupleIndex match
     case S(index) => DynSelect(prefix, Value.Lit(Tree.IntLit(BigInt(index)))(N), true)(sel.toLoc)
-    case N => Select(prefix, name)(target, sel.toLoc)(false)
+    case N => namedSelection(prefix, name, target, sel.toLoc, false)
 
   private def superReference(sup: st.Super)(k: Path => Block)(using LoweringCtx): Block =
     if erroneousRef(sup) then compError else sup.resolvedTargets.distinct match
@@ -773,7 +817,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           if target.k is syntax.Fun then
             val base = loweringCtx.superBases.getOrElse(sup.owner,
               lastWords("Superclass must be lowered before its members"))
-            k(SuperSelect(receiver, base, target.id)(target, sup.toLoc))
+            val key = target.defn.flatMap(MemberKey.symbol).fold[Path](Value.Lit(Tree.StrLit(target.nme))(sup.toLoc))(lowerSymbolKey)
+            k(SuperSelect(receiver, base, key)(target, sup.toLoc))
           else k(Select(receiver, target.id)(S(target), sup.toLoc)(false))
       case targets => fail(ErrorReport(
         msg"Super reference '${sup.id.name}' requires one inherited implementation" -> sup.toLoc ::
@@ -1305,11 +1350,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             case S(sym: TermSymbol) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
-                  AssignField(p, memberIdent(ref.id, member), castTo(r, sym.erasedType, ref.toLoc), k(unit))(S(sym))
+                  assignNamedField(p, memberIdent(ref.id, member), castTo(r, sym.erasedType, ref.toLoc), k(unit))(S(sym))
             case N if ref.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
-                  AssignField(p, memberIdent(ref.id, member), r, k(unit))(N)
+                  assignNamedField(p, memberIdent(ref.id, member), r, k(unit))(N)
             case _ => fail:
               ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
@@ -1322,18 +1367,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case S(sym: TermSymbol) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                AssignField(p, name, castTo(r, sym.erasedType, sel.toLoc), k(unit))(S(sym))
+                assignNamedField(p, name, castTo(r, sym.erasedType, sel.toLoc), k(unit))(S(sym))
           case N if sel.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                AssignField(p, name, r, k(unit))(N)
+                assignNamedField(p, name, r, k(unit))(N)
           case _ => fail:
             ErrorReport(msg"Assignment requires a term member" -> sel.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            AssignField(
+            assignNamedField(
               p,
               nme,
               castTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc),
@@ -1349,7 +1394,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         softAssert(sym.nonEmpty, s"Missing symbol for synthetic assignment target ${sel.showDbg}")
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            AssignField(p, memberIdent(nme, sel.sym), castTo(r, fieldErasedType(sym), sel.toLoc), k(unit))(sym)
+            assignNamedField(p, memberIdent(nme, sel.sym), castTo(r, fieldErasedType(sym), sel.toLoc), k(unit))(sym)
       case sel @ DynSel(prefix, fld, ai, _) =>
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
@@ -1358,7 +1403,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case sel @ SelProj(prefix, _, proj) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            AssignField(
+            assignNamedField(
               p,
               memberIdent(proj, sel.sym),
               castTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc),
@@ -1448,7 +1493,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
               val pctor = parentConstructor(params, as, nw.toLoc)
               ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(parent),
-                mtds, privateFlds, publicFlds, pctor, ctor, N, N, N)(N, Nil)
+                mtds, privateFlds, publicFlds, pctor, ctor, N, N, N)(N, Nil, methodKeys(rft))
             val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)
             Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
@@ -1826,7 +1871,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def setupNamedSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]], loc: Opt[Loc])
       (k: Result => Block)(using LoweringCtx): Block =
     subTerm(prefix): p =>
-      k(Select(p, nme)(disamb, loc)(
+      k(namedSelection(p, nme, disamb, loc,
         !disamb.isDefined
         // * ^ We assume that resolved selections are well-behaved (will not yield undefined or debind a method)
         // || disamb.exists(_.defn.exists(_.hasDeclareModifier.isEmpty)) // * This checks `declare` members, which is normally unwanted
@@ -1918,13 +1963,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()
       case Annot.Pure() => ()
+      case a: Annot.Fresh => target match
+        case TermDefinition(k = syntax.ImmutVal) => ()
+        case _ => warn(a, S(msg"Only immutable vals may be marked @annotations.fresh."))
       case Annot.Modifier(syntax.Keyword.`open` | syntax.Keyword.`override`) => ()
       case a: Annot.Affine => target match
         case TermDefinition(k = syntax.Fun) => ()
         case _ => warn(a)
       case a: Annot.JsSymbol => target match
         case td: TermDefinition if (td.k is syntax.Fun) && td.flags.isMethod && !td.tsym.isPrivate => ()
-        case _ => warn(a, S(msg"Only public methods may implement a well-known symbol."))
+        case _ => warn(a, S(msg"Only public methods may use @jsSymbol."))
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
       case annot => warn(annot)
   

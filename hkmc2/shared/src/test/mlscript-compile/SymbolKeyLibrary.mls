@@ -1,0 +1,13 @@
+#lang(0.3.x)
+
+module SymbolKeyLibrary {
+  @annotations.fresh val readKey = Symbol("library read")
+  class Reader {
+    @annotations.jsSymbol(readKey) fun read() = 55
+  }
+  fun make(value) =
+    class Local {
+      @annotations.jsSymbol(SymbolKeyLibrary.readKey) fun read() = value
+    }
+    new Local
+}

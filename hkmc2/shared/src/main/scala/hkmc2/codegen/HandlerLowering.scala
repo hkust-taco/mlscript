@@ -592,14 +592,14 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
             if (bod.methods is newMtds) && (bod.ctor is newCtor) then
               bod
             else
-              ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor, bod.annotations)
+              ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor, bod.annotations)(bod.methodKeys)
           val newPreCtor = translateCtorLike(preCtor, isym.asThis, false)
           val newCtor = translateCtorLike(ctor, isym.asThis, false)
           val c2 =
             if (methods is newMtds) && (preCtor is newPreCtor) && (ctor is newCtor) && (companion is companion2) then
               defn
             else
-              defn.copy(methods = newMtds, preCtor = newPreCtor, ctor = newCtor, companion = companion2)(defn.configOverride, defn.annotations)
+              defn.copy(methods = newMtds, preCtor = newPreCtor, ctor = newCtor, companion = companion2)(defn.configOverride, defn.annotations, defn.methodKeys)
           if debugEnabled then
             Scoped(debugInfos.map(_._1).toSet, debugInfos.foldRight(k(c2)): (elem, blk) =>
               Assign(elem._1, Tuple(false, elem._2)(N), blk))

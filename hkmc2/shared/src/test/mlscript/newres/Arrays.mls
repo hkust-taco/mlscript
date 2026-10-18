@@ -136,8 +136,8 @@ new Array[Int](1, 2)
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.244: 	declare class Array[T](val length: Int) {
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.245: 	  @jsSymbol("iterator") fun iterator(): Iterator[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.245: 	  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[T] & Iterable[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.246: 	  fun join(...separators): Str
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.247: 	  fun reverse(): Array[T]
@@ -155,8 +155,8 @@ new Array[Int]()
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.244: 	declare class Array[T](val length: Int) {
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.245: 	  @jsSymbol("iterator") fun iterator(): Iterator[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.245: 	  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[T] & Iterable[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.246: 	  fun join(...separators): Str
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.247: 	  fun reverse(): Array[T]

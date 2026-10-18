@@ -1390,15 +1390,49 @@ parts remain accepted and contribute uncertainty alongside any known flows;
 resolution does not prove that a value can be iterated. Precise tuple spreads
 retain their fixed positions.
 
-`@jsSymbol("iterator")` on a public method gives its source name to the
-`Symbol.iterator` property. The prelude's `Array.iterator()` and
-`Iterable[A].iterator()` aliases therefore call the native symbol property.
-Class implementations and their overrides use the same annotation. A record
-can implement the protocol with a computed `(Symbol.iterator)` field; record
-types can declare that computed field or annotate a named field with
-`@jsSymbol("iterator")`. A plain string-keyed `iterator` field alone does not
-implement JavaScript iteration. Currently `iterator` is the supported well-known
-symbol.
+`@annotations.jsSymbol(path)` gives a public method a source name for the JavaScript property
+key denoted by `path`. The path must consist of modules and immutable `val`s,
+and end in a `val` annotated with `@annotations.fresh`. This marker is a contract
+that the val owns a unique symbol; the resolver does not prove freshness or
+require a `Symbol` type. Checking the value's type belongs to the type checker.
+
+```mlscript
+module Keys {
+  @annotations.fresh val read = Symbol("read")
+}
+class Reader {
+  @annotations.jsSymbol(Keys.read) fun read() = 42
+}
+```
+
+The method is stored at `Keys.read`, and both `reader.read()` and
+`reader.(Keys.read)()` select that property. An override must retain both the
+inherited source name and the same key. Giving an inherited key a different
+source name is a collision, as is defining two methods with the same key in one
+class. Distinct receiver paths are significant for fresh instance fields.
+
+The annotation constructor is declared as `annotations.jsSymbol` in the prelude;
+`open annotations { jsSymbol }` permits its short spelling. Recognition uses
+the resolved declaration, so a user definition named `jsSymbol` has no special
+meaning.
+
+Currently, selecting a method after its local key has escaped the caller's scope
+is unsupported: the compiler needs a runtime witness for that particular key.
+Such accesses produce a compilation error; the key must not be hoisted and shared
+between factory invocations. `newres/JsSymbol.mls` records this limitation with
+an explicit regression.
+
+The prelude marks `Symbol.iterator` as fresh. `Array.iterator()` and
+`Iterable[A].iterator()` use `@annotations.jsSymbol(Symbol.iterator)` to select the native
+symbol property. Records can implement the protocol with a computed
+`(Symbol.iterator)` field; record types can declare that field or annotate a
+named field with `@annotations.jsSymbol(Symbol.iterator)`. A string-keyed `iterator` field
+alone does not implement JavaScript iteration.
+
+`Iterator[A]` promises only `next`. `IteratorImpl` implements the iterable
+protocol by returning itself from its symbol-keyed `iterator()` method. Native
+iterator factories return `Iterator[A] & Iterable[A]`, preserving their iterable
+capability without requiring every iterator implementation to be iterable.
 
 With new resolution (`#lang(0.3.x)`), annotations determine the interface available
 to member lookup and calls. A receiver annotated `Base` exposes Base's declared

@@ -69,8 +69,10 @@ class BlockTraverser:
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Unit = p match
-    case p @ SuperSelect(qual, base, _) =>
-      applyPath(qual); applyPath(base); p.symbol.traverse
+    case p @ SuperSelect(qual, base, key) =>
+      applyPath(qual); applyPath(base); applyPath(key); p.symbol.traverse
+    case KeyedSelect(qual, key, sym) =>
+      applyPath(qual); applyPath(key); sym.traverse
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual); applyPath(fld)
     case p @ Select(qual, name) =>
@@ -108,6 +110,7 @@ class BlockTraverser:
     paramsOpt.foreach(applyParamList)
     auxParams.foreach(applyParamList)
     parentPath.foreach(applyPath)
+    defn.methodKeys.valuesIterator.foreach(applyPath)
     methods.foreach(applyFunDefn)
     privateFields.foreach(_.traverse)
     publicFields.foreach: f =>
@@ -123,6 +126,7 @@ class BlockTraverser:
   
   def applyCompanionModule(b: ClsLikeBody): Unit =
     b.isym.traverse
+    b.methodKeys.valuesIterator.foreach(applyPath)
     b.methods.foreach(applyFunDefn)
     b.privateFields.foreach(_.traverse)
     b.publicFields.foreach: f =>

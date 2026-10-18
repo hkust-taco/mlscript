@@ -180,12 +180,19 @@ class BlockTransformer(subst: SymbolSubst):
     case p: Path => applyPath(p)(k)
   
   def applyPath(p: Path)(k: Path => Block): Block = p match
-    case p @ SuperSelect(qual, base, name) =>
+    case p @ SuperSelect(qual, base, key) =>
       applyPath(qual): qual2 =>
         applyPath(base): base2 =>
-          val sym2 = p.symbol.subst
-          k(if (qual2 is qual) && (base2 is base) && (sym2 is p.symbol) then p
-            else SuperSelect(qual2, base2, name)(sym2, p.toLoc))
+          applyPath(key): key2 =>
+            val sym2 = p.symbol.subst
+            k(if (qual2 is qual) && (base2 is base) && (key2 is key) && (sym2 is p.symbol) then p
+              else SuperSelect(qual2, base2, key2)(sym2, p.toLoc))
+    case KeyedSelect(qual, key, sym) =>
+      applyPath(qual): qual2 =>
+        applyPath(key): key2 =>
+          val sym2 = sym.subst
+          k(if (qual2 is qual) && (key2 is key) && (sym2 is sym) then p
+            else KeyedSelect(qual2, key2, sym2)(p.toLoc))
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual): qual2 =>
         applyPath(fld): fld2 =>
@@ -258,7 +265,15 @@ class BlockTransformer(subst: SymbolSubst):
         (privateFields2 is defn.privateFields) &&
         (publicFields2 is defn.publicFields) &&
         (ctor2 is defn.ctor)
-      then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2, defn.annotations)
+      then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2, defn.annotations)(defn.methodKeys)
+  
+  private def applyMethodKeys(keys: Map[TermSymbol, Path])(k: Map[TermSymbol, Path] => Block): Block =
+    def loop(todo: Ls[(TermSymbol, Path)], acc: Map[TermSymbol, Path], changed: Bool): Block = todo match
+      case Nil => k(if changed then acc else keys)
+      case (sym, key) :: rest => applyPath(key): key2 =>
+        val sym2 = sym.subst
+        loop(rest, acc + (sym2 -> key2), changed || (sym2 isnt sym) || (key2 isnt key))
+    loop(keys.toList, Map.empty, false)
   
   def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
     val ClsLikeDefn(own, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods,
@@ -270,13 +285,18 @@ class BlockTransformer(subst: SymbolSubst):
     val termCompanion2 = termCompanion.mapConserve(_.subst)
     val paramsOpt2 = paramsOpt.mapConserve(applyParamList)
     val auxParams2 = auxParams.mapConserve(applyParamList)
-    def helper(parentPath2: Opt[Path]) =
+    def helper(parentPath2: Opt[Path]): Block = applyMethodKeys(defn.methodKeys): keys2 =>
+      applyMethodKeys(mod.fold(Map.empty[TermSymbol, Path])(_.methodKeys)): modKeys2 =>
+        finish(parentPath2, keys2, modKeys2)
+    def finish(parentPath2: Opt[Path], keys2: Map[TermSymbol, Path], modKeys2: Map[TermSymbol, Path]): Block =
       val methods2 = methods.mapConserve(applyFunDefn)
       val privateFields2 = privateFields.mapConserve(_.subst)
       val publicFields2 = publicFields.mapConserve(applyPublicField)
       val preCtor2 = applyFunBodyLikeBlock(preCtor)
       val ctor2 = applyFunBodyLikeBlock(ctor)
-      val mod2 = mod.mapConserve(applyObjBody)
+      val mod2 = mod.mapConserve: body =>
+        val body2 = applyObjBody(body)
+        if modKeys2 is body2.methodKeys then body2 else body2.copy()(modKeys2)
       k:
         if (own2 is own) && (isym2 is isym) && (sym2 is sym) && (ctorSym2 is ctorSym) &&
             (paramsOpt2 is paramsOpt) &&
@@ -286,9 +306,9 @@ class BlockTransformer(subst: SymbolSubst):
             (privateFields2 is privateFields) &&
             (publicFields2 is publicFields) &&
             (preCtor2 is preCtor) && (ctor2 is ctor) &&
-            (mod2 is mod) && (termCompanion2 is termCompanion)
+            (mod2 is mod) && (termCompanion2 is termCompanion) && (keys2 is defn.methodKeys)
           then defn else ClsLikeDefn(own2, isym2, sym2, ctorSym2, kind, paramsOpt2, 
-            auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable, termCompanion2)(defn.configOverride, defn.annotations)
+            auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable, termCompanion2)(defn.configOverride, defn.annotations, keys2)
     parentPath match
     case Some(pp) => applyPath(pp): pp2 =>
       helper:

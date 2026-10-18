@@ -962,6 +962,11 @@ class NewResolver:
     listenInstanceViews(value, mergeIntersections = false)(listener)
 
   private def listenInstanceViews(value: TermShape, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit = value match
+    case Marked(view: IntersectionView, marks) if !mergeIntersections =>
+      view.values.foreach: value =>
+        transportShape(value, marks :: Nil) match
+          case value: TermShape => listenInstanceViews(value, mergeIntersections)(listener)
+          case NoShape => ()
     case Marked(instance: InstanceShape, marks) =>
       listenTypeViews(transportType(instance.tpe, marks :: Nil), mergeIntersections)(listener)
     case _ => listener(value)
@@ -1012,6 +1017,8 @@ class NewResolver:
           val projected = project(instances, shapeDependencies(record), TypeSubstitution.empty)
           if projected.isEmpty then record else rctx.shapeView(projected):
             RecordTypeShape(record.fields.map((name, tpe) => name -> instantiateType(tpe, projected)), record.aliases)(record.source, record.declarations)
+        case view: IntersectionView =>
+          IntersectionView(view.values.map(instantiateShape(_, instances)))
         case specialized: SpecializedShape =>
           val projected = project(instances, shapeDependencies(specialized), specialized.instances)
           if projected.isEmpty then specialized else rctx.shapeView(projected):
@@ -1175,6 +1182,8 @@ class NewResolver:
       union(declared, nominal.parent.fold(S(Set.empty))(shapeSupport))
     case record: RecordTypeShape =>
       record.fields.values.foldLeft[Binders](S(Set.empty))((acc, field) => union(acc, typeSupport(field)))
+    case view: IntersectionView =>
+      view.values.foldLeft[Binders](S(Set.empty))((acc, value) => union(acc, shapeSupport(value)))
     case callable: CallableTypeShape =>
       val types = callable.paramLists.flatMap(params => params.params.flatten ::: params.rest.toList ::: params.trailing.flatten) :::
         callable.result.toList ::: callable.supplied.toList.flatten :::
@@ -1291,10 +1300,15 @@ class NewResolver:
     * field combinations; a separate cache keyed by whole record sets is unnecessary.
     */
   private def intersectViews(values: Ls[TermShape])(publish: Listener)(using ResolutionContext): Unit =
-    val records = values.collect:
+    val flattened = values.flatMap:
+      case Marked(view: IntersectionView, marks) => view.values.flatMap(value => transportShape(value, marks :: Nil) match
+        case value: TermShape => S(value)
+        case NoShape => N)
+      case value => value :: Nil
+    val records = flattened.collect:
       case Marked(record: RecordTypeShape, marks) =>
         RecordTypeShape(record.fields.map((name, tpe) => name -> transportType(tpe, marks :: Nil)), record.aliases)(record.source, record.declarations)
-    records.headOption.foreach: first =>
+    val merged = records.headOption.map: first =>
       val merged = records.tail.foldLeft(first): (left, right) =>
         val fields = right.fields.foldLeft(left.fields):
           case (fields, (name, tpe)) => fields.updated(name, fields.get(name).fold(tpe)(previous =>
@@ -1302,10 +1316,14 @@ class NewResolver:
         val aliases = right.aliases.foldLeft(left.aliases):
           case (aliases, (name, keys)) => aliases.updated(name, aliases.getOrElse(name, Set.empty) ++ keys)
         RecordTypeShape(fields, aliases)(left.source, right.declarations ++ left.declarations)
-      publish(merged)
-    values.distinctBy(ShapeIdentity.key).foreach:
-      case Marked(_: RecordTypeShape, _) => ()
-      case other => publish(other)
+      merged
+    val components = merged.toList ::: flattened.filter:
+      case Marked(_: RecordTypeShape, _) => false
+      case _ => true
+    components.distinctBy(ShapeIdentity.key) match
+      case value :: Nil => publish(value)
+      case Nil => ()
+      case values => publish(IntersectionView(values))
 
   private def listenTypeViews(tpe: DeclaredType)(listener: Listener)(using ResolutionContext): Unit =
     listenTypeViews(tpe, mergeIntersections = true)(listener)
@@ -1461,7 +1479,7 @@ class NewResolver:
               case TypeShape.Record(source, fields) =>
                 val aliases = fields.flatMap:
                   case (field @ RcdField(Lit(Tree.StrLit(name)), _, _), _) => field.key.collect:
-                    case key: WellKnownSymbol => name -> Set(key)
+                    case key: SymbolKey => name -> Set(key)
                   case _ => N
                 publish(RecordTypeShape(fields.map((field, sign) => field.key.get -> declaredType(sign, current)).toMap, aliases.toMap)(
                   source, fields.map((field, _) => field.key.get -> field).toMap))
@@ -2378,7 +2396,7 @@ class NewResolver:
               // applying these marks to its members yields no candidates.
               case NoShape => parentView.getMember(name).withMarks(inner :: receiver :: Nil)
           parentMember.withAnnotation(view.annotation)
-    MemberLookup.ownMember(defn, name, inherited) match
+    MemberKey.own(defn, name) match
       case S(member) =>
         val (location, provenance) = splitReceiverPath(defn, receiver)
         // Supplied arguments are outside the class; its parameter annotations
@@ -2537,7 +2555,7 @@ class NewResolver:
       val flow = new IterationFlow(elements, call("iterator"), call("next"),
         site("iterator member"), site("next member"), site("iteration done"), site("iteration value"))
       def select(value: TermShape, key: MemberKey, site: FlowSymbol)(receive: Listener)(using ResolutionContext): Unit =
-        listenInstanceViews(value, mergeIntersections = false): view =>
+        listenInstanceViews(value): view =>
           listenMemberValue(view.getMember(key).visibleFrom(_ => false, reportInaccessible = false),
             site, source, TypeSubstitution.empty, () => receive(UnknownValueShape.spread(source, view)))(receive)
       listenTerm(flow.iterator): iterator =>
@@ -2554,8 +2572,11 @@ class NewResolver:
       flow
 
   private def listenIterableElements(value: TermShape, flow: IterationFlow)(using ResolutionContext): Unit =
-    listenInstanceViews(value, mergeIntersections = false): view =>
-      listenMemberValue(view.getMember(WellKnownSymbol.Iterator).visibleFrom(_ => false, reportInaccessible = false),
+    val symbols = prelude.builtins.SymbolModule
+    val iteratorKey = SymbolKey(symbols.module :: symbols.iterator :: Nil)(
+      symbols.bms.ref().synthSel(symbols.iterator))
+    listenInstanceViews(value): view =>
+      listenMemberValue(view.getMember(iteratorKey).visibleFrom(_ => false, reportInaccessible = false),
         flow.iteratorMember, flow.elements.source, TypeSubstitution.empty,
         () => flow.elements.publish(TypeShape.Inferred(UnknownValueShape.spread(flow.elements.source, view)))):
           method => applyShape(method, flow.iterator.rhs, flow.iterator, checked = false)
@@ -3187,6 +3208,12 @@ class NewResolver:
     def publish(value: TermShape)(using ResolutionContext): Unit =
       publishViewed(res, value, instances)(using rctx.withInstances(callerInstances))
     lhs match
+      case Marked(view: IntersectionView, marks) =>
+        view.values.foreach: value =>
+          transportShape(value, marks :: Nil) match
+            case value: TermShape => applyShape(value, args, res, checked)
+            case NoShape => ()
+        return
       case Marked(_: InstanceShape, _) =>
         listenInstanceViews(instantiateShape(lhs, instances), mergeIntersections = checked)(applyShape(_, args, res, checked))
         return
@@ -3775,15 +3802,29 @@ class NewResolver:
       case (key, definitions) if definitions.map(_.tsym).distinct.sizeCompare(1) > 0 =>
         defn.isErroneous = true
         definitions.foreach(_.isErroneous = true)
-        rctx.report(ErrorReport(msg"Duplicate definition of member 'Symbol.${key.name}'." -> N ::
+        rctx.report(ErrorReport(msg"Duplicate definition of member '${key.name}'." -> N ::
           definitions.map(td => msg"Member '${td.tsym.nme}' is defined here." -> td.toLoc)))
       case _ => ()
     defn.body.members.values.toList.distinct.foreach: member =>
       member.asTrm.filterNot(sym => sym.isInstanceOf[ClassCtorSymbol] || sym.isPrivate).foreach: own =>
         // Bind this host to the defining unit before an importer can observe its edges.
         own.overrideLinks.inferenceHost
-        val key: MemberKey = MemberKey.symbol(member).getOrElse(member.nme)
-        listenInheritedMember(defn, key): lookup =>
+        MemberKey.symbol(member).foreach: key =>
+          listenInheritedMember(defn, key): lookup =>
+            def check(info: MemberLookup): Unit = info match
+              case MemberLookup.All(members) => members.foreach(check)
+              case MemberLookup.Contextual(source, _) => check(source)
+              case MemberLookup.Found(base: BlockMemberSymbol, _) => collision(base)
+              case MemberLookup.Declared(base, _, _, _, _) => collision(base)
+              case _ => ()
+            def collision(base: BlockMemberSymbol): Unit = if base.nme != member.nme then
+              defn.isErroneous = true
+              own.defn.foreach(_.isErroneous = true)
+              rctx.report(ErrorReport(
+                msg"Member '${member.nme}' uses the same @jsSymbol key as inherited member '${base.nme}'; overrides must keep the inherited name." -> own.toLoc ::
+                msg"The inherited member is declared here." -> base.toLoc :: Nil))
+            check(lookup.visibleFrom(_ => false, reportInaccessible = false))
+        listenInheritedMember(defn, member.nme): lookup =>
           def record(info: MemberLookup): Unit = info match
             case MemberLookup.All(members) => members.foreach(record)
             case MemberLookup.Contextual(source, _) => record(source)
@@ -4008,11 +4049,26 @@ class NewResolver:
     * definitions. Keep validating selections/opens: a later distinct candidate
     * must be an error, since it cannot change an already interpreted annotation.
     */
+  private def staticAnnotationSymbol(trm: Term): Opt[Symbol] = trm.withoutCaptures match
+    case ref: NewRefImpl => S(ref.sym)
+    case Ref(sym) => S(sym)
+    case sel: NewSel => staticAnnotationSymbol(sel.prefix).flatMap(_.asMod).flatMap(_.tree.definedSymbols.get(sel.id.name))
+    case sel: Sel => staticAnnotationSymbol(sel.prefix).flatMap(_.asMod).flatMap(_.tree.definedSymbols.get(sel.nme.name))
+    case _ => N
+
+  /** Only member identity is needed to interpret an annotation. In particular a
+    * declared module has no runtime initializer to infer, and its syntax already
+    * identifies its members before their definitions are elaborated. Ordinary
+    * resolution still checks access and records targets for those selections.
+    */
   def annotationSymbol(trm: Term)(using ResolutionContext): Opt[Symbol] = trm match
     case Capture(base, _) => annotationSymbol(base)
     case TyApp(base, _) => annotationSymbol(base)
     case App(base, _) => annotationSymbol(base)
     case ref: NewRefImpl => S(ref.sym)
+    case _ if staticAnnotationSymbol(trm).nonEmpty =>
+      requireTerm(trm)
+      staticAnnotationSymbol(trm)
     case _: NewSel | _: UnresolvedRef =>
       val symbols = mutable.LinkedHashSet.empty[BlockMemberSymbol]
       var collecting = true
@@ -4038,6 +4094,71 @@ class NewResolver:
     case _ =>
       resolError(trm, msg"An annotation must have a known main symbol." -> N :: Nil)
       N
+
+  /** Resolve the identity of a computed key, without checking its value's type.
+    * `fresh` is a user contract: distinct marked vals denote distinct keys.
+    * Modules and immutable vals make the path stable; calls and mutable bindings
+    * cannot be used to identify a property at compile time. A forward val's marker
+    * is checked when its definition completes, not by forcing its initializer.
+    */
+  def symbolKey(term: Term, required: Bool)(using ResolutionContext): Opt[SymbolKey] =
+    def member(t: Term): Opt[Symbol] = staticAnnotationSymbol(t).orElse:
+      if required then annotationSymbol(t)
+      else
+        val members = mutable.LinkedHashSet.empty[BlockMemberSymbol]
+        listen(t, discardMarks = false):
+          case sh: SymShape => members += sh.sym
+          case _ => ()
+        members.toList match
+          case sym :: Nil => S(sym)
+          case _ => N
+    def stable(sym: Symbol): Bool = sym.asMod.nonEmpty || (sym match
+      case bms: BlockMemberSymbol => bms.trmTree.exists(_.k is ImmutVal) || bms.asTrm.exists(_.k is ImmutVal)
+      case tsym: TermSymbol => tsym.k is ImmutVal
+      case _ => false)
+    def canonicalPath(path: Ls[Symbol], seen: Set[Symbol]): Ls[Symbol] =
+      path.foldLeft(Ls.empty[Symbol]): (prefix, sym) =>
+        sym.asMod match
+          case S(module) => prefix :+ module
+          case N =>
+            val base = sym.asTrm.flatMap(_.defn).map(_.sym).getOrElse(sym)
+            val alias = if seen(base) then N else base.asTrm.flatMap(_.defn).flatMap(_.body).flatMap(stablePath)
+            alias match
+              // An immutable alias replaces the whole receiver path, not just
+              // its last name: M.alias may refer to a val outside M. Only follow
+              // stable references; calls and other initializers remain opaque.
+              case S(target) => canonicalPath(target, seen + base)
+              case N => prefix :+ base
+    def stablePath(t: Term): Opt[Ls[Symbol]] = t.withoutCaptures match
+      case ref: NewRefImpl => member(t).filter(stable).map(_ :: Nil)
+      case Ref(sym) if stable(sym) => S(sym :: Nil)
+      case sel: NewSel =>
+        for
+          prefix <- stablePath(sel.prefix)
+          sym <- member(sel).filter(stable)
+        yield prefix :+ sym
+      case sel: Sel =>
+        for
+          prefix <- stablePath(sel.prefix)
+          sym <- member(sel).filter(stable)
+        yield prefix :+ sym
+      case _ => N
+    def fresh(sym: Symbol): Bool = sym.asTrm.flatMap(_.defn).exists(_.annotations.exists(_.isInstanceOf[Annot.Fresh]))
+    stablePath(term) match
+      case S(path) if path.last.asMod.isEmpty && (required || fresh(path.last)) =>
+        if required then
+          def check(): Unit = if !fresh(path.last) then
+            resolError(term, msg"@jsSymbol requires a val marked @annotations.fresh." -> term.toLoc ::
+              msg"The referenced member is declared here." -> path.last.toLoc :: Nil)
+          path.last match
+            case member: BlockMemberSymbol => member.onComplete(() => check())
+            case _ => check()
+        requireTerm(term)
+        S(SymbolKey(canonicalPath(path.init, Set.empty) :+ path.last.asTrm.flatMap(_.defn).map(_.sym).getOrElse(path.last))(term))
+      case _ =>
+        if required then resolError(term,
+          msg"@jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh." -> term.toLoc :: Nil)
+        N
 
   /** Values prefer the function/constructor overload; selection receivers prefer
     * the module overload. Keep that choice through captures so nested functions

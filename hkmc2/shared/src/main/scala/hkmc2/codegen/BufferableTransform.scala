@@ -87,14 +87,18 @@ class BufferableTransform()(using State, Raise):
                 cls.paramsOpt.toList ::: cls.auxParams,
                 Begin(cls.preCtor, cls.ctor),
               )(N, annotations = Nil), true)
+            val transformedMethods = cls.methods.map(transformFunDefn(_, false))
+            val transformedKeys = cls.methods.zip(transformedMethods).flatMap: (before, after) =>
+              cls.methodKeys.get(before.dSym).map(after.dSym -> _)
+            .toMap
             val fakeCompanion = ClsLikeBody(
               companionSym,
-              fakeCtor :: cls.methods.map(transformFunDefn(_, false)),
+              fakeCtor :: transformedMethods,
               Nil,
               clsSizeSym -> clsSizeTermSym :: Nil,
               Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size))(N))(N, Nil), End()),
               annotations = Nil,
-            )
+            )(transformedKeys)
             k:
               ClsLikeDefn(
                 cls.owner,
@@ -113,6 +117,6 @@ class BufferableTransform()(using State, Raise):
                 S(fakeCompanion),
                 cls.bufferable,
                 cls.termCompanion,
-              )(cls.configOverride, cls.annotations)
+              )(cls.configOverride, cls.annotations, if bufferable then cls.methodKeys else Map.empty)
         case _ => super.applyDefn(defn)(k)
     transformer.applyProgram(prog)

@@ -362,7 +362,7 @@ class BlockSimplifier
       val privateFields2 = removeUnusedPrivateFields(defn2.privateFields)
       if privateFields2 is defn2.privateFields
       then defn2
-      else defn2.copy(privateFields = privateFields2)
+      else defn2.copy(privateFields = privateFields2)(defn2.methodKeys)
 
     override def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
       super.applyClsLikeDefn(defn):
@@ -371,7 +371,7 @@ class BlockSimplifier
           val cls2 =
             if privateFields2 is cls.privateFields
             then cls
-            else cls.copy(privateFields = privateFields2)(cls.configOverride, cls.annotations)
+            else cls.copy(privateFields = privateFields2)(cls.configOverride, cls.annotations, cls.methodKeys)
           k(cls2)
         case other => k(other)
     
@@ -1715,7 +1715,8 @@ class BlockSimplifier
             // receiver, as in `(x => x).apply(...)`, is not dead.
             fun match
               case Select(qual, _) => applyPath(qual)
-              case SuperSelect(qual, base, _) => applyPath(qual); applyPath(base)
+              case SuperSelect(qual, base, key) => applyPath(qual); applyPath(base); applyPath(key)
+              case KeyedSelect(qual, key, _) => applyPath(qual); applyPath(key)
               // Otherwise, `fun` is a direct `Value.MemberRef` to `ts`: the call target itself,
               // which `observeCall` records. Traversing it as a value would count `ts` again and
               // set `disallowElimination`, preventing every directly called function from being inlined.

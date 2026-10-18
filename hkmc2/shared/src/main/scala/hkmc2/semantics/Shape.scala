@@ -53,6 +53,7 @@ sealed trait Shape extends ShapeEvent:
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
     case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
     case rs: RecordTypeShape => s"RecordTypeShape(${rs.source.showDbg})"
+    case view: IntersectionView => s"IntersectionView(${view.values.map(_.shwDbg).mkString(", ")})"
     case ts: InstanceShape => s"InstanceShape(${ts.tpe.resolution.source.showDbg})"
     case ts: NominalInstanceView => s"NominalInstanceView(${ts.defn.sym.showDbg})"
     case ts: OpaqueTypeShape => s"OpaqueTypeShape(${ts.source.showDbg})"
@@ -78,7 +79,7 @@ object ShapeIdentity:
   private[semantics] def comparison(shape: ShapeEvent): Key = shape match
     case instance: InstanceShape => instance.candidateIdentity
     case _: (MarkedShape[?] | ContextualShape | ClassValueShape | NominalInstanceView |
-        CallableTypeShape | RecordTypeShape | SpecializedShape | UnknownValueShape |
+        CallableTypeShape | RecordTypeShape | IntersectionView | SpecializedShape | UnknownValueShape |
         OpaqueTypeShape | RigidTypeShape | ActivatedShapeEvent) => new View(shape)
     // These producers own graph nodes, including synthesized inference hosts.
     // Adding a variant requires choosing its equality policy here.
@@ -101,6 +102,7 @@ object ShapeIdentity:
         view.declaration.fold(0)(System.identityHashCode), view.asyncResult.hashCode)
       case view: RecordTypeShape => ValueKey.hash(
         ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.aliases.hashCode)
+      case view: IntersectionView => view.values.map(_.comparison).hashCode
       case view: SpecializedShape => ValueKey.hash(view.declaration.comparison.hashCode,
         view.arguments.hashCode, view.instances.hashCode)
       case view: UnknownValueShape => ValueKey.hash(System.identityHashCode(view.source), view.fromPublicInterface.hashCode)
@@ -129,6 +131,9 @@ object ShapeIdentity:
           case _ => false
         case a: RecordTypeShape => that.shape match
           case b: RecordTypeShape => a.fields == b.fields && a.aliases == b.aliases
+          case _ => false
+        case a: IntersectionView => that.shape match
+          case b: IntersectionView => a.values.map(_.comparison) == b.values.map(_.comparison)
           case _ => false
         case a: SpecializedShape => that.shape match
           case b: SpecializedShape => a.declaration.comparison == b.declaration.comparison &&
@@ -509,22 +514,9 @@ object MemberLookup:
     * except for private members as seen from outside their class (see Private). */
   def inClass(defn: ClassLikeDef, ext: Opt[TermShape], name: MemberKey)(using ResolutionContext): MemberLookup =
     def inherited = ext.fold[MemberLookup](Missing)(_.getMember(name))
-    ownMember(defn, name, inherited) match
+    MemberKey.own(defn, name) match
       case S(member) => own(defn, member, Found(member, Nil), inherited)
       case N => inherited
-
-  /** An inherited source alias still denotes the same runtime symbol property.
-    * A subclass can override it under another alias; lookup must select that
-    * implementation rather than the hidden parent's inferred body.
-    */
-  def ownMember(defn: ClassLikeDef, name: MemberKey, inherited: => MemberLookup): Opt[BlockMemberSymbol] =
-    def symbol(info: MemberLookup): Opt[WellKnownSymbol] = info match
-      case Contextual(source, _) => symbol(source)
-      case Private(_, _, inherited) => symbol(inherited)
-      case Found(member, _) => MemberKey.symbol(member.memberSymbol)
-      case Declared(member, _, _, _, _) => MemberKey.symbol(member)
-      case _ => N
-    MemberKey.own(defn, name).orElse(symbol(inherited).flatMap(MemberKey.own(defn, _)))
   
   /** Hide a name only when all its definitions are private. A public companion keeps the name
     * available even when its class is private; checkAccess checks the interpretation actually selected.
@@ -649,7 +641,7 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   * Source declarations are witnesses for diagnostics and property selection, not
   * part of semantic equality: a merged field may have several such witnesses.
   */
-final class RecordTypeShape(val fields: Map[MemberKey, DeclaredType], val aliases: Map[Str, Set[WellKnownSymbol]])(
+final class RecordTypeShape(val fields: Map[MemberKey, DeclaredType], val aliases: Map[Str, Set[SymbolKey]])(
     val source: Term.Rcd, val declarations: Map[MemberKey, RcdField]) extends CoreHeadShape:
   def describe: Str = "record type"
   override def toString: Str = s"RecordTypeShape($fields)"
@@ -661,6 +653,18 @@ final class RecordTypeShape(val fields: Map[MemberKey, DeclaredType], val aliase
       case name: Str => aliases.getOrElse(name, Set.empty).toList.sortBy(_.name)
       case _ => Nil)
     MemberLookup.all(keys.map(key => MemberLookup.Typed(declarations(key), fields(key), Nil)))
+
+/** A conjunction exposes members supplied by any component. Keep nominal and
+  * structural interfaces together: `Iterator[T] & Iterable[T]` supplies `next`
+  * and the iteration method on the same value. Constraint inspection still
+  * visits the components separately, retaining every input and output flow.
+  */
+final class IntersectionView(val values: Ls[TermShape]) extends CoreHeadShape:
+  def describe: Str = "intersection type"
+  def toLoc: Opt[Loc] = values.headOption.flatMap(_.toLoc)
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
+    MemberLookup.all(values.map(_.getMember(name)))
+  override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool = values.exists(_.isInstanceOfClass(cls))
 
 /** An instance described by a type, in either position of a constraint. Keep the
   * type reference intact during transport: expanding it to its current positive
@@ -946,7 +950,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
     case cls: ClassDef if cls.annotations.exists(_.isInstanceOf[Annot.Bufferable]) =>
       name match
         case name: Str => bufferedMembers.get(name).fold[MemberLookup](MemberLookup.Missing)(MemberLookup.Found(_, Nil))
-        case _: WellKnownSymbol => MemberLookup.Missing
+        case _: SymbolKey => MemberLookup.Missing
     case _: TermDefinition => MemberLookup.Missing
     case _ => MemberLookup.Missing
   def toLoc: Opt[Loc] = defn.sym.toLoc

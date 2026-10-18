@@ -75,36 +75,36 @@ declare class RegExp {
 declare module RegExp
 
 declare class Set[V] {
-  @jsSymbol("iterator") fun iterator(): Iterator[V]
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[V] & Iterable[V]
   val size: Int
   fun add(value: V): Set[V]
   fun has(value: V): Bool
   fun delete(value: V): Bool
   fun clear(): undefined
-  fun values(): Iterator[V]
+  fun values(): Iterator[V] & Iterable[V]
   fun union(other: Set[V]): Set[V]
   fun difference(other: Set[V]): Set[V]
 }
 declare module Set
 
 declare class Map[K, V] {
-  @jsSymbol("iterator") fun iterator(): Iterator[[K, V]]
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[[K, V]] & Iterable[[K, V]]
   val size: Int
   fun get(key: K): V | undefined
   fun has(key: K): Bool
   fun delete(key: K): Bool
   fun clear(): undefined
   fun id"set"(key: K, value: V): Map[K, V]
-  fun keys(): Iterator[K]
-  fun values(): Iterator[V]
-  fun entries(): Iterator[[K, V]]
+  fun keys(): Iterator[K] & Iterable[K]
+  fun values(): Iterator[V] & Iterable[V]
+  fun entries(): Iterator[[K, V]] & Iterable[[K, V]]
   fun forEach(f: (V, drop K, drop Map[K, V]) -> Any): undefined
 }
 
 declare class Iterator[out T] {
-  @jsSymbol("iterator") fun iterator(): Iterator[T]
   fun next(): { value: T, done: Bool }
 }
+type Iterable[out A] = {@annotations.jsSymbol(Symbol.iterator) iterator: () -> Iterator[A]}
 
 declare module Map
 
@@ -206,7 +206,7 @@ declare class Num {
 }
 declare class Int extends Num
 declare class Str {
-  @jsSymbol("iterator") fun iterator(): Iterator[Str]
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[Str] & Iterable[Str]
   val length: Int
   fun toString(): Str
   fun at(index: Int): Str | undefined
@@ -243,14 +243,14 @@ declare class Class
 // the `.class` storage used by generated MLscript constructor functions.
 // The `val length` parameter also supports matching with `Array(length)`.
 declare class Array[T](val length: Int) {
-  @jsSymbol("iterator") fun iterator(): Iterator[T]
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[T] & Iterable[T]
   fun join(...separators): Str
   fun reverse(): Array[T]
   fun sort(...compare): Array[T]
   fun slice(...bounds): Array[T]
   fun copyWithin(target: Int, start: Int, ...end): Array[T]
-  fun entries(): Iterator[[Int, T]]
-  fun keys(): Iterator[Int]
+  fun entries(): Iterator[[Int, T]] & Iterable[[Int, T]]
+  fun keys(): Iterator[Int] & Iterable[Int]
   fun toReversed(): Array[T]
   fun toSorted(...compare): Array[T]
   fun toSpliced(start: Int, ...items): Array[T]
@@ -292,18 +292,6 @@ declare module Array {
     concat
     isArray
   val prototype: Array[Any]
-}
-
-declare class Symbol {
-  val description: Str | undefined
-}
-declare fun Symbol(...description): Symbol
-declare module Symbol {
-  // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
-  // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
-  // uninitialized `runtime` in the `Rendering` module.
-  fun for: Str -> Any = ()
-  val iterator: Any
 }
 
 // MLwasm-specific types
@@ -562,6 +550,8 @@ declare module debug {
 
 declare module annotations {
   object pure
+  object fresh
+  fun jsSymbol(path: Any)
   object untyped
   object tailrec
   object tailcall
@@ -572,6 +562,18 @@ declare module annotations {
   object bufferable
   object generator
   object async
+}
+
+declare class Symbol {
+  val description: Str | undefined
+}
+declare fun Symbol(...description): Symbol
+declare module Symbol {
+  // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
+  // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
+  // uninitialized `runtime` in the `Rendering` module.
+  fun for: Str -> Symbol = ()
+  @annotations.fresh val iterator: Symbol
 }
 
 declare module handlers {
@@ -610,6 +612,5 @@ declare open class HTMLElement {
 // Shared read interfaces for arrays, strings, and lazy views. Element types are
 // covariant, so using these interfaces does not widen an invariant collection.
 type Indexable[out A] = {length: Int, at: Int -> A, slice: Function}
-type Iterable[out A] = {@jsSymbol("iterator") iterator: () -> Iterator[A]}
 type IterableIndexable[out A] = Indexable[A] & Iterable[A]
 

@@ -215,7 +215,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       override def applyPath(p: Path): Unit = p match
         // A direct superclass reference, like an extends or Instantiate operand, does not
         // let the class escape as a value. Its receiver still needs ordinary capture analysis.
-        case sel @ SuperSelect(qual, RefOfDefn(S(cls: ClassSymbol), _), _) =>
+        case sel @ SuperSelect(qual, RefOfDefn(S(cls: ClassSymbol), _), key) =>
+          applyPath(key)
           applyPath(qual)
           cls.traverse
           sel.symbol.traverse
@@ -246,13 +247,18 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           tsym.owner.foreach(_.traverse)
           sym.traverse
           applyPath(rhs)
-        case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
+        case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
             privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion)
         =>
           own.foreach(_.traverse)
           isym.traverse
           sym.traverse
           termCompanion.foreach(_.traverse)
+          // Computed names are evaluated when this class is defined. Moving the
+          // class out of its enclosing invocation could read a key before its
+          // initialization or share the first invocation's key with later calls.
+          if cls.methodKeys.nonEmpty || mod.exists(_.methodKeys.nonEmpty) then ignored += isym
+          cls.methodKeys.valuesIterator.foreach(applyPath)
           // Check if `extends` is a complex expression, i.e. not just extending a class.
           // If it's just a class, add it to an graph where edges are class extensions.
           // If B extends A, then A -> B is an edge
@@ -615,7 +621,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       N,
       N,
       N,
-    )(N, Nil)
+    )(N, Nil, Map.empty)
     
     (defn, sortedVars.iterator.map(x => (x.ctorSyms.local, x.valDefn.tsym)).toList)
   
@@ -664,7 +670,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           case Some(_) => die 
           case None => N
         
-        k(newCls.copy(companion = newComp)(newCls.configOverride, newCls.annotations))
+        k(newCls.copy(companion = newComp)(newCls.configOverride, newCls.annotations, newCls.methodKeys))
       case _ => super.applyDefn(defn)(k)
 
   /**
@@ -1003,7 +1009,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           preCtor = rewrittenPrector,
           privateFields = rewrittenPrivateFields,
           methods = newMtds,
-        )(obj.cls.configOverride, obj.cls.annotations)
+        )(obj.cls.configOverride, obj.cls.annotations, obj.cls.methodKeys)
         LifterResult(newCls, rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras)
       
 
@@ -1028,7 +1034,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           ctor = ctorWithCap,
           privateFields = rewrittenPrivateFields,
           methods = newMtds
-        )
+        )(obj.clsBody.methodKeys)
         LifterResult(newComp, rewriterCtor.extraDefns.toList ::: extras)
   
   class LiftedFunc(override val obj: ScopedObject.Func)(using ctx: LifterCtxNew) extends LiftedScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
@@ -1363,7 +1369,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxParams = newAuxList
       )(obj.cls.configOverride,
         if liftedFromStagedModule && !obj.cls.isStaged then Annot.Modifier(Keyword.`staged`)(N) :: obj.cls.annotations
-        else obj.cls.annotations)
+        else obj.cls.annotations, obj.cls.methodKeys)
       val extrasDefns = rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras
       LifterResult(newCls, flat :: extrasDefns)
   

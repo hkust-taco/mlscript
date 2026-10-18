@@ -12,7 +12,7 @@ open Stack { Nil, Cons }
 module Iter with ...
 
 open class IterableBase with
-  @jsSymbol("iterator") open fun iterator() = throw new Error("Not implemented: iterator()")
+  @annotations.jsSymbol(Symbol.iterator) open fun iterator() = throw new Error("Not implemented: iterator()")
 
   // require that subclasses are immutable
   fun toArray(): Array = [...this]
@@ -73,11 +73,12 @@ open class IterableBase with
 // * Implements the `IterableImpl` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol
 class IterableImpl(mk: () -> Iterator) extends IterableBase with
-  @jsSymbol("iterator") override fun iterator() = mk()
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator() = mk()
 
 // * Implements the `Iterator` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
-class IteratorImpl(val next: Function)
+class IteratorImpl(val next: Function) with
+  @annotations.jsSymbol(Symbol.iterator) fun iterator() = this
 
 module Result with
   class Next(val value) with

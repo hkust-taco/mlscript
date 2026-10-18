@@ -236,8 +236,8 @@ For a fixed argument-reference set, selection adds at most two nodes per referen
 
 Resolution is a best-effort check, not a type checker. Implicit spread observations
 must propagate known flows without rejecting an opaque or inconvenient protocol.
-They inspect every union and intersection component independently, just like
-constraint inspection. An unknown alternative joins the known elements; it never
+They preserve every union and intersection component. Member lookup combines
+an intersection's interfaces, while constraints inspect each component independently. An unknown alternative joins the known elements; it never
 replaces them. Definitively completed iterator results supply no element, while
 a missing or unknown `done` still permits observing `value`.
 
@@ -632,3 +632,27 @@ Worksheet coverage under `newres` includes `MutableArrays`, `ContextualInference
 generic call isolation, and escaping payloads. Deferred cases retain explicit
 regression expectations;
 see the [future-work reference](new-resolution-future-work.md).
+
+
+### Fresh property keys
+
+`@annotations.jsSymbol(path)` identifies a property by a stable path through modules and
+immutable vals. The terminal val's `@annotations.fresh` marker is a contract,
+not a type check or a proof about its initializer. Resolver key identity includes
+the receiver path, and direct immutable receiver aliases are normalized. Modules
+use their module symbol, independently of a companion function or class overload.
+Key recognition does not evaluate a val initializer or force alias expansion.
+
+Annotations on declared module members can be interpreted from the module's
+syntax before its value definitions complete. This matters for prelude bootstrap:
+`@annotations.fresh` must not require a runtime value from the declared
+`annotations` module. Builtin `Symbol` lookup is lazy so interpreting an unrelated
+annotation does not require `Symbol` to be present in an earlier prelude block.
+Completed overload sets are published as soon as their definitions are available,
+allowing a subsequent annotation to select through an earlier immutable val.
+
+Lowering records computed names as explicit class operands and selected keys as
+explicit path operands. Transformations therefore retain their imports and
+captures and substitute their symbols. Computed names are evaluated in the
+class's enclosing scope. Lifting cannot move such a class out of the invocation
+that evaluates its keys; doing so could reuse a key or read it before initialization.

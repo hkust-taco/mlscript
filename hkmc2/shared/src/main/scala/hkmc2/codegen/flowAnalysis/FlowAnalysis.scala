@@ -159,6 +159,7 @@ object MemberRefTo:
       locally:
         p match
           case Select(qual, _) => S(qual)
+          case KeyedSelect(qual, _, _) => S(qual)
           case SuperSelect(qual, _, _) => S(qual)
           case _ => N
 
@@ -610,7 +611,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
         if ctxTracker.isEnclosingMatchScrutSym(disamb) =>
           applyValueMemberRef(v, recordAffinity = false)
       case _ => applyPath(qual)
-    case p: (Select | SuperSelect) =>
+    case p: (Select | SuperSelect | KeyedSelect) =>
       super.applyPath(p)
     case c: Cast => applyResult(c.value)
     case v: Value => applyValue(v)
@@ -653,6 +654,8 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case cls@ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion)
     =>
+      cls.methodKeys.valuesIterator.foreach(applyPath)
+      mod.foreach(_.methodKeys.valuesIterator.foreach(applyPath))
       ctxTracker.inCls(cls):
         paramsOpt.foreach(applyParamList)
         auxParams.foreach(applyParamList)
@@ -917,6 +920,7 @@ class FlowConstraintsCollector(
         cc.constrain(funProdStrat, generatedVars(fun.dSym))
     
     def processClsLikeDefn(cls: ClsLikeDefn)(using cc: ConstraintsCollector): Unit =
+      cls.methodKeys.valuesIterator.foreach(constrainOpaqueResult)
       cls.privateFields.foreach(sym => generatedVars(sym).constrainOpaque)
       cls.publicFields.foreach: (_, tsym) =>
         generatedVars(tsym).constrainOpaque
@@ -927,6 +931,7 @@ class FlowConstraintsCollector(
       processBlock(cls.preCtor)(using cc, UnknownCons)
       processBlock(cls.ctor)(using cc, UnknownCons)
       cls.companion.foreach: mod =>
+        mod.methodKeys.valuesIterator.foreach(constrainOpaqueResult)
         mod.privateFields.foreach(sym => generatedVars(sym).constrainOpaque)
         mod.publicFields.foreach: (_, tsym) =>
           generatedVars(tsym).constrainOpaque
@@ -1058,13 +1063,24 @@ class FlowConstraintsCollector(
         case p: Path =>
           p match
           case refSite@FunRef(f, selectedFrom) =>
+            refSite match
+              case KeyedSelect(_, key, _) => cc.constrain(processResult(key), UnknownCons)
+              case SuperSelect(_, base, key) =>
+                cc.constrain(processResult(base), UnknownCons)
+                cc.constrain(processResult(key), UnknownCons)
+              case _ => ()
             for qual <- selectedFrom do
               cc.constrain(processResult(qual), UnknownCons)
             funsToProdStratScheme.get(f) match
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
             case None => generatedVars(f)
-          case s @ SuperSelect(qual, base, _) =>
+          case KeyedSelect(qual, key, sym) =>
+            cc.constrain(processResult(qual), UnknownCons)
+            cc.constrain(processResult(key), UnknownCons)
+            generatedVars(sym)
+          case s @ SuperSelect(qual, base, key) =>
+            cc.constrain(processResult(key), UnknownCons)
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(base), UnknownCons)
             generatedVars(s.symbol)

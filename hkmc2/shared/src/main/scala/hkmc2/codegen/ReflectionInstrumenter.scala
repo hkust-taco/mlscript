@@ -187,6 +187,10 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           transformPath(qual): x =>
             transformPath(fld): y =>
               blockCtor("DynSelect", Ls(x, y, toValue(arrayIdx)), "dynsel")(k)
+        case KeyedSelect(qual, key, _) =>
+          transformPath(qual): x =>
+            transformPath(key): y =>
+              blockCtor("DynSelect", Ls(x, y, toValue(false)), "dynsel")(k)
         case Cast(value, target, check) =>
           transformResult(value): v =>
             blockCtor("Symbol", Ls(toValue(target.describe)), "target"): t =>
@@ -414,17 +418,17 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
               .unzip
             val newModule = c.copy(methods = c.methods ++ stagedMethods)(c.configOverride, c.annotations.filter:
               case Annot.Modifier(Keyword.`staged`) => false
-              case _ => true)
+              case _ => true, c.methodKeys)
             Define(newModule, rest)
           case b => b
       val newCtor = genCls.applyBlock(companion.ctor)
       val newCompanion = companion.copy(
         methods = stagedCtor :: companion.methods ++ stagedMethods,
         ctor = Begin(newCtor, debugCont(End())),
-      )
+      )(companion.methodKeys)
       val newModule = c.copy(sym = sym, companion = S(newCompanion))(c.configOverride, c.annotations.filter:
         case Annot.Modifier(Keyword.`staged`) => false
-        case _ => true)
+        case _ => true, c.methodKeys)
       Define(newModule, rest)
     case b => b
 

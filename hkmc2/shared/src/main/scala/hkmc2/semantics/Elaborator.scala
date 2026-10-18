@@ -309,7 +309,7 @@ object Elaborator:
       val Object = assumeBuiltinCls("Object")
       val Array = assumeBuiltinCls("Array")
       val TypedArray = assumeBuiltinCls("TypedArray")
-      val Symbol = assumeBuiltinCls("Symbol")
+      lazy val Symbol = assumeBuiltinCls("Symbol")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
       class VirtualModule private(val module: ModuleOrObjectSymbol, val bms: BlockMemberSymbol):
         def this(module: ModuleOrObjectSymbol) =
@@ -400,6 +400,8 @@ object Elaborator:
       object debug extends VirtualModule(assumeBuiltinMod("debug")):
         val printStack = assumeObject("printStack")
       object annotations extends VirtualModule(assumeBuiltinMod("annotations")):
+        lazy val fresh = assumeObject("fresh")
+        lazy val jsSymbol = assumeObject("jsSymbol")
         val untyped = assumeObject("untyped")
         val tailrec = assumeObject("tailrec")
         val tailcall = assumeObject("tailcall")
@@ -832,8 +834,6 @@ extends Importer:
       | Keyword.`public`
       | Keyword.`private`
     )) => S(Annot.Modifier(kw)(tree.toLoc))
-    case App(Ident("jsSymbol"), Tup(StrLit("iterator") :: Nil)) =>
-      S(Annot.JsSymbol(WellKnownSymbol.Iterator)(tree.toLoc))
     case App(Ident("config"), Tup(args)) =>
       val modify = ConfigParser.parseOverrides(args)
       S(Annot.Config(modify)(tree.toLoc))
@@ -847,6 +847,15 @@ extends Importer:
         symbol match
         case S(sym) =>
           sym match
+          case ctx.builtins.annotations.fresh =>
+            return S(Annot.Fresh()(tree.toLoc))
+          case ctx.builtins.annotations.jsSymbol =>
+            return trm.withoutCaptures match
+              case Term.App(_, Term.Tup(Fld(_, path, N) :: Nil)) =>
+                symbolKey(path, required = true).map(Annot.JsSymbol(_)(tree.toLoc))
+              case _ =>
+                raise(ErrorReport(msg"@jsSymbol requires one stable path to a val marked @annotations.fresh." -> tree.toLoc :: Nil))
+                N
           case ctx.builtins.annotations.untyped =>
             return S(Annot.Untyped()(tree.toLoc))
           case ctx.builtins.annotations.tailcall =>
@@ -1309,16 +1318,7 @@ extends Importer:
     */
   private def recordFieldScope(field: RcdField)(using Ctx): RcdField =
     rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
-    def isSymbolModule(prefix: Term): Bool = prefix.withoutCaptures match
-      case ref: NewRefImpl => ref.sym is ctx.builtins.SymbolModule.bms
-      case Term.Ref(symbol) => symbol is ctx.builtins.SymbolModule.bms
-      case _ => false
-    val key = field.field.withoutCaptures match
-      case selection: Term.NewSel if selection.id.name == "iterator" && isSymbolModule(selection.prefix) =>
-        S(WellKnownSymbol.Iterator)
-      case selection: Term.Sel if selection.nme.name == "iterator" && isSymbolModule(selection.prefix) =>
-        S(WellKnownSymbol.Iterator)
-      case _ => field.key
+    val key = field.key.orElse(symbolKey(field.field, required = false))
     field.copy()(key)
   
   /** An async expression wraps the values of `target` in a promise, whose payload
@@ -2184,6 +2184,18 @@ extends Importer:
       ):
     
     val members = blk.definedSymbols.toMap
+    // A qualified annotation can need a preceding val's receiver before the
+    // enclosing block finishes. Publish a member once all its overloads have
+    // definitions; waiting for unrelated later statements needlessly hides that
+    // receiver. The final completion pass still releases malformed definitions.
+    def completeIfReady(member: BlockMemberSymbol): Unit =
+      if member.trees.forall:
+          case td: Tree.TypeDef => td.symbol.defn.nonEmpty
+          case _: Tree.TermDef => member.asTrm.flatMap(_.defn).exists: defn =>
+            // A separate signature is elaborated before the implementation;
+            // listeners must observe the final symbol and body together.
+            member.trmImplTree.isEmpty || defn.body.nonEmpty
+      then member.complete()
     val fieldInterpretation = resultInterp.elements
     val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures
     
@@ -2576,6 +2588,7 @@ extends Importer:
               
               tdf
             
+            completeIfReady(sym)
             go(sts, Nil, tdf :: acc)(N)
           case L(d) =>
             reportUnusedAnnotations
@@ -2899,6 +2912,7 @@ extends Importer:
               clsSym.defn = S(cd)
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
+        completeIfReady(sym)
         go(sts, Nil, defn :: acc)(N)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)(statementLoc)

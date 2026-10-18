@@ -170,6 +170,8 @@ declare module debug with
 
 declare module annotations with
   object pure
+  object fresh
+  fun jsSymbol(path: Any)
   object untyped
   object tailrec
   object tailcall

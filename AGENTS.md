@@ -44,6 +44,12 @@ Do not change repository-local or global Git identity configuration.
 
 ## Design Philosophy
 
+**Confirm language-design decisions before implementing them.** Propose changes
+to source syntax, language semantics, or public library contracts and obtain the
+user's confirmation unless that specific design is already explicitly approved.
+Authorization to fix compiler behavior does not by itself authorize introducing
+annotations, changing member naming or dispatch rules, or extending public APIs.
+
 **Resolution is a best-effort check, not type checking.** Its purpose is to find
 usable targets for names, members, and calls. It may diagnose obvious mistakes,
 but it does not establish type safety, even in strict-resolution mode. A later

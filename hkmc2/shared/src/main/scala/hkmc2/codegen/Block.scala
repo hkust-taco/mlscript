@@ -340,7 +340,7 @@ sealed abstract class Block extends Product:
             val newCtor = c.ctor.flattened
             val newMethods = flattenMethods(c.methods)
             if (newCtor is c.ctor) && (newMethods is c.methods) then c
-              else c.copy(ctor = newCtor, methods = newMethods)
+              else c.copy(ctor = newCtor, methods = newMethods)(c.methodKeys)
           if (newPreCtor is c.preCtor)
           && (newCtor is c.ctor)
           && (newMethods is c.methods)
@@ -351,7 +351,7 @@ sealed abstract class Block extends Product:
             ctor = newCtor,
             methods = newMethods,
             companion = newCompanion,
-          )(c.configOverride, c.annotations)
+          )(c.configOverride, c.annotations, c.methodKeys)
       
       val newRest = rest.flatten(k)
       if (newDefn is defn) && (newRest is rest)
@@ -616,7 +616,7 @@ object HandleBlock:
       N,
       N,
       N,
-    )(N, Nil)
+    )(N, Nil, Map.empty)
 
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
@@ -667,12 +667,14 @@ sealed abstract class Defn:
       // * Simple heuristic. TODO: check the purity of the ctor somehow? (ignore pure local field inits)
       c.companion.isEmpty
         && (!(c.k is syntax.Obj) || c.ctor.isEmpty)
+        && c.methodKeys.valuesIterator.forall(_.isPure)
   
   def subBlocks: Ls[Block] = this match
     case FunDefn(body = body) => body :: Nil
     case _: ValDefn => Nil
-    case ClsLikeDefn(preCtor = preCtor, ctor = ctor, methods = mtds, companion = comp) =>
-      preCtor :: ctor :: mtds.flatMap(_.subBlocks) ::: comp.toList.flatMap(_.subBlocks)
+    case cls @ ClsLikeDefn(preCtor = preCtor, ctor = ctor, methods = mtds, companion = comp) =>
+      preCtor :: ctor :: mtds.flatMap(_.subBlocks) ::: comp.toList.flatMap(_.subBlocks) :::
+        cls.methodKeys.valuesIterator.flatMap(_.subBlocks).toList
   
   // * Note that `privateFields` abd `publicFields` can't possibly be free since they are never
   // * referred to directly (they are only accessed through selections).
@@ -684,7 +686,7 @@ sealed abstract class Defn:
         // * Value definitions without an owner are similar to local variables;
         // * they need to be declared with `let` in JS, which is why we add them here.
         vd.sym.optionIf(tsym.owner.isEmpty)
-    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
+    case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
       preCtor.freeVars
         ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
@@ -692,12 +694,13 @@ sealed abstract class Defn:
         ++ stat.iterator.flatMap(_.freeVars)
         ++ sym.optionIf(own.isEmpty)
         ++ parentSym.iterator.flatMap(_.freeVars)
+        ++ cls.methodKeys.valuesIterator.flatMap(_.freeVars)
   
   lazy val size: Int = this match
     case FunDefn(_, _, _, params, body) => 1 + body.size
     case ValDefn(_, _, rhs) => 1
-    case ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
-      1 + methods.map(_.size).sum + preCtor.size + ctor.size + stat.fold(0)(_.size)
+    case cls @ ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
+      1 + methods.map(_.size).sum + preCtor.size + ctor.size + stat.fold(0)(_.size) + cls.methodKeys.valuesIterator.map(_.size).sum
   
 
 final case class FunDefn(
@@ -799,11 +802,13 @@ private[codegen] object InlinerBodySummary:
           recordFunction(fun, false)
         case cls: ClsLikeDefn =>
           cls.parentPath.foreach(applyPath)
+          cls.methodKeys.valuesIterator.foreach(applyPath)
           cls.methods.foreach(recordFunction(_, true))
           withoutCallGraphSource:
             applySubBlock(cls.preCtor)
             applySubBlock(cls.ctor)
           cls.companion.foreach: module =>
+            module.methodKeys.valuesIterator.foreach(applyPath)
             module.methods.foreach(recordFunction(_, true))
             // The module constructor is run with the enclosing constructor and therefore inherits
             // whether its surrounding block has a call-graph source.
@@ -927,6 +932,8 @@ final case class ClsLikeDefn(
 )(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
+    // Computed names run in the class's enclosing scope, before any constructor.
+    val methodKeys: Map[TermSymbol, Path],
 ) extends Defn:
   require(k isnt syntax.Mod)
   isym match
@@ -946,6 +953,11 @@ final case class ClsLikeDefn(
     c.methods.foreach: m =>
       m.dSym.irDefn = S(m)
   val defnSym = S(isym)
+  override def equals(obj: Any): Bool = obj match
+    case that: ClsLikeDefn => productIterator.sameElements(that.productIterator) &&
+      configOverride == that.configOverride && annotations == that.annotations && methodKeys == that.methodKeys
+    case _ => false
+  override def hashCode: Int = (productIterator.toList, configOverride, annotations, methodKeys).hashCode
 
 
 // * This is only supposed to be for companion module definitions (notably, not for `object`)
@@ -956,16 +968,20 @@ final case class ClsLikeBody(
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
     ctor: Block,
     annotations: Ls[Annot],
-):
+)(val methodKeys: Map[TermSymbol, Path]):
+  override def equals(obj: Any): Bool = obj match
+    case that: ClsLikeBody => productIterator.sameElements(that.productIterator) && methodKeys == that.methodKeys
+    case _ => false
+  override def hashCode: Int = (productIterator.toList, methodKeys).hashCode
   lazy val visibility: Visibility = Visibility.of(annotations)
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
     case _ => false
   def subBlocks: Ls[Block] =
-    ctor :: methods.flatMap(_.subBlocks)
+    ctor :: methods.flatMap(_.subBlocks) ::: methodKeys.valuesIterator.flatMap(_.subBlocks).toList
   lazy val freeVars: Set[FreeSymbol] =
-    ctor.freeVars ++ methods.flatMap(_.freeVars)
-  lazy val size = 1 + methods.map(_.size).sum + ctor.size
+    ctor.freeVars ++ methods.flatMap(_.freeVars) ++ methodKeys.valuesIterator.flatMap(_.freeVars)
+  lazy val size = 1 + methods.map(_.size).sum + ctor.size + methodKeys.valuesIterator.map(_.size).sum
 
 /*
 object ClsLikeBody:
@@ -1035,6 +1051,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case Value.This(sym) => s"this[${sym.showDbg}]"
     case Value.Lit(lit) => lit.idStr
     case Select(q, n) => s"Select(${q.showDbg}, ${n.showDbg})"
+    case KeyedSelect(q, key, _) => s"KeyedSelect(${q.showDbg}, ${key.showDbg})"
     case SuperSelect(q, base, n) => s"SuperSelect(${q.showDbg}, ${base.showDbg}, ${n.showDbg})"
     case DynSelect(q, fld, arrayIdx) => s"DynSelect(${q.showDbg}, ${fld.showDbg}, $arrayIdx)"
     case Call(fun, argss) => s"Call(${fun.showDbg}, [${
@@ -1064,7 +1081,8 @@ sealed abstract class Result extends Located, HasErasedType:
     case _: Value => true
     case sel @ Select(q, n) =>
       q.isPure && sel.symbol.exists(_.isPure)
-    case sel @ SuperSelect(q, base, _) => q.isPure && base.isPure && sel.symbol.isPure
+    case KeyedSelect(q, key, sym) => q.isPure && key.isPure && sym.isPure
+    case sel @ SuperSelect(q, base, key) => q.isPure && base.isPure && key.isPure && sel.symbol.isPure
     case c @ Call(fun, ass) if c.isKnownUnsaturatedCall =>
       fun.isPure && ass.forall(_.forall(a => a.spread.isEmpty && a.value.isPure))
     case Call(Value.SimpleRef(bs: BuiltinSymbol), ass) if bs.isPure =>
@@ -1081,7 +1099,8 @@ sealed abstract class Result extends Located, HasErasedType:
     case Call(fun, argss) => fun.subBlocks ::: argss.flatten.flatMap(_.value.subBlocks)
     case Instantiate(mut, cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
-    case SuperSelect(qual, base, _) => qual.subBlocks ::: base.subBlocks
+    case KeyedSelect(qual, key, _) => qual.subBlocks ::: key.subBlocks
+    case SuperSelect(qual, base, key) => qual.subBlocks ::: base.subBlocks ::: key.subBlocks
     case Lambda(params, body) => body :: Nil
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
@@ -1091,7 +1110,8 @@ sealed abstract class Result extends Located, HasErasedType:
     case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.iterator.flatten.flatMap(_.value.freeVars).toSet
     case Cast(value, _, _) => value.freeVars
     case Select(qual, name) => qual.freeVars
-    case SuperSelect(qual, base, _) => qual.freeVars ++ base.freeVars
+    case KeyedSelect(qual, key, _) => qual.freeVars ++ key.freeVars
+    case SuperSelect(qual, base, key) => qual.freeVars ++ base.freeVars ++ key.freeVars
     case Lambda(params, body) => body.freeVars -- params.paramSyms
     case Tuple(mut, elems) => elems.iterator.flatMap(_.value.freeVars).toSet
     case Record(mut, args) =>
@@ -1107,7 +1127,8 @@ sealed abstract class Result extends Located, HasErasedType:
     case Instantiate(mut, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
     case Cast(value, _, _) => value.size
     case Select(qual, name) => qual.size
-    case SuperSelect(qual, base, _) => qual.size + base.size
+    case KeyedSelect(qual, key, _) => qual.size + key.size
+    case SuperSelect(qual, base, key) => qual.size + base.size + key.size
     case Lambda(params, body) => 1 + body.size
     case Tuple(mut, elems) => elems.iterator.map(_.value.size).sum
     case Record(mut, args) => args.iterator.map(arg => arg.idx.fold(0)(_.size) + arg.value.size).sum
@@ -1154,6 +1175,7 @@ sealed abstract class Result extends Located, HasErasedType:
     // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
     // * unresolved selection (dynamic field access) stays unknown.
     case sel: SuperSelect => sel.symbol.erasedType
+    case KeyedSelect(_, _, sym) => sym.erasedType
     case sel @ Select(_, _) => sel.symbol match
       case S(ts: TermSymbol) => ts.erasedType
       // * A class reference is the class object, so it stays unknown.
@@ -1358,6 +1380,7 @@ sealed abstract class Path extends TrivialResult:
     case ref: Value.MemberRef => S(ref.disamb)
     case sel: Select => sel.symbol
     case sel: SuperSelect => S(sel.symbol)
+    case KeyedSelect(_, _, sym) => S(sym)
     case _ => N
 
 /**
@@ -1367,12 +1390,18 @@ case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol
   def withLoc(loc: Opt[Loc]): Select = if loc == toLoc then this else copy()(symbol, loc)(sanitize)
   def extraInfo(using DebugPrinter): Str = symbol.map(s => s"sym=${s.showAsPlain}").mkString
 
+/** A statically resolved member with a computed runtime key. The key is an
+  * operand, so captures, imports, substitution and lifting see its dependencies.
+  */
+case class KeyedSelect(qual: Path, key: Path, symbol: TermSymbol)(val toLoc: Opt[Loc]) extends Path:
+  def withLoc(loc: Opt[Loc]): KeyedSelect = if loc == toLoc then this else copy()(loc)
+
 /** Direct lookup on the lexical parent's prototype, with the original receiver as `this`.
   * `base` is the same stable parent operand used by the class definition: a direct class
   * reference or a previously evaluated value. No extends expression is re-evaluated at a
   * super call. Both operands are explicit so lifting and inlining preserve their bindings.
   */
-case class SuperSelect(qual: Path, base: Path, name: Tree.Ident)(val symbol: TermSymbol, val toLoc: Opt[Loc]) extends Path:
+case class SuperSelect(qual: Path, base: Path, key: Path)(val symbol: TermSymbol, val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): SuperSelect = if loc == toLoc then this else copy()(symbol, loc)
 
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool)(val toLoc: Opt[Loc]) extends Path:
@@ -1447,6 +1476,7 @@ object TermSymbolPath:
       case S(sym: TermSymbol) => S(sym)
       case _ => N
     case selection: SuperSelect => S(selection.symbol)
+    case KeyedSelect(_, _, sym) => S(sym)
     case _ => N
 
 case class Arg(spread: Opt[SpreadKind], value: Path)
