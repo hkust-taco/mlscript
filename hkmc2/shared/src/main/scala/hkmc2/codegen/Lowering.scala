@@ -1899,7 +1899,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case TermDefinition(k = syntax.Fun) => ()
         case _ => warn(a)
       case _: Annot.Config => () // Config annotations are handled during FunDefn creation
-      case _: Annot.Debug => () // Debug annotations are handled during definition lowering
+      case a: Annot.Debug => target match
+        case _: Definition => () // Debug annotations are handled during definition elaboration and lowering
+        case _ => warn(a)
       case annot => warn(annot)
   
   def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =

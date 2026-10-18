@@ -40,3 +40,20 @@ mixed_local()
 //│ ╙──      	     ^^^^^^^^^^^^^^
 //│ Lowering.term 57
 //│ = 57
+
+
+// Annotations on statements other than definitions have no effect.
+:w
+@dbg('lowering) let not_a_definition = 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.47: 	@dbg('lowering) let not_a_definition = 1
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ not_a_definition = 1
+
+:w
+fun local_let() =
+  @dbg('lowering) let not_a_definition = 2
+  not_a_definition
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.55: 	  @dbg('lowering) let not_a_definition = 2
+//│ ╙──      	  ^^^^^^^^^^^^^^^
