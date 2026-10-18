@@ -1407,7 +1407,7 @@ extends Importer:
       * or droppable, as in `(Int, drop Int) -> Int`. */
     def funTyParams(lhs: Tree): Term = lhs match
       case tree @ Tup(fields) =>
-        val elems = fields.map:
+        val namedElems = fields.map:
           case PrefixApp(Keywrd(Keyword.`drop`), field) => fld(field, Tpe) match
             case f: Fld => f.copy(flags = f.flags.copy(droppable = true))
             case spd: Spd => spd.copy(droppable = true)
@@ -1417,6 +1417,12 @@ extends Importer:
           case field @ InfixApp(Optional(id: Ident), Keywrd(Keyword.`:`), rhs) =>
             Fld(FldFlags.empty.copy(opt = true), Term.Lit(StrLit(id.name).withLocOf(id)), S(optionalType(arg(rhs, Tpe), field.toLoc)))
           case field => fld(field, Tpe)
+        // Parameter names label positions; they are not singleton string types.
+        // Normalize named fields here so resolution, erasure, and other consumers
+        // all read the parameter type from the same tuple element.
+        val elems = namedElems.map:
+          case f @ Fld(_, _, S(tpe)) => f.copy(term = tpe, asc = N)
+          case elem => elem
         // * Check the same constraints as `params`, tracking whether an optional parameter (`seenOpt`)
         // * and a variadic parameter (`seenVariadic`) were seen.
         fields.lazyZip(elems).foldLeft((false, false)):
