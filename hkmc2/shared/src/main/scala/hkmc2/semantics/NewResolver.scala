@@ -1823,8 +1823,8 @@ class NewResolver:
       (using ResolutionContext): Unit =
     parameters.foreach: parameter =>
       val instance = ContextualType(parameterType(parameter.parameter).instantiate(substitution), Nil)
-      parameter.lower.foreach(bound => constrainTypes(ContextualType(bound.instantiate(substitution), Nil), instance))
-      parameter.upper.foreach(bound => constrainTypes(instance, ContextualType(bound.instantiate(substitution), Nil)))
+      parameter.lower.foreach(bound => constrainTypes(ContextualType(bound.instantiate(substitution), Nil), instance, N))
+      parameter.upper.foreach(bound => constrainTypes(instance, ContextualType(bound.instantiate(substitution), Nil), N))
 
   /** Consume the scheme at its authoritative site. Specialized values and curried
     * tails carry instantiated references and no scheme, so later calls reuse it.
@@ -1863,23 +1863,26 @@ class NewResolver:
       resultSignature(definition).foreach: sign =>
         val expected = declaredType(typeResolution(sign), Map.empty)
         listenResult(body): shape =>
-          inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil)
+          inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil, S(body))
 
   def checkAscription(body: Term, sign: Term)(using ResolutionContext): Unit =
     val expected = declaredType(typeResolution(sign), Map.empty)
     listenTerm(body): shape =>
-      inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil)
+      inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil, S(body))
 
   /** Keep both endpoints symbolic. Register before following either endpoint,
     * so recursive references reuse the relation even before any bound exists.
     */
-  private[semantics] def constrainTypes(lower: ContextualType, upper: ContextualType)(using ResolutionContext): Unit =
+  private[semantics] def constrainTypes(lower: ContextualType, upper: ContextualType, site: Opt[Term])(using ResolutionContext): Unit =
     if rctx.state.typeRelations.add((lower, upper)) then
       instanceShape(lower.tpe).exit(lower.marks).enter(upper.marks) match
-        case value: TermShape => inferTypeArguments(upper.tpe, value, upper.marks)
+        case value: TermShape => inferTypeArguments(upper.tpe, value, upper.marks, site)
         case NoShape => ()
 
-  private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
+  // Keep the first diagnostic use site outside the semantic constraint key, so
+  // reporting provenance does not multiply identical edges in the inference graph.
+  private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks],
+      site: Opt[Term])(using ResolutionContext): Unit =
     if !rctx.addTypeConstraint(tpe, value, marks) then return
     val annotation = tpe.resolution.source
     def follow(tpe: DeclaredType, args: TypeApplication, captures: Ls[Marks],
@@ -1905,7 +1908,7 @@ class NewResolver:
                   case Marked(instance: InstanceShape, context) =>
                     val endpoint = if context == NoMarks then Nil else context :: Nil
                     value.exit(marks).enter(context) match
-                      case actual: TermShape => inferTypeArguments(instance.tpe, actual, endpoint)
+                      case actual: TermShape => inferTypeArguments(instance.tpe, actual, endpoint, site)
                       case NoShape => ()
                   case _ => ()
             else publishParameter(destination, lower)
@@ -1923,7 +1926,7 @@ class NewResolver:
           case NoShape => ()
         case TypeShape.Tuple(fields) => observe:
           case unknown @ Marked(_: UnknownValueShape, _) =>
-            fields.foreach(field => inferTypeArguments(declaredType(field, tpe), unknown, marks))
+            fields.foreach(field => inferTypeArguments(declaredType(field, tpe), unknown, marks, site))
           case Marked(tuple: TupleShape, context) =>
             fields.zipWithIndex.foreach: (field, index) =>
               tuple.getMember(index.toString) match
@@ -1931,7 +1934,7 @@ class NewResolver:
                   listenTupleField(element): shape =>
                     shape.exit(inner).exit(context) match
                       case value: TermShape =>
-                        inferTypeArguments(declaredType(field, tpe), value, marks)
+                        inferTypeArguments(declaredType(field, tpe), value, marks, site)
                       case NoShape => ()
                 case _ => ()
           case _ => ()
@@ -1947,8 +1950,8 @@ class NewResolver:
         // candidates through listenConstraintViews, avoiding candidate products.
         case TypeShape.Combined(formula) =>
           formula.orderedAtoms.foreach(atom => follow(atom.instantiate(tpe.instances), noTypeArguments, captures, next))
-        case TypeShape.Record(_, fields) => observe(constrainRecord(fields.map((field, sign) => field -> declaredType(sign, tpe)), _, marks))
-        case TypeShape.Function(_, _) => observe(constrainFunction(tpe, _, marks))
+        case TypeShape.Record(_, fields) => observe(constrainRecord(fields.map((field, sign) => field -> declaredType(sign, tpe)), _, marks, site))
+        case TypeShape.Function(_, _) => observe(constrainFunction(tpe, _, marks, site))
         case TypeShape.Polymorphic(_, _, body) =>
           follow(declaredType(body, tpe), args, captures, next)
         case TypeShape.Wildcard(input, _) => input.foreach(res => follow(declaredType(res, tpe.withPolarity(!tpe.positive)), args, captures, next))
@@ -1976,8 +1979,8 @@ class NewResolver:
             def constrain(param: TyParam, bound: DeclaredType, pattern: DeclaredType)(using ResolutionContext): Unit =
               listenArgumentParts(bound.instantiate(instances)): actual =>
                 listenArgumentParts(argumentType(pattern, param)): expected =>
-                  constrainTypes(ContextualType(actual.output, context), ContextualType(expected.output, Nil))
-                  constrainTypes(ContextualType(expected.input, Nil), ContextualType(actual.input, context))
+                  constrainTypes(ContextualType(actual.output, context), ContextualType(expected.output, Nil), site)
+                  constrainTypes(ContextualType(expected.input, Nil), ContextualType(actual.input, context), site)
             def originalParameters()(using ResolutionContext): Unit = cls.tparams.zip(arguments).foreach: (param, pattern) =>
               val bound = parameterType(TypeShape.Parameter(param.sym, param.sym.inferenceHost))
               constrain(param, argumentType(bound, param), pattern)
@@ -1992,7 +1995,7 @@ class NewResolver:
               case _: UnknownValueShape =>
                 cls.tparams.zip(arguments).foreach: (param, argument) =>
                   listenArgumentParts(argumentType(argument, param)): parts =>
-                    inferTypeArguments(parts.output, value, marks)
+                    inferTypeArguments(parts.output, value, marks, site)
               case ds: DefnShape =>
                 if ds.clsDef.contains(cls) then originalParameters() else ds.ext.foreach(parent)
               case base: BaseShape =>
@@ -2009,7 +2012,7 @@ class NewResolver:
           // A concrete target stays fixed, but must receive bounds that arrive
           // through a symbolic source later. Concrete mismatch reporting is
           // separate from retaining this obligation in the graph.
-          case Marked(_: InstanceShape, _) => listenConstraintViews(value)(inferTypeArguments(tpe, _, marks))
+          case Marked(_: InstanceShape, _) => listenConstraintViews(value)(inferTypeArguments(tpe, _, marks, site))
           case _ => ()
     // Alias expansion guards only unproductive cycles. Descending into a tuple,
     // nominal argument, or arrow installs another edge with its own cycle guard.
@@ -2020,10 +2023,10 @@ class NewResolver:
     * with additional properties from an actual record.
     */
   private def constrainRecord(fields: Ls[(RcdField, DeclaredType)],
-      actual: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
+      actual: TermShape, marks: Ls[Marks], site: Opt[Term])(using ResolutionContext): Unit =
     fields.foreach: (field, expected) =>
       val flow = rctx.fieldProjectionSite(field.sym)
-      def receive(value: TermShape)(using ResolutionContext): Unit = inferTypeArguments(expected, value, marks)
+      def receive(value: TermShape)(using ResolutionContext): Unit = inferTypeArguments(expected, value, marks, site)
       def member(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
         case MemberLookup.Contextual(source, substitution) => member(source, instances.withOverrides(substitution))
         case MemberLookup.Found(RecordMember(member, true), _) => receive(UnknownValueShape.at(member.rhs))
@@ -2049,11 +2052,19 @@ class NewResolver:
     * Read an implementation only while checking it against its declared interface;
     * calls through that interface continue to expose only the declared result.
     */
-  private[semantics] def constrainFunction(expected: DeclaredType, source: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
+  private[semantics] def constrainFunction(expected: DeclaredType, source: TermShape, marks: Ls[Marks],
+      site: Opt[Term])(using ResolutionContext): Unit =
     val ShapeParts(actual, instances, _) = shapeParts(source)
+    def arityError(expected: DeclaredType)(using ResolutionContext): Unit =
+      val messages =
+        msg"Callback parameter list does not match its declared function type." -> actual.toLoc ::
+        msg"The expected function type is declared here." -> expected.resolution.source.toLoc :: Nil
+      site match
+        case S(use) => resolError(use, messages)
+        case N => rctx.report(ErrorReport(messages))
     actual match
       case Marked(_: InstanceShape, _) =>
-        listenConstraintViews(actual)(constrainFunction(expected, _, marks))
+        listenConstraintViews(actual)(constrainFunction(expected, _, marks, site))
         return
       case _ => ()
     val context = actual.applicationHead._2
@@ -2072,48 +2083,29 @@ class NewResolver:
           case (params, _) :: tail =>
             val declared = callable.paramLists.head
             if callbackArityMismatch(Arity(params), declared) then
-              resolError(expected.resolution.source, msg"Callback parameter list does not match its declared function type." -> actual.toLoc :: Nil)
+              arityError(expected)
             else
-              (params.params.zip(declared.params) ::: params.trailingParams.zip(declared.trailing)).foreach: (param, sign) =>
-                sign.foreach: tpe =>
-                  listenTypeInstances(tpe): shape =>
-                    constrainParameterIn(param, shape.exit(expectedContext).enter(context), context, instances)
-              // The interface may supply fewer fixed arguments than the implementation
-              // accepts. Extra optional parameters receive either a rest element or
-              // undefined; a positional zip alone leaves their bodies unobserved.
-              params.params.drop(declared.params.length).foreach: param =>
-                constrainOmittedParameterIn(param, context, instances)
-                declared.rest.foreach: rest =>
-                  listenTypeInstances(rest)(listenInstanceViews(_): array =>
-                    listenArrayElements(array): shape =>
-                      constrainParameterIn(param, shape.exit(expectedContext).enter(context), context, instances)
-                    ())
-              params.variadic.map(_.param).foreach: rest =>
-                val fields = declared.params.drop(params.params.length).map:
-                  case S(tpe) => TupleShape.TypedField(tpe, Nil)
-                  case N => TupleShape.UnknownField(callable.source, Nil)
-                val suffix = if declared.hasRest
-                  then TupleShape.Unknown(callable.source, TupleShape.UnknownField(callable.source, Nil)) :: Nil
-                  else Nil
-                val tuple = TupleShape(callable.source, fields ::: suffix)(this)
-                constrainParameterIn(rest, tuple.exit(expectedContext).enter(context), context, instances)
+              val allParams = params.allParams
+              zipCallbackArguments(context, Arity(params), declared, callable.source, expectedContext)(
+                (index, shape) => constrainParameterIn(allParams(index), shape, context, instances, site),
+                index => constrainOmittedParameterIn(allParams(index), context, instances))
               callable.result.foreach: ret =>
                 tail match
                   case Nil => results: shape =>
                     shape.exit(context).enter(expectedContext) match
-                      case value: TermShape => inferTypeArguments(ret, value, marks)
+                      case value: TermShape => inferTypeArguments(ret, value, marks, site)
                       case NoShape => ()
                   case _ => matchLists(ret, tail)
           case Nil => ()
         case Marked(record: RecordTypeShape, _) =>
           constrainRecord(record.fields.iterator.map((name, tpe) => record.declarations(name) -> tpe).toList,
-            actual, marks)
+            actual, marks, site)
         case _ => ()
     actual match
       case Marked(_: UnknownValueShape, _) =>
         listenTypeViews(expected):
           case Marked(callable: CallableTypeShape, _) =>
-            callable.result.foreach(ret => inferTypeArguments(ret, actual, marks))
+            callable.result.foreach(ret => inferTypeArguments(ret, actual, marks, site))
           case _ => ()
       case Marked(givenType: CallableTypeShape, actualContext) =>
         listenTypeViews(expected):
@@ -2121,41 +2113,70 @@ class NewResolver:
             val domain = givenType.paramLists.head
             val expectedDomain = wanted.paramLists.head
             if callbackArityMismatch(Arity(domain), expectedDomain) then
-              resolError(expected.resolution.source, msg"Callback parameter list does not match its declared function type." -> actual.toLoc :: Nil)
+              arityError(expected)
             else
-              (domain.params.zip(expectedDomain.params) ::: domain.trailing.zip(expectedDomain.trailing)).foreach:
-                case (S(givenParam), S(wantedParam)) =>
-                  listenTypeInstances(wantedParam): shape =>
-                    shape.exit(expectedContext).enter(actualContext) match
-                      case value: TermShape => inferTypeArguments(givenParam, value, context)
-                      case NoShape => ()
-                case _ => ()
+              val allParams = domain.allParams
+              zipCallbackArguments(actualContext :: Nil, Arity(domain), expectedDomain, wanted.source, expectedContext)(
+                (index, shape) => allParams(index).foreach: tpe =>
+                  shape match
+                    case value: TermShape => inferTypeArguments(tpe, value, context, site)
+                    case NoShape => ()
+                , _ => ())
               wanted.result.foreach: ret =>
                 def receive(shape: TermShape)(using ResolutionContext): Unit = shape.exit(actualContext).enter(expectedContext) match
-                  case value: TermShape => inferTypeArguments(ret, value, marks)
+                  case value: TermShape => inferTypeArguments(ret, value, marks, site)
                   case NoShape => ()
                 listenCallableResult(givenType)(receive)
           case _ => ()
       case _ => matchLists(expected, actual.unappliedParams)
 
-  /** Whether a callback accepting `actual` arguments is incompatible with the parameters of its
-    * `expected` function type. The callback must not require an argument that callers may omit
-    * (i.e., more arguments than the required parameters of `expected`). Since functions ignore
-    * extra arguments (`runtime.checkArgs` only checks that enough arguments are passed),
-    * the callback may omit trailing parameters of `expected`, including its rest parameter,
-    * but only those marked droppable, as in `(T, drop Int, drop ...Array[Any]) -> U`:
-    * other parameters are meant to be used by implementations. Callback parameters beyond those
-    * of `expected` must be optional, in which case they are always `undefined`. */
+  /** Check obvious arity and droppability mismatches. Different variadic layouts
+    * need not agree: a callback may collect trailing arguments in its rest parameter
+    * or take fixed interface arguments from the end. More involved compatibility
+    * questions belong to type checking, rather than a structural-equality check.
+    */
   private def callbackArityMismatch(actual: Arity, expected: DeclaredParams): Bool =
-    if actual.trailing > 0 || expected.trailing.nonEmpty then
-      // Trailing parameters after a variadic parameter receive the last arguments,
-      // so we only accept callbacks with the same parameter structure as `expected`.
-      !(actual.hasRest && expected.hasRest && actual.leading == expected.params.length
-        && actual.leadingRequired == expected.leadingRequired && actual.trailing == expected.trailing.length)
+    actual.required > Arity(expected).required
+      || !actual.hasRest && expected.variadic.exists(!_.droppable)
+      || !actual.hasRest && expected.paramFlags.drop(actual.leading).exists(!_.droppable)
+
+  /** Fixed callback interfaces describe an ordinary argument tuple. For variable
+    * layouts, propagate the positions we can cheaply align, leaving ambiguous
+    * middle positions unknown instead of inventing positional correspondences.
+    */
+  private def zipCallbackArguments(mss: Ls[Marks], arity: Arity, declared: DeclaredParams, source: Term, marks: Marks)(
+      publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit,
+      omitted: Int => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+    def fields(types: Ls[Opt[DeclaredType]]): Ls[TupleShape.Fixed] = types.map:
+      case S(tpe) => TupleShape.TypedField(tpe, Nil)
+      case N => TupleShape.UnknownField(source, Nil)
+    def assign(index: Int, sign: Opt[DeclaredType]): Unit = sign.foreach: tpe =>
+      listenTypeInstances(tpe)(shape => publish(index, shape.exit(marks).enter(mss)))
+    if !declared.hasRest && declared.leadingRequired == declared.params.length then
+      zipTupleShapes(mss, arity, TupleShape(source, fields(declared.params))(this), marks)(publish, omitted)
     else
-      actual.required > expected.leadingRequired
-        || !actual.hasRest && expected.variadic.exists(!_.droppable)
-        || !actual.hasRest && expected.paramFlags.drop(actual.leading).exists(!_.droppable)
+      val alignedTail = arity.trailing == declared.trailing.length
+      val prefix = if alignedTail then arity.leading else arity.leadingRequired.min(declared.leadingRequired)
+      declared.params.take(prefix).zipWithIndex.foreach((sign, index) => assign(index, sign))
+      val suffix = declared.trailing.takeRight(arity.trailing)
+      suffix.zipWithIndex.foreach: (sign, index) =>
+        assign(arity.leading + 1 + arity.trailing - suffix.length + index, sign)
+      if alignedTail then
+        // Extra optional implementation parameters receive a rest element or undefined.
+        (declared.params.length until arity.leading).foreach: index =>
+          omitted(index)
+          declared.rest.foreach: rest =>
+            listenTypeInstances(rest)(listenInstanceViews(_): array =>
+              listenArrayElements(array)(shape => publish(index, shape.exit(marks).enter(mss)))
+              ())
+      if arity.hasRest then
+        val tuple = if alignedTail then
+          val suffix = if declared.hasRest
+            then TupleShape.Unknown(source, TupleShape.UnknownField(source, Nil)) :: Nil
+            else Nil
+          TupleShape(source, fields(declared.params.drop(arity.leading)) ::: suffix)(this)
+        else TupleShape.unknown(source)(this)
+        publish(arity.leading, tuple.exit(marks).enter(mss))
   
   private def listenSignatureResult(tpe: DeclaredType, count: Int)(listener: Listener)(using ResolutionContext): Unit =
     if count == 0 then listenTypeInstances(tpe)(listener)
@@ -2368,7 +2389,7 @@ class NewResolver:
           case nominal: NominalInstanceView => arrayElementType(nominal).foreach: element =>
             listenTerm(rhs): value =>
               value.enter(context) match
-                case value: TermShape => inferTypeArguments(element, value, context)
+                case value: TermShape => inferTypeArguments(element, value, context, S(rhs))
                 case NoShape => ()
           case _ => ()
 
@@ -2437,7 +2458,7 @@ class NewResolver:
       instances: TypeSubstitution)(using ResolutionContext): Unit =
     val params = ps.allParams
     zipArgumentShapes(mss, Arity(ps), args, src, funSh)(
-      (index, shape) => constrainParameterIn(params(index), shape, mss, instances),
+      (index, shape) => constrainParameterIn(params(index), shape, mss, instances, S(src)),
       index => constrainOmittedParameterIn(params(index), mss, instances))
 
   // Annotated optional parameters already include undefined in their declared type.
@@ -2447,18 +2468,18 @@ class NewResolver:
     if parameterSignature(param).isEmpty then
       val omitted = rctx.state.omittedArguments.getOrElseUpdate(new Identity(param),
         Lit(Tree.UnitLit(false).withLoc(param.toLoc)))
-      listenTerm(omitted)(constrainParameterIn(param, _, marks, instances))
+      listenTerm(omitted)(constrainParameterIn(param, _, marks, instances, N))
 
   private[semantics] def constrainParameter(p: Param, shape: TermShape | NoShape, marks: Ls[Marks])(using ResolutionContext): Unit =
-    constrainParameterIn(p, shape, marks, rctx.instances)
+    constrainParameterIn(p, shape, marks, rctx.instances, N)
 
   private def constrainParameterIn(p: Param, shape: TermShape | NoShape, marks: Ls[Marks],
-      instances: TypeSubstitution)(using ResolutionContext): Unit =
+      instances: TypeSubstitution, site: Opt[Term])(using ResolutionContext): Unit =
     shape match
       case NoShape => ()
       case sh: TermShape =>
         parameterSignature(p) match
-          case S(tpe) => inferTypeArguments(tpe.instantiate(instances), sh, marks)
+          case S(tpe) => inferTypeArguments(tpe.instantiate(instances), sh, marks, site)
           case N => publishParameter(p.sym, sh)(using rctx.withInstances(instances))
 
   private[semantics] def parameterSignature(p: Param)(using ResolutionContext): Opt[DeclaredType] =
@@ -3004,7 +3025,7 @@ class NewResolver:
         listenTypeArgument(parameter): bound =>
           bound.applicationHead._1 match
             case _: RigidTypeShape => ()
-            case _ => inferTypeArguments(instanceType(instance), instantiateShape(bound, substitution), marks)
+            case _ => inferTypeArguments(instanceType(instance), instantiateShape(bound, substitution), marks, N)
     substitution
 
   def appShape(source: TermShape, args: Term, res: App)(using ResolutionContext): Unit =
@@ -3057,7 +3078,7 @@ class NewResolver:
             else ps.trailing(index - ps.params.length - 1)
           ).foreach: tpe =>
             value match
-              case value: TermShape => inferTypeArguments(tpe, value, context :: Nil)
+              case value: TermShape => inferTypeArguments(tpe, value, context :: Nil, S(res))
               case NoShape => ()
           // The declared types of optional parameters already include `undefined`.
           , _ => ())

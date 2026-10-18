@@ -36,24 +36,10 @@ arr.map((..., ...) => 1)
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
 //│ ║  l.35: 	arr.map((..., ...) => 1)
 //│ ╙──      	              ^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.260: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in Arrays.mls:35
-//│ ║  l.35: 	arr.map((..., ...) => 1)
-//│ ╙──      	        ^^^^^^^^^^^^^^^
 //│ = [1, 1]
 
-:e
+:expect [[true, false], [true, false]]
 arr.map((..., e) => e)
-//│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.260: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in Arrays.mls:49
-//│ ║  l.49: 	arr.map((..., e) => e)
-//│ ╙──      	        ^^^^^^^^^^^^^
 //│ = [[true, false], [true, false]]
 
 arr.map(pass1(=> _ === false))
@@ -77,7 +63,7 @@ Array(1)
 :e
 Array()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.78: 	Array()
+//│ ║  l.64: 	Array()
 //│ ║        	^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
@@ -96,7 +82,7 @@ Array()
 :e
 Array(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.97: 	Array(1, 2, 3)
+//│ ║  l.83: 	Array(1, 2, 3)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 3
 //│ ║  in ../decls/Prelude.mls

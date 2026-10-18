@@ -1,0 +1,83 @@
+:.
+
+// A fixed interface supplies the last argument to the callback's trailing parameter.
+:expect [[2, 2], [2, 2]]
+[[1, 2].map((...prefix, arr) => arr.length), [1, 2].map((x, ...middle, arr) => arr.length)]
+//│ = [[2, 2], [2, 2]]
+
+// The same argument mapping applies to a callback with an explicit interface.
+:expect [2, 2]
+private fun named(...prefix: Array[Any], arr: Array[Int]): Int = arr.length
+[1, 2].map(named)
+//│ = [2, 2]
+
+// Different variadic layouts are not inherently incompatible. Keep cheaply known
+// positions and the rest's Array interface without enumerating possible lengths.
+:expect [3, 1]
+fun variadic(f: (Int, ...Array[Int], Str) -> Int) = f(1, 2, "tail")
+fun optional(f: (Int?, ...Array[Int], Str) -> Int) = f("tail")
+[variadic((...xs) => xs.length), optional((...xs) => xs.length)]
+//│ = [3, 1]
+
+// Diagnose a bad named callback at the call, and show the annotation as context.
+:e
+private fun needsFour(a, b, c, d) = a
+[1].map(needsFour)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.25: 	[1].map(needsFour)
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.24: 	private fun needsFour(a, b, c, d) = a
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.260: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+//│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'needsFour' expected at least 4 arguments but got 3
+
+// Typed callbacks have the same diagnostic location as inferred callbacks.
+:e
+val typed: (Int, Int, Array[Int], Int) -> Int = (a, b, c, d) => a
+[1].map(typed)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.41: 	[1].map(typed)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.40: 	val typed: (Int, Int, Array[Int], Int) -> Int = (a, b, c, d) => a
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.260: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+//│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 4 arguments but got 3
+//│ typed = fun
+
+// The use site survives nested record constraints.
+:e
+fun acceptsRecord(r: { callback: (Int?) -> Int }) = 0
+acceptsRecord({ callback: x => x })
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.58: 	acceptsRecord({ callback: x => x })
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.58: 	acceptsRecord({ callback: x => x })
+//│ ║        	                          ^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.57: 	fun acceptsRecord(r: { callback: (Int?) -> Int }) = 0
+//│ ╙──      	                                 ^^^^^^^^^^^^^
+//│ = 0
+
+// Ascriptions identify the supplied implementation, not an invalid function type.
+:e
+private fun required(x) = x
+let bad = required as ((Int?) -> Int)
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.73: 	let bad = required as ((Int?) -> Int)
+//│ ║        	          ^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.72: 	private fun required(x) = x
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.73: 	let bad = required as ((Int?) -> Int)
+//│ ╙──      	                       ^^^^^^^^^^^^^
+//│ bad = fun required

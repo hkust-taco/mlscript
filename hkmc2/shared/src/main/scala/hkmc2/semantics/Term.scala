@@ -1205,8 +1205,8 @@ case class TypeDef(
   * so it is not part of `show` and is printed by `showOptMarker` after the name instead.
   * `droppable` marks a parameter (`drop y`) or function type parameter (`drop Int`) whose argument
   * is always passed but which implementations may ignore, such as the index passed by `Array#map`
-  * to its callback. Since functions ignore extra arguments (see `Runtime.checkArgs`),
-  * it currently does not affect resolution or code generation. */
+  * to its callback. Resolution permits callbacks to omit these parameters;
+  * code generation already ignores extra arguments (see `Runtime.checkArgs`). */
 final case class FldFlags(mut: Bool, spec: Bool, pat: Bool, isVal: Bool, opt: Bool, droppable: Bool):
   def show(addSpace: Bool = false): Str =
     val flags = Buffer.empty[String]

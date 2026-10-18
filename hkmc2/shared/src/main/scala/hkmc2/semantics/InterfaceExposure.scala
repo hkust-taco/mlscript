@@ -120,7 +120,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       // unknowns, and consumers see only the annotated result.
       val declared = resolver.declaredType(resolver.typeResolution(sign), Map.empty).instantiate(rctx.instances)
       watch((new Identity(body), declared, marks))(resolver.listenResult(body)): shape =>
-        resolver.constrainFunction(declared, shape, marks)
+        resolver.constrainFunction(declared, shape, marks, S(body))
       watch((declared, marks))(resolver.listenTypeInstances(declared)): shape =>
         emit(shape.exit(marks), path)
 

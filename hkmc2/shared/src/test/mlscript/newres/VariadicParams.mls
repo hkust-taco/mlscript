@@ -133,25 +133,23 @@ fun app(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
 app((x, ...xs, s) => s)
 //│ = "a"
 
-// Trailing parameters receive the last arguments, so callbacks must have the same structure.
+// A callback cannot discard a non-droppable rest parameter.
 :e
 app((x, s) => s)
-//│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.130: 	fun app(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.138: 	app((x, s) => s)
+//│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  l.138: 	app((x, s) => s)
-//│ ╙──       	    ^^^^^^^^^^^
+//│ ║         	    ^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.130: 	fun app(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
+//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 2
 
-:e
+// A callback may collect trailing arguments in its own rest parameter.
+:expect "b"
 app((x, ...xs) => "b")
-//│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.130: 	fun app(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.148: 	app((x, ...xs) => "b")
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ = "b"
 
 
@@ -169,29 +167,29 @@ sum(0, 1, 2, 3)
 :e
 fun bad(...xs, ...ys) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.170: 	fun bad(...xs, ...ys) = 0
+//│ ║  l.168: 	fun bad(...xs, ...ys) = 0
 //│ ╙──       	               ^^^^^
 
 :e
 fun bad(...xs, y?) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.176: 	fun bad(...xs, y?) = 0
+//│ ║  l.174: 	fun bad(...xs, y?) = 0
 //│ ╙──       	               ^^
 
 :e
 fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.182: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
+//│ ║  l.180: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╙──       	                           ^^^^^^^^^^^^^
 
 :e
 fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.188: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
+//│ ║  l.186: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╙──       	                           ^^^^
 
 :e
 class C(x, ...xs, y)
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.194: 	class C(x, ...xs, y)
+//│ ║  l.192: 	class C(x, ...xs, y)
 //│ ╙──       	           ^^^^^
