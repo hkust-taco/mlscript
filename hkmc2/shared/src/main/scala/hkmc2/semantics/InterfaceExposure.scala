@@ -11,7 +11,7 @@ object InterfaceExposure:
   final case class Input(shape: TermShape, state: ResolutionContext)(val provenance: ShapeProvenance)
 
   def isPublic(definition: Definition): Bool =
-    !definition.annotations.contains(Annot.Private) && (definition match
+    (definition.visibility is Visibility.Public) && (definition match
       case td: TermDefinition => (td.k isnt syntax.LetBind) || td.annotations.contains(Annot.Modifier(syntax.Keyword.`public`)(N))
       case _: TypeDef => false
       case _ => true)
@@ -63,15 +63,19 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
   private def member(symbol: BlockMemberSymbol, marks: Ls[Marks], path: Path)(using ResolutionContext): Unit =
     if (symbol.getState is rctx.owner) && (symbol.asModOrObj.isDefined || symbol.asTrm.isDefined || symbol.asCls.isDefined) then
       val ref = source(symbol)
-      watch((symbol, marks))(resolver.fromBMS(symbol, ref.resSym, marks, _, ref, _ => (), false))(emit(_, path))
-      // Both overloads are public: selecting a module member must not hide the
-      // function's inputs, and exposing a function must not hide module members.
+      def interpretation(receiver: Bool): Unit =
+        if resolver.valueTarget(symbol, receiver).flatMap(_.defn).exists(InterfaceExposure.isPublic) then
+          watch((symbol, marks, receiver))(
+            resolver.fromBMS(symbol, ref.resSym, marks, _, ref, _ => (), receiver))(emit(_, path))
+      interpretation(false)
+      // Only expose the public interpretations of the name. A public factory
+      // can hide its class; returning an instance still exposes that instance's members.
       if symbol.asModOrObj.isDefined && symbol.asTrm.isDefined then
-        watch((symbol, marks, true))(resolver.fromBMS(symbol, ref.resSym, marks, _, ref, _ => (), true))(emit(_, path))
+        interpretation(true)
       // A term companion can hide the constructor in term position, but clients
       // still have access to the class through `new` and class projections.
       if symbol.asModOrObj.isDefined || symbol.asTrm.exists(!_.isInstanceOf[ClassCtorSymbol]) then
-        symbol.asCls.flatMap(_.defn).foreach: cls =>
+        symbol.asCls.flatMap(_.defn).filter(InterfaceExposure.isPublic).foreach: cls =>
           val resolver = this.resolver
           watch((cls.sym, marks))(listener => resolver.listenExt(cls, ext =>
             DefnShape(cls, ext).exit(ExitMark(ResolutionBoundary(cls.sym), S(ref.resSym), NoMarks)).exit(marks) match

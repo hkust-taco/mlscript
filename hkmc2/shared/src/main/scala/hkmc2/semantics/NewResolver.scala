@@ -1596,7 +1596,8 @@ class NewResolver:
             // JavaScript may adopt a structural thenable instead of returning
             // the object itself. Until its callback interface can be inferred,
             // preserve uncertainty rather than exposing the object's fields.
-            case _ => value.getMember("then") match
+            // Awaiting a value only calls its public `then` method.
+            case _ => value.getMember("then").visibleFrom(_ => false, reportInaccessible = false) match
               case MemberLookup.Missing => publish(value)
               case _ => publish(UnknownValueShape(source, fromPublicInterface = false)(ShapeProvenance(
                 msg"This value may be a thenable; its fulfillment interface is not known." -> value.toLoc :: Nil)))
@@ -2035,7 +2036,8 @@ class NewResolver:
         case _ => ()
       actual match
         case Marked(_: UnknownValueShape, _) => receive(actual)
-        case _ => member(actual.getMember(field.sym.nme), TypeSubstitution.empty)
+        // A structural interface only describes public members.
+        case _ => member(actual.getMember(field.sym.nme).visibleFrom(_ => false, reportInaccessible = false), TypeSubstitution.empty)
 
   /** Function constraints reverse the parameter flow and preserve result flow.
     * Read an implementation only while checking it against its declared interface;
@@ -2206,6 +2208,24 @@ class NewResolver:
     val scope = defn.sym match
       case _: ModuleOrObjectSymbol => N
       case symbol => S(ResolutionBoundary(symbol))
+    def inherited: MemberLookup =
+      (name.toIntOption, arrayElementType(view)) match
+        // An element's value keeps its whole path, including its provenance.
+        case (S(index), S(element)) if index >= 0 =>
+          MemberLookup.Indexed(TupleShape.TypedField(element, Nil) :: Nil, Nil).withMarks(receiver :: Nil)
+        case _ =>
+          // The parent is referenced inside the class, like its own members'
+          // annotations: `class Int extends Num` captures `Num` into Int's
+          // scope. An inherited member exits that scope before the receiver
+          // path applies, just like an own member.
+          val parentMember = nominalParent(view).fold[MemberLookup](MemberLookup.Missing): parent =>
+            val Marked(parentView, inner) = parent
+            markCarrier.exit(inner).exit(receiver) match
+              case Marked(_, path) => parentView.getMemberThrough(name, path)
+              // The parent interface is not reachable through this receiver;
+              // applying these marks to its members yields no candidates.
+              case NoShape => parentView.getMember(name).withMarks(inner :: receiver :: Nil)
+          parentMember.withAnnotation(view.annotation)
     defn.body.members.get(name) match
       case S(member) =>
         val (location, provenance) = splitReceiverPath(defn, receiver)
@@ -2218,28 +2238,13 @@ class NewResolver:
             case provenance: ExitMark => transportType(bound, provenance :: Nil)
           symbol -> argument
         val local = captureNominalBindings(defn, transported)
-        MemberLookup.Declared(member, local, scope.toList.map(ExitMark(_, N, NoMarks)), view.annotation, true)
-          .withMarks(location match
-            case NoMarks => Nil
-            case location: SomeMarks => location :: Nil)
-      case N =>
-        (name.toIntOption, arrayElementType(view)) match
-          // An element's value keeps its whole path, including its provenance.
-          case (S(index), S(element)) if index >= 0 =>
-            MemberLookup.Indexed(TupleShape.TypedField(element, Nil) :: Nil, Nil).withMarks(receiver :: Nil)
-          case _ =>
-            // The parent is referenced inside the class, like its own members'
-            // annotations: `class Int extends Num` captures `Num` into Int's
-            // scope. An inherited member exits that scope before the receiver
-            // path applies, just like an own member.
-            val inherited = nominalParent(view).fold[MemberLookup](MemberLookup.Missing): parent =>
-              val Marked(parentView, inner) = parent
-              markCarrier.exit(inner).exit(receiver) match
-                case Marked(_, path) => parentView.getMemberThrough(name, path)
-                // The parent interface is not reachable through this receiver;
-                // applying these marks to its members yields no candidates.
-                case NoShape => parentView.getMember(name).withMarks(inner :: receiver :: Nil)
-            inherited.withAnnotation(view.annotation)
+        MemberLookup.own(defn, member,
+          MemberLookup.Declared(member, local, scope.toList.map(ExitMark(_, N, NoMarks)), view.annotation, true)
+            .withMarks(location match
+              case NoMarks => Nil
+              case location: SomeMarks => location :: Nil),
+          inherited)
+      case N => inherited
 
   /** Supplied class arguments are outside the instance scope. Both member and
     * parent annotations refer to those parameters from inside that scope.
@@ -2759,7 +2764,9 @@ class NewResolver:
                       // between nominal matching and member lookup, not recovery
                       // from a malformed class (filtered by classPattern above).
                       softAssert(false, "Matched constructor is missing its field")
-                  member(sh.getMember(bms.nme), TypeSubstitution.empty)
+                  // The pattern reads the field of `cls` even when it is private,
+                  // ignoring the private members of the same name of `cls`'s subclasses.
+                  member(sh.getMember(bms.nme).visibleFrom(_ is cls, reportInaccessible = false), TypeSubstitution.empty)
                 matched(if fs.forall((_, pat) => preservesInput(pat)) then sh else unknownOutput)
             // A structural annotation describes possible class instances too.
             // A successful class test supplies the tested class's declared
@@ -3118,7 +3125,10 @@ class NewResolver:
         resolError(host, provenance.diagnostic(message, N))
       case _ => ()
 
-  def unresolvedRef(ref: UnresolvedRef)(using ResolutionContext): Unit =
+  /** Like for imports in Scala, wildcard opens do not provide the members that are inaccessible
+    * from `scope`, where `ref` is written: another opened definition may provide an accessible member.
+    */
+  def unresolvedRef(ref: UnresolvedRef, scope: SrcScope)(using ResolutionContext): Unit =
     ref.prefixes.foreach: prefix =>
       listenReceiver(prefix): shape =>
         def member(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
@@ -3148,7 +3158,8 @@ class NewResolver:
             unknownMember(ref, ref.id.name, reason, fromPublicInterface, provenance)
 
           case _ => () // Completed references only route their selected members.
-        member(shape.getMember(ref.id.name), TypeSubstitution.empty)
+        member(shape.getMember(ref.id.name).visibleFrom(scope.canAccessPrivatesOf, reportInaccessible = false),
+          TypeSubstitution.empty)
 
   /** Inspect an overload set only once its definitions have all been published. */
   private def completedClass(shape: SymShape)(selected: ShapeListener[ClassDef], absent: () => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
@@ -3261,13 +3272,18 @@ class NewResolver:
         def captures(term: Term): Ls[Marks] = term match
           case Capture(base, thru) => EntryMark(ResolutionBoundary(thru), N, NoMarks) :: captures(base)
           case _ => Nil
-        receive(info.withMarks(captures(sup.receiver)), TypeSubstitution.empty)
+        // Like in JavaScript, private members are not available through `super`, even where they are accessible:
+        // `super` looks up the members inherited by the parent class (see also Lowering.superReference).
+        receive(info.withMarks(captures(sup.receiver)).visibleFrom(_ => false, reportInaccessible = false),
+          TypeSubstitution.empty)
     sup.owner.asDefnSym.defn match
       case S(defn) => completed(defn)
       case N => sup.owner.asDefnSym.defnListeners += completed
 
-  def newSel(sel: NewSel)(using ResolutionContext): Unit =
+  /** `scope` is where `sel` is written, which determines the private members it can select. */
+  def newSel(sel: NewSel, scope: SrcScope)(using ResolutionContext): Unit =
     log(s"newSel? sel = ${sel.showDbg}")
+    def visible(info: MemberLookup): MemberLookup = info.visibleFrom(scope.canAccessPrivatesOf, reportInaccessible = true)
     def member(info: MemberLookup, description: Message, diagnostic: Message => Ls[(Message, Opt[Loc])],
         instances: TypeSubstitution)(using ResolutionContext): Unit = info match
       case MemberLookup.Contextual(source, substitution) => member(source, description, diagnostic, instances.withOverrides(substitution))
@@ -3314,15 +3330,15 @@ class NewResolver:
               case value: TermShape => publishViewed(sel, value, ref.instances)
               case NoShape => ())
         , shape =>
-          member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty))
+          member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty))
       case N => listenReceiver(sel.prefix): shape =>
         log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-        member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
+        member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
       case S(cls) =>
         classSelection(cls)(ref =>
           val cd = ref.definition
           listenExt(cd, ext =>
-            val info = DefnShape(cd, ext).getInstanceMember(sel.id.name)
+            val info = visible(DefnShape(cd, ext).getInstanceMember(sel.id.name))
             info match
               case MemberLookup.Found(bms: BlockMemberSymbol, declarationMarks) =>
                 // Resolve the projection target even in an unused function. Wait
@@ -3336,7 +3352,7 @@ class NewResolver:
                   val selected = receiver match
                     case Marked(nominal: NominalInstanceView, context) =>
                       nominal.ancestor(cd) match
-                        case S(view) => view.getMember(sel.id.name).withAnnotation(nominal.annotation).withMarks(context :: Nil)
+                        case S(view) => visible(view.getMember(sel.id.name)).withAnnotation(nominal.annotation).withMarks(context :: Nil)
                         case N =>
                           // An explicit projection can name a narrower class, but
                           // it cannot recover that class's implementation arguments.
@@ -3345,7 +3361,7 @@ class NewResolver:
                     case _ =>
                       // C# selects a declaration, not an instance of C. Transport
                       // the member through the actual receiver, never the qualifier.
-                      projectedMember(receiver, cd, sel.id.name).getOrElse:
+                      projectedMember(receiver, cd, sel.id.name).map(visible).getOrElse:
                         // Without a path into this class, only its declared
                         // interface is available; qualifier values add no evidence.
                         val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
@@ -3498,7 +3514,8 @@ class NewResolver:
           def link(base: BlockMemberSymbol): Unit = base.onComplete: () =>
             base.asTrm.filterNot(_.isPrivate).foreach: target =>
               if target isnt own then own.overrideLinks.inferenceHost.publish(target)
-          record(lookup)
+          // Private members are not overridden, so they do not hide the inherited members they shadow.
+          record(lookup.visibleFrom(_ => false, reportInaccessible = false))
 
   private def listenInheritedMember(defn: ClassLikeDef, name: Str)
       (listener: ShapeListener[MemberLookup])(using ResolutionContext): Unit =
@@ -3738,7 +3755,7 @@ class NewResolver:
     * the module overload. Keep that choice through captures so nested functions
     * and opened names use the same interpretation as direct references.
     */
-  private def valueTarget(member: BlockMemberSymbol, receiver: Bool): Opt[DefinitionSymbol[?]] =
+  private[semantics] def valueTarget(member: BlockMemberSymbol, receiver: Bool): Opt[DefinitionSymbol[?]] =
     if receiver then member.asModOrObj.orElse(member.asTrm).orElse(member.asCls).orElse(member.asPat)
     else member.asTrm.orElse(member.asModOrObj).orElse(member.asCls).orElse(member.asPat)
 

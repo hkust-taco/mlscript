@@ -49,7 +49,7 @@ object SessionBinding:
         // An imported subclass layout refers to its ancestors even when no source expression
         // names them. Parents must precede children in Wasm's type declaration order.
         sym match
-          case cls: ClassLikeSymbol => cls.irClassHeader.flatMap(_.parent).foreach(applySymbol)
+          case cls: ClassLikeSymbol => cls.irClassHeader.flatMap(_.parent.knownSymbol).foreach(applySymbol)
           case ctor: ClassCtorSymbol => applySymbol(ctor.associatedCls)
           case member: BlockMemberSymbol => member.asClsOrMod.foreach(applySymbol)
           case member: TermSymbol => member.owner.foreach(applySymbol)

@@ -1,5 +1,7 @@
 :js
 
+#lang(0.3.x)
+
 
 let g = [0]
 //│ g = [0]
@@ -20,22 +22,18 @@ g
 
 set g.0 |>= Math.sign
 
-// Without parentheses, the placeholder abstracts the entire assignment;
-// its body would pass a number to the pipe operator as a function.
-:e
+// The RHS of `|>=` delimits the placeholder, as for `|>`.
 set g.2 |>= Math.pow(_, 5)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Num' at an unrelated type 'Function'
-//│ ║  l.26: 	set g.2 |>= Math.pow(_, 5)
-//│ ╙──      	            ^^^^^^^^^^^^^^
-//│ = fun
-
-g
-//│ = [1, 1, 2]
-
-
-// Parenthesizing the callback scopes the placeholder to Math.pow.
-set g.2 |>= (Math.pow(_, 5))
 
 :expect [1, 1, 32]
 g
 //│ = [1, 1, 32]
+
+
+// Parentheses do not delimit placeholders in the new syntax.
+set g.2 |>= (Math.pow(_, 2))
+
+:expect [1, 1, 1024]
+g
+//│ = [1, 1, 1024]
+

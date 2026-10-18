@@ -220,7 +220,8 @@ abstract class MLsDiffMaker extends DiffMaker:
               debugDce = flags.contains("debugDce"),
             ))),
         dataFlowAnalysis = noOptimizations.isUnset,
-      )
+      ),
+      checkInvariants = true,
     )
   
   

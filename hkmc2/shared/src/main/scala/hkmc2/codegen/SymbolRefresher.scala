@@ -40,7 +40,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
   private def refreshClassSymbol(s: ClassSymbol) =
     val ns = new ClassSymbol(s.tree, s.id)
     assertUpdate(s, ns)
-    // defn is relied by JSBuilder to identify whether a class should be lifted
+    // JSBuilder still reads the source parameter lists for curried constructor wrappers and rendering.
     s.defn match
     case s @ S(_) => ns.defn = s
     case N =>
@@ -98,7 +98,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     val ClsLikeDefn(
       owner, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath,
       methods, privateFields, publicFields, preCtor, ctor, companion,
-      bufferable) = defn
+      bufferable, termCompanion) = defn
     assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for ClsLikeDefn is a free variable for this block")
     isym match
       case s: ClassSymbol => refreshClassSymbol(s)

@@ -148,3 +148,76 @@ reused("next")
 import "../../mlscript-compile/NamedFieldLibrary.mjs"
 NamedFieldLibrary.select(NamedFieldLibrary.fields.0)
 //│ = 36
+
+
+// Private constructor functions retain the inferred representation of their arguments and fields.
+:noInline
+:sir
+:siret
+:expect 42
+private class PrivateBox(val value) with
+  private constructor
+private module PrivateBox with
+  fun make(value) = PrivateBox(value)
+PrivateBox.make(42).value
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: PrivateBox⁰;
+//│ @private
+//│ define PrivateBox¹ as class PrivateBox⁰ {
+//│   val value⁰: Int⁰;
+//│   constructor PrivateBox²(value: Int⁰) {
+//│     define value⁰ as val value¹: Int⁰ = value;
+//│     end
+//│   }
+//│ }
+//│ module PrivateBox³ {
+//│   method make⁰ = fun make¹(value1: Int⁰): PrivateBox⁰ {
+//│     return PrivateBox²(value1)
+//│   }
+//│ };
+//│ set tmp = PrivateBox³.make¹(42);
+//│ return tmp.value¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+#lang(0.3.x)
+
+
+// Placeholder parameters stay untyped until erasure observes their arguments.
+:noInline
+:sir
+:siret
+:expect 42
+let increment = => _ + 1
+increment(41)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let increment;
+//│ @private
+//│ define increment as fun increment⁰(_0: Int⁰): ? {
+//│   return +⁰(_0, 1)
+//│ };
+//│ set increment¹ = increment⁰;
+//│ return increment¹(41)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+//│ increment = fun increment
+
+
+// A trailing argument's implicit lambda receives its caller's inferred parameter type.
+:noInline
+:sir
+:siret
+:expect 42
+private fun apply(value, f) = f(value)
+apply(41) \ _ + 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define apply⁰ as fun apply¹(value: Int⁰, f: Function⁰): ? {
+//│   return f(value)
+//│ };
+//│ define lambda as fun lambda⁰(_0: Int⁰): ? { return +⁰(_0, 1) };
+//│ return apply¹(41, lambda⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42

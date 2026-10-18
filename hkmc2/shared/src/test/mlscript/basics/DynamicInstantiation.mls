@@ -17,7 +17,7 @@ let c = C
 new! c
 //│ = C
 
-let f = new! _
+let f = => new! _
 //│ f = fun f
 
 f(c)

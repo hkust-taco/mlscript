@@ -340,3 +340,31 @@ private fun early() =
 early()
 //│ Wasm result:
 //│ = 42
+
+
+// A private member does not change the representation of the public member it shadows.
+:noInline
+:expect 42
+class PublicBase with
+  fun value = const(42)
+class PrivateDerived extends PublicBase with
+  private fun value = true
+  fun ownValue = value
+let derived = new PrivateDerived
+if derived.ownValue then derived.value else const(0)
+//│ Wasm result:
+//│ = 42
+
+
+#lang(0.3.x)
+//│ Wasm result:
+//│ = {}
+
+
+// Trailing arguments retain the inferred unboxed calling convention of the full argument list.
+:noInline
+:expect 42
+private fun add(left, right) = wasm.i32.add(left, right)
+add(const(41)) \ const(1)
+//│ Wasm result:
+//│ = 42

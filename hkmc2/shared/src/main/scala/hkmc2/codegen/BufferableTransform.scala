@@ -112,6 +112,7 @@ class BufferableTransform()(using State, Raise):
                 if bufferable then cls.ctor else End(),
                 S(fakeCompanion),
                 cls.bufferable,
+                cls.termCompanion,
               )(cls.configOverride, cls.annotations)
         case _ => super.applyDefn(defn)(k)
     transformer.applyProgram(prog)

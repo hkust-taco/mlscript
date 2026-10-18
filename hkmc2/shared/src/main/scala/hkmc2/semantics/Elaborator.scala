@@ -105,6 +105,9 @@ object Elaborator:
   /** Context used to keep track of underscores representing lambda shorthands, eg in `_ + 1`. */
   // TODO later: use TempSymbol instead of VarSymbol? (currently, trying that creates lot of problems)
   class UnderCtx(val unders: Opt[mutable.ArrayBuffer[VarSymbol]])
+  object UnderCtx:
+    /** The context of terms that do not delimit implicit lambdas, where `_` placeholders are illegal. */
+    val none: UnderCtx = UnderCtx(N)
   
   case class Ctx(
       outer: OuterCtx,
@@ -464,6 +467,7 @@ object Elaborator:
             // binders at this site (see NewResolver.instantiateByName).
             val ref = Term.MemberRef(sym)(id, FlowSymbol.memSym(sym))
             rctx.recordLexicalBinders(ref, ctx.typeBinders)
+            rctx.recordAccessSite(ref, ctx.scope)
             ref
         else
           sym.ref(id)
@@ -477,7 +481,8 @@ object Elaborator:
         if config.language.useNewResolution then
           val res = new Term.NewSel(prefix, name, N)(FlowSymbol.synthSel(nme)).withLocOf(id)
           rctx.recordLexicalBinders(res, ctx.typeBinders)
-          summon[NewResolver].newSel(res)
+          rctx.recordAccessSite(res, ctx.scope)
+          summon[NewResolver].newSel(res, ctx.scope)
           res
         else
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
@@ -489,7 +494,8 @@ object Elaborator:
         val prefixes = sources.map(source => source.elem.ref(source.id).withoutLoc.withLocOf(source.id))
         val res = new Term.UnresolvedRef(prefixes, id)(FlowSymbol.synthSel(nme)).withLocOf(id)
         rctx.recordLexicalBinders(res, ctx.typeBinders)
-        summon[NewResolver].unresolvedRef(res)
+        rctx.recordAccessSite(res, ctx.scope)
+        summon[NewResolver].unresolvedRef(res, ctx.scope)
         res
       def symbol: Opt[Symbol] = N
       def isImport: Bool = true
@@ -682,7 +688,8 @@ object Elaborator:
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       val bsym = BlockMemberSymbol("ret", Nil, true)
-      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N, auxCtorParams = Nil)(N)
+      val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N,
+        auxCtorParams = Nil, ctorAnnotations = Nil)(N)
       sym.defn = S(defn)
       Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), FlowSymbol.synthSel(id.name), N, N)
     val nonLocalRet =
@@ -733,6 +740,8 @@ object Elaborator:
     * `App(Bra(Round, Block(x, y)), Tup(u, v))`.
     * An empty first parameter list is parsed as the unit literal:
     * `constructor()(x)` becomes `App(Unt(), Tup(x))`.
+    * A bare `constructor` declaration, which is parsed as `Empty()`, has no parameter lists;
+    * it is only useful with modifiers, as in `private constructor`.
     */
   private object ConstructorParamDecl:
     def mkTup(inner: Tree): Tree = inner match
@@ -741,6 +750,8 @@ object Elaborator:
       case other => Tup(other :: Nil)
 
     def unapply(tree: Tree): Opt[Ls[Tree]] = tree match
+      case Empty() =>
+        S(Nil)
       case Unt() =>
         S(Tup(Nil) :: Nil)
       case Bra(Round, inner) =>
@@ -750,6 +761,17 @@ object Elaborator:
       case App(lhs, Bra(Round, inner)) =>
         unapply(lhs).map(_ :+ mkTup(inner))
       case _ => N
+  
+  /** Extracts the annotations and the parameter lists of a (desugared) constructor declaration,
+    * as in `private constructor(x)`, where `private` desugars into an annotation. */
+  private object ConstructorDecl:
+    def unapply(tree: Tree): Opt[(Ls[Tree], Ls[Tree])] = tree match
+      case PossiblyAnnotated(annotations, Constructor(ConstructorParamDecl(paramLists))) => S(annotations, paramLists)
+      case _ => N
+  
+  /** The modifiers supported on constructor declarations, as in `private constructor(x)`.
+    * Class definitions record them in ClassDef.ctorAnnotations. */
+  private val constructorModifiers: Set[Keyword] = Set.single(Keyword.`private`)
   
 end Elaborator
 
@@ -766,7 +788,8 @@ extends Importer:
   private given NewResolver = this
   private given ResolutionContext = state.newResolverState.context.withReporter(raise)
   
-  val newResolution: Bool = config.language.useNewResolution
+  val lang = config.language
+  val newResolution: Bool = lang.useNewResolution
   
   lazy val illegalMemberNameTail =
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
@@ -1030,7 +1053,9 @@ extends Importer:
     * function, which takes a `Ctx` and returns a `SimpleSplit` representing
     * the _alternative_ split, and returns a `SimpleSplit` representing the
     * split of the given trees. */
-  private def termSplit(ts: Ls[Tree], mk: Term => Term): Ctxl[SimpleSplit] =
+  /** Desugar a list of trees as a term split, where `mk` wraps the trees of scrutinees
+    * in the prefixes of the enclosing operator splits (see the `OpApp` case of `termBranch`). */
+  private def termSplit(ts: Ls[Tree], mk: Tree => Tree): Ctxl[SimpleSplit] =
     val (_, splits) = ts.foldLeft((ctx, Ls[SimpleSplit]())):
       case ((curCtx, splits), t) =>
         termBranch(t, mk)(using curCtx).mapSecond(_ :: splits)
@@ -1101,9 +1126,9 @@ extends Importer:
           mkMatch(scrutineeRef(), pattern, innerSplit) ~: End
     split
   
-  private def termBranch(t: Tree, mk: Term => Term): Ctxl[(Ctx, SimpleSplit)] = branch.appOrElse(t):
+  private def termBranch(t: Tree, mk: Tree => Tree): Ctxl[(Ctx, SimpleSplit)] = branch.appOrElse(t):
     case block: Block => (ctx, termSplit(block.desugStmts, mk))
-    case lhs is rhs => (ctx, mk(term(lhs, Trm)).reference(patternBranch(_, rhs, identity)))
+    case lhs is rhs => (ctx, term(mk(lhs), Trm).reference(patternBranch(_, rhs, identity)))
     // Several matches followed by `and`, `do`, or `then`.
     case matchesTree ~> consequent =>
       val (coda, patternTree) :: matches = disaggregate(matchesTree)
@@ -1113,22 +1138,21 @@ extends Importer:
           case R((kw, tree)) => Else(term(tree, Trm))(S(kw))
       val split = coda match
         case Under() => innerSplit
-        case coda => mk(term(coda, Trm)).reference: scrutinee =>
+        case coda => term(mk(coda), Trm).reference: scrutinee =>
           val pattern = this.pattern(patternTree)
           val innerCtx = ctx ++ pattern.variables.allocate
           mkMatch(scrutinee(), pattern, innerSplit(using innerCtx)) ~: End
       (ctx, split)
     // Handle splits on binary operators.
+    // * Each branch scrutinee `rhs` is elaborated as the tree `lhs op rhs`, as in the non-split form,
+    // * so that, eg, the RHS of `|>` delimits underscore lambdas (see `underscoreDelimitingSides`).
     case OpApp(lhs, ident: Ident, rhss) =>
-      val op = term(ident, Trm)
-      val split = term(lhs, Trm).reference: lhs =>
-        val mk2 = (rhs: Term) =>
-          val args = withTypeBinders(Term.Tup(PlainFld(lhs()) :: PlainFld(rhs) :: Nil)(DummyTup))
-          app(op, args)(Tree.DummyApp, N, FlowSymbol("‹operator-split›"))
-        termSplit(rhss, mk2 andThen mk)
+      val lhsTerm = if underscoreDelimitingSides(ident)._1 then delimitedTerm(lhs, Trm) else term(lhs, Trm)
+      val split = lhsTerm.reference: lhs =>
+        termSplit(rhss, ((rhs: Tree) => OpApp(Tree.Trm(lhs()), ident, rhs :: Nil)) andThen mk)
       (ctx, split)
     case OpSplit(lhs, rhss) =>
-      val split = mk(term(lhs, Trm)).reference: lhs =>
+      val split = term(mk(lhs), Trm).reference: lhs =>
         val (_, splits) = rhss.foldLeft((ctx, Ls[SimpleSplit]())):
           case ((curCtx, splits), t) =>
             operatorBranch(lhs, t)(using curCtx).mapSecond(_ :: splits)
@@ -1224,16 +1248,26 @@ extends Importer:
   // Callers specify the interpretation at each elaboration entry point. Keeping
   // it explicit (rather than implicit) prevents a target's interpretation from
   // leaking into its value operands.
+  // * In the old underscore syntax, every term delimits the implicit lambda of its `_` placeholders.
+  // * In the new syntax, only some positions do (see `delimitedTerm`), and placeholders elsewhere are illegal.
   def term(tree: Tree, interp: Interpretation): Ctxl[Term] =
+    if lang.newUnderscoreAndApplicationSyntax then
+      trace[Term](s"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
+        given UnderCtx = UnderCtx.none
+        subterm(tree, interp)
+    else delimitedTerm(tree, interp)
+  
+  /** Elaborate `tree` as a term that delimits an implicit lambda, whose parameters are the `_` placeholders
+    * of `tree` that are not delimited by one of its subterms, as in the body of `=> _ + 1`. */
+  def delimitedTerm(tree: Tree, interp: Interpretation): Ctxl[Term] =
   trace[Term](s"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
     val unders = mutable.ArrayBuffer.empty[VarSymbol]
-    given UnderCtx = new UnderCtx(S(unders))
+    given UnderCtx = UnderCtx(S(unders))
     val st = subterm(tree, interp)
-    val params = unders.iterator.map: sym =>
-        Param.simple(sym)
-      .toList
-    if params.isEmpty then st
-    else withTypeBinders(Term.Lam(PlainParamList(params)(N), st))
+    if unders.isEmpty then st
+    else
+      val params = unders.iterator.map(Param.simple).toList
+      withTypeBinders(Term.Lam(PlainParamList(params)(N), st))
   
   /** Record the explicit type binders in scope where `term` is written, for
     * new resolution's binder-support analysis (see NewResolver.shapeSupport).
@@ -1283,6 +1317,47 @@ extends Importer:
     if newResolution then listenTerm(lt)(shape => appShape(shape, rt, res))
     res
   
+  /** With the new underscore syntax, some operator operands delimit their own implicit lambdas,
+    * as if prefixed by `=>`:
+    *  - the RHS of an operator whose name ends with `>` (such as `|>` and `>>`),
+    *    so that `x |> _ + 1` means `x |> (y => y + 1)`;
+    *  - the LHS of an operator whose name starts with `<` (such as `<|` and `<<`),
+    *    so that `_ + 1 <| x` means `(y => y + 1) <| x`.
+    * The builtin comparisons `>`, `<`, and `<=` are excluded,
+    * so that, eg, `x |> (100 > _)` means `x |> (y => 100 > y)`.
+    * Returns whether the LHS and whether the RHS of `op` delimit implicit lambdas. */
+  private def underscoreDelimitingSides(op: Tree): (Bool, Bool) = op match
+    case Ident(name) if lang.newUnderscoreAndApplicationSyntax =>
+      (name.startsWith("<") && name =/= "<" && name =/= "<=", name.endsWith(">") && name =/= ">")
+    case _ => (false, false)
+  
+  /** `f(args) \ a` means `f(args, a)`, and `f \ a` means `f(a)`; returns the corresponding application tree.
+    * Braces around the LHS are transparent, so that `{f \ a} \ b` means `f(a, b)`,
+    * which is also what the operator split of `f` on lines `\ a` and `\ b` means,
+    * as it is elaborated as `(f \ a) \ b` (`\` being otherwise right-associative).
+    * Parentheses are not transparent, as they delimit subexpressions: `(f \ a) \ b` means `f(a)(b)`.
+    * With the new underscore syntax, the argument delimits its own implicit lambda, as if prefixed by `=>`,
+    * so that `xs.map \ _ + 1` means `xs.map(x => x + 1)`; this is done here rather than in
+    * `Tree.desugared`, which does not know the language version. */
+  private def backslashApp(lhs: Tree, rhs: Tree): Tree.App =
+    def delimited(value: Tree): Tree = PrefixApp(new Keywrd(Keyword.`=>`), value).withLocOf(value)
+    // * Field-shaped arguments, such as `key: a` and `...xs` (see `fld`), are not expressions,
+    // * so only their values delimit implicit lambdas.
+    val arg =
+      if lang.newUnderscoreAndApplicationSyntax then rhs match
+        case InfixApp(key, kw @ Keywrd(Keyword.`:`), value) => InfixApp(key, kw, delimited(value)).withLocOf(rhs)
+        case Spread(kw, S(value)) => Spread(kw, S(delimited(value))).withLocOf(rhs)
+        case _ => delimited(rhs)
+      else rhs
+    def withAppendedArg(lhs: Tree): Opt[Tree.App] = lhs.desugared match
+      case InfixApp(lhs, Keywrd(Keyword.backslash), rhs) => withAppendedArg(backslashApp(lhs, rhs))
+      // * Prefix operator applications, such as `-x`, are not calls with argument lists.
+      case App(Ident(op), _) if Parser.prefixOps.contains(op) => N
+      case App(f, Tup(args)) => S(App(f, Tup(args :+ arg)))
+      case Bra(BracketKind.Curly, Block(stmt :: Nil)) => withAppendedArg(stmt)
+      case _ => N
+    withAppendedArg(lhs).getOrElse(App(lhs, Tup(arg :: Nil)))
+  
   private def assignment(lhs: Term, rhs: Term): Term.Assgn =
     // Resolve the term interpretation of the l-value before lowering. The
     // selected definition is recorded even when its value publishes no shape.
@@ -1325,6 +1400,9 @@ extends Importer:
     
     def mkNew(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])(typ: Opt[typing.Type]): Term.New =
       val res = withTypeBinders(new Term.New(cls, args, rft)(FlowSymbol.neww(), typ).withLocOf(tree))
+      // The synthetic parent of an anonymous refinement (below) instantiates the same class at the same site,
+      // so only this expression accesses the class's constructor.
+      if newResolution then rctx.recordAccessSite(res, ctx.scope)
       rft.foreach: (symbol, body) =>
         // An anonymous refinement is a concrete subclass too. Publish its declaration
         // so override lookup, super references and implementation checks use the same graph.
@@ -1337,7 +1415,7 @@ extends Importer:
           new Term.New(captured(cls), args.map(captured), N)(FlowSymbol.neww(), typ).withLocOf(tree))
         if newResolution then resolveNew(parent)
         val definition = ClassDef.Plain(ctx.getOuter, syntax.Cls, symbol,
-          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N)(tree.toLoc)
+          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N, ctorAnnotations = Nil)(tree.toLoc)
         symbol.defn = S(definition)
         registerInheritance(definition)
       if newResolution then resolveNew(res)
@@ -1348,7 +1426,8 @@ extends Importer:
       // Resolve that interpretation on the qualifier itself, as for explicit `.class`.
       val qualifier = withTypeBinders(new Term.NewSel(cls, new Ident("class").withLocOf(cls), N)(FlowSymbol.sel("class")).withLocOf(cls))
       val res = withTypeBinders(new Term.NewSel(prefix, name, S(qualifier))(FlowSymbol.selProj(name.name)).withLocOf(tree))
-      newSel(res)
+      rctx.recordAccessSite(res, ctx.scope)
+      newSel(res, ctx.scope)
       interpretRef(res, interp)
 
     /** Fallback to a normal selection + application when label-specific handling does not apply. */
@@ -1381,7 +1460,8 @@ extends Importer:
         Term.Lit(StrLit(loc.origin.fileName.toString))
       else if newResolution then
         val res = withTypeBinders(new Term.NewSel(preTrm, tree.name, N)(FlowSymbol.sel(tree.name.name)).withLocOf(tree))
-        newSel(res)
+        rctx.recordAccessSite(res, ctx.scope)
+        newSel(res, ctx.scope)
         interpretRef(res, interp)
       else
         Term.Sel(preTrm, tree.name)(sym, FlowSymbol.sel(tree.name.name), N, S(summon))
@@ -1395,7 +1475,11 @@ extends Importer:
       case Curly =>
       case _ =>
         raise(ErrorReport(msg"Unsupported ${k.name} in this position" -> tree.toLoc :: Nil))
-      term(e, interp) // * not `subterm` as `e` could be a lambda shorthand
+      // * In the old syntax, parentheses delimit underscore lambdas, so `e` is elaborated with `term`.
+      // * In the new syntax, only `=>` and the RHS of operators ending with `>` delimit them,
+      // * so parentheses are transparent, and `x |> (_ + 1)` means `x |> (y => y + 1)`.
+      if lang.newUnderscoreAndApplicationSyntax then subterm(e, interp)
+      else term(e, interp)
     case b: Block =>
       ctx.nestLocal("‹block›").givenIn:
         block(b, hasResult = true, resultInterp = interp)._1 match
@@ -1450,7 +1534,7 @@ extends Importer:
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil), N,
-        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil)(hd.toLoc))
+        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil, ctorAnnotations = Nil)(hd.toLoc))
       
       val elabed = ctx.nestInner(derivedClsSym).givenIn:
         block(sts_, hasResult = false)._1
@@ -1600,6 +1684,8 @@ extends Importer:
       Term.CompType(subterm(lhs, Tpe), subterm(rhs, Tpe), true)//.withLocOf(tree)
     case InfixApp(lhs, op @ Keywrd(Keyword.`&`), rhs) =>
       Term.CompType(subterm(lhs, Tpe), subterm(rhs, Tpe), false)//.withLocOf(tree)
+    case tree @ InfixApp(lhs, Keywrd(Keyword.backslash), rhs) =>
+      subterm(backslashApp(lhs, rhs).withLocOf(tree), interp)
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
@@ -1666,9 +1752,11 @@ extends Importer:
       app(lt, rt)(tree, N, sym)
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol.app()
-      val lt = subterm(lhs)
+      val (lhsDelimitsUnders, rhsDelimitsUnders) = underscoreDelimitingSides(op)
+      val lt = if lhsDelimitsUnders then delimitedTerm(lhs, Trm) else subterm(lhs)
       val ot = subterm(op)
-      val rts = rhss.map(r => PlainFld(subterm(r)))
+      val rts = rhss.map: r =>
+        PlainFld(if rhsDelimitsUnders then delimitedTerm(r, Trm) else subterm(r))
       app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
         DummyApp, N, sym)
     case SynthSel(pre, nme) =>
@@ -1712,6 +1800,7 @@ extends Importer:
           // Like other written selections, a by-name member selected through
           // `super` is instantiated at this site, within its type binders.
           val res = withTypeBinders(new Term.Super(receiver.ref(id), owner, nme)(FlowSymbol.sel(nme.name)).withLocOf(sel))
+          if newResolution then rctx.recordAccessSite(res, ctx.scope)
           resolveSuper(res)
           interpretRef(res, interp)
         case _ =>
@@ -1900,6 +1989,8 @@ extends Importer:
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
+    case PrefixApp(Keywrd(Keyword.`=>`), body) if lang.newUnderscoreAndApplicationSyntax =>
+      delimitedTerm(body, interp)
     case PrefixApp(kw, body) =>
       raise(ErrorReport(msg"Illegal position for prefix keyword '${kw.name}'." -> kw.toLoc :: Nil))
       subterm(body)
@@ -1949,12 +2040,22 @@ extends Importer:
     case und: Under =>
       summon[UnderCtx].unders match
       case N =>
-        raise(ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil))
+        raise:
+          if lang.newUnderscoreAndApplicationSyntax then
+            ErrorReport(
+              msg"Illegal position for '_' placeholder" -> tree.toLoc
+              :: msg"Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`" -> N
+              :: Nil)
+          else ErrorReport(msg"Illegal position for '_' placeholder." -> tree.toLoc :: Nil)
         error
       case S(unds) =>
-        val sym = VarSymbol(Ident("_" + unds.size))
+        // * The placeholder both declares its implicit lambda parameter and refers to it,
+        // * so the parameter and the reference are both located at the `_`,
+        // * which lets diagnostics about either point to it.
+        val id = new Ident("_" + unds.size).withLocOf(und)
+        val sym = VarSymbol(id)
         unds += sym
-        sym.ref()
+        sym.ref(id)
     case Annotated(lhs, rhs) =>
       annot(lhs).fold(subterm(rhs, interp))(ann =>
         annotated(ann, subterm(rhs, interp)))
@@ -2111,9 +2212,11 @@ extends Importer:
       // advancing to another statement starts a fresh span.
       val statementLoc = sourceLoc.orElse(sts.headOption.flatMap(_.toLoc))
       /** Call this function when the following term cannot be annotated. */
-      def reportUnusedAnnotations: Unit = if annotations.nonEmpty then raise:
+      def reportUnusedAnnotations: Unit = reportUnused(annotations)
+      /** Call this function when the following term cannot be annotated with `unusedAnnots`. */
+      def reportUnused(unusedAnnots: Ls[Annot]): Unit = if unusedAnnots.nonEmpty then raise:
         WarningReport:
-          msg"This annotation has no effect" -> (annotations.foldLeft[Opt[Loc]](N):
+          msg"This annotation has no effect" -> (unusedAnnots.foldLeft[Opt[Loc]](N):
             case (acc, ann) => acc match
               case N => ann.toLoc
               case S(loc) => S(loc ++ ann.toLoc)
@@ -2125,18 +2228,28 @@ extends Importer:
       case Nil =>
         reportUnusedAnnotations
         (mkBlk(acc, N, hasResult), ctx)
+      // * Constructor blocks support no annotations: they are desugared into sibling classes
+      // * (in `BlockImpl.desugStmts`), which ignores their annotations.
       case Constructor(Block(ctors)) :: sts =>
         // TODO properly handle (it currently desugars to sibling classes)
-        go(sts, annotations, acc)(N)
+        reportUnusedAnnotations
+        go(sts, Nil, acc)(N)
       case (ctorParams @ Constructor(ConstructorParamDecl(_))) :: sts =>
-        // constructor(x, y) or constructor(x, y)(u, v) syntax: params are extracted during class elaboration
-        ctx.getOuter match
+        // * `constructor`, `constructor(x, y)`, or `constructor(x, y)(u, v)` in a class body:
+        // * the `Cls` case of type definitions below extracts their parameter lists,
+        // * as well as their modifiers, which apply to the class's whole constructor.
+        // * Only the body of the class itself can declare its constructor, not a nested block.
+        ctx.outer.inner match
         case S(_: ClassSymbol) =>
-          go(sts, annotations, acc)(N)
+          reportUnused(annotations.filterNot:
+            case Annot.Modifier(kw) => constructorModifiers.contains(kw)
+            case _ => false)
+          go(sts, Nil, acc)(N)
         case _ =>
+          reportUnusedAnnotations
           raise(ErrorReport(msg"'constructor(...)' declarations are only allowed in class bodies"
             -> ctorParams.toLoc :: Nil))
-          go(sts, annotations, acc)(N)
+          go(sts, Nil, acc)(N)
       case Open(bod) :: sts =>
         reportUnusedAnnotations
         bod match
@@ -2671,15 +2784,18 @@ extends Importer:
               md
         case Cls =>
           val clsSym = td.symbol.asInstanceOf[ClassSymbol] // TODO: improve `asInstanceOf`
-          // Extract constructor(...) param lists from the class body
-          // Handles both single param lists: constructor(x, y)
-          // and multi param lists: constructor(x, y)(u, v)
-          val auxCtorParamTrees: Ls[Tree] = body match
-            case S(blk: Block) => blk.stmts.flatMap:
-              case Constructor(ConstructorParamDecl(paramTrees)) =>
-                paramTrees
-              case _ => Nil
+          // Extract the param lists and modifiers of the constructor declarations in the class body.
+          // Handles single param lists: constructor(x, y),
+          // multi param lists: constructor(x, y)(u, v),
+          // and modified declarations, possibly without param lists: private constructor
+          // The statement loop (see `go`) reports the unsupported annotations of these declarations.
+          val ctorDecls: Ls[(Ls[Tree], Ls[Tree])] = body match
+            case S(blk: Block) => blk.desugStmts.collect:
+              case ConstructorDecl(annotationTrees, paramTrees) => (annotationTrees, paramTrees)
             case _ => Nil
+          val auxCtorParamTrees: Ls[Tree] = ctorDecls.flatMap(_._2)
+          val ctorAnnotations = ctorDecls.flatMap(_._1).collect:
+            case kw @ Keywrd(mod) if constructorModifiers.contains(mod) => Annot.Modifier(mod)(kw.toLoc)
           val auxCtorPss = auxCtorParamTrees.map: ps =>
             val (res, newCtx2) =
               given Ctx = newCtx
@@ -2710,7 +2826,7 @@ extends Importer:
                     TermDefFlags.empty,
                     Modulefulness.none,
                     annotations.collect:
-                      case a @ Annot.Modifier(Keyword.`declare`) => a
+                      case a @ Annot.Modifier(Keyword.`declare` | Keyword.`private` | Keyword.`public`) => a
                     ,
                     S(clsSym),
                   )(statementLoc)
@@ -2721,7 +2837,8 @@ extends Importer:
               else N
               val cd =
                 val (bod, c) = mkBody(auxCtorPss)
-                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp, auxCtorParams = auxCtorPss)(statementLoc)
+                ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp,
+                  auxCtorParams = auxCtorPss, ctorAnnotations = ctorAnnotations)(statementLoc)
               clsSym.defn = S(cd)
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")
@@ -2753,7 +2870,13 @@ extends Importer:
       case (st: Tree) :: sts =>
         // TODO reject plain term statements? Currently, `(1, 2)` is allowed to elaborate (tho it should be rejected in type checking later)
         val interpretation = if sts.isEmpty then resultInterp else Trm
-        val res = annotations.foldLeft(term(st, interpretation)):
+        // * In the old syntax, each term statement delimits its own underscore lambdas.
+        // * In the new syntax, blocks are transparent like parentheses, so that, eg,
+        // * the placeholder in `x |>` followed by an indented `_ + 1` is delimited by `|>`.
+        val st_t =
+          if lang.newUnderscoreAndApplicationSyntax then subterm(st, interpretation)
+          else term(st, interpretation)
+        val res = annotations.foldLeft(st_t):
           case (acc, ann) => annotated(ann, acc)
         sts match
         case Nil => (mkBlk(acc, S(res), hasResult), ctx)
@@ -2765,6 +2888,21 @@ extends Importer:
     
     members.valuesIterator.foreach(_.complete())
     members.valuesIterator.foreach: bms =>
+      // Check completed definitions so declaration order cannot affect visibility. A public
+      // class/module cannot be reached through a private companion; a public companion may
+      // hide its implementation class. Constructor privacy is independent of class visibility.
+      // None of the definitions of a rejected name is compiled, nor are references to them
+      // (see Lowering.erroneousRef and MemberStorage.sourcePrivateDefinition).
+      def checkCompanion(definition: Definition, companion: Definition): Unit =
+        if (definition.visibility is Visibility.Public) && (companion.visibility is Visibility.Private) then
+          raise:
+            ErrorReport(
+              msg"Public ${definition.describeRef} cannot have a private companion" -> definition.toLoc ::
+                msg"Private companion declared here" -> companion.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation)
+          bms.symbols.foreach(_.defn.foreach(_.isErroneous = true))
+      bms.asCls.flatMap(_.defn).foreach: cls =>
+        bms.asMod.flatMap(_.defn).foreach(checkCompanion(cls, _))
       bms.symbols.foreach:
         case sym: (ClassLikeSymbol & InnerSymbol) =>
           sym.defn.foreach: d => // erroneous code may not have a defn even after the BMS is completed
@@ -2772,8 +2910,9 @@ extends Importer:
             // A declaration supplies no fresh function object to hold a companion.
             // Generated constructor functions also have no source body, but lowering creates them.
             // Foreign class-like declarations produce no companion initialization at all.
-            if d.hasDeclareModifier.isEmpty then
-              bms.asTrm.filterNot(_.isInstanceOf[ClassCtorSymbol]).flatMap(_.defn).foreach: term =>
+            bms.asTrm.filterNot(_.isInstanceOf[ClassCtorSymbol]).flatMap(_.defn).foreach: term =>
+              checkCompanion(d, term)
+              if d.hasDeclareModifier.isEmpty then
                 if term.body.isEmpty || term.hasDeclareModifier.isDefined then raise:
                   ErrorReport:
                     msg"A term declaration cannot have an implemented ${sym.describeKind} companion" -> term.toLoc
@@ -3145,7 +3284,7 @@ extends Importer:
       (Nil, ctx)
   
   def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] =
-    given UnderCtx = new UnderCtx(N)
+    given UnderCtx = UnderCtx.none
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
     if newResolution then
@@ -3155,7 +3294,7 @@ extends Importer:
     (res, newCtx)
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
-    given UnderCtx = new UnderCtx(N)
+    given UnderCtx = UnderCtx.none
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     computeVariances(res)
     if newResolution then

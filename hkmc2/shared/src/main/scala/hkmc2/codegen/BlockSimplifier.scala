@@ -1447,11 +1447,12 @@ class BlockSimplifier
 
       def accessesPrivateMembers(blk: Block): Bool =
         var found = false
-        (new BlockTraverser:
+        new BlockTraverser:
+          applyBlock(blk)
           override def applySymbol(sym: Symbol): Unit = sym match
-            case ts: TermSymbol if ts.isPrivate => found = true
+            case member: DefinitionSymbol[?] if MemberStorage.privateOwner(member).isDefined =>
+              found = true
             case _ =>
-        ).applyBlock(blk)
         found
 
       // * TODO: once bad actors like the current pattern compiler stop duplicating symbols,

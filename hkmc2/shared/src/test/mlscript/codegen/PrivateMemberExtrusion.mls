@@ -126,3 +126,158 @@ f.g()(1)
 //│ = 179
 
 
+
+
+// * The members of a class's companion module are emitted in the same JS class,
+// * so they access each other's private members directly.
+
+:sjs
+:expect [3, 30]
+class Pair(val fst, val snd) with
+  private val sum = fst + snd
+  private fun scaled(k) = Pair.scale(sum, k)
+module Pair with
+  private fun scale(n, k) = n * k
+  fun sumOf(p: Pair) = p.sum
+  fun scaledOf(p: Pair, k) = p.scaled(k)
+[Pair.sumOf(Pair(1, 2)), Pair.scaledOf(Pair(1, 2), 10)]
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ const sum$accessorSymbol = globalThis.Symbol("sum");
+//│ const scaled$accessorSymbol = globalThis.Symbol("scaled");
+//│ let Pair1, tmp3, tmp4, inlinedVal, inlinedVal1;
+//│ Pair1 = function Pair(fst, snd) {
+//│   return globalThis.Object.freeze(new Pair.class(fst, snd));
+//│ };
+//│ (class Pair {
+//│   static {
+//│     Pair1.class = this
+//│   }
+//│   constructor(fst, snd) {
+//│     let tmp5;
+//│     this.fst = fst;
+//│     this.snd = snd;
+//│     tmp5 = this.fst + this.snd;
+//│     this.#sum = tmp5;
+//│   }
+//│   static #scale(n, k) {
+//│     return n * k
+//│   }
+//│   static sumOf(p) {
+//│     return p.#sum
+//│   }
+//│   static scaledOf(p, k) {
+//│     return p.#scaled(k)
+//│   }
+//│   #sum;
+//│   get [sum$accessorSymbol]() { return this.#sum; }
+//│   set [sum$accessorSymbol](value) { this.#sum = value; }
+//│   get [scaled$accessorSymbol]() { return this.#scaled; }
+//│   #scaled(k) {
+//│     let n;
+//│     n = this.#sum;
+//│     return n * k
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Pair", ["fst", "snd"]];
+//│ });
+//│ tmp3 = Pair1(1, 2);
+//│ inlinedVal = tmp3[sum$accessorSymbol];
+//│ tmp4 = Pair1(1, 2);
+//│ inlinedVal1 = tmp4[scaled$accessorSymbol](10);
+//│ return globalThis.Object.freeze([ inlinedVal, inlinedVal1 ])
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [3, 30]
+
+// * They share the same namespace of JS private names, in which JS forbids duplicates.
+
+:expect [1, 2]
+class Foo with
+  private val x = 1
+  fun getX = x
+module Foo with
+  private val x = 2
+  fun getX = x
+[(new Foo).getX, Foo.getX]
+//│ = [1, 2]
+
+
+// * Inlining refreshes the module and class symbols, which must still share a private namespace.
+
+open annotations { inline, noInline }
+
+:expect [[1, 2], [3, 4]]
+@inline fun makePair(n) =
+  class Local with
+    let x = n
+    @noInline fun getX = x
+  module Local with
+    let x = n + 1
+    @noInline fun getX = x
+  [(new Local).getX, Local.getX]
+[makePair(1), makePair(3)]
+//│ = [[1, 2], [3, 4]]
+
+
+// * Standalone modules keep their synthetic class containers after inlining.
+
+:expect [1, 3]
+@inline fun moduleValue(n) =
+  module Local with
+    let x = n
+    @noInline fun getX = x
+  Local.getX
+[moduleValue(1), moduleValue(3)]
+//│ = [1, 3]
+
+
+// * FIXME: SymbolRefresher does not refresh the owned member symbol of a nested module.
+
+:fixme
+:expect [3, 7]
+@inline fun moduleSum(n) =
+  module Local with
+    let x = n
+    module Nested with
+      let y = n + 1
+      @noInline fun sum = x + y
+    @noInline fun read = Nested.sum
+  Local.read
+[moduleSum(1), moduleSum(3)]
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:Nested for ClsLikeDefn is a free variable for this block
+
+
+// A selection that may refer both to an accessible private member and to other members
+// cannot be compiled to a single property access, as private members are not properties.
+:e
+class PublicBase with
+  fun f = "A"
+class PrivateOverride extends PublicBase with
+  private fun f = "B"
+  fun viaThis = this.f
+  fun pick(flag) = (if flag then this else new PublicBase).f
+let po = new PrivateOverride
+[po.viaThis, po.pick(true), po.pick(false)]
+//│ ╔══[COMPILATION ERROR] This reference may target a private member, which cannot be selected together with other members
+//│ ║  l.257: 	  fun pick(flag) = (if flag then this else new PublicBase).f
+//│ ║         	                                                          ^^
+//│ ╟── private member 'f' declared here
+//│ ║  l.255: 	  private fun f = "B"
+//│ ║         	              ^
+//│ ╟── other target: function 'f'
+//│ ║  l.253: 	  fun f = "A"
+//│ ╙──       	      ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ po = PrivateOverride
+
+// The shape of `that` is inferred from the call, which selects the private member.
+:expect ["B", "B"]
+class PublicBase2 with
+  fun f = "A"
+class PrivateOverride2 extends PublicBase2 with
+  private fun f = "B"
+  fun viaThis = this.f
+  fun viaParam(that) = that.f
+let po2 = new PrivateOverride2
+[po2.viaThis, po2.viaParam(po2)]
+//│ = ["B", "B"]
+//│ po2 = PrivateOverride2
