@@ -345,12 +345,12 @@ fun sig(x, y?) = x
 :e
 fun sig2: (Int, Int?) -> Int
 fun sig2(x, y) = x
-//│ ╔══[COMPILATION ERROR] Parameter 'y' is required...
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
 //│ ║  l.347: 	fun sig2(x, y) = x
-//│ ║         	            ^
-//│ ╟── ...but the corresponding parameter of the function's signature is optional.
+//│ ║         	        ^^^^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
 //│ ║  l.346: 	fun sig2: (Int, Int?) -> Int
-//│ ╙──       	                ^^^^
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^
 
 
 // *** Optimizations ***

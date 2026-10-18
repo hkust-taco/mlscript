@@ -1471,18 +1471,39 @@ class NewResolver:
   // publish inferred alternatives for parameters behind this boundary.
   private def signatureParameters(using rs: ResolutionContext) = rs.state.signatureParameters
   def registerParameterSignature(paramLists: Ls[ParamList], sign: Term)(using ResolutionContext): Unit =
+    // Check only signatures that explicitly specify one calling convention,
+    // following aliases and quantifiers but leaving unions, intersections, and
+    // inferred types to type checking. Rejecting one possible view of a compound
+    // signature would turn this best-effort check into a false incompatibility.
+    def singleArrow(res: TypeResolution, seen: Set[TypeResolution])(using ResolutionContext): Bool =
+      if seen(res) then false else
+        def next(inner: TypeResolution): Bool = singleArrow(inner, seen + res)
+        res.currentShapes.toList match
+          case TypeShape.Function(_, _) :: Nil => true
+          case TypeShape.Reference(base, _, _, _) :: Nil => next(base)
+          case TypeShape.Contextual(ref) :: Nil => next(ref.tpe.resolution)
+          case TypeShape.Applied(base, _) :: Nil => next(base)
+          case TypeShape.Alias(_, S(rhs)) :: Nil => next(rhs)
+          case TypeShape.Polymorphic(_, _, body) :: Nil => next(body)
+          case _ => false
     def bind(paramLists: Ls[ParamList], tpe: DeclaredType)(using ResolutionContext): Unit = paramLists match
       case Nil => ()
       case ps :: tail => listenTypeViews(tpe):
         case Marked(callable: CallableTypeShape, marks) =>
           val declared = callable.paramLists.head
-          if !declared.hasRest then ps.params.zip(declared.params).foreach: (param, sign) =>
-            if param.sign.isEmpty then sign.foreach: tpe =>
-              val contextual = transportType(tpe, marks :: Nil)
-              signatureParameters(param.sym) = contextual
-              listenTypeInstances(contextual): shape =>
-                if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
-          callable.result.foreach(tpe => bind(tail, transportType(tpe, marks :: Nil)))
+          if Arity(ps) != Arity(declared) then
+            if singleArrow(tpe.resolution, Set.empty) then
+              rctx.report(ErrorReport(
+                msg"Implementation parameter list does not match its separate signature." -> ps.toLoc ::
+                msg"The signature has different required, optional, variadic, or trailing parameter positions." -> sign.toLoc :: Nil))
+          else
+            if !declared.hasRest then ps.params.zip(declared.params).foreach: (param, sign) =>
+              if param.sign.isEmpty then sign.foreach: tpe =>
+                val contextual = transportType(tpe, marks :: Nil)
+                signatureParameters(param.sym) = contextual
+                listenTypeInstances(contextual): shape =>
+                  if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
+            callable.result.foreach(tpe => bind(tail, transportType(tpe, marks :: Nil)))
         case _ => ()
     bind(paramLists, declaredType(typeResolution(sign), Map.empty))
 

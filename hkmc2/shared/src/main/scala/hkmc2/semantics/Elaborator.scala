@@ -2516,9 +2516,9 @@ extends Importer:
                 case st => term(st, Tpe)(using newCtx)
               
               if td.annotatedResultType.isEmpty then
-                s.foreach(checkSignatureOptionality(pss, _))
-              if newResolution && td.annotatedResultType.isEmpty then
-                s.foreach(registerParameterSignature(pss, _))
+                s.foreach: sign =>
+                  if newResolution then registerParameterSignature(pss, sign)
+                  else checkSignatureOptionality(pss, sign)
               
               val body: Opt[Term] = rhs match
                 case N => N
