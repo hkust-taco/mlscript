@@ -1366,6 +1366,14 @@ val v: Option[Int] = Some(1)
 
 ### Resolution Interfaces
 
+**Resolution is a best-effort check, not a replacement for type checking.** It
+finds targets for names, members, and calls, and catches some obvious mistakes.
+Successful resolution does not establish type safety, including in strict mode;
+a later type-checking pass will cover the remaining cases. When precise tracking
+or checking would be too complicated or expensive, resolution accepts the case
+leniently. For example, it need not enumerate possible spread lengths to track
+every way an optional parameter could receive `undefined`.
+
 With new resolution (`#lang(0.3.x)`), annotations determine the interface available
 to member lookup and calls. A receiver annotated `Base` exposes Base's declared
 members and preserves virtual dispatch; concrete arguments cannot add subclass

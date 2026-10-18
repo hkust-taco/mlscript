@@ -13,6 +13,13 @@ import Elaborator.*
 import hkmc2.syntax.LetBind
 
 
+/** Best-effort name, member, and call resolution, not a type checker.
+  * Shape propagation helps find targets and diagnose obvious mistakes; it does
+  * not prove type safety, even in strict mode. Leave complicated or expensive
+  * compatibility checks to a later type-checking pass and accept those cases
+  * leniently. In particular, optional arguments and spreads need not retain
+  * every possible length or correlation between alternatives.
+  */
 class NewResolver:
   self: Elaborator =>
   import tl.*

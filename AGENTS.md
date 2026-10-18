@@ -44,6 +44,15 @@ Do not change repository-local or global Git identity configuration.
 
 ## Design Philosophy
 
+**Resolution is a best-effort check, not type checking.** Its purpose is to find
+usable targets for names, members, and calls. It may diagnose obvious mistakes,
+but it does not establish type safety, even in strict-resolution mode. A later
+type-checking pass will cover the remaining cases. When tracking or checking a
+case would be too complicated or expensive, resolution should leniently accept
+it rather than reject it for lack of proof. Preserve useful known information
+without inventing impossible value flows or requiring exhaustive tracking of
+argument lengths, optionality, or relationships between alternatives.
+
 You are working on an industry-strength compiler codebase.
 Although its test suite is extensive, tests alone are not enough to determine the quality of a change;
 the goal is not just to "make everything green".
