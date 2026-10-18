@@ -169,7 +169,7 @@ consume(produce(2))
 //│ };
 //│ @private
 //│ define produce⁰ as fun produce¹(n: Int⁰): Function⁰ {
-//│   let scrut: ?, tmp1: ?;
+//│   let scrut: ?, tmp1: Int⁰;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
 //│     true =>
@@ -178,7 +178,7 @@ consume(produce(2))
 //│       return $box_Box⁰(Box_v)
 //│     else
 //│       set tmp1 = -⁰(n, 1);
-//│       return produce¹((tmp1 as! Int⁰))
+//│       return produce¹(tmp1)
 //│   end
 //│ };
 //│ @private

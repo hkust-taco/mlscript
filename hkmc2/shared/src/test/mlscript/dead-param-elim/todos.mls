@@ -113,13 +113,11 @@ sumPlus(enum(3))
 //│     true =>
 //│       return 1
 //│     else
-//│       let arg, fv_tmp, fv_r, inlinedVal;
+//│       let fv_tmp, inlinedVal;
 //│       set tmp = -⁰(x, 1);
-//│       set arg = (tmp as! Int⁰);
-//│       set inlinedVal = enum$enum$worker⁰(arg, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│       set inlinedVal = enum$enum$worker⁰(tmp, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
 //│       set fv_tmp = +⁰(x, inlinedVal);
-//│       set fv_r = (fv_tmp as! Int⁰);
-//│       return +⁰(fv_r, 1)
+//│       return +⁰(fv_tmp, 1)
 //│   end
 //│ };
 //│ define enum⁰ as fun enum¹(x) {
@@ -130,26 +128,24 @@ sumPlus(enum(3))
 //│       return Nil⁰
 //│     else
 //│       set tmp = -⁰(x, 1);
-//│       set tmp1 = enum¹((tmp as! Int⁰));
+//│       set tmp1 = enum¹(tmp);
 //│       return Cons⁰(x, tmp1)
 //│   end
 //│ };
 //│ define sumPlus⁰ as fun sumPlus¹(ls) {
-//│   let r, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│   let arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
 //│   match ls
 //│     Nil⁰ =>
-//│       set tmp = 0;
-//│       end
+//│       return 1
 //│     Cons¹ =>
 //│       set arg$Cons$0$ = ls.h⁰;
 //│       set arg$Cons$1$ = ls.t⁰;
 //│       set tmp1 = sumPlus¹(arg$Cons$1$);
 //│       set tmp = +⁰(arg$Cons$0$, tmp1);
-//│       end
+//│       return +⁰(tmp, 1)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
-//│   set r = (tmp as! Int⁰);
-//│   return +⁰(r, 1)
+//│   end
 //│ };
 //│ return enum$enum$worker⁰(3, undefined, undefined, undefined, undefined, undefined, undefined, undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

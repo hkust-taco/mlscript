@@ -232,7 +232,7 @@ data class ContTrace(
 data class EffectSig(contTrace: ContTrace, handler: Any, handlerFun: Function | Bool | null)
 
 abstract class NonLocalReturn with
-  fun ret(value)
+  fun ret(value: Any): Any
 
 data class FnLocalsInfo(fnName: Str, locals: Array[LocalVarInfo])
 data class LocalVarInfo(localName: Str, value: Any)

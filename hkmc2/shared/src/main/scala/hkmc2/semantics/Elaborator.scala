@@ -302,6 +302,7 @@ object Elaborator:
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
+      lazy val Iterator = assumeBuiltinCls("Iterator")
       lazy val Awaited = assumeBuiltinTpe("Awaited")
       lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")
@@ -1314,7 +1315,10 @@ extends Importer:
   
   private def app(lt: Term, rt: Term)(tree: Tree.App, typ: Opt[typing.Type], resSym: FlowSymbol)(using Ctx): Term =
     val res = withTypeBinders(new Term.App(lt, rt)(tree, typ, resSym))
-    if newResolution then listenTerm(lt)(shape => appShape(shape, rt, res))
+    if newResolution then lt match
+      // Builtin operators have no shapes of their own; see NewResolver.builtinApplication.
+      case Term.Ref(op: BuiltinSymbol) => builtinApplication(op, rt, res)
+      case _ => listenTerm(lt)(shape => appShape(shape, rt, res))
     res
   
   /** With the new underscore syntax, some operator operands delimit their own implicit lambdas,

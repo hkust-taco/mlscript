@@ -234,6 +234,16 @@ wasm.i32.eqz(wasm.i32.const(1))
 //│ = 0
 
 
+// Chained trailing applications keep the unboxed representation of their intermediate results.
+:expect 1
+42
+  wasm.i32.const()
+  wasm.i32.eqz()
+  wasm.i32.eqz()
+//│ Wasm result:
+//│ = 1
+
+
 // `2147483647` does not fit in an i31 and is truncated to all 31 bits set, which `get_s` reads as -1 and
 // `get_u` as 2147483647.
 wasm.i31.get_s(2147483647)
@@ -403,3 +413,20 @@ not true
 not false
 //│ Wasm result:
 //│ = 1
+
+
+// Operators are implemented by dynamically typed runtime intrinsics, so the slots their results flow into
+// keep the default reference representation, even when other inputs are integers (see `BuiltinOperatorResults`).
+:noInline
+:expect 43
+private fun pass(a) = a
+let unused = pass(1)
+pass(42 + 1)
+//│ Wasm result:
+//│ = 43
+
+
+:todo // String concatenation is not supported yet
+"a" + 1
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: unreachable

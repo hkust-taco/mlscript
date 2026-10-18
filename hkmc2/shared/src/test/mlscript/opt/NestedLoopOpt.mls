@@ -28,9 +28,9 @@ fun innerUpdatesOuterCondition() =
 //│           match scrut1
 //│             true =>
 //│               set tmp = -⁰(x, 1);
-//│               set x = (tmp as! Int⁰);
+//│               set x = tmp;
 //│               set tmp1 = -⁰(y, 1);
-//│               set y = (tmp1 as! Int⁰);
+//│               set y = tmp1;
 //│               continue lbl1
 //│             else
 //│               end
@@ -205,13 +205,13 @@ fun labelContinueFiltersPath(limit) =
 //│         match scrut1
 //│           true =>
 //│             set tmp1 = +⁰(i, 1);
-//│             set i = (tmp1 as! Int⁰);
+//│             set i = tmp1;
 //│             continue loop
 //│           else
 //│             set tmp2 = +⁰(acc, 10);
-//│             set acc = (tmp2 as! Int⁰);
+//│             set acc = tmp2;
 //│             set tmp3 = +⁰(i, 1);
-//│             set i = (tmp3 as! Int⁰);
+//│             set i = tmp3;
 //│             continue loop
 //│         end
 //│     end

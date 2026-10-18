@@ -16,10 +16,18 @@ let f = foo(1)(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ f = 3
 
-:breakme // builtins like `+` do not yet yield a shape
 :e
 f(3)
-//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.20: 	f(3)
+//│ ║        	^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ║  l.6: 	  x + y
+//│ ║       	  ^^^^^
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.6: 	  x + y
+//│ ╙──     	  ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sr
 let f = foo(1)
@@ -35,10 +43,18 @@ let g = f(2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ g = 3
 
-:breakme // builtins like `+` do not yet yield a shape
 :e
 g(3)
-//│ ═══[RUNTIME ERROR] TypeError: g is not a function
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.47: 	g(3)
+//│ ║        	^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ║  l.6: 	  x + y
+//│ ║       	  ^^^^^
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.6: 	  x + y
+//│ ╙──     	  ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let f = x => y => x + y

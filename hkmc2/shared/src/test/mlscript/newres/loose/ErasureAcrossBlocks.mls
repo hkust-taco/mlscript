@@ -1,0 +1,34 @@
+:.
+
+// Worksheet blocks are compiled one after the other, and the representations erasure infers for a block's
+// definitions are final once it is compiled. Without strict resolution, a block does not expose its public
+// definitions to unknown callers (see `Elaborator.topLevel`), so their representations are inferred from the
+// uses in their own block only, and later blocks must use them consistently. Compiled files are not affected:
+// a compilation unit is elaborated with its exports exposed.
+
+
+fun ident(x) = x
+ident(1)
+//│ = 1
+
+// The parameter of `ident` was inferred as an `Int` from the block above.
+:ge
+ident("a")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.16: 	ident("a")
+//│ ╙──      	      ^^^
+//│ = "a"
+
+
+// Later blocks cannot widen the representation of a top-level `let`, which is not exposed to their writes
+// even under strict resolution.
+let counter = 1
+//│ counter = 1
+
+:ge
+set counter = "hello"
+counter
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.29: 	set counter = "hello"
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
+//│ = "hello"

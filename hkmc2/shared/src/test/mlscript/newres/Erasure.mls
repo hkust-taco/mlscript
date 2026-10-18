@@ -214,10 +214,27 @@ apply(41) \ _ + 1
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let lambda;
 //│ @private
-//│ define apply⁰ as fun apply¹(value: Int⁰, f: Function⁰): ? {
-//│   return f(value)
+//│ define apply⁰ as fun apply¹(value: Int⁰, f: Function⁰): Int⁰ {
+//│   return (f(value) as! Int⁰)
 //│ };
 //│ define lambda as fun lambda⁰(_0: Int⁰): ? { return +⁰(_0, 1) };
 //│ return apply¹(41, lambda⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
+
+
+// Overrides are checked against the representations of the members they override, on every target.
+:ge
+private class Base() with
+  open fun get() = new Base()
+private class Derived() extends Base() with
+  override fun get() = "str"
+private fun produce(b) = b.get()
+produce(Derived())
+//│ ╔══[COMPILATION ERROR] Overriding member 'get' produces values represented as 'Str', which the member it overrides cannot produce: its results are represented as 'Base'
+//│ ║  l.231: 	  override fun get() = "str"
+//│ ║         	               ^^^
+//│ ╟── The overridden member 'get' is defined here
+//│ ║  l.229: 	  open fun get() = new Base()
+//│ ╙──       	           ^^^
+//│ = "str"

@@ -316,7 +316,7 @@ f(k1, 1) + f(k2, 5)
 //│     end
 //│   };
 //│   do Predef⁰.print⁰("between");
-//│   return g⁸(x)(2)
+//│   return (g⁸(x)(2) as! Int⁰)
 //│ };
 //│ @affine(1)
 //│ define k1⁰ as fun k1¹(a)(b) {
@@ -340,7 +340,7 @@ f(k1, 1) + f(k2, 5)
 //│   };
 //│   set h = g⁹(x);
 //│   do Predef⁰.print⁰("between");
-//│   return h(2)
+//│   return (h(2) as! Int⁰)
 //│ };
 //│ set tmp = f$f⁰(k1¹, 1);
 //│ set tmp1 = f⁹(k2¹, 5);
@@ -376,7 +376,7 @@ f(k1, 1) + f(k2, 5)
 //│   define b as fun b⁰(y)(eta$0$0) {
 //│     return (k(y) as! Function⁰)(eta$0$0)
 //│   };
-//│   return a⁰(x)(2)
+//│   return (a⁰(x)(2) as! Int⁰)
 //│ };
 //│ @affine(1)
 //│ define k1² as fun k1³(a)(b) {
@@ -394,7 +394,7 @@ f(k1, 1) + f(k2, 5)
 //│     return (k(y) as! Function⁰)
 //│   };
 //│   set h = a¹(x);
-//│   return h(2)
+//│   return (h(2) as! Int⁰)
 //│ };
 //│ set tmp = f$f¹(k1³, 1);
 //│ set tmp1 = f¹¹(k2³, 5);

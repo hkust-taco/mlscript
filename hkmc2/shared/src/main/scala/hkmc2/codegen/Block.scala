@@ -1145,6 +1145,10 @@ sealed abstract class Result extends Located, HasErasedType:
     case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
     case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
     // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
+    // * WORKAROUND (see `semantics.BuiltinOperatorResults`): builtin operators have no declared signature,
+    // * so their results are approximated from the representations of their operands.
+    case Call(Value.SimpleRef(op: BuiltinSymbol), args :: Nil) if args.forall(_.spread.isEmpty) =>
+      ErasedType.builtinOperatorResult(op.nme, args.map(_.value))
     case Call(fun, argss) => fun.targetSymbol match
       case S(ts: TermSymbol) => ts.erasedType match
         case S(ErasedType.FuncRef(rsc, paramLists, ret)) =>
@@ -1182,6 +1186,8 @@ sealed abstract class Result extends Located, HasErasedType:
 
   /** `undefined` is an unspecified value of any representation, including unboxed primitives.
     * Casts retain the expected representation but do not constrain the underlying unspecified value.
+    * Reading back an `undefined` stored in a slot is undefined behavior (see Runtime Representations in
+    * `doc/reference.md`), so a backend may materialize it as any value of the slot's representation.
     */
   def isUndefined: Bool = this match
     case Value.Lit(Tree.UnitLit(false)) => true

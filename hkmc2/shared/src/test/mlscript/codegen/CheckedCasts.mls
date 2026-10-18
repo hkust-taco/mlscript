@@ -5,12 +5,12 @@
 // checked, `as!!` when not.
 
 :sir
-fun checked(x: Int, y: Int): Int = x + y
+fun checked(x: Num, y: Int): Int = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define checked⁰ as fun checked¹(x, y) { return (+⁰(x, y) as! Int⁰) }; end
 
 :noCheckCasts
 :sir
-fun unchecked(x: Int, y: Int): Int = x + y
+fun unchecked(x: Num, y: Int): Int = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define unchecked⁰ as fun unchecked¹(x, y) { return (+⁰(x, y) as!! Int⁰) }; end

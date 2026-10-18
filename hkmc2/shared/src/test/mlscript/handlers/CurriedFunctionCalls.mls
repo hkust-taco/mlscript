@@ -79,7 +79,7 @@ fun g(a)(b) = f(a)(b) + f(b)(a)
 //│   match pc
 //│     1 =>
 //│       set tmp1 = runtime⁰.resumeValue﹖;
-//│       return +⁰(tmp, tmp1)
+//│       return (+⁰(tmp, tmp1) as! Int⁰)
 //│     else
 //│       end
 //│   end

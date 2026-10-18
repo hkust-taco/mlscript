@@ -148,22 +148,6 @@ callid1(Predef)
 //│ | listen: trm = [1]
 //│ | listenTerm: trm = 1
 //│ | listen: trm = 1
-//│ | listen: trm = member:Num⁰
-//│ | transportType type of member:Num⁰ (previous = List(), marks = List(↘⟨class:Int⁰⟩ϵ))
-//│ | | .exit InstanceShape(missing) (↘⟨class:Int⁰⟩ϵ)
-//│ | | | .exit InstanceShape(missing) (ϵ)
-//│ | | | = InstanceShape(missing)
-//│ | | = MarkedShape(InstanceShape(missing), ↘⟨class:Int⁰⟩ϵ)
-//│ | .enter InstanceShape(missing) (↘⟨class:Int⁰⟩ϵ)
-//│ | | .exit MarkedShape (InstanceShape(missing), class:Int⁰, )
-//│ | | = MarkedShape(InstanceShape(missing), ↗⟨class:Int⁰⟩ϵ)
-//│ | | .enter MarkedShape(InstanceShape(missing), ↗⟨class:Int⁰⟩ϵ) (ϵ)
-//│ | | = MarkedShape(InstanceShape(missing), ↗⟨class:Int⁰⟩ϵ)
-//│ | = MarkedShape(InstanceShape(missing), ↗⟨class:Int⁰⟩ϵ)
-//│ | .exit NominalInstanceView(class:Num¹) (↘⟨class:Int⁰⟩ϵ)
-//│ | | .exit NominalInstanceView(class:Num¹) (ϵ)
-//│ | | = NominalInstanceView(class:Num¹)
-//│ | = MarkedShape(NominalInstanceView(class:Num¹), ↘⟨class:Int⁰⟩ϵ)
 //│ | introShape: intro = Lit(IntLit(1))
 //│ | .exit IntroShape(1) (ϵ)
 //│ | = IntroShape(1)
@@ -274,27 +258,27 @@ f.name
 :e
 (x => x).foo
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.275: 	(x => x).foo
+//│ ║  l.259: 	(x => x).foo
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── Function literal does not contain member 'foo'
-//│ ║  l.275: 	(x => x).foo
+//│ ║  l.259: 	(x => x).foo
 //│ ╙──       	 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 f is Int -> Int
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator '->').
-//│ ║  l.285: 	f is Int -> Int
+//│ ║  l.269: 	f is Int -> Int
 //│ ╙──       	     ^^^^^^^^^^
 //│ = true
 
 :fixme
 (f as Int -> Int).apply
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.292: 	(f as Int -> Int).apply
+//│ ║  l.276: 	(f as Int -> Int).apply
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature does not contain member 'apply'
-//│ ║  l.292: 	(f as Int -> Int).apply
+//│ ║  l.276: 	(f as Int -> Int).apply
 //│ ╙──       	      ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

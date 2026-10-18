@@ -108,25 +108,27 @@ i(print)(2)
 //│ ╙──      	        ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'i' expected 2 arguments but got 1
 
-// :re
+// The sum flows to every call of `i`'s argument, including the ill-arity `i(print)(2)` above,
+// whose application of that result is reported when this block resolves the sum.
+:e
 i((x, y, z) => x + y + z, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.102: 	i(print)(2)
+//│ ║         	^^^^^^^^^^^
+//│ ╟── Value of type 'Int' cannot be called like a function.
+//│ ║  l.114: 	i((x, y, z) => x + y + z, 2)
+//│ ╙──       	               ^^^^^^^^^
 //│ = 3
 
 // :re
 :e
 i((...args) => [...args], _)(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.102: 	i(print)(2)
-//│ ║         	^^^^^^^^^^^
-//│ ╟── Tuple literal cannot be called like a function.
-//│ ║  l.91: 	let i = _(0, 1, _)
-//│ ╙──      	         ^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.117: 	i((...args) => [...args], _)(2)
+//│ ║  l.125: 	i((...args) => [...args], _)(2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Tuple literal cannot be called like a function.
-//│ ║  l.91: 	let i = _(0, 1, _)
-//│ ╙──      	         ^^^^^^^^^
+//│ ╟── Value of type 'Int' cannot be called like a function.
+//│ ║  l.114: 	i((x, y, z) => x + y + z, 2)
+//│ ╙──       	               ^^^^^^^^^
 //│ = fun
 
 
@@ -147,8 +149,8 @@ i((...args) => [...args], _)(2)
 //│ ║  l.30: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
 //│ ║        	                                 ^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in PartialApps.mls:145
-//│ ║  l.145: 	123 |> (_ + 1 >> _ * 2)
+//│ ║  in PartialApps.mls:147
+//│ ║  l.147: 	123 |> (_ + 1 >> _ * 2)
 //│ ╙──       	        ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
@@ -194,7 +196,7 @@ data class C(a, b, c)
 :ge
 2 |> C(1, _, 3) |> print
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
-//│ ║  l.195: 	2 |> C(1, _, 3) |> print
+//│ ║  l.197: 	2 |> C(1, _, 3) |> print
 //│ ╙──       	     ^^^^^^^^^^
 //│ = fun
 
@@ -244,7 +246,7 @@ _ - _ of 1, 2
 :pe
 |> 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.245: 	|> 1
+//│ ║  l.247: 	|> 1
 //│ ╙──       	   ^
 //│ = fun pipeInto
 
@@ -252,7 +254,7 @@ _ - _ of 1, 2
 :re
 |> (1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.253: 	|> (1)
+//│ ║  l.255: 	|> (1)
 //│ ║         	^^^^^^
 //│ ╟── Function 'pipeInto' expected 2 arguments, but got 1
 //│ ║  in ../../mlscript-compile/Predef.mls
@@ -301,10 +303,10 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.302: 	let f = if _ then 1 else 0
+//│ ║  l.304: 	let f = if _ then 1 else 0
 //│ ║         	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.302: 	let f = if _ then 1 else 0
+//│ ║  l.304: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f13; f13 = 1;

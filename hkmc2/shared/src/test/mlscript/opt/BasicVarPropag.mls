@@ -228,7 +228,7 @@ main
 //│       true =>
 //│         do Predef⁰.print⁰(x);
 //│         set tmp = -⁰(x, 1);
-//│         set x = (tmp as! Int⁰);
+//│         set x = tmp;
 //│         continue lbl
 //│       else
 //│         end

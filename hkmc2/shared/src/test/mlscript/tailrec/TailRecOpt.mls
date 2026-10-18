@@ -27,7 +27,7 @@ f(10000, 20000, 0)
 //│       0 =>
 //│         let tmp;
 //│         set tmp = +⁰(param2, param3);
-//│         set param2 = (tmp as! Int⁰);
+//│         set param2 = tmp;
 //│         set id = 1;
 //│         continue loopLabel
 //│       1 =>
@@ -36,7 +36,7 @@ f(10000, 20000, 0)
 //│         match scrut
 //│           true =>
 //│             set tmp = -⁰(param0, 1);
-//│             set param0 = (tmp as! Int⁰);
+//│             set param0 = tmp;
 //│             set param3 = 1;
 //│             set id = 0;
 //│             continue loopLabel
@@ -45,12 +45,12 @@ f(10000, 20000, 0)
 //│             match scrut1
 //│               true =>
 //│                 set tmp1 = -⁰(param1, 1);
-//│                 set param1 = (tmp1 as! Int⁰);
+//│                 set param1 = tmp1;
 //│                 set param3 = 2;
 //│                 set id = 0;
 //│                 continue loopLabel
 //│               else
-//│                 return param2
+//│                 return (param2 as! Int⁰)
 //│             end
 //│         end
 //│       else
@@ -64,9 +64,9 @@ f(10000, 20000, 0)
 //│ };
 //│ @inline
 //│ define f⁰ as fun f¹(a, b, c) {
-//│   return (g_f⁰(1, a, b, c, undefined) as! Int⁰)
+//│   return g_f⁰(1, a, b, c, undefined)
 //│ };
-//│ return (g_f⁰(1, 10000, 20000, 0, undefined) as! Int⁰)
+//│ return g_f⁰(1, 10000, 20000, 0, undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 50000
 

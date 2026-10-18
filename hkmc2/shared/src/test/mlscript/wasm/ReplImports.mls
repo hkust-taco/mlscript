@@ -165,3 +165,14 @@ fun rejectNonBox(x: Any): CastBox = x
 rejectNonBox(42)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// An inferred session global of primitive type is stored unboxed as well.
+let inferred = wasm.i32.const(123)
+//│ Wasm result:
+//│ = {}
+
+:expect 123
+inferred
+//│ Wasm result:
+//│ = 123

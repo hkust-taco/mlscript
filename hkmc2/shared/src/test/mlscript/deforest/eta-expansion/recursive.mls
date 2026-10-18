@@ -39,7 +39,7 @@ sum(enum(5), 0)
 //│       return Nil⁰
 //│     else
 //│       set tmp = -⁰(x1, 1);
-//│       set tmp1 = enum¹((tmp as! Int⁰));
+//│       set tmp1 = enum¹(tmp);
 //│       return Cons⁰(x1, tmp1)
 //│   end
 //│ };
@@ -54,7 +54,7 @@ sum(enum(5), 0)
 //│         set arg$Cons$1$ = ls.t⁰;
 //│         set tmp = +⁰(arg$Cons$0$, acc);
 //│         set ls = arg$Cons$1$;
-//│         set acc = (tmp as! Int⁰);
+//│         set acc = tmp;
 //│         continue loopLabel
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
@@ -72,13 +72,11 @@ sum(enum(5), 0)
 //│         set inlinedVal = eta$0$0;
 //│         break inlinedLbl
 //│       else
-//│         let arg, fv_tmp, acc;
+//│         let fv_tmp;
 //│         set tmp = -⁰(x, 1);
-//│         set arg = (tmp as! Int⁰);
 //│         set fv_tmp = +⁰(x, eta$0$0);
-//│         set acc = (fv_tmp as! Int⁰);
-//│         set x = arg;
-//│         set eta$0$0 = acc;
+//│         set x = tmp;
+//│         set eta$0$0 = fv_tmp;
 //│         continue loopLabel
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
@@ -147,7 +145,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│       let inlinedVal;
 //│       set arg$Cons$1$ = xs.t⁰;
 //│       set inlinedVal = flatten_append$append$worker⁰(arg$Cons$1$, ys, undefined, undefined, undefined);
-//│       return (+⁰(1, inlinedVal) as! Int⁰)
+//│       return +⁰(1, inlinedVal)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -188,7 +186,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│     Cons¹ =>
 //│       set arg$Cons$1$ = ls.t⁰;
 //│       set tmp5 = len¹(arg$Cons$1$);
-//│       return (+⁰(1, tmp5) as! Int⁰)
+//│       return +⁰(1, tmp5)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end

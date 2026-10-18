@@ -79,7 +79,7 @@ f(1, 2)
 //│   set g$here = g$⁰(used1, used2);
 //│   set foo = g$here;
 //│   set tmp = foo(used2);
-//│   return +⁰(tmp, unused2)
+//│   return (+⁰(tmp, unused2) as! Int⁰)
 //│ };
 //│ return f¹(1, 2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -376,7 +376,7 @@ f(0)
 //│ define g as fun g⁵(x) {
 //│   let tmp;
 //│   set tmp = +⁰(x, 1);
-//│   set x = (tmp as! Int⁰);
+//│   set x = tmp;
 //│   return x
 //│ };
 //│ define f⁷ as fun f⁸(x) {
@@ -387,7 +387,7 @@ f(0)
 //│       return g⁵(x)
 //│     else
 //│       set tmp = +⁰(x, 1);
-//│       set x = (tmp as! Int⁰);
+//│       set x = tmp;
 //│       return x
 //│   end
 //│ };
@@ -597,10 +597,10 @@ h(1)
 //│   match scrut
 //│     true =>
 //│       set tmp = -⁰(c, 1);
-//│       set tmp1 = f1⁰((tmp as! Int⁰));
+//│       set tmp1 = f1⁰(tmp);
 //│       set tmp2 = -⁰(c, 1);
-//│       set tmp3 = f2⁰((tmp2 as! Int⁰));
-//│       return (+⁰(tmp1, tmp3) as! Int⁰)
+//│       set tmp3 = f2⁰(tmp2);
+//│       return +⁰(tmp1, tmp3)
 //│     else
 //│       return 1
 //│   end

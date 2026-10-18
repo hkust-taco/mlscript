@@ -169,7 +169,9 @@ value
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
 //│ ║  l.163: 	let value = const(1)
 //│ ╙──       	    ^^^^^
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ║  l.163: 	let value = const(1)
+//│ ╙──       	            ^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i64` to `(ref null any)` in a different type hierarchy
 
 
@@ -177,9 +179,11 @@ value
 :ge
 fun exported(value) = value
 exported(const(42))
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.179: 	exported(const(42))
+//│ ║  l.180: 	fun exported(value) = value
+//│ ╙──       	                      ^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.181: 	exported(const(42))
 //│ ╙──       	         ^^^^^^^^^
 //│ Wasm result:
 //│ = 42
@@ -189,7 +193,9 @@ exported(const(42))
 :ge
 private class Mutable(mut val value)
 Mutable(const(42)).value
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.194: 	private class Mutable(mut val value)
+//│ ╙──       	                              ^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Unknown`
 
@@ -210,7 +216,7 @@ cell.value
 val annotated: Any = const(42)
 annotated
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.210: 	val annotated: Any = const(42)
+//│ ║  l.216: 	val annotated: Any = const(42)
 //│ ╙──       	                     ^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 

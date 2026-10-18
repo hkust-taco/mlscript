@@ -199,13 +199,13 @@ capturePrefix(10)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @inline @private
 //│ define checkedPrefix⁰ as fun checkedPrefix¹(x)(y) {
-//│   return (+⁰(x, y) as! Int⁰)
+//│   return +⁰(x, y)
 //│ };
 //│ @private
 //│ define capturePrefix⁰ as fun capturePrefix¹(n) {
 //│   let arg;
 //│   set arg = (n as! Int⁰);
-//│   return (+⁰(arg, 3) as! Int⁰)
+//│   return +⁰(arg, 3)
 //│ };
 //│ return capturePrefix¹(10)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

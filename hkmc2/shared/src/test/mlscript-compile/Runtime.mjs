@@ -670,7 +670,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     throw runtime.safeCall(globalThis.Error(tmp3))
   }
   static checkArgs(functionName, expected, isUB, got) {
-    let name, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
+    let scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
     tmp = got < expected;
     if (tmp === false) {
       if (isUB === true) {
@@ -690,8 +690,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       } else {
         tmp4 = "";
       }
-      name = tmp4;
-      tmp5 = "Function" + name;
+      tmp5 = "Function" + tmp4;
       tmp6 = tmp5 + " expected ";
       if (isUB === true) {
         tmp7 = "";
@@ -813,18 +812,18 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     throw Runtime.CustomStackError(tmp4)
   }
   static showStackTrace(header, tr, debug, showLocals) {
-    let msg, curHandler, atTail, tmp;
+    let msg, curHandler, atTail;
     msg = header;
     curHandler = tr.contTrace;
     atTail = true;
     if (debug === true) {
       lbl: while (true) {
-        let scrut, cur, scrut1, tmp1, tmp2;
+        let scrut, cur, scrut1, tmp, tmp1;
         scrut = curHandler !== null;
         if (scrut === true) {
           cur = curHandler.next;
           lbl1: while (true) {
-            let scrut2, curLocals, loc, localsMsg, scrut3, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
+            let scrut2, curLocals, loc, scrut3, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10;
             scrut2 = cur !== null;
             if (scrut2 === true) {
               curLocals = cur.getLocals;
@@ -832,24 +831,22 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
               if (showLocals === true) {
                 scrut3 = curLocals.length > 0;
                 if (scrut3 === true) {
-                  tmp3 = runtime.safeCall(curLocals.map(lambda));
-                  tmp4 = runtime.safeCall(tmp3.join(", "));
-                  tmp5 = " with locals: " + tmp4;
+                  tmp2 = runtime.safeCall(curLocals.map(lambda));
+                  tmp3 = runtime.safeCall(tmp2.join(", "));
+                  tmp4 = " with locals: " + tmp3;
                 } else {
-                  tmp5 = "";
+                  tmp4 = "";
                 }
               } else {
-                tmp5 = "";
+                tmp4 = "";
               }
-              localsMsg = tmp5;
-              tmp6 = "\n\tat " + cur.getNme;
-              tmp7 = tmp6 + " (";
-              tmp8 = tmp7 + loc;
-              tmp9 = tmp8 + ")";
-              tmp10 = msg + tmp9;
+              tmp5 = "\n\tat " + cur.getNme;
+              tmp6 = tmp5 + " (";
+              tmp7 = tmp6 + loc;
+              tmp8 = tmp7 + ")";
+              tmp9 = msg + tmp8;
+              tmp10 = tmp9 + tmp4;
               msg = tmp10;
-              tmp11 = msg + localsMsg;
-              msg = tmp11;
               cur = cur.next;
               atTail = false;
               continue lbl1
@@ -859,9 +856,9 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
           curHandler = curHandler.nextHandler;
           scrut1 = curHandler !== null;
           if (scrut1 === true) {
-            tmp1 = "\n\twith handler " + curHandler.handler["constructor"]["name"];
-            tmp2 = msg + tmp1;
-            msg = tmp2;
+            tmp = "\n\twith handler " + curHandler.handler["constructor"]["name"];
+            tmp1 = msg + tmp;
+            msg = tmp1;
             atTail = false;
             continue lbl
           }
@@ -870,8 +867,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         break;
       }
       if (atTail === true) {
-        tmp = msg + "\n\tat tail position";
-        return tmp
+        return msg + "\n\tat tail position"
       }
       return msg;
     }
@@ -889,7 +885,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       if (scrut === true) {
         tmp1 = reps + 1;
         reps = tmp1;
-        scrut1 = reps > 10;
+        scrut1 = tmp1 > 10;
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         }
@@ -919,7 +915,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       if (scrut === true) {
         tmp = reps + 1;
         reps = tmp;
-        scrut1 = reps > 10;
+        scrut1 = tmp > 10;
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         }

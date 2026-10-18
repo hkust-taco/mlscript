@@ -191,13 +191,17 @@ class C
 
 :e
 fun test: Function = new C
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ║  l.193: 	fun test: Function = new C
+//│ ╙──       	                     ^^^^^
 //│ Wasm result:
 //│ = {}
 
 :e
 fun test: Function = (new C) as Object
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ║  l.201: 	fun test: Function = (new C) as Object
+//│ ╙──       	                      ^^^^^
 //│ Wasm result:
 //│ = {}
 
@@ -220,7 +224,7 @@ fun test: Function = castToA(123)
 :e
 castToA(wasm.i32.const(123))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.221: 	castToA(wasm.i32.const(123))
+//│ ║  l.225: 	castToA(wasm.i32.const(123))
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 123
@@ -337,3 +341,10 @@ fun discardPartial() =
 discardPartial()
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// An ascription narrows the dynamically typed result of an operator with a checked cast.
+:expect 43
+42 + 1 as Int
+//│ Wasm result:
+//│ = 43

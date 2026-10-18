@@ -36,8 +36,7 @@ in
 //│ set tmp2 = Predef⁰.hide⁰(4);
 //│ set x = (tmp2 as! Int⁰);
 //│ set tmp3 = +⁰(x, 1);
-//│ set x = (tmp3 as! Int⁰);
-//│ return Predef⁰.print⁰(x)
+//│ return Predef⁰.print⁰(tmp3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 2
 //│ > 5

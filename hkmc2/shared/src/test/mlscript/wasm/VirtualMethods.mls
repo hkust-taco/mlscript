@@ -296,6 +296,12 @@ class M1() with
 class M2() extends M1() with
   override fun f(m: Int32): Int = 0
 M2().f(1)
+//│ ╔══[COMPILATION ERROR] Overriding member 'f' produces values represented as 'Int', which the member it overrides cannot produce: its results are represented as 'Int32'
+//│ ║  l.297: 	  override fun f(m: Int32): Int = 0
+//│ ║         	               ^
+//│ ╟── The overridden member 'f' is defined here
+//│ ║  l.295: 	  open fun f(m: Int32): Int32 = m
+//│ ╙──       	           ^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
 //│ ║  l.298: 	M2().f(1)
 //│ ╙──       	       ^
@@ -304,17 +310,37 @@ M2().f(1)
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-// The same rule on a parameter: `g`'s `m` is unannotated, so it erases to `anyref` rather than `i32`.
+// The same rule on a parameter. An unannotated parameter of an override takes the inherited
+// representation, so only a declared one can differ: here `m: Int` erases to `anyref` rather than `i32`.
 :ge
 class N1() with
   open fun g(m: Int32): Int32 = m
 class N2() extends N1() with
-  override fun g(m): Int32 = 0
-N2().g(1)
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
+  override fun g(m: Int): Int32 = n32
+N2().g(n32)
+//│ ╔══[COMPILATION ERROR] Parameter 'm' of overriding member 'g' is represented as 'Int', which cannot hold the values represented as 'Int32' that the member it overrides accepts
+//│ ║  l.319: 	  override fun g(m: Int): Int32 = n32
+//│ ║         	                 ^^^^^^
+//│ ╟── The overridden member 'g' is defined here
+//│ ║  l.317: 	  open fun g(m: Int32): Int32 = m
+//│ ╙──       	           ^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int'
+//│ ║  l.320: 	N2().g(n32)
+//│ ╙──       	       ^^^
 //│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.312: 	  override fun g(m): Int32 = 0
-//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.319: 	  override fun g(m: Int): Int32 = n32
+//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// An unannotated parameter of an override takes the inherited `i32` representation.
+:expect 7
+class O1() with
+  open fun g(m: Int32): Int32 = m
+class O2() extends O1() with
+  override fun g(m) = m
+O2().g(n32)
+//│ Wasm result:
+//│ = 7
 
 
 // Boxed types are bridged by casts, so they need not match
@@ -434,3 +460,42 @@ readChild(new Child())
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = {}
+
+
+// An override must produce only representations of the inherited result. `Producer.get`'s result is inferred
+// from its body, so an override returning a string is rejected, rather than trapping when its result is cast
+// to the result type of the shared slot.
+:ge
+class Producer() with
+  open fun get() = new Producer()
+class StrProducer() extends Producer() with
+  override fun get() = "str"
+fun produce(p) = p.get()
+produce(StrProducer())
+//│ ╔══[COMPILATION ERROR] Overriding member 'get' produces values represented as 'Str', which the member it overrides cannot produce: its results are represented as 'Producer'
+//│ ║  l.472: 	  override fun get() = "str"
+//│ ║         	               ^^^
+//│ ╟── The overridden member 'get' is defined here
+//│ ║  l.470: 	  open fun get() = new Producer()
+//│ ╙──       	           ^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// An unannotated parameter of an override takes the inherited representation, inferred here from calls through
+// `Consumer`. A direct call passing a string is rejected, rather than trapping on the cast to the shared slot's
+// parameter type.
+:ge
+class Consumer() with
+  open fun take(x) = x
+class EchoConsumer() extends Consumer() with
+  override fun take(x) = x
+fun consume(c) = c.take(1)
+consume(Consumer())
+consume(EchoConsumer())
+EchoConsumer().take("s")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.496: 	EchoConsumer().take("s")
+//│ ╙──       	                    ^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

@@ -69,7 +69,7 @@ fun foo() =
 //│       true =>
 //│         let lambda$here;
 //│         set tmp = +⁰(scope0$cap.x$0⁰, 1);
-//│         set scope0$cap.x$0⁰ = (tmp as! Int⁰);
+//│         set scope0$cap.x$0⁰ = tmp;
 //│         set lambda$here = lambda$⁰(scope0$cap);
 //│         return lambda$here
 //│       else

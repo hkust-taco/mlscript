@@ -31,7 +31,6 @@ in
 //│ !! Change triggered { x⁰ ~> 2 }
 //│ !! Change triggered { y⁰ ~> 2 }
 //│ !! Change triggered { tmp:tmp⁰ ~> 3 }
-//│ !! Change triggered { rm redundant cast Cast(tmp:tmp⁰, ValueLike(?), checked) }
 //│ !! Change triggered { x¹ ~> 3 }
 //│ !! Change triggered { y⁰ ~> 3 }
 //│ !! Change triggered { tmp:tmp¹ ~> 6 }

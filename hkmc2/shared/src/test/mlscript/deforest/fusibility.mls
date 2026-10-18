@@ -551,7 +551,7 @@ c(mk(7))
 //│   let tmp1, tmp2;
 //│   set tmp1 = g¹(p)();
 //│   set tmp2 = g¹(p)();
-//│   return +⁰(tmp1, tmp2)
+//│   return (+⁰(tmp1, tmp2) as! Int⁰)
 //│ };
 //│ set tmp = mk¹(7);
 //│ return c¹(tmp)
@@ -654,7 +654,7 @@ c(mk(7))
 //│   let tmp1, tmp2;
 //│   set tmp1 = g³(p)(0)();
 //│   set tmp2 = g³(p)(0)();
-//│   return +⁰(tmp1, tmp2)
+//│   return (+⁰(tmp1, tmp2) as! Int⁰)
 //│ };
 //│ set tmp = mk³(7);
 //│ return c³(tmp)
@@ -735,7 +735,7 @@ c(mk(7))
 //│ define c⁴ as fun c⁵(p) {
 //│   let lambda$here;
 //│   set lambda$here = lambda$⁰(p);
-//│   return callTwice⁰(lambda$here)
+//│   return (callTwice⁰(lambda$here) as! Int⁰)
 //│ };
 //│ set tmp = mk⁵(7);
 //│ return c⁵(tmp)

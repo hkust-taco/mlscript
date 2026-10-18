@@ -11,6 +11,10 @@ import hkmc2.Message.MessageContext
 
 /** The capability to inspect completed resolution. Created only after elaboration/resolution;
   * executable lowering additionally requires this instance's whole-program pass to have finished.
+  *
+  * The representations this pass infers from resolution's observations are as binding as declared ones:
+  * lowering reports a value whose representation is unrelated to its slot's, or a slot whose values have
+  * no common representation, as a compilation error (see Runtime Representations in `doc/reference.md`).
   */
 final class Erasure private (using Config, Ctx, State)(using Raise):
   private given Erasure = this
@@ -21,8 +25,9 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
   def requireCompleted(statement: Statement): Unit =
     assert(completed.exists(_ is statement), "Lowering requires completed erasure of this program")
 
-  /** Async definitions expose a promise, but their original bodies produce its payload.
-    * Lowering must coerce explicit and implicit returns before AsyncLowering wraps them.
+  /** Async definitions expose a promise and generators an iterator, but their original
+    * bodies produce the payload (of the promise, or of the generator's final step).
+    * Lowering must coerce explicit and implicit returns before they are wrapped.
     */
   def bodyResultType(td: TermDefinition): Opt[ErasedValueType] =
     bodyResults.getOrElse(td.tsym, td.tsym.declaredResultType)
@@ -126,6 +131,25 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           case N => (ps :: Nil, rhs)
       case _ => N
 
+  /** An override without a result annotation implements the result of the member it overrides as if it declared it:
+    * lowering coerces the values of its body to the inherited representation, with checked casts where resolution
+    * observes wider values (as when an override computes its result with dynamically typed operations, or when its
+    * body never returns normally). A representation within the inherited one is kept, being more precise. An unrelated
+    * one is kept as well, for `checkOverride` to report: such values cannot be coerced to the inherited result.
+    */
+  private def overrideResultType(td: TermDefinition, observed: Opt[ErasedValueType]): Opt[ErasedValueType] =
+    td.tsym.overriddenMembers.headOption.filter(_.isErased) match
+      case N => observed
+      case S(base) =>
+        val inherited = base.declaredResultType
+        observed match
+          case N => inherited
+          case S(tpe) =>
+            ErasedType.needsCast(tpe.canonicalize, inherited.getOrElse(ErasedType.Unknown).canonicalize) match
+              case S(false) => observed
+              case S(true) => inherited
+              case N => observed
+
   private def definitionType(td: TermDefinition): Opt[ErasedType] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
@@ -148,12 +172,16 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
           && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
       then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
-      else declaredType(resultSign, td.modulefulness).orElse(inferredType(td.tsym))
+      else declaredType(resultSign, td.modulefulness).orElse(overrideResultType(td, inferredType(td.tsym)))
     bodyResults(td.tsym) = resultType
+    // The body produces the payload; callers receive the wrapper object instead.
+    // Resolution gives calls of such functions the same wrapper shapes.
     val callableResult =
-      if config.language.useNewResolution && td.asyncAnnotation.nonEmpty
-      then S(ErasedType.ValueLike(S(false), summon[Ctx].builtins.Promise))
-      else resultType
+      if !config.language.useNewResolution then resultType
+      else td.resultWrapperAnnotation match
+        case S(_: Annot.Async) => S(ErasedType.ValueLike(S(false), summon[Ctx].builtins.Promise))
+        case S(_: Annot.Generator) => S(ErasedType.ValueLike(S(false), summon[Ctx].builtins.Iterator))
+        case N => resultType
     td.k match
       case syntax.Fun =>
         val paramLists = sigShape match
@@ -274,8 +302,28 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         (direct ::: app.shapes.toList.flatMap(constructed)).distinct.foreach(checkConstruction(app, _))
       case _ => ()
 
+    // An override shares the calling convention of the member it overrides: calls of that member reach it, and the
+    // Wasm backend compiles it with that member's physical signature. Its parameters without declared types therefore
+    // take the representations of the inherited parameters (even unknown ones), rather than of their own observed
+    // inputs; `checkOverride` checks the declared ones.
+    val inheritedParams: Map[VarSymbol, Param] = statements.iterator.flatMap:
+      case td: TermDefinition => td.tsym.overriddenMembers.headOption.flatMap(_.defn).iterator.flatMap: base =>
+        if td.params.map(_.params.length) != base.params.map(_.params.length) then Iterator.empty
+        else td.params.iterator.zip(base.params).flatMap((ps, bps) => ps.params.iterator.zip(bps.params))
+          .map((param, inherited) => param.sym -> inherited)
+      case _ => Iterator.empty
+    .toMap
+    def eraseParameter(p: Param, visiting: Set[VarSymbol]): Unit = if !p.sym.isErased then
+      p.sym.erasedType = declaredType(p.sign, p.modulefulness).orElse:
+        inheritedParams.get(p.sym) match
+          // Parameters of members defined in earlier programs are already erased.
+          case S(inherited) if declarations.parameters.contains(inherited.sym) && !visiting(p.sym) =>
+            eraseParameter(inherited, visiting + p.sym)
+            inherited.sym.erasedType
+          case S(inherited) => Option.when(inherited.sym.isErased)(inherited.sym.erasedType).flatten
+          case N => inferredType(p.sym)
     parameters.foreach: p =>
-      if !p.sym.isErased then p.sym.erasedType = declaredType(p.sign, p.modulefulness).orElse(inferredType(p.sym))
+      eraseParameter(p, Set.empty)
       // Public fields have a BlockMemberSymbol; private/auxiliary constructor fields have a TermSymbol.
       // Their source signatures belong to the parameter, not to the synthesized field definition.
       val field = p.fldSym.flatMap:
@@ -302,13 +350,89 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       case sym: TermSymbol => sym.defn }.flatten
     // A handler's compiled declaration omits its resumption parameter list;
     // retain the traversed declaration instead of recovering the original from its symbol.
-    definitions.distinctBy(_.tsym).foreach: td =>
-      if !td.tsym.isErased then td.tsym.erasedType = definitionType(td)
+    // An override's result can be the inherited one (see `overrideResultType`), so the members a definition
+    // overrides are erased first. Overriding edges are acyclic, but erroneous inheritance cycles must not diverge.
+    val definitionsBySymbol = definitions.distinctBy(_.tsym).map(td => td.tsym -> td).toMap
+    def eraseDefinition(td: TermDefinition, visiting: Set[TermSymbol]): Unit =
+      if !td.tsym.isErased && !visiting(td.tsym) then
+        td.tsym.overriddenMembers.flatMap(definitionsBySymbol.get).foreach(eraseDefinition(_, visiting + td.tsym))
+        td.tsym.erasedType = definitionType(td)
+    definitions.distinctBy(_.tsym).foreach(eraseDefinition(_, Set.empty))
     declarations.variables.foreach:
       case sym: VarSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
       case sym: TermSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
       case _ => ()
+    // Both checks compare erased signatures, so they run once every definition of the program is erased.
+    statements.foreach:
+      case td: TermDefinition =>
+        checkOverride(td)
+        checkExposedOpenMember(td, declarations)
+      case _ => ()
     completed = S(root)
+
+  /** An override is reached through calls of the member it overrides, so it must accept every representation of the
+    * inherited parameters and produce only representations of the inherited result. The Wasm backend also compiles all
+    * the overrides of a method with the physical signature of the method introducing it, so on that target, an
+    * override called directly cannot accept representations that this signature cannot hold either: its parameters
+    * must have the representations of the inherited ones. Unchecked, such mismatches would be bridged by casts that
+    * fail at run time. Parameters without declared types already take the inherited representations (see
+    * `inheritedParams` in `run`), so only declared ones can fail the parameter checks.
+    */
+  private def checkOverride(td: TermDefinition): Unit =
+    def within(actual: Opt[ErasedValueType], expected: Opt[ErasedValueType]): Bool =
+      ErasedType.needsCast(actual.getOrElse(ErasedType.Unknown).canonicalize,
+        expected.getOrElse(ErasedType.Unknown).canonicalize).contains(false)
+    def describe(tpe: Opt[ErasedValueType]): Str = tpe.getOrElse(ErasedType.Unknown).canonicalize.describe
+    def signature(sym: TermSymbol): (Ls[Ls[Opt[ErasedValueType]]], Opt[ErasedValueType]) = sym.erasedType match
+      case S(ft: ErasedFuncType) => (ft.paramLists, ft.ret)
+      case S(vt: ErasedValueType) => (Nil, S(vt))
+      case N => (Nil, N)
+    if td.tsym.isErased then
+      val (params, result) = signature(td.tsym)
+      td.tsym.overriddenMembers.filter(_.isErased).foreach: base =>
+        val (baseParams, baseResult) = signature(base)
+        def report(message: Message, loc: Opt[Loc]): Unit = raise(ErrorReport(
+          (message -> loc) :: (msg"The overridden member '${base.nme}' is defined here" -> base.toLoc) :: Nil,
+          source = Diagnostic.Source.Compilation))
+        if !within(result, baseResult) then report(
+          msg"Overriding member '${td.tsym.nme}' produces values represented as '${describe(result)
+            }', which the member it overrides cannot produce: its results are represented as '${describe(baseResult)}'",
+          td.tsym.toLoc)
+        // Parameter lists of different lengths are reported by the backends that require equal lengths.
+        if params.map(_.length) == baseParams.map(_.length) then
+          params.flatten.lazyZip(baseParams.flatten).lazyZip(td.params.flatMap(_.params)).foreach: (param, baseParam, p) =>
+            if !within(baseParam, param) then report(
+              msg"Parameter '${p.sym.nme}' of overriding member '${td.tsym.nme}' is represented as '${describe(param)
+                }', which cannot hold the values represented as '${describe(baseParam)}' that the member it overrides accepts",
+              p.toLoc)
+            else if (config.target is CompilationTarget.Wasm) && !within(param, baseParam) then report(
+              msg"Parameter '${p.sym.nme}' of overriding member '${td.tsym.nme}' receives values represented as '${
+                describe(param)}', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as '${
+                describe(baseParam)}'",
+              p.toLoc)
+
+  /** Subclasses in other compilation units implement an open member with the representations of its erased signature,
+    * which therefore must not depend on what this compilation unit happens to pass to the member or return from it.
+    * Interface exposure feeds values of unknown shape to the unannotated parameters of members reachable from the
+    * unit's interface (see InterfaceExposure); an open member receiving them must annotate its parameters and result.
+    * Exposure is not observed for a member whose parameters are all annotated, or which has none: overrides in other
+    * compilation units are then still checked against its erased signature by `checkOverride`.
+    */
+  private def checkExposedOpenMember(td: TermDefinition, declarations: ErasureDeclarations): Unit =
+    if config.language.useNewResolution && (td.k is syntax.Fun) && Inheritance.isOpen(td) && !Inheritance.isExternal(td) then
+      val params = td.params.flatMap(ps => ps.params ::: ps.restParam.toList)
+      def exposed(p: Param): Bool = declarations.parameters.contains(p.sym) &&
+        summon[State].newResolverState.erasureInputs.shapes(p.sym).exists: shape =>
+          shape.applicationHead._1 match
+            case unknown: UnknownValueShape => unknown.fromPublicInterface
+            case _ => false
+      if params.exists(exposed) then
+        val missing = params.filter(_.sign.isEmpty).map(p => msg"Parameter '${p.sym.nme}' has no type annotation" -> p.toLoc)
+          ::: Option.when(td.resultSignature.isEmpty)(msg"Its result has no type annotation" -> td.tsym.toLoc).toList
+        if missing.nonEmpty then raise(ErrorReport(
+          (msg"Open member '${td.tsym.nme}' is exposed to other compilation units, which can override it; annotate the types of its parameters and result" -> td.tsym.toLoc)
+            :: missing,
+          source = Diagnostic.Source.Compilation))
 
 object Erasure:
   /** Prelude declarations use the same pass even though they have no executable program. */

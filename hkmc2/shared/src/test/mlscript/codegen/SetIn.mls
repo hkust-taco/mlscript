@@ -123,7 +123,7 @@ fun example() =
 example()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define example⁰ as fun example¹() {
-//│   let x, get_x, old, tmp, tmp1, tmp2, tmp3, get_x1;
+//│   let x, get_x, y, old, tmp, tmp1, tmp2, tmp3, get_x1;
 //│   set x = 0;
 //│   @private
 //│   define get_x1 as fun get_x⁰() {
@@ -133,7 +133,7 @@ example()
 //│   set old = x;
 //│   try
 //│     set tmp1 = +⁰(x, 1);
-//│     set x = (tmp1 as! Int⁰);
+//│     set x = tmp1;
 //│     do Predef⁰.print⁰(x);
 //│     set tmp2 = x;
 //│     set tmp = tmp2;
@@ -141,10 +141,11 @@ example()
 //│   finally
 //│     set x = (old as! Int⁰);
 //│     end;
-//│     do Predef⁰.print⁰(x);
+//│     set y = (tmp as! Int⁰);
+//│   do Predef⁰.print⁰(x);
 //│   set tmp3 = get_x();
 //│   do Predef⁰.print⁰(tmp3);
-//│   return tmp
+//│   return y
 //│ };
 //│ return example¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
