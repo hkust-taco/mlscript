@@ -88,10 +88,13 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
                 val curRes = etaExpansionTargetShapes(pf)
                 val mergedRes = res match
                   case N => curRes
-                  case S(prevRes) => prevRes.zip(curRes).map: (a, b) =>
-                    assert(a.paramInfo === b.paramInfo,
-                      s"eta expansion targets disagree on arity: ${a.pp} vs ${b.pp}")
-                    EtaTargets(a.paramCount, a.requiredParamCount, a.hasRestParam, a.prodFuns ++ b.prodFuns)
+                  case S(prevRes) =>
+                    // A returned value can choose between functions with different
+                    // calling conventions, including required vs optional parameters.
+                    // Expand only their common prefix: forwarding a later list needs
+                    // one convention shared by every possible target at that level.
+                    prevRes.zip(curRes).takeWhile((a, b) => a.paramInfo === b.paramInfo).map: (a, b) =>
+                      EtaTargets(a.paramCount, a.requiredParamCount, a.hasRestParam, a.prodFuns ++ b.prodFuns)
                 go(S(mergedRes))
               else Nil
             case UnknownProd => Nil
