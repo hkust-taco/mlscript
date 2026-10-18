@@ -854,7 +854,7 @@ extends Importer:
       val modify = ConfigParser.parseOverrides(args)
       S(Annot.Config(modify)(tree.toLoc))
     case App(Ident("dbg"), Tup(args)) =>
-      val modify = ConfigParser.parseDebugDirective(args, definitionLocal = true)
+      val modify = ConfigParser.parseDebugDirective(args, definitionLocal = true, wd)
       S(Annot.Debug(modify)(tree.toLoc))
     case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
       S(Annot.Affine(whichParamList.toInt)(tree.toLoc))
@@ -2899,7 +2899,7 @@ extends Importer:
         go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case Directive(Ident("dbg"), Tup(args)) :: sts =>
         reportUnusedAnnotations
-        val modify = ConfigParser.parseDebugDirective(args, definitionLocal = false)
+        val modify = ConfigParser.parseDebugDirective(args, definitionLocal = false, wd)
         go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case Directive(Ident(name), _) :: sts =>
         raise(ErrorReport(

@@ -41,13 +41,14 @@ fs.readFileSync(debugFile, "utf8") == "Lowering.term 42\nLowering.term 45\n"
 //│ = true
 
 
-// Imported units share a handler. Relative and absolute destinations name the same log.
+// Imported units share a handler. Relative destinations are resolved against the directory of
+// the file that declares them, so relative and absolute destinations name the same log here.
 // Generate fixtures under target/, outside test discovery, just like the emitted logs.
 :silent
 val importLog = "target/DebugImports.log"
 val absoluteLog = JSON.stringify(fs.realpathSync("target") + "/DebugImports.log")
 fs.writeFileSync(importLog, "old session contents")
-fs.writeFileSync("target/DebugImportA.mls", "#lang(0.3.x)\n@dbg('lowering, showUids: false, out: File(\"../../../../target/DebugImports.log\"))\nmodule DebugImportA with\n  fun value() = 2101\n")
+fs.writeFileSync("target/DebugImportA.mls", "#lang(0.3.x)\n@dbg('lowering, showUids: false, out: File(\"DebugImports.log\"))\nmodule DebugImportA with\n  fun value() = 2101\n")
 fs.writeFileSync("target/DebugImportB.mls", "#lang(0.3.x)\nimport \"./DebugImportA.mls\"\n@dbg('lowering, showUids: false, out: File(" + absoluteLog + "))\nmodule DebugImportB with\n  fun value() = 2102\n")
 
 :noCodeGen

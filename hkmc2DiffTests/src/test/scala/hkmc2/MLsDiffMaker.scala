@@ -236,7 +236,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   protected var activeDebug = Config.Debug.default
-  protected lazy val debugOutputHandler = DebugOutputHandler(cctx.fs, wd, str => output(str))
+  protected lazy val debugOutputHandler = DebugOutputHandler(cctx.fs, str => output(str))
 
   protected def outputDebugSection(title: Str, contents: Str, out: Config.DebugOutput): Unit = out match
     case Config.DebugOutput.StdIO =>
@@ -451,7 +451,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val parser = new syntax.Parser(origin, tokens, syntax.ParseRules(), raise, dbg = dbgParsing.isSet):
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
     val res = parser.parseAll(parser.block(allowNewlines = true))
-    val phaseConfig = Config.elaborationConfig(res)
+    val phaseConfig = Config.elaborationConfig(res, file.up)
     activeDebug = phaseConfig.debug
     
     // If parsed tree is displayed, don't show the string serialization.
@@ -463,7 +463,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       res.foreach(t => output(t.showAsTree))
     else if phaseConfig.debug.showParsedTree then
       outputDebugSection("Parsed tree", res.map(_.showAsTree).mkString("\n"), phaseConfig.debug.out)
-    else DebugOutputHandler.showParsedDefinitions(res, phaseConfig): (tree, out) =>
+    else DebugOutputHandler.showParsedDefinitions(res, phaseConfig, file.up): (tree, out) =>
       outputDebugSection("Parsed tree", tree.showAsTree, out)
     
     // if showParse.isSet then
@@ -491,7 +491,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
     val blk = new syntax.Tree.Block(trees)
-    val elaborationConfig = Config.elaborationConfig(blk)
+    val elaborationConfig = Config.elaborationConfig(blk, file.up)
     activeDebug = elaborationConfig.debug
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)

@@ -10,13 +10,12 @@ import hkmc2.utils.*, shorthands.*
   * A session shares one handler across compilation units: each destination is cleared on first
   * use, then appended to without retaining or rewriting previous output. Concurrent debug writes
   * are best effort; this handler does not synchronize them. */
-final class DebugOutputHandler(fs: io.FileSystem, baseDir: io.Path, stdIO: Str => Unit):
+final class DebugOutputHandler(fs: io.FileSystem, stdIO: Str => Unit):
   private val writtenFiles = mutable.Set.empty[io.Path]
 
   def emit(out: Config.DebugOutput, line: Str): Unit = out match
     case Config.DebugOutput.StdIO => stdIO(line)
-    case Config.DebugOutput.File(path) =>
-      val file = io.Path.resolve(baseDir, path)
+    case Config.DebugOutput.File(file) =>
       if writtenFiles(file) then fs.append(file, line + '\n')
       else
         fs.write(file, line + '\n')
@@ -51,11 +50,11 @@ object DebugOutputHandler:
                 tl.inOuterDebugScope(k(r))
       case N => process(k)
 
-  def showParsedDefinitions(trees: Ls[syntax.Tree], config: Config)
+  def showParsedDefinitions(trees: Ls[syntax.Tree], config: Config, sourceDir: io.Path)
       (display: (syntax.Tree, Config.DebugOutput) => Unit): Unit =
     def visit(tree: syntax.Tree): Unit = tree match
       case syntax.PossiblyAnnotated(annotations, target) =>
-        ConfigParser.discoverDebugFromAnnotations(annotations, config).foreach: localConfig =>
+        ConfigParser.discoverDebugFromAnnotations(annotations, config, sourceDir).foreach: localConfig =>
           if localConfig.debug.showParsedTree then display(tree, localConfig.debug.out)
         target.children.foreach:
           case child: syntax.Tree => visit(child)

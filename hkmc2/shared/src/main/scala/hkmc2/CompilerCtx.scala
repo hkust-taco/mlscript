@@ -33,7 +33,7 @@ class CompilerCtx(
 ):
   private val outputHandler: DebugOutputHandler = importing match
     case S((_, parent)) => parent.outputHandler
-    case N => DebugOutputHandler(fs, rootConfig.baseDir, println)
+    case N => DebugOutputHandler(fs, println)
   
   def allFilesBeingImported: Ls[io.Path] =
     importing match
@@ -95,7 +95,7 @@ class CompilerCtx(
         given CompilerCtx = this
         ParserSetup(file, outputHandler)
       val parsed = parse.resultBlk
-      val phaseConfig = Config.elaborationConfig(parsed)
+      val phaseConfig = Config.elaborationConfig(parsed, file.up)
       stateDebug = CompilerCtx.debugTracingEnabled(phaseConfig.debug)
       stateShowUids = phaseConfig.debug.showUids
       def traceLogger(enabled: Bool) = new TraceLogger:
@@ -266,7 +266,7 @@ class CompilerCtx(
         given CompilerCtx = this
         given DebugPrinter = new DebugPrinter
         val parse = ParserSetup(file, outputHandler)
-        val elaborationConfig = Config.elaborationConfig(parse.resultBlk)
+        val elaborationConfig = Config.elaborationConfig(parse.resultBlk, file.up)
         stateDebug = CompilerCtx.debugTracingEnabled(elaborationConfig.debug)
         stateShowUids = elaborationConfig.debug.showUids
         val etl = new TraceLogger:

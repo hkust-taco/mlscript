@@ -22,14 +22,14 @@ class ParserSetup(file: io.Path, outputHandler: DebugOutputHandler)
     def doPrintDbg(msg: => Str): Unit = ()
   
   val result = parser.parseAll(parser.block(allowNewlines = true))
-  val effectiveConfig = Config.elaborationConfig(result)
+  val effectiveConfig = Config.elaborationConfig(result, file.up)
 
   if effectiveConfig.debug.showParsedTree then
     outputHandler.emit(
       effectiveConfig.debug.out,
       s"Parsed tree\n${result.map(_.showAsTree).mkString("\n")}",
     )
-  else DebugOutputHandler.showParsedDefinitions(result, effectiveConfig): (tree, out) =>
+  else DebugOutputHandler.showParsedDefinitions(result, effectiveConfig, file.up): (tree, out) =>
     outputHandler.emit(out, s"Parsed tree\n${tree.showAsTree}")
   
   val resultBlk = new syntax.Tree.Block(result)

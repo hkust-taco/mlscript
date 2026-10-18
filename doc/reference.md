@@ -2096,8 +2096,8 @@ The `out: File(...)` argument writes it to a file instead:
 #dbg('lowering, out: File("lowering.log"))
 ```
 
-A relative `File` path is resolved against the compiler's base directory,
-and an absolute path is used as is, as for imports.
+As for imports, a relative `File` path is resolved against the directory of the file
+in which the `#dbg` directive or `@dbg` annotation is written, and an absolute path is used as is.
 The first time the compiler writes to a file during a compilation session, it replaces the file's previous contents;
 it then appends all later output, including the output of other files compiled in the same session,
 such as imported files.

@@ -197,7 +197,9 @@ object Config:
 
   enum DebugOutput:
     case StdIO
-    case File(path: Str)
+    /** A relative path written in a directive is resolved, when the directive is parsed,
+      * against the directory of the file in which it is written, as for imports. */
+    case File(path: io.Path)
 
   case class Debug(
     showParsedTree: Bool,
@@ -318,18 +320,19 @@ object Config:
   /** File directives apply to the whole compilation unit, including elaboration.
     * Read them before constructing the elaborator so its resolver agrees with lowering.
     * Elaboration still records SetConfig statements and reports directive errors once. */
-  def elaborationConfig(prgm: syntax.Tree.Block)(using Config): Config =
-    elaborationConfig(prgm.desugStmts)
+  def elaborationConfig(prgm: syntax.Tree.Block, sourceDir: io.Path)(using Config): Config =
+    elaborationConfig(prgm.desugStmts, sourceDir)
 
-  /** Read directives from parsed trees before elaboration or tree display. */
-  def elaborationConfig(trees: Ls[syntax.Tree])(using Config): Config =
+  /** Read directives from parsed trees before elaboration or tree display.
+    * `sourceDir` is the directory of the file containing the trees. */
+  def elaborationConfig(trees: Ls[syntax.Tree], sourceDir: io.Path)(using Config): Config =
     import syntax.Tree.*
     given Raise = _ => ()
     def modifier(tree: syntax.Tree): Config => Config = tree match
       case App(Directive(prefix, _), args) => modifier(Directive(prefix, args))
       case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args)
       case Directive(Ident("lang"), Tup(args)) => ConfigParser.parseLanguageDirective(args)
-      case Directive(Ident("dbg"), Tup(args)) => ConfigParser.parseDebugDirective(args, definitionLocal = false)
+      case Directive(Ident("dbg"), Tup(args)) => ConfigParser.parseDebugDirective(args, definitionLocal = false, sourceDir)
       case _ => identity
     trees.foldLeft(config)((cfg, tree) => modifier(tree)(cfg))
 
@@ -579,11 +582,11 @@ object ConfigParser:
         cfg => cfg.copy(language = modify(cfg.language))
       case N => identity
 
-  private def parseDebugOutput(tree: Tree)(using Raise): Opt[Config.DebugOutput] = tree match
+  private def parseDebugOutput(tree: Tree, sourceDir: io.Path)(using Raise): Opt[Config.DebugOutput] = tree match
     case Ident("StdIO") | Call("StdIO", Nil) =>
       S(Config.DebugOutput.StdIO)
     case Call("File", StrLit(path) :: Nil) =>
-      S(Config.DebugOutput.File(path))
+      S(Config.DebugOutput.File(io.Path.resolve(sourceDir, path)))
     case _ =>
       expect("StdIO or File(\"path\")")(tree)
       N
@@ -610,13 +613,13 @@ object ConfigParser:
           source = Diagnostic.Source.Compilation))
         identity
 
-  private def parseDebugArg(arg: Tree, definitionLocal: Bool)(using Raise): Config.Debug => Config.Debug = arg match
+  private def parseDebugArg(arg: Tree, definitionLocal: Bool, sourceDir: io.Path)(using Raise): Config.Debug => Config.Debug = arg match
     case Quoted(Ident(name)) =>
       updateDebugFlag(name, true, arg, definitionLocal)
     case Ident(name) if name.startsWith("'") =>
       updateDebugFlag(name.drop(1), true, arg, definitionLocal)
     case NamedArg("out", value) =>
-      parseDebugOutput(value) match
+      parseDebugOutput(value, sourceDir) match
         case S(out) => _.copy(out = out)
         case N => identity
     case NamedArg(name, value) =>
@@ -627,20 +630,21 @@ object ConfigParser:
       unsupported("debugging", arg)
       identity
 
-  /** Parse `#dbg(...)` and `@dbg(...)` arguments into a cumulative debug configuration. */
-  def parseDebugDirective(args: Ls[Tree], definitionLocal: Bool)(using Raise): Config => Config =
+  /** Parse `#dbg(...)` and `@dbg(...)` arguments into a cumulative debug configuration.
+    * `sourceDir` is the directory of the file containing them. */
+  def parseDebugDirective(args: Ls[Tree], definitionLocal: Bool, sourceDir: io.Path)(using Raise): Config => Config =
     val modifyDebug = args.foldLeft(identity[Config.Debug]): (acc, arg) =>
-      val modify = parseDebugArg(arg, definitionLocal)
+      val modify = parseDebugArg(arg, definitionLocal, sourceDir)
       debug => modify(acc(debug))
     new (Config => Config):
       def apply(cfg: Config): Config = cfg.copy(debug = modifyDebug(cfg.debug))
       override def toString: Str = "..."
 
   /** Select parsed-tree displays without duplicating diagnostics reported by elaboration. */
-  def discoverDebugFromAnnotations(annotations: Ls[Tree], base: Config): Opt[Config] =
+  def discoverDebugFromAnnotations(annotations: Ls[Tree], base: Config, sourceDir: io.Path): Opt[Config] =
     given Raise = _ => ()
     val modifiers = annotations.collect:
-      case App(Ident("dbg"), Tup(args)) => parseDebugDirective(args, definitionLocal = true)
+      case App(Ident("dbg"), Tup(args)) => parseDebugDirective(args, definitionLocal = true, sourceDir)
     if modifiers.isEmpty then N
     else S(modifiers.foldLeft(base)((cfg, modify) => modify(cfg)))
 
