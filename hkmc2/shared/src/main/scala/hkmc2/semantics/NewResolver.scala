@@ -2485,72 +2485,69 @@ class NewResolver:
   private def zipArgumentShapes(mss: Ls[Marks], arity: Arity,
       args: Term, src: Term, funSh: TermShape)(publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit,
       omitted: Int => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+    checkArgumentArity(args, arity, src, funSh):
+      case (tuple, marks) => zipTupleShapes(mss, arity, tuple, marks)(publish, omitted)
+
+  private def zipTupleShapes(mss: Ls[Marks], arity: Arity, tuple: TupleShape, marks: Marks)(
+      publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit,
+      omitted: Int => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
     val Arity(leadingRequired, expectedCount, hasRest, trailing) = arity
-    def matchSegments(tuple: TupleShape, marks: Marks)(using ResolutionContext): Unit =
+    val knownCount = tuple.segments.count(_.isInstanceOf[TupleShape.Fixed])
+    val unknownCount = tuple.segments.length - knownCount
+    val minExtra = (arity.required - knownCount).max(0)
+    val extra = (expectedCount - knownCount).max(0)
+    // Match leading positions from the left and trailing positions from the right.
+    // A fixed field cannot cross the required parameters at the opposite end.
+    // When all unknown segments precede it, they must supply any missing required
+    // arguments. These bounds avoid enumerating spread lengths or their combinations.
+    def assignPositions(segments: Ls[TupleShape.Segment], count: Int, reserved: Int, position: Int => Int): Unit =
       def assign(segment: TupleShape.Segment, positions: Range)(using ResolutionContext): Unit =
         positions.foreach: index =>
           listenTupleField(segment.element): sh =>
-            publish(index, sh.exit(marks).enter(mss))
-      // The trailing parameters take the last arguments. Fixed fields after the last unknown
-      // segment have a known distance from the end, so they are assigned exactly. Trailing
-      // parameters not covered by them may receive elements of any of the remaining segments,
-      // which are then matched against the leading and variadic parameters as if there were
-      // no trailing parameters: the last of them is unknown, so it retains all possible layouts.
-      val exactTrailing = tuple.segments.reverse.takeWhile(_.isInstanceOf[TupleShape.Fixed]).take(trailing).reverse
-      val segments = tuple.segments.dropRight(exactTrailing.length)
-      val uncovered = trailing - exactTrailing.length
-      (0 until uncovered).foreach: index =>
-        segments.foreach(assign(_, expectedCount + 1 + index to expectedCount + 1 + index))
-      exactTrailing.zipWithIndex.foreach: (segment, index) =>
-        assign(segment, expectedCount + 1 + uncovered + index to expectedCount + 1 + uncovered + index)
-      val knownCount = segments.count(_.isInstanceOf[TupleShape.Fixed])
-      // Distribute only successful argument counts. Unknown spreads retain all
-      // possible fixed positions and the residual tail for a rest parameter.
-      // Unknown spreads must supply at least `minExtra` arguments (to cover the
-      // required parameters) and at most `extra` arguments (to cover optional ones too).
-      val extra = (expectedCount - knownCount).max(0)
-      val minExtra = (leadingRequired - knownCount).max(0)
-      def loop(rest: Ls[TupleShape.Segment], before: Int, unknownBefore: Bool)(using ResolutionContext): Unit = rest match
+            publish(position(index), sh.exit(marks).enter(mss))
+      def loop(rest: Ls[TupleShape.Segment], before: Int, unknownBefore: Int): Unit = rest match
         case Nil => ()
         case (field: TupleShape.Fixed) :: tail =>
-          val unknownAfter = tail.exists(_.isInstanceOf[TupleShape.Unknown])
-          // With no later unknown segment, preceding spreads must supply all
-          // missing required arguments, even when the function has a rest parameter.
-          val first = if unknownBefore && !unknownAfter then before + minExtra else before
-          val last = if !unknownBefore then before
-            else if hasRest then expectedCount - 1 else before + extra
-          assign(field, first.max(0) until (last + 1).min(expectedCount))
+          val unknownAfter = unknownCount - unknownBefore
+          val after = knownCount - before - 1
+          if unknownAfter > 0 || after >= reserved then
+            val first = if unknownBefore > 0 && unknownAfter == 0 then before + minExtra else before
+            val last = if unknownBefore == 0 then before
+              else if hasRest then count - 1 else before + extra
+            assign(field, first until (last + 1).min(count))
           loop(tail, before + 1, unknownBefore)
         case (unknown: TupleShape.Unknown) :: tail =>
-          val end = if hasRest then expectedCount else before + extra
+          val end = if hasRest then count else (before + extra).min(count)
           assign(unknown, before until end)
-          loop(tail, before, true)
-      loop(segments, 0, false)
-      if knownCount == segments.length then
-        (knownCount until expectedCount).foreach(omitted(_))
-      if hasRest then
-        // If consumption reaches an unknown segment, some subsequent fields
-        // may have been consumed too. Approximate that optional prefix with an
-        // unknown segment, retaining the suffix that must remain. Publishing
-        // separate concrete tails here would turn uncertainty into false arity
-        // failures when the rest tuple is spread into another call.
-        def drop(xs: Ls[TupleShape.Segment], count: Int, approximate: Bool)(using ResolutionContext): Ls[TupleShape.Segment] =
-          if count == 0 then xs
-          else xs match
-            case Nil => Nil
-            case (_: TupleShape.Fixed) :: rest => drop(rest, count - 1, approximate)
-            case (unknown: TupleShape.Unknown) :: Nil =>
-              // Consuming a prefix changes the length, but not the element
-              // shape, when there are no following fields to merge into it.
-              if approximate then unknown :: Nil else Nil
-            case (_: TupleShape.Unknown) :: rest =>
-              val suffix = drop(rest, count, false)
-              if approximate then TupleShape.Unknown(tuple.source, TupleShape.UnknownField(tuple.source, Nil)) :: suffix else suffix
-        val remaining = drop(segments, expectedCount, true)
-        val rest = if expectedCount == 0 && trailing == 0 then tuple else TupleShape.restView(tuple, remaining)(this)
-        publish(expectedCount, rest.exit(marks).enter(mss))
-    checkArgumentArity(args, arity, src, funSh):
-      case (tuple, marks) => matchSegments(tuple, marks)
+          loop(tail, before, unknownBefore + 1)
+      loop(segments, 0, 0)
+    assignPositions(tuple.segments, expectedCount, trailing, identity)
+    assignPositions(tuple.segments.reverse, trailing, leadingRequired, index => expectedCount + trailing - index)
+    if unknownCount == 0 then
+      ((knownCount - trailing) until expectedCount).foreach(omitted(_))
+    if hasRest then
+      val exactTrailing = tuple.segments.reverse.takeWhile(_.isInstanceOf[TupleShape.Fixed]).take(trailing)
+      val segments = tuple.segments.dropRight(exactTrailing.length)
+      // If consumption reaches an unknown segment, some subsequent fields
+      // may have been consumed too. Approximate that optional prefix with an
+      // unknown segment, retaining the suffix that must remain. Publishing
+      // separate concrete tails here would turn uncertainty into false arity
+      // failures when the rest tuple is spread into another call.
+      def drop(xs: Ls[TupleShape.Segment], count: Int, approximate: Bool)(using ResolutionContext): Ls[TupleShape.Segment] =
+        if count == 0 then xs
+        else xs match
+          case Nil => Nil
+          case (_: TupleShape.Fixed) :: rest => drop(rest, count - 1, approximate)
+          case (unknown: TupleShape.Unknown) :: Nil =>
+            // Consuming a prefix changes the length, but not the element
+            // shape, when there are no following fields to merge into it.
+            if approximate then unknown :: Nil else Nil
+          case (_: TupleShape.Unknown) :: rest =>
+            val suffix = drop(rest, count, false)
+            if approximate then TupleShape.Unknown(tuple.source, TupleShape.UnknownField(tuple.source, Nil)) :: suffix else suffix
+      val remaining = drop(segments, expectedCount, true)
+      val rest = if expectedCount == 0 && trailing == 0 then tuple else TupleShape.restView(tuple, remaining)(this)
+      publish(expectedCount, rest.exit(marks).enter(mss))
   
   private def checkArgumentArity(args: Term, arity: Arity, src: Term,
       callable: TermShape)(matched: ShapeListener[(TupleShape, Marks)])(using ResolutionContext): Unit =
