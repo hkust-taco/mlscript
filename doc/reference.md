@@ -247,6 +247,68 @@ fun foo(x: Int): Int = x + 1
 fun bar(x: Int, y: Str): Bool = x > 0
 ```
 
+### Optional Parameters
+
+A parameter followed by `?` is optional: callers may omit its argument, which is then `undefined`.
+
+```mlscript
+fun greet(name: Str, greeting?: Str) =
+  if greeting is Str then greeting + ", " + name else "Hello, " + name
+greet("Ana")             // = "Hello, Ana"
+greet("Ana", "Hi")       // = "Hi, Ana"
+```
+
+The annotation of an optional parameter includes `undefined`: `greeting?: Str` has type `Str | undefined`.
+The `?` must directly follow the parameter: `y ?` and `y ?: Str` are not optional parameters.
+
+Optional parameters follow the required ones, except for the parameters after a variadic parameter
+(see below). Only function and lambda parameters can be optional; class parameters, context parameters
+(`using`), and variadic parameters cannot.
+
+Direct calls must supply every required argument, and no more arguments than the function accepts.
+A function that receives extra arguments dynamically ignores them.
+
+### Variadic Parameters
+
+A parameter prefixed with `...` collects any number of arguments into an array.
+Parameters may follow it; they receive the last arguments.
+
+```mlscript
+fun f(...xs) = xs
+f(1, 2, 3)               // = [1, 2, 3]
+fun g(x, ...xs, y) = [x, xs, y]
+g(1, 2, 3, 4)            // = [1, [2, 3], 4]
+g(1, 2)                  // = [1, [], 2]
+```
+
+The required parameters take the first and last arguments, the optional parameters take the remaining
+ones from left to right, and the variadic parameter collects the rest:
+
+```mlscript
+fun h(x, y?, ...xs, z) = [x, y, xs, z]
+h(1, 2)                  // = [1, undefined, [], 2]
+h(1, 2, 3)               // = [1, 2, [], 3]
+h(1, 2, 3, 4, 5)         // = [1, 2, [3, 4], 5]
+```
+
+A parameter list has at most one variadic parameter, and the parameters following it must be required.
+Class parameters cannot be variadic.
+
+### Droppable Parameters
+
+`drop` marks a parameter whose argument is always passed, but which implementations may ignore.
+In a function type, it lets the functions passed for it leave out that parameter:
+
+```mlscript
+fun app(f: (Int, drop Int) -> Int) = f(1, 2)
+app(x => x)              // = 1
+app((x, i) => x + i)     // = 3
+```
+
+A variadic parameter can also be droppable, as in `(Int, drop ...Array[Int]) -> Int`.
+Callers of a definition such as `fun first(x, drop y) = x` must still pass the argument of `y`.
+Only function and lambda parameters can be droppable.
+
 ### Recursive Functions
 
 Functions are recursive by default:
@@ -780,6 +842,8 @@ fun g(x, ...rest) = rest
 f(1, 2, 3)               // xs = [1, 2, 3]
 ```
 
+See [Variadic Parameters](#variadic-parameters).
+
 Under new resolution, an annotation on a rest parameter describes the whole rest
 array. Tuple values support precise zero-based projections such as `xs.0` and
 inherit the declared Array interface.
@@ -797,10 +861,10 @@ An explicit annotation such as `Array[Base]` makes element reads use the members
 declared by `Base`. Storing a `Child` that extends `Base` does not permit access
 to `Child`-only members through that annotation.
 
-Array callbacks such as `map` receive the element, index, and array; their
-declared function interfaces must account for these arguments, for example with
-unused or rest parameters. `reduce` also passes the accumulator first, and must be
-given an initial value: `xs.reduce((acc, x, ...) => acc + x, 0)`. Without one,
+Array callbacks such as `map` receive the element, index, and array. The index and
+array parameters are [droppable](#droppable-parameters), so callbacks may take only
+the element: `xs.map(x => x + 1)`. `reduce` also passes the accumulator first, and must
+be given an initial value: `xs.reduce((acc, x) => acc + x, 0)`. Without one,
 JavaScript uses the first element as the initial accumulator, which the declared
 signature does not describe.
 
@@ -1535,7 +1599,32 @@ arguments. Its diagnostic indicates a limitation of the current check.
 ```mlscript
 type Transformer[A, B] = A -> B
 type BinOp[A] = (A, A) -> A
+type Callback = (Int, Int?) -> Int              // optional parameter
+type Labeled = (x: Int, y?: Int) -> Int         // named parameters
+type Step = (Int, drop Int) -> Int              // droppable parameter
+type Join = (Str, ...Array[Str], Str) -> Str    // variadic parameter
 ```
+
+Function type parameters follow the rules of
+[optional](#optional-parameters), [variadic](#variadic-parameters), and [droppable](#droppable-parameters)
+function parameters. Parameter names in function types are labels only: they do not affect compatibility.
+
+A function passed where a function type is expected must accept the arguments that the type passes:
+- it may leave out trailing droppable parameters, including a droppable variadic parameter,
+  but no other parameters;
+- it may not require an argument that the type marks as optional;
+- its additional parameters must be optional, and are then `undefined`;
+- it may collect several arguments in a variadic parameter.
+
+```mlscript
+fun app(f: (Int, Int?) -> Int) = f(1)
+app((x, y?) => x)        // ok
+app((x, y) => x)         // error: `y` is required, but its argument may be omitted
+app(x => x)              // error: the optional parameter is not droppable
+```
+
+A separate signature, as in `fun f: (Int, Int?) -> Int` followed by `fun f(x, y?) = x`,
+must agree with the definition on which parameters are required, optional, and variadic.
 
 ### `forall` (Universal Quantification)
 
