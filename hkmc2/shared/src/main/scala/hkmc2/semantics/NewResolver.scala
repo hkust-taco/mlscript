@@ -55,22 +55,30 @@ class NewResolver:
         observeErasure(symbol)(listenTerm(SimpleRef(symbol)(new syntax.Tree.Ident(symbol.nme))))
       case _ => ()
     declarations.statements.foreach:
-      case td: TermDefinition => observeErasureDefinition(td, declarations.mutableFields(td.tsym))
+      case td: TermDefinition => observeErasureDefinition(td)
       case _ => ()
 
   private def observeErasure(symbol: Symbol)(connect: Listener => Unit)(using ResolutionContext): Unit =
     if symbol.getState is rctx.owner then rctx.state.erasureInputs.register(symbol): publish =>
       connect(shape => listenInstanceViews(shape)(publish))
 
-  private def observeErasureDefinition(td: TermDefinition, mutableField: Bool)(using ResolutionContext): Unit =
+  private def observeErasureDefinition(td: TermDefinition)(using ResolutionContext): Unit =
     if !td.tsym.isErased then observeErasure(td.tsym): publish =>
       // The function body returns its payload. AsyncLowering wraps that body later;
       // the callable's promise representation is assigned separately by Erasure.
       td.body.foreach(body => listenResult(body)(publish))
-      // Mutable fields admit replacements not represented by initializer flow.
-      // Keep the resolver's unknown-write alternative when choosing their storage.
-      if (td.k is syntax.MutVal) || mutableField then
-        td.body.foreach(body => publish(UnknownValueShape.at(body)))
+      // A field that assignments can replace also holds the values assigned to it, including those that other
+      // compilation units can assign when it is exposed (see `assignField` and `InterfaceExposure`). Assignments
+      // in later blocks and in other compilation units reach consumer copies of the field's host instead, which
+      // the field's representation does not include: lowering converts their values to that representation.
+      if isAssignableField(td) then listenMemberVariable(td.tsym)(publish)
+
+  /** Whether assignments can replace the value of the field that `td` defines: a mutable field (`mut val`,
+    * including a mutable constructor parameter) or a record field. Even the fields of an immutable record are
+    * assignable, through a mutable copy of the record (`mut {...r}`), which reuses its fields (see RecordMember).
+    */
+  private def isAssignableField(td: TermDefinition): Bool =
+    (td.k is syntax.MutVal) || (td.k is syntax.RecordField)
   
   /** Interpret types through completed symbolic candidates, independently of term overloads. */
   def typeResolution(term: Term)(using rs: ResolutionContext): TypeResolution =
@@ -3452,30 +3460,37 @@ class NewResolver:
                   bms.asModOrObj.orElse(bms.asTrm).orElse(bms.asCls).foreach: sym =>
                     rctx.recordResolution(sel, sel.resolvedTargets.contains(sym))(sel.resolvedTargets ::= sym)
                 listenTermViews(sel.prefix): receiver =>
-                  val selected = receiver match
-                    case Marked(nominal: NominalInstanceView, context) =>
-                      nominal.ancestor(cd) match
-                        case S(view) => visible(view.getMember(sel.id.name)).withAnnotation(nominal.annotation).withMarks(context :: Nil)
-                        case N =>
-                          // An explicit projection can name a narrower class, but
-                          // it cannot recover that class's implementation arguments.
-                          val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
-                          MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
-                    case _ =>
-                      // C# selects a declaration, not an instance of C. Transport
-                      // the member through the actual receiver, never the qualifier.
-                      projectedMember(receiver, cd, sel.id.name).map(visible).getOrElse:
-                        // Without a path into this class, only its declared
-                        // interface is available; qualifier values add no evidence.
-                        val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
-                        MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap,
-                          declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
-                  member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty)
+                  member(projectedLookup(sel, cd, bms, declarationMarks, receiver, visible),
+                    msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty)
               case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty))
         , sh =>
           rctx.markError(sel)
           resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
         )
+  
+  /** The member that a projection `sel` (`o.C#m`) selects in `receiver`, one of the receivers of `o`, where `C`
+    * resolves to `cd` and `m` to the member `bms` of `cd`, with the marks `declarationMarks`. `visible` applies the
+    * private-member visibility of the scope where `sel` is written.
+    */
+  private def projectedLookup(sel: NewSel, cd: ClassDef, bms: BlockMemberSymbol, declarationMarks: Ls[Marks],
+      receiver: TermShape, visible: MemberLookup => MemberLookup)(using ResolutionContext): MemberLookup = receiver match
+    case Marked(nominal: NominalInstanceView, context) =>
+      nominal.ancestor(cd) match
+        case S(view) => visible(view.getMember(sel.id.name)).withAnnotation(nominal.annotation).withMarks(context :: Nil)
+        case N =>
+          // An explicit projection can name a narrower class, but
+          // it cannot recover that class's implementation arguments.
+          val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
+          MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
+    case _ =>
+      // C# selects a declaration, not an instance of C. Transport
+      // the member through the actual receiver, never the qualifier.
+      projectedMember(receiver, cd, sel.id.name).map(visible).getOrElse:
+        // Without a path into this class, only its declared
+        // interface is available; qualifier values add no evidence.
+        val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
+        MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap,
+          declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
   
   /** Both constructor references and explicit `new` use the same definition and
     * parameter lists, including auxiliary constructor(...) lists. A partial `new`
@@ -3556,6 +3571,83 @@ class NewResolver:
       case Ref(sym: LocalSymbol) => publishActivated(sym, shape)
       case _ => ()
     listenTerm(rhs)(assign(lhs, _))
+
+  /** Assignments to a field are inputs of the field, like its initializer: erasure infers the representation of a
+    * field without a declared type from both (see `observeErasureDefinition`). Resolve the assigned member the way
+    * `newSel` and `unresolvedRef` resolve selections, for every class that the receiver can be an instance of, and
+    * write the assigned values to each assignable field that the lookups find (see `writeField`). `scope` is where
+    * `lhs` is written, which determines the private members it can select.
+    * Dynamic receivers and computed keys have no static target field: lowering compiles such assignments without
+    * converting their values to the representation of a field, which only the JavaScript backend supports, as all
+    * its values share one representation.
+    * TODO: A structural type's field (`MemberLookup.Typed`) belongs to the type rather than to the values it
+    * describes, so assignments through structural types do not reach the fields of those values yet.
+    */
+  private[semantics] def assignField(lhs: Term, rhs: Term, scope: SrcScope)(using ResolutionContext): Unit =
+    // `transport` takes an assigned value from the assignment into the scope where the selection is evaluated:
+    // the selection can be captured by a nested definition, from which the assigned value exits, as for variables.
+    def target(lhs: Term, transport: TermShape => TermShape | NoShape)(using ResolutionContext): Unit =
+      def assign(field: TermSymbol, marks: Ls[Marks])(using ResolutionContext): Unit =
+        // Each receiver path to a field follows the assigned values once per activation of the assignment.
+        if rctx.state.fieldAssignments.add((new Identity(lhs), new Identity(rhs), field, marks)) then
+          listenTerm(rhs): value =>
+            transport(value) match
+              case value: TermShape => writeField(field, value, marks)
+              case NoShape => ()
+      def memberField(member: BlockMemberSymbol, marks: Ls[Marks])(using ResolutionContext): Unit = member.onComplete: () =>
+        valueTarget(member, false) match
+          case S(field: TermSymbol) if field.defn.exists(isAssignableField) => assign(field, marks)
+          case _ => ()
+      def lookup(info: MemberLookup)(using ResolutionContext): Unit = info match
+        // The receiver's substitution interprets the field's value; assigned values keep the assignment's own.
+        case MemberLookup.Contextual(source, _) => lookup(source)
+        // Assigning through an immutable record has no effect.
+        case MemberLookup.Found(RecordMember(field, mutable), marks) => if mutable then assign(field.tsym, marks)
+        case MemberLookup.Found(member: BlockMemberSymbol, marks) => memberField(member, marks)
+        case MemberLookup.Declared(member, _, marks, _, _) => memberField(member, marks)
+        case _ => ()
+      def visible(info: MemberLookup, reportInaccessible: Bool): MemberLookup =
+        info.visibleFrom(scope.canAccessPrivatesOf, reportInaccessible)
+      lhs match
+        case Capture(base, thru) => target(base, value => transport(value) match
+          case value: TermShape => MarkedShape.exit(value, ResolutionBoundary(thru), N)
+          case NoShape => NoShape)
+        // Mirror the lookups of `newSel`, which select the same members.
+        case sel: NewSel =>
+          def selected(info: MemberLookup)(using ResolutionContext): Unit = lookup(visible(info, reportInaccessible = true))
+          sel.cls match
+            case N if sel.id.name == "class" =>
+              listenClass(sel.prefix, recordTargets = false)(_ => (), shape => selected(shape.getMember(sel.id.name)))
+            case N => listenReceiver(sel.prefix)(shape => selected(shape.getMember(sel.id.name)))
+            case S(cls) =>
+              listenClass(cls.prefix, recordTargets = false)(ref =>
+                val cd = ref.definition
+                listenExt(cd, ext => visible(DefnShape(cd, ext).getInstanceMember(sel.id.name), reportInaccessible = true) match
+                  case MemberLookup.Found(bms: BlockMemberSymbol, declarationMarks) =>
+                    listenTermViews(sel.prefix): receiver =>
+                      lookup(projectedLookup(sel, cd, bms, declarationMarks, receiver, visible(_, reportInaccessible = true)))
+                  case info => selected(info))
+              , _ => ())
+        // Mirror the lookups of `unresolvedRef`.
+        case ref: UnresolvedRef => ref.prefixes.foreach: prefix =>
+          listenReceiver(prefix)(shape => lookup(visible(shape.getMember(ref.id.name), reportInaccessible = false)))
+        // Definitions outside class-like bodies are referenced directly (see `Ctx.withMembers`).
+        case MemberRef(member: BlockMemberSymbol) => memberField(member, Nil)
+        case _ => ()
+    target(lhs, value => value)
+
+  /** Write `value` to the host of the assignable `field` (`memberVariable`), which holds the values assigned to the
+    * field as seen from inside its definition, like its initializer. Reading the field leaves its definition and
+    * then follows the path of the member lookup to the reader (see `fromBMSAt`), so a value assigned through a lookup
+    * with the path `marks` enters the field along the reverse path. A value enters the field's definition at no
+    * particular site: the field is not evaluated anew by each read, as a by-name definition would be.
+    */
+  private[semantics] def writeField(field: TermSymbol, value: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
+    softAssert(field.defn.exists(isAssignableField), "Only assignable fields hold assigned values")
+    value.enter(marks) match
+      case value: TermShape =>
+        publishActivated(rctx.memberVariable(field), MarkedShape.enter(value, ResolutionBoundary(field), N))
+      case NoShape => ()
 
   def defineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(loc: Opt[Loc])(using ResolutionContext): DefineVar =
     if newResolution then sym match
@@ -3771,6 +3863,11 @@ class NewResolver:
                   case _ => shape
                 receive(captured)
               )(using rctx.withInstances(instances))
+              // A mutable field holds its initializer and then the values assigned to it (see `writeField`), which
+              // keep the activations of their assignments, like the values assigned to a variable. Without them,
+              // a read could resolve a member statically in the initializer's class only, while another class's
+              // instance was assigned. The fields of external declarations, which have no body, are left unobserved.
+              if td.k is syntax.MutVal then listenMemberVariable(td.tsym)(wrappedListener)
         case S(d: TermDefinition) if !d.tsym.isInstanceOf[ClassCtorSymbol] &&
             ((d.sign.nonEmpty && (!d.flags.hasResultAnnotation || d.params.forall(ps =>
               (ps.params ::: ps.restParam.toList).forall(_.sign.nonEmpty)))) ||
@@ -4111,7 +4208,7 @@ class NewResolver:
             val record: Rcd = Rcd(false, fields.map((key, value) =>
               val field = RcdField.source(key, value)(using rctx.owner)
               lexicalBinders(tuple).foreach(binders => rctx.state.lexicalTypeBinders(field.tsym) = binders)
-              observeErasureDefinition(field.tsym.defn.get, false)
+              observeErasureDefinition(field.tsym.defn.get)
               field))
             record.withLocOf(tuple)
             // The record's fields are the tuple's own field expressions, so its

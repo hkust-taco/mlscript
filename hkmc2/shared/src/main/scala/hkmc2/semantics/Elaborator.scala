@@ -1377,7 +1377,7 @@ extends Importer:
       case _ => N
     withAppendedArg(lhs).getOrElse(App(lhs, Tup(arg :: Nil)))
   
-  private def assignment(lhs: Term, rhs: Term): Term.Assgn =
+  private def assignment(lhs: Term, rhs: Term)(using Ctx): Term.Assgn =
     // Resolve the term interpretation of the l-value before lowering. The
     // selected definition is recorded even when its value publishes no shape.
     // Use this for synthesized assignments as well as source-level `set`.
@@ -1385,6 +1385,7 @@ extends Importer:
       listenTerm(lhs)(_ => ())
       assignArrayElement(lhs, rhs)
       assignVariable(lhs, rhs)
+      assignField(lhs, rhs, ctx.scope)
     Term.Assgn(lhs, rhs)
 
   def ifLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit, loc: Opt[Loc]): Term.IfLike =

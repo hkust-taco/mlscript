@@ -19,7 +19,6 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
   val statements = mutable.ArrayBuffer.empty[Statement]
   val parameters = mutable.LinkedHashMap.empty[VarSymbol, Param]
   val variables = mutable.LinkedHashSet.empty[VarSymbol | TermSymbol | TempSymbol]
-  val mutableFields = mutable.Set.empty[TermSymbol]
   private val visited = mutable.Set.empty[Identity[Statement]]
 
   private def parameter(p: Param): Unit =
@@ -78,9 +77,7 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
       case IfLike(_, _, branches) => split(branches)
       case New(_, _, refinement) => refinement.foreach: (symbol, body) =>
         symbol.defn.fold(visit(body.blk))(visit)
-      case Rcd(mut, stats) =>
-        if mut then stats.collect { case field: RcdField => field.tsym }.foreach(mutableFields += _)
-        stats.foreach(visit)
+      case Rcd(_, stats) => stats.foreach(visit)
       case field: RcdField => field.tsym.defn.foreach(visit)
       case _ => ()
     statement.subStatements.foreach(visit)
@@ -110,6 +107,9 @@ private[hkmc2] final class ErasureInputs:
     // Even an unused/unproductive definition has a completed, empty observation.
     host.inferenceHost
     connect(host.publish)
+
+  /** Whether `symbol` is a source slot of this compilation unit that was prepared for erasure. */
+  def isPrepared(symbol: Symbol): Bool = values.contains(symbol)
 
   def shapes(symbol: Symbol): Ls[TermShape] =
     val host = values.getOrElse(symbol, lastWords("Source slot was not prepared for erasure"))

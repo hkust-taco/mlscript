@@ -32,3 +32,34 @@ counter
 //│ ║  l.29: 	set counter = "hello"
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^
 //│ = "hello"
+
+
+// The representation of a mutable field is inferred from its initializer and from the values that its own block
+// assigns to it, which later blocks cannot widen either. Without strict resolution, its class is not exposed.
+class Cell(mut val value)
+let cell = Cell(1)
+set cell.value = 2
+//│ cell = Cell(2)
+
+:ge
+set cell.value = "hello"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.45: 	set cell.value = "hello"
+//│ ╙──      	    ^^^^^^^^^^
+
+class Mixed(mut val value)
+let mixed = Mixed(1)
+set mixed.value = "hello"
+//│ mixed = Mixed("hello")
+
+set mixed.value = "again"
+
+// The same holds for the fields of mutable records.
+let record = mut {count: 0}
+//│ record = {count: 0}
+
+:ge
+set record.count = "many"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.62: 	set record.count = "many"
+//│ ╙──      	    ^^^^^^^^^^^^

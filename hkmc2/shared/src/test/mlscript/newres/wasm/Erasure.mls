@@ -189,15 +189,13 @@ exported(const(42))
 //│ = 42
 
 
-// Mutable fields admit unknown writes even when the only local initializer is numeric.
-:ge
+// A mutable field takes the representation of its initializer and of the values assigned to it,
+// here only a numeric initializer (see MutableFields.mls for assignments).
+:expect 42
 private class Mutable(mut val value)
 Mutable(const(42)).value
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.194: 	private class Mutable(mut val value)
-//│ ╙──       	                              ^^^^^
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Unknown`
+//│ Wasm result:
+//│ = 42
 
 
 // An explicit mutable-field annotation supplies the storage interface.
@@ -216,7 +214,7 @@ cell.value
 val annotated: Any = const(42)
 annotated
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.216: 	val annotated: Any = const(42)
+//│ ║  l.214: 	val annotated: Any = const(42)
 //│ ╙──       	                     ^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 

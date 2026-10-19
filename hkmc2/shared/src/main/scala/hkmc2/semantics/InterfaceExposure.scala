@@ -104,10 +104,24 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
 
   private def members(cls: ClassLikeDef, marks: Ls[Marks], path: Path)(using ResolutionContext): Unit =
     cls.body.blk.stats.foreach:
-      case d: Definition if InterfaceExposure.isPublic(d) => member(d.bsym, marks, path.via(msg"Member '${d.bsym.nme}' is accessible here." -> d.headerLoc))
+      case d: Definition if InterfaceExposure.isPublic(d) =>
+        member(d.bsym, marks, path.via(msg"Member '${d.bsym.nme}' is accessible here." -> d.headerLoc))
+        d match
+          // Diagnostics about the field are located at the field itself.
+          case td: TermDefinition if td.k is syntax.MutVal => assignable(td.tsym, td.bsym, path)
+          case _ => ()
       case _ => ()
     cls.ext.foreach: parent =>
       term(parent, marks, path.via(msg"This parent contributes inherited members." -> parent.toLoc))
+
+  /** Other compilation units can assign values of unknown shape to an exposed assignable field. The unknown value
+    * refers to the field itself, which distinguishes it from the unknown values that this compilation unit assigns
+    * to the field (see `Erasure.checkExposedMutableField`). Being self-contained, it reaches the field through no
+    * particular member lookup.
+    */
+  private def assignable(field: TermSymbol, symbol: BlockMemberSymbol, path: Path)(using ResolutionContext): Unit =
+    if field.getState is rctx.owner then
+      resolver.writeField(field, UnknownValueShape(source(symbol), fromPublicInterface = true)(path), Nil)
 
   private def result(body: Term, sign: Opt[Term], marks: Ls[Marks], path: Path)(using ResolutionContext): Unit = sign match
     case N =>
@@ -172,12 +186,21 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         val field = segment.element
         watch((tuple, field, marks))(resolver.listenTupleField(field)): shape =>
           emit(shape.exit(marks), path.via(msg"This value is stored in this tuple." -> tuple.source.toLoc))
-      case record: RecordShape => record.elements.foreach:
-        case RecordShape.Field(field) => contextualTerm(field.rhs, marks,
-          path.via(msg"This value is stored in this record field." -> field.toLoc), instances.withOverrides(record.instances))
-        case RecordShape.Spread(inner, context) =>
-          emit(resolver.instantiateShape(inner, instances.withOverrides(record.instances)).exit(context).exit(marks), path)
-        case _ => ()
+      case record: RecordShape =>
+        record.elements.foreach:
+          case RecordShape.Field(field) => contextualTerm(field.rhs, marks,
+            path.via(msg"This value is stored in this record field." -> field.toLoc), instances.withOverrides(record.instances))
+          case RecordShape.Spread(inner, context) =>
+            emit(resolver.instantiateShape(inner, instances.withOverrides(record.instances)).exit(context).exit(marks), path)
+          case _ => ()
+        // Through a mutable record, clients can assign its fields, including those it copies from the records it
+        // spreads (see RecordMember). The spread records are also exposed above, as values of their own.
+        if record.source.mut then
+          def assignableFields(record: RecordShape): Unit = record.elements.foreach:
+            case RecordShape.Field(field) => assignable(field.tsym, field.sym, path)
+            case RecordShape.Spread(inner, _) => assignableFields(inner)
+            case _ => ()
+          assignableFields(record)
       case base: BaseShape => members(base.defn, marks, path)
       case callable: CallableTypeShape =>
         // Written structure constrains external values; missing output parts

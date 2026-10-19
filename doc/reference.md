@@ -1441,6 +1441,24 @@ Worksheet blocks are compiled one after the other, so without `#lang(strictResol
 later blocks must use an earlier block's definitions with the representations inferred from that
 block's own uses.
 
+A mutable field holds its initializer and then the values assigned to it, through any receiver that
+can be an instance of its class, so an unannotated mutable field takes the representation of all of
+them. Since other compilation units can assign values to the mutable fields that a compilation unit
+exposes, those must declare their types, as their representations must not depend on the values that
+the compilation unit happens to assign to them:
+
+```mlscript
+private class Cell(mut val value)  // `value` is represented as `Int32`
+private fun reset(cell) = set cell.value = wasm.i32.const(0)
+reset(Cell(wasm.i32.const(1)))
+
+class Counter(mut val count)       // error: `count` is exposed, so its type must be declared
+class Counter(mut val count: Int)  // ok
+```
+
+The fields of a mutable record (including those it copies from the records it spreads) can be
+assigned too, but cannot declare types: when exposed, they take the unknown representation.
+
 An override shares the representations of the member it overrides. Its unannotated parameters
 take the inherited parameters' representations, its annotated parameters must admit them (and,
 on the Wasm backend, which compiles overrides with the overridden method's signature, match

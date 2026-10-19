@@ -365,11 +365,12 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       // unknown, as it was before erasure.
       case sym: TempSymbol if sym.erasedType.isEmpty => inferredType(sym).foreach(sym.populateErasedType(_))
       case _ => ()
-    // Both checks compare erased signatures, so they run once every definition of the program is erased.
+    // These checks compare erased signatures, so they run once every definition of the program is erased.
     statements.foreach:
       case td: TermDefinition =>
         checkOverride(td)
         checkExposedOpenMember(td, declarations)
+        checkExposedMutableField(td)
       case _ => ()
     completed = S(root)
 
@@ -436,6 +437,30 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           (msg"Open member '${td.tsym.nme}' is exposed to other compilation units, which can override it; annotate the types of its parameters and result" -> td.tsym.toLoc)
             :: missing,
           source = Diagnostic.Source.Compilation))
+
+  /** Other compilation units assign values to a mutable field with the representation of its erased type, which
+    * therefore must not depend on the values that this compilation unit happens to assign to the field. Interface
+    * exposure assigns a value of unknown shape referring to the field itself to the mutable fields reachable from the
+    * unit's interface (see InterfaceExposure); such a field must declare its type. Fields that merely receive unknown
+    * values from this unit's own exposed parameters do not need to: their representation is already the unknown one.
+    * Record fields cannot declare types; their exposed representation is the unknown one.
+    */
+  private def checkExposedMutableField(td: TermDefinition): Unit =
+    // A constructor parameter declares the type of the field it defines.
+    val declared = td.tsym.decl match
+      case S(p: Param) => p.sign.isDefined || p.modulefulness.isModuleful
+      case _ => td.sign.isDefined || td.modulefulness.isModuleful
+    val inputs = summon[State].newResolverState.erasureInputs
+    if config.language.useNewResolution && (td.k is syntax.MutVal) && !declared && !Inheritance.isExternal(td)
+        && inputs.isPrepared(td.tsym) then
+      val exposure = inputs.shapes(td.tsym).iterator.map(_.applicationHead._1).collectFirst:
+        case unknown: UnknownValueShape if unknown.fromPublicInterface && (unknown.source match
+          case ref: MemberRef => ref.sym is td.bsym
+          case _ => false) => unknown
+      exposure.foreach: unknown =>
+        raise(ErrorReport(unknown.provenance.diagnostic(
+          msg"Mutable field '${td.tsym.nme}' is exposed to other compilation units, which can assign to it; annotate its type",
+          td.tsym.toLoc), source = Diagnostic.Source.Compilation))
 
 object Erasure:
   /** Prelude declarations use the same pass even though they have no executable program. */

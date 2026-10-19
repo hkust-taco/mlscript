@@ -36,11 +36,11 @@ fun Getter = 14
 :e
 module MutableMembers {
   class Mutable
-  mut val Mutable = 17
+  mut val Mutable: Int = 17
 }
 //│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
-//│ ║  l.39: 	  mut val Mutable = 17
-//│ ║        	      ^^^^^^^^^^^^^^^^
+//│ ║  l.39: 	  mut val Mutable: Int = 17
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Arbitrary values cannot be overloaded with class 'Mutable'
 //│ ║  l.38: 	  class Mutable
 //│ ╙──      	  ^^^^^^^^^^^^^

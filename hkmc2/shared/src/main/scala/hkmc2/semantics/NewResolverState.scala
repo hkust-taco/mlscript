@@ -126,10 +126,16 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.symShapes, identity)
   // Member `let`s have no TermDefinition body. Their initializers and subsequent
   // assignments feed this host, just as assignments feed a local variable.
+  // Assignable fields also have such a host, which holds only their assigned
+  // values (see NewResolver.writeField): their initializers are their bodies.
   // Keep the host in resolver state so imported observations use the existing
   // consumer-local publisher machinery rather than mutating the source symbol.
   private[semantics] val memberVariables: Cache[TermSymbol, ShapeHost] =
     new Cache(_.memberVariables, identity)
+  // An assignment's lookups can reach the same field through the same path from
+  // several receivers (see NewResolver.assignField); subscribe to its values once.
+  val fieldAssignments: Seen[(Identity[Term], Identity[Term], TermSymbol, Ls[Marks])] =
+    new Seen(_.fieldAssignments)
   val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, DeclaredType], Bool), DeclaredSymShape] =
     new Cache(_.declaredSymShapes, identity)
   val selfShapes: Cache[InnerSymbol, BaseShape] =

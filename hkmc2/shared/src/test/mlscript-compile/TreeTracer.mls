@@ -8,8 +8,8 @@ open Predef { fold }
 module TreeTracer with ...
 
 class TreeTracer with
-  mut val steps = 0
-  mut val enabled = false
+  mut val steps: Int = 0
+  mut val enabled: Bool = false
   fun output(outie, innie, innieAlt, message: Str) = if enabled do
     let lines = message.split("\n")
     lines.forEach of (line, i, xs) => if
