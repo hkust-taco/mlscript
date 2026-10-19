@@ -664,9 +664,10 @@ trait TypeOrTermDef extends Located:
     * Modifiers and annotations of the definition are outside of its tree,
     * so they are not covered either. */
   lazy val headLoc: Opt[Loc] =
-    val parts: Ls[Located] =
-      symbName.flatMap(_.toOption).toList ::: name.toOption.toList ::: typeParams.toList :::
-        paramLists ::: annotatedResultType.toList ::: extension.toList
+    val parts =
+      symbName.flatMap(_.toOption).iterator
+        ++ name.toOption.toList ++ typeParams.toList
+        ++ paramLists ++ annotatedResultType.toList ++ extension
     Loc(parts).map(head => toLoc.fold(head)(_.left ++ head))
   
 end TypeOrTermDef
