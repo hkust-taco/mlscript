@@ -765,7 +765,7 @@ sccHelper(100000)
 // A call is typed as the callee's result only when saturated: `curried(1)` supplies one of two declared
 // parameter lists, so it is the residual function, not an `Int`.
 fun curried(a: Int)(b: Int): Int = a + b
-fun useFn(g: Function) = g(1)
+fun useFn(g: Function[Array[Any], Any]) = g(1)
 useFn(curried(1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Function⁰;
@@ -786,7 +786,7 @@ val done: Int = curried(1)(2)
 // Counting lists must account for normalization: a `fun` with no parameter list keeps `Nil` in its
 // signature, but lowering gives it one empty list and calls it with one empty argument list. `thunk()` is
 // therefore saturated, and only the further `(2)` needs narrowing to `Int`.
-fun thunk: Function = (b: Int) => b + 1
+fun thunk: Function[Array[Any], Any] = (b: Int) => b + 1
 val over: Int = thunk(2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Function⁰, tmp1: ?;
@@ -876,11 +876,11 @@ fun badInst() = useInt(new Bar("x"))
 
 // A reference to a `fun` is already a function value, so returning one at `Function` takes no coercion. An
 // instantiation is typed as its class instead, so the same annotation makes the coercion real.
-fun test: Function = id
+fun test: Function[Array[Any], Any] = id
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define test² as fun test³(): Function⁰ { return id¹ }; end
 
-fun test: Function = new Object
+fun test: Function[Array[Any], Any] = new Object
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define test⁴ as fun test⁵(): Function⁰ { return (new globalThis⁰.Object⁰() as! Function⁰) }; end
 
