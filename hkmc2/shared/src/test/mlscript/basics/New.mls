@@ -48,7 +48,7 @@ new
 //│ ║        	  ^^^^^
 //│ ╟── Class 'Foo' must be instantiated with 'new'.
 //│ ║  l.5: 	class Foo
-//│ ╙──     	      ^^^
+//│ ╙──     	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -101,7 +101,7 @@ new Foo(...[1, 2])
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Foo' expected 3 arguments, but got 2
 //│ ║  l.92: 	data class Foo(a,b,c)
-//│ ╙──      	     ^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ = Foo(1, 2, undefined)
 
 :e
@@ -111,7 +111,7 @@ new Foo(...[1, 2, 3, 4])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Foo' expected 3 arguments, but got 4
 //│ ║  l.92: 	data class Foo(a,b,c)
-//│ ╙──      	     ^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ = Foo(1, 2, 3)
 
 

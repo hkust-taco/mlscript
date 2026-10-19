@@ -88,7 +88,7 @@ Option.oops
 //│ ╟── Module 'Option' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
 //│ ║  l.6: 	module Option with ...
-//│ ╙──     	       ^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -99,7 +99,7 @@ open Option { oops }
 //│ ╟── Module 'Option' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
 //│ ║  l.6: 	module Option with ...
-//│ ╙──     	       ^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^
 
 :e
 :re
@@ -110,7 +110,7 @@ oops
 //│ ╟── Module 'Option' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
 //│ ║  l.6: 	module Option with ...
-//│ ╙──     	       ^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -122,7 +122,7 @@ Option.None.oops
 //│ ╟── Object 'None' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
 //│ ║  l.10: 	object None
-//│ ╙──      	       ^^^^
+//│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

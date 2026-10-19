@@ -255,7 +255,7 @@ _ - _ of 1, 2
 //│ ╟── Function 'pipeInto' expected 2 arguments, but got 1
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.30: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 |> (1, _ - 2)

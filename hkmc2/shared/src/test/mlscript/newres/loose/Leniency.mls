@@ -159,7 +159,7 @@ fun noCandidate(x) = x.absent
 //│ ╟── Module 'M1' does not contain member 'absent'
 //│ ║  in Leniency.mls:4
 //│ ║  l.4: 	module M1 { val u = 1 }
-//│ ╙──     	       ^^
+//│ ╙──     	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A computed key is another source of uncertainty about the selected member.

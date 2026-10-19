@@ -772,7 +772,7 @@ object RcdField:
     // directly to its written type: projection does not invoke a value definition.
     tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N,
       if signature then S(rhs) else N,
-      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, N))
+      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, field.toLoc, N))
     sym.complete()
     RcdField(field, rhs, sym)(symbol.orElse(field match
       case Term.Lit(Tree.StrLit(name)) => S(name)
@@ -855,7 +855,7 @@ final case class TermDefinition(
     modulefulness: Modulefulness,
     annotations: Ls[Annot],
     companion: Opt[CompanionSymbol],
-)(val toLoc: Opt[Loc],
+)(val toLoc: Opt[Loc], val headerLoc: Opt[Loc],
   // Lexical binding site, as ModuleOrObjectDef.path; absent for synthetic definitions.
   val scope: Opt[SrcScope],
 ) extends CompanionValue:
@@ -978,6 +978,14 @@ sealed abstract class Declaration extends Located:
 sealed abstract class Definition extends Declaration, Statement, PossiblyErroneous:
   val annotations: Ls[Annot]
   def bsym: BlockMemberSymbol
+  /** The span of this definition's header: its modifiers (such as `declare`), keyword, name,
+    * type and value parameter lists, result annotation, and parent clause, but neither its
+    * annotations (such as `@foo`) nor its body or right-hand side (see `syntax.TypeOrTermDef.headLoc`).
+    * Diagnostics that cite the definition as a witness, such as arity errors, should use
+    * this rather than `toLoc`, which spans the whole definition, including its body.
+    * A class constructor's header is that of its class; synthesized definitions,
+    * such as the fields generated from class parameters, use their source location. */
+  def headerLoc: Opt[Loc]
   def visibility: Visibility = Visibility.of(annotations)
   def hasDeclareModifier: Opt[Annot.Modifier] = Annot.declareModifierOf(annotations)
   def hasStagedModifier: Opt[Annot.Modifier] = annotations.collectFirst:
@@ -1044,6 +1052,7 @@ case class ModuleOrObjectDef(
 )(
   val path: SrcScope,
   val toLoc: Opt[Loc],
+  val headerLoc: Opt[Loc],
 ) extends ClassLikeDef, CompanionValue:
   val ctorSym: Option[ClassCtorSymbol] = N
 
@@ -1065,7 +1074,7 @@ case class PatternDef(
      */
     pattern: Pattern,
     annotations: Ls[Annot],
-)(val toLoc: Opt[Loc]) extends ClassLikeDef:
+)(val toLoc: Opt[Loc], val headerLoc: Opt[Loc]) extends ClassLikeDef:
   self =>
   val kind: ClsLikeKind = Pat
   val ext: Opt[New] = N
@@ -1097,6 +1106,12 @@ sealed abstract class ClassDef extends ClassLikeDef:
     * the whole constructor. This is the case even for a bare `private constructor` declaration,
     * which adds no parameter list. */
   val ctorAnnotations: Ls[Annot]
+  /** The span of the `constructor(...)` declarations in the class body that declare
+    * parameter lists, if any. These parameter lists extend the class's constructor
+    * beyond those written in its header, which `headerLoc` covers. Since they are written
+    * in the body, only diagnostics about the constructor's parameters, such as arity errors,
+    * cite this location, in addition to `headerLoc`. */
+  val ctorLoc: Opt[Loc]
   def isData: Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`data`) => mod
   /** The modifier making the class's constructor private, if any: only the class and its
@@ -1122,15 +1137,15 @@ object ClassDef:
       comp: Opt[ClassCompanionSymbol],
       auxCtorParams: Ls[ParamList],
       ctorAnnotations: Ls[Annot],
-  )(toLoc: Opt[Loc]): ClassDef =
+  )(toLoc: Opt[Loc], headerLoc: Opt[Loc], ctorLoc: Opt[Loc]): ClassDef =
     params match
       case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym, S(ctorSym.getOrElse(lastWords("Parameterized classes should have a ctor symbol.")))
-        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations, ctorAnnotations)(toLoc)
+        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations, ctorAnnotations)(toLoc, headerLoc, ctorLoc)
       case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
         , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym,
-        ctorAnnotations = ctorAnnotations)(toLoc)
+        ctorAnnotations = ctorAnnotations)(toLoc, headerLoc, ctorLoc)
   
   def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[ParamList], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
@@ -1149,7 +1164,7 @@ object ClassDef:
       companion: Opt[ClassCompanionSymbol],
       annotations: Ls[Annot],
       ctorAnnotations: Ls[Annot],
-  )(val toLoc: Opt[Loc]) extends ClassDef:
+  )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc], val ctorLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = S(params)
   
   case class Plain(
@@ -1165,7 +1180,7 @@ object ClassDef:
       auxParams: List[ParamList],
       ctorSym: Opt[ClassCtorSymbol],
       ctorAnnotations: Ls[Annot],
-  )(val toLoc: Opt[Loc]) extends ClassDef:
+  )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc], val ctorLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
   
 end ClassDef
@@ -1178,7 +1193,7 @@ case class TypeDef(
   rhs: Opt[Term],
   companion: Opt[CompanionValue],
   annotations: Ls[Annot],
-)(val toLoc: Opt[Loc]) extends TypeLikeDef:
+)(val toLoc: Opt[Loc], val headerLoc: Opt[Loc]) extends TypeLikeDef:
   val kind: ObjDefKind = Als
 
 

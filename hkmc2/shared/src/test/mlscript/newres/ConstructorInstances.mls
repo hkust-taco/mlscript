@@ -227,9 +227,7 @@ let second = new Box(Second(22))
 //│ ║         	          ^^^^^^^^
 //│ ╟── 'Box' is exposed by this compilation unit.
 //│ ║  l.213: 	class Box(val item) with
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.214: 	  fun copy() = new Box(item)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.217: 	[first.copy().item.first, second.copy().item.second]
 //│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -242,9 +240,7 @@ let second = new Box(Second(22))
 //│ ║         	          ^^^^^^^^
 //│ ╟── 'Box' is exposed by this compilation unit.
 //│ ║  l.213: 	class Box(val item) with
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.214: 	  fun copy() = new Box(item)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[21, 22]', got: 'undefined'
 //│ first = Box(First(21))

@@ -68,34 +68,18 @@ Array()
 //│ ╟── Class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.247: 	declare class Array[T](val length: Int) {
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.248: 	  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.249: 	  fun join(...separators): Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.250: 	  fun reverse(): Array[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.251: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
 :e
 Array(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.83: 	Array(1, 2, 3)
+//│ ║  l.75: 	Array(1, 2, 3)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 3
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.247: 	declare class Array[T](val length: Int) {
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.248: 	  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.249: 	  fun join(...separators): Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.250: 	  fun reverse(): Array[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.251: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2, 3]
 
 

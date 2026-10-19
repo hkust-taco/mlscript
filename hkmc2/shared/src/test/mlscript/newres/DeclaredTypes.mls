@@ -707,7 +707,7 @@ fun omittedSecond(x: Pair[Int]) = x.value.1.oops
 //│ ║         	                  ^^^^^^^^^^^^
 //│ ╟── 'omittedSecond' is exposed by this compilation unit.
 //│ ║  l.700: 	fun omittedSecond(x: Pair[Int]) = x.value.1.oops
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // An unfilled omitted alias argument likewise cannot justify an arbitrary member.
 :ge
@@ -722,4 +722,4 @@ fun omittedAlias(x: HalfPair) = x.value.1.oops
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╟── 'omittedAlias' is exposed by this compilation unit.
 //│ ║  l.715: 	fun omittedAlias(x: HalfPair) = x.value.1.oops
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

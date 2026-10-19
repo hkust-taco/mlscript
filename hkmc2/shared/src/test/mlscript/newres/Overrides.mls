@@ -54,7 +54,7 @@ abstract class Abstract { fun foo() }
 class Implemented extends Abstract { fun foo() = 4 }
 
 :expect 4
-(new Implemented).foo()
+new Implemented().foo()
 //│ = 4
 
 :e
@@ -80,7 +80,7 @@ new Abstract
 :expect 10
 class SuperBase { open fun foo(x) = x + 1 }
 class SuperChild extends SuperBase { override fun foo(x) = super.foo(x + 1) * 2 }
-(new SuperChild).foo(3)
+new SuperChild().foo(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp;
 //│ define SuperBase⁰ as class SuperBase¹ {
@@ -103,14 +103,14 @@ class SuperChild extends SuperBase { override fun foo(x) = super.foo(x + 1) * 2 
 
 :expect 11
 class SuperInherited extends SuperChild { fun bar(x) = super.foo(x) + 1 }
-(new SuperInherited).bar(3)
+new SuperInherited().bar(3)
 //│ = 11
 
 :expect 10
 class SuperClosure extends SuperBase {
   override fun foo(x) = (() => super.foo(x + 1) * 2)()
 }
-(new SuperClosure).foo(3)
+new SuperClosure().foo(3)
 //│ = 10
 
 :expect 13
@@ -118,7 +118,7 @@ class GetterBase(val n) { open fun value = n + 1 }
 class GetterChild(n) extends GetterBase(n) {
   override fun value = super.value + super.n
 }
-(new GetterChild(6)).value
+new GetterChild(6).value
 //│ = 13
 
 :expect 12
@@ -130,7 +130,7 @@ class ReceiverChild extends ReceiverBase {
   override fun value() = 10
   override fun run() = super.run()
 }
-(new ReceiverChild).run()
+new ReceiverChild().run()
 //│ = 12
 
 :expect 7
@@ -146,7 +146,7 @@ class GenericChild[A](x: A) extends GenericBase[A](x) {
 :expect 8
 class ForwardChild extends ForwardBase { override fun f(x) = super.f(x) + 1 }
 class ForwardBase { open fun f(x) = x + 2 }
-(new ForwardChild).f(5)
+new ForwardChild().f(5)
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 //│ ═══[RUNTIME ERROR] Expected: '8', got: 'undefined'
 
@@ -277,7 +277,7 @@ private fun readDeep(x) = x.foo()
 fun local(n) = {
   class LocalBase { open fun foo(x) = n + x }
   class LocalChild extends LocalBase { override fun foo(x) = super.foo(x) * 2 }
-  (new LocalChild).foo(1)
+  new LocalChild().foo(1)
 }
 [local(2), local(6)]
 //│ = [6, 14]
@@ -318,7 +318,7 @@ class StillMissing extends MissingInherited
 
 :expect 4
 class InheritsImplementation extends Implemented
-(new InheritsImplementation).foo()
+new InheritsImplementation().foo()
 //│ = 4
 
 :expect 4
@@ -334,7 +334,7 @@ fun makeParent(n) = {
 }
 let parent = makeParent(4)
 class StoredParent extends parent { override fun f() = super.f() * 2 }
-(new StoredParent).f()
+new StoredParent().f()
 //│ = 8
 //│ parent = class Parent
 
@@ -376,7 +376,7 @@ class StoredIncomplete extends abstractParent
 :expect 5
 let abstractParent = Abstract
 class StoredComplete extends abstractParent { fun foo() = 5 }
-(new StoredComplete).foo()
+new StoredComplete().foo()
 //│ = 5
 //│ abstractParent = class Abstract
 
@@ -386,7 +386,7 @@ class StoredComplete extends abstractParent { fun foo() = 5 }
 :expect [8, 10]
 fun lifted(n) = {
   class Child extends SuperBase { override fun foo(x) = super.foo(x) + n }
-  (new Child).foo(2)
+  new Child().foo(2)
 }
 [lifted(5), lifted(7)]
 //│ = [8, 10]
@@ -395,13 +395,13 @@ fun lifted(n) = {
 class FieldBase { open val x: Int = 1 }
 class FieldChild extends FieldBase { override val x: Int = 9 }
 private fun field(x) = x.x
-[field(new FieldChild), (new FieldChild).x]
+[field(new FieldChild), new FieldChild().x]
 //│ = [9, 9]
 
 :expect 7
 abstract class AbstractField { val x: Int }
 class ConcreteField extends AbstractField { val x: Int = 7 }
-(new ConcreteField).x
+new ConcreteField().x
 //│ = 7
 
 abstract class PrivateRequirement { private fun hidden() }
@@ -433,7 +433,7 @@ private fun readInherited(flag) = {
 let changingParent = makeParent(4)
 class SavedParent extends changingParent { override fun f() = super.f() }
 set changingParent = makeParent(9)
-(new SavedParent).f()
+new SavedParent().f()
 //│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3688'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
@@ -448,7 +448,7 @@ class Holder(n) { class Parent { open fun f() = n } }
 let changingHolder = Holder(5)
 class SavedNestedParent extends changingHolder.Parent { override fun f() = super.f() }
 set changingHolder = Holder(11)
-(new SavedNestedParent).f()
+new SavedNestedParent().f()
 //│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3688'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.

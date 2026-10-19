@@ -75,7 +75,7 @@ new mut Foo.x
 //│ ║        	        ^^^^^
 //│ ╟── Class value does not contain member 'x'
 //│ ║  l.5: 	class Foo with
-//│ ╙──     	      ^^^
+//│ ╙──     	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

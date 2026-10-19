@@ -98,7 +98,7 @@ class NewResolver:
           member.asTpe.orElse(member.asModOrObj) match
             case S(symbol) => select(symbol)
             case N =>
-              result.fail(msg"${member.describe.capitalize} cannot be used as a type" -> member.toLoc :: Nil)
+              result.fail(msg"${member.describe.capitalize} cannot be used as a type" -> member.headerLoc :: Nil)
               result.publish(TypeShape.Abstract)
         term match
           // Imported declarations can still contain legacy references.
@@ -2744,7 +2744,7 @@ class NewResolver:
         if mismatch then
           if rctx.state.reportedArities.getOrElseUpdate(reportKey, mutable.Set.empty).add(known) then
             val count = if unknown then msg"at least ${known}" else msg"${known}"
-            resolError(src, callable.diagnostic(msg"${callable.describe.capitalize} expected ${arity.describe}, but got ${count}"))
+            resolError(src, callable.arityDiagnostic(msg"${callable.describe.capitalize} expected ${arity.describe}, but got ${count}"))
         else matched((tuple, marks))
       case _ => resolError(src, msg"Expected an argument tuple." -> args.toLoc :: Nil)
   
@@ -2773,7 +2773,7 @@ class NewResolver:
           case N =>
             if args.nonEmpty || cls.isInstanceOf[ClassDef] then
               rctx.markError(res)
-              resolError(res, msg"${cls.describe.capitalize} does not take pattern arguments." -> cls.toLoc :: Nil)
+              resolError(res, msg"${cls.describe.capitalize} does not take pattern arguments." -> cls.headerLoc :: Nil)
             Nil
           case S(ps) =>
             // Elaboration reports and removes rest parameters of class-like definitions,
@@ -2783,7 +2783,7 @@ class NewResolver:
               rctx.markError(res)
               resolError(res,
                 msg"${cls.describe.capitalize} expected ${ps.params.length} ${
-                  "pattern argument".pluralized(ps.params.length)}, but got ${args.length}" -> cls.toLoc :: Nil)
+                  "pattern argument".pluralized(ps.params.length)}, but got ${args.length}" -> cls.headerLoc :: Nil)
             ps.params.lazyZip(args).flatMap: (p, a) =>
               p.fldSym match
                 case S(fldSym: BlockMemberSymbol) =>
@@ -2857,7 +2857,7 @@ class NewResolver:
     val source = Term.MemberRef(definition.bsym)(new syntax.Tree.Ident(definition.bsym.nme).withLocOf(definition),
       FlowSymbol.pat()(using rctx.owner))
     val unknown = UnknownValueShape(source, fromPublicInterface = false)(ShapeProvenance(
-      msg"Pattern '${definition.sym.nme}' accepts values of unknown shape." -> definition.toLoc :: Nil))
+      msg"Pattern '${definition.sym.nme}' accepts values of unknown shape." -> definition.headerLoc :: Nil))
     matchShapePat(unknown, definition.pattern)(_ => ())
 
   /** Propagate possible values to pattern bindings. Constructor tests filter by
@@ -3496,7 +3496,7 @@ class NewResolver:
         val count = if ref.supplied.nonEmpty then 0 else ref.definition.tparams.length
         if count != args.length && rctx.state.typeArgumentArityErrors.add((new Identity(application), count)) then
           resolError(trm, msg"Class '${ref.definition.sym.nme}' expected ${count} type ${
-            "argument".pluralized(count)}, but got ${args.length}" -> ref.definition.toLoc :: Nil)
+            "argument".pluralized(count)}, but got ${args.length}" -> ref.definition.headerLoc :: Nil)
         val supplied = args.map(arg => declaredType(typeResolution(arg), Map.empty).instantiate(rctx.instances))
         if ref.supplied.nonEmpty then selected(ref)
         else
@@ -3661,8 +3661,8 @@ class NewResolver:
                         val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
                         MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap,
                           declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
-                  member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.toLoc) :: Nil, TypeSubstitution.empty)
-              case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.toLoc) :: Nil, TypeSubstitution.empty))
+                  member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty)
+              case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty))
         , sh =>
           rctx.markError(sel)
           resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))

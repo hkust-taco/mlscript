@@ -29,7 +29,7 @@ sum([1, 2])
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Function 'sum' expected 0 arguments, but got 1
 //│ ║  l.16: 	fun sum([x, y]) = x + y
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 fun sum(pair) =

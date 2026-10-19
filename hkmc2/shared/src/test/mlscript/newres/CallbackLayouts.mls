@@ -28,7 +28,7 @@ private fun needsFour(a, b, c, d) = a
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  l.24: 	private fun needsFour(a, b, c, d) = a
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.268: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
@@ -76,7 +76,7 @@ let bad = required as ((Int?) -> Int)
 //│ ║        	          ^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
 //│ ║  l.72: 	private fun required(x) = x
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  l.73: 	let bad = required as ((Int?) -> Int)
 //│ ╙──      	                       ^^^^^^^^^^^^^

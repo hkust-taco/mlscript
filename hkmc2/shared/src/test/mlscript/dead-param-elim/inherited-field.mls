@@ -10,7 +10,7 @@
 :expect 21
 class Parent(val value)
 class Child(value) extends Parent(value)
-private fun read(value) = (new Child(value)).Parent#value
+private fun read(value) = new Child(value).Parent#value
 read(21)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
@@ -21,6 +21,6 @@ read(21)
 :expect 21
 class Parent(val value)
 class Child(value) extends Parent(value)
-private fun read(value) = (new Child(value)).Parent#value
+private fun read(value) = new Child(value).Parent#value
 read(21)
 //│ = 21

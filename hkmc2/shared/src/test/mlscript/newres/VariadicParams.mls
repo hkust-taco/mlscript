@@ -30,7 +30,7 @@ f(1)
 //│ ║        	^^^^
 //│ ╟── Function 'f' expected at least 2 arguments, but got 1
 //│ ║  l.8: 	fun f(x, ...xs, y) = [x, xs, y]
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
 
 fun g(...xs, y, z) = [xs, y, z]

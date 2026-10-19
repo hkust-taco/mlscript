@@ -41,6 +41,18 @@ sealed trait Shape extends ShapeEvent:
       case rigid: RigidTypeShape => rigid.provenance.diagnostic(message, toLoc)
       case _ => (message -> toLoc) :: Nil
     case _: SymShape => (message -> toLoc) :: Nil
+  /** Arity errors also cite where the expected parameter lists are declared, when the
+    * witness of `diagnostic` does not show them: a class constructor can take the
+    * parameter lists of `constructor(...)` declarations written in the class body. */
+  final def arityDiagnostic(message: Message): Ls[(Message, Opt[Loc])] =
+    def constructorDeclarations(shape: Shape): Ls[(Message, Opt[Loc])] = shape match
+      case value: TermShape => value.applicationHead._1 match
+        case view: ContextualShape => constructorDeclarations(view.source)
+        case view: SpecializedShape => constructorDeclarations(view.declaration)
+        case defn: DefnShape => defn.ctorLoc.map(loc => msg"The constructor is declared here." -> S(loc)).toList
+        case _ => Nil
+      case _: SymShape => Nil
+    diagnostic(message) ::: constructorDeclarations(this)
   def shwDbg(using DebugPrinter): Str = this match
     case ds: DefnShape => ds.defn.sym.showDbg
     case as: AppShape => s"AppShape(${as.receiver.shwDbg}, ${as.args.showDbg})"
@@ -633,7 +645,7 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   def describe: Str = s"${defn.describe}"
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     MemberLookup.inClass(defn, ext, name)
-  def toLoc: Opt[Loc] = defn.toLoc
+  def toLoc: Opt[Loc] = defn.headerLoc
 
 /** A structural annotation exposes only its declared fields. Their symbols belong
   * to the annotation, not to whichever record happens to be passed by a caller.
@@ -758,7 +770,7 @@ final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSym
     val parent: Opt[TermShape])(val annotation: Opt[Term], val provenance: ShapeProvenance)(resolver: NewResolver) extends CoreHeadShape:
   def describe: Str = s"value of type '${defn.sym.nme}'"
   override def toString: Str = s"NominalInstanceView(${defn.sym}, $bindings, $parent)"
-  def toLoc: Opt[Loc] = defn.toLoc
+  def toLoc: Opt[Loc] = defn.headerLoc
   override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool =
     (defn is cls) || parent.exists(_.isInstanceOfClass(cls))
   def ancestor(cls: ClassLikeDef): Opt[NominalInstanceView] =
@@ -826,7 +838,7 @@ final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams
     declaration: Opt[TermDefinition], asyncResult: Opt[AsyncResult]) extends CoreHeadShape:
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
-  def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.toLoc)
+  def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.headerLoc)
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = MemberLookup.Missing
 
 /** Why observing a type did not expose a member interface. Keep this evidence
@@ -953,7 +965,17 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
         case _: SymbolKey => MemberLookup.Missing
     case _: TermDefinition => MemberLookup.Missing
     case _ => MemberLookup.Missing
-  def toLoc: Opt[Loc] = defn.sym.toLoc
+  /** A definition is identified by its header; a class constructor, by its class's.
+    * The definition's `bsym` would instead span all of its trees: whole definitions,
+    * including their bodies, and any overloads, such as the companions of a class. */
+  def toLoc: Opt[Loc] = defn.headerLoc.orElse(defn.sym.toLoc)
+  /** For a class constructor, the `constructor(...)` declarations of its class with
+    * parameter lists, which are not part of the header (see `ClassDef.ctorLoc`). */
+  def ctorLoc: Opt[Loc] = defn match
+    case _: TermDefinition => clsDef match
+      case S(cls: ClassDef) => cls.ctorLoc
+      case _ => N
+    case _ => N
 
 /*
 // TODO – see `RefinedShape`

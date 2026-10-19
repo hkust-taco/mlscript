@@ -32,8 +32,6 @@ pattern WrongAnnotatedArity = AnnotatedPair("one")
 //│ ║  l.30: 	pattern WrongAnnotatedArity = AnnotatedPair("one")
 //│ ║        	                              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class definition 'AnnotatedPair' expected 2 pattern arguments, but got 1
-//│ ║  l.26: 	@untyped
-//│ ║        	^^^^^^^^
 //│ ║  l.27: 	public data class AnnotatedPair(val first, val second)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -43,8 +41,8 @@ data class NextPair(val first, val second)
 :e
 pattern WrongNextArity = NextPair("one")
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.44: 	pattern WrongNextArity = NextPair("one")
+//│ ║  l.42: 	pattern WrongNextArity = NextPair("one")
 //│ ║        	                         ^^^^^^^^^^^^^^^
 //│ ╟── Class definition 'NextPair' expected 2 pattern arguments, but got 1
-//│ ║  l.41: 	data class NextPair(val first, val second)
+//│ ║  l.39: 	data class NextPair(val first, val second)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
