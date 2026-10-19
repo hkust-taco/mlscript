@@ -1,20 +1,22 @@
 :.
 
+open annotations { jsSymbol }
+
 // Abstract members retain their source name and runtime key in implementations.
 :expect [17]
 abstract class AbstractSource {
-  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[Int]
+  @jsSymbol(Symbol.iterator) fun iterator(): Iterator[Int]
 }
 class ConcreteSource extends AbstractSource {
-  @annotations.jsSymbol(Symbol.iterator) override fun iterator() = [17].iterator()
+  @jsSymbol(Symbol.iterator) override fun iterator() = [17].iterator()
 }
 [...(new ConcreteSource)]
 //│ = [17]
 
 // Both source aliases remain available when structural interfaces are combined.
 :expect [18, 18]
-type SourceOne = {@annotations.jsSymbol(Symbol.iterator) first: () -> Iterator[Int]}
-type SourceTwo = {@annotations.jsSymbol(Symbol.iterator) second: () -> Iterator[Int]}
+type SourceOne = {@jsSymbol(Symbol.iterator) first: () -> Iterator[Int]}
+type SourceTwo = {@jsSymbol(Symbol.iterator) second: () -> Iterator[Int]}
 private fun both(xs: SourceOne & SourceTwo) = [xs.first().next().value, xs.second().next().value]
 both([18])
 //│ = [18, 18]
@@ -22,26 +24,26 @@ both([18])
 // A source alias and a string property with the same name are distinct targets.
 :e
 private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
-//│ ╔══[COMPILATION ERROR] This selection of member 'first' is ambiguous, as it has multiple resolved targets
-//│ ║  l.24: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
-//│ ║        	                                                                      ^^^^^^^^
-//│ ╟── target: record field 'first'
-//│ ║  l.16: 	type SourceOne = {@annotations.jsSymbol(Symbol.iterator) first: () -> Iterator[Int]}
-//│ ║        	                                                         ^^^^^
-//│ ╟── target: record field 'first'
-//│ ║  l.24: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
+//│ ╔══[COMPILATION ERROR] This reference has targets with different property keys.
+//│ ║  l.26: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
+//│ ║        	                                                                        ^^^^^^
+//│ ╟── Candidate 'first' is declared here.
+//│ ║  l.18: 	type SourceOne = {@jsSymbol(Symbol.iterator) first: () -> Iterator[Int]}
+//│ ║        	                                             ^^^^^
+//│ ╟── Candidate 'first' is declared here.
+//│ ║  l.26: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
 //│ ╙──      	                                       ^^^^^
 
 // An unused annotation must not rename a field behind its source-level name.
 :w
 :expect [19, 19]
 class Plain {
-  @annotations.jsSymbol(Symbol.iterator) val value = 19
+  @jsSymbol(Symbol.iterator) val value = 19
 }
 let plain = new Plain
 [plain.value, plain.("value")]
 //│ ╔══[WARNING] Only public methods may use @jsSymbol.
-//│ ║  l.39: 	  @annotations.jsSymbol(Symbol.iterator) val value = 19
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.41: 	  @jsSymbol(Symbol.iterator) val value = 19
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [19, 19]
 //│ plain = Plain { value: 19 }

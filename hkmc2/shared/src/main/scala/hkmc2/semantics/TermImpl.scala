@@ -93,6 +93,9 @@ trait PossiblyErroneous:
 trait NewResolvableImpl extends PossiblyErroneous:
   self: MemberRef | NewSel | UnresolvedRef | Super =>
   var resolvedTargets: Ls[DefinitionSymbol[?]] = Nil // * filled during flow analysis
+  // The implicit property-key expression, resolved in this use site's scope at
+  // block completion. Lowering must not reuse the annotation's lexical environment.
+  var keyAccess: Opt[Term] = N
 
 
 trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
@@ -190,6 +193,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case Blk(stats, res) => stats.toVector :+ res
     case _ => subTerms
   def subTerms: Vector[Term] = this match
+    case ref: MemberRef => ref.keyAccess.toVector
     case Error() | Missing | _: Lit | _: AnyRef_ | _: DynTy | _: UnitVal => Vector.empty
     case Capture(base, thru) => Vector.single(base)
     case Resolved(t, sym) => Vector.single(t)
@@ -200,9 +204,9 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case TyApp(pre, tarsg) => pre +: tarsg.toVector
     case Sel(pre, _) => Vector.single(pre)
     case SynthSel(pre, _) => Vector.single(pre)
-    case Super(receiver, _, _) => Vector.single(receiver)
-    case NewSel(pre, _, cls) => Vector.single(pre) ++ cls.toVector
-    case UnresolvedRef(prefixes, _) => prefixes.toVector
+    case sup @ Super(receiver, _, _) => Vector.single(receiver) ++ sup.keyAccess.toVector
+    case sel @ NewSel(pre, _, cls) => Vector.single(pre) ++ cls.toVector ++ sel.keyAccess.toVector
+    case ref @ UnresolvedRef(prefixes, _) => prefixes.toVector ++ ref.keyAccess.toVector
     case DynSel(o, f, _, _) => Vector.double(o, f)
     case Tup(fields) => fields.flatMap(_.subTerms).toVector
     case Mut(und) => Vector.single(und)

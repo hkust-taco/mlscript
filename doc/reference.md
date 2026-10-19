@@ -1402,11 +1402,15 @@ class. Distinct receiver paths are significant for fresh instance fields.
 
 Currently, selecting a member on an escaped instance is unsupported when the
 caller cannot access its local key: the compiler needs a runtime witness for
-that particular key. Lowering diagnoses such accesses at the use site before
+that particular key. Resolution diagnoses such accesses at the use site before
 constructing a reference to the unavailable key. Closures that capture the key
 remain valid, as do keys available through an imported file, including its
 private file-level vals. The key must not be hoisted and shared between factory
 invocations. `newres/JsSymbol.mls` records these cases.
+
+A key path that accesses a private member of a class or module in another file
+is rejected at the selection site. Such members use private accessor symbols
+local to their defining file; they do not use the file-level private export ABI.
 
 Compilation files check that their exposed functions and values do not make a close-world assumption. A public `fun read(x) = x.a` needs an interface for
 `x` even if local callers all provide `{a: 1}`. A private helper can use local

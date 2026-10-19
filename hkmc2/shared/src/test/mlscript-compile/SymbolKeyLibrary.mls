@@ -8,6 +8,18 @@ module SymbolKeyLibrary {
   class Reader {
     @jsSymbol(readKey) fun read() = 55
   }
+  module Nested {
+    @fresh val key = Symbol("nested library key")
+    class Reader {
+      @jsSymbol(key) fun read() = 68
+    }
+  }
+  private module PrivateKeys {
+    @fresh val key = Symbol("private module key")
+  }
+  class PrivatePathReader {
+    @jsSymbol(PrivateKeys.key) fun read() = 72
+  }
   fun make(value) =
     class Local {
       @jsSymbol(SymbolKeyLibrary.readKey) fun read() = value

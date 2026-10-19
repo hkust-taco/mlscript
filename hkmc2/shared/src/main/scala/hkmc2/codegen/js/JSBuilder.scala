@@ -70,7 +70,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       source = Diagnostic.Source.Compilation))
     doc" # ${mkErr(errMsg)};"
   
-  private def getPrivateAccessorSymbol(ts: DefinitionSymbol[?]): semantics.TempSymbol =
+  private def getPrivateAccessorSymbol(ts: DefinitionSymbol[?])(using Raise): semantics.TempSymbol =
+    // Accessor symbols are shared only within this emitted module. Allocating a
+    // fresh symbol in an importer cannot reach the defining module's accessor.
+    softAssert(ts.getState is State, s"Cannot generate a cross-file access to private member '${ts.nme}'")
     privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.nme}$$accessorSymbol"))
   
   /** Private names belong to the containing IR class, shared by its instance and static members.

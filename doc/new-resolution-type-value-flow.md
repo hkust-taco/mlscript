@@ -645,7 +645,7 @@ Key recognition does not evaluate a val initializer or force alias expansion.
 
 Annotations on declared module members can be interpreted from the module's
 syntax before its value definitions complete. This matters for prelude bootstrap:
-`@annotations.fresh` must not require a runtime value from the declared
+`@fresh` must not require a runtime value from the declared
 `annotations` module. Builtin `Symbol` lookup is lazy so interpreting an unrelated
 annotation does not require `Symbol` to be present in an earlier prelude block.
 Completed overload sets are published as soon as their definitions are available,
@@ -657,8 +657,29 @@ captures and substitute their symbols. Computed names are evaluated in the
 class's enclosing scope. Lifting cannot move such a class out of the invocation
 that evaluates its keys; doing so could reuse a key or read it before initialization.
 
-Before constructing a key reference, lowering checks that its root is lexically
-bound, declared global, or backed by an actual import/export. A member's resolved
-declaration cannot supply a factory-local key to an escaped instance's caller.
-Such accesses fail at the use site; nested closures can still capture the key.
-This check does not change resolution's candidate flows.
+At block completion, resolution recovers an access path from the use site's
+lexical scope to the key's binding, following enclosing modules when necessary.
+Context updates preserve scope identity; entering a nested block creates a new
+scope. Term definitions retain their binding scope, as module definitions do.
+File bindings can also be reached through the compilation unit's existing default
+export or private export ABI. Foreign provenance alone does not make a local
+binding importable.
+
+The legacy resolver uses the same `AccessPath.findAccessPath` helper for implicit
+companion references. It retains the module overload at each step, so a companion
+of a constructor function is reached through its class value, including across
+files and after lifting.
+
+The recovered expression is part of the resolved reference and is cloned and
+lowered like other operands. Lowering does not maintain a separate inventory of
+available bindings. A member's resolved declaration cannot supply a factory-local
+key to an escaped instance's caller. Such accesses fail at the use site; nested
+closures can still capture the key. These checks do not change candidate flows.
+Overrides with a common key retain all their targets and share only the recovered
+key operand.
+
+Private members of classes and modules cannot supply keys across files: their
+generated accessor symbols are local to one emitted JavaScript module. Resolution
+reports the inaccessible private member at the selection, and code generation
+asserts this boundary as a compiler invariant. This restriction does not apply to
+private file-level vals, which use the compilation unit's private export ABI.

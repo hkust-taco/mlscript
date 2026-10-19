@@ -479,7 +479,13 @@ final class ResolutionContext private[semantics] (
         markError(term)
         reportResolutionError(term, messages)
     state.pendingChecks.clear()
-    state.accessSites.foreach(checkAccess)
+    state.accessSites.foreach: (term, scope) =>
+      checkAccess(term, scope)
+      // Access checks can insert already-resolved key expressions. Bind their
+      // hosts to this unit before sealing, just like the written source terms.
+      term match
+        case ref: NewResolvable => ref.keyAccess.foreach(visit)
+        case _ => ()
     state.accessSites.clear()
     state.pending.foreach: (key, value) =>
       if !key.value.isInstanceOf[Symbol] && state.completedNodes.add(key) then value.completed = true
@@ -577,6 +583,36 @@ final class ResolutionContext private[semantics] (
     if violations.nonEmpty then
       markError(term)
       violations.foreach(report)
+    else term match
+      case ref: NewResolvable =>
+        // Overrides can have several targets but still share one property key.
+        // Keep those targets and their flows; recover only their common operand.
+        ref.resolvedTargets.map(_.asTrm.flatMap(_.defn).flatMap(MemberKey.symbol)).distinct match
+          case S(key) :: Nil =>
+            AccessPath.symbolKey(scope, key)(using state.owner) match
+              case R(path) => ref.keyAccess = S(path)
+              case L(AccessPath.Failure.PrivateMember(member)) =>
+                markError(ref)
+                report(ErrorReport(
+                  msg"Cannot use @jsSymbol key '${key.name}' here: private member '${member.nme}' belongs to another file." -> loc ::
+                    msg"The private member is declared here." -> member.toLoc ::
+                    ref.resolvedTargets.distinct.map(target =>
+                      msg"The keyed member '${target.nme}' is defined here." -> target.toLoc),
+                  source = Diagnostic.Source.Compilation))
+              case L(AccessPath.Failure.OutOfScope) =>
+                markError(ref)
+                report(ErrorReport(
+                  msg"Cannot use @jsSymbol key '${key.name}' here: '${key.path.head.nme}' is not in scope." -> loc ::
+                    msg"The key's root binding is defined here." -> key.path.head.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation))
+          case keys if keys.exists(_.nonEmpty) =>
+            markError(ref)
+            report(ErrorReport(
+              msg"This reference has targets with different property keys." -> loc ::
+                ref.resolvedTargets.distinct.map(target => msg"Candidate '${target.nme}' is declared here." -> target.toLoc),
+              source = Diagnostic.Source.Compilation))
+          case _ => ()
+      case _: New => ()
 
   def canResolve(host: Publisher[?]): Bool =
     data(host)

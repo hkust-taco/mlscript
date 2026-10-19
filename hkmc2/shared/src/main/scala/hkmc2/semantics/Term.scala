@@ -281,36 +281,6 @@ object Resolvable:
 
 case class SrcScope(outer: Elaborator.OuterCtx, parent: Opt[SrcScope]):
   
-  /** Computes the outermost scope from which the current scope can still be accessed.
-    * For instance, from [scp2] here, [scp1] is the outermost accessible base:
-    *     [scp0]
-    *     fun foo =
-    *       [scp1]
-    *       module Foo with
-    *         module Bar with
-    *           [scp2]
-    * and the path is Foo :: Bar :: Nil.
-    * [scp0] cannot access [scp2] because there is a function (Function outer) on the way.
-    * The same would happen for:
-    *     [scp0]
-    *     if ... then // LocalScope also blocks access to [scp1] and [scp2]
-    *       [scp1]
-    *       module Foo with
-    *         module Bar with
-    *           [scp2]
-    */
-  lazy val outermostAcessibleBase: (SrcScope, Ls[InnerSymbol]) =
-      import Elaborator.OuterCtx.*
-      outer match
-      case InnerScope(inner) =>
-        parent match
-        case N => (this, inner :: Nil)
-        case S(par) =>
-          val (base, path) = par.outermostAcessibleBase
-          (base, inner :: path)
-      case _: (Function | LocalScope | NonReturnContext) | LambdaOrHandlerBlock =>
-        (this, Nil)
-  
   /** Whether code written in this scope can access the private members of `owner`: whether it is nested in the
     * definition of `owner` or of one of its companions, which are the other class-like definitions of its block member
     * symbol. These are found through `owner`, whose definition is complete, unlike the definitions enclosing this scope,
@@ -591,6 +561,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       copyResolution(source, copy)
     def copyNewResolution(source: NewResolvable, copy: NewResolvable): copy.type =
       copy.resolvedTargets = source.resolvedTargets
+      copy.keyAccess = source.keyAccess.map(_.mkClone)
       copy.isErroneous = source.isErroneous
       copy
     // Keep class qualifiers typed as selections while sharing all clone metadata copying.
@@ -801,7 +772,7 @@ object RcdField:
     // directly to its written type: projection does not invoke a value definition.
     tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N,
       if signature then S(rhs) else N,
-      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc))
+      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, N))
     sym.complete()
     RcdField(field, rhs, sym)(symbol.orElse(field match
       case Term.Lit(Tree.StrLit(name)) => S(name)
@@ -884,7 +855,10 @@ final case class TermDefinition(
     modulefulness: Modulefulness,
     annotations: Ls[Annot],
     companion: Opt[CompanionSymbol],
-)(val toLoc: Opt[Loc]) extends CompanionValue:
+)(val toLoc: Opt[Loc],
+  // Lexical binding site, as ModuleOrObjectDef.path; absent for synthetic definitions.
+  val scope: Opt[SrcScope],
+) extends CompanionValue:
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner

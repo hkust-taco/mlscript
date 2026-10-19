@@ -233,7 +233,13 @@ private fun escaping(value) =
 [escaping(53).read(), escaping(54).read()]
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is not in scope.
 //│ ║  l.233: 	[escaping(53).read(), escaping(54).read()]
-//│ ║         	 ^^^^^^^^^^^^^^^^^
+//│ ║         	             ^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.228: 	  @fresh val localKey = Symbol("escaping")
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is not in scope.
+//│ ║  l.233: 	[escaping(53).read(), escaping(54).read()]
+//│ ║         	                                  ^^^^^
 //│ ╟── The key's root binding is defined here.
 //│ ║  l.228: 	  @fresh val localKey = Symbol("escaping")
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -244,14 +250,12 @@ private fun escaping(value) =
 :e
 escaping(54).read()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is not in scope.
-//│ ║  l.245: 	escaping(54).read()
-//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.251: 	escaping(54).read()
+//│ ║         	            ^^^^^
 //│ ╟── The key's root binding is defined here.
 //│ ║  l.228: 	  @fresh val localKey = Symbol("escaping")
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp;
-//│ set tmp = escaping⁰(54);
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -325,14 +329,12 @@ private fun moduleKey(value) =
 :sir
 moduleKey(62).fetch()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is not in scope.
-//│ ║  l.326: 	moduleKey(62).fetch()
-//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.330: 	moduleKey(62).fetch()
+//│ ║         	             ^^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.318: 	  module LocalKeys { @fresh val key = Symbol("module key") }
+//│ ║  l.322: 	  module LocalKeys { @fresh val key = Symbol("module key") }
 //│ ╙──       	         ^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp;
-//│ set tmp = moduleKey⁰(62);
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -348,20 +350,20 @@ private fun localCell(value) =
 :e
 localCell(0).value
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is not in scope.
-//│ ║  l.349: 	localCell(0).value
-//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.351: 	localCell(0).value
+//│ ║         	            ^^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.343: 	  @fresh val cellKey = Symbol("cell")
+//│ ║  l.345: 	  @fresh val cellKey = Symbol("cell")
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 set localCell(0).value = 63
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is not in scope.
-//│ ║  l.359: 	set localCell(0).value = 63
+//│ ║  l.361: 	set localCell(0).value = 63
 //│ ║         	                ^^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.343: 	  @fresh val cellKey = Symbol("cell")
+//│ ║  l.345: 	  @fresh val cellKey = Symbol("cell")
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -373,10 +375,10 @@ private fun openedEscaped() =
   fetch()
 openedEscaped()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is not in scope.
-//│ ║  l.373: 	  fetch()
+//│ ║  l.375: 	  fetch()
 //│ ║         	  ^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.318: 	  module LocalKeys { @fresh val key = Symbol("module key") }
+//│ ║  l.322: 	  module LocalKeys { @fresh val key = Symbol("module key") }
 //│ ╙──       	         ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -402,30 +404,36 @@ new SymbolKeyLibrary.FileReader().read()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 64
 
-:fixme
+// Private accessor symbols are local to the defining file.
+:e
 :sjs
 new SymbolKeyLibrary.FileReader().readPriv()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'SymbolKeyLibrary.privateKey' here: private member 'privateKey' belongs to another file.
+//│ ║  l.410: 	new SymbolKeyLibrary.FileReader().readPriv()
+//│ ║         	                                 ^^^^^^^^^
+//│ ╟── The private member is declared here.
+//│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
+//│ ║  l.6: 	  @fresh private val privateKey = Symbol("private key")
+//│ ║       	                     ^^^^^^^^^^
+//│ ╟── The keyed member 'readPriv' is defined here.
+//│ ║  l.29: 	    @jsSymbol(privateKey) fun readPriv() = 65
+//│ ╙──      	                              ^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ const privateKey$accessorSymbol = globalThis.Symbol("privateKey");
-//│ let tmp23;
-//│ tmp23 = globalThis.Object.freeze(new SymbolKeyLibrary.FileReader());
-//│ return tmp23[SymbolKeyLibrary[privateKey$accessorSymbol]]()
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: tmp23[SymbolKeyLibrary[privateKey$accessorSymbol]] is not a function
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :sir
 SymbolKeyLibrary.makeLocal(65).read()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'key' here: 'key' is not in scope.
-//│ ║  l.418: 	SymbolKeyLibrary.makeLocal(65).read()
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.428: 	SymbolKeyLibrary.makeLocal(65).read()
+//│ ║         	                              ^^^^^
 //│ ╟── The key's root binding is defined here.
 //│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
-//│ ║  l.20: 	    @fresh val key = Symbol("factory key")
+//│ ║  l.32: 	    @fresh val key = Symbol("factory key")
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp;
-//│ set tmp = SymbolKeyLibrary⁰.makeLocal⁰(65);
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -447,9 +455,74 @@ class MissingSuperKey extends EscapedBase {
 }
 (new MissingSuperKey).run()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'baseKey' here: 'baseKey' is not in scope.
-//│ ║  l.446: 	  fun run() = super.read()
-//│ ║         	              ^^^^^^^^^^
+//│ ║  l.454: 	  fun run() = super.read()
+//│ ║         	                   ^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.436: 	  @fresh val baseKey = Symbol("base")
+//│ ║  l.444: 	  @fresh val baseKey = Symbol("base")
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The annotation's unqualified module reference needs its enclosing path at the caller.
+:expect [68, 69]
+module OuterKeys {
+  module Nested {
+    @fresh val key = Symbol("nested key")
+    class Reader {
+      @jsSymbol(key) fun read() = 69
+    }
+  }
+}
+[new SymbolKeyLibrary.Nested.Reader().read(), new OuterKeys.Nested.Reader().read()]
+//│ = [68, 69]
+
+// Sibling scopes may use a module defined in their common lexical parent.
+:expect [70, 71]
+@noInline
+private fun siblingReaders(value) =
+  module Local {
+    @fresh val key = Symbol("sibling key")
+    class Reader {
+      @jsSymbol(key) fun read() = value
+    }
+  }
+  fun make() = new Local.Reader
+  fun read() = make().read()
+  read()
+[siblingReaders(70), siblingReaders(71)]
+//│ = [70, 71]
+
+// Different implementations of an inherited member retain the same key operand.
+:expect [41, 42]
+private fun inheritedRead(value) = value.read()
+[inheritedRead(new Base), inheritedRead(new Child)]
+//│ = [41, 42]
+
+// A private intermediate module is just as inaccessible across files as a private key val.
+:e
+:sir
+new SymbolKeyLibrary.PrivatePathReader().read()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'SymbolKeyLibrary.PrivateKeys.key' here: private member 'PrivateKeys' belongs to another file.
+//│ ║  l.503: 	new SymbolKeyLibrary.PrivatePathReader().read()
+//│ ║         	                                        ^^^^^
+//│ ╟── The private member is declared here.
+//│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
+//│ ║  l.16: 	  private module PrivateKeys {
+//│ ║        	                 ^^^^^^^^^^^
+//│ ╟── The keyed member 'read' is defined here.
+//│ ║  l.20: 	    @jsSymbol(PrivateKeys.key) fun read() = 72
+//│ ╙──      	                                   ^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The same-file accessor remains available even outside the key's owner.
+:expect 73
+module PrivateOwner {
+  @fresh private val key = Symbol("same-file private key")
+  class Reader {
+    @jsSymbol(key) fun read() = 73
+  }
+}
+new PrivateOwner.Reader().read()
+//│ = 73

@@ -110,7 +110,8 @@ object Elaborator:
     val none: UnderCtx = UnderCtx(N)
   
   case class Ctx(
-      outer: OuterCtx,
+      // Copies that update names preserve lexical identity; only nest creates a scope.
+      scope: SrcScope,
       parent: Opt[Ctx],
       env: Map[Str, Ctx.Elem],
       mode: Mode,
@@ -120,7 +121,7 @@ object Elaborator:
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
     
-    lazy val scope: SrcScope = SrcScope(outer, parent.map(_.scope))
+    def outer: OuterCtx = scope.outer
 
     /** A nominal member can refer to enclosing binders even when its own
       * signature does not mention them, for example through a local type alias.
@@ -165,7 +166,8 @@ object Elaborator:
           labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker))
       )
     
-    def nest(outerCtx: OuterCtx): Ctx = Ctx(outerCtx, Some(this), Map.empty, mode, Map.empty, Nil)
+    def nest(outerCtx: OuterCtx): Ctx =
+      Ctx(SrcScope(outerCtx, S(scope)), Some(this), Map.empty, mode, Map.empty, Nil)
     def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
     def nestInner(inner: InnerSymbol): Ctx = nest(OuterCtx.InnerScope(inner))
     
@@ -508,7 +510,9 @@ object Elaborator:
       def isImport: Bool = false
       def nme: Str = base.nme
     given Conversion[RefSymbol, Elem] = RefElem(_)
-    val empty: Ctx = Ctx(OuterCtx.LocalScope("top-level"), N, Map.empty, Mode.Full, Map.empty, Nil)
+    val empty: Ctx =
+      val outer = OuterCtx.LocalScope("top-level")
+      Ctx(SrcScope(outer, N), N, Map.empty, Mode.Full, Map.empty, Nil)
     
   /** The interpretation required by the enclosing syntax. Class and pattern
     * targets are resolved by their enclosing construct; types must not request
@@ -925,7 +929,7 @@ extends Importer:
         Modulefulness.none,
         Nil,
         N,
-      )(N)
+      )(N, N)
       mtdSym.tsym = S(tsym)
       tsym.defn = S(td)
       HandlerTermDefinition(resumeSym, td)
@@ -1602,7 +1606,7 @@ extends Importer:
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
                   raise(ErrorReport(msg"Handler function cannot be a getter" -> td.toLoc :: Nil))
-                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)(td.toLoc)
+                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)(td.toLoc, td.scope)
                 S(HandlerTermDefinition(value.sym, newTd))
               case _ =>
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
@@ -2516,6 +2520,7 @@ extends Importer:
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             
             val tsym = TermSymbol(k, owner, id) // TODO?
+            val bindingScope = ctx.scope
             // Recorded before the definition's own type parameters enter scope.
             rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
             
@@ -2581,7 +2586,7 @@ extends Importer:
               // Retain the source signature's meaning; Erasure decides which arrows are physical parameters.
               if newResolution then s.foreach(registerSignature)
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
-                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(statementLoc)
+                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(statementLoc, S(bindingScope))
               sym.tsym = S(tsym)
               tsym.defn = S(tdf)
               if newResolution then checkDeclaredResult(tdf)
@@ -2694,7 +2699,7 @@ extends Importer:
               p.modulefulness,
               if isPublicField then Nil else Annot.Private :: Nil,
               N,
-            )(p.toLoc)
+            )(p.toLoc, S(ctx.scope))
             assert(p.fldSym.isEmpty)
             p.fldSym = S(fsym)
             fsym.tsym = S(tsym)
@@ -2899,7 +2904,7 @@ extends Importer:
                       case a @ Annot.Modifier(Keyword.`declare` | Keyword.`private` | Keyword.`public`) => a
                     ,
                     S(clsSym),
-                  )(statementLoc)
+                  )(statementLoc, S(outerCtx.scope))
                 if pss.nonEmpty then sym.tsym = S(ctsym)
                 ctsym.defn = S(ctdef)
                 // Note: do NOT set sym.tsym for constructor(...) classes; they are not callable as functions.
