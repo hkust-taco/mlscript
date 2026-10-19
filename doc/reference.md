@@ -1408,43 +1408,11 @@ remain valid, as do keys available through an imported file, including its
 private file-level vals. The key must not be hoisted and shared between factory
 invocations. `newres/JsSymbol.mls` records these cases.
 
-The prelude marks `Symbol.iterator` as fresh. `Array.iterator()` and
-`Iterable[A].iterator()` use `@jsSymbol(Symbol.iterator)` to select the native
-symbol property. Records can implement the protocol with a computed
-`(Symbol.iterator)` field; record types can declare that field or annotate a
-named field with `@jsSymbol(Symbol.iterator)`. A string-keyed `iterator` field
-alone does not implement JavaScript iteration.
-
-`Iterator[A]` promises only `next`. `IteratorImpl` implements the iterable
-protocol by returning itself from its symbol-keyed `iterator()` method. Native
-iterator factories return `Iterator[A] & Iterable[A]`, preserving their iterable
-capability without requiring every iterator implementation to be iterable.
-
-With new resolution (`#lang(0.3.x)`), annotations determine the interface available
-to member lookup and calls. A receiver annotated `Base` exposes Base's declared
-members and preserves virtual dispatch; concrete arguments cannot add subclass
-members to that interface. The same rule applies to parameters, result annotations,
-separate signatures, and constructor fields. Reading an unannotated member through
-an annotated interface currently does not infer its shape from its initializer or
-method body. Inference of missing selected-member types is a planned improvement.
-Structural record annotations likewise expose only their declared fields.
-
-Compilation files check that their exposed functions and values work for inputs
-admitted by their interfaces. A public `fun read(x) = x.a` needs an interface for
+Compilation files check that their exposed functions and values do not make a close-world assumption. A public `fun read(x) = x.a` needs an interface for
 `x` even if local callers all provide `{a: 1}`. A private helper can use local
 inference, but returning it or storing it in an exposed record or tuple makes its
 interface subject to the same check. Callable result annotations provide the
 declared parameter interface when checking returned functions.
-
-Worksheet blocks perform this exposed-interface check only under
-`#lang(strictResolution: true)`. Non-strict resolution allows multiple selection
-or call targets, but still rejects missing targets and known invalid operations.
-With `eagerResolution: false`, member selections and applications accept a known
-valid target alongside other candidates. This tolerates correlations lost across
-conditional branches or recursion; every known result still propagates. Eager
-resolution instead diagnoses each invalid candidate. A call with no callable
-target is rejected in either mode, and external inputs with no declared callable
-interface remain invalid.
 
 Generic parameters remain opaque regardless of strict mode, visibility, or local
 callers. For example, `private fun read[A](x: A) = x.a` is invalid because `A`

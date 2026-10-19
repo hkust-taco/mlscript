@@ -802,7 +802,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case N => false)
     if !available then
       raise(ErrorReport(
-        msg"Cannot use @jsSymbol key '${key.name}' here: '${first.nme}' is outside this scope." -> loc ::
+        msg"Cannot use @jsSymbol key '${key.name}' here: '${first.nme}' is not in scope." -> loc ::
           msg"The key's root binding is defined here." -> first.toLoc :: Nil,
         source = Diagnostic.Source.Compilation))
       return N

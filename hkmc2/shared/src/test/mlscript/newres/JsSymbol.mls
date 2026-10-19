@@ -231,7 +231,7 @@ private fun escaping(value) =
   }
   new Escaped
 [escaping(53).read(), escaping(54).read()]
-//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is outside this scope.
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is not in scope.
 //│ ║  l.233: 	[escaping(53).read(), escaping(54).read()]
 //│ ║         	 ^^^^^^^^^^^^^^^^^
 //│ ╟── The key's root binding is defined here.
@@ -243,7 +243,7 @@ private fun escaping(value) =
 :sir
 :e
 escaping(54).read()
-//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is outside this scope.
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is not in scope.
 //│ ║  l.245: 	escaping(54).read()
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── The key's root binding is defined here.
@@ -255,6 +255,7 @@ escaping(54).read()
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
 
 // Imported keys must keep their defining module alive through IR transformations.
 import "../../mlscript-compile/SymbolKeyLibrary.mls"
@@ -323,11 +324,11 @@ private fun moduleKey(value) =
 :e
 :sir
 moduleKey(62).fetch()
-//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is outside this scope.
-//│ ║  l.325: 	moduleKey(62).fetch()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is not in scope.
+//│ ║  l.326: 	moduleKey(62).fetch()
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.317: 	  module LocalKeys { @fresh val key = Symbol("module key") }
+//│ ║  l.318: 	  module LocalKeys { @fresh val key = Symbol("module key") }
 //│ ╙──       	         ^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp;
@@ -346,21 +347,21 @@ private fun localCell(value) =
 
 :e
 localCell(0).value
-//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is outside this scope.
-//│ ║  l.348: 	localCell(0).value
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is not in scope.
+//│ ║  l.349: 	localCell(0).value
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.342: 	  @fresh val cellKey = Symbol("cell")
+//│ ║  l.343: 	  @fresh val cellKey = Symbol("cell")
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 set localCell(0).value = 63
-//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is outside this scope.
-//│ ║  l.358: 	set localCell(0).value = 63
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is not in scope.
+//│ ║  l.359: 	set localCell(0).value = 63
 //│ ║         	                ^^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.342: 	  @fresh val cellKey = Symbol("cell")
+//│ ║  l.343: 	  @fresh val cellKey = Symbol("cell")
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -371,11 +372,11 @@ private fun openedEscaped() =
   open instance
   fetch()
 openedEscaped()
-//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is outside this scope.
-//│ ║  l.372: 	  fetch()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is not in scope.
+//│ ║  l.373: 	  fetch()
 //│ ║         	  ^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.317: 	  module LocalKeys { @fresh val key = Symbol("module key") }
+//│ ║  l.318: 	  module LocalKeys { @fresh val key = Symbol("module key") }
 //│ ╙──       	         ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -391,18 +392,36 @@ openedAvailable()
 
 // An imported file-level key has a real private export; factory locals do not.
 :expect 64
-(new SymbolKeyLibrary.FileReader).read()
+:sjs
+new SymbolKeyLibrary.FileReader().read()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ import { _$_modulePrivate_$_fileKey as fileKey } from "./../../mlscript-compile/SymbolKeyLibrary.mjs";
+//│ let tmp22;
+//│ tmp22 = globalThis.Object.freeze(new SymbolKeyLibrary.FileReader());
+//│ return tmp22[fileKey]()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 64
+
+:fixme
+:sjs
+new SymbolKeyLibrary.FileReader().readPriv()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ const privateKey$accessorSymbol = globalThis.Symbol("privateKey");
+//│ let tmp23;
+//│ tmp23 = globalThis.Object.freeze(new SymbolKeyLibrary.FileReader());
+//│ return tmp23[SymbolKeyLibrary[privateKey$accessorSymbol]]()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] TypeError: tmp23[SymbolKeyLibrary[privateKey$accessorSymbol]] is not a function
 
 :e
 :sir
 SymbolKeyLibrary.makeLocal(65).read()
-//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'key' here: 'key' is outside this scope.
-//│ ║  l.399: 	SymbolKeyLibrary.makeLocal(65).read()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'key' here: 'key' is not in scope.
+//│ ║  l.418: 	SymbolKeyLibrary.makeLocal(65).read()
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The key's root binding is defined here.
 //│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
-//│ ║  l.18: 	    @fresh val key = Symbol("factory key")
+//│ ║  l.20: 	    @fresh val key = Symbol("factory key")
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp;
@@ -427,10 +446,10 @@ class MissingSuperKey extends EscapedBase {
   fun run() = super.read()
 }
 (new MissingSuperKey).run()
-//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'baseKey' here: 'baseKey' is outside this scope.
-//│ ║  l.427: 	  fun run() = super.read()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'baseKey' here: 'baseKey' is not in scope.
+//│ ║  l.446: 	  fun run() = super.read()
 //│ ║         	              ^^^^^^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.417: 	  @fresh val baseKey = Symbol("base")
+//│ ║  l.436: 	  @fresh val baseKey = Symbol("base")
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
