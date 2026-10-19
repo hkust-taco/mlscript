@@ -81,3 +81,11 @@ let bad = required as ((Int?) -> Int)
 //│ ║  l.73: 	let bad = required as ((Int?) -> Int)
 //│ ╙──      	                       ^^^^^^^^^^^^^
 //│ bad = fun required
+
+// Dropping the rest does not permit dropping a required trailing parameter.
+// FIXME: The callback layout check currently ignores trailing droppability.
+:breakme
+:e
+private fun requiredTrailing(f: (drop ...Array[Int], Str) -> Int) = f("tail")
+requiredTrailing(() => 0)
+//│ = 0
