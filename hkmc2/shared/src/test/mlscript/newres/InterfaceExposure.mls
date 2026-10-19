@@ -50,7 +50,7 @@ privateGeneric({a: 1})
 :e
 private class GenericClass[A](value: A) with
   fun read() = (() => value.a)()
-(new GenericClass({a: 1})).read()
+new GenericClass({a: 1}).read()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.52: 	  fun read() = (() => value.a)()
 //│ ║        	                      ^^^^^^^
@@ -399,7 +399,7 @@ inspectAbstract(TypedHolder(KnownField(4)))
 private class EscapedClass with
   fun inspect(x) = x.a
 fun annotatedInstance(): EscapedClass = new EscapedClass
-(new EscapedClass).inspect({a: 1})
+new EscapedClass().inspect({a: 1})
 //│ = 1
 
 // Spreading an array hides its length, but still exposes the stored functions.

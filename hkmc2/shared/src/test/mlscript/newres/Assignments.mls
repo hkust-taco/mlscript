@@ -18,7 +18,7 @@ Later.Item
 //│ = 7
 
 :expect 42
-(new Later.ItemClass).answer()
+new Later.ItemClass().answer()
 //│ = 42
 
 

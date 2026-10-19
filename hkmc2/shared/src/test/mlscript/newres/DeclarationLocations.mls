@@ -315,9 +315,9 @@ class Opened with
   open fun f(x) =
     x + 1
     x + 2
-(new Opened).f(1, 2)
+new Opened().f(1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.318: 	(new Opened).f(1, 2)
+//│ ║  l.318: 	new Opened().f(1, 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'f' expected 1 argument, but got 2
 //│ ║  l.315: 	  open fun f(x) =

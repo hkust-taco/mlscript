@@ -47,7 +47,7 @@ class Bar with
 //│ ╙──      	^^^^^^^
 
 :expect 42
-(new Bar).foo
+new Bar().foo
 //│ = 42
 
 // * The annotation is ignored, but the constructors of the block are still defined.

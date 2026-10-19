@@ -199,7 +199,7 @@ class Foo with
 module Foo with
   private val x = 2
   fun getX = x
-[(new Foo).getX, Foo.getX]
+[new Foo().getX, Foo.getX]
 //│ = [1, 2]
 
 
@@ -215,7 +215,7 @@ open annotations { inline, noInline }
   module Local with
     let x = n + 1
     @noInline fun getX = x
-  [(new Local).getX, Local.getX]
+  [new Local().getX, Local.getX]
 [makePair(1), makePair(3)]
 //│ = [[1, 2], [3, 4]]
 

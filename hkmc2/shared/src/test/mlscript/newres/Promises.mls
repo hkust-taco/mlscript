@@ -127,7 +127,7 @@ asyncGetter.then(value => value.answer)
 class AsyncMethods with
   @annotations.async
   fun fetch(value: Int): {answer: Int} = {answer: value}
-(new AsyncMethods).fetch(46).then(value => value.answer)
+new AsyncMethods().fetch(46).then(value => value.answer)
 //│ = 46
 
 // Partial application is still a function; only the last call returns Promise.

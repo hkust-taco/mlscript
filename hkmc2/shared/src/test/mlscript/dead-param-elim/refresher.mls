@@ -22,7 +22,7 @@ f(1, 2).get()
 fun foo(y) =
   class M with
     fun bar() = set y = 2
-  (new M).bar()
+  new M().bar()
 foo(10)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > foo⁰#0 @ foo¹ -> eliminable: {0}
@@ -69,7 +69,7 @@ fun wrapper(val1, dead) =
       class B with
         fun getVal() = val1
       new B
-  (new A).makeB().getVal()
+  new A().makeB().getVal()
 wrapper(42, 0)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > wrapper⁰#0 @ wrapper¹ -> eliminable: {1}
@@ -122,7 +122,7 @@ fun multi(a, b, dead) =
   class Calc with
     fun sum() = a + b
     fun prod() = a * b
-  (new Calc).prod()
+  new Calc().prod()
 multi(5, 6, 999)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > multi⁰#0 @ multi¹ -> eliminable: {2}

@@ -88,5 +88,5 @@ let key = "a"
 
 :expect [42, 43]
 class Box(val fields)
-[Box(answer: 42).fields.answer, (new Box(answer: 43)).fields.answer]
+[Box(answer: 42).fields.answer, new Box(answer: 43).fields.answer]
 //│ = [42, 43]

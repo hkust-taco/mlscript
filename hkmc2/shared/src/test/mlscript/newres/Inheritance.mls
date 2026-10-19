@@ -92,7 +92,7 @@ b.z
 class Baz extends Bar(42) {
   val a = [this.z, this.x]
 }
-(new Baz).a
+new Baz().a
 //│ = [44, 43]
 
 

@@ -38,7 +38,7 @@ values.delete("a")
 let re = new RegExp("a+")
 let groups = new RegExp("ab").exec("abc")
 [re.test("aa"), (if groups is Array as array then array.at(0) else "missing"),
- re.exec("c"), (new Map).has("missing")]
+ re.exec("c"), new Map().has("missing")]
 //│ = [true, "ab", null, false]
 //│ groups = ["ab"]
 //│ re = /a+/

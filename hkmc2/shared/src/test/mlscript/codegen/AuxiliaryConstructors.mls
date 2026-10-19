@@ -143,7 +143,7 @@ class A(val x) with
 class B extends A(1)(2)(3)
 
 :expect 6
-(new B).bruh
+new B().bruh
 //│ = 6
 
 :e
