@@ -1488,11 +1488,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         subTerm_nonTail(rhs): value =>
           AssignField(ref, Tree.Ident("value"), value, k(value))(N)
     
-    case Mut(Rcd(mut, stats)) => // TODO: warn when in statement position
+    case Mut(rcd: st.Rcd) => // TODO: warn when in statement position
       // * Note: I don't think this is supposed to happen...
-      block(stats, L((mut, Nil, trm.toLoc)))(k)
-    case Rcd(mut, stats) => // TODO: warn when in statement position
-      block(stats, L((mut, Nil, trm.toLoc)))(k)
+      block(rcd.stats, L((allocatesMutable(rcd), Nil, trm.toLoc)))(k)
+    case rcd: st.Rcd => // TODO: warn when in statement position
+      block(rcd.stats, L((allocatesMutable(rcd), Nil, trm.toLoc)))(k)
     
     case Missing => fail:
       ErrorReport(
@@ -1794,6 +1794,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     */
   def castTo[R <: Result](r: R, expected: Opt[ErasedType], loc: Opt[Loc]): (R | Cast) =
     r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(r.toLoc))
+
+  /** Whether a record literal is allocated as a mutable object, rather than frozen: a mutable record (`mut {...}`)
+    * and a record with a field declared `mut` (see `RcdField`). The other fields of the latter are immutable as well,
+    * but are not frozen at run time: resolution assumes that they are never assigned, which type checking will ensure.
+    */
+  private def allocatesMutable(rcd: st.Rcd): Bool = rcd.mut || rcd.stats.exists:
+    case field: RcdField => field.mut
+    case _ => false
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedType] =

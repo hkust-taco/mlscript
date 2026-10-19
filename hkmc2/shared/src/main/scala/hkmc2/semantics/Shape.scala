@@ -111,7 +111,7 @@ object ShapeIdentity:
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
         view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode)
-      case view: RecordTypeShape => ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode)
+      case view: RecordTypeShape => ValueKey.hash(ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.mutable.hashCode)
       case view: SpecializedShape => ValueKey.hash(view.declaration.comparison.hashCode,
         view.arguments.hashCode, view.instances.hashCode)
       case view: UnknownValueShape => ValueKey.hash(System.identityHashCode(view.source), view.fromPublicInterface.hashCode)
@@ -139,7 +139,7 @@ object ShapeIdentity:
             a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.wrappedResult == b.wrappedResult
           case _ => false
         case a: RecordTypeShape => that.shape match
-          case b: RecordTypeShape => a.fields == b.fields
+          case b: RecordTypeShape => a.fields == b.fields && a.mutable == b.mutable
           case _ => false
         case a: SpecializedShape => that.shape match
           case b: SpecializedShape => a.declaration.comparison == b.declaration.comparison &&
@@ -635,8 +635,10 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   * Field types are deferred references, including for recursive intersections.
   * Source declarations are witnesses for diagnostics and property selection, not
   * part of semantic equality: a merged field may have several such witnesses.
+  * The `mutable` fields (see RcdField) are part of the interface: values constrained
+  * by it can be assigned values of these fields' types (see NewResolver.constrainRecord).
   */
-final class RecordTypeShape(val fields: Map[Str, DeclaredType])(
+final class RecordTypeShape(val fields: Map[Str, DeclaredType], val mutable: Set[Str])(
     val source: Term.Rcd, val declarations: Map[Str, RcdField]) extends CoreHeadShape:
   def describe: Str = "record type"
   override def toString: Str = s"RecordTypeShape($fields)"
@@ -1174,8 +1176,10 @@ object TupleShape:
 
 /** A field found by record member lookup. Spreading r into `mut {...r}` reuses
   * its field symbols, but writes can change the copied values even if r is immutable.
-  * Store mutability on this lookup result: the mutable copy's initializer no longer
-  * determines its value shape, while reads from an immutable r can still use it.
+  * Store mutability on this lookup result: reads through the mutable copy also return
+  * the values assigned to the field, while reads from an immutable r can only return its
+  * initializer. Reads through any copy of r of a field declared `mut` (see RcdField) are mutable
+  * lookups too, as a copy reads the value that r holds when it is made.
   */
 final case class RecordMember(field: RcdField, mutable: Bool)
 
@@ -1196,7 +1200,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
       case Nil => Missing
       case RecordShape.Field(field) :: rest => field.field match
         case Term.Lit(Tree.StrLit(key)) =>
-          if key == name then Found(RecordMember(field, source.mut), Nil) else loop(rest)
+          if key == name then Found(RecordMember(field, field.mut || source.mut), Nil) else loop(rest)
         case _ => unknown(field.field)
       case RecordShape.Unknown(shape) :: _ => Unknown(Uncertainty.RecordOverwrite, shape.fromPublicInterface, shape.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)

@@ -9,17 +9,15 @@ mut "oops"
 //│ ╙──     	^^^
 //│ = "oops"
 
-:e
+// A record field can be declared mutable.
 mut a: 1
-//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.13: 	mut a: 1
-//│ ╙──      	    ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = {a: 1}
+//│ a = 1
 
 :e
 mut {"oops"}
 //│ ╔══[COMPILATION ERROR] Expected a record after 'mut' keyword; found a block
-//│ ║  l.20: 	mut {"oops"}
+//│ ║  l.18: 	mut {"oops"}
 //│ ╙──      	     ^^^^^^
 //│ = "oops"
 

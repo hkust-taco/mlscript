@@ -2356,8 +2356,12 @@ extends Importer:
       case Spread(Keywrd(Keyword.`...`), S(body)) :: sts =>
         reportUnusedAnnotations
         go(sts, Nil, RcdSpread(term(body, fieldInterpretation)) :: acc)(N)
-      case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) :: sts =>
+      case InfixApp(key, Keywrd(Keyword.`:`), rhs) :: sts =>
         var newCtx = ctx
+        // A field written `mut f: ...` can be assigned (see RcdField).
+        val (mutField, lhs) = key match
+          case Modified(Keywrd(Keyword.`mut`), lhs) => (true, lhs)
+          case lhs => (false, lhs)
         val (rlhs, rhs_t) = rhs match
           case _: Under => (lhs, subterm(rhs, fieldInterpretation))
           case _ =>
@@ -2370,11 +2374,11 @@ extends Importer:
           case id: Ident if fieldInterpretation == Tpe =>
             // Record type fields declare interfaces, not local value bindings.
             // Keep their types directly so lookup never follows initializer flow.
-            recordFieldScope(RcdField.signature(Term.Lit(StrLit(id.name)).withLocOf(id), rhs_t)) :: acc
+            recordFieldScope(RcdField.signature(Term.Lit(StrLit(id.name)).withLocOf(id), rhs_t, mutField)) :: acc
           case id: Ident =>
             val sym = new VarSymbol(id)
             newCtx += id.name -> sym
-            recordFieldScope(RcdField.source(Term.Lit(StrLit(id.name)).withLocOf(id), sym.ref(id)))
+            recordFieldScope(RcdField.source(Term.Lit(StrLit(id.name)).withLocOf(id), sym.ref(id), mutField))
               :: defineVar(sym, rhs_t)(Loc(rlhs, rhs))
               :: LetDecl(sym, annotations)(id.toLoc)
               :: acc
@@ -2382,15 +2386,15 @@ extends Importer:
             reportUnusedAnnotations
             val field = Term.Lit(lit).withLocOf(lit)
             recordFieldScope(if fieldInterpretation == Tpe
-              then RcdField.signature(field, rhs_t)
-              else RcdField.source(field, rhs_t)
+              then RcdField.signature(field, rhs_t, mutField)
+              else RcdField.source(field, rhs_t, mutField)
             ) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
-            recordFieldScope(RcdField.source(term(inner, Trm), rhs_t)) :: acc
+            recordFieldScope(RcdField.source(term(inner, Trm), rhs_t, mutField)) :: acc
           case _ =>
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
-            recordFieldScope(RcdField.source(Term.Error().withLocOf(rlhs), rhs_t)) :: acc
+            recordFieldScope(RcdField.source(Term.Error().withLocOf(rlhs), rhs_t, mutField)) :: acc
         newCtx.givenIn:
           go(sts, Nil, newAcc)(N)
       case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts

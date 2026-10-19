@@ -193,14 +193,14 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
           case RecordShape.Spread(inner, context) =>
             emit(resolver.instantiateShape(inner, instances.withOverrides(record.instances)).exit(context).exit(marks), path)
           case _ => ()
-        // Through a mutable record, clients can assign its fields, including those it copies from the records it
-        // spreads (see RecordMember). The spread records are also exposed above, as values of their own.
-        if record.source.mut then
-          def assignableFields(record: RecordShape): Unit = record.elements.foreach:
-            case RecordShape.Field(field) => assignable(field.tsym, field.sym, path)
-            case RecordShape.Spread(inner, _) => assignableFields(inner)
-            case _ => ()
-          assignableFields(record)
+        // Clients can assign the mutable fields of a record, and through a mutable record (`mut {...}`), also the
+        // fields it copies from the records it spreads (see RecordMember). The spread records are also exposed
+        // above, as values of their own, whose mutable fields are assignable through them as well.
+        def assignableFields(record: RecordShape, copied: Bool): Unit = record.elements.foreach:
+          case RecordShape.Field(field) if copied || field.mut => assignable(field.tsym, field.sym, path)
+          case RecordShape.Spread(inner, _) if copied => assignableFields(inner, copied)
+          case _ => ()
+        assignableFields(record, record.source.mut)
       case base: BaseShape => members(base.defn, marks, path)
       case callable: CallableTypeShape =>
         // Written structure constrains external values; missing output parts

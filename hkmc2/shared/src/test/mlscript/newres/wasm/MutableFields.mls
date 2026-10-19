@@ -286,3 +286,30 @@ private fun makeReadLater() = ReadLater(const(1))
 makeReadLater().value
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// Through a record type declaring a mutable field, the values it describes can be assigned values of that field's
+// type: here, values of the unknown representation, which an unboxed field cannot hold.
+:ge
+private class Described(mut val value)
+private fun describe(described: {mut value: Any}) = ()
+private fun mutableView() = describe(Described(const(1)))
+mutableView()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.294: 	private class Described(mut val value)
+//│ ╙──       	                                ^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+
+// Fields that a record type does not declare `mut` are assumed not to be assigned through it:
+// type checking will reject such assignments.
+:noInline
+:expect 1
+private class Viewed(mut val value)
+private fun view(viewed: {value: Any}) = ()
+private fun immutableView() =
+  let viewed = Viewed(const(1))
+  view(viewed)
+  viewed.value
+immutableView()
+//│ Wasm result:
+//│ = 1

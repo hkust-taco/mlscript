@@ -766,8 +766,11 @@ final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot
 /** The symbol identifies the property, independently of any local binding used
   * to evaluate its value. Computed keys also have an identity, but cannot be
   * selected statically until their key is known. Cloning preserves this identity.
+  * `mut` marks a field written `mut f: ...`, which can be assigned. Other fields are immutable,
+  * unless their whole record is mutable (`mut {...}`, see RecordMember); a record type's field
+  * marked `mut` can be assigned values of its type through the values that the type describes.
   */
-final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol) extends Statement, AutoLocated:
+final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val mut: Bool) extends Statement, AutoLocated:
   // The two-argument RcdField.apply sets sym.tsym and its definition before
   // constructing this node. Lowering clones reuse the same initialized symbols.
   val tsym: TermSymbol = sym.tsym.get
@@ -777,11 +780,11 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol) extend
     case _ => ()
 
 object RcdField:
-  // Lowering and pattern compilation synthesize fields after source erasure.
-  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, false)
-  def source(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, true)
-  def signature(field: Term, sign: Term)(using State): RcdField = make(field, sign, true, true)
-  private def make(field: Term, rhs: Term, signature: Bool, source: Bool)(using State): RcdField =
+  // Lowering and pattern compilation synthesize immutable fields after source erasure.
+  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, false, false)
+  def source(field: Term, rhs: Term, mut: Bool)(using State): RcdField = make(field, rhs, false, true, mut)
+  def signature(field: Term, sign: Term, mut: Bool)(using State): RcdField = make(field, sign, true, true, mut)
+  private def make(field: Term, rhs: Term, signature: Bool, source: Bool, mut: Bool)(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"
@@ -798,7 +801,7 @@ object RcdField:
       if signature then S(rhs) else N,
       if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, Nil, N)(field.toLoc, field.toLoc))
     sym.complete()
-    RcdField(field, rhs, sym)
+    RcdField(field, rhs, sym)(mut)
 final case class RcdSpread(rcd: Term) extends Statement, AutoLocated
 
 final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(val toLoc: Opt[Loc]) extends Statement

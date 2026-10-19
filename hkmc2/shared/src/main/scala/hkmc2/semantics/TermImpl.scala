@@ -103,7 +103,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case d: Definition => ???
     case imp: Import => Import(imp.sym, imp.str, imp.file)(imp.toLoc)
     case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))(toLoc)
-    case RcdField(field, rhs, sym) => RcdField(field.mkClone, rhs.mkClone, sym)
+    case f @ RcdField(field, rhs, sym) => RcdField(field.mkClone, rhs.mkClone, sym)(f.mut)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
     case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)(toLoc)
     case sc: SetConfig => sc
@@ -409,7 +409,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case Rcd(mut, stats) =>
         (if mut then doc"mut " else doc"") :: braced:
           doc" # " :: stats.map(_.show).mkDocument(doc", # ")
-      case RcdField(field, rhs, _) => doc"${field.show}: ${rhs.show}"
+      case f @ RcdField(field, rhs, _) => doc"${if f.mut then "mut " else ""}${field.show}: ${rhs.show}"
       case RcdSpread(record) => doc"...${record.show}"
       case Quoted(body) => doc"""code"${body.show}""""
       case Unquoted(body) => doc"$${${body.show}}"
@@ -489,7 +489,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case r @ SelfRef(sym) => sym.showAsPlain
     case Capture(base, thru) => s"${base.showDbg}^${thru.showDbg}"
     case App(lhs, rhs) => s"${lhs.showDbg}${rhs.showDbgAsParams}"
-    case RcdField(lhs, rhs, _) => s"${lhs.showDbg}: ${rhs.showDbg}"
+    case f @ RcdField(lhs, rhs, _) => s"${if f.mut then "mut " else ""}${lhs.showDbg}: ${rhs.showDbg}"
     case RcdSpread(bod) => s"...${bod.showDbg}"
     case FunTy(lhs: Tup, rhs, eff) =>
       s"${lhs.fields.map(_.showDbg).mkString(", ")} ->${

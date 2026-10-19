@@ -99,6 +99,17 @@ fun put(value) = set store.value = value
 //│ store = Store(0)
 
 
+// Record fields declared `mut` can be assigned; other fields are immutable, unless their whole record is
+// mutable (`mut {...}`). Reading a mutable field returns its initializer and the values assigned to it.
+:expect [2, "count"]
+private class Box(val value)
+private fun replaceInner() =
+  let record = {mut inner: Box(1), label: "count"}
+  set record.inner = Box(2)
+  [record.inner.value, record.label]
+replaceInner()
+//│ = [2, "count"]
+
 // Assigning through a mutable copy of a record assigns the fields of the copied record,
 // so the representations of those fields include the values assigned to them through the copy.
 :expect "many"
@@ -110,26 +121,30 @@ private fun copy() =
 copy()
 //│ = "many"
 
-// FIXME: Assignments through structural types do not reach the fields of the values they describe yet
-// (see NewResolver.assignField), so the value assigned here is missing from the field's values.
-:fixme
+// Copies of a record read the current values of its mutable fields.
+:expect ["many", "many"]
+private fun copyMutable() =
+  let source = {mut count: 0}
+  set source.count = "many"
+  let copied = {...source}
+  [source.count, copied.count]
+copyMutable()
+//│ = ["many", "many"]
+
+// The fields of an exposed record that are mutable cannot declare types: they take the unknown representation.
+val exposedRecord = {mut count: 0, label: "count"}
+//│ exposedRecord = {count: 0, label: "count"}
+
+
+// A record type can declare mutable fields too. The values it describes can be assigned values of these fields'
+// types through it, so their own fields hold such values, just as the parameters of a callback hold values of the
+// parameter types of its function type. Assignments through the record type need not be followed.
 :expect 3
 private class Holder(mut val item)
-private fun put(holder: {item: Any}) = set holder.item = "str"
+private fun put(holder: {mut item: Str}) = set holder.item = "str"
 private fun structural() =
-  let holder = Holder(1)
+  let holder = Holder("abc")
   put(holder)
   holder.item.length
 structural()
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.122: 	  holder.item.length
-//│ ║         	  ^^^^^^^^^^^^^^^^^^
-//│ ╟── Integer literal does not contain member 'length'
-//│ ║  l.120: 	  let holder = Holder(1)
-//│ ╙──       	                      ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
-
-// The fields of an exposed mutable record cannot declare types: they take the unknown representation.
-val exposedRecord = mut {count: 0}
-//│ exposedRecord = {count: 0}
+//│ = 3

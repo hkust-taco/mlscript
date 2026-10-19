@@ -682,9 +682,14 @@ Modules cannot extend classes. Objects can extend classes.
 
 ```mlscript
 {a: 1, b: 2}          // immutable (frozen) record
-mut {a: 1, b: 2}      // mutable record
+{mut a: 1, b: 2}      // record whose field `a` is mutable
+mut {a: 1, b: 2}      // mutable record: all its fields are mutable
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
+
+Only mutable fields can be assigned. Fields are immutable unless they are declared `mut` or
+their whole record is mutable. A mutable record also makes mutable the fields it copies from
+the records it spreads. A record spreading another one copies the current values of its fields.
 
 ### Field Access
 
@@ -1456,8 +1461,10 @@ class Counter(mut val count)       // error: `count` is exposed, so its type mus
 class Counter(mut val count: Int)  // ok
 ```
 
-The fields of a mutable record (including those it copies from the records it spreads) can be
-assigned too, but cannot declare types: when exposed, they take the unknown representation.
+Mutable record fields (see Record Literals) can be assigned too, but cannot declare their types:
+when exposed, they take the unknown representation. Through a record type declaring a mutable
+field, the values it describes can be assigned values of that field's type, which their own fields
+therefore admit.
 
 An override shares the representations of the member it overrides. Its unannotated parameters
 take the inherited parameters' representations, its annotated parameters must admit them (and,
@@ -1544,7 +1551,11 @@ lookup still combines the fields of record intersections.
 
 ```mlscript
 type Point = { x: Num, y: Num }
+type Cursor = { mut position: Int }
 ```
+
+The values that a record type describes can be assigned values of the types of its mutable
+fields through it, but not values of its other fields.
 
 Under new resolution, recursive type aliases must be guarded: every recursive
 cycle must pass through a record, tuple, function arrow, or nominal type.

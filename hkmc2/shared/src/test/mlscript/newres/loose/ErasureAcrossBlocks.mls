@@ -63,3 +63,21 @@ set record.count = "many"
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ║  l.62: 	set record.count = "many"
 //│ ╙──      	    ^^^^^^^^^^^^
+
+let fields = {mut count: 0, label: "count"}
+//│ fields = {count: 0, label: "count"}
+
+:ge
+set fields.count = "many"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.71: 	set fields.count = "many"
+//│ ╙──      	    ^^^^^^^^^^^^
+
+// The values that a record type describes can be assigned values of the types of its mutable fields.
+class Holder(mut val item)
+let holder = Holder(1)
+fun accept(described: {mut item: Str}) = ()
+accept(holder)
+//│ holder = Holder(1)
+
+set holder.item = "str"
