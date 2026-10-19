@@ -183,6 +183,9 @@ class NewResolver:
             result.publish(TypeShape.Tuple(fields.collect { case Fld(_, sign, _) => typeResolution(sign) }))
           case record: Rcd =>
             val fields = record.stats.collect { case field: RcdField => field }
+            fields.foreach: field =>
+              if !record.mut && !field.mut && field.rhs.withoutCaptures.isInstanceOf[WildcardTy] then
+                result.fail(msg"A field with input/output bounds must be declared 'mut'." -> field.toLoc :: Nil)
             if fields.length != record.stats.length || fields.exists(field => field.field match
               case Lit(_: Tree.StrLit) => false
               case _ => true)
@@ -681,6 +684,19 @@ class NewResolver:
       (using ResolutionContext): DeclaredType =
     declaredType(resolution, context.bindings, positive, asArgument = true).instantiate(context.instances).withOrigin(context.origin)
 
+  /** Split a field before substitution selects either endpoint. Flipping an already substituted read type
+    * cannot recover its write type: {mut f: A} under A = in S out T has input S and output T.
+    * The enclosing polarity also applies inside explicit bounds and function types.
+    */
+  private def declaredField(resolution: TypeResolution, context: DeclaredType, mutable: Bool)
+      (using ResolutionContext): TypeArgument =
+    val argument = declaredArgument(resolution, context, context.positive)
+    val output = selectArgument(argument, true)
+    val read = resolution.source.withoutCaptures match
+      case WildcardTy(_, N) => output.withOrigin(S(TypeInterfaceReason.MissingFieldOutput(resolution.source)))
+      case _ => output
+    TypeArgument(if mutable then selectArgument(argument, false) else extremeType(false), read)
+
   private def normalizedArgument(source: TypeResolution, parts: TypeArgument)(using ResolutionContext): DeclaredType =
     rctx.state.argumentTypes.getOrElseUpdate((source, parts), {
       val normalized = new TypeResolution(source.source, source.fail)
@@ -1038,7 +1054,7 @@ class NewResolver:
         case record: RecordTypeShape =>
           val projected = project(instances, shapeDependencies(record), TypeSubstitution.empty)
           if projected.isEmpty then record else rctx.shapeView(projected):
-            RecordTypeShape(record.fields.map((name, tpe) => name -> instantiateType(tpe, projected)), record.mutable)(record.source, record.declarations)
+            RecordTypeShape(record.fields.map((name, tpe) => name -> tpe.map(instantiateType(_, projected))), record.mutable)(record.source, record.declarations)
         case specialized: SpecializedShape =>
           val projected = project(instances, shapeDependencies(specialized), specialized.instances)
           if projected.isEmpty then specialized else rctx.shapeView(projected):
@@ -1201,7 +1217,7 @@ class NewResolver:
       val declared = nominal.bindings.values.foldLeft[Binders](lexicalBinders(nominal.defn.sym))((acc, bound) => union(acc, typeSupport(bound)))
       union(declared, nominal.parent.fold(S(Set.empty))(shapeSupport))
     case record: RecordTypeShape =>
-      record.fields.values.foldLeft[Binders](S(Set.empty))((acc, field) => union(acc, typeSupport(field)))
+      record.fields.values.foldLeft[Binders](S(Set.empty))((acc, field) => union(acc, union(typeSupport(field.input), typeSupport(field.output))))
     case callable: CallableTypeShape =>
       val types = callable.paramLists.flatMap(params => params.params.flatten ::: params.rest.toList) :::
         callable.result.toList ::: callable.supplied.toList.flatten :::
@@ -1320,12 +1336,14 @@ class NewResolver:
   private def intersectViews(values: Ls[TermShape])(publish: Listener)(using ResolutionContext): Unit =
     val records = values.collect:
       case Marked(record: RecordTypeShape, marks) =>
-        RecordTypeShape(record.fields.map((name, tpe) => name -> transportType(tpe, marks :: Nil)), record.mutable)(record.source, record.declarations)
+        RecordTypeShape(record.fields.map((name, tpe) => name -> tpe.map(transportType(_, marks :: Nil))), record.mutable)(record.source, record.declarations)
     records.headOption.foreach: first =>
       val merged = records.tail.foldLeft(first): (left, right) =>
         val fields = right.fields.foldLeft(left.fields):
           case (fields, (name, tpe)) => fields.updated(name, fields.get(name).fold(tpe)(previous =>
-            combinedType(previous.resolution, previous, tpe, false)))
+            // Both interfaces can write the field, while a read must satisfy both output types.
+            TypeArgument(combinedType(previous.input.resolution, previous.input, tpe.input, true),
+              combinedType(previous.output.resolution, previous.output, tpe.output, false))))
         // A field is mutable in an intersection if any of its components declares it so.
         RecordTypeShape(fields, left.mutable ++ right.mutable)(left.source, right.declarations ++ left.declarations)
       publish(merged)
@@ -1476,7 +1494,8 @@ class NewResolver:
                 publish(TupleShape(current.resolution.source,
                   fields.map(field => TupleShape.TypedField(declaredType(field, current), Nil)))(this))
               case TypeShape.Record(source, fields) =>
-                publish(RecordTypeShape(fields.map((field, sign) => field.sym.nme -> declaredType(sign, current)).toMap,
+                publish(RecordTypeShape(fields.map((field, sign) =>
+                  field.sym.nme -> declaredField(sign, current, field.mut || source.mut)).toMap,
                   fields.collect { case (field, _) if field.mut || source.mut => field.sym.nme }.toSet)(
                   source, fields.map((field, _) => field.sym.nme -> field).toMap))
               case TypeShape.Union(left, right) => next(left); next(right)
@@ -1976,7 +1995,7 @@ class NewResolver:
         case TypeShape.Combined(formula) =>
           formula.orderedAtoms.foreach(atom => follow(atom.instantiate(tpe.instances), noTypeArguments, captures, next))
         case TypeShape.Record(source, fields) => observe(constrainRecord(fields.map((field, sign) =>
-          (field, declaredType(sign, tpe), field.mut || source.mut)), _, marks))
+          (field, declaredField(sign, tpe, field.mut || source.mut), field.mut || source.mut)), _, marks))
         case TypeShape.Function(_, _) => observe(constrainFunction(tpe, _, marks))
         case TypeShape.Polymorphic(_, _, body) =>
           follow(declaredType(body, tpe), args, captures, next)
@@ -2047,17 +2066,18 @@ class NewResolver:
   /** Structural constraints follow declared fields only. This supplies generic
     * argument inference and callback checking without refining the annotation
     * with additional properties from an actual record.
-    * The values that a record type describes can be assigned values of the types of its `mutable` fields
+    * The values that a record type describes can be assigned values of the input types of its `mutable` fields
     * (see RcdField) through it, so the actual value's assignable field receives them, just like the
     * parameters of an actual callback receive values of their declared types (see `constrainFunction`).
     * Assignments through the immutable fields of record types are assumed not to happen: type checking will
-    * reject them. This is why assignments through record types need not be followed (see `assignField`).
+    * reject them. Writes through structural interfaces need not contribute their individual values to
+    * concrete fields, but still constrain assigned callbacks against the input type (see `assignField`).
     */
-  private def constrainRecord(fields: Ls[(RcdField, DeclaredType, Bool)],
+  private def constrainRecord(fields: Ls[(RcdField, TypeArgument, Bool)],
       actual: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
     fields.foreach: (field, expected, mutable) =>
       val flow = rctx.fieldProjectionSite(field.sym)
-      def receive(value: TermShape)(using ResolutionContext): Unit = inferTypeArguments(expected, value, marks)
+      def receive(value: TermShape)(using ResolutionContext): Unit = inferTypeArguments(expected.output, value, marks)
       def member(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
         case MemberLookup.Contextual(source, substitution) => member(source, instances.withOverrides(substitution))
         case MemberLookup.Found(member, inner) =>
@@ -2074,7 +2094,7 @@ class NewResolver:
               case value: TermShape => receive(value)
               case NoShape => ()
         case MemberLookup.Typed(_, tpe, inner) =>
-          receive(instanceShape(transportType(instantiateType(tpe, instances), inner)))
+          receive(instanceShape(transportType(instantiateType(tpe.output, instances), inner)))
         case MemberLookup.Dynamic(inner) => DynShape().exit(inner) match
           case value: TermShape => receive(value)
           case NoShape => ()
@@ -2085,8 +2105,11 @@ class NewResolver:
           // A structural interface only describes public members.
           val lookup = actual.getMember(field.sym.nme).visibleFrom(_ => false, reportInaccessible = false)
           member(lookup, TypeSubstitution.empty)
-          if mutable then assignableTargets(lookup): (target, inner) =>
-            listenTypeInstances(expected.withPolarity(!expected.positive))(writeField(target, _, inner))
+          if mutable then
+            assignableTargets(lookup): (target, inner) =>
+              listenTypeInstances(expected.input)(writeField(target, _, inner))
+            listenFieldInput(lookup, field.rhs): input =>
+              listenTypeInstances(expected.input)(inferTypeArguments(input, _, marks))
 
   /** Function constraints reverse the parameter flow and preserve result flow.
     * Read an implementation only while checking it against its declared interface;
@@ -3271,7 +3294,7 @@ class NewResolver:
           case MemberLookup.Typed(field, tpe, marks) if rctx.canResolve(ref) || ref.resolvedMembers.contains(prefix -> field.sym) =>
             val candidate = prefix -> field.sym
             rctx.recordResolution(ref, ref.resolvedMembers.contains(candidate))(ref.resolvedMembers ::= candidate)
-            publishTyped(ref, field, tpe, marks, instances)
+            publishTyped(ref, field, tpe.output, marks, instances)
           case MemberLookup.Indexed(_, _) if rctx.canResolve(ref) =>
             resolError(ref, msg"Tuple elements must be selected by index." -> ref.toLoc :: Nil)
           case MemberLookup.Dynamic(marks) if rctx.canResolve(ref) || ref.dynamicPrefixes.contains(prefix) =>
@@ -3423,7 +3446,7 @@ class NewResolver:
         publishDeclared(sel, member, sel.resSym, bindings, marks, annotation, positive, instances)
       case MemberLookup.Typed(field, tpe, marks) if rctx.canResolve(sel) || sel.resolvedMembers.contains(field.sym) =>
         rctx.recordResolution(sel, sel.resolvedMembers.contains(field.sym))(sel.resolvedMembers ::= field.sym)
-        publishTyped(sel, field, tpe, marks, instances)
+        publishTyped(sel, field, tpe.output, marks, instances)
       case MemberLookup.Indexed(fields, marks) if rctx.canResolve(sel) || sel.tupleIndex == sel.id.name.toIntOption =>
         val index = sel.id.name.toIntOption
         softAssert(index.exists(_ >= 0), "Tuple lookup must identify a nonnegative index")
@@ -3596,7 +3619,7 @@ class NewResolver:
     * Dynamic receivers and computed keys have no static target field: lowering compiles such assignments without
     * converting their values to the representation of a field, which only the JavaScript backend supports, as all
     * its values share one representation. A record type's field belongs to the type rather than to the values it
-    * describes, whose fields receive any value of the field's type if it is mutable (see `constrainRecord`).
+    * describes, whose fields receive any value of the field's input type if it is mutable (see `constrainRecord`).
     */
   private[semantics] def assignField(lhs: Term, rhs: Term, scope: SrcScope)(using ResolutionContext): Unit =
     // `transport` takes an assigned value from the assignment into the scope where the selection is evaluated:
@@ -3609,7 +3632,16 @@ class NewResolver:
             transport(value) match
               case value: TermShape => writeField(field, value, marks)
               case NoShape => ()
-      def lookup(info: MemberLookup)(using ResolutionContext): Unit = assignableTargets(info)(assign)
+      def lookup(info: MemberLookup)(using ResolutionContext): Unit =
+        assignableTargets(info)(assign)
+        // The interface's input constrains assigned callbacks and generic arguments even when its
+        // implementation is hidden. Checking only the field's reads would select the opposite bound.
+        listenFieldInput(info, lhs): input =>
+          if rctx.state.fieldAssignmentTypes.add((new Identity(lhs), new Identity(rhs), input)) then
+            listenTerm(rhs): value =>
+              transport(value) match
+                case value: TermShape => inferTypeArguments(input, value, Nil)
+                case NoShape => ()
       def visible(info: MemberLookup, reportInaccessible: Bool): MemberLookup =
         info.visibleFrom(scope.canAccessPrivatesOf, reportInaccessible)
       lhs match
@@ -3656,7 +3688,7 @@ class NewResolver:
   /** Read the values assigned to `field` (see `writeField`) through a member lookup with the path `marks` at `site`:
     * like the field's initializer (see `fromBMSAt`), they leave the field's definition and then follow that path.
     */
-  private def listenAssignedValues(field: TermSymbol, site: FlowSymbol, marks: Ls[Marks])(listener: Listener)
+  private[semantics] def listenAssignedValues(field: TermSymbol, site: FlowSymbol, marks: Ls[Marks])(listener: Listener)
       (using ResolutionContext): Unit =
     listenMemberVariable(field): value =>
       MarkedShape.exit(value, ResolutionBoundary(field), S(site)) match
@@ -3664,6 +3696,38 @@ class NewResolver:
           case value: TermShape => listener(value)
           case NoShape => ()
         case NoShape => ()
+  
+  /** A mutable member's write interface, interpreted at the lookup site. A nominal signature must be
+    * interpreted negatively before its receiver bindings select an endpoint; a structural field already
+    * retains both endpoints. Use the ordinary declared-member transport so captures and constructor fields
+    * follow exactly the same scope path as a read. Unannotated concrete fields impose no declared input.
+    */
+  private def listenFieldInput(info: MemberLookup, source: Term)(listener: ShapeListener[DeclaredType])
+      (using ResolutionContext): Unit =
+    val caller = rctx
+    def declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks],
+        annotation: Opt[Term], positive: Bool, instances: TypeSubstitution)(using ResolutionContext): Unit =
+      member.onComplete: () =>
+        if valueTarget(member, false).flatMap(_.defn).exists:
+          case td: TermDefinition => td.k is syntax.MutVal
+          case _ => false
+        then listenDeclaredMember(member, bindings, rctx.fieldProjectionSite(member), source, annotation, _ => (),
+          false, !positive, marks, N)(
+          value => value match
+            case Marked(instance: InstanceShape, inner) =>
+              listener(transportType(instance.tpe, inner :: marks))(using caller)
+            case _ => ()
+        )(using rctx.withInstances(instances))
+    def follow(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
+      case MemberLookup.Contextual(source, substitution) => follow(source, instances.withOverrides(substitution))
+      case MemberLookup.Typed(_, tpe, marks) =>
+        listener(transportType(instantiateType(tpe.input, instances), marks))
+      case MemberLookup.Declared(member, bindings, marks, annotation, positive) =>
+        declared(member, bindings, marks, annotation, positive, instances)
+      case MemberLookup.Found(member: BlockMemberSymbol, marks) =>
+        declared(member, Map.empty, marks, N, true, instances)
+      case _ => ()
+    follow(info, rctx.instances)
   
   /** The assignable fields (see `isAssignableField`) that a member lookup finds, with the paths of their lookups.
     * The fields of an immutable record are only assignable through mutable lookups: assigning them through the

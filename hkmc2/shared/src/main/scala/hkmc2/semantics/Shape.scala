@@ -451,7 +451,7 @@ enum MemberLookup:
   // type arguments; they never authorize reading an implementation's value flow.
   case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term], positive: Bool)
   // A structural field already has its lexical bindings and intersection applied.
-  case Typed(field: RcdField, tpe: DeclaredType, marks: Ls[Marks])
+  case Typed(field: RcdField, tpe: TypeArgument, marks: Ls[Marks])
   // A preceding spread can place several different fields at the same index.
   case Indexed(fields: Ls[TupleShape.Fixed], marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
@@ -635,10 +635,12 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   * Field types are deferred references, including for recursive intersections.
   * Source declarations are witnesses for diagnostics and property selection, not
   * part of semantic equality: a merged field may have several such witnesses.
-  * The `mutable` fields (see RcdField) are part of the interface: values constrained
-  * by it can be assigned values of these fields' types (see NewResolver.constrainRecord).
+  * Each field retains its read (output) and write (input) types separately: substitution can
+  * select different bounds for them, even when both were written as the same type variable.
+  * Immutable fields have Nothing as their input. The `mutable` fields (see RcdField) are
+  * part of the interface: values constrained by it admit their inputs as writes.
   */
-final class RecordTypeShape(val fields: Map[Str, DeclaredType], val mutable: Set[Str])(
+final class RecordTypeShape(val fields: Map[Str, TypeArgument], val mutable: Set[Str])(
     val source: Term.Rcd, val declarations: Map[Str, RcdField]) extends CoreHeadShape:
   def describe: Str = "record type"
   override def toString: Str = s"RecordTypeShape($fields)"
@@ -802,6 +804,7 @@ final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams
   */
 enum TypeInterfaceReason:
   case MissingOutput(source: Term)
+  case MissingFieldOutput(source: Term)
   case ContravariantParameter(parameter: TyParam, source: Term)
   case Unrestricted(source: Term)
   case AbstractDeclaration(symbol: TypeAliasSymbol, source: Term)
@@ -810,10 +813,12 @@ enum TypeInterfaceReason:
   case Unavailable(source: Term)
 
   def provenance: ShapeProvenance =
+    def missingOutput(source: Term, subject: Str): Ls[(Message, Opt[Loc])] =
+      (msg"This $subject specifies only an input bound." -> source.toLoc) ::
+        (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
     val result = ShapeProvenance(this match
-      case MissingOutput(source) =>
-        (msg"This type argument specifies only an input bound." -> source.toLoc) ::
-          (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
+      case MissingOutput(source) => missingOutput(source, "type argument")
+      case MissingFieldOutput(source) => missingOutput(source, "field")
       case ContravariantParameter(parameter, source) =>
         (msg"This type argument supplies only an input bound for '${parameter.sym.nme}'." -> source.toLoc) ::
           (msg"Type parameter '${parameter.sym.nme}' is declared contravariant here." -> parameter.sym.toLoc) ::

@@ -585,10 +585,10 @@ class TypeRelationTest extends AnyFunSuite:
       case (value: RecordTypeShape) :: Nil => value
       case _ => fail("Expected one merged record")
     val first = record(intersection)
-    val next = first.fields("next")
+    val next = first.fields("next").output
     val saturated = record(next)
     val counts = (left.inferenceHost.listeners.size, right.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
-      assert(record(saturated.fields("next")) eq saturated)
+      assert(record(saturated.fields("next").output) eq saturated)
     assert((left.inferenceHost.listeners.size, right.inferenceHost.listeners.size) == counts)
     assert(h.state.allocatedTypeInstanceCount == 0)

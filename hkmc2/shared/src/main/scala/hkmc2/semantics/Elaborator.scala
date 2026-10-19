@@ -1320,6 +1320,15 @@ extends Importer:
     if newResolution then field.tsym.defn.foreach(_.sign.foreach(registerSignature))
     field
   
+  /** Type arguments and mutable record fields share the same input/output interval syntax. */
+  private def typeArgument(tree: Tree)(using Ctx, UnderCtx): Term = tree match
+    case Bra(Round, inner) => typeArgument(inner)
+    case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
+    case Modified(kw @ Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe))).mkLocWith(kw)
+    case Tup(Modified(in @ Keywrd(Keyword.`in`), arg1) :: Modified(out @ Keywrd(Keyword.`out`), arg2) :: Nil) =>
+      Term.WildcardTy(S(subterm(arg1, Tpe)), S(subterm(arg2, Tpe))).mkLocWith(in, out)
+    case arg => subterm(arg, Tpe)
+  
   /** An async expression wraps the values of `target` in a promise, whose payload
     * reads the binders in scope where the expression is written (see
     * NewResolver.resultType).
@@ -1616,13 +1625,7 @@ extends Importer:
       val baseInterp = interp match
         case Trm | Receiver | Specialization => Specialization
         case _ => interp
-      val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map {
-        case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
-        case Modified(kw @ Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe))).mkLocWith(kw)
-        case Tup(Modified(in @ Keywrd(Keyword.`in`), arg1) :: Modified(out @ Keywrd(Keyword.`out`), arg2) :: Nil) =>
-          Term.WildcardTy(S(subterm(arg1, Tpe)), S(subterm(arg2, Tpe))).mkLocWith(in, out)
-        case arg => subterm(arg, Tpe)
-      })(N).withLocOf(tree))
+      val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map(typeArgument))(N).withLocOf(tree))
       // A term specialization must validate its arguments even when unused.
       // Type and constructor interpretations have their own argument checks.
       if newResolution && interp == Trm then listenTerm(result)(_ => ())
@@ -2369,7 +2372,7 @@ extends Importer:
             case Apps(base, tups) =>
               val rrhs = tups.foldRight(rhs):
                 InfixApp(_, Keywrd(Keyword.`=>`), _)
-              (base, term(rrhs, fieldInterpretation))
+              (base, if fieldInterpretation == Tpe then typeArgument(rrhs) else term(rrhs, fieldInterpretation))
         val newAcc = rlhs match
           case id: Ident if fieldInterpretation == Tpe =>
             // Record type fields declare interfaces, not local value bindings.

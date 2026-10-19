@@ -136,6 +136,10 @@ final class NewResolverState(val owner: Elaborator.State):
   // several receivers (see NewResolver.assignField); subscribe to its values once.
   val fieldAssignments: Seen[(Identity[Term], Identity[Term], TermSymbol, Ls[Marks])] =
     new Seen(_.fieldAssignments)
+  // The same assignment can also encounter several declared write interfaces. Retain each substituted
+  // input once per activation; callbacks assigned through it must satisfy that input, not the read type.
+  val fieldAssignmentTypes: Seen[(Identity[Term], Identity[Term], DeclaredType)] =
+    new Seen(_.fieldAssignmentTypes)
   val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, DeclaredType], Bool), DeclaredSymShape] =
     new Cache(_.declaredSymShapes, identity)
   val selfShapes: Cache[InnerSymbol, BaseShape] =

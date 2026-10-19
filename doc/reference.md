@@ -1463,8 +1463,9 @@ class Counter(mut val count: Int)  // ok
 
 Mutable record fields (see Record Literals) can be assigned too, but cannot declare their types:
 when exposed, they take the unknown representation. Through a record type declaring a mutable
-field, the values it describes can be assigned values of that field's type, which their own fields
-therefore admit.
+field, the values it describes can be assigned values of that field's input type, which their own
+fields therefore admit. Exposing a record also exposes values stored by assignments, including
+through fields copied by a mutable spread: those values can be read by clients just like initializers.
 
 An override shares the representations of the member it overrides. Its unannotated parameters
 take the inherited parameters' representations, its annotated parameters must admit them (and,
@@ -1552,10 +1553,20 @@ lookup still combines the fields of record intersections.
 ```mlscript
 type Point = { x: Num, y: Num }
 type Cursor = { mut position: Int }
+type CursorView = { mut position: in Int out (Int | Str) }
 ```
 
-The values that a record type describes can be assigned values of the types of its mutable
-fields through it, but not values of its other fields.
+The values that a record type describes can be assigned values of the input types of its mutable
+fields through it, but not values of its other fields. In `{ mut f: in S out T }`, writes accept `S`
+and reads expose `T`. Omitting `in` gives `Nothing` as the input; omitting `out` gives `Any` as the
+output. `{ mut f: U }` uses `U` in both positions, while `{ f: U }` has only a read interface.
+
+Field outputs are covariant and field inputs are contravariant. They are interpreted separately
+before substituting type arguments: for `type Cell[A] = { mut f: A }`, `Cell[in S out T]` exposes
+`{ mut f: in S out T }`, not a single invariant occurrence of either bound. Enclosing negative
+positions reverse these choices, just as for function inputs. Intersecting record interfaces
+intersects their shared fields' output types and unions their input types. Assigning a callback
+through a mutable field constrains it against the input type, independently of the read interface.
 
 Under new resolution, recursive type aliases must be guarded: every recursive
 cycle must pass through a record, tuple, function arrow, or nominal type.

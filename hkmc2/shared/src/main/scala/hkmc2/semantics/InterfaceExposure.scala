@@ -196,11 +196,22 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         // Clients can assign the mutable fields of a record, and through a mutable record (`mut {...}`), also the
         // fields it copies from the records it spreads (see RecordMember). The spread records are also exposed
         // above, as values of their own, whose mutable fields are assignable through them as well.
-        def assignableFields(record: RecordShape, copied: Bool): Unit = record.elements.foreach:
-          case RecordShape.Field(field) if copied || field.mut => assignable(field.tsym, field.sym, path)
-          case RecordShape.Spread(inner, _) if copied => assignableFields(inner, copied)
-          case _ => ()
-        assignableFields(record, record.source.mut)
+        // Reading an escaping field exposes its assigned values too. Follow the same definition exits and
+        // spread paths as a member read; a captured generic record must interpret these values in its own
+        // substitution. Mutable copies also expose writes to fields whose original record was immutable.
+        def assignableFields(record: RecordShape, copied: Bool, context: Ls[Marks], substitution: TypeSubstitution): Unit =
+          record.elements.foreach:
+            case RecordShape.Field(field) if copied || field.mut =>
+              watch((field.tsym, context, substitution, "assigned values"))(
+                listener => resolver.listenAssignedValues(field.tsym, source(field.sym).resSym, context)(listener)(
+                  using rctx.withInstances(substitution))): value =>
+                emit(resolver.instantiateShape(value, substitution),
+                  path.via(msg"This value is stored in this record field." -> field.toLoc))
+              assignable(field.tsym, field.sym, path)
+            case RecordShape.Spread(inner, marks) if copied =>
+              assignableFields(inner, copied, marks :: context, substitution.withOverrides(inner.instances))
+            case _ => ()
+        assignableFields(record, record.source.mut, marks, instances.withOverrides(record.instances))
       case base: BaseShape => members(base.defn, marks, path)
       case callable: CallableTypeShape =>
         // Written structure constrains external values; missing output parts
