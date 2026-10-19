@@ -28,6 +28,16 @@ trait AnyRefImpl:
 trait NewRefImpl extends AnyRefImpl:
   self: Term.SimpleRef | Term.MemberRef | Term.SelfRef =>
 
+trait AppImpl:
+  self: Term.App =>
+  /** Callable candidates observed by applyShape, independently of the call's results:
+    * a throwing function is a target even when it produces no value. These are diagnostic
+    * witnesses, not fixed code-generation decisions. A Publisher retains them across blocks
+    * and lets later activations add targets in the consuming unit's private inference data.
+    * completeBlock seals this host along with the application; mkClone copies its snapshot.
+    */
+  private[semantics] val callableTargets: Publisher[TermShape] = new Publisher[TermShape] {}
+
 trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
   // At least one receiver permits runtime lookup without a static member symbol.

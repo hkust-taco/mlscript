@@ -3228,13 +3228,13 @@ class NewResolver:
     // leave protocol compatibility to type checking.
     lhs match
       case Marked(_: DynShape, _) =>
-        if checked then rctx.callable(res)
+        if checked then res.callableTargets.currentShapes.add(source)
         publish(lhs)
         return
       case _ => ()
     lhs match
       case Marked(nominal: NominalInstanceView, _) if nominal.isInstanceOfClass(prelude.builtins.Function.defn.get) =>
-        if checked then rctx.callable(res)
+        if checked then res.callableTargets.currentShapes.add(source)
         // The builtin Function class guarantees callability, including through
         // aliases and subclasses, but supplies neither an arity nor a result
         // interface. Check the argument tuple and leave arity checks to runtime;
@@ -3247,7 +3247,7 @@ class NewResolver:
         publish(UnknownValueShape(res, fromPublicInterface = false)(nominal.annotation.fold(provenance)(provenance.withTypeOrigin)))
         return
       case Marked(original: CallableTypeShape, context) =>
-        if checked then rctx.callable(res)
+        if checked then res.callableTargets.currentShapes.add(source)
         val viewed = instantiateShape(original, instances) match
           case callable: CallableTypeShape => callable
           case _ => lastWords("A callable view must remain callable")
@@ -3305,10 +3305,10 @@ class NewResolver:
         val exposed = lhs.applicationHead._1 match
           case unknown: UnknownValueShape => unknown.fromPublicInterface
           case _ => false
-        rctx.nonCallable(res, config.language.eagerResolution || exposed)(lhs.diagnostic(message))
+        rctx.resolutionProblem(res, config.language.eagerResolution || exposed)(lhs.diagnostic(message))
       publish(UnknownValueShape.at(res))
       return
-    if checked then rctx.callable(res)
+    if checked then res.callableTargets.currentShapes.add(source)
     if sh.isSaturated then
       def go(body: Term, mss: Ls[Marks])(using ResolutionContext) =
         listenResult(body): sh =>
@@ -3414,7 +3414,7 @@ class NewResolver:
         msg"Cannot resolve member '$name' across a computed key or unknown record spread."
     host match
       case sel: NewSel =>
-        rctx.missingMember(sel, config.language.eagerResolution || fromPublicInterface):
+        rctx.resolutionProblem(sel, config.language.eagerResolution || fromPublicInterface):
           provenance.diagnostic(message, N)
       case _ if !rctx.hasError(host) =>
         rctx.markError(host)
@@ -3610,7 +3610,7 @@ class NewResolver:
         rctx.recordResolution(sel, sel.hasDynamicTarget)(sel.hasDynamicTarget = true)
         publishDynamic(sel, marks)
       case MemberLookup.Missing if rctx.canResolve(sel) =>
-        rctx.missingMember(sel, config.language.eagerResolution):
+        rctx.resolutionProblem(sel, config.language.eagerResolution):
           diagnostic(msg"$description does not contain member '${sel.id.name}'")
       case MemberLookup.Unknown(reason, fromPublicInterface, provenance) =>
         unknownMember(sel, sel.id.name, reason, fromPublicInterface, provenance)

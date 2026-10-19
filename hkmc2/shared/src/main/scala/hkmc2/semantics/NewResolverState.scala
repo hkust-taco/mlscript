@@ -9,13 +9,6 @@ import Term.*
 inline def rctx(using context: ResolutionContext): ResolutionContext = context
 
 object NewResolverState:
-  /** Diagnostics wait for all this block's candidates. Calls record validity
-    * independently of their results: a callable that only throws is still callable.
-    */
-  final class PendingCheck:
-    var callable: Bool = false
-    val problems = mutable.ListBuffer.empty[(Bool, () => Ls[(Message, Opt[Loc])])]
-
   /** Tables belong to a compilation unit; a context only selects a namespace.
     * An inherited lookup is read-only. Mutable values are copied into the
     * consumer's table before use, so extending an imported graph cannot change
@@ -86,7 +79,8 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
   private[semantics] val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
   private[semantics] val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
-  private[semantics] val pendingChecks = mutable.LinkedHashMap.empty[Identity[NewSel | App], NewResolverState.PendingCheck]
+  private[semantics] val resolutionProblems =
+    mutable.LinkedHashMap.empty[Identity[NewSel | App], mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]
   // The references, selections, and instantiations written in this unit's current block,
   // with the lexical scope in which each is written (see ResolutionContext.checkAccess).
   private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable | New, SrcScope)]
@@ -403,22 +397,20 @@ final class ResolutionContext private[semantics] (
   // including later activations of completed syntax, and report them together
   // at block completion. Eager problems invalidate the use immediately;
   // delaying their report lets the same error include every relevant witness.
-  private def hasSelectionTarget(selection: NewSel): Bool =
-    selection.resolvedTargets.nonEmpty || selection.hasDynamicTarget || selection.tupleIndex.nonEmpty
-  private def pendingCheck(term: NewSel | App): NewResolverState.PendingCheck =
-    state.pendingChecks.getOrElseUpdate(new Identity(term), new NewResolverState.PendingCheck)
-  def callable(application: App): Unit = pendingCheck(application).callable = true
-  def nonCallable(application: App, eager: Bool)(messages: => Ls[(Message, Opt[Loc])]): Unit =
-    if !hasError(application) then
-      if eager then markError(application)
-      pendingCheck(application).problems += ((eager, () => messages))
-  def missingMember(selection: NewSel, eager: Bool)(messages: => Ls[(Message, Opt[Loc])]): Unit =
-    val key = new Identity[NewSel | App](selection)
+  def resolutionProblem(term: NewSel | App, eager: Bool)(messages: => Ls[(Message, Opt[Loc])]): Unit =
+    val key = new Identity[NewSel | App](term)
     // Accumulate witnesses for this block's error without replaying errors on
-    // completed selections or adding follow-on errors to unrelated failures.
-    if !hasError(selection) || state.pendingChecks.contains(key) then
-      if eager then markError(selection)
-      pendingCheck(selection).problems += ((eager, () => messages))
+    // completed terms or adding follow-on errors to unrelated failures.
+    if !hasError(term) || state.resolutionProblems.contains(key) then
+      if eager then markError(term)
+      state.resolutionProblems.getOrElseUpdate(key, mutable.ListBuffer.empty) += (() =>
+        // Keep this observation's graph: an intermediate exporter can have
+        // callable witnesses in its private copy of a third file's application.
+        val unresolved = term match
+          case selection: NewSel =>
+            selection.resolvedTargets.isEmpty && !selection.hasDynamicTarget && selection.tupleIndex.isEmpty
+          case application: App => application.callableTargets.currentShapes(using this).isEmpty
+        if eager || unresolved then messages else Nil)
 
   /** Seal the decisions and original host data read by erasure/lowering. The
     * inference graph keeps private, live host data and all its listeners, so
@@ -451,6 +443,7 @@ final class ResolutionContext private[semantics] (
         case term: Term => data(term)
         case _ => ()
       statement match
+        case application: App => data(application.callableTargets)
         case cls: ClassLikeDef =>
           cls.ext.foreach(visit)
           cls.auxParams.foreach(_.subTerms.foreach(visit))
@@ -467,18 +460,13 @@ final class ResolutionContext private[semantics] (
         case _ => ()
       statement.subStatements.foreach(visit)
     visit(block)
-    state.pendingChecks.foreach: (key, check) =>
+    state.resolutionProblems.foreach: (key, problems) =>
       val term = key.value
-      val unresolved = term match
-        case selection: NewSel => !hasSelectionTarget(selection)
-        case _: App => !check.callable
-      val messages = check.problems.iterator.collect:
-        case (eager, messages) if eager || unresolved => messages()
-      .flatten.toList.distinct
+      val messages = problems.iterator.flatMap(_()).toList.distinct
       if messages.nonEmpty then
         markError(term)
         reportResolutionError(term, messages)
-    state.pendingChecks.clear()
+    state.resolutionProblems.clear()
     state.accessSites.foreach: (term, scope) =>
       checkAccess(term, scope)
       // Access checks can insert already-resolved key expressions. Bind their

@@ -334,7 +334,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   // --- END ---
   
   case App(lhs: Term, rhs: Term)
-    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl
+    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl, AppImpl
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
   /** `checked` asks resolution to validate the receiver and determine the element
@@ -601,7 +601,10 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case Capture(base, thru) => Capture(base.mkClone, thru)
       case term @ Resolved(t, sym) => copyResolution(term, Resolved(t.mkClone, sym)(term.typ))
       case term @ Ref(sym) => copyResolution(term, Ref(sym)(Tree.Ident(term.tree.name), term.typ))
-      case term @ App(lhs, rhs) => copyResolution(term, App(lhs.mkClone, rhs.mkClone)(term.tree, term.typ, term.resSym))
+      case term @ App(lhs, rhs) =>
+        val copy = App(lhs.mkClone, rhs.mkClone)(term.tree, term.typ, term.resSym)
+        copy.callableTargets.shapes.copyFrom(term.callableTargets.shapes)
+        copyResolution(term, copy)
       case term @ TyApp(lhs, targs) => copyResolution(term, TyApp(lhs.mkClone, targs.map(_.mkClone))(term.typ))
       case term @ Sel(prefix, nme) => copySelection(term, Sel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx))
       case term @ SynthSel(prefix, nme) => copySelection(term, SynthSel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx))
