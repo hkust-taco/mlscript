@@ -470,23 +470,46 @@ fun (??) orElse(x, y) = if x is undefined then y else x
 undefined ?? 1
 //│ = 1
 
-// FIXME: The lexer merges `?:` into a single operator token, which the parser always splits
-// into an optional marker followed by `:`, so a user-defined `?:` operator can no longer be used.
-:fixme
+// The optional marker must be attached to its parameter, so `?:` can otherwise be an operator.
 :expect 1
 fun (?:) elvis(x, y) = if x is undefined then y else x
 undefined ?: 1
-//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.478: 	undefined ?: 1
-//│ ╙──       	^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
+//│ = 1
+
+:e
+fun bad(x, y ?: Int) = x
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
+//│ ║  l.480: 	fun bad(x, y ?: Int) = x
+//│ ╙──       	           ^^^^^^^^
+
+:pe
+:e
+fun bad(x, y ?) = x
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.487: 	fun bad(x, y ?) = x
+//│ ╙──       	              ^
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
+//│ ║  l.487: 	fun bad(x, y ?) = x
+//│ ╙──       	           ^^^
+
+:pe
+:e
+fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.497: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ╙──       	                      ^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.497: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║         	                 ^^^^^
+//│ ╟── This type has no resolved target
+//│ ║  l.497: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ╙──       	                 ^^^^^
 
 // A separate signature determines how many arguments can be passed.
 :e
 sig()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.487: 	sig()
+//│ ║  l.510: 	sig()
 //│ ║         	^^^^^
 //│ ╟── Function 'sig' expected 1 to 2 arguments, but got 0
 //│ ║  l.358: 	fun sig(x, y?) = x

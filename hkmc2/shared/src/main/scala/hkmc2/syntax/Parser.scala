@@ -1095,14 +1095,17 @@ abstract class Parser(
       // * and only when it ends the element. In `y?: Int`, the lexer merges `?` and `:` into a single
       // * `?:` operator token, which we split back into the marker followed by the `:` keyword.
       // * Other operators starting with `?`, such as `??` and `?>`, are distinct operator tokens.
+      // * The marker must be attached to the parameter, without intervening whitespace: otherwise,
+      // * `?` and `?:` are ordinary operators, so that `a ?: b` applies a user-defined `?:` operator,
+      // * while `y ?` and `y ?: Int` are not optional parameters.
       case (OP("?"), l0) :: rest
-      if prec < Keyword.eqPrec.get && (NOISE.get(rest) match
+      if prec < Keyword.eqPrec.get && acc.toLoc.exists(_.spanEnd === l0.spanStart) && (NOISE.get(rest) match
         case Nil | (_: NEWLINE_COMMA, _) :: _ => true
         case _ => false
       ) =>
         consume
         exprCont(Optional(acc).withLoc(acc.toLoc.fold(S(l0))(l => S(l ++ l0))), prec, allowNewlines = allowNewlines)
-      case (OP("?:"), l0) :: _ if prec < Keyword.eqPrec.get =>
+      case (OP("?:"), l0) :: _ if prec < Keyword.eqPrec.get && acc.toLoc.exists(_.spanEnd === l0.spanStart) =>
         consume
         val markerLoc = Loc(l0.spanStart, l0.spanStart + 1, l0.origin)
         cur = (IDENT(":", true), Loc(l0.spanStart + 1, l0.spanEnd, l0.origin)) :: cur

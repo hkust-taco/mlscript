@@ -1412,7 +1412,7 @@ A key path that accesses a private member of a class or module in another file
 is rejected at the selection site. Such members use private accessor symbols
 local to their defining file; they do not use the file-level private export ABI.
 
-Compilation files check that their exposed functions and values do not make a close-world assumption. A public `fun read(x) = x.a` needs an interface for
+Compilation files check that their exposed functions and values do not make a closed-world assumption. A public `fun read(x) = x.a` needs an interface for
 `x` even if local callers all provide `{a: 1}`. A private helper can use local
 inference, but returning it or storing it in an exposed record or tuple makes its
 interface subject to the same check. Callable result annotations provide the

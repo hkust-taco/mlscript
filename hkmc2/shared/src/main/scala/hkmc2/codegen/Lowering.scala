@@ -2055,7 +2055,8 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
         "so its erased type no longer describes what it is compiled to")
       val (unloweredPs, bod) = handleMultipleParamLists(paramLists, bodyTerm)
       val (ps, prologue) = lowerTrailingParams(unloweredPs, name)
-      val instrumentedBody = inScopedBlock(prologue(setupFunctionBody(ps, bod, name, returnType)))
+      // * The trace shows the source-level parameters, which the prologue extracts before the body runs.
+      val instrumentedBody = inScopedBlock(prologue(setupFunctionBody(unloweredPs, bod, name, returnType)))
       (ps :: Nil, instrumentedBody)
     else
       super.setupFunctionDef(paramLists, bodyTerm, name, returnType)
@@ -2073,18 +2074,23 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
     val prevIndentLvlSym = loweringCtx.registerTempSymbol(N, erasedType = N, dbgNme = "traceLogPrevIndent")
     val resSym = loweringCtx.registerTempSymbol(N, erasedType = N, dbgNme = "traceLogRes")
     val retMsgSym = loweringCtx.registerTempSymbol(N, erasedType = N, dbgNme = "traceLogRetMsg")
-    val psInspectedSyms = params.params.map(p => loweringCtx.registerTempSymbol(N, erasedType = N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
+    // * All the parameters are shown, in their source order; the variadic parameter is shown as a spread array.
+    val shownParams = params.params.map("" -> _) ::: params.variadic.toList.flatMap: v =>
+      ("..." -> v.param) :: v.trailing.map("" -> _)
+    val psInspectedSyms = shownParams.map: (prefix, p) =>
+      (loweringCtx.registerTempSymbol(N, erasedType = N, dbgNme = s"traceLogParam_${p.sym.nme}"), prefix, p.sym)
     val resInspectedSym = loweringCtx.registerTempSymbol(N, erasedType = N, dbgNme = "traceLogResInspected")
     
     
-    val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(N, Value.Lit(Tree.StrLit(")"))(N)) :: Nil):
-      case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
-        then Arg(N, s.asSimpleRef) :: acc
-        else Arg(N, s.asSimpleRef) :: Arg(N, Value.Lit(Tree.StrLit(", "))(N)) :: acc
+    def str(s: Str) = Arg(N, Value.Lit(Tree.StrLit(s))(N))
+    val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](str(")") :: Nil):
+      case (((s, prefix, p), i), acc) =>
+        val shown = Option.when(prefix.nonEmpty)(str(prefix)).toList ::: Arg(N, s.asSimpleRef) :: Nil
+        if i == psInspectedSyms.length - 1 then shown ::: acc else shown ::: str(", ") :: acc
     
     val tmp1, tmp2, tmp3 = loweringCtx.registerTempSymbol(N, erasedType = N)
     
-    assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
+    assignStmts(psInspectedSyms.map: (pInspectedSym, _, pSym) =>
       pInspectedSym -> pureCall(inspectFn, Arg(N, pSym.asSimpleRef) :: Nil)
     *) |>:
     assignStmts(
