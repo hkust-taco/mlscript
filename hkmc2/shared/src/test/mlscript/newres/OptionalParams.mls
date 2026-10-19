@@ -470,11 +470,23 @@ fun (??) orElse(x, y) = if x is undefined then y else x
 undefined ?? 1
 //│ = 1
 
+// FIXME: The lexer merges `?:` into a single operator token, which the parser always splits
+// into an optional marker followed by `:`, so a user-defined `?:` operator can no longer be used.
+:fixme
+:expect 1
+fun (?:) elvis(x, y) = if x is undefined then y else x
+undefined ?: 1
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.478: 	undefined ?: 1
+//│ ╙──       	^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
+
 // A separate signature determines how many arguments can be passed.
 :e
 sig()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.475: 	sig()
+//│ ║  l.487: 	sig()
 //│ ║         	^^^^^
 //│ ╟── Function 'sig' expected 1 to 2 arguments, but got 0
 //│ ║  l.358: 	fun sig(x, y?) = x

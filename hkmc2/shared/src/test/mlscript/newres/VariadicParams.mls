@@ -161,35 +161,77 @@ app((x, ...xs) => "b")
 sum(0, 1, 2, 3)
 //│ = 6
 
+// FIXME: Without inlining, the omitted optional parameter is `()` rather than `undefined`:
+// `Runtime.Tuple.getLeading` ends with `else undefined`, which is compiled as `return runtime.Unit`.
+:fixme
+:noInline
+:expect [1, undefined, [], 2]
+fun h(x, y?, ...xs, w) = [x, y, xs, w]
+h(1, 2)
+//│ ═══[RUNTIME ERROR] Expected: '[1, undefined, [], 2]', got: '[1, (), [], 2]'
+//│ = [1, (), [], 2]
+
+:fixme
+:noInline
+:expect "none"
+fun h(x, y?, ...xs, w) = if y is undefined then "none" else "some"
+h(1, 2)
+//│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"some"'
+//│ = "some"
+
+// FIXME: Stack-safe resumption calls the function again with its saved parameters, which do not
+// include the rest parameter (see `HandlerLowering`). Trailing parameters are lowered into that rest
+// parameter, so resuming the function below loses its required arguments.
+:fixme
+:effectHandlers
+:lift
+:stackSafe 10
+:expect [[1, 2], 3]
+fun deep(n, ...xs, last) = if n == 0 then [xs, last] else deep(n - 1, ...xs, last)
+deep(100, 1, 2, 3)
+//│ ═══[RUNTIME ERROR] Error: Function 'deep' expected at least 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Expected: '[[1, 2], 3]', got: 'undefined'
+
+// FIXME: The rest parameter itself is also lost (not specific to trailing parameters).
+:fixme
+:effectHandlers
+:lift
+:stackSafe 10
+:expect [1, 2, 3]
+fun deepRest(n, ...xs) = if n == 0 then xs else deepRest(n - 1, ...xs)
+deepRest(100, 1, 2, 3)
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: '[]'
+//│ = []
+
 
 // *** Errors ***
 
 :e
 fun bad(...xs, ...ys) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.168: 	fun bad(...xs, ...ys) = 0
+//│ ║  l.210: 	fun bad(...xs, ...ys) = 0
 //│ ╙──       	               ^^^^^
 
 :e
 fun bad(...xs, y?) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.174: 	fun bad(...xs, y?) = 0
+//│ ║  l.216: 	fun bad(...xs, y?) = 0
 //│ ╙──       	               ^^
 
 :e
 fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.180: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
+//│ ║  l.222: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╙──       	                           ^^^^^^^^^^^^^
 
 :e
 fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.186: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
+//│ ║  l.228: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╙──       	                           ^^^^
 
 :e
 class C(x, ...xs, y)
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.192: 	class C(x, ...xs, y)
+//│ ║  l.234: 	class C(x, ...xs, y)
 //│ ╙──       	           ^^^^^

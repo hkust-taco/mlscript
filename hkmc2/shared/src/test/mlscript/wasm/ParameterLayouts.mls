@@ -1,0 +1,24 @@
+:.
+
+:global
+:wasm
+
+
+// * Wasm functions have a fixed arity, so optional parameters are rejected.
+:e
+fun opt(x, y?) = x
+opt(1)
+//│ ╔══[COMPILATION ERROR] Optional parameters are not supported by the WebAssembly backend.
+//│ ║  l.9: 	fun opt(x, y?) = x
+//│ ╙──     	       ^^^^^^^
+
+// FIXME: Trailing parameters are lowered into a rest parameter and calls to `Runtime.Tuple`,
+// which the Wasm backend does not support; they should be rejected with a proper diagnostic.
+:fixme
+fun trailing(x, ...xs, y) = y
+trailing(1, 2, 3)
+//│ ╔══[COMPILATION ERROR] Unexpected reference to a builtin symbol '+' in result position
+//│ ║  l.45: 	  checkArgs(functionName, expected, leading + args.length)
+//│ ╙──      	                                            ^
+//│ ═══[COMPILATION ERROR] Cannot find variable `tmp:runtime` (TempSymbol) in local or global scope.
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for symbol `member:Runtime`
