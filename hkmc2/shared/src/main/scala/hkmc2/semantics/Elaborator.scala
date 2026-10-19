@@ -2670,7 +2670,7 @@ extends Importer:
                 case Modified(Keywrd(Keyword.`out`), id: Ident) =>
                   mk(id, S(true))
                 case _ =>
-                  raise(ErrorReport(msg"Unsupported type parameter ${targ.describe}" -> targ.toLoc :: Nil))
+                  raise(ErrorReport(msg"Unsupported type parameter shape: ${targ.describe}" -> targ.toLoc :: Nil))
                   Nil
           case N => Nil
         
@@ -3429,7 +3429,7 @@ extends Importer:
           sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
           Param.simple(sym) :: Nil
         case t =>
-          raise(ErrorReport(msg"Unsupported type parameter ${t.describe}" -> t.toLoc :: Nil))
+          raise(ErrorReport(msg"Unsupported type parameter shape: ${t.describe}" -> t.toLoc :: Nil))
           Nil
       (vs, ctx ++ vs.map(p => p.sym.name -> p.sym))
     case _ =>

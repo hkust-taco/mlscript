@@ -3803,14 +3803,17 @@ class NewResolver:
     // Distinct source aliases cannot define the same JavaScript property twice.
     // Otherwise lookup could infer the first body while runtime keeps the last.
     defn.body.methods.filterNot(_.tsym.isPrivate).flatMap(td =>
-      MemberKey.symbol(td).map(_ -> td)).groupMap(_._1)(_._2).foreach:
+      MemberKey.symbol(td).map(_ -> td)
+    ).groupMap(_._1)(_._2).foreach:
       case (key, definitions) if definitions.map(_.tsym).distinct.sizeCompare(1) > 0 =>
         defn.isErroneous = true
         definitions.foreach(_.isErroneous = true)
-        rctx.report(ErrorReport(msg"Duplicate definition of member '${key.name}'." -> N ::
-          definitions.map(td => msg"Member '${td.tsym.nme}' is defined here." -> td.toLoc)))
+        rctx.report:
+          ErrorReport(msg"Duplicate definition of member '${key.name}'." -> N
+          :: definitions.map: td =>
+            msg"Member '${td.tsym.nme}' is defined here." -> td.toLoc)
       case _ => ()
-    defn.body.members.values.toList.distinct.foreach: member =>
+    defn.body.members.valuesIterator.distinct.foreach: member =>
       member.asTrm.filterNot(sym => sym.isInstanceOf[ClassCtorSymbol] || sym.isPrivate).foreach: own =>
         // Bind this host to the defining unit before an importer can observe its edges.
         own.overrideLinks.inferenceHost
