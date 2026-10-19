@@ -1364,44 +1364,33 @@ fun f(x: Int): Str = String(x)
 val v: Option[Int] = Some(1)
 ```
 
+
+### Spreads
+
+Argument and array spreads follow the JavaScript iteration protocol:
+`value[Symbol.iterator]().next().value`. Arrays, strings, native collections,
+and user iterables use the same resolution path. Precise tuple spreads
+retain their fixed positions.
+
+
 ### Resolution Interfaces
 
 **Resolution is a best-effort check, not a replacement for type checking.** It
 finds targets for names, members, and calls, and catches some obvious mistakes.
-Successful resolution does not establish type safety, including in strict mode;
-a later type-checking pass will cover the remaining cases. When precise tracking
-or checking would be too complicated or expensive, resolution accepts the case
-leniently.
-
-**Leniency does not permit dropping flows.** Resolution uses them to find member
-targets and detect ambiguities. When exact tracking is impractical, it joins all
-possible flows, even if this loses correlations or precise argument counts. For
-example, `S & T <: U` contributes both `S <: U` and `T <: U`, approximating the
-intersection as a union. Unions and intersections of function signatures likewise
-contribute every component's parameter and result flows; an uncertain parameter
-position retains its possible element types rather than becoming an opaque unknown.
-
-Argument and array spreads follow the JavaScript iteration protocol:
-`value[Symbol.iterator]().next().value`. Arrays, strings, native collections,
-and user iterables use the same resolution path. Every known alternative of the
-operand, iterator method, and step result contributes its element flows. A step
-known to have `done: true` contributes no element. Missing or opaque protocol
-parts remain accepted and contribute uncertainty alongside any known flows;
-resolution does not prove that a value can be iterated. Precise tuple spreads
-retain their fixed positions.
+Successful resolution does not establish type safety, even in strict mode.
+Type checking is meant to run as a later pass, but is not yet implemented.
 
 `@annotations.jsSymbol(path)` gives a public method a source name for the JavaScript property
 key denoted by `path`. The path must consist of modules and immutable `val`s,
 and end in a `val` annotated with `@annotations.fresh`. This marker is a contract
-that the val owns a unique symbol; the resolver does not prove freshness or
-require a `Symbol` type. Checking the value's type belongs to the type checker.
+that the val owns a unique symbol; the resolver does not prove freshness.
 
 ```mlscript
 module Keys {
-  @annotations.fresh val read = Symbol("read")
+  @fresh val read = Symbol("read")
 }
 class Reader {
-  @annotations.jsSymbol(Keys.read) fun read() = 42
+  @jsSymbol(Keys.read) fun read() = 42
 }
 ```
 
@@ -1411,11 +1400,6 @@ inherited source name and the same key. Giving an inherited key a different
 source name is a collision, as is defining two methods with the same key in one
 class. Distinct receiver paths are significant for fresh instance fields.
 
-The annotation constructor is declared as `annotations.jsSymbol` in the prelude;
-`open annotations { jsSymbol }` permits its short spelling. Recognition uses
-the resolved declaration, so a user definition named `jsSymbol` has no special
-meaning.
-
 Currently, selecting a method after its local key has escaped the caller's scope
 is unsupported: the compiler needs a runtime witness for that particular key.
 Such accesses produce a compilation error; the key must not be hoisted and shared
@@ -1423,10 +1407,10 @@ between factory invocations. `newres/JsSymbol.mls` records this limitation with
 an explicit regression.
 
 The prelude marks `Symbol.iterator` as fresh. `Array.iterator()` and
-`Iterable[A].iterator()` use `@annotations.jsSymbol(Symbol.iterator)` to select the native
+`Iterable[A].iterator()` use `@jsSymbol(Symbol.iterator)` to select the native
 symbol property. Records can implement the protocol with a computed
 `(Symbol.iterator)` field; record types can declare that field or annotate a
-named field with `@annotations.jsSymbol(Symbol.iterator)`. A string-keyed `iterator` field
+named field with `@jsSymbol(Symbol.iterator)`. A string-keyed `iterator` field
 alone does not implement JavaScript iteration.
 
 `Iterator[A]` promises only `next`. `IteratorImpl` implements the iterable

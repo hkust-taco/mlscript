@@ -1,5 +1,7 @@
 #lang(0.3.x)
 
+open annotations { jsSymbol, fresh }
+
 declare type Any
 declare type Anything
 declare type Nothing
@@ -75,36 +77,37 @@ declare class RegExp {
 declare module RegExp
 
 declare class Set[V] {
-  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[V] & Iterable[V]
+  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[V]
   val size: Int
   fun add(value: V): Set[V]
   fun has(value: V): Bool
   fun delete(value: V): Bool
   fun clear(): undefined
-  fun values(): Iterator[V] & Iterable[V]
+  fun values(): IterableIterator[V]
   fun union(other: Set[V]): Set[V]
   fun difference(other: Set[V]): Set[V]
 }
 declare module Set
 
 declare class Map[K, V] {
-  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[[K, V]] & Iterable[[K, V]]
+  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[[K, V]]
   val size: Int
   fun get(key: K): V | undefined
   fun has(key: K): Bool
   fun delete(key: K): Bool
   fun clear(): undefined
   fun id"set"(key: K, value: V): Map[K, V]
-  fun keys(): Iterator[K] & Iterable[K]
-  fun values(): Iterator[V] & Iterable[V]
-  fun entries(): Iterator[[K, V]] & Iterable[[K, V]]
+  fun keys(): IterableIterator[K]
+  fun values(): IterableIterator[V]
+  fun entries(): IterableIterator[[K, V]]
   fun forEach(f: (V, drop K, drop Map[K, V]) -> Any): undefined
 }
 
 declare class Iterator[out T] {
   fun next(): { value: T, done: Bool }
 }
-type Iterable[out A] = {@annotations.jsSymbol(Symbol.iterator) iterator: () -> Iterator[A]}
+type Iterable[out A] = {@jsSymbol(Symbol.iterator) iterator: () -> Iterator[A]}
+type IterableIterator[out A] = Iterator[A] & Iterable[A]
 
 declare module Map
 
@@ -206,7 +209,7 @@ declare class Num {
 }
 declare class Int extends Num
 declare class Str {
-  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[Str] & Iterable[Str]
+  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[Str]
   val length: Int
   fun toString(): Str
   fun at(index: Int): Str | undefined
@@ -243,14 +246,14 @@ declare class Class
 // the `.class` storage used by generated MLscript constructor functions.
 // The `val length` parameter also supports matching with `Array(length)`.
 declare class Array[T](val length: Int) {
-  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[T] & Iterable[T]
+  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[T]
   fun join(...separators): Str
   fun reverse(): Array[T]
   fun sort(...compare): Array[T]
   fun slice(...bounds): Array[T]
   fun copyWithin(target: Int, start: Int, ...end): Array[T]
-  fun entries(): Iterator[[Int, T]] & Iterable[[Int, T]]
-  fun keys(): Iterator[Int] & Iterable[Int]
+  fun entries(): IterableIterator[[Int, T]]
+  fun keys(): IterableIterator[Int]
   fun toReversed(): Array[T]
   fun toSorted(...compare): Array[T]
   fun toSpliced(start: Int, ...items): Array[T]
@@ -292,6 +295,19 @@ declare module Array {
     concat
     isArray
   val prototype: Array[Any]
+}
+
+declare class Symbol {
+  val description: Str | undefined
+}
+declare fun Symbol(...description): Symbol
+declare module Symbol {
+  // Implementation note:
+  // A `TermDef` like `for` needs `rhs` to be defined to be recognized as `isMLsFun`.
+  // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
+  // uninitialized `runtime` in the `Rendering` module.
+  fun for: Str -> Symbol = ()
+  @fresh val iterator: Symbol
 }
 
 // MLwasm-specific types
@@ -551,7 +567,7 @@ declare module debug {
 declare module annotations {
   object pure
   object fresh
-  fun jsSymbol(path: Any)
+  fun jsSymbol(path: Symbol)
   object untyped
   object tailrec
   object tailcall
@@ -562,18 +578,6 @@ declare module annotations {
   object bufferable
   object generator
   object async
-}
-
-declare class Symbol {
-  val description: Str | undefined
-}
-declare fun Symbol(...description): Symbol
-declare module Symbol {
-  // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
-  // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
-  // uninitialized `runtime` in the `Rendering` module.
-  fun for: Str -> Symbol = ()
-  @annotations.fresh val iterator: Symbol
 }
 
 declare module handlers {

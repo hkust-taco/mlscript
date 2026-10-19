@@ -458,15 +458,15 @@ val escapedCallback = @annotations.async {value => value.answer}
 //│ ║         	                                          ^^^^^
 //│ ╟── This value is fulfilled by this promise.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.187: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
+//│ ║  l.190: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.188: 	  fun id"then"[B, C](onFulfilled: Awaited[A] -> (B | Promise[B]), onRejected?: (Any -> (C | Promise[C])) | null): Promise[Awaited[B | C]]
+//│ ║  l.191: 	  fun id"then"[B, C](onFulfilled: Awaited[A] -> (B | Promise[B]), onRejected?: (Any -> (C | Promise[C])) | null): Promise[Awaited[B | C]]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.189: 	  fun id"catch"[B](onRejected: (Any -> (B | Promise[B])) | undefined | null): Promise[Awaited[A | B]]
+//│ ║  l.192: 	  fun id"catch"[B](onRejected: (Any -> (B | Promise[B])) | undefined | null): Promise[Awaited[A | B]]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.190: 	  fun id"finally"(onFinally: (() -> undefined) | undefined | null): Promise[A]
+//│ ║  l.193: 	  fun id"finally"(onFinally: (() -> undefined) | undefined | null): Promise[A]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.191: 	... (more lines omitted) ...
+//│ ║  l.194: 	... (more lines omitted) ...
 //│ ║         	^
 //│ ╟── 'escapedCallback' is exposed by this compilation unit.
 //│ ║  in Promises.mls:451

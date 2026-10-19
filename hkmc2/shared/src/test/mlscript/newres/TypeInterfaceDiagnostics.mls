@@ -76,7 +76,7 @@ xs.0.value
 //│ ║        	                                 ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.2: 	declare type Any
+//│ ║  l.4: 	declare type Any
 //│ ╙──     	             ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Item(5)]

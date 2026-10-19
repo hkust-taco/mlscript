@@ -67,15 +67,15 @@ Array()
 //│ ║        	^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.244: 	declare class Array[T](val length: Int) {
+//│ ║  l.247: 	declare class Array[T](val length: Int) {
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.245: 	  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[T] & Iterable[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.246: 	  fun join(...separators): Str
+//│ ║  l.248: 	  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.249: 	  fun join(...separators): Str
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.247: 	  fun reverse(): Array[T]
+//│ ║  l.250: 	  fun reverse(): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.248: 	... (more lines omitted) ...
+//│ ║  l.251: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
@@ -86,15 +86,15 @@ Array(1, 2, 3)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 3
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.244: 	declare class Array[T](val length: Int) {
+//│ ║  l.247: 	declare class Array[T](val length: Int) {
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.245: 	  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[T] & Iterable[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.246: 	  fun join(...separators): Str
+//│ ║  l.248: 	  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[T]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.249: 	  fun join(...separators): Str
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.247: 	  fun reverse(): Array[T]
+//│ ║  l.250: 	  fun reverse(): Array[T]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.248: 	... (more lines omitted) ...
+//│ ║  l.251: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2, 3]
 
