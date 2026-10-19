@@ -1,0 +1,106 @@
+:.
+
+
+// Reading a declared mutable field propagates S <: T to an inferred result type.
+:ge
+class Base
+class Child(val value: Int) extends Base
+private fun read[T](record: {mut f: T}): T = record.f
+private fun test() =
+  let record = ({mut f: Child(1)} as {mut f: Base})
+  read(record).value
+test()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.11: 	  read(record).value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.10: 	  let record = ({mut f: Child(1)} as {mut f: Base})
+//│ ╙──      	                                             ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A declared mutable field also propagates T <: S back to the source's type argument.
+// There is no direct field assignment here: the constraint comes from the two interfaces.
+:ge
+class Base
+class Child(val value: Int) extends Base
+class Holder[S](val record: {mut f: S})
+private fun accept(record: {mut f: Base}) = ()
+private fun test() =
+  let holder = Holder({mut f: Child(2)})
+  accept(holder.record)
+  holder.record.f.value
+test()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.32: 	  holder.record.f.value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.28: 	private fun accept(record: {mut f: Base}) = ()
+//│ ╙──      	                                   ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Whole-record mutability has the same read constraint.
+:ge
+class Base
+class Child(val value: Int) extends Base
+private fun read[T](record: mut {f: T}): T = record.f
+private fun test() =
+  let record = (mut {f: Child(3)} as mut {f: Base})
+  read(record).value
+test()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.50: 	  read(record).value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.49: 	  let record = (mut {f: Child(3)} as mut {f: Base})
+//│ ╙──      	                                             ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Whole-record mutability has the same reverse write constraint.
+:ge
+class Base
+class Child(val value: Int) extends Base
+class Holder[S](val record: mut {f: S})
+private fun accept(record: mut {f: Base}) = ()
+private fun test() =
+  let holder = Holder(mut {f: Child(4)})
+  accept(holder.record)
+  holder.record.f.value
+test()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.70: 	  holder.record.f.value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.66: 	private fun accept(record: mut {f: Base}) = ()
+//│ ╙──      	                                   ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// An immutable destination only constrains the read; it must not widen the source's write type.
+:expect 5
+class Base
+class Child(val value: Int) extends Base
+class Holder[S](val record: {mut f: S})
+private fun accept(record: {f: Base}) = ()
+private fun test() =
+  let holder = Holder({mut f: Child(5)})
+  accept(holder.record)
+  holder.record.f.value
+test()
+//│ = 5
+
+
+// The same control applies when the source uses whole-record mutability.
+:expect 6
+class Base
+class Child(val value: Int) extends Base
+class Holder[S](val record: mut {f: S})
+private fun accept(record: {f: Base}) = ()
+private fun test() =
+  let holder = Holder(mut {f: Child(6)})
+  accept(holder.record)
+  holder.record.f.value
+test()
+//│ = 6

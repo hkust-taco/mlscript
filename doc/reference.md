@@ -1561,12 +1561,17 @@ fields through it, but not values of its other fields. In `{ mut f: in S out T }
 and reads expose `T`. Omitting `in` gives `Nothing` as the input; omitting `out` gives `Any` as the
 output. `{ mut f: U }` uses `U` in both positions, while `{ f: U }` has only a read interface.
 
-Field outputs are covariant and field inputs are contravariant. They are interpreted separately
-before substituting type arguments: for `type Cell[A] = { mut f: A }`, `Cell[in S out T]` exposes
+Field outputs are covariant and field inputs are contravariant. Thus `{ mut f: S } <: { mut f: T }`
+contributes both `S <: T` for reads and `T <: S` for writes; `mut { f: S }` follows the same rule.
+The two occurrences are interpreted separately before substituting type arguments:
+for `type Cell[A] = { mut f: A }`, `Cell[in S out T]` exposes
 `{ mut f: in S out T }`, not a single invariant occurrence of either bound. Enclosing negative
 positions reverse these choices, just as for function inputs. Intersecting record interfaces
 intersects their shared fields' output types and unions their input types. Assigning a callback
 through a mutable field constrains it against the input type, independently of the read interface.
+
+New resolution propagates these constraints for type-argument inference and callback checking.
+It does not perform complete structural subtyping checks; InvalML does not yet support record types.
 
 Under new resolution, recursive type aliases must be guarded: every recursive
 cycle must pass through a record, tuple, function arrow, or nominal type.
