@@ -374,3 +374,11 @@ private fun add(left, right) = wasm.i32.add(left, right)
 add(const(41)) \ const(1)
 //│ Wasm result:
 //│ = 42
+
+
+// A backtracking assignment saves the variable in a temporary, which takes the variable's representation:
+// saving and restoring an unboxed `i32` needs no conversion. The Wasm backend does not support `finally` yet.
+:ge
+let saved = const(1)
+set saved = const(2) in saved
+//│ ═══[COMPILATION ERROR] WatBuilder::returningTerm for TryBlock(...) not implemented yet

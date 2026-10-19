@@ -9,11 +9,16 @@ import Term.*
   * Several declarations are outside subStatements: split bindings, handler parameters,
   * auxiliary constructor parameters, and the definitions synthesized for record fields.
   * Keep their enumeration shared so every delayed slot is prepared before erasure reads it.
+  *
+  * Variables include the temporaries that elaboration declares with `LetDecl` (currently only the `old` copy
+  * that a backtracking assignment `set x = v in body` saves and restores). They are slots like source
+  * variables: a temporary without a representation would need a conversion from and back to the saved
+  * variable's representation, which is a checked cast, or an error for an unboxed primitive on Wasm.
   */
 private[hkmc2] final class ErasureDeclarations(root: Statement):
   val statements = mutable.ArrayBuffer.empty[Statement]
   val parameters = mutable.LinkedHashMap.empty[VarSymbol, Param]
-  val variables = mutable.LinkedHashSet.empty[VarSymbol | TermSymbol]
+  val variables = mutable.LinkedHashSet.empty[VarSymbol | TermSymbol | TempSymbol]
   val mutableFields = mutable.Set.empty[TermSymbol]
   private val visited = mutable.Set.empty[Identity[Statement]]
 
@@ -21,10 +26,10 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
     parameters(p.sym) = p
     p.subTerms.foreach(visit)
 
-  private def variable(sym: VarSymbol | TermSymbol): Unit =
+  private def variable(sym: VarSymbol | TermSymbol | TempSymbol): Unit =
     variables += sym
     val declaration = sym match
-      case sym: VarSymbol => sym.decl
+      case sym: (VarSymbol | TempSymbol) => sym.decl
       case sym: TermSymbol => sym.decl
     declaration match
       case S(p: Param) => parameter(p)
@@ -67,7 +72,7 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
       case Handle(_, _, _, _, definitions, _) => definitions.foreach: d =>
         variable(d.resumeSym)
         visit(d.td)
-      case LetDecl(sym: (VarSymbol | TermSymbol), _) => variable(sym)
+      case LetDecl(sym: (VarSymbol | TermSymbol | TempSymbol), _) => variable(sym)
       case Ref(sym: VarSymbol) => variable(sym)
       case SimpleRef(sym: VarSymbol) => variable(sym)
       case IfLike(_, _, branches) => split(branches)

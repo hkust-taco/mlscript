@@ -162,7 +162,7 @@ let x = 1 in
     set y = 3
   y
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let y, old; set old = 1; try set y = 3; end finally do (old as! Int⁰); end; return y
+//│ let y; try set y = 3; end finally end; return y
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

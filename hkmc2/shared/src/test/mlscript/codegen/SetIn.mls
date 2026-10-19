@@ -139,7 +139,7 @@ example()
 //│     set tmp = tmp2;
 //│     end
 //│   finally
-//│     set x = (old as! Int⁰);
+//│     set x = old;
 //│     end;
 //│     set y = (tmp as! Int⁰);
 //│   do Predef⁰.print⁰(x);

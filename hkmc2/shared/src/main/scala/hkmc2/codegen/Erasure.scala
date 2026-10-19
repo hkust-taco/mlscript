@@ -361,6 +361,9 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     declarations.variables.foreach:
       case sym: VarSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
       case sym: TermSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
+      // A temporary's erased type is populated at most once (see TempSymbol); without inferred inputs, it stays
+      // unknown, as it was before erasure.
+      case sym: TempSymbol if sym.erasedType.isEmpty => inferredType(sym).foreach(sym.populateErasedType(_))
       case _ => ()
     // Both checks compare erased signatures, so they run once every definition of the program is erased.
     statements.foreach:

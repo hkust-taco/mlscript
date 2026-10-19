@@ -49,6 +49,10 @@ class NewResolver:
     declarations.variables.foreach:
       case symbol: VarSymbol => variable(symbol)
       case symbol: TermSymbol if !symbol.isErased => observeErasure(symbol)(listenMemberVariable(symbol))
+      // A temporary that elaboration declares (see ErasureDeclarations) is observed like a variable,
+      // unless its representation was fixed when it was created.
+      case symbol: TempSymbol if symbol.erasedType.isEmpty =>
+        observeErasure(symbol)(listenTerm(SimpleRef(symbol)(new syntax.Tree.Ident(symbol.nme))))
       case _ => ()
     declarations.statements.foreach:
       case td: TermDefinition => observeErasureDefinition(td, declarations.mutableFields(td.tsym))

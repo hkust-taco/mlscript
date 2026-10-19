@@ -242,11 +242,14 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   var decl: Opt[Declaration] = N
   def subst(using s: SymbolSubst): LocalVarSymbol
 
-/** A temporary variable introduced by lowering.
+/** A temporary variable introduced by elaboration or lowering.
   *
-  * Its `erasedType` is once-mutable: a temp holding a branching term's result is named before those branches
-  * are lowered, so `Normalization` populates it with the join of their representations once they have all
-  * been seen. `Normalization.joinTempType` is its only write site.
+  * Its `erasedType` is once-mutable, and populated in two places:
+  * - A temp holding a branching term's result is named before those branches are lowered, so
+  *   `Normalization.joinTempType` populates it with the join of their representations once they have all
+  *   been seen.
+  * - A temp that elaboration declares with `LetDecl` (see `ErasureDeclarations`) is a slot like a source
+  *   variable: `Erasure` populates it with the representation inferred from the values flowing into it.
   */
 class TempSymbol(val trm: Opt[Term], override var erasedType: Opt[ErasedType], dbgNme: Str = "tmp")(using State)
     extends LocalVarSymbol(dbgNme)
