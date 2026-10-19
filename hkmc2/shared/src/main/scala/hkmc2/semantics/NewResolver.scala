@@ -90,7 +90,7 @@ class NewResolver:
           member.asTpe.orElse(member.asModOrObj) match
             case S(symbol) => select(symbol)
             case N =>
-              result.fail(msg"${member.describe.capitalize} cannot be used as a type" -> member.toLoc :: Nil)
+              result.fail(msg"${member.describe.capitalize} cannot be used as a type" -> member.headerLoc :: Nil)
               result.publish(TypeShape.Abstract)
         term match
           // Imported declarations can still contain legacy references.
@@ -2451,7 +2451,7 @@ class NewResolver:
         if mismatch then
           if rctx.state.reportedArities.getOrElseUpdate(reportKey, mutable.Set.empty).add(known) then
             val count = if unknown then msg"at least ${known}" else msg"${known}"
-            resolError(src, callable.diagnostic(msg"${callable.describe.capitalize} expected ${expected} ${
+            resolError(src, callable.arityDiagnostic(msg"${callable.describe.capitalize} expected ${expected} ${
               "argument".pluralized(expected)}, but got ${count}"))
         else matched((tuple, marks))
       case _ => resolError(src, msg"Expected an argument tuple." -> args.toLoc :: Nil)

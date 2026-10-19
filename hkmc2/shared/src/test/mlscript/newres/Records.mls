@@ -179,7 +179,7 @@ nestedWrap({second: 23}).value.second
 //│ ║         	               ^
 //│ ╟── 'nestedWrap' is exposed by this compilation unit.
 //│ ║  l.167: 	fun nestedWrap(x) = {...wrap(x)}
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.169: 	nestedWrap({second: 23}).value.second
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -192,7 +192,7 @@ nestedWrap({second: 23}).value.second
 //│ ║         	               ^
 //│ ╟── 'nestedWrap' is exposed by this compilation unit.
 //│ ║  l.167: 	fun nestedWrap(x) = {...wrap(x)}
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

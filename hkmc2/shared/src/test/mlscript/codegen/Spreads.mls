@@ -32,7 +32,7 @@ foo(...a)
 //│ ║        	^^^^^^^^^
 //│ ╟── Function 'foo' expected 4 arguments, but got 3
 //│ ║  l.12: 	fun foo(w, x, y, z) = [w, x, y, z]
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 4 arguments but got 3
 
 

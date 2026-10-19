@@ -689,7 +689,7 @@ object Elaborator:
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       val bsym = BlockMemberSymbol("ret", Nil, true)
       val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N,
-        auxCtorParams = Nil, ctorAnnotations = Nil)(N, N)
+        auxCtorParams = Nil, ctorAnnotations = Nil)(N, N, N)
       sym.defn = S(defn)
       Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), FlowSymbol.synthSel(id.name), N, N)
     val nonLocalRet =
@@ -772,6 +772,21 @@ object Elaborator:
   /** The modifiers supported on constructor declarations, as in `private constructor(x)`.
     * Class definitions record them in ClassDef.ctorAnnotations. */
   private val constructorModifiers: Set[Keyword] = Set.single(Keyword.`private`)
+  
+  /** The header of a definition statement (see `Definition.headerLoc`): from its first
+    * modifier, such as `declare`, through the end of the definition's head.
+    * Modifiers precede the definition's tree, so they are found among the statement's
+    * annotations. Other annotations, such as `@foo`, are left out, except when written between
+    * a modifier and the definition, since the header is a contiguous span.
+    * Only the start of each modifier is used, as a modifier can be located at its whole
+    * modified statement: `open` modifiers are, after desugaring an `Open` tree.
+    * Desugarings can also reuse modifiers written for other statements, as the ADT constructors
+    * desugared by `BlockImpl.desugStmts` do, so modifiers outside the statement are ignored. */
+  private def definitionHeaderLoc(defn: TypeOrTermDef, annotations: Ls[Annot], statementLoc: Opt[Loc]): Opt[Loc] =
+    val modifiers = annotations.iterator.flatMap:
+      case modifier: Annot.Modifier => modifier.toLoc.filter(loc => statementLoc.forall(_.covers(loc))).map(_.left)
+      case _ => N
+    Loc.mk(modifiers ++ defn.headLoc.orElse(defn.toLoc))
   
 end Elaborator
 
@@ -908,7 +923,7 @@ extends Importer:
         Modulefulness.none,
         Nil,
         N,
-      )(N)
+      )(N, N)
       mtdSym.tsym = S(tsym)
       tsym.defn = S(td)
       HandlerTermDefinition(resumeSym, td)
@@ -1415,7 +1430,7 @@ extends Importer:
         // The header of an anonymous class is its instantiation, `new C(args)`, without the refinement body.
         val headerLoc = tree.toLoc.map(_.left ++ Loc(cls :: args))
         val definition = ClassDef.Plain(ctx.getOuter, syntax.Cls, symbol,
-          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N, ctorAnnotations = Nil)(tree.toLoc, headerLoc)
+          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N, ctorAnnotations = Nil)(tree.toLoc, headerLoc, N)
         symbol.defn = S(definition)
         registerInheritance(definition)
       if newResolution then resolveNew(res)
@@ -1536,7 +1551,7 @@ extends Importer:
         BlockMemberSymbol(derivedClsSym.name, Nil), N,
         Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil, ctorAnnotations = Nil)(
           // The header of the handler class is `handle id = c`, without the handler definitions and body.
-          hd.toLoc, hd.toLoc.map(_.left ++ Loc(id, c))))
+          hd.toLoc, hd.toLoc.map(_.left ++ Loc(id, c)), N))
       
       val elabed = ctx.nestInner(derivedClsSym).givenIn:
         block(sts_, hasResult = false)._1
@@ -1551,7 +1566,7 @@ extends Importer:
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
                   raise(ErrorReport(msg"Handler function cannot be a getter" -> td.toLoc :: Nil))
-                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)(td.toLoc)
+                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)(td.toLoc, td.headerLoc)
                 S(HandlerTermDefinition(value.sym, newTd))
               case _ =>
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
@@ -2508,7 +2523,8 @@ extends Importer:
               // Retain the source signature's meaning; Erasure decides which arrows are physical parameters.
               if newResolution then s.foreach(registerSignature)
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
-                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(statementLoc)
+                TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(
+                statementLoc, definitionHeaderLoc(td, annotations, statementLoc))
               sym.tsym = S(tsym)
               tsym.defn = S(tdf)
               if newResolution then checkDeclaredResult(tdf)
@@ -2540,9 +2556,7 @@ extends Importer:
             raise(d)
             return go(sts, Nil, acc)(N)
         
-        // The statement location covers the definition's annotations and modifiers, such as `declare`,
-        // which are not part of the `td` tree; the header extends it only through the definition's head.
-        val headerLoc = td.headLoc.orElse(td.toLoc).map(head => statementLoc.fold(head)(_.left ++ head))
+        val headerLoc = definitionHeaderLoc(td, annotations, statementLoc)
         
         if owner.isDefined && !identifierPattern.matches(nme.name) then
           raise:
@@ -2628,7 +2642,7 @@ extends Importer:
               p.modulefulness,
               if isPublicField then Nil else Annot.Private :: Nil,
               N,
-            )(p.toLoc)
+            )(p.toLoc, p.toLoc)
             assert(p.fldSym.isEmpty)
             p.fldSym = S(fsym)
             fsym.tsym = S(tsym)
@@ -2795,12 +2809,17 @@ extends Importer:
           // multi param lists: constructor(x, y)(u, v),
           // and modified declarations, possibly without param lists: private constructor
           // The statement loop (see `go`) reports the unsupported annotations of these declarations.
-          val ctorDecls: Ls[(Ls[Tree], Ls[Tree])] = body match
+          val ctorDecls: Ls[(Tree, Ls[Tree], Ls[Tree])] = body match
             case S(blk: Block) => blk.desugStmts.collect:
-              case ConstructorDecl(annotationTrees, paramTrees) => (annotationTrees, paramTrees)
+              case decl @ ConstructorDecl(annotationTrees, paramTrees) => (decl, annotationTrees, paramTrees)
             case _ => Nil
-          val auxCtorParamTrees: Ls[Tree] = ctorDecls.flatMap(_._2)
-          val ctorAnnotations = ctorDecls.flatMap(_._1).collect:
+          val auxCtorParamTrees: Ls[Tree] = ctorDecls.flatMap(_._3)
+          // Only the declarations with parameter lists extend the constructor's parameters.
+          val ctorLoc = Loc.mk:
+            ctorDecls.iterator.flatMap:
+              case (decl, _, _ :: _) => decl.toLoc
+              case _ => N
+          val ctorAnnotations = ctorDecls.flatMap(_._2).collect:
             case kw @ Keywrd(mod) if constructorModifiers.contains(mod) => Annot.Modifier(mod)(kw.toLoc)
           val auxCtorPss = auxCtorParamTrees.map: ps =>
             val (res, newCtx2) =
@@ -2835,7 +2854,7 @@ extends Importer:
                       case a @ Annot.Modifier(Keyword.`declare` | Keyword.`private` | Keyword.`public`) => a
                     ,
                     S(clsSym),
-                  )(statementLoc)
+                  )(statementLoc, headerLoc)
                 if pss.nonEmpty then sym.tsym = S(ctsym)
                 ctsym.defn = S(ctdef)
                 // Note: do NOT set sym.tsym for constructor(...) classes; they are not callable as functions.
@@ -2844,7 +2863,7 @@ extends Importer:
               val cd =
                 val (bod, c) = mkBody(auxCtorPss)
                 ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp,
-                  auxCtorParams = auxCtorPss, ctorAnnotations = ctorAnnotations)(statementLoc, headerLoc)
+                  auxCtorParams = auxCtorPss, ctorAnnotations = ctorAnnotations)(statementLoc, headerLoc, ctorLoc)
               clsSym.defn = S(cd)
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")

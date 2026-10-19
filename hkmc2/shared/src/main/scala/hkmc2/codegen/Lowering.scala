@@ -372,7 +372,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   Nil,
                   N,
                   Nil,
-                )(mod.toLoc, mod.headerLoc)
+                )(mod.toLoc, mod.headerLoc, N)
                 // Link the class to the module's member symbol. A module overloaded with a
                 // function is stored in the function's `.class` property, as references to the
                 // module expect (see `JSBuilder.shouldBeLifted`), so the class must know it too.
@@ -963,7 +963,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           Modulefulness.none,
           Annot.RaiseEffects()(N) :: Nil,
           N,
-        )(trm.toLoc)
+        )(trm.toLoc, trm.toLoc)
         val rewritten = st.App(
           State.runtimeSymbol.ref().synthSel(State.toJsAsyncSymbol),
           st.Tup(PlainFld(st.Blk(td :: Nil, bms.ref(ident).resolved(dsym))) :: Nil)(Tree.DummyTup)

@@ -71,7 +71,7 @@ read(Box(Item(8)))
 //│ ║        	         ^^^^^^^^
 //│ ╟── 'read' is exposed by this compilation unit.
 //│ ║  l.63: 	fun read(box: Box) = box.item.value
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Incomplete result annotations infer their holes from the implementation.
@@ -156,7 +156,7 @@ read(Box(Item(13)))
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── 'read' is exposed by this compilation unit.
 //│ ║  l.151: 	fun read(box: Box): Int = box.item.value
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // An external callback may supply an unknown value for its result's hole.
@@ -174,7 +174,7 @@ read(() => Box(Item(14)))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'read' is exposed by this compilation unit.
 //│ ║  l.166: 	fun read(callback: () -> Box) = callback().item.value
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A result hole retains the call's explicit-binder view while observing its body.

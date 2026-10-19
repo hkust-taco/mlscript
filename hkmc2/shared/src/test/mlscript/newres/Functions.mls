@@ -10,7 +10,7 @@ foo()
 //│ ║       	^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 0
 //│ ║  l.4: 	private fun foo(x) = x + 1
-//│ ╙──     	        ^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 :e
@@ -20,7 +20,7 @@ foo(1, 2)
 //│ ║        	^^^^^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 2
 //│ ║  l.4: 	private fun foo(x) = x + 1
-//│ ╙──     	        ^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 2
 
 
@@ -43,7 +43,7 @@ fun callid0(p) = p.id(1)
 //│ ║        	            ^
 //│ ╟── 'callid0' is exposed by this compilation unit.
 //│ ║  l.36: 	fun callid0(p) = p.id(1)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^
 
 
 :de

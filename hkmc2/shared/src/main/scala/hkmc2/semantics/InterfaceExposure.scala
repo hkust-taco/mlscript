@@ -104,7 +104,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
 
   private def members(cls: ClassLikeDef, marks: Ls[Marks], path: Path)(using ResolutionContext): Unit =
     cls.body.blk.stats.foreach:
-      case d: Definition if InterfaceExposure.isPublic(d) => member(d.bsym, marks, path.via(msg"Member '${d.bsym.nme}' is accessible here." -> d.toLoc))
+      case d: Definition if InterfaceExposure.isPublic(d) => member(d.bsym, marks, path.via(msg"Member '${d.bsym.nme}' is accessible here." -> d.headerLoc))
       case _ => ()
     cls.ext.foreach: parent =>
       term(parent, marks, path.via(msg"This parent contributes inherited members." -> parent.toLoc))
@@ -207,7 +207,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
   def check(exports: Ls[BlockMemberSymbol], values: Ls[Term]): Unit =
     try
       exports.foreach: symbol =>
-        member(symbol, Nil, ShapeProvenance.empty.via(msg"'${symbol.nme}' is exposed by this compilation unit." -> symbol.toLoc))
+        member(symbol, Nil, ShapeProvenance.empty.via(msg"'${symbol.nme}' is exposed by this compilation unit." -> symbol.headerLoc))
       values.foreach: value =>
         term(value, Nil, ShapeProvenance.empty.via(msg"This value is exposed by this compilation unit." -> value.toLoc))
       // Annotated callbacks can escape even from private code. Delay their

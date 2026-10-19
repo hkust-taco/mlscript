@@ -75,14 +75,20 @@ trait BlockImpl(using Elaborator.State):
           case App(f, Tup(ps)) => App(f, Tup(ps.map(p => TermDef(syntax.ImmutVal, p, N))))
           case App(f, tup: TyTup) => App(insertVal(f), tup)
           case _ => Error()
+        // Locate each constructor's class, and the annotations wrapping it, at the constructor's declaration.
+        // The class reuses the enclosing class's annotations, name, and type parameters, whose locations
+        // would otherwise make the class and its annotated statement span the enclosing class.
         PossiblyAnnotated(anns, td) :: (
-          ctors.map(head => PossiblyAnnotated(getPossibleGenericAnns(head, anns), TypeDef(syntax.Cls,
-            td.name match
-              case L(_) => head
-              case R(name) =>
-                InfixApp(insertVal(genCtorHead(head)), Keywrd(syntax.Keyword.`extends`), genExt(head))
-            , N
-          )))
+          ctors.map: head =>
+            val cls = TypeDef(syntax.Cls,
+              td.name match
+                case L(_) => head
+                case R(name) =>
+                  InfixApp(insertVal(genCtorHead(head)), Keywrd(syntax.Keyword.`extends`), genExt(head))
+              , N
+            ).withLocOf(head)
+            getPossibleGenericAnns(head, anns).foldRight(cls: Tree): (ann, target) =>
+              Annotated(ann, target).withLocOf(head)
         ) ::: desug(stmts)
       case stmt :: stmts =>
         stmt.desugared match

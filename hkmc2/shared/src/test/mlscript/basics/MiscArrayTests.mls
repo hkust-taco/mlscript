@@ -64,7 +64,7 @@ xs |.
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 2 arguments, but got 1
 //│ ║  l.51: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda5, tmp;
 //│ lambda5 = (undefined, function (x) {
@@ -84,7 +84,7 @@ xs|.
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 2 arguments, but got 1
 //│ ║  l.51: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 :pt

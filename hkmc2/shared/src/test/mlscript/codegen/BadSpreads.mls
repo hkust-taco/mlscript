@@ -49,7 +49,7 @@ foo()
 //│ ║        	^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 0
 //│ ║  l.42: 	fun foo(a, ...b) = [a, ...b]
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
 

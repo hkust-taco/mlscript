@@ -70,7 +70,7 @@ call(Item(2))
 //│ ║        	         ^
 //│ ╟── 'make' is exposed by this compilation unit.
 //│ ║  l.61: 	fun make(x): Box = Box(x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ║  l.60: 	class Box[T](val item: T)
 //│ ║        	          ^
@@ -80,13 +80,13 @@ call(Item(2))
 //│ ║        	         ^^^^^^^^
 //│ ╟── 'read' is exposed by this compilation unit.
 //│ ║  l.62: 	fun read(box: Box) = box.item.value
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
 //│ ║  l.63: 	fun call(x) = read(make(x))
 //│ ║        	         ^
 //│ ╟── 'call' is exposed by this compilation unit.
 //│ ║  l.63: 	fun call(x) = read(make(x))
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Inference through an explicit callback signature also transports bounds back

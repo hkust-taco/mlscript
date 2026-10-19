@@ -150,7 +150,7 @@ exposed(First)
 //│ ║         	            ^
 //│ ╟── 'exposed' is exposed by this compilation unit.
 //│ ║  l.139: 	fun exposed(x) = x.absent
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A resolved public selection reports the unknown input, not other known misses.
@@ -166,5 +166,5 @@ fun resolved(x) = x.value
 //│ ║         	             ^
 //│ ╟── 'resolved' is exposed by this compilation unit.
 //│ ║  l.158: 	fun resolved(x) = x.value
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -662,13 +662,18 @@ trait TypeOrTermDef extends Located:
     * right-hand sides), which can span many lines and are noise in diagnostics
     * that only need to identify the definition, such as arity errors.
     * Modifiers and annotations of the definition are outside of its tree,
-    * so they are not covered either. */
+    * so they are not covered either.
+    * Only the parts written within the definition's own span are included:
+    * desugarings can synthesize parts out of trees located elsewhere, as when
+    * `semantics.BlockImpl.desugStmts` gives the classes of ADT constructors
+    * a parent clause referring to the name of the enclosing class. */
   lazy val headLoc: Opt[Loc] =
     val parts =
       symbName.flatMap(_.toOption).iterator
         ++ name.toOption.toList ++ typeParams.toList
         ++ paramLists ++ annotatedResultType.toList ++ extension
-    Loc(parts).map(head => toLoc.fold(head)(_.left ++ head))
+    val written = parts.flatMap(_.toLoc).filter(part => toLoc.forall(_.covers(part)))
+    Loc.mk(written).map(head => toLoc.fold(head)(_.left ++ head))
   
 end TypeOrTermDef
 

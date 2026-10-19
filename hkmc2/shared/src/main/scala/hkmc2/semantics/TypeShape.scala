@@ -197,12 +197,12 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
       def declarations(resolution: TypeResolution, seen: Set[TypeResolution]): Ls[(Message, Opt[Loc])] =
         if seen(resolution) then Nil else resolution.shapes.toList.flatMap:
           case Nominal(defn) => msg"candidate: ${defn.sym.describeKind}" -> defn.headerLoc :: Nil
-          case Alias(symbol, _) => msg"candidate: ${symbol.describeKind}" -> symbol.toLoc :: Nil
+          case Alias(symbol, _) => msg"candidate: ${symbol.describeKind}" -> symbol.defn.flatMap(_.headerLoc).orElse(symbol.toLoc) :: Nil
           case Reference(base, _, _, _) => declarations(base, seen + resolution)
           case _ => Nil
       val candidates = source.withoutCaptures match
         case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.map: (prefix, member) =>
-          msg"candidate: ${member.describe}" -> member.toLoc
+          msg"candidate: ${member.describe}" -> member.headerLoc
         case _ => declarations(this, Set.empty).distinct
       fail(msg"This type is ambiguous, as it has multiple resolved targets" -> source.toLoc :: candidates)
     shapes.foreachGrowing:

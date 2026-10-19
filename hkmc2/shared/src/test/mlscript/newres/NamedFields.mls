@@ -64,7 +64,7 @@ one(1, a: 2)
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── Function 'one' expected 1 argument, but got 2
 //│ ║  l.60: 	fun one(fields: {a: Int}) = fields.a
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 let key = "a"
