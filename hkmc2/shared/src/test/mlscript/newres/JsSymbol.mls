@@ -223,7 +223,6 @@ shadowed()
 // An escaping instance can't refer back to the local key.
 // Hoisting the key would incorrectly share it between different invocations.
 :e
-:expect [53, 54]
 @noInline
 private fun escaping(value) =
   @fresh val localKey = Symbol("escaping")
@@ -232,29 +231,30 @@ private fun escaping(value) =
   }
   new Escaped
 [escaping(53).read(), escaping(54).read()]
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'localKey'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.229: 	  @fresh val localKey = Symbol("escaping")
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is outside this scope.
+//│ ║  l.233: 	[escaping(53).read(), escaping(54).read()]
+//│ ║         	 ^^^^^^^^^^^^^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.228: 	  @fresh val localKey = Symbol("escaping")
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'localKey'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.229: 	  @fresh val localKey = Symbol("escaping")
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: localKey is not defined
-//│ ═══[RUNTIME ERROR] Expected: '[53, 54]', got: 'undefined'
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// FIXME: The IR is wrong; resolution should fail more cleanly
+// Lowering must report the unavailable key without emitting an out-of-scope reference.
 :sir
 :e
 escaping(54).read()
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp; set tmp = escaping⁰(54); return tmp.[localKey⁰]()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'localKey'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.229: 	  @fresh val localKey = Symbol("escaping")
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is outside this scope.
+//│ ║  l.245: 	escaping(54).read()
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.228: 	  @fresh val localKey = Symbol("escaping")
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ set tmp = escaping⁰(54);
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] ReferenceError: localKey is not defined
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Imported keys must keep their defining module alive through IR transformations.
 import "../../mlscript-compile/SymbolKeyLibrary.mls"
@@ -295,3 +295,142 @@ private fun update(cell: Cell) =
   cell.value
 update(mut {(Keys.first): 0})
 //│ = 59
+
+// A returned closure captures the original key, even when its name is shadowed.
+:expect [60, 61]
+@noInline
+private fun captured(value) =
+  @fresh val capturedKey = Symbol("captured")
+  class Captured {
+    @jsSymbol(capturedKey) fun read() = value
+  }
+  val instance = new Captured
+  () =>
+    @fresh val capturedKey = Symbol("shadow")
+    instance.read()
+[captured(60)(), captured(61)()]
+//│ = [60, 61]
+
+// Local modules are bindings too; a sibling scope cannot recover their keys.
+@noInline
+private fun moduleKey(value) =
+  module LocalKeys { @fresh val key = Symbol("module key") }
+  class Local {
+    @jsSymbol(LocalKeys.key) fun fetch() = value
+  }
+  new Local
+
+:e
+:sir
+moduleKey(62).fetch()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is outside this scope.
+//│ ║  l.325: 	moduleKey(62).fetch()
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.317: 	  module LocalKeys { @fresh val key = Symbol("module key") }
+//│ ╙──       	         ^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ set tmp = moduleKey⁰(62);
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A structural field needs its key for both reading and writing.
+@noInline
+private fun localCell(value) =
+  @fresh val cellKey = Symbol("cell")
+  type Cell = {@jsSymbol(cellKey) value: Int}
+  val cell: Cell = mut {(cellKey): value}
+  cell
+
+:e
+localCell(0).value
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is outside this scope.
+//│ ║  l.348: 	localCell(0).value
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.342: 	  @fresh val cellKey = Symbol("cell")
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+set localCell(0).value = 63
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is outside this scope.
+//│ ║  l.358: 	set localCell(0).value = 63
+//│ ║         	                ^^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.342: 	  @fresh val cellKey = Symbol("cell")
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Opened calls must use the same checked key lowering as explicit selections.
+:e
+private fun openedEscaped() =
+  val instance = moduleKey(0)
+  open instance
+  fetch()
+openedEscaped()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is outside this scope.
+//│ ║  l.372: 	  fetch()
+//│ ║         	  ^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.317: 	  module LocalKeys { @fresh val key = Symbol("module key") }
+//│ ╙──       	         ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 67
+private fun openedAvailable() =
+  @fresh val key = Symbol("opened")
+  class Opened { @jsSymbol(key) fun fetch() = 67 }
+  val instance = new Opened
+  open instance
+  fetch()
+openedAvailable()
+//│ = 67
+
+// An imported file-level key has a real private export; factory locals do not.
+:expect 64
+(new SymbolKeyLibrary.FileReader).read()
+//│ = 64
+
+:e
+:sir
+SymbolKeyLibrary.makeLocal(65).read()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'key' here: 'key' is outside this scope.
+//│ ║  l.399: 	SymbolKeyLibrary.makeLocal(65).read()
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
+//│ ║  l.18: 	    @fresh val key = Symbol("factory key")
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ set tmp = SymbolKeyLibrary⁰.makeLocal⁰(65);
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Inherited implementations also need the key at the super access site.
+@noInline
+private fun baseWithLocalKey() =
+  @fresh val baseKey = Symbol("base")
+  open class LocalBase {
+    @jsSymbol(baseKey) open fun read() = 66
+  }
+  LocalBase.class
+val EscapedBase = baseWithLocalKey()
+//│ EscapedBase = class LocalBase
+
+:e
+class MissingSuperKey extends EscapedBase {
+  fun run() = super.read()
+}
+(new MissingSuperKey).run()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'baseKey' here: 'baseKey' is outside this scope.
+//│ ║  l.427: 	  fun run() = super.read()
+//│ ║         	              ^^^^^^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.417: 	  @fresh val baseKey = Symbol("base")
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

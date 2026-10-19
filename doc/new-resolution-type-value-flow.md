@@ -656,3 +656,9 @@ explicit path operands. Transformations therefore retain their imports and
 captures and substitute their symbols. Computed names are evaluated in the
 class's enclosing scope. Lifting cannot move such a class out of the invocation
 that evaluates its keys; doing so could reuse a key or read it before initialization.
+
+Before constructing a key reference, lowering checks that its root is lexically
+bound, declared global, or backed by an actual import/export. A member's resolved
+declaration cannot supply a factory-local key to an escaped instance's caller.
+Such accesses fail at the use site; nested closures can still capture the key.
+This check does not change resolution's candidate flows.

@@ -43,9 +43,12 @@ class LoweringCtx(
   private val definedSymsDuringLowering: collection.mutable.Set[ScopedSymbol], // used to create Scoped blocks
   val returnType: Opt[ErasedType], // the declared return type of the enclosing function, used to coerce `return`s
   val superBases: Map[InnerSymbol, Path], // evaluated parents of the enclosing class definitions
+  val boundMembers: Set[BlockMemberSymbol], // lexical bindings available to implicit property-key references
 ):
   def withLocalVals(syms: IterableOnce[TermSymbol -> VarSymbol]): LoweringCtx =
-    LoweringCtx(localVals ++ syms, symbolsToPreserve, mayRet, definedSymsDuringLowering, returnType, superBases)
+    LoweringCtx(localVals ++ syms, symbolsToPreserve, mayRet, definedSymsDuringLowering, returnType, superBases, boundMembers)
+  def withMembers(syms: IterableOnce[BlockMemberSymbol]): LoweringCtx =
+    LoweringCtx(localVals, symbolsToPreserve, mayRet, definedSymsDuringLowering, returnType, superBases, boundMembers ++ syms)
   def collectScopedSym(s: ScopedSymbol) = definedSymsDuringLowering.add(s)
   def collectScopedSyms(s: ScopedSymbol*) = definedSymsDuringLowering.addAll(s)
   def registerTempSymbol(trm: Option[Term], erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State) =
@@ -60,13 +63,14 @@ class LoweringCtx(
 object LoweringCtx:
   def loweringCtx(using sub: LoweringCtx): LoweringCtx = sub
   def empty(symbolsToPreserve: Set[ScopedSymbol]) =
-    LoweringCtx(Map.empty, symbolsToPreserve, mayRet = false, collection.mutable.Set.empty, returnType = N, superBases = Map.empty)
+    LoweringCtx(Map.empty, symbolsToPreserve, mayRet = false, collection.mutable.Set.empty, returnType = N,
+      superBases = Map.empty, boundMembers = symbolsToPreserve.collect { case sym: BlockMemberSymbol => sym })
   def nestFunc(returnType: Opt[ErasedType])(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.localVals, sub.symbolsToPreserve, mayRet = true, sub.definedSymsDuringLowering, returnType, sub.superBases)
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, mayRet = true, sub.definedSymsDuringLowering, returnType, sub.superBases, sub.boundMembers)
   def nestScoped(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, collection.mutable.Set.empty, sub.returnType, sub.superBases)
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, collection.mutable.Set.empty, sub.returnType, sub.superBases, sub.boundMembers)
   def withSuperBase(owner: InnerSymbol, parent: Path)(using sub: LoweringCtx): LoweringCtx =
-    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, sub.definedSymsDuringLowering, sub.returnType, sub.superBases + (owner -> parent))
+    LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, sub.definedSymsDuringLowering, sub.returnType, sub.superBases + (owner -> parent), sub.boundMembers)
 end LoweringCtx
 
 import LoweringCtx.loweringCtx
@@ -404,47 +408,53 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           def defineClass(parent: Opt[Path], parentParams: Ls[ParamList]): Block =
             val base = parent.getOrElse(
               Select(State.globalThisSymbol.asThis, Tree.Ident("Object"))(S(ctx.builtins.Object), defn.toLoc)(false))
-            val clsDef = LoweringCtx.withSuperBase(defn.sym, base).givenIn:
-              val (mtds, publicFlds, privateFlds, ctor) = defn match
-                case pd: PatternDef =>
-                  // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
-                  // methods using the `SplitCompiler`, which transliterate the pattern into
-                  // UCS splits that backtrack without any optimizations.
-                  val compiler = new ups.SplitCompiler
-                  val methods = compiler.compilePattern(pd)
-                  // We only need `owner`, `sym`, `params` and `body`
-                  val mtds = methods.map:
-                    case (sym, params, split) =>
-                      val paramLists = params :: Nil
-                      val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
-                      FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(configOverride = N, annotations = Nil)
-                  // The return type is intended to be consistent with `gatherMembers`
-                  (mtds, Nil, Nil, End())
-                case _ => gatherMembers(defn.body)
-              val mod = defn.companion match
-                case S(sym) =>
-                  sym.defn match
-                  case S(mod: ModuleOrObjectDef) =>
-                    reportAnnotations(mod, mod.extraAnnotations)
-                    mod.ext match
-                    case S(ext) => fail:
-                      ErrorReport(
-                        msg"Modules cannot have an extension clause." -> ext.toLoc :: Nil,
-                        source = Diagnostic.Source.Compilation
-                      )
-                    case N =>
-                    val (mtds, publicFlds, privateFlds, ctor) =
-                      gatherMembers(mod.body)
-                    S(ClsLikeBody(mod.sym, mtds, privateFlds, publicFlds, ctor, mod.annotations)(methodKeys(mod.body)))
+            val keys = for
+              classKeys <- methodKeys(defn.body)
+              moduleKeys <- defn.companion.flatMap(_.defn).collect { case mod: ModuleOrObjectDef => mod.body }
+                .fold(S(Map.empty[TermSymbol, Path]): Opt[Map[TermSymbol, Path]])(methodKeys)
+            yield classKeys -> moduleKeys
+            keys.fold(compError): (classKeys, moduleKeys) =>
+              val clsDef = LoweringCtx.withSuperBase(defn.sym, base).givenIn:
+                val (mtds, publicFlds, privateFlds, ctor) = defn match
+                  case pd: PatternDef =>
+                    // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
+                    // methods using the `SplitCompiler`, which transliterate the pattern into
+                    // UCS splits that backtrack without any optimizations.
+                    val compiler = new ups.SplitCompiler
+                    val methods = compiler.compilePattern(pd)
+                    // We only need `owner`, `sym`, `params` and `body`
+                    val mtds = methods.map:
+                      case (sym, params, split) =>
+                        val paramLists = params :: Nil
+                        val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
+                        FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(configOverride = N, annotations = Nil)
+                    // The return type is intended to be consistent with `gatherMembers`
+                    (mtds, Nil, Nil, End())
+                  case _ => gatherMembers(defn.body)
+                val mod = defn.companion match
+                  case S(sym) =>
+                    sym.defn match
+                    case S(mod: ModuleOrObjectDef) =>
+                      reportAnnotations(mod, mod.extraAnnotations)
+                      mod.ext match
+                      case S(ext) => fail:
+                        ErrorReport(
+                          msg"Modules cannot have an extension clause." -> ext.toLoc :: Nil,
+                          source = Diagnostic.Source.Compilation
+                        )
+                      case N =>
+                      val (mtds, publicFlds, privateFlds, ctor) =
+                        gatherMembers(mod.body)
+                      S(ClsLikeBody(mod.sym, mtds, privateFlds, publicFlds, ctor, mod.annotations)(moduleKeys))
+                    case _ => N
                   case _ => N
-                case _ => N
-              val pctor = defn.ext.fold[Block](End()): ext =>
-                inScopedBlock(parentConstructor(parentParams, ext.args, ext.toLoc))
-              val cfgOverride = defn.extraAnnotations.collectFirst:
-                case Annot.Config(modify) => modify(config)
-              ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, parent,
-                mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable, defn.bsym.asTrm)(cfgOverride, defn.annotations, methodKeys(defn.body))
-            Define(clsDef, blockImpl(stats, res))
+                val pctor = defn.ext.fold[Block](End()): ext =>
+                  inScopedBlock(parentConstructor(parentParams, ext.args, ext.toLoc))
+                val cfgOverride = defn.extraAnnotations.collectFirst:
+                  case Annot.Config(modify) => modify(config)
+                ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, parent,
+                  mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable, defn.bsym.asTrm)(cfgOverride, defn.annotations, classKeys)
+              Define(clsDef, blockImpl(stats, res))
           defn.ext match
           case N => defineClass(N, Nil)
           case S(ext) =>
@@ -454,7 +464,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case td: TypeDef => // * Type definitions are erased
           blockImpl(stats, res)
     
-    blockImpl(imps ::: funs ::: rest, res)(using loweringCtx.withLocalVals(localVals))
+    // Unlike the mutable set used to build Scoped blocks, these bindings belong
+    // only to this source block and its descendants, never to a sibling block.
+    val members = stats.iterator.collect:
+      case td: TermDefinition if td.owner.isEmpty => td.sym
+      case cd: ClassLikeDef if cd.owner.isEmpty => cd.bsym
+    blockImpl(imps ::: funs ::: rest, res)(using loweringCtx.withLocalVals(localVals).withMembers(members))
   
   def classOf(trm: Term, nw: PossiblyErroneous)(k: (Path, Ls[ParamList]) => Block)(using LoweringCtx): Block =
     def classValue: Block = nw match
@@ -763,7 +778,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * cannot introduce a call. Keep the resulting paths in the IR, rather than
     * consulting source annotations during code generation after symbols change.
     */
-  private def lowerSymbolKey(key: SymbolKey)(using LoweringCtx): Path =
+  private def lowerSymbolKey(key: SymbolKey, loc: Opt[Loc])(using LoweringCtx): Opt[Path] =
     def target(sym: Symbol, receiver: Bool): DefinitionSymbol[?] = sym match
       case bms: BlockMemberSymbol =>
         (if receiver then bms.asMod.orElse(bms.asTrm) else bms.asTrm).getOrElse(
@@ -773,6 +788,24 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case _ => lastWords("Invalid symbol path root")
     val first = key.path.head
     val firstTarget = target(first, key.path.tail.nonEmpty)
+    // A resolved member identifies its property's key, but does not make the
+    // key's defining environment available to the caller. In particular, a
+    // factory-local key cannot be recovered from an escaped instance. Validate
+    // the root before constructing any IR reference; nested closures inherit
+    // boundMembers and localVals, so their implicit key captures remain valid.
+    val available = firstTarget.defn.exists(_.hasDeclareModifier.nonEmpty) || first.asBlkMember.exists: sym =>
+      loweringCtx.boundMembers(sym) || (sym.getState.externalModuleImport(sym, State) match
+        case S(_: Elaborator.ExternalModuleImport.Default) => true
+        // Foreign provenance alone is insufficient: only actual top-level ABI
+        // exports can be imported, not a local from another unit's factory.
+        case S(_: Elaborator.ExternalModuleImport.Private) => sym.getState.compilationUnitPrivateName(sym).nonEmpty
+        case N => false)
+    if !available then
+      raise(ErrorReport(
+        msg"Cannot use @jsSymbol key '${key.name}' here: '${first.nme}' is outside this scope." -> loc ::
+          msg"The key's root binding is defined here." -> first.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+      return N
     val root: Path = first match
       case bms: BlockMemberSymbol if firstTarget.defn.exists(_.hasDeclareModifier.nonEmpty) =>
         Select(State.globalThisSymbol.asThis, Tree.Ident(bms.nme))(S(firstTarget), key.term.toLoc)(false)
@@ -782,30 +815,36 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         Select(State.globalThisSymbol.asThis, sym.id)(S(sym), key.term.toLoc)(false)
       case sym: ModuleOrObjectSymbol => sym.defn.get.bsym.asMemberRef(sym)
       case _ => lastWords("Invalid symbol path root")
-    key.path.tail.zipWithIndex.foldLeft(root): (prefix, entry) =>
+    S(key.path.tail.zipWithIndex.foldLeft(root): (prefix, entry) =>
       val (sym, index) = entry
       Select(prefix, Tree.Ident(sym.nme))(S(target(sym, index < key.path.length - 2)), key.term.toLoc)(false)
+    )
 
-  private def methodKeys(body: ObjBody)(using LoweringCtx): Map[TermSymbol, Path] =
-    body.methods.filterNot(_.isErroneous).flatMap: method =>
-      MemberKey.symbol(method).map(key => method.tsym -> lowerSymbolKey(key))
-    .toMap
+  private def methodKeys(body: ObjBody)(using LoweringCtx): Opt[Map[TermSymbol, Path]] =
+    body.methods.filterNot(_.isErroneous).foldLeft(S(Map.empty[TermSymbol, Path]): Opt[Map[TermSymbol, Path]]): (keys, method) =>
+      MemberKey.symbol(method).fold(keys): key =>
+        val lowered = lowerSymbolKey(key, method.toLoc)
+        for
+          keys <- keys
+          path <- lowered
+        yield keys + (method.tsym -> path)
 
   private def namedSelection(prefix: Path, name: Tree.Ident, target: Opt[DefinitionSymbol[?]],
-      loc: Opt[Loc], sanitize: Bool)(using LoweringCtx): Path = target match
+      loc: Opt[Loc], sanitize: Bool)(using LoweringCtx): Opt[Path] = target match
     case S(sym: TermSymbol) if sym.defn.flatMap(MemberKey.symbol).nonEmpty =>
-      KeyedSelect(prefix, lowerSymbolKey(sym.defn.flatMap(MemberKey.symbol).get), sym)(loc)
-    case _ => Select(prefix, name)(target, loc)(sanitize)
+      lowerSymbolKey(sym.defn.flatMap(MemberKey.symbol).get, loc).map(key => KeyedSelect(prefix, key, sym)(loc))
+    case _ => S(Select(prefix, name)(target, loc)(sanitize))
 
   private def assignNamedField(prefix: Path, name: Tree.Ident, value: Path, rest: Block)
       (target: Opt[DefinitionSymbol[?]])(using LoweringCtx): Block =
     namedSelection(prefix, name, target, name.toLoc, false) match
-      case KeyedSelect(_, key, _) => AssignDynField(prefix, key, false, value, rest)
-      case _ => AssignField(prefix, name, value, rest)(target)
+      case S(KeyedSelect(_, key, _)) => AssignDynField(prefix, key, false, value, rest)
+      case S(_) => AssignField(prefix, name, value, rest)(target)
+      case N => compError
 
   private def selectionPath(sel: NewSel, prefix: Path, name: Tree.Ident,
-      target: Opt[DefinitionSymbol[?]])(using LoweringCtx): Path = sel.tupleIndex match
-    case S(index) => DynSelect(prefix, Value.Lit(Tree.IntLit(BigInt(index)))(N), true)(sel.toLoc)
+      target: Opt[DefinitionSymbol[?]])(using LoweringCtx): Opt[Path] = sel.tupleIndex match
+    case S(index) => S(DynSelect(prefix, Value.Lit(Tree.IntLit(BigInt(index)))(N), true)(sel.toLoc))
     case N => namedSelection(prefix, name, target, sel.toLoc, false)
 
   private def superReference(sup: st.Super)(k: Path => Block)(using LoweringCtx): Block =
@@ -817,8 +856,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           if target.k is syntax.Fun then
             val base = loweringCtx.superBases.getOrElse(sup.owner,
               lastWords("Superclass must be lowered before its members"))
-            val key = target.defn.flatMap(MemberKey.symbol).fold[Path](Value.Lit(Tree.StrLit(target.nme))(sup.toLoc))(lowerSymbolKey)
-            k(SuperSelect(receiver, base, key)(target, sup.toLoc))
+            val key = target.defn.flatMap(MemberKey.symbol)
+              .fold[Opt[Path]](S(Value.Lit(Tree.StrLit(target.nme))(sup.toLoc)))(lowerSymbolKey(_, sup.toLoc))
+            key.fold(compError)(key => k(SuperSelect(receiver, base, key)(target, sup.toLoc)))
           else k(Select(receiver, target.id)(S(target), sup.toLoc)(false))
       case targets => fail(ErrorReport(
         msg"Super reference '${sup.id.name}' requires one inherited implementation" -> sup.toLoc ::
@@ -1278,10 +1318,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => conclude(p))
       case sel: NewSel => newSelection(sel): (prefix, name, target) =>
         subTerm_nonTail(prefix): p =>
-          conclude(selectionPath(sel, p, name, target))
+          selectionPath(sel, p, name, target).fold(compError)(conclude)
       case ref: UnresolvedRef => openSelection(ref): (prefix, member, target) =>
         subTerm_nonTail(prefix): p =>
-          conclude(Select(p, memberIdent(ref.id, member))(target, ref.toLoc)(false))
+          namedSelection(p, memberIdent(ref.id, member), target, ref.toLoc, false).fold(compError)(conclude)
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
           conclude(Select(p, nme)(selSymbol(sel), trm.toLoc)(false).withLocOf(sel))
@@ -1439,7 +1479,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case sel: NewSel if sel.isClassValue => classOf(sel.prefix, sel)((p, _) => k(p))
     case sup: st.Super => superReference(sup)(k)
     case sel: NewSel => newSelection(sel): (prefix, name, target) =>
-      if sel.tupleIndex.nonEmpty then subTerm_nonTail(prefix)(p => k(selectionPath(sel, p, name, target)))
+      if sel.tupleIndex.nonEmpty then subTerm_nonTail(prefix)(p => selectionPath(sel, p, name, target).fold(compError)(k))
       else setupNamedSelection(prefix, name, target, sel.toLoc)(k)
     
     case sel @ Sel(prefix, nme) =>
@@ -1489,13 +1529,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           val sym = isym.defn.get.bsym
           loweringCtx.collectScopedSym(sym)
           withClassParent(sr): parent =>
-            val clsDef = LoweringCtx.withSuperBase(isym, parent).givenIn:
-              val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
-              val pctor = parentConstructor(params, as, nw.toLoc)
-              ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(parent),
-                mtds, privateFlds, publicFlds, pctor, ctor, N, N, N)(N, Nil, methodKeys(rft))
-            val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)
-            Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
+            methodKeys(rft).fold(compError): keys =>
+              val clsDef = LoweringCtx.withSuperBase(isym, parent).givenIn:
+                val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
+                val pctor = parentConstructor(params, as, nw.toLoc)
+                ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(parent),
+                  mtds, privateFlds, publicFlds, pctor, ctor, N, N, N)(N, Nil, keys)
+              val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)
+              Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
     case Try(sub, finallyDo) =>
       val l = loweringCtx.registerTempSymbol(S(sub), erasedType = N)
@@ -1854,9 +1895,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     // * Only values inside local blocks can be replaced by fresh variables without breaking that linkage.
     inline def topLevelVals = rest.iterator.collect:
         case td: TermDefinition if td.k.isInstanceOf[syntax.Val] => td.sym
+    // Worksheet blocks retain lexical definitions from preceding blocks in
+    // their parent contexts. Opened members are selections, not extra bindings.
+    def enclosingMembers(scope: Ctx): Iterator[BlockMemberSymbol] =
+      scope.env.valuesIterator.flatMap:
+        case Ctx.RefElem(sym) => sym.asBlkMember
+        case _ => N
+      ++ scope.parent.iterator.flatMap(enclosingMembers)
     
     val blk =
-      inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals)):
+      inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals)
+        .withMembers(enclosingMembers(ctx))
+        .withMembers(imps.iterator.map(_.sym).collect { case sym: BlockMemberSymbol => sym })):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
     Program(
@@ -1871,11 +1921,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def setupNamedSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]], loc: Opt[Loc])
       (k: Result => Block)(using LoweringCtx): Block =
     subTerm(prefix): p =>
-      k(namedSelection(p, nme, disamb, loc,
+      namedSelection(p, nme, disamb, loc,
         !disamb.isDefined
         // * ^ We assume that resolved selections are well-behaved (will not yield undefined or debind a method)
         // || disamb.exists(_.defn.exists(_.hasDeclareModifier.isEmpty)) // * This checks `declare` members, which is normally unwanted
-      ))
+      ).fold(compError)(k)
   
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedType])
       (using LoweringCtx): (List[ParamList], Block) =

@@ -1400,11 +1400,13 @@ inherited source name and the same key. Giving an inherited key a different
 source name is a collision, as is defining two methods with the same key in one
 class. Distinct receiver paths are significant for fresh instance fields.
 
-Currently, selecting a method after its local key has escaped the caller's scope
-is unsupported: the compiler needs a runtime witness for that particular key.
-Such accesses produce a compilation error; the key must not be hoisted and shared
-between factory invocations. `newres/JsSymbol.mls` records this limitation with
-an explicit regression.
+Currently, selecting a member on an escaped instance is unsupported when the
+caller cannot access its local key: the compiler needs a runtime witness for
+that particular key. Lowering diagnoses such accesses at the use site before
+constructing a reference to the unavailable key. Closures that capture the key
+remain valid, as do keys available through an imported file, including its
+private file-level vals. The key must not be hoisted and shared between factory
+invocations. `newres/JsSymbol.mls` records these cases.
 
 The prelude marks `Symbol.iterator` as fresh. `Array.iterator()` and
 `Iterable[A].iterator()` use `@jsSymbol(Symbol.iterator)` to select the native

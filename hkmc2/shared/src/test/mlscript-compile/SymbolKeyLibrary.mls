@@ -1,13 +1,24 @@
 #lang(0.3.x)
 
+@fresh private val fileKey = Symbol("file key")
+
 module SymbolKeyLibrary {
-  @annotations.fresh val readKey = Symbol("library read")
+  @fresh val readKey = Symbol("library read")
   class Reader {
-    @annotations.jsSymbol(readKey) fun read() = 55
+    @jsSymbol(readKey) fun read() = 55
   }
   fun make(value) =
     class Local {
-      @annotations.jsSymbol(SymbolKeyLibrary.readKey) fun read() = value
+      @jsSymbol(SymbolKeyLibrary.readKey) fun read() = value
+    }
+    new Local
+  class FileReader {
+    @jsSymbol(fileKey) fun read() = 64
+  }
+  fun makeLocal(value) =
+    @fresh val key = Symbol("factory key")
+    class Local {
+      @jsSymbol(key) fun read() = value
     }
     new Local
 }
