@@ -405,7 +405,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           def defineClass(parent: Opt[Path], parentParams: Ls[ParamList]): Block =
             val base = parent.getOrElse(
               Select(State.globalThisSymbol.asThis, Tree.Ident("Object"))(S(ctx.builtins.Object), defn.toLoc)(false))
-            val bodies = defn.companion.flatMap(_.defn).collect { case mod: ModuleOrObjectDef => mod.body }
+            val bodies = defn.companion.flatMap(_.defn).collect:
+              case mod: ModuleOrObjectDef => mod.body
             def companionKeys(k: Map[TermSymbol, Path] => Block): Block = bodies match
               case S(body) => methodKeys(body)(k)
               case N => k(Map.empty)
