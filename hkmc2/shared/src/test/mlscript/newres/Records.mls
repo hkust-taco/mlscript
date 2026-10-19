@@ -183,7 +183,7 @@ nestedWrap({second: 23}).value.second
 //│ ║  l.172: 	fun nestedWrap(x) = {...wrap(x)}
 //│ ║         	               ^
 //│ ╟── 'nestedWrap' is exposed by this compilation unit.
-//│ ║  l.167: 	fun nestedWrap(x) = {...wrap(x)}
+//│ ║  l.172: 	fun nestedWrap(x) = {...wrap(x)}
 //│ ╙──       	^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.174: 	nestedWrap({second: 23}).value.second
@@ -196,7 +196,7 @@ nestedWrap({second: 23}).value.second
 //│ ║  l.172: 	fun nestedWrap(x) = {...wrap(x)}
 //│ ║         	               ^
 //│ ╟── 'nestedWrap' is exposed by this compilation unit.
-//│ ║  l.167: 	fun nestedWrap(x) = {...wrap(x)}
+//│ ║  l.172: 	fun nestedWrap(x) = {...wrap(x)}
 //│ ╙──       	^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -286,15 +286,7 @@ unknownValueOpen({answer3: 2})
 //│ ║         	                     ^^^^^
 //│ ╟── 'unknownValueOpen' is exposed by this compilation unit.
 //│ ║  l.271: 	fun unknownValueOpen(input) =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.272: 	  let unknownValue = mut {value: {answer3: 0}}
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.273: 	  set unknownValue.value = input
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.274: 	  let fallbackValue = {answer3: 1}
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.275: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -317,7 +309,7 @@ fun allMissingOpen() =
   nonexistent
 allMissingOpen()
 //│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: nonexistent
-//│ ║  l.317: 	  nonexistent
+//│ ║  l.309: 	  nonexistent
 //│ ╙──       	  ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -363,14 +355,14 @@ let mutableNested = mut {...stableNested}
 set mutableNested.value = {after: 34}
 [stableNested.value.before, mutableNested.value.after]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.364: 	[stableNested.value.before, mutableNested.value.after]
+//│ ║  l.356: 	[stableNested.value.before, mutableNested.value.after]
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'after'
-//│ ║  l.361: 	let stableNested = {value: {before: 33}}
+//│ ║  l.353: 	let stableNested = {value: {before: 33}}
 //│ ║         	                            ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'after' of a value with unknown shape.
 //│ ╟── This value is exposed by this compilation unit.
-//│ ║  l.362: 	let mutableNested = mut {...stableNested}
+//│ ║  l.354: 	let mutableNested = mut {...stableNested}
 //│ ╙──       	                            ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mutableNested = {value: {after: 34}}
@@ -387,18 +379,18 @@ fun ambiguousRecordOpen() =
   shared
 ambiguousRecordOpen()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'shared' is ambiguous
-//│ ║  l.387: 	  shared
+//│ ║  l.379: 	  shared
 //│ ║         	  ^^^^^^
 //│ ╟── candidate: record field 'shared' defined here
-//│ ║  l.383: 	  let firstRecord = {shared: 1}
+//│ ║  l.375: 	  let firstRecord = {shared: 1}
 //│ ║         	                     ^^^^^^
 //│ ╟── Opened here
-//│ ║  l.385: 	  open firstRecord
+//│ ║  l.377: 	  open firstRecord
 //│ ║         	       ^^^^^^^^^^^
 //│ ╟── candidate: record field 'shared' defined here
-//│ ║  l.384: 	  let secondRecord = {shared: 2}
+//│ ║  l.376: 	  let secondRecord = {shared: 2}
 //│ ║         	                      ^^^^^^
 //│ ╟── Opened here
-//│ ║  l.386: 	  open secondRecord
+//│ ║  l.378: 	  open secondRecord
 //│ ╙──       	       ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
