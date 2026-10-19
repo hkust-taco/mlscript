@@ -237,18 +237,22 @@ Curried.missing
 //│ ║  l.235: 	Curried.missing
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── Class value does not contain member 'missing'
+//│ ║  l.200: 	@annotations.buffered
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.201: 	class Curried with
-//│ ╙──       	      ^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 Curried.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.245: 	Curried.value
+//│ ║  l.247: 	Curried.value
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── Class value does not contain member 'value'
+//│ ║  l.200: 	@annotations.buffered
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.201: 	class Curried with
-//│ ╙──       	      ^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -256,9 +260,9 @@ class Ordinary with
   fun append(value: Str) = value
 Ordinary.append
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.257: 	Ordinary.append
+//│ ║  l.261: 	Ordinary.append
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── Class value does not contain member 'append'
-//│ ║  l.255: 	class Ordinary with
-//│ ╙──       	      ^^^^^^^^
+//│ ║  l.259: 	class Ordinary with
+//│ ╙──       	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

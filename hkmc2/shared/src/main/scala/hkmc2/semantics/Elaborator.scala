@@ -689,7 +689,7 @@ object Elaborator:
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       val bsym = BlockMemberSymbol("ret", Nil, true)
       val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N,
-        auxCtorParams = Nil, ctorAnnotations = Nil)(N)
+        auxCtorParams = Nil, ctorAnnotations = Nil)(N, N)
       sym.defn = S(defn)
       Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), FlowSymbol.synthSel(id.name), N, N)
     val nonLocalRet =
@@ -1412,8 +1412,10 @@ extends Importer:
         val parent = withTypeBinders(
           new Term.New(captured(cls), args.map(captured), N)(FlowSymbol.neww(), typ).withLocOf(tree))
         if newResolution then resolveNew(parent)
+        // The header of an anonymous class is its instantiation, `new C(args)`, without the refinement body.
+        val headerLoc = tree.toLoc.map(_.left ++ Loc(cls :: args))
         val definition = ClassDef.Plain(ctx.getOuter, syntax.Cls, symbol,
-          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N, ctorAnnotations = Nil)(tree.toLoc)
+          BlockMemberSymbol(symbol.nme, Nil), Nil, S(parent), body, N, Nil, Nil, N, ctorAnnotations = Nil)(tree.toLoc, headerLoc)
         symbol.defn = S(definition)
         registerInheritance(definition)
       if newResolution then resolveNew(res)
@@ -1532,7 +1534,9 @@ extends Importer:
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil), N,
-        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil, ctorAnnotations = Nil)(hd.toLoc))
+        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil, ctorAnnotations = Nil)(
+          // The header of the handler class is `handle id = c`, without the handler definitions and body.
+          hd.toLoc, hd.toLoc.map(_.left ++ Loc(id, c))))
       
       val elabed = ctx.nestInner(derivedClsSym).givenIn:
         block(sts_, hasResult = false)._1
@@ -2536,6 +2540,10 @@ extends Importer:
             raise(d)
             return go(sts, Nil, acc)(N)
         
+        // The statement location covers the definition's annotations and modifiers, such as `declare`,
+        // which are not part of the `td` tree; the header extends it only through the definition's head.
+        val headerLoc = td.headLoc.orElse(td.toLoc).map(head => statementLoc.fold(head)(_.left ++ head))
+        
         if owner.isDefined && !identifierPattern.matches(nme.name) then
           raise:
             ErrorReport:
@@ -2704,7 +2712,7 @@ extends Importer:
             assert(body.isEmpty)
             val d =
               given Ctx = newCtx
-              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_, Tpe)), N, annotations)(statementLoc)
+              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_, Tpe)), N, annotations)(statementLoc, headerLoc)
             alsSym.defn = S(d)
             d
         case Pat =>
@@ -2760,7 +2768,7 @@ extends Importer:
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
             val pd = PatternDef(owner, patSym, sym, tps, allParams,
-              patternParams, extractionParams, pat, annotations)(statementLoc)
+              patternParams, extractionParams, pat, annotations)(statementLoc, headerLoc)
             patSym.defn = S(pd)
             if newResolution then checkPatternDefinition(pd)
             pd
@@ -2777,7 +2785,7 @@ extends Importer:
               val md =
                 val (bod, c) = mkBody(Nil)
                 ModuleOrObjectDef(owner, modSym, sym,
-                  tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)(outerCtx.scope, statementLoc)
+                  tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)(outerCtx.scope, statementLoc, headerLoc)
               modSym.defn = S(md)
               md
         case Cls =>
@@ -2836,7 +2844,7 @@ extends Importer:
               val cd =
                 val (bod, c) = mkBody(auxCtorPss)
                 ClassDef(owner, Cls, clsSym, sym, tsym, tps, pss, newOf(td), ObjBody(bod), annotations, comp,
-                  auxCtorParams = auxCtorPss, ctorAnnotations = ctorAnnotations)(statementLoc)
+                  auxCtorParams = auxCtorPss, ctorAnnotations = ctorAnnotations)(statementLoc, headerLoc)
               clsSym.defn = S(cd)
               cd
         case Trt | Mxn => lastWords(s"Unexpected type definition kind here: $k")

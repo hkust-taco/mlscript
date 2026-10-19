@@ -134,7 +134,7 @@ open Later { absent }
 //│ ║         	             ^^^^^^
 //│ ╟── Module 'Later' does not contain member 'absent'
 //│ ║  l.62: 	module Later { val answer = 7 }
-//│ ╙──      	       ^^^^^
+//│ ╙──      	^^^^^^^^^^^^
 
 
 // Wildcard lookup retains overload sets until the use chooses a definition.

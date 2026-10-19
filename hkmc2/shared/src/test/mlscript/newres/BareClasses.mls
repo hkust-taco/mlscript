@@ -52,7 +52,7 @@ Foo.b
 //│ ║        	^^^^^
 //│ ╟── Class value does not contain member 'b'
 //│ ║  l.30: 	class Foo {
-//│ ╙──      	      ^^^
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 let f = Foo
@@ -65,7 +65,7 @@ f.b
 //│ ║        	^^^
 //│ ╟── Class value does not contain member 'b'
 //│ ║  l.30: 	class Foo {
-//│ ╙──      	      ^^^
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -130,7 +130,7 @@ let f = Foo(1)
 //│ ║         	        ^^^^^^
 //│ ╟── Class 'Foo' must be instantiated with 'new'.
 //│ ║  l.113: 	class Foo {
-//│ ╙──       	      ^^^
+//│ ╙──       	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ f = undefined
 

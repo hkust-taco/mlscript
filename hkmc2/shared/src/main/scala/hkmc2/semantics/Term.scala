@@ -1019,6 +1019,12 @@ sealed abstract class TypeLikeDef extends Definition:
   val bsym: BlockMemberSymbol
   val tparams: Ls[TyParam]
   val annotations: Ls[Annot]
+  /** The span of this definition's header: its annotations and modifiers (such as `declare`),
+    * keyword, name, type and value parameter lists, result annotation, and parent clause,
+    * but not its body (see `syntax.TypeOrTermDef.headLoc`).
+    * Diagnostics that cite the definition as a witness, such as arity errors, should use
+    * this rather than `toLoc`, which spans the whole definition, including its body. */
+  def headerLoc: Opt[Loc]
 
 sealed abstract class ClassLikeDef extends TypeLikeDef:
   val owner: Opt[InnerSymbol]
@@ -1060,6 +1066,7 @@ case class ModuleOrObjectDef(
 )(
   val path: SrcScope,
   val toLoc: Opt[Loc],
+  val headerLoc: Opt[Loc],
 ) extends ClassLikeDef, CompanionValue:
   val ctorSym: Option[ClassCtorSymbol] = N
 
@@ -1081,7 +1088,7 @@ case class PatternDef(
      */
     pattern: Pattern,
     annotations: Ls[Annot],
-)(val toLoc: Opt[Loc]) extends ClassLikeDef:
+)(val toLoc: Opt[Loc], val headerLoc: Opt[Loc]) extends ClassLikeDef:
   self =>
   val kind: ClsLikeKind = Pat
   val ext: Opt[New] = N
@@ -1138,15 +1145,15 @@ object ClassDef:
       comp: Opt[ClassCompanionSymbol],
       auxCtorParams: Ls[ParamList],
       ctorAnnotations: Ls[Annot],
-  )(toLoc: Opt[Loc]): ClassDef =
+  )(toLoc: Opt[Loc], headerLoc: Opt[Loc]): ClassDef =
     params match
       case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym, S(ctorSym.getOrElse(lastWords("Parameterized classes should have a ctor symbol.")))
-        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations, ctorAnnotations)(toLoc)
+        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations, ctorAnnotations)(toLoc, headerLoc)
       case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
         , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym,
-        ctorAnnotations = ctorAnnotations)(toLoc)
+        ctorAnnotations = ctorAnnotations)(toLoc, headerLoc)
   
   def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[ParamList], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
@@ -1165,7 +1172,7 @@ object ClassDef:
       companion: Opt[ClassCompanionSymbol],
       annotations: Ls[Annot],
       ctorAnnotations: Ls[Annot],
-  )(val toLoc: Opt[Loc]) extends ClassDef:
+  )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = S(params)
   
   case class Plain(
@@ -1181,7 +1188,7 @@ object ClassDef:
       auxParams: List[ParamList],
       ctorSym: Opt[ClassCtorSymbol],
       ctorAnnotations: Ls[Annot],
-  )(val toLoc: Opt[Loc]) extends ClassDef:
+  )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
   
 end ClassDef
@@ -1194,7 +1201,7 @@ case class TypeDef(
   rhs: Opt[Term],
   companion: Opt[CompanionValue],
   annotations: Ls[Annot],
-)(val toLoc: Opt[Loc]) extends TypeLikeDef:
+)(val toLoc: Opt[Loc], val headerLoc: Opt[Loc]) extends TypeLikeDef:
   val kind: ObjDefKind = Als
 
 

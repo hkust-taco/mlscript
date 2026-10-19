@@ -616,7 +616,7 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   def describe: Str = s"${defn.describe}"
   protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
     MemberLookup.inClass(defn, ext, name)
-  def toLoc: Opt[Loc] = defn.toLoc
+  def toLoc: Opt[Loc] = defn.headerLoc
 
 /** A structural annotation exposes only its declared fields. Their symbols belong
   * to the annotation, not to whichever record happens to be passed by a caller.
@@ -725,7 +725,7 @@ final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSym
     val parent: Opt[TermShape])(val annotation: Opt[Term], val provenance: ShapeProvenance)(resolver: NewResolver) extends CoreHeadShape:
   def describe: Str = s"value of type '${defn.sym.nme}'"
   override def toString: Str = s"NominalInstanceView(${defn.sym}, $bindings, $parent)"
-  def toLoc: Opt[Loc] = defn.toLoc
+  def toLoc: Opt[Loc] = defn.headerLoc
   override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool =
     (defn is cls) || parent.exists(_.isInstanceOfClass(cls))
   def ancestor(cls: ClassLikeDef): Opt[NominalInstanceView] =
@@ -899,7 +899,16 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
       bufferedMembers.get(name).fold[MemberLookup](MemberLookup.Missing)(MemberLookup.Found(_, Nil))
     case _: TermDefinition => MemberLookup.Missing
     case _ => MemberLookup.Missing
-  def toLoc: Opt[Loc] = defn.sym.toLoc
+  /** A class-like definition and its constructor are both identified by the
+    * definition's header. The constructor's `bsym` would instead span all of
+    * its trees: the whole class, including its body, and any companions.
+    * The constructor also extends through its parameter lists, which include
+    * those of `constructor(...)` declarations written in the class body. */
+  def toLoc: Opt[Loc] = clsDef.flatMap(_.headerLoc) match
+    case S(header) => defn match
+      case ctor: TermDefinition => S(header ++ Loc(ctor.params))
+      case _ => S(header)
+    case N => defn.sym.toLoc
 
 /*
 // TODO – see `RefinedShape`

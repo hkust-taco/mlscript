@@ -656,6 +656,19 @@ trait TypeOrTermDef extends Located:
     case h => 
       (h, (N, Nil), N)
   
+  /** The span from this definition's keyword through the end of its head:
+    * its name, type and value parameter lists, result annotation, and parent clause.
+    * It excludes the definition's bodies (`{ ... }` refinements, `with` parts, and
+    * right-hand sides), which can span many lines and are noise in diagnostics
+    * that only need to identify the definition, such as arity errors.
+    * Modifiers and annotations of the definition are outside of its tree,
+    * so they are not covered either. */
+  lazy val headLoc: Opt[Loc] =
+    val parts: Ls[Located] =
+      symbName.flatMap(_.toOption).toList ::: name.toOption.toList ::: typeParams.toList :::
+        paramLists ::: annotatedResultType.toList ::: extension.toList
+    Loc(parts).map(head => toLoc.fold(head)(_.left ++ head))
+  
 end TypeOrTermDef
 
 

@@ -142,7 +142,7 @@ private fun excess(value: Alias[Int, Str]) = ()
 //│ ║         	                          ^^^^^^^^^^^^^^^
 //│ ╟── The type parameters are declared here.
 //│ ║  l.135: 	type Alias[A] = Box[A]
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^
 
 // Annotated results do not hide missing input types from exposure checking.
 :ge

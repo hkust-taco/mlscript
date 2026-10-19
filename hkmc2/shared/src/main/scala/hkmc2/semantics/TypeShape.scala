@@ -196,7 +196,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
     else if ambiguousReceiver || shapes.sizeCompare(1) > 0 then
       def declarations(resolution: TypeResolution, seen: Set[TypeResolution]): Ls[(Message, Opt[Loc])] =
         if seen(resolution) then Nil else resolution.shapes.toList.flatMap:
-          case Nominal(defn) => msg"candidate: ${defn.sym.describeKind}" -> defn.toLoc :: Nil
+          case Nominal(defn) => msg"candidate: ${defn.sym.describeKind}" -> defn.headerLoc :: Nil
           case Alias(symbol, _) => msg"candidate: ${symbol.describeKind}" -> symbol.toLoc :: Nil
           case Reference(base, _, _, _) => declarations(base, seen + resolution)
           case _ => Nil
@@ -216,8 +216,8 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
             fail(msg"Type '$name' accepts at most $count type ${"argument".pluralized(count)}, but got ${args.length}." ->
               source.toLoc :: (msg"The type parameters are declared here." -> loc) :: Nil)
           base.shapes.toList match
-            case Nominal(defn) :: Nil => check(defn.sym.nme, defn.tparams.length, defn.toLoc)
-            case Alias(symbol, _) :: Nil => symbol.defn.foreach(d => check(symbol.nme, d.tparams.length, d.toLoc))
+            case Nominal(defn) :: Nil => check(defn.sym.nme, defn.tparams.length, defn.headerLoc)
+            case Alias(symbol, _) :: Nil => symbol.defn.foreach(d => check(symbol.nme, d.tparams.length, d.headerLoc))
             case Reference(inner, _, _, _) :: Nil => checkArity(inner, seen + base)
             case _ => ()
         checkArity(base, Set.empty)

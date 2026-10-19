@@ -87,34 +87,18 @@ Array()
 //│ ╟── Class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.241: 	declare class Array[T](val length: Int) {
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.242: 	  fun join(...separators): Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.243: 	  fun reverse(): Array[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.244: 	  fun sort(...compare): Array[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.245: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
 :e
 Array(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.102: 	Array(1, 2, 3)
-//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.94: 	Array(1, 2, 3)
+//│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 3
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.241: 	declare class Array[T](val length: Int) {
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.242: 	  fun join(...separators): Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.243: 	  fun reverse(): Array[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.244: 	  fun sort(...compare): Array[T]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.245: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2, 3]
 
 

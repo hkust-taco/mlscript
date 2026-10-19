@@ -9,7 +9,7 @@ Empty.missing
 //│ ║       	^^^^^^^^^^^^^
 //│ ╟── Module 'Empty' does not contain member 'missing'
 //│ ║  l.5: 	module Empty
-//│ ╙──     	       ^^^^^
+//│ ╙──     	^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A member annotation must not become the enclosing module's location.
@@ -22,7 +22,7 @@ Container.missing
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Module 'Container' does not contain member 'missing'
 //│ ║  l.17: 	module Container with
-//│ ╙──      	       ^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Nested declarations retain their own spans.
@@ -36,7 +36,7 @@ Outer.Inner.missing
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── Module 'Inner' does not contain member 'missing'
 //│ ║  l.31: 	  module Inner with
-//│ ╙──      	         ^^^^^
+//│ ╙──      	  ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A nominal annotation continues to point at the use of the type.
@@ -53,7 +53,7 @@ hidden(new Base)
 //│ ╙──      	                  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// The receiver inside a class uses the declaration, including its name and body.
+// The receiver inside a class uses the declaration's header, without its body.
 :e
 class Receiver with
   declare fun text(): Str
@@ -63,33 +63,131 @@ class Receiver with
 //│ ║        	                  ^^^^^^^^^^^^
 //│ ╟── Class definition 'Receiver' does not contain member 'missing'
 //│ ║  l.58: 	class Receiver with
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.59: 	  declare fun text(): Str
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.60: 	  fun inspect() = this.missing
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^
 
-// Parameterized classes likewise use the written declaration, not only its fields.
+// Parameterized classes likewise use the written header, not only its fields.
 :e
 class Parameterized(value: Int) with
   fun inspect() = this.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.75: 	  fun inspect() = this.missing
+//│ ║  l.71: 	  fun inspect() = this.missing
 //│ ║        	                  ^^^^^^^^^^^^
 //│ ╟── Class definition 'Parameterized' does not contain member 'missing'
-//│ ║  l.74: 	class Parameterized(value: Int) with
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.75: 	  fun inspect() = this.missing
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.70: 	class Parameterized(value: Int) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // A class without fields has a declaration location even in pattern diagnostics.
 :e
 class Empty
 if new Empty is Empty(_) then 1 else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.88: 	if new Empty is Empty(_) then 1 else 0
+//│ ║  l.82: 	if new Empty is Empty(_) then 1 else 0
 //│ ║        	                ^^^^^^^^
 //│ ╟── Class definition 'Empty' does not take pattern arguments.
-//│ ║  l.87: 	class Empty
+//│ ║  l.81: 	class Empty
 //│ ╙──      	^^^^^^^^^^^
 //│ = 0
+
+
+// Diagnostics citing a class show its header: its modifiers, type and value
+// parameters, and parent clause, but neither its body nor its companions.
+data class Pair[A](a: A, b: Int) extends Base with
+  fun first = a
+  fun second = b
+module Pair with
+  fun make(a) = Pair(a, 0)
+
+:e
+Pair(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.101: 	Pair(1)
+//│ ║         	^^^^^^^
+//│ ╟── Class 'Pair' expected 2 arguments, but got 1
+//│ ║  l.94: 	data class Pair[A](a: A, b: Int) extends Base with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = Pair(1, undefined)
+
+:e
+Pair[Int, Int](1, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.111: 	Pair[Int, Int](1, 2)
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── Class 'Pair' expected 1 type argument, but got 2
+//│ ║  l.94: 	data class Pair[A](a: A, b: Int) extends Base with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = Pair(1, 2)
+
+:e
+if Pair(1, 2) is Pair(x) then x
+//│ ╔══[COMPILATION ERROR] Resolution error in constructor
+//│ ║  l.121: 	if Pair(1, 2) is Pair(x) then x
+//│ ║         	                 ^^^^^^^
+//│ ╟── Class definition 'Pair' expected 2 pattern arguments, but got 1
+//│ ║  l.94: 	data class Pair[A](a: A, b: Int) extends Base with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:e
+Pair(1, 2).missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.131: 	Pair(1, 2).missing
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Pair' does not contain member 'missing'
+//│ ║  l.131: 	Pair(1, 2).missing
+//│ ╙──       	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A `declare` modifier is part of the header.
+:e
+:re
+declare class Declared(val length: Int) with
+  fun reverse(): Declared
+Declared()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.145: 	Declared()
+//│ ║         	^^^^^^^^^^
+//│ ╟── Class 'Declared' expected 1 argument, but got 0
+//│ ║  l.143: 	declare class Declared(val length: Int) with
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.Declared is not a function
+
+// A class constructor extends through its `constructor(...)` declarations.
+:e
+class Constructed with
+  constructor(x, y)
+  fun f = 1
+new Constructed(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.159: 	new Constructed(1)
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'Constructed' expected 2 arguments, but got 1
+//│ ║  l.156: 	class Constructed with
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.157: 	  constructor(x, y)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^
+//│ = Constructed
+
+// Type alias and pattern headers exclude their right-hand sides.
+:e
+type Alias[A] = Pair[A]
+fun excess(value: Alias[Int, Str]) = ()
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.173: 	fun excess(value: Alias[Int, Str]) = ()
+//│ ║         	                  ^^^^^^^^^^^^^^^
+//│ ╟── Type 'Alias' accepts at most 1 type argument, but got 2.
+//│ ║  l.173: 	fun excess(value: Alias[Int, Str]) = ()
+//│ ║         	                  ^^^^^^^^^^^^^^^
+//│ ╟── The type parameters are declared here.
+//│ ║  l.172: 	type Alias[A] = Pair[A]
+//│ ╙──       	^^^^^^^^^^^^
+
+:e
+pattern Small(n) = n & (0 | 1 | 2)
+Small(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.186: 	Small(1)
+//│ ║         	^^^^^^^^
+//│ ╟── Pattern 'Small' cannot be called like a function.
+//│ ║  l.185: 	pattern Small(n) = n & (0 | 1 | 2)
+//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -459,15 +459,7 @@ val escapedCallback = @annotations.async {value => value.answer}
 //│ ╟── This value is fulfilled by this promise.
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.185: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.186: 	  fun id"then"[B, C](onFulfilled: Awaited[A] -> (B | Promise[B]), ...onRejected: Array[(Any -> (C | Promise[C])) | undefined | null]): Promise[Awaited[B | C]]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.187: 	  fun id"catch"[B](onRejected: (Any -> (B | Promise[B])) | undefined | null): Promise[Awaited[A | B]]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.188: 	  fun id"finally"(onFinally: (() -> undefined) | undefined | null): Promise[A]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.189: 	... (more lines omitted) ...
-//│ ║         	^
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'escapedCallback' is exposed by this compilation unit.
 //│ ║  in Promises.mls:451
 //│ ║  l.451: 	val escapedCallback = @annotations.async {value => value.answer}
@@ -480,7 +472,7 @@ val escapedCallback = @annotations.async {value => value.answer}
 fun noFulfillment() = noFulfillment()
 noFulfillment().then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
-//│ ║  l.481: 	noFulfillment().then(value => value.answer)
+//│ ║  l.473: 	noFulfillment().then(value => value.answer)
 //│ ╙──       	                              ^^^^^^^^^^^^
 
 // TODO: Infer structural thenables' fulfillment callbacks. Their original fields
@@ -491,9 +483,9 @@ class Thenable with
   fun id"then"(resolve: {answer: Int} -> undefined, reject: Any -> undefined) = resolve({answer: 77})
 Promise.resolve(new Thenable).then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.492: 	Promise.resolve(new Thenable).then(value => value.answer)
+//│ ║  l.484: 	Promise.resolve(new Thenable).then(value => value.answer)
 //│ ║         	                                            ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── This value may be a thenable; its fulfillment interface is not known.
-//│ ║  l.492: 	Promise.resolve(new Thenable).then(value => value.answer)
+//│ ║  l.484: 	Promise.resolve(new Thenable).then(value => value.answer)
 //│ ╙──       	                ^^^^^^^^^^^^
