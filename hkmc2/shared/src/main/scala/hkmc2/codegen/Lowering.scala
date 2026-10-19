@@ -1911,16 +1911,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       val loweredParams = ParamList.withRest(ps.flags, required, S(Param.simple(argsSym)))(ps.toLoc)
       val args = argsSym.asSimpleRef
       def int(n: Int): Path = Value.Lit(Tree.IntLit(n))(N)
-      val tuple = State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("Tuple"), State.tupleSymbol)
-      def tupleCall(nme: Str, sym: TermSymbol, as: Ls[Path]): Result =
-        Call(tuple.sel(Tree.Ident(nme), sym), as.map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+      val tupleSlice = State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("Tuple"), State.tupleSymbol)
+        .sel(Tree.Ident("slice"), State.tupleSliceSymbol)
+      // * `Tuple.slice(xs, i, j)` drops the first `i` and the last `j` elements of `xs`.
+      def slice(xs: Path, i: Int, j: Int): Result =
+        Call(tupleSlice, (xs :: int(i) :: int(j) :: Nil).map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+      // * Single arguments are read by raw indexing (`xs.at(i)`, where a negative `i` counts from the end),
+      // * which yields `undefined` for an omitted optional argument and preserves an explicitly passed `undefined`.
+      // * They cannot be read through runtime functions such as `Tuple.get`: MLscript calls must not return
+      // * `undefined`, as enforced by the `Runtime.checkCall` sanity check, and a function returning
+      // * an `undefined` literal actually returns `()` (see `Return` in `JSBuilder`).
+      def at(xs: Path, i: Int): Path = DynSelect(xs, int(i), true)(N)
       val k = trailing.length
-      val extractions: Ls[(VarSymbol, Result)] =
-        optional.zipWithIndex.map: (p, i) =>
-          p.sym -> tupleCall("getLeading", State.tupleGetLeadingSymbol, args :: int(i) :: int(k) :: Nil)
-        ::: (variadicParam.sym -> tupleCall("slice", State.tupleSliceSymbol, args :: int(optional.length) :: int(k) :: Nil))
-        :: trailing.zipWithIndex.map: (p, i) =>
-          p.sym -> tupleCall("get", State.tupleGetSymbol, args :: int(i - k) :: Nil)
       // * The sanity check emitted by the code generator only knows about the lowered parameter list,
       // * so we check that the arguments of the trailing parameters are present here.
       val check = Option.when(config.sanityChecks.isDefined):
@@ -1928,7 +1930,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           (Value.Lit(Tree.StrLit(name.getOrElse("")))(N) :: int(ps.paramCountLB) :: int(required.length) :: args :: Nil)
             .map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
       val prologue: LoweringCtx ?=> Block => Block = body =>
-        extractions.foreach((sym, _) => loweringCtx.collectScopedSym(sym))
+        // * The optional parameters take the arguments preceding the last `k` ones, as far as there are any:
+        // * reading past the end of these leading arguments yields `undefined`.
+        val optionalExtractions = if optional.isEmpty then Nil else
+          val leading = loweringCtx.registerTempSymbol(N, erasedType = S(ErasedType.Array), "leadingArgs")
+          (leading -> slice(args, 0, k)) :: optional.zipWithIndex.map((p, i) => p.sym -> at(leading.asSimpleRef, i))
+        val extractions: Ls[(LocalVarSymbol, Result)] =
+          optionalExtractions
+          ::: (variadicParam.sym -> slice(args, optional.length, k))
+          :: trailing.zipWithIndex.map((p, i) => p.sym -> at(args, i - k))
+        (optional ::: variadicParam :: trailing).foreach(p => loweringCtx.collectScopedSym(p.sym))
         val extracted = extractions.foldRight(body):
           case ((sym, res), rest) => Assign(sym, res, rest)
         check.fold(extracted)(Assign.discard(_, extracted))

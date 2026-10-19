@@ -61,23 +61,36 @@ object HandlerLowering:
   // currentFun: path to the current function for resumption
   // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
   private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo, inGetter: Bool, inAsync: Bool):
-    def doUnwind(loc: Value, state: Path, restoreList: List[LocalVarSymbol])(using paths: HandlerPaths) =
-      Return(Call(paths.unwindPath, (
+    def doUnwind(loc: Value, state: Path, restoreList: List[LocalVarSymbol])(using paths: HandlerPaths): Block =
+      val unwind = Return(Call(paths.unwindPath, (
         currentFun ::
         state ::
         loc ::
         debugInfo.debugInfoPath ::
         thisPath.getOrElse(unit) ::
-        resumeInfo.argLists ++:
-        (intLit(restoreList.length) ::
-        restoreList.map(_.asPath))
+        intLit(resumeInfo.argLists.length) ::
+        Nil
+      ).map(_.asArg) ::: resumeInfo.argLists.flatMap(_.encoded) ::: (
+        intLit(restoreList.length) ::
+        restoreList.map(_.asPath)
       ).map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N))
+      resumeInfo.argLists.foldRight[Block](unwind): (argList, rest) =>
+        argList.lengthDefn.fold(rest)((sym, length) => Assign(sym, length, rest))
   
-  // argLists: length-encoded argument list used for resumption.
+  /** The arguments of a parameter list, saved when unwinding so that `FunctionContFrame.resume` can pass them
+    * back to the function. They are encoded as their number (`length`) followed by the arguments themselves.
+    * A rest parameter is spread into the saved arguments, so that the resumed function collects them again.
+    * Omitting it would lose its arguments, including those of trailing parameters, which lowering gathers
+    * into a rest parameter (see `Lowering.lowerTrailingParams`). The number of arguments then depends on
+    * the length of the rest parameter, so `lengthDefn` computes it into a temporary before unwinding. */
+  private case class SavedArgList(length: Path, args: Ls[Arg], lengthDefn: Opt[(TempSymbol, Result)]):
+    def encoded: Ls[Arg] = length.asArg :: args
+  
+  // argLists: the argument lists saved for resumption (see `SavedArgList`).
   // currentLocals: All locals to be saved and reloaded, this cannot include any variables in outer scopes
   // currentStackSafetySym: The symbol to be used for stack safety
   private case class ResumeInfo(
-    argLists: List[Path],
+    argLists: List[SavedArgList],
     currentLocals: List[LocalVarSymbol],
     currentStackSafetySym: FnOrCls,
   )
@@ -120,7 +133,7 @@ class HandlerPaths(using Elaborator.State):
   val resumeValueIdent = new Tree.Ident("resumeValue")
   val resumeValue: Path = runtimePath.selN(resumeValueIdent)
 
-class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
+class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config, Erasure):
   
   val debugEnabled = opt.exists(_.debug)
   val stackSafety = opt.flatMap(_.stackSafety)
@@ -542,9 +555,16 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
           List(intLit(idx), Value.Lit(Tree.StrLit(sym.nme))(N))
         .map(_.asArg)
       val debugInfoSym = freshTmp(erasedType = S(ErasedType.Array), s"$debugNme$$debugInfo")
-      // TODO: properly support spread argument by calculating the correct length.
-      val rtArgLists = intLit(fun.params.length) :: fun.params.flatMap: pl =>
-        intLit(pl.params.length) :: pl.params.map(p => p.sym.asSimpleRef)
+      val rtArgLists = fun.params.map: pl =>
+        val args = pl.params.map(_.sym.asSimpleRef.asArg)
+        pl.restParam match
+        case N => SavedArgList(intLit(pl.params.length), args, N)
+        case S(rest) =>
+          val length = freshTmp(erasedType = S(ErasedType.Int), "argCount")
+          val restLength = rest.sym.asSimpleRef.selSN("length")
+          SavedArgList(length.asSimpleRef, args :+ Arg(S(syntax.SpreadKind.Eager), rest.sym.asSimpleRef),
+            S(length -> Call(State.builtinOpsMap("+").asSimpleRef,
+              (intLit(pl.params.length).asArg :: restLength.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultFun, N)))
       val newCtx = HandlerCtx.FunctionLike(FunctionCtx(funcPath, thisPath, ResumeInfo(rtArgLists, sortedVars, L(fun.sym)),
         DebugInfo(debugNme, if debugEnabled then debugInfoSym.asSimpleRef else unit), thisPath.isDefined && fun.params.isEmpty, fun.async))
       val bod2 = translateBlock(fun.body, newCtx, scopedVars)
@@ -733,7 +753,8 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
         mainBody
       )
     
-    val extraVars = if needsStackSafety then Set(pcVar, curDepth) else Set.single(pcVar)
+    val argCountVars = ctx.resumeInfo.argLists.flatMap(_.lengthDefn.map(_._1))
+    val extraVars = (if needsStackSafety then Set(pcVar, curDepth) else Set.single(pcVar)) ++ argCountVars
 
     Scoped(
       scopedVars ++ extraVars,

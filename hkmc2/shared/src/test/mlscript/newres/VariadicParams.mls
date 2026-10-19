@@ -14,7 +14,7 @@ fun f(x, ...xs, y) = [x, xs, y]
 //│   runtime.checkArgs("f", 2, tmp1);
 //│   tmp = args.length - 1;
 //│   inlinedVal = runtime.safeCall(args.slice(0, tmp));
-//│   y = runtime.Tuple.get(args, -1);
+//│   y = args.at(-1);
 //│   return globalThis.Object.freeze([ x, inlinedVal, y ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -53,27 +53,17 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let h;
 //│ h = function h(x, ...args7) {
-//│   let w, inlinedVal12, inlinedVal13, inlinedVal14, tmp14, scrut, tmp15, scrut1, tmp16, tmp17;
-//│   tmp17 = 1 + args7.length;
-//│   runtime.checkArgs("h", 2, tmp17);
-//│   tmp16 = args7.length - 1;
-//│   scrut1 = 0 < tmp16;
-//│   if (scrut1 === true) {
-//│     inlinedVal12 = args7.at(0);
-//│   } else {
-//│     inlinedVal12 = undefined;
-//│   }
+//│   let y7, z2, w, inlinedVal12, inlinedVal13, tmp14, tmp15, tmp16;
+//│   tmp16 = 1 + args7.length;
+//│   runtime.checkArgs("h", 2, tmp16);
 //│   tmp15 = args7.length - 1;
-//│   scrut = 1 < tmp15;
-//│   if (scrut === true) {
-//│     inlinedVal13 = args7.at(1);
-//│   } else {
-//│     inlinedVal13 = undefined;
-//│   }
+//│   inlinedVal12 = runtime.safeCall(args7.slice(0, tmp15));
+//│   y7 = inlinedVal12.at(0);
+//│   z2 = inlinedVal12.at(1);
 //│   tmp14 = args7.length - 1;
-//│   inlinedVal14 = runtime.safeCall(args7.slice(2, tmp14));
-//│   w = runtime.Tuple.get(args7, -1);
-//│   return globalThis.Object.freeze([ x, inlinedVal12, inlinedVal13, inlinedVal14, w ])
+//│   inlinedVal13 = runtime.safeCall(args7.slice(2, tmp14));
+//│   w = args7.at(-1);
+//│   return globalThis.Object.freeze([ x, y7, z2, inlinedVal13, w ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -84,6 +74,28 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 :expect [[1, 2, 3, [], 4], [1, 2, 3, [4, 5], 6]]
 [h(1, 2, 3, 4), h(1, 2, 3, 4, 5, 6)]
 //│ = [[1, 2, 3, [], 4], [1, 2, 3, [4, 5], 6]]
+
+
+// *** Explicit `undefined` arguments ***
+
+// Arguments may be `undefined`, which is preserved, including for optional and trailing parameters.
+:expect [1, [undefined], undefined]
+f(1, undefined, undefined)
+//│ = [1, [undefined], undefined]
+
+:expect [1, undefined, undefined, [], 2]
+h(1, undefined, 2)
+//│ = [1, undefined, undefined, [], 2]
+
+:expect [1, 2, undefined, [undefined], undefined]
+h(1, 2, undefined, undefined, undefined)
+//│ = [1, 2, undefined, [undefined], undefined]
+
+:noInline
+:expect [[undefined], undefined]
+fun trailingNoInline(x, ...xs, y) = [xs, y]
+trailingNoInline(1, undefined, undefined)
+//│ = [[undefined], undefined]
 
 
 // *** Spread arguments ***
@@ -117,10 +129,10 @@ lastA(B(0), B(1), A(2))
 private fun lastB(...xs, y) = y.b
 lastB(B(0), A(1))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.117: 	private fun lastB(...xs, y) = y.b
+//│ ║  l.129: 	private fun lastB(...xs, y) = y.b
 //│ ║         	                              ^^^
 //│ ╟── Instance of class 'A' does not contain member 'b'
-//│ ║  l.118: 	lastB(B(0), A(1))
+//│ ║  l.130: 	lastB(B(0), A(1))
 //│ ╙──       	            ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -137,13 +149,13 @@ app((x, ...xs, s) => s)
 :e
 app((x, s) => s)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.138: 	app((x, s) => s)
+//│ ║  l.150: 	app((x, s) => s)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.138: 	app((x, s) => s)
+//│ ║  l.150: 	app((x, s) => s)
 //│ ║         	    ^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
-//│ ║  l.130: 	fun app(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
+//│ ║  l.142: 	fun app(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 2
 
@@ -161,47 +173,44 @@ app((x, ...xs) => "b")
 sum(0, 1, 2, 3)
 //│ = 6
 
-// FIXME: Without inlining, the omitted optional parameter is `()` rather than `undefined`:
-// `Runtime.Tuple.getLeading` ends with `else undefined`, which is compiled as `return runtime.Unit`.
-:fixme
+// Omitted optional arguments are `undefined`, even when their extraction is not inlined.
 :noInline
 :expect [1, undefined, [], 2]
 fun h(x, y?, ...xs, w) = [x, y, xs, w]
 h(1, 2)
-//│ ═══[RUNTIME ERROR] Expected: '[1, undefined, [], 2]', got: '[1, (), [], 2]'
-//│ = [1, (), [], 2]
+//│ = [1, undefined, [], 2]
 
-:fixme
 :noInline
 :expect "none"
 fun h(x, y?, ...xs, w) = if y is undefined then "none" else "some"
 h(1, 2)
-//│ ═══[RUNTIME ERROR] Expected: '"none"', got: '"some"'
-//│ = "some"
+//│ = "none"
 
-// FIXME: Stack-safe resumption calls the function again with its saved parameters, which do not
-// include the rest parameter (see `HandlerLowering`). Trailing parameters are lowered into that rest
-// parameter, so resuming the function below loses its required arguments.
-:fixme
+// Stack-safe resumption calls the function again with its saved arguments, which must include
+// those of its rest parameter, including the arguments of the trailing parameters lowered into it.
 :effectHandlers
 :lift
 :stackSafe 10
 :expect [[1, 2], 3]
 fun deep(n, ...xs, last) = if n == 0 then [xs, last] else deep(n - 1, ...xs, last)
 deep(100, 1, 2, 3)
-//│ ═══[RUNTIME ERROR] Error: Function 'deep' expected at least 2 arguments but got 1
-//│ ═══[RUNTIME ERROR] Expected: '[[1, 2], 3]', got: 'undefined'
+//│ = [[1, 2], 3]
 
-// FIXME: The rest parameter itself is also lost (not specific to trailing parameters).
-:fixme
 :effectHandlers
 :lift
 :stackSafe 10
 :expect [1, 2, 3]
 fun deepRest(n, ...xs) = if n == 0 then xs else deepRest(n - 1, ...xs)
 deepRest(100, 1, 2, 3)
-//│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: '[]'
-//│ = []
+//│ = [1, 2, 3]
+
+:effectHandlers
+:lift
+:stackSafe 10
+:expect [1, [], 2]
+fun deepOpt(n, y?, ...xs, last) = if n == 0 then [y, xs, last] else deepOpt(n - 1, y, ...xs, last)
+deepOpt(100, 1, 2)
+//│ = [1, [], 2]
 
 
 // *** Errors ***
@@ -209,29 +218,29 @@ deepRest(100, 1, 2, 3)
 :e
 fun bad(...xs, ...ys) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.210: 	fun bad(...xs, ...ys) = 0
+//│ ║  l.219: 	fun bad(...xs, ...ys) = 0
 //│ ╙──       	               ^^^^^
 
 :e
 fun bad(...xs, y?) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.216: 	fun bad(...xs, y?) = 0
+//│ ║  l.225: 	fun bad(...xs, y?) = 0
 //│ ╙──       	               ^^
 
 :e
 fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.222: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
+//│ ║  l.231: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╙──       	                           ^^^^^^^^^^^^^
 
 :e
 fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.228: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
+//│ ║  l.237: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╙──       	                           ^^^^
 
 :e
 class C(x, ...xs, y)
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.234: 	class C(x, ...xs, y)
+//│ ║  l.243: 	class C(x, ...xs, y)
 //│ ╙──       	           ^^^^^
