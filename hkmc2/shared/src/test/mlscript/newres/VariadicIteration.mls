@@ -9,16 +9,12 @@ private fun restIterator() = {(Symbol.iterator): (...args) => [1].iterator()}
 // Resolution leaves protocol compatibility to type checking. An iterator with
 // trailing parameters must not trigger the post-lowering rest-parameter assertion.
 :!js
-:fixme
 private fun trailingIterator() = {(Symbol.iterator): (...args, last) => [1].iterator()}
 [...trailingIterator()]
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Unexpected trailing parameters after a variadic parameter: List(Param(‹›,last,None,Modulefulness(None)))
 
 // The same applies to the implicit call of next, after the iterator is obtained.
 :!js
-:fixme
 private fun trailingNext() = {(Symbol.iterator): () => (
   {next: (...args, last) => ({done: true})}
 )}
 [...trailingNext()]
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Unexpected trailing parameters after a variadic parameter: List(Param(‹›,last,None,Modulefulness(None)))

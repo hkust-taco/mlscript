@@ -3277,7 +3277,7 @@ class NewResolver:
         // Protocol observations apply no arguments. Preserve omitted-input flow
         // without treating an uncertain calling convention as a resolution error.
         (ps.params ::: ps.trailingParams).foreach(constrainOmittedParameterIn(_, mss, instances))
-        ps.restParam.foreach(param => constrainParameterIn(param,
+        ps.variadic.foreach(v => constrainParameterIn(v.param,
           TupleShape(args, Nil)(this), mss, instances, N))
     log(s"appShape isSaturated? ${sh.isSaturated}; head? ${sh.applicationHead._1.shwDbg}, ${sh.applicationHead._2.map(_.showDbg)}")
     def register(using ResolutionContext) = publish(sh)
