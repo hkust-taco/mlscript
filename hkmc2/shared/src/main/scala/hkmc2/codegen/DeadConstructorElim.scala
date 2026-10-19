@@ -90,5 +90,6 @@ object DeadConstructorElim:
     raise: Raise,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
+    erasure: Erasure,
   ): Program = cfg.flowBasedOpt.fold(p):
     FlowAnalysisBasedRewrite.rewriteWith(p, _, eta = false, dpe = false)

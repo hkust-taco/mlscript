@@ -68,7 +68,7 @@ connected component are tail calls.
 */
 
 // This optimization assumes the lifter has been run.
-class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
+class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx, Erasure):
   
   type AccessMap = Map[ScopedInfo, AccessInfo]
   

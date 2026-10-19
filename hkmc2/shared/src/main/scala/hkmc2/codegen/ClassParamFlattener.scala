@@ -24,7 +24,7 @@ import hkmc2.semantics.Elaborator.State
   * Argument spreads are intentionally preserved as `Arg`s while only the
   * surrounding argument-list boundary is removed.
   */
-class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
+class ClassParamFlattener(using State, Erasure) extends BlockTransformer(SymbolSubst.Id):
   
   private def flattenParamLists(paramss: Ls[ParamList]): ParamList =
     val flags = paramss.headOption.fold(ParamListFlags.empty)(_.flags)
@@ -105,5 +105,5 @@ class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
 end ClassParamFlattener
 
 object ClassParamFlattener:
-  def apply(program: Program)(using State): Program =
+  def apply(program: Program)(using State, Erasure): Program =
     new ClassParamFlattener().applyProgram(program)

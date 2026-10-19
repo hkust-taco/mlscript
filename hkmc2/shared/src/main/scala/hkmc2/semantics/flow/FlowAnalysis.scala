@@ -129,7 +129,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
           val prod = cd.paramsOpt match
             case S(ps) =>
-              ps.restParam match
+              ps.variadic match
               case S(_) => ???
               case N =>
                 P.Fun(

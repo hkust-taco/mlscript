@@ -27,7 +27,7 @@ abstract class CodeBuilder:
   type Context
   
 
-class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
+class JSBuilder(using Config, TL, State, Ctx, Erasure) extends CodeBuilder:
   import JSBuilder.*
   private given PostCondAnalysis = new PostCondAnalysis
   
@@ -1195,7 +1195,7 @@ object JSBuilder:
 end JSBuilder
 
 
-trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
+trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State, Erasure)
     extends JSBuilder:
   
   private val doInstrument = config.sanityChecks.isDefined

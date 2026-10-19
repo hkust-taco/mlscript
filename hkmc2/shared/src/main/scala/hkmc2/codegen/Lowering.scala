@@ -623,7 +623,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case Nil => buildInstantiate(accArgss)
           case ps :: rest =>
             val freshSyms = ps.params.map(p => new VarSymbol(new Tree.Ident(p.sym.nme), erasedType = N))
-            softTODO(ps.restParam.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
+            softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
             val freshParamList = ParamList(ps.flags, freshParams, N)(ps.toLoc)
             val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))

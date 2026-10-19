@@ -17,7 +17,7 @@ import hkmc2.document.Document.{braced, bracedbk}
 
 /** `SymbolPrinter` is used for printing symbols that are not locally bound, so that they are consistent
   * with the debug-printed names shown in other parts of the compiler, such as showAsTreee. */
-class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
+class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter, Erasure):
   
   val showPurity =
     false

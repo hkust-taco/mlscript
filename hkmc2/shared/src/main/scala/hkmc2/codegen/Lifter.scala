@@ -89,7 +89,7 @@ object Lifter:
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
   * Assumes the input block does not have any `HandleBlock`s.
   */
-class Lifter(topLevelBlk: Block)(using State, Raise, Config):
+class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
   // TODO: implement tracing debug system
 
   import Lifter.*

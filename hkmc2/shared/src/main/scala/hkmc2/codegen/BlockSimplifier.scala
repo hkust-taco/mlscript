@@ -19,7 +19,7 @@ import hkmc2.{codegen => argss}
   * we don't want to eliminate these. */
 class BlockSimplifier
     (symbolsToPreserve: Set[ScopedSymbol], tl: TL, printer: Program => Str)
-    (using DebugPrinter, State, Config, Raise, Ctx):
+    (using DebugPrinter, State, Config, Raise, Ctx, Erasure):
   import tl.*
   
   

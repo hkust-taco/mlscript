@@ -1320,10 +1320,14 @@ final case class ParamList(flags: ParamListFlags, params: Ls[Param], variadic: O
   /** The rest parameter, for parameter lists without trailing parameters after their variadic parameter.
     * This is the case of all parameter lists after lowering (see `Lowering.setupFunctionDef`),
     * so code generation passes use this accessor rather than `variadic`.
+    * Erasure keeps this accessor out of resolution; the assertion separately checks that
+    * trailing-parameter lowering has happened, since erasure precedes that transformation.
     * Ignoring trailing parameters would silently miscompile, so this is a hard assertion. */
-  def restParam: Opt[Param] = variadic.map: v =>
-    assert(v.trailing.isEmpty, s"Unexpected trailing parameters after a variadic parameter: ${v.trailing}")
-    v.param
+  def restParam(using Erasure): Opt[Param] =
+    variadic.map: v =>
+      assert(v.trailing.isEmpty,
+        s"Unexpected trailing parameters after a variadic parameter: ${v.trailing}")
+      v.param
   lazy val allParams: Ls[Param] = params ::: variadic.fold(Nil)(_.allParams)
   lazy val paramSyms = allParams.map(_.sym)
   def subTerms: Ls[Term] = allParams.flatMap(_.subTerms)

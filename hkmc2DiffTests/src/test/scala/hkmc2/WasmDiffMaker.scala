@@ -61,7 +61,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
       pgrm: Program,
       definedValues: ComputeDefinedValues,
       symbolsToPreserve: Set[ScopedSymbol],
-  )(using Config, Raise, Elaborator.Ctx): Unit =
+  )(using Config, Raise, Elaborator.Ctx, codegen.Erasure): Unit =
     
     super.processIRBlock(pgrm, definedValues, symbolsToPreserve)
     

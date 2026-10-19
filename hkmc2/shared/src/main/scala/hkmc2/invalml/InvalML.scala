@@ -704,7 +704,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
                 ty
             }
             constrain(tryMkMono(ty, term), ClassLikeType(clsSym, targs))
-            require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+            require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
             (clsDfn.paramsOpt.fold(Nil)(_.params).map {
               case Param(_, sym, sign, _) =>
                 if sym.nme === field.name then sign else N
@@ -719,7 +719,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
       case Term.New(cls, args, N) =>
         cls.symbol.flatMap(_.asCls.flatMap(_.defn)) match
         case S(clsDfn: ClassDef.Parameterized) =>
-          require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+          require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
           val argsList = args match
             case Nil => Nil
             case Term.Tup(elems) :: Nil => elems.map:
@@ -742,7 +742,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
                 ty
             }
             val effBuff = ListBuffer.empty[Type]
-            require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+            require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
             argsList.iterator.zip(clsDfn.params.params).foreach {
               case (arg, Param(sign = S(sign))) =>
                 val (ty, eff) = ascribe(arg, typeAndSubstType(sign, pol = true)(using map.toMap))

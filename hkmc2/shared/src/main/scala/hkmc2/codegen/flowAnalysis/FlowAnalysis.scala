@@ -78,7 +78,7 @@ object FlowAnalysis:
     mono: Bool,
     nonAffineTracking: Bool,
     accumulatorTracking: Bool,
-  )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
+  )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter, Erasure) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
     val constrCol = new FlowConstraintsCollector(pre, mono, nonAffineTracking, accumulatorTracking)
@@ -444,8 +444,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     
     inline def inLam(lam: Lambda)(inline body: => Any) =
       val locallyDefined = MutSet.empty[Symbol]
-      lam.params.params.foreach(p => locallyDefined += p.sym)
-      lam.params.restParam.foreach(p => locallyDefined += p.sym)
+      lam.params.paramSyms.foreach(locallyDefined += _)
       withCtx(InCtx.Lam(lam))(withCaptureInfo(lam.uid, locallyDefined)(body))()
     
     inline def inTopLvl(inline body: => Any) =
@@ -642,8 +641,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     applyPath(defn.rhs)
   
   override def applyParamList(pl: ParamList): Unit =
-    pl.params.foreach(p => ctxTracker.registerStratVar(p.sym, p.sym.nme))
-    pl.restParam.foreach(p => ctxTracker.registerStratVar(p.sym, p.sym.nme))
+    pl.allParams.foreach(p => ctxTracker.registerStratVar(p.sym, p.sym.nme))
   
   override def applyArg(arg: Arg): Unit =
     applyPath(arg.value)
@@ -688,7 +686,7 @@ class FlowConstraintsCollector(
   val mono: Bool,
   val nonAffineTracking: Bool,
   val accumulatorTracking: Bool,
-):
+)(using Erasure):
   given FlowPreAnalyzer = preAnalyzer
   given Raise = preAnalyzer.raise
   given fState: FlowAnalysis.State = preAnalyzer.fState

@@ -22,7 +22,7 @@ end FlowAnalysisSolverResult
 type RewrittenFunDefn = (params: Ls[ParamList], body: Block)
 
 
-abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolver):
+abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolver)(using Erasure):
 
   
   // ====== the abstract members ======

@@ -15,7 +15,7 @@ sealed abstract class FinalDest
 case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
 case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
 
-class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Config, Elaborator.Ctx)
+class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Config, Elaborator.Ctx, Erasure)
   extends FlowAnalysisSolverResult:
   given preAnalyzer: FlowPreAnalyzer = constraintSolver.preAnalyzer
   given fState: FlowAnalysis.State = constraintSolver.fState
@@ -144,6 +144,7 @@ object Deforest:
     eCtx: Elaborator.Ctx,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
+    erasure: Erasure,
   ): Program =
     // TODO: handle see through imported modules
     val dCfg = cfg.deforest.getOrElse(lastWords("deforestation is disabled in Config"))

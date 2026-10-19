@@ -118,7 +118,7 @@ object ScopeData:
         case Companion(clsBody, compDefn) => Set(clsBody.isym)
         case _: ClassCtor => Set.empty
         case Func(fun, _) => fun.params.flatMap: p =>
-            p.restParam.map(_.sym) ++ p.params.map(_.sym)
+            p.paramSyms
           .toSet
         case ScopedBlock(_, block) => block.syms.toSet
         case _: Loop => Set.empty

@@ -20,7 +20,7 @@ import semantics.Elaborator.State
   */
 class WorkerWrapper
     (tl: TL, printer: Program => Str)
-    (using DebugPrinter, State, Config, Raise)
+    (using DebugPrinter, State, Config, Raise, Erasure)
   extends BlockTransformer(SymbolSubst.Id):
   import tl.*
   
@@ -119,5 +119,5 @@ end WorkerWrapper
 
 object WorkerWrapper:
   def apply(symbolsToPreserve: Set[ScopedSymbol], tl: TL, printer: Program => Str)(p: Program)
-      (using DebugPrinter, State, Config, Raise): Program =
+      (using DebugPrinter, State, Config, Raise, Erasure): Program =
     (new WorkerWrapper(tl, printer)).applyProgram(p)

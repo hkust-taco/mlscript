@@ -16,7 +16,7 @@ class FlowAnalysisBasedRewrite(
   val deadParamElimSolver: DeadParamElimResult,
   val etaExpansionSolver: EtaExpansionResult,
   val deadConstructorElimSolver: DeadConstructorElimResult,
-)(using Raise) extends PolyInstantiationRewrite(constraintSolver):
+)(using Raise, Erasure) extends PolyInstantiationRewrite(constraintSolver):
 
   private case class EtaParamList(params: ParamList, args: Ls[Arg])
   
@@ -281,6 +281,7 @@ object FlowAnalysisBasedRewrite:
     raise: Raise,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
+    erasure: Erasure,
   ): Program = cfg.flowBasedOpt.fold(p)(rewriteWith(p, _))
   
   
@@ -296,6 +297,7 @@ object FlowAnalysisBasedRewrite:
     raise: Raise,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
+    erasure: Erasure,
   ): Program =
     def mkTl(prefix: Str, debug: Bool) =
       FlowAnalysis.mkTraceLogger(optCfg.config.copy(debug = debug), prefix, tl)

@@ -60,6 +60,7 @@ class MLsCompiler
     val exportedSymbol = artifact.compilationUnit.defaultExport
     
     given Elaborator.State = artifact.state
+    given codegen.Erasure = artifact.erasure
     given Config = artifact.config
     if config.language.version.isEmpty then
       raise:

@@ -12,7 +12,7 @@ import collection.mutable.HashMap
 
 
 class FirstClassFunctionTransformer
-      (using Elaborator.State, Elaborator.Ctx, Raise, DebugPrinter)
+      (using Elaborator.State, Elaborator.Ctx, Raise, DebugPrinter, Erasure)
     extends BlockTransformer(new SymbolSubst):
   // Anonymous lambdas' parameter lists cannot be retrieved from the term symbol
   private val funDefns = HashMap.empty[BlockMemberSymbol, FunDefn] 
