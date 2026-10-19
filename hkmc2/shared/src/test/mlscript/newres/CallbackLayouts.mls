@@ -82,10 +82,70 @@ let bad = required as ((Int?) -> Int)
 //│ ╙──      	                       ^^^^^^^^^^^^^
 //│ bad = fun required
 
-// Dropping the rest does not permit dropping a required trailing parameter.
-// FIXME: The callback layout check currently ignores trailing droppability.
-:breakme
+// Dropping the rest does not permit dropping a non-droppable trailing parameter.
 :e
 private fun requiredTrailing(f: (drop ...Array[Int], Str) -> Int) = f("tail")
 requiredTrailing(() => 0)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.88: 	requiredTrailing(() => 0)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.88: 	requiredTrailing(() => 0)
+//│ ║        	                 ^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.87: 	private fun requiredTrailing(f: (drop ...Array[Int], Str) -> Int) = f("tail")
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 0
+
+// Callbacks may still collect the trailing input in their rest or bind it at the end.
+:expect [1, 4]
+private fun collectTrailing(f: (drop ...Array[Int], Str) -> Int) = f("tail")
+[collectTrailing((...xs) => xs.length), collectTrailing((...xs, last) => last.length)]
+//│ = [1, 4]
+
+// The same omission is rejected for typed callbacks through a generic alias.
+:e
+type RequiredTail[A] = (drop ...Array[Int], A) -> Int
+private fun genericTrailing[A](tail: A, f: RequiredTail[A]) = f(tail)
+val noInputs: () -> Int = () => 0
+genericTrailing("tail", noInputs)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.111: 	genericTrailing("tail", noInputs)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.110: 	val noInputs: () -> Int = () => 0
+//│ ║         	              ^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.108: 	type RequiredTail[A] = (drop ...Array[Int], A) -> Int
+//│ ╙──       	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 0
+//│ noInputs = fun
+
+// An otherwise identical interface may explicitly allow dropping its trailing input.
+:expect 0
+type DroppableTail[A] = (drop ...Array[Int], drop A) -> Int
+private fun droppableTrailing[A](tail: A, f: DroppableTail[A]) = f(tail)
+droppableTrailing("tail", noInputs)
+//│ = 0
+
+// Leading inputs consume the callback's capacity before any trailing inputs do.
+:e
+private fun mixedTrailing(f: (Int, drop ...Array[Int], drop Str, Str) -> Int) = f(1, "drop", "keep")
+mixedTrailing((first, second) => first)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.134: 	mixedTrailing((first, second) => first)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.134: 	mixedTrailing((first, second) => first)
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.133: 	private fun mixedTrailing(f: (Int, drop ...Array[Int], drop Str, Str) -> Int) = f(1, "drop", "keep")
+//│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+// Optional leading inputs can be absent, leaving a trailing input within reach.
+// Resolution leaves uncertain layouts to type checking.
+:expect 1
+private fun optionalTrailing(f: (Int?, drop ...Array[Int], Str, drop Str) -> Int) = f("keep", "drop")
+optionalTrailing(first => 1)
+//│ = 1

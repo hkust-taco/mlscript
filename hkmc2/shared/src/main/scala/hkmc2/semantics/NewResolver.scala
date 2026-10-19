@@ -1452,8 +1452,9 @@ class NewResolver:
                     val leadingFlds = leading.collect { case fld: Fld => fld }
                     DeclaredParams(leadingFlds.map(paramType), leadingFlds.map(_.flags), variadic match
                       case (spd: Spd) :: trailing =>
+                        val trailingFlds = trailing.collect { case fld: Fld => fld }
                         S(DeclaredVariadic(S(declaredType(typeResolution(spd.term), current.withPolarity(!current.positive))),
-                          spd.droppable, trailing.collect { case fld: Fld => paramType(fld) }))
+                          spd.droppable, trailingFlds.map(paramType), trailingFlds.map(_.flags)))
                       case _ => N)
                   case single =>
                     DeclaredParams(S(declaredType(typeResolution(single), current.withPolarity(!current.positive))) :: Nil,
@@ -1785,7 +1786,7 @@ class NewResolver:
             case params: NELs[ParamList] => publish(CallableTypeShape(source,
               params.ne_map(ps => DeclaredParams(ps.params.map(_.sign.map(signature(_, !positive))), ps.params.map(_.flags),
                 ps.variadic.map(v => DeclaredVariadic(v.param.sign.map(signature(_, !positive)), v.param.flags.droppable,
-                  v.trailing.map(_.sign.map(signature(_, !positive))))))),
+                  v.trailing.map(_.sign.map(signature(_, !positive))), v.trailing.map(_.flags))))),
               result, N, N, S(td), N))
             case Nil if td.asyncAnnotation.nonEmpty =>
               publish(promiseShape(td.asyncAnnotation.get, result.getOrElse(extremeType(true))))
@@ -2187,11 +2188,15 @@ class NewResolver:
     * need not agree: a callback may collect trailing arguments in its rest parameter
     * or take fixed interface arguments from the end. More involved compatibility
     * questions belong to type checking, rather than a structural-equality check.
+    * For fixed callbacks, diagnose trailing inputs that remain out of reach even
+    * when callers omit all optional leading and variadic arguments.
     */
   private def callbackArityMismatch(actual: Arity, expected: DeclaredParams): Bool =
+    val trailingCapacity = (actual.leading - expected.leadingRequired).max(0)
     actual.required > Arity(expected).required
       || !actual.hasRest && expected.variadic.exists(!_.droppable)
       || !actual.hasRest && expected.paramFlags.drop(actual.leading).exists(!_.droppable)
+      || !actual.hasRest && expected.variadic.exists(_.trailingFlags.drop(trailingCapacity).exists(!_.droppable))
 
   /** Approximate a declared argument list without choosing a compound signature's
     * branch or enumerating spread lengths. Equal layouts retain whole parameter

@@ -785,10 +785,13 @@ final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSym
 
 /** The variadic parameter of a declared calling interface. A `rest` annotation describes the whole
   * array of arguments it receives, and `trailing` gives the types of the (required) parameters following it.
+  * `trailingFlags` retains which of those required inputs callbacks may drop.
   */
-final case class DeclaredVariadic(rest: Opt[DeclaredType], droppable: Bool, trailing: Ls[Opt[DeclaredType]]):
+final case class DeclaredVariadic(rest: Opt[DeclaredType], droppable: Bool,
+    trailing: Ls[Opt[DeclaredType]], trailingFlags: Ls[FldFlags]):
+  require(trailingFlags.length == trailing.length)
   def mapTypes(f: DeclaredType => DeclaredType): DeclaredVariadic =
-    DeclaredVariadic(rest.map(f), droppable, trailing.map(_.map(f)))
+    DeclaredVariadic(rest.map(f), droppable, trailing.map(_.map(f)), trailingFlags)
 
 /** Parameter types and arity exposed by one list in a declared calling interface.
   * `params` and `paramFlags` give the types and flags of the leading parameters, which may be optional
