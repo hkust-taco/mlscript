@@ -245,21 +245,17 @@ let f = new Foo()
 //│ ║         	        ^^^^^^^^^
 //│ ╟── Class 'Foo' expected 1 argument, but got 0
 //│ ║  l.80: 	class Foo(val a) {
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.81: 	  val b = a + 1
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.82: 	}
-//│ ╙──      	^
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ f = Foo(undefined)
 
 
 :e
 new 42
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.257: 	new 42
+//│ ║  l.253: 	new 42
 //│ ║         	^^^^^^
 //│ ╟── Invalid class expression: integer literal
-//│ ║  l.257: 	new 42
+//│ ║  l.253: 	new 42
 //│ ╙──       	    ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

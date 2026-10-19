@@ -88,5 +88,5 @@ let x = M."f_instr"().body.rest.rhs.cls.l.value
 let y = M."g_instr"().body.rest.rhs.cls.l.value
 //│ x = class Function$
 //│ y = class Function$
-(new x).call(2)
+new x().call(2)
 //│ = 2

@@ -15,7 +15,7 @@ read(a) + project(a)
 :expect 7
 class Overloaded { fun get() = 7 }
 fun Overloaded() = 99
-(new Overloaded).Overloaded#get()
+new Overloaded().Overloaded#get()
 //│ = 7
 
 // Class aliases retain constructor shapes.
@@ -32,7 +32,7 @@ a.Alias#get()
 :expect 9
 class Parent { fun get() = 9 }
 class Child extends Parent {}
-(new Child).Child#get()
+new Child().Child#get()
 //│ = 9
 
 // Fields and assignments share the same resolution path.
@@ -52,7 +52,7 @@ fun missing(a) = a.Later#missing()
 //│ ║        	                 ^^^^^^^^^^^^^^^
 //│ ╟── Class 'Later' does not contain member 'missing'
 //│ ║  l.7: 	class Later(val x) { fun get() = x }
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^
 
 :e
 val NotClass = 1

@@ -281,6 +281,6 @@ Prim(0).take(n32)
 class Cx(val base: Int) with
   fun p(n: Int): Int = this.q(n)
   fun q(n: Int): Int = if n <= 0 then this.base else this.p(n - 1)
-(new Cx(9)).Cx#p(3)
+new Cx(9).Cx#p(3)
 //│ Wasm result:
 //│ = 9

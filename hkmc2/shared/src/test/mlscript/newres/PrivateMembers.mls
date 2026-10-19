@@ -143,7 +143,7 @@ class Outer with
     fun get = this.v
 
 :expect 1
-(new Outer).mk.get
+new Outer().mk.get
 //│ = 1
 
 
@@ -181,7 +181,7 @@ class C extends B with
   fun h = super.f
 
 :expect ["A", "B", "A"]
-[(new C).f, (new C).g, (new C).h]
+[new C().f, new C().g, new C().h]
 //│ = ["A", "B", "A"]
 
 
@@ -315,5 +315,5 @@ class SuperPrivate extends SuperPublic with
   private fun secret = 2
 class SuperChild extends SuperPrivate with
   fun get = super.secret
-(new SuperChild).get
+new SuperChild().get
 //│ = 1

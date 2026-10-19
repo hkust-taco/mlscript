@@ -61,7 +61,7 @@ alias(B).u
 //│ ║        	          ^
 //│ ╟── 'alias' is exposed by this compilation unit.
 //│ ║  l.48: 	val alias = foo
-//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
@@ -77,7 +77,7 @@ alias(A).u
 //│ ║        	          ^
 //│ ╟── 'alias' is exposed by this compilation unit.
 //│ ║  l.48: 	val alias = foo
-//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   alias⁰(A⁰)‹app²›.u‹u⁰, u²›
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

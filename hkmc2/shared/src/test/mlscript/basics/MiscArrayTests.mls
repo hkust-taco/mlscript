@@ -64,7 +64,7 @@ xs |.
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 2 arguments, but got 1
 //│ ║  l.51: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
 //│ ║  l.61: 	  map(x => x * 2)
 //│ ╙──      	      ^^^^^^^^^^
@@ -87,7 +87,7 @@ xs|.
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 2 arguments, but got 1
 //│ ║  l.51: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
 //│ ║  l.84: 	  map(x => x * 2)
 //│ ╙──      	      ^^^^^^^^^^

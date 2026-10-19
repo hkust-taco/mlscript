@@ -256,7 +256,7 @@ app(c => 2) + app(c => if c is C then 1 else 0)
 
 :soir
 :noInline
-fun q() = (new D).app(b => print(b))
+fun q() = new D().app(b => print(b))
 q()
 //│ dead-constructor-elim > >>> dead-constructor-elim results >>>
 //│ dead-constructor-elim > <<< dead-constructor-elim results <<<

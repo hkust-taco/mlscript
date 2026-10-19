@@ -211,33 +211,17 @@ t('group)
 //│ ║         	^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
 //│ ║  l.176: 	fun t(kind, props) =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.177: 	  if graphics.has(kind) then
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.178: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.179: 	  else
-//│ ║         	^^^^^^
-//│ ║  l.180: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo // * Make second parameter optional
 t('group)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.226: 	t('group)
+//│ ║  l.218: 	t('group)
 //│ ║         	^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
 //│ ║  l.176: 	fun t(kind, props) =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.177: 	  if graphics.has(kind) then
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.178: 	    (args, ...) => output of args.'i, kind + " " + showProps(args.'x, args.'y, props)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.179: 	  else
-//│ ║         	^^^^^^
-//│ ║  l.180: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 let empty = Object.create of null

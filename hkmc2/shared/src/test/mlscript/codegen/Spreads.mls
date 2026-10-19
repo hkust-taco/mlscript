@@ -32,7 +32,7 @@ foo(...a)
 //│ ║        	^^^^^^^^^
 //│ ╟── Function 'foo' expected 4 arguments, but got 3
 //│ ║  l.12: 	fun foo(w, x, y, z) = [w, x, y, z]
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 4 arguments but got 3
 
 
@@ -74,7 +74,7 @@ x.r
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── Class 'A' expected 0 arguments, but got 3
 //│ ║  l.66: 	data class A(...r)
-//│ ╙──      	     ^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.68: 	x.r
 //│ ║        	^^^
@@ -98,9 +98,7 @@ new A(1, 2, 3).getR
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Class 'A' expected 0 arguments, but got 3
 //│ ║  l.90: 	data class A(...r) with
-//│ ║        	     ^^^^^^^^^^^^^^^^^^
-//│ ║  l.91: 	  fun getR = r
-//│ ╙──      	^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
 //│ ║  l.91: 	  fun getR = r
 //│ ║        	             ^
@@ -113,7 +111,7 @@ new A(1, 2, 3).getR
 :todo
 fun (||>) pipeIntoMulti[A, B](...xs: Array[A], f: (...Array[A]) -> B): B = f(...xs)
 //│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.114: 	fun (||>) pipeIntoMulti[A, B](...xs: Array[A], f: (...Array[A]) -> B): B = f(...xs)
+//│ ║  l.112: 	fun (||>) pipeIntoMulti[A, B](...xs: Array[A], f: (...Array[A]) -> B): B = f(...xs)
 //│ ╙──       	                              ^^^^^^^^^^^^^^^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: variance traversal of spread elements (of class String)
 
