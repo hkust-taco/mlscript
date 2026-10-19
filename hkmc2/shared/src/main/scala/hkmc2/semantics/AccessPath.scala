@@ -34,6 +34,34 @@ object AccessPath:
     sel.resolvedMembers = member :: Nil
     sel
 
+  /** Recover a path to `target` from `src` by walking its enclosing module/object owners
+    * until reaching a binding available in `src`. For a member declared in [scp2] here,
+    * [scp1] is the outermost accessible base:
+    * {{{
+    *     [scp0]
+    *     fun foo =
+    *       [scp1]
+    *       module Foo with
+    *         module Bar with
+    *           [scp2]
+    * }}}
+    * From [scp1], the path to that member is `Foo.Bar.member`. [scp0] cannot access
+    * [scp2] because there is a function scope on the way: the owner walk cannot
+    * obtain the local binding of `Foo` from outside an invocation of `foo`.
+    * The same would happen for:
+    * {{{
+    *     [scp0]
+    *     if ... then // LocalScope also blocks access to [scp1] and [scp2]
+    *       [scp1]
+    *       module Foo with
+    *         module Bar with
+    *           [scp2]
+    * }}}
+    * This restriction prevents entering an inaccessible scope; it does not prevent
+    * nested functions from capturing bindings in their enclosing scopes. `encloses`
+    * recognizes those bindings before the owner walk is needed. Imported file bindings
+    * and global declarations can also provide the base of a path directly.
+    */
   def findAccessPath(src: SrcScope, target: DefinitionSymbol[?])(using state: State): Either[Failure, Term] =
     def encloses(dst: SrcScope): Bool =
       def loop(scope: SrcScope): Bool = (scope is dst) || scope.parent.exists(loop)
