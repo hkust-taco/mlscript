@@ -53,21 +53,15 @@ let f = withOpt
 //│ = [[1, undefined, 42], [1, 2, 42]]
 //│ f = fun f
 
-// FIXME: The eta-expansion only forwards the leading parameters (see `Resolver`),
-// so the rest arguments are lost.
-:fixme
+// * The eta-expansion forwards the variadic parameter as a spread, followed by its trailing parameters.
 :expect [1, [2, 3], 42]
 let g = withRest
 g(1, 2, 3)
-//│ ═══[RUNTIME ERROR] Expected: '[1, [2, 3], 42]', got: '[1, [], 42]'
-//│ = [1, [], 42]
+//│ = [1, [2, 3], 42]
 //│ g = fun g
 
-// FIXME: The trailing arguments are lost too, and the call then fails.
-:fixme
 :expect [1, [2], 3, 42]
 let h = withTrailing
 h(1, 2, 3)
-//│ ═══[RUNTIME ERROR] Error: Function 'withTrailing' expected at least 2 arguments but got 1
-//│ ═══[RUNTIME ERROR] Expected: '[1, [2], 3, 42]', got: 'undefined'
+//│ = [1, [2], 3, 42]
 //│ h = fun h

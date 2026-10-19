@@ -753,7 +753,10 @@ class Resolver(tl: TraceLogger)
               case (ps @ ParamList(
                 flags = ParamListFlags(ctx = false)
               )) :: pss if !inAppPrefix && pss.exists(_.flags.ctx) =>
-                val as = ps.params.map(p => Fld(p.flags, p.sym.ref().dontResolve, N))
+                def arg(p: Param) = Fld(p.flags, p.sym.ref().dontResolve, N)
+                // The variadic parameter is forwarded as a spread, followed by its trailing parameters.
+                val as = ps.params.map(arg) ::: ps.variadic.toList.flatMap: v =>
+                  Spd(SpreadKind.Eager, v.param.sym.ref().dontResolve, false) :: v.trailing.map(arg)
               //   val as = ps.params.map(p => Fld(p.flags, p.sym.ref().resolve, N))
                 val newLam = (t: Term) => 
                   lam(Term.Lam(ps, t))

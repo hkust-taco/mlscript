@@ -1909,6 +1909,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       val (required, optional) = ps.params.splitAt(ps.leadingRequiredCount)
       val argsSym = VarSymbol(Tree.Ident("args"), erasedType = S(ErasedType.Array))
       val loweredParams = ParamList.withRest(ps.flags, required, S(Param.simple(argsSym)))(ps.toLoc)
+      // * The WebAssembly backend rejects variadic parameters (see `wasm.text.genFuncBody`) and lacks
+      // * the JavaScript runtime functions used to extract the arguments, so the body is not generated.
+      if config.target is CompilationTarget.Wasm then return (loweredParams, _ => compError)
       val args = argsSym.asSimpleRef
       def int(n: Int): Path = Value.Lit(Tree.IntLit(n))(N)
       val tupleSlice = State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("Tuple"), State.tupleSymbol)

@@ -622,10 +622,17 @@ def genFuncBody[T](
     paramTypes: Opt[Seq[ValType]] = N,
 )(mkBody: FunctionCtx ?=> T)(using Ctx, Raise, State): T -> FunctionCtx =
   // * Wasm functions have a fixed arity, so calls cannot omit the arguments of optional parameters.
+  // * Nor can they pass a variable number of arguments: a variadic parameter would be bound as a plain parameter,
+  // * receiving a single argument rather than an array of the remaining ones.
   params.foreach: ps =>
     if ps.hasOptParams then raise(ErrorReport(
       msg"Optional parameters are not supported by the WebAssembly backend." -> ps.toLoc :: Nil,
       source = Diagnostic.Source.Compilation))
+    ps.variadic.foreach: v =>
+      // * The rest parameter introduced when lowering trailing parameters has no location of its own.
+      raise(ErrorReport(
+        msg"Variadic parameters are not supported by the WebAssembly backend." -> v.param.toLoc.orElse(ps.toLoc) :: Nil,
+        source = Diagnostic.Source.Compilation))
   val funcCtx = FunctionCtx(params, thisSym, paramTypes)
   val result = mkBody(using funcCtx)
   result -> funcCtx
