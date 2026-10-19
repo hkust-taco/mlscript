@@ -1,0 +1,81 @@
+:.
+
+// A value stored in an escaping record is exposed even when it is assigned after the record's
+// construction. Clients can access its public fields and call its functions through that record.
+
+
+// Initializers already expose their nested mutable fields, which must declare their types.
+:ge
+private class InitialCell(mut val value)
+fun exportInitialCell() = {mut item: InitialCell(1)}
+//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+//│ ║  l.9: 	private class InitialCell(mut val value)
+//│ ║       	                                  ^^^^^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.10: 	fun exportInitialCell() = {mut item: InitialCell(1)}
+//│ ║        	                               ^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.10: 	fun exportInitialCell() = {mut item: InitialCell(1)}
+//│ ║        	                               ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'exportInitialCell' is exposed by this compilation unit.
+//│ ║  l.10: 	fun exportInitialCell() = {mut item: InitialCell(1)}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// FIXME: InterfaceExposure follows the initializer of `item` but misses the values assigned to it.
+// This must report that AssignedCell.value is exposed and needs an annotation, just like InitialCell.value.
+:breakme
+:ge
+private class AssignedCell(mut val value)
+fun exportAssignedCell() =
+  let record = {mut item: 0}
+  set record.item = AssignedCell(1)
+  record
+
+
+// FIXME: A mutable spread copy also exposes values assigned through its copied fields.
+:breakme
+:ge
+private class CopiedCell(mut val value)
+fun exportCopiedCell() =
+  let source = {item: 0}
+  let copy = mut {...source}
+  set copy.item = CopiedCell(1)
+  copy
+
+
+// An escaping callback's unannotated input must admit external callers, even if its local calls
+// all pass a record containing `answer`. Initializers already produce the required diagnostic.
+:e
+private fun initialCallback(value) = value.answer
+fun exportInitialCallback() = {mut callback: initialCallback}
+initialCallback({answer: 42})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.50: 	private fun initialCallback(value) = value.answer
+//│ ║        	                                     ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╟── Parameter 'value' admits values of unknown shape.
+//│ ║  l.50: 	private fun initialCallback(value) = value.answer
+//│ ║        	                            ^^^^^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.51: 	fun exportInitialCallback() = {mut callback: initialCallback}
+//│ ║        	                                   ^^^^^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.51: 	fun exportInitialCallback() = {mut callback: initialCallback}
+//│ ║        	                                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'exportInitialCallback' is exposed by this compilation unit.
+//│ ║  l.51: 	fun exportInitialCallback() = {mut callback: initialCallback}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// FIXME: The same callback escapes through assignment, but receives no unknown external input.
+:breakme
+:e
+private fun assignedCallback(value) = value.answer
+fun exportAssignedCallback() =
+  let record = {mut callback: 0}
+  set record.callback = assignedCallback
+  record
+assignedCallback({answer: 42})
+//│ = 42
