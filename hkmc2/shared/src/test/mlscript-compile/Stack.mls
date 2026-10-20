@@ -28,10 +28,10 @@ fun fromArray(arr: Array) =
     set i -= 1
   ls
 
-fun toArray(xs) =
-  xs reverse() toReverseArray()
-
 fun toReverseArray(xs) =
+  xs reverse() toArray()
+
+fun toArray(xs) =
   let
     arr = mut []
     i = 0
@@ -48,7 +48,7 @@ fun zip(...xss) =
       Nil then go(heads, tails)(t)
     Nil and heads is
       Nil then { assert tails is Nil, Nil }
-      else heads toArray() :: go(Nil, Nil) of tails reverse()
+      else heads toReverseArray() :: go(Nil, Nil) of tails reverse()
   go(Nil, Nil) of fromArray(xss)
 
 // * Non-recursive efficient internally-mutable list concatenation.
