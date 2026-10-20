@@ -217,9 +217,9 @@ applyTwice(fst, Pair(1, 2))
   allowUnresolvedAccesses: true,
   useNewResolution: false,
   typeCheck: Some(TypeChecking()))
+//│ Type: undefined
 
 #config(language: Language(
   allowUnresolvedAccesses: false,
   useNewResolution: true,
   typeCheck: None))
-//│ Type: undefined

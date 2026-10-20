@@ -42,16 +42,14 @@ final case class Conj(
   tl.traceNot[Opt[Conj]](s"merge ${this.showDbg} and ${that.showDbg}", r => s"= ${r.map(_.showDbg)}"):
     val Conj(i1, u1, v1, w1, x1, y1) = this
     val Conj(i2, u2, v2, w2, x2, y2) = that
-    val xs = x1 ++ x2
-    val ys = y1 ++ y2
+    val xs = (x1 ++ x2).distinct
+    val ys = (y1 ++ y2).distinct
     if xs.intersect(ys).nonEmpty then N
-    else i1.merge(i2) match
-      case N => N
-      case S(i) =>
-        val u = u1.merge(u2)
-        (v1.orElse(v2), w1.orElse(w2)) match
-          case (S(v), S(w)) if v.sym === w.sym => N
-          case (v,w) => S(Conj(i, u, v, w, xs, ys))
+    else i1.merge(i2).flatMap: i =>
+      val u = u1.merge(u2)
+      (v1.orElse(v2), w1.orElse(w2)) match
+        case (S(v), S(w)) if v.sym === w.sym => N
+        case (v,w) => S(Conj(i, u, v, w, xs, ys))
 
 object Conj:
   val empty: Conj = Conj(NF.Inter.empty, NF.Union.empty, N, N, Nil, Nil)
@@ -84,7 +82,7 @@ object NormalForm:
     case u: NF.Union => Disj(Ls(Conj(NF.Inter(Nil), u, N, N, Nil, Nil)))
     case v: InfVar => Disj(Ls(Conj.mkVar(v, false)))
     case ct: ClassLikeType => Disj(Ls(Conj.mkUnion(ct)))
-    case _ => dnf(~(ty.toBasic))
+    case _ => (~ty.toBasic).toDnf
 
   def dnf(ty: Type)(using TL): Disj =
   tl.traceNot[Disj](s"Disj ${ty.showDbg} ${ty.getClass}", r => s"= ${r.showDbg}"):
@@ -97,6 +95,6 @@ object NormalForm:
     case Bot => Disj.bot
     case v: InfVar => Disj(Ls(Conj.mkVar(v, true)))
     case ct: ClassLikeType => Disj(Conj.mkInter(ct) :: Nil)
-    case Inter(lhs, rhs) => inter(dnf(lhs), dnf(rhs))
-    case Union(lhs, rhs) => union(dnf(lhs), dnf(rhs))
+    case Inter(lhs, rhs) => inter(lhs.toDnf, rhs.toDnf)
+    case Union(lhs, rhs) => union(lhs.toDnf, rhs.toDnf)
     case Neg(ty) => neg(ty)

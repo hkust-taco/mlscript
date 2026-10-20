@@ -21,21 +21,25 @@ import hkmc2.codegen.ErasedType.eraseSign
 class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
   import tl.{trace, log}
   private val builtinOps = Elaborator.binaryOps ++ Elaborator.unaryOps ++ Elaborator.aliasOps.keySet
-  private val solver = new ConstraintSolver(elState, tl)
 
   private def error(msg: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N)(using InfCtx) =
     raise(ErrorReport(msg, extraInfo = extraInfo))
     Bot // TODO: error type?
 
-  private def typeNames(using ctx: InfCtx) = ctx.typeNames
   private def freshVar(origin: Symbol | Term, hint: Str = "")(using ctx: InfCtx) =
     // ctx.freshVar(origin, hint)
     InfVar(ctx.lvl, InfVarSymbol(origin, hint), false)
   private def freshWildcard(s: Symbol)(using InfCtx) = Wildcard(freshVar(s),freshVar(s))
-
   private def freshOuter(sym: Symbol)(using ctx: InfCtx): InfVar =
     // ctx.freshOuter(sym)
-    InfVar(ctx.lvl + 1, new InfVarSymbol(sym), true)
+    InfVar(ctx.lvl + 1, InfVarSymbol(sym), true)
+  private def freshEnv(sym: Symbol)(using ctx: InfCtx): InfVar =
+    val s = InfVarSymbol(sym)
+    val state = new InfVarState
+    ctx.varSt += s -> state
+    state.upperBounds = ctx.outRegAcc :: Nil
+    state.lowerBounds = ctx.outRegAcc :: Nil
+    InfVar(ctx.lvl, s, false)
 
   private def mono(ty: InfType)(using ctx: InfCtx): Opt[Type] = ty match
     case x: Type => S(x)
@@ -49,7 +53,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
   private def monoOrErr(ty: InfType, sc: Located)(using InfCtx): Type =
     mono(ty).getOrElse(error(msg"General type is not allowed here." -> sc.toLoc :: Nil))
 
-  private def tryMkMono(ty: InfType, sc: Located)(using InfCtx, Scope): Type = ty match
+  private def tryMkMono(ty: InfType, sc: Located)(using InfCtx, CCtx, Scope): Type = ty match
     case pt: PolyType => tryMkMono(instantiate(pt), sc)
     case ft: PolyFunType =>
       mono(ft).getOrElse:
@@ -93,7 +97,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
                       case S(true) => Wildcard.out(ta)
                       case N => ta
                 val fs = ts.map(_ => false) // TODO
-                ClassLikeType(tpeSym, ts, Nil, fs, fs)
+                ClassLikeType(tpeSym, ts, Nil, fs, N)
             case N => error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil)
         case FunTy(Term.Tup(params), ret, eff) =>
           val p = params.map {
@@ -116,6 +120,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
         case CompType(lhs, rhs, pol) =>
           if pol then mono(lhs, pol) | mono(rhs, pol) else mono(lhs, pol) & mono(rhs, pol)
         case UnitVal() => InfCtx.objTy
+        case Lit(x) => InfCtx.litTy(x)
         case _ => ty.symbol.flatMap(_.asTpe) match
           case S(cls: (ClassSymbol | TypeAliasSymbol)) => typeAndSubstType(Term.TyApp(ty, Nil)(N), pol)
           case _ => error(msg"Invalid type" -> ty.toLoc :: Nil, S(ty)) // TODO
@@ -134,7 +139,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
         val lbty = ctx.lbs(tv.sym).foldLeft[Type](Bot)(_ | _)
         val ubty = ctx.ubs(tv.sym).foldLeft[Type](Top)(_ & _)
         constrain(lbty, ubty)
-    PolyType(bds.map(_._1), S(outer), body)
+    PolyType(bds.map(_._1), S(outer), Nil, body)
 
   private def typeType(ty: Term)(using ctx: InfCtx, cctx: CCtx): InfType =
     typeAndSubstType(ty, true)(using Map.empty)
@@ -147,7 +152,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
     ty
 
   private def constrain(x: Type, y: Type)(using ctx: InfCtx, cctx: CCtx): Unit =
-    ctx.constrain(solver, ctx.sub(x,y))
+    ctx.constrain(ctx.sub(x,y))
 
   private def fundef(sym: Symbol, lam: Term, sig: Opt[Term])
       (using ctx: InfCtx, cctx: CCtx, scope: Scope) = lam match
@@ -164,14 +169,73 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
         ctx += sym -> funTyV // for recursive functions
         val (res, _) = typeCheck(lam)
         val funTy = tryMkMono(res, lam)
-        given CCtx = CCtx.init(lam, N)
-        constrain(funTy, funTyV)
-        ctx += sym -> generalize(funTy, S(outer), ctx.lvl + 1)
+        {
+          given CCtx = CCtx.init(lam, N)
+          constrain(funTy, funTyV)
+          ctx += sym -> generalize(funTy, S(outer), ctx.lvl + 1)
+        }
     case _ =>
       error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
 
-  def instantiate(x: InfType): Type = ???
-  def generalize(ty: InfType, outer: Opt[InfVar], lvl: Int): PolyType = ???
+
+  private class Subst(map: Map[InfVarSymbol, InfVar]) extends TypeMap:
+    override def apply(pol: Bool)(t: Type) = t.toBasic match
+      case v @ InfVar(_, s, _) => map.get(s).getOrElse(v)
+      case t => super.apply(pol)(t)
+
+  private def substMono(map: Map[InfVarSymbol, InfVar])(x: Type): Type =
+    Subst(map)(true)(x)
+
+  private def substMono(map: Map[InfVarSymbol, InfVar])(x: K): K = x match
+    case K(x, y: Type) => K(substMono(map)(x), substMono(map)(y))
+    case K(x, DisjOr(p, cs)) => K(substMono(map)(x), DisjOr(substMono(map)(p), cs.map(substMono(map))))
+
+  private def subst(map: Map[InfVarSymbol, InfVar])(x: InfType): InfType =
+    x match
+      case _: PolyType => ???
+      case PolyFunType(args, ret, eff) =>
+        PolyFunType(args.map(subst(map)), subst(map)(ret), substMono(map)(eff))
+      case x: Type => substMono(map)(x)
+
+  private def instantiate(x: PolyType)(using ctx: InfCtx, cctx: CCtx) =
+    val PolyType(tvs, outer, xbds, body) = x
+    val env = freshEnv(new TempSymbol(N, erasedType = N, "env"))
+    val map = (outer.map(_.sym -> env).toList ++ tvs.map(v =>
+      val nv = InfVar(ctx.lvl, InfVarSymbol(InstSymbol(v.sym), v.sym.hint), false)
+      tl.log(s"instantiate ${v.showDbg} ~> ${nv.showDbg}")
+      v.sym -> nv
+    )).toMap
+    tvs.foreach: v =>
+      ctx.varSt.get(v.sym).foreach: st =>
+        val ns = new InfVarState
+        ctx.varSt += map(v.sym).sym -> ns
+        ns.upperBounds = st.upperBounds.map(substMono(map))
+        ns.lowerBounds = st.lowerBounds.map(substMono(map))
+        ns.disjsub = st.disjsub.map(d => DisjOr(substMono(map)(d.p), d.cs.map(substMono(map))))
+    // TODO bound scheme
+    xbds.foreach(k => ctx.constrain(substMono(map)(k)))
+    subst(map)(body)
+
+  private def skolemize(x: PolyType)(using ctx: InfCtx, cctx: CCtx) =
+    val PolyType(tvs, outer, xbds, body) = x
+    // * Note that by this point, the state is supposed to be frozen/treated as immutable
+    // * `outer` is already skolemized when it is declared
+    val map = tvs.map(v =>
+      val sk = InfVar(ctx.lvl, InfVarSymbol(InstSymbol(v.sym), v.sym.hint), true)
+      tl.log(s"skolemize ${v.showDbg} ~> ${sk.showDbg}")
+      v.sym -> sk
+    ).toMap
+    tvs.foreach: v =>
+      ctx.varSt.get(v.sym).foreach: st =>
+        val ns = new InfVarState
+        ctx.varSt += map(v.sym).sym -> ns
+        ns.upperBounds = st.upperBounds.map(substMono(map))
+        ns.lowerBounds = st.lowerBounds.map(substMono(map))
+        ns.disjsub = st.disjsub.map(d => DisjOr(substMono(map)(d.p), d.cs.map(substMono(map))))
+    // xbds.foreach(k => ctx.constrain(substMono(map)(k)))
+    subst(map)(body)
+
+  private def generalize(ty: InfType, outer: Opt[InfVar], lvl: Int): PolyType = ???
 
   private def app(lhs: InfType, lhsEff: Type, rhs: Ls[Elem], t: Term)
       (using ctx: InfCtx, cctx: CCtx, scope: Scope)
@@ -189,7 +253,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
           case (spd: Spd, _) => TODO(s"spread arguments: $spd")
         (ret, resEff)
     case ClassLikeType(s, (params: ClassLikeType) :: ret :: eff :: Nil, _,_,_)
-        if s === ctx.prim.fnSym && params.sym === ctx.prim.objSym =>
+        if s === ctx.prim.fnSym => // && params.sym === ctx.prim.objSym =>
       app(PolyFunType(params.refinement.values.toList, ret.posPart, eff.posPart), lhsEff, rhs, t)
     case ty: PolyType => app(instantiate(ty), lhsEff, rhs, t)
     case funTy =>
@@ -218,7 +282,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
             ty
         }
         val fs = targs.map(_ => false) // TODO
-        constrain(tryMkMono(ty, t), ClassLikeType(clsSym, targs, Nil, fs, fs))
+        constrain(tryMkMono(ty, t), ClassLikeType(clsSym, targs, Nil, fs, N))
         require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
         (clsDfn.paramsOpt.fold(Nil)(_.params).map {
           case Param(_, sym, sign, _) =>
@@ -263,7 +327,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
           case _ => ???
         }
         val fs = targs.map(_ => false) // TOOD
-        (ClassLikeType(clsDfn.sym, targs, Nil, fs, fs), effBuff.foldLeft[Type](Bot)((res, e) => res | e))
+        (ClassLikeType(clsDfn.sym, targs, Nil, fs, N), effBuff.foldLeft[Type](Bot)((res, e) => res | e))
     case S(clsDfn: ClassDef.Plain) => ??? // TODO
     case N => 
       (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
@@ -288,19 +352,26 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
     case (Term.Lam(params, body), ft @ ClassLikeType(fn, (args: ClassLikeType)::ret::eff::Nil, _,_,_))
         if fn === ctx.prim.fnSym =>
       ascribe(lhs, PolyFunType(args.refinement.values.toList, ret.posPart, eff.posPart))
-    case (term, pt @ PolyType(_, outer, _)) => // * generalize
+    case (term, pt @ PolyType(_, outer, _, _)) => // * generalize
       val nextCtx = outer match
         case S(outer) => ctx.nestWithOuter(outer)
         case N => ctx.nextLevel
-      // given InfCtx = nextCtx
-      // constrain(ascribe(term, skolemize(pt))._2, Bot) // * never generalize terms with effects
-      // (pt, Bot)
-      ???
+      given InfCtx = nextCtx
+      constrain(ascribe(term, skolemize(pt))._2, Bot) // * never generalize terms with effects
+      (pt, Bot)
     // case (Term.IfLike(_, IfLikeForm.ReturningIf, split), ty) => // * propagate
     //   typeAllSplits(split.getExpandedSplit, S(ty))
     case (Term.Asc(term, ty), rhs) =>
       ascribe(term, typeType(ty))
       ascribe(term, rhs)
+    case (lhs, rhs: Type) => rhs.conjuncts.toList match
+      case rhs :: Nil =>
+        val (lhsTy, eff) = typeCheck(lhs)
+        constrain(tryMkMono(lhsTy, lhs), monoOrErr(rhs, lhs))
+        (rhs, eff)
+      case cs =>
+        val e = cs.map(c => ascribe(lhs, c)._2).reduce(_|_)
+        (rhs, e)
     case _ =>
       val (lhsTy, eff) = typeCheck(lhs)
       rhs match
@@ -377,18 +448,19 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
             ctx += td.sym -> typeType(sig)
             goStats(stats)
           case (clsDef: ClassDef) :: stats =>
-            typeNames.add(clsDef.sym.nme)
+            // typeNames.add(clsDef.sym.nme)
             // clsDef.ext match
             //   case S(Term.New(ty, _, N)) => createADTCtor(clsDef, ty)
             //   case _ => ()
             goStats(stats)
           case (modDef: ModuleOrObjectDef) :: stats =>
-            typeNames.add(modDef.sym.nme)
+            // typeNames.add(modDef.sym.nme)
             goStats(stats)
           case Import(sym, str, pth) :: stats =>
             goStats(stats) // TODO:
+          case (_: SetConfig) :: _ =>
           case stat :: _ =>
-            // TODO(stat) // TODO
+            TODO(stat)
         goStats(stats)
         val (ty, eff) = typeCheck(res)
         (ty, effBuff.foldLeft(eff)((res, e) => res | e))

@@ -24,8 +24,9 @@ import hkmc2.utils.*, shorthands.*
 //       refine.values.foreach(apply(pol))
 //     case _ =>
 
-class TypeMapper:
-  def applyArg(pol: Bool)(t: TypeArg): TypeArg = ???
+class TypeMap:
+  def applyArg(pol: Bool)(t: TypeArg): TypeArg =
+    Wildcard(apply(!pol)(t.negPart), apply(pol)(t.posPart))
   def apply(pol: Bool)(t: Type): Type = t.toBasic match
     case Bot | Top | _: InfVar => t
     case Union(x, y) => Union(apply(pol)(x), apply(pol)(y))

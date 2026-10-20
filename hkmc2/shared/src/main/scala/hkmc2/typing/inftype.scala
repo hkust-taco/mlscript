@@ -56,7 +56,7 @@ object Wildcard:
   def out(ty: Type) = Wildcard(Bot, ty)
   def empty = Wildcard(Bot, Top)
 
-case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], body: InfType) extends InfType:
+case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], xbds: Ls[K], body: InfType) extends InfType:
   lazy val lvl = (body :: tvs).map(_.lvl).max
   def show(using Scope, InfCtx, Raise) = showDbg //TODO
   def showDbg = ???
@@ -69,7 +69,7 @@ case class PolyFunType(args: Ls[InfType], ret: InfType, eff: Type) extends InfTy
 
 sealed abstract class Type extends InfType with TypeArg:
   lazy val lvl = toBasic match
-    case ClassLikeType(name, targs, refinement, i, o) =>
+    case ClassLikeType(name, targs, refinement, _,_) =>
       val args = targs.iterator
       val refine = refinement.iterator.map(_._2)
       (args ++ refine).map(_.lvl).maxOption.getOrElse(0)
@@ -78,11 +78,30 @@ sealed abstract class Type extends InfType with TypeArg:
     case Union(lhs, rhs) => lhs.lvl.max(rhs.lvl)
     case Inter(lhs, rhs) => lhs.lvl.max(rhs.lvl)
     case Neg(ty) => ty.lvl
-  def show(using Scope, InfCtx, Raise) = showDbg //TODO
+  def show(using Scope, InfCtx, Raise) = toBasic match
+    case ClassLikeType(f, args, _,_,_) if f === summon[InfCtx].prim.fnSym =>
+      val fargs :: ret :: eff :: Nil = args.runtimeChecked
+      val ClassLikeType(_,_,r,_,_) = fargs.negPart.runtimeChecked
+      val a = s"[${r.values.map(_.show).mkString(", ")}]"
+      if eff === Bot then
+        s"$a -> ${ret.show}"
+      else
+        s"$a ->{${eff.show}} ${ret.show}"
+    case ClassLikeType(name, targs, refinement, _,_) =>
+      val cls = if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.show).mkString(", ")}]"
+      val r = refinement.map { case (l,t) => s"${l.name}: ${t.showDbg}" }.mkString(", ")
+      cls ++ (if refinement.isEmpty then "" else s" & {$r}")
+    case v @ InfVar(lvl, sym, isSkolem) =>
+      val name = scope.lookup(v.sym).getOrElse(scope.allocateName(v.sym, v.sym.hint))
+      if isSkolem then name else s"'${name}"
+    case Union(lhs, rhs) => s"${lhs.paren} ∨ ${rhs.paren}"
+    case Inter(lhs, rhs) => s"${lhs.paren} ∧ ${rhs.paren}"
+    case Neg(ty) => s"¬${ty.paren}"
+    case _ => showDbg
   def showDbg: Str = toBasic match
     case ClassLikeType(name, targs, refinement, _,_) =>
       val cls = if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.map(_.showDbg).mkString(", ")}]"
-      val r = refinement.map { case (l,t) => s"$l: ${t.showDbg}" }.mkString(", ")
+      val r = refinement.map { case (l,t) => s"${l.name}: ${t.showDbg}" }.mkString(", ")
       cls ++ (if refinement.isEmpty then "" else s" & {$r}")
     case v @ InfVar(lvl, sym, isSkolem) =>
       val name = if sym.hint.isEmpty then s"${sym.nme}" else s"${sym.nme}(${sym.hint})"
@@ -106,9 +125,9 @@ sealed abstract class Type extends InfType with TypeArg:
   lazy val partialpattern: Bool = simp match
     case _: InfVar => false
     case Top | Bot => true
-    case ClassLikeType(s, args, refine,_,o) =>
-      val p = args.iterator.zip(o).forall:
-        case (t, true) => t.posPart.partialpattern
+    case ClassLikeType(s, args, refine,congr,_) =>
+      val p = args.iterator.zip(congr).forall:
+        case (t, true) => t.negPart === Bot && t.posPart.partialpattern
         case (t, false) => t is Wildcard.empty
       p && refine.values.forall(_.partialpattern)
     case Union(x,y) => x.partialpattern && y.partialpattern
@@ -126,6 +145,9 @@ sealed abstract class Type extends InfType with TypeArg:
 
   def disjuncts: Ite[Type] = simp match
     case Union(x,y) => x.disjuncts ++ y.disjuncts
+    case x => Ite(x)
+  def conjuncts: Ite[Type] = simp match
+    case Inter(x,y) => x.conjuncts ++ y.conjuncts
     case x => Ite(x)
 
   var _dnf: Disj = null
@@ -170,30 +192,32 @@ case class Neg(t: Type) extends BasicType
 case class ClassLikeType(
   sym: ClsTag, args: Ls[TypeArg],
   refinement: Ls[(Tree.Ident, Type)],
-  in: Ls[Bool], out: Ls[Bool]
+  congr: Ls[Bool], ov: Opt[Int]
 ) extends BasicType:
   private def merge(u: Ls[TypeArg], r: Ls[Tree.Ident -> Type]) =
     val targs = args.lazyZip(u).map(_ & _)
     val rmap = mergeMap(refinement, r)(_ & _)
-    val lbl = (refinement.iterator ++ r.iterator).map(_._1).distinct
+    val lbl = (refinement.iterator ++ r.iterator).map(_._1).distinct.toList
     val refine = lbl.zip(lbl.map(rmap)).toList
-    ClassLikeType(sym, targs, refine, in, out)
+    ClassLikeType(sym, targs, refine, congr, ov)
   def merge(cs: Ls[ClassLikeType]): Opt[Ls[ClassLikeType]] = cs match
     case Nil => S(Ls(this))
+    case x :: xs if x.sym === sym && x.ov.isDefined =>
+      S(this :: x :: xs)
     case x :: _ if x.sym is sym =>
       S(Ls(cs.foldLeft(this)((x, y) => x.merge(y.args, y.refinement))))
-    case _ => N    
+    case _ => N
 type ClsTag = LitSymbol | TypeSymbol | ModuleOrObjectSymbol
 
-object Discriminator extends TypeMapper:
+object Discriminator extends TypeMap:
   override def apply(pol: Bool)(t: Type) = t.simp match
     case _: InfVar => Top
     case c @ ClassLikeType(_: LitSymbol, _,_,_,_) => c
-    case c @ ClassLikeType(s: (TypeSymbol | ModuleOrObjectSymbol), args, refine, i,o) =>
+    case c @ ClassLikeType(s: (TypeSymbol | ModuleOrObjectSymbol), args, refine,congr,ov) =>
       // TODO flags in `s.defn.get.tparams`
-      val a = args.iterator.zip(o).map:
-        case (t, true) => apply(pol)(t.posPart) // TODO
+      val a = args.iterator.zip(congr).map:
+        case (t, true) => Wildcard.out(apply(pol)(t.posPart)) // TODO
         case _ => Wildcard.empty
-      ClassLikeType(s, a.toList, refine.mapValues(apply(pol)), i,o)
+      ClassLikeType(s, a.toList, refine.mapValues(apply(pol)), congr,ov)
     case t @ Neg(ClassLikeType(_, _, refine, _,_)) => if refine.isEmpty then t else Top
     case t => super.apply(pol)(t)
