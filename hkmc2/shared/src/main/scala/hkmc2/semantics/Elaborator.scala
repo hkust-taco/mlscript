@@ -1946,7 +1946,9 @@ extends Importer:
         if mut then Term.Mut(inner) else inner
       case N =>
         val objectRef = ctx.builtins.Object.bms.get.ref(Ident("Object"))
-        mkNew(objectRef, Nil, bodo)(N)
+        // An anonymous object invokes Object's constructor, rather than
+        // partially applying its declared optional parameter list.
+        mkNew(objectRef, Term.Tup(Nil)(Tree.DummyTup) :: Nil, bodo)(N)
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
       
@@ -2678,7 +2680,7 @@ extends Importer:
         val pss = td.paramLists.map: ps =>
           val (res, newCtx2) =
             given Ctx = newCtx
-            params(ps, isDataClass, k is Pat, inFunction = false)
+            params(ps, isDataClass, k is Pat, inFunction = false, inConstructor = k is Cls)
           newCtx = newCtx2
           withoutVariadic(res)
         
@@ -2897,7 +2899,7 @@ extends Importer:
               given Ctx = newCtx
               // Unlike main parameters, constructor(...) parameters of data classes are not
               // implicitly `val`: they only become fields when explicitly marked.
-              params(ps, false, false, inFunction = false)
+              params(ps, false, false, inFunction = false, inConstructor = true)
             newCtx = newCtx2
             withoutVariadic(res)
           newCtx.givenIn:
@@ -3111,7 +3113,7 @@ extends Importer:
     case _ => ()
   
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
-    val ps_ctx = params(t, inDataClass = false, inPattern = false, inFunction = true)
+    val ps_ctx = params(t, inDataClass = false, inPattern = false, inFunction = true, inConstructor = false)
     def checkFlags(p: Param): Unit =
       if p.flags.isVal || p.flags.mut then
         raise(ErrorReport(msg"Illegal function parameter modifiers: ${
@@ -3145,8 +3147,10 @@ extends Importer:
    *                  will be added to the context.
    * @param inFunction Whether the parameter list belongs to a function or lambda,
    *                   whose parameters may be optional or droppable.
+   * @param inConstructor Whether the parameter list belongs to a class constructor,
+   *                      whose parameters may be optional but not droppable.
    */
-  def params(t: Tree, inDataClass: Bool, inPattern: Bool, inFunction: Bool): Ctxl[(ParamList, Ctx)] = t match
+  def params(t: Tree, inDataClass: Bool, inPattern: Bool, inFunction: Bool, inConstructor: Bool): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>
       // * `acc` accumulates the leading parameters in reverse order, and `variadic` the variadic
       // * parameter together with the trailing parameters following it, also in reverse order.
@@ -3169,8 +3173,8 @@ extends Importer:
             // * arguments, the optional leading parameters take the remaining ones from left to right,
             // * and the variadic parameter takes the rest (see `ParamList` and `Lowering.setupFunctionDef`).
             if p.flags.opt then
-              if !inFunction then
-                raise(ErrorReport(msg"Optional parameters are only supported in function and lambda parameter lists." -> hd.toLoc :: Nil))
+              if !inFunction && !inConstructor then
+                raise(ErrorReport(msg"Optional parameters are only supported in function, lambda, and constructor parameter lists." -> hd.toLoc :: Nil))
               else if inUsing then
                 raise(ErrorReport(msg"Contextual parameters cannot be optional." -> hd.toLoc :: Nil))
               else if spd.isDefined then

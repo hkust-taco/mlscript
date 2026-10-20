@@ -17,6 +17,8 @@ import hkmc2.semantics.Elaborator.State
   *
   * Instantiations are saturated by the time this pass runs, so every
   * `Instantiate` can be rewritten without consulting the class definition.
+  * Lowering.lowerConstructorArgs has materialized omitted optional constructor
+  * arguments, so flattening cannot shift later lists into their parameter slots.
   * Source-level constructor wrapper functions keep their original calling
   * convention when they are used partially. Saturated calls to curried class
   * wrappers are lowered to instantiations, matching the `new` path without

@@ -7,7 +7,12 @@ new Map
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   new Map⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = Map(0) {}
+//│ = fun
+
+// A missing argument list leaves the declared constructor partially applied.
+:expect 0
+(new Map)([]).size
+//│ = 0
 
 // :de
 :sr

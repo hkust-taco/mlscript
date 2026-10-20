@@ -27,3 +27,14 @@ trailing(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Variadic parameters are not supported by the WebAssembly backend.
 //│ ║  l.25: 	fun trailing(x, ...xs, y) = y
 //│ ╙──      	            ^^^^^^^^^^^^^
+
+// * Constructor parameter lists obey the same backend restriction.
+:e
+class OptionalConstructor(val value?)
+new OptionalConstructor()
+//│ ╔══[COMPILATION ERROR] Optional parameters are not supported by the WebAssembly backend.
+//│ ║  l.33: 	class OptionalConstructor(val value?)
+//│ ╙──      	                         ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Optional parameters are not supported by the WebAssembly backend.
+//│ ║  l.33: 	class OptionalConstructor(val value?)
+//│ ╙──      	                         ^^^^^^^^^^^^

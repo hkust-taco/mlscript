@@ -371,7 +371,7 @@ renderAsStr of new SelfRef
 //│ = "SelfRef { a: ref'1, b: 1 } as ref'1"
 
 renderAsStr of
-  new Object with
+  new Object() with
     val x = 0
     fun y = 0
 //│ = "$anon { x: 0 }"

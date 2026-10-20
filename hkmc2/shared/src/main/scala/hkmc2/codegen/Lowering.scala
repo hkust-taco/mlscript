@@ -530,7 +530,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     args match
     case _ :: _ =>
       def zipArgs(remainingParamss: Ls[ParamList], args: Ls[Term], acc: Ls[Ls[Arg]]): Block = (remainingParamss, args) match
-        case (ps :: remainingParamss2, arg :: remainingArgs) => lowerArgs(arg, expectedParamTypes(ps)): as =>
+        case (ps :: remainingParamss2, arg :: remainingArgs) => lowerConstructorArgs(arg, ps): as =>
           zipArgs(remainingParamss2, remainingArgs, as ne_:: acc)
         case (Nil, arg :: remainingArgs) =>
           if remainingArgs.isEmpty then
@@ -558,10 +558,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * trying to group as many as possible into a single one
     * when they correspond to parameter lists of the same callee. */
   def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+    val isConstructor = fr.targetSymbol.exists:
+      case _: ClassCtorSymbol => true
+      case _ => false
     def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
-        lowerArgs(args, expectedParamTypes(ps))(as => zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects))
+        def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
+        if isConstructor then lowerConstructorArgs(args, ps)(next)
+        else lowerArgs(args, expectedParamTypes(ps))(next)
       case (Nil, Nil) =>
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
       case (Nil, args :: remainingArgss) =>
@@ -608,7 +613,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     def zipArgs(remainingCtorParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]]): Block =
       (remainingCtorParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
-        lowerArgs(args, expectedParamTypes(ps))(as => zipArgs(remainingParams, remainingArgs, as :: acc))
+        lowerConstructorArgs(args, ps)(as => zipArgs(remainingParams, remainingArgs, as :: acc))
       case (Nil, Nil) =>
         k(buildInstantiate(acc.reverse))
       case (Nil, args :: remainingArgss) =>
@@ -646,6 +651,23 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             Assign(tmp, inst,
               lowerRemainingCalls(tmp.asSimpleRef, remainingArgss.head, remainingArgss.tail, annotations, N)(k))
     else zipArgs(ctorParamLists, args, Nil)
+  
+  /** Materialize omitted constructor parameters as undefined before optimizers
+    * flatten argument lists or associate fields with argument positions.
+    * With spreads, collect the arguments once and read the fixed parameter slots;
+    * missing slots yield undefined and later lists cannot shift into those slots.
+    */
+  private def lowerConstructorArgs(arg: Term, ps: ParamList)(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+    lowerArgs(arg, expectedParamTypes(ps)): args =>
+      if !ps.params.exists(_.flags.opt) then k(args)
+      else if args.forall(_.spread.isEmpty) then
+        k(args.padTo(ps.params.length, Arg(N, Value.Lit(Tree.UnitLit(false))(arg.toLoc))))
+      else
+        assert(ps.variadic.isEmpty, "Constructor parameters must have a fixed layout")
+        val tuple = loweringCtx.registerTempSymbol(S(arg), erasedType = S(ErasedType.Array), "constructorArgs")
+        val slots = ps.params.indices.map: index =>
+          Arg(N, DynSelect(tuple.asSimpleRef, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(arg.toLoc))
+        Assign(tuple, Tuple(false, args)(arg.toLoc), k(slots.toList))
   
   def lowerArgs(arg: Term, expectedTypes: Ls[Opt[ErasedType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     arg match

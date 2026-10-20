@@ -3726,6 +3726,19 @@ class NewResolver:
         val sh = newShapes.getOrElseUpdate((ref.target, marks, nw.resSym, ref.supplied),
           NewShape(dsh, ref.target, marks, nw.args, nw, ref.supplied))
         if rctx.state.constructorApplications.add((sh, instances)) then
+          // A class without parameter lists still accepts one empty argument tuple.
+          // Zipping alone would silently ignore that tuple, and any lists supplied
+          // after a constructor is saturated. Anonymous refinements forward these
+          // arguments through their synthetic parent New, which checks them there.
+          if nw.rft.isEmpty then
+            val paramCount = dsh.unappliedParams.length
+            val maxLists = paramCount.max(1)
+            if nw.args.length > maxLists then
+              resolError(nw, dsh.arityDiagnostic(
+                msg"Class '${cd.sym.nme}' expected at most ${maxLists} ${"argument list".pluralized(maxLists)}, but got ${nw.args.length}"))
+            if paramCount == 0 then
+              nw.args.headOption.foreach: args =>
+                checkArgumentArity(args, Arity(0, 0, false, 0), nw, dsh)(_ => ())
           dsh.unappliedParams.lazyZip(nw.args).foreach:
             case ((ps, _), args) => zipArgsIn(marks, ps, args, nw, dsh, instances)
         publishViewed(nw, sh, instances)(using rctx.withInstances(callerInstances))

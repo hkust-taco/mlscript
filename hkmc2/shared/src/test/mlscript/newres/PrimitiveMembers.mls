@@ -22,7 +22,7 @@ fun decimal(n: Num) = n.toFixed(1)
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect [true, 2, false, 1]
-let values = new mut Set
+let values = new mut Set()
 values.add("a")
 values.add("b")
 let present = values.has("a")

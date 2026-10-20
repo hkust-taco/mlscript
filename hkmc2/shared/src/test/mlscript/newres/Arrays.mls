@@ -134,7 +134,7 @@ new Array[Int](1, 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 2
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.247: 	declare class Array[T](val length: Int) {
+//│ ║  l.263: 	declare class Array[T](val length: Int) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2]
 
@@ -145,7 +145,7 @@ new Array[Int]()
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.247: 	declare class Array[T](val length: Int) {
+//│ ║  l.263: 	declare class Array[T](val length: Int) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
@@ -208,7 +208,7 @@ class Total(val total: Int)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'reduce' expected 2 arguments, but got 1
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.282: 	  fun reduce[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
+//│ ║  l.298: 	  fun reduce[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 3
 

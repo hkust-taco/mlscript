@@ -62,7 +62,7 @@ let identifierPattern = new RegExp of
 private fun noNeedForQuotes(id) = identifierPattern.test(id)
 
 // Use this object instead when no options object is given.
-let emptyOptions = new Object
+let emptyOptions = new Object()
 
 let DEFAULT_BREAK_LENGTH = 80
 

@@ -119,7 +119,7 @@ module A with
   f()
   () // defeats tail call optimization
 
-let obj = new Object with
+let obj = new with
   fun foo() = print("Hello")
   foo()
 //│ > Hello

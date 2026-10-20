@@ -7,6 +7,7 @@ declare type Anything
 declare type Nothing
 
 declare open class Object {
+  constructor(value?)
   fun toString(): Str
 }
 declare fun Object(value?): Object
@@ -30,7 +31,9 @@ declare module JSON {
     stringify
 }
 
-declare class Number: Num
+declare class Number: Num {
+  constructor(value?)
+}
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/Number
 declare fun Number(value?): Number
 declare module Number {
@@ -59,7 +62,9 @@ declare open class Function[A /* extends Array */, B]: ((...A) -> B) {
 }
 declare module Function
 
-declare class String
+declare class String {
+  constructor(value?)
+}
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/String
 declare fun String(value?): Str
 declare module String {
@@ -70,6 +75,7 @@ declare module String {
 }
 
 declare class RegExp {
+  constructor(source?: Str | RegExp, flags?: Str)
   fun toString(): Str
   fun exec(input: Str): Array[Str] | null
   fun test(input: Str): Bool
@@ -77,6 +83,7 @@ declare class RegExp {
 declare module RegExp
 
 declare class Set[V] {
+  constructor(values?: Iterable[V] | null)
   @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[V]
   val size: Int
   fun add(value: V): Set[V]
@@ -90,6 +97,7 @@ declare class Set[V] {
 declare module Set
 
 declare class Map[K, V] {
+  constructor(entries?: Iterable[[K, V]] | null)
   @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[[K, V]]
   val size: Int
   fun get(key: K): V | undefined
@@ -123,6 +131,7 @@ declare class WeakMap[K, V] {
 declare module WeakMap
 
 declare class Error {
+  constructor(message?, options?)
   val message: Str
   val name: Str
   val stack: Str | undefined
@@ -131,11 +140,15 @@ declare class Error {
 declare fun Error(message?, options?): Error
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError/TypeError
-declare class TypeError extends Error
+declare class TypeError extends Error(message, options) {
+  constructor(message?, options?)
+}
 declare fun TypeError(message?, options?): TypeError
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError/RangeError
-declare class RangeError extends Error
+declare class RangeError extends Error(message, options) {
+  constructor(message?, options?)
+}
 declare fun RangeError(message?, options?): RangeError
 
 declare class Date
@@ -150,7 +163,10 @@ declare module TypedArray
 declare class Int8Array
 declare module Int8Array
 
-declare class Uint8Array
+declare class Uint8Array {
+  // The first argument can be a length, an array-like/iterable, or a buffer.
+  constructor(lengthOrValuesOrBuffer?, byteOffset?: Int, length?: Int)
+}
 declare module Uint8Array
 
 declare class Uint8ClampedArray
@@ -416,10 +432,13 @@ declare val Infinity
 // Wasm support
 declare object WebAssembly {
   declare class Instance {
+    constructor(compiledModule: Module, imports?)
     val exports: dyn
   }
   declare class Memory
-  declare class Module
+  declare class Module {
+    constructor(bytes)
+  }
   declare module Module {
     fun
       exports

@@ -921,15 +921,15 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
   }
   static debugCont(cont) {
     let tmp, tmp1, tmp2;
-    tmp = globalThis.Object.freeze(new globalThis.Map());
-    tmp1 = globalThis.Object.freeze(new globalThis.Set());
+    tmp = globalThis.Object.freeze(new globalThis.Map(undefined));
+    tmp1 = globalThis.Object.freeze(new globalThis.Set(undefined));
     tmp2 = Runtime.showFunctionContChain(cont, tmp, tmp1, 0);
     return runtime.safeCall(globalThis.console.log(tmp2))
   }
   static debugHandler(cont) {
     let tmp, tmp1, tmp2;
-    tmp = globalThis.Object.freeze(new globalThis.Map());
-    tmp1 = globalThis.Object.freeze(new globalThis.Set());
+    tmp = globalThis.Object.freeze(new globalThis.Map(undefined));
+    tmp1 = globalThis.Object.freeze(new globalThis.Set(undefined));
     tmp2 = Runtime.showHandlerContChain(cont, tmp, tmp1, 0);
     return runtime.safeCall(globalThis.console.log(tmp2))
   }
@@ -945,8 +945,8 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       if (scrut1 === true) {
         runtime.safeCall(globalThis.console.log("<lastHandler is self>"));
       }
-      vis = globalThis.Object.freeze(new globalThis.Set());
-      hl = globalThis.Object.freeze(new globalThis.Map());
+      vis = globalThis.Object.freeze(new globalThis.Set(undefined));
+      hl = globalThis.Object.freeze(new globalThis.Map(undefined));
       tmp = globalThis.Object.freeze([
         contTrace.last
       ]);
@@ -1200,7 +1200,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
           result = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f);
           scrut = Runtime.curEffect !== null;
           if (scrut === true) {
-            throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary"))
+            throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary", undefined))
           }
           lbl: while (true) {
             let scrut1, saved, scrut2, tmp3;
@@ -1213,7 +1213,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
               result = tmp3;
               scrut2 = Runtime.curEffect !== null;
               if (scrut2 === true) {
-                throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary"))
+                throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary", undefined))
               }
               continue lbl;
             }

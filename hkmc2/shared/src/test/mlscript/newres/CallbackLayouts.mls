@@ -31,7 +31,7 @@ private fun needsFour(a, b, c, d) = a
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.268: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+//│ ║  l.284: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'needsFour' expected at least 4 arguments but got 3
 
@@ -47,7 +47,7 @@ val typed: (Int, Int, Array[Int], Int) -> Int = (a, b, c, d) => a
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.268: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+//│ ║  l.284: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 4 arguments but got 3
 //│ typed = fun
