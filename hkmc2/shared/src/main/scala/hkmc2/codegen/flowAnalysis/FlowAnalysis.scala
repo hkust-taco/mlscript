@@ -159,7 +159,7 @@ object MemberRefTo:
       locally:
         p match
           case Select(qual, _) => S(qual)
-          case KeyedSelect(qual, _, _) => S(qual)
+          case DynSelect(qual, _, DynSelectKind.Member(_)) => S(qual)
           case SuperSelect(qual, _, _) => S(qual)
           case _ => N
 
@@ -554,7 +554,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       applyPath(lhs)
       applyResult(rhs)
       applyBlock(rest)
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+    case AssignDynField(lhs, fld, kind, rhs, rest) =>
       applyPath(lhs)
       applyPath(fld)
       applyResult(rhs)
@@ -598,8 +598,8 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case _ => ()
   
   override def applyPath(p: Path): Unit = p match
-    case DynSelect(qual, fld, arrayIdx) =>
-      applyPath(qual); applyPath(fld)
+    case DynSelect(qual, fld, kind) =>
+      applyPath(qual); applyPath(fld); applyDynSelectKind(kind)
     case p@TrackableFieldSelect(qual, _ -> _) =>
       res.selToCtxOfSel.addOne(p.uid -> ctxTracker.getAllCtx)
       qual match
@@ -610,7 +610,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
         if ctxTracker.isEnclosingMatchScrutSym(disamb) =>
           applyValueMemberRef(v, recordAffinity = false)
       case _ => applyPath(qual)
-    case p: (Select | SuperSelect | KeyedSelect) =>
+    case p: (Select | SuperSelect) =>
       super.applyPath(p)
     case c: Cast => applyResult(c.value)
     case v: Value => applyValue(v)
@@ -975,7 +975,7 @@ class FlowConstraintsCollector(
         constrainOpaqueResult(lhs)
         constrainOpaqueResult(rhs)
         processBlock(rest)
-      case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+      case AssignDynField(lhs, fld, kind, rhs, rest) =>
         constrainOpaqueResult(lhs)
         constrainOpaqueResult(fld)
         constrainOpaqueResult(rhs)
@@ -1062,7 +1062,7 @@ class FlowConstraintsCollector(
           p match
           case refSite@FunRef(f, selectedFrom) =>
             refSite match
-              case KeyedSelect(_, key, _) => cc.constrain(processResult(key), UnknownCons)
+              case DynSelect(_, key, DynSelectKind.Member(_)) => cc.constrain(processResult(key), UnknownCons)
               case SuperSelect(_, base, key) =>
                 cc.constrain(processResult(base), UnknownCons)
                 cc.constrain(processResult(key), UnknownCons)
@@ -1073,7 +1073,7 @@ class FlowConstraintsCollector(
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
             case None => generatedVars(f)
-          case KeyedSelect(qual, key, sym) =>
+          case DynSelect(qual, key, DynSelectKind.Member(sym)) =>
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(key), UnknownCons)
             generatedVars(sym)
@@ -1086,7 +1086,7 @@ class FlowConstraintsCollector(
             cc.constrain(processResult(qual), UnknownCons)
             s.symbol.fold(UnknownProd): selSym =>
               generatedVars(selSym)
-          case DynSelect(qual, fld, arrayIdx) =>
+          case DynSelect(qual, fld, DynSelectKind.ArrayIdx | DynSelectKind.Unknown) =>
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(fld), UnknownCons)
             UnknownProd

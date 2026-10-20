@@ -40,11 +40,11 @@ class BufferableTransform()(using State, Raise):
               def getOffset(off: Int, loc: Opt[Loc])(k: Path => Block): Block =
                 val idxSymbol = new TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
                 Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off))(N).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N),
-                  k(DynSelect(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true)(loc))))
+                  k(DynSelect(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, DynSelectKind.ArrayIdx)(loc))))
               def assignToOffset(off: Int, r: Result, rst: Block) =
                 val idxSymbol = new TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
                 Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off))(N).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N),
-                  AssignDynField(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, true, r, applyBlock(rst))))
+                  AssignDynField(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, DynSelectKind.ArrayIdx, r, applyBlock(rst))))
               new BlockTransformer(SymbolSubst.Id):
                 override def applySimpleSymbol(sym: SimpleSymbol): SimpleSymbol = symMap.getOrElse(sym, sym)
                 override def applyBlock(b: Block): Block = b match

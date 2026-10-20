@@ -526,3 +526,38 @@ module PrivateOwner {
 }
 new PrivateOwner.Reader().read()
 //│ = 73
+
+// Under `:ftc`, function values are objects with a `call` method, so a keyed method used as a
+// value must be eta-expanded like a method selected by name.
+:ftc
+:sir
+:expect [74, 75]
+class FtcKeyed {
+  @jsSymbol(Keys.second) fun next(x) = x + 1
+}
+let ftcKeyed = new FtcKeyed
+let ftcNext = ftcKeyed.next
+[ftcKeyed.next(73), ftcNext(74)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, Function$, tmp2;
+//│ define FtcKeyed⁰ as class FtcKeyed¹ {
+//│   method next⁰ = fun next¹(x) {
+//│     return +⁰(x, 1)
+//│   }
+//│ };
+//│ set ftcKeyed⁰ = new FtcKeyed¹();
+//│ define Function$ as class Function$⁰ extends globalThis⁰.Function⁰ {
+//│   method call⁰ = fun call¹(x) {
+//│     return ftcKeyed⁰.[Keys⁰.second⁰](x)
+//│   }
+//│ };
+//│ set tmp2 = new Function$⁰();
+//│ set ftcNext⁰ = tmp2;
+//│ set tmp = ftcKeyed⁰.[Keys⁰.second⁰](73);
+//│ set tmp1 = ftcNext⁰.call﹖(74);
+//│ return [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [74, 75]
+//│ ftcKeyed = FtcKeyed
+//│ ftcNext = class anonymous
+

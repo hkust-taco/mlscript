@@ -95,14 +95,15 @@ class BlockTransformer(subst: SymbolSubst):
       applyDefn(defn): defn2 =>
         val rst2 = applySubBlock(rst)
         if (defn2 is defn) && (rst2 is rst) then b else Define(defn2, rst2)
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+    case AssignDynField(lhs, fld, kind, rhs, rest) =>
       applyResult(rhs): rhs2 =>
         applyPath(lhs): lhs2 =>
           applyPath(fld): fld2 =>
+            val kind2 = applyDynSelectKind(kind)
             val rest2 = applySubBlock(rest)
-            if (lhs2 is lhs) && (fld2 is fld) && (rhs2 is rhs) && (rest2 is rest)
+            if (lhs2 is lhs) && (fld2 is fld) && (kind2 is kind) && (rhs2 is rhs) && (rest2 is rest)
             then b
-            else AssignDynField(lhs2, fld2, arrayIdx, rhs2, rest2)
+            else AssignDynField(lhs2, fld2, kind2, rhs2, rest2)
     case _: Scoped => applyScopedBlock(b)
   
   // FunDefn body, Lambda body, Handler body, ctor and pCtor are considered "funBodyLike"
@@ -187,16 +188,11 @@ class BlockTransformer(subst: SymbolSubst):
             val sym2 = p.symbol.subst
             k(if (qual2 is qual) && (base2 is base) && (key2 is key) && (sym2 is p.symbol) then p
               else SuperSelect(qual2, base2, key2)(sym2, p.toLoc))
-    case KeyedSelect(qual, key, sym) =>
-      applyPath(qual): qual2 =>
-        applyPath(key): key2 =>
-          val sym2 = sym.subst
-          k(if (qual2 is qual) && (key2 is key) && (sym2 is sym) then p
-            else KeyedSelect(qual2, key2, sym2)(p.toLoc))
-    case DynSelect(qual, fld, arrayIdx) =>
+    case DynSelect(qual, fld, kind) =>
       applyPath(qual): qual2 =>
         applyPath(fld): fld2 =>
-          k(if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx)(p.toLoc))
+          val kind2 = applyDynSelectKind(kind)
+          k(if (qual2 is qual) && (fld2 is fld) && (kind2 is kind) then p else DynSelect(qual2, fld2, kind2)(p.toLoc))
     case p @ Select(qual, name) =>
       applyPath(qual): qual2 =>
         val sym2 = p.symbol.mapConserve(_.subst)
@@ -218,6 +214,13 @@ class BlockTransformer(subst: SymbolSubst):
       val sym2 = sym.subst
       k(if (sym2 is sym) then v else sym2.asThis.withLocOf(v))
     case Value.Lit(lit) => k(v)
+  
+  /** Substitutes the resolved member of a keyed selection, as for the symbol of a [[Select]]. */
+  def applyDynSelectKind(kind: DynSelectKind): DynSelectKind = kind match
+    case DynSelectKind.Member(sym) =>
+      val sym2 = sym.subst
+      if sym2 is sym then kind else DynSelectKind.Member(sym2)
+    case DynSelectKind.ArrayIdx | DynSelectKind.Unknown => kind
   
   def applySimpleSymbol(sym: SimpleSymbol): SimpleSymbol = sym match
     case sym: LocalVarSymbol => sym.subst

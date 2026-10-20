@@ -183,14 +183,11 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
               .getOrElse(blockCtor("Symbol", Ls(toValue(name))))
             sym: sym =>
               blockCtor("Select", Ls(x, sym), "sel")(k)
-        case DynSelect(qual, fld, arrayIdx) =>
+        case DynSelect(qual, fld, kind) =>
+          // * The reflected `Block.DynSelect` only distinguishes array indices; it has no member symbols.
           transformPath(qual): x =>
             transformPath(fld): y =>
-              blockCtor("DynSelect", Ls(x, y, toValue(arrayIdx)), "dynsel")(k)
-        case KeyedSelect(qual, key, _) =>
-          transformPath(qual): x =>
-            transformPath(key): y =>
-              blockCtor("DynSelect", Ls(x, y, toValue(false)), "dynsel")(k)
+              blockCtor("DynSelect", Ls(x, y, toValue(kind.isArrayIdx)), "dynsel")(k)
         case Cast(value, target, check) =>
           transformResult(value): v =>
             blockCtor("Symbol", Ls(toValue(target.describe)), "target"): t =>

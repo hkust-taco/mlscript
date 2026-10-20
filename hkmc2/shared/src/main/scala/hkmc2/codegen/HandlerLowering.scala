@@ -321,7 +321,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
       case Define(defn, rest) => Define(defn, go(rest))
       case Assign(lhs, rhs, rest) => Assign(lhs, rhs, go(rest))
       case blk @ AssignField(lhs, nme, rhs, rest) => AssignField(lhs, nme, rhs, go(rest))(blk.symbol)
-      case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => AssignDynField(lhs, fld, arrayIdx, rhs, go(rest))
+      case AssignDynField(lhs, fld, kind, rhs, rest) => AssignDynField(lhs, fld, kind, rhs, go(rest))
       case _: Return => blk
 
       // ignored cases
@@ -721,11 +721,11 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
     val getSavedTmp = freshTmp(erasedType = S(ErasedType.Int), "saveOffset")
     def getSaved(off: BigInt): (Block => Block, Path) =
       if off == 0 then
-        return (id, DynSelect(paths.runtimePath.selSN("resumeArr"), paths.runtimePath.selSN("resumeIdx"), true)(N))
+        return (id, DynSelect(paths.runtimePath.selSN("resumeArr"), paths.runtimePath.selSN("resumeIdx"), DynSelectKind.ArrayIdx)(N))
       val addOne = Assign(getSavedTmp, Call(State.builtinOpsMap("+").asSimpleRef, (paths.runtimePath.selSN("resumeIdx").asArg :: intLit(off).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultFun, N), _)
-      (addOne, DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asSimpleRef, true)(N))
+      (addOne, DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asSimpleRef, DynSelectKind.ArrayIdx)(N))
 
-    val resumeArrIndexed = DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asSimpleRef, true)(N)
+    val resumeArrIndexed = DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asSimpleRef, DynSelectKind.ArrayIdx)(N)
     val plus = State.builtinOpsMap("+").asSimpleRef
     val preRestore = blockBuilder
         .assign(pcVar, paths.resumePc)

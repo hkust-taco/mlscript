@@ -782,8 +782,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def namedSelection(prefix: Path, name: Tree.Ident, target: Opt[DefinitionSymbol[?]],
       keyAccess: Opt[Term], loc: Opt[Loc], sanitize: Bool)(k: Path => Block)(using LoweringCtx): Block =
     (keyAccess, target) match
-      case (S(key), S(sym: TermSymbol)) => subTerm_nonTail(key)(key => k(KeyedSelect(prefix, key, sym)(loc)))
-      case (S(key), N) => subTerm_nonTail(key)(key => k(DynSelect(prefix, key, false)(loc)))
+      case (S(key), S(sym: TermSymbol)) =>
+        subTerm_nonTail(key)(key => k(DynSelect(prefix, key, DynSelectKind.Member(sym))(loc)))
+      case (S(key), N) => subTerm_nonTail(key)(key => k(DynSelect(prefix, key, DynSelectKind.Unknown)(loc)))
       case _ =>
         assert(target.flatMap(_.asTrm).flatMap(_.defn).flatMap(MemberKey.symbol).isEmpty,
           "A symbol-keyed selection requires its resolved access path")
@@ -792,13 +793,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def assignNamedField(prefix: Path, name: Tree.Ident, value: Path, rest: Block,
       keyAccess: Opt[Term])(target: Opt[DefinitionSymbol[?]])(using LoweringCtx): Block =
     namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
-      case KeyedSelect(_, key, _) => AssignDynField(prefix, key, false, value, rest)
-      case DynSelect(_, key, _) => AssignDynField(prefix, key, false, value, rest)
+      case DynSelect(_, key, kind) => AssignDynField(prefix, key, kind, value, rest)
       case _ => AssignField(prefix, name, value, rest)(target)
+
+  /** A `DynSel` term (`x.[i]` or `x.(k)`) carries no resolved member, only an array-index flag. */
+  private def dynSelectKind(arrayIdx: Bool): DynSelectKind =
+    if arrayIdx then DynSelectKind.ArrayIdx else DynSelectKind.Unknown
 
   private def selectionPath(sel: NewSel, prefix: Path, name: Tree.Ident,
       target: Opt[DefinitionSymbol[?]])(k: Path => Block)(using LoweringCtx): Block = sel.tupleIndex match
-    case S(index) => k(DynSelect(prefix, Value.Lit(Tree.IntLit(BigInt(index)))(N), true)(sel.toLoc))
+    case S(index) => k(DynSelect(prefix, Value.Lit(Tree.IntLit(BigInt(index)))(N), DynSelectKind.ArrayIdx)(sel.toLoc))
     case N => namedSelection(prefix, name, target, sel.keyAccess, sel.toLoc, false)(k)
 
   private def superReference(sup: st.Super)(k: Path => Block)(using LoweringCtx): Block =
@@ -1357,7 +1361,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case N if sel.tupleIndex.nonEmpty =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                AssignDynField(p, Value.Lit(Tree.IntLit(BigInt(sel.tupleIndex.get)))(trm.toLoc), true, r, k(unit))
+                AssignDynField(p, Value.Lit(Tree.IntLit(BigInt(sel.tupleIndex.get)))(trm.toLoc), DynSelectKind.ArrayIdx, r, k(unit))
           case S(sym: TermSymbol) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
@@ -1394,7 +1398,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
             subTerm_nonTail(rhs): r =>
-              AssignDynField(p, f, ai, r, k(unit))
+              AssignDynField(p, f, dynSelectKind(ai), r, k(unit))
       case sel @ SelProj(prefix, _, proj) =>
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
@@ -1466,7 +1470,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case DynSel(prefix, fld, ai, _) =>
       subTerm(prefix): p =>
         subTerm_nonTail(fld): f =>
-          k(DynSelect(p, f, ai)(trm.toLoc))
+          k(DynSelect(p, f, dynSelectKind(ai))(trm.toLoc))
       
       
     case DynNew(cls, args) =>
@@ -1924,7 +1928,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       // * They cannot be read through runtime functions such as `Tuple.get`: MLscript calls must not return
       // * `undefined`, as enforced by the `Runtime.checkCall` sanity check, and a function returning
       // * an `undefined` literal actually returns `()` (see `Return` in `JSBuilder`).
-      def at(xs: Path, i: Int): Path = DynSelect(xs, int(i), true)(N)
+      def at(xs: Path, i: Int): Path = DynSelect(xs, int(i), DynSelectKind.ArrayIdx)(N)
       val k = trailing.length
       // * The sanity check emitted by the code generator only knows about the lowered parameter list,
       // * so we check that the arguments of the trailing parameters are present here.

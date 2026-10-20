@@ -291,7 +291,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx, Er
     
     // Main args
     def mainArgs(rest: List[Path]) = (0 until paramList.size).toList.foldRight(rest):
-      case (n, acc) => DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(n))(N), true)(N) :: acc
+      case (n, acc) => DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(n))(N), DynSelectKind.ArrayIdx)(N) :: acc
     
     // If the rest param exists, append a slice
     val (initialBlk: (Block => Block), pathList: List[Path]) =

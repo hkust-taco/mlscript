@@ -92,8 +92,8 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter, Erasure):
       doc"set ${print(lhs)} = ${print(rhs)}; # ${print(rest)}"
     case asf @ AssignField(lhs, nme, rhs, rest) =>
       doc"set ${print(lhs)}.${showMemberSymbol(nme.name, asf.symbol)} = ${print(rhs)}; # ${print(rest)}"
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-      doc"set ${print(lhs)}${if arrayIdx then "." else "!"}${print(fld)} = ${print(rhs)}; # ${print(rest)}"
+    case AssignDynField(lhs, fld, kind, rhs, rest) =>
+      doc"set ${printDynSelection(lhs, fld, kind)} = ${print(rhs)}; # ${print(rest)}"
     case Define(defn, rest) =>
       doc"${printFlags(defn)}define ${print(defn.sym)} as ${print(defn)}; # ${print(rest)}"
     case Scoped(syms, body) =>
@@ -211,15 +211,19 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter, Erasure):
     case Value.This(sym) => doc"${print(sym)}.this"
     case Value.Lit(lit) => doc"${lit.idStr}"
   
+  /** Prints `q.i` for an array index, `q.[k]` for a key resolved to a member, and `q!k` otherwise. */
+  private def printDynSelection(qual: Path, fld: Path, kind: DynSelectKind)(using Scope): Document = kind match
+    case DynSelectKind.ArrayIdx => doc"${print(qual)}.${print(fld)}"
+    case DynSelectKind.Member(_) => doc"${print(qual)}.[${print(fld)}]"
+    case DynSelectKind.Unknown => doc"${print(qual)}!${print(fld)}"
+  
   def print(path: Path)(using Scope): Document = path match
     case sel @ SuperSelect(qual, base, key) =>
       doc"super[${print(base)}](${print(qual)}).[${print(key)}]"
-    case KeyedSelect(qual, key, _) => doc"${print(qual)}.[${print(key)}]"
     case sel @ Select(qual, name) =>
       val docQual = print(qual)
       doc"${docQual}.${showMemberSymbol(name.name, sel.symbol)}"
-    case DynSelect(qual, fld, arrayIdx) =>
-      doc"${print(qual)}${if arrayIdx then "." else "!"}${print(fld)}"
+    case DynSelect(qual, fld, kind) => printDynSelection(qual, fld, kind)
     case x: Value => print(x)
     case Cast(value, target, check) =>
       // * `as!` and `as!!` mark a cast asserted with and without a runtime check respectively.

@@ -51,10 +51,11 @@ class BlockTraverser:
     case b @ AssignField(l, n, r, rst) =>
       applyPath(l); applyResult(r); applySubBlock(rst); b.symbol.foreach(_.traverse)
     case Define(defn, rst) => applyDefn(defn); applySubBlock(rst)
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+    case AssignDynField(lhs, fld, kind, rhs, rest) =>
       applyPath(lhs)
       applyResult(rhs)
       applyPath(fld)
+      applyDynSelectKind(kind)
       applySubBlock(rest)
     case Scoped(_, body) => applySubBlock(body)
   
@@ -71,10 +72,8 @@ class BlockTraverser:
   def applyPath(p: Path): Unit = p match
     case p @ SuperSelect(qual, base, key) =>
       applyPath(qual); applyPath(base); applyPath(key); p.symbol.traverse
-    case KeyedSelect(qual, key, sym) =>
-      applyPath(qual); applyPath(key); sym.traverse
-    case DynSelect(qual, fld, arrayIdx) =>
-      applyPath(qual); applyPath(fld)
+    case DynSelect(qual, fld, kind) =>
+      applyPath(qual); applyPath(fld); applyDynSelectKind(kind)
     case p @ Select(qual, name) =>
       applyPath(qual); p.symbol.foreach(_.traverse)
     case c @ Cast(value, _, _) => applyResult(value)
@@ -87,6 +86,10 @@ class BlockTraverser:
       disamb.traverse
     case Value.This(sym) => sym.traverse
     case Value.Lit(lit) => ()
+  
+  def applyDynSelectKind(kind: DynSelectKind): Unit = kind match
+    case DynSelectKind.Member(sym) => sym.traverse
+    case DynSelectKind.ArrayIdx | DynSelectKind.Unknown => ()
   
   def applyFunDefn(fun: FunDefn): Unit =
     fun.owner.foreach(_.traverse)

@@ -364,7 +364,6 @@ class JSBuilder(using Config, TL, State, Ctx, Erasure) extends CodeBuilder:
       else doc"($params) => ${ braced(bodyDoc) }"
     case s @ SuperSelect(qual, base, key) =>
       doc"Reflect.get(${resultQual(base)}.prototype, ${result(key)}, ${result(qual)})"
-    case KeyedSelect(qual, key, _) => doc"${resultQual(qual)}[${result(key)}]"
     case s @ Select(qual, id) => 
       val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
@@ -385,10 +384,11 @@ class JSBuilder(using Config, TL, State, Ctx, Erasure) extends CodeBuilder:
         // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
         doc"$runtimeVar.checkSelect($sel, ${makeStringLiteral(id.name)}, $qualJS)"
       else sel
-    case DynSelect(qual, fld, ai) =>
-      if ai
-      then doc"${resultQual(qual)}.at(${result(fld)})"
-      else doc"${result(qual)}[${result(fld)}]"
+    case DynSelect(qual, fld, kind) => kind match
+      case DynSelectKind.ArrayIdx => doc"${resultQual(qual)}.at(${result(fld)})"
+      // * `resultQual` parenthesizes a literal receiver, notably a negative number such as `-1`,
+      // * which would otherwise bind more loosely than the following bracket.
+      case DynSelectKind.Member(_) | DynSelectKind.Unknown => doc"${resultQual(qual)}[${result(fld)}]"
     case Instantiate(mut, cls, argss) =>
       val calls = argss.foldLeft(resultInst(cls)): (acc, args) =>
         doc"${acc}(${args.map(argument).mkDocument(", ")})"
@@ -505,7 +505,7 @@ class JSBuilder(using Config, TL, State, Ctx, Erasure) extends CodeBuilder:
         case _ => N
       val name = symbolicSuffixBase(n.name).getOrElse(n.name)
       doc" # ${result(p)}${field.getOrElse(fieldSelect(name))} = ${result(r)};${returningTerm(rst, endSemi)}"
-    case AssignDynField(p, f, ai, r, rst) =>
+    case AssignDynField(p, f, _, r, rst) =>
       doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst, endSemi)}"
     case Define(defn, rst) =>
       inline def mkThis(sym: InnerSymbol): Document =

@@ -1416,7 +1416,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       case TryBlock(sub, finallyDo, _) => TryBlock(sub, finallyDo, rest)
       case Assign(lhs, rhs, _) => Assign(lhs, rhs, rest)
       case af @ AssignField(lhs, nme, rhs, _) => AssignField(lhs, nme, rhs, rest)(af.symbol)
-      case AssignDynField(lhs, fld, arrayIdx, rhs, _) => AssignDynField(lhs, fld, arrayIdx, rhs, rest)
+      case AssignDynField(lhs, fld, kind, rhs, _) => AssignDynField(lhs, fld, kind, rhs, rest)
       case Define(defn, _) => Define(defn, rest)
       case Match(scrut, arms, dflt, _) => Match(scrut, arms, dflt, rest)
       case Label(label, loop, body, _) => Label(label, loop, body, rest)
@@ -1969,9 +1969,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             extraInfo = S(sel),
           )
 
-    case dyn @ DynSelect(qual, fld, arrayIdx) =>
+    case dyn @ DynSelect(qual, fld, kind) =>
       val qualRes = result(qual)
-      if arrayIdx then
+      if kind.isArrayIdx then
         val idxBuilder = compileTupleIndex(
           fld = fld,
           loc = fld.toLoc,
@@ -2201,11 +2201,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val rstBlk = returningTerm(rst)
         assignInstr +: rstBlk
 
-      case assign @ AssignDynField(lhs, fld, arrayIdx, rhs, rst) =>
+      case assign @ AssignDynField(lhs, fld, kind, rhs, rst) =>
         val lhsExpr = result(lhs)
         val rhsExpr = result(rhs)
         val assignInstr =
-          if arrayIdx then
+          if kind.isArrayIdx then
             val tupleArrayType = this.tupleArrayType(mut = true)
             val tupleRef = ref.cast(lhsExpr, RefType(tupleArrayType, nullable = false))
             val idxBuilder = compileTupleIndex(
@@ -2218,7 +2218,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             array.set(tupleArrayType, tupleRef, idxExpr, rhsExpr)
           else
             errExpr(
-              Ls(msg"WatBuilder::returningTerm for AssignDynField(...) where `arrayIdx = false` is not implemented yet" ->
+              Ls(msg"WatBuilder::returningTerm for AssignDynField(...) with a non-index key is not implemented yet" ->
                 lhs.toLoc),
               extraInfo = S(assign),
             )
