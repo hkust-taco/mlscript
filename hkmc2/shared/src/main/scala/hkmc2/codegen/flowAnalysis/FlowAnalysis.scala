@@ -1183,7 +1183,19 @@ class FlowConstraintsCollector(
             cc.constrain(valueStrat, UnknownCons)
             valueStrat
           case Value.MemberRef(_, disamb) =>
-            markUnsafeEta()
+            disamb match
+            case _: ClassSymbol | _: PatternSymbol =>
+              // Just accessing the binding is pure.
+              ()
+            case sym: TermSymbol =>
+              // (Accessing mutable fields is a Select)
+              if !sym.isPure then markUnsafeEta()
+            case _: ModuleOrObjectSymbol =>
+              lastWords("module/object references should be handled by CtorProducer")
+            case _: TypeAliasSymbol =>
+              lastWords("type aliases should not occur as runtime member references")
+            case _: TopLevelSymbol =>
+              lastWords("top-level references should use Value.This")
             generatedVars(disamb)
           case Value.SimpleRef(sym) =>
             if nonlocals.contains(sym) then markUnsafeEta()

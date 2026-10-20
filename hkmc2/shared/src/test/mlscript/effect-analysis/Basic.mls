@@ -23,6 +23,28 @@ fun node_pure(x) = leaf_pure(x)
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
+// * They run in separate diff blocks, so the flow-analysis results of leaf
+// * isn't available in node_value. Yet, node_value should be able to infer the
+// * purity from the binding type (val) solely.
+val leaf_pure = 42
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ leaf_pure = 42
+//-
+fun node_value() = leaf_pure
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node_value⁰#0 @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * Accessing a pattern is pure
+pattern Leaf = 42
+fun node_pattern() = Leaf
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function node_pattern⁰#0 @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
 // * Unsafe propagates through calls; unknown calls are unsafe.
 fun leaf_unsafe(x) = unsafe()
 fun node_unsafe(x) = leaf_unsafe(x)
