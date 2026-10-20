@@ -25,9 +25,110 @@ fun f(a, b) = if a is
 
 
 
-// A leading conjunction on its own is not a complete split.
-fun f(a, b) = if a is
+// Each branch sees the shared pattern bindings.
+fun choose(a, b, c) = if a is
   Some(av)
     and b is Some(bv) then av + bv
+    and c is Some(cv) then av * cv
+  else -1
+
+:expect [5, 8, -1, -1]
+[choose(Some(2), Some(3), Some(4)), choose(Some(2), None, Some(4)), choose(Some(2), None, None), choose(None, Some(3), Some(4))]
+//│ = [5, 8, -1, -1]
+
+// Conditions without a consequent continue the next clause, including its bindings.
+fun chained(a, b, c) = if a is
+  Some(av)
+    and b is Some(bv)
+    and bv > 0 then av + bv
+    and c is Some(bv) then av * bv
+  else -1
+
+:expect [5, 8, 8, -1]
+[chained(Some(2), Some(3), Some(4)), chained(Some(2), Some(-3), Some(4)), chained(Some(2), None, Some(4)), chained(None, Some(3), Some(4))]
+//│ = [5, 8, 8, -1]
+
+// A nested split completes a branch even without a consequent at this indentation.
+fun nested(a, b, c) = if a is
+  Some(av)
+    and b is
+      Some(bv) then av + bv
+    and c is
+      Some(cv) then av * cv
+  else -1
+
+:expect [5, 8, -1]
+[nested(Some(2), Some(3), Some(4)), nested(Some(2), None, Some(4)), nested(None, Some(3), Some(4))]
+//│ = [5, 8, -1]
+
+fun braces(a, b, c) = if a is Some(av) {
+  and b is Some(bv) then av + bv,
+  // Commas, newlines, and comments all separate clauses.
+  and c is Some(cv) then av * cv
+} else -1
+
+:expect [5, 8, -1]
+[braces(Some(2), Some(3), Some(4)), braces(Some(2), None, Some(4)), braces(None, Some(3), Some(4))]
+//│ = [5, 8, -1]
+
+// The shared condition runs once, and successful branches skip later guards.
+let trace = ""
+fun check(label, value) =
+  set trace = trace + label
+  value
+fun ordered(a, b, c) = if check("a", a)
+  and check("b", b) then 1
+  and check("c", c) then 2
+  else 3
+//│ trace = ""
+
+:expect [1, 2, 3, 3, "ababcabca"]
+[ordered(true, true, true), ordered(true, false, true), ordered(true, false, false), ordered(false, true, true), trace]
+//│ = [1, 2, 3, 3, "ababcabca"]
+
+// A conditional inside a guard is not the enclosing branch's consequent.
+fun conditional(a, b) = if true
+  and if a then b else false
+  and true then 1
+  and true then 2
+
+:expect [1, 2, 2]
+[conditional(true, true), conditional(true, false), conditional(false, true)]
+//│ = [1, 2, 2]
+
+// Ordinary conjunctions still work, both as values and inside application arguments.
+fun both(a, b, c) = a
+  and b
+  and c
+fun negate(x) = not x
+fun applied(a, b, c) = if negate \ a
+  and b
+  and c then 1
+else 2
+
+:expect [true, false, false, 1, 2]
+[both(true, true, true), both(true, false, true), both(false, true, true), applied(false, false, false), applied(true, true, true)]
+//│ = [true, false, false, 1, 2]
+
+let remaining = 3
+while remaining > 0
+  and remaining > 1 do
+    set remaining -= 2
+  and remaining == 1 do
+    set remaining -= 1
+//│ remaining = 0
+
+:expect 0
+remaining
+//│ = 0
+
+// Bindings introduced by a sibling guard do not escape into later branches.
+:e
+fun invalid(a, b) = if a is Some(av)
+  and b is Some(bv) then av + bv
+  and true then bv
     
+//│ ╔══[COMPILATION ERROR] Name not found: bv
+//│ ║  l.+3: 	  and true then bv
+//│ ╙──      	                ^^
 

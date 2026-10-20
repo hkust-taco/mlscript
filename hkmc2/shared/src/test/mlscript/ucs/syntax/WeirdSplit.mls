@@ -22,15 +22,13 @@ fun f(x) =
 //│ ║        	        ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 
-:fixme // Repeated leading `and` branches are not recognized.
 fun f(x, s, t) =
   if x
     is A()
       and t then 0
-      and s then 0
+      and s then 2
     is _ then 1
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.+4: 	      and t then 0
-//│ ║        	                 ^
-//│ ║  l.+5: 	      and s then 0
-//│ ╙──      	^^^^^^^^^^^^^^^^^^
+
+:expect [0, 2, 1, 1]
+[f(A(), true, true), f(A(), true, false), f(A(), false, false), f(B(), true, true)]
+//│ = [0, 2, 1, 1]
