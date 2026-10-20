@@ -2,14 +2,19 @@
 
 
 
-type Stack[out A] = Stack.{ Cons[A] | Nil }
+class Stack[out A]: Cons[A] | Nil with
+  fun map[B](f: A -> B): Stack[B] = if this is
+    Stack.Cons(head, tail) then Stack.Cons(f(head), tail.map(f))
+    Stack.Nil then Stack.Nil
+  
+  // Match Array.join's conversion of elements to strings.
+  fun join(separator: Str): Str = Stack.toArray(this).join(separator)
 
 module Stack with ...
 
 
-class Base
-data class (::) Cons[out A](head: A, tail: Stack[A]) extends Base
-object Nil extends Base
+data class (::) Cons[out A](head: A, tail: Stack[A]) extends Stack[A]
+object Nil extends Stack[Nothing]
 
 fun isEmpty(xs) = xs is Nil
 
@@ -48,8 +53,8 @@ fun zip(...xss) =
       Nil then go(heads, tails)(t)
     Nil and heads is
       Nil then { assert tails is Nil, Nil }
-      else heads toReverseArray() :: go(Nil, Nil) of tails reverse()
-  go(Nil, Nil) of fromArray(xss)
+      else heads toReverseArray() :: go(Nil, Nil)(tails reverse())
+  go(Nil, Nil)(fromArray(xss))
 
 // * Non-recursive efficient internally-mutable list concatenation.
 fun (:::) concat(xs, ys) = if

@@ -150,7 +150,7 @@ foo(1 :: Nil)
 
 :ge
 foo(1 :: "this is invalid")
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Stack.Base'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Stack'
 //│ ║  l.+1: 	foo(1 :: "this is invalid")
 //│ ╙──      	         ^^^^^^^^^^^^^^^^^
 //│ = "yeah we're done"

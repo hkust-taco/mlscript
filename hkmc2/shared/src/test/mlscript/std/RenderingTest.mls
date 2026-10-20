@@ -339,7 +339,7 @@ open Stack
 
 :ge
 renderAsStr of 1 :: 2 :: 3 :: 4
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Stack.Base'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Stack'
 //│ ║  l.+1: 	renderAsStr of 1 :: 2 :: 3 :: 4
 //│ ╙──      	                              ^
 //│ = "Cons(1, Cons(2, Cons(3, 4)))"
