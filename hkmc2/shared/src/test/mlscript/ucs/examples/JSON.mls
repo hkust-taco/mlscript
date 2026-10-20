@@ -1,0 +1,401 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+import "../../../mlscript-compile/Stack.mls"
+open Stack
+
+class ListMap[K, out V]: ConsMap[K, V] | NilMap
+data class ConsMap[K, out V](head: [K, V], tail: ListMap[K, V]) extends ListMap[K, V]
+object NilMap extends ListMap
+  
+fun containsKey[K, V](map: ListMap[K, V], key: K): Bool = if map is
+  ConsMap([k, _], _) and k === key then true
+  ConsMap(_, tail) then containsKey(tail, key)
+  NilMap then false
+  
+fun (:+) insert[K, V](map: ListMap[K, V], entry: [K, V]) = if map is
+  ConsMap(entry', map) and
+    entry'.0 === entry.0 then ConsMap(entry, map)
+    else ConsMap(entry', insert(map, entry))
+  NilMap then ConsMap(entry, NilMap)
+  
+fun showMap(map) =
+  fun showEntry(entry) =
+    assert entry is [k, v]
+    String(k) + " -> " + String(v)
+  fun aux(map) = if map is
+    ConsMap(last, NilMap) then showEntry(last)
+    ConsMap(head, tail) then showEntry(head) + ", " + aux(tail)
+    NilMap then ""
+  if map is NilMap then "{}" else "{ " + aux(map) + " }"
+
+showMap \ NilMap
+//│ = "{}"
+
+showMap \ NilMap :+ ["b", 2]
+//│ = "{ b -> 2 }"
+
+showMap \ NilMap :+ [1, "a"] :+ [2, "b"]
+//│ = "{ 1 -> a, 2 -> b }"
+
+showMap \ NilMap :+ [1, "a"] :+ [2, "b"] :+ [1, "c"]
+//│ = "{ 1 -> c, 2 -> b }"
+
+class JsonValue: JsonNumber | JsonString | JsonArray | JsonObject | JsonBoolean | JsonNull
+data class JsonNumber(value: Num) extends JsonValue
+data class JsonString(value: Str) extends JsonValue
+data class JsonArray(value: Stack[JsonValue]) extends JsonValue
+data class JsonObject(value: ListMap[Str, JsonValue]) extends JsonValue
+data class JsonBoolean(value: Bool) extends JsonValue
+object JsonNull extends JsonValue
+
+data class ParserState(text: Str, at: Int) {
+  fun drained: Bool = at === text.length
+  fun peek: Option[Str] = if drained then None else Some(text.charAt(at))
+  fun peekCode: Option[Int] = if drained then None else Some(text.charCodeAt(at))
+  fun next: ParserState = if drained then this else ParserState(text, at + 1)
+  fun nextDigit: Option[[Num, ParserState]] = if peekCode is
+    Some(ch) and 48 <= ch and ch <= 57 then Some([ch - 48, next])
+    else None
+  fun match(prefix: Str): Option[ParserState] =
+    if
+      prefix.length > text.length - at then None
+      text.startsWith(prefix, at) then Some(ParserState(text, at + prefix.length))
+      else None
+  fun rest: Str = text.slice(at, text.length)
+}
+fun showParserState(state: ParserState) = "ParserState(_, " + String(state.at) + ")"
+  
+abstract class ParseResult[out T]: Success[T] | Failure with {
+  fun flatMap[U](f: (T, ParserState) -> ParseResult[U]): ParseResult[U]
+  fun map[U](f: T -> U): ParseResult[U]
+}
+data class Success[out T](value: T, state: ParserState) extends ParseResult[T] {
+  fun flatMap[U](f: (T, ParserState) -> ParseResult[U]): ParseResult[U] = f(value, state)
+  fun map[U](f: T -> U): ParseResult[U] = Success(f(value), state)
+}
+data class Failure(error: Str) extends ParseResult[Nothing] {
+  fun flatMap[U](f: (Nothing, ParserState) -> ParseResult[U]): ParseResult[U] = Failure(error)
+  fun map[U](f: Nothing -> U): ParseResult[U] = Failure(error)
+}
+fun showParseResult[A](result: ParseResult[A]) = if result is
+  Success(value, state) then "Success after " + String(state.at) + ": " + String(value)
+  Failure(error) then "Failure: " + String(error)
+
+fun isWhiteSpace(ch: Str): Bool =
+  (ch === " ") || (ch === "\n") || (ch === "\r") || (ch === "\t")
+fun skipWhiteSpace(state: ParserState): ParserState = if state.peek is
+  Some(ch) and isWhiteSpace(ch) then skipWhiteSpace(state.next)
+  else state
+
+(skipWhiteSpace \ ParserState(" \n\r\t", 0)).at
+//│ = 4
+
+fun isDigit(ch) = ch >= "0" and ch <= "9"
+
+fun parseNumber(state: ParserState): ParseResult[Num] =
+  fun parseNegative(state): ParseResult[Bool] = if state.peek is
+    Some("-") then Success(true, state.next)
+    else Success(false, state)
+  
+  // Parse one or more decimal digits
+  // --------------------------------
+  fun parseDigits(state): ParseResult[Num] =
+    // Parse remaining digits
+    fun aux(acc, state) = if state.nextDigit is
+      Some([digit, state']) then aux((acc * 10) + digit, state')
+      None then [acc, state]
+    // Parse the first digit
+    if state.nextDigit is
+      Some([digit, state']) and aux(digit, state') is
+        [num, state''] then Success(num, state'')
+      None then Failure("expected one or more decimal digits")
+  
+  // Parse the integral part of the number
+  // -------------------------------------
+  fun parseIntegral(state): ParseResult[Num] = if state.nextDigit is
+    Some([0, state']) then Success(0, state')
+    else parseDigits(state)
+  
+  // Parse the fractional part of the number
+  // ---------------------------------------
+  fun parseFraction(state): ParseResult[Num] = if state.peek is
+    Some(".") then parseDigits(state.next).flatMap \ (digits, after) =>
+      // The consumed width preserves leading zeroes and exact powers of ten.
+      Success(digits / Math.pow(10, after.at - state.at - 1), after)
+    else Success(0, state)
+  fun parseExponent(state): ParseResult[Num] =
+    fun parseSign(state): ParseResult[Bool] = if state.peek is
+      Some("-") then Success(true, state.next)
+      Some("+") then Success(false, state.next)
+      else Success(false, state)
+    if state.peek is Some(e) and (e === "e") || (e === "E")
+    then parseSign(state.next).flatMap \ (sign, state) =>
+      parseDigits(state).map \ exponent =>
+        Math.pow(10, if sign then -exponent else exponent)
+    else Success(1, state)
+  
+  parseNegative(state).flatMap \ (negative, state) =>
+    parseIntegral(state).flatMap \ (integral, state) =>
+      parseFraction(state).flatMap \ (fraction, state) =>
+        parseExponent(state).flatMap \ (exponent, state) =>
+          let value = (integral + fraction) * exponent
+          Success((if negative then -value else value), state)
+
+showParseResult \ parseNumber \ ParserState("0", 0)
+//│ = "Success after 1: 0"
+
+showParseResult \ parseNumber \ ParserState("0234", 0)
+//│ = "Success after 1: 0"
+
+showParseResult \ parseNumber \ ParserState("123", 0)
+//│ = "Success after 3: 123"
+
+showParseResult \ parseNumber \ ParserState("12.34", 0)
+//│ = "Success after 5: 12.34"
+
+showParseResult \ parseNumber \ ParserState("1e10", 0)
+//│ = "Success after 4: 10000000000"
+
+showParseResult \ parseNumber \ ParserState("1E5", 0)
+//│ = "Success after 3: 100000"
+
+showParseResult \ parseNumber \ ParserState("1E-1", 0)
+//│ = "Success after 4: 0.1"
+
+showParseResult \ parseNumber \ ParserState("1E+1", 0)
+//│ = "Success after 4: 10"
+
+:expect [0, 0.1, 0.01, 0.1, 0.001, -1.25, 12.5, 0.0125]
+["0.0", "0.1", "0.01", "0.10", "0.001", "-1.25", "1.25e1", "1.25e-2"].map \ source =>
+  assert parseNumber(ParserState(source, 0)) is Success(value, state)
+  assert state.drained
+  value
+//│ = [0, 0.1, 0.01, 0.1, 0.001, -1.25, 12.5, 0.0125]
+
+:expect [true, true, true, true]
+["1.", "1e", "1e+", "-"].map(source => parseNumber(ParserState(source, 0)) is Failure)
+//│ = [true, true, true, true]
+
+fun parseString(state: ParserState): ParseResult[Str] =
+  
+  fun parseCodePoint(n, acc, state) = if
+    n === 0 then Success(acc, state)
+    state.peekCode is Some(code) and
+      48 <= code and code <= 57 then parseCodePoint(n - 1, acc * 16 + code - 48, state.next)
+      65 <= code and code <= 70 then parseCodePoint(n - 1, acc * 16 + code - 55, state.next)
+      97 <= code and code <= 102 then parseCodePoint(n - 1, acc * 16 + code - 87, state.next)
+      else Failure("expect " + String(n) + " hex digit(s) instead of '" + String.fromCodePoint(code) + "'")
+    else Failure("expect " + String(n) + " hex digit(s) instead of end of input")
+  
+  fun parseContent(acc, state) = if state.peek is
+    Some("\"") then Success(acc, state.next)
+    Some("\\") and
+      let state' = state.next
+      state'.peek is
+        Some("\"") then parseContent(acc + "\"", state'.next)
+        Some("\\") then parseContent(acc + "\\", state'.next)
+        Some("/") then parseContent(acc + "/", state'.next)
+        Some("b") then parseContent(acc + "\b", state'.next)
+        Some("f") then parseContent(acc + "\f", state'.next)
+        Some("n") then parseContent(acc + "\n", state'.next)
+        Some("r") then parseContent(acc + "\r", state'.next)
+        Some("t") then parseContent(acc + "\t", state'.next)
+        Some("u") then
+          parseCodePoint(4, 0, state'.next).flatMap \ (codePoint, state) =>
+            if codePoint < 0xD800 || 0xDFFF < codePoint
+            then parseContent(acc + String.fromCodePoint(codePoint), state)
+            else Failure("invalid code point")
+        else Failure("invalid escape sequence")
+    Some(ch) then parseContent(acc + ch, state.next)
+    None then Failure("expected '\"' instead of end of input")
+  
+  if state.peek is
+    Some("\"") then parseContent("", state.next)
+    Some(ch) then Failure("expected '\"' instead of '" + ch + "'")
+    else Failure("expected '\"' instead of end of input")
+
+showParseResult \ parseString \ ParserState("\"\"", 0)
+//│ = "Success after 2: "
+
+showParseResult \ parseString \ ParserState("\"abc\"", 0)
+//│ = "Success after 5: abc"
+
+showParseResult \ parseString \ ParserState("\"\\\"\"", 0)
+//│ = "Success after 4: \""
+
+showParseResult \ parseString \ ParserState("\"\\\\\"", 0)
+//│ = "Success after 4: \\"
+
+showParseResult \ parseString \ ParserState("\"\\/\"", 0)
+//│ = "Success after 4: /"
+
+showParseResult \ parseString \ ParserState("\"\\b\"", 0)
+//│ = "Success after 4: \b"
+
+showParseResult \ parseString \ ParserState("\"", 0)
+//│ = "Failure: expected '\"' instead of end of input"
+
+showParseResult \ parseString \ ParserState("\"\\u\"", 0)
+//│ = "Failure: expect 4 hex digit(s) instead of '\"'"
+
+showParseResult \ parseString \ ParserState("\"\\u0\"", 0)
+//│ = "Failure: expect 3 hex digit(s) instead of '\"'"
+
+showParseResult \ parseString \ ParserState("\"\\u004c\"", 0)
+//│ = "Success after 8: L"
+
+fun parseTrue(state: ParserState): ParseResult[Bool] =
+  if state.match("true") is
+    Some(state) then Success(true, state)
+    None then Failure("expected 'true'")
+  
+fun parseFalse(state: ParserState): ParseResult[Bool] =
+  if state.match("false") is
+    Some(state) then Success(false, state)
+    None then Failure("expected 'false'")
+  
+fun parseNull(state: ParserState): ParseResult[()] =
+  if state.match("null") is
+    Some(state) then Success((), state)
+    None then Failure("expected 'null'")
+
+fun parseObjectEntry(state: ParserState): ParseResult[[Str, JsonValue]] =
+  let state' = skipWhiteSpace(state)
+  parseString(state').flatMap \ (key, state) =>
+    let state' = skipWhiteSpace(state)
+    if state'.peek is
+      Some(":") then
+        parseValue(state'.next).flatMap \ (value, state') =>
+          Success([key, value], state')
+      Some(ch) then Failure("expected ':' instead of '" + ch + "'")
+      None then Failure("expected ':' instead of end of input")
+    else Failure("expected ':' instead of end of input")
+  
+fun parseObject(state: ParserState): ParseResult[ListMap[Str, JsonValue]] =
+  fun parseObjectTail(acc: ListMap[Str, JsonValue], state: ParserState) =
+    let state' = skipWhiteSpace(state)
+    if state'.peek is
+      Some(",") then
+        parseObjectEntry(state'.next).flatMap \ (entry, state') =>
+          if containsKey(acc, entry.0) then
+            Failure("duplicate key '" + String(entry.0) + "'")
+          else
+            parseObjectTail(ConsMap(entry, acc), state')
+      Some("}") then Success(acc, state'.next)
+      Some(ch) then Failure("expected ',' or '}' instead of " + ch)
+      None then Failure("expected ',' or '}' instead of end of input")
+  let state' = skipWhiteSpace(state)
+  if state'.peek is
+    Some("}") then Success(NilMap, state'.next)
+    None then Failure("expected ',' or '}' instead of end of input")
+    else
+      parseObjectEntry(state').flatMap \ (head, state) =>
+        parseObjectTail(ConsMap(head, NilMap), state)
+  
+fun parseArray(state: ParserState): ParseResult[Stack[JsonValue]] =
+  fun parseArrayTail(acc, state) =
+    let state' = skipWhiteSpace(state)
+    if state'.peek is
+      Some(",") then
+        parseValue(state'.next).flatMap \ (value, state') =>
+          parseArrayTail(value :: acc, state')
+      Some("]") then Success(reverse(acc), state'.next)
+      Some(ch) then Failure("expected ',' or ']' instead of " + ch)
+      None then Failure("expected ',' or ']' instead of end of input")
+  let state' = skipWhiteSpace(state)
+  if state'.peek is
+    Some("]") then Success(Nil, state'.next)
+    None then Failure("expected ',' or ']' instead of end of input")
+    else
+      parseValue(state').flatMap \ (head, state) =>
+        parseArrayTail(head :: Nil, state)
+  
+fun parseValue(state: ParserState): ParseResult[JsonValue] =
+  let state' = skipWhiteSpace(state)
+  if state'.peek is
+    Some(ch) and
+      ch === "\"" then parseString(state').map(JsonString)
+      (ch === "-") || isDigit(ch) then parseNumber(state').map(JsonNumber)
+      ch === "[" then parseArray(state'.next).map(JsonArray)
+      ch === "{" then parseObject(state'.next).map(JsonObject)
+      ch === "t" then parseTrue(state').map(JsonBoolean)
+      ch === "f" then parseFalse(state').map(JsonBoolean)
+      ch === "n" then parseNull(state').map \ _ => JsonNull
+      else Failure("cannot recognize " + ch + " as the beginning of a JSON value")
+    None then Failure("expected a JSON value instead of end of input")
+
+fun parse(source: Str): ParseResult[JsonValue] =
+  (parseValue \ ParserState(source, 0)).flatMap \ (value, finalState) =>
+    let shouldBeEnd = skipWhiteSpace(finalState)
+    if shouldBeEnd.drained then
+      Success(value, shouldBeEnd)
+    else
+      Failure("expected end of input instead of: " + shouldBeEnd.rest)
+
+fun stringify(value: JsonValue): Str =
+  fun stringifyObject(map) =
+    fun showEntry(entry) =
+      assert entry is [k, v]
+      "\"" + String(k) + "\": " + stringify(v)
+    fun aux(map) = if map is
+      ConsMap(last, NilMap) then showEntry(last)
+      ConsMap(head, tail) then showEntry(head) + ", " + aux(tail)
+      NilMap then ""
+    if map is NilMap then "{}" else "{ " + aux(map) + " }"
+  
+  if value is
+    JsonNumber(n) then String(n)
+    JsonString(s) then "\"" + s + "\""
+    JsonArray(xs) then "[" + xs.map(stringify).join(", ") + "]"
+    JsonObject(m) then stringifyObject(m)
+    JsonBoolean(b) then if b then "true" else "false"
+    JsonNull then "null"
+
+fun showResult(result: ParseResult[JsonValue]) = if result is
+  Success(value, state) then "Success after " + String(state.at) + ": " + stringify(value)
+  Failure(error) then "Failure: " + String(error)
+
+// Simple tests.
+showResult \ parse \ "null"
+//│ = "Success after 4: null"
+
+showResult \ parse \ "true"
+//│ = "Success after 4: true"
+
+showResult \ parse \ "false"
+//│ = "Success after 5: false"
+
+showResult \ parse \ "123"
+//│ = "Success after 3: 123"
+
+showResult \ parse \ "\"abc\""
+//│ = "Success after 5: \"abc\""
+
+showResult \ parse \ "[1, 2, 3]"
+//│ = "Success after 9: [1, 2, 3]"
+
+showResult \ parse \ "{\"a\": 1, \"b\": 2}"
+//│ = "Success after 16: { \"b\": 2, \"a\": 1 }"
+
+showResult \ parse \ "nul"
+//│ = "Failure: expected 'null'"
+
+showResult \ parse \ "[1, 3, 5"
+//│ = "Failure: expected ',' or ']' instead of end of input"
+
+showResult \ parse \ "[1, 3, 5]"
+//│ = "Success after 9: [1, 3, 5]"
+
+// Complicated tests.
+showResult \ parse \ "{ \"origin\": { \"x\": 0, \"y\": 0 } }"
+//│ = "Success after 32: { \"origin\": { \"y\": 0, \"x\": 0 } }"
+
+showResult \ parse \ "[   { \"origin\": { \"x\": 0, \"y\": 0 } , \"size\": { \"width\": 100, \"height\": 100 } }   ]"
+//│ = "Success after 82: [{ \"size\": { \"height\": 100, \"width\": 100 }, \"origin\": { \"y\": 0, \"x\": 0 } }]"
+
+showResult \ parse \ "{\"id\":\"658f34f88882211aa8679240\",\"children\":[{\"name\":\"Jo Rosales\",\"age\":8},{\"name\":\"Shawn Burke\",\"age\":7},{\"name\":\"Gomez Guthrie\",\"age\":10},{\"name\":\"Tandy Christensen\",\"age\":9},{\"name\":\"Jody Langley\",\"age\":3}],\"currentJob\":{\"title\":\"Developer\",\"salary\":\"mask;\"},\"jobs\":[{\"title\":\"medic\",\"salary\":\"R$ 6.400,90\"},{\"title\":\"teacher\",\"salary\":\"R$ 7.960,31\"}],\"maxRunDistance\":14.7,\"cpf\":\"713.763.356-03\",\"cnpj\":\"33.385.435/0001-50\",\"pretendSalary\":\"R$ 9.247,29\",\"age\":63,\"gender\":\"male\",\"firstName\":\"Parker\",\"lastName\":\"Case\",\"phone\":\"+55 (83) 95023-7077\",\"address\":\"14 Orient Avenue - Harmon, Northern Mariana Islands, Myanmar.\",\"hairColor\":\"yellow\"}"
+//│ = "Success after 647: { \"hairColor\": \"yellow\", \"address\": \"14 Orient Avenue - Harmon, Northern Mariana Islands, Myanmar.\", \"phone\": \"+55 (83) 95023-7077\", \"lastName\": \"Case\", \"firstName\": \"Parker\", \"gender\": \"male\", \"age\": 63, \"pretendSalary\": \"R$ 9.247,29\", \"cnpj\": \"33.385.435/0001-50\", \"cpf\": \"713.763.356-03\", \"maxRunDistance\": 14.7, \"jobs\": [{ \"salary\": \"R$ 6.400,90\", \"title\": \"medic\" }, { \"salary\": \"R$ 7.960,31\", \"title\": \"teacher\" }], \"currentJob\": { \"salary\": \"mask;\", \"title\": \"Developer\" }, \"children\": [{ \"age\": 8, \"name\": \"Jo Rosales\" }, { \"age\": 7, \"name\": \"Shawn Burke\" }, { \"age\": 10, \"name\": \"Gomez Guthrie\" }, { \"age\": 9, \"name\": \"Tandy Christensen\" }, { \"age\": 3, \"name\": \"Jody Langley\" }], \"id\": \"658f34f88882211aa8679240\" }"
+
