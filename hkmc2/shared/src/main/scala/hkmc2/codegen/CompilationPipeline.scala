@@ -9,7 +9,7 @@ import hkmc2.semantics.Elaborator.{Ctx, State}
 import hkmc2.semantics.SymbolPrinter
 import hkmc2.utils.TL
 
-class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
+class CompilationPipeline(using Config, Erasure, Raise, State, Ctx, SymbolPrinter):
   
   def preOptimizeHook(prog: Program) = ()
   
@@ -69,6 +69,7 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       else prog
     runPass("ClassParamFlattener")(ClassParamFlattener.apply)
     runPass("ReflectionInstrumenter")(ReflectionInstrumenter(using summon).apply)
+    runPass("ClassTagsTransformer")(ClassTagsTransformer.apply)
     preOptimizeHook(result)
     
     // * We run this pass here first, before inlining so that the @tailrec/@tailcall annotations

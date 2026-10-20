@@ -1,0 +1,22 @@
+
+:global
+:classTags mono
+:noFreeze
+:todo
+
+
+// TODO: make the tag a real field
+:wasm
+class Box(val x)
+private fun tagged() =
+  let value = new Box(0)
+  @matchShapes(Box(_)) shape.match of value, () => 1
+tagged()
+//│ ═══[COMPILATION ERROR] WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `__tag$`). Use `_.[_]` for index-based accesses.
+//│ ╔══[COMPILATION ERROR] WatBuilder::result for field selection without a resolved symbol is not implemented (field `__tag$`). Use `_.[_]` for index-based accesses.
+//│ ║  l.13: 	  @matchShapes(Box(_)) shape.match of value, () => 1
+//│ ╙──      	                                      ^^^^^
+//│ ═══[COMPILATION ERROR] WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `__tag$`). Use `_.[_]` for index-based accesses.
+//│ ╔══[COMPILATION ERROR] WatBuilder::result for field selection without a resolved symbol is not implemented (field `__tag$`). Use `_.[_]` for index-based accesses.
+//│ ║  l.13: 	  @matchShapes(Box(_)) shape.match of value, () => 1
+//│ ╙──      	                                      ^^^^^

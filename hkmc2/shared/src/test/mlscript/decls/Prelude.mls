@@ -566,6 +566,7 @@ declare module annotations {
   object compile
   object buffered
   object bufferable
+  object matchShapes
   object generator
   object async
 }
@@ -576,6 +577,10 @@ declare module handlers {
 
 declare module scope {
   fun locally
+}
+
+declare module shape {
+  fun match
 }
 
 declare module runtime {

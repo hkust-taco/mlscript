@@ -149,7 +149,7 @@ class CompilerCtx(
       // Note that this must run the *whole* pipeline (and not just the lowering proper),
       // as the `irDefn` fields the inliner reads are owned by the latest rewrite of each definition,
       // and only fully-transformed definitions are valid to splice into another unit.
-      def optimize(lowered: codegen.Program): codegen.Program =
+      def optimize(lowered: codegen.Program)(using codegen.Erasure): codegen.Program =
         given Config = artifactConfig
         val printer = (p: codegen.Program) => p.showAsTree // TODO: proper printing like in diff-tests
         val pipeline = new codegen.CompilationPipeline:
