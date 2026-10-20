@@ -4,7 +4,7 @@
 // Lexical member references resolve through their receiver, including members
 // declared after the method and overloaded class/term names.
 module Receiver {
-  fun values() = [value, Item(), (new Item).answer()]
+  fun values() = [value, Item(), new Item().answer()]
   val value = 31
   class Item { fun answer() = value }
   fun Item() = 32
@@ -34,5 +34,5 @@ class Child extends Parent {
 }
 
 :expect [34, 33]
-(new Child).values()
+new Child().values()
 //│ = [34, 33]

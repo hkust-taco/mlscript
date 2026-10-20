@@ -18,6 +18,6 @@ class Child extends parent with
 module Child with
   let x = 4
   fun sum(child) = child.getX + x
-[(new Child).value, Child.sum(new Child)]
+[new Child().value, Child.sum(new Child)]
 //│ = [11, 7]
 //│ parent = class Base

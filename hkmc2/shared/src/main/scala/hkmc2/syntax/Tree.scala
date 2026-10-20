@@ -656,6 +656,25 @@ trait TypeOrTermDef extends Located:
     case h => 
       (h, (N, Nil), N)
   
+  /** The span from this definition's keyword through the end of its head:
+    * its name, type and value parameter lists, result annotation, and parent clause.
+    * It excludes the definition's bodies (`{ ... }` refinements, `with` parts, and
+    * right-hand sides), which can span many lines and are noise in diagnostics
+    * that only need to identify the definition, such as arity errors.
+    * Modifiers and annotations of the definition are outside of its tree,
+    * so they are not covered either.
+    * Only the parts written within the definition's own span are included:
+    * desugarings can synthesize parts out of trees located elsewhere, as when
+    * `semantics.BlockImpl.desugStmts` gives the classes of ADT constructors
+    * a parent clause referring to the name of the enclosing class. */
+  lazy val headLoc: Opt[Loc] =
+    val parts =
+      symbName.flatMap(_.toOption).iterator
+        ++ name.toOption.toList ++ typeParams.toList
+        ++ paramLists ++ annotatedResultType.toList ++ extension
+    val written = parts.flatMap(_.toLoc).filter(part => toLoc.forall(_.covers(part)))
+    Loc.mk(written).map(head => toLoc.fold(head)(_.left ++ head))
+  
 end TypeOrTermDef
 
 

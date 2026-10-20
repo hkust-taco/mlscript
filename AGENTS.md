@@ -5,8 +5,9 @@
 
 When working on Scala code, use the Metals MCP tools when available for semantic
 symbol searches, inspection, documentation, and finding usages, and for quick
-file or module compilation feedback. Codex's project configuration in
-`.codex/config.toml` can launch the headless Metals server automatically.
+file or module compilation feedback. The project configurations for Codex
+(`.codex/config.toml`) and Claude Code (`.mcp.json`) can launch the headless
+Metals server automatically; keep their Metals versions in sync.
 If Metals is unavailable, continue with source searches and SBT, and report the
 connection problem. Metals compilation and test tools do not replace the SBT
 test prerequisites and final validation below.

@@ -16,7 +16,7 @@ id()
 //│ ╟── Function 'id' expected 1 argument, but got 0
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.19: 	fun id(x) = x
-//│ ╙──      	^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
@@ -26,17 +26,17 @@ print(1, 2, 3)
 1 print()
 //│ > 1
 
-1 \ print()
+1 |. print()
 //│ > 1
 
-1 \ (print(_))()
+1 |. (=> print(_))()
 //│ > 1
 
-{1 \ print(_)}(2)
+{=> 1 |. print(_)}(2)
 //│ > 1 2
 
 1
-  \ print()
+  |. print()
 //│ > 1
 
 
@@ -53,6 +53,9 @@ print <| 2 + 2
 //│ > 4
 
 (_ * 2) <| 2 + 2 |> (_ + 1)
+//│ = 9
+
+_ * 2 <| 2 + 2 |> _ + 1
 //│ = 9
 
 2 + 2 !> print
@@ -132,8 +135,8 @@ Symbols
 // * Function composition is associative
 
 let
-  f = ((_ + 1) >> (_ * 2)) >> (_ - 1)
-  g = (_ + 1) >> ((_ * 2) >> (_ - 1))
+  f = ((=> _ + 1) >> (_ * 2)) >> (_ - 1)
+  g = (=> _ + 1) >> ((=> _ * 2) >> (_ - 1))
 //│ f = fun
 //│ g = fun
 
@@ -189,20 +192,12 @@ foldr(tuple)(0, 1, 2, 3)
 :todo
 foldr(+)()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.190: 	foldr(+)()
+//│ ║  l.193: 	foldr(+)()
 //│ ║         	^^^^^^^^^^
 //│ ╟── Function 'foldr' expected 1 argument, but got 0
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.118: 	fun foldr[A](f: (A, A) -> A)(first: A, ...rest: Array[A]): A =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.119: 	  let len = rest.length
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.120: 	  if len === 0 then first else...
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.121: 	  let
-//│ ║         	^^^^^
-//│ ║  l.122: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.116: 	fun foldr[A](f: (A, A) -> A)(first: A, ...rest: Array[A]): A =
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
@@ -235,29 +230,21 @@ fold(+) of
 
 import "../../mlscript-compile/Iter.mls"
 
-:e
-Iter.joined(_, "") of [
+(=> Iter.joined(_, "")) of [
   "0"
   "1"
   "2"
   "3"
 ]
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.239: 	Iter.joined(_, "") of [
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.240: 	  "0"
-//│ ║         	^^^^^
-//│ ║  l.241: 	  "1"
-//│ ║         	^^^^^
-//│ ║  l.242: 	  "2"
-//│ ║         	^^^^^
-//│ ║  l.243: 	... (more lines omitted) ...
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── String literal cannot be called like a function.
-//│ ║  in ../../mlscript-compile/Iter.mls
-//│ ║  l.226: 	  if next.done then "" else
-//│ ╙──       	                    ^^
-//│ = fun
+//│ = "0123"
+
+Iter.joined(_, "") <| [
+  "0"
+  "1"
+  "2"
+  "3"
+]
+//│ = "0123"
 
 
 mkStr of

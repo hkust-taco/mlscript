@@ -130,7 +130,7 @@ fun foo(x) =
     fun self1 = this
     fun self2 = Foo
   class Bar extends Foo
-  (new Bar).self2
+  new Bar().self2
 foo(2)
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference of type Foo.
 //│ ║  l.132: 	  class Bar extends Foo

@@ -48,7 +48,7 @@ read("abc")
 //│ ╟── Cannot resolve member 'length' of a value with unknown shape.
 //│ ╟── Pattern 'Bad' accepts values of unknown shape.
 //│ ║  l.42: 	pattern Bad = s => s.length
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A wrong member is rejected on the narrowed type, rather than left unresolved.

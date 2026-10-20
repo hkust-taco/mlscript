@@ -16,7 +16,7 @@ fun g(z) =
 //│ ║        	                ^^^^^^^
 //│ ╟── Function 'plus' expected 2 arguments, but got 1
 //│ ║  l.4: 	fun plus(x, y) = x + y
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^
 
 fun f(x, y)(z) =
   x + y + g(z)

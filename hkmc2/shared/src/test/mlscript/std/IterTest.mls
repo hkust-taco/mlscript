@@ -13,25 +13,63 @@ let arr = [
 ]
 //│ arr = ["0", "1", "2", "3"]
 
-{Iter.joined(_, "")} of arr
+{=> Iter.joined(_, "")} of arr
 //│ = "0123"
 
 arr Iter.joined("")
 //│ = "0123"
 
-arr \ Iter.mapping(_ + "!") \ Iter.toArray()
+[1, 2, 3] |. Iter.mapping(=> _ + 1)
+//│ = IterableImpl(_)
+
+:e
+[1, 2, 3] |. Iter.mapping(_ + 1)
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.26: 	[1, 2, 3] |. Iter.mapping(_ + 1)
+//│ ║        	                          ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+arr |. Iter.mapping(=> _ + "!") |. Iter.toArray()
+//│ = ["0!", "1!", "2!", "3!"]
+
+(arr |. Iter.mapping \ _ + "!") |. Iter.toArray()
+//│ = ["0!", "1!", "2!", "3!"]
+
+arr |. Iter.mapping { \ _ + "!" } |. Iter.toArray()
+//│ = ["0!", "1!", "2!", "3!"]
+
+arr |> Iter.mapping(_, => _ + "!") |> Iter.toArray
 //│ = ["0!", "1!", "2!", "3!"]
 
 arr
-  |> Iter.withMap of _ + "!"
-  |> Iter.withFilter of _ != "2!"
+  |> Iter.withMap of => _ + "!"
+  |> Iter.withFilter of => _ != "2!"
   |> Iter.toArray
+//│ = ["0!", "1!", "3!"]
+
+arr
+  |> Iter.withMap \ _ + "!"
+  |> Iter.withFilter \ _ != "2!"
+  |> Iter.toArray
+//│ = ["0!", "1!", "3!"]
+
+arr
+  .map \ _ + "!" |! drop _ |! drop _
+  .filter \ _ != "2!" |! drop _ |! drop _
 //│ = ["0!", "1!", "3!"]
 
 ["abc", "01234"]
   |> Iter.withMap of (s: Str) => s.toUpperCase()
   |> Iter.flattening
-  |> Iter.withFilter of _ != "0"
+  |> Iter.withFilter of => _ != "0"
+  |> Iter.toArray
+//│ = ["A", "B", "C", "1", "2", "3", "4"]
+
+["abc", "01234"]
+  |> Iter.withMap \ _.Str#toUpperCase()
+  |> Iter.flattening
+  |> Iter.withFilter \ _ != "0"
   |> Iter.toArray
 //│ = ["A", "B", "C", "1", "2", "3", "4"]
 
@@ -42,6 +80,13 @@ mkStr of
   "3"
 //│ = "0123"
 
+mkStr
+  \ "0"
+  \ "1"
+  \ "2"
+  \ "3"
+//│ = "0123"
+
 mkStr of
   "0"
   1
@@ -50,7 +95,7 @@ mkStr of
 //│ 
 //│ = "01"
 
-let xs = [1, 2, 3] Iter.mapping(_ + "!" !> print)
+let xs = [1, 2, 3] Iter.mapping(=> _ + "!" !> print)
 //│ xs = IterableImpl(_)
 
 // Note: spreads can be effectful!

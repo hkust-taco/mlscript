@@ -14,7 +14,7 @@ class PrivateDerived extends PublicBase with
   fun call(x: Int) = Entry(x + 10)
   fun construct(x: Int) = new Entry(x + 10)
 let derived = new PrivateDerived
-[derived.Entry(2).value, (new derived.Entry(3)).value, derived.call(2).read(), derived.construct(3).read()]
+[derived.Entry(2).value, new derived.Entry(3).value, derived.call(2).read(), derived.construct(3).read()]
 //│ = [2, 3, 12, 13]
 //│ derived = PrivateDerived { Entry: fun Entry { class: class Entry } }
 
@@ -25,11 +25,11 @@ class PrivateBase with
   private class Entry with
     constructor
     fun value = 17
-  fun base() = (new Entry).value
+  fun base() = new Entry().value
 class PrivateChild extends PrivateBase with
   private class Entry with
     fun value = 19
-  fun child() = (new Entry).value
+  fun child() = new Entry().value
 let child = new PrivateChild
 [child.base(), child.child()]
 //│ = [17, 19]
@@ -106,12 +106,12 @@ module PrivateStatics with
 class BothScopes with
   private class Entry with
     fun value = 89
-  fun own() = (new Entry).value
+  fun own() = new Entry().value
 module BothScopes with
   private class Entry with
     fun value = 97
-  @inline fun own() = (new Entry).value
-[(new BothScopes).own(), BothScopes.own()]
+  @inline fun own() = new Entry().value
+[new BothScopes().own(), BothScopes.own()]
 //│ = [89, 97]
 
 
@@ -121,8 +121,8 @@ module BothScopes with
 class Lifted with
   private class Entry with
     fun value = 71
-  fun reader() = () => (new Entry).value
-(new Lifted).reader()()
+  fun reader() = () => new Entry().value
+new Lifted().reader()()
 //│ = 71
 
 
@@ -164,7 +164,7 @@ InlinedObject.get(1)
 module InlinedClass with
   private class Cls with
     fun value = 3
-  fun get(x) = x + (new Cls).value
+  fun get(x) = x + new Cls().value
 
 :fixme
 :expect 4

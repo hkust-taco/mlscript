@@ -11,7 +11,7 @@ new Foo
 //│ ║       	^^^^^^^
 //│ ╟── Object 'Foo' cannot be instantiated with keyword 'new'.
 //│ ║  l.5: 	object Foo
-//│ ╙──     	       ^^^
+//│ ╙──     	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
@@ -25,7 +25,7 @@ new! Foo.class
 //│ ║        	     ^^^^^^^^^
 //│ ╟── Object 'Foo' does not contain member 'class'
 //│ ║  l.5: 	object Foo
-//│ ╙──     	       ^^^
+//│ ╙──     	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 new! Foo!class
@@ -38,7 +38,7 @@ object Bar extends Foo
 //│ ║        	                   ^^^
 //│ ╟── Object 'Foo' cannot be instantiated with keyword 'new'.
 //│ ║  l.5: 	object Foo
-//│ ╙──     	       ^^^
+//│ ╙──     	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e

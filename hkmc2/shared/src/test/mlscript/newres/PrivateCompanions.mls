@@ -376,7 +376,7 @@ module Encapsulated with
     constructor(value)
     fun read() = value.field
   module Cell with
-    fun read() = (new Cell({field: 19})).read()
+    fun read() = new Cell({field: 19}).read()
 
 :expect 19
 Encapsulated.Cell.read()
@@ -403,7 +403,7 @@ module InlineSecrets with
   private class Entry with
     fun read() = value
   private fun Entry() = new Entry
-  @noInline fun read() = (new Entry).read()
+  @noInline fun read() = new Entry().read()
   read()
 }
 
@@ -437,7 +437,7 @@ class DerivedTypes extends BaseTypes with
     fun value = 47
   fun own() = new Entry
 let derived = new DerivedTypes
-[(new derived.Entry).value, derived.own().value]
+[new derived.Entry().value, derived.own().value]
 //│ = [43, 47]
 //│ derived = DerivedTypes { Entry: class Entry }
 
