@@ -31,7 +31,6 @@ abstract class TraceLogger(using val debugPrinter: DebugPrinter):
     case (false, _) :: _ => Config.DebugOutput.StdIO
     case Nil => defaultDebugOutput
 
-  /** An inner annotation changes only the settings it names in the enclosing debug scope. */
   final def debugConfig(base: Config): Config =
     debugOverrides.headOption.fold(base)(entry => base.copy(debug = entry._2))
   

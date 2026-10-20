@@ -56,7 +56,7 @@ DebugMethods.selected(7)
 //│ ~> { fun member:command_elaboration(x¹) = x¹; }
 
 
-// A class's lowering trace covers the evaluation of its superclass,
+// A class's lowering trace includes its superclass reference,
 // but not the statements that follow the class definition.
 class DebugParent
 @dbg('lowering, showUids: false) class DebugChild extends DebugParent

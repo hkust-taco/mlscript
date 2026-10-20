@@ -5,11 +5,8 @@ import scala.collection.mutable
 import hkmc2.utils.*, shorthands.*
 
 
-/** Routes compiler debugging output without putting callbacks or mutable streams in [[Config]].
-  *
-  * A session shares one handler across compilation units: each destination is cleared on first
-  * use, then appended to without retaining or rewriting previous output. Concurrent debug writes
-  * are best effort; this handler does not synchronize them. */
+/** A compilation session shares one handler across units: each output file is overwritten on first
+  * use, then appended to. Concurrent debug writes are not synchronized. */
 final class DebugOutputHandler(fs: io.FileSystem, stdIO: Str => Unit):
   private val writtenFiles = mutable.Set.empty[io.Path]
 
@@ -66,24 +63,19 @@ object DebugOutputHandler:
       (display: (Str, Str, Config.DebugOutput) => Unit)(using DebugPrinter): Unit =
     showElaborated(block, config, _.showElaboratedTree, "Elaborated tree", _.showAsTree, _.showAsTree)(display)
 
-  /** Print elaborated terms in readable form, with the settings of the `:sr` diff-test command.
-    * `showFlowSymbols` also disambiguates symbol names, which a readable form needs; before flow
-    * analysis, it shows selections as unresolved (`ˀˀˀ`). Erased types are not computed yet. */
   def showElaboratedTerm(block: semantics.Term.Blk, config: Config, width: Int)
       (display: (Str, Str, Config.DebugOutput) => Unit)(using utils.Scope, Raise): Unit =
     given semantics.ShowCfg = semantics.ShowCfg(
       showErasedTypes = false,
       showExpansionMappings = true,
-      showFlowSymbols = true,
+      showFlowSymbols = true, // Also disambiguates symbols that share a name.
       debug = false,
     )
     showElaborated(block, config, _.showElaboratedTerm, "Elaborated term",
       _.showTopLevel.mkString(width), _.show.mkString(width))(display)
 
   /** Display the whole block if the file's settings select it, and otherwise each annotated
-    * definition that selects it, including definitions nested in other definitions.
-    * Inspect the elaborated tree directly: new resolution runs during elaboration and does not
-    * traverse the legacy resolver, but annotated definitions still need to be displayed. */
+    * definition that selects it, including definitions nested in other definitions. */
   private def showElaborated(block: semantics.Term.Blk, config: Config, isEnabled: Config.Debug => Bool, title: Str,
       showBlock: semantics.Term.Blk => Str, showDefinition: semantics.Definition => Str)
       (display: (Str, Str, Config.DebugOutput) => Unit): Unit =
@@ -97,7 +89,6 @@ object DebugOutputHandler:
     if isEnabled(config.debug) then display(title, showBlock(block), config.debug.out)
     else visit(block)
 
-  /** Use the same selection and formatting in the compiler and diff-test pipelines. */
   def showIR(program: codegen.Program, optimized: Bool, printer: codegen.Printer, width: Int)
       (display: (Str, Str, Config.DebugOutput) => Unit)(using Config, utils.Scope): Unit =
     val title = if optimized then "Optimized IR" else "Lowered IR"

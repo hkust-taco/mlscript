@@ -12,7 +12,7 @@ fun do_not_debug_me(x) = x
 //│ ~> x⁰
 
 
-// Named flags can be explicitly disabled, and StdIO is the default destination.
+// Named flags can be explicitly disabled.
 #dbg(elaboration: false, out: StdIO)
 fun named_debug_config(x) = x
 

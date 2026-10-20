@@ -124,7 +124,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def debugLowering[T](annotations: Ls[Annot])(thunk: => T): T =
     DebugOutputHandler.traceDefinition(annotations, config, _.lowering)(thunk)
 
-  /** Trace a definition whose lowering continues, through `k`, with the statements that follow it. */
   private def debugLoweringThen[R](annotations: Ls[Annot])(lower: (R => Block) => Block)(k: R => Block): Block =
     DebugOutputHandler.traceDefinitionThen(annotations, config, _.lowering)(lower)(k)
   
