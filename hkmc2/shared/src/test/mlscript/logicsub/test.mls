@@ -1,0 +1,29 @@
+#config(language: Language(typeCheck: TypeChecking()))
+//│ Type: undefined
+
+fun f: (1 -> 1) & (("a"|"B") -> ("a"|"B"|"c"))
+fun f(x) = x
+//│ Type: undefined
+
+f(1)
+//│ Type: 'app
+//│   >: 1
+
+f("a")
+//│ Type: 'app
+//│   >: ("c" ∨ "B") ∨ "a"
+
+fun g: (Int -> Int) & (Str -> Str)
+//│ Type: undefined
+
+// TODO
+g(1)
+//│ Type: 'app
+//│   >: ⊥
+
+fun g: (1 -> 1) & (2 -> 2)
+//│ Type: undefined
+
+g(1)
+//│ Type: 'app
+//│   >: 1
