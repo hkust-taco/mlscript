@@ -122,10 +122,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     else S(modifiers.foldLeft(config)((cfg, modify) => modify(cfg)))
 
   private def debugLowering[T](annotations: Ls[Annot])(thunk: => T): T =
-    DebugOutputHandler.traceDefinition(annotations, config, _.lowering)(thunk)
+    tl.traceDefinition(annotations, config)(thunk)
 
   private def debugLoweringThen[R](annotations: Ls[Annot])(lower: (R => Block) => Block)(k: R => Block): Block =
-    DebugOutputHandler.traceDefinitionThen(annotations, config, _.lowering)(lower)(k)
+    tl.traceDefinitionThen(annotations, config)(lower)(k)
   
   extension (t: Term)
     def instantiated = t match

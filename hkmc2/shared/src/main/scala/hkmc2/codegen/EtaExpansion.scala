@@ -140,7 +140,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     case (_: TermSymbol, 0) => addFunShapeIfChanged()
     case _ => ()
 
-  if tl.doTrace then
+  if tl.isTracing then
     given ShowCfg = ShowCfg.internal
     
     tl.log(">>> eta-expansion targets shapes >>>")

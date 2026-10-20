@@ -72,11 +72,8 @@ class CompilerCtx(
     def mk =
       val dependencies = new CompilerCtx.DependencyRecorder
       val modulePath = (file.up / io.RelPath(file.baseName + ".mjs")).toString
-      var stateDebug = false
-      var stateShowUids = true
-      val state = new Elaborator.State:
-        override protected def doDbg: Bool = stateDebug
-        override protected def doShowUids: Bool = stateShowUids
+      val debug = new DebugContext
+      val state = new Elaborator.State(debug)
       given Elaborator.State = state
 
       given Config = rootConfig
@@ -88,24 +85,19 @@ class CompilerCtx(
           includeZero = true,
         ))
       )
-      val backendTL = new TraceLogger:
-        override def doTrace: Bool = false
+      val backendTL = TraceLogger.silent
 
       val parse =
         given CompilerCtx = this
         ParserSetup(file, outputHandler)
       val parsed = parse.resultBlk
       val phaseConfig = Config.elaborationConfig(parsed, file.up)
-      stateDebug = CompilerCtx.debugTracingEnabled(phaseConfig.debug)
-      stateShowUids = phaseConfig.debug.showUids
-      def traceLogger(enabled: Bool) = new TraceLogger:
-        override def doTrace: Bool = enabled
-        override protected def defaultDebugOutput: Config.DebugOutput = phaseConfig.debug.out
-        override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
-          outputHandler.emit(out, str)
-      val etl = traceLogger(phaseConfig.debug.elaboration)
-      val ltl = traceLogger(phaseConfig.debug.lowering)
-      val dtl = traceLogger(phaseConfig.debug.optimizations)
+      debug.configure(phaseConfig.debug)
+      def traceLogger(phase: Config.Debug => Bool) =
+        new TraceLogger(debug, phase, _ => false, outputHandler.emit, indentWhenDisabled = true)
+      val etl = traceLogger(_.elaboration)
+      val ltl = traceLogger(_.lowering)
+      val dtl = traceLogger(_.optimizations)
 
       given Elaborator.Ctx = prelude
       val artifactCtx = derive(parse.origin.fileName, dependencies)
@@ -256,24 +248,16 @@ class CompilerCtx(
           s"Cached prelude for $file was elaborated under a different root configuration")
         art.lastChangedTimestamp >= lastMod,
       create =
-        var stateDebug = false
-        var stateShowUids = true
-        val state = new Elaborator.State:
-          override protected def doDbg: Bool = stateDebug
-          override protected def doShowUids: Bool = stateShowUids
+        val debug = new DebugContext
+        val state = new Elaborator.State(debug)
         given Elaborator.State = state
         given Config = rootConfig
         given CompilerCtx = this
         given DebugPrinter = new DebugPrinter
         val parse = ParserSetup(file, outputHandler)
         val elaborationConfig = Config.elaborationConfig(parse.resultBlk, file.up)
-        stateDebug = CompilerCtx.debugTracingEnabled(elaborationConfig.debug)
-        stateShowUids = elaborationConfig.debug.showUids
-        val etl = new TraceLogger:
-          override def doTrace: Bool = elaborationConfig.debug.elaboration
-          override protected def defaultDebugOutput: Config.DebugOutput = elaborationConfig.debug.out
-          override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
-            outputHandler.emit(out, str)
+        debug.configure(elaborationConfig.debug)
+        val etl = new TraceLogger(debug, _.elaboration, _ => false, outputHandler.emit, indentWhenDisabled = true)
         // The prelude defines the builtins consulted during its own resolution.
         // Seed lookup with the block's original symbols, as block elaboration does,
         // so those lookups share the declarations that are being elaborated.
@@ -293,9 +277,6 @@ class CompilerCtx(
 object CompilerCtx:
   
   inline def get(using cctx: CompilerCtx) = cctx
-
-  private def debugTracingEnabled(debug: Config.Debug): Bool =
-    debug.elaboration || debug.lowering || debug.optimizations
 
 
   /** Collect import provenance after elaboration has assembled all user and synthetic imports.

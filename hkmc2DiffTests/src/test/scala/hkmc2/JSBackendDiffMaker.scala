@@ -45,27 +45,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)(using throw _)
   val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)(using throw _)
   
-  val ltl = new TraceLogger:
-    override protected def doForceTrace = debugLowering.isSet || scope.exists:
-      showUCS.get.getOrElse(Set.empty).contains
-    override def doTrace = doForceTrace || activeDebug.lowering
-    override protected def defaultDebugOutput: Config.DebugOutput =
-      if activeDebug.lowering then activeDebug.out else Config.DebugOutput.StdIO
-    override def emitDbg(str: String): Unit = output(str)
-    override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
-      debugOutputHandler.emit(out, str)
+  val ltl = phaseLogger(_.lowering,
+    scope => debugLowering.isSet || scope.exists(showUCS.get.getOrElse(Set.empty).contains), indentWhenDisabled = true)
   
-  val dtl = new TraceLogger:
-    override def doTrace = debugOptimizations.isSet || activeDebug.optimizations
-    override protected def defaultDebugOutput: Config.DebugOutput =
-      if activeDebug.optimizations then activeDebug.out else Config.DebugOutput.StdIO
-    override def emitDbg(str: String): Unit = output(str)
-    override protected[hkmc2] def emitDbg(str: Str, out: Config.DebugOutput): Unit =
-      debugOutputHandler.emit(out, str)
+  val dtl = phaseLogger(_.optimizations, _ => debugOptimizations.isSet, indentWhenDisabled = true)
   
-  val replTL = new TraceLogger:
-    override def doTrace = showRepl.isSet
-    override def emitDbg(str: String): Unit = output(str)
+  val replTL = TraceLogger(_ => showRepl.isSet, str => output(str))
   
   lazy val host =
     hostCreated = true

@@ -631,7 +631,8 @@ object Elaborator:
     case Default(sym: ImportSymbol, modulePath: Str)
     case Private(sym: BlockMemberSymbol, modulePath: Str)
   
-  class State:
+  class State(val debugContext: DebugContext):
+    def this() = this(new DebugContext)
     val newResolverState: NewResolverState = new NewResolverState(this)
     val suid = new Uid.Symbol.State
     given State = this
@@ -727,31 +728,8 @@ object Elaborator:
       "globalThis" -> globalThisSymbol,
     ))
     val superSymbol = builtinOpsMap("super")
-    // Definition-local debug annotations may independently change whether tracing is active and
-    // whether symbol identities are useful in that trace, so both settings share the same scope.
-    private var debugOverrides = Ls.empty[(Bool, Bool)]
-    protected def doDbg: Bool = false
-    /** Debugging requested independently of the [[Config.Debug]] settings, such as by diff-test
-      * commands; as for `TraceLogger.doForceTrace`, definition-local overrides cannot disable it.
-      * Implementations should include it in [[doDbg]]. */
-    protected def doForceDbg: Bool = false
-    protected def doShowUids: Bool = true
-    final def dbg: Bool = debugOverrides match
-      case (enabled, _) :: _ => enabled || doForceDbg
-      case Nil => doDbg
-    final def showUids: Bool = debugOverrides.headOption.map(_._2).getOrElse(doShowUids)
-    def scopedDebug[T](enabled: Bool, showUids: Bool)(thunk: => T): T =
-      debugOverrides ::= enabled -> showUids
-      try thunk finally debugOverrides = debugOverrides.tail
-    /** Restore symbol printing for the continuation outside a definition-local debug annotation. */
-    def inOuterDebugScope[T](thunk: => T): T = debugOverrides match
-      case _ :: outer =>
-        val current = debugOverrides
-        debugOverrides = outer
-        try thunk finally debugOverrides = current
-      case Nil => thunk
     def dbgUid(uid: Uid[Symbol]): Str =
-      if dbg && showUids then s"‹$uid›" else ""
+      if debugContext.showUids then s"‹$uid›" else ""
   transparent inline def State(using state: State): State = state
   
   /** Extracts all parameter lists from a `constructor(...)...` declaration.
@@ -813,7 +791,7 @@ extends Importer:
   val newResolution: Bool = lang.useNewResolution
   
   private def debugElaboration[T](annotations: Ls[Annot])(thunk: => T): T =
-    DebugOutputHandler.traceDefinition(annotations, config, _.elaboration)(thunk)(using state, tl)
+    tl.traceDefinition(annotations, config)(thunk)
   
   lazy val illegalMemberNameTail =
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N

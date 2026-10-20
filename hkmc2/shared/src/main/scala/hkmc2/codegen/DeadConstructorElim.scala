@@ -74,7 +74,7 @@ class DeadConstructorElimSolver(val constraintSolver: FlowConstraintSolver, trac
         .filterNot(liveCtorConcreteIds)
   end deadCtors
   
-  if tl.doTrace then
+  if tl.isTracing then
     tl.log(">>> dead-constructor-elim results >>>")
     for ctorStr <- deadCtors.toSeq.map(_.exprId.getResult.showDbg).sorted do
       tl.log(s"eliminable: $ctorStr")

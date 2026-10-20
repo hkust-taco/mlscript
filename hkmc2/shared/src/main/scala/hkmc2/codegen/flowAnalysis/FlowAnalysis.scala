@@ -89,14 +89,14 @@ object FlowAnalysis:
     prefix: Str,
     outerTl: TL,
   ): TraceLogger =
-    new TraceLogger(using outerTl.debugPrinter):
-      override def doTrace: Bool = scope match
+    TraceLogger(
+      {
         case S(TraceScope.NonAffineSyms) => cfg.logNonAffine
         case S(TraceScope.AccumulatorSym) => cfg.logAccumulator
         case _ => cfg.debug
-
-      override def emitDbg(str: Str): Unit =
-        outerTl.emitDbg(s"$prefix$str")
+      },
+      str => outerTl.emitDbg(s"$prefix$str"),
+    )(using outerTl.debugPrinter)
     
 end FlowAnalysis
 

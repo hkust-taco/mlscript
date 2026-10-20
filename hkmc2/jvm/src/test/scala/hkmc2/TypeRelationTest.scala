@@ -14,8 +14,7 @@ class TypeRelationTest extends AnyFunSuite:
     given state: ResolutionContext = owner.newResolverState.context
     given Raise = diagnostic => fail(diagnostic.theMsg)
     given DebugPrinter = new DebugPrinter
-    given trace: TraceLogger = new TraceLogger:
-      override def doTrace: Boolean = false
+    given trace: TraceLogger = TraceLogger.silent
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
     val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)

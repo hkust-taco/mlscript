@@ -62,8 +62,7 @@ class MLsCompiler
     given Raise = mkRaise(file)
     given DebugPrinter = new DebugPrinter
     
-    val compilerTL = new TraceLogger:
-      override def doTrace: Bool = false
+    val compilerTL = TraceLogger.silent
     
     val preludeCtx = cctx.getPrelude(preludeFile)(using compilerTL, summon[Raise]).ctx
     val artifact = cctx.getElaboratedBlock(file, preludeCtx)(using compilerTL)
