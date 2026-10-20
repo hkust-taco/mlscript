@@ -64,23 +64,32 @@ sum(enum(5), 0)
 //│ set x = 5;
 //│ set eta$0$0 = 0;
 //│ block inlinedLbl:
+//│   let enum$enum$worker$deferred;
+//│   set enum$enum$worker$deferred = false;
 //│   loop loopLabel:
 //│     let scrut, tmp;
 //│     set scrut = <⁰(x, 0);
 //│     match scrut
 //│       true =>
-//│         set inlinedVal = eta$0$0;
-//│         break inlinedLbl
+//│         match enum$enum$worker$deferred
+//│           true =>
+//│             set inlinedVal = (eta$0$0 as! Int⁰);
+//│             break inlinedLbl
+//│           else
+//│             set inlinedVal = eta$0$0;
+//│             break inlinedLbl
+//│         end
 //│       else
 //│         let fv_tmp;
 //│         set tmp = -⁰(x, 1);
 //│         set fv_tmp = +⁰(x, eta$0$0);
 //│         set x = tmp;
 //│         set eta$0$0 = fv_tmp;
+//│         set enum$enum$worker$deferred = true;
 //│         continue loopLabel
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
-//│ return inlinedVal
+//│ return (inlinedVal as! Int⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 15
 
@@ -114,7 +123,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ eta-expansion > flatten$flatten⁰#0 @ <root>: [1, 5]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, flatten$flatten, flatten_append$append$worker, flatten$flatten$worker;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, flatten$flatten, flatten_append$append$worker, flatten$flatten$worker, inlinedVal;
 //│ @inline @private
 //│ define flatten$flatten as fun flatten$flatten⁰(xss)(eta$0$1, eta$0$2, eta$0$4) {
 //│   return flatten$flatten$worker⁰(xss, eta$0$1, eta$0$2, eta$0$4)
@@ -142,10 +151,11 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│     Nil⁰ =>
 //│       return ys(eta$0$1, eta$0$2, eta$0$4)
 //│     Cons¹ =>
-//│       let inlinedVal;
+//│       let inlinedVal1, inlinedVal2;
 //│       set arg$Cons$1$ = xs.t⁰;
-//│       set inlinedVal = flatten_append$append$worker⁰(arg$Cons$1$, ys, undefined, undefined, undefined);
-//│       return +⁰(1, inlinedVal)
+//│       set inlinedVal2 = flatten_append$append$worker⁰(arg$Cons$1$, ys, undefined, undefined, undefined);
+//│       set inlinedVal1 = (inlinedVal2 as! Int⁰);
+//│       return +⁰(1, inlinedVal1)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -196,7 +206,8 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ set tmp2 = Cons⁰(3, Nil⁰);
 //│ set tmp3 = Cons⁰(tmp2, Nil⁰);
 //│ set tmp4 = Cons⁰(tmp1, tmp3);
-//│ return flatten$flatten$worker⁰(tmp4, undefined, undefined, undefined)
+//│ set inlinedVal = flatten$flatten$worker⁰(tmp4, undefined, undefined, undefined);
+//│ return (inlinedVal as! Int⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

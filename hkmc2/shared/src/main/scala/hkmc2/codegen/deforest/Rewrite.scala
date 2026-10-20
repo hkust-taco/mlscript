@@ -12,7 +12,7 @@ import hkmc2.codegen.flowAnalysis.*
 
 
 
-class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[LocalVarSymbol])(using Raise)
+class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[LocalVarSymbol])(using Raise, Config, Elaborator.Ctx)
   extends PolyInstantiationRewrite(solver.constraintSolver):
   
   type MatchOrLabelId = ResultId | LabelSymbol
@@ -80,18 +80,24 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     slots.collect:
       case (key, (true, tpe)) => key -> tpe
 
-  override protected def rewrittenFunctionType(fun: TermSymbol, instId: InstantiationId): Opt[ErasedType] =
+  // what `fun` returns in instance `instId` once rewritten, and whether that differs from its declared result
+  private def rewrittenResultType(fun: TermSymbol, instId: InstantiationId): (Bool, Opt[ErasedValueType]) =
     val params = pre.res.funSymToFunDefn(fun).params
     val returns = constraintSolver.prodFunsWithDests.iterator.collect:
       case pf if pf.concreteId == ConcreteId((fun, params.size - 1), instId) =>
         representation(pf.res, fun.declaredResultType, Set.empty)
     .toList
-    val resultChanged = returns.exists(_._1)
+    if returns.exists(_._1) then true -> S(ErasedType.Union.mk(returns.map(_._2)))
+    else false -> fun.declaredResultType
+
+  override protected def rewrittenFunctionType(fun: TermSymbol, instId: InstantiationId): Opt[ErasedType] =
+    val params = pre.res.funSymToFunDefn(fun).params
+    val (resultChanged, result) = rewrittenResultType(fun, instId)
     if !resultChanged && !params.exists(_.params.exists(p => changedSlots.contains(instId -> p.sym)))
     then fun.erasedType
     else S(ErasedType.FuncRef(S(false), params.map(_.params.map: p =>
       changedSlots.get(instId -> p.sym).orElse(p.sym.erasedType)),
-      if resultChanged then S(ErasedType.Union.mk(returns.map(_._2))) else fun.declaredResultType))
+      result))
 
   private def retypedSymbol(previous: Symbol, tpe: ErasedValueType): Symbol = previous match
     case v: VarSymbol if v.erasedType.contains(tpe) => v
@@ -399,8 +405,28 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   // from the polymorphic analysis
   protected class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
     
+    // the result slot of the function whose body is being rewritten, into which the calls replacing a fused match
+    // or a `break` return; scoped by the definitions entered, as `return` refers to the innermost one
+    private var returnType: Opt[ErasedValueType] = N
+    private def returningInto[A](tpe: Opt[ErasedValueType])(rewrite: => A): A =
+      val enclosing = returnType
+      returnType = tpe
+      try rewrite finally returnType = enclosing
+    
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
-      fun.params.mapConserve(applyParamList) -> applyBlock(fun.body)
+      fun.params.mapConserve(applyParamList) ->
+        returningInto(rewrittenResultType(fun.dSym, instId)._2)(applyBlock(fun.body))
+    
+    override def applyFunDefn(fun: FunDefn): FunDefn =
+      returningInto(fun.dSym.subst.declaredResultType)(super.applyFunDefn(fun))
+    
+    override def applyLam(lam: Lambda): Lambda = returningInto(N)(super.applyLam(lam))
+    
+    override def applyHandler(hdr: Handler): Handler = returningInto(N)(super.applyHandler(hdr))
+    
+    // the callee is a closure or an extracted function, whose results are unknown, so like any call to a
+    // function value the result is cast into the slot that the replaced `return`s wrote
+    private def returnCall(call: Result): Block = Return(returnType.fold(call)(call.coerceTo(_, N)))
     
     // calls `fun` with possibly remapped `args`
     def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
@@ -488,13 +514,13 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       b match
       case m@Match(scrut, _, _, _) if solver.finalDtorSrcs.isDefinedAt(scrut.uid.concreteId) =>
         applyPath(scrut): newScrut =>
-          mkCall(newScrut, dtorBranchFnFvs(scrut.uid.concreteId))(Return(_))
+          mkCall(newScrut, dtorBranchFnFvs(scrut.uid.concreteId))(returnCall)
       case Break(label) =>
         val labelRestFunId = label.withInstId(instId)
         restFunSyms.get(labelRestFunId) match
         case None => super.applyBlock(b)
         case Some((bms, tSym)) =>
-          mkCall(bms.asMemberRef(tSym), restFnFvs(labelRestFunId))(Return(_))
+          mkCall(bms.asMemberRef(tSym), restFnFvs(labelRestFunId))(returnCall)
       // copying a definition would need fresh symbols for it; lifting removes the nested ones beforehand
       case Define(defn, _) if refreshSymbolMappingForCopy.isDefined =>
         softAssert(false, s"deforestation copying the definition ${defn.sym.nme}")

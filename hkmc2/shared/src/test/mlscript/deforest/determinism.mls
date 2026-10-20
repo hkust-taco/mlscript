@@ -79,7 +79,7 @@ c2 of A(A(A(A(A(A(1))))))
 //│ @private
 //│ define c2$c2 as fun c2$c2⁰(x) {
 //│   let a, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5;
-//│   return x(arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, arg$A$0$, a)
+//│   return (x(arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, arg$A$0$, a) as! Int⁰)
 //│ };
 //│ @affine(1) @private
 //│ define c2$x_A as fun c2$x_A⁰(A_a6)(fv_arg$A$0$, fv_arg$A$0$1, fv_arg$A$0$2, fv_arg$A$0$3, fv_arg$A$0$4, fv_arg$A$0$5, fv_a) {

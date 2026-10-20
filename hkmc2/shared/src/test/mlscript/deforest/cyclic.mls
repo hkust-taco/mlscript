@@ -142,7 +142,7 @@ modSome(Some(17), 3)
 //│         break inlinedLbl
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
-//│ return inlinedVal
+//│ return (inlinedVal as! Object⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = Some(2)
 

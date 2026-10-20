@@ -561,7 +561,7 @@ f(id(A)) + f(A)
 //│ let tmp, tmp1, tmp2, f$x_A, f$x_rest, f$f, deforest$lam;
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
-//│   return x()
+//│   return (x() as! Int⁰)
 //│ };
 //│ @affine(1) @private
 //│ define f$x_A as fun f$x_A⁰()() {
