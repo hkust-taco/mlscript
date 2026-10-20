@@ -285,7 +285,7 @@ isO(O)
 //│ deforest > 	match: x⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let $x_O, $x_rest, deforest$lam: ?;
+//│ let $x_O, $x_rest, deforest$lam: Function⁰;
 //│ @affine(1) @private
 //│ define $x_O as fun $x_O⁰()(): ? {
 //│   return 1

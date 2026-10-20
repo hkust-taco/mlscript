@@ -458,8 +458,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       case ctor@CtorProducer(_, args, _) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
         assert(args.isEmpty)
         val (branchFunBms, branchFunTSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))
-        val lambdaSym = new TempSymbol(N, erasedType = N, "deforest$lam")
         mkCall(branchFunBms.asMemberRef(branchFunTSym), Nil): callBranchFun =>
+          val lambdaSym = new TempSymbol(N, erasedType = callBranchFun.erasedValueType, "deforest$lam")
           Scoped(
             Set.single(lambdaSym),
             Assign(
