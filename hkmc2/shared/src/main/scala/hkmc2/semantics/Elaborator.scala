@@ -1451,19 +1451,13 @@ extends Importer:
         val elems = namedElems.map:
           case f @ Fld(_, _, S(tpe)) => f.copy(term = tpe, asc = N)
           case elem => elem
-        // * Check the same constraints as `params`, tracking whether an optional parameter (`seenOpt`)
-        // * and a variadic parameter (`seenVariadic`) were seen.
-        fields.lazyZip(elems).foldLeft((false, false)):
-          case ((seenOpt, seenVariadic), (field, Fld(flags, _, _))) =>
-            if flags.opt && seenVariadic then
-              raise(ErrorReport(msg"Optional parameters cannot follow a variadic parameter." -> field.toLoc :: Nil))
-            else if seenOpt && !flags.opt && !seenVariadic then
-              raise(ErrorReport(msg"A required parameter cannot follow an optional parameter." -> field.toLoc :: Nil))
-            (seenOpt || flags.opt, seenVariadic)
-          case ((seenOpt, seenVariadic), (field, _: Spd)) =>
-            if seenVariadic then
-              raise(ErrorReport(msg"A parameter list cannot have more than one variadic parameter." -> field.toLoc :: Nil))
-            (seenOpt, true)
+        fields.lazyZip(elems).foldLeft(ParameterOrder.empty):
+          case (order, (field, Fld(flags, _, _))) =>
+            order.checkFixed(flags.opt, field.toLoc)
+            order.next(flags.opt, false)
+          case (order, (field, _: Spd)) =>
+            order.checkVariadic(field.toLoc)
+            order.next(false, true)
         withTypeBinders(Term.Tup(elems)(tree))
       case _ => subterm(lhs, Tpe)
     
@@ -3156,8 +3150,8 @@ extends Importer:
     case Tup(ps) =>
       // * `acc` accumulates the leading parameters in reverse order, and `variadic` the variadic
       // * parameter together with the trailing parameters following it, also in reverse order.
-      def go(ps: Ls[Tree], acc: Ls[Param], variadic: Opt[(Param, Ls[Param])], ctx: Ctx, flags: ParamListFlags)
-          : (ParamList, Ctx) =
+      def go(ps: Ls[Tree], acc: Ls[Param], variadic: Opt[(Param, Ls[Param])], ctx: Ctx, flags: ParamListFlags,
+          order: ParameterOrder): (ParamList, Ctx) =
         ps match
         case Nil =>
           (ParamList(flags, acc.reverse, variadic.map((p, trailing) => Variadic(p, trailing.reverse)))(t.toLoc), ctx)
@@ -3181,10 +3175,10 @@ extends Importer:
                 raise(ErrorReport(msg"Contextual parameters cannot be optional." -> hd.toLoc :: Nil))
               else if spd.isDefined then
                 raise(ErrorReport(msg"Variadic parameters cannot be optional." -> hd.toLoc :: Nil))
-              else if variadic.isDefined then
-                raise(ErrorReport(msg"Optional parameters cannot follow a variadic parameter." -> hd.toLoc :: Nil))
-            else if spd.isEmpty && variadic.isEmpty && acc.exists(_.flags.opt) then
-              raise(ErrorReport(msg"A required parameter cannot follow an optional parameter." -> hd.toLoc :: Nil))
+              else order.checkFixed(true, hd.toLoc)
+            else if spd.isEmpty then order.checkFixed(false, hd.toLoc)
+            spd.foreach(_ => order.checkVariadic(hd.toLoc))
+            val nextOrder = order.next(p.flags.opt, spd.nonEmpty)
             val bindings = (p.sym.name -> p.sym) :: aliases.map(_ -> p.sym)
             val newCtx = if !inPattern || p.flags.pat then ctx ++ bindings else ctx
             val newFlags = flags.copy(ctx = inUsing)
@@ -3192,15 +3186,14 @@ extends Importer:
             case (S(spd), N) =>
               if spd is SpreadKind.Lazy then
                 raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
-              go(tl, acc, S(p -> Nil), newCtx, newFlags)
+              go(tl, acc, S(p -> Nil), newCtx, newFlags, nextOrder)
             case (S(_), S((vp, trailing))) =>
-              raise(ErrorReport(msg"A parameter list cannot have more than one variadic parameter." -> hd.toLoc :: Nil))
               // * Keep the parameter as a trailing one so that its references remain bound.
-              go(tl, acc, S(vp -> (p :: trailing)), newCtx, newFlags)
-            case (N, S((vp, trailing))) => go(tl, acc, S(vp -> (p :: trailing)), newCtx, newFlags)
-            case (N, N) => go(tl, p :: acc, N, newCtx, newFlags)
-          case L(d) => raise(d); go(tl, acc, variadic, ctx, flags)
-      go(ps, Nil, N, ctx, ParamListFlags.empty)
+              go(tl, acc, S(vp -> (p :: trailing)), newCtx, newFlags, nextOrder)
+            case (N, S((vp, trailing))) => go(tl, acc, S(vp -> (p :: trailing)), newCtx, newFlags, nextOrder)
+            case (N, N) => go(tl, p :: acc, N, newCtx, newFlags, nextOrder)
+          case L(d) => raise(d); go(tl, acc, variadic, ctx, flags, order)
+      go(ps, Nil, N, ctx, ParamListFlags.empty, ParameterOrder.empty)
     case _ =>
       raise:
         ErrorReport:
