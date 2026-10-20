@@ -1,0 +1,39 @@
+:.
+:js
+
+fun sign(x) = if x
+  < 0 then "negative"
+  > 0 then "positive"
+  _ then "zero"
+
+:expect ["negative", "zero", "positive"]
+[sign(-1), sign(0), sign(1)]
+//│ = ["negative", "zero", "positive"]
+
+// The fallback belongs to this nested split, not to the enclosing pattern.
+data class Box(value)
+
+fun classify(box) = if box is
+  Box(value) and value
+    < 0 then "negative"
+    > 0 then "positive"
+    _ then "zero"
+  else "not a box"
+
+:expect ["negative", "zero", "positive", "not a box"]
+[classify(Box(-1)), classify(Box(0)), classify(Box(1)), classify(0)]
+//│ = ["negative", "zero", "positive", "not a box"]
+
+let calls = 0
+fun input(x) =
+  set calls += 1
+  x
+//│ calls = 0
+
+fun checked(x) = if input(x)
+  < 0 then -1
+  _ then 0
+
+:expect [-1, 0, 0, 3]
+[checked(-1), checked(0), checked("text"), calls]
+//│ = [-1, 0, 0, 3]
