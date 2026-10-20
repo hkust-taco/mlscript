@@ -12,8 +12,8 @@ fun foo() =
 
 module ScratchPrelude with ...
 abstract class List[out T]: Cons[T] | Nil
-data class Cons(head, tail) extends List
-object Nil extends List
+data class Cons[out T](head: T, tail: List[T]) extends List[T]
+object Nil extends List[Nothing]
 fun listLen(ls) =
   fun l(ls, a) = if ls is
     Nil then a
