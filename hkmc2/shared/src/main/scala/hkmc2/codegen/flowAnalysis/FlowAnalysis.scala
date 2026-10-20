@@ -925,8 +925,8 @@ class FlowConstraintsCollector(
         case ((ps, whichParamList), acc) =>
           val plFunId = paramListFunId(whichParamList)
           // A declared curried function runs its body only at the final list.
-          // Earlier stages capture arguments; each needs its own, initially pure summary.
-          val stageEffect =
+          // Applying earlier parameter lists only captures arguments; each needs its own, initially pure summary.
+          val effectParamList =
             if whichParamList == params.size - 1 then effect
             else freshVar(s"effect_$plFunId", cc.forFun)
           val capUB = freshVar(s"cap_ub_$plFunId", cc.forFun)
@@ -940,7 +940,7 @@ class FlowConstraintsCollector(
             ps.restParam.map(p => generatedVars(p.sym)),
             acc,
             capUB,
-            stageEffect)
+            effectParamList)
       // An explicit @pure annotation overrides the latent effect. Keep analyzing body
       // calls, but do not let their effects flow into this trusted override.
       processBlock(body)(using cc, res,

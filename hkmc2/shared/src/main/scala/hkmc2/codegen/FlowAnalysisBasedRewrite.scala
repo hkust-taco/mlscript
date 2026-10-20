@@ -113,7 +113,7 @@ class FlowAnalysisBasedRewrite(
       val body2 = withEliminatedParams(removed):
         withEtaArgss(etaParams.map(_.args)):
           applyFunBodyLikeBlock(body)
-      // The appended stage may be effectful even when the original producer was pure.
+      // Calls added for the new parameter lists may be effectful even when the original body was pure.
       val annotations2 =
         if etaParams.nonEmpty then fun.annotations.filterNot(_.isInstanceOf[Annot.Pure])
         else fun.annotations

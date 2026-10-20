@@ -60,7 +60,7 @@ node()()
 //│ = 42
 
 
-// * Pure works for multi-stage expansion
+// * Pure works for expansion across multiple parameter lists
 :expect 42
 fun pure() = 42
 @affine(0) fun leaf_2() =
