@@ -598,8 +598,6 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case _ => ()
   
   override def applyPath(p: Path): Unit = p match
-    case DynSelect(qual, fld, kind) =>
-      applyPath(qual); applyPath(fld); applyDynSelectKind(kind)
     case p@TrackableFieldSelect(qual, _ -> _) =>
       res.selToCtxOfSel.addOne(p.uid -> ctxTracker.getAllCtx)
       qual match
@@ -610,7 +608,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
         if ctxTracker.isEnclosingMatchScrutSym(disamb) =>
           applyValueMemberRef(v, recordAffinity = false)
       case _ => applyPath(qual)
-    case p: (Select | SuperSelect) =>
+    case p: (Select | SuperSelect | DynSelect) =>
       super.applyPath(p)
     case c: Cast => applyResult(c.value)
     case v: Value => applyValue(v)
@@ -1073,10 +1071,6 @@ class FlowConstraintsCollector(
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
             case None => generatedVars(f)
-          case DynSelect(qual, key, DynSelectKind.Member(sym)) =>
-            cc.constrain(processResult(qual), UnknownCons)
-            cc.constrain(processResult(key), UnknownCons)
-            generatedVars(sym)
           case s @ SuperSelect(qual, base, key) =>
             cc.constrain(processResult(key), UnknownCons)
             cc.constrain(processResult(qual), UnknownCons)
@@ -1086,10 +1080,12 @@ class FlowConstraintsCollector(
             cc.constrain(processResult(qual), UnknownCons)
             s.symbol.fold(UnknownProd): selSym =>
               generatedVars(selSym)
-          case DynSelect(qual, fld, DynSelectKind.ArrayIdx | DynSelectKind.Unknown) =>
+          case DynSelect(qual, fld, kind) =>
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(fld), UnknownCons)
-            UnknownProd
+            kind match
+              case DynSelectKind.Member(sym) => generatedVars(sym)
+              case DynSelectKind.ArrayIdx | DynSelectKind.Unknown => UnknownProd
           case Cast(value, _, _) =>
             val valueStrat = processResult(value)
             cc.constrain(valueStrat, UnknownCons)
