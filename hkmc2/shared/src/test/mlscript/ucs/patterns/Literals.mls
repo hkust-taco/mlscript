@@ -75,11 +75,26 @@ fun dual_patterns(x, y) =
     x is "none" and y is "none" then 3
 
 
-:fixme // TODO
+:expect true
 () is ()
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern (unit).
-//│ ║  l.+1: 	() is ()
-//│ ╙──      	      ^^
 //│ = true
 
 
+
+fun isUnit(value) = value is ()
+
+:expect [true, false, false, false, false, false]
+[isUnit(()), isUnit(null), isUnit(unsafe.undefined), isUnit(0), isUnit([]), isUnit({value: 1})]
+//│ = [true, false, false, false, false, false]
+
+:expect [true, false, true, false]
+[[(), 1] is [(), _], [null, 1] is [(), _], () is (() | Int), "text" is (() | Int)]
+//│ = [true, false, true, false]
+
+// A local declaration named Unit cannot change the meaning of the literal pattern.
+object Unit
+fun shadowed(value) = value is ()
+
+:expect [true, false]
+[shadowed(()), shadowed(Unit)]
+//│ = [true, false]

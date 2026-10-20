@@ -1,0 +1,24 @@
+:.
+
+// A pattern can be the first use of the runtime singleton in this module.
+fun isUnit(value) = if value is () then 1 else 0
+isUnit(0)
+//│ Wasm result:
+//│ = 0
+
+let originalUnit = ()
+isUnit(originalUnit) * 10 + isUnit(0)
+//│ Wasm result:
+//│ = 10
+
+// Distinguish the runtime singleton from an unrelated object with the same name.
+object Unit
+fun shadowed(value) = if value is () then 1 else 0
+shadowed(()) * 10 + shadowed(Unit)
+//│ Wasm result:
+//│ = 10
+
+:fixme // Wasm REPL singleton exports use source names, so a later Unit object overwrites the runtime singleton.
+if () === originalUnit then 1
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: unreachable

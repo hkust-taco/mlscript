@@ -2871,6 +2871,10 @@ class NewResolver:
       case _ => reject(sh)
     lhs.withoutCaptures match
       case Term.Error() => rctx.markError(res)
+      // The unit literal denotes a fixed runtime object, without a source name
+      // to resolve. Keep its ordinary constructor shape and singleton test.
+      case Term.UnitVal() =>
+        classPattern(State.unitSymbol.defn.getOrElse(lastWords("Missing runtime Unit definition")))
       case Term.Ref(sym: VarSymbol) if sym.decl.exists(_.isPatternConstructor) =>
         res.resolvedTargets ::= sym
       case Term.SimpleRef(sym: VarSymbol) if sym.decl.exists(_.isPatternConstructor) =>

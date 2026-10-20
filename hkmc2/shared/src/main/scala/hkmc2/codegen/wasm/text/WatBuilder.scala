@@ -2654,11 +2654,17 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     ))
 
                   case Case.Cls(cls, _) =>
-                    val clsBlkMemberSym = cls.asBlkMember getOrElse:
-                      break(errExpr(
-                        Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
-                        extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
-                      ))
+                    val clsBlkMemberSym =
+                      // Unit's Wasm struct and RTTI belong to the synthetic singleton,
+                      // which may first be needed by a pattern rather than a value.
+                      if cls is State.unitSymbol then
+                        RegisterUnitSingleton()
+                        State.unitBlockMemberSymbol
+                      else cls.asBlkMember getOrElse:
+                        break(errExpr(
+                          Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
+                          extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
+                        ))
                     val isStructCompatible = ref.test(getScrutExpr, baseObjectRefType(nullable = false))
                     def isArrayCompatible = ref.test(getScrutExpr, RefType(HeapType.Array, nullable = false))
 
