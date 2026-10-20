@@ -1,0 +1,203 @@
+:.
+:js
+
+class Tree[out A]: Empty | Node[A]
+data class Node[out A](value: A, left: Tree[A], right: Tree[A], height: Int) extends Tree[A]
+object Empty extends Tree[Nothing]
+
+fun showTree(t: Tree[Any]): Str = if t is
+  Node(v, l, r, _) then
+    "(" + showTree(l) + " " + String(v) + " " + showTree(r) + ")"
+  Empty then "•"
+
+fun showTreeWithHeight(t: Tree[Any]): Str = if t is
+  Node(v, l, r, h) then
+    "(" + showTreeWithHeight(l) + " " + String(v) + " [" + String(h) + "]" + " " + showTreeWithHeight(r) + ")"
+  Empty then "•"
+
+fun height(t) =
+  if t is
+    Node(_, _, _, h) then h
+    Empty then 0
+
+let nil = Empty
+fun node(v, l, r) = Node(v, l, r, Math.max(height(l), height(r)) + 1)
+fun single(v) = Node(v, Empty, Empty, 1)
+//│ nil = Empty
+
+fun isBalanced(t) =
+  if t is
+    Node(_, l, r, h) then
+      h == Math.max(height(l), height(r)) + 1 and
+        Math.abs(height(l) - height(r)) <= 1 and isBalanced(l) and isBalanced(r)
+    Empty then true
+
+assert isBalanced(nil)
+
+//      _             _                    _        _
+//  ___(_)_ __   __ _| | ___     _ __ ___ | |_ __ _| |_ ___
+// / __| | '_ \ / _` | |/ _ \   | '__/ _ \| __/ _` | __/ _ \
+// \__ \ | | | | (_| | |  __/   | | | (_) | || (_| | ||  __/
+// |___/_|_| |_|\__, |_|\___|   |_|  \___/ \__\__,_|\__\___|
+//              |___/
+
+fun rotateLeft[A](t: Tree[A]): Tree[A] =
+  if t is
+    Node(v, l, Node(v', l', r', _), _) and
+      Math.max(height(l), height(l')) + 1 is h and
+        Math.max(h, height(r')) + 1 is h' then
+          Node(v', Node(v, l, l', h), r', h')
+    _ then t
+
+rotateLeft(nil) |> showTree
+rotateLeft(single(0)) |> showTree
+//│ = "(• 0 •)"
+
+let unbalanced1 = node(0, nil, node(1, nil, single(2)))
+assert not isBalanced(unbalanced1)
+unbalanced1 |> showTree
+rotateLeft(unbalanced1) |> showTree
+//│ = "((• 0 •) 1 (• 2 •))"
+//│ unbalanced1 = Node(0, Empty, Node(1, Empty, Node(2, Empty, Empty, 1), 2), 3)
+
+fun rotateRight[A](t: Tree[A]): Tree[A] =
+  if t is
+    Node(v, Node(v', l', r', _), r, _) then
+      node(v', l', node(v, r', r))
+    _ then t
+
+rotateRight(nil) |> showTree
+rotateRight(single(0)) |> showTree
+//│ = "(• 0 •)"
+
+let unbalanced2 = node(2, node(1, single(0), nil), nil)
+assert not isBalanced(unbalanced2)
+unbalanced2 |> showTree
+rotateRight(unbalanced2) |> showTree
+//│ = "((• 0 •) 1 (• 2 •))"
+//│ unbalanced2 = Node(2, Node(1, Node(0, Empty, Empty, 1), Empty, 2), Empty, 3)
+
+//      _             _     _                    _        _
+//   __| | ___  _   _| |__ | | ___     _ __ ___ | |_ __ _| |_ ___
+//  / _` |/ _ \| | | | '_ \| |/ _ \   | '__/ _ \| __/ _` | __/ _ \
+// | (_| | (_) | |_| | |_) | |  __/   | | | (_) | || (_| | ||  __/
+//  \__,_|\___/ \__,_|_.__/|_|\___|   |_|  \___/ \__\__,_|\__\___|
+//
+
+fun rotateRightLeft[A](t: Tree[A]): Tree[A] =
+  if t is
+    Node(v, t1, Node(v', Node(v'', t2, t3, _), t4, _), _) then
+      node(v'', node(v, t1, t2), node(v', t3, t4))
+    else t
+
+// Should remain the same.
+rotateRightLeft(nil) |> showTree
+rotateRightLeft(single(0)) |> showTree
+rotateRightLeft(unbalanced1) |> showTree
+rotateRightLeft(unbalanced2) |> showTree
+//│ = "(((• 0 •) 1 •) 2 •)"
+
+let unbalanced3 = node(0, nil, node(3, node(1, nil, single(2)), nil))
+assert not isBalanced(unbalanced3)
+unbalanced3 |> showTree
+rotateRightLeft(unbalanced3) |> showTree
+//│ = "((• 0 •) 1 ((• 2 •) 3 •))"
+//│ unbalanced3 = Node(
+//│   0,
+//│   Empty,
+//│   Node(3, Node(1, Empty, Node(2, Empty, Empty, 1), 2), Empty, 3),
+//│   4
+//│ )
+
+fun rotateLeftRight[A](t: Tree[A]): Tree[A] =
+  if t is
+    Node(v, Node(v', t1, Node(v'', t2, t3, _), _), t4, _) then
+      node(v'', node(v', t1, t2), node(v, t3, t4))
+    else t
+
+// Should remain the same.
+rotateLeftRight(nil) |> showTree
+rotateLeftRight(single(0)) |> showTree
+rotateLeftRight(unbalanced1) |> showTree
+rotateLeftRight(unbalanced2) |> showTree
+//│ = "(((• 0 •) 1 •) 2 •)"
+
+let unbalanced4 = node(3, node(0, nil, node(2, single(1), nil)), nil)
+assert not isBalanced(unbalanced4)
+unbalanced4 |> showTree
+rotateLeftRight(unbalanced4) |> showTree
+//│ = "((• 0 (• 1 •)) 2 (• 3 •))"
+//│ unbalanced4 = Node(
+//│   3,
+//│   Node(0, Empty, Node(2, Node(1, Empty, Empty, 1), Empty, 2), 3),
+//│   Empty,
+//│   4
+//│ )
+
+fun bf(t) =
+  if t is
+    Node(_, l, r, _) then height(l) - height(r)
+    Empty then 0
+
+//  _                     _
+// (_)_ __  ___  ___ _ __| |_
+// | | '_ \/ __|/ _ \ '__| __|
+// | | | | \__ \  __/ |  | |_
+// |_|_| |_|___/\___|_|   \__|
+//
+
+// Nested operator splits choose a rotation from the two balance factors.
+fun balance[A](t: Tree[A]): Tree[A] =
+  if t is
+    Node(x, l, r, _) and height(r) - height(l)
+      > 1 and r is Node(y, l', r', _) and height(r') - height(l')
+        >= 0 then rotateLeft(t)
+        < 0 and l' is Node then rotateRightLeft(t)
+      < -1 and l is Node(y, l', r', _) and height(r') - height(l')
+        > 0 and r' is Node then rotateLeftRight(t)
+        <= 0 then rotateRight(t)
+    _ then t
+
+fun insert(t: Tree[Num], v: Num) = if t is
+  Node(v', l, r, _) and
+    v < v' then node(v', insert(l, v), r) |> balance
+    v > v' then node(v', l, insert(r, v)) |> balance
+    _ then t
+  Empty then Node(v, Empty, Empty, 1)
+
+
+insert(nil, 0) |> showTree
+insert(single(0), 1) |> showTree
+insert(single(0), -1) |> showTree
+//│ = "((• -1 •) 0 •)"
+
+insert(node(0, nil, single(1)), 2) |> showTreeWithHeight
+insert(node(0, nil, single(1)), 2) |> showTree
+//│ = "((• 0 •) 1 (• 2 •))"
+
+insert(unbalanced1, 3) |> showTree
+//│ = "((• 0 (• 1 •)) 2 (• 3 •))"
+
+// Rotations preserve the cached heights, not just the ordering of values.
+:expect [true, true, true, true]
+[isBalanced(rotateLeft(unbalanced1)), isBalanced(rotateRight(unbalanced2)),
+ isBalanced(rotateRightLeft(unbalanced3)), isBalanced(rotateLeftRight(unbalanced4))]
+//│ = [true, true, true, true]
+
+fun values(t: Tree[Num]): Array[Num] = if t is
+  Node(v, l, r, _) then [...values(l), v, ...values(r)]
+  Empty then []
+
+fun build(xs: Array[Num]): Tree[Num] =
+  let tree = Empty
+  let i = 0
+  while i < xs.length do
+    set tree = insert(tree, xs.at(i))
+    assert isBalanced(tree)
+    set i += 1
+  tree
+
+:expect "1,2,3,4,5,6,7,8|1,2,3,4,5,6,7,8|1,2,3|1,2,3|1,2,3|"
+[[1, 2, 3, 4, 5, 6, 7, 8], [8, 7, 6, 5, 4, 3, 2, 1],
+ [3, 1, 2], [1, 3, 2], [2, 1, 2, 3, 1], []].map(xs => values(build(xs)).join(",")).join("|")
+//│ = "1,2,3,4,5,6,7,8|1,2,3,4,5,6,7,8|1,2,3|1,2,3|1,2,3|"
