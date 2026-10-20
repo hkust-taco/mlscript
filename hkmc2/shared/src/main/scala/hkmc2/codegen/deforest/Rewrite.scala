@@ -62,29 +62,26 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         case S(FinalDestSel(_, field)) =>
           val fieldType = representation(c.args.find(_._1 == field).get._2, field.erasedFieldType, seen + p)._2
           true -> fieldType
-        case N => false -> (c.ctor match
-          case cls: (ClassSymbol | ModuleOrObjectSymbol) => ErasedType.ValueLike(S(false), cls)
-          case _: Int => ErasedType.Array)
+        case N => false -> c.allocatedType
       case _: ProdFun => false -> ErasedType.Function(S(false))
       case UnknownProd => false -> fallback
 
   // A proved cast can disappear when fusion changes its operand's representation.
   // Keep other casts: even a check known to succeed can still narrow a physical anyref
   // slot for Wasm. Unknown/failing casts expose their inputs and therefore prevent fusion.
-  private lazy val fusedCasts = constraintSolver.provenCastSources.iterator.collect:
-    case (id, sources) if sources.exists(representation(_, N, Set.empty)._1) => id
+  private lazy val fusedCasts = constraintSolver.castsWithSrcs.iterator.collect:
+    case c if c.succeeds && c.sources.exists(representation(_, N, Set.empty)._1) => c.concreteId
   .toSet
 
   private lazy val changedSlots =
-    val candidates = LinkedHashMap.empty[(InstantiationId, Symbol), Buffer[(Bool, ErasedValueType)]]
+    val slots = LinkedHashMap.empty[(InstantiationId, Symbol), (Bool, ErasedValueType)]
     for (sym, instId, v) <- collector.symbolFlows do sym match
       case sym: (VarSymbol | TempSymbol | TermSymbol) =>
-        candidates.getOrElseUpdate(instId -> sym, Buffer.empty) +=
-          representation(v, sym.mapErasedValueType, Set.empty)
+        val previous = slots.put(instId -> sym, representation(v, sym.mapErasedValueType, Set.empty))
+        assert(previous.isEmpty, s"$sym holds two flow variables in one instance")
       case _ => ()
-    candidates.iterator.collect:
-      case (key, reps) if reps.exists(_._1) => key -> ErasedType.Union.mk(reps.map(_._2))
-    .toMap
+    slots.collect:
+      case (key, (true, tpe)) => key -> tpe
 
   override protected def rewrittenFunctionType(fun: TermSymbol, instId: InstantiationId): Opt[ErasedType] =
     val params = pre.res.funSymToFunDefn(fun).params
@@ -101,40 +98,29 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
 
   private def retypedSymbol(previous: Symbol, tpe: ErasedValueType): Symbol = previous match
     case v: VarSymbol if v.erasedType.contains(tpe) => v
-    case v: VarSymbol =>
-      val fresh = new VarSymbol(v.id, S(tpe))
-      fresh.sourceAliases = v.sourceAliases
-      fresh
+    case v: VarSymbol => SymbolRefresher.copyVarSymbol(v, S(tpe))
     case t: TempSymbol if t.erasedType.contains(tpe) => t
-    case t: TempSymbol => new TempSymbol(t.trm, S(tpe), t.nme)
+    case t: TempSymbol => SymbolRefresher.copyTempSymbol(t, S(tpe))
     case t: TermSymbol if t.erasedType.contains(tpe) => t
-    case t: TermSymbol =>
-      val fresh = new TermSymbol(t.k, t.owner, t.id, S(tpe))
-      fresh.sourceAliases = t.sourceAliases
-      fresh
+    case t: TermSymbol => SymbolRefresher.copyTermSymbol(t, t.owner, S(tpe))
     case other => lastWords(s"expected a runtime slot, got $other")
 
   // Rewriters for extracted branches share the rewritten outer bindings. Only bindings
   // owned by a copied body get fresh copies; recreating a free symbol would leave it unbound.
-  private lazy val orderedChangedSlots = changedSlots.toList.sortBy:
-    case ((instId, sym), _) => (sym.uid, instId.map(_.uid).mkString(","))
-  private lazy val rewrittenSlots = orderedChangedSlots.map:
-    case (key@(_, sym), tpe) => key -> retypedSymbol(sym, tpe)
+  private lazy val rewrittenSlots =
+    import scala.math.Ordering.Implicits.seqOrdering
+    changedSlots.toList
+      .sortBy:
+        case ((instId, sym), _) => (sym.uid, instId.map(_.uid))
+      .map:
+        case (key@(_, sym), tpe) => (key, tpe, retypedSymbol(sym, tpe))
 
   override protected def symbolMapping(instId: InstantiationId,
       refreshed: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]): Map[Symbol, Symbol] =
-    val globals = rewrittenSlots.iterator.collect:
-      case ((Nil, sym), next) => sym -> next
-    val original = globals.toMap ++ super.symbolMapping(instId, refreshed)
-    val replacements = refreshed match
-      case N => rewrittenSlots.iterator.collect:
-        case ((id, sym), next) if id == instId => sym -> next
-      case S(mapping) =>
-        val copied = Map.from[Symbol, Symbol](mapping)
-        orderedChangedSlots.iterator.collect:
-          case ((id, sym), tpe) if id == instId && copied.contains(sym) =>
-            sym -> retypedSymbol(copied(sym), tpe)
-    original ++ replacements
+    val mapping = super.symbolMapping(instId, refreshed)
+    mapping ++ rewrittenSlots.iterator.collect:
+      case ((id, sym), tpe, shared) if id.isEmpty || id == instId =>
+        sym -> mapping.get(sym).fold(shared)(retypedSymbol(_, tpe))
 
   private def capturedType(sym: LocalVarSymbol, instId: InstantiationId): Opt[ErasedValueType] =
     changedSlots.get(instId -> sym).orElse(sym.mapErasedValueType)

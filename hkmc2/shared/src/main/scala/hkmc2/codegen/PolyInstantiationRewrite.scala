@@ -63,9 +63,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
       if tpe == sym.erasedType then N
       else
         assert(fun.visibility is Visibility.Private)
-        val fresh = new TermSymbol(sym.k, sym.owner, sym.id, tpe)
-        fresh.sourceAliases = sym.sourceAliases
-        S(sym -> fresh)
+        S(sym -> SymbolRefresher.copyTermSymbol(sym, sym.owner, tpe))
     .toMap
 
   protected def symbolMapping(instId: InstantiationId,

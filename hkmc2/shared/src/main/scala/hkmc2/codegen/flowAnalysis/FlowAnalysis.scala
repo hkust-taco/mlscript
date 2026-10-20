@@ -181,7 +181,7 @@ object FunRef:
 sealed trait ProdStrat
 sealed trait ConsStrat
 
-class StratVar(val name: Str, val sourceSymbol: Opt[Symbol], val generatedForFun: Opt[TermSymbol])(using eState: Elaborator.State)
+class StratVar(val name: Str, val sourceSymbol: Opt[Symbol], val generatedForFun: Opt[TermSymbol], val instantiationId: Opt[InstantiationId])(using eState: Elaborator.State)
   extends Symbol(using eState) with ProdStrat with ConsStrat:
   def nme: Str = name
   def subst(using SymbolSubst): StratVar = this
@@ -200,13 +200,13 @@ object StratVar:
   
 
   def freshVar(nme: String)(using fState: FlowAnalysis.State): StratVar =
-    freshVar(nme, N, N)
+    freshVar(nme, N, N, N)
   def freshVar(nme: String, generatedForFun: TermSymbol)(using fState: FlowAnalysis.State): StratVar =
-    freshVar(nme, N, S(generatedForFun))
-  def freshVar(nme: String, sourceSymbol: Opt[Symbol], generatedForFun: Opt[TermSymbol])(using fState: FlowAnalysis.State): StratVar =
+    freshVar(nme, N, S(generatedForFun), N)
+  def freshVar(nme: String, sourceSymbol: Opt[Symbol], generatedForFun: Opt[TermSymbol], instantiationId: Opt[InstantiationId])(using fState: FlowAnalysis.State): StratVar =
     val ownName = if nme.isEmpty then "$stratvar" else nme
     val name = generatedForFun.fold(ownName)(fun => s"${ownName}_for_${fun.nme}")
-    val stratVar = StratVar(name, sourceSymbol, generatedForFun)(using fState.eState)
+    val stratVar = StratVar(name, sourceSymbol, generatedForFun, instantiationId)(using fState.eState)
     fState.stratVars += stratVar
     stratVar
   def freshVar(nme: String, forFunOpt: Opt[TermSymbol])(using fState: FlowAnalysis.State): StratVar =
@@ -256,6 +256,9 @@ class Ctor(
   val args: Ls[SelField -> ProdStrat]
 ) extends ProdStrat with StratWithOrigin[ResultId]:
   val dests = MutSet.empty[ConcreteCtorConsumer | MarkerConsStrat]
+  def allocatedType: ErasedValueType = ctor match
+    case cls: (ClassSymbol | ModuleOrObjectSymbol) => ErasedType.ValueLike(S(false), cls)
+    case _: Int => ErasedType.Array
   override def toString(): String =
     s"$ctor(${args.map(_.toString()).mkString(", ")})"
 
@@ -279,7 +282,9 @@ class CastConsumer(
   val exprId: ResultId,
   val instantiationId: Opt[InstantiationId],
   val target: ErasedValueType,
-) extends ConsStrat with StratWithOrigin[ResultId]
+) extends ConsStrat with StratWithOrigin[ResultId]:
+  val sources = LinkedHashSet.empty[ProdStrat]
+  var succeeds = true
 
 case object UnknownCons extends MarkerConsStrat
 
@@ -400,7 +405,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     def registerStratVar(sym: Symbol, nme: String): Unit =
       val currentRootFun = ctx.tails.collectFirst:
         case InCtx.Fn(fun) :: tl if isTopLvlLikeFunCtx(tl) => fun.dSym
-      res.generatedVars.getOrElseUpdate(sym, freshVar(nme, S(sym), currentRootFun))
+      res.generatedVars.getOrElseUpdate(sym, freshVar(nme, S(sym), currentRootFun, N))
     
     private inline def withCtx(newCtx: InCtx)(inline body: => Any)(after: => Unit = ()): Unit =
       ctx = newCtx :: ctx
@@ -736,7 +741,6 @@ class FlowConstraintsCollector(
   // rewrite needs locals as well as parameters; the original scheme variables have no
   // solved bounds, and variables copied through several schemes retain the full path.
   val symbolFlows = mutable.Buffer.empty[(Symbol, InstantiationId, StratVar)]
-  private val symbolVarInstantiations = MutMap.empty[StratVar, InstantiationId]
   for (sym, v) <- preAnalyzer.res.generatedVars if mono || v.generatedForFun.isEmpty do
     symbolFlows += ((sym, Nil, v))
   
@@ -839,11 +843,10 @@ class FlowConstraintsCollector(
         if s.generatedForFun.fold(false):
           forFun => funToSccRep(forFun).fold(false)(_ is groupRep)
         then stratVarMap.getOrElseUpdate(s, {
-          val v = freshVar(s.name, s.sourceSymbol, cc.forFun)
-          s.sourceSymbol.foreach: sym =>
-            val instId = referSite :: symbolVarInstantiations.getOrElse(s, Nil)
-            symbolVarInstantiations(v) = instId
-            if cc.forFunGroup.isEmpty then symbolFlows += ((sym, instId, v))
+          val instId = updateInstantiationId(s.instantiationId)
+          val v = freshVar(s.name, s.sourceSymbol, cc.forFun, instId)
+          for sym <- s.sourceSymbol if cc.forFunGroup.isEmpty do
+            symbolFlows += ((sym, instId.get, v))
           v
         })
         else s
@@ -1135,17 +1138,7 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   val consumersWithSrcs = mutable.Buffer.empty[ConcreteCtorConsumer]
   val prodFunsWithDests = mutable.Buffer.empty[ProdFun]
   val consFunsWithSrcs = mutable.Buffer.empty[ConsFun]
-  
-  private class CastEvidence:
-    val sources = LinkedHashSet.empty[ProdStrat]
-    var succeeds = true
-  private val castEvidence = LinkedHashMap.empty[ConcreteId[ResultId], CastEvidence]
-  
-  // A producer can be fused through a cast only if all of that cast's inputs pass.
-  // If any input is unknown or incompatible, the solver exposes every input below.
-  lazy val provenCastSources: Map[ConcreteId[ResultId], Set[ProdStrat]] = castEvidence.iterator.collect:
-    case (id, evidence) if evidence.succeeds && evidence.sources.nonEmpty => id -> evidence.sources.toSet
-  .toMap
+  val castsWithSrcs = mutable.Buffer.empty[CastConsumer]
   
   private def addCtorDest(c: Ctor, d: ConcreteCtorConsumer | MarkerConsStrat): Unit =
     if c.dests.isEmpty then ctorsWithDests += c
@@ -1327,21 +1320,19 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
       case (p, c: StratVar) => if c.lowerBounds.add(p) then
         for u <- c.upperBounds do handle(p, u)
       case (p, c: CastConsumer) =>
-        val evidence = castEvidence.getOrElseUpdate(c.concreteId, new CastEvidence)
-        if evidence.sources.add(p) then
+        if c.sources.isEmpty then castsWithSrcs += c
+        if c.sources.add(p) then
           val actual = p match
-            case c: Ctor => c.ctor match
-              case cls: (ClassSymbol | ModuleOrObjectSymbol) => S(ErasedType.ValueLike(S(false), cls))
-              case _: Int => S(ErasedType.Array)
+            case ctor: Ctor => S(ctor.allocatedType)
             case _: ProdFun => S(ErasedType.Function(S(false)))
             case UnknownProd => N
             case _: StratVar => lastWords("cast producer variable was not propagated")
           val succeeds = actual.exists: tpe =>
             ErasedType.needsCast(tpe.canonicalize, c.target.canonicalize).contains(false)
-          if evidence.succeeds && !succeeds then
-            evidence.succeeds = false
-            evidence.sources.toList.foreach(handle(_, UnknownCons))
-          else if !evidence.succeeds then handle(p, UnknownCons)
+          if c.succeeds && !succeeds then
+            c.succeeds = false
+            c.sources.toList.foreach(handle(_, UnknownCons))
+          else if !c.succeeds then handle(p, UnknownCons)
       case _ => () // ignore other cases
     end handle
     
