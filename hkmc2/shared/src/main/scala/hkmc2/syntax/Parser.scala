@@ -889,7 +889,7 @@ abstract class Parser(
         (e :: acc, S(e))
       case _ => exprCont(SplitPoint(), prec, allowNewlines = false) match
         case SplitPoint() => // * Note: nothing was parsed!
-          // * Kludge to accommodate the kludge for `then` below
+          // A previous continuation may have consumed the whole branch.
           (acc, N)
         case e => (e :: acc, S(e))
     yeetSpaces match
@@ -900,14 +900,14 @@ abstract class Parser(
     case (SELECT(nme, dyn), l0) :: rest =>
       assert(SelPrec <= prec)
       ??? // TODO?
-    case (IDENT("then", false), l0) :: rest if e.isDefined =>
-      // * Kludge – when we have a proper generally splittable syntax, this will be handled by construction
-      consume
-      val rhs = expr(Keyword.`then`.rightPrecOrMin, allowNewlines = false)
+    case (KEYWORD(Keyword.`then` | Keyword.`and` | Keyword.`do`), _) :: _ if e.isDefined =>
+      // The splitting operator's precedence delimits its operand, not the
+      // branch's guard or consequent. Continue the completed branch at ordinary
+      // expression precedence so nested guards retain their `then`/`do` bodies.
       e match
       case N => die
       case S(e) =>
-        opSplitImpl(lhs, splittingOpLoc, prec, InfixApp(e, new Keywrd(Keyword.`then`).withLoc(S(l0)), rhs) :: acc)
+        opSplitImpl(lhs, splittingOpLoc, prec, exprCont(e, MinPrec, allowNewlines = false) :: acc)
     case (IDENT(op, true), l0) :: rest =>
       assert(opPrec(op)._1 <= prec)
       if rest.collectFirst{ case (_: NEWLINE_COMMA | IDENT("then", false), _) => }.isEmpty // TODO dedup
