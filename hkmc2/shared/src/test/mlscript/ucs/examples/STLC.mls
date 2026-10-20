@@ -76,14 +76,17 @@ fun showTerm(t: Term) =
     Var(name) then name
     Abs(lhs, ty, rhs) then "&" + showTerm(lhs) + ": " + showType(ty) + " => " + showTerm(rhs)
     App(Abs(lhs0, ty, lhs1), rhs) then
-      "((" + showTerm(Abs(lhs0, ty, rhs)) + ") " + showTerm(rhs) + ")"
+      "((" + showTerm(Abs(lhs0, ty, lhs1)) + ") " + showTerm(rhs) + ")"
     App(lhs, rhs) then "(" + showTerm(lhs) + " " + showTerm(rhs) + ")"
 
 showTerm(Var("x"))
 showTerm(Abs(Var("x"), PrimitiveType("int"), Var("y")))
 showTerm(App(Var("x"), Var("y")))
+//│ = "(x y)"
+
+:expect "((&x: int => y) z)"
 showTerm(App(Abs(Var("x"), PrimitiveType("int"), Var("y")), Var("z")))
-//│ = "((&x: int => z) z)"
+//│ = "((&x: int => y) z)"
 
 // A recursive type checker exercises nested matches and environment lookup.
 fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
