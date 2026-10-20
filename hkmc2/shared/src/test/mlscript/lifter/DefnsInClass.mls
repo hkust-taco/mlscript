@@ -1,3 +1,4 @@
+:..
 :.
 // NOTE: due to conflict between flow analysis and lifter
 :flowBasedOpt off
@@ -41,10 +42,10 @@ A(1).getA()
 data class A1(x) with
   data class B(y) with
     fun getB() = x + y
-  fun getA() = (new B(2)).getB()
+  fun getA() = new B(2).getB()
 
 :expect 3
-(new A1(1)).getA()
+new A1(1).getA()
 //│ = 3
 
 :sir
@@ -52,7 +53,7 @@ class A with
   val x = 
     fun g() = 2
     g
-(new A).x()
+new A().x()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g, tmp;
 //│ define g as fun g⁰() {

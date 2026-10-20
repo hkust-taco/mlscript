@@ -2,7 +2,7 @@
 :effectHandlers
 :lift
 
-class PrintEffect with
+abstract class PrintEffect with
   fun p(s: String): ()
   fun aux(s: String): ()
 

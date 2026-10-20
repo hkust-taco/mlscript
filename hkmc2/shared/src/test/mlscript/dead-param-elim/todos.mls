@@ -1,5 +1,7 @@
+:.
 :js
 :deforest
+:lift
 :flowBasedOpt debugEta debugDpe
 
 open annotations { noInline }
@@ -76,8 +78,8 @@ c(p(true))
 //│ = 1
 
 // TODO: some params also come from variables local to a branch, but
-// even with the block simplifier before the fused pass, eta expansion param 8 will not be eliminated:
-// param 8 is the match result `tmp1`, which is assigned the non-trivial `h + sumPlus(t)` in `sumPlus_16$ls_Cons`
+// even with the block simplifier before the fused pass, eta expansion param `eta$0$0` will not be eliminated:
+// `eta$0$0` is the match result `tmp1`, which is assigned the non-trivial `h + sumPlus(t)` in `sumPlus$ls_Cons`
 // and there is no way for block simplifier to remove it; this case scoped branches can help
 :expect 11
 :soir
@@ -97,16 +99,14 @@ sumPlus(enum(3))
 //│ deforest > 	fields: ls⁰.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > enum$enum⁰#0 @ <root>: [1, 9]
+//│ eta-expansion > enum$enum⁰#0 @ <root>: [1, 7]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > sumPlus$ls_Cons⁰#1 @ <root> -> eliminable: {0, 5}
-//│ dead-param-elim > sumPlus$ls_Nil⁰#1 @ <root> -> eliminable: {0, 5}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let enum$enum$worker;
 //│ @private
-//│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$6, eta$0$7, eta$0$8) {
+//│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6) {
 //│   let scrut, tmp;
 //│   set scrut = <⁰(x, 0);
 //│   match scrut

@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -15,14 +16,14 @@
 :w
 (1, 2)
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.16: 	(1, 2)
+//│ ║  l.17: 	(1, 2)
 //│ ╙──      	 ^
 //│ = 2
 
 :w
 (1, 2,)
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.23: 	(1, 2,)
+//│ ║  l.24: 	(1, 2,)
 //│ ╙──      	 ^
 //│ = 2
 
@@ -54,7 +55,7 @@ undefined
 :todo
 NaN
 //│ ╔══[COMPILATION ERROR] Name not found: NaN
-//│ ║  l.55: 	NaN
+//│ ║  l.56: 	NaN
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -74,7 +75,7 @@ NaN
 :e
 'AA BB'
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.75: 	'AA BB'
+//│ ║  l.76: 	'AA BB'
 //│ ╙──      	    ^^^
 //│ = "AA"
 
@@ -97,42 +98,42 @@ NaN
 :w
 "\uFE&&"
 //│ ╔══[WARNING] Invalid Unicode escape sequence: expected 4 hexadecimal digits but got 2
-//│ ║  l.98: 	"\uFE&&"
+//│ ║  l.99: 	"\uFE&&"
 //│ ╙──      	   ^^
 //│ = "&&"
 
 :w
 "\u{}"
 //│ ╔══[WARNING] Expected at least one hexadecimal digit in Unicode escape sequence
-//│ ║  l.105: 	"\u{}"
+//│ ║  l.106: 	"\u{}"
 //│ ╙──       	   ^
 //│ = ""
 
 :w
 "\u{ffffffff}"
 //│ ╔══[WARNING] Too many hexadecimal digits in Unicode escape sequence
-//│ ║  l.112: 	"\u{ffffffff}"
+//│ ║  l.113: 	"\u{ffffffff}"
 //│ ╙──       	          ^^
 //│ = ""
 
 :w
 "\u{efefef}"
 //│ ╔══[WARNING] Unicode code point out of range: 0xefefef
-//│ ║  l.119: 	"\u{efefef}"
+//│ ║  l.120: 	"\u{efefef}"
 //│ ╙──       	    ^^^^^^
 //│ = ""
 
 :w
 "\u{55"
 //│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
-//│ ║  l.126: 	"\u{55"
+//│ ║  l.127: 	"\u{55"
 //│ ╙──       	      ^
 //│ = "U"
 
 :w
 "\u{41****"
 //│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
-//│ ║  l.133: 	"\u{41****"
+//│ ║  l.134: 	"\u{41****"
 //│ ╙──       	      ^
 //│ = "A****"
 

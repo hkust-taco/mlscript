@@ -1,3 +1,4 @@
+:.
 :js
 :flowBasedOpt debugDpe
 
@@ -31,7 +32,7 @@ f(1, 2).get()
 //│ @private
 //│ define f⁰ as fun f¹(used) { return new C⁰(used) };
 //│ set tmp = f¹(1);
-//│ return tmp.get﹖()
+//│ return tmp.get¹()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -44,7 +45,7 @@ f(1, 2).get()
 private fun foo(y) =
   class M with
     fun bar() = set y = 2
-  (new M).bar()
+  new M().bar()
 foo(10)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<

@@ -1,0 +1,9 @@
+#lang(0.3.x)
+
+// The declared union supplies a target while admitting another known shape
+// without that member. Importers preserve the target and its runtime access.
+module LenientSelections with
+  class WithValue(val value: Int)
+  class WithoutValue
+  fun read(x: WithValue | WithoutValue, enabled: Bool) = if enabled then x.value else 0
+  val observed = read(WithValue(7), true)

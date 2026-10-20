@@ -1,10 +1,13 @@
+:.
 :global
 :sir
 :siret
 :deforest
+:lift
 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ import "..." as Predef; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // Deforestation extracts a fusing match's branches and continuation into new functions, renaming the symbols
 // that cross into them. A rename stands for the same slot as the symbol it replaces, so it takes that
@@ -34,6 +37,7 @@ data class Pair(a: Int, b: Str)
 //│   }
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // A fused field selection is replaced by a symbol standing for the constructor argument (`Box_v`), which is both
@@ -53,7 +57,7 @@ fun selected(n: Int, k: Str) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let selected$b_Box, selected$b_rest;
 //│ @affine(1) @private
-//│ define selected$b_Box as fun selected$b_Box⁰(Box_v: Int⁰)(fv_k: Str⁰, fv_x: ?, fv_arg$Box$0$: ?): ? {
+//│ define selected$b_Box as fun selected$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_x: ?, fv_k: Str⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_x = fv_arg$Box$0$;
 //│   return [fv_x, fv_k]
@@ -66,9 +70,10 @@ fun selected(n: Int, k: Str) =
 //│   let b: ?, x: ?, arg$Box$0$: ?, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set b = selected$b_Box⁰(Box_v);
-//│   return b(k, x, arg$Box$0$)
+//│   return b(arg$Box$0$, x, k)
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // The code following the match becomes a separate continuation function, whose free variables are typed the
@@ -87,14 +92,14 @@ fun withRest(n: Int, k: Str) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let withRest$b_Box, withRest$b_rest;
 //│ @affine(1) @private
-//│ define withRest$b_Box as fun withRest$b_Box⁰(Box_v: Int⁰)(fv_x: ?, fv_arg$Box$0$: ?, fv_tmp: ?, fv_k: Str⁰, fv_r: ?, fv_tmp1: ?): ? {
+//│ define withRest$b_Box as fun withRest$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_x: ?, fv_tmp: ?, fv_r: ?, fv_k: Str⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
 //│   set fv_x = fv_arg$Box$0$;
-//│   set fv_tmp1 = fv_x;
-//│   return withRest$b_rest⁰(fv_k, fv_r, fv_tmp1)
+//│   set fv_tmp = fv_x;
+//│   return withRest$b_rest⁰(fv_r, fv_tmp, fv_k)
 //│ };
 //│ @private
-//│ define withRest$b_rest as fun withRest$b_rest⁰(fv_k: Str⁰, fv_r: ?, fv_tmp: ?): ? {
+//│ define withRest$b_rest as fun withRest$b_rest⁰(fv_r: ?, fv_tmp: ?, fv_k: Str⁰): ? {
 //│   set fv_r = fv_tmp;
 //│   return [fv_r, fv_k]
 //│ };
@@ -102,9 +107,10 @@ fun withRest(n: Int, k: Str) =
 //│   let b: ?, r: ?, x: ?, arg$Box$0$: ?, tmp: ?, Box_v: Int⁰;
 //│   set Box_v = n;
 //│   set b = withRest$b_Box⁰(Box_v);
-//│   return b(x, arg$Box$0$, tmp, k, r, tmp)
+//│   return b(arg$Box$0$, x, tmp, r, k)
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 // A constructor field that no branch selects still becomes a parameter, so that the branch function takes the
@@ -135,3 +141,4 @@ fun noFields(n: Int, s: Str) =
 //│   return p()
 //│ };
 //│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

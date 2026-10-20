@@ -1,6 +1,5 @@
+:.
 
-:global
-:wasm
 
 
 :wat
@@ -141,7 +140,7 @@ nestedInArm(0)
 
 :wat
 class Foo(val a, val b)
-(new Foo(42, 1)).Foo#a
+new Foo(42, 1).Foo#a
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))

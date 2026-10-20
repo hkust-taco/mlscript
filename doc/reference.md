@@ -247,16 +247,6 @@ fun foo(x: Int): Int = x + 1
 fun bar(x: Int, y: Str): Bool = x > 0
 ```
 
-### Multi-Body `fun`
-
-Multiple functions can be defined under a single `fun` keyword:
-
-```mlscript
-fun
-  min(x, y) = if x < y then x else y
-  max(x, y) = if x > y then x else y
-```
-
 ### Recursive Functions
 
 Functions are recursive by default:
@@ -267,6 +257,31 @@ fun fact(n) =
 
 Mutual recursion uses sequential `fun` definitions in the same block.
 
+### Trailing arguments
+
+The `\` keyword, which binds very strongly on the left and very loosely on the right, can be used to provide extra arguments in a call. Representative examples:
+
+```fs
+tuple() \ 1 + 1
+== tuple(1 + 1)
+
+// Also allowed:
+tuple \ 1 + 1
+== tuple(1 + 1)
+
+tuple(1, 2) \ 3
+== tuple(1, 2, 3)
+
+tuple(1)
+  \ 2
+== tuple(1, 2)
+
+tuple
+  \ 1
+  \ 2
+ == tuple(1, 2)
+```
+
 ### Lambdas
 
 ```mlscript
@@ -275,16 +290,78 @@ x => x + 1
 () => 42
 ```
 
-**Underscore lambda shorthand** — each `_` becomes a new anonymous parameter (left to right):
-```mlscript
-_ + 1            // x => x + 1
-_ + _            // (x, y) => x + y
-_.f(0, _, 2)     // (x, y) => x.f(0, y, 2)
+### Underscore lambda shorthand
+
+Each `_` becomes a new anonymous parameter (left to right).
+
+Only a few places can introduce underscore lambdas:
+* the RHS of the `\` keyword;
+* the RHS of any operator that ends with `>` (except the builtin `>`);
+* symmetrically, the LHS of any operator that begins with `<` (except the builtins `<` and `<=`)
+
+This means we can write things like
+```fs
+42 |> _ + 1
+
+_.getKey <|
+  let r = result()
+  print(r)
+  r.field
+
+number
+  |> _ + 1
+  |> Math.pow(_, 2)
+  .toHexString
+
+xs.map \ _ + 1
+
+xs.reduce \ f(_) + _
+
+xs.foldLeft(0) \ getValue(_) + _
+==
+xs.foldLeft(0, (x, y) => getValue(x) + y)
+
+xs.foldLeft(0) \ getValue(_.key) + _
+==
+xs.foldLeft(0, (x, y) => getValue(x.key) + y)
+
+f >> g(_) + 1
 ```
 
-**Lambdas in block position:**
-```mlscript
-{_ + 1}          // x => x + 1
+Moreover, `=>` can be used in prefix position, which lets the parameter list be inferred implicitly:
+
+```fs
+xs.map(=> _ + 1)
+
+let f =
+  => _ + 1
+xs.map(f)
+
+// This is admittedly a bit strange-looking, but we quickly get used to it:
+let f = => _ + 1 in xs.map(f)
+```
+
+### More examples
+
+```fs
+xs
+  .map \ _ + 1
+  .map \ _ * 2
+
+xs
+  .map \ x =>
+    print(x)
+    doThings(x)
+  .filter \ _ < 100
+
+xs.groupMapReduce
+  \ _.key
+  \ _.value
+  \ _ + _
+
+getValue(...)
+  !> print(_.someField)  // `!>` is Scala's `tap`
+  |> _.someOtherField
 ```
 
 ### Function Declarations (without definition)
@@ -328,13 +405,6 @@ x \f(args)       // receiver syntax: f(x, args)
 x f(args)        // "juxtaposition" syntax: f(x, args) – will probably be removed in the future
 f(1, 2, a: 3, 4, b: 5)  // named argument (becomes record, as in f(1, 2, 4, {a: 3, b: 5}))
 f(using x)       // pass context/implicit argument
-```
-
-**Block as function argument** (using `@`):
-```mlscript
-test @ {_ + 1}      // passes lambda {_ + 1} to test
-test @              // indented block as arg
-  _ + 1
 ```
 
 ### `case` — Anonymous Pattern-Matching Function
@@ -389,14 +459,6 @@ and  or  not        // boolean keywords
 ```
 
 Note: `==` is a deep structural equality (compares arrays and class fields recursively), while `===` is JavaScript strict equality.
-
-### Operator Precedence
-
-Operator sections with `_`:
-```mlscript
-(_ + 1)           // right section: x => x + 1
-(1 + _)           // left section:  y => 1 + y
-```
 
 ### Comma-Operators
 
@@ -517,6 +579,10 @@ data class Some[T](value: T) extends Option[T]
 object None extends Option[Nothing]
 ```
 
+Under new resolution, classes, objects, and modules without an explicit parent
+inherit Object's declared member interface. Explicit parents and members declared
+on the receiver take precedence.
+
 ### Class with Multiple Parameter Lists
 
 ```mlscript
@@ -608,14 +674,6 @@ fun f(): module M = M
 
 Modules cannot extend classes. Objects can extend classes.
 
-### Multiple `object`/`module` Declarations Under One Keyword
-
-```mlscript
-object
-  A extends Foo
-  B extends Foo
-```
-
 ---
 
 ## 9. Records and Tuples
@@ -673,6 +731,11 @@ f(a: 0)              // calls f({a: 0})
 f of a: 0, b: 1      // calls f({a: 0, b: 1})
 ```
 
+With positional and named arguments mixed, positional values are followed by
+one record containing the named fields. Expressions still evaluate in source
+order, and later occurrences of a named field overwrite earlier ones.
+Here `a: expression` is a field value, not a type annotation.
+
 ---
 
 ## 10. Arrays
@@ -682,9 +745,14 @@ f of a: 0, b: 1      // calls f({a: 0, b: 1})
 mut [1, 2, 3]        // mutable array
 
 xs.[0]               // index access (uses .at() internally)
+xs![0]               // dynamic index access
 xs.(0)               // dynamic index access
 set xs.[0] = v       // index assignment
 ```
+
+Under new resolution, `xs.[i]` is checked like the array's methods: `xs` must be
+an array, and the result has its element type. A dynamic access such as `xs![i]`
+is only checked at runtime, and so are operations on its result.
 
 **Spread syntax:**
 ```mlscript
@@ -711,6 +779,30 @@ fun f(...xs) = xs        // xs is an array
 fun g(x, ...rest) = rest
 f(1, 2, 3)               // xs = [1, 2, 3]
 ```
+
+Under new resolution, an annotation on a rest parameter describes the whole rest
+array. Tuple values support precise zero-based projections such as `xs.0` and
+inherit the declared Array interface.
+
+Mutable array literals collect element shapes from their initializer and later
+writes. Statically resolved element reads are checked against all those shapes.
+For example,
+after `let xs = mut [First(1)]` followed by `xs.push(Second(2))`, resolution
+considers both `First` and `Second` when checking `xs.0`, even though the runtime
+value at index 0 is still a `First`. Overwriting or removing an element does not
+remove its shape from consideration. Resolution does not track individual
+positions or the array's length.
+
+An explicit annotation such as `Array[Base]` makes element reads use the members
+declared by `Base`. Storing a `Child` that extends `Base` does not permit access
+to `Child`-only members through that annotation.
+
+Array callbacks such as `map` receive the element, index, and array; their
+declared function interfaces must account for these arguments, for example with
+unused or rest parameters. `reduce` also passes the accumulator first, and must be
+given an initial value: `xs.reduce((acc, x, ...) => acc + x, 0)`. Without one,
+JavaScript uses the first element as the initial accumulator, which the declared
+signature does not describe.
 
 ---
 
@@ -945,6 +1037,13 @@ if r is { 'x: x } then x
 ```
 
 ### `as` Pattern Alias
+
+With `newResolution` enabled, capitalization distinguishes binding from matching:
+`p as name` binds the result of `p` to the lowercase name, even if that name is
+already in scope. `p as Name` matches the result of `p` against the uppercase
+constructor name; it does not introduce a binding. Constructor names follow the
+usual lookup rules, including selective and wildcard opens. An unknown uppercase
+name is an error.
 
 ```mlscript
 fun map(f) = case
@@ -1265,6 +1364,49 @@ fun f(x: Int): Str = String(x)
 val v: Option[Int] = Some(1)
 ```
 
+### Resolution Interfaces
+
+With new resolution (`#lang(0.3.x)`), annotations determine the interface available
+to member lookup and calls. A receiver annotated `Base` exposes Base's declared
+members and preserves virtual dispatch; concrete arguments cannot add subclass
+members to that interface. The same rule applies to parameters, result annotations,
+separate signatures, and constructor fields. Reading an unannotated member through
+an annotated interface currently does not infer its shape from its initializer or
+method body. Inference of missing selected-member types is a planned improvement.
+Structural record annotations likewise expose only their declared fields.
+
+Compilation files check that their exposed functions and values work for inputs
+admitted by their interfaces. A public `fun read(x) = x.a` needs an interface for
+`x` even if local callers all provide `{a: 1}`. A private helper can use local
+inference, but returning it or storing it in an exposed record or tuple makes its
+interface subject to the same check. Callable result annotations provide the
+declared parameter interface when checking returned functions.
+
+Worksheet blocks perform this exposed-interface check only under
+`#lang(strictResolution: true)`. Non-strict resolution allows multiple selection
+or call targets, but still rejects missing targets and known invalid operations.
+
+Generic parameters remain opaque regardless of strict mode, visibility, or local
+callers. For example, `private fun read[A](x: A) = x.a` is invalid because `A`
+does not supply member `a`, even when every call supplies a record with that field.
+Explicit and inferred type arguments still substitute into result interfaces:
+an identity function with parameter and result type `A` preserves its caller's type.
+
+### Dynamic Values
+
+JavaScript imports (including package imports), `globalThis`, and explicit dynamic
+selection or instantiation introduce dynamic values. Ordinary selections and
+calls on those values are checked at runtime and produce dynamic values.
+Use `value as dyn` for an explicit dynamic result or `fun useValue(x: dyn)`
+for a dynamic parameter. Type aliases can also denote `dyn`; dynamic construction
+uses `new!`.
+
+These rules apply in both strict and non-strict resolution. A value whose interface
+is unknown is not automatically dynamic. If inference includes both a dynamic
+candidate and a known candidate with an invalid operation, the known error is
+still reported. Dynamic values also do not remove the need for an unambiguous
+class or type identity in constructor patterns, class projections, or type references.
+
 ### Generic Type Parameters
 
 Covariant, contravariant, invariant:
@@ -1279,11 +1421,82 @@ Bounded type parameters:
 fun f[A <: Num](x: A): A = x
 ```
 
+Under new resolution, supplying a type argument affects both inputs and outputs.
+For an invariant `Array[A]`, supplying `Int` means that lower bounds of `A` are
+checked against `Int`, and upper bounds must accept `Int`. Passing an ordinary
+integer value to `x: A` instead contributes only a lower bound; it does not fix
+all uses of `A` to `Int`.
+
+Use-site type arguments have input and output parts:
+
+| Argument | Input | Output |
+| --- | --- | --- |
+| `S` | `S` | `S` |
+| `in T` | `T` | `Any` |
+| `out U` | `Nothing` | `U` |
+| `in T out U` | `T` | `U` |
+
+For an unqualified argument, the declaration's `in` or `out` annotation selects
+the corresponding form. An explicitly written use-site variance supplies its own
+parts. Substitution selects the output part in positive positions and the input
+part in negative positions. Function inputs and type-argument input parts reverse
+polarity; results and type-argument output parts preserve it. An invariant argument
+must be interpreted in both polarities before substitution selects its bounds.
+For example, a method input `Box[T]` on `Receiver[in Child out Base]` becomes
+`Box[in Base out Child]` when `Box` is invariant. Declaration-site `in` reverses
+polarity just like a written input part; declaration-site `out` preserves it.
+
+Each explicit generic parameter is instantiated once at the expression that
+specializes or invokes its definition: `f[T]`, a by-name reference/selection, or
+otherwise the first term application. Stored specializations and later curried
+argument lists share that instantiation. A by-name reference invokes its body even
+without parentheses, so later uses of its result share any state it created.
+An ordinary reference to a function with parameter lists can retain its generic
+scheme until specialization or invocation.
+
+Missing parameter/result annotations use inference. Omitted generic arguments
+likewise count as inference holes rather than anonymous generic parameters; written
+parts continue to restrict the interface. Currently an omitted argument inside a
+shared annotation or alias can mix inferred types from different callers. These
+annotations therefore do not always preserve the precision of a wholly unannotated
+parameter. Concrete type-mismatch diagnostics are also incomplete during the
+new-resolution migration.
+
+Type-argument inference approximates a union in an expected type by propagating
+constraints into every component. An intersection in an actual type contributes
+each component separately: `L1 & L2 <: R` installs both `L1 <: R` and `L2 <: R`.
+Resolution uses these approximations to collect member targets without searching
+alternative constraint sets. Ordinary member
+lookup still combines the fields of record intersections.
+
 ### Structural Record Types
 
 ```mlscript
 type Point = { x: Num, y: Num }
 ```
+
+Under new resolution, recursive type aliases must be guarded: every recursive
+cycle must pass through a record, tuple, function arrow, or nominal type.
+`type Loop = Loop` and `type Choice[A] = A | Choice[A]` are rejected, even when
+unused. Alias applications follow the guards in the alias body: a wrapper defined
+as `type Wrap[A] = {next: A}` permits `type Loop = Wrap[Loop]`.
+
+Recursive structural types must also have a finite graph representation of their
+unfolding. The current check conservatively rejects constructor-bearing cycles
+between used type parameters, after alias and union/intersection normalization.
+For example:
+
+```mlscript
+type Chain[A] = {value: A, next: Chain[A]}
+type Reset[A] = {value: A, next: Reset[Array[Int]]}
+type Saturating[A] = {value: A, next: Saturating[A | Int]}
+type Growing[A] = {value: A, next: Growing[Array[A]]}
+```
+
+The first three are supported. `Growing[Int]` would expose `Int`, `Array[Int]`,
+`Array[Array[Int]]`, and so on, and is rejected. The check also rejects some finite
+types whose regularity depends on variance or relationships between recursive
+arguments. Its diagnostic indicates a limitation of the current check.
 
 ### Function Types
 
@@ -1335,6 +1548,32 @@ open Stack { Cons, Nil }           // selective open
 open Iter                          // open all members
 do open M; ...                     // locally open
 ```
+
+With `newResolution` enabled, wildcard opens are consulted only when a name has
+no explicit binding in the current scope or any enclosing scope. Explicit
+bindings include local variables, parameters, member definitions, imports, and
+selective opens such as `open Stack { Cons, Nil }`. An inner wildcard open does
+not shadow an explicit binding in an outer scope. Moving a wildcard open before
+or after an explicit binding does not give it priority over that binding.
+
+For example, inside the function below, `x` refers to the explicitly bound `x`,
+even though `M` also provides a member named `x`:
+
+```mlscript
+val x = 1
+module M { val x = 2; val y = 3 }
+fun example() =
+  open M
+  x + y                            // explicit x; y from M
+```
+
+When no explicit binding exists, lookup considers the wildcard opens visible at
+that occurrence. These rules apply to the name itself, before choosing its term,
+class, or pattern interpretation, so an explicit binding also takes precedence
+over an overloaded class or function supplied by a wildcard open.
+
+If wildcard lookup finds several distinct members with the requested name, the
+reference is ambiguous; the order of the opens does not choose a winner.
 
 ### `open M in` Scope
 
@@ -1461,16 +1700,21 @@ abstract
 
 ```mlscript
 [1, 2, 3]
-  .map(_ + 1)
-  .filter(_ > 1)
+  .map \ _ + 1
+  .filter \ _ > 1
 ```
 
-### Backslash `\` at Start of Line
+### `|. ` for piping the first argument
 
 ```mlscript
 42
-  \inc()          // inc(42)
-  \inc()          // inc(inc(42))
+  |. inc()          // inc(42)
+  |. inc()          // inc(inc(42))
+
+// parses as
+((42
+  |. inc)()
+  |. inc)()
 ```
 
 ### Parenthesis Matching

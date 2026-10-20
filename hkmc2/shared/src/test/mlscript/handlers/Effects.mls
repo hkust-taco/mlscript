@@ -197,8 +197,8 @@ fun f() = case [...x, y, z] then x
 //│   match caseScrut
 //│     Array(2+) =>
 //│       let inlinedVal, tmp;
-//│       set tmp = -⁰(caseScrut.length﹖, 2);
-//│       set inlinedVal = caseScrut.slice﹖(0, tmp);
+//│       set tmp = -⁰(caseScrut.length⁰, 2);
+//│       set inlinedVal = caseScrut.slice⁰(0, tmp);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
 //│       return inlinedVal
@@ -311,7 +311,7 @@ if true do
 //│ > 3
 
 module A with
-  data class Effect(x) with
+  data abstract class Effect(x) with
     fun test() = x
     fun perform(arg)
 

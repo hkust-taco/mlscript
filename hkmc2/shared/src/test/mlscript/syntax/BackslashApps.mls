@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -6,41 +7,348 @@ import "../../mlscript-compile/Iter.mls"
 
 fun inc(x) = x + 1
 
-1 \inc()
+
+:expect 2
+inc \ 1
 //│ = 2
 
-1\inc()
+inc() \ 1
 //│ = 2
 
-1 \inc() \inc()
+inc()\1
+//│ = 2
+
+inc \ inc \ 1
 //│ = 3
 
-1 \inc()\inc()
+inc() \ inc() \ 1
 //│ = 3
 
-42
-  \inc()
-  \inc()
+inc() \inc() \1
+//│ = 3
+
+inc()\ inc()\ 1
+//│ = 3
+
+inc() \
+  inc() \ 42
 //│ = 44
 
 
-[1, 2, 3] \Iter.mapping(inc) \Iter.toStack()
+1 |.inc()
+//│ = 2
+
+1|.inc()
+//│ = 2
+
+1 |.inc() |.inc()
+//│ = 3
+
+1 |.inc()|.inc()
+//│ = 3
+
+42
+  |.inc()
+  |.inc()
+//│ = 44
+
+
+[1, 2, 3] |.Iter.mapping(inc) |.Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 [1, 2, 3]
-  \Iter.mapping(inc)
-  \Iter.toStack()
+  |.Iter.mapping(inc)
+  |.Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 [1, 2, 3]
-  \Iter.mapping @ x => x + 1
-  \Iter.toStack()
+  |.Iter.mapping @ x => x + 1
+  |.Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
 [1, 2, 3]
-  \Iter.mapping @
-    _ + 1
-  \Iter.toStack()
+  |.Iter.mapping @
+    => _ + 1
+  |.Iter.toStack()
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
+
+
+
+
+// * `f(args) \ a` means `f(args, a)`, and `f \ a` means `f(a)`
+
+fun add(x, y) = x + y
+
+:expect 3
+add(1) \ 2
+//│ = 3
+
+:expect [2, 3, 4]
+[1, 2, 3].map \ (x, ...) => x + 1
+//│ = [2, 3, 4]
+
+// * `\` is right-associative
+print \ id \ 0
+//│ > 0
+
+// * `\` binds looser than other operators on the right...
+:expect 4
+inc \ 1 + 2
+//│ = 4
+
+// * ...but as tightly as selection on the left
+:expect 3
+1 + inc \ 1
+//│ = 3
+
+fun addCurried(x)(y) = x + y
+
+:expect 4
+3 |> addCurried \ 1
+//│ = 4
+
+:expect [2, 3, 4]
+[1, 2, 3] |> _.map \ (x, ...) => x + 1
+//│ = [2, 3, 4]
+
+// * Braces around the LHS are transparent
+:expect 3
+{add \ 1} \ 2
+//│ = 3
+
+// * Parentheses are not, as they delimit subexpressions: this means `addCurried(1)(2)`
+
+:expect 3
+(addCurried \ 1) \ 2
+//│ = 3
+
+// * Operator splits are left-associative, so this means `{add \ 1} \ 2`
+:expect 3
+add
+  \ 1
+  \ 2
+//│ = 3
+
+fun add3(x, y, z) = x + y + z
+
+:expect 6
+add3(1)
+  \ 2
+  \ 3
+//│ = 6
+
+// * Prefix operator applications are not argument lists, so this means `(- x)(2)`, not `-(x, 2)`
+:sjs
+fun test(x) =
+  {- x} \ 2
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let test; test = function test(x) { let tmp6; tmp6 = - x; return runtime.safeCall(tmp6(2)) };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// * The argument of `\` delimits its own placeholders
+
+fun applyTo3(f) = f(3)
+
+:expect 4
+applyTo3 \ _ + 1
+//│ = 4
+
+applyTo3 { \ _ + 1 }
+//│ = 4
+
+applyTo3 \ { _ + 1 }
+//│ = 4
+
+fun twice(f, x) = f(f(x))
+
+:expect 12
+twice
+  \ _ * 2
+  \ 3
+//│ = 12
+
+fun call2(f, x, y) = f(x, y)
+
+:expect 3
+call2
+  \ _ + _
+  \ 1
+  \ 2
+//│ = 3
+
+// * Explicit lambdas still work
+:expect 12
+twice
+  \ => _ * 2
+  \ 3
+//│ = 12
+
+:expect 12
+twice
+  \ x => x * 2
+  \ 3
+//│ = 12
+
+// * The innermost delimiter wins: here, `_` is bound by `\`, not by `|>`
+fun applyTo(f)(x) = f(x)
+
+:expect 6
+3 |> applyTo \ _ * 2
+//│ = 6
+
+
+// * Record literals can be passed as arguments
+:expect {key: "A", value: 1}
+id \ { key: "A", value: 1 }
+//│ = {key: "A", value: 1}
+
+id \
+  key: "A", value: 1
+//│ = {key: "A", value: 1}
+
+id \
+  key: "A"
+  value: 1
+//│ = {key: "A", value: 1}
+
+id
+  \ key: "A"
+  \ value: 1
+//│ = {key: "A", value: 1}
+
+
+// * The argument of `\` extends as far as the body of a lambda `x => ...`,
+// * so it includes keyword operators such as `:`, `is`, and `and`, but not `then` and `else`
+
+:expect true
+id \ 1 is Int
+//│ = true
+
+:expect false
+id \ true and false
+//│ = false
+
+:expect 1
+if id \ true then 1 else 2
+//│ = 1
+
+:expect [1, 2, 3]
+tuple(1) \ ...[2, 3]
+//│ = [1, 2, 3]
+
+// * Only the values of named arguments delimit placeholders
+fun call(f) = f.'op(2)
+
+:expect 3
+call \ op: _ + 1
+//│ = 3
+
+
+// * Trickier interactions between `\` and other delimiters
+
+// * The three placeholders form a single lambda, absorbing the extra arguments passed by `Array#map`
+[1, 2, 3].map \ _ + 1 |! drop _ |! drop _
+//│ = [2, 3, 4]
+
+// * The RHS of `|>` delimits `_ * 2`, while the `_` in `_ + 1` is delimited by `\`,
+// * so the callback is `x => (x + 1) |> (y => y * 2)`
+:expect 18
+twice
+  \ _ + 1 |> _ * 2
+  \ 3
+//│ = 18
+
+// * `<|` delimits `twice(_, 1)`, but the LHS of `|>` is not delimited
+:e
+twice(_, 1) <| _ |> _ * 2
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.264: 	twice(_, 1) <| _ |> _ * 2
+//│ ║         	               ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+import "../../mlscript-compile/Stack.mls"
+open Stack
+
+:e
+fun findFirst(xs) \ f = ???
+//│ ╔══[COMPILATION ERROR] Expected a valid function definition head; found infix operator '\' instead
+//│ ║  l.276: 	fun findFirst(xs) \ f = ???
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^
+
+fun findFirst(xs, f) = if xs is
+  Nil then []
+  Cons(x, xs') and
+    f(x) then [x]
+    else findFirst(xs', f)
+
+:silent
+let nums = 1 :: 2 :: 3 :: 4 :: 5 :: Nil
+
+nums |. findFirst \ _ * 6 is 24
+//│ = [4]
+
+nums |> findFirst(_) \ _ * 6 is 24
+//│ = [4]
+
+findFirst
+  \ nums
+  \ _ * 6 is 24
+//│ = [4]
+
+
+:expect true
+(tuple(1, 2) \ 3) == tuple(1, 2, 3)
+//│ = true
+
+:expect [1, 2, false]
+tuple(1, 2) \ 3 == tuple(1, 2, 3)
+//│ = [1, 2, false]
+
+tuple() \ 1
+== tuple(1)
+//│ = true
+
+// Also allowed:
+tuple \ 1
+== tuple(1)
+//│ = true
+
+tuple(1, 2) \ 3
+== tuple(1, 2, 3)
+//│ = true
+
+:e
+tuple(1) \ 2
+  \ 3
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.324: 	tuple(1) \ 2
+//│ ║         	           ^
+//│ ║  l.325: 	  \ 3
+//│ ║         	^^^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.324: 	tuple(1) \ 2
+//│ ╙──       	           ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+tuple(1) \ 2
+\ 3
+== tuple(1, 2, 3)
+//│ = true
+
+tuple
+  \ 1
+  \ 2
+  \ 3
+== tuple(1, 2, 3)
+//│ = true
+
+tuple
+\ 1
+\ 2
+== tuple of 1, 2
+//│ = true
 
 

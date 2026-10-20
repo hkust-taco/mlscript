@@ -1,3 +1,4 @@
+:.
 :js
 
 // `baz()` should be a call in tail position (like `print(1)`), not bound to a variable

@@ -18,7 +18,7 @@ import hkmc2.{codegen => argss}
   * typically, these will be top-level symbols that are being exported from a diff-test block;
   * we don't want to eliminate these. */
 class BlockSimplifier
-    (symbolsToPreserve: Set[BoundSymbol], tl: TL, printer: Program => Str)
+    (symbolsToPreserve: Set[ScopedSymbol], tl: TL, printer: Program => Str)
     (using DebugPrinter, State, Config, Raise, Ctx):
   import tl.*
   
@@ -1407,19 +1407,20 @@ class BlockSimplifier
 
       def accessesPrivateMembers(blk: Block): Bool =
         var found = false
-        (new BlockTraverser:
+        new BlockTraverser:
+          applyBlock(blk)
           override def applySymbol(sym: Symbol): Unit = sym match
-            case ts: TermSymbol if ts.isPrivate => found = true
+            case member: DefinitionSymbol[?] if MemberStorage.privateOwner(member).isDefined =>
+              found = true
             case _ =>
-        ).applyBlock(blk)
         found
 
       // * TODO: once bad actors like the current pattern compiler stop duplicating symbols,
       // *  we can remove this ugly workaround.
       def hasDuplicateBoundSymbols(fun: FunDefn): Bool =
-        val seen = MutSet.empty[BoundSymbol | LabelSymbol | ClassCtorSymbol]
+        val seen = MutSet.empty[ScopedSymbol | TermSymbol | LabelSymbol | ClassCtorSymbol]
         var found = false
-        def register(sym: BoundSymbol | LabelSymbol | ClassCtorSymbol): Unit =
+        def register(sym: ScopedSymbol | TermSymbol | LabelSymbol | ClassCtorSymbol): Unit =
           if seen(sym) then found = true
           else seen += sym
         def registerParamList(pl: ParamList): Unit =
@@ -1538,6 +1539,10 @@ class BlockSimplifier
         def canBeInlineEliminated: Bool =
           isPrivate && !isMethod && !defn.noInline && useCount <= 1 && !disallowElimination && !isLoopBreaker
             && !isPatternHelper && !hasDuplicateBindings
+            // Class/module references still need the function object that owns their `.class`.
+            // Term-only use counts cannot establish that this shared binding is dead;
+            // ordinary DCE can remove it once neither interpretation is referenced.
+            && defn.sym.asClsOrMod.isEmpty
           // false
         
         def inlineCost(newBlk: Block, threshold: Int): Opt[Int] =
@@ -1703,8 +1708,18 @@ class BlockSimplifier
           registerNonLocalFunction(ts)
 
         override def applyResult(r: Result): Unit = r match
-          case c @ Call(TermSymbolPath(ts), argss) =>
+          case c @ Call(fun @ TermSymbolPath(ts), argss) =>
             observeCall(ts, c, currentCallGraphSource)
+            // A resolved method call still uses its receiver (and a super call its parent)
+            // as ordinary values. In particular, a function whose only use is as such a
+            // receiver, as in `(x => x).apply(...)`, is not dead.
+            fun match
+              case Select(qual, _) => applyPath(qual)
+              case SuperSelect(qual, base, _) => applyPath(qual); applyPath(base)
+              // Otherwise, `fun` is a direct `Value.MemberRef` to `ts`: the call target itself,
+              // which `observeCall` records. Traversing it as a value would count `ts` again and
+              // set `disallowElimination`, preventing every directly called function from being inlined.
+              case _ => ()
             argss.foreach(_.foreach(applyArg))
           case _ => super.applyResult(r)
         

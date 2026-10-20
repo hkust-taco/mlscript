@@ -40,7 +40,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
   private def refreshClassSymbol(s: ClassSymbol) =
     val ns = new ClassSymbol(s.tree, s.id)
     assertUpdate(s, ns)
-    // defn is relied by JSBuilder to identify whether a class should be lifted
+    // JSBuilder still reads the source parameter lists for curried constructor wrappers and rendering.
     s.defn match
     case s @ S(_) => ns.defn = s
     case N =>
@@ -59,7 +59,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
       s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
       mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol]))
 
-  private def refreshParamList(pl: ParamList) =
+  def refreshParamList(pl: ParamList) =
     for
       p <- pl.restParam ++: pl.params
     do
@@ -96,7 +96,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     val ClsLikeDefn(
       owner, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath,
       methods, privateFields, publicFields, preCtor, ctor, companion,
-      bufferable) = defn
+      bufferable, termCompanion) = defn
     assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for ClsLikeDefn is a free variable for this block")
     isym match
       case s: ClassSymbol => refreshClassSymbol(s)
@@ -152,14 +152,8 @@ object SymbolRefresher:
       override def mapTopLevelSym(s: TopLevelSymbol): TopLevelSymbol = m.getOrElse(s, s).asInstanceOf[TopLevelSymbol]
       override def mapLabelSym(s: LabelSymbol): LabelSymbol = m.getOrElse(s, s).asInstanceOf[LabelSymbol]
 
-// An internal class so that the actual map can be used
-private class SymbolRefresherInternal(m: MutMap[Symbol, Symbol])(using State) extends BlockTransformer(SymbolRefresher.initSymbolSubst(m)):
-  // We have a pretty weird setup here, where we store a mutable state inside the SymbolRefresher
-  // We must initialize the SymbolRefresher by walking before applyBlock
-  def apply(b: Block) =
-    SymbolRefresherWalker(m).applyBlock(b)
-    applyBlock(b)
-
+// remaps each symbol in `m` to its new symbol, including at the positions where the new one may be of another kind
+class SymbolMapTransformer(m: collection.Map[Symbol, Symbol]) extends BlockTransformer(SymbolRefresher.initSymbolSubst(m)):
   // Although the types created during walking can always be symbol substituted, the user may pass in extra symbol that map across different types
   override def applySimpleSymbol(s: SimpleSymbol): SimpleSymbol = m.getOrElse(s, s).asInstanceOf[SimpleSymbol]
 
@@ -168,5 +162,13 @@ private class SymbolRefresherInternal(m: MutMap[Symbol, Symbol])(using State) ex
   override def applyAssignLhs(s: Assignable): Assignable = s match
     case NoSymbol => NoSymbol
     case s: LocalVarSymbol => m.getOrElse(s, s).asInstanceOf[LocalVarSymbol]
+
+// An internal class so that the actual map can be used
+private class SymbolRefresherInternal(m: MutMap[Symbol, Symbol])(using State) extends SymbolMapTransformer(m):
+  // We have a pretty weird setup here, where we store a mutable state inside the SymbolRefresher
+  // We must initialize the SymbolRefresher by walking before applyBlock
+  def apply(b: Block) =
+    SymbolRefresherWalker(m).applyBlock(b)
+    applyBlock(b)
   
 class SymbolRefresher(m: Map[Symbol, Symbol])(using State) extends SymbolRefresherInternal(MutMap.from(m))

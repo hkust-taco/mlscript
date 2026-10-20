@@ -180,6 +180,12 @@ class BlockTransformer(subst: SymbolSubst):
     case p: Path => applyPath(p)(k)
   
   def applyPath(p: Path)(k: Path => Block): Block = p match
+    case p @ SuperSelect(qual, base, name) =>
+      applyPath(qual): qual2 =>
+        applyPath(base): base2 =>
+          val sym2 = p.symbol.subst
+          k(if (qual2 is qual) && (base2 is base) && (sym2 is p.symbol) then p
+            else SuperSelect(qual2, base2, name)(sym2, p.toLoc))
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual): qual2 =>
         applyPath(fld): fld2 =>
@@ -256,11 +262,12 @@ class BlockTransformer(subst: SymbolSubst):
   
   def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
     val ClsLikeDefn(own, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods,
-      privateFields, publicFields, preCtor, ctor, mod, bufferable) = defn
+      privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion) = defn
     val own2 = own.mapConserve(_.subst)
     val isym2 = isym.subst
     val sym2 = sym.subst
     val ctorSym2 = ctorSym.mapConserve(_.subst)
+    val termCompanion2 = termCompanion.mapConserve(_.subst)
     val paramsOpt2 = paramsOpt.mapConserve(applyParamList)
     val auxParams2 = auxParams.mapConserve(applyParamList)
     def helper(parentPath2: Opt[Path]) =
@@ -279,9 +286,9 @@ class BlockTransformer(subst: SymbolSubst):
             (privateFields2 is privateFields) &&
             (publicFields2 is publicFields) &&
             (preCtor2 is preCtor) && (ctor2 is ctor) &&
-            (mod2 is mod)
+            (mod2 is mod) && (termCompanion2 is termCompanion)
           then defn else ClsLikeDefn(own2, isym2, sym2, ctorSym2, kind, paramsOpt2, 
-            auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable)(defn.configOverride, defn.annotations)
+            auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2, bufferable, termCompanion2)(defn.configOverride, defn.annotations)
     parentPath match
     case Some(pp) => applyPath(pp): pp2 =>
       helper:

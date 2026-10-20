@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -9,9 +10,13 @@ id(123)
 :e
 :re
 id()
-//│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 0
-//│ ║  l.11: 	id()
-//│ ╙──      	  ^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.12: 	id()
+//│ ║        	^^^^
+//│ ╟── Function 'id' expected 1 argument, but got 0
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.19: 	fun id(x) = x
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
@@ -21,17 +26,17 @@ print(1, 2, 3)
 1 print()
 //│ > 1
 
-1 \ print()
+1 |. print()
 //│ > 1
 
-1 \ (print(_))()
+1 |. (=> print(_))()
 //│ > 1
 
-{1 \ print(_)}(2)
+{=> 1 |. print(_)}(2)
 //│ > 1 2
 
 1
-  \ print()
+  |. print()
 //│ > 1
 
 
@@ -48,6 +53,9 @@ print <| 2 + 2
 //│ > 4
 
 (_ * 2) <| 2 + 2 |> (_ + 1)
+//│ = 9
+
+_ * 2 <| 2 + 2 |> _ + 1
 //│ = 9
 
 2 + 2 !> print
@@ -127,8 +135,8 @@ Symbols
 // * Function composition is associative
 
 let
-  f = ((_ + 1) >> (_ * 2)) >> (_ - 1)
-  g = (_ + 1) >> ((_ * 2) >> (_ - 1))
+  f = ((=> _ + 1) >> (_ * 2)) >> (_ - 1)
+  g = (=> _ + 1) >> ((=> _ * 2) >> (_ - 1))
 //│ f = fun
 //│ g = fun
 
@@ -183,14 +191,18 @@ foldr(tuple)(0, 1, 2, 3)
 
 :todo
 foldr(+)()
-//│ ╔══[COMPILATION ERROR] Expected at least 1 arguments, got 0
-//│ ║  l.185: 	foldr(+)()
-//│ ╙──       	        ^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.193: 	foldr(+)()
+//│ ║         	^^^^^^^^^^
+//│ ╟── Function 'foldr' expected 1 argument, but got 0
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.116: 	fun foldr[A](f: (A, A) -> A)(first: A, ...rest: Array[A]): A =
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
 // An alternative implementation of foldr
-fun foldr(f)(first, ...rest) =
+fun foldr(f)(first, ...rest: Array) =
   let len = rest.length
   if len == 0 then first else...
   let
@@ -218,13 +230,21 @@ fold(+) of
 
 import "../../mlscript-compile/Iter.mls"
 
-Iter.joined(_, "") of [
+(=> Iter.joined(_, "")) of [
   "0"
   "1"
   "2"
   "3"
 ]
-//│ = fun
+//│ = "0123"
+
+Iter.joined(_, "") <| [
+  "0"
+  "1"
+  "2"
+  "3"
+]
+//│ = "0123"
 
 
 mkStr of

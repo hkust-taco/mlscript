@@ -1,4 +1,4 @@
-:js
+:.
 :deforest logNonAffine
 
 data class (::) Cons(h, t)
@@ -29,6 +29,7 @@ data class Once(x)
 fun c(p) = if p is AA(v) then v
 c(AA(3))
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(3) ->
@@ -42,6 +43,7 @@ c(AA(3))
 fun c(x) = if x is AA(_) then x.AA#x + x.AA#x
 c(AA(7))
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(7) ->
@@ -58,14 +60,25 @@ fun c(p) =
   cl() + cl()
 c(AA(7))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > cap_ub_(term:lambda,0)_for_c¹
-//│ deforest > cap_ub_(term:lambda,0)_for_c⁰
+//│ deforest > call_res_for_c¹
+//│ deforest > call_res_for_c⁰
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
+//│ deforest > cap_ub_(term:lambda$,0)_for_lambda$⁰
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$_for_c¹
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$_for_c⁰
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$⁰
+//│ deforest > cap_ub_(term:lambda,0)_for_lambda⁰
 //│ deforest > cl_for_c¹
 //│ deforest > cl_for_c⁰
-//│ deforest > lambda_for_c¹
-//│ deforest > lambda_for_c⁰
+//│ deforest > lambda$_for_lambda$⁰
+//│ deforest > lambda$here_for_c¹
+//│ deforest > lambda$here_for_c⁰
+//│ deforest > lambda_for_lambda⁰
 //│ deforest > p_for_c¹
 //│ deforest > p_for_c⁰
+//│ deforest > p_for_lambda$_for_c¹
+//│ deforest > p_for_lambda$_for_c⁰
+//│ deforest > p_for_lambda$⁰
 //│ deforest > tmp⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
@@ -80,6 +93,8 @@ fun affine_branched(x, y, cons_y) = if x is
   else 0
 affine_branched(AA(0), AA(1), (y) => if y is AA(x) then x + 2)
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:affine_branched,0)_for_affine_branched⁰
+//│ deforest > cap_ub_(term:lambda,0)_for_lambda⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
 //│ deforest > AA⁰(1) ->
@@ -97,6 +112,7 @@ fun c(x) = if x is AA(_) then 0
 let p = AA(10) in
   c(p) + c(p)
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
 //│ deforest > p¹
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> fusing >>>
@@ -109,6 +125,8 @@ fun apply(f, x) = f(x) + f(x)
 apply(c, AA(3))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > c_for_c⁰
+//│ deforest > cap_ub_(term:apply,0)_for_apply⁰
+//│ deforest > cap_ub_(term:c,0)_for_c¹
 //│ deforest > cap_ub_(term:c,0)_for_c⁰
 //│ deforest > f_for_apply¹
 //│ deforest > f_for_apply⁰
@@ -125,6 +143,7 @@ apply(c, AA(3))
 fun c(k, x) = if k is AA(_) then x.AA#x + x.AA#x + x.AA#x
 c(AA(0), AA(3))
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
 //│ deforest > tmp⁰
 //│ deforest > x_for_c¹
 //│ deforest > x_for_c⁰
@@ -146,7 +165,14 @@ fun c(y) = if y is AA(_) then
   0
 c(AA(1))
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > _d$_for__d$⁰
+//│ deforest > _d_for__d⁰
+//│ deforest > cap_ub_(term:_d$,0)_for__d$⁰
+//│ deforest > cap_ub_(term:_d$,1)_for__d$⁰
+//│ deforest > cap_ub_(term:_d,0)_for__d⁰
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
 //│ deforest > tmp⁰
+//│ deforest > y_for__d$⁰
 //│ deforest > y_for_c¹
 //│ deforest > y_for_c⁰
 //│ deforest > <<< non-affine syms <<<
@@ -161,6 +187,8 @@ fun c2(x) = if x is AA(AA(_)) then 1 else 0
 let p = AA(AA(AA(10))) in
   c1(p) + c2(p)
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:c1,0)_for_c1⁰
+//│ deforest > cap_ub_(term:c2,0)_for_c2⁰
 //│ deforest > p¹
 //│ deforest > tmp¹
 //│ deforest > tmp⁰
@@ -178,6 +206,9 @@ fun c2(p) = if p is Many(Once(v)) then v
 fun apply(f, g, p) = f(p) + g(p)
 apply(c1, c2, Many(Once(10)))
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:apply,0)_for_apply⁰
+//│ deforest > cap_ub_(term:c1,0)_for_c1⁰
+//│ deforest > cap_ub_(term:c2,0)_for_c2⁰
 //│ deforest > p_for_apply¹
 //│ deforest > p_for_apply⁰
 //│ deforest > tmp¹
@@ -197,7 +228,10 @@ nest_consume(nest_pickB, nest_prod(10))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > arg$AA$0$_for_nest_consume¹
 //│ deforest > arg$AA$0$_for_nest_consume⁰
+//│ deforest > cap_ub_(term:nest_consume,0)_for_nest_consume⁰
+//│ deforest > cap_ub_(term:nest_pickB,0)_for_nest_pickB¹
 //│ deforest > cap_ub_(term:nest_pickB,0)_for_nest_pickB⁰
+//│ deforest > cap_ub_(term:nest_prod,0)_for_nest_prod⁰
 //│ deforest > f_for_nest_consume¹
 //│ deforest > f_for_nest_consume⁰
 //│ deforest > i_for_nest_consume¹
@@ -226,6 +260,8 @@ length(from(5, Nil))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > call_res_for_from¹
 //│ deforest > call_res_for_from⁰
+//│ deforest > cap_ub_(term:from,0)_for_from⁰
+//│ deforest > cap_ub_(term:length,0)_for_length⁰
 //│ deforest > n_for_from¹
 //│ deforest > n_for_from⁰
 //│ deforest > tmp_for_from¹
@@ -249,6 +285,8 @@ fun append(xs, ys) = if xs is
   Nil then ys
 length(append(id(1 :: Nil), 2 :: Nil))
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:append,0)_for_append⁰
+//│ deforest > cap_ub_(term:length,0)_for_length⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
@@ -280,6 +318,15 @@ fun pong(a, b) = if a is
   Nil then b
 length(ping(id(1 :: 2 :: Nil), 3 :: 4 :: Nil))
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:length,0)_for_length⁰
+//│ deforest > cap_ub_(term:ping,0)_for_ping¹
+//│ deforest > cap_ub_(term:ping,0)_for_ping⁰
+//│ deforest > cap_ub_(term:pong,0)_for_pong¹
+//│ deforest > cap_ub_(term:pong,0)_for_pong⁰
+//│ deforest > ping_for_ping¹
+//│ deforest > ping_for_ping⁰
+//│ deforest > pong_for_pong¹
+//│ deforest > pong_for_pong⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
@@ -310,6 +357,8 @@ fun sum(ls, acc) = if ls is
   Nil then acc
 sum(append(id(Nil), Nil), 0)
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:append,0)_for_append⁰
+//│ deforest > cap_ub_(term:sum,0)_for_sum⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
@@ -351,6 +400,10 @@ fun flatten(xss) = if xss is
   Nil then Nil
 length(flatten(id((1 :: Nil) :: Nil)))
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > append_for_append⁰
+//│ deforest > cap_ub_(term:append,0)_for_append⁰
+//│ deforest > cap_ub_(term:flatten,0)_for_flatten⁰
+//│ deforest > cap_ub_(term:length,0)_for_length⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
@@ -372,6 +425,7 @@ fun alias_then_patmat(x) =
   if x is Cons(a, b) then a + b + y.Cons#h
 alias_then_patmat(Cons(12, 13))
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:alias_then_patmat,0)_for_alias_then_patmat⁰
 //│ deforest > tmp⁵
 //│ deforest > x_for_alias_then_patmat¹
 //│ deforest > x_for_alias_then_patmat⁰
@@ -391,6 +445,8 @@ fun foo(a) =
     AA then a.AA#x() + a.AA#x()
 foo of AA of () => 1
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:foo,0)_for_foo⁰
+//│ deforest > cap_ub_(term:lambda,0)_for_lambda⁰
 //│ deforest > <<< non-affine syms <<<
 //│ deforest > >>> accumulator syms >>>
 //│ deforest > <<< accumulator syms <<<
@@ -410,6 +466,8 @@ fun foo(a) =
       f() + f()
 foo of AA of () => 1
 //│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:foo,0)_for_foo⁰
+//│ deforest > cap_ub_(term:lambda,0)_for_lambda¹
 //│ deforest > cap_ub_(term:lambda,0)_for_lambda⁰
 //│ deforest > f_for_foo¹
 //│ deforest > f_for_foo⁰
@@ -425,6 +483,264 @@ foo of AA of () => 1
 //│ deforest > 	fields: a¹.x⁰
 //│ deforest > <<< fusing <<<
 //│ = 2
+
+
+// the result of `g(p)` is called twice, so `p` is not affine and `mk(7)` is not fused into `g`:
+// fusing it would make eta expansion of `mk` recompute `expensive(x)` on each call,
+// and affinity is the only thing keeping deforestation from producing such a slower program
+:flowBasedOpt
+:noInline
+:soir
+fun expensive(x) = x + 1
+fun mk(x) = AA(expensive(x))
+fun g(p)() = if p is AA(v) then v
+fun c(p) =
+  let cl = g(p)
+  cl() + cl()
+c(mk(7))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > call_res_for_c¹
+//│ deforest > call_res_for_c⁰
+//│ deforest > call_res_for_expensive_for_mk⁰
+//│ deforest > call_res_for_mk⁰
+//│ deforest > call_res⁰
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
+//│ deforest > cap_ub_(term:expensive,0)_for_expensive⁰
+//│ deforest > cap_ub_(term:g,0)_for_g⁰
+//│ deforest > cap_ub_(term:g,1)_for_g_for_c¹
+//│ deforest > cap_ub_(term:g,1)_for_g_for_c⁰
+//│ deforest > cap_ub_(term:g,1)_for_g⁰
+//│ deforest > cap_ub_(term:mk,0)_for_mk⁰
+//│ deforest > cl_for_c¹
+//│ deforest > cl_for_c⁰
+//│ deforest > expensive_for_expensive⁰
+//│ deforest > expensive_res_for_expensive_for_mk⁰
+//│ deforest > g_for_g⁰
+//│ deforest > mk_res_for_mk⁰
+//│ deforest > p_for_c¹
+//│ deforest > p_for_c⁰
+//│ deforest > p_for_g_for_c¹
+//│ deforest > p_for_g_for_c⁰
+//│ deforest > p_for_g⁰
+//│ deforest > tmp_for_mk⁰
+//│ deforest > tmp⁵
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ define expensive⁰ as fun expensive¹(x) {
+//│   return +⁰(x, 1)
+//│ };
+//│ define mk⁰ as fun mk¹(x) {
+//│   let tmp1;
+//│   set tmp1 = expensive¹(x);
+//│   return AA⁰(tmp1)
+//│ };
+//│ define g⁰ as fun g¹(p)() {
+//│   match p
+//│     AA¹ =>
+//│       return p.x⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ define c⁰ as fun c¹(p) {
+//│   let tmp1, tmp2;
+//│   set tmp1 = g¹(p)();
+//│   set tmp2 = g¹(p)();
+//│   return +⁰(tmp1, tmp2)
+//│ };
+//│ set tmp = mk¹(7);
+//│ return c¹(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 16
+
+// the body of `g` does not reference `q`, so `g(p, q)` does not capture it and calling the result twice keeps `q` affine
+fun g(p, q)() = if p is AA(v) then v
+fun c(p, q) =
+  let cl = g(p, q)
+  cl() + cl()
+c(AA(7), AA(8))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > call_res_for_c¹
+//│ deforest > call_res_for_c⁰
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
+//│ deforest > cap_ub_(term:g,0)_for_g⁰
+//│ deforest > cap_ub_(term:g,1)_for_g_for_c¹
+//│ deforest > cap_ub_(term:g,1)_for_g_for_c⁰
+//│ deforest > cap_ub_(term:g,1)_for_g⁰
+//│ deforest > cl_for_c¹
+//│ deforest > cl_for_c⁰
+//│ deforest > g_for_g⁰
+//│ deforest > p_for_c¹
+//│ deforest > p_for_c⁰
+//│ deforest > p_for_g_for_c¹
+//│ deforest > p_for_g_for_c⁰
+//│ deforest > p_for_g⁰
+//│ deforest > tmp⁵
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 14
+
+// the same when one call applies several param lists: `g(p)(0)` is a closure called twice, so `p` is not affine
+:flowBasedOpt
+:noInline
+:soir
+:expect 16
+fun expensive(x) = x + 1
+fun mk(x) = AA(expensive(x))
+fun g(p)(q)() = if p is AA(v) then v
+fun c(p) =
+  let cl = g(p)(0)
+  cl() + cl()
+c(mk(7))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > call_res_for_c¹
+//│ deforest > call_res_for_c⁰
+//│ deforest > call_res_for_expensive_for_mk⁰
+//│ deforest > call_res_for_mk⁰
+//│ deforest > call_res⁰
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
+//│ deforest > cap_ub_(term:expensive,0)_for_expensive⁰
+//│ deforest > cap_ub_(term:g,0)_for_g⁰
+//│ deforest > cap_ub_(term:g,1)_for_g⁰
+//│ deforest > cap_ub_(term:g,2)_for_g_for_c¹
+//│ deforest > cap_ub_(term:g,2)_for_g_for_c⁰
+//│ deforest > cap_ub_(term:g,2)_for_g⁰
+//│ deforest > cap_ub_(term:mk,0)_for_mk⁰
+//│ deforest > cl_for_c¹
+//│ deforest > cl_for_c⁰
+//│ deforest > expensive_for_expensive⁰
+//│ deforest > expensive_res_for_expensive_for_mk⁰
+//│ deforest > g_for_g⁰
+//│ deforest > mk_res_for_mk⁰
+//│ deforest > p_for_c¹
+//│ deforest > p_for_c⁰
+//│ deforest > p_for_g_for_c¹
+//│ deforest > p_for_g_for_c⁰
+//│ deforest > p_for_g⁰
+//│ deforest > tmp_for_mk⁰
+//│ deforest > tmp⁵
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ define expensive² as fun expensive³(x) {
+//│   return +⁰(x, 1)
+//│ };
+//│ define mk² as fun mk³(x) {
+//│   let tmp1;
+//│   set tmp1 = expensive³(x);
+//│   return AA⁰(tmp1)
+//│ };
+//│ define g² as fun g³(p)(q)() {
+//│   match p
+//│     AA¹ =>
+//│       return p.x⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ define c² as fun c³(p) {
+//│   let tmp1, tmp2;
+//│   set tmp1 = g³(p)(0)();
+//│   set tmp2 = g³(p)(0)();
+//│   return +⁰(tmp1, tmp2)
+//│ };
+//│ set tmp = mk³(7);
+//│ return c³(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 16
+
+fun callTwice(f) = f() + f()
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > cap_ub_(term:callTwice,0)_for_callTwice⁰
+//│ deforest > f_for_callTwice⁰
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+// a closure that escapes to unknown code (here `callTwice` from an earlier block) may be called many times,
+// so its captured `p` is not affine
+:flowBasedOpt
+:noInline
+:soir
+:expect 16
+fun expensive(x) = x + 1
+fun mk(x) = AA(expensive(x))
+fun c(p) = callTwice(() => if p is AA(v) then v)
+c(mk(7))
+//│ deforest > >>> non-affine syms >>>
+//│ deforest > call_res_for_expensive_for_mk⁰
+//│ deforest > call_res_for_mk⁰
+//│ deforest > call_res⁰
+//│ deforest > cap_ub_(term:c,0)_for_c⁰
+//│ deforest > cap_ub_(term:expensive,0)_for_expensive⁰
+//│ deforest > cap_ub_(term:lambda$,0)_for_lambda$⁰
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$_for_c¹
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$_for_c⁰
+//│ deforest > cap_ub_(term:lambda$,1)_for_lambda$⁰
+//│ deforest > cap_ub_(term:lambda,0)_for_lambda⁰
+//│ deforest > cap_ub_(term:mk,0)_for_mk⁰
+//│ deforest > expensive_for_expensive⁰
+//│ deforest > expensive_res_for_expensive_for_mk⁰
+//│ deforest > lambda$_for_lambda$⁰
+//│ deforest > lambda_for_lambda⁰
+//│ deforest > mk_res_for_mk⁰
+//│ deforest > p_for_c¹
+//│ deforest > p_for_c⁰
+//│ deforest > p_for_lambda$_for_c¹
+//│ deforest > p_for_lambda$_for_c⁰
+//│ deforest > p_for_lambda$⁰
+//│ deforest > tmp_for_mk⁰
+//│ deforest > tmp⁵
+//│ deforest > <<< non-affine syms <<<
+//│ deforest > >>> accumulator syms >>>
+//│ deforest > <<< accumulator syms <<<
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp, lambda$;
+//│ @inline
+//│ define lambda$ as fun lambda$⁰(p)() {
+//│   return lambda²(p)
+//│ };
+//│ define lambda as fun lambda²(p) {
+//│   match p
+//│     AA¹ =>
+//│       return p.x⁰
+//│     else
+//│       throw new globalThis⁰.Error⁰("match error")
+//│   end
+//│ };
+//│ define expensive⁴ as fun expensive⁵(x) {
+//│   return +⁰(x, 1)
+//│ };
+//│ define mk⁴ as fun mk⁵(x) {
+//│   let tmp1;
+//│   set tmp1 = expensive⁵(x);
+//│   return AA⁰(tmp1)
+//│ };
+//│ define c⁴ as fun c⁵(p) {
+//│   let lambda$here;
+//│   set lambda$here = lambda$⁰(p);
+//│   return callTwice⁰(lambda$here)
+//│ };
+//│ set tmp = mk⁵(7);
+//│ return c⁵(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 16
 
 
 

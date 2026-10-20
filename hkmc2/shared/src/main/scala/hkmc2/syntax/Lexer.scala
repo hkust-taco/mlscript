@@ -100,18 +100,20 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
             source = Lexing))
           (zero, j)
         case (S(str), j) => (IntLit(BigInt(str, radix)), j)
-    def isDecimalStart(ch: Char) = ch === '.' || ch === 'e' || ch === 'E'
-    /** Take a fraction part with an optional exponent part. Call at periods. */
+    /** A period only starts a fraction if a digit follows it. Otherwise, the literal
+      * ends before the period, which can then start a selection, as in `1.toString()`. */
+    def isDecimalStart(i: Int) =
+      test(i, ch => ch === 'e' || ch === 'E') || test(i, _ === '.') && test(i + 1, isDigit)
+    /** Take a fraction part with an optional exponent part. Call where `isDecimalStart` holds. */
     def decimal(i: Int, integral: Str): (DecLit, Int) =
       lazy val msgPrefix = "Expected at least one digit after the "
       val (fraction, j) =
         if test(i, _ === '.')
         then takeDigits(i + 1, isDigit) match
-        case (N, j) =>
-          // TODO should parse a selection here; as in `1.toString()`
-          raise(ErrorReport(msg"$msgPrefix decimal point" -> S(loc(i + 1, i + 2)) :: Nil,
-            source = Lexing))
-          ("", j)
+        // Unreachable: both callers of `decimal` check `isDecimalStart(i)`, which only holds
+        // for a period if a digit follows it, and `takeDigits` always takes that first digit.
+        // A period without a following digit instead ends the literal and is lexed separately.
+        case (N, j) => lastWords("A decimal point must be followed by a digit")
         case (S(digits), j) => ("." + digits, j)
         else ("", i)
       val (exponent, k) =
@@ -134,7 +136,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
           case 'x' => integer(i + 2, 16, "hexadecimal", isHexDigit)
           case 'o' => integer(i + 2, 8, "octal", isOctDigit)
           case 'b' => integer(i + 2, 2, "binary", isBinDigit)
-          case '.' | 'E' | 'e' => decimal(i + 1, "0")
+          case _ if isDecimalStart(i + 1) => decimal(i + 1, "0")
           case _ => integer(i, 10, "decimal", isDigit)
         case '0' => (zero, i + 1)
         case _ => takeDigits(i, isDigit) match
@@ -143,7 +145,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
               source = Lexing))
             (zero, i)
           case (S(integral), j) =>
-            if j < length && isDecimalStart(bytes(j)) then decimal(j, integral)
+            if isDecimalStart(j) then decimal(j, integral)
             else (IntLit(BigInt(integral)), j)
     else
       raise(ErrorReport(msg"Expected a numeric literal instead of end of input" -> S(loc(i, i + 1)) :: Nil,

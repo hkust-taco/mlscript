@@ -1,3 +1,4 @@
+:.
 :js
 :flowBasedOpt debugDpe
 :noInline
@@ -151,6 +152,31 @@ pong(5, 0)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 
+// when poly, the call `ping(5, 99)` gets copies of both ping and pong, both with eliminated `unused` param;
+// in-place ping keeps `unused` for unseen callers but calls its own copy of pong, which drops `unused`,
+// and in-place pong also calls its own copy of ping
+:flowBasedOpt debugDpe poly
+:noTailRec
+fun ping(n, unused) = if n == 0 then 0 else pong(n - 1, unused)
+fun pong(n, unused) = if n == 0 then 0 else ping(n - 1, unused)
+ping(5, 99)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > ping⁴#0 @ pong⁴ -> eliminable: {1}
+//│ dead-param-elim > pong⁵#0 @ ping⁵ -> eliminable: {1}
+//│ dead-param-elim > ping⁴#0 @ ping⁶ -> eliminable: {1}
+//│ dead-param-elim > pong⁵#0 @ ping⁶ -> eliminable: {1}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 0
+
+:flowBasedOpt poly
+:expect 0
+ping(5, 0)
+pong(5, 0)
+//│ = 0
+
+// flowBasedOpt is set globally above, so restore the mono default for the rest of the file
+:flowBasedOpt debugDpe
+
 // [INLINING PR FIXME]: regression? no worker/wrapper anymore -> should have an option to only disable inlining of big functions and keep worker/wrapper!
 :soir
 :noTailRec
@@ -158,10 +184,12 @@ private fun ping(n)(unused) = if n == 0 then 0 else pong(n - 1)(unused)
 private fun pong(n)(unused) = if n == 0 then 0 else ping(n - 1)(unused)
 ping(5)(99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > ping⁴#1 @ <root> -> eliminable: {0}
+//│ dead-param-elim > pong⁴#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
-//│ define ping⁴ as fun ping⁵(n)(unused) {
+//│ define ping⁴ as fun ping⁵(n)() {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -169,11 +197,11 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return pong⁴(tmp)(unused)
+//│       return pong⁴(tmp)()
 //│   end
 //│ };
 //│ @private
-//│ define pong⁵ as fun pong⁴(n)(unused) {
+//│ define pong⁵ as fun pong⁴(n)() {
 //│   let scrut, tmp;
 //│   set scrut = Predef⁰.equals⁰(n, 0);
 //│   match scrut
@@ -181,10 +209,10 @@ ping(5)(99)
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return ping⁵(tmp)(unused)
+//│       return ping⁵(tmp)()
 //│   end
 //│ };
-//│ return ping⁵(5)(99)
+//│ return ping⁵(5)()
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 

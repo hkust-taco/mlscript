@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -42,15 +43,15 @@ FilePrivateFunctions.selfRecursive(3)
 //│ = 3
 
 
-// This additionally checks that discovery reaches transitive cross-unit callees before SCCs are
-// computed: the local program refers to the exported wrapper, but not its generated recursive worker.
+// The exported wrapper calls a generated private worker. Discovery must include that recursive
+// callee, and cross-unit inlining must preserve access through the wrapper.
 :sjs
 :soir
 FilePrivateFunctions.mutuallyRecursiveEven(4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ return FilePrivateFunctions⁰.mutuallyRecursiveEven_mutuallyRecursiveOdd⁰(0, 4)
+//│ return FilePrivateFunctions⁰.mutuallyRecursiveEven⁰(4)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return FilePrivateFunctions.mutuallyRecursiveEven_mutuallyRecursiveOdd(0, 4)
+//│ return FilePrivateFunctions.mutuallyRecursiveEven(4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = true
 
@@ -66,3 +67,18 @@ FilePrivateFunctions.largeFunction(0)
 //│ return FilePrivateFunctions.largeFunction(0)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
+
+
+// File-level vals keep their private export symbols when referenced by inlined imported methods.
+import "../../mlscript-compile/LocalValsExport.mls"
+
+:expect 42
+:sjs
+LocalValsExport.add(1)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ import { _$_modulePrivate_$_stored as stored } from "./../../mlscript-compile/LocalValsExport.mjs";
+//│ let tmp1;
+//│ tmp1 = stored.at(0) + 1;
+//│ return tmp1 + 1
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42

@@ -32,6 +32,9 @@ abstract class Path:
   /** Calculate relative path from this to target */
   def relativeTo(base: Path): Opt[RelPath]
   
+  def relativeToOrSame(base: Path): Path | RelPath =
+    relativeTo(base).getOrElse(this)
+  
   /** Get segments as a list */
   def segments: Ls[String]
   

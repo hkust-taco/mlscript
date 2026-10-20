@@ -1,22 +1,23 @@
+:.
 :js
 
 
 :w
 do 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.5: 	do 1
+//│ ║  l.6: 	do 1
 //│ ╙──     	   ^
 
 :w
 if true do 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.11: 	if true do 1
+//│ ║  l.12: 	if true do 1
 //│ ╙──      	           ^
 
 :w
 if true do () else 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.17: 	if true do () else 1
+//│ ║  l.18: 	if true do () else 1
 //│ ╙──      	                   ^
 
 if true then () else 1
@@ -25,7 +26,7 @@ if true then () else 1
 :w
 x => x, 0
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.26: 	x => x, 0
+//│ ║  l.27: 	x => x, 0
 //│ ╙──      	^^^^^^
 //│ = 0
 
@@ -33,14 +34,14 @@ x => x, 0
 () => 1
 2
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.33: 	() => 1
+//│ ║  l.34: 	() => 1
 //│ ╙──      	^^^^^^^
 //│ = 2
 
 :w
 case x then x, 0
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.41: 	case x then x, 0
+//│ ║  l.42: 	case x then x, 0
 //│ ╙──      	^^^^^^^^^^^^^
 //│ = 0
 
@@ -48,7 +49,7 @@ case x then x, 0
 case x then x
 case x then x
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.48: 	case x then x
+//│ ║  l.49: 	case x then x
 //│ ╙──      	^^^^^^^^^^^^^
 //│ = fun
 
@@ -58,7 +59,7 @@ fun foo(x) =
   x
   x
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.58: 	  x
+//│ ║  l.59: 	  x
 //│ ╙──      	  ^
 
 :w
@@ -67,7 +68,7 @@ fun foo() =
   x
   x
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.67: 	  x
+//│ ║  l.68: 	  x
 //│ ╙──      	  ^
 
 :w
@@ -76,7 +77,7 @@ fun foo() =
   x
   x
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.76: 	  x
+//│ ║  l.77: 	  x
 //│ ╙──      	  ^
 
 
