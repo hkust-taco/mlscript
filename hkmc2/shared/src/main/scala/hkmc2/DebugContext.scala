@@ -3,7 +3,7 @@ package hkmc2
 import hkmc2.utils.*, shorthands.*
 
 
-/** Debug settings shared by a compilation unit's symbol printing and phase loggers.
+/** Source debug settings shared by a compilation unit's phase loggers.
   * Imported units have their own context; only their output handler is shared.
   * Compilation is synchronous within a unit, so scoped changes are restored on the call stack. */
 final class DebugContext(forceUids: () => Bool):

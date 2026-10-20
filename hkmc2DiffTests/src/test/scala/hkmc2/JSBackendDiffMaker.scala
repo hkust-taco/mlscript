@@ -50,7 +50,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
   val dtl = phaseLogger(_.optimizations, _ => debugOptimizations.isSet, indentWhenDisabled = true)
   
-  val replTL = TraceLogger(_ => showRepl.isSet, str => output(str))
+  val replTL = phaseLogger(_ => false, _ => showRepl.isSet, indentWhenDisabled = true)
   
   lazy val host =
     hostCreated = true

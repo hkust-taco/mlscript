@@ -130,7 +130,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   extension (t: Term)
     def instantiated = t match
       case r: Resolvable =>
-        tl.trace[Term](s"Expanding term ${r}", post = t => s"~> ${t}"):
+        tl.trace[Term](dbg"Expanding term ${r}", post = t => dbg"~> ${t}"):
           r.expanded
       case t => t
   
@@ -878,7 +878,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             FlowSymbol(sym.nme)
           ).resolve
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), N)
-        tl.log(s"Ref builtin $sym")
+        tl.log(dbg"Ref builtin $sym")
         assert(paramLists.length === 1)
         return k(Lambda(paramLists.head, bodyBlock)(Nil, ref.toLoc))
       if sym.unary then
@@ -893,7 +893,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             FlowSymbol(sym.nme)
           ).resolve
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), N)
-        tl.log(s"Ref builtin $sym")
+        tl.log(dbg"Ref builtin $sym")
         assert(paramLists.length === 1)
         return k(Lambda(paramLists.head, bodyBlock)(Nil, ref.toLoc))
     case bs: BlockMemberSymbol =>
@@ -948,9 +948,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   
   @tailrec
   final def term(t: st, inStmtPos: Bool = false)(k0: Result => Block)(using LoweringCtx): Block =
-    tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
+    tl.log(dbg"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
       if inStmtPos then " (in stmt)" else ""}${
-      t.resolvedSym.fold("")(" – symbol " + _)}")
+      t.resolvedSym.fold("")(sym => " – symbol " + sym.showDbg)}")
     
     def warnStmt = if inStmtPos then warnPureExprInStmtPos(t.toLoc, S(t))
     

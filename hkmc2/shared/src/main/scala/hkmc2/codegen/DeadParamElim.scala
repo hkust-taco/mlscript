@@ -121,7 +121,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver, traceLogge
     assert(eliminableCallSiteArgsById.nonEmpty === eliminableParamsById.nonEmpty)
     tl.log(">>> dead-param-elim results >>>")
     for (id, elim) <- eliminableParamsById do
-      tl.log(s"${id.showConcreteFunId} -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
+      tl.log(dbg"${id.showConcreteFunId} -> eliminable: {${elim.toSeq.sorted.mkString(", ")}}")
     tl.log("<<< dead-param-elim results <<<")
   end if
 end DeadParamElimSolver

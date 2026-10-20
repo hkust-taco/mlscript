@@ -1254,13 +1254,13 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol)(val to
   var isCovariant: Bool = true
   var isContravariant: Bool = true
   
-  def showDbg: Str =
+  def showDbg(using DebugPrinter): Str =
     // (if isContravariant then "in " else "") +
     // (if isCovariant then "out " else "") +
     (if isCovariant then
       if isContravariant then "" else "out "
       else if isContravariant then "in " else "in out ") +
-    "‹" + flags.show + "›" + sym
+    "‹" + flags.show + "›" + sym.showDbg
 
 
 object Param:

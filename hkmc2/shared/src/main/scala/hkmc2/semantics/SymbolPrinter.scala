@@ -6,13 +6,15 @@ import syntax.*
 import hkmc2.utils.*
 
 
-class SymbolPrinter(val dbgScp: Scope) extends DebugPrinter:
+class SymbolPrinter(
+  val dbgScp: Scope,
+  preprocess: Product => Product,
+  postprocess: Product => Str,
+)(using owner: Elaborator.State) extends DebugPrinter(false, S(owner),
+    sym => sym.showFullName(using dbgScp, semantics.ShowCfg.internal, throw _),
+    preprocess, postprocess):
+  def this(dbgScp: Scope)(using Elaborator.State) = this(dbgScp, identity, _ => "")
   
-  override def printPlain(v: Any): Str = v match
-    case sym: Symbol =>
-      sym.showFullName(using dbgScp, semantics.ShowCfg.internal, throw _)
-    case _ => super.printPlain(v)
-    
   def printSymbol(sym: Symbol)(using Raise, ShowCfg): Str =
     sym.showName(using dbgScp, summon)
   

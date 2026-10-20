@@ -73,7 +73,7 @@ class CompilerCtx(
       val dependencies = new CompilerCtx.DependencyRecorder
       val modulePath = (file.up / io.RelPath(file.baseName + ".mjs")).toString
       val debug = new DebugContext
-      val state = new Elaborator.State(debug)
+      val state = new Elaborator.State
       given Elaborator.State = state
 
       given Config = rootConfig
@@ -249,11 +249,11 @@ class CompilerCtx(
         art.lastChangedTimestamp >= lastMod,
       create =
         val debug = new DebugContext
-        val state = new Elaborator.State(debug)
+        val state = new Elaborator.State
         given Elaborator.State = state
         given Config = rootConfig
         given CompilerCtx = this
-        given DebugPrinter = new DebugPrinter
+        given DebugPrinter = new DebugPrinter(state)
         val parse = ParserSetup(file, outputHandler)
         val elaborationConfig = Config.elaborationConfig(parse.resultBlk, file.up)
         debug.configure(elaborationConfig.debug)

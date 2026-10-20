@@ -31,7 +31,7 @@ class Importer extends NewResolver:
     lazy val sym = VarSymbol(id, erasedType = N)
     
     if path.startsWith(".") || path.startsWith("/") then // leave alone imports like "fs"
-      log(s"importing $file")
+      log(dbg"importing $file")
       
       val nme = file.baseName
       val id = new syntax.Tree.Ident(nme) // TODO loc
@@ -54,7 +54,7 @@ class Importer extends NewResolver:
           reportCycle(cctx.allFilesBeingImported :+ file)
         else
           cctx.withActiveDependency(file)(reportCycle):
-            val importedSym = tl.trace(s">>> Importing $file"):
+            val importedSym = tl.trace(dbg">>> Importing $file"):
               given TL = tl
               val artifact = cctx.getElaboratedBlock(file, prelude)
               artifact.compilationUnit.defaultExport.getOrElse:

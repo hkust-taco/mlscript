@@ -30,7 +30,7 @@ fun persistently_debugged(x) = x
 //│ | | Elab subterm Ident(x)
 //│ | | ~> x¹
 //│ | ~> x¹
-//│ ~> { fun member:persistently_debugged(x¹) = x¹; }
+//│ ~> { fun member:persistently_debugged⁰(x¹) = x¹; }
 
 #dbg(elaboration: false)
 
@@ -130,9 +130,9 @@ fun shadowing(x) =
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ return 42
 //│ ⬤ Simplif. iter. 1
-//│ Captured variables: HashSet()
+//│ Captured variables: Set()
 //│ ⬤ Simplif. iter. 1
-//│ Captured variables: HashSet()
+//│ Captured variables: Set()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ return 42
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -1624,7 +1624,7 @@ class NewResolver:
     // consumes a candidate's entry site and the new entry supplies its own.
     // Deferred references use exactly the same transport as ordinary values.
     // The nested trace shows the carrier standing in for `base` (see markCarrier).
-    trace[DeclaredType](s"transportType ${base.resolution.showDbg} (previous = ${previous.map(_.showDbg)}, marks = ${marks.map(_.showDbg)})"):
+    trace[DeclaredType](dbg"transportType ${base.resolution.showDbg} (previous = ${previous.map(_.showDbg)}, marks = ${marks.map(_.showDbg)})"):
       markCarrier.exit(previous).exit(marks) match
         case Marked(_, NoMarks) => base
         case Marked(_, path: SomeMarks) =>
@@ -2956,16 +2956,16 @@ class NewResolver:
         return
       case _ => ()
     val sh = appShapes.getOrElseUpdate((ShapeIdentity.key(lhs), res.resSym), {
-      log(s"appShape: lhs = ${lhs.shwDbg}, args = ${args.showDbg}, res = ${res.showDbg}")
+      log(dbg"appShape: lhs = ${lhs.shwDbg}, args = ${args.showDbg}, res = ${res.showDbg}")
       new AppShape(lhs, args, res)
     })
     lhs.unappliedParams match
     case Nil => ()
     case (ps, mss) :: pss =>
       zipArgsIn(mss, ps.params, ps.restParam, args, res, lhs, instances)
-    log(s"appShape isSaturated? ${sh.isSaturated}; head? ${sh.applicationHead._1.shwDbg}, ${sh.applicationHead._2.map(_.showDbg)}")
+    log(dbg"appShape isSaturated? ${sh.isSaturated}; head? ${sh.applicationHead._1.shwDbg}, ${sh.applicationHead._2.map(_.showDbg)}")
     def register(using ResolutionContext) = publish(sh)
-    log(s"lhs ${lhs.isSaturated} ${lhs.unappliedParams.map(_.mapFirst(_.showDbg).mapSecond(_.map(_.showDbg)))}")
+    log(dbg"lhs ${lhs.isSaturated} ${lhs.unappliedParams.map(_.mapFirst(_.showDbg).mapSecond(_.map(_.showDbg)))}")
     if lhs.isSaturated && !rctx.hasError(res) then
       rctx.markError(res)
       // Marks transport a value across scopes; they do not apply arguments.
@@ -3000,7 +3000,7 @@ class NewResolver:
             // TODO: handle `mss`
             register
           case _ =>
-            log(s"appShape: td.body = ${td.body}")
+            log(dbg"appShape: td.body = ${td.body}")
             listenDefinitionResult(td, instances): result =>
               transportShape(result, mss) match
                 case value: TermShape => publish(value)
@@ -3248,13 +3248,13 @@ class NewResolver:
 
   /** `scope` is where `sel` is written, which determines the private members it can select. */
   def newSel(sel: NewSel, scope: SrcScope)(using ResolutionContext): Unit =
-    log(s"newSel? sel = ${sel.showDbg}")
+    log(dbg"newSel? sel = ${sel.showDbg}")
     def visible(info: MemberLookup): MemberLookup = info.visibleFrom(scope.canAccessPrivatesOf, reportInaccessible = true)
     def member(info: MemberLookup, description: Message, diagnostic: Message => Ls[(Message, Opt[Loc])],
         instances: TypeSubstitution)(using ResolutionContext): Unit = info match
       case MemberLookup.Contextual(source, substitution) => member(source, description, diagnostic, instances.withOverrides(substitution))
       case MemberLookup.Found(bms, marks) if rctx.canResolve(sel) || sel.resolvedMembers.contains(bms.memberSymbol) =>
-        log(s"newSel member: bms = ${bms.memberSymbol.showDbg}, mss = ${marks.map(_.showDbg)}")
+        log(dbg"newSel member: bms = ${bms.memberSymbol.showDbg}, mss = ${marks.map(_.showDbg)}")
         rctx.recordResolution(sel, sel.resolvedMembers.contains(bms.memberSymbol))(sel.resolvedMembers ::= bms.memberSymbol)
         publishMember(sel, bms, sel.resSym, marks, instances)
       case MemberLookup.Declared(member, bindings, marks, annotation, positive) if rctx.canResolve(sel) || sel.resolvedMembers.contains(member) =>
@@ -3298,7 +3298,7 @@ class NewResolver:
         , shape =>
           member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty))
       case N => listenReceiver(sel.prefix): shape =>
-        log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
+        log(dbg"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
         member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
       case S(cls) =>
         classSelection(cls)(ref =>
@@ -3452,7 +3452,7 @@ class NewResolver:
           case N => listenResult(body)(publishActivated(host, _))
 
   def pipeTerm(from: Term, to: ShapeHost)(using ResolutionContext): Unit =
-    log(s"pipeTerm: from = ${from.showDbg}, to = ${to.showDbg}; ${to.currentShapes}")
+    log(dbg"pipeTerm: from = ${from.showDbg}, to = ${to.showDbg}; ${to.currentShapes}")
     listenTerm(from): sh =>
       publishActivated(to, sh)
   
@@ -3576,9 +3576,9 @@ class NewResolver:
   private def fromBMSAt(bms: BlockMemberSymbol, resSym: FlowSymbol, markss: Ls[Marks], listener: Listener,
       trm: Term, selected: ShapeListener[DefinitionSymbol[?]], receiver: Bool,
       specialization: Opt[(FlowSymbol, Ls[DeclaredType])])(using ResolutionContext): Unit =
-    log(s"listenBMS: bms = ${bms.describe}")
+    log(dbg"listenBMS: bms = ${bms.describe}")
     bms.onComplete: () =>
-      log(s"listenedBMS: bms = ${bms.describe}")
+      log(dbg"listenedBMS: bms = ${bms.describe}")
       valueTarget(bms, receiver) match
       case S(sym: (ModuleOrObjectSymbol | TermSymbol | ClassSymbol | PatternSymbol)) =>
         // Selection is independent of the selected value's shape. In particular,
@@ -3586,7 +3586,7 @@ class NewResolver:
         // Pattern resolution supplies its own interpretation of the selected head.
         selected(sym)
         val wrappedListener: Listener = sh =>
-          log(s"fromBMS: bms = ${bms.showDbg}, sh = ${sh.shwDbg}, flow = ${resSym.showDbg}, markss = ${markss.map(_.showDbg)}")
+          log(dbg"fromBMS: bms = ${bms.showDbg}, sh = ${sh.shwDbg}, flow = ${resSym.showDbg}, markss = ${markss.map(_.showDbg)}")
           val sh0 = sh
           // Modules, objects, and runtime pattern objects introduce no value
           // boundary. Pattern bodies have separate matching scopes; passing the
@@ -3599,15 +3599,15 @@ class NewResolver:
             case value: TermShape => transportShape(value, markss)
             case NoShape => NoShape) match
             case NoShape =>
-              log(s"FILTER OUT ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
+              log(dbg"FILTER OUT ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
             case sh: TermShape =>
               if sh0.isInstanceOf[MarkedShape[?]]
-              then log(s"MATCH ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
-              else log(s"PUSH ${sh.shwDbg}")
+              then log(dbg"MATCH ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
+              else log(dbg"PUSH ${sh.shwDbg}")
               listener(sh)
         sym.defn match
         case S(td: TermDefinition) if td.params.isEmpty =>
-          log(s"listenTerm: td.body = ${td.body.fold("N")(_.showDbg)}")
+          log(dbg"listenTerm: td.body = ${td.body.fold("N")(_.showDbg)}")
           val callerInstances = rctx.instances
           val instances = if isByName(td) then instantiateByName(td, resSym,
             ExitMark(ResolutionBoundary(td.tsym), S(resSym), NoMarks) :: markss, specialization, Map.empty)
@@ -3808,7 +3808,7 @@ class NewResolver:
     flow.exits.getOrElse(N, Vector.empty).foreach(value => listenTerm(value)(listener))
 
   def listenTerm(trm: Term)(listener: Listener)(using ResolutionContext): Unit =
-    log(s"listenTerm: trm = ${trm.showDbg}")
+    log(dbg"listenTerm: trm = ${trm.showDbg}")
     listenValue(trm, false)(listener)
 
   def listenReceiver(trm: Term)(listener: Listener)(using ResolutionContext): Unit =
@@ -3871,7 +3871,7 @@ class NewResolver:
 
   private def listen(trm: Term, discardMarks: Bool)(receive: ShapeListener[Shape])(using ResolutionContext): Unit =
     val listener = activationListener(receive)
-    log(s"listen: trm = ${trm.showDbg}")
+    log(dbg"listen: trm = ${trm.showDbg}")
     trm.addShapeListener(listener)
     trm match
     case _: SynthSel =>
@@ -4067,7 +4067,7 @@ class NewResolver:
         case _ => N
       def publish(parent: Opt[NominalInstanceView])(using ResolutionContext): Unit =
         listener(introShapes.getOrElseUpdate(new Identity(intro), {
-          log(s"introShape: intro = $intro")
+          log(dbg"introShape: intro = $intro")
           IntroShape(intro, parent)
         }))
       primitive match

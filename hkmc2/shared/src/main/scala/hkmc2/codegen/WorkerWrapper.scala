@@ -88,7 +88,7 @@ class WorkerWrapper
       case Annot.NoInline() | Annot.Generator() => false
       case _ => true
     ))
-    log(s"▶ Worker-wrapper: ${fun.dSym.showDbg} -> ${worker.dSym.showDbg}")
+    log(dbg"▶ Worker-wrapper: ${fun.dSym.showDbg} -> ${worker.dSym.showDbg}")
     Scoped(Set.single(worker.sym), Define(wrapper, Define(worker, rest)))
   
   private def mkInlineOnly(fun: FunDefn, body: Block): FunDefn =

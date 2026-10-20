@@ -145,7 +145,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     
     tl.log(">>> eta-expansion targets shapes >>>")
     for (id, shape) <- etaExpandedFunShape do
-      tl.log(s"${id.showConcreteFunId}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
+      tl.log(dbg"${id.showConcreteFunId}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
     tl.log("<<< eta-expansion targets shapes <<<")
   end if
 end EtaExpansionSolver

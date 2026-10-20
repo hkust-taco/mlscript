@@ -631,8 +631,7 @@ object Elaborator:
     case Default(sym: ImportSymbol, modulePath: Str)
     case Private(sym: BlockMemberSymbol, modulePath: Str)
   
-  class State(val debugContext: DebugContext):
-    def this() = this(new DebugContext)
+  class State:
     val newResolverState: NewResolverState = new NewResolverState(this)
     val suid = new Uid.Symbol.State
     given State = this
@@ -728,8 +727,6 @@ object Elaborator:
       "globalThis" -> globalThisSymbol,
     ))
     val superSymbol = builtinOpsMap("super")
-    def dbgUid(uid: Uid[Symbol]): Str =
-      if debugContext.showUids then s"‹$uid›" else ""
   transparent inline def State(using state: State): State = state
   
   /** Extracts all parameter lists from a `constructor(...)...` declaration.
@@ -1024,7 +1021,7 @@ extends Importer:
     Head.Let(binding, term)
   
   protected def mkMatch(scrutinee: Term, pattern: Pattern, consequent: SimpleSplit) =
-    log(s"mkMatch: scrutinee = ${scrutinee.showDbg}, pattern = ${pattern.showDbg}, consequent = ${consequent.showDbg}")
+    log(dbg"mkMatch: scrutinee = ${scrutinee.showDbg}, pattern = ${pattern.showDbg}, consequent = ${consequent.showDbg}")
     matchScrutPat(scrutinee, pattern)
     // Captures carry the scope crossings needed to resolve extracted bindings,
     // but matching the value at runtime only needs the underlying reference.
@@ -1257,7 +1254,7 @@ extends Importer:
   // * In the new syntax, only some positions do (see `delimitedTerm`), and placeholders elsewhere are illegal.
   def term(tree: Tree, interp: Interpretation): Ctxl[Term] =
     if lang.newUnderscoreAndApplicationSyntax then
-      trace[Term](s"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
+      trace[Term](dbg"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
         given UnderCtx = UnderCtx.none
         subterm(tree, interp)
     else delimitedTerm(tree, interp)
@@ -1265,7 +1262,7 @@ extends Importer:
   /** Elaborate `tree` as a term that delimits an implicit lambda, whose parameters are the `_` placeholders
     * of `tree` that are not delimited by one of its subterms, as in the body of `=> _ + 1`. */
   def delimitedTerm(tree: Tree, interp: Interpretation): Ctxl[Term] =
-  trace[Term](s"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
+  trace[Term](dbg"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
     val unders = mutable.ArrayBuffer.empty[VarSymbol]
     given UnderCtx = UnderCtx(S(unders))
     val st = subterm(tree, interp)
@@ -1397,7 +1394,7 @@ extends Importer:
   // Most recursive operands are terms. Transparent wrappers must explicitly
   // forward their interpretation; class, pattern, and type operands specify theirs.
   def subterm(tree: Tree, interp: Interpretation = Trm): Ctxl[UnderCtx ?=> Term] =
-  trace[Term](s"Elab subterm ${tree.showDbg}", r => s"~> ${r.showDbg}"):
+  trace[Term](dbg"Elab subterm ${tree.showDbg}", r => s"~> ${r.showDbg}"):
     
     def error = Term.Error().withLocOf(tree)
     
@@ -1530,7 +1527,7 @@ extends Importer:
     case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       
       val sym = VarSymbol(id, erasedType = N)
-      log(s"Processing `handle` statement $id (${sym}) ${ctx.outer}")
+      log(dbg"Processing `handle` statement $id (${sym}) ${ctx.outer}")
       
       val derivedClsSym = ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident(s"Handler$$${id.name}$$"))
       recordDefinitionScope(derivedClsSym)
@@ -1913,7 +1910,7 @@ extends Importer:
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
-        log(s"Non-local return: $sym")
+        log(dbg"Non-local return: $sym")
         if !ctx.potentiallyInstrumented then
           raise:
             ErrorReport(msg"Non-local return statements are only supported with effect handlers enabled." -> tree.toLoc :: Nil)
@@ -2127,7 +2124,7 @@ extends Importer:
   def blockOrRcd(blk: Block, hasResult: Bool, resultInterp: Interpretation)(using UnderCtx)
     : Ctxl[(Blk | Rcd, Ctx)]
     = trace[(Blk | Rcd, Ctx)](
-        pre = s"Elab block ${blk.desugStmts.toString.truncate(100, "[...]")} ${ctx.outer}", r => s"~> ${r._1.showDbg}"
+        pre = dbg"Elab block ${blk.desugStmts.showAsPlain.truncate(100, "[...]")} ${ctx.outer}", r => s"~> ${r._1.showDbg}"
       ):
     
     val members = blk.definedSymbols.toMap
@@ -2162,7 +2159,7 @@ extends Importer:
               raise(ErrorReport(msg"Multiple definitions of symbol '$name'" -> N ::
                 group.map(msg"defined here" -> _.toLoc)))
             val mainDefn = group.head // * Safe since these `groupMapReduce` groups cannot be empty
-            log(s"Processing overloadings for '$name'")
+            log(dbg"Processing overloadings for '$name'")
             defns.iterator.foreach: defn =>
               if defn.k > k then
                 // Only function definitions with parameters create a fresh companion object.
@@ -2376,7 +2373,7 @@ extends Importer:
       if tups.isEmpty || id.name.headOption.exists(_.isLower) =>
         val sym =
           fieldOrVarSym(LetBind, id)
-        log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")
+        log(dbg"Processing `let` statement $id (${sym}) ${ctx.outer}")
         members.get(id.name).foreach: s =>
           raise(ErrorReport(msg"Name '${id.name}' is already used"
             -> hd.toLoc :: msg"by a member declared in the same block" -> s.toLoc :: Nil))
@@ -2458,7 +2455,7 @@ extends Importer:
             
             val elaborateDefinition: Ctx ?=> TermDefinition = newCtx ?=>
               
-              log(s"Processing term definition $nme")
+              log(dbg"Processing term definition $nme")
               // * Add type parameters to context
               val (tps, newCtx1) = td.typeParams match
                 case S(t) =>
@@ -2749,8 +2746,8 @@ extends Importer:
             // 2. extraction bindings, e.g., `value` in `pattern Middle(value) = ...`; and
             // 3. the rest are reported as invalid parameters.
             val (patternParams, extractionParams) = allParams.partition(_.flags.pat)
-            log(s"`${patSym.nme}`'s pattern parameters: ${patternParams.mkString("[", ", ", "]")}")
-            log(s"`${patSym.nme}`'s extraction parameters: ${extractionParams.mkString("[", ", ", "]")}")
+            log(dbg"`${patSym.nme}`'s pattern parameters: ${patternParams.map(_.showDbg).mkString("[", ", ", "]")}")
+            log(dbg"`${patSym.nme}`'s extraction parameters: ${extractionParams.map(_.showDbg).mkString("[", ", ", "]")}")
             // Empty pattern body is considered as wildcard patterns.
             val rhs = td.rhs.getOrElse:
               raise(ErrorReport(msg"Pattern definitions must have a body." -> statementLoc :: Nil))
@@ -2772,8 +2769,8 @@ extends Importer:
                 case N if !guardedNames.contains(name) =>
                   raise(WarningReport(msg"Unused pattern binding: $name." -> aliases.head.toLoc :: Nil))
                 case _ => ()
-            scoped("ucs:ups")(log(s"elaborated pattern body: ${pat.showDbg}"))
-            scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
+            scoped("ucs:ups")(log(dbg"elaborated pattern body: ${pat.showDbg}"))
+            scoped("ucs:ups:tree")(log(dbg"elaborated pattern body: ${pat.showAsTree}"))
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
             val pd = PatternDef(owner, patSym, sym, tps, allParams,
@@ -2784,13 +2781,13 @@ extends Importer:
         case k: (Mod.type | Obj.type) =>
           val modSym = td.symbol.asInstanceOf[ModuleOrObjectSymbol] // TODO: improve `asInstanceOf`
           newCtx.givenIn:
-            trace(s"Processing module/object definition $nme"):
+            trace(dbg"Processing module/object definition $nme"):
               val comp = sym.asCls match
                 case comp @ S(_) =>
                   assert(sym.asAls.isEmpty)
                   comp
                 case N => sym.asAls
-              log(s"Companion: ${comp}")
+              log(dbg"Companion: ${comp}")
               val md =
                 val (bod, c) = mkBody(Nil)
                 ModuleOrObjectDef(owner, modSym, sym,
@@ -2823,9 +2820,9 @@ extends Importer:
                 msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
             res.copy(restParam = N)(res.toLoc)
           newCtx.givenIn:
-            trace(s"Processing class definition $nme"):
+            trace(dbg"Processing class definition $nme"):
               val comp = sym.asMod
-              log(s"Companion: ${comp}")
+              log(dbg"Companion: ${comp}")
               val allCtorPss = pss ::: auxCtorPss
               val tsym = if allCtorPss.nonEmpty then
                 val ctsym = ClassCtorSymbol(Fun, owner, clsSym)
@@ -2986,7 +2983,7 @@ extends Importer:
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
       case pt @ ParamTree(flags, id, sign, spd, modifiers) =>
-        log(s"Elaborating ParamTree: ${pt}")
+        log(dbg"Elaborating ParamTree: ${pt}")
         val flg = flags.copy(isVal = flags.isVal || inDataClass)
         val (canonicalId, aliases) = symbolicSuffixBase(id.name) match
           case S(base) =>
@@ -3104,7 +3101,7 @@ extends Importer:
      *  FIXME: This routine is insufficient to look up definitions defined
      *  later in the program. */
     def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = scoped("ucs:pattern:resolution"):
-      log(s"resolve ${id}")
+      log(dbg"resolve ${id}")
       ctx.get(id.name) match
       case S(elem) =>
         log("has elem!")
@@ -3194,7 +3191,7 @@ extends Importer:
     def arg(t: Tree): Ctxl[Pattern \/ Pattern] = t match
       case TypeDef(syntax.Pat, body, N) => L(go(body))
       case _ => R(go(t))
-    def go(t: Tree): Ctxl[Pattern] = trace[Pattern](s"Elab pattern ${t.showDbg}", r => s"~> ${r.showDbg}"):
+    def go(t: Tree): Ctxl[Pattern] = trace[Pattern](dbg"Elab pattern ${t.showDbg}", r => s"~> ${r.showDbg}"):
       t match
       // Annotated patterns like `@compile P`.
       case Tree.Annotated(annotation, target) =>
@@ -3385,7 +3382,7 @@ extends Importer:
               TODO(sym->sym.uid)
           // case S(sym) => ???
           case N =>
-            log(s"No symbol found $lhs ${lhs.symbol}")
+            log(dbg"No symbol found $lhs ${lhs.symbol}")
             // ???
             () // TODO
       case Term.Ref(sym: VarSymbol) =>

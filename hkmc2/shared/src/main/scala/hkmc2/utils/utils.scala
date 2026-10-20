@@ -52,13 +52,55 @@ extension (t: Any)
     ts.printPlain(t)
 
 
-class DebugPrinter:
+/** Interpolate compiler values through the selected debug printer, including symbols nested in
+  * collections and products. Ordinary string interpolation cannot carry a printing policy. */
+extension (context: StringContext)
+  def dbg(values: Any*)(using printer: DebugPrinter): Str =
+    context.s(values.map(printer.printPlain)*)
+
+
+class DebugPrinter(
+  val showUids: Bool,
+  uidOwner: Opt[semantics.Elaborator.State],
+  symbolName: semantics.Symbol => Str,
+  val preProcess: Product => Product,
+  val postProcess: Product => Str,
+):
+  def this() = this(false, N, sym => sym.prefix + sym.nme, identity, _ => "")
+  def this(owner: semantics.Elaborator.State) = this(false, S(owner), sym => sym.prefix + sym.nme, identity, _ => "")
+
   given DebugPrinter = this
   
-  def preProcess(t: Product): Product = t
-  def postProcess(t: Product): Str = ""
+  /** A printing operation captures an immutable policy; changing a trace scope cannot change
+    * a printer already passed to a renderer. Name allocation and tree hooks are preserved. */
+  def withUids(enabled: Bool): DebugPrinter =
+    new DebugPrinter(enabled, uidOwner, symbolName, preProcess, postProcess)
   
-  def printPlain(v: Any): Str = v.toString
+  def printPlain(v: Any): Str = v match
+    case null => "null"
+    case sym: semantics.Symbol =>
+      // Numeric UIDs are unique only within their allocating unit. Foreign symbols must not
+      // acquire a local-looking identity just because the importing unit enables UID printing.
+      val showUid = showUids && uidOwner.exists(_ is sym.getState)
+      symbolName(sym) + (if showUid then s"‹${sym.uid}›" else "")
+    // Shapes contain inference graphs. Their explicit summaries avoid traversing those graphs.
+    case shape: semantics.Shape => shape.shwDbg
+    case marks: semantics.Marks => marks.showDbg
+    case flags: TermDefFlags => flags.toString
+    case flags: FldFlags => flags.toString
+    case flags: ParamListFlags => flags.toString
+    case path: io.Path => path.toString
+    case path: io.RelPath => path.toString
+    case xs: List[?] => xs.iterator.map(printPlain).mkString("List(", ", ", ")")
+    case xs: Vector[?] => xs.iterator.map(printPlain).mkString("Vector(", ", ", ")")
+    case xs: Array[?] => xs.iterator.map(printPlain).mkString("Array(", ", ", ")")
+    case xs: collection.Map[?, ?] =>
+      xs.iterator.map((k, v) => s"${printPlain(k)} -> ${printPlain(v)}").mkString("Map(", ", ", ")")
+    case xs: collection.Set[?] => xs.iterator.map(printPlain).mkString("Set(", ", ", ")")
+    case tuple: Tuple => tuple.productIterator.map(printPlain).mkString("[", ", ", "]")
+    case p: Product if p.productArity > 0 =>
+      p.productIterator.map(printPlain).mkString(p.productPrefix + "(", ",", ")")
+    case _ => v.toString
   
   def printProduct(inTailPos: Bool, t: Product): Str =
     

@@ -2073,6 +2073,7 @@ The following aspects display a program representation, without tracing:
 
 Finally, `showUids` (enabled by default) controls whether traces show the unique identifiers of symbols.
 Disabling it makes traces easier to compare across compiler runs.
+UIDs are local to a compilation unit, so imported symbols use disambiguated names without numeric UIDs.
 
 ### Syntax
 
