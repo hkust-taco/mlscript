@@ -1,0 +1,130 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+class Result[out A, out B]: Ok[A] | Err[B]
+data class Ok[out A](value: A) extends Result[A, Nothing]
+data class Err[out A](message: A) extends Result[Nothing, A]
+
+class Type: FunctionType | PrimitiveType
+data class PrimitiveType(name: Str) extends Type
+data class FunctionType(lhs: Type, rhs: Type) extends Type
+
+class Term: Lit | Var | Abs | App
+data class Lit(tag: Str, ty: Type) extends Term
+data class Var(name: Str) extends Term
+data class Abs(lhs: Var, lty: Type, rhs: Term) extends Term
+data class App(lhs: Term, rhs: Term) extends Term
+
+class TreeMap[out A]: Node[A] | Empty
+data class Node[out A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A]) extends TreeMap[A]
+object Empty extends TreeMap[Nothing]
+
+fun insert(t, k, v) =
+  if t is
+    Node(k', oldValue, l, r) and
+      k < k' then Node(k', oldValue, insert(l, k, v), r)
+      k > k' then Node(k', oldValue, l, insert(r, k, v))
+      _ then Node(k, v, l, r)
+    Empty then Node(k, v, Empty, Empty)
+fun find(t, k) =
+  if t is
+    Node(k', v, l, r) and
+      k < k' then find(l, k)
+      k > k' then find(r, k)
+      _ then Some(v)
+    Empty then None
+
+// Inserting on either side must retain the values at ancestor keys.
+let entries = insert(insert(insert(Empty, "m", 1), "a", 2), "z", 3)
+//│ entries = Node("m", 1, Node("a", 2, Empty, Empty), Node("z", 3, Empty, Empty))
+
+:expect [Some(1), Some(2), Some(3), None]
+[find(entries, "m"), find(entries, "a"), find(entries, "z"), find(entries, "missing")]
+//│ = [Some(1), Some(2), Some(3), None]
+
+:expect [Some(1), Some(4), Some(3)]
+let replaced = insert(entries, "a", 4)
+[find(replaced, "m"), find(replaced, "a"), find(replaced, "z")]
+//│ = [Some(1), Some(4), Some(3)]
+//│ replaced = Node("m", 1, Node("a", 4, Empty, Empty), Node("z", 3, Empty, Empty))
+
+fun showType(ty: Type) =
+  if ty is
+    FunctionType(PrimitiveType(name), rhs) then name + " -> " + showType(rhs)
+    FunctionType(lhs, rhs) then "(" + showType(lhs) + ") -> " + showType(rhs)
+    PrimitiveType(name) then name
+
+showType(PrimitiveType("int"))
+showType(FunctionType(PrimitiveType("int"), PrimitiveType("bool")))
+showType(FunctionType(FunctionType(PrimitiveType("int"), PrimitiveType("bool")), PrimitiveType("bool")))
+showType(FunctionType(PrimitiveType("bool"), FunctionType(PrimitiveType("int"), PrimitiveType("bool"))))
+//│ = "bool -> int -> bool"
+
+fun typeEqual(t1, t2) =
+  if
+    t1 is PrimitiveType(name1) and t2 is PrimitiveType(name2) then name1 === name2
+    t1 is FunctionType(lhs1, rhs1) and t2 is FunctionType(lhs2, rhs2) then
+      typeEqual(lhs1, lhs2) and typeEqual(rhs1, rhs2)
+    _ then false
+
+fun showTerm(t: Term) =
+  if t is
+    Lit(tag, _) then tag
+    Var(name) then name
+    Abs(lhs, ty, rhs) then "&" + showTerm(lhs) + ": " + showType(ty) + " => " + showTerm(rhs)
+    App(Abs(lhs0, ty, lhs1), rhs) then
+      "((" + showTerm(Abs(lhs0, ty, rhs)) + ") " + showTerm(rhs) + ")"
+    App(lhs, rhs) then "(" + showTerm(lhs) + " " + showTerm(rhs) + ")"
+
+showTerm(Var("x"))
+showTerm(Abs(Var("x"), PrimitiveType("int"), Var("y")))
+showTerm(App(Var("x"), Var("y")))
+showTerm(App(Abs(Var("x"), PrimitiveType("int"), Var("y")), Var("z")))
+//│ = "((&x: int => z) z)"
+
+// A recursive type checker exercises nested matches and environment lookup.
+fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
+  if t is
+    Lit(_, ty) then Ok(ty)
+    Var(name) and find(ctx, name) is
+      Some(ty) then Ok(ty)
+      None then Err("unbound variable `" + name + "`")
+    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+      Ok(resTy) then Ok(FunctionType(ty, resTy))
+      Err(message) then Err(message)
+    App(lhs, rhs) and typeTerm(lhs, ctx) is
+      Ok(FunctionType(pTy, resTy)) and typeTerm(rhs, ctx) is
+        Ok(aTy) and
+          typeEqual(pTy, aTy) then Ok(resTy)
+          else Err("expect the argument to be of type `" + showType(pTy) + "` but found `" + showType(aTy) + "`")
+        Err(message) then Err(message)
+      Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" + name + "`")
+      Err(message) then Err(message)
+
+fun showTypeTerm(t, ctx) =
+  if typeTerm(t, ctx) is
+    Ok(ty) then showTerm(t) + " : " + showType(ty)
+    Err(message) then "Type error: " + message
+
+showTypeTerm(Var("x"), Empty)
+showTypeTerm(Abs(Var("x"), PrimitiveType("int"), Var("x")), Empty)
+showTypeTerm(App(Var("f"), Lit("0", PrimitiveType("int"))), insert(Empty, "f", FunctionType(PrimitiveType("int"), PrimitiveType("int"))))
+showTypeTerm(App(Var("f"), Lit("0.2", PrimitiveType("float"))), insert(Empty, "f", FunctionType(PrimitiveType("int"), PrimitiveType("int"))))
+showTypeTerm(App(Var("f"), Lit("0", PrimitiveType("int"))), insert(Empty, "f", PrimitiveType("Str")))
+//│ = "Type error: cannot apply primitive type `Str`"
+
+// The inner binder has a different type; references to the outer binder keep theirs.
+:expect "int -> bool -> int"
+let nested = typeTerm(Abs(Var("x"), PrimitiveType("int"), Abs(Var("y"), PrimitiveType("bool"), Var("x"))), Empty)
+assert nested is Ok(ty)
+showType(ty)
+//│ = "int -> bool -> int"
+//│ nested = Ok(
+//│   FunctionType(
+//│     PrimitiveType("int"),
+//│     FunctionType(PrimitiveType("bool"), PrimitiveType("int"))
+//│   )
+//│ )
