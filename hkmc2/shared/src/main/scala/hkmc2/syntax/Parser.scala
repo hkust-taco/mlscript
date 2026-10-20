@@ -860,7 +860,10 @@ abstract class Parser(
         prefixRules.getKwAlt(kw, S(loc)) match
         case S(subRule) =>
           consume
-          parseRule(CommaPrecNext, subRule, allowNewlines = false).getOrElse(errExpr)
+          // Keyword atoms such as `true` still have an expression continuation:
+          // in an operand split, `true then ...` must keep its consequent.
+          exprCont(parseRule(CommaPrecNext, subRule, allowNewlines = false).getOrElse(errExpr),
+            CommaPrecNext, allowNewlines = false)
         case N => expr(CommaPrecNext, allowNewlines = false)
       case _ => expr(CommaPrecNext, allowNewlines = false)
     item match
