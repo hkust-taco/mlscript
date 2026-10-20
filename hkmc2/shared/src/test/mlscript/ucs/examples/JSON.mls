@@ -205,10 +205,11 @@ fun parseString(state: ParserState): ParseResult[Str] =
         Some("t") then parseContent(acc + "\t", state'.next)
         Some("u") then
           parseCodePoint(4, 0, state'.next).flatMap \ (codePoint, state) =>
-            if codePoint < 0xD800 || 0xDFFF < codePoint
-            then parseContent(acc + String.fromCodePoint(codePoint), state)
-            else Failure("invalid code point")
+            // Each escape contributes one UTF-16 code unit; adjacent surrogate
+            // escapes form a pair in the resulting string.
+            parseContent(acc + String.fromCharCode(codePoint), state)
         else Failure("invalid escape sequence")
+    Some(ch) and ch.charCodeAt(0) < 32 then Failure("unescaped control character")
     Some(ch) then parseContent(acc + ch, state.next)
     None then Failure("expected '\"' instead of end of input")
   
@@ -339,7 +340,7 @@ fun stringify(value: JsonValue): Str =
   fun stringifyObject(map) =
     fun showEntry(entry) =
       assert entry is [k, v]
-      "\"" + String(k) + "\": " + stringify(v)
+      JSON.stringify(k) + ": " + stringify(v)
     fun aux(map) = if map is
       ConsMap(last, NilMap) then showEntry(last)
       ConsMap(head, tail) then showEntry(head) + ", " + aux(tail)
@@ -348,11 +349,38 @@ fun stringify(value: JsonValue): Str =
   
   if value is
     JsonNumber(n) then String(n)
-    JsonString(s) then "\"" + s + "\""
+    JsonString(s) then JSON.stringify(s)
     JsonArray(xs) then "[" + xs.map(stringify).join(", ") + "]"
     JsonObject(m) then stringifyObject(m)
     JsonBoolean(b) then if b then "true" else "false"
     JsonNull then "null"
+
+:expect true
+let text = "\"\\\n\t"
+let encoded = stringify(JsonString(text))
+assert parse(encoded) is Success(JsonString(decoded), _)
+decoded === text
+//│ = true
+//│ encoded = "\"\\\"\\\\\\n\\t\""
+//│ text = "\"\\\n\t"
+
+:expect "😀"
+assert parse("\"\\uD83D\\uDE00\"") is Success(JsonString(decoded), _)
+decoded
+//│ = "😀"
+
+:expect [true, true, true]
+["\"\n\"", "\"\t\"", "\"\u0001\""].map(source => parse(source) is Failure)
+//│ = [true, true, true]
+
+:expect true
+let key = "a\"b"
+let objectText = stringify(JsonObject(ConsMap([key, JsonString("\n")], NilMap)))
+assert parse(objectText) is Success(JsonObject(ConsMap([decodedKey, JsonString(decodedValue)], NilMap)), _)
+decodedKey === key and decodedValue === "\n"
+//│ = true
+//│ key = "a\"b"
+//│ objectText = "{ \"a\\\"b\": \"\\n\" }"
 
 fun showResult(result: ParseResult[JsonValue]) = if result is
   Success(value, state) then "Success after " + String(state.at) + ": " + stringify(value)
