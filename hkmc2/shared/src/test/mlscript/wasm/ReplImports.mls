@@ -161,3 +161,18 @@ fun rejectNonBox(x): CastBox = x
 rejectNonBox(42)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// Imported and local classes with the same name need distinct runtime metadata.
+data class Reused()
+let original = Reused()
+fun isOriginal(value) = value is Reused
+//│ Wasm result:
+//│ = {}
+
+// Trap if either nominal identity was replaced by the other declaration.
+data class Reused()
+let later = Reused()
+if isOriginal(original) and not isOriginal(later) and (later is Reused) and not (original is Reused) then 1
+//│ Wasm result:
+//│ = 1
