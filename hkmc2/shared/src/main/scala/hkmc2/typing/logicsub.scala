@@ -470,4 +470,4 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
         ascribe(term, res)
       case Term.Annotated(Annot.Untyped, _) => (Bot, Bot)
       case _ =>
-        (error(msg"Term shape not yet supported by InvalML: ${t.toString}" -> t.toLoc :: Nil), Bot)
+        (error(msg"Term shape not yet supported: ${t.toString}" -> t.toLoc :: Nil), Bot)
