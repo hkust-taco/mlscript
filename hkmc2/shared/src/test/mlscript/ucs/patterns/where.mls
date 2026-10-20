@@ -39,18 +39,25 @@ foo(Pair(4, 0))
 //│ = false
 
 
-// Should we report `a` and `b` as inconsistent variables?
+// A `where` guard sees the bindings of its own alternative.
 fun bar(p) = p is
   (Pair(a, b) where a > b) | Int
 
+:expect true
 bar(4)
 //│ = true
 
+:expect false
 bar(Pair(4, 5))
 //│ = false
 
+:expect true
 bar(Pair(4, 3))
 //│ = true
+
+:expect false
+bar("other")
+//│ = false
 
 
 :e
