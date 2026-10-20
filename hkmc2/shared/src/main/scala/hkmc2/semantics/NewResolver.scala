@@ -3083,14 +3083,57 @@ class NewResolver:
                 resolution.publish(TypeShape.Nominal(cls))
                 declaredType(resolution, Map.empty)
               })
-            def subclass(base: ClassLikeDef)(using ResolutionContext): Unit =
+            def subclass(base: ClassLikeDef, input: TermShape)(using ResolutionContext): Unit =
               // A base-class annotation or self reference can denote a subclass
-              // instance. The test exposes that subclass's declared fields even
-              // when no constructor call supplies a concrete receiver shape.
-              // Omitted subclass arguments remain abstract and share the cached
-              // type, rather than borrowing types from unrelated allocations.
-              atPattern(testedClass): candidate =>
-                if candidate.isInstanceOfClass(base) then check(candidate, N)
+              // instance. Infer the tested subclass's arguments from its parent
+              // interface and this input, never from unrelated allocations.
+              // One instantiation per static pattern bounds recursive tail matches;
+              // the ordinary site-binder substitution keeps generic callers apart.
+              val refined = rctx.state.subclassPatternTypes.getOrElseUpdate((new Identity(ctor), cls.sym), {
+                val instances = rctx.instantiateTypeParameters(cls.sym, resSym, cls.tparams.map(_.sym), lexicalBinders(ctor.target))
+                val arguments = cls.tparams.map: parameter =>
+                  val instance = instances(parameter.sym)
+                  val argument = new TypeResolution(ctor.target, messages => resolError(ctor.target, messages))
+                  argument.publish(TypeShape.Parameter(instance, instance.inferenceHost))
+                  argument
+                val applied = new TypeResolution(ctor.target, messages => resolError(ctor.target, messages))
+                applied.publish(TypeShape.Applied(testedClass.resolution, arguments))
+                declaredType(applied, Map.empty)
+              })
+              def constrainAncestor(candidate: TermShape)(using ResolutionContext): Unit =
+                val ShapeParts(source, instances, _) = shapeParts(candidate)
+                val (head, marks) = source.applicationHead
+                head match
+                  case nominal: NominalInstanceView if nominal.defn is base =>
+                    val ShapeParts(actual, actualInstances, _) = shapeParts(input)
+                    val (actualHead, actualMarks) = actual.applicationHead
+                    base.tparams.foreach: parameter =>
+                      val bound = actualHead match
+                        case nominal: NominalInstanceView => nominal.bindings.get(parameter.sym)
+                        case _: BaseShape => S(argumentType(parameterType(
+                          TypeShape.Parameter(parameter.sym, parameter.sym.inferenceHost)), parameter))
+                        case _ => N
+                      for
+                        expected <- nominal.bindings.get(parameter.sym)
+                        supplied <- bound
+                      do
+                        listenArgumentParts(expected.instantiate(instances)): expected =>
+                          listenArgumentParts(supplied.instantiate(actualInstances)): supplied =>
+                            // A test observes the input's output interface; it
+                            // must not constrain the input's declared binders.
+                            // Contravariant-only relationships supply no output
+                            // bound for a subclass field.
+                            constrainTypes(ContextualType(supplied.output, actualMarks), ContextualType(expected.output, marks), N)
+                  case nominal: NominalInstanceView =>
+                    nominalParent(nominal).foreach: parent =>
+                      transportShape(instantiateShape(parent, instances), marks) match
+                        case parent: TermShape => constrainAncestor(parent)
+                        case NoShape => ()
+                  case _ => ()
+              atPattern(refined.instantiate(rctx.instances)): candidate =>
+                if candidate.isInstanceOfClass(base) then
+                  constrainAncestor(candidate)
+                  check(candidate, N)
             def narrow(sh: TermShape)(using ResolutionContext): Unit = shapeParts(sh).value match
               case Marked(_: RecordTypeShape, _) =>
                 atPattern(testedClass)(check(_, N))
@@ -3122,9 +3165,9 @@ class NewResolver:
                   case value: TermShape => narrow(value)
                   case NoShape => ()
               case Marked(nominal: NominalInstanceView, _) if !nominal.isInstanceOfClass(cls) =>
-                subclass(nominal.defn)
+                subclass(nominal.defn, sh)
               case Marked(base: BaseShape, _) if !base.isInstanceOfClass(cls) =>
-                subclass(base.defn)
+                subclass(base.defn, sh)
               case _ => check(sh, N)
             shape match
               case sh: TermShape => narrow(sh)

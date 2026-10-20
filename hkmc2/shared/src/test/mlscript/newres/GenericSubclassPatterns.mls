@@ -1,0 +1,62 @@
+:.
+
+// A constructor test recovers the relationship between subclass arguments and
+// an annotated base, without requiring a public self-type or local allocations.
+class Base[out A]
+data class Child[out A](value: A) extends Base[A]
+
+fun size(value: Base[Array[Int]]): Int = if value is
+  Child(items) then items.length
+  else 0
+
+:expect 3
+size(Child([1, 2, 3]))
+//│ = 3
+
+// Parent arguments can be structured and can pass through several ancestors.
+class Root[out A]
+class Middle[out B] extends Root[Array[B]]
+data class Leaf[out C](item: C) extends Middle[C]
+
+fun length(value: Root[Array[Str]]): Int = if value is
+  Leaf(text) then text.length
+  else 0
+
+:expect 4
+length(Leaf("four"))
+//│ = 4
+
+// Recursive tail matches reuse the same inference sites.
+class Chain[out A] with
+  fun map[B](f: A -> B): Chain[B] = if this is
+    Link(head, tail) then Link(f(head), tail.map(f))
+    End then End
+data class Link[out A](head: A, tail: Chain[A]) extends Chain[A]
+object End extends Chain[Nothing]
+
+fun total(xs: Chain[Str]): Int = if xs is
+  Link(head, tail) then head.length + total(tail)
+  End then 0
+
+:expect 6
+total(Link(1, Link(22, Link(333, End))).map(String))
+//│ = 6
+
+// Each generic caller retains its own payload type.
+class First(val first: Int)
+class Second(val second: Int)
+fun get[A](value: Base[A]): A = if value is Child(item) then item else throw Error("empty")
+
+:expect [1, 2]
+[get[First](Child(First(1))).first, get[Second](Child(Second(2))).second]
+//│ = [1, 2]
+
+// An argument absent from the parent cannot be inferred from its allocations.
+:e
+class Extra[out A, out B](val item: B) extends Base[A]
+fun unconnected(value: Base[Int]) = if value is Extra(item) then item.length else 0
+unconnected(Extra[Int, Str]("abc"))
+//│ ╔══[COMPILATION ERROR] This selection of member 'length' has no resolved target
+//│ ║  l.+2: 	fun unconnected(value: Base[Int]) = if value is Extra(item) then item.length else 0
+//│ ╙──      	                                                                 ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

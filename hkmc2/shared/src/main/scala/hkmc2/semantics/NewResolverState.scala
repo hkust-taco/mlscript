@@ -235,6 +235,10 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.typeViews, identity)
   val patternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =
     new Cache(_.patternTypes, identity)
+  // Subclass arguments are inferred at the static pattern site, not allocated
+  // for each incoming shape. Recursive matches must reach the same argument hosts.
+  val subclassPatternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =
+    new Cache(_.subclassPatternTypes, identity)
   // A pattern's unknown output has one source identity across repeated inputs.
   // Rebuilding its synthetic term on every match would create fresh candidates
   // in recursive pattern calls, where hosts compare source identities.
