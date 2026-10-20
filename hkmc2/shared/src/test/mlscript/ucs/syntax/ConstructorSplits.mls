@@ -1,0 +1,126 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
+fun getOrHello(x) = if x is
+  None then "hello"
+  Some \
+    a then a
+
+getOrHello(None)
+//│ = "hello"
+
+getOrHello(Some(42))
+//│ = 42
+
+fun getOrElse(x, defaultValue) = if x is
+  None then defaultValue
+  Some(value) then value
+
+None getOrElse(42)
+//│ = 42
+
+Some(0) getOrElse(42)
+//│ = 0
+
+let getOr42 = case
+  Some(value) then value
+  None then 42
+//│ getOr42 = fun
+
+None getOr42()
+//│ = 42
+
+Some(0) getOr42()
+//│ = 0
+
+fun check(x) = x is Some(42)
+
+check(None)
+//│ = false
+
+check(Some(42))
+//│ = true
+
+check(Some(77))
+//│ = false
+
+data class Left(leftValue)
+data class Right(rightValue)
+
+fun getBothOrElse(either, defaultValue) = if either is
+  None then defaultValue
+  Some \
+    Left(value) then value
+    Right(value) then value
+
+:expect 42
+getBothOrElse(None, 42)
+//│ = 42
+
+:expect 7
+getBothOrElse(Some(Left(7)), 42)
+//│ = 7
+
+:expect "noice"
+getBothOrElse(Some(Left("noice")), 42)
+//│ = "noice"
+
+:expect 9
+getBothOrElse(Some(Right(9)), 42)
+//│ = 9
+
+// Parentheses and `\` can both split on a constructor's argument.
+fun parens(x) = if x is
+  Some(
+    0 then 10
+    n and n > 0 then n + 1
+    _ then -2
+  )
+  _ then -1
+
+fun slash(x) = if x is
+  Some \
+    0 then 10
+    n and n > 0 then n + 1
+    _ then -2
+  _ then -1
+
+:expect [10, 4, -2, -1]
+[parens(Some(0)), parens(Some(3)), parens(Some(-3)), parens(None)]
+//│ = [10, 4, -2, -1]
+
+:expect [10, 4, -2, -1]
+[slash(Some(0)), slash(Some(3)), slash(Some(-3)), slash(None)]
+//│ = [10, 4, -2, -1]
+
+// Pattern arguments retain their wildcards and bindings instead of delimiting lambdas.
+fun anySome(x) = x is (Some \ _)
+pattern SomeValue = (Some \ value) => value
+
+:expect [true, false, true]
+[anySome(Some(42)), anySome(None), Some(42) is SomeValue as 42]
+//│ = [true, false, true]
+
+data class Pair(left, right)
+fun firstIsZero(x) = x is (Pair(0) \ _)
+
+:expect [true, false, false]
+[firstIsZero(Pair(0, 1)), firstIsZero(Pair(1, 0)), firstIsZero(None)]
+//│ = [true, false, false]
+
+// Constructor splits complete their leading-and branch before the next alternative.
+fun chooseSome(a, b) = if true
+  and a is Some \
+    0 then 1
+  and b is Some(
+    1 then 2
+  )
+  else 0
+
+:expect [1, 2, 0]
+[chooseSome(Some(0), Some(1)), chooseSome(None, Some(1)), chooseSome(None, None)]
+//│ = [1, 2, 0]

@@ -941,8 +941,9 @@ abstract class Parser(
   private def andSplit(lhs: Tree, prec: Int): Tree =
     def hasConsequent(t: Tree): Bool = t match
       case InfixApp(_, Keywrd(Keyword.`then` | Keyword.`do`), _) => true
-      case InfixApp(_, Keywrd(Keyword.`and` | Keyword.`is`), rhs) => hasConsequent(rhs)
+      case InfixApp(_, Keywrd(Keyword.`and` | Keyword.`is` | Keyword.backslash), rhs) => hasConsequent(rhs)
       case Block(stmts) => stmts.exists(hasConsequent)
+      case App(_, Tup(rhss)) => rhss.exists(hasConsequent)
       case OpApp(_, _, rhss) => rhss.exists(hasConsequent)
       case OpSplit(_, rhss) => rhss.exists(hasConsequent)
       case Annotated(_, target) => hasConsequent(target)
