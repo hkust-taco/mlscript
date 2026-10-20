@@ -41,9 +41,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   extension (f: SelField) def fieldName: String = f match
     case tSym: TermSymbol => tSym.nme
     case n: Int => n.toString
-  extension (f: SelField) def erasedFieldType: Opt[ErasedValueType] = f match
-    case tSym: TermSymbol => tSym.mapErasedValueType
-    case _: Int => N
 
   /** Fusion replaces a constructor by either a branch closure or its selected field.
     * Derive changed slots from the solved flow graph; unchanged slots retain their

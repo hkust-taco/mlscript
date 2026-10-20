@@ -314,33 +314,23 @@ data class H(b: Box, n: Int)
 private fun get(h: H, c: Bool): Int = if c then (if h.b is Box(v) then v) else h.n
 get(H(Box(42), 1), true)
 //│ deforest > >>> fusing >>>
-//│ deforest > Box¹(42) ->
-//│ deforest > 	match: scrut⁰
-//│ deforest > 	fields: scrut⁰.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: H⁰, $scrut_Box, $scrut_rest, $c_rest, tmp1: Function⁰, Box_v: Int⁰;
-//│ @affine(1) @private
-//│ define $scrut_Box as fun $scrut_Box⁰(Box_v1: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
-//│   set fv_arg$Box$0$ = Box_v1;
-//│   set fv_v = fv_arg$Box$0$;
-//│   return fv_v
-//│ };
-//│ @private
-//│ define $scrut_rest as fun $scrut_rest⁰(): ? {
-//│   return $c_rest⁰()
-//│ };
-//│ @private
-//│ define $c_rest as fun $c_rest⁰(): ? {
-//│   return null
-//│ };
+//│ let tmp: Box², tmp1: H⁰;
 //│ @private
 //│ define get⁰ as fun get¹(h: H⁰, c: Bool⁰): Int⁰ {
-//│   let v: Int⁰, arg$Box$0$: ?, scrut: Function⁰;
+//│   let scrut: ?, v: Int⁰, arg$Box$0$: ?;
 //│   match c
 //│     true =>
 //│       set scrut = h.b⁴;
-//│       return scrut(arg$Box$0$, v)
+//│       match scrut
+//│         Box² =>
+//│           set arg$Box$0$ = scrut.v¹;
+//│           set v = arg$Box$0$;
+//│           return v
+//│         else
+//│           throw new globalThis⁰.Error⁰("match error")
+//│       end
 //│     else
 //│       return h.n³
 //│   end
@@ -355,10 +345,9 @@ get(H(Box(42), 1), true)
 //│     end
 //│   }
 //│ };
-//│ set Box_v = 42;
-//│ set tmp1 = $scrut_Box⁰(Box_v);
-//│ set tmp = H²(tmp1, 1);
-//│ return get¹(tmp, true)
+//│ set tmp = Box¹(42);
+//│ set tmp1 = H²(tmp, 1);
+//│ return get¹(tmp1, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -371,23 +360,23 @@ private fun get(h: H, c: Bool): Int = if c then (if h.b is Box(v) then v) else h
 get(H(Box(42), 1), true)
 //│ deforest > >>> fusing >>>
 //│ deforest > Box¹(42) ->
-//│ deforest > 	match: scrut¹
-//│ deforest > 	fields: scrut¹.v¹
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: H³, $scrut_Box, $scrut_rest, $c_rest, tmp1: Function⁰, Box_v: Int⁰;
 //│ @affine(1) @private
-//│ define $scrut_Box as fun $scrut_Box¹(Box_v1: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
+//│ define $scrut_Box as fun $scrut_Box⁰(Box_v1: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v1;
 //│   set fv_v = fv_arg$Box$0$;
 //│   return fv_v
 //│ };
 //│ @private
-//│ define $scrut_rest as fun $scrut_rest¹(): ? {
-//│   return $c_rest¹()
+//│ define $scrut_rest as fun $scrut_rest⁰(): ? {
+//│   return $c_rest⁰()
 //│ };
 //│ @private
-//│ define $c_rest as fun $c_rest¹(): ? {
+//│ define $c_rest as fun $c_rest⁰(): ? {
 //│   return null
 //│ };
 //│ @private
@@ -412,7 +401,7 @@ get(H(Box(42), 1), true)
 //│   }
 //│ };
 //│ set Box_v = 42;
-//│ set tmp1 = $scrut_Box¹(Box_v);
+//│ set tmp1 = $scrut_Box⁰(Box_v);
 //│ set tmp = H⁵(tmp1, 1);
 //│ return get³(tmp, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
