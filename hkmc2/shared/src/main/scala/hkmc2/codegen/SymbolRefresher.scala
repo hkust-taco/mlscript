@@ -9,7 +9,7 @@ import hkmc2.utils.*
 import semantics.*
 import semantics.Elaborator.State
 
-class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State, Erasure) extends BlockTraverser:
+class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extends BlockTraverser:
 
   private def assertUpdate[T <: Symbol](k: T, v: T) =
     assert(!mapping.isDefinedAt(k), s"already defined: $k")
@@ -59,7 +59,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State, Erasur
       s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
       mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol]))
 
-  def refreshParamList(pl: ParamList) =
+  def refreshParamList(pl: LoweredParamList) =
     for
       p <- pl.restParam ++: pl.params
     do
@@ -164,11 +164,11 @@ class SymbolMapTransformer(m: collection.Map[Symbol, Symbol]) extends BlockTrans
     case s: LocalVarSymbol => m.getOrElse(s, s).asInstanceOf[LocalVarSymbol]
 
 // An internal class so that the actual map can be used
-private class SymbolRefresherInternal(m: MutMap[Symbol, Symbol])(using State, Erasure) extends SymbolMapTransformer(m):
+private class SymbolRefresherInternal(m: MutMap[Symbol, Symbol])(using State) extends SymbolMapTransformer(m):
   // We have a pretty weird setup here, where we store a mutable state inside the SymbolRefresher
   // We must initialize the SymbolRefresher by walking before applyBlock
   def apply(b: Block) =
     SymbolRefresherWalker(m).applyBlock(b)
     applyBlock(b)
   
-class SymbolRefresher(m: Map[Symbol, Symbol])(using State, Erasure) extends SymbolRefresherInternal(MutMap.from(m))
+class SymbolRefresher(m: Map[Symbol, Symbol])(using State) extends SymbolRefresherInternal(MutMap.from(m))

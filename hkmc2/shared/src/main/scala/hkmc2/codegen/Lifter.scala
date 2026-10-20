@@ -89,7 +89,7 @@ object Lifter:
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
   * Assumes the input block does not have any `HandleBlock`s.
   */
-class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
+class Lifter(topLevelBlk: Block)(using State, Raise, Config):
   // TODO: implement tracing debug system
 
   import Lifter.*
@@ -613,7 +613,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
       S(ClassCtorSymbol(syntax.Fun, N, clsSym)),
       syntax.Cls,
       N,
-      PlainParamList(sortedVars.iterator.map(_.param).toList)(N) :: Nil, None, Nil, Nil,
+      LoweredParamList.plain(sortedVars.iterator.map(_.param).toList)(N) :: Nil, None, Nil, Nil,
       Nil,
       End(),
       sortedVars.iterator.foldLeft[Block](End()):
@@ -928,8 +928,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
   // some helpers
   private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(Tree.Ident(p.sym.nme), erasedType = p.sym.erasedType))(p.toLoc)
   private def dupParams(plist: List[Param]): List[Param] = plist.map(dupParam)
-  private def dupParamList(plist: ParamList): ParamList =
-    plist.copy(params = dupParams(plist.params), variadic = plist.variadic.map(_.map(dupParam)))(plist.toLoc)
+  private def dupParamList(plist: LoweredParamList): LoweredParamList =
+    plist.copy(params = dupParams(plist.params), restParam = plist.restParam.map(dupParam))(plist.toLoc)
   
   /* CONCRETE IMPLS */
   
@@ -1077,7 +1077,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
     private def mkFlattenedDefn: LifterResult[FunDefn] =  
       val newPlists = fun.params match
         case head :: next => head.copy(params = auxParams ::: head.params)(head.toLoc) :: next
-        case Nil => PlainParamList(auxParams)(N) :: Nil
+        case Nil => LoweredParamList.plain(auxParams)(N) :: Nil
       val rewriter = new BlockRewriter(N)
       val newBod = rewriter.rewrite(fun.body)
       val withCapture = addExtraSyms(newBod)
@@ -1089,7 +1089,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
     
     // Definition with the auxiliary parameters as a new first parameter list.
     private def mkAuxDefn: FunDefn =
-      val newPList = PlainParamList(dupParams(auxParams))(N)
+      val newPList = LoweredParamList.plain(dupParams(auxParams))(N)
       val (newPlists, syms, restSym) = fun.params match
         case head :: _ =>
           val duped = dupParamList(head)
@@ -1190,7 +1190,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
         ::: capturesOrdered.map(x => capSymsMap_(x).vs)
         ::: passedSymsOrdered.map(x => passedSymsMap_(x).vs))
       .map(Param.simple(_))
-    lazy val auxParamList = PlainParamList(auxParams)(N)
+    lazy val auxParamList = LoweredParamList.plain(auxParams)(N)
     
     // Whether this can be lifted without the need to pass extra parameters.
     lazy val isTrivial = auxParams.isEmpty
@@ -1204,7 +1204,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
     def mkFlattenedDefn: FunDefn =
       // Symbols for the aux parameter list
       val auxSyms = auxParams.map(p => VarSymbol(Tree.Ident(p.sym.nme), erasedType = p.sym.erasedType))
-      val auxParamListLocal = PlainParamList(auxSyms.map(Param.simple(_)))(N)
+      val auxParamListLocal = LoweredParamList.plain(auxSyms.map(Param.simple(_)))(N)
       
       val dupedClsAuxParams = cls.auxParams.map(dupParamList(_))
       val dupedMainOpt = cls.paramsOpt.map(dupParamList(_))
@@ -1223,7 +1223,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
       ))
       
       // Uses the symbols from pl1.
-      def applyPlToPl(pl1: ParamList, pl2: ParamList): List[Arg] = (pl1.restParam, pl2.restParam) match
+      def applyPlToPl(pl1: LoweredParamList, pl2: LoweredParamList): List[Arg] = (pl1.restParam, pl2.restParam) match
         case (S(rp), S(_)) => pl1.params.foldRight(Arg(S(SpreadKind.Eager), rp.sym.asSimpleRef) :: Nil)((p, ls) => p.sym.asSimpleRef.asArg :: ls)
         case (N, N) => pl1.paramSyms.map(s => s.asSimpleRef.asArg)
         case _ => die

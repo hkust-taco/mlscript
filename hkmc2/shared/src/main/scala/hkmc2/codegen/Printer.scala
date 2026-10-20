@@ -17,7 +17,7 @@ import hkmc2.document.Document.{braced, bracedbk}
 
 /** `SymbolPrinter` is used for printing symbols that are not locally bound, so that they are consistent
   * with the debug-printed names shown in other parts of the compiler, such as showAsTreee. */
-class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter, Erasure):
+class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
   
   val showPurity =
     false
@@ -126,7 +126,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter, Erasure):
       privateFields: Ls[TermSymbol],
       publicFields: Ls[(BlockMemberSymbol, TermSymbol)],
       methods: Ls[FunDefn],
-      auxParams: Ls[ParamList],
+      auxParams: Ls[LoweredParamList],
       preCtor: Opt[Block],
       ctor: Block,
       ctorSym: Opt[TermSymbol],
@@ -160,7 +160,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter, Erasure):
     then doc""
     else doc" " :: braced(doc"${docPrivFlds}${docPubFlds}${docCtor}${docMethods}")
   
-  def printParamLists(paramss: Ls[ParamList])(using Scope): Document =
+  def printParamLists(paramss: Ls[LoweredParamList])(using Scope): Document =
     paramss
       .map: pl =>
         val allParams =

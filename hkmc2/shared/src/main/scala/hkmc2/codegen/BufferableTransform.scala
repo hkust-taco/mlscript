@@ -26,7 +26,7 @@ class BufferableTransform()(using State, Raise):
             val pubFieldMap: Map[Symbol, Symbol] = cls.publicFields.toMap
             val fields = cls.privateFields ++ cls.publicFields.map(_._2)
             val fieldMap: Map[Symbol, Int] = fields.zipWithIndex.toMap
-            def mkSymbolReplacer(params: List[ParamList]): (List[ParamList], Map[SimpleSymbol, SimpleSymbol]) =
+            def mkSymbolReplacer(params: List[LoweredParamList]): (List[LoweredParamList], Map[SimpleSymbol, SimpleSymbol]) =
               val allVars = params.flatMap(_.allParams).map(_.sym)
               // TODO: https://github.com/hkust-taco/mlscript/pull/504#discussion_r3827173721
               val varMap = allVars
@@ -35,7 +35,7 @@ class BufferableTransform()(using State, Raise):
                 .toMap
               def mapParam(p: Param) =
                 Param(p.flags, varMap(p.sym), p.sign, p.modulefulness)(p.toLoc)
-              (params.map(pl => ParamList(pl.flags, pl.params.map(mapParam), pl.variadic.map(_.map(mapParam)))(pl.toLoc)), varMap.toMap)
+              (params.map(pl => LoweredParamList(pl.flags, pl.params.map(mapParam), pl.restParam.map(mapParam))(pl.toLoc)), varMap.toMap)
             def mkFieldReplacer(buf: VarSymbol, baseIdx: VarSymbol, symMap: Map[SimpleSymbol, SimpleSymbol]) =
               def getOffset(off: Int, loc: Opt[Loc])(k: Path => Block): Block =
                 val idxSymbol = new TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
@@ -78,7 +78,7 @@ class BufferableTransform()(using State, Raise):
               val idx = VarSymbol(new Tree.Ident("idx"), erasedType = S(ErasedType.Int))
               val (newParams, symMap) = mkSymbolReplacer(f.params)
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
-              FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id, erasedType = N), PlainParamList(
+              FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id, erasedType = N), LoweredParamList.plain(
                 Param.simple(buf) :: Param.simple(idx) :: Nil)(N) :: newParams,
                 if isCtor then Begin(blk, Return(idx.asSimpleRef)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(

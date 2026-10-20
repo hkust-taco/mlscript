@@ -423,7 +423,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                       // We only need `owner`, `sym`, `params` and `body`
                       val mtds = methods.map:
                         case (sym, params, split) =>
-                          val paramLists = params :: Nil
+                          val paramLists = LoweredParamList.fixed(params) :: Nil
                           val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
                           FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(configOverride = N, annotations = Nil)
                       // The return type is intended to be consistent with `gatherMembers`
@@ -450,7 +450,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                     inScopedBlock(parentConstructor(parentParams, ext.args, ext.toLoc))
                   val cfgOverride = defn.extraAnnotations.collectFirst:
                     case Annot.Config(modify) => modify(config)
-                  ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind, defn.paramsOpt, defn.auxParams, parent,
+                  ClsLikeDefn(defn.owner, defn.sym, defn.bsym, defn.ctorSym, defn.kind,
+                    defn.paramsOpt.map(LoweredParamList.fixed), defn.auxParams.map(LoweredParamList.fixed), parent,
                     mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable, defn.bsym.asTrm, classKeys)(cfgOverride, defn.annotations)
                 Define(clsDef, blockImpl(stats, res))
           defn.ext match
@@ -625,7 +626,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             val freshSyms = ps.params.map(p => new VarSymbol(new Tree.Ident(p.sym.nme), erasedType = N))
             softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
-            val freshParamList = ParamList(ps.flags, freshParams, N)(ps.toLoc)
+            val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
             val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
             Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil, loc)
         k(etaExpand(remainingParamss, acc.reverse))
@@ -1879,7 +1880,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       )(k)
   
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedType])
-      (using LoweringCtx): (List[ParamList], Block) =
+      (using LoweringCtx): (List[LoweredParamList], Block) =
     val physicalParams = paramLists match
       case Nil => ParamList(ParamListFlags.empty, Nil, N)(N) :: Nil
       case ps => ps
@@ -1894,7 +1895,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       Scoped(scopedSyms, body)
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedType])
-      (using LoweringCtx): (List[ParamList], Block) =
+      (using LoweringCtx): (List[LoweredParamList], Block) =
     val (loweredParamLists, prologues) = paramLists.map(lowerTrailingParams(_, name)).unzip
     val scopedBody = inScopedBlock:
       prologues.foldRight(returnedTerm(bodyTerm, returnType))((prologue, body) => prologue(body))
@@ -1906,13 +1907,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * extracts the other parameters, following the assignment described in `Elaborator.params`:
     * the trailing parameters (`z`) take the last arguments, the optional parameters (`y`) take the remaining
     * ones from left to right, and the variadic parameter (`xs`) takes the rest.
-    * Passes running after lowering thus only see rest parameters (see `ParamList.restParam`). */
-  protected def lowerTrailingParams(ps: ParamList, name: Opt[Str]): (ParamList, LoweringCtx ?=> Block => Block) =
+    * Passes running after lowering thus only see `LoweredParamList`, which cannot contain trailing parameters. */
+  protected def lowerTrailingParams(ps: ParamList, name: Opt[Str]): (LoweredParamList, LoweringCtx ?=> Block => Block) =
+    val loweredParams = LoweredParamList.callingConvention(ps)
     ps.variadic match
     case S(Variadic(variadicParam, trailing @ (_ :: _))) =>
       val (required, optional) = ps.params.splitAt(ps.leadingRequiredCount)
-      val argsSym = VarSymbol(Tree.Ident("args"), erasedType = S(ErasedType.Array))
-      val loweredParams = ParamList.withRest(ps.flags, required, S(Param.simple(argsSym)))(ps.toLoc)
+      val argsSym = loweredParams.restParam.get.sym
       // * The WebAssembly backend rejects variadic parameters (see `wasm.text.genFuncBody`) and lacks
       // * the JavaScript runtime functions used to extract the arguments, so the body is not generated.
       if config.target is CompilationTarget.Wasm then return (loweredParams, _ => compError)
@@ -1951,7 +1952,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case ((sym, res), rest) => Assign(sym, res, rest)
         check.fold(extracted)(Assign.discard(_, extracted))
       (loweredParams, prologue)
-    case _ => (ps, body => body)
+    case _ => (loweredParams, body => body)
   
   
   // TODO: reduce duplication between the two `reportAnnotations`
@@ -2045,7 +2046,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
   
 
   override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str], returnType: Opt[ErasedType])
-      (using LoweringCtx): (List[ParamList], Block) =
+      (using LoweringCtx): (List[LoweredParamList], Block) =
     if instrument then
       // * TODO: Instrumentation collapses the trailing parameter lists into lambdas, so `fun f(a)(b): Int` is
       // * compiled to take `a` alone and return a function, while its erased type - which `returnType` is

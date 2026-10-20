@@ -68,7 +68,7 @@ connected component are tail calls.
 */
 
 // This optimization assumes the lifter has been run.
-class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx, Erasure):
+class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
   
   type AccessMap = Map[ScopedInfo, AccessInfo]
   
@@ -236,7 +236,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx, Er
   
   // Tries to rewrite an application of an arg list to a param list without needing to forcibly
   // unspread the arguments.
-  private def rewriteArgsList(f: FunDefn, paramList: ParamList, args: List[Arg]): CallArgsResult =
+  private def rewriteArgsList(f: FunDefn, paramList: LoweredParamList, args: List[Arg]): CallArgsResult =
     val (headArgs, restArgs) = paramList.restParam match
       case Some(value) => args.splitAt(paramList.params.length)
       case None => (args, Nil)
@@ -279,7 +279,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx, Er
     * - The second return value is a list of paths containing the arguments in order. If there is a spread parameter, it will be
     *   the last one.
     */
-  def forceSpread(plist: ParamList, args: List[Arg]): (Block => Block, List[Path]) =
+  def forceSpread(plist: LoweredParamList, args: List[Arg]): (Block => Block, List[Path]) =
     // Forcibly spread the args in an array.
     // Assume the lengths are correct
     val paramList = plist.params
@@ -772,9 +772,9 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx, Er
       val newParamLists =
         val initial = paramSyms.map(Param.simple(_))
         if funsLen > 1 then
-          PlainParamList(Param.simple(curIdSym) :: initial)(N) :: Nil
+          LoweredParamList.plain(Param.simple(curIdSym) :: initial)(N) :: Nil
         else
-          PlainParamList(initial)(N) :: Nil
+          LoweredParamList.plain(initial)(N) :: Nil
       val annotations = 
         if funsLen == 1 && funs.head.inline then Annot.Inline()(N) :: Annot.Private :: Nil
         else Annot.Private :: Nil

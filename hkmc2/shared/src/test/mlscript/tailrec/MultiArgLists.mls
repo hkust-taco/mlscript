@@ -321,7 +321,7 @@ fun f(a)(b) = f(a)(b)
 //│         sym = member:f$tailrec¹
 //│         dSym = term:f$tailrec²
 //│         params = Ls of
-//│           ParamList: ‹empty›
+//│           LoweredParamList: ‹empty›
 //│         body = Label:
 //│           label = label:loopLabel⁰
 //│           loop = true
@@ -332,12 +332,12 @@ fun f(a)(b) = f(a)(b)
 //│         sym = member:f⁴
 //│         dSym = term:f⁵
 //│         params = Ls of
-//│           ParamList:
+//│           LoweredParamList:
 //│             params = Ls of
 //│               Param:
 //│                 sym = a⁰
 //│                 modulefulness = Modulefulness of N
-//│           ParamList:
+//│           LoweredParamList:
 //│             params = Ls of
 //│               Param:
 //│                 sym = b⁰

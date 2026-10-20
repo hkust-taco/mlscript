@@ -10,7 +10,7 @@ import document.*
 import document.Document
 import semantics.{
   BlockMemberSymbol, ClassSymbol, ClassLikeSymbol, ClassCtorSymbol, Elaborator,
-  InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, ParamList, Symbol, TempSymbol, TermSymbol,
+  InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, Symbol, TempSymbol, TermSymbol,
 },
   Elaborator.State
 import text.Param as WasmParam
@@ -510,7 +510,7 @@ object FunctionCtx:
   *   When set, overrides the loaded type of each param slot at its position (index 0 = `this`).
   */
 class FunctionCtx(
-    _params: Ls[ParamList],
+    _params: Ls[LoweredParamList],
     thisSym: Opt[InnerSymbol],
     paramTypes: Opt[Seq[ValType]] = N,
 )(using Ctx, Raise, State):
@@ -617,7 +617,7 @@ end FunctionCtx
   * Returns the result of the `mkBody` function along with the [[FunctionCtx]].
   */
 def genFuncBody[T](
-    params: Ls[ParamList],
+    params: Ls[LoweredParamList],
     thisSym: Opt[InnerSymbol],
     paramTypes: Opt[Seq[ValType]] = N,
 )(mkBody: FunctionCtx ?=> T)(using Ctx, Raise, State): T -> FunctionCtx =
@@ -628,10 +628,10 @@ def genFuncBody[T](
     if ps.hasOptParams then raise(ErrorReport(
       msg"Optional parameters are not supported by the WebAssembly backend." -> ps.toLoc :: Nil,
       source = Diagnostic.Source.Compilation))
-    ps.variadic.foreach: v =>
+    ps.restParam.foreach: p =>
       // * The rest parameter introduced when lowering trailing parameters has no location of its own.
       raise(ErrorReport(
-        msg"Variadic parameters are not supported by the WebAssembly backend." -> v.param.toLoc.orElse(ps.toLoc) :: Nil,
+        msg"Variadic parameters are not supported by the WebAssembly backend." -> p.toLoc.orElse(ps.toLoc) :: Nil,
         source = Diagnostic.Source.Compilation))
   val funcCtx = FunctionCtx(params, thisSym, paramTypes)
   val result = mkBody(using funcCtx)

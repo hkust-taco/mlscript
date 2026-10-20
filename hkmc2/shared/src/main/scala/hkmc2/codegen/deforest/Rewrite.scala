@@ -12,7 +12,7 @@ import hkmc2.codegen.flowAnalysis.*
 
 
 
-class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[LocalVarSymbol])(using Raise, Erasure)
+class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[LocalVarSymbol])(using Raise)
   extends PolyInstantiationRewrite(solver.constraintSolver):
   
   type MatchOrLabelId = ResultId | LabelSymbol
@@ -31,8 +31,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     matchOrLabelId match
     case l: LabelSymbol => l -> instId
     case scrutId: ResultId => ConcreteId(scrutId, instId)
-  extension (vs: Ls[VarSymbol]) def asParamList: ParamList =
-    ParamList(ParamListFlags.empty, vs.map(Param.simple), N)(N)
+  extension (vs: Ls[VarSymbol]) def asParamList: LoweredParamList =
+    LoweredParamList(ParamListFlags.empty, vs.map(Param.simple), N)(N)
   extension (c: CtorCls) def ctorClsName: String = c match
     case cls: ClassLikeSymbol => cls.nme
     case n: Int => s"tup$n"

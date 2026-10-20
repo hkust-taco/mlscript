@@ -16,9 +16,9 @@ class FlowAnalysisBasedRewrite(
   val deadParamElimSolver: DeadParamElimResult,
   val etaExpansionSolver: EtaExpansionResult,
   val deadConstructorElimSolver: DeadConstructorElimResult,
-)(using Raise, Erasure) extends PolyInstantiationRewrite(constraintSolver):
+)(using Raise) extends PolyInstantiationRewrite(constraintSolver):
 
-  private case class EtaParamList(params: ParamList, args: Ls[Arg])
+  private case class EtaParamList(params: LoweredParamList, args: Ls[Arg])
   
   class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
     
@@ -32,7 +32,7 @@ class FlowAnalysisBasedRewrite(
         try thunk
         finally activeEliminatedParams --= removed
     
-    private def filterParamList(pl: ParamList, eliminable: Set[Int]): (ParamList, Set[VarSymbol]) =
+    private def filterParamList(pl: LoweredParamList, eliminable: Set[Int]): (LoweredParamList, Set[VarSymbol]) =
       if eliminable.isEmpty then pl -> Set.empty
       else
         val removed = MutSet.empty[VarSymbol]
@@ -41,9 +41,9 @@ class FlowAnalysisBasedRewrite(
           case (param, i) =>
             if eliminable(i) then removed.add(param.sym)
             else keptParams.append(param)
-        ParamList.withRest(pl.flags, keptParams.toList, pl.restParam)(pl.toLoc) -> removed.toSet
+        LoweredParamList(pl.flags, keptParams.toList, pl.restParam)(pl.toLoc) -> removed.toSet
     
-    private def filterFunParams(funSym: TermSymbol, params: Ls[ParamList]): (Ls[ParamList], Set[VarSymbol]) =
+    private def filterFunParams(funSym: TermSymbol, params: Ls[LoweredParamList]): (Ls[LoweredParamList], Set[VarSymbol]) =
       val removed = MutSet.empty[VarSymbol]
       var changed = false
       val params2 = params.zipWithIndex.map:
@@ -65,7 +65,7 @@ class FlowAnalysisBasedRewrite(
       try thunk
       finally activeEtaArgss = saved
     
-    private def etaParamLists(id: ConcreteFunId, existingParams: Ls[ParamList]): Ls[EtaParamList] =
+    private def etaParamLists(id: ConcreteFunId, existingParams: Ls[LoweredParamList]): Ls[EtaParamList] =
       
       
       def eliminableParamsOf(targets: EtaTargets): Set[Int] =
@@ -99,7 +99,7 @@ class FlowAnalysisBasedRewrite(
               .toList
               val restParam = Option.when(targets.hasRestParam)(etaParam("rest"))
               EtaParamList(
-                ParamList.withRest(ParamListFlags.empty, params, restParam)(N),
+                LoweredParamList(ParamListFlags.empty, params, restParam)(N),
                 params.map(p => Arg(N, p.sym.asSimpleRef)) :::
                   restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef)),
               )
@@ -281,7 +281,6 @@ object FlowAnalysisBasedRewrite:
     raise: Raise,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
-    erasure: Erasure,
   ): Program = cfg.flowBasedOpt.fold(p)(rewriteWith(p, _))
   
   
@@ -297,7 +296,6 @@ object FlowAnalysisBasedRewrite:
     raise: Raise,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
-    erasure: Erasure,
   ): Program =
     def mkTl(prefix: Str, debug: Bool) =
       FlowAnalysis.mkTraceLogger(optCfg.config.copy(debug = debug), prefix, tl)

@@ -27,7 +27,7 @@ abstract class CodeBuilder:
   type Context
   
 
-class JSBuilder(using Config, TL, State, Ctx, Erasure) extends CodeBuilder:
+class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   import JSBuilder.*
   private given PostCondAnalysis = new PostCondAnalysis
   
@@ -266,7 +266,7 @@ class JSBuilder(using Config, TL, State, Ctx, Erasure) extends CodeBuilder:
   def operand(a: Arg)(using Raise, Scope): Document =
     if a.spread.nonEmpty then die else subexpression(a.value)
   
-  private def curriedFunctionBody(paramLists: Ls[ParamList], body: Block, generator: Bool): Block =
+  private def curriedFunctionBody(paramLists: Ls[LoweredParamList], body: Block, generator: Bool): Block =
     paramLists match
     case Nil => body
     case params :: Nil =>
@@ -776,7 +776,7 @@ class JSBuilder(using Config, TL, State, Ctx, Erasure) extends CodeBuilder:
               // Source params are used for the wrapper to preserve the curried calling convention.
               // All args are forwarded to the flat `new Class.class(...)` constructor.
               val sourceAuxParams = isym.defn.map(_.auxParams).getOrElse(Nil)
-              val allSourceParams = sourceParamsOpt.toList ::: sourceAuxParams
+              val allSourceParams = (sourceParamsOpt.toList ::: sourceAuxParams).map(LoweredParamList.fixed)
               
               val fun = allSourceParams match
                 case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:
@@ -1079,7 +1079,7 @@ class JSBuilder(using Config, TL, State, Ctx, Erasure) extends CodeBuilder:
         (if enumerable then doc"enumerable: true, # " else doc"") :: doc"value: ${value}"
     })"
   
-  def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)
+  def setupFunction(name: Option[Str], params: LoweredParamList, body: Block, isLambda: Bool)
       (using Raise, Scope): (Document, Document) =
     val paramsList = params.params.map(p => scope.allocateName(p.sym))
       .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
@@ -1195,7 +1195,7 @@ object JSBuilder:
 end JSBuilder
 
 
-trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State, Erasure)
+trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
     extends JSBuilder:
   
   private val doInstrument = config.sanityChecks.isDefined
@@ -1210,7 +1210,7 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State, Erasure)
   
   val functionParamVarargSymbol = semantics.TempSymbol(N, erasedType = N, "args")
   
-  override def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
+  override def setupFunction(name: Option[Str], params: LoweredParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
     // * We used to instrument `fun f(x, y) = x + y` into something like
     // * `function f(...args) { runtime.checkArgs("f", 2, true, args.length); let x = args[0]; let y = args[1]; x + y }`
     // * which was very verbose, in addition to possibly making things quite inefficient.

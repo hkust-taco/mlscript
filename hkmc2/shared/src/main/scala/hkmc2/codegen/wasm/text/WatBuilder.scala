@@ -472,7 +472,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       ctorSym = N,
       k = syntax.Obj,
       paramsOpt = N,
-      auxParams = PlainParamList(Nil)(N) :: Nil,
+      auxParams = LoweredParamList.plain(Nil)(N) :: Nil,
       parentPath = N,
       methods = Nil,
       privateFields = Nil,
@@ -940,7 +940,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   /** Returns the single flattened constructor parameter list. After ClassParamFlattener, all classes have paramsOpt = N
     * and exactly one auxParams entry.
     */
-  private def classCtorParamList(defn: ClsLikeDefn): ParamList =
+  private def classCtorParamList(defn: ClsLikeDefn): LoweredParamList =
     assert(
       defn.paramsOpt.isEmpty,
       s"WatBuilder: expected paramsOpt to be None after flattening for class ${defn.sym.nme}",
@@ -1030,7 +1030,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     * Note that only top-level functions that will be lowered by the [[FunDefn]] arm of [[returningTerm]] can be
     * pre-declared with this function - see [[isPredeclarableTopLevelFun]].
     */
-  private def predeclareTopLevelFun(sym: BlockMemberSymbol, ps: ParamList)(using Raise): Unit =
+  private def predeclareTopLevelFun(sym: BlockMemberSymbol, ps: LoweredParamList)(using Raise): Unit =
     val params = ps.paramSyms.map(p => p -> SymIdx(p.nme))
     val resultTypes = Seq(Result(declaredResultType(sym)))
     val funcTy = ctx.addType(TypeInfo(
@@ -2402,7 +2402,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
                   def overwriteMethod(
                       sym: BlockMemberSymbol,
-                      ps: ParamList,
+                      ps: LoweredParamList,
                       bod: Block,
                   ): Unit =
                     val paramTypes = ctx.getVirtualTable(clsLikeDefn.sym).flatMap: vt =>
@@ -2429,7 +2429,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
                   clsLikeDefn.methods.foreach:
                     case FunDefn(_, sym, _, Nil, bod) =>
-                      overwriteMethod(sym, PlainParamList(Nil)(N), bod)
+                      overwriteMethod(sym, LoweredParamList.plain(Nil)(N), bod)
                     case FunDefn(_, sym, _, ps :: Nil, bod) =>
                       overwriteMethod(sym, ps, bod)
                     case methodDefn =>
@@ -2969,7 +2969,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
   def setupFunction(
       thisSym: Opt[InnerSymbol],
-      params: ParamList,
+      params: LoweredParamList,
       body: Block,
       paramTypes: Opt[Seq[ValType]] = N,
   )(using Raise, SessionExportCtx): (Expr, FunctionCtx) =

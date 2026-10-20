@@ -12,7 +12,7 @@ import hkmc2.semantics.Elaborator.State
 /** Flattens class constructor parameter lists in the Block IR.
   *
   * After this pass, every `ClsLikeDefn` is normalized so that
-  * `paramsOpt` is `N` and `auxParams` contains exactly one `ParamList`
+  * `paramsOpt` is `N` and `auxParams` contains exactly one `LoweredParamList`
   * (which may be empty for parameterless classes).
   *
   * Instantiations are saturated by the time this pass runs, so every
@@ -24,20 +24,20 @@ import hkmc2.semantics.Elaborator.State
   * Argument spreads are intentionally preserved as `Arg`s while only the
   * surrounding argument-list boundary is removed.
   */
-class ClassParamFlattener(using State, Erasure) extends BlockTransformer(SymbolSubst.Id):
+class ClassParamFlattener(using State) extends BlockTransformer(SymbolSubst.Id):
   
-  private def flattenParamLists(paramss: Ls[ParamList]): ParamList =
+  private def flattenParamLists(paramss: Ls[LoweredParamList]): LoweredParamList =
     val flags = paramss.headOption.fold(ParamListFlags.empty)(_.flags)
     val (init, last) = paramss.splitAt(paramss.length - 1)
     val params = init.flatMap(_.allParams) ::: last.flatMap(_.params)
-    ParamList.withRest(flags, params, last.flatMap(_.restParam).headOption)(Loc(paramss))
+    LoweredParamList(flags, params, last.flatMap(_.restParam).headOption)(Loc(paramss))
   
   /** Normalize class params so that `paramsOpt = N` and `auxParams` has exactly one element. */
   private def flattenClsParams(cls: ClsLikeDefn): ClsLikeDefn =
     if cls.paramsOpt.isEmpty && cls.auxParams.sizeIs == 1 then return cls
     val paramss = cls.paramsOpt.toList ::: cls.auxParams
     val flatAux = paramss match
-      case Nil => PlainParamList(Nil)(N)
+      case Nil => LoweredParamList.plain(Nil)(N)
       case single :: Nil => single
       case _ => flattenParamLists(paramss)
     cls.copy(paramsOpt = N, auxParams = flatAux :: Nil)(
@@ -104,5 +104,5 @@ class ClassParamFlattener(using State, Erasure) extends BlockTransformer(SymbolS
 end ClassParamFlattener
 
 object ClassParamFlattener:
-  def apply(program: Program)(using State, Erasure): Program =
+  def apply(program: Program)(using State): Program =
     new ClassParamFlattener().applyProgram(program)

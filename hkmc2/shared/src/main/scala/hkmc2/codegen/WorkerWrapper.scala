@@ -20,7 +20,7 @@ import semantics.Elaborator.State
   */
 class WorkerWrapper
     (tl: TL, printer: Program => Str)
-    (using DebugPrinter, State, Config, Raise, Erasure)
+    (using DebugPrinter, State, Config, Raise)
   extends BlockTransformer(SymbolSubst.Id):
   import tl.*
   
@@ -32,7 +32,7 @@ class WorkerWrapper
   
   // * Optional parameters are excluded because uncurrying concatenates the parameter lists,
   // * so the arguments of a later list would be assigned to the omitted optional parameters.
-  private def isPlainParamList(params: ParamList): Bool =
+  private def isPlainParamList(params: LoweredParamList): Bool =
     params.flags == ParamListFlags.empty && params.restParam.isEmpty && !params.hasOptParams
   
   private def effectiveConfig(fun: FunDefn): Config =
@@ -51,11 +51,11 @@ class WorkerWrapper
     mapping(param.sym) = freshSym
     Param(param.flags, freshSym, param.sign, param.modulefulness)(param.toLoc).withSignTypeOf(param)
   
-  private def flattenParams(params: Ls[ParamList]): (ParamList, Map[Symbol, Symbol]) =
+  private def flattenParams(params: Ls[LoweredParamList]): (LoweredParamList, Map[Symbol, Symbol]) =
     val mapping = collection.mutable.LinkedHashMap.empty[Symbol, Symbol]
     val flatParams = params.flatMap: params =>
       params.params.map(freshParam(_, mapping))
-    PlainParamList(flatParams)(Loc(params)) -> mapping.toMap
+    LoweredParamList.plain(flatParams)(Loc(params)) -> mapping.toMap
   
   private def rewriteParams(body: Block, mapping: Map[Symbol, Symbol]): Block =
     val subst = new SymbolSubst:
@@ -119,5 +119,5 @@ end WorkerWrapper
 
 object WorkerWrapper:
   def apply(symbolsToPreserve: Set[ScopedSymbol], tl: TL, printer: Program => Str)(p: Program)
-      (using DebugPrinter, State, Config, Raise, Erasure): Program =
+      (using DebugPrinter, State, Config, Raise): Program =
     (new WorkerWrapper(tl, printer)).applyProgram(p)

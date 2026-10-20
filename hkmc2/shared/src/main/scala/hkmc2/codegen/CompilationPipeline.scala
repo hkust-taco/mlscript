@@ -9,7 +9,7 @@ import hkmc2.semantics.Elaborator.{Ctx, State}
 import hkmc2.semantics.SymbolPrinter
 import hkmc2.utils.TL
 
-class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter, Erasure):
+class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
   
   def preOptimizeHook(prog: Program) = ()
   

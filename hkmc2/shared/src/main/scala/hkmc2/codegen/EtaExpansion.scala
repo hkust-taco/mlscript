@@ -164,6 +164,5 @@ object EtaExpansion:
     raise: Raise,
     eState: Elaborator.State,
     symbolPrinter: SymbolPrinter,
-    erasure: Erasure,
   ): Program = cfg.flowBasedOpt.fold(p):
     FlowAnalysisBasedRewrite.rewriteWith(p, _, dpe = false, dce = false)

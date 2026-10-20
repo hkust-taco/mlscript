@@ -19,7 +19,7 @@ import hkmc2.{codegen => argss}
   * we don't want to eliminate these. */
 class BlockSimplifier
     (symbolsToPreserve: Set[ScopedSymbol], tl: TL, printer: Program => Str)
-    (using DebugPrinter, State, Config, Raise, Ctx, Erasure):
+    (using DebugPrinter, State, Config, Raise, Ctx):
   import tl.*
   
   
@@ -126,7 +126,7 @@ class BlockSimplifier
   
   def localVars(block: Block): Set[LocalVar] =
     val locals: MutSet[LocalVar] = MutSet.empty[LocalVar]
-    def paramsOf(paramLists: IterableOnce[ParamList]): Unit =
+    def paramsOf(paramLists: IterableOnce[LoweredParamList]): Unit =
       locals ++= paramLists.iterator.flatMap(_.paramSyms)
     def rec(current: Block): Unit =
       current match
@@ -1423,7 +1423,7 @@ class BlockSimplifier
         def register(sym: ScopedSymbol | TermSymbol | LabelSymbol | ClassCtorSymbol): Unit =
           if seen(sym) then found = true
           else seen += sym
-        def registerParamList(pl: ParamList): Unit =
+        def registerParamList(pl: LoweredParamList): Unit =
           pl.params.foreach(param => register(param.sym))
           pl.restParam.foreach(param => register(param.sym))
         (new BlockTraverser:
@@ -1456,7 +1456,7 @@ class BlockSimplifier
         ).applyFunDefn(fun)
         found
 
-      def matchArgs(args: List[Arg], params: ParamList): Option[List[(VarSymbol, Result)]] =
+      def matchArgs(args: List[Arg], params: LoweredParamList): Option[List[(VarSymbol, Result)]] =
         if args.exists(_.spread.isDefined) then
           // we require a precise match when any arg is a spread arg
           if params.restParam.isEmpty then return N
@@ -1482,7 +1482,7 @@ class BlockSimplifier
         * or if there are fewer arg lists than param lists (partial application).
         * Extra arg lists beyond the param lists are ignored here and should be
         * handled by the caller (e.g., applied as a chained call on the result). */
-      def matchAllArgs(argss: List[List[Arg]], params: List[ParamList]): Option[List[(VarSymbol, Result)]] =
+      def matchAllArgs(argss: List[List[Arg]], params: List[LoweredParamList]): Option[List[(VarSymbol, Result)]] =
         if argss.length < params.length then return N
         val matchedPairs = argss.zip(params)
         val allMatched = matchedPairs.foldLeft[Option[List[(VarSymbol, Result)]]](S(Nil)):

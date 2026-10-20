@@ -133,7 +133,7 @@ class HandlerPaths(using Elaborator.State):
   val resumeValueIdent = new Tree.Ident("resumeValue")
   val resumeValue: Path = runtimePath.selN(resumeValueIdent)
 
-class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config, Erasure):
+class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
   
   val debugEnabled = opt.exists(_.debug)
   val stackSafety = opt.flatMap(_.stackSafety)
@@ -782,7 +782,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
       val withStackSafe = needsStackSafety match
         case S(stackLimit) =>
           val bodSym = BlockMemberSymbol("‹stack safe body›", Nil, false)
-          val bodFun = FunDefn.withFreshSymbol(N, bodSym, ParamList(ParamListFlags.empty, Nil, N)(N) :: Nil, Ret(r))(configOverride = N, annotations = Nil)
+          val bodFun = FunDefn.withFreshSymbol(N, bodSym, LoweredParamList(ParamListFlags.empty, Nil, N)(N) :: Nil, Ret(r))(configOverride = N, annotations = Nil)
           blockBuilder
             .scopedVars(Set.single(bodSym))
             .define(bodFun)

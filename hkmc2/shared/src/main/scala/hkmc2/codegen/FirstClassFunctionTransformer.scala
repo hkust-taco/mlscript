@@ -12,7 +12,7 @@ import collection.mutable.HashMap
 
 
 class FirstClassFunctionTransformer
-      (using Elaborator.State, Elaborator.Ctx, Raise, DebugPrinter, Erasure)
+      (using Elaborator.State, Elaborator.Ctx, Raise, DebugPrinter)
     extends BlockTransformer(new SymbolSubst):
   // Anonymous lambdas' parameter lists cannot be retrieved from the term symbol
   private val funDefns = HashMap.empty[BlockMemberSymbol, FunDefn] 
@@ -21,7 +21,7 @@ class FirstClassFunctionTransformer
       funDefns += (fun.sym -> fun)
       super.applyFunDefn(fun)
 
-  private def generateFCFunctionClass(p: Path, params: ParamList) =
+  private def generateFCFunctionClass(p: Path, params: LoweredParamList) =
     val clsSym = ClassSymbol(
       syntax.Tree.DummyTypeDef(syntax.Cls),
       syntax.Tree.Ident("Function$")
@@ -37,16 +37,16 @@ class FirstClassFunctionTransformer
         Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun, N),
         End()), End(), None, None, None, methodKeys = Map.empty)(N, annotations = Nil)
 
-  private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
+  private def getParamList(l: BlockMemberSymbol): Option[LoweredParamList] = funDefns.get(l) match
     case Some(fd) => fd.params.headOption
     case _ => l.tsym.flatMap(getParamList)
 
-  private def getParamList(ts: TermSymbol): Option[ParamList] =
+  private def getParamList(ts: TermSymbol): Option[LoweredParamList] =
     ts.irFunDefn.flatMap(_.params.headOption).orElse:
       // FIXME: remove this fallback once imported functions have their `irFunDefn` properly linked.
       ts.defn.collectFirst:
         case TermDefinition(k = syntax.Fun, params = params @ (_ :: _)) =>
-          params.head
+          LoweredParamList.callingConvention(params.head)
   
   private def isGetter(l: BlockMemberSymbol): Bool = funDefns.get(l) match
     case Some(fd) => fd.params.isEmpty
@@ -59,7 +59,7 @@ class FirstClassFunctionTransformer
         case TermDefinition(k = syntax.Fun, params = Nil) => true
         case _ => false
   
-  private def etaExpandPath(p: Path, params: ParamList)(k: Path => Block): Block =
+  private def etaExpandPath(p: Path, params: LoweredParamList)(k: Path => Block): Block =
     val clsDef = generateFCFunctionClass(p, params)
     val tmp = new TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)))
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
@@ -91,7 +91,7 @@ class FirstClassFunctionTransformer
           ErrorReport(msg"Cannot get ${s.nme}'s parameter list."
             -> p.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
-        PlainParamList(Nil)(N)
+        LoweredParamList.plain(Nil)(N)
       etaExpandPath(p, params)(k)
   
   /** A resolved function member is called directly; any other term member holds a function object. */
@@ -129,7 +129,7 @@ class FirstClassFunctionTransformer
       case Nil => fd
       case _ :: Nil => fd
       case head :: tail =>
-        def rec(params: List[ParamList]): Block = params match
+        def rec(params: List[LoweredParamList]): Block = params match
           case head :: rest =>
             val newBody = rec(rest)
             val funSym = new BlockMemberSymbol("lambda$", Nil, false)

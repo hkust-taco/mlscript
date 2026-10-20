@@ -139,7 +139,7 @@ class BlockTraverser:
   def applyArg(arg: Arg): Unit =
     applyPath(arg.value)
   
-  def applyParamList(pl: ParamList): Unit =
+  def applyParamList(pl: LoweredParamList): Unit =
     pl.allParams.foreach(_.sym.traverse)
   
   def applyCase(cse: Case): Unit = cse match

@@ -587,12 +587,12 @@ object HandleBlock:
   )(using Elaborator.State, Elaborator.Ctx) =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
-    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil)(N) :: Nil, body)(N, annotations = Nil)
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, LoweredParamList.plain(Nil)(N) :: Nil, body)(N, annotations = Nil)
     
     val handlerMtds = handlers.map: handler =>
       val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
       val fDef = FunDefn.withFreshSymbol(
-        N, sym, PlainParamList(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
+        N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
         handler.body
         )(N, annotations = Nil)
       val rSym = TempSymbol(N, erasedType = N, "suspendRes")
@@ -710,7 +710,7 @@ final case class FunDefn(
     owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
     dSym: TermSymbol,
-    params: Ls[ParamList],
+    params: Ls[LoweredParamList],
     body: Block,
   )(
     val configOverride: Opt[Config],
@@ -829,7 +829,7 @@ private[codegen] object InlinerBodySummary:
     InlinerBodySummary(entries.toList, transitiveCallTargets)
 
 object FunDefn:
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasedType = N)
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
@@ -921,8 +921,8 @@ final case class ClsLikeDefn(
     sym: BlockMemberSymbol,
     ctorSym: Opt[ClassCtorSymbol],
     k: syntax.ClsLikeKind,
-    paramsOpt: Opt[ParamList],
-    auxParams: List[ParamList],
+    paramsOpt: Opt[LoweredParamList],
+    auxParams: List[LoweredParamList],
     parentPath: Opt[Path],
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
@@ -998,7 +998,7 @@ object ClsLikeBody:
 final case class Handler(
     sym: BlockMemberSymbol,
     resumeSym: VarSymbol,
-    params: Ls[ParamList],
+    params: Ls[LoweredParamList],
     body: Block,
 ):
   lazy val freeVars: Set[FreeSymbol] = body.freeVars -- params.flatMap(_.paramSyms) - sym - resumeSym
@@ -1354,7 +1354,7 @@ object Cast:
       case Cast(inner, _, innerCheck) => new Cast(inner, target, check || innerCheck)(toLoc)
       case _ => new Cast(value, target, check)(toLoc)
 
-case class Lambda(params: ParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
+case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
   def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(annot, loc)
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
 

@@ -78,7 +78,7 @@ object FlowAnalysis:
     mono: Bool,
     nonAffineTracking: Bool,
     accumulatorTracking: Bool,
-  )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter, Erasure) =
+  )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
     val constrCol = new FlowConstraintsCollector(pre, mono, nonAffineTracking, accumulatorTracking)
@@ -237,7 +237,7 @@ class ProdFun(
   val instantiationId: Opt[InstantiationId]
 )(
   val params: Ls[ConsStrat],
-  /** The number of leading `params` that are not optional (see `ParamList.paramCountLB`). */
+  /** The number of leading `params` that are not optional (see `LoweredParamList.paramCountLB`). */
   val requiredParamCount: Int,
   val restParam: Opt[ConsStrat],
   val res: ProdStrat,
@@ -405,7 +405,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     
     inline def inFun(fun: FunDefn)(inline body: => Any) =
       // each param list is a closure over the params of the lists before it
-      def withParamListCaptureInfo(paramLists: Iterator[(ParamList, Int)]): Unit = paramLists.nextOption() match
+      def withParamListCaptureInfo(paramLists: Iterator[(LoweredParamList, Int)]): Unit = paramLists.nextOption() match
         case N => body
         case S((pl, whichParamList)) =>
           val locallyDefined = MutSet.from[Symbol](pl.paramSyms)
@@ -638,7 +638,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     currentCaptureInfo.foreach(_.locallyDefined += defn.tsym)
     applyPath(defn.rhs)
   
-  override def applyParamList(pl: ParamList): Unit =
+  override def applyParamList(pl: LoweredParamList): Unit =
     pl.allParams.foreach(p => ctxTracker.registerStratVar(p.sym, p.sym.nme))
   
   override def applyArg(arg: Arg): Unit =
@@ -684,7 +684,7 @@ class FlowConstraintsCollector(
   val mono: Bool,
   val nonAffineTracking: Bool,
   val accumulatorTracking: Bool,
-)(using Erasure):
+):
   given FlowPreAnalyzer = preAnalyzer
   given Raise = preAnalyzer.raise
   given fState: FlowAnalysis.State = preAnalyzer.fState
@@ -867,7 +867,7 @@ class FlowConstraintsCollector(
     
     def mkFunProdStrat(
       resName: String,
-      params: Ls[ParamList],
+      params: Ls[LoweredParamList],
       body: Block,
       funLamId: FunId
     )(using cc: ConstraintsCollector): ProdStrat =

@@ -149,7 +149,7 @@ class CompilerCtx(
       // Note that this must run the *whole* pipeline (and not just the lowering proper),
       // as the `irDefn` fields the inliner reads are owned by the latest rewrite of each definition,
       // and only fully-transformed definitions are valid to splice into another unit.
-      def optimize(lowered: codegen.Program)(using codegen.Erasure): codegen.Program =
+      def optimize(lowered: codegen.Program): codegen.Program =
         given Config = artifactConfig
         val printer = (p: codegen.Program) => p.showAsTree // TODO: proper printing like in diff-tests
         val pipeline = new codegen.CompilationPipeline:
@@ -161,11 +161,10 @@ class CompilerCtx(
       // Every compilation unit is lowered, so that its symbols carry the IR definitions an
       // importer's inliner may splice in — and so that the importer never has to lower it itself,
       // which it could only do by elaborating it afresh, under symbols nobody else would share.
-      val erasure = codegen.Erasure(blk)(using artifactConfig, prelude, state)
       val ir =
         artifactConfig.givenIn:
           given Elaborator.State = state
-          given codegen.Erasure = erasure
+          given codegen.Erasure = codegen.Erasure(blk)(using artifactConfig, prelude, state)
           val low = backendTL.givenIn:
             new codegen.Lowering()(using artifactConfig, backendTL, summon[Raise], state, prelude, summon[SymbolPrinter])
           optimize(low.program(blk, Set.empty))
@@ -173,7 +172,7 @@ class CompilerCtx(
       state.publishCompilationUnitAbi:
         CompilationUnitAbi:
           CompilerCtx.allocateModulePrivateExportNames(ir)(using state, summon[Raise])
-      Artifact(parsed, blk0, ir, artifactConfig, prelude, state, erasure, compilationUnit, rootConfig, dependencies.result, lastMod)
+      Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig, dependencies.result, lastMod)
     
     val artifact = cache.upsert(file)(
       isCurrent = (cachedFile, art) =>
@@ -311,8 +310,6 @@ object CompilerCache:
     val config: Config,
     val ctx: Elaborator.Ctx,
     val state: Elaborator.State,
-    // Backends consuming cached IR reuse the capability created for this compilation unit.
-    val erasure: codegen.Erasure,
     val compilationUnit: Elaborator.CompilationUnit,
     val rootConfig: Config,
     val dependencies: Set[SourceDependency],
