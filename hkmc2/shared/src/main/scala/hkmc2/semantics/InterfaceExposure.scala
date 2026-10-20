@@ -185,7 +185,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         // still admit unknown shapes even when local callers supplied evidence.
         val unknown = UnknownValueShape(callable.source, fromPublicInterface = true)(path)
         callable.paramLists.foreach: params =>
-          (params.params.flatten ::: params.rest.toList ::: params.trailing.flatten).foreach: input =>
+          params.allParams.flatMap(_.tpe).foreach: input =>
             unknown.enter(marks) match
               case value: TermShape => resolver.exposeTypeHoles(input, value, marks)
               case NoShape => ()

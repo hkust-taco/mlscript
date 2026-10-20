@@ -1185,7 +1185,7 @@ class NewResolver:
     case view: IntersectionView =>
       view.values.foldLeft[Binders](S(Set.empty))((acc, value) => union(acc, shapeSupport(value)))
     case callable: CallableTypeShape =>
-      val types = callable.paramLists.flatMap(params => params.params.flatten ::: params.rest.toList ::: params.trailing.flatten) :::
+      val types = callable.paramLists.flatMap(params => params.allParams.flatMap(_.tpe)) :::
         callable.result.toList ::: callable.supplied.toList.flatten :::
         callable.scheme.toList.flatMap(_.parameters.flatMap(parameter => parameter.lower.toList ::: parameter.upper.toList))
       types.foldLeft[Binders](S(Set.empty))((acc, tpe) => union(acc, typeSupport(tpe)))
@@ -1446,19 +1446,20 @@ class NewResolver:
               case TypeShape.Function(params, ret) =>
                 val ps = params match
                   case Tup(fields) =>
-                    def paramType(fld: Fld) = S(declaredType(typeResolution(fld.term), current.withPolarity(!current.positive)))
+                    def parameter(fld: Fld) =
+                      DeclaredParam(S(declaredType(typeResolution(fld.term), current.withPolarity(!current.positive))), fld.flags)
                     // Elaboration reports function types with several variadic parameters.
                     val (leading, variadic) = fields.span(_.isInstanceOf[Fld])
                     val leadingFlds = leading.collect { case fld: Fld => fld }
-                    DeclaredParams(leadingFlds.map(paramType), leadingFlds.map(_.flags), variadic match
+                    DeclaredParams(leadingFlds.map(parameter), variadic match
                       case (spd: Spd) :: trailing =>
                         val trailingFlds = trailing.collect { case fld: Fld => fld }
-                        S(DeclaredVariadic(S(declaredType(typeResolution(spd.term), current.withPolarity(!current.positive))),
-                          spd.droppable, trailingFlds.map(paramType), trailingFlds.map(_.flags)))
+                        S(Variadic(DeclaredParam(S(declaredType(typeResolution(spd.term), current.withPolarity(!current.positive))),
+                          FldFlags.empty.copy(droppable = spd.droppable)), trailingFlds.map(parameter)))
                       case _ => N)
                   case single =>
-                    DeclaredParams(S(declaredType(typeResolution(single), current.withPolarity(!current.positive))) :: Nil,
-                      FldFlags.empty :: Nil, N)
+                    DeclaredParams(DeclaredParam(S(declaredType(typeResolution(single), current.withPolarity(!current.positive))),
+                      FldFlags.empty) :: Nil, N)
                 publish(CallableTypeShape(source, ps ne_:: Nil,
                   S(declaredType(ret, current)), N, N, N, N))
               case TypeShape.Polymorphic(params, _, body) =>
@@ -1784,9 +1785,10 @@ class NewResolver:
             listenTypeViews(signature(td.sign.get, positive))(publish)
           else td.params match
             case params: NELs[ParamList] => publish(CallableTypeShape(source,
-              params.ne_map(ps => DeclaredParams(ps.params.map(_.sign.map(signature(_, !positive))), ps.params.map(_.flags),
-                ps.variadic.map(v => DeclaredVariadic(v.param.sign.map(signature(_, !positive)), v.param.flags.droppable,
-                  v.trailing.map(_.sign.map(signature(_, !positive))), v.trailing.map(_.flags))))),
+              params.ne_map: ps =>
+                def parameter(p: Param) = DeclaredParam(p.sign.map(signature(_, !positive)), p.flags)
+                DeclaredParams(ps.params.map(parameter), ps.variadic.map(_.map(parameter)))
+              ,
               result, N, N, S(td), N))
             case Nil if td.asyncAnnotation.nonEmpty =>
               publish(promiseShape(td.asyncAnnotation.get, result.getOrElse(extremeType(true))))
@@ -2171,7 +2173,7 @@ class NewResolver:
               arityError(expected)
             val allParams = domain.allParams
             zipCallbackArguments(actualContext :: Nil, Arity(domain), expectedDomain, wanted.source, expectedContext)(
-              (index, shape) => allParams(index).foreach: tpe =>
+              (index, shape) => allParams(index).tpe.foreach: tpe =>
                 shape match
                   case value: TermShape => inferTypeArguments(tpe, value, context, site)
                   case NoShape => ()
@@ -2194,9 +2196,9 @@ class NewResolver:
   private def callbackArityMismatch(actual: Arity, expected: DeclaredParams): Bool =
     val trailingCapacity = (actual.leading - expected.leadingRequired).max(0)
     actual.required > Arity(expected).required
-      || !actual.hasRest && expected.variadic.exists(!_.droppable)
-      || !actual.hasRest && expected.paramFlags.drop(actual.leading).exists(!_.droppable)
-      || !actual.hasRest && expected.variadic.exists(_.trailingFlags.drop(trailingCapacity).exists(!_.droppable))
+      || !actual.hasRest && expected.variadic.exists(!_.param.flags.droppable)
+      || !actual.hasRest && expected.params.drop(actual.leading).exists(!_.flags.droppable)
+      || !actual.hasRest && expected.trailing.drop(trailingCapacity).exists(!_.flags.droppable)
 
   /** Approximate a declared argument list without choosing a compound signature's
     * branch or enumerating spread lengths. Equal layouts retain whole parameter
@@ -2206,7 +2208,7 @@ class NewResolver:
     */
   private def zipDeclaredParameters(arity: Arity, declared: DeclaredParams)(
       publish: (Int, DeclaredType) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
-    def assign(index: Int, sign: Opt[DeclaredType]): Unit = sign.foreach(publish(index, _))
+    def assign(index: Int, param: DeclaredParam): Unit = param.tpe.foreach(publish(index, _))
     if arity == Arity(declared) then
       declared.allParams.zipWithIndex.foreach((sign, index) => assign(index, sign))
     else
@@ -2241,8 +2243,8 @@ class NewResolver:
         // Slicing can change a tuple-typed rest's length. Keep its element types
         // above, but widen the length to avoid false arity errors on forwarding.
         // Scalar middle inputs likewise contribute an Array of their declared type.
-        middle.flatten.foreach(tpe => publish(arity.leading, arrayType(tpe)))
-        if middle.flatten.isEmpty then
+        middle.flatMap(_.tpe).foreach(tpe => publish(arity.leading, arrayType(tpe)))
+        if middle.flatMap(_.tpe).isEmpty then
           // Even an empty or still-unresolved rest supplies the Array interface.
           publish(arity.leading, arrayType(extremeType(false)))
 
@@ -2285,9 +2287,10 @@ class NewResolver:
   private def zipCallbackArguments(mss: Ls[Marks], arity: Arity, declared: DeclaredParams, source: Term, marks: Marks)(
       publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit,
       omitted: Int => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
-    def fields(types: Ls[Opt[DeclaredType]]): Ls[TupleShape.Fixed] = types.map:
-      case S(tpe) => TupleShape.TypedField(tpe, Nil)
-      case N => TupleShape.UnknownField(source, Nil)
+    def fields(params: Ls[DeclaredParam]): Ls[TupleShape.Fixed] = params.map: param =>
+      param.tpe match
+        case S(tpe) => TupleShape.TypedField(tpe, Nil)
+        case N => TupleShape.UnknownField(source, Nil)
     if !declared.hasRest && declared.leadingRequired == declared.params.length && arity.required <= declared.params.length then
       zipTupleShapes(mss, arity, TupleShape(source, fields(declared.params))(this), marks)(publish, omitted)
     else
@@ -3254,10 +3257,7 @@ class NewResolver:
         val callable = instantiateCallable(viewed, res.resSym, lexicalBinders(res), context :: Nil)
         val ps = callable.paramLists.head
         if checked then zipArgumentShapes(context :: Nil, Arity(ps), args, res, lhs)((index, value) =>
-          (if index < ps.params.length then ps.params(index)
-            else if index == ps.params.length then ps.rest
-            else ps.trailing(index - ps.params.length - 1)
-          ).foreach: tpe =>
+          ps.allParams(index).tpe.foreach: tpe =>
             value match
               case value: TermShape => inferTypeArguments(tpe, value, context :: Nil, S(res))
               case NoShape => ()

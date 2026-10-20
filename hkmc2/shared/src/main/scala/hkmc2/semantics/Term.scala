@@ -1303,12 +1303,12 @@ final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulef
   * the leading parameters (`x`) and the `trailing` ones (`y` and `z`). The trailing parameters are
   * always required. When there are no trailing parameters, the variadic parameter is a rest parameter.
   * Lowering desugars trailing parameters into a rest parameter (see `Lowering.setupFunctionDef`). */
-final case class Variadic(param: Param, trailing: Ls[Param]):
-  def map(f: Param => Param): Variadic = Variadic(f(param), trailing.map(f))
-  def allParams: Ls[Param] = param :: trailing
+final case class Variadic[+P](param: P, trailing: Ls[P]):
+  def map[Q](f: P => Q): Variadic[Q] = Variadic(f(param), trailing.map(f))
+  def allParams: Ls[P] = param :: trailing
 
 /** `params` are the leading parameters, which may end with optional parameters. */
-final case class ParamList(flags: ParamListFlags, params: Ls[Param], variadic: Opt[Variadic])
+final case class ParamList(flags: ParamListFlags, params: Ls[Param], variadic: Opt[Variadic[Param]])
 (val toLoc: Opt[Loc]) extends Located:
   def foreach(f: Param => Unit): Unit = allParams.foreach(f)
   def trailingParams: Ls[Param] = variadic.fold(Nil)(_.trailing)
