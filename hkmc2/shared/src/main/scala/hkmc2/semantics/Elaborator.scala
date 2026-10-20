@@ -2464,8 +2464,6 @@ extends Importer:
                   msg"Illegal ${k.desc} member name: '${id.name}'" -> nme.toLoc
                   :: illegalMemberNameTail
               return go(sts, Nil, acc)(N)
-            // A value is the result of evaluating its body once, so it cannot take parameters;
-            // lowering relies on this. Drop them, so that uses of them in the body are reported.
             val paramLists = td.paramLists match
               case pss @ (_ :: _) if k.isInstanceOf[Val] =>
                 raise:
@@ -2619,17 +2617,17 @@ extends Importer:
           case Annot.Modifier(Keyword.`data`) => true
           case _ => false
         
-        val pss = debugElaboration(annotations)(td.paramLists.map { ps =>
-          val (res, newCtx2) =
-            given Ctx = newCtx
-            params(ps, isDataClass, k is Pat)
-          newCtx = newCtx2
-          // Spread parameters are not supported in class parameters.
-          res.restParam.foreach: rp =>
-            raise(ErrorReport(
-              msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
-          res.copy(restParam = N)(res.toLoc)
-        })
+        val pss = debugElaboration(annotations):
+          td.paramLists.map: ps =>
+            val (res, newCtx2) =
+              given Ctx = newCtx
+              params(ps, isDataClass, k is Pat)
+            newCtx = newCtx2
+            // Spread parameters are not supported in class parameters.
+            res.restParam.foreach: rp =>
+              raise(ErrorReport(
+                msg"Spread parameters are not supported in class parameters." -> rp.toLoc :: Nil))
+            res.copy(restParam = N)(res.toLoc)
         
         def withFields(extraParams: Ls[ParamList])(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
           softAssert(pss.sizeCompare(td.clsParams) === 0,

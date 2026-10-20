@@ -94,7 +94,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def erroneousRef(ref: NewResolvable): Bool =
     ref.isErroneous || ref.resolvedTargets.exists(_.defn.exists(_.isErroneous))
   
-  /** Lower the parent before the class body and share its value with every super reference.
+  /** Lower the parent reference before the class body.
     * Definition references are stable; classOf already saves computed class values in temporaries.
     * Other paths (notably a class selected through a mutable receiver) must be read here, once,
     * so changing that receiver after the class definition cannot redirect its super calls.
@@ -104,16 +104,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       val saved = loweringCtx.registerTempSymbol(N, erasedType = N, "superBase")
       Assign(saved, path, k(saved.asSimpleRef))
     parent match
-      case Value.MemberRef(_, _: ClassSymbol) | Value.SimpleRef(_: TempSymbol) => k(parent)
-      case sel: Select if sel.symbol.exists(_.isInstanceOf[ClassSymbol]) =>
-        // The selected class declaration is immutable, but its receiver might be a variable.
-        // Save that receiver while retaining the class symbol for nominal IR analyses.
-        sel.qual match
-          case _: Value.This | Value.MemberRef(_, _: ClassSymbol | _: ModuleOrObjectSymbol) |
-              Value.SimpleRef(_: TempSymbol) => k(sel)
-          case qual => save(qual)(p => k(sel.copy(qual = p)(sel.symbol, sel.toLoc)(sel.sanitize)))
-      case _ => save(parent)(k)
-
+    case Value.MemberRef(_, _: ClassSymbol) | Value.SimpleRef(_: TempSymbol) => k(parent)
+    case sel: Select if sel.symbol.exists(_.isInstanceOf[ClassSymbol]) =>
+      // The selected class declaration is immutable, but its receiver might be a variable.
+      // Save that receiver while retaining the class symbol for nominal IR analyses.
+      sel.qual match
+      case _: Value.This | Value.MemberRef(_, _: ClassSymbol | _: ModuleOrObjectSymbol)
+        | Value.SimpleRef(_: TempSymbol) => k(sel)
+      case qual => save(qual)(p => k(sel.copy(qual = p)(sel.symbol, sel.toLoc)(sel.sanitize)))
+    case _ => save(parent)(k)
+  
   private def definitionConfigOverride(annotations: Ls[Annot]): Opt[Config] =
     val modifiers = annotations.collect:
       case Annot.Config(modify) => modify
@@ -462,8 +462,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case N => Define(lowerClass(N, Nil), blockImpl(stats, res))
           case S(ext) =>
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
-            // Evaluating the superclass is part of the class definition, so it is traced with it,
-            // but the statements following the class are not.
             debugLoweringThen[ClsLikeDefn](defn.extraAnnotations)(define =>
               classOf(ext.cls, ext): (clsp, params) =>
                 withClassParent(clsp)(parent => define(lowerClass(S(parent), params)))

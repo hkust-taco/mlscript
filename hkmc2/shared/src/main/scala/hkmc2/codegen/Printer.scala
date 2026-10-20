@@ -118,7 +118,6 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     //   if cfg.staged then doc"staged " else doc""
     printAnnotations(defn.annotations, doc" # ")
 
-  /** Print one definition in the same form used when it occurs in a complete IR block. */
   def printDefinition(defn: Defn)(using Scope): Document =
     doc"${printFlags(defn)}define ${print(defn.sym)} as ${print(defn)}"
 
