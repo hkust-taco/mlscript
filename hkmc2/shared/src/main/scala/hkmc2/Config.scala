@@ -33,6 +33,7 @@ case class Config(
   commentGeneratedCode: Bool,
   noFreeze: Bool,
   noModuleCheck: Bool,
+  aggressive: Bool,
   optimizer: Optimizer,
   // Check internal invariants whose checks are too costly to always run, such as MemberStorage.privateOwner's.
   checkInvariants: Bool,
@@ -87,6 +88,7 @@ object Config:
     commentGeneratedCode = false,
     noFreeze = false,
     noModuleCheck = false,
+    aggressive = false,
     optimizer = Optimizer.FastOpt,
     checkInvariants = false,
   )
@@ -228,6 +230,7 @@ object Config:
     debugEta: Bool = false,
     debugDpe: Bool = false,
     debugDce: Bool = false,
+    logEffects: Bool = false,
   ):
     def effectiveDebugEta: Bool = debug || debugEta
     def effectiveDebugDpe: Bool = debug || debugDpe
@@ -611,6 +614,7 @@ object ConfigParser:
       var debugEta = base.debugEta
       var debugDpe = base.debugDpe
       var debugDce = base.debugDce
+      var logEffects = base.logEffects
       args.foreach:
         case NamedArg("debug", value) =>
           setFrom(value)(parseBool)(v => debug = v)
@@ -630,6 +634,8 @@ object ConfigParser:
           setFrom(value)(parseBool)(v => debugDpe = v)
         case NamedArg("debugDce", value) =>
           setFrom(value)(parseBool)(v => debugDce = v)
+        case NamedArg("logEffects", value) =>
+          setFrom(value)(parseBool)(v => logEffects = v)
         case other =>
           unsupported(passName, other)
       S(Config.FlowAnalysisConfig(
@@ -642,6 +648,7 @@ object ConfigParser:
         debugEta,
         debugDpe,
         debugDce,
+        logEffects,
       ))
     case _ =>
       expect(s"${passName}(...)")(tree)
@@ -676,6 +683,8 @@ object ConfigParser:
       parsedField(value)(parseBool)(v => _.copy(noFreeze = v))
     case "noModuleCheck" =>
       parsedField(value)(parseBool)(v => _.copy(noModuleCheck = v))
+    case "aggressive" =>
+      parsedField(value)(parseBool)(v => _.copy(aggressive = v))
     case "rewriteWhileLoops" =>
       parsedField(value)(parseBool)(v => _.copy(rewriteWhileLoops = v))
     case "stageCode" =>
