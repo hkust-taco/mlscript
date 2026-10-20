@@ -99,6 +99,17 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       changedSlots.get(instId -> p.sym).orElse(p.sym.erasedType)),
       result))
 
+  // the instances whose slots or results fusion retypes, including those a fused value only passes through,
+  // which contain neither the constructor nor its consumer; sorted so that their copies are made in a stable order
+  override protected def retypedInstIds: Iterator[InstantiationId] =
+    import scala.math.Ordering.Implicits.seqOrdering
+    val retypedResults = constraintSolver.prodFunsWithDests.iterator.flatMap: pf =>
+      pf.exprId match
+        case (fun: TermSymbol, _) =>
+          pf.instantiationId.filter(_ => representation(pf.res, fun.declaredResultType, Set.empty)._1)
+        case _: ResultId => N
+    (changedSlots.keysIterator.map(_._1) ++ retypedResults).toList.distinct.sortBy(_.map(_.uid)).iterator
+
   private def retypedSymbol(previous: Symbol, tpe: ErasedValueType): Symbol = previous match
     case v: VarSymbol if v.erasedType.contains(tpe) => v
     case v: VarSymbol => SymbolRefresher.copyVarSymbol(v, S(tpe))

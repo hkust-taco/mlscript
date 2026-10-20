@@ -54,6 +54,10 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   /** A representation-changing rewrite must describe the new result before recursive calls are rebuilt. */
   protected def rewrittenFunctionType(fun: TermSymbol, instId: InstantiationId): Opt[ErasedType] = fun.erasedType
 
+  // instances whose functions need copies although none of their code changes, because some of their types do:
+  // a call into such an instance would otherwise reach the original definition, which keeps the original types
+  protected def retypedInstIds: Iterator[InstantiationId] = Iterator.empty
+
   // Refresh an original private function as well when a monomorphic rewrite changes its representation.
   // Public functions cannot change their calling convention: their unknown consumers prevent such fusion.
   private lazy val rewrittenFunctionSymbols: Map[TermSymbol, TermSymbol] =
@@ -85,7 +89,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
       case S(entry) => collector.funToSccGroups(entry).iterator.filterNot(_ is entry)
       case N => collector.funToSccGroups(path.last.getReferredFun.get).iterator
     for
-      instId <- solvers.iterator.flatMap(_.polyInstIds)
+      instId <- solvers.iterator.flatMap(_.polyInstIds) ++ retypedInstIds
       path <- instId.inits
       if path.nonEmpty && !res.contains(path)
       copied = funSymsToBeCopiedAt(path)

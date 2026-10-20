@@ -423,11 +423,15 @@ get(idpoly(Box(42)))
 //│ deforest > 	fields: b⁸.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let get$b_Box, get$b_rest, get$get, tmp: Function⁰, tmp1: Function⁰, Box_v: Int⁰;
+//│ let get$b_Box, get$b_rest, get$get, idpoly$idpoly, tmp: Function⁰, tmp1: Function⁰, Box_v: Int⁰;
 //│ @private @private
 //│ define get$get as fun get$get⁰(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: ?;
 //│   return (b(arg$Box$0$, v) as! Int⁰)
+//│ };
+//│ @private @private
+//│ define idpoly$idpoly as fun idpoly$idpoly⁰(x: Function⁰): Function⁰ {
+//│   return x
 //│ };
 //│ @affine(1) @private
 //│ define get$b_Box as fun get$b_Box⁰(Box_v1: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
@@ -457,7 +461,7 @@ get(idpoly(Box(42)))
 //│ };
 //│ set Box_v = 42;
 //│ set tmp = get$b_Box⁰(Box_v);
-//│ set tmp1 = idpoly¹(tmp);
+//│ set tmp1 = idpoly$idpoly⁰(tmp);
 //│ return get$get⁰(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -476,11 +480,19 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│ deforest > 	fields: b⁹.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Int⁰, get$b_Box, get$b_rest, get$get, tmp1: Function⁰, tmp2: Function⁰, tmp3: Int⁰, tmp4: Int⁰, Box_v: Int⁰, Box_v1: Int⁰;
+//│ let tmp: Int⁰, get$b_Box, get$b_rest, get$get, idpoly$idpoly, idpoly$idpoly1, tmp1: Function⁰, tmp2: Function⁰, tmp3: Int⁰, tmp4: Int⁰, Box_v: Int⁰, Box_v1: Int⁰;
 //│ @private @private
 //│ define get$get as fun get$get¹(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: ?;
 //│   return (b(arg$Box$0$, v) as! Int⁰)
+//│ };
+//│ @private @private
+//│ define idpoly$idpoly as fun idpoly$idpoly¹(x: Function⁰): Function⁰ {
+//│   return x
+//│ };
+//│ @private @private
+//│ define idpoly$idpoly1 as fun idpoly$idpoly²(x: Int⁰): Int⁰ {
+//│   return x
 //│ };
 //│ @affine(1) @private
 //│ define get$b_Box as fun get$b_Box¹(Box_v2: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
@@ -510,11 +522,11 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│ };
 //│ set Box_v = 42;
 //│ set tmp1 = get$b_Box¹(Box_v);
-//│ set tmp2 = idpoly³(tmp1);
+//│ set tmp2 = idpoly$idpoly¹(tmp1);
 //│ set tmp = get$get¹(tmp2);
 //│ set Box_v1 = 1;
 //│ set tmp3 = Box_v1;
-//│ set tmp4 = idpoly³(tmp3);
+//│ set tmp4 = idpoly$idpoly²(tmp3);
 //│ return +⁰(tmp, tmp4)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 43
@@ -534,11 +546,25 @@ get(idTwice(Box(42)))
 //│ deforest > 	fields: b¹⁰.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let get$b_Box, get$b_rest, get$get, tmp: Function⁰, tmp1: Function⁰, Box_v: Int⁰;
+//│ let get$b_Box, get$b_rest, get$get, idTwice$idTwice, idTwice_idpoly$idpoly, idTwice_idpoly$idpoly1, tmp: Function⁰, tmp1: Function⁰, Box_v: Int⁰;
 //│ @private @private
 //│ define get$get as fun get$get²(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: ?;
 //│   return (b(arg$Box$0$, v) as! Int⁰)
+//│ };
+//│ @private @private
+//│ define idTwice$idTwice as fun idTwice$idTwice⁰(x: Function⁰): Function⁰ {
+//│   let tmp2: Function⁰;
+//│   set tmp2 = idTwice_idpoly$idpoly⁰(x);
+//│   return idTwice_idpoly$idpoly¹(tmp2)
+//│ };
+//│ @private @private
+//│ define idTwice_idpoly$idpoly as fun idTwice_idpoly$idpoly⁰(x: Function⁰): Function⁰ {
+//│   return x
+//│ };
+//│ @private @private
+//│ define idTwice_idpoly$idpoly1 as fun idTwice_idpoly$idpoly¹(x: Function⁰): Function⁰ {
+//│   return x
 //│ };
 //│ @affine(1) @private
 //│ define get$b_Box as fun get$b_Box²(Box_v1: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
@@ -574,7 +600,7 @@ get(idTwice(Box(42)))
 //│ };
 //│ set Box_v = 42;
 //│ set tmp = get$b_Box²(Box_v);
-//│ set tmp1 = idTwice¹(tmp);
+//│ set tmp1 = idTwice$idTwice⁰(tmp);
 //│ return get$get²(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -642,7 +668,7 @@ test(false, true)
 //│ deforest > 	fields: x¹.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test_cons$x_Box, test_cons$x_rest, test_cons$x_Box1, test_cons$x_rest1, test_cons$cons, test$test, test_cons$cons1;
+//│ let test_cons$x_Box, test_cons$x_rest, test_cons$x_Box1, test_cons$x_rest1, test_cons$cons, test$test, test_cons$cons1, test_g$g, test_g$g1;
 //│ @private @private
 //│ define test_cons$cons as fun test_cons$cons⁰(x: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: ?;
@@ -665,7 +691,7 @@ test(false, true)
 //│         else
 //│           set tmp = notFused;
 //│           end
-//│       do g⁰(tmp);
+//│       do test_g$g⁰(tmp);
 //│       return 1
 //│   end
 //│ };
@@ -673,6 +699,14 @@ test(false, true)
 //│ define test_cons$cons1 as fun test_cons$cons¹(x: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: ?;
 //│   return (x(arg$Box$0$, v) as! Int⁰)
+//│ };
+//│ @private @private
+//│ define test_g$g as fun test_g$g⁰(x: Object⁰): Object⁰ {
+//│   return x
+//│ };
+//│ @private @private
+//│ define test_g$g1 as fun test_g$g¹(x: Object⁰): Object⁰ {
+//│   return x
 //│ };
 //│ @affine(1) @private
 //│ define test_cons$x_Box as fun test_cons$x_Box¹(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
@@ -707,7 +741,7 @@ test(false, true)
 //│   end
 //│ };
 //│ @private
-//│ define g¹ as fun g⁰(x: Object⁰): Box² {
+//│ define g⁰ as fun g¹(x: Object⁰): Box² {
 //│   return (x as! Box²)
 //│ };
 //│ @private
@@ -727,7 +761,7 @@ test(false, true)
 //│         else
 //│           set tmp = notFused;
 //│           end
-//│       do g⁰(tmp);
+//│       do test_g$g¹(tmp);
 //│       return 1
 //│   end
 //│ };
@@ -761,7 +795,7 @@ test(false, true)
 //│ deforest > 	select: b
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let test_get$get, test_get$get1, test$test;
+//│ let test_get$get, test_get$get1, test$test, test_g$g, test_g$g1;
 //│ @private @private
 //│ define test_get$get as fun test_get$get⁰(h: A⁰): A⁰ {
 //│   return h
@@ -789,9 +823,17 @@ test(false, true)
 //│         else
 //│           set tmp2 = notFused;
 //│           end
-//│       do g²(tmp2);
+//│       do test_g$g²(tmp2);
 //│       return 1
 //│   end
+//│ };
+//│ @private @private
+//│ define test_g$g as fun test_g$g²(x: A⁰): A⁰ {
+//│   return x
+//│ };
+//│ @private @private
+//│ define test_g$g1 as fun test_g$g³(x: A⁰): A⁰ {
+//│   return x
 //│ };
 //│ @private
 //│ define up¹ as fun up⁰(x: Object⁰): Object⁰ {
@@ -802,7 +844,7 @@ test(false, true)
 //│   return h.b¹³
 //│ };
 //│ @private
-//│ define g³ as fun g²(x: Object⁰): Object⁰ {
+//│ define g² as fun g³(x: Object⁰): Object⁰ {
 //│   return x
 //│ };
 //│ @private
@@ -824,7 +866,7 @@ test(false, true)
 //│         else
 //│           set tmp2 = notFused;
 //│           end
-//│       do g²(tmp2);
+//│       do test_g$g³(tmp2);
 //│       return 1
 //│   end
 //│ };
