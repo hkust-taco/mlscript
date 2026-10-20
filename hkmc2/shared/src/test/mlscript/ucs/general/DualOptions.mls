@@ -6,9 +6,8 @@
 // Matching two options in any possible order.
 
 
-abstract class Option[T]
-data class Some[T](value: T) extends Option[T]
-object None extends Option[Nothing]
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
 data class Pair[A, B](x: A, y: B)
 
 // All `add_n` functions should be inferred to have the same type.
@@ -244,3 +243,53 @@ add_8((x) => x > 0, None, Some(-9))
 add_8((x) => x > 0, Some(5), Some(9))
 //│ = 14
 
+// Missing combinations must eventually be rejected by the type checker.
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun bad_add_missing_SS(x, y) =
+  if
+    x is Some(xv) and y is None     then xv
+    x is None     and y is Some(yv) then yv
+    x is None     and y is None     then 0
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun bad_add_missing_SN(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is None     and y is Some(yv) then yv
+    x is None     and y is None     then 0
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun bad_add_missing_NS(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is Some(xv) and y is None     then xv
+    x is None     and y is None     then 0
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun bad_add_missing_NN(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is Some(xv) and y is None     then xv
+    x is None     and y is Some(yv) then yv
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun bad_add_missing_SS_NN(x, y) =
+  if
+    x is Some(xv) and y is None     then xv
+    x is None     and y is Some(yv) then yv
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun bad_add_missing_SN_NS(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is None     and y is None     then 0
+
+fun actually_fine_add(x, y) =
+  if
+    x is Some(xv) and y is None then xv

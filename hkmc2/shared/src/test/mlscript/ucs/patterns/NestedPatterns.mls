@@ -1,0 +1,100 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+
+
+class Either[out A, out B]: Left[A] | Right[B]
+data class Left[A](leftValue: A) extends Either[A, Nothing]
+data class Right[B](rightValue: B) extends Either[Nothing, B]
+
+fun compute(v) =
+  if v is
+    Left(Some(x)) then x * 5
+    Left(None) then 1
+    Right(Some(x)) then x * 3
+    Right(None) then 0
+
+fun crazy(v) =
+  if v is
+    Some(Some(Some(Some(Some(Some(None)))))) then "bruh!"
+    _ then "lol"
+
+
+// Exercise every constructor path and both outcomes of the deep pattern.
+:expect [10, 1, 6, 0]
+[compute(Left(Some(2))), compute(Left(None)), compute(Right(Some(2))), compute(Right(None))]
+//│ = [10, 1, 6, 0]
+
+:expect ["bruh!", "lol"]
+[crazy(Some(Some(Some(Some(Some(Some(None))))))), crazy(Some(None))]
+//│ = ["bruh!", "lol"]
+
+fun f(x) =
+  if x is
+    [0, 0] then "zeros"
+    [1, 1] then "ones"
+    _      then "bruh"
+
+f([0, 0])
+//│ = "zeros"
+
+f([1, 1])
+//│ = "ones"
+
+f([1, 0])
+//│ = "bruh"
+
+fun f(x) =
+  if x is
+    [0, 0] then "zeros"
+    [1, 1] then "ones"
+    [y, 1] then x
+    _      then "que?"
+
+f([0, 0])
+//│ = "zeros"
+
+f([1, 1])
+//│ = "ones"
+
+f([0, 1])
+//│ = [0, 1]
+
+f([1, 0])
+//│ = "que?"
+
+fun f(p) =
+  if p is
+    Some([x, y]) then x + y
+    None       then 0
+
+:expect [3, 0]
+[f(Some([1, 2])), f(None)]
+//│ = [3, 0]
+
+data class Union[A, B](a: A, b: B)
+
+// Name conflict between the scrutinee and the positionals.
+fun hmm(x) =
+  if x is Union(x, y) then x
+
+hmm(Union(1, 2))
+//│ = 1
+
+data class Point(x: Int, y: Int)
+
+fun sum(p) = if p is Point(x, y) then x + y
+
+:expect 3
+sum(Point(1, 2))
+//│ = 3
+
+fun dist(p, q) = if p is Point(x1, y1) and q is Point(x2, y2) then
+  Math.abs(x1 - x2) + Math.abs(y1 - y2)
+
+:expect 4
+dist(Point(1, 2), Point(3, 4))
+//│ = 4

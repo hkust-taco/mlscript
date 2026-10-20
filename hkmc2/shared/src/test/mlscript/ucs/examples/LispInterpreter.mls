@@ -1,0 +1,354 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+import "../../../mlscript-compile/Stack.mls"
+open Stack
+
+fun equalElements[A](xs: Array[A], ys: Array[A], eq: (A, A) -> Bool): Bool =
+  xs.length === ys.length and xs.every((x, i, ...) => eq(x, ys.at(i)))
+
+//     _    ____ _____
+//    / \  / ___|_   _|
+//   / _ \ \___ \ | |
+//  / ___ \ ___) || |
+// /_/   \_\____/ |_|
+//
+
+class Expr: Lambda | BuiltIn | Instance | Thunk | StrLit | IntLit | ExprList
+data class Lambda(f: Stack[Data] -> Data) extends Expr
+data class BuiltIn(e: Stack[Data] -> Data) extends Expr
+data class Instance(n: Str, m: Stack[[Str, Expr]]) extends Expr
+data class Thunk(e: () -> Data) extends Expr
+data class StrLit(s: Str) extends Expr
+data class IntLit(n: Int) extends Expr
+data class ExprList(l: Stack[Expr]) extends Expr
+fun equalExpr(x: Expr, y: Expr): Bool = if x is
+  Lambda(f) and y is Lambda(g) then f === g
+  BuiltIn(f) and y is BuiltIn(g) then f === g
+  Instance(n, m) and y is Instance(n', m') then
+    fun equalPair(a: [Str, Expr], b: [Str, Expr]) = a.0 === b.0 and equalExpr(a.1, b.1)
+    n === n' and equalElements(toArray(m), toArray(m'), equalPair)
+  Thunk(e) and y is Thunk(e') then e === e'
+  StrLit(s) and y is StrLit(s') then s === s'
+  IntLit(n) and y is IntLit(n') then n === n'
+  ExprList(l) and y is ExprList(l') then equalElements(toArray(l), toArray(l'), equalExpr)
+  else false
+fun showExpr(e: Expr): Str = if e is
+  Lambda(f) then "<lambda>"
+  BuiltIn(f) then "<built-in>"
+  Instance(n, m) then "<object " + n + ">"
+  Thunk(e) then "<thunk>"
+  // StrLit(s) then "str:" ++ s
+  // IntLit(n) then "int:" ++ toString(n)
+  StrLit(s) then s
+  IntLit(n) then String(n)
+  ExprList(l) then "[" + l.map(showExpr).join(", ") + "]"
+class Data: Literal | DataList | Symbol
+data class Literal(e: Expr) extends Data
+data class DataList(l: Stack[Data]) extends Data
+data class Symbol(s: Str) extends Data
+fun equalData(x: Data, y: Data): Bool = if x is
+  Literal(e) and y is Literal(e') then equalExpr(e, e')
+  DataList(l) and y is DataList(l') then equalElements(toArray(l), toArray(l'), equalData)
+  Symbol(s) and y is Symbol(s') then s === s'
+  else false
+fun showData(d: Data): Str = if d is
+  Literal(e) then showExpr(e)
+  DataList(l) then "(" + l.map(showData).join(", ") + ")"
+  // Symbol(s) then "sym:" ++ s
+  Symbol(s) then s
+
+//  _____       _                 _
+// |_   _|___  | | __ ___  _ __  (_) ____ ___  _ __
+//   | | / _ \ | |/ // _ \| '_ \ | ||_  // _ \| '__|
+//   | || (_) ||   <|  __/| | | || | / /|  __/| |
+//   |_| \___/ |_|\_\\___||_| |_||_|/___|\___||_|
+//
+
+fun skipBlank(s: Str, i: Int): Int =
+  if
+    i < 0 then skipBlank(s, 0)
+    i >= s.length then s.length
+    s.charCodeAt(i) == 32 then skipBlank(s, i + 1)
+    else i
+
+fun scanWhile(s: Str, i: Int, p: Str -> Bool): Option[[Str, Int]] =
+  fun aux(acc, i) =
+    if i < s.length and s.charAt(i) is ch and p(ch)
+      then aux(acc + ch, i + 1)
+      else [acc, i]
+  if aux("", i) is
+    ["", _] then None
+    [acc, i] then Some([acc, i])
+
+fun isDelimiter(ch) = ch !== " " and ch !== "(" and ch !== ")"
+
+fun nextToken(s: Str, i: Int): Option[[Str, Int]] =
+  let i' = skipBlank(s, i)
+  if s.charAt(i') is
+    "(" then Some(["(", i' + 1])
+    ")" then Some([")", i' + 1])
+    else scanWhile(s, i', isDelimiter)
+
+fun tokenize(s: Str): Stack[Str] =
+  let s' = String(s)
+  fun aux(acc, i) =
+    if nextToken(s', i) is
+      None then reverse(acc)
+      Some([token, i']) then aux(token :: acc, i')
+  aux(Nil, 0)
+
+render \ tokenize("")
+//│ = "Nil"
+
+render \ tokenize("12")
+//│ = "Cons(\"12\", Nil)"
+
+render \ tokenize("x")
+//│ = "Cons(\"x\", Nil)"
+
+render \ tokenize("(quote (cons 1 nil))")
+//│ = "Cons(\"(\", Cons(\"quote\", Cons(\"(\", Cons(\"cons\", Cons(\"1\", Cons(\"nil\", Cons(\")\", Cons(\")\", Nil))))))))"
+
+render \ tokenize("(+ 1 2)")
+//│ = "Cons(\"(\", Cons(\"+\", Cons(\"1\", Cons(\"2\", Cons(\")\", Nil)))))"
+
+//  ____
+// |  _ \  __ _  _ __  ___   ___  _ __
+// | |_) |/ _` || '__|/ __| / _ \| '__|
+// |  __/| (_| || |   \__ \|  __/| |
+// |_|    \__,_||_|   |___/ \___||_|
+//
+
+fun isDigit(n) = 48 <= n and n <= 57
+fun isDigits(s: Str): Bool =
+  let s' = String(s)
+  fun aux(i) =
+    if i < s'.length and isDigit(s'.charCodeAt(i))
+      then aux(i + 1)
+      else i === s'.length
+  aux(0)
+isDigits("123")
+//│ = true
+
+isDigits("123jump")
+//│ = false
+
+isDigits("bruh")
+//│ = false
+
+class ParseResult[out A]: Success[A] | Failure
+data class Success[out A](value: A) extends ParseResult[A]
+data class Failure(error: Str) extends ParseResult[Nothing]
+
+fun parseExpr(tokens: Stack[Str]): [ParseResult[Data], Stack[Str]] =
+  if tokens is
+    Cons("(", tail) then parseList(tail)
+    Cons(")", _) then [Failure("Unmatched closing parenthesis."), tokens]
+    Cons(token, tail) and
+      isDigits(token) then [(Success \ Literal \ IntLit \ parseInt(token, 10)), tail]
+      else [(Success \ Symbol \ token), tail]
+    Nil then [Failure("Unexpected end of input, expect either `)` or more tokens."), Nil]
+  
+fun parseList(tokens: Stack[Str]): [ParseResult[DataList], Stack[Str]] =
+  fun collect(acc, ts) = if ts is
+    Cons(")", tail) then [(Success \ DataList \ reverse \ acc), tail]
+    Cons and parseExpr(ts) is
+      [Success(datum), rest] then collect(datum :: acc, rest)
+      [Failure(_) as failure, rest] then [failure, rest]
+    Nil then [Failure("Unexpected end of input, expect either `)` or more tokens."), Nil]
+  collect(Nil, tokens)
+
+fun showParse(source: Str): Str =
+  if parseExpr(tokenize(source)) is
+    [Success(datum), _] then "Ok: " + showData(datum)
+    [Failure(error), _] then "Error: " + error
+
+showParse("(cons 1 nil)")
+//│ = "Ok: (cons, 1, nil)"
+
+showParse("(cons 1 (cons 2 nil))")
+//│ = "Ok: (cons, 1, (cons, 2, nil))"
+
+showParse("(cons 1 (cons 2 (cons 3 nil)))")
+//│ = "Ok: (cons, 1, (cons, 2, (cons, 3, nil)))"
+
+showParse("(+ 1 2)")
+//│ = "Ok: (+, 1, 2)"
+
+showParse("(car (cons 1 nil))")
+//│ = "Ok: (car, (cons, 1, nil))"
+
+//  _____
+// | ____| _ __ __   __
+// |  _|  | '_ \\ \ / /
+// | |___ | | | |\ V /
+// |_____||_| |_| \_/
+//
+
+// Environments are persistent lookup functions; recursive bindings tie the knot.
+type Env[T] = Str -> T
+fun emptyEnv(name: Str): Nothing = throw Error("unbound name: " + name)
+
+fun (+:) extend[A](env: Str -> A, entry: [Str, A]) =
+  assert entry is [name, expr]
+  (name': Str) => if name' === name then expr else env(name')
+
+fun extendRec[A](env: Str -> A, name: Str, expr: (Str -> A) -> A) =
+  fun env'(name': Str): A = if name' === name then expr(env') else env(name')
+  env'
+
+fun extendParameters[A](env: Str -> A, ps: Stack[Str], vs: Stack[A]) =
+  if [ps, vs] is
+    [Nil, Nil] then env
+    [Cons(p, ps'), Cons(v, vs')] then extendParameters(extend(env, [p, v]), ps', vs')
+    else throw Error("invalid input")
+
+fun (++:) extendEntries[A](env: Str -> A, ps: Stack[[Str, A]]) =
+  if ps is
+    Nil then env
+    Cons(p, ps') then extendEntries(extend(env, p), ps')
+    else throw Error("invalid input")
+
+let intEnv1 = extend(emptyEnv, ["one", 1])
+let intEnv2 = extend(intEnv1, ["two", 2])
+let intEnv3 = extend(intEnv2, ["three", 3])
+//│ intEnv1 = fun
+//│ intEnv2 = fun
+//│ intEnv3 = fun
+
+// Make a tuple to save some lines.
+[intEnv1("one"), intEnv2("one"), intEnv3("one"), intEnv2("two"), intEnv3("two"), intEnv3("three")]
+//│ = [1, 1, 1, 2, 2, 3]
+
+:re
+intEnv1("two")
+//│ ═══[RUNTIME ERROR] Error: unbound name: two
+
+:re
+intEnv2("three")
+//│ ═══[RUNTIME ERROR] Error: unbound name: three
+
+:re
+intEnv3("bruh")
+//│ ═══[RUNTIME ERROR] Error: unbound name: bruh
+
+let intEnv6 = intEnv3 ++: (["four", 4] :: ["five", 5] :: ["six", 6] :: Nil)
+//│ intEnv6 = fun
+
+[intEnv6("one"), intEnv6("two"), intEnv6("three"), intEnv6("four"), intEnv6("five"), intEnv6("six")]
+//│ = [1, 2, 3, 4, 5, 6]
+
+:re
+intEnv6("seven")
+//│ ═══[RUNTIME ERROR] Error: unbound name: seven
+
+fun builtinEq(args: Stack[Data]): Data = if args is
+  Cons(x, Cons(y, Nil)) and
+    equalData(x, y) then Literal(IntLit(1))
+    else Literal(IntLit(0))
+  else throw Error("invalid input")
+fun builtinAdd(args: Stack[Data]): Data = if args is
+  Cons(Literal(IntLit(x)), Cons(Literal(IntLit(y)), Nil)) then Literal(IntLit(x + y))
+  else throw Error("invalid input")
+fun builtinSub(args: Stack[Data]): Data = if args is
+  Cons(Literal(IntLit(x)), Cons(Literal(IntLit(y)), Nil)) then Literal(IntLit(x - y))
+  else throw Error("invalid input")
+fun builtinMul(args: Stack[Data]): Data = if args is
+  Cons(Literal(IntLit(x)), Cons(Literal(IntLit(y)), Nil)) then Literal(IntLit(x * y))
+  else throw Error("invalid input")
+let builtinNil = DataList(Nil)
+fun builtinCons(args: Stack[Data]): Data = if args is
+  Cons(x, Cons(DataList(xs), Nil)) then DataList(x :: xs)
+  else throw Error("invalid input")
+fun builtinCar(args: Stack[Data]): Data = if args is
+  Cons(DataList(Cons(x, _)), Nil) then x
+  else throw Error("invalid input")
+fun builtinCdr(args: Stack[Data]): Data = if args is
+  Cons(DataList(Cons(_, xs)), Nil) then DataList(xs)
+  else throw Error("invalid input")
+fun builtinNull(args: Stack[Data]): Data = if args is
+  Cons(DataList(Nil), Nil) then Literal(IntLit(1))
+  else Literal(IntLit(0))
+//│ builtinNil = DataList(Nil)
+
+let globalEnv = emptyEnv ++:
+  ["eq", Literal(Lambda(builtinEq))] :: ["+", Literal(Lambda(builtinAdd))] ::
+  ["-", Literal(Lambda(builtinSub))] :: ["*", Literal(Lambda(builtinMul))] ::
+  ["nil", builtinNil] :: ["cons", Literal(Lambda(builtinCons))] ::
+  ["car", Literal(Lambda(builtinCar))] :: ["cdr", Literal(Lambda(builtinCdr))] ::
+  ["null", Literal(Lambda(builtinNull))] :: Nil
+//│ globalEnv = fun
+
+fun toName(x: Data): Str = if x is Symbol(s) then s else throw Error("invalid input")
+
+fun asList(x: Data): Stack[Data] = if x is DataList(ys) then ys else throw Error("invalid input")
+
+fun eval(x: Data, env: Str -> Data): Data = if x is
+  Literal(StrLit(_)) as lit then lit
+  Literal(IntLit(_)) as lit then lit
+  Symbol(name) then env(name)
+  DataList(Cons(Symbol("val"), tail)) and tail is
+    Cons(param, Cons(expr, Cons(rest, Nil))) then
+      eval(rest, env +: [toName(param), eval(expr, env)])
+    else throw Error("invalid input")
+  DataList(Cons(Symbol("def"), Cons(param, Cons(body, Cons(rest, Nil))))) then
+    let env' = extendRec(env, toName(param), env => eval(body, env))
+    eval(rest, env')
+  DataList(Cons(Symbol("if"), Cons(cond, Cons(thenPart, Cons(elsePart, Nil))))) and
+    eval(cond, env) is Literal(IntLit(0)) then eval(elsePart, env)
+    else eval(thenPart, env)
+  DataList(Cons(Symbol("quote"), Cons(y, Nil))) then y
+  DataList(Cons(Symbol("lambda"), Cons(params, Cons(body, Nil)))) then
+    let ps = asList(params).map(toName)
+    Literal(Lambda(args => eval(body, extendParameters(env, ps, args))))
+  DataList(Cons(operator, operands)) and eval(operator, env) is
+    Literal(Lambda(f)) then f \ operands.map(x => eval(x, env))
+    else throw Error("invalid input") // application of a non-function
+  else throw Error("invalid input") // unrecognized program
+
+fun showEval(source: Str): Str =
+  if parseExpr(tokenize(source)) is
+    [Success(datum), _] then "Ok: " + showData \ eval(datum, globalEnv)
+    [Failure(error), _] then "Error: " + error
+
+showEval("1")
+//│ = "Ok: 1"
+
+showEval("(+ 1 2)")
+//│ = "Ok: 3"
+
+showEval("(val x 7 (val y 6 (* x y)))")
+//│ = "Ok: 42"
+
+showEval("(quote x)")
+//│ = "Ok: x"
+
+showEval("(cons 1 nil)")
+//│ = "Ok: (1)"
+
+showEval("(car (cons 1 nil))")
+//│ = "Ok: 1"
+
+showEval("(null 0)")
+//│ = "Ok: 0"
+
+showEval("(null nil)")
+//│ = "Ok: 1"
+
+showEval("(def id (lambda (x) x) (id 42))")
+//│ = "Ok: 42"
+
+showEval("(def fact (lambda (n) (if (eq n 0) 1 (* n (fact (- n 1))))) (fact 5))")
+//│ = "Ok: 120"
+
+showEval("(def fib (lambda (n) (if (eq n 0) 0 (if (eq n 1) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 10))")
+//│ = "Ok: 55"
+
+showEval("(def sum (lambda (n) (if (eq n 0) 0 (+ n (sum (- n 1))))) (sum 50))")
+//│ = "Ok: 1275"
+
+showEval("(def ack (lambda (m n) (if (eq m 0) (+ n 1) (if (eq n 0) (ack (- m 1) 1) (ack (- m 1) (ack m (- n 1)))))) (ack 3 2))")
+//│ = "Ok: 29"

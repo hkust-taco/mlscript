@@ -1,0 +1,36 @@
+:.
+:js
+
+data class A()
+data class B()
+
+fun f(x) =
+  if x
+    is
+      A then 0
+      B then 1
+
+// Precedence problem: should we restruct terms when push them to the stack?
+:e
+fun f(x) =
+  if x ==
+    1
+      + 2 then 0
+      + _ then 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+5: 	      + _ then 1
+//│ ║        	        ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+
+:fixme // Repeated leading `and` branches are not recognized.
+fun f(x, s, t) =
+  if x
+    is A()
+      and t then 0
+      and s then 0
+    is _ then 1
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.+4: 	      and t then 0
+//│ ║        	                 ^
+//│ ║  l.+5: 	      and s then 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^

@@ -62,9 +62,9 @@ object TestFolders:
   def slopDiffDir(wd: os.Path): os.Path =
     diffTestDir(wd)/"slop"
 
-  /** Diff test directories that are always excluded (staging, mlscript-compile). */
+  /** Compile tests have their own runners and are excluded from diff test discovery. */
   def alwaysExcludedDiffDirs(wd: os.Path): Ls[os.Path] =
-    (diffTestDir(wd)/"ucs"/"staging") :: compileTestDir(wd) :: Nil
+    compileTestDir(wd) :: Nil
   
   /** All diff test directories excluded from the main DiffTestRunner. */
   def mainExcludedDiffDirs(wd: os.Path): Ls[os.Path] =

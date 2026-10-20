@@ -1,0 +1,37 @@
+:.
+:js
+
+data class Point(x: Int, y: Int)
+class Shape: Circle | Rectangle | LineSegment
+data class Circle(center: Point, radius: Int) extends Shape
+data class Rectangle(position: Point, width: Int, height: Int) extends Shape
+data class LineSegment(start: Point, end: Point) extends Shape
+
+fun hidden(p) = if p is Circle then true else false
+
+fun this_is_sealed(x: Shape) =
+  if x is
+    Circle(_, _) then "Circle"
+    Rectangle(_, _, _) then "Rectangle"
+    LineSegment(_, _) then "LineSegment"
+
+// The missing LineSegment branch requires exhaustiveness checking.
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun missing_a_case(x: Shape) =
+  if x is
+    Circle(_, _) then "Circle"
+    Rectangle(_, _, _) then "Rectangle"
+
+fun missing_a_case(x: Shape) =
+  if x is
+    Circle(_, _) then "Circle"
+    Rectangle(_, _, _) then "Rectangle"
+    else x
+
+fun countLineSegments(x) =
+  if x is
+    Shape and hidden(x) then "1"
+    Rectangle(_, _, _) then "2"
+    LineSegment(_, _) then "3"
+    Circle(_, _) then "4"

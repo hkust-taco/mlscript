@@ -1,9 +1,8 @@
 :.
 :js
 
-abstract class List[out T]
-data class Cons[out T](head: T, tail: List[T]) extends List[T]
-object Nil extends List[Nothing]
+import "../../../mlscript-compile/Stack.mls"
+open Stack
 
 
 fun map(f, xs) = if xs is
@@ -15,9 +14,8 @@ fun map(f, xs) = if xs is
 object Bot
 
 
-abstract class Option[T]
-data class Some[T](value: T) extends Option[T]
-object None extends Option[Nothing]
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
 
 
 fun normalize(tp) = ()
@@ -34,4 +32,171 @@ fun merge(tp1, tp2) = if
   m is Some(tp) then tp
   m is None     then glb(tp1_n, tp2_n)
 
+fun f(x) =
+  if x ==
+    let v = 0
+    v then v
+    else 0
 
+
+class Either[out A, out B]: Left[A] | Right[B]
+data class Left[A](leftValue: A) extends Either[A, Nothing]
+data class Right[B](rightValue: B) extends Either[Nothing, B]
+
+fun q(x) =
+  if
+    x is Some and x is Some and x is Some then 0
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+// TODO: post-processing should combine two matches on `y`
+fun p(x, y) =
+  if
+    x is Some and y is None then 0
+    y is Some and x is Some then 1
+    x is Some and y is Some then 0
+
+fun h(x, y) =
+  if x is
+    None then y
+    let y_square = y * y
+    Some(z) then z + y_square
+
+h(Some(5), 6)
+//│ = 41
+
+fun h(x, y) =
+  if x is
+    None then y
+    let y_square = y * y
+    Some(y_square) then 0
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(a, y) =
+  if a is
+    Some(v) and v is
+      Left(x) then x
+      let y = v + 1
+      Right(x) then x + y
+    else 0
+
+:e
+fun q(a) =
+  if a is
+    Left(x) then x
+    let y = a + 1
+    then y
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.+4: 	    let y = a + 1
+//│ ║        	            ^^^^^
+//│ ║  l.+5: 	    then y
+//│ ╙──      	^^^^^^^^^^
+
+data class A()
+data class B()
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun w() =
+  if
+    A then "A"
+    let y = 0
+    B then "B"
+    else "?"
+
+w()
+//│ = "?"
+
+fun i(x) =
+  if x is
+    A() then "A"
+    let y = 0
+    B() then "B"
+
+fun inc(x) = x + 1
+
+fun qq(x, z) =
+  if x ==
+    let y = inc(z)
+    y * y then 0
+    else 0
+
+fun bruh(x) =
+  if
+    x == 0 then 0
+    let y = 1
+    else y
+
+fun f1(x) = x + 1
+fun f2(x, y) = x + y
+
+fun ff(x) =
+  if
+    x == 0 then 0
+    let y = f1(x)
+    let z = f2(x, y)
+    z == 1 then 1
+    z == 2 then 2
+    else 0
+
+fun p(x): Bool = true
+
+fun ip(x, y) =
+  if p(x) and
+    let z = inc(y)
+    y === z * z then "bruh"
+  else "rocks"
+
+fun tr(x) =
+  if x is
+    Some(v) then v
+    let tmp = 1
+    None then tmp
+
+// This is a very interesting side-effect example!
+
+fun mn(a) =
+  if a is
+    Some(x) and x is
+      Left(b) and b is
+        0 then "b is 1"
+        let _ = print(b)
+        1 then "b is 2"
+        2 then "b is 3"
+      Right(b) then "right-defined"
+    None       then "undefined"
+
+mn \ None
+mn \ Some \ Left \ 0
+mn \ Some \ Left \ 1
+mn \ Some \ Left \ 2
+mn \ Some \ Right \ ()
+//│ > 1
+//│ > 2
+//│ = "right-defined"
+
+
+// Interleaved bindings inside an operator split are now supported.
+fun f(x, z) = if x
+  == 0 then "zero"
+  let y = z + 1
+  == y * y then "square"
+  else "other"
+
+:expect ["zero", "square", "other"]
+[f(0, 2), f(9, 2), f(8, 2)]
+//│ = ["zero", "square", "other"]
+
+data class A()
+data class B()
+
+fun tt(x) =
+  if x
+    is A() then "A"
+    let y = "B"
+    is B() then y
+
+:expect ["A", "B"]
+[tt(A()), tt(B())]
+//│ = ["A", "B"]

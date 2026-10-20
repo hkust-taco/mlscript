@@ -1,0 +1,13 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+
+fun useless_negate_1(x) =
+  if
+    x is Some(y) and x is Some(z) then y + z
+
+useless_negate_1(Some(1))
+//│ = 2

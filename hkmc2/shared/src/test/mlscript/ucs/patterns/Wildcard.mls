@@ -1,0 +1,216 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+
+
+
+class Either[out A, out B]: Left[A] | Right[B]
+data class Left[out A](leftValue: A) extends Either[A, Nothing]
+data class Right[out B](rightValue: B) extends Either[Nothing, B]
+
+
+fun w1(x, e_0, e_1) =
+  if x is
+    Left(None) then "Left of None"
+    Right(None) then "Right of None"
+    _ and e_0 is y_0 and x is
+      Left(Some(lv)) then "Left of Some of " + String(lv)
+      _ and e_1 is y_1 and x is
+        Right(Some(rv)) then "Right of Some of " + String(rv)
+
+w1(Left(None), "a", "b")
+//│ = "Left of None"
+
+w1(Right(None), "a", "b")
+//│ = "Right of None"
+
+w1(Left(Some(0)), "a", "b")
+//│ = "Left of Some of 0"
+
+w1(Right(Some(0)), "a", "b")
+//│ = "Right of Some of 0"
+
+// A failed wildcard guard resumes with the following constructor cases.
+fun w2(x, p) =
+  if x is
+    Some then 1
+    _ and p(x) and
+      x is None then 2
+      _ then 3
+    None then 4
+    _ then 5
+
+:expect [1, 2, 3, 4, 5]
+[w2(Some(0), _ => true), w2(None, _ => true), w2(0, _ => true),
+ w2(None, _ => false), w2(0, _ => false)]
+//│ = [1, 2, 3, 4, 5]
+
+fun w2(x, p) =
+  if x is
+    Some then 1
+    _ and p(x) then 2
+    None then 3
+    _ then 4
+
+:expect [1, 2, 2, 3, 4]
+[w2(Some(0), _ => true), w2(None, _ => true), w2(0, _ => true),
+ w2(None, _ => false), w2(0, _ => false)]
+//│ = [1, 2, 2, 3, 4]
+
+fun w3(x, p) = if x is
+  _ and p(x) then "r1"
+  Some(xv) then "r2: " + String(xv)
+  None then "r3"
+  _ then "r4"
+
+// Expect "r1"
+w3(0, _ => true)
+//│ = "r1"
+
+w3(None, _ => true)
+//│ = "r1"
+
+w3(Some(0), _ => true)
+//│ = "r1"
+
+// Expect "r2"
+w3(Some(0), _ => false)
+//│ = "r2: 0"
+
+// Expect "r3"
+w3(None, _ => false)
+//│ = "r3"
+
+// Expect "r4"
+w3(0, _ => false)
+//│ = "r4"
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun w3_1(x, f) =
+  if f(x) is _ then 0 else 1
+
+w3_1(0, _ => true)
+//│ = 0
+
+w3_1(0, _ => false)
+//│ = 0
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun w3_1_1(x, f) =
+  if f(x) is a then a else 0
+
+w3_1_1(0, x => x)
+//│ = 0
+
+w3_1_1(0, x => x + 1)
+//│ = 1
+
+fun w4(x, p) = if x is
+  a and p(x) then "r1"
+  Some(xv) then "r2: " + String(xv)
+  None then "r3"
+  _ then "r4"
+
+
+// Expect "r1"
+w4(0, _ => true)
+//│ = "r1"
+
+w4(None, _ => true)
+//│ = "r1"
+
+w4(Some(0), _ => true)
+//│ = "r1"
+
+// Expect "r2"
+w4(Some(0), _ => false)
+//│ = "r2: 0"
+
+// Expect "r3"
+w4(None, _ => false)
+//│ = "r3"
+
+// Expect "r4"
+w4(0, _ => false)
+//│ = "r4"
+
+data class Alpha()
+data class Beta()
+data class Gamma()
+data class Delta()
+
+// Nested wildcard fallbacks preserve the order of constructor tests.
+fun w5(y) =
+  if y is
+    Alpha then "alpha"
+    _ and y is
+      Beta then "beta"
+      _ and y is
+        Gamma then "gamma"
+        _ and y is
+          Delta then "delta"
+          _ then "unknown"
+
+w5(0)
+//│ = "unknown"
+
+w5(Alpha())
+//│ = "alpha"
+
+w5(Beta())
+//│ = "beta"
+
+w5(Gamma())
+//│ = "gamma"
+
+w5(Delta())
+//│ = "delta"
+
+fun w6(x, y) =
+  if x is
+    _ and y is
+      Some(z) then z
+      None then 0
+    else x
+
+w6("42", Some(42))
+//│ = 42
+
+w6("42", None)
+//│ = 0
+
+w6("42", "42")
+//│ = "42"
+
+
+fun w7(x, f) =
+  if x is
+    _ and f(x) is
+      Some(v) then v
+      None then x
+    Left(x) then x + 1
+    Right(x) then x + 2
+
+// The wildcard guard wins before either constructor fallback.
+w7(Left(99), _ => Some(0)) // => 0
+//│ = 0
+
+w7(Left(99), _ => None) // => Left(99)
+//│ = Left(99)
+
+w7(Right(99), _ => Some(0)) // => 0
+//│ = 0
+
+w7(Right(99), _ => None) // => Right(99)
+//│ = Right(99)
+
+w7(Left(99), _ => "test")
+//│ = 100
+
+w7(Right(99), _ => "test")
+//│ = 101

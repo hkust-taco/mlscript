@@ -1,0 +1,49 @@
+:.
+:js
+
+data class A()
+data class B()
+data class C()
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x, y) =
+  if
+    y is A and
+      x is
+        A then 0
+        B then 1
+        C then 2
+    y is B and
+      x is
+        A then 4
+
+:e
+:breakme // Exhaustiveness checking must account for the comparison split.
+// Resolution accepts the methods; the future checker must analyze the split.
+abstract class Tree: Node | Empty with
+  fun contains(wanted: Int): Bool
+object Empty extends Tree with
+  fun contains(wanted: Int): Bool = false
+data class Node(value: Int, left: Tree, right: Tree) extends Tree with
+  fun contains(wanted: Int): Bool = if wanted
+    < value then left.contains(wanted)
+    > value then right.contains(wanted)
+    == value then true
+
+:expect [true, false]
+let tree = Node(2, Node(1, Empty, Empty), Node(3, Empty, Empty))
+[tree.contains(1), tree.contains(4)]
+//│ = [true, false]
+//│ tree = Node(2, Node(1, Empty, Empty), Node(3, Empty, Empty))
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(a, b) = if a and b then 0
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x, y) =
+  if x == y + 5 then 0
+  else if x == y + 7 then 0
+

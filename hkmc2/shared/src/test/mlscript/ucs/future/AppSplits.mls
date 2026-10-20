@@ -50,3 +50,29 @@ if foo
 //│ ═══[RUNTIME ERROR] Error: match error
 
 
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some }
+
+:fixme // Constructor argument splits are not implemented.
+fun foo(x) = if x is Some
+  (0) then 0
+  (1) then 1
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (juxtaposition).
+//│ ║  l.+1: 	fun foo(x) = if x is Some
+//│ ║        	                     ^^^^
+//│ ║  l.+2: 	  (0) then 0
+//│ ╙──      	^^
+
+:fixme // Constructor argument splits are not implemented.
+fun foo(x) = if x is Some \
+  0 then 0
+  1 then 1
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator '\').
+//│ ║  l.+1: 	fun foo(x) = if x is Some \
+//│ ║        	                     ^^^^^^
+//│ ║  l.+2: 	  0 then 0
+//│ ║        	^^^^^^^^^^
+//│ ║  l.+3: 	  1 then 1
+//│ ╙──      	^^^^^^^^^^
+

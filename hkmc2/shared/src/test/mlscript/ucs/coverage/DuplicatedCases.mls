@@ -1,0 +1,87 @@
+:.
+:js
+
+// This test file contains the cases containing cases with identical patterns.
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if x is
+  "a" then 1
+  "b" then 2
+  "a" then 3
+
+data class X
+data class Y
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if x is
+  X then 1
+  X then 2
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if x is
+  X then 1
+  Y then 2
+  X then 3
+
+data class Box[T](value: T)
+
+fun f(x) = if x is
+  Box(1) then true
+  Box then false
+
+f(Box(0))
+f(Box(1))
+//│ = true
+
+fun a_tale_of_scrutinees(x, y) =
+  if
+    x is "A" and y is "B" then "AB"
+    y is "A" and x is "B" then "BA"
+    y is "A" and x is "A" then "AA"
+    x is "B" and y is "B" then "BB"
+
+fun test(x, p) = if x is
+  Bool and p(x) then "great"
+  true then "false"
+  false then "true"
+
+data class P[A](x: A)
+data class Q[A, B](x: A, y: B)
+
+fun f(x) =
+  if x is
+    P(1) then 1
+    P(y) then 2
+
+fun f(x) =
+  if x is
+    Q(a, b) and a is 1 and b is 1 then 1
+    Q(a, b) and b is 1 then 2
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) =
+  if x is
+    Q(a, b) and a is 1 and b is 2 then 1
+    Q(a, b) and b is 1 then 2
+
+fun f(x) =
+  if x is
+    Q(1, 1) then 1
+    Q(y, 1) then 2
+
+fun f(x) =
+  if x is
+    Q(0, 0) then 1
+    Q(1, 1) then 2
+    Q(y, 1) then 3
+    _       then 4
+
+fun f(x) =
+  if x is
+    P(P(P(1))) then 1
+    P(P(1)) then 2
+    P(1) then 3

@@ -1,0 +1,29 @@
+:.
+:js
+
+fun f(x, y) =
+  if x == 0 and
+    y == 0 then "bruh"
+    y == 1 then "lol"
+  else "okay"
+
+data class A()
+data class B()
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) =
+  if x == 0 and
+    x is
+      A() then "A"
+      B() then "B"
+    x == 0 then "lol"
+    else "bruh"
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x, y) =
+  if
+    x == 0 and
+      y == 0 then "bruh"
+      else "lol"

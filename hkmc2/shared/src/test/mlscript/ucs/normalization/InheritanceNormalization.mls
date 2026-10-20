@@ -81,3 +81,17 @@ g(new Child2)
 //│ = "Base"
 
 
+// A failed base-class guard must retain both subclass fallbacks.
+class C extends A
+
+fun guardedFallback(x, p) = if x is
+  A and p(x) then "guard"
+  B then "B"
+  C then "C"
+  else "other"
+
+:expect ["guard", "other", "guard", "guard", "B", "C"]
+[guardedFallback(new A, _ => true), guardedFallback(new A, _ => false),
+ guardedFallback(new B, _ => true), guardedFallback(new C, _ => true),
+ guardedFallback(new B, _ => false), guardedFallback(new C, _ => false)]
+//│ = ["guard", "other", "guard", "guard", "B", "C"]

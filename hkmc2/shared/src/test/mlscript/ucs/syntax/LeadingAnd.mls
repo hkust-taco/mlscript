@@ -1,0 +1,33 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+
+
+
+
+
+
+fun f(a, b) = if a is
+  Some(av)
+    and b is Some(bv) then av + bv
+
+fun f(a, b) = if a is Some(av)
+    and b is Some(bv)
+    then av + bv
+
+fun f(a, b) = if a is
+  Some(av)
+    and b is Some(bv)
+    then av + bv
+
+
+
+// A leading conjunction on its own is not a complete split.
+fun f(a, b) = if a is
+  Some(av)
+    and b is Some(bv) then av + bv
+    
+

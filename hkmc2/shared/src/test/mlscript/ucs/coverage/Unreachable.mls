@@ -1,0 +1,34 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+
+fun f(x) = if x is Some(xv) and xv === 1 then true else false
+
+f(Some(1))
+f(Some(2))
+f(None)
+//│ = false
+
+fun reachable_1(x) =
+  if x is
+    _ and f(x) then "cos"
+    Some(xv) then "sin"
+    None then "tan"
+
+reachable_1(Some(1))
+reachable_1(Some(2))
+reachable_1(None)
+//│ = "tan"
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun unreachable_1(x) =
+  if x is
+    _ and
+      f(x) then "tmux"
+      else "screen"
+    Some(xv) then "sin"
+    None then "tan"
