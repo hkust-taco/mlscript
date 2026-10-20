@@ -1,28 +1,21 @@
+:.
 :js
 
 :global
 // :d
 
 
-:todo
 fun Foo() = 1
 module Foo with { val x = 1 }
-//│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.8: 	fun Foo() = 1
-//│ ║       	^^^^^^^^^^^^^
-//│ ╟── with module of the same name
-//│ ║  l.9: 	module Foo with { val x = 1 }
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Foo
-//│ = class Foo { x: 1 }
+//│ = fun Foo { class: class Foo { x: 1 } }
 
 Foo()
 //│ = 1
 
-:todo
 :noInline
 Foo()
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
+//│ = 1
 
 

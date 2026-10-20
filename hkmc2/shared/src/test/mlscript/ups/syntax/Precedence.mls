@@ -1,3 +1,4 @@
+:.
 :ucs ups
 
 // The right binding power of `=>` is lower than the left binding power of `|`.
@@ -26,19 +27,19 @@ pattern Test = (1 => 2) | 4 => 8
 // The precedence of `as` is lower than `=>`.
 
 pattern Test = 0 as x => 2
-//│ elaborated pattern body: 0 as (x => 2)
+//│ elaborated pattern body: 0 >> (x‹x⁰› => 2)
 
 pattern Test = (0 as x) => 2
-//│ elaborated pattern body: (0 as x) => 2
+//│ elaborated pattern body: (0 as x‹x¹›) => 2
 
 pattern Test(x) = 0 as x | 1 as x
-//│ elaborated pattern body: 0 as x ∨ 1 as x
+//│ elaborated pattern body: 0 as x‹x²› ∨ 1 as x‹x²›
 
 pattern Test(x) = 0 as x | (1 as x)
-//│ elaborated pattern body: 0 as x ∨ 1 as x
+//│ elaborated pattern body: 0 as x‹x³› ∨ 1 as x‹x³›
 
 pattern Test(x) = 0 as x | (1 as x)
-//│ elaborated pattern body: 0 as x ∨ 1 as x
+//│ elaborated pattern body: 0 as x‹x⁴› ∨ 1 as x‹x⁴›
 
 pattern Test(x) = (0 as x) | (1 as x)
-//│ elaborated pattern body: 0 as x ∨ 1 as x
+//│ elaborated pattern body: 0 as x‹x⁵› ∨ 1 as x‹x⁵›

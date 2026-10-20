@@ -462,7 +462,7 @@ fun f(x, y, z) =
 //│   private val f$cap¹;
 //│   private val x⁴;
 //│   constructor(f$cap, x) {
-//│     do super⁰(f$cap².y$0⁰, f$cap², x⁵);
+//│     do super⁰(f$cap.y$0⁰, f$cap, x);
 //│     end;
 //│     set D⁰.this.f$cap¹ = f$cap;
 //│     set D⁰.this.x⁴ = x;
@@ -498,13 +498,13 @@ let d = res.1
 :expect 0
 class A(val x)
 class B(y) extends A(y)
-(new B(0)).x
+new B(0).x
 //│ = 0
 
 :expect [1, 2]
 class A(val x)(val y)
 class B extends A(1)(2)
-[(new B).x, (new B).y]
+[new B().x, new B().y]
 //│ = [1, 2]
 
 :w
@@ -522,25 +522,25 @@ fun f(x, y, z) =
 //│ let C, Capture$f;
 //│ @data
 //│ define C as class C⁸ {
-//│   private val f$cap³;
-//│   private val x⁶;
+//│   private val f$cap²;
+//│   private val x⁵;
 //│   val a⁶;
 //│   constructor C⁷(a, f$cap, x) {
-//│     set C⁸.this.f$cap³ = f$cap;
-//│     set C⁸.this.x⁶ = x;
+//│     set C⁸.this.f$cap² = f$cap;
+//│     set C⁸.this.x⁵ = x;
 //│     define a⁶ as val a⁷ = a;
 //│     end
 //│   }
 //│   method getX² = fun getX³ {
-//│     return C⁸.this.x⁶
+//│     return C⁸.this.x⁵
 //│   }
 //│   method getY² = fun getY³ {
-//│     return C⁸.this.f$cap³.y$0²
+//│     return C⁸.this.f$cap².y$0²
 //│   }
 //│   method setY² = fun setY³ {
 //│     let tmp;
-//│     set tmp = +⁰(C⁸.this.f$cap³.y$0², 1);
-//│     set C⁸.this.f$cap³.y$0² = tmp;
+//│     set tmp = +⁰(C⁸.this.f$cap².y$0², 1);
+//│     set C⁸.this.f$cap².y$0² = tmp;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };

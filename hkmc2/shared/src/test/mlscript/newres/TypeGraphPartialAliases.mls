@@ -1,0 +1,49 @@
+:.
+
+// Supplying the unused formal allows eager alias normalization to reach a fixed point.
+type First[A, B] = A
+type Chain[A] = {value: A, next: Chain[First[A, Int]]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// Omitting that same unused formal must preserve the finite graph.
+type First[A, B] = A
+type Chain[A] = {value: A, next: Chain[First[A]]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// A fully supplied forwarding alias may itself contain a partial application.
+type First[A, B] = A
+type Forward[A] = First[A]
+type Chain[A] = {value: A, next: Chain[Forward[A]]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// Partial projections must also permit a finite argument permutation.
+type First[A, B, C] = A
+type Chain[A, B] = {value: A, next: Chain[First[B, A], First[A, B]]}
+private fun walk[A, B](chain: Chain[A, B], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// A fixed omitted argument is a reset with a stable source hole.
+type Identity[A] = A
+type Chain[A] = {value: A, next: Chain[Identity]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// Omitting an unused formal on the recursive alias itself already terminates.
+type Chain[A, B] = {value: A, next: Chain[A]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// Nominal recursive fields need not unfold their changing arguments eagerly.
+class Chain[A](val value: A, val next: Chain[Array[A]])
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()
+
+// A relevant omitted formal resets to its source hole, even though another
+// argument changes on the recursive edge. Normalization must reuse that hole.
+type Second[A, B] = B
+type Chain[A] = {value: A, next: Chain[Second[A]]}
+private fun walk[A](chain: Chain[A], n: Int) =
+  if n > 0 then walk(chain.next, n - 1) else ()

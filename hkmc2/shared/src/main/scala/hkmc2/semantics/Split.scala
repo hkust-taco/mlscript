@@ -5,7 +5,7 @@ import hkmc2.utils.*, shorthands.*
 import syntax.*, Elaborator.State, ucs.FlatPattern
 
 final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation: Split) extends AutoLocated:
-  def mkClone(using State): Branch =
+  def mkClone(using State, codegen.Erasure): Branch =
     val scrutineeClone = new Term.Ref(scrutinee.sym)
         (Tree.Ident(scrutinee.tree.name), scrutinee.typ)
     Branch(scrutineeClone, pattern.mkClone, continuation.mkClone)
@@ -31,7 +31,7 @@ enum Split extends AutoLocated with ProductWithTail:
   
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
-  def mkClone(using State): Split = this match
+  def mkClone(using State, codegen.Erasure): Split = this match
     case Cons(head, tail) => Cons(head.mkClone, tail.mkClone)
     case Let(sym, term, tail) => Let(sym, term.mkClone, tail.mkClone)
     case Else(default) => Else(default.mkClone)
@@ -126,6 +126,17 @@ enum Split extends AutoLocated with ProductWithTail:
       (sym.body.freeSplitSyms ++ tail.freeSplitSyms) - sym
     case Split.UseSplit(sym) => sym.body.freeSplitSyms + sym
   
+  def show(using utils.Scope, ShowCfg, Raise): document.Document =
+    import document.*
+    this match
+      case Cons(Branch(scrutinee, pattern, continuation), tail) =>
+        doc"${scrutinee.show} is ${pattern.show} then { #{  # ${continuation.show} #}  # } # ${tail.show}"
+      case Let(sym, term, tail) => doc"let ${sym.showName} = ${term.show}; # ${tail.show}"
+      case Else(default) => doc"else ${default.show}"
+      case End => doc""
+      case LetSplit(sym, tail) => doc"let-split ${sym.showName} = { #{  # ${sym.body.show} #}  # }; # ${tail.show}"
+      case UseSplit(sym) => doc"$${${sym.showName}}"
+
   final def showDbg(using DebugPrinter): String = this match
     case Split.Cons(head, tail) => s"${head.showDbg}; ${tail.showDbg}"
     case Split.Let(name, term, tail) => s"let ${name} = ${term.showDbg}; ${tail.showDbg}"
@@ -172,21 +183,25 @@ object Split:
   import utils.{tl, TL}
   import collection.mutable.{Map as MutMap}
   import ups.SplitCompiler, SplitCompiler.{MakeConsequent, Scrut, SymbolScrut}
-  import Term.Ref
   
   /** Desugar a `SimpleSplit` into a `Split`. */
-  def from(rootSplit: SS)(using tl: TL)(using Ctx, Raise, State): Split =
+  def from(rootSplit: SS)(using codegen.Erasure)(using tl: TL)(using Ctx, Raise, State, Config): Split =
     val compiler = new SplitCompiler()
-    val scrutCache = MutMap.empty[Ref, Scrut]
+    // Separate references to the same local binding must reuse its sub-scrutinees,
+    // so normalization can merge repeated tests and field extractions.
+    val scrutCache = MutMap.empty[LocalVarSymbol, Scrut]
     def go(split: SS): Split = split match
       case SS.Cons(branch, tail) => branch match
         case SS.Head.Match(ref, pattern, consequent) =>
+          val symbol = ref.sym match
+            case symbol: LocalVarSymbol => symbol
+            case _ => lastWords("A simple split scrutinee must refer to a local binding")
           lazy val alternative = go(tail)
           val makeConsequent: MakeConsequent = (output, bindings) =>
             bindings.iterator.foldLeft(go(consequent)):
               case (innerSplit, (symbol, mkTerm)) => Let(symbol, mkTerm(), innerSplit)
           compiler.makeMatchSplit
-            (scrutCache.getOrElseUpdate(ref, Scrut.from(ref)), pattern, false)
+            (scrutCache.getOrElseUpdate(symbol, Scrut.from(ref)), pattern, false)
             (makeConsequent, alternative)
         case SS.Head.Let(binding, term) => Let(binding, term, go(tail))
       case SS.Else(default) => Else(default)

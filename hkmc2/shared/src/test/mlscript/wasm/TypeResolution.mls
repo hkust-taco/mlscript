@@ -1,0 +1,10 @@
+:.
+
+// The annotation precedes both the alias and its unboxed representation.
+fun increment(n: Number): Number = wasm.i32.add(n, wasm.i32.const(1))
+type Number = LaterNumber
+type LaterNumber = Int32
+increment(wasm.i32.const(41))
+//│ Wasm result:
+//│ = 42
+

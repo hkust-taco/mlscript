@@ -1,0 +1,38 @@
+#lang(0.3.x)
+
+// * Private members and constructors accessed from other files (see `newres/PrivateMembers.mls`).
+
+module PrivateLibrary with
+  
+  class Counter(val start: Int) with
+    private constructor
+    private val next = start + 1
+    fun peek = next
+  
+  module Counter with
+    fun make(start: Int) = Counter(start)
+    fun nextOf(counter: Counter) = counter.next
+  
+  module Registry with
+    private val size = 3
+    fun count = size
+
+  private class Hidden with
+    fun value = 53
+  private fun Hidden() = new Hidden
+  fun hidden() = new Hidden
+
+  private class Implementation with
+    fun value = 59
+  module Implementation with
+    fun make() = new Implementation
+
+  private class Point(val value: Int)
+  private class Alone with
+    fun value = 73
+  private module Service with
+    fun value() = 79
+  fun point(x: Int) = Point(x)
+  fun alone() = new Alone
+  fun service() = Service.value()
+

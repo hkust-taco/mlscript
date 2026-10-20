@@ -79,7 +79,8 @@ enum Tree extends AutoLocated:
     extends Tree with TypeDefImpl
   case Open(opened: Tree)
   case OpenIn(opened: Tree, body: Tree)
-  case DynAccess(obj: Tree, fld: Tree)
+  /** `dynamic` is false only for `obj.[idx]`, an array index checked during resolution. */
+  case DynAccess(obj: Tree, fld: Tree, dynamic: Bool)
   case Modified(modifier: Keywrd[Keyword.Modifier], body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
@@ -160,7 +161,7 @@ enum Tree extends AutoLocated:
     case TyTup(tys) => tys.toVector
     case Sel(prefix, name) => Vector.double(prefix, name)
     case SynthSel(prefix, name) => Vector.single(prefix)
-    case DynAccess(prefix, fld) => Vector.double(prefix, fld)
+    case DynAccess(prefix, fld, _) => Vector.double(prefix, fld)
     case Open(bod) => Vector.single(bod)
     case OpenIn(opened, body) => Vector.double(opened, body)
     case Def(lhs, rhs) => Vector.double(lhs, rhs)
@@ -203,7 +204,7 @@ enum Tree extends AutoLocated:
     case Reft(base, reft) => "refinement"
     case Sel(prefix, name) => "selection"
     case SynthSel(prefix, name) => "synthetic selection"
-    case DynAccess(prefix, name) => "dynamic field access"
+    case DynAccess(prefix, name, _) => "dynamic field access"
     case PrefixApp(kw, body) => s"prefix operator '${kw.name}'"
     case InfixApp(lhs, kw, rhs) => s"infix operator '${kw.name}'"
     case LexicalNew(body, _) => "new"
@@ -304,7 +305,7 @@ enum Tree extends AutoLocated:
         case N => this
       case N => this
     case Sel(pre, nme) if nme.name.startsWith("'") =>
-      DynAccess(pre.desugared, StrLit(nme.name.drop(1)).withLocOf(nme)).withLocOf(this)
+      DynAccess(pre.desugared, StrLit(nme.name.drop(1)).withLocOf(nme), true).withLocOf(this)
     
     case Pun(false, id) =>
       InfixApp(id, Keywrd(Keyword.`:`), id)
@@ -313,6 +314,9 @@ enum Tree extends AutoLocated:
     case LetLike(kw, und @ Under(), r, b) =>
       LetLike(kw, Ident("_").withLocOf(und), r, b)
     
+    // `open` keeps its existing expression grammar; a declaration operand makes it a modifier.
+    case Open(body: (TypeOrTermDef | Modified | Annotated)) =>
+      Annotated(Keywrd(Keyword.`open`).withLocOf(this), body.desugared)
     case PossiblyAnnotated(anns, m: Modified) =>
       PossiblyAnnotated(anns,
         m match
@@ -325,6 +329,8 @@ enum Tree extends AutoLocated:
         case Modified(kw @ Keywrd(Keyword.`staged`), s) =>
           Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`virtual`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`override`), s) =>
           Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`public`), s) =>
           Annotated(kw, s.desugared)
@@ -368,6 +374,11 @@ enum Tree extends AutoLocated:
       // fun f(a: A)
       case InfixApp(id: Ident, Keywrd(Keyword.`:`), sign) =>
         R(ParamTree(flags, id, S(sign), N, modifiers))
+      // The annotation describes the rest tuple, just as for an ordinary parameter.
+      case InfixApp(SpreadParam(id, spd), Keywrd(Keyword.`:`), sign) =>
+        R(ParamTree(flags, id, S(sign), S(spd), modifiers))
+      case Spread(kw, S(InfixApp(id: Ident, Keywrd(Keyword.`:`), sign))) =>
+        R(ParamTree(flags, id, S(sign), S(SpreadKind.fromKw(kw)), modifiers))
       // fun f(..a) | fun f(...a)
       case SpreadParam(id, spd) =>
         R(ParamTree(flags, id, N, S(spd), modifiers))
@@ -504,6 +515,7 @@ sealed abstract class ValLike(str: Str, desc: Str)(using Line) extends TermDefKi
 sealed abstract class Val(str: Str, desc: Str)(using Line) extends ValLike(str, desc)
 case object ImmutVal extends Val("val", "value")
 case object MutVal extends Val("mut val", "mutable value")
+case object RecordField extends ValLike("field", "record field")
 case object LetBind extends ValLike("let", "let binding")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object Fun extends TermDefKind("fun", "function")
@@ -578,6 +590,12 @@ trait TypeOrTermDef extends Located:
       case Reft(base, body) =>
         rec(base, symbName, annot, body :: refts)
       
+      // In `class C(...): R { ... }`, the parser attaches the brace body to R.
+      // Extract it as the class body, just as for a body following `extends`.
+      // Parenthesized result refinements remain part of the result annotation.
+      case InfixApp(tree, kw @ Keywrd(Keyword.`:`), Reft(ann, body)) if this.isInstanceOf[TypeDef] =>
+        rec(InfixApp(tree, kw, ann), symbName, annot, body :: refts)
+      
       case InfixApp(tree, Keywrd(Keyword.`:`), ann) =>
         rec(tree, symbName, S(ann), refts)
       
@@ -638,6 +656,25 @@ trait TypeOrTermDef extends Located:
     case h => 
       (h, (N, Nil), N)
   
+  /** The span from this definition's keyword through the end of its head:
+    * its name, type and value parameter lists, result annotation, and parent clause.
+    * It excludes the definition's bodies (`{ ... }` refinements, `with` parts, and
+    * right-hand sides), which can span many lines and are noise in diagnostics
+    * that only need to identify the definition, such as arity errors.
+    * Modifiers and annotations of the definition are outside of its tree,
+    * so they are not covered either.
+    * Only the parts written within the definition's own span are included:
+    * desugarings can synthesize parts out of trees located elsewhere, as when
+    * `semantics.BlockImpl.desugStmts` gives the classes of ADT constructors
+    * a parent clause referring to the name of the enclosing class. */
+  lazy val headLoc: Opt[Loc] =
+    val parts =
+      symbName.flatMap(_.toOption).iterator
+        ++ name.toOption.toList ++ typeParams.toList
+        ++ paramLists ++ annotatedResultType.toList ++ extension
+    val written = parts.flatMap(_.toLoc).filter(part => toLoc.forall(_.covers(part)))
+    Loc.mk(written).map(head => toLoc.fold(head)(_.left ++ head))
+  
 end TypeOrTermDef
 
 
@@ -656,10 +693,14 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
       rhs.getOrElse(Empty()))
     case Trt | Mxn => ???
   
+  // Brace bodies and `with` bodies must expose the same members to builtin lookup
+  // and elaboration. Keep all candidates so elaboration can diagnose multiple bodies.
+  lazy val bodies: Ls[Tree] = reft ++ withPart
+  
   lazy val definedSymbols: Map[Str, BlockMemberSymbol] =
     // val fromParams = 
     // val fromTypeParams = 
-    withPart match
+    bodies.headOption match
     case S(blk: Block) =>
       blk.definedSymbols.toMap
     case _ =>
@@ -672,7 +713,7 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
       pts.flatMap(_.desugared.asParam(inUsing = inUsing).toOption).collect:
         case pt @ ParamTree(ident = id, spd = N) =>
           val k = if pt.flags.mut then MutVal else ImmutVal
-          TermSymbol(k, symbol.asClsLike, id, erasedType = N)
+          TermSymbol(k, symbol.asClsLike, id)
       .toList
     
   lazy val allSymbols = definedSymbols ++

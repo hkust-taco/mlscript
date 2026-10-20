@@ -1,3 +1,5 @@
+#lang(0.2.x)
+
 import "./Example.mls"
 import "./quotes/CSPNest.mls"
 open Example

@@ -22,14 +22,14 @@ private fun bar(ls) =
   @matchShapes(Cons(1, Cons(2, Cons(3, Cons(_, Cons(_, Cons(_, Nil)))))))
   shape.match of ls, () => ls.Cons#xs.Cons#xs.Cons#xs.Cons#x + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x + + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x 
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Cons@21, Cons@20, Cons@18, Cons@19, Cons@16, Cons@17 in foo
-//│ class-tags collection-phase > track consumption at match@26 in bar
+//│ class-tags collection-phase > track construction of Cons@154, Cons@156, Cons@155, Cons@158, Cons@157, Cons@159 in foo
+//│ class-tags collection-phase > track consumption at match@187 in bar
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Nil@15, Cons@16, Cons@17, Cons@18, Cons@19, Cons@20, Cons@21
-//│ class-tags web-computation-phase >   field accesses: Cons.x@0, Cons.xs@1, Cons.xs@2, Cons.xs@3, Cons.x@4, Cons.xs@5, Cons.xs@6, Cons.xs@7, Cons.xs@8, Cons.x@9, Cons.xs@10, Cons.xs@11, Cons.xs@12, Cons.xs@13, Cons.xs@14
-//│ class-tags web-computation-phase >   pattern matches: match@26
+//│ class-tags web-computation-phase >   producers: Nil@153, Cons@154, Cons@155, Cons@156, Cons@157, Cons@158, Cons@159
+//│ class-tags web-computation-phase >   field accesses: Cons.x@136, Cons.xs@137, Cons.xs@138, Cons.xs@139, Cons.x@140, Cons.xs@141, Cons.xs@142, Cons.xs@143, Cons.xs@144, Cons.x@145, Cons.xs@146, Cons.xs@147, Cons.xs@148, Cons.xs@149, Cons.xs@150
+//│ class-tags web-computation-phase >   pattern matches: match@187
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Nil
@@ -97,14 +97,14 @@ private fun foofoo(t) =
     () => t.C#x.D#x + 1
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@4, D@3, C@6 in foo
-//│ class-tags collection-phase > track consumption at match@9 in foofoo
+//│ class-tags collection-phase > track construction of C@391, D@390, C@393 in foo
+//│ class-tags collection-phase > track consumption at match@406 in foofoo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@3, C@4, E@5, C@6
-//│ class-tags web-computation-phase >   field accesses: D.x@1, C.x@2
-//│ class-tags web-computation-phase >   pattern matches: match@9
+//│ class-tags web-computation-phase >   producers: D@390, C@391, E@392, C@393
+//│ class-tags web-computation-phase >   field accesses: D.x@385, C.x@386
+//│ class-tags web-computation-phase >   pattern matches: match@406
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for D(x: _)
@@ -160,14 +160,14 @@ private fun foofoo(t) =
     () => t.C#x.D#x + 1
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of D@3, C@5 in foo
-//│ class-tags collection-phase > track consumption at match@8 in foofoo
+//│ class-tags collection-phase > track construction of C@510, D@508 in foo
+//│ class-tags collection-phase > track consumption at match@523 in foofoo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@3, E@4, C@5
-//│ class-tags web-computation-phase >   field accesses: D.x@1, C.x@2
-//│ class-tags web-computation-phase >   pattern matches: match@8
+//│ class-tags web-computation-phase >   producers: D@508, E@509, C@510
+//│ class-tags web-computation-phase >   field accesses: D.x@503, C.x@504
+//│ class-tags web-computation-phase >   pattern matches: match@523
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for D(x: _)
@@ -240,13 +240,13 @@ fun pair(x, y) =
     () => 2
     () => 3
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Pair@6 in pair
-//│ class-tags collection-phase > track consumption at match@7 in pair
+//│ class-tags collection-phase > track construction of Pair@654 in pair
+//│ class-tags collection-phase > track consumption at match@663 in pair
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@2, E@3, D@4, E@5, Pair@6
-//│ class-tags web-computation-phase >   pattern matches: match@7
+//│ class-tags web-computation-phase >   producers: D@650, E@651, D@652, E@653, Pair@654
+//│ class-tags web-computation-phase >   pattern matches: match@663
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for D(x: 1)

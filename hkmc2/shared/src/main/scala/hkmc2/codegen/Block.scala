@@ -29,6 +29,15 @@ This means that if a program fragment containing definitions is rewritten at all
 then the rewritten version must be kept as the "currently valid" version, and the old one must no longer be reused,
 as a given symbol can never correspond to more than one IR definition.
 
+Class-like symbols also retain a `ClassHeader`: erasure publishes these before executable bodies,
+including for external declarations, and rewritten IR class definitions refresh them. This lets inheritance
+queries operate solely on IR even when a parent has no executable definition or has not been lowered yet.
+An unknown parent is recorded inside the header, independently of its other metadata.
+The header also links a companion module to its containing class, including the synthetic class of a
+standalone module. The distinct instance and static receivers share that class as their member container.
+It also records the function companion carrying the runtime class value. This symbol is an explicit
+`ClsLikeDefn` operand so transformations preserve and refresh it along with other IR references.
+
 Moreover, we generally assume that in a given program, no symbol is every bound more than once
 by any binding form, such as Scoped, Label, Define. (This is currently not completely enforced, though.)
 This means that processes that duplicate binding forms within a program (eg, inlining)
@@ -59,11 +68,10 @@ type ScopedSymbol = LocalVarSymbol | BlockMemberSymbol
   */
 type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
 
-/** Symbols that may be bound by MIR binding forms such as `Scoped`.
-  */
-type BoundSymbol = ScopedSymbol | TermSymbol
-
-/** Symbols that may occur in MIR free-variable sets.
+/** Symbols of lexical bindings required by MIR, including assignment destinations.
+  * A `MemberRef` requires its block member binding regardless of the selected definition:
+  * `Scoped` introduces that binding, and JS can store its class on the companion function.
+  * Analyses needing individual definitions must instead inspect the reference's `disamb`.
   */
 type FreeSymbol = SimpleSymbol | BlockMemberSymbol | LabelSymbol
 
@@ -146,7 +154,7 @@ sealed abstract class Block extends Product:
   // * Note: this function is only for rather fringe use-cases in the optimizer;
   // * it should not be used for scope analysis purposes
   // * (like it used to before we added Scoped blocks).
-  lazy val definedVars: Set[BoundSymbol] = this match
+  lazy val definedVars: Set[ScopedSymbol] = this match
     case _: Return | _: Throw | _: Unreachable => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
     case Assign(NoSymbol, r, rst) => rst.definedVars
@@ -192,9 +200,9 @@ sealed abstract class Block extends Product:
   
   lazy val freeVars: Set[FreeSymbol] = this match
     case Match(scrut, arms, dflt, rest) =>
-      scrut.freeVars ++ dflt.toList.flatMap(_.freeVars) ++ rest.freeVars
-      ++ arms.flatMap:
-        (pat, arm) => arm.freeVars -- pat.freeVars
+      scrut.freeVars ++ dflt.iterator.flatMap(_.freeVars) ++ rest.freeVars
+      ++ arms.iterator.flatMap:
+        (pat, arm) => arm.freeVars ++ pat.freeVars
     case Return(res) => res.freeVars
     case Throw(exc) => exc.freeVars
     case Label(label, _, body, rest) => (body.freeVars - label) ++ rest.freeVars 
@@ -607,6 +615,7 @@ object HandleBlock:
       End(),
       N,
       N,
+      N,
     )(N, Nil)
 
     blockBuilder
@@ -641,10 +650,7 @@ sealed abstract class Defn:
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
     case _ => false
-  lazy val visibility: Visibility = annotations.collectFirst:
-    case Annot.Modifier(Keyword.`private`) => Visibility.Private
-    case Annot.Modifier(Keyword.`public`) => Visibility.Public
-  .getOrElse(Visibility.Public)
+  lazy val visibility: Visibility = Visibility.of(annotations)
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]
   
@@ -679,7 +685,7 @@ sealed abstract class Defn:
         // * they need to be declared with `let` in JS, which is why we add them here.
         vd.sym.optionIf(tsym.owner.isEmpty)
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
-        methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
+        methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
       preCtor.freeVars
         ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
         -- auxParams.flatMap(_.paramSyms)
@@ -690,7 +696,7 @@ sealed abstract class Defn:
   lazy val size: Int = this match
     case FunDefn(_, _, _, params, body) => 1 + body.size
     case ValDefn(_, _, rhs) => 1
-    case ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
+    case ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
       1 + methods.map(_.size).sum + preCtor.size + ctor.size + stat.fold(0)(_.size)
   
 
@@ -845,6 +851,28 @@ object ValDefn:
       ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasedType = rhs.erasedValueType), sym, rhs)(configOverride, annotations)
 
 
+/** Class metadata, available independently of its executable body.
+  * An absent header means metadata has not been published. A published header records the parent
+  * as unknown, absent (a root), or known, independently of the remaining metadata.
+  * `companionClass` is installed by `ClsLikeDefn` for modules attached to a class, including
+  * standalone modules with synthetic classes. Other inner symbols are their own member containers.
+  * `termCompanion` identifies the function carrying this class/module's runtime value. Accessing
+  * that value must use the function's storage, including its private name, before selecting `.class`.
+  */
+final case class ClassHeader(parent: ClassHeader.Parent, companionClass: Opt[InnerSymbol], termCompanion: Opt[TermSymbol])
+
+object ClassHeader:
+  enum Parent:
+    case Unknown
+    case Root
+    case Known(symbol: TypeSymbol)
+
+    /** The parent symbol, if known. This projection does not distinguish roots from unknown parents;
+      * analyses that need to prove the absence of ancestors must inspect the three cases directly. */
+    def knownSymbol: Opt[TypeSymbol] = this match
+      case Known(symbol) => S(symbol)
+      case Unknown | Root => N
+
 /*
   The following explains the difference between paramsOpt, auxParams, privateFields and publicFields.
   
@@ -895,14 +923,26 @@ final case class ClsLikeDefn(
     ctor: Block,
     companion: Opt[ClsLikeBody],
     bufferable: Option[Bool],
+    termCompanion: Opt[TermSymbol],
 )(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
 ) extends Defn:
   require(k isnt syntax.Mod)
+  isym match
+    case sym: ClassLikeSymbol =>
+      val parent = parentPath match
+        case N => ClassHeader.Parent.Root
+        case S(parent) => parent.targetSymbol.flatMap(_.asTpe)
+          .fold(ClassHeader.Parent.Unknown)(ClassHeader.Parent.Known(_))
+      sym.irClassHeader = S(ClassHeader(parent, N, termCompanion))
+    case _ => ()
   methods.foreach: m =>
     m.dSym.irDefn = S(m)
   companion.foreach: c =>
+    c.isym match
+      case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym), termCompanion))
+      case _ => ()
     c.methods.foreach: m =>
       m.dSym.irDefn = S(m)
   val defnSym = S(isym)
@@ -917,6 +957,7 @@ final case class ClsLikeBody(
     ctor: Block,
     annotations: Ls[Annot],
 ):
+  lazy val visibility: Visibility = Visibility.of(annotations)
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
     case _ => false
@@ -994,6 +1035,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case Value.This(sym) => s"this[${sym.showDbg}]"
     case Value.Lit(lit) => lit.idStr
     case Select(q, n) => s"Select(${q.showDbg}, ${n.showDbg})"
+    case SuperSelect(q, base, n) => s"SuperSelect(${q.showDbg}, ${base.showDbg}, ${n.showDbg})"
     case DynSelect(q, fld, arrayIdx) => s"DynSelect(${q.showDbg}, ${fld.showDbg}, $arrayIdx)"
     case Call(fun, argss) => s"Call(${fun.showDbg}, [${
       argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
@@ -1022,6 +1064,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case _: Value => true
     case sel @ Select(q, n) =>
       q.isPure && sel.symbol.exists(_.isPure)
+    case sel @ SuperSelect(q, base, _) => q.isPure && base.isPure && sel.symbol.isPure
     case c @ Call(fun, ass) if c.isKnownUnsaturatedCall =>
       fun.isPure && ass.forall(_.forall(a => a.spread.isEmpty && a.value.isPure))
     case Call(Value.SimpleRef(bs: BuiltinSymbol), ass) if bs.isPure =>
@@ -1038,19 +1081,21 @@ sealed abstract class Result extends Located, HasErasedType:
     case Call(fun, argss) => fun.subBlocks ::: argss.flatten.flatMap(_.value.subBlocks)
     case Instantiate(mut, cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
+    case SuperSelect(qual, base, _) => qual.subBlocks ::: base.subBlocks
     case Lambda(params, body) => body :: Nil
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
   
   lazy val freeVars: Set[FreeSymbol] = this match
-    case Call(fun, argss) => fun.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
-    case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.flatten.flatMap(_.value.freeVars).toSet
+    case Call(fun, argss) => fun.freeVars ++ argss.iterator.flatten.flatMap(_.value.freeVars).toSet
+    case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.iterator.flatten.flatMap(_.value.freeVars).toSet
     case Cast(value, _, _) => value.freeVars
     case Select(qual, name) => qual.freeVars
+    case SuperSelect(qual, base, _) => qual.freeVars ++ base.freeVars
     case Lambda(params, body) => body.freeVars -- params.paramSyms
-    case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
+    case Tuple(mut, elems) => elems.iterator.flatMap(_.value.freeVars).toSet
     case Record(mut, args) =>
-      args.flatMap(arg => arg.idx.fold(Set.empty[FreeSymbol])(_.freeVars) ++ arg.value.freeVars).toSet
+      args.iterator.flatMap(arg => arg.idx.fold(Set.empty[FreeSymbol])(_.freeVars) ++ arg.value.freeVars).toSet
     case Value.SimpleRef(l) => Set.single(l)
     case Value.MemberRef(bms, disamb) => Set.single(bms)
     case Value.This(sym) => Set.empty
@@ -1062,6 +1107,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case Instantiate(mut, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
     case Cast(value, _, _) => value.size
     case Select(qual, name) => qual.size
+    case SuperSelect(qual, base, _) => qual.size + base.size
     case Lambda(params, body) => 1 + body.size
     case Tuple(mut, elems) => elems.iterator.map(_.value.size).sum
     case Record(mut, args) => args.iterator.map(arg => arg.idx.fold(0)(_.size) + arg.value.size).sum
@@ -1107,6 +1153,7 @@ sealed abstract class Result extends Located, HasErasedType:
       case _ => N
     // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
     // * unresolved selection (dynamic field access) stays unknown.
+    case sel: SuperSelect => sel.symbol.erasedType
     case sel @ Select(_, _) => sel.symbol match
       case S(ts: TermSymbol) => ts.erasedType
       // * A class reference is the class object, so it stays unknown.
@@ -1310,6 +1357,7 @@ sealed abstract class Path extends TrivialResult:
   def targetSymbol: Opt[DefinitionSymbol[?]] = this match
     case ref: Value.MemberRef => S(ref.disamb)
     case sel: Select => sel.symbol
+    case sel: SuperSelect => S(sel.symbol)
     case _ => N
 
 /**
@@ -1318,6 +1366,14 @@ sealed abstract class Path extends TrivialResult:
 case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]], val toLoc: Opt[Loc])(val sanitize: Boolean) extends Path with ProductWithExtraInfo:
   def withLoc(loc: Opt[Loc]): Select = if loc == toLoc then this else copy()(symbol, loc)(sanitize)
   def extraInfo(using DebugPrinter): Str = symbol.map(s => s"sym=${s.showAsPlain}").mkString
+
+/** Direct lookup on the lexical parent's prototype, with the original receiver as `this`.
+  * `base` is the same stable parent operand used by the class definition: a direct class
+  * reference or a previously evaluated value. No extends expression is re-evaluated at a
+  * super call. Both operands are explicit so lifting and inlining preserve their bindings.
+  */
+case class SuperSelect(qual: Path, base: Path, name: Tree.Ident)(val symbol: TermSymbol, val toLoc: Opt[Loc]) extends Path:
+  def withLoc(loc: Opt[Loc]): SuperSelect = if loc == toLoc then this else copy()(symbol, loc)
 
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool)(val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): DynSelect = if loc == toLoc then this else copy()(loc)
@@ -1390,6 +1446,7 @@ object TermSymbolPath:
     case selection: Select => selection.symbol match
       case S(sym: TermSymbol) => S(sym)
       case _ => N
+    case selection: SuperSelect => S(selection.symbol)
     case _ => N
 
 case class Arg(spread: Opt[SpreadKind], value: Path)

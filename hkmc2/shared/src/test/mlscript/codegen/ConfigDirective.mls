@@ -156,14 +156,14 @@ print(42)
 private fun deadParamConfig(a) = 0
 deadParamConfig(42)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun deadParamConfig#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > deadParamConfig⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 
 #config(flowBasedOpt: None)
 
 
-#config(deforest: Some(Deforest(mono: false)))
+#config(deforest: Some(Deforest(mono: false)), liftDefns: Some(LiftDefns))
 #config(effectHandlers: Some(EffectHandlers(stackSafety: None)))
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
@@ -179,14 +179,14 @@ fstConfig(Pair(1, 2))
 //│ deforest > <<< fusing <<<
 //│ = 1
 
-#config(deforest: None)
+#config(deforest: None, liftDefns: None)
 
 fun fstConfig(p) = if p is Pair(x, y) then x
 fstConfig(Pair(1, 2))
 //│ = 1
 
 
-#config(deforest: Some(Deforest(debug: false, logNonAffine: true)))
+#config(deforest: Some(Deforest(debug: false, logNonAffine: true)), liftDefns: Some(LiftDefns))
 //│ deforest > >>> non-affine syms >>>
 //│ deforest > <<< non-affine syms <<<
 
@@ -194,18 +194,20 @@ fun fst(p) = if p is Pair(x, y) then x
 fun applyTwice(f, x) = f(x) + f(x)
 applyTwice(fst, Pair(1, 2))
 //│ deforest > >>> non-affine syms >>>
-//│ deforest > cap_ub_(term:fst,0)_for_fst@35
-//│ deforest > f_for_applyTwice@24
-//│ deforest > f_for_applyTwice@55
-//│ deforest > fst_for_fst@32
-//│ deforest > tmp@1
-//│ deforest > x_for_applyTwice@23
-//│ deforest > x_for_applyTwice@54
+//│ deforest > cap_ub_(term:applyTwice,0)_for_applyTwice⁰
+//│ deforest > cap_ub_(term:fst,0)_for_fst¹
+//│ deforest > cap_ub_(term:fst,0)_for_fst⁰
+//│ deforest > f_for_applyTwice¹
+//│ deforest > f_for_applyTwice⁰
+//│ deforest > fst_for_fst⁰
+//│ deforest > tmp⁰
+//│ deforest > x_for_applyTwice¹
+//│ deforest > x_for_applyTwice⁰
 //│ deforest > <<< non-affine syms <<<
 //│ = 2
 
 
-#config(deforest: None)
+#config(deforest: None, liftDefns: None)
 #config(language: 0.3.x)
 #lang(0.2.x)
 

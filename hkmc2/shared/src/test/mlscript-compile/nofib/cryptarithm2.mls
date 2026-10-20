@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -17,17 +19,17 @@ fun delete_(xs, e) = deleteBy((x, y) => x === y, e, xs)
 
 fun listDiff(a, ls) = foldl(delete_, a, ls)
 
-data class StateT[S, M, A](run)
+data class StateT[S, M, A](run: Function)
 
 fun runStateT(m, s) = if m is StateT(run) then run(s)
 
-fun bind(m, f) =
+fun bind(m, f: Function) =
   StateT of
     s => concat of map(case { [a, ss] then runStateT(f(a), ss) }, runStateT(m, s))
 
 fun return_(a) = StateT(s => [a, s] :: Nil)
 
-fun mapM(f, ls) = foldr((a, r) => bind(f(a), x => bind(r, xs => return_(x :: xs))), return_(Nil), ls)
+fun mapM(f: Function, ls) = foldr((a, r) => bind(f(a), x => bind(r, xs => return_(x :: xs))), return_(Nil), ls)
 
 fun lift(ls) = StateT(s => concat(map(x => [x, s] :: Nil, ls)))
 

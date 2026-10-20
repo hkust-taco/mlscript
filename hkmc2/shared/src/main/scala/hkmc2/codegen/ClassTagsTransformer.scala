@@ -25,13 +25,13 @@ private object ClassTagsDebug:
     case index: Int => index.toString
 
   def showProducer(producer: Ctor): Str =
-    s"${showCtor(producer.ctor)}@${producer.exprId}"
+    s"${showCtor(producer.ctor)}@${producer.exprId.uid}"
 
   def showFieldAccess(access: FieldSel): Str =
-    s"${{showCtor(access.selectsFrom)}}.${showField(access.field)}@${access.exprId}"
+    s"${{showCtor(access.selectsFrom)}}.${showField(access.field)}@${access.exprId.uid}"
 
   def showPatternMatch(patternMatch: Dtor): Str =
-    s"match@${patternMatch.exprId}"
+    s"match@${patternMatch.exprId.uid}"
 
   def showConsumer(consumer: ConcreteCtorConsumer): Str = consumer match
     case access: FieldSel => showFieldAccess(access)
@@ -150,10 +150,17 @@ private sealed abstract class Shape:
 private object Shape:
   val defaultFlattenThreshold: Int = 256
 
-  def mkShapeByPattern(pattern: Pattern)(using raise: Raise): Shape =
+  def mkShapeByPattern(pattern: Pattern)(using Config, Erasure, Raise): Shape =
     pattern match
       case ctorPattern @ Pattern.Constructor(_, arguments) =>
-        val ctor = ctorPattern.symbol.flatMap:
+        // New resolution records the constructor selected in pattern context separately
+        // from its target term, which may also denote a term companion.
+        val symbol =
+          if config.language.useNewResolution then ctorPattern.resolvedTargets.distinct match
+            case sym :: Nil if !ctorPattern.isErroneous => S(sym)
+            case _ => N
+          else ctorPattern.target.resolvedSym
+        val ctor = symbol.flatMap:
           case ctor: ClassCtorSymbol => S(ctor.associatedCls)
           case symbol => symbol.asClsLike
         ctor match
@@ -264,7 +271,7 @@ class ClassTagsTransformer(
   val webs: List[Web],
   val flowRes: FlowConstraintSolver,
   val debug: Bool,
-)(using State, Elaborator.Ctx, TL, Raise) extends BlockTransformer(SymbolSubst.Id):
+)(using Config, Erasure, State, Elaborator.Ctx, TL, Raise) extends BlockTransformer(SymbolSubst.Id):
   private given fState: FlowAnalysis.State = flowRes.fState
 
   private val producersInWeb = webs.iterator.flatMap(_.markedProducers).toSet
@@ -844,6 +851,7 @@ object ClassTagsTransformer:
     eState: State,
     ctx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
+    erasure: Erasure,
   ): Program =
     cfg.classTags match
       case N => p

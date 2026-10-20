@@ -1,3 +1,4 @@
+:.
 :noInline
 
 :global
@@ -18,13 +19,7 @@ fun cast() =
   42
 cast()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define cast⁰ as fun cast¹() {
-//│   let unused, x;
-//│   set x = Box⁰(1);
-//│   define unused as val unused⁰ = (x as! Box¹);
-//│   return 42
-//│ };
-//│ return cast¹()
+//│ define cast⁰ as fun cast¹() { let x; set x = Box⁰(1); do (x as! Box¹); return 42 }; return cast¹()
 //│ Wasm result:
 //│ = 42
 
@@ -37,14 +32,7 @@ fun cast() =
   42
 cast()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define cast² as fun cast³() {
-//│   let tmp, unused, x;
-//│   set x = Box⁰(1);
-//│   define unused as val unused¹ = x;
-//│   define tmp as val tmp⁰ = (unused¹ as! Box¹);
-//│   return 42
-//│ };
-//│ return cast³()
+//│ define cast² as fun cast³() { let x; set x = Box⁰(1); do (x as! Box¹); return 42 }; return cast³()
 //│ Wasm result:
 //│ = 42
 

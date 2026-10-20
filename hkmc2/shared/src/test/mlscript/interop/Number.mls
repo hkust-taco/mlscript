@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -5,7 +6,7 @@ globalThis.Number("0.50")
 //│ = 0.5
 
 
-let num = _ globalThis.Number()
+let num = => _ globalThis.Number()
 //│ num = fun num
 
 num("0.50")

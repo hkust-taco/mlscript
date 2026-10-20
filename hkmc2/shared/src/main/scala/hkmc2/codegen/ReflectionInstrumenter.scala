@@ -191,6 +191,9 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           transformResult(value): v =>
             blockCtor("Symbol", Ls(toValue(target.describe)), "target"): t =>
               blockCtor("Cast", Ls(v, t, toValue(check)), "cast")(k)
+        case _: SuperSelect =>
+          raise(ErrorReport(msg"Super selection is not supported in staged modules." -> p.toLoc :: Nil))
+          End()
         case _: Value.This =>
           raise(ErrorReport(msg"Value.This not supported in staged module." -> p.toLoc :: Nil))
           End()

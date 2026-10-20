@@ -24,14 +24,14 @@ private fun inspect(t) =
   @matchShapes(C(_)) shape.match of t,
     () => t.C#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@4 in foo
-//│ class-tags collection-phase > track consumption at match@6 in inspect
+//│ class-tags collection-phase > track construction of C@120 in foo
+//│ class-tags collection-phase > track consumption at match@128 in inspect
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@2, E@3, C@4
-//│ class-tags web-computation-phase >   field accesses: C.x@1
-//│ class-tags web-computation-phase >   pattern matches: match@6
+//│ class-tags web-computation-phase >   producers: D@118, E@119, C@120
+//│ class-tags web-computation-phase >   field accesses: C.x@115
+//│ class-tags web-computation-phase >   pattern matches: match@128
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for D(x: _)
@@ -92,14 +92,14 @@ private fun inspect(t) =
   @matchShapes(C(_)) shape.match of t,
     () => t.C#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@3, C@5 in foo
-//│ class-tags collection-phase > track consumption at match@7 in inspect
+//│ class-tags collection-phase > track construction of C@227, C@225 in foo
+//│ class-tags collection-phase > track consumption at match@235 in inspect
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@2, C@3, E@4, C@5
-//│ class-tags web-computation-phase >   field accesses: C.x@1
-//│ class-tags web-computation-phase >   pattern matches: match@7
+//│ class-tags web-computation-phase >   producers: D@224, C@225, E@226, C@227
+//│ class-tags web-computation-phase >   field accesses: C.x@221
+//│ class-tags web-computation-phase >   pattern matches: match@235
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for D(x: _)
@@ -162,14 +162,14 @@ private fun inspect(t) =
     () => t.C#x.E#x
     () => t.C#x.F#y
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@6, C@8, E@5, F@7 in foo
-//│ class-tags collection-phase > track consumption at match@10 in inspect
+//│ class-tags collection-phase > track construction of C@358, C@360 in foo
+//│ class-tags collection-phase > track consumption at match@373 in inspect
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: E@5, C@6, F@7, C@8
-//│ class-tags web-computation-phase >   field accesses: E.x@1, C.x@2, F.y@3, C.x@4
-//│ class-tags web-computation-phase >   pattern matches: match@10
+//│ class-tags web-computation-phase >   producers: E@357, C@358, F@359, C@360
+//│ class-tags web-computation-phase >   field accesses: E.x@350, C.x@351, F.y@353, C.x@354
+//│ class-tags web-computation-phase >   pattern matches: match@373
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for E(x: _)

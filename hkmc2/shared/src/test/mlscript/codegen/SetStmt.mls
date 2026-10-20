@@ -1,5 +1,7 @@
 :js
 
+#lang(0.3.x)
+
 
 let g = [0]
 //│ g = [0]
@@ -20,9 +22,18 @@ g
 
 set g.0 |>= Math.sign
 
+// The RHS of `|>=` delimits the placeholder, as for `|>`.
 set g.2 |>= Math.pow(_, 5)
-//│ = fun
 
+:expect [1, 1, 32]
 g
-//│ = [1, 1, 2]
+//│ = [1, 1, 32]
+
+
+// Parentheses do not delimit placeholders in the new syntax.
+set g.2 |>= (Math.pow(_, 2))
+
+:expect [1, 1, 1024]
+g
+//│ = [1, 1, 1024]
 

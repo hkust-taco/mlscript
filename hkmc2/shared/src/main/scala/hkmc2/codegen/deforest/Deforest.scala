@@ -137,7 +137,7 @@ end DeforestFusionSolver
 
 
 object Deforest:
-  def apply(p: Program)(using
+  def apply(p: Program, additionalTopLevelSymbols: Set[LocalVarSymbol])(using
     cfg: Config,
     tl: TL,
     raise: Raise,
@@ -156,6 +156,6 @@ object Deforest:
     val solver = new DeforestFusionSolver(flowAnalysisRes)
     if !solver.hasWorkToDo then p
     else
-      val rewrite = new DeforestRewriter(solver)
+      val rewrite = new DeforestRewriter(solver, additionalTopLevelSymbols)
       rewrite()
 

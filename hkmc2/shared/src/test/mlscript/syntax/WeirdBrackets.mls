@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -8,24 +9,48 @@
 //│ = {a: 1, b: 2}
 
 
-:e
+// * `\` is an infix keyword (see `BackslashApps.mls`), so it cannot be used in prefix position
+// * nor be defined as an operator
+
+:pe
+:re
 \{ Int }
-//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.12: 	\{ Int }
-//│ ╙──      	^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.17: 	\{ Int }
+//│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:e
+:pe
+:re
 \(0)
-//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.19: 	\(0)
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.25: 	\(0)
+//│ ╙──      	^
+//│ ╔══[PARSE ERROR] Expected end of input; found parenthesis section instead
+//│ ║  l.25: 	\(0)
 //│ ╙──      	 ^^^
-//│ = fun
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+:pe
+:e
 fun (\) huh(x) = x
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.36: 	fun (\) huh(x) = x
+//│ ╙──      	     ^
+//│ ╔══[COMPILATION ERROR] This ‹erroneous syntax› is not a valid symbolic name
+//│ ║  l.36: 	fun (\) huh(x) = x
+//│ ╙──      	      ^
 
+:pe
+:re
 \(0)
-//│ = 0
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.46: 	\(0)
+//│ ╙──      	^
+//│ ╔══[PARSE ERROR] Expected end of input; found parenthesis section instead
+//│ ║  l.46: 	\(0)
+//│ ╙──      	 ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 // Writing record patterns in this way is strange. In the previous `Desugarer`,
@@ -33,7 +58,7 @@ fun (\) huh(x) = x
 // syntax. In the new `Desugarer`, we chose not to support this syntax.
 fun f(x) = if x is {( Int then 1, Bool then 2 )}
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (parenthesis section).
-//│ ║  l.34: 	fun f(x) = if x is {( Int then 1, Bool then 2 )}
+//│ ║  l.59: 	fun f(x) = if x is {( Int then 1, Bool then 2 )}
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -42,23 +67,28 @@ fun f(x) = if x is {( Int then 1, Bool then 2 )}
 :e
 fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (parenthesis section).
-//│ ║  l.43: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
+//│ ║  l.68: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+:pe
 :e
 fun f(x) = if x is \{ Int then 1, Bool then 2 }
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (refinement).
-//│ ║  l.49: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
-//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.75: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
+//│ ╙──      	                   ^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (‹erroneous syntax›).
+//│ ║  l.75: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
+//│ ╙──      	                                               ^
 
+:pe
 :e
 fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ╔══[COMPILATION ERROR] Cannot use this reference as a pattern.
-//│ ║  l.55: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.85: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^
-//│ ╔══[COMPILATION ERROR] Cannot use this reference as a pattern.
-//│ ║  l.55: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ╙──      	                   ^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (‹erroneous syntax›).
+//│ ║  l.85: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╙──      	                                               ^
 
 class Box[T](val content: T)
 
@@ -67,12 +97,12 @@ fun interesting(x) =
   if x is Box( Int then 1, Bool then 2 )
 //│ Split with nested patterns:
 //│ >  if
-//│ >    x is Box(Int) then 1
-//│ >    x is Box(Bool) then 2
+//│ >    x is member:Box⁰^term:interesting⁰(member:Int⁰^term:interesting⁰) then 1
+//│ >    x is member:Box⁰^term:interesting⁰(member:Bool⁰^term:interesting⁰) then 2
 //│ Expanded split with flattened patterns:
 //│ >  ‹if|while›
-//│ >    x is Box(arg$Box$0$) and tmp:arg$Box$0$ is Int then 1
-//│ >    x is Box(arg$Box$0$) and tmp:arg$Box$0$ is Bool then 2
+//│ >    x is member:Box⁰^term:interesting⁰(arg$Box$0$) and tmp:arg$Box$0$ is member:Int⁰^term:interesting⁰ then 1
+//│ >    x is member:Box⁰^term:interesting⁰(arg$Box$0$) and tmp:arg$Box$0$ is member:Bool⁰^term:interesting⁰ then 2
 
 interesting of Box(42)
 //│ = 1

@@ -1,16 +1,18 @@
+:.
 :js
 :noInline
 :flowBasedOpt debugDpe
 
 
+// Dynamic receivers keep the invalid null accesses in the generated code.
 // an eliminated arg with effects is still evaluated
 :re
 :soir
 private fun f(a) = 0
-fun g(o) = f(o.x)
+fun g(o: dyn) = f(o.x)
 g(null)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > f⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
@@ -24,10 +26,10 @@ g(null)
 :re
 :soir
 private fun f(a, b) = a
-fun g(o, p) = f(o.x, p.y)
+fun g(o: dyn, p: dyn) = f(o.x, p.y)
 g(null, null)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > f²#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
@@ -53,7 +55,7 @@ private fun f(a, b) = a
 fun g(o) = f(n, o.bump)
 g(new A)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > prodfun f#0 @ <root> -> eliminable: {1}
+//│ dead-param-elim > f⁴#0 @ <root> -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp;
@@ -64,12 +66,12 @@ g(new A)
 //│ define g⁴ as fun g⁵(o) {
 //│   let arg;
 //│   set arg = n⁰;
-//│   do o.bump﹖;
+//│   do o.bump⁰;
 //│   return f⁵(arg)
 //│ };
 //│ set n⁰ = 0;
 //│ define A⁰ as class A¹ {
-//│   method bump⁰ = fun bump¹ {
+//│   method bump¹ = fun bump⁰ {
 //│     set n⁰ = 1;
 //│     return runtime⁰.Unit⁰
 //│   }

@@ -66,13 +66,13 @@ fun unannotated() =
   let value = new Box(0)
   shape.match of value, () => 1
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@0 in unannotated
-//│ class-tags collection-phase > track consumption at match@1 in unannotated
+//│ class-tags collection-phase > track construction of Box@221 in unannotated
+//│ class-tags collection-phase > track consumption at match@224 in unannotated
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@0
-//│ class-tags web-computation-phase >   pattern matches: match@1
+//│ class-tags web-computation-phase >   producers: Box@221
+//│ class-tags web-computation-phase >   pattern matches: match@224
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
@@ -142,13 +142,13 @@ fun foo() =
   @matchShapes(D(_)) shape.match of t,
     () => t.D#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@1 in foo
-//│ class-tags collection-phase > track consumption at match@2 in foo
+//│ class-tags collection-phase > track construction of C@367 in foo
+//│ class-tags collection-phase > track consumption at match@371 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@1
-//│ class-tags web-computation-phase >   pattern matches: match@2
+//│ class-tags web-computation-phase >   producers: C@367
+//│ class-tags web-computation-phase >   pattern matches: match@371
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: 0)
@@ -171,13 +171,13 @@ fun overlap() =
   let value = new Box(0)
   @matchShapes(Box(_), _) shape.match of value, () => 1, () => 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@0 in overlap
-//│ class-tags collection-phase > track consumption at match@1 in overlap
+//│ class-tags collection-phase > track construction of Box@413 in overlap
+//│ class-tags collection-phase > track consumption at match@418 in overlap
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@0
-//│ class-tags web-computation-phase >   pattern matches: match@1
+//│ class-tags web-computation-phase >   producers: Box@413
+//│ class-tags web-computation-phase >   pattern matches: match@418
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
@@ -249,13 +249,13 @@ fun constructorMutation() =
   let value = new Altered(new A(0))
   @matchShapes(Altered(A(_)), Altered(B(_))) shape.match of value, () => 1, () => 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Altered@1 in constructorMutation
-//│ class-tags collection-phase > track consumption at match@2 in constructorMutation
+//│ class-tags collection-phase > track construction of Altered@610 in constructorMutation
+//│ class-tags collection-phase > track consumption at match@615 in constructorMutation
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: A@0, Altered@1
-//│ class-tags web-computation-phase >   pattern matches: match@2
+//│ class-tags web-computation-phase >   producers: A@609, Altered@610
+//│ class-tags web-computation-phase >   pattern matches: match@615
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
@@ -273,13 +273,13 @@ fun dynamicField(flag, external) =
   let value = new Box(field)
   @matchShapes(Box(_)) shape.match of value, () => 1
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@2 in dynamicField
-//│ class-tags collection-phase > track consumption at match@3 in dynamicField
+//│ class-tags collection-phase > track construction of Box@676 in dynamicField
+//│ class-tags collection-phase > track consumption at match@679 in dynamicField
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: A@1, Box@2
-//│ class-tags web-computation-phase >   pattern matches: match@3
+//│ class-tags web-computation-phase >   producers: A@675, Box@676
+//│ class-tags web-computation-phase >   pattern matches: match@679
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
@@ -337,13 +337,13 @@ fun foo() =
     () => 1
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@2, D@3 in bar
-//│ class-tags collection-phase > track consumption at match@5 in foo
+//│ class-tags collection-phase > track construction of D@878, C@877 in bar
+//│ class-tags collection-phase > track consumption at match@887 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@2, D@3
-//│ class-tags web-computation-phase >   pattern matches: match@5
+//│ class-tags web-computation-phase >   producers: C@877, D@878
+//│ class-tags web-computation-phase >   pattern matches: match@887
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: D(x: 0))
@@ -364,13 +364,13 @@ fun curriedBranch() =
   let result = @matchShapes(Box(_)) shape.match of value, curried
   result()
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@0 in curriedBranch
-//│ class-tags collection-phase > track consumption at match@1 in curriedBranch
+//│ class-tags collection-phase > track construction of Box@958 in curriedBranch
+//│ class-tags collection-phase > track consumption at match@959 in curriedBranch
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@0
-//│ class-tags web-computation-phase >   pattern matches: match@1
+//│ class-tags web-computation-phase >   producers: Box@958
+//│ class-tags web-computation-phase >   pattern matches: match@959
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
@@ -390,13 +390,13 @@ fun uncurriedBranch() =
   let result = @matchShapes(C(_)) shape.match of value, f
   result
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@0 in uncurriedBranch
-//│ class-tags collection-phase > track consumption at match@1 in uncurriedBranch
+//│ class-tags collection-phase > track construction of C@1008 in uncurriedBranch
+//│ class-tags collection-phase > track consumption at match@1009 in uncurriedBranch
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@0
-//│ class-tags web-computation-phase >   pattern matches: match@1
+//│ class-tags web-computation-phase >   producers: C@1008
+//│ class-tags web-computation-phase >   pattern matches: match@1009
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: 0)
@@ -418,13 +418,13 @@ private fun recursiveBranch() =
   else 42
 fun recursiveMatch() = recursiveBranch()
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@3 in recursiveBranch
-//│ class-tags collection-phase > track consumption at match@4 in recursiveBranch
+//│ class-tags collection-phase > track construction of Box@1063 in recursiveBranch
+//│ class-tags collection-phase > track consumption at match@1064 in recursiveBranch
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@3
-//│ class-tags web-computation-phase >   pattern matches: match@4
+//│ class-tags web-computation-phase >   producers: Box@1063
+//│ class-tags web-computation-phase >   pattern matches: match@1064
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
@@ -446,13 +446,13 @@ fun flattenBudget(flag) =
   let value = new TooManyShapes(field, field, field, field, field, field, field, field, field)
   @matchShapes(TooManyShapes(_, _, _, _, _, _, _, _, _)) shape.match of value, () => 1
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of TooManyShapes@3 in flattenBudget
-//│ class-tags collection-phase > track consumption at match@4 in flattenBudget
+//│ class-tags collection-phase > track construction of TooManyShapes@1181 in flattenBudget
+//│ class-tags collection-phase > track consumption at match@1184 in flattenBudget
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: A@1, B@2, TooManyShapes@3
-//│ class-tags web-computation-phase >   pattern matches: match@4
+//│ class-tags web-computation-phase >   producers: A@1179, B@1180, TooManyShapes@1181
+//│ class-tags web-computation-phase >   pattern matches: match@1184
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ ╔══[COMPILATION ERROR] Flattening this shape would produce more than 256 alternatives.
@@ -460,7 +460,7 @@ fun flattenBudget(flag) =
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
 //│ class-tags transform-phase > allocated tag 1 for B(x: 0)
-//│ class-tags transform-phase > match shapes TooManyShapes(h: _, a: _, e: _, f: _, b: _, g: _, c: _, d: _, i: _) against <none>
+//│ class-tags transform-phase > match shapes TooManyShapes(d: _, h: _, i: _, a: _, e: _, f: _, c: _, b: _, g: _) against <none>
 //│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
 //│ ║  l.447: 	  @matchShapes(TooManyShapes(_, _, _, _, _, _, _, _, _)) shape.match of value, () => 1
 //│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

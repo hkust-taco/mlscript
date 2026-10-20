@@ -1,0 +1,83 @@
+:.
+
+// Calling a method of a generic instance preserves the shape passed through
+// its generic wrapper: the instance's site is inside the wrapper, so the
+// wrapper's binding is retained. The two calls keep distinct instantiations.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val value: T) with
+  fun get(): T = value
+private fun wrap[B](x: B) = Box(x).get()
+[wrap(First(1)).first, wrap(Second(2)).second]
+//│ = [1, 2]
+
+// The corresponding by-name method preserves the wrapper's argument shape.
+:expect [3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+class Box[T](val value: T) with
+  fun get: T = value
+private fun wrap[B](x: B) = Box(x).get
+[wrap(First(3)).first, wrap(Second(4)).second]
+//│ = [3, 4]
+
+// Spreading a generic tuple preserves the element's shape through the
+// wrapper's type parameter: the tuple's field retains an instance whose site
+// is inside the wrapper.
+:expect 5
+class Item(val value: Int)
+private fun tuple[A](x: A): [A] = [x]
+private fun wrap[B](x: B) = [...tuple(x)]
+wrap(Item(5)).0.value
+//│ = 5
+
+// The Array interface synthesized for a tuple keeps its fields' retained instances.
+:expect [15, 16]
+class First(val first: Int)
+class Second(val second: Int)
+private fun tuple[A](x: A): [A] = [x]
+private fun wrap[B](x: B) = tuple(x).map((v, ...) => v)
+[wrap(First(15)).0.first, wrap(Second(16)).0.second]
+//│ = [15, 16]
+
+// An anonymous refinement records the binders enclosing it, like a named class.
+// Viewing its instance through a generic caller's substitution reads them.
+:expect 1
+class C
+fun f[A](x: A) = new C with
+  fun foo = 1
+f(1).foo
+//│ = 1
+
+:expect 2
+class D with
+  fun bar = 2
+fun g[A](x: A) = new D with
+  fun baz = this.bar
+g(1).baz
+//│ = 2
+
+:expect [3, 4]
+class E
+class First(val first: Int)
+class Second(val second: Int)
+fun h[A](x: A) = new E with
+  fun get = x
+[h(First(3)).get.first, h(Second(4)).get.second]
+//│ = [3, 4]
+
+// A by-name generic definition read through a variable is instantiated at the
+// selection that names it, whose scope is recorded, not where the variable is
+// later used: the symbol shape reaches `m.length` with the selection's site.
+:expect [0, 0]
+module Store with
+  fun empty[A]: Array[A] = []
+fun f[B](x: B) =
+  let m = Store.empty
+  m.length
+fun g() =
+  let m = Store.empty
+  m.length
+[f(1), g()]
+//│ = [0, 0]

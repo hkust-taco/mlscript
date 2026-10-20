@@ -17,9 +17,9 @@ import semantics.Elaborator.State
   * This class checks this invariant. */
 class BlockChecker()(using DebugPrinter, State, Raise) extends BlockTraverser:
   
-  val definedSyms = MutSet.empty[BoundSymbol]
+  val definedSyms = MutSet.empty[ScopedSymbol]
   
-  private def checkSymbol(sym: BoundSymbol, info: => Any): Unit =
+  private def checkSymbol(sym: ScopedSymbol, info: => Any): Unit =
     if !definedSyms.add(sym) then
       raise:
         InternalError(

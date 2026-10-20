@@ -26,7 +26,7 @@ final case class InvalCtx(
   env: HashMap[Uid[Symbol], GeneralType],
   outRegAcc: Type,
   symbolCache: HashMap[Str, TypeSymbol],
-):
+)(using Config):
   def +=(p: Symbol -> GeneralType): Unit = env += p._1.uid -> p._2
   def get(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
   def getCls(name: Str): TypeSymbol = symbolCache.getOrElseUpdate(name,
@@ -62,15 +62,19 @@ object InvalCtx:
     ClassLikeType(ctx.getCls("Region"), Wildcard.out(sk) :: Nil)
   def refTy(ct: Type, sk: Type)(using ctx: InvalCtx): Type =
     ClassLikeType(ctx.getCls("Ref"), Wildcard(ct, ct) :: Wildcard.out(sk) :: Nil)
-  def init(raise: Raise)(using Elaborator.State, Elaborator.Ctx): InvalCtx =
+  def init(raise: Raise)(using Elaborator.State, Elaborator.Ctx)(using Config): InvalCtx =
     new InvalCtx(raise, summon, None, 1, HashMap.empty, Bot, HashMap.empty)
 
   val builtinOps = Elaborator.binaryOps ++ Elaborator.unaryOps ++ Elaborator.aliasOps.keySet
 end InvalCtx
 
 
-class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
+class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)(using Ctx, Config):
   import tl.{trace, log}
+
+  // InvalML expands patterns while typing. Its early use of lowering is valid only
+  // for legacy resolution, whose terms do not carry deferred candidate sets.
+  require(!config.language.useNewResolution, "InvalML requires legacy resolution")
   
   private val infVarState = new InfVarUid.State()
   private val solver = new ConstraintSolver(infVarState, elState, tl)
@@ -124,6 +128,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
     def mono(ty: Term, pol: Bool): Type =
       monoOrErr(typeAndSubstType(ty, pol), ty)
     ty match
+    case Capture(base, _) => typeAndSubstType(base, pol)
     case Ref(sym: LocalSymbol) =>
       log(s"Type lookup: ${sym.nme} ${sym.uid} ${map.keySet}")
       map.get(sym.uid) match
@@ -157,6 +162,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
           val defn = tpeSym.defn.get
           if targs.length != defn.tparams.length then
             error(msg"Type arguments do not match class definition" -> ty.toLoc :: Nil)
+          val polarized = map.valuesIterator.exists(arg => arg.negPart =/= arg.posPart)
           val ts = defn.tparams.lazyZip(targs).map: (tp, t) =>
             t match
             case Term.WildcardTy(in, out) => Wildcard(
@@ -164,18 +170,25 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
                 out.map(t => mono(t, pol)).getOrElse(Top)
               )
             case _ =>
-              val ta = mono(t, pol)
+              // An invariant argument occurs in both polarities. Selecting one
+              // wildcard bound and duplicating it would, for example, expose a
+              // Cell[Int] as writable Cell[Int | Str] through a widened holder.
               tp.vce match
-                case S(false) => Wildcard.in(ta)
-                case S(true) => Wildcard.out(ta)
-                case N => ta
+                case S(false) => Wildcard.in(mono(t, !pol))
+                case S(true) => Wildcard.out(mono(t, pol))
+                case N =>
+                  val in = mono(t, !pol)
+                  // Equal substitution parts cannot depend on polarity. Avoid
+                  // rechecking their syntax and reporting malformed types twice.
+                  val out = if polarized then mono(t, pol) else in
+                  if in === out then in else Wildcard(in, out)
           ClassLikeType(tpeSym, ts)
       case N =>
         error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil)
     case Neg(rhs) =>
       mono(rhs, !pol).!
-    case CompType(lhs, rhs, pol) =>
-      Type.mkComposedType(typeMonoType(lhs), typeMonoType(rhs), pol)
+    case CompType(lhs, rhs, union) =>
+      Type.mkComposedType(mono(lhs, pol), mono(rhs, pol), union)
     case UnitVal() =>
       InvalCtx.unitTy
     case _ =>
@@ -254,7 +267,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
       constrain(lhsTy, FunType(rhsTy.reverse, resTy, Bot)) // TODO: right
       (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
     case sel @ Term.SynthSel(Term.Ref(_: TopLevelSymbol), _) if sel.symbol.isDefined =>
-      val (opTy, eff) = typeCheck(Ref(sel.symbol.get)(sel.nme, N)) // FIXME 666
+      val (opTy, eff) = typeCheck(Ref(sel.symbol.get)(sel.nme, N))
       (tryMkMono(opTy, sel), Bot, eff)
     case unq @ Term.Unquoted(body) =>
       val (ty, eff) = typeCheck(body)
@@ -612,7 +625,7 @@ class InvalTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
       case Term.Annotated(Annot.Untyped(), _) => (Bot, Bot)
       case sel @ Term.SynthSel(Ref(_: TopLevelSymbol), nme)
         if sel.symbol.isDefined =>
-        typeCheck(Ref(sel.symbol.get)(sel.nme, N)) // FIXME 666
+        typeCheck(Ref(sel.symbol.get)(sel.nme, N))
       case Ref(sym) =>
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)

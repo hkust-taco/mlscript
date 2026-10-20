@@ -1,0 +1,26 @@
+:.
+:..
+:js
+
+// The producer is Child but the selected field belongs to Parent, which receives
+// the constructor input through Child's parent constructor call, so it is live.
+// Disable inlining to keep read available for the dead-parameter analysis.
+:flowBasedOpt debugDpe
+:noInline
+:expect 21
+class Parent(val value)
+class Child(value) extends Parent(value)
+private fun read(value) = new Child(value).Parent#value
+read(21)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 21
+
+:flowBasedOpt off
+:noInline
+:expect 21
+class Parent(val value)
+class Child(value) extends Parent(value)
+private fun read(value) = new Child(value).Parent#value
+read(21)
+//│ = 21

@@ -1044,9 +1044,18 @@ fun viaTyped(x, y): Str = addInts(x, y)
 // A member is reached by *selection*, which - unlike a bare reference - is never auto-invoked, so its
 // signature is its own type.
 module Plain with
-  fun f: Int -> Int
+  fun f: Int -> Int = (x: Int) => x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define Plain⁰ as class Plain¹ module Plain²; end
+//│ define Plain⁰ as class Plain¹
+//│ module Plain² {
+//│   method f⁶ = fun f⁷: Function⁰ {
+//│     let lambda;
+//│     @private
+//│     define lambda as fun lambda⁴(x: Int⁰): ? { return x };
+//│     return (lambda⁴ as! Function⁰)
+//│   }
+//│ };
+//│ end
 
 declare module Ext with
   fun member: Int -> Int
@@ -1061,7 +1070,7 @@ fun useExt() = useFn(Ext.member)
 
 fun usePlain() = useFn(Plain.f)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define usePlain⁰ as fun usePlain¹(): ? { return useFn¹(Plain².f⁶) }; end
+//│ define usePlain⁰ as fun usePlain¹(): ? { return useFn¹(Plain².f⁷) }; end
 
 
 // *Applying* the selected member is a call on that function value, and since `Function` does not store its
@@ -1079,7 +1088,7 @@ fun applyPlain() = useInt(Plain.f(1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define applyPlain⁰ as fun applyPlain¹(): ? {
 //│   let tmp: ?;
-//│   set tmp = Plain².f⁶(1);
+//│   set tmp = Plain².f⁷(1);
 //│   return useInt¹((tmp as! Int⁰))
 //│ };
 //│ end
@@ -1122,7 +1131,7 @@ fun selUntyped(): Int = @untyped Plain.f
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define selUntyped⁰ as fun selUntyped¹(): Int⁰ {
 //│   let tmp: Unknown;
-//│   set tmp = Plain².f⁶;
+//│   set tmp = Plain².f⁷;
 //│   return (tmp as! Int⁰)
 //│ };
 //│ end
@@ -1131,7 +1140,7 @@ fun selUntyped(): Int = @untyped Plain.f
 fun selTyped(): Int = Plain.f
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Int'
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define selTyped⁰ as fun selTyped¹(): Int⁰ { return Plain².f⁶ }; end
+//│ define selTyped⁰ as fun selTyped¹(): Int⁰ { return Plain².f⁷ }; end
 
 
 // A lambda is disclaimed too: it reaches `LambdaRewriter` as the binding's RHS and is floated into a
@@ -1141,10 +1150,10 @@ fun lamUntyped(): Int = @untyped ((x: Int) => x)
 //│ define lamUntyped⁰ as fun lamUntyped¹(): Int⁰ {
 //│   let tmp: Unknown, lambda;
 //│   @private
-//│   define lambda as fun lambda⁴(x: Int⁰): ? {
+//│   define lambda as fun lambda⁵(x: Int⁰): ? {
 //│     return x
 //│   };
-//│   set tmp = lambda⁴;
+//│   set tmp = lambda⁵;
 //│   return (tmp as! Int⁰)
 //│ };
 //│ end
@@ -1253,7 +1262,7 @@ fun tagged(x: Int) =
   fun describe() = Tag.label()
   describe()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1251: 	  object Tag with
+//│ ║  l.1260: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let describe;
@@ -1280,7 +1289,7 @@ fun mk() =
     fun get() = Tag.label()
   new Holder
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.1277: 	  object Tag with
+//│ ║  l.1286: 	  object Tag with
 //│ ╙──        	         ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let Holder;

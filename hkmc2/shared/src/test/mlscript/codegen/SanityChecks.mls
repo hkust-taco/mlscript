@@ -1,6 +1,8 @@
+:.
 :js
 
-// * In this test, we use `id` to wrap functions so that compile-time arity checks get bypassed.
+// * Use dynamic values to exercise runtime checks even for statically invalid operations.
+fun unchecked(x): dyn = x
 
 
 :ssjs
@@ -12,7 +14,7 @@ f(2, 3)
 //│   runtime.checkArgs("f", 2, true, arguments.length);
 //│   return x + y
 //│ };
-//│ block$res1 = 5;
+//│ block$res2 = 5;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
@@ -27,17 +29,17 @@ f(2, 3)
 //│   return x + y
 //│ };
 //│ f1 = f2;
-//│ block$res2 = 5;
+//│ block$res3 = 5;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 //│ f = fun f
 
 :re
-f(2)
+unchecked(f)(2)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 :re
-f(2, 3, 4)
+unchecked(f)(2, 3, 4)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 3
 
 
@@ -45,18 +47,18 @@ f(2, 3, 4)
 :expect NaN
 :noSanityCheck
 fun f2(x, y) = x + y
-id(f2)(2)
+unchecked(f2)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f21;
-//│ f21 = function f2(x, y) { return x + y }; block$res5 = runtime.safeCall(f21(2));
+//│ f21 = function f2(x, y) { return x + y }; block$res6 = runtime.safeCall(f21(2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
 :ssjs
 :re
-id(f)(2)
+unchecked(f)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ block$res6 = runtime.safeCall(f1(2));
+//│ block$res7 = runtime.safeCall(f1(2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
@@ -64,7 +66,7 @@ id(f)(2)
 :ssjs
 // :re // Argument numbers are no longer checked for lambdas, including extra parameter lists
 fun f(x)(y, z) = x + y + z
-id(f)(3)(4)
+unchecked(f)(3)(4)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f3;
 //│ f3 = function f(x) {
@@ -75,7 +77,7 @@ id(f)(3)(4)
 //│     return tmp + z
 //│   }
 //│ };
-//│ block$res7 = runtime.safeCall(f3(3)(4));
+//│ block$res8 = runtime.safeCall(f3(3)(4));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -83,13 +85,13 @@ id(f)(3)(4)
 // :ssjs
 :expect NaN
 :noSanityCheck
-let f = (x, y) => x + y in f(2)
+let f = (x, y) => x + y in unchecked(f)(2)
 //│ = NaN
 
 // :ssjs
 :re
 let f = (x, y) => x + y
-f(2)
+unchecked(f)(2)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 //│ f = fun f
 
@@ -99,14 +101,14 @@ f(2)
 :noSanityCheck
 data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
-id(Cls(1, 2)).f(3)
+unchecked(Cls(1, 2)).f(3)
 //│ = NaN
 
 // :ssjs
 :re
 data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
-id(Cls(1, 2)).f(3)
+unchecked(Cls(1, 2)).f(3)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
 
@@ -115,7 +117,7 @@ id(Cls(1, 2)).f(3)
 // :re // Argument numbers are no longer checked for lambdas, including extra parameter lists
 data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
-id(Cls(1, 2)).f(3, 4)(5)
+unchecked(Cls(1, 2)).f(3, 4)(5)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Cls5, tmp2, callPrefix;
 //│ Cls5 = function Cls(x, y) {
@@ -146,7 +148,7 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│ });
 //│ tmp2 = runtime.checkCall(Cls5(1, 2));
 //│ callPrefix = runtime.safeCall(tmp2.f(3, 4));
-//│ block$res12 = runtime.safeCall(callPrefix(5));
+//│ block$res13 = runtime.safeCall(callPrefix(5));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -176,7 +178,7 @@ module M with
 
 :ssjs
 :re
-if M.A(1).y is
+if unchecked(M.A(1)).y is
   x and x == 1 then x
   else 0
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
@@ -184,7 +186,7 @@ if M.A(1).y is
 //│ tmp3 = runtime.checkCall(M1.A(1));
 //│ scrut = runtime.checkSelect(tmp3.y, "y", tmp3);
 //│ scrut1 = runtime.checkCall(Predef.equals(scrut, 1));
-//│ if (scrut1 === true) { block$res17 = scrut; } else { block$res17 = 0; }
+//│ if (scrut1 === true) { block$res18 = scrut; } else { block$res18 = 0; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
@@ -192,7 +194,7 @@ if M.A(1).y is
 
 // :ssjs
 :re
-M.A(1).y
+unchecked(M.A(1)).y
   console.log()
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
@@ -200,22 +202,22 @@ M.A(1).y
 
 // :ssjs
 :noSanityCheck
-M.A(1).y
+unchecked(M.A(1)).y
   console.log()
 //│ > undefined
 
 :noSanityCheck
 :expect false
-M.A(2).y > 1
+unchecked(M.A(2)).y > 1
 //│ = false
 
 :re
-M.A(2).y > 1
+unchecked(M.A(2)).y > 1
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 // :ssjs
 :re
-M.A(1).g(0)
+unchecked(M.A(1)).g(0)
 //│ ═══[RUNTIME ERROR] TypeError: tmp8.g is not a function
 
 
@@ -229,7 +231,7 @@ M.A(1).f(0)
 :ssjs
 M.g(1, 2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ block$res24 = 3;
+//│ block$res25 = 3;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 

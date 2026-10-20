@@ -1,3 +1,4 @@
+:.
 :js
 
 // Fixed-point patterns may recurse indirectly through other definitions:
@@ -78,13 +79,13 @@ pattern PeelB = UnTag as PeelA | _
 :w
 fun runPeelA(x) = if x is @compile PeelA(y) then y
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.79: 	fun runPeelA(x) = if x is @compile PeelA(y) then y
-//│ ║        	                                   ^^^^^^^
+//│ ║  l.80: 	fun runPeelA(x) = if x is @compile PeelA(y) then y
+//│ ║        	                                   ^^^^^^^^
 //│ ╟── One of its recursive parts accepts any term
-//│ ║  l.71: 	pattern PeelB = UnTag as PeelA | _
+//│ ║  l.72: 	pattern PeelB = UnTag as PeelA | _
 //│ ║        	                ^^^^^^^^^^^^^^^^^^
 //│ ╟── while another can fail.
-//│ ║  l.70: 	pattern PeelA = UnBox as PeelB | 42
+//│ ║  l.71: 	pattern PeelA = UnBox as PeelB | 42
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^
 //│ ╙── Falling back to the naive translation.
 
@@ -160,8 +161,8 @@ fun atLeastOneSlow(x) = if x is AtLeastOneA(r) then r else "<no match>"
 :w
 fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
 //│ ╔══[WARNING] This fixed-point pattern is not supported by pattern compilation.
-//│ ║  l.161: 	fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
-//│ ║         	                                         ^^^^^^^^^^^^^
+//│ ║  l.162: 	fun atLeastOneFast(x) = if x is @compile AtLeastOneA(r) then r else "<no match>"
+//│ ║         	                                         ^^^^^^^^^^^^^^
 //│ ╟── `AtLeastOneA` does not match unless its first pattern does, which is not supported for mutually recursive definitions.
 //│ ╙── Falling back to the naive translation.
 
