@@ -248,7 +248,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
           sym.traverse
           applyPath(rhs)
         case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-            privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion)
+            privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion, _)
         =>
           own.foreach(_.traverse)
           isym.traverse
@@ -621,7 +621,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
       N,
       N,
       N,
-    )(N, Nil, Map.empty)
+      Map.empty,
+    )(N, Nil)
     
     (defn, sortedVars.iterator.map(x => (x.ctorSyms.local, x.valDefn.tsym)).toList)
   
@@ -670,7 +671,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
           case Some(_) => die 
           case None => N
         
-        k(newCls.copy(companion = newComp)(newCls.configOverride, newCls.annotations, newCls.methodKeys))
+        k(newCls.copy(companion = newComp)(newCls.configOverride, newCls.annotations))
       case _ => super.applyDefn(defn)(k)
 
   /**
@@ -1009,7 +1010,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
           preCtor = rewrittenPrector,
           privateFields = rewrittenPrivateFields,
           methods = newMtds,
-        )(obj.cls.configOverride, obj.cls.annotations, obj.cls.methodKeys)
+        )(obj.cls.configOverride, obj.cls.annotations)
         LifterResult(newCls, rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras)
       
 
@@ -1034,7 +1035,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
           ctor = ctorWithCap,
           privateFields = rewrittenPrivateFields,
           methods = newMtds
-        )(obj.clsBody.methodKeys)
+        )
         LifterResult(newComp, rewriterCtor.extraDefns.toList ::: extras)
   
   class LiftedFunc(override val obj: ScopedObject.Func)(using ctx: LifterCtxNew) extends LiftedScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
@@ -1369,7 +1370,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config, Erasure):
         auxParams = newAuxList
       )(obj.cls.configOverride,
         if liftedFromStagedModule && !obj.cls.isStaged then Annot.Modifier(Keyword.`staged`)(N) :: obj.cls.annotations
-        else obj.cls.annotations, obj.cls.methodKeys)
+        else obj.cls.annotations)
       val extrasDefns = rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras
       LifterResult(newCls, flat :: extrasDefns)
   

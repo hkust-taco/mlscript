@@ -482,7 +482,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       companion = N,
       bufferable = N,
       termCompanion = N,
-    )(N, Nil, Map.empty)
+      methodKeys = Map.empty,
+    )(N, Nil)
 
   /** Registers the synthetic `Unit` singleton. */
   private def RegisterUnitSingleton()(using FunctionCtx, Raise, SessionExportCtx): Unit =

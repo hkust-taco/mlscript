@@ -818,20 +818,20 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx, Er
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         if cMtds is comp.methods
         then comp
-        else comp.copy(methods = cMtds)(comp.methodKeys)
+        else comp.copy(methods = cMtds)
       if (c.companion is companion)
       then c
-      else c.copy(companion = companion)(c.configOverride, c.annotations, c.methodKeys)
+      else c.copy(companion = companion)(c.configOverride, c.annotations)
     else
       val mtds = optFunctionsFlat(c.methods, S(c.isym))
       val companion = c.companion.mapConserve: comp =>
         val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         if cMtds is comp.methods
         then comp
-        else comp.copy(methods = cMtds)(comp.methodKeys)
+        else comp.copy(methods = cMtds)
       if (c.methods is mtds) && (c.companion is companion)
       then c
-      else c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations, c.methodKeys)
+      else c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations)
   
   def transform(prog: Program): Program =
     if !config.tailRecOpt then return prog

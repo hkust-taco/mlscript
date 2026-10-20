@@ -186,7 +186,7 @@ object ScopeData:
       obj match
       case ScopedObject.Top(b) => traverser.applyBlock(b)
       case ScopedObject.Class(cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-          privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion), _)
+          privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion, _), _)
       =>
         // do not traverse the companion -- it is a separate kind of scoped object
         // and will therefore be traversed separately

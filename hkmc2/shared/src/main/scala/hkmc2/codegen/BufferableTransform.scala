@@ -98,7 +98,8 @@ class BufferableTransform()(using State, Raise):
               clsSizeSym -> clsSizeTermSym :: Nil,
               Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size))(N))(N, Nil), End()),
               annotations = Nil,
-            )(transformedKeys)
+              methodKeys = transformedKeys,
+            )
             k:
               ClsLikeDefn(
                 cls.owner,
@@ -117,6 +118,7 @@ class BufferableTransform()(using State, Raise):
                 S(fakeCompanion),
                 cls.bufferable,
                 cls.termCompanion,
-              )(cls.configOverride, cls.annotations, if bufferable then cls.methodKeys else Map.empty)
+                if bufferable then cls.methodKeys else Map.empty,
+              )(cls.configOverride, cls.annotations)
         case _ => super.applyDefn(defn)(k)
     transformer.applyProgram(prog)

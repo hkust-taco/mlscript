@@ -568,7 +568,7 @@ class JSBuilder(using Config, TL, State, Ctx, Erasure) extends CodeBuilder:
               doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, $functionKeyword ($params) ${ braced(bodyDoc) });"
             
           case cls @ ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
-              privFlds, pubFlds, preCtor, ctor, modo, bufferable, termCompanion)
+              privFlds, pubFlds, preCtor, ctor, modo, bufferable, termCompanion, _)
           =>
             // After ClassParamFlattener, all classes have paramsOpt = N and exactly one auxParams entry.
             assert(paramsOpt.isEmpty,

@@ -648,7 +648,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case defn: FunDefn => applyFunDefn(defn)
     case defn: ValDefn => applyValDefn(defn)
     case cls@ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-        privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion)
+        privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion, _)
     =>
       cls.methodKeys.valuesIterator.foreach(applyPath)
       mod.foreach(_.methodKeys.valuesIterator.foreach(applyPath))

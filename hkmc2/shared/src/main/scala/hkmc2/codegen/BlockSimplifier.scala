@@ -362,7 +362,7 @@ class BlockSimplifier
       val privateFields2 = removeUnusedPrivateFields(defn2.privateFields)
       if privateFields2 is defn2.privateFields
       then defn2
-      else defn2.copy(privateFields = privateFields2)(defn2.methodKeys)
+      else defn2.copy(privateFields = privateFields2)
 
     override def applyClsLikeDefn(defn: ClsLikeDefn)(k: Defn => Block): Block =
       super.applyClsLikeDefn(defn):
@@ -371,7 +371,7 @@ class BlockSimplifier
           val cls2 =
             if privateFields2 is cls.privateFields
             then cls
-            else cls.copy(privateFields = privateFields2)(cls.configOverride, cls.annotations, cls.methodKeys)
+            else cls.copy(privateFields = privateFields2)(cls.configOverride, cls.annotations)
           k(cls2)
         case other => k(other)
     

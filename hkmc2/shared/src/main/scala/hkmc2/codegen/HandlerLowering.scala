@@ -586,7 +586,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
             raise(lifterReport(msg"Unexpected nested function: lambdas may not function correctly." -> fun.sym.toLoc :: Nil))
           val (debugInfoSym, debugInfo, fun2) = translateFunLike(fun, fun.sym.asMemberRef(fun.dSym), N, fun.sym.nme)
           if debugEnabled then Scoped(Set.single(debugInfoSym), Assign(debugInfoSym, Tuple(false, debugInfo)(N), k(fun2))) else k(fun2)
-        case defn @ ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor, companion, bufferable, termCompanion) =>
+        case defn @ ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor, companion, bufferable, termCompanion, _) =>
           if h.currentBlockIsTrulyNested && opt.isDefined then
             raise(lifterReport(msg"Unexpected nested class: lambdas may not function correctly." -> isym.toLoc :: Nil))
           val debugInfos = mutable.ArrayBuffer.empty[(TempSymbol, List[Arg])]
@@ -612,14 +612,14 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
             if (bod.methods is newMtds) && (bod.ctor is newCtor) then
               bod
             else
-              ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor, bod.annotations)(bod.methodKeys)
+              ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor, bod.annotations, bod.methodKeys)
           val newPreCtor = translateCtorLike(preCtor, isym.asThis, false)
           val newCtor = translateCtorLike(ctor, isym.asThis, false)
           val c2 =
             if (methods is newMtds) && (preCtor is newPreCtor) && (ctor is newCtor) && (companion is companion2) then
               defn
             else
-              defn.copy(methods = newMtds, preCtor = newPreCtor, ctor = newCtor, companion = companion2)(defn.configOverride, defn.annotations, defn.methodKeys)
+              defn.copy(methods = newMtds, preCtor = newPreCtor, ctor = newCtor, companion = companion2)(defn.configOverride, defn.annotations)
           if debugEnabled then
             Scoped(debugInfos.map(_._1).toSet, debugInfos.foldRight(k(c2)): (elem, blk) =>
               Assign(elem._1, Tuple(false, elem._2)(N), blk))

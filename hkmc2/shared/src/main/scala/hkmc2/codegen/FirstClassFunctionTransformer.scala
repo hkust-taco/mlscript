@@ -35,7 +35,7 @@ class FirstClassFunctionTransformer
       Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function), N)(false)),
       callDef :: Nil, Nil, Nil, Assign.discard(
         Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun, N),
-        End()), End(), None, None, None)(N, annotations = Nil, methodKeys = Map.empty)
+        End()), End(), None, None, None, methodKeys = Map.empty)(N, annotations = Nil)
 
   private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
     case Some(fd) => fd.params.headOption

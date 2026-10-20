@@ -342,7 +342,7 @@ sealed abstract class Block extends Product:
             val newCtor = c.ctor.flattened
             val newMethods = flattenMethods(c.methods)
             if (newCtor is c.ctor) && (newMethods is c.methods) then c
-              else c.copy(ctor = newCtor, methods = newMethods)(c.methodKeys)
+              else c.copy(ctor = newCtor, methods = newMethods)
           if (newPreCtor is c.preCtor)
           && (newCtor is c.ctor)
           && (newMethods is c.methods)
@@ -353,7 +353,7 @@ sealed abstract class Block extends Product:
             ctor = newCtor,
             methods = newMethods,
             companion = newCompanion,
-          )(c.configOverride, c.annotations, c.methodKeys)
+          )(c.configOverride, c.annotations)
       
       val newRest = rest.flatten(k)
       if (newDefn is defn) && (newRest is rest)
@@ -618,7 +618,8 @@ object HandleBlock:
       N,
       N,
       N,
-    )(N, Nil, Map.empty)
+      Map.empty,
+    )(N, Nil)
 
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
@@ -689,7 +690,7 @@ sealed abstract class Defn:
         // * they need to be declared with `let` in JS, which is why we add them here.
         vd.sym.optionIf(tsym.owner.isEmpty)
     case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
-        methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
+        methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion, _) =>
       preCtor.freeVars
         ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
         -- auxParams.flatMap(_.paramSyms)
@@ -701,7 +702,7 @@ sealed abstract class Defn:
   lazy val size: Int = this match
     case FunDefn(_, _, _, params, body) => 1 + body.size
     case ValDefn(_, _, rhs) => 1
-    case cls @ ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
+    case cls @ ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion, _) =>
       1 + methods.map(_.size).sum + preCtor.size + ctor.size + stat.fold(0)(_.size) + cls.methodKeys.valuesIterator.map(_.size).sum
   
 
@@ -931,11 +932,11 @@ final case class ClsLikeDefn(
     companion: Opt[ClsLikeBody],
     bufferable: Option[Bool],
     termCompanion: Opt[TermSymbol],
+    // Computed names are structural operands evaluated in the class's enclosing scope.
+    methodKeys: Map[TermSymbol, Path],
 )(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
-    // Computed names run in the class's enclosing scope, before any constructor.
-    val methodKeys: Map[TermSymbol, Path],
 ) extends Defn:
   require(k isnt syntax.Mod)
   isym match
@@ -957,9 +958,9 @@ final case class ClsLikeDefn(
   val defnSym = S(isym)
   override def equals(obj: Any): Bool = obj match
     case that: ClsLikeDefn => productIterator.sameElements(that.productIterator) &&
-      configOverride == that.configOverride && annotations == that.annotations && methodKeys == that.methodKeys
+      configOverride == that.configOverride && annotations == that.annotations
     case _ => false
-  override def hashCode: Int = (productIterator.toList, configOverride, annotations, methodKeys).hashCode
+  override def hashCode: Int = (productIterator.toList, configOverride, annotations).hashCode
 
 
 // * This is only supposed to be for companion module definitions (notably, not for `object`)
@@ -970,11 +971,8 @@ final case class ClsLikeBody(
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
     ctor: Block,
     annotations: Ls[Annot],
-)(val methodKeys: Map[TermSymbol, Path]):
-  override def equals(obj: Any): Bool = obj match
-    case that: ClsLikeBody => productIterator.sameElements(that.productIterator) && methodKeys == that.methodKeys
-    case _ => false
-  override def hashCode: Int = (productIterator.toList, methodKeys).hashCode
+    methodKeys: Map[TermSymbol, Path],
+):
   lazy val visibility: Visibility = Visibility.of(annotations)
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
