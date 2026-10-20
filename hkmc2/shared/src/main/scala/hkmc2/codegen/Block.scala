@@ -55,6 +55,15 @@ by any binding form, such as Scoped, Label, Define. (This is currently not compl
 This means that processes that duplicate binding forms within a program (eg, inlining)
 must refresh the corresponding symbols – see SymbolRefresher for this purpose.
 
+Invariant: the IR requires casts for uses of a value whose known erased type is not a subtype
+of the erased type expected by each use.
+This might not yet be fully enforced, but it is a goal of the IR to make this invariant hold.
+
+Some (but not yet all) of the invariants of the IR are checked by the `BlockChecker`, which is OFF by default.
+It is healthy to run all the tests with the `BlockChecker` ON from time to time.
+`whenValidatingIR` is another palce that checks the IR on construction,
+also disabled by default for performance reasons.
+
 */
 
 
