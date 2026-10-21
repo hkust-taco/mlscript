@@ -4,18 +4,16 @@ package semantics
 import hkmc2.utils.*, shorthands.*
 import syntax.*, Elaborator.State, ucs.FlatPattern
 
-final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation: Split) extends AutoLocated:
+final case class Branch(scrutinee: Term.Ref | Term.SimpleRef, pattern: FlatPattern, continuation: Split) extends AutoLocated:
   def mkClone(using State, codegen.Erasure): Branch =
-    val scrutineeClone = new Term.Ref(scrutinee.sym)
-        (Tree.Ident(scrutinee.tree.name), scrutinee.typ)
-    Branch(scrutineeClone, pattern.mkClone, continuation.mkClone)
+    Branch(scrutinee.mkClone.asInstanceOf, pattern.mkClone, continuation.mkClone)
   
   override def children: Vector[Located] = Vector.triple(scrutinee, pattern, continuation)
   
   def showDbg(using DebugPrinter): String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
 
 object Branch:
-  def apply(scrutinee: Term.Ref, continuation: Split): Branch =
+  def apply(scrutinee: Term.Ref | Term.SimpleRef, continuation: Split): Branch =
     Branch(scrutinee, FlatPattern.Lit(Tree.BoolLit(true)), continuation)
 
 enum Split extends AutoLocated with ProductWithTail:

@@ -177,6 +177,8 @@ computed.value
 //│ ║  l.175: 	{(key): 0}.value
 //│ ║         	 ^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' across a computed key or unknown record spread.
+//│ ║  l.175: 	{(key): 0}.value
+//│ ║         	  ^^^^^^^
 //│ ╟── This computed key can overwrite the selected member.
 //│ ║  l.175: 	{(key): 0}.value
 //│ ╙──       	  ^^^
@@ -187,10 +189,10 @@ computed.value
 let eagerUnknown = if hide(true) then M1 else (M2 as Any)
 eagerUnknown.u
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.188: 	eagerUnknown.u
+//│ ║  l.190: 	eagerUnknown.u
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'u' of a value with unknown shape.
-//│ ║  l.187: 	let eagerUnknown = if hide(true) then M1 else (M2 as Any)
+//│ ║  l.189: 	let eagerUnknown = if hide(true) then M1 else (M2 as Any)
 //│ ║         	                                                     ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../../decls/Prelude.mls

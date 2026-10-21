@@ -29,22 +29,24 @@ sealed trait Shape extends ShapeEvent:
     * from the observed value to that witness. Wrappers preserve this ordering.
     * An annotation restricting a value and its class declaration are different
     * witnesses: interface errors use the annotation, while toLoc identifies the
-    * declaration. Diagnostic witnesses do not change semantic keys.
+    * declaration. Unknown values have no interface witness of their own, so their
+    * operations point to the operand's use site and provenance explains why the
+    * interface is unknown. Diagnostic witnesses do not change semantic keys.
     */
-  final def diagnostic(message: Message): Ls[(Message, Opt[Loc])] = this match
+  final def diagnostic(message: Message, useLoc: Opt[Loc]): Ls[(Message, Opt[Loc])] = this match
     case value: TermShape => value.applicationHead._1 match
-      case view: NominalInstanceView => view.provenance.diagnostic(message, view.annotation.flatMap(_.toLoc).orElse(toLoc))
-      case view: ContextualShape => view.source.diagnostic(message)
-      case view: SpecializedShape => view.declaration.diagnostic(message)
-      case unknown: UnknownValueShape => unknown.provenance.diagnostic(message, toLoc)
-      case opaque: OpaqueTypeShape => opaque.provenance.diagnostic(message, toLoc)
-      case rigid: RigidTypeShape => rigid.provenance.diagnostic(message, toLoc)
-      case _ => (message -> toLoc) :: Nil
-    case _: SymShape => (message -> toLoc) :: Nil
+      case view: NominalInstanceView => view.provenance.diagnostic(message, view.annotation.flatMap(_.toLoc).orElse(toLoc).orElse(useLoc))
+      case view: ContextualShape => view.source.diagnostic(message, useLoc)
+      case view: SpecializedShape => view.declaration.diagnostic(message, useLoc)
+      case unknown: UnknownValueShape => unknown.provenance.diagnostic(message, useLoc.orElse(toLoc))
+      case opaque: OpaqueTypeShape => opaque.provenance.diagnostic(message, toLoc.orElse(useLoc))
+      case rigid: RigidTypeShape => rigid.provenance.diagnostic(message, useLoc.orElse(toLoc))
+      case _ => (message -> toLoc.orElse(useLoc)) :: Nil
+    case _: SymShape => (message -> toLoc.orElse(useLoc)) :: Nil
   /** Arity errors also cite where the expected parameter lists are declared, when the
     * witness of `diagnostic` does not show them: a class constructor can take the
     * parameter lists of `constructor(...)` declarations written in the class body. */
-  final def arityDiagnostic(message: Message): Ls[(Message, Opt[Loc])] =
+  final def arityDiagnostic(message: Message, useLoc: Opt[Loc]): Ls[(Message, Opt[Loc])] =
     def constructorDeclarations(shape: Shape): Ls[(Message, Opt[Loc])] = shape match
       case value: TermShape => value.applicationHead._1 match
         case view: ContextualShape => constructorDeclarations(view.source)
@@ -52,7 +54,7 @@ sealed trait Shape extends ShapeEvent:
         case defn: DefnShape => defn.ctorLoc.map(loc => msg"The constructor is declared here." -> S(loc)).toList
         case _ => Nil
       case _: SymShape => Nil
-    diagnostic(message) ::: constructorDeclarations(this)
+    diagnostic(message, useLoc) ::: constructorDeclarations(this)
   def shwDbg(using DebugPrinter): Str = this match
     case ds: DefnShape => ds.defn.sym.showDbg
     case as: AppShape => s"AppShape(${as.receiver.shwDbg}, ${as.args.showDbg})"
@@ -946,7 +948,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
       val ctor = (cls.paramsOpt.toList ::: cls.auxParams).foldRight[Term](Term.Lit(syntax.Tree.IntLit(0))):
         (params, body) => scoped(Term.Lam(params, body))
       val methods = cls.body.methods.filter(method => method.body.nonEmpty && !method.tsym.isPrivate).map: method =>
-        val ref = scoped(Term.MemberRef(method.bsym)(new syntax.Tree.Ident(method.bsym.nme), FlowSymbol.memSym(method.bsym)))
+        val ref = scoped(Term.MemberRef(method.bsym)(N, FlowSymbol.memSym(method.bsym)))
         field(method.bsym.nme, withBuffer(ref))
       (field("size", Term.Lit(syntax.Tree.IntLit(0))) ::
         field("ctor", withBuffer(ctor)) :: methods).toMap

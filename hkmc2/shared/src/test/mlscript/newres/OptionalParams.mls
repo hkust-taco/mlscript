@@ -156,6 +156,8 @@ len()
 //│ ║  l.149: 	fun len(s?) = s.length
 //│ ║         	        ^^
 //│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ║  l.149: 	fun len(s?) = s.length
+//│ ║         	              ^
 //│ ╟── Parameter 's' admits values of unknown shape.
 //│ ║  l.149: 	fun len(s?) = s.length
 //│ ║         	        ^^
@@ -204,10 +206,10 @@ app((x, y?) => [x, y])
 :e
 [1, 2, 3].map((a, b, c, d) => a)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.205: 	[1, 2, 3].map((a, b, c, d) => a)
+//│ ║  l.207: 	[1, 2, 3].map((a, b, c, d) => a)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.205: 	[1, 2, 3].map((a, b, c, d) => a)
+//│ ║  l.207: 	[1, 2, 3].map((a, b, c, d) => a)
 //│ ║         	              ^^^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../decls/Prelude.mls
@@ -220,13 +222,13 @@ app((x, y?) => [x, y])
 fun app(f: (Int, Int?) -> Any) = f(1)
 app((x, y) => [x, y])
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.221: 	app((x, y) => [x, y])
+//│ ║  l.223: 	app((x, y) => [x, y])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.221: 	app((x, y) => [x, y])
+//│ ║  l.223: 	app((x, y) => [x, y])
 //│ ║         	    ^^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
-//│ ║  l.220: 	fun app(f: (Int, Int?) -> Any) = f(1)
+//│ ║  l.222: 	fun app(f: (Int, Int?) -> Any) = f(1)
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
 
@@ -235,13 +237,13 @@ app((x, y) => [x, y])
 fun app(f: (Int, Int?) -> Any) = f(1)
 app(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.236: 	app(x => x)
+//│ ║  l.238: 	app(x => x)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.236: 	app(x => x)
+//│ ║  l.238: 	app(x => x)
 //│ ║         	    ^^^^^^
 //│ ╟── The expected function type is declared here.
-//│ ║  l.235: 	fun app(f: (Int, Int?) -> Any) = f(1)
+//│ ║  l.237: 	fun app(f: (Int, Int?) -> Any) = f(1)
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^
 //│ = 1
 
@@ -249,13 +251,13 @@ app(x => x)
 fun app(f: (Int, Int) -> Any) = f(1, 2)
 app(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.250: 	app(x => x)
+//│ ║  l.252: 	app(x => x)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.250: 	app(x => x)
+//│ ║  l.252: 	app(x => x)
 //│ ║         	    ^^^^^^
 //│ ╟── The expected function type is declared here.
-//│ ║  l.249: 	fun app(f: (Int, Int) -> Any) = f(1, 2)
+//│ ║  l.251: 	fun app(f: (Int, Int) -> Any) = f(1, 2)
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^
 //│ = 1
 
@@ -322,7 +324,7 @@ let xs = [1, 2]
 :e
 class D(drop x)
 //│ ╔══[COMPILATION ERROR] Droppable parameters are only supported in function and lambda parameter lists.
-//│ ║  l.323: 	class D(drop x)
+//│ ║  l.325: 	class D(drop x)
 //│ ╙──       	        ^^^^^^
 
 // Rest parameters may also be droppable.
@@ -341,13 +343,13 @@ fun app(f: (Int, drop ...Array[Int]) -> Int) = f(1, 2, 3)
 fun app(f: (Int, ...Array[Int]) -> Int) = f(1, 2, 3)
 app(x => x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.342: 	app(x => x)
+//│ ║  l.344: 	app(x => x)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.342: 	app(x => x)
+//│ ║  l.344: 	app(x => x)
 //│ ║         	    ^^^^^^
 //│ ╟── The expected function type is declared here.
-//│ ║  l.341: 	fun app(f: (Int, ...Array[Int]) -> Int) = f(1, 2, 3)
+//│ ║  l.343: 	fun app(f: (Int, ...Array[Int]) -> Int) = f(1, 2, 3)
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 1
 
@@ -361,10 +363,10 @@ fun sig(x, y?) = x
 fun sig2: (Int, Int?) -> Int
 fun sig2(x, y) = x
 //│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
-//│ ║  l.362: 	fun sig2(x, y) = x
+//│ ║  l.364: 	fun sig2(x, y) = x
 //│ ║         	        ^^^^^^
 //│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
-//│ ║  l.361: 	fun sig2: (Int, Int?) -> Int
+//│ ║  l.363: 	fun sig2: (Int, Int?) -> Int
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^
 
 
@@ -423,13 +425,13 @@ sum(3)
 :e
 fun bad(x?, y) = x
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.424: 	fun bad(x?, y) = x
+//│ ║  l.426: 	fun bad(x?, y) = x
 //│ ╙──       	            ^
 
 :e
 fun bad(...xs?) = xs
 //│ ╔══[COMPILATION ERROR] Variadic parameters cannot be optional.
-//│ ║  l.430: 	fun bad(...xs?) = xs
+//│ ║  l.432: 	fun bad(...xs?) = xs
 //│ ╙──       	        ^^^^^^
 
 class C(x?)
@@ -437,13 +439,13 @@ class C(x?)
 :e
 fun bad(using x?: Int) = x
 //│ ╔══[COMPILATION ERROR] Contextual parameters cannot be optional.
-//│ ║  l.438: 	fun bad(using x?: Int) = x
+//│ ║  l.440: 	fun bad(using x?: Int) = x
 //│ ╙──       	        ^^^^^^^^^^^^^
 
 :e
 let t = [1, 2?]
 //│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
-//│ ║  l.444: 	let t = [1, 2?]
+//│ ║  l.446: 	let t = [1, 2?]
 //│ ╙──       	            ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ t = undefined
@@ -451,13 +453,13 @@ let t = [1, 2?]
 :e
 fun first(t: [Int, Int?]) = t.0
 //│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
-//│ ║  l.452: 	fun first(t: [Int, Int?]) = t.0
+//│ ║  l.454: 	fun first(t: [Int, Int?]) = t.0
 //│ ╙──       	                   ^^^^
 
 :e
 fun app(f: (Int?, Int) -> Int) = f(1, 2)
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.458: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
+//│ ║  l.460: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
 //│ ╙──       	                  ^^^
 
 // Other operators starting with `?` are unaffected.
@@ -475,39 +477,39 @@ undefined ?: 1
 :e
 fun bad(x, y ?: Int) = x
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
-//│ ║  l.476: 	fun bad(x, y ?: Int) = x
+//│ ║  l.478: 	fun bad(x, y ?: Int) = x
 //│ ╙──       	           ^^^^^^^^
 
 :pe
 :e
 fun bad(x, y ?) = x
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.483: 	fun bad(x, y ?) = x
+//│ ║  l.485: 	fun bad(x, y ?) = x
 //│ ╙──       	              ^
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
-//│ ║  l.483: 	fun bad(x, y ?) = x
+//│ ║  l.485: 	fun bad(x, y ?) = x
 //│ ╙──       	           ^^^
 
 :pe
 :e
 fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.493: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║  l.495: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╙──       	                      ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.493: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║  l.495: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ║         	                 ^^^^^
 //│ ╟── This type has no resolved target
-//│ ║  l.493: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║  l.495: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╙──       	                 ^^^^^
 
 // A separate signature determines how many arguments can be passed.
 :e
 sig()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.506: 	sig()
+//│ ║  l.508: 	sig()
 //│ ║         	^^^^^
 //│ ╟── Function 'sig' expected 1 to 2 arguments, but got 0
-//│ ║  l.358: 	fun sig(x, y?) = x
+//│ ║  l.360: 	fun sig(x, y?) = x
 //│ ╙──       	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'sig' expected at least 1 argument but got 0

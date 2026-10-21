@@ -451,6 +451,8 @@ val escapedCallback = @annotations.async {value => value.answer}
 //│ ║  l.449: 	val escapedCallback = @annotations.async {value => value.answer}
 //│ ║         	                                                   ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ║  l.449: 	val escapedCallback = @annotations.async {value => value.answer}
+//│ ║         	                                                   ^^^^^
 //│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.449: 	val escapedCallback = @annotations.async {value => value.answer}
 //│ ║         	                                          ^^^^^
@@ -470,7 +472,7 @@ val escapedCallback = @annotations.async {value => value.answer}
 fun noFulfillment() = noFulfillment()
 noFulfillment().then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
-//│ ║  l.471: 	noFulfillment().then(value => value.answer)
+//│ ║  l.473: 	noFulfillment().then(value => value.answer)
 //│ ╙──       	                              ^^^^^^^^^^^^
 
 // TODO: Infer structural thenables' fulfillment callbacks. Their original fields
@@ -481,9 +483,11 @@ class Thenable with
   fun id"then"(resolve: {answer: Int} -> undefined, reject: Any -> undefined) = resolve({answer: 77})
 Promise.resolve(new Thenable).then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.482: 	Promise.resolve(new Thenable).then(value => value.answer)
+//│ ║  l.484: 	Promise.resolve(new Thenable).then(value => value.answer)
 //│ ║         	                                            ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ║  l.484: 	Promise.resolve(new Thenable).then(value => value.answer)
+//│ ║         	                                            ^^^^^
 //│ ╟── This value may be a thenable; its fulfillment interface is not known.
-//│ ║  l.482: 	Promise.resolve(new Thenable).then(value => value.answer)
+//│ ║  l.484: 	Promise.resolve(new Thenable).then(value => value.answer)
 //│ ╙──       	                ^^^^^^^^^^^^

@@ -293,7 +293,6 @@ final class TypeParameterInstance(val origin: VarSymbol, val siteBinders: Opt[Se
     extends VarSymbol(origin.id):
   require(!origin.isInstanceOf[TypeParameterInstance], "Instantiate original type binders only")
   decl = origin.decl
-  val reference: Term.SimpleRef = Term.SimpleRef(this)(origin.id)
 
 class BuiltinSymbol
     (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool, val isPure: Bool)(using State)

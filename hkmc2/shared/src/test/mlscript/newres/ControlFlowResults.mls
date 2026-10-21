@@ -27,7 +27,9 @@ result.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.26: 	result.answer
 //│ ║        	^^^^^^^^^^^^^
-//│ ╙── Unit value does not contain member 'answer'
+//│ ╟── Unit value does not contain member 'answer'
+//│ ║  l.26: 	result.answer
+//│ ╙──      	^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ result = ()
 
@@ -37,9 +39,11 @@ fun answer() = {answer: 42}
 let result = while false do answer()
 result.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.38: 	result.answer
+//│ ║  l.40: 	result.answer
 //│ ║        	^^^^^^^^^^^^^
-//│ ╙── Unit value does not contain member 'answer'
+//│ ╟── Unit value does not contain member 'answer'
+//│ ║  l.40: 	result.answer
+//│ ╙──      	^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ result = ()
 
@@ -49,9 +53,11 @@ let saved = 0
 let result = set saved = 1
 result.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.50: 	result.answer
+//│ ║  l.54: 	result.answer
 //│ ║        	^^^^^^^^^^^^^
-//│ ╙── Unit value does not contain member 'answer'
+//│ ╟── Unit value does not contain member 'answer'
+//│ ║  l.54: 	result.answer
+//│ ╙──      	^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ result = ()
 //│ saved = 1
@@ -61,9 +67,11 @@ result.answer
 let result = drop {answer: 42}
 result.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.62: 	result.answer
+//│ ║  l.68: 	result.answer
 //│ ║        	^^^^^^^^^^^^^
-//│ ╙── Unit value does not contain member 'answer'
+//│ ╟── Unit value does not contain member 'answer'
+//│ ║  l.68: 	result.answer
+//│ ╙──      	^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ result = ()
 
@@ -141,9 +149,11 @@ let stopped = do exitLabel:
   {answer: 42}
 stopped.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.142: 	stopped.answer
+//│ ║  l.150: 	stopped.answer
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╙── Unit value does not contain member 'answer'
+//│ ╟── Unit value does not contain member 'answer'
+//│ ║  l.150: 	stopped.answer
+//│ ╙──       	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ stopped = undefined
 
@@ -181,17 +191,19 @@ returnedClosure()(42).answer
 fun exposedClosure() = return value => value.answer
 exposedClosure()({answer: 42})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.181: 	fun exposedClosure() = return value => value.answer
+//│ ║  l.191: 	fun exposedClosure() = return value => value.answer
 //│ ║         	                                       ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ║  l.191: 	fun exposedClosure() = return value => value.answer
+//│ ║         	                                       ^^^^^
 //│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.181: 	fun exposedClosure() = return value => value.answer
+//│ ║  l.191: 	fun exposedClosure() = return value => value.answer
 //│ ║         	                              ^^^^^
 //│ ╟── This value is returned here.
-//│ ║  l.181: 	fun exposedClosure() = return value => value.answer
+//│ ║  l.191: 	fun exposedClosure() = return value => value.answer
 //│ ║         	                              ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'exposedClosure' is exposed by this compilation unit.
-//│ ║  l.181: 	fun exposedClosure() = return value => value.answer
+//│ ║  l.191: 	fun exposedClosure() = return value => value.answer
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -519,7 +519,7 @@ final class ResolutionContext private[semantics] (
     */
   private def checkAccess(term: NewResolvable | New, scope: SrcScope): Unit = if !hasError(term) then
     val loc = term match
-      case ref: MemberRef => ref.tree.toLoc
+      case ref: MemberRef => ref.toLoc
       case sel: NewSel => sel.id.toLoc
       case ref: UnresolvedRef => ref.id.toLoc
       case sup: Super => sup.id.toLoc

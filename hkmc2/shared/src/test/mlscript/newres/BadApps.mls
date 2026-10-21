@@ -51,7 +51,7 @@ call(M)
 //│ ║        	^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ║  l.44: 	fun call(x) = x()
-//│ ║        	         ^
+//│ ║        	              ^
 //│ ╟── Parameter 'x' admits values of unknown shape.
 //│ ║  l.44: 	fun call(x) = x()
 //│ ║        	         ^
@@ -73,7 +73,7 @@ instantiate(Plain)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ║  l.66: 	fun instantiate(cls) = cls()
-//│ ║        	                ^^^
+//│ ║        	                       ^^^
 //│ ╟── Parameter 'cls' admits values of unknown shape.
 //│ ║  l.66: 	fun instantiate(cls) = cls()
 //│ ║        	                ^^^
@@ -95,7 +95,7 @@ overapply(Curried(1)(2))
 //│ ║        	          ^^^^^^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ║  l.88: 	fun overapply(instance) = instance()
-//│ ║        	              ^^^^^^^^
+//│ ║        	                          ^^^^^^^^
 //│ ╟── Parameter 'instance' admits values of unknown shape.
 //│ ║  l.88: 	fun overapply(instance) = instance()
 //│ ║        	              ^^^^^^^^
@@ -117,7 +117,7 @@ overapply(new Plain)
 //│ ║         	          ^^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ║  l.110: 	fun overapply(instance) = instance()
-//│ ║         	              ^^^^^^^^
+//│ ║         	                          ^^^^^^^^
 //│ ╟── Parameter 'instance' admits values of unknown shape.
 //│ ║  l.110: 	fun overapply(instance) = instance()
 //│ ║         	              ^^^^^^^^

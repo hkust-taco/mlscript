@@ -108,3 +108,16 @@ ambiguous(true).answer
 //│ ║  l.99: 	  {answer: 0}
 //│ ╙──      	   ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// User bindings with runtime names must not capture generated control-flow references.
+:expect 3
+fun shadowedLoop(runtime, Runtime, Continue) =
+  let i = 0 in do done:
+    fun step() =
+      if i >= 3 do done.break(i)
+      set i += 1
+      done.continue
+    step()
+shadowedLoop(0, 0, 0)
+//│ = 3

@@ -55,7 +55,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
 
   private def source(symbol: BlockMemberSymbol): MemberRef =
     val flow = flows.getOrElseUpdate(symbol, FlowSymbol("exposed"))
-    val ref: MemberRef = MemberRef(symbol)(new syntax.Tree.Ident(symbol.nme).withLocOf(symbol), flow)
+    val ref: MemberRef = MemberRef(symbol)(N, flow)
     // An exported definition is invoked from outside the unit, where no binder is in scope.
     rctx.recordLexicalBinders(ref, Set.empty)
     ref
@@ -83,7 +83,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
               case NoShape => ()))(emit(_, path))
 
   private def parameter(param: Param, marks: Ls[Marks], path: Path)(using ResolutionContext): Unit =
-    val ref = SimpleRef(param.sym)(param.sym.id)
+    val ref = SimpleRef(param.sym)(N)
     val unknown = UnknownValueShape(ref, fromPublicInterface = true)(path.via(
       msg"Parameter '${param.sym.nme}' admits values of unknown shape." -> param.toLoc))
     resolver.parameterSignature(param) match
@@ -97,7 +97,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       params.params.foreach(parameter(_, marks, path))
       params.trailingParams.foreach(parameter(_, marks, path))
       params.variadic.map(_.param).foreach: rest =>
-        val ref = SimpleRef(rest.sym)(rest.sym.id)
+        val ref = SimpleRef(rest.sym)(N)
         val unknown = UnknownValueShape(ref, fromPublicInterface = true)(path.via(
           msg"Rest parameter '${rest.sym.nme}' admits elements of unknown shape." -> rest.toLoc))
         val tuple = TupleShape(ref, TupleShape.Unknown(ref, TupleShape.ValueField(unknown, Nil)) :: Nil)(resolver)
@@ -206,12 +206,14 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       // dynamic values have no static graph.
       case _: (RecordTypeShape | OpaqueTypeShape | UnknownValueShape | RigidTypeShape | DynShape | ErrShape) => ()
 
-  def check(exports: Ls[BlockMemberSymbol], values: Ls[Term]): Unit =
+  /** An exposed value can be a synthesized local reference. Keep the exposure
+    * site's location in its diagnostic provenance, not on that reference. */
+  def check(exports: Ls[BlockMemberSymbol], values: Ls[(Term, Opt[Loc])]): Unit =
     try
       exports.foreach: symbol =>
         member(symbol, Nil, ShapeProvenance.empty.via(msg"'${symbol.nme}' is exposed by this compilation unit." -> symbol.headerLoc))
-      values.foreach: value =>
-        term(value, Nil, ShapeProvenance.empty.via(msg"This value is exposed by this compilation unit." -> value.toLoc))
+      values.foreach: (value, loc) =>
+        term(value, Nil, ShapeProvenance.empty.via(msg"This value is exposed by this compilation unit." -> loc))
       // Annotated callbacks can escape even from private code. Delay their
       // exposure until the block is elaborated, so forward definitions and
       // returned closures are available. Processing one root may discover more.

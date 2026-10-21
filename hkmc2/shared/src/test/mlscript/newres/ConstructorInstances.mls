@@ -222,6 +222,8 @@ let second = new Box(Second(22))
 //│ ║  l.216: 	let second = new Box(Second(22))
 //│ ║         	                     ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'first' of a value with unknown shape.
+//│ ║  l.217: 	[first.copy().item.first, second.copy().item.second]
+//│ ║         	 ^^^^^^^^^^^^^^^^^
 //│ ╟── Parameter 'item' admits values of unknown shape.
 //│ ║  l.213: 	class Box(val item) with
 //│ ║         	          ^^^^^^^^
@@ -235,6 +237,8 @@ let second = new Box(Second(22))
 //│ ║  l.215: 	let first = new Box(First(21))
 //│ ║         	                    ^^^^^^^^^
 //│ ╟── Cannot resolve member 'second' of a value with unknown shape.
+//│ ║  l.217: 	[first.copy().item.first, second.copy().item.second]
+//│ ║         	                          ^^^^^^^^^^^^^^^^^^
 //│ ╟── Parameter 'item' admits values of unknown shape.
 //│ ║  l.213: 	class Box(val item) with
 //│ ║         	          ^^^^^^^^

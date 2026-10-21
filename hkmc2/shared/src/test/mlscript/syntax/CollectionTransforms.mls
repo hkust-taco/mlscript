@@ -108,6 +108,8 @@ xs.map(=> _ + 1).map(=> _ * 2)
 //│ ║  l.106: 	xs.map(=> _ + 1).map(=> _ * 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'map' of a value with unknown shape.
+//│ ║  l.106: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── The shape of this value is unknown.
 //│ ║  l.106: 	xs.map(=> _ + 1).map(=> _ * 2)
 //│ ╙──       	^^^^^^

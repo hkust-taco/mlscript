@@ -462,20 +462,20 @@ object Elaborator:
 
     abstract class Elem:
       def nme: Str
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term
+      def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term
       def symbol: Opt[Symbol]
       def isImport: Bool
     final case class RefElem(sym: RefSymbol) extends Elem:
       val nme = sym.nme
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
-        // * Note: due to symbolic ops, we may have `id.name =/= nme`;
-        // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
+      def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
+        // * A source identifier can differ from the symbol name due to symbolic
+        // * operators, e.g., source spelling "|>" for the symbol named "pipe".
         if config.language.useNewResolution then
           sym match
           case sym: SimpleRefSymbol =>
             Term.SimpleRef(sym)(id)
           case sym: InnerSymbol =>
-            Term.SelfRef(sym)(id)
+            Term.SelfRef(sym)(id.getOrElse(Ident(sym.nme)))
           case sym: MemberSymbol =>
             // A reference can invoke a by-name definition, instantiating its
             // binders at this site (see NewResolver.instantiateByName).
@@ -484,16 +484,17 @@ object Elaborator:
             rctx.recordAccessSite(ref, ctx.scope)
             ref
         else
-          sym.ref(id)
+          sym.ref(id.getOrElse(Ident(sym.nme)))
       def symbol = S(sym)
       def isImport: Bool = false
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[MemberSymbol], isImport: Bool) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
+      def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         // * Same remark as in RefElem#ref
-        val prefix = base.ref(Ident(base.nme))
-        val name = new Ident(nme).withLocOf(id)
+        val prefix = base.ref(N)
+        val loc = id.flatMap(_.toLoc)
+        val name = new Ident(nme).withLoc(loc)
         if config.language.useNewResolution then
-          val res = new Term.NewSel(prefix, name, N)(FlowSymbol.synthSel(nme)).withLocOf(id)
+          val res = new Term.NewSel(prefix, name, N)(FlowSymbol.synthSel(nme)).withLoc(loc)
           rctx.recordLexicalBinders(res, ctx.typeBinders)
           rctx.recordAccessSite(res, ctx.scope)
           summon[NewResolver].newSel(res, ctx.scope)
@@ -502,11 +503,12 @@ object Elaborator:
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
       def symbol = symOpt
     final case class WildcardElem(nme: Str, sources: Ls[OpenSource]) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
+      def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         // Each ref is fresh. Locate its outer capture at the opening site too;
         // a chained wildcard reference may already have attached this location.
-        val prefixes = sources.map(source => source.elem.ref(source.id).withoutLoc.withLocOf(source.id))
-        val res = new Term.UnresolvedRef(prefixes, id)(FlowSymbol.synthSel(nme)).withLocOf(id)
+        val prefixes = sources.map(source => source.elem.ref(S(source.id)).withoutLoc.withLocOf(source.id))
+        val name: Ident = id.getOrElse(Ident(nme))
+        val res = new Term.UnresolvedRef(prefixes, name)(FlowSymbol.synthSel(nme)).withLocOf(name)
         rctx.recordLexicalBinders(res, ctx.typeBinders)
         rctx.recordAccessSite(res, ctx.scope)
         summon[NewResolver].unresolvedRef(res, ctx.scope)
@@ -514,7 +516,7 @@ object Elaborator:
       def symbol: Opt[Symbol] = N
       def isImport: Bool = true
     final case class CaptElem(base: Elem, thru: DefinitionSymbol[?]) extends Elem:
-      def ref(id: Ident)(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
+      def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         Term.Capture(base.ref(id), thru)
       def symbol = base.symbol
       def isImport: Bool = false
@@ -823,6 +825,9 @@ extends Importer:
   val lang = config.language
   val newResolution: Bool = lang.useNewResolution
   
+  private def syntheticLocalRef(sym: LocalVarSymbol): Term =
+    if newResolution then Term.SimpleRef(sym)(N) else sym.ref()
+  
   private def debugElaboration[T](annotations: Ls[Annot])(thunk: => T): T =
     tl.traceDefinition(annotations, config)(thunk)
   
@@ -918,7 +923,7 @@ extends Importer:
   
   private def requireEffectMethodValue(methodName: Str, valueSym: Opt[VarSymbol]): Term =
     valueSym match
-      case S(sym) => sym.ref(Ident("value"))
+      case S(sym) => syntheticLocalRef(sym)
       case N => lastWords(s"Missing value parameter for non-local effect handler method '$methodName'.")
   
   /** Mark a handler method as used via symbol direct references, without emitting code. */
@@ -930,8 +935,8 @@ extends Importer:
     * so compiler-inserted selections use normal member resolution and lowering. */
   private def nonLocalContinueSentinel(using Ctx): Term =
     if newResolution then
-      pipeTerm(Ctx.RefElem(State.runtimeModuleSymbol).ref(Ident("Runtime")), State.runtimeSymbol)
-      Ctx.SelElem(Ctx.RefElem(State.runtimeSymbol), "Continue", S(State.continueSymbol), false).ref(Ident("Continue"))
+      pipeTerm(Ctx.RefElem(State.runtimeModuleSymbol).ref(N), State.runtimeSymbol)
+      Ctx.SelElem(Ctx.RefElem(State.runtimeSymbol), "Continue", S(State.continueSymbol), false).ref(N)
     else State.runtimeSymbol.ref().synthSel(State.continueSymbol)
   
   /** Build an effect handler around `body` for non-local control flow. */
@@ -986,7 +991,7 @@ extends Importer:
     val selection = if newResolution then
       markEffectMethodUsed(handlerSymbol, callSiteId)
       val receiver = ctx.controlHandler(handlerSymbol).getOrElse(
-        lastWords("A non-local control handler must belong to an enclosing scope")).ref(callSiteId)
+        lastWords("A non-local control handler must belong to an enclosing scope")).ref(N)
       val sel = withTypeBinders(new Term.NewSel(receiver, mtdTree.withLocOf(callSiteId), N)(
         FlowSymbol.sel(callSiteId.name)).withLocOf(callSiteId))
       rctx.recordAccessSite(sel, ctx.scope)
@@ -1078,7 +1083,7 @@ extends Importer:
   /** Elaborate `case` expressions */
   protected def caseSplit(scrut: VarSymbol, tree: Case): Ctxl[Term.IfLike] =
     val (form, split) = withScopedConnectives(tree.kw):
-      patternBranch(() => scrut.ref(), tree.branches, identity)
+      patternBranch(() => syntheticLocalRef(scrut), tree.branches, identity)
     ifLike(tree.kw.kw, form, split, tree.toLoc)
   
   protected def mkSplitLet(binding: LocalVarSymbol, term: Term): Head.Let =
@@ -1091,8 +1096,7 @@ extends Importer:
     // Captures carry the scope crossings needed to resolve extracted bindings,
     // but matching the value at runtime only needs the underlying reference.
     val ref = scrutinee.withoutCaptures match
-      case ref: Term.Ref => ref
-      case ref: (Term.SimpleRef | Term.SelfRef) => ref.sym.ref().withLocOf(scrutinee)
+      case ref: (Term.Ref | Term.SimpleRef) => ref
       case _ => lastWords("A pattern scrutinee must be a reference")
     Head.Match(ref, pattern, consequent)
   
@@ -1275,7 +1279,7 @@ extends Importer:
           // Member references can invoke getters; evaluate those only once.
           case _ =>
             val symbol = TempSymbol(N, erasedType = N, "scrut")
-            mkSplitLet(symbol, term) ~: continuation(() => symbol.ref())
+            mkSplitLet(symbol, term) ~: continuation(() => syntheticLocalRef(symbol))
   
   private type TT = (Tree, Tree)
   
@@ -1620,7 +1624,7 @@ extends Importer:
           LetDecl(sym, Nil)(tree.toLoc) :: defineVar(sym, lt)(tree.toLoc) :: Nil, Term.Try(Blk(
             assignment(lt, subterm(rhs)) :: Nil,
             subterm(bod, interp),
-        ), assignment(lt, sym.ref())))
+        ), assignment(lt, syntheticLocalRef(sym))))
     case LetLike(Keywrd(Keyword.`set`), _, N, S(_)) =>
       raise:
         ErrorReport(msg"Expected a right-hand side for this assignment" -> tree.toLoc :: Nil)
@@ -1680,7 +1684,7 @@ extends Importer:
       error
     case id @ Ident("this") =>
       (if newResolution then ctx.getReceiver else ctx.getOuter.map(Ctx.RefElem(_))) match
-      case S(elem) => elem.ref(id)
+      case S(elem) => elem.ref(S(id))
       case N =>
         raise:
           ErrorReport(msg"Cannot use 'this' outside of an object scope" -> tree.toLoc :: Nil)
@@ -1904,7 +1908,7 @@ extends Importer:
         case (S(owner: (ClassSymbol | ModuleOrObjectSymbol)), S(receiver)) =>
           // Like other written selections, a by-name member selected through
           // `super` is instantiated at this site, within its type binders.
-          val res = withTypeBinders(new Term.Super(receiver.ref(id), owner, nme)(FlowSymbol.sel(nme.name)).withLocOf(sel))
+          val res = withTypeBinders(new Term.Super(receiver.ref(S(id)), owner, nme)(FlowSymbol.sel(nme.name)).withLocOf(sel))
           if newResolution then rctx.recordAccessSite(res, ctx.scope)
           resolveSuper(res)
           interpretRef(res, interp)
@@ -1940,9 +1944,9 @@ extends Importer:
       val rs = FlowSymbol.app()
       withTypeBinders(Term.Lam(ps,
         app(
-          if newResolution then elaborateProjection(self.ref(), c, nme)
+          if newResolution then elaborateProjection(syntheticLocalRef(self), c, nme)
           else Term.SelProj(self.ref(), c, nme)(f, FlowSymbol.selProj(nme.name), N, S(summon)),
-          args.ref())(
+          syntheticLocalRef(args))(
           App(nme, Tup(Nil)) // FIXME
           , N, rs)
       ))
@@ -1983,7 +1987,7 @@ extends Importer:
         )(N)
         if mut then Term.Mut(inner) else inner
       case N =>
-        val objectRef = ctx.builtins.Object.bms.get.ref(Ident("Object"))
+        val objectRef = Ctx.RefElem(ctx.builtins.Object.bms.get).ref(N)
         // An anonymous object invokes Object's constructor, rather than
         // partially applying its declared optional parameter list.
         mkNew(objectRef, Term.Tup(Nil)(Tree.DummyTup) :: Nil, bodo)(N)
@@ -2070,7 +2074,7 @@ extends Importer:
       raise(ErrorReport(msg"Illegal outer binding." -> tree.toLoc :: Nil))
       error
     case Outer(N) => ctx.get("outer") match
-      case S(sym) => interpretRef(sym.ref(Ident("outer")), interp)
+      case S(sym) => interpretRef(sym.ref(N).withLocOf(tree), interp)
       case N =>
         raise(ErrorReport(msg"Illegal outer reference." -> tree.toLoc :: Nil))
         error
@@ -2166,7 +2170,7 @@ extends Importer:
         val id = new Ident("_" + unds.size).withLocOf(und)
         val sym = VarSymbol(id, erasedType = N)
         unds += sym
-        sym.ref(id)
+        syntheticLocalRef(sym).withLocOf(und)
     case Annotated(lhs, rhs) =>
       annot(lhs).fold(subterm(rhs, interp))(ann =>
         annotated(ann, subterm(rhs, interp)))
@@ -2413,7 +2417,7 @@ extends Importer:
                     val sym = if newResolution then N else resolveField(id, baseElem.symbol, id)
                     val e = Ctx.SelElem(baseElem, id.name, sym, isImport = true)
                     // Validate the named selection even when its binding is unused.
-                    if newResolution then e.ref(id)
+                    if newResolution then e.ref(S(id))
                     id.name -> e :: Nil
                   case t =>
                     raise(ErrorReport(msg"Illegal 'open' statement element." -> t.toLoc :: Nil))
@@ -2758,7 +2762,7 @@ extends Importer:
               tsym,
               Nil, N, N,
               if newResolution
-                then S(Term.Capture(Term.SimpleRef(p.sym)(Ident(p.sym.name)), tsym))
+                then S(Term.Capture(Term.SimpleRef(p.sym)(N), tsym))
                 else S(p.sym.ref())
               ,
               TermDefFlags.empty,
@@ -2781,7 +2785,7 @@ extends Importer:
             psym.sourceAliases = p.sym.sourceAliases
             rctx.state.lexicalTypeBinders(psym) = ctx.typeBinders
             val decl = LetDecl(psym, Nil)(p.toLoc) // TODO: never use term symbols on LetDecl LHS
-            val defn = defineVar(psym, p.sym.ref())(p.toLoc)
+            val defn = defineVar(psym, syntheticLocalRef(p.sym))(p.toLoc)
             p.fldSym = S(psym)
             decl :: defn :: Nil
           
@@ -3269,8 +3273,8 @@ extends Importer:
         // like explicit bindings, they take precedence over wildcard sources.
         state.builtinOpsMap.get(id.name) match
           case S(bi) => S(bi.ref(id))
-          case N => candidate.map(_.ref(id))
-      case S(elem) => S(elem.ref(id))
+          case N => candidate.map(_.ref(S(id)))
+      case S(elem) => S(elem.ref(S(id)))
   
   def pattern(t: Tree): Ctxl[Pattern] = pattern(t, Map.empty)
 
@@ -3298,10 +3302,10 @@ extends Importer:
         log("has elem!")
         elem.symbol.flatMap:
           case vs: VarSymbol => vs.decl match
-            case S(d) if d.isPatternConstructor => S(elem.ref(id))
+            case S(d) if d.isPatternConstructor => S(elem.ref(S(id)))
             case S(_) | N => N
           case sym: Symbol => sym.asCls.orElse(sym.asObj).orElse(sym.asPat) match
-            case S(_) => S(elem.ref(id))
+            case S(_) => S(elem.ref(S(id)))
             case N => N
       case N =>
         state.builtinOpsMap.get(id.name) match
@@ -3508,8 +3512,8 @@ extends Importer:
         val exports = res.stats.collect:
           case d: Definition if InterfaceExposure.isPublic(d) => d.bsym
         val values = res.stats.collect:
-          case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(new Ident(sym.nme).withLocOf(rhs))
-        InterfaceExposure(this).check(exports, res.res :: values)
+          case DefineVar(sym: LocalVarSymbol, rhs) => Term.SimpleRef(sym)(N) -> rhs.toLoc
+        InterfaceExposure(this).check(exports, (res.res -> res.res.toLoc) :: values)
       else
         // Explicit annotations still check callbacks whose signatures they hide.
         InterfaceExposure(this).check(Nil, Nil)

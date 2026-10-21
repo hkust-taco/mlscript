@@ -128,6 +128,8 @@ read(new Child)
 //│ ║  l.125: 	private fun read(x: Base) = x.item().value
 //│ ║         	                            ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.125: 	private fun read(x: Base) = x.item().value
+//│ ║         	                            ^^^^^^^^
 //│ ╟── The shape of this value is unknown.
 //│ ║  l.125: 	private fun read(x: Base) = x.item().value
 //│ ╙──       	                            ^^^^^^
@@ -158,10 +160,10 @@ class Child extends Base with
 let identity = (x => x) as [A] -> A -> A
 identity[Base](new Child).extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.159: 	identity[Base](new Child).extra
+//│ ║  l.161: 	identity[Base](new Child).extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.159: 	identity[Base](new Child).extra
+//│ ║  l.161: 	identity[Base](new Child).extra
 //│ ╙──       	         ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ identity = fun identity
@@ -171,10 +173,10 @@ identity[Base](new Child).extra
 let identity = (x => x) as [A] -> A -> A
 identity[Int, Int](1)
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.172: 	identity[Int, Int](1)
+//│ ║  l.174: 	identity[Int, Int](1)
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature expected 1 type argument, but got 2
-//│ ║  l.171: 	let identity = (x => x) as [A] -> A -> A
+//│ ║  l.173: 	let identity = (x => x) as [A] -> A -> A
 //│ ╙──       	                                  ^^^^^^
 //│ = 1
 //│ identity = fun identity

@@ -9,6 +9,8 @@ read({value: 1})
 //│ ║  l.6: 	fun read(x) = x.value
 //│ ║       	              ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.6: 	fun read(x) = x.value
+//│ ║       	              ^
 //│ ╟── Parameter 'x' admits values of unknown shape.
 //│ ║  l.6: 	fun read(x) = x.value
 //│ ║       	         ^
@@ -22,14 +24,16 @@ read({value: 1})
 fun rest(...xs) = xs.0.value
 rest({value: 2})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.22: 	fun rest(...xs) = xs.0.value
+//│ ║  l.24: 	fun rest(...xs) = xs.0.value
 //│ ║        	                  ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.24: 	fun rest(...xs) = xs.0.value
+//│ ║        	                  ^^^^
 //│ ╟── Rest parameter 'xs' admits elements of unknown shape.
-//│ ║  l.22: 	fun rest(...xs) = xs.0.value
+//│ ║  l.24: 	fun rest(...xs) = xs.0.value
 //│ ║        	         ^^^^^
 //│ ╟── 'rest' is exposed by this compilation unit.
-//│ ║  l.22: 	fun rest(...xs) = xs.0.value
+//│ ║  l.24: 	fun rest(...xs) = xs.0.value
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -38,17 +42,19 @@ rest({value: 2})
 fun escaped() = x => x.value
 escaped()({value: 3})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.38: 	fun escaped() = x => x.value
+//│ ║  l.42: 	fun escaped() = x => x.value
 //│ ║        	                     ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.42: 	fun escaped() = x => x.value
+//│ ║        	                     ^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.38: 	fun escaped() = x => x.value
+//│ ║  l.42: 	fun escaped() = x => x.value
 //│ ║        	                ^
 //│ ╟── This value is returned here.
-//│ ║  l.38: 	fun escaped() = x => x.value
+//│ ║  l.42: 	fun escaped() = x => x.value
 //│ ║        	                ^^^^^^^^^^^^
 //│ ╟── 'escaped' is exposed by this compilation unit.
-//│ ║  l.38: 	fun escaped() = x => x.value
+//│ ║  l.42: 	fun escaped() = x => x.value
 //│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -61,17 +67,19 @@ hidden({value: 4})
 :e
 val exported = {callback: hidden}
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.57: 	private fun hidden(x) = x.value
+//│ ║  l.63: 	private fun hidden(x) = x.value
 //│ ║        	                        ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.63: 	private fun hidden(x) = x.value
+//│ ║        	                        ^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.57: 	private fun hidden(x) = x.value
+//│ ║  l.63: 	private fun hidden(x) = x.value
 //│ ║        	                   ^
 //│ ╟── This value is stored in this record field.
-//│ ║  l.62: 	val exported = {callback: hidden}
+//│ ║  l.68: 	val exported = {callback: hidden}
 //│ ║        	                ^^^^^^^^
 //│ ╟── 'exported' is exposed by this compilation unit.
-//│ ║  l.62: 	val exported = {callback: hidden}
+//│ ║  l.68: 	val exported = {callback: hidden}
 //│ ╙──      	^^^^^^^^^^^^
 //│ exported = {callback: fun hidden}
 
@@ -80,17 +88,19 @@ val exported = {callback: hidden}
 fun recordSpread(x) = ({...{...x}}).value
 recordSpread({value: 5})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.80: 	fun recordSpread(x) = ({...{...x}}).value
+//│ ║  l.88: 	fun recordSpread(x) = ({...{...x}}).value
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' across a computed key or unknown record spread.
+//│ ║  l.88: 	fun recordSpread(x) = ({...{...x}}).value
+//│ ║        	                               ^
 //│ ╟── This spread has no known element shape.
-//│ ║  l.80: 	fun recordSpread(x) = ({...{...x}}).value
+//│ ║  l.88: 	fun recordSpread(x) = ({...{...x}}).value
 //│ ║        	                               ^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.80: 	fun recordSpread(x) = ({...{...x}}).value
+//│ ║  l.88: 	fun recordSpread(x) = ({...{...x}}).value
 //│ ║        	                 ^
 //│ ╟── 'recordSpread' is exposed by this compilation unit.
-//│ ║  l.80: 	fun recordSpread(x) = ({...{...x}}).value
+//│ ║  l.88: 	fun recordSpread(x) = ({...{...x}}).value
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -99,18 +109,20 @@ recordSpread({value: 5})
 fun tupleSpread(xs) = [...xs].0.value
 tupleSpread([{value: 6}])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.99: 	fun tupleSpread(xs) = [...xs].0.value
-//│ ║        	                      ^^^^^^^^^^^^^^^
+//│ ║  l.109: 	fun tupleSpread(xs) = [...xs].0.value
+//│ ║         	                      ^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.109: 	fun tupleSpread(xs) = [...xs].0.value
+//│ ║         	                      ^^^^^^^^^
 //│ ╟── This spread has no known element shape.
-//│ ║  l.99: 	fun tupleSpread(xs) = [...xs].0.value
-//│ ║        	                          ^^
+//│ ║  l.109: 	fun tupleSpread(xs) = [...xs].0.value
+//│ ║         	                          ^^
 //│ ╟── Parameter 'xs' admits values of unknown shape.
-//│ ║  l.99: 	fun tupleSpread(xs) = [...xs].0.value
-//│ ║        	                ^^
+//│ ║  l.109: 	fun tupleSpread(xs) = [...xs].0.value
+//│ ║         	                ^^
 //│ ╟── 'tupleSpread' is exposed by this compilation unit.
-//│ ║  l.99: 	fun tupleSpread(xs) = [...xs].0.value
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.109: 	fun tupleSpread(xs) = [...xs].0.value
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Checked indexing carries the origin and its diagnostic path to the result.
@@ -118,17 +130,19 @@ tupleSpread([{value: 6}])
 fun indexed(xs) = xs.[0].value
 indexed([{value: 7}])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.118: 	fun indexed(xs) = xs.[0].value
+//│ ║  l.130: 	fun indexed(xs) = xs.[0].value
 //│ ║         	                    ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.130: 	fun indexed(xs) = xs.[0].value
+//│ ║         	                  ^^^^^
 //│ ╟── This array index has no known element shape.
-//│ ║  l.118: 	fun indexed(xs) = xs.[0].value
+//│ ║  l.130: 	fun indexed(xs) = xs.[0].value
 //│ ║         	                  ^^^^^
 //│ ╟── Parameter 'xs' admits values of unknown shape.
-//│ ║  l.118: 	fun indexed(xs) = xs.[0].value
+//│ ║  l.130: 	fun indexed(xs) = xs.[0].value
 //│ ║         	            ^^
 //│ ╟── 'indexed' is exposed by this compilation unit.
-//│ ║  l.118: 	fun indexed(xs) = xs.[0].value
+//│ ║  l.130: 	fun indexed(xs) = xs.[0].value
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -138,16 +152,16 @@ private fun identity[A](x: A): A = x
 fun throughType(x) = identity(x).value
 throughType({value: 8})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.138: 	fun throughType(x) = identity(x).value
+//│ ║  l.152: 	fun throughType(x) = identity(x).value
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.138: 	fun throughType(x) = identity(x).value
+//│ ║  l.152: 	fun throughType(x) = identity(x).value
 //│ ║         	                ^
 //│ ╟── 'throughType' is exposed by this compilation unit.
-//│ ║  l.138: 	fun throughType(x) = identity(x).value
+//│ ║  l.152: 	fun throughType(x) = identity(x).value
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.137: 	private fun identity[A](x: A): A = x
+//│ ║  l.151: 	private fun identity[A](x: A): A = x
 //│ ╙──       	                               ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -156,14 +170,16 @@ throughType({value: 8})
 fun hole(xs: Array) = xs.0.value
 hole([{value: 9}])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.156: 	fun hole(xs: Array) = xs.0.value
+//│ ║  l.170: 	fun hole(xs: Array) = xs.0.value
 //│ ║         	                      ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.170: 	fun hole(xs: Array) = xs.0.value
+//│ ║         	                      ^^^^
 //│ ╟── Parameter 'xs' admits values of unknown shape.
-//│ ║  l.156: 	fun hole(xs: Array) = xs.0.value
+//│ ║  l.170: 	fun hole(xs: Array) = xs.0.value
 //│ ║         	         ^^^^^^^^^
 //│ ╟── 'hole' is exposed by this compilation unit.
-//│ ║  l.156: 	fun hole(xs: Array) = xs.0.value
+//│ ║  l.170: 	fun hole(xs: Array) = xs.0.value
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -173,17 +189,19 @@ private class Box(val item)
 fun refined(x) = if x is Box(item) then item.value else 0
 refined(Box({value: 10}))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.173: 	fun refined(x) = if x is Box(item) then item.value else 0
+//│ ║  l.189: 	fun refined(x) = if x is Box(item) then item.value else 0
 //│ ║         	                                        ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.189: 	fun refined(x) = if x is Box(item) then item.value else 0
+//│ ║         	                                        ^^^^
 //│ ╟── This constructor field may contain a value of unknown shape.
-//│ ║  l.172: 	private class Box(val item)
+//│ ║  l.188: 	private class Box(val item)
 //│ ║         	                      ^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.173: 	fun refined(x) = if x is Box(item) then item.value else 0
+//│ ║  l.189: 	fun refined(x) = if x is Box(item) then item.value else 0
 //│ ║         	            ^
 //│ ╟── 'refined' is exposed by this compilation unit.
-//│ ║  l.173: 	fun refined(x) = if x is Box(item) then item.value else 0
+//│ ║  l.189: 	fun refined(x) = if x is Box(item) then item.value else 0
 //│ ╙──       	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -206,14 +224,16 @@ declared(Known)
 fun dynamic(x) = x.value
 dynamic({value: 13} as dyn)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.206: 	fun dynamic(x) = x.value
+//│ ║  l.224: 	fun dynamic(x) = x.value
 //│ ║         	                 ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.224: 	fun dynamic(x) = x.value
+//│ ║         	                 ^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.206: 	fun dynamic(x) = x.value
+//│ ║  l.224: 	fun dynamic(x) = x.value
 //│ ║         	            ^
 //│ ╟── 'dynamic' is exposed by this compilation unit.
-//│ ║  l.206: 	fun dynamic(x) = x.value
+//│ ║  l.224: 	fun dynamic(x) = x.value
 //│ ╙──       	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -222,14 +242,16 @@ dynamic({value: 13} as dyn)
 fun first(xs) = xs.0
 first([14])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.222: 	fun first(xs) = xs.0
+//│ ║  l.242: 	fun first(xs) = xs.0
 //│ ║         	                ^^^^
 //│ ╟── Cannot resolve member '0' of a value with unknown shape.
+//│ ║  l.242: 	fun first(xs) = xs.0
+//│ ║         	                ^^
 //│ ╟── Parameter 'xs' admits values of unknown shape.
-//│ ║  l.222: 	fun first(xs) = xs.0
+//│ ║  l.242: 	fun first(xs) = xs.0
 //│ ║         	          ^^
 //│ ╟── 'first' is exposed by this compilation unit.
-//│ ║  l.222: 	fun first(xs) = xs.0
+//│ ║  l.242: 	fun first(xs) = xs.0
 //│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -241,13 +263,13 @@ private fun callback(x) = x.value
 callback({value: 15})
 erase(callback)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.240: 	private fun callback(x) = x.value
+//│ ║  l.262: 	private fun callback(x) = x.value
 //│ ║         	                          ^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.240: 	private fun callback(x) = x.value
+//│ ║  l.262: 	private fun callback(x) = x.value
 //│ ║         	                     ^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.239: 	private fun erase(f: Function) = ()
+//│ ║  l.261: 	private fun erase(f: Function) = ()
 //│ ║         	                     ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -36,7 +36,7 @@ trait TermSynthesizer(using State):
   protected final def param = Param.simple
   protected final def paramList(params: Param*) = PlainParamList(params.toList)(N)
     
-  private lazy val runtimeRef: Term.Ref = State.runtimeSymbol.ref().resolve
+  private lazy val runtimeRef: Term.SimpleRef = Term.SimpleRef(State.runtimeSymbol)(N)
 
   /** Make a term that looks like `runtime.MatchSuccess` with its symbol. */
   protected lazy val matchSuccessClass =
@@ -77,19 +77,19 @@ trait TermSynthesizer(using State):
     app(tupleSlice, tup(fld(t), fld(int(i)), fld(int(j))), label)
 
   /** Make a term that looks like `runtime.Str.startsWith(t, p)`. */
-  protected final def callStringStartsWith(t: Term.Ref, p: Term, label: Str) =
+  protected final def callStringStartsWith(t: Term.Ref | Term.SimpleRef, p: Term, label: Str) =
     app(stringStartsWith, tup(fld(t), fld(p)), label)
 
   /** Make a term that looks like `runtime.Str.get(t, i)`. */
-  protected final def callStringGet(t: Term.Ref, i: Int, label: Str) =
+  protected final def callStringGet(t: Term.Ref | Term.SimpleRef, i: Int, label: Str) =
     app(stringGet, tup(fld(t), fld(int(i))), label)
 
   /** Make a term that looks like `runtime.Str.drop(t, n)`. */
-  protected final def callStringTake(t: Term.Ref, n: Int, label: Str) =
+  protected final def callStringTake(t: Term.Ref | Term.SimpleRef, n: Int, label: Str) =
     app(stringTake, tup(fld(t), fld(int(n))), label)
   
   /** Make a term that looks like `runtime.Str.drop(t, n)`. */
-  protected final def callStringDrop(t: Term.Ref, n: Int, label: Str) =
+  protected final def callStringDrop(t: Term.Ref | Term.SimpleRef, n: Int, label: Str) =
     app(stringLeaveOut, tup(fld(t), fld(int(n))), label)
 
   protected final def tempLet(dbgName: Str, term: Term)(inner: TempSymbol => Split): Split =
@@ -117,7 +117,7 @@ trait TermSynthesizer(using State):
 
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeLocalPatternBranch(
-      scrut: => Term.Ref,
+      scrut: => Term.Ref | Term.SimpleRef,
       localPatternSymbol: LocalVarSymbol,
       inner: => Split,
   )(fallback: Split): Split =
@@ -126,7 +126,7 @@ trait TermSynthesizer(using State):
       Branch(resultSymbol.safeRef, matchSuccessPattern(N), inner) ~: fallback
   
   protected final def makeTupleBranch(
-    scrut: => Term.Ref,
+    scrut: => Term.Ref | Term.SimpleRef,
     subScrutinees: Ls[LocalVarSymbol],
     consequent: => Split,
     alternative: Split
@@ -139,7 +139,7 @@ trait TermSynthesizer(using State):
     ) ~: alternative
   
   protected final def makeTupleBranch(
-    scrut: => Term.Ref,
+    scrut: => Term.Ref | Term.SimpleRef,
     leading: Ls[LocalVarSymbol],
     spread: LocalVarSymbol,
     trailing: Ls[LocalVarSymbol],

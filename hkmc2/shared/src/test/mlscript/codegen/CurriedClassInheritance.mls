@@ -56,6 +56,8 @@ c.a
 //│ ║  l.54: 	c.a
 //│ ║        	^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ║  l.54: 	c.a
+//│ ║        	^
 //│ ╟── The shape of this value is unknown.
 //│ ║  l.42: 	let c = b(100)
 //│ ╙──      	        ^^^^^^
@@ -65,17 +67,19 @@ c.a
 :re
 Bar(123)(1234)(100).a
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.66: 	Bar(123)(1234)(100).a
+//│ ║  l.68: 	Bar(123)(1234)(100).a
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Bar' cannot receive more argument lists.
-//│ ║  l.66: 	Bar(123)(1234)(100).a
+//│ ║  l.68: 	Bar(123)(1234)(100).a
 //│ ╙──      	^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.66: 	Bar(123)(1234)(100).a
+//│ ║  l.68: 	Bar(123)(1234)(100).a
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ║  l.68: 	Bar(123)(1234)(100).a
+//│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.66: 	Bar(123)(1234)(100).a
+//│ ║  l.68: 	Bar(123)(1234)(100).a
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -83,16 +87,20 @@ Bar(123)(1234)(100).a
 :re
 [c.x, c.y]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.84: 	[c.x, c.y]
+//│ ║  l.88: 	[c.x, c.y]
 //│ ║        	 ^^^
 //│ ╟── Cannot resolve member 'x' of a value with unknown shape.
+//│ ║  l.88: 	[c.x, c.y]
+//│ ║        	 ^
 //│ ╟── The shape of this value is unknown.
 //│ ║  l.42: 	let c = b(100)
 //│ ╙──      	        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.84: 	[c.x, c.y]
+//│ ║  l.88: 	[c.x, c.y]
 //│ ║        	      ^^^
 //│ ╟── Cannot resolve member 'y' of a value with unknown shape.
+//│ ║  l.88: 	[c.x, c.y]
+//│ ║        	      ^
 //│ ╟── The shape of this value is unknown.
 //│ ║  l.42: 	let c = b(100)
 //│ ╙──      	        ^^^^^^
@@ -108,10 +116,10 @@ let b1 = b0(123)
 :re
 b1.a
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.109: 	b1.a
+//│ ║  l.117: 	b1.a
 //│ ║         	^^^^
 //│ ╟── Instance of class 'Bar' does not contain member 'a'
-//│ ║  l.104: 	let b1 = b0(123)
+//│ ║  l.112: 	let b1 = b0(123)
 //│ ╙──       	         ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -125,10 +133,10 @@ b.a
 :re
 let c = b(100)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.126: 	let c = b(100)
+//│ ║  l.134: 	let c = b(100)
 //│ ║         	        ^^^^^^
 //│ ╟── Instance of class 'Bar' cannot receive more argument lists.
-//│ ║  l.118: 	let b = b1(1234)
+//│ ║  l.126: 	let b = b1(1234)
 //│ ╙──       	        ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ c = undefined
@@ -137,11 +145,13 @@ let c = b(100)
 :re
 c.a
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.138: 	c.a
+//│ ║  l.146: 	c.a
 //│ ║         	^^^
 //│ ╟── Cannot resolve member 'a' of a value with unknown shape.
+//│ ║  l.146: 	c.a
+//│ ║         	^
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.126: 	let c = b(100)
+//│ ║  l.134: 	let c = b(100)
 //│ ╙──       	        ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -149,18 +159,22 @@ c.a
 :re
 [c.x, c.y]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.150: 	[c.x, c.y]
+//│ ║  l.160: 	[c.x, c.y]
 //│ ║         	 ^^^
 //│ ╟── Cannot resolve member 'x' of a value with unknown shape.
+//│ ║  l.160: 	[c.x, c.y]
+//│ ║         	 ^
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.126: 	let c = b(100)
+//│ ║  l.134: 	let c = b(100)
 //│ ╙──       	        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.150: 	[c.x, c.y]
+//│ ║  l.160: 	[c.x, c.y]
 //│ ║         	      ^^^
 //│ ╟── Cannot resolve member 'y' of a value with unknown shape.
+//│ ║  l.160: 	[c.x, c.y]
+//│ ║         	      ^
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.126: 	let c = b(100)
+//│ ║  l.134: 	let c = b(100)
 //│ ╙──       	        ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -174,10 +188,10 @@ let b = Baz(123)(1234)
 :re
 let c = b(100)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.175: 	let c = b(100)
+//│ ║  l.189: 	let c = b(100)
 //│ ║         	        ^^^^^^
 //│ ╟── Instance of class 'Baz' cannot receive more argument lists.
-//│ ║  l.170: 	let b = Baz(123)(1234)
+//│ ║  l.184: 	let b = Baz(123)(1234)
 //│ ╙──       	        ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ c = undefined
@@ -187,17 +201,21 @@ let c = b(100)
 :re
 [c.x, c.y]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.188: 	[c.x, c.y]
+//│ ║  l.202: 	[c.x, c.y]
 //│ ║         	 ^^^
 //│ ╟── Cannot resolve member 'x' of a value with unknown shape.
+//│ ║  l.202: 	[c.x, c.y]
+//│ ║         	 ^
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.175: 	let c = b(100)
+//│ ║  l.189: 	let c = b(100)
 //│ ╙──       	        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.188: 	[c.x, c.y]
+//│ ║  l.202: 	[c.x, c.y]
 //│ ║         	      ^^^
 //│ ╟── Cannot resolve member 'y' of a value with unknown shape.
+//│ ║  l.202: 	[c.x, c.y]
+//│ ║         	      ^
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.175: 	let c = b(100)
+//│ ║  l.189: 	let c = b(100)
 //│ ╙──       	        ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

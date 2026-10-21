@@ -18,6 +18,8 @@ handled().answer
 //│ ║  l.16: 	handled().answer
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ║  l.16: 	handled().answer
+//│ ║        	^^^^^^^^^
 //│ ╟── An effect handler can replace the handled body's result.
 //│ ║  l.12: 	  handle h = AnswerEffect with
 //│ ║        	             ^^^^^^^^^^^^^^^^^

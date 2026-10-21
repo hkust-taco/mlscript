@@ -436,8 +436,8 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             case _ =>
               error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
               (Bot, Bot, Bot)
-            scrutinee match // * refine
-              case Ref(sym: LocalSymbol) =>
+            scrutinee.sym match // * refine
+              case sym: LocalSymbol =>
                 nestCtx1 += sym -> clsTy
                 nestCtx2 += sym -> tv
               case _ => () // TODO: refine all variables holding this value?
@@ -628,7 +628,8 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
       case sel @ Term.SynthSel(Ref(_: TopLevelSymbol), nme)
         if sel.symbol.isDefined =>
         typeCheck(Ref(sel.symbol.get)(sel.nme, N))
-      case Ref(sym) =>
+      case ref: (Ref | SimpleRef) =>
+        val sym = ref.sym
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)
           case _ =>

@@ -10,7 +10,7 @@ import collection.mutable.{Buffer, HashMap}, collection.immutable.SeqMap
 import codegen.{ErasedType, PrimitiveType}
 import Elaborator.{Ctx, State, ctx}, utils.TL
 import semantics.Pattern as SP // "SP" is short for "semantic patterns"
-import Term.Ref
+import Term.{Ref, SimpleRef}
 import ups.Compiler.ResultMode
 
 object SplitCompiler:
@@ -24,7 +24,7 @@ object SplitCompiler:
     private val tupleLead: HashMap[Int, SymbolScrut[?]] = HashMap.empty
     private val tupleLast: HashMap[Int, SymbolScrut[?]] = HashMap.empty
     
-    def apply()(using State): Term.Ref
+    def apply()(using State): Ref | SimpleRef
 
     def getSubScrutinee(cs: ClassSymbol | PatternSymbol)(i: Int)(using State): SymbolScrut[?] =
       val scrutinees = subScrutinees.getOrElseUpdate(cs, Buffer.empty)
@@ -39,13 +39,13 @@ object SplitCompiler:
       fields.getOrElseUpdate(fieldName, TempSymbol(N, erasedType = N, s"field_${fieldName.name}$$").toScrut)
   
   object Scrut:
-    def from(ref: Term.Ref): RefScrut = RefScrut(() => ref)
+    def from(ref: Ref | SimpleRef): RefScrut = RefScrut(() => ref)
   
-  class RefScrut(make: () => Term.Ref) extends Scrut:
-    def apply()(using State): Ref = make()
+  class RefScrut(make: () => Ref | SimpleRef) extends Scrut:
+    def apply()(using State): Ref | SimpleRef = make()
   
   class SymbolScrut[SymbolType <: LocalVarSymbol](val symbol: SymbolType) extends Scrut:
-    def apply()(using State): Ref = symbol.ref()
+    def apply()(using State): SimpleRef = SimpleRef(symbol)(N)
   
   extension [SymbolType <: LocalVarSymbol](symbol: SymbolType)
     def toScrut: SymbolScrut[SymbolType] = SymbolScrut(symbol)
@@ -111,7 +111,7 @@ object SplitCompiler:
     private lazy val symbol =
       _hasBeenUsed = true
       TempSymbol(N, erasedType = N, nameHint.getOrElse("output"))
-    def apply()(using State): Ref = symbol.safeRef
+    def apply()(using State): SimpleRef = SimpleRef(symbol)(N)
     def toList: Ls[TempSymbol] = if _hasBeenUsed then symbol :: Nil else Nil
     def toLet(term: => Term, tail: Split): Split =
       if _hasBeenUsed then Split.Let(symbol, term, tail) else tail
@@ -883,7 +883,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         makeMatchSplit(scrutinee, pattern, true)(
           (output, bindings) =>
             val guardSymbol = TempSymbol(N, erasedType = N, "guardResult")
-            val branch = Branch(guardSymbol.ref(), makeConsequent(output, bindings))
+            val branch = Branch(guardSymbol.safeRef, makeConsequent(output, bindings))
             val innermost = Split.Let(guardSymbol, guard, branch ~: Split.End)
             // The creation of bindings here is repeated with the creation of
             // bindings during desugaring. We can add a piece of information
@@ -1136,7 +1136,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         (makeConsequent, alternative) => make(
           (output, remains, bindings) =>
             val guardSymbol = TempSymbol(N, erasedType = N, "guardResult")
-            val branch = Branch(guardSymbol.ref(), makeConsequent(output, remains, bindings))
+            val branch = Branch(guardSymbol.safeRef, makeConsequent(output, remains, bindings))
             val innermost = Split.Let(guardSymbol, guard, branch ~: Split.End)
             // The creation of bindings here is repeated with the creation of
             // bindings during desugaring. We can add a piece of information

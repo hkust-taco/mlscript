@@ -23,13 +23,13 @@ object AccessPath:
 
   private def reference(target: DefinitionSymbol[?])(using State): Either[Failure, Term] = checked(target):
     val member = target.bms.getOrElse(lastWords("An access path requires a block member"))
-    val ref = MemberRef(member)(new Tree.Ident(member.nme).withLocOf(target), FlowSymbol.memSym(member))
+    val ref = MemberRef(member)(N, FlowSymbol.memSym(member))
     ref.resolvedTargets = target :: Nil
     ref
 
   private def select(prefix: Term, target: DefinitionSymbol[?])(using State): Either[Failure, Term] = checked(target):
     val member = target.bms.getOrElse(lastWords("An access path requires a block member"))
-    val sel = new NewSel(prefix, new Tree.Ident(member.nme).withLocOf(target), N)(FlowSymbol.synthSel(member.nme))
+    val sel = new NewSel(prefix, Tree.Ident(member.nme), N)(FlowSymbol.synthSel(member.nme))
     sel.resolvedTargets = target :: Nil
     sel.resolvedMembers = member :: Nil
     sel

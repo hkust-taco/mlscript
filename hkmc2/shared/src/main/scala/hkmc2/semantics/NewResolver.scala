@@ -717,11 +717,13 @@ class NewResolver:
         case _ => argument
 
   private def instanceType(instance: TypeParameterInstance)(using ResolutionContext): DeclaredType =
-    declaredType(typeResolution(instance.reference), Map.empty)
+    parameterType(TypeShape.Parameter(instance, instance.inferenceHost))
 
   private def parameterType(parameter: TypeShape.Parameter)(using ResolutionContext): DeclaredType =
     rctx.state.parameterTypes.getOrElseUpdate(parameter, {
-      val source = SimpleRef(parameter.symbol)(parameter.symbol.id)
+      // This endpoint is shared across occurrences. Written uses and declaration
+      // notes carry their own locations; the canonical parameter has no source use.
+      val source = SimpleRef(parameter.symbol)(N)
       val resolution = new TypeResolution(source, messages => resolError(source, messages))
       resolution.publish(parameter)
       declaredType(resolution, Map.empty)
@@ -1820,7 +1822,7 @@ class NewResolver:
       // type argument without leaking this abstract candidate into the caller.
       val site = FlowSymbol("generic interface")
       params.foreach: param =>
-        val ref = SimpleRef(param)(param.id)
+        val ref = SimpleRef(param)(N)
         val unknown = RigidTypeShape(param, ref)
         publishParameter(param, MarkedShape.enter(unknown, ResolutionBoundary(owner), S(site)))
 
@@ -2489,7 +2491,7 @@ class NewResolver:
               case NoShape => ()
         case _ =>
           if rctx.state.arrayIndexErrors.add(new Identity(sel)) then
-            resolError(sel, receiver.diagnostic(msg"${receiver.describe.capitalize} does not support checked array indexing.") :::
+            resolError(sel, receiver.diagnostic(msg"${receiver.describe.capitalize} does not support checked array indexing.", prefix.toLoc) :::
               (msg"Use '![...]' for a dynamic access." -> N) :: Nil)
 
   private[semantics] def arrayElementType(array: NominalInstanceView): Opt[DeclaredType] =
@@ -2752,7 +2754,7 @@ class NewResolver:
         if mismatch then
           if rctx.state.reportedArities.getOrElseUpdate(reportKey, mutable.Set.empty).add(known) then
             val count = if unknown then msg"at least ${known}" else msg"${known}"
-            resolError(src, callable.arityDiagnostic(msg"${callable.describe.capitalize} expected ${arity.describe}, but got ${count}"))
+            resolError(src, callable.arityDiagnostic(msg"${callable.describe.capitalize} expected ${arity.describe}, but got ${count}", src.toLoc))
         else matched((tuple, marks))
       case _ => resolError(src, msg"Expected an argument tuple." -> args.toLoc :: Nil)
   
@@ -2773,7 +2775,7 @@ class NewResolver:
         true
     def reject(sh: TermShape)(using ResolutionContext): Unit =
       rctx.markError(res)
-      resolError(res, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a constructor pattern."))
+      resolError(res, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a constructor pattern.", lhs.toLoc))
     def classPattern(cls: ClassDef | ModuleOrObjectDef)(using ResolutionContext): Unit = if select(cls.sym) then
       val assoc = res.arguments match
         case N => Nil
@@ -2862,8 +2864,7 @@ class NewResolver:
     * supply undeclared assumptions to guards or transformations.
     */
   def checkPatternDefinition(definition: PatternDef)(using ResolutionContext): Unit =
-    val source = Term.MemberRef(definition.bsym)(new syntax.Tree.Ident(definition.bsym.nme).withLocOf(definition),
-      FlowSymbol.pat()(using rctx.owner))
+    val source = Term.MemberRef(definition.bsym)(N, FlowSymbol.pat()(using rctx.owner))
     val unknown = UnknownValueShape(source, fromPublicInterface = false)(ShapeProvenance(
       msg"Pattern '${definition.sym.nme}' accepts values of unknown shape." -> definition.headerLoc :: Nil))
     matchShapePat(unknown, definition.pattern)(_ => ())
@@ -2977,7 +2978,7 @@ class NewResolver:
         // The transform is lowered to a separate lambda. Its source references
         // already name these parameter symbols, not the aliases used by guards.
         parameters.foreach: (binding, parameter) =>
-          pipeTerm(Term.SimpleRef(binding)(binding.id), parameter)
+          pipeTerm(Term.SimpleRef(binding)(N), parameter)
         matchShapePat(shape, pat)(_ => ())
         listenTerm(transform)(matched)
       case Pattern.Guarded(pat, _) => matchShapePat(shape, pat)(matched)
@@ -3305,7 +3306,7 @@ class NewResolver:
         val exposed = lhs.applicationHead._1 match
           case unknown: UnknownValueShape => unknown.fromPublicInterface
           case _ => false
-        rctx.resolutionProblem(res, config.language.eagerResolution || exposed)(lhs.diagnostic(message))
+        rctx.resolutionProblem(res, config.language.eagerResolution || exposed)(lhs.diagnostic(message, res.lhs.toLoc))
       publish(UnknownValueShape.at(res))
       return
     if checked then res.callableTargets.currentShapes.add(source)
@@ -3415,10 +3416,10 @@ class NewResolver:
     host match
       case sel: NewSel =>
         rctx.resolutionProblem(sel, config.language.eagerResolution || fromPublicInterface):
-          provenance.diagnostic(message, N)
+          provenance.diagnostic(message, sel.prefix.toLoc)
       case _ if !rctx.hasError(host) =>
         rctx.markError(host)
-        resolError(host, provenance.diagnostic(message, N))
+        resolError(host, provenance.diagnostic(message, host.toLoc))
       case _ => ()
 
   /** Like for imports in Scala, wildcard opens do not provide the members that are inaccessible
@@ -3629,10 +3630,10 @@ class NewResolver:
               case value: TermShape => publishViewed(sel, value, ref.instances)
               case NoShape => ())
         , shape =>
-          member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty))
+          member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic(_, sel.prefix.toLoc), TypeSubstitution.empty))
       case N => listenReceiver(sel.prefix): shape =>
         log(dbg"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-        member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
+        member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic(_, sel.prefix.toLoc), TypeSubstitution.empty)
       case S(cls) =>
         classSelection(cls)(ref =>
           val cd = ref.definition
@@ -3670,7 +3671,7 @@ class NewResolver:
               case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty))
         , sh =>
           rctx.markError(sel)
-          resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
+          resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class.", cls.prefix.toLoc))
         )
   
   /** Both constructor references and explicit `new` use the same definition and
@@ -3735,7 +3736,7 @@ class NewResolver:
             val maxLists = paramCount.max(1)
             if nw.args.length > maxLists then
               resolError(nw, dsh.arityDiagnostic(
-                msg"Class '${cd.sym.nme}' expected at most ${maxLists} ${"argument list".pluralized(maxLists)}, but got ${nw.args.length}"))
+                msg"Class '${cd.sym.nme}' expected at most ${maxLists} ${"argument list".pluralized(maxLists)}, but got ${nw.args.length}", nw.cls.toLoc))
             if paramCount == 0 then
               nw.args.headOption.foreach: args =>
                 checkArgumentArity(args, Arity(0, 0, false, 0), nw, dsh)(_ => ())
@@ -3746,7 +3747,7 @@ class NewResolver:
     , shape =>
       if !rctx.hasError(nw) then
         rctx.markError(nw)
-        resolError(nw, shape.diagnostic(msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'."))
+        resolError(nw, shape.diagnostic(msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'.", nw.cls.toLoc))
     )
   
   /** Assignments return to the binding's lexical scope before contributing
@@ -4359,7 +4360,7 @@ class NewResolver:
       def checkArity(callee: TermShape, count: Int)(using ResolutionContext): Unit =
         if count != args.length && rctx.state.typeArgumentArityErrors.add((new Identity(application), count)) then
           resolError(trm, callee.diagnostic(msg"${callee.describe.capitalize} expected ${count} type ${
-            "argument".pluralized(count)}, but got ${args.length}"))
+            "argument".pluralized(count)}, but got ${args.length}", underlying.toLoc))
       def instantiate(value: TermShape)(receive: Listener)(using ResolutionContext): Unit = listenInstanceViews(value): viewed =>
         val ShapeParts(actual, captured, supplied) = shapeParts(viewed)
         if supplied.nonEmpty then

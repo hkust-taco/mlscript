@@ -38,6 +38,8 @@ fun callid0(p) = p.id(1)
 //│ ║  l.36: 	fun callid0(p) = p.id(1)
 //│ ║        	                 ^^^^
 //│ ╟── Cannot resolve member 'id' of a value with unknown shape.
+//│ ║  l.36: 	fun callid0(p) = p.id(1)
+//│ ║        	                 ^
 //│ ╟── Parameter 'p' admits values of unknown shape.
 //│ ║  l.36: 	fun callid0(p) = p.id(1)
 //│ ║        	            ^
@@ -270,27 +272,27 @@ f.name
 :e
 (x => x).foo
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.271: 	(x => x).foo
+//│ ║  l.273: 	(x => x).foo
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── Function literal does not contain member 'foo'
-//│ ║  l.271: 	(x => x).foo
+//│ ║  l.273: 	(x => x).foo
 //│ ╙──       	 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 f is Int -> Int
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator '->').
-//│ ║  l.281: 	f is Int -> Int
+//│ ║  l.283: 	f is Int -> Int
 //│ ╙──       	     ^^^^^^^^^^
 //│ = true
 
 :fixme
 (f as Int -> Int).apply
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.288: 	(f as Int -> Int).apply
+//│ ║  l.290: 	(f as Int -> Int).apply
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature does not contain member 'apply'
-//│ ║  l.288: 	(f as Int -> Int).apply
+//│ ║  l.290: 	(f as Int -> Int).apply
 //│ ╙──       	      ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

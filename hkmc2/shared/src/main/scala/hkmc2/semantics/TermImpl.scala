@@ -22,8 +22,15 @@ type AnyRef_ = AnyRefImpl & Term
 
 trait AnyRefImpl:
   self: Term.Ref | Term.SimpleRef | Term.MemberRef | Term.SelfRef =>
-  def tree: Tree.Ident
   def sym: Symbol
+  /** An identifier records a written use, not a backend name. Desugared uses such
+    * as `_` can instead carry that token's location; wholly synthetic references
+    * have neither an identifier nor a source location. */
+  def sourceId: Opt[Tree.Ident] = this match
+    case ref: Term.Ref => S(ref.tree)
+    case ref: Term.SelfRef => S(ref.tree)
+    case ref: Term.SimpleRef => ref.tree
+    case ref: Term.MemberRef => ref.tree
 
 trait NewRefImpl extends AnyRefImpl:
   self: Term.SimpleRef | Term.MemberRef | Term.SelfRef =>
@@ -275,7 +282,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
   
   protected def children: Vector[Located] = this match
     case t: Lit => Vector.single(t.lit.asTree)
-    case t: AnyRef_ => treeOrSubterms(t.tree)
+    case t: AnyRef_ => t.sourceId.toVector
     case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => Vector.double(l.params, l.body)
     case t: App => treeOrSubterms(t.tree)

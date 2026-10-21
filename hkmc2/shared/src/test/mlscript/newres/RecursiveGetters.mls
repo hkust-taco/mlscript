@@ -120,6 +120,8 @@ fun exposed(value) =
 //│ ║  l.118: 	  result.answer
 //│ ║         	  ^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ║  l.118: 	  result.answer
+//│ ║         	  ^^^^^^
 //│ ╟── Parameter 'value' admits values of unknown shape.
 //│ ║  l.116: 	fun exposed(value) =
 //│ ║         	            ^^^^^

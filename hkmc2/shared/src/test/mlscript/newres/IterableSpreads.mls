@@ -200,6 +200,8 @@ fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
 //│ ║  l.198: 	fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
 //│ ║         	                                                     ^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ║  l.198: 	fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
+//│ ║         	                                                     ^^^^^^^^^
 //│ ╟── This spread has no known element shape.
 //│ ║  l.198: 	fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
 //│ ╙──       	                                                         ^^
@@ -212,10 +214,10 @@ class Duplicate {
 }
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member 'Symbol.iterator'.
 //│ ╟── Member 'first' is defined here.
-//│ ║  l.210: 	  @annotations.jsSymbol(Symbol.iterator) fun first() = [Box(1)].iterator()
+//│ ║  l.212: 	  @annotations.jsSymbol(Symbol.iterator) fun first() = [Box(1)].iterator()
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'second' is defined here.
-//│ ║  l.211: 	  @annotations.jsSymbol(Symbol.iterator) fun second() = [Box(2)].iterator()
+//│ ║  l.213: 	  @annotations.jsSymbol(Symbol.iterator) fun second() = [Box(2)].iterator()
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // An override must keep the runtime key declared by its parent.
@@ -224,7 +226,7 @@ class MissingSymbol extends Parent {
   override fun iterator() = [Box(3)].iterator()
 }
 //│ ╔══[COMPILATION ERROR] Overriding member 'iterator' must use the same @jsSymbol annotation as its parent.
-//│ ║  l.224: 	  override fun iterator() = [Box(3)].iterator()
+//│ ║  l.226: 	  override fun iterator() = [Box(3)].iterator()
 //│ ║         	               ^^^^^^^^
 //│ ╟── The inherited member is declared here.
 //│ ║  l.111: 	  @annotations.jsSymbol(Symbol.iterator) open fun iterator() = [Box(0)].iterator()

@@ -21,6 +21,8 @@ syntaxValue.answer
 //│ ║  l.19: 	syntaxValue.answer
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ║  l.19: 	syntaxValue.answer
+//│ ║        	^^^^^^^^^^^
 //│ ╟── The shape of this value is unknown.
 //│ ║  l.18: 	let syntaxValue = `42
 //│ ╙──      	                   ^^
@@ -32,11 +34,11 @@ syntaxValue.answer
 let typeValue = dyn
 typeValue
 //│ ╔══[COMPILATION ERROR] Resolution error in dynamic type
-//│ ║  l.32: 	let typeValue = dyn
+//│ ║  l.34: 	let typeValue = dyn
 //│ ║        	                ^^^
 //│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (dynamic type)
-//│ ║  l.32: 	let typeValue = dyn
+//│ ║  l.34: 	let typeValue = dyn
 //│ ╙──      	                ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ typeValue = undefined
@@ -46,10 +48,10 @@ typeValue
 let promise = @annotations.async {answer: 42}
 promise.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.47: 	promise.answer
+//│ ║  l.49: 	promise.answer
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Promise' does not contain member 'answer'
-//│ ║  l.46: 	let promise = @annotations.async {answer: 42}
+//│ ║  l.48: 	let promise = @annotations.async {answer: 42}
 //│ ║        	              ^^^^^^^^^^^^^^^^^^
 //│ ╙── This async annotation wraps the body's result in a promise.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -288,8 +288,8 @@ fun exposed(f) =
 //│ ║  l.285: 	  let y = f(0)
 //│ ║         	          ^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.284: 	fun exposed(f) =
-//│ ║         	            ^
+//│ ║  l.285: 	  let y = f(0)
+//│ ║         	          ^
 //│ ╟── Parameter 'f' admits values of unknown shape.
 //│ ║  l.284: 	fun exposed(f) =
 //│ ║         	            ^
@@ -323,3 +323,34 @@ new Opened().f(1, 2)
 //│ ║  l.315: 	  open fun f(x) =
 //│ ╙──       	  ^^^^^^^^^^^^^
 //│ = 3
+
+// A shared unknown shape must report each call at its own callee, including through an alias.
+:e
+fun invokeAtEachUse(f) =
+  let alias = f
+  f()
+  alias()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.332: 	  alias()
+//│ ║         	  ^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ║  l.332: 	  alias()
+//│ ║         	  ^^^^^
+//│ ╟── Parameter 'f' admits values of unknown shape.
+//│ ║  l.329: 	fun invokeAtEachUse(f) =
+//│ ║         	                    ^
+//│ ╟── 'invokeAtEachUse' is exposed by this compilation unit.
+//│ ║  l.329: 	fun invokeAtEachUse(f) =
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.331: 	  f()
+//│ ║         	  ^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ║  l.331: 	  f()
+//│ ║         	  ^
+//│ ╟── Parameter 'f' admits values of unknown shape.
+//│ ║  l.329: 	fun invokeAtEachUse(f) =
+//│ ║         	                    ^
+//│ ╟── 'invokeAtEachUse' is exposed by this compilation unit.
+//│ ║  l.329: 	fun invokeAtEachUse(f) =
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
