@@ -156,6 +156,9 @@ class NewResolver:
           case App(Ref(op: BuiltinSymbol), Tup(Fld(_, Lit(_: Tree.IntLit | _: Tree.DecLit), _) :: Nil))
               if op.nme === "-" || op.nme === "+" =>
             result.publish(TypeShape.Abstract)
+          // The interop sentinel supplies no resolution candidates, including
+          // when it appears in an annotation alongside legitimate values.
+          case Lit(Tree.UnitLit(false)) => result.publish(TypeShape.Bottom)
           case literal: Lit =>
             // Singleton annotations retain literal values, which read no binders.
             rctx.recordTemplateBinders(result, S(Set.empty))
@@ -2146,8 +2149,7 @@ class NewResolver:
             // Diagnostics must not disconnect parameter or result constraints.
             val allParams = params.allParams
             zipCallbackArguments(context, Arity(params), declared, callable.source, expectedContext)(
-              (index, shape) => constrainParameterIn(allParams(index), shape, context, instances, site),
-              index => constrainOmittedParameterIn(allParams(index), context, instances))
+              (index, shape) => constrainParameterIn(allParams(index), shape, context, instances, site))
             callable.result.foreach: ret =>
               tail match
                 case Nil => results: shape =>
@@ -2179,7 +2181,7 @@ class NewResolver:
                 shape match
                   case value: TermShape => inferTypeArguments(tpe, value, context, site)
                   case NoShape => ()
-              , _ => ())
+              )
             wanted.result.foreach: ret =>
               def receive(shape: TermShape)(using ResolutionContext): Unit = shape.exit(actualContext).enter(expectedContext) match
                 case value: TermShape => inferTypeArguments(ret, value, marks, site)
@@ -2287,22 +2289,16 @@ class NewResolver:
     * layouts use the same flow approximation as separate signatures.
     */
   private def zipCallbackArguments(mss: Ls[Marks], arity: Arity, declared: DeclaredParams, source: Term, marks: Marks)(
-      publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit,
-      omitted: Int => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+      publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
     def fields(params: Ls[DeclaredParam]): Ls[TupleShape.Fixed] = params.map: param =>
       param.tpe match
         case S(tpe) => TupleShape.TypedField(tpe, Nil)
         case N => TupleShape.UnknownField(source, Nil)
     if !declared.hasRest && declared.leadingRequired == declared.params.length && arity.required <= declared.params.length then
-      zipTupleShapes(mss, arity, TupleShape(source, fields(declared.params))(this), marks)(publish, omitted)
+      zipTupleShapes(mss, arity, TupleShape(source, fields(declared.params))(this), marks)(publish)
     else
       zipDeclaredParameters(arity, declared): (index, tpe) =>
         listenTypeInstances(tpe)(shape => publish(index, shape.exit(marks).enter(mss)))
-      // Aligned optional annotations already include null. Only synthesize
-      // omissions for extra positions, or when differing tails can shift inputs.
-      val supplied = if arity.trailing == declared.trailing.length then declared.params.length
-        else Arity(declared).required - arity.trailing
-      (arity.leadingRequired.max(supplied) until arity.leading).foreach(omitted(_))
   
   private def listenSignatureResult(tpe: DeclaredType, count: Int)(listener: Listener)(using ResolutionContext): Unit =
     if count == 0 then listenTypeInstances(tpe)(listener)
@@ -2631,37 +2627,18 @@ class NewResolver:
       instances: TypeSubstitution)(using ResolutionContext): Unit =
     val params = ps.allParams
     zipArgumentShapes(mss, Arity(ps), args, src, funSh)(
-      (index, shape) => constrainParameterIn(params(index), shape, mss, instances, S(src)),
-      index => constrainOmittedParameterIn(params(index), mss, instances))
-
-  // Annotated optional parameters already include null in their declared type.
-  // Reuse the same witness for direct calls and callback interfaces.
-  private def constrainOmittedParameterIn(param: Param, marks: Ls[Marks],
-      instances: TypeSubstitution)(using ResolutionContext): Unit =
-    if parameterSignature(param).isEmpty then
-      val omitted = rctx.state.omittedArguments.getOrElseUpdate(new Identity(param),
-        Lit(Tree.UnitLit(param.flags.opt).withLoc(param.toLoc)))
-      listenTerm(omitted)(constrainParameterIn(param, _, marks, instances, N))
+      (index, shape) => constrainParameterIn(params(index), shape, mss, instances, S(src)))
 
   private[semantics] def constrainParameter(p: Param, shape: TermShape | NoShape, marks: Ls[Marks])(using ResolutionContext): Unit =
     constrainParameterIn(p, shape, marks, rctx.instances, N)
 
-  private def isUndefinedArgument(shape: TermShape | NoShape): Bool = shape match
-    case Marked(literal: IntroShape, _) => literal.trm match
-      case Lit(Tree.UnitLit(false)) => true
-      case _ => false
-    case _ => false
-
   private def constrainParameterIn(p: Param, shape: TermShape | NoShape, marks: Ls[Marks],
-      instances: TypeSubstitution, site: Opt[Term])(using ResolutionContext): Unit =
-    shape match
-      case NoShape => ()
-      case _ if p.flags.opt && isUndefinedArgument(shape) =>
-        constrainOmittedParameterIn(p, marks, instances)
-      case sh: TermShape =>
-        parameterSignature(p) match
-          case S(tpe) => inferTypeArguments(tpe.instantiate(instances), sh, marks, site)
-          case N => publishParameter(p.sym, sh)(using rctx.withInstances(instances))
+      instances: TypeSubstitution, site: Opt[Term])(using ResolutionContext): Unit = shape match
+    case NoShape => ()
+    case sh: TermShape =>
+      parameterSignature(p) match
+        case S(tpe) => inferTypeArguments(tpe.instantiate(instances), sh, marks, site)
+        case N => publishParameter(p.sym, sh)(using rctx.withInstances(instances))
 
   private[semantics] def parameterSignature(p: Param)(using ResolutionContext): Opt[DeclaredType] =
     p.sign.map(sign => declaredType(typeResolution(sign), Map.empty)).orElse(signatureParameters.get(p.sym))
@@ -2682,17 +2659,14 @@ class NewResolver:
   
   /** Publish the shapes of the arguments matching each parameter position, where index
     * `arity.leading` denotes the variadic parameter and the following indices its trailing parameters,
-    * as in `ParamList.allParams`. When the argument count is known and some optional parameters
-    * receive no argument, `omitted` is called on their indices. */
+    * as in `ParamList.allParams`. Optional parameters already include null at their declarations. */
   private def zipArgumentShapes(mss: Ls[Marks], arity: Arity,
-      args: Term, src: Term, funSh: TermShape)(publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit,
-      omitted: Int => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+      args: Term, src: Term, funSh: TermShape)(publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
     checkArgumentArity(args, arity, src, funSh):
-      case (tuple, marks) => zipTupleShapes(mss, arity, tuple, marks)(publish, omitted)
+      case (tuple, marks) => zipTupleShapes(mss, arity, tuple, marks)(publish)
 
   private def zipTupleShapes(mss: Ls[Marks], arity: Arity, tuple: TupleShape, marks: Marks)(
-      publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit,
-      omitted: Int => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+      publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
     val Arity(leadingRequired, expectedCount, hasRest, trailing) = arity
     val knownCount = tuple.segments.count(_.isInstanceOf[TupleShape.Fixed])
     val unknownCount = tuple.segments.length - knownCount
@@ -2725,9 +2699,6 @@ class NewResolver:
       loop(segments, 0, 0)
     assignPositions(tuple.segments, expectedCount, trailing, identity)
     assignPositions(tuple.segments.reverse, trailing, leadingRequired, index => expectedCount + trailing - index)
-    // Unknown-length spreads may be empty. Keep the null flow for every optional
-    // position not guaranteed an argument by the fixed fields and required prefix.
-    (leadingRequired.max(knownCount - trailing) until expectedCount).foreach(omitted(_))
     if hasRest then
       // If consumption reaches an unknown segment, some subsequent fields
       // may have been consumed too. Widen their lengths, keeping every field's
@@ -3267,15 +3238,10 @@ class NewResolver:
         val callable = instantiateCallable(viewed, res.resSym, lexicalBinders(res), context :: Nil)
         val ps = callable.paramLists.head
         if checked then zipArgumentShapes(context :: Nil, Arity(ps), args, res, lhs)((index, value) =>
-          val param = ps.allParams(index)
-          // An explicit undefined at an optional position is an omission, not a bound on a type parameter.
-          if !param.flags.opt || !isUndefinedArgument(value) then
-            param.tpe.foreach: tpe =>
-              value match
-                case value: TermShape => inferTypeArguments(tpe, value, context :: Nil, S(res))
-                case NoShape => ()
-          // The declared types of optional parameters already include `null`.
-          , _ => ())
+          ps.allParams(index).tpe.foreach: tpe =>
+            value match
+              case value: TermShape => inferTypeArguments(tpe, value, context :: Nil, S(res))
+              case NoShape => ())
         def publish(shape: TermShape)(using ResolutionContext): Unit = transportShape(shape, context :: Nil) match
           case value: TermShape =>
             publishViewed(res, value, TypeSubstitution.empty)(using rctx.withInstances(callerInstances))
@@ -3292,9 +3258,7 @@ class NewResolver:
     case (ps, mss) :: pss =>
       if checked then zipArgsIn(mss, ps, args, res, lhs, instances)
       else
-        // Protocol observations apply no arguments. Preserve omitted-input flow
-        // without treating an uncertain calling convention as a resolution error.
-        (ps.params ::: ps.trailingParams).foreach(constrainOmittedParameterIn(_, mss, instances))
+        // Protocol observations supply no arguments, so a rest parameter is empty.
         ps.variadic.foreach(v => constrainParameterIn(v.param,
           TupleShape(args, Nil)(this), mss, instances, N))
     log(dbg"appShape isSaturated? ${sh.isSaturated}; head? ${sh.applicationHead._1.shwDbg}, ${sh.applicationHead._2.map(_.showDbg)}")
@@ -4532,6 +4496,9 @@ class NewResolver:
                 case _ => expand(rest, RecordShape.Unknown(UnknownValueShape.spread(term, shape)) :: reversed)
           case _ :: rest => expand(rest, reversed)
         expand(record.stats, Nil)
+    // Undefined is an interop sentinel, not a legitimate value for resolution.
+    // Its runtime literal and pattern tests do not require a propagated shape.
+    case Lit(Tree.UnitLit(false)) => ()
     case intro: IntroTerm =>
       // Literals and lambdas have the declared interface of their builtin class,
       // including inherited members. Retain their own shape for calls, pattern

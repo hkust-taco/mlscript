@@ -91,16 +91,16 @@ fun extractedLength(value: TextBox) =
 extractedLength(TextBox("abc"))
 //│ = 3
 
-// Excluding null does not remove undefined or manufacture an interface for Any.
+// Excluding null does not remove false or manufacture an interface for Any.
 :ge
-fun stillUndefined(value: Str | null | unsafe.undefined) =
+fun stillFalse(value: Str | null | false) =
   if value is ~null as text then text.length else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.97: 	  if value is ~null as text then text.length else 0
 //│ ║        	                                 ^^^^^^^^^^^
-//│ ╟── Undefined literal does not contain member 'length'
-//│ ║  l.96: 	fun stillUndefined(value: Str | null | unsafe.undefined) =
-//│ ╙──      	                                       ^^^^^^^^^^^^^^^^
+//│ ╟── Boolean literal does not contain member 'length'
+//│ ║  l.96: 	fun stillFalse(value: Str | null | false) =
+//│ ╙──      	                                   ^^^^^
 
 :ge
 fun stillUnknown(value: Any) =

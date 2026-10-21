@@ -52,10 +52,10 @@ private fun typed[A](f: (...Array[A]) -> Int, a: A) =
 //│ ║  l.18: 	class Right(val value: Int)
 //│ ╙──      	                ^^^^^
 
-// The interface always supplies two arguments, even though its prefix has one.
+// The trailing interface argument must reach the optional callback's second parameter.
 #lang(eagerResolution: true)
 private fun requiredPair(f: (Str, drop ...Array[Str], drop Str) -> Int) = 0
-requiredPair((first?, second?) => second.length)
+requiredPair((first?, second?) => if second is ~null as value then value.length else 0)
 //│ = 0
 
 // A tuple annotation on the interface's rest must not give a sliced rest its

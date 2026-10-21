@@ -6,7 +6,7 @@ fun named(f: (s: Str) -> Int) = f("abc")
 named(s => s.length)
 //│ = 3
 
-// Optional named parameters retain both the annotation and the undefined case.
+// Optional named parameters retain both the annotation and the null case.
 :expect [0, 3]
 fun namedOptional(f: (s?: Str) -> Int) = [f(), f("abc")]
 namedOptional((s?) => if s is ~null as s then s.length else 0)
@@ -18,6 +18,9 @@ missingNamed((s?) => s.length)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.17: 	missingNamed((s?) => s.length)
 //│ ║        	                     ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.17: 	missingNamed((s?) => s.length)
+//│ ║        	              ^^
 //│ ╟── Null literal does not contain member 'length'
 //│ ║  l.16: 	fun missingNamed(f: (s?: Str) -> Int) = f()
 //│ ╙──      	                     ^^^^^^^

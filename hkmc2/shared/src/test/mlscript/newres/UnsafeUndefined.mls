@@ -53,7 +53,7 @@ fun bareLength(value: Str | BareType) =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [undefined, true, false]
 
-// Literal types and negated patterns retain the undefined branch in resolution.
+// Explicit tests of the interop sentinel still distinguish it from legitimate values.
 :expect [0, 3]
 fun length(value: Str | unsafe.undefined) =
   if value is ~unsafe.undefined as text then text.length else 0
@@ -65,14 +65,11 @@ fun isUndefined(value) = if value is unsafe.undefined then true else false
 [isUndefined(unsafe.undefined), isUndefined(null)]
 //│ = [true, false]
 
-:e
+// Undefined contributes no member target, even in strict and eager resolution.
+:expect 3
 fun unchecked(value: Str | unsafe.undefined) = value.length
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.69: 	fun unchecked(value: Str | unsafe.undefined) = value.length
-//│ ║        	                                               ^^^^^^^^^^^^
-//│ ╟── Undefined literal does not contain member 'length'
-//│ ║  l.69: 	fun unchecked(value: Str | unsafe.undefined) = value.length
-//│ ╙──      	                           ^^^^^^^^^^^^^^^^
+unchecked("abc")
+//│ = 3
 
 // Optional parameters still convert the unsafe value to null on entry.
 :expect [null, null, 7]

@@ -3146,9 +3146,15 @@ extends Importer:
         sym.sourceAliases = aliases
         val p = Param(flg, sym, sig, mfn)(t.toLoc)
         sym.decl = S(p)
-        if newResolution then sig.foreach: sign =>
-          listenTypeInstances(sign): shape =>
-            if sym.currentShapes.add(shape) then sym.notifyShapeListeners(shape)
+        if newResolution then
+          // Optional parameters admit null independently of their callers. Seed
+          // unannotated parameters too, without turning their inferred inputs
+          // into an annotation boundary.
+          val initial = sig.orElse:
+            if flg.opt then S(Term.Lit(UnitLit(true).withLoc(t.toLoc))) else N
+          initial.foreach: sign =>
+            listenTypeInstances(sign): shape =>
+              if sym.currentShapes.add(shape) then sym.notifyShapeListeners(shape)
         (p, spd, aliases)
   
   /** Variadic parameters are not supported in class parameters. Report them and keep their trailing parameters. */
