@@ -951,7 +951,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     *   but the result has the same semantics.
     *  */
   def reserveNames(p: Program)(using Scope, Raise): Unit =
-    def go(blk: Block): Unit = tl.trace(s"avoidNames ${blk.toString.take(100)}..."):
+    def go(blk: Block): Unit = tl.trace(dbg"avoidNames ${blk.showAsPlain.take(100)}..."):
       blk match
       case Define(defn, rest) =>
         defn match

@@ -150,7 +150,7 @@ sealed abstract class NormalForm extends TypeExt:
 
 object NormalForm:
   def inter(lhs: Disj, rhs: Disj)(using TL): Disj =
-  tl.traceNot[Disj](s"inter ${lhs.showDbg} and ${rhs.showDbg}", r => s"= ${r.showDbg}"):
+  tl.traceNot[Disj](dbg"inter ${lhs.showDbg} and ${rhs.showDbg}", r => s"= ${r.showDbg}"):
     if lhs.isBot || rhs.isBot then Disj.bot
     else Disj(lhs.conjs.flatMap(lhs => rhs.conjs.flatMap(rhs => lhs.merge(rhs) match {
       case S(conj) => conj :: Nil
@@ -160,7 +160,7 @@ object NormalForm:
   def union(lhs: Disj, rhs: Disj): Disj = Disj(lhs.conjs ++ rhs.conjs)
 
   def neg(ty: Type)(using TL): Disj =
-  tl.traceNot[Disj](s"~DNF ${ty.showDbg} ${ty.getClass} ${ty.toBasic.showDbg}", r => s"= ${r.showDbg}"):
+  tl.traceNot[Disj](dbg"~DNF ${ty.showDbg} ${ty.getClass} ${ty.toBasic.showDbg}", r => s"= ${r.showDbg}"):
     ty match
     case u: Union => Disj(Conj(Inter(N), u, Nil) :: Nil)
     case _ => ty.toBasic match
@@ -174,7 +174,7 @@ object NormalForm:
     case NegType(ty) => dnf(ty)
 
   def dnf(ty: Type)(using TL): Disj =
-  tl.traceNot[Disj](s"DNF ${ty.showDbg} ${ty.getClass}", r => s"= ${r.showDbg}"):
+  tl.traceNot[Disj](dbg"DNF ${ty.showDbg} ${ty.getClass}", r => s"= ${r.showDbg}"):
     ty match
     case d: Disj => d
     case c: Conj => Disj(c :: Nil)

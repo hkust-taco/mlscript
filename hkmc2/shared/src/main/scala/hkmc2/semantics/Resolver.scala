@@ -259,7 +259,7 @@ class Resolver(tl: TraceLogger)
     * usually the entry point for the resolver.
     */
   def traverseBlock(blk: Term.Blk)(using ICtx): ICtx =
-  trace(s"Traversing block: $blk"):
+  trace(dbg"Traversing block: $blk"):
     traverseStmts(blk.stats).givenIn:
       traverse(blk.res, expect = Any)
       ictx
@@ -268,7 +268,7 @@ class Resolver(tl: TraceLogger)
   final def traverseStmts(stmts: Ls[Statement])(using ICtx): ICtx = stmts match
     case Nil => ictx
     case stmt :: rest => 
-      log(s"Traversing statement: $stmt")
+      log(dbg"Traversing statement: $stmt")
       val newICtx = stmt match
         case tdf: Definition =>
           traverseDefn(tdf)
@@ -289,7 +289,7 @@ class Resolver(tl: TraceLogger)
     * check the modulefulness of the term.
     */
   def traverse(t: Term, expect: Expect)(using ictx: ICtx): Unit =
-  trace(s"Traversing term: $t (expect = ${expect})"):
+  trace(dbg"Traversing term: $t (expect = ${expect})"):
     
     t match
       case blk: Term.Blk =>
@@ -341,7 +341,7 @@ class Resolver(tl: TraceLogger)
     if !cfg.noModuleCheck then
       val evalsToModule = ModuleChecker.evalsToModule(t, prefer = expect)
       val evalsToStaticClass = ModuleChecker.isStaticClass(t)
-      log(s"Checking ${t}: expect ${expect}, evalsToModule = ${evalsToModule}, evalsToStaticClass = ${evalsToStaticClass}")
+      log(dbg"Checking ${t}: expect ${expect}, evalsToModule = ${evalsToModule}, evalsToStaticClass = ${evalsToStaticClass}")
       
       if expect.`module` && !evalsToModule then
         raise(ErrorReport(msg"Expected a module; found non-moduleful ${t.describe}." -> t.toLoc 
@@ -357,7 +357,7 @@ class Resolver(tl: TraceLogger)
   end traverse
   
   def traverseDefn(defn: Definition)(using ICtx): ICtx =
-  trace(s"Resolving definition: $defn"):
+  trace(dbg"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
       val TermDefinition(_k, _sym, _tsym, 
         pss, tps, sign, body, TermDefFlags(isMethod, _), modulefulness, annotations, comp
@@ -425,7 +425,7 @@ class Resolver(tl: TraceLogger)
     // Case: instance definition. Add the instance to the context.
     case defn @ TermDefinition(k = Ins, sym = sym, tsym = tsym, flags = TermDefFlags(isMethod, _), sign = sign) =>
       softAssert(defn.owner.isEmpty)
-      log(s"Resolving instance definition ${defn.showDbg}")
+      log(dbg"Resolving instance definition ${defn.showDbg}")
       traverseTermDef(defn)
       sign match
         case N =>
@@ -436,7 +436,7 @@ class Resolver(tl: TraceLogger)
     
     // Case: Fun/Val definition. 
     case defn @ TermDefinition(k = Fun | ImmutVal | MutVal) =>
-      log(s"Resolving ${defn.k.desc} definition $defn")
+      log(dbg"Resolving ${defn.k.desc} definition $defn")
       traverseTermDef(defn)
       ictx
     
@@ -444,7 +444,7 @@ class Resolver(tl: TraceLogger)
     // context and use the context to traverse through the body.
     // Traverse through other subterms with original context.
     case defn: ClassLikeDef =>
-      log(s"Resolving ${defn.kind.desc} definition $defn")
+      log(dbg"Resolving ${defn.kind.desc} definition $defn")
       
       defn match
         case defn: PatternDef =>
@@ -590,7 +590,7 @@ class Resolver(tl: TraceLogger)
         (N, ictx)
     
     t.expandedResolvableIn: t =>
-      log(s"Resolving resolvable term ${t} with sym = ${t.legacyResolvedSym}, typ = ${t.resolvedTyp}")
+      log(dbg"Resolving resolvable term ${t} with sym = ${t.legacyResolvedSym}, typ = ${t.resolvedTyp}")
       
       // Fill the context with possibly the type arguments information.
       val newICtx2 = newICtx1.givenIn:
@@ -609,11 +609,11 @@ class Resolver(tl: TraceLogger)
                 case (ictx, (tparam, targ)) => 
                   val sym = tparam.sym
                   val typ = resolveSign(targ, expect = Any)
-                  log(s"Resolving App with type arg ${sym} = $typ")
+                  log(dbg"Resolving App with type arg ${sym} = $typ")
                   ictx.withTypeArg(sym, typ)
             case (S(tparams), N) => tparams.foldLeft(ictx): 
               case (ictx, tparam) => 
-                log(s"Resolving App with type arg ${tparam.sym} unspecified")
+                log(dbg"Resolving App with type arg ${tparam.sym} unspecified")
                 ictx
             case (N, _) => ictx
           newICtx
@@ -872,15 +872,15 @@ class Resolver(tl: TraceLogger)
       case _ if t.symbol.exists(_.isInstanceOf[ErrorSymbol]) => ()
       
       case t @ Term.Ref(bsym: BlockMemberSymbol) =>
-        log(s"Resolving symbol for reference ${t} (bsym = ${bsym})")
+        log(dbg"Resolving symbol for reference ${t} (bsym = ${bsym})")
         val sym = disambSym(prefer, sign = sign)(bsym)
         sym.foreach: sym =>
           t.expand(S((t.duplicate.resolved(sym))))
         resolveType(t, prefer = prefer)
-        log(s"Resolved symbol for ${t}: ${sym}")
+        log(dbg"Resolved symbol for ${t}: ${sym}")
       
       case t @ AnySel(lhs: Resolvable, id, cls) => lhs.expandedResolvableIn: lhs =>
-        log(s"Resolving symbol for selection ${t}, defn = ${lhs.defn}")
+        log(dbg"Resolving symbol for selection ${t}, defn = ${lhs.defn}")
         
         val clsDefn = cls.flatMap: sym =>
           sym.legacyResolvedSym.flatMap(_.asCls).map: clsSym =>
@@ -900,15 +900,15 @@ class Resolver(tl: TraceLogger)
             val fsym = defn.body.members.get(id.name)
             fsym match
               case S(bms: BlockMemberSymbol) =>
-                log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
+                log(dbg"Resolving symbol for ${t}, defn = ${lhs.defn}")
                 disambSym(prefer, sign)(bms) match
                   case S(ds) =>
                     checkPrivateAccess(t, ds)
                     t.expand(S(t.withSym(bms).resolved(ds)))
                   case N =>
-                    log(s"Unable to disambiguate ${bms}")
+                    log(dbg"Unable to disambiguate ${bms}")
                     t.expand(S(t.withSym(bms)))
-                log(s"Resolved symbol for ${t}: ${bms}")
+                log(dbg"Resolved symbol for ${t}: ${bms}")
               case N =>
                 defn match
                   case defn: ModuleOrObjectDef =>
@@ -923,7 +923,7 @@ class Resolver(tl: TraceLogger)
                     // - MLscript programs selecting JS members without properly defining them.
                     // - Inherited members.
           case defn =>
-            log(s"Unsupported selection from definition: ${defn}")
+            log(dbg"Unsupported selection from definition: ${defn}")
       
       case t @ Term.New(cls, _, N) =>
         // cls is already resolved, so the symbol should be present;
@@ -970,14 +970,14 @@ class Resolver(tl: TraceLogger)
         val decl = base.legacyResolvedSym match
           case S(bms: BlockMemberSymbol) => 
             val disambBms = disambSym(bms)
-            log(s"Disambiguate ${bms} (${bms.asTrm}) into ${disambBms} (defn = ${disambBms.map(_.defn)}), preferring ${prefer}")
+            log(dbg"Disambiguate ${bms} (${bms.asTrm}) into ${disambBms} (defn = ${disambBms.map(_.defn)}), preferring ${prefer}")
             disambBms match
             case S(disambBms) => disambBms.defn
             case N => bms.asPrincipal.flatMap(_.defn)
           case S(bls: LocalVarSymbol) => bls.decl
           case S(ds: DefinitionSymbol[?]) => ds.defn
           case _ => N
-        log(s"Declaration: ${decl}")
+        log(dbg"Declaration: ${decl}")
         decl match
         case S(defn: TermDefinition) if defn.params.length === ass.length =>
           val ty = defn.sign.map(resolveSign(_, expect = Expect.fromModulefulness(defn.modulefulness)))
@@ -998,15 +998,15 @@ class Resolver(tl: TraceLogger)
   end resolveType
   
   def resolveArg(p: Param)(lhs: Term)(using ictx: ICtx): Elem =
-    log(s"Resolving implicit argument, expecting a ${p.sign}")
+    log(dbg"Resolving implicit argument, expecting a ${p.sign}")
     p.sign match
       case S(sign) => 
         // FIXME[Harry]: Don't re-resolve signatures for every argument!
         val ty = resolveSign(sign, expect = if p.modulefulness.modified then Module(N) else NonModule(N))
-        log(s"Resolving implicit argument, expecting a ${ty.show}")
+        log(dbg"Resolving implicit argument, expecting a ${ty.show}")
         ictx.query(ty) match
         case R(i) =>
-          log(s"Resolved ${p.sign} with instance ${i}")
+          log(dbg"Resolved ${p.sign} with instance ${i}")
           val ref = i.sym.ref()
           traverse(ref,
             // note: we accept regular arguments for module parameters
@@ -1026,7 +1026,7 @@ class Resolver(tl: TraceLogger)
         lastWords(s"No type signature for contextual parameter ${p.showDbg} at ${p.toLoc}")
   
   def traverseParam(p: Param)(using ictx: ICtx): Unit =
-    log(s"Resolving parameter ${p.showDbg}")
+    log(dbg"Resolving parameter ${p.showDbg}")
     val ty = p.sign.map(sign =>
       resolveSign(sign, expect = if p.modulefulness.modified then Module(N) else NonModule(N)))
     p.signType = ty
@@ -1052,7 +1052,7 @@ class Resolver(tl: TraceLogger)
    * details.
    */
   def traverseSign(t: Term, expect: Expect, inAppPrefix: Bool = false)(using ictx: ICtx): Unit = boundary:
-    trace(s"Traversing type ${t}, expecting ${expect}"):
+    trace(dbg"Traversing type ${t}, expecting ${expect}"):
       
       // * Traverse through the sub-terms.
       t match

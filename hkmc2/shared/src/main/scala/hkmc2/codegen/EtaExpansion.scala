@@ -146,12 +146,12 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     case (_: TermSymbol, 0) => addFunShapeIfChanged()
     case _ => ()
 
-  if tl.doTrace then
+  if tl.isTracing then
     given ShowCfg = ShowCfg.internal
     
     tl.log(">>> eta-expansion targets shapes >>>")
     for (id, shape) <- etaExpandedFunShape do
-      tl.log(s"${id.showConcreteFunId}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
+      tl.log(dbg"${id.showConcreteFunId}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
     tl.log("<<< eta-expansion targets shapes <<<")
   end if
 end EtaExpansionSolver

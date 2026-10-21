@@ -319,7 +319,7 @@ object MarkedShape:
     case sh: NonMarkedShape => MarkedShape(sh, EntryMark(boundary, id, NoMarks))
     case MarkedShape(sh, marks) => MarkedShape(sh, EntryMark(boundary, id, marks))
   def exit(sh: TermShape, boundary: ResolutionBoundary, id: Opt[FlowSymbol])(using TL): TermShape | NoShape =
-  tl.trace[TermShape | NoShape](s".exit MarkedShape (${sh.shwDbg}, ${boundary.showDbg}, ${id.fold("")(_.showDbg)})", res => s"= ${res.shwDbg}"):
+  tl.trace[TermShape | NoShape](dbg".exit MarkedShape (${sh.shwDbg}, ${boundary.showDbg}, ${id.fold("")(_.showDbg)})", res => s"= ${res.shwDbg}"):
     sh match
     // Exits are only ever prepended to a path's trailing exits, never compared
     // against them; they locate what a value refers to. A self-contained value
@@ -410,7 +410,7 @@ sealed trait TermShape extends Shape, ShapeLike:
     case _ => unappliedParamLists.map(_ -> applicationMarks)
   
   def exit(marks: Marks)(using TL): TermShape | NoShape =
-  tl.trace[TermShape | NoShape](s".exit $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
+  tl.trace[TermShape | NoShape](dbg".exit $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
     marks match
     case NoMarks => this
     case EntryMark(sym, id, rest) =>
@@ -428,7 +428,7 @@ sealed trait TermShape extends Shape, ShapeLike:
       exit(mark).exit(rest)
   
   def enter(marks: Marks)(using tl: TL): TermShape | NoShape =
-  tl.trace[TermShape | NoShape](s".enter $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
+  tl.trace[TermShape | NoShape](dbg".enter $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
     marks match
     case NoMarks => this
     case EntryMark(sym, id, rest) =>
