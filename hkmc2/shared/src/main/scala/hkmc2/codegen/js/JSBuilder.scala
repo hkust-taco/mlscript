@@ -697,7 +697,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val ctorCode = scope.nest.givenIn:
               val preCtorCode = nonNestedScoped(preCtor)(bd => block(bd, true))
               val defaultSuperCall = if par.isDefined && preCtor.isEmpty then doc" # super();" else doc""
-              doc"$defaultSuperCall$preCtorCode$singletonInit${nonNestedScoped(ctor)(bd => block(bd, endSemi = true))}${
+              doc"${normalizeOptionalParams(backendParamList)}$defaultSuperCall$preCtorCode$singletonInit${nonNestedScoped(ctor)(bd => block(bd, endSemi = true))}${
                   kind match
                   case syntax.Obj =>
                     doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")};"
@@ -1079,12 +1079,18 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         (if enumerable then doc"enumerable: true, # " else doc"") :: doc"value: ${value}"
     })"
   
+  private def normalizeOptionalParams(params: LoweredParamList)(using Raise, Scope): Document =
+    params.params.filter(_.flags.opt).map: p =>
+      val name = scope.lookup_!(p.sym, p.toLoc)
+      doc" # $name = $name ?? null;"
+    .mkDocument("")
+  
   def setupFunction(name: Option[Str], params: LoweredParamList, body: Block, isLambda: Bool)
       (using Raise, Scope): (Document, Document) =
     val paramsList = params.params.map(p => scope.allocateName(p.sym))
       .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
       .mkDocument(", ")
-    (paramsList, this.body(body, endSemi = false))
+    (paramsList, normalizeOptionalParams(params) :: this.body(body, endSemi = false))
 
 
 
@@ -1221,7 +1227,7 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
     // * which will check arguments against the erased parameter type,
     // * including checking they are not `undefined`, which should achieve most of the benefit.
     // * Following JavaScript, extra arguments are ignored, so we only check for missing arguments
-    // * (optional parameters are not counted in `paramCountLB`; missing optional arguments are `undefined`).
+    // * (optional parameters are not counted in `paramCountLB`; missing optional arguments become `null`).
     /*
     if instrument then
       val paramsList = params.params.map(p => scope.allocateName(p.sym))
@@ -1236,13 +1242,11 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
         case S(p) => doc"\nlet $p = $runtimeVar.Tuple.slice($paramsStr, ${params.paramCountLB}, 0);"
       (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign$restAssign${this.body(body, endSemi = false)}")
     */
+    val (paramsList, bodyDoc) = super.setupFunction(name, params, body, isLambda)
     if instrument && !isLambda then
       val functionName = JSBuilder.makeStringLiteral(name.fold("")(n => s"${JSBuilder.escapeStringCharacters(n)}"))
       val checkArgsNum = doc"\n$runtimeVar.checkArgs($functionName, ${params.paramCountLB}, arguments.length);"
-      val paramsList = params.params.map(p => scope.allocateName(p.sym))
-        .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
-        .mkDocument(", ")
       (paramsList,
-        doc"$checkArgsNum${this.body(body, endSemi = false)}")
+        doc"$checkArgsNum$bodyDoc")
     else
-      super.setupFunction(name, params, body, isLambda = isLambda)
+      (paramsList, bodyDoc)

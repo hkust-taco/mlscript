@@ -6,11 +6,11 @@
 
 fun foo(x, y?) = [x, y]
 [foo(1), foo(1, 2)]
-//│ = [[1, undefined], [1, 2]]
+//│ = [[1, null], [1, 2]]
 
 fun bar(x, y?, ...xs, w) = [x, y, xs, w]
 [bar(1, 2), bar(1, 2, 3, 4)]
-//│ = [[1, undefined, [], 2], [1, 2, [3], 4]]
+//│ = [[1, null, [], 2], [1, 2, [3], 4]]
 
 
 // * Separate signatures must agree with the implementation on which parameters are optional.
@@ -47,10 +47,10 @@ fun withTrailing(x, ...xs, y)(using I: Int) = [x, xs, y, I]
 
 using Int = 42
 
-:expect [[1, undefined, 42], [1, 2, 42]]
+:expect [[1, null, 42], [1, 2, 42]]
 let f = withOpt
 [f(1), f(1, 2)]
-//│ = [[1, undefined, 42], [1, 2, 42]]
+//│ = [[1, null, 42], [1, 2, 42]]
 //│ f = fun f
 
 // * The eta-expansion forwards the variadic parameter as a spread, followed by its trailing parameters.

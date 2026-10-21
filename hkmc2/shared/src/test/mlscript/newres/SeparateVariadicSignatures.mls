@@ -12,11 +12,11 @@ signed("a", "bb", "ccc", "tail")
 signed("a", "tail")
 //│ = [1, [], 4]
 
-// Optional leading parameters inherit the union with undefined.
+// Optional leading parameters inherit the union with null.
 :expect [[0, [], 4], [2, [3], 4]]
 fun optional: (Str?, ...Array[Str], Str) -> Any
 fun optional(x?, ...middle, y) =
-  [if x is ~undefined as x then x.length else 0, middle.map(s => s.length), y.length]
+  [if x is ~null as x then x.length else 0, middle.map(s => s.length), y.length]
 [optional("tail"), optional("bb", "ccc", "tail")]
 //│ = [[0, [], 4], [2, [3], 4]]
 

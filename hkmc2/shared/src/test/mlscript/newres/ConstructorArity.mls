@@ -193,8 +193,8 @@ class InvalidParent extends Empty(1)
 //│ ╙──       	                            ^^^^^^^^
 
 
-// Foreign constructors use their declared parameter lists and the same optional
-// parameter semantics as MLscript constructors: omission supplies undefined.
+// Foreign constructors use their declared parameter lists. Their optional slots
+// preserve undefined so native defaults run before any values reach MLscript code.
 :expect ["NaN", "NaN", "NaN"]
 val NativeNumber = Number.class
 [String(new Number()), String(new Number(undefined)), String(new NativeNumber())]

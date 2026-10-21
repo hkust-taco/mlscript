@@ -38,3 +38,6 @@ new OptionalConstructor()
 //│ ╔══[COMPILATION ERROR] Optional parameters are not supported by the WebAssembly backend.
 //│ ║  l.33: 	class OptionalConstructor(val value?)
 //│ ╙──      	                         ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] WatBackend::result for Lit expression not implemented yet
+//│ ║  l.34: 	new OptionalConstructor()
+//│ ╙──      	                       ^^

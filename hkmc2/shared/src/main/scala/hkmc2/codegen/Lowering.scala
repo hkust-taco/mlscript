@@ -232,7 +232,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         new TailOp(transfersControl = true):
           override def apply(k: Result): Block = Ret(castTo(k, returnType, N))
   
-  def parentConstructor(ctorParamLists: Ls[ParamList], args: Ls[Term], loc: Opt[Loc])(using LoweringCtx) =
+  def parentConstructor(ctorParamLists: ConstructorParams, args: Ls[Term], loc: Opt[Loc])(using LoweringCtx) =
     lowerSuperCtorCall(
       ctorParamLists,
       State.builtinOpsMap("super").asSimpleRef,
@@ -419,7 +419,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 msg"Buffered classes must not have a main parameter list; use `constructor(...)` syntax instead." -> defn.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation
               ))
-          def lowerClass(parent: Opt[Path], parentParams: Ls[ParamList])(define: ClsLikeDefn => Block): Block =
+          def lowerClass(parent: Opt[Path], parentParams: ConstructorParams)(define: ClsLikeDefn => Block): Block =
             val base = parent.getOrElse(
               Select(State.globalThisSymbol.asThis, Tree.Ident("Object"))(S(ctx.builtins.Object), defn.toLoc)(false))
             val bodies = defn.companion.flatMap(_.defn).collect:
@@ -473,7 +473,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 define(clsDef)
           defn.ext match
           case N =>
-            debugLoweringThen[ClsLikeDefn](defn.extraAnnotations)(lowerClass(N, Nil))
+            debugLoweringThen[ClsLikeDefn](defn.extraAnnotations)(lowerClass(N, ConstructorParams(Nil, false)))
               (Define(_, blockImpl(stats, res)))
           case S(ext) =>
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
@@ -486,7 +486,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     
     blockImpl(imps ::: funs ::: rest, res)(using loweringCtx.withLocalVals(localVals))
   
-  def classOf(trm: Term, nw: PossiblyErroneous)(k: (Path, Ls[ParamList]) => Block)(using LoweringCtx): Block =
+  def classOf(trm: Term, nw: PossiblyErroneous)(k: (Path, ConstructorParams) => Block)(using LoweringCtx): Block =
     def classValue: Block = nw match
       case term: Term if !nw.isErroneous =>
         ClassValueShape.targetsOf(term) match
@@ -538,20 +538,25 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case _ => classValue
     else subTerm(trm)(p => k(p, getClassParamLists(p)))
   
-  private def classParamLists(cls: ClassLikeDef): Ls[ParamList] = cls.paramsOpt.toList ::: cls.auxParams
+  /** Keep the source constructor's calling convention even when its class value is stored in a temporary.
+    * Foreign constructors own their argument defaults; only MLscript bodies normalize optional values. */
+  case class ConstructorParams(lists: Ls[ParamList], isMls: Bool)
 
-  def getClassParamLists(cls: Path): Ls[ParamList] =
+  private def classParamLists(cls: ClassLikeDef): ConstructorParams =
+    ConstructorParams(cls.paramsOpt.toList ::: cls.auxParams, cls.hasDeclareModifier.isEmpty)
+
+  def getClassParamLists(cls: Path): ConstructorParams =
     cls.targetSymbol match
     case S(clsSym: ClassSymbol) =>
-      clsSym.defn.map(classParamLists).getOrElse(Nil)
-    case _ => Nil
+      clsSym.defn.map(classParamLists).getOrElse(ConstructorParams(Nil, false))
+    case _ => ConstructorParams(Nil, false)
   
   // * Lowers the `super(...)(...)` call we get from the `extends C(...)(...)` syntax
-  def lowerSuperCtorCall(ctorParamLists: Ls[ParamList], fr: Path, isMlsFun: Bool, args: List[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+  def lowerSuperCtorCall(ctorParamLists: ConstructorParams, fr: Path, isMlsFun: Bool, args: List[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     args match
     case _ :: _ =>
       def zipArgs(remainingParamss: Ls[ParamList], args: Ls[Term], acc: Ls[Ls[Arg]]): Block = (remainingParamss, args) match
-        case (ps :: remainingParamss2, arg :: remainingArgs) => lowerConstructorArgs(arg, ps): as =>
+        case (ps :: remainingParamss2, arg :: remainingArgs) => lowerConstructorArgs(arg, ps, ctorParamLists.isMls): as =>
           zipArgs(remainingParamss2, remainingArgs, as ne_:: acc)
         case (Nil, arg :: remainingArgs) =>
           if remainingArgs.isEmpty then
@@ -566,9 +571,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               msg"Extending a partially applied class is not supported" -> loc :: Nil,
               source = Diagnostic.Source.Compilation))
           k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, true, Nil), loc))
-      zipArgs(ctorParamLists, args, Nil)
+      zipArgs(ctorParamLists.lists, args, Nil)
     case Nil =>
-      if !ctorParamLists.isEmpty then
+      if !ctorParamLists.lists.isEmpty then
         raise(ErrorReport(
           msg"Extending a partially applied class is not supported" -> loc :: Nil,
           source = Diagnostic.Source.Compilation))
@@ -586,7 +591,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       (remainingParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
         def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
-        if isConstructor then lowerConstructorArgs(args, ps)(next)
+        if isConstructor then lowerConstructorArgs(args, ps, isMlsFun)(next)
         else lowerArgs(args, expectedParamTypes(ps))(next)
       case (Nil, Nil) =>
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
@@ -623,7 +628,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * when they correspond to constructor parameter lists of the same class.
     * If fewer argument lists are provided than constructor parameter lists, eta-expands
     * the missing ones with fresh lambdas (avoiding reliance on mutable JS class curry semantics). */
-  def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: Ls[ParamList], args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+  def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: ConstructorParams, args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
       Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations), loc)
@@ -634,7 +639,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     def zipArgs(remainingCtorParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]]): Block =
       (remainingCtorParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
-        lowerConstructorArgs(args, ps)(as => zipArgs(remainingParams, remainingArgs, as :: acc))
+        lowerConstructorArgs(args, ps, ctorParamLists.isMls)(as => zipArgs(remainingParams, remainingArgs, as :: acc))
       case (Nil, Nil) =>
         k(buildInstantiate(acc.reverse))
       case (Nil, args :: remainingArgss) =>
@@ -653,10 +658,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
-            val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
-            Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil, loc)
+            if ctorParamLists.isMls then
+              val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
+              Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil, loc)
+            else
+              val forwarding = OptionalParams.forwarding(freshParamList)
+              Lambda(forwarding.params,
+                forwarding.prologue(Return(etaExpand(rest, accArgss :+ forwarding.args))))(Nil, loc)
         k(etaExpand(remainingParamss, acc.reverse))
-    if ctorParamLists.isEmpty then
+    if ctorParamLists.lists.isEmpty then
       // * Need to specially handle no-param classes
       args match
       case Nil =>
@@ -671,24 +681,34 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedValueType, "baseInst")
             Assign(tmp, inst,
               lowerRemainingCalls(tmp.asSimpleRef, remainingArgss.head, remainingArgss.tail, annotations, N)(k))
-    else zipArgs(ctorParamLists, args, Nil)
+    else zipArgs(ctorParamLists.lists, args, Nil)
   
-  /** Materialize omitted constructor parameters as undefined before optimizers
+  /** Materialize omitted MLscript constructor parameters as null before optimizers
     * flatten argument lists or associate fields with argument positions.
     * With spreads, collect the arguments once and read the fixed parameter slots;
-    * missing slots yield undefined and later lists cannot shift into those slots.
+    * normalize optional slots before constructor elimination can expose them as fields,
+    * and keep later lists from shifting into those slots. Foreign constructors retain undefined
+    * in their optional slots so their native defaults can run.
     */
-  private def lowerConstructorArgs(arg: Term, ps: ParamList)(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+  private def lowerConstructorArgs(arg: Term, ps: ParamList, isMls: Bool)(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+    def normalize(args: Ls[Arg]): Block =
+      def loop(args: Ls[Arg], params: Ls[Param], acc: Ls[Arg]): Block = (args, params) match
+        case (arg :: rest, param :: params) if isMls && param.flags.opt =>
+          OptionalParams.argument(arg.value)(value => loop(rest, params, Arg(N, value) :: acc))
+        case (arg :: rest, _ :: params) => loop(rest, params, arg :: acc)
+        case _ => k(acc.reverse ::: args)
+      loop(args, ps.params, Nil)
     lowerArgs(arg, expectedParamTypes(ps)): args =>
       if !ps.params.exists(_.flags.opt) then k(args)
       else if args.forall(_.spread.isEmpty) then
-        k(args.padTo(ps.params.length, Arg(N, Value.Lit(Tree.UnitLit(false))(arg.toLoc))))
+        val omitted = ps.params.drop(args.length).map(p => Arg(N, Value.Lit(Tree.UnitLit(isMls && p.flags.opt))(arg.toLoc)))
+        normalize(args ::: omitted)
       else
         assert(ps.variadic.isEmpty, "Constructor parameters must have a fixed layout")
         val tuple = loweringCtx.registerTempSymbol(S(arg), erasedType = S(ErasedType.Array), "constructorArgs")
         val slots = ps.params.indices.map: index =>
           Arg(N, DynSelect(tuple.asSimpleRef, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(arg.toLoc))
-        Assign(tuple, Tuple(false, args)(arg.toLoc), k(slots.toList))
+        Assign(tuple, Tuple(false, args)(arg.toLoc), normalize(slots.toList))
   
   def lowerArgs(arg: Term, expectedTypes: Ls[Opt[ErasedType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     arg match
@@ -1971,11 +1991,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       // * `Tuple.slice(xs, i, j)` drops the first `i` and the last `j` elements of `xs`.
       def slice(xs: Path, i: Int, j: Int): Result =
         Call(tupleSlice, (xs :: int(i) :: int(j) :: Nil).map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
-      // * Single arguments are read by raw indexing (`xs.at(i)`, where a negative `i` counts from the end),
-      // * which yields `undefined` for an omitted optional argument and preserves an explicitly passed `undefined`.
-      // * They cannot be read through runtime functions such as `Tuple.get`: MLscript calls must not return
-      // * `undefined`, as enforced by the `Runtime.checkCall` sanity check, and a function returning
-      // * an `undefined` literal actually returns `()` (see `Return` in `JSBuilder`).
+      // * Raw indexing (`xs.at(i)`, where a negative `i` counts from the end) lets us normalize
+      // * missing optional values to null while preserving the other arguments unchanged.
+      // * Runtime calls such as `Tuple.get` would check or convert undefined before that normalization.
       def at(xs: Path, i: Int): Path = DynSelect(xs, int(i), DynSelectKind.ArrayIdx)(N)
       val k = trailing.length
       // * The sanity check emitted by the code generator only knows about the lowered parameter list,
@@ -1995,7 +2013,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           ::: (variadicParam.sym -> slice(args, optional.length, k))
           :: trailing.zipWithIndex.map((p, i) => p.sym -> at(args, i - k))
         (optional ::: variadicParam :: trailing).foreach(p => loweringCtx.collectScopedSym(p.sym))
-        val extracted = extractions.foldRight(body):
+        val extracted = extractions.foldRight(OptionalParams.normalizeAll(optional, body)):
           case ((sym, res), rest) => Assign(sym, res, rest)
         check.fold(extracted)(Assign.discard(_, extracted))
       (loweredParams, prologue)

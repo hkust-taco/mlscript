@@ -63,13 +63,25 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│   tmp14 = args7.length - 1;
 //│   inlinedVal13 = runtime.safeCall(args7.slice(2, tmp14));
 //│   w = args7.at(-1);
-//│   return globalThis.Object.freeze([ x, y7, z2, inlinedVal13, w ])
+//│   if (y7 === undefined) {
+//│     y7 = null;
+//│   }
+//│   if (z2 === undefined) {
+//│     return globalThis.Object.freeze([
+//│       x,
+//│       y7,
+//│       null,
+//│       inlinedVal13,
+//│       w
+//│     ])
+//│   }
+//│   return globalThis.Object.freeze([ x, y7, z2, inlinedVal13, w ]);
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:expect [[1, undefined, undefined, [], 2], [1, 2, undefined, [], 3]]
+:expect [[1, null, null, [], 2], [1, 2, null, [], 3]]
 [h(1, 2), h(1, 2, 3)]
-//│ = [[1, undefined, undefined, [], 2], [1, 2, undefined, [], 3]]
+//│ = [[1, null, null, [], 2], [1, 2, null, [], 3]]
 
 :expect [[1, 2, 3, [], 4], [1, 2, 3, [4, 5], 6]]
 [h(1, 2, 3, 4), h(1, 2, 3, 4, 5, 6)]
@@ -78,18 +90,18 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 
 // *** Explicit `undefined` arguments ***
 
-// Arguments may be `undefined`, which is preserved, including for optional and trailing parameters.
+// Explicit `undefined` becomes null in optional parameters; required and rest parameters preserve it.
 :expect [1, [undefined], undefined]
 f(1, undefined, undefined)
 //│ = [1, [undefined], undefined]
 
-:expect [1, undefined, undefined, [], 2]
+:expect [1, null, null, [], 2]
 h(1, undefined, 2)
-//│ = [1, undefined, undefined, [], 2]
+//│ = [1, null, null, [], 2]
 
-:expect [1, 2, undefined, [undefined], undefined]
+:expect [1, 2, null, [undefined], undefined]
 h(1, 2, undefined, undefined, undefined)
-//│ = [1, 2, undefined, [undefined], undefined]
+//│ = [1, 2, null, [undefined], undefined]
 
 :noInline
 :expect [[undefined], undefined]
@@ -129,10 +141,10 @@ lastA(B(0), B(1), A(2))
 private fun lastB(...xs, y) = y.b
 lastB(B(0), A(1))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.129: 	private fun lastB(...xs, y) = y.b
+//│ ║  l.141: 	private fun lastB(...xs, y) = y.b
 //│ ║         	                              ^^^
 //│ ╟── Instance of class 'A' does not contain member 'b'
-//│ ║  l.130: 	lastB(B(0), A(1))
+//│ ║  l.142: 	lastB(B(0), A(1))
 //│ ╙──       	            ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -149,13 +161,13 @@ app((x, ...xs, s) => s)
 :e
 app((x, s) => s)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.150: 	app((x, s) => s)
+//│ ║  l.162: 	app((x, s) => s)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.150: 	app((x, s) => s)
+//│ ║  l.162: 	app((x, s) => s)
 //│ ║         	    ^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
-//│ ║  l.142: 	fun app(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
+//│ ║  l.154: 	fun app(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 2
 
@@ -173,16 +185,16 @@ app((x, ...xs) => "b")
 sum(0, 1, 2, 3)
 //│ = 6
 
-// Omitted optional arguments are `undefined`, even when their extraction is not inlined.
+// Omitted optional arguments are `null`, even when their extraction is not inlined.
 :noInline
-:expect [1, undefined, [], 2]
+:expect [1, null, [], 2]
 fun h(x, y?, ...xs, w) = [x, y, xs, w]
 h(1, 2)
-//│ = [1, undefined, [], 2]
+//│ = [1, null, [], 2]
 
 :noInline
 :expect "none"
-fun h(x, y?, ...xs, w) = if y is undefined then "none" else "some"
+fun h(x, y?, ...xs, w) = if y is null then "none" else "some"
 h(1, 2)
 //│ = "none"
 
@@ -218,29 +230,29 @@ deepOpt(100, 1, 2)
 :e
 fun bad(...xs, ...ys) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.219: 	fun bad(...xs, ...ys) = 0
+//│ ║  l.231: 	fun bad(...xs, ...ys) = 0
 //│ ╙──       	               ^^^^^
 
 :e
 fun bad(...xs, y?) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.225: 	fun bad(...xs, y?) = 0
+//│ ║  l.237: 	fun bad(...xs, y?) = 0
 //│ ╙──       	               ^^
 
 :e
 fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.231: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
+//│ ║  l.243: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╙──       	                           ^^^^^^^^^^^^^
 
 :e
 fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.237: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
+//│ ║  l.249: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╙──       	                           ^^^^
 
 :e
 class C(x, ...xs, y)
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.243: 	class C(x, ...xs, y)
+//│ ║  l.255: 	class C(x, ...xs, y)
 //│ ╙──       	           ^^^^^

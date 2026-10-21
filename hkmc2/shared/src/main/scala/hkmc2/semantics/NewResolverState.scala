@@ -121,9 +121,9 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.spreadElements, identity)
   val introShapes: Cache[Identity[IntroTerm], IntroShape] =
     new Cache(_.introShapes, identity)
-  // The `undefined` value received by an unannotated optional parameter whose argument is
+  // The `null` value received by an unannotated optional parameter whose argument is
   // omitted (see `NewResolver.zipArgsIn`). One literal per parameter, located at the parameter,
-  // keeps a single candidate shape and explains where the `undefined` value comes from.
+  // keeps a single candidate shape and explains where the `null` value comes from.
   private[semantics] val omittedArguments: Cache[Identity[Param], Lit] =
     new Cache(_.omittedArguments, identity)
   val symShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks]), CoreSymShape] =

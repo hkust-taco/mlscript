@@ -4,7 +4,7 @@ package codegen
 import hkmc2.utils.*, shorthands.*
 import utils.*
 import semantics.*
-import syntax.{Tree, SpreadKind}
+import syntax.Tree
 import semantics.Elaborator.{ctx, State}
 import hkmc2.Message.MessageContext
 
@@ -27,10 +27,9 @@ class FirstClassFunctionTransformer
       syntax.Tree.Ident("Function$")
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
-    val args = params.params.map(_.sym.asSimpleRef.asArg) :::
-      params.restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef))
-    val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, args ne_:: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
+    val forwarding = OptionalParams.forwarding(params)
+    val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), forwarding.params :: Nil,
+      forwarding.prologue(Return(Call(p, forwarding.args ne_:: Nil)(CallMetadata.defaultMlsFun, N))))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
       Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function), N)(false)),
       callDef :: Nil, Nil, Nil, Assign.discard(

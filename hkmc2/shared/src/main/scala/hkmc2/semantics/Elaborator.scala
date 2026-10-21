@@ -1473,7 +1473,7 @@ extends Importer:
     def error = Term.Error().withLocOf(tree)
     
     /** Elaborate the parameters of a function type. Unlike other tuples, these may be marked optional,
-      * as in `(Int, Int?) -> Int`, in which case the parameter type also includes `undefined`,
+      * as in `(Int, Int?) -> Int`, in which case the parameter type also includes `null`,
       * or droppable, as in `(Int, drop Int) -> Int`. */
     def funTyParams(lhs: Tree): Term = lhs match
       case tree @ Tup(fields) =>
@@ -3131,8 +3131,8 @@ extends Importer:
             id -> Nil
         val writtenSig = sign.map(term(_, Tpe))
         val mfn = Modulefulness.ofSign(writtenSig)(Mod in modifiers)
-        // * The argument of an optional parameter may be omitted, in which case the parameter is `undefined`,
-        // * so the annotation of `y?: T` denotes `T | undefined` both for callers and in the body.
+        // * The argument of an optional parameter may be omitted, in which case the parameter is `null`,
+        // * so the annotation of `y?: T` denotes `T | null` both for callers and in the body.
         val sig = if flg.opt then writtenSig.map(optionalType(_, t.toLoc)) else writtenSig
         if newResolution then sig.foreach(registerSignature)
         val sym = VarSymbol(canonicalId)
@@ -3152,9 +3152,9 @@ extends Importer:
     case N => ps
   
   /** The type of an optional parameter or optional function type parameter annotated with `tpe`,
-    * where `loc` is the location of the optional parameter, which explains the `undefined` part. */
+    * where `loc` is the location of the optional parameter, which explains the `null` part. */
   def optionalType(tpe: Term, loc: Opt[Loc]): Term =
-    Term.CompType(tpe, Term.Lit(Tree.UnitLit(false).withLoc(loc)), true)
+    Term.CompType(tpe, Term.Lit(Tree.UnitLit(true).withLoc(loc)), true)
   
   /** A separate signature, as in `fun f: (Int, Int?) -> Int` followed by `fun f(x, y?) = ...`,
     * determines how the function can be called, so it must agree with the implementation's

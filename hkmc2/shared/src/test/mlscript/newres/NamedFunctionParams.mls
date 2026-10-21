@@ -9,7 +9,7 @@ named(s => s.length)
 // Optional named parameters retain both the annotation and the undefined case.
 :expect [0, 3]
 fun namedOptional(f: (s?: Str) -> Int) = [f(), f("abc")]
-namedOptional((s?) => if s is ~undefined as s then s.length else 0)
+namedOptional((s?) => if s is ~null as s then s.length else 0)
 //│ = [0, 3]
 
 :e
@@ -18,7 +18,7 @@ missingNamed((s?) => s.length)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.17: 	missingNamed((s?) => s.length)
 //│ ║        	                     ^^^^^^^^
-//│ ╟── Undefined literal does not contain member 'length'
+//│ ╟── Null literal does not contain member 'length'
 //│ ║  l.16: 	fun missingNamed(f: (s?: Str) -> Int) = f()
 //│ ╙──      	                     ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -32,6 +32,6 @@ namedGeneric("abc", x => x.length)
 
 :expect [0, 3]
 fun namedSignature: (text?: Str) -> Int
-fun namedSignature(text?) = if text is ~undefined as text then text.length else 0
+fun namedSignature(text?) = if text is ~null as text then text.length else 0
 [namedSignature(), namedSignature("abc")]
 //│ = [0, 3]

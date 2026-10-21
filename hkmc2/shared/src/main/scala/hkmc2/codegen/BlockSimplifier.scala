@@ -1926,7 +1926,7 @@ class BlockSimplifier
                       "inlinedVal",
                     )
                     val copier = Copier(resSym, mapping, thisMapping)
-                    val newBlk = copier.applyBlock(blk)
+                    val newBlk = copier.applyBlock(OptionalParams.normalizeAll(info.defn.params.flatMap(_.params), blk))
                     if extraArgss.isEmpty then
                       acc(Scoped(Set.single(resSym), newBlk(k(resSym.asSimpleRef))))
                     else

@@ -255,9 +255,9 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     // * the general path evaluates them and only extracts the arguments matching the parameters.
     if hd.length > paramList.params.length then return CallArgsResult.ForceSpread
     
-    // * Optional parameters whose arguments are omitted must be reset to `undefined`,
+    // * Optional parameters whose arguments are omitted must be reset to `null`,
     // * rather than keeping the values they had in the previous iteration.
-    val hdPadded = hd ++ List.fill(paramList.params.length - hd.length)(Value.Lit(Tree.UnitLit(false))(N))
+    val hdPadded = hd ++ paramList.params.drop(hd.length).map(p => Value.Lit(Tree.UnitLit(p.flags.opt))(N))
     
     if paramList.restParam.isDefined then
       val rest =
@@ -726,7 +726,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       
       def rewrite(b: Block): Block =
         // Rewrite the result with symbols pointing to the merged function parameters and possibly the copied parameters (see `copiedParams`).
-        val blk = applyBlock(symRewriter.applyBlock(b))
+        val blk = applyBlock(symRewriter.applyBlock(OptionalParams.normalizeAll(f.params.flatMap(_.params), b)))
         val withCopied = copiedParamSyms.toArray.sortBy(_._1.uid).foldRight(blk):
           case ((ogParam, copiedParam), accBlk) => Assign(copiedParam, paramSymsArr(paramsIdxes(ogParam)).asSimpleRef, accBlk)
         Scoped(copiedParamSyms.map(_._2).toSet, withCopied)

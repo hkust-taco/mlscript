@@ -881,7 +881,7 @@ class FlowConstraintsCollector(
         ps.restParam.foreach: p =>
           generatedVars(p.sym).constrainOpaque
         // * The argument of an optional parameter may be omitted, in which case the parameter is
-        // * `undefined`, a value that is not tracked by the analysis.
+        // * `null`, a value that is not tracked by the analysis.
         ps.params.drop(ps.paramCountLB).foreach: p =>
           cc.constrain(UnknownProd, generatedVars(p.sym))
       val funValueStrat = params.zipWithIndex.foldRight[ProdStrat](res):

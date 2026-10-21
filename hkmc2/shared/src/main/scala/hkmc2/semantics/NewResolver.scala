@@ -2298,7 +2298,7 @@ class NewResolver:
     else
       zipDeclaredParameters(arity, declared): (index, tpe) =>
         listenTypeInstances(tpe)(shape => publish(index, shape.exit(marks).enter(mss)))
-      // Aligned optional annotations already include undefined. Only synthesize
+      // Aligned optional annotations already include null. Only synthesize
       // omissions for extra positions, or when differing tails can shift inputs.
       val supplied = if arity.trailing == declared.trailing.length then declared.params.length
         else Arity(declared).required - arity.trailing
@@ -2634,22 +2634,30 @@ class NewResolver:
       (index, shape) => constrainParameterIn(params(index), shape, mss, instances, S(src)),
       index => constrainOmittedParameterIn(params(index), mss, instances))
 
-  // Annotated optional parameters already include undefined in their declared type.
+  // Annotated optional parameters already include null in their declared type.
   // Reuse the same witness for direct calls and callback interfaces.
   private def constrainOmittedParameterIn(param: Param, marks: Ls[Marks],
       instances: TypeSubstitution)(using ResolutionContext): Unit =
     if parameterSignature(param).isEmpty then
       val omitted = rctx.state.omittedArguments.getOrElseUpdate(new Identity(param),
-        Lit(Tree.UnitLit(false).withLoc(param.toLoc)))
+        Lit(Tree.UnitLit(param.flags.opt).withLoc(param.toLoc)))
       listenTerm(omitted)(constrainParameterIn(param, _, marks, instances, N))
 
   private[semantics] def constrainParameter(p: Param, shape: TermShape | NoShape, marks: Ls[Marks])(using ResolutionContext): Unit =
     constrainParameterIn(p, shape, marks, rctx.instances, N)
 
+  private def isUndefinedArgument(shape: TermShape | NoShape): Bool = shape match
+    case Marked(literal: IntroShape, _) => literal.trm match
+      case Lit(Tree.UnitLit(false)) => true
+      case _ => false
+    case _ => false
+
   private def constrainParameterIn(p: Param, shape: TermShape | NoShape, marks: Ls[Marks],
       instances: TypeSubstitution, site: Opt[Term])(using ResolutionContext): Unit =
     shape match
       case NoShape => ()
+      case _ if p.flags.opt && isUndefinedArgument(shape) =>
+        constrainOmittedParameterIn(p, marks, instances)
       case sh: TermShape =>
         parameterSignature(p) match
           case S(tpe) => inferTypeArguments(tpe.instantiate(instances), sh, marks, site)
@@ -2717,8 +2725,9 @@ class NewResolver:
       loop(segments, 0, 0)
     assignPositions(tuple.segments, expectedCount, trailing, identity)
     assignPositions(tuple.segments.reverse, trailing, leadingRequired, index => expectedCount + trailing - index)
-    if unknownCount == 0 then
-      ((knownCount - trailing) until expectedCount).foreach(omitted(_))
+    // Unknown-length spreads may be empty. Keep the null flow for every optional
+    // position not guaranteed an argument by the fixed fields and required prefix.
+    (leadingRequired.max(knownCount - trailing) until expectedCount).foreach(omitted(_))
     if hasRest then
       // If consumption reaches an unknown segment, some subsequent fields
       // may have been consumed too. Widen their lengths, keeping every field's
@@ -3258,11 +3267,14 @@ class NewResolver:
         val callable = instantiateCallable(viewed, res.resSym, lexicalBinders(res), context :: Nil)
         val ps = callable.paramLists.head
         if checked then zipArgumentShapes(context :: Nil, Arity(ps), args, res, lhs)((index, value) =>
-          ps.allParams(index).tpe.foreach: tpe =>
-            value match
-              case value: TermShape => inferTypeArguments(tpe, value, context :: Nil, S(res))
-              case NoShape => ()
-          // The declared types of optional parameters already include `undefined`.
+          val param = ps.allParams(index)
+          // An explicit undefined at an optional position is an omission, not a bound on a type parameter.
+          if !param.flags.opt || !isUndefinedArgument(value) then
+            param.tpe.foreach: tpe =>
+              value match
+                case value: TermShape => inferTypeArguments(tpe, value, context :: Nil, S(res))
+                case NoShape => ()
+          // The declared types of optional parameters already include `null`.
           , _ => ())
         def publish(shape: TermShape)(using ResolutionContext): Unit = transportShape(shape, context :: Nil) match
           case value: TermShape =>

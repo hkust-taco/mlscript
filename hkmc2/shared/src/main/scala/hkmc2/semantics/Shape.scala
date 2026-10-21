@@ -797,7 +797,7 @@ final case class DeclaredParam(tpe: Opt[DeclaredType], flags: FldFlags):
   def mapType(f: DeclaredType => DeclaredType): DeclaredParam = copy(tpe = tpe.map(f))
 
 /** Parameter types and arity exposed by one list in a declared calling interface.
-  * Leading parameters may be optional; their types then already include `undefined`
+  * Leading parameters may be optional; their types then already include `null`
   * (see `Elaborator.optionalType`). A variadic parameter's type describes the whole
   * array it receives, and its trailing parameters are required.
   */

@@ -167,7 +167,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     paramss
       .map: pl =>
         val allParams =
-          pl.params.map(x => doc"${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}") ++
+          pl.params.map(x => doc"${scope.allocateName(x.sym)}${if x.flags.opt then "?" else ""}${erasedTypeAnnot(x.sym)}") ++
           pl.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}")
         allParams.mkDocument("(", ", ", ")")
       .mkDocument("")
@@ -244,10 +244,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if mut then "mut " else ""}${print(cls)}${chainedArgs}"
     case Lambda(params, body) =>
       scope.nest.givenIn:
-        val allParams =
-          params.params.map(x => doc"${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}") ++
-          params.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}")
-        val docParams = allParams.mkDocument("(", ", ", ")")
+        val docParams = printParamLists(params :: Nil)
         doc"$docParams => ${bracedbk(print(body))}"
     case Tuple(mut, elems) =>
       val docElems = elems.map(x => print(x)).mkDocument(", ")
