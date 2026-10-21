@@ -3802,6 +3802,18 @@ class NewResolver:
     listenTerm(from): sh =>
       publishActivated(to, sh)
   
+  /** The synthetic handler is an instance with real method definitions. Publish
+    * it after building those definitions, so forward selections made while
+    * elaborating the handled body resolve through ordinary member lookup. */
+  def resolveAbortiveHandler(handle: Handle)(using ResolutionContext): Unit =
+    assert(handle.isAbortive)
+    val definition = handle.derivedClsSym.defn.get
+    listenExt(definition, parent =>
+      val receiver = selfShapes.getOrElseUpdate(handle.derivedClsSym, BaseShape(definition, parent))
+      MarkedShape.exit(receiver, ResolutionBoundary(handle.derivedClsSym), N) match
+        case value: TermShape => publishActivated(handle.lhs, value)
+        case NoShape => lastWords("A new handler instance must be reachable outside its class"))
+
   // Classes without an explicit parent expose Object's declarations. Share this
   // root interface between inferred instances, nominal annotations, and this-values;
   // Object itself must terminate the chain. This does not add a runtime constructor call.
@@ -4538,6 +4550,9 @@ class NewResolver:
     case SelfRef(sym) if sym is sym.getState.globalThisSymbol => listener(DynShape())
     case ref @ Ref(loc: LocalSymbol) =>
       loc.subscribeToShapes(listener)
+    case RuntimeRef(symbol) =>
+      val definition = symbol.defn.get
+      listenExt(definition, parent => listener(defnShapes.getOrElseUpdate(symbol, DefnShape(definition, parent))))
     case ref @ SimpleRef(sym) =>
       sym match
       case loc: LocalSymbol =>
@@ -4597,9 +4612,13 @@ class NewResolver:
       // Finally is evaluated for effects; normal completion returns the body's
       // value. Its cleanup value must not contribute candidates to this result.
       if resultFlow(cleanup).normal then listen(body, discardMarks)(listener)
-    case Label(label, _, body, _) =>
+    case Label(label, _, body, hasContinueDispatch) =>
       val flow = resultFlow(body)
-      if flow.normal then listen(body, discardMarks)(listener)
+      if flow.normal then listen(body, discardMarks):
+        // Lowering consumes this sentinel to re-enter the label. It is never
+        // a result of the label expression, unlike a non-local break payload.
+        case value: TermShape if hasContinueDispatch && value.isInstanceOfClass(State.continueSymbol.defn.get) => ()
+        case value => listener(value)
       flow.exits.getOrElse(S(label), Vector.empty).foreach(value => listen(value, discardMarks)(listener))
     case annotated @ Annotated(annotation @ Annot.Async(), body) =>
       listener(promiseShape(annotation, resultType(body, lexicalBinders(annotated), rctx.instances)(listenResult(body))))
@@ -4610,6 +4629,18 @@ class NewResolver:
       // Quotation constructs a runtime syntax value; splicing supplies syntax
       // for a different stage. Neither has the value interface of its operand.
       listener(UnknownValueShape.at(trm))
+    case handle: Handle if handle.isAbortive =>
+      resolveAbortiveHandler(handle)
+      listenResult(handle.body)(listener)
+      handle.defs.foreach: method =>
+        // Parameters arrive through the method and handler-instance boundaries.
+        // The result leaves both boundaries, joining every invocation at the
+        // handler site rather than returning to the abandoned continuation.
+        listenDefinitionResult(method.td, rctx.instances): result =>
+          result.exit(ExitMark(ResolutionBoundary(method.td.tsym), N, NoMarks))
+            .exit(ExitMark(ResolutionBoundary(handle.derivedClsSym), N, NoMarks)) match
+              case value: TermShape => listener(value)
+              case NoShape => ()
     case _: Handle =>
       // An effect handler can abort or replace the continuation's result. The
       // normal body's interface alone therefore cannot describe this value.

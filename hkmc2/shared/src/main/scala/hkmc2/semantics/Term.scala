@@ -303,6 +303,8 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
 
   case Error()
   case UnitVal()
+  /** A compiler-inserted reference to a declared singleton exported by Runtime.mls. */
+  case RuntimeRef(sym: ModuleOrObjectSymbol)
   case DynTy()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
@@ -387,7 +389,9 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case Try(body: Term, finallyDo: Term)
   case Annotated(annot: Annot, target: Term)
   case Handle(lhs: LocalVarSymbol, rhs: Term, args: List[Term],
-    derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
+    derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)(
+    // Abortive handlers never resume their body: a method's result is the handled expression's result.
+    val isAbortive: Bool)
   case LeadingDotSel(nme: Tree.Ident)(
       val originalCtx: Opt[SrcScope]
     ) (using State) extends Term, ResolvableImpl, LeadingDotSelImpl
@@ -523,7 +527,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       val bodyFree = body.freeVars
       if bodyFree(result.nme) then bodyFree - result.nme else bodyFree
     case Forall(_, _, body) => body.freeVars
-    case Error | Missing | _: Lit | _: DynTy | _: UnitVal | _: LeadingDotSel | _: Continue => Set.empty
+    case Error | Missing | _: Lit | _: DynTy | _: UnitVal | _: RuntimeRef | _: LeadingDotSel | _: Continue => Set.empty
     case Break(_, result, value) => value.iterator.flatMap(_.freeVars).toSet + result.nme
     case _ => subTerms.iterator.flatMap(_.freeVars).toSet
 
@@ -576,6 +580,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
     val that = this match
       case Error() => Error()
       case UnitVal() => UnitVal()
+      case RuntimeRef(sym) => RuntimeRef(sym)
       case DynTy() => DynTy()
       case Missing => Missing
       case Lit(Tree.StrLit(value)) => Lit(Tree.StrLit(value))
@@ -663,8 +668,8 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case Continue(label) => Continue(label)
       case Try(body, finallyDo) => Try(body.mkClone, finallyDo.mkClone)
       case Annotated(annot, target) => Annotated(annot, target.mkClone)
-      case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
-        Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
+      case handle @ Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
+        Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)(handle.isAbortive)
     copyMetadata(this, that)
   
 end Term

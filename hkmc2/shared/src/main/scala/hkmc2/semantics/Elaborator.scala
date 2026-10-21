@@ -191,6 +191,16 @@ object Elaborator:
     private def capture(elem: Ctx.Elem): Ctx.Elem =
       outer.resolutionBoundary.fold(elem)(Ctx.CaptElem(elem, _))
 
+    /** Control handlers have no source name, but references to them cross the same
+      * lexical boundaries as named bindings. In particular, a return inside a
+      * nested class must transport its payload back out of that class. */
+    def controlHandler(symbol: TempSymbol): Opt[Ctx.Elem] =
+      val owns = outer match
+        case OuterCtx.Function(handler, _) => handler is symbol
+        case _ => false
+      if owns || labels.valuesIterator.exists(_.nonLocalHandlerSymbol is symbol) then S(Ctx.RefElem(symbol))
+      else parent.flatMap(_.controlHandler(symbol)).map(capture)
+
     private lazy val visibleWildcardOpens: Ls[Ctx.OpenSource] =
       val inherited = parent.toList.flatMap(_.visibleWildcardOpens)
       wildcardOpens ::: inherited.map(source => Ctx.OpenSource(capture(source.elem))(source.id))
@@ -914,9 +924,10 @@ extends Importer:
     methodMarker.ref(callSiteId)
     ()
   
-  /** Use a synthesized selection so the sentinel object can be referenced without field-access sanity checks. */
+  /** The continuation sentinel is a known runtime object, not a source member access. */
   private def nonLocalContinueSentinel(using Ctx): Term =
-    State.runtimeSymbol.ref().synthSel(State.continueSymbol)
+    if newResolution then Term.RuntimeRef(State.continueSymbol)
+    else State.runtimeSymbol.ref().synthSel(State.continueSymbol)
   
   /** Build an effect handler around `body` for non-local control flow. */
   private def mkEffectHandleAbortive(
@@ -924,13 +935,15 @@ extends Importer:
       effectClassName: Str,
       methods: Ls[EffectHandlerMethodSpec],
       body: Term,
-  )(using State): Term =
+  )(using State, Ctx): Term =
     val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident(effectClassName))
+    recordDefinitionScope(clsSym)
     val htds = methods.map: spec =>
       val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme), erasedType = N))
       val resumeSym = VarSymbol(Ident("resume"), erasedType = N)
       val mtdSym = BlockMemberSymbol(spec.methodName, Nil, true)
-      val tsym = TermSymbol(Fun, N, Ident(spec.methodName))
+      val tsym = TermSymbol(Fun, S(clsSym), Ident(spec.methodName))
+      rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
       val td = TermDefinition(
         Fun,
         mtdSym,
@@ -939,15 +952,20 @@ extends Importer:
         N,
         N,
         S(spec.methodBody(valueSym)),
-        TermDefFlags.empty,
+        TermDefFlags.empty.copy(isMethod = true),
         Modulefulness.none,
         Nil,
         N,
       )(N, N, N)
       mtdSym.tsym = S(tsym)
       tsym.defn = S(td)
+      mtdSym.complete()
       HandlerTermDefinition(resumeSym, td)
-    Term.Handle(handlerSymbol, state.nonLocalRetHandlerTrm, Nil, clsSym, htds, body)
+    clsSym.defn = S(ClassDef.Plain(ctx.getOuter, Cls, clsSym, BlockMemberSymbol(effectClassName, Nil), Nil, N,
+      ObjBody(Blk(htds.map(_.td), unit)), N, Nil, Nil, N, ctorAnnotations = Nil)(body.toLoc, body.toLoc, N))
+    val handle = new Term.Handle(handlerSymbol, state.nonLocalRetHandlerTrm, Nil, clsSym, htds, body)(isAbortive = true)
+    if newResolution then resolveAbortiveHandler(handle)
+    handle
   
   /** Build a non-local effect invocation on `handlerSymbol`. */
   private def mkNonLocalEffectInvocation(
@@ -960,9 +978,18 @@ extends Importer:
     val rs = FlowSymbol.app()
     val mtdTree = new Ident(methodName)
     val argTree = new Tup(argTrees)
-    app(
-      Term.Sel(handlerSymbol.ref(callSiteId), mtdTree)(
-        S(state.nonLocalRet), FlowSymbol.sel(callSiteId.name), N, S(summon)),
+    val selection = if newResolution then
+      markEffectMethodUsed(handlerSymbol, callSiteId)
+      val receiver = ctx.controlHandler(handlerSymbol).getOrElse(
+        lastWords("A non-local control handler must belong to an enclosing scope")).ref(callSiteId)
+      val sel = withTypeBinders(new Term.NewSel(receiver, mtdTree.withLocOf(callSiteId), N)(
+        FlowSymbol.sel(callSiteId.name)).withLocOf(callSiteId))
+      rctx.recordAccessSite(sel, ctx.scope)
+      newSel(sel, ctx.scope)
+      sel
+    else Term.Sel(handlerSymbol.ref(callSiteId), mtdTree)(
+      S(state.nonLocalRet), FlowSymbol.sel(callSiteId.name), N, S(summon))
+    app(selection,
       withTypeBinders(Term.Tup(argTerms.map(term => PlainFld(term)))(argTree)),
     )(Tree.DummyApp, N, rs)
   
@@ -1640,7 +1667,7 @@ extends Importer:
           (subterm(c, Clss), Nil)
       
       (ctx + (id.name -> sym)).givenIn:
-        Term.Handle(sym, cp, p, derivedClsSym, tds, subterm(bod, interp))
+        Term.Handle(sym, cp, p, derivedClsSym, tds, subterm(bod, interp))(isAbortive = false)
     case h: Hndl =>
       raise(ErrorReport(
         msg"Unsupported handle binding shape" ->

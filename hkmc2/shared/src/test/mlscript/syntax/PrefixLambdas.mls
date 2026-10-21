@@ -75,9 +75,6 @@ fun returning() = => return 17
 //│ ║  l.73: 	fun returning() = => return 17
 //│ ╙──      	                     ^^^^^^^^^
 
-// FIXME: New resolution does not resolve the synthetic return handler's `ret`
-// member, including for the equivalent `() => return 17` lambda.
-:fixme
 :effectHandlers
 :lift
 :expect 17
@@ -86,9 +83,6 @@ fun returning() =
   escape()
   99
 returning()
-//│ ╔══[COMPILATION ERROR] This selection of member 'ret' has no resolved target
-//│ ║  l.85: 	  let escape = => return 17
-//│ ╙──      	                  ^^^^^^
 //│ = 17
 
 #lang(useNewResolution: false)

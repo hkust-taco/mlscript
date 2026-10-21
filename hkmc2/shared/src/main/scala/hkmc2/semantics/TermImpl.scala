@@ -125,6 +125,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     val desc = this match
       case Error() => "‹error›"
       case UnitVal() => "unit value"
+      case RuntimeRef(_) => "runtime value"
       case DynTy() => "dynamic type"
       case _: Rcd => "record literal"
       case Lit(lit) => lit.describeLit
@@ -204,7 +205,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case _ => subTerms
   def subTerms: Vector[Term] = this match
     case ref: MemberRef => ref.keyAccess.toVector
-    case Error() | Missing | _: Lit | _: AnyRef_ | _: DynTy | _: UnitVal => Vector.empty
+    case Error() | Missing | _: Lit | _: AnyRef_ | _: DynTy | _: UnitVal | _: RuntimeRef => Vector.empty
     case Capture(base, thru) => Vector.single(base)
     case Resolved(t, sym) => Vector.single(t)
     case App(lhs, rhs) => Vector.double(lhs, rhs)
@@ -303,6 +304,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     def res: Document = this match
       case lit: Lit => lit.lit.idStr
       case UnitVal() => doc"()"
+      case RuntimeRef(sym) => doc"runtime.${sym.showName}"
       case DynTy() => doc"dyn"
       case r: SimpleRef =>
         r.sym match
@@ -494,6 +496,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
   
   def showPlain(using DebugPrinter): Str = this match
     case Term.UnitVal() => "()"
+    case RuntimeRef(sym) => s"runtime.${sym.nme}"
     case Term.DynTy() => "dyn"
     case Lit(lit) => lit.idStr
     case Resolved(t, sym) => t.showPlain
