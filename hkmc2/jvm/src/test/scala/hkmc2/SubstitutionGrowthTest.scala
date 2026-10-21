@@ -47,7 +47,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
   private final case class Measurement(views: Int, largestSubstitution: Int, activations: Int, typeInstances: Int)
 
   private val cctx = TestFolders.compilerCtx(os.pwd)
-  private given DebugPrinter = new DebugPrinter
+  private given DebugPrinter = new DebugPrinter()
   private val tl = TraceLogger.silent
 
   /** Resolves a generated unit through ordinary elaboration, in a fresh state. */

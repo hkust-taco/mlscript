@@ -63,7 +63,7 @@ class MLsCompiler
   def compileModule(file: io.Path): Unit =
     
     given Raise = mkRaise(file)
-    given DebugPrinter = new DebugPrinter
+    given DebugPrinter = new DebugPrinter(N)
     
     val compilerTL = TraceLogger.silent
     

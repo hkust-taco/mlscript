@@ -6,7 +6,7 @@ import syntax.*
 import hkmc2.utils.*
 
 
-class SymbolPrinter(val dbgScp: Scope)(using owner: Elaborator.State) extends DebugPrinter(owner):
+class SymbolPrinter(val dbgScp: Scope)(using owner: Elaborator.State) extends DebugPrinter(S(owner)):
   override protected def symbolName(sym: Symbol): Str =
     sym.showFullName(using dbgScp, ShowCfg.internal, throw _)
   

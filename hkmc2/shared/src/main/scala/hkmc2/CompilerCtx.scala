@@ -258,7 +258,7 @@ class CompilerCtx(
         given Elaborator.State = state
         given Config = rootConfig
         given CompilerCtx = this
-        given DebugPrinter = new DebugPrinter(state)
+        given DebugPrinter = new DebugPrinter(S(state))
         val parse = ParserSetup(file, outputHandler)
         val elaborationConfig = Config.elaborationConfig(parse.resultBlk, file.up)
         debug.configure(elaborationConfig.debug)

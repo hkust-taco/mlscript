@@ -74,6 +74,7 @@ exactly where the mutable state is supposed to be defined and used.
 
 Never use default arguments in core business logic.
 Default arguments should be reserved for user-facing APIs.
+Do NOT encode default arguments through overloading to skirt this rule.
 
 Keep it DRY: if you find yourself copying and pasting code,
 consider refactoring it into a reusable function or class.

@@ -60,11 +60,10 @@ extension (context: StringContext)
 
 
 class DebugPrinter(
-  final val showUids: Bool,
-  private val uidOwner: Opt[semantics.Elaborator.State],
+  private val uidOwner: Opt[semantics.Elaborator.State] = N,
+  final val showUids: Bool = false,
 ):
-  def this() = this(false, N)
-  def this(owner: semantics.Elaborator.State) = this(false, S(owner))
+  require(!showUids || uidOwner.isDefined)
 
   protected def symbolName(sym: semantics.Symbol): Str = sym.prefix + sym.nme
   protected def preProcess(t: Product): Product = t
@@ -174,7 +173,7 @@ end DebugPrinter
 object DebugPrinter:
   
   private final class UidView(val underlying: DebugPrinter, enabled: Bool)
-      extends DebugPrinter(enabled, underlying.uidOwner):
+      extends DebugPrinter(underlying.uidOwner, enabled):
     override protected def symbolName(sym: semantics.Symbol): Str = underlying.symbolName(sym)
     override protected def preProcess(t: Product): Product = underlying.preProcess(t)
     override protected def postProcess(t: Product): Str = underlying.postProcess(t)
