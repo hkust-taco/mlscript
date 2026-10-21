@@ -92,7 +92,7 @@ b1.a
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.91: 	b1.a
 //│ ║        	^^^^
-//│ ╟── Instance of class 'Bar' does not contain member 'a'
+//│ ╟── Partially-applied constructor of class 'Bar' does not contain member 'a'
 //│ ║  l.86: 	let b1 = b0(123)
 //│ ╙──      	         ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

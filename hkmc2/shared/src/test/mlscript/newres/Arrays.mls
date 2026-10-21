@@ -139,7 +139,7 @@ new Array[Int](1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.138: 	new Array[Int](1, 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Array' expected 1 argument, but got 2
+//│ ╟── Constructor of class 'Array' expected 1 argument, but got 2
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.241: 	declare class Array[T](val length: Int) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -150,7 +150,7 @@ new Array[Int]()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.149: 	new Array[Int]()
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Array' expected 1 argument, but got 0
+//│ ╟── Constructor of class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.241: 	declare class Array[T](val length: Int) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

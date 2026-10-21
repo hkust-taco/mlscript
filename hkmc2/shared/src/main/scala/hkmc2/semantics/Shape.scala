@@ -548,8 +548,13 @@ class AppShape(val receiver: CoreTermShape, val args: Term, val src: Term.App)(u
       case ds: DefnShape => ds.classExtends(cls)
       case _ => false)
   def describe: Str =
-    // s"application of ${receiver.describe}"
-    s"instance of ${applicationHead._1.describe}"
+    val head = applicationHead._1
+    if !isSaturated then s"partially-applied ${head.describe}"
+    else head match
+      // Constructor applications produce instances of the associated class,
+      // so their descriptions must not describe the constructor function itself.
+      case ds: DefnShape => s"instance of ${ds.clsDef.fold(ds.describe)(_.describeRef)}"
+      case _ => s"instance of ${head.describe}"
   def toLoc: Opt[Loc] = src.toLoc
   override def toString: String = s"AppShape($receiver, ${args.showDbg})"
 
@@ -865,7 +870,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
       case defn: TypeLikeDef => defn.kind.desc + " "
       case defn: TermDefinition =>
         defn.tsym match
-        case _: ClassCtorSymbol => "class "
+        case _: ClassCtorSymbol => "constructor of class "
         case s => s.k.desc + " "
     }'${defn.bsym.nme}'"
   // override def toString: String = s"DefnShape(${defn.describe} ${defn.bsym.nme})"

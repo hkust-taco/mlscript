@@ -112,7 +112,7 @@ Pair(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.111: 	Pair(1)
 //│ ║         	^^^^^^^
-//│ ╟── Class 'Pair' expected 2 arguments, but got 1
+//│ ╟── Constructor of class 'Pair' expected 2 arguments, but got 1
 //│ ║  l.98: 	data class Pair[A](a: A, b: Int) extends Base with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = Pair(1, undefined)
@@ -122,7 +122,7 @@ Pair[Int, Int](1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
 //│ ║  l.121: 	Pair[Int, Int](1, 2)
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╟── Class 'Pair' expected 1 type argument, but got 2
+//│ ╟── Constructor of class 'Pair' expected 1 type argument, but got 2
 //│ ║  l.98: 	data class Pair[A](a: A, b: Int) extends Base with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = Pair(1, 2)
@@ -156,7 +156,7 @@ Declared()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.155: 	Declared()
 //│ ║         	^^^^^^^^^^
-//│ ╟── Class 'Declared' expected 1 argument, but got 0
+//│ ╟── Constructor of class 'Declared' expected 1 argument, but got 0
 //│ ║  l.153: 	declare class Declared(val length: Int) with
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: globalThis.Declared is not a function
@@ -170,7 +170,7 @@ new Constructed(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.169: 	new Constructed(1)
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Constructed' expected 2 arguments, but got 1
+//│ ╟── Constructor of class 'Constructed' expected 2 arguments, but got 1
 //│ ║  l.166: 	class Constructed with
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
@@ -221,7 +221,7 @@ new Mixed(1)(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.220: 	new Mixed(1)(2)
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ╟── Class 'Mixed' expected 2 arguments, but got 1
+//│ ╟── Constructor of class 'Mixed' expected 2 arguments, but got 1
 //│ ║  l.217: 	class Mixed(a) with
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
@@ -240,7 +240,7 @@ Cons(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.239: 	Cons(1)
 //│ ║         	^^^^^^^
-//│ ╟── Class 'Cons' expected 2 arguments, but got 1
+//│ ╟── Constructor of class 'Cons' expected 2 arguments, but got 1
 //│ ║  l.238: 	    Cons(x: Int, xs: IntList)
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot instantiate abstract class 'Cons'
@@ -260,7 +260,7 @@ Some(1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.259: 	Some(1, 2)
 //│ ║         	^^^^^^^^^^
-//│ ╟── Class 'Some' expected 1 argument, but got 2
+//│ ╟── Constructor of class 'Some' expected 1 argument, but got 2
 //│ ║  l.258: 	    Some(x: T)
 //│ ╙──       	    ^^^^^^^^^
 //│ = Some(1)

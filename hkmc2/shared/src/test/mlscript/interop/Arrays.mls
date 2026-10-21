@@ -84,7 +84,7 @@ Array()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.83: 	Array()
 //│ ║        	^^^^^^^
-//│ ╟── Class 'Array' expected 1 argument, but got 0
+//│ ╟── Constructor of class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.241: 	declare class Array[T](val length: Int) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -95,7 +95,7 @@ Array(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.94: 	Array(1, 2, 3)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Class 'Array' expected 1 argument, but got 3
+//│ ╟── Constructor of class 'Array' expected 1 argument, but got 3
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.241: 	declare class Array[T](val length: Int) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
