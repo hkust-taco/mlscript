@@ -156,8 +156,8 @@ class NewResolver:
           case App(Ref(op: BuiltinSymbol), Tup(Fld(_, Lit(_: Tree.IntLit | _: Tree.DecLit), _) :: Nil))
               if op.nme === "-" || op.nme === "+" =>
             result.publish(TypeShape.Abstract)
-          // The interop sentinel supplies no resolution candidates, including
-          // when it appears in an annotation alongside legitimate values.
+          // Ignore undefined in annotations: `T | undefined` has the same
+          // resolution candidates as T.
           case Lit(Tree.UnitLit(false)) => result.publish(TypeShape.Bottom)
           case literal: Lit =>
             // Singleton annotations retain literal values, which read no binders.
@@ -602,7 +602,7 @@ class NewResolver:
           // Normalize both parts before retaining the argument. Otherwise even
           // out A keeps another A-to-wildcard environment at each recursive
           // step. Preserve the written source: it overrides declaration variance.
-          val parts = TypeArgument(input.fold(extremeType(false, S(resolution)))(loop(_, bindings, aliases, !positive)),
+          val parts = TypeArgument(input.fold(extremeType(false))(loop(_, bindings, aliases, !positive)),
             output.fold(missingOutput(resolution))(loop(_, bindings, aliases, positive)))
           normalizedArgument(resolution, parts)
         case TypeShape.Applied(base, arguments) :: Nil =>
@@ -733,18 +733,15 @@ class NewResolver:
     })
 
   private def extremeType(top: Bool)(using ResolutionContext): DeclaredType =
-    extremeType(top, N)
-
-  private def extremeType(top: Bool, source: Opt[TypeResolution])(using ResolutionContext): DeclaredType =
-    rctx.state.extremeTypes.getOrElseUpdate((top, source), {
-      val resolution = new TypeResolution(source.fold[Term](Term.Missing)(_.source),
+    rctx.state.extremeTypes.getOrElseUpdate(top, {
+      val resolution = new TypeResolution(Term.Missing,
         _ => lastWords("A synthesized extreme type cannot be invalid"))
       resolution.publish(if top then TypeShape.Top else TypeShape.Bottom)
       declaredType(resolution, Map.empty)
     })
 
   private def missingOutput(source: TypeResolution)(using ResolutionContext): DeclaredType =
-    extremeType(true, S(source)).withOrigin(S(TypeInterfaceReason.MissingOutput(source.source)))
+    extremeType(true).withOrigin(S(TypeInterfaceReason.MissingOutput(source.source)))
 
   /** Written wildcards override declaration variance. Unqualified arguments have
     * already been interpreted in both polarities; declaration variance keeps the
@@ -4496,8 +4493,8 @@ class NewResolver:
                 case _ => expand(rest, RecordShape.Unknown(UnknownValueShape.spread(term, shape)) :: reversed)
           case _ :: rest => expand(rest, reversed)
         expand(record.stats, Nil)
-    // Undefined is an interop sentinel, not a legitimate value for resolution.
-    // Its runtime literal and pattern tests do not require a propagated shape.
+    // Ignore undefined during resolution. Runtime literals and pattern tests
+    // are compiled from the term itself and do not need a shape.
     case Lit(Tree.UnitLit(false)) => ()
     case intro: IntroTerm =>
       // Literals and lambdas have the declared interface of their builtin class,
@@ -4592,8 +4589,8 @@ class NewResolver:
     case Label(label, _, body, hasContinueDispatch) =>
       val flow = resultFlow(body)
       if flow.normal then listen(body, discardMarks):
-        // Lowering consumes this sentinel to re-enter the label. It is never
-        // a result of the label expression, unlike a non-local break payload.
+        // Lowering uses runtime.Continue to re-enter the label. Only normal
+        // results and non-local break values flow out of the label.
         case value: TermShape if hasContinueDispatch && value.isInstanceOfClass(State.continueSymbol.defn.get) => ()
         case value => listener(value)
       flow.exits.getOrElse(S(label), Vector.empty).foreach(value => listen(value, discardMarks)(listener))

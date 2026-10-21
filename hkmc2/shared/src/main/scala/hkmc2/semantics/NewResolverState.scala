@@ -246,7 +246,7 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.patternRefinements, identity)
   val primitiveTypes: Cache[ClassSymbol, DeclaredType] =
     new Cache(_.primitiveTypes, identity)
-  val extremeTypes: Cache[(Bool, Opt[TypeResolution]), DeclaredType] =
+  val extremeTypes: Cache[Bool, DeclaredType] =
     new Cache(_.extremeTypes, identity)
   val variantTypes: Cache[(DeclaredType, Bool), DeclaredType] =
     new Cache(_.variantTypes, identity)

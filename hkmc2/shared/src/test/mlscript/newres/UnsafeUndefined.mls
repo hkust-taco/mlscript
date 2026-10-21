@@ -53,7 +53,7 @@ fun bareLength(value: Str | BareType) =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [undefined, true, false]
 
-// Explicit tests of the interop sentinel still distinguish it from legitimate values.
+// Runtime patterns still distinguish undefined from legitimate values.
 :expect [0, 3]
 fun length(value: Str | unsafe.undefined) =
   if value is ~unsafe.undefined as text then text.length else 0

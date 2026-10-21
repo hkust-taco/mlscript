@@ -115,12 +115,9 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       watch((new Identity(body), marks, "result"))(resolver.listenResult(body)): shape =>
         emit(shape.exit(marks), path.via(msg"This value is returned here." -> body.toLoc))
     case S(sign) =>
-      // Check returned implementations against the declared calling interface.
-      // Its parameter types constrain returned closures instead of unrestricted
-      // unknowns, and consumers see only the annotated result.
+      // checkDeclaredResult already checks the body during elaboration.
+      // Exposure follows the declared result's interface.
       val declared = resolver.declaredType(resolver.typeResolution(sign), Map.empty).instantiate(rctx.instances)
-      watch((new Identity(body), declared, marks))(resolver.listenResult(body)): shape =>
-        resolver.constrainFunction(declared, shape, marks, S(body))
       watch((declared, marks))(resolver.listenTypeInstances(declared)): shape =>
         emit(shape.exit(marks), path)
 

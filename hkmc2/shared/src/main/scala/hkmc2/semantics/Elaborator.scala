@@ -3147,9 +3147,9 @@ extends Importer:
         val p = Param(flg, sym, sig, mfn)(t.toLoc)
         sym.decl = S(p)
         if newResolution then
-          // Optional parameters admit null independently of their callers. Seed
-          // unannotated parameters too, without turning their inferred inputs
-          // into an annotation boundary.
+          // Optional parameters admit null regardless of which calls we observe.
+          // Add null to unannotated parameters without giving them an annotation
+          // that would hide the shapes inferred from their arguments.
           val initial = sig.orElse:
             if flg.opt then S(Term.Lit(UnitLit(true).withLoc(t.toLoc))) else N
           initial.foreach: sign =>

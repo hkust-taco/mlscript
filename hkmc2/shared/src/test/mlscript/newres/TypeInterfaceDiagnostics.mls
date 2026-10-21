@@ -292,3 +292,24 @@ fun inspect(value: Alias) = value.member
 //│ ╟── Type 'Hidden' is declared without a member interface.
 //│ ║  l.283: 	declare type Hidden
 //│ ╙──       	             ^^^^^^
+
+// Shared Any/Nothing nodes must not share the missing bound's diagnostic location.
+:ge
+fun firstInputOnly(xs: Array[in Int]) = xs.[0].length
+fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.298: 	fun firstInputOnly(xs: Array[in Int]) = xs.[0].length
+//│ ║         	                                          ^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.298: 	fun firstInputOnly(xs: Array[in Int]) = xs.[0].length
+//│ ║         	                             ^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.299: 	fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
+//│ ║         	                                           ^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.299: 	fun secondInputOnly(xs: Array[in Str]) = xs.[0].length
+//│ ║         	                              ^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.

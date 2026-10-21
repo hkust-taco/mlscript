@@ -1,0 +1,34 @@
+:.
+:!js
+
+// A returned callback's arity should be checked once, whether its factory is public or private.
+:e
+fun publicFactory(unused): Int -> Int = (x, y) => 0
+//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ║  l.6: 	fun publicFactory(unused): Int -> Int = (x, y) => 0
+//│ ║       	                                        ^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.6: 	fun publicFactory(unused): Int -> Int = (x, y) => 0
+//│ ║       	                                        ^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.6: 	fun publicFactory(unused): Int -> Int = (x, y) => 0
+//│ ╙──     	                           ^^^^^^^^^^
+
+:e
+private fun privateFactory(unused): Int -> Int = (x, y) => 0
+//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ║  l.18: 	private fun privateFactory(unused): Int -> Int = (x, y) => 0
+//│ ║        	                                                 ^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.18: 	private fun privateFactory(unused): Int -> Int = (x, y) => 0
+//│ ║        	                                                 ^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.18: 	private fun privateFactory(unused): Int -> Int = (x, y) => 0
+//│ ╙──      	                                    ^^^^^^^^^^
+
+// Returned callbacks receive their annotated input types even when a factory parameter is unannotated.
+:js
+:expect 3
+fun typedFactory(unused): Str -> Int = text => text.length
+typedFactory(null)("abc")
+//│ = 3
