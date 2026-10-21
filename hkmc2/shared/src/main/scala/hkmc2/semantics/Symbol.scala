@@ -49,8 +49,6 @@ abstract class Symbol(using ownerState: State) extends MaybeSymbol with Located:
   def showFullName(using Scope, ShowCfg, Raise): Str =
     showPrefix + showName
   
-  // Generic string conversion is independent of the symbol's owner and the current trace.
-  // DebugPrinter adds disambiguated names and optional UIDs when explicitly rendering a symbol.
   override def toString: Str =
     prefix + nme
   
