@@ -12,7 +12,7 @@ import Tree.{IntLit, DecLit, StrLit}
 
 class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
 
-  protected def doPrintDbg(msg: => Str): Unit = println(msg)
+  inline protected def doPrintDbg(msg: Str): Unit = println(msg)
   
   val bytes: Array[Char] = origin.fph.blockStr.toArray
   private val length = bytes.length

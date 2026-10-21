@@ -8,7 +8,7 @@ import hkmc2.semantics.*
 
 
 class ParserSetup(file: io.Path, outputHandler: DebugOutputHandler)
-(using Elaborator.State, Raise, CompilerCtx, Config, DebugPrinter):
+    (using Elaborator.State, Raise, CompilerCtx, Config, DebugPrinter):
   
   val block = CompilerCtx.get.fs.read(file)
   val fph = new FastParseHelpers(block)
@@ -19,12 +19,15 @@ class ParserSetup(file: io.Path, outputHandler: DebugOutputHandler)
   
   val rules = syntax.ParseRules()
   val parser = new syntax.Parser(origin, tokens, rules, raise, dbg = false):
+    // * Tracing is not supported for compiled files,
+    // * as debug flags to enable traces are only available after parsing.
     def doPrintDbg(msg: => Str): Unit = ()
   
   val result = parser.parseAll(parser.block(allowNewlines = true))
   val effectiveConfig = Config.elaborationConfig(result, file.up)
-
-  if effectiveConfig.debug.showParsedTree then
+  
+  if effectiveConfig.debug.showParsedTree
+  then
     outputHandler.emit(
       effectiveConfig.debug.out,
       s"Parsed tree\n${result.map(_.showAsTree).mkString("\n")}",
