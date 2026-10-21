@@ -132,7 +132,7 @@ fun tooManyArguments() = new Pair(1, 2)(3)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.131: 	fun tooManyArguments() = new Pair(1, 2)(3)
 //│ ║         	                         ^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Pair' expected 1 argument, but got 2
+//│ ╟── Constructor of class 'Pair' expected 1 argument, but got 2
 //│ ║  l.106: 	class Pair(val first)(val second) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -241,7 +241,7 @@ fun extraErrorArgument() = new Error("message", {}, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.240: 	fun extraErrorArgument() = new Error("message", {}, 3)
 //│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Error' expected 0 to 2 arguments, but got 3
+//│ ╟── Constructor of class 'Error' expected 0 to 2 arguments, but got 3
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.132: 	declare class Error {
 //│ ║         	^^^^^^^^^^^^^^^^^^^
@@ -275,7 +275,7 @@ fun extraForeignArgument() = new String("hello", "world")
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.274: 	fun extraForeignArgument() = new String("hello", "world")
 //│ ║         	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'String' expected 1 argument, but got 2
+//│ ╟── Constructor of class 'String' expected 1 argument, but got 2
 //│ ║  l.265: 	declare class String with
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.

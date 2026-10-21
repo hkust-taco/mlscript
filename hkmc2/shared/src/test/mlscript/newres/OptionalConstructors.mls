@@ -124,7 +124,7 @@ fun missingRequired() = new Main()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.123: 	fun missingRequired() = new Main()
 //│ ║         	                        ^^^^^^^^^^
-//│ ╟── Class 'Main' expected 1 to 2 arguments, but got 0
+//│ ╟── Constructor of class 'Main' expected 1 to 2 arguments, but got 0
 //│ ║  l.4: 	class Main(val first, val second?: Int) {
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -133,7 +133,7 @@ fun tooMany() = new Main(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.132: 	fun tooMany() = new Main(1, 2, 3)
 //│ ║         	                ^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Main' expected 1 to 2 arguments, but got 3
+//│ ╟── Constructor of class 'Main' expected 1 to 2 arguments, but got 3
 //│ ║  l.4: 	class Main(val first, val second?: Int) {
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
