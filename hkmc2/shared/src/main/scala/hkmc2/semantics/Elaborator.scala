@@ -1767,9 +1767,7 @@ extends Importer:
         Term.Constrained(constraints, body)
       case _ => lastWords(s"Unexpected lambda parameter shape: $lhs")
     case Keywrd(Keyword.`dyn`) => Term.DynTy().withLocOf(tree)
-    case Keywrd(Keyword.`undefined`) =>
-      reportBareUndefined(tree)
-      error
+    case Keywrd(Keyword.`undefined`) => Term.Lit(bareUndefined(tree))
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
       val body = subterm(lhs, interp)
       val sign = subterm(rhs, Tpe)
@@ -3287,9 +3285,10 @@ extends Importer:
   
   def pattern(t: Tree): Ctxl[Pattern] = pattern(t, Map.empty)
 
-  private def reportBareUndefined(tree: Tree): Unit =
-    raise(ErrorReport(msg"Direct use of 'undefined' is not allowed; use 'unsafe.undefined' for JavaScript interoperation."
+  private def bareUndefined(tree: Tree): Literal =
+    raise(WarningReport(msg"Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation."
       -> tree.toLoc :: Nil))
+    UnitLit(false).withLocOf(tree)
 
   private def pattern(t: Tree, extractionBindings: Map[Str, VarSymbol]): Ctxl[Pattern] =
     import ucs.{Ctor, unapply, error}, ucs.extractors.*, Keyword.*, Pattern.*, InvalidReason.*
@@ -3410,9 +3409,7 @@ extends Importer:
       case TyTup(ps) => tuple(ps)
       case Tup(ps) => tuple(ps)
       case t: syntax.Literal => Literal(t)
-      case Keywrd(Keyword.`undefined`) =>
-        reportBareUndefined(t)
-        Pattern.Wildcard()
+      case Keywrd(Keyword.`undefined`) => Literal(bareUndefined(t))
       // Negation patterns: `~p`
       case App(Ident("~"), Tup(p :: Nil)) => Negation(go(p))
       // Negative integer and decimal literals.

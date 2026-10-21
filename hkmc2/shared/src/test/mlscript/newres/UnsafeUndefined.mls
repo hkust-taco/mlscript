@@ -1,29 +1,45 @@
 :.
 
-:e
+:w
 undefined
-//│ ╔══[COMPILATION ERROR] Direct use of 'undefined' is not allowed; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
 //│ ║  l.4: 	undefined
 //│ ╙──     	^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:e
-fun bareValue() = undefined
-//│ ╔══[COMPILATION ERROR] Direct use of 'undefined' is not allowed; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.11: 	fun bareValue() = undefined
-//│ ╙──      	                  ^^^^^^^^^
+:w
+:expect [undefined]
+fun bareValue() = [undefined]
+bareValue()
+//│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.11: 	fun bareValue() = [undefined]
+//│ ╙──      	                   ^^^^^^^^^
+//│ = [undefined]
 
-:e
+:w
 type BareType = undefined
-//│ ╔══[COMPILATION ERROR] Direct use of 'undefined' is not allowed; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.17: 	type BareType = undefined
+//│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.19: 	type BareType = undefined
 //│ ╙──      	                ^^^^^^^^^
 
-:e
+:w
+:expect [1, 0]
 fun barePattern(value) = if value is undefined then 1 else 0
-//│ ╔══[COMPILATION ERROR] Direct use of 'undefined' is not allowed; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.23: 	fun barePattern(value) = if value is undefined then 1 else 0
+[barePattern(unsafe.undefined), barePattern(null)]
+//│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.26: 	fun barePattern(value) = if value is undefined then 1 else 0
 //│ ╙──      	                                     ^^^^^^^^^
+//│ = [1, 0]
+
+// Warning about the spelling must preserve the literal type and its narrowing behavior.
+:w
+:expect [0, 3]
+fun bareLength(value: Str | BareType) =
+  if value is ~undefined as text then text.length else 0
+[bareLength(unsafe.undefined), bareLength("abc")]
+//│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.37: 	  if value is ~undefined as text then text.length else 0
+//│ ╙──      	               ^^^^^^^^^
+//│ = [0, 3]
 
 // The virtual module emits the host literal without a runtime module lookup.
 :sir
@@ -52,10 +68,10 @@ fun isUndefined(value) = if value is unsafe.undefined then true else false
 :e
 fun unchecked(value: Str | unsafe.undefined) = value.length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.53: 	fun unchecked(value: Str | unsafe.undefined) = value.length
+//│ ║  l.69: 	fun unchecked(value: Str | unsafe.undefined) = value.length
 //│ ║        	                                               ^^^^^^^^^^^^
 //│ ╟── Undefined literal does not contain member 'length'
-//│ ║  l.53: 	fun unchecked(value: Str | unsafe.undefined) = value.length
+//│ ║  l.69: 	fun unchecked(value: Str | unsafe.undefined) = value.length
 //│ ╙──      	                           ^^^^^^^^^^^^^^^^
 
 // Optional parameters still convert the unsafe value to null on entry.
