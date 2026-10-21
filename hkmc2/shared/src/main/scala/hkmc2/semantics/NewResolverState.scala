@@ -473,6 +473,7 @@ final class ResolutionContext private[semantics] (
       // hosts to this unit before sealing, just like the written source terms.
       term match
         case ref: NewResolvable => ref.keyAccess.foreach(visit)
+        case nw: New if nw.args.isEmpty && nw.rft.isEmpty => checkPartialInstantiation(nw)
         case _ => ()
     state.accessSites.clear()
     state.pending.foreach: (key, value) =>
@@ -485,6 +486,23 @@ final class ResolutionContext private[semantics] (
     */
   def recordAccessSite(term: NewResolvable | New, scope: SrcScope): Unit =
     state.accessSites += ((term, scope))
+
+  /** Check written instantiations once their aliases and forward references have
+    * resolved. Using the per-block source sites avoids repeating the warning when
+    * generic functions are instantiated or their inference is imported elsewhere. */
+  private def checkPartialInstantiation(term: New): Unit = if !hasError(term) then
+    ClassValueShape.targetsOf(term).map(ClassValueShape.definitionOf).distinct match
+      case cls :: Nil =>
+        (cls.paramsOpt.toList ::: cls.auxParams) match
+          case params :: Nil if params.paramCountLB == 0 && !params.flags.ctx =>
+            val construction = term.toLoc.fold(s"new ${cls.sym.nme}"): loc =>
+              loc.origin.fph.blockStr.slice(loc.spanStart, loc.spanEnd)
+            report(WarningReport(
+              msg"This 'new' expression partially applies class '${cls.sym.nme}' instead of constructing an instance." -> term.toLoc ::
+              msg"Use `$construction()` to construct an instance, or `=> $construction()` to create an explicit zero-argument lambda." -> N ::
+              msg"The constructor accepts an empty argument list." -> params.toLoc :: Nil))
+          case _ => ()
+      case _ => ()
 
   /** Private members are only accessible from within their owner and its companion (see
     * SrcScope.canAccessPrivatesOf); member lookups performed elsewhere skip them in favor of

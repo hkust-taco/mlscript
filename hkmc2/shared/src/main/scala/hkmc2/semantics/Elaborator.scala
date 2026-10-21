@@ -1182,7 +1182,7 @@ extends Importer:
     // * Each branch scrutinee `rhs` is elaborated as the tree `lhs op rhs`, as in the non-split form,
     // * so that, eg, the RHS of `|>` delimits underscore lambdas (see `underscoreDelimitingSides`).
     case OpApp(lhs, ident: Ident, rhss) =>
-      val lhsTerm = if underscoreDelimitingSides(ident)._1 then delimitedTerm(lhs, Trm) else term(lhs, Trm)
+      val lhsTerm = if underscoreDelimitingSides(ident)._1 then delimitedTerm(lhs, Trm, alwaysLambda = false) else term(lhs, Trm)
       val split = lhsTerm.reference: lhs =>
         termSplit(rhss, ((rhs: Tree) => OpApp(Tree.Trm(lhs()), ident, rhs :: Nil)) andThen mk)
       (ctx, split)
@@ -1290,16 +1290,18 @@ extends Importer:
       trace[Term](dbg"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
         given UnderCtx = UnderCtx.none
         subterm(tree, interp)
-    else delimitedTerm(tree, interp)
+    else delimitedTerm(tree, interp, alwaysLambda = false)
   
   /** Elaborate `tree` as a term that delimits an implicit lambda, whose parameters are the `_` placeholders
-    * of `tree` that are not delimited by one of its subterms, as in the body of `=> _ + 1`. */
-  def delimitedTerm(tree: Tree, interp: Interpretation): Ctxl[Term] =
+    * of `tree` that are not delimited by one of its subterms, as in the body of `=> _ + 1`.
+    * An explicit prefix `=>` always creates a lambda; implicit delimiters leave
+    * placeholder-free expressions eager. */
+  def delimitedTerm(tree: Tree, interp: Interpretation, alwaysLambda: Bool): Ctxl[Term] =
   trace[Term](dbg"Elab term ${tree.showDbg}", r => s"~> ${r.showDbg}"):
     val unders = mutable.ArrayBuffer.empty[VarSymbol]
     given UnderCtx = UnderCtx(S(unders))
     val st = subterm(tree, interp)
-    if unders.isEmpty then st
+    if unders.isEmpty && !alwaysLambda then st
     else
       val params = unders.iterator.map(Param.simple).toList
       withTypeBinders(Term.Lam(PlainParamList(params)(N), st))
@@ -1352,8 +1354,7 @@ extends Importer:
     if newResolution then listenTerm(lt)(shape => appShape(shape, rt, res))
     res
   
-  /** With the new underscore syntax, some operator operands delimit their own implicit lambdas,
-    * as if prefixed by `=>`:
+  /** With the new underscore syntax, some operator operands delimit their own implicit lambdas:
     *  - the RHS of an operator whose name ends with `>` (such as `|>` and `>>`),
     *    so that `x |> _ + 1` means `x |> (y => y + 1)`;
     *  - the LHS of an operator whose name starts with `<` (such as `<|` and `<<`),
@@ -1371,11 +1372,14 @@ extends Importer:
     * which is also what the operator split of `f` on lines `\ a` and `\ b` means,
     * as it is elaborated as `(f \ a) \ b` (`\` being otherwise right-associative).
     * Parentheses are not transparent, as they delimit subexpressions: `(f \ a) \ b` means `f(a)(b)`.
-    * With the new underscore syntax, the argument delimits its own implicit lambda, as if prefixed by `=>`,
+    * With the new underscore syntax, the argument delimits its own implicit lambda,
     * so that `xs.map \ _ + 1` means `xs.map(x => x + 1)`; this is done here rather than in
     * `Tree.desugared`, which does not know the language version. */
-  private def backslashApp(lhs: Tree, rhs: Tree): Tree.App =
-    def delimited(value: Tree): Tree = PrefixApp(new Keywrd(Keyword.`=>`), value).withLocOf(value)
+  private def backslashApp(lhs: Tree, rhs: Tree)(using Ctx): Tree.App =
+    // These delimiters are implicit: synthesizing a prefix `=>` would also
+    // suspend arguments without placeholders instead of passing their values.
+    def delimited(value: Tree): Tree =
+      Tree.Trm(delimitedTerm(value, Trm, alwaysLambda = false)).withLocOf(value)
     // * Field-shaped arguments, such as `key: a` and `...xs` (see `fld`), are not expressions,
     // * so only their values delimit implicit lambdas.
     val arg =
@@ -1822,10 +1826,10 @@ extends Importer:
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol.app()
       val (lhsDelimitsUnders, rhsDelimitsUnders) = underscoreDelimitingSides(op)
-      val lt = if lhsDelimitsUnders then delimitedTerm(lhs, Trm) else subterm(lhs)
+      val lt = if lhsDelimitsUnders then delimitedTerm(lhs, Trm, alwaysLambda = false) else subterm(lhs)
       val ot = subterm(op)
       val rts = rhss.map: r =>
-        PlainFld(if rhsDelimitsUnders then delimitedTerm(r, Trm) else subterm(r))
+        PlainFld(if rhsDelimitsUnders then delimitedTerm(r, Trm, alwaysLambda = false) else subterm(r))
       app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
         DummyApp, N, sym)
     case SynthSel(pre, nme) =>
@@ -2061,7 +2065,8 @@ extends Importer:
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
     case PrefixApp(Keywrd(Keyword.`=>`), body) if lang.newUnderscoreAndApplicationSyntax =>
-      delimitedTerm(body, interp)
+      ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
+        delimitedTerm(body, interp, alwaysLambda = true)
     case PrefixApp(kw, body) =>
       raise(ErrorReport(msg"Illegal position for prefix keyword '${kw.name}'." -> kw.toLoc :: Nil))
       subterm(body)

@@ -203,10 +203,27 @@ val NativeNumber = Number.class
 
 :noInline
 :expect ["NaN", "NaN", "NaN", "NaN"]
+:w
 val makeNumber = new Number
 val makeNativeNumber = new NativeNumber
 [String(makeNumber()), String(makeNumber(undefined)),
  String(makeNativeNumber()), String(makeNativeNumber(undefined))]
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Number' instead of constructing an instance.
+//│ ║  l.207: 	val makeNumber = new Number
+//│ ║         	                 ^^^^^^^^^^
+//│ ╟── Use `new Number()` to construct an instance, or `=> new Number()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.34: 	  constructor(value?)
+//│ ╙──      	              ^^^^^^
+//│ ╔══[WARNING] This 'new' expression partially applies class 'Number' instead of constructing an instance.
+//│ ║  l.208: 	val makeNativeNumber = new NativeNumber
+//│ ║         	                       ^^^^^^^^^^^^^^^^
+//│ ╟── Use `new NativeNumber()` to construct an instance, or `=> new NativeNumber()` to create an explicit zero-argument lambda.
+//│ ╟── The constructor accepts an empty argument list.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.34: 	  constructor(value?)
+//│ ╙──      	              ^^^^^^
 //│ = ["NaN", "NaN", "NaN", "NaN"]
 //│ makeNativeNumber = fun
 //│ makeNumber = fun
@@ -222,7 +239,7 @@ new Error("message").message
 :e
 fun extraErrorArgument() = new Error("message", {}, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.223: 	fun extraErrorArgument() = new Error("message", {}, 3)
+//│ ║  l.240: 	fun extraErrorArgument() = new Error("message", {}, 3)
 //│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Error' expected 0 to 2 arguments, but got 3
 //│ ║  in ../decls/Prelude.mls
@@ -238,10 +255,10 @@ declare class NoConstructor
 :e
 fun undeclaredConstructor() = new NoConstructor(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.239: 	fun undeclaredConstructor() = new NoConstructor(1)
+//│ ║  l.256: 	fun undeclaredConstructor() = new NoConstructor(1)
 //│ ║         	                              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got 1
-//│ ║  l.236: 	declare class NoConstructor
+//│ ║  l.253: 	declare class NoConstructor
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Written foreign constructor parameter lists are still checked.
@@ -256,25 +273,25 @@ new String("hello").length
 :e
 fun extraForeignArgument() = new String("hello", "world")
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.257: 	fun extraForeignArgument() = new String("hello", "world")
+//│ ║  l.274: 	fun extraForeignArgument() = new String("hello", "world")
 //│ ║         	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'String' expected 1 argument, but got 2
-//│ ║  l.248: 	declare class String with
+//│ ║  l.265: 	declare class String with
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
-//│ ║  l.249: 	  constructor(value: Str)
+//│ ║  l.266: 	  constructor(value: Str)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun extraForeignList() = new String("hello")()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.269: 	fun extraForeignList() = new String("hello")()
+//│ ║  l.286: 	fun extraForeignList() = new String("hello")()
 //│ ║         	                         ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'String' expected at most 1 argument list, but got 2
-//│ ║  l.248: 	declare class String with
+//│ ║  l.265: 	declare class String with
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
-//│ ║  l.249: 	  constructor(value: Str)
+//│ ║  l.266: 	  constructor(value: Str)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -285,8 +302,8 @@ fun extraForeignList() = new String("hello")()
 fun LooseStack[A](...xs: Array[A]) = new LooseStack(1,2,3)
 class LooseStack[out A]
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.285: 	fun LooseStack[A](...xs: Array[A]) = new LooseStack(1,2,3)
+//│ ║  l.302: 	fun LooseStack[A](...xs: Array[A]) = new LooseStack(1,2,3)
 //│ ║         	                                     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got 3
-//│ ║  l.286: 	class LooseStack[out A]
+//│ ║  l.303: 	class LooseStack[out A]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^

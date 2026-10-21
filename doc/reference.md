@@ -263,8 +263,8 @@ The annotation of an optional parameter includes `undefined`: `greeting?: Str` h
 The `?` must directly follow the parameter: `y ?` and `y ?: Str` are not optional parameters.
 
 Optional parameters follow the required ones, except for the parameters after a variadic parameter
-(see below). Only function and lambda parameters can be optional; class parameters, context parameters
-(`using`), and variadic parameters cannot.
+(see below). Function, lambda, and constructor parameters can be optional; context parameters
+(`using`) and variadic parameters cannot.
 
 Direct calls must supply every required argument, and no more arguments than the function accepts.
 A function that receives extra arguments dynamically ignores them.
@@ -351,6 +351,7 @@ tuple
 x => x + 1
 (x, y) => x + y
 () => 42
+=> 42                 // also a zero-argument lambda
 ```
 
 ### Underscore lambda shorthand
@@ -403,6 +404,17 @@ xs.map(f)
 // This is admittedly a bit strange-looking, but we quickly get used to it:
 let f = => _ + 1 in xs.map(f)
 ```
+
+An explicit prefix `=>` always creates a lambda. If it contains no `_` placeholders,
+the lambda takes zero arguments: `=> new C()` constructs a fresh instance whenever
+called. Implicit delimiter positions such as `f \ expr` and `value |> expr` keep
+expressions without placeholders eager.
+
+A bare `new C` partially applies a constructor when `C` has a parameter list.
+If its only list accepts zero arguments (including an all-optional list), the
+compiler warns: write `new C()` to construct the instance, or `=> new C()` for
+an explicit zero-argument factory. A class declared without parameter lists
+still constructs immediately with `new C`.
 
 ### More examples
 
