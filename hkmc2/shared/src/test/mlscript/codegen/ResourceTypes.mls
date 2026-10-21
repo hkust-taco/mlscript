@@ -178,7 +178,7 @@ fun mkRscMutNew() = new rsc mut C()
 
 :e
 fun newMaybe() = new rsc? C()
-//│ ╔══[COMPILATION ERROR] An instance cannot be 'rsc?': it either is a resource or is not.
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
 //│ ║  l.180: 	fun newMaybe() = new rsc? C()
 //│ ╙──       	                     ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -590,8 +590,7 @@ fun partialIntoPlain(a) = usePlainFn(curried(a))
 //│ };
 //│ end
 
-// A lambda states its resource-ness with a modifier. Without one, it is not a resource, so `rsc?` has no
-// effect on it.
+// A lambda states its resource-ness with a modifier. Without one, it is not a resource, and `rsc?` on it is a compilation error.
 
 fun rscLam() = useRscFn(rsc (x => x))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -619,7 +618,7 @@ fun rscLamReturned() = rsc (x => x)
 :ge
 fun plainLamIntoRsc() = useRscFn(x => x)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'rsc Function'
-//│ ║  l.620: 	fun plainLamIntoRsc() = useRscFn(x => x)
+//│ ║  l.619: 	fun plainLamIntoRsc() = useRscFn(x => x)
 //│ ╙──       	                                 ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define plainLamIntoRsc⁰ as fun plainLamIntoRsc¹(): ? {
@@ -632,7 +631,7 @@ fun plainLamIntoRsc() = useRscFn(x => x)
 :ge
 fun rscLamIntoPlain() = usePlainFn(rsc (x => x))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc Function' at an unrelated type 'Function'
-//│ ║  l.633: 	fun rscLamIntoPlain() = usePlainFn(rsc (x => x))
+//│ ║  l.632: 	fun rscLamIntoPlain() = usePlainFn(rsc (x => x))
 //│ ╙──       	                                        ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscLamIntoPlain⁰ as fun rscLamIntoPlain¹(): ? {
@@ -646,11 +645,11 @@ fun rscLamIntoPlain() = usePlainFn(rsc (x => x))
 //│ };
 //│ end
 
-:w
+:e
 fun maybeLam() = rsc? (x => x)
-//│ ╔══[WARNING] A function value is not a resource unless marked 'rsc', so 'rsc?' has no effect.
-//│ ║  l.650: 	fun maybeLam() = rsc? (x => x)
-//│ ╙──       	                       ^^^^^^
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.649: 	fun maybeLam() = rsc? (x => x)
+//│ ╙──       	                 ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define maybeLam⁰ as fun maybeLam¹(): ? {
 //│   let lambda;
@@ -675,7 +674,7 @@ fun rscPartialIntoRsc(a) = useRscFn(rsc curried(a))
 :ge
 fun rscPartialIntoPlain(a) = usePlainFn(rsc curried(a))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc Function' at an unrelated type 'Function'
-//│ ║  l.676: 	fun rscPartialIntoPlain(a) = usePlainFn(rsc curried(a))
+//│ ║  l.675: 	fun rscPartialIntoPlain(a) = usePlainFn(rsc curried(a))
 //│ ╙──       	                                            ^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscPartialIntoPlain⁰ as fun rscPartialIntoPlain¹(a: ?): ? {
@@ -685,14 +684,14 @@ fun rscPartialIntoPlain(a) = usePlainFn(rsc curried(a))
 //│ };
 //│ end
 
-:w
+:e
 :ge
 fun maybePartial(a) = useRscFn(rsc? curried(a))
-//│ ╔══[WARNING] A function value is not a resource unless marked 'rsc', so 'rsc?' has no effect.
-//│ ║  l.690: 	fun maybePartial(a) = useRscFn(rsc? curried(a))
-//│ ╙──       	                                    ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.689: 	fun maybePartial(a) = useRscFn(rsc? curried(a))
+//│ ╙──       	                               ^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'rsc Function'
-//│ ║  l.690: 	fun maybePartial(a) = useRscFn(rsc? curried(a))
+//│ ║  l.689: 	fun maybePartial(a) = useRscFn(rsc? curried(a))
 //│ ╙──       	                                    ^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define maybePartial⁰ as fun maybePartial¹(a: ?): ? {
@@ -705,7 +704,7 @@ fun maybePartial(a) = useRscFn(rsc? curried(a))
 :w
 fun rscSaturated(a) = rsc curried(a)(a)
 //│ ╔══[WARNING] This call is not known to leave some parameter lists unapplied, so its resource modifier has no effect.
-//│ ║  l.706: 	fun rscSaturated(a) = rsc curried(a)(a)
+//│ ║  l.705: 	fun rscSaturated(a) = rsc curried(a)(a)
 //│ ╙──       	                          ^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscSaturated⁰ as fun rscSaturated¹(a: ?): ? { return curried¹(a)(a) }; end
@@ -713,7 +712,7 @@ fun rscSaturated(a) = rsc curried(a)(a)
 :w
 fun rscUnknownCallee(h, a) = rsc h(a)
 //│ ╔══[WARNING] This call is not known to leave some parameter lists unapplied, so its resource modifier has no effect.
-//│ ║  l.714: 	fun rscUnknownCallee(h, a) = rsc h(a)
+//│ ║  l.713: 	fun rscUnknownCallee(h, a) = rsc h(a)
 //│ ╙──       	                                 ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscUnknownCallee⁰ as fun rscUnknownCallee¹(h: ?, a: ?): ? { return h(a) }; end
@@ -751,7 +750,7 @@ fun asPlain(x: D) = x as C
 :e
 fun isRsc(x) = x is rsc C
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern ('rsc'-modified identifier).
-//│ ║  l.752: 	fun isRsc(x) = x is rsc C
+//│ ║  l.751: 	fun isRsc(x) = x is rsc C
 //│ ╙──       	                        ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define isRsc⁰ as fun isRsc¹(x: ?): ? { return true }; end
@@ -759,7 +758,7 @@ fun isRsc(x) = x is rsc C
 :e
 fun isMaybe(x) = if x is rsc? C then 1 else 0
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern ('rsc?'-modified identifier).
-//│ ║  l.760: 	fun isMaybe(x) = if x is rsc? C then 1 else 0
+//│ ║  l.759: 	fun isMaybe(x) = if x is rsc? C then 1 else 0
 //│ ╙──       	                              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define isMaybe⁰ as fun isMaybe¹(x: ?): ? { return 1 }; end
@@ -852,14 +851,14 @@ fun handledRsc() =
     fun op(x)(k) = k(x)
   0
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found annotation.
-//│ ║  l.851: 	  handle h = rsc RscEffect with
+//│ ║  l.850: 	  handle h = rsc RscEffect with
 //│ ║         	                 ^^^^^^^^^
 //│ ╙── The 'handle' keyword requires a statically known class.
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.851: 	  handle h = rsc RscEffect with
+//│ ║  l.850: 	  handle h = rsc RscEffect with
 //│ ║         	             ^^^
 //│ ╟── This annotation is not supported on reference terms.
-//│ ║  l.851: 	  handle h = rsc RscEffect with
+//│ ║  l.850: 	  handle h = rsc RscEffect with
 //│ ╙──       	                 ^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let handleBlock$, Handler$h$op, Handler$h$, Handler$h$op$;

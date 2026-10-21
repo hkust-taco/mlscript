@@ -886,7 +886,8 @@ extends Importer:
     case Term.DynNew(_, _) | Term.Mut(_: Term.DynNew) =>
       reject(msg"Resource instantiation with 'new!' is not supported yet.")
     case _ if kw == Keyword.`rsc?` =>
-      reject(msg"An instance cannot be 'rsc?': it either is a resource or is not.")
+      raise(Annot.Resource.maybeRscOnVal(kwLoc))
+      inst
     case Term.New(_, _, S(_)) | Term.Mut(Term.New(_, _, S(_))) =>
       reject(msg"Resource instantiation with a refinement is not supported yet.")
     // * The modifier wraps the instantiation in an annotation, just as it wraps a type.
@@ -2087,6 +2088,11 @@ extends Importer:
       unannotated(trm) match
       case inst @ (Term.New(_, _, _) | Term.DynNew(_, _) | Term.Mut(_: Term.New | _: Term.DynNew)) =>
         raise(Annot.noEffect(kwt.toLoc, inst, N))
+        trm
+      case Term.Lam(_, _) | Term.App(_, _) | Term.Ref(_) | Term.Sel(_, _) | Term.SynthSel(_, _)
+      if kw == Keyword.`rsc?` && interp != Tpe =>
+        raise(Annot.Resource.maybeRscOnVal(kwt.toLoc))
+        // * Drop the `rsc?` annotation, so that `Lowering` only sees `rsc` (or the lack thereof)
         trm
       case _ => Term.Annotated(Annot.Modifier(kw)(kwt.toLoc), trm)
     case Modified(kw, body) =>

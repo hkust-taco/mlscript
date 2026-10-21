@@ -99,6 +99,10 @@ object Annot:
     /** Reports the resource modifier `kw` on the declaration of a type parameter. */
     def unsupportedOnTyParam(kw: Keyword, loc: Opt[Loc]): ErrorReport =
       ErrorReport(msg"'${kw.name}' modifiers on type parameters are not supported yet." -> loc :: Nil)
+    
+    /** Reports the use of `rsc?` on a value that requires a known resource-ness. */
+    def maybeRscOnVal(loc: Opt[Loc]): ErrorReport =
+      ErrorReport(msg"This value cannot be 'rsc?': it either is a resource or is not." -> loc :: Nil)
   
   /** Reports that an annotation written at `annotLoc` has no effect on `receiver`,
     * because of `reason` or, by default, because `receiver` does not support it.

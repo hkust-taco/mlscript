@@ -560,19 +560,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       k(Call(fr, Nil ne_:: Nil)(CallMetadata(isMlsFun, true, Nil), rsc = false, loc))
   
   /** Whether the resource modifiers in `annots` make a function value (a lambda or a partial application) a resource.
-    * A function value is not a resource unless stated otherwise, and `rsc?` is reported as having no effect.
+    * A function value is not a resource unless stated otherwise.
     */
-  def functionValueRsc(annots: Ls[Annot], loc: Opt[Loc]): Bool =
-    if annots.exists:
-      case Annot.Resource(N) => true
-      case _ => false
-    then
-      // * The annotation does not record where its keyword is written, so the warning points at `loc`.
-      raise(WarningReport(
-        msg"A function value is not a resource unless marked 'rsc', so 'rsc?' has no effect." -> loc :: Nil,
-        source = Diagnostic.Source.Compilation))
+  def functionValueRsc(annots: Ls[Annot]): Bool =
     annots.exists:
       case Annot.Resource(S(annotRsc)) => annotRsc
+      case Annot.Resource(N) =>
+        softAssert(false, "`rsc?` on function values should be dropped during elaboration")
+        false
       case _ => false
 
   /** Lower a call with multiple argument lists into `Call` nodes,
@@ -607,7 +602,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case (_ :: _, Nil) =>
         // * `Result.erasedType` asserts this flag against the callee's erased signature rather than via `td.params`.
         // * This relies on `td` having the same number of paramlists as its erased signature.
-        val rsc = functionValueRsc(rscAnnots, loc)
+        val rsc = functionValueRsc(rscAnnots)
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, callAnnots), rsc, loc))
     fr.targetSymbol match
     case S(fs: TermSymbol) =>
@@ -1417,7 +1412,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case st.Lam(params, body) =>
       warnStmt
       // * `Elaborator` records the modifier of `rsc (x => ...)` as an annotation on the lambda, as for `new rsc C()`.
-      val rsc = functionValueRsc(annots, trm.toLoc)
+      val rsc = functionValueRsc(annots)
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, N)
       val affineAnnots = annots.collect:
         case a @ Annot.Affine(0) => a

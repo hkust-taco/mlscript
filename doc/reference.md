@@ -375,6 +375,10 @@ The modifier has no effect on a call that is not known to leave some of its call
 These are the only expressions a modifier applies to: written on any other one, including an instantiation (whose
 modifier goes inside the `new`, see *Instantiation*), it has no effect and is reported as such.
 
+Note that marking lambdas, calls or references as `rsc?` is a compilation error -
+lambdas and partially applied calls create function values and therefore must decide their resource-ness,
+while all other calls and references already have their resource-ness determined.
+
 ### Function Declarations (without definition)
 
 ```mlscript
