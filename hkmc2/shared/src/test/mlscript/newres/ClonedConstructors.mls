@@ -58,7 +58,7 @@ constructors.make(35).value
 
 // Static `new` can also recover the known class through a constructor-valued field.
 :expect 35
-(new constructors.make(35)).value
+new constructors.make(35).value
 //│ = 35
 
 :expect 35

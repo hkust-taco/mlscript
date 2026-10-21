@@ -5,7 +5,7 @@ import "../../mlscript-compile/SealedClasses.mls"
 
 :expect 2
 class OpenChild extends SealedClasses.Open
-(new OpenChild).value()
+new OpenChild().value()
 //│ = 2
 
 :e

@@ -58,7 +58,7 @@ Foo()
 //│ ║        	^^^^^
 //│ ╟── Class 'Foo' must be instantiated with 'new'.
 //│ ║  l.8: 	class Foo
-//│ ╙──     	      ^^^
+//│ ╙──     	^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

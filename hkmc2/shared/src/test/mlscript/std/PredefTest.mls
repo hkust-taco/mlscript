@@ -16,7 +16,7 @@ id()
 //│ ╟── Function 'id' expected 1 argument, but got 0
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.19: 	fun id(x) = x
-//│ ╙──      	^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
@@ -197,15 +197,7 @@ foldr(+)()
 //│ ╟── Function 'foldr' expected 1 argument, but got 0
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.116: 	fun foldr[A](f: (A, A) -> A)(first: A, ...rest: Array[A]): A =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.117: 	  let len = rest.length
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.118: 	  if len === 0 then first else...
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.119: 	  let
-//│ ║         	^^^^^
-//│ ║  l.120: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 

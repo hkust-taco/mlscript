@@ -144,7 +144,7 @@ new Foo(0)
 
 :wat
 class Foo(val a)
-(new Foo(42)).Foo#a
+new Foo(42).Foo#a
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
@@ -315,7 +315,7 @@ class Pong(val other: Ping)
 :wat
 class Foo(val x) with
   val y = this.x
-(new Foo(42)).Foo#y
+new Foo(42).Foo#y
 //│ Wat:
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))

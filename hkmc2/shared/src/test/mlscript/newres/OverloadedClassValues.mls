@@ -12,7 +12,7 @@ Primitive()
 //│ = 7
 
 :expect 42
-(new Primitive).answer()
+new Primitive().answer()
 //│ = 42
 
 
@@ -23,7 +23,7 @@ class Reverse {
 }
 
 :expect 43
-(new Reverse()).answer()
+new Reverse().answer()
 //│ = 43
 
 class Getter {
@@ -36,7 +36,7 @@ Getter()
 //│ = 14
 
 :expect 44
-(new Getter).answer()
+new Getter().answer()
 //│ = 44
 
 
@@ -45,7 +45,7 @@ fun local(n) = {
   class Item {
     fun answer() = n
   }
-  fun Item(x) = (new Item).answer() + x
+  fun Item(x) = new Item().answer() + x
   Item(2)
 }
 
@@ -63,7 +63,7 @@ module Members {
   class Factory {
     fun answer() = 46
   }
-  fun Factory(x) = (new Factory).answer() + x
+  fun Factory(x) = new Factory().answer() + x
 }
 
 :expect 45
@@ -75,7 +75,7 @@ Members.fresh().answer()
 //│ = 45
 
 :expect 45
-(new Members.Item).answer()
+new Members.Item().answer()
 //│ = 45
 
 :expect 48
@@ -83,7 +83,7 @@ Members.Factory(2)
 //│ = 48
 
 :expect 46
-(new Members.Factory()).answer()
+new Members.Factory().answer()
 //│ = 46
 
 
@@ -100,7 +100,7 @@ Aux(41).answer()
 //│ = 42
 
 :expect 41
-(new Aux(41)).answer()
+new Aux(41).answer()
 //│ = 41
 
 
@@ -112,7 +112,7 @@ class Child extends Parent
 
 // Inherited members retain their class interpretation despite the term overload.
 :expect 47
-(new Child).answer()
+new Child().answer()
 //│ = 47
 
 
@@ -143,7 +143,7 @@ container.value
 //│ = 5
 
 :expect 50
-(new container.Inner).answer()
+new container.Inner().answer()
 //│ = 50
 
 :expect 50
@@ -164,7 +164,7 @@ MutableMembers.value
 //│ = 18
 
 :expect 53
-(new MutableMembers.Item).answer()
+new MutableMembers.Item().answer()
 //│ = 53
 
 

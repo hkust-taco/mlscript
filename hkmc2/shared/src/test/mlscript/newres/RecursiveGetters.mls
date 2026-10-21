@@ -125,8 +125,4 @@ fun exposed(value) =
 //│ ║         	            ^^^^^
 //│ ╟── 'exposed' is exposed by this compilation unit.
 //│ ║  l.116: 	fun exposed(value) =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.117: 	  fun result = if true then value else result
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.118: 	  result.answer
-//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^

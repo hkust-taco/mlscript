@@ -93,7 +93,7 @@ class TypeRelationTest extends AnyFunSuite:
     val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
     val member = BlockMemberSymbol("Identity", Nil)
     symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)),
-      S(ft.resolution.source), N, Nil)(N))
+      S(ft.resolution.source), N, Nil)(N, N))
     val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
     val (argument, at) = h.parameter("A")
     val application = h.tpe(TypeShape.Applied(alias.resolution, List(at.resolution)))
@@ -121,7 +121,7 @@ class TypeRelationTest extends AnyFunSuite:
     val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
     val member = BlockMemberSymbol("Identity", Nil)
     symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N), TyParam(FldFlags.empty, N, unused)(N)),
-      S(ft.resolution.source), N, Nil)(N))
+      S(ft.resolution.source), N, Nil)(N, N))
     val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
     val scope = TermSymbol(Fun, N, Tree.Ident("owner"))
     val owner = ResolutionBoundary(scope)
@@ -396,7 +396,7 @@ class TypeRelationTest extends AnyFunSuite:
     val name: Tree.Ident = Tree.Ident("Closed")
     val symbol = ClassSymbol(Tree.TypeDef(Cls, name, N), name)
     val defn = ClassDef.Plain(N, Cls, symbol, BlockMemberSymbol("Closed", Nil), Nil, N,
-      ObjBody(Term.Blk(Nil, Term.UnitVal())), N, Nil, Nil, N, Nil)(N)
+      ObjBody(Term.Blk(Nil, Term.UnitVal())), N, Nil, Nil, N, Nil)(N, N, N)
     h.state.state.lexicalTypeBinders(symbol) = Set.empty
     val original = NominalInstanceView(defn, Map.empty, N)(N, ShapeProvenance.empty)(h.resolver)
     val scheme = h.tpe(TypeShape.Top).resolution

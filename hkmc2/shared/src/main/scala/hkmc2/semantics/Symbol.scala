@@ -353,6 +353,12 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   
   def symbols = tsym.toList ::: trees.collect:
     case t: Tree.TypeDef => t.symbol
+  
+  /** The headers of this symbol's definitions (see `Definition.headerLoc`), spanning from the
+    * first to the last when the symbol is overloaded. Diagnostics citing a member as a witness
+    * use this rather than `toLoc`, which spans the definitions' whole trees, including their bodies. */
+  def headerLoc: Option[Loc] =
+    Loc.mk(symbols.iterator.flatMap(_.defn.flatMap(_.headerLoc))).orElse(toLoc)
   def describe: Str =
     symbols match
     case Nil => s"symbol"
