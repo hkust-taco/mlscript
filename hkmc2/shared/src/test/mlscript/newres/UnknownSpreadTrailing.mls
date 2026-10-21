@@ -39,6 +39,6 @@ viaSeveral([Tail(5)], [Tail(6)])
 
 // Optional leading parameters yield to trailing parameters when the count is known.
 :expect [[undefined, 7], [8, 9]]
-private fun optional(x?, ...middle, y) = [if x is Head as x then x.head else undefined, y.tail]
+private fun optional(x?, ...middle, y) = [if x is Head as x then x.head else unsafe.undefined, y.tail]
 [optional(Tail(7)), optional(Head(8), Tail(9))]
 //│ = [[undefined, 7], [8, 9]]

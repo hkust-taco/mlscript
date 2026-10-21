@@ -424,7 +424,8 @@ class ParseRules(using State):
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
     singleKw(`dyn`)(Keywrd(`dyn`)),
-    singleKw(`undefined`)(UnitLit(false)),
+    // Keep this forbidden source token distinct from the undefined literals synthesized by the compiler.
+    singleKw(`undefined`)(Keywrd(`undefined`)),
     singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Ident("this")),
     singleKw(`super`)(Ident("super")),

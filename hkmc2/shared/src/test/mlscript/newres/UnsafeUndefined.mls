@@ -1,0 +1,70 @@
+:.
+
+:e
+undefined
+//│ ╔══[COMPILATION ERROR] Direct use of 'undefined' is not allowed; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.4: 	undefined
+//│ ╙──     	^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+fun bareValue() = undefined
+//│ ╔══[COMPILATION ERROR] Direct use of 'undefined' is not allowed; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.11: 	fun bareValue() = undefined
+//│ ╙──      	                  ^^^^^^^^^
+
+:e
+type BareType = undefined
+//│ ╔══[COMPILATION ERROR] Direct use of 'undefined' is not allowed; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.17: 	type BareType = undefined
+//│ ╙──      	                ^^^^^^^^^
+
+:e
+fun barePattern(value) = if value is undefined then 1 else 0
+//│ ╔══[COMPILATION ERROR] Direct use of 'undefined' is not allowed; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.23: 	fun barePattern(value) = if value is undefined then 1 else 0
+//│ ╙──      	                                     ^^^^^^^^^
+
+// The virtual module emits the host literal without a runtime module lookup.
+:sir
+:sjs
+:expect [undefined, true, false]
+[unsafe.undefined, unsafe.undefined === unsafe.undefined, unsafe.undefined === null]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return [undefined, true, false]
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ return globalThis.Object.freeze([ undefined, true, false ])
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [undefined, true, false]
+
+// Literal types and negated patterns retain the undefined branch in resolution.
+:expect [0, 3]
+fun length(value: Str | unsafe.undefined) =
+  if value is ~unsafe.undefined as text then text.length else 0
+[length(unsafe.undefined), length("abc")]
+//│ = [0, 3]
+
+:expect [true, false]
+fun isUndefined(value) = if value is unsafe.undefined then true else false
+[isUndefined(unsafe.undefined), isUndefined(null)]
+//│ = [true, false]
+
+:e
+fun unchecked(value: Str | unsafe.undefined) = value.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.53: 	fun unchecked(value: Str | unsafe.undefined) = value.length
+//│ ║        	                                               ^^^^^^^^^^^^
+//│ ╟── Undefined literal does not contain member 'length'
+//│ ║  l.53: 	fun unchecked(value: Str | unsafe.undefined) = value.length
+//│ ╙──      	                           ^^^^^^^^^^^^^^^^
+
+// Optional parameters still convert the unsafe value to null on entry.
+:expect [null, null, 7]
+fun optional(value?) = value
+[optional(), optional(unsafe.undefined), optional(7)]
+//│ = [null, null, 7]
+
+// Recognition uses the Prelude symbol, not the spelling of the qualifier.
+:expect 42
+let unsafe = {id"undefined": 42} in unsafe.undefined
+//│ = 42

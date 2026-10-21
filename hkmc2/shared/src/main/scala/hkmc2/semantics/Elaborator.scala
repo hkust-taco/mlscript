@@ -368,6 +368,8 @@ object Elaborator:
         val line = assumeObject("line")
         val name = assumeObject("name")
         val file = assumeObject("file")
+      object unsafe extends VirtualModule(assumeBuiltinMod("unsafe")):
+        val undefined = assumeObject("undefined")
       object js extends VirtualModule(assumeBuiltinMod("js")):
         val bitand = assumeObject("bitand")
         val bitnot = assumeObject("bitnot")
@@ -1548,12 +1550,14 @@ extends Importer:
       // `.class` chooses the class overload before requesting a receiver value.
       // Interpreting C as a receiver first would also select its companion.
       val preTrm = subterm(tree.prefix, if newResolution && tree.name.name == "class" then Clss else Receiver)
-      // `source` has no runtime object. Recognize its statically named fields
+      // Virtual modules have no runtime object. Recognize their literal members
       // before constructing a runtime selection, in either resolution mode.
-      // Compare symbols so a user-defined binding named `source` stays ordinary.
+      // Compare symbols so user-defined bindings named `source` or `unsafe` stay ordinary.
       val sym = if newResolution then preTrm.withoutCaptures match
         case Term.MemberRef(bms) if bms === ctx.builtins.source.bms =>
           ctx.builtins.source.module.tree.definedSymbols.get(tree.name.name)
+        case Term.MemberRef(bms) if bms === ctx.builtins.unsafe.bms =>
+          ctx.builtins.unsafe.module.tree.definedSymbols.get(tree.name.name)
         case _ => N
       else resolveField(tree.name, preTrm.symbol, tree.name)
       if sym.contains(ctx.builtins.source.line) then
@@ -1565,6 +1569,8 @@ extends Importer:
       else if sym.contains(ctx.builtins.source.file) then
         val loc = tree.toLoc.getOrElse(???)
         Term.Lit(StrLit(loc.origin.fileName.toString))
+      else if sym.contains(ctx.builtins.unsafe.undefined) then
+        Term.Lit(UnitLit(false).withLocOf(tree))
       else if newResolution then
         val res = withTypeBinders(new Term.NewSel(preTrm, tree.name, N)(FlowSymbol.sel(tree.name.name)).withLocOf(tree))
         rctx.recordAccessSite(res, ctx.scope)
@@ -1761,6 +1767,9 @@ extends Importer:
         Term.Constrained(constraints, body)
       case _ => lastWords(s"Unexpected lambda parameter shape: $lhs")
     case Keywrd(Keyword.`dyn`) => Term.DynTy().withLocOf(tree)
+    case Keywrd(Keyword.`undefined`) =>
+      reportBareUndefined(tree)
+      error
     case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
       val body = subterm(lhs, interp)
       val sign = subterm(rhs, Tpe)
@@ -3278,6 +3287,10 @@ extends Importer:
   
   def pattern(t: Tree): Ctxl[Pattern] = pattern(t, Map.empty)
 
+  private def reportBareUndefined(tree: Tree): Unit =
+    raise(ErrorReport(msg"Direct use of 'undefined' is not allowed; use 'unsafe.undefined' for JavaScript interoperation."
+      -> tree.toLoc :: Nil))
+
   private def pattern(t: Tree, extractionBindings: Map[Str, VarSymbol]): Ctxl[Pattern] =
     import ucs.{Ctor, unapply, error}, ucs.extractors.*, Keyword.*, Pattern.*, InvalidReason.*
     /** String range bounds must be single characters. */
@@ -3397,6 +3410,9 @@ extends Importer:
       case TyTup(ps) => tuple(ps)
       case Tup(ps) => tuple(ps)
       case t: syntax.Literal => Literal(t)
+      case Keywrd(Keyword.`undefined`) =>
+        reportBareUndefined(t)
+        Pattern.Wildcard()
       // Negation patterns: `~p`
       case App(Ident("~"), Tup(p :: Nil)) => Negation(go(p))
       // Negative integer and decimal literals.
@@ -3472,7 +3488,11 @@ extends Importer:
           raise:
             ErrorReport(msg"Pattern name not found: ${id.name}." -> id.toLoc :: Nil)
           Pattern.Wildcard()
-      case sel: (SynthSel | Sel) => constructor(term(sel, Ptrn), N, sel)
+      case sel: (SynthSel | Sel) => term(sel, Ptrn) match
+        // Virtual-module selections such as `unsafe.undefined` are literal patterns,
+        // so negation and narrowing must see the literal rather than a constructor.
+        case Term.Lit(lit) => Literal(lit)
+        case target => constructor(target, N, sel)
       case _: Tree =>
         raise(ErrorReport(msg"Unrecognized pattern (${t.describe})." -> t.toLoc :: Nil))
         Pattern.Wildcard()

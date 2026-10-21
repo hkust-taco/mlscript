@@ -19,9 +19,9 @@ fun nullableLength(value: Str | null) =
 
 // Other singleton literals use the same refinement rule.
 :expect [3, 0]
-fun definedLength(value: Str | undefined) =
-  if value is ~undefined as text then text.length else 0
-[definedLength("abc"), definedLength(undefined)]
+fun definedLength(value: Str | unsafe.undefined) =
+  if value is ~unsafe.undefined as text then text.length else 0
+[definedLength("abc"), definedLength(unsafe.undefined)]
 //│ = [3, 0]
 
 :expect [3, 0]
@@ -42,9 +42,9 @@ fun boxLength(value: TextBox | Empty) =
 
 // De Morgan's laws apply to both alternatives and conjunctions.
 :expect [3, 0, 0]
-fun presentLength(value: Str | null | undefined) =
-  if value is ~(null | undefined) as text then text.length else 0
-[presentLength("abc"), presentLength(null), presentLength(undefined)]
+fun presentLength(value: Str | null | unsafe.undefined) =
+  if value is ~(null | unsafe.undefined) as text then text.length else 0
+[presentLength("abc"), presentLength(null), presentLength(unsafe.undefined)]
 //│ = [3, 0, 0]
 
 :expect [3, 0]
@@ -93,14 +93,14 @@ extractedLength(TextBox("abc"))
 
 // Excluding null does not remove undefined or manufacture an interface for Any.
 :ge
-fun stillUndefined(value: Str | null | undefined) =
+fun stillUndefined(value: Str | null | unsafe.undefined) =
   if value is ~null as text then text.length else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.97: 	  if value is ~null as text then text.length else 0
 //│ ║        	                                 ^^^^^^^^^^^
 //│ ╟── Undefined literal does not contain member 'length'
-//│ ║  l.96: 	fun stillUndefined(value: Str | null | undefined) =
-//│ ╙──      	                                       ^^^^^^^^^
+//│ ║  l.96: 	fun stillUndefined(value: Str | null | unsafe.undefined) =
+//│ ╙──      	                                       ^^^^^^^^^^^^^^^^
 
 :ge
 fun stillUnknown(value: Any) =

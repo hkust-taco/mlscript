@@ -197,7 +197,7 @@ class InvalidParent extends Empty(1)
 // preserve undefined so native defaults run before any values reach MLscript code.
 :expect ["NaN", "NaN", "NaN"]
 val NativeNumber = Number.class
-[String(new Number()), String(new Number(undefined)), String(new NativeNumber())]
+[String(new Number()), String(new Number(unsafe.undefined)), String(new NativeNumber())]
 //│ = ["NaN", "NaN", "NaN"]
 //│ NativeNumber = class Number
 
@@ -206,8 +206,8 @@ val NativeNumber = Number.class
 :w
 val makeNumber = new Number
 val makeNativeNumber = new NativeNumber
-[String(makeNumber()), String(makeNumber(undefined)),
- String(makeNativeNumber()), String(makeNativeNumber(undefined))]
+[String(makeNumber()), String(makeNumber(unsafe.undefined)),
+ String(makeNativeNumber()), String(makeNativeNumber(unsafe.undefined))]
 //│ ╔══[WARNING] This 'new' expression partially applies class 'Number' instead of constructing an instance.
 //│ ║  l.207: 	val makeNumber = new Number
 //│ ║         	                 ^^^^^^^^^^

@@ -13,7 +13,7 @@ declare open class Object {
 declare fun Object(value?): Object
 declare module Object {
   fun entries(target): Array[[Str, Any]]
-  fun getOwnPropertyDescriptor(target, key): Object | undefined
+  fun getOwnPropertyDescriptor(target, key): Object | unsafe.undefined
   fun getOwnPropertyDescriptors(target): Object
   fun
     create
@@ -89,7 +89,7 @@ declare class Set[V] {
   fun add(value: V): Set[V]
   fun has(value: V): Bool
   fun delete(value: V): Bool
-  fun clear(): undefined
+  fun clear(): unsafe.undefined
   fun values(): IterableIterator[V]
   fun union(other: Set[V]): Set[V]
   fun difference(other: Set[V]): Set[V]
@@ -100,15 +100,15 @@ declare class Map[K, V] {
   constructor(entries?: Iterable[[K, V]] | null)
   @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[[K, V]]
   val size: Int
-  fun get(key: K): V | undefined
+  fun get(key: K): V | unsafe.undefined
   fun has(key: K): Bool
   fun delete(key: K): Bool
-  fun clear(): undefined
+  fun clear(): unsafe.undefined
   fun id"set"(key: K, value: V): Map[K, V]
   fun keys(): IterableIterator[K]
   fun values(): IterableIterator[V]
   fun entries(): IterableIterator[[K, V]]
-  fun forEach(f: (V, drop K, drop Map[K, V]) -> Any): undefined
+  fun forEach(f: (V, drop K, drop Map[K, V]) -> Any): unsafe.undefined
 }
 
 declare class Iterator[out T] {
@@ -123,7 +123,7 @@ declare class WeakSet[V]
 declare module WeakSet
 
 declare class WeakMap[K, V] {
-  fun get(key: K): V | undefined
+  fun get(key: K): V | unsafe.undefined
   fun has(key: K): Bool
   fun delete(key: K): Bool
   fun id"set"(key: K, value: V): WeakMap[K, V]
@@ -134,7 +134,7 @@ declare class Error {
   constructor(message?, options?)
   val message: Str
   val name: Str
-  val stack: Str | undefined
+  val stack: Str | unsafe.undefined
 }
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Error
 declare fun Error(message?, options?): Error
@@ -204,10 +204,10 @@ declare type Awaited[out A]
 // Follow TypeScript's Promise declarations, translating void returns to undefined.
 // Default type arguments are not supported yet: callers must supply the first callback.
 // Structural PromiseLike values and tuple-mapped all results remain unsupported.
-declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
+declare class Promise[out A](executor: ((A | Promise[A]) -> unsafe.undefined, Any -> unsafe.undefined) -> unsafe.undefined) {
   fun id"then"[B, C](onFulfilled: Awaited[A] -> (B | Promise[B]), onRejected?: (Any -> (C | Promise[C])) | null): Promise[Awaited[B | C]]
-  fun id"catch"[B](onRejected: (Any -> (B | Promise[B])) | undefined | null): Promise[Awaited[A | B]]
-  fun id"finally"(onFinally: (() -> undefined) | undefined | null): Promise[A]
+  fun id"catch"[B](onRejected: (Any -> (B | Promise[B])) | unsafe.undefined | null): Promise[Awaited[A | B]]
+  fun id"finally"(onFinally: (() -> unsafe.undefined) | unsafe.undefined | null): Promise[A]
 }
 declare module Promise {
   fun resolve[A](value: A | Promise[A]): Promise[Awaited[A]]
@@ -228,10 +228,10 @@ declare class Str {
   @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[Str]
   val length: Int
   fun toString(): Str
-  fun at(index: Int): Str | undefined
+  fun at(index: Int): Str | unsafe.undefined
   fun charAt(index: Int): Str
   fun charCodeAt(index: Int): Num
-  fun codePointAt(index: Int): Int | undefined
+  fun codePointAt(index: Int): Int | unsafe.undefined
   fun indexOf(value: Str, ...from): Int
   fun lastIndexOf(value: Str, ...from): Int
   fun includes(value: Str, ...from): Bool
@@ -274,20 +274,20 @@ declare class Array[T](val length: Int) {
   fun toSorted(...compare): Array[T]
   fun toSpliced(start: Int, ...items): Array[T]
   fun id"with"(index: Int, value: T): Array[T]
-  fun at(index: Int): T | undefined
+  fun at(index: Int): T | unsafe.undefined
   fun fill(value: T, ...bounds): Array[T]
   fun splice(start: Int, ...items): Array[T]
   fun push(...items: Array[T]): Int
   fun unshift(...items: Array[T]): Int
-  fun pop(): T | undefined
-  fun shift(): T | undefined
+  fun pop(): T | unsafe.undefined
+  fun shift(): T | unsafe.undefined
   fun concat(...arrays): Array[Any]
   fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
-  fun forEach(f: (T, drop Int, drop Array[T]) -> Any): undefined
+  fun forEach(f: (T, drop Int, drop Array[T]) -> Any): unsafe.undefined
   fun filter(f: (T, drop Int, drop Array[T]) -> Bool): Array[T]
-  fun find(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): T | undefined
+  fun find(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): T | unsafe.undefined
   fun findIndex(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): Int
-  fun findLast(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): T | undefined
+  fun findLast(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): T | unsafe.undefined
   fun findLastIndex(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): Int
   fun flat(...depth): Array[Any]
   fun flatMap[U](f: (T, drop Int, drop Array[T]) -> (U | Array[U]), ...thisArg): Array[U]
@@ -314,7 +314,7 @@ declare module Array {
 }
 
 declare class Symbol {
-  val description: Str | undefined
+  val description: Str | unsafe.undefined
 }
 declare fun Symbol(...description): Symbol
 declare module Symbol {
@@ -461,6 +461,11 @@ declare module source {
     line
     name
     file
+}
+
+// This virtual module exposes host values that ordinary MLscript code avoids.
+declare module unsafe {
+  val id"undefined"
 }
 
 declare module js {

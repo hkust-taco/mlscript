@@ -456,8 +456,8 @@ val escapedCallback = @annotations.async {value => value.answer}
 //│ ║         	                                          ^^^^^
 //│ ╟── This value is fulfilled by this promise.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.206: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.206: 	declare class Promise[out A](executor: ((A | Promise[A]) -> unsafe.undefined, Any -> unsafe.undefined) -> unsafe.undefined) {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'escapedCallback' is exposed by this compilation unit.
 //│ ║  in Promises.mls:449
 //│ ║  l.449: 	val escapedCallback = @annotations.async {value => value.answer}
@@ -478,7 +478,7 @@ noFulfillment().then(value => value.answer)
 :!js
 :fixme
 class Thenable with
-  fun id"then"(resolve: {answer: Int} -> undefined, reject: Any -> undefined) = resolve({answer: 77})
+  fun id"then"(resolve: {answer: Int} -> unsafe.undefined, reject: Any -> unsafe.undefined) = resolve({answer: 77})
 Promise.resolve(new Thenable).then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.482: 	Promise.resolve(new Thenable).then(value => value.answer)

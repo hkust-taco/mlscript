@@ -44,7 +44,7 @@ lookup(map, key)
 // This runtime primitive preserves undefined; user-call instrumentation forbids returning it.
 :noSanityCheck
 :expect true
-Runtime.Tuple.get([undefined], 0) is undefined
+Runtime.Tuple.get([unsafe.undefined], 0) is unsafe.undefined
 //│ = true
 
 // Tuple runtime operations also support lazy views.
@@ -64,11 +64,11 @@ Term.show(Term.Lam([termSymbol], Term.Ref(termSymbol)), termContext)
 //│ = "(x_0) =>\n  x_0"
 
 :expect ["null", "undefined", "true", "42"]
-[null, undefined, true, 42].map((lit, ...rest) => Term.show(Term.Lit(lit), termContext))
+[null, unsafe.undefined, true, 42].map((lit, ...rest) => Term.show(Term.Lit(lit), termContext))
 //│ = ["null", "undefined", "true", "42"]
 
 :expect "undefined"
-Term.showPattern(Term.LitPattern(undefined), termContext)
+Term.showPattern(Term.LitPattern(unsafe.undefined), termContext)
 //│ = "undefined"
 
 // Shared read interfaces retain element types without invariant Array[Any] annotations.

@@ -1206,7 +1206,7 @@ case class TypeDef(
 
 // TODO Store optional source locations for the flags instead of booleans
 /** `opt` marks an optional parameter (`y?`) or an optional function type parameter (`Int?`),
-  * whose argument may be omitted by callers, in which case the parameter is `undefined`.
+  * whose argument may be omitted by callers, in which case the parameter is `null`.
   * Unlike the other flags, which are prefix modifiers, it is written as a postfix `?`,
   * so it is not part of `show` and is printed by `showOptMarker` after the name instead.
   * `droppable` marks a parameter (`drop y`) or function type parameter (`drop Int`) whose argument

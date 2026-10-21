@@ -91,9 +91,9 @@ module Result with
 // indicate the object's class in the error message, which is useful for debugging.
 fun getIterator(something): Iterator =
   let test = something.(Symbol.iterator)
-  if test is undefined then
+  if test is unsafe.undefined then
     throw TypeError of "Not an iterable: " + if
-      something is undefined then "undefined"
+      something is unsafe.undefined then "undefined"
       something is null then "null"
       let prototype = Reflect.getPrototypeOf of something
       prototype is null then "object"

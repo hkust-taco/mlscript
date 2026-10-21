@@ -12,7 +12,7 @@ data class CSV(strDelimiter) with ...
 
 
 // Check to see if the delimiter is defined. If not, then default to comma.
-if strDelimiter is undefined then set strDelimiter = ","
+if strDelimiter is unsafe.undefined then set strDelimiter = ","
 
 val objPattern = new mut RegExp of
   // Delimiters.
@@ -47,7 +47,7 @@ fun toArrays(strData: Str) =
       // Now that we have our delimiter out of the way,
       // let's check to see which kind of value we captured (quoted or unquoted).
       let strMatchedValue =
-        if arrMatches.2 != undefined
+        if arrMatches.2 != unsafe.undefined
         then
           // We found a quoted value. When we capture this value, unescape any double quotes.
           arrMatches.2.replace of

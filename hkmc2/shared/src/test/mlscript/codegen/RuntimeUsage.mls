@@ -33,7 +33,7 @@ print of safeCall(123)
 print of safeCall(null)
 //│ > null
 
-print of safeCall(undefined)
+print of safeCall(unsafe.undefined)
 //│ > ()
 
 print of safeCall(())
@@ -46,7 +46,7 @@ print of  checkCall(null)
 //│ > null
 
 :re
-print of  checkCall(undefined)
+print of  checkCall(unsafe.undefined)
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 

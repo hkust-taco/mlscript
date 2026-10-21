@@ -92,21 +92,21 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 
 // Explicit `undefined` becomes null in optional parameters; required and rest parameters preserve it.
 :expect [1, [undefined], undefined]
-f(1, undefined, undefined)
+f(1, unsafe.undefined, unsafe.undefined)
 //│ = [1, [undefined], undefined]
 
 :expect [1, null, null, [], 2]
-h(1, undefined, 2)
+h(1, unsafe.undefined, 2)
 //│ = [1, null, null, [], 2]
 
 :expect [1, 2, null, [undefined], undefined]
-h(1, 2, undefined, undefined, undefined)
+h(1, 2, unsafe.undefined, unsafe.undefined, unsafe.undefined)
 //│ = [1, 2, null, [undefined], undefined]
 
 :noInline
 :expect [[undefined], undefined]
 fun trailingNoInline(x, ...xs, y) = [xs, y]
-trailingNoInline(1, undefined, undefined)
+trailingNoInline(1, unsafe.undefined, unsafe.undefined)
 //│ = [[undefined], undefined]
 
 

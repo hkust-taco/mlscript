@@ -57,7 +57,7 @@ Promise.any([Promise.reject("failed"), Promise.resolve({answer: 7})]).then(value
 // An absent rejection handler contributes no additional fulfillment candidate.
 :await
 :expect 8
-Promise.resolve({answer: 8}).then(value => value, undefined).then(value => value.answer)
+Promise.resolve({answer: 8}).then(value => value, unsafe.undefined).then(value => value.answer)
 //│ = 8
 
 :await
@@ -68,18 +68,18 @@ Promise.resolve({answer: 9}).then(value => value, null).then(value => value.answ
 // A promise used only as a completion signal has an undefined payload.
 :await
 :expect true
-(new Promise[undefined]((resolve, reject) => resolve(undefined))).then(value => value === undefined)
+(new Promise[unsafe.undefined]((resolve, reject) => resolve(unsafe.undefined))).then(value => value === unsafe.undefined)
 //│ = true
 
 // Explicitly absent catch/finally callbacks preserve the original settlement.
 :await
 :expect 14
-Promise.resolve({answer: 14}).catch(null).finally(undefined).then(value => value.answer)
+Promise.resolve({answer: 14}).catch(null).finally(unsafe.undefined).then(value => value.answer)
 //│ = 14
 
 :await
 :re
-Promise.reject("still rejected").catch(undefined).finally(null)
+Promise.reject("still rejected").catch(unsafe.undefined).finally(null)
 //│ ═══[RUNTIME ERROR] still rejected
 //│ = Promise {}
 
@@ -92,8 +92,8 @@ new Promise((resolve, reject) => resolve(10).missing)
 //│ ║        	                                 ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Undefined literal does not contain member 'missing'
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.206: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
-//│ ╙──       	                                                            ^^^^^^^^^
+//│ ║  l.206: 	declare class Promise[out A](executor: ((A | Promise[A]) -> unsafe.undefined, Any -> unsafe.undefined) -> unsafe.undefined) {
+//│ ╙──       	                                                            ^^^^^^^^^^^^^^^^
 
 :!js
 :e
@@ -103,8 +103,8 @@ new Promise((resolve, reject) => reject("failed").missing)
 //│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Undefined literal does not contain member 'missing'
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.206: 	declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
-//│ ╙──       	                                                                              ^^^^^^^^^
+//│ ║  l.206: 	declare class Promise[out A](executor: ((A | Promise[A]) -> unsafe.undefined, Any -> unsafe.undefined) -> unsafe.undefined) {
+//│ ╙──       	                                                                                     ^^^^^^^^^^^^^^^^
 
 // Both then branches contribute to the resulting promise type.
 :!js

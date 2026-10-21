@@ -103,7 +103,7 @@ let oops =
 oops.h
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'h')
 
-let obj = mut {s: undefined}
+let obj = mut {s: unsafe.undefined}
 //│ obj = {s: undefined}
 
 handle h = Effect with

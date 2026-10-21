@@ -14,7 +14,7 @@ fun optional(x?) = x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect [null, null, null, 0, false, ""]
-[optional(), optional(undefined), optional(null), optional(0), optional(false), optional("")]
+[optional(), optional(unsafe.undefined), optional(null), optional(0), optional(false), optional("")]
 //│ = [null, null, null, 0, false, ""]
 
 :sjs
@@ -31,24 +31,24 @@ let optionalLambda = (x?) => x
 //│ optionalLambda = fun optionalLambda
 
 :expect [null, null, 1]
-[optionalLambda(), optionalLambda(undefined), optionalLambda(1)]
+[optionalLambda(), optionalLambda(unsafe.undefined), optionalLambda(1)]
 //│ = [null, null, 1]
 
 // Inlining must preserve normalization even when the argument slot is present.
 :expect [null, null, 2]
 @inline private fun inlineOptional(x?) = x
-[inlineOptional(), inlineOptional(undefined), inlineOptional(2)]
+[inlineOptional(), inlineOptional(unsafe.undefined), inlineOptional(2)]
 //│ = [null, null, 2]
 
 :expect [null, 12]
 fun relay(x) = inlineOptional(x)
-[relay(undefined), relay(12)]
+[relay(unsafe.undefined), relay(12)]
 //│ = [null, 12]
 
 :noInline
 :expect [[null, null], [null, 3], [4, null]]
 fun curried(x?)(y?) = [x, y]
-[curried()(), curried(undefined)(3), curried(4)(undefined)]
+[curried()(), curried(unsafe.undefined)(3), curried(4)(unsafe.undefined)]
 //│ = [[null, null], [null, 3], [4, null]]
 
 class Methods {
@@ -57,20 +57,20 @@ class Methods {
 
 :expect [null, null, 5]
 let methods = new Methods
-[methods.optional(), methods.optional(undefined), methods.optional(5)]
+[methods.optional(), methods.optional(unsafe.undefined), methods.optional(5)]
 //│ = [null, null, 5]
 //│ methods = Methods
 
 // A spread can omit a slot or explicitly supply undefined.
 :expect [null, null, 6]
 fun spread(xs: Array[Any]) = optional(...xs)
-[spread([]), spread([undefined]), spread([6])]
+[spread([]), spread([unsafe.undefined]), spread([6])]
 //│ = [null, null, 6]
 
 // Direct flows of undefined normalize just like omissions, including during narrowing.
 :expect [0, 2]
 private fun narrow(x?) = if x is ~null as x then x.length else 0
-[narrow(undefined), narrow("hi")]
+[narrow(unsafe.undefined), narrow("hi")]
 //│ = [0, 2]
 
 // Unknown-length spreads may be empty even when their element type excludes null.
@@ -88,15 +88,15 @@ fun unknownSpread(xs: Array[Str]) = unguarded(...xs, "last")
 // Tail-call jumps must normalize on every iteration, including spread calls.
 :expect [null, null, null]
 @tailrec fun loop(n, x?) =
-  if n == 0 then x else if n == 1 then loop(0, undefined) else loop(n - 1, n)
+  if n == 0 then x else if n == 1 then loop(0, unsafe.undefined) else loop(n - 1, n)
 @tailrec fun spreadLoop(n, x?) = if n == 0 then x else spreadLoop(...[n - 1])
-@tailrec fun spreadUndefined(n, x?) = if n == 0 then x else spreadUndefined(...[n - 1, undefined])
+@tailrec fun spreadUndefined(n, x?) = if n == 0 then x else spreadUndefined(...[n - 1, unsafe.undefined])
 [loop(3), spreadLoop(3, 7), spreadUndefined(3, 8)]
 //│ = [null, null, null]
 
 // Merged tail-call dispatchers have their own physical parameter list.
 :expect [null, null]
-@tailrec fun even(n, x?) = if n == 0 then x else odd(n - 1, undefined)
+@tailrec fun even(n, x?) = if n == 0 then x else odd(n - 1, unsafe.undefined)
 @tailrec fun odd(n, x?) = if n == 0 then x else even(n - 1)
 [even(3, 9), odd(3, 10)]
 //│ = [null, null]
@@ -105,7 +105,7 @@ fun unknownSpread(xs: Array[Str]) = unguarded(...xs, "last")
 :expect [[null, 1, 2], [null, 1, null]]
 @tailrec fun captures(n, x?, ...fs: Array[() -> Any]) =
   if n == 0 then [(() => x), ...fs].map(f => f())
-  else if n == 1 then captures(0, undefined, (() => x), ...fs)
+  else if n == 1 then captures(0, unsafe.undefined, (() => x), ...fs)
   else captures(n - 1, n - 1, (() => x), ...fs)
 [captures(2, 2), captures(2)]
 //│ = [[null, 1, 2], [null, 1, null]]
@@ -116,7 +116,7 @@ fun unknownSpread(xs: Array[Str]) = unguarded(...xs, "last")
 :expect [null, null, 11]
 data class Data(value?)
 private fun read(item) = item.value
-[read(Data(undefined)), read(Data()), read(Data(11))]
+[read(Data(unsafe.undefined)), read(Data()), read(Data(11))]
 //│ deforest > >>> fusing >>>
 //│ deforest > Data⁰(11) ->
 //│ deforest > 	select: value
@@ -134,7 +134,7 @@ private fun read(item) = item.value
 data class Dynamic(value?)
 private fun readDynamic(item: Dynamic) = item.value
 let dynamicClass = Dynamic.class
-[readDynamic(new! dynamicClass(undefined)), readDynamic(new! dynamicClass(13))]
+[readDynamic(new! dynamicClass(unsafe.undefined)), readDynamic(new! dynamicClass(13))]
 //│ deforest > >>> fusing >>>
 //│ deforest > <<< fusing <<<
 //│ = [null, 13]

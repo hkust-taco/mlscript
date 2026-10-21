@@ -466,14 +466,14 @@ fun app(f: (Int?, Int) -> Int) = f(1, 2)
 
 // Other operators starting with `?` are unaffected.
 :expect 1
-fun (??) orElse(x, y) = if x is undefined then y else x
-undefined ?? 1
+fun (??) orElse(x, y) = if x is unsafe.undefined then y else x
+unsafe.undefined ?? 1
 //│ = 1
 
 // The optional marker must be attached to its parameter, so `?:` can otherwise be an operator.
 :expect 1
-fun (?:) elvis(x, y) = if x is undefined then y else x
-undefined ?: 1
+fun (?:) elvis(x, y) = if x is unsafe.undefined then y else x
+unsafe.undefined ?: 1
 //│ = 1
 
 :e

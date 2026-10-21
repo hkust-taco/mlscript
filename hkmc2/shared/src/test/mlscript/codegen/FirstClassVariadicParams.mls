@@ -32,7 +32,7 @@ declare fun encodeURI(value?)
 :noInline
 :expect ["undefined", "undefined", "null", "abc"]
 let encode = encodeURI
-[encode(), encode(undefined), encode(null), encode("abc")]
+[encode(), encode(unsafe.undefined), encode(null), encode("abc")]
 //│ = ["undefined", "undefined", "null", "abc"]
 //│ encode = class anonymous
 
@@ -42,7 +42,7 @@ declare fun encodeURIComponent(value?, ...ignored)
 :noInline
 :expect ["undefined", "undefined", "a%20b"]
 let encodeComponent = encodeURIComponent
-[encodeComponent(), encodeComponent(undefined, 1), encodeComponent("a b", 2, 3)]
+[encodeComponent(), encodeComponent(unsafe.undefined, 1), encodeComponent("a b", 2, 3)]
 //│ = ["undefined", "undefined", "a%20b"]
 //│ encodeComponent = class anonymous
 
@@ -51,6 +51,6 @@ let encodeComponent = encodeURIComponent
 :expect [[null, []], [null, [2]], [1, [2, 3]]]
 fun fixedAndRest(x?, ...xs) = [x, xs]
 let forwardRest = fixedAndRest
-[forwardRest(), forwardRest(undefined, 2), forwardRest(1, 2, 3)]
+[forwardRest(), forwardRest(unsafe.undefined, 2), forwardRest(1, 2, 3)]
 //│ = [[null, []], [null, [2]], [1, [2, 3]]]
 //│ forwardRest = class anonymous
