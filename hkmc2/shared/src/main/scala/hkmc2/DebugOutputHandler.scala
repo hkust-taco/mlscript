@@ -7,7 +7,7 @@ import hkmc2.utils.*, shorthands.*
 
 /** A compilation session shares one handler across units: each output file is overwritten on first
   * use, then appended to. Concurrent debug writes are not synchronized. */
-final class DebugOutputHandler(fs: io.FileSystem, stdIO: Str => Unit):
+final class DebugOutputHandler(fs: io.FileSystem, stdIO: Str => Unit) extends DebugSink:
   private val writtenFiles = mutable.Set.empty[io.Path]
 
   def emit(out: Config.DebugOutput, line: Str): Unit = out match

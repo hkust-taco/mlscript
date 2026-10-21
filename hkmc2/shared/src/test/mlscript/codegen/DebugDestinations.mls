@@ -34,6 +34,17 @@ fs.readFileSync(debugFile, "utf8") == "Lowering.term 42\nLowering.term 45\n"
 //│ | | avoidNames Return(Lit(IntLit(47)))...
 //│ | | avoidNames End()...
 
+// Analysis flags share the captured output sink without enabling optimization-phase traces
+// or redirecting their output to the file selected above.
+:flowBasedOpt debugDpe
+:noInline
+private fun forced_analysis(unused) = 48
+forced_analysis(0)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > forced_analysis⁰#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 48
+
 #dbg(out: StdIO)
 
 :expect true

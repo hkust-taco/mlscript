@@ -87,16 +87,14 @@ object FlowAnalysis:
   def mkTraceLogger(
     cfg: Config.FlowAnalysisConfig,
     prefix: Str,
-    outerTl: TL,
-  ): TraceLogger =
-    given printer: DebugPrinter = outerTl.debugPrinter
-    new TraceLogger(new DebugContext(() => printer.showUids), indentWhenDisabled = true):
+    sink: DebugSink,
+  )(using printer: DebugPrinter): TraceLogger =
+    new TraceLogger(new DebugContext(() => printer.showUids), sink, indentWhenDisabled = true, prefix = prefix):
       protected def phaseEnabled(config: Config.Debug): Bool = false
       protected def forceTrace(scope: Opt[Str]): Bool = scope match
         case S(TraceScope.NonAffineSyms) => cfg.logNonAffine
         case S(TraceScope.AccumulatorSym) => cfg.logAccumulator
         case _ => cfg.debug
-      protected def output(out: Config.DebugOutput, line: Str): Unit = outerTl.emitDbg(s"$prefix$line")
     
 end FlowAnalysis
 

@@ -275,8 +275,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   protected abstract class DiffTraceLogger(indentWhenDisabled: Bool)
-      extends TraceLogger(debugContext, indentWhenDisabled)(using dbgPrinter):
-    protected final def output(out: Config.DebugOutput, line: Str): Unit = debugOutputHandler.emit(out, line)
+      extends TraceLogger(debugContext, debugOutputHandler, indentWhenDisabled, prefix = "")(using dbgPrinter)
 
   protected def commandLogger(command: Command[?]): TraceLogger =
     new DiffTraceLogger(indentWhenDisabled = true):

@@ -36,9 +36,8 @@ class CompilerCtx(
     case N => DebugOutputHandler(fs, println)
 
   private abstract class PhaseTraceLogger(context: DebugContext)(using DebugPrinter)
-      extends TraceLogger(context, indentWhenDisabled = true):
+      extends TraceLogger(context, outputHandler, indentWhenDisabled = true, prefix = ""):
     protected final def forceTrace(scope: Opt[Str]): Bool = false
-    protected final def output(out: Config.DebugOutput, line: Str): Unit = outputHandler.emit(out, line)
   
   def allFilesBeingImported: Ls[io.Path] =
     importing match

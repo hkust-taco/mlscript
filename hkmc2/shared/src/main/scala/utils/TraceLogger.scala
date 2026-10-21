@@ -10,11 +10,12 @@ def tl(using TL): TL = summon
 
 abstract class TraceLogger(
   final val debug: DebugContext,
+  final val sink: DebugSink,
   indentWhenDisabled: Bool,
+  prefix: Str,
 )(using printer: DebugPrinter):
   protected def phaseEnabled(config: Config.Debug): Bool
   protected def forceTrace(scope: Opt[Str]): Bool
-  protected def output(out: Config.DebugOutput, line: Str): Unit
 
   final def debugPrinter: DebugPrinter = printer.withUids(debug.showUids)
 
@@ -41,8 +42,6 @@ abstract class TraceLogger(
   inline def enter() = indent += 1
   inline def exit() = indent -= 1
   
-  private[hkmc2] final def emitDbg(str: Str): Unit = output(Config.DebugOutput.StdIO, str)
-  
   final def logs(msgs: (DebugPrinter ?=> Any)*): Unit =
     if isTracing then msgs.foreach(msg => log(msg))
   
@@ -50,10 +49,10 @@ abstract class TraceLogger(
     if isTracing then
       val printer = debugPrinter
       val rendered = printer.printPlain(msg(using printer))
-      output(debugOutput,
+      sink.emit(debugOutput, prefix + (
         if noIndent then rendered
-        else "| " * indent + rendered.indentNewLines("| " * indent + ">  "),
-      )
+        else "| " * indent + rendered.indentNewLines("| " * indent + ">  ")
+      ))
 
   final def traceDefinition[T](annotations: Ls[semantics.Annot], base: Config)(body: => T): T =
     traceDefinitionThen[T, T](annotations, base)(k => k(body))(identity)
@@ -75,9 +74,6 @@ abstract class TraceLogger(
 
 object TraceLogger:
   def silent(using printer: DebugPrinter): TraceLogger =
-    new TraceLogger(new DebugContext(() => printer.showUids), indentWhenDisabled = true):
+    new TraceLogger(new DebugContext(() => printer.showUids), DebugSink.discard, indentWhenDisabled = true, prefix = ""):
       protected def phaseEnabled(config: Config.Debug): Bool = false
       protected def forceTrace(scope: Opt[Str]): Bool = false
-      // FlowAnalysis.mkTraceLogger uses emitDbg to print traces enabled by its own flags,
-      // so disabling this logger's traces must not discard that forwarded output.
-      protected def output(out: Config.DebugOutput, line: Str): Unit = scala.Predef.println(line)
