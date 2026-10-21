@@ -60,23 +60,27 @@ extension (context: StringContext)
 
 
 class DebugPrinter(
-  val showUids: Bool,
-  uidOwner: Opt[semantics.Elaborator.State],
-  symbolName: semantics.Symbol => Str,
-  val preProcess: Product => Product,
-  val postProcess: Product => Str,
+  final val showUids: Bool,
+  private val uidOwner: Opt[semantics.Elaborator.State],
 ):
-  def this() = this(false, N, sym => sym.prefix + sym.nme, identity, _ => "")
-  def this(owner: semantics.Elaborator.State) = this(false, S(owner), sym => sym.prefix + sym.nme, identity, _ => "")
+  def this() = this(false, N)
+  def this(owner: semantics.Elaborator.State) = this(false, S(owner))
+
+  protected def symbolName(sym: semantics.Symbol): Str = sym.prefix + sym.nme
+  protected def preProcess(t: Product): Product = t
+  protected def postProcess(t: Product): Str = ""
 
   given DebugPrinter = this
   
-  /** A printing operation captures an immutable policy; changing a trace scope cannot change
-    * a printer already passed to a renderer. Name allocation and tree hooks are preserved. */
-  def withUids(enabled: Bool): DebugPrinter =
-    new DebugPrinter(enabled, uidOwner, symbolName, preProcess, postProcess)
+  /** Capture UID visibility without replacing the symbol-naming or tree-processing hooks.
+    * A view points directly at the original printer, even after repeated visibility changes. */
+  final def withUids(enabled: Bool): DebugPrinter =
+    if enabled === showUids then this
+    else this match
+      case view: DebugPrinter.UidView => view.underlying
+      case _ => new DebugPrinter.UidView(this, enabled)
   
-  def printPlain(v: Any): Str = v match
+  final def printPlain(v: Any): Str = v match
     case null => "null"
     case sym: semantics.Symbol =>
       // Numeric UIDs are unique only within their allocating unit. Foreign symbols must not
@@ -102,7 +106,7 @@ class DebugPrinter(
       p.productIterator.map(printPlain).mkString(p.productPrefix + "(", ",", ")")
     case _ => v.toString
   
-  def printProduct(inTailPos: Bool, t: Product): Str =
+  final def printProduct(inTailPos: Bool, t: Product): Str =
     
     def aux(v: Any, inTailPos: Bool = false): Str =
       v match
@@ -169,6 +173,12 @@ end DebugPrinter
 
 object DebugPrinter:
   
+  private final class UidView(val underlying: DebugPrinter, enabled: Bool)
+      extends DebugPrinter(enabled, underlying.uidOwner):
+    override protected def symbolName(sym: semantics.Symbol): Str = underlying.symbolName(sym)
+    override protected def preProcess(t: Product): Product = underlying.preProcess(t)
+    override protected def postProcess(t: Product): Str = underlying.postProcess(t)
+
   val emptyValues: Set[Any] = Set(
     None, Nil, Vector.empty,
     semantics.PlainParamList(Nil)(N),

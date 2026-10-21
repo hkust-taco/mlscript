@@ -255,14 +255,14 @@ abstract class MLsDiffMaker extends DiffMaker:
     ))
   
   
-  val dbgPrinter: SymbolPrinter = new SymbolPrinter(dbgScp,
-    t =>
+  val dbgPrinter: SymbolPrinter = new SymbolPrinter(dbgScp):
+    override protected def preProcess(t: Product): Product =
       case class Unexpanded(origin: Resolvable)
       t match
         case t: Resolvable if t.hasExpansion => t.expanded
         case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
-        case t => t,
-    t =>
+        case t => t
+    override protected def postProcess(t: Product): Str =
       if showLocations.isSet then
         t match
           case t: Located => t.toLoc.fold(" loc[none]"): loc =>
@@ -270,8 +270,7 @@ abstract class MLsDiffMaker extends DiffMaker:
             val (el, _, ec) = loc.origin.fph.getLineColAt(loc.spanEnd)
             s" loc[$sl:$sc-$el:$ec]"
           case _ => ""
-      else "",
-  )
+      else ""
   
   
   protected abstract class DiffTraceLogger(indentWhenDisabled: Bool)
@@ -422,7 +421,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     given Config = baseConfig
     
     val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet):
-      override protected def doPrintDbg(msg: => Str): Unit = output(msg)
+      override protected def doPrintDbg(msg: Str): Unit = output(msg)
     val tokens = lexer.bracketedTokens
     
     if showParse.isSet || dbgParsing.isSet then
