@@ -1070,8 +1070,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     
     trm match
     case st.UnitVal() => k(unit)
-    case st.RuntimeRef(sym) =>
-      k(Select(State.runtimeSymbol.asSimpleRef, Tree.Ident(sym.nme))(S(sym), trm.toLoc)(false))
     case st.Lit(lit) =>
       if lit =/= Tree.UnitLit(false) then warnStmt
       k(Value.Lit(lit)(trm.toLoc))

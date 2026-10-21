@@ -547,6 +547,7 @@ object Elaborator:
   transparent inline def ctx(using Ctx): Ctx = summon
   
   final case class RuntimeSymbols(
+      module: BlockMemberSymbol,
       unit: ModuleOrObjectSymbol,
       loopEnd: ModuleOrObjectSymbol,
       tuple: ModuleOrObjectSymbol,
@@ -576,10 +577,9 @@ object Elaborator:
         case L(errs) =>
           lastWords:
             errs.map(_.mainMsg).mkString("\n")
+      val module = topLevelMembers.getOrElse("Runtime", lastWords("Runtime.mls does not define module 'Runtime'."))
       val members =
-        topLevelMembers
-          .get("Runtime")
-          .flatMap(_.asMod)
+        module.asMod
           .flatMap(_.defn)
           .fold(lastWords("Runtime.mls does not define module 'Runtime'."))(_.body.members)
       def member(name: Str): BlockMemberSymbol =
@@ -599,6 +599,7 @@ object Elaborator:
       val tuple = modOrObj("Tuple")
       val str = modOrObj("StrOps")
       RuntimeSymbols(
+        module = module,
         unit = modOrObj("Unit"),
         loopEnd = modOrObj("LoopEnd"),
         tuple = tuple,
@@ -685,6 +686,7 @@ object Elaborator:
     private def runtimeSymbols: RuntimeSymbols =
       cachedRuntimeSymbols.getOrElse:
         lastWords("Runtime symbols have not been initialized from Runtime.mls.")
+    def runtimeModuleSymbol: BlockMemberSymbol = runtimeSymbols.module
     def unitSymbol: ModuleOrObjectSymbol = runtimeSymbols.unit
     // Stable symbol for the synthetic Wasm Unit singleton
     val unitBlockMemberSymbol = BlockMemberSymbol("Unit", Nil)
@@ -924,9 +926,12 @@ extends Importer:
     methodMarker.ref(callSiteId)
     ()
   
-  /** The continuation sentinel is a known runtime object, not a source member access. */
+  /** Give the synthetic import the same module shape as an ordinary import alias,
+    * so compiler-inserted selections use normal member resolution and lowering. */
   private def nonLocalContinueSentinel(using Ctx): Term =
-    if newResolution then Term.RuntimeRef(State.continueSymbol)
+    if newResolution then
+      pipeTerm(Ctx.RefElem(State.runtimeModuleSymbol).ref(Ident("Runtime")), State.runtimeSymbol)
+      Ctx.SelElem(Ctx.RefElem(State.runtimeSymbol), "Continue", S(State.continueSymbol), false).ref(Ident("Continue"))
     else State.runtimeSymbol.ref().synthSel(State.continueSymbol)
   
   /** Build an effect handler around `body` for non-local control flow. */

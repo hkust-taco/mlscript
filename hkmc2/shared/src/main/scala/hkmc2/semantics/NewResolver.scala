@@ -4550,9 +4550,6 @@ class NewResolver:
     case SelfRef(sym) if sym is sym.getState.globalThisSymbol => listener(DynShape())
     case ref @ Ref(loc: LocalSymbol) =>
       loc.subscribeToShapes(listener)
-    case RuntimeRef(symbol) =>
-      val definition = symbol.defn.get
-      listenExt(definition, parent => listener(defnShapes.getOrElseUpdate(symbol, DefnShape(definition, parent))))
     case ref @ SimpleRef(sym) =>
       sym match
       case loc: LocalSymbol =>
