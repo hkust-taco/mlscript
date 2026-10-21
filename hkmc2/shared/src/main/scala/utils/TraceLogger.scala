@@ -74,6 +74,8 @@ abstract class TraceLogger(
 
 object TraceLogger:
   def silent(using printer: DebugPrinter): TraceLogger =
-    new TraceLogger(new DebugContext(() => printer.showUids), DebugSink.discard, indentWhenDisabled = true, prefix = ""):
+    val debug = new DebugContext:
+      override protected def forceUids: Bool = printer.showUids
+    new TraceLogger(debug, DebugSink.discard, indentWhenDisabled = true, prefix = ""):
       protected def phaseEnabled(config: Config.Debug): Bool = false
       protected def forceTrace(scope: Opt[Str]): Bool = false

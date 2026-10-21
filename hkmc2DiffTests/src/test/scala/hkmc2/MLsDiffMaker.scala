@@ -235,7 +235,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   
   
-  protected lazy val debugContext = new DebugContext(() => dbgParsing.isSet || dbgResolving.isSet || debug.isSet)
+  protected lazy val debugContext = new DebugContext:
+    override protected def forceUids: Bool = dbgParsing.isSet || dbgResolving.isSet || debug.isSet
   protected lazy val debugOutputHandler = DebugOutputHandler(cctx.fs, str => output(str))
 
   protected def outputDebugSection(title: Str, contents: Str, out: Config.DebugOutput): Unit = out match

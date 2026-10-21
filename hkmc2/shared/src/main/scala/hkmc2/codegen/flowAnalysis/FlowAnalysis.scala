@@ -89,7 +89,9 @@ object FlowAnalysis:
     prefix: Str,
     sink: DebugSink,
   )(using printer: DebugPrinter): TraceLogger =
-    new TraceLogger(new DebugContext(() => printer.showUids), sink, indentWhenDisabled = true, prefix = prefix):
+    val debug = new DebugContext:
+      override protected def forceUids: Bool = printer.showUids
+    new TraceLogger(debug, sink, indentWhenDisabled = true, prefix = prefix):
       protected def phaseEnabled(config: Config.Debug): Bool = false
       protected def forceTrace(scope: Opt[Str]): Bool = scope match
         case S(TraceScope.NonAffineSyms) => cfg.logNonAffine
