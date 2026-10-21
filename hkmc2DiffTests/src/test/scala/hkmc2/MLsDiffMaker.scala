@@ -274,15 +274,23 @@ abstract class MLsDiffMaker extends DiffMaker:
   )
   
   
-  protected def phaseLogger(phase: Config.Debug => Bool, force: Opt[Str] => Bool, indentWhenDisabled: Bool): TraceLogger =
-    new TraceLogger(debugContext, phase, force, (out, line) => debugOutputHandler.emit(out, line), indentWhenDisabled)
+  protected abstract class DiffTraceLogger(indentWhenDisabled: Bool)
+      extends TraceLogger(debugContext, indentWhenDisabled)(using dbgPrinter):
+    protected final def output(out: Config.DebugOutput, line: Str): Unit = debugOutputHandler.emit(out, line)
 
-  val etl = phaseLogger(_.elaboration,
-    scope => dbgElab.isSet || scope.exists(showUCS.get.getOrElse(Set.empty).contains), indentWhenDisabled = false)
+  protected def commandLogger(command: Command[?]): TraceLogger =
+    new DiffTraceLogger(indentWhenDisabled = true):
+      protected def phaseEnabled(config: Config.Debug): Bool = false
+      protected def forceTrace(scope: Opt[Str]): Bool = command.isSet
+
+  val etl = new DiffTraceLogger(indentWhenDisabled = false):
+    protected def phaseEnabled(config: Config.Debug): Bool = config.elaboration
+    protected def forceTrace(scope: Opt[Str]): Bool =
+      dbgElab.isSet || scope.exists(showUCS.get.getOrElse(Set.empty).contains)
   
-  val rtl = phaseLogger(_ => false, _ => dbgResolving.isSet, indentWhenDisabled = true)
+  val rtl = commandLogger(dbgResolving)
   
-  val ftl = phaseLogger(_ => false, _ => dbgFlow.isSet, indentWhenDisabled = true)
+  val ftl = commandLogger(dbgFlow)
   
   var curCtx = Elaborator.State.init
   var curICtx = Resolver.ICtx.empty
@@ -405,7 +413,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       case err: Throwable =>
         uncaught(err)
   
-  given tl: TraceLogger = phaseLogger(_ => false, _ => debug.isSet, indentWhenDisabled = true)
+  given tl: TraceLogger = commandLogger(debug)
   
   
   def processOrigin(origin: Origin)(using Raise): Unit =

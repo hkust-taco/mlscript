@@ -24,19 +24,12 @@ final class DebugContext(forceUids: () => Bool):
     current = settings
     try body finally current = saved
 
-  def traceDefinition[T](annotations: Ls[semantics.Annot], base: Config, enabled: Config.Debug => Bool)
-      (body: => T): T =
-    traceDefinitionThen[T, T](annotations, base, enabled)(k => k(body))(identity)
-
   /** A lowering continuation processes following statements in the enclosing settings.
     * Capture those settings at entry, independently of scopes entered while processing the definition. */
-  def traceDefinitionThen[R, T](annotations: Ls[semantics.Annot], base: Config, enabled: Config.Debug => Bool)
+  def scopedThen[R, T](config: Config.Debug, uidDebug: Bool)
       (process: (R => T) => T)(k: R => T): T =
-    DebugOutputHandler.definitionConfig(annotations, base.copy(debug = config)) match
-      case S(localConfig) =>
-        val outer = current
-        within(Settings(localConfig.debug, enabled(localConfig.debug))):
-          process(r => within(outer)(k(r)))
-      case N => process(k)
+    val outer = current
+    within(Settings(config, uidDebug)):
+      process(r => within(outer)(k(r)))
 
 end DebugContext

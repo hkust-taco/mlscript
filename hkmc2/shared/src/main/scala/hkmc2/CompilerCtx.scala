@@ -34,6 +34,11 @@ class CompilerCtx(
   private val outputHandler: DebugOutputHandler = importing match
     case S((_, parent)) => parent.outputHandler
     case N => DebugOutputHandler(fs, println)
+
+  private abstract class PhaseTraceLogger(context: DebugContext)(using DebugPrinter)
+      extends TraceLogger(context, indentWhenDisabled = true):
+    protected final def forceTrace(scope: Opt[Str]): Bool = false
+    protected final def output(out: Config.DebugOutput, line: Str): Unit = outputHandler.emit(out, line)
   
   def allFilesBeingImported: Ls[io.Path] =
     importing match
@@ -93,11 +98,12 @@ class CompilerCtx(
       val parsed = parse.resultBlk
       val phaseConfig = Config.elaborationConfig(parsed, file.up)
       debug.configure(phaseConfig.debug)
-      def traceLogger(phase: Config.Debug => Bool) =
-        new TraceLogger(debug, phase, _ => false, outputHandler.emit, indentWhenDisabled = true)
-      val etl = traceLogger(_.elaboration)
-      val ltl = traceLogger(_.lowering)
-      val dtl = traceLogger(_.optimizations)
+      val etl = new PhaseTraceLogger(debug):
+        protected def phaseEnabled(config: Config.Debug): Bool = config.elaboration
+      val ltl = new PhaseTraceLogger(debug):
+        protected def phaseEnabled(config: Config.Debug): Bool = config.lowering
+      val dtl = new PhaseTraceLogger(debug):
+        protected def phaseEnabled(config: Config.Debug): Bool = config.optimizations
 
       given Elaborator.Ctx = prelude
       val artifactCtx = derive(parse.origin.fileName, dependencies)
@@ -257,7 +263,8 @@ class CompilerCtx(
         val parse = ParserSetup(file, outputHandler)
         val elaborationConfig = Config.elaborationConfig(parse.resultBlk, file.up)
         debug.configure(elaborationConfig.debug)
-        val etl = new TraceLogger(debug, _.elaboration, _ => false, outputHandler.emit, indentWhenDisabled = true)
+        val etl = new PhaseTraceLogger(debug):
+          protected def phaseEnabled(config: Config.Debug): Bool = config.elaboration
         // The prelude defines the builtins consulted during its own resolution.
         // Seed lookup with the block's original symbols, as block elaboration does,
         // so those lookups share the declarations that are being elaborated.

@@ -45,12 +45,16 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)(using throw _)
   val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)(using throw _)
   
-  val ltl = phaseLogger(_.lowering,
-    scope => debugLowering.isSet || scope.exists(showUCS.get.getOrElse(Set.empty).contains), indentWhenDisabled = true)
+  val ltl = new DiffTraceLogger(indentWhenDisabled = true):
+    protected def phaseEnabled(config: Config.Debug): Bool = config.lowering
+    protected def forceTrace(scope: Opt[Str]): Bool =
+      debugLowering.isSet || scope.exists(showUCS.get.getOrElse(Set.empty).contains)
   
-  val dtl = phaseLogger(_.optimizations, _ => debugOptimizations.isSet, indentWhenDisabled = true)
+  val dtl = new DiffTraceLogger(indentWhenDisabled = true):
+    protected def phaseEnabled(config: Config.Debug): Bool = config.optimizations
+    protected def forceTrace(scope: Opt[Str]): Bool = debugOptimizations.isSet
   
-  val replTL = phaseLogger(_ => false, _ => showRepl.isSet, indentWhenDisabled = true)
+  val replTL = commandLogger(showRepl)
   
   lazy val host =
     hostCreated = true
