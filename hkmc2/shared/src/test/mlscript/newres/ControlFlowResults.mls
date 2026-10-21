@@ -192,7 +192,7 @@ exposedClosure()({answer: 42})
 //│ ║         	                              ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'exposedClosure' is exposed by this compilation unit.
 //│ ║  l.181: 	fun exposedClosure() = return value => value.answer
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Pattern guards execute in the enclosing function's return scope.

@@ -57,7 +57,7 @@ Companion.class
 //│ = class Companion { value: 10 }
 
 :expect 42
-(new Overloaded.class).answer()
+new Overloaded.class().answer()
 //│ = 42
 
 :expect 12
@@ -142,7 +142,7 @@ fun captured(x) = {
     fun value() = x
   }
   fun Local() = 1
-  (new Local.class).value()
+  new Local.class().value()
 }
 
 :expect 23
@@ -203,7 +203,7 @@ let second = Outer(42)
 //│ second = Outer(42)
 
 :expect [41, 42, false]
-[(new first.Inner.class).result(), (new second.Inner.class).result(),
+[new first.Inner.class().result(), new second.Inner.class().result(),
  first.Inner.class == second.Inner.class]
 //│ = [41, 42, false]
 
@@ -231,7 +231,7 @@ OverloadedClassLibrary.Item.class
 //│ = class Item
 
 :expect 52
-(new OverloadedClassLibrary.Item.class).answer()
+new OverloadedClassLibrary.Item.class().answer()
 //│ = 52
 
 // Ordinary fields and foreign dynamic selections keep their usual behavior.

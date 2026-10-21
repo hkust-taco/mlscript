@@ -42,6 +42,7 @@ enum Annot extends Located:
   // Buffered classes expose generated allocation and access methods on the class value.
   case Bufferable(keepInstances: Bool)(val toLoc: Opt[Loc])
   case Config(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc])
+  case Debug(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc])
   // Marks if a function or lambda is one-shot, i.e. called at most once.
   // Functions with multiple parameter lists are considered here as a chain of
   // function values. `whichParamList` is the zero-based index of the parameter
@@ -61,7 +62,7 @@ enum Annot extends Located:
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
     case _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
-      | Generator() | Async() | RaiseEffects() | Pure() | _: Bufferable | _: Config | _: Affine => Vector.empty
+      | Generator() | Async() | RaiseEffects() | Pure() | _: Bufferable | _: Config | _: Debug | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case Untyped() => doc"@untyped"
@@ -78,6 +79,7 @@ enum Annot extends Located:
     case Bufferable(keepInstances) => if keepInstances then doc"@bufferable" else doc"@buffered"
     case Trm(trm) => doc"@${trm.show}"
     case Config(_) => doc"@config(...)"
+    case Debug(_) => doc"@dbg(...)"
   
   def mkClone(using State, Erasure): Annot = this match
     case Trm(trm) => Trm(trm.mkClone)(toLoc)
@@ -326,6 +328,15 @@ case class SrcScope(outer: Elaborator.OuterCtx, parent: Opt[SrcScope]):
           (base, inner :: path)
       case _: (Function | LocalScope | NonReturnContext) | LambdaOrHandlerBlock =>
         (this, Nil)
+  
+  /** Whether code written in this scope can access the private members of `owner`: whether it is nested in the
+    * definition of `owner` or of one of its companions, which are the other class-like definitions of its block member
+    * symbol. These are found through `owner`, whose definition is complete, unlike the definitions enclosing this scope,
+    * which may still be in the process of being elaborated. Notably, a subclass of `owner` cannot access these members. */
+  def canAccessPrivatesOf(owner: ClassLikeDef): Bool =
+    def grantsAccess(inner: InnerSymbol): Bool =
+      (inner is owner.sym) || owner.bsym.asCls.exists(_ is inner) || owner.bsym.asModOrObj.exists(_ is inner)
+    outer.inner.exists(grantsAccess) || parent.exists(_.canAccessPrivatesOf(owner))
 
 object SrcScope:
   given s: Ctx => SrcScope = summon[Ctx].scope
@@ -806,7 +817,7 @@ object RcdField:
     // directly to its written type: projection does not invoke a value definition.
     tsym.defn = S(TermDefinition(RecordField, sym, tsym, Nil, N,
       if signature then S(rhs) else N,
-      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, Nil, N)(field.toLoc))
+      if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, Nil, N)(field.toLoc, field.toLoc))
     sym.complete()
     RcdField(field, rhs, sym)
 final case class RcdSpread(rcd: Term) extends Statement, AutoLocated
@@ -820,6 +831,12 @@ final case class SetConfig(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[
 
 enum Visibility:
   case Public, Private
+
+object Visibility:
+  def of(annotations: Ls[Annot]): Visibility = annotations.collectFirst:
+      case Annot.Modifier(Keyword.`private`) => Visibility.Private
+      case Annot.Modifier(Keyword.`public`) => Visibility.Public
+    .getOrElse(Visibility.Public)
 
 /** `isMethod` distinguishes methods from functions. `hasResultAnnotation` records whether a
   * signature describes just the result; erasure consumes leading arrows only for full signatures.
@@ -881,7 +898,7 @@ final case class TermDefinition(
     modulefulness: Modulefulness,
     annotations: Ls[Annot],
     companion: Opt[CompanionSymbol],
-)(val toLoc: Opt[Loc]) extends CompanionValue:
+)(val toLoc: Opt[Loc], val headerLoc: Opt[Loc]) extends CompanionValue:
   require(k is tsym.k)
   def bsym: BlockMemberSymbol = sym
   val owner = tsym.owner
@@ -899,11 +916,6 @@ final case class TermDefinition(
     sign.map: sign =>
       if (k is syntax.Fun) && !flags.hasResultAnnotation then Elaborator.Sig.parse(sign).stripParams(params.length)._1
       else sign
-  def visibility: Visibility = annotations
-    .collectFirst:
-      case Annot.Modifier(Keyword.`private`) => Visibility.Private
-      case Annot.Modifier(Keyword.`public`) => Visibility.Public
-    .getOrElse(Visibility.Public)
   lazy val mayRaiseEffects: Bool =
     annotations.forall:
       case Annot.Pure() => false
@@ -999,9 +1011,18 @@ sealed abstract class Declaration extends Located:
     case _: (PatternDef | ClassDef) => true
     case p: Param => p.flags.pat
 
-sealed abstract class Definition extends Declaration, Statement:
+sealed abstract class Definition extends Declaration, Statement, PossiblyErroneous:
   val annotations: Ls[Annot]
   def bsym: BlockMemberSymbol
+  /** The span of this definition's header: its modifiers (such as `declare`), keyword, name,
+    * type and value parameter lists, result annotation, and parent clause, but neither its
+    * annotations (such as `@foo`) nor its body or right-hand side (see `syntax.TypeOrTermDef.headLoc`).
+    * Diagnostics that cite the definition as a witness, such as arity errors, should use
+    * this rather than `toLoc`, which spans the whole definition, including its body.
+    * A class constructor's header is that of its class; synthesized definitions,
+    * such as the fields generated from class parameters, use their source location. */
+  def headerLoc: Opt[Loc]
+  def visibility: Visibility = Visibility.of(annotations)
   def hasDeclareModifier: Opt[Annot.Modifier] = Annot.declareModifierOf(annotations)
   def hasStagedModifier: Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`staged`) => mod
@@ -1067,6 +1088,7 @@ case class ModuleOrObjectDef(
 )(
   val path: SrcScope,
   val toLoc: Opt[Loc],
+  val headerLoc: Opt[Loc],
 ) extends ClassLikeDef, CompanionValue:
   val ctorSym: Option[ClassCtorSymbol] = N
 
@@ -1088,7 +1110,7 @@ case class PatternDef(
      */
     pattern: Pattern,
     annotations: Ls[Annot],
-)(val toLoc: Opt[Loc]) extends ClassLikeDef:
+)(val toLoc: Opt[Loc], val headerLoc: Opt[Loc]) extends ClassLikeDef:
   self =>
   val kind: ClsLikeKind = Pat
   val ext: Opt[New] = N
@@ -1114,8 +1136,24 @@ sealed abstract class ClassDef extends ClassLikeDef:
   val body: ObjBody
   val companion: Opt[ClassCompanionSymbol]
   val annotations: Ls[Annot]
+  /** The modifiers of the class's constructor declarations, as in `private constructor(x)`.
+    * The class's parameter lists, whether written in its head or in constructor declarations,
+    * form a single constructor, so a modifier written on any of these declarations applies to
+    * the whole constructor. This is the case even for a bare `private constructor` declaration,
+    * which adds no parameter list. */
+  val ctorAnnotations: Ls[Annot]
+  /** The span of the `constructor(...)` declarations in the class body that declare
+    * parameter lists, if any. These parameter lists extend the class's constructor
+    * beyond those written in its header, which `headerLoc` covers. Since they are written
+    * in the body, only diagnostics about the constructor's parameters, such as arity errors,
+    * cite this location, in addition to `headerLoc`. */
+  val ctorLoc: Opt[Loc]
   def isData: Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`data`) => mod
+  /** The modifier making the class's constructor private, if any: only the class and its
+    * companion can then refer to the constructor or instantiate the class (see NewResolverState.checkAccess). */
+  def privateCtor: Opt[Annot.Modifier] = ctorAnnotations.collectFirst:
+    case mod @ Annot.Modifier(Keyword.`private`) => mod
   override def extraAnnotations(using Ctx): Ls[Annot] = super.extraAnnotations.filter:
     case Annot.Modifier(Keyword.`data`) => false
     case _ => true
@@ -1134,14 +1172,16 @@ object ClassDef:
       annotations: Ls[Annot],
       comp: Opt[ClassCompanionSymbol],
       auxCtorParams: Ls[ParamList],
-  )(toLoc: Opt[Loc]): ClassDef =
+      ctorAnnotations: Ls[Annot],
+  )(toLoc: Opt[Loc], headerLoc: Opt[Loc], ctorLoc: Opt[Loc]): ClassDef =
     params match
       case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym, S(ctorSym.getOrElse(lastWords("Parameterized classes should have a ctor symbol.")))
-        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations)(toLoc)
+        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations, ctorAnnotations)(toLoc, headerLoc, ctorLoc)
       case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
-        , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym)(toLoc)
+        , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym,
+        ctorAnnotations = ctorAnnotations)(toLoc, headerLoc, ctorLoc)
   
   def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[ParamList], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
@@ -1159,7 +1199,8 @@ object ClassDef:
       body: ObjBody,
       companion: Opt[ClassCompanionSymbol],
       annotations: Ls[Annot],
-  )(val toLoc: Opt[Loc]) extends ClassDef:
+      ctorAnnotations: Ls[Annot],
+  )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc], val ctorLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = S(params)
   
   case class Plain(
@@ -1174,7 +1215,8 @@ object ClassDef:
       annotations: Ls[Annot],
       auxParams: List[ParamList],
       ctorSym: Opt[ClassCtorSymbol],
-  )(val toLoc: Opt[Loc]) extends ClassDef:
+      ctorAnnotations: Ls[Annot],
+  )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc], val ctorLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
   
 end ClassDef
@@ -1187,7 +1229,7 @@ case class TypeDef(
   rhs: Opt[Term],
   companion: Opt[CompanionValue],
   annotations: Ls[Annot],
-)(val toLoc: Opt[Loc]) extends TypeLikeDef:
+)(val toLoc: Opt[Loc], val headerLoc: Opt[Loc]) extends TypeLikeDef:
   val kind: ObjDefKind = Als
 
 
@@ -1245,13 +1287,13 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol)(val to
   var isCovariant: Bool = true
   var isContravariant: Bool = true
   
-  def showDbg: Str =
+  def showDbg(using DebugPrinter): Str =
     // (if isContravariant then "in " else "") +
     // (if isCovariant then "out " else "") +
     (if isCovariant then
       if isContravariant then "" else "out "
       else if isContravariant then "in " else "in out ") +
-    "‹" + flags.show + "›" + sym
+    "‹" + flags.show + "›" + sym.showDbg
 
 
 object Param:

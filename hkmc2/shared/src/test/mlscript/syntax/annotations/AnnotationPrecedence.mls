@@ -31,7 +31,7 @@ fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ║        	                                           ^^^^
 //│ ╟── Pattern 'A' cannot be called like a function.
 //│ ║  l.8: 	pattern A(pattern B) = B
-//│ ╙──     	        ^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: y
 //│ ║  l.22: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ╙──      	                                                   ^
@@ -41,7 +41,7 @@ fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ╟── Object 'compile' cannot be called like a function.
 //│ ║  in ../../decls/Prelude.mls
 //│ ║  l.565: 	  object compile
-//│ ╙──       	         ^^^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: y
 //│ ║  l.22: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ╙──      	                                                           ^

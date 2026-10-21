@@ -16,7 +16,7 @@ Foo.x
 //│ ║        	^^^^^
 //│ ╟── Object 'Foo' does not contain member 'x'
 //│ ║  l.7: 	object Foo with
-//│ ╙──     	       ^^^
+//│ ╙──     	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -38,15 +38,7 @@ object Oops with
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── Module/object definition 'Oops' does not contain member 'fakeField'
 //│ ║  l.31: 	object Oops with
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	  if true then
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.33: 	    val fakeField = 1
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.34: 	    print(fakeField)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.35: 	... (more lines omitted) ...
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^
 //│ > 1
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -54,11 +46,11 @@ object Oops with
 :re
 Oops.fakeField
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.55: 	Oops.fakeField
+//│ ║  l.47: 	Oops.fakeField
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Object 'Oops' does not contain member 'fakeField'
 //│ ║  l.31: 	object Oops with
-//│ ╙──      	       ^^^^
+//│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

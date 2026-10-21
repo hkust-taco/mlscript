@@ -36,4 +36,4 @@ fun laterArity(x, y) = x
 //│ ║        	             ^^^^^^^^^^^^^
 //│ ╟── Function 'laterArity' expected 2 arguments, but got 1
 //│ ║  l.33: 	fun laterArity(x, y) = x
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^

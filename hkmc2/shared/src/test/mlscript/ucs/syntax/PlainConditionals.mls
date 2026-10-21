@@ -100,21 +100,21 @@ let foo = x => x is A(_)
 [foo(0), foo(A(0))]
 //│ = [false, true]
 
-let foo = _ is A
+let foo = => _ is A
 //│ foo = fun foo
 
 :expect [false, true]
 [foo(0), foo(A(0))]
 //│ = [false, true]
 
-let foo = _ is A(_)
+let foo = => _ is A(_)
 //│ foo = fun foo
 
 :expect [false, true]
 [foo(0), foo(A(0))]
 //│ = [false, true]
 
-let foo = _ is A(x) and x > 0
+let foo = => _ is A(x) and x > 0
 //│ foo = fun
 
 :expect [false, false, true]

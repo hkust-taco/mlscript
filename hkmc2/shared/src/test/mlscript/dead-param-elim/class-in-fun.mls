@@ -45,7 +45,7 @@ f(1, 2).get()
 private fun foo(y) =
   class M with
     fun bar() = set y = 2
-  (new M).bar()
+  new M().bar()
 foo(10)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<

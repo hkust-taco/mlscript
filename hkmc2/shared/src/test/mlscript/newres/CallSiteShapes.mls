@@ -17,7 +17,7 @@ forwarded(new A).get() + forwarded(new B).get()
 //│ ║       	              ^^^^^
 //│ ╟── 'forwarded' is exposed by this compilation unit.
 //│ ║  l.9: 	fun forwarded(value) = identity(value)
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.10: 	forwarded(new A).get() + forwarded(new B).get()
 //│ ║        	                         ^^^^^^^^^^^^^^^^^^^^
@@ -27,7 +27,7 @@ forwarded(new A).get() + forwarded(new B).get()
 //│ ║       	              ^^^^^
 //│ ╟── 'forwarded' is exposed by this compilation unit.
 //│ ║  l.9: 	fun forwarded(value) = identity(value)
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'
 
@@ -71,7 +71,7 @@ restIdentity(0, new A).get() + restIdentity(0, new B).get()
 //│ ║        	                          ^^^^^^^
 //│ ╟── 'restIdentity' is exposed by this compilation unit.
 //│ ║  l.63: 	fun restIdentity(ignored, ...args) = identity(...args)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.64: 	restIdentity(0, new A).get() + restIdentity(0, new B).get()
 //│ ║        	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -81,6 +81,6 @@ restIdentity(0, new A).get() + restIdentity(0, new B).get()
 //│ ║        	                          ^^^^^^^
 //│ ╟── 'restIdentity' is exposed by this compilation unit.
 //│ ║  l.63: 	fun restIdentity(ignored, ...args) = identity(...args)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '40', got: 'undefined'

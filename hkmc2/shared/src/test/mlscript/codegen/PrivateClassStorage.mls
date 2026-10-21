@@ -1,0 +1,183 @@
+:.
+:js
+
+open annotations { inline, noInline }
+
+
+// Private parameterized classes keep both their constructor wrapper and class value private.
+:expect [2, 3, 12, 13]
+class PublicBase with
+  class Entry(val value: Int)
+class PrivateDerived extends PublicBase with
+  private class Entry(val value: Int) with
+    fun read() = value
+  fun call(x: Int) = Entry(x + 10)
+  fun construct(x: Int) = new Entry(x + 10)
+let derived = new PrivateDerived
+[derived.Entry(2).value, new derived.Entry(3).value, derived.call(2).read(), derived.construct(3).read()]
+//│ = [2, 3, 12, 13]
+//│ derived = PrivateDerived { Entry: fun Entry { class: class Entry } }
+
+
+// Each declaring class retains its own private binding, including through inherited methods.
+:expect [17, 19]
+class PrivateBase with
+  private class Entry with
+    constructor
+    fun value = 17
+  fun base() = new Entry().value
+class PrivateChild extends PrivateBase with
+  private class Entry with
+    fun value = 19
+  fun child() = new Entry().value
+let child = new PrivateChild
+[child.base(), child.child()]
+//│ = [17, 19]
+//│ child = PrivateChild
+
+
+// A private class/module pair shares one private field and cannot replace a public pair.
+:expect [23, 29]
+class PairBase with
+  class Entry with
+    fun value = 23
+  module Entry with
+    // Inlining an outer-instance capture is tracked separately in InlineModuleMethods.mls.
+    @noInline fun make() = new Entry
+class PairChild extends PairBase with
+  private class Entry with
+    fun value = 29
+  private module Entry with
+    fun make() = new Entry
+  fun own() = Entry.make()
+let pair = new PairChild
+[pair.Entry.make().value, pair.own().value]
+//│ = [23, 29]
+//│ pair = PairChild { Entry: class Entry }
+
+
+// Standalone private modules and objects also have distinct storage from inherited properties.
+:expect [31, 37, 41, 43]
+class SingletonBase with
+  module Service with
+    fun value() = 31
+  object Item with
+    fun value = 37
+class SingletonChild extends SingletonBase with
+  private module Service with
+    fun value() = 41
+  private object Item with
+    fun value = 43
+  fun own() = [Service.value(), Item.value]
+let singletons = new SingletonChild
+[singletons.Service.value(), singletons.Item.value, ..singletons.own()]
+//│ = [31, 37, 41, 43]
+//│ singletons = SingletonChild { Service: class Service, Item: Item }
+
+
+// A public companion keeps a private parameterized class's shared binding public.
+:expect [47, 53]
+module PublicCompanions with
+  private class Entry(val value: Int)
+  module Entry with
+    fun make(x: Int) = Entry(x)
+  fun make(x: Int) = new Entry(x)
+[PublicCompanions.Entry.make(47).value, PublicCompanions.make(53).value]
+//│ = [47, 53]
+
+
+// Inlined module methods use the same accessors as other private members.
+:expect [59, 61, 67]
+module PrivateStatics with
+  private class Entry with
+    fun value = 59
+  private class Point(val value: Int)
+  private module Service with
+    @noInline fun value() = 67
+  @inline fun make() = new Entry
+  @inline fun point(x: Int) = Point(x)
+  @inline fun service() = Service.value()
+[PrivateStatics.make().value, PrivateStatics.point(61).value, PrivateStatics.service()]
+//│ = [59, 61, 67]
+
+
+// Instance and static private class fields share a JS class scope but have different bindings.
+:expect [89, 97]
+class BothScopes with
+  private class Entry with
+    fun value = 89
+  fun own() = new Entry().value
+module BothScopes with
+  private class Entry with
+    fun value = 97
+  @inline fun own() = new Entry().value
+[new BothScopes().own(), BothScopes.own()]
+//│ = [89, 97]
+
+
+// A lifted closure reads a private class through an accessor on its enclosing instance.
+:lift
+:expect 71
+class Lifted with
+  private class Entry with
+    fun value = 71
+  fun reader() = () => new Entry().value
+new Lifted().reader()()
+//│ = 71
+
+
+// Imported calls retain private class accesses in the file that defines their storage.
+import "../../mlscript-compile/PrivateLibrary.mls"
+
+:expect [83, 73, 79]
+[PrivateLibrary.point(83).value, PrivateLibrary.alone().value, PrivateLibrary.service()]
+//│ = [83, 73, 79]
+
+
+// Known limitation, WON'T FIX: each diff-test block is emitted as a separate program, but the inliner
+// still moves bodies accessing private storage defined in an earlier block into later blocks,
+// whereas the accessors of that storage only exist for the accesses of the program that defines it.
+// Whole compilation units are emitted as single programs, so this only affects incremental diff tests;
+// the compiler should not be complicated just to accommodate the diff-test framework.
+
+module InlinedVal with
+  private val secret = 1
+  fun get(x) = x + secret
+
+:re
+:expect 2
+InlinedVal.get(1)
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'NaN'
+//│ = NaN
+
+module InlinedObject with
+  private object Obj with
+    fun value = 2
+  fun get(x) = x + Obj.value
+
+:fixme
+:expect 3
+InlinedObject.get(1)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'value')
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+
+module InlinedClass with
+  private class Cls with
+    fun value = 3
+  fun get(x) = x + new Cls().value
+
+:fixme
+:expect 4
+InlinedClass.get(1)
+//│ ═══[RUNTIME ERROR] TypeError: InlinedClass1[Cls$accessorSymbol] is not a constructor
+//│ ═══[RUNTIME ERROR] Expected: '4', got: 'undefined'
+
+module InlinedPattern with
+  private pattern Small = 0 | 1
+  fun isSmall(x) = x is Small
+
+:fixme
+:expect true
+InlinedPattern.isSmall(0)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'unapply')
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'

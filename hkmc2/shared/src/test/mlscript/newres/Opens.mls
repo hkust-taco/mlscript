@@ -134,7 +134,7 @@ open Later { absent }
 //│ ║         	             ^^^^^^
 //│ ╟── Module 'Later' does not contain member 'absent'
 //│ ║  l.62: 	module Later { val answer = 7 }
-//│ ╙──      	       ^^^^^
+//│ ╙──      	^^^^^^^^^^^^
 
 
 // Wildcard lookup retains overload sets until the use chooses a definition.
@@ -146,7 +146,7 @@ module Overloaded {
 fun overload() = {
   open Overloaded
   // The call and constructor choose different definitions of Item.
-  [Item(), (new Item).answer()]
+  [Item(), new Item().answer()]
 }
 
 :expect [11, 9]
@@ -188,11 +188,11 @@ chained()
 import "../../mlscript-compile/OverloadedClassLibrary.mls" as Library
 fun imported() = {
   open Library
-  [Item(), (new Item).answer()]
+  [Item(), new Item().answer()]
 }
 fun importedNamed() = {
   open Library { Item }
-  [Item(), (new Item).answer()]
+  [Item(), new Item().answer()]
 }
 
 :expect [[16, 52], [16, 52]]
@@ -346,7 +346,7 @@ module Callable {
 }
 fun callable() = {
   open Callable
-  [Make().answer(), (new Make).answer()]
+  [Make().answer(), new Make().answer()]
 }
 
 :expect [22, 22]

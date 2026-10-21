@@ -32,7 +32,7 @@ open Foo { a }
 //│ ║        	           ^
 //│ ╟── Module 'Foo' does not contain member 'a'
 //│ ║  l.5: 	module Foo with
-//│ ╙──     	       ^^^
+//│ ╙──     	^^^^^^^^^^
 
 
 open Bar { y, Baz }

@@ -116,6 +116,11 @@ object Parser:
     def unapply(ts: Ls[TokLoc]): S[Ls[TokLoc]] =
       S(get(ts))
   
+  private def isKey(id: IDENT, rest: Ls[TokLoc]): Bool =
+    !id.symbolic && rest.match
+      case NOISE(IDENT(":", _) -> _ :: _) => true
+      case _ => false
+  
   extension (loc: Loc)
     def showStart: String =
       loc.origin.fph.getLineColAt(loc.spanStart) match
@@ -363,7 +368,7 @@ abstract class Parser(
         errExpr :: Nil
       case _ =>
         blockOf(rule, a :: annotations, allowNewlines = allowNewlines)
-    case (tok @ (id: IDENT), loc) :: _ if id.name =/= ":" =>
+    case (tok @ (id: IDENT), loc) :: rest if id.name =/= ":" && !isKey(id, rest) =>
       Keyword.all.get(id.name) match
       case S(kw) =>
         consume
@@ -388,15 +393,17 @@ abstract class Parser(
           rule.exprAlt match
           case S(exprAlt) =>
             yeetSpaces match
-            case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ =>
+            case (br @ BRACKETS(_: Indent_Curly, toks), _) :: _ =>
               consume
               prefixRules.getKwAlt(kw, S(loc)) match
               case S(subRule) if subRule.blkAlt.isEmpty =>
-                rec(toks, S(tok.innerLoc), tok.describe).concludeWith { p =>
+                rec(toks, S(br.innerLoc), br.describe).concludeWith { p =>
                   p.blockOf(subRule.map(e => parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)), annotations, allowNewlines)
                 } ++ blockContOf(rule)
               case _ =>
-                TODO(cur)
+                // * The keyword cannot start an expression, as in `\{ ... }` (`\` being an infix-only keyword)
+                err(msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found '${kw.name}' keyword instead" -> S(loc) :: Nil)
+                annotations.annotate(errExpr) :: blockContOf(rule)
             case _ =>
               prefixRules.getKwAlt(kw, S(loc)) match
               case S(subRule) =>
@@ -460,6 +467,8 @@ abstract class Parser(
     //     case N =>
     //      err((msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found end of phrase instead" -> S(loc.left) :: Nil)
     //       N
+    case (tok @ (id: IDENT), loc) :: rest if isKey(id, rest) =>
+      tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
       case S(Keyword.`:`) | N =>
@@ -646,6 +655,9 @@ abstract class Parser(
       consume
       val id = Tree.Ident(name).withLoc(S(loc))
       exprCont(id, prec, allowNewlines = true)
+    case (tok @ IDENT(nme, _), loc) :: rest if isKey(tok, rest) =>
+      consume
+      exprCont(Tree.Ident(nme).withLoc(S(loc)), prec, allowNewlines = allowNewlines)
     case (IDENT(nme, sym), loc) :: _ =>
       Keyword.all.get(nme) match
       case S(kw) => // * Expressions starting with keywords should be handled in parseRule
@@ -809,13 +821,15 @@ abstract class Parser(
       cur match // `true | false | Tree`
       case Nil => false
       case (_: NEWLINE_COMMA | SPACE, _) :: _ => consume; true
+      // * Items are parsed with `CommaPrecNext` so that commas separate them (see below),
+      // * as in `x \ { key: "A", value: 1 }`, instead of being reported as unexpected.
       case (KEYWORD(kw), loc) :: _ if kw isnt Keyword.__ =>
         prefixRules.getKwAlt(kw, S(loc)) match
         case S(subRule) =>
           consume
           parseRule(CommaPrecNext, subRule, allowNewlines = false).getOrElse(errExpr)
-        case N => expr(0, allowNewlines = false)
-      case _ => expr(0, allowNewlines = false)
+        case N => expr(CommaPrecNext, allowNewlines = false)
+      case _ => expr(CommaPrecNext, allowNewlines = false)
     item match
       case true => splitItem(acc) // continue
       case false => printDbg(s"! end of split"); acc // break
@@ -896,6 +910,15 @@ abstract class Parser(
       case KEYWORD(kw) => kw.leftPrecOrMin
       case _ => opPrec(id.name)._1
     case _ => Int.MinValue
+  
+  /** The left precedence of keyword `kw` when it starts a new line continuing the preceding expression.
+   *  Like symbolic operators starting new lines (see `exprContImpl`), `\` only continues expressions
+   *  parsed at the top level (`prec <= NoElsePrec`), so that `f` followed by lines `\ a` and `\ b`
+   *  means `(f \ a) \ b`, rather than `f \ (a \ b)`: the argument `a` does not extend to the next line,
+   *  even when it ends with an operand parsed with a lower precedence, as in `\ key: a`.
+   *  (Indented chains of `\` are parsed as operator splits, as `\` is `InfixSplittable`.) */
+  private def newlineLeftPrec(kw: Keyword): Int =
+    if kw is Keyword.backslash then NoElsePrec + 1 else kw.leftPrecOrMin
   
   /** Whether a block starting with `toks` continues the preceding expression with an infix operator,
    *  as in `foo { + 1 }`, `foo { .bar }`, `foo { as T }`, or `foo { and bar }`.
@@ -1140,7 +1163,7 @@ abstract class Parser(
         exprCont(res, prec, allowNewlines = allowNewlines)
       
       case (_: NEWLINE_COMMA, _) :: (KEYWORD(kw), _) :: _
-      if kw.canStartInfixOnNewLine && kw.leftPrecOrMin > prec
+      if kw.canStartInfixOnNewLine && newlineLeftPrec(kw) > prec
       && infixRules.kwAlts.contains(kw.name)
       && (kw isnt Keyword.`do`) // This is to avoid the following case:
         //  ```

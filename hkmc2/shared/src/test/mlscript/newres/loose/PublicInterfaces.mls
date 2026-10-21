@@ -14,7 +14,7 @@ read({value: 1})
 //│ ║       	         ^
 //│ ╟── 'read' is exposed by this compilation unit.
 //│ ║  l.6: 	fun read(x) = x.value
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Rest parameters retain the same obligation through tuple element lookup.
@@ -30,7 +30,7 @@ rest({value: 2})
 //│ ║        	         ^^^^^
 //│ ╟── 'rest' is exposed by this compilation unit.
 //│ ║  l.22: 	fun rest(...xs) = xs.0.value
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Returned closures are reachable from the public interface too.
@@ -49,7 +49,7 @@ escaped()({value: 3})
 //│ ║        	                ^^^^^^^^^^^^
 //│ ╟── 'escaped' is exposed by this compilation unit.
 //│ ║  l.38: 	fun escaped() = x => x.value
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A completed private helper must still be checked when it later escapes.
@@ -72,7 +72,7 @@ val exported = {callback: hidden}
 //│ ║        	                ^^^^^^^^
 //│ ╟── 'exported' is exposed by this compilation unit.
 //│ ║  l.62: 	val exported = {callback: hidden}
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^
 //│ exported = {callback: fun hidden}
 
 // Record spreads preserve the public origin across nested copies.
@@ -91,7 +91,7 @@ recordSpread({value: 5})
 //│ ║        	                 ^
 //│ ╟── 'recordSpread' is exposed by this compilation unit.
 //│ ║  l.80: 	fun recordSpread(x) = ({...{...x}}).value
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Tuple spreads preserve it on their unknown elements.
@@ -110,7 +110,7 @@ tupleSpread([{value: 6}])
 //│ ║        	                ^^
 //│ ╟── 'tupleSpread' is exposed by this compilation unit.
 //│ ║  l.99: 	fun tupleSpread(xs) = [...xs].0.value
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Checked indexing carries the origin and its diagnostic path to the result.
@@ -129,7 +129,7 @@ indexed([{value: 7}])
 //│ ║         	            ^^
 //│ ╟── 'indexed' is exposed by this compilation unit.
 //│ ║  l.118: 	fun indexed(xs) = xs.[0].value
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Type substitution must keep the public input distinct from ordinary unknowns.
@@ -145,7 +145,7 @@ throughType({value: 8})
 //│ ║         	                ^
 //│ ╟── 'throughType' is exposed by this compilation unit.
 //│ ║  l.138: 	fun throughType(x) = identity(x).value
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ║  l.137: 	private fun identity[A](x: A): A = x
 //│ ╙──       	                               ^
@@ -164,7 +164,7 @@ hole([{value: 9}])
 //│ ║         	         ^^^^^^^^^
 //│ ╟── 'hole' is exposed by this compilation unit.
 //│ ║  l.156: 	fun hole(xs: Array) = xs.0.value
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Constructor refinement must preserve the input's origin on unknown fields.
@@ -184,7 +184,7 @@ refined(Box({value: 10}))
 //│ ║         	            ^
 //│ ╟── 'refined' is exposed by this compilation unit.
 //│ ║  l.173: 	fun refined(x) = if x is Box(item) then item.value else 0
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Private helpers that do not escape retain local inference.
@@ -214,7 +214,7 @@ dynamic({value: 13} as dyn)
 //│ ║         	            ^
 //│ ╟── 'dynamic' is exposed by this compilation unit.
 //│ ║  l.206: 	fun dynamic(x) = x.value
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A tuple target likewise cannot close an unannotated public parameter.
@@ -230,7 +230,7 @@ first([14])
 //│ ║         	          ^^
 //│ ╟── 'first' is exposed by this compilation unit.
 //│ ║  l.222: 	fun first(xs) = xs.0
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // An annotated callback interface must be checked in a non-strict worksheet too.

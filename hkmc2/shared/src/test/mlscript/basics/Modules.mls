@@ -23,7 +23,7 @@ Foo.x
 //│ ║        	^^^^^
 //│ ╟── Module 'Foo' does not contain member 'x'
 //│ ║  l.14: 	module Foo with val x = 1
-//│ ╙──      	       ^^^
+//│ ╙──      	^^^^^^^^^^
 
 module Foo with
   val x = 1

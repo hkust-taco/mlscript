@@ -67,7 +67,7 @@ true and true
 
 false: Bool
 //│ Parsed:
-//│ 	InfixApp(BoolLit(false),Keywrd(keyword ':'),Ident(Bool))
+//│ 	InfixApp(Ident(false),Keywrd(keyword ':'),Ident(Bool))
 
 f of false
 //│ Parsed:

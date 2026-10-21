@@ -238,7 +238,7 @@ Curried.missing
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── Class value does not contain member 'missing'
 //│ ║  l.201: 	class Curried with
-//│ ╙──       	      ^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -248,7 +248,7 @@ Curried.value
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── Class value does not contain member 'value'
 //│ ║  l.201: 	class Curried with
-//│ ╙──       	      ^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -260,5 +260,5 @@ Ordinary.append
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── Class value does not contain member 'append'
 //│ ║  l.255: 	class Ordinary with
-//│ ╙──       	      ^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

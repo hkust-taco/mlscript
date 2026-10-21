@@ -1339,7 +1339,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         alternative = failure
       )
       pd.extractionParams.map(_.sym)
-      log(s"Translated `unapply`: ${topmost.prettyPrint}")
+      log(dbg"Translated `unapply`: ${topmost.prettyPrint}")
       makeMethod("unapply", pd.patternParams, inputSymbol, topmost)
     // TODO: Use `pd.extractionParams`.
     val unapplyStringPrefix = scoped("ucs:cp"):
@@ -1350,7 +1350,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pd.pattern)
         ((consumedOutput, remainingOutput, bindings) => Split.Else:
           makeMatchSuccess(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
-      log(s"Translated `unapplyStringPrefix`: ${topmost.prettyPrint}")
+      log(dbg"Translated `unapplyStringPrefix`: ${topmost.prettyPrint}")
       makeMethod("unapplyStringPrefix", pd.patternParams, inputSymbol, topmost)
     unapply :: unapplyStringPrefix :: Nil
   
@@ -1386,7 +1386,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
         val topmost = makeMatchSplit(inputSymbol.toScrut, pattern, true)
           ((output, bindings) => Split.Else(makeMatchSuccess(output())), failure)
-        log(s"Translated `unapply`: ${topmost.prettyPrint}")
+        log(dbg"Translated `unapply`: ${topmost.prettyPrint}")
         makeUnapplyRecordStatements("unapply", patternParams, inputSymbol, topmost)
       val unapplyStringPrefix = scoped("ucs:cp"):
         // We don't report errors here because they have been already reported in
@@ -1396,6 +1396,6 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pattern)
           ((consumedOutput, remainingOutput, bindings) => Split.Else:
             makeMatchSuccess(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
-        log(s"Translated `unapplyStringPrefix`: ${topmost.prettyPrint}")
+        log(dbg"Translated `unapplyStringPrefix`: ${topmost.prettyPrint}")
         makeUnapplyRecordStatements("unapplyStringPrefix", patternParams, inputSymbol, topmost)
       Term.Rcd(false, unapply ::: unapplyStringPrefix)

@@ -186,10 +186,10 @@ let tf = new TFun(inc) in tf.TFun#f("1")
 
 data class Pair[A, B](fst: A, snd: B)
 
-(new Pair(42, true)).Pair#fst
+new Pair(42, true).Pair#fst
 //│ Type: Int
 
-(new Pair(42, true)).Pair#snd
+new Pair(42, true).Pair#snd
 //│ Type: Bool
 
 
@@ -278,7 +278,7 @@ f
 f(x => x).Foo#x
 //│ Type: ('A) ->{⊥} 'A
 
-g => (new Foo(g)).Foo#x
+g => new Foo(g).Foo#x
 //│ Type: ('A -> 'A) ->{⊥} ('A) ->{⊥} 'A
 
 

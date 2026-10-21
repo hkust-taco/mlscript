@@ -35,4 +35,11 @@ module A with
 //│ ║  l.33: 	  constructor(x, y)
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^
 
+// * Ok, but useless; could raise a warning
+class A {
+  constructor
+}
+new A
+//│ = A
+
 

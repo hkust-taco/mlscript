@@ -59,7 +59,7 @@ let direct = new Pair(...[Box(53)])(...[Box(54)])
 //│ ║        	            ^
 //│ ╟── 'curried' is exposed by this compilation unit.
 //│ ║  l.49: 	fun curried(x)(y) = Pair(x)(y)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.52: 	[built.left.value, built.right.value, direct.left.value, direct.right.value]
 //│ ║        	                   ^^^^^^^^^^^^^^^^^
@@ -69,7 +69,7 @@ let direct = new Pair(...[Box(53)])(...[Box(54)])
 //│ ║        	               ^
 //│ ╟── 'curried' is exposed by this compilation unit.
 //│ ║  l.49: 	fun curried(x)(y) = Pair(x)(y)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[51, 52, 53, 54]', got: 'undefined'
 //│ built = Pair(Box(51))
@@ -90,7 +90,7 @@ fun short() = [1, ...[2]]
 //│ ║        	                 ^^^^^^^^^^^^^^^^
 //│ ╟── Function 'four' expected 4 arguments, but got 2
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
 
 :e
 four(...[1, 2], ...[3, 4], 5)
@@ -99,7 +99,7 @@ four(...[1, 2], ...[3, 4], 5)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'four' expected 4 arguments, but got 5
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
 
 // Opaque values are left to the runtime spread operation to validate.
@@ -152,7 +152,7 @@ fun laterBad() = varying([5], [6, 7])
 //│ ║         	                      ^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'four' expected 4 arguments, but got 3
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
 
 // Recursive tuple growth has unknown length, but a rest-only function can forward it.
 :expect [3, 2, 1]
@@ -195,7 +195,7 @@ four(...arr)
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── Function 'four' expected 4 arguments, but got 2
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 2
 
 
@@ -265,7 +265,7 @@ inspectUnknown(...opaque([Box(96)]))
 //│ ║         	                   ^
 //│ ╟── 'inspectUnknown' is exposed by this compilation unit.
 //│ ║  l.248: 	fun inspectUnknown(x) = x.value
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Too many known fields remain a proven mismatch even with an unknown spread.
@@ -276,7 +276,7 @@ four(...opaque([]), 1, 2, 3, 4, 5)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'four' expected 4 arguments, but got at least 5
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
 
 // Rest arity may be valid while the callable argument remains unknown.
@@ -336,7 +336,7 @@ invokePublicRest(...callbacks, Box(0))
 //│ ║         	                     ^
 //│ ╟── 'invokePublicRest' is exposed by this compilation unit.
 //│ ║  l.326: 	fun invokePublicRest(f, x, ...tail) = f()
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A function parameter's Array annotation carries its element interface through a spread.

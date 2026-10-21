@@ -62,7 +62,7 @@ fun map(opt, f) = if opt is
 
 // Optimizes similarly
 :soir
-fun test(x) = x map(_ + 1) map(_ * 2)
+fun test(x) = x map(=> _ + 1) map(=> _ * 2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test⁰ as fun test¹(x) {
 //│   let inlinedVal, arg$Some$0$, arg$Some$0$1;
@@ -87,7 +87,7 @@ fun test(x) = x map(_ + 1) map(_ * 2)
 
 // Optimizes similarly
 :soir
-fun test(x) = x map(_ + 1) map(_ * 2) map("Result: " + _)
+fun test(x) = x map(=> _ + 1) map(=> _ * 2) map(=> "Result: " + _)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define test² as fun test³(x) {
 //│   let inlinedVal, inlinedVal1, arg$Some$0$, arg$Some$0$1, arg$Some$0$2;
@@ -115,7 +115,7 @@ fun test(x) = x map(_ + 1) map(_ * 2) map("Result: " + _)
 
 // Optimizes similarly
 :soir
-fun test(x) = if x map(_ + 1) is
+fun test(x) = if x map(=> _ + 1) is
   Some(0) then []
   Some(x) then [x]
   None then null

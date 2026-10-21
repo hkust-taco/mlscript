@@ -17,10 +17,10 @@ receiver.missing
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Module 'Left' does not contain member 'missing'
 //│ ║  l.6: 	module Left { fun get() = 1 }
-//│ ║       	       ^^^^
+//│ ║       	^^^^^^^^^^^
 //│ ╟── Module 'Right' does not contain member 'missing'
 //│ ║  l.7: 	module Right { fun get() = 2 }
-//│ ╙──     	       ^^^^^
+//│ ╙──     	^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e

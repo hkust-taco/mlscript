@@ -48,7 +48,7 @@ module Right with
 //│ ║        	                  ^^^^^^^^^^^^
 //│ ╟── candidate: type alias
 //│ ║  l.39: 	    type Number = Int
-//│ ║        	         ^^^^^^
+//│ ║        	    ^^^^^^^^^^^
 //│ ╟── candidate: type alias
 //│ ║  l.42: 	    type Number = Str
-//│ ╙──      	         ^^^^^^
+//│ ╙──      	    ^^^^^^^^^^^

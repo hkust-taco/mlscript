@@ -41,6 +41,18 @@ sealed trait Shape extends ShapeEvent:
       case rigid: RigidTypeShape => rigid.provenance.diagnostic(message, toLoc)
       case _ => (message -> toLoc) :: Nil
     case _: SymShape => (message -> toLoc) :: Nil
+  /** Arity errors also cite where the expected parameter lists are declared, when the
+    * witness of `diagnostic` does not show them: a class constructor can take the
+    * parameter lists of `constructor(...)` declarations written in the class body. */
+  final def arityDiagnostic(message: Message): Ls[(Message, Opt[Loc])] =
+    def constructorDeclarations(shape: Shape): Ls[(Message, Opt[Loc])] = shape match
+      case value: TermShape => value.applicationHead._1 match
+        case view: ContextualShape => constructorDeclarations(view.source)
+        case view: SpecializedShape => constructorDeclarations(view.declaration)
+        case defn: DefnShape => defn.ctorLoc.map(loc => msg"The constructor is declared here." -> S(loc)).toList
+        case _ => Nil
+      case _: SymShape => Nil
+    diagnostic(message) ::: constructorDeclarations(this)
   def shwDbg(using DebugPrinter): Str = this match
     case ds: DefnShape => ds.defn.sym.showDbg
     case as: AppShape => s"AppShape(${as.receiver.shwDbg}, ${as.args.showDbg})"
@@ -301,7 +313,7 @@ object MarkedShape:
     case sh: NonMarkedShape => MarkedShape(sh, EntryMark(boundary, id, NoMarks))
     case MarkedShape(sh, marks) => MarkedShape(sh, EntryMark(boundary, id, marks))
   def exit(sh: TermShape, boundary: ResolutionBoundary, id: Opt[FlowSymbol])(using TL): TermShape | NoShape =
-  tl.trace[TermShape | NoShape](s".exit MarkedShape (${sh.shwDbg}, ${boundary.showDbg}, ${id.fold("")(_.showDbg)})", res => s"= ${res.shwDbg}"):
+  tl.trace[TermShape | NoShape](dbg".exit MarkedShape (${sh.shwDbg}, ${boundary.showDbg}, ${id.fold("")(_.showDbg)})", res => s"= ${res.shwDbg}"):
     sh match
     // Exits are only ever prepended to a path's trailing exits, never compared
     // against them; they locate what a value refers to. A self-contained value
@@ -392,7 +404,7 @@ sealed trait TermShape extends Shape, ShapeLike:
     case _ => unappliedParamLists.map(_ -> applicationMarks)
   
   def exit(marks: Marks)(using TL): TermShape | NoShape =
-  tl.trace[TermShape | NoShape](s".exit $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
+  tl.trace[TermShape | NoShape](dbg".exit $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
     marks match
     case NoMarks => this
     case EntryMark(sym, id, rest) =>
@@ -410,7 +422,7 @@ sealed trait TermShape extends Shape, ShapeLike:
       exit(mark).exit(rest)
   
   def enter(marks: Marks)(using tl: TL): TermShape | NoShape =
-  tl.trace[TermShape | NoShape](s".enter $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
+  tl.trace[TermShape | NoShape](dbg".enter $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
     marks match
     case NoMarks => this
     case EntryMark(sym, id, rest) =>
@@ -445,9 +457,14 @@ enum MemberLookup:
   case Dynamic(marks: Ls[Marks])
   case Missing
   case Unknown(reason: MemberLookup.Uncertainty, fromPublicInterface: Bool, provenance: ShapeProvenance)
+  /** A private member of `owner`, found by `own`, which only hides the members of the same name that `owner`
+    * inherits, found by `inherited`, from the code that can access the private members of `owner`.
+    * Which members a lookup finds thus depends on where it is performed: see `visibleFrom`. */
+  case Private(own: MemberLookup, owner: ClassLikeDef, inherited: MemberLookup)
   
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
     case Contextual(source, instances) => Contextual(source.withMarks(marks), instances)
+    case Private(own, owner, inherited) => Private(own.withMarks(marks), owner, inherited.withMarks(marks))
     case Found(member, inner) => Found(member, inner ::: marks)
     case Declared(member, bindings, inner, annotation, positive) => Declared(member, bindings, inner ::: marks, annotation, positive)
     case Typed(field, tpe, inner) => Typed(field, tpe, inner ::: marks)
@@ -458,6 +475,7 @@ enum MemberLookup:
   /** The receiver's annotation remains the diagnostic origin when lookup visits a parent. */
   def withAnnotation(annotation: Opt[Term]): MemberLookup = this match
     case Contextual(source, instances) => Contextual(source.withAnnotation(annotation), instances)
+    case Private(own, owner, inherited) => Private(own.withAnnotation(annotation), owner, inherited.withAnnotation(annotation))
     case Declared(member, bindings, marks, _, positive) => Declared(member, bindings, marks, annotation, positive)
     case _ => this
 
@@ -467,15 +485,40 @@ enum MemberLookup:
       case Missing | Unknown(_, _, _) | Dynamic(_) => this
       case _ => Contextual(this, instances)
 
+  /** The members found by this lookup when it is performed by code that can access the private members of the
+    * class-like definitions satisfying `canAccess` (see SrcScope.canAccessPrivatesOf). Inaccessible private members
+    * do not hide inherited members, just like JavaScript's private class elements do not hide inherited properties.
+    * When there are no such inherited members, the lookup only finds the inaccessible private member
+    * if `reportInaccessible` is set, so that its consumer reports the illegal access (see ResolutionContext.checkAccess)
+    * rather than a missing member; otherwise, the lookup finds no member.
+    */
+  def visibleFrom(canAccess: ClassLikeDef => Bool, reportInaccessible: Bool): MemberLookup = this match
+    case Contextual(source, instances) => source.visibleFrom(canAccess, reportInaccessible).instantiate(instances)
+    case Private(own, owner, inherited) =>
+      if canAccess(owner) then own
+      else inherited.visibleFrom(canAccess, reportInaccessible) match
+        case Missing if reportInaccessible => own
+        case visible => visible
+    case _ => this
+
 object MemberLookup:
   enum Uncertainty:
     case ValueShape, RecordOverwrite
   
-  /** Own members take precedence over inherited ones, including unknown spreads. */
+  /** Own members take precedence over inherited ones, including unknown spreads,
+    * except for private members as seen from outside their class (see Private). */
   def inClass(defn: ClassLikeDef, ext: Opt[TermShape], name: Str)(using ResolutionContext): MemberLookup =
+    def inherited = ext.fold[MemberLookup](Missing)(_.getMember(name))
     defn.body.members.get(name) match
-      case S(member) => Found(member, Nil)
-      case N => ext.fold[MemberLookup](Missing)(_.getMember(name))
+      case S(member) => own(defn, member, Found(member, Nil), inherited)
+      case N => inherited
+  
+  /** Hide a name only when all its definitions are private. A public companion keeps the name
+    * available even when its class is private; checkAccess checks the interpretation actually selected.
+    * An entirely private name instead permits lookup of the inherited member outside its owner. */
+  def own(defn: ClassLikeDef, member: BlockMemberSymbol, found: MemberLookup, inherited: => MemberLookup): MemberLookup =
+    if member.symbols.nonEmpty && member.symbols.forall(_.defn.exists(_.visibility is Visibility.Private))
+    then Private(found, defn, inherited) else found
 
 end MemberLookup
 
@@ -585,7 +628,7 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   def describe: Str = s"${defn.describe}"
   protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
     MemberLookup.inClass(defn, ext, name)
-  def toLoc: Opt[Loc] = defn.toLoc
+  def toLoc: Opt[Loc] = defn.headerLoc
 
 /** A structural annotation exposes only its declared fields. Their symbols belong
   * to the annotation, not to whichever record happens to be passed by a caller.
@@ -694,7 +737,7 @@ final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSym
     val parent: Opt[TermShape])(val annotation: Opt[Term], val provenance: ShapeProvenance)(resolver: NewResolver) extends CoreHeadShape:
   def describe: Str = s"value of type '${defn.sym.nme}'"
   override def toString: Str = s"NominalInstanceView(${defn.sym}, $bindings, $parent)"
-  def toLoc: Opt[Loc] = defn.toLoc
+  def toLoc: Opt[Loc] = defn.headerLoc
   override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool =
     (defn is cls) || parent.exists(_.isInstanceOfClass(cls))
   def ancestor(cls: ClassLikeDef): Opt[NominalInstanceView] =
@@ -743,7 +786,7 @@ final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams
     declaration: Opt[TermDefinition], asyncResult: Opt[AsyncResult]) extends CoreHeadShape:
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
-  def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.toLoc)
+  def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.headerLoc)
   protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup = MemberLookup.Missing
 
 /** Why observing a type did not expose a member interface. Keep this evidence
@@ -868,7 +911,17 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
       bufferedMembers.get(name).fold[MemberLookup](MemberLookup.Missing)(MemberLookup.Found(_, Nil))
     case _: TermDefinition => MemberLookup.Missing
     case _ => MemberLookup.Missing
-  def toLoc: Opt[Loc] = defn.sym.toLoc
+  /** A definition is identified by its header; a class constructor, by its class's.
+    * The definition's `bsym` would instead span all of its trees: whole definitions,
+    * including their bodies, and any overloads, such as the companions of a class. */
+  def toLoc: Opt[Loc] = defn.headerLoc.orElse(defn.sym.toLoc)
+  /** For a class constructor, the `constructor(...)` declarations of its class with
+    * parameter lists, which are not part of the header (see `ClassDef.ctorLoc`). */
+  def ctorLoc: Opt[Loc] = defn match
+    case _: TermDefinition => clsDef match
+      case S(cls: ClassDef) => cls.ctorLoc
+      case _ => N
+    case _ => N
 
 /*
 // TODO – see `RefinedShape`
@@ -1151,7 +1204,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
           case Missing => N
           case Found(member: RecordMember, inner) =>
             S(Found(member.copy(mutable = member.mutable || source.mut), inner ::: marks :: Nil))
-          case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _, _) | Typed(_, _, _) | Indexed(_, _) =>
+          case Found(_: BlockMemberSymbol, _) | Declared(_, _, _, _, _) | Typed(_, _, _) | Indexed(_, _) | Private(_, _, _) =>
             // Record spreads recursively look up RecordShapes, which only create RecordMembers.
             lastWords("Record lookup returned a nominal member")
         spread(shape.getMember(name)).getOrElse(loop(rest))

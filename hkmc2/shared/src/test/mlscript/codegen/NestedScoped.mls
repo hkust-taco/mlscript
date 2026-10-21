@@ -133,7 +133,7 @@ fun g(x, y, z) =
     z then
       scope.locally of (
         let a = 1
-        (_ + a)
+        => _ + a
       )
 
 

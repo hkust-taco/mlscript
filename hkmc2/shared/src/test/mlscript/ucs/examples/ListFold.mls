@@ -12,12 +12,6 @@ open StrOps { concat2, ~ }
 
 fun (|>) pipe(x, f) = f(x)
 
-fun findFirst(f, xs) =
-  if xs is
-    Nil then None
-    Cons(x, _) and f(x) then Some(x)
-    Cons(_, xs) then findFirst(f, xs)
-
 fun (::) cons(head, tail) = Cons(head, tail)
 
 let oneTwoThree = 1 :: 2 :: 3 :: Nil

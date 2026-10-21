@@ -77,7 +77,7 @@ C.oops
 //│ ║        	^^^^^^
 //│ ╟── Class value does not contain member 'oops'
 //│ ║  l.38: 	declare class C
-//│ ╙──      	              ^
+//│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
@@ -87,7 +87,7 @@ M.D.oops
 //│ ║        	^^^^^^^^
 //│ ╟── Class value does not contain member 'oops'
 //│ ║  l.48: 	  declare class D
-//│ ╙──      	                ^
+//│ ╙──      	  ^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

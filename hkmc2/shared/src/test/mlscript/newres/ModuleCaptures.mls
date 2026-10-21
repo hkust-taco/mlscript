@@ -42,7 +42,7 @@ fun cls(initial) = {
   class Local {
     val item = initial
   }
-  (new Local).item
+  new Local().item
 }
 
 :expect [6, 7]

@@ -98,12 +98,20 @@ if x +
 //│                 kw = Keywrd of keyword 'then'
 //│                 rhs = IntLit of 9
 
-:todo
+:pe
 if
   x
   is
     A then "A"
-//│ /!!!\ Uncaught error: scala.NotImplementedError: List() (of class Nil$)
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
+//│ ║  l.104: 	  is
+//│ ╙──       	  ^^
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ IfLike:
+//│   kw = Keywrd of keyword 'if'
+//│   split = Block of Ls of
+//│     Ident of "x"
+//│     Error
 
 x
   + 1

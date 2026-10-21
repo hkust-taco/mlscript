@@ -1,6 +1,4 @@
-// #lang(0.3.x)
-// ^ Too slow for the CI at the moment, making it flaky;
-//    needs the perf. fixes at `LPTK/new-resolution-no-hashing`
+#lang(0.3.x)
 
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"

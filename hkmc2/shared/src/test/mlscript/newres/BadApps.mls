@@ -48,7 +48,7 @@ call(M)
 //│ ║        	              ^^^
 //│ ╟── Module 'M' cannot be called like a function.
 //│ ║  l.43: 	module M
-//│ ╙──      	       ^
+//│ ╙──      	^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Plain class values require new, including when passed through a parameter.
@@ -61,7 +61,7 @@ instantiate(Plain)
 //│ ║        	                       ^^^^^
 //│ ╟── Class 'Plain' must be instantiated with 'new'.
 //│ ║  l.56: 	class Plain
-//│ ╙──      	      ^^^^^
+//│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A fully applied constructor really has received all its argument lists.

@@ -2,27 +2,48 @@
 :js
 
 
-:fixme // TODO: support
-// :sjs
+// * A class with a primary constructor can't be overloaded with a term,
+// * as the primary constructor acts like an overloaded function.
+:e
 fun Foo(x) = new Foo(x, 0)
 data class Foo(x, y)
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.7: 	fun Foo(x) = new Foo(x, 0)
+//│ ║  l.8: 	fun Foo(x) = new Foo(x, 0)
 //│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.8: 	data class Foo(x, y)
+//│ ║  l.9: 	data class Foo(x, y)
 //│ ╙──     	     ^^^^^^^^^^^^^^^
 
-:fixme
+fun Foo(x) = new Foo(x, 0)
+data class Foo { constructor(x, y) }
+
 Foo(123)
+//│ = Foo
+
+:e
+Foo(123, 456)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.17: 	Foo(123)
-//│ ║        	^^^^^^^^
+//│ ║  l.24: 	Foo(123, 456)
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── Function 'Foo' expected 1 argument, but got 2
+//│ ║  l.17: 	fun Foo(x) = new Foo(x, 0)
+//│ ╙──      	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'Foo' expected 1 argument but got 2
+
+:e
+new Foo(123)
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.34: 	new Foo(123)
+//│ ║        	^^^^^^^^^^^^
 //│ ╟── Class 'Foo' expected 2 arguments, but got 1
-//│ ║  l.7: 	fun Foo(x) = new Foo(x, 0)
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.8: 	data class Foo(x, y)
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
-//│ = Foo(123, undefined)
+//│ ║  l.18: 	data class Foo { constructor(x, y) }
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── The constructor is declared here.
+//│ ║  l.18: 	data class Foo { constructor(x, y) }
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^
+//│ = Foo
+
+new Foo(123, 456)
+//│ = Foo
 
 

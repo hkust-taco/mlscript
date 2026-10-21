@@ -1,3 +1,5 @@
+#lang(0.2.x)
+
 // Kept in legacy mode to exercise signatures imported by new resolution.
 module LegacyGenericLibrary with
   class Cell[A](val value: A) with

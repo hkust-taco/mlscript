@@ -10,7 +10,7 @@ class Factory {
 fun Factory(x: Int): Int = x + 1
 fun originalFactory() = new Factory
 type OriginalFactory = Factory
-Factory(20) + (new Factory).answer
+Factory(20) + new Factory().answer
 //│ Wasm result:
 //│ = 42
 
@@ -18,7 +18,7 @@ Factory(20) + (new Factory).answer
 // Imported constructors and term functions remain distinct in later blocks.
 :noInline
 :expect 43
-Factory(21) + (new Factory).answer
+Factory(21) + new Factory().answer
 //│ Wasm result:
 //│ = 43
 
@@ -28,7 +28,7 @@ Factory(21) + (new Factory).answer
 :expect 42
 fun Reverse(): Int = 40
 class Reverse { val answer: Int = 2 }
-Reverse() + (new Reverse).answer
+Reverse() + new Reverse().answer
 //│ Wasm result:
 //│ = 42
 
@@ -47,7 +47,7 @@ if new Reverse is Reverse then 1 else 0
 fun make(n: Int): Int = {
   class Local { val answer: Int = 20 }
   fun Local(x: Int): Int = x + 1
-  Local(n) + (new Local).answer
+  Local(n) + new Local().answer
 }
 make(1) + make(2)
 //│ Wasm result:

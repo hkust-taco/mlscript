@@ -17,6 +17,9 @@ private[io] class NodeFileSystem extends FileSystem:
   def write(path: Path, content: String): Unit =
     fs.writeFileSync(path.toString, content)
   
+  def append(path: Path, content: String): Unit =
+    fs.appendFileSync(path.toString, content)
+  
   def exists(path: Path): Bool =
     fs.existsSync(path.toString)
   

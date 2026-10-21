@@ -17,7 +17,7 @@ let c = C
 new! c
 //│ = C
 
-let f = new! _
+let f = => new! _
 //│ f = fun f
 
 f(c)
@@ -58,7 +58,7 @@ new id(C)
 //│ ╟── Function 'id' cannot be instantiated with keyword 'new'.
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.19: 	fun id(x) = x
-//│ ╙──      	^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e

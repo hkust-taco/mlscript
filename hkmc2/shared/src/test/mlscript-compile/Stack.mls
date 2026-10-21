@@ -2,13 +2,13 @@
 
 
 
-type Stack[A] = Stack.{ Cons[A] | Nil }
+type Stack[out A] = Stack.{ Cons[A] | Nil }
 
 module Stack with ...
 
 
 class Base
-data class (::) Cons[A](head: A, tail: Stack[A]) extends Base
+data class (::) Cons[out A](head: A, tail: Stack[A]) extends Base
 object Nil extends Base
 
 fun isEmpty(xs) = xs is Nil

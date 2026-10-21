@@ -47,11 +47,11 @@
 
 
 2 + 2
-\print()
+.> print
 //│ > 4
 
 2 + 2
-  \print()
+  .> print
 //│ > 2
 //│ = "2()"
 
@@ -161,20 +161,12 @@ let x
   .a
 //│ = 2
 
-:e
-:re
+// * The placeholder is delimited by `|>`, not by the parentheses,
+// * so this selects field `a` of the record in the lambda body.
 2
   |> (a: _)
     .a
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.167: 	  |> (a: _)
-//│ ║         	     ^^^^^^
-//│ ║  l.168: 	    .a
-//│ ║         	^^^^^^
-//│ ╟── Function literal does not contain member 'a'
-//│ ║  l.167: 	  |> (a: _)
-//│ ╙──       	      ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = 2
 
 :ge
 :re
@@ -182,7 +174,7 @@ let x
   |> (a: _)
 .a
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
-//│ ║  l.183: 	.a
+//│ ║  l.175: 	.a
 //│ ╙──       	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -270,7 +262,7 @@ let x
   |> print
 //│ > 3
 
-let incr = _ + 1
+let incr = => _ + 1
 //│ incr = fun incr
 
 // :dp
@@ -329,10 +321,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.330: 	2, * 3
+//│ ║  l.322: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.330: 	2, * 3
+//│ ║  l.322: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -386,9 +378,9 @@ xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.386: 	,+
+//│ ║  l.378: 	,+
 //│ ║         	  ^
-//│ ║  l.387: 	ys |> Arr.len
+//│ ║  l.379: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -402,9 +394,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.402: 	+,
+//│ ║  l.394: 	+,
 //│ ║         	  ^
-//│ ║  l.403: 	ys |> Arr.len
+//│ ║  l.395: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -435,10 +427,10 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.436: 	new Foo(1) ,is Foo
+//│ ║  l.428: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.436: 	new Foo(1) ,is Foo
+//│ ║  l.428: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -446,10 +438,10 @@ new Foo(1) ,is Foo
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.447: 	is Foo
+//│ ║  l.439: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.447: 	is Foo
+//│ ║  l.439: 	is Foo
 //│ ╙──       	   ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

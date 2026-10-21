@@ -498,13 +498,13 @@ let d = res.1
 :expect 0
 class A(val x)
 class B(y) extends A(y)
-(new B(0)).x
+new B(0).x
 //│ = 0
 
 :expect [1, 2]
 class A(val x)(val y)
 class B extends A(1)(2)
-[(new B).x, (new B).y]
+[new B().x, new B().y]
 //│ = [1, 2]
 
 :w

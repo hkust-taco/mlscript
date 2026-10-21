@@ -29,13 +29,13 @@ OverloadedClassLibrary.Item()
 //│ = 16
 
 :expect 52
-(new OverloadedClassLibrary.Item).answer()
+new OverloadedClassLibrary.Item().answer()
 //│ = 52
 
 open OverloadedClassLibrary { Item }
 
 :expect 52
-(new Item).answer()
+new Item().answer()
 //│ = 52
 
 :expect 16
@@ -51,7 +51,7 @@ OverloadedDefault()
 //│ = 19
 
 :expect 54
-(new OverloadedDefault).answer()
+new OverloadedDefault().answer()
 //│ = 54
 
 

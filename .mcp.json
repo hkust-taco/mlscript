@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "metals": {
+      "type": "stdio",
+      "command": "sh",
+      "args": [
+        "-c",
+        "workspace=$(git rev-parse --show-toplevel) && exec cs launch org.scalameta:metals-mcp_2.13:1.6.9 -- --workspace \"$workspace\" --transport stdio"
+      ]
+    }
+  }
+}

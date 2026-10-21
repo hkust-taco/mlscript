@@ -566,7 +566,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
             raise(lifterReport(msg"Unexpected nested function: lambdas may not function correctly." -> fun.sym.toLoc :: Nil))
           val (debugInfoSym, debugInfo, fun2) = translateFunLike(fun, fun.sym.asMemberRef(fun.dSym), N, fun.sym.nme)
           if debugEnabled then Scoped(Set.single(debugInfoSym), Assign(debugInfoSym, Tuple(false, debugInfo)(N), k(fun2))) else k(fun2)
-        case defn @ ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor, companion, bufferable) =>
+        case defn @ ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor, companion, bufferable, termCompanion) =>
           if h.currentBlockIsTrulyNested && opt.isDefined then
             raise(lifterReport(msg"Unexpected nested class: lambdas may not function correctly." -> isym.toLoc :: Nil))
           val debugInfos = mutable.ArrayBuffer.empty[(TempSymbol, List[Arg])]
@@ -588,7 +588,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
             // without many special handling.
             val newCtor = if opt.fold(true)(_.doNotInstrumentTopLevelModCtor) && !h.currentBlockIsTrulyNested then bod.ctor else
               translateCtorLike(bod.ctor, bod.isym.asThis, true)
-            tl.log(s"companion name: ${bod.isym.nme}")
+            tl.log(dbg"companion name: ${bod.isym.nme}")
             if (bod.methods is newMtds) && (bod.ctor is newCtor) then
               bod
             else

@@ -95,13 +95,13 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
   extension (patterns: Ls[(Label, ExPat)])
     /** Specialize a set of patterns. Also display them in the debug log. */
     def specializePatterns(head: Opt[Head]): Ls[(Label, SpPat)] =
-      log(s"Specialized patterns of ${head.fold("the case without tags")(_.showDbg)}:")
+      log(dbg"Specialized patterns of ${head.fold("the case without tags")(_.showDbg)}:")
       patterns.map: (label, pattern) =>
         val spec = pattern.specialize(head)
         val simp = spec.simplify
-        log(s"• Label $label")
-        log(s"  ‣ Expanded: ${spec.showDbg}")
-        log(s"  ‣ Simplified: ${simp.showDbg}")
+        log(dbg"• Label $label")
+        log(dbg"  ‣ Expanded: ${spec.showDbg}")
+        log(dbg"  ‣ Simplified: ${simp.showDbg}")
         (label, simp)
   
   private val labelMap: MutMap[Pat, Label] = MutMap()
@@ -179,7 +179,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     // Make a split that tries all branches in order.
     val topmostSplit = branches.foldLeft(default: Split)((tail, branch) => branch ~: tail)
     val bodyTerm = SynthIf(topmostSplit)
-    log(s"Multi-matcher body:\n${topmostSplit.prettyPrint}")
+    log(dbg"Multi-matcher body:\n${topmostSplit.prettyPrint}")
     (paramList(param(scrutinee)), bodyTerm)
   
   def multiMatcherBranch(
@@ -193,7 +193,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       .mkString("{", ", ", "}")}"
   ):
     val fields = patterns.iterator.flatMap((_, p) => p.fields).distinct.toList
-    log(s"fields: ${fields.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
+    log(dbg"fields: ${fields.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
     val subPatternsByField = fields.map: field =>
       field -> patterns.iterator.flatMap((_, p) => p.collectSubPatterns(field)).toList
     val subScrutinees = Map.from(subPatternsByField.iterator.map: (field, subPatterns) =>
@@ -202,7 +202,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     val bindings = subPatternsByField.foldLeft(Ls.empty[Statement]): (statements, entry) =>
       val (field, subPatterns) = entry
       val subScrutinee = subScrutinees(field)
-      log(s"subPattern for field ${field.showDbg}: ${
+      log(dbg"subPattern for field ${field.showDbg}: ${
         subPatterns.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
       val subMatcherSymbol = buildMultiMatcher(subPatterns.iterator)
       /** Shorthands for the result of the matcher branch. */
@@ -311,7 +311,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       val makeMakeSplit = fields.iterator.foldRight(
         (fields: Ls[(Ident, Term)], bindingsSymbols: Ls[TempSymbol]) =>
           ((makeConsequent, alternative) =>
-            log(s"current bindings: " + aliases.map(_.name).mkString("{", ", ", "}"))
+            log(dbg"current bindings: " + aliases.map(_.name).mkString("{", ", ", "}"))
             val currentBindings = aliases.map:
               alias => RcdField(str(alias.name), scrutinee.safeRef)
             val bindings = bindingsSymbols match
@@ -387,7 +387,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       val makeMakeSplit = fields.iterator.foldRight(
         (fields: Ls[RcdField], bindingsSymbols: Ls[TempSymbol]) =>
           ((makeConsequent, alternative) =>
-            log(s"current bindings: " + aliases.map(_.name).mkString("{", ", ", "}"))
+            log(dbg"current bindings: " + aliases.map(_.name).mkString("{", ", ", "}"))
             // The current pattern's bindings.
             val currentBindings = aliases.map:
               alias => RcdField(str(alias.name), scrutinee.safeRef)

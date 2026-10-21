@@ -99,11 +99,12 @@ class BlockTraverser:
   
   def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
     val ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-      privateFields, publicFields, preCtor, ctor, mod, bufferable) = defn
+      privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion) = defn
     own.foreach(_.traverse)
     isym.traverse
     sym.traverse
     ctorSym.foreach(_.traverse)
+    termCompanion.foreach(_.traverse)
     paramsOpt.foreach(applyParamList)
     auxParams.foreach(applyParamList)
     parentPath.foreach(applyPath)

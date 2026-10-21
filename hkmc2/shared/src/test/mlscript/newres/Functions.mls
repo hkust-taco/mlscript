@@ -10,7 +10,7 @@ foo()
 //│ ║       	^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 0
 //│ ║  l.4: 	private fun foo(x) = x + 1
-//│ ╙──     	        ^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 :e
@@ -20,7 +20,7 @@ foo(1, 2)
 //│ ║        	^^^^^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 2
 //│ ║  l.4: 	private fun foo(x) = x + 1
-//│ ╙──     	        ^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 2
 
 
@@ -43,7 +43,7 @@ fun callid0(p) = p.id(1)
 //│ ║        	            ^
 //│ ╟── 'callid0' is exposed by this compilation unit.
 //│ ║  l.36: 	fun callid0(p) = p.id(1)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^
 
 
 :de
@@ -74,29 +74,27 @@ callid1(Predef)
 //│ | | | listen: trm = p⁰.id
 //│ | | ~> p⁰.id(1)
 //│ | ~> p⁰.id(1)
-//│ | Elab term App(Ident(callid1),Tup(List(Ident(Predef))))
-//│ | | Elab subterm App(Ident(callid1),Tup(List(Ident(Predef))))
-//│ | | | Elab subterm Ident(callid1)
-//│ | | | | listenTerm: trm = member:callid1⁰
-//│ | | | | listen: trm = member:callid1⁰
-//│ | | | | listenBMS: bms = function
-//│ | | | ~> member:callid1⁰
-//│ | | | Elab subterm Tup(List(Ident(Predef)))
-//│ | | | | Elab term Ident(Predef)
-//│ | | | | | Elab subterm Ident(Predef)
-//│ | | | | | | listenTerm: trm = member:Predef⁰
-//│ | | | | | | listen: trm = member:Predef⁰
-//│ | | | | | | listenBMS: bms = module
-//│ | | | | | | listenedBMS: bms = module
-//│ | | | | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
-//│ | | | | | | PUSH module:Predef¹
-//│ | | | | | ~> member:Predef⁰
-//│ | | | | ~> member:Predef⁰
-//│ | | | ~> [member:Predef⁰]
+//│ | Elab subterm App(Ident(callid1),Tup(List(Ident(Predef))))
+//│ | | Elab subterm Ident(callid1)
 //│ | | | listenTerm: trm = member:callid1⁰
 //│ | | | listen: trm = member:callid1⁰
 //│ | | | listenBMS: bms = function
-//│ | | ~> member:callid1⁰(member:Predef⁰)
+//│ | | ~> member:callid1⁰
+//│ | | Elab subterm Tup(List(Ident(Predef)))
+//│ | | | Elab term Ident(Predef)
+//│ | | | | Elab subterm Ident(Predef)
+//│ | | | | | listenTerm: trm = member:Predef⁰
+//│ | | | | | listen: trm = member:Predef⁰
+//│ | | | | | listenBMS: bms = module
+//│ | | | | | listenedBMS: bms = module
+//│ | | | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ | | | | | PUSH module:Predef¹
+//│ | | | | ~> member:Predef⁰
+//│ | | | ~> member:Predef⁰
+//│ | | ~> [member:Predef⁰]
+//│ | | listenTerm: trm = member:callid1⁰
+//│ | | listen: trm = member:callid1⁰
+//│ | | listenBMS: bms = function
 //│ | ~> member:callid1⁰(member:Predef⁰)
 //│ | listenedBMS: bms = function
 //│ | fromBMS: bms = member:callid1⁰, sh = member:callid1⁰, flow = callid1¹, markss = List()
@@ -178,8 +176,8 @@ callid1(Predef)
 //│ | | = MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | = MarkedShape(IntroShape(1), ↘⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | appShape isSaturated? true; head? member:id⁰, List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
-//│ | lhs false List(((x⁰),List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)))
-//│ | appShape: td.body = Some(SimpleRef(x))
+//│ | lhs false List([(x⁰), List(↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)])
+//│ | appShape: td.body = Some(SimpleRef(x⁰))
 //│ | listenTerm: trm = x⁰
 //│ | listen: trm = x⁰
 //│ | .exit MarkedShape(UnknownValueShape(x⁰), ↘⟨term:Predef¹/id¹⟩%⟨exposed⁰⟩ϵ) (↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
@@ -199,8 +197,8 @@ callid1(Predef)
 //│ | | = IntroShape(1)
 //│ | = MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | appShape isSaturated? true; head? member:callid1⁰, List(↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
-//│ | lhs false List(((p⁰),List(↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)))
-//│ | appShape: td.body = Some(App(NewSel(SimpleRef(p),Ident(id),None),Tup(List(Fld(‹›,Lit(IntLit(1)),None)))))
+//│ | lhs false List([(p⁰), List(↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)])
+//│ | appShape: td.body = Some(App(NewSel(SimpleRef(p⁰),Ident(id),None),Tup(List(Fld(‹›,Lit(IntLit(1)),None)))))
 //│ | listenTerm: trm = p⁰.id(1)
 //│ | listen: trm = p⁰.id(1)
 //│ | .exit MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
@@ -209,7 +207,7 @@ callid1(Predef)
 //│ | | .exit MarkedShape (MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ), term:callid1², callid1¹)
 //│ | | = IntroShape(1)
 //│ | = IntroShape(1)
-//│ ~> { fun member:callid1(p⁰) = p⁰.id(1); member:callid1⁰(member:Predef⁰) }
+//│ ~> { fun member:callid1⁰(p⁰) = p⁰.id(1); member:callid1⁰(member:Predef⁰) }
 //│ listenTerm: trm = member:callid1⁰(member:Predef⁰)
 //│ listen: trm = member:callid1⁰(member:Predef⁰)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
@@ -272,27 +270,27 @@ f.name
 :e
 (x => x).foo
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.273: 	(x => x).foo
+//│ ║  l.271: 	(x => x).foo
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── Function literal does not contain member 'foo'
-//│ ║  l.273: 	(x => x).foo
+//│ ║  l.271: 	(x => x).foo
 //│ ╙──       	 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 f is Int -> Int
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator '->').
-//│ ║  l.283: 	f is Int -> Int
+//│ ║  l.281: 	f is Int -> Int
 //│ ╙──       	     ^^^^^^^^^^
 //│ = true
 
 :fixme
 (f as Int -> Int).apply
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.290: 	(f as Int -> Int).apply
+//│ ║  l.288: 	(f as Int -> Int).apply
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature does not contain member 'apply'
-//│ ║  l.290: 	(f as Int -> Int).apply
+//│ ║  l.288: 	(f as Int -> Int).apply
 //│ ╙──       	      ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

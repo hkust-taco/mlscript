@@ -24,7 +24,7 @@ class Reader with
   fun first(): Int = if this is Pair(Text as text, _) then text.value.length else 0
 class Text(val value: Str) extends Reader
 class Pair(val left: Reader, val right: Reader) extends Reader
-[Text("abc").read(), (new Reader).read(), Pair(Text("four"), Text("five")).first()]
+[Text("abc").read(), new Reader().read(), Pair(Text("four"), Text("five")).first()]
 //│ = [3, 0, 4]
 
 // Each enclosing generic activation retains its own field type when a local

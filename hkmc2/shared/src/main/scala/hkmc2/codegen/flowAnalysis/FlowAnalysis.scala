@@ -87,16 +87,16 @@ object FlowAnalysis:
   def mkTraceLogger(
     cfg: Config.FlowAnalysisConfig,
     prefix: Str,
-    outerTl: TL,
-  ): TraceLogger =
-    new TraceLogger(using outerTl.debugPrinter):
-      override def doTrace: Bool = scope match
+    sink: DebugSink,
+  )(using printer: DebugPrinter): TraceLogger =
+    val debug = new DebugContext:
+      override protected def forceUids: Bool = printer.showUids
+    new TraceLogger(debug, sink, indentWhenDisabled = true, prefix = prefix):
+      protected def phaseEnabled(config: Config.Debug): Bool = false
+      protected def forceTrace(scope: Opt[Str]): Bool = scope match
         case S(TraceScope.NonAffineSyms) => cfg.logNonAffine
         case S(TraceScope.AccumulatorSym) => cfg.logAccumulator
         case _ => cfg.debug
-
-      override def emitDbg(str: Str): Unit =
-        outerTl.emitDbg(s"$prefix$str")
     
 end FlowAnalysis
 
@@ -648,7 +648,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case defn: FunDefn => applyFunDefn(defn)
     case defn: ValDefn => applyValDefn(defn)
     case cls@ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-        privateFields, publicFields, preCtor, ctor, mod, bufferable)
+        privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion)
     =>
       ctxTracker.inCls(cls):
         paramsOpt.foreach(applyParamList)
@@ -1110,12 +1110,13 @@ class FlowConstraintSolver(val collector: FlowConstraintsCollector):
     * TODO: cache inheritance set in header object to avoid retraversals, here and elsewhere (eg erased types). */
   private def mayInheritFields(cls: CtorCls, ancestor: CtorCls): Bool = (cls, ancestor) match
     case (cls: ClassLikeSymbol, ancestor: ClassLikeSymbol) =>
-      def go(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Bool = cur.irClassHeader match
-        case N => true
-        case S(ClassHeader(N)) => false
-        case S(ClassHeader(S(parent))) => parent.asClsOrMod match
-          case S(parent) => (parent is ancestor) || !seen(parent) && go(parent, seen + parent)
-          case N => true
+      def go(cur: ClassLikeSymbol, seen: Set[ClassLikeSymbol]): Bool =
+        cur.irClassHeader.fold(ClassHeader.Parent.Unknown)(_.parent) match
+          case ClassHeader.Parent.Unknown => true
+          case ClassHeader.Parent.Root => false
+          case ClassHeader.Parent.Known(parent) => parent.asClsOrMod match
+            case S(parent) => (parent is ancestor) || !seen(parent) && go(parent, seen + parent)
+            case N => true
       go(cls, Set(cls))
     case _ => false
   

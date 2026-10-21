@@ -280,7 +280,7 @@ let foo =
   class A
   module A with
     fun test(a) = new A
-  (new A).test
+  new A().test
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   let foo³,
 //│   foo³ = {
@@ -290,13 +290,13 @@ let foo =
 //│     module A³::A⁵ {
 //│       fun test⁶::test⁷(a³) ‹flow:test³› = new A³
 //│     },
-//│     new A³.A³.test⁶{ ~> A³.test⁶(new A³)‹app¹²› }
+//│     new A³().A³.test⁶{ ~> A³.test⁶(new A³())‹app¹²› }
 //│   }
 //│ where
 //│     foo³  <~  A
-//│     a³  <~  A
+//│     a³  <~  A()
 //│     flow:test³  <~  ((a³) -> A)
-//│     flow:test³  ~>  ((A) -> ⋅test¹)
+//│     flow:test³  ~>  ((A()) -> ⋅test¹)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ foo = A
 

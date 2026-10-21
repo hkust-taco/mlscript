@@ -213,7 +213,7 @@ object ByValue with
       (Hole as hole) => [hole, id]
     ) | (
       App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
-        [rhs, App(lhs, _)]
+        [rhs, => App(lhs, _)]
     ) | (
       App(Context(Hole) as [lhs, remake], Term as rhs) =>
         [lhs, lhs' => App(remake(lhs'), rhs)]

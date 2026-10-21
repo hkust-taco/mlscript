@@ -176,17 +176,13 @@ new A(1, 2, 3)(4, 5, 6).fields
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'A' expected 2 arguments, but got 3
 //│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.173: 	new A(1, 2, 3)(4, 5, 6).fields
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'A' expected 1 argument, but got 3
 //│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
 
 

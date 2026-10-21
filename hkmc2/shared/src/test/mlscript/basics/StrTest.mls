@@ -35,7 +35,7 @@ concat of
 //│ ╟── Function 'concat2' expected 2 arguments, but got 3
 //│ ║  in ../../mlscript-compile/StrOps.mls
 //│ ║  l.6: 	fun (~) concat2(a, b) = a + b
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
 //│ = "ab"
 
 
@@ -47,7 +47,7 @@ concat of
 //│ ╟── Function 'concat2' expected 2 arguments, but got 1
 //│ ║  in ../../mlscript-compile/StrOps.mls
 //│ ║  l.6: 	fun (~) concat2(a, b) = a + b
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
 //│ = "aundefined"
 
 :ge

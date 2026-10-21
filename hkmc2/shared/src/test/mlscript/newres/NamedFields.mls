@@ -64,7 +64,7 @@ one(1, a: 2)
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── Function 'one' expected 1 argument, but got 2
 //│ ║  l.60: 	fun one(fields: {a: Int}) = fields.a
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 let key = "a"
@@ -88,5 +88,5 @@ let key = "a"
 
 :expect [42, 43]
 class Box(val fields)
-[Box(answer: 42).fields.answer, (new Box(answer: 43)).fields.answer]
+[Box(answer: 42).fields.answer, new Box(answer: 43).fields.answer]
 //│ = [42, 43]

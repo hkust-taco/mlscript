@@ -32,7 +32,7 @@ Foo.x'
 //│ ║        	^^^^^^
 //│ ╟── Object 'Foo' does not contain member 'x''
 //│ ║  l.20: 	object Foo with
-//│ ╙──      	       ^^^
+//│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 Foo.("x'")
@@ -53,13 +53,13 @@ set Foo.x' += 1
 //│ ║        	    ^^^^^^
 //│ ╟── Object 'Foo' does not contain member 'x''
 //│ ║  l.41: 	object Foo with
-//│ ╙──      	       ^^^
+//│ ╙──      	^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.50: 	set Foo.x' += 1
 //│ ║        	    ^^^^^^
 //│ ╟── Object 'Foo' does not contain member 'x''
 //│ ║  l.41: 	object Foo with
-//│ ╙──      	       ^^^
+//│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 Foo.("x'")

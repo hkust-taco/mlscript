@@ -176,11 +176,6 @@ lambda = (undefined, function (Predef2, a, b, field) {
       return runtime.safeCall(f(receiver, ...args))
     }
   }
-  static passToLo(receiver, f) {
-    return (...args) => {
-      return runtime.safeCall(f(receiver, ...args))
-    }
-  }
   static call(receiver, f) {
     return (...args) => {
       return runtime.safeCall(f.call(receiver, ...args))
