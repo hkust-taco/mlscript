@@ -14,88 +14,91 @@ import Elaborator.Ctx
 import syntax.*
 import Tree.*
 import utils.Scope
-import hkmc2.codegen.ErasedType.eraseSign
 
-final case class DisjOr(p: Type, cs: Ls[K])
-final case class K(x: Type, y: Type | DisjOr)
+final case class K(x: Type, y: Type, cs: Opt[Ls[K]]):
+  def lvl: Int = x.lvl max y.lvl max cs.fold(0)(_.map(_.lvl).max)
 
 class InfVarState:
   var lowerBounds: Ls[Type] = Nil
-  var upperBounds: Ls[Type] = Nil
-  var disjsub: Ls[DisjOr] = Nil
+  var upperBounds: Ls[Type -> Opt[Ls[K]]] = Nil
+
+trait KCtx(using val prim: PrimCtx):
+  def sub(x: Type, y: Type): K = K(x,y,N)
+  def subArg(x: TypeArg, y: TypeArg): Ls[K] =
+    sub(x.posPart,y.posPart) :: sub(y.negPart,x.negPart) :: Nil
+  def or(x: K, y: K): K = (x,y) match
+    case (K(a, b, N), y) => K(a, b, S(Ls(y)))
+    case (K(a, b, S(cs)), y) => K(a, b, S(cs.map(or(_,y))))
+  def constrain(c: K)(using CCtx, TL, Raise): Unit = c match
+    case K(x,y,N) => ConstraintSolver.constrain(x,y)(using this)
+    case K(x,y,S(Nil)) =>
+    case K(x,y,S(cs)) => ConstraintSolver.constrain(x,y)(using SuffixCtx(cs, this))
+  def asSubcls(x: ClassLikeType, y: ClsTag) =
+    if x.sym === y then S(x)
+    else x.sym match
+      case LitSymbol(_: IntLit) if prim.intSym === y => S(ClassLikeType(y, Nil, Nil, Nil, N))
+      case LitSymbol(_: StrLit) if prim.strSym === y => S(ClassLikeType(y, Nil, Nil, Nil, N))
+      case LitSymbol(_: BoolLit) if prim.boolSym === y => S(ClassLikeType(y, Nil, Nil, Nil, N))
+      case _ => N
+
+  def addub(s: InfVar, ub: Type, cs: Opt[Ls[K]] = N)(using CCtx, TL, Raise): Unit
+  def addlb(lb: Type, s: InfVar)(using CCtx, TL, Raise): Unit
+  def err(parents: Ls[(Type, Type)], origin: Term, exp: Opt[InfType])
+    (using CCtx, TL, Raise, Scope): Unit
 
 final case class InfCtx(
-  val lvl: Int,
-  val parent: Option[InfCtx],
-  val env: HashMap[Symbol, InfType],
-  val outRegAcc: Type,
-  val prefix: Ls[Ls[Type->Type]],
-  val suffix: Ls[K], // TODO mutable
+  lvl: Int,
+  parent: Option[InfCtx],
+  env: HashMap[Symbol, InfType],
+  outRegAcc: Type,
+  prefix: Opt[Ls[K]] = N
 )(using
     val varSt: HashMap[InfVarSymbol, InfVarState],
-    val prim: PrimCtx,
+    val xbds: ListBuffer[K],
+    prim: PrimCtx,
     val ctx: Ctx,
     val cfg: Config
-):
-  def +=(p: Symbol -> InfType): Unit = env += p
+) extends KCtx:
+  def +=(p: Symbol -> InfType) = env += p
   def get(sym: Symbol): Option[InfType] = env.get(sym) `orElse` parent.dlof(_.get(sym))(None)
   def nest: InfCtx = copy(parent = Some(this), env = HashMap.empty)
-  def nestWithOuter(outer: InfVar): InfCtx= copy(parent = Some(this), lvl = lvl + 1, env = HashMap.empty, outRegAcc = outRegAcc | outer)
+  def nestWithOuter(outer: InfVar): InfCtx = copy(parent = Some(this), lvl = lvl + 1, env = HashMap.empty, outRegAcc = outRegAcc | outer)
   def nextLevel: InfCtx= copy(parent = Some(this), lvl = lvl + 1, env = HashMap.empty)
 
-  def withSuffix(x:Ls[K]) = copy(parent = S(this), suffix = x ++ suffix)
-  def dropSuffix = copy(suffix = Nil)
-  // def freshVar(origin: Symbol | Term, hint: Str = ""): InfVar
-
-  def sub(x: Type, y: Type): K = K(x,y)
-  def subArg(x: TypeArg, y: TypeArg): Ls[K] =
-    K(x.posPart,y.posPart) :: K(y.negPart,x.negPart) :: Nil
-  def subor(x: K, y: K): K = (x,y) match
-    case (K(a, b: Type), y) => K(a, DisjOr(b, Ls(y)))
-    case (K(a, DisjOr(b, cs)), y) => K(a, DisjOr(b, cs ++ Ls(y)))
-
-  def constrain(c: K)(using CCtx, TL, Raise): Unit = c match
-    case K(x,y: Type) => ConstraintSolver.constrain(x,y)(using this)
-    case K(x,DisjOr(y, cs)) =>
-      given InfCtx = withSuffix(cs)
-      ConstraintSolver.constrain(x,y)
-
-  def ubs(s: InfVarSymbol): Ls[Type] = varSt.getOrElseUpdate(s, new InfVarState).upperBounds
-  def lbs(s: InfVarSymbol): Ls[Type] = varSt.getOrElseUpdate(s, new InfVarState).lowerBounds
-  def addub(s: InfVar, ub: Type)(using CCtx, TL, Raise): Unit =
-    if prefix.isEmpty && suffix.isEmpty then
+  def addub(s: InfVar, ub: Type, cs: Opt[Ls[K]] = N)(using CCtx, TL, Raise) =
+    val k = K(s, ub, cs)
+    if s.lvl < k.lvl then xbds += k
+    else
       val v = varSt.getOrElseUpdate(s.sym, new InfVarState)
-      v.upperBounds = ub :: v.upperBounds
+      v.upperBounds = ub -> cs :: v.upperBounds
       v.lowerBounds.foreach(lb => constrain(sub(lb, ub)))
-    else ???
-  def addlb(lb: Type, s: InfVar)(using CCtx, TL, Raise): Unit =
-    if prefix.isEmpty && suffix.isEmpty then
-      val v = varSt.getOrElseUpdate(s.sym, new InfVarState)
-      v.lowerBounds = lb :: v.lowerBounds
-      v.upperBounds.foreach(ub => constrain(sub(lb, ub)))
-    else ???
-  def disjor(p: Type, a: InfVar, cs: Ls[K]): Unit = ???
-
-  def err(msg: Diagnostic)(using CCtx, Raise, TL): Unit =
-    if suffix.isEmpty then raise(msg)
-    else
-      val nctx = dropSuffix
-      suffix.foreach(k => nctx.constrain(k))
-
-  def asSubcls(x: ClassLikeType, y: ClsTag): Opt[ClassLikeType] =
-    if x.sym === y then S(x)
-    else
-      x.sym match
-        case lit: LitSymbol =>
-          lit.lit match
-            case _: IntLit =>
-              if prim.intSym === y then S(ClassLikeType(y, Nil, Nil, Nil, N)) else N
-            case _: StrLit =>
-              if prim.strSym === y then S(ClassLikeType(y, Nil, Nil, Nil, N)) else N
-            case _: BoolLit =>
-              if prim.boolSym === y then S(ClassLikeType(y, Nil, Nil, Nil, N)) else N
-            case _ => N
-        case _ => N
+  def addlb(lb: Type, s: InfVar)(using CCtx, TL, Raise) =
+   val k = K(lb, s, N)
+   if s.lvl < k.lvl then xbds += k
+   else
+     val v = varSt.getOrElseUpdate(s.sym, new InfVarState)
+     v.lowerBounds = lb :: v.lowerBounds
+     v.upperBounds.foreach(p => constrain(K(lb, p._1, p._2)))
+  def err(parents: Ls[(Type, Type)], origin: Term, exp: Opt[InfType])
+     (using CCtx, TL, Raise, Scope) = 
+   given InfCtx = this
+   raise(ErrorReport(
+       msg"Type error in ${origin.describe}${exp match
+           case S(ty) => msg" with expected type ${ty.show}"
+           case N => msg""
+         }" -> origin.toLoc
+       :: parents.reverse.map(p =>
+         msg"because: cannot constrain  ${p._1.show}  <:  ${p._2.show}" -> N
+       )
+     ))
+  // TODO
+  def ubs(s: InfVarSymbol): Ls[Type] = varSt.getOrElseUpdate(s, new InfVarState).upperBounds.map(_._1)
+  def lbs(s: InfVarSymbol): Ls[Type] = varSt.getOrElseUpdate(s, new InfVarState).lowerBounds
+  // def withPrefix(x: Type, y: Type) = ???
+  override def constrain(c: K)(using CCtx, TL, Raise) = prefix match
+    case N => super.constrain(c)
+    case S(Nil) =>
+    case S(cs) => cs.foreach(k => super.constrain(or(k,c)))
 
 class PrimCtx(using st: Elaborator.State, ctx: Elaborator.Ctx, cfg: Config):
   val objSym = ctx.get("Object").get.symbol.get.asTpe.get
@@ -110,7 +113,7 @@ class PrimCtx(using st: Elaborator.State, ctx: Elaborator.Ctx, cfg: Config):
 object InfCtx:
   def init(using st: Elaborator.State, ctx: Elaborator.Ctx, tl: TL, cfg: Config): InfCtx =
     given PrimCtx = new PrimCtx
-    InfCtx(1, N, HashMap.empty, Bot, Nil, Nil)(using HashMap.empty)
+    InfCtx(1, N, HashMap.empty, Bot)(using HashMap.empty, ListBuffer.empty)
   def mkTag(s: ClsTag) = ClassLikeType(s, Nil, Nil, Nil, N)
   def litTy(lit: Literal)(using ctx: InfCtx) = mkTag(ctx.prim.litSym(lit))
   def objTy(using ctx: InfCtx) = mkTag(ctx.prim.objSym)
@@ -119,11 +122,7 @@ object InfCtx:
     val w = Ls(Wildcard.in(u), Wildcard.out(ret), Wildcard.out(eff))
     val i = Ls(true, false, false)
     ClassLikeType(ctx.prim.fnSym, w, Nil, i, S(0))
-  def asRefinedObj(t: Ls[Type])(using ctx: InfCtx) =
-    val r = t.zipWithIndex.map:
-      case (elemTy, idx) => (Tree.Ident(idx.toString): Tree.Ident, elemTy)
-    ClassLikeType(ctx.prim.objSym, Nil, r, Nil, N)
-  //  def arrayTy(elem: Type)(using ctx: InfCtx) = ClassLikeType(ctx.getCls("Array"), Ls(elem), Nil, Nil)
+  // def arrayTy(elem: Type)(using ctx: InfCtx) = ClassLikeType(ctx.prim.arrSym, Ls(elem), Nil, Nil)
   def tupTy(e: Ls[Type])(using ctx: InfCtx) =
     // val refine = (Tree.Ident("size"): Tree.Ident, litTy(IntLit(e.length))) :: e.zipWithIndex.map:
     //   case (elemTy, idx) => (Tree.Ident(idx.toString): Tree.Ident, elemTy)
@@ -133,3 +132,25 @@ object InfCtx:
     ClassLikeType(ctx.prim.arrSym, Nil, refine, Nil, N)
   def refinedObj(r: Ls[Tree.Ident -> Type])(using ctx: InfCtx) =
     ClassLikeType(ctx.prim.objSym, Nil, r, Nil, N)
+
+class SuffixCtx(val suffix: Ls[K], val cont: KCtx)(using PrimCtx) extends KCtx:
+  def addub(s: InfVar, ub: Type, cs: Opt[Ls[K]] = N)(using CCtx, TL, Raise) = cs match
+    case N => cont.addub(s, ub, S(suffix))
+    case S(Nil) =>
+    case S(cs) => cont.addub(s, ub, S(cs.flatMap(k => suffix.map(or(k,_)))))
+  def addlb(lb: Type, s: InfVar)(using CCtx, TL, Raise) = ???
+  def err(parents: Ls[(Type, Type)], origin: Term, exp: Opt[InfType])
+      (using CCtx, TL, Raise, Scope) =
+    suffix.foreach(cont.constrain)
+
+class MkPrefix(using PrimCtx) extends KCtx:
+  var r = Opt(ListBuffer.empty[K])
+  def addub(s: InfVar, ub: Type, cs: Opt[Ls[K]] = N)(using CCtx, TL, Raise) =
+    r.foreach(_ += K(s, ub, cs))
+  def addlb(lb: Type, s: InfVar)(using CCtx, TL, Raise) = ???
+  def err(parents: Ls[(Type, Type)], origin: Term, exp: Opt[InfType])
+      (using CCtx, TL, Raise, Scope) =
+    r = N
+  def apply(x: Type, y: Type)(using CCtx, TL, Raise): Opt[Ls[K]] =
+    constrain(sub(x,y))
+    r.map(_.toList)

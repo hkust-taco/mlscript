@@ -22,26 +22,24 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
   import tl.{trace, log}
   private val builtinOps = Elaborator.binaryOps ++ Elaborator.unaryOps ++ Elaborator.aliasOps.keySet
 
-  private def error(msg: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N)(using InfCtx) =
+  private def error(msg: Ls[Message -> Opt[Loc]], extraInfo: => Opt[Any] = N) =
     raise(ErrorReport(msg, extraInfo = extraInfo))
     Bot // TODO: error type?
 
   private def freshVar(origin: Symbol | Term, hint: Str = "")(using ctx: InfCtx) =
-    // ctx.freshVar(origin, hint)
     InfVar(ctx.lvl, InfVarSymbol(origin, hint), false)
   private def freshWildcard(s: Symbol)(using InfCtx) = Wildcard(freshVar(s),freshVar(s))
   private def freshOuter(sym: Symbol)(using ctx: InfCtx): InfVar =
-    // ctx.freshOuter(sym)
     InfVar(ctx.lvl + 1, InfVarSymbol(sym), true)
   private def freshEnv(sym: Symbol)(using ctx: InfCtx): InfVar =
     val s = InfVarSymbol(sym)
     val state = new InfVarState
     ctx.varSt += s -> state
-    state.upperBounds = ctx.outRegAcc :: Nil
+    state.upperBounds = ctx.outRegAcc -> N :: Nil
     state.lowerBounds = ctx.outRegAcc :: Nil
     InfVar(ctx.lvl, s, false)
 
-  private def mono(ty: InfType)(using ctx: InfCtx): Opt[Type] = ty match
+  private def mono(ty: InfType)(using InfCtx): Opt[Type] = ty match
     case x: Type => S(x)
     case PolyFunType(args, ret, eff) =>
       val a = args.map(mono)
@@ -134,8 +132,9 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
         tv -> qv
     bds.foreach:
       case (tv, QuantVar(_, ub, lb)) =>
-        ub.foreach(ub => ctx.addub(tv,typeMonoType(ub)))
-        lb.foreach(lb => ctx.addlb(typeMonoType(lb), tv))
+        val v = ctx.varSt.getOrElseUpdate(tv.sym, new InfVarState)
+        ub.foreach(ub => v.upperBounds = typeMonoType(ub) -> N :: v.upperBounds)
+        lb.foreach(lb => v.lowerBounds = typeMonoType(lb) :: v.lowerBounds)
         val lbty = ctx.lbs(tv.sym).foldLeft[Type](Bot)(_ | _)
         val ubty = ctx.ubs(tv.sym).foldLeft[Type](Top)(_ & _)
         constrain(lbty, ubty)
@@ -152,7 +151,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
     ty
 
   private def constrain(x: Type, y: Type)(using ctx: InfCtx, cctx: CCtx): Unit =
-    ctx.constrain(ctx.sub(x,y))
+    ctx.constrain(K(x,y,N)) // TODO
 
   private def fundef(sym: Symbol, lam: Term, sig: Opt[Term])
       (using ctx: InfCtx, cctx: CCtx, scope: Scope) = lam match
@@ -187,8 +186,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
     Subst(map)(true)(x)
 
   private def substMono(map: Map[InfVarSymbol, InfVar])(x: K): K = x match
-    case K(x, y: Type) => K(substMono(map)(x), substMono(map)(y))
-    case K(x, DisjOr(p, cs)) => K(substMono(map)(x), DisjOr(substMono(map)(p), cs.map(substMono(map))))
+    case K(x, y, cs) => K(substMono(map)(x), substMono(map)(y), cs.map(_.map(substMono(map))))
 
   private def subst(map: Map[InfVarSymbol, InfVar])(x: InfType): InfType =
     x match
@@ -209,9 +207,9 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
       ctx.varSt.get(v.sym).foreach: st =>
         val ns = new InfVarState
         ctx.varSt += map(v.sym).sym -> ns
-        ns.upperBounds = st.upperBounds.map(substMono(map))
+        ns.upperBounds = st.upperBounds.map: d =>
+          substMono(map)(d._1) -> d._2.map(_.map(substMono(map)))
         ns.lowerBounds = st.lowerBounds.map(substMono(map))
-        ns.disjsub = st.disjsub.map(d => DisjOr(substMono(map)(d.p), d.cs.map(substMono(map))))
     // TODO bound scheme
     xbds.foreach(k => ctx.constrain(substMono(map)(k)))
     subst(map)(body)
@@ -229,9 +227,9 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
       ctx.varSt.get(v.sym).foreach: st =>
         val ns = new InfVarState
         ctx.varSt += map(v.sym).sym -> ns
-        ns.upperBounds = st.upperBounds.map(substMono(map))
+        ns.upperBounds = st.upperBounds.map: d =>
+          substMono(map)(d._1) -> d._2.map(_.map(substMono(map)))
         ns.lowerBounds = st.lowerBounds.map(substMono(map))
-        ns.disjsub = st.disjsub.map(d => DisjOr(substMono(map)(d.p), d.cs.map(substMono(map))))
     // xbds.foreach(k => ctx.constrain(substMono(map)(k)))
     subst(map)(body)
 
