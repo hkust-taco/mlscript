@@ -47,9 +47,8 @@ class SubstitutionGrowthTest extends AnyFunSuite:
   private final case class Measurement(views: Int, largestSubstitution: Int, activations: Int, typeInstances: Int)
 
   private val cctx = TestFolders.compilerCtx(os.pwd)
-  private given DebugPrinter = new DebugPrinter
-  private val tl = new TraceLogger:
-    override def doTrace: Bool = false
+  private given DebugPrinter = new DebugPrinter()
+  private val tl = TraceLogger.silent
 
   /** Resolves a generated unit through ordinary elaboration, in a fresh state. */
   private def measure(name: Str, source: Str): Measurement =
@@ -129,8 +128,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     given owner: Elaborator.State = new Elaborator.State
     given state: ResolutionContext = owner.newResolverState.context
     given Raise = diagnostic => fail(diagnostic.theMsg)
-    given trace: TraceLogger = new TraceLogger:
-      override def doTrace: Boolean = false
+    given trace: TraceLogger = TraceLogger.silent
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
     val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)

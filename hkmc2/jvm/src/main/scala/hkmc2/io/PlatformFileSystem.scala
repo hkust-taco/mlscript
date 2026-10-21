@@ -8,6 +8,8 @@ private[io] class JavaFileSystem extends FileSystem:
 
   def write(path: Path, content: String): Unit = os.write.over(unwrap(path), content)
 
+  def append(path: Path, content: String): Unit = os.write.append(unwrap(path), content)
+
   def exists(path: Path): Bool = os.exists(unwrap(path))
   
   def getLastChangedTimestamp(path: Path): Long = os.mtime(unwrap(path))

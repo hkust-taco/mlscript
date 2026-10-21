@@ -47,10 +47,10 @@ abstract class Symbol(using ownerState: State) extends MaybeSymbol with Located:
   def showPrefix(using Scope, ShowCfg, Raise): Str = prefix
   
   def showFullName(using Scope, ShowCfg, Raise): Str =
-    showPrefix + showName + State.dbgUid(uid)
+    showPrefix + showName
   
   override def toString: Str =
-    prefix + nme + State.dbgUid(uid)
+    prefix + nme
   
   private[semantics] val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
   def ref(id: Tree.Ident =

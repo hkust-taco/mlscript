@@ -588,7 +588,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
             // without many special handling.
             val newCtor = if opt.fold(true)(_.doNotInstrumentTopLevelModCtor) && !h.currentBlockIsTrulyNested then bod.ctor else
               translateCtorLike(bod.ctor, bod.isym.asThis, true)
-            tl.log(s"companion name: ${bod.isym.nme}")
+            tl.log(dbg"companion name: ${bod.isym.nme}")
             if (bod.methods is newMtds) && (bod.ctor is newCtor) then
               bod
             else

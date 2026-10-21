@@ -293,7 +293,7 @@ object FlowAnalysisBasedRewrite:
     symbolPrinter: SymbolPrinter,
   ): Program =
     def mkTl(prefix: Str, debug: Bool) =
-      FlowAnalysis.mkTraceLogger(optCfg.config.copy(debug = debug), prefix, tl)
+      FlowAnalysis.mkTraceLogger(optCfg.config.copy(debug = debug), prefix, tl.sink)(using tl.debugPrinter)
     val flowAnalysisRes = mkTl("flow-analysis > ", optCfg.debug).givenIn:
       FlowAnalysis(
         p,

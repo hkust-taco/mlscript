@@ -95,7 +95,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
       doc"set ${print(lhs)}${if arrayIdx then "." else "!"}${print(fld)} = ${print(rhs)}; # ${print(rest)}"
     case Define(defn, rest) =>
-      doc"${printFlags(defn)}define ${print(defn.sym)} as ${print(defn)}; # ${print(rest)}"
+      doc"${printDefinition(defn)}; # ${print(rest)}"
     case Scoped(syms, body) =>
       scope.nest.givenIn:
         import hkmc2.given_Ordering_Uid // Not sure why needed...
@@ -117,6 +117,9 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     // defn.configOverride.map: cfg =>
     //   if cfg.staged then doc"staged " else doc""
     printAnnotations(defn.annotations, doc" # ")
+
+  def printDefinition(defn: Defn)(using Scope): Document =
+    doc"${printFlags(defn)}define ${print(defn.sym)} as ${print(defn)}"
 
   def printAnnotations(annotations: Ls[Annot], trailing: Document)(using Scope): Document =
     if annotations.isEmpty then doc""

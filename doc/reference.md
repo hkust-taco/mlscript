@@ -27,6 +27,7 @@ which is an evolving language that has not stabilized just yet.
 17. [Indentation and Block Syntax](#17-indentation-and-block-syntax)
 18. [Miscellaneous](#18-miscellaneous)
 19. [Built-in Types and Prelude](#19-built-in-types-and-prelude)
+20. [Compiler Debugging](#20-compiler-debugging)
 
 ---
 
@@ -2032,6 +2033,128 @@ concat(...xs)                // join multiple strings
 from(value)                  // convert to string
 parenthesizedIf(x, cond)     // wrap in parens if cond
 ```
+
+---
+
+## 20. Compiler Debugging
+
+The compiler can report what it does in each of its phases, and show the intermediate programs it produces.
+This is configured in the source code, either for a whole file with the `#dbg` directive,
+or for individual definitions with the `@dbg` annotation.
+The output is meant for compiler developers: its format is not stable and may change at any time.
+
+### Debugging Aspects
+
+Each argument of `#dbg` or `@dbg` enables or disables one *aspect*.
+The following aspects trace a phase of the compiler:
+
+| Aspect | Traces |
+|---|---|
+| `elaboration` | elaboration of syntax trees into terms |
+| `lowering` | lowering of terms into the intermediate representation (IR) |
+| `optimizations` | the optimization passes run on the IR |
+
+With the new name resolution (`#lang(0.3.x)`), names are resolved during elaboration,
+so `elaboration` traces name resolution as well.
+
+Parser tracing is available through the diff-test command `:dp`.
+Source directives are read after parsing and cannot enable parser tracing.
+
+The following aspects display a program representation, without tracing:
+
+| Aspect | Displays |
+|---|---|
+| `showParsedTree` | the syntax tree produced by the parser |
+| `showElaboratedTree` | the elaborated term, as a tree |
+| `showElaboratedTerm` | the elaborated term, in readable form |
+| `showLoweredTree` | the IR produced by lowering, as a tree |
+| `showIR` | the IR produced by lowering, in readable form |
+| `showOptimizedIR` | the IR after optimizations, in readable form |
+
+Finally, `showUids` (enabled by default) controls whether traces show the unique identifiers of symbols.
+Disabling it makes traces easier to compare across compiler runs.
+UIDs are local to a compilation unit, so imported symbols use disambiguated names without numeric UIDs.
+
+### Syntax
+
+An aspect is enabled by writing its name as a quoted identifier,
+or enabled or disabled by giving it a Boolean value:
+
+```mlscript
+#dbg('lowering)                         // enable an aspect
+#dbg(elaboration: true, showIR: true)   // enable aspects explicitly
+#dbg(showUids: false)                   // disable an aspect
+```
+
+Unknown aspects and non-Boolean values are reported as errors.
+
+### Output Destination
+
+Debugging output is written to the standard output by default, which `out: StdIO` selects explicitly.
+The `out: File(...)` argument writes it to a file instead:
+
+```mlscript
+#dbg('lowering, out: File("lowering.log"))
+```
+
+As for imports, a relative `File` path is resolved against the directory of the file
+in which the `#dbg` directive or `@dbg` annotation is written, and an absolute path is used as is.
+The first time the compiler writes to a file during a compilation session, it replaces the file's previous contents;
+it then appends all later output, including the output of other files compiled in the same session,
+such as imported files.
+Output from concurrent compilations to the same file may be interleaved.
+
+Any other destination is reported as an error.
+
+### The `#dbg` Directive
+
+The `#dbg` directive configures debugging for the file in which it appears, and must appear at its top level:
+
+```mlscript
+#dbg('elaboration, 'showOptimizedIR, out: File("debug.log"))
+
+fun f(x) = x + 1
+```
+
+Several `#dbg` directives may set different aspects.
+Currently, debugging settings apply to the whole file regardless of where the directive appears,
+so if several directives set the same aspect, the last one takes effect.
+
+### The `@dbg` Annotation
+
+The `@dbg` annotation takes the same arguments as `#dbg`,
+but only applies them to the definition it annotates.
+It can annotate functions, methods, values, classes, modules, and objects:
+
+```mlscript
+@dbg('elaboration, 'showIR, showUids: false)
+fun selected(x) = x + 1
+
+fun unrelated(x) = x   // not traced, not displayed
+```
+
+Annotations combine with the file's settings:
+for example, `@dbg(lowering: false)` stops a lowering trace enabled by `#dbg` for the annotated definition.
+They also apply to the definitions nested in the annotated definition,
+which can override them with their own `@dbg` annotations:
+
+```mlscript
+@dbg('lowering, out: File("lowering.log"))
+fun traced() =
+  fun helper() = 1                        // traced to lowering.log
+  @dbg(lowering: false) fun muted() = 2   // not traced
+  helper() + muted()
+```
+
+The statements that follow an annotated definition are not affected by its annotation.
+The lowering trace of an annotated class also covers the evaluation of its superclass, if any,
+and its companion module, if any, which is compiled together with the class.
+
+The `optimizations` aspect cannot be selected per definition, as optimization passes process whole files.
+Setting it in `@dbg` produces a warning and has no effect; use `#dbg` instead.
+
+Currently, the destination selected by an enclosing `@dbg` annotation only applies to traces:
+the displays requested by the annotation of a nested definition use the file's destination.
 
 ---
 

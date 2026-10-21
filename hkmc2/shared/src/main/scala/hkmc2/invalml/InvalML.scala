@@ -124,13 +124,13 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
   private def typeAndSubstType
       (ty: Term, pol: Bool)(using map: Map[Uid[Symbol], TypeArg])(using ctx: InvalCtx, cctx: CCtx)
       : GeneralType =
-  trace[GeneralType](s"${ctx.lvl}. Typing type ${ty.showDbg}", r => s"~> ${r.showDbg}"):
+  trace[GeneralType](dbg"${ctx.lvl}. Typing type ${ty.showDbg}", r => s"~> ${r.showDbg}"):
     def mono(ty: Term, pol: Bool): Type =
       monoOrErr(typeAndSubstType(ty, pol), ty)
     ty match
     case Capture(base, _) => typeAndSubstType(base, pol)
     case Ref(sym: LocalSymbol) =>
-      log(s"Type lookup: ${sym.nme} ${sym.uid} ${map.keySet}")
+      log(dbg"Type lookup: ${sym.nme} ${sym.uid} ${map.keySet}")
       map.get(sym.uid) match
         case Some(Wildcard(in, out)) => if pol then out else in
         case Some(ty: Type) => ty
@@ -492,7 +492,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future
   private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: InvalCtx, scope: Scope): (GeneralType, Type) =
-  trace[(GeneralType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs.showDbg}", res => s"! ${res._2.showDbg}"):
+  trace[(GeneralType, Type)](dbg"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs.showDbg}", res => s"! ${res._2.showDbg}"):
     given CCtx = CCtx.init(lhs, S(rhs))
     (lhs, rhs) match
     case (Term.Lam(PlainParamList(params), body), ft @ PolyFunType(args, ret, eff)) => // * annoted functions
@@ -619,7 +619,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
           }, typeAndSubstType(resTy, true)(using map.toMap), Bot))
 
   private def typeCheck(t: Term)(using ctx: InvalCtx, scope: Scope): (GeneralType, Type) =
-  trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": (${res._1.showDbg}, ${res._2.showDbg})"):
+  trace[(GeneralType, Type)](dbg"${ctx.lvl}. Typing ${t.showDbg}", res => s": (${res._1.showDbg}, ${res._2.showDbg})"):
     given CCtx = CCtx.init(t, N)
     t match
       case Term.Annotated(Annot.Untyped(), _) => (Bot, Bot)

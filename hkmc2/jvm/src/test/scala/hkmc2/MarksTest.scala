@@ -20,8 +20,7 @@ class MarksTest extends AnyFunSuite:
     given ResolutionContext = owner.newResolverState.context
     given Raise = diagnostic => fail(diagnostic.theMsg)
     given DebugPrinter = new DebugPrinter
-    given TraceLogger = new TraceLogger:
-      override def doTrace: Boolean = false
+    given TraceLogger = TraceLogger.silent
     // Path normalization needs a value that retains scope exits. Dynamic values
     // omit those exits because they carry no references into their source scope.
     val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
