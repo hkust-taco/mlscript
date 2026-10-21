@@ -2491,7 +2491,7 @@ class NewResolver:
               case NoShape => ()
         case _ =>
           if rctx.state.arrayIndexErrors.add(new Identity(sel)) then
-            resolError(sel, receiver.diagnostic(msg"${receiver.describe.capitalize} does not support checked array indexing.", prefix.toLoc) :::
+            resolError(sel, receiver.diagnostic(msg"${receiver.describe.capitalize} does not support checked array indexing.") :::
               (msg"Use '![...]' for a dynamic access." -> N) :: Nil)
 
   private[semantics] def arrayElementType(array: NominalInstanceView): Opt[DeclaredType] =
@@ -2754,7 +2754,7 @@ class NewResolver:
         if mismatch then
           if rctx.state.reportedArities.getOrElseUpdate(reportKey, mutable.Set.empty).add(known) then
             val count = if unknown then msg"at least ${known}" else msg"${known}"
-            resolError(src, callable.arityDiagnostic(msg"${callable.describe.capitalize} expected ${arity.describe}, but got ${count}", src.toLoc))
+            resolError(src, callable.arityDiagnostic(msg"${callable.describe.capitalize} expected ${arity.describe}, but got ${count}"))
         else matched((tuple, marks))
       case _ => resolError(src, msg"Expected an argument tuple." -> args.toLoc :: Nil)
   
@@ -2775,7 +2775,7 @@ class NewResolver:
         true
     def reject(sh: TermShape)(using ResolutionContext): Unit =
       rctx.markError(res)
-      resolError(res, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a constructor pattern.", lhs.toLoc))
+      resolError(res, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a constructor pattern."))
     def classPattern(cls: ClassDef | ModuleOrObjectDef)(using ResolutionContext): Unit = if select(cls.sym) then
       val assoc = res.arguments match
         case N => Nil
@@ -3306,7 +3306,7 @@ class NewResolver:
         val exposed = lhs.applicationHead._1 match
           case unknown: UnknownValueShape => unknown.fromPublicInterface
           case _ => false
-        rctx.resolutionProblem(res, config.language.eagerResolution || exposed)(lhs.diagnostic(message, res.lhs.toLoc))
+        rctx.resolutionProblem(res, config.language.eagerResolution || exposed)(lhs.diagnostic(message))
       publish(UnknownValueShape.at(res))
       return
     if checked then res.callableTargets.currentShapes.add(source)
@@ -3416,10 +3416,10 @@ class NewResolver:
     host match
       case sel: NewSel =>
         rctx.resolutionProblem(sel, config.language.eagerResolution || fromPublicInterface):
-          provenance.diagnostic(message, sel.prefix.toLoc)
+          provenance.diagnostic(message, N)
       case _ if !rctx.hasError(host) =>
         rctx.markError(host)
-        resolError(host, provenance.diagnostic(message, host.toLoc))
+        resolError(host, provenance.diagnostic(message, N))
       case _ => ()
 
   /** Like for imports in Scala, wildcard opens do not provide the members that are inaccessible
@@ -3630,10 +3630,10 @@ class NewResolver:
               case value: TermShape => publishViewed(sel, value, ref.instances)
               case NoShape => ())
         , shape =>
-          member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic(_, sel.prefix.toLoc), TypeSubstitution.empty))
+          member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty))
       case N => listenReceiver(sel.prefix): shape =>
         log(dbg"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-        member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic(_, sel.prefix.toLoc), TypeSubstitution.empty)
+        member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
       case S(cls) =>
         classSelection(cls)(ref =>
           val cd = ref.definition
@@ -3671,7 +3671,7 @@ class NewResolver:
               case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty))
         , sh =>
           rctx.markError(sel)
-          resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class.", cls.prefix.toLoc))
+          resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
         )
   
   /** Both constructor references and explicit `new` use the same definition and
@@ -3736,7 +3736,7 @@ class NewResolver:
             val maxLists = paramCount.max(1)
             if nw.args.length > maxLists then
               resolError(nw, dsh.arityDiagnostic(
-                msg"Class '${cd.sym.nme}' expected at most ${maxLists} ${"argument list".pluralized(maxLists)}, but got ${nw.args.length}", nw.cls.toLoc))
+                msg"Class '${cd.sym.nme}' expected at most ${maxLists} ${"argument list".pluralized(maxLists)}, but got ${nw.args.length}"))
             if paramCount == 0 then
               nw.args.headOption.foreach: args =>
                 checkArgumentArity(args, Arity(0, 0, false, 0), nw, dsh)(_ => ())
@@ -3747,7 +3747,7 @@ class NewResolver:
     , shape =>
       if !rctx.hasError(nw) then
         rctx.markError(nw)
-        resolError(nw, shape.diagnostic(msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'.", nw.cls.toLoc))
+        resolError(nw, shape.diagnostic(msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'."))
     )
   
   /** Assignments return to the binding's lexical scope before contributing
@@ -4360,7 +4360,7 @@ class NewResolver:
       def checkArity(callee: TermShape, count: Int)(using ResolutionContext): Unit =
         if count != args.length && rctx.state.typeArgumentArityErrors.add((new Identity(application), count)) then
           resolError(trm, callee.diagnostic(msg"${callee.describe.capitalize} expected ${count} type ${
-            "argument".pluralized(count)}, but got ${args.length}", underlying.toLoc))
+            "argument".pluralized(count)}, but got ${args.length}"))
       def instantiate(value: TermShape)(receive: Listener)(using ResolutionContext): Unit = listenInstanceViews(value): viewed =>
         val ShapeParts(actual, captured, supplied) = shapeParts(viewed)
         if supplied.nonEmpty then

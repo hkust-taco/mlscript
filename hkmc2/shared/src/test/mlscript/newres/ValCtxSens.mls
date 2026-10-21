@@ -56,8 +56,6 @@ alias(B).u
 //│ ║  l.54: 	alias(B).u
 //│ ║        	^^^^^^^^^^
 //│ ╟── Cannot resolve member 'u' of a value with unknown shape.
-//│ ║  l.54: 	alias(B).u
-//│ ║        	^^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
 //│ ║  l.16: 	val foo = x => x
 //│ ║        	          ^
@@ -71,11 +69,9 @@ alias(B).u
 :sr
 alias(A).u
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.72: 	alias(A).u
+//│ ║  l.70: 	alias(A).u
 //│ ║        	^^^^^^^^^^
 //│ ╟── Cannot resolve member 'u' of a value with unknown shape.
-//│ ║  l.72: 	alias(A).u
-//│ ║        	^^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
 //│ ║  l.16: 	val foo = x => x
 //│ ║        	          ^

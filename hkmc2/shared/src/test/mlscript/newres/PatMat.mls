@@ -101,8 +101,6 @@ test(bz)
 //│ ║  l.98: 	    Foo(y) then y.b
 //│ ║        	                ^^^
 //│ ╟── Cannot resolve member 'b' of a value with unknown shape.
-//│ ║  l.98: 	    Foo(y) then y.b
-//│ ║        	                ^
 //│ ╟── This constructor field may contain a value of unknown shape.
 //│ ║  l.5: 	class Foo(val a)
 //│ ║       	              ^
@@ -127,7 +125,7 @@ let x = if maybe then Bar else bz
 :e
 x.b
 //│ ╔══[COMPILATION ERROR] This selection of member 'b' is ambiguous, as it has multiple resolved targets
-//│ ║  l.128: 	x.b
+//│ ║  l.126: 	x.b
 //│ ║         	^^^
 //│ ╟── target: function 'b' in overloaded function and class 'Baz'
 //│ ║  l.7: 	class Baz(c) { fun b = c }
@@ -169,17 +167,15 @@ if Foo(Predef) is
 val f = case
   Foo(y) then y.b
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.170: 	  Foo(y) then y.b
+//│ ║  l.168: 	  Foo(y) then y.b
 //│ ║         	              ^^^
 //│ ╟── Cannot resolve member 'b' of a value with unknown shape.
-//│ ║  l.170: 	  Foo(y) then y.b
-//│ ║         	              ^
 //│ ╟── This constructor field may contain a value of unknown shape.
 //│ ║  l.5: 	class Foo(val a)
 //│ ║       	              ^
 //│ ╟── Parameter 'caseScrut' admits values of unknown shape.
 //│ ╟── 'f' is exposed by this compilation unit.
-//│ ║  l.169: 	val f = case
+//│ ║  l.167: 	val f = case
 //│ ╙──       	^^^^^
 //│ f = fun
 

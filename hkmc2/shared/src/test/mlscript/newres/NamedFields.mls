@@ -73,8 +73,6 @@ let key = "a"
 //│ ║  l.71: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
-//│ ║  l.71: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This computed key can overwrite the selected member.
 //│ ║  l.71: 	[a: {answer: 1}, (key): {other: 2}].0.a.answer
 //│ ╙──      	                  ^^^

@@ -18,8 +18,6 @@ xs.0.value
 //│ ║  l.16: 	xs.0.value
 //│ ║        	^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.16: 	xs.0.value
-//│ ║        	^^^^
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.14: 	let xs = (mut [] as Array[in Item])
 //│ ║        	                          ^^^^^^^
@@ -35,7 +33,7 @@ let xs = mut []
 connect(xs, Item(3))
 xs.0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.36: 	xs.0.value
+//│ ║  l.34: 	xs.0.value
 //│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = []
@@ -65,13 +63,11 @@ class Box[out T](val item: T)
 let box = (new Box(Item(6)) as Box[in Item])
 box.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.66: 	box.item.value
+//│ ║  l.64: 	box.item.value
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.66: 	box.item.value
-//│ ║        	^^^^^^^^
 //│ ╟── This type argument specifies only an input bound.
-//│ ║  l.65: 	let box = (new Box(Item(6)) as Box[in Item])
+//│ ║  l.63: 	let box = (new Box(Item(6)) as Box[in Item])
 //│ ║        	                                   ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -95,13 +91,11 @@ class Box[T](val item: T) with
 let box = (new Box(Item(8)) as Box[in Item])
 box.apply(x => x.value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.96: 	box.apply(x => x.value)
+//│ ║  l.92: 	box.apply(x => x.value)
 //│ ║        	               ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.96: 	box.apply(x => x.value)
-//│ ║        	               ^
 //│ ╟── This type argument specifies only an input bound.
-//│ ║  l.95: 	let box = (new Box(Item(8)) as Box[in Item])
+//│ ║  l.91: 	let box = (new Box(Item(8)) as Box[in Item])
 //│ ║        	                                   ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

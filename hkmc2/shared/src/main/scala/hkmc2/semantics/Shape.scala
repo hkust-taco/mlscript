@@ -29,24 +29,24 @@ sealed trait Shape extends ShapeEvent:
     * from the observed value to that witness. Wrappers preserve this ordering.
     * An annotation restricting a value and its class declaration are different
     * witnesses: interface errors use the annotation, while toLoc identifies the
-    * declaration. Unknown values have no interface witness of their own, so their
-    * operations point to the operand's use site and provenance explains why the
-    * interface is unknown. Diagnostic witnesses do not change semantic keys.
+    * declaration. Unknown values cite their provenance; the enclosing resolution
+    * error already locates the operation, so repeating its operand adds no evidence.
+    * Diagnostic witnesses do not change semantic keys.
     */
-  final def diagnostic(message: Message, useLoc: Opt[Loc]): Ls[(Message, Opt[Loc])] = this match
+  final def diagnostic(message: Message): Ls[(Message, Opt[Loc])] = this match
     case value: TermShape => value.applicationHead._1 match
-      case view: NominalInstanceView => view.provenance.diagnostic(message, view.annotation.flatMap(_.toLoc).orElse(toLoc).orElse(useLoc))
-      case view: ContextualShape => view.source.diagnostic(message, useLoc)
-      case view: SpecializedShape => view.declaration.diagnostic(message, useLoc)
-      case unknown: UnknownValueShape => unknown.provenance.diagnostic(message, useLoc.orElse(toLoc))
-      case opaque: OpaqueTypeShape => opaque.provenance.diagnostic(message, toLoc.orElse(useLoc))
-      case rigid: RigidTypeShape => rigid.provenance.diagnostic(message, useLoc.orElse(toLoc))
-      case _ => (message -> toLoc.orElse(useLoc)) :: Nil
-    case _: SymShape => (message -> toLoc.orElse(useLoc)) :: Nil
+      case view: NominalInstanceView => view.provenance.diagnostic(message, view.annotation.flatMap(_.toLoc).orElse(toLoc))
+      case view: ContextualShape => view.source.diagnostic(message)
+      case view: SpecializedShape => view.declaration.diagnostic(message)
+      case unknown: UnknownValueShape => unknown.provenance.diagnostic(message, N)
+      case opaque: OpaqueTypeShape => opaque.provenance.diagnostic(message, toLoc)
+      case rigid: RigidTypeShape => rigid.provenance.diagnostic(message, N)
+      case _ => (message -> toLoc) :: Nil
+    case _: SymShape => (message -> toLoc) :: Nil
   /** Arity errors also cite where the expected parameter lists are declared, when the
     * witness of `diagnostic` does not show them: a class constructor can take the
     * parameter lists of `constructor(...)` declarations written in the class body. */
-  final def arityDiagnostic(message: Message, useLoc: Opt[Loc]): Ls[(Message, Opt[Loc])] =
+  final def arityDiagnostic(message: Message): Ls[(Message, Opt[Loc])] =
     def constructorDeclarations(shape: Shape): Ls[(Message, Opt[Loc])] = shape match
       case value: TermShape => value.applicationHead._1 match
         case view: ContextualShape => constructorDeclarations(view.source)
@@ -54,7 +54,7 @@ sealed trait Shape extends ShapeEvent:
         case defn: DefnShape => defn.ctorLoc.map(loc => msg"The constructor is declared here." -> S(loc)).toList
         case _ => Nil
       case _: SymShape => Nil
-    diagnostic(message, useLoc) ::: constructorDeclarations(this)
+    diagnostic(message) ::: constructorDeclarations(this)
   def shwDbg(using DebugPrinter): Str = this match
     case ds: DefnShape => ds.defn.sym.showDbg
     case as: AppShape => s"AppShape(${as.receiver.shwDbg}, ${as.args.showDbg})"
@@ -1064,8 +1064,9 @@ final class ShapeProvenance private (path: => Ls[(Message, Opt[Loc])], notes: =>
   private lazy val originNotes = notes
   /** A type origin anchors the operation's explanation: first trace the value
     * back to that annotation, then explain the interface it provides. Without
-    * an annotation witness, report the operation at its fallback location first
-    * and follow it with the reasons the value's shape is unknown.
+    * an annotation witness, lead with the operation's explanation and follow it
+    * with the reasons the value's shape is unknown. The fallback identifies other
+    * shape evidence, if any, not the operation already located by the main error.
     */
   def diagnostic(message: Message, fallback: Opt[Loc]): Ls[(Message, Opt[Loc])] = typeOrigin match
     case S(source) => pathNotes ::: (message -> source.toLoc.orElse(fallback)) :: originNotes

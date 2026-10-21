@@ -145,8 +145,6 @@ exposed(First)
 //│ ║  l.3: 	module First { val value = 1 }
 //│ ║       	^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'absent' of a value with unknown shape.
-//│ ║  l.139: 	fun exposed(x) = x.absent
-//│ ║         	                 ^
 //│ ╟── Parameter 'x' admits values of unknown shape.
 //│ ║  l.139: 	fun exposed(x) = x.absent
 //│ ║         	            ^
@@ -160,15 +158,13 @@ exposed(First)
 fun resolved(x) = x.value
 [resolved(First), resolved(Second)]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.160: 	fun resolved(x) = x.value
+//│ ║  l.158: 	fun resolved(x) = x.value
 //│ ║         	                  ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.160: 	fun resolved(x) = x.value
-//│ ║         	                  ^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.160: 	fun resolved(x) = x.value
+//│ ║  l.158: 	fun resolved(x) = x.value
 //│ ║         	             ^
 //│ ╟── 'resolved' is exposed by this compilation unit.
-//│ ║  l.160: 	fun resolved(x) = x.value
+//│ ║  l.158: 	fun resolved(x) = x.value
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

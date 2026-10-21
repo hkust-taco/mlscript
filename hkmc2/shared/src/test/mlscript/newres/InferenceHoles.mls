@@ -66,8 +66,6 @@ read(Box(Item(8)))
 //│ ║  l.63: 	fun read(box: Box) = box.item.value
 //│ ║        	                     ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.63: 	fun read(box: Box) = box.item.value
-//│ ║        	                     ^^^^^^^^
 //│ ╟── Parameter 'box' admits values of unknown shape.
 //│ ║  l.63: 	fun read(box: Box) = box.item.value
 //│ ║        	         ^^^^^^^^
@@ -103,16 +101,16 @@ type SomeBox = Box
 private fun both(left: SomeBox, right: SomeBox) = [left.item.first, right.item.second]
 both(Box(First(11)), Box(Second(12)))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.103: 	private fun both(left: SomeBox, right: SomeBox) = [left.item.first, right.item.second]
+//│ ║  l.101: 	private fun both(left: SomeBox, right: SomeBox) = [left.item.first, right.item.second]
 //│ ║         	                                                                    ^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.104: 	both(Box(First(11)), Box(Second(12)))
+//│ ║  l.102: 	both(Box(First(11)), Box(Second(12)))
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.103: 	private fun both(left: SomeBox, right: SomeBox) = [left.item.first, right.item.second]
+//│ ║  l.101: 	private fun both(left: SomeBox, right: SomeBox) = [left.item.first, right.item.second]
 //│ ║         	                                                   ^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.104: 	both(Box(First(11)), Box(Second(12)))
+//│ ║  l.102: 	both(Box(First(11)), Box(Second(12)))
 //│ ╙──       	                         ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[11, 12]', got: 'undefined'
@@ -122,13 +120,13 @@ both(Box(First(11)), Box(Second(12)))
 class Box[T](val item: T)
 private fun excess(value: Box[Int, Str]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.123: 	private fun excess(value: Box[Int, Str]) = ()
+//│ ║  l.121: 	private fun excess(value: Box[Int, Str]) = ()
 //│ ║         	                          ^^^^^^^^^^^^^
 //│ ╟── Type 'Box' accepts at most 1 type argument, but got 2.
-//│ ║  l.123: 	private fun excess(value: Box[Int, Str]) = ()
+//│ ║  l.121: 	private fun excess(value: Box[Int, Str]) = ()
 //│ ║         	                          ^^^^^^^^^^^^^
 //│ ╟── The type parameters are declared here.
-//│ ║  l.122: 	class Box[T](val item: T)
+//│ ║  l.120: 	class Box[T](val item: T)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // A type alias checks its own argument list before interpreting the body.
@@ -137,13 +135,13 @@ class Box[T](val item: T)
 type Alias[A] = Box[A]
 private fun excess(value: Alias[Int, Str]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.138: 	private fun excess(value: Alias[Int, Str]) = ()
+//│ ║  l.136: 	private fun excess(value: Alias[Int, Str]) = ()
 //│ ║         	                          ^^^^^^^^^^^^^^^
 //│ ╟── Type 'Alias' accepts at most 1 type argument, but got 2.
-//│ ║  l.138: 	private fun excess(value: Alias[Int, Str]) = ()
+//│ ║  l.136: 	private fun excess(value: Alias[Int, Str]) = ()
 //│ ║         	                          ^^^^^^^^^^^^^^^
 //│ ╟── The type parameters are declared here.
-//│ ║  l.137: 	type Alias[A] = Box[A]
+//│ ║  l.135: 	type Alias[A] = Box[A]
 //│ ╙──       	^^^^^^^^^^^^
 
 // Annotated results do not hide missing input types from exposure checking.
@@ -153,13 +151,11 @@ class Box[T](val item: T)
 fun read(box: Box): Int = box.item.value
 read(Box(Item(13)))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.153: 	fun read(box: Box): Int = box.item.value
+//│ ║  l.151: 	fun read(box: Box): Int = box.item.value
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.153: 	fun read(box: Box): Int = box.item.value
-//│ ║         	                          ^^^^^^^^
 //│ ╟── 'read' is exposed by this compilation unit.
-//│ ║  l.153: 	fun read(box: Box): Int = box.item.value
+//│ ║  l.151: 	fun read(box: Box): Int = box.item.value
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -170,16 +166,14 @@ class Box[T](val item: T)
 fun read(callback: () -> Box) = callback().item.value
 read(() => Box(Item(14)))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.170: 	fun read(callback: () -> Box) = callback().item.value
+//│ ║  l.166: 	fun read(callback: () -> Box) = callback().item.value
 //│ ║         	                                ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.170: 	fun read(callback: () -> Box) = callback().item.value
-//│ ║         	                                ^^^^^^^^^^^^^^^
 //│ ╟── Parameter 'callback' admits values of unknown shape.
-//│ ║  l.170: 	fun read(callback: () -> Box) = callback().item.value
+//│ ║  l.166: 	fun read(callback: () -> Box) = callback().item.value
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'read' is exposed by this compilation unit.
-//│ ║  l.170: 	fun read(callback: () -> Box) = callback().item.value
+//│ ║  l.166: 	fun read(callback: () -> Box) = callback().item.value
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

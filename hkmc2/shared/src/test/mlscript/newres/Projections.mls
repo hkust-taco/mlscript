@@ -95,8 +95,6 @@ apply(identity, new Answer).get()
 //│ ║  l.93: 	apply(identity, new Answer).get()
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'get' of a value with unknown shape.
-//│ ║  l.93: 	apply(identity, new Answer).get()
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The shape of this value is unknown.
 //│ ║  l.92: 	val apply = Identity::apply
 //│ ╙──      	                    ^^^^^^^
@@ -143,17 +141,17 @@ fun sameClass(value) = value.Entry#get()
 :e
 fun missingClass(value) = value.Unknown#get()
 //│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
-//│ ║  l.144: 	fun missingClass(value) = value.Unknown#get()
+//│ ║  l.142: 	fun missingClass(value) = value.Unknown#get()
 //│ ╙──       	                               ^^^^^^^^
 
 :e
 val instance = new Parent
 fun instanceAsClass(value) = value.instance#get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.151: 	fun instanceAsClass(value) = value.instance#get()
+//│ ║  l.149: 	fun instanceAsClass(value) = value.instance#get()
 //│ ║         	                             ^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Parent' cannot be used as a projection class.
-//│ ║  l.150: 	val instance = new Parent
+//│ ║  l.148: 	val instance = new Parent
 //│ ╙──       	               ^^^^^^^^^^
 //│ instance = Parent
 
@@ -190,10 +188,10 @@ fun invalidAlias(value) = value.AliasToNumber#get()
 val SourceNumber = 123
 val AliasToNumber = SourceNumber
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.189: 	fun invalidAlias(value) = value.AliasToNumber#get()
+//│ ║  l.187: 	fun invalidAlias(value) = value.AliasToNumber#get()
 //│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Integer literal cannot be used as a projection class.
-//│ ║  l.190: 	val SourceNumber = 123
+//│ ║  l.188: 	val SourceNumber = 123
 //│ ╙──       	                   ^^^
 //│ AliasToNumber = 123
 //│ SourceNumber = 123
@@ -234,10 +232,10 @@ private fun chooseClass(flag) = if flag then Parent.class else OtherEntry.class
 let classAlias = chooseClass(true)
 fun ambiguousAlias(value) = value.classAlias#get()
 //│ ╔══[COMPILATION ERROR] The projection class is ambiguous
-//│ ║  l.235: 	fun ambiguousAlias(value) = value.classAlias#get()
+//│ ║  l.233: 	fun ambiguousAlias(value) = value.classAlias#get()
 //│ ║         	                                 ^^^^^^^^^^^
 //│ ╟── class: 'OtherEntry'
-//│ ║  l.232: 	class OtherEntry extends Parent {}
+//│ ║  l.230: 	class OtherEntry extends Parent {}
 //│ ║         	      ^^^^^^^^^^
 //│ ╟── class: 'Parent'
 //│ ║  l.33: 	class Parent { fun get() = 9 }
@@ -267,9 +265,9 @@ readMixed(Identified(5))
 let recordQualifier = {"class": Parent}
 fun invalidRecordQualifier(value) = value.recordQualifier#get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.268: 	fun invalidRecordQualifier(value) = value.recordQualifier#get()
+//│ ║  l.266: 	fun invalidRecordQualifier(value) = value.recordQualifier#get()
 //│ ║         	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Record literal cannot be used as a projection class.
-//│ ║  l.267: 	let recordQualifier = {"class": Parent}
+//│ ║  l.265: 	let recordQualifier = {"class": Parent}
 //│ ╙──       	                       ^^^^^^^^^^^^^^^
 //│ recordQualifier = {class: class Parent}

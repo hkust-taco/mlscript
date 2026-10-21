@@ -31,8 +31,6 @@ fun inputOnly(source: Source[in Item]) = source.item.value
 //│ ║  l.29: 	fun inputOnly(source: Source[in Item]) = source.item.value
 //│ ║        	                                         ^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.29: 	fun inputOnly(source: Source[in Item]) = source.item.value
-//│ ║        	                                         ^^^^^^^^^^^
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.29: 	fun inputOnly(source: Source[in Item]) = source.item.value
 //│ ║        	                             ^^^^^^^
@@ -64,7 +62,7 @@ let empty = mut []
 connect({iterator: () => empty}, Item(7))
 empty.0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.65: 	empty.0.value
+//│ ║  l.63: 	empty.0.value
 //│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ empty = []

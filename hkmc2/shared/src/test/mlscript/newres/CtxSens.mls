@@ -52,8 +52,6 @@ bar(A).u
 //│ ║  l.50: 	bar(A).u
 //│ ║        	^^^^^^^^
 //│ ╟── Cannot resolve member 'u' of a value with unknown shape.
-//│ ║  l.50: 	bar(A).u
-//│ ║        	^^^^^^
 //│ ╟── Parameter 'y' admits values of unknown shape.
 //│ ║  l.40: 	fun bar(y) =
 //│ ║        	        ^
@@ -70,11 +68,9 @@ bar(A).u
 :sr
 bar(B).u
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.71: 	bar(B).u
+//│ ║  l.69: 	bar(B).u
 //│ ║        	^^^^^^^^
 //│ ╟── Cannot resolve member 'u' of a value with unknown shape.
-//│ ║  l.71: 	bar(B).u
-//│ ║        	^^^^^^
 //│ ╟── Parameter 'y' admits values of unknown shape.
 //│ ║  l.40: 	fun bar(y) =
 //│ ║        	        ^
