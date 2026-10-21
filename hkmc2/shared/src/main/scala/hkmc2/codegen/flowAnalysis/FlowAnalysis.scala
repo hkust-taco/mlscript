@@ -155,13 +155,11 @@ object TrackableSelect:
 object MemberRefTo:
   def unapply(p: Path): Opt[(targetSymbol: DefinitionSymbol[?], selectedFrom: Opt[Path])] =
     p.targetSymbol.map: target =>
-      target ->
-      locally:
-        p match
-          case Select(qual, _) => S(qual)
-          case DynSelect(qual, _, DynSelectKind.Member(_)) => S(qual)
-          case SuperSelect(qual, _, _) => S(qual)
-          case _ => N
+      target -> p.match
+        case Select(qual, _) => S(qual)
+        case DynSelect(qual, _, DynSelectKind.Member(_)) => S(qual)
+        case SuperSelect(qual, _, _) => S(qual)
+        case _ => N
 
 object CtorProducer:
   /** Extracts result forms that produce a concrete `Ctor` flow strategy. */
