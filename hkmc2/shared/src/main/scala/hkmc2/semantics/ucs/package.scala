@@ -15,12 +15,8 @@ package object ucs:
   def bug(using Line, FileName, Name, Raise)(msgs: (Message, Option[Loc])*): Unit =
     raise(InternalError(msgs.toList))
   
-  extension (symbol: Symbol)
-    /** UCS-generated local references need no further resolution. Other symbol
-      * kinds retain the legacy resolved form used by generated pattern code. */
-    def safeRef(using Elaborator.State): Term.Ref | Term.SimpleRef = symbol match
-      case symbol: LocalVarSymbol => Term.SimpleRef(symbol)(N)
-      case _ => symbol.ref().resolve
+  extension (symbol: SimpleRefSymbol)
+    def safeRef(using Elaborator.State): Term.SimpleRef = Term.SimpleRef(symbol)(N)
   
   extension (op: Keyword.Infix)
     infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match

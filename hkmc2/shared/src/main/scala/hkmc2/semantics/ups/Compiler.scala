@@ -6,7 +6,7 @@ package ups
 import hkmc2.utils.*, shorthands.*
 
 import syntax.{Keyword, LetBind, Tree}, Tree.{BoolLit, DecLit, Ident, IntLit, StrLit, UnitLit}
-import Term.{Blk, Rcd, Ref, SynthIf, SynthSel}
+import Term.{Blk, Rcd, SynthIf}
 import Pattern.{Instantiation, Head}
 import Elaborator.{Ctx, State, ctx}, utils.TL
 import ucs.{TermSynthesizer, FlatPattern, safeRef}
@@ -575,15 +575,7 @@ object Compiler:
     * matcher code, preserving the path chosen by source resolution.
     */
   def preservedReference(term: Term)(using State, codegen.Erasure): Term =
-    /** To make `Lowering` happy about the terms. */
-    def fillImplicitArgs(term: Term): Term = term match
-      case ref: Ref =>
-        if ref.expansion.isDefined then ref else ref.resolve
-      case sel: SynthSel =>
-        fillImplicitArgs(sel.prefix)
-        if sel.expansion.isDefined then sel else sel.resolve
-      case _: Term => term
-    fillImplicitArgs(term.mkClone)
+    term.mkClone
   
   import Pattern.*
   

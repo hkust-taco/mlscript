@@ -137,6 +137,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   
   val lowerHandlers: Bool = config.effectHandlers.isDefined
 
+  private object BuiltinRef:
+    def unapply(term: Term): Opt[BuiltinSymbol] = term match
+      case SimpleRef(sym: BuiltinSymbol) => S(sym)
+      case Ref(sym: BuiltinSymbol) => S(sym)
+      case _ => N
+
   private lazy val wasmBinaryIntrinsicMap: Map[Str, Str] = Map(
     "+" -> "plus_impl",
     "-" -> "minus_impl",
@@ -1159,7 +1165,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       ref(t, annots, N, inStmtPos = inStmtPos)(k)
     case st.Resolved(t @ st.Ref(bsym), sym) =>
       ref(t, annots, S(sym), inStmtPos = inStmtPos)(k)
-    case st.App(ref @ Ref(sym: BuiltinSymbol), arg) =>
+    case st.App(ref @ BuiltinRef(sym), arg) =>
       arg match
       case st.Tup(Nil) =>
         if !sym.nullary then raise:
@@ -1226,7 +1232,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // * operations by the dedicated case above, so they cannot be part of a curried call chain;
         // * otherwise, the operator would be lowered as a function value, which, for operators that are
         // * both unary and binary like `-`, is the binary one.
-        case app @ st.App(Ref(_: BuiltinSymbol), _) => (app, args)
+        case app @ st.App(BuiltinRef(_), _) => (app, args)
         case st.App(inner, innerArg) => collectAppChain(inner, innerArg :: args)
         case st.TyApp(inner, _) => collectAppChain(inner, args) // type args are erased
         case expr => (expr, args)
@@ -2049,12 +2055,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     annotations.foreach:
       case Annot.Untyped() => ()
       case annot: Annot.Trm => receiver match
-        case st.App(Ref(_: BuiltinSymbol), _) => warn(annot)
+        case st.App(BuiltinRef(_), _) => warn(annot)
         case st.App(_, _) | New(_, _, _) | DynNew(_, _) | Mut(_: New | _: DynNew) => ()
         case st.Resolved(_, defnSym) if isImplicitNullaryCall(defnSym) => ()
         case _ => warn(annot)
       case a @ Annot.TailCall() => receiver match
-        case st.App(Ref(_: BuiltinSymbol), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))
+        case st.App(BuiltinRef(_), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))
         case st.App(_, _) => ()
         case st.Resolved(_, defnSym) if isImplicitNullaryCall(defnSym) => ()
         case _ => warn(a)

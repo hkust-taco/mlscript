@@ -650,7 +650,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     app(matcher.safeRef, tup(fld(argument)), label)
 
   private def refEq(left: Term, right: Term): Term =
-    app(State.builtinOpsMap("===").ref(Ident("===")), tup(fld(left), fld(right)), "reference equality")
+    app(State.builtinOpsMap("===").safeRef, tup(fld(left), fld(right)), "reference equality")
 
   /** Run `make` with a thunk producing the `rest` split. When the thunk is
     * invoked more than once, `rest` is bound as a join point and every

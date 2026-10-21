@@ -4,7 +4,7 @@ package semantics
 import hkmc2.utils.*, shorthands.*
 import syntax.*, Elaborator.State, ucs.FlatPattern
 
-final case class Branch(scrutinee: Term.Ref | Term.SimpleRef, pattern: FlatPattern, continuation: Split) extends AutoLocated:
+final case class Branch(scrutinee: Term.SimpleRef, pattern: FlatPattern, continuation: Split) extends AutoLocated:
   def mkClone(using State, codegen.Erasure): Branch =
     Branch(scrutinee.mkClone.asInstanceOf, pattern.mkClone, continuation.mkClone)
   
@@ -13,7 +13,7 @@ final case class Branch(scrutinee: Term.Ref | Term.SimpleRef, pattern: FlatPatte
   def showDbg(using DebugPrinter): String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
 
 object Branch:
-  def apply(scrutinee: Term.Ref | Term.SimpleRef, continuation: Split): Branch =
+  def apply(scrutinee: Term.SimpleRef, continuation: Split): Branch =
     Branch(scrutinee, FlatPattern.Lit(Tree.BoolLit(true)), continuation)
 
 enum Split extends AutoLocated with ProductWithTail:
@@ -199,7 +199,7 @@ object Split:
             bindings.iterator.foldLeft(go(consequent)):
               case (innerSplit, (symbol, mkTerm)) => Let(symbol, mkTerm(), innerSplit)
           compiler.makeMatchSplit
-            (scrutCache.getOrElseUpdate(symbol, Scrut.from(ref)), pattern, false)
+            (scrutCache.getOrElseUpdate(symbol, SymbolScrut(symbol)), pattern, false)
             (makeConsequent, alternative)
         case SS.Head.Let(binding, term) => Let(binding, term, go(tail))
       case SS.Else(default) => Else(default)

@@ -99,7 +99,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   
   extension (split: Split)
     /** Check if any branch in the split tests the given scrutinee. */
-    private def referencesScrutinee(scrutinee: Term.Ref | Term.SimpleRef): Bool = split match
+    private def referencesScrutinee(scrutinee: Term.SimpleRef): Bool = split match
       case Split.Cons(Branch(thatScrutinee, _, continuation), tail) =>
         (scrutinee.sym is thatScrutinee.sym) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
       case Split.Let(_, _, tail) => tail.referencesScrutinee(scrutinee)
@@ -115,7 +115,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
 
     /** Specialize this split under the given assumption, falling back to the
       * unchanged split when specialization is a no-op. */
-    private def specialized(mode: Mode, scrutinee: Term.Ref | Term.SimpleRef, pattern: FlatPattern)(using VarSet): Split =
+    private def specialized(mode: Mode, scrutinee: Term.SimpleRef, pattern: FlatPattern)(using VarSet): Split =
       specialize(split, mode, scrutinee, pattern).getOrElse(split)
 
   /** Replace all `UseSplit(sym)` references in `split` with a duplicate of `body`. */
@@ -217,7 +217,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   private def specialize(
       split: Split,
       mode: Mode,
-      scrutinee: Term.Ref | Term.SimpleRef,
+      scrutinee: Term.SimpleRef,
       pattern: FlatPattern
   )(using VarSet): Opt[Split] = trace(
     pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${split.prettyPrint}",
