@@ -99,7 +99,7 @@ new Foo(...[1, 2])
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.98: 	new Foo(...[1, 2])
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Foo' expected 3 arguments, but got 2
+//│ ╟── Constructor of class 'Foo' expected 3 arguments, but got 2
 //│ ║  l.92: 	data class Foo(a,b,c)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ = Foo(1, 2, undefined)
@@ -109,7 +109,7 @@ new Foo(...[1, 2, 3, 4])
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.108: 	new Foo(...[1, 2, 3, 4])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Foo' expected 3 arguments, but got 4
+//│ ╟── Constructor of class 'Foo' expected 3 arguments, but got 4
 //│ ║  l.92: 	data class Foo(a,b,c)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ = Foo(1, 2, 3)

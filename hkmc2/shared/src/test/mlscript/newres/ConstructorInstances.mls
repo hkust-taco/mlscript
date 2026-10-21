@@ -111,7 +111,7 @@ private val invalid = Box[Int, Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
 //│ ║  l.110: 	private val invalid = Box[Int, Str]
 //│ ║         	                      ^^^^^^^^^^^^^
-//│ ╟── Class 'Box' expected 1 type argument, but got 2
+//│ ╟── Constructor of class 'Box' expected 1 type argument, but got 2
 //│ ║  l.109: 	class Box[T](val item: T)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ invalid = fun Box { class: class Box }
@@ -135,7 +135,7 @@ box[Str]("bad")
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
 //│ ║  l.134: 	box[Str]("bad")
 //│ ║         	^^^^^^^^
-//│ ╟── Class 'Box' expected 0 type arguments, but got 1
+//│ ╟── Constructor of class 'Box' expected 0 type arguments, but got 1
 //│ ║  l.132: 	class Box[T](val item: T)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
@@ -156,7 +156,7 @@ private val invalid = partial[Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
 //│ ║  l.155: 	private val invalid = partial[Str]
 //│ ║         	                      ^^^^^^^^^^^^
-//│ ╟── Class 'Pair' expected 0 type arguments, but got 1
+//│ ╟── Constructor of class 'Pair' expected 0 type arguments, but got 1
 //│ ║  l.153: 	class Pair[T](val item: T)(val other: T)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ invalid = fun

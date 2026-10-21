@@ -35,7 +35,7 @@ new Foo(123)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.34: 	new Foo(123)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── Class 'Foo' expected 2 arguments, but got 1
+//│ ╟── Constructor of class 'Foo' expected 2 arguments, but got 1
 //│ ║  l.18: 	data class Foo { constructor(x, y) }
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
