@@ -170,8 +170,9 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
 
     // No erased representation is read until every interpretation has been validated and every
     // nominal parent header has been published, including forward and external declarations.
+    val validatedTypes = mutable.Set.empty[TypeResolution]
     statements.foreach:
-      case term: Term => term.typeInterpretation.foreach(_.validate(Set.empty))
+      case term: Term => term.typeInterpretation.foreach(_.validate(validatedTypes))
       case _ => ()
     statements.foreach:
       case cls: ClassLikeDef =>

@@ -2662,6 +2662,10 @@ class NewResolver:
     checkArgumentArity(args, arity, src, funSh):
       case (tuple, marks) => zipTupleShapes(mss, arity, tuple, marks)(publish)
 
+  /** Calls and tuple patterns match the same leading/rest/trailing layout.
+    * Share position bounds and rest slicing so both preserve possible elements
+    * without assigning them impossible positions or inventing minimum lengths.
+    */
   private def zipTupleShapes(mss: Ls[Marks], arity: Arity, tuple: TupleShape, marks: Marks)(
       publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
     val Arity(leadingRequired, expectedCount, hasRest, trailing) = arity
@@ -2717,7 +2721,7 @@ class NewResolver:
               xs.take(xs.length - suffix.length).map(segment => TupleShape.Unknown(tuple.source, segment.element)) ::: suffix
             else suffix
       val remaining = drop(drop(tuple.segments, expectedCount, true).reverse, trailing, true).reverse
-      val rest = if expectedCount == 0 && trailing == 0 then tuple else TupleShape.restView(tuple, remaining)(this)
+      val rest = if remaining == tuple.segments then tuple else TupleShape.restView(tuple, remaining)(this)
       publish(expectedCount, rest.exit(marks).enter(mss))
   
   private def checkArgumentArity(args: Term, arity: Arity, src: Term,
@@ -2966,8 +2970,10 @@ class NewResolver:
           case CtorPatternShape(cls, fs, _, resSym, constructorMarks) =>
             // Nominal views already live outside the instance. Cancel the
             // constructor's own exit, retaining its enclosing lexical path.
+            // A self-contained value such as unit would discard those outer
+            // exits and lose the context of a class returned from a function.
             val context = cls match
-              case _: ClassDef => MarkedShape.enter(unitResultShape, ResolutionBoundary(cls.sym), N).exit(constructorMarks) match
+              case _: ClassDef => MarkedShape.enter(markCarrier, ResolutionBoundary(cls.sym), N).exit(constructorMarks) match
                 case Marked(_, marks) => marks :: Nil
                 case NoShape => lastWords("A wildcard constructor entry cannot reject its own exit")
               case _: ModuleOrObjectDef => Nil
@@ -3080,41 +3086,11 @@ class NewResolver:
           val known = segments.count(_.isInstanceOf[TupleShape.Fixed])
           val uncertain = known != segments.length
           if (uncertain || known >= required) && (spread.nonEmpty || known <= required) then
-            def bind(segment: TupleShape.Segment, p: Pattern)(using ResolutionContext): Unit =
-              def receive(value: TermShape)(using ResolutionContext): Unit = value.exit(marks) match
-                case value: TermShape => matchShapePat(value, p)(_ => ())
-                case NoShape => ()
-              listenTupleField(segment.element)(receive)
-            // A spread can move subsequent fields. Retain every possible position
-            // rather than treating the first unknown segment as the only candidate.
-            def positions(xs: Ls[TupleShape.Segment], ps: Ls[Pattern])(using ResolutionContext): Unit =
-              var before = 0
-              var unknownBefore = false
-              xs.foreach:
-                case field: TupleShape.Fixed =>
-                  ps.iterator.zipWithIndex.foreach: (p, index) =>
-                    if index >= before && (if !unknownBefore then index == before
-                        else spread.nonEmpty || index <= before + required - known) then bind(field, p)
-                  before += 1
-                case unknown: TupleShape.Unknown =>
-                  ps.drop(before).foreach(bind(unknown, _))
-                  unknownBefore = true
-            positions(segments, leading)
-            positions(segments.reverse, trailing.reverse)
-            spread.foreach: (_, p, _) =>
-              // Stop trimming at an unknown segment: its possible lengths include
-              // consuming the remaining prefix/suffix, so all later values may remain.
-              def trim(xs: Ls[TupleShape.Segment], count: Int): Ls[TupleShape.Segment] =
-                if count == 0 then xs else xs match
-                  case (_: TupleShape.Fixed) :: tail => trim(tail, count - 1)
-                  case _ => xs
-              val middle = trim(trim(segments, leading.length).reverse, trailing.length).reverse
-              // Reusing an unchanged view also bounds recursive tail matching on
-              // arrays with unknown length; wrapping it again would grow forever.
-              val rest = if middle == segments then tuple
-                else TupleShape.restView(tuple, middle)(this)
-              rest.exit(marks) match
-                case value: TermShape => matchShapePat(value, p)(_ => ())
+            val patterns = leading ::: spread.toList.flatMap((_, rest, trailing) => rest :: trailing)
+            val arity = Arity(leading.length, leading.length, spread.nonEmpty, trailing.length)
+            zipTupleShapes(Nil, arity, tuple, marks): (index, value) =>
+              value match
+                case value: TermShape => matchShapePat(value, patterns(index))(_ => ())
                 case NoShape => ()
             tuple.exit(marks) match
               case value: TermShape => matched(value)

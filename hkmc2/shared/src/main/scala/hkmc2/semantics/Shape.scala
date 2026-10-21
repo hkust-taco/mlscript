@@ -1213,8 +1213,8 @@ object TupleShape:
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Rest => shape == that.shape && segments == that.segments
       case _ => false
-  /** A view of `tuple` retaining only `segments`, which must be taken from
-    * `tuple.segments`. A view of another view refers to that view's parent:
+  /** A view of `tuple` retaining the fields in `segments`, possibly with their
+    * lengths widened by rest slicing. A view of another view refers to that view's parent:
     * a view contributes no spreads of its own, so containsSpread gives the same
     * answer for the parent as for the intermediate view. Nesting views instead
     * would make the candidate's identity record the order in which fields were
