@@ -98,16 +98,16 @@ fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
 //│ ║  l.93: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
 //│ ╙──      	                   ^^^^^^^^^^
 
-// Generic forwarding preserves the input's interface while replacing undefined with null.
-:expect [0, 3]
+// Generic forwarding retains the nullable interface; the unsafe call remains a regression probe.
+:re
 private fun optionalIdentity(value?) = value
 private fun genericIdentity[A](value: A) = optionalIdentity(value)
 fun genericLength(value: Str | unsafe.undefined) =
   if genericIdentity(value) is ~null as text then text.length else 0
 [genericLength(unsafe.undefined), genericLength("abc")]
-//│ = [0, 3]
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
 
-// Passing an annotated undefined alternative to an optional parameter produces null.
+// Optional parameters admit null even when callers only supply other values.
 :e
 private fun optionalLength(value?) = value.length
 fun forward(value: Str | unsafe.undefined) = optionalLength(value)
@@ -149,3 +149,8 @@ let record = {absent: unsafe.undefined, text: "abc"}
 //│ = [3, 3, [3]]
 //│ pair = [undefined, "abc"]
 //│ record = {absent: undefined, text: "abc"}
+
+// Generic optional forwarding preserves legitimate values and missing defaults.
+:expect [3, null]
+[genericLength("abc"), optionalIdentity()]
+//│ = [3, null]

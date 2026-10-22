@@ -1468,12 +1468,14 @@ class BlockSimplifier
         else
           // otherwise arg list is a simple list, and
           // we can perform manual array instantiation if params contain a spread param
+          val paddedArgs = OptionalParams.pad(params.params, args) match
+            case S(args) => args
+            case N => return N
           if params.restParam.isEmpty then
-            if args.size =/= params.params.size then return N
-            S(args.zip(params.params).map((arg, param) => (param.sym, arg.value)))
+            if paddedArgs.size =/= params.params.size then return N
+            S(paddedArgs.zip(params.params).map((arg, param) => (param.sym, arg.value)))
           else
-            if args.size < params.params.size then return N
-            val (fixedArgs, restArgs) = args.splitAt(params.params.size)
+            val (fixedArgs, restArgs) = paddedArgs.splitAt(params.params.size)
             S(fixedArgs.zip(params.params).map((arg, param) => (param.sym, arg.value)) ++
               List((params.restParam.get.sym, Tuple(true, restArgs)(N))))
       
@@ -1926,7 +1928,7 @@ class BlockSimplifier
                       "inlinedVal",
                     )
                     val copier = Copier(resSym, mapping, thisMapping)
-                    val newBlk = copier.applyBlock(OptionalParams.normalizeAll(info.defn.params.flatMap(_.params), blk))
+                    val newBlk = copier.applyBlock(blk)
                     if extraArgss.isEmpty then
                       acc(Scoped(Set.single(resSym), newBlk(k(resSym.asSimpleRef))))
                     else

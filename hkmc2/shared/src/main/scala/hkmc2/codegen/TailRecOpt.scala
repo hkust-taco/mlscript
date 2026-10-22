@@ -257,7 +257,9 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     
     // * Optional parameters whose arguments are omitted must be reset to `null`,
     // * rather than keeping the values they had in the previous iteration.
-    val hdPadded = hd ++ paramList.params.drop(hd.length).map(p => Value.Lit(Tree.UnitLit(p.flags.opt))(N))
+    val hdPadded = OptionalParams.pad(paramList.params, headArgs) match
+      case S(args) => args.map(_.value)
+      case N => return CallArgsResult.ForceSpread
     
     if paramList.restParam.isDefined then
       val rest =
@@ -289,9 +291,16 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
   
     val tupleRes = Tuple(false, args)(N)
     
-    // Main args
-    def mainArgs(rest: List[Path]) = (0 until paramList.size).toList.foldRight(rest):
-      case (n, acc) => DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(n))(N), DynSelectKind.ArrayIdx)(N) :: acc
+    var prefix = blockBuilder.assignScoped(tupleSym, tupleRes)
+    // Materialize optional slots before assigning any loop parameter, so missing arguments reset
+    // the slots to null and reads remain independent of parameter assignment order.
+    val mainArgs = paramList.zipWithIndex.map: (param, index) =>
+      if param.flags.opt then
+        val slot = TempSymbol(N, erasedType = param.sym.erasedType, "optionalArg")
+        prefix = prefix.scopedVars(Set(slot)).chain(rest =>
+          OptionalParams.bindFromTuple(tupleSym.asSimpleRef, index, slot, true, rest))
+        slot.asSimpleRef
+      else DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(N)
     
     // If the rest param exists, append a slice
     val (initialBlk: (Block => Block), pathList: List[Path]) =
@@ -307,12 +316,10 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
             :: Value.Lit(Tree.IntLit(0))(N).asArg
             :: Nil) ne_:: Nil
         )(CallMetadata.defaultMlsFun, N)
-        val blk = blockBuilder
-          .assignScoped(tupleSym, tupleRes)
-          .assignScoped(sliceResSym, sliceRes)
-        (blk, mainArgs(sliceResSym.asSimpleRef :: Nil))
+        val blk = prefix.assignScoped(sliceResSym, sliceRes)
+        (blk, mainArgs :+ sliceResSym.asSimpleRef)
       else
-        (blockBuilder.assignScoped(tupleSym, tupleRes), mainArgs(Nil))
+        (prefix, mainArgs)
     end val
     (initialBlk, pathList)
   
@@ -726,7 +733,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       
       def rewrite(b: Block): Block =
         // Rewrite the result with symbols pointing to the merged function parameters and possibly the copied parameters (see `copiedParams`).
-        val blk = applyBlock(symRewriter.applyBlock(OptionalParams.normalizeAll(f.params.flatMap(_.params), b)))
+        val blk = applyBlock(symRewriter.applyBlock(b))
         val withCopied = copiedParamSyms.toArray.sortBy(_._1.uid).foldRight(blk):
           case ((ogParam, copiedParam), accBlk) => Assign(copiedParam, paramSymsArr(paramsIdxes(ogParam)).asSimpleRef, accBlk)
         Scoped(copiedParamSyms.map(_._2).toSet, withCopied)

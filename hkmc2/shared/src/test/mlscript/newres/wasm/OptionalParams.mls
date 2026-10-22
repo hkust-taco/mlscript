@@ -173,7 +173,7 @@ choose()
 //│ Wasm result:
 //│ = null
 
-// Uninitialized constructor arguments are evaluated once and lower to Unit in Wasm.
+// Retain the unsafe constructor-argument regression; its observed result is not a language guarantee.
 :expect 10
 class Normalize(val x?) {
   fun read() = absent(x)
@@ -186,7 +186,7 @@ Normalize(argument()).read() + Normalize(argument()).read() * 10 + count * 5
 //│ Wasm result:
 //│ = 10
 
-// Null is absent; Unit and a directly supplied uninitialized value are preserved.
+// Null and Unit remain distinct; keep the unsafe constructor call as a regression probe too.
 :expect 1
 class OptionalField(val x?) {
   fun read() = absent(x)

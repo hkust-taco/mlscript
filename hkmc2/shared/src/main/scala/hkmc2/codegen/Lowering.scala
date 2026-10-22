@@ -539,7 +539,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     else subTerm(trm)(p => k(p, getClassParamLists(p)))
   
   /** Keep the source constructor's calling convention even when its class value is stored in a temporary.
-    * Foreign constructors own their argument defaults; only MLscript bodies normalize optional values. */
+    * Foreign constructors own their argument defaults; MLscript constructors bind absent slots to null. */
   case class ConstructorParams(lists: Ls[ParamList], isMls: Bool)
 
   private def classParamLists(cls: ClassLikeDef): ConstructorParams =
@@ -587,12 +587,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val isConstructor = fr.targetSymbol.exists:
       case _: ClassCtorSymbol => true
       case _ => false
+    val useMlsDefaults = isMlsFun && (fr.targetSymbol match
+      case S(fs: TermSymbol) => fs.defn.exists(_.hasDeclareModifier.isEmpty)
+      case _ => false)
     def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
         def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
         if isConstructor then lowerConstructorArgs(args, ps, isMlsFun)(next)
-        else lowerArgs(args, expectedParamTypes(ps))(next)
+        else lowerArgs(args, expectedParamTypes(ps)): as =>
+          // Trailing parameters are selected from the end of the source argument list. Padding
+          // that list here would shift them; their extraction prologue supplies missing nulls.
+          if useMlsDefaults && ps.variadic.forall(_.trailing.isEmpty) && as.forall(_.spread.isEmpty) then
+            next(OptionalParams.pad(ps.params, as).getOrElse(as))
+          else next(as)
       case (Nil, Nil) =>
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
       case (Nil, args :: remainingArgss) =>
@@ -662,9 +670,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
               Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil, loc)
             else
-              val forwarding = OptionalParams.forwarding(freshParamList)
+              val forwarding = OptionalParams.forwarding(freshParamList, fixedArity = true)
               Lambda(forwarding.params,
-                forwarding.prologue(Return(etaExpand(rest, accArgss :+ forwarding.args))))(Nil, loc)
+                Return(etaExpand(rest, accArgss :+ forwarding.args)))(Nil, loc)
         k(etaExpand(remainingParamss, acc.reverse))
     if ctorParamLists.lists.isEmpty then
       // * Need to specially handle no-param classes
@@ -686,12 +694,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   /** Materialize omitted MLscript constructor parameters as null before optimizers
     * flatten argument lists or associate fields with argument positions.
     * With spreads, collect the arguments once and read the fixed parameter slots;
-    * normalize optional slots before constructor elimination can expose them as fields,
+    * bind absent optional slots to null before constructor elimination can expose them as fields,
     * and keep later lists from shifting into those slots. Foreign constructors retain undefined
     * in their optional slots so their native defaults can run.
     */
   private def lowerConstructorArgs(arg: Term, ps: ParamList, isMls: Bool)(k: Ls[Arg] => Block)(using LoweringCtx): Block =
-    def normalize(args: Ls[Arg]): Block =
+    def capture(args: Ls[Arg]): Block =
       def loop(args: Ls[Arg], params: Ls[Param], acc: Ls[Arg]): Block = (args, params) match
         case (arg :: rest, param :: params) if isMls && param.flags.opt =>
           OptionalParams.argument(arg.value)(value => loop(rest, params, Arg(N, value) :: acc))
@@ -701,14 +709,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     lowerArgs(arg, expectedParamTypes(ps)): args =>
       if !ps.params.exists(_.flags.opt) then k(args)
       else if args.forall(_.spread.isEmpty) then
-        val omitted = ps.params.drop(args.length).map(p => Arg(N, Value.Lit(Tree.UnitLit(isMls && p.flags.opt))(arg.toLoc)))
-        normalize(args ::: omitted)
+        val padded = if isMls then OptionalParams.pad(ps.params, args).getOrElse(args)
+          else args ::: ps.params.drop(args.length).map(p => Arg(N, Value.Lit(Tree.UnitLit(false))(arg.toLoc)))
+        capture(padded)
       else
         assert(ps.variadic.isEmpty, "Constructor parameters must have a fixed layout")
         val tuple = loweringCtx.registerTempSymbol(S(arg), erasedType = S(ErasedType.Array), "constructorArgs")
-        val slots = ps.params.indices.map: index =>
-          Arg(N, DynSelect(tuple.asSimpleRef, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(arg.toLoc))
-        Assign(tuple, Tuple(false, args)(arg.toLoc), normalize(slots.toList))
+        def bind(params: Ls[(Param, Int)], acc: Ls[Arg]): Block = params match
+          case (param, index) :: rest =>
+            val slot = loweringCtx.registerTempSymbol(S(arg), erasedType = param.sym.erasedType, "constructorArg")
+            OptionalParams.bindFromTuple(tuple.asSimpleRef, index, slot, isMls && param.flags.opt,
+              bind(rest, slot.asSimpleRef.asArg :: acc))
+          case Nil => k(acc.reverse)
+        Assign(tuple, Tuple(false, args)(arg.toLoc), bind(ps.params.zipWithIndex, Nil))
   
   def lowerArgs(arg: Term, expectedTypes: Ls[Opt[ErasedType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     arg match
@@ -1991,9 +2004,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       // * `Tuple.slice(xs, i, j)` drops the first `i` and the last `j` elements of `xs`.
       def slice(xs: Path, i: Int, j: Int): Result =
         Call(tupleSlice, (xs :: int(i) :: int(j) :: Nil).map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
-      // * Raw indexing (`xs.at(i)`, where a negative `i` counts from the end) lets us normalize
-      // * missing optional values to null while preserving the other arguments unchanged.
-      // * Runtime calls such as `Tuple.get` would check or convert undefined before that normalization.
+      // * Required trailing parameters are indexed from the end after the arity check.
+      // * Optional slots are guarded by the leading tuple's length before they are read.
       def at(xs: Path, i: Int): Path = DynSelect(xs, int(i), DynSelectKind.ArrayIdx)(N)
       val k = trailing.length
       // * The sanity check emitted by the code generator only knows about the lowered parameter list,
@@ -2003,18 +2015,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           (Value.Lit(Tree.StrLit(name.getOrElse("")))(N) :: int(ps.paramCountLB) :: int(required.length) :: args :: Nil)
             .map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
       val prologue: LoweringCtx ?=> Block => Block = body =>
-        // * The optional parameters take the arguments preceding the last `k` ones, as far as there are any:
-        // * reading past the end of these leading arguments yields `undefined`.
-        val optionalExtractions = if optional.isEmpty then Nil else
-          val leading = loweringCtx.registerTempSymbol(N, erasedType = S(ErasedType.Array), "leadingArgs")
-          (leading -> slice(args, 0, k)) :: optional.zipWithIndex.map((p, i) => p.sym -> at(leading.asSimpleRef, i))
         val extractions: Ls[(LocalVarSymbol, Result)] =
-          optionalExtractions
-          ::: (variadicParam.sym -> slice(args, optional.length, k))
+          (variadicParam.sym -> slice(args, optional.length, k))
           :: trailing.zipWithIndex.map((p, i) => p.sym -> at(args, i - k))
         (optional ::: variadicParam :: trailing).foreach(p => loweringCtx.collectScopedSym(p.sym))
-        val extracted = extractions.foldRight(OptionalParams.normalizeAll(optional, body)):
+        val extractedRest = extractions.foldRight(body):
           case ((sym, res), rest) => Assign(sym, res, rest)
+        // * Exclude trailing arguments before checking optional slot presence, so they cannot
+        // * accidentally fill a missing optional parameter.
+        val extracted = if optional.isEmpty then extractedRest else
+          val leading = loweringCtx.registerTempSymbol(N, erasedType = S(ErasedType.Array), "leadingArgs")
+          Assign(leading, slice(args, 0, k), optional.zipWithIndex.foldRight(extractedRest):
+            case ((param, index), rest) =>
+              OptionalParams.bindFromTuple(leading.asSimpleRef, index, param.sym, true, rest))
         check.fold(extracted)(Assign.discard(_, extracted))
       (loweredParams, prologue)
     case _ => (loweredParams, body => body)

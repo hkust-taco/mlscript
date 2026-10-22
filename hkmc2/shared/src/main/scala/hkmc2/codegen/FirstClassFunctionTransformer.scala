@@ -27,9 +27,9 @@ class FirstClassFunctionTransformer
       syntax.Tree.Ident("Function$")
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
-    val forwarding = OptionalParams.forwarding(params)
+    val forwarding = OptionalParams.forwarding(params, fixedArity = false)
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), forwarding.params :: Nil,
-      forwarding.prologue(Return(Call(p, forwarding.args ne_:: Nil)(CallMetadata.defaultMlsFun, N))))(N, annotations = Nil)
+      Return(Call(p, forwarding.args ne_:: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
       Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function), N)(false)),
       callDef :: Nil, Nil, Nil, Assign.discard(

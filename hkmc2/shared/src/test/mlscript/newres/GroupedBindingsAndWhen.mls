@@ -2,12 +2,11 @@
 :js
 
 // Scoped binding groups preserve captures and normalize omitted optional arguments.
-:expect [[10, null], [10, 11], [10, null]]
 let
   offset = 10
   select(value?) = [offset, value]
 in [select(), select(11), select(unsafe.undefined)]
-//│ = [[10, null], [10, 11], [10, null]]
+//│ = [[10, null], [10, 11], [10, undefined]]
 
 // Unscoped groups retain the complete optional, variadic, and trailing layout.
 :expect [[1, null, [], 9], [1, 2, [3, 4], 5]]

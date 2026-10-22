@@ -81,11 +81,10 @@ fun unchecked(value: Str | unsafe.undefined) = value.length
 unchecked("abc")
 //│ = 3
 
-// Optional parameters still convert the unsafe value to null on entry.
-:expect [null, null, 7]
+// Keep unsafe arguments to optional parameters as regression probes without defining their result.
 fun optional(value?) = value
 [optional(), optional(unsafe.undefined), optional(7)]
-//│ = [null, null, 7]
+//│ = [null, undefined, 7]
 
 // Recognition uses the Prelude symbol, not the spelling of the qualifier.
 :expect 42

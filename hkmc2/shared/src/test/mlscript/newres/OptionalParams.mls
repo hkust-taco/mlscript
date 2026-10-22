@@ -388,10 +388,6 @@ sum(3)
 //│ define last⁰ as fun last¹(n, prev?) {
 //│   loop loopLabel:
 //│     let scrut, scrut1, tmp2, tmp3;
-//│     match prev
-//│       undefined =>
-//│         set prev = null;
-//│         end
 //│     set scrut = Predef⁰.equals⁰(n, 0);
 //│     match scrut
 //│       true =>
@@ -415,8 +411,8 @@ sum(3)
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
-//│ set tmp = last¹(1);
-//│ set tmp1 = last¹(3);
+//│ set tmp = last¹(1, null);
+//│ set tmp1 = last¹(3, null);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [[null], [null]]
@@ -427,13 +423,13 @@ sum(3)
 :e
 fun bad(x?, y) = x
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.428: 	fun bad(x?, y) = x
+//│ ║  l.424: 	fun bad(x?, y) = x
 //│ ╙──       	            ^
 
 :e
 fun bad(...xs?) = xs
 //│ ╔══[COMPILATION ERROR] Variadic parameters cannot be optional.
-//│ ║  l.434: 	fun bad(...xs?) = xs
+//│ ║  l.430: 	fun bad(...xs?) = xs
 //│ ╙──       	        ^^^^^^
 
 class C(x?)
@@ -441,13 +437,13 @@ class C(x?)
 :e
 fun bad(using x?: Int) = x
 //│ ╔══[COMPILATION ERROR] Contextual parameters cannot be optional.
-//│ ║  l.442: 	fun bad(using x?: Int) = x
+//│ ║  l.438: 	fun bad(using x?: Int) = x
 //│ ╙──       	        ^^^^^^^^^^^^^
 
 :e
 let t = [1, 2?]
 //│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
-//│ ║  l.448: 	let t = [1, 2?]
+//│ ║  l.444: 	let t = [1, 2?]
 //│ ╙──       	            ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ t = undefined
@@ -455,13 +451,13 @@ let t = [1, 2?]
 :e
 fun first(t: [Int, Int?]) = t.0
 //│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
-//│ ║  l.456: 	fun first(t: [Int, Int?]) = t.0
+//│ ║  l.452: 	fun first(t: [Int, Int?]) = t.0
 //│ ╙──       	                   ^^^^
 
 :e
 fun app(f: (Int?, Int) -> Int) = f(1, 2)
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.462: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
+//│ ║  l.458: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
 //│ ╙──       	                  ^^^
 
 // Other operators starting with `?` are unaffected.
@@ -479,37 +475,37 @@ unsafe.undefined ?: 1
 :e
 fun bad(x, y ?: Int) = x
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
-//│ ║  l.480: 	fun bad(x, y ?: Int) = x
+//│ ║  l.476: 	fun bad(x, y ?: Int) = x
 //│ ╙──       	           ^^^^^^^^
 
 :pe
 :e
 fun bad(x, y ?) = x
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.487: 	fun bad(x, y ?) = x
+//│ ║  l.483: 	fun bad(x, y ?) = x
 //│ ╙──       	              ^
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
-//│ ║  l.487: 	fun bad(x, y ?) = x
+//│ ║  l.483: 	fun bad(x, y ?) = x
 //│ ╙──       	           ^^^
 
 :pe
 :e
 fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.497: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║  l.493: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╙──       	                      ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.497: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║  l.493: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ║         	                 ^^^^^
 //│ ╟── This type has no resolved target
-//│ ║  l.497: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║  l.493: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╙──       	                 ^^^^^
 
 // A separate signature determines how many arguments can be passed.
 :e
 sig()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.510: 	sig()
+//│ ║  l.506: 	sig()
 //│ ║         	^^^^^
 //│ ╟── Function 'sig' expected 1 to 2 arguments, but got 0
 //│ ║  l.358: 	fun sig(x, y?) = x
