@@ -1,0 +1,49 @@
+:js
+:effectHandlers
+:lift
+
+open annotations
+
+abstract class Read with
+  fun read(): Str
+
+// A resumed transform contributes the handler's value to the match output.
+
+fun plain(e) = if "a" is ("a" => e.read()) as r then r else "no"
+fun compiled(e) = if "ab" is (("a" => e.read()) ~ "b") as r then r else "no"
+
+:expect "X"
+handle e = Read with
+  fun read()(k) = k("X")
+in
+  plain(e)
+//│ = "X"
+
+:fixme // Runtime.StrPat does not suspend and resume around action calls.
+:expect "Xb"
+handle e = Read with
+  fun read()(k) = k("X")
+in
+  compiled(e)
+//│ ═══[RUNTIME ERROR] Expected: '"Xb"', got: '"no"'
+//│ = "no"
+
+// Aborting the handler must not execute a later transform in the sequence.
+
+fun aborting() =
+  let trace = ""
+  fun after() =
+    set trace = "ran"
+    "b"
+  let result =
+    handle e = Read with
+      fun read()(k) = "stop"
+    in
+      if "ab" is (("a" => e.read()) ~ ("b" => after())) then "matched" else "no"
+  [result, trace]
+
+:fixme // The engine runs the second transform before the handler can abort.
+:expect ["stop", ""]
+aborting()
+//│ ═══[RUNTIME ERROR] Expected: '["stop", ""]', got: '["stop", "ran"]'
+//│ = ["stop", "ran"]

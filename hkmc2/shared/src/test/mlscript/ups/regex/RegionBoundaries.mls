@@ -1,0 +1,79 @@
+:js
+
+open annotations
+
+// A character range denotes the same code points in all matching routes.
+
+pattern Emoji = "😀" ..= "😏"
+
+:fixme // The plain range path requires one UTF-16 code unit.
+:expect true
+"😁" is Emoji
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+:expect true
+"😁" is @compile Emoji
+//│ = true
+
+:expect true
+"😁" is ("" ~ Emoji)
+//│ = true
+
+
+// Even an empty prefix must preserve a conjunction's tuple output.
+
+:expect ["a", "a"]
+if "a" is (("a" & ("a" | "b")) as r) then r else "no"
+//│ = ["a", "a"]
+
+:fixme // A string region keeps only the conjunction driver's output.
+:expect ["a", "a"]
+if "a" is ("" ~ (("a" & ("a" | "b")) as r)) then r else "no"
+//│ ═══[RUNTIME ERROR] Expected: '["a", "a"]', got: '"a"'
+//│ = "a"
+
+
+// A non-string alternative must not change recursive string bindings.
+
+pattern Digit = "0" ..= "9"
+pattern MixedListed = (((Digit as h) ~ (MixedListed as t)) => h + "," + t) | ("" => "$") | 42
+
+:fixme // The outer transform reads the innermost activation's head binding.
+:expect "1,2,3,$"
+if "123" is MixedListed as r then r else "no"
+//│ ═══[RUNTIME ERROR] Expected: '"1,2,3,$"', got: '"3,2,3,$"'
+//│ = "3,2,3,$"
+
+:expect "1,2,3,$"
+if "123" is @compile MixedListed as r then r else "no"
+//│ = "1,2,3,$"
+
+:expect 42
+if 42 is MixedListed as r then r else "no"
+//│ = 42
+
+:expect 42
+if 42 is @compile MixedListed as r then r else "no"
+//│ = 42
+
+
+// A range crossing the BMP boundary also orders characters by code point.
+
+pattern AcrossPlanes = "z" ..= "😀"
+
+:fixme // UTF-16 lexicographic order differs from code-point order.
+:expect true
+"\uffff" is AcrossPlanes
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+:expect true
+"\uffff" is @compile AcrossPlanes
+//│ = true
+
+:fixme // The legacy prefix range reads only the first UTF-16 code unit.
+:expect MatchSuccess(["😁", "tail"], null)
+Emoji.unapplyStringPrefix("😁tail")
+//│ ═══[RUNTIME ERROR] Expected: 'MatchSuccess(["😁", "tail"], null)', got: 'MatchFailure(null)'
+//│ = MatchFailure(null)

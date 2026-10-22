@@ -1,7 +1,220 @@
 # PR #540 "Optimized compilation of string patterns" — review findings
 
-Reviewed branch `compiled-string-patterns` against its base `hkust-taco/hkmc2`
-(merge base `c9bb0edd`). Upstream PR: <https://github.com/hkust-taco/mlscript/pull/540>.
+The original July review compared `compiled-string-patterns` against
+`hkust-taco/hkmc2` (then merge base `c9bb0edd`). The current review appears
+immediately below. Upstream PR: <https://github.com/hkust-taco/mlscript/pull/540>.
+
+## Current review — 2026-10-22
+
+**Recommendation: request changes.** This review covers the complete PR at
+`88d8ee5bc119a5d4548a7e93f9aa0c1459f389ed`, against `hkmc2` at
+`355df32708d10f685e6bb6661060084e76c4d765`. The July/August review and its
+status lists below are historical; they should not be read as the current
+set of open findings. No compiler or runtime implementation was changed
+during this review.
+
+There are six actionable findings: three P1 issues and three P2 issues.
+The effect, mixed-recursion, and conjunction examples were also executed
+on an isolated checkout of the current base. The growing-instantiation
+example completes on that base, but does not finish compiling on the PR.
+
+### 1. [P1] Suspend the string engine when a transform performs an effect
+
+Location: `hkmc2/shared/src/test/mlscript-compile/Runtime.mls`, the action
+application in `StrPat.parseRun` (line 384).
+
+The runtime invokes a transform through `actions.[actionId].apply(...)`
+inside code compiled without effect-handler instrumentation. If the action
+performs an algebraic effect, the engine continues executing operations
+with the placeholder result. The caller cannot resume the interrupted
+parse at the action call.
+
+An end-to-end source reproduction is now in
+`ups/regex/EffectfulTransforms.mls`. For the pattern
+`("a" => e.read()) ~ "b"`, a handler that resumes `read` with `"X"`
+should produce `"Xb"`; the PR takes the failure branch and returns `"no"`.
+The base returns `"Xb"`. A non-resuming handler exposes a second consequence:
+the following transform still mutates a captured variable, yielding
+`["stop", "ran"]` instead of `["stop", ""]`. The base preserves the
+empty trace.
+
+This confirms historical C2 at the language level, rather than only by
+calling the engine directly. The action application and the surrounding
+parser state need a resumable execution protocol, including correct
+continuations for deferred frames. Merely testing `curEffect` after the
+call would prevent some corruption but would not implement resumption.
+
+### 2. [P1] Preserve recursive bindings when a definition has non-string alternatives
+
+Location: `hkmc2/shared/src/main/scala/hkmc2/semantics/ups/SplitCompiler.scala`,
+lines 1689–1700 (`stringOnlyAlternatives` and the fallback).
+
+The whole-body region fixes recursive transforms only when every outer
+alternative is string-shaped. Adding an unrelated numeric alternative
+selects the fallback, leaving the outer transform outside the automaton.
+It then reads slots overwritten by the innermost recursive activation.
+
+```mlscript
+pattern Digit = "0" ..= "9"
+pattern MixedListed =
+  (((Digit as h) ~ (MixedListed as t)) => h + "," + t) | ("" => "$") | 42
+
+if "123" is MixedListed as r then r else "no"
+```
+
+The base and the PR's `@compile MixedListed` return `"1,2,3,$"`; the
+ordinary PR route returns `"3,2,3,$"`. Both routes still accept `42`, so
+removing the non-string alternative or compiling the entire body under a
+`Str` guard would lose valid behavior. Dispatch strings to a region that
+includes their enclosing transforms while preserving the other alternatives
+and their order. `ups/regex/RegionBoundaries.mls` pins the failing string
+case and the working compiled and numeric cases. Historical C7's fix is
+therefore incomplete for mixed definitions.
+
+### 3. [P1] Reject or bound growing recursive pattern instantiations
+
+Location: `hkmc2/shared/src/main/scala/hkmc2/semantics/ups/SplitCompiler.scala`,
+lines 1395–1403 (`isParametricStringSite`); the unbounded loop is in
+`Instantiator.scala`, lines 35–58.
+
+```mlscript
+pattern Rep(pattern P) = (P ~ Rep(Rep(P))) | ""
+"" is Rep("a")
+```
+
+The new automatic region route accepts this definition and eagerly
+instantiates `Rep("a")`, `Rep(Rep("a"))`, and progressively larger
+arguments. `regionSupport` visits symbols, so its recursion guard does not
+detect the growing instantiations. Structural memoization never closes the
+worklist. The empty input is intentional: the base compiles and returns
+`true` without following the recursive branch at runtime.
+
+On the PR, a separate JVM with a 768 MB heap was stopped after a ten-second
+external limit, before any result or compiler diagnostic. A thread dump
+shows repeated `Instantiation.hashCode`/`Synonym.hashCode` calls during
+compilation. This confirms historical M11. Detect non-finite specialization
+or enforce a compilation budget with a source diagnostic before scheduling
+unbounded work. An active diff test for this case would hang the suite, so
+the reproduction is recorded here rather than added to normal test discovery.
+
+### 4. [P2] Apply code-point range semantics to plain and prefix matching
+
+Location: `hkmc2/shared/src/main/scala/hkmc2/semantics/ups/SplitCompiler.scala`,
+lines 276–278; also the legacy prefix range implementation at lines 1115–1127.
+
+Elaboration now accepts astral bounds and `Instantiator` interprets ranges
+by code point, but `makeRangeTest` requires JavaScript `.length === 1` and
+uses UTF-16 lexicographic comparisons. These routes disagree:
+
+```mlscript
+pattern Emoji = "😀" ..= "😏"
+"😁" is Emoji             // false, should be true
+"😁" is @compile Emoji    // true
+"😁" is ("" ~ Emoji)      // true
+Emoji.unapplyStringPrefix("😁tail") // failure, should consume the emoji
+```
+
+Changing only the length test is insufficient: `"\uffff"` is within the
+code-point range `"z" ..= "😀"`, but the plain path rejects it because of
+UTF-16 ordering. Prefix matching also reads and drops only one code unit.
+Use the same code-point interpretation on all routes, including the consumed
+prefix length. The six range checks in `RegionBoundaries.mls` cover both
+planes and the prefix protocol. Astral bounds were rejected by the base;
+this is incomplete support for the PR's newly accepted syntax.
+
+### 5. [P2] Preserve conjunction outputs across a string-region boundary
+
+Location: `hkmc2/shared/src/main/scala/hkmc2/semantics/ups/StringCompiler.scala`,
+lines 394–403 (pure subtree shortcut) and 493–502 (driver-only output).
+
+```mlscript
+if "a" is (("a" & ("a" | "b")) as r) then r else "no"
+// ["a", "a"] on both branches
+
+if "a" is ("" ~ (("a" & ("a" | "b")) as r)) then r else "no"
+// base: ["a", "a"]; PR: "a"
+```
+
+An empty prefix does not change what the conjunction consumes, yet it
+changes the binding's value and type. The general matcher produces a tuple
+of conjunct outputs; the string engine treats a pure conjunction as a slice
+and an impure conjunction as its driver's output. The existing
+`Conjunction.mls` documents the latter rule but does not resolve this conflict
+with the same pattern outside a region. Preserve the conjunction's value
+when compiling it, or explicitly reject the unsupported value-producing
+case. `RegionBoundaries.mls` now pins the minimized base-confirmed regression.
+
+### 6. [P2] Bound determinization before constructing exponential tables
+
+Location: `hkmc2/shared/src/main/scala/hkmc2/semantics/ups/StringCompiler.scala`,
+lines 1037–1055 (`reverseDeterminize`); the forward subset construction is
+also unbounded.
+
+For `pattern C = "a" ..= "b"`, a pattern consisting of `k` copies of `C`
+followed by `"a" ~ Str` has a small NFA but an exponentially large reverse
+DFA. The compiler constructs that entire DFA before recognition minimization.
+The existing statistics hook measured these actual emitted literal lengths:
+
+| k | Whole-match table | Prefix-parse table |
+|---:|---:|---:|
+| 8 | 3,531 | 4,252 |
+| 10 | 16,331 | 19,546 |
+| 12 | 71,627 | 86,805 |
+| 14 | 292,811 | 363,987 |
+| 16 | 1,374,155 | 1,702,030 |
+
+Thus a short definition emits over three million table characters at
+`k = 16`. At `k = 18`, a separate 768 MB JVM did not finish within a
+ten-second process limit; its thread dump was in `reverseDeterminize`.
+These are bounded experiments, not claims that the measured runs exhausted
+memory. The unbounded subset construction itself establishes that larger
+inputs can keep growing until process limits intervene.
+
+Apply budgets to states, transitions, and encoded/viability size before
+allocating them. On overflow, report a useful source diagnostic or use an
+algorithm with the same matching semantics. Quietly returning to the legacy
+greedy matcher would reintroduce semantic differences. The `remove(0)`
+worklist and eager unpacking of viability bits add costs, but are secondary
+to the absent budget. This consolidates historical M5/M6/M22 into one issue.
+
+### Verification and limits of this review
+
+- Read the full 33-file PR diff and the surrounding compiler/runtime code;
+  checked commit authors and the whole diff for whitespace-only changes.
+  No remaining isolated blank-line or indentation churn was found. Indented
+  blank lines newly added with code are intentional project formatting.
+- Metals symbol lookup and file compilation succeeded. Its usage queries
+  returned no references, so cross-component tracing used source searches.
+- Ran `ctest` on both the PR and the base: 55 tests passed on each.
+- Ran 2,480 independently calculated cases: 80 generated finite patterns
+  over all 31 `a`/`b` inputs of length zero through four. Literals, empty
+  strings, ranges, greedy `Str`, ordered alternatives, nested concatenations,
+  and nested transforms all agreed with a simple exhaustive reference parser.
+  These temporary probes do not establish correctness for recursive grammars.
+- Added two ordinary `.mls` regression files, `EffectfulTransforms.mls` and
+  `RegionBoundaries.mls`. Their seven unresolved assertions use `:fixme`;
+  the tests also contain passing controls. The harmful resource probes were
+  run in disposable processes and removed from normal test discovery.
+- GitHub's `build` check succeeded for the reviewed head. Final local
+  `hkmc2AllTests/test` passed all 1,107 tests (including the two new files),
+  with no unexpected failures or additional golden changes. The seven
+  assertions marked `:fixme` remain known failures, not implemented fixes.
+
+Two older concerns need careful classification. Eager multi-matcher labels
+can execute a losing alternative's transform: `Box(A) | Box(B)` records
+`"AB"` under `@compile` instead of `"A"`, including with string regions.
+However, an isolated base test with ordinary literal transforms has exactly
+the same problem, so it is not counted as a new PR regression here. Also,
+historical M4 has an NFA-level epsilon-cycle counterexample but no established
+source program producing it; this review did not establish that reachability,
+so it is a design concern rather than a seventh confirmed finding.
+
+The remaining per-site action allocations, repeated table compilation,
+linear alphabet lookup, and global statistics sink warrant performance or
+maintenance work, but are not additional demonstrated correctness regressions.
+The earlier closure-duplication crash, exclusive-bound bug, ordinary non-string
+scrutinee bug, and omission of transforms within a single compiled condition
+are fixed on the reviewed head and are not re-reported.
 
 ## Method
 
