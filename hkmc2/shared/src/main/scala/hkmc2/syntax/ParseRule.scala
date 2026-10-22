@@ -145,7 +145,7 @@ class ParseRules(using State):
   def letLike(kw: Keyword.LetLike) = 
     keepKw(kw)(
       ParseRule(s"'${kw.name}' binding keyword")(
-        Expr(
+        exprOrBlk(
           ParseRule(s"'${kw.name}' binding head")(
             discardKw(`=`):
               ParseRule(s"'${kw.name}' binding equals sign")(
@@ -172,7 +172,7 @@ class ParseRules(using State):
           )
         ) {
           case (lhs, (rhs, body)) => (lhs, rhs, body)
-        }
+        }*
       )
     ).map:
       case (kw, (lhs, rhs, body)) => LetLike(kw, lhs, rhs, body)
@@ -289,6 +289,7 @@ class ParseRules(using State):
     },
     ifLike(`if`),
     ifLike(`while`),
+    ifLike(`when`),
     Kw(`assert`)(
       ParseRule(s"'assert' keyword")(
         exprOrBlk(
@@ -427,8 +428,8 @@ class ParseRules(using State):
     // Keep this source token distinct so its warning does not apply to compiler-synthesized undefined literals.
     singleKw(`undefined`)(Keywrd(`undefined`)),
     singleKw(`null`)(UnitLit(true)),
-    singleKw(`this`)(Ident("this")),
-    singleKw(`super`)(Ident("super")),
+    singleKw(`this`)(Keywrd(Keyword.`this`)),
+    singleKw(`super`)(Keywrd(Keyword.`super`)),
     singleKw(Keyword.__)(Under()),
     Kw(`#`)(
       ParseRule(s"'#' directive keyword")(

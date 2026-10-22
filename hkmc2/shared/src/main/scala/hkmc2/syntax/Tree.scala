@@ -215,6 +215,7 @@ enum Tree extends AutoLocated:
     case DynamicNew(body) => "dynamic new"
     case IfLike(Keywrd(Keyword.`if`), split) => "if expression"
     case IfLike(Keywrd(Keyword.`while`), split) => "while expression"
+    case IfLike(Keywrd(Keyword.`when`), split) => "when expression"
     case Case(_, branches) => "case"
     case Region(name, body) => "region"
     case RegRef(reg, value) => "region reference"
@@ -244,6 +245,17 @@ enum Tree extends AutoLocated:
   
   def showDbg(using DebugPrinter): Str =
     this.showAsPlain
+  
+  // Binding groups use ordinary block syntax: assignments supply initializers,
+  // while other entries are binding heads (including declarations and `+=` forms).
+  def asLetLike(kw: Keywrd[Keyword.LetLike], body: Opt[Tree]): Tree = this match
+    case Annotated(ann, entry) =>
+      Annotated(ann, entry.asLetLike(kw, body)).withLocOf(this)
+    case entry =>
+      val binding = entry match
+        case Def(lhs, rhs) => LetLike(kw, lhs, S(rhs), body)
+        case lhs => LetLike(kw, lhs, N, body)
+      binding.withLocOf(entry)
   
   lazy val desugared: Tree =
     
@@ -276,6 +288,12 @@ enum Tree extends AutoLocated:
     this match
     case Ident(name) if name.startsWith("'") =>
       StrLit(name.drop(1)).withLocOf(this)
+    case IfLike(kw @ Keywrd(Keyword.`when`), split) =>
+      // `when { ... }` -> `if this is { ... }`
+      val ifKw = new Keywrd(Keyword.`if`).withLocOf(kw)
+      val isKw = new Keywrd(Keyword.`is`).withLocOf(kw)
+      val thisKw = new Keywrd(Keyword.`this`).withLocOf(kw)
+      IfLike(ifKw, InfixApp(thisKw, isKw, split).withLocOf(split)).withLocOf(this)
     case IfLike(kw, split) =>
       val split2 = rewriteImplicitSplitLabels(split)
       if split2 is split then this else IfLike(kw, split2).withLocOf(this)
@@ -313,6 +331,13 @@ enum Tree extends AutoLocated:
     
     case Pun(false, id) =>
       InfixApp(id, Keywrd(Keyword.`:`), id)
+    
+    case LetLike(kw, group: Block, N, S(body)) =>
+      // Nest scoped bindings so `set` restores every assigned value after the body.
+      group.stmts.foldRight(body): (binding, body) =>
+        binding.asLetLike(kw, S(body)).desugared
+    case LetLike(kw, group: Block, N, N) =>
+      group.withStmts(group.stmts.map(_.asLetLike(kw, N)))
     
     // TODO generalize to pattern-let and rm this special case
     case LetLike(kw, und @ Under(), r, b) =>

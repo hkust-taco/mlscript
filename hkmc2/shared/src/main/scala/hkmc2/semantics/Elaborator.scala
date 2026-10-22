@@ -15,7 +15,7 @@ import BracketKind.*
 import Term.{ Blk, Rcd }
 import hkmc2.Message.MessageContext
 
-import Keyword.{`and`, `case`, `do`, `else`, `if`, `is`, `let`, `or`, `set`, `then`, `while`}
+import Keyword.{`and`, `case`, `do`, `else`, `if`, `is`, `let`, `or`, `set`, `then`, `while`, `when`}
 import hkmc2.utils.Scope
 import SimpleSplit.*
 import ucs.{error, unapply}
@@ -1070,6 +1070,7 @@ extends Importer:
         (split ~~: topmostDefault,
           if kwLocSets._1.nonEmpty then IfLikeForm.ImperativeIf else IfLikeForm.ReturningIf)
       case `while` => (split, IfLikeForm.While)
+      case `when` => lastWords("`when` keyword should have been desugared before elaboration.")
     reportInconsistentConnectives(kw)
     kwLocSets = savedKwLocSets
     (form, result)
@@ -1688,14 +1689,14 @@ extends Importer:
         msg"Unsupported handle binding shape" ->
           h.toLoc :: Nil))
       error
-    case id @ Ident("this") =>
+    case kw @ Keywrd(Keyword.`this`) =>
       (if newResolution then ctx.getReceiver else ctx.getOuter.map(Ctx.RefElem(_))) match
-      case S(elem) => elem.ref(S(id))
+      case S(elem) => elem.ref(S(new Ident("this").withLocOf(kw)))
       case N =>
         raise:
           ErrorReport(msg"Cannot use 'this' outside of an object scope" -> tree.toLoc :: Nil)
         error
-    case Ident("super") =>
+    case Keywrd(Keyword.`super`) =>
       raise(ErrorReport(msg"'super' must be followed by a member selection" -> tree.toLoc :: Nil))
       error
     case id @ Ident(name) => ident(id, interp).map(interpretRef(_, interp)).getOrElse:
@@ -1910,12 +1911,13 @@ extends Importer:
           mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
         elaborateSelection(sel)
-    case sel @ Sel(id @ Ident("super"), nme) =>
+    case sel @ Sel(kw @ Keywrd(Keyword.`super`), nme) =>
       (ctx.getOuter, ctx.getReceiver) match
         case (S(owner: (ClassSymbol | ModuleOrObjectSymbol)), S(receiver)) =>
           // Like other written selections, a by-name member selected through
           // `super` is instantiated at this site, within its type binders.
-          val res = withTypeBinders(new Term.Super(receiver.ref(S(id)), owner, nme)(FlowSymbol.sel(nme.name)).withLocOf(sel))
+          val res = withTypeBinders(new Term.Super(receiver.ref(S(new Ident("super").withLocOf(kw))),
+            owner, nme)(FlowSymbol.sel(nme.name)).withLocOf(sel))
           if newResolution then rctx.recordAccessSite(res, ctx.scope)
           resolveSuper(res)
           interpretRef(res, interp)
