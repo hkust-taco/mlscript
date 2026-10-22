@@ -1405,7 +1405,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
   private def makeStringRegionSplit(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
     val instantiator = new Instantiator(stringPosition = true)
     val (instantiated, context) = instantiator(pattern)
-    val compiler = new StringCompiler(using context)
+    val compiler = new StringCompiler(new PatternCompilationBudget)(using context)
     def isStr = FlatPattern.ClassLike(
       ctx.builtins.Str.safeRef, ctx.builtins.Str, N, false)(Tree.Dummy)
     compiler.compile(instantiated, StringCompiler.Mode.Whole, pattern.toLoc) match
@@ -1452,7 +1452,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
   private def makeStringPrefixAutomatonSplit(scrutinee: Scrut, pattern: SP)(using Raise): MakePrefixSplit =
     val instantiator = new Instantiator(stringPosition = true)
     val (instantiated, context) = instantiator(pattern)
-    val compiler = new StringCompiler(using context)
+    val compiler = new StringCompiler(new PatternCompilationBudget)(using context)
     compiler.compile(instantiated, StringCompiler.Mode.Prefix, pattern.toLoc) match
       case N => RejectPrefixSplit
       case S(compiled) =>

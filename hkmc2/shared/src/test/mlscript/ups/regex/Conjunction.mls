@@ -4,7 +4,7 @@ open annotations
 
 // A conjunction in a string sequence matches a segment satisfying all of
 // its conjuncts. At most one conjunct — the "driver" — may carry bindings
-// or transformations; it determines the committed parse and the output.
+// or transformations; it determines the common consumed span.
 // The remaining (pure) conjuncts are determinized and run in lockstep as
 // constraints gating completion.
 
@@ -33,13 +33,13 @@ pattern Fenced = "<" ~ (("a" ~ Str) & (Str ~ "b")) ~ ">"
 //│ = false
 
 
-// A binding on a pure conjunction captures the consumed slice.
+// A binding on a pure conjunction captures its tuple of outputs.
 
 pattern FencedX = ("<" ~ ((("a" ~ Str) & (Str ~ "b")) as x) ~ ">") => x
 
-:expect "aXb"
+:expect ["aXb", "aXb"]
 if "<aXb>" is FencedX as x then x else "no"
-//│ = "aXb"
+//│ = ["aXb", "aXb"]
 
 
 // The committed parse is the driver's highest-priority parse among the
@@ -74,7 +74,7 @@ probe("aX!")
 //│ = "no"
 
 
-// The conjunction's value is the driver's value.
+// Bindings inside the driver retain that branch's own value.
 
 pattern Digit = (((("0" ..= "9") as d) & Str) ~ "!") => d
 

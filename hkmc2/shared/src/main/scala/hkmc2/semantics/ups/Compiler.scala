@@ -292,7 +292,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
           // Note that each label needs its own compiler: a compiler instance
           // accumulates the automaton states (and failure flag) of a single
           // region.
-          case fragment => StringCompiler().compile(fragment, StringCompiler.Mode.Whole, statsSiteLoc) match
+          case fragment => StringCompiler(new PatternCompilationBudget).compile(fragment, StringCompiler.Mode.Whole, statsSiteLoc) match
             case N => emptyMatchResult("rejected string pattern")
             case S(compiled) =>
               // Mirrors the branch chosen below: a match-only region still

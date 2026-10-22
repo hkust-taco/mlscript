@@ -25,11 +25,9 @@ pattern Emoji = "😀" ..= "😏"
 if "a" is (("a" & ("a" | "b")) as r) then r else "no"
 //│ = ["a", "a"]
 
-:fixme // A string region keeps only the conjunction driver's output.
 :expect ["a", "a"]
 if "a" is ("" ~ (("a" & ("a" | "b")) as r)) then r else "no"
-//│ ═══[RUNTIME ERROR] Expected: '["a", "a"]', got: '"a"'
-//│ = "a"
+//│ = ["a", "a"]
 
 
 // A non-string alternative must not change recursive string bindings.

@@ -130,7 +130,9 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
         patterns.forall(loop(_, visiting))
       case CharClass(_, _) => true
       case And(patterns) =>
-        patterns.forall(loop(_, visiting))
+        // The empty conjunction is the wildcard; every nonempty conjunction
+        // constructs a tuple of outputs instead of returning the scrutinee.
+        patterns.isEmpty
       case Or(patterns) =>
         patterns.forall(loop(_, visiting))
       case Not(_) => true
@@ -316,12 +318,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       // of its conjuncts' outputs, and an untransformed conjunct — including
       // one specialization reduced to `Wildcard` — contributes the scrutinee
       // to it (see `ups/SimpleConjunction.mls`).
-      val simplified = patterns.foldRight(Nil: Ls[Pattern[K]]):
-        case (p, acc) => p.simplify match
-          case `Wildcard` => acc match
-            case `Wildcard` :: _ => acc // One consecutive wildcard is enough.
-            case acc => Wildcard :: acc
-          case simplified => simplified :: acc
+      val simplified = patterns.map(_.simplify)
       if simplified contains Never then Never else simplified.foldSingleton(And.apply)(identity)
     case Or(patterns) =>
       // A `Never` alternative can never be chosen, so all of them are

@@ -373,14 +373,20 @@ module StrPat with
         4 then // Bind: store the topmost value into a slot
           bindings.set(ops.[k + 1], valStack.[valStack.length - 1])
           k + 2
-        5 then // Call: apply a transform to the values in its argument slots
+        5 | 10 then // Call uses binding slots; Apply consumes stack arguments
           let actionId = ops.[k + 1]
           let argCount = ops.[k + 2]
           let args = mut []
-          let j = 0
-          while j < argCount do
-            args.push(readSlot(ops.[k + 3 + j], overlay))
-            set j += 1
+          if op is 5 then
+            let j = 0
+            while j < argCount do
+              args.push(readSlot(ops.[k + 3 + j], overlay))
+              set j += 1
+          else
+            let j = argCount
+            while j > 0 do
+              set j -= 1
+              set args.[j] = valStack.pop()
           let value = actions.[actionId].apply(null, args)
           // The parser has no effect continuation: a suspended action returns
           // a placeholder, and consuming it would run later transforms before
@@ -390,7 +396,7 @@ module StrPat with
             set curEffect = null
             throw Error("Effects cannot escape a compiled string pattern transform.")
           valStack.push(value)
-          k + 3 + argCount
+          if op is 5 then k + 3 + argCount else k + 3
         8 then // Rem: the remaining input starts here
           set remStart = pos
           k + 1

@@ -242,7 +242,9 @@ class Instantiator(stringPosition: Bool)(using codegen.Erasure)(using tl: TL)(us
     case SP.Composition(true, left, right) =>
       (instantiate(left) or instantiate(right)).withLocOf(pattern)
     case SP.Composition(false, left, right) =>
-      (instantiate(left) and instantiate(right)).withLocOf(pattern)
+      // Conjunction produces a pair, so source grouping is observable even
+      // when reassociation would leave the recognized language unchanged.
+      And(instantiate(left) :: instantiate(right) :: Nil).withLocOf(pattern)
     case SP.Negation(pattern2) => Not(instantiate(pattern2)).withLocOf(pattern)
     case SP.Wildcard() => Wildcard
     case SP.Literal(literal) => Literal(literal)

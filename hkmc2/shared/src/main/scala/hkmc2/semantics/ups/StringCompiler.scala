@@ -6,7 +6,7 @@ import hkmc2.utils.*, shorthands.*
 
 import syntax.Tree, Tree.StrLit
 import Elaborator.{Ctx, State, ctx}, utils.TL
-import Message.MessageContext, ucs.error
+import Message.MessageContext, ucs.{error, safeRef, TermSynthesizer}
 import Pattern.*
 
 import collection.mutable.{Buffer, Map as MutMap, LinkedHashMap, Set as MutSet}
@@ -103,6 +103,8 @@ object StringCompiler:
     case Bind(slot: Int)
     /** Push the result of calling an action closure on the given slots. */
     case Call(actionId: Int, argSlots: Ls[Int])
+    /** Pop arguments in source order; push the result of a generated value plan. */
+    case Apply(actionId: Int, argCount: Int)
     /** Push a sentinel delimiting a recursive component's deferred frames. */
     case Enter
     /** Pop and execute deferred frames down to the sentinel, innermost first. */
@@ -124,9 +126,10 @@ object StringCompiler:
     *        the reverse scan, omitting the NFA, the operation pool, and the
     *        viability matrix — call sites that only ask *whether* the
     *        scrutinee matches should embed this much smaller table
-    * @param actions transform closures, in `actionId` order
+    * @param actions transform closures and generated value plans, in `actionId` order
     * @param visibleSlots the root-visible bindings and their slot indices, in
     *        the order the caller should destructure them
+    * @param hasTransforms true when user transforms must run even in a condition
     * @param pure true when the region carries no value operations at all, so
     *        recognition suffices and a whole-match output is the scrutinee
     */
@@ -136,6 +139,7 @@ object StringCompiler:
       actions: Ls[Term],
       visibleSlots: Ls[(VarSymbol, Int)],
       pure: Bool,
+      hasTransforms: Bool,
   ):
     /** Whether the recognition-only entry point (`matchWhole`) suffices: the
       * region carries no operations at all, or nothing demands its value, its
@@ -145,7 +149,7 @@ object StringCompiler:
       * `ups/regex/CompiledSemantics.mls`). Both region call sites must
       * consult this one predicate so they cannot drift apart. */
     def recognitionSuffices(valueNeeded: Bool): Bool =
-      pure || (!valueNeeded && visibleSlots.isEmpty && actions.isEmpty)
+      pure || (!valueNeeded && visibleSlots.isEmpty && !hasTransforms)
 
   /** Extract the string-shaped fragment of an expanded pattern: everything a
     * `Str`-headed multi-matcher branch should try to match. Non-string leaves
@@ -169,9 +173,8 @@ object StringCompiler:
     case _: (Concat | CharClass) => true
     case _ => false
 
-class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise, Config):
+class StringCompiler(budget: PatternCompilationBudget)(using context: Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise, Config) extends TermSynthesizer:
   import StringCompiler.*, tl.*
-  private val budget = new PatternCompilationBudget
 
   // ------------------------------------------------------------------------
   // Grammar analysis
@@ -283,12 +286,9 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       if sccOf.get(inst).exists(recursiveSccs.contains) then
         check(inst, body, true)
 
-  /** A pattern is pure when matching it involves no value operations: no
-    * bindings, no transforms, transitively through pattern references. The
-    * output of a pure whole-match is the scrutinee itself, and the consumed
-    * part of a pure sub-match is a single slice of the input. Cycles are
-    * treated as pure so the traversal stays well-founded; a cycle only ends
-    * up pure if every body on it is operation-free. */
+  /** Purity excludes bindings and transforms, transitively through references.
+    * Pure patterns can still construct values, notably conjunction tuples;
+    * only `canReuseSlice` justifies eliding that value computation. */
   private val pureMemo = MutMap.empty[Instantiation, Bool]
 
   /** The purity of `pattern`, paired with whether the answer relied on the
@@ -324,6 +324,9 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       case _: (Literal | CharClass | ClassLike | MatchedClassLike | Record | Tuple) => (true, false)
     loop(pattern, Set.empty)._1
 
+  private def canReuseSlice(pattern: Pat): Bool =
+    isPureDeep(pattern) && pattern.preservesOriginalScrutinee
+
   // ------------------------------------------------------------------------
   // NFA construction
   // ------------------------------------------------------------------------
@@ -354,11 +357,17 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
   private def slotOf(symbol: VarSymbol): Int =
     slots.getOrElseUpdate(symbol, slots.size)
 
-  /** Transform closures, in `actionId` order. */
+  /** Transform closures and generated value plans, in `actionId` order. */
   private val actions = Buffer.empty[Term]
 
-  /** The transform terms backing `actions`, for interning by identity. */
-  private val actionSources = Buffer.empty[Term]
+  /** User transform terms compare by identity. Generated value plans also
+    * occupy `actions`, so transform indices must be recorded explicitly. */
+  private val actionIds = MutMap.empty[Term, Int]
+
+  private def addAction(action: Term): Int =
+    val id = actions.size
+    actions += action
+    id
 
   private var failed = false
   private var anyOps = false
@@ -396,9 +405,9 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
     */
   private def build(pattern: Pat, cont: Int, needValue: Bool, exitOps: Ls[Op], scc: Opt[SccContext]): Int =
     budget.spend(1)
-    // Pure subtrees need no internal operations even when their value is
-    // demanded: the consumed part is a single slice of the input.
-    if (needValue || exitOps.nonEmpty) && isPureDeep(pattern) then
+    // Only identity-producing, binding/transform-free subtrees can replace
+    // their value computation with a slice of the consumed input.
+    if (needValue || exitOps.nonEmpty) && canReuseSlice(pattern) then
       val sliceOps = if needValue then Op.Slice :: exitOps else exitOps
       val exit = newState()
       addEps(exit, cont, sliceOps)
@@ -476,32 +485,27 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
               case Nil => lastWords("unreachable: empty concatenation")
             go(patterns)
       case And(patterns) =>
-        // All conjuncts consume the same slice, so a pure conjunct's value
-        // is that slice and only an impure conjunct can contribute a
-        // distinct value (or bindings). Hence one conjunct — the only
-        // impure one, or the first when all are pure — acts as the
-        // *driver*: it is built as an ordinary prioritized fragment whose
-        // priorities and operations determine the committed parse and the
-        // conjunction's value. Every other conjunct is pure and runs in
-        // lockstep as a determinized constraint: the product of the driver
-        // fragment with the constraint DFAs may complete only in states
-        // where every constraint accepts the consumed slice. DFAs add no
-        // choice points, so the committed parse is the driver's
-        // highest-priority parse among the slices all constraints admit.
+        // The driver selects the common span and runs the only permitted
+        // binding/transform-bearing conjunct. Pure constraints run in lockstep
+        // as DFAs and gate completion. Their values are constructed separately
+        // over the committed span, retaining each branch's own alternatives
+        // and tuple grouping; recognition purity does not imply slice output.
         val (impure, pureConjuncts) = patterns.partition(p => !isPureDeep(p))
         if impure.sizeIs >= 2 then
           fail(msg"Conjunctions where more than one branch carries bindings or transformations are not supported within string patterns." -> pattern.diagnosticLoc)
           newState()
         else
-          softAssert(impure.nonEmpty || (!needValue && exitOps.isEmpty),
-            "value operations on a pure conjunction")
           val driver = impure.headOption.getOrElse(patterns.head)
+          val driverIndex = if impure.isEmpty then 0 else patterns.indexWhere(_ eq driver)
           val constraints = if impure.isEmpty then patterns.tail else pureConjuncts
           // Completion edges into `driverAccept` carry the conjunction's
           // pending operations; the product retargets them to states that
           // exit to the continuation exactly when every constraint accepts.
           val driverAccept = newState()
-          val driverEntry = build(driver, driverAccept, needValue, exitOps, scc)
+          val completion =
+            if needValue then Op.Slice :: Op.Apply(conjunctionAction(patterns, driverIndex), 2) :: exitOps
+            else exitOps
+          val driverEntry = build(driver, driverAccept, needValue, completion, scc)
           val dfas = constraints.map: constraint =>
             val accept = newState()
             val entry = build(constraint, accept, needValue = false, Nil, scc)
@@ -548,7 +552,11 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
                     unit = segmentEnd + 1
                 byTarget.foreach: (productTarget, segments) =>
                   addChr(source, segments.toList, productTarget)
-          entry
+          if needValue then
+            val markedEntry = newState()
+            addEps(markedEntry, entry, Op.Mark :: Nil)
+            markedEntry
+          else entry
       case Not(p) =>
         if !isPureDeep(p) then
           // Bindings and transforms inside a negation could never be
@@ -604,14 +612,11 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
         // must have written them, and an unreachable call may read unused
         // slots but must still bind all references in its closure's body.
         val transformSymbols = correspondence.keysIterator.toList
-        val actionId = actionSources.indexWhere(_ eq term) match
-          case -1 =>
-            val params = transformSymbols.map: symbol =>
-              Param.simple(correspondence(symbol))
-            actionSources += term
-            actions += Term.Lam(PlainParamList(params)(N), term.mkClone)
-            actions.size - 1
-          case index => index
+        val actionId = actionIds.getOrElseUpdate(term, {
+          val params = transformSymbols.map: symbol =>
+            Param.simple(correspondence(symbol))
+          addAction(Term.Lam(PlainParamList(params)(N), term.mkClone))
+        })
         val argSlots = transformSymbols.map(slotOf)
         val ops = Op.Call(actionId, argSlots) :: (if needValue then exitOps else Op.Drop :: exitOps)
         build(p, cont, false, ops, scc)
@@ -643,14 +648,14 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
     if !recursiveSccs.contains(sccId) then
       // Non-recursive definitions are inlined at the reference.
       build(bodies(inst), cont, needValue, exitOps, N)
-    else if isPureDeep(Synonym(inst)) then
+    else if isPureDeep(Synonym(inst)) && !needValue && exitOps.isEmpty then
       // Pure recursive components carry no operations; their bodies are
       // recognition-only and tail calls are plain gotos.
       softAssert(!needValue && exitOps.isEmpty,
         "the pure-subtree shortcut should have handled value operations")
       buildSccCopy(inst, sccId, cont, pure = true)
     else
-      // Impure recursive components: bracket the copy with Enter/Exit so that
+      // Value-producing recursive components: bracket the copy with Enter/Exit so that
       // frames deferred at internal tail calls unwind exactly here. The
       // pending operations of this reference itself must be deferred too, as
       // the outermost frame of the activation: they may read slots bound
@@ -680,6 +685,42 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       val bodyEntry = build(bodies(member), cont, needValue = !pure, Nil, S(sccContext))
       addEps(entries(member), bodyEntry, Nil)
     entries(inst)
+
+  /** Construct the conjunction tuple from the driver's value and the common
+    * input slice. Identity constraints reuse that slice; other pure constraints
+    * use their own whole-match value plans, so alternatives can choose outputs
+    * of different shapes. They have no user transforms to repeat. The tail
+    * check forbids same-component recursion through conjunctions, hence these
+    * nested compilations descend into proper subpatterns or lower components.
+    */
+  private def conjunctionAction(patterns: Ls[Pat], driverIndex: Int): Int =
+    val driver = VarSymbol(Tree.Ident("driverValue"), erasedType = N)
+    val input = VarSymbol(Tree.Ident("conjunctionInput"), erasedType = S(codegen.ErasedType.Str))
+    val values = patterns.zipWithIndex.map: (pattern, index) =>
+      if index == driverIndex then driver.safeRef
+      else if canReuseSlice(pattern) then input.safeRef
+      else
+        softAssert(isPureDeep(pattern), "conjunction value constraint must be pure")
+        // Nested value plans belong to this compilation and share its work
+        // budget; otherwise a tree of conjunctions could reset the limit.
+        new StringCompiler(budget).compileWithinBudget(pattern, Mode.Whole) match
+          case N =>
+            failed = true
+            Term.Error()
+          case S(compiled) =>
+            softAssert(!compiled.hasTransforms && compiled.visibleSlots.isEmpty,
+              "pure conjunction constraint unexpectedly has transforms or bindings")
+            val parsed = app(strPatParseWhole,
+              tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, pattern.diagnosticLoc)), fld(input.safeRef)),
+              "conjunction value")
+            // Recognition has already proved this exact span satisfies the
+            // constraint, so its whole parse must succeed.
+            val result = TempSymbol(N, erasedType = N, "conjunctParse")
+            Term.SynthIf(Split.Let(result, parsed,
+              Branch(result.safeRef, ucs.FlatPattern.Tuple(1, true),
+                Split.Else(callTupleGet(result.safeRef, 0, "conjunct output"))) ~:
+                Split.Else(Term.Throw(str("Conjunction value parse failed after recognition (this is a compiler bug).")))))
+    addAction(Term.Lam(paramList(param(driver), param(input)), tup(values)))
 
   // ------------------------------------------------------------------------
   // Fragment determinization (for complement and product)
@@ -1145,6 +1186,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       case Op.Drop => 3 :: Nil
       case Op.Bind(slot) => 4 :: slot :: Nil
       case Op.Call(actionId, argSlots) => 5 :: actionId :: argSlots.size :: argSlots
+      case Op.Apply(actionId, argCount) => 10 :: actionId :: argCount :: Nil
       case Op.Enter => 6 :: Nil
       case Op.Exit => 7 :: Nil
       case Op.Rem => 8 :: Nil
@@ -1336,7 +1378,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
     computeSccs()
     checkTailPositions()
     if failed then N else
-      val rootIsPure = isPureDeep(root)
+      val rootIsPure = canReuseSlice(root)
       // Pre-allocate slots for the root-visible bindings so the caller can
       // rely on their presence even if some binding branches are dead.
       val visible = root.symbols.map(symbol => symbol -> slotOf(symbol))
@@ -1364,4 +1406,5 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
         log(s"Encoded table (${table.length} characters): $table")
         log(s"Encoded match table (${matchTable.length} characters): $matchTable")
         S(Compiled(table, matchTable, actions.toList, visible,
-          pure = !anyOps && slots.isEmpty && actions.isEmpty))
+          pure = !anyOps && slots.isEmpty && actions.isEmpty,
+          hasTransforms = actionIds.nonEmpty))
