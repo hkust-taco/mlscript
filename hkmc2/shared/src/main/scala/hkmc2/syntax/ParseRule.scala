@@ -145,7 +145,7 @@ class ParseRules(using State):
   def letLike(kw: Keyword.LetLike) = 
     keepKw(kw)(
       ParseRule(s"'${kw.name}' binding keyword")(
-        Expr(
+        exprOrBlk(
           ParseRule(s"'${kw.name}' binding head")(
             discardKw(`=`):
               ParseRule(s"'${kw.name}' binding equals sign")(
@@ -172,7 +172,7 @@ class ParseRules(using State):
           )
         ) {
           case (lhs, (rhs, body)) => (lhs, rhs, body)
-        }
+        }*
       )
     ).map:
       case (kw, (lhs, rhs, body)) => LetLike(kw, lhs, rhs, body)

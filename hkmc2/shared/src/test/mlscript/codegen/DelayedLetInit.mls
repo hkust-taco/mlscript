@@ -108,15 +108,19 @@ let foo
 if true
 then foo = 0
 else foo = 1
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
+//│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: if expression
+//│ ║  l.108: 	if true
+//│ ║         	   ^^^^
 //│ ║  l.109: 	then foo = 0
-//│ ╙──       	         ^
+//│ ╙──       	^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'else'
+//│ ║  l.110: 	else foo = 1
+//│ ╙──       	^^^^^^^^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo1;
-//│ if (true === true) {
-//│   block$res14 = foo1;
-//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ foo = undefined
 
 let foo
@@ -160,15 +164,12 @@ foo
 
 :fixme
 fun f() = foo = 0
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.162: 	fun f() = foo = 0
-//│ ╙──       	              ^
+//│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: term definition
+//│ ║  l.166: 	fun f() = foo = 0
+//│ ╙──       	^^^^^^^^^^^^^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let f4;
-//│ f4 = function f() {
-//│   runtime.checkArgs("f", 0, true, arguments.length);
-//│   return foo2
-//│ };
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

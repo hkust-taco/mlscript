@@ -342,6 +342,15 @@ abstract class Parser(
         case (COMMA, _) :: _ => consume; blockOf(rule, annotations, allowNewlines)
         case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, annotations, allowNewlines)
         case _ => Nil
+    // Definitions can start with keywords or parentheses as well as identifiers
+    // (for example, `this.x = v` and `(obj).x = v` in a `set` block).
+    def blockEntry(lhs: Tree): Ls[Tree] =
+      val entry = cur match
+        case (KEYWORD(Keyword.`=`), _) :: _ =>
+          consume
+          Def(lhs, expr(CommaPrecNext, allowNewlines = allowNewlines))
+        case _ => lhs
+      annotations.annotate(entry) :: blockContOf(rule)
     cur match
     case Nil => Nil
     case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, annotations, allowNewlines)
@@ -383,7 +392,7 @@ abstract class Parser(
           case _ =>
             val p = kw.rightPrec.getOrElse(CommaPrecNext)
             val res = parseRule(p, subRule, allowNewlines = allowNewlines).getOrElse(errExpr)
-            annotations.annotate(exprCont(res, CommaPrecNext, allowNewlines = allowNewlines)) :: blockContOf(rule)
+            blockEntry(exprCont(res, CommaPrecNext, allowNewlines = allowNewlines))
         case N =>
           
           // TODO dedup this common-looking logic:
@@ -407,7 +416,7 @@ abstract class Parser(
               case S(subRule) =>
                 val e = exprCont(parseRule(CommaPrecNext, subRule, allowNewlines = allowNewlines)
                   .getOrElse(errExpr), CommaPrecNext, allowNewlines = allowNewlines)
-                annotations.annotate(parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)) :: blockContOf(rule)
+                blockEntry(parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr))
               case N =>
                 // TODO dedup?
                 err(msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil)
@@ -416,18 +425,9 @@ abstract class Parser(
             err(msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil)
             annotations.annotate(errExpr) :: blockContOf(rule)
       case N =>
-        val lhs = tryParseExp(CommaPrecNext, tok, loc, rule, allowNewlines = allowNewlines).getOrElse(errExpr)
-        cur match
-        case (KEYWORD(kw @ (Keyword.`=`)), l0) :: _ /* if kw.leftPrecOrMin > prec */ =>
-          consume
-          val rhs = expr(CommaPrecNext, allowNewlines = allowNewlines)
-          Def(lhs, rhs) :: blockContOf(rule)
-        case _ =>
-          annotations.annotate(lhs) :: blockContOf(rule)
+        blockEntry(tryParseExp(CommaPrecNext, tok, loc, rule, allowNewlines = allowNewlines).getOrElse(errExpr))
     case (tok, loc) :: _ =>
-      annotations.annotate(
-        tryParseExp(CommaPrecNext, tok, loc, rule, allowNewlines = allowNewlines).getOrElse(errExpr)
-      ) :: blockContOf(rule)
+      blockEntry(tryParseExp(CommaPrecNext, tok, loc, rule, allowNewlines = allowNewlines).getOrElse(errExpr))
   
   
   private def tryParseExp[A](prec: Int, tok: Token, loc: Loc, rule: ParseRule[A], allowNewlines: Bool): Opt[A] =
