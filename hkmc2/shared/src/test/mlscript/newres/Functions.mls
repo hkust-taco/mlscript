@@ -142,7 +142,7 @@ callid1(Predef)
 //│ | | | = MarkedShape(member:id⁰, ↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | | = MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
 //│ | | PUSH MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ)
-//│ | | appShape: lhs = MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ), args = [1], res = p⁰.id(1)
+//│ | | appShape: lhs = MarkedShape(member:id⁰, ↘⟨term:callid1²⟩%⟨callid1¹⟩↗⟨term:Predef¹/id¹⟩%⟨⋅id⁰⟩ϵ), args = [1], res = p⁰.id‹term:Predef¹/id¹›(1)
 //│ | | listenTerm: trm = [1]
 //│ | | listen: trm = [1]
 //│ | | listenTerm: trm = 1
@@ -198,8 +198,8 @@ callid1(Predef)
 //│ | | appShape isSaturated? true; head? member:callid1⁰, List(↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | | lhs false List([(p⁰), List(↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)])
 //│ | | appShape: td.body = Some(App(NewSel(SimpleRef(p⁰),Ident(id),None),Tup(List(Fld(‹›,Lit(IntLit(1)),None)))))
-//│ | | listenTerm: trm = p⁰.id(1)
-//│ | | listen: trm = p⁰.id(1)
+//│ | | listenTerm: trm = p⁰.id‹term:Predef¹/id¹›(1)
+//│ | | listen: trm = p⁰.id‹term:Predef¹/id¹›(1)
 //│ | | .exit MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (↗⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
 //│ | | | .exit MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ) (ϵ)
 //│ | | | = MarkedShape(IntroShape(1), ↘⟨term:callid1²⟩%⟨callid1¹⟩ϵ)
@@ -207,7 +207,7 @@ callid1(Predef)
 //│ | | | = IntroShape(1)
 //│ | | = IntroShape(1)
 //│ | ~> member:callid1⁰(member:Predef⁰)
-//│ ~> { fun member:callid1⁰(p⁰) = p⁰.id(1); member:callid1⁰(member:Predef⁰) }
+//│ ~> { fun member:callid1⁰(p⁰) = p⁰.id‹term:Predef¹/id¹›(1); member:callid1⁰(member:Predef⁰) }
 //│ listenTerm: trm = member:callid1⁰(member:Predef⁰)
 //│ listen: trm = member:callid1⁰(member:Predef⁰)
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————

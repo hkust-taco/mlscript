@@ -485,6 +485,11 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case r: Ref => r.sym.showAsPlain
     case r: Resolved =>
       s"${r.showPlain}‹${r.sym.showDbg}›"
+    case sel: NewSel =>
+      // New selections keep their targets outside the legacy `symbol` field.
+      // Debug output can run during resolution, so show all currently known targets.
+      val targets = sel.resolvedTargets.distinct
+      sel.showPlain + (if targets.isEmpty then "" else targets.map(_.showDbg).mkString("‹", ", ", "›"))
     case trm: Term =>
       // s"$showPlain‹${trm.symbol.getOrElse("")}›"
       s"$showPlain${trm.symbol.fold("")(sym => "‹"+sym.showDbg+"›")}"
