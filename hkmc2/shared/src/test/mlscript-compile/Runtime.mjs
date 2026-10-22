@@ -118,9 +118,9 @@ lambda$6 = (undefined, function (bindings) {
     return lambda5(bindings, slot, overlay)
   }
 });
-lambda$5 = (undefined, function (scope27$cap, actions, input, valStack, markStack, bindings, readSlot) {
+lambda$5 = (undefined, function (scope27$cap, Runtime2, actions, input, valStack, markStack, bindings, readSlot) {
   return (ops, k, overlay) => {
-    return lambda6(scope27$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay)
+    return lambda6(scope27$cap, Runtime2, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay)
   }
 });
 lambda$4 = (undefined, function (execValueOp) {
@@ -154,8 +154,8 @@ lambda5 = (undefined, function (bindings, slot, overlay) {
   }
   return runtime.safeCall(bindings.get(slot));
 });
-lambda6 = (undefined, function (scope27$cap, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay) {
-  let op, b, a, actionId, argCount, args, j, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9;
+lambda6 = (undefined, function (scope27$cap, Runtime2, actions, input, valStack, markStack, bindings, readSlot, ops, k, overlay) {
+  let op, b, a, actionId, argCount, args, j, value, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
   op = ops.at(k);
   switch (op) {
     case 0:
@@ -188,29 +188,34 @@ lambda6 = (undefined, function (scope27$cap, actions, input, valStack, markStack
       args = [];
       j = 0;
       lbl: while (true) {
-        let scrut, tmp10, tmp11, tmp12, tmp13;
-        scrut = j < argCount;
-        if (scrut === true) {
-          tmp10 = k + 3;
-          tmp11 = tmp10 + j;
-          tmp12 = runtime.safeCall(readSlot(ops.at(tmp11), overlay));
-          runtime.safeCall(args.push(tmp12));
-          tmp13 = j + 1;
-          j = tmp13;
+        let scrut1, tmp9, tmp10, tmp11, tmp12;
+        scrut1 = j < argCount;
+        if (scrut1 === true) {
+          tmp9 = k + 3;
+          tmp10 = tmp9 + j;
+          tmp11 = runtime.safeCall(readSlot(ops.at(tmp10), overlay));
+          runtime.safeCall(args.push(tmp11));
+          tmp12 = j + 1;
+          j = tmp12;
           continue lbl
         }
         break;
       }
-      tmp7 = runtime.safeCall(actions.at(actionId).apply(null, args));
-      runtime.safeCall(valStack.push(tmp7));
-      tmp8 = k + 3;
-      return tmp8 + argCount;
+      value = runtime.safeCall(actions.at(actionId).apply(null, args));
+      scrut = Runtime2.curEffect !== null;
+      if (scrut === true) {
+        Runtime2.curEffect = null;
+        throw runtime.safeCall(globalThis.Error("Effects cannot escape a compiled string pattern transform."))
+      }
+      runtime.safeCall(valStack.push(value));
+      tmp7 = k + 3;
+      return tmp7 + argCount;
     case 8:
       scope27$cap.remStart$2 = scope27$cap.pos$1;
       return k + 1;
   }
-  tmp9 = "StrPat: malformed operation " + op;
-  throw runtime.safeCall(globalThis.Error(tmp9))
+  tmp8 = "StrPat: malformed operation " + op;
+  throw runtime.safeCall(globalThis.Error(tmp8))
 });
 lambda7 = (undefined, function (execValueOp, ops, overlay) {
   let k;
@@ -944,7 +949,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         bindings = globalThis.Object.freeze(new globalThis.Map());
         scope27$cap.remStart$2 = n;
         readSlot = lambda$6(bindings);
-        execValueOp = lambda$5(scope27$cap, actions, input, valStack, markStack, bindings, readSlot);
+        execValueOp = lambda$5(scope27$cap, Runtime, actions, input, valStack, markStack, bindings, readSlot);
         runFrameOps = lambda$4(execValueOp);
         lbl1: while (true) {
           let committed, tmp2, tmp3, stack, tmp4;

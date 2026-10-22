@@ -7,7 +7,8 @@ open annotations
 abstract class Read with
   fun read(): Str
 
-// A resumed transform contributes the handler's value to the match output.
+// Ordinary transforms can resume effects. Compiled string transforms cannot
+// suspend the parser yet, so effects escaping them must fail explicitly.
 
 fun plain(e) = if "a" is ("a" => e.read()) as r then r else "no"
 fun compiled(e) = if "ab" is (("a" => e.read()) ~ "b") as r then r else "no"
@@ -19,16 +20,16 @@ in
   plain(e)
 //│ = "X"
 
-:fixme // Runtime.StrPat does not suspend and resume around action calls.
-:expect "Xb"
+:re
 handle e = Read with
   fun read()(k) = k("X")
 in
   compiled(e)
-//│ ═══[RUNTIME ERROR] Expected: '"Xb"', got: '"no"'
-//│ = "no"
+//│ ═══[RUNTIME ERROR] Error: Effects cannot escape a compiled string pattern transform.
 
-// Aborting the handler must not execute a later transform in the sequence.
+// Rejection precedes both the outer handler and later committed transforms.
+// Catch the error within this call so the trace remains observable and the
+// following match checks that the rejected effect did not leak into it.
 
 fun aborting() =
   let trace = ""
@@ -36,14 +37,78 @@ fun aborting() =
     set trace = "ran"
     "b"
   let result =
+    js.try_catch of
+      () =>
+        handle e = Read with
+          fun read()(k) =
+            set trace += "handled"
+            "stop"
+        in
+          if "ab" is (("a" => e.read()) ~ ("b" => after())) then "matched" else "no"
+      error => error.message
+  let recovery =
     handle e = Read with
-      fun read()(k) = "stop"
+      fun read()(k) = k("recovered")
     in
-      if "ab" is (("a" => e.read()) ~ ("b" => after())) then "matched" else "no"
-  [result, trace]
+      plain(e)
+  [result === "Effects cannot escape a compiled string pattern transform.", trace, recovery]
 
-:fixme // The engine runs the second transform before the handler can abort.
-:expect ["stop", ""]
+:expect [true, "", "recovered"]
 aborting()
-//│ ═══[RUNTIME ERROR] Expected: '["stop", ""]', got: '["stop", "ran"]'
-//│ = ["stop", "ran"]
+//│ = [true, "", "recovered"]
+
+
+// Match-only compilation must reject an escaping effect too, even though its
+// caller does not demand the transform's output.
+
+fun compiledCondition(e) = "ab" is @compile (("a" => e.read()) ~ "b")
+
+:re
+handle e = Read with
+  fun read()(k) = k("X")
+in
+  compiledCondition(e)
+//│ ═══[RUNTIME ERROR] Error: Effects cannot escape a compiled string pattern transform.
+
+
+// Named patterns share a handler value; entering its block at the call site
+// exercises the generated prefix method without a nested pattern definition.
+
+:silent
+val reader =
+  handle e = Read with
+    fun read()(k) = k("X")
+  in
+    e
+
+pattern Prefix = ("a" => reader.read()) ~ "b"
+
+:re
+enterHandleBlock(reader, () => Prefix.unapplyStringPrefix("abtail"))
+//│ ═══[RUNTIME ERROR] Error: Effects cannot escape a compiled string pattern transform.
+
+
+// An effect in a deferred recursive transform must stop outer frames too.
+// The outer transform throws a different error if the parser runs it.
+
+pattern Nested = (("a" ~ Nested) => throw Error("Unexpected outer recursive transform")) | (("b" ~ Nested) => reader.read()) | ""
+
+:expect "Effects cannot escape a compiled string pattern transform."
+js.try_catch of
+  () => enterHandleBlock(reader, () => if "ab" is Nested as r then r else "no")
+  error => error.message
+//│ = "Effects cannot escape a compiled string pattern transform."
+
+
+// An action can handle its own effects completely: it returns an ordinary
+// value without asking the parser to suspend or resume.
+
+fun locallyHandled() =
+  handle e = Read with
+    fun read()(k) = k("X")
+  in
+    e.read()
+
+:expect "Xb"
+if "ab" is (("a" => locallyHandled()) ~ "b") as r then r else "no"
+//│ = "Xb"

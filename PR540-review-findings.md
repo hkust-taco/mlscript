@@ -10,8 +10,8 @@ immediately below. Upstream PR: <https://github.com/hkust-taco/mlscript/pull/540
 `88d8ee5bc119a5d4548a7e93f9aa0c1459f389ed`, against `hkmc2` at
 `355df32708d10f685e6bb6661060084e76c4d765`. The July/August review and its
 status lists below are historical; they should not be read as the current
-set of open findings. No compiler or runtime implementation was changed
-during this review.
+set of open findings. The initial review made no implementation changes;
+the later requested effect restriction is described below.
 
 The follow-up review targets published head
 `7c6acd57466b795fb5112874a3d1c97919e648a4`, which adds this report and the
@@ -20,12 +20,15 @@ reproductions requested during follow-up are preserved in
 `ups/regex/ResourceGrowth.mls`, with the harmful cases commented and small
 controls enabled.
 
-There are six actionable findings: three P1 issues and three P2 issues.
+The published head has six actionable findings: three P1 issues and three P2
+issues. The local follow-up rejects effects escaping a string transform,
+addressing the first finding under the requested temporary restriction.
+Five other findings remain open.
 The effect, mixed-recursion, and conjunction examples were also executed
 on an isolated checkout of the current base. The growing-instantiation
 example completes on that base, but does not finish compiling on the PR.
 
-### 1. [P1] Suspend the string engine when a transform performs an effect
+### 1. [P1] Reject escaping effects until the string engine can resume them
 
 Location: `hkmc2/shared/src/test/mlscript-compile/Runtime.mls`, the action
 application in `StrPat.parseRun` (line 384).
@@ -46,10 +49,23 @@ the following transform still mutates a captured variable, yielding
 empty trace.
 
 This confirms historical C2 at the language level, rather than only by
-calling the engine directly. The action application and the surrounding
-parser state need a resumable execution protocol, including correct
-continuations for deferred frames. Merely testing `curEffect` after the
-call would prevent some corruption but would not implement resumption.
+calling the engine directly. Full support would require a resumable protocol
+for the action application and surrounding parser state, including deferred
+frames.
+
+The requested temporary policy is now implemented locally: immediately after
+calling an action, `parseRun` checks `curEffect`. If an effect escaped, it
+clears the pending effect and throws `Effects cannot escape a compiled string
+pattern transform.` before using the placeholder result or running further
+operations. The shared operation executor covers ordinary calls and deferred
+frames, in both whole and prefix modes. This is a runtime restriction and
+does not claim to implement resumption. Effects handled entirely within the
+action remain supported because they return an ordinary value to the parser.
+
+`EffectfulTransforms.mls` now expects explicit rejection rather than the two
+old incorrect results. It also checks condition-only `@compile`, prefix
+matching, deferred recursive actions, absence of later transform execution,
+recovery after catching the error, and a locally handled effect that succeeds.
 
 ### 2. [P1] Preserve recursive bindings when a definition has non-string alternatives
 
@@ -239,7 +255,8 @@ The focused `CompiledBugs.mls` run reconfirmed C1, C4, C5, C6, and C8.
 C3's introduced bypass is also fixed: the definition keeps its `unapply`
 route. This does not fix the older extraction feature itself; both forms
 still return `"no"` and retain their `:fixme` assertions. C2 remains broken
-with end-to-end evidence above. C7's exact string-only example is fixed,
+on the published head, but the local follow-up implements the requested
+explicit rejection policy. C7's exact string-only example is fixed,
 but its mixed-definition variant still corrupts bindings, so that thread
 must not be treated as fully resolved.
 
@@ -264,14 +281,16 @@ compile-time table construction or per-match action-closure allocation.
   and nested transforms all agreed with a simple exhaustive reference parser.
   These temporary probes do not establish correctness for recursive grammars.
 - Added two ordinary `.mls` regression files, `EffectfulTransforms.mls` and
-  `RegionBoundaries.mls`. Their seven unresolved assertions use `:fixme`;
-  the tests also contain passing controls. `ResourceGrowth.mls` preserves
+  `RegionBoundaries.mls`. Five unresolved assertions in `RegionBoundaries.mls`
+  use `:fixme`; the effect tests now enforce explicit rejection, and both
+  files also contain passing controls. `ResourceGrowth.mls` preserves
   the harmful resource probes as commented code and adds six active control
   assertions. The harmful probes were run only in disposable processes.
 - GitHub's `build` check succeeded for the reviewed head. Final local
   `hkmc2AllTests/test` passed all 1,108 tests (including the three new files),
-  with no unexpected failures or additional golden changes. The seven
-  assertions marked `:fixme` remain known failures, not implemented fixes.
+  with no unexpected failures. The generated `Runtime.mjs` and effect-test
+  goldens include the rejection policy. The five new assertions marked
+  `:fixme` remain known failures, not implemented fixes.
 
 Two older concerns need careful classification. Eager multi-matcher labels
 can execute a losing alternative's transform: `Box(A) | Box(B)` records

@@ -381,7 +381,15 @@ module StrPat with
           while j < argCount do
             args.push(readSlot(ops.[k + 3 + j], overlay))
             set j += 1
-          valStack.push(actions.[actionId].apply(null, args))
+          let value = actions.[actionId].apply(null, args)
+          // The parser has no effect continuation: a suspended action returns
+          // a placeholder, and consuming it would run later transforms before
+          // the handler can resume or abort. Reject effects escaping an action
+          // before changing the value stack, including in deferred frames.
+          if curEffect !== null do
+            set curEffect = null
+            throw Error("Effects cannot escape a compiled string pattern transform.")
+          valStack.push(value)
           k + 3 + argCount
         8 then // Rem: the remaining input starts here
           set remStart = pos
