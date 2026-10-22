@@ -6,11 +6,9 @@ open annotations
 
 pattern Emoji = "😀" ..= "😏"
 
-:fixme // The plain range path requires one UTF-16 code unit.
 :expect true
 "😁" is Emoji
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "😁" is @compile Emoji
@@ -62,18 +60,14 @@ if 42 is @compile MixedListed as r then r else "no"
 
 pattern AcrossPlanes = "z" ..= "😀"
 
-:fixme // UTF-16 lexicographic order differs from code-point order.
 :expect true
 "\uffff" is AcrossPlanes
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 :expect true
 "\uffff" is @compile AcrossPlanes
 //│ = true
 
-:fixme // The legacy prefix range reads only the first UTF-16 code unit.
 :expect MatchSuccess(["😁", "tail"], null)
 Emoji.unapplyStringPrefix("😁tail")
-//│ ═══[RUNTIME ERROR] Expected: 'MatchSuccess(["😁", "tail"], null)', got: 'MatchFailure(null)'
-//│ = MatchFailure(null)
+//│ = MatchSuccess(["😁", "tail"], null)

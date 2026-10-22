@@ -136,3 +136,46 @@ pattern Bad = "😀😀" ..= "😂"
 
 "😀" is Bad
 //│ = true
+
+
+// Standalone ranges, including their generated prefix methods, share the
+// code-point expansion used inside a sequence. A supplementary character's
+// complete UTF-16 encoding is returned, and the following input is retained.
+
+pattern Faces = "😀" ..< "😂"
+
+:expect [true, true, false, false, false, false]
+["😀" is Faces, "😁" is Faces, "😂" is Faces, "😀x" is Faces, "" is Faces, 42 is Faces]
+//│ = [true, true, false, false, false, false]
+
+:expect "😁"
+if "😁" is Faces as face then face else "no"
+//│ = "😁"
+
+:expect MatchSuccess(["😁", "tail"], null)
+Faces.unapplyStringPrefix("😁tail")
+//│ = MatchSuccess(["😁", "tail"], null)
+
+:expect MatchFailure(null)
+Faces.unapplyStringPrefix("😂tail")
+//│ = MatchFailure(null)
+
+:expect MatchFailure(null)
+Faces.unapplyStringPrefix(42)
+//│ = MatchFailure(null)
+
+pattern EmptyFace = "😂" ..< "😂"
+
+:expect false
+"😂" is EmptyFace
+//│ = false
+
+:expect MatchFailure(null)
+EmptyFace.unapplyStringPrefix("😂tail")
+//│ = MatchFailure(null)
+
+pattern Across = "z" ..= "😀"
+
+:expect MatchSuccess(["￿", "tail"], null)
+Across.unapplyStringPrefix("\ufffftail")
+//│ = MatchSuccess(["￿", "tail"], null)

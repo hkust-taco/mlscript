@@ -250,16 +250,12 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       extractionMatches.exists(_.nonEmpty)
     case _ => false
   
-  /** Build the test for a range pattern. The bound comparisons are guarded
+  /** Build the test for a numeric range pattern. The comparisons are guarded
     * by a class test on the scrutinee because bare JS comparisons coerce
     * foreign values (`[]` compares equal to `0`, so `[] is (0 ..< 65536)`
-    * used to match) and compare strings *lexicographically* (`"abc"` fell
-    * within `"a" ..= "z"`). Ranges denote sets of single characters or
-    * numbers — the compiled paths already enumerate integer ranges and match
-    * character ranges one code unit at a time — so the plain path must
-    * agree:
+    * used to match). String ranges use the automaton's shared code-point
+    * interpretation rather than JavaScript's UTF-16 lexicographic ordering.
     *
-    *  - character ranges match single-character strings only;
     *  - integer ranges match integers only;
     *  - decimal ranges match any number.
     */
@@ -273,9 +269,6 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       Branch(scrut(), FlatPattern.ClassLike(symbol.safeRef, symbol, N, false)(Tree.Dummy),
         continuation) ~: Split.End
     (lo, hi) match
-      case (_: StrLit, _: StrLit) => classGuard(ctx.builtins.Str,
-        tempLet("scrutineeLength", sel(scrut(), "length")): lengthSymbol =>
-          Branch(lengthSymbol.safeRef, FlatPattern.Lit(IntLit(1)), comparisons) ~: Split.End)
       case (_: IntLit, _: IntLit) => classGuard(ctx.builtins.Int, comparisons)
       case (_: DecLit, _: DecLit) => classGuard(ctx.builtins.Num, comparisons)
       // Mixed bound types are rejected during elaboration.
@@ -769,6 +762,8 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       case Wildcard() => (makeConsequent, alternative) => makeConsequent(scrutinee, SeqMap.empty) ~~: alternative
       case Literal(literal) => (makeConsequent, alternative) =>
         Branch(scrutinee(), FlatPattern.Lit(literal), makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
+      case Range(_: StrLit, _: StrLit, _) =>
+        makeStringRegionSplit(scrutinee, pattern, outputNeeded)
       case Range(lower, upper, rightInclusive) => (makeConsequent, alternative) =>
         makeRangeTest(scrutinee, lower, upper, rightInclusive, makeConsequent(scrutinee, SeqMap.empty)) ~~: alternative
       case Concatenation(left, right) => regionSupport(pattern, Set.empty) match
@@ -1110,19 +1105,10 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         ) ~: alternative)
     // Non-string literal patterns are directly discarded.
     case Literal(_) => RejectPrefixSplit
-    case Range(lower: StrLit, upper: StrLit, rightInclusive) => (makeConsequent, alternative) =>
-      // Check if the string is not empty. Then 
-      val stringHeadSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "stringHead")
-      val stringTailSymbol = TempSymbol(N, erasedType = S(ErasedType.Str), "stringTail")
-      val nonEmptySymbol = TempSymbol(N, erasedType = S(ErasedType.Bool), "nonEmpty")
-      val nonEmptyTerm = app(this.lt.safeRef, tup(fld(int(0)), fld(sel(scrutinee(), "length"))), "string is not empty")
-      Split.Let(nonEmptySymbol, nonEmptyTerm, // `0 < string.length`
-        Branch(nonEmptySymbol.safeRef,
-          Split.Let(stringHeadSymbol, callStringGet(scrutinee(), 0, "head"),
-            Split.Let(stringTailSymbol, callStringDrop(scrutinee(), 1, "tail"),
-              makeRangeTest(stringHeadSymbol.toScrut, lower, upper, rightInclusive,
-                makeConsequent(stringHeadSymbol.toScrut, stringTailSymbol.toScrut, SeqMap.empty))))
-        ) ~: alternative)
+    case Range(_: StrLit, _: StrLit, _) =>
+      // Use the same range expansion as whole matching and concatenation;
+      // a supplementary character consumes its complete surrogate pair.
+      makeStringPrefixAutomatonSplit(scrutinee, pattern)
     // Other range patterns cannot be string prefixes.
     case Range(_, _, _) => RejectPrefixSplit
     case Concatenation(left, right) => (makeConsequent, alternative) =>
@@ -1462,32 +1448,42 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
               ) ~: alternative
           ) ~: alternative
 
-  /** Compile the body of a pattern definition into a prefix-matching
-    * automaton for its `unapplyStringPrefix` method. The result follows the
-    * established protocol: `MatchSuccess([consumed, remaining], null)`.
+  /** Compile a prefix region, retaining the consumed value, the remaining
+    * input and any visible bindings. Both definition bodies and individual
+    * ranges use this path so range expansion and consumed lengths agree.
     */
-  private def makeStringPrefixAutomatonSplit(inputSymbol: VarSymbol, pattern: SP)(using Raise): Split =
+  private def makeStringPrefixAutomatonSplit(scrutinee: Scrut, pattern: SP)(using Raise): MakePrefixSplit =
     val instantiator = new Instantiator
     val (instantiated, context) = instantiator(pattern)
     val compiler = new StringCompiler(using context)
     compiler.compile(instantiated, StringCompiler.Mode.Prefix) match
-      case N => failure
+      case N => RejectPrefixSplit
       case S(compiled) =>
         StringCompiler.TableStats.record(pattern.toLoc, "prefix-parse", compiled.table)
-        val callTerm = app(strPatParsePrefix,
-          tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, pattern.toLoc)), fld(inputSymbol.safeRef)),
-          "string prefix parse")
-        tempLet("prefixResult", callTerm): resultSymbol =>
-          val consumedSymbol = TempSymbol(N, erasedType = N, "consumed")
-          val remainingSymbol = TempSymbol(N, erasedType = N, "remaining")
-          Branch(
-            resultSymbol.safeRef,
-            FlatPattern.Tuple(2, true),
-            Split.Let(consumedSymbol, callTupleGet(resultSymbol.safeRef, 0, "consumed prefix"),
-              Split.Let(remainingSymbol, callTupleGet(resultSymbol.safeRef, 1, "remaining input"),
-                Split.Else(makeMatchSuccess(
-                  tup(fld(consumedSymbol.safeRef), fld(remainingSymbol.safeRef))))))
-          ) ~: failure
+        (makeConsequent, alternative) =>
+          val callTerm = app(strPatParsePrefix,
+            tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, pattern.toLoc)), fld(scrutinee())),
+            "string prefix parse")
+          Branch(scrutinee(), FlatPattern.ClassLike(
+            ctx.builtins.Str.safeRef, ctx.builtins.Str, N, false)(Tree.Dummy),
+            tempLet("prefixResult", callTerm): resultSymbol =>
+              val consumedSymbol = TempSymbol(N, erasedType = N, "consumed")
+              val remainingSymbol = TempSymbol(N, erasedType = N, "remaining")
+              val slotSymbols = compiled.visibleSlots.map: (symbol, slot) =>
+                (symbol, slot, TempSymbol(N, erasedType = N, s"${symbol.name}$$"))
+              val bindings: BindingMap = SeqMap.from(slotSymbols.map:
+                (symbol, _, local) => symbol -> local.toScrut)
+              val consequent = slotSymbols.foldRight(makeConsequent(
+                consumedSymbol.toScrut, remainingSymbol.toScrut, bindings)):
+                case ((_, slot, local), inner) =>
+                  Split.Let(local, callTupleGet(resultSymbol.safeRef, 2 + slot, "string binding"), inner)
+              Branch(
+                resultSymbol.safeRef,
+                FlatPattern.Tuple(2, true),
+                Split.Let(consumedSymbol, callTupleGet(resultSymbol.safeRef, 0, "consumed prefix"),
+                  Split.Let(remainingSymbol, callTupleGet(resultSymbol.safeRef, 1, "remaining input"), consequent))
+              ) ~: alternative
+          ) ~: alternative
 
   /** The `Raise` under which `unapplyStringPrefix` is compiled.
     *
@@ -1732,7 +1728,9 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           // The whole body — including alternatives without `~` — is compiled
           // into one prefix automaton, so alternation and splitting decisions
           // are resolved jointly rather than by greedy composition.
-          makeStringPrefixAutomatonSplit(inputSymbol, pd.pattern)
+          makeStringPrefixAutomatonSplit(inputSymbol.toScrut, pd.pattern)(
+            (consumed, remaining, _) => Split.Else(makeMatchSuccess(tup(fld(consumed()), fld(remaining())))),
+            failure)
         else
           // Bodies without string sequences have no splitting ambiguity, and
           // parametric definitions cannot be compiled ahead of the use site
