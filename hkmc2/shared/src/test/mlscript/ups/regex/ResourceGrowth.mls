@@ -1,21 +1,26 @@
 :js
 
 // Short pattern definitions must not cause unbounded specialization
-// or unchecked determinization. The large reproductions below are commented
-// because a diff-test timeout cannot safely interrupt the compiler's work.
-// Run them in a disposable JVM with an external time and memory limit until
-// compilation either succeeds within a budget or reports a source diagnostic.
+// or unchecked determinization. Growing recursive arguments are diagnosed
+// before specialization, independently of compilation resource limits.
 
 
 // Growing pattern arguments: this particular language is regular (`a*`).
-// The compiler keeps instantiating Rep("a"), Rep(Rep("a")), and so on;
-// testing the empty input still hangs during compilation, before matching.
-// The base matcher compiles the example and returns true on the empty input.
-//
-// pattern Rep(pattern P) = (P ~ Rep(Rep(P))) | ""
-//
-// :expect true
-// "" is Rep("a")
+// Eager specialization would instantiate Rep("a"), Rep(Rep("a")), etc.
+// Reject that unsupported growth without misdiagnosing a non-regular language.
+
+pattern Rep(pattern P) = (P ~ Rep(Rep(P))) | ""
+
+:e
+"" is Rep("a")
+//│ ╔══[COMPILATION ERROR] Recursive specialization grows the arguments of pattern `Rep`.
+//│ ║  l.12: 	pattern Rep(pattern P) = (P ~ Rep(Rep(P))) | ""
+//│ ║        	                              ^^^^^^^^^
+//│ ╟── Wrapping a pattern parameter in additional patterns around a recursive cycle is not supported by pattern compilation.
+//│ ╟── Requested by this compiled pattern.
+//│ ║  l.15: 	"" is Rep("a")
+//│ ╙──      	      ^^^^^^^
+//│ = false
 
 // Control: recursive calls with unchanged arguments have a finite set of
 // instantiations and recognize the same language for this argument.

@@ -1,0 +1,79 @@
+:js
+
+open annotations
+
+// Forwarding and permuting parameters close a finite specialization graph.
+
+pattern Swap(pattern P, pattern Q) = (P ~ Swap(Q, P)) | ""
+
+:expect [true, true, false]
+["" is Swap("a", "b"), "abab" is Swap("a", "b"), "aa" is Swap("a", "b")]
+//│ = [true, true, false]
+
+// Changing an argument to a closed pattern stabilizes after one step.
+
+pattern Reset(pattern P) = (P ~ Reset("b")) | ""
+
+:expect [true, false]
+["abbb" is Reset("a"), "aabb" is Reset("a")]
+//│ = [true, false]
+
+// Wrapping on an acyclic path is finite, even when the callee is recursive.
+
+pattern Stable(pattern P) = (P ~ Stable(P)) | ""
+pattern Wrapped(pattern P) = Stable("x" ~ P)
+
+:expect true
+"xaxaxa" is Wrapped("a")
+//│ = true
+
+// Growth can travel through multiple definitions and parameter positions.
+
+pattern Left(pattern P, pattern Q) = ("a" ~ Right(Q, P ~ "b")) | ""
+pattern Right(pattern P, pattern Q) = ("b" ~ Left(Q, P)) | ""
+
+:e
+"" is Left("x", "y")
+//│ ╔══[COMPILATION ERROR] Recursive specialization grows the arguments of pattern `Right`.
+//│ ║  l.32: 	pattern Left(pattern P, pattern Q) = ("a" ~ Right(Q, P ~ "b")) | ""
+//│ ║        	                                            ^^^^^^^^^^^^^^^^
+//│ ╟── Wrapping a pattern parameter in additional patterns around a recursive cycle is not supported by pattern compilation.
+//│ ╟── Requested by this compiled pattern.
+//│ ║  l.36: 	"" is Left("x", "y")
+//│ ╙──      	      ^^^^^^^^^^^^^
+//│ = false
+
+:e
+"" is @compile Left("x", "y")
+//│ ╔══[COMPILATION ERROR] Recursive specialization grows the arguments of pattern `Right`.
+//│ ║  l.32: 	pattern Left(pattern P, pattern Q) = ("a" ~ Right(Q, P ~ "b")) | ""
+//│ ║        	                                            ^^^^^^^^^^^^^^^^
+//│ ╟── Wrapping a pattern parameter in additional patterns around a recursive cycle is not supported by pattern compilation.
+//│ ╟── Requested by this compiled pattern.
+//│ ║  l.47: 	"" is @compile Left("x", "y")
+//│ ╙──      	               ^^^^^^^^^^^^^
+//│ = false
+
+// Disjunction also grows syntactic arguments, even when its language repeats.
+
+pattern Duplicate(pattern P) = (P ~ Duplicate(P | P)) | ""
+
+:e
+"" is Duplicate("a")
+//│ ╔══[COMPILATION ERROR] Recursive specialization grows the arguments of pattern `Duplicate`.
+//│ ║  l.59: 	pattern Duplicate(pattern P) = (P ~ Duplicate(P | P)) | ""
+//│ ║        	                                    ^^^^^^^^^^^^^^^
+//│ ╟── Wrapping a pattern parameter in additional patterns around a recursive cycle is not supported by pattern compilation.
+//│ ╟── Requested by this compiled pattern.
+//│ ║  l.62: 	"" is Duplicate("a")
+//│ ╙──      	      ^^^^^^^^^^^^^
+//│ = false
+
+// A growth step followed by a reset does not form a parameter-flow cycle.
+
+pattern First(pattern P) = (P ~ Second("x" ~ P)) | ""
+pattern Second(pattern Q) = (Q ~ First("a")) | ""
+
+:expect true
+"axa" is First("a")
+//│ = true

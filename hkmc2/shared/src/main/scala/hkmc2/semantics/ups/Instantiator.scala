@@ -29,8 +29,78 @@ class Instantiator(stringPosition: Bool)(using codegen.Erasure)(using tl: TL)(us
   
   /** Instantiate an anonymous pattern. */
   def apply(pattern: SP): (Pat, Context) = scoped("ucs:instantiation"):
-    val entryPoint = instantiate(pattern)(using Map.empty)
-    (entryPoint, runInstantiationLoop)
+    if hasGrowingRecursion(pattern) then (Never, new Context(Map.empty))
+    else
+      val entryPoint = instantiate(pattern)(using Map.empty)
+      (entryPoint, runInstantiationLoop)
+
+  /** Whether this leaf cannot match the input of a string region. */
+  private def nonStringLeaf(pattern: SP): Bool = stringPosition && (pattern match
+    case SP.Range(lower, upper, _) =>
+      !(lower.isInstanceOf[StrLit] && upper.isInstanceOf[StrLit])
+    case _: (SP.Tuple | SP.Record) => true
+    case SP.Constructor(target, _) => target.resolvedSym.flatMap(_.asClsLike) match
+      case S(symbol: ClassSymbol) => !(symbol is ctx.builtins.Str)
+      case S(_: ModuleOrObjectSymbol) => true
+      case _ => false
+    case _ => false)
+
+  /** Check finite specialization before constructing any instantiated keys.
+    * An edge records a parameter passed to another definition's parameter;
+    * it grows when the actual argument wraps that parameter in a pattern.
+    * A cycle containing a growing edge can create unbounded argument trees.
+    * Copying, permutation, and replacement by a closed pattern do not grow a
+    * cycle, and remain supported. This is a syntactic compilation restriction,
+    * not a claim about the regularity of the pattern's language.
+    */
+  private def hasGrowingRecursion(root: SP): Bool =
+    case class Edge(from: VarSymbol, to: VarSymbol, grows: Bool, callee: PatternSymbol, site: SP)
+    val edges = collection.mutable.ArrayBuffer.empty[Edge]
+    val visited = collection.mutable.Set.empty[PatternSymbol]
+    def children(pattern: SP): Ls[SP] = pattern match
+      case SP.Record(fields) => fields.map(_._2)
+      case SP.Guarded(inner, _) => inner :: Nil
+      case _ => pattern.children.collect { case child: SP => child }.toList
+    def dependencies(pattern: SP, wrapped: Bool): Ls[(VarSymbol, Bool)] =
+      if nonStringLeaf(pattern) then Nil else pattern match
+        case SP.Constructor(target, N) => target.resolvedSym match
+          case S(symbol: VarSymbol) => (symbol, wrapped) :: Nil
+          case _ => Nil
+        // Annotations and unbound aliases disappear during instantiation.
+        case SP.Annotated(inner, _) => dependencies(inner, wrapped)
+        case alias @ SP.Alias(inner, _) if alias.symbolOption.isEmpty => dependencies(inner, wrapped)
+        case _ => children(pattern).flatMap(dependencies(_, true))
+    def visit(pattern: SP, parameters: Set[VarSymbol]): Unit = if !nonStringLeaf(pattern) then
+      pattern match
+        case SP.Constructor(target, arguments) =>
+          target.resolvedSym.flatMap(_.asPat).foreach: symbol =>
+            symbol.defn.foreach: definition =>
+              arguments.getOrElse(Nil).zip(definition.patternParams).foreach: (argument, formal) =>
+                dependencies(argument, false).foreach: (parameter, grows) =>
+                  if parameters.contains(parameter) then
+                    edges += Edge(parameter, formal.sym, grows, symbol, pattern)
+              if visited.add(symbol) then
+                visit(definition.pattern, definition.patternParams.iterator.map(_.sym).toSet)
+        case _ => ()
+      children(pattern).foreach(visit(_, parameters))
+    visit(root, Set.empty)
+    val outgoing = edges.groupMap(_.from)(_.to)
+    def reaches(start: VarSymbol, target: VarSymbol): Bool =
+      val seen = collection.mutable.Set.empty[VarSymbol]
+      val pending = collection.mutable.Stack(start)
+      while pending.nonEmpty do
+        val current = pending.pop()
+        if current is target then return true
+        if seen.add(current) then outgoing.get(current).foreach(_.foreach(pending.push(_)))
+      false
+    edges.find(edge => edge.grows && reaches(edge.to, edge.from)) match
+      case S(edge) =>
+        error(
+          msg"Recursive specialization grows the arguments of pattern `${edge.callee.nme}`." -> edge.site.toLoc,
+          msg"Wrapping a pattern parameter in additional patterns around a recursive cycle is not supported by pattern compilation." -> N,
+          msg"Requested by this compiled pattern." -> root.toLoc)
+        true
+      case N => false
   
   /** Run the loop to recursively instantiate needed patterns. */
   private def runInstantiationLoop: Context =
@@ -78,16 +148,12 @@ class Instantiator(stringPosition: Bool)(using codegen.Erasure)(using tl: TL)(us
     // definitions. Discard their leaves before expanding them: a numeric
     // range need not be enumerable, and its object fields cannot contribute
     // bindings or transformations to a successful string match.
-    case SP.Range(lower, upper, _) if stringPosition &&
-        !(lower.isInstanceOf[StrLit] && upper.isInstanceOf[StrLit]) => Never
-    case _: (SP.Tuple | SP.Record) if stringPosition => Never
+    case _ if nonStringLeaf(pattern) => Never
     case SP.Constructor(target, arguments) => target.resolvedSym match
       // Look up the corresponding pattern from the substitution.
       case S(symbol: VarSymbol) => subst(symbol)
       // Recursively instantiate the arguments of constructor patterns.
       case S(symbol) => symbol.asClsLike match
-        case S(symbol: ClassSymbol) if stringPosition && !(symbol is ctx.builtins.Str) => Never
-        case S(_: ModuleOrObjectSymbol) if stringPosition => Never
         case S(symbol: ClassSymbol) =>
           val head = ClassLikeHead(symbol, target)
           symbol.defn.get.paramsOpt match
