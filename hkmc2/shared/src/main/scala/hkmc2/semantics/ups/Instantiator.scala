@@ -14,7 +14,7 @@ import scala.collection.immutable.SeqMap
 object Instantiator:
   type Subst = Map[VarSymbol, Pat]
 
-class Instantiator(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise):
+class Instantiator(stringPosition: Bool)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise):
   import tl.*
   
   /** The map contains all instantiated patterns. The key is a pattern symbol
@@ -74,11 +74,20 @@ class Instantiator(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise)
   
   /** Instantiate the given pattern with a substitution map. */
   def instantiate(pattern: SP)(using subst: Map[VarSymbol, Pat]): Pat = pattern match
+    // A string region also contains the non-string alternatives of mixed
+    // definitions. Discard their leaves before expanding them: a numeric
+    // range need not be enumerable, and its object fields cannot contribute
+    // bindings or transformations to a successful string match.
+    case SP.Range(lower, upper, _) if stringPosition &&
+        !(lower.isInstanceOf[StrLit] && upper.isInstanceOf[StrLit]) => Never
+    case _: (SP.Tuple | SP.Record) if stringPosition => Never
     case SP.Constructor(target, arguments) => target.resolvedSym match
       // Look up the corresponding pattern from the substitution.
       case S(symbol: VarSymbol) => subst(symbol)
       // Recursively instantiate the arguments of constructor patterns.
       case S(symbol) => symbol.asClsLike match
+        case S(symbol: ClassSymbol) if stringPosition && !(symbol is ctx.builtins.Str) => Never
+        case S(_: ModuleOrObjectSymbol) if stringPosition => Never
         case S(symbol: ClassSymbol) =>
           val head = ClassLikeHead(symbol, target)
           symbol.defn.get.paramsOpt match
@@ -191,7 +200,9 @@ class Instantiator(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise)
       case S(symbol) => Rename(instantiate(pattern), symbol)
     // Pattern arguments are accessible throughout the pattern.
     case SP.Transform(pattern, parameters, transform) =>
-      Extract(instantiate(pattern), parameters.toMap, transform)
+      val input = instantiate(pattern)
+      if input == Never then Never
+      else Extract(input, SeqMap.from(parameters), transform)
     case SP.Annotated(pattern, annotations) =>
       // Currently, we only support `@compile` annotation, so here we only
       // check whether this annotation exists, and report an error for all

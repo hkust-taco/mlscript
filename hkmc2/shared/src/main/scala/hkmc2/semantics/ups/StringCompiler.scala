@@ -592,17 +592,13 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
         // fix is to host each definition's transforms as methods on the
         // pattern object (compiled once, next to `unapply`) and reference
         // them from regions by selection.
-        // The transform's parameters are exactly the symbols the definition
-        // itself binds — the ones `correspondence` maps. `p.symbols` can
-        // contain more: instantiation substitutes pattern arguments into the
-        // body, and a binding inside an argument (`Wrap(("x" as w))`) is
-        // visible here but is no parameter of the transform term. Both the
-        // parameter list and the argument slots must be derived from the
-        // same filtered list: they define the calling convention together,
-        // and the closure is interned only once while `argSlots` used to be
-        // recomputed per occurrence, so deriving them from `p.symbols` let
-        // two instantiations of one definition disagree on arity.
-        val transformSymbols = p.symbols.filter(correspondence.contains)
+        // The source correspondence defines the closure's calling convention.
+        // Substitution can add bindings from pattern arguments, and projection
+        // onto strings can remove bindings from dead non-string alternatives.
+        // Neither changes the transform's parameters: every reachable call
+        // must have written them, and an unreachable call may read unused
+        // slots but must still bind all references in its closure's body.
+        val transformSymbols = correspondence.keysIterator.toList
         val actionId = actionSources.indexWhere(_ eq term) match
           case -1 =>
             val params = transformSymbols.map: symbol =>

@@ -37,11 +37,9 @@ if "a" is ("" ~ (("a" & ("a" | "b")) as r)) then r else "no"
 pattern Digit = "0" ..= "9"
 pattern MixedListed = (((Digit as h) ~ (MixedListed as t)) => h + "," + t) | ("" => "$") | 42
 
-:fixme // The outer transform reads the innermost activation's head binding.
 :expect "1,2,3,$"
 if "123" is MixedListed as r then r else "no"
-//│ ═══[RUNTIME ERROR] Expected: '"1,2,3,$"', got: '"3,2,3,$"'
-//│ = "3,2,3,$"
+//│ = "1,2,3,$"
 
 :expect "1,2,3,$"
 if "123" is @compile MixedListed as r then r else "no"

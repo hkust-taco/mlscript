@@ -1248,12 +1248,9 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       * automata) and for targets elaboration has already reported on. */
     case Unsupported(construct: Str, loc: Opt[Loc], quiet: Bool)
 
-  /** Whether every alternative of the pattern can only match strings, so a
-    * definition body may be compiled as a single `Str`-guarded region for
-    * `unapply`. A non-string alternative (a class or numeric pattern, a
-    * wildcard) would be a dead state inside the region while the general
-    * translation dispatches it normally, so mixed bodies must keep the
-    * latter. Only alternative-position nodes are inspected: below a `~`,
+  /** Whether a definition needs only its string matcher. Mixed definitions
+    * additionally retain their general matcher for non-string inputs.
+    * Only alternative-position nodes are inspected: below a `~`,
     * everything is string-position by construction, and parametric
     * references are conservatively rejected (their arguments would need the
     * same analysis). */
@@ -1406,7 +1403,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     * whose `length` is falsy.
     */
   private def makeStringRegionSplit(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
-    val instantiator = new Instantiator
+    val instantiator = new Instantiator(stringPosition = true)
     val (instantiated, context) = instantiator(pattern)
     val compiler = new StringCompiler(using context)
     def isStr = FlatPattern.ClassLike(
@@ -1453,7 +1450,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     * ranges use this path so range expansion and consumed lengths agree.
     */
   private def makeStringPrefixAutomatonSplit(scrutinee: Scrut, pattern: SP)(using Raise): MakePrefixSplit =
-    val instantiator = new Instantiator
+    val instantiator = new Instantiator(stringPosition = true)
     val (instantiated, context) = instantiator(pattern)
     val compiler = new StringCompiler(using context)
     compiler.compile(instantiated, StringCompiler.Mode.Prefix) match
@@ -1578,7 +1575,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
   (makeConsequent, alternative) => scoped("ucs:ups:compilation"):
     warnOnDiscardedExtractionOutputs(pattern)
     // Instantiate the pattern and all patterns used in it.
-    val instantiator = new Instantiator
+    val instantiator = new Instantiator(stringPosition = false)
     val (synonym, context) = instantiator(pattern)
     // Decide whether the compiled matcher needs to create `MatchSuccess` or can
     // represent success and failure using Boolean values.
@@ -1681,9 +1678,8 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
   ):
     val unapply = scoped("ucs:translation"):
       val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
-      val makeSplit =
+      val makeSplit: MakeSplit =
         if pd.patternParams.isEmpty && containsStringSeq(pd.pattern)
-            && stringOnlyAlternatives(pd.pattern)
             && regionSupported(pd.pattern, Set.empty) then
           // The whole body is compiled as ONE region. This is not merely an
           // optimization: a transform wrapping a recursive sequence must sit
@@ -1692,7 +1688,20 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           // node-by-node, so only inner `~` nodes would become regions and
           // an enclosing transform would read the global slot store after
           // the parse — i.e. the innermost activation's bindings.
-          makeStringRegionSplit(inputSymbol.toScrut, pd.pattern, true)
+          val stringSplit = makeStringRegionSplit(inputSymbol.toScrut, pd.pattern, true)
+          if stringOnlyAlternatives(pd.pattern) then stringSplit
+          else
+            val otherSplit = makeMatchSplit(inputSymbol.toScrut, pd.pattern, true)
+            (makeConsequent, alternative) =>
+              // Select the matcher by input kind before trying alternatives.
+              // A failed string parse must not retry the general matcher,
+              // which would repeat transforms and lose recursive slot frames.
+              // `unapply` supplies a complete failure continuation below.
+              softAssert(alternative.isFull, "definition matcher requires a complete failure continuation")
+              Branch(inputSymbol.safeRef, FlatPattern.ClassLike(
+                ctx.builtins.Str.safeRef, ctx.builtins.Str, N, false)(Tree.Dummy),
+                stringSplit(makeConsequent, alternative)
+              ) ~: otherSplit(makeConsequent, alternative)
         else makeMatchSplit(inputSymbol.toScrut, pd.pattern, true)
       val topmost = makeSplit(
         makeConsequent = (output, bindings) =>

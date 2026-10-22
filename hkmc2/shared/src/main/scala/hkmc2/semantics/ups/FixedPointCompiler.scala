@@ -395,7 +395,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     * the instantiator's cumulative progress, so the context of the last one
     * — which is returned — covers them all. */
   private def instantiateGroups(groups: Ls[Ls[SP]]): (Ls[Ls[Pat]], Context) =
-    val instantiator = new Instantiator
+    val instantiator = new Instantiator(stringPosition = false)
     val results = groups.map(_.map(instantiator(_)))
     (results.map(_.map(_._1)), results.flatten.last._2)
 
