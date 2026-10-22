@@ -764,6 +764,14 @@ final class ResolutionContext private[semantics] (
   def hasTypeConstraint(tpe: DeclaredType, value: TermShape, marks: Ls[Marks]): Bool =
     typeConstraints((tpe, ShapeIdentity.key(value), marks))
 
+/** One pair of call sites per spread source. Incoming alternatives share these
+  * observations and the element host, so their Cartesian product is never built.
+  * Publisher storage and listeners remain owned by the consuming resolution graph.
+  */
+private[semantics] final class IterationFlow(
+    val elements: TypeResolution, val iterator: Term.App, val next: Term.App,
+    val iteratorMember: FlowSymbol, val nextMember: FlowSymbol, val doneMember: FlowSymbol, val valueMember: FlowSymbol)
+
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"
   def publish(shape: TermShape)(using ResolutionContext): Unit =
