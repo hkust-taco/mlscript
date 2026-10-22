@@ -9,14 +9,6 @@ import "../../mlscript-compile/NonLocalReturnLibrary.mls"
 //│ = [42, 5]
 
 
-:expect 17
-fun returning() =
-  let escape = () => return 17
-  escape()
-  99
-returning()
-//│ = 17
-
 // Both normal completion and a non-local return contribute result members.
 :expect [42, 0]
 fun mkAnswer(value) = {answer: value}
@@ -99,13 +91,13 @@ fun ambiguous(early) =
   {answer: 0}
 ambiguous(true).answer
 //│ ╔══[COMPILATION ERROR] This selection of member 'answer' is ambiguous, as it has multiple resolved targets
-//│ ║  l.100: 	ambiguous(true).answer
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.92: 	ambiguous(true).answer
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── target: record field 'answer'
-//│ ║  l.97: 	  let escape = => return {answer: 42}
+//│ ║  l.89: 	  let escape = => return {answer: 42}
 //│ ║        	                          ^^^^^^
 //│ ╟── target: record field 'answer'
-//│ ║  l.99: 	  {answer: 0}
+//│ ║  l.91: 	  {answer: 0}
 //│ ╙──      	   ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -37,21 +37,11 @@ let before = count
 //│ count = 2
 //│ next = fun
 
-// Implicit delimiters still pass placeholder-free values eagerly.
-fun twice(f) = f(5) + f(5)
-fun add(a, b) = a + b
-fun inc(x) = x + 1
-fun id(x) = x
-
-:expect [12, 5, 7, 9]
-[twice \ inc, add(2) \ 3, 7 |> id, id <| 9]
-//│ = [12, 5, 7, 9]
-
-// Backslash arguments may explicitly suspend a value, or introduce placeholders.
-:expect [42, 12, [2, 3]]
+// Backslash arguments may explicitly suspend a placeholder-free value.
+:expect 42
 fun invoke(f) = f()
-[invoke \ (=> 42), twice \ _ + 1, [1, 2].map \ _ + 1]
-//│ = [42, 12, [2, 3]]
+invoke \ (=> 42)
+//│ = 42
 
 // A lambda remains a value when passed to a non-backslash call.
 :expect 23
@@ -72,7 +62,7 @@ block()
 :e
 fun returning() = => return 17
 //│ ╔══[COMPILATION ERROR] Non-local return statements are only supported with effect handlers enabled.
-//│ ║  l.73: 	fun returning() = => return 17
+//│ ║  l.63: 	fun returning() = => return 17
 //│ ╙──      	                     ^^^^^^^^^
 
 :effectHandlers

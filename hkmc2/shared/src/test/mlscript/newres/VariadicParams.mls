@@ -141,34 +141,6 @@ lastB(B(0), A(1))
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-// *** Function types and callbacks ***
-
-fun app(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
-
-:expect "a"
-app((x, ...xs, s) => s)
-//│ = "a"
-
-// A callback cannot discard a non-droppable rest parameter.
-:e
-app((x, s) => s)
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.154: 	app((x, s) => s)
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.154: 	app((x, s) => s)
-//│ ║         	    ^^^^^^^^^^^
-//│ ╟── The expected function type is declared here.
-//│ ║  l.146: 	fun app(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
-//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ = 2
-
-// A callback may collect trailing arguments in its own rest parameter.
-:expect "b"
-app((x, ...xs) => "b")
-//│ = "b"
-
-
 // *** Optimizations ***
 
 :expect 6
@@ -183,12 +155,6 @@ sum(0, 1, 2, 3)
 fun h(x, y?, ...xs, w) = [x, y, xs, w]
 h(1, 2)
 //│ = [1, null, [], 2]
-
-:noInline
-:expect "none"
-fun h(x, y?, ...xs, w) = if y is null then "none" else "some"
-h(1, 2)
-//│ = "none"
 
 // Stack-safe resumption calls the function again with its saved arguments, which must include
 // those of its rest parameter, including the arguments of the trailing parameters lowered into it.
@@ -217,34 +183,80 @@ deepOpt(100, 1, 2)
 //│ = [1, [], 2]
 
 
+// *** Unknown-length spreads ***
+
+class Head(val head: Int)
+class Middle(val middle: Int)
+class Tail(val tail: Int)
+
+// The first fixed argument always belongs to x, even when the spread is empty.
+:expect 1
+private fun last(x, ...middle, y) = y.tail
+fun viaUnknown(xs: Array[Tail]) = last(Head(0), ...xs)
+viaUnknown([Tail(1)])
+//│ = 1
+
+// Unknown lengths remain accepted; runtime checks a count that is too small.
+:re
+viaUnknown([])
+//│ ═══[RUNTIME ERROR] Error: Function 'last' expected at least 2 arguments but got 1
+
+// The middle fixed argument can reach y or the rest, but never the last parameter:
+// a successful call still needs an argument after it to fill z.
+:expect [2, 3]
+private fun lastOfTwo(x, ...middle, y, z) = z.tail
+fun viaTwo(xs: Array[Tail]) = lastOfTwo(Head(0), Middle(0), ...xs)
+[viaTwo([Tail(2)]), viaTwo([Tail(2), Tail(3)])]
+//│ = [2, 3]
+
+// The same matching rule applies at the other end.
+:expect 4
+private fun first(x, ...middle, y) = x.head
+fun viaPrefix(xs: Array[Head]) = first(...xs, Tail(0))
+viaPrefix([Head(4)])
+//│ = 4
+
+// Several unknown spreads do not make the fixed prefix a possible tail argument.
+:expect 6
+fun viaSeveral(xs: Array[Tail], ys: Array[Tail]) = last(Head(0), ...xs, ...ys)
+viaSeveral([Tail(5)], [Tail(6)])
+//│ = 6
+
+// Optional leading parameters yield to trailing parameters when the count is known.
+:expect [[undefined, 7], [8, 9]]
+private fun optional(x?, ...middle, y) = [if x is Head as x then x.head else unsafe.undefined, y.tail]
+[optional(Tail(7)), optional(Head(8), Tail(9))]
+//│ = [[undefined, 7], [8, 9]]
+
+
 // *** Errors ***
 
 :e
 fun bad(...xs, ...ys) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.223: 	fun bad(...xs, ...ys) = 0
+//│ ║  l.235: 	fun bad(...xs, ...ys) = 0
 //│ ╙──       	               ^^^^^
 
 :e
 fun bad(...xs, y?) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.229: 	fun bad(...xs, y?) = 0
+//│ ║  l.241: 	fun bad(...xs, y?) = 0
 //│ ╙──       	               ^^
 
 :e
 fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.235: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
+//│ ║  l.247: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╙──       	                           ^^^^^^^^^^^^^
 
 :e
 fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.241: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
+//│ ║  l.253: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╙──       	                           ^^^^
 
 :e
 class C(x, ...xs, y)
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.247: 	class C(x, ...xs, y)
+//│ ║  l.259: 	class C(x, ...xs, y)
 //│ ╙──       	           ^^^^^

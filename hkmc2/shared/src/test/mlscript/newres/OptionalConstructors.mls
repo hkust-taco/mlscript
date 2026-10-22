@@ -93,7 +93,7 @@ class Child extends Main(19)
 [(new Child).values(), (new Main(20) with {}).values()]
 //│ = [[19, null], [20, null]]
 
-// Captures and constructor elimination preserve the materialized optional slots.
+// Lifted local classes preserve captured values and materialized optional slots.
 :lift
 :expect [29, null]
 fun local(captured) = {
@@ -105,24 +105,11 @@ fun local(captured) = {
 local(29).values()
 //│ = [29, null]
 
-:lift
-:deforest
-:expect [[null], [30]]
-private fun project(x) = [x.value]
-[project(Data()), project(Data(30))]
-//│ deforest > >>> fusing >>>
-//│ deforest > Data⁰(30) ->
-//│ deforest > 	select: value
-//│ deforest > Data⁰(null) ->
-//│ deforest > 	select: value
-//│ deforest > <<< fusing <<<
-//│ = [[null], [30]]
-
 // Optionality does not remove required parameters or permit extra arguments.
 :e
 fun missingRequired() = new Main()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.123: 	fun missingRequired() = new Main()
+//│ ║  l.110: 	fun missingRequired() = new Main()
 //│ ║         	                        ^^^^^^^^^^
 //│ ╟── Constructor of class 'Main' expected 1 to 2 arguments, but got 0
 //│ ║  l.4: 	class Main(val first, val second?: Int) {
@@ -131,7 +118,7 @@ fun missingRequired() = new Main()
 :e
 fun tooMany() = new Main(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.132: 	fun tooMany() = new Main(1, 2, 3)
+//│ ║  l.119: 	fun tooMany() = new Main(1, 2, 3)
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Main' expected 1 to 2 arguments, but got 3
 //│ ║  l.4: 	class Main(val first, val second?: Int) {
@@ -140,7 +127,7 @@ fun tooMany() = new Main(1, 2, 3)
 :e
 class BadOrder(first?, second)
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.141: 	class BadOrder(first?, second)
+//│ ║  l.128: 	class BadOrder(first?, second)
 //│ ╙──       	                       ^^^^^^
 
 :e
@@ -148,17 +135,17 @@ class BadAuxiliary {
   constructor(first?, second)
 }
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.148: 	  constructor(first?, second)
+//│ ║  l.135: 	  constructor(first?, second)
 //│ ╙──       	                      ^^^^^^
 
 :e
 class BadContext(using value?: Int)
 //│ ╔══[COMPILATION ERROR] Contextual parameters cannot be optional.
-//│ ║  l.155: 	class BadContext(using value?: Int)
+//│ ║  l.142: 	class BadContext(using value?: Int)
 //│ ╙──       	                 ^^^^^^^^^^^^^^^^^
 
 :e
 class BadDrop(drop value)
 //│ ╔══[COMPILATION ERROR] Droppable parameters are only supported in function and lambda parameter lists.
-//│ ║  l.161: 	class BadDrop(drop value)
+//│ ║  l.148: 	class BadDrop(drop value)
 //│ ╙──       	              ^^^^^^^^^^

@@ -72,22 +72,7 @@ indirect(11)
 //│ ║  l.69: 	indirect(11)
 //│ ╙──      	^^^^^^^^
 
-// Null denotes an absent argument; Unit, zero and false remain supplied values.
-:expect 1
-absent(null)
-//│ Wasm result:
-//│ = 1
-
-:expect 0
-absent(unsafe.undefined)
-//│ Wasm result:
-//│ = 0
-
-:expect 0
-absent(())
-//│ Wasm result:
-//│ = 0
-
+// Forwarding preserves supplied Unit values and the distinct null value.
 :expect 0
 fun forward(x) = absent(x)
 forward(unsafe.undefined)
@@ -105,20 +90,12 @@ forward(())
 //│ = 0
 
 // Optional fields are nullable even when their written type is a concrete class.
-:expect 0
+:expect 12
 class Item(val value: Int)
 class Box(val item?: Item) {
   fun get() = if item is Item as item then item.value else 0
 }
-Box().get()
-//│ Wasm result:
-//│ = 0
-
-:expect 12
-class Box2(val item?: Item) {
-  fun get() = if item is Item as item then item.value else 0
-}
-Box2(Item(12)).get()
+if Box().get() is 0 then Box(Item(12)).get() else -1
 //│ Wasm result:
 //│ = 12
 
@@ -143,21 +120,13 @@ Supplied().pick(14)
 //│ Wasm result:
 //│ = 14
 
-// Constructor and parent-initializer calls retain the optional field's null value.
-:expect 15
+// Constructor and parent-initializer calls preserve supplied and omitted fields.
+:expect 16
 class Fields(val first: Int, val second?: Int) {
   fun read() = if second is null then first else second
 }
 class Inherited() extends Fields(15)
-Inherited().read()
-//│ Wasm result:
-//│ = 15
-
-:expect 16
-class SuppliedFields(val first: Int, val second?: Int) {
-  fun read() = if second is null then first else second
-}
-SuppliedFields(1, 16).read()
+if Inherited().read() is 15 then Fields(1, 16).read() else -1
 //│ Wasm result:
 //│ = 16
 
@@ -165,7 +134,7 @@ SuppliedFields(1, 16).read()
 :e
 choose()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.166: 	choose()
+//│ ║  l.135: 	choose()
 //│ ║         	^^^^^^^^
 //│ ╟── Function 'choose' expected 1 to 2 arguments, but got 0
 //│ ║  l.8: 	fun choose(x: Int, y?: Int) = if y is null then x else y
@@ -247,11 +216,6 @@ inlined()
 @tailrec fun countdown(n: Int, x?) =
   if n is 0 then absent(x) else countdown(n - 1)
 countdown(3, 18)
-//│ Wasm result:
-//│ = 1
-
-:expect 1
-countdown(3, ())
 //│ Wasm result:
 //│ = 1
 

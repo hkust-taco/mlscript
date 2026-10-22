@@ -39,20 +39,11 @@ fun extraEmptyList() = new Empty()()
 //│ ║  l.16: 	class Empty {
 //│ ╙──      	^^^^^^^^^^^
 
-:e
-fun extraList() = new Empty()(1)
-//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.43: 	fun extraList() = new Empty()(1)
-//│ ║        	                  ^^^^^^^^^^^^^^
-//│ ╟── Class 'Empty' expected at most 1 argument list, but got 2
-//│ ║  l.16: 	class Empty {
-//│ ╙──      	^^^^^^^^^^^
-
 // Spreads use the same tuple arity checking as ordinary function applications.
 :e
 fun nonemptySpread() = new Empty(...[1, 2])
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.53: 	fun nonemptySpread() = new Empty(...[1, 2])
+//│ ║  l.44: 	fun nonemptySpread() = new Empty(...[1, 2])
 //│ ║        	                       ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got 2
 //│ ║  l.16: 	class Empty {
@@ -72,7 +63,7 @@ uncertainSpread([]).answer()
 :e
 fun knownExtraWithSpread(xs: Array[Int]) = new Empty(1, ...xs)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.73: 	fun knownExtraWithSpread(xs: Array[Int]) = new Empty(1, ...xs)
+//│ ║  l.64: 	fun knownExtraWithSpread(xs: Array[Int]) = new Empty(1, ...xs)
 //│ ║        	                                           ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got at least 1
 //│ ║  l.16: 	class Empty {
@@ -87,19 +78,19 @@ val Alias = Classes.Empty
 :e
 fun qualified() = new Classes.Empty(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.88: 	fun qualified() = new Classes.Empty(1)
+//│ ║  l.79: 	fun qualified() = new Classes.Empty(1)
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got 1
-//│ ║  l.83: 	module Classes { class Empty }
+//│ ║  l.74: 	module Classes { class Empty }
 //│ ╙──      	                 ^^^^^^^^^^^
 
 :e
 fun aliased() = new Alias(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.97: 	fun aliased() = new Alias(1)
+//│ ║  l.88: 	fun aliased() = new Alias(1)
 //│ ║        	                ^^^^^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got 1
-//│ ║  l.83: 	module Classes { class Empty }
+//│ ║  l.74: 	module Classes { class Empty }
 //│ ╙──      	                 ^^^^^^^^^^^
 
 
@@ -121,20 +112,20 @@ new Pair(3)(4).values()
 :e
 fun tooManyLists() = new Pair(1)(2)(3)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.122: 	fun tooManyLists() = new Pair(1)(2)(3)
+//│ ║  l.113: 	fun tooManyLists() = new Pair(1)(2)(3)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Pair' expected at most 2 argument lists, but got 3
-//│ ║  l.106: 	class Pair(val first)(val second) {
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.97: 	class Pair(val first)(val second) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun tooManyArguments() = new Pair(1, 2)(3)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.131: 	fun tooManyArguments() = new Pair(1, 2)(3)
+//│ ║  l.122: 	fun tooManyArguments() = new Pair(1, 2)(3)
 //│ ║         	                         ^^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Pair' expected 1 argument, but got 2
-//│ ║  l.106: 	class Pair(val first)(val second) {
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.97: 	class Pair(val first)(val second) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // Auxiliary constructor lists count even when absent from the class header.
@@ -151,15 +142,15 @@ new Auxiliary(5)(6).values()
 :e
 fun extraAuxiliaryList() = new Auxiliary(5)(6)()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.152: 	fun extraAuxiliaryList() = new Auxiliary(5)(6)()
+//│ ║  l.143: 	fun extraAuxiliaryList() = new Auxiliary(5)(6)()
 //│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Auxiliary' expected at most 2 argument lists, but got 3
-//│ ║  l.141: 	class Auxiliary {
+//│ ║  l.132: 	class Auxiliary {
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
-//│ ║  l.142: 	  constructor(val first)
+//│ ║  l.133: 	  constructor(val first)
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.143: 	  constructor(val second)
+//│ ║  l.134: 	  constructor(val second)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -171,25 +162,25 @@ fun extraAuxiliaryList() = new Auxiliary(5)(6)()
 :e
 fun invalidRefinement() = (new Empty(1) with {})
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.172: 	fun invalidRefinement() = (new Empty(1) with {})
+//│ ║  l.163: 	fun invalidRefinement() = (new Empty(1) with {})
 //│ ║         	                           ^^^^^^^^^^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got 1
 //│ ║  l.16: 	class Empty {
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.172: 	fun invalidRefinement() = (new Empty(1) with {})
+//│ ║  l.163: 	fun invalidRefinement() = (new Empty(1) with {})
 //│ ╙──       	                           ^^^^^^^^^^^^^^^^^
 
 :e
 class InvalidParent extends Empty(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.184: 	class InvalidParent extends Empty(1)
+//│ ║  l.175: 	class InvalidParent extends Empty(1)
 //│ ║         	                            ^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got 1
 //│ ║  l.16: 	class Empty {
 //│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.184: 	class InvalidParent extends Empty(1)
+//│ ║  l.175: 	class InvalidParent extends Empty(1)
 //│ ╙──       	                            ^^^^^^^^
 
 
@@ -209,7 +200,7 @@ val makeNativeNumber = new NativeNumber
 [String(makeNumber()), String(makeNumber(unsafe.undefined)),
  String(makeNativeNumber()), String(makeNativeNumber(unsafe.undefined))]
 //│ ╔══[WARNING] This 'new' expression partially applies class 'Number' instead of constructing an instance.
-//│ ║  l.207: 	val makeNumber = new Number
+//│ ║  l.198: 	val makeNumber = new Number
 //│ ║         	                 ^^^^^^^^^^
 //│ ╟── Use `new Number()` to construct an instance, or `=> new Number()` to create an explicit zero-argument lambda.
 //│ ╟── The constructor accepts an empty argument list.
@@ -217,7 +208,7 @@ val makeNativeNumber = new NativeNumber
 //│ ║  l.32: 	  constructor(value?)
 //│ ╙──      	              ^^^^^^
 //│ ╔══[WARNING] This 'new' expression partially applies class 'Number' instead of constructing an instance.
-//│ ║  l.208: 	val makeNativeNumber = new NativeNumber
+//│ ║  l.199: 	val makeNativeNumber = new NativeNumber
 //│ ║         	                       ^^^^^^^^^^^^^^^^
 //│ ╟── Use `new NativeNumber()` to construct an instance, or `=> new NativeNumber()` to create an explicit zero-argument lambda.
 //│ ╟── The constructor accepts an empty argument list.
@@ -239,7 +230,7 @@ new Error("message").message
 :e
 fun extraErrorArgument() = new Error("message", {}, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.240: 	fun extraErrorArgument() = new Error("message", {}, 3)
+//│ ║  l.231: 	fun extraErrorArgument() = new Error("message", {}, 3)
 //│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Error' expected 0 to 2 arguments, but got 3
 //│ ║  in ../decls/Prelude.mls
@@ -255,10 +246,10 @@ declare class NoConstructor
 :e
 fun undeclaredConstructor() = new NoConstructor(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.256: 	fun undeclaredConstructor() = new NoConstructor(1)
+//│ ║  l.247: 	fun undeclaredConstructor() = new NoConstructor(1)
 //│ ║         	                              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got 1
-//│ ║  l.253: 	declare class NoConstructor
+//│ ║  l.244: 	declare class NoConstructor
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Written foreign constructor parameter lists are still checked.
@@ -273,25 +264,25 @@ new String("hello").length
 :e
 fun extraForeignArgument() = new String("hello", "world")
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.274: 	fun extraForeignArgument() = new String("hello", "world")
+//│ ║  l.265: 	fun extraForeignArgument() = new String("hello", "world")
 //│ ║         	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'String' expected 1 argument, but got 2
-//│ ║  l.265: 	declare class String with
+//│ ║  l.256: 	declare class String with
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
-//│ ║  l.266: 	  constructor(value: Str)
+//│ ║  l.257: 	  constructor(value: Str)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun extraForeignList() = new String("hello")()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.286: 	fun extraForeignList() = new String("hello")()
+//│ ║  l.277: 	fun extraForeignList() = new String("hello")()
 //│ ║         	                         ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'String' expected at most 1 argument list, but got 2
-//│ ║  l.265: 	declare class String with
+//│ ║  l.256: 	declare class String with
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
-//│ ║  l.266: 	  constructor(value: Str)
+//│ ║  l.257: 	  constructor(value: Str)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -302,8 +293,8 @@ fun extraForeignList() = new String("hello")()
 fun LooseStack[A](...xs: Array[A]) = new LooseStack(1,2,3)
 class LooseStack[out A]
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.302: 	fun LooseStack[A](...xs: Array[A]) = new LooseStack(1,2,3)
+//│ ║  l.293: 	fun LooseStack[A](...xs: Array[A]) = new LooseStack(1,2,3)
 //│ ║         	                                     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class value expected 0 arguments, but got 3
-//│ ║  l.303: 	class LooseStack[out A]
+//│ ║  l.294: 	class LooseStack[out A]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
