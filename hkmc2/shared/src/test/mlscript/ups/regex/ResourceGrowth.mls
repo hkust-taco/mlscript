@@ -1,0 +1,67 @@
+:js
+
+// Short pattern definitions must not cause unbounded specialization
+// or unchecked determinization. The large reproductions below are commented
+// because a diff-test timeout cannot safely interrupt the compiler's work.
+// Run them in a disposable JVM with an external time and memory limit until
+// compilation either succeeds within a budget or reports a source diagnostic.
+
+
+// Growing pattern arguments: this particular language is regular (`a*`).
+// The compiler keeps instantiating Rep("a"), Rep(Rep("a")), and so on;
+// testing the empty input still hangs during compilation, before matching.
+// The base matcher compiles the example and returns true on the empty input.
+//
+// pattern Rep(pattern P) = (P ~ Rep(Rep(P))) | ""
+//
+// :expect true
+// "" is Rep("a")
+
+// Control: recursive calls with unchanged arguments have a finite set of
+// instantiations and recognize the same language for this argument.
+
+pattern StableRep(pattern P) = (P ~ StableRep(P)) | ""
+
+:expect true
+"" is StableRep("a")
+//│ = true
+
+:expect true
+"aaaa" is StableRep("a")
+//│ = true
+
+:expect false
+"aaab" is StableRep("a")
+//│ = false
+
+
+// Exponential reverse determinization: C^16 followed by "a" and any suffix.
+// This is an ordinary regular expression with a small NFA, but its reverse
+// DFA must remember which of the last 17 positions contained "a". At PR
+// head 88d8ee5bc, the whole-match and prefix-parse tables contained 1,374,155
+// and 1,702,030 characters. The 18-copy variant exceeded a 10-second limit.
+// Keep all 16 occurrences explicit so the reproduction needs no generator.
+
+pattern C = "a" ..= "b"
+
+// pattern Sixteen = C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ "a" ~ Str
+//
+// :expect true
+// "bbbbbbbbbbbbbbbba" is Sixteen
+
+// Small controls cover both the fixed prefix and the arbitrary suffix without
+// putting the exponential-size reproduction into every test run.
+
+pattern Four = C ~ C ~ C ~ C ~ "a" ~ Str
+
+:expect true
+"bbbba" is Four
+//│ = true
+
+:expect true
+"bbbba!tail" is Four
+//│ = true
+
+:expect false
+"bbbbb" is Four
+//│ = false

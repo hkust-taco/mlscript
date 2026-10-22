@@ -13,6 +13,13 @@ status lists below are historical; they should not be read as the current
 set of open findings. No compiler or runtime implementation was changed
 during this review.
 
+The follow-up review targets published head
+`7c6acd57466b795fb5112874a3d1c97919e648a4`, which adds this report and the
+two regression files without changing the implementation. The resource
+reproductions requested during follow-up are preserved in
+`ups/regex/ResourceGrowth.mls`, with the harmful cases commented and small
+controls enabled.
+
 There are six actionable findings: three P1 issues and three P2 issues.
 The effect, mixed-recursion, and conjunction examples were also executed
 on an isolated checkout of the current base. The growing-instantiation
@@ -95,14 +102,25 @@ shows repeated `Instantiation.hashCode`/`Synonym.hashCode` calls during
 compilation. This confirms historical M11. Detect non-finite specialization
 or enforce a compilation budget with a source diagnostic before scheduling
 unbounded work. An active diff test for this case would hang the suite, so
-the reproduction is recorded here rather than added to normal test discovery.
+`ResourceGrowth.mls` preserves the exact definition and use site as commented
+code, alongside active controls with unchanged recursive arguments.
+
+This example is not a non-regular language: the language denoted by
+`Rep("a")` is `a*`. Every finite successful derivation emits only `a`s,
+and every finite number of `a`s has a derivation. Infinite syntactic
+specialization is a different property from language regularity. A
+conservative check may reject unsupported growing specialization, but its
+diagnostic should describe that limitation rather than claim the language
+is non-regular.
 
 ### 4. [P2] Apply code-point range semantics to plain and prefix matching
 
 Location: `hkmc2/shared/src/main/scala/hkmc2/semantics/ups/SplitCompiler.scala`,
 lines 276–278; also the legacy prefix range implementation at lines 1115–1127.
 
-Elaboration now accepts astral bounds and `Instantiator` interprets ranges
+Astral (supplementary) characters have Unicode code points U+10000 through
+U+10FFFF, represented by two UTF-16 code units. For example, `"😀" ..= "😏"`
+has astral bounds. Elaboration now accepts these bounds and `Instantiator` interprets ranges
 by code point, but `makeRangeTest` requires JavaScript `.length === 1` and
 uses UTF-16 lexicographic comparisons. These routes disagree:
 
@@ -144,6 +162,37 @@ with the same pattern outside a region. Preserve the conjunction's value
 when compiling it, or explicitly reject the unsupported value-producing
 case. `RegionBoundaries.mls` now pins the minimized base-confirmed regression.
 
+Suggested implementation approach:
+
+1. Separate absence of bindings/transforms from the property that a pattern's
+   output equals its consumed slice. Only the latter justifies replacing its
+   value computation with `Mark`/`Slice`. A nonempty conjunction generally
+   does not have that property. Audit `preservesOriginalScrutinee` too;
+   it currently treats a conjunction of identity-producing children as an
+   identity-producing pattern.
+2. Keep the intersection automaton for recognition and selection of a common
+   consumed span. Give conjunctions an explicit value plan: produce each
+   conjunct's output for that same span and assemble the tuple in source
+   order, retaining the source grouping. `Pattern.and` currently flattens
+   conjunctions, so the value plan must retain grouping separately or the
+   representation must stop discarding it.
+3. Reuse the consumed slice for conjuncts proven to preserve it. Other pure
+   conjuncts still need their own prioritized value computation: for example,
+   an alternative can choose between a tuple-producing conjunction and a
+   literal. A tuple containing copies of the driver value is not sufficient.
+   A runtime tuple/pack operation or an equivalent generated expression can
+   combine the results; bindings must observe that result before surrounding
+   concatenation applies its existing grouped, left-to-right `+` operations.
+4. Preserve exactly-once execution on the committed parse. Supporting several
+   effectful conjuncts requires their own committed parse/value plans over
+   the same span, with source-order execution and resumable effects. Keep
+   the existing explicit rejection until that protocol is implemented.
+
+Tests for a fix should compare plain and compiled values with and without
+an empty prefix, including nested conjunctions, alternatives with different
+output shapes, bindings, transforms, and concatenation coercions. Recognition
+tests alone cannot detect this bug.
+
 ### 6. [P2] Bound determinization before constructing exponential tables
 
 Location: `hkmc2/shared/src/main/scala/hkmc2/semantics/ups/StringCompiler.scala`,
@@ -177,6 +226,29 @@ greedy matcher would reintroduce semantic differences. The `remove(0)`
 worklist and eager unpacking of viability bits add costs, but are secondary
 to the absent budget. This consolidates historical M5/M6/M22 into one issue.
 
+`ResourceGrowth.mls` now contains the exact 16-copy pattern and matching
+input as commented code, plus an active four-copy control with positive and
+negative cases. This language is plainly regular: `C^16 ~ "a" ~ Str` is
+already a regular expression. Its reversal requires exponentially many
+deterministic states even though the original expression has a small NFA.
+Non-regular-language rejection would not address this case.
+
+### Status of the earlier critical review threads
+
+The focused `CompiledBugs.mls` run reconfirmed C1, C4, C5, C6, and C8.
+C3's introduced bypass is also fixed: the definition keeps its `unapply`
+route. This does not fix the older extraction feature itself; both forms
+still return `"no"` and retain their `:fixme` assertions. C2 remains broken
+with end-to-end evidence above. C7's exact string-only example is fixed,
+but its mixed-definition variant still corrupts bindings, so that thread
+must not be treated as fully resolved.
+
+The older requests to move `Input` out of `UpsBugsBacklog.mls` and avoid
+decoding tables on every match are also implemented: the test is in
+`CompiledSemantics.mls`, and `StrPat.getProgram`/`getMatcher` cache decoded
+tables at module scope. This does not remove the separate costs of repeated
+compile-time table construction or per-match action-closure allocation.
+
 ### Verification and limits of this review
 
 - Read the full 33-file PR diff and the surrounding compiler/runtime code;
@@ -193,10 +265,11 @@ to the absent budget. This consolidates historical M5/M6/M22 into one issue.
   These temporary probes do not establish correctness for recursive grammars.
 - Added two ordinary `.mls` regression files, `EffectfulTransforms.mls` and
   `RegionBoundaries.mls`. Their seven unresolved assertions use `:fixme`;
-  the tests also contain passing controls. The harmful resource probes were
-  run in disposable processes and removed from normal test discovery.
+  the tests also contain passing controls. `ResourceGrowth.mls` preserves
+  the harmful resource probes as commented code and adds six active control
+  assertions. The harmful probes were run only in disposable processes.
 - GitHub's `build` check succeeded for the reviewed head. Final local
-  `hkmc2AllTests/test` passed all 1,107 tests (including the two new files),
+  `hkmc2AllTests/test` passed all 1,108 tests (including the three new files),
   with no unexpected failures or additional golden changes. The seven
   assertions marked `:fixme` remain known failures, not implemented fixes.
 
