@@ -169,8 +169,9 @@ object StringCompiler:
     case _: (Concat | CharClass) => true
     case _ => false
 
-class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise):
+class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise, Config):
   import StringCompiler.*, tl.*
+  private val budget = new PatternCompilationBudget
 
   // ------------------------------------------------------------------------
   // Grammar analysis
@@ -334,13 +335,16 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
   private val states = Buffer.empty[Buffer[Edge]]
 
   private def newState(): Int =
+    budget.newState(states.size)
     states += Buffer.empty
     states.size - 1
 
   private def addChr(from: Int, ranges: Ls[CharRange], target: Int): Unit =
+    budget.spend(1L + ranges.size)
     states(from) += Edge.Chr(ranges, target)
 
   private def addEps(from: Int, target: Int, ops: Ls[Op]): Unit =
+    budget.spend(1L + ops.size)
     if ops.nonEmpty then anyOps = true
     states(from) += Edge.Eps(target, ops)
 
@@ -391,6 +395,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
     * frame.
     */
   private def build(pattern: Pat, cont: Int, needValue: Bool, exitOps: Ls[Op], scc: Opt[SccContext]): Int =
+    budget.spend(1)
     // Pure subtrees need no internal operations even when their value is
     // demanded: the consumed part is a single slice of the input.
     if (needValue || exitOps.nonEmpty) && isPureDeep(pattern) then
@@ -694,6 +699,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
     def classCount: Int = classRanges.size
     /** The class containing the given code unit. */
     def classAt(unit: Int): Int =
+      budget.spend(classRanges.size)
       var classId = 0
       while classId + 1 < classRanges.size && unit > classRanges(classId)._2 do
         classId += 1
@@ -725,6 +731,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
     val pendingStates = Buffer(entry)
     while pendingStates.nonEmpty do
       val state = pendingStates.remove(pendingStates.size - 1)
+      budget.spend(1L + states(state).size)
       states(state).foreach: edge =>
         val target = edgeTarget(edge)
         if reachable.add(target) then pendingStates += target
@@ -744,6 +751,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       val worklist = Buffer.from(seed)
       while worklist.nonEmpty do
         val state = worklist.remove(worklist.size - 1)
+        budget.spend(1L + states(state).size)
         states(state).foreach:
           case Edge.Eps(target, _) =>
             if result.add(target) then worklist += target
@@ -752,6 +760,8 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
     val ids = LinkedHashMap.empty[Set[Int], Int]
     val pendingSets = Buffer.empty[Set[Int]]
     def idOf(set: Set[Int]): Int = ids.getOrElseUpdate(set, {
+      budget.newState(ids.size)
+      budget.spend(set.size.toLong + classRanges.size)
       pendingSets += set
       ids.size
     })
@@ -760,11 +770,14 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
     val accepting = Buffer.empty[Bool]
     // Subsets are processed in discovery order, which is id order, so the
     // transition rows are appended in order.
-    while pendingSets.nonEmpty do
-      val set = pendingSets.remove(0)
+    var nextSet = 0
+    while nextSet < pendingSets.size do
+      val set = pendingSets(nextSet)
+      nextSet += 1
       accepting += set.contains(accept)
       classRanges.foreach: (representative, _) =>
         val moved = set.iterator.flatMap: state =>
+          budget.spend(1L + states(state).size)
           states(state).iterator.collect:
             case Edge.Chr(ranges, target) if rangesContain(ranges, representative) => target
         .toSet
@@ -786,6 +799,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
   /** Rewrite the target of every edge through `f`; returns whether any
     * edge changed. */
   private def retargetAll(edges: Buffer[Edge])(f: Int => Int): Bool =
+    budget.spend(edges.size)
     var changed = false
     var i = 0
     while i < edges.size do
@@ -863,7 +877,9 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       def resolve(state: Int): Int =
         val path = MutSet.empty[Int]
         var cur = state
-        while next(cur) != -1 && path.add(cur) do cur = next(cur)
+        while next(cur) != -1 && path.add(cur) do
+          budget.spend(1)
+          cur = next(cur)
         cur
       var changed = false
       states.foreach: edges =>
@@ -892,6 +908,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
         while !dead && fused(cur).isDefined do
           if path.add(cur) then
             val (next, moreOps) = fused(cur).getOrElse(lastWords("unreachable"))
+            budget.spend(1L + acc.size + moreOps.size)
             acc = acc ::: moreOps
             cur = next
           else dead = true
@@ -927,6 +944,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       changed
     var changed = true
     while changed do
+      budget.spend(states.size.toLong + states.iterator.map(_.size.toLong).sum)
       changed = false
       changed |= dropDeadEdges()
       changed |= contractTrivial()
@@ -994,6 +1012,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
     if classId == 0 then 0 else bounds(classId - 1)
 
   private def rangesContain(ranges: Ls[CharRange], unit: Int): Bool =
+    budget.spend(ranges.size)
     ranges.exists((lo, hi) => lo <= unit && unit <= hi)
 
   /** Subset-construct the determinized *reverse* automaton. State `R_i` of a
@@ -1008,6 +1027,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
   private def reverseDeterminize(accept: Int, bounds: Ls[Int]): (Buffer[Int], Ls[Set[Int]], Int) =
     val stateCount = states.size
     val classes = classCount(bounds)
+    budget.spend(stateCount.toLong + classes)
     // Reverse ε-adjacency: epsPre(t) lists the sources of ε-edges into t.
     val epsPre = Array.fill(stateCount)(Buffer.empty[Int])
     // Reverse char-adjacency per class: chrPre(c)(t) lists sources of
@@ -1017,6 +1037,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       edges.foreach:
         case Edge.Eps(target, _) => epsPre(target) += source
         case Edge.Chr(ranges, target) =>
+          budget.spend(classes)
           var classId = 0
           while classId < classes do
             if rangesContain(ranges, classRepresentative(bounds, classId)) then
@@ -1027,27 +1048,37 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       val result = MutSet.from(seed)
       while worklist.nonEmpty do
         val state = worklist.remove(worklist.size - 1)
+        budget.spend(1L + epsPre(state).size)
         epsPre(state).foreach: source =>
           if result.add(source) then worklist += source
       result.toSet
     val ids = LinkedHashMap.empty[Set[Int], Int]
     val worklist = Buffer.empty[Set[Int]]
     def idOf(set: Set[Int]): Int = ids.getOrElseUpdate(set, {
+      budget.newState(ids.size)
+      // Reserve both the transition row and its eventual viability row.
+      budget.spend(set.size.toLong + classes + stateCount)
       worklist += set
       ids.size
     })
     val seed = close(Set(accept))
     val seedId = idOf(seed)
     val transitions = Buffer.empty[Int]
-    while worklist.nonEmpty do
-      val set = worklist.remove(0)
+    var nextSet = 0
+    while nextSet < worklist.size do
+      val set = worklist(nextSet)
+      nextSet += 1
       val id = ids(set)
       // Rows may be discovered out of order; grow the table as needed.
       while transitions.size < (id + 1) * classes do transitions += 0
       var classId = 0
       while classId < classes do
         val pre = chrPre(classId)
-        val next = close(set.iterator.flatMap(t => pre.get(t).iterator.flatMap(_.iterator)).toSet)
+        val next = close(set.iterator.flatMap: t =>
+          val predecessors = pre.get(t)
+          budget.spend(1L + predecessors.fold(0)(_.size))
+          predecessors.iterator.flatMap(_.iterator)
+        .toSet)
         transitions(id * classes + classId) = idOf(next)
         classId += 1
     (transitions, ids.keysIterator.toList, seedId)
@@ -1081,6 +1112,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
     var blockCount = 2
     var stable = false
     while !stable do
+      budget.spend(stateCount.toLong * (1L + classes))
       val ids = LinkedHashMap.empty[(Int, Ls[Int]), Int]
       val next = new Array[Int](stateCount)
       for s <- 0 until stateCount do
@@ -1105,6 +1137,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
   // ------------------------------------------------------------------------
 
   private def encodeOps(ops: Ls[Op], pool: Buffer[Ls[Int]]): Int =
+    budget.spend(ops.size)
     val encoded = ops.flatMap:
       case Op.Mark => 0 :: Nil
       case Op.Slice => 1 :: Nil
@@ -1117,6 +1150,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       case Op.Rem => 8 :: Nil
       case Op.Defer(deferred, captured) =>
         9 :: encodeOps(deferred, pool) :: captured.size :: captured
+    budget.spend(encoded.size.toLong * (1L + pool.size))
     pool.indexOf(encoded) match
       case -1 =>
         pool += encoded
@@ -1138,6 +1172,7 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
       var v = value
       var done = false
       while !done do
+        budget.spend(1)
         val digit = v % 32
         v /= 32
         if v > 0 then packed += packAlphabet.charAt(digit + 32)
@@ -1290,7 +1325,13 @@ class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL
   /** Compile a string region rooted at `root`. Returns `N` when the region
     * cannot be compiled (an error has been reported and the caller should
     * compile nothing). */
-  def compile(root: Pat, mode: Mode): Opt[Compiled] = scoped("ucs:string-compiler"):
+  def compile(root: Pat, mode: Mode, siteLoc: Opt[Loc]): Opt[Compiled] = scoped("ucs:string-compiler"):
+    try compileWithinBudget(root, mode)
+    catch case limit: PatternCompilationLimit =>
+      limit.report(siteLoc.orElse(root.diagnosticLoc))
+      N
+
+  private def compileWithinBudget(root: Pat, mode: Mode): Opt[Compiled] =
     collectBodies(root)
     computeSccs()
     checkTailPositions()

@@ -1408,7 +1408,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     val compiler = new StringCompiler(using context)
     def isStr = FlatPattern.ClassLike(
       ctx.builtins.Str.safeRef, ctx.builtins.Str, N, false)(Tree.Dummy)
-    compiler.compile(instantiated, StringCompiler.Mode.Whole) match
+    compiler.compile(instantiated, StringCompiler.Mode.Whole, pattern.toLoc) match
       case N => RejectSplit // Errors have been reported; compile nothing.
       case S(compiled) =>
         val recognitionOnly = compiled.recognitionSuffices(outputNeeded)
@@ -1453,7 +1453,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     val instantiator = new Instantiator(stringPosition = true)
     val (instantiated, context) = instantiator(pattern)
     val compiler = new StringCompiler(using context)
-    compiler.compile(instantiated, StringCompiler.Mode.Prefix) match
+    compiler.compile(instantiated, StringCompiler.Mode.Prefix, pattern.toLoc) match
       case N => RejectPrefixSplit
       case S(compiled) =>
         StringCompiler.TableStats.record(pattern.toLoc, "prefix-parse", compiled.table)

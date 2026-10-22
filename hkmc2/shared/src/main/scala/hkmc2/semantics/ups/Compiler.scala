@@ -18,7 +18,7 @@ import collection.mutable.{Queue, Map as MutMap}, collection.immutable.{Set, Map
   * a few matcher functions. Each matcher function matches a set of patterns
   * and returns a record that contains the results of each pattern.
   */
-class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise) extends TermSynthesizer:
+class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise, Config) extends TermSynthesizer:
   import Compiler.*, tl.*
   import Pattern.*
 
@@ -292,7 +292,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
           // Note that each label needs its own compiler: a compiler instance
           // accumulates the automaton states (and failure flag) of a single
           // region.
-          case fragment => StringCompiler().compile(fragment, StringCompiler.Mode.Whole) match
+          case fragment => StringCompiler().compile(fragment, StringCompiler.Mode.Whole, statsSiteLoc) match
             case N => emptyMatchResult("rejected string pattern")
             case S(compiled) =>
               // Mirrors the branch chosen below: a match-only region still

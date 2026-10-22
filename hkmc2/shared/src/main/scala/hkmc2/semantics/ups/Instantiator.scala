@@ -14,8 +14,9 @@ import scala.collection.immutable.SeqMap
 object Instantiator:
   type Subst = Map[VarSymbol, Pat]
 
-class Instantiator(stringPosition: Bool)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise):
+class Instantiator(stringPosition: Bool)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise, Config):
   import tl.*
+  private val budget = new PatternCompilationBudget
   
   /** The map contains all instantiated patterns. The key is a pattern symbol
    *  paired with fully instantiated patterns as arguments. The value is the
@@ -29,10 +30,14 @@ class Instantiator(stringPosition: Bool)(using codegen.Erasure)(using tl: TL)(us
   
   /** Instantiate an anonymous pattern. */
   def apply(pattern: SP): (Pat, Context) = scoped("ucs:instantiation"):
-    if hasGrowingRecursion(pattern) then (Never, new Context(Map.empty))
-    else
-      val entryPoint = instantiate(pattern)(using Map.empty)
-      (entryPoint, runInstantiationLoop)
+    try
+      if hasGrowingRecursion(pattern) then (Never, new Context(Map.empty))
+      else
+        val entryPoint = instantiate(pattern)(using Map.empty)
+        (entryPoint, runInstantiationLoop)
+    catch case limit: PatternCompilationLimit =>
+      limit.report(pattern.toLoc)
+      (Never, new Context(Map.empty))
 
   /** Whether this leaf cannot match the input of a string region. */
   private def nonStringLeaf(pattern: SP): Bool = stringPosition && (pattern match
@@ -134,16 +139,45 @@ class Instantiator(stringPosition: Bool)(using codegen.Erasure)(using tl: TL)(us
   
   /** Add the instantiation to the queue if it has not been instantiated yet. */
   def schedule(instantiation: Instantiation): Instantiation =
+    // Structural hashing expands shared argument DAGs. Bound its cost before
+    // touching the map, even for finite but exponentially duplicated arguments.
+    budget.spend(instantiation.arguments.foldLeft(1L)(_ + keySize(_)))
     if !progress.contains(instantiation) then
+      budget.newSpecialization(progress.size)
       progress += (instantiation -> N)
       worklist.enqueue(instantiation)
     else
       log(dbg"Already instantiated ${instantiation.showDbg}")
     progress(instantiation)
     instantiation
+
+  private val keySizes = MutMap.empty[Identity[Pat], Long]
+
+  private def keySize(pattern: Pat): Long = keySizes.getOrElseUpdate(Identity(pattern), {
+    val children: Iterable[Pat] = pattern match
+      case Concat(ps) => ps
+      case And(ps) => ps
+      case Or(ps) => ps
+      case Not(p) => p :: Nil
+      case Rename(p, _) => p :: Nil
+      case Extract(p, _, _) => p :: Nil
+      case Synonym(inst) => inst.arguments
+      case ClassLike(_, args) => args.toList.flatMap(_.values)
+      case MatchedClassLike(_, fields) => fields.values
+      case Record(fields) => fields.values
+      case Tuple(leading, spread) => leading ::: spread.toList.flatMap:
+        (_, middle, trailing) => middle :: trailing
+      case _: (Literal | CharClass) => Nil
+    children.foldLeft(1L): (size, child) =>
+      (size + keySize(child)) min (config.patternCompilationWorkLimit.toLong + 1)
+  })
   
   /** Instantiate the given pattern with a substitution map. */
-  def instantiate(pattern: SP)(using subst: Map[VarSymbol, Pat]): Pat = pattern match
+  def instantiate(pattern: SP)(using subst: Map[VarSymbol, Pat]): Pat =
+    budget.spend(1)
+    instantiateNode(pattern)
+
+  private def instantiateNode(pattern: SP)(using subst: Map[VarSymbol, Pat]): Pat = pattern match
     // A string region also contains the non-string alternatives of mixed
     // definitions. Discard their leaves before expanding them: a numeric
     // range need not be enumerable, and its object fields cannot contribute
@@ -236,6 +270,8 @@ class Instantiator(stringPosition: Bool)(using codegen.Erasure)(using tl: TL)(us
           // directly expand the range pattern into a range test. An empty
           // range (`5 ..< 5`, or reversed bounds) expands to the empty
           // disjunction, which is `Never`.
+          val size = (upper - lower + (if rightInclusive then 1 else 0)) max BigInt(0)
+          budget.spend((size min BigInt(config.patternCompilationWorkLimit.toLong + 1)).toLong)
           val range = if rightInclusive then lower to upper else lower until upper
           Or(range.map(i => Literal(IntLit(i))).toList)
         case _ =>

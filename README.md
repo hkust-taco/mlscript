@@ -209,6 +209,29 @@ or specify a string to filter the tests to run.
 - `dtest` aka "main diff-tests" for running only the main diff-tests in `hkmc2/shared/src/test/mlscript`
 - You can find other similar command aliases in `build.sbt`.
 
+### Pattern compilation limits
+
+Compiled patterns report a compilation error if specialization or automaton
+construction exceeds its resource budget. The compiler does not emit a partial
+matcher or silently switch matching semantics. A limit can reject a regular
+language whose automaton is too expensive for this compilation strategy.
+
+The limits can be adjusted with a source directive:
+
+```mlscript
+#config(patternSpecializationLimit: 1024, stringPatternStateLimit: 8192, patternCompilationWorkLimit: 2000000)
+```
+
+These are the defaults. All three limits must be positive integers.
+`patternSpecializationLimit` bounds distinct instantiated definitions;
+`stringPatternStateLimit` bounds each NFA or DFA during construction, before
+minimization. `patternCompilationWorkLimit` bounds deterministic work per
+instantiation or automaton build, including argument hashing, graph visits,
+copied operations, transition rows, and viability/table encoding. Its units
+are compiler operations, not milliseconds, and may change with the algorithm.
+Recursively growing pattern arguments are diagnosed separately, before
+specialization, regardless of these limits.
+
 The command aliases below are shorthand for running aggregated tests; they take no arguments.
 
 - `qtest` aka "quick tests" for `ctest` and `dtest` together.

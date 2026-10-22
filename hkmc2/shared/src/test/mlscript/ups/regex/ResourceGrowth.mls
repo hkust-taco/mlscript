@@ -49,13 +49,21 @@ pattern StableRep(pattern P) = (P ~ StableRep(P)) | ""
 
 pattern C = "a" ..= "b"
 
-// pattern Sixteen = C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ "a" ~ Str
-//
-// :expect true
-// "bbbbbbbbbbbbbbbba" is Sixteen
+:e
+pattern Sixteen = C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ "a" ~ Str
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `stringPatternStateLimit` (8192).
+//│ ║  l.53: 	pattern Sixteen = C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ "a" ~ Str
+//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(stringPatternStateLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
 
-// Small controls cover both the fixed prefix and the arbitrary suffix without
-// putting the exponential-size reproduction into every test run.
+// Exhaustion reports an error and emits no partial matcher or greedy fallback.
+:expect false
+"bbbbbbbbbbbbbbbba" is Sixteen
+//│ = false
+
+// Small controls still compile successfully and cover both the fixed prefix
+// and the arbitrary suffix after the preceding compilation was rejected.
 
 pattern Four = C ~ C ~ C ~ C ~ "a" ~ Str
 

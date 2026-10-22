@@ -25,6 +25,9 @@ case class Config(
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
   patMatConsequentSharingThreshold: Opt[Int],
+  patternSpecializationLimit: Int,
+  stringPatternStateLimit: Int,
+  patternCompilationWorkLimit: Int,
   stageCode: Bool,
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
@@ -80,6 +83,9 @@ object Config:
     effectHandlers = N,
     liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
+    patternSpecializationLimit = default.patternSpecializationLimit,
+    stringPatternStateLimit = default.stringPatternStateLimit,
+    patternCompilationWorkLimit = default.patternCompilationWorkLimit,
     target = CompilationTarget.JS,
     rewriteWhileLoops = false,
     stageCode = false,
@@ -94,6 +100,9 @@ object Config:
   )
   object default:
     val patMatConsequentSharingThreshold = S(15)
+    val patternSpecializationLimit = 1024
+    val stringPatternStateLimit = 8192
+    val patternCompilationWorkLimit = 2000000
     val deadBranchRemoval = false // TODO
     val inlineThreshold = 10
   
@@ -414,6 +423,13 @@ object ConfigParser:
     parse(value) match
       case S(v) => set(v)
       case N => identity
+
+  private def parsePositiveInt(value: Tree)(using Raise): Opt[Int] =
+    parseInt(value).flatMap: n =>
+      if n > 0 then S(n)
+      else
+        expect("a positive integer")(value)
+        N
 
   private def optionalField[A](value: Tree)(parse: Tree => Opt[A])(set: Opt[A] => Config => Config)(using Raise): Config => Config =
     parseOpt(value)(parse) match
@@ -814,6 +830,12 @@ object ConfigParser:
       parsedField(value)(parseBool)(v => _.copy(checkCasts = v))
     case "patMatConsequentSharingThreshold" =>
       parsedField(value)(parseInt)(v => _.copy(patMatConsequentSharingThreshold = S(v)))
+    case "patternSpecializationLimit" =>
+      parsedField(value)(parsePositiveInt)(v => _.copy(patternSpecializationLimit = v))
+    case "stringPatternStateLimit" =>
+      parsedField(value)(parsePositiveInt)(v => _.copy(stringPatternStateLimit = v))
+    case "patternCompilationWorkLimit" =>
+      parsedField(value)(parsePositiveInt)(v => _.copy(patternCompilationWorkLimit = v))
     case "inlining" =>
       optionalField(value)(parseInt)(v => _.mapOptimizer(_.copy(inlining = v.map(Inliner(_)))))
     case "deadBranchRemoval" =>
