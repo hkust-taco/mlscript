@@ -4,20 +4,19 @@
 :wasm
 
 
-// * Wasm functions have a fixed arity, so optional parameters are rejected.
-:e
-fun opt(x, y?) = x
+// * Calls pad optional parameters to the fixed Wasm arity.
+:expect null
+fun opt(x, y?) = y
 opt(1)
-//│ ╔══[COMPILATION ERROR] Optional parameters are not supported by the WebAssembly backend.
-//│ ║  l.9: 	fun opt(x, y?) = x
-//│ ╙──     	       ^^^^^^^
+//│ Wasm result:
+//│ = null
 
-// * Nor can they take a variable number of arguments.
+// * Variadic parameters still require packing arguments into an array.
 :e
 fun rest(x, ...xs) = xs
 rest(1, 2)
 //│ ╔══[COMPILATION ERROR] Variadic parameters are not supported by the WebAssembly backend.
-//│ ║  l.17: 	fun rest(x, ...xs) = xs
+//│ ║  l.16: 	fun rest(x, ...xs) = xs
 //│ ╙──      	            ^^^^^
 
 // * Trailing parameters are lowered into a rest parameter, which is rejected in the same way.
@@ -25,19 +24,15 @@ rest(1, 2)
 fun trailing(x, ...xs, y) = y
 trailing(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Variadic parameters are not supported by the WebAssembly backend.
-//│ ║  l.25: 	fun trailing(x, ...xs, y) = y
+//│ ║  l.24: 	fun trailing(x, ...xs, y) = y
 //│ ╙──      	            ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] More arguments were supplied than the WebAssembly call supports.
+//│ ║  l.25: 	trailing(1, 2, 3)
+//│ ╙──      	^^^^^^^^^^^^^^^^^
 
-// * Constructor parameter lists obey the same backend restriction.
-:e
+// * Constructors bind omitted optional fields to null.
+:expect null
 class OptionalConstructor(val value?)
-new OptionalConstructor()
-//│ ╔══[COMPILATION ERROR] Optional parameters are not supported by the WebAssembly backend.
-//│ ║  l.33: 	class OptionalConstructor(val value?)
-//│ ╙──      	                         ^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Optional parameters are not supported by the WebAssembly backend.
-//│ ║  l.33: 	class OptionalConstructor(val value?)
-//│ ╙──      	                         ^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] WatBackend::result for Lit expression not implemented yet
-//│ ║  l.34: 	new OptionalConstructor()
-//│ ╙──      	                       ^^
+(new OptionalConstructor()).value
+//│ Wasm result:
+//│ = null

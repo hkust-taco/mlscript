@@ -621,13 +621,10 @@ def genFuncBody[T](
     thisSym: Opt[InnerSymbol],
     paramTypes: Opt[Seq[ValType]] = N,
 )(mkBody: FunctionCtx ?=> T)(using Ctx, Raise, State): T -> FunctionCtx =
-  // * Wasm functions have a fixed arity, so calls cannot omit the arguments of optional parameters.
-  // * Nor can they pass a variable number of arguments: a variadic parameter would be bound as a plain parameter,
-  // * receiving a single argument rather than an array of the remaining ones.
+  // * Calls pad omitted optional arguments with null to preserve Wasm's fixed arity.
+  // * Variadic parameters still need argument packing: binding one as a plain parameter would
+  // * pass a single argument rather than an array of the remaining ones.
   params.foreach: ps =>
-    if ps.hasOptParams then raise(ErrorReport(
-      msg"Optional parameters are not supported by the WebAssembly backend." -> ps.toLoc :: Nil,
-      source = Diagnostic.Source.Compilation))
     ps.restParam.foreach: p =>
       // * The rest parameter introduced when lowering trailing parameters has no location of its own.
       raise(ErrorReport(

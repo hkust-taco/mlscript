@@ -1,0 +1,223 @@
+:.
+:noInline
+open annotations
+//│ Wasm result:
+//│ = {}
+
+// Direct calls retain supplied arguments and materialize every omitted slot.
+fun choose(x: Int, y?: Int) = if y is null then x else y
+fun absent(x?) = if x is null then 1 else 0
+fun slots(x?, y?) = absent(x) + absent(y)
+//│ Wasm result:
+//│ = {}
+
+:expect 10
+choose(10)
+//│ Wasm result:
+//│ = 10
+
+:expect 20
+choose(10, 20)
+//│ Wasm result:
+//│ = 20
+
+:expect 2
+slots()
+//│ Wasm result:
+//│ = 2
+
+:expect 2
+slots(null)
+//│ Wasm result:
+//│ = 2
+
+:expect 2
+slots(null, null)
+//│ Wasm result:
+//│ = 2
+
+:expect 2
+slots(unsafe.undefined)
+//│ Wasm result:
+//│ = 2
+
+:expect 1
+slots(0)
+//│ Wasm result:
+//│ = 1
+
+:expect 0
+slots(0, false)
+//│ Wasm result:
+//│ = 0
+
+:expect null
+fun identity(x?) = x
+identity()
+//│ Wasm result:
+//│ = null
+
+// Function values need a Wasm callable representation independently of optional arguments.
+:fixme
+:expect 11
+val indirect: (Int, Int?) -> Anything = choose
+indirect(11)
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref $choose)` to `(ref null any)` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
+//│ ║  l.64: 	indirect(11)
+//│ ╙──      	^^^^^^^^
+
+// Explicit undefined is normalized, while null, Unit, zero and false remain distinct.
+:expect 1
+absent(null)
+//│ Wasm result:
+//│ = 1
+
+:expect 1
+absent(unsafe.undefined)
+//│ Wasm result:
+//│ = 1
+
+:expect 0
+absent(())
+//│ Wasm result:
+//│ = 0
+
+:expect 1
+fun forward(x) = absent(x)
+forward(unsafe.undefined)
+//│ Wasm result:
+//│ = 1
+
+// Optional fields are nullable even when their written type is a concrete class.
+:expect 0
+class Item(val value: Int)
+class Box(val item?: Item) {
+  fun get() = if item is Item as item then item.value else 0
+}
+Box().get()
+//│ Wasm result:
+//│ = 0
+
+:expect 12
+class Box2(val item?: Item) {
+  fun get() = if item is Item as item then item.value else 0
+}
+Box2(Item(12)).get()
+//│ Wasm result:
+//│ = 12
+
+// Virtual dispatch and super calls supply omitted arguments independently.
+:expect 13
+class Base() {
+  open fun pick(x?: Int) = if x is null then 13 else x
+}
+class Child() extends Base() {
+  override fun pick(x?: Int) = if x is null then super.pick() else x
+}
+fun dispatch(base: Base) = base.pick()
+dispatch(Child())
+//│ Wasm result:
+//│ = 13
+
+:expect 14
+class Supplied() {
+  fun pick(x?: Int) = if x is null then 0 else x
+}
+Supplied().pick(14)
+//│ Wasm result:
+//│ = 14
+
+// Constructor and parent-initializer calls retain the optional field's null value.
+:expect 15
+class Fields(val first: Int, val second?: Int) {
+  fun read() = if second is null then first else second
+}
+class Inherited() extends Fields(15)
+Inherited().read()
+//│ Wasm result:
+//│ = 15
+
+:expect 16
+class SuppliedFields(val first: Int, val second?: Int) {
+  fun read() = if second is null then first else second
+}
+SuppliedFields(1, 16).read()
+//│ Wasm result:
+//│ = 16
+
+// Required arguments are still checked by resolution.
+:e
+choose()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.151: 	choose()
+//│ ║         	^^^^^^^^
+//│ ╟── Function 'choose' expected 1 to 2 arguments, but got 0
+//│ ║  l.8: 	fun choose(x: Int, y?: Int) = if y is null then x else y
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ = null
+
+// Supplied constructor values are evaluated once and normalized before field initialization.
+:expect 21
+class Normalize(val x?) {
+  fun read() = absent(x)
+}
+let count = 0
+fun argument() =
+  set count = count + 1
+  unsafe.undefined
+Normalize(argument()).read() + Normalize(argument()).read() * 10 + count * 5
+//│ Wasm result:
+//│ = 21
+
+// A virtual call with a supplied optional argument preserves its value.
+:expect 17
+class SuppliedBase() {
+  open fun pick(x?) = if x is null then 0 else x
+}
+class SuppliedChild() extends SuppliedBase() {
+  override fun pick(x?) = if x is null then 0 else x
+}
+fun suppliedDispatch(base: SuppliedBase, x) = base.pick(x)
+suppliedDispatch(SuppliedChild(), 17)
+//│ Wasm result:
+//│ = 17
+
+:expect 1112
+class SuppliedBase() {
+  open fun pick(x?) = if x is null then 1 else x
+}
+class SuppliedChild() extends SuppliedBase() {
+  override fun pick(x) = super.pick(x)
+}
+fun suppliedDispatch(base: SuppliedBase, x) = base.pick(x) + base.pick()
+let c = SuppliedChild()
+c.pick(10) + suppliedDispatch(c, 100) + suppliedDispatch(SuppliedBase(), 1000)
+//│ Wasm result:
+//│ = 1112
+
+// Optional slots work with inlining and tail-call jumps as well as real calls.
+#config(inlining: 100)
+//│ Wasm result:
+//│ = {}
+:expect 1
+fun inlined(x?) = absent(x)
+inlined()
+//│ Wasm result:
+//│ = 1
+
+:expect 1
+@tailrec fun countdown(n: Int, x?) =
+  if n is 0 then absent(x) else countdown(n - 1)
+countdown(3, 18)
+//│ Wasm result:
+//│ = 1
+
+
+// TODO: improve error
+:e
+fun test(x?: Int32) = x
+//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ Wasm result:
+//│ = {}
