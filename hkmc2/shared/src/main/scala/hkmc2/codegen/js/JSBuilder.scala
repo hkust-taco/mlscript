@@ -567,8 +567,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // * which is not meaningful, here.
               doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, $functionKeyword ($params) ${ braced(bodyDoc) });"
             
-          case cls @ ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
-              privFlds, pubFlds, preCtor, ctor, modo, bufferable, termCompanion, _)
+          case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
+              privFlds, pubFlds, preCtor, ctor, modo, bufferable, termCompanion, clsMethodKeys)
           =>
             // After ClassParamFlattener, all classes have paramsOpt = N and exactly one auxParams entry.
             assert(paramsOpt.isEmpty,
@@ -745,7 +745,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     .mkDocument(" ")
                   else doc""
                 } :: {
-                  mkMethods(mtds, mtdPrefix, cls.methodKeys)
+                  mkMethods(mtds, mtdPrefix, clsMethodKeys)
                 } :: {
                   // * If this class has a `toString` implementation, then delegate
                   // * `prettyPrint` to `toString`.
@@ -776,13 +776,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // Source params are used for the wrapper to preserve the curried calling convention.
               // All args are forwarded to the flat `new Class.class(...)` constructor.
               val sourceAuxParams = isym.defn.map(_.auxParams).getOrElse(Nil)
-              val allSourceParams = (sourceParamsOpt.toList ::: sourceAuxParams).map(LoweredParamList.fixed)
+              val allSourceParams =
+                sourceParamsOpt.iterator.++(sourceAuxParams).map(LoweredParamList.fixed).toList
               
               val fun = allSourceParams match
                 case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
                   val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
-                  val argsDoc = allSourceParams.flatMap(_.paramSyms)
+                  val argsDoc = allSourceParams.iterator.flatMap(_.paramSyms)
                     .map(p => scope.lookup_!(p, p.toLoc)).mkDocument(", ")
                   val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
@@ -1082,7 +1083,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   private def normalizeOptionalParams(params: LoweredParamList)(using Raise, Scope): Document =
     params.params.filter(_.flags.opt).map: p =>
       val name = scope.lookup_!(p.sym, p.toLoc)
-      doc" # $name = $name ?? null;"
+      doc" # $name ??= null;"
     .mkDocument("")
   
   def setupFunction(name: Option[Str], params: LoweredParamList, body: Block, isLambda: Bool)

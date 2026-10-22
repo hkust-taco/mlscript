@@ -32,6 +32,7 @@ class WorkerWrapper
   
   // * Optional parameters are excluded because uncurrying concatenates the parameter lists,
   // * so the arguments of a later list would be assigned to the omitted optional parameters.
+  // * TODO: support this once we normalize known-call sites in the future.
   private def isPlainParamList(params: LoweredParamList): Bool =
     params.flags == ParamListFlags.empty && params.restParam.isEmpty && !params.hasOptParams
   

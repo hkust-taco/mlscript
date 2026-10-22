@@ -425,7 +425,6 @@ class ParseRules(using State):
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
     singleKw(`dyn`)(Keywrd(`dyn`)),
-    // Keep this source token distinct so its warning does not apply to compiler-synthesized undefined literals.
     singleKw(`undefined`)(Keywrd(`undefined`)),
     singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Keywrd(Keyword.`this`)),

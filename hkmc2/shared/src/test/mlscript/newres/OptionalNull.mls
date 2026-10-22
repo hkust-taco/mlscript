@@ -10,7 +10,7 @@ fun optional(x?) = x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define optional⁰ as fun optional¹(x?) { return x }; end
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let optional; optional = function optional(x) { x = x ?? null; return x };
+//│ let optional; optional = function optional(x) { x ??= null; return x };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect [null, null, null, 0, false, ""]
@@ -23,7 +23,7 @@ let optionalLambda = (x?) => x
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let optionalLambda, optionalLambda1;
 //│ optionalLambda1 = function optionalLambda(x) {
-//│   x = x ?? null;
+//│   x ??= null;
 //│   return x
 //│ };
 //│ optionalLambda = optionalLambda1;
