@@ -369,8 +369,9 @@ exportSource().item
 //│ = 0
 
 
-// An annotated generic field value exposes only its substituted interface. Separate factory activations
-// must keep their callback domains distinct instead of exposing either callback to arbitrary inputs.
+// An annotated generic field value exposes only its substituted interface, including through nested spreads.
+// Separate factory activations must keep their callback domains distinct instead of exposing either callback
+// to arbitrary inputs.
 :expect [4, 6]
 private fun make[T](callback: T -> Int) =
   let record = {mut callback: 0}
@@ -378,29 +379,111 @@ private fun make[T](callback: T -> Int) =
   record
 private fun length(value) = value.length
 private fun increment(value) = value + 1
-fun exportStringCallback() = make[Str](length)
-fun exportIntCallback() = make[Int](increment)
+fun exportStringCallback() = {...{...make[Str](length)}}
+fun exportIntCallback() = {...make[Int](increment)}
 [length("abcd"), increment(5)]
 //│ = [4, 6]
 
 
 // A later field replaces a spread field completely. Exposure must not follow the discarded value and require
-// annotations on mutable class fields that remain private. Currently it traverses the whole spread source.
-:fixme
+// annotations on mutable class fields that remain private.
 :expect 0
 private class OverwrittenCell(mut val value)
 private val overwrittenSource = {hidden: OverwrittenCell(0)}
 val overwrittenView = {...overwrittenSource, hidden: 0}
 overwrittenView.hidden
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
-//│ ║  l.391: 	private class OverwrittenCell(mut val value)
-//│ ║         	                                      ^^^^^
-//│ ╟── This value is stored in this record field.
-//│ ║  l.392: 	private val overwrittenSource = {hidden: OverwrittenCell(0)}
-//│ ║         	                                 ^^^^^^
-//│ ╟── 'overwrittenView' is exposed by this compilation unit.
-//│ ║  l.393: 	val overwrittenView = {...overwrittenSource, hidden: 0}
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ = 0
 //│ overwrittenSource = {hidden: OverwrittenCell(0)}
 //│ overwrittenView = {hidden: 0}
+
+
+// The same last-write-wins rule applies to repeated direct fields and fields replaced by a later spread.
+:expect [0, 1]
+private class ReplacedCell(mut val value)
+fun exportDirectReplacement() = {item: ReplacedCell(0), item: 0}
+fun exportSpreadReplacement() = {item: ReplacedCell(0), ...{item: 1}}
+[exportDirectReplacement().item, exportSpreadReplacement().item]
+//│ = [0, 1]
+
+
+// Neither an initializer nor values assigned to its mutable field escape after a nested copy overwrites it.
+:expect 0
+private class ReplacedAssignedCell(mut val value)
+private fun originalWithAssignment() =
+  let record = {mut item: ReplacedAssignedCell(0)}
+  set record.item = ReplacedAssignedCell(1)
+  record
+private fun intermediateWithAssignment() = {...originalWithAssignment()}
+fun exportAssignedReplacement() = mut {...intermediateWithAssignment(), item: 0}
+exportAssignedReplacement().item
+//│ = 0
+
+
+// A computed key might leave earlier fields intact, so their values must still be exposed.
+:ge
+private class PossiblyRetainedCell(mut val value)
+fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(0), (key): 0}
+//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+//│ ║  l.424: 	private class PossiblyRetainedCell(mut val value)
+//│ ║         	                                           ^^^^^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.425: 	fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(0), (key): 0}
+//│ ║         	                                           ^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.425: 	fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(0), (key): 0}
+//│ ║         	                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'exportPossibleReplacement' is exposed by this compilation unit.
+//│ ║  l.425: 	fun exportPossibleReplacement(key: Str) = {item: PossiblyRetainedCell(0), (key): 0}
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// A frozen spread copy does not let clients write to the private mutable record that it copied.
+:expect 3
+private val privateMutableSource = {mut item: "abc"}
+val exportedImmutableCopy = {...privateMutableSource}
+privateMutableSource.item.length
+//│ = 3
+//│ exportedImmutableCopy = {item: "abc"}
+//│ privateMutableSource = {item: "abc"}
+
+
+// Freezing the copy still exposes the nested values its source held when they were copied.
+:ge
+private class FrozenCopiedCell(mut val value)
+fun exportFrozenCopy() =
+  let record = {mut item: 0}
+  set record.item = FrozenCopiedCell(1)
+  {...record}
+//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
+//│ ║  l.452: 	private class FrozenCopiedCell(mut val value)
+//│ ║         	                                       ^^^^^
+//│ ╟── This value is stored in this record field.
+//│ ║  l.454: 	  let record = {mut item: 0}
+//│ ║         	                    ^^^^
+//│ ╟── This value is returned here.
+//│ ║  l.454: 	  let record = {mut item: 0}
+//│ ║         	                    ^^^^^^^^
+//│ ║  l.455: 	  set record.item = FrozenCopiedCell(1)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.456: 	  {...record}
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── 'exportFrozenCopy' is exposed by this compilation unit.
+//│ ║  l.453: 	fun exportFrozenCopy() =
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+
+
+// An explicitly mutable copy still admits unknown writes through its copied fields.
+:e
+private val privateImmutableSource = {item: "abc"}
+val exportedMutableCopy = mut {...privateImmutableSource}
+exportedMutableCopy.item.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.479: 	exportedMutableCopy.item.length
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── 'exportedMutableCopy' is exposed by this compilation unit.
+//│ ║  l.478: 	val exportedMutableCopy = mut {...privateImmutableSource}
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ exportedMutableCopy = {item: "abc"}
+//│ privateImmutableSource = {item: "abc"}

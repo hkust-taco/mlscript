@@ -2498,8 +2498,7 @@ extends Importer:
             // Keep their types directly so lookup never follows initializer flow.
             reportUnused(annotations.filterNot(_.isInstanceOf[Annot.JsSymbol]))
             val field = Term.Lit(StrLit(id.name)).withLocOf(id)
-            recordFieldScope(MemberKey.symbol(annotations).fold(RcdField.signature(field, rhs_t, mutField))(
-              key => RcdField.signature(field, rhs_t, mutField, key))) :: acc
+            recordFieldScope(RcdField.signature(field, rhs_t, mutField, MemberKey.symbol(annotations))) :: acc
           case id: Ident =>
             val sym = new VarSymbol(id)
             newCtx += id.name -> sym
@@ -2511,13 +2510,13 @@ extends Importer:
             reportUnusedAnnotations
             val field = Term.Lit(lit).withLocOf(lit)
             recordFieldScope(if fieldInterpretation == Tpe
-              then RcdField.signature(field, rhs_t, mutField)
+              then RcdField.signature(field, rhs_t, mutField, N)
               else RcdField.source(field, rhs_t, mutField)
             ) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
             val key = term(inner, Trm)
-            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t, mutField)
+            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t, mutField, N)
               else RcdField.source(key, rhs_t, mutField)) :: acc
           case _ =>
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))

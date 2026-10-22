@@ -270,16 +270,41 @@ forwardedTail([7])
 //│ = 7
 
 
-// TODO: Override representation checks must include fixed parameters following a variadic one.
+// Trailing parameters obey the same override representation checks as leading parameters.
 :ge
-:breakme
 private class TailBase() with
   open fun apply(...rest, value: Int): Int = 0
 private class TailChild() extends TailBase() with
   override fun apply(...rest, value: Str): Int = 0
 private fun useTailBase(base: TailBase) = base.apply(1)
 useTailBase(TailChild())
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'apply' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.278: 	  override fun apply(...rest, value: Str): Int = 0
+//│ ║         	                              ^^^^^^^^^^
+//│ ╟── The overridden member 'apply' is defined here
+//│ ║  l.276: 	  open fun apply(...rest, value: Int): Int = 0
+//│ ╙──       	           ^^^^^
 //│ = 0
+
+// An unannotated trailing parameter inherits the base member's representation, even across blocks.
+:ge
+private class InheritedTail() extends TailBase() with
+  override fun apply(...rest, value): Int = 0
+InheritedTail().apply("wrong")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.293: 	InheritedTail().apply("wrong")
+//│ ╙──       	                      ^^^^^^^
+//│ = 0
+
+// TODO: Decide which changes to an override's parameter layout are permitted. Adding a required
+// trailing slot currently makes a valid call through the base member fail at run time.
+:ge
+:breakme
+:re
+private class ExtraTail() extends TailBase() with
+  override fun apply(...rest, first: Int, value: Int): Int = 0
+useTailBase(ExtraTail())
+//│ ═══[RUNTIME ERROR] Error: Function 'apply' expected at least 2 arguments but got 1
 
 
 // *** Errors ***
@@ -287,29 +312,29 @@ useTailBase(TailChild())
 :e
 fun bad(...xs, ...ys) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.288: 	fun bad(...xs, ...ys) = 0
+//│ ║  l.313: 	fun bad(...xs, ...ys) = 0
 //│ ╙──       	               ^^^^^
 
 :e
 fun bad(...xs, y?) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.294: 	fun bad(...xs, y?) = 0
+//│ ║  l.319: 	fun bad(...xs, y?) = 0
 //│ ╙──       	               ^^
 
 :e
 fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.300: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
+//│ ║  l.325: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╙──       	                           ^^^^^^^^^^^^^
 
 :e
 fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.306: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
+//│ ║  l.331: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╙──       	                           ^^^^
 
 :e
 class C(x, ...xs, y)
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.312: 	class C(x, ...xs, y)
+//│ ║  l.337: 	class C(x, ...xs, y)
 //│ ╙──       	           ^^^^^

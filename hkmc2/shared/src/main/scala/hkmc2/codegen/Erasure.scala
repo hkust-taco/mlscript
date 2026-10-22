@@ -317,9 +317,10 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     // inputs; `checkOverride` checks the declared ones.
     val inheritedParams: Map[VarSymbol, Param] = statements.iterator.flatMap:
       case td: TermDefinition => td.tsym.overriddenMembers.headOption.flatMap(_.defn).iterator.flatMap: base =>
-        if td.params.map(_.params.length) != base.params.map(_.params.length) then Iterator.empty
-        else td.params.iterator.zip(base.params).flatMap((ps, bps) => ps.params.iterator.zip(bps.params))
-          .map((param, inherited) => param.sym -> inherited)
+        val leading =
+          if td.params.map(_.params.length) != base.params.map(_.params.length) then Nil
+          else td.params.zip(base.params).flatMap((ps, bps) => ps.params.zip(bps.params))
+        (leading ::: correspondingVariadicParameters(td, base)).iterator.map((param, inherited) => param.sym -> inherited)
       case _ => Iterator.empty
     .toMap
     def eraseParameter(p: Param, visiting: Set[VarSymbol]): Unit = if !p.sym.isErased then
@@ -383,6 +384,17 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       case _ => ()
     completed = S(root)
 
+  /** The rest tuple and trailing slots receive the same argument positions when both declarations
+    * have the same layout. Equal leading counts alone do not establish that correspondence: an
+    * optional prefix or a different trailing count changes which arguments enter the rest tuple.
+    */
+  private def correspondingVariadicParameters(td: TermDefinition, base: TermDefinition): Ls[(Param, Param)] =
+    def layout(ps: ParamList) =
+      (ps.flags, ps.params.length, ps.leadingRequiredCount, ps.variadic.isDefined, ps.trailingParams.length)
+    if td.params.map(layout) != base.params.map(layout) then Nil
+    else td.params.zip(base.params).flatMap: (ps, bps) =>
+      ps.variadic.toList.flatMap(_.allParams).zip(bps.variadic.toList.flatMap(_.allParams))
+
   /** An override is reached through calls of the member it overrides, so it must accept every representation of the
     * inherited parameters and produce only representations of the inherited result. The Wasm backend also compiles all
     * the overrides of a method with the physical signature of the method introducing it, so on that target, an
@@ -411,18 +423,23 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           msg"Overriding member '${td.tsym.nme}' produces values represented as '${describe(result)
             }', which the member it overrides cannot produce: its results are represented as '${describe(baseResult)}'",
           td.tsym.toLoc)
+        def checkParameter(param: Opt[ErasedValueType], baseParam: Opt[ErasedValueType], p: Param): Unit =
+          if !within(baseParam, param) then report(
+            msg"Parameter '${p.sym.nme}' of overriding member '${td.tsym.nme}' is represented as '${describe(param)
+              }', which cannot hold the values represented as '${describe(baseParam)}' that the member it overrides accepts",
+            p.toLoc)
+          else if (config.target is CompilationTarget.Wasm) && !within(param, baseParam) then report(
+            msg"Parameter '${p.sym.nme}' of overriding member '${td.tsym.nme}' receives values represented as '${
+              describe(param)}', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as '${
+              describe(baseParam)}'",
+            p.toLoc)
         // Parameter lists of different lengths are reported by the backends that require equal lengths.
         if params.map(_.length) == baseParams.map(_.length) then
           params.flatten.lazyZip(baseParams.flatten).lazyZip(td.params.flatMap(_.params)).foreach: (param, baseParam, p) =>
-            if !within(baseParam, param) then report(
-              msg"Parameter '${p.sym.nme}' of overriding member '${td.tsym.nme}' is represented as '${describe(param)
-                }', which cannot hold the values represented as '${describe(baseParam)}' that the member it overrides accepts",
-              p.toLoc)
-            else if (config.target is CompilationTarget.Wasm) && !within(param, baseParam) then report(
-              msg"Parameter '${p.sym.nme}' of overriding member '${td.tsym.nme}' receives values represented as '${
-                describe(param)}', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as '${
-                describe(baseParam)}'",
-              p.toLoc)
+            checkParameter(param, baseParam, p)
+        base.defn.foreach: inherited =>
+          correspondingVariadicParameters(td, inherited).foreach: (param, baseParam) =>
+            checkParameter(param.sym.erasedType, baseParam.sym.erasedType, param)
 
   /** Subclasses in other compilation units implement an open member with the representations of its erased signature,
     * which therefore must not depend on what this compilation unit happens to pass to the member or return from it.

@@ -185,31 +185,38 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         watch((tuple, field, marks))(resolver.listenTupleField(field)): shape =>
           emit(shape.exit(marks), path.via(msg"This value is stored in this tuple." -> tuple.source.toLoc))
       case record: RecordShape =>
-        record.elements.foreach:
-          case RecordShape.Field(field) => contextualTerm(field.rhs, marks,
-            path.via(msg"This value is stored in this record field." -> field.toLoc), instances.withOverrides(record.instances))
-          case RecordShape.Spread(inner, context) =>
-            emit(resolver.instantiateShape(inner, instances.withOverrides(record.instances)).exit(context).exit(marks), path)
-          case _ => ()
-        // Clients can assign the mutable fields of a record, and through a mutable record (`mut {...}`), also the
-        // fields it copies from the records it spreads (see RecordMember). The spread records are also exposed
-        // above, as values of their own, whose mutable fields are assignable through them as well.
-        // Reading an escaping field exposes its assigned values too. Follow the same definition exits and
-        // spread paths as a member read; a captured generic record must interpret these values in its own
-        // substitution. Mutable copies also expose writes to fields whose original record was immutable.
-        def assignableFields(record: RecordShape, copied: Bool, context: Ls[Marks], substitution: TypeSubstitution): Unit =
-          record.elements.foreach:
-            case RecordShape.Field(field) if copied || field.mut =>
-              watch((field.tsym, context, substitution, "assigned values"))(
-                listener => resolver.listenAssignedValues(field.tsym, source(field.sym).resSym, context)(listener)(
-                  using rctx.withInstances(substitution))): value =>
-                emit(resolver.instantiateShape(value, substitution),
-                  path.via(msg"This value is stored in this record field." -> field.toLoc))
-              assignable(field.tsym, field.sym, path)
-            case RecordShape.Spread(inner, marks) if copied =>
-              assignableFields(inner, copied, marks :: context, substitution.withOverrides(inner.instances))
-            case _ => ()
-        assignableFields(record, record.source.mut, marks, instances.withOverrides(record.instances))
+        // A spread copies fields, not its source record. Like member lookup, exposure follows the last value
+        // written at each key; exposing the whole source would also expose values replaced by later fields.
+        // Unknown keys cannot prove that an earlier field is overwritten, so retain both possible values.
+        // Preserve spread paths and substitutions for assigned values as well as initializers: a mutable copy
+        // can expose writes to an originally immutable field, and a generic source interprets them in its scope.
+        val mutableCopy = record.source.mut
+        // A record can spread the same producer repeatedly. Memoize each contextual view and overwrite set so
+        // nested copies walk the shared graph rather than expanding it into a tree. Empty marks add no context.
+        val visited = mutable.Map.empty[(RecordShape, Bool, Bool, Ls[Marks], TypeSubstitution, Set[MemberKey]), Set[MemberKey]]
+        def fields(record: RecordShape, copied: Bool, spread: Bool, context: Ls[Marks], substitution: TypeSubstitution,
+            shadowed: Set[MemberKey]): Set[MemberKey] =
+          val readAssignments = copied || record.source.mut
+          visited.getOrElseUpdate((record, readAssignments, spread, context.filter(_ != NoMarks), substitution, shadowed),
+            record.elements.reverse.foldLeft(shadowed): (shadowed, element) =>
+              element match
+                case RecordShape.Field(field) =>
+                  if !field.key.exists(shadowed) then
+                    val fieldPath = path.via(msg"This value is stored in this record field." -> field.toLoc)
+                    contextualTerm(field.rhs, context, fieldPath, substitution)
+                    if readAssignments || field.mut then
+                      watch((field.tsym, context, substitution, "assigned values"))(
+                        listener => resolver.listenAssignedValues(field.tsym, source(field.sym).resSym, context)(listener)(
+                          using rctx.withInstances(substitution))): value =>
+                        emit(resolver.instantiateShape(value, substitution), fieldPath)
+                    // A copy reads its source's assigned values, but only the exposed record's own mutability
+                    // admits external writes. An immutable spread copy does not expose its mutable source.
+                    if mutableCopy || (!spread && field.mut) then assignable(field.tsym, field.sym, path)
+                  shadowed ++ field.key
+                case RecordShape.Spread(inner, marks) =>
+                  fields(inner, readAssignments, true, marks :: context, substitution.withOverrides(inner.instances), shadowed)
+                case _ => shadowed)
+        fields(record, false, false, marks, instances.withOverrides(record.instances), Set.empty)
       case base: BaseShape => members(base.defn, marks, path)
       case callable: CallableTypeShape =>
         // Written structure constrains external values; missing output parts

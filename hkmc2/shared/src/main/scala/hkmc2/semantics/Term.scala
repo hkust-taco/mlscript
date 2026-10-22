@@ -767,9 +767,8 @@ object RcdField:
   // Lowering and pattern compilation synthesize immutable fields after source erasure.
   def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, false, false, N)
   def source(field: Term, rhs: Term, mut: Bool)(using State): RcdField = make(field, rhs, false, true, mut, N)
-  def signature(field: Term, sign: Term, mut: Bool)(using State): RcdField = make(field, sign, true, true, mut, N)
-  def signature(field: Term, sign: Term, mut: Bool, symbol: SymbolKey)(using State): RcdField =
-    make(field, sign, true, true, mut, S(symbol))
+  def signature(field: Term, sign: Term, mut: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
+    make(field, sign, true, true, mut, symbol)
   private def make(field: Term, rhs: Term, signature: Bool, source: Bool, mut: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name

@@ -1644,9 +1644,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         ),
       )
 
-  def argument(a: Arg)(using FunctionCtx, Raise, SessionExportCtx): Expr =
-    argument(a, N)
-
   private def argument(a: Arg, expected: Opt[ValType])(using FunctionCtx, Raise, SessionExportCtx): Expr =
     if a.spread.nonEmpty then
       errExpr(
@@ -1879,7 +1876,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               case S(_) =>
                 call(
                   funcidx = getIntrinsic(intrName),
-                  operands = args.map(argument),
+                  operands = args.map(argument(_, N)),
                   returnTypes = Seq(Result(RefType.anyref)),
                 )
         case N =>
@@ -2068,7 +2065,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       call(funcidx = ctorFuncIdx, operands = ctorArgs, Seq(Result(RefType(ctorClsTypeIdx, nullable = false))))
 
     case Tuple(mut, elems) =>
-      val tupleValues = elems.map(argument)
+      val tupleValues = elems.map(argument(_, N))
       array.new_fixed(tupleArrayType(mut), tupleValues)
 
     case Cast(value, target, _) =>
@@ -2115,7 +2112,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     def compileOperand: (Expr, Opt[Str]) =
       val operand =
         if arg.value.isUndefined then argument(arg, declared.flatMap(_.wasmType))
-        else argument(arg)
+        else argument(arg, N)
       operand -> declared
         .filter(_.wasmType.exists(expected => !operand.resultType.exists(_.isSubtypeOf(expected))))
         .map(_.describe)
