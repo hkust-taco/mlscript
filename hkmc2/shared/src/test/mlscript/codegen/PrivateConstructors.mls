@@ -1,0 +1,336 @@
+:.
+:js
+
+
+class Foo with
+  private constructor(val x, val y)
+
+:e
+new Foo(1, 2)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.9: 	new Foo(1, 2)
+//│ ║       	^^^^^^^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.6: 	  private constructor(val x, val y)
+//│ ╙──     	  ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// * Annotations on constructor declarations must not apply to the statement that follows the constructor:
+// * the members declared after the constructors below stay public.
+
+declare class BigInt2 {
+  private constructor()
+  fun toString(...radix): Str
+}
+
+// * `toString` is called as a public method, not through a private accessor symbol.
+:sjs
+fun f(x: BigInt2) = x.toString(16)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f; f = function f(x) { return runtime.safeCall(x.toString(16)) };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// * Constructor blocks, which define sibling classes, do not support annotations.
+:w
+class Bar with
+  private constructor
+    Baz
+  fun foo = 42
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.37: 	  private constructor
+//│ ║        	  ^^^^^^^
+//│ ╟── Annotations are not supported on constructor terms.
+//│ ║  l.37: 	  private constructor
+//│ ║        	          ^^^^^^^^^^^
+//│ ║  l.38: 	    Baz
+//│ ╙──      	^^^^^^^
+
+:expect 42
+new Bar().foo
+//│ = 42
+
+// * The annotation is ignored, but the constructors of the block are still defined.
+:expect true
+(new Baz) is Bar
+//│ = true
+
+:e
+:w
+module M with
+  private constructor(x)
+  fun foo = 42
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.61: 	  private constructor(x)
+//│ ║        	  ^^^^^^^
+//│ ╟── Annotations are not supported on constructor terms.
+//│ ║  l.61: 	  private constructor(x)
+//│ ╙──      	          ^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
+//│ ║  l.61: 	  private constructor(x)
+//│ ╙──      	          ^^^^^^^^^^^^^^
+
+:expect 42
+M.foo
+//│ = 42
+
+
+// * A `private` modifier on a constructor declaration, which may or may not add parameter lists,
+// * makes the class's constructor private. All the parameter lists of a class form a single
+// * constructor, which is then only accessible from within the class and its companion.
+
+:sr
+class Foo { private constructor }
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   class Foo⁰::Foo¹ @private constructor {  }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:e
+new Foo
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.89: 	new Foo
+//│ ║        	^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.83: 	class Foo { private constructor }
+//│ ╙──      	            ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:sr
+class Foo { private constructor(val x) }
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun Foo² class Foo³::Foo⁴ @private constructor(val x⁰) { val x¹::x² ‹flow:x⁰› = x⁰^x² }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:e
+new Foo(1)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.105: 	new Foo(1)
+//│ ║         	^^^^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.99: 	class Foo { private constructor(val x) }
+//│ ╙──      	            ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:sr
+class Foo(val x) { private constructor }
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun Foo⁵ class Foo⁶::Foo⁷ @private constructor(val x³) { val x⁴::x⁵ ‹flow:x¹› = x³^x⁵ }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:e
+Foo(1)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.121: 	Foo(1)
+//│ ║         	^^^
+//│ ╟── private constructor declared here
+//│ ║  l.115: 	class Foo(val x) { private constructor }
+//│ ╙──       	                   ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+new Foo(1)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.131: 	new Foo(1)
+//│ ║         	^^^^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.115: 	class Foo(val x) { private constructor }
+//│ ╙──       	                   ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:sr
+class Foo(val x) { private constructor(val y) }
+//│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
+//│   fun Foo⁸
+//│   class Foo⁹::Foo¹⁰ @private constructor(val x⁶)(val y⁰) {
+//│     val x⁷::x⁸ ‹flow:x²› = x⁶^x⁸,
+//│     val y¹::y² ‹flow:y⁰› = y⁰^y²
+//│   }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:e
+Foo(1)(2)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.151: 	Foo(1)(2)
+//│ ║         	^^^
+//│ ╟── private constructor declared here
+//│ ║  l.141: 	class Foo(val x) { private constructor(val y) }
+//│ ╙──       	                   ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+new Foo(1)(2)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.161: 	new Foo(1)(2)
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.141: 	class Foo(val x) { private constructor(val y) }
+//│ ╙──       	                   ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// * The class and its companion can access the constructor.
+
+class Foo(val x) with
+  private constructor
+  fun withX(x) = Foo(x)
+  fun withNewX(x) = new Foo(x)
+module Foo with
+  fun make(x) = Foo(x)
+  fun makeNew(x) = new Foo(x)
+  class Sub(y) extends Foo(y + 1)
+  fun makeSub(y) = new Sub(y)
+  val ctor = Foo
+
+:expect [1, 2, 3, 4, 6]
+[Foo.make(1).x, Foo.makeNew(2).x, Foo.make(0).withX(3).x, Foo.make(0).withNewX(4).x, Foo.makeSub(5).x]
+//│ = [1, 2, 3, 4, 6]
+
+// * A constructor function obtained from the companion can be called from anywhere.
+:expect 1
+Foo.ctor(1).x
+//│ = 1
+
+// * Referring to the constructor function, instantiating the class, and extending it access the constructor.
+
+:e
+let mk = Foo
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.196: 	let mk = Foo
+//│ ║         	         ^^^
+//│ ╟── private constructor declared here
+//│ ║  l.174: 	  private constructor
+//│ ╙──       	  ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ mk = undefined
+
+:e
+class Bar extends Foo(1)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.207: 	class Bar extends Foo(1)
+//│ ║         	                  ^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.174: 	  private constructor
+//│ ╙──       	  ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+new Foo(1) with
+  fun foo = 42
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.217: 	new Foo(1) with
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.218: 	  fun foo = 42
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.174: 	  private constructor
+//│ ╙──       	  ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+module Other with
+  class Bar extends Foo(1)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Foo' outside the class
+//│ ║  l.231: 	  class Bar extends Foo(1)
+//│ ║         	                    ^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.174: 	  private constructor
+//│ ╙──       	  ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// * Other references to the class do not access its constructor.
+
+fun test(x) = x is Foo
+fun test2(x: Foo) = x.x
+fun test3 = Foo.class
+
+:expect [true, 2]
+[test(Foo.make(1)), test2(Foo.make(2))]
+//│ = [true, 2]
+
+
+// * Instantiating a class through a variable also accesses its constructor.
+
+class Baz with
+  private constructor
+
+let cls = Baz
+//│ cls = class Baz
+
+:e
+new cls
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Baz' outside the class
+//│ ║  l.260: 	new cls
+//│ ║         	^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.254: 	  private constructor
+//│ ╙──       	  ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// * The constructor is private when any of its declarations is.
+
+class Qux with
+  private constructor(x)
+  constructor(y)
+  fun sum = x + y
+
+:e
+new Qux(1)(2)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Qux' outside the class
+//│ ║  l.278: 	new Qux(1)(2)
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.273: 	  private constructor(x)
+//│ ╙──       	  ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+data class Point(x, y) with
+  private constructor
+module Point with
+  val origin = Point(0, 0)
+
+:expect 0
+if Point.origin is Point(px, py) then px + py
+//│ = 0
+
+:e
+Point(1, 2)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Point' outside the class
+//│ ║  l.297: 	Point(1, 2)
+//│ ║         	^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.288: 	  private constructor
+//│ ╙──       	  ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// * Annotations on constructor declarations other than `private` are reported as unused.
+
+:w
+class Foo with
+  declare constructor(x)
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.311: 	  declare constructor(x)
+//│ ║         	  ^^^^^^^
+//│ ╟── Annotations are not supported on constructor terms.
+//│ ║  l.311: 	  declare constructor(x)
+//│ ╙──       	          ^^^^^^^^^^^^^^
+
+// * Constructors can only be declared directly in class bodies.
+
+:e
+:w
+class Foo with
+  fun foo =
+    private constructor
+    42
+//│ ╔══[WARNING] This annotation has no effect
+//│ ║  l.325: 	    private constructor
+//│ ║         	    ^^^^^^^
+//│ ╟── Annotations are not supported on constructor terms.
+//│ ║  l.325: 	    private constructor
+//│ ╙──       	            ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] 'constructor(...)' declarations are only allowed in class bodies
+//│ ║  l.325: 	    private constructor
+//│ ╙──       	            ^^^^^^^^^^^
+

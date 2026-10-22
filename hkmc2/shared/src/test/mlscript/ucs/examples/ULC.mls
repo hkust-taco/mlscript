@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../../mlscript-compile/Option.mls"
@@ -11,7 +12,7 @@ fun par(a) = "(" + a + ")"
 
 fun showList(xs) = "[" + xs Iter.fromStack() Iter.joined(", ") + "]"
 
-fun contains(xs, x) = xs Iter.fromStack() Iter.some of _ === x
+fun contains(xs, x) = xs Iter.fromStack() Iter.some of => _ === x
 
 contains("x" :: "y" :: "z" :: Nil, "y")
 //│ = true

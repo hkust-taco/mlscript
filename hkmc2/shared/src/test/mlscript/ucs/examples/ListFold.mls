@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../../mlscript-compile/Stack.mls"
@@ -7,14 +8,9 @@ import "../../../mlscript-compile/StrOps.mls"
 open Stack
 open Option
 open StrOps
+open StrOps { concat2, ~ }
 
 fun (|>) pipe(x, f) = f(x)
-
-fun findFirst(f, xs) =
-  if xs is
-    Nil then None
-    Cons(x, _) and f(x) then Some(x)
-    Cons(_, xs) then findFirst(f, xs)
 
 fun (::) cons(head, tail) = Cons(head, tail)
 

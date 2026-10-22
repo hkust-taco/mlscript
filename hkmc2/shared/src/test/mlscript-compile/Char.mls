@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 
 module Char with
   // The full character range: matches any single UTF-16 code unit. (Guards

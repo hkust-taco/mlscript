@@ -1,3 +1,4 @@
+:.
 :js
 
 pattern X = "x"
@@ -46,7 +47,7 @@ pattern XsXs = Xs ~ Xs
 :e
 fun guarded(s) = if s is (Xs where true) ~ "x" then true else false
 //│ ╔══[COMPILATION ERROR] Guards are not supported within string patterns.
-//│ ║  l.47: 	fun guarded(s) = if s is (Xs where true) ~ "x" then true else false
+//│ ║  l.48: 	fun guarded(s) = if s is (Xs where true) ~ "x" then true else false
 //│ ╙──      	                          ^^^^^^^^^^^^^
 
 guarded("xxxx")
@@ -55,7 +56,7 @@ guarded("xxxx")
 :e
 fun chained(s) = if s is (Xs as X) ~ "x" then true else false
 //│ ╔══[COMPILATION ERROR] Chained patterns are not supported within string patterns.
-//│ ║  l.56: 	fun chained(s) = if s is (Xs as X) ~ "x" then true else false
+//│ ║  l.57: 	fun chained(s) = if s is (Xs as X) ~ "x" then true else false
 //│ ╙──      	                          ^^^^^^^
 
 chained("xxxx")

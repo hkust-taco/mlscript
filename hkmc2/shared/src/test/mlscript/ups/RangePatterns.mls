@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations
@@ -47,24 +48,19 @@ pattern UnsignedShort = 0 ..< 65536
 [] is UnsignedShort
 //│ = false
 
-:pe
-:e
-// Don't forget to add a space between numbers and the range operator.
+// The space between a number and the range operator is optional.
 pattern UnsignedByte = 0..< 256
-//│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
-//│ ║  l.53: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                         ^
-//│ ╔══[COMPILATION ERROR] Name not found: .<
-//│ ║  l.53: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                         ^^
-//│ ╔══[COMPILATION ERROR] Cannot use this ‹error› as a pattern.
-//│ ║  l.53: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                         ^^
+
+255 is UnsignedByte
+//│ = true
+
+256 is UnsignedByte
+//│ = false
 
 :e
 pattern BadRange = "s"..=0
 //│ ╔══[COMPILATION ERROR] The upper and lower bounds of range patterns should be literals of the same type.
-//│ ║  l.65: 	pattern BadRange = "s"..=0
+//│ ║  l.61: 	pattern BadRange = "s"..=0
 //│ ╙──      	                   ^^^^^^^
 
 // It becomes an absurd pattern.
@@ -74,16 +70,16 @@ pattern BadRange = "s"..=0
 :e
 pattern BadRange = 0 ..= "s"
 //│ ╔══[COMPILATION ERROR] The upper and lower bounds of range patterns should be literals of the same type.
-//│ ║  l.75: 	pattern BadRange = 0 ..= "s"
+//│ ║  l.71: 	pattern BadRange = 0 ..= "s"
 //│ ╙──      	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
 //│ ╔══[COMPILATION ERROR] The lower bound of character ranges must be a single character.
-//│ ║  l.81: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.77: 	pattern BadRange = "yolo" ..= "swag"
 //│ ║        	                   ^^^^^^
 //│ ╟── The upper bound of character ranges must be a single character.
-//│ ║  l.81: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.77: 	pattern BadRange = "yolo" ..= "swag"
 //│ ╙──      	                              ^^^^^^
 
 // Ranges denote sets of single characters or numbers, so the scrutinee is

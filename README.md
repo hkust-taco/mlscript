@@ -21,6 +21,13 @@ The latter is in active development, on the `hkmc2` branch.
 The continuous integration (CI) has been set up to only test this version of the compiler.
 The `mlscript` branch contains the last commit where the CI was set up to test the old version-1 compiler.
 
+Most notably, **`hkmc2` does not yet reimplement type checking**
+(outside of the experimental InvalML mini-type checker,
+which constitutes the artifact of our [OOPSLA '25 paper](https://cse.hkust.edu.hk/~parreaux/publication/oopsla25/)).
+We are working on a new type checker that will be more expressive and more efficient than the old one,
+but still need to finish other tasks before it can be integrated.
+
+
 The webpage at https://hkust-taco.github.io/mlscript/ still demonstrates the old version-1 compiler.
 An online demo of hkmc2 (already somewhat outdated) can be found at https://mlscript.fun/.
 

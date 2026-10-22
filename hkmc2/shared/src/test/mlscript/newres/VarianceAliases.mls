@@ -1,0 +1,105 @@
+:.
+
+// Identity aliases preserve a negative occurrence, including nested aliases.
+// The callback must handle Base, just as it would for a direct T -> Int domain.
+:ge
+class Base
+class Child(val value: Int) extends Base
+type Identity[A] = A
+type Callback[A] = Identity[Identity[A]] -> Int
+class Receiver[T](val value: T) with
+  fun use(f: Callback[T]): Int = f(value)
+let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+receiver.use(x => x.value)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.13: 	receiver.use(x => x.value)
+//│ ║        	                  ^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.12: 	let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+//│ ╙──      	                                                                      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ receiver = Receiver(Base)
+
+// A negative nominal argument has the same bounds through a forward alias.
+:ge
+class Base
+class Child(val value: Int) extends Base
+class Receiver[T](val value: T) with
+  fun accept(xs: Items[T]): () =
+    xs.push(value)
+    ()
+type Items[A] = Array[Identity[A]]
+type Identity[A] = A
+let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+let xs = mut [Child(1)]
+receiver.accept(xs)
+xs.1.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.36: 	xs.1.value
+//│ ║        	^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.33: 	let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+//│ ╙──      	                                                                      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ receiver = Receiver(Base)
+//│ xs = [Child(1), Base]
+
+// Captured and local alias binders must see the same composed polarity.
+:ge
+class Base
+class Child(val value: Int) extends Base
+class Receiver[T](val value: T) with
+  type Callbacks[A] = {direct: T -> Int, indirect: A -> Int}
+  fun use(callbacks: Callbacks[T]): Int =
+    callbacks.direct(value) + callbacks.indirect(value)
+let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+receiver.use({direct: x => x.value, indirect: x => x.value})
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.56: 	receiver.use({direct: x => x.value, indirect: x => x.value})
+//│ ║        	                           ^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.55: 	let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+//│ ╙──      	                                                                      ^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.56: 	receiver.use({direct: x => x.value, indirect: x => x.value})
+//│ ║        	                                                   ^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'value'
+//│ ║  l.55: 	let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+//│ ╙──      	                                                                      ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ receiver = Receiver(Base)
+
+// Valid callbacks retain the same behavior after alias expansion.
+:expect 7
+class Base
+class Child(val value: Int) extends Base
+type Identity[A] = A
+type Callback[A] = Identity[Identity[A]] -> Int
+class Receiver[T](val value: T) with
+  fun use(f: Callback[T]): Int = f(value)
+let receiver = (new Receiver[Base](new Base) as Receiver[in Child out Base])
+receiver.use(x => 7)
+//│ = 7
+//│ receiver = Receiver(Base)
+
+// A covariant declaration keeps the output projection of the nested argument.
+:expect 8
+class Base
+class Child(val value: Int) extends Base
+class Box[out T](val item: T)
+class Holder[T](val box: Box[T])
+let holder = (new Holder[Child](new Box[Child](Child(8))) as Holder[out Child])
+holder.box.item.value
+//│ = 8
+//│ holder = Holder(Box(Child(8)))
+
+// A written output wildcard overrides declaration-site contravariance.
+:expect 9
+class Base
+class Child(val value: Int) extends Base
+class Box[in T](val item: T)
+class Holder[T](val box: Box[out T])
+let holder = (new Holder[Child](new Box[out Child](Child(9))) as Holder[out Child])
+holder.box.item.value
+//│ = 9
+//│ holder = Holder(Box(Child(9)))

@@ -1,5 +1,4 @@
-:js
-:deforest
+:.
 
 
 object A
@@ -44,11 +43,11 @@ fun bar(v) = if v is
   B then 2
 foo(bar, 123)
 //│ deforest > >>> fusing >>>
+//│ deforest > A⁰ ->
+//│ deforest > 	match: v⁰
+//│ deforest > A⁰ ->
+//│ deforest > 	match: v⁰
 //│ deforest > B⁰ ->
-//│ deforest > 	match: v⁰
-//│ deforest > A⁰ ->
-//│ deforest > 	match: v⁰
-//│ deforest > A⁰ ->
 //│ deforest > 	match: v⁰
 //│ deforest > <<< fusing <<<
 //│ = 1

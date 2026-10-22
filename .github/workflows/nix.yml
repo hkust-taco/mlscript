@@ -10,6 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      # Runner speed varies between runs, which shows up in test durations and time-outs.
+      # Record the hardware so slow runners can be identified.
+      - name: Show runner hardware
+        run: |
+          echo "nproc: $(nproc)"
+          lscpu
+          free -h
       - name: Install Nix
         uses: DeterminateSystems/nix-installer-action@main
       - uses: rrbutani/use-nix-shell-action@v1

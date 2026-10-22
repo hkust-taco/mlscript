@@ -1,3 +1,4 @@
+:.
 :js
 :patMatConsequentSharingThreshold 1
 // ^ force dedup even for small consequents
@@ -53,11 +54,11 @@ if
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    let-split σ = y is []=1 and
-//│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple‹module:Tuple›.)get‹term:Tuple/get›(y⁰, 0)
+//│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple‹module:Tuple⁰›.)get‹term:Tuple⁰/get⁰›(y⁰, 0)
 //│ >      let b = tmp:element0$⁰
 //│ >      else
-//│ >        let x
-//│ >        x = 1
+//│ >        let x⁰
+//│ >        x⁰ = 1
 //│ >        builtin:+⁰(x⁰, b⁰)
 //│ >    x is true and
 //│ >      z is true then 1

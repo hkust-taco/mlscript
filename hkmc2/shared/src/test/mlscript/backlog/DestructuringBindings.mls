@@ -1,43 +1,44 @@
+:.
 :js
 :todo
 
 
 [a, b] => [b, a]
 //│ ╔══[COMPILATION ERROR] Illegal constraint syntax.
-//│ ║  l.5: 	[a, b] => [b, a]
+//│ ║  l.6: 	[a, b] => [b, a]
 //│ ╙──     	 ^
 //│ ╔══[COMPILATION ERROR] Illegal constraint syntax.
-//│ ║  l.5: 	[a, b] => [b, a]
+//│ ║  l.6: 	[a, b] => [b, a]
 //│ ╙──     	    ^
 //│ ╔══[COMPILATION ERROR] Name not found: b
-//│ ║  l.5: 	[a, b] => [b, a]
+//│ ║  l.6: 	[a, b] => [b, a]
 //│ ╙──     	           ^
 //│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.5: 	[a, b] => [b, a]
+//│ ║  l.6: 	[a, b] => [b, a]
 //│ ╙──     	              ^
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (constrained type)
-//│ ║  l.5: 	[a, b] => [b, a]
+//│ ║  l.6: 	[a, b] => [b, a]
 //│ ╙──     	          ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple
-//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.24: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	           ^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple
-//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.24: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	                   ^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.24: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	                             ^
 //│ ╔══[COMPILATION ERROR] Name not found: c
-//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.24: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	                                  ^
 //│ ╔══[COMPILATION ERROR] Name not found: b
-//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.24: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	                                        ^
 //│ ╔══[COMPILATION ERROR] Name not found: d
-//│ ║  l.23: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ║  l.24: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──      	                                             ^
 
 

@@ -63,6 +63,7 @@ object Keyword:
   // val `;` = Keyword(";", ascPrec, eqPrec)
   
   val `if` = Keyword("if", N, nextPrec)
+  val `when` = Keyword("when", N, curPrec)
   val `while` = Keyword("while", N, curPrec)
   val `assert` = Keyword("assert", N, curPrec)
   type `assert` = `assert`.type
@@ -152,6 +153,7 @@ object Keyword:
   val `forall` = Keyword("forall", N, N)
   val `exists` = Keyword("exists", N, N)
   val `null` = Keyword("null", N, N)
+  val `dyn` = Keyword("dyn", N, N)
   val `undefined` = Keyword("undefined", N, N)
   val `abstract` = Keyword("abstract", N, N)
   val `constructor` = Keyword("constructor", N, N)
@@ -175,7 +177,16 @@ object Keyword:
   // * Currently, the precedence of normal operators starts at the maximum precedence of keywords,
   // * so we need to start the precedence of `=>` to account for that.
   val `=>` = Keyword("=>", S(maxPrec.get + charPrecList.length), lamRhsPrec)
-
+  
+  // * `f \ a` means `f(a)` (see `Elaborator.backslashApp`). `\` binds as tightly as selection on the left
+  // * (`maxPrec.get + charPrecList.length - 1` is the precedence of selection)
+  // * and, on the right, as loosely as the body of a lambda, so that, eg,
+  // * `xs |> f \ a + 1` means `xs |> f(a + 1)` and `f \ key: a` means `f(key: a)`;
+  // * this also makes it right-associative, so that `f \ g \ a` means `f(g(a))`.
+  // * However, chains of `\` starting new lines are left-associative (see `Parser.newlineLeftPrec`),
+  // * so that `f` followed by lines `\ a` and `\ b` means `f(a, b)`.
+  val backslash = Keyword("\\", S(maxPrec.get + charPrecList.length - 1), lamRhsPrec)
+  
   // * `new` is a strange keyword:
   // * it has a very high precedence that sits between that of selection and that of application.
   // * Indeed, `new Foo().bar` should parse as `(new Foo()).bar`, not `new (Foo().bar)`,
@@ -206,23 +217,23 @@ object Keyword:
   
   type Prefix =
     `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `yield`.type |
-    `yield*`.type | `import`.type | `|`.type | `&`.type
+    `yield*`.type | `import`.type | `|`.type | `&`.type | `=>`.type | `when`.type
   
   type Infix =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type |
     `|`.type | `&`.type | `do`.type |
-    `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type | `#`.type
+    `where`.type | `with`.type | `and`.type | `or`.type | `then`.type | `else`.type | `#`.type | backslash.type
   
   type InfixSplittable =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type |
-    `where`.type | `with`.type | `of`.type
+    `where`.type | `with`.type | `of`.type | backslash.type
   
   type Ellipsis = `...`.type | `..`.type
   
-  type IfLike = `if`.type | `while`.type
+  type IfLike = `if`.type | `while`.type | `when`.type
   type SplitLike = IfLike | `case`.type
   
   type LetLike = `let`.type | `set`.type
   
-  type Modifier = `in`.type | `out`.type | `mut`.type | `abstract`.type | `declare`.type | `data`.type | `virtual`.type | `override`.type |
+  type Modifier = `in`.type | `out`.type | `mut`.type | `abstract`.type | `declare`.type | `data`.type | `virtual`.type | `override`.type | `open`.type |
     `public`.type | `private`.type | `staged`.type

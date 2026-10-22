@@ -1,0 +1,43 @@
+:.
+:js
+open annotations
+
+// Marker annotations have separate locations for each occurrence.
+:w
+@inline
+class First
+@inline
+class Second
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.7: 	@inline
+//│ ╙──     	^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.9: 	@inline
+//│ ╙──     	^^^^^^^
+
+// Annotations on let bindings point to the annotation occurrence.
+:w
+@tailrec
+let value = 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.20: 	@tailrec
+//│ ╙──      	^^^^^^^^
+//│ value = 1
+
+// Annotations on bodyless functions retain their own locations.
+:w
+@inline
+fun abstractFunction()
+//│ ╔══[WARNING] Only functions with a body may be marked as @inline.
+//│ ║  l.29: 	@inline
+//│ ╙──      	^^^^^^^
+
+// This error is emitted from lowered IR after the prefix has become a temporary.
+:ftc
+:ge
+let index = 0
+[(x => x)].(index)(1)
+//│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
+//│ ║  l.39: 	[(x => x)].(index)(1)
+//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ index = 0

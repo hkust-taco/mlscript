@@ -101,6 +101,9 @@ new Point(0.0, 0.0, 0.0)
 
 :e
 new Foo("1!5!")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.103: 	new Foo("1!5!")
+//│ ╙──       	        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
 //│ ║  l.103: 	new Foo("1!5!")
 //│ ║         	        ^^^^^^
@@ -126,16 +129,13 @@ let p = new Point(1.0, 0.0, 0.0) in p.Point#x
 let t = new Some(true) in t.Some#value
 //│ Type: Bool
 
-:fixme
-:pe
+:e
 42.Some#value
-//│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
-//│ ║  l.131: 	42.Some#value
-//│ ╙──       	   ^
-//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator '#').
-//│ ║  l.131: 	42.Some#value
-//│ ╙──       	   ^^^^^^^^^^
-//│ Type: Num
+//│ ╔══[COMPILATION ERROR] Type error in field selection
+//│ ║  l.133: 	42.Some#value
+//│ ║         	^^^^^^^^^^^^^
+//│ ╙── because: cannot constrain  Int  <:  Some[in 'A out 'A]
+//│ Type: ⊥
 
 
 data class Printer[T](f: T -> Str)
@@ -186,10 +186,10 @@ let tf = new TFun(inc) in tf.TFun#f("1")
 
 data class Pair[A, B](fst: A, snd: B)
 
-(new Pair(42, true)).Pair#fst
+new Pair(42, true).Pair#fst
 //│ Type: Int
 
-(new Pair(42, true)).Pair#snd
+new Pair(42, true).Pair#snd
 //│ Type: Bool
 
 
@@ -278,7 +278,7 @@ f
 f(x => x).Foo#x
 //│ Type: ('A) ->{⊥} 'A
 
-g => (new Foo(g)).Foo#x
+g => new Foo(g).Foo#x
 //│ Type: ('A -> 'A) ->{⊥} ('A) ->{⊥} 'A
 
 

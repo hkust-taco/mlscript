@@ -3,6 +3,7 @@ package semantics
 
 import hkmc2.utils.*, shorthands.*, syntax.*, Tree.{BoolLit, Keywrd}
 import Keyword.{`do`, `else`, `then`}, utils.TL, Elaborator.{Ctx, State}
+import hkmc2.document.*
 
 /**
   * Similar to `Split` but contains nested patterns (i.e., class `Pattern`).
@@ -28,6 +29,19 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
       case Cons(head, tail) => Cons(head, tail ~~: this)
       case els: Else => els
       case End => this
+  
+  def showSub(using Scope, ShowCfg, Raise, IfLikeForm): Document = this match
+    case Cons(head, End) => doc"${summon[IfLikeForm].midStr} ${head.show}"
+    case Cons(head, tail) => doc" and { #{  # ${head.show}; # ${tail.show} #}  # }"
+    // case Else(default) => doc" else ${default.show}"
+    case Else(default) => doc" ${summon[IfLikeForm].midStr} ${default.show}"
+    case End => "‹unhandled›"
+  def show(using Scope, ShowCfg, Raise, IfLikeForm): Document = this match
+    case Cons(head, End) => doc"${head.show}"
+    case Cons(head, tail) => doc"${head.show}; # ${tail.show}"
+    // case Else(default) => doc"${summon[IfLikeForm].midStr} ${default.show}"
+    case Else(default) => doc"else ${default.show}"
+    case End => ""
   
   protected def children: Vector[Located] = this match
     case Cons(branch, tail) => Vector.double(branch, tail)
@@ -74,13 +88,13 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
   /** This field is designed to be compatible with bbML. */
   private var _expandedSplit: Opt[Split] = N
   
-  /**  */
-  def getExpandedSplit(using TL, Ctx, State, Raise): Split = _expandedSplit.getOrElse:
+  /** Expand patterns after resolution, with symbol queries authorized by erasure. */
+  def getExpandedSplit(using codegen.Erasure, TL, Ctx, State, Raise, Config): Split = _expandedSplit.getOrElse:
     val split = Split.from(this)
     _expandedSplit = S(split)
     split
   
-  def mkClone(using State): SimpleSplit = this match
+  def mkClone(using State, codegen.Erasure): SimpleSplit = this match
     case Cons(head, tail) => Cons(head match
       case Head.Match(scrutinee, pattern, consequent) =>
         Head.Match(scrutinee.mkClone.asInstanceOf, pattern, consequent.mkClone) // TODO: clone `pattern`?
@@ -93,6 +107,7 @@ end SimpleSplit
 
 object SimpleSplit:
   
+  /** Only used by InvalML as a hack. */
   object IfThenElse:
     def unapply(split: SimpleSplit): Opt[(Term, Term, Term)] = split match
       case Cons(
@@ -106,8 +121,16 @@ object SimpleSplit:
   
   /** Represents a single branch of a simple split. */
   enum Head extends AutoLocated:
+    // Elaboration binds scrutinee expressions first: this reference must name
+    // a LocalVarSymbol, allowing its sub-scrutinees to be shared by binding.
     case Match(scrutinee: Term.Ref, pattern: Pattern, consequent: SimpleSplit)
     case Let(binding: LocalVarSymbol, term: Term)
+    
+    def show(using Scope, ShowCfg, Raise, IfLikeForm): Document = this match
+      case Match(scrutinee, pattern, consequent) =>
+        // doc"${scrutinee.show} is ${pattern.show} and { #{  # ${consequent.show} #}  # }"
+        doc"${scrutinee.show} is ${pattern.show}${consequent.showSub}"
+      case Let(binding, term) => doc"let ${binding.showName} = ${term.show}"
     
     def subTerms: Vector[Term] = this match
       case Match(scrutinee, pattern, consequent) =>

@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -46,18 +47,18 @@
 
 
 2 + 2
-\print()
+.> print
 //│ > 4
 
 2 + 2
-  \print()
+  .> print
 //│ > 2
 //│ = "2()"
 
 
 let xs = [1, 2, 3]
 let ys = [4, 5, 6]
-fun len(xs) = xs.length
+fun len(xs: Array) = xs.length
 //│ xs = [1, 2, 3]
 //│ ys = [4, 5, 6]
 
@@ -84,7 +85,7 @@ let r = 10 in r
 //│   rhs = Tup of Ls of
 //│     IntLit of 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.74: 	let r = 10 in r
+//│ ║  l.75: 	let r = 10 in r
 //│ ╙──      	              ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
@@ -160,11 +161,12 @@ let x
   .a
 //│ = 2
 
-:re
+// * The placeholder is delimited by `|>`, not by the parentheses,
+// * so this selects field `a` of the record in the lambda body.
 2
   |> (a: _)
     .a
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+//│ = 2
 
 :ge
 :re
@@ -172,7 +174,7 @@ let x
   |> (a: _)
 .a
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
-//│ ║  l.173: 	.a
+//│ ║  l.175: 	.a
 //│ ╙──       	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -203,7 +205,7 @@ let x
 
 // :dp
 2 {+ 1} * 2
-//│ = 4
+//│ = 6
 
 {2
   + 1} * 2
@@ -212,12 +214,9 @@ let x
 {2 { + 1 }} * 2
 //│ = 6
 
-:e // Note: this used to parse as a juxtaposition (the curly braces were treated equally to an indented section)
-2 { * 1 { + 2 } }
-//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.216: 	2 { * 1 { + 2 } }
-//│ ╙──       	      ^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+// * Note: `{+ ...}` binds looser than `*`, so it attaches to the whole product (not parsed as a refinement)
+2 { * 3 { + 2 } }
+//│ = 8
 
 // :dp
 2
@@ -263,7 +262,7 @@ let x
   |> print
 //│ > 3
 
-let incr = _ + 1
+let incr = => _ + 1
 //│ incr = fun incr
 
 // :dp
@@ -322,10 +321,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.323: 	2, * 3
+//│ ║  l.322: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.323: 	2, * 3
+//│ ║  l.322: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -349,7 +348,7 @@ let incr = _ + 1
 //│ = 16
 
 module Arr with
-  val len = _.length
+  val len = (xs: Array) => xs.length
 
 let
   xs = [1, 2]
@@ -379,9 +378,9 @@ xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.379: 	,+
+//│ ║  l.378: 	,+
 //│ ║         	  ^
-//│ ║  l.380: 	ys |> Arr.len
+//│ ║  l.379: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -395,9 +394,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.395: 	+,
+//│ ║  l.394: 	+,
 //│ ║         	  ^
-//│ ║  l.396: 	ys |> Arr.len
+//│ ║  l.395: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -428,10 +427,10 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.429: 	new Foo(1) ,is Foo
+//│ ║  l.428: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.429: 	new Foo(1) ,is Foo
+//│ ║  l.428: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -439,10 +438,10 @@ new Foo(1) ,is Foo
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.440: 	is Foo
+//│ ║  l.439: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.440: 	is Foo
+//│ ║  l.439: 	is Foo
 //│ ╙──       	   ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

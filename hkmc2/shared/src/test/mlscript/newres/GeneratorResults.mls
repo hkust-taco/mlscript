@@ -1,0 +1,18 @@
+:.
+
+// A generator call returns an iterator even when its body returns a literal.
+// Resolution currently propagates that literal instead of the iterator shape.
+@annotations.generator
+fun generated() = 1
+
+:fixme
+:expect {value: 1, done: true}
+generated().next()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.10: 	generated().next()
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Integer literal does not contain member 'next'
+//│ ║  l.6: 	fun generated() = 1
+//│ ╙──     	                  ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '{value: 1, done: true}', got: 'undefined'

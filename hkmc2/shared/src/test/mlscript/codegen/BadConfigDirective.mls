@@ -1,11 +1,14 @@
+:.
 :js
 
 
 :w
 @config(tailRecOpt: false) "hi"
 //│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.6: 	@config(tailRecOpt: false) "hi"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This annotation is not supported on string literal terms.
-//│ ║  l.5: 	@config(tailRecOpt: false) "hi"
+//│ ║  l.6: 	@config(tailRecOpt: false) "hi"
 //│ ╙──     	                           ^^^^
 //│ = "hi"
 
@@ -18,20 +21,43 @@
 :e
 #lang(1.0.x)
 //│ ╔══[COMPILATION ERROR] Unknown language version '1.0.x'
-//│ ║  l.19: 	#lang(1.0.x)
+//│ ║  l.22: 	#lang(1.0.x)
 //│ ║        	      ^^^^^
-//│ ╙── Available language versions: 0.2.x, 0.3.x
+//│ ╙── Available language versions: 0.2.x, 0.3.1, 0.3.x
+
+// * Only canonical version names are accepted
+:e
+#lang(0.03.1)
+//│ ╔══[COMPILATION ERROR] Unknown language version '0.03.1'
+//│ ║  l.30: 	#lang(0.03.1)
+//│ ║        	      ^^^^^^
+//│ ╙── Available language versions: 0.2.x, 0.3.1, 0.3.x
 
 
 :e
 #lang(unknownLanguageField: true)
 //│ ╔══[COMPILATION ERROR] Unsupported Language argument
-//│ ║  l.27: 	#lang(unknownLanguageField: true)
+//│ ║  l.38: 	#lang(unknownLanguageField: true)
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 :e
 #lang(versionName: "custom")
 //│ ╔══[COMPILATION ERROR] Unsupported Language argument
-//│ ║  l.34: 	#lang(versionName: "custom")
+//│ ║  l.45: 	#lang(versionName: "custom")
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^
+
+
+:w
+:deforest
+let deforest = 0
+//│ ═══[WARNING] The deforestation optimization requires definition lifting to be enabled.
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ deforest = 0
+
+:w
+#config(deforest: Some(Deforest(mono: false)), liftDefns: None)
+//│ ═══[WARNING] The deforestation optimization requires definition lifting to be enabled.
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<

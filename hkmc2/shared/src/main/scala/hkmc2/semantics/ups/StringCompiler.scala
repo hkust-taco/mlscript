@@ -165,10 +165,11 @@ object StringCompiler:
     * decide whether string-shaped patterns should be absorbed into a single
     * `Str` head backed by an automaton.
     */
-  def containsStringNode(pattern: ExPat): Bool = pattern.reduce[Bool](_.exists(identity)):
+  def containsStringNode(pattern: ExPat): Bool = pattern.components.exists:
     case _: (Concat | CharClass) => true
+    case _ => false
 
-class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Raise):
+class StringCompiler(using context: Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise):
   import StringCompiler.*, tl.*
 
   // ------------------------------------------------------------------------
@@ -605,9 +606,9 @@ class StringCompiler(using context: Context)(using tl: TL)(using Ctx, State, Rai
         val actionId = actionSources.indexWhere(_ eq term) match
           case -1 =>
             val params = transformSymbols.map: symbol =>
-              Param(FldFlags.empty, correspondence(symbol), N, Modulefulness.none)
+              Param.simple(correspondence(symbol))
             actionSources += term
-            actions += Term.Lam(PlainParamList(params), term.mkClone)
+            actions += Term.Lam(PlainParamList(params)(N), term.mkClone)
             actions.size - 1
           case index => index
         val argSlots = transformSymbols.map(slotOf)

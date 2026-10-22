@@ -1,0 +1,51 @@
+:.
+
+open annotations
+
+// Resolved member selections in transform closures survive cloning into both
+// whole-body automata and compiled multi-matchers. Only committed parses run them.
+:expect [true, false, true, false, 2]
+let calls = 0
+fun upper(text: Str) =
+  set calls += 1
+  text.toUpperCase()
+pattern Upper = (("a" as text) => upper(text)) ~ "b"
+fun plain(input: Str) = input is Upper
+fun compiled(input: Str) = input is @compile Upper
+[plain("ab"), plain("ax"), compiled("ab"), compiled("ax"), calls]
+//│ = [true, false, true, false, 2]
+//│ calls = 2
+
+// Recursive deferred frames keep each activation's bindings with the typed
+// runtime tables.
+:expect ["1,2,3,$", "1,2,3,$"]
+pattern Digit = "0" ..= "9"
+pattern Listed = (((Digit as h) ~ (Listed as t)) => h + "," + t) | ("" => "$")
+fun plain(input: Str) = if input is Listed as result then result else "no"
+fun compiled(input: Str) = if input is @compile Listed as result then result else "no"
+[plain("123"), compiled("123")]
+//│ = ["1,2,3,$", "1,2,3,$"]
+
+// FIXME: The new resolver does not expose generated prefix matcher methods.
+// Their runtime protocol is covered separately in ups/regex/Prefix.mls.
+:fixme
+:expect MatchSuccess(["1,2,3,$", "x"], null)
+Listed.unapplyStringPrefix("123x")
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.33: 	Listed.unapplyStringPrefix("123x")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Pattern 'Listed' does not contain member 'unapplyStringPrefix'
+//│ ║  l.23: 	pattern Listed = (((Digit as h) ~ (Listed as t)) => h + "," + t) | ("" => "$")
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: 'MatchSuccess(["1,2,3,$", "x"], null)', got: 'undefined'
+
+// The absorbed string branch coexists with constructor and literal branches;
+// multiple labels for the same constructor still select their own transforms.
+:expect ["ab", Box("ABC"), Box("ABD"), "no", 7, "no"]
+class Box(val value: Str)
+pattern Upper = (("a" ~ "b") as text) => "AB"
+pattern Mixed = ("a" ~ "b") | Box(Upper ~ ("c" => "C")) | Box(Upper ~ ("d" => "D")) | 7
+fun read(input) = if input is @compile Mixed as result then result else "no"
+[read("ab"), read(Box("abc")), read(Box("abd")), read(Box("abe")), read(7), read(8)]
+//│ = ["ab", Box("ABC"), Box("ABD"), "no", 7, "no"]

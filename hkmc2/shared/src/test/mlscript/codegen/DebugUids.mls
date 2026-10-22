@@ -1,0 +1,45 @@
+:js
+
+
+// Imported symbols retain disambiguated names, but only the current unit's symbols get numeric UIDs.
+:silent
+fs.writeFileSync("target/DebugUidLibrary.mls", "#lang(0.3.x)\nmodule DebugUidLibrary with\n  fun value() = 23\n")
+
+:noCodeGen
+import "../../../../../../target/DebugUidLibrary.mls"
+
+
+@dbg('lowering, showUids: true, out: File("../../../../../../target/DebugUids.log"))
+fun with_uids(x) = DebugUidLibrary.value() + x
+@dbg('lowering, showUids: false, out: File("../../../../../../target/DebugNoUids.log"))
+fun without_uids(x) = DebugUidLibrary.value() + x
+
+:expect false
+new RegExp("DebugUidLibrary[⁰-⁹]*‹[0-9]+›").test(fs.readFileSync("target/DebugUids.log", "utf8"))
+//│ = false
+
+:expect true
+:silent
+let trace = fs.readFileSync("target/DebugUids.log", "utf8")
+trace.includes("DebugUidLibrary") && new RegExp("x[⁰-⁹]*‹[0-9]+›").test(trace)
+
+:expect false
+new RegExp("‹[0-9]+›").test(fs.readFileSync("target/DebugNoUids.log", "utf8"))
+//│ = false
+
+
+// A nested printer override must end before the next definition is lowered.
+@dbg('lowering, showUids: false, out: File("../../../../../../target/DebugNestedUids.log"))
+fun nested_uids(x) =
+  @dbg(showUids: true, out: File("../../../../../../target/DebugInnerUids.log"))
+  fun inner(y) = y
+  fun sibling(z) = z
+  inner(x) + sibling(x)
+
+:expect true
+new RegExp("‹[0-9]+›").test(fs.readFileSync("target/DebugInnerUids.log", "utf8"))
+//│ = true
+
+:expect false
+new RegExp("‹[0-9]+›").test(fs.readFileSync("target/DebugNestedUids.log", "utf8"))
+//│ = false

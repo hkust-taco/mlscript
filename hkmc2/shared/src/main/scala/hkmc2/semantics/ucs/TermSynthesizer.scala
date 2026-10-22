@@ -27,14 +27,14 @@ trait TermSynthesizer(using State):
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
     (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).resolve
   protected final def `new`(cls: Term, args: Ls[Term], label: Str): Term.New = 
-    Term.New(cls, args, N)(N)
+    Term.New(cls, args, N)(FlowSymbol.neww(), N)
   protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(false, fields.toList)
   
   protected final def splitLet(sym: LocalVarSymbol, term: Term)(inner: Split): Split =
     Split.Let(sym, term, inner)
   
-  protected final def param = Param(FldFlags.empty, _, N, Modulefulness.none)
-  protected final def paramList(params: Param*) = PlainParamList(params.toList)
+  protected final def param = Param.simple
+  protected final def paramList(params: Param*) = PlainParamList(params.toList)(N)
     
   private lazy val runtimeRef: Term.Ref = State.runtimeSymbol.ref().resolve
 
@@ -59,10 +59,10 @@ trait TermSynthesizer(using State):
   protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple", State.tupleSymbol), "slice", State.tupleSliceSymbol)
   protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple", State.tupleSymbol), "lazySlice", State.tupleLazySliceSymbol)
   protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple", State.tupleSymbol), "get", State.tupleGetSymbol)
-  protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str", State.strSymbol), "startsWith", State.strStartsWithSymbol)
-  protected lazy val stringGet = sel(sel(runtimeRef, "Str", State.strSymbol), "get", State.strGetSymbol)
-  protected lazy val stringTake = sel(sel(runtimeRef, "Str", State.strSymbol), "take", State.strTakeSymbol)
-  protected lazy val stringLeave = sel(sel(runtimeRef, "Str", State.strSymbol), "leave", State.strLeaveSymbol)
+  protected lazy val stringStartsWith = sel(sel(runtimeRef, "StrOps", State.strSymbol), "startsWith", State.strStartsWithSymbol)
+  protected lazy val stringGet = sel(sel(runtimeRef, "StrOps", State.strSymbol), "get", State.strGetSymbol)
+  protected lazy val stringTake = sel(sel(runtimeRef, "StrOps", State.strSymbol), "take", State.strTakeSymbol)
+  protected lazy val stringLeaveOut = sel(sel(runtimeRef, "StrOps", State.strSymbol), "leaveOut", State.strLeaveOutSymbol)
   protected lazy val strPatMatchWhole = sel(sel(runtimeRef, "StrPat", State.strPatSymbol), "matchWhole", State.strPatMatchWholeSymbol)
   protected lazy val strPatParseWhole = sel(sel(runtimeRef, "StrPat", State.strPatSymbol), "parseWhole", State.strPatParseWholeSymbol)
   protected lazy val strPatParsePrefix = sel(sel(runtimeRef, "StrPat", State.strPatSymbol), "parsePrefix", State.strPatParsePrefixSymbol)
@@ -93,7 +93,7 @@ trait TermSynthesizer(using State):
   
   /** Make a term that looks like `runtime.Str.drop(t, n)`. */
   protected final def callStringDrop(t: Term.Ref, n: Int, label: Str) =
-    app(stringLeave, tup(fld(t), fld(int(n))), label)
+    app(stringLeaveOut, tup(fld(t), fld(int(n))), label)
 
   /** Aggregate the transform closures of a compiled string pattern into a
     * tuple for the matching engine. The closures may originate from different
@@ -107,11 +107,11 @@ trait TermSynthesizer(using State):
       case N => tuple // No sub-locations at all: nothing to mix.
 
   protected final def tempLet(dbgName: Str, term: Term)(inner: TempSymbol => Split): Split =
-    val s = TempSymbol(N, dbgName)
+    val s = TempSymbol(N, erasedType = N, dbgName)
     Split.Let(s, term, inner(s))
 
   protected final def plainTest(cond: Term, dbgName: Str = "cond")(inner: => Split): Split =
-    val s = TempSymbol(N, dbgName)
+    val s = TempSymbol(N, erasedType = N, dbgName)
     Split.Let(s, cond, Branch(s.safeRef, inner) ~: Split.End)
 
   protected final def makeBindings(fields: Ls[RcdField | RcdSpread]): Term =

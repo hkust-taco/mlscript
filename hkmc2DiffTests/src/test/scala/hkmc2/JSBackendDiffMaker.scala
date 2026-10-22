@@ -20,10 +20,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
   val debugLowering = NullaryCommand("dl")
   val noCodeGen = NullaryCommand("noCodeGen")
-  val js = NullaryCommand("js")
+  val js = FlagCommand(false, "js")
   val showSanitizedJS = NullaryCommand("ssjs")
   val showJS = NullaryCommand("sjs")
   val showRepl = NullaryCommand("showRepl")
+  val await = NullaryCommand("await")
   val traceJS = NullaryCommand("traceJS")
   val expect = Command("expect"): ln =>
     ln.trim
@@ -44,18 +45,16 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)(using throw _)
   val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)(using throw _)
   
-  val ltl = new TraceLogger:
-    override def doTrace = debugLowering.isSet || scope.exists:
-      showUCS.get.getOrElse(Set.empty).contains
-    override def emitDbg(str: String): Unit = output(str)
+  val ltl = new DiffTraceLogger(indentWhenDisabled = true):
+    protected def phaseEnabled(config: Config.Debug): Bool = config.lowering
+    protected def forceTrace(scope: Opt[Str]): Bool =
+      debugLowering.isSet || scope.exists(showUCS.get.getOrElse(Set.empty).contains)
   
-  val dtl = new TraceLogger:
-    override def doTrace = debugOptimizations.isSet
-    override def emitDbg(str: String): Unit = output(str)
+  val dtl = new DiffTraceLogger(indentWhenDisabled = true):
+    protected def phaseEnabled(config: Config.Debug): Bool = config.optimizations
+    protected def forceTrace(scope: Opt[Str]): Bool = debugOptimizations.isSet
   
-  val replTL = new TraceLogger:
-    override def doTrace = showRepl.isSet
-    override def emitDbg(str: String): Unit = output(str)
+  val replTL = commandLogger(showRepl)
   
   lazy val host =
     hostCreated = true
@@ -86,12 +85,14 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case Import(sym = sym: VarSymbol) => sym
       .toSet
     
-    def definedValues(includeNonTerms: Bool): Ls[(Str, BoundSymbol, N)] =
+    def definedValues(includeNonTerms: Bool): Ls[(Str, ScopedSymbol, N)] =
       import Elaborator.Ctx.*
       curCtx.env.iterator.flatMap:
-        case (nme, e @ (_: RefElem | SelElem(base = RefElem(_: InnerSymbol)))) =>
+        case (nme, e @ (_: RefElem)) =>
           e.symbol match
-          case S(ts: TermSymbol) if ts.k.isInstanceOf[syntax.ValLike] => S((nme, ts, N))
+          case S(ts: TermSymbol) =>
+            softAssert(false, s"Unexpected term symbol in the top-level environment: ${ts.showDbg}")
+            N
           case S(ts: BlockMemberSymbol)
             if includeNonTerms
             || ts.trmImplTree.exists(t => t.k.isInstanceOf[syntax.ValLike] && (t.k isnt syntax.Ins))
@@ -105,10 +106,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     
     lazy val blockPrinter =
       given ShowCfg = ShowCfg(
+        showErasedTypes = showIRErasedTypes.isSet,
         showExpansionMappings = false,
         showFlowSymbols = true,
         debug = debug.isSet,
       )
+      given Elaborator.Ctx = curCtx
       Printer()
     val print = (p: codegen.Program) =>
       blockPrinter.worksheet(p)(using irPrintingScp).mkString(output.ColWidth)
@@ -121,6 +124,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     
     if noCodeGen.isUnset then
       given Elaborator.Ctx = curCtx
+      given codegen.Erasure = codegen.Erasure(blk)
       val low = ltl.givenIn:
         new codegen.Lowering()(using summon[Config], ltl, summon[Raise], loweringState, curCtx, summon[SymbolPrinter])
           with codegen.LoweringTraceLog(traceJS.isSet)
@@ -130,7 +134,18 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       val optimized = ltl.givenIn:
         val customPipeline = new CompilationPipeline:
+          private var lastShownIR: Str = null
+          private var lastShownTree: Str = null
+          private var passIdx = 0
           override def passHook(passName: Str, before: Program, after: Program) =
+            def showPipelineStage(title: Str, prog: Program): Unit =
+              def show(last: Str, str: Str): Str =
+                outputSeparator(title)
+                if last == str then output("(unchanged)") else output(str)
+                str
+              if showPipeline.isSet then lastShownIR = show(lastShownIR, print(prog))
+              if showPipelineTree.isSet then lastShownTree = show(lastShownTree, prog.showAsTree)
+            end showPipelineStage
             // TODO: Preserve object identity in Lifter
             if (passName =/= "Lifter") && (before isnt after) && (before === after) then
               output(s"/!\\ Warning: object identity between equal objects was not preserved by ${passName}")
@@ -149,22 +164,24 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
                   else false
                 }
               rec(before.main, after.main)
+            if passIdx === 0 then showPipelineStage("pipeline #0 (input)", before)
+            passIdx += 1
+            showPipelineStage(s"pipeline #${passIdx} ${passName}", after)
           override def preOptimizeHook(prog: Program) =
             if showLoweredTree.isSet then
               outputSeparator("Lowered IR Tree")
               output(prog.showAsTree)
+            else DebugOutputHandler.showLoweredTree(prog)(outputDebugSection)
             if showIR.isSet || showIRLines.isSet then
-              given ShowCfg = ShowCfg(
-                showExpansionMappings = false,
-                showFlowSymbols = true,
-                debug = debug.isSet,
-              )
-              val irStr = Printer().worksheet(prog)(using irPrintingScp).mkString(output.ColWidth)
+              val irStr = print(prog)
               val sloc = irStr.count(_ == '\n') + 1
               if showIRLines.isSet then output(s"Lines of IR: ${sloc}")
               if showIR.isSet then
                 outputSeparator("Lowered IR")
                 output(irStr)
+              else if config.debug.showIR then
+                outputDebugSection("Lowered IR", irStr, config.debug.out)
+            else DebugOutputHandler.showIR(prog, false, blockPrinter, output.ColWidth)(outputDebugSection)(using config, irPrintingScp)
             super.preOptimizeHook(prog)
         customPipeline.run(lowered, print, symbolsToPreserve, dtl)
       
@@ -173,12 +190,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       if showOptimizedIR.isSet then
         outputSeparator("Optimized IR")
-        given ShowCfg = ShowCfg(
-          showExpansionMappings = false,
-          showFlowSymbols = true,
-          debug = debug.isSet,
-        )
-        output(Printer().worksheet(optimized)(using irPrintingScp).mkString(output.ColWidth))
+        output(print(optimized))
+      else DebugOutputHandler.showIR(optimized, true, blockPrinter, output.ColWidth)(outputDebugSection)(using config, irPrintingScp)
       if showOptimizedTree.isSet then
         outputSeparator("Optimized IR Tree")
         output(optimized.showAsTree)
@@ -188,10 +201,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       }
   end processTerm
   
-  type ComputeDefinedValues = (includeNonTerms: Bool) => Ls[(Str, ValueSymbol, Opt[Str])]
+  type ComputeDefinedValues = (includeNonTerms: Bool) => Ls[(Str, ScopedSymbol, Opt[Str])]
   
   def processIRBlock
-        (pgrm: Program, definedValues: ComputeDefinedValues, symbolsToPreserve: Set[BoundSymbol])
+        (pgrm: Program, definedValues: ComputeDefinedValues, symbolsToPreserve: Set[ScopedSymbol])
         (using Config, Raise, Elaborator.Ctx): Unit =
     
     if js.isSet then
@@ -202,10 +215,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // val nestedScp = codegen.js.Scope(S(baseScp), curCtx.outer, collection.mutable.Map.empty) // * not needed
       
       val importedSymbols: Set[ScopedSymbol] = pgrm.imports.iterator.map(_._1).toSet
-      val exportedScoped = symbolsToPreserve.collect:
-        case sym: ScopedSymbol if !importedSymbols.contains(sym) => sym
+      val exportedScoped = symbolsToPreserve -- importedSymbols
       
-      val resSym = new TempSymbol(N, "block$res")
+      val resSym = new TempSymbol(N, erasedType = N, "block$res")
       
       val resNme = nestedScp.allocateName(resSym)
       
@@ -268,7 +280,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // * Sometimes the JS block won't execute due to a syntax or runtime error so we always set this first
       host.execute(s"$resNme = undefined")
       
-      mkQuery(preStr, jsStr): stdout =>
+      val awaitResult = (if await.isSet then s"; $resNme = await $resNme" else "")
+      mkQuery(preStr, jsStr + awaitResult): stdout =>
         stdout.splitSane('\n').init // should always ends with "undefined" (TODO: check)
           .foreach: line =>
             output(s"> ${line}")
@@ -281,10 +294,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           val le =
             import codegen.*
             Assign(
-              Elaborator.State.noSymbol,
+              NoSymbol,
               Call(
                 Elaborator.State.runtimeSymbol.asSimpleRef.selSN("printRaw"),
-                (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun),
+                (Arg(N, sym.asPath) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N),
               End())
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)

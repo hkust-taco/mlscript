@@ -20,9 +20,19 @@ abstract class MLsDiffMaker extends DiffMaker:
   val runtimeSourceFile: io.Path = predefFile.up / "Runtime.mls" // * Contains MLscript runtime sources
   val termFile: io.Path = predefFile.up / "Term.mjs" // * Contains MLscript runtime term definitions
   val blockFile: io.Path = predefFile.up / "Block.mjs" // * Contains MLscript runtime block definitions
-  val optionFile: io.Path = predefFile.up / "Option.mjs" // * Contains MLscipt runtime option definition
+  // Reflection must use the same option constructors as Block.mls.
+  val optionFile: io.Path = predefFile.up / "Option.mjs"
   
   val wd = file.up
+  
+  val importDot = NullaryCommand(".", () =>
+    given Config = mkConfig
+    importFile(wd / io.RelPath(".mls"), verbose = false, includeDirectives = true)
+  )
+  val importUpDot = NullaryCommand("..", () => doImportUp(wd))
+  def doImportUp(wd: io.Path) =
+    given Config = mkConfig
+    importFile(wd.up / io.RelPath(".mls"), verbose = false, includeDirectives = true)
   
   val silent = NullaryCommand("silent")
   val dbgElab = NullaryCommand("de")
@@ -38,6 +48,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val showResolve = NullaryCommand("r")
   val showResolvedTree = NullaryCommand("rt")
   val showFlows = FlagCommand(false, "sf")
+  val showResl = FlagCommand(false, "sr")
   val showLoweredTree = NullaryCommand("lot")
   val ppLoweredTreeOld = NullaryCommand("slot", () => output("Option ':slot' is deprecated, use ':sir' instead."))
   val showIR = NullaryCommand("sir")
@@ -45,8 +56,14 @@ abstract class MLsDiffMaker extends DiffMaker:
   val checkIR = NullaryCommand("checkIR")
   val showOptimizedIR = NullaryCommand("soir")
   val showOptimizedTree = NullaryCommand("olot")
+  val showPipeline = NullaryCommand("showPipeline")
+  val showPipelineTree = NullaryCommand("showPipelineTree")
   val debugOptimizations = NullaryCommand("dopt")
   val noOptimizations = NullaryCommand("noOpt")
+  val showIRErasedTypes = NullaryCommand("siret", () =>
+    if showIR.isUnset && showOptimizedIR.isUnset then
+      output("Option ':siret' only has an effect if ':sir' or ':soir' is also set")
+  )
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
   val funcToCls = NullaryCommand("ftc")
@@ -68,6 +85,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   // * Compiler configuration
   
   val noSanityCheck = NullaryCommand("noSanityCheck")
+  val noCheckCasts = NullaryCommand("noCheckCasts")
   val noFreeze = NullaryCommand("noFreeze")
   val noModuleCheck = NullaryCommand("noModuleCheck")
   val effectHandlers = Command("effectHandlers")(_.trim)
@@ -81,9 +99,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val inlineThreshold = Command("inlineThreshold")(_.trim.toInt)
   val noTailRecOpt = NullaryCommand("noTailRec")
   val deforest = Command("deforest")(_.trim)
-  val etaExpansion = Command("etaExpansion")(_.trim)
   val patMatConsequentSharingThreshold = Command("patMatConsequentSharingThreshold")(_.trim.toInt)
-  val deadParamElim = Command("deadParamElim")(_.trim)
+  val flowBasedOpt = Command("flowBasedOpt")(_.trim)
 
   private val DeforestKnownFlags = Set(
     "mono",
@@ -96,8 +113,8 @@ abstract class MLsDiffMaker extends DiffMaker:
     "logAccumulator",
     "noLogAccumulator",
   )
-  private val EtaExpansionKnownFlags = Set("debug", "on", "off")
-  private val DeadParamElimKnownFlags = Set("debug", "mono", "poly", "off")
+  private val FlowBasedOptKnownFlags =
+    Set("debug", "debugEta", "debugDpe", "debugDce", "on", "off", "mono", "poly")
   
   def mkConfig: Config =
     import Config.*
@@ -128,6 +145,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       language = Config.Language.default,
       baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true, checkUnreachable = true)),
+      checkCasts = !noCheckCasts.isSet,
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
         debug = effectHandlers.get.contains("debug"),
         stackSafety = stackSafe.get.flatMap:
@@ -156,21 +174,12 @@ abstract class MLsDiffMaker extends DiffMaker:
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,
 
-      etaExpansion =
-        val etaExpansionFlags =
-          if etaExpansion.isUnset then Set.empty[Str]
-          else parseFlags(etaExpansion.get)
-        if etaExpansion.isUnset then S(EtaExpansion.default)
-          else
-            reportUnknownFlags(":etaExpansion", etaExpansionFlags, EtaExpansionKnownFlags)
-            reportExclusiveFlagConflict(":etaExpansion", etaExpansionFlags, "on", "off")
-            if etaExpansionFlags.contains("off") then N
-            else S(EtaExpansion.withDebug(etaExpansionFlags.contains("debug"))),
       qqEnabled = importQQ.isSet,
       funcToCls = funcToCls.isSet,
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
       noModuleCheck = noModuleCheck.isSet,
+      debug = Config.Debug.default,
       optimizer = Optimizer(
         deforest = Opt.when(deforest.isSet):
           val flags = parseFlags(deforest.get)
@@ -192,44 +201,51 @@ abstract class MLsDiffMaker extends DiffMaker:
           inlineThreshold.get.getOrElse(Config.default.inlineThreshold))),
         deadBranchRemoval = Config.default.deadBranchRemoval,
         deadCodeElim = noOptimizations.isUnset,
-        deadParamElim =
-          if deadParamElim.isUnset then S(DeadParamElim.default)
+        flowBasedOpt =
+          if flowBasedOpt.isUnset then S(FlowBasedOpt.default)
           else
-            val flags = parseFlags(deadParamElim.get)
-            reportUnknownFlags(":deadParamElim", flags, DeadParamElimKnownFlags)
-            reportExclusiveFlagConflict(":deadParamElim", flags, "mono", "poly")
-            if flags.contains("off") && (flags - "off").nonEmpty then
-              output(s"$errMarker ':deadParamElim off' conflicts with other flags")
+            val flags = parseFlags(flowBasedOpt.get)
+            reportUnknownFlags(":flowBasedOpt", flags, FlowBasedOptKnownFlags)
+            reportExclusiveFlagConflict(":flowBasedOpt", flags, "on", "off")
+            reportExclusiveFlagConflict(":flowBasedOpt", flags, "mono", "poly")
             if flags.contains("off") then N
-            else
-              S(DeadParamElim(FlowAnalysisConfig(
-                debug = flags.contains("debug"),
-                mono = !flags.contains("poly"),
-                trackNonAffine = false,
-                trackAccumulator = false,
-                logNonAffine = false,
-                logAccumulator = false,
-              ))),
+            else S(FlowBasedOpt(FlowAnalysisConfig(
+              debug = flags.contains("debug"),
+              mono = !flags.contains("poly"),
+              trackNonAffine = false,
+              trackAccumulator = false,
+              logNonAffine = false,
+              logAccumulator = false,
+              debugEta = flags.contains("debugEta"),
+              debugDpe = flags.contains("debugDpe"),
+              debugDce = flags.contains("debugDce"),
+            ))),
         dataFlowAnalysis = noOptimizations.isUnset,
-      )
+      ),
+      checkInvariants = true,
     )
   
   
   val importCmd = Command("import"): ln =>
     given Config = mkConfig
-    importFile(file.up / io.RelPath(ln.trim), verbose = silent.isUnset)
+    importFile(file.up / io.RelPath(ln.trim), verbose = silent.isUnset, includeDirectives = false)
   
   // eg: `:ucs desugared normalized lowered`
   val showUCS = Command("ucs"): ln =>
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   
   
-  given Elaborator.State = new Elaborator.State:
-    override def dbg: Bool =
-      dbgParsing.isSet
-      || dbgElab.isSet
-      || dbgResolving.isSet
-      || debug.isSet
+  protected lazy val debugContext = new DebugContext:
+    override protected def forceUids: Bool = dbgParsing.isSet || dbgResolving.isSet || debug.isSet
+  protected lazy val debugOutputHandler = DebugOutputHandler(cctx.fs, str => output(str))
+
+  protected def outputDebugSection(title: Str, contents: Str, out: Config.DebugOutput): Unit = out match
+    case Config.DebugOutput.StdIO =>
+      outputSeparator(title)
+      output(contents)
+    case _ => debugOutputHandler.emit(out, s"${title}\n${contents}")
+
+  given Elaborator.State = new Elaborator.State
   
   
   protected lazy val dbgScp: utils.Scope = // for unique symbol debug-printing only
@@ -241,42 +257,39 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   val dbgPrinter: SymbolPrinter = new SymbolPrinter(dbgScp):
-    override def preProcess(t: Product): Product = super.preProcess:
+    override protected def preProcess(t: Product): Product =
       case class Unexpanded(origin: Resolvable)
       t match
-      case t: Resolvable if t.hasExpansion => t.expanded
-      case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
-      case t => t
-    override def postProcess(t: Product): Str =
-      super.postProcess(t) + (
-        if showLocations.isSet then
-          t match
+        case t: Resolvable if t.hasExpansion => t.expanded
+        case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
+        case t => t
+    override protected def postProcess(t: Product): Str =
+      if showLocations.isSet then
+        t match
           case t: Located => t.toLoc.fold(" loc[none]"): loc =>
             val (sl, _, sc) = loc.origin.fph.getLineColAt(loc.spanStart)
             val (el, _, ec) = loc.origin.fph.getLineColAt(loc.spanEnd)
             s" loc[$sl:$sc-$el:$ec]"
-        else ""
-      )
+          case _ => ""
+      else ""
   
   
-  val etl = new TraceLogger:
-    override def doTrace = dbgElab.isSet || scope.exists:
-      showUCS.get.getOrElse(Set.empty).contains
-    override def emitDbg(str: String): Unit = output(str)
-    override def trace[T](pre: => Str, post: T => Str = noPostTrace)(thunk: => T): T =
-      // * This override is for avoiding to increase the indentation when tracing if doTrace is false,
-      // * so that selectively-enabled tracing doesn't get strange indentation.
-      // * Perhaps this should be the default behavior of TraceLogger.
-      if doTrace then super.trace(pre, post)(thunk)
-      else thunk
+  protected abstract class DiffTraceLogger(indentWhenDisabled: Bool)
+      extends TraceLogger(debugContext, debugOutputHandler, indentWhenDisabled, prefix = "")(using dbgPrinter)
+
+  protected def commandLogger(command: Command[?]): TraceLogger =
+    new DiffTraceLogger(indentWhenDisabled = true):
+      protected def phaseEnabled(config: Config.Debug): Bool = false
+      protected def forceTrace(scope: Opt[Str]): Bool = command.isSet
+
+  val etl = new DiffTraceLogger(indentWhenDisabled = false):
+    protected def phaseEnabled(config: Config.Debug): Bool = config.elaboration
+    protected def forceTrace(scope: Opt[Str]): Bool =
+      dbgElab.isSet || scope.exists(showUCS.get.getOrElse(Set.empty).contains)
   
-  val rtl = new TraceLogger:
-    override def doTrace = dbgResolving.isSet
-    override def emitDbg(str: String): Unit = output(str)
+  val rtl = commandLogger(dbgResolving)
   
-  val ftl = new TraceLogger:
-    override def doTrace = dbgFlow.isSet
-    override def emitDbg(str: String): Unit = output(str)
+  val ftl = commandLogger(dbgFlow)
   
   var curCtx = Elaborator.State.init
   var curICtx = Resolver.ICtx.empty
@@ -295,6 +308,11 @@ abstract class MLsDiffMaker extends DiffMaker:
       val preludeArtifact = cctx.getPrelude(preludeFile)
       curCtx = preludeArtifact.ctx
       prelude = preludeArtifact.ctx
+    else
+      // The compiler loads the prelude as one compilation unit. Its mutually
+      // referring host signatures must see declarations across blank lines here
+      // too; worksheet block boundaries are not part of the prelude's semantics.
+      consumeEmptyLines.setCurrentValue(())
     super.run()
   
   
@@ -307,18 +325,23 @@ abstract class MLsDiffMaker extends DiffMaker:
       ()
     if file != preludeFile then
       val cfg = mkConfig
-      given Config = cfg.copy(optimizer = cfg.optimizer.copy(
+      // The synthetic Predef import bootstraps the host environment; it is not
+      // a WASM test block, even when :wasm is enabled at the top of the file.
+      given Config = cfg.copy(target = CompilationTarget.JS, optimizer = cfg.optimizer.copy(
         deforest = cfg.deforest.map: d =>
           d.copy(config = d.config.copy(
             debug = false,
             logAccumulator = false,
             logNonAffine = false
           )),
-        deadParamElim = cfg.deadParamElim.map: d =>
+        flowBasedOpt = cfg.flowBasedOpt.map: d =>
           d.copy(config = d.config.copy(
             debug = false,
             logAccumulator = false,
-            logNonAffine = false
+            logNonAffine = false,
+            debugEta = false,
+            debugDpe = false,
+            debugDce = false,
           ))
       ))
       processTrees(
@@ -328,7 +351,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     super.init()
   
   
-  def importFile(file: io.Path, verbose: Bool)(using Config): Unit =
+  def importFile(file: io.Path, verbose: Bool, includeDirectives: Bool)(using Config): Unit =
     
     // val raise: Raise = throw _
     given raise: Raise = d =>
@@ -343,7 +366,21 @@ abstract class MLsDiffMaker extends DiffMaker:
     
     // Stupid hack to ignore diff-test directives like `:ignore`
     def dropCrap(ts: Ls[syntax.Stroken -> Loc]): Ls[syntax.Stroken -> Loc] = ts match
-      case (syntax.IDENT(":", true), _) :: (syntax.IDENT(nme, false), _) :: rest =>
+      case (syntax.IDENT(":..", true), _) :: rest =>
+        doImportUp(file.up)
+        dropCrap(rest.dropWhile(_._1 isnt syntax.NEWLINE).drop(1))
+      case (syntax.IDENT(prefix @ (":" | ":!"), true), _) :: (syntax.IDENT(nme, false), _) :: rest =>
+        if includeDirectives then
+          val ln = rest.takeWhile(_._1 isnt syntax.NEWLINE)
+          def render(ts: Ls[syntax.Stroken -> Loc]): Str = ts match
+            case (st, _) :: rest =>
+              val str = st match
+                case syntax.IDENT(nme, _) => nme
+                case syntax.SPACE => " "
+                case _ => TODO(st)
+              str + render(rest)
+            case Nil => ""
+          processLines(s"$prefix$nme ${render(ln)}" :: Nil, reprintCommands = false)
         dropCrap(rest.dropWhile(_._1 isnt syntax.NEWLINE).drop(1))
       case _ => ts
     
@@ -362,46 +399,52 @@ abstract class MLsDiffMaker extends DiffMaker:
     val elab = Elaborator(etl, wd, Ctx.empty)
     try
       val resBlk = new syntax.Tree.Block(res)
-      val (e, newCtx) = elab.importFrom(resBlk)
+      val (e, newCtx) = elab.importFrom(resBlk, resBlk.definedSymbols.iterator.map(_._2).toList)
       if file.toString === runtimeSourceFile.toString then
         summon[Elaborator.State].initRuntimeSymbolsFromBlock(e)
       val ctxWithImports = newCtx.withMembers(resBlk.definedSymbols)
       if verbose then
         output(s"Imported ${resBlk.definedSymbols.size} member(s)")
       curCtx = ctxWithImports
+      if includeDirectives then extractConfig(e.stats)
       processTerm(e, inImport = true)
     catch
       case err: Throwable =>
         uncaught(err)
   
-  given tl: TraceLogger with
-    override def doTrace = debug.isSet
-    override def emitDbg(str: String): Unit = output(str)
+  given tl: TraceLogger = commandLogger(debug)
   
   
   def processOrigin(origin: Origin)(using Raise): Unit =
     val oldCtx = curCtx
     
-    given Config = configModify(mkConfig)
+    val baseConfig = configModify(mkConfig)
+    given Config = baseConfig
     
-    val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
+    val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet):
+      override protected def doPrintDbg(msg: Str): Unit = output(msg)
     val tokens = lexer.bracketedTokens
     
     if showParse.isSet || dbgParsing.isSet then
       output(syntax.Lexer.printTokens(tokens))
     
-    val rules = syntax.ParseRules()
-    val p = new syntax.Parser(origin, tokens, rules, raise, dbg = dbgParsing.isSet):
+    val parser = new syntax.Parser(origin, tokens, syntax.ParseRules(), raise, dbg = dbgParsing.isSet):
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
-    val res = p.parseAll(p.block(allowNewlines = true))
+    val res = parser.parseAll(parser.block(allowNewlines = true))
+    val phaseConfig = Config.elaborationConfig(res, file.up)
+    debugContext.configure(phaseConfig.debug)
     
     // If parsed tree is displayed, don't show the string serialization.
-    if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet then
+    if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet && !phaseConfig.debug.showParsedTree then
       output(s"Parsed:${res.map("\n\t"+_.showDbg).mkString}")
     
     if showParsedTree.isSet then
       outputSeparator(s"Parsed tree")
       res.foreach(t => output(t.showAsTree))
+    else if phaseConfig.debug.showParsedTree then
+      outputDebugSection("Parsed tree", res.map(_.showAsTree).mkString("\n"), phaseConfig.debug.out)
+    else DebugOutputHandler.showParsedDefinitions(res, phaseConfig, file.up): (tree, out) =>
+      outputDebugSection("Parsed tree", tree.showAsTree, out)
     
     // if showParse.isSet then
     //   output(s"AST: $res")
@@ -418,30 +461,55 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   private var blockNum = 0
   
+  def extractConfig(stats: Ls[semantics.Statement]): Unit =
+    // Extract SetConfig statements and update persistent config
+    stats.foreach:
+      case sc: semantics.SetConfig =>
+        val prev = configModify
+        configModify = cfg => sc.modify(prev(cfg))
+      case _ => ()
+  
   def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
-    val elab = Elaborator(etl, file.up, prelude)
+    val blk = new syntax.Tree.Block(trees)
+    val elaborationConfig = Config.elaborationConfig(blk, file.up)
+    debugContext.configure(elaborationConfig.debug)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     // given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
     given Elaborator.Ctx = curCtx.nestLocal(s"block:${blockNum}")
-    val blk = new syntax.Tree.Block(trees)
-    val (e, newCtx) = elab.topLevel(blk)
+    // Match the compiler's prelude bootstrap: builtin lookup uses the original
+    // declaration symbols, including while those declarations are elaborated.
+    if file == preludeFile then prelude = summon[Elaborator.Ctx].withMembers(blk.definedSymbols)
+    val elab =
+      given Config = elaborationConfig
+      Elaborator(etl, file.up, prelude)
+    val (e, newCtx) = elaborationConfig.givenIn(elab.topLevel(blk))
     curCtx = newCtx
     
-    // Extract SetConfig statements and update persistent config
-    e.stats.foreach:
-      case sc: semantics.SetConfig =>
-        val prev = configModify
-        configModify = cfg => sc.modify(prev(cfg))
-      case _ => ()
+    extractConfig(e.stats)
     
     // If elaborated tree is displayed, don't show the string serialization.
-    if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet then
+    if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet && !elaborationConfig.debug.showElaboratedTree then
       output(s"Elab: ${e.showDbg}")
     if showElaboratedTree.isSet then
       outputSeparator(s"Elaborated tree")
       output(e.showAsTree)
+    else DebugOutputHandler.showElaboratedTree(e, elaborationConfig)(outputDebugSection)
+    DebugOutputHandler.showElaboratedTerm(e, elaborationConfig, output.ColWidth)(outputDebugSection)(using flowScp)
+    
+    if showResl.isSet then
+      import semantics.ShowCfg
+      given ShowCfg = ShowCfg(
+        showErasedTypes = showIRErasedTypes.isSet,
+        showExpansionMappings = true,
+        showFlowSymbols = true,
+        debug = debug.isSet,
+      )
+      outputSeparator(s"Resolved")
+      output:
+        import document.*
+        doc" #{ ${e.showTopLevel(using flowScp)} #} ".mkString(output.ColWidth)
     
     processTerm(e, inImport = false)
       
@@ -450,11 +518,13 @@ abstract class MLsDiffMaker extends DiffMaker:
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     given Ctx = curCtx
     given Config = Config.extractConfigFromStats(trm)
+    debugContext.configure(config.debug)
     if file.toString =/= runtimeSourceFile.toString && file.toString =/= preludeFile.toString then
       summon[Elaborator.State].initRuntimeSymbolsFromFile(runtimeSourceFile, prelude)(
         using summon[TL], summon[Raise], cctx)
-    val resolver = Resolver(rtl)
-    curICtx = resolver.traverseBlock(trm)(using curICtx)
+    if !config.language.useNewResolution then
+      val resolver = Resolver(rtl)
+      curICtx = resolver.traverseBlock(trm)(using curICtx)
     
     if showResolve.isSet then
       output(s"Resolved: ${trm.showDbg}")
@@ -470,6 +540,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       if showFlows.isSet then
         import semantics.ShowCfg
         given ShowCfg = ShowCfg(
+          showErasedTypes = showIRErasedTypes.isSet,
           showExpansionMappings = true,
           showFlowSymbols = true,
           debug = debug.isSet,

@@ -1,0 +1,15 @@
+#lang(0.3.x, strictResolution: true)
+
+module AsyncLibrary with
+  @annotations.async
+  fun inferred() = {answer: 53}
+  @annotations.async
+  fun typed(value: Int): {answer: Int} = {answer: value}
+  fun curried: Int -> Int -> Int
+  @annotations.async
+  fun curried(x)(y) = x + y
+  @annotations.async
+  fun getter: Int = 56
+  class Methods with
+    @annotations.async
+    fun result(value: Int): Int = value

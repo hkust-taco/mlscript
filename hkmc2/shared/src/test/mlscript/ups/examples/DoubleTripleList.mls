@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations
@@ -102,8 +103,9 @@ let testList = 1 :: 2 :: Nil
 //│ testList = Cons(1, Cons(2, Nil))
 
 withLog of () =>
-  testList.head
-  testList.tail
+  // Observe the installed JS getters dynamically; Cons's val reads are pure.
+  testList!head
+  testList!tail
   ()
 //│ > access the `head` of [1, 2]
 //│ > access the `tail` of [1, 2]

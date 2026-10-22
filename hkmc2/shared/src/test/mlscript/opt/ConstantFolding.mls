@@ -1,3 +1,4 @@
+:.
 :js
 
 
@@ -26,7 +27,7 @@ in
   set y += 1
   print(x + y)
 //│ ⬤ Simplif. iter. 1
-//│ Captured variables: HashSet()
+//│ Captured variables: Set()
 //│ !! Change triggered { x⁰ ~> 2 }
 //│ !! Change triggered { y⁰ ~> 2 }
 //│ !! Change triggered { tmp:tmp⁰ ~> 3 }
@@ -51,11 +52,11 @@ in
 //│ !! Change triggered { rm tmp:tmp¹ = 6 }
 //│ ▶ DCE:
 //│ >  return Predef⁰.print⁰(6)
-//│ Captured variables: HashSet()
+//│ Captured variables: Set()
 //│ ⬤ Simplif. iter. 3
-//│ Captured variables: HashSet()
+//│ Captured variables: Set()
 //│ ⬤ Simplif. iter. 1
-//│ Captured variables: HashSet()
+//│ Captured variables: Set()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ return Predef⁰.print⁰(6)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

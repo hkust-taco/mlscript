@@ -61,6 +61,7 @@ class BlockTraverser:
   def applyResult(r: Result): Unit = r match
     case r @ Call(fun, argss) => applyPath(fun); argss.foreach(_.foreach(applyArg))
     case Instantiate(mut, cls, argss) => applyPath(cls); argss.foreach(_.foreach(applyArg))
+    case Cast(value, target, _) => applyResult(value)
     case l @ Lambda(params, body) => applyLam(l)
     case Tuple(mut, elems) => elems.foreach(applyArg)
     case Record(mut, fields) => fields.foreach:
@@ -68,10 +69,13 @@ class BlockTraverser:
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Unit = p match
+    case p @ SuperSelect(qual, base, _) =>
+      applyPath(qual); applyPath(base); p.symbol.traverse
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual); applyPath(fld)
     case p @ Select(qual, name) =>
       applyPath(qual); p.symbol.foreach(_.traverse)
+    case c @ Cast(value, _, _) => applyResult(value)
     case v: Value => applyValue(v)
   
   def applyValue(v: Value): Unit = v match
@@ -95,11 +99,12 @@ class BlockTraverser:
   
   def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
     val ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-      privateFields, publicFields, preCtor, ctor, mod, bufferable) = defn
+      privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion) = defn
     own.foreach(_.traverse)
     isym.traverse
     sym.traverse
     ctorSym.foreach(_.traverse)
+    termCompanion.foreach(_.traverse)
     paramsOpt.foreach(applyParamList)
     auxParams.foreach(applyParamList)
     parentPath.foreach(applyPath)

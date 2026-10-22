@@ -1,3 +1,4 @@
+:.
 :js
 
 import "../../../mlscript-compile/Iter.mls"
@@ -7,9 +8,9 @@ import "../../../mlscript-compile/apps/parsing-web-demo/Examples.mls"
 
 :silent
 val examples = (Examples.examples |> MutMap.values).sort of
-  (a, b) => a.name.localeCompare(b.name)
+  (a: Examples.Example, b: Examples.Example) => a.name.localeCompare(b.name)
 
-examples Iter.each of case entry then
+examples Iter.each of (entry: Examples.Example) =>
   print of "Testing example: " + entry.name
   Test.example of entry.source
 //│ > Testing example: Extensible Syntax

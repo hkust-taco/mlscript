@@ -1,3 +1,4 @@
+:.
 :js
 
 open annotations
@@ -8,21 +9,21 @@ open annotations
 fun trimStart(str) =
   if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
-//│ ║  l.9: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
-//│ ╙──     	                                                            ^^^^
+//│ ║  l.10: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ╙──      	                                                            ^^^^
 
 :fixme
 fun trimStart(str) =
   if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
-//│ ║  l.16: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║  l.17: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                                                            ^^^^
 
 :fixme
 fun trimStart(str) =
   if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
-//│ ║  l.23: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ║  l.24: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
 //│ ╙──      	                                                          ^^^^
 
 
@@ -32,16 +33,16 @@ fun trimStart(str) =
 fun trimStart(str) =
   if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.33: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║  l.34: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ║        	                                          ^
 //│ ╟── found a lone annotation instead
-//│ ║  l.33: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║  l.34: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.33: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║  l.34: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                                          ^
-//│ ╔══[COMPILATION ERROR] Name not found: rest
-//│ ║  l.33: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: rest
+//│ ║  l.34: 	  if str is (@compile((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                                                           ^^^^
 
 

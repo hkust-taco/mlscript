@@ -1,0 +1,43 @@
+:.
+
+// Source metadata is expanded at its lexical use, including inside functions.
+:expect true
+source.line > 0
+//│ = true
+
+:expect ""
+fun location() = source.name
+location()
+//│ = ""
+
+:expect "SourceMarker"
+module SourceMarker with
+  fun nested() = source.name
+SourceMarker.nested()
+//│ = "SourceMarker"
+
+:expect true
+source.file.endsWith("SourceLocations.mls")
+//│ = true
+
+// A captured reference still denotes the builtin module.
+:expect true
+fun line() = source.line
+line() > 0
+//│ = true
+
+// A user binding with the same name keeps ordinary member access.
+:expect [42, "user", "custom"]
+fun shadow() =
+  let source = (line: 42, name: "user", file: "custom")
+  [source.line, source.name, source.file]
+shadow()
+//│ = [42, "user", "custom"]
+
+:expect 1
+fun consecutiveLines() =
+  val first = source.line
+  val second = source.line
+  second - first
+consecutiveLines()
+//│ = 1

@@ -1,3 +1,5 @@
+#lang(0.3.x)
+
 import "./NofibPrelude.mls"
 import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
 open NofibPrelude
@@ -70,7 +72,7 @@ fun maxm(x, y) = if x is
 
 fun hash(cvs, k) = if k is K(_, a, z, n) then n + assoc(a, cvs) + assoc(z, cvs)
 
-fun select(p, x, ts_fs) = if ts_fs is [ts, fs] and
+fun select(p: Function, x, ts_fs) = if ts_fs is [ts, fs] and
   p(x) then [x :: ts, fs]
   else [ts, x :: fs]
 
