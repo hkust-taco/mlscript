@@ -1483,7 +1483,7 @@ that particular key. Resolution diagnoses such accesses at the use site before
 constructing a reference to the unavailable key. Closures that capture the key
 remain valid, as do keys available through an imported file, including its
 private file-level vals. The key must not be hoisted and shared between factory
-invocations. `newres/JsSymbol.mls` records these cases.
+invocations. `slop/JsSymbol.mls` records these cases.
 
 A key path that accesses a private member of a class or module in another file
 is rejected at the selection site. Such members use private accessor symbols

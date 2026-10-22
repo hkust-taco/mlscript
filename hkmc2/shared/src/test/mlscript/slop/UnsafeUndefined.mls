@@ -81,7 +81,7 @@ let unsafe = {id"undefined": 42} in unsafe.undefined
 //│ = 42
 
 
-// These checks inherit strict and eager resolution from newres/.mls.
+// These checks inherit strict and eager resolution from slop/.mls.
 // Undefined is not a legitimate alternative that can prevent target selection.
 :expect [0, 3]
 fun nonNullLength(value: Str | null | unsafe.undefined) =
