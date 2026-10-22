@@ -211,7 +211,7 @@ app((x, y?) => [x, y])
 //│ ║         	              ^^^^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.284: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+//│ ║  l.282: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 4 arguments but got 3
 

@@ -1,7 +1,5 @@
 #lang(0.3.x)
 
-open annotations { jsSymbol, fresh }
-
 declare type Any
 declare type Anything
 declare type Nothing
@@ -84,7 +82,7 @@ declare module RegExp
 
 declare class Set[V] {
   constructor(values?: Iterable[V] | null)
-  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[V]
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[V]
   val size: Int
   fun add(value: V): Set[V]
   fun has(value: V): Bool
@@ -98,7 +96,7 @@ declare module Set
 
 declare class Map[K, V] {
   constructor(entries?: Iterable[[K, V]] | null)
-  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[[K, V]]
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[[K, V]]
   val size: Int
   fun get(key: K): V | unsafe.undefined
   fun has(key: K): Bool
@@ -114,7 +112,7 @@ declare class Map[K, V] {
 declare class Iterator[out T] {
   fun next(): { value: T, done: Bool }
 }
-type Iterable[out A] = {@jsSymbol(Symbol.iterator) iterator: () -> Iterator[A]}
+type Iterable[out A] = {@annotations.jsSymbol(Symbol.iterator) iterator: () -> Iterator[A]}
 type IterableIterator[out A] = Iterator[A] & Iterable[A]
 
 declare module Map
@@ -225,7 +223,7 @@ declare class Num {
 }
 declare class Int extends Num
 declare class Str {
-  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[Str]
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[Str]
   val length: Int
   fun toString(): Str
   fun at(index: Int): Str | unsafe.undefined
@@ -262,7 +260,7 @@ declare class Class
 // the `.class` storage used by generated MLscript constructor functions.
 // The `val length` parameter also supports matching with `Array(length)`.
 declare class Array[T](val length: Int) {
-  @jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[T]
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[T]
   fun join(...separators): Str
   fun reverse(): Array[T]
   fun sort(...compare): Array[T]
@@ -323,7 +321,7 @@ declare module Symbol {
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
   // uninitialized `runtime` in the `Rendering` module.
   fun for: Str -> Symbol = ()
-  @fresh val iterator: Symbol
+  @annotations.fresh val iterator: Symbol
 }
 
 // MLwasm-specific types

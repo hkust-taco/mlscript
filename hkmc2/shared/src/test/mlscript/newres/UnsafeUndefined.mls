@@ -1,24 +1,34 @@
 :.
 
+
 :w
 undefined
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.4: 	undefined
+//│ ║  l.5: 	undefined
 //│ ╙──     	^^^^^^^^^
+
+
+fun oops = unsafe.undefined
+
+// * This used to throw, but we now emit `Unit` upon compiling MIR's `return undefined`
+:noInline
+print(oops)
+//│ > ()
+
 
 :w
 :expect [undefined]
 fun bareValue() = [undefined]
 bareValue()
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.11: 	fun bareValue() = [undefined]
+//│ ║  l.21: 	fun bareValue() = [undefined]
 //│ ╙──      	                   ^^^^^^^^^
 //│ = [undefined]
 
 :w
 type BareType = undefined
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.19: 	type BareType = undefined
+//│ ║  l.29: 	type BareType = undefined
 //│ ╙──      	                ^^^^^^^^^
 
 :w
@@ -26,7 +36,7 @@ type BareType = undefined
 fun barePattern(value) = if value is undefined then 1 else 0
 [barePattern(unsafe.undefined), barePattern(null)]
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.26: 	fun barePattern(value) = if value is undefined then 1 else 0
+//│ ║  l.36: 	fun barePattern(value) = if value is undefined then 1 else 0
 //│ ╙──      	                                     ^^^^^^^^^
 //│ = [1, 0]
 
@@ -37,7 +47,7 @@ fun bareLength(value: Str | BareType) =
   if value is ~undefined as text then text.length else 0
 [bareLength(unsafe.undefined), bareLength("abc")]
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.37: 	  if value is ~undefined as text then text.length else 0
+//│ ║  l.47: 	  if value is ~undefined as text then text.length else 0
 //│ ╙──      	               ^^^^^^^^^
 //│ = [0, 3]
 
@@ -81,3 +91,5 @@ fun optional(value?) = value
 :expect 42
 let unsafe = {id"undefined": 42} in unsafe.undefined
 //│ = 42
+
+

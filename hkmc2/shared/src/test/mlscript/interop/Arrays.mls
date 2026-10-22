@@ -67,7 +67,7 @@ Array()
 //│ ║        	^^^^^^^
 //│ ╟── Constructor of class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.263: 	declare class Array[T](val length: Int) {
+//│ ║  l.261: 	declare class Array[T](val length: Int) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
@@ -78,7 +78,7 @@ Array(1, 2, 3)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Array' expected 1 argument, but got 3
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.263: 	declare class Array[T](val length: Int) {
+//│ ║  l.261: 	declare class Array[T](val length: Int) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2, 3]
 

@@ -28,8 +28,8 @@ Empty.toString(1)
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'toString' expected 0 arguments, but got 1
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.10: 	  fun toString(): Str
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	  fun toString(): Str
+//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^
 //│ = "Empty"
 
 :expect "empty"

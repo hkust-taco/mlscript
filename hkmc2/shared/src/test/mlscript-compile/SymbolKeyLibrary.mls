@@ -1,5 +1,8 @@
 #lang(0.3.x)
 
+open annotations { jsSymbol, fresh }
+
+
 @fresh val fileKey = Symbol("file key")
 
 module SymbolKeyLibrary {
@@ -36,3 +39,5 @@ module SymbolKeyLibrary {
     }
     new Local
 }
+
+

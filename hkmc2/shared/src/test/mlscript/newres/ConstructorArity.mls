@@ -214,7 +214,7 @@ val makeNativeNumber = new NativeNumber
 //│ ╟── Use `new Number()` to construct an instance, or `=> new Number()` to create an explicit zero-argument lambda.
 //│ ╟── The constructor accepts an empty argument list.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.34: 	  constructor(value?)
+//│ ║  l.32: 	  constructor(value?)
 //│ ╙──      	              ^^^^^^
 //│ ╔══[WARNING] This 'new' expression partially applies class 'Number' instead of constructing an instance.
 //│ ║  l.208: 	val makeNativeNumber = new NativeNumber
@@ -222,7 +222,7 @@ val makeNativeNumber = new NativeNumber
 //│ ╟── Use `new NativeNumber()` to construct an instance, or `=> new NativeNumber()` to create an explicit zero-argument lambda.
 //│ ╟── The constructor accepts an empty argument list.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.34: 	  constructor(value?)
+//│ ║  l.32: 	  constructor(value?)
 //│ ╙──      	              ^^^^^^
 //│ = ["NaN", "NaN", "NaN", "NaN"]
 //│ makeNativeNumber = fun
@@ -243,10 +243,10 @@ fun extraErrorArgument() = new Error("message", {}, 3)
 //│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Error' expected 0 to 2 arguments, but got 3
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.132: 	declare class Error {
+//│ ║  l.130: 	declare class Error {
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
-//│ ║  l.133: 	  constructor(message?, options?)
+//│ ║  l.131: 	  constructor(message?, options?)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Foreign classes without a constructor list do not accept arbitrary arguments.

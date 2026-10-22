@@ -154,7 +154,7 @@ fun noCandidate(x) = x.absent
 //│ ║         	                   ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../../decls/Prelude.mls
-//│ ║  l.4: 	declare type Any
+//│ ║  l.2: 	declare type Any
 //│ ║       	             ^^^
 //│ ╟── Module 'M1' does not contain member 'absent'
 //│ ║  in Leniency.mls:4
@@ -194,7 +194,7 @@ eagerUnknown.u
 //│ ║         	                                                     ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../../decls/Prelude.mls
-//│ ║  l.4: 	declare type Any
+//│ ║  l.2: 	declare type Any
 //│ ╙──     	             ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ eagerUnknown = class M1 { u: 1 }

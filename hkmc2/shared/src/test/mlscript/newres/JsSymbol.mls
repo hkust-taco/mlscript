@@ -413,10 +413,10 @@ new SymbolKeyLibrary.FileReader().readPriv()
 //│ ║         	                                 ^^^^^^^^^
 //│ ╟── The private member is declared here.
 //│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
-//│ ║  l.6: 	  @fresh private val privateKey = Symbol("private key")
+//│ ║  l.9: 	  @fresh private val privateKey = Symbol("private key")
 //│ ║       	                     ^^^^^^^^^^
 //│ ╟── The keyed member 'readPriv' is defined here.
-//│ ║  l.29: 	    @jsSymbol(privateKey) fun readPriv() = 65
+//│ ║  l.32: 	    @jsSymbol(privateKey) fun readPriv() = 65
 //│ ╙──      	                              ^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
@@ -431,7 +431,7 @@ SymbolKeyLibrary.makeLocal(65).read()
 //│ ║         	                              ^^^^^
 //│ ╟── The key's root binding is defined here.
 //│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
-//│ ║  l.32: 	    @fresh val key = Symbol("factory key")
+//│ ║  l.35: 	    @fresh val key = Symbol("factory key")
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
@@ -506,10 +506,10 @@ new SymbolKeyLibrary.PrivatePathReader().read()
 //│ ║         	                                        ^^^^^
 //│ ╟── The private member is declared here.
 //│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
-//│ ║  l.16: 	  private module PrivateKeys {
+//│ ║  l.19: 	  private module PrivateKeys {
 //│ ║        	                 ^^^^^^^^^^^
 //│ ╟── The keyed member 'read' is defined here.
-//│ ║  l.20: 	    @jsSymbol(PrivateKeys.key) fun read() = 72
+//│ ║  l.23: 	    @jsSymbol(PrivateKeys.key) fun read() = 72
 //│ ╙──      	                                   ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."

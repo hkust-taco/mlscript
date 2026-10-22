@@ -25,7 +25,7 @@ new Object
 //│ ╟── Use `new Object()` to construct an instance, or `=> new Object()` to create an explicit zero-argument lambda.
 //│ ╟── The constructor accepts an empty argument list.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.9: 	  constructor(value?)
+//│ ║  l.7: 	  constructor(value?)
 //│ ╙──     	              ^^^^^^
 //│ = fun
 

@@ -239,7 +239,7 @@ invokeUnknown(...opaque([() => 95]))
 //│ ║         	                          ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.4: 	declare type Any
+//│ ║  l.2: 	declare type Any
 //│ ║       	             ^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'f' admits values of unknown shape.
@@ -264,7 +264,7 @@ inspectUnknown(...opaque([Box(96)]))
 //│ ║         	                          ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.4: 	declare type Any
+//│ ║  l.2: 	declare type Any
 //│ ║       	             ^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
@@ -299,7 +299,7 @@ invokeRest(...opaque([() => 97]), Box(0))
 //│ ║         	                          ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.4: 	declare type Any
+//│ ║  l.2: 	declare type Any
 //│ ║       	             ^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'f' admits values of unknown shape.
