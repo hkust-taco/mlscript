@@ -1109,10 +1109,11 @@ abstract class Parser(
       // * `?` and `?:` are ordinary operators, so that `a ?: b` applies a user-defined `?:` operator,
       // * while `y ?` and `y ?: Int` are not optional parameters.
       case (OP("?"), l0) :: rest
-      if prec < Keyword.eqPrec.get && acc.toLoc.exists(_.spanEnd === l0.spanStart) && (NOISE.get(rest) match
+      if prec < Keyword.eqPrec.get && acc.toLoc.exists(_.spanEnd === l0.spanStart)
+      && NOISE.get(rest).match
         case Nil | (_: NEWLINE_COMMA, _) :: _ => true
         case _ => false
-      ) =>
+      =>
         consume
         exprCont(Optional(acc).withLoc(acc.toLoc.fold(S(l0))(l => S(l ++ l0))), prec, allowNewlines = allowNewlines)
       case (OP("?:"), l0) :: _ if prec < Keyword.eqPrec.get && acc.toLoc.exists(_.spanEnd === l0.spanStart) =>
