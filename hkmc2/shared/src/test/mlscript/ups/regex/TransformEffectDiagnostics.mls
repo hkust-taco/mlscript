@@ -1,0 +1,165 @@
+:js
+:effectHandlers
+:lift
+
+open annotations
+
+abstract class Read with
+  fun read(): Str
+
+// Reject the handler syntax at the transform itself, even if it would handle
+// all its effects locally. The same check applies in condition-only matches.
+
+:e
+fun directHandler() =
+  "a" is ("" ~ ("a" => (
+    handle e = Read with
+      fun read()(k) = k("X")
+    in e.read()
+  )))
+//│ ╔══[COMPILATION ERROR] Effect handlers are not supported inside compiled string pattern transforms.
+//│ ║  l.16: 	    handle e = Read with
+//│ ║        	               ^^^^^^^^^
+//│ ║  l.17: 	      fun read()(k) = k("X")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.18: 	    in e.read()
+//│ ╙──      	^^^^^^^^^^^^^^^^
+
+
+// Known effect operations are evidence; missing @pure annotations are not.
+// Wrappers around an effect operation are diagnosed transitively.
+
+fun declaredEffect() = handlers.await(Promise.resolve("a"))
+
+:e
+fun explicitCall() = "a" is @compile ("" ~ ("a" => handlers.await(Promise.resolve("a"))))
+//│ ╔══[COMPILATION ERROR] Effect operations are not supported inside compiled string pattern transforms.
+//│ ║  l.35: 	fun explicitCall() = "a" is @compile ("" ~ ("a" => handlers.await(Promise.resolve("a"))))
+//│ ╙──      	                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun suspendCall(tag, resume) = "a" is ("" ~ ("a" => runtime.suspend(tag, resume)))
+//│ ╔══[COMPILATION ERROR] Effect operations are not supported inside compiled string pattern transforms.
+//│ ║  l.41: 	fun suspendCall(tag, resume) = "a" is ("" ~ ("a" => runtime.suspend(tag, resume)))
+//│ ╙──      	                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun handlerCall(tag, body) = "a" is ("" ~ ("a" => runtime.handle_suspension(tag, body)))
+//│ ╔══[COMPILATION ERROR] Effect operations are not supported inside compiled string pattern transforms.
+//│ ║  l.47: 	fun handlerCall(tag, body) = "a" is ("" ~ ("a" => runtime.handle_suspension(tag, body)))
+//│ ╙──      	                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+fun wrapper() = declaredEffect()
+
+:e
+fun wrappedCall() = "a" is ("" ~ ("a" => wrapper()))
+//│ ╔══[COMPILATION ERROR] Effect operations are not supported inside compiled string pattern transforms.
+//│ ║  l.32: 	fun declaredEffect() = handlers.await(Promise.resolve("a"))
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── While compiling this string pattern transform.
+//│ ║  l.55: 	fun wrappedCall() = "a" is ("" ~ ("a" => wrapper()))
+//│ ╙──      	                                         ^^^^^^^^^
+
+// Recursive helpers close the analysis worklist without needing @pure.
+fun repeat(n) = if n > 0 then "x" + repeat(n - 1) else "a"
+
+:expect "xxa!"
+if "a!" is (("a" => repeat(2)) ~ "!") as result then result
+//│ = "xxa!"
+
+fun identity(x) = x
+
+:expect "A!"
+if "a!" is (("a" => identity("A")) ~ "!") as result then result
+//│ = "A!"
+
+
+// Unknown higher-order callees remain accepted and use the runtime guard.
+// The ordinary function-value argument also remains usable.
+
+fun indirect(f) = if "a!" is (("a" => f()) ~ "!") as result then result
+
+:expect "A!"
+indirect(() => "A")
+//│ = "A!"
+
+:re
+handle e = Read with
+  fun read()(k) = k("X")
+in
+  indirect(() => e.read())
+//│ ═══[RUNTIME ERROR] Error: Effects cannot escape a compiled string pattern transform.
+
+// Creating a function value can handle effects before matching begins. The
+// initializer is not the callback's body and must not be analyzed as one.
+val callback =
+  handle e = Read with
+    fun read()(k) = k("ready")
+  in
+    let value = e.read()
+    () => value
+//│ callback = fun
+
+:expect "ready!"
+if "a!" is (("a" => callback()) ~ "!") as result then result
+//│ = "ready!"
+
+
+// Named prefix matchers and deferred recursive transforms use the same
+// validation. Definitions are rejected before any generated matcher can run.
+
+:e
+pattern PrefixEffect = ("a" => declaredEffect()) ~ "!"
+//│ ╔══[COMPILATION ERROR] Effect operations are not supported inside compiled string pattern transforms.
+//│ ║  l.32: 	fun declaredEffect() = handlers.await(Promise.resolve("a"))
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── While compiling this string pattern transform.
+//│ ║  l.112: 	pattern PrefixEffect = ("a" => declaredEffect()) ~ "!"
+//│ ╙──       	                               ^^^^^^^^^^^^^^^^
+
+:e
+pattern DeferredEffect = (("x" ~ DeferredEffect) => declaredEffect()) | "a"
+//│ ╔══[COMPILATION ERROR] Effect operations are not supported inside compiled string pattern transforms.
+//│ ║  l.32: 	fun declaredEffect() = handlers.await(Promise.resolve("a"))
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── While compiling this string pattern transform.
+//│ ║  l.121: 	pattern DeferredEffect = (("x" ~ DeferredEffect) => declaredEffect()) | "a"
+//│ ╙──       	                                                    ^^^^^^^^^^^^^^^^
+
+
+// Partial application does not execute the body. Fully applying the same
+// curried helper inside a transform does, so only that use is rejected.
+
+fun deferredHelper(value)(suffix) =
+  handle e = Read with
+    fun read()(k) = k(value)
+  in e.read() + suffix
+
+:expect "A!"
+if "a" is ("" ~ (("a" => deferredHelper("A")) as pending)) then pending("!")
+//│ = "A!"
+
+:e
+fun fullApplication() = "a" is ("" ~ ("a" => deferredHelper("A")("!")))
+//│ ╔══[COMPILATION ERROR] Effect handlers are not supported inside compiled string pattern transforms.
+//│ ║  l.134: 	  handle e = Read with
+//│ ║         	             ^^^^^^^^^
+//│ ║  l.135: 	    fun read()(k) = k(value)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.136: 	  in e.read() + suffix
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── While compiling this string pattern transform.
+//│ ║  l.143: 	fun fullApplication() = "a" is ("" ~ ("a" => deferredHelper("A")("!")))
+//│ ╙──       	                                             ^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Reading a source getter executes its body without application syntax.
+fun effectfulGetter = handlers.await(Promise.resolve("a"))
+
+:e
+fun getterRead() = "a" is ("" ~ ("a" => effectfulGetter))
+//│ ╔══[COMPILATION ERROR] Effect operations are not supported inside compiled string pattern transforms.
+//│ ║  l.156: 	fun effectfulGetter = handlers.await(Promise.resolve("a"))
+//│ ║         	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── While compiling this string pattern transform.
+//│ ║  l.159: 	fun getterRead() = "a" is ("" ~ ("a" => effectfulGetter))
+//│ ╙──       	                                        ^^^^^^^^^^^^^^^

@@ -1,10 +1,57 @@
 # PR #540 "Optimized compilation of string patterns" — review findings
 
 The original July review compared `compiled-string-patterns` against
-`hkust-taco/hkmc2` (then merge base `c9bb0edd`). The current review appears
-immediately below. Upstream PR: <https://github.com/hkust-taco/mlscript/pull/540>.
+`hkust-taco/hkmc2` (then merge base `c9bb0edd`). Current local implementation
+status appears immediately below; the reviews that follow describe historical
+heads. Upstream PR: <https://github.com/hkust-taco/mlscript/pull/540>.
 
-## Current review — 2026-10-22
+## Local fixes — 2026-10-22
+
+The five outstanding findings from the October review are addressed in five
+separate local commits:
+
+| Finding | Commit | Behavior and regression coverage |
+| --- | --- | --- |
+| Unicode ranges | `13057e34a` | Plain and prefix matching use the same code-point range interpretation as compiled regions. `AstralRanges.mls` covers supplementary characters, exclusive bounds, ranges crossing the BMP boundary, and non-string inputs. |
+| Mixed recursive definitions | `897b60b4d` | String inputs use the whole recursive string region, preserving deferred bindings; non-string alternatives retain their general matcher. `MixedRecursive.mls` covers numeric, tuple, record, and transformed alternatives. |
+| Growing specialization | `ebddcb16a` | A growing recursive parameter cycle is diagnosed before specialization. `Rep(Rep(P))` is active in `ResourceGrowth.mls`; `Specialization.mls` checks finite permutations, wrapping outside recursion, and resets. |
+| Resource exhaustion | `af957ee6e` | Configurable positive limits bound specialization count, NFA/DFA state count, and compilation work. The exact 16-copy example is active in `ResourceGrowth.mls`; `CompilationLimits.mls` checks limits and recovery. |
+| Conjunction values | `c3ab584ed` | Intersection recognition keeps the existing driver/constraint product. Value construction preserves each conjunct's output, order, and nesting over the chosen span. `ConjunctionValues.mls` covers alternatives, bindings, transforms, recursive drivers and constraints, concatenation coercion, and prefix results. |
+
+The specialization diagnostic is independent of resource limits. Both resource
+examples denote regular languages; neither diagnostic claims otherwise.
+Conjunctions still permit at most one branch with bindings or transforms.
+Pure constraints with non-identity outputs use separate value plans over the
+committed span, sharing the enclosing compilation's work budget. User transforms
+are not repeated while constructing constraint values.
+
+The effect restriction now also reports compilation errors for handler constructs
+and identifiable effect operations (`handlers.await`, `runtime.suspend`, and
+`runtime.handle_suspension`), following statically resolved helper calls and
+source getters. Partial application does not execute a helper body. Ordinary
+unannotated helpers are allowed, and indirect calls retain the runtime guard.
+`TransformEffectDiagnostics.mls`, `EffectfulTransforms.mls`, and the new-resolution
+string-pattern tests cover both paths. Handler constructs in a known helper are
+rejected even when that helper would handle all its effects locally; ordinary
+non-compiled transforms remain unaffected.
+
+Two additional legacy matcher limitations found during this work are preserved
+as `:fixme` reproductions at the end of `ConjunctionValues.mls`: general
+head dispatch with overlapping `Str` and literal heads, and legacy prefix
+conjunctions testing the right branch against the entire remaining input.
+They do not use the concatenation automaton fixed here and remain unresolved.
+
+All changed golden outputs and generated runtime code are committed with their
+corresponding fixes. The full PR diff was checked for whitespace-only changes
+against `355df32708d10f685e6bb6661060084e76c4d765`, with commit authors inspected;
+existing indentation and blank-line formatting were preserved. Validation uses
+Metals compilation, `ctest` before focused tests, and `hkmc2AllTests/test`.
+The final run passed 55 prerequisite compilation tests and all 1,113 tests in
+`hkmc2AllTests/test` (including 807 diff-test files), with no unexpected failures.
+The review text below retains its original findings and validation results; it
+is not a list of issues still open after these local fixes.
+
+## Review of the published head — 2026-10-22 (historical)
 
 **Recommendation: request changes.** This review covers the complete PR at
 `88d8ee5bc119a5d4548a7e93f9aa0c1459f389ed`, against `hkmc2` at

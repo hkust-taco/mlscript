@@ -376,6 +376,67 @@ class StringCompiler(budget: PatternCompilationBudget)(using context: Context)(u
     failed = true
     error(messages*)
 
+  /** The runtime parser cannot suspend at an action call. Reject handler
+    * syntax and explicitly effectful calls in the transform and in statically
+    * selected helper bodies. An unannotated function is not evidence of an
+    * effect: unknown/indirect calls remain protected by the runtime guard.
+    * Terms compare by identity, so recursive helper calls close this worklist
+    * without storing analysis state on their shared symbols.
+    */
+  private def checkTransformEffects(transform: Term): Unit =
+    val pending = Buffer(transform)
+    val visited = MutSet.empty[Term]
+    var rejected = false
+    def reject(message: Message, loc: Opt[Loc], notes: (Message, Opt[Loc])*): Unit =
+      rejected = true
+      val contextNote =
+        if loc == transform.toLoc then Nil
+        else (msg"While compiling this string pattern transform." -> transform.toLoc) :: Nil
+      fail((message -> loc) +: (notes ++ contextNote)*)
+    @annotation.tailrec
+    def applicationHead(term: Term, argumentLists: Int): (Term, Int) = term.expanded match
+      case Term.App(callee, _) => applicationHead(callee, argumentLists + 1)
+      case Term.TyApp(callee, _) => applicationHead(callee, argumentLists)
+      case Term.Capture(base, _) => applicationHead(base, argumentLists)
+      case callee => (callee, argumentLists)
+    while pending.nonEmpty && !rejected do
+      val term = pending.remove(pending.size - 1)
+      if visited.add(term) then
+        budget.spend(1)
+        term match
+          case _: Term.Handle =>
+            reject(msg"Effect handlers are not supported inside compiled string pattern transforms.", term.toLoc)
+          case Term.Annotated(annotation: Annot.RaiseEffects, _) =>
+            reject(msg"Explicitly effectful expressions are not supported inside compiled string pattern transforms.", annotation.toLoc)
+          case call: Term.App =>
+            val (callee, argumentLists) = applicationHead(call, 0)
+            val target = callee.resolvedSym.flatMap(_.asTrm)
+            val effectIntrinsic = target.exists: symbol =>
+              (symbol is ctx.builtins.handlers.await) ||
+              ctx.builtins.runtime.suspend.asTrm.contains(symbol) ||
+              ctx.builtins.runtime.handle_suspension.asTrm.contains(symbol)
+            if effectIntrinsic then
+              reject(msg"Effect operations are not supported inside compiled string pattern transforms.", call.toLoc)
+            else target.flatMap(_.defn).filter: definition =>
+              // A partial application creates a function value; it does not
+              // execute the curried definition's body inside the parser.
+              (definition.k is syntax.Fun) && argumentLists >= definition.params.size
+            .foreach: definition =>
+              definition.annotations.collectFirst:
+                case annotation: Annot.RaiseEffects => annotation
+              match
+                case S(_) =>
+                  reject(msg"Effectful function calls are not supported inside compiled string pattern transforms.", call.toLoc,
+                    msg"Function `${definition.tsym.nme}` can raise effects." -> definition.headerLoc)
+                case N => definition.body.foreach(pending += _)
+          case _ =>
+            // Source getters execute their body on reference, without an App.
+            // Val initializers and ordinary function values do not.
+            term.resolvedSym.flatMap(_.asTrm).flatMap(_.defn).filter: definition =>
+              (definition.k is syntax.Fun) && definition.params.isEmpty
+            .flatMap(_.body).foreach(pending += _)
+        if !rejected then pending ++= term.subTerms.reverseIterator
+
   /** The slots that deferred operations read before writing them locally:
     * their values must be captured when the deferred frame is created, not
     * when it is executed (later iterations overwrite the global slots). */
@@ -613,6 +674,7 @@ class StringCompiler(budget: PatternCompilationBudget)(using context: Context)(u
         // slots but must still bind all references in its closure's body.
         val transformSymbols = correspondence.keysIterator.toList
         val actionId = actionIds.getOrElseUpdate(term, {
+          checkTransformEffects(term)
           val params = transformSymbols.map: symbol =>
             Param.simple(correspondence(symbol))
           addAction(Term.Lam(PlainParamList(params)(N), term.mkClone))

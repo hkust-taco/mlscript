@@ -49,3 +49,19 @@ pattern Mixed = ("a" ~ "b") | Box(Upper ~ ("c" => "C")) | Box(Upper ~ ("d" => "D
 fun read(input) = if input is @compile Mixed as result then result else "no"
 [read("ab"), read(Box("abc")), read(Box("abd")), read(Box("abe")), read(7), read(8)]
 //│ = ["ab", Box("ABC"), Box("ABD"), "no", 7, "no"]
+
+// Effect checks follow resolved helper symbols, including qualified calls.
+// Rejection happens before the transform is lowered into an action closure.
+:lift
+:effectHandlers
+:e
+module EffectHelpers {
+  fun suspend() = handlers.await(Promise.resolve("a"))
+}
+fun rejectEffects() = "a!" is (("a" => EffectHelpers.suspend()) ~ "!")
+//│ ╔══[COMPILATION ERROR] Effect operations are not supported inside compiled string pattern transforms.
+//│ ║  l.59: 	  fun suspend() = handlers.await(Promise.resolve("a"))
+//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── While compiling this string pattern transform.
+//│ ║  l.61: 	fun rejectEffects() = "a!" is (("a" => EffectHelpers.suspend()) ~ "!")
+//│ ╙──      	                                       ^^^^^^^^^^^^^^^^^^^^^^^

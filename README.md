@@ -232,6 +232,12 @@ are compiler operations, not milliseconds, and may change with the algorithm.
 Recursively growing pattern arguments are diagnosed separately, before
 specialization, regardless of these limits.
 
+Compiled string transforms currently cannot suspend for an algebraic effect.
+Handler constructs and known effect operations are compilation errors, including
+through statically resolved helper calls. Ordinary unannotated helpers remain
+allowed. An effect escaping an indirect call raises a runtime error before any
+later transform runs. This restriction is specific to compiled string transforms.
+
 The command aliases below are shorthand for running aggregated tests; they take no arguments.
 
 - `qtest` aka "quick tests" for `ctest` and `dtest` together.
