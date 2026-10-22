@@ -289,6 +289,7 @@ class ParseRules(using State):
     },
     ifLike(`if`),
     ifLike(`while`),
+    ifLike(`when`),
     Kw(`assert`)(
       ParseRule(s"'assert' keyword")(
         exprOrBlk(
@@ -426,8 +427,8 @@ class ParseRules(using State):
     singleKw(`dyn`)(Keywrd(`dyn`)),
     singleKw(`undefined`)(UnitLit(false)),
     singleKw(`null`)(UnitLit(true)),
-    singleKw(`this`)(Ident("this")),
-    singleKw(`super`)(Ident("super")),
+    singleKw(`this`)(Keywrd(Keyword.`this`)),
+    singleKw(`super`)(Keywrd(Keyword.`super`)),
     singleKw(Keyword.__)(Under()),
     Kw(`#`)(
       ParseRule(s"'#' directive keyword")(

@@ -212,6 +212,7 @@ enum Tree extends AutoLocated:
     case DynamicNew(body) => "dynamic new"
     case IfLike(Keywrd(Keyword.`if`), split) => "if expression"
     case IfLike(Keywrd(Keyword.`while`), split) => "while expression"
+    case IfLike(Keywrd(Keyword.`when`), split) => "when expression"
     case Case(_, branches) => "case"
     case Region(name, body) => "region"
     case RegRef(reg, value) => "region reference"
@@ -272,6 +273,12 @@ enum Tree extends AutoLocated:
     this match
     case Ident(name) if name.startsWith("'") =>
       StrLit(name.drop(1)).withLocOf(this)
+    case IfLike(kw @ Keywrd(Keyword.`when`), split) =>
+      // `when { ... }` -> `if this is { ... }`
+      val ifKw = new Keywrd(Keyword.`if`).withLocOf(kw)
+      val isKw = new Keywrd(Keyword.`is`).withLocOf(kw)
+      val thisKw = new Keywrd(Keyword.`this`).withLocOf(kw)
+      IfLike(ifKw, InfixApp(thisKw, isKw, split).withLocOf(split)).withLocOf(this)
     case IfLike(kw, split) =>
       val split2 = rewriteImplicitSplitLabels(split)
       if split2 is split then this else IfLike(kw, split2).withLocOf(this)
