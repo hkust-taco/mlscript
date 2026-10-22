@@ -11,7 +11,8 @@ import syntax.Tree
 /** The parameter lists accepted by the IR: fixed parameters followed by at most one rest parameter.
   * Source variadic parameters with trailing parameters must be desugared before constructing IR.
   * Individual parameters retain their source metadata and erased symbols. In particular, an optional
-  * parameter binds `null` for a missing or `undefined` argument; every backend must preserve this at entry. */
+  * parameter binds `null` for a missing argument; Wasm call sites supply it directly, while JS function
+  * entries normalize the native `undefined` used for missing arguments to `null`. */
 final case class LoweredParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])
 (val toLoc: Opt[Loc]) extends Located:
   def foreach(f: Param => Unit): Unit = allParams.foreach(f)

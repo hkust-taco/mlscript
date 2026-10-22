@@ -36,10 +36,15 @@ slots(null, null)
 //│ Wasm result:
 //│ = 2
 
-:expect 2
+:expect 1
 slots(unsafe.undefined)
 //│ Wasm result:
-//│ = 2
+//│ = 1
+
+:expect 1
+slots((), null)
+//│ Wasm result:
+//│ = 1
 
 :expect 1
 slots(0)
@@ -64,30 +69,40 @@ val indirect: (Int, Int?) -> Anything = choose
 indirect(11)
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref $choose)` to `(ref null any)` in a different type hierarchy
 //│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
-//│ ║  l.64: 	indirect(11)
+//│ ║  l.69: 	indirect(11)
 //│ ╙──      	^^^^^^^^
 
-// Explicit undefined is normalized, while null, Unit, zero and false remain distinct.
+// Null denotes an absent argument; Unit, zero and false remain supplied values.
 :expect 1
 absent(null)
 //│ Wasm result:
 //│ = 1
 
-:expect 1
+:expect 0
 absent(unsafe.undefined)
 //│ Wasm result:
-//│ = 1
+//│ = 0
 
 :expect 0
 absent(())
 //│ Wasm result:
 //│ = 0
 
-:expect 1
+:expect 0
 fun forward(x) = absent(x)
 forward(unsafe.undefined)
 //│ Wasm result:
+//│ = 0
+
+:expect 1
+forward(null)
+//│ Wasm result:
 //│ = 1
+
+:expect 0
+forward(())
+//│ Wasm result:
+//│ = 0
 
 // Optional fields are nullable even when their written type is a concrete class.
 :expect 0
@@ -150,7 +165,7 @@ SuppliedFields(1, 16).read()
 :e
 choose()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.151: 	choose()
+//│ ║  l.166: 	choose()
 //│ ║         	^^^^^^^^
 //│ ╟── Function 'choose' expected 1 to 2 arguments, but got 0
 //│ ║  l.8: 	fun choose(x: Int, y?: Int) = if y is null then x else y
@@ -158,8 +173,8 @@ choose()
 //│ Wasm result:
 //│ = null
 
-// Supplied constructor values are evaluated once and normalized before field initialization.
-:expect 21
+// Uninitialized constructor arguments are evaluated once and lower to Unit in Wasm.
+:expect 10
 class Normalize(val x?) {
   fun read() = absent(x)
 }
@@ -169,7 +184,23 @@ fun argument() =
   unsafe.undefined
 Normalize(argument()).read() + Normalize(argument()).read() * 10 + count * 5
 //│ Wasm result:
-//│ = 21
+//│ = 10
+
+// Null is absent; Unit and a directly supplied uninitialized value are preserved.
+:expect 1
+class OptionalField(val x?) {
+  fun read() = absent(x)
+}
+let uninitialized = OptionalField(unsafe.undefined).read()
+OptionalField(null).read() + OptionalField(()).read() * 10 + uninitialized * 100
+//│ Wasm result:
+//│ = 1
+
+// TODO: A method call on a class from an earlier Wasm REPL block looks for a struct field.
+:fixme
+:expect 0
+OptionalField(()).read()
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:OptionalField/read` in struct `member:OptionalField` with type `(type $OptionalField (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
 
 // A virtual call with a supplied optional argument preserves its value.
 :expect 17
@@ -202,7 +233,12 @@ c.pick(10) + suppliedDispatch(c, 100) + suppliedDispatch(SuppliedBase(), 1000)
 //│ Wasm result:
 //│ = {}
 :expect 1
-fun inlined(x?) = absent(x)
+@inline fun inlined(x?) = absent(x)
+inlined(null) + inlined(()) * 10 + inlined(unsafe.undefined) * 100
+//│ Wasm result:
+//│ = 1
+
+:expect 1
 inlined()
 //│ Wasm result:
 //│ = 1
@@ -213,6 +249,18 @@ inlined()
 countdown(3, 18)
 //│ Wasm result:
 //│ = 1
+
+:expect 1
+countdown(3, ())
+//│ Wasm result:
+//│ = 1
+
+:expect 0
+@tailrec fun keep(n: Int, x?) =
+  if n is 0 then absent(x) else keep(n - 1, x)
+keep(3, ())
+//│ Wasm result:
+//│ = 0
 
 
 // TODO: improve error

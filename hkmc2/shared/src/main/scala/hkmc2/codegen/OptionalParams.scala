@@ -7,9 +7,10 @@ import semantics.Elaborator.State
 import syntax.{Tree, SpreadKind}
 
 
-/** Optional parameters bind `null` when an argument is missing or explicitly `undefined`.
-  * Backends implement this at function entry. Rewrites that remove that entry (inlining,
-  * tail-call jumps, and constructor elimination) must materialize the same normalization. */
+/** Optional parameters bind `null` when an argument is missing. JS receives missing arguments as
+  * `undefined`, so rewrites that remove a JS function entry (inlining, tail-call jumps, and constructor
+  * elimination) must preserve its normalization. Wasm call sites supply `null` directly; IR `undefined`
+  * is an uninitialized value, not a distinct Wasm value that can be tested for missing arguments. */
 object OptionalParams:
   case class Forwarding(params: LoweredParamList, args: Ls[Arg], prologue: Block => Block)
   
@@ -38,17 +39,20 @@ object OptionalParams:
           Forwarding(physical, args :+ Arg(S(SpreadKind.Eager), rest.sym.asSimpleRef),
             body => Scoped(Set(rest.sym), Assign(rest.sym, restValue, body)))
   
-  def normalize(sym: LocalVarSymbol, rest: Block): Block =
-    Match(sym.asSimpleRef,
-      Case.Lit(Tree.UnitLit(false)) -> Assign(sym, Value.Lit(Tree.UnitLit(true))(sym.toLoc), End()) :: Nil,
-      N, rest)
+  def normalize(sym: LocalVarSymbol, rest: Block)(using Config): Block = config.target match
+    case CompilationTarget.JS =>
+      Match(sym.asSimpleRef,
+        Case.Lit(Tree.UnitLit(false)) -> Assign(sym, Value.Lit(Tree.UnitLit(true))(sym.toLoc), End()) :: Nil,
+        N, rest)
+    case CompilationTarget.Wasm => rest
   
-  def normalizeAll(params: Ls[Param], body: Block): Block =
+  def normalizeAll(params: Ls[Param], body: Block)(using Config): Block =
     params.filter(_.flags.opt).foldRight(body)((param, rest) => normalize(param.sym, rest))
   
   /** Evaluate a constructor slot once before optimizers can replace field reads with arguments. */
-  def argument(value: Path)(k: Path => Block)(using State): Block = value match
-    case Value.Lit(Tree.UnitLit(false)) => k(Value.Lit(Tree.UnitLit(true))(value.toLoc))
+  def argument(value: Path)(k: Path => Block)(using State, Config): Block = value match
+    case Value.Lit(Tree.UnitLit(false)) if config.target is CompilationTarget.JS =>
+      k(Value.Lit(Tree.UnitLit(true))(value.toLoc))
     case _: Value.Lit => k(value)
     case _ =>
       val slot = TempSymbol(N, erasedType = N, "optionalArg")

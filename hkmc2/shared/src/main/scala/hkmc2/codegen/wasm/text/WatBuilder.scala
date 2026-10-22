@@ -295,13 +295,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   /** Synthetic base struct symbol for all heap-allocated class instances. */
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
 
-  /** Undefined must stay distinct from Unit: optional parameters normalize only undefined.
-    * Every instance of this private empty struct denotes undefined. Unlike user objects and
-    * Unit it has no Object header; its structural type also survives calls between modules. */
-  private val undefinedSym: BlockMemberSymbol = BlockMemberSymbol("Undefined", Nil)
-  private def undefinedTypeIdx(using Raise): TypeIdx = ctx.getType(undefinedSym).getOrElse:
-    ctx.addType(TypeInfo(undefinedSym, StructType(Seq.empty, Seq.empty), objectTag = N))
-
   /** Synthetic field symbol for the object-header pointer to a class's shared RTTI object. */
   private val typeInfoFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$typeinfo"), erasedType = N)
 
@@ -1752,7 +1745,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       )
     case Value.Lit(UnitLit(true)) => ref.`null`(HeapType.Any)
     case Value.Lit(UnitLit(false)) =>
-      struct.`new`(undefinedTypeIdx, Seq.empty)
+      // `undefined` is the IR's canonical "no meaningful value", so it lowers to `$Unit` (similar to
+      // `normalizeValueExprs`).
+      result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))
     case Value.SimpleRef(l) => l match
       case l: LocalVarSymbol => getVar(l, r.toLoc)
       case bs: BuiltinSymbol => errExpr(
@@ -2648,7 +2643,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                         val scrutValue = i31.get(scrutAsI31, signed = true)
                         i32.eq(scrutValue, withValidIntLit(value, lit.toLoc)(i32.const))
                       case UnitLit(true) => ref.is_null(getScrutExpr)
-                      case UnitLit(false) => ref.test(getScrutExpr, RefType(undefinedTypeIdx, nullable = false))
                       case _ =>
                         break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 
@@ -2987,6 +2981,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       paramTypes: Opt[Seq[ValType]] = N,
   )(using Raise, SessionExportCtx): (Expr, FunctionCtx) =
     genFuncBody(params :: Nil, thisSym = thisSym, paramTypes = paramTypes):
-      block(OptionalParams.normalizeAll(params.params, body)).mergeAsBlock.getOrElse(nop)
+      block(body).mergeAsBlock.getOrElse(nop)
 
 end WatBuilder
