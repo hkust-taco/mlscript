@@ -97,7 +97,7 @@ val =a
 :pe
 :re
 let =a
-//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found '=' keyword instead
+//│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding keyword; found '=' keyword instead
 //│ ║  l.99: 	let =a
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

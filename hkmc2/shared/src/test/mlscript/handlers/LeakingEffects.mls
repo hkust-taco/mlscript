@@ -47,7 +47,7 @@ while
 //│ xs = []
 
 // * Notes:
-(mut []).pop() === undefined
+(mut []).pop() === unsafe.undefined
 //│ = false
 (mut []).pop() === null
 //│ = false

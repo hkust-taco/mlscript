@@ -46,11 +46,11 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
         blockPass(Lifter(_).transform)(prog)
       else prog
     runPass("Deforest"): prog =>
-      val outterTl = tl
+      val outerTl = tl
       config.deforest match
         case None => prog
         case Some(dCfg) =>
-          flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outterTl).givenIn:
+          flowAnalysis.FlowAnalysis.mkTraceLogger(dCfg.config, "deforest > ", outerTl.sink)(using outerTl.debugPrinter).givenIn:
             deforest.Deforest(prog, additionalTopLevelSymbols =
               symbolsToPreserve.collect{case s: semantics.LocalVarSymbol => s})
     runPass("HandlerLowering"): prog =>

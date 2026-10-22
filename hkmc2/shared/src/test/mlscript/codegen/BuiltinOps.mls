@@ -84,7 +84,7 @@ id(+)(1)
 //│ });
 //│ return runtime.safeCall(lambda3(1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
 
 
 fun (+) lol(a, b) = [a, b]

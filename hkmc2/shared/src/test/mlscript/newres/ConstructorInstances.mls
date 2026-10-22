@@ -111,7 +111,7 @@ private val invalid = Box[Int, Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
 //│ ║  l.110: 	private val invalid = Box[Int, Str]
 //│ ║         	                      ^^^^^^^^^^^^^
-//│ ╟── Class 'Box' expected 1 type argument, but got 2
+//│ ╟── Constructor of class 'Box' expected 1 type argument, but got 2
 //│ ║  l.109: 	class Box[T](val item: T)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ invalid = fun Box { class: class Box }
@@ -135,7 +135,7 @@ box[Str]("bad")
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
 //│ ║  l.134: 	box[Str]("bad")
 //│ ║         	^^^^^^^^
-//│ ╟── Class 'Box' expected 0 type arguments, but got 1
+//│ ╟── Constructor of class 'Box' expected 0 type arguments, but got 1
 //│ ║  l.132: 	class Box[T](val item: T)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
@@ -156,7 +156,7 @@ private val invalid = partial[Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
 //│ ║  l.155: 	private val invalid = partial[Str]
 //│ ║         	                      ^^^^^^^^^^^^
-//│ ╟── Class 'Pair' expected 0 type arguments, but got 1
+//│ ╟── Constructor of class 'Pair' expected 0 type arguments, but got 1
 //│ ║  l.153: 	class Pair[T](val item: T)(val other: T)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ invalid = fun
@@ -217,11 +217,11 @@ let second = new Box(Second(22))
 [first.copy().item.first, second.copy().item.second]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.217: 	[first.copy().item.first, second.copy().item.second]
-//│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.215: 	let first = new Box(First(21))
-//│ ║         	                    ^^^^^^^^^
-//│ ╟── Cannot resolve member 'second' of a value with unknown shape.
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Second' does not contain member 'first'
+//│ ║  l.216: 	let second = new Box(Second(22))
+//│ ║         	                     ^^^^^^^^^^
+//│ ╟── Cannot resolve member 'first' of a value with unknown shape.
 //│ ╟── Parameter 'item' admits values of unknown shape.
 //│ ║  l.213: 	class Box(val item) with
 //│ ║         	          ^^^^^^^^
@@ -230,11 +230,11 @@ let second = new Box(Second(22))
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.217: 	[first.copy().item.first, second.copy().item.second]
-//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.216: 	let second = new Box(Second(22))
-//│ ║         	                     ^^^^^^^^^^
-//│ ╟── Cannot resolve member 'first' of a value with unknown shape.
+//│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.215: 	let first = new Box(First(21))
+//│ ║         	                    ^^^^^^^^^
+//│ ╟── Cannot resolve member 'second' of a value with unknown shape.
 //│ ╟── Parameter 'item' admits values of unknown shape.
 //│ ║  l.213: 	class Box(val item) with
 //│ ║         	          ^^^^^^^^

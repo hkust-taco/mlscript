@@ -243,7 +243,7 @@ let f = new Foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.242: 	let f = new Foo()
 //│ ║         	        ^^^^^^^^^
-//│ ╟── Class 'Foo' expected 1 argument, but got 0
+//│ ╟── Constructor of class 'Foo' expected 1 argument, but got 0
 //│ ║  l.80: 	class Foo(val a) {
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ f = Foo(undefined)

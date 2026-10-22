@@ -10,9 +10,12 @@ import utils.*
 import hkmc2.codegen.flowAnalysis.*
 import semantics.*
 
-case class EtaTargets(paramCount: Int, hasRestParam: Bool, prodFuns: Set[ProdFun]):
-  def paramInfo: (Int, Bool) = paramCount -> hasRestParam
-  def ppParamInfo: Str = if hasRestParam then s"$paramCount+rest" else s"$paramCount"
+/** `requiredParamCount` is the number of leading parameters that are not optional. */
+case class EtaTargets(paramCount: Int, requiredParamCount: Int, hasRestParam: Bool, prodFuns: Set[ProdFun]):
+  def paramInfo: (Int, Int, Bool) = (paramCount, requiredParamCount, hasRestParam)
+  def ppParamInfo: Str =
+    val opt = if requiredParamCount < paramCount then s"(${paramCount - requiredParamCount} optional)" else ""
+    if hasRestParam then s"$paramCount$opt+rest" else s"$paramCount$opt"
   def pp: Str = s"$ppParamInfo${prodFuns.map(_.exprId).mkString("<", ", ", ">")}"
 
 abstract class EtaExpansionResult extends FlowAnalysisSolverResult:
@@ -85,10 +88,13 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
                 val curRes = etaExpansionTargetShapes(pf)
                 val mergedRes = res match
                   case N => curRes
-                  case S(prevRes) => prevRes.zip(curRes).map: (a, b) =>
-                    assert(a.paramInfo === b.paramInfo,
-                      s"eta expansion targets disagree on arity: ${a.pp} vs ${b.pp}")
-                    EtaTargets(a.paramCount, a.hasRestParam, a.prodFuns ++ b.prodFuns)
+                  case S(prevRes) =>
+                    // A returned value can choose between functions with different
+                    // calling conventions, including required vs optional parameters.
+                    // Expand only their common prefix: forwarding a later list needs
+                    // one convention shared by every possible target at that level.
+                    prevRes.zip(curRes).takeWhile((a, b) => a.paramInfo === b.paramInfo).map: (a, b) =>
+                      EtaTargets(a.paramCount, a.requiredParamCount, a.hasRestParam, a.prodFuns ++ b.prodFuns)
                 go(S(mergedRes))
               else Nil
             case UnknownProd => Nil
@@ -108,7 +114,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     cache.get(pf) match
     case S(res) => res
     case N =>
-      val targets = EtaTargets(pf.params.size, pf.restParam.isDefined, Set.single(pf))
+      val targets = EtaTargets(pf.params.size, pf.requiredParamCount, pf.restParam.isDefined, Set.single(pf))
       if !processing.contains(pf) then
         val res = targets :: funResShape(pf.res)
         cache(pf) = res
@@ -140,12 +146,12 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
     case (_: TermSymbol, 0) => addFunShapeIfChanged()
     case _ => ()
 
-  if tl.doTrace then
+  if tl.isTracing then
     given ShowCfg = ShowCfg.internal
     
     tl.log(">>> eta-expansion targets shapes >>>")
     for (id, shape) <- etaExpandedFunShape do
-      tl.log(s"${id.showConcreteFunId}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
+      tl.log(dbg"${id.showConcreteFunId}: ${shape.map(_.ppParamInfo).mkString("[", ", ", "]")}")
     tl.log("<<< eta-expansion targets shapes <<<")
   end if
 end EtaExpansionSolver

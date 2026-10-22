@@ -126,7 +126,7 @@ test((x) => x.value)
 //│ ║  l.117: 	fun test(f: Function) = f(1, 2, 3)
 //│ ║         	            ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Erasure checks callback inputs even when a private consumer never calls it.
 :ge

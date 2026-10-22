@@ -259,35 +259,30 @@ pattern Steps = @compile (Step as Steps | _)
 //│   }
 //│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input) {
 //│     let output, remaining, unapplyResult, output1, unapplyResult1, outputPair, tmp, tmp1, tmp2;
-//│     set unapplyResult1 = Step⁰.unapplyStringPrefix﹖(input);
-//│     match unapplyResult1
-//│       MatchSuccess⁰ =>
-//│         set outputPair = unapplyResult1.output⁰;
-//│         set output = runtime⁰.Tuple⁰.get⁰(outputPair, 0);
-//│         set remaining = runtime⁰.Tuple⁰.get⁰(outputPair, 1);
-//│         set unapplyResult = Steps¹.unapply﹖(output);
-//│         match unapplyResult
+//│     match input
+//│       Str⁰ =>
+//│         set unapplyResult1 = Step⁰.unapplyStringPrefix﹖(input);
+//│         match unapplyResult1
 //│           MatchSuccess⁰ =>
-//│             set output1 = unapplyResult.output⁰;
-//│             set tmp = [output1, remaining];
-//│             return new runtime⁰.MatchSuccess⁰(tmp, null)
-//│           else
-//│             match input
-//│               Str⁰ =>
+//│             set outputPair = unapplyResult1.output⁰;
+//│             set output = runtime⁰.Tuple⁰.get⁰(outputPair, 0);
+//│             set remaining = runtime⁰.Tuple⁰.get⁰(outputPair, 1);
+//│             set unapplyResult = Steps¹.unapply﹖(output);
+//│             match unapplyResult
+//│               MatchSuccess⁰ =>
+//│                 set output1 = unapplyResult.output⁰;
+//│                 set tmp = [output1, remaining];
+//│                 return new runtime⁰.MatchSuccess⁰(tmp, null)
+//│               else
 //│                 set tmp1 = [input, ""];
 //│                 return new runtime⁰.MatchSuccess⁰(tmp1, null)
-//│               else
-//│                 return new runtime⁰.MatchFailure⁰(null)
 //│             end
-//│         end
-//│       else
-//│         match input
-//│           Str⁰ =>
+//│           else
 //│             set tmp2 = [input, ""];
 //│             return new runtime⁰.MatchSuccess⁰(tmp2, null)
-//│           else
-//│             return new runtime⁰.MatchFailure⁰(null)
 //│         end
+//│       else
+//│         return new runtime⁰.MatchFailure⁰(null)
 //│     end
 //│   }
 //│ };

@@ -26,16 +26,16 @@ append(ys, Second(6), 2)
 [xs.0.first, ys.0.second]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.26: 	[xs.0.first, ys.0.second]
-//│ ║        	             ^^^^^^^^^^^
-//│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.24: 	append(xs, First(5), 2)
-//│ ╙──      	           ^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.26: 	[xs.0.first, ys.0.second]
 //│ ║        	 ^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
 //│ ║  l.25: 	append(ys, Second(6), 2)
 //│ ╙──      	           ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.26: 	[xs.0.first, ys.0.second]
+//│ ║        	             ^^^^^^^^^^^
+//│ ╟── Instance of class 'First' does not contain member 'second'
+//│ ║  l.24: 	append(xs, First(5), 2)
+//│ ╙──      	           ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[5, 6]', got: 'undefined'
 //│ xs = [First(5)]

@@ -106,7 +106,7 @@ i(print)(2)
 //│ ╟── Function literal expected 2 arguments, but got 1
 //│ ║  l.91: 	let i = _(0, 1, _)
 //│ ╙──      	        ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'i' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'i' expected at least 2 arguments but got 1
 
 // The sum flows to every call of `i`'s argument, including the ill-arity `i(print)(2)` above,
 // whose application of that result is reported when this block resolves the sum.
@@ -128,7 +128,10 @@ i((...args) => [...args], _)(2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Int' cannot be called like a function.
 //│ ║  l.114: 	i((x, y, z) => x + y + z, 2)
-//│ ╙──       	               ^^^^^^^^^
+//│ ║         	               ^^^^^^^^^
+//│ ╟── Tuple literal cannot be called like a function.
+//│ ║  l.91: 	let i = _(0, 1, _)
+//│ ╙──      	         ^^^^^^^^^
 //│ = fun
 
 
@@ -145,14 +148,20 @@ i((...args) => [...args], _)(2)
 :e
 :re
 123 |> (_ + 1 >> _ * 2)
-//│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.30: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
-//│ ║        	                                 ^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.150: 	123 |> (_ + 1 >> _ * 2)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in PartialApps.mls:147
-//│ ║  l.147: 	123 |> (_ + 1 >> _ * 2)
-//│ ╙──       	        ^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+//│ ║  l.150: 	123 |> (_ + 1 >> _ * 2)
+//│ ║         	        ^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.30: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
+//│ ╙──      	                                 ^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
+//│ ║  l.150: 	123 |> (_ + 1 >> _ * 2)
+//│ ╙──       	        ^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
 
 (_ + 1 + _ * 2) of 123, 456
 //│ = 1036
@@ -196,7 +205,7 @@ data class C(a, b, c)
 :ge
 2 |> C(1, _, 3) |> print
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
-//│ ║  l.197: 	2 |> C(1, _, 3) |> print
+//│ ║  l.206: 	2 |> C(1, _, 3) |> print
 //│ ╙──       	     ^^^^^^^^^^
 //│ = fun
 
@@ -246,7 +255,7 @@ _ - _ of 1, 2
 :pe
 |> 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.247: 	|> 1
+//│ ║  l.256: 	|> 1
 //│ ╙──       	   ^
 //│ = fun pipeInto
 
@@ -254,7 +263,7 @@ _ - _ of 1, 2
 :re
 |> (1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.255: 	|> (1)
+//│ ║  l.264: 	|> (1)
 //│ ║         	^^^^^^
 //│ ╟── Function 'pipeInto' expected 2 arguments, but got 1
 //│ ║  in ../../mlscript-compile/Predef.mls
@@ -303,10 +312,10 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.304: 	let f = if _ then 1 else 0
+//│ ║  l.313: 	let f = if _ then 1 else 0
 //│ ║         	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.304: 	let f = if _ then 1 else 0
+//│ ║  l.313: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f13; f13 = 1;

@@ -1,0 +1,35 @@
+:.
+:flowBasedOpt
+:noInline
+open annotations
+
+// Both calls are valid; the returned functions need not agree on optionality.
+// No function type annotations are involved. Affinity enables eta expansion.
+:expect [1, 1]
+@affine(0) private fun required(x) = x
+@affine(0) private fun optional(x?) = if x is Int then x else 0
+private fun choose(b) = if b then required else optional
+[choose(true)(1), choose(false)(1)]
+//│ = [1, 1]
+
+// A fixed/rest disagreement also ends expansion without invalidating the calls.
+:expect [2, 2]
+@affine(0) private fun fixed(x) = x
+@affine(0) private fun variadic(x, ...xs) = x + xs.length
+private fun chooseRest(b) = if b then fixed else variadic
+[chooseRest(true)(2), chooseRest(false)(2)]
+//│ = [2, 2]
+
+// Keep the compatible prefix even if a later returned function differs.
+:flowBasedOpt debugEta
+:expect [12, 12]
+@affine(0) private fun firstRequired(x) = @affine(0) y => x + y
+@affine(0) private fun firstOptional(x) = @affine(0) (y?) => x + (if y is Int then y else 0)
+private fun nested(b) = if b then firstRequired else firstOptional
+[nested(true)(10)(2), nested(false)(10)(2)]
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > nested⁰#0 @ <root>: [1, 1]
+//│ eta-expansion > firstOptional⁰#0 @ <root>: [1, 1(1 optional)]
+//│ eta-expansion > firstRequired⁰#0 @ <root>: [1, 1]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ = [12, 12]

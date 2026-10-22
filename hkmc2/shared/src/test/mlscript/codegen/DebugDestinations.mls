@@ -1,0 +1,72 @@
+:js
+
+
+:silent
+val debugFile = "target/DebugDestinations.log"
+fs.writeFileSync(debugFile, "old session contents")
+
+
+@dbg('lowering, showUids: false, out: File("../../../../../../target/DebugDestinations.log"))
+fun selected_file() = 42
+fun unrelated_file() = 43
+
+
+// Later definitions append to the same file, including methods.
+module FileMethods with
+  @dbg('lowering, showUids: false, out: File("../../../../../../target/DebugDestinations.log"))
+  fun selected() = 45
+  fun unrelated() = 46
+
+:expect true
+fs.readFileSync(debugFile, "utf8") == "Lowering.term 42\nLowering.term 45\n"
+//│ = true
+
+
+// A destination alone must not redirect tracing forced by diff-test commands.
+#dbg(out: File("../../../../../../target/DebugDestinations.log"))
+
+:dl
+@dbg(showUids: false) fun forced_output() = 47
+//│ Lowering.term 47
+//│ Lowering.term undefined
+//│ avoidNames Scoped(Set(member:forced_output⁰),Define(FunDefn(None,member:forced_output⁰,term:forced_output¹,List...
+//│ | avoidNames Define(FunDefn(None,member:forced_output⁰,term:forced_output¹,List(LoweredParamList(‹›,List(),None))...
+//│ | | avoidNames Return(Lit(IntLit(47)))...
+//│ | | avoidNames End()...
+
+// Analysis flags share the captured output sink without enabling optimization-phase traces
+// or redirecting their output to the file selected above.
+:flowBasedOpt debugDpe
+:noInline
+private fun forced_analysis(unused) = 48
+forced_analysis(0)
+//│ dead-param-elim > >>> dead-param-elim results >>>
+//│ dead-param-elim > forced_analysis⁰#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > <<< dead-param-elim results <<<
+//│ = 48
+
+#dbg(out: StdIO)
+
+:expect true
+fs.readFileSync(debugFile, "utf8") == "Lowering.term 42\nLowering.term 45\n"
+//│ = true
+
+
+// Imported units share a handler. Relative destinations are resolved against the directory of
+// the file that declares them, so relative and absolute destinations name the same log here.
+// Generate fixtures under target/, outside test discovery, just like the emitted logs.
+:silent
+val importLog = "target/DebugImports.log"
+val absoluteLog = JSON.stringify(fs.realpathSync("target") + "/DebugImports.log")
+fs.writeFileSync(importLog, "old session contents")
+fs.writeFileSync("target/DebugImportA.mls", "#lang(0.3.x)\n@dbg('lowering, showUids: false, out: File(\"DebugImports.log\"))\nmodule DebugImportA with\n  fun value() = 2101\n")
+fs.writeFileSync("target/DebugImportB.mls", "#lang(0.3.x)\nimport \"./DebugImportA.mls\"\n@dbg('lowering, showUids: false, out: File(" + absoluteLog + "))\nmodule DebugImportB with\n  fun value() = 2102\n")
+
+:noCodeGen
+import "../../../../../../target/DebugImportB.mls"
+
+:expect true
+let trace = fs.readFileSync(importLog, "utf8")
+trace.includes("Lowering.term 2101") && trace.includes("Lowering.term 2102") && not(trace.includes("old session contents"))
+//│ = true
+//│ trace = "Lowering.term 2101\nLowering.term { } (in stmt)\nLowering.term undefined (in stmt)\nLowering.term 2102\nLowering.term { } (in stmt)\nLowering.term undefined (in stmt)\n"

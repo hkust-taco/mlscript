@@ -1,0 +1,344 @@
+:.
+open annotations
+
+// Missing optional arguments bind null. Unsafe calls below remain regression probes;
+// their observed outputs do not define semantics for unsafe.undefined.
+:sir
+:sjs
+:noInline
+fun absent(x?) = x is null
+[absent(), absent(unsafe.undefined), absent(null), absent(()), absent(0), absent(false)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│ define absent⁰ as fun absent¹(x?) {
+//│   match x
+//│     null =>
+//│       return true
+//│     else
+//│       return false
+//│   end
+//│ };
+//│ set tmp = absent¹(null);
+//│ set tmp1 = absent¹((undefined as!! Unknown));
+//│ set tmp2 = absent¹(null);
+//│ set tmp3 = absent¹(runtime⁰.Unit⁰);
+//│ set tmp4 = absent¹(0);
+//│ set tmp5 = absent¹(false);
+//│ return [tmp, tmp1, tmp2, tmp3, tmp4, tmp5]
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let absent, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│ absent = function absent(x) {
+//│   x ??= null;
+//│   if (x === null) {
+//│     return true
+//│   }
+//│   return false;
+//│ };
+//│ tmp = absent(null);
+//│ tmp1 = absent(undefined);
+//│ tmp2 = absent(null);
+//│ tmp3 = absent(runtime.Unit);
+//│ tmp4 = absent(0);
+//│ tmp5 = absent(false);
+//│ return globalThis.Object.freeze([ tmp, tmp1, tmp2, tmp3, tmp4, tmp5 ])
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [true, true, true, false, false, false]
+
+// Known omissions are explicit null arguments in the shared IR.
+:sir
+:noInline
+:expect true
+absent()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return absent¹(null)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = true
+
+// Optional defaults also apply through function values and lambdas.
+:noInline
+let callback = absent
+let lambda = (x?) => x is null
+[callback(), callback(unsafe.undefined), lambda(), lambda(unsafe.undefined)]
+//│ = [true, true, true, true]
+//│ callback = fun absent
+//│ lambda = fun lambda
+
+// Each curried parameter list supplies its own defaults.
+:noInline
+fun curried(a, b, c)(x?) = x is null
+[curried(1, 2, 3)(), curried(1, 2, 3)(unsafe.undefined), curried(1, 2, 3)(null), curried(1, 2, 3)(())]
+//│ = [true, true, true, false]
+
+// Inlining binds omitted slots before substituting parameters into the body.
+@inline private fun inlined(x?) = x is null
+[inlined(), inlined(unsafe.undefined), inlined(null), inlined(())]
+//│ = [true, false, true, false]
+
+// Fixed optional slots precede the rest tuple, including calls through spreads.
+:noInline
+fun withRest(x?, ...xs) = [x is null, xs.length]
+fun fromSpread(xs: Array[Any]) = withRest(...xs)
+[withRest(), withRest(unsafe.undefined), withRest(0, 1, 2), fromSpread([]), fromSpread([unsafe.undefined])]
+//│ = [[true, 0], [true, 0], [false, 2], [true, 0], [true, 0]]
+
+// Optional slots must not consume required trailing arguments.
+:noInline
+fun trailing(x?, ...xs, last) = [x is null, xs.length, last]
+fun trailingSpread(xs: Array[Any]) = trailing(...xs, 3)
+[trailing(3), trailing(unsafe.undefined, 3), trailing(0, 2, 3), trailingSpread([]), trailingSpread([unsafe.undefined])]
+//│ = [[true, 0, 3], [false, 0, 3], [false, 1, 3], [true, 0, 3], [false, 0, 3]]
+
+// Tail-call jumps bind null again when the next iteration omits an earlier value.
+@tailrec fun omit(n, x?) = if n == 0 then x is null else omit(n - 1)
+@tailrec fun keep(n, x?) = if n == 0 then x is null else keep(n - 1, x)
+@tailrec fun spreadOmit(n, x?) = if n == 0 then x is null else spreadOmit(...[n - 1])
+@tailrec fun spreadKeep(n, x?) = if n == 0 then x is null else spreadKeep(...[n - 1, x])
+[omit(2, 1), keep(2, unsafe.undefined), spreadOmit(2, 1), spreadKeep(2, unsafe.undefined)]
+//│ = [true, true, true, true]
+
+// Constructor flattening preserves empty slots between parameter lists.
+class Fields(val first?)(val second?) {
+  constructor(val last)
+  fun values() = [first is null, second is null, last]
+}
+fun build(xs: Array[Any]) = new Fields(...xs)(2)(4)
+[new Fields()(2)(4).values(), new Fields(unsafe.undefined)()(4).values(), build([]).values(), build([unsafe.undefined]).values()]
+//│ = [[true, false, 4], [true, true, 4], [true, false, 4], [true, false, 4]]
+
+// Evaluate spread arguments once, then coerce the tuple's required field to its declared representation.
+:noInline
+:sir
+:siret
+:expect [true, false, 2]
+class Box(val required: Int, val value?)
+let count = 0
+fun makeArgs(present) =
+  set count = count + 1
+  if present then [1, ()] else [1]
+let missing = new Box(...makeArgs(false))
+let supplied = new Box(...makeArgs(true))
+[missing.value is null, supplied.value is null, count]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut: ?, scrut1: ?, tmp: Array⁰, constructorArgs: Array⁰, constructorArg: Int⁰, constructorArg1: Unknown, tmp1: Array⁰, constructorArgs1: Array⁰, constructorArg2: Int⁰, constructorArg3: Unknown, tmp2: Bool⁰, tmp3: Bool⁰;
+//│ define makeArgs⁰ as fun makeArgs¹(present: Unknown): Array⁰ {
+//│   let tmp4: Int⁰;
+//│   set tmp4 = +⁰(count⁰, 1);
+//│   set count⁰ = tmp4;
+//│   match present
+//│     true =>
+//│       return [1, runtime⁰.Unit⁰]
+//│     else
+//│       return [1]
+//│   end
+//│ };
+//│ define Box⁰ as class Box² {
+//│   val required⁰: Int⁰;
+//│   val value⁰: Unknown;
+//│   constructor Box¹(required: Int⁰, value?: Unknown) {
+//│     define required⁰ as val required¹: Int⁰ = required;
+//│     define value⁰ as val value¹: Unknown = value;
+//│     end
+//│   }
+//│ };
+//│ set count⁰ = 0;
+//│ set tmp = makeArgs¹(false);
+//│ set constructorArgs = [...tmp];
+//│ set constructorArg = (constructorArgs.0 as! Int⁰);
+//│ match constructorArgs
+//│   Array(2+) =>
+//│     set constructorArg1 = constructorArgs.1;
+//│     end
+//│   else
+//│     set constructorArg1 = null;
+//│     end
+//│ set missing⁰ = new Box²(constructorArg, constructorArg1);
+//│ set tmp1 = makeArgs¹(true);
+//│ set constructorArgs1 = [...tmp1];
+//│ set constructorArg2 = (constructorArgs1.0 as! Int⁰);
+//│ match constructorArgs1
+//│   Array(2+) =>
+//│     set constructorArg3 = constructorArgs1.1;
+//│     end
+//│   else
+//│     set constructorArg3 = null;
+//│     end
+//│ set supplied⁰ = new Box²(constructorArg2, constructorArg3);
+//│ set scrut = missing⁰.value¹;
+//│ match scrut
+//│   null =>
+//│     set tmp2 = true;
+//│     end
+//│   else
+//│     set tmp2 = false;
+//│     end
+//│ set scrut1 = supplied⁰.value¹;
+//│ match scrut1
+//│   null =>
+//│     set tmp3 = true;
+//│     return [tmp2, tmp3, count⁰]
+//│   else
+//│     set tmp3 = false;
+//│     return [tmp2, tmp3, count⁰]
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [true, false, 2]
+//│ count = 2
+//│ missing = Box(1, null)
+//│ supplied = Box(1, ())
+
+// Eliminating constructors must still bind missing fields to null.
+:lift
+:deforest
+:expect [true, false]
+data class Data(value?)
+private fun read(d: Data) = d.value is null
+[read(Data()), read(Data(()))]
+//│ deforest > >>> fusing >>>
+//│ deforest > Data⁰(optionalArg⁰) ->
+//│ deforest > 	select: value
+//│ deforest > runtime⁰.Unit⁰ ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > Data⁰(null) ->
+//│ deforest > 	select: value
+//│ deforest > <<< fusing <<<
+//│ = [true, false]
+
+// Defined values behave consistently across calls, inlining, spreads, and tail-call jumps.
+:expect [true, true, false, false, false, true, true, true, true]
+[absent(), absent(null), absent(()), absent(0), absent(false), inlined(), fromSpread([]).0, omit(2, 1), spreadOmit(2, 1)]
+//│ = [true, true, false, false, false, true, true, true, true]
+
+// Optional trailing slots and constructor fields retain null when calls are rewritten.
+:expect [[true, 0, 3], [true, 0, 3], true, [true, true, 4]]
+[trailing(3), trailingSpread([]), read(Data()), new Fields()()(4).values()]
+//│ = [[true, 0, 3], [true, 0, 3], true, [true, true, 4]]
+
+// Merged dispatchers reset omitted parameters on each transition.
+:expect [true, true]
+@tailrec fun even(n, x?) = if n == 0 then x is null else odd(n - 1)
+@tailrec fun odd(n, x?) = if n == 0 then x is null else even(n - 1)
+[even(3, 9), odd(3, 10)]
+//│ = [true, true]
+
+// Closures retain each iteration's value, including a newly omitted slot.
+:expect [null, 1, 2]
+@tailrec fun captured(n, fs: Array[() -> Any], x?) =
+  if n == 0 then [(() => x), ...fs].map(f => f())
+  else if n == 1 then captured(0, [(() => x), ...fs])
+  else captured(n - 1, [(() => x), ...fs], n - 1)
+captured(2, [], 2)
+//│ = [null, 1, 2]
+
+// Scoped groups retain both captured values and optional defaults after inlining.
+:expect [[10, null], [10, 11]]
+let
+  offset = 10
+  select(value?) = [offset, value]
+in [select(), select(11)]
+//│ = [[10, null], [10, 11]]
+
+
+// Optional method arguments use the same binding rule as functions.
+class Methods {
+  fun optional(x?) = x
+}
+
+let methods = new Methods
+[methods.optional(), methods.optional(unsafe.undefined), methods.optional(5)]
+//│ = [null, null, 5]
+//│ methods = Methods
+
+
+// Unknown-length spreads may be empty even when their element type excludes null.
+:e
+private fun unguarded(x?, ...middle, last) = x.length
+fun unknownSpread(xs: Array[Str]) = unguarded(...xs, "last")
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.254: 	private fun unguarded(x?, ...middle, last) = x.length
+//│ ║         	                                             ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.254: 	private fun unguarded(x?, ...middle, last) = x.length
+//│ ╙──       	                      ^^
+
+// Optionality alone admits null, even when every observed call supplies a string.
+:e
+private fun alwaysSupplied(x?) = x.length
+alwaysSupplied("abc")
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.265: 	private fun alwaysSupplied(x?) = x.length
+//│ ║         	                                 ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.265: 	private fun alwaysSupplied(x?) = x.length
+//│ ╙──       	                           ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Uncalled bodies have the same nullable parameter shape.
+:e
+private fun neverCalled(x?) = x.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.277: 	private fun neverCalled(x?) = x.length
+//│ ║         	                              ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.277: 	private fun neverCalled(x?) = x.length
+//│ ╙──       	                        ^^
+
+// Callback constraints must not erase the optional parameter's null alternative.
+:e
+fun invoke(f: Str -> Int) = f("abc")
+invoke((x?) => x.length)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.288: 	invoke((x?) => x.length)
+//│ ║         	               ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.288: 	invoke((x?) => x.length)
+//│ ╙──       	        ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Inferred constructor fields retain the optional parameter's null alternative too.
+:e
+private class NullableField(val value?)
+NullableField("abc").value.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.300: 	NullableField("abc").value.length
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.299: 	private class NullableField(val value?)
+//│ ╙──       	                            ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Dynamic construction keeps normalization when lowering cannot see the target class.
+:lift
+:deforest
+data class Dynamic(value?)
+private fun readDynamic(item: Dynamic) = item.value
+let dynamicClass = Dynamic.class
+[readDynamic(new! dynamicClass(unsafe.undefined)), readDynamic(new! dynamicClass(13))]
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = [null, 13]
+//│ dynamicClass = class Dynamic
+
+
+// Unscoped groups retain the complete optional, variadic, and trailing layout.
+:expect [[1, null, [], 9], [1, 2, [3, 4], 5]]
+let
+  collect(first, optional?, ...middle, last) = [first, optional, middle, last]
+[collect(1, 9), collect(1, 2, 3, 4, 5)]
+//│ = [[1, null, [], 9], [1, 2, [3, 4], 5]]
+//│ collect = fun
+
+// The implicit receiver in `when` agrees with explicit `this`; `super` still
+// resolves the parent method and passes optional arguments through its call.
+class Parent {
+  open fun value(x?: Any): Any = x
+}
+class Child(val field?) extends Parent {
+  override fun value(x?) = when
+    Child as child then [child.field, this.field, super.value(x)]
+    else []
+}
+
+:expect [[null, null, null], [7, 7, 9], [7, 7, null]]
+[(new Child()).value(), (new Child(7)).value(9), (new Child(7)).value(unsafe.undefined)]
+//│ = [[null, null, null], [7, 7, 9], [7, 7, null]]

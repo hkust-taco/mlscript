@@ -47,10 +47,10 @@ abstract class Symbol(using ownerState: State) extends MaybeSymbol with Located:
   def showPrefix(using Scope, ShowCfg, Raise): Str = prefix
   
   def showFullName(using Scope, ShowCfg, Raise): Str =
-    showPrefix + showName + State.dbgUid(uid)
+    showPrefix + showName
   
   override def toString: Str =
-    prefix + nme + State.dbgUid(uid)
+    prefix + nme
   
   private[semantics] val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
   def ref(id: Tree.Ident =
@@ -296,7 +296,6 @@ final class TypeParameterInstance(val origin: VarSymbol, val siteBinders: Opt[Se
     extends VarSymbol(origin.id):
   require(!origin.isInstanceOf[TypeParameterInstance], "Instantiate original type binders only")
   decl = origin.decl
-  val reference: Term.SimpleRef = Term.SimpleRef(this)(origin.id)
 
 class BuiltinSymbol
     (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool, val isPure: Bool)(using State)

@@ -46,7 +46,13 @@
 null
 //│ = null
 
+:w
 undefined
+//│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.50: 	undefined
+//│ ╙──      	^^^^^^^^^
+
+unsafe.undefined
 
 
 0.5
@@ -55,7 +61,7 @@ undefined
 :todo
 NaN
 //│ ╔══[COMPILATION ERROR] Name not found: NaN
-//│ ║  l.56: 	NaN
+//│ ║  l.62: 	NaN
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -75,7 +81,7 @@ NaN
 :e
 'AA BB'
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.76: 	'AA BB'
+//│ ║  l.82: 	'AA BB'
 //│ ╙──      	    ^^^
 //│ = "AA"
 
@@ -98,42 +104,42 @@ NaN
 :w
 "\uFE&&"
 //│ ╔══[WARNING] Invalid Unicode escape sequence: expected 4 hexadecimal digits but got 2
-//│ ║  l.99: 	"\uFE&&"
-//│ ╙──      	   ^^
+//│ ║  l.105: 	"\uFE&&"
+//│ ╙──       	   ^^
 //│ = "&&"
 
 :w
 "\u{}"
 //│ ╔══[WARNING] Expected at least one hexadecimal digit in Unicode escape sequence
-//│ ║  l.106: 	"\u{}"
+//│ ║  l.112: 	"\u{}"
 //│ ╙──       	   ^
 //│ = ""
 
 :w
 "\u{ffffffff}"
 //│ ╔══[WARNING] Too many hexadecimal digits in Unicode escape sequence
-//│ ║  l.113: 	"\u{ffffffff}"
+//│ ║  l.119: 	"\u{ffffffff}"
 //│ ╙──       	          ^^
 //│ = ""
 
 :w
 "\u{efefef}"
 //│ ╔══[WARNING] Unicode code point out of range: 0xefefef
-//│ ║  l.120: 	"\u{efefef}"
+//│ ║  l.126: 	"\u{efefef}"
 //│ ╙──       	    ^^^^^^
 //│ = ""
 
 :w
 "\u{55"
 //│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
-//│ ║  l.127: 	"\u{55"
+//│ ║  l.133: 	"\u{55"
 //│ ╙──       	      ^
 //│ = "U"
 
 :w
 "\u{41****"
 //│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
-//│ ║  l.134: 	"\u{41****"
+//│ ║  l.140: 	"\u{41****"
 //│ ╙──       	      ^
 //│ = "A****"
 

@@ -234,7 +234,7 @@ f(D(1))
 //│ deforest > 	match: d⁰
 //│ deforest > 	fields: d⁰.x³
 //│ deforest > <<< fusing <<<
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:365': deforestation copying the definition O
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:368': deforestation copying the definition O
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:O for ClsLikeDefn is a free variable for this block
@@ -252,7 +252,7 @@ E(y).get()
 //│ deforest > AA⁰(0) ->
 //│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:365': deforestation copying the definition E
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:368': deforestation copying the definition E
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:E for ClsLikeDefn is a free variable for this block

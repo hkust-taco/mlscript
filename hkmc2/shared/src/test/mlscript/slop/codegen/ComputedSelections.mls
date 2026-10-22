@@ -1,0 +1,20 @@
+:.
+:js
+
+open annotations { fresh, jsSymbol, inline }
+
+// Inlining must preserve both the local key and the resolved method's receiver.
+// Reading the same method through its runtime key remains a dynamic property access.
+// Negative array indices count from the end; ordinary property reads do not.
+:expect [[41, 41, 41, undefined], [42, 42, 42, undefined]]
+@inline
+private fun selections(value) =
+  @fresh val key = Symbol("read")
+  class Reader(val n) {
+    @jsSymbol(key) fun read() = n
+  }
+  let reader = new Reader(value)
+  let xs = [0, value]
+  [reader.read(), reader.(key)(), xs.[-1], xs.(-1)]
+[selections(41), selections(42)]
+//│ = [[41, 41, 41, undefined], [42, 42, 42, undefined]]

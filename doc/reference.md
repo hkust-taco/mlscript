@@ -27,6 +27,7 @@ which is an evolving language that has not stabilized just yet.
 17. [Indentation and Block Syntax](#17-indentation-and-block-syntax)
 18. [Miscellaneous](#18-miscellaneous)
 19. [Built-in Types and Prelude](#19-built-in-types-and-prelude)
+20. [Compiler Debugging](#20-compiler-debugging)
 
 ---
 
@@ -247,6 +248,68 @@ fun foo(x: Int): Int = x + 1
 fun bar(x: Int, y: Str): Bool = x > 0
 ```
 
+### Optional Parameters
+
+A parameter followed by `?` is optional: callers may omit its argument, which is then `undefined`.
+
+```mlscript
+fun greet(name: Str, greeting?: Str) =
+  if greeting is Str then greeting + ", " + name else "Hello, " + name
+greet("Ana")             // = "Hello, Ana"
+greet("Ana", "Hi")       // = "Hi, Ana"
+```
+
+The annotation of an optional parameter includes `undefined`: `greeting?: Str` has type `Str | undefined`.
+The `?` must directly follow the parameter: `y ?` and `y ?: Str` are not optional parameters.
+
+Optional parameters follow the required ones, except for the parameters after a variadic parameter
+(see below). Function, lambda, and constructor parameters can be optional; context parameters
+(`using`) and variadic parameters cannot.
+
+Direct calls must supply every required argument, and no more arguments than the function accepts.
+A function that receives extra arguments dynamically ignores them.
+
+### Variadic Parameters
+
+A parameter prefixed with `...` collects any number of arguments into an array.
+Parameters may follow it; they receive the last arguments.
+
+```mlscript
+fun f(...xs) = xs
+f(1, 2, 3)               // = [1, 2, 3]
+fun g(x, ...xs, y) = [x, xs, y]
+g(1, 2, 3, 4)            // = [1, [2, 3], 4]
+g(1, 2)                  // = [1, [], 2]
+```
+
+The required parameters take the first and last arguments, the optional parameters take the remaining
+ones from left to right, and the variadic parameter collects the rest:
+
+```mlscript
+fun h(x, y?, ...xs, z) = [x, y, xs, z]
+h(1, 2)                  // = [1, undefined, [], 2]
+h(1, 2, 3)               // = [1, 2, [], 3]
+h(1, 2, 3, 4, 5)         // = [1, 2, [3, 4], 5]
+```
+
+A parameter list has at most one variadic parameter, and the parameters following it must be required.
+Class parameters cannot be variadic.
+
+### Droppable Parameters
+
+`drop` marks a parameter whose argument is always passed, but which implementations may ignore.
+In a function type, it lets the functions passed for it leave out that parameter:
+
+```mlscript
+fun app(f: (Int, drop Int) -> Int) = f(1, 2)
+app(x => x)              // = 1
+app((x, i) => x + i)     // = 3
+```
+
+A variadic parameter can also be droppable, as in `(Int, drop ...Array[Int]) -> Int`.
+Callers of a definition such as `fun first(x, drop y) = x` must still pass the argument of `y`.
+Only function and lambda parameters can be droppable.
+
 ### Recursive Functions
 
 Functions are recursive by default:
@@ -288,6 +351,7 @@ tuple
 x => x + 1
 (x, y) => x + y
 () => 42
+=> 42                 // also a zero-argument lambda
 ```
 
 ### Underscore lambda shorthand
@@ -340,6 +404,17 @@ xs.map(f)
 // This is admittedly a bit strange-looking, but we quickly get used to it:
 let f = => _ + 1 in xs.map(f)
 ```
+
+An explicit prefix `=>` always creates a lambda. If it contains no `_` placeholders,
+the lambda takes zero arguments: `=> new C()` constructs a fresh instance whenever
+called. Implicit delimiter positions such as `f \ expr` and `value |> expr` keep
+expressions without placeholders eager.
+
+A bare `new C` partially applies a constructor when `C` has a parameter list.
+If its only list accepts zero arguments (including an all-optional list), the
+compiler warns: write `new C()` to construct the instance, or `=> new C()` for
+an explicit zero-argument factory. A class declared without parameter lists
+still constructs immediately with `new C`.
 
 ### More examples
 
@@ -785,6 +860,8 @@ fun g(x, ...rest) = rest
 f(1, 2, 3)               // xs = [1, 2, 3]
 ```
 
+See [Variadic Parameters](#variadic-parameters).
+
 Under new resolution, an annotation on a rest parameter describes the whole rest
 array. Tuple values support precise zero-based projections such as `xs.0` and
 inherit the declared Array interface.
@@ -802,10 +879,10 @@ An explicit annotation such as `Array[Base]` makes element reads use the members
 declared by `Base`. Storing a `Child` that extends `Base` does not permit access
 to `Child`-only members through that annotation.
 
-Array callbacks such as `map` receive the element, index, and array; their
-declared function interfaces must account for these arguments, for example with
-unused or rest parameters. `reduce` also passes the accumulator first, and must be
-given an initial value: `xs.reduce((acc, x, ...) => acc + x, 0)`. Without one,
+Array callbacks such as `map` receive the element, index, and array. The index and
+array parameters are [droppable](#droppable-parameters), so callbacks may take only
+the element: `xs.map(x => x + 1)`. `reduce` also passes the accumulator first, and must
+be given an initial value: `xs.reduce((acc, x) => acc + x, 0)`. Without one,
 JavaScript uses the first element as the initial accumulator, which the declared
 signature does not describe.
 
@@ -1369,27 +1446,59 @@ fun f(x: Int): Str = String(x)
 val v: Option[Int] = Some(1)
 ```
 
+
+### Spreads
+
+Argument and array spreads follow the JavaScript iteration protocol:
+`value[Symbol.iterator]().next().value`. Arrays, strings, native collections,
+and user iterables use the same resolution path. Precise tuple spreads
+retain their fixed positions.
+
+
 ### Resolution Interfaces
 
-With new resolution (`#lang(0.3.x)`), annotations determine the interface available
-to member lookup and calls. A receiver annotated `Base` exposes Base's declared
-members and preserves virtual dispatch; concrete arguments cannot add subclass
-members to that interface. The same rule applies to parameters, result annotations,
-separate signatures, and constructor fields. Reading an unannotated member through
-an annotated interface currently does not infer its shape from its initializer or
-method body. Inference of missing selected-member types is a planned improvement.
-Structural record annotations likewise expose only their declared fields.
+**Resolution is a best-effort check, not a replacement for type checking.** It
+finds targets for names, members, and calls, and catches some obvious mistakes.
+Successful resolution does not establish type safety, even in strict mode.
+Type checking is meant to run as a later pass, but is not yet implemented.
 
-Compilation files check that their exposed functions and values work for inputs
-admitted by their interfaces. A public `fun read(x) = x.a` needs an interface for
+`@annotations.jsSymbol(path)` gives a public method a source name for the JavaScript property
+key denoted by `path`. The path must consist of modules and immutable `val`s,
+and end in a `val` annotated with `@annotations.fresh`. This marker is a contract
+that the val owns a unique symbol; the resolver does not prove freshness.
+
+```mlscript
+module Keys {
+  @fresh val read = Symbol("read")
+}
+class Reader {
+  @jsSymbol(Keys.read) fun read() = 42
+}
+```
+
+The method is stored at `Keys.read`, and both `reader.read()` and
+`reader.(Keys.read)()` select that property. An override must retain both the
+inherited source name and the same key. Giving an inherited key a different
+source name is a collision, as is defining two methods with the same key in one
+class. Distinct receiver paths are significant for fresh instance fields.
+
+Currently, selecting a member on an escaped instance is unsupported when the
+caller cannot access its local key: the compiler needs a runtime witness for
+that particular key. Resolution diagnoses such accesses at the use site before
+constructing a reference to the unavailable key. Closures that capture the key
+remain valid, as do keys available through an imported file, including its
+private file-level vals. The key must not be hoisted and shared between factory
+invocations. `slop/JsSymbol.mls` records these cases.
+
+A key path that accesses a private member of a class or module in another file
+is rejected at the selection site. Such members use private accessor symbols
+local to their defining file; they do not use the file-level private export ABI.
+
+Compilation files check that their exposed functions and values do not make a closed-world assumption. A public `fun read(x) = x.a` needs an interface for
 `x` even if local callers all provide `{a: 1}`. A private helper can use local
 inference, but returning it or storing it in an exposed record or tuple makes its
 interface subject to the same check. Callable result annotations provide the
 declared parameter interface when checking returned functions.
-
-Worksheet blocks perform this exposed-interface check only under
-`#lang(strictResolution: true)`. Non-strict resolution allows multiple selection
-or call targets, but still rejects missing targets and known invalid operations.
 
 Generic parameters remain opaque regardless of strict mode, visibility, or local
 callers. For example, `private fun read[A](x: A) = x.a` is invalid because `A`
@@ -1601,7 +1710,32 @@ arguments. Its diagnostic indicates a limitation of the current check.
 ```mlscript
 type Transformer[A, B] = A -> B
 type BinOp[A] = (A, A) -> A
+type Callback = (Int, Int?) -> Int              // optional parameter
+type Labeled = (x: Int, y?: Int) -> Int         // named parameters
+type Step = (Int, drop Int) -> Int              // droppable parameter
+type Join = (Str, ...Array[Str], Str) -> Str    // variadic parameter
 ```
+
+Function type parameters follow the rules of
+[optional](#optional-parameters), [variadic](#variadic-parameters), and [droppable](#droppable-parameters)
+function parameters. Parameter names in function types are labels only: they do not affect compatibility.
+
+A function passed where a function type is expected must accept the arguments that the type passes:
+- it may leave out trailing droppable parameters, including a droppable variadic parameter,
+  but no other parameters;
+- it may not require an argument that the type marks as optional;
+- its additional parameters must be optional, and are then `undefined`;
+- it may collect several arguments in a variadic parameter.
+
+```mlscript
+fun app(f: (Int, Int?) -> Int) = f(1)
+app((x, y?) => x)        // ok
+app((x, y) => x)         // error: `y` is required, but its argument may be omitted
+app(x => x)              // error: the optional parameter is not droppable
+```
+
+A separate signature, as in `fun f: (Int, Int?) -> Int` followed by `fun f(x, y?) = x`,
+must agree with the definition on which parameters are required, optional, and variadic.
 
 ### `forall` (Universal Quantification)
 
@@ -2130,6 +2264,128 @@ concat(...xs)                // join multiple strings
 from(value)                  // convert to string
 parenthesizedIf(x, cond)     // wrap in parens if cond
 ```
+
+---
+
+## 20. Compiler Debugging
+
+The compiler can report what it does in each of its phases, and show the intermediate programs it produces.
+This is configured in the source code, either for a whole file with the `#dbg` directive,
+or for individual definitions with the `@dbg` annotation.
+The output is meant for compiler developers: its format is not stable and may change at any time.
+
+### Debugging Aspects
+
+Each argument of `#dbg` or `@dbg` enables or disables one *aspect*.
+The following aspects trace a phase of the compiler:
+
+| Aspect | Traces |
+|---|---|
+| `elaboration` | elaboration of syntax trees into terms |
+| `lowering` | lowering of terms into the intermediate representation (IR) |
+| `optimizations` | the optimization passes run on the IR |
+
+With the new name resolution (`#lang(0.3.x)`), names are resolved during elaboration,
+so `elaboration` traces name resolution as well.
+
+Parser tracing is available through the diff-test command `:dp`.
+Source directives are read after parsing and cannot enable parser tracing.
+
+The following aspects display a program representation, without tracing:
+
+| Aspect | Displays |
+|---|---|
+| `showParsedTree` | the syntax tree produced by the parser |
+| `showElaboratedTree` | the elaborated term, as a tree |
+| `showElaboratedTerm` | the elaborated term, in readable form |
+| `showLoweredTree` | the IR produced by lowering, as a tree |
+| `showIR` | the IR produced by lowering, in readable form |
+| `showOptimizedIR` | the IR after optimizations, in readable form |
+
+Finally, `showUids` (enabled by default) controls whether traces show the unique identifiers of symbols.
+Disabling it makes traces easier to compare across compiler runs.
+UIDs are local to a compilation unit, so imported symbols use disambiguated names without numeric UIDs.
+
+### Syntax
+
+An aspect is enabled by writing its name as a quoted identifier,
+or enabled or disabled by giving it a Boolean value:
+
+```mlscript
+#dbg('lowering)                         // enable an aspect
+#dbg(elaboration: true, showIR: true)   // enable aspects explicitly
+#dbg(showUids: false)                   // disable an aspect
+```
+
+Unknown aspects and non-Boolean values are reported as errors.
+
+### Output Destination
+
+Debugging output is written to the standard output by default, which `out: StdIO` selects explicitly.
+The `out: File(...)` argument writes it to a file instead:
+
+```mlscript
+#dbg('lowering, out: File("lowering.log"))
+```
+
+As for imports, a relative `File` path is resolved against the directory of the file
+in which the `#dbg` directive or `@dbg` annotation is written, and an absolute path is used as is.
+The first time the compiler writes to a file during a compilation session, it replaces the file's previous contents;
+it then appends all later output, including the output of other files compiled in the same session,
+such as imported files.
+Output from concurrent compilations to the same file may be interleaved.
+
+Any other destination is reported as an error.
+
+### The `#dbg` Directive
+
+The `#dbg` directive configures debugging for the file in which it appears, and must appear at its top level:
+
+```mlscript
+#dbg('elaboration, 'showOptimizedIR, out: File("debug.log"))
+
+fun f(x) = x + 1
+```
+
+Several `#dbg` directives may set different aspects.
+Currently, debugging settings apply to the whole file regardless of where the directive appears,
+so if several directives set the same aspect, the last one takes effect.
+
+### The `@dbg` Annotation
+
+The `@dbg` annotation takes the same arguments as `#dbg`,
+but only applies them to the definition it annotates.
+It can annotate functions, methods, values, classes, modules, and objects:
+
+```mlscript
+@dbg('elaboration, 'showIR, showUids: false)
+fun selected(x) = x + 1
+
+fun unrelated(x) = x   // not traced, not displayed
+```
+
+Annotations combine with the file's settings:
+for example, `@dbg(lowering: false)` stops a lowering trace enabled by `#dbg` for the annotated definition.
+They also apply to the definitions nested in the annotated definition,
+which can override them with their own `@dbg` annotations:
+
+```mlscript
+@dbg('lowering, out: File("lowering.log"))
+fun traced() =
+  fun helper() = 1                        // traced to lowering.log
+  @dbg(lowering: false) fun muted() = 2   // not traced
+  helper() + muted()
+```
+
+The statements that follow an annotated definition are not affected by its annotation.
+The lowering trace of an annotated class also covers the evaluation of its superclass, if any,
+and its companion module, if any, which is compiled together with the class.
+
+The `optimizations` aspect cannot be selected per definition, as optimization passes process whole files.
+Setting it in `@dbg` produces a warning and has no effect; use `#dbg` instead.
+
+Currently, the destination selected by an enclosing `@dbg` annotation only applies to traces:
+the displays requested by the annotation of a nested definition use the file's destination.
 
 ---
 

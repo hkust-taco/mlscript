@@ -62,7 +62,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     typeProdImpl(t.expanded, insideSelAppChain)
   
   def typeProdImpl(t: Term, insideSelAppChain: Boolean): Producer =
-  trace[P](s"Typing producer: ${t.showDbg}", post = res => s": ${res.showDbg}"):
+  trace[P](dbg"Typing producer: ${t.showDbg}", post = res => s": ${res.showDbg}"):
     
     def constrain(lhs: P, rhs: C): Unit = collectedConstraints += ((src = t, c = Constraint(lhs, rhs)))
     
@@ -70,7 +70,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       t.ldsRoot match
       case S(lds) if !insideSelAppChain =>
         val sym = FlowSymbol("bind")
-        log(s"Constraining leading dot selection ${lds.showDbg} at the top level")
+        log(dbg"Constraining leading dot selection ${lds.showDbg} at the top level")
         constrain(P.LeadingDotSel(lds), C.Flow(sym))
         constrain(res(typeProd(sub, insideSelAppChain = true)), C.Flow(sym))
         P.Flow(sym)
@@ -100,7 +100,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             msg"Cannot use non-term member ${bms.nme} in term position" -> t.toLoc :: Nil
         getFlowSymOrType(bms)
       case _: Symbol =>
-        log(s"/!\\ Unhandled symbol type: ${sym} (${sym.getClass.getSimpleName}) /!\\")
+        log(dbg"/!\\ Unhandled symbol type: ${sym} (${sym.getClass.getSimpleName}) /!\\")
         P.Unknown(t)
         
     case Blk(stats, res) =>
@@ -129,7 +129,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
           val prod = cd.paramsOpt match
             case S(ps) =>
-              ps.restParam match
+              ps.variadic match
               case S(_) => ???
               case N =>
                 P.Fun(
@@ -142,20 +142,20 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                 )
             case N => P.Unknown(cd)
           
-          log(s"Class member type: ${prod.showDbg}")
+          log(dbg"Class member type: ${prod.showDbg}")
           
           constrain(prod, C.Flow(cd.bsym.flow))
           
         case md: ModuleOrObjectDef =>
           // TODO
-          log(s"Module: ${md.path}")
+          log(dbg"Module: ${md.path}")
           typeBody(md.body)
           
         case _: Import =>
           // TODO?
 
         case stt =>
-          log(s"/!\\ Unhandled statement: ${stt} /!\\")
+          log(dbg"/!\\ Unhandled statement: ${stt} /!\\")
           P.Unknown(stt)
           
       typeProd(res)
@@ -165,21 +165,21 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
 
     case sel @ LeadingDotSel(nme) =>
       leadingDotSelsToExpand += sel
-      log(s"Leading dot selection ${sel.showDbg}")
+      log(dbg"Leading dot selection ${sel.showDbg}")
       val sym = sel.resSym
       constrain(P.LeadingDotSel(sel), C.Flow(sym))
       P.Flow(sym)
     
     case sel @ AnySel(pre, nme, cls) =>
-      log(s"Selection ${sel.showDbg} ${sel.typ}")
+      log(dbg"Selection ${sel.showDbg} ${sel.typ}")
       checkLDS(pre): pre_t =>
         sel.legacyResolvedSym match
         case S(sym: BlockMemberSymbol) =>
-          log(s"RES ${sym.nme} in ${sel.showDbg}")
+          log(dbg"RES ${sym.nme} in ${sel.showDbg}")
           getFlowSymOrType(sym)
         case S(sym) =>
           selsToExpand += sel
-          log(s"Unhandled symbol reference ${sym.nme} in ${sel.showDbg}")
+          log(dbg"Unhandled symbol reference ${sym.nme} in ${sel.showDbg}")
           P.Unknown(sel)
         case N =>
           selsToExpand += sel
@@ -192,7 +192,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case N =>
         cls.legacyResolvedSym.flatMap(_.asCls) match
         case N =>
-          log(s"Unresolved or invalid class symbol in ${cls.showDbg}")
+          log(dbg"Unresolved or invalid class symbol in ${cls.showDbg}")
           P.Unknown(nw)
         case S(sym) =>
           sym match
@@ -239,7 +239,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   */
   
   def typeParam(p: Param): C =
-  trace[C](s"Typing param: ${p.showDbg}", post = res => s": ${res.showDbg}"):
+  trace[C](dbg"Typing param: ${p.showDbg}", post = res => s": ${res.showDbg}"):
     p.signType match
     case S(typ) =>
       p.flow.producers += ConcreteProd(Vector.empty, P.Typ(typ))
@@ -248,12 +248,12 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       C.Flow(p.flow)
   
   def typeParamList(ps: ParamList): Ls[C] =
-    if ps.restParam.nonEmpty then
+    if ps.variadic.nonEmpty then
       ??? // TODO
     ps.params.map(typeParam)
   
   def typeType(t: Term): Type =
-  trace[Type](s"Typing consumer: ${t.showDbg}", post = res => s": ${res.showDbg}"):
+  trace[Type](dbg"Typing consumer: ${t.showDbg}", post = res => s": ${res.showDbg}"):
     t match
     case Capture(base, _) => typeType(base)
     case Ref(sym: VarSymbol) => Type.Ref(sym, Nil) // unparameterized type variable
@@ -264,7 +264,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       Type.Tup:
         fields.map:
           case f: Fld => typeType(f.term)
-          case Spd(eager, term) => (???, typeType(term))
+          case Spd(eager, term, _) => (???, typeType(term))
     case FunTy(lhs, rhs, _) =>
       Type.Fun(typeType(lhs), typeType(rhs), N)
     case _ => TODO(t)
@@ -277,7 +277,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   def expandTerms() =
     import SelectionTarget.*
     selsToExpand.foreach: sel =>
-      log(s"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.mkString(", ")}")
+      log(dbg"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.map(_.showAsPlain).mkString(", ")}")
       assert(sel.expansion.isEmpty)
       sel.resolvedTargets match
         case ObjectMember(sym) :: Nil =>
@@ -286,7 +286,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case CompanionMember(comp, sym) :: Nil =>
           val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), FlowSymbol.sel(sym.nme), N, N)
           val app = App(base, Tup(sel.prefix :: Nil)(Tree.DummyTup))(Tree.DummyApp, N, FlowSymbol.app())
-          log(s"Expansion: ${app.showDbg}")
+          log(dbg"Expansion: ${app.showDbg}")
           sel.expansion = S(S(app))
         case Nil =>
           // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
@@ -301,12 +301,12 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
               case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
               case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
     leadingDotSelsToExpand.foreach: sel =>
-      log(s"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.mkString(", ")}")
+      log(dbg"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.map(_.showAsPlain).mkString(", ")}")
       assert(sel.expansion.isEmpty)
       sel.resolvedTargets match
       case CompanionMember(comp, sym) :: Nil =>
         val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), FlowSymbol.sel(sym.nme), N, N)
-        log(s"Leading dot expansion: ${base.showDbg}")
+        log(dbg"Leading dot expansion: ${base.showDbg}")
         sel.expansion = S(S(base))
       case Nil =>
         // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
@@ -325,7 +325,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       d.body.members.get(name) match
       case S(memb: BlockMemberSymbol) =>
         oc
-        .flatMap(findAccessPath(_, d.path, ms))
+        .flatMap(scope => AccessPath.findAccessPath(scope, ms).toOption)
         .map((_, memb))
       case _ => N
     case cs: ClassSymbol =>
@@ -336,7 +336,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         d.body.members.get(name) match
         case S(memb: BlockMemberSymbol) =>
           oc
-          .flatMap(findAccessPath(_, d.path, comp))
+          .flatMap(scope => AccessPath.findAccessPath(scope, comp).toOption)
           .map((_, memb))
         case _ => N
     case _ => N
@@ -365,7 +365,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       val (trm, cc) = collectedConstraints.pop()
       toSolve.push(cc)
       
-      trace(s"Handling constraint: ${cc.showDbg} (from ${trm.showDbg})"):
+      trace(dbg"Handling constraint: ${cc.showDbg} (from ${trm.showDbg})"):
         
         while fuel > 0 && toSolve.nonEmpty
         do
@@ -374,27 +374,27 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
           def dig(lhs: P, rhs: C, path: Path): Unit =
             
-            log(s"Solving: ${lhs.showDbg} <: ${rhs.showDbg}   (${lhs.getClass.getSimpleName}, ${rhs.getClass.getSimpleName})")
+            log(dbg"Solving: ${lhs.showDbg} <: ${rhs.showDbg}   (${lhs.getClass.getSimpleName}, ${rhs.getClass.getSimpleName})")
             
             (lhs, rhs) match
             case (P.Flow(sym), rhs)
             if inCache.contains(sym -> rhs)
-              => log(s"In (in) cache!")
+              => log(dbg"In (in) cache!")
             case (lhs, C.Flow(sym))
             if outCache.contains(lhs -> sym)
-              => log(s"In (out) cache!")
+              => log(dbg"In (out) cache!")
             case (P.Flow(sym), C.Flow(sym2)) =>
-              log(s"New flow $sym ~> $sym2")
+              log(dbg"New flow $sym ~> $sym2")
               sym.outFlows += sym2
               sym.producers.foreach(cp =>
                 dig(cp.ctor, rhs, cp.path ++ path))
             case (lhs: ProdCtor, C.Flow(sym)) =>
-              log(s"New flow $lhs ~> $sym")
+              log(dbg"New flow $lhs ~> $sym")
               sym.producers += ConcreteProd(path, lhs)
               sym.consumers.foreach: c =>
                 dig(lhs, c, path)
             case (P.Flow(sym), rhs) =>
-              log(s"New flow $sym ~> $rhs")
+              log(dbg"New flow $sym ~> $rhs")
               sym.consumers += rhs
               sym.producers.foreach: cp =>
                 dig(cp.ctor, rhs, cp.path ++ path)
@@ -431,14 +431,14 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
               zip(args, ini, rst, path)
             case (sel @ P.LeadingDotSel(trm), rhs) => rhs match
               case C.Typ(Type.Ref(sym, _)) =>
-                log(s"Examining ${sym} for leading dot selection resolution")
+                log(dbg"Examining ${sym} for leading dot selection resolution")
                 getCompanionMember(trm.nme.name, trm.originalCtx, sym) match
                 case S((path, memb)) =>
                   sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
-                  log(s"Found member ${memb}")
+                  log(dbg"Found member ${memb}")
                   toSolve.push(Constraint(getFlowSymOrType(memb), C.Flow(trm.resSym)))
                 case _ =>
-                  log(s"Could not find member ${trm.nme.name} in ${sym}")
+                  log(dbg"Could not find member ${trm.nme.name} in ${sym}")
               case _ => log("Unhandled RHS for leading dot selections")
             case (lhs, sel: C.Sel) =>
               lhs match
@@ -450,7 +450,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                 d.body.members.get(sel.nme.name) match
                 case S(memb: BlockMemberSymbol) =>
                   sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
-                  log(s"Found immediate member ${memb}")
+                  log(dbg"Found immediate member ${memb}")
                   toSolve.push(Constraint(getFlowSymOrType(memb), sel.res))
                 case N =>
                   d.moduleCompanion match
@@ -458,11 +458,11 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                     val cd = comp.defn.getOrElse(die)
                     cd.body.members.get(sel.nme.name) match
                     case S(memb) =>
-                      log(s"Found companion member ${memb}")
+                      log(dbg"Found companion member ${memb}")
                       sel.trm.originalCtx match
                       case S(oc) =>
-                        val patho = findAccessPath(oc, cd.path, comp)
-                        log(s"Access path: ${patho}")
+                        val patho = AccessPath.findAccessPath(oc, comp).toOption
+                        log(dbg"Access path: ${patho}")
                         patho match
                         case S(path) =>
                           sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
@@ -488,7 +488,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   :: msg"Type `${lhs.showDbg}` does not contain member '${sel.nme.name}'" -> lhs.toLoc
                   :: Nil)
             case _ =>
-              log(s"/!\\ Unhandled constraint /!\\")
+              log(dbg"/!\\ Unhandled constraint /!\\")
           end dig
           
           dig(c.lhs, c.rhs, Vector.empty)
@@ -496,26 +496,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         if fuel === 0 then
           raise(ErrorReport(
             msg"Could not solve all constraints within $MAX_FUEL iterations." -> N :: Nil))
-  
-  def findAccessPath(src: SrcScope, dst: SrcScope, moduleSym: ModuleOrObjectSymbol): Opt[Term] =
-    log(s"outermostAcessibleBase ${dst.outermostAcessibleBase}")
-    val (outermostBase, outermostPath) = dst.outermostAcessibleBase
-    var cur = src
-    while cur isnt outermostBase do
-      cur.parent match
-      case N =>
-        return N
-      case S(p) =>
-        cur = p
-    assert(cur is outermostBase)
-    (moduleSym :: outermostPath).reverse match
-    case Nil => die
-    case sym :: syms => S:
-      syms.foldLeft(sym.asInstanceOf[DefinitionSymbol[?]]//FIXME
-        .bms.getOrElse(die).ref(): Term): (a, b) =>
-        Sel(a, Tree.Ident(b.nme))(S(b.asInstanceOf[DefinitionSymbol[?]]//FIXME
-          .bms.getOrElse(die)), FlowSymbol.sel(b.nme), N, N)
-  
   
   import hkmc2.document.*
   import utils.Scope

@@ -125,6 +125,12 @@ def hkmc2TestSubproject(dirName: String, compileRunner: Option[String], diffRunn
 lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", Some("NofibCompileTestRunner"), "NofibDiffTestRunner")
 lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", Some("AppsCompileTestRunner"), "AppsDiffTestRunner")
 lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", Some("WasmCompileTestRunner"), "WasmDiffTestRunner")
+lazy val hkmc2SlopTests = hkmc2TestSubproject("hkmc2SlopTests", None, "SlopDiffTestRunner")
+  .settings(
+    // These worksheets import main-suite fixtures such as Iter.mjs. The aggregate
+    // suites can schedule sibling tasks in parallel, so order this dependency explicitly.
+    Test / test := (Test / test).dependsOn(hkmc2JVM / Test / test).value,
+  )
 
 lazy val hkmc2MainTests = project.in(file("hkmc2MainTests"))
   .settings(
@@ -141,6 +147,7 @@ lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
         .dependsOn(hkmc2NofibTests / Test / test)
         .dependsOn(hkmc2AppsTests / Test / test)
         .dependsOn(hkmc2WasmTests / Test / test)
+        .dependsOn(hkmc2SlopTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
     ).value
   )
@@ -152,6 +159,7 @@ lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
         .dependsOn(hkmc2NofibTests / Test / test)
         .dependsOn(hkmc2AppsTests / Test / test)
         .dependsOn(hkmc2WasmTests / Test / test)
+        .dependsOn(hkmc2SlopTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
         .dependsOn(hkmc2JS / Test / test)
         .dependsOn(hkmc2Benchmarks / Test / compile)
@@ -166,6 +174,7 @@ addCommandAlias("dtest", "hkmc2DiffTests/testOnly hkmc2.DiffTestRunner -- -z")
 addCommandAlias("ndtest", "hkmc2NofibTests/testOnly hkmc2.NofibDiffTestRunner -- -z")
 addCommandAlias("adtest", "hkmc2AppsTests/testOnly hkmc2.AppsDiffTestRunner -- -z")
 addCommandAlias("wdtest", "hkmc2WasmTests/testOnly hkmc2.WasmDiffTestRunner -- -z")
+addCommandAlias("sdtest", "hkmc2SlopTests/testOnly hkmc2.SlopDiffTestRunner -- -z")
 // Compilation tests
 addCommandAlias("ctest", "hkmc2JVM/testOnly hkmc2.CompileTestRunner -- -z")
 addCommandAlias("cntest", "hkmc2NofibTests/testOnly hkmc2.NofibCompileTestRunner -- -z")

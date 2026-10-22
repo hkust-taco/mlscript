@@ -35,12 +35,6 @@ new
 :re
 new
   Foo()
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.37: 	  Foo()
-//│ ║        	  ^^^^^
-//│ ╟── Class 'Foo' must be instantiated with 'new'.
-//│ ║  l.5: 	class Foo
-//│ ╙──     	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.36: 	new
 //│ ║        	^^^
@@ -49,6 +43,12 @@ new
 //│ ╟── Invalid class expression: application
 //│ ║  l.37: 	  Foo()
 //│ ╙──      	  ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.37: 	  Foo()
+//│ ║        	  ^^^^^
+//│ ╟── Class 'Foo' must be instantiated with 'new'.
+//│ ║  l.5: 	class Foo
+//│ ╙──     	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -99,7 +99,7 @@ new Foo(...[1, 2])
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.98: 	new Foo(...[1, 2])
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Foo' expected 3 arguments, but got 2
+//│ ╟── Constructor of class 'Foo' expected 3 arguments, but got 2
 //│ ║  l.92: 	data class Foo(a,b,c)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ = Foo(1, 2, undefined)
@@ -109,7 +109,7 @@ new Foo(...[1, 2, 3, 4])
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.108: 	new Foo(...[1, 2, 3, 4])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Foo' expected 3 arguments, but got 4
+//│ ╟── Constructor of class 'Foo' expected 3 arguments, but got 4
 //│ ║  l.92: 	data class Foo(a,b,c)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ = Foo(1, 2, 3)

@@ -170,3 +170,16 @@ class VirtualPathTests extends AnyFunSuite:
     assert(fs.read("/a/b.mls") == "initial")
     fs.write("/a/c/../b.mls", "updated")
     assert(fs.read("/a/./b.mls") == "updated")
+
+  test("in-memory append preserves snapshots and updates normalized paths"):
+    val fs = new InMemoryFileSystem(Map.empty)
+    val path = Path("/a/b.log")
+    fs.append(path, "first")
+    val snapshot = fs.allFiles
+    val timestamp = fs.getLastChangedTimestamp(path)
+    fs.append(Path("/a/c/../b.log"), " second")
+    assert(fs.read("/a/b.log") == "first second")
+    assert(fs.getLastChangedTimestamp(path) == timestamp + 1)
+    assert(snapshot("/a/b.log") == "first", "Previously read contents must remain immutable")
+    fs.write(path, "replacement")
+    assert(fs.read(path) == "replacement")

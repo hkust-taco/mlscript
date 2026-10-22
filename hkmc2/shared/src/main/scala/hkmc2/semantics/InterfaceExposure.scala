@@ -55,7 +55,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
 
   private def source(symbol: BlockMemberSymbol): MemberRef =
     val flow = flows.getOrElseUpdate(symbol, FlowSymbol("exposed"))
-    val ref: MemberRef = MemberRef(symbol)(new syntax.Tree.Ident(symbol.nme).withLocOf(symbol), flow)
+    val ref: MemberRef = MemberRef(symbol)(N, flow)
     // An exported definition is invoked from outside the unit, where no binder is in scope.
     rctx.recordLexicalBinders(ref, Set.empty)
     ref
@@ -83,7 +83,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
               case NoShape => ()))(emit(_, path))
 
   private def parameter(param: Param, marks: Ls[Marks], path: Path)(using ResolutionContext): Unit =
-    val ref = SimpleRef(param.sym)(param.sym.id)
+    val ref = SimpleRef(param.sym)(N)
     val unknown = UnknownValueShape(ref, fromPublicInterface = true)(path.via(
       msg"Parameter '${param.sym.nme}' admits values of unknown shape." -> param.toLoc))
     resolver.parameterSignature(param) match
@@ -95,8 +95,9 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
   private def parameters(lists: Ls[(ParamList, Ls[Marks])], path: Path)(using ResolutionContext): Unit =
     lists.foreach: (params, marks) =>
       params.params.foreach(parameter(_, marks, path))
-      params.restParam.foreach: rest =>
-        val ref = SimpleRef(rest.sym)(rest.sym.id)
+      params.trailingParams.foreach(parameter(_, marks, path))
+      params.variadic.map(_.param).foreach: rest =>
+        val ref = SimpleRef(rest.sym)(N)
         val unknown = UnknownValueShape(ref, fromPublicInterface = true)(path.via(
           msg"Rest parameter '${rest.sym.nme}' admits elements of unknown shape." -> rest.toLoc))
         val tuple = TupleShape(ref, TupleShape.Unknown(ref, TupleShape.ValueField(unknown, Nil)) :: Nil)(resolver)
@@ -128,12 +129,9 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       watch((new Identity(body), marks, "result"))(resolver.listenResult(body)): shape =>
         emit(shape.exit(marks), path.via(msg"This value is returned here." -> body.toLoc))
     case S(sign) =>
-      // Check returned implementations against the declared calling interface.
-      // Its parameter types constrain returned closures instead of unrestricted
-      // unknowns, and consumers see only the annotated result.
+      // checkDeclaredResult already checks the body during elaboration.
+      // Exposure follows the declared result's interface.
       val declared = resolver.declaredType(resolver.typeResolution(sign), Map.empty).instantiate(rctx.instances)
-      watch((new Identity(body), declared, marks))(resolver.listenResult(body)): shape =>
-        resolver.constrainFunction(declared, shape, marks)
       watch((declared, marks))(resolver.listenTypeInstances(declared)): shape =>
         emit(shape.exit(marks), path)
 
@@ -218,7 +216,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         // still admit unknown shapes even when local callers supplied evidence.
         val unknown = UnknownValueShape(callable.source, fromPublicInterface = true)(path)
         callable.paramLists.foreach: params =>
-          (params.params.flatten ::: params.rest.toList).foreach: input =>
+          params.allParams.flatMap(_.tpe).foreach: input =>
             unknown.enter(marks) match
               case value: TermShape => resolver.exposeTypeHoles(input, value, marks)
               case NoShape => ()
@@ -234,16 +232,19 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         resolver.arrayElementType(nominal).foreach: binding =>
           watch((ShapeIdentity.key(shape), "array elements"))(listener => { resolver.listenArrayElements(shape)(listener); () }): element =>
             emit(element, path.via(msg"This value is stored in this array." -> binding.resolution.source.toLoc))
+      case view: IntersectionView => view.values.foreach(value => emit(value.exit(marks), path))
       // Structural annotations hide initializer implementations. Unknown and
       // dynamic values have no static graph.
       case _: (RecordTypeShape | OpaqueTypeShape | UnknownValueShape | RigidTypeShape | DynShape | ErrShape) => ()
 
-  def check(exports: Ls[BlockMemberSymbol], values: Ls[Term]): Unit =
+  /** An exposed value can be a synthesized local reference. Keep the exposure
+    * site's location in its diagnostic provenance, not on that reference. */
+  def check(exports: Ls[BlockMemberSymbol], values: Ls[(Term, Opt[Loc])]): Unit =
     try
       exports.foreach: symbol =>
         member(symbol, Nil, ShapeProvenance.empty.via(msg"'${symbol.nme}' is exposed by this compilation unit." -> symbol.headerLoc))
-      values.foreach: value =>
-        term(value, Nil, ShapeProvenance.empty.via(msg"This value is exposed by this compilation unit." -> value.toLoc))
+      values.foreach: (value, loc) =>
+        term(value, Nil, ShapeProvenance.empty.via(msg"This value is exposed by this compilation unit." -> loc))
       // Annotated callbacks can escape even from private code. Delay their
       // exposure until the block is elaborated, so forward definitions and
       // returned closures are available. Processing one root may discover more.

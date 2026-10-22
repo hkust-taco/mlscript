@@ -20,7 +20,7 @@ abstract class TimeOutTests
     testName = test.name
     super.withFixture(test)
   override val defaultTestSignaler: Signaler = new Signaler:
-    @annotation.nowarn("msg=method stop in class Thread is deprecated") def apply(testThread: Thread): Unit =
+    def apply(testThread: Thread): Unit =
       println(s"[${Thread.currentThread().getName}] running ${testThread.getName} has run out of time!")
       println(s"!! Test $testName at $testThread has run out out time !! stopping..." +
         "\n\tNote: you can increase this limit by changing TimeOutTests.TimeLimit")
@@ -30,7 +30,7 @@ abstract class TimeOutTests
       // * which would be a much bigger pain to make receptive to "gentle" interruption.
       // * It would feel extremely wrong to intersperse the pure type checker algorithms
       // * with ugly `Thread.isInterrupted` checks everywhere...
-      try testThread.stop()
+      try classOf[Thread].getMethod("stop").invoke(testThread)
       catch _ =>
         // * Thread.stop() is no longer supported in recent JVMs,
         // * and unfortunately there is no good alternative other than terminating the entire process.

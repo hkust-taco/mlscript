@@ -27,17 +27,8 @@ f()
 xs.reverse()
 //│ = [2, 1, 0]
 
-:e
-:re
 xs.map(x => x * 2)
-//│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.261: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in MiscArrayTests.mls:32
-//│ ║  l.32: 	xs.map(x => x * 2)
-//│ ╙──      	       ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
+//│ = [4, 2, 0]
 
 xs.map((x, i, a) => x * 2)
 //│ = [4, 2, 0]
@@ -60,13 +51,13 @@ xs |.map(x => x * 2) |.print()
 xs |.
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.61: 	  map(x => x * 2)
+//│ ║  l.52: 	  map(x => x * 2)
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 2 arguments, but got 1
-//│ ║  l.51: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
+//│ ║  l.42: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
-//│ ║  l.61: 	  map(x => x * 2)
+//│ ║  l.52: 	  map(x => x * 2)
 //│ ╙──      	      ^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda5, tmp;
@@ -76,22 +67,22 @@ xs |.
 //│ tmp = map(lambda5);
 //│ return Predef.passTo(xs1, tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'map' expected at least 2 arguments but got 1
 
 :e
 :re
 xs|.
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.84: 	  map(x => x * 2)
+//│ ║  l.75: 	  map(x => x * 2)
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 2 arguments, but got 1
-//│ ║  l.51: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
+//│ ║  l.42: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
-//│ ║  l.84: 	  map(x => x * 2)
+//│ ║  l.75: 	  map(x => x * 2)
 //│ ╙──      	      ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'map' expected at least 2 arguments but got 1
 
 :pt
 xs

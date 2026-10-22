@@ -203,20 +203,7 @@ replaceGetter()
 //│ = 2
 
 
-// Other compilation units can assign values to the mutable fields that this compilation unit exposes:
-// those must declare their types, since their representations must not depend on the values that
-// this compilation unit happens to assign to them.
-:ge
-class Exposed(mut val value)
-//│ ╔══[COMPILATION ERROR] Mutable field 'value' is exposed to other compilation units, which can assign to it; annotate its type
-//│ ║  l.210: 	class Exposed(mut val value)
-//│ ║         	                      ^^^^^
-//│ ╟── 'Exposed' is exposed by this compilation unit.
-//│ ║  l.210: 	class Exposed(mut val value)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Wasm result:
-//│ = {}
-
+// An exposed mutable field can use an unboxed representation when its type is declared.
 :noInline
 :expect 2
 class Declared(mut val value: Int32)
@@ -269,7 +256,7 @@ private fun assignLaterString() =
   let later = makeLater()
   set later.value = "hello"
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int32'
-//│ ║  l.270: 	  set later.value = "hello"
+//│ ║  l.257: 	  set later.value = "hello"
 //│ ╙──       	      ^^^^^^^^^^^
 //│ Wasm result:
 //│ = {}
@@ -296,7 +283,7 @@ private fun describe(described: {mut value: Any}) = ()
 private fun mutableView() = describe(Described(const(1)))
 mutableView()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.294: 	private class Described(mut val value)
+//│ ║  l.281: 	private class Described(mut val value)
 //│ ╙──       	                                ^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 

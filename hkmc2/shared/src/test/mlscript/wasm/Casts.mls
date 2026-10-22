@@ -182,7 +182,7 @@ fun test: Function = id
 //│ ╙──       	                     ^^
 
 :fixme
-fun test: Function = new Object
+fun test: Function = new Object()
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing constructor definition for class member:Object
 
 class C

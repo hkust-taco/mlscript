@@ -560,10 +560,10 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
           // The step pattern is not built from a recursive context. The fixed
           // point degenerates to a flat contraction loop: keep applying the
           // step pattern to its own output until it fails.
-          log(s"No recursive context; compiling a flat contraction loop.")
+          log(dbg"No recursive context; compiling a flat contraction loop.")
           S(assemble(entry, Nil, post, requireProgress))
         case S((ctxInst, body)) =>
-          log(s"Recursive context: ${ctxInst.showDbg}")
+          log(dbg"Recursive context: ${ctxInst.showDbg}")
           val alternatives = body match
             case Or(alternatives) => alternatives
             case pattern => pattern :: Nil
@@ -650,7 +650,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     app(matcher.safeRef, tup(fld(argument)), label)
 
   private def refEq(left: Term, right: Term): Term =
-    app(State.builtinOpsMap("===").ref(Ident("===")), tup(fld(left), fld(right)), "reference equality")
+    app(State.builtinOpsMap("===").safeRef, tup(fld(left), fld(right)), "reference equality")
 
   /** Run `make` with a thunk producing the `rest` split. When the thunk is
     * invoked more than once, `rest` is bound as a join point and every
@@ -800,7 +800,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
       val (postMatcher, postImpls) = postCompiler.buildMatcher(postPattern, ResultMode.Full)
       (postMatcher, postImpls)
 
-    log(s"Classes: ${classes.map(cls => s"${cls.symbol.nme}(${cls.alts})").mkString(", ")}")
+    log(dbg"Classes: ${classes.map(cls => s"${cls.symbol.nme}(${cls.alts})").mkString(", ")}")
 
     // ---- Machine state ----
     val inputSymbol = VarSymbol(Ident("input"), erasedType = N)

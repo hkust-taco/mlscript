@@ -189,32 +189,12 @@ exported(const(42))
 //│ = 42
 
 
-// A mutable field takes the representation of its initializer and of the values assigned to it,
-// here only a numeric initializer (see MutableFields.mls for assignments).
-:expect 42
-private class Mutable(mut val value)
-Mutable(const(42)).value
-//│ Wasm result:
-//│ = 42
-
-
-// An explicit mutable-field annotation supplies the storage interface.
-:noInline
-:expect 42
-private class Mutable(mut val value: Int32)
-let cell = Mutable(const(1))
-set cell.value = const(42)
-cell.value
-//│ Wasm result:
-//│ = 42
-
-
 // Explicit Any keeps its declared representation and rejects an unboxed initializer.
 :ge
 val annotated: Any = const(42)
 annotated
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.214: 	val annotated: Any = const(42)
+//│ ║  l.194: 	val annotated: Any = const(42)
 //│ ╙──       	                     ^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 
@@ -225,7 +205,7 @@ annotated
 :expect 42
 private fun choose(flag, value) =
   if flag do return value
-  undefined
+  unsafe.undefined
 let unused = choose(false, const(1))
 choose(true, const(42))
 //│ Wasm result:
@@ -237,14 +217,14 @@ choose(true, const(42))
 :noInline
 :expect 42
 private class Missing(val a: Int32, val b: Int64, val c: Float32, val d: Float64)
-private fun empty(): Missing = undefined
+private fun empty(): Missing = unsafe.undefined
 private fun pass(a: Int32, b: Int64, c: Float32, d: Float64): Int32 =
   val missing = Missing(a, b, c, d)
   let local = missing.a
-  set local = undefined
+  set local = unsafe.undefined
   local
 let missing = empty()
-let unspecified = pass(undefined, undefined, undefined, undefined)
+let unspecified = pass(unsafe.undefined, unsafe.undefined, unsafe.undefined, unsafe.undefined)
 42
 //│ Wasm result:
 //│ = 42
@@ -303,7 +283,7 @@ discard()
 let calls = const(0)
 private fun absent(): Int64 =
   set calls = wasm.i32.add(calls, const(1))
-  undefined
+  unsafe.undefined
 private fun consume(value: Int64): Int32 = calls
 let count = consume(absent())
 wasm.i32.add(count, const(41))
@@ -315,7 +295,7 @@ wasm.i32.add(count, const(41))
 :noInline
 :expect 42
 private fun choose(flag) =
-  let value = if flag then const(42) else undefined
+  let value = if flag then const(42) else unsafe.undefined
   value
 let unused = choose(false)
 choose(true)

@@ -35,7 +35,7 @@ class BlockChecker()(using DebugPrinter, State, Raise) extends BlockTraverser:
     case _ => ()
     super.applyBlock(b)
   
-  override def applyParamList(pl: ParamList): Unit =
+  override def applyParamList(pl: LoweredParamList): Unit =
     pl.paramSyms.foreach(checkSymbol(_, pl))
     super.applyParamList(pl)
   

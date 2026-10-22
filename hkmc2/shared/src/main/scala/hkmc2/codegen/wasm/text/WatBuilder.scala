@@ -384,15 +384,25 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     if r.isUndefined then target.zeroValue.getOrElse(lastWords("Undefined requires a defaultable value type"))
     else castConserve(result(r), target, r.toLoc)
 
-  /** Compile arguments in the physical parameter representations, including undefined placeholders.
-    * A method's already-evaluated receiver occupies the first parameter.
+  /** Compile arguments in their physical parameter representations, including undefined placeholders,
+    * and supply null for omitted optional arguments. A method's already-evaluated receiver occupies
+    * the first parameter. Source arity checking happens before parameter flags are erased; a missing
+    * slot must still have a representation that can carry null.
     */
-  private def castArgsToParams(args: Seq[Arg], funcTypeInfo: TypeInfo, receiver: Opt[Expr])
+  private def adaptCallArgs(args: Seq[Arg], funcTypeInfo: TypeInfo, receiver: Opt[Expr], loc: Opt[Loc])
       (using FunctionCtx, Raise, SessionExportCtx): Seq[Expr] =
     val declParams = funcTypeInfo.asFunctionType_!.sigType.params
-    val prefix = receiver.map(castConserve(_, declParams.head.valtype, N)).toSeq
-    prefix ++ args.zip(declParams.drop(prefix.size)).map: (arg, p) =>
-      argument(arg, S(p.valtype))
+    val prefix = receiver.map(castConserve(_, declParams.head.valtype, loc)).toSeq
+    val suppliedParams = declParams.drop(prefix.size)
+    if args.size > suppliedParams.size then raise(ErrorReport(
+      msg"More arguments were supplied than the WebAssembly call supports." -> loc :: Nil,
+      source = Diagnostic.Source.Compilation))
+    prefix ++ suppliedParams.zipWithIndex.map: (p, index) =>
+      args.lift(index) match
+        case S(arg) => argument(arg, S(p.valtype))
+        case N => p.valtype match
+          case rt: RefType if rt.nullable => ref.`null`(rt.heapType)
+          case _ => errExpr(Ls(msg"Missing argument cannot be represented as null by the WebAssembly backend." -> loc))
 
   /** Returns the default Wasm value for one struct field when eagerly constructing an object instance. */
   private def defaultStructFieldValue(field: Field)(using Raise): Expr = field.ty.zeroValue.getOrElse:
@@ -479,7 +489,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       ctorSym = N,
       k = syntax.Obj,
       paramsOpt = N,
-      auxParams = PlainParamList(Nil)(N) :: Nil,
+      auxParams = LoweredParamList.plain(Nil)(N) :: Nil,
       parentPath = N,
       methods = Nil,
       privateFields = Nil,
@@ -489,6 +499,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       companion = N,
       bufferable = N,
       termCompanion = N,
+      methodKeys = Map.empty,
     )(N, Nil)
 
   /** Registers the synthetic `Unit` singleton. */
@@ -947,7 +958,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   /** Returns the single flattened constructor parameter list. After ClassParamFlattener, all classes have paramsOpt = N
     * and exactly one auxParams entry.
     */
-  private def classCtorParamList(defn: ClsLikeDefn): ParamList =
+  private def classCtorParamList(defn: ClsLikeDefn): LoweredParamList =
     assert(
       defn.paramsOpt.isEmpty,
       s"WatBuilder: expected paramsOpt to be None after flattening for class ${defn.sym.nme}",
@@ -1037,7 +1048,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     * Note that only top-level functions that will be lowered by the [[FunDefn]] arm of [[returningTerm]] can be
     * pre-declared with this function - see [[isPredeclarableTopLevelFun]].
     */
-  private def predeclareTopLevelFun(sym: BlockMemberSymbol, ps: ParamList)(using Raise): Unit =
+  private def predeclareTopLevelFun(sym: BlockMemberSymbol, ps: LoweredParamList)(using Raise): Unit =
     val params = ps.paramSyms.map(p => p -> SymIdx(p.nme))
     val resultTypes = Seq(Result(declaredResultType(sym)))
     val funcTy = ctx.addType(TypeInfo(
@@ -1425,7 +1436,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       case TryBlock(sub, finallyDo, _) => TryBlock(sub, finallyDo, rest)
       case Assign(lhs, rhs, _) => Assign(lhs, rhs, rest)
       case af @ AssignField(lhs, nme, rhs, _) => AssignField(lhs, nme, rhs, rest)(af.symbol)
-      case AssignDynField(lhs, fld, arrayIdx, rhs, _) => AssignDynField(lhs, fld, arrayIdx, rhs, rest)
+      case AssignDynField(lhs, fld, kind, rhs, _) => AssignDynField(lhs, fld, kind, rhs, rest)
       case Define(defn, _) => Define(defn, rest)
       case Match(scrut, arms, dflt, _) => Match(scrut, arms, dflt, rest)
       case Label(label, loop, body, _) => Label(label, loop, body, rest)
@@ -1452,8 +1463,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                 val parentInitType = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(parentInitFunc).typeIdx)
                 val superCall = call(
                   funcidx = ctx.getFunc_!(parentInitFunc),
-                  operands = castArgsToParams(args, parentInitType,
-                    S(local.get(thisVar, RefType(parentTypeRef, nullable = false)))),
+                  operands = adaptCallArgs(args, parentInitType,
+                    S(local.get(thisVar, RefType(parentTypeRef, nullable = false))), clsLikeDefn.sym.toLoc),
                   returnTypes = Seq(Result(RefType(parentTypeRef, nullable = false))),
                 )
                 prefixWat :+ drop(superCall)
@@ -1698,10 +1709,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val baseSym = vt.slots(slot).owner
         val paramTypes = vt.slots(slot).paramTypes
         val resultType = vt.slots(slot).resultType
-        softAssert(
-          args.size == paramTypes.size,
-          s"Virtual call arity mismatch for $methodSym: ${args.size} args vs ${paramTypes.size} declared params",
-        )
         val ownerTypeInfoIdx = typeInfoTypeIdxs(ownerCls)
         val receiverTmp = mkTempLocal("receiver", erasedType = N)
         val receiverExpr = local.set(receiverTmp, result(qual))
@@ -1716,7 +1723,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           ownerTypeInfoRef,
           RefType(virtualMethodTypeIdx, nullable = true),
         )
-        val operands = castArgsToParams(args, ctx.getTypeInfo_!(virtualMethodTypeIdx), S(receiverRef))
+        val operands = adaptCallArgs(args, ctx.getTypeInfo_!(virtualMethodTypeIdx), S(receiverRef), qual.toLoc)
         val virtualCall = call_ref(
           target = methodRef,
           operands = operands,
@@ -1730,7 +1737,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         Ls(receiverExpr, adaptedCall)
       case N =>
         val funcTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(methodSym).typeIdx)
-        val operands = castArgsToParams(args, funcTypeInfo, S(result(qual)))
+        val operands = adaptCallArgs(args, funcTypeInfo, S(result(qual)), qual.toLoc)
         Ls(call(
           funcidx = ctx.getFunc_!(methodSym),
           operands = operands,
@@ -1752,6 +1759,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         operands = Seq(ref.i31(i32.const(lit.offset)), ref.i31(i32.const(lit.byteLen))),
         returnTypes = Seq(Result(RefType.anyref)),
       )
+    case Value.Lit(UnitLit(true)) => ref.`null`(HeapType.Any)
     case Value.Lit(UnitLit(false)) =>
       // `undefined` is the IR's canonical "no meaningful value", so it lowers to `$Unit` (similar to
       // `normalizeValueExprs`).
@@ -1885,7 +1893,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     extraInfo = S(fun.toString),
                   )
               val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(baseFuncIdx).typeIdx)
-              val wasmArgs = castArgsToParams(args, baseTypeInfo, N)
+              val wasmArgs = adaptCallArgs(args, baseTypeInfo, N, c.toLoc)
 
               call(
                 funcidx = baseFuncIdx,
@@ -1912,7 +1920,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     ),
                   )
               val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
-              val wasmArgs = castArgsToParams(args, baseTypeInfo, N)
+              val wasmArgs = adaptCallArgs(args, baseTypeInfo, N, c.toLoc)
 
               call_ref(
                 target = base,
@@ -1985,9 +1993,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             extraInfo = S(sel),
           )
 
-    case dyn @ DynSelect(qual, fld, arrayIdx) =>
+    case dyn @ DynSelect(qual, fld, kind) =>
       val qualRes = result(qual)
-      if arrayIdx then
+      if kind.isArrayIdx then
         val idxBuilder = compileTupleIndex(
           fld = fld,
           loc = fld.toLoc,
@@ -2056,7 +2064,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         lastWords(s"Missing type definition for class constructor ${ctorClsBlkSym.toString}")
       val ctorClsTypeIdx = ctx.getType(ctorClsBlkSym).getOrElse:
         lastWords(s"Missing class definition for class ${ctorClsBlkSym.toString}")
-      val ctorArgs = castArgsToParams(as, ctorTypeIdx, N)
+      val ctorArgs = adaptCallArgs(as, ctorTypeIdx, N, r.toLoc)
       call(funcidx = ctorFuncIdx, operands = ctorArgs, Seq(Result(RefType(ctorClsTypeIdx, nullable = false))))
 
     case Tuple(mut, elems) =>
@@ -2219,11 +2227,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val rstBlk = returningTerm(rst)
         assignInstr +: rstBlk
 
-      case assign @ AssignDynField(lhs, fld, arrayIdx, rhs, rst) =>
+      case assign @ AssignDynField(lhs, fld, kind, rhs, rst) =>
         val lhsExpr = result(lhs)
         val rhsExpr = result(rhs)
         val assignInstr =
-          if arrayIdx then
+          if kind.isArrayIdx then
             val tupleArrayType = this.tupleArrayType(mut = true)
             val tupleRef = ref.cast(lhsExpr, RefType(tupleArrayType, nullable = false))
             val idxBuilder = compileTupleIndex(
@@ -2236,7 +2244,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             array.set(tupleArrayType, tupleRef, idxExpr, rhsExpr)
           else
             errExpr(
-              Ls(msg"WatBuilder::returningTerm for AssignDynField(...) where `arrayIdx = false` is not implemented yet" ->
+              Ls(msg"WatBuilder::returningTerm for AssignDynField(...) with a non-index key is not implemented yet" ->
                 lhs.toLoc),
               extraInfo = S(assign),
             )
@@ -2419,7 +2427,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
                   def overwriteMethod(
                       sym: BlockMemberSymbol,
-                      ps: ParamList,
+                      ps: LoweredParamList,
                       bod: Block,
                   ): Unit =
                     val predeclaredMethod = ctx.getFuncInfo_!(sym)
@@ -2446,7 +2454,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
                   clsLikeDefn.methods.foreach:
                     case FunDefn(_, sym, _, Nil, bod) =>
-                      overwriteMethod(sym, PlainParamList(Nil)(N), bod)
+                      overwriteMethod(sym, LoweredParamList.plain(Nil)(N), bod)
                     case FunDefn(_, sym, _, ps :: Nil, bod) =>
                       overwriteMethod(sym, ps, bod)
                     case methodDefn =>
@@ -2657,6 +2665,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                         val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
                         val scrutValue = i31.get(scrutAsI31, signed = true)
                         i32.eq(scrutValue, withValidIntLit(value, lit.toLoc)(i32.const))
+                      case UnitLit(true) => ref.is_null(getScrutExpr)
                       case _ =>
                         break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 
@@ -2994,7 +3003,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
   def setupFunction(
       thisSym: Opt[InnerSymbol],
-      params: ParamList,
+      params: LoweredParamList,
       body: Block,
       resultType: Opt[ValType],
       paramTypes: Opt[Seq[ValType]] = N,

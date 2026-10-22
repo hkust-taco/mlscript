@@ -30,8 +30,11 @@ class WorkerWrapper
   private def withoutInline(annotations: Ls[Annot]): Ls[Annot] =
     annotations.filterNot(_.isInstanceOf[Annot.Inline])
   
-  private def isPlainParamList(params: ParamList): Bool =
-    params.flags == ParamListFlags.empty && params.restParam.isEmpty
+  // * Optional parameters are excluded because uncurrying concatenates the parameter lists,
+  // * so the arguments of a later list would be assigned to the omitted optional parameters.
+  // * TODO: support this once we normalize known-call sites in the future.
+  private def isPlainParamList(params: LoweredParamList): Bool =
+    params.flags == ParamListFlags.empty && params.restParam.isEmpty && !params.hasOptParams
   
   private def effectiveConfig(fun: FunDefn): Config =
     fun.configOverride.getOrElse(config)
@@ -49,11 +52,11 @@ class WorkerWrapper
     mapping(param.sym) = freshSym
     Param(param.flags, freshSym, param.sign, param.modulefulness)(param.toLoc).withSignTypeOf(param)
   
-  private def flattenParams(params: Ls[ParamList]): (ParamList, Map[Symbol, Symbol]) =
+  private def flattenParams(params: Ls[LoweredParamList]): (LoweredParamList, Map[Symbol, Symbol]) =
     val mapping = collection.mutable.LinkedHashMap.empty[Symbol, Symbol]
     val flatParams = params.flatMap: params =>
       params.params.map(freshParam(_, mapping))
-    PlainParamList(flatParams)(Loc(params)) -> mapping.toMap
+    LoweredParamList.plain(flatParams)(Loc(params)) -> mapping.toMap
   
   private def rewriteParams(body: Block, mapping: Map[Symbol, Symbol]): Block =
     val subst = new SymbolSubst:
@@ -88,7 +91,7 @@ class WorkerWrapper
       case Annot.NoInline() | Annot.Generator() => false
       case _ => true
     ))
-    log(s"▶ Worker-wrapper: ${fun.dSym.showDbg} -> ${worker.dSym.showDbg}")
+    log(dbg"▶ Worker-wrapper: ${fun.dSym.showDbg} -> ${worker.dSym.showDbg}")
     Scoped(Set.single(worker.sym), Define(wrapper, Define(worker, rest)))
   
   private def mkInlineOnly(fun: FunDefn, body: Block): FunDefn =

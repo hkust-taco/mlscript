@@ -64,6 +64,9 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       case Lit(syntax.Tree.UnitLit(true)) => S(ErasedType.Unknown)
     case _: CallableTypeShape => S(ErasedType.Function(S(false)))
     case _: TupleShape => S(ErasedType.Array)
+    // An intersection describes one value through several interfaces, not alternative values.
+    // Keep the same conservative representation as an intersection in a declared signature.
+    case _: IntersectionView => S(ErasedType.Unknown)
     case _: (RecordShape | RecordTypeShape | DynShape | UnknownValueShape | OpaqueTypeShape | RigidTypeShape | ErrShape) =>
       S(ErasedType.Unknown)
     case _: InstanceShape =>
@@ -172,7 +175,12 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
           && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
       then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
-      else declaredType(resultSign, td.modulefulness).orElse(overrideResultType(td, inferredType(td.tsym)))
+      else declaredType(resultSign, td.modulefulness).orElse:
+        val observed = inferredType(td.tsym)
+        // An async/generator override's inherited callable result describes its wrapper,
+        // not the payload returned by this body. Check that wrapper in `checkOverride` below.
+        if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then observed
+        else overrideResultType(td, observed)
     bodyResults(td.tsym) = resultType
     // The body produces the payload; callers receive the wrapper object instead.
     // Resolution gives calls of such functions the same wrapper shapes.
@@ -223,8 +231,9 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
 
     // No erased representation is read until every interpretation has been validated and every
     // nominal parent header has been published, including forward and external declarations.
+    val validatedTypes = mutable.Set.empty[TypeResolution]
     statements.foreach:
-      case term: Term => term.typeInterpretation.foreach(_.validate(Set.empty))
+      case term: Term => term.typeInterpretation.foreach(_.validate(validatedTypes))
       case _ => ()
     statements.foreach:
       case cls: ClassLikeDef =>
@@ -241,19 +250,19 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           case _ => ()
       case _ => ()
 
-    // Public members replace inherited names; private members retain their declaration identity.
+    // Public members replace inherited runtime keys; private members retain their declaration identity.
     // A subclass cannot implement a private declaration by introducing the same name.
-    type MemberKey = Either[TermSymbol, Str]
+    type ImplementationKey = Either[TermSymbol, MemberKey]
     // Definitions are keyed by identity: as case classes, they would otherwise
     // be hashed and compared through their entire bodies on every lookup.
-    val effectiveMembers = mutable.Map.empty[Identity[ClassLikeDef], Map[MemberKey, TermSymbol]]
+    val effectiveMembers = mutable.Map.empty[Identity[ClassLikeDef], Map[ImplementationKey, TermSymbol]]
     def checkConstruction(term: Term & PossiblyErroneous, cls: ClassDef): Unit =
       if Inheritance.hasModifier(cls, syntax.Keyword.`abstract`) then
         term.isErroneous = true
         raise(ErrorReport(
           msg"Cannot instantiate abstract class '${cls.sym.nme}'" -> term.toLoc ::
             (msg"Abstract class defined here" -> cls.toLoc) :: Nil, source = Diagnostic.Source.Compilation))
-    def members(cls: ClassLikeDef, visiting: Set[Identity[ClassLikeDef]]): Map[MemberKey, TermSymbol] =
+    def members(cls: ClassLikeDef, visiting: Set[Identity[ClassLikeDef]]): Map[ImplementationKey, TermSymbol] =
       effectiveMembers.getOrElseUpdate(Identity(cls),
         if visiting(Identity(cls)) then
           raise(ErrorReport(msg"Inheritance cycle involving '${cls.sym.nme}'" -> cls.toLoc :: Nil,
@@ -261,10 +270,10 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           Map.empty
         else
           val inherited = cls.ext.flatMap(parentClass)
-            .fold(Map.empty[MemberKey, TermSymbol])(members(_, visiting + Identity(cls)))
+            .fold(Map.empty[ImplementationKey, TermSymbol])(members(_, visiting + Identity(cls)))
           inherited ++ cls.body.members.toList.flatMap: (name, member) =>
             member.asTrm.map: symbol =>
-              val key: MemberKey = if symbol.isPrivate then Left(symbol) else Right(name)
+              val key: ImplementationKey = if symbol.isPrivate then Left(symbol) else Right(MemberKey.symbol(member).getOrElse(name))
               key -> symbol
       )
     statements.foreach:
@@ -424,7 +433,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     */
   private def checkExposedOpenMember(td: TermDefinition, declarations: ErasureDeclarations): Unit =
     if config.language.useNewResolution && (td.k is syntax.Fun) && Inheritance.isOpen(td) && !Inheritance.isExternal(td) then
-      val params = td.params.flatMap(ps => ps.params ::: ps.restParam.toList)
+      val params = td.params.flatMap(_.allParams)
       def exposed(p: Param): Bool = declarations.parameters.contains(p.sym) &&
         summon[State].newResolverState.erasureInputs.shapes(p.sym).exists: shape =>
           shape.applicationHead._1 match

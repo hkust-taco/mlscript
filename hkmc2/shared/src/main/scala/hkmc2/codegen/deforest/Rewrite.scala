@@ -31,8 +31,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     matchOrLabelId match
     case l: LabelSymbol => l -> instId
     case scrutId: ResultId => ConcreteId(scrutId, instId)
-  extension (vs: Ls[VarSymbol]) def asParamList: ParamList =
-    ParamList(ParamListFlags.empty, vs.map(Param.simple), N)(N)
+  extension (vs: Ls[VarSymbol]) def asParamList: LoweredParamList =
+    LoweredParamList(ParamListFlags.empty, vs.map(Param.simple), N)(N)
   extension (c: CtorCls) def ctorClsName: String = c match
     case cls: ClassLikeSymbol => cls.nme
     case n: Int => s"tup$n"
@@ -226,6 +226,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
                 cse match
                 case Case.Cls(cls, path) => cls === ctorCls
                 case Case.Tup(len, inf) => len === ctorCls
+                // Concrete constructor producers are objects or tuples, never literals. A cast
+                // proved redundant can expose such a producer to a literal test (e.g. Unit vs null).
+                case Case.Lit(_) => false
                 case _ => die
               .map(b => ctorCls -> b._2)
           tmp.map(_._1) ->

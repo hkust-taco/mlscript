@@ -47,3 +47,32 @@ class Buffer(val items: Array[Int]) with
   fun length = items.length
 Buffer([1, 2, 3]).read(Buffer([4, 5, 6]))
 //│ = 3
+
+// A class returned from a generic factory retains the factory's type argument
+// when a pattern refines an unknown input to that class's declared fields.
+class First(val first: Int)
+class Second(val second: Int)
+private fun makeBox[A](item: A) =
+  class Box(val value: A)
+  Box
+val FirstBox = makeBox(First(1))
+val SecondBox = makeBox(Second(2))
+//│ FirstBox = fun Box { class: class Box }
+//│ SecondBox = fun Box { class: class Box }
+
+:expect 3
+fun readFirst(value) = if value is FirstBox(item) then item.first else 0
+readFirst(FirstBox(First(3)))
+//│ = 3
+
+:expect 4
+fun readSecond(value) = if value is SecondBox(item) then item.second else 0
+readSecond(SecondBox(Second(4)))
+//│ = 4
+
+// The two calls to makeBox must not contribute field types to one another.
+:e
+fun wrong(value) = if value is FirstBox(item) then item.second else 0
+//│ ╔══[COMPILATION ERROR] This selection of member 'second' has no resolved target
+//│ ║  l.75: 	fun wrong(value) = if value is FirstBox(item) then item.second else 0
+//│ ╙──      	                                                   ^^^^^^^^^^^

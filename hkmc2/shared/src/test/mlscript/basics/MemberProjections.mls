@@ -92,7 +92,7 @@ foo.M.Foo::m()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.91: 	foo.M.Foo::m()
 //│ ║        	         ^^^^^
-//│ ╟── Function literal expected 1 argument, but got 0
+//│ ╟── Function literal expected at least 1 argument, but got 0
 //│ ║  l.91: 	foo.M.Foo::m()
 //│ ╙──      	           ^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection

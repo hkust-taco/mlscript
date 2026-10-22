@@ -194,7 +194,7 @@ foldr(+)()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.193: 	foldr(+)()
 //│ ║         	^^^^^^^^^^
-//│ ╟── Function 'foldr' expected 1 argument, but got 0
+//│ ╟── Function 'foldr' expected at least 1 argument, but got 0
 //│ ║  in ../../mlscript-compile/Predef.mls
 //│ ║  l.116: 	fun foldr[A](f: (A, A) -> A)(first: A, ...rest: Array[A]): A =
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -264,13 +264,13 @@ mkStr of
 
 // loose equality is disabled
 
-null == undefined
+null == unsafe.undefined
 //│ = false
 
-undefined == null
+unsafe.undefined == null
 //│ = false
 
-undefined === null
+unsafe.undefined === null
 //│ = false
 
 [] == false

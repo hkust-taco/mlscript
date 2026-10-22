@@ -49,7 +49,7 @@ class Instantiator(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise)
         val subst = defn.patternParams.iterator.map(_.sym).zip(instantiation.arguments).toMap
         log("Instantiating " + instantiation.showDbg)
         val instantiated = instantiate(defn.pattern)(using subst)
-        log(s"Instantiated ${instantiation.showDbg}\n" +
+        log(dbg"Instantiated ${instantiation.showDbg}\n" +
           s"arity = ${instantiation.symbol.defn.get.patternParams.size}\n" +
           s"arguments = ${instantiation.arguments.iterator.map(_.showDbg).mkString(", ")}\n" +
           s"instantiated = ${instantiated.showDbg}")
@@ -68,7 +68,7 @@ class Instantiator(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise)
       progress += (instantiation -> N)
       worklist.enqueue(instantiation)
     else
-      log(s"Already instantiated ${instantiation.showDbg}")
+      log(dbg"Already instantiated ${instantiation.showDbg}")
     progress(instantiation)
     instantiation
   

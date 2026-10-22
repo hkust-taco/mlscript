@@ -1,0 +1,37 @@
+:.
+#lang(0.3.x)
+open annotations
+
+// A generator override's callable returns Iterator, but its body's payload can have any representation.
+:noInline
+:sir
+:siret
+:expect {value: "payload", done: true}
+private class GeneratorBase() with
+  @annotations.generator
+  open fun generate(value: Any): Any = value
+private class GeneratorChild() extends GeneratorBase() with
+  @annotations.generator
+  override fun generate(value: Any) = value
+GeneratorChild().generate("payload").next()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: GeneratorChild⁰, tmp1: Iterator⁰;
+//│ @private
+//│ define GeneratorBase⁰ as class GeneratorBase² {
+//│   constructor GeneratorBase¹
+//│   method generate⁰ = fun generate¹(value: Unknown): Iterator⁰ {
+//│     return value
+//│   }
+//│ };
+//│ @private
+//│ define GeneratorChild¹ as class GeneratorChild⁰ extends GeneratorBase² {
+//│   constructor GeneratorChild²
+//│   method generate² = fun generate³(value: Unknown): Iterator⁰ {
+//│     return value
+//│   }
+//│ };
+//│ set tmp = GeneratorChild²();
+//│ set tmp1 = tmp.generate³("payload");
+//│ return tmp1.next⁰()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = {value: "payload", done: true}

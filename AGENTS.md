@@ -44,6 +44,12 @@ Do not change repository-local or global Git identity configuration.
 
 ## Design Philosophy
 
+**Confirm language-design decisions before implementing them.** Propose changes
+to source syntax, language semantics, or public library contracts and obtain the
+user's confirmation unless that specific design is already explicitly approved.
+Authorization to fix compiler behavior does not by itself authorize introducing
+annotations, changing member naming or dispatch rules, or extending public APIs.
+
 You are working on an industry-strength compiler codebase.
 Although its test suite is extensive, tests alone are not enough to determine the quality of a change;
 the goal is not just to "make everything green".
@@ -74,6 +80,7 @@ exactly where the mutable state is supposed to be defined and used.
 
 Never use default arguments in core business logic.
 Default arguments should be reserved for user-facing APIs.
+Do NOT encode default arguments through overloading to skirt this rule.
 
 Keep it DRY: if you find yourself copying and pasting code,
 consider refactoring it into a reusable function or class.
@@ -93,6 +100,10 @@ invariant, behavior, or failure being prevented. Name the relevant data and oper
 avoid vague claims about where a "lifecycle" or "responsibility" belongs. If history
 or a rejected alternative matters, include enough context to explain the tradeoff
 after commits are squashed.
+
+Do NOT include comments that simply describe what the code is doing
+without adding any additional insight, or comments that talk about
+parts of the system that are not directly related to the code being commented on.
 
 
 ## User-Facing Diagnostics

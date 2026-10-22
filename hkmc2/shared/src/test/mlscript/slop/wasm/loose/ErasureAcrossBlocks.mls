@@ -1,6 +1,6 @@
 :.
 
-// See `newres/loose/ErasureAcrossBlocks.mls`: without strict resolution, worksheet blocks infer the
+// See `slop/loose/ErasureAcrossBlocks.mls`: without strict resolution, worksheet blocks infer the
 // representations of their public definitions from their own uses only.
 
 

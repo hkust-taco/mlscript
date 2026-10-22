@@ -28,14 +28,14 @@ Foo(123, 456)
 //│ ╟── Function 'Foo' expected 1 argument, but got 2
 //│ ║  l.17: 	fun Foo(x) = new Foo(x, 0)
 //│ ╙──      	^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'Foo' expected 1 argument but got 2
+//│ = Foo
 
 :e
 new Foo(123)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.34: 	new Foo(123)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── Class 'Foo' expected 2 arguments, but got 1
+//│ ╟── Constructor of class 'Foo' expected 2 arguments, but got 1
 //│ ║  l.18: 	data class Foo { constructor(x, y) }
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.

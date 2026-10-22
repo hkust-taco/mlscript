@@ -82,17 +82,10 @@ values([Item(4)]).map((item, ...) => item.value)
 [10, 20].map((item, ...rest) => rest.0 + rest.1.length + 1)
 //│ = [3, 4]
 
-// Fixed callbacks must accept all three arguments supplied by Array.map.
-:ge
+// Callbacks may drop the index and array arguments supplied by Array.map.
+:expect [1]
 [1].map(x => x)
-//│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.261: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in Arrays.mls:87
-//│ ║  l.87: 	[1].map(x => x)
-//│ ╙──      	        ^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
+//│ = [1]
 
 // Mutable arrays do not propagate stale initializer element shapes to callbacks.
 :ge
@@ -102,11 +95,11 @@ let xs = mut [Original(1)]
 set xs.0 = Replacement(2)
 xs.map((x, ...) => x.original)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.103: 	xs.map((x, ...) => x.original)
-//│ ║         	                   ^^^^^^^^^^
+//│ ║  l.96: 	xs.map((x, ...) => x.original)
+//│ ║        	                   ^^^^^^^^^^
 //│ ╟── Instance of class 'Replacement' does not contain member 'original'
-//│ ║  l.102: 	set xs.0 = Replacement(2)
-//│ ╙──       	           ^^^^^^^^^^^^^^
+//│ ║  l.95: 	set xs.0 = Replacement(2)
+//│ ╙──      	           ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Replacement(2)]
 
@@ -137,22 +130,22 @@ new String("hello") is String
 :ge
 new Array[Int](1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.138: 	new Array[Int](1, 2)
+//│ ║  l.131: 	new Array[Int](1, 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Array' expected 1 argument, but got 2
+//│ ╟── Constructor of class 'Array' expected 1 argument, but got 2
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.241: 	declare class Array[T](val length: Int) {
+//│ ║  l.261: 	declare class Array[T](val length: Int) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2]
 
 :ge
 new Array[Int]()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.149: 	new Array[Int]()
+//│ ║  l.142: 	new Array[Int]()
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Array' expected 1 argument, but got 0
+//│ ╟── Constructor of class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.241: 	declare class Array[T](val length: Int) {
+//│ ║  l.261: 	declare class Array[T](val length: Int) {
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
@@ -199,10 +192,10 @@ class Item(val value: Int)
 class Total(val total: Int)
 [Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.200: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ║  l.193: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
 //│ ║         	                                     ^^^^^^^^^^^
 //│ ╟── Instance of class 'Total' does not contain member 'missing'
-//│ ║  l.200: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ║  l.193: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
 //│ ╙──       	                                                  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -211,12 +204,12 @@ class Total(val total: Int)
 :e
 [1, 2].reduce((acc, x, ...) => acc + x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.212: 	[1, 2].reduce((acc, x, ...) => acc + x)
+//│ ║  l.205: 	[1, 2].reduce((acc, x, ...) => acc + x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'reduce' expected 2 arguments, but got 1
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.275: 	  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.296: 	  fun reduce[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 3
 
 // A tuple created in one activation of `mk` and passed to another has the path
@@ -251,10 +244,10 @@ let items = mut [Item(4)]
 class Item(val value: Int)
 (new Item(1)).[0]
 //│ ╔══[COMPILATION ERROR] Resolution error in array index
-//│ ║  l.252: 	(new Item(1)).[0]
+//│ ║  l.245: 	(new Item(1)).[0]
 //│ ║         	 ^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Item' does not support checked array indexing.
-//│ ║  l.252: 	(new Item(1)).[0]
+//│ ║  l.245: 	(new Item(1)).[0]
 //│ ║         	 ^^^^^^^^^^^
 //│ ╙── Use '![...]' for a dynamic access.
 //│ ═══[RUNTIME ERROR] TypeError: tmp49.at is not a function
@@ -263,8 +256,8 @@ class Item(val value: Int)
 :e
 fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.264: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
+//│ ║  l.257: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
 //│ ║         	                                                ^^^^^^^^^^^^^
 //│ ╟── Value of type 'Int' does not contain member 'whatever'
-//│ ║  l.264: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
+//│ ║  l.257: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
 //│ ╙──       	                    ^^^

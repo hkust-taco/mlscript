@@ -33,7 +33,7 @@ foo(...a)
 //│ ╟── Function 'foo' expected 4 arguments, but got 3
 //│ ║  l.12: 	fun foo(w, x, y, z) = [w, x, y, z]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 4 arguments but got 3
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 4 arguments but got 3
 
 
 let f = (...xs) => xs
@@ -72,7 +72,7 @@ x.r
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.67: 	let x = new A(1, 2, 3)
 //│ ║        	        ^^^^^^^^^^^^^^
-//│ ╟── Class 'A' expected 0 arguments, but got 3
+//│ ╟── Constructor of class 'A' expected 0 arguments, but got 3
 //│ ║  l.66: 	data class A(...r)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
@@ -96,7 +96,7 @@ new A(1, 2, 3).getR
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.92: 	new A(1, 2, 3).getR
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Class 'A' expected 0 arguments, but got 3
+//│ ╟── Constructor of class 'A' expected 0 arguments, but got 3
 //│ ║  l.90: 	data class A(...r) with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
@@ -108,15 +108,16 @@ new A(1, 2, 3).getR
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
 //│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: 'undefined'
 
-:todo
 fun (||>) pipeIntoMulti[A, B](...xs: Array[A], f: (...Array[A]) -> B): B = f(...xs)
-//│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.112: 	fun (||>) pipeIntoMulti[A, B](...xs: Array[A], f: (...Array[A]) -> B): B = f(...xs)
-//│ ╙──       	                              ^^^^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: variance traversal of spread elements (of class String)
 
-:todo
+:expect 6
+pipeIntoMulti(1, 2, 3, (...xs) => xs.0 + xs.1 + xs.2)
+//│ = 6
+
 fun (<||) pipeFromMulti[A, B](f: (...Array[A]) -> B, ...xs: Array[A]): B = f(...xs)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: variance traversal of spread elements (of class String)
+
+:expect 6
+pipeFromMulti((...xs) => xs.0 + xs.1 + xs.2, 1, 2, 3)
+//│ = 6
 
 

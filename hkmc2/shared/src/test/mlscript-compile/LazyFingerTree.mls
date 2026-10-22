@@ -58,7 +58,7 @@ class LazyFT extends IterableBase with
 
 class View(val underlying: Indexable, val start: Int, val end: Int) extends LazyFT with
 
-  override fun iterator() =
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator() =
     let idx = start
     let until = underlying.length - end
     IteratorImpl of () =>
@@ -84,7 +84,7 @@ object SpliceMarker
 class Splice(val bits: Array, val len: Int) extends LazyFT with
   let materialized = null
 
-  override fun iterator() = materialize().iterator()
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator() = materialize().iterator()
 
   fun reify =
     let acc = FingerTreeList.mk()
