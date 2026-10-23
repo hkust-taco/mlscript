@@ -137,6 +137,7 @@ lazy val hkmc2MainTests = project.in(file("hkmc2MainTests"))
     Test / test := (
       (hkmc2DiffTests / Test / test)
         .dependsOn(hkmc2JVM / Test / test)
+        .dependsOn(hkmc2SlopTests / Test / test)
     ).value
   )
 
