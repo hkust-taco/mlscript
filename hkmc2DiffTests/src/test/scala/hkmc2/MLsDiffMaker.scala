@@ -143,6 +143,10 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"$errMarker Option ':noInline' conflicts with option ':inlineThreshold'")
     Config(
       language = Config.Language.default,
+      patternSpecializationLimit = Config.default.patternSpecializationLimit,
+      stringPatternStateLimit = Config.default.stringPatternStateLimit,
+      patternCompilationWorkLimit = Config.default.patternCompilationWorkLimit,
+      patternMatcherWorkLimit = Config.default.patternMatcherWorkLimit,
       baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true, checkUnreachable = true)),
       checkCasts = !noCheckCasts.isSet,

@@ -1,0 +1,88 @@
+:js
+
+open annotations
+
+// Limits are per compilation, configurable, and report source diagnostics.
+// These small cases exercise each limit without stressing the test process.
+
+pattern Rep(pattern P) = (P ~ Rep(P)) | ""
+pattern Wrap(pattern P) = "x" ~ Rep(P)
+
+:e
+#config(patternSpecializationLimit: 1)
+"xa" is Wrap("a")
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `patternSpecializationLimit` (1).
+//│ ║  l.13: 	"xa" is Wrap("a")
+//│ ║        	        ^^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(patternSpecializationLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = false
+
+:expect true
+#config(patternSpecializationLimit: 4)
+"xaaa" is Wrap("a")
+//│ = true
+
+:e
+#config(stringPatternStateLimit: 2)
+"abcd" is ("a" ~ "b" ~ "c" ~ "d")
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `stringPatternStateLimit` (2).
+//│ ║  l.28: 	"abcd" is ("a" ~ "b" ~ "c" ~ "d")
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(stringPatternStateLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = false
+
+:expect true
+#config(stringPatternStateLimit: 100)
+"abcd" is ("a" ~ "b" ~ "c" ~ "d")
+//│ = true
+
+// Forward determinization (negation and conjunction constraints) is bounded too.
+
+pattern C = "a" ..= "b"
+
+:e
+#config(stringPatternStateLimit: 100)
+"a" is ("" ~ ~(Str ~ "a" ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C))
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `stringPatternStateLimit` (100).
+//│ ║  l.47: 	"a" is ("" ~ ~(Str ~ "a" ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C))
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(stringPatternStateLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = false
+
+:e
+#config(patternCompilationWorkLimit: 20)
+"abcdef" is ("abc" ~ "def")
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `patternCompilationWorkLimit` (20).
+//│ ║  l.57: 	"abcdef" is ("abc" ~ "def")
+//│ ║        	             ^^^^^^^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(patternCompilationWorkLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = false
+
+:expect true
+#config(patternCompilationWorkLimit: 2000000, stringPatternStateLimit: 8192)
+"abcdef" is ("abc" ~ "def")
+//│ = true
+
+// Invalid limits are diagnosed, rather than disabling the safeguard.
+
+:e
+#config(patternSpecializationLimit: 0)
+//│ ╔══[COMPILATION ERROR] Expected a positive integer
+//│ ║  l.73: 	#config(patternSpecializationLimit: 0)
+//│ ╙──      	                                    ^
+
+:e
+#config(stringPatternStateLimit: -1)
+//│ ╔══[COMPILATION ERROR] Expected a positive integer
+//│ ║  l.79: 	#config(stringPatternStateLimit: -1)
+//│ ╙──      	                                 ^^
+
+:e
+#config(patternCompilationWorkLimit: 0)
+//│ ╔══[COMPILATION ERROR] Expected a positive integer
+//│ ║  l.85: 	#config(patternCompilationWorkLimit: 0)
+//│ ╙──      	                                     ^

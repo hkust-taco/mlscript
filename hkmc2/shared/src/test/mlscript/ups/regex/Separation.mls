@@ -2,6 +2,8 @@
 
 import "../../../mlscript-compile/Iter.mls"
 
+open annotations
+
 pattern TailLines(pattern L) =
   | ("\n" ~ (Lines(L) as t)) => t
   | "" => []
@@ -14,11 +16,23 @@ pattern Lines(pattern L) =
 //│ = true
 
 :expect true
+"hello" is @compile Lines("hello")
+//│ = true
+
+:expect true
 "hello\nworld" is Lines("hello" | "world")
+//│ = true
+
+:expect true
+"hello\nworld" is @compile Lines("hello" | "world")
 //│ = true
 
 :expect false
 "hello\nworld" is Lines("hello")
+//│ = false
+
+:expect false
+"hello\nworld" is @compile Lines("hello")
 //│ = false
 
 pattern Digit = "0" ..= "9"
@@ -35,10 +49,19 @@ Integer.unapplyStringPrefix("123")
 "123\n456\n789" is Lines of Integer
 //│ = true
 
+"123\n456\n789" is @compile (Lines of Integer)
+//│ = true
+
 fun parseIntegers(input) =
   if input is (Lines of (Integer as n) => parseInt(n, 10)) as n then n
 
+fun parseIntegersCompiled(input) =
+  if input is @compile (Lines of (Integer as n) => parseInt(n, 10)) as n then n
+
 parseIntegers of "123\n456\n789"
+//│ = [123, 456, 789]
+
+parseIntegersCompiled of "123\n456\n789"
 //│ = [123, 456, 789]
 
 :e
@@ -47,6 +70,6 @@ parseIntegers of "123\n456\n789"
 // `t through P` means match `t` against `P` and returns the result.
 "123\n456\n789" through Lines(Integer) // ==> [123, 456, 789]
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.48: 	"123\n456\n789" through Lines(Integer) // ==> [123, 456, 789]
+//│ ║  l.71: 	"123\n456\n789" through Lines(Integer) // ==> [123, 456, 789]
 //│ ╙──      	                ^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Lines1 is not a function

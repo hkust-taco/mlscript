@@ -1,0 +1,78 @@
+:js
+
+// String recursion retains each activation's bindings even when the same
+// definition also matches values that cannot enter the string automaton.
+// The decimal range must not be enumerated while compiling the string arm.
+
+pattern Digit = "0" ..= "9"
+pattern Mixed =
+  | (((Digit as h) ~ (Mixed as t)) => h + "," + t)
+  | ("" => "$")
+  | (42 => "number")
+  | ("x" => "first")
+  | ("x" => "second")
+  | ([1] => "tuple")
+  | (({a: 1}) => "record")
+  | ((1.5 ..< 2.5) => "range")
+
+:expect "1,2,3,$"
+if "123" is Mixed as r then r else "no"
+//│ = "1,2,3,$"
+
+:expect "1,2,first"
+if "12x" is Mixed as r then r else "no"
+//│ = "1,2,first"
+
+:expect ["number", "tuple", "record", "range", "no"]
+fun matchMixed(x) = if x is Mixed as r then r else "no"
+[matchMixed(42), matchMixed([1]), matchMixed({a: 1}), matchMixed(2.0), matchMixed(2.5)]
+//│ = ["number", "tuple", "record", "range", "no"]
+
+:expect "no"
+if "123!" is Mixed as r then r else "no"
+//│ = "no"
+
+// A wildcard remains available to both kinds of input, in source order.
+
+pattern WithDefault =
+  | (((Digit as h) ~ (WithDefault as t)) => h + "," + t)
+  | (_ => "default")
+
+:expect "1,2,default"
+if "12!" is WithDefault as r then r else "no"
+//│ = "1,2,default"
+
+:expect "default"
+if 42 is WithDefault as r then r else "no"
+//│ = "default"
+
+// A rejected string parse does not retry the general matcher, whose greedy
+// prefix composition could run transformations on an abandoned parse.
+
+let trace = ""
+fun record(x) =
+  set trace = trace + x
+  x
+pattern Committed =
+  | (((Digit as h) ~ (Committed as t)) => record(h) + t)
+  | ("" => "")
+  | (42 => record("number"))
+//│ trace = ""
+
+:expect ["no", ""]
+val bad = if "12!" is Committed as r then r else "no"
+[bad, trace]
+//│ = ["no", ""]
+//│ bad = "no"
+
+:expect ["12", "21"]
+val good = if "12" is Committed as r then r else "no"
+[good, trace]
+//│ = ["12", "21"]
+//│ good = "12"
+
+:expect ["number", "21number"]
+val number = if 42 is Committed as r then r else "no"
+[number, trace]
+//│ = ["number", "21number"]
+//│ number = "number"

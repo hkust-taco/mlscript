@@ -1,0 +1,322 @@
+:js
+
+open annotations
+
+// Regressions of the compiled string pattern engine (`ups.StringCompiler` and
+// `Runtime.StrPat`) against the naive translation it replaced. Each block
+// records the *correct* answer with `:expect`; the ones still marked `:fixme`
+// are not fixed yet, the rest are regression tests for bugs already fixed.
+
+
+// ——— Purity of a recursive component must not depend on alternative order ———
+//
+// `isPureDeep` used to memoize the optimistic answer it assumes for an
+// instantiation already being visited, so a member of an impure SCC could be
+// recorded as pure — which member depending on where `forall` happened to
+// short-circuit, i.e. on the order the alternatives are written in. The two
+// spellings below must agree.
+
+pattern Y = ("a" ~ X) | (("b" ~ "c") => "T")
+pattern X = ("d" ~ Y) | "e"
+
+:expect "zae"
+if "zae" is ("z" ~ Y) as r then r else "no"
+//│ = "zae"
+
+// The same grammar with `Y`'s alternatives swapped compiles correctly.
+
+pattern Y2 = (("b" ~ "c") => "T") | ("a" ~ X2)
+pattern X2 = ("d" ~ Y2) | "e"
+
+:expect "zae"
+if "zae" is ("z" ~ Y2) as r2 then r2 else "no"
+//│ = "zae"
+
+
+// ——— A string region must not match a non-string scrutinee ———
+//
+// `makeStringRegionSplit` used to emit the `StrPat` call with no `Str` class
+// test, unlike the `Str` head of the multi-matcher, so `matchWhole` read
+// `input.length` off whatever it was given and reported a match.
+
+pattern Funny = "" ~ "" ~ ""
+
+:expect false
+42 is Funny
+//│ = false
+
+:expect false
+[] is Funny
+//│ = false
+
+// The multi-matcher always got this right: it tests the `Str` head first.
+
+:expect false
+42 is @compile Funny
+//│ = false
+
+
+// ——— Exclusive string ranges ———
+//
+// `Instantiator` used to drop `rightInclusive` when building a `CharClass`, so
+// `..<` silently became `..=` as soon as the range sat inside a `~` sequence.
+
+pattern Half = ("a" ..< "z") ~ "!"
+
+:expect false
+"z!" is Half
+//│ = false
+
+:expect true
+"y!" is Half
+//│ = true
+
+// Outside a sequence the range goes through `makeRangeTest` instead, which
+// always honoured the flag — the two must agree.
+
+pattern Plain = "a" ..< "z"
+
+:expect false
+"z" is Plain
+//│ = false
+
+// An empty range — exclusive (`5 ..< 5`) or reversed (`5 ..= 3`) — must
+// match nothing. It expands to an empty disjunction, which used to make it
+// match *everything*: `Or(Nil)` was the wildcard until the encoding of the
+// pattern-lattice units was fixed to `Never = Or(Nil)`.
+
+:expect false
+5 is @compile (5 ..< 5)
+//│ = false
+
+:expect false
+4 is @compile (5 ..= 3)
+//│ = false
+
+:expect false
+"hello" is (5 ..< 5) ~ ""
+//│ = false
+
+
+// ——— Bindings of the outer activations of a recursive component ———
+//
+// A definition whose body wraps a recursive sequence in a transform used to
+// compile that transform *outside* the automaton in its `unapply` (only the
+// inner `~` became a region), so it read the global slot store after the
+// parse — the innermost activation's bindings. The whole body of a
+// string-only definition is now compiled as one region, putting the
+// transform inside, where deferred frames capture per-activation values.
+
+pattern Digit = "0" ..= "9"
+pattern Listed = (((Digit as h) ~ (Listed as t)) => h + "," + t) | ("" => "$")
+
+:expect "1,$"
+if "1" is Listed as l1 then l1 else "NOPE"
+//│ = "1,$"
+
+:expect "1,2,$"
+if "12" is Listed as l2 then l2 else "NOPE"
+//│ = "1,2,$"
+
+:expect "1,2,3,$"
+if "123" is Listed as l3 then l3 else "NOPE"
+//│ = "1,2,3,$"
+
+// The multi-matcher route compiles the same definition correctly.
+
+fun listedCompiled(s) = if s is @compile Listed as l then l else "NOPE"
+
+:expect "1,2,3,$"
+listedCompiled("123")
+//│ = "1,2,3,$"
+
+// The whole-body region is only taken when *every* alternative is
+// string-shaped: an alternative that can match non-strings would be a dead
+// state inside the `Str`-guarded region, so a mixed definition must keep
+// the general alternative dispatch on both routes.
+
+class Box(val v)
+
+pattern Mixed = ("a" ~ "b") | Box(1)
+
+:expect true
+"ab" is Mixed
+//│ = true
+
+:expect true
+Box(1) is Mixed
+//│ = true
+
+:expect false
+Box(2) is Mixed
+//│ = false
+
+:expect false
+42 is Mixed
+//│ = false
+
+fun mixedCompiled(x) = x is @compile Mixed
+
+:expect true
+mixedCompiled("ab")
+//│ = true
+
+:expect true
+mixedCompiled(Box(1))
+//│ = true
+
+:expect false
+mixedCompiled(Box(2))
+//│ = false
+
+
+// ——— Transforms must run exactly once on the committed parse ———
+//
+// `multiMatcherStringBranch` used to call `matchWhole` in match-only mode
+// even when the region had transforms, so `@compile` silently dropped their
+// effects. Both call sites now consult `Compiled.recognitionSuffices`, so
+// the two spellings below must print alike.
+
+fun probe(x) = if x is ("a" => print("ran")) ~ "b" then "yes" else "no"
+
+probe("ab")
+//│ > ran
+//│ = "yes"
+
+fun probeCompiled(x) = if x is @compile (("a" => print("ran")) ~ "b") then "yes" else "no"
+
+probeCompiled("ab")
+//│ > ran
+//│ = "yes"
+
+
+// ——— Use sites of parametric string patterns with extraction parameters ———
+//
+// `isParametricStringSite` used to route this site to an in-place automaton,
+// which only knows the region's own output, so the whole match (`"[ab]"`)
+// came back instead of the extraction binding. Definitions with extraction
+// parameters now keep the `unapply` route, so the two spellings below agree
+// again — both still fail to extract, but that is the pre-existing
+// limitation (extraction through parametric string patterns has never
+// worked), not a regression of the automaton path.
+
+pattern Bracket(pattern P, inner) = "[" ~ (P as inner) ~ "]"
+
+:expect "ab"
+:fixme
+if "[ab]" is Bracket(Str) as bv then bv else "no"
+//│ ═══[RUNTIME ERROR] Expected: '"ab"', got: '"no"'
+//│ = "no"
+
+// Matching the extraction argument directly never worked (pre-existing).
+
+:expect "ab"
+:fixme
+if "[ab]" is Bracket(Str, bx) then bx else "no"
+//│ ═══[RUNTIME ERROR] Expected: '"ab"', got: '"no"'
+//│ = "no"
+
+
+// ——— Transform closures shared across the labels of one multi-matcher ———
+//
+// Each label of a multi-matcher gets its own `StringCompiler`, so a definition
+// reached from two labels emits its transform lambda twice, and both copies
+// bind the same parameter symbols. This used to trip the duplicate-binder
+// assertion in `SymbolRefresher` (`already defined: w`); the duplicate-binder
+// detection was since taught to look through nested definitions upstream, so
+// the two copies now coexist. The emission scheme is still worth revisiting —
+// hosting each definition's transforms as methods on its pattern object would
+// share one closure instead (see the TODO on `StringCompiler.build`) — but the
+// sharing is now an efficiency question, not a correctness one.
+
+pattern T = (("a" ~ "b") as w) => [w]
+
+pattern P2 = Box(T ~ "c") | Box(T ~ "d")
+
+fun f2(x) = if x is @compile P2 as y then y else "no"
+
+// The output of `T` is `[w]`, and a sequence folds its elements' outputs with
+// JS `+`, so `["ab"] + "c"` is `"abc"` and the rebuilt `Box` holds it.
+
+:expect Box("abc")
+f2(Box("abc"))
+//│ = Box("abc")
+
+:expect Box("abd")
+f2(Box("abd"))
+//│ = Box("abd")
+
+:expect "no"
+f2(Box("abe"))
+//│ = "no"
+
+
+// ——— Transform calling convention under substituted pattern arguments ———
+//
+// A transform's parameters are the symbols its own definition binds — the
+// ones its `correspondence` maps. Bindings inside substituted pattern
+// arguments used to leak into the parameter list (an unguarded lookup
+// crashed the compiler) and into the per-occurrence argument slots (so two
+// instantiations of one definition could disagree with the interned
+// closure's arity).
+
+pattern WrapL(pattern L) = ((L as h) ~ "!") => [h]
+
+:expect "yx"
+if "y!x!" is (WrapL("y") ~ WrapL(("x" as w))) as wr then wr else "no"
+//│ = "yx"
+
+pattern WrapR(pattern L) = (L ~ ("!" as h)) => h
+
+:expect "!!"
+if "x!y!" is (WrapR(("x" as w2)) ~ WrapR("y")) as wr2 then wr2 else "no"
+//│ = "!!"
+
+
+// ——— Grouping of `~` must survive substitution and synonyms ———
+//
+// Instantiation used to flatten nested concatenations into the parent
+// sequence, and the output of a sequence is a *left fold* of JS `+`, which
+// is not associative across mixed operand types — so the same grouped
+// sub-pattern produced one value through a synonym and another as a pattern
+// argument. All spellings below must agree.
+
+pattern Grouped = ("a" => 1) ~ ("b" => 2)
+
+:expect 3
+if "ab" is (Grouped as g0) then g0 else "no"
+//│ = 3
+
+:expect "#3"
+if "#ab" is (("#" ~ Grouped) as g1) then g1 else "no"
+//│ = "#3"
+
+pattern WrapG(pattern S) = "#" ~ S
+
+:expect "#3"
+if "#ab" is (WrapG(("a" => 1) ~ ("b" => 2)) as g2) then g2 else "no"
+//│ = "#3"
+
+:expect "#3"
+if "#ab" is (("#" ~ (("a" => 1) ~ ("b" => 2))) as g3) then g3 else "no"
+//│ = "#3"
+
+
+// ——— `@compile` must not change the output's type ———
+//
+// `simplify` (applied on the `@compile` path only) used to drop bare empty
+// string literals from sequences, but a leading `""` coerces the folded
+// output to a string: both spellings below must produce the string "1",
+// not the number 1.
+
+pattern EmptyThenOne = "" ~ ("a" => 1)
+
+:expect "1"
+if "a" is (EmptyThenOne as e1) then e1 else "no"
+//│ = "1"
+
+fun emptyCompiled(x) = if x is (@compile EmptyThenOne) as e then e else "no"
+
+:expect "1"
+emptyCompiled("a")
+//│ = "1"

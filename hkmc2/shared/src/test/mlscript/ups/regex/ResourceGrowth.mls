@@ -1,0 +1,80 @@
+:js
+
+// Short pattern definitions must not cause unbounded specialization
+// or unchecked determinization. Growing recursive arguments are diagnosed
+// before specialization, independently of compilation resource limits.
+
+
+// Growing pattern arguments: this particular language is regular (`a*`).
+// Eager specialization would instantiate Rep("a"), Rep(Rep("a")), etc.
+// Reject that unsupported growth without misdiagnosing a non-regular language.
+
+pattern Rep(pattern P) = (P ~ Rep(Rep(P))) | ""
+
+:e
+"" is Rep("a")
+//│ ╔══[COMPILATION ERROR] Recursive specialization grows the arguments of pattern `Rep`.
+//│ ║  l.12: 	pattern Rep(pattern P) = (P ~ Rep(Rep(P))) | ""
+//│ ║        	                              ^^^^^^^^^
+//│ ╟── Wrapping a pattern parameter in additional patterns around a recursive cycle is not supported by pattern compilation.
+//│ ╟── Requested by this compiled pattern.
+//│ ║  l.15: 	"" is Rep("a")
+//│ ╙──      	      ^^^^^^^
+//│ = false
+
+// Control: recursive calls with unchanged arguments have a finite set of
+// instantiations and recognize the same language for this argument.
+
+pattern StableRep(pattern P) = (P ~ StableRep(P)) | ""
+
+:expect true
+"" is StableRep("a")
+//│ = true
+
+:expect true
+"aaaa" is StableRep("a")
+//│ = true
+
+:expect false
+"aaab" is StableRep("a")
+//│ = false
+
+
+// Exponential reverse determinization: C^16 followed by "a" and any suffix.
+// This is an ordinary regular expression with a small NFA, but its reverse
+// DFA must remember which of the last 17 positions contained "a". At PR
+// head 88d8ee5bc, the whole-match and prefix-parse tables contained 1,374,155
+// and 1,702,030 characters. The 18-copy variant exceeded a 10-second limit.
+// Keep all 16 occurrences explicit so the reproduction needs no generator.
+
+pattern C = "a" ..= "b"
+
+:e
+pattern Sixteen = C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ "a" ~ Str
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `stringPatternStateLimit` (8192).
+//│ ║  l.53: 	pattern Sixteen = C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ C ~ "a" ~ Str
+//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(stringPatternStateLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+
+// Exhaustion reports an error and emits no partial matcher or greedy fallback.
+:expect false
+"bbbbbbbbbbbbbbbba" is Sixteen
+//│ = false
+
+// Small controls still compile successfully and cover both the fixed prefix
+// and the arbitrary suffix after the preceding compilation was rejected.
+
+pattern Four = C ~ C ~ C ~ C ~ "a" ~ Str
+
+:expect true
+"bbbba" is Four
+//│ = true
+
+:expect true
+"bbbba!tail" is Four
+//│ = true
+
+:expect false
+"bbbbb" is Four
+//│ = false

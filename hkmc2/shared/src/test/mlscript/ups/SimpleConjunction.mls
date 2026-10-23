@@ -30,8 +30,8 @@ print of "2:", show of 2
 print of "3:", show of 3
 print of "42:", show of 42
 //│ > 0: None
-//│ > 1: Some(1)
-//│ > 2: Some(2)
+//│ > 1: Some([1, 1])
+//│ > 2: Some([2, 2])
 //│ > 3: None
 //│ > 42: None
 

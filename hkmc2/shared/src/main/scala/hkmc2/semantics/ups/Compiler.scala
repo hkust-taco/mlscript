@@ -18,9 +18,15 @@ import collection.mutable.{Queue, Map as MutMap}, collection.immutable.{Set, Map
   * a few matcher functions. Each matcher function matches a set of patterns
   * and returns a record that contains the results of each pattern.
   */
-class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise) extends TermSynthesizer:
+class Compiler(budget: PatternCompilationWorkBudget)(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise, Config) extends TermSynthesizer:
   import Compiler.*, tl.*
   import Pattern.*
+
+  /** The location of the match site this compiler serves, used only to label
+    * `StringCompiler.TableStats` measurement records. Expanded patterns
+    * aggregate sub-trees from several blocks, so their own locations are not
+    * usable for this purpose. */
+  var statsSiteLoc: Opt[Loc] = N
 
   /** A previously-computed matcher result for one field of the current
     * multi-matcher. In full mode the value also carries the original field
@@ -71,7 +77,9 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
   
   extension (pattern: Pat)
     /** Get or create a label for the pattern. */
-    def label: Label = labelMap.getOrElseUpdate(pattern, labelMap.size)
+    def label: Label =
+      budget.visit(pattern)
+      labelMap.getOrElseUpdate(pattern, labelMap.size)
   
   extension (field: Ident | Int)
     def showDbg: Str = field match
@@ -97,7 +105,9 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     def specializePatterns(head: Opt[Head]): Ls[(Label, SpPat)] =
       log(dbg"Specialized patterns of ${head.fold("the case without tags")(_.showDbg)}:")
       patterns.map: (label, pattern) =>
+        budget.visit(pattern)
         val spec = pattern.specialize(head)
+        budget.visit(spec)
         val simp = spec.simplify
         log(dbg"• Label $label")
         log(dbg"  ‣ Expanded: ${spec.showDbg}")
@@ -122,6 +132,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     val entryPointSymbol = buildMultiMatcher(Iterator.single(pattern))
     val implementations = List.newBuilder[Implementation]
     while buildQueue.nonEmpty do
+      budget.spend(1)
       val (symbol, patterns) = buildQueue.dequeue()
       val (paramList, term) = buildMultiMatcherBody(patterns)
       implementations += ((symbol, paramList, term))
@@ -132,7 +143,10 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
   def buildMultiMatcher(patterns: Iterator[Pat])(using ResultMode): LocalVarSymbol =
     // Get or create the label for each pattern. Multi-matchers are identified
     // by the set of labels (orders are not important).
-    val distinctPatterns = patterns.distinct.toList
+    val distinctPatterns = patterns.map: pattern =>
+      budget.visit(pattern)
+      pattern
+    .distinct.toList
     val labels = distinctPatterns.iterator.map(_.label).toSet
     multiMatchers.get(labels).getOrElse:
       val f = TempSymbol(N, erasedType = N, makeMultiMatcherName(distinctPatterns))
@@ -145,11 +159,24 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
   def buildMultiMatcherBody(patterns: Ls[Pat])(using ResultMode): (ParamList, Term) = trace(
     pre = s"buildMultiMatcherBody: ${
       patterns.iterator.map: pattern =>
-        s"${pattern.showDbg} => ${pattern.label}"
+        s"${pattern.showDbg} => ${labelMap(pattern)}"
       .mkString("{", ", ", "}")}"
   ):
-    val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty)))
-    val heads = expandedPatterns.iterator.flatMap((_, p) => p.heads).distinct
+    val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty, budget)))
+    // String-shaped patterns (sequences and character classes) cannot take
+    // part in head-based specialization: how a string scrutinee is split is a
+    // decision global to the whole sequence. Whenever one is present, all
+    // string-shaped patterns — including plain string literals, whose heads
+    // would overlap the `Str` class — are absorbed into a single `Str` head
+    // whose branch runs one compiled automaton per label, like a lexer
+    // jointly matching several token rules (see `StringCompiler`).
+    val absorbStrings = expandedPatterns.exists((_, p) => StringCompiler.containsStringNode(p))
+    val strSymbol = ctx.builtins.Str
+    val heads = expandedPatterns.iterator.flatMap((_, p) => p.heads).distinct.filter: head =>
+      !absorbStrings || (head match
+        case _: StrLit => false
+        case head: ClassLikeHead if head.symbol is strSymbol => false
+        case _ => true)
     // This is the parameter of the current multi-matcher.
     val scrutinee = VarSymbol(Ident("input"), erasedType = N)
     // Allocate branches in source order before the default, but accumulate
@@ -172,12 +199,17 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
         case _: syntax.Literal => empty
       val consequent = Split.Else(multiMatcherBranch(specialized, scrutinee, classFields))
       Branch(scrutinee.safeRef, head.toFlatPattern(classFieldArguments), consequent) :: branches
+    val stringBranch = if !absorbStrings then N else
+      val pattern = FlatPattern.ClassLike(strSymbol.safeRef, strSymbol, N, false)(Tree.Dummy)
+      val consequent = Split.Else(multiMatcherStringBranch(expandedPatterns, scrutinee))
+      S(Branch(scrutinee.safeRef, pattern, consequent))
     // Assemble the default branch.
     val default =
       val specialized = expandedPatterns.specializePatterns(N)
       Split.Else(multiMatcherBranch(specialized, scrutinee, Map.empty))
     // Make a split that tries all branches in order.
-    val topmostSplit = branches.foldLeft(default: Split)((tail, branch) => branch ~: tail)
+    val stringTail = stringBranch.fold(default: Split)(_ ~: default)
+    val topmostSplit = branches.foldLeft(stringTail)((tail, branch) => branch ~: tail)
     val bodyTerm = SynthIf(topmostSplit)
     log(dbg"Multi-matcher body:\n${topmostSplit.prettyPrint}")
     (paramList(param(scrutinee)), bodyTerm)
@@ -195,6 +227,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     val fields = patterns.iterator.flatMap((_, p) => p.fields).distinct.toList
     log(dbg"fields: ${fields.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
     val subPatternsByField = fields.map: field =>
+      patterns.foreach((_, pattern) => budget.visit(pattern))
       field -> patterns.iterator.flatMap((_, p) => p.collectSubPatterns(field)).toList
     val subScrutinees = Map.from(subPatternsByField.iterator.map: (field, subPatterns) =>
       field -> MatcherResult(VarSymbol(field.asIdent, erasedType = N), subPatterns.iterator.map(_.label).toSet))
@@ -247,6 +280,99 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     // and as a record otherwise.
     Blk(statements.reverse, resultTerm)
   
+  /** The branch body for the absorbed `Str` head: each label's string-shaped
+    * fragment is compiled to its own whole-match automaton (see the note in
+    * `buildMultiMatcherBody`). The per-label result terms follow the same
+    * protocol as `multiMatcherBranch`: a Boolean in match-only mode, and a
+    * `MatchSuccess`/`MatchFailure` value in full mode.
+    */
+  def multiMatcherStringBranch(
+      patterns: Ls[(Label, ExPat)],
+      scrutinee: VarSymbol,
+  )(using ResultMode): Blk =
+    val z = (Nil: Ls[Statement], Nil: Ls[(Label, Term)])
+    val (tests, resultTerms) = patterns.iterator.foldLeft(z):
+      case ((stmts, results), (label, pattern)) =>
+        budget.visit(pattern)
+        val fragment = StringCompiler.stringFragment(pattern).simplify
+        val resultTerm = fragment match
+          case Or(Nil) =>
+            // This label has no string-shaped alternative: it cannot match.
+            emptyMatchResult("not a string pattern")
+          // Note that each label needs its own compiler: a compiler instance
+          // accumulates the automaton states (and failure flag) of a single
+          // region.
+          case fragment => StringCompiler(new PatternCompilationBudget).compile(fragment, StringCompiler.Mode.Whole, statsSiteLoc) match
+            case N => emptyMatchResult("rejected string pattern")
+            case S(compiled) =>
+              // Mirrors the branch chosen below: a match-only region still
+              // needs the parse table when it carries transforms or bindings.
+              val embedsMatchTable =
+                if isMatchOnly then compiled.recognitionSuffices(false) else compiled.pure
+              StringCompiler.TableStats.record(statsSiteLoc,
+                if embedsMatchTable then "mm-match" else "mm-parse",
+                if embedsMatchTable then compiled.matchTable else compiled.table)
+              val matchTableTerm = str(compiled.matchTable)
+              if isMatchOnly && compiled.recognitionSuffices(false) then
+                app(strPatMatchWhole, tup(fld(matchTableTerm), fld(scrutinee.safeRef)), "string match")
+              else if isMatchOnly then
+                // The region carries transforms (or bindings): even a
+                // condition-position match must run them, exactly once, on
+                // the committed parse. Only the success of the parse is
+                // observed.
+                val call = app(strPatParseWhole,
+                  tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, N)), fld(scrutinee.safeRef)),
+                  "string parse")
+                val resultSymbol = TempSymbol(N, erasedType = N, "parseResult")
+                SynthIf(Split.Let(resultSymbol, call,
+                  Branch(
+                    resultSymbol.safeRef,
+                    // The engine returns null on failure and an array on success.
+                    FlatPattern.Tuple(1, true),
+                    Split.Else(bool(true))
+                  ) ~: Split.Else(bool(false))))
+              else if compiled.pure then
+                // An operation-free whole match preserves the scrutinee.
+                val matchedSymbol = TempSymbol(N, erasedType = N, "stringMatched")
+                val call = app(strPatMatchWhole, tup(fld(matchTableTerm), fld(scrutinee.safeRef)), "string match")
+                SynthIf(Split.Let(matchedSymbol, call,
+                  Branch(matchedSymbol.safeRef,
+                    Split.Else(makeMatchSuccess(scrutinee.safeRef))
+                  ) ~: Split.Else(emptyMatchResult("string mismatch"))))
+              else
+                // Note: expanded patterns may aggregate sub-patterns from
+                // several source blocks, so their auto-computed location is
+                // not usable here; the helper pins the first action's own
+                // location instead (the surrounding terms are location-free).
+                val call = app(strPatParseWhole,
+                  tup(fld(str(compiled.table)), fld(actionsTuple(compiled.actions, N)), fld(scrutinee.safeRef)),
+                  "string parse")
+                val resultSymbol = TempSymbol(N, erasedType = N, "parseResult")
+                val outputSymbol = TempSymbol(N, erasedType = N, "stringOutput")
+                val slotSymbols = compiled.visibleSlots.map: (symbol, slot) =>
+                  (symbol, slot, TempSymbol(N, erasedType = N, s"${symbol.name}$$"))
+                val bindingsTerm = makeBindings(slotSymbols.map:
+                  (symbol, _, local) => RcdField(str(symbol.name), local.safeRef))
+                val success = slotSymbols.foldRight(
+                  Split.Else(makeMatchSuccess(outputSymbol.safeRef, bindingsTerm)): Split
+                ):
+                  case ((_, slot, local), inner) =>
+                    Split.Let(local, callTupleGet(resultSymbol.safeRef, 1 + slot, "string binding"), inner)
+                SynthIf(Split.Let(resultSymbol, call,
+                  Branch(
+                    resultSymbol.safeRef,
+                    // The engine returns null on failure and an array on success.
+                    FlatPattern.Tuple(1, true),
+                    Split.Let(outputSymbol, callTupleGet(resultSymbol.safeRef, 0, "string output"), success)
+                  ) ~: Split.Else(emptyMatchResult("string mismatch"))))
+        val symbol = TempSymbol(N, erasedType = N, label.asFieldName + "$")
+        (DefineVar(symbol, resultTerm)(N) :: LetDecl(symbol, Nil)(N) :: stmts, (label, symbol.safeRef) :: results)
+    val resultTerm = resultTerms.reverse match
+      case (_, term) :: Nil => term
+      case terms => Rcd(false, terms.map: (label, term) =>
+        RcdField(str(label.asFieldName), term))
+    Blk(tests.reverse, resultTerm)
+  
   import Pattern.*
   
   /** Represent things that can be used as expressions in consequents. */
@@ -293,6 +419,22 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       subScrutinees: Map[Ident | Int, MatcherResult],
       aliases: Ls[VarSymbol]
   )(using ResultMode): MakeSplit = trace(pre = s"completePattern: ${pattern.showDbg}"):
+    budget.visit(pattern)
+    val makeSplit = completePatternImpl(pattern, scrutinee, subScrutinees, aliases)
+    (makeConsequent, alternative) =>
+      // A conjunction can invoke a continuation once for each alternative.
+      // Charge every invocation, not just construction of the closure: a
+      // small pattern can otherwise emit exponentially many result branches.
+      budget.visit(pattern)
+      budget.spend(aliases.size.toLong)
+      makeSplit(makeConsequent, alternative)
+
+  private def completePatternImpl(
+      pattern: SpPat,
+      scrutinee: LocalVarSymbol,
+      subScrutinees: Map[Ident | Int, MatcherResult],
+      aliases: Ls[VarSymbol]
+  )(using ResultMode): MakeSplit =
     pattern match
     case MatchedClassLike(head, fields) if isMatchOnly =>
       val acceptAll: MakeSplit = (makeConsequent, _) => makeConsequent(scrutinee, rcd())
@@ -306,7 +448,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
               Branch(resultSymbol.safeRef,
                 makeInnerSplit(makeConsequent, Split.End)) ~: alternative)
     case MatchedClassLike(head, fields) =>
-      val rebuildNeeded = fields.iterator.exists((_, pattern) => !pattern.preservesOriginalScrutinee)
+      val rebuildNeeded = fields.iterator.exists((_, pattern) => !pattern.preservesOriginalScrutinee(budget))
       val constructor = Compiler.preservedReference(head.constructor)
       val makeMakeSplit = fields.iterator.foldRight(
         (fields: Ls[(Ident, Term)], bindingsSymbols: Ls[TempSymbol]) =>
@@ -346,7 +488,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
           val fieldBindingsTerm = makeBindings(fieldAliases.map:
             alias => RcdField(str(alias.name), outputSymbol.safeRef))
           val fieldOutput =
-            if rebuildNeeded && !pattern.preservesOriginalScrutinee then outputSymbol.safeRef
+            if rebuildNeeded && !pattern.preservesOriginalScrutinee(budget) then outputSymbol.safeRef
             else subScrutinees(field).input
           (outputFields: Ls[(Ident, Term)], bindingsSymbols: Ls[TempSymbol]) =>
             ((makeConsequent, alternative) =>
@@ -526,8 +668,10 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
         val params = paramList(param(bindingsSymbol))
         // Because we pass the extracted values using recoreds. We need to bind
         // each property to its corresponding variable which is accessible from
-        // then `term`.
-        val letBindings = pattern.symbols.flatMap: symbol =>
+        // then `term`. Only the symbols the definition itself binds are
+        // mapped by `correspondence` (and referenced by `term`); symbols
+        // bound inside substituted pattern arguments are not.
+        val letBindings = pattern.symbols.filter(correspondence.contains).flatMap: symbol =>
           val termSymbol = correspondence(symbol)
           LetDecl(termSymbol, Nil)(N) ::
           DefineVar(termSymbol, sel(bindingsSymbol.safeRef, termSymbol.name))(N) :: Nil

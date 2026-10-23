@@ -1,0 +1,69 @@
+:js
+
+open annotations
+
+// A character range denotes the same code points in all matching routes.
+
+pattern Emoji = "😀" ..= "😏"
+
+:expect true
+"😁" is Emoji
+//│ = true
+
+:expect true
+"😁" is @compile Emoji
+//│ = true
+
+:expect true
+"😁" is ("" ~ Emoji)
+//│ = true
+
+
+// Even an empty prefix must preserve a conjunction's tuple output.
+
+:expect ["a", "a"]
+if "a" is (("a" & ("a" | "b")) as r) then r else "no"
+//│ = ["a", "a"]
+
+:expect ["a", "a"]
+if "a" is ("" ~ (("a" & ("a" | "b")) as r)) then r else "no"
+//│ = ["a", "a"]
+
+
+// A non-string alternative must not change recursive string bindings.
+
+pattern Digit = "0" ..= "9"
+pattern MixedListed = (((Digit as h) ~ (MixedListed as t)) => h + "," + t) | ("" => "$") | 42
+
+:expect "1,2,3,$"
+if "123" is MixedListed as r then r else "no"
+//│ = "1,2,3,$"
+
+:expect "1,2,3,$"
+if "123" is @compile MixedListed as r then r else "no"
+//│ = "1,2,3,$"
+
+:expect 42
+if 42 is MixedListed as r then r else "no"
+//│ = 42
+
+:expect 42
+if 42 is @compile MixedListed as r then r else "no"
+//│ = 42
+
+
+// A range crossing the BMP boundary also orders characters by code point.
+
+pattern AcrossPlanes = "z" ..= "😀"
+
+:expect true
+"\uffff" is AcrossPlanes
+//│ = true
+
+:expect true
+"\uffff" is @compile AcrossPlanes
+//│ = true
+
+:expect MatchSuccess(["😁", "tail"], null)
+Emoji.unapplyStringPrefix("😁tail")
+//│ = MatchSuccess(["😁", "tail"], null)

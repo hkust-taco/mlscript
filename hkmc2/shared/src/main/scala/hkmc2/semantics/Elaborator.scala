@@ -535,6 +535,7 @@ object Elaborator:
       loopEnd: ModuleOrObjectSymbol,
       tuple: ModuleOrObjectSymbol,
       str: ModuleOrObjectSymbol,
+      strPat: ModuleOrObjectSymbol,
       unreachable: TermSymbol,
       assertFail: TermSymbol,
       continue: ModuleOrObjectSymbol,
@@ -546,6 +547,9 @@ object Elaborator:
       strGet: TermSymbol,
       strTake: TermSymbol,
       strLeaveOut: TermSymbol,
+      strPatMatchWhole: TermSymbol,
+      strPatParseWhole: TermSymbol,
+      strPatParsePrefix: TermSymbol,
       matchSuccessCls: ClassSymbol,
       matchSuccessTrm: TermSymbol,
       matchFailureCls: ClassSymbol,
@@ -581,11 +585,13 @@ object Elaborator:
 
       val tuple = modOrObj("Tuple")
       val str = modOrObj("StrOps")
+      val strPat = modOrObj("StrPat")
       RuntimeSymbols(
         unit = modOrObj("Unit"),
         loopEnd = modOrObj("LoopEnd"),
         tuple = tuple,
         str = str,
+        strPat = strPat,
         unreachable = term("unreachable"),
         assertFail = term("assertFail"),
         continue = modOrObj("Continue"),
@@ -597,6 +603,9 @@ object Elaborator:
         strGet = moduleMember(str, "get"),
         strTake = moduleMember(str, "take"),
         strLeaveOut = moduleMember(str, "leaveOut"),
+        strPatMatchWhole = moduleMember(strPat, "matchWhole"),
+        strPatParseWhole = moduleMember(strPat, "parseWhole"),
+        strPatParsePrefix = moduleMember(strPat, "parsePrefix"),
         matchSuccessCls = cls("MatchSuccess"),
         matchSuccessTrm = term("MatchSuccess"),
         matchFailureCls = cls("MatchFailure"),
@@ -706,6 +715,10 @@ object Elaborator:
     def strGetSymbol: TermSymbol = runtimeSymbols.strGet
     def strTakeSymbol: TermSymbol = runtimeSymbols.strTake
     def strLeaveOutSymbol: TermSymbol = runtimeSymbols.strLeaveOut
+    def strPatSymbol: ModuleOrObjectSymbol = runtimeSymbols.strPat
+    def strPatMatchWholeSymbol: TermSymbol = runtimeSymbols.strPatMatchWhole
+    def strPatParseWholeSymbol: TermSymbol = runtimeSymbols.strPatParseWhole
+    def strPatParsePrefixSymbol: TermSymbol = runtimeSymbols.strPatParsePrefix
     def matchSuccessClsSymbol: ClassSymbol = runtimeSymbols.matchSuccessCls
     def matchSuccessTrmSymbol: TermSymbol = runtimeSymbols.matchSuccessTrm
     def matchFailureClsSymbol: ClassSymbol = runtimeSymbols.matchFailureCls
@@ -3117,9 +3130,13 @@ extends Importer:
     /** String range bounds must be single characters. */
     def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
       val ds = collection.mutable.Buffer.empty[(Message, Option[Loc])]
-      if lo.value.length =/= 1 then
+      // A bound is a single character when it is one code point; astral
+      // characters (two UTF-16 code units) are accepted.
+      def isSingleCharacter(s: Str): Bool =
+        s.nonEmpty && s.codePointCount(0, s.length) == 1
+      if !isSingleCharacter(lo.value) then
         ds += msg"The lower bound of character ranges must be a single character." -> lo.toLoc
-      if hi.value.length =/= 1 then
+      if !isSingleCharacter(hi.value) then
         ds += msg"The upper bound of character ranges must be a single character." -> hi.toLoc
       if ds.nonEmpty then error(ds.toSeq*)
       ds.nonEmpty

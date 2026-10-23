@@ -1,0 +1,176 @@
+:js
+
+open annotations
+
+// Conjunction outputs retain their source grouping, including when an empty
+// concatenation prefix selects the string compiler.
+
+pattern LeftGrouped = ("a" & "a") & "a"
+pattern RightGrouped = "a" & ("a" & "a")
+
+:expect [["a", "a"], "a"]
+if "a" is LeftGrouped as x then x
+//│ = [["a", "a"], "a"]
+
+:expect [["a", "a"], "a"]
+if "a" is @compile LeftGrouped as x then x
+//│ = [["a", "a"], "a"]
+
+:expect [["a", "a"], "a"]
+if "a" is ("" ~ (LeftGrouped as x)) then x
+//│ = [["a", "a"], "a"]
+
+:expect ["a", ["a", "a"]]
+if "a" is RightGrouped as x then x
+//│ = ["a", ["a", "a"]]
+
+:expect ["a", ["a", "a"]]
+if "a" is @compile RightGrouped as x then x
+//│ = ["a", ["a", "a"]]
+
+:expect ["a", ["a", "a"]]
+if "a" is ("" ~ (RightGrouped as x)) then x
+//│ = ["a", ["a", "a"]]
+
+:expect ["a", "a"]
+if "a" is @compile (_ & _) as x then x
+//│ = ["a", "a"]
+
+:expect ["a", "a"]
+if "a" is ("" ~ ((_ & _) as x)) then x
+//│ = ["a", "a"]
+
+
+// A pure constraint can choose values of different shapes. Its preferred
+// parse is evaluated on the common span selected by the intersection.
+
+pattern DifferentShapes = ("a" & "a") | "b"
+pattern RightShapes = Str & DifferentShapes
+pattern LeftShapes = DifferentShapes & Str
+
+:expect ["a", ["a", "a"]]
+if "a!" is ((RightShapes as x) ~ "!") then x
+//│ = ["a", ["a", "a"]]
+
+:expect ["b", "b"]
+if "b!" is ((RightShapes as x) ~ "!") then x
+//│ = ["b", "b"]
+
+:expect [["a", "a"], "a"]
+if "a!" is ((LeftShapes as x) ~ "!") then x
+//│ = [["a", "a"], "a"]
+
+pattern PrefixShapes = ("" ~ (RightShapes as value)) => value
+
+:expect MatchSuccess([["a", ["a", "a"]], "!"], null)
+PrefixShapes.unapplyStringPrefix("a!")
+//│ = MatchSuccess([["a", ["a", "a"]], "!"], null)
+
+
+// Bindings within the driver keep its output, whereas a binding around the
+// conjunction sees the tuple, in source order even when the driver is last.
+
+:expect ["a", ["a", "a"]]
+if "a!" is (((Str & ("a" as inner)) as both) ~ "!") then [inner, both]
+//│ = ["a", ["a", "a"]]
+
+let trace = ""
+fun record(value, result) =
+  set trace += value
+  result
+//│ trace = ""
+
+pattern Transformed = Str & ("a" => record("a", 7))
+
+:expect ["a", 7]
+if "a!" is ((Transformed as x) ~ "!") then x
+//│ = ["a", 7]
+
+:expect "a"
+trace
+//│ = "a"
+
+:expect false
+"a!" is (("b" & ("a" => record("bad", 9))) ~ "!")
+//│ = false
+
+:expect "a"
+trace
+//│ = "a"
+
+// Both generated tuple actions and user transforms occur in these regions;
+// repeated references must keep the transform's own action index.
+
+pattern Twice = ((Transformed as first) ~ (Transformed as second)) => [first, second]
+
+:expect [["a", 7], ["a", 7]]
+if "aa" is Twice as x then x
+//│ = [["a", 7], ["a", 7]]
+
+:expect "aaa"
+trace
+//│ = "aaa"
+
+
+// Concatenation coerces the conjunction tuple as a whole. Capturing that
+// tuple before concatenation must not change the result or flatten it.
+
+:expect "a,a!"
+if "a!" is (("a" & "a") ~ "!") as x then x
+//│ = "a,a!"
+
+:expect ["a,a!", ["a", "a"]]
+if "a!" is ((("a" & "a") as inner) ~ "!") as x then [x, inner]
+//│ = ["a,a!", ["a", "a"]]
+
+
+// Pure recursion can construct values too. As an intersection constraint it
+// is recognized without value operations, then parsed over the chosen span.
+
+pattern RecursiveTuple = ("x" ~ RecursiveTuple) | ("a" & "a")
+
+:expect ["xxa", "xxa,a"]
+if "xxa!" is (((Str & RecursiveTuple) as x) ~ "!") then x
+//│ = ["xxa", "xxa,a"]
+
+:expect ["xxa,a", "xxa"]
+if "xxa!" is (((RecursiveTuple & Str) as x) ~ "!") then x
+//│ = ["xxa,a", "xxa"]
+
+:expect "xxa,a"
+if "xxa" is RecursiveTuple as x then x
+//│ = "xxa,a"
+
+:expect true
+"xxa" is @compile RecursiveTuple
+//│ = true
+
+// A transform inside the recursive driver must unwind before its tuple is
+// constructed, once per level and without losing the conjunction's mark.
+
+pattern RecursiveTransform = (("x" ~ (RecursiveTransform as tail)) => record("x", "X" + tail)) | ("a" => "A")
+
+:expect ["xxa", "XXA"]
+if "xxa!" is (((Str & RecursiveTransform) as x) ~ "!") then x
+//│ = ["xxa", "XXA"]
+
+:expect "aaaxx"
+trace
+//│ = "aaaxx"
+
+
+// Separate legacy limitations, outside the concatenation matcher: head-based
+// dispatch does not handle overlapping Str/literal heads, and prefix
+// conjunction checks its right branch against the entire remaining input.
+
+:fixme
+:expect ["a", ["a", "a"]]
+if "a" is @compile RightShapes as x then x
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] Expected: '["a", ["a", "a"]]', got: 'undefined'
+
+:fixme
+:expect MatchSuccess([["a", ["a", "a"]], "!"], null)
+RightShapes.unapplyStringPrefix("a!")
+//│ ═══[RUNTIME ERROR] Expected: 'MatchSuccess([["a", ["a", "a"]], "!"], null)', got: 'MatchFailure(null)'
+//│ = MatchFailure(null)
