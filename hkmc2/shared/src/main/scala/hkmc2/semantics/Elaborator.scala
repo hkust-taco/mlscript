@@ -560,6 +560,7 @@ object Elaborator:
       assertFail: TermSymbol,
       checkVariadicArgs: TermSymbol,
       continue: ModuleOrObjectSymbol,
+      nonLocalReturn: ClassSymbol,
       toJsAsync: TermSymbol,
       tupleGet: TermSymbol,
       tupleSlice: TermSymbol,
@@ -612,6 +613,7 @@ object Elaborator:
         assertFail = term("assertFail"),
         checkVariadicArgs = term("checkVariadicArgs"),
         continue = modOrObj("Continue"),
+        nonLocalReturn = cls("NonLocalReturn"),
         toJsAsync = term("toJsAsync"),
         tupleGet = moduleMember(tuple, "get"),
         tupleSlice = moduleMember(tuple, "slice"),
@@ -708,7 +710,7 @@ object Elaborator:
     val blockSymbol = TempSymbol(N, erasedType = N, "Block")
     val optionSymbol = TempSymbol(N, erasedType = N, "option")
     val wasmSymbol = TempSymbol(N, erasedType = N, "wasm")
-    val nonLocalRetHandlerTrm =
+    lazy val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       val bsym = BlockMemberSymbol("ret", Nil, true)
@@ -723,6 +725,7 @@ object Elaborator:
     def assertFailSymbol: TermSymbol = runtimeSymbols.assertFail
     def checkVariadicArgsSymbol: TermSymbol = runtimeSymbols.checkVariadicArgs
     def continueSymbol: ModuleOrObjectSymbol = runtimeSymbols.continue
+    def nonLocalReturnSymbol: ClassSymbol = runtimeSymbols.nonLocalReturn
     def toJsAsyncSymbol: TermSymbol = runtimeSymbols.toJsAsync
     def tupleGetSymbol: TermSymbol = runtimeSymbols.tupleGet
     def tupleSliceSymbol: TermSymbol = runtimeSymbols.tupleSlice
@@ -935,11 +938,11 @@ extends Importer:
   
   /** Give the synthetic import the same module shape as an ordinary import alias,
     * so compiler-inserted selections use normal member resolution and lowering. */
-  private def nonLocalContinueSentinel(using Ctx): Term =
+  private def runtimeMember(symbol: DefinitionSymbol[?])(using Ctx): Term =
     if newResolution then
       pipeTerm(Ctx.RefElem(State.runtimeModuleSymbol).ref(N), State.runtimeSymbol)
-      Ctx.SelElem(Ctx.RefElem(State.runtimeSymbol), "Continue", S(State.continueSymbol), false).ref(N)
-    else State.runtimeSymbol.ref().synthSel(State.continueSymbol)
+      interpretRef(Ctx.SelElem(Ctx.RefElem(State.runtimeSymbol), symbol.nme, symbol.bms, false).ref(N), Trm)
+    else State.runtimeSymbol.ref().synthSel(symbol)
   
   /** Build an effect handler around `body` for non-local control flow. */
   private def mkEffectHandleAbortive(
@@ -975,7 +978,8 @@ extends Importer:
       HandlerTermDefinition(resumeSym, td)
     clsSym.defn = S(ClassDef.Plain(ctx.getOuter, Cls, clsSym, BlockMemberSymbol(effectClassName, Nil), Nil, N,
       ObjBody(Blk(htds.map(_.td), unit)), N, Nil, Nil, N, ctorAnnotations = Nil)(body.toLoc, body.toLoc, N))
-    val handle = new Term.Handle(handlerSymbol, state.nonLocalRetHandlerTrm, Nil, clsSym, htds, body)(isAbortive = true)
+    val parent = if newResolution then runtimeMember(State.nonLocalReturnSymbol) else state.nonLocalRetHandlerTrm
+    val handle = new Term.Handle(handlerSymbol, parent, Nil, clsSym, htds, body)(isAbortive = true)
     if newResolution then resolveAbortiveHandler(handle)
     handle
   
@@ -1022,7 +1026,7 @@ extends Importer:
       (if nonLocalBreakMethodMarker.directRefs.isEmpty then Nil else
         EffectHandlerMethodSpec("break", S("value"), requireEffectMethodValue("break", _)) :: Nil) :::
       (if nonLocalContinueMethodMarker.directRefs.isEmpty then Nil else
-        EffectHandlerMethodSpec("continue", N, _ => nonLocalContinueSentinel) :: Nil)
+        EffectHandlerMethodSpec("continue", N, _ => runtimeMember(State.continueSymbol)) :: Nil)
     if methods.isEmpty then body else
       mkEffectHandleAbortive(nonLocalHandlerSym, "NonLocalLabelEffect", methods, body)
   
@@ -1778,7 +1782,7 @@ extends Importer:
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       block(Block(tree :: Nil), hasResult = false, resultInterp = interp)._1
     case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>
-      app(State.builtinOpsMap("!").ref(new Ident("not").withLocOf(kw)), withTypeBinders(Term.Tup(
+      app(Ctx.RefElem(State.builtinOpsMap("!")).ref(S(new Ident("not").withLocOf(kw))), withTypeBinders(Term.Tup(
         PlainFld(subterm(rhs)) :: Nil)(DummyTup)))(DummyApp, N, FlowSymbol("not-app"))
     case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
       ifLike(Keyword.`if`, IfLikeForm.ReturningIf, shorthandSplit(tree), tree.toLoc)
@@ -1878,9 +1882,11 @@ extends Importer:
       app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
         DummyApp, N, sym)
     case SynthSel(pre, nme) =>
-      val preTrm = subterm(pre)
-      val sym = resolveField(nme, preTrm.symbol, nme)
-      Term.SynthSel(preTrm, nme)(sym, FlowSymbol.synthSel(nme.name), N, S(summon)).withLocOf(tree)
+      if newResolution then subterm(Sel(pre, nme).withLocOf(tree), interp)
+      else
+        val preTrm = subterm(pre)
+        val sym = resolveField(nme, preTrm.symbol, nme)
+        Term.SynthSel(preTrm, nme)(sym, FlowSymbol.synthSel(nme.name), N, S(summon)).withLocOf(tree)
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
@@ -2013,10 +2019,9 @@ extends Importer:
           (org.fileName.relativeTo(config.baseDir).getOrElse(org.fileName).toString,
             (org.startLineNum + org.fph.getLineColAt(loc.spanStart)._1).toString)
         case N => ("‹unknown›", "‹unknown›")
-      val elsPart = els.fold(PrefixApp(Keywrd(Keyword.`else`), Tree.Trm(
-        State.runtimeSymbol.ref().synthSel(State.assertFailSymbol)
-          .app(Term.Lit(StrLit(fl)), Term.Lit(StrLit(ln)))
-      )))(PrefixApp.apply.tupled)
+      val elsPart = els.fold(PrefixApp(Keywrd(Keyword.`else`),
+        App(Tree.Trm(runtimeMember(State.assertFailSymbol)), Tup(StrLit(fl) :: StrLit(ln) :: Nil))
+      ))(PrefixApp.apply.tupled)
       subterm:
         IfLike(new Keywrd(Keyword.`if`).withLocOf(kw), Block(
           InfixApp(rhs, new Keywrd(Keyword.`then`), thno.getOrElse(Unt())) :: elsPart :: Nil))
@@ -2490,7 +2495,7 @@ extends Importer:
           case id: Ident =>
             val sym = new VarSymbol(id, erasedType = N)
             newCtx += id.name -> sym
-            recordFieldScope(RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), sym.ref(id)))
+            recordFieldScope(RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym).ref(S(id))))
               :: defineVar(sym, rhs_t)(Loc(rlhs, rhs))
               :: LetDecl(sym, annotations)(id.toLoc)
               :: acc
@@ -2975,6 +2980,7 @@ extends Importer:
               val allCtorPss = pss ::: auxCtorPss
               val tsym = if allCtorPss.nonEmpty then
                 val ctsym = ClassCtorSymbol(Fun, owner, clsSym)
+                val resultType = if newResolution then interpretRef(Ctx.RefElem(sym).ref(N), Tpe) else clsSym.ref()
                 val ctdef =
                   TermDefinition(
                     Fun,
@@ -2982,7 +2988,7 @@ extends Importer:
                     ctsym,
                     allCtorPss,
                     S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none)(tp.toLoc))),
-                    S(clsSym.ref()),
+                    S(resultType),
                     N,
                     TermDefFlags.empty,
                     Modulefulness.none,
@@ -3206,9 +3212,9 @@ extends Importer:
     */
   private def seedRestParameter(ps: ParamList)(using Ctx): Unit = if newResolution then
     ps.variadic.map(_.param).filter(parameterSignature(_).isEmpty).foreach: p =>
-      val array = prelude.builtins.Array.ref(new Ident("Array").withLoc(p.toLoc))
-      val nothing = prelude.builtins.Nothing.ref(new Ident("Nothing").withLoc(p.toLoc))
-      val initial = Term.TyApp(array, nothing :: Nil)(N).withLoc(p.toLoc)
+      def builtin(name: Str): Term =
+        prelude.getBuiltin(name).get.ref(S(new Ident(name).withLoc(p.toLoc)))
+      val initial = Term.TyApp(builtin("Array"), builtin("Nothing") :: Nil)(N).withLoc(p.toLoc)
       // Builtins ignore local name shadowing, but their interfaces still enter
       // the parameter's lexical scopes. Without these captures a generic Array
       // method mixes inference inside the function with inference outside it.
@@ -3307,7 +3313,7 @@ extends Importer:
         // Primitive operators are implicit bindings outside the Ctx environments;
         // like explicit bindings, they take precedence over wildcard sources.
         state.builtinOpsMap.get(id.name) match
-          case S(bi) => S(bi.ref(id))
+          case S(bi) => S(Ctx.RefElem(bi).ref(S(id)))
           case N => candidate.map(_.ref(S(id)))
       case S(elem) => S(elem.ref(S(id)))
   
