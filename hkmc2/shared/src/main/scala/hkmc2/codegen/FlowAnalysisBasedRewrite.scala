@@ -1,7 +1,7 @@
 package hkmc2
 package codegen
 
-import scala.collection.mutable.{Set as MutSet, Buffer}
+import scala.collection.mutable.{Set as MutSet, Buffer, LinkedHashMap}
 
 import hkmc2.utils.*, shorthands.*
 import utils.*
@@ -267,6 +267,10 @@ class FlowAnalysisBasedRewrite(
           case N => super.applyFunDefn(fun)
   
   def otherNewFunDefns: Iterable[FunDefn] = Nil
+  
+  def retypedVariables: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedValueType] = LinkedHashMap.empty
+  
+  def retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncType] = LinkedHashMap.empty
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
   
 end FlowAnalysisBasedRewrite

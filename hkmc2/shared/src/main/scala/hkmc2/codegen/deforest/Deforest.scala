@@ -121,25 +121,6 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
           else N
     end mergeDests
 
-    // an unfused constructor's fields keep their declared types, so a constructor stored in one can only be
-    // fused into a match, and only if the field's type admits the closure replacing it
-    def storedCtorsKeptUnfused(c: Ctor): Iterator[Ctor] =
-      def admitsClosure(field: SelField) = field.erasedFieldType.forall: tpe =>
-        ErasedType.needsCast(ErasedType.Function(S(false)).canonicalize, tpe.canonicalize).contains(false)
-      for
-        (field, arg) <- c.args.iterator
-        stored <- arg match
-          case stored: Ctor => Iterator.single(stored)
-          case v: StratVar => v.lowerBounds.iterator.collect:
-            case stored: Ctor => stored
-          case _ => Iterator.empty
-        if mergeDests(stored, stored.dests.toSet) match
-          case S(_: FinalDestMatch) => !admitsClosure(field)
-          case _ => true
-      yield stored
-
-    // roots are closed under `storedCtorsKeptUnfused`, but a constructor unfused only through a consumer it
-    // shares with a root is not a root; the assertion below checks that its stored constructors are marked anyway
     val prodRoots =
       val unconsumed = constraintSolver.collector.allRealCtors.iterator.filter: ctor =>
         ctor.instantiationId.isDefined && ctor.dests.isEmpty
@@ -148,28 +129,43 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
           ctor <- constraintSolver.ctorsWithDests
           if mergeDests(ctor, ctor.dests.toSet).isEmpty
         yield ctor
-      val roots = MutSet.empty[Ctor]
-      def addRoot(c: Ctor): Unit = if roots.add(c) then storedCtorsKeptUnfused(c).foreach(addRoot)
-      (unconsumed ++ unmergeable).foreach(addRoot)
-      roots
+      unconsumed ++ unmergeable
     val consRoots =
       for
         dtor <- constraintSolver.consumersWithSrcs
         if dtor.srcs.contains(UnknownProd)
       yield dtor
 
-    val result = FlowWebComputation[Ctor, ConcreteCtorConsumer](
-      p => p.dests.collect:
-        case c: ConcreteCtorConsumer => c,
-      c => c.srcs.collect:
-        case p: Ctor => p,
-      prodRoots,
-      consRoots,
-    )
+    val result =
+      // constructors stored in `c`'s field that must stay unfused when `c` is unfused,
+      // as `c`'s fields keep their declared types
+      def storedCtorsKeptUnfused(c: Ctor): Iterator[Ctor] =
+        for
+          (field, arg) <- c.args.iterator
+          stored <- arg match
+            case stored: Ctor => Iterator.single(stored)
+            case v: StratVar => v.lowerBounds.iterator.collect:
+              case stored: Ctor => stored
+            case _ => Iterator.empty
+          if mergeDests(stored, stored.dests.toSet) match
+            case S(_: FinalDestMatch) =>
+              field.erasedFieldType.exists: tpe =>
+                !ErasedType.needsCast(
+                  ErasedType.Function(S(false)).canonicalize,
+                  tpe.canonicalize).contains(false)
+            case _ => true
+        yield stored
+      FlowWebComputation[Ctor, ConcreteCtorConsumer](
+        p => p.dests.collect:
+          case c: ConcreteCtorConsumer => c,
+        c => c.srcs.collect:
+          case p: Ctor => p,
+        storedCtorsKeptUnfused,
+        prodRoots,
+        consRoots,
+      )
     val toRemoveCtor = result.markedProducers
     val toRemoveDtor = result.markedConsumers
-    for c <- toRemoveCtor; stored <- storedCtorsKeptUnfused(c) do
-      softAssert(toRemoveCtor(stored), s"${pp(stored.concreteId)} is fused but stored in unfused ${pp(c.concreteId)}")
 
     for
       ctor <- constraintSolver.ctorsWithDests
