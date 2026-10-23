@@ -19,30 +19,30 @@ object SplitCompiler:
    *  the normalization to merge let bindings from different branches.
    */
   sealed abstract class Scrut:
-    private val subScrutinees: HashMap[ClassSymbol | PatternSymbol, Buffer[SymbolScrut[?]]] = HashMap.empty
-    private val fields: HashMap[Ident, SymbolScrut[?]] = HashMap.empty
-    private val tupleLead: HashMap[Int, SymbolScrut[?]] = HashMap.empty
-    private val tupleLast: HashMap[Int, SymbolScrut[?]] = HashMap.empty
+    private val subScrutinees: HashMap[ClassSymbol | PatternSymbol, Buffer[SymbolScrut]] = HashMap.empty
+    private val fields: HashMap[Ident, SymbolScrut] = HashMap.empty
+    private val tupleLead: HashMap[Int, SymbolScrut] = HashMap.empty
+    private val tupleLast: HashMap[Int, SymbolScrut] = HashMap.empty
     
     def apply()(using State): SimpleRef
 
-    def getSubScrutinee(cs: ClassSymbol | PatternSymbol)(i: Int)(using State): SymbolScrut[?] =
+    def getSubScrutinee(cs: ClassSymbol | PatternSymbol)(i: Int)(using State): SymbolScrut =
       val scrutinees = subScrutinees.getOrElseUpdate(cs, Buffer.empty)
       while scrutinees.size <= i do
         scrutinees += TempSymbol(N, erasedType = N, s"arg$$${cs.nme}$$${scrutinees.size}$$").toScrut
       scrutinees(i)
-    def getTupleLeadSubScrutinee(index: Int)(using State): SymbolScrut[?] =
+    def getTupleLeadSubScrutinee(index: Int)(using State): SymbolScrut =
       tupleLead.getOrElseUpdate(index, TempSymbol(N, erasedType = N, s"element$index$$").toScrut)
-    def getTupleLastSubScrutinee(index: Int)(using State): SymbolScrut[?] =
+    def getTupleLastSubScrutinee(index: Int)(using State): SymbolScrut =
       tupleLast.getOrElseUpdate(index, TempSymbol(N, erasedType = N, s"lastElement$index$$").toScrut)
-    def getFieldScrutinee(fieldName: Ident)(using State): SymbolScrut[?] =
+    def getFieldScrutinee(fieldName: Ident)(using State): SymbolScrut =
       fields.getOrElseUpdate(fieldName, TempSymbol(N, erasedType = N, s"field_${fieldName.name}$$").toScrut)
   
-  class SymbolScrut[SymbolType <: LocalVarSymbol](val symbol: SymbolType) extends Scrut:
+  class SymbolScrut(val symbol: LocalVarSymbol) extends Scrut:
     def apply()(using State): SimpleRef = SimpleRef(symbol)(N)
   
-  extension [SymbolType <: LocalVarSymbol](symbol: SymbolType)
-    def toScrut: SymbolScrut[SymbolType] = SymbolScrut(symbol)
+  extension (symbol: LocalVarSymbol)
+    def toScrut: SymbolScrut = SymbolScrut(symbol)
   
   type BindingMap = SeqMap[VarSymbol, Scrut]
   
@@ -273,7 +273,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
      *           sub-scrutinee and its location.
      *         - A `MakeConsequent` function that creates the nested match split.
      */
-    def folded(z: MakeConsequent)(getSubScrutinee: Int => SymbolScrut[?])
+    def folded(z: MakeConsequent)(getSubScrutinee: Int => SymbolScrut)
     : (Ls[(LocalVarSymbol, Opt[Loc])], MakeConsequent) =
       patterns.iterator.zipWithIndex.foldRight((Nil, z)):
         case ((subPattern, index), (accSubScrutinees, makeInnerSplit)) =>
@@ -290,7 +290,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           ((subScrutinee.symbol -> subPattern.toLoc) :: accSubScrutinees, makeThisSplit)
     
     /** Same as the other overload, but for `MakePrefixConsequent`. */
-    def folded(z: MakePrefixConsequent)(getSubScrutinee: Int => SymbolScrut[?])
+    def folded(z: MakePrefixConsequent)(getSubScrutinee: Int => SymbolScrut)
     : (Ls[(LocalVarSymbol, Opt[Loc])], MakePrefixConsequent) =
       patterns.iterator.zipWithIndex.foldRight((Nil, z)):
         case ((subPattern, index), (accSubScrutinees, makeInnerSplit)) =>
@@ -402,7 +402,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         case (argument, index) => (scrutinee.getSubScrutinee(classSymbol)(index).symbol, argument.toLoc)
       .toList)
       def buildConsequent(
-          infos: Ls[(SP, SymbolScrut[?], Bool)],
+          infos: Ls[(SP, SymbolScrut, Bool)],
           rebuiltArguments: Ls[Scrut],
           bindings: BindingMap
       ): Split = infos match

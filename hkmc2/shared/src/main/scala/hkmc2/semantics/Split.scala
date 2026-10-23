@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 
 import hkmc2.utils.*, shorthands.*
-import syntax.*, Elaborator.State, ucs.FlatPattern
+import syntax.*, Elaborator.State, ucs.FlatPattern, ups.SplitCompiler.SymbolScrut
 
 final case class Branch(scrutinee: Term.SimpleRef, pattern: FlatPattern, continuation: Split) extends AutoLocated:
   def mkClone(using State, codegen.Erasure): Branch =
@@ -180,7 +180,7 @@ object Split:
   import Elaborator.{Ctx, State}
   import utils.{tl, TL}
   import collection.mutable.{Map as MutMap}
-  import ups.SplitCompiler, SplitCompiler.{MakeConsequent, Scrut, SymbolScrut}
+  import ups.SplitCompiler, SplitCompiler.{MakeConsequent, Scrut}
   
   /** Desugar a `SimpleSplit` into a `Split`. */
   def from(rootSplit: SS)(using codegen.Erasure)(using tl: TL)(using Ctx, Raise, State, Config): Split =
