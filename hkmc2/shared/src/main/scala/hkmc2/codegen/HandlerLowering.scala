@@ -62,18 +62,18 @@ object HandlerLowering:
   // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
   private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo, inGetter: Bool, inAsync: Bool):
     def doUnwind(loc: Value, state: Path, restoreList: List[LocalVarSymbol])(using paths: HandlerPaths): Block =
-      val unwind = Return(Call(paths.unwindPath, (
-        currentFun ::
-        state ::
-        loc ::
-        debugInfo.debugInfoPath ::
-        thisPath.getOrElse(unit) ::
-        intLit(resumeInfo.argLists.length) ::
-        Nil
-      ).map(_.asArg) ::: resumeInfo.argLists.flatMap(_.encoded) ::: (
-        intLit(restoreList.length) ::
-        restoreList.map(_.asPath)
-      ).map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N))
+      val unwind = Return(Call(paths.unwindPath,
+          Iterator(
+            currentFun, state, loc, debugInfo.debugInfoPath,
+            thisPath.getOrElse(unit), intLit(resumeInfo.argLists.length),
+          ).map(_.asArg)
+          .++(resumeInfo.argLists.iterator.flatMap(_.encoded))
+          .++(
+            Iterator.single(intLit(restoreList.length))
+            .++(restoreList.iterator.map(_.asPath))
+            .map(_.asArg))
+          .toList ne_:: Nil
+        )(CallMetadata.mlsFunWithEffect, N))
       resumeInfo.argLists.foldRight[Block](unwind): (argList, rest) =>
         argList.lengthDefn.fold(rest)((sym, length) => Assign(sym, length, rest))
   
