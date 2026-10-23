@@ -34,9 +34,9 @@ f(1)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f2;
 //│ f2 = function f(x) {
-//│   throw globalThis.Object.freeze(new globalThis.Error("e"))
+//│   throw globalThis.Object.freeze(new globalThis.Error("e", undefined))
 //│ };
-//│ throw globalThis.Object.freeze(new globalThis.Error("e"))
+//│ throw globalThis.Object.freeze(new globalThis.Error("e", undefined))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: e
 
@@ -50,14 +50,14 @@ f(false)
 //│ let f3;
 //│ f3 = function f(x) {
 //│   if (x === true) {
-//│     throw globalThis.Object.freeze(new globalThis.Error("x"))
+//│     throw globalThis.Object.freeze(new globalThis.Error("x", undefined))
 //│   }
-//│   throw globalThis.Object.freeze(new globalThis.Error("y"));
+//│   throw globalThis.Object.freeze(new globalThis.Error("y", undefined));
 //│ };
 //│ if (false === true) {
-//│   throw globalThis.Object.freeze(new globalThis.Error("x"))
+//│   throw globalThis.Object.freeze(new globalThis.Error("x", undefined))
 //│ }
-//│ throw globalThis.Object.freeze(new globalThis.Error("y"));
+//│ throw globalThis.Object.freeze(new globalThis.Error("y", undefined));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: y
 

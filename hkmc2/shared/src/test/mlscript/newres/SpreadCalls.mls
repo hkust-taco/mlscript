@@ -100,7 +100,7 @@ four(...[1, 2], ...[3, 4], 5)
 //│ ╟── Function 'four' expected 4 arguments, but got 5
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
+//│ = [1, 2, 3, 4]
 
 // Opaque values are left to the runtime spread operation to validate.
 :re
@@ -196,7 +196,7 @@ four(...arr)
 //│ ╟── Function 'four' expected 4 arguments, but got 2
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 2
+//│ ═══[RUNTIME ERROR] Error: Function 'four' expected at least 4 arguments but got 2
 
 
 // Exact call arity anchors known suffixes and prefixes around opaque spreads.
@@ -240,7 +240,15 @@ invokeUnknown(...opaque([() => 95]))
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.2: 	declare type Any
-//│ ╙──     	             ^^^
+//│ ║       	             ^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'f' admits values of unknown shape.
+//│ ║  in SpreadCalls.mls:232
+//│ ║  l.232: 	fun invokeUnknown(f) = f()
+//│ ║         	                  ^
+//│ ╟── 'invokeUnknown' is exposed by this compilation unit.
+//│ ║  l.232: 	fun invokeUnknown(f) = f()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Unknown elements must not silently resolve against another known candidate.
@@ -249,7 +257,7 @@ fun inspectUnknown(x) = x.value
 inspectUnknown(Box(96))
 inspectUnknown(...opaque([Box(96)]))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.248: 	fun inspectUnknown(x) = x.value
+//│ ║  l.256: 	fun inspectUnknown(x) = x.value
 //│ ║         	                        ^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ║  l.173: 	fun opaque(values): Array[Any] = values
@@ -260,11 +268,11 @@ inspectUnknown(...opaque([Box(96)]))
 //│ ║       	             ^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  in SpreadCalls.mls:248
-//│ ║  l.248: 	fun inspectUnknown(x) = x.value
+//│ ║  in SpreadCalls.mls:256
+//│ ║  l.256: 	fun inspectUnknown(x) = x.value
 //│ ║         	                   ^
 //│ ╟── 'inspectUnknown' is exposed by this compilation unit.
-//│ ║  l.248: 	fun inspectUnknown(x) = x.value
+//│ ║  l.256: 	fun inspectUnknown(x) = x.value
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -272,19 +280,19 @@ inspectUnknown(...opaque([Box(96)]))
 :e
 four(...opaque([]), 1, 2, 3, 4, 5)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.273: 	four(...opaque([]), 1, 2, 3, 4, 5)
+//│ ║  l.281: 	four(...opaque([]), 1, 2, 3, 4, 5)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'four' expected 4 arguments, but got at least 5
 //│ ║  l.5: 	fun four(a, b, c, d) = [a, b, c, d]
 //│ ╙──     	^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
+//│ = [1, 2, 3, 4]
 
 // Rest arity may be valid while the callable argument remains unknown.
 :e
 fun invokeRest(f, x, ...tail) = f()
 invokeRest(...opaque([() => 97]), Box(0))
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.284: 	fun invokeRest(f, x, ...tail) = f()
+//│ ║  l.292: 	fun invokeRest(f, x, ...tail) = f()
 //│ ║         	                                ^^^
 //│ ╟── Value with no known interface cannot be called like a function.
 //│ ║  l.173: 	fun opaque(values): Array[Any] = values
@@ -292,7 +300,15 @@ invokeRest(...opaque([() => 97]), Box(0))
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.2: 	declare type Any
-//│ ╙──     	             ^^^
+//│ ║       	             ^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'f' admits values of unknown shape.
+//│ ║  in SpreadCalls.mls:292
+//│ ║  l.292: 	fun invokeRest(f, x, ...tail) = f()
+//│ ║         	               ^
+//│ ╟── 'invokeRest' is exposed by this compilation unit.
+//│ ║  l.292: 	fun invokeRest(f, x, ...tail) = f()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // When repeatedTuples receives [Box(98)], both a and b must acquire its element
@@ -326,16 +342,14 @@ invokeTypedRest(...callbacks, Box(0))
 fun invokePublicRest(f, x, ...tail) = f()
 invokePublicRest(...callbacks, Box(0))
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.326: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ║  l.342: 	fun invokePublicRest(f, x, ...tail) = f()
 //│ ║         	                                      ^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.326: 	fun invokePublicRest(f, x, ...tail) = f()
-//│ ║         	                     ^
 //│ ╟── Parameter 'f' admits values of unknown shape.
-//│ ║  l.326: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ║  l.342: 	fun invokePublicRest(f, x, ...tail) = f()
 //│ ║         	                     ^
 //│ ╟── 'invokePublicRest' is exposed by this compilation unit.
-//│ ║  l.326: 	fun invokePublicRest(f, x, ...tail) = f()
+//│ ║  l.342: 	fun invokePublicRest(f, x, ...tail) = f()
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -371,10 +385,10 @@ class Child extends Base with
 fun readBase(xs: Array[Base]) = first(...xs).extra
 readBase([new Child])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.371: 	fun readBase(xs: Array[Base]) = first(...xs).extra
+//│ ║  l.385: 	fun readBase(xs: Array[Base]) = first(...xs).extra
 //│ ║         	                                ^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.371: 	fun readBase(xs: Array[Base]) = first(...xs).extra
+//│ ║  l.385: 	fun readBase(xs: Array[Base]) = first(...xs).extra
 //│ ╙──       	                       ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -412,16 +426,16 @@ invokeUnannotatedArray(...unknownCallbacks)
 private fun firstInArray(xs) = first(...xs)
 [firstInArray(lefts).left, firstInArray(rights).right]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.413: 	[firstInArray(lefts).left, firstInArray(rights).right]
+//│ ║  l.427: 	[firstInArray(lefts).left, firstInArray(rights).right]
 //│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Right' does not contain member 'left'
-//│ ║  l.392: 	let rights = new mut Array[Right](0)
+//│ ║  l.406: 	let rights = new mut Array[Right](0)
 //│ ╙──       	                           ^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.413: 	[firstInArray(lefts).left, firstInArray(rights).right]
+//│ ║  l.427: 	[firstInArray(lefts).left, firstInArray(rights).right]
 //│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Left' does not contain member 'right'
-//│ ║  l.391: 	let lefts = new mut Array[Left](0)
+//│ ║  l.405: 	let lefts = new mut Array[Left](0)
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[43, 44]', got: 'undefined'

@@ -477,7 +477,7 @@ render of testObject
 render of testObject, breakLength: null
 //│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
 
-render of testObject, breakLength: undefined
+render of testObject, breakLength: unsafe.undefined
 //│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
 
 render of testObject, breakLength: ()
@@ -492,7 +492,7 @@ render of testObject, breakLength: -10
 render of testObject, indent: null
 //│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
 
-render of testObject, indent: undefined
+render of testObject, indent: unsafe.undefined
 //│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
 
 render of testObject, indent: ()
@@ -510,7 +510,7 @@ render of testObject, padding: true
 render of testObject, padding: null
 //│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
 
-render of testObject, padding: undefined
+render of testObject, padding: unsafe.undefined
 //│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
 
 render of testObject, padding: ()

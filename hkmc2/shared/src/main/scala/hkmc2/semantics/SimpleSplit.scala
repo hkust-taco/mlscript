@@ -123,7 +123,7 @@ object SimpleSplit:
   enum Head extends AutoLocated:
     // Elaboration binds scrutinee expressions first: this reference must name
     // a LocalVarSymbol, allowing its sub-scrutinees to be shared by binding.
-    case Match(scrutinee: Term.Ref, pattern: Pattern, consequent: SimpleSplit)
+    case Match(scrutinee: Term.Ref | Term.SimpleRef, pattern: Pattern, consequent: SimpleSplit)
     case Let(binding: LocalVarSymbol, term: Term)
     
     def show(using Scope, ShowCfg, Raise, IfLikeForm): Document = this match

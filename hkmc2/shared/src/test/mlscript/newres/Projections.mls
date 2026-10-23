@@ -76,11 +76,11 @@ fun ambiguous(a) = a.Item#get()
 //│ ║  l.74: 	fun ambiguous(a) = a.Item#get()
 //│ ║        	                    ^^^^^
 //│ ╟── class: 'Item'
-//│ ║  l.71: 	module Right { class Item extends Parent {} }
-//│ ║        	                     ^^^^
-//│ ╟── class: 'Item'
 //│ ║  l.70: 	module Left { class Item extends Parent {} }
-//│ ╙──      	                    ^^^^
+//│ ║        	                    ^^^^
+//│ ╟── class: 'Item'
+//│ ║  l.71: 	module Right { class Item extends Parent {} }
+//│ ╙──      	                     ^^^^
 
 // Forwarded arguments carry shapes through the projected method's result.
 // FIXME: The projected wrapper loses the activation of its exposed argument.

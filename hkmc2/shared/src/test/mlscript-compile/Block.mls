@@ -15,7 +15,7 @@ type Opt[A] = Option[A]
 
 // dependancies referenced in Block classes, referencing implementation in Term.mls
 
-type Literal = null | undefined | Str | Int | Num | Bool
+type Literal = null | unsafe.undefined | Str | Int | Num | Bool
 
 type ParamList = Array[Symbol]
 
@@ -99,7 +99,7 @@ fun indent(s: Str) = s.replaceAll("\n", "\n  ")
 
 fun showLiteral(l: Literal) =
   if l is 
-    undefined then "undefined"
+    unsafe.undefined then "undefined"
     null then "null"
     Str then "\"" + l.toString() + "\""
     else l.toString()

@@ -425,7 +425,7 @@ class ParseRules(using State):
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
     singleKw(`dyn`)(Keywrd(`dyn`)),
-    singleKw(`undefined`)(UnitLit(false)),
+    singleKw(`undefined`)(Keywrd(`undefined`)),
     singleKw(`null`)(UnitLit(true)),
     singleKw(`this`)(Keywrd(Keyword.`this`)),
     singleKw(`super`)(Keywrd(Keyword.`super`)),

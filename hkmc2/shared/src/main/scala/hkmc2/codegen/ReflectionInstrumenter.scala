@@ -102,7 +102,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     case baseSym: BaseTypeSymbol =>
       val name = scope.allocateOrGetName(baseSym)
       val (owner, bsym, paramsOpt, auxParams) = (baseSym.defn, defnMap.get(baseSym)) match
-        case (S(defn), _) => (defn.owner, defn.bsym, defn.paramsOpt, defn.auxParams)
+        case (S(defn), _) => (defn.owner, defn.bsym,
+          defn.paramsOpt.map(LoweredParamList.fixed), defn.auxParams.map(LoweredParamList.fixed))
         case (_, S(defn: ClsLikeDefn)) => (defn.owner, defn.sym, defn.paramsOpt, defn.auxParams)
         // FIXME: hack to patch in staging for returning the object Unit.
         case _ if baseSym == State.unitSymbol => (N, baseSym, N, Nil)
@@ -183,10 +184,11 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
               .getOrElse(blockCtor("Symbol", Ls(toValue(name))))
             sym: sym =>
               blockCtor("Select", Ls(x, sym), "sel")(k)
-        case DynSelect(qual, fld, arrayIdx) =>
+        case DynSelect(qual, fld, kind) =>
+          // * The reflected `Block.DynSelect` only distinguishes array indices; it has no member symbols.
           transformPath(qual): x =>
             transformPath(fld): y =>
-              blockCtor("DynSelect", Ls(x, y, toValue(arrayIdx)), "dynsel")(k)
+              blockCtor("DynSelect", Ls(x, y, toValue(kind.isArrayIdx)), "dynsel")(k)
         case Cast(value, target, check) =>
           transformResult(value): v =>
             blockCtor("Symbol", Ls(toValue(target.describe)), "target"): t =>
@@ -261,10 +263,10 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
   def transformArgs(args: Ls[Arg])(using Context)(k: Ls[(Path, Bool)] => Block): Block =
     args.map(transformArg).collectApply(k)
 
-  def transformParamList(ps: ParamList)(k: Path => Block) =
+  def transformParamList(ps: LoweredParamList)(k: Path => Block) =
     ps.params.map(p => transformSymbol(p.sym)).collectApply(tuple(_)(k))
 
-  def transformParamsOpt(pOpt: Opt[ParamList])(k: Path => Block) =
+  def transformParamsOpt(pOpt: Opt[LoweredParamList])(k: Path => Block) =
     transformOption(pOpt, transformParamList)(k)
 
   def transformCase(cse: Case)(using Context)(k: Path => Block): Block = cse match
@@ -387,7 +389,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
     // TODO: remove it. only for test
     val debug = (k: Block) => call(sym, Nil)(fnPrintCode(_)(k))
-    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(PlainParamList(Nil)(N)), body = newBody)(f.configOverride, f.annotations)
+    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(LoweredParamList.plain(Nil)(N)), body = newBody)(f.configOverride, f.annotations)
     (newFun, debug)
 
   override def applyBlock(b: Block): Block = super.applyBlock(b) match
@@ -398,7 +400,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       val (stagedMethods, debugPrintCode) = companion.methods
         .map(applyFunDefnInner)
         .unzip
-      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(PlainParamList(Nil)(N)), companion.ctor)(N, Nil)
+      val ctor = FunDefn.withFreshSymbol(S(companion.isym), BlockMemberSymbol("ctor$", Nil), Ls(LoweredParamList.plain(Nil)(N)), companion.ctor)(N, Nil)
       val (stagedCtor, ctorPrint) = applyFunDefnInner(ctor)
 
       val debugBlock = (ctorPrint :: debugPrintCode)

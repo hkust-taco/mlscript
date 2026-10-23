@@ -109,6 +109,8 @@ enum Tree extends AutoLocated:
   case Effectful(eff: Tree, body: Tree)
   case Outer(name: Opt[Tree])
   case Spread(kw: Keywrd[Keyword.Ellipsis], body: Opt[Tree])
+  /** A parameter or function type parameter marked optional with a postfix `?`, as in `fun f(x, y?)`. */
+  case Optional(body: Tree)
   case Annotated(annotation: Tree, target: Tree)
   case Directive(prefix: Tree, body: Tree)
   case Constructor(decl: Tree)
@@ -166,6 +168,7 @@ enum Tree extends AutoLocated:
     case OpenIn(opened, body) => Vector.double(opened, body)
     case Def(lhs, rhs) => Vector.double(lhs, rhs)
     case Spread(kw, body) => Vector.single(kw) ++ body.toVector
+    case Optional(body) => Vector.single(body)
     case Annotated(annotation, target) => Vector.double(annotation, target)
     case Directive(prefix, body) => Vector.double(prefix, body)
     case Constructor(decl) => Vector.single(decl)
@@ -221,6 +224,7 @@ enum Tree extends AutoLocated:
     case Hndl(_, _, _, _) => "handle"
     case Def(lhs, rhs) => "defining assignment"
     case Spread(_, _) => "spread"
+    case Optional(_) => "optional parameter"
     case Annotated(_, _) => "annotated"
     case Directive(_, _) => "directive"
     case Open(_) => "open"
@@ -340,8 +344,8 @@ enum Tree extends AutoLocated:
       LetLike(kw, Ident("_").withLocOf(und), r, b)
     
     // `open` keeps its existing expression grammar; a declaration operand makes it a modifier.
-    case Open(body: (TypeOrTermDef | Modified | Annotated)) =>
-      Annotated(Keywrd(Keyword.`open`).withLocOf(this), body.desugared)
+    case PossiblyAnnotated(anns, opened @ Open(body: (TypeOrTermDef | Modified | Annotated))) =>
+      PossiblyAnnotated(anns, Annotated(Keywrd(Keyword.`open`).withLocOf(opened), body.desugared))
     case PossiblyAnnotated(anns, m: Modified) =>
       PossiblyAnnotated(anns,
         m match
@@ -424,6 +428,18 @@ enum Tree extends AutoLocated:
       // fun f(using <...>)
       case TermDef(Ins, inner, N) =>
         go(inner, flags, modifiers + Ins)
+      // fun f(a?)
+      case Optional(inner) =>
+        go(inner, flags.copy(opt = true), modifiers)
+      // fun f(a?: A)
+      case InfixApp(Optional(inner), kw @ Keywrd(Keyword.`:`), sign) =>
+        go(InfixApp(inner, kw, sign), flags.copy(opt = true), modifiers)
+      // fun f(...a?), which is reported during elaboration
+      case Spread(kw, S(Optional(inner))) =>
+        go(Spread(kw, S(inner)), flags.copy(opt = true), modifiers)
+      // fun f(drop a)
+      case PrefixApp(Keywrd(Keyword.`drop`), inner) =>
+        go(inner, flags.copy(droppable = true), modifiers)
       
       // * Base Case (for `using` clause)
       // fun f(using A)

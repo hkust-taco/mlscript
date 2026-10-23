@@ -65,7 +65,7 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
             k(Value.SimpleRef(thisVar)(v.toLoc))
           case _ => super.applyValue(v)(k)
       val newBody = transformer.applyBlock(wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))
-      collectedFunDefn += FunDefn(N, outerBms, outerDsym, PlainParamList((thisParam.iterator ++ outerParams.iterator.map(_._2)).toList)(N) :: PlainParamList(Nil)(N) :: Nil, newBody)(fun.configOverride, noAsync)
+      collectedFunDefn += FunDefn(N, outerBms, outerDsym, LoweredParamList.plain((thisParam.iterator ++ outerParams.iterator.map(_._2)).toList)(N) :: LoweredParamList.plain(Nil)(N) :: Nil, newBody)(fun.configOverride, noAsync)
       val callArgs = (fun.owner.iterator.map(s => Arg(N, Value.This(s)(N))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym)(N))))).toList
       val outerCall = Call(Value.MemberRef(outerBms, outerDsym)(N), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val tmp = TempSymbol(N, erasedType = outerCall.erasedValueType, "tmp")

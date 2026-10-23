@@ -15,12 +15,8 @@ package object ucs:
   def bug(using Line, FileName, Name, Raise)(msgs: (Message, Option[Loc])*): Unit =
     raise(InternalError(msgs.toList))
   
-  extension (symbol: Symbol)
-    /** Create a `Ref` that does not have any implicit arguments. We need this
-     *  function because we generate a lot of `Ref`s after implicit resolution.
-     *  Writing `.resolve` is too verbose.
-     */
-    def safeRef(using Elaborator.State): Term.Ref = symbol.ref().resolve
+  extension (symbol: SimpleRefSymbol)
+    def safeRef(using Elaborator.State): Term.SimpleRef = Term.SimpleRef(symbol)(N)
   
   extension (op: Keyword.Infix)
     infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match

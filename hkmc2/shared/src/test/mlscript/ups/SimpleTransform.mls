@@ -153,7 +153,7 @@ pattern EvaluatedTerm =
   | Infix("/", EvaluatedTerm as left, EvaluatedTerm as right) => left / right
   | Prefix("-", EvaluatedTerm as operand) => -operand
   | Prefix("+", EvaluatedTerm as operand) => +operand
-//│ Lines of IR: 297
+//│ Lines of IR: 302
 
 // Some helper functions to create `Term`s.
 fun wrapLiteral(value) = if value is Int then Literal(value) else value

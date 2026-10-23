@@ -92,7 +92,7 @@ new SuperChild().foo(3)
 //│   method foo³ = fun foo⁴(x) {
 //│     let tmp1, tmp2;
 //│     set tmp1 = +⁰(x, 1);
-//│     set tmp2 = super[SuperBase¹](SuperChild¹.this).foo²(tmp1);
+//│     set tmp2 = super[SuperBase¹](SuperChild¹.this).["foo"](tmp1);
 //│     return *⁰(tmp2, 2)
 //│   }
 //│ };
@@ -434,7 +434,7 @@ let changingParent = makeParent(4)
 class SavedParent extends changingParent { override fun f() = super.f() }
 set changingParent = makeParent(9)
 new SavedParent().f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3360'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3689'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 4
@@ -449,7 +449,7 @@ let changingHolder = Holder(5)
 class SavedNestedParent extends changingHolder.Parent { override fun f() = super.f() }
 set changingHolder = Holder(11)
 new SavedNestedParent().f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3360'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3689'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 5

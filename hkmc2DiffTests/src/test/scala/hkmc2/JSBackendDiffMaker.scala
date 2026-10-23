@@ -104,18 +104,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     
     val symbolsToPreserve = definedValues(includeNonTerms = true).iterator.map(_._2).toSet
     
-    lazy val blockPrinter =
-      given ShowCfg = ShowCfg(
-        showErasedTypes = showIRErasedTypes.isSet,
-        showExpansionMappings = false,
-        showFlowSymbols = true,
-        debug = debug.isSet,
-      )
-      given Elaborator.Ctx = curCtx
-      Printer()
-    val print = (p: codegen.Program) =>
-      blockPrinter.worksheet(p)(using irPrintingScp).mkString(output.ColWidth)
-    
     Config.extractConfigFromStats(blk).givenIn {
     val loweringState = summon[Elaborator.State]
     if file.toString =/= runtimeSourceFile.toString && file.toString =/= preludeFile.toString then
@@ -125,6 +113,17 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     if noCodeGen.isUnset then
       given Elaborator.Ctx = curCtx
       given codegen.Erasure = codegen.Erasure(blk)
+      lazy val blockPrinter =
+        given ShowCfg = ShowCfg(
+          showErasedTypes = showIRErasedTypes.isSet,
+          showExpansionMappings = false,
+          showFlowSymbols = true,
+          debug = debug.isSet,
+        )
+        Printer()
+      val print = (p: codegen.Program) =>
+        blockPrinter.worksheet(p)(using irPrintingScp).mkString(output.ColWidth)
+      
       val low = ltl.givenIn:
         new codegen.Lowering()(using summon[Config], ltl, summon[Raise], loweringState, curCtx, summon[SymbolPrinter])
           with codegen.LoweringTraceLog(traceJS.isSet)

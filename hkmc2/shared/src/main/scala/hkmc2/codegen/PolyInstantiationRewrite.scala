@@ -19,7 +19,7 @@ abstract class FlowAnalysisSolverResult:
 end FlowAnalysisSolverResult
 
 
-type RewrittenFunDefn = (params: Ls[ParamList], body: Block)
+type RewrittenFunDefn = (params: Ls[LoweredParamList], body: Block)
 
 
 abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolver):
@@ -110,7 +110,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   
   // the rewriter of a copy of `params` and `body`, which maps symbol defined in `initMapping`
   // and refreshes symbols bound in `body` so that a copy never rebinds an original symbol
-  protected final def mkCopyRewriter(instId: InstantiationId, params: Ls[ParamList], body: Block, initMapping: Map[LocalVarSymbol, LocalVarSymbol]): Rewriter =
+  protected final def mkCopyRewriter(instId: InstantiationId, params: Ls[LoweredParamList], body: Block, initMapping: Map[LocalVarSymbol, LocalVarSymbol]): Rewriter =
     val mapping = MutMap.from(initMapping)
     val walker = SymbolRefresherWalker(mapping.asInstanceOf)
     params.foreach(walker.refreshParamList)

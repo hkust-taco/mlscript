@@ -501,11 +501,11 @@ fun foo1(x, y, z) = if
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    let-split σ =
-//│ >      z is member:A¹^term:foo1⁰ then member:Predef¹.print^term:foo1⁰(2)
-//│ >      else member:Predef¹.print^term:foo1⁰(3)
+//│ >      z is member:A¹^term:foo1⁰ then member:Predef¹.print‹term:Predef⁰/print⁰›^term:foo1⁰(2)
+//│ >      else member:Predef¹.print‹term:Predef⁰/print⁰›^term:foo1⁰(3)
 //│ >    x is member:A¹^term:foo1⁰ and
 //│ >      let tmp:scrut = member:pred⁰^term:foo1⁰(x¹)
-//│ >      tmp:scrut is true then member:Predef¹.print^term:foo1⁰(1)
+//│ >      tmp:scrut is true then member:Predef¹.print‹term:Predef⁰/print⁰›^term:foo1⁰(1)
 //│ >      $σ
 //│ >    $σ
 
@@ -520,15 +520,15 @@ fun foo2(x, y, z) = if
 //│ >  ‹if|while›
 //│ >    let-split σ =
 //│ >      let-split σ =
-//│ >        z is member:A¹^term:foo2⁰ then member:Predef¹.print^term:foo2⁰(3)
-//│ >        else member:Predef¹.print^term:foo2⁰(4)
+//│ >        z is member:A¹^term:foo2⁰ then member:Predef¹.print‹term:Predef⁰/print⁰›^term:foo2⁰(3)
+//│ >        else member:Predef¹.print‹term:Predef⁰/print⁰›^term:foo2⁰(4)
 //│ >      y is member:A¹^term:foo2⁰ and
 //│ >        let tmp:scrut = member:pred⁰^term:foo2⁰(y²)
-//│ >        tmp:scrut is true then member:Predef¹.print^term:foo2⁰(2)
+//│ >        tmp:scrut is true then member:Predef¹.print‹term:Predef⁰/print⁰›^term:foo2⁰(2)
 //│ >        $σ
 //│ >      $σ
 //│ >    x is member:A¹^term:foo2⁰ and
 //│ >      let tmp:scrut = member:pred⁰^term:foo2⁰(x²)
-//│ >      tmp:scrut is true then member:Predef¹.print^term:foo2⁰(1)
+//│ >      tmp:scrut is true then member:Predef¹.print‹term:Predef⁰/print⁰›^term:foo2⁰(1)
 //│ >      $σ
 //│ >    $σ

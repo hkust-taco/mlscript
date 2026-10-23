@@ -2,20 +2,18 @@ package hkmc2
 package semantics
 
 import hkmc2.utils.*, shorthands.*
-import syntax.*, Elaborator.State, ucs.FlatPattern
+import syntax.*, Elaborator.State, ucs.FlatPattern, ups.SplitCompiler.SymbolScrut
 
-final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation: Split) extends AutoLocated:
+final case class Branch(scrutinee: Term.SimpleRef, pattern: FlatPattern, continuation: Split) extends AutoLocated:
   def mkClone(using State, codegen.Erasure): Branch =
-    val scrutineeClone = new Term.Ref(scrutinee.sym)
-        (Tree.Ident(scrutinee.tree.name), scrutinee.typ)
-    Branch(scrutineeClone, pattern.mkClone, continuation.mkClone)
+    Branch(scrutinee.mkClone.asInstanceOf, pattern.mkClone, continuation.mkClone)
   
   override def children: Vector[Located] = Vector.triple(scrutinee, pattern, continuation)
   
   def showDbg(using DebugPrinter): String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
 
 object Branch:
-  def apply(scrutinee: Term.Ref, continuation: Split): Branch =
+  def apply(scrutinee: Term.SimpleRef, continuation: Split): Branch =
     Branch(scrutinee, FlatPattern.Lit(Tree.BoolLit(true)), continuation)
 
 enum Split extends AutoLocated with ProductWithTail:
@@ -201,7 +199,7 @@ object Split:
             bindings.iterator.foldLeft(go(consequent)):
               case (innerSplit, (symbol, mkTerm)) => Let(symbol, mkTerm(), innerSplit)
           compiler.makeMatchSplit
-            (scrutCache.getOrElseUpdate(symbol, Scrut.from(ref)), pattern, false)
+            (scrutCache.getOrElseUpdate(symbol, SymbolScrut(symbol)), pattern, false)
             (makeConsequent, alternative)
         case SS.Head.Let(binding, term) => Let(binding, term, go(tail))
       case SS.Else(default) => Else(default)

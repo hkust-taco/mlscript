@@ -70,7 +70,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       source = Diagnostic.Source.Compilation))
     doc" # ${mkErr(errMsg)};"
   
-  private def getPrivateAccessorSymbol(ts: DefinitionSymbol[?]): semantics.TempSymbol =
+  private def getPrivateAccessorSymbol(ts: DefinitionSymbol[?])(using Raise): semantics.TempSymbol =
+    // Accessor symbols are shared only within this emitted module. Allocating a
+    // fresh symbol in an importer cannot reach the defining module's accessor.
+    softAssert(ts.getState is State, s"Cannot generate a cross-file access to private member '${ts.nme}'")
     privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.nme}$$accessorSymbol"))
   
   /** Private names belong to the containing IR class, shared by its instance and static members.
@@ -128,6 +131,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           applyBlock(rest)
         case _ => super.applyBlock(b)
       override def applyClsLikeDefn(cls: ClsLikeDefn): Unit =
+        cls.methodKeys.valuesIterator.foreach(applyPath)
+        cls.companion.foreach(_.methodKeys.valuesIterator.foreach(applyPath))
         withClass(cls.isym):
           cls.parentPath.foreach(applyPath)
           applyBlock(cls.preCtor)
@@ -261,7 +266,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   def operand(a: Arg)(using Raise, Scope): Document =
     if a.spread.nonEmpty then die else subexpression(a.value)
   
-  private def curriedFunctionBody(paramLists: Ls[ParamList], body: Block, generator: Bool): Block =
+  private def curriedFunctionBody(paramLists: Ls[LoweredParamList], body: Block, generator: Bool): Block =
     paramLists match
     case Nil => body
     case params :: Nil =>
@@ -357,8 +362,8 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         // lexical-`this` behavior of the Lambda IR.
         doc"(function* ($params) ${ braced(bodyDoc) }).bind(this)"
       else doc"($params) => ${ braced(bodyDoc) }"
-    case s @ SuperSelect(qual, base, id) =>
-      doc"Reflect.get(${resultQual(base)}.prototype, ${makeStringLiteral(id.name)}, ${result(qual)})"
+    case s @ SuperSelect(qual, base, key) =>
+      doc"Reflect.get(${resultQual(base)}.prototype, ${result(key)}, ${result(qual)})"
     case s @ Select(qual, id) => 
       val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
@@ -379,10 +384,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
         doc"$runtimeVar.checkSelect($sel, ${makeStringLiteral(id.name)}, $qualJS)"
       else sel
-    case DynSelect(qual, fld, ai) =>
-      if ai
-      then doc"${resultQual(qual)}.at(${result(fld)})"
-      else doc"${result(qual)}[${result(fld)}]"
+    case DynSelect(qual, fld, kind) => kind match
+      case DynSelectKind.ArrayIdx => doc"${resultQual(qual)}.at(${result(fld)})"
+      // * `resultQual` parenthesizes a literal receiver, notably a negative number such as `-1`,
+      // * which would otherwise bind more loosely than the following bracket.
+      case DynSelectKind.Member(_) | DynSelectKind.Unknown => doc"${resultQual(qual)}[${result(fld)}]"
     case Instantiate(mut, cls, argss) =>
       val calls = argss.foldLeft(resultInst(cls)): (acc, args) =>
         doc"${acc}(${args.map(argument).mkDocument(", ")})"
@@ -499,7 +505,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         case _ => N
       val name = symbolicSuffixBase(n.name).getOrElse(n.name)
       doc" # ${result(p)}${field.getOrElse(fieldSelect(name))} = ${result(r)};${returningTerm(rst, endSemi)}"
-    case AssignDynField(p, f, ai, r, rst) =>
+    case AssignDynField(p, f, _, r, rst) =>
       doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst, endSemi)}"
     case Define(defn, rst) =>
       inline def mkThis(sym: InnerSymbol): Document =
@@ -562,7 +568,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, $functionKeyword ($params) ${ braced(bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
-              privFlds, pubFlds, preCtor, ctor, modo, bufferable, termCompanion)
+              privFlds, pubFlds, preCtor, ctor, modo, bufferable, termCompanion, clsMethodKeys)
           =>
             // After ClassParamFlattener, all classes have paramsOpt = N and exactly one auxParams entry.
             assert(paramsOpt.isEmpty,
@@ -585,21 +591,22 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               case S(owner) => doc"${result(owner.asThis)}${selectPrivateField(isym, isym.toLoc).getOrElse(fieldSelect(sym.nme))}"
               case N => scope.lookup_!(sym, sym.toLoc)
             
-            def mkMethodName(td: FunDefn): Document =
+            def mkMethodName(td: FunDefn, keys: Map[TermSymbol, Path]): Document =
               if td.dSym.isPrivate
               then doc"#${isym.privatesScope.allocateOrGetName(td.dSym)}"
-              else doc"${td.sym.nme}"
+              else keys.get(td.dSym).fold(doc"${td.sym.nme}")(
+                key => outerScope.givenIn { doc"[${result(key)}]" })
 
-            def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
+            def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str, keys: Map[TermSymbol, Path])(using Scope): Document =
               mtds.map:
                 case td @ FunDefn(params = ps :: pss, body = bod) =>
                   val result = curriedFunctionBody(pss, bod, td.generator)
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result, isLambda = false)
                   val generatorPrefix = if td.generator && pss.isEmpty then "*" else ""
-                  doc" # $mtdPrefix$generatorPrefix${mkMethodName(td)}($params) ${ braced(bodyDoc) }"
+                  doc" # $mtdPrefix$generatorPrefix${mkMethodName(td, keys)}($params) ${ braced(bodyDoc) }"
                 case td @ FunDefn(params = Nil, body = bod) =>
-                  doc" # ${mtdPrefix}get ${mkMethodName(td)}() ${ braced(body(bod, endSemi = true)) }"
+                  doc" # ${mtdPrefix}get ${mkMethodName(td, keys)}() ${ braced(body(bod, endSemi = true)) }"
               .mkDocument(doc"")
             
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
@@ -666,7 +673,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   val ctorCode = if mod.ctor.isEmpty then doc"" else doc" # static " :: braced:
                     body(mod.ctor, endSemi = true)
                   privs :: ctorCode :: {
-                    mkMethods(mod.methods, mtdPrefix)
+                    mkMethods(mod.methods, mtdPrefix, mod.methodKeys)
                   }
                 // * Note that `thisProxy` might be defined at this point,
                 // * if the module accesses the self-reference of an outer definition.
@@ -690,7 +697,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             val ctorCode = scope.nest.givenIn:
               val preCtorCode = nonNestedScoped(preCtor)(bd => block(bd, true))
               val defaultSuperCall = if par.isDefined && preCtor.isEmpty then doc" # super();" else doc""
-              doc"$defaultSuperCall$preCtorCode$singletonInit${nonNestedScoped(ctor)(bd => block(bd, endSemi = true))}${
+              doc"${normalizeOptionalParams(backendParamList)}$defaultSuperCall$preCtorCode$singletonInit${nonNestedScoped(ctor)(bd => block(bd, endSemi = true))}${
                   kind match
                   case syntax.Obj =>
                     doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")};"
@@ -738,7 +745,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     .mkDocument(" ")
                   else doc""
                 } :: {
-                  mkMethods(mtds, mtdPrefix)
+                  mkMethods(mtds, mtdPrefix, clsMethodKeys)
                 } :: {
                   // * If this class has a `toString` implementation, then delegate
                   // * `prettyPrint` to `toString`.
@@ -769,13 +776,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // Source params are used for the wrapper to preserve the curried calling convention.
               // All args are forwarded to the flat `new Class.class(...)` constructor.
               val sourceAuxParams = isym.defn.map(_.auxParams).getOrElse(Nil)
-              val allSourceParams = sourceParamsOpt.toList ::: sourceAuxParams
+              val allSourceParams =
+                sourceParamsOpt.iterator.++(sourceAuxParams).map(LoweredParamList.fixed).toList
               
               val fun = allSourceParams match
                 case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
                   val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
-                  val argsDoc = allSourceParams.flatMap(_.paramSyms)
+                  val argsDoc = allSourceParams.iterator.flatMap(_.paramSyms)
                     .map(p => scope.lookup_!(p, p.toLoc)).mkDocument(", ")
                   val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
@@ -1072,12 +1080,18 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         (if enumerable then doc"enumerable: true, # " else doc"") :: doc"value: ${value}"
     })"
   
-  def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)
+  private def normalizeOptionalParams(params: LoweredParamList)(using Raise, Scope): Document =
+    params.params.filter(_.flags.opt).map: p =>
+      val name = scope.lookup_!(p.sym, p.toLoc)
+      doc" # $name ??= null;"
+    .mkDocument("")
+  
+  def setupFunction(name: Option[Str], params: LoweredParamList, body: Block, isLambda: Bool)
       (using Raise, Scope): (Document, Document) =
     val paramsList = params.params.map(p => scope.allocateName(p.sym))
       .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
       .mkDocument(", ")
-    (paramsList, this.body(body, endSemi = false))
+    (paramsList, normalizeOptionalParams(params) :: this.body(body, endSemi = false))
 
 
 
@@ -1203,16 +1217,18 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
   
   val functionParamVarargSymbol = semantics.TempSymbol(N, erasedType = N, "args")
   
-  override def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
+  override def setupFunction(name: Option[Str], params: LoweredParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
     // * We used to instrument `fun f(x, y) = x + y` into something like
     // * `function f(...args) { runtime.checkArgs("f", 2, true, args.length); let x = args[0]; let y = args[1]; x + y }`
     // * which was very verbose, in addition to possibly making things quite inefficient.
     // * Now, we no longer instrument lambdas (which affects extra parameter lists),
     // * and we instead use the JS builtin `arguments` array to get the number of received arguments, as in
-    // * `function f(x, y) { runtime.checkArgs("f", 2, true, arguments.length); x + y }`
+    // * `function f(x, y) { runtime.checkArgs("f", 2, arguments.length); x + y }`
     // * The idea is that later on, we'll add a runtime type sanity check as well anyway,
     // * which will check arguments against the erased parameter type,
     // * including checking they are not `undefined`, which should achieve most of the benefit.
+    // * Following JavaScript, extra arguments are ignored, so we only check for missing arguments
+    // * (optional parameters are not counted in `paramCountLB`; missing optional arguments become `null`).
     /*
     if instrument then
       val paramsList = params.params.map(p => scope.allocateName(p.sym))
@@ -1227,13 +1243,11 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
         case S(p) => doc"\nlet $p = $runtimeVar.Tuple.slice($paramsStr, ${params.paramCountLB}, 0);"
       (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign$restAssign${this.body(body, endSemi = false)}")
     */
+    val (paramsList, bodyDoc) = super.setupFunction(name, params, body, isLambda)
     if instrument && !isLambda then
       val functionName = JSBuilder.makeStringLiteral(name.fold("")(n => s"${JSBuilder.escapeStringCharacters(n)}"))
-      val checkArgsNum = doc"\n$runtimeVar.checkArgs($functionName, ${params.paramCountLB}, ${params.paramCountUB.toString}, arguments.length);"
-      val paramsList = params.params.map(p => scope.allocateName(p.sym))
-        .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
-        .mkDocument(", ")
+      val checkArgsNum = doc"\n$runtimeVar.checkArgs($functionName, ${params.paramCountLB}, arguments.length);"
       (paramsList,
-        doc"$checkArgsNum${this.body(body, endSemi = false)}")
+        doc"$checkArgsNum$bodyDoc")
     else
-      super.setupFunction(name, params, body, isLambda = isLambda)
+      (paramsList, bodyDoc)

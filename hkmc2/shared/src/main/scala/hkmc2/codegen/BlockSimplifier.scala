@@ -126,7 +126,7 @@ class BlockSimplifier
   
   def localVars(block: Block): Set[LocalVar] =
     val locals: MutSet[LocalVar] = MutSet.empty[LocalVar]
-    def paramsOf(paramLists: IterableOnce[ParamList]): Unit =
+    def paramsOf(paramLists: IterableOnce[LoweredParamList]): Unit =
       locals ++= paramLists.iterator.flatMap(_.paramSyms)
     def rec(current: Block): Unit =
       current match
@@ -1423,7 +1423,7 @@ class BlockSimplifier
         def register(sym: ScopedSymbol | TermSymbol | LabelSymbol | ClassCtorSymbol): Unit =
           if seen(sym) then found = true
           else seen += sym
-        def registerParamList(pl: ParamList): Unit =
+        def registerParamList(pl: LoweredParamList): Unit =
           pl.params.foreach(param => register(param.sym))
           pl.restParam.foreach(param => register(param.sym))
         (new BlockTraverser:
@@ -1456,7 +1456,7 @@ class BlockSimplifier
         ).applyFunDefn(fun)
         found
 
-      def matchArgs(args: List[Arg], params: ParamList): Option[List[(VarSymbol, Result)]] =
+      def matchArgs(args: List[Arg], params: LoweredParamList): Option[List[(VarSymbol, Result)]] =
         if args.exists(_.spread.isDefined) then
           // we require a precise match when any arg is a spread arg
           if params.restParam.isEmpty then return N
@@ -1468,12 +1468,14 @@ class BlockSimplifier
         else
           // otherwise arg list is a simple list, and
           // we can perform manual array instantiation if params contain a spread param
+          val paddedArgs = OptionalParams.pad(params.params, args) match
+            case S(args) => args
+            case N => return N
           if params.restParam.isEmpty then
-            if args.size =/= params.params.size then return N
-            S(args.zip(params.params).map((arg, param) => (param.sym, arg.value)))
+            if paddedArgs.size =/= params.params.size then return N
+            S(paddedArgs.zip(params.params).map((arg, param) => (param.sym, arg.value)))
           else
-            if args.size < params.params.size then return N
-            val (fixedArgs, restArgs) = args.splitAt(params.params.size)
+            val (fixedArgs, restArgs) = paddedArgs.splitAt(params.params.size)
             S(fixedArgs.zip(params.params).map((arg, param) => (param.sym, arg.value)) ++
               List((params.restParam.get.sym, Tuple(true, restArgs)(N))))
       
@@ -1482,7 +1484,7 @@ class BlockSimplifier
         * or if there are fewer arg lists than param lists (partial application).
         * Extra arg lists beyond the param lists are ignored here and should be
         * handled by the caller (e.g., applied as a chained call on the result). */
-      def matchAllArgs(argss: List[List[Arg]], params: List[ParamList]): Option[List[(VarSymbol, Result)]] =
+      def matchAllArgs(argss: List[List[Arg]], params: List[LoweredParamList]): Option[List[(VarSymbol, Result)]] =
         if argss.length < params.length then return N
         val matchedPairs = argss.zip(params)
         val allMatched = matchedPairs.foldLeft[Option[List[(VarSymbol, Result)]]](S(Nil)):
@@ -1715,7 +1717,8 @@ class BlockSimplifier
             // receiver, as in `(x => x).apply(...)`, is not dead.
             fun match
               case Select(qual, _) => applyPath(qual)
-              case SuperSelect(qual, base, _) => applyPath(qual); applyPath(base)
+              case SuperSelect(qual, base, key) => applyPath(qual); applyPath(base); applyPath(key)
+              case DynSelect(qual, key, _) => applyPath(qual); applyPath(key)
               // Otherwise, `fun` is a direct `Value.MemberRef` to `ts`: the call target itself,
               // which `observeCall` records. Traversing it as a value would count `ts` again and
               // set `disallowElimination`, preventing every directly called function from being inlined.

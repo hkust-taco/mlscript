@@ -248,15 +248,78 @@ fun foo(x: Int): Int = x + 1
 fun bar(x: Int, y: Str): Bool = x > 0
 ```
 
+### Optional Parameters
+
+A parameter followed by `?` is optional: callers may omit its argument, which is then `null`.
+
+```mlscript
+fun greet(name: Str, greeting?: Str) =
+  (if greeting is null then "Hello, " else greeting + ", ") + name
+print \ greet("Ana")             // prints: Hello, Ana
+print \ greet("Ana", "Hi")       // prints: Hi, Ana
+```
+
+The annotation of an optional parameter includes `null`: `greeting?: Str` has type `Str | null`.
+The `?` must directly follow the parameter: `y ?` and `y ?: Str` are not optional parameters.
+
+Optional parameters follow required ones.
+Function, lambda, and constructor parameters can be optional;
+context parameters (`using`) and variadic parameters cannot.
+
+Direct calls must supply every required argument, and no more arguments than the function accepts.
+A function that receives extra arguments might ignore them at runtime (unspecified behavior).
+
+### Variadic Parameters
+
+A parameter prefixed with `...` collects any number of arguments into an array.
+Parameters may follow it; they receive the last arguments.
+
+```mlscript
+fun f(...xs) = xs
+f(1, 2, 3)               // = [1, 2, 3]
+fun g(x, ...xs, y) = [x, xs, y]
+g(1, 2, 3, 4)            // = [1, [2, 3], 4]
+g(1, 2)                  // = [1, [], 2]
+```
+
+The required parameters take the first and last arguments, the optional parameters take the remaining
+ones from left to right, and the variadic parameter collects the rest:
+
+```mlscript
+fun h(x, y?, ...xs, z) = [x, y, xs, z]
+h(1, 2)                  // = [1, undefined, [], 2]
+h(1, 2, 3)               // = [1, 2, [], 3]
+h(1, 2, 3, 4, 5)         // = [1, 2, [3, 4], 5]
+```
+
+A parameter list has at most one variadic parameter, and the parameters following it must be required.
+Class parameters cannot be variadic.
+
+### Droppable Parameters
+
+`drop` marks a parameter that implementations may ignore and may even omit to specify.
+In a function type, it lets the functions passed for it leave out that parameter:
+
+```mlscript
+fun app(f: (Int, drop Int) -> Int) = f(1, 2)
+app(x => x)              // = 1
+app((x, i) => x + i)     // = 3
+```
+
+A variadic parameter can also be droppable, as in `(Int, drop ...Array[Int]) -> Int`.
+Callers of a definition such as `fun first(x, drop y) = x` must still pass the argument of `y`.
+Only function and lambda parameters can be droppable.
+
 ### Recursive Functions
 
-Functions are recursive by default:
+Functions can make recursive calls:
 ```mlscript
 fun fact(n) =
   if n <= 1 then 1 else n * fact(n - 1)
 ```
 
-Mutual recursion uses sequential `fun` definitions in the same block.
+Mutual recursion is permitted among `fun` definitions in the same block
+or through method calls.
 
 ### Trailing arguments
 
@@ -289,6 +352,7 @@ tuple
 x => x + 1
 (x, y) => x + y
 () => 42
+=> 42                 // also a zero-argument lambda
 ```
 
 ### Underscore lambda shorthand
@@ -341,6 +405,17 @@ xs.map(f)
 // This is admittedly a bit strange-looking, but we quickly get used to it:
 let f = => _ + 1 in xs.map(f)
 ```
+
+An explicit prefix `=>` always creates a lambda. If it contains no `_` placeholders,
+the lambda takes zero arguments: `=> new C()` constructs a fresh instance whenever
+called. Implicit delimiter positions such as `f \ expr` and `value |> expr` keep
+expressions without placeholders eager.
+
+A bare `new C` partially applies a constructor when `C` has a parameter list.
+If its only list accepts zero arguments (including an all-optional list), the
+compiler warns: write `new C()` to construct the instance, or `=> new C()` for
+an explicit zero-argument factory. A class declared without parameter lists
+still constructs immediately with `new C`.
 
 ### More examples
 
@@ -781,6 +856,8 @@ fun g(x, ...rest) = rest
 f(1, 2, 3)               // xs = [1, 2, 3]
 ```
 
+See [Variadic Parameters](#variadic-parameters).
+
 Under new resolution, an annotation on a rest parameter describes the whole rest
 array. Tuple values support precise zero-based projections such as `xs.0` and
 inherit the declared Array interface.
@@ -798,10 +875,10 @@ An explicit annotation such as `Array[Base]` makes element reads use the members
 declared by `Base`. Storing a `Child` that extends `Base` does not permit access
 to `Child`-only members through that annotation.
 
-Array callbacks such as `map` receive the element, index, and array; their
-declared function interfaces must account for these arguments, for example with
-unused or rest parameters. `reduce` also passes the accumulator first, and must be
-given an initial value: `xs.reduce((acc, x, ...) => acc + x, 0)`. Without one,
+Array callbacks such as `map` receive the element, index, and array. The index and
+array parameters are [droppable](#droppable-parameters), so callbacks may take only
+the element: `xs.map(x => x + 1)`. `reduce` also passes the accumulator first, and must
+be given an initial value: `xs.reduce((acc, x) => acc + x, 0)`. Without one,
 JavaScript uses the first element as the initial accumulator, which the declared
 signature does not describe.
 
@@ -1365,27 +1442,85 @@ fun f(x: Int): Str = String(x)
 val v: Option[Int] = Some(1)
 ```
 
-### Resolution Interfaces
 
-With new resolution (`#lang(0.3.x)`), annotations determine the interface available
-to member lookup and calls. A receiver annotated `Base` exposes Base's declared
-members and preserves virtual dispatch; concrete arguments cannot add subclass
-members to that interface. The same rule applies to parameters, result annotations,
-separate signatures, and constructor fields. Reading an unannotated member through
-an annotated interface currently does not infer its shape from its initializer or
-method body. Inference of missing selected-member types is a planned improvement.
-Structural record annotations likewise expose only their declared fields.
+### Spreads
 
-Compilation files check that their exposed functions and values work for inputs
-admitted by their interfaces. A public `fun read(x) = x.a` needs an interface for
+Argument and array spreads follow the JavaScript iteration protocol:
+`value[Symbol.iterator]().next().value`. Arrays, strings, native collections,
+and user iterables use the same resolution path. Precise tuple spreads
+retain their fixed positions.
+
+
+### Resolution
+
+The resolution pass of the compiler finds targets for names, members, and calls, and catches some obvious mistakes.
+It does so by taking into account the declared types of values and parameters
+and by tracking the flow of values through the current compilation unit,
+stopping at the unit's exposed public interface (to support separate and scalable compilation).
+This pass is mandatory and affects the program's runtime behavior,
+unlike type checking, which is optional.
+
+**Resolution is a best-effort process, not a replacement for type checking.**
+Successful resolution does not establish type safety, even in strict mode.
+Type checking is meant to run as a later pass, but is not yet implemented.
+
+Resolution is "loose" and "lenient" by default: while it rejects unresolved references,
+it allows references that are ambiguous (see: loose) and uncertain (see: lenient).
+Optionally, one can enable
+* **strict** resolution, under which all references must be resolved to exactly one source target.
+  For example, `(xs: (List | Str)) => xs.length` is rejected:
+  while `List` and `Str` both have a `length` member,
+  and while that member could be selected dynamically under, eg, JS compilation,
+  the two members are unrelated, so the access could not be compiled directly
+  with more static backends like WASM.
+  On the other hand, `(xs: (Cons | Nil)) => xs.length` works,
+  provided that `Cons` and `Nil` are both subtypes of a common abstract class `List` that declares `length`.
+* **eager** resolution: unlike lenient resolution, it does not discard receiver shapes that do not have the selected member.
+  This moves resolution a bit closer to type checking, but still does not guarantee type safety.
+  Resolution is lenient by default because it is quite approximate,
+  so it will often get spurious candidate receivers that are only present due to its approximate tracking of flow.
+
+Strict resolution is currently required by backends like WASM,
+although smarter compilation strategies could allow more lenient resolution in the future
+(an ambiguous selection can often be compiled into a match with unambiguous selections in its branches).
+
+`@annotations.jsSymbol(path)` gives a public method a source name for the JavaScript property
+key denoted by `path`. The path must consist of modules and immutable `val`s,
+and end in a `val` annotated with `@annotations.fresh`. This marker is a contract
+that the val owns a unique symbol; the resolver does not prove freshness.
+
+```mlscript
+module Keys {
+  @fresh val read = Symbol("read")
+}
+class Reader {
+  @jsSymbol(Keys.read) fun read() = 42
+}
+```
+
+The method is stored at `Keys.read`, and both `reader.read()` and
+`reader.(Keys.read)()` select that property. An override must retain both the
+inherited source name and the same key. Giving an inherited key a different
+source name is a collision, as is defining two methods with the same key in one
+class. Distinct receiver paths are significant for fresh instance fields.
+
+Currently, selecting a member on an escaped instance is unsupported when the
+caller cannot access its local key: the compiler needs a runtime witness for
+that particular key. Resolution diagnoses such accesses at the use site before
+constructing a reference to the unavailable key. Closures that capture the key
+remain valid, as do keys available through an imported file, including its
+private file-level vals. The key must not be hoisted and shared between factory
+invocations. `slop/JsSymbol.mls` records these cases.
+
+A key path that accesses a private member of a class or module in another file
+is rejected at the selection site. Such members use private accessor symbols
+local to their defining file; they do not use the file-level private export ABI.
+
+Compilation files check that their exposed functions and values do not make a closed-world assumption. A public `fun read(x) = x.a` needs an interface for
 `x` even if local callers all provide `{a: 1}`. A private helper can use local
 inference, but returning it or storing it in an exposed record or tuple makes its
 interface subject to the same check. Callable result annotations provide the
 declared parameter interface when checking returned functions.
-
-Worksheet blocks perform this exposed-interface check only under
-`#lang(strictResolution: true)`. Non-strict resolution allows multiple selection
-or call targets, but still rejects missing targets and known invalid operations.
 
 Generic parameters remain opaque regardless of strict mode, visibility, or local
 callers. For example, `private fun read[A](x: A) = x.a` is invalid because `A`
@@ -1504,7 +1639,32 @@ arguments. Its diagnostic indicates a limitation of the current check.
 ```mlscript
 type Transformer[A, B] = A -> B
 type BinOp[A] = (A, A) -> A
+type Callback = (Int, Int?) -> Int              // optional parameter
+type Labeled = (x: Int, y?: Int) -> Int         // named parameters
+type Step = (Int, drop Int) -> Int              // droppable parameter
+type Join = (Str, ...Array[Str], Str) -> Str    // variadic parameter
 ```
+
+Function type parameters follow the rules of
+[optional](#optional-parameters), [variadic](#variadic-parameters), and [droppable](#droppable-parameters)
+function parameters. Parameter names in function types are labels only: they do not affect compatibility.
+
+A function passed where a function type is expected must accept the arguments that the type passes:
+- it may leave out trailing droppable parameters, including a droppable variadic parameter,
+  but no other parameters;
+- it may not require an argument that the type marks as optional;
+- its additional parameters must be optional, and are then `undefined`;
+- it may collect several arguments in a variadic parameter.
+
+```mlscript
+fun app(f: (Int, Int?) -> Int) = f(1)
+app((x, y?) => x)        // ok
+app((x, y) => x)         // error: `y` is required, but its argument may be omitted
+app(x => x)              // error: the optional parameter is not droppable
+```
+
+A separate signature, as in `fun f: (Int, Int?) -> Int` followed by `fun f(x, y?) = x`,
+must agree with the definition on which parameters are required, optional, and variadic.
 
 ### `forall` (Universal Quantification)
 

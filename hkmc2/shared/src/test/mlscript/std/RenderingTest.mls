@@ -8,7 +8,7 @@ render(())
 render(null)
 //│ = "null"
 
-render(undefined)
+render(unsafe.undefined)
 //│ = "undefined"
 
 render(123)
@@ -371,7 +371,7 @@ renderAsStr of new SelfRef
 //│ = "SelfRef { a: ref'1, b: 1 } as ref'1"
 
 renderAsStr of
-  new Object with
+  new Object() with
     val x = 0
     fun y = 0
 //│ = "$anon { x: 0 }"
@@ -418,7 +418,7 @@ class RangeIterator(val start: Int, val end: Int) extends Iterator with
       set current += 1
       result
     else
-      (done: true, value: undefined)
+      (done: true, value: unsafe.undefined)
 
 renderAsStr of RangeIterator(0, 1)
 //│ = "RangeIterator(0, 1)"

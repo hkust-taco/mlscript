@@ -212,7 +212,7 @@ t('group)
 //│ ╟── Function 't' expected 2 arguments, but got 1
 //│ ║  l.176: 	fun t(kind, props) =
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 't' expected at least 2 arguments but got 1
 
 :todo // * Make second parameter optional
 t('group)
@@ -222,7 +222,7 @@ t('group)
 //│ ╟── Function 't' expected 2 arguments, but got 1
 //│ ║  l.176: 	fun t(kind, props) =
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 't' expected at least 2 arguments but got 1
 
 let empty = Object.create of null
 //│ empty = {}

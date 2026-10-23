@@ -74,9 +74,8 @@ enum FlatPattern extends AutoLocated:
     case ClassLike(ctor, symbol, args, rfd) =>
       def showCtor(ctor: Term): Str = ctor match
         // This prints the symbol name without `refNum` and "member:" prefix.
-        case Term.Ref(sym: BlockMemberSymbol) => sym.nme
-        // This prints the symbol without `refNum`.
-        case Term.Ref(sym) => sym.toString
+        case ref: AnyRef_ => ref.sym.nme
+        case Term.NewSel(p, i, N) => s"${showCtor(p)}.${i.name}"
         case Term.Sel(p, i) => s"${showCtor(p)}.${i.name}"
         case Term.SynthSel(p, i) => s"${showCtor(p)}.${i.name}"
         case _ => ctor.showDbg
