@@ -591,6 +591,9 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol:
 
 type AnyDefinitionSymbol = DefinitionSymbol[?]
 
+/** Symbols that own a class, module, object, or pattern body; excludes the synthetic top-level receiver. */
+type ClassLikeDefSymbol = ClassSymbol | ModuleOrObjectSymbol | PatternSymbol
+
 /**
  * A symbol for entities with a definition.
  *

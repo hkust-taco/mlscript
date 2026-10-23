@@ -920,7 +920,7 @@ object ClassHeader:
 // * a lone module is represented as an empty class with a `companion` module.
 final case class ClsLikeDefn(
     owner: Opt[InnerSymbol],
-    isym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol,
+    isym: ClassLikeDefSymbol,
     sym: BlockMemberSymbol,
     ctorSym: Opt[ClassCtorSymbol],
     k: syntax.ClsLikeKind,
@@ -953,9 +953,7 @@ final case class ClsLikeDefn(
   methods.foreach: m =>
     m.dSym.irDefn = S(m)
   companion.foreach: c =>
-    c.isym match
-      case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym), termCompanion))
-      case _ => ()
+    c.isym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym), termCompanion))
     c.methods.foreach: m =>
       m.dSym.irDefn = S(m)
   val defnSym = S(isym)
@@ -968,7 +966,7 @@ final case class ClsLikeDefn(
 
 // * This is only supposed to be for companion module definitions (notably, not for `object`)
 final case class ClsLikeBody(
-    isym: DefinitionSymbol[? <: ModuleOrObjectDef] & InnerSymbol,
+    isym: ModuleOrObjectSymbol,
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
