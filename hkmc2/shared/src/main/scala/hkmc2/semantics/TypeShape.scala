@@ -45,7 +45,8 @@ object TypeShape:
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Combined => formula == that.formula
       case _ => false
-  final case class Tuple(fields: Ls[TypeResolution]) extends TypeShape:
+  final case class TupleField(tpe: TypeResolution, spread: Bool)
+  final case class Tuple(fields: Ls[TupleField]) extends TypeShape:
     protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), fields.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Tuple => fields == that.fields
@@ -234,7 +235,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
           param.lower.foreach(_.validate(visited))
           param.upper.foreach(_.validate(visited))
         body.validate(visited)
-      case Tuple(fields) => fields.foreach(_.validate(visited))
+      case Tuple(fields) => fields.foreach(_.tpe.validate(visited))
       case Record(_, fields) => fields.foreach(_._2.validate(visited))
       case Union(left, right) => left.validate(visited); right.validate(visited)
       case Intersection(left, right) => left.validate(visited); right.validate(visited)

@@ -119,11 +119,17 @@ i((...args) => [...args], _)(2)
 //│ ║  l.102: 	i(print)(2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── Tuple literal cannot be called like a function.
+//│ ║  l.117: 	i((...args) => [...args], _)(2)
+//│ ║         	                   ^^^^
+//│ ╟── Tuple literal cannot be called like a function.
 //│ ║  l.91: 	let i = _(0, 1, _)
 //│ ╙──      	         ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.117: 	i((...args) => [...args], _)(2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Tuple literal cannot be called like a function.
+//│ ║  l.117: 	i((...args) => [...args], _)(2)
+//│ ║         	                   ^^^^
 //│ ╟── Tuple literal cannot be called like a function.
 //│ ║  l.91: 	let i = _(0, 1, _)
 //│ ╙──      	         ^^^^^^^^^
@@ -144,10 +150,10 @@ i((...args) => [...args], _)(2)
 :re
 123 |> (_ + 1 >> _ * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.145: 	123 |> (_ + 1 >> _ * 2)
+//│ ║  l.151: 	123 |> (_ + 1 >> _ * 2)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.145: 	123 |> (_ + 1 >> _ * 2)
+//│ ║  l.151: 	123 |> (_ + 1 >> _ * 2)
 //│ ║         	        ^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../../mlscript-compile/Predef.mls
@@ -242,7 +248,7 @@ _ - _ of 1, 2
 :pe
 |> 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.243: 	|> 1
+//│ ║  l.249: 	|> 1
 //│ ╙──       	   ^
 //│ = fun pipeInto
 
@@ -250,7 +256,7 @@ _ - _ of 1, 2
 :re
 |> (1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.251: 	|> (1)
+//│ ║  l.257: 	|> (1)
 //│ ║         	^^^^^^
 //│ ╟── Function 'pipeInto' expected 2 arguments, but got 1
 //│ ║  in ../../mlscript-compile/Predef.mls
@@ -299,10 +305,10 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.300: 	let f = if _ then 1 else 0
+//│ ║  l.306: 	let f = if _ then 1 else 0
 //│ ║         	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.300: 	let f = if _ then 1 else 0
+//│ ║  l.306: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f23; f23 = 1;

@@ -245,7 +245,7 @@ class TypeRelationTest extends AnyFunSuite:
     val second = DynShape()
     val early = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     val late = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    early.publish(TypeShape.Tuple(List(at.resolution, late)))
+    early.publish(TypeShape.Tuple(List(at.resolution, late).map(TypeShape.TupleField(_, spread = false))))
     val left = h.resolver.declaredType(early, Map(a -> h.tpe(TypeShape.Inferred(first))))
     val right = h.resolver.declaredType(early, Map(a -> h.tpe(TypeShape.Inferred(second))))
     val leftSeen = h.observe(ContextualType(left, Nil))
@@ -253,7 +253,7 @@ class TypeRelationTest extends AnyFunSuite:
     assert(leftSeen.isEmpty && rightSeen.isEmpty)
     // Closing a recursive dependency must wake both observers without merging
     // their environments or allocating a parameter for the forward reference.
-    late.publish(TypeShape.Tuple(List(at.resolution, early)))
+    late.publish(TypeShape.Tuple(List(at.resolution, early).map(TypeShape.TupleField(_, spread = false))))
     def firstField(values: ArrayBuffer[TermShape]): Set[TermShape] = values.toList match
       case (tuple: TupleShape) :: Nil => tuple.elements.head match
         case TupleShape.TypedField(tpe, marks) => h.observe(ContextualType(tpe, marks)).toSet
@@ -421,10 +421,10 @@ class TypeRelationTest extends AnyFunSuite:
     val (b, bt) = h.parameter("B")
     val (_, result) = h.parameter("Result")
     val input = ContextualType(h.tpe(TypeShape.Intersection(at.resolution, bt.resolution)), Nil)
-    val expected = ContextualType(h.tpe(TypeShape.Tuple(result.resolution :: Nil)), Nil)
+    val expected = ContextualType(h.tpe(TypeShape.Tuple(TypeShape.TupleField(result.resolution, spread = false) :: Nil)), Nil)
     val seen = h.observe(ContextualType(result, Nil))
     def tuple(value: TermShape): TermShape =
-      h.resolver.instanceShape(h.tpe(TypeShape.Tuple(h.tpe(TypeShape.Inferred(value)).resolution :: Nil)))
+      h.resolver.instanceShape(h.tpe(TypeShape.Tuple(TypeShape.TupleField(h.tpe(TypeShape.Inferred(value)).resolution, spread = false) :: Nil)))
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     val left = tuple(first)
