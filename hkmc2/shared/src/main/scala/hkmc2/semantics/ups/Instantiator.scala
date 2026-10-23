@@ -56,7 +56,13 @@ class Instantiator(stringPosition: Bool)(using codegen.Erasure)(using tl: TL)(us
     * A cycle containing a growing edge can create unbounded argument trees.
     * Copying, permutation, and replacement by a closed pattern do not grow a
     * cycle, and remain supported. This is a syntactic compilation restriction,
-    * not a claim about the regularity of the pattern's language.
+    * not a claim about the regularity of the pattern's language. With eager
+    * substitution over a finite set of constructors that never erase wrappers,
+    * a growing cycle is exactly what makes argument depth unbounded. Without
+    * one, growth can only cross finitely many acyclic parameter dependencies.
+    * The check is conservative for normalized arguments: appending an empty
+    * disjunction stabilizes under `Pattern.or` despite wrapping the parameter
+    * in the source syntax.
     */
   private def hasGrowingRecursion(root: SP): Bool =
     case class Edge(from: VarSymbol, to: VarSymbol, grows: Bool, callee: PatternSymbol, site: SP)

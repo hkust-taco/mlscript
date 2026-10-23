@@ -77,3 +77,23 @@ pattern Second(pattern Q) = (Q ~ First("a")) | ""
 :expect true
 "axa" is First("a")
 //│ = true
+
+// The parameter-flow check is conservative for normalized argument tuples.
+// The empty range becomes Never. P | Never stabilizes after one specialization
+// because disjunction construction flattens its operands and appends no alternatives.
+// TODO: Recognize this finite specialization instead of rejecting syntactic growth.
+
+pattern StableUnion(pattern P) = ("a" ~ StableUnion(P | ("z" ..< "z"))) | P
+
+:fixme
+:expect true
+"aaa" is StableUnion("")
+//│ ╔══[COMPILATION ERROR] Recursive specialization grows the arguments of pattern `StableUnion`.
+//│ ║  l.86: 	pattern StableUnion(pattern P) = ("a" ~ StableUnion(P | ("z" ..< "z"))) | P
+//│ ║        	                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Wrapping a pattern parameter in additional patterns around a recursive cycle is not supported by pattern compilation.
+//│ ╟── Requested by this compiled pattern.
+//│ ║  l.90: 	"aaa" is StableUnion("")
+//│ ╙──      	         ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
