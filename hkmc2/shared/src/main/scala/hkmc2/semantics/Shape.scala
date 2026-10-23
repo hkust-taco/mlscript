@@ -113,9 +113,9 @@ object ShapeIdentity:
       case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.hashCode), parentHash(view.parent))
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
-        view.declaration.fold(0)(System.identityHashCode), view.asyncResult.hashCode)
+        view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode)
       case view: RecordTypeShape => ValueKey.hash(
-        ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.aliases.hashCode)
+        ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.mutable.hashCode, view.aliases.hashCode)
       case view: IntersectionView => view.values.map(_.comparison).hashCode
       case view: SpecializedShape => ValueKey.hash(view.declaration.comparison.hashCode,
         view.arguments.hashCode, view.instances.hashCode)
@@ -141,10 +141,10 @@ object ShapeIdentity:
         case a: CallableTypeShape => that.shape match
           case b: CallableTypeShape => (a.source eq b.source) && a.paramLists == b.paramLists && a.result == b.result &&
             a.scheme == b.scheme && a.supplied == b.supplied &&
-            a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.asyncResult == b.asyncResult
+            a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.wrappedResult == b.wrappedResult
           case _ => false
         case a: RecordTypeShape => that.shape match
-          case b: RecordTypeShape => a.fields == b.fields && a.aliases == b.aliases
+          case b: RecordTypeShape => a.fields == b.fields && a.mutable == b.mutable && a.aliases == b.aliases
           case _ => false
         case a: IntersectionView => that.shape match
           case b: IntersectionView => a.values.map(_.comparison) == b.values.map(_.comparison)
@@ -462,7 +462,7 @@ enum MemberLookup:
   // type arguments; they never authorize reading an implementation's value flow.
   case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term], positive: Bool)
   // A structural field already has its lexical bindings and intersection applied.
-  case Typed(field: RcdField, tpe: DeclaredType, marks: Ls[Marks])
+  case Typed(field: RcdField, tpe: TypeArgument, marks: Ls[Marks])
   // A preceding spread can place several different fields at the same index.
   case Indexed(fields: Ls[TupleShape.Fixed], marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
@@ -659,8 +659,12 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   * Field types are deferred references, including for recursive intersections.
   * Source declarations are witnesses for diagnostics and property selection, not
   * part of semantic equality: a merged field may have several such witnesses.
+  * Each field retains its read (output) and write (input) types separately: substitution can
+  * select different bounds for them, even when both were written as the same type variable.
+  * Immutable fields have Nothing as their input. The `mutable` fields (see RcdField) are
+  * part of the interface: values constrained by it admit their inputs as writes.
   */
-final class RecordTypeShape(val fields: Map[MemberKey, DeclaredType], val aliases: Map[Str, Set[SymbolKey]])(
+final class RecordTypeShape(val fields: Map[MemberKey, TypeArgument], val mutable: Set[MemberKey], val aliases: Map[Str, Set[SymbolKey]])(
     val source: Term.Rcd, val declarations: Map[MemberKey, RcdField]) extends CoreHeadShape:
   def describe: Str = "record type"
   override def toString: Str = s"RecordTypeShape($fields)"
@@ -817,15 +821,19 @@ final class DeclaredParams(val params: Ls[DeclaredParam], val variadic: Opt[Vari
   def mapTypes(f: DeclaredType => DeclaredType): DeclaredParams =
     DeclaredParams(params.map(_.mapType(f)), variadic.map(_.map(_.mapType(f))))
 
-/** Async lowering wraps the result only after all written parameter lists have
-  * been applied. A separate signature can encode those lists as nested arrows,
+/** Async and generator lowering wrap the result only after all written parameter lists
+  * have been applied. A separate signature can encode those lists as nested arrows,
   * so the pending wrapper must survive observing the next callable interface.
   */
-final case class AsyncResult(annotation: Annot.Async, remainingLists: Int) extends ValueKey:
-  // Every async annotation wraps the result in Promise. Its span is evidence.
-  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), remainingLists.hashCode)
+final case class WrappedResult(annotation: Annot.Async | Annot.Generator, remainingLists: Int) extends ValueKey:
+  // Every async annotation wraps the result in Promise and every generator annotation
+  // in Iterator, so only the annotation's kind matters. Its span is evidence.
+  private def isAsync: Bool = annotation match
+    case _: Annot.Async => true
+    case _: Annot.Generator => false
+  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), isAsync.hashCode, remainingLists.hashCode)
   protected def sameValue(other: ValueKey): Bool = other match
-    case that: AsyncResult => remainingLists == that.remainingLists
+    case that: WrappedResult => isAsync == that.isAsync && remainingLists == that.remainingLists
     case _ => false
   require(remainingLists > 0)
 
@@ -839,7 +847,7 @@ final case class AsyncResult(annotation: Annot.Async, remainingLists: Int) exten
   */
 final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams],
     result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[DeclaredType]],
-    declaration: Opt[TermDefinition], asyncResult: Opt[AsyncResult]) extends CoreHeadShape:
+    declaration: Opt[TermDefinition], wrappedResult: Opt[WrappedResult]) extends CoreHeadShape:
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
   def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.headerLoc)
@@ -852,6 +860,7 @@ final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams
   */
 enum TypeInterfaceReason:
   case MissingOutput(source: Term)
+  case MissingFieldOutput(source: Term)
   case ContravariantParameter(parameter: TyParam, source: Term)
   case Unrestricted(source: Term)
   case AbstractDeclaration(symbol: TypeAliasSymbol, source: Term)
@@ -860,10 +869,12 @@ enum TypeInterfaceReason:
   case Unavailable(source: Term)
 
   def provenance: ShapeProvenance =
+    def missingOutput(source: Term, subject: Str): Ls[(Message, Opt[Loc])] =
+      (msg"This $subject specifies only an input bound." -> source.toLoc) ::
+        (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
     val result = ShapeProvenance(this match
-      case MissingOutput(source) =>
-        (msg"This type argument specifies only an input bound." -> source.toLoc) ::
-          (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
+      case MissingOutput(source) => missingOutput(source, "type argument")
+      case MissingFieldOutput(source) => missingOutput(source, "field")
       case ContravariantParameter(parameter, source) =>
         (msg"This type argument supplies only an input bound for '${parameter.sym.nme}'." -> source.toLoc) ::
           (msg"Type parameter '${parameter.sym.nme}' is declared contravariant here." -> parameter.sym.toLoc) ::
@@ -1229,8 +1240,10 @@ object TupleShape:
 
 /** A field found by record member lookup. Spreading r into `mut {...r}` reuses
   * its field symbols, but writes can change the copied values even if r is immutable.
-  * Store mutability on this lookup result: the mutable copy's initializer no longer
-  * determines its value shape, while reads from an immutable r can still use it.
+  * Store mutability on this lookup result: reads through the mutable copy also return
+  * the values assigned to the field, while reads from an immutable r can only return its
+  * initializer. Reads through any copy of r of a field declared `mut` (see RcdField) are mutable
+  * lookups too, as a copy reads the value that r holds when it is made.
   */
 final case class RecordMember(field: RcdField, mutable: Bool)
 
@@ -1251,7 +1264,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
       case Nil => Missing
       case RecordShape.Field(field) :: rest => field.key match
         case S(key) =>
-          if key == name then Found(RecordMember(field, source.mut), Nil) else loop(rest)
+          if key == name then Found(RecordMember(field, field.mut || source.mut), Nil) else loop(rest)
         case _ => unknown(field.field)
       case RecordShape.Unknown(shape) :: _ => Unknown(Uncertainty.RecordOverwrite, shape.fromPublicInterface, shape.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)

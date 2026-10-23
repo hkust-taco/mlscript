@@ -41,6 +41,52 @@ class NewResolver:
   // These results carry no value flow or lexical context. Reuse one immutable
   // shape so repeated subscriptions do not manufacture distinct unit candidates.
   private lazy val unitResultShape = IntroShape(unit, N)
+
+  /** Observe source slots while inference is still open. Interface exposure can subsequently
+    * add unknown inputs, and these subscriptions retain those alternatives too. Expanding an
+    * InstanceShape here uses the resolver's contextual type interpreter; erasure must not
+    * reconstruct substitutions or install new listeners after the block has been completed.
+    */
+  def prepareErasure(root: Statement)(using ResolutionContext): Unit =
+    val declarations = new ErasureDeclarations(root)
+    def variable(symbol: VarSymbol): Unit = if !symbol.isErased then
+      val ref = SimpleRef(symbol)(N)
+      observeErasure(symbol)(listenTerm(ref))
+    declarations.parameters.values.foreach: p =>
+      variable(p.sym)
+    declarations.variables.foreach:
+      case symbol: VarSymbol => variable(symbol)
+      case symbol: TermSymbol if !symbol.isErased => observeErasure(symbol)(listenMemberVariable(symbol))
+      // A temporary that elaboration declares (see ErasureDeclarations) is observed like a variable,
+      // unless its representation was fixed when it was created.
+      case symbol: TempSymbol if symbol.erasedType.isEmpty =>
+        observeErasure(symbol)(listenTerm(SimpleRef(symbol)(N)))
+      case _ => ()
+    declarations.statements.foreach:
+      case td: TermDefinition => observeErasureDefinition(td)
+      case _ => ()
+
+  private def observeErasure(symbol: Symbol)(connect: Listener => Unit)(using ResolutionContext): Unit =
+    if symbol.getState is rctx.owner then rctx.state.erasureInputs.register(symbol): publish =>
+      connect(shape => listenInstanceViews(shape)(publish))
+
+  private def observeErasureDefinition(td: TermDefinition)(using ResolutionContext): Unit =
+    if !td.tsym.isErased then observeErasure(td.tsym): publish =>
+      // The function body returns its payload. AsyncLowering wraps that body later;
+      // the callable's promise representation is assigned separately by Erasure.
+      td.body.foreach(body => listenResult(body)(publish))
+      // A field that assignments can replace also holds the values assigned to it, including those that other
+      // compilation units can assign when it is exposed (see `assignField` and `InterfaceExposure`). Assignments
+      // in later blocks and in other compilation units reach consumer copies of the field's host instead, which
+      // the field's representation does not include: lowering converts their values to that representation.
+      if isAssignableField(td) then listenMemberVariable(td.tsym)(publish)
+
+  /** Whether assignments can replace the value of the field that `td` defines: a mutable field (`mut val`,
+    * including a mutable constructor parameter) or a record field. Even the fields of an immutable record are
+    * assignable, through a mutable copy of the record (`mut {...r}`), which reuses its fields (see RecordMember).
+    */
+  private def isAssignableField(td: TermDefinition): Bool =
+    (td.k is syntax.MutVal) || (td.k is syntax.RecordField)
   
   /** Interpret types through completed symbolic candidates, independently of term overloads. */
   def typeResolution(term: Term)(using rs: ResolutionContext): TypeResolution =
@@ -148,6 +194,9 @@ class NewResolver:
                 case Spd(_, sign, _) => TypeShape.TupleField(typeResolution(sign), spread = true)
           case record: Rcd =>
             val fields = record.stats.collect { case field: RcdField => field }
+            fields.foreach: field =>
+              if !record.mut && !field.mut && field.rhs.withoutCaptures.isInstanceOf[WildcardTy] then
+                result.fail(msg"A field with input/output bounds must be declared 'mut'." -> field.toLoc :: Nil)
             if fields.length != record.stats.length || fields.exists(_.key.isEmpty)
             then
               result.fail(msg"A record type requires statically named fields." -> record.toLoc :: Nil)
@@ -650,6 +699,19 @@ class NewResolver:
       (using ResolutionContext): DeclaredType =
     declaredType(resolution, context.bindings, positive, asArgument = true).instantiate(context.instances).withOrigin(context.origin)
 
+  /** Split a field before substitution selects either endpoint. Flipping an already substituted read type
+    * cannot recover its write type: {mut f: A} under A = in S out T has input S and output T.
+    * The enclosing polarity also applies inside explicit bounds and function types.
+    */
+  private def declaredField(resolution: TypeResolution, context: DeclaredType, mutable: Bool)
+      (using ResolutionContext): TypeArgument =
+    val argument = declaredArgument(resolution, context, context.positive)
+    val output = selectArgument(argument, true)
+    val read = resolution.source.withoutCaptures match
+      case WildcardTy(_, N) => output.withOrigin(S(TypeInterfaceReason.MissingFieldOutput(resolution.source)))
+      case _ => output
+    TypeArgument(if mutable then selectArgument(argument, false) else extremeType(false), read)
+
   private def normalizedArgument(source: TypeResolution, parts: TypeArgument)(using ResolutionContext): DeclaredType =
     rctx.state.argumentTypes.getOrElseUpdate((source, parts), {
       val normalized = new TypeResolution(source.source, source.fail)
@@ -1025,7 +1087,8 @@ class NewResolver:
         case record: RecordTypeShape =>
           val projected = project(instances, shapeDependencies(record), TypeSubstitution.empty)
           if projected.isEmpty then record else rctx.shapeView(projected):
-            RecordTypeShape(record.fields.map((name, tpe) => name -> instantiateType(tpe, projected)), record.aliases)(record.source, record.declarations)
+            RecordTypeShape(record.fields.map((name, tpe) => name -> tpe.map(instantiateType(_, projected))),
+              record.mutable, record.aliases)(record.source, record.declarations)
         case view: IntersectionView =>
           IntersectionView(view.values.map(instantiateShape(_, instances)))
         case specialized: SpecializedShape =>
@@ -1043,7 +1106,7 @@ class NewResolver:
                 DeclaredTypeParameter(parameter.parameter, parameter.lower.map(instantiate), parameter.upper.map(instantiate)))
             CallableTypeShape(callable.source, callable.paramLists.ne_map: params =>
               params.mapTypes(instantiate)
-            , callable.result.map(instantiate), scheme, callable.supplied, callable.declaration, callable.asyncResult)
+            , callable.result.map(instantiate), scheme, callable.supplied, callable.declaration, callable.wrappedResult)
         case literal: IntroShape if !literal.trm.isInstanceOf[Lam] => literal
         case _: (UnknownValueShape | DynShape | OpaqueTypeShape | ErrShape) => source
         case source: ContextualSource => contextualView(source, source, TypeSubstitution.empty, instances)
@@ -1190,7 +1253,7 @@ class NewResolver:
       val declared = nominal.bindings.values.foldLeft[Binders](lexicalBinders(nominal.defn.sym))((acc, bound) => union(acc, typeSupport(bound)))
       union(declared, nominal.parent.fold(S(Set.empty))(shapeSupport))
     case record: RecordTypeShape =>
-      record.fields.values.foldLeft[Binders](S(Set.empty))((acc, field) => union(acc, typeSupport(field)))
+      record.fields.values.foldLeft[Binders](S(Set.empty))((acc, field) => union(acc, union(typeSupport(field.input), typeSupport(field.output))))
     case view: IntersectionView =>
       view.values.foldLeft[Binders](S(Set.empty))((acc, value) => union(acc, shapeSupport(value)))
     case callable: CallableTypeShape =>
@@ -1316,15 +1379,19 @@ class NewResolver:
       case value => value :: Nil
     val records = flattened.collect:
       case Marked(record: RecordTypeShape, marks) =>
-        RecordTypeShape(record.fields.map((name, tpe) => name -> transportType(tpe, marks :: Nil)), record.aliases)(record.source, record.declarations)
+        RecordTypeShape(record.fields.map((name, tpe) => name -> tpe.map(transportType(_, marks :: Nil))),
+          record.mutable, record.aliases)(record.source, record.declarations)
     val merged = records.headOption.map: first =>
       val merged = records.tail.foldLeft(first): (left, right) =>
         val fields = right.fields.foldLeft(left.fields):
           case (fields, (name, tpe)) => fields.updated(name, fields.get(name).fold(tpe)(previous =>
-            combinedType(previous.resolution, previous, tpe, false)))
+            // Both interfaces can write the field, while a read must satisfy both output types.
+            TypeArgument(combinedType(previous.input.resolution, previous.input, tpe.input, true),
+              combinedType(previous.output.resolution, previous.output, tpe.output, false))))
         val aliases = right.aliases.foldLeft(left.aliases):
           case (aliases, (name, keys)) => aliases.updated(name, aliases.getOrElse(name, Set.empty) ++ keys)
-        RecordTypeShape(fields, aliases)(left.source, right.declarations ++ left.declarations)
+        // A field is mutable in an intersection if any of its components declares it so.
+        RecordTypeShape(fields, left.mutable ++ right.mutable, aliases)(left.source, right.declarations ++ left.declarations)
       merged
     val components = merged.toList ::: flattened.filter:
       case Marked(_: RecordTypeShape, _) => false
@@ -1509,7 +1576,9 @@ class NewResolver:
                   case (field @ RcdField(Lit(Tree.StrLit(name)), _, _), _) => field.key.collect:
                     case key: SymbolKey => name -> Set(key)
                   case _ => N
-                publish(RecordTypeShape(fields.map((field, sign) => field.key.get -> declaredType(sign, current)).toMap, aliases.toMap)(
+                publish(RecordTypeShape(fields.map((field, sign) =>
+                  field.key.get -> declaredField(sign, current, field.mut || source.mut)).toMap,
+                  fields.collect { case (field, _) if field.mut || source.mut => field.key.get }.toSet, aliases.toMap)(
                   source, fields.map((field, _) => field.key.get -> field).toMap))
               case TypeShape.Union(left, right) => next(left); next(right)
               case TypeShape.Intersection(left, right) if !mergeIntersections => next(left); next(right)
@@ -1635,6 +1704,24 @@ class NewResolver:
       msg"This async annotation wraps the body's result in a promise." -> N :: Nil).withTypeOrigin(annotation)
     NominalInstanceView(cls, Map(cls.tparams.head.sym -> awaitedType(payload)), implicitParent(cls))(N, provenance)(this)
 
+  /** A generator call returns an iterator over its yielded values. Neither the yielded
+    * values nor the body's final payload are tracked, so the iterator yields `Any`.
+    */
+  private def iteratorShape(annotation: Annot.Generator)(using ResolutionContext): NominalInstanceView =
+    val cls = prelude.builtins.Iterator.defn.get
+    softAssert(cls.tparams.length == 1 && cls.ext.isEmpty,
+      "The builtin Iterator must have one element parameter and the implicit Object parent")
+    val provenance = ShapeProvenance(
+      msg"This generator annotation makes calls return an iterator instead of the body's result." -> N :: Nil)
+      .withTypeOrigin(annotation)
+    NominalInstanceView(cls, Map(cls.tparams.head.sym -> extremeType(true)), implicitParent(cls))(N, provenance)(this)
+
+  /** The object that replaces a function's result once all its written parameter lists are applied. */
+  private def wrapperShape(annotation: Annot.Async | Annot.Generator, payload: DeclaredType)
+      (using ResolutionContext): NominalInstanceView = annotation match
+    case annotation: Annot.Async => promiseShape(annotation, payload)
+    case annotation: Annot.Generator => iteratorShape(annotation)
+
   /** Reify the projection before observing its operand. Expanding an inferred
     * body's type parameter here would freeze the declaration's abstract view
     * before a caller can substitute its own type argument.
@@ -1678,6 +1765,7 @@ class NewResolver:
 
   /** Result annotations constrain the body before async lowering. Consumers of
     * the function observe Promise[Awaited[result]], including explicit returns.
+    * Consumers of a generator observe an iterator, whatever its body returns.
     * Inferred values retain their lexical endpoint until callers leave the scope.
     */
   private def listenDefinitionResult(td: TermDefinition, instances: TypeSubstitution)(listener: Listener)(using ResolutionContext): Unit =
@@ -1685,31 +1773,32 @@ class NewResolver:
       case S(sign) => listenSignatureResult(declaredType(typeResolution(sign), Map.empty).instantiate(instances),
         if td.flags.hasResultAnnotation then 0 else td.params.length)(listener)
       case N => td.body.foreach(body => listenResult(body)(listener))
-    td.asyncAnnotation match
-      case S(annotation) =>
+    td.resultWrapperAnnotation match
+      case S(annotation: Annot.Async) =>
         val source = td.sign.orElse(td.body).get
         // The body and signature are written inside the definition, where its own binders are in scope.
         val scope = lexicalBinders(td.tsym).map(_ ++ definitionBinders(td))
         listener(promiseShape(annotation, resultType(source, scope, instances)(bodyResult)))
+      case S(annotation: Annot.Generator) => listener(iteratorShape(annotation))
       case N => bodyResult(listener)
 
   /** Observe one application of a declared callable. Partial application keeps
-    * the async wrapper pending, even across the nested arrows of a full signature.
+    * the async or generator wrapper pending, even across the nested arrows of a full signature.
     */
   private[semantics] def listenCallableResult(callable: CallableTypeShape)(listener: Listener)(using ResolutionContext): Unit =
-    callable.asyncResult match
-      case S(AsyncResult(annotation, 1)) =>
+    callable.wrappedResult match
+      case S(WrappedResult(annotation, 1)) =>
         softAssert(callable.paramLists.tail.isEmpty)
-        // A nominal member without a result annotation still returns Promise,
+        // A nominal member without a result annotation still returns its wrapper,
         // but its interface must not recover a payload type from the hidden body.
-        listener(promiseShape(annotation, callable.result.getOrElse(extremeType(true))))
+        listener(wrapperShape(annotation, callable.result.getOrElse(extremeType(true))))
       case pending =>
-        val remaining = pending.map(info => AsyncResult(info.annotation, info.remainingLists - 1))
+        val remaining = pending.map(info => WrappedResult(info.annotation, info.remainingLists - 1))
         callable.paramLists.tail match
-          case tail: NELs[DeclaredParams] => listener(callable.copy(paramLists = tail, asyncResult = remaining))
+          case tail: NELs[DeclaredParams] => listener(callable.copy(paramLists = tail, wrappedResult = remaining))
           case Nil => callable.result match
             case S(tpe) if remaining.nonEmpty => listenTypeViews(tpe):
-              case Marked(next: CallableTypeShape, marks) => listener(Marked(next.copy(asyncResult = remaining), marks))
+              case Marked(next: CallableTypeShape, marks) => listener(Marked(next.copy(wrappedResult = remaining), marks))
               case other => listener(other)
             case S(tpe) => listenTypeInstances(tpe)(listener)
             case N => listener(UnknownValueShape.at(callable.source))
@@ -1790,7 +1879,7 @@ class NewResolver:
                 val parameters = td.tparams.toList.flatten.map(p => declaredParameter(p.sym)) ::: callable.tparams
                 CallableTypeShape(callable.source, callable.paramLists, callable.result,
                   if parameters.isEmpty then N else S(TypeScheme(td.tsym, parameters)), callable.supplied, S(td),
-                  td.asyncAnnotation.map(AsyncResult(_, td.params.length)))
+                  td.resultWrapperAnnotation.map(WrappedResult(_, td.params.length)))
               case instance: InstanceShape if !isByName(td) =>
                 instanceShape(quantifiedType(instance.tpe, td.tparams.toList.flatten.map(_.sym)))
               case _ => interface
@@ -1910,7 +1999,7 @@ class NewResolver:
           val instantiated = CallableTypeShape(callable.source,
             callable.paramLists.ne_map: params =>
               params.mapTypes(instantiate)
-            , callable.result.map(instantiate), N, N, callable.declaration, callable.asyncResult)
+            , callable.result.map(instantiate), N, N, callable.declaration, callable.wrappedResult)
           // Reentrant observations must find the view before supplied arguments
           // can publish candidates or trigger another observation of this call.
           rctx.state.instantiatedCallables(key) = instantiated
@@ -2005,7 +2094,8 @@ class NewResolver:
         // candidates through listenConstraintViews, avoiding candidate products.
         case TypeShape.Combined(formula) =>
           formula.orderedAtoms.foreach(atom => follow(atom.instantiate(tpe.instances), noTypeArguments, captures, next))
-        case TypeShape.Record(_, fields) => observe(constrainRecord(fields.map((field, sign) => field -> declaredType(sign, tpe)), _, marks, site))
+        case TypeShape.Record(source, fields) => observe(constrainRecord(fields.map((field, sign) =>
+          (field, declaredField(sign, tpe, field.mut || source.mut), field.mut || source.mut)), _, marks, site))
         case TypeShape.Function(_, _) => observe(constrainFunction(tpe, _, marks, site))
         case TypeShape.Polymorphic(_, _, body) =>
           follow(declaredType(body, tpe), args, captures, next)
@@ -2111,18 +2201,30 @@ class NewResolver:
   /** Structural constraints follow declared fields only. This supplies generic
     * argument inference and callback checking without refining the annotation
     * with additional properties from an actual record.
+    * The values that a record type describes can be assigned values of the input types of its `mutable` fields
+    * (see RcdField) through it, so the actual value's assignable field receives them, just like the
+    * parameters of an actual callback receive values of their declared types (see `constrainFunction`).
+    * Assignments through the immutable fields of record types are assumed not to happen: type checking will
+    * reject them. Writes through structural interfaces need not contribute their individual values to
+    * concrete fields, but still constrain assigned callbacks against the input type (see `assignField`).
     */
-  private def constrainRecord(fields: Ls[(RcdField, DeclaredType)],
+  private def constrainRecord(fields: Ls[(RcdField, TypeArgument, Bool)],
       actual: TermShape, marks: Ls[Marks], site: Opt[Term])(using ResolutionContext): Unit =
-    fields.foreach: (field, expected) =>
+    fields.foreach: (field, expected, mutable) =>
       val flow = rctx.fieldProjectionSite(field.sym)
-      def receive(value: TermShape)(using ResolutionContext): Unit = inferTypeArguments(expected, value, marks, site)
+      def receive(value: TermShape)(using ResolutionContext): Unit = inferTypeArguments(expected.output, value, marks, site)
 
       actual match
         case Marked(_: UnknownValueShape, _) => receive(actual)
-        // A structural interface only describes public members.
-        case _ => listenMemberValue(actual.getMember(field.key.get).visibleFrom(_ => false, reportInaccessible = false),
-          flow, field.rhs, TypeSubstitution.empty, () => ())(receive)
+        case _ =>
+          // A structural interface only describes public members.
+          val lookup = actual.getMember(field.key.get).visibleFrom(_ => false, reportInaccessible = false)
+          listenMemberValue(lookup, flow, field.rhs, TypeSubstitution.empty, () => ())(receive)
+          if mutable then
+            assignableTargets(lookup): (target, inner) =>
+              listenTypeInstances(expected.input)(writeField(target, _, inner))
+            listenFieldInput(lookup, field.rhs): input =>
+              listenTypeInstances(expected.input)(inferTypeArguments(input, _, marks, site))
 
   /** Read a member using the same declaration and scope rules for ordinary
     * constraints and implicit protocol observations. The caller decides whether
@@ -2133,16 +2235,21 @@ class NewResolver:
       (using ResolutionContext): Unit = info match
     case MemberLookup.All(members) => members.foreach(listenMemberValue(_, flow, source, instances, unresolved)(receive))
     case MemberLookup.Contextual(nested, substitution) => listenMemberValue(nested, flow, source, instances.withOverrides(substitution), unresolved)(receive)
-    case MemberLookup.Found(RecordMember(member, true), _) => receive(UnknownValueShape.at(member.rhs))
     case MemberLookup.Found(member, inner) =>
-      fromBMS(member.memberSymbol, flow, inner, value => receive(instantiateShape(value, instances)), source, _ => (), false)(using rctx.withInstances(instances))
+      def read(value: TermShape)(using ResolutionContext): Unit = receive(instantiateShape(value, instances))
+      fromBMS(member.memberSymbol, flow, inner, read, source, _ => (), false)(using rctx.withInstances(instances))
+      // Like other reads through mutable lookups (see `publishMember`).
+      member match
+        case RecordMember(member, true) =>
+          listenAssignedValues(member.tsym, flow, inner)(read)(using rctx.withInstances(instances))
+        case _ => ()
     case MemberLookup.Declared(member, bound, inner, annotation, positive) =>
       listenDeclaredMember(member, bound, flow, source, annotation, _ => (), false, positive, inner, N): value =>
         transportShape(instantiateShape(value, instances), inner) match
           case value: TermShape => receive(value)
           case NoShape => ()
     case MemberLookup.Typed(_, tpe, inner) =>
-      receive(instanceShape(transportType(instantiateType(tpe, instances), inner)))
+      receive(instanceShape(transportType(instantiateType(tpe.output, instances), inner)))
     case MemberLookup.Dynamic(inner) => DynShape().exit(inner) match
       case value: TermShape => receive(value)
       case NoShape => ()
@@ -2202,7 +2309,7 @@ class NewResolver:
                 case _ => matchLists(ret, tail)
           case Nil => ()
         case Marked(record: RecordTypeShape, _) =>
-          constrainRecord(record.fields.iterator.map((name, tpe) => record.declarations(name) -> tpe).toList,
+          constrainRecord(record.fields.iterator.map((name, tpe) => (record.declarations(name), tpe, record.mutable(name))).toList,
             actual, marks, site)
         case _ => ()
     actual match
@@ -3200,6 +3307,85 @@ class NewResolver:
             case _ => inferTypeArguments(instanceType(instance), instantiateShape(bound, substitution), marks, N)
     substitution
 
+  /** The type of the instances of a primitive class, whose views locate their provenance at `source`. */
+  private def primitiveType(cls: ClassSymbol, source: Term)(using ResolutionContext): DeclaredType =
+    val resolution = new TypeResolution(source, messages => resolError(source, messages))
+    resolution.publish(TypeShape.Nominal(cls.defn.get))
+    declaredType(resolution, Map.empty)
+
+  /** The declared interface of a primitive class. */
+  private def listenPrimitiveInterface(tpe: DeclaredType)(listener: NominalInstanceView => Unit)
+      (using ResolutionContext): Unit =
+    listenTypeViews(tpe):
+      case nominal: NominalInstanceView => listener(nominal)
+      case _ => softAssert(false, "Primitive class must expose a nominal interface")
+
+  /** WORKAROUND (see BuiltinOperatorResults): builtin operators have no declared interface, so without this,
+    * their applications would have no shapes at all, and a slot they flow into would only be inferred from its
+    * other inputs. When targeting JavaScript, approximate the results from the primitive classes of the operands.
+    * Applications the rules cannot approximate produce unknown values, as do all applications when targeting
+    * Wasm, whose backend implements the operators with dynamically typed runtime intrinsics.
+    */
+  def builtinApplication(op: BuiltinSymbol, args: Term, res: App)(using ResolutionContext): Unit =
+    import BuiltinOperatorResults.{PrimitiveClass, Alternative}
+    def publish(shape: TermShape)(using ResolutionContext): Unit = publishViewed(res, shape, rctx.instances)
+    var publishedUnknown = false
+    def unknown()(using ResolutionContext): Unit = if !publishedUnknown then
+      publishedUnknown = true
+      publish(UnknownValueShape.at(res))
+    val forwarded = mutable.Set.empty[Int]
+    // Unlike literals, which share their class's cached interface, results locate their provenance at the application.
+    val resultTypes = mutable.Map.empty[PrimitiveClass, DeclaredType]
+    val operands: Opt[Ls[Term]] = args match
+      case Tup(fields) => fields.foldRight(S(Nil): Opt[Ls[Term]]):
+        case (Fld(_, value, _), S(rest)) => S(value :: rest)
+        case _ => N
+      case _ => N
+    def produce(terms: Ls[Term], approximation: Opt[Ls[Alternative]])(using ResolutionContext): Unit =
+      approximation match
+        case S(alternatives) => alternatives.foreach:
+          case Alternative.Of(primitive) =>
+            val builtins = prelude.builtins
+            val cls = primitive match
+              case PrimitiveClass.Int => builtins.Int
+              case PrimitiveClass.Num => builtins.Num
+              case PrimitiveClass.Str => builtins.Str
+              case PrimitiveClass.Bool => builtins.Bool
+              case PrimitiveClass.BigInt => builtins.BigInt
+            listenPrimitiveInterface(resultTypes.getOrElseUpdate(primitive, primitiveType(cls, res)))(publish)
+          case Alternative.Operand(index) => if forwarded.add(index) then listenTerm(terms(index))(publish)
+        case N => unknown()
+    def primitiveOf(view: TermShape)(using ResolutionContext): Opt[PrimitiveClass] =
+      val builtins = prelude.builtins
+      def is(cls: ClassSymbol) = view.isInstanceOfClass(cls.defn.get)
+      if is(builtins.Int) then S(PrimitiveClass.Int)
+      else if is(builtins.Num) then S(PrimitiveClass.Num)
+      else if is(builtins.Str) then S(PrimitiveClass.Str)
+      else if is(builtins.Bool) then S(PrimitiveClass.Bool)
+      else if is(builtins.BigInt) then S(PrimitiveClass.BigInt)
+      else N
+    operands match
+      case S(terms) if (config.target is CompilationTarget.JS) && BuiltinOperatorResults.approximates(op.nme, terms.length) =>
+        BuiltinOperatorResults(op.nme, terms.map(_ => N)) match
+          // Approximations that hold for operands of any class do not wait for the operands' shapes.
+          case S(alternatives) => produce(terms, S(alternatives))
+          case N =>
+            // Combine each class newly seen for one operand with the classes already seen for the others. Classes
+            // seen in different activations are combined as well, which over-approximates the results. An operand
+            // without any shapes yields no results, like any other use of a value without shapes.
+            val seen = terms.map(_ => mutable.LinkedHashSet.empty[Opt[PrimitiveClass]])
+            terms.zipWithIndex.foreach: (term, index) =>
+              listenTerm(term): shape =>
+                listenInstanceViews(shape): view =>
+                  val primitive = primitiveOf(view)
+                  if seen(index).add(primitive) then
+                    val choices = seen.zipWithIndex.map: (classes, other) =>
+                      if other == index then primitive :: Nil else classes.toList
+                    choices.foldRight(Nil :: Nil: Ls[Ls[Opt[PrimitiveClass]]]): (options, suffixes) =>
+                      options.flatMap(option => suffixes.map(option :: _))
+                    .foreach(classes => produce(terms, BuiltinOperatorResults(op.nme, classes)))
+      case _ => unknown()
+
   def appShape(source: TermShape, args: Term, res: App)(using ResolutionContext): Unit =
     applyShape(source, args, res, checked = true)
 
@@ -3371,13 +3557,12 @@ class NewResolver:
       publish(symShapes.getOrElseUpdate((sym, flow, marks), CoreSymShape(sym, flow, marks)))
     member match
       case member: BlockMemberSymbol => definition(member)
-      case RecordMember(field, false) => definition(field.sym)
-      case RecordMember(field, true) =>
-        // Assignments can replace the stored value, so its initializer no longer
-        // determines what a read returns. Publish the known property symbol for
-        // selection/assignment, but an unknown shape for the value being read.
-        rctx.recordResolution(host, host.resolvedTargets.contains(field.tsym))(host.resolvedTargets ::= field.tsym)
-        publish(UnknownValueShape.at(field.rhs))
+      case RecordMember(field, mutable) =>
+        definition(field.sym)
+        // Through a mutable lookup, a read also returns the values assigned to the field (see `writeField`),
+        // like a read of a mutable class field (see `fromBMSAt`). The field's own definition cannot know whether
+        // a read is mutable, as mutable copies of a record reuse its fields (see RecordMember).
+        if mutable then listenAssignedValues(field.tsym, flow, marks)(publish)
 
   private def publishDeclared(host: NewResolvable & ShapeHost, member: BlockMemberSymbol, flow: FlowSymbol,
       bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term], positive: Bool,
@@ -3437,7 +3622,7 @@ class NewResolver:
           case MemberLookup.Typed(field, tpe, marks) if rctx.canResolve(ref) || ref.resolvedMembers.contains(prefix -> field.sym) =>
             val candidate = prefix -> field.sym
             rctx.recordResolution(ref, ref.resolvedMembers.contains(candidate))(ref.resolvedMembers ::= candidate)
-            publishTyped(ref, field, tpe, marks, instances)
+            publishTyped(ref, field, tpe.output, marks, instances)
           case MemberLookup.Indexed(_, _) if rctx.canResolve(ref) =>
             resolError(ref, msg"Tuple elements must be selected by index." -> ref.toLoc :: Nil)
           case MemberLookup.Dynamic(marks) if rctx.canResolve(ref) || ref.dynamicPrefixes.contains(prefix) =>
@@ -3591,7 +3776,7 @@ class NewResolver:
         publishDeclared(sel, member, sel.resSym, bindings, marks, annotation, positive, instances)
       case MemberLookup.Typed(field, tpe, marks) if rctx.canResolve(sel) || sel.resolvedMembers.contains(field.sym) =>
         rctx.recordResolution(sel, sel.resolvedMembers.contains(field.sym))(sel.resolvedMembers ::= field.sym)
-        publishTyped(sel, field, tpe, marks, instances)
+        publishTyped(sel, field, tpe.output, marks, instances)
       case MemberLookup.Indexed(fields, marks) if rctx.canResolve(sel) || sel.tupleIndex == sel.id.name.toIntOption =>
         val index = sel.id.name.toIntOption
         softAssert(index.exists(_ >= 0), "Tuple lookup must identify a nonnegative index")
@@ -3644,30 +3829,37 @@ class NewResolver:
                   bms.asModOrObj.orElse(bms.asTrm).orElse(bms.asCls).foreach: sym =>
                     rctx.recordResolution(sel, sel.resolvedTargets.contains(sym))(sel.resolvedTargets ::= sym)
                 listenTermViews(sel.prefix): receiver =>
-                  val selected = receiver match
-                    case Marked(nominal: NominalInstanceView, context) =>
-                      nominal.ancestor(cd) match
-                        case S(view) => visible(view.getMember(sel.id.name)).withAnnotation(nominal.annotation).withMarks(context :: Nil)
-                        case N =>
-                          // An explicit projection can name a narrower class, but
-                          // it cannot recover that class's implementation arguments.
-                          val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
-                          MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
-                    case _ =>
-                      // C# selects a declaration, not an instance of C. Transport
-                      // the member through the actual receiver, never the qualifier.
-                      projectedMember(receiver, cd, sel.id.name).map(visible).getOrElse:
-                        // Without a path into this class, only its declared
-                        // interface is available; qualifier values add no evidence.
-                        val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
-                        MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap,
-                          declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
-                  member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty)
+                  member(projectedLookup(sel, cd, bms, declarationMarks, receiver, visible),
+                    msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty)
               case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty))
         , sh =>
           rctx.markError(sel)
           resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
         )
+  
+  /** The member that a projection `sel` (`o.C#m`) selects in `receiver`, one of the receivers of `o`, where `C`
+    * resolves to `cd` and `m` to the member `bms` of `cd`, with the marks `declarationMarks`. `visible` applies the
+    * private-member visibility of the scope where `sel` is written.
+    */
+  private def projectedLookup(sel: NewSel, cd: ClassDef, bms: BlockMemberSymbol, declarationMarks: Ls[Marks],
+      receiver: TermShape, visible: MemberLookup => MemberLookup)(using ResolutionContext): MemberLookup = receiver match
+    case Marked(nominal: NominalInstanceView, context) =>
+      nominal.ancestor(cd) match
+        case S(view) => visible(view.getMember(sel.id.name)).withAnnotation(nominal.annotation).withMarks(context :: Nil)
+        case N =>
+          // An explicit projection can name a narrower class, but
+          // it cannot recover that class's implementation arguments.
+          val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
+          MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
+    case _ =>
+      // C# selects a declaration, not an instance of C. Transport
+      // the member through the actual receiver, never the qualifier.
+      projectedMember(receiver, cd, sel.id.name).map(visible).getOrElse:
+        // Without a path into this class, only its declared
+        // interface is available; qualifier values add no evidence.
+        val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
+        MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap,
+          declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
   
   /** Both constructor references and explicit `new` use the same definition and
     * parameter lists, including auxiliary constructor(...) lists. A partial `new`
@@ -3761,6 +3953,145 @@ class NewResolver:
       case Ref(sym: LocalSymbol) => publishActivated(sym, shape)
       case _ => ()
     listenTerm(rhs)(assign(lhs, _))
+
+  /** Assignments to a field are inputs of the field, like its initializer: erasure infers the representation of a
+    * field without a declared type from both (see `observeErasureDefinition`). Resolve the assigned member the way
+    * `newSel` and `unresolvedRef` resolve selections, for every class that the receiver can be an instance of, and
+    * write the assigned values to each assignable field that the lookups find (see `writeField`). `scope` is where
+    * `lhs` is written, which determines the private members it can select.
+    * Dynamic receivers and computed keys have no static target field: lowering compiles such assignments without
+    * converting their values to the representation of a field, which only the JavaScript backend supports, as all
+    * its values share one representation. A record type's field belongs to the type rather than to the values it
+    * describes, whose fields receive any value of the field's input type if it is mutable (see `constrainRecord`).
+    */
+  private[semantics] def assignField(lhs: Term, rhs: Term, scope: SrcScope)(using ResolutionContext): Unit =
+    // `transport` takes an assigned value from the assignment into the scope where the selection is evaluated:
+    // the selection can be captured by a nested definition, from which the assigned value exits, as for variables.
+    def target(lhs: Term, transport: TermShape => TermShape | NoShape)(using ResolutionContext): Unit =
+      def assign(field: TermSymbol, marks: Ls[Marks])(using ResolutionContext): Unit =
+        // Each receiver path to a field follows the assigned values once per activation of the assignment.
+        if rctx.state.fieldAssignments.add((new Identity(lhs), new Identity(rhs), field, marks)) then
+          listenTerm(rhs): value =>
+            transport(value) match
+              case value: TermShape => writeField(field, value, marks)
+              case NoShape => ()
+      def lookup(info: MemberLookup)(using ResolutionContext): Unit =
+        assignableTargets(info)(assign)
+        // The interface's input constrains assigned callbacks and generic arguments even when its
+        // implementation is hidden. Checking only the field's reads would select the opposite bound.
+        listenFieldInput(info, lhs): input =>
+          if rctx.state.fieldAssignmentTypes.add((new Identity(lhs), new Identity(rhs), input)) then
+            listenTerm(rhs): value =>
+              transport(value) match
+                case value: TermShape => inferTypeArguments(input, value, Nil, S(rhs))
+                case NoShape => ()
+      def visible(info: MemberLookup, reportInaccessible: Bool): MemberLookup =
+        info.visibleFrom(scope.canAccessPrivatesOf, reportInaccessible)
+      lhs match
+        case Capture(base, thru) => target(base, value => transport(value) match
+          case value: TermShape => MarkedShape.exit(value, ResolutionBoundary(thru), N)
+          case NoShape => NoShape)
+        // Mirror the lookups of `newSel`, which select the same members.
+        case sel: NewSel =>
+          def selected(info: MemberLookup)(using ResolutionContext): Unit = lookup(visible(info, reportInaccessible = true))
+          sel.cls match
+            case N if sel.id.name == "class" =>
+              listenClass(sel.prefix, recordTargets = false)(_ => (), shape => selected(shape.getMember(sel.id.name)))
+            case N => listenReceiver(sel.prefix)(shape => selected(shape.getMember(sel.id.name)))
+            case S(cls) =>
+              classSelection(cls)(ref =>
+                val cd = ref.definition
+                listenExt(cd, ext => visible(DefnShape(cd, ext).getInstanceMember(sel.id.name), reportInaccessible = true) match
+                  case MemberLookup.Found(bms: BlockMemberSymbol, declarationMarks) =>
+                    listenTermViews(sel.prefix): receiver =>
+                      lookup(projectedLookup(sel, cd, bms, declarationMarks, receiver, visible(_, reportInaccessible = true)))
+                  case info => selected(info))
+              , _ => ())
+        // Mirror the lookups of `unresolvedRef`.
+        case ref: UnresolvedRef => ref.prefixes.foreach: prefix =>
+          listenReceiver(prefix)(shape => lookup(visible(shape.getMember(ref.id.name), reportInaccessible = false)))
+        // Definitions outside class-like bodies are referenced directly (see `Ctx.withMembers`).
+        case MemberRef(member: BlockMemberSymbol) => lookup(MemberLookup.Found(member, Nil))
+        case _ => ()
+    target(lhs, value => value)
+
+  /** Write `value` to the host of the assignable `field` (`memberVariable`), which holds the values assigned to the
+    * field as seen from inside its definition, like its initializer. Reading the field leaves its definition and
+    * then follows the path of the member lookup to the reader (see `fromBMSAt`), so a value assigned through a lookup
+    * with the path `marks` enters the field along the reverse path. A value enters the field's definition at no
+    * particular site: the field is not evaluated anew by each read, as a by-name definition would be.
+    */
+  private[semantics] def writeField(field: TermSymbol, value: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
+    softAssert(field.defn.exists(isAssignableField), "Only assignable fields hold assigned values")
+    value.enter(marks) match
+      case value: TermShape =>
+        publishActivated(rctx.memberVariable(field), MarkedShape.enter(value, ResolutionBoundary(field), N))
+      case NoShape => ()
+  
+  /** Read the values assigned to `field` (see `writeField`) through a member lookup with the path `marks` at `site`:
+    * like the field's initializer (see `fromBMSAt`), they leave the field's definition and then follow that path.
+    */
+  private[semantics] def listenAssignedValues(field: TermSymbol, site: FlowSymbol, marks: Ls[Marks])(listener: Listener)
+      (using ResolutionContext): Unit =
+    listenMemberVariable(field): value =>
+      MarkedShape.exit(value, ResolutionBoundary(field), S(site)) match
+        case value: TermShape => transportShape(value, marks) match
+          case value: TermShape => listener(value)
+          case NoShape => ()
+        case NoShape => ()
+  
+  /** A mutable member's write interface, interpreted at the lookup site. A nominal signature must be
+    * interpreted negatively before its receiver bindings select an endpoint; a structural field already
+    * retains both endpoints. Use the ordinary declared-member transport so captures and constructor fields
+    * follow exactly the same scope path as a read. Unannotated concrete fields impose no declared input.
+    */
+  private def listenFieldInput(info: MemberLookup, source: Term)(listener: ShapeListener[DeclaredType])
+      (using ResolutionContext): Unit =
+    val caller = rctx
+    def declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks],
+        annotation: Opt[Term], positive: Bool, instances: TypeSubstitution)(using ResolutionContext): Unit =
+      member.onComplete: () =>
+        if valueTarget(member, false).flatMap(_.defn).exists:
+          case td: TermDefinition => td.k is syntax.MutVal
+          case _ => false
+        then listenDeclaredMember(member, bindings, rctx.fieldProjectionSite(member), source, annotation, _ => (),
+          false, !positive, marks, N)(
+          value => value match
+            case Marked(instance: InstanceShape, inner) =>
+              listener(transportType(instance.tpe, inner :: marks))(using caller)
+            case _ => ()
+        )(using rctx.withInstances(instances))
+    def follow(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
+      case MemberLookup.All(members) => members.foreach(follow(_, instances))
+      case MemberLookup.Contextual(source, substitution) => follow(source, instances.withOverrides(substitution))
+      case MemberLookup.Typed(_, tpe, marks) =>
+        listener(transportType(instantiateType(tpe.input, instances), marks))
+      case MemberLookup.Declared(member, bindings, marks, annotation, positive) =>
+        declared(member, bindings, marks, annotation, positive, instances)
+      case MemberLookup.Found(member: BlockMemberSymbol, marks) =>
+        declared(member, Map.empty, marks, N, true, instances)
+      case _ => ()
+    follow(info, rctx.instances)
+  
+  /** The assignable fields (see `isAssignableField`) that a member lookup finds, with the paths of their lookups.
+    * The fields of an immutable record are only assignable through mutable lookups: assigning them through the
+    * immutable record has no effect. Lookups through structural types, dynamic receivers, and computed keys find
+    * no assignable field (see `assignField`).
+    */
+  private def assignableTargets(info: MemberLookup)(target: (TermSymbol, Ls[Marks]) => ResolutionContext ?=> Unit)
+      (using ResolutionContext): Unit =
+    def member(member: BlockMemberSymbol, marks: Ls[Marks])(using ResolutionContext): Unit = member.onComplete: () =>
+      valueTarget(member, false) match
+        case S(field: TermSymbol) if field.defn.exists(isAssignableField) => target(field, marks)
+        case _ => ()
+    info match
+      case MemberLookup.All(members) => members.foreach(assignableTargets(_)(target))
+      // The receiver's substitution interprets the field's value; assigned values keep their own.
+      case MemberLookup.Contextual(source, _) => assignableTargets(source)(target)
+      case MemberLookup.Found(RecordMember(field, mutable), marks) => if mutable then target(field.tsym, marks)
+      case MemberLookup.Found(found: BlockMemberSymbol, marks) => member(found, marks)
+      case MemberLookup.Declared(declared, _, marks, _, _) => member(declared, marks)
+      case _ => ()
 
   def defineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(loc: Opt[Loc])(using ResolutionContext): DefineVar =
     if newResolution then sym match
@@ -4026,6 +4357,11 @@ class NewResolver:
                   case _ => shape
                 receive(captured)
               )(using rctx.withInstances(instances))
+              // A mutable field holds its initializer and then the values assigned to it (see `writeField`), which
+              // keep the activations of their assignments, like the values assigned to a variable. Without them,
+              // a read could resolve a member statically in the initializer's class only, while another class's
+              // instance was assigned. The fields of external declarations, which have no body, are left unobserved.
+              if td.k is syntax.MutVal then listenAssignedValues(td.tsym, resSym, markss)(listener)
         case S(d: TermDefinition) if !d.tsym.isInstanceOf[ClassCtorSymbol] &&
             ((d.sign.nonEmpty && (!d.flags.hasResultAnnotation || d.params.forall(ps =>
               ps.allParams.forall(_.sign.nonEmpty)))) ||
@@ -4221,15 +4557,27 @@ class NewResolver:
       case _: Definition => normal
       case term: Term => resultFlow(term)
       case _ => sequence(stat.subTerms)
-    def split(branches: SimpleSplit, onEnd: ResultFlow): ResultFlow = branches match
-      case SimpleSplit.Else(value) => resultFlow(value)
+    def irrefutable(pattern: Pattern): Bool = pattern match
+      case Pattern.Wildcard() => true
+      case Pattern.Alias(inner, _) => irrefutable(inner)
+      case Pattern.Annotated(inner, _) => irrefutable(inner)
+      case Pattern.Composition(true, left, right) => irrefutable(left) || irrefutable(right)
+      case Pattern.Composition(false, left, right) => irrefutable(left) && irrefutable(right)
+      case _ => false
+    def split(branches: SimpleSplit, onEnd: ResultFlow, repeats: Bool): ResultFlow = branches match
+      case SimpleSplit.Else(value) =>
+        val flow = resultFlow(value)
+        if repeats then flow.copy(normal = false) else flow
       case SimpleSplit.End => onEnd
-      case SimpleSplit.Cons(SimpleSplit.Head.Let(_, value), tail) => resultFlow(value).andThen(split(tail, onEnd))
+      case SimpleSplit.Cons(SimpleSplit.Head.Let(_, value), tail) => resultFlow(value).andThen(split(tail, onEnd, repeats))
       case SimpleSplit.Cons(SimpleSplit.Head.Match(scrutinee, pattern, consequent), tail) =>
         // A failed pattern can skip its guards. Retain that path as well as
         // any control transfer from a guard which is evaluated.
         val guards = pattern.subTerms.foldLeft(normal)((flow, term) => flow.or(resultFlow(term)))
-        resultFlow(scrutinee).andThen(guards.andThen(split(consequent, onEnd).or(split(tail, onEnd))))
+        val alternative = split(tail, onEnd, repeats)
+        val matched = split(consequent, alternative, repeats)
+        resultFlow(scrutinee).andThen(guards.andThen(
+          if irrefutable(pattern) then matched else matched.or(alternative)))
     def quoted(term: Term, depth: Int): ResultFlow = term match
       // Only splices crossing back to the current stage execute now. Nested
       // quotations delay their own splices, including any returns they contain.
@@ -4254,9 +4602,9 @@ class NewResolver:
         if last.normal then first.or(last.copy(normal = false)) else last
       case IfLike(_, form, branches) =>
         // Falling off an imperative split returns unit; falling off a returning
-        // split throws a match error. A loop may finish without running its body.
-        val flow = split(branches, if form.isImperative then normal else ResultFlow(false, Map.empty))
-        if form == IfLikeForm.While then flow.or(normal) else flow
+        // split throws a match error. A loop's completed branch starts another
+        // iteration; only falling off the split can produce a normal unit result.
+        split(branches, if form.isImperative then normal else ResultFlow(false, Map.empty), form == IfLikeForm.While)
       case Quoted(body) => quoted(body, 1)
       case _: Lam | _: Unquoted | _: FunTy | _: Forall | _: Constrained | _: WildcardTy
           | _: CompType | _: Neg | _: DynTy => normal
@@ -4268,6 +4616,8 @@ class NewResolver:
       case Asc(value, _) => resultFlow(value)
       case TyApp(value, _) => resultFlow(value)
       case _ => sequence(term.subTerms)
+
+  protected def completesNormally(term: Term): Bool = resultFlow(term).normal
 
   /** Function results include explicit returns, whereas listenTerm observes only
     * normal completion. Share this rule between calls, result checking, getters,
@@ -4429,7 +4779,12 @@ class NewResolver:
           assert(graph != null, "A tuple producer must have an inference owner")
           val defining = rctx.inGraph(graph.nn.context)
           val record = defining.state.namedTupleRecords.getOrElseUpdate(new Identity(tuple), {
-            val record: Rcd = Rcd(false, fields.map((key, value) => RcdField(key, value)(using rctx.owner)))
+            val record: Rcd = Rcd(false, fields.map((key, value) =>
+              // Like the record they are packed into at run time, named tuple fields are immutable.
+              val field = RcdField.source(key, value, false)(using rctx.owner)
+              lexicalBinders(tuple).foreach(binders => rctx.state.lexicalTypeBinders(field.tsym) = binders)
+              observeErasureDefinition(field.tsym.defn.get)
+              field))
             record.withLocOf(tuple)
             // The record's fields are the tuple's own field expressions, so its
             // lexical scope is the tuple's.
@@ -4537,14 +4892,8 @@ class NewResolver:
       primitive match
         case N => publish(N)
         case S(cls) =>
-          val tpe = rctx.state.primitiveTypes.getOrElseUpdate(cls, {
-            val resolution = new TypeResolution(intro, messages => resolError(intro, messages))
-            resolution.publish(TypeShape.Nominal(cls.defn.get))
-            declaredType(resolution, Map.empty)
-          })
-          listenTypeViews(tpe):
-            case nominal: NominalInstanceView => publish(S(nominal))
-            case _ => softAssert(false, "Primitive class must expose a nominal interface")
+          val tpe = rctx.state.primitiveTypes.getOrElseUpdate(cls, primitiveType(cls, intro))
+          listenPrimitiveInterface(tpe)(nominal => publish(S(nominal)))
     case Ref(sym) if sym is sym.getState.globalThisSymbol => listener(DynShape())
     case SelfRef(sym) if sym is sym.getState.globalThisSymbol => listener(DynShape())
     case ref @ Ref(loc: LocalSymbol) =>

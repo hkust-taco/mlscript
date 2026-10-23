@@ -42,6 +42,31 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
         selExpr.getResult.matches:
           case TrackableSelect(from, _, _) => from === dtor.exprId.getResult
   
+  /** Decide only predicates determined by a concrete producer. An incomplete parent chain does
+    * not prove a class test false, and a class instance's type does not determine its tuple length.
+    */
+  private def matches(ctor: CtorCls, cse: Case): Opt[Bool] = (ctor, cse) match
+    case (cls: TypeSymbol, Case.Cls(expected: TypeSymbol, _)) => ErasedType.isSubtypeOf(cls, expected)
+    case (_: Int, Case.Cls(expected: TypeSymbol, _)) => ErasedType.isSubtypeOf(summon[Elaborator.Ctx].builtins.Array, expected)
+    case (length: Int, Case.Tup(expected, inf)) => S(if inf then length >= expected else length == expected)
+    // Concrete producers are objects or tuples, never literal values.
+    case (_, Case.Lit(_)) => S(false)
+    case _ => N
+
+  /** Both fusion eligibility and branch extraction use this ordered decision. In particular, a
+    * later matching arm cannot justify fusion when an earlier arm's predicate remains unknown.
+    */
+  def selectedBranch(ctor: CtorCls, dtor: CtorDtorId): Opt[Block] =
+    val matched = preAnalyzer.res.matchScrutToMatchBlock(dtor.exprId)
+    def loop(arms: Ls[Case -> Block]): Opt[Block] = arms match
+      case (cse, body) :: rest => matches(ctor, cse) match
+        case S(true) => S(body)
+        case S(false) => loop(rest)
+        case N => N
+      // With no default, a failed match falls through to its rest block.
+      case Nil => S(matched.dflt.getOrElse(End()))
+    loop(matched.arms)
+
   val finalCtorDests = LinkedHashMap.empty[CtorDtorId, FinalDest]
   val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
   val fusingCtorInfo = MutMap.empty[CtorDtorId, Ctor]
@@ -56,17 +81,24 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
       ctor.instId :: dtor.instId :: Nil
 
   locally {
-    def mergeDests(dests: Set[ConcreteCtorConsumer | MarkerConsStrat]): Opt[FinalDest] =
+    def mergeDests(ctor: Ctor, dests: Set[ConcreteCtorConsumer | MarkerConsStrat]): Opt[FinalDest] =
       def selsSelectingTheSameSymbol(sels: Set[FieldSel]) =
         sels.map(s => s.field).size == 1
-      if dests.exists(_.isInstanceOf[MarkerConsStrat]) then
+      val canSkipConstruction = ctor.exprId.getResult match
+        // Rewriting replays these arguments, but drops the constructor body and qualifier.
+        // A stale source parameter layout must not truncate the replayed argument list.
+        case CtorProducer(_, args, selectedFrom) => args.length == ctor.args.length &&
+          selectedFrom.forall(_.isPure) && ConstructorElision.isHarmless(ctor.ctor)
+        case _ => false
+      if !canSkipConstruction || dests.exists(_.isInstanceOf[MarkerConsStrat]) then
         N
       else
         val (dtors, sels) = dests.partitionMap:
           case d: Dtor => Left(d)
           case fs: FieldSel => Right(fs)
           case _ => die
-        if dtors.size == 0 && selsSelectingTheSameSymbol(sels) then
+        if sels.nonEmpty && !ConstructorElision.preservesParameterFields(ctor) then N
+        else if dtors.size == 0 && selsSelectingTheSameSymbol(sels) then
           S(FinalDestSel(
             sels.map(_.concreteId),
             sels.head.field
@@ -77,7 +109,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
           if selAndDtorIsSameConsumer(
             dtor.concreteId,
             sels.map(s => s.concreteId)
-          ) then
+          ) && selectedBranch(ctor.ctor, dtor.concreteId).isDefined then
             S(FinalDestMatch(
               dtor.concreteId,
               sels.map(_.concreteId)
@@ -88,7 +120,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
     val prodRoots =
       for
         ctor <- constraintSolver.ctorsWithDests
-        if mergeDests(ctor.dests.toSet).isEmpty
+        if mergeDests(ctor, ctor.dests.toSet).isEmpty
       yield ctor
     val consRoots =
       for
@@ -111,7 +143,7 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
       ctor <- constraintSolver.ctorsWithDests
       if !toRemoveCtor(ctor)
     do
-      finalCtorDests(ctor.concreteId) = mergeDests(ctor.dests.toSet).get
+      finalCtorDests(ctor.concreteId) = mergeDests(ctor, ctor.dests.toSet).get
       fusingCtorInfo(ctor.concreteId) = ctor
     for
       dtor <- constraintSolver.consumersWithSrcs

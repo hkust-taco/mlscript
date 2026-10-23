@@ -16,7 +16,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   extends PolyInstantiationRewrite(solver.constraintSolver):
   
   type MatchOrLabelId = ResultId | LabelSymbol
-  type BranchId = CtorDtorId -> Opt[CtorCls]
+  // The producer determines the branch closure's field parameters even when several producers
+  // select the same default body. Different constructor layouts cannot share that closure.
+  type BranchId = CtorDtorId -> CtorCls
   type LabelId = LabelSymbol -> InstantiationId
   type RestFunId = CtorDtorId | LabelId
   
@@ -42,6 +44,104 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   extension (f: SelField) def erasedFieldType: Opt[ErasedValueType] = f match
     case tSym: TermSymbol => tSym.mapErasedValueType
     case _: Int => N
+
+  /** Fusion replaces a constructor by either a branch closure or its selected field.
+    * Derive changed slots from the solved flow graph; unchanged slots retain their
+    * declarations. A source declaration describes the original object, not its replacement.
+    */
+  private def representation(p: ProdStrat, original: Opt[ErasedValueType], seen: Set[ProdStrat]): (Bool, ErasedValueType) =
+    val fallback = original.getOrElse(ErasedType.Unknown)
+    if seen(p) then false -> fallback
+    else p match
+      case v: StratVar =>
+        val reps = v.lowerBounds.toList.map(representation(_, original, seen + p))
+        if reps.isEmpty then false -> fallback
+        else reps.exists(_._1) -> ErasedType.Union.mk(reps.map(_._2))
+      case c: Ctor => solver.finalCtorDests.get(c.concreteId) match
+        case S(_: FinalDestMatch) => true -> ErasedType.Function(S(false))
+        case S(FinalDestSel(_, field)) =>
+          val fieldType = representation(c.args.find(_._1 == field).get._2, field.erasedFieldType, seen + p)._2
+          true -> fieldType
+        case N => false -> (c.ctor match
+          case cls: (ClassSymbol | ModuleOrObjectSymbol) => ErasedType.ValueLike(S(false), cls)
+          case _: Int => ErasedType.Array)
+      case _: ProdFun => false -> ErasedType.Function(S(false))
+      case UnknownProd => false -> fallback
+
+  // A proved cast can disappear when fusion changes its operand's representation.
+  // Keep other casts: even a check known to succeed can still narrow a physical anyref
+  // slot for Wasm. Unknown/failing casts expose their inputs and therefore prevent fusion.
+  private lazy val fusedCasts = constraintSolver.provenCastSources.iterator.collect:
+    case (id, sources) if sources.exists(representation(_, N, Set.empty)._1) => id
+  .toSet
+
+  private lazy val changedSlots =
+    val candidates = LinkedHashMap.empty[(InstantiationId, Symbol), Buffer[(Bool, ErasedValueType)]]
+    for (sym, instId, v) <- collector.symbolFlows do sym match
+      case sym: (VarSymbol | TempSymbol | TermSymbol) =>
+        candidates.getOrElseUpdate(instId -> sym, Buffer.empty) +=
+          representation(v, sym.mapErasedValueType, Set.empty)
+      case _ => ()
+    candidates.iterator.collect:
+      case (key, reps) if reps.exists(_._1) => key -> ErasedType.Union.mk(reps.map(_._2))
+    .toMap
+
+  override protected def rewrittenFunctionType(fun: TermSymbol, instId: InstantiationId): Opt[ErasedType] =
+    val params = pre.res.funSymToFunDefn(fun).params
+    val returns = constraintSolver.prodFunsWithDests.iterator.collect:
+      case pf if pf.concreteId == ConcreteId((fun, params.size - 1), instId) =>
+        representation(pf.res, fun.declaredResultType, Set.empty)
+    .toList
+    val resultChanged = returns.exists(_._1)
+    if !resultChanged && !params.exists(_.params.exists(p => changedSlots.contains(instId -> p.sym)))
+    then fun.erasedType
+    else S(ErasedType.FuncRef(S(false), params.map(_.params.map: p =>
+      changedSlots.get(instId -> p.sym).orElse(p.sym.erasedType)),
+      if resultChanged then S(ErasedType.Union.mk(returns.map(_._2))) else fun.declaredResultType))
+
+  private def retypedSymbol(previous: Symbol, tpe: ErasedValueType): Symbol = previous match
+    case v: VarSymbol if v.erasedType.contains(tpe) => v
+    case v: VarSymbol =>
+      val fresh = new VarSymbol(v.id, S(tpe))
+      fresh.sourceAliases = v.sourceAliases
+      fresh
+    case t: TempSymbol if t.erasedType.contains(tpe) => t
+    case t: TempSymbol => new TempSymbol(t.trm, S(tpe), t.nme)
+    case t: TermSymbol if t.erasedType.contains(tpe) => t
+    case t: TermSymbol =>
+      val fresh = new TermSymbol(t.k, t.owner, t.id, S(tpe))
+      fresh.sourceAliases = t.sourceAliases
+      fresh
+    case other => lastWords(s"expected a runtime slot, got $other")
+
+  // Rewriters for extracted branches share the rewritten outer bindings. Only bindings
+  // owned by a copied body get fresh copies; recreating a free symbol would leave it unbound.
+  private lazy val orderedChangedSlots = changedSlots.toList.sortBy:
+    case ((instId, sym), _) => (sym.uid, instId.map(_.uid).mkString(","))
+  private lazy val rewrittenSlots = orderedChangedSlots.map:
+    case (key@(_, sym), tpe) => key -> retypedSymbol(sym, tpe)
+
+  override protected def symbolMapping(instId: InstantiationId,
+      refreshed: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]): Map[Symbol, Symbol] =
+    val globals = rewrittenSlots.iterator.collect:
+      case ((Nil, sym), next) => sym -> next
+    val original = globals.toMap ++ super.symbolMapping(instId, refreshed)
+    val replacements = refreshed match
+      case N => rewrittenSlots.iterator.collect:
+        case ((id, sym), next) if id == instId => sym -> next
+      case S(mapping) =>
+        val copied = Map.from[Symbol, Symbol](mapping)
+        orderedChangedSlots.iterator.collect:
+          case ((id, sym), tpe) if id == instId && copied.contains(sym) =>
+            sym -> retypedSymbol(copied(sym), tpe)
+    original ++ replacements
+
+  private def capturedType(sym: LocalVarSymbol, instId: InstantiationId): Opt[ErasedValueType] =
+    changedSlots.get(instId -> sym).orElse(sym.mapErasedValueType)
+
+  private def fieldType(p: ProdStrat, field: SelField): Opt[ErasedValueType] =
+    val (changed, tpe) = representation(p, field.erasedFieldType, Set.empty)
+    if changed then S(tpe) else field.erasedFieldType
 
   private def getParentLabelOrMatchesAndRestBefore(
     matchOrLabelId: MatchOrLabelId
@@ -94,7 +194,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   val restFunSyms = LinkedHashMap.empty[RestFunId, (BlockMemberSymbol, TermSymbol)]
   
   // original bodies of a branch
-  val branchOriginalBodies = MutMap.empty[ResultId -> Opt[CtorCls], Block]
+  val branchOriginalBodies = MutMap.empty[ResultId -> CtorCls, Block]
   // original rest function bodies and their parent matches (if any)
   val restOriginalBodiesAndParentRest = MutMap.empty[MatchOrLabelId, Block -> Opt[MatchOrLabelId]]
   
@@ -115,25 +215,14 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
               val clsNme = selInfo.selectsFrom.ctorClsName
               fieldSym.getOrElseUpdate(
                 selInfo.field,
-                new VarSymbol(
-                  Tree.Ident(s"${clsNme}_${selInfo.field.fieldName}"),
-                  erasedType = selInfo.field.erasedFieldType))
+                new VarSymbol(Tree.Ident(s"${clsNme}_${selInfo.field.fieldName}")))
           )
         
         // ctor dest branch function computations
-        val matchBlk = pre.res.matchScrutToMatchBlock(dest._1)
-        val (whichBranch, whichBranchPreBody) =
-          val tmp =
-            val ctorCls = ctorInfo.ctor
-            matchBlk.arms
-              .find: (cse, _) =>
-                cse match
-                case Case.Cls(cls, path) => cls === ctorCls
-                case Case.Tup(len, inf) => len === ctorCls
-                case _ => die
-              .map(b => ctorCls -> b._2)
-          tmp.map(_._1) ->
-          tmp.fold(matchBlk.dflt.get)(_._2)
+        val whichBranch = ctorInfo.ctor
+        val whichBranchPreBody =
+          solver.selectedBranch(ctorInfo.ctor, dest).getOrElse(
+            lastWords("Fusion requires a statically determined match branch"))
         val destBranchId: BranchId = dest -> whichBranch
         // identify the dest branchid for a ctor
         ctorWhichBranch(ctor) = destBranchId
@@ -141,11 +230,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         branchFunSyms.getOrElseUpdate(
           destBranchId,
           locally:
-            val branchName = whichBranch.fold("_dflt")(c => s"_${c.ctorClsName}")
+            val branchName = s"_${whichBranch.ctorClsName}"
             val scrutName = dest._1.getReferredSym.nme
             val branchFnNme = s"${dest.instId.mkFunName}$$$scrutName$branchName"
             new BlockMemberSymbol(branchFnNme, Nil, true)
-            -> new TermSymbol(Fun, N, Tree.Ident(branchFnNme), erasedType = N)
+            -> new TermSymbol(Fun, N, Tree.Ident(branchFnNme))
         )
         // compute the function parameters corresponding to ctor fields of branch funs
         branchFunParamFieldSyms.getOrElseUpdate(
@@ -160,7 +249,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             completeArgs.map: selField =>
               selsInfos.get(selField) match
               case Some(selId) => branchSelSyms(selId)
-              case None => VarSymbol(Tree.Ident(s"_${selField.fieldName}"), erasedType = selField.erasedFieldType)
+              case None => VarSymbol(Tree.Ident(s"_${selField.fieldName}"))
         )
         
         val (parents, _) = getParentLabelOrMatchesAndRestBefore(dest.exprId)
@@ -174,7 +263,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             locally:
               val restFunName = dest.instId.mkFunName + s"$$${nme}_rest"
               new BlockMemberSymbol(restFunName, Nil, true)
-              -> new TermSymbol(Fun, N, Tree.Ident(restFunName), erasedType = N)
+              -> new TermSymbol(Fun, N, Tree.Ident(restFunName))
           )
           val (ps, restBeforeParent) = getParentLabelOrMatchesAndRestBefore(matchOrLabelId)
           restOriginalBodiesAndParentRest.getOrElseUpdate(
@@ -300,6 +389,29 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     allBranchesOfDtor.keysIterator.foreach(fvsForDtor)
   }
 
+  // Publish the generated calling conventions before rewriting bodies that refer to them.
+  // A branch function takes its fields first and its captured variables second; a call
+  // supplying only the fields therefore returns a Function, even though the final result
+  // type is unknown. Losing that distinction introduces checked Object casts around the
+  // closures and prevents eta expansion from combining their applications.
+  for (branchId, params) <- branchFunParamFieldSyms do
+    val ctors = ctorWhichBranch.iterator.collect:
+      case (id, branch) if branch == branchId => solver.fusingCtorInfo(id)
+    .toList
+    params.zipWithIndex.foreach: (param, index) =>
+      val types = ctors.map: ctor =>
+        val (field, prod) = ctor.args(index)
+        fieldType(prod, field)
+      param.erasedType = if types.forall(_.isEmpty) then N
+        else S(ErasedType.Union.mk(types.map(_.getOrElse(ErasedType.Unknown))))
+  for (branchId, (_, sym)) <- branchFunSyms do
+    sym.erasedType = S(ErasedType.FuncRef(S(false),
+      branchFunParamFieldSyms(branchId).map(_.erasedType) ::
+        dtorBranchFnFvs(branchId._1).map(capturedType(_, branchId._1.instId)) :: Nil, N))
+  for (restId, (_, sym)) <- restFunSyms do
+    sym.erasedType = S(ErasedType.FuncRef(S(false),
+      restFnFvs(restId).map(capturedType(_, restId.getInstId)) :: Nil, N))
+
   // Rewrites the program under a specific instantiation id
   // from the polymorphic analysis
   protected class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
@@ -314,6 +426,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     
     override def applyResult(r: Result)(k: Result => Block): Block =
       r match
+      case c: Cast if fusedCasts(c.uid.concreteId) => applyResult(c.value)(k)
       case s@TrackableSelect(from, _, _) =>
         if branchSelSyms.isDefinedAt(s.uid.concreteId) then
           k(branchSelSyms(s.uid.concreteId).subst.asSimpleRef)
@@ -325,8 +438,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         def mkCtorFieldSyms(ctorDtorId: CtorDtorId): Ls[TempSymbol] =
           val ctorInfo = solver.fusingCtorInfo(ctorDtorId)
           val clsNme = ctorInfo.ctor.ctorClsName
-          ctorInfo.args.unzip._1.map: f =>
-            new TempSymbol(N, erasedType = f.erasedFieldType, s"${clsNme}_${f.fieldName}")
+          ctorInfo.args.map: (field, prod) =>
+            new TempSymbol(N, erasedType = fieldType(prod, field), s"${clsNme}_${field.fieldName}")
         end mkCtorFieldSyms
         
         solver.finalCtorDests.get(ctor.uid.concreteId) match
@@ -353,6 +466,12 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     override def applyPath(p: Path)(k: Path => Block): Block =
       p match
       case PolyFnRef(specializedRef) => k(specializedRef)
+      case c: Cast if fusedCasts(c.uid.concreteId) =>
+        applyResult(c.value):
+          case p: Path => k(p)
+          case r =>
+            val tmp = TempSymbol(N, r.erasedValueType, "fused")
+            Scoped(Set.single(tmp), Assign(tmp, r, k(tmp.asPath)))
       case ctor@CtorProducer(_, args, _) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
         assert(args.isEmpty)
         val (branchFunBms, branchFunTSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))
@@ -418,7 +537,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     // the rewriter of an extracted part (branch body functions and match rest functions),
     // whose free variables `fvs` become the `fv_` parameters it returns
     def mkExtractedBodyRewriter(instId: InstantiationId, body: Block, fvs: Ls[LocalVarSymbol]): (Rewriter, Ls[VarSymbol]) =
-      val fvParams = fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.mapErasedValueType))
+      val fvParams = fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = capturedType(s, instId)))
       mkCopyRewriter(instId, Nil, body, Map.from(fvs.iterator.zip(fvParams))) -> fvParams
   
     // Functions for fused match branches; each runs one arm and then its rest
@@ -466,9 +585,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
           case Some((params, rewrittenBody)) =>
-            // deforest never changes fun params in place
-            assert(params is fun.params)
-            FunDefn(fun.owner, fun.sym, fun.dSym, params, rewrittenBody)(fun.configOverride, fun.annotations)
+            FunDefn(fun.owner, fun.sym, fun.dSym.subst, params, rewrittenBody)(fun.configOverride, fun.annotations)
           case None => super.applyFunDefn(fun)
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
 end DeforestRewriter

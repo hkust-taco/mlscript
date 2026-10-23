@@ -206,7 +206,9 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       }
       #_reified;
       resumeWith(value) {
-        return Runtime._try(lambda$(Runtime, this, value))
+        let lambda$here;
+        lambda$here = lambda$(Runtime, this, value);
+        return Runtime._try(lambda$here)
       }
       raise() {
         Runtime.curEffect = this.reified;
@@ -861,17 +863,18 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return header;
   }
   static showFunctionContChain(cont, hl, vis, reps) {
-    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope31$cap;
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope31$cap, lambda$here;
     scope31$cap = new Capture$scope311(undefined);
     if (cont instanceof Runtime.FunctionContFrame.class) {
       tmp = cont["constructor"]["name"] + "(pc=";
       scope31$cap.result$0 = tmp + cont.saved.at(1);
-      runtime.safeCall(hl.forEach(lambda$2(scope31$cap, cont)));
+      lambda$here = lambda$2(scope31$cap, cont);
+      runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
         tmp1 = reps + 1;
         reps = tmp1;
-        scrut1 = reps > 10;
+        scrut1 = tmp1 > 10;
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         }
@@ -891,16 +894,17 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return "(NOT CONT)";
   }
   static showHandlerContChain(cont, hl, vis, reps) {
-    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope33$cap;
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope33$cap, lambda$here;
     scope33$cap = new Capture$scope331(undefined);
     if (cont instanceof Runtime.HandlerContFrame.class) {
       scope33$cap.result$0 = cont.handler["constructor"]["name"];
-      runtime.safeCall(hl.forEach(lambda$3(scope33$cap, cont)));
+      lambda$here = lambda$3(scope33$cap, cont);
+      runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
         tmp = reps + 1;
         reps = tmp;
-        scrut1 = reps > 10;
+        scrut1 = tmp > 10;
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         }
@@ -1232,15 +1236,6 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       Runtime.stackLimit = old;
     }
     return tmp
-  }
-  static plus_impl(lhs, rhs) {
-    if (lhs instanceof Runtime.Int31.class) {
-      if (rhs instanceof Runtime.Int31.class) {
-        return lhs + rhs
-      }
-      return Runtime.unreachable;
-    }
-    return Runtime.unreachable;
   }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Runtime"];

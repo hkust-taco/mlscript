@@ -10,9 +10,10 @@ fun nonsense(xs) = if xs is
 //│ let nonsense;
 //│ nonsense = function nonsense(xs) {
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 0) {
-//│     let tmp;
+//│     let inlinedVal, tmp;
 //│     tmp = xs.length - 0;
-//│     return runtime.safeCall(xs.slice(0, tmp))
+//│     inlinedVal = runtime.safeCall(xs.slice(0, tmp));
+//│     return inlinedVal
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };

@@ -27,15 +27,20 @@ counter
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry (func (result (ref null any))))
+//│   (type $entry (func (result (ref null i31))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
-//│   (import "repl" "counter" (global $counter (mut (ref null any))))
-//│   (import "repl" "step" (global $step (mut (ref null any))))
-//│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (return
-//│       (call $plus_impl
-//│         (global.get $counter)
-//│         (global.get $step))))
+//│   (import "repl" "counter" (global $counter (mut (ref null i31))))
+//│   (import "repl" "step" (global $step (mut (ref null i31))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null i31))
+//│       (local.set $tmp
+//│         (call $plus_impl
+//│           (global.get $counter)
+//│           (global.get $step)))
+//│       (return
+//│         (ref.cast (ref null i31)
+//│           (local.get $tmp)))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -52,13 +57,12 @@ unit
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $entry (func (result (ref $Unit))))
+//│   (type $entry (func (result (ref null $Unit))))
 //│   (import "repl" "Unit_typeinfo" (global $Unit_typeinfo (ref $Unit_typeinfo)))
 //│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
-//│   (func $entry (export "entry") (type $entry) (result (ref $Unit))
+//│   (func $entry (export "entry") (type $entry) (result (ref null $Unit))
 //│     (return
-//│       (ref.cast (ref $Unit)
-//│         (global.get $Unit))))
+//│       (global.get $Unit)))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = {}
@@ -157,7 +161,18 @@ narrowedBox
 // The imported type must also enforce the cast, rather than just avoiding a missing-type diagnostic.
 :noInline
 :re
-fun rejectNonBox(x): CastBox = x
+fun rejectNonBox(x: Any): CastBox = x
 rejectNonBox(42)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// An inferred session global of primitive type is stored unboxed as well.
+let inferred = wasm.i32.const(123)
+//│ Wasm result:
+//│ = {}
+
+:expect 123
+inferred
+//│ Wasm result:
+//│ = 123

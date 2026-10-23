@@ -51,6 +51,27 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   given eState: Elaborator.State = constraintSolver.eState
   given pre: FlowPreAnalyzer = constraintSolver.preAnalyzer
   
+  /** A representation-changing rewrite must describe the new result before recursive calls are rebuilt. */
+  protected def rewrittenFunctionType(fun: TermSymbol, instId: InstantiationId): Opt[ErasedType] = fun.erasedType
+
+  // Refresh an original private function as well when a monomorphic rewrite changes its representation.
+  // Public functions cannot change their calling convention: their unknown consumers prevent such fusion.
+  private lazy val rewrittenFunctionSymbols: Map[TermSymbol, TermSymbol] =
+    val selfInstIds = collector.synthesizedInstIdToFunSym.iterator.map(_.swap).toMap
+    pre.res.rootFunDefns.toList.sortBy(_._1.uid).iterator.flatMap: (sym, fun) =>
+      val tpe = rewrittenFunctionType(sym, selfInstIds.getOrElse(sym, Nil))
+      if tpe == sym.erasedType then N
+      else
+        assert(fun.visibility is Visibility.Private)
+        val fresh = new TermSymbol(sym.k, sym.owner, sym.id, tpe)
+        fresh.sourceAliases = sym.sourceAliases
+        S(sym -> fresh)
+    .toMap
+
+  protected def symbolMapping(instId: InstantiationId,
+      refreshed: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]): Map[Symbol, Symbol] =
+    Map.from[Symbol, Symbol](rewrittenFunctionSymbols) ++ refreshed.getOrElse(Map.empty)
+  
   
   final def apply(): Program =
     if !solvers.exists(_.hasWorkToDo) then pre.pgrm
@@ -59,7 +80,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
       if newBody is pre.pgrm.main then pre.pgrm
       else Program(pre.pgrm.imports, newBody)
   
-  val newPolyFnSyms : LinkedHashMap[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]] =
+  lazy val newPolyFnSyms : LinkedHashMap[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]] =
     val res = LinkedHashMap.empty[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]]
     def funSymsToBeCopiedAt(path: InstantiationId): Iterator[TermSymbol] =
       collector.synthesizedInstIdToFunSym.get(path) match
@@ -77,7 +98,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
           val name = path.mkFunName + s"$$${f.nme}"
           f -> (
             new BlockMemberSymbol(name, Nil, true),
-            new TermSymbol(Fun, N, Tree.Ident(name), erasedType = f.erasedType))
+            new TermSymbol(Fun, N, Tree.Ident(name), erasedType = rewrittenFunctionType(f, path)))
         .toMap
     res
   end newPolyFnSyms
@@ -122,7 +143,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   // otherwise into a copy whose symbols are refreshed by the map
   // helps subclass compute the symbol for the instantiated fun defns
   protected abstract class InstantiationRewriter(val instId: InstantiationId, val refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]])
-    extends SymbolMapTransformer(refreshSymbolMappingForCopy.getOrElse(Map.empty).asInstanceOf):
+    extends SymbolMapTransformer(symbolMapping(instId, refreshSymbolMappingForCopy)):
     
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn
     

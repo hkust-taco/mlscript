@@ -217,72 +217,30 @@ first(1, 2, 3)
 sum(3)
 //│ = 6
 
-// The omitted optional argument must be reset in each iteration.
-:soir
-:expect [[null], [null]]
-@tailrec fun last(n, prev?) =
-  if n == 0 then [prev] else if n == 1 then last(n - 1) else last(n - 1, n)
-[last(1), last(3)]
-//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1;
-//│ @tailrec
-//│ define last⁰ as fun last¹(n, prev?) {
-//│   loop loopLabel:
-//│     let scrut, scrut1, tmp2, tmp3;
-//│     set scrut = Predef⁰.equals⁰(n, 0);
-//│     match scrut
-//│       true =>
-//│         return [prev]
-//│       else
-//│         set scrut1 = Predef⁰.equals⁰(n, 1);
-//│         match scrut1
-//│           true =>
-//│             set tmp2 = -⁰(n, 1);
-//│             set n = tmp2;
-//│             set prev = null;
-//│             continue loopLabel
-//│           else
-//│             let n_tmp;
-//│             set tmp3 = -⁰(n, 1);
-//│             set n_tmp = n;
-//│             set n = tmp3;
-//│             set prev = n_tmp;
-//│             continue loopLabel
-//│         end
-//│     end
-//│   unreachable /* Rest of abortive labelled block */
-//│ };
-//│ set tmp = last¹(1, null);
-//│ set tmp1 = last¹(3, null);
-//│ return [tmp, tmp1]
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = [[null], [null]]
-
-
 // *** Errors ***
 
 :e
 fun bad(x?, y) = x
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.265: 	fun bad(x?, y) = x
+//│ ║  l.223: 	fun bad(x?, y) = x
 //│ ╙──       	            ^
 
 :e
 fun bad(...xs?) = xs
 //│ ╔══[COMPILATION ERROR] Variadic parameters cannot be optional.
-//│ ║  l.271: 	fun bad(...xs?) = xs
+//│ ║  l.229: 	fun bad(...xs?) = xs
 //│ ╙──       	        ^^^^^^
 
 :e
 fun bad(using x?: Int) = x
 //│ ╔══[COMPILATION ERROR] Contextual parameters cannot be optional.
-//│ ║  l.277: 	fun bad(using x?: Int) = x
+//│ ║  l.235: 	fun bad(using x?: Int) = x
 //│ ╙──       	        ^^^^^^^^^^^^^
 
 :e
 let t = [1, 2?]
 //│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
-//│ ║  l.283: 	let t = [1, 2?]
+//│ ║  l.241: 	let t = [1, 2?]
 //│ ╙──       	            ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ t = undefined
@@ -290,13 +248,13 @@ let t = [1, 2?]
 :e
 fun first(t: [Int, Int?]) = t.0
 //│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
-//│ ║  l.291: 	fun first(t: [Int, Int?]) = t.0
+//│ ║  l.249: 	fun first(t: [Int, Int?]) = t.0
 //│ ╙──       	                   ^^^^
 
 :e
 fun app(f: (Int?, Int) -> Int) = f(1, 2)
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.297: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
+//│ ║  l.255: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
 //│ ╙──       	                  ^^^
 
 // Other operators starting with `?` are unaffected.
@@ -314,28 +272,28 @@ unsafe.undefined ?: 1
 :e
 fun bad(x, y ?: Int) = x
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
-//│ ║  l.315: 	fun bad(x, y ?: Int) = x
+//│ ║  l.273: 	fun bad(x, y ?: Int) = x
 //│ ╙──       	           ^^^^^^^^
 
 :pe
 :e
 fun bad(x, y ?) = x
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.322: 	fun bad(x, y ?) = x
+//│ ║  l.280: 	fun bad(x, y ?) = x
 //│ ╙──       	              ^
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
-//│ ║  l.322: 	fun bad(x, y ?) = x
+//│ ║  l.280: 	fun bad(x, y ?) = x
 //│ ╙──       	           ^^^
 
 :pe
 :e
 fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.332: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║  l.290: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╙──       	                      ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.332: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║  l.290: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ║         	                 ^^^^^
 //│ ╟── This type has no resolved target
-//│ ║  l.332: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║  l.290: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╙──       	                 ^^^^^

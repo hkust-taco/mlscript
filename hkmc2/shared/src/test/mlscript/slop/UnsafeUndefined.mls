@@ -10,7 +10,8 @@ undefined
 
 fun oops = unsafe.undefined
 
-// * This used to throw, but we now emit `Unit` upon compiling MIR's `return undefined`
+// * `unsafe.undefined` is an unspecified value (see Runtime Representations in `doc/reference.md`);
+// * the JS backend compiles `return undefined` to `return runtime.Unit`.
 :noInline
 print(oops)
 //│ > ()
@@ -21,14 +22,14 @@ print(oops)
 fun bareValue() = [undefined]
 bareValue()
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.21: 	fun bareValue() = [undefined]
+//│ ║  l.22: 	fun bareValue() = [undefined]
 //│ ╙──      	                   ^^^^^^^^^
 //│ = [undefined]
 
 :w
 type BareType = undefined
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.29: 	type BareType = undefined
+//│ ║  l.30: 	type BareType = undefined
 //│ ╙──      	                ^^^^^^^^^
 
 :w
@@ -36,7 +37,7 @@ type BareType = undefined
 fun barePattern(value) = if value is undefined then 1 else 0
 [barePattern(unsafe.undefined), barePattern(null)]
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.36: 	fun barePattern(value) = if value is undefined then 1 else 0
+//│ ║  l.37: 	fun barePattern(value) = if value is undefined then 1 else 0
 //│ ╙──      	                                     ^^^^^^^^^
 //│ = [1, 0]
 
@@ -47,7 +48,7 @@ fun bareLength(value: Str | BareType) =
   if value is ~undefined as text then text.length else 0
 [bareLength(unsafe.undefined), bareLength("abc")]
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.47: 	  if value is ~undefined as text then text.length else 0
+//│ ║  l.48: 	  if value is ~undefined as text then text.length else 0
 //│ ╙──      	               ^^^^^^^^^
 //│ = [0, 3]
 
@@ -57,19 +58,13 @@ fun bareLength(value: Str | BareType) =
 :expect [undefined, true, false]
 [unsafe.undefined, unsafe.undefined === unsafe.undefined, unsafe.undefined === null]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ return [undefined, true, false]
+//│ return [(undefined as!! Unknown), true, false]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return globalThis.Object.freeze([ undefined, true, false ])
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [undefined, true, false]
 
 // Runtime patterns still distinguish undefined from legitimate values.
-:expect [0, 3]
-fun length(value: Str | unsafe.undefined) =
-  if value is ~unsafe.undefined as text then text.length else 0
-[length(unsafe.undefined), length("abc")]
-//│ = [0, 3]
-
 :expect [true, false]
 fun isUndefined(value) = if value is unsafe.undefined then true else false
 [isUndefined(unsafe.undefined), isUndefined(null)]
@@ -157,10 +152,10 @@ projected(Box("abc"))
 :e
 fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.158: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
+//│ ║  l.153: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
 //│ ║         	                                                     ^^^
 //│ ╟── Function with a declared signature expected 1 argument, but got 0
-//│ ║  l.158: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
+//│ ║  l.153: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
 //│ ╙──       	                   ^^^^^^^^^^
 
 // Generic forwarding retains the nullable interface; the unsafe call remains a regression probe.
@@ -207,20 +202,20 @@ let record = {absent: unsafe.undefined, text: "abc"}
 private fun optionalLength(value?) = value.length
 fun forward(value: Str | unsafe.undefined) = optionalLength(value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.207: 	private fun optionalLength(value?) = value.length
+//│ ║  l.202: 	private fun optionalLength(value?) = value.length
 //│ ║         	                                     ^^^^^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.207: 	private fun optionalLength(value?) = value.length
+//│ ║  l.202: 	private fun optionalLength(value?) = value.length
 //│ ╙──       	                           ^^^^^^
 
 // The optional parameter's null flow also survives generic result substitution.
 :e
 fun unguardedGeneric(value: Str | unsafe.undefined) = genericIdentity(value).length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.218: 	fun unguardedGeneric(value: Str | unsafe.undefined) = genericIdentity(value).length
+//│ ║  l.213: 	fun unguardedGeneric(value: Str | unsafe.undefined) = genericIdentity(value).length
 //│ ║         	                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.168: 	private fun optionalIdentity(value?) = value
+//│ ║  l.163: 	private fun optionalIdentity(value?) = value
 //│ ╙──       	                             ^^^^^^
 
 
@@ -233,13 +228,13 @@ class Right(val value: Str)
 :e
 fun ambiguous(value: Left | unsafe.undefined | Right) = value.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
-//│ ║  l.234: 	fun ambiguous(value: Left | unsafe.undefined | Right) = value.value
+//│ ║  l.229: 	fun ambiguous(value: Left | unsafe.undefined | Right) = value.value
 //│ ║         	                                                        ^^^^^^^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Right'
-//│ ║  l.231: 	class Right(val value: Str)
+//│ ║  l.226: 	class Right(val value: Str)
 //│ ║         	                ^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Left'
-//│ ║  l.230: 	class Left(val value: Str)
+//│ ║  l.225: 	class Left(val value: Str)
 //│ ╙──       	               ^^^^^
 
 

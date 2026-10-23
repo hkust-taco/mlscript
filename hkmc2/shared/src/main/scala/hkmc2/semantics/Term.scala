@@ -750,8 +750,11 @@ final case class LetDecl(sym: LocalVarSymbol | TermSymbol, annotations: Ls[Annot
 /** The symbol identifies the property, independently of any local binding used
   * to evaluate its value. Computed keys also have an identity, but cannot be
   * selected statically until their key is known. Cloning preserves this identity.
+  * `mut` marks a field written `mut f: ...`, which can be assigned. Other fields are immutable,
+  * unless their whole record is mutable (`mut {...}`, see RecordMember); a record type's field
+  * marked `mut` can be assigned values of its type through the values that the type describes.
   */
-final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val key: Opt[MemberKey]) extends Statement, AutoLocated:
+final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val mut: Bool, val key: Opt[MemberKey]) extends Statement, AutoLocated:
   // The two-argument RcdField.apply sets sym.tsym and its definition before
   // constructing this node. Lowering clones reuse the same initialized symbols.
   val tsym: TermSymbol = sym.tsym.get
@@ -761,18 +764,20 @@ final case class RcdField(field: Term, rhs: Term, sym: BlockMemberSymbol)(val ke
     case _ => ()
 
 object RcdField:
-  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, N)
-  def signature(field: Term, sign: Term)(using State): RcdField = make(field, sign, true, N)
-  def signature(field: Term, sign: Term, symbol: SymbolKey)(using State): RcdField =
-    make(field, sign, true, S(symbol))
-  private def make(field: Term, rhs: Term, signature: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
+  // Lowering and pattern compilation synthesize immutable fields after source erasure.
+  def apply(field: Term, rhs: Term)(using State): RcdField = make(field, rhs, false, false, false, N)
+  def source(field: Term, rhs: Term, mut: Bool)(using State): RcdField = make(field, rhs, false, true, mut, N)
+  def signature(field: Term, sign: Term, mut: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
+    make(field, sign, true, true, mut, symbol)
+  private def make(field: Term, rhs: Term, signature: Bool, source: Bool, mut: Bool, symbol: Opt[SymbolKey])(using State): RcdField =
     val name = field match
       case Term.Lit(Tree.StrLit(name)) => name
       case _ => "computed field"
     val id = new Tree.Ident(name)
     id.withLocOf(field)
     val sym = new BlockMemberSymbol(name, Nil)
-    val tsym = TermSymbol(RecordField, N, id, erasedType = N)
+    val tsym = TermSymbol(RecordField, N, id)
+    if !source then tsym.erasedType = N
     sym.tsym = S(tsym)
     // Value-field lookup removes the synthetic definition's capture mark, leaving
     // enclosing call-site marks intact. A structural type field instead refers
@@ -781,7 +786,7 @@ object RcdField:
       if signature then S(rhs) else N,
       if signature then N else S(Term.Capture(rhs, tsym)), TermDefFlags.empty, Modulefulness.none, symbol.toList.map(Annot.JsSymbol(_)(field.toLoc)), N)(field.toLoc, field.toLoc, N))
     sym.complete()
-    RcdField(field, rhs, sym)(symbol.orElse(field match
+    RcdField(field, rhs, sym)(mut, symbol.orElse(field match
       case Term.Lit(Tree.StrLit(name)) => S(name)
       case _ => N))
 final case class RcdSpread(rcd: Term) extends Statement, AutoLocated
@@ -876,6 +881,20 @@ final case class TermDefinition(
     if (k is syntax.Fun) && body.nonEmpty then annotations.collectFirst:
       case annotation: Annot.Async => annotation
     else N
+  /** A generator call returns a generator object; the body's result is only the payload of its
+    * final step. The elaborator rejects the annotation on functions without a parameter list,
+    * which are then compiled as ordinary functions.
+    */
+  def generatorAnnotation: Opt[Annot.Generator] =
+    if (k is syntax.Fun) && body.nonEmpty && params.nonEmpty then annotations.collectFirst:
+      case annotation: Annot.Generator => annotation
+    else N
+  /** The annotation whose lowering replaces the function's result by a wrapper object
+    * (a promise or a generator) once all of its written parameter lists have been applied.
+    * Async generators are not modeled: a function with both annotations is treated as async.
+    */
+  def resultWrapperAnnotation: Opt[Annot.Async | Annot.Generator] =
+    asyncAnnotation.orElse(generatorAnnotation)
   /** A result annotation denotes the whole result; a separate function signature
     * includes the arrows corresponding to the definition's written parameter lists.
     */

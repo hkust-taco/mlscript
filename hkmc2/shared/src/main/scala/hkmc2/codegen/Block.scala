@@ -374,7 +374,8 @@ end Block
 object Block:
   /** The union of the types returned from `block`, whose canonical form is their least upper bound.
     *
-    * `N` means there are no returns; an untyped return contributes `Unknown` instead. Nested function, lambda,
+    * `N` means there are no constraining returns: `undefined` can inhabit any representation. Other untyped
+    * returns contribute `Unknown` instead. Nested function, lambda,
     * and class bodies have their own returns and are excluded. All other returns count, including unreachable
     * ones, since backends such as Wasm still validate their types.
     *
@@ -385,7 +386,7 @@ object Block:
     val types = Buffer.empty[ErasedValueType]
     val collector = new BlockTraverserShallow:
       override def applyBlock(b: Block): Unit = b match
-        case Return(res) => types += res.erasedValueType_!
+        case Return(res) => if !res.isUndefined then types += res.erasedValueType_!
         case _ => super.applyBlock(b)
     collector.applyBlock(block)
     Option.when(types.nonEmpty)(ErasedType.Union.mk(types))
@@ -833,7 +834,13 @@ private[codegen] object InlinerBodySummary:
 
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
-    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasedType = N)
+    // * Generated callables have a known function representation even when their result is unknown.
+    // * In particular, lowering a lambda must not introduce a checked Function cast that makes
+    // * its uses opaque to dead-parameter elimination and deforestation.
+    // * Definitions without parameter lists are getters, whose value representation is still unknown.
+    val erasedType = Option.when(params.nonEmpty):
+      ErasedType.FuncRef(S(false), params.map(_.params.map(_.sym.erasedType)), N)
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasedType)
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
 
@@ -1159,6 +1166,10 @@ sealed abstract class Result extends Located, HasErasedType:
     case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
     case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
     // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
+    // * WORKAROUND (see `semantics.BuiltinOperatorResults`): builtin operators have no declared signature,
+    // * so their results are approximated from the representations of their operands.
+    case Call(Value.SimpleRef(op: BuiltinSymbol), args :: Nil) if args.forall(_.spread.isEmpty) =>
+      ErasedType.builtinOperatorResult(op.nme, args.map(_.value))
     case Call(fun, argss) => fun.targetSymbol match
       case S(ts: TermSymbol) => ts.erasedType match
         case S(ErasedType.FuncRef(rsc, paramLists, ret)) =>
@@ -1190,7 +1201,20 @@ sealed abstract class Result extends Located, HasErasedType:
       case sym => sym.asCls.flatMap(_.erasedType)
     // * A tuple literal is typed as `Array` at runtime.
     case Tuple(_, _) => S(ErasedType.Array)
+    // * Avoid a redundant cast around a function literal: in JavaScript that
+    // * would also prevent assignment from supplying the function's inferred name.
+    case _: Lambda => S(ErasedType.Function(S(false)))
     case _ => N
+
+  /** `undefined` is an unspecified value of any representation, including unboxed primitives.
+    * Casts retain the expected representation but do not constrain the underlying unspecified value.
+    * Reading back an `undefined` stored in a slot is undefined behavior (see Runtime Representations in
+    * `doc/reference.md`), so a backend may materialize it as any value of the slot's representation.
+    */
+  def isUndefined: Bool = this match
+    case Value.Lit(Tree.UnitLit(false)) => true
+    case Cast(value, _, _) => value.isUndefined
+    case _ => false
 
   /** Coerces this result to `expected`, yielding it unchanged when no coercion is required.
     *
@@ -1203,13 +1227,16 @@ sealed abstract class Result extends Located, HasErasedType:
   def coerceTo(expected: ErasedType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
     val actual = erasedValueType_!.canonicalize
     val declared = expected.canonicalize
-    ErasedType.needsCast(actual, declared) match
+    val cast =
+      if isUndefined && !declared.isInstanceOf[ErasedType.Incompatible] then S(true)
+      else ErasedType.needsCast(actual, declared)
+    cast match
       case S(false) => this
       case S(true) =>
         val target = expected match
           case ft: ErasedFuncType => ErasedType.Function(ft.rsc)
           case v: ErasedValueType => v
-        Cast(this, target, config.checkCasts)(loc)
+        Cast(this, target, config.checkCasts && !isUndefined)(loc)
       case N =>
         // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
         def membersOf(et: CanonicalErasedType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
@@ -1335,7 +1362,8 @@ case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: I
   *
   * Invariants:
   * - `value` is not a `Cast`.
-  * - `target` must be a proper subtype of `value`'s erased type.
+  * - `target` must be a proper subtype of `value`'s erased type, unless `value` is `undefined`, whose
+  *   representation is supplied by the cast.
   */
 case class Cast private(value: Result, target: ErasedValueType, check: Bool)(val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): Cast = if loc == toLoc then this else copy()(loc)
@@ -1343,7 +1371,8 @@ case class Cast private(value: Result, target: ErasedValueType, check: Bool)(val
 object Cast:
   /** Builds a cast while collapsing a nested cast.
     *
-    * This node is malformed if the target type is not a proper subtype of the value's erased type.
+    * Except for `undefined`, this node is malformed if the target type is not a proper subtype of the value's
+    * erased type.
     *
     * Collapsing `Cast(Cast(v, T), U)` to `Cast(v, U)` drops the inner test. The `T`-typed intermediate goes with it,
     * so no value is left in a wrongly-typed slot. However, an unchecked failure *can be lost* - if a cast is

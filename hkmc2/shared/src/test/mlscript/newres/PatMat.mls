@@ -113,10 +113,19 @@ test(bz)
 //│ ═══[RUNTIME ERROR] Error: match error
 
 
+// The earlier worksheet block fixed x's representation to Foo.
+:ge
 set x = bz
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Baz' at an unrelated type 'Foo'
+//│ ║  l.118: 	set x = bz
+//│ ╙──       	    ^^^^^^
 
 :breakme // Note: if compiled together with it, this would make the previous code ambiguous
+:ge
 x = bz
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Baz' at an unrelated type 'Foo'
+//│ ║  l.24: 	let x = Foo(Bar)
+//│ ╙──      	    ^
 
 
 let x = if maybe then Bar else bz
@@ -125,7 +134,7 @@ let x = if maybe then Bar else bz
 :e
 x.b
 //│ ╔══[COMPILATION ERROR] This selection of member 'b' is ambiguous, as it has multiple resolved targets
-//│ ║  l.126: 	x.b
+//│ ║  l.135: 	x.b
 //│ ║         	^^^
 //│ ╟── target: function 'b' in overloaded function and class 'Baz'
 //│ ║  l.7: 	class Baz(c) { fun b = c }
@@ -167,7 +176,7 @@ if Foo(Predef) is
 val f = case
   Foo(y) then y.b
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.168: 	  Foo(y) then y.b
+//│ ║  l.177: 	  Foo(y) then y.b
 //│ ║         	              ^^^
 //│ ╟── Cannot resolve member 'b' of a value with unknown shape.
 //│ ╟── This constructor field may contain a value of unknown shape.
@@ -175,7 +184,7 @@ val f = case
 //│ ║       	              ^
 //│ ╟── Parameter 'caseScrut' admits values of unknown shape.
 //│ ╟── 'f' is exposed by this compilation unit.
-//│ ║  l.167: 	val f = case
+//│ ║  l.176: 	val f = case
 //│ ╙──       	^^^^^
 //│ f = fun
 

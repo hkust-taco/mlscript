@@ -1,0 +1,67 @@
+:.
+:global
+:flowBasedOpt mono
+:noInline
+
+
+data class ProofBox(x: Int)
+data class OtherBox(x: Int, y: Int)
+//│ Wasm result:
+//│ = {}
+
+
+// A constructor that passes a cast cannot justify dropping a failing input to it.
+// Both branches reach the same monomorphic cast, even though one is not executed.
+:re
+:soir
+fun mixedCast(flag: Bool): Int =
+  fun check(x: Any): Int =
+    val unused: ProofBox = x
+    42
+  if flag then check(ProofBox(1)) else check(OtherBox(2, 3))
+mixedCast(false)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define mixedCast⁰ as fun mixedCast¹(flag) {
+//│   let check, tmp, tmp1;
+//│   define check as fun check⁰(x) {
+//│     do (x as! ProofBox⁰);
+//│     return 42
+//│   };
+//│   match flag
+//│     true =>
+//│       set tmp = ProofBox¹(1);
+//│       return check⁰(tmp)
+//│     else
+//│       set tmp1 = OtherBox⁰(2, 3);
+//│       return check⁰(tmp1)
+//│   end
+//│ };
+//│ return mixedCast¹(false)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// Unknown inputs invalidate the proof for the known constructor too.
+:re
+:soir
+fun unknownCast(x: Any): Int =
+  fun check(y: Any): Int =
+    val unused: ProofBox = y
+    42
+  check(ProofBox(1))
+  check(x)
+unknownCast("not a box")
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define unknownCast⁰ as fun unknownCast¹(x) {
+//│   let check, tmp;
+//│   define check as fun check¹(y) {
+//│     do (y as! ProofBox⁰);
+//│     return 42
+//│   };
+//│   set tmp = ProofBox¹(1);
+//│   do check¹(tmp);
+//│   return check¹(x)
+//│ };
+//│ return unknownCast¹("not a box")
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

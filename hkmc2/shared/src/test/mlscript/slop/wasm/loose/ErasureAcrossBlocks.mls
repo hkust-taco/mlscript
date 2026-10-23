@@ -1,0 +1,32 @@
+:.
+
+// See `slop/loose/ErasureAcrossBlocks.mls`: without strict resolution, worksheet blocks infer the
+// representations of their public definitions from their own uses only.
+
+
+fun ident(x) = x
+ident(1)
+//│ Wasm result:
+//│ = 1
+
+:ge
+ident("a")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.13: 	ident("a")
+//│ ╙──      	      ^^^
+//│ Wasm result:
+//│ = "a"
+
+
+class Foo
+class Box(val v)
+let b = Box(new Foo)
+//│ Wasm result:
+//│ = {}
+
+// Reading a field whose representation is another session class crashes code generation: the session module
+// does not import the types that the struct types it imports refer to. A declared field type (`val v: Foo`)
+// fails the same way; inference makes such fields more common.
+:fixme
+b.v
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for type index `$Foo`

@@ -346,13 +346,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   // Assign(td.sym, r,
                   //   term(st.Blk(stats, res))(k)))
                   Define(
-                    ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
+                    // A field synthesized from a constructor parameter has an unlocated body (the parameter
+                    // reference); its declared name then locates diagnostics about the field's representation.
+                    ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc.orElse(td.tsym.toLoc)))(cfgOverride, td.annotations),
                     blockImpl(stats, res),
                   )
             case syntax.Fun =>
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
               val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
-                setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+                setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), summon[Erasure].bodyResultType(td))
               Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations),
                 blockImpl(stats, res))
             case syntax.LetBind | syntax.HandlerBind | syntax.RecordField => fail:
@@ -595,7 +597,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case (ps :: remainingParams, args :: remainingArgs) =>
         def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
         if isConstructor then lowerConstructorArgs(args, ps, isMlsFun)(next)
-        else lowerArgs(args, expectedParamTypes(ps)): as =>
+        else lowerArgs(args, expectedParamTypes(ps, args)): as =>
           // Trailing parameters are selected from the end of the source argument list. Padding
           // that list here would shift them; their extraction prologue supplies missing nulls.
           if useMlsDefaults && ps.variadic.forall(_.trailing.isEmpty) && as.forall(_.spread.isEmpty) then
@@ -706,7 +708,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case (arg :: rest, _ :: params) => loop(rest, params, arg :: acc)
         case _ => k(acc.reverse ::: args)
       loop(args, ps.params, Nil)
-    lowerArgs(arg, expectedParamTypes(ps)): args =>
+    lowerArgs(arg, expectedParamTypes(ps, arg)): args =>
       if !ps.params.exists(_.flags.opt) then k(args)
       else if args.forall(_.spread.isEmpty) then
         val padded = if isMls then OptionalParams.pad(ps.params, args).getOrElse(args)
@@ -1387,7 +1389,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             N
           case Some(bod) =>
             reportAnnotations(td, td.annotations)
-            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), summon[Erasure].bodyResultType(td))
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
       loweringCtx.collectScopedSym(lhs)
@@ -1612,11 +1614,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         subTerm_nonTail(rhs): value =>
           AssignField(ref, Tree.Ident("value"), value, k(value))(N)
     
-    case Mut(Rcd(mut, stats)) => // TODO: warn when in statement position
+    case Mut(rcd: st.Rcd) => // TODO: warn when in statement position
       // * Note: I don't think this is supposed to happen...
-      block(stats, L((mut, Nil, trm.toLoc)))(k)
-    case Rcd(mut, stats) => // TODO: warn when in statement position
-      block(stats, L((mut, Nil, trm.toLoc)))(k)
+      block(rcd.stats, L((allocatesMutable(rcd), Nil, trm.toLoc)))(k)
+    case rcd: st.Rcd => // TODO: warn when in statement position
+      block(rcd.stats, L((allocatesMutable(rcd), Nil, trm.toLoc)))(k)
     
     case Missing => fail:
       ErrorReport(
@@ -1805,7 +1807,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       .flatMap: td =>
         td.body.map: bod =>
           val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
-            setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+            setupFunctionDef(td.params, bod, S(td.sym.nme), summon[Erasure].bodyResultType(td))
           reportAnnotations(td, td.extraAnnotations)
           val cfgOverride = definitionConfigOverride(td.extraAnnotations)
           FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations)
@@ -1914,17 +1916,40 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     *  - Otherwise, `r` is returned unchanged.
     *
     * An absent `expected` is an unannotated slot, which holds the top reference type rather than no type at all.
+    * When the caller has no better location for the coercion (e.g., an implicit return), diagnostics point at
+    * the coerced value itself.
     */
   def castTo[R <: Result](r: R, expected: Opt[ErasedType], loc: Opt[Loc]): (R | Cast) =
-    r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc)
+    r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(r.toLoc))
+
+  /** Whether a record literal is allocated as a mutable object, rather than frozen: a mutable record (`mut {...}`)
+    * and a record with a field declared `mut` (see `RcdField`). The other fields of the latter are immutable as well,
+    * but are not frozen at run time: resolution assumes that they are never assigned, which type checking will ensure.
+    */
+  private def allocatesMutable(rcd: st.Rcd): Bool = rcd.mut || rcd.stats.exists:
+    case field: RcdField => field.mut
+    case _ => false
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedType] =
     s.collect { case t: TermSymbol => t.erasedType }.flatten
 
-  /** The declared erased types of a parameter list's fixed parameters (excluding rest params). */
-  private def expectedParamTypes(ps: ParamList): Ls[Opt[ErasedType]] =
-    ps.params.map(_.sym.erasedType)
+  /** Match fixed argument positions to their source slots before trailing parameters are packed
+    * into a rest array. With spreads, only the required prefix has a known alignment; the
+    * extraction prologue coerces the remaining values when it binds their destination slots.
+    */
+  private def expectedParamTypes(ps: ParamList, args: Term): Ls[Opt[ErasedType]] =
+    if ps.trailingParams.isEmpty then ps.params.map(_.sym.erasedType)
+    else args match
+      case Tup(fields) if fields.forall {
+        case Fld(FldFlags.benign(), _, N) => true
+        case _ => false
+      } =>
+        val leading = ps.params.take((fields.length - ps.trailingParams.length).max(0))
+        val trailing = ps.trailingParams.takeRight(fields.length - leading.length)
+        leading.map(_.sym.erasedType) :::
+          List.fill(fields.length - leading.length - trailing.length)(N) ::: trailing.map(_.sym.erasedType)
+      case _ => ps.params.take(ps.leadingRequiredCount).map(_.sym.erasedType)
 
 
   def program(main: st.Blk, symbolsToPreserve: Set[ScopedSymbol]): Program =
@@ -2020,7 +2045,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           :: trailing.zipWithIndex.map((p, i) => p.sym -> at(args, i - k))
         (optional ::: variadicParam :: trailing).foreach(p => loweringCtx.collectScopedSym(p.sym))
         val extractedRest = extractions.foldRight(body):
-          case ((sym, res), rest) => Assign(sym, res, rest)
+          case ((sym, res), rest) => Assign(sym, castTo(res, sym.erasedType, sym.toLoc), rest)
         // * Exclude trailing arguments before checking optional slot presence, so they cannot
         // * accidentally fill a missing optional parameter.
         val extracted = if optional.isEmpty then extractedRest else

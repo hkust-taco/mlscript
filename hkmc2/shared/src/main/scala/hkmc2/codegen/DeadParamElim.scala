@@ -133,6 +133,7 @@ object DeadParamElim:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    eCtx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program = cfg.flowBasedOpt.fold(p):
     FlowAnalysisBasedRewrite.rewriteWith(p, _, eta = false, dce = false)

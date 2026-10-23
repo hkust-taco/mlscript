@@ -119,7 +119,7 @@ print(x)
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
 //│ x = tmp;
-//│ return Predef.print(tmp)
+//│ return Predef.print(x)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
 //│ x = 1

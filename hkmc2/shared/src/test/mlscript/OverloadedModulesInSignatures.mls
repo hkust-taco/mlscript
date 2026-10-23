@@ -25,7 +25,9 @@ module TrmMod with
 
 :e
 fun f: ClsMod = 42
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'ClsMod'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'ClsMod'
+//│ ║  l.27: 	fun f: ClsMod = 42
+//│ ╙──      	                ^^
 
 :rt
 f
@@ -76,10 +78,12 @@ f
 :e
 fun f: TrmMod = 42
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
-//│ ║  l.77: 	fun f: TrmMod = 42
+//│ ║  l.79: 	fun f: TrmMod = 42
 //│ ║        	       ^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'module TrmMod'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'module TrmMod'
+//│ ║  l.79: 	fun f: TrmMod = 42
+//│ ╙──      	                ^^
 
 :sjs
 fun f = TrmMod
@@ -141,10 +145,10 @@ module Foo
 :e
 fun f(x: Foo): Foo = x
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.142: 	fun f(x: Foo): Foo = x
+//│ ║  l.146: 	fun f(x: Foo): Foo = x
 //│ ╙──       	         ^^^
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.142: 	fun f(x: Foo): Foo = x
+//│ ║  l.146: 	fun f(x: Foo): Foo = x
 //│ ╙──       	               ^^^
 
 fun f(x: Foo[Int]): Foo[Int] = x
@@ -154,10 +158,10 @@ fun f(module x: Foo): module Foo = x
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.155: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.159: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.155: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.159: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 
 

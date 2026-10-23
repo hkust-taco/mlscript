@@ -58,7 +58,11 @@ inc / 2
 
 :sjs
 :re
+:ge
 n / 2
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
+//│ ║  l.62: 	n / 2
+//│ ╙──      	^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return runtime.safeCall(n(2))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

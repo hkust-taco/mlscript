@@ -144,8 +144,8 @@ fun printRaw(x) = console.log(render(x, indent: 2, breakLength: 76))
 // TraceLogger
 
 module TraceLogger with
-  mut val enabled = false
-  mut val indentLvl = 0
+  mut val enabled: Bool = false
+  mut val indentLvl: Int = 0
   fun indent() =
     if enabled then
       let prev = indentLvl
@@ -170,10 +170,10 @@ module TraceLogger with
 // Casts below decode slots whose types are fixed by this layout.
 
 mut val curEffect: EffectSig | null = null
-mut val resumeValue = null
-mut val resumeArr = null
-mut val resumeIdx = null
-mut val resumePc = -1
+mut val resumeValue: Any = null
+mut val resumeArr: Array | null = null
+mut val resumeIdx: Int | null = null
+mut val resumePc: Int = -1
 
 object FatalEffect
 object PrintStackEffect
@@ -235,7 +235,7 @@ data class ContTrace(
 data class EffectSig(contTrace: ContTrace, handler: Any, handlerFun: Function | Bool | null)
 
 abstract class NonLocalReturn with
-  fun ret(value)
+  fun ret(value: Any): Any
 
 data class FnLocalsInfo(fnName: Str, locals: Array[LocalVarInfo])
 data class LocalVarInfo(localName: Str, value: Any)
@@ -511,10 +511,10 @@ fun toJsAsync(thunk: () -> Any) =
   Promise.resolve(r)
 
 // stack safety
-mut val stackLimit = 0 // How deep the stack can go before heapifying the stack
-mut val stackDepth = 0
-mut val stackHandler = null
-mut val stackResume = null
+mut val stackLimit: Int = 0 // How deep the stack can go before heapifying the stack
+mut val stackDepth: Int = 0
+mut val stackHandler: Any = null
+mut val stackResume: Function | null = null
 
 object StackDelayHandler with
   fun delay() = mkEffect of this, k =>
@@ -548,6 +548,3 @@ class Int31(v: Int) with
   fun zext() = bitand(v, bitnot(shl(1, 31))) as Int
   fun sext() = bitor(v, shl(1, 31)) as Int
 
-fun plus_impl(lhs, rhs) = if lhs is
-  Int31 and rhs is Int31 then lhs + rhs
-  else unreachable

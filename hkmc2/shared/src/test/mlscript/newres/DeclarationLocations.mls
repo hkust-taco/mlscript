@@ -320,6 +320,15 @@ new Opened().f(1, 2)
 //│ ╟── Function 'f' expected 1 argument, but got 2
 //│ ║  l.313: 	  open fun f(x) =
 //│ ╙──       	  ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Open member 'f' is exposed to other compilation units, which can override it; annotate the types of its parameters and result
+//│ ║  l.313: 	  open fun f(x) =
+//│ ║         	           ^
+//│ ╟── Parameter 'x' has no type annotation
+//│ ║  l.313: 	  open fun f(x) =
+//│ ║         	             ^
+//│ ╟── Its result has no type annotation
+//│ ║  l.313: 	  open fun f(x) =
+//│ ╙──       	           ^
 //│ = 3
 
 // Each call cites the unknown parameter's declaration without repeating the callee span.
@@ -329,22 +338,22 @@ fun invokeAtEachUse(f) =
   f()
   alias()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.330: 	  alias()
+//│ ║  l.339: 	  alias()
 //│ ║         	  ^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'f' admits values of unknown shape.
-//│ ║  l.327: 	fun invokeAtEachUse(f) =
+//│ ║  l.336: 	fun invokeAtEachUse(f) =
 //│ ║         	                    ^
 //│ ╟── 'invokeAtEachUse' is exposed by this compilation unit.
-//│ ║  l.327: 	fun invokeAtEachUse(f) =
+//│ ║  l.336: 	fun invokeAtEachUse(f) =
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.329: 	  f()
+//│ ║  l.338: 	  f()
 //│ ║         	  ^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'f' admits values of unknown shape.
-//│ ║  l.327: 	fun invokeAtEachUse(f) =
+//│ ║  l.336: 	fun invokeAtEachUse(f) =
 //│ ║         	                    ^
 //│ ╟── 'invokeAtEachUse' is exposed by this compilation unit.
-//│ ║  l.327: 	fun invokeAtEachUse(f) =
+//│ ║  l.336: 	fun invokeAtEachUse(f) =
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^

@@ -1,0 +1,83 @@
+:.
+
+// Worksheet blocks are compiled one after the other, and the representations erasure infers for a block's
+// definitions are final once it is compiled. Without strict resolution, a block does not expose its public
+// definitions to unknown callers (see `Elaborator.topLevel`), so their representations are inferred from the
+// uses in their own block only, and later blocks must use them consistently. Compiled files are not affected:
+// a compilation unit is elaborated with its exports exposed.
+
+
+fun ident(x) = x
+ident(1)
+//│ = 1
+
+// The parameter of `ident` was inferred as an `Int` from the block above.
+:ge
+ident("a")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.16: 	ident("a")
+//│ ╙──      	      ^^^
+//│ = "a"
+
+
+// Later blocks cannot widen the representation of a top-level `let`, which is not exposed to their writes
+// even under strict resolution.
+let counter = 1
+//│ counter = 1
+
+:ge
+set counter = "hello"
+counter
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.29: 	set counter = "hello"
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
+//│ = "hello"
+
+
+// The representation of a mutable field is inferred from its initializer and from the values that its own block
+// assigns to it, which later blocks cannot widen either. Without strict resolution, its class is not exposed.
+class Cell(mut val value)
+let cell = Cell(1)
+set cell.value = 2
+//│ cell = Cell(2)
+
+:ge
+set cell.value = "hello"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.45: 	set cell.value = "hello"
+//│ ╙──      	    ^^^^^^^^^^
+
+class Mixed(mut val value)
+let mixed = Mixed(1)
+set mixed.value = "hello"
+//│ mixed = Mixed("hello")
+
+set mixed.value = "again"
+
+// The same holds for the fields of mutable records.
+let record = mut {count: 0}
+//│ record = {count: 0}
+
+:ge
+set record.count = "many"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.62: 	set record.count = "many"
+//│ ╙──      	    ^^^^^^^^^^^^
+
+let fields = {mut count: 0, label: "count"}
+//│ fields = {count: 0, label: "count"}
+
+:ge
+set fields.count = "many"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.71: 	set fields.count = "many"
+//│ ╙──      	    ^^^^^^^^^^^^
+
+// The values that a record type describes can be assigned values of the types of its mutable fields.
+class Holder(mut val item)
+let holder = Holder(1)
+fun accept(described: {mut item: Str}) = ()
+accept(holder)
+//│ holder = Holder(1)
+
+set holder.item = "str"

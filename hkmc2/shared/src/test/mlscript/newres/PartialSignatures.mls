@@ -131,6 +131,12 @@ read(new Child)
 //│ ╟── The shape of this value is unknown.
 //│ ║  l.125: 	private fun read(x: Base) = x.item().value
 //│ ╙──       	                            ^^^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'item' produces values represented as 'Other', which the member it overrides cannot produce: its results are represented as 'Item'
+//│ ║  l.124: 	  override fun item() = Other(2)
+//│ ║         	               ^^^^
+//│ ╟── The overridden member 'item' is defined here
+//│ ║  l.122: 	  open fun item() = Item(1)
+//│ ╙──       	           ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A separate polymorphic signature retains binders for explicit type application.
@@ -158,10 +164,10 @@ class Child extends Base with
 let identity = (x => x) as [A] -> A -> A
 identity[Base](new Child).extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.159: 	identity[Base](new Child).extra
+//│ ║  l.165: 	identity[Base](new Child).extra
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.159: 	identity[Base](new Child).extra
+//│ ║  l.165: 	identity[Base](new Child).extra
 //│ ╙──       	         ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ identity = fun identity
@@ -171,10 +177,10 @@ identity[Base](new Child).extra
 let identity = (x => x) as [A] -> A -> A
 identity[Int, Int](1)
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.172: 	identity[Int, Int](1)
+//│ ║  l.178: 	identity[Int, Int](1)
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature expected 1 type argument, but got 2
-//│ ║  l.171: 	let identity = (x => x) as [A] -> A -> A
+//│ ║  l.177: 	let identity = (x => x) as [A] -> A -> A
 //│ ╙──       	                                  ^^^^^^
 //│ = 1
 //│ identity = fun identity

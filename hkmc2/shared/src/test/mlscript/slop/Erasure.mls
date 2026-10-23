@@ -1,0 +1,166 @@
+:.
+#lang(0.3.x)
+open annotations
+
+// A generator override's callable returns Iterator, but its body's payload can have any representation.
+:noInline
+:sir
+:siret
+:expect {value: "payload", done: true}
+private class GeneratorBase() with
+  @annotations.generator
+  open fun generate(value: Any): Any = value
+private class GeneratorChild() extends GeneratorBase() with
+  @annotations.generator
+  override fun generate(value: Any) = value
+GeneratorChild().generate("payload").next()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: GeneratorChild⁰, tmp1: Iterator⁰;
+//│ @private
+//│ define GeneratorBase⁰ as class GeneratorBase² {
+//│   constructor GeneratorBase¹
+//│   method generate⁰ = fun generate¹(value: Unknown): Iterator⁰ {
+//│     return value
+//│   }
+//│ };
+//│ @private
+//│ define GeneratorChild¹ as class GeneratorChild⁰ extends GeneratorBase² {
+//│   constructor GeneratorChild²
+//│   method generate² = fun generate³(value: Unknown): Iterator⁰ {
+//│     return value
+//│   }
+//│ };
+//│ set tmp = GeneratorChild²();
+//│ set tmp1 = tmp.generate³("payload");
+//│ return tmp1.next⁰()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = {value: "payload", done: true}
+
+
+// Removing a checked cast can expose a subclass producer to fusion. Its base-class arm must still match.
+:noInline
+:lift
+:deforest
+:expect 1
+private class Parent()
+private class Child(value: Int) extends Parent()
+private fun classify(value: Any) =
+  val parent: Parent = value
+  if parent is Parent then 1 else 0
+classify(Child(42))
+//│ deforest > >>> fusing >>>
+//│ deforest > Child⁰(42) ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > <<< fusing <<<
+//│ = 1
+
+
+// Tuple producers have Array's class identity and the implicit Object supertype.
+:noInline
+:lift
+:deforest
+:expect [1, 1, 1]
+private fun arrayKind(value: Any) = if value is Array then 1 else 0
+private fun objectKind(value: Any) = if value is Object then 1 else 0
+[arrayKind([1, 2]), objectKind([3, 4]), objectKind(Child(0))]
+//│ deforest > >>> fusing >>>
+//│ deforest > Child⁰(0) ->
+//│ deforest > 	match: value⁰
+//│ deforest > [3, 4] ->
+//│ deforest > 	match: value⁰
+//│ deforest > [1, 2] ->
+//│ deforest > 	match: value¹
+//│ deforest > <<< fusing <<<
+//│ = [1, 1, 1]
+
+
+// Default branches must specialize their field parameters separately for constructors of different arities.
+:noInline
+:lift
+:deforest
+:expect [0, 0]
+private class A(v: Int)
+private class B()
+private class Target()
+private fun make(flag: Bool) = if flag then A(1) else B()
+private fun fallback(value: Any) = if value is Target then 1 else 0
+[fallback(make(true)), fallback(make(false))]
+//│ deforest > >>> fusing >>>
+//│ deforest > A⁰(1) ->
+//│ deforest > 	match: value²
+//│ deforest > B⁰() ->
+//│ deforest > 	match: value²
+//│ deforest > A⁰(1) ->
+//│ deforest > 	match: value²
+//│ deforest > B⁰() ->
+//│ deforest > 	match: value²
+//│ deforest > <<< fusing <<<
+//│ = [0, 0]
+
+
+// Passing a checked cast does not justify dropping the constructor body and its effects.
+:noInline
+:lift
+:deforest
+:expect [1, 1]
+let castCount = 0
+private class CastEffect(value: Int) with
+  set castCount = castCount + 1
+private fun consumeCastEffect(value: Any) =
+  val instance: CastEffect = value
+  if instance is CastEffect then 1 else 0
+[consumeCastEffect(CastEffect(42)), castCount]
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = [1, 1]
+//│ castCount = 1
+
+// A harmless subclass body cannot justify dropping effects in its superclass constructor.
+:noInline
+:lift
+:deforest
+:expect [1, 1]
+let inheritedCount = 0
+private class EffectfulParent() with
+  set inheritedCount = inheritedCount + 1
+private class EffectfulChild(value: Int) extends EffectfulParent()
+private fun consumeInheritedEffect(value: Any) =
+  val instance: EffectfulChild = value
+  if instance is EffectfulChild then 1 else 0
+[consumeInheritedEffect(EffectfulChild(42)), inheritedCount]
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = [1, 1]
+//│ inheritedCount = 1
+
+// Constructor-local writes can change a projected parameter field even without external effects.
+:noInline
+:lift
+:deforest
+:expect 2
+private class ChangedField(mut val value: Int, replacement: Int) with
+  set this.value = replacement
+private fun readChanged(value: Any) =
+  val instance: ChangedField = value
+  instance.value
+readChanged(ChangedField(1, 2))
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 2
+
+// Lifting can add constructor captures beyond the source parameter list.
+:noInline
+:lift
+:deforest
+:expect 2
+private fun readCaptured(captured: Int) =
+  class Captured(val value: Int) with
+    fun capture() = captured
+  fun read(value: Any) =
+    val instance: Captured = value
+    instance.value
+  read(Captured(2))
+readCaptured(1)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 2

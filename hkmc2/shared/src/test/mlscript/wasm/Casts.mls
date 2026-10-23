@@ -3,13 +3,13 @@
 
 
 // In this example, the function call is equivalent to `useBox((id(new Box(42) as!! Box)))`.
-// The `:wat` output below shows this as a `ref.cast` to `(ref $Box)` applied to the result of `id`,
-// which is what the round-trip through an unannotated `id` makes necessary.
+// The `:wat` output below shows this as a `ref.cast` to `(ref null $Box)` applied to the result of `id`,
+// which is what the round-trip through an `Any`-typed `id` makes necessary.
 // Note that `:noInline` is needed here (and below) to prevent `id` from being inlined and the coercion elided.
 :noInline
 :wat
 class Box(val v: Int)
-fun id(a) = a
+fun id(a: Any): Any = a
 fun useBox(b: Box): Int = b.v
 useBox(id(new Box(42)))
 //│ Wat:
@@ -21,7 +21,7 @@ useBox(id(new Box(42)))
 //│   (type $Box_init (func (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))))
 //│   (type $Box_ctor (func (param $v (ref null i31)) (result (ref $Box))))
 //│   (type $id (func (param $a (ref null any)) (result (ref null any))))
-//│   (type $useBox (func (param $b (ref $Box)) (result (ref null i31))))
+//│   (type $useBox (func (param $b (ref null $Box)) (result (ref null i31))))
 //│   (type $entry (func (result (ref null i31))))
 //│   (global $Box_typeinfo (export "Box_typeinfo") (ref $Box_typeinfo) (struct.new $Box_typeinfo
 //│     (i32.const 1)
@@ -50,12 +50,13 @@ useBox(id(new Box(42)))
 //│   (func $id (export "id") (type $id) (param $a (ref null any)) (result (ref null any))
 //│     (return
 //│       (local.get $a)))
-//│   (func $useBox (export "useBox") (type $useBox) (param $b (ref $Box)) (result (ref null i31))
+//│   (func $useBox (export "useBox") (type $useBox) (param $b (ref null $Box)) (result (ref null i31))
 //│     (return
 //│       (struct.get $Box $v
-//│         (local.get $b))))
+//│         (ref.cast (ref $Box)
+//│           (local.get $b)))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
-//│     (local $tmp (ref $Box))
+//│     (local $tmp (ref null $Box))
 //│     (local $tmp1 (ref null any))
 //│     (block (result (ref null i31))
 //│       (local.set $tmp
@@ -67,7 +68,7 @@ useBox(id(new Box(42)))
 //│           (local.get $tmp)))
 //│       (return
 //│         (call $useBox
-//│           (ref.cast (ref $Box)
+//│           (ref.cast (ref null $Box)
 //│             (local.get $tmp1))))))
 //│   (elem $Box_init declare func $Box_init)
 //│   (elem $Box_ctor declare func $Box_ctor)
@@ -149,10 +150,10 @@ wasm.ref.i31(wasm.i32.const(7))
 :noInline
 wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.150: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.151: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ║  l.150: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ║  l.151: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
@@ -177,7 +178,7 @@ unpack(toObj())
 :e
 fun test: Function = id
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.178: 	fun test: Function = id
+//│ ║  l.179: 	fun test: Function = id
 //│ ╙──       	                     ^^
 
 :fixme
@@ -190,13 +191,17 @@ class C
 
 :e
 fun test: Function = new C
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ║  l.193: 	fun test: Function = new C
+//│ ╙──       	                     ^^^^^
 //│ Wasm result:
 //│ = {}
 
 :e
 fun test: Function = (new C) as Object
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ║  l.201: 	fun test: Function = (new C) as Object
+//│ ╙──       	                      ^^^^^
 //│ Wasm result:
 //│ = {}
 
@@ -219,7 +224,7 @@ fun test: Function = castToA(123)
 :e
 castToA(wasm.i32.const(123))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.220: 	castToA(wasm.i32.const(123))
+//│ ║  l.225: 	castToA(wasm.i32.const(123))
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 123
@@ -240,13 +245,13 @@ narrowUnitFromObject(())
 //│ = {}
 
 :sir
-fun narrowUnitFromUntyped(x): () = x
-narrowUnitFromUntyped(())
+fun narrowUnitFromAny(x: Any): () = x
+narrowUnitFromAny(())
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define narrowUnitFromUntyped⁰ as fun narrowUnitFromUntyped¹(x) {
+//│ define narrowUnitFromAny⁰ as fun narrowUnitFromAny¹(x) {
 //│   return (x as! Unit⁰)
 //│ };
-//│ return narrowUnitFromUntyped¹(runtime⁰.Unit⁰)
+//│ return narrowUnitFromAny¹(runtime⁰.Unit⁰)
 //│ Wasm result:
 //│ = {}
 
@@ -273,7 +278,7 @@ narrowUnitInVal(())
 :sir
 :soir
 :re
-fun narrowLocal(x): Object =
+fun narrowLocal(x: Any): Object =
   class Local()
   val y: Local = x
   y
@@ -306,7 +311,7 @@ narrowLocal(42)
 :lift
 :soir
 :re
-fun liftedNarrow(x): Object =
+fun liftedNarrow(x: Any): Object =
   class Lifted()
   fun narrow(y): Lifted = y
   narrow(x)
@@ -323,3 +328,23 @@ liftedNarrow(42)
 //│ return liftedNarrow¹(42)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// Discarding a partial application must still execute its checked argument.
+:noInline
+:re
+fun opaquePartialArg(x: Any): Any = x
+fun discardPartial() =
+  fun checkedPartialArg(x: Box)(y: Int): Int = y
+  let unusedPartial = checkedPartialArg(opaquePartialArg("not a box"))
+  42
+discardPartial()
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// An ascription narrows the dynamically typed result of an operator with a checked cast.
+:expect 43
+42 + 1 as Int
+//│ Wasm result:
+//│ = 43

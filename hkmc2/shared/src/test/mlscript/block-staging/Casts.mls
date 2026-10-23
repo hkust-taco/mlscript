@@ -8,7 +8,7 @@
 :js
 :staging
 class Top(x: Int)
-fun anything(v) = v
+fun anything(v: Any): Any = v
 staged module M with
   fun mk(): Top = anything(1)
 //│ > fun ctor_() = ()

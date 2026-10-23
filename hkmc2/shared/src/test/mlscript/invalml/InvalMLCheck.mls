@@ -38,7 +38,9 @@ fun bar(x) = let t = x + 1 in "aaa"
 :e
 fun baz: Int -> Int
 fun baz(x) = "bbb"
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.40: 	fun baz(x) = "bbb"
+//│ ╙──      	             ^^^^^
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
 //│ ║  l.40: 	fun baz(x) = "bbb"
 //│ ║        	             ^^^^^
@@ -54,7 +56,7 @@ add(1, 2) as Int
 :e
 add(0, 0) as Str
 //│ ╔══[COMPILATION ERROR] Type error in application of type ‹not implemented› with expected type Str
-//│ ║  l.55: 	add(0, 0) as Str
+//│ ║  l.57: 	add(0, 0) as Str
 //│ ║        	^^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: Str
@@ -62,7 +64,7 @@ add(0, 0) as Str
 :e
 fun errAdd(x: Int) = x + "1"
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
-//│ ║  l.63: 	fun errAdd(x: Int) = x + "1"
+//│ ║  l.65: 	fun errAdd(x: Int) = x + "1"
 //│ ║        	                         ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 
@@ -82,11 +84,11 @@ high(x => x)
 :e
 high(x => x + 1)
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type Int
-//│ ║  l.83: 	high(x => x + 1)
+//│ ║  l.85: 	high(x => x + 1)
 //│ ║        	          ^
 //│ ╙── because: cannot constrain  A  <:  Int
 //│ ╔══[COMPILATION ERROR] Type error in application with expected type A
-//│ ║  l.83: 	high(x => x + 1)
+//│ ║  l.85: 	high(x => x + 1)
 //│ ║        	          ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  A
 //│ Type: Int
@@ -110,7 +112,7 @@ fun baz(z) =
 :e
 baz as Int -> (([A] -> A -> A), Int) -> Int
 //│ ╔══[COMPILATION ERROR] Cannot type non-function term Ref(member:baz) as (Int) ->{⊥} ([outer, 'A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
-//│ ║  l.111: 	baz as Int -> (([A] -> A -> A), Int) -> Int
+//│ ║  l.113: 	baz as Int -> (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^
 //│ Type: ⊥
 
@@ -121,7 +123,7 @@ baz(42)
 :e
 baz(42) as (([A] -> A -> A), Int) -> Int
 //│ ╔══[COMPILATION ERROR] Cannot type non-function term App(Ref(member:baz),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as ([outer, 'A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
-//│ ║  l.122: 	baz(42) as (([A] -> A -> A), Int) -> Int
+//│ ║  l.124: 	baz(42) as (([A] -> A -> A), Int) -> Int
 //│ ╙──       	^^^^^^^
 //│ Type: ⊥
 
@@ -142,10 +144,10 @@ id as [A] -> A -> A
 :e
 42 as Int | Num
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
-//│ ║  l.143: 	42 as Int | Num
+//│ ║  l.145: 	42 as Int | Num
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Term shape not yet supported by InvalML: CompType(Asc(Lit(IntLit(42)),Ref(member:Int)),Ref(member:Num),true)
-//│ ║  l.143: 	42 as Int | Num
+//│ ║  l.145: 	42 as Int | Num
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ Type: ⊥
 
@@ -176,7 +178,7 @@ foo
 :e
 foo(42, 1)
 //│ ╔══[COMPILATION ERROR] Type error in integer literal with expected type ¬'A
-//│ ║  l.177: 	foo(42, 1)
+//│ ║  l.179: 	foo(42, 1)
 //│ ║         	        ^
 //│ ╟── because: cannot constrain  Int  <:  ¬'A
 //│ ╟── because: cannot constrain  'A  <:  ¬{Int}

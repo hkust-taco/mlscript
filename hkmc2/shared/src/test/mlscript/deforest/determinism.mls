@@ -19,7 +19,7 @@ if B(1,2,3,4,5) is
 //│ deforest > 	fields: scrut⁰.e⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, e, a, b, c, d, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, $scrut_B, $scrut_rest, B_a, B_b, B_c, B_d, B_e;
+//│ let e, a, b, c, d, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, $scrut_B, $scrut_rest, scrut, B_a, B_b, B_c, B_d, B_e;
 //│ @affine(1) @private
 //│ define $scrut_B as fun $scrut_B⁰(B_a1, B_b1, B_c1, B_d1, B_e1)() {
 //│   set arg$B$0$ = B_a1;
@@ -75,11 +75,11 @@ c2 of A(A(A(A(A(A(1))))))
 //│ deforest > 	fields: arg$A$0$⁴.a¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2$c2, c2$x_A, c2$x_rest, c2$arg$A$0$_A, c2$arg$A$0$_rest, c2$arg$A$0$_A1, c2$arg$A$0$_rest1, c2$arg$A$0$_A2, c2$arg$A$0$_rest2, c2$arg$A$0$_A3, c2$arg$A$0$_rest3, c2$arg$A$0$_A4, c2$arg$A$0$_rest4, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
+//│ let c2$x_A, c2$x_rest, c2$arg$A$0$_A, c2$arg$A$0$_rest, c2$arg$A$0$_A1, c2$arg$A$0$_rest1, c2$arg$A$0$_A2, c2$arg$A$0$_rest2, c2$arg$A$0$_A3, c2$arg$A$0$_rest3, c2$arg$A$0$_A4, c2$arg$A$0$_rest4, c2$c2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
 //│ @private
 //│ define c2$c2 as fun c2$c2⁰(x) {
 //│   let a, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5;
-//│   return x(arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, a)
+//│   return x(arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5, arg$A$0$, a)
 //│ };
 //│ @affine(1) @private
 //│ define c2$x_A as fun c2$x_A⁰(A_a6)(fv_arg$A$0$, fv_arg$A$0$1, fv_arg$A$0$2, fv_arg$A$0$3, fv_arg$A$0$4, fv_arg$A$0$5, fv_a) {
