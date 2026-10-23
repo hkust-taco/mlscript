@@ -1771,6 +1771,7 @@ extends Importer:
       case Tup(_) =>
         ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
           val (syms, nestCtx) = funParams(lhs)
+          seedRestParameter(syms)
           withTypeBinders(Term.Lam(syms, term(rhs, Trm)(using nestCtx)))
       case TyTup(tys) =>
         val constraints = tys.flatMap(maybeConstraint)
@@ -2638,6 +2639,7 @@ extends Importer:
                 s.foreach: sign =>
                   if newResolution then registerParameterSignature(pss, sign)
                   else checkSignatureOptionality(pss, sign)
+              pss.foreach(seedRestParameter)
               
               val body: Opt[Term] = rhs match
                 case N => N
@@ -3210,6 +3212,25 @@ extends Importer:
     ps_ctx._1.variadic.foreach(_.allParams.foreach(checkFlags))
     ps_ctx
   
+  /** An unannotated rest parameter has Array's interface even before any call.
+    * Seed bottom elements as an inferred shape, not an annotation: argument
+    * tuples must still supply their element shapes and positional information.
+    * Call after registering separate signatures so those interfaces remain authoritative.
+    */
+  private def seedRestParameter(ps: ParamList)(using Ctx): Unit = if newResolution then
+    ps.variadic.map(_.param).filter(parameterSignature(_).isEmpty).foreach: p =>
+      val array = prelude.builtins.Array.ref(new Ident("Array").withLoc(p.toLoc))
+      val nothing = prelude.builtins.Nothing.ref(new Ident("Nothing").withLoc(p.toLoc))
+      val initial = Term.TyApp(array, nothing :: Nil)(N).withLoc(p.toLoc)
+      // Builtins ignore local name shadowing, but their interfaces still enter
+      // the parameter's lexical scopes. Without these captures a generic Array
+      // method mixes inference inside the function with inference outside it.
+      def capture(scope: Ctx): Term =
+        val outer = scope.parent.fold[Term](initial)(capture)
+        scope.outer.resolutionBoundary.fold(outer)(Term.Capture(outer, _))
+      listenTypeInstances(capture(ctx)): shape =>
+        if p.sym.currentShapes.add(shape) then p.sym.notifyShapeListeners(shape)
+  
   /** Elaborate a subtyping constraint. */
   def constraint(lhs: Tree, op: "<:<" | ">:>", rhs: Tree): Ctxl[SubConstraint] =
     val l = term(lhs, Tpe)
@@ -3235,8 +3256,7 @@ extends Importer:
    *                  will be added to the context.
    * @param inFunction Whether the parameter list belongs to a function or lambda,
    *                   whose parameters may be optional or droppable.
-   * @param inConstructor Whether the parameter list belongs to a class constructor,
-   *                      whose parameters may be optional but not droppable.
+   * @param inConstructor Whether the parameter list belongs to a class constructor.
    */
   def params(t: Tree, inDataClass: Bool, inPattern: Bool, inFunction: Bool, inConstructor: Bool): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>

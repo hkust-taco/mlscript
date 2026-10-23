@@ -247,7 +247,7 @@ class Cell(mut val v: Int) with
 // Record the parameter and result representations of an unannotated variadic function.
 fun rest(a, ...xs) = xs
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define rest⁰ as fun rest¹(a: ?, ...xs: ?): ? { return xs }; end
+//│ define rest⁰ as fun rest¹(a: ?, ...xs: Array⁰): Array⁰ { return xs }; end
 
 
 // Closure capture (`:lift`) preserves the inferred representation of the mutable local `n` in its generated

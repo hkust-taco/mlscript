@@ -198,7 +198,7 @@ fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
 //│ ╙──       	                                                         ^^
 
 // Iterator only promises next; iterable implementations supply their own method.
-import "../../mlscript-compile/Iter.mjs"
+import "../../../mlscript-compile/Iter.mjs"
 
 :expect [48, 49]
 let count = 48

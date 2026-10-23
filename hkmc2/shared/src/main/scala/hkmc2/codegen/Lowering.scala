@@ -589,9 +589,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val isConstructor = fr.targetSymbol.exists:
       case _: ClassCtorSymbol => true
       case _ => false
-    val useMlsDefaults = isMlsFun && (fr.targetSymbol match
+    val useMlsDefaults = isMlsFun && fr.targetSymbol.match
       case S(fs: TermSymbol) => fs.defn.exists(_.hasDeclareModifier.isEmpty)
-      case _ => false)
+      case _ => false
     def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>

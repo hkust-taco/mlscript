@@ -1,7 +1,7 @@
 :.
 
 // A mutable field without a declared type takes the representation of its initializer and of the values
-// assigned to it (see also wasm/MutableFields.mls). Other compilation units can assign values to the mutable
+// assigned to it (see also ../wasm/MutableFields.mls). Other compilation units can assign values to the mutable
 // fields that this compilation unit exposes, so those must declare their types: their representations must not
 // depend on the values that this compilation unit happens to assign to them.
 

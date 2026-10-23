@@ -187,8 +187,11 @@ class NewResolver:
             result.publish(TypeShape.Parameter(sym, sym.inferenceHost))
           case Ref(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
             result.publish(TypeShape.Parameter(sym, sym.inferenceHost))
-          case Tup(fields) if fields.forall(_.isInstanceOf[Fld]) =>
-            result.publish(TypeShape.Tuple(fields.collect { case Fld(_, sign, _) => typeResolution(sign) }))
+          case Tup(fields) => result.publish:
+            TypeShape.Tuple:
+              fields.map:
+                case Fld(_, sign, _) => TypeShape.TupleField(typeResolution(sign), spread = false)
+                case Spd(_, sign, _) => TypeShape.TupleField(typeResolution(sign), spread = true)
           case record: Rcd =>
             val fields = record.stats.collect { case field: RcdField => field }
             fields.foreach: field =>
@@ -212,7 +215,7 @@ class NewResolver:
             // Singleton annotations retain literal values, which read no binders.
             rctx.recordTemplateBinders(result, S(Set.empty))
             listenTerm(literal)(shape => result.publish(TypeShape.Inferred(shape)))
-          case _: Tup | Missing | Error() =>
+          case Missing | Error() =>
             result.publish(TypeShape.Abstract)
           case _ => listen(term, discardMarks = true):
             case shape: SymShape => shape.sym.onComplete: () =>
@@ -387,7 +390,8 @@ class NewResolver:
                   case S(TypeShape.Nominal(_)) => args.foreach(guardedChild)
                   // An abstract constructor could forward an argument unchanged.
                   case _ => args.foreach(child)
-              case TypeShape.Tuple(fields) => fields.foreach(guardedChild)
+              case TypeShape.Tuple(fields) => fields.foreach: field =>
+                if field.spread then child(field.tpe) else guardedChild(field.tpe)
               case TypeShape.Record(_, fields) => fields.foreach((_, field) => guardedChild(field))
               case TypeShape.Function(params, result) => guardedChild(typeResolution(params)); guardedChild(result)
               case TypeShape.Polymorphic(params, _, body) =>
@@ -458,7 +462,7 @@ class NewResolver:
               applications += ((res, symbol, rhs, args))
             visit(base)
             args.foreach(visit)
-          case TypeShape.Tuple(fields) => fields.foreach(visit)
+          case TypeShape.Tuple(fields) => fields.foreach(field => visit(field.tpe))
           case TypeShape.Record(_, fields) => fields.foreach((_, field) => visit(field))
           case TypeShape.Function(params, result) => visit(typeResolution(params)); visit(result)
           case TypeShape.Polymorphic(params, _, body) =>
@@ -509,6 +513,9 @@ class NewResolver:
                 case S(TypeShape.Nominal(_)) => ()
                 case _ => args.foreach(follow)
             case TypeShape.Union(left, right) => follow(left); follow(right)
+            // A spread splices its operand into this tuple; it does not place
+            // that operand under a tuple field that could guard recursion.
+            case TypeShape.Tuple(fields) => fields.filter(_.spread).foreach(field => follow(field.tpe))
             case TypeShape.Intersection(left, right) => follow(left); follow(right)
             case TypeShape.Negation(base) => follow(base)
             case TypeShape.Wildcard(input, output) => input.foreach(follow); output.foreach(follow)
@@ -966,7 +973,7 @@ class NewResolver:
           cls.tparams.zip(typeArguments(current, args, cls.tparams, current.positive)).foreach: (param, argument) =>
             listenArgumentParts(argumentType(argument, param)): parts =>
               exposeTypeHoles(transportType(parts.output, captures), unknown, marks)
-        case TypeShape.Tuple(fields) => fields.foreach(field => descend(declaredType(field, current)))
+        case TypeShape.Tuple(fields) => fields.foreach(field => descend(declaredType(field.tpe, current)))
         case TypeShape.Record(_, fields) => fields.foreach((_, field) => descend(declaredType(field, current)))
         case TypeShape.Function(_, result) => descend(declaredType(result, current))
         case TypeShape.Polymorphic(parameters, _, body) =>
@@ -1545,8 +1552,25 @@ class NewResolver:
                       case NoShape => ()
                   case _ => publish(shape))
               case TypeShape.Tuple(fields) =>
-                publish(TupleShape(current.resolution.source,
-                  fields.map(field => TupleShape.TypedField(declaredType(field, current), Nil)))(this))
+                def expand(rest: Ls[TypeShape.TupleField], reversed: Ls[TupleShape.Element])(using ResolutionContext): Unit = rest match
+                  case Nil => publish(TupleShape(current.resolution.source, reversed.reverse)(this))
+                  case TypeShape.TupleField(field, false) :: tail =>
+                    expand(tail, TupleShape.TypedField(declaredType(field, current), Nil) :: reversed)
+                  case TypeShape.TupleField(field, true) :: tail =>
+                    listenTypeViews(declaredType(field, current), mergeIntersections = false):
+                      case Marked(tuple: TupleShape, marks) =>
+                        expand(tail, TupleShape.Spread(tuple, marks) :: reversed)
+                      case Marked(array: NominalInstanceView, marks) if arrayElementType(array).nonEmpty =>
+                        // Retain the symbolic element endpoint: sampling its
+                        // current values would lose inference from later calls.
+                        val element = TupleShape.TypedField(arrayElementType(array).get, marks :: Nil)
+                        expand(tail, TupleShape.Unknown(field.source, element) :: reversed)
+                      case shape @ Marked(_: DynShape | _: UnknownValueShape | _: OpaqueTypeShape, _) =>
+                        expand(tail, TupleShape.Unknown(field.source, TupleShape.ValueField(shape, Nil)) :: reversed)
+                      case shape =>
+                        field.fail(msg"A tuple type spread requires an Array or tuple interface." -> field.source.toLoc ::
+                          shape.diagnostic(msg"This type does not supply an array interface."))
+                expand(fields, Nil)
               case TypeShape.Record(source, fields) =>
                 val aliases = fields.flatMap:
                   case (field @ RcdField(Lit(Tree.StrLit(name)), _, _), _) => field.key.collect:
@@ -2057,20 +2081,7 @@ class NewResolver:
         case TypeShape.Hole(host) => value.enter(captures) match
           case value: TermShape => host.publish(value)
           case NoShape => ()
-        case TypeShape.Tuple(fields) => observe:
-          case unknown @ Marked(_: UnknownValueShape, _) =>
-            fields.foreach(field => inferTypeArguments(declaredType(field, tpe), unknown, marks, site))
-          case Marked(tuple: TupleShape, context) =>
-            fields.zipWithIndex.foreach: (field, index) =>
-              tuple.getMember(index.toString) match
-                case MemberLookup.Indexed(actual, inner) => actual.foreach: element =>
-                  listenTupleField(element): shape =>
-                    shape.exit(inner).exit(context) match
-                      case value: TermShape =>
-                        inferTypeArguments(declaredType(field, tpe), value, marks, site)
-                      case NoShape => ()
-                case _ => ()
-          case _ => ()
+        case TypeShape.Tuple(_) => observe(constrainTuple(tpe, _, marks, site))
         case TypeShape.Union(left, right) =>
           follow(declaredType(left, tpe), noTypeArguments, captures, next)
           follow(declaredType(right, tpe), noTypeArguments, captures, next)
@@ -2151,6 +2162,41 @@ class NewResolver:
     // Alias expansion guards only unproductive cycles. Descending into a tuple,
     // nominal argument, or arrow installs another edge with its own cycle guard.
     withCanonicalType(tpe)(follow(_, noTypeArguments, Nil, Set.empty))
+
+  /** Expand fixed tuple spreads before matching positions. Unknown-length
+    * segments share the remaining middle elements, as with declared parameter
+    * lists; their symbolic fields retain both input and output type arguments.
+    */
+  private def constrainTuple(expected: DeclaredType, actual: TermShape, marks: Ls[Marks],
+      site: Opt[Term])(using ResolutionContext): Unit =
+    listenTypeViews(expected, mergeIntersections = false):
+      case Marked(tuple: TupleShape, context) =>
+        def constrain(field: TupleShape.Fixed, value: TermShape)(using ResolutionContext): Unit =
+          listenTupleField(field):
+            case Marked(instance: InstanceShape, inner) =>
+              inferTypeArguments(transportType(instance.tpe, inner :: context :: Nil), value, marks, site)
+            case _ => ()
+        val (leading, rest) = tuple.segments.span(_.isInstanceOf[TupleShape.Fixed])
+        val (trailing, middle) = rest.reverse.span(_.isInstanceOf[TupleShape.Fixed])
+        val positions = leading ::: trailing.reverse
+        actual match
+          case unknown @ Marked(_: UnknownValueShape, _) =>
+            tuple.segments.foreach(segment => constrain(segment.element, unknown))
+          case Marked(supplied: TupleShape, suppliedContext) =>
+            val arity = Arity(leading.length, leading.length, middle.nonEmpty, trailing.length)
+            zipTupleShapes(Nil, arity, supplied, suppliedContext): (index, shape) =>
+              shape match
+                case value: TermShape if arity.hasRest && index == leading.length =>
+                  listenArrayElements(value): element =>
+                    middle.foreach(segment => constrain(segment.element, element))
+                case value: TermShape =>
+                  val position = if arity.hasRest && index > leading.length then index - 1 else index
+                  constrain(positions(position).element, value)
+                case NoShape => ()
+          case _ =>
+            listenArrayElements(actual): element =>
+              tuple.segments.foreach(segment => constrain(segment.element, element))
+      case _ => ()
 
   /** Structural constraints follow declared fields only. This supplies generic
     * argument inference and callback checking without refining the annotation

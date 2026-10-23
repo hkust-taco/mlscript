@@ -2,7 +2,7 @@
 :effectHandlers
 :lift
 
-import "../../mlscript-compile/NonLocalReturnLibrary.mls"
+import "../../../mlscript-compile/NonLocalReturnLibrary.mls"
 
 :expect [42, 5]
 [NonLocalReturnLibrary.result[Int](42).0, NonLocalReturnLibrary.result[Str]("hello").0.length]

@@ -149,29 +149,13 @@ fun projected(value: Box[Str] | unsafe.undefined) = value.Box#item.length
 projected(Box("abc"))
 //│ = 3
 
-// Ignoring undefined must not discard either legitimate member target.
-class Left(val value: Str)
-class Right(val value: Str)
-
-:e
-fun ambiguous(value: Left | unsafe.undefined | Right) = value.value
-//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
-//│ ║  l.157: 	fun ambiguous(value: Left | unsafe.undefined | Right) = value.value
-//│ ║         	                                                        ^^^^^^^^^^^
-//│ ╟── target: value 'value' in overloaded function and class 'Right'
-//│ ║  l.154: 	class Right(val value: Str)
-//│ ║         	                ^^^^^
-//│ ╟── target: value 'value' in overloaded function and class 'Left'
-//│ ║  l.153: 	class Left(val value: Str)
-//│ ╙──       	               ^^^^^
-
 :e
 fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.169: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
+//│ ║  l.153: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
 //│ ║         	                                                     ^^^
 //│ ╟── Function with a declared signature expected 1 argument, but got 0
-//│ ║  l.169: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
+//│ ║  l.153: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
 //│ ╙──       	                   ^^^^^^^^^^
 
 // Generic forwarding retains the nullable interface; the unsafe call remains a regression probe.
@@ -182,27 +166,6 @@ fun genericLength(value: Str | unsafe.undefined) =
   if genericIdentity(value) is ~null as text then text.length else 0
 [genericLength(unsafe.undefined), genericLength("abc")]
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
-
-// Optional parameters admit null even when callers only supply other values.
-:e
-private fun optionalLength(value?) = value.length
-fun forward(value: Str | unsafe.undefined) = optionalLength(value)
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.188: 	private fun optionalLength(value?) = value.length
-//│ ║         	                                     ^^^^^^^^^^^^
-//│ ╟── Null literal does not contain member 'length'
-//│ ║  l.188: 	private fun optionalLength(value?) = value.length
-//│ ╙──       	                           ^^^^^^
-
-// The optional parameter's null flow also survives generic result substitution.
-:e
-fun unguardedGeneric(value: Str | unsafe.undefined) = genericIdentity(value).length
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.199: 	fun unguardedGeneric(value: Str | unsafe.undefined) = genericIdentity(value).length
-//│ ║         	                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Null literal does not contain member 'length'
-//│ ║  l.179: 	private fun optionalIdentity(value?) = value
-//│ ╙──       	                             ^^^^^^
 
 // Aliases and generic arguments retain the legitimate alternatives without
 // requiring a value shape for the undefined annotation.
@@ -230,3 +193,48 @@ let record = {absent: unsafe.undefined, text: "abc"}
 :expect [3, null]
 [genericLength("abc"), optionalIdentity()]
 //│ = [3, null]
+
+
+#lang(eagerResolution: true)
+
+// Optional parameters admit null even when callers only supply other values.
+:e
+private fun optionalLength(value?) = value.length
+fun forward(value: Str | unsafe.undefined) = optionalLength(value)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.202: 	private fun optionalLength(value?) = value.length
+//│ ║         	                                     ^^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.202: 	private fun optionalLength(value?) = value.length
+//│ ╙──       	                           ^^^^^^
+
+// The optional parameter's null flow also survives generic result substitution.
+:e
+fun unguardedGeneric(value: Str | unsafe.undefined) = genericIdentity(value).length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.213: 	fun unguardedGeneric(value: Str | unsafe.undefined) = genericIdentity(value).length
+//│ ║         	                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.163: 	private fun optionalIdentity(value?) = value
+//│ ╙──       	                             ^^^^^^
+
+
+#lang(strictResolution: true)
+
+// Ignoring undefined must not discard either legitimate member target.
+class Left(val value: Str)
+class Right(val value: Str)
+
+:e
+fun ambiguous(value: Left | unsafe.undefined | Right) = value.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
+//│ ║  l.229: 	fun ambiguous(value: Left | unsafe.undefined | Right) = value.value
+//│ ║         	                                                        ^^^^^^^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Right'
+//│ ║  l.226: 	class Right(val value: Str)
+//│ ║         	                ^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Left'
+//│ ║  l.225: 	class Left(val value: Str)
+//│ ╙──       	               ^^^^^
+
+

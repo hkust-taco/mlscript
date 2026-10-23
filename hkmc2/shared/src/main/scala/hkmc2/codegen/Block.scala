@@ -677,8 +677,11 @@ sealed abstract class Defn:
     case FunDefn(body = body) => body :: Nil
     case _: ValDefn => Nil
     case cls @ ClsLikeDefn(preCtor = preCtor, ctor = ctor, methods = mtds, companion = comp) =>
-      preCtor :: ctor :: mtds.flatMap(_.subBlocks) ::: comp.toList.flatMap(_.subBlocks) :::
-        cls.methodKeys.valuesIterator.flatMap(_.subBlocks).toList
+      Iterator(preCtor, ctor)
+        .++(mtds.iterator.flatMap(_.subBlocks))
+        .++(comp.iterator.flatMap(_.subBlocks))
+        .++(cls.methodKeys.valuesIterator.flatMap(_.subBlocks))
+        .toList
   
   // * Note that `privateFields` abd `publicFields` can't possibly be free since they are never
   // * referred to directly (they are only accessed through selections).

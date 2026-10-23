@@ -250,24 +250,24 @@ fun bar(x: Int, y: Str): Bool = x > 0
 
 ### Optional Parameters
 
-A parameter followed by `?` is optional: callers may omit its argument, which is then `undefined`.
+A parameter followed by `?` is optional: callers may omit its argument, which is then `null`.
 
 ```mlscript
 fun greet(name: Str, greeting?: Str) =
-  if greeting is Str then greeting + ", " + name else "Hello, " + name
-greet("Ana")             // = "Hello, Ana"
-greet("Ana", "Hi")       // = "Hi, Ana"
+  (if greeting is null then "Hello, " else greeting + ", ") + name
+print \ greet("Ana")             // prints: Hello, Ana
+print \ greet("Ana", "Hi")       // prints: Hi, Ana
 ```
 
-The annotation of an optional parameter includes `undefined`: `greeting?: Str` has type `Str | undefined`.
+The annotation of an optional parameter includes `null`: `greeting?: Str` has type `Str | null`.
 The `?` must directly follow the parameter: `y ?` and `y ?: Str` are not optional parameters.
 
-Optional parameters follow the required ones, except for the parameters after a variadic parameter
-(see below). Function, lambda, and constructor parameters can be optional; context parameters
-(`using`) and variadic parameters cannot.
+Optional parameters follow required ones.
+Function, lambda, and constructor parameters can be optional;
+context parameters (`using`) and variadic parameters cannot.
 
 Direct calls must supply every required argument, and no more arguments than the function accepts.
-A function that receives extra arguments dynamically ignores them.
+A function that receives extra arguments might ignore them at runtime (unspecified behavior).
 
 ### Variadic Parameters
 
@@ -297,7 +297,7 @@ Class parameters cannot be variadic.
 
 ### Droppable Parameters
 
-`drop` marks a parameter whose argument is always passed, but which implementations may ignore.
+`drop` marks a parameter that implementations may ignore and may even omit to specify.
 In a function type, it lets the functions passed for it leave out that parameter:
 
 ```mlscript
@@ -312,13 +312,14 @@ Only function and lambda parameters can be droppable.
 
 ### Recursive Functions
 
-Functions are recursive by default:
+Functions can make recursive calls:
 ```mlscript
 fun fact(n) =
   if n <= 1 then 1 else n * fact(n - 1)
 ```
 
-Mutual recursion uses sequential `fun` definitions in the same block.
+Mutual recursion is permitted among `fun` definitions in the same block
+or through method calls.
 
 ### Trailing arguments
 
@@ -1455,12 +1456,38 @@ and user iterables use the same resolution path. Precise tuple spreads
 retain their fixed positions.
 
 
-### Resolution Interfaces
+### Resolution
 
-**Resolution is a best-effort check, not a replacement for type checking.** It
-finds targets for names, members, and calls, and catches some obvious mistakes.
+The resolution pass of the compiler finds targets for names, members, and calls, and catches some obvious mistakes.
+It does so by taking into account the declared types of values and parameters
+and by tracking the flow of values through the current compilation unit,
+stopping at the unit's exposed public interface (to support separate and scalable compilation).
+This pass is mandatory and affects the program's runtime behavior,
+unlike type checking, which is optional.
+
+**Resolution is a best-effort process, not a replacement for type checking.**
 Successful resolution does not establish type safety, even in strict mode.
 Type checking is meant to run as a later pass, but is not yet implemented.
+
+Resolution is "loose" and "lenient" by default: while it rejects unresolved references,
+it allows references that are ambiguous (see: loose) and uncertain (see: lenient).
+Optionally, one can enable
+* **strict** resolution, under which all references must be resolved to exactly one source target.
+  For example, `(xs: (List | Str)) => xs.length` is rejected:
+  while `List` and `Str` both have a `length` member,
+  and while that member could be selected dynamically under, eg, JS compilation,
+  the two members are unrelated, so the access could not be compiled directly
+  with more static backends like WASM.
+  On the other hand, `(xs: (Cons | Nil)) => xs.length` works,
+  provided that `Cons` and `Nil` are both subtypes of a common abstract class `List` that declares `length`.
+* **eager** resolution: unlike lenient resolution, it does not discard receiver shapes that do not have the selected member.
+  This moves resolution a bit closer to type checking, but still does not guarantee type safety.
+  Resolution is lenient by default because it is quite approximate,
+  so it will often get spurious candidate receivers that are only present due to its approximate tracking of flow.
+
+Strict resolution is currently required by backends like WASM,
+although smarter compilation strategies could allow more lenient resolution in the future
+(an ambiguous selection can often be compiled into a match with unambiguous selections in its branches).
 
 `@annotations.jsSymbol(path)` gives a public method a source name for the JavaScript property
 key denoted by `path`. The path must consist of modules and immutable `val`s,
