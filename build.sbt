@@ -93,18 +93,18 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
 
+val compileTestFixtures = taskKey[Unit]("Compile the MLscript fixtures needed by diff tests")
+
 /** Helper to create test subprojects that compile `.mls` files then run diff tests.
   * Each subproject depends on `hkmc2JVM` and `hkmc2DiffTests` for shared test infrastructure.
-  * When a compile runner is provided, `Def.sequential` guarantees it completes before diff tests start. */
+  * A named prerequisite lets suites share fixture compilation in aggregate runs.
+  * Diff tests wait for it before loading the generated modules. */
 def hkmc2TestSubproject(dirName: String, compileRunner: Option[String], diffRunner: String): Project = {
-  val testTask = compileRunner match {
+  val compileTask = compileRunner match {
     case Some(runner) =>
-      Def.sequential(
-        (Test / testOnly).toTask(s" hkmc2.$runner"),
-        (Test / testOnly).toTask(s" hkmc2.$diffRunner"),
-      )
+      (Test / testOnly).toTask(s" hkmc2.$runner")
     case None =>
-      (Test / testOnly).toTask(s" hkmc2.$diffRunner")
+      Def.task { () }
   }
 
   Project(dirName, file(dirName))
@@ -116,7 +116,9 @@ def hkmc2TestSubproject(dirName: String, compileRunner: Option[String], diffRunn
       libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
       libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
       
-      Test / test := testTask.value,
+      Test / compileTestFixtures := compileTask.value,
+      Test / test := (Test / testOnly).toTask(s" hkmc2.$diffRunner")
+        .dependsOn(Test / compileTestFixtures).value,
       
       Test/run/fork := true, // so that CTRL+C actually terminates the watcher
     )
@@ -127,9 +129,13 @@ lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", Some("AppsCompil
 lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", Some("WasmCompileTestRunner"), "WasmDiffTestRunner")
 lazy val hkmc2SlopTests = hkmc2TestSubproject("hkmc2SlopTests", None, "SlopDiffTestRunner")
   .settings(
-    // These worksheets import main-suite fixtures such as Iter.mjs. The aggregate
-    // suites can schedule sibling tasks in parallel, so order this dependency explicitly.
-    Test / test := (Test / test).dependsOn(hkmc2JVM / Test / test).value,
+    // These worksheets load main-suite fixtures such as Iter.mjs and the Wasm.mjs
+    // runtime helper. Both must be generated before the slop tests start, even
+    // when an aggregate schedules the Wasm and slop suites as sibling tasks.
+    Test / test := (Test / test).dependsOn(
+      hkmc2JVM / Test / test,
+      hkmc2WasmTests / Test / compileTestFixtures,
+    ).value,
   )
 
 lazy val hkmc2MainTests = project.in(file("hkmc2MainTests"))
