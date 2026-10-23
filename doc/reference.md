@@ -250,24 +250,24 @@ fun bar(x: Int, y: Str): Bool = x > 0
 
 ### Optional Parameters
 
-A parameter followed by `?` is optional: callers may omit its argument, which is then `undefined`.
+A parameter followed by `?` is optional: callers may omit its argument, which is then `null`.
 
 ```mlscript
 fun greet(name: Str, greeting?: Str) =
-  if greeting is Str then greeting + ", " + name else "Hello, " + name
-greet("Ana")             // = "Hello, Ana"
-greet("Ana", "Hi")       // = "Hi, Ana"
+  (if greeting is null then "Hello, " else greeting + ", ") + name
+print \ greet("Ana")             // prints: Hello, Ana
+print \ greet("Ana", "Hi")       // prints: Hi, Ana
 ```
 
-The annotation of an optional parameter includes `undefined`: `greeting?: Str` has type `Str | undefined`.
+The annotation of an optional parameter includes `null`: `greeting?: Str` has type `Str | null`.
 The `?` must directly follow the parameter: `y ?` and `y ?: Str` are not optional parameters.
 
-Optional parameters follow the required ones, except for the parameters after a variadic parameter
-(see below). Function, lambda, and constructor parameters can be optional; context parameters
-(`using`) and variadic parameters cannot.
+Optional parameters follow required ones.
+Function, lambda, and constructor parameters can be optional;
+context parameters (`using`) and variadic parameters cannot.
 
 Direct calls must supply every required argument, and no more arguments than the function accepts.
-A function that receives extra arguments dynamically ignores them.
+A function that receives extra arguments might ignore them at runtime (unspecified behavior).
 
 ### Variadic Parameters
 
@@ -297,7 +297,7 @@ Class parameters cannot be variadic.
 
 ### Droppable Parameters
 
-`drop` marks a parameter whose argument is always passed, but which implementations may ignore.
+`drop` marks a parameter that implementations may ignore and may even omit to specify.
 In a function type, it lets the functions passed for it leave out that parameter:
 
 ```mlscript
@@ -312,13 +312,14 @@ Only function and lambda parameters can be droppable.
 
 ### Recursive Functions
 
-Functions are recursive by default:
+Functions can make recursive calls:
 ```mlscript
 fun fact(n) =
   if n <= 1 then 1 else n * fact(n - 1)
 ```
 
-Mutual recursion uses sequential `fun` definitions in the same block.
+Mutual recursion is permitted among `fun` definitions in the same block
+or through method calls.
 
 ### Trailing arguments
 

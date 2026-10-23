@@ -22,8 +22,11 @@ Note that this only affects the main compilation tests;
 there is also `cntest` for nofib compilation tests, `catest` for application compilation tests,
 and `cwtest` for WASM compilation tests.
 
-Before finishing your work, run `hkmc2AllTests/test` to make sure the codebase compiles and all tests succeed;
+Before finishing work with retained code or test changes, run `hkmc2AllTests/test`
+to make sure the codebase compiles and all tests succeed;
 this covers `ctest`, so no need to run `ctest` separately.
+Full validation is not required for read-only investigations, documentation-only edits,
+and temporary experiments whose changes have all been reverted.
 
 After you are done fixing all the problems and all the tests pass,
 *you need to commit the resulting golden test output changes*.
