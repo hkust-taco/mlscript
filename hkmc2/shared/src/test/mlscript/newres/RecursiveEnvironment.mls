@@ -35,14 +35,14 @@ class Box(val value) with
   fun copy() = Box(value)
 Box({answer: 42}).copy().value.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.36: 	Box({answer: 42}).copy().value.answer
+//│ ║  l.+3: 	Box({answer: 42}).copy().value.answer
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.34: 	class Box(val value) with
+//│ ║  l.+1: 	class Box(val value) with
 //│ ║        	          ^^^^^^^^^
 //│ ╟── 'Box' is exposed by this compilation unit.
-//│ ║  l.34: 	class Box(val value) with
+//│ ║  l.+1: 	class Box(val value) with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
@@ -70,17 +70,17 @@ private fun opened(value) =
   new Wrapper().make().value.answer
 opened({answer: 44})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.70: 	  new Wrapper().make().value.answer
+//│ ║  l.+7: 	  new Wrapper().make().value.answer
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.64: 	class OpenBox(val value)
+//│ ║  l.+1: 	class OpenBox(val value)
 //│ ║        	              ^^^^^^^^^
 //│ ╟── This value is stored in this record field.
-//│ ║  l.65: 	let makers = {create: OpenBox}
+//│ ║  l.+2: 	let makers = {create: OpenBox}
 //│ ║        	              ^^^^^^
 //│ ╟── This value is exposed by this compilation unit.
-//│ ║  l.65: 	let makers = {create: OpenBox}
+//│ ║  l.+2: 	let makers = {create: OpenBox}
 //│ ╙──      	              ^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '44', got: 'undefined'
@@ -97,14 +97,14 @@ let finish = partial({answer: 45})
 let pair = finish({answer: 46})
 [pair.first.answer, pair.second.answer]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.98: 	[pair.first.answer, pair.second.answer]
+//│ ║  l.+6: 	[pair.first.answer, pair.second.answer]
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── Parameter 'second' admits values of unknown shape.
-//│ ║  l.94: 	  class Pair(val first)(val second)
+//│ ║  l.+2: 	  class Pair(val first)(val second)
 //│ ║        	                        ^^^^^^^^^^
 //│ ╟── This value is exposed by this compilation unit.
-//│ ║  l.96: 	let finish = partial({answer: 45})
+//│ ║  l.+4: 	let finish = partial({answer: 45})
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[45, 46]', got: 'undefined'

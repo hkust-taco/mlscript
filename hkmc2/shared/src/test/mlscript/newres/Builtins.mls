@@ -6,12 +6,12 @@
 :w
 new Map
 //│ ╔══[WARNING] This 'new' expression partially applies class 'Map' instead of constructing an instance.
-//│ ║  l.7: 	new Map
-//│ ║       	^^^^^^^
+//│ ║  l.+1: 	new Map
+//│ ║        	^^^^^^^
 //│ ╟── Use `new Map()` to construct an instance, or `=> new Map()` to create an explicit zero-argument lambda.
 //│ ╟── The constructor accepts an empty argument list.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.97: 	  constructor(entries?: Iterable[[K, V]] | null)
+//│ ║  l.XX: 	  constructor(entries?: Iterable[[K, V]] | null)
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   new Map⁰
@@ -23,12 +23,12 @@ new Map
 :w
 (new Map)([]).size
 //│ ╔══[WARNING] This 'new' expression partially applies class 'Map' instead of constructing an instance.
-//│ ║  l.24: 	(new Map)([]).size
+//│ ║  l.+1: 	(new Map)([]).size
 //│ ║        	 ^^^^^^^
 //│ ╟── Use `new Map()` to construct an instance, or `=> new Map()` to create an explicit zero-argument lambda.
 //│ ╟── The constructor accepts an empty argument list.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.97: 	  constructor(entries?: Iterable[[K, V]] | null)
+//│ ║  l.XX: 	  constructor(entries?: Iterable[[K, V]] | null)
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 0
 

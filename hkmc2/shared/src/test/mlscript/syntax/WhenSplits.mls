@@ -5,8 +5,8 @@
 :e
 when 0 then 1
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.6: 	when 0 then 1
-//│ ╙──     	^^^^
+//│ ║  l.+1: 	when 0 then 1
+//│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

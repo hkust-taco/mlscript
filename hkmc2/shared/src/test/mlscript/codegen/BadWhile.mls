@@ -6,8 +6,8 @@
 :sjs
 while {} do()
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
-//│ ║  l.7: 	while {} do()
-//│ ╙──     	         ^^^^
+//│ ║  l.+1: 	while {} do()
+//│ ╙──      	         ^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -22,5 +22,5 @@ fun f() =
     set i -= 1
     i
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.23: 	    i
+//│ ║  l.+5: 	    i
 //│ ╙──      	    ^

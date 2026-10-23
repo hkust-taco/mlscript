@@ -91,13 +91,13 @@ fun ambiguous(early) =
   {answer: 0}
 ambiguous(true).answer
 //│ ╔══[COMPILATION ERROR] This selection of member 'answer' is ambiguous, as it has multiple resolved targets
-//│ ║  l.92: 	ambiguous(true).answer
+//│ ║  l.+5: 	ambiguous(true).answer
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── target: record field 'answer'
-//│ ║  l.89: 	  let escape = => return {answer: 42}
+//│ ║  l.+2: 	  let escape = => return {answer: 42}
 //│ ║        	                          ^^^^^^
 //│ ╟── target: record field 'answer'
-//│ ║  l.91: 	  {answer: 0}
+//│ ║  l.+4: 	  {answer: 0}
 //│ ╙──      	   ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

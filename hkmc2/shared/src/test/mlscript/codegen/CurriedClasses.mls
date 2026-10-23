@@ -107,23 +107,23 @@ h.y
 class A(x1, x2, ...xs)(y1, ...ys) with
   fun fields = [x1, x2, xs, y1, ys]
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	                ^^^^^
+//│ ║  l.+1: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──      	                ^^^^^
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	                           ^^^^^
+//│ ║  l.+1: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──      	                           ^^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'xs'
-//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
-//│ ║         	                        ^^
+//│ ║  l.+2: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║        	                        ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	                   ^^
+//│ ║  l.+1: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──      	                   ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
-//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
-//│ ║         	                                ^^
+//│ ║  l.+2: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║        	                                ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	                              ^^
+//│ ║  l.+1: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──      	                              ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let A3;
 //│ A3 = function A(x1, x2) {
@@ -156,33 +156,33 @@ class A(x1, x2, ...xs)(y1, ...ys) with
 //│   static [definitionMetadata] = ["class", "A", [null, null]];
 //│ });
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'xs'
-//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
-//│ ║         	                        ^^
+//│ ║  l.+2: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║        	                        ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	                   ^^
+//│ ║  l.+1: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──      	                   ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'ys'
-//│ ║  l.108: 	  fun fields = [x1, x2, xs, y1, ys]
-//│ ║         	                                ^^
+//│ ║  l.+2: 	  fun fields = [x1, x2, xs, y1, ys]
+//│ ║        	                                ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	                              ^^
+//│ ║  l.+1: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──      	                              ^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :todo
 new A(1, 2, 3)(4, 5, 6).fields
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.173: 	new A(1, 2, 3)(4, 5, 6).fields
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	new A(1, 2, 3)(4, 5, 6).fields
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'A' expected 2 arguments, but got 3
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.173: 	new A(1, 2, 3)(4, 5, 6).fields
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	new A(1, 2, 3)(4, 5, 6).fields
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'A' expected 1 argument, but got 3
-//│ ║  l.107: 	class A(x1, x2, ...xs)(y1, ...ys) with
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	class A(x1, x2, ...xs)(y1, ...ys) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
 
 

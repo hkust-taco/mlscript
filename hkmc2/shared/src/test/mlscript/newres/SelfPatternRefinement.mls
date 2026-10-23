@@ -57,10 +57,10 @@ data class Bad with
     Entry(text: Str)
   fun read = if this is Entry(text) then text.absent
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.58: 	  fun read = if this is Entry(text) then text.absent
+//│ ║  l.+4: 	  fun read = if this is Entry(text) then text.absent
 //│ ║        	                                         ^^^^^^^^^^^
 //│ ╟── Value of type 'Str' does not contain member 'absent'
-//│ ║  l.57: 	    Entry(text: Str)
+//│ ║  l.+3: 	    Entry(text: Str)
 //│ ╙──      	                ^^^
 
 // A generic subclass's omitted argument stays abstract even when a local
@@ -71,7 +71,7 @@ class Parent with
 class Child[A](val item: A) extends Parent
 Child("abc").read
 //│ ╔══[COMPILATION ERROR] This selection of member 'length' has no resolved target
-//│ ║  l.70: 	  fun read = if this is Child(item) then item.length else 0
+//│ ║  l.+2: 	  fun read = if this is Child(item) then item.length else 0
 //│ ╙──      	                                         ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

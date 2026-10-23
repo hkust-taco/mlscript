@@ -51,13 +51,13 @@ class Left(val value: Int)
 class Right(val value: Int)
 fun ambiguous(xs: Iterable[Left] | Iterable[Right] | {}) = [...xs].0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
-//│ ║  l.52: 	fun ambiguous(xs: Iterable[Left] | Iterable[Right] | {}) = [...xs].0.value
+//│ ║  l.+3: 	fun ambiguous(xs: Iterable[Left] | Iterable[Right] | {}) = [...xs].0.value
 //│ ║        	                                                           ^^^^^^^^^^^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Right'
-//│ ║  l.51: 	class Right(val value: Int)
+//│ ║  l.+2: 	class Right(val value: Int)
 //│ ║        	                ^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Left'
-//│ ║  l.50: 	class Left(val value: Int)
+//│ ║  l.+1: 	class Left(val value: Int)
 //│ ╙──      	               ^^^^^
 
 #lang(eagerResolution: true)
@@ -137,37 +137,37 @@ partial(once(Box(13)))
 :e
 fun intersection(xs: Iterable[Left] & Iterable[Right] & Empty) = [...xs].0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
-//│ ║  l.138: 	fun intersection(xs: Iterable[Left] & Iterable[Right] & Empty) = [...xs].0.value
-//│ ║         	                                                                 ^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun intersection(xs: Iterable[Left] & Iterable[Right] & Empty) = [...xs].0.value
+//│ ║        	                                                                 ^^^^^^^^^^^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Right'
-//│ ║  l.51: 	class Right(val value: Int)
+//│ ║  l.XX: 	class Right(val value: Int)
 //│ ║        	                ^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Left'
-//│ ║  l.50: 	class Left(val value: Int)
+//│ ║  l.XX: 	class Left(val value: Int)
 //│ ╙──      	               ^^^^^
 
 :e
 fun methodAlternatives(xs: {(Symbol.iterator): (() -> Iterator[Left]) | (() -> Iterator[Right]) | Empty}) = [...xs].0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
-//│ ║  l.150: 	fun methodAlternatives(xs: {(Symbol.iterator): (() -> Iterator[Left]) | (() -> Iterator[Right]) | Empty}) = [...xs].0.value
-//│ ║         	                                                                                                            ^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun methodAlternatives(xs: {(Symbol.iterator): (() -> Iterator[Left]) | (() -> Iterator[Right]) | Empty}) = [...xs].0.value
+//│ ║        	                                                                                                            ^^^^^^^^^^^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Right'
-//│ ║  l.51: 	class Right(val value: Int)
+//│ ║  l.XX: 	class Right(val value: Int)
 //│ ║        	                ^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Left'
-//│ ║  l.50: 	class Left(val value: Int)
+//│ ║  l.XX: 	class Left(val value: Int)
 //│ ╙──      	               ^^^^^
 
 :e
 fun resultAlternatives(xs: {(Symbol.iterator): () -> ({next: () -> ({value: Left} | {value: Right} | Empty)})}) = [...xs].0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
-//│ ║  l.162: 	fun resultAlternatives(xs: {(Symbol.iterator): () -> ({next: () -> ({value: Left} | {value: Right} | Empty)})}) = [...xs].0.value
-//│ ║         	                                                                                                                  ^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun resultAlternatives(xs: {(Symbol.iterator): () -> ({next: () -> ({value: Left} | {value: Right} | Empty)})}) = [...xs].0.value
+//│ ║        	                                                                                                                  ^^^^^^^^^^^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Right'
-//│ ║  l.51: 	class Right(val value: Int)
+//│ ║  l.XX: 	class Right(val value: Int)
 //│ ║        	                ^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Left'
-//│ ║  l.50: 	class Left(val value: Int)
+//│ ║  l.XX: 	class Left(val value: Int)
 //│ ╙──      	               ^^^^^
 
 // A known target can still be resolved alongside an opaque protocol alternative.
@@ -190,12 +190,12 @@ private fun copy[A](xs: Iterable[A]): Array[A] = [...xs]
 :e
 fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.191: 	fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
-//│ ║         	                                                     ^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
+//│ ║        	                                                     ^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── This spread has no known element shape.
-//│ ║  l.191: 	fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
-//│ ╙──       	                                                         ^^
+//│ ║  l.+1: 	fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
+//│ ╙──      	                                                         ^^
 
 // Iterator only promises next; iterable implementations supply their own method.
 import "../../../mlscript-compile/Iter.mjs"
@@ -216,11 +216,11 @@ let iterator = Iter.IteratorImpl(() =>
 :e
 private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.217: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
-//│ ║         	                                                       ^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
+//│ ║        	                                                       ^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Iterator' does not contain member 'iterator'
-//│ ║  l.217: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
-//│ ╙──       	                                      ^^^^^^^^^^^^^
+//│ ║  l.+1: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
+//│ ╙──      	                                      ^^^^^^^^^^^^^
 
 // Abstract members retain their source name and runtime key in implementations.
 :expect [17]

@@ -29,10 +29,10 @@ finally print("done")
 try
   42 finally print("done")
 //│ ╔══[PARSE ERROR] Unexpected 'finally' keyword here
-//│ ║  l.30: 	  42 finally print("done")
+//│ ║  l.+2: 	  42 finally print("done")
 //│ ╙──      	     ^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'finally' keyword after `try` body; found end of input instead
-//│ ║  l.30: 	  42 finally print("done")
+//│ ║  l.+2: 	  42 finally print("done")
 //│ ╙──      	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -42,13 +42,13 @@ try
   42
   finally print("done")
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'finally' keyword instead
-//│ ║  l.43: 	  finally print("done")
+//│ ║  l.+3: 	  finally print("done")
 //│ ╙──      	  ^^^^^^^
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.43: 	  finally print("done")
+//│ ║  l.+3: 	  finally print("done")
 //│ ╙──      	          ^^^^^
 //│ ╔══[PARSE ERROR] Expected 'finally' keyword after `try` body; found end of input instead
-//│ ║  l.42: 	  42
+//│ ║  l.+2: 	  42
 //│ ╙──      	  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

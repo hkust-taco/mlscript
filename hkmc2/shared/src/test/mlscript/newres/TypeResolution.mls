@@ -27,16 +27,16 @@ module RightTypes with
   type Ambiguous = Str
 fun ambiguous(n: Ambiguous) = n
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.28: 	fun ambiguous(n: Ambiguous) = n
+//│ ║  l.+7: 	fun ambiguous(n: Ambiguous) = n
 //│ ║        	                 ^^^^^^^^^
 //│ ╟── This type is ambiguous, as it has multiple resolved targets
-//│ ║  l.28: 	fun ambiguous(n: Ambiguous) = n
+//│ ║  l.+7: 	fun ambiguous(n: Ambiguous) = n
 //│ ║        	                 ^^^^^^^^^
 //│ ╟── candidate: type alias
-//│ ║  l.25: 	  type Ambiguous = Int
+//│ ║  l.+4: 	  type Ambiguous = Int
 //│ ║        	  ^^^^^^^^^^^^^^
 //│ ╟── candidate: type alias
-//│ ║  l.27: 	  type Ambiguous = Str
+//│ ║  l.+6: 	  type Ambiguous = Str
 //│ ╙──      	  ^^^^^^^^^^^^^^
 
 // A type annotation selects the class even when its name also has a value.
@@ -52,9 +52,9 @@ fun unused(value: Invalid) = value
 type Invalid = notAType
 val notAType = 1
 //│ ╔══[COMPILATION ERROR] Resolution error in member reference
-//│ ║  l.52: 	type Invalid = notAType
+//│ ║  l.+2: 	type Invalid = notAType
 //│ ║        	               ^^^^^^^^
 //│ ╟── Value symbol 'notAType' cannot be used as a type
-//│ ║  l.53: 	val notAType = 1
+//│ ║  l.+3: 	val notAType = 1
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ notAType = 1

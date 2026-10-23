@@ -26,11 +26,11 @@ fun f(x, ...xs, y) = [x, xs, y]
 :e
 f(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.27: 	f(1)
+//│ ║  l.+1: 	f(1)
 //│ ║        	^^^^
 //│ ╟── Function 'f' expected at least 2 arguments, but got 1
-//│ ║  l.8: 	fun f(x, ...xs, y) = [x, xs, y]
-//│ ╙──     	^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun f(x, ...xs, y) = [x, xs, y]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
 
 fun g(...xs, y, z) = [xs, y, z]
@@ -133,11 +133,11 @@ lastA(B(0), B(1), A(2))
 private fun lastB(...xs, y) = y.b
 lastB(B(0), A(1))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.133: 	private fun lastB(...xs, y) = y.b
-//│ ║         	                              ^^^
+//│ ║  l.+1: 	private fun lastB(...xs, y) = y.b
+//│ ║        	                              ^^^
 //│ ╟── Instance of class 'A' does not contain member 'b'
-//│ ║  l.134: 	lastB(B(0), A(1))
-//│ ╙──       	            ^^^^
+//│ ║  l.+2: 	lastB(B(0), A(1))
+//│ ╙──      	            ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -234,29 +234,29 @@ private fun optional(x?, ...middle, y) = [if x is Head as x then x.head else uns
 :e
 fun bad(...xs, ...ys) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.235: 	fun bad(...xs, ...ys) = 0
-//│ ╙──       	               ^^^^^
+//│ ║  l.+1: 	fun bad(...xs, ...ys) = 0
+//│ ╙──      	               ^^^^^
 
 :e
 fun bad(...xs, y?) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.241: 	fun bad(...xs, y?) = 0
-//│ ╙──       	               ^^
+//│ ║  l.+1: 	fun bad(...xs, y?) = 0
+//│ ╙──      	               ^^
 
 :e
 fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.247: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
-//│ ╙──       	                           ^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
+//│ ╙──      	                           ^^^^^^^^^^^^^
 
 :e
 fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.253: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
-//│ ╙──       	                           ^^^^
+//│ ║  l.+1: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
+//│ ╙──      	                           ^^^^
 
 :e
 class C(x, ...xs, y)
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.259: 	class C(x, ...xs, y)
-//│ ╙──       	           ^^^^^
+//│ ║  l.+1: 	class C(x, ...xs, y)
+//│ ╙──      	           ^^^^^

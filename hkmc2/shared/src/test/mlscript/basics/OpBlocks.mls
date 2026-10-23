@@ -96,12 +96,12 @@
     + 1
   * 3
 //│ ╔══[PARSE ERROR] Unexpected indented block in this operator split inner position
-//│ ║  l.96: 	    + 1
+//│ ║  l.+3: 	    + 1
 //│ ║        	^^^^^^^
-//│ ║  l.97: 	  * 3
+//│ ║  l.+4: 	  * 3
 //│ ║        	^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.95: 	  * 2
+//│ ║  l.+2: 	  * 2
 //│ ╙──      	  ^
 //│ = 18
 
@@ -111,11 +111,11 @@
     1
   * 3
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.110: 	  * 2 +
-//│ ║         	      ^
+//│ ║  l.+2: 	  * 2 +
+//│ ║        	      ^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.110: 	  * 2 +
-//│ ╙──       	  ^
+//│ ║  l.+2: 	  * 2 +
+//│ ╙──      	  ^
 //│ = 19
 
 :pe
@@ -124,11 +124,11 @@
   * 3
     + 1
 //│ ╔══[PARSE ERROR] Unexpected indented block in this operator split inner position
-//│ ║  l.125: 	    + 1
-//│ ║         	^^^^
+//│ ║  l.+4: 	    + 1
+//│ ║        	^^^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.123: 	  * 2
-//│ ╙──       	  ^
+//│ ║  l.+2: 	  * 2
+//│ ╙──      	  ^
 //│ = 14
 
 // * Note: `{+ ...}` binds looser than `*`, so it attaches to the whole product (not parsed as a refinement)
@@ -145,11 +145,11 @@
   * 3 + 1
   * 3
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.145: 	  * 3 + 1
-//│ ║         	      ^
+//│ ║  l.+2: 	  * 3 + 1
+//│ ║        	      ^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.145: 	  * 3 + 1
-//│ ╙──       	  ^
+//│ ║  l.+2: 	  * 3 + 1
+//│ ╙──      	  ^
 //│ = 28
 
 // :pe
@@ -175,8 +175,8 @@
   1
   0
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.175: 	  1
-//│ ╙──       	  ^
+//│ ║  l.+2: 	  1
+//│ ╙──      	  ^
 //│ = true
 
 
@@ -370,10 +370,10 @@ fun f(x) = if x
   foo(A) then a
   bar(B) then b
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (juxtaposition)
-//│ ║  l.369: 	fun f(x) = if x
-//│ ║         	              ^
-//│ ║  l.370: 	  foo(A) then a
-//│ ╙──       	^^
+//│ ║  l.+1: 	fun f(x) = if x
+//│ ║        	              ^
+//│ ║  l.+2: 	  foo(A) then a
+//│ ╙──      	^^
 
 
 if 0

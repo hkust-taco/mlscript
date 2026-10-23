@@ -5,10 +5,10 @@
 :fixme
 fun (let) oops = 1
 //│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding keyword; found end of input instead
-//│ ║  l.6: 	fun (let) oops = 1
-//│ ╙──     	        ^
+//│ ║  l.+1: 	fun (let) oops = 1
+//│ ╙──      	        ^
 //│ ╔══[COMPILATION ERROR] This ‹erroneous syntax› is not a valid symbolic name
-//│ ║  l.6: 	fun (let) oops = 1
-//│ ╙──     	        ^
+//│ ║  l.+1: 	fun (let) oops = 1
+//│ ╙──      	        ^
 
 

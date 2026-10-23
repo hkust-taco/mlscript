@@ -29,13 +29,13 @@ select([["first", 2], 3])
 fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
 opaque([{name: "hidden"}, 1])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ║  l.+1: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
 //│ ║        	                                                          ^^^^^^^^^
 //│ ╟── Cannot resolve member 'name' of a value with unknown shape.
-//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ║  l.+1: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
 //│ ║        	                     ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ║  l.+1: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
 //│ ╙──      	           ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

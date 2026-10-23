@@ -31,10 +31,10 @@ class Item(val value: Int)
 fun read(f: Function) = f().value
 read(() => Item(42))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.31: 	fun read(f: Function) = f().value
+//│ ║  l.+2: 	fun read(f: Function) = f().value
 //│ ║        	                        ^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.31: 	fun read(f: Function) = f().value
+//│ ║  l.+2: 	fun read(f: Function) = f().value
 //│ ║        	            ^^^^^^^^
 //│ ╙── The 'Function' type does not specify a return type.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -44,10 +44,10 @@ read(() => Item(42))
 fun curried(f: Function) = f(1)(2)
 curried((x) => (y) => x + y)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.44: 	fun curried(f: Function) = f(1)(2)
+//│ ║  l.+1: 	fun curried(f: Function) = f(1)(2)
 //│ ║        	                           ^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.44: 	fun curried(f: Function) = f(1)(2)
+//│ ║  l.+1: 	fun curried(f: Function) = f(1)(2)
 //│ ║        	               ^^^^^^^^
 //│ ╙── The 'Function' type does not specify a return type.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -59,10 +59,10 @@ fun aliased(f: Callback) =
   val result = f()
   result.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.60: 	  result.value
+//│ ║  l.+4: 	  result.value
 //│ ║        	  ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.58: 	fun aliased(f: Callback) =
+//│ ║  l.+2: 	fun aliased(f: Callback) =
 //│ ║        	               ^^^^^^^^
 //│ ╙── The 'Function' type does not specify a return type.
 
@@ -73,10 +73,10 @@ fun captured(f: Function) =
   fun inner() = result(2)
   inner()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.73: 	  fun inner() = result(2)
+//│ ║  l.+3: 	  fun inner() = result(2)
 //│ ║        	                ^^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.71: 	fun captured(f: Function) =
+//│ ║  l.+1: 	fun captured(f: Function) =
 //│ ║        	                ^^^^^^^^
 //│ ╙── The 'Function' type does not specify a return type.
 
@@ -84,10 +84,10 @@ fun captured(f: Function) =
 :ge
 fun inheritedResult(f: CallbackClass) = f().value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.85: 	fun inheritedResult(f: CallbackClass) = f().value
+//│ ║  l.+1: 	fun inheritedResult(f: CallbackClass) = f().value
 //│ ║        	                                        ^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.85: 	fun inheritedResult(f: CallbackClass) = f().value
+//│ ║  l.+1: 	fun inheritedResult(f: CallbackClass) = f().value
 //│ ║        	                       ^^^^^^^^^^^^^
 //│ ╙── The 'Function' type does not specify a return type.
 
@@ -95,10 +95,10 @@ fun inheritedResult(f: CallbackClass) = f().value
 :ge
 fun missing(f: Function) = f.nonexistent
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.96: 	fun missing(f: Function) = f.nonexistent
+//│ ║  l.+1: 	fun missing(f: Function) = f.nonexistent
 //│ ║        	                           ^^^^^^^^^^^^^
 //│ ╟── Value of type 'Function' does not contain member 'nonexistent'
-//│ ║  l.96: 	fun missing(f: Function) = f.nonexistent
+//│ ║  l.+1: 	fun missing(f: Function) = f.nonexistent
 //│ ╙──      	               ^^^^^^^^
 
 // A user-defined class named Function is not the builtin.
@@ -107,24 +107,24 @@ module Shadowing with
   class Function
   fun shadowed(f: Function) = f(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.108: 	  fun shadowed(f: Function) = f(1)
-//│ ║         	                              ^^^^
+//│ ║  l.+3: 	  fun shadowed(f: Function) = f(1)
+//│ ║        	                              ^^^^
 //│ ╟── Value of type 'Function' cannot be called like a function.
-//│ ║  l.108: 	  fun shadowed(f: Function) = f(1)
-//│ ╙──       	                  ^^^^^^^^
+//│ ║  l.+3: 	  fun shadowed(f: Function) = f(1)
+//│ ╙──      	                  ^^^^^^^^
 
 :e
 fun test(f: Function) = f(1, 2, 3)
 test((x) => x.value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.118: 	test((x) => x.value)
-//│ ║         	            ^^^^^^^
+//│ ║  l.+2: 	test((x) => x.value)
+//│ ║        	            ^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.118: 	test((x) => x.value)
-//│ ║         	      ^
+//│ ║  l.+2: 	test((x) => x.value)
+//│ ║        	      ^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.117: 	fun test(f: Function) = f(1, 2, 3)
-//│ ║         	            ^^^^^^^^
+//│ ║  l.+1: 	fun test(f: Function) = f(1, 2, 3)
+//│ ║        	            ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -133,14 +133,14 @@ test((x) => x.value)
 private fun discard(f: Function) = ()
 discard(x => x.value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.134: 	discard(x => x.value)
-//│ ║         	             ^^^^^^^
+//│ ║  l.+2: 	discard(x => x.value)
+//│ ║        	             ^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.134: 	discard(x => x.value)
-//│ ║         	        ^
+//│ ║  l.+2: 	discard(x => x.value)
+//│ ║        	        ^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.133: 	private fun discard(f: Function) = ()
-//│ ║         	                       ^^^^^^^^
+//│ ║  l.+1: 	private fun discard(f: Function) = ()
+//│ ║        	                       ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 
 // Aliases retain the annotation witness, including for unknown rest elements.
@@ -149,14 +149,14 @@ type ErasedCallback = Function
 private fun discardRest(f: ErasedCallback) = ()
 discardRest((...xs) => xs.0.value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.150: 	discardRest((...xs) => xs.0.value)
-//│ ║         	                       ^^^^^^^^^^
+//│ ║  l.+3: 	discardRest((...xs) => xs.0.value)
+//│ ║        	                       ^^^^^^^^^^
 //│ ╟── Rest parameter 'xs' admits elements of unknown shape.
-//│ ║  l.150: 	discardRest((...xs) => xs.0.value)
-//│ ║         	             ^^^^^
+//│ ║  l.+3: 	discardRest((...xs) => xs.0.value)
+//│ ║        	             ^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.149: 	private fun discardRest(f: ErasedCallback) = ()
-//│ ║         	                           ^^^^^^^^^^^^^^
+//│ ║  l.+2: 	private fun discardRest(f: ErasedCallback) = ()
+//│ ║        	                           ^^^^^^^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 
 // Explicit callback annotations still provide an interface for their parameters.
@@ -173,31 +173,31 @@ discardReturned(() => makeCallback())
 private fun makeCallback() = laterCallback
 private fun laterCallback(x) = x.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.174: 	private fun laterCallback(x) = x.value
-//│ ║         	                               ^^^^^^^
+//│ ║  l.+4: 	private fun laterCallback(x) = x.value
+//│ ║        	                               ^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.174: 	private fun laterCallback(x) = x.value
-//│ ║         	                          ^
+//│ ║  l.+4: 	private fun laterCallback(x) = x.value
+//│ ║        	                          ^
 //│ ╟── This value is returned here.
-//│ ║  l.172: 	discardReturned(() => makeCallback())
-//│ ║         	                      ^^^^^^^^^^^^^^
+//│ ║  l.+2: 	discardReturned(() => makeCallback())
+//│ ║        	                      ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.171: 	private fun discardReturned(f: Function) = ()
-//│ ║         	                               ^^^^^^^^
+//│ ║  l.+1: 	private fun discardReturned(f: Function) = ()
+//│ ║        	                               ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 
 // A declared result erases a private implementation even without a caller.
 :ge
 private fun declared(): Function = x => x.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.191: 	private fun declared(): Function = x => x.value
-//│ ║         	                                        ^^^^^^^
+//│ ║  l.+1: 	private fun declared(): Function = x => x.value
+//│ ║        	                                        ^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.191: 	private fun declared(): Function = x => x.value
-//│ ║         	                                   ^
+//│ ║  l.+1: 	private fun declared(): Function = x => x.value
+//│ ║        	                                   ^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.191: 	private fun declared(): Function = x => x.value
-//│ ║         	                        ^^^^^^^^
+//│ ║  l.+1: 	private fun declared(): Function = x => x.value
+//│ ║        	                        ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 
 // Erasing an imported parameter's signature checks the consumer's callback.
@@ -206,14 +206,14 @@ import "../../mlscript-compile/MutMap.mls"
 :ge
 MutMap.empty |> MutMap.updateWith("key") of (x => x.value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.207: 	MutMap.empty |> MutMap.updateWith("key") of (x => x.value)
-//│ ║         	                                                  ^^^^^^^
+//│ ║  l.+1: 	MutMap.empty |> MutMap.updateWith("key") of (x => x.value)
+//│ ║        	                                                  ^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.207: 	MutMap.empty |> MutMap.updateWith("key") of (x => x.value)
-//│ ║         	                                             ^
+//│ ║  l.+1: 	MutMap.empty |> MutMap.updateWith("key") of (x => x.value)
+//│ ║        	                                             ^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ║  in ../../mlscript-compile/MutMap.mls
-//│ ║  l.30: 	fun updateWith(key)(op: Function)(m: MutMap) =
+//│ ║  l.XX: 	fun updateWith(key)(op: Function)(m: MutMap) =
 //│ ║        	                        ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -229,26 +229,26 @@ discardRecursive(recursive)
 private fun discardCallable(f: Function) = ()
 discardCallable(x => x())
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.230: 	discardCallable(x => x())
-//│ ║         	                     ^^^
+//│ ║  l.+2: 	discardCallable(x => x())
+//│ ║        	                     ^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.230: 	discardCallable(x => x())
-//│ ║         	                ^
+//│ ║  l.+2: 	discardCallable(x => x())
+//│ ║        	                ^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.229: 	private fun discardCallable(f: Function) = ()
-//│ ║         	                               ^^^^^^^^
+//│ ║  l.+1: 	private fun discardCallable(f: Function) = ()
+//│ ║        	                               ^^^^^^^^
 //│ ╙── The 'Function' type does not specify parameter types.
 
 // Propagating an unknown result through a spread retains the annotation's position.
 :ge
 private fun spreadResult(f: Function) = [...f()].0.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.244: 	private fun spreadResult(f: Function) = [...f()].0.value
-//│ ║         	                                        ^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	private fun spreadResult(f: Function) = [...f()].0.value
+//│ ║        	                                        ^^^^^^^^^^^^^^^^
 //│ ╟── This spread has no known element shape.
-//│ ║  l.244: 	private fun spreadResult(f: Function) = [...f()].0.value
-//│ ║         	                                            ^^^
+//│ ║  l.+1: 	private fun spreadResult(f: Function) = [...f()].0.value
+//│ ║        	                                            ^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
-//│ ║  l.244: 	private fun spreadResult(f: Function) = [...f()].0.value
-//│ ║         	                            ^^^^^^^^
+//│ ║  l.+1: 	private fun spreadResult(f: Function) = [...f()].0.value
+//│ ║        	                            ^^^^^^^^
 //│ ╙── The 'Function' type does not specify a return type.

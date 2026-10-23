@@ -11,7 +11,7 @@
 :e
 _ + 1
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.12: 	_ + 1
+//│ ║  l.+1: 	_ + 1
 //│ ║        	^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -19,7 +19,7 @@ _ + 1
 :e
 (_ + 1)
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.20: 	(_ + 1)
+//│ ║  l.+1: 	(_ + 1)
 //│ ║        	 ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -44,7 +44,7 @@ f(3)
 :e
 3 > _
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.45: 	3 > _
+//│ ║  l.+1: 	3 > _
 //│ ║        	    ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -103,16 +103,16 @@ k(3)
 :e
 _ < 3
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.104: 	_ < 3
-//│ ║         	^
+//│ ║  l.+1: 	_ < 3
+//│ ║        	^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 _ <= 3
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.112: 	_ <= 3
-//│ ║         	^
+//│ ║  l.+1: 	_ <= 3
+//│ ║        	^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -122,16 +122,16 @@ _ <= 3
 :e
 3 |. _ + 1
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.123: 	3 |. _ + 1
-//│ ║         	     ^
+//│ ║  l.+1: 	3 |. _ + 1
+//│ ║        	     ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 3 + _
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.131: 	3 + _
-//│ ║         	    ^
+//│ ║  l.+1: 	3 + _
+//│ ║        	    ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -139,16 +139,16 @@ _ <= 3
 :e
 _ |> f
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.140: 	_ |> f
-//│ ║         	^
+//│ ║  l.+1: 	_ |> f
+//│ ║        	^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 (=> _ + 1) << _ * 2
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.148: 	(=> _ + 1) << _ * 2
-//│ ║         	              ^
+//│ ║  l.+1: 	(=> _ + 1) << _ * 2
+//│ ║        	              ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

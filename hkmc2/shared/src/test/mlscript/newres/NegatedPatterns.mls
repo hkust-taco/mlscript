@@ -96,36 +96,36 @@ extractedLength(TextBox("abc"))
 fun stillFalse(value: Str | null | false) =
   if value is ~null as text then text.length else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.97: 	  if value is ~null as text then text.length else 0
+//│ ║  l.+2: 	  if value is ~null as text then text.length else 0
 //│ ║        	                                 ^^^^^^^^^^^
 //│ ╟── Boolean literal does not contain member 'length'
-//│ ║  l.96: 	fun stillFalse(value: Str | null | false) =
+//│ ║  l.+1: 	fun stillFalse(value: Str | null | false) =
 //│ ╙──      	                                   ^^^^^
 
 :ge
 fun stillUnknown(value: Any) =
   if value is ~TextBox as other then other.text else ""
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.107: 	  if value is ~TextBox as other then other.text else ""
-//│ ║         	                                     ^^^^^^^^^^
+//│ ║  l.+2: 	  if value is ~TextBox as other then other.text else ""
+//│ ║        	                                     ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'text' of a value with unknown shape.
-//│ ║  l.106: 	fun stillUnknown(value: Any) =
-//│ ║         	                        ^^^
+//│ ║  l.+1: 	fun stillUnknown(value: Any) =
+//│ ║        	                        ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.2: 	declare type Any
-//│ ╙──     	             ^^^
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
 
 // An impossible conjunction must not exclude either of its alternatives.
 :ge
 fun stillNull(value: Str | null) =
   if value is ~(null & Str) as text then text.length else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.122: 	  if value is ~(null & Str) as text then text.length else 0
-//│ ║         	                                         ^^^^^^^^^^^
+//│ ║  l.+2: 	  if value is ~(null & Str) as text then text.length else 0
+//│ ║        	                                         ^^^^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.121: 	fun stillNull(value: Str | null) =
-//│ ╙──       	                           ^^^^
+//│ ║  l.+1: 	fun stillNull(value: Str | null) =
+//│ ╙──      	                           ^^^^
 
 // A negated loop condition is checked again after assigning the next link.
 :expect [0, 2]

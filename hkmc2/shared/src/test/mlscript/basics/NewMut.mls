@@ -63,7 +63,7 @@ f.y
 :e
 let f = mut new Foo
 //│ ╔══[COMPILATION ERROR] Illegal position for 'mut' modifier.
-//│ ║  l.64: 	let f = mut new Foo
+//│ ║  l.+1: 	let f = mut new Foo
 //│ ╙──      	        ^^^
 //│ f = Foo { x: 0 }
 
@@ -71,11 +71,11 @@ let f = mut new Foo
 :re
 new mut Foo.x
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.72: 	new mut Foo.x
+//│ ║  l.+1: 	new mut Foo.x
 //│ ║        	        ^^^^^
 //│ ╟── Class value does not contain member 'x'
-//│ ║  l.5: 	class Foo with
-//│ ╙──     	^^^^^^^^^
+//│ ║  l.XX: 	class Foo with
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

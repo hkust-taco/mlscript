@@ -9,14 +9,14 @@
 :ge
 Int
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member Int in term position
-//│ ║  l.10: 	Int
+//│ ║  l.+1: 	Int
 //│ ╙──      	^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   Int⁰
 //│ where
 //│     
 //│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
-//│ ║  l.10: 	Int
+//│ ║  l.+1: 	Int
 //│ ╙──      	^^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -34,7 +34,7 @@ class C
 :e
 C
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member C in term position
-//│ ║  l.35: 	C
+//│ ║  l.+1: 	C
 //│ ╙──      	^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   C⁰

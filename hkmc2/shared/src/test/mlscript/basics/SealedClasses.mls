@@ -11,9 +11,9 @@ new OpenChild().value()
 :e
 class Invalid extends SealedClasses.Closed
 //│ ╔══[COMPILATION ERROR] Cannot extend sealed class 'Closed' outside its compilation unit
-//│ ║  l.12: 	class Invalid extends SealedClasses.Closed
+//│ ║  l.+1: 	class Invalid extends SealedClasses.Closed
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class 'Closed' is defined here; declare it 'open' or 'abstract' to allow external subclasses
 //│ ║  in ../../mlscript-compile/SealedClasses.mls
-//│ ║  l.3: 	  class Closed { fun value() = 1 }
-//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  class Closed { fun value() = 1 }
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -86,14 +86,14 @@ fun test() =
   calls
 test()
 //│ ╔══[COMPILATION ERROR] Overriding member 'value' must preserve whether the member is a field, getter, or method
-//│ ║  l.81: 	    fun value: Int =
+//│ ║  l.+6: 	    fun value: Int =
 //│ ║        	    ^^^^^^^^^^^^^^^^
-//│ ║  l.82: 	      set calls += 1
+//│ ║  l.+7: 	      set calls += 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.83: 	      42
+//│ ║  l.+8: 	      42
 //│ ║        	^^^^^^^^
 //│ ╟── Inherited member 'value' is defined here
-//│ ║  l.79: 	    val value: Int
+//│ ║  l.+4: 	    val value: Int
 //│ ╙──      	        ^^^^^
 //│ = 0
 

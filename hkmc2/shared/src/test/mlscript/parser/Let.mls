@@ -4,8 +4,8 @@
 :pe
 let
 //│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding keyword; found end of input instead
-//│ ║  l.5: 	let
-//│ ╙──     	   ^
+//│ ║  l.+1: 	let
+//│ ╙──      	   ^
 //│ Parsed:
 //│ 	Error()
 
@@ -16,7 +16,7 @@ let x
 :pe
 let x =
 //│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding equals sign; found end of input instead
-//│ ║  l.17: 	let x =
+//│ ║  l.+1: 	let x =
 //│ ╙──      	       ^
 //│ Parsed:
 //│ 	Error()
@@ -33,7 +33,7 @@ let x =
 :pe
 let x = y in
 //│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding `in` clause; found end of input instead
-//│ ║  l.34: 	let x = y in
+//│ ║  l.+1: 	let x = y in
 //│ ╙──      	            ^
 //│ Parsed:
 //│ 	Error()
@@ -45,7 +45,7 @@ let x = y in z
 :pe
 let x = y class
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
-//│ ║  l.46: 	let x = y class
+//│ ║  l.+1: 	let x = y class
 //│ ╙──      	          ^^^^^
 //│ Parsed:
 //│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(Ident(y)),None)
@@ -67,9 +67,9 @@ let x
 =
 1
 //│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding equals sign; found new line instead
-//│ ║  l.67: 	=
+//│ ║  l.+2: 	=
 //│ ║        	 ^
-//│ ║  l.68: 	1
+//│ ║  l.+3: 	1
 //│ ╙──
 //│ Parsed:
 //│ 	Error()
@@ -87,7 +87,7 @@ let ()
 :pe
 let // a
 //│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding keyword; found end of input instead
-//│ ║  l.88: 	let // a
+//│ ║  l.+1: 	let // a
 //│ ╙──      	        ^
 //│ Parsed:
 //│ 	Error()
@@ -96,7 +96,7 @@ let // a
 let
   // a
 //│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding keyword; found end of input instead
-//│ ║  l.97: 	  // a
+//│ ║  l.+2: 	  // a
 //│ ╙──      	  ^
 //│ Parsed:
 //│ 	Error()
@@ -106,9 +106,9 @@ let
   // a
 1
 //│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding keyword; found new line instead
-//│ ║  l.106: 	  // a
-//│ ║         	      ^
-//│ ║  l.107: 	1
+//│ ║  l.+2: 	  // a
+//│ ║        	      ^
+//│ ║  l.+3: 	1
 //│ ╙──
 //│ Parsed:
 //│ 	Error()
@@ -148,8 +148,8 @@ let
 let
   x = 1 in x
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.149: 	  x = 1 in x
-//│ ╙──       	        ^^
+//│ ║  l.+2: 	  x = 1 in x
+//│ ╙──      	        ^^
 //│ Parsed:
 //│ 	LetLike(Keywrd(keyword 'let'),Block(List(Def(Ident(x),IntLit(1)))),None,None)
 
@@ -181,9 +181,9 @@ let
 x = 1
 in x
 //│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding keyword; found new line instead
-//│ ║  l.180: 	let
-//│ ║         	   ^
-//│ ║  l.181: 	x = 1
+//│ ║  l.+1: 	let
+//│ ║        	   ^
+//│ ║  l.+2: 	x = 1
 //│ ╙──
 //│ Parsed:
 //│ 	Error()
@@ -204,8 +204,8 @@ let a = 1 in b
 let
   with
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'with' keyword instead
-//│ ║  l.205: 	  with
-//│ ╙──       	  ^^^^
+//│ ║  l.+2: 	  with
+//│ ╙──      	  ^^^^
 //│ Parsed:
 //│ 	LetLike(Keywrd(keyword 'let'),Block(List(Error())),None,None)
 
@@ -256,8 +256,8 @@ x => let x = 1
 :pe
 if
 //│ ╔══[PARSE ERROR] Expected expression or block after 'if' keyword; found end of input instead
-//│ ║  l.257: 	if
-//│ ╙──       	  ^
+//│ ║  l.+1: 	if
+//│ ╙──      	  ^
 //│ Parsed:
 //│ 	Error()
 

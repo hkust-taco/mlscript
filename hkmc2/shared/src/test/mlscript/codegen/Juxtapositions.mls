@@ -41,13 +41,13 @@ fun add(x, y) = x + y
 42
 add(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.42: 	add(2)
+//│ ║  l.+2: 	add(2)
 //│ ║        	^^^^^^
 //│ ╟── Function 'add' expected 2 arguments, but got 1
-//│ ║  l.30: 	fun add(x, y) = x + y
+//│ ║  l.XX: 	fun add(x, y) = x + y
 //│ ╙──      	^^^^^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.41: 	42
+//│ ║  l.+1: 	42
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] Error: Function 'add' expected at least 2 arguments but got 1
 
@@ -72,7 +72,7 @@ add(2)
 :e // Note: this used to parse as a juxtaposition (the curly braces were treated equally to an indented section)
 42 { inc() }
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.73: 	42 { inc() }
+//│ ║  l.+1: 	42 { inc() }
 //│ ╙──      	^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -80,43 +80,43 @@ add(2)
 42 { inc() }
   inc()
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.80: 	42 { inc() }
+//│ ║  l.+1: 	42 { inc() }
 //│ ╙──      	^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e // Note: idem
 42 { add(2) } inc()
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.88: 	42 { add(2) } inc()
+//│ ║  l.+1: 	42 { add(2) } inc()
 //│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e // Note: idem
 42 { add(2) } { inc() }
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.95: 	42 { add(2) } { inc() }
+//│ ║  l.+1: 	42 { add(2) } { inc() }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e // Note: idem
 42 { add(2), inc() }
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.102: 	42 { add(2), inc() }
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	42 { add(2), inc() }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 42 { add(2) inc() }
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.109: 	42 { add(2) inc() }
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	42 { add(2) inc() }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 42 { add(2) { inc() } }
 //│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.116: 	42 { add(2) { inc() } }
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	42 { add(2) { inc() } }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 2 * 2
@@ -151,10 +151,10 @@ inc(2) * 2
   inc() * 1
     add(2)
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (operator application).
-//│ ║  l.151: 	  inc() * 1
-//│ ║         	  ^^^^^^^^^
-//│ ║  l.152: 	    add(2)
-//│ ╙──       	^^^^
+//│ ║  l.+2: 	  inc() * 1
+//│ ║        	  ^^^^^^^^^
+//│ ║  l.+3: 	    add(2)
+//│ ╙──      	^^^^
 //│ = 42
 
 :e
@@ -162,10 +162,10 @@ inc(2) * 2
   inc()
     add(2)
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (juxtaposition).
-//│ ║  l.162: 	  inc()
-//│ ║         	  ^^^^^
-//│ ║  l.163: 	    add(2)
-//│ ╙──       	^^^^
+//│ ║  l.+2: 	  inc()
+//│ ║        	  ^^^^^
+//│ ║  l.+3: 	    add(2)
+//│ ╙──      	^^^^
 //│ = 42
 
 
@@ -174,8 +174,8 @@ inc(2) * 2
 42
   inc() + 1
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (operator application).
-//│ ║  l.175: 	  inc() + 1
-//│ ╙──       	  ^^^^^^^^^
+//│ ║  l.+2: 	  inc() + 1
+//│ ╙──      	  ^^^^^^^^^
 //│ = 42
 
 :todo // ? do we really want to support this
@@ -183,8 +183,8 @@ inc(2) * 2
   add(2) + 1
   inc()
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (operator application).
-//│ ║  l.183: 	  add(2) + 1
-//│ ╙──       	  ^^^^^^^^^^
+//│ ║  l.+2: 	  add(2) + 1
+//│ ╙──      	  ^^^^^^^^^^
 //│ = 43
 
 :todo // ? do we really want to support this
@@ -192,8 +192,8 @@ inc(2) * 2
   add(2)
   inc() + 1
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (operator application).
-//│ ║  l.193: 	  inc() + 1
-//│ ╙──       	  ^^^^^^^^^
+//│ ║  l.+3: 	  inc() + 1
+//│ ╙──      	  ^^^^^^^^^
 //│ = 44
 
 2 * 2
@@ -227,10 +227,10 @@ inc(2) * 2
   inc())
 inc()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.228: 	inc()
-//│ ║         	^^^^^
+//│ ║  l.+3: 	inc()
+//│ ║        	^^^^^
 //│ ╟── Function 'inc' expected 1 argument, but got 0
-//│ ║  l.15: 	fun inc(x) = x + 1
+//│ ║  l.XX: 	fun inc(x) = x + 1
 //│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected at least 1 argument but got 0
 
@@ -241,10 +241,10 @@ inc()
 )
 inc()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.242: 	inc()
-//│ ║         	^^^^^
+//│ ║  l.+4: 	inc()
+//│ ║        	^^^^^
 //│ ╟── Function 'inc' expected 1 argument, but got 0
-//│ ║  l.15: 	fun inc(x) = x + 1
+//│ ║  l.XX: 	fun inc(x) = x + 1
 //│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected at least 1 argument but got 0
 
@@ -261,8 +261,8 @@ inc()
 :e
 42 console.log
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (selection).
-//│ ║  l.262: 	42 console.log
-//│ ╙──       	   ^^^^^^^^^^^
+//│ ║  l.+1: 	42 console.log
+//│ ╙──      	   ^^^^^^^^^^^
 //│ = 42
 
 

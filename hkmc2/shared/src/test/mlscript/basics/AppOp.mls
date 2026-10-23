@@ -108,8 +108,8 @@ pipeInto @ 1, inc
 :re
 1 pipeInto @ inc
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.109: 	1 pipeInto @ inc
-//│ ╙──       	  ^^^^^^^^
+//│ ║  l.+1: 	1 pipeInto @ inc
+//│ ╙──      	  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
 
 (=> 1 pipeInto(_)) @ inc

@@ -11,11 +11,11 @@ id(123)
 :re
 id()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.12: 	id()
+//│ ║  l.+1: 	id()
 //│ ║        	^^^^
 //│ ╟── Function 'id' expected 1 argument, but got 0
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.19: 	fun id(x) = x
+//│ ║  l.XX: 	fun id(x) = x
 //│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
@@ -192,12 +192,12 @@ foldr(tuple)(0, 1, 2, 3)
 :todo
 foldr(+)()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.193: 	foldr(+)()
-//│ ║         	^^^^^^^^^^
+//│ ║  l.+1: 	foldr(+)()
+//│ ║        	^^^^^^^^^^
 //│ ╟── Function 'foldr' expected at least 1 argument, but got 0
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.116: 	fun foldr[A](f: (A, A) -> A)(first: A, ...rest: Array[A]): A =
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun foldr[A](f: (A, A) -> A)(first: A, ...rest: Array[A]): A =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 

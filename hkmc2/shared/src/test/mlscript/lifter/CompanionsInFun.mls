@@ -10,7 +10,7 @@ fun f(x) =
   module A
   fun g = new A
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.10: 	  module A
+//│ ║  l.+4: 	  module A
 //│ ╙──      	         ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let g;

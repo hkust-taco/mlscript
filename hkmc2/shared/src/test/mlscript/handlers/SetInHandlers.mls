@@ -33,16 +33,16 @@ set x += 1 in
   print("end")
 x
 //│ ╔══[COMPILATION ERROR] Backtracking assignment is not supported with effect handlers enabled
-//│ ║  l.29: 	set x += 1 in
+//│ ║  l.+8: 	set x += 1 in
 //│ ║        	    ^^^^^^^^^
-//│ ║  l.30: 	  print("init")
+//│ ║  l.+9: 	  print("init")
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.31: 	  print(h.test())
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	  print(x)
-//│ ║        	^^^^^^^^^^
-//│ ║  l.33: 	... (more lines omitted) ...
-//│ ╙──      	^^^^^^^^^^^^^^
+//│ ║  l.+10: 	  print(h.test())
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.+11: 	  print(x)
+//│ ║         	^^^^^^^^^^
+//│ ║  l.+12: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = 1
 

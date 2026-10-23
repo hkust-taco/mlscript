@@ -161,18 +161,18 @@ Explosive.class
 :e
 Empty().class
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.162: 	Empty().class
-//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.+1: 	Empty().class
+//│ ║        	^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Empty' does not contain member 'class'
-//│ ║  l.162: 	Empty().class
-//│ ╙──       	^^^^^^^
+//│ ║  l.+1: 	Empty().class
+//│ ╙──      	^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 set Bare.class = 1
 //│ ╔══[COMPILATION ERROR] Assignment requires a term member
-//│ ║  l.172: 	set Bare.class = 1
-//│ ╙──       	    ^^^^^^^^^^
+//│ ║  l.+1: 	set Bare.class = 1
+//│ ╙──      	    ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Specialization must survive class selection and subsequent construction.
@@ -351,11 +351,11 @@ new bareClass is Bare
 let invalidClass = 0
 new invalidClass
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.352: 	new invalidClass
-//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	new invalidClass
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Integer literal cannot be instantiated with keyword 'new'.
-//│ ║  l.351: 	let invalidClass = 0
-//│ ╙──       	                   ^
+//│ ║  l.+1: 	let invalidClass = 0
+//│ ╙──      	                   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ invalidClass = 0
 
@@ -364,13 +364,13 @@ let ambiguousClass = Primary.class
 set ambiguousClass = Curried.class
 new ambiguousClass
 //│ ╔══[COMPILATION ERROR] The class interpretation here is ambiguous
-//│ ║  l.365: 	new ambiguousClass
-//│ ║         	    ^^^^^^^^^^^^^^
+//│ ║  l.+3: 	new ambiguousClass
+//│ ║        	    ^^^^^^^^^^^^^^
 //│ ╟── class 'Primary' defined here
-//│ ║  l.7: 	class Primary(val x)
-//│ ║       	      ^^^^^^^
+//│ ║  l.XX: 	class Primary(val x)
+//│ ║        	      ^^^^^^^
 //│ ╟── class 'Curried' defined here
-//│ ║  l.12: 	class Curried(val x)(val y)
+//│ ║  l.XX: 	class Curried(val x)(val y)
 //│ ╙──      	      ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ambiguousClass = class Curried
@@ -432,14 +432,14 @@ let mixedRepresentation = Primary
 set mixedRepresentation = Primary.class
 new mixedRepresentation
 //│ ╔══[COMPILATION ERROR] The class interpretation here is ambiguous
-//│ ║  l.433: 	new mixedRepresentation
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	new mixedRepresentation
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^
 //│ ╟── function 'Primary' defined here
-//│ ║  l.7: 	class Primary(val x)
-//│ ║       	      ^^^^^^^
+//│ ║  l.XX: 	class Primary(val x)
+//│ ║        	      ^^^^^^^
 //│ ╟── class 'Primary' defined here
-//│ ║  l.7: 	class Primary(val x)
-//│ ╙──     	      ^^^^^^^
+//│ ║  l.XX: 	class Primary(val x)
+//│ ╙──      	      ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mixedRepresentation = class Primary
 

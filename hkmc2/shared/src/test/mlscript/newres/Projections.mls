@@ -48,20 +48,20 @@ cell.Cell#value
 :e
 fun missing(a) = a.Later#missing()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.49: 	fun missing(a) = a.Later#missing()
+//│ ║  l.+1: 	fun missing(a) = a.Later#missing()
 //│ ║        	                 ^^^^^^^^^^^^^^^
 //│ ╟── Class 'Later' does not contain member 'missing'
-//│ ║  l.7: 	class Later(val x) { fun get() = x }
-//│ ╙──     	^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	class Later(val x) { fun get() = x }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 
 :e
 val NotClass = 1
 fun invalid(a) = a.NotClass#get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.59: 	fun invalid(a) = a.NotClass#get()
+//│ ║  l.+2: 	fun invalid(a) = a.NotClass#get()
 //│ ║        	                 ^^^^^^^^^^^^^^
 //│ ╟── Integer literal cannot be used as a projection class.
-//│ ║  l.58: 	val NotClass = 1
+//│ ║  l.+1: 	val NotClass = 1
 //│ ╙──      	               ^
 //│ NotClass = 1
 
@@ -73,13 +73,13 @@ open Left
 open Right
 fun ambiguous(a) = a.Item#get()
 //│ ╔══[COMPILATION ERROR] The projection class is ambiguous
-//│ ║  l.74: 	fun ambiguous(a) = a.Item#get()
+//│ ║  l.+5: 	fun ambiguous(a) = a.Item#get()
 //│ ║        	                    ^^^^^
 //│ ╟── class: 'Item'
-//│ ║  l.70: 	module Left { class Item extends Parent {} }
+//│ ║  l.+1: 	module Left { class Item extends Parent {} }
 //│ ║        	                    ^^^^
 //│ ╟── class: 'Item'
-//│ ║  l.71: 	module Right { class Item extends Parent {} }
+//│ ║  l.+2: 	module Right { class Item extends Parent {} }
 //│ ╙──      	                     ^^^^
 
 // Forwarded arguments carry shapes through the projected method's result.
@@ -92,11 +92,11 @@ let identity = new Identity
 val apply = Identity::apply
 apply(identity, new Answer).get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.93: 	apply(identity, new Answer).get()
+//│ ║  l.+5: 	apply(identity, new Answer).get()
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'get' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.92: 	val apply = Identity::apply
+//│ ║  l.+4: 	val apply = Identity::apply
 //│ ╙──      	                    ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '17', got: 'undefined'
@@ -141,18 +141,18 @@ fun sameClass(value) = value.Entry#get()
 :e
 fun missingClass(value) = value.Unknown#get()
 //│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
-//│ ║  l.142: 	fun missingClass(value) = value.Unknown#get()
-//│ ╙──       	                               ^^^^^^^^
+//│ ║  l.+1: 	fun missingClass(value) = value.Unknown#get()
+//│ ╙──      	                               ^^^^^^^^
 
 :e
 val instance = new Parent
 fun instanceAsClass(value) = value.instance#get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.149: 	fun instanceAsClass(value) = value.instance#get()
-//│ ║         	                             ^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun instanceAsClass(value) = value.instance#get()
+//│ ║        	                             ^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Parent' cannot be used as a projection class.
-//│ ║  l.148: 	val instance = new Parent
-//│ ╙──       	               ^^^^^^^^^^
+//│ ║  l.+1: 	val instance = new Parent
+//│ ╙──      	               ^^^^^^^^^^
 //│ instance = Parent
 
 // A forward wildcard source resolves through its eventual module shape.
@@ -188,11 +188,11 @@ fun invalidAlias(value) = value.AliasToNumber#get()
 val SourceNumber = 123
 val AliasToNumber = SourceNumber
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.187: 	fun invalidAlias(value) = value.AliasToNumber#get()
-//│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun invalidAlias(value) = value.AliasToNumber#get()
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Integer literal cannot be used as a projection class.
-//│ ║  l.188: 	val SourceNumber = 123
-//│ ╙──       	                   ^^^
+//│ ║  l.+2: 	val SourceNumber = 123
+//│ ╙──      	                   ^^^
 //│ AliasToNumber = 123
 //│ SourceNumber = 123
 
@@ -232,13 +232,13 @@ private fun chooseClass(flag) = if flag then Parent.class else OtherEntry.class
 let classAlias = chooseClass(true)
 fun ambiguousAlias(value) = value.classAlias#get()
 //│ ╔══[COMPILATION ERROR] The projection class is ambiguous
-//│ ║  l.233: 	fun ambiguousAlias(value) = value.classAlias#get()
-//│ ║         	                                 ^^^^^^^^^^^
+//│ ║  l.+4: 	fun ambiguousAlias(value) = value.classAlias#get()
+//│ ║        	                                 ^^^^^^^^^^^
 //│ ╟── class: 'OtherEntry'
-//│ ║  l.230: 	class OtherEntry extends Parent {}
-//│ ║         	      ^^^^^^^^^^
+//│ ║  l.+1: 	class OtherEntry extends Parent {}
+//│ ║        	      ^^^^^^^^^^
 //│ ╟── class: 'Parent'
-//│ ║  l.33: 	class Parent { fun get() = 9 }
+//│ ║  l.XX: 	class Parent { fun get() = 9 }
 //│ ╙──      	      ^^^^^^
 //│ classAlias = class Parent
 
@@ -265,9 +265,9 @@ readMixed(Identified(5))
 let recordQualifier = {"class": Parent}
 fun invalidRecordQualifier(value) = value.recordQualifier#get()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.266: 	fun invalidRecordQualifier(value) = value.recordQualifier#get()
-//│ ║         	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun invalidRecordQualifier(value) = value.recordQualifier#get()
+//│ ║        	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Record literal cannot be used as a projection class.
-//│ ║  l.265: 	let recordQualifier = {"class": Parent}
-//│ ╙──       	                       ^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	let recordQualifier = {"class": Parent}
+//│ ╙──      	                       ^^^^^^^^^^^^^^^
 //│ recordQualifier = {class: class Parent}

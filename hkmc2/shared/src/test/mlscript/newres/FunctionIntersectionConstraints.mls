@@ -27,14 +27,14 @@ fun allResults(f: (Int -> Int) & (Str -> Str)) =
   let g = adapt(f)
   [g(0).toUpperCase(), g("").toFixed(0)]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.28: 	  [g(0).toUpperCase(), g("").toFixed(0)]
+//│ ║  l.+4: 	  [g(0).toUpperCase(), g("").toFixed(0)]
 //│ ║        	   ^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Int' does not contain member 'toUpperCase'
-//│ ║  l.26: 	fun allResults(f: (Int -> Int) & (Str -> Str)) =
+//│ ║  l.+2: 	fun allResults(f: (Int -> Int) & (Str -> Str)) =
 //│ ╙──      	                          ^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.28: 	  [g(0).toUpperCase(), g("").toFixed(0)]
+//│ ║  l.+4: 	  [g(0).toUpperCase(), g("").toFixed(0)]
 //│ ║        	                       ^^^^^^^^^^^^^
 //│ ╟── Value of type 'Str' does not contain member 'toFixed'
-//│ ║  l.26: 	fun allResults(f: (Int -> Int) & (Str -> Str)) =
+//│ ║  l.+2: 	fun allResults(f: (Int -> Int) & (Str -> Str)) =
 //│ ╙──      	                                         ^^^

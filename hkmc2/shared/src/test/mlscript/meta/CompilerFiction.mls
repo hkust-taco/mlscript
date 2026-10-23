@@ -5,15 +5,15 @@
 :ge
 source
 //│ ╔══[COMPILATION ERROR] Module 'source' is virtual (i.e., "compiler fiction"); cannot be used directly
-//│ ║  l.6: 	source
-//│ ╙──     	^^^^^^
+//│ ║  l.+1: 	source
+//│ ╙──      	^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :ge
 js
 //│ ╔══[COMPILATION ERROR] Module 'js' is virtual (i.e., "compiler fiction"); cannot be used directly
-//│ ║  l.14: 	js
+//│ ║  l.+1: 	js
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -21,18 +21,18 @@ js
 :ge
 js.oops
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.22: 	js.oops
+//│ ║  l.+1: 	js.oops
 //│ ║        	^^^^^^^
 //│ ╟── Module 'js' does not contain member 'oops'
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.468: 	declare module js {
-//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	declare module js {
+//│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 js.try_catch
 //│ ╔══[COMPILATION ERROR] Module 'js' is virtual (i.e., "compiler fiction"); cannot be used directly
-//│ ║  l.33: 	js.try_catch
+//│ ║  l.+1: 	js.try_catch
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
