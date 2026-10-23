@@ -84,7 +84,9 @@ pattern BiasedOr2 =
 :noOpt
 :checkIR
 fun biasedOr2__compiled(x) = if x is (@compile BiasedOr2) as output then output
-//│ ═══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
+//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
+//│ ║  l.81: 	  | Some((x => x + 2) as res) => res
+//│ ╙──      	          ^
 
 fun biasedOr2__naive(x) = if x is BiasedOr2(output) then output
 

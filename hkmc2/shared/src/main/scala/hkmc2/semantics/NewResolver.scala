@@ -2309,7 +2309,8 @@ class NewResolver:
     rctx.state.appliedTypes.getOrElseUpdate((symbol, arguments), {
       val source = arguments.head.resolution
       val member = symbol.defn.get.bsym
-      val head = Term.MemberRef(member)(S(new Tree.Ident(symbol.nme).withLocOf(source.source)), FlowSymbol.memSym(member))
+      // The constructor has no written identifier; its arguments retain their own source origins.
+      val head = Term.MemberRef(member)(N, FlowSymbol.memSym(member))
       head.resolvedTargets = symbol :: Nil
       // This head is fully applied and has no lexical binders. Reusing an argument's
       // source would misclassify it as a bare generic use in that argument's scope.

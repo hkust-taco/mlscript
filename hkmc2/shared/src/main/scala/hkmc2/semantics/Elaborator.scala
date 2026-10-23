@@ -494,7 +494,7 @@ object Elaborator:
         // * Same remark as in RefElem#ref
         val prefix = base.ref(N)
         val loc = id.flatMap(_.toLoc)
-        val name = new Ident(nme).withLoc(loc)
+        val name = id.filter(_.name === nme).getOrElse(new Ident(nme))
         if config.language.useNewResolution then
           val res = new Term.NewSel(prefix, name, N)(FlowSymbol.synthSel(nme)).withLoc(loc)
           rctx.recordLexicalBinders(res, ctx.typeBinders)
@@ -502,7 +502,7 @@ object Elaborator:
           summon[NewResolver].newSel(res, ctx.scope)
           res
         else
-          Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon))
+          Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon)).withLoc(loc)
       def symbol = symOpt
     final case class WildcardElem(nme: Str, sources: Ls[OpenSource]) extends Elem:
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
@@ -1538,7 +1538,7 @@ extends Importer:
     def elaborateProjection(prefix: Term, cls: Term, name: Ident): Term =
       // The qualifier denotes a class even when its source is a stored constructor.
       // Resolve that interpretation on the qualifier itself, as for explicit `.class`.
-      val qualifier = withTypeBinders(new Term.NewSel(cls, new Ident("class").withLocOf(cls), N)(FlowSymbol.sel("class")).withLocOf(cls))
+      val qualifier = withTypeBinders(new Term.NewSel(cls, new Ident("class"), N)(FlowSymbol.sel("class")).withLocOf(cls))
       val res = withTypeBinders(new Term.NewSel(prefix, name, S(qualifier))(FlowSymbol.selProj(name.name)).withLocOf(tree))
       rctx.recordAccessSite(res, ctx.scope)
       newSel(res, ctx.scope)
@@ -3207,7 +3207,7 @@ extends Importer:
   private def seedRestParameter(ps: ParamList)(using Ctx): Unit = if newResolution then
     ps.variadic.map(_.param).filter(parameterSignature(_).isEmpty).foreach: p =>
       def builtin(name: Str): Term =
-        prelude.getBuiltin(name).get.ref(S(new Ident(name).withLoc(p.toLoc)))
+        prelude.getBuiltin(name).get.ref(N)
       val initial = Term.TyApp(builtin("Array"), builtin("Nothing") :: Nil)(N).withLoc(p.toLoc)
       // Builtins ignore local name shadowing, but their interfaces still enter
       // the parameter's lexical scopes. Without these captures a generic Array
@@ -3380,7 +3380,7 @@ extends Importer:
           // We create a symbol specifically for `Param` for each variable to
           // avoid redundantly redeclaring symbols in `Scope` during code
           // generation, which triggers the assertion in `Scope.addToBindings`.
-          val parameterSymbol = VarSymbol(new Ident(symbol.name), erasedType = N)
+          val parameterSymbol = VarSymbol(symbol.id, erasedType = N)
           (name -> parameterSymbol, symbol -> parameterSymbol)
       .toList.unzip
       pattern.variables.report // Report all invalid variables we found in `pattern`.

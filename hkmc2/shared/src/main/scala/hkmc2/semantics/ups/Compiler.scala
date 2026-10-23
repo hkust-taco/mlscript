@@ -79,7 +79,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       case index: Int => s"p_$index"
     /** Convert the field name to an `Ident`. */
     def asIdent: Ident = field match
-      case id: Ident => new Ident(id.name)
+      case id: Ident => id
       case index: Int => Ident(index.toString)
   
   extension (head: Head)

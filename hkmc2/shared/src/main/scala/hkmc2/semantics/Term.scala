@@ -547,6 +547,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   
   /** Duplicate an elaborated expression after resolution, retaining its semantic
     * identity and completed results. Listeners belong to elaboration and are not copied.
+    * Source identifiers and literals are shared so their token locations survive cloning.
     */
   override def mkClone(using State, Erasure): Term =
     def copyMetadata(source: Term, copy: Term): copy.type =
@@ -580,11 +581,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
       case UnitVal() => UnitVal()
       case DynTy() => DynTy()
       case Missing => Missing
-      case Lit(Tree.StrLit(value)) => Lit(Tree.StrLit(value))
-      case Lit(Tree.IntLit(value)) => Lit(Tree.IntLit(value))
-      case Lit(Tree.DecLit(value)) => Lit(Tree.DecLit(value))
-      case Lit(Tree.BoolLit(value)) => Lit(Tree.BoolLit(value))
-      case Lit(Tree.UnitLit(value)) => Lit(Tree.UnitLit(value))
+      case Lit(lit) => Lit(lit)
       case term @ SimpleRef(sym) => SimpleRef(sym)(term.tree)
       case term @ SelfRef(sym) => SelfRef(sym)(term.tree)
       case term @ MemberRef(sym) => copyNewResolution(term, MemberRef(sym)(term.tree, term.resSym))
@@ -604,16 +601,16 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
         copyNewResolution(term, copyShapes(term, copy))
       case Capture(base, thru) => Capture(base.mkClone, thru)
       case term @ Resolved(t, sym) => copyResolution(term, Resolved(t.mkClone, sym)(term.typ))
-      case term @ Ref(sym) => copyResolution(term, Ref(sym)(Tree.Ident(term.tree.name), term.typ))
+      case term @ Ref(sym) => copyResolution(term, Ref(sym)(term.tree, term.typ))
       case term @ App(lhs, rhs) =>
         val copy = App(lhs.mkClone, rhs.mkClone)(term.tree, term.typ, term.resSym)
         copy.callableTargets.shapes.copyFrom(term.callableTargets.shapes)
         copyResolution(term, copy)
       case term @ TyApp(lhs, targs) => copyResolution(term, TyApp(lhs.mkClone, targs.map(_.mkClone))(term.typ))
-      case term @ Sel(prefix, nme) => copySelection(term, Sel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx))
-      case term @ SynthSel(prefix, nme) => copySelection(term, SynthSel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx))
+      case term @ Sel(prefix, nme) => copySelection(term, Sel(prefix.mkClone, nme)(term.sym, term.resSym, term.typ, term.originalCtx))
+      case term @ SynthSel(prefix, nme) => copySelection(term, SynthSel(prefix.mkClone, nme)(term.sym, term.resSym, term.typ, term.originalCtx))
       case term @ LeadingDotSel(nme) =>
-        val copy = LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx)
+        val copy = LeadingDotSel(nme)(term.originalCtx)
         copy.resolvedTargets = term.resolvedTargets
         copyResolution(term, copy)
       case DynSel(prefix, fld, arrayIdx, checked) => DynSel(prefix.mkClone, fld.mkClone, arrayIdx, checked)
@@ -648,7 +645,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
         copyResolution(term, New(cls.mkClone, args.map(_.mkClone), rft.map { case (cs, ob) => cs -> ObjBody(ob.blk.mkBlkClone) })(term.resSym, term.typ))
       case DynNew(cls, args) => DynNew(cls.mkClone, args.map(_.mkClone))
       case term @ SelProj(prefix, cls, proj) =>
-        copySelection(term, SelProj(prefix.mkClone, cls.mkClone, Tree.Ident(proj.name))(term.sym, term.resSym, term.typ, term.originalCtx))
+        copySelection(term, SelProj(prefix.mkClone, cls.mkClone, proj)(term.sym, term.resSym, term.typ, term.originalCtx))
       case Asc(term, ty) => Asc(term.mkClone, ty.mkClone)
       case CompType(lhs, rhs, pol) => CompType(lhs.mkClone, rhs.mkClone, pol)
       case Neg(rhs) => Neg(rhs.mkClone)

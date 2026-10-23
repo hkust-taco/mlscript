@@ -926,7 +926,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       else b
   
   // some helpers
-  private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(Tree.Ident(p.sym.nme), erasedType = p.sym.erasedType))(p.toLoc)
+  private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(p.sym.id, erasedType = p.sym.erasedType))(p.toLoc)
   private def dupParams(plist: List[Param]): List[Param] = plist.map(dupParam)
   private def dupParamList(plist: LoweredParamList): LoweredParamList =
     plist.copy(params = dupParams(plist.params), restParam = plist.restParam.map(dupParam))(plist.toLoc)
@@ -1203,7 +1203,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     // Contains *all* parameters, and applies them all at once in a single `Instantiate`
     def mkFlattenedDefn: FunDefn =
       // Symbols for the aux parameter list
-      val auxSyms = auxParams.map(p => VarSymbol(Tree.Ident(p.sym.nme), erasedType = p.sym.erasedType))
+      val auxSyms = auxParams.map(p => VarSymbol(p.sym.id, erasedType = p.sym.erasedType))
       val auxParamListLocal = LoweredParamList.plain(auxSyms.map(Param.simple(_)))(N)
       
       val dupedClsAuxParams = cls.auxParams.map(dupParamList(_))
