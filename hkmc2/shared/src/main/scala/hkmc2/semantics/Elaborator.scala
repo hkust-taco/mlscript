@@ -3243,8 +3243,7 @@ extends Importer:
    *                  will be added to the context.
    * @param inFunction Whether the parameter list belongs to a function or lambda,
    *                   whose parameters may be optional or droppable.
-   * @param inConstructor Whether the parameter list belongs to a class constructor,
-   *                      whose parameters may be optional but not droppable.
+   * @param inConstructor Whether the parameter list belongs to a class constructor.
    */
   def params(t: Tree, inDataClass: Bool, inPattern: Bool, inFunction: Bool, inConstructor: Bool): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>

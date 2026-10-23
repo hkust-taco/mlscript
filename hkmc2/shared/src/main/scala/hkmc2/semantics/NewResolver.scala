@@ -141,11 +141,11 @@ class NewResolver:
             result.publish(TypeShape.Parameter(sym, sym.inferenceHost))
           case Ref(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
             result.publish(TypeShape.Parameter(sym, sym.inferenceHost))
-          case Tup(fields) =>
-            result.publish(TypeShape.Tuple(fields.map:
-              case Fld(_, sign, _) => TypeShape.TupleField(typeResolution(sign), spread = false)
-              case Spd(_, sign, _) => TypeShape.TupleField(typeResolution(sign), spread = true)
-            ))
+          case Tup(fields) => result.publish:
+            TypeShape.Tuple:
+              fields.map:
+                case Fld(_, sign, _) => TypeShape.TupleField(typeResolution(sign), spread = false)
+                case Spd(_, sign, _) => TypeShape.TupleField(typeResolution(sign), spread = true)
           case record: Rcd =>
             val fields = record.stats.collect { case field: RcdField => field }
             if fields.length != record.stats.length || fields.exists(_.key.isEmpty)
