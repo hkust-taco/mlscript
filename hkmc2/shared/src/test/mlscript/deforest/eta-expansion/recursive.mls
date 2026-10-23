@@ -64,28 +64,19 @@ sum(enum(5), 0)
 //│ set x = 5;
 //│ set eta$0$0 = 0;
 //│ block inlinedLbl:
-//│   let enum$enum$worker$deferred;
-//│   set enum$enum$worker$deferred = false;
 //│   loop loopLabel:
 //│     let scrut, tmp;
 //│     set scrut = <⁰(x, 0);
 //│     match scrut
 //│       true =>
-//│         match enum$enum$worker$deferred
-//│           true =>
-//│             set inlinedVal = (eta$0$0 as! Int⁰);
-//│             break inlinedLbl
-//│           else
-//│             set inlinedVal = eta$0$0;
-//│             break inlinedLbl
-//│         end
+//│         set inlinedVal = eta$0$0;
+//│         break inlinedLbl
 //│       else
 //│         let fv_tmp;
 //│         set tmp = -⁰(x, 1);
 //│         set fv_tmp = +⁰(x, eta$0$0);
 //│         set x = tmp;
 //│         set eta$0$0 = fv_tmp;
-//│         set enum$enum$worker$deferred = true;
 //│         continue loopLabel
 //│     end
 //│   unreachable /* Rest of abortive labelled block */

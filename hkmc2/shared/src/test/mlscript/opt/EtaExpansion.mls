@@ -316,7 +316,7 @@ f(k1, 1) + f(k2, 5)
 //│     end
 //│   };
 //│   do Predef⁰.print⁰("between");
-//│   return (g⁸(x)(2) as! Int⁰)
+//│   return g⁸(x)(2)
 //│ };
 //│ @affine(1)
 //│ define k1⁰ as fun k1¹(a)(b) {
@@ -376,7 +376,7 @@ f(k1, 1) + f(k2, 5)
 //│   define b as fun b⁰(y)(eta$0$0) {
 //│     return (k(y) as! Function⁰)(eta$0$0)
 //│   };
-//│   return (a⁰(x)(2) as! Int⁰)
+//│   return a⁰(x)(2)
 //│ };
 //│ @affine(1)
 //│ define k1² as fun k1³(a)(b) {
@@ -483,4 +483,26 @@ f(k1, 1) + f(k2, 5)
 //│ = 13
 
 
-
+// the params eta expansion appends take the types of the params they stand for, and the result is what the targets
+// return: `g(x: Int)(eta$0$0: Int): Int` passes `eta$0$0` to `b: Int` without a cast
+:soir
+:siret
+:noInline
+:expect 3
+@affine(1) fun f(a: Int)(b: Int) = a + b
+fun g(x) = f(x)
+g(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let g$g;
+//│ @private
+//│ define g$g as fun g$g¹(x: Int⁰)(eta$0$0: Int⁰): Int⁰ {
+//│   return f¹⁴(x)(eta$0$0)
+//│ };
+//│ @affine(1)
+//│ define f¹⁵ as fun f¹⁴(a: Int⁰)(b: Int⁰): Int⁰ {
+//│   return +⁰(a, b)
+//│ };
+//│ define g¹² as fun g¹³(x: Int⁰)(eta$0$0: Int⁰): Int⁰ { return f¹⁴(x)(eta$0$0) };
+//│ return g$g¹(1)(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
