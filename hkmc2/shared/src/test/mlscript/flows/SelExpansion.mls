@@ -45,10 +45,10 @@ f.a
 :re
 f.a.b
 //│ ╔══[COMPILATION ERROR] Unresolved selection:
-//│ ║  l.46: 	f.a.b
+//│ ║  l.+1: 	f.a.b
 //│ ║        	^^^^^
 //│ ╟── Type `123` does not contain member 'b'
-//│ ║  l.10: 	  val a = 123
+//│ ║  l.XX: 	  val a = 123
 //│ ╙──      	          ^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   f⁰.a⁰{ ~> f⁰.a⁰ }.bˀˀˀ
@@ -134,11 +134,11 @@ id(0)
 :e
 id(f).foo
 //│ ╔══[COMPILATION ERROR] Unresolved selection:
-//│ ║  l.135: 	id(f).foo
-//│ ║         	^^^^^^^^^
+//│ ║  l.+1: 	id(f).foo
+//│ ║        	^^^^^^^^^
 //│ ╟── Type `0` does not contain member 'foo'
-//│ ║  l.125: 	id(0)
-//│ ╙──       	   ^
+//│ ║  l.XX: 	id(0)
+//│ ╙──      	   ^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   id³(f⁰)‹app⁶›.Foo⁰.foo⁰{ ~> Foo⁰.foo⁰(id³(f⁰)‹app⁶›)‹app⁷› }
 //│ where
@@ -154,8 +154,8 @@ id(f).foo
 :e
 fun test(g) = g.foo
 //│ ╔══[COMPILATION ERROR] Cannot resolve selection
-//│ ║  l.155: 	fun test(g) = g.foo
-//│ ╙──       	              ^^^^^
+//│ ║  l.+1: 	fun test(g) = g.foo
+//│ ╙──      	              ^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   fun test⁰::test¹(g⁰) ‹flow:test⁰› = g⁰.fooˀˀˀ
 //│ where
@@ -265,8 +265,8 @@ let foo =
 :re
 foo.test
 //│ ╔══[COMPILATION ERROR] Cannot access companion A from the context of this selection
-//│ ║  l.266: 	foo.test
-//│ ╙──       	^^^^^^^^
+//│ ║  l.+1: 	foo.test
+//│ ╙──      	^^^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   foo².testˀˀˀ
 //│ where
@@ -304,8 +304,8 @@ let foo =
 :re
 foo.test
 //│ ╔══[COMPILATION ERROR] Cannot access companion A from the context of this selection
-//│ ║  l.305: 	foo.test
-//│ ╙──       	^^^^^^^^
+//│ ║  l.+1: 	foo.test
+//│ ╙──      	^^^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   foo³.testˀˀˀ
 //│ where

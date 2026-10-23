@@ -22,7 +22,7 @@ fun test[A](x: Foo[[A, Int]]) = x.f
 test(new Foo(arg => [arg.0 + 1, arg.1 + 2]))([1, 2])
 //│ ═══[COMPILATION ERROR] WatBuilder::returningTerm for FunDefn(...) where `!sym.nameIsMeaningful` not implemented yet
 //│ ╔══[COMPILATION ERROR] Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type
-//│ ║  l.22: 	test(new Foo(arg => [arg.0 + 1, arg.1 + 2]))([1, 2])
+//│ ║  l.+3: 	test(new Foo(arg => [arg.0 + 1, arg.1 + 2]))([1, 2])
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Static tuple projections lower to WASM array accesses.
@@ -46,5 +46,5 @@ xs.0
 fun increment(x: Int): Int = x + 1
 [increment].0(41)
 //│ ╔══[COMPILATION ERROR] Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type
-//│ ║  l.47: 	[increment].0(41)
+//│ ║  l.+2: 	[increment].0(41)
 //│ ╙──      	^^^^^^^^^^^^^^^^^

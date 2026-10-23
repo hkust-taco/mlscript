@@ -242,6 +242,6 @@ fun take(pattern P, idx: Str, acc: Str) =
       set acc = acc + ch
     else [acc, idx]
 //│ ╔══[COMPILATION ERROR] This selection of member 'length' has no resolved target
-//│ ║  l.239: 	  while idx < str.length and str.charAt(idx) is ch and ch is P
-//│ ╙──       	              ^^^^^^^^^^
+//│ ║  l.+2: 	  while idx < str.length and str.charAt(idx) is ch and ch is P
+//│ ╙──      	              ^^^^^^^^^^
 

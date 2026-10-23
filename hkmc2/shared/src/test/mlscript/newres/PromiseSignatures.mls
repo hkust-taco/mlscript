@@ -88,14 +88,14 @@ Promise.reject("still rejected").catch(unsafe.undefined).finally(null)
 :e
 new Promise((resolve, reject) => resolve(10).missing)
 //│ ╔══[COMPILATION ERROR] This selection of member 'missing' has no resolved target
-//│ ║  l.89: 	new Promise((resolve, reject) => resolve(10).missing)
+//│ ║  l.+1: 	new Promise((resolve, reject) => resolve(10).missing)
 //│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^^
 
 :!js
 :e
 new Promise((resolve, reject) => reject("failed").missing)
 //│ ╔══[COMPILATION ERROR] This selection of member 'missing' has no resolved target
-//│ ║  l.96: 	new Promise((resolve, reject) => reject("failed").missing)
+//│ ║  l.+1: 	new Promise((resolve, reject) => reject("failed").missing)
 //│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Both then branches contribute to the resulting promise type.
@@ -103,33 +103,33 @@ new Promise((resolve, reject) => reject("failed").missing)
 :e
 Promise.resolve({answer: 11}).then(value => value, reason => 0).then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.104: 	Promise.resolve({answer: 11}).then(value => value, reason => 0).then(value => value.answer)
-//│ ║         	                                                                              ^^^^^^^^^^^^
+//│ ║  l.+1: 	Promise.resolve({answer: 11}).then(value => value, reason => 0).then(value => value.answer)
+//│ ║        	                                                                              ^^^^^^^^^^^^
 //│ ╟── Integer literal does not contain member 'answer'
-//│ ║  l.104: 	Promise.resolve({answer: 11}).then(value => value, reason => 0).then(value => value.answer)
-//│ ╙──       	                                                             ^
+//│ ║  l.+1: 	Promise.resolve({answer: 11}).then(value => value, reason => 0).then(value => value.answer)
+//│ ╙──      	                                                             ^
 
 // A rejection handler's output does not replace the fulfilled input type.
 :!js
 :e
 Promise.resolve(0).catch(reason => Promise.resolve({answer: 12})).then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.115: 	Promise.resolve(0).catch(reason => Promise.resolve({answer: 12})).then(value => value.answer)
-//│ ║         	                                                                                ^^^^^^^^^^^^
+//│ ║  l.+1: 	Promise.resolve(0).catch(reason => Promise.resolve({answer: 12})).then(value => value.answer)
+//│ ║        	                                                                                ^^^^^^^^^^^^
 //│ ╟── Integer literal does not contain member 'answer'
-//│ ║  l.115: 	Promise.resolve(0).catch(reason => Promise.resolve({answer: 12})).then(value => value.answer)
-//│ ╙──       	                ^
+//│ ║  l.+1: 	Promise.resolve(0).catch(reason => Promise.resolve({answer: 12})).then(value => value.answer)
+//│ ╙──      	                ^
 
 // A finalizer's return value does not become the promise's fulfillment value.
 :!js
 :e
 Promise.resolve(0).finally(() => console.log("finally")).then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.126: 	Promise.resolve(0).finally(() => console.log("finally")).then(value => value.answer)
-//│ ║         	                                                                       ^^^^^^^^^^^^
+//│ ║  l.+1: 	Promise.resolve(0).finally(() => console.log("finally")).then(value => value.answer)
+//│ ║        	                                                                       ^^^^^^^^^^^^
 //│ ╟── Integer literal does not contain member 'answer'
-//│ ║  l.126: 	Promise.resolve(0).finally(() => console.log("finally")).then(value => value.answer)
-//│ ╙──       	                ^
+//│ ║  l.+1: 	Promise.resolve(0).finally(() => console.log("finally")).then(value => value.answer)
+//│ ╙──      	                ^
 
 // The bottom type stays empty through aliases used by promise interfaces.
 :js

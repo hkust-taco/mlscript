@@ -114,24 +114,24 @@ if 1 + 2
   * 3 then 0
   + 4 then 1
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.115: 	  + 4 then 1
-//│ ║         	  ^
+//│ ║  l.+3: 	  + 4 then 1
+//│ ║        	  ^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.114: 	  * 3 then 0
-//│ ╙──       	  ^
+//│ ║  l.+2: 	  * 3 then 0
+//│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
-//│ ║  l.115: 	  + 4 then 1
-//│ ║         	      ^^^^
+//│ ║  l.+3: 	  + 4 then 1
+//│ ║        	      ^^^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.114: 	  * 3 then 0
-//│ ╙──       	  ^
+//│ ║  l.+2: 	  * 3 then 0
+//│ ╙──      	  ^
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.113: 	if 1 + 2
-//│ ║         	       ^
-//│ ║  l.114: 	  * 3 then 0
-//│ ║         	^^^^^^^^^^^^
-//│ ║  l.115: 	  + 4 then 1
-//│ ╙──       	^^^^^
+//│ ║  l.+1: 	if 1 + 2
+//│ ║        	       ^
+//│ ║  l.+2: 	  * 3 then 0
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.+3: 	  + 4 then 1
+//│ ╙──      	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pt

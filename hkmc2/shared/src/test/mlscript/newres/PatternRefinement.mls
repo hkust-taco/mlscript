@@ -29,10 +29,10 @@ fun read(x: Array[Str] | null) = if x is Array as xs then xs.0.length else 0
 class Box(val value: Int)
 fun read(x: {value: Int}) = if x is Box as b then b.missing else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.30: 	fun read(x: {value: Int}) = if x is Box as b then b.missing else 0
+//│ ║  l.+2: 	fun read(x: {value: Int}) = if x is Box as b then b.missing else 0
 //│ ║        	                                                  ^^^^^^^^^
 //│ ╟── Value of type 'Box' does not contain member 'missing'
-//│ ║  l.30: 	fun read(x: {value: Int}) = if x is Box as b then b.missing else 0
+//│ ║  l.+2: 	fun read(x: {value: Int}) = if x is Box as b then b.missing else 0
 //│ ╙──      	                                    ^^^
 
 // A class pattern inside that same class retains the lexical captures needed
@@ -74,5 +74,5 @@ readSecond(SecondBox(Second(4)))
 :e
 fun wrong(value) = if value is FirstBox(item) then item.second else 0
 //│ ╔══[COMPILATION ERROR] This selection of member 'second' has no resolved target
-//│ ║  l.75: 	fun wrong(value) = if value is FirstBox(item) then item.second else 0
+//│ ║  l.+1: 	fun wrong(value) = if value is FirstBox(item) then item.second else 0
 //│ ╙──      	                                                   ^^^^^^^^^^^

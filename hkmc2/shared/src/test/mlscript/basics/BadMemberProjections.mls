@@ -6,11 +6,11 @@
 :e
 1::x
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.7: 	1::x
-//│ ║       	 ^^^
+//│ ║  l.+1: 	1::x
+//│ ║        	 ^^^
 //│ ╟── Integer literal cannot be used as a projection class.
-//│ ║  l.7: 	1::x
-//│ ╙──     	^
+//│ ║  l.+1: 	1::x
+//│ ╙──      	^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda;
 //│ lambda = (undefined, function (self, ...args) {
@@ -25,16 +25,16 @@
 :re
 1::x()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.26: 	1::x()
+//│ ║  l.+1: 	1::x()
 //│ ║        	 ^^^
 //│ ╟── Integer literal cannot be used as a projection class.
-//│ ║  l.26: 	1::x()
+//│ ║  l.+1: 	1::x()
 //│ ╙──      	^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.26: 	1::x()
+//│ ║  l.+1: 	1::x()
 //│ ║        	 ^^^^^
 //│ ╟── Function literal expected at least 1 argument, but got 0
-//│ ║  l.26: 	1::x()
+//│ ║  l.+1: 	1::x()
 //│ ╙──      	   ^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let lambda1;
@@ -61,20 +61,20 @@ let x = 1
 :e
 "A"::x
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.62: 	"A"::x
+//│ ║  l.+1: 	"A"::x
 //│ ║        	   ^^^
 //│ ╟── String literal cannot be used as a projection class.
-//│ ║  l.62: 	"A"::x
+//│ ║  l.+1: 	"A"::x
 //│ ╙──      	^^^
 //│ = fun
 
 :e
 "A" ::x
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.72: 	"A" ::x
+//│ ║  l.+1: 	"A" ::x
 //│ ║        	    ^^^
 //│ ╟── String literal cannot be used as a projection class.
-//│ ║  l.72: 	"A" ::x
+//│ ║  l.+1: 	"A" ::x
 //│ ╙──      	^^^
 //│ = fun
 

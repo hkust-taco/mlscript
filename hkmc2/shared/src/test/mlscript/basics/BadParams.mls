@@ -5,40 +5,40 @@
 :e
 (val x) => x
 //│ ╔══[COMPILATION ERROR] Illegal function parameter modifiers: val
-//│ ║  l.6: 	(val x) => x
-//│ ╙──     	     ^
+//│ ║  l.+1: 	(val x) => x
+//│ ╙──      	     ^
 //│ = fun
 
 :e
 (mut x) => x
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.13: 	(mut x) => x
+//│ ║  l.+1: 	(mut x) => x
 //│ ╙──      	     ^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.13: 	(mut x) => x
+//│ ║  l.+1: 	(mut x) => x
 //│ ╙──      	           ^
 //│ = fun
 
 :e
 (mut val x) => x
 //│ ╔══[COMPILATION ERROR] Illegal function parameter modifiers: mut val
-//│ ║  l.23: 	(mut val x) => x
+//│ ║  l.+1: 	(mut val x) => x
 //│ ╙──      	         ^
 //│ = fun
 
 :e
 fun f(val x) = x
 //│ ╔══[COMPILATION ERROR] Illegal function parameter modifiers: val
-//│ ║  l.30: 	fun f(val x) = x
+//│ ║  l.+1: 	fun f(val x) = x
 //│ ╙──      	          ^
 
 :e
 (...val x) => x
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found spread
-//│ ║  l.36: 	(...val x) => x
+//│ ║  l.+1: 	(...val x) => x
 //│ ╙──      	 ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.36: 	(...val x) => x
+//│ ║  l.+1: 	(...val x) => x
 //│ ╙──      	              ^
 //│ = fun
 
@@ -53,14 +53,14 @@ fun f(val x) = x
 :e
 (...x, ...y) => x
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.54: 	(...x, ...y) => x
+//│ ║  l.+1: 	(...x, ...y) => x
 //│ ╙──      	       ^^^^
 //│ = fun
 
 :e
 (..., ...y) => y
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.61: 	(..., ...y) => y
+//│ ║  l.+1: 	(..., ...y) => y
 //│ ╙──      	      ^^^^
 //│ = fun
 
@@ -68,7 +68,7 @@ fun f(val x) = x
 :e
 class Foo(class C)
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found type definition
-//│ ║  l.69: 	class Foo(class C)
+//│ ║  l.+1: 	class Foo(class C)
 //│ ╙──      	          ^^^^^^^
 
 

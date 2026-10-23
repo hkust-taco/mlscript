@@ -91,10 +91,10 @@ class Box(val value: Int)
 private val instance = Box(17)
 private fun invalid(x) = if x is instance(value) then value else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.92: 	private fun invalid(x) = if x is instance(value) then value else 0
+//│ ║  l.+3: 	private fun invalid(x) = if x is instance(value) then value else 0
 //│ ║        	                                 ^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Box' cannot be used as a constructor pattern.
-//│ ║  l.91: 	private val instance = Box(17)
+//│ ║  l.+2: 	private val instance = Box(17)
 //│ ╙──      	                       ^^^^^^^
 //│ instance = undefined
 
@@ -104,11 +104,11 @@ class Pair(val left: Int)(val right: Int)
 private val partial = Pair(18)
 private fun invalid(x) = if x is partial(left) then left else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.105: 	private fun invalid(x) = if x is partial(left) then left else 0
-//│ ║         	                                 ^^^^^^^^^^^^^
+//│ ║  l.+3: 	private fun invalid(x) = if x is partial(left) then left else 0
+//│ ║        	                                 ^^^^^^^^^^^^^
 //│ ╟── Partially-applied constructor of class 'Pair' cannot be used as a constructor pattern.
-//│ ║  l.104: 	private val partial = Pair(18)
-//│ ╙──       	                      ^^^^^^^^
+//│ ║  l.+2: 	private val partial = Pair(18)
+//│ ╙──      	                      ^^^^^^^^
 //│ partial = fun
 
 // Explicit parent projections preserve an annotated receiver's binder view.

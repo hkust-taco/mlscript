@@ -16,7 +16,7 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.12: 	  object M with
+//│ ║  l.+2: 	  object M with
 //│ ╙──      	         ^
 
 :expect 14
@@ -88,7 +88,7 @@ fun foo(y) =
       set y = 2
   O
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.86: 	  object O with
+//│ ║  l.+2: 	  object O with
 //│ ╙──      	         ^
 
 let o = foo(10) as dyn
@@ -110,8 +110,8 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.106: 	  object M with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  object M with
+//│ ╙──      	         ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let foo3;
 //│ define foo3 as fun foo3⁰(M) {
@@ -140,8 +140,8 @@ data class A(x) with
     fun bar = M.getB()
     bar
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.137: 	  object M with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  object M with
+//│ ╙──      	         ^
 
 :expect 2
 A(2).getA()
@@ -197,8 +197,8 @@ fun f =
   foo
 f.a
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.193: 	  object A with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  object A with
+//│ ╙──      	         ^
 //│ = 2
 
 :sir
@@ -276,8 +276,8 @@ fun foo(x) =
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.274: 	  object O with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  object O with
+//│ ╙──      	         ^
 
 foo(123)
 //│ = [true, [true, false], true]
@@ -325,14 +325,14 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.322: 	  object A with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  object A with
+//│ ╙──      	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.323: 	    object B with
-//│ ╙──       	           ^
+//│ ║  l.+3: 	    object B with
+//│ ╙──      	           ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.324: 	      object C
-//│ ╙──       	             ^
+//│ ║  l.+4: 	      object C
+//│ ╙──      	             ^
 //│ = C
 
 :todo
@@ -344,11 +344,11 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.341: 	  module A with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  module A with
+//│ ╙──      	         ^
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.343: 	      object C
-//│ ╙──       	             ^
+//│ ║  l.+4: 	      object C
+//│ ╙──      	             ^
 //│ = C
 
 :todo
@@ -360,8 +360,8 @@ fun f =
   A.B.C
 f
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.357: 	  module A with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  module A with
+//│ ╙──      	         ^
 //│ = C
 
 module X with

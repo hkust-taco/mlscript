@@ -52,7 +52,7 @@ let y = 1
 :e
 z = 1
 //│ ╔══[COMPILATION ERROR] Name not found: z
-//│ ║  l.53: 	z = 1
+//│ ║  l.+1: 	z = 1
 //│ ╙──      	^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
@@ -109,13 +109,13 @@ if true
 then foo = 0
 else foo = 1
 //│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: if expression
-//│ ║  l.108: 	if true
-//│ ║         	   ^^^^
-//│ ║  l.109: 	then foo = 0
-//│ ╙──       	^^^^^^^^
+//│ ║  l.+2: 	if true
+//│ ║        	   ^^^^
+//│ ║  l.+3: 	then foo = 0
+//│ ╙──      	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'else'
-//│ ║  l.110: 	else foo = 1
-//│ ╙──       	^^^^^^^^
+//│ ║  l.+4: 	else foo = 1
+//│ ╙──      	^^^^^^^^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo1;
 //│ throw "This code cannot be run as its compilation yielded an error."
@@ -165,8 +165,8 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: term definition
-//│ ║  l.166: 	fun f() = foo = 0
-//│ ╙──       	^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun f() = foo = 0
+//│ ╙──      	^^^^^^^^^^^^^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

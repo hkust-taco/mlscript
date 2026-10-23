@@ -23,10 +23,10 @@ private fun never(flag: Bool) = (if flag then () => throw "stopped" else {other:
 private fun invalid() = {other: 0}
 invalid()()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.24: 	invalid()()
+//│ ║  l.+2: 	invalid()()
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Record literal cannot be called like a function.
-//│ ║  l.23: 	private fun invalid() = {other: 0}
+//│ ║  l.+1: 	private fun invalid() = {other: 0}
 //│ ╙──      	                         ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -40,13 +40,13 @@ private fun alternatives(n: Int) =
   else {other: 0}
 alternatives(0)().value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
-//│ ║  l.41: 	alternatives(0)().value
+//│ ║  l.+7: 	alternatives(0)().value
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Right'
-//│ ║  l.36: 	class Right(val value: Int)
+//│ ║  l.+2: 	class Right(val value: Int)
 //│ ║        	                ^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Left'
-//│ ║  l.35: 	class Left(val value: Int)
+//│ ║  l.+1: 	class Left(val value: Int)
 //│ ╙──      	               ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -57,9 +57,9 @@ alternatives(0)().value
 private fun eager(flag: Bool) = (if flag then () => Item(3) else {other: 0})()
 eager(true)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.57: 	private fun eager(flag: Bool) = (if flag then () => Item(3) else {other: 0})()
+//│ ║  l.+1: 	private fun eager(flag: Bool) = (if flag then () => Item(3) else {other: 0})()
 //│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Record literal cannot be called like a function.
-//│ ║  l.57: 	private fun eager(flag: Bool) = (if flag then () => Item(3) else {other: 0})()
+//│ ║  l.+1: 	private fun eager(flag: Bool) = (if flag then () => Item(3) else {other: 0})()
 //│ ╙──      	                                                                  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

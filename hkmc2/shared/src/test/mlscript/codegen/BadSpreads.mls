@@ -5,14 +5,14 @@
 :e
 ..., 1
 //│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
-//│ ║  l.6: 	..., 1
-//│ ╙──     	^^^
+//│ ║  l.+1: 	..., 1
+//│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 fun f = ..., 1
 //│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
-//│ ║  l.13: 	fun f = ..., 1
+//│ ║  l.+1: 	fun f = ..., 1
 //│ ╙──      	        ^^^
 //│ = 1
 
@@ -40,10 +40,10 @@ fun foo(a, ...b) = [a, ...b]
 :re
 foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.41: 	foo()
+//│ ║  l.+1: 	foo()
 //│ ║        	^^^^^
 //│ ╟── Function 'foo' expected at least 1 argument, but got 0
-//│ ║  l.37: 	fun foo(a, ...b) = [a, ...b]
+//│ ║  l.XX: 	fun foo(a, ...b) = [a, ...b]
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
@@ -51,13 +51,13 @@ foo()
 :e
 fun foo(1) = 2
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.52: 	fun foo(1) = 2
+//│ ║  l.+1: 	fun foo(1) = 2
 //│ ╙──      	        ^
 
 :e
 fun foo(...1) = 2
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found spread
-//│ ║  l.58: 	fun foo(...1) = 2
+//│ ║  l.+1: 	fun foo(...1) = 2
 //│ ╙──      	        ^^^^
 
 

@@ -5,28 +5,28 @@
 :e
 pattern P
 //│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
-//│ ║  l.6: 	pattern P
-//│ ╙──     	^^^^^^^^^
+//│ ║  l.+1: 	pattern P
+//│ ╙──      	^^^^^^^^^
 
 :e
 pattern Foo1[A]: ...
 //│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
-//│ ║  l.12: 	pattern Foo1[A]: ...
+//│ ║  l.+1: 	pattern Foo1[A]: ...
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 
 :fixme
 pattern Foo2[pattern A]: ...
 //│ ╔══[COMPILATION ERROR] Unsupported type parameter shape: type definition
-//│ ║  l.18: 	pattern Foo2[pattern A]: ...
+//│ ║  l.+1: 	pattern Foo2[pattern A]: ...
 //│ ╙──      	             ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
-//│ ║  l.18: 	pattern Foo2[pattern A]: ...
+//│ ║  l.+1: 	pattern Foo2[pattern A]: ...
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 pattern Foo(pattern T)
 //│ ╔══[COMPILATION ERROR] Pattern definitions must have a body.
-//│ ║  l.27: 	pattern Foo(pattern T)
+//│ ║  l.+1: 	pattern Foo(pattern T)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 
 

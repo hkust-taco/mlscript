@@ -84,11 +84,11 @@ Predef.id(1)
 :e
 Predef.idd(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.85: 	Predef.idd(1)
+//│ ║  l.+1: 	Predef.idd(1)
 //│ ║        	^^^^^^^^^^
 //│ ╟── Module 'Predef' does not contain member 'idd'
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.16: 	module Predef with ...
+//│ ║  l.XX: 	module Predef with ...
 //│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -137,21 +137,21 @@ p.id
 :e
 (1).id
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.138: 	(1).id
-//│ ║         	^^^^^^
+//│ ║  l.+1: 	(1).id
+//│ ║        	^^^^^^
 //│ ╟── Integer literal does not contain member 'id'
-//│ ║  l.138: 	(1).id
-//│ ╙──       	 ^
+//│ ║  l.+1: 	(1).id
+//│ ╙──      	 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 1.id
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.148: 	1.id
-//│ ║         	^^^^
+//│ ║  l.+1: 	1.id
+//│ ║        	^^^^
 //│ ╟── Integer literal does not contain member 'id'
-//│ ║  l.148: 	1.id
-//│ ╙──       	^
+//│ ║  l.+1: 	1.id
+//│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect "ha ha "
@@ -167,9 +167,9 @@ print(1)
 :e
 ().id
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.168: 	().id
-//│ ║         	^^^^^
+//│ ║  l.+1: 	().id
+//│ ║        	^^^^^
 //│ ╟── Unit value does not contain member 'id'
-//│ ║  l.168: 	().id
-//│ ╙──       	^^
+//│ ║  l.+1: 	().id
+//│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

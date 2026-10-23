@@ -126,38 +126,38 @@ class Foo(x, val y, z, val z, z) with
   print("this.z = " + this.z)
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
-//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
-//│ ║         	                    ^
+//│ ║  l.+1: 	class Foo(x, val y, z, val z, z) with
+//│ ║        	                    ^
 //│ ╟── Defined at: 
-//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
-//│ ║         	                       ^^^^^
+//│ ║  l.+1: 	class Foo(x, val y, z, val z, z) with
+//│ ║        	                       ^^^^^
 //│ ╟── Defined at: 
-//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
-//│ ╙──       	                              ^
+//│ ║  l.+1: 	class Foo(x, val y, z, val z, z) with
+//│ ╙──      	                              ^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.121: 	  let y += 1
-//│ ║         	      ^
+//│ ║  l.+3: 	  let y += 1
+//│ ║        	      ^
 //│ ╟── Class definition 'Foo' does not contain member 'y'
-//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Foo(x, val y, z, val z, z) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.124: 	  print("this.y = " + this.y)
-//│ ║         	                      ^^^^^^
+//│ ║  l.+6: 	  print("this.y = " + this.y)
+//│ ║        	                      ^^^^^^
 //│ ╟── Class definition 'Foo' does not contain member 'y'
-//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Foo(x, val y, z, val z, z) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.125: 	  print("z = " + z)
-//│ ║         	                 ^
+//│ ║  l.+7: 	  print("z = " + z)
+//│ ║        	                 ^
 //│ ╟── Class definition 'Foo' does not contain member 'z'
-//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Foo(x, val y, z, val z, z) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.126: 	  print("this.z = " + this.z)
-//│ ║         	                      ^^^^^^
+//│ ║  l.+8: 	  print("this.z = " + this.z)
+//│ ║        	                      ^^^^^^
 //│ ╟── Class definition 'Foo' does not contain member 'z'
-//│ ║  l.119: 	class Foo(x, val y, z, val z, z) with
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Foo(x, val y, z, val z, z) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Foo9;
 //│ Foo9 = function Foo(x, y, z, z1, z2) {
@@ -184,11 +184,11 @@ Foo(10, 20, 30, 40, 50)
 class Foo(val z, val z)
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
-//│ ║  l.184: 	class Foo(val z, val z)
-//│ ║         	          ^^^^^
+//│ ║  l.+1: 	class Foo(val z, val z)
+//│ ║        	          ^^^^^
 //│ ╟── Defined at: 
-//│ ║  l.184: 	class Foo(val z, val z)
-//│ ╙──       	                 ^^^^^
+//│ ║  l.+1: 	class Foo(val z, val z)
+//│ ╙──      	                 ^^^^^
 
 Foo(1, 2)
 //│ = Foo(undefined, undefined)

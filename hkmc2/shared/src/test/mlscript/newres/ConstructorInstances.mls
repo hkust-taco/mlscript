@@ -96,7 +96,7 @@ let first = new Box[First](First(17))
 let second = new Box[Second](Second(18))
 [first.copy().item.first, second.copy().item.second]
 //│ ╔══[COMPILATION ERROR] This selection of member 'first' has no resolved target
-//│ ║  l.97: 	[first.copy().item.first, second.copy().item.second]
+//│ ║  l.+7: 	[first.copy().item.first, second.copy().item.second]
 //│ ╙──      	 ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[17, 18]', got: 'undefined'
@@ -109,11 +109,11 @@ let second = new Box[Second](Second(18))
 class Box[T](val item: T)
 private val invalid = Box[Int, Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.110: 	private val invalid = Box[Int, Str]
-//│ ║         	                      ^^^^^^^^^^^^^
+//│ ║  l.+2: 	private val invalid = Box[Int, Str]
+//│ ║        	                      ^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Box' expected 1 type argument, but got 2
-//│ ║  l.109: 	class Box[T](val item: T)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Box[T](val item: T)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ invalid = fun Box { class: class Box }
 
 // Supplied member types receive callback input obligations too.
@@ -133,17 +133,17 @@ class Box[T](val item: T)
 let box = new Box[Int](1)
 box[Str]("bad")
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.134: 	box[Str]("bad")
-//│ ║         	^^^^^^^^
+//│ ║  l.+3: 	box[Str]("bad")
+//│ ║        	^^^^^^^^
 //│ ╟── Constructor of class 'Box' expected 0 type arguments, but got 1
-//│ ║  l.132: 	class Box[T](val item: T)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Box[T](val item: T)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.134: 	box[Str]("bad")
-//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	box[Str]("bad")
+//│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Box' cannot receive more argument lists.
-//│ ║  l.133: 	let box = new Box[Int](1)
-//│ ╙──       	          ^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	let box = new Box[Int](1)
+//│ ╙──      	          ^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ box = Box(1)
 
@@ -154,11 +154,11 @@ class Pair[T](val item: T)(val other: T)
 private val partial = Pair[Int](1)
 private val invalid = partial[Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.155: 	private val invalid = partial[Str]
-//│ ║         	                      ^^^^^^^^^^^^
+//│ ║  l.+3: 	private val invalid = partial[Str]
+//│ ║        	                      ^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Pair' expected 0 type arguments, but got 1
-//│ ║  l.153: 	class Pair[T](val item: T)(val other: T)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Pair[T](val item: T)(val other: T)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ invalid = fun
 //│ partial = fun
 
@@ -170,11 +170,11 @@ class Child(val extra: Int) extends Base
 let callbacks = new mut Array[Base -> Int](0)
 callbacks.push(x => x.extra)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.171: 	callbacks.push(x => x.extra)
-//│ ║         	                    ^^^^^^^
+//│ ║  l.+4: 	callbacks.push(x => x.extra)
+//│ ║        	                    ^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.170: 	let callbacks = new mut Array[Base -> Int](0)
-//│ ╙──       	                              ^^^^
+//│ ║  l.+3: 	let callbacks = new mut Array[Base -> Int](0)
+//│ ╙──      	                              ^^^^
 //│ = 1
 //│ callbacks = [fun]
 
@@ -196,11 +196,11 @@ callbacks.push(x => new Child(20))
 private fun first(callback, ...tail) = callback
 first(...callbacks)(new Base).extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.197: 	first(...callbacks)(new Base).extra
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+6: 	first(...callbacks)(new Base).extra
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.194: 	let callbacks = new mut Array[Base -> Base](0)
-//│ ╙──       	                                      ^^^^
+//│ ║  l.+3: 	let callbacks = new mut Array[Base -> Base](0)
+//│ ╙──      	                                      ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ callbacks = [fun]
 
@@ -216,31 +216,31 @@ let first = new Box(First(21))
 let second = new Box(Second(22))
 [first.copy().item.first, second.copy().item.second]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.217: 	[first.copy().item.first, second.copy().item.second]
-//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+7: 	[first.copy().item.first, second.copy().item.second]
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.216: 	let second = new Box(Second(22))
-//│ ║         	                     ^^^^^^^^^^
+//│ ║  l.+6: 	let second = new Box(Second(22))
+//│ ║        	                     ^^^^^^^^^^
 //│ ╟── Cannot resolve member 'first' of a value with unknown shape.
 //│ ╟── Parameter 'item' admits values of unknown shape.
-//│ ║  l.213: 	class Box(val item) with
-//│ ║         	          ^^^^^^^^
+//│ ║  l.+3: 	class Box(val item) with
+//│ ║        	          ^^^^^^^^
 //│ ╟── 'Box' is exposed by this compilation unit.
-//│ ║  l.213: 	class Box(val item) with
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	class Box(val item) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.217: 	[first.copy().item.first, second.copy().item.second]
-//│ ║         	                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+7: 	[first.copy().item.first, second.copy().item.second]
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.215: 	let first = new Box(First(21))
-//│ ║         	                    ^^^^^^^^^
+//│ ║  l.+5: 	let first = new Box(First(21))
+//│ ║        	                    ^^^^^^^^^
 //│ ╟── Cannot resolve member 'second' of a value with unknown shape.
 //│ ╟── Parameter 'item' admits values of unknown shape.
-//│ ║  l.213: 	class Box(val item) with
-//│ ║         	          ^^^^^^^^
+//│ ║  l.+3: 	class Box(val item) with
+//│ ║        	          ^^^^^^^^
 //│ ╟── 'Box' is exposed by this compilation unit.
-//│ ║  l.213: 	class Box(val item) with
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	class Box(val item) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[21, 22]', got: 'undefined'
 //│ first = Box(First(21))

@@ -11,10 +11,10 @@ open Stack
 :w
 pattern P = x :: xs => [x, xs]
 //│ ╔══[WARNING] Unused pattern binding: x.
-//│ ║  l.12: 	pattern P = x :: xs => [x, xs]
+//│ ║  l.+1: 	pattern P = x :: xs => [x, xs]
 //│ ╙──      	            ^
 //│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: x
-//│ ║  l.12: 	pattern P = x :: xs => [x, xs]
+//│ ║  l.+1: 	pattern P = x :: xs => [x, xs]
 //│ ╙──      	                        ^
 
 pattern P = (x :: xs) => [x, xs]

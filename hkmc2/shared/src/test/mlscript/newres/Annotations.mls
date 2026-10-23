@@ -66,7 +66,7 @@ fun shadowed() =
   fun inner(x) = x
   inner(3)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.65: 	  @noInline
+//│ ║  l.+3: 	  @noInline
 //│ ╙──      	  ^^^^^^^^^
 
 // A known application head is enough; its argument need not have a value shape.
@@ -77,7 +77,7 @@ fun customAnnotation(arg) =
   fun inner() = 4
   inner()
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.76: 	  @Custom(arg)
+//│ ║  l.+3: 	  @Custom(arg)
 //│ ╙──      	  ^^^^^^^^^^^^
 
 // A declared module's member identity is available before its body completes.
@@ -88,7 +88,7 @@ fun forwardQualified() =
   inner(5)
 module Later { object noInline }
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.86: 	  @Later.noInline
+//│ ║  l.+2: 	  @Later.noInline
 //│ ╙──      	  ^^^^^^^^^^^^^^^
 
 // Nor can an annotation wait for a forward wildcard source or an alias's value.
@@ -100,7 +100,7 @@ fun forwardWildcard() =
   inner(6)
 module Future { object noInline }
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.98: 	  @noInline
+//│ ║  l.+3: 	  @noInline
 //│ ║        	  ^^^^^^^^^
 //│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 
@@ -111,8 +111,8 @@ fun forwardAlias() =
   inner(7)
 val alias = Later
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.109: 	  @alias.noInline
-//│ ║         	  ^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  @alias.noInline
+//│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 //│ alias = class Later { noInline: noInline }
 
@@ -127,8 +127,8 @@ fun ambiguousAnnotation() =
   fun inner(x) = x
   inner(8)
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.126: 	  @marker
-//│ ║         	  ^^^^^^^
+//│ ║  l.+6: 	  @marker
+//│ ║        	  ^^^^^^^
 //│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
 
 // A late candidate must not silently invalidate an already recognized annotation.
@@ -141,6 +141,6 @@ fun lateAmbiguity() =
   inner(9)
 module Last { object noInline }
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.139: 	  @noInline
-//│ ║         	  ^^^^^^^^^
+//│ ║  l.+4: 	  @noInline
+//│ ║        	  ^^^^^^^^^
 //│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.

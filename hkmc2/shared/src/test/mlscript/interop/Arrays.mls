@@ -34,7 +34,7 @@ arr.map((_, ...) => 1)
 :e
 arr.map((..., ...) => 1)
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.35: 	arr.map((..., ...) => 1)
+//│ ║  l.+1: 	arr.map((..., ...) => 1)
 //│ ╙──      	              ^^^
 //│ = [1, 1]
 
@@ -63,23 +63,23 @@ Array(1)
 :e
 Array()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.64: 	Array()
+//│ ║  l.+1: 	Array()
 //│ ║        	^^^^^^^
 //│ ╟── Constructor of class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.261: 	declare class Array[T](val length: Int) {
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	declare class Array[T](val length: Int) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
 :e
 Array(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.75: 	Array(1, 2, 3)
+//│ ║  l.+1: 	Array(1, 2, 3)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Array' expected 1 argument, but got 3
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.261: 	declare class Array[T](val length: Int) {
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	declare class Array[T](val length: Int) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2, 3]
 
 

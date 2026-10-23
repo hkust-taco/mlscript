@@ -8,11 +8,11 @@
 fun Foo(x) = new Foo(x, 0)
 data class Foo(x, y)
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Foo'
-//│ ║  l.8: 	fun Foo(x) = new Foo(x, 0)
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun Foo(x) = new Foo(x, 0)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.9: 	data class Foo(x, y)
-//│ ╙──     	     ^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	data class Foo(x, y)
+//│ ╙──      	     ^^^^^^^^^^^^^^^
 
 fun Foo(x) = new Foo(x, 0)
 data class Foo { constructor(x, y) }
@@ -23,23 +23,23 @@ Foo(123)
 :e
 Foo(123, 456)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.24: 	Foo(123, 456)
+//│ ║  l.+1: 	Foo(123, 456)
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── Function 'Foo' expected 1 argument, but got 2
-//│ ║  l.17: 	fun Foo(x) = new Foo(x, 0)
+//│ ║  l.XX: 	fun Foo(x) = new Foo(x, 0)
 //│ ╙──      	^^^^^^^^^^
 //│ = Foo
 
 :e
 new Foo(123)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.34: 	new Foo(123)
+//│ ║  l.+1: 	new Foo(123)
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Foo' expected 2 arguments, but got 1
-//│ ║  l.18: 	data class Foo { constructor(x, y) }
+//│ ║  l.XX: 	data class Foo { constructor(x, y) }
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
-//│ ║  l.18: 	data class Foo { constructor(x, y) }
+//│ ║  l.XX: 	data class Foo { constructor(x, y) }
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^
 //│ = Foo
 

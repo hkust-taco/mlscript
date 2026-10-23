@@ -41,14 +41,14 @@ module Right with
   module Types with
     type Number = Str
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.36: 	fun unused(value: Types.Number) = value
+//│ ║  l.+3: 	fun unused(value: Types.Number) = value
 //│ ║        	                  ^^^^^^^^^^^^
 //│ ╟── This type is ambiguous, as it has multiple resolved targets
-//│ ║  l.36: 	fun unused(value: Types.Number) = value
+//│ ║  l.+3: 	fun unused(value: Types.Number) = value
 //│ ║        	                  ^^^^^^^^^^^^
 //│ ╟── candidate: type alias
-//│ ║  l.39: 	    type Number = Int
+//│ ║  l.+6: 	    type Number = Int
 //│ ║        	    ^^^^^^^^^^^
 //│ ╟── candidate: type alias
-//│ ║  l.42: 	    type Number = Str
+//│ ║  l.+9: 	    type Number = Str
 //│ ╙──      	    ^^^^^^^^^^^
