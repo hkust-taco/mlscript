@@ -837,7 +837,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           // consequence split.
           (makeConsequent, alternative) => Split.Let(
             sym = lambdaSymbol,
-            term = Term.Lam(PlainParamList(params)(N), transform.mkClone),
+            term = Term.Lam(PlainParamList(params)(N), transform).mkClone,
             // Declare the lambda function at the outermost level. Even if there
             // are multiple disjunctions in the consequent, we will not need to
             // repeat the `transform` term.
