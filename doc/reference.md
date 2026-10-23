@@ -1450,12 +1450,38 @@ and user iterables use the same resolution path. Precise tuple spreads
 retain their fixed positions.
 
 
-### Resolution Interfaces
+### Resolution
 
-**Resolution is a best-effort check, not a replacement for type checking.** It
-finds targets for names, members, and calls, and catches some obvious mistakes.
+The resolution pass of the compiler finds targets for names, members, and calls, and catches some obvious mistakes.
+It does so by taking into account the declared types of values and parameters
+and by tracking the flow of values through the current compilation unit,
+stopping at the unit's exposed public interface (to support separate and scalable compilation).
+This pass is mandatory and affects the program's runtime behavior,
+unlike type checking, which is optional.
+
+**Resolution is a best-effort process, not a replacement for type checking.**
 Successful resolution does not establish type safety, even in strict mode.
 Type checking is meant to run as a later pass, but is not yet implemented.
+
+Resolution is "loose" and "lenient" by default: while it rejects unresolved references,
+it allows references that are ambiguous (see: loose) and uncertain (see: lenient).
+Optionally, one can enable
+* **strict** resolution, under which all references must be resolved to exactly one source target.
+  For example, `(xs: (List | Str)) => xs.length` is rejected:
+  while `List` and `Str` both have a `length` member,
+  and while that member could be selected dynamically under, eg, JS compilation,
+  the two members are unrelated, so the access could not be compiled directly
+  with more static backends like WASM.
+  On the other hand, `(xs: (Cons | Nil)) => xs.length` works,
+  provided that `Cons` and `Nil` are both subtypes of a common abstract class `List` that declares `length`.
+* **eager** resolution: unlike lenient resolution, it does not discard receiver shapes that do not have the selected member.
+  This moves resolution a bit closer to type checking, but still does not guarantee type safety.
+  Resolution is lenient by default because it is quite approximate,
+  so it will often get spurious candidate receivers that are only present due to its approximate tracking of flow.
+
+Strict resolution is currently required by backends like WASM,
+although smarter compilation strategies could allow more lenient resolution in the future
+(an ambiguous selection can often be compiled into a match with unambiguous selections in its branches).
 
 `@annotations.jsSymbol(path)` gives a public method a source name for the JavaScript property
 key denoted by `path`. The path must consist of modules and immutable `val`s,
