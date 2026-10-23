@@ -36,7 +36,6 @@ val charPrecList: List[Str] = List(
     "+ -",
     "* / %",
     "~",
-    "", // Precedence of prefix operators
     "", // Precedence of application
     "", // Precedence of `new`
     // ".",
@@ -70,7 +69,6 @@ object Parser:
   private val CommaPrecNext2 = CommaPrecNext + 1
   private val SelPrec = precOf('.')
   private val AppPrec = SelPrec - 1
-  private val PrefixOpsPrec = AppPrec - 1
   // * Annotation body precedence: above all keyword infix ops (like `as`, `is`)
   // * but below character-based operators (like `+`, `;`).
   private val AnnotBodyPrec = Keyword.maxPrec.get + 1
@@ -681,13 +679,7 @@ abstract class Parser(
         val id = new Tree.Ident(nme).withLoc(S(loc))
         if sym && startsPrefixOperand
         then
-          val newPrec =
-            if nme === "!" then
-              // Special case: bang operator currently used in BbML
-              PrefixOpsPrec
-            else
-              opPrec(nme)._2
-          val rhs = expr(newPrec, allowNewlines = allowNewlines)
+          val rhs = expr(opPrec(nme)._2, allowNewlines = allowNewlines)
           exprCont(PrefixOpApp(id, rhs), prec, allowNewlines = allowNewlines)
         else exprCont(id, prec, allowNewlines = allowNewlines)
     case (LITVAL(lit), loc) :: _ =>
