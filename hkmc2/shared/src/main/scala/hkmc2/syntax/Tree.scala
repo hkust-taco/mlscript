@@ -90,7 +90,6 @@ enum Tree extends AutoLocated:
   case OpApp(lhs: Tree, op: Tree, rhss: Ls[Tree])
   case Jux(lhs: Tree, rhs: Tree)
   case Reft(base: Tree, body: Block)
-  case SynthSel(prefix: Tree, name: Ident)
   case Sel(prefix: Tree, name: Ident)
   case MemberProj(cls: Tree, name: Ident)
   case PrefixApp(kw: Keywrd[Keyword.Prefix], rhs: Tree)
@@ -162,7 +161,6 @@ enum Tree extends AutoLocated:
     case Outer(name) => name.toVector
     case TyTup(tys) => tys.toVector
     case Sel(prefix, name) => Vector.double(prefix, name)
-    case SynthSel(prefix, name) => Vector.single(prefix)
     case DynAccess(prefix, fld, _) => Vector.double(prefix, fld)
     case Open(bod) => Vector.single(bod)
     case OpenIn(opened, body) => Vector.double(opened, body)
@@ -206,7 +204,6 @@ enum Tree extends AutoLocated:
     case Jux(lhs, rhs) => "juxtaposition"
     case Reft(base, reft) => "refinement"
     case Sel(prefix, name) => "selection"
-    case SynthSel(prefix, name) => "synthetic selection"
     case DynAccess(prefix, name, _) => "dynamic field access"
     case PrefixApp(kw, body) => s"prefix operator '${kw.name}'"
     case InfixApp(lhs, kw, rhs) => s"infix operator '${kw.name}'"

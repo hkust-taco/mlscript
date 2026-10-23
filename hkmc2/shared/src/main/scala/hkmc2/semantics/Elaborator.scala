@@ -1881,12 +1881,6 @@ extends Importer:
         PlainFld(if rhsDelimitsUnders then delimitedTerm(r, Trm, alwaysLambda = false) else subterm(r))
       app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
         DummyApp, N, sym)
-    case SynthSel(pre, nme) =>
-      if newResolution then subterm(Sel(pre, nme).withLocOf(tree), interp)
-      else
-        val preTrm = subterm(pre)
-        val sym = resolveField(nme, preTrm.symbol, nme)
-        Term.SynthSel(preTrm, nme)(sym, FlowSymbol.synthSel(nme.name), N, S(summon)).withLocOf(tree)
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
@@ -3519,7 +3513,7 @@ extends Importer:
           raise:
             ErrorReport(msg"Pattern name not found: ${id.name}." -> id.toLoc :: Nil)
           Pattern.Wildcard()
-      case sel: (SynthSel | Sel) => term(sel, Ptrn) match
+      case sel: Sel => term(sel, Ptrn) match
         // Virtual-module selections such as `unsafe.undefined` are literal patterns,
         // so negation and narrowing must see the literal rather than a constructor.
         case Term.Lit(lit) => Literal(lit)

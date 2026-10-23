@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 
 import sourcecode.{FileName, Line, Name}
-import syntax.{Keyword, Tree}, Tree.{Ident, InfixApp, Keywrd, Sel, SynthSel}
+import syntax.{Keyword, Tree}, Tree.{Ident, InfixApp, Keywrd, Sel}
 import hkmc2.utils.*, shorthands.*
 
 package object ucs:
@@ -24,7 +24,7 @@ package object ucs:
       case _ => N
   
   // TOOD: rm
-  type Ctor = SynthSel | Sel | Ident
+  type Ctor = Sel | Ident
   
   /** A helper extractor for matching the tree of `x | y`. */  
   object extractors:
