@@ -41,7 +41,7 @@ class LoweringCtx(
   val symbolsToPreserve: Set[ScopedSymbol],
   val mayRet: Bool, // For rewriting while loop into tail recursive function, represent whether an explicit return is legal in the current block
   private val definedSymsDuringLowering: collection.mutable.Set[ScopedSymbol], // used to create Scoped blocks
-  val returnType: Opt[ErasedType], // the declared return type of the enclosing function, used to coerce `return`s
+  val returnType: Opt[ErasedValueType], // the declared return type of the enclosing function, used to coerce `return`s
   val superBases: Map[InnerSymbol, Path], // evaluated parents of the enclosing class definitions
 ):
   def withLocalVals(syms: IterableOnce[TermSymbol -> VarSymbol]): LoweringCtx =
@@ -62,7 +62,7 @@ object LoweringCtx:
   def empty(symbolsToPreserve: Set[ScopedSymbol]) =
     LoweringCtx(Map.empty, symbolsToPreserve, mayRet = false, collection.mutable.Set.empty, returnType = N,
       superBases = Map.empty)
-  def nestFunc(returnType: Opt[ErasedType])(using sub: LoweringCtx): LoweringCtx =
+  def nestFunc(returnType: Opt[ErasedValueType])(using sub: LoweringCtx): LoweringCtx =
     LoweringCtx(sub.localVals, sub.symbolsToPreserve, mayRet = true, sub.definedSymsDuringLowering, returnType, sub.superBases)
   def nestScoped(using sub: LoweringCtx): LoweringCtx =
     LoweringCtx(sub.localVals, sub.symbolsToPreserve, sub.mayRet, collection.mutable.Set.empty, sub.returnType, sub.superBases)
@@ -239,7 +239,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   type Rcd = (Bool, List[RcdArg], Opt[Loc])
   
   /** Lowers `t` in tail-return position, coercing the result to the enclosing function's declared return type. */
-  def returnedTerm(t: st, returnType: Opt[ErasedType])(using LoweringCtx): Block =
+  def returnedTerm(t: st, returnType: Opt[ErasedValueType])(using LoweringCtx): Block =
     LoweringCtx.nestFunc(returnType).givenIn:
       term(t):
         new TailOp(transfersControl = true):
@@ -287,7 +287,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val localVals = stats.collect:
       case td: TermDefinition if td.k.isInstanceOf[syntax.Val] && td.owner.isEmpty && td.body.isDefined
           && td.hasDeclareModifier.isEmpty && !loweringCtx.symbolsToPreserve(td.sym) =>
-        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.mapErasedValueType)
+        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.erasedType)
         loweringCtx.collectScopedSym(newSym)
         td.tsym -> newSym
     
@@ -618,7 +618,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case Nil => lowerRemainingCalls(fr, args, remainingArgss, annotations, loc)(k)
         case acc: NELs[Ls[Arg]] =>
           val call = Call(fr, acc)(CallMetadata(isMlsFun, mayRaiseEffects, Nil), loc)
-          val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedValueType, "baseCall")
+          val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "baseCall")
           Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
       case (_ :: _, Nil) =>
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
@@ -637,7 +637,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       remainingArgss match
       case Nil => k(call)
       case args :: remainingArgss =>
-        val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedValueType, "callPrefix")
+        val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "callPrefix")
         Assign(tmp, call,
           lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
   
@@ -662,7 +662,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         k(buildInstantiate(acc.reverse))
       case (Nil, args :: remainingArgss) =>
         val inst = buildInstantiate(acc.reverse)
-        val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedValueType, "baseInst")
+        val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedType, "baseInst")
         Assign(tmp, inst,
           lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, N)(k))
       case (remainingParamss, Nil) =>
@@ -696,7 +696,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             k(buildInstantiate(as :: Nil))
           case remainingArgss =>
             val inst = buildInstantiate(as :: Nil)
-            val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedValueType, "baseInst")
+            val tmp = loweringCtx.registerTempSymbol(N, erasedType = inst.erasedType, "baseInst")
             Assign(tmp, inst,
               lowerRemainingCalls(tmp.asSimpleRef, remainingArgss.head, remainingArgss.tail, annotations, N)(k))
     else zipArgs(ctorParamLists.lists, args, Nil)
@@ -733,7 +733,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case Nil => k(acc.reverse)
         Assign(tuple, Tuple(false, args)(arg.toLoc), bind(ps.params.zipWithIndex, Nil))
   
-  def lowerArgs(arg: Term, expectedTypes: Ls[Opt[ErasedType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+  def lowerArgs(arg: Term, expectedTypes: Ls[Opt[ErasedValueType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     arg match
     case Tup(fs) =>
       if fs.exists(e => e match
@@ -1078,7 +1078,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           syntax.Fun,
           N,
           ident,
-          erasedType = S(ErasedType.FuncRef(rsc = S(false), paramLists = Nil :: Nil, ret = N)),
+          erasure = S(ErasedFuncSignature.Signature(paramLists = Nil :: Nil, ret = N)),
         )
         val td: TermDefinition = TermDefinition(
           syntax.Fun,
@@ -1834,7 +1834,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     
     (mtds, publicFlds, privateFlds, ctor)
   
-  def args(elems: Ls[Elem], expectedTypes: Ls[Opt[ErasedType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
+  def args(elems: Ls[Elem], expectedTypes: Ls[Opt[ErasedValueType]])(k: Ls[Arg] => Block)(using LoweringCtx): Block =
     val as = elems.map:
       case sem.Fld(sem.FldFlags.benign(), value, N) => R(N -> value)
       case sem.Fld(sem.FldFlags.benign(), idx, S(rhs)) => L(idx -> rhs)
@@ -1854,7 +1854,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     var fsr: Ls[RcdArg] = Nil
     // * `expected` tracks the erased types of the not-yet-consumed positional parameters.
     // * A spread or named argument breaks positional alignment, so remaining arguments pass through uncast.
-    def rec(as: Ls[(Term -> Term) \/ (Opt[SpreadKind] -> st)], expected: Ls[Opt[ErasedType]]): Block = as match
+    def rec(as: Ls[(Term -> Term) \/ (Opt[SpreadKind] -> st)], expected: Ls[Opt[ErasedValueType]]): Block = as match
       case Nil => End()
       case R((spd, a)) :: as =>
         subTerm_nonTail(a):
@@ -1913,7 +1913,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.annot)
         Define(lamDef, k(lamDef.asPath))
       case r =>
-        val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedValueType)
+        val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedType)
         Assign(l, r, k(l.asSimpleRef))
 
   /** Wraps the lowered result `r` with a [[Cast]] when it must be downcasted to fit the `expected` erased type of the
@@ -1925,15 +1925,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     *
     * An absent `expected` is an unannotated slot, which holds the top reference type rather than no type at all.
     */
-  def castTo[R <: Result](r: R, expected: Opt[ErasedType], loc: Opt[Loc]): (R | Cast) =
+  def castTo[R <: Result](r: R, expected: Opt[ErasedValueType], loc: Opt[Loc]): (R | Cast) =
     r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc)
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
-  private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedType] =
+  private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
     s.collect { case t: TermSymbol => t.erasedType }.flatten
 
   /** The declared erased types of a parameter list's fixed parameters (excluding rest params). */
-  private def expectedParamTypes(ps: ParamList): Ls[Opt[ErasedType]] =
+  private def expectedParamTypes(ps: ParamList): Ls[Opt[ErasedValueType]] =
     ps.params.map(_.sym.erasedType)
 
 
@@ -1969,7 +1969,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // || disamb.exists(_.defn.exists(_.hasDeclareModifier.isEmpty)) // * This checks `declare` members, which is normally unwanted
       )(k)
   
-  final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedType])
+  final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedValueType])
       (using LoweringCtx): (List[LoweredParamList], Block) =
     val physicalParams = paramLists match
       case Nil => ParamList(ParamListFlags.empty, Nil, N)(N) :: Nil
@@ -1984,7 +1984,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       val scopedSyms = loweringCtx.getCollectedSym.filterNot(syms)
       Scoped(scopedSyms, body)
   
-  def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedType])
+  def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedValueType])
       (using LoweringCtx): (List[LoweredParamList], Block) =
     val (loweredParamLists, prologues) = paramLists.map(lowerTrailingParams(_, name)).unzip
     val scopedBody = inScopedBlock:
@@ -2136,7 +2136,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
   private val inspectFn = selFromGlobalThis("util", "inspect")
   
 
-  override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str], returnType: Opt[ErasedType])
+  override def setupFunctionDef(paramLists: List[ParamList], bodyTerm: st, name: Option[Str], returnType: Opt[ErasedValueType])
       (using LoweringCtx): (List[LoweredParamList], Block) =
     if instrument then
       // * TODO: Instrumentation collapses the trailing parameter lists into lambdas, so `fun f(a)(b): Int` is
@@ -2165,7 +2165,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
         case h :: t => go(t, Term.Lam(h, bod))
     go(paramLists.reverse, bod)
   
-  def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str], returnType: Opt[ErasedType])(using LoweringCtx): Block = inScopedBlock:
+  def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str], returnType: Opt[ErasedValueType])(using LoweringCtx): Block = inScopedBlock:
     val enterMsgSym = loweringCtx.registerTempSymbol(N, erasedType = N, dbgNme = "traceLogEnterMsg")
     val prevIndentLvlSym = loweringCtx.registerTempSymbol(N, erasedType = N, dbgNme = "traceLogPrevIndent")
     val resSym = loweringCtx.registerTempSymbol(N, erasedType = N, dbgNme = "traceLogRes")

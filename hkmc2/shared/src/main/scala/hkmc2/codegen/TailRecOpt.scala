@@ -287,7 +287,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val paramList = plist.params
     val restParam = plist.restParam
     
-    val tupleSym = TempSymbol(N, erasedType = S(ErasedType.Array), "argList")
+    val tupleSym = TempSymbol(N, initErasedType = S(ErasedType.Array), "argList")
   
     val tupleRes = Tuple(false, args)(N)
     
@@ -296,7 +296,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     // the slots to null and reads remain independent of parameter assignment order.
     val mainArgs = paramList.zipWithIndex.map: (param, index) =>
       if param.flags.opt then
-        val slot = TempSymbol(N, erasedType = param.sym.erasedType, "optionalArg")
+        val slot = TempSymbol(N, initErasedType = param.sym.erasedType, "optionalArg")
         prefix = prefix.scopedVars(Set(slot)).chain(rest =>
           OptionalParams.bindFromTuple(tupleSym.asSimpleRef, index, slot, true, rest))
         slot.asSimpleRef
@@ -305,7 +305,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     // If the rest param exists, append a slice
     val (initialBlk: (Block => Block), pathList: List[Path]) =
       if restParam.isDefined then
-        val sliceResSym = TempSymbol(N, erasedType = S(ErasedType.Array), "sliceRes")
+        val sliceResSym = TempSymbol(N, initErasedType = S(ErasedType.Array), "sliceRes")
         // runtime.Tuple.slice(tupleSym, paramList.length, 0)
         val sliceRes = Call(
           State.runtimeSymbol.asSimpleRef
@@ -390,26 +390,24 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val dSym =
       if !hasWrapper then funs.head.dSym
       else
-        val erasedType =
+        val erasure: Opt[ErasedValueType | ErasedFuncSignature] =
           if funsLen === 1 then
             // * The loop stands for the same function as its single member, with its parameter lists
-            // * flattened - construct a new `FuncRef` to reflect this.
-            funs.head.dSym.erasedType match
-              case S(ft: ErasedFuncType) =>
-                S(ErasedType.FuncRef(ft.rsc, paramSyms.map(_.erasedType) :: Nil, ft.ret))
-              case other => other
+            // * flattened - construct a new signature to reflect this.
+            funs.head.dSym.erasedSignature match
+              case S(sig) => S(ErasedFuncSignature.Signature(paramSyms.map(_.erasedType) :: Nil, sig.ret))
+              case N => funs.head.dSym.erasedType
           else
             // * The dispatcher can exit through any member's return, so its result type is the LUB of its members.
             val memberRets = funs.map(_.dSym.declaredResultType)
             val ret =
               if memberRets.exists(_.isEmpty) then N
               else S(memberRets.flatten.map(_.canonicalize).reduce(ErasedType.lub))
-            S(ErasedType.FuncRef(
-              rsc = S(false),
+            S(ErasedFuncSignature.Signature(
               paramLists = (S(ErasedType.Int) :: paramSyms.map(_.erasedType)) :: Nil,
               ret = ret,
             ))
-        val res = TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme), erasedType)
+        val res = TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme), erasure)
         // * Link the loop function to the BMS so that the erased type is accessible.
         // * This never overwrites an already-elaborated `tsym` because it is always freshly created here (guarded by
         // * `hasWrapper`).
@@ -435,7 +433,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
             // * A call that becomes a jump continues the loop rather than leaving it, so it is not an exit.
             case TailCallShape(calleeSym, c, _)
               if dSymIds.contains(calleeSym) && isExactlySaturatedCall(c, dSymToDefn(calleeSym)) => ()
-            case Return(res) => funExits ::= res.erasedValueType
+            case Return(res) => funExits ::= res.erasedType
             case _ => super.applyBlock(b)
         // * Computed on the pre-merge function bodies, which is over-approximated but safe:
         // * `rebuildTailCallResult` only narrows exit values, so values are never wider than the LUB computed here.
@@ -563,7 +561,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
             // Instead, we coerce the exit value to the dispatcher's declared return type (which is the LUB over all
             // members' returns and thus a supertype of all deferred targets), and then emit a cast to the target type
             // so that an invalid cast is trapped at runtime.
-            val slot = TempSymbol(N, erasedType = dSym.declaredResultType, "exitResult")
+            val slot = TempSymbol(N, initErasedType = dSym.declaredResultType, "exitResult")
             val ref = slot.asSimpleRef
             Scoped(Set(slot),
               Assign(slot, coerceToDeclaredReturn(res2, dSym),
@@ -614,7 +612,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
               // We should thus assign the params to temporary symbols
               // if they are needed for a subsequent assignment.
               var assignedSyms: Map[VarSymbol, Lazy[TempSymbol]] = paramSyms.map: sym =>
-                  sym -> Lazy(TempSymbol(N, erasedType = sym.erasedType, sym.nme + "_tmp")) // Use `Lazy` to avoid generating useless symbols
+                  sym -> Lazy(TempSymbol(N, initErasedType = sym.erasedType, sym.nme + "_tmp")) // Use `Lazy` to avoid generating useless symbols
                 .toMap
               var requiredTmps: Set[(VarSymbol, TempSymbol)] = Set.empty
               
@@ -716,7 +714,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
                 case CallArgsResult.Success(res) => res.map:
                   case r: Path => r
                   case r: Result =>
-                    val newSym = TempSymbol(N, erasedType = r.erasedValueType)
+                    val newSym = TempSymbol(N, initErasedType = r.erasedType)
                     pre = pre.assignScoped(newSym, r)
                     newSym.asPath
                 case CallArgsResult.ForceSpread =>

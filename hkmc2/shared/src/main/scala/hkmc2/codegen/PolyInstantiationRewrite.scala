@@ -41,6 +41,9 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   
   // definitions this rewrite introduces besides the specialized copies
   def otherNewFunDefns: Iterable[FunDefn]
+  
+  // Rewrites that remove parameters must keep the copied symbol's erased signature in sync.
+  def specializedSignature(fun: TermSymbol, instId: InstantiationId, sig: ErasedFuncSignature): ErasedFuncSignature = sig
   // ====== the abstract members ======
   
   
@@ -77,7 +80,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
           val name = path.mkFunName + s"$$${f.nme}"
           f -> (
             new BlockMemberSymbol(name, Nil, true),
-            new TermSymbol(Fun, N, Tree.Ident(name), erasedType = f.erasedType))
+            f.withMappedErasure(Fun, N, Tree.Ident(name))(specializedSignature(f, path, _)))
         .toMap
     res
   end newPolyFnSyms

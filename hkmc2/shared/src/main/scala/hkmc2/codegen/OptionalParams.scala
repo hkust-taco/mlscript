@@ -57,5 +57,5 @@ object OptionalParams:
   def argument(value: Path)(k: Path => Block)(using State): Block = value match
     case _: Value.Lit => k(value)
     case _ =>
-      val slot = TempSymbol(N, erasedType = N, "optionalArg")
+      val slot = TempSymbol(N, initErasedType = N, "optionalArg")
       Scoped(Set(slot), Assign(slot, value, k(slot.asSimpleRef)))

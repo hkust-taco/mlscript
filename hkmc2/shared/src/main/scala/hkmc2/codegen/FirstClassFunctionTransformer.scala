@@ -60,7 +60,7 @@ class FirstClassFunctionTransformer
   
   private def etaExpandPath(p: Path, params: LoweredParamList)(k: Path => Block): Block =
     val clsDef = generateFCFunctionClass(p, params)
-    val tmp = new TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)))
+    val tmp = new TempSymbol(None, initErasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)))
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
     Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil)(InstantiateMetadata.empty, p.toLoc), k(tmp.asSimpleRef.withLoc(p.toLoc)))))
   

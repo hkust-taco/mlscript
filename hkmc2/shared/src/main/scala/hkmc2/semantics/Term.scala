@@ -769,7 +769,7 @@ object RcdField:
     val id = new Tree.Ident(name)
     id.withLocOf(field)
     val sym = new BlockMemberSymbol(name, Nil)
-    val tsym = TermSymbol(RecordField, N, id, erasedType = N)
+    val tsym = TermSymbol(RecordField, N, id, erasure = N)
     sym.tsym = S(tsym)
     // Value-field lookup removes the synthetic definition's capture mark, leaving
     // enclosing call-site marks intact. A structural type field instead refers

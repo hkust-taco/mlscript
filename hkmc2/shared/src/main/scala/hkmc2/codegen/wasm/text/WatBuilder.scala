@@ -51,8 +51,8 @@ extension (ty: ValType)
     case F64Type => S(Instructions.f64.const(0))
     case V128Type => N
 
-extension (et: ErasedType)
-  /** Returns the corresponding Wasm type for this [[ErasedType]]. */
+extension (et: ErasedValueType)
+  /** Returns the corresponding Wasm type for this [[ErasedValueType]]. */
   private[text] def wasmType(using Ctx, State): Opt[ValType] =
     import Ctx.ctx
     val elabCtx = ctx.elabCtx
@@ -90,16 +90,18 @@ extension (sym: WasmSlotSymbol)
       case bms: BlockMemberSymbol =>
         // A BMS's erased type lives in its associated TermSymbol
         bms.tsym.flatMap(_.erasedType).flatMap(_.wasmType).getOrElse(RefType.anyref)
-      case s: HasErasedType =>
+      case s: LocalVarSymbol =>
         s.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
 
 extension (sym: WasmSlotSymbol)
   /** The Wasm value type a parameter slot for `sym` should be declared with. */
   private[text] def paramType(using Ctx, State): ValType =
-    sym match
-      case s: HasErasedType =>
-        s.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
-      case _ => RefType.anyref
+    summon[Ctx].elabCtx.givenIn:
+      sym match
+        case l: LocalVarSymbol => l.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
+        case cls: ClassSymbol => CanonicalErasedValueType(rsc = S(false), cls).wasmType.getOrElse(RefType.anyref)
+        case mod: ModuleOrObjectSymbol => mod.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
+        case _: (PatternSymbol | TopLevelSymbol | BlockMemberSymbol) => RefType.anyref
 
 /** The declared Wasm value type of the parameter slot for `sym` at position `idx`, honoring an optional per-position
   * override (index 0 = `this`). Falls back to `sym.paramType` if no override is given.
@@ -165,7 +167,7 @@ object WatBuilder:
 
   private def declareIntrinsicType(name: Str)(using Ctx, Raise, State): TypeIdx =
     summon[Ctx].addType(TypeInfo(
-      sym = TempSymbol(N, erasedType = N, name),
+      sym = TempSymbol(N, initErasedType = N, name),
       compType = FunctionType(
         params = intrinsicParamSuffixes(name).map(nme => WasmParam(SymIdx(nme), RefType.anyref)),
         results = Seq(Result(RefType.anyref)),
@@ -177,7 +179,7 @@ object WatBuilder:
     */
   private def mkIntrinsicParams(suffixes: Ls[Str])(using State): Ls[TempSymbol -> SymIdx] =
     suffixes.map: suffix =>
-      val sym = TempSymbol(N, erasedType = N, suffix)
+      val sym = TempSymbol(N, initErasedType = N, suffix)
       sym -> SymIdx(suffix)
 
   /** Allocates the Wasm type and function definition for an intrinsic with the given signature.
@@ -190,7 +192,7 @@ object WatBuilder:
   )(using Ctx, Raise, State): FuncIdx =
     val funcTy = WatBuilder.declareIntrinsicType(name)
     val funcInfo = FuncInfo(
-      sym = TempSymbol(N, erasedType = N, name),
+      sym = TempSymbol(N, initErasedType = N, name),
       typeUse = TypeUse(funcTy),
       params = params.map(_.resolvedParam),
       locals = Seq.empty,
@@ -296,14 +298,14 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
 
   /** Synthetic field symbol for the object-header pointer to a class's shared RTTI object. */
-  private val typeInfoFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$typeinfo"), erasedType = N)
+  private val typeInfoFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$typeinfo"), erasure = N)
 
   /** Synthetic field symbol for the runtime class tag stored in RTTI. */
   private val tagFieldSym: TermSymbol =
-    TermSymbol(syntax.MutVal, owner = N, Ident("$tag"), erasedType = S(ErasedType.Int))
+    TermSymbol(syntax.MutVal, owner = N, Ident("$tag"), erasure = S(ErasedType.Int))
 
   /** Synthetic field symbol for the direct-parent RTTI reference used by runtime subtype checks. */
-  private val parentFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$parent"), erasedType = N)
+  private val parentFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$parent"), erasure = N)
 
   private case class StringLitInfo(offset: Int, byteLen: Int, watBytes: Str)
   private val stringLits: LinkedHashMap[Str, StringLitInfo] = LinkedHashMap.empty
@@ -823,7 +825,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       thisType: Opt[ValType],
   )(using Raise): TypeIdx =
     ctx.addType(TypeInfo(
-      sym = TempSymbol(N, erasedType = N, defn.sym.nme),
+      sym = TempSymbol(N, initErasedType = N, defn.sym.nme),
       FunctionType(
         params = params.zipWithIndex.map: (p, idx) =>
           WasmParam(p._2, resolveParamType(p._1, idx, thisType.map(Seq(_)))),
@@ -891,7 +893,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   )(using Raise): TypeIdx =
     ctx.getOrCreateWasmIntrinsicType(WasmIntrinsicType.VirtualMethod(baseSym, paramTypes.toList, resultType)):
       ctx.addType(TypeInfo(
-        sym = TempSymbol(N, erasedType = N, s"virtual${paramTypes.size + 1}"),
+        sym = TempSymbol(N, initErasedType = N, s"virtual${paramTypes.size + 1}"),
         compType = virtualMethodSignature(baseSym, paramTypes, resultType),
         objectTag = N,
       ))
@@ -1041,7 +1043,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     val params = ps.paramSyms.map(p => p -> SymIdx(p.nme))
     val resultTypes = Seq(Result(declaredResultType(sym)))
     val funcTy = ctx.addType(TypeInfo(
-      sym = TempSymbol(N, erasedType = N, sym.nme),
+      sym = TempSymbol(N, initErasedType = N, sym.nme),
       compType = FunctionType(
         params = params.map((p, idx) => WasmParam(idx, p.paramType)),
         results = resultTypes,
@@ -1143,7 +1145,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       case func: SessionFunc =>
         // If the function symbol comes from a class or module, generate a TempSymbol to avoid symbol collision with
         // the class/module itself
-        val funcTySym = TempSymbol(N, erasedType = N, func.sym.nme)
+        val funcTySym = TempSymbol(N, initErasedType = N, func.sym.nme)
         val typeIdx =
           ctx.addType(TypeInfo(sym = funcTySym, wrapId = func.wrapId, compType = func.funcType, objectTag = N))
         ctx.addFunctionImport(WasmImport(
@@ -1179,7 +1181,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         typeInfoTypeIdxs(cls.sym) = typeInfoTypeIdx
         val globalExtern = ExternType.Global(
           GlobalType(RefType(typeInfoTypeIdx, nullable = false), mutable = false),
-          TempSymbol(N, erasedType = N, cls.sym.nme),
+          TempSymbol(N, initErasedType = N, cls.sym.nme),
           wrapId = N -> S("typeinfo"),
         )
         val globalIdx = ctx.addGlobalImport(WasmImport(
@@ -1208,7 +1210,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     val vt = ctx.getVirtualTable(defn.sym)
     val vtSlots = vt.fold(Nil)(_.slots)
     val newSlotFields = vtSlots.zipWithIndex.drop(parentVirtualMethodCount).map: (slotInfo, slot) =>
-      val fieldSym = TermSymbol(syntax.MutVal, owner = N, Ident(s"slot$slot"), erasedType = N)
+      val fieldSym = TermSymbol(syntax.MutVal, owner = N, Ident(s"slot$slot"), erasure = N)
       fieldSym -> Field(
         RefType(virtualMethodFuncType(defn.sym, slotInfo.paramTypes, slotInfo.resultType), nullable = true),
         mutable = true,
@@ -1216,7 +1218,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       )
 
     val typeInfoType = ctx.addType(TypeInfo(
-      sym = TempSymbol(N, erasedType = N, defn.sym.nme),
+      sym = TempSymbol(N, initErasedType = N, defn.sym.nme),
       compType = StructType(fields = inheritedFields ++ newSlotFields, parents = Seq(parentTypeInfoIdx)),
       objectTag = N,
       wrapId = N -> S("typeinfo"),
@@ -1303,7 +1305,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
   /** Gets (and caches) the exception tag used for MLX `throw`. */
   private def exnTagIdx(using Raise): TagIdx =
-    val sym = TempSymbol(N, erasedType = N, "mlx_exn")
+    val sym = TempSymbol(N, initErasedType = N, "mlx_exn")
     ctx.getOrCreateWasmIntrinsicTag(
       "mlx_exn",
       ctx.addTag(TagInfo(
@@ -1353,7 +1355,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       module = ExternIntrinsics.SystemModule,
       name = ExternIntrinsics.StringFromUtf16ImportName,
     ):
-      val importTySym = TempSymbol(N, erasedType = N, ExternIntrinsics.StringFromUtf16ImportName)
+      val importTySym = TempSymbol(N, initErasedType = N, ExternIntrinsics.StringFromUtf16ImportName)
       val importTy = ctx.addType(TypeInfo(
         sym = importTySym,
         compType = FunctionType(
@@ -1825,8 +1827,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             case S(body) =>
               val declaredParams = fun.targetSymbol match
                 case S(ts: TermSymbol) =>
-                  ts.erasedType.collect:
-                    case ft: ErasedFuncType => ft.paramLists
+                  ts.erasedSignature.map(_.paramLists)
                 case _ => N
               val ps = declaredParams match
                 case S(pl :: Nil) => pl
@@ -2125,7 +2126,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       name,
       ExternType.Func(
         TypeUse(typeIdx),
-        TempSymbol(N, erasedType = N, name),
+        TempSymbol(N, initErasedType = N, name),
         wrapId = N -> N,
       ),
     ))
@@ -2495,7 +2496,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val operand = result(res)
         // Storage and calling conventions may widen a reference (e.g. a singleton's nullable global).
         // Restore the IR value's type at the return boundary so Block.returnType also describes the emitted value.
-        val resWat = res.erasedValueType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _))
+        val resWat = res.erasedType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _))
         val returned = resWat.resultType match
           case S(refTy: RefType) =>
             refTy.heapType match
@@ -2904,7 +2905,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       val entryResultTypes = Seq(Result(entryResultType))
 
       val entryFnTy = ctx.addType(TypeInfo(
-        sym = TempSymbol(N, erasedType = N, entrySym.nme),
+        sym = TempSymbol(N, initErasedType = N, entrySym.nme),
         FunctionType(params = Seq.empty, results = entryResultTypes),
         objectTag = N,
       ))
@@ -2927,7 +2928,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               memuse = N,
               sym = TempSymbol(
                 N,
-                erasedType = S(ErasedType.Str),
+                initErasedType = S(ErasedType.Str),
                 s.take(WatBuilder.StringConstantIdentMaxLength),
               ),
             ))
@@ -2935,13 +2936,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       val initActions = ctx.getSingletonInitActions
       if initActions.nonEmpty then
         val initTy = ctx.addType(TypeInfo(
-          sym = TempSymbol(N, erasedType = N, "start"),
+          sym = TempSymbol(N, initErasedType = N, "start"),
           compType = FunctionType(params = Seq.empty, results = Seq.empty),
           objectTag = N,
         ))
         val initBody = initActions.mergeAsBlock_!
         val initFn = ctx.addFunc(FuncInfo(
-          sym = TempSymbol(N, erasedType = N, "start"),
+          sym = TempSymbol(N, initErasedType = N, "start"),
           typeUse = TypeUse(initTy),
           params = Seq.empty,
           resultTypes = initBody.resultTypes.map(ty => Result(ty.asValType_!)),

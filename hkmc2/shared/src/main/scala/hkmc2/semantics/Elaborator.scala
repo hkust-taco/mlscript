@@ -703,13 +703,13 @@ object Elaborator:
     val importSymbol = new VarSymbol(Ident("import"), erasedType = N)
     @deprecated("Use the `NoSymbol` singleton instead.")
     val noSymbol = NoSymbol
-    val runtimeSymbol = TempSymbol(N, erasedType = N, "runtime")
-    val definitionMetadataSymbol = TempSymbol(N, erasedType = N, "definitionMetadata")
-    val prettyPrintSymbol = TempSymbol(N, erasedType = N, "prettyPrint")
-    val termSymbol = TempSymbol(N, erasedType = N, "Term")
-    val blockSymbol = TempSymbol(N, erasedType = N, "Block")
-    val optionSymbol = TempSymbol(N, erasedType = N, "option")
-    val wasmSymbol = TempSymbol(N, erasedType = N, "wasm")
+    val runtimeSymbol = TempSymbol(N, initErasedType = N, "runtime")
+    val definitionMetadataSymbol = TempSymbol(N, initErasedType = N, "definitionMetadata")
+    val prettyPrintSymbol = TempSymbol(N, initErasedType = N, "prettyPrint")
+    val termSymbol = TempSymbol(N, initErasedType = N, "Term")
+    val blockSymbol = TempSymbol(N, initErasedType = N, "Block")
+    val optionSymbol = TempSymbol(N, initErasedType = N, "option")
+    val wasmSymbol = TempSymbol(N, initErasedType = N, "wasm")
     lazy val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
@@ -1181,7 +1181,7 @@ extends Importer:
       ((ctx + (ident.name -> symbol)), head ~: End)
     // Interleaved-`do` statements like `{ x is A then 0; do log(1); ... }`.
     case PrefixApp(Keywrd(`do`), rhsTree) =>
-      (ctx, mkSplitLet(TempSymbol(N, erasedType = N, "unused"), term(rhsTree, Trm)) ~: End)
+      (ctx, mkSplitLet(TempSymbol(N, initErasedType = N, "unused"), term(rhsTree, Trm)) ~: End)
     // Although the `else`-clause marks the end of the split, we cannot
     // stop and still have to elaborate the remaining trees.
     case PrefixApp(kwTree @ Keywrd(`else`), elseTree) =>
@@ -1285,7 +1285,7 @@ extends Importer:
           case Term.SimpleRef(_: LocalVarSymbol) => continuation(() => term)
           // Member references can invoke getters; evaluate those only once.
           case _ =>
-            val symbol = TempSymbol(N, erasedType = N, "scrut")
+            val symbol = TempSymbol(N, initErasedType = N, "scrut")
             mkSplitLet(symbol, term) ~: continuation(() => syntheticLocalRef(symbol))
   
   private type TT = (Tree, Tree)
@@ -1630,7 +1630,7 @@ extends Importer:
         error
       else
         val lt = subterm(lhs)
-        val sym = TempSymbol(S(lt), erasedType = N, "old")
+        val sym = TempSymbol(S(lt), initErasedType = N, "old")
         Blk(
           LetDecl(sym, Nil)(tree.toLoc) :: defineVar(sym, lt)(tree.toLoc) :: Nil, Term.Try(Blk(
             assignment(lt, subterm(rhs)) :: Nil,
@@ -2060,10 +2060,10 @@ extends Importer:
         subterm(body)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
       val labelSym = new LabelSymbol(N, labelId.name)
-      val resultSym = new TempSymbol(N, erasedType = N, s"${labelId.name}$$result")
-      val nonLocalHandlerSym = TempSymbol(N, erasedType = N, s"nonLocalHandler$$${labelId.name}")
-      val nonLocalBreakMethodMarker = TempSymbol(N, erasedType = N, s"nonLocalBreakMethod$$${labelId.name}")
-      val nonLocalContinueMethodMarker = TempSymbol(N, erasedType = N, s"nonLocalContinueMethod$$${labelId.name}")
+      val resultSym = new TempSymbol(N, initErasedType = N, s"${labelId.name}$$result")
+      val nonLocalHandlerSym = TempSymbol(N, initErasedType = N, s"nonLocalHandler$$${labelId.name}")
+      val nonLocalBreakMethodMarker = TempSymbol(N, initErasedType = N, s"nonLocalBreakMethod$$${labelId.name}")
+      val nonLocalContinueMethodMarker = TempSymbol(N, initErasedType = N, s"nonLocalContinueMethod$$${labelId.name}")
       val bodyTerm = ctx.withLabel(
         labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker).givenIn:
         subterm(body)
@@ -2631,7 +2631,7 @@ extends Importer:
                 case N => N
                 case _ if ctx.mode is Mode.Light => S(Term.Missing)
                 case S(rhs) => S:
-                  val nonLocalRetHandler = TempSymbol(N, erasedType = N, s"nonLocalRetHandler$$${id.name}")
+                  val nonLocalRetHandler = TempSymbol(N, initErasedType = N, s"nonLocalRetHandler$$${id.name}")
                   val hasGeneratorAnnotation = annotations.exists(_.isInstanceOf[Annot.Generator])
                   val hasAsyncAnnotation = annotations.exists(_.isInstanceOf[Annot.Async])
                   if pss.isEmpty && hasGeneratorAnnotation then
@@ -3127,7 +3127,7 @@ extends Importer:
     case N => N
   
   def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): TermSymbol | VarSymbol =
-    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasedType = N)
+    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasure = N)
     else VarSymbol(id, erasedType = N)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =

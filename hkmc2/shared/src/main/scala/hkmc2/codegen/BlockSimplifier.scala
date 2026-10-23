@@ -1924,7 +1924,7 @@ class BlockSimplifier
                   case Nil =>
                     val resSym = TempSymbol(
                       N,
-                      erasedType = if extraArgss.isEmpty then call.erasedValueType else N,
+                      initErasedType = if extraArgss.isEmpty then call.erasedType else N,
                       "inlinedVal",
                     )
                     val copier = Copier(resSym, mapping, thisMapping)
