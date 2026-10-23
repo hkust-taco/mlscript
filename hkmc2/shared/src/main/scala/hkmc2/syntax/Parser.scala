@@ -84,7 +84,9 @@ object Parser:
     case _ =>
       val r = opStr.last
       (precOf(opStr.head), precOf(r) - (if r === ',' || r === ':' then 1 else 0))
-  val prefixOps: Set[Str] = Set("!", "+", "-", "~", "@", "|", "&")
+  // At the start of a new line, an attached operand makes these operators start a fresh
+  // prefix expression. Other symbolic operators continue the previous expression as infix.
+  private val newlinePrefixOps: Set[Str] = Set("!", "+", "-", "~", "@", "|", "&")
   
   type Indent_Curly = Curly.type | Indent.type
   
@@ -632,6 +634,18 @@ abstract class Parser(
   
   def simpleExpr(prec: Int, allowNewlines: Bool)(using Line): Tree =
     wrap(prec)(simpleExprImpl(prec, allowNewlines = allowNewlines))
+  
+  /** An operator remains a value before argument lists, selections, and expression delimiters.
+    * In particular, `op(args)`, `op[T](args)`, and `op \ arg` retain their explicit call syntax.
+    * Curly and indented blocks instead supply a single prefix operand, including when they
+    * start with an operator that would otherwise continue the operator value as an infix split. */
+  private def startsPrefixOperand: Bool = yeetSpaces match
+    case (KEYWORD(Keyword.`else` | Keyword.`in` | Keyword.`finally`), _) :: _ => false
+    case (KEYWORD(kw), _) :: _ => prefixRules.kwAlts.contains(kw.name)
+    case (IDENT(_, _) | ESC_IDENT(_) | LITVAL(_) | QUOTE | SUSPENSION(_), _) :: _ => true
+    case (BRACKETS(_: Indent_Curly, _), _) :: _ => true
+    case _ => false
+  
   def simpleExprImpl(prec: Int, allowNewlines: Bool): Tree =
     yeetSpaces match
     case (IDENT("=", _), l0) :: (IDENT(nme, false), l1) :: rest =>
@@ -664,20 +678,17 @@ abstract class Parser(
         errExpr
       case N =>
         consume
-        val id = Tree.Ident(nme).withLoc(S(loc))
-        if prefixOps.contains(nme)
+        val id = new Tree.Ident(nme).withLoc(S(loc))
+        if sym && startsPrefixOperand
         then
-          yeetSpaces match
-          case Nil => id
-          case _ =>
-            val newPrec =
-              if nme === "!" then
-                // Special case: bang operator currently used in BbML
-                PrefixOpsPrec
-              else
-                opCharPrec(nme.head)
-            val rhs = expr(newPrec, allowNewlines = allowNewlines)
-            exprCont(App(id, PlainTup(rhs)), prec, allowNewlines = allowNewlines)
+          val newPrec =
+            if nme === "!" then
+              // Special case: bang operator currently used in BbML
+              PrefixOpsPrec
+            else
+              opPrec(nme)._2
+          val rhs = expr(newPrec, allowNewlines = allowNewlines)
+          exprCont(PrefixOpApp(id, rhs), prec, allowNewlines = allowNewlines)
         else exprCont(id, prec, allowNewlines = allowNewlines)
     case (LITVAL(lit), loc) :: _ =>
       consume
@@ -1078,7 +1089,7 @@ abstract class Parser(
       if allowNewlines
       && prec <= NoElsePrec // (Q: why doesn't MinPrec work?)
       && NOISE.get(rest).nonEmpty // * Don't treat as infix if there are no tokens for the RHS (eg `()\n???`)
-      && (!prefixOps.contains(opStr) || rest.match
+      && (!newlinePrefixOps.contains(opStr) || rest.match
         case (_: NEWLINE_COMMA, _) :: _ | (SPACE, _) :: _ | (BRACKETS(_: Indent_Curly, _), _) :: _ | Nil => true
         case _ => false
       ) =>

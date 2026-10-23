@@ -22,20 +22,22 @@ if 1 + 1
 //│ ╟── as it has lower precedence than the splitting operator here
 //│ ║  l.+2: 	    * 2 == 4 then "X"
 //│ ╙──      	    ^
-//│ ╔══[PARSE ERROR] Unexpected literal in this operator split inner position
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
 //│ ║  l.+2: 	    * 2 == 4 then "X"
-//│ ║        	           ^
+//│ ║        	             ^^^^
 //│ ╟── Note: the operator split starts here
 //│ ║  l.+2: 	    * 2 == 4 then "X"
 //│ ╙──      	    ^
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.+1: 	if 1 + 1
+//│ ║        	   ^^^^^
 //│ ║  l.+2: 	    * 2 == 4 then "X"
-//│ ╙──      	           ^
-//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
-//│ ║  l.+2: 	    * 2 == 4 then "X"
-//│ ╙──      	      ^
-//│ ═══[COMPILATION ERROR] Unrecognized term split (reference term)
-//│ ═══[RUNTIME ERROR] Error: match error
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	    * 2 == 1 then "A"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    |> id is r then r
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // ——— ——— ———
 

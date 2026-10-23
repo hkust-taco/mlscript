@@ -68,6 +68,9 @@ pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╟── Because the pattern it belongs to is negated.
 //│ ║  l.+1: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╙──      	                           ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'toString' has no resolved target
+//│ ║  l.+1: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ╙──      	                                               ^^^^^^^^^^
 
 :e
 pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
@@ -82,24 +85,34 @@ pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 pattern Negated = ~(Int | Str)
 //│ elaborated pattern body: ¬(member:Int⁰ ∨ member:Str⁰)
 
-// FIXME: The precedence of `=>` is higher than `~`?
+// The explicit call ends before the pattern body, so the negated binding is unavailable.
 :pt
+:e
 pattern BadNegated = ~(Int as x) => x
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ TypeDef:
 //│   k = Pat
 //│   head = Ident of "BadNegated"
-//│   rhs = S of App:
-//│     lhs = Ident of "~"
-//│     rhs = Tup of Ls of
-//│       InfixApp:
-//│         lhs = Tup of Ls of
+//│   rhs = S of InfixApp:
+//│     lhs = Tup of Ls of
+//│       App:
+//│         lhs = Ident of "~"
+//│         rhs = Tup of Ls of
 //│           InfixApp:
 //│             lhs = Ident of "Int"
 //│             kw = Keywrd of keyword 'as'
 //│             rhs = Ident of "x"
-//│         kw = Keywrd of keyword '=>'
-//│         rhs = Ident of "x"
+//│     kw = Keywrd of keyword '=>'
+//│     rhs = Ident of "x"
+//│ ╔══[COMPILATION ERROR] This pattern cannot be bound.
+//│ ║  l.+1: 	pattern BadNegated = ~(Int as x) => x
+//│ ║        	                       ^^^
+//│ ╟── Because the pattern it belongs to is negated.
+//│ ║  l.+1: 	pattern BadNegated = ~(Int as x) => x
+//│ ╙──      	                       ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: x
+//│ ║  l.+1: 	pattern BadNegated = ~(Int as x) => x
+//│ ╙──      	                                    ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :ucs ups

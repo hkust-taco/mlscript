@@ -7,7 +7,7 @@
 
 +1
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1))))
+//│ 	PrefixOpApp(Ident(+),IntLit(1))
 
 1 + 2
 //│ Parsed:
@@ -15,15 +15,15 @@
 
 1 + +2
 //│ Parsed:
-//│ 	OpApp(IntLit(1),Ident(+),List(App(Ident(+),Tup(List(IntLit(2))))))
+//│ 	OpApp(IntLit(1),Ident(+),List(PrefixOpApp(Ident(+),IntLit(2))))
 
 +1 + +2
 //│ Parsed:
-//│ 	OpApp(App(Ident(+),Tup(List(IntLit(1)))),Ident(+),List(App(Ident(+),Tup(List(IntLit(2))))))
+//│ 	OpApp(PrefixOpApp(Ident(+),IntLit(1)),Ident(+),List(PrefixOpApp(Ident(+),IntLit(2))))
 
 + + 1 + + + 2
 //│ Parsed:
-//│ 	OpApp(App(Ident(+),Tup(List(App(Ident(+),Tup(List(IntLit(1))))))),Ident(+),List(App(Ident(+),Tup(List(App(Ident(+),Tup(List(IntLit(2)))))))))
+//│ 	OpApp(PrefixOpApp(Ident(+),PrefixOpApp(Ident(+),IntLit(1))),Ident(+),List(PrefixOpApp(Ident(+),PrefixOpApp(Ident(+),IntLit(2)))))
 
 1 + 2 * 3
 //│ Parsed:

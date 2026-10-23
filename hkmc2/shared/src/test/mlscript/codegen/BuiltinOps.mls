@@ -26,13 +26,10 @@
 +
 //│ = fun
 
-// * A bit confusing... but at least there's a warning!
-:w
+// * Explicit argument lists are uniform across symbolic operators.
+:expect 5
 +(2, 3)
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.+1: 	+(2, 3)
-//│ ╙──      	  ^
-//│ = 3
+//│ = 5
 
 *(2, 3)
 //│ = 6

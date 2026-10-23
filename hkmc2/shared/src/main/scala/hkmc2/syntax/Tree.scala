@@ -87,6 +87,9 @@ enum Tree extends AutoLocated:
   case Tup(fields: Ls[Tree])
   case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
+  /** Unlike an explicit argument list, a prefix operand must not acquire extra arguments from `\`.
+    * Keeping the source form also lets operator operands delimit implicit lambdas. */
+  case PrefixOpApp(op: Ident, rhs: Tree)
   case OpApp(lhs: Tree, op: Tree, rhss: Ls[Tree])
   case Jux(lhs: Tree, rhs: Tree)
   case Reft(base: Tree, body: Block)
@@ -143,6 +146,7 @@ enum Tree extends AutoLocated:
     case Unquoted(body) => Vector.single(body)
     case Tup(fields) => fields.toVector
     case App(lhs, rhs) => Vector.double(lhs, rhs)
+    case PrefixOpApp(op, rhs) => Vector.double(op, rhs)
     case OpApp(lhs, op, rhss) => lhs +: op +: rhss.toVector
     case Jux(lhs, rhs) => Vector.double(lhs, rhs)
     case Reft(base, reft) => Vector.double(base, reft)
@@ -200,6 +204,7 @@ enum Tree extends AutoLocated:
     case Tup(fields) => "tuple"
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
+    case PrefixOpApp(op, rhs) => "prefix operator application"
     case OpApp(lhs, op, rhss) => "operator application"
     case Jux(lhs, rhs) => "juxtaposition"
     case Reft(base, reft) => "refinement"
@@ -483,6 +488,9 @@ object Tree:
   
   extension [T <: Keyword & Singleton](kw: Tree.Keywrd[T])
     def name = kw.kw.name
+  
+  extension (prefix: PrefixOpApp)
+    def toApp: App = new App(prefix.op, PlainTup(prefix.rhs)).withLocOf(prefix)
 
 /**
  * A parameter yet to be elaborated, which is different from
