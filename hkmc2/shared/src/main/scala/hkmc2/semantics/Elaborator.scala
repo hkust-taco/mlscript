@@ -738,14 +738,18 @@ object Elaborator:
     def matchSuccessTrmSymbol: TermSymbol = runtimeSymbols.matchSuccessTrm
     def matchFailureClsSymbol: ClassSymbol = runtimeSymbols.matchFailureCls
     def matchFailureTrmSymbol: TermSymbol = runtimeSymbols.matchFailureTrm
+    val builtinOpsByArity: Map[(Str, BuiltinSymbol.Arity), BuiltinSymbol] =
+      import BuiltinSymbol.Arity.*
+      List(Unary -> unaryOps, Binary -> binaryOps, Variadic -> anyOps).flatMap: (arity, ops) =>
+        ops.map(op => (op, arity) -> BuiltinSymbol(op, arity, isPure = !impureOps(op)))
+      .toMap
     val builtinOpsMap =
+      import BuiltinSymbol.Arity.*
+      // A bare operator denotes its binary function when both arities exist. Direct applications
+      // select their own arity in `app`, without affecting aliases or lexically shadowed operators.
       val baseBuiltins = builtins.map: op =>
-          op -> BuiltinSymbol(op,
-            binary = binaryOps(op),
-            unary = unaryOps(op),
-            nullary = false,
-            functionLike = anyOps(op),
-            isPure = !impureOps(op))
+          op -> builtinOpsByArity.get((op, Binary)).orElse(builtinOpsByArity.get((op, Unary)))
+            .getOrElse(builtinOpsByArity((op, Variadic)))
         .toMap
       baseBuiltins ++ aliasOps.map:
         case (alias, base) => alias -> baseBuiltins(base)
@@ -1393,8 +1397,22 @@ extends Importer:
     case _ => Term.Annotated(annotation, target)
   
   private def app(lt: Term, rt: Term)(tree: Tree.App, typ: Opt[typing.Type], resSym: FlowSymbol)(using Ctx): Term =
-    val res = withTypeBinders(new Term.App(lt, rt)(tree, typ, resSym))
-    if newResolution then listenTerm(lt)(shape => appShape(shape, rt, res))
+    val arity = rt match
+      case Term.Tup(_ :: Nil) => S(BuiltinSymbol.Arity.Unary)
+      case Term.Tup(_ :: _ :: Nil) => S(BuiltinSymbol.Arity.Binary)
+      case _ => N
+    def select(sym: BuiltinSymbol): BuiltinSymbol =
+      arity.flatMap(a => State.builtinOpsByArity.get((sym.nme, a))).getOrElse(sym)
+    val appliedFun = lt match
+      case ref @ Term.Ref(sym: BuiltinSymbol) =>
+        val selected = select(sym)
+        if selected is sym then ref else selected.ref(ref.tree)
+      case ref @ Term.SimpleRef(sym: BuiltinSymbol) =>
+        val selected = select(sym)
+        if selected is sym then ref else Term.SimpleRef(selected)(ref.tree).withLocOf(ref)
+      case _ => lt
+    val res = withTypeBinders(new Term.App(appliedFun, rt)(tree, typ, resSym))
+    if newResolution then listenTerm(appliedFun)(shape => appShape(shape, rt, res))
     res
   
   /** With the new underscore syntax, some operator operands delimit their own implicit lambdas:

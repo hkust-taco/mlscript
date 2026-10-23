@@ -305,30 +305,44 @@ final class TypeParameterInstance(val origin: VarSymbol, val siteBinders: Opt[Se
   require(!origin.isInstanceOf[TypeParameterInstance], "Instantiate original type binders only")
   decl = origin.decl
 
-class BuiltinSymbol
-    (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool, val isPure: Bool)(using State)
+object BuiltinSymbol:
+  enum Arity(val paramCount: Opt[Int]):
+    case Unary extends Arity(S(1))
+    case Binary extends Arity(S(2))
+    // `super` forwards the selected constructor's arguments, including spreads.
+    case Variadic extends Arity(N)
+
+final class BuiltinSymbol(val nme: Str, val arity: BuiltinSymbol.Arity, val isPure: Bool)(using State)
     extends Symbol:
   def toLoc: Option[Loc] = N
   override def prefix: Str = "builtin:"
   
   def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
   
+  def unary: Bool = arity is BuiltinSymbol.Arity.Unary
+  def binary: Bool = arity is BuiltinSymbol.Arity.Binary
+  def functionLike: Bool = arity is BuiltinSymbol.Arity.Variadic
+  
+  lazy val erasedType: ErasedValueType = ErasedType.Function(rsc = S(false))
+  
+  /** Each operator symbol has one calling convention. Operand types stay unknown because these are
+    * dynamic host operations; in particular, arithmetic may produce numbers, strings, or big integers.
+    * `super` has no fixed signature: its parameters depend on the constructor being invoked.
+    */
+  lazy val erasedSignature: Opt[ErasedFuncSignature] = arity.paramCount.map: count =>
+    val ret = nme match
+      case "!" | "==" | "!=" | "===" | "!==" | "<" | "<=" | ">" | ">=" => S(ErasedType.Bool)
+      case "typeof" => S(ErasedType.Str)
+      case _ => N
+    ErasedFuncSignature.Signature(List(List.fill(count)(N)), ret)
+  
   // * A basic approximation of builtin operator types
   lazy val signature : semantics.flow.Producer =
     import typing.Type
     import typing.Type.*
-    val binaryType : Type = Fun(args = Tup.mk(Top, Top), ret = Top, eff = N)
-    val unaryType : Type = Fun(args = Tup.mk(Top), ret = Top, eff = N)
-    val nullaryType : Type = Top
-    val typ = (binary, unary, nullary) match
-      case (true, true, true) => Union(binaryType, Union(unaryType, nullaryType))
-      case (true, true, _) => Union(binaryType, unaryType)
-      case (true, _, true) => Union(binaryType, nullaryType)
-      case (_, true, true) => Union(unaryType, nullaryType)
-      case (true, _, _) => binaryType
-      case (_, true, _) => unaryType
-      case (_, _, true) => nullaryType
-      case _ => Bot
+    val typ = arity.paramCount match
+      case S(count) => Fun(args = Tup.mk(List.fill(count)(Top)*), ret = Top, eff = N)
+      case N => Bot
     semantics.flow.Producer.Typ(typ)
 
 

@@ -169,9 +169,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     "+" -> "pos_impl",
     "!" -> "not_impl"
   )
-  private def wasmIntrinsicPath(sym: BuiltinSymbol, unary: Bool): Opt[Path] =
+  private def wasmIntrinsicPath(sym: BuiltinSymbol): Opt[Path] =
     if config.target is CompilationTarget.Wasm then
-      val map = if unary then wasmUnaryIntrinsicMap else wasmBinaryIntrinsicMap
+      val map = sym.arity match
+        case BuiltinSymbol.Arity.Unary => wasmUnaryIntrinsicMap
+        case BuiltinSymbol.Arity.Binary => wasmBinaryIntrinsicMap
+        case BuiltinSymbol.Arity.Variadic => Map.empty[Str, Str]
       map.get(sym.nme).map(name => State.wasmSymbol.asSimpleRef.selN(Tree.Ident(name)))
     else N
   private lazy val virtualModuleSymbols: Set[BlockMemberSymbol] =
@@ -980,38 +983,24 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     sym match
     case sym: BuiltinSymbol =>
       warnStmt
-      if sym.binary then
-        val t1 = new Tree.Ident("arg1")
-        val t2 = new Tree.Ident("arg2")
-        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)(t1.toLoc)
-        val p2 = Param(FldFlags.empty, VarSymbol(t2, erasedType = N), N, Modulefulness.none)(t2.toLoc)
-        val ps = PlainParamList(p1 :: p2 :: Nil)(N)
-        val bod = st.App(ref, st.Tup(List(st.SimpleRef(p1.sym)(N), st.SimpleRef(p2.sym)(N)))
+      sym.erasedSignature match
+      case S(sig) =>
+        val params = sig.paramLists.head.zipWithIndex.map: (erasedType, i) =>
+          val id = new Tree.Ident(if sym.unary then "arg" else s"arg${i + 1}")
+          Param(FldFlags.empty, VarSymbol(id, erasedType = erasedType), N, Modulefulness.none)(id.toLoc)
+        val ps = PlainParamList(params)(N)
+        val bod = st.App(ref, st.Tup(params.map(p => st.SimpleRef(p.sym)(N)))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
             )))(
             Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
             N,
             FlowSymbol(sym.nme)
           ).resolve
-        val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), N)
+        val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), sig.ret)
         tl.log(dbg"Ref builtin $sym")
         assert(paramLists.length === 1)
         return k(Lambda(paramLists.head, bodyBlock)(Nil, ref.toLoc))
-      if sym.unary then
-        val t1 = new Tree.Ident("arg")
-        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)(t1.toLoc)
-        val ps = PlainParamList(p1 :: Nil)(N)
-        val bod = st.App(ref, st.Tup(List(st.SimpleRef(p1.sym)(N)))
-          (Tree.Tup(Nil // FIXME should not be required (using dummy value)
-            )))(
-            Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
-            N,
-            FlowSymbol(sym.nme)
-          ).resolve
-        val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), N)
-        tl.log(dbg"Ref builtin $sym")
-        assert(paramLists.length === 1)
-        return k(Lambda(paramLists.head, bodyBlock)(Nil, ref.toLoc))
+      case N => ()
     case bs: BlockMemberSymbol =>
       disamb.flatMap(_.defn) match
       case S(d) if d.hasDeclareModifier.isDefined =>
@@ -1211,7 +1200,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case st.App(ref @ BuiltinRef(sym), arg) =>
       arg match
       case st.Tup(Nil) =>
-        if !sym.nullary then raise:
+        raise:
           ErrorReport(
             msg"Expected arguments for builtin operator '${sym.nme}'" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
@@ -1222,7 +1211,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             msg"Builtin '${sym.nme}' is not a unary operator" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg): ar =>
-          val target = wasmIntrinsicPath(sym, unary = true)
+          val target = wasmIntrinsicPath(sym)
             .getOrElse(sym.asSimpleRef.withLocOf(ref))
           k(Call(target, (Arg(N, ar) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
@@ -1255,7 +1244,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case State.orSymbol => mkBooleanMatch(false)
           case _ =>
             subTerm_nonTail(arg2): ar2 =>
-              val target = wasmIntrinsicPath(sym, unary = false)
+              val target = wasmIntrinsicPath(sym)
                 .getOrElse(sym.asSimpleRef.withLocOf(ref))
               k(Call(target, (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
       case _ => fail:
@@ -1273,8 +1262,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         expr.instantiated match
         // * Applications of builtin operators, such as `- x` in `(- x)(2)`, are lowered as primitive
         // * operations by the dedicated case above, so they cannot be part of a curried call chain;
-        // * otherwise, the operator would be lowered as a function value, which, for operators that are
-        // * both unary and binary like `-`, is the binary one.
+        // * otherwise, the operator would be lowered as a function value and curried-call handling could
+        // * mistake application of the primitive's result for a partial application of the operator.
         case app @ st.App(BuiltinRef(_), _) => (app, args)
         case st.App(inner, innerArg) => collectAppChain(inner, innerArg :: args)
         case st.TyApp(inner, _) => collectAppChain(inner, args) // type args are erased

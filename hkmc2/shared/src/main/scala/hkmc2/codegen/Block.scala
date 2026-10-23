@@ -1141,8 +1141,7 @@ sealed abstract class Result extends Located:
   lazy val erasedType: Opt[ErasedValueType] = this match
     case Value.SimpleRef(sym) => sym match
       case l: LocalVarSymbol => l.erasedType
-      // TODO: Distinguish the arities of builtin operators so each use can have its own signature.
-      case _: BuiltinSymbol => N
+      case sym: BuiltinSymbol => S(sym.erasedType)
     // * A reference to a class is the class *object* (a `Class`).
     case Value.MemberRef(_, _: ClassSymbol) => N
     case Value.MemberRef(_, disamb: ModuleOrObjectSymbol) => disamb.erasedType
@@ -1159,8 +1158,13 @@ sealed abstract class Result extends Located:
     case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
     case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
     // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
-    case Call(fun, argss) => fun.targetSymbol match
-      case S(ts: TermSymbol) => ts.erasedSignature match
+    case Call(fun, argss) =>
+      val signature = fun match
+        case Value.SimpleRef(bs: BuiltinSymbol) => bs.erasedSignature
+        case _ => fun.targetSymbol.flatMap:
+          case ts: TermSymbol => ts.erasedSignature
+          case _ => N
+      signature match
         case S(sig) => argss.sizeCompare(sig.paramLists) match
           // * An exactly-applied call yields the function's result type.
           case 0 => sig.ret
@@ -1170,7 +1174,6 @@ sealed abstract class Result extends Located:
           // * signature is oblivious about.
           case _ => N
         case N => N
-      case _ => N
     // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
     // * unresolved selection (dynamic field access) stays unknown.
     case sel: SuperSelect => sel.symbol.erasedType
@@ -1271,9 +1274,9 @@ object Call:
     fun match
     case Value.SimpleRef(sym: BuiltinSymbol) =>
       argss match
-      case (Arg(N, arg1: Value) :: Arg(N, arg2: Value) :: Nil) :: Nil =>
+      case (Arg(N, arg1: Value) :: Arg(N, arg2: Value) :: Nil) :: Nil if sym.binary =>
         evalBuiltin(sym, arg1, arg2)(toLoc)(return _)
-      case (Arg(N, arg1: Value) :: Nil) :: Nil =>
+      case (Arg(N, arg1: Value) :: Nil) :: Nil if sym.unary =>
         evalBuiltin(sym, arg1)(toLoc)(return _)
       case _ =>
     case _ =>

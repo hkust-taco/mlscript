@@ -313,8 +313,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if disamb.shouldBeLifted then doc"${scope.lookup_!(bms, bms.toLoc)}.class"
       else scope.lookup_!(bms, r.toLoc)
     case Value.SimpleRef(l: BuiltinSymbol) =>
-      if l.nullary then l.nme
-      else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
+      errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
     case Cast(value, _, _) => result(value)
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
