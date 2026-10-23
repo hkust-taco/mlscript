@@ -1520,12 +1520,29 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     * Note that we still have not supported accessing pattern parameters in the
     * naive pattern declaration in the efficient pattern compilation. */
   def compilePattern(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
+    val budget = new PatternCompilationWorkBudget("patternMatcherWorkLimit", config.patternMatcherWorkLimit)
+    // Fixed-point preparation is eager, whereas ordinary matcher generation
+    // runs when the returned split builder is invoked. Abort either phase at
+    // this source boundary, before any partial matcher definitions escape.
+    def guarded[A](fallback: => A)(body: => A): A =
+      try body
+      catch case limit: PatternCompilationLimit =>
+        limit.report(pattern.toLoc)
+        fallback
+    guarded[MakeSplit](RejectSplit):
+      val makeSplit = prepareCompiledPattern(scrutinee, pattern, outputNeeded, budget)
+      (makeConsequent, alternative) => guarded(alternative):
+        makeSplit(makeConsequent, alternative)
+
+  private def prepareCompiledPattern(
+      scrutinee: Scrut, pattern: SP, outputNeeded: Bool, budget: PatternCompilationWorkBudget
+  ): MakeSplit =
     // Fixed-point patterns — patterns piping their own output back into
     // themselves, such as `pattern S = P as S | _` — are compiled to an
     // iterative matcher machine instead of the multi-matcher scheme below
     // (see `FixedPointCompiler`). Fixed-point-shaped patterns the machine
     // compilation does not support fall back to the naive translation.
-    FixedPointCompiler().compile(pattern) match
+    FixedPointCompiler(budget).compile(pattern) match
       case S(FixedPointCompiler.Outcome.Compiled(machine, outputPattern)) =>
         // A body-annotated definition is fully machine-compiled, so mirror
         // the eager diagnostics of `compilePatternImpl` here. At a match
@@ -1536,7 +1553,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         makeFixedPointMatchSplit(scrutinee, machine, outputPattern, outputNeeded)
       case S(FixedPointCompiler.Outcome.Unsupported) =>
         makeMatchSplit(scrutinee, pattern, outputNeeded)
-      case N => compilePatternImpl(scrutinee, pattern, outputNeeded)
+      case N => compilePatternImpl(scrutinee, pattern, outputNeeded, budget)
 
   /** Embed a compiled fixed-point machine at a match site: bind the machine
     * as a local function, call it on the scrutinee, and destructure the
@@ -1571,7 +1588,9 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           consequent
         ) ~: alternative)
 
-  private def compilePatternImpl(scrutinee: Scrut, pattern: SP, outputNeeded: Bool): MakeSplit =
+  private def compilePatternImpl(
+      scrutinee: Scrut, pattern: SP, outputNeeded: Bool, budget: PatternCompilationWorkBudget
+  ): MakeSplit =
   (makeConsequent, alternative) => scoped("ucs:ups:compilation"):
     warnOnDiscardedExtractionOutputs(pattern)
     // Instantiate the pattern and all patterns used in it.
@@ -1589,7 +1608,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     // When the instantiated pattern is transform-free and thus preserves the
     // original scrutinee as its output, `MatchOnly` is used and the caller can
     // obtain the scrutinee directly.
-    val canReuseScrutineeOutput = synonym.preservesOriginalScrutinee(using context, summon[Raise])
+    val canReuseScrutineeOutput = synonym.preservesOriginalScrutinee(budget)(using context, summon[Raise])
     val resultMode =
       if hasExplicitExtractionMatches(scrutinee, pattern) ||
           carriesExtractionSlots(context)
@@ -1597,7 +1616,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       else if outputNeeded && !canReuseScrutineeOutput then ResultMode.Full
       else ResultMode.MatchOnly
     // Initiate the compilation.
-    val compiler = new Compiler(using context)
+    val compiler = new Compiler(budget)(using context)
     compiler.statsSiteLoc = pattern.toLoc
     val (matcherSymbol, implementations) = compiler.buildMatcher(synonym, resultMode)
     val innermostSplit = resultMode match

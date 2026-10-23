@@ -5,6 +5,44 @@ The original July review compared `compiled-string-patterns` against
 status appears immediately below; the reviews that follow describe historical
 heads. Upstream PR: <https://github.com/hkust-taco/mlscript/pull/540>.
 
+## Specialization and general matcher limits — 2026-10-23
+
+The recursive-growth check is a parameter-flow analysis across all reachable
+definitions, including mutual recursion and parameter permutations. It is not
+specific to `Rep(Rep(P))`. For eager substitution over a finite constructor
+alphabet without erasing wrappers, a cycle containing a growth edge is exactly
+what makes argument depth unbounded; without such a cycle, the set of reachable
+specialization keys is finite.
+
+The implementation is conservative because it analyzes source arguments before
+their normalization. `StableUnion` in `ups/regex/Specialization.mls` now records a
+false positive as a `:fixme`: appending an empty disjunction stabilizes, but the
+source-level wrapping edge is still rejected. A temporary experiment with only
+the growth check disabled confirmed that this example compiles and recognizes
+the expected language. The check was restored; this precision limitation remains.
+
+The existing specialization and instantiation-work limits already apply to both
+string and general patterns. General `@compile` matcher generation now also has
+its own `patternMatcherWorkLimit`, defaulting to 2,000,000. It charges pattern
+analysis, synonym expansion, structural hashing, head/field specialization, and
+result-building continuation invocations. Counting continuation invocations is
+necessary because a small conjunction of disjunctions can emit exponentially
+many branches without creating many distinct matcher functions. Fixed-point
+step, side, and post matchers share the enclosing match site's budget. Exhaustion
+reports a source error and aborts the whole build before partial matchers escape.
+
+`ups/CompilationLimits.mls` covers non-string specialization limits, general
+matcher exhaustion and recovery, shared synonym expansion, repeated head
+specialization, conjunction branch generation, fixed-point builds, and invalid
+settings. The README documents all four limits and the specialization check's
+precision limitation.
+
+Validation passed: Metals compilation, 55 prerequisite `ctest` cases, 90 focused
+pattern diff-test files, and all 1,114 tests in `hkmc2AllTests/test` (808 diff-test
+files plus 306 other tests). Golden outputs are included. The full PR's whitespace
+changes and commit authors were rechecked; one blank line's original indentation
+was restored while moving the argument-size accounting into the shared budget.
+
 ## Local fixes — 2026-10-22
 
 The five outstanding findings from the October review are addressed in five

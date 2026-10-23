@@ -28,6 +28,7 @@ case class Config(
   patternSpecializationLimit: Int,
   stringPatternStateLimit: Int,
   patternCompilationWorkLimit: Int,
+  patternMatcherWorkLimit: Int,
   stageCode: Bool,
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
@@ -86,6 +87,7 @@ object Config:
     patternSpecializationLimit = default.patternSpecializationLimit,
     stringPatternStateLimit = default.stringPatternStateLimit,
     patternCompilationWorkLimit = default.patternCompilationWorkLimit,
+    patternMatcherWorkLimit = default.patternMatcherWorkLimit,
     target = CompilationTarget.JS,
     rewriteWhileLoops = false,
     stageCode = false,
@@ -103,6 +105,7 @@ object Config:
     val patternSpecializationLimit = 1024
     val stringPatternStateLimit = 8192
     val patternCompilationWorkLimit = 2000000
+    val patternMatcherWorkLimit = 2000000
     val deadBranchRemoval = false // TODO
     val inlineThreshold = 10
   
@@ -836,6 +839,8 @@ object ConfigParser:
       parsedField(value)(parsePositiveInt)(v => _.copy(stringPatternStateLimit = v))
     case "patternCompilationWorkLimit" =>
       parsedField(value)(parsePositiveInt)(v => _.copy(patternCompilationWorkLimit = v))
+    case "patternMatcherWorkLimit" =>
+      parsedField(value)(parsePositiveInt)(v => _.copy(patternMatcherWorkLimit = v))
     case "inlining" =>
       optionalField(value)(parseInt)(v => _.mapOptimizer(_.copy(inlining = v.map(Inliner(_)))))
     case "deadBranchRemoval" =>

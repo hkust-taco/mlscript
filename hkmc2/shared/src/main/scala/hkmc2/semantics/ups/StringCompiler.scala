@@ -325,7 +325,7 @@ class StringCompiler(budget: PatternCompilationBudget)(using context: Context)(u
     loop(pattern, Set.empty)._1
 
   private def canReuseSlice(pattern: Pat): Bool =
-    isPureDeep(pattern) && pattern.preservesOriginalScrutinee
+    isPureDeep(pattern) && pattern.preservesOriginalScrutinee(budget)
 
   // ------------------------------------------------------------------------
   // NFA construction

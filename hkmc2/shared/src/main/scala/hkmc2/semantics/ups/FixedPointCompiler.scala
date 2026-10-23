@@ -154,7 +154,7 @@ object FixedPointCompiler:
   * machine compilation does not support get a warning and fall back to the
   * naive backtracking translation.
   */
-class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise, Config) extends TermSynthesizer:
+class FixedPointCompiler(budget: PatternCompilationWorkBudget)(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise, Config) extends TermSynthesizer:
   import FixedPointCompiler.*, tl.*
 
   /** Try to compile the given `@compile`-annotated pattern into a fixed-point
@@ -374,7 +374,9 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
 
   /** Does `pattern` mention the given instantiation anywhere? Used to locate
     * the recursive occurrences of the context pattern (the "holes"). */
-  private def mentions(pattern: Pat, target: Instantiation): Bool = pattern match
+  private def mentions(pattern: Pat, target: Instantiation): Bool =
+    budget.visit(pattern)
+    pattern match
     case Synonym(inst) => (inst == target) || inst.arguments.exists(mentions(_, target))
     case ClassLike(_, arguments) => arguments.exists(_.valuesIterator.exists(mentions(_, target)))
     case MatchedClassLike(_, entries) => entries.valuesIterator.exists(mentions(_, target))
@@ -452,9 +454,10 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     def flattenClassLike(head: ClassLikeHead): FlatPattern =
       FlatPattern.ClassLike(
         Compiler.preservedReference(head.constructor), head.symbol, N, false)(Tree.Dummy)
-    (left.matchableHeads, right.matchableHeads) match
+    (left.matchableHeads(budget), right.matchableHeads(budget)) match
       case (S(leftHeads), S(rightHeads)) => leftHeads.exists: leftHead =>
         rightHeads.exists: rightHead =>
+          budget.spend(1)
           !ucs.Normalization.areProvablyDisjoint(flatten(leftHead), flatten(rightHead))
       case _ => true
 
@@ -551,7 +554,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     // A total post pattern — which the definition's trailing wildcard, when
     // present, guarantees — always accepts the machine's own normal form, so
     // no intermediate is ever consulted.
-    val missing = if post.forall(_.isTotal) then N else unmatchedIntermediates(definition)
+    val missing = if post.forall(_.isTotal(budget)) then N else unmatchedIntermediates(definition)
     missing match
       case S(rejection) =>
         warnUnmatchedIntermediates(rejection, origin)
@@ -598,7 +601,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
               if arity != entries.size then
                 warn(msg"Cannot rebuild `${cls.nme}` because not all of its parameters are accessible." -> pattern.toLoc)
                 N
-              else if !sides.forall((_, side) => side.preservesOriginalScrutinee) then
+              else if !sides.forall((_, side) => side.preservesOriginalScrutinee(budget)) then
                 warn(msg"Side patterns of a context alternative must be transform-free." -> pattern.toLoc)
                 N
               else S((head, cls, entries.size, AltInfo(holeIndex, sides)))
@@ -680,7 +683,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     // A mixture of the two is not enough: a partial link can fail on the final
     // term while a total link would have accepted an earlier intermediate,
     // which is why a total link is reported here rather than skipped.
-    def isTotal(post: Opt[Pat]): Bool = post.forall(_.isTotal)
+    def isTotal(post: Opt[Pat]): Bool = post.forall(_.isTotal(budget))
     // A total link is at fault as a whole rather than through one of its
     // patterns — its alternatives are just the wildcard — so the declaration
     // it comes from is what the diagnostic points at.
@@ -715,12 +718,13 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     * whose earlier intermediates could not have matched anyway. */
   private def assembleAlternating(links: Ls[(Pat, Opt[Pat])])(using Context): Machine =
     // Like in `assemble`, every matcher gets its own compiler instance
-    // because the matcher memoization is instance-bound.
+    // because the matcher memoization is instance-bound. All instances share
+    // the match site's budget, including the step and post matchers.
     val matchers = links.map: (step, post) =>
-      val stepCompiler = new Compiler
+      val stepCompiler = new Compiler(budget)
       val (stepMatcher, stepImpls) = stepCompiler.buildMatcher(step, ResultMode.Full)
       val postMatcherOpt = post.map: postPattern =>
-        val postCompiler = new Compiler
+        val postCompiler = new Compiler(budget)
         postCompiler.buildMatcher(postPattern, ResultMode.Full)
       (stepMatcher, stepImpls, postMatcherOpt)
 
@@ -781,9 +785,9 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     // subterm. Side conditions only need Booleans (`MatchOnly`). The two
     // modes produce differently-shaped functions and the compiler's matcher
     // memoization is mode-unaware, so we use two separate instances.
-    val redexCompiler = new Compiler
+    val redexCompiler = new Compiler(budget)
     val (redexMatcher, redexImpls) = redexCompiler.buildMatcher(redexPattern, ResultMode.Full)
-    val sideCompiler = new Compiler
+    val sideCompiler = new Compiler(budget)
     val compiledSides =
       classes.iterator.flatMap(_.alts.iterator.flatMap(_.sides.iterator.map(_._2)))
         .distinct.map: side =>
@@ -797,7 +801,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     // definition's trailing wildcard is among its alternatives), so it always
     // returns a `MatchSuccess` that the `unapply` can yield directly.
     val postMatcherOpt = post.map: postPattern =>
-      val postCompiler = new Compiler
+      val postCompiler = new Compiler(budget)
       val (postMatcher, postImpls) = postCompiler.buildMatcher(postPattern, ResultMode.Full)
       (postMatcher, postImpls)
 
@@ -832,6 +836,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     def childField(index: Int) = s"c$index"
     def inertField(index: Int) = s"i$index"
     def mkFrame(cls: ClassInfo, hole: Int, child: Int => Term, inert: Int => Term, node: Term, tail: Term): Term =
+      budget.spend(2L * cls.paramCount + 1)
       Term.Rcd(false,
         RcdField(str("tag"), int(cls.index)) ::
         List.tabulate(cls.paramCount)(index => RcdField(str(childField(index)), child(index))) :::
@@ -847,12 +852,14 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
       sides match
         case Nil => success
         case (index, side) :: rest =>
+          budget.visit(side)
           val okSymbol = TempSymbol(N, erasedType = N, "sideOk")
           Split.Let(okSymbol, callMatcher(sideMatchers(side), child(index), "side condition"),
             Branch(okSymbol.safeRef, sideChecks(rest, child, success, failure)) ~: failure())
 
     /** Call the redex matcher on `scrutinee` and branch on its result. */
     def matchRedex(scrutinee: Term, onSuccess: TempSymbol => Split, onFailure: Split): Split =
+      budget.spend(1)
       val resultSym = TempSymbol(N, erasedType = N, "redexResult")
       val outputSym = TempSymbol(N, erasedType = N, "contractum")
       Split.Let(resultSym, callMatcher(redexMatcher, scrutinee, "redex match"),
@@ -925,6 +932,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
               setStmt(modeSymbol, int(ModeFind)) :: markProgress)*),
             altChain)))
     def upClass(cls: ClassInfo): Split =
+      budget.spend(2L * cls.paramCount + 1)
       val children = List.tabulate(cls.paramCount)(index => TempSymbol(N, erasedType = N, s"frameChild$index"))
       val inerts = List.tabulate(cls.paramCount)(index => TempSymbol(N, erasedType = N, s"frameInert$index"))
       val nodeSym = TempSymbol(N, erasedType = N, "frameNode")

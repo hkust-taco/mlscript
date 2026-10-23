@@ -146,6 +146,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       patternSpecializationLimit = Config.default.patternSpecializationLimit,
       stringPatternStateLimit = Config.default.stringPatternStateLimit,
       patternCompilationWorkLimit = Config.default.patternCompilationWorkLimit,
+      patternMatcherWorkLimit = Config.default.patternMatcherWorkLimit,
       baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true, checkUnreachable = true)),
       checkCasts = !noCheckCasts.isSet,

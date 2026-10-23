@@ -111,8 +111,10 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     * through instantiated pattern definitions. Cycles are treated as
     * preserving so the traversal stays well-founded on recursive patterns.
     */
-  def preservesOriginalScrutinee(using Context, Raise): Bool =
-    def loop(pattern: Pat, visiting: Set[Instantiation]): Bool = pattern match
+  def preservesOriginalScrutinee(budget: PatternCompilationWorkBudget)(using Context, Raise): Bool =
+    def loop(pattern: Pat, visiting: Set[Instantiation]): Bool =
+      budget.visit(pattern)
+      pattern match
       case Literal(_) => true
       case ClassLike(_, arguments) =>
         arguments.fold(true)(_.valuesIterator.forall(loop(_, visiting)))
@@ -149,8 +151,10 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     * The dual of `matchableHeads`: total patterns are exactly those it can say
     * the least about.
     */
-  def isTotal(using Context, Raise): Bool =
-    def loop(pattern: Pat, visiting: Set[Instantiation]): Bool = pattern match
+  def isTotal(budget: PatternCompilationWorkBudget)(using Context, Raise): Bool =
+    def loop(pattern: Pat, visiting: Set[Instantiation]): Bool =
+      budget.visit(pattern)
+      pattern match
       // The units need no case of their own: `Wildcard` is `And(Nil)`, which
       // requires nothing of a value, and `Never` is `Or(Nil)`, which offers it
       // no alternative. Spelling them out separately is how they came to be
@@ -190,8 +194,10 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     * A cycle contributes no head: matching through it would take an infinite
     * derivation, so a value matching the pattern matches it some other way.
     */
-  def matchableHeads(using Context, Raise): Opt[Set[Head]] =
-    def loop(pattern: Pat, visiting: Set[Instantiation]): Opt[Set[Head]] = pattern match
+  def matchableHeads(budget: PatternCompilationWorkBudget)(using Context, Raise): Opt[Set[Head]] =
+    def loop(pattern: Pat, visiting: Set[Instantiation]): Opt[Set[Head]] =
+      budget.visit(pattern)
+      pattern match
       case Literal(lit) => S(Set(lit))
       case ClassLike(sym, _) => S(Set(sym))
       case MatchedClassLike(sym, _) => S(Set(sym))
@@ -343,27 +349,29 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   
   /** Expand the pattern by replacing any top-level synonym with its body.
    *  @return the expanded pattern named "ExPat" in the paper. */
-  def expand(alreadyExpanded: Set[Instantiation])(using Context, Raise): ExPat = map:
-    case Synonym(instantiation) =>
-      if alreadyExpanded contains instantiation then
-        error(msg"Expanding this pattern leads to an infinite loop." -> instantiation.toLoc)
-        Never // Infinite recursive patterns are considered as never patterns.
-      else
-        // Otherwise, we expand the instantiated pattern definition's body.
-        instantiation.body.expand(alreadyExpanded + instantiation)
-    // I don't know how to make the GADT type checking work here.
-    // case pattern: NonCompositional[K] => pattern // Noop.
-    // case pattern: ExPat => pattern // Noop.
-    case pattern: ClassLike => pattern
-    case pattern: Record => pattern
-    case pattern: Tuple => pattern
-    case pattern: Literal => pattern
-    // Note that synonyms nested in `Concat` are deliberately kept: recursive
-    // references are handled by the string pattern compiler, which treats them
-    // as grammar nonterminals rather than expanding them (which would diverge).
-    case pattern: Concat => pattern
-    case pattern: CharClass => pattern
-    case _: MatchedClassLike => lastWords("MatchedClassLike encountered during expansion")
+  def expand(alreadyExpanded: Set[Instantiation], budget: PatternCompilationWorkBudget)(using Context, Raise): ExPat =
+    budget.visit(this)
+    map:
+      case Synonym(instantiation) =>
+        if alreadyExpanded contains instantiation then
+          error(msg"Expanding this pattern leads to an infinite loop." -> instantiation.toLoc)
+          Never // Infinite recursive patterns are considered as never patterns.
+        else
+          // Otherwise, we expand the instantiated pattern definition's body.
+          instantiation.body.expand(alreadyExpanded + instantiation, budget)
+      // I don't know how to make the GADT type checking work here.
+      // case pattern: NonCompositional[K] => pattern // Noop.
+      // case pattern: ExPat => pattern // Noop.
+      case pattern: ClassLike => pattern
+      case pattern: Record => pattern
+      case pattern: Tuple => pattern
+      case pattern: Literal => pattern
+      // Note that synonyms nested in `Concat` are deliberately kept: recursive
+      // references are handled by the string pattern compiler, which treats them
+      // as grammar nonterminals rather than expanding them (which would diverge).
+      case pattern: Concat => pattern
+      case pattern: CharClass => pattern
+      case _: MatchedClassLike => lastWords("MatchedClassLike encountered during expansion")
   
   /** Unwrap `Rename` patterns until we reach a non-`Rename` pattern. Collect
    *  the symbols on the way. Maybe we can make `Rename` a property of each

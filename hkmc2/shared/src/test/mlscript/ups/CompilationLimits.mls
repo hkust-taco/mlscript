@@ -1,0 +1,172 @@
+:js
+
+open annotations
+
+// The specialization and instantiation-work limits also protect non-string patterns.
+
+class Box(val value)
+pattern Inner(pattern P) = Box(P)
+pattern Outer(pattern P) = Box(Inner(P))
+
+:e
+#config(patternSpecializationLimit: 1)
+Box(Box(1)) is @compile Outer(1)
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `patternSpecializationLimit` (1).
+//│ ║  l.13: 	Box(Box(1)) is @compile Outer(1)
+//│ ║        	                        ^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(patternSpecializationLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = false
+
+:expect true
+#config(patternSpecializationLimit: 4)
+Box(Box(1)) is @compile Outer(1)
+//│ = true
+
+:e
+#config(patternCompilationWorkLimit: 10)
+1 is @compile (1 ..= 100)
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `patternCompilationWorkLimit` (10).
+//│ ║  l.28: 	1 is @compile (1 ..= 100)
+//│ ║        	               ^^^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(patternCompilationWorkLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = false
+
+:expect true
+#config(patternCompilationWorkLimit: 2000000)
+1 is @compile (1 ..= 100)
+//│ = true
+
+// General matcher generation has its own limit, independent of string automata.
+// Each match site has a fresh budget, and failure must not poison later compilations.
+
+:e
+#config(patternMatcherWorkLimit: 1)
+Box(Box(1)) is @compile Outer(1)
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `patternMatcherWorkLimit` (1).
+//│ ║  l.46: 	Box(Box(1)) is @compile Outer(1)
+//│ ║        	                        ^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(patternMatcherWorkLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = false
+
+:expect [true, false]
+#config(patternMatcherWorkLimit: 10000, stringPatternStateLimit: 1)
+[Box(Box(1)) is @compile Outer(1), Box(Box(2)) is @compile Outer(1)]
+//│ = [true, false]
+
+// A small synonym DAG can expand to a large tree without new specializations.
+// Conjunctions also prevent the scrutinee-preservation query from unfolding it first.
+
+pattern Both(pattern P) = P & P
+pattern Repeated = Both(Both(Both(Both(Both(Both(1))))))
+
+:e
+#config(patternMatcherWorkLimit: 100, patternSpecializationLimit: 1024)
+1 is @compile Repeated
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `patternMatcherWorkLimit` (100).
+//│ ║  l.67: 	1 is @compile Repeated
+//│ ║        	              ^^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(patternMatcherWorkLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = false
+
+:expect true
+#config(patternMatcherWorkLimit: 100000)
+1 is @compile Repeated
+//│ = true
+
+// Many literal heads repeatedly specialize the same expanded pattern.
+
+:e
+#config(patternMatcherWorkLimit: 500)
+1 is @compile (1 ..= 30)
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `patternMatcherWorkLimit` (500).
+//│ ║  l.84: 	1 is @compile (1 ..= 30)
+//│ ║        	               ^^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(patternMatcherWorkLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = false
+
+:expect true
+#config(patternMatcherWorkLimit: 100000)
+1 is @compile (1 ..= 30)
+//│ = true
+
+// Disjunctive record tests survive head specialization. Combining them causes
+// the result-building continuations to be invoked for every branch combination.
+
+pattern Choice = ({a: 1}) | ({b: 2})
+pattern Choices = Choice & Choice & Choice & Choice & Choice & Choice & Choice & Choice
+
+:e
+#config(patternMatcherWorkLimit: 3000)
+{a: 1} is @compile Choices
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `patternMatcherWorkLimit` (3000).
+//│ ║  l.105: 	{a: 1} is @compile Choices
+//│ ║         	                   ^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(patternMatcherWorkLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = false
+
+:expect true
+#config(patternMatcherWorkLimit: 2000000)
+{a: 1} is @compile Choices
+//│ = true
+
+:expect [{a: 1}, {a: 1}]
+if ({a: 1}) is (@compile (Choice & Choice)) as output then output
+//│ = [{a: 1}, {a: 1}]
+
+// Fixed-point compilation prepares its matchers eagerly. Exhaustion must abort
+// the whole machine, with no naive fallback and no cached partial machine.
+
+pattern Peel = (Box(x) => x) as Peel | _
+
+:e
+#config(patternMatcherWorkLimit: 1)
+if Box(Box(42)) is @compile Peel(x) then x else -1
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `patternMatcherWorkLimit` (1).
+//│ ║  l.129: 	if Box(Box(42)) is @compile Peel(x) then x else -1
+//│ ║         	                            ^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(patternMatcherWorkLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = -1
+
+:expect 42
+#config(patternMatcherWorkLimit: 10000)
+if Box(Box(42)) is @compile Peel(x) then x else -1
+//│ = 42
+
+// A small step matcher can succeed before the post matcher exhausts their
+// shared budget. Retrying the same definition must rebuild a complete machine.
+
+pattern PeelThenRange = (Box(x) => x) as PeelThenRange | (1 ..= 100)
+
+:e
+#config(patternMatcherWorkLimit: 2000)
+if Box(42) is @compile PeelThenRange(x) then x else -1
+//│ ╔══[COMPILATION ERROR] Pattern compilation exceeded `patternMatcherWorkLimit` (2000).
+//│ ║  l.149: 	if Box(42) is @compile PeelThenRange(x) then x else -1
+//│ ║         	                       ^^^^^^^^^^^^^^^
+//│ ╟── Simplify this pattern or increase the limit with `#config(patternMatcherWorkLimit: ...)`.
+//│ ╙── This resource limit does not mean that the pattern's language is non-regular.
+//│ = -1
+
+:expect 42
+#config(patternMatcherWorkLimit: 100000)
+if Box(42) is @compile PeelThenRange(x) then x else -1
+//│ = 42
+
+:e
+#config(patternMatcherWorkLimit: 0)
+//│ ╔══[COMPILATION ERROR] Expected a positive integer
+//│ ║  l.163: 	#config(patternMatcherWorkLimit: 0)
+//│ ╙──       	                                 ^
+
+:e
+#config(patternMatcherWorkLimit: -1)
+//│ ╔══[COMPILATION ERROR] Expected a positive integer
+//│ ║  l.169: 	#config(patternMatcherWorkLimit: -1)
+//│ ╙──       	                                 ^^

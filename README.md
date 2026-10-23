@@ -211,26 +211,42 @@ or specify a string to filter the tests to run.
 
 ### Pattern compilation limits
 
-Compiled patterns report a compilation error if specialization or automaton
-construction exceeds its resource budget. The compiler does not emit a partial
-matcher or silently switch matching semantics. A limit can reject a regular
+Compiled patterns report a compilation error if specialization, general matcher
+generation, or string automaton construction exceeds its resource budget.
+The compiler does not emit a partial matcher or silently switch matching semantics.
+A limit can reject a regular
 language whose automaton is too expensive for this compilation strategy.
 
 The limits can be adjusted with a source directive:
 
 ```mlscript
 #config(patternSpecializationLimit: 1024, stringPatternStateLimit: 8192, patternCompilationWorkLimit: 2000000)
+#config(patternMatcherWorkLimit: 2000000)
 ```
 
-These are the defaults. All three limits must be positive integers.
-`patternSpecializationLimit` bounds distinct instantiated definitions;
+These are the defaults. All limits must be positive integers.
+`patternSpecializationLimit` bounds distinct instantiated definitions for both
+general and string patterns;
 `stringPatternStateLimit` bounds each NFA or DFA during construction, before
 minimization. `patternCompilationWorkLimit` bounds deterministic work per
 instantiation or automaton build, including argument hashing, graph visits,
-copied operations, transition rows, and viability/table encoding. Its units
-are compiler operations, not milliseconds, and may change with the algorithm.
+copied operations, transition rows, and viability/table encoding.
+`patternMatcherWorkLimit` separately bounds general `@compile` matcher generation:
+pattern analysis and expansion, structural hashing, head and field specialization,
+and emitted result branches. Fixed-point step, side, and post matchers share the
+enclosing match site's budget. Each match site starts with a fresh budget.
+Work units count compiler operations, not milliseconds, and may change with the
+algorithm.
 Recursively growing pattern arguments are diagnosed separately, before
 specialization, regardless of these limits.
+
+That diagnostic analyzes parameter flow across reachable definitions, including
+mutual recursion. Passing a parameter unchanged creates a copy edge; wrapping it
+creates a growth edge. A cycle containing growth is rejected, while permutations,
+constant resets, and growth outside a cycle are allowed. The check is conservative
+with respect to argument normalization: even `P | emptyRange`, which stabilizes
+after disjunction flattening, is currently rejected on a recursive cycle.
+`ups/regex/Specialization.mls` records this precision limitation as a `:fixme`.
 
 Compiled string transforms currently cannot suspend for an algebraic effect.
 Handler constructs and known effect operations are compilation errors, including

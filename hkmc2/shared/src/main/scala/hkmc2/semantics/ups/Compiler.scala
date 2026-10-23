@@ -18,7 +18,7 @@ import collection.mutable.{Queue, Map as MutMap}, collection.immutable.{Set, Map
   * a few matcher functions. Each matcher function matches a set of patterns
   * and returns a record that contains the results of each pattern.
   */
-class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise, Config) extends TermSynthesizer:
+class Compiler(budget: PatternCompilationWorkBudget)(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, State, Raise, Config) extends TermSynthesizer:
   import Compiler.*, tl.*
   import Pattern.*
 
@@ -77,7 +77,9 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
   
   extension (pattern: Pat)
     /** Get or create a label for the pattern. */
-    def label: Label = labelMap.getOrElseUpdate(pattern, labelMap.size)
+    def label: Label =
+      budget.visit(pattern)
+      labelMap.getOrElseUpdate(pattern, labelMap.size)
   
   extension (field: Ident | Int)
     def showDbg: Str = field match
@@ -103,7 +105,9 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     def specializePatterns(head: Opt[Head]): Ls[(Label, SpPat)] =
       log(dbg"Specialized patterns of ${head.fold("the case without tags")(_.showDbg)}:")
       patterns.map: (label, pattern) =>
+        budget.visit(pattern)
         val spec = pattern.specialize(head)
+        budget.visit(spec)
         val simp = spec.simplify
         log(dbg"• Label $label")
         log(dbg"  ‣ Expanded: ${spec.showDbg}")
@@ -128,6 +132,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     val entryPointSymbol = buildMultiMatcher(Iterator.single(pattern))
     val implementations = List.newBuilder[Implementation]
     while buildQueue.nonEmpty do
+      budget.spend(1)
       val (symbol, patterns) = buildQueue.dequeue()
       val (paramList, term) = buildMultiMatcherBody(patterns)
       implementations += ((symbol, paramList, term))
@@ -138,7 +143,10 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
   def buildMultiMatcher(patterns: Iterator[Pat])(using ResultMode): LocalVarSymbol =
     // Get or create the label for each pattern. Multi-matchers are identified
     // by the set of labels (orders are not important).
-    val distinctPatterns = patterns.distinct.toList
+    val distinctPatterns = patterns.map: pattern =>
+      budget.visit(pattern)
+      pattern
+    .distinct.toList
     val labels = distinctPatterns.iterator.map(_.label).toSet
     multiMatchers.get(labels).getOrElse:
       val f = TempSymbol(N, erasedType = N, makeMultiMatcherName(distinctPatterns))
@@ -151,10 +159,10 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
   def buildMultiMatcherBody(patterns: Ls[Pat])(using ResultMode): (ParamList, Term) = trace(
     pre = s"buildMultiMatcherBody: ${
       patterns.iterator.map: pattern =>
-        s"${pattern.showDbg} => ${pattern.label}"
+        s"${pattern.showDbg} => ${labelMap(pattern)}"
       .mkString("{", ", ", "}")}"
   ):
-    val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty)))
+    val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty, budget)))
     // String-shaped patterns (sequences and character classes) cannot take
     // part in head-based specialization: how a string scrutinee is split is a
     // decision global to the whole sequence. Whenever one is present, all
@@ -219,6 +227,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     val fields = patterns.iterator.flatMap((_, p) => p.fields).distinct.toList
     log(dbg"fields: ${fields.iterator.map(_.showDbg).mkString("{", ", ", "}")}")
     val subPatternsByField = fields.map: field =>
+      patterns.foreach((_, pattern) => budget.visit(pattern))
       field -> patterns.iterator.flatMap((_, p) => p.collectSubPatterns(field)).toList
     val subScrutinees = Map.from(subPatternsByField.iterator.map: (field, subPatterns) =>
       field -> MatcherResult(VarSymbol(field.asIdent, erasedType = N), subPatterns.iterator.map(_.label).toSet))
@@ -284,6 +293,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     val z = (Nil: Ls[Statement], Nil: Ls[(Label, Term)])
     val (tests, resultTerms) = patterns.iterator.foldLeft(z):
       case ((stmts, results), (label, pattern)) =>
+        budget.visit(pattern)
         val fragment = StringCompiler.stringFragment(pattern).simplify
         val resultTerm = fragment match
           case Or(Nil) =>
@@ -409,6 +419,22 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       subScrutinees: Map[Ident | Int, MatcherResult],
       aliases: Ls[VarSymbol]
   )(using ResultMode): MakeSplit = trace(pre = s"completePattern: ${pattern.showDbg}"):
+    budget.visit(pattern)
+    val makeSplit = completePatternImpl(pattern, scrutinee, subScrutinees, aliases)
+    (makeConsequent, alternative) =>
+      // A conjunction can invoke a continuation once for each alternative.
+      // Charge every invocation, not just construction of the closure: a
+      // small pattern can otherwise emit exponentially many result branches.
+      budget.visit(pattern)
+      budget.spend(aliases.size.toLong)
+      makeSplit(makeConsequent, alternative)
+
+  private def completePatternImpl(
+      pattern: SpPat,
+      scrutinee: LocalVarSymbol,
+      subScrutinees: Map[Ident | Int, MatcherResult],
+      aliases: Ls[VarSymbol]
+  )(using ResultMode): MakeSplit =
     pattern match
     case MatchedClassLike(head, fields) if isMatchOnly =>
       val acceptAll: MakeSplit = (makeConsequent, _) => makeConsequent(scrutinee, rcd())
@@ -422,7 +448,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
               Branch(resultSymbol.safeRef,
                 makeInnerSplit(makeConsequent, Split.End)) ~: alternative)
     case MatchedClassLike(head, fields) =>
-      val rebuildNeeded = fields.iterator.exists((_, pattern) => !pattern.preservesOriginalScrutinee)
+      val rebuildNeeded = fields.iterator.exists((_, pattern) => !pattern.preservesOriginalScrutinee(budget))
       val constructor = Compiler.preservedReference(head.constructor)
       val makeMakeSplit = fields.iterator.foldRight(
         (fields: Ls[(Ident, Term)], bindingsSymbols: Ls[TempSymbol]) =>
@@ -462,7 +488,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
           val fieldBindingsTerm = makeBindings(fieldAliases.map:
             alias => RcdField(str(alias.name), outputSymbol.safeRef))
           val fieldOutput =
-            if rebuildNeeded && !pattern.preservesOriginalScrutinee then outputSymbol.safeRef
+            if rebuildNeeded && !pattern.preservesOriginalScrutinee(budget) then outputSymbol.safeRef
             else subScrutinees(field).input
           (outputFields: Ls[(Ident, Term)], bindingsSymbols: Ls[TempSymbol]) =>
             ((makeConsequent, alternative) =>
