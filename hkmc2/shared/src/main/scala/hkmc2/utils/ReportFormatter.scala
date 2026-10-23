@@ -20,6 +20,9 @@ class ReportFormatter(
 ):
   val MaxLineCount = 5
   
+  /** Snapshot consumers can hide unstable line numbers while retaining source excerpts. */
+  protected def hideLineNumbers(origin: Origin): Bool = false
+  
   /** Output main text. */
   private def text(str: Str) =
     output(if colorize then fansi.Color.Red(str).toString else str)
@@ -42,6 +45,12 @@ class ReportFormatter(
   
   /** Report errors and warnings. */
   def apply(blockLineNum: Int, diags: Ls[Diagnostic], showRelativeLineNums: Bool): Unit =
+    def lineNumber(origin: Origin, globalLineNum: Int): Str =
+      val relativeLineNum = globalLineNum - blockLineNum + 1
+      if hideLineNumbers(origin) then "XX"
+      else if showRelativeLineNums && relativeLineNum > 0 then s"+$relativeLineNum"
+      else globalLineNum.toString
+    
     diags.foreach { diag =>
       val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
       val onlyOneLine = diag.allMsgs.size =:= 1 && diag.allMsgs.head._2.isEmpty
@@ -79,7 +88,7 @@ class ReportFormatter(
           val path = loc.origin.fileName
           if (curPath isnt null) && curPath =/= path then
             text(s"║  in ${path.relativeTo(basePath).getOrElse(path)}${
-              if org.startLineNum > 0 then s":${org.startLineNum}" else ""}")
+              if org.startLineNum > 0 then s":${lineNumber(org, org.startLineNum)}" else ""}")
           curPath = path
           val (startLineNum, startLineStr, startLineCol) =
             loc.origin.fph.getLineColAt(loc.spanStart)
@@ -94,10 +103,7 @@ class ReportFormatter(
             val isLastLineOfLoc = l === endLineNum || lineCount === MaxLineCount - 1
             lineCount += 1
             val globalLineNum = loc.origin.startLineNum + l - 1
-            val relativeLineNum = globalLineNum - blockLineNum + 1
-            val shownLineNum =
-              if showRelativeLineNums && relativeLineNum > 0 then s"l.+$relativeLineNum"
-              else "l." + globalLineNum
+            val shownLineNum = "l." + lineNumber(org, globalLineNum)
             val prepre = "║  "
             val pre = s"$shownLineNum: "
             val curLine = if lineCount < MaxLineCount
