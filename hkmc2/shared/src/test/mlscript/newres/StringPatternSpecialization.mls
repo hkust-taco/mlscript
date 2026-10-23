@@ -1,0 +1,26 @@
+:.
+
+open annotations
+
+// Supported string sequences should be compiled jointly without requiring
+// `@compile`, including when a named pattern takes pattern arguments.
+pattern Choice = "a" | "ab"
+pattern FollowedByC(pattern P) = P ~ "c"
+
+:expect true
+"abc" is Choice ~ "c"
+//│ = true
+
+// FIXME: The new resolver dispatches this call through the generated matcher
+// instead of specializing the whole sequence. Choice commits to "a" and
+// cannot retry "ab" after the suffix fails, unlike the inline sequence above.
+:fixme
+:expect true
+"abc" is FollowedByC(Choice)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+// Explicit compilation already specializes the same pattern successfully.
+:expect true
+"abc" is @compile FollowedByC(Choice)
+//│ = true

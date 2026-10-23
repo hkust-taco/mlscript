@@ -1,0 +1,45 @@
+:js
+
+// Ordinary string sequences use automata even without `@compile`. The first
+// alternative of Choice cannot complete the sequence on "abc", so a matcher
+// must reconsider it in the context of the suffix.
+pattern Choice = "a" | "ab"
+pattern FollowedByC(pattern P) = P ~ "c"
+
+:expect [true, true, true]
+["abc" is ("a" | "ab") ~ "c", "abc" is Choice ~ "c", "abc" is FollowedByC(Choice)]
+//│ = [true, true, true]
+
+// Both greedy wildcard consumption and recursive repetition must leave input
+// for the suffix. The entire sequence is compiled jointly at these use sites.
+pattern Star = ("a" ~ Star) | ""
+
+:expect [true, true]
+["abc" is _ ~ "c", "aaa" is Star ~ "a"]
+//│ = [true, true]
+
+// A standalone prefix match legitimately chooses the first alternative.
+// Returning just that result loses the alternatives needed by an enclosing
+// sequence if its suffix subsequently fails.
+:expect MatchSuccess(["a", "bc"], null)
+Choice.unapplyStringPrefix("abc")
+//│ = MatchSuccess(["a", "bc"], null)
+
+:expect MatchSuccess("ac", null)
+FollowedByC.unapply(Choice, "ac")
+//│ = MatchSuccess("ac", null)
+
+// FIXME: Direct calls to parametric matcher methods still compose legacy
+// prefix results. After Choice consumes "a", they cannot retry its "ab"
+// alternative when the following "c" fails on the remainder "bc".
+:fixme
+:expect MatchSuccess("abc", null)
+FollowedByC.unapply(Choice, "abc")
+//│ ═══[RUNTIME ERROR] Expected: 'MatchSuccess("abc", null)', got: 'MatchFailure(null)'
+//│ = MatchFailure(null)
+
+:fixme
+:expect MatchSuccess(["abc", "!"], null)
+FollowedByC.unapplyStringPrefix(Choice, "abc!")
+//│ ═══[RUNTIME ERROR] Expected: 'MatchSuccess(["abc", "!"], null)', got: 'MatchFailure(null)'
+//│ = MatchFailure(null)
