@@ -1225,29 +1225,39 @@ sealed abstract class Result extends Located, HasErasedType:
     * [[Config]] of their own.
     */
   def coerceTo(expected: ErasedType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
+    coerceToOr[this.type | Cast](expected, loc)(identity): (actual, declared) =>
+      raise:
+        ErrorReport(msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'" -> loc :: Nil,
+          source = Diagnostic.Source.Compilation)
+      this
+
+  // `coerceTo` continuing with `coerced`, except that a value of a type unrelated to `expected` goes to `unrelated`
+  def coerceToOr[R](expected: ErasedType, loc: Opt[Loc])(coerced: (this.type | Cast) => R)
+      (unrelated: (CanonicalErasedType, CanonicalErasedType) => R)(using Ctx, State, Raise, Config): R =
     val actual = erasedValueType_!.canonicalize
     val declared = expected.canonicalize
     val cast =
       if isUndefined && !declared.isInstanceOf[ErasedType.Incompatible] then S(true)
       else ErasedType.needsCast(actual, declared)
     cast match
-      case S(false) => this
+      case S(false) => coerced(this)
       case S(true) =>
         val target = expected match
           case ft: ErasedFuncType => ErasedType.Function(ft.rsc)
           case v: ErasedValueType => v
-        Cast(this, target, config.checkCasts && !isUndefined)(loc)
+        coerced(Cast(this, target, config.checkCasts && !isUndefined)(loc))
       case N =>
         // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
         def membersOf(et: CanonicalErasedType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
           case ErasedType.Incompatible(l, r) => S(l -> r)
           case _ => N
-        val message = membersOf(actual).orElse(membersOf(declared)) match
-          case S((l, r)) => msg"Types '${l.describe}' and '${r.describe}' have no common representation"
-          case N => msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'"
-        raise:
-          ErrorReport(message -> loc :: Nil, source = Diagnostic.Source.Compilation)
-        this
+        membersOf(actual).orElse(membersOf(declared)) match
+          case S((l, r)) =>
+            raise:
+              ErrorReport(msg"Types '${l.describe}' and '${r.describe}' have no common representation" -> loc :: Nil,
+                source = Diagnostic.Source.Compilation)
+            coerced(this)
+          case N => unrelated(actual, declared)
 
 /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
  * regardless of whether the check for effect is inserted or not.

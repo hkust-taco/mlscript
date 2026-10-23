@@ -1,5 +1,4 @@
 :.
-:global
 :sir
 :siret
 :deforest
@@ -886,3 +885,161 @@ test(false, true)
 //│ return test$test¹(false, true)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
+
+
+// `a.AA#x` has no concrete lower bound and doesn't block fusion, and it flows into a slot
+// retyped by fusion from A to Function. As `a.AA#x` has type A, unrelated to Function, it can never be produced:
+// as it is pure, it is dropped, and `undefined` is passed in its place
+:expect 0
+object A
+data class AA(x: A)
+private fun f(a, b) = if a is AA then f(a, a.AA#x) else if b is A then 0
+f(A, A)
+//│ deforest > >>> fusing >>>
+//│ deforest > A³ ->
+//│ deforest > 	match: b¹⁵
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let f$b_A, f$b_rest, f$a_rest, f$f, deforest$lam: Function⁰;
+//│ @private @private
+//│ define f$f as fun f$f⁰(a: A³, b: Function⁰): Int⁰ {
+//│   match a
+//│     AA⁰ =>
+//│       return f$f⁰(a, (undefined as!! Function⁰))
+//│     else
+//│       return (b() as! Int⁰)
+//│   end
+//│ };
+//│ @affine(1) @private
+//│ define f$b_A as fun f$b_A⁰()(): ? {
+//│   return 0
+//│ };
+//│ @private
+//│ define f$b_rest as fun f$b_rest⁰(): ? {
+//│   return f$a_rest⁰()
+//│ };
+//│ @private
+//│ define f$a_rest as fun f$a_rest⁰(): ? {
+//│   return null
+//│ };
+//│ @private
+//│ define f⁰ as fun f¹(a: A³, b: A³): Int⁰ {
+//│   match a
+//│     AA⁰ =>
+//│       return f¹(a, a.x²)
+//│     else
+//│       match b
+//│         A³ =>
+//│           return 0
+//│         else
+//│           throw new globalThis⁰.Error⁰("match error")
+//│       end
+//│   end
+//│ };
+//│ define A⁴ as object A³;
+//│ @data
+//│ define AA¹ as class AA⁰ {
+//│   val x³: A³;
+//│   constructor AA²(x: A³) {
+//│     define x³ as val x²: A³ = x;
+//│     end
+//│   }
+//│ };
+//│ set deforest$lam = f$b_A⁰();
+//│ return f$f⁰(A³, deforest$lam)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 0
+
+
+
+// `fail()` has no concrete lower bound but still runs (it throws), and it is returned from `g`, whose result
+// is retyped by fusion from A to Function. As `fail()` has type A, unrelated to Function, it never returns:
+// it is still called, and `undefined` is returned in its place
+:re
+object A
+private fun fail(): A = throw Error("error")
+private fun g(c) = if c then A else fail()
+private fun f(a) = if a is A then 0 else 1
+[f(g(true)), f(g(false))]
+//│ deforest > >>> fusing >>>
+//│ deforest > A⁵ ->
+//│ deforest > 	match: a²
+//│ deforest > A⁵ ->
+//│ deforest > 	match: a²
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰, tmp1: Int⁰, f$a_A, f$a_rest, f$a_A1, f$a_rest1, g$g, f$f, g$g1, f$f1, tmp2: Function⁰, tmp3: Function⁰;
+//│ @private @private
+//│ define g$g as fun g$g⁰(c: Bool⁰): Function⁰ {
+//│   match c
+//│     true =>
+//│       return f$a_A⁰()
+//│     else
+//│       do fail⁰();
+//│       return (undefined as!! Function⁰)
+//│   end
+//│ };
+//│ @private @private
+//│ define f$f as fun f$f¹(a: Function⁰): Int⁰ {
+//│   return (a() as! Int⁰)
+//│ };
+//│ @private @private
+//│ define g$g1 as fun g$g¹(c: Bool⁰): Function⁰ {
+//│   match c
+//│     true =>
+//│       return f$a_A¹()
+//│     else
+//│       do fail⁰();
+//│       return (undefined as!! Function⁰)
+//│   end
+//│ };
+//│ @private @private
+//│ define f$f1 as fun f$f²(a: Function⁰): Int⁰ {
+//│   return (a() as! Int⁰)
+//│ };
+//│ @affine(1) @private
+//│ define f$a_A as fun f$a_A⁰()(): ? {
+//│   return 0
+//│ };
+//│ @affine(1) @private
+//│ define f$a_A1 as fun f$a_A¹()(): ? {
+//│   return 0
+//│ };
+//│ @private
+//│ define f$a_rest as fun f$a_rest¹(): ? {
+//│   return null
+//│ };
+//│ @private
+//│ define f$a_rest1 as fun f$a_rest²(): ? {
+//│   return null
+//│ };
+//│ @private
+//│ define fail¹ as fun fail⁰(): A⁵ {
+//│   throw globalThis⁰.Error¹("error")
+//│ };
+//│ @private
+//│ define g⁴ as fun g⁵(c: Bool⁰): A⁵ {
+//│   match c
+//│     true =>
+//│       return A⁵
+//│     else
+//│       return fail⁰()
+//│   end
+//│ };
+//│ @private
+//│ define f² as fun f³(a: A⁵): Int⁰ {
+//│   match a
+//│     A⁵ =>
+//│       return 0
+//│     else
+//│       return 1
+//│   end
+//│ };
+//│ define A⁶ as object A⁵;
+//│ set tmp3 = g$g¹(true);
+//│ set tmp = f$f²(tmp3);
+//│ set tmp2 = g$g⁰(false);
+//│ set tmp1 = f$f¹(tmp2);
+//│ return [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] Error: error

@@ -381,8 +381,16 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     
     // a slot that fusion retypes takes the type the flow gives it
     // the flow analysis proves the value has the slot's type, so the cast should never fail
-    private def intoRetypedSlot[R <: Result](r: R, slot: SlotType): R | Cast =
-      if slot.retyped == slot.original then r else r.coerceTo(slot.retyped.getOrElse(ErasedType.Unknown), N)
+    private def intoRetypedSlot[R <: Result](r: R, slot: SlotType)(k: (R | Path) => Block): Block =
+      if slot.retyped == slot.original then k(r)
+      else coerceIntoFlowTypedSlot(r, slot.retyped.getOrElse(ErasedType.Unknown))(k)
+    
+    // as the flow proves that a value reaching a slot typed from the flow has the slot's type, a value whose type is
+    // unrelated to it is never produced (it is read in a dead branch, or is the result of a call that never
+    // returns): its effects are kept, and `undefined` stands in for it
+    private def coerceIntoFlowTypedSlot[R <: Result](r: R, tpe: ErasedType)(k: (R | Path) => Block): Block =
+      r.coerceToOr(tpe, N)(k): (_, _) =>
+        Assign.discard(r, k(Value.Lit(Tree.UnitLit(false))(N).coerceTo(tpe, N)))
     
     // calls `fun` with possibly remapped `args`
     def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
@@ -411,8 +419,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           args.zip(fieldSyms).foldRight(after):
             case (Arg(N, a) -> fieldSym, rest) =>
               applyPath(a): fusedField =>
-                val value = fusedField.coerceTo(fieldSym.erasedType.getOrElse(ErasedType.Unknown), N)
-                Scoped(Set.single(fieldSym), Assign(fieldSym, value, rest))
+                coerceIntoFlowTypedSlot(fusedField, fieldSym.erasedType.getOrElse(ErasedType.Unknown)): value =>
+                  Scoped(Set.single(fieldSym), Assign(fieldSym, value, rest))
             case _ => TODO("spread args are not supported")
         
         solver.finalCtorDests.get(ctor.uid.concreteId) match
@@ -438,10 +446,14 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           val slotss = original.iterator.zip(retyped).map(_.iterator.zip(_))
           // truncating `slotss` only drops the lists a partial application leaves unapplied
           val argss3 = argss2.iterator.zip(slotss).map: (args, slots) =>
-            if args.exists(_.spread.isDefined) then args
-            else args.map: a =>
-              slots.nextOption().fold(a)(slot => Arg(N, intoRetypedSlot(a.value, slot)))
-          k(Call(fun2, argss3.toList.ne_!)(c.metadata, c.toLoc))
+            if args.exists(_.spread.isDefined) then args.map(_ -> N)
+            else args.map(_ -> slots.nextOption())
+          .toList
+          applyListOf(argss3, applyListOf(_, (arg, k2) => arg match
+            case (a, S(slot)) => intoRetypedSlot(a.value, slot)(value => k2(Arg(N, value) -> N))
+            case _ => k2(arg)
+          )(_)): argss4 =>
+            k(Call(fun2, argss4.map(_.map(_._1)).ne_!)(c.metadata, c.toLoc))
         case c2 => k(c2)
       case _ => super.applyResult(r)(k)
     
@@ -491,15 +503,16 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       case Assign(l: LocalVarSymbol, r, rst) =>
         applyResult(r): r2 =>
           val l2 = applyAssignLhs(l)
-          val r3 = l2 match
-            case l2: LocalVarSymbol => intoRetypedSlot(r2, (l.mapErasedValueType, l2.mapErasedValueType))
-            case NoSymbol => r2
-          val rst2 = applySubBlock(rst)
-          if (l2 is l) && (r3 is r) && (rst2 is rst) then b else Assign(l2, r3, rst2)
+          val slot = l2 match
+            case l2: LocalVarSymbol => (l.mapErasedValueType, l2.mapErasedValueType)
+            case NoSymbol => (N, N)
+          intoRetypedSlot(r2, slot): r3 =>
+            val rst2 = applySubBlock(rst)
+            if (l2 is l) && (r3 is r) && (rst2 is rst) then b else Assign(l2, r3, rst2)
       case Return(res) =>
         applyResult(res): res2 =>
-          val res3 = intoRetypedSlot(res2, returnType)
-          if res3 is res then b else Return(res3)
+          intoRetypedSlot(res2, returnType): res3 =>
+            if res3 is res then b else Return(res3)
       case Break(label) =>
         val labelRestFunId = label.withInstId(instId)
         restFunSyms.get(labelRestFunId) match
