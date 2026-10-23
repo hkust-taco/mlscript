@@ -143,20 +143,84 @@ id"#>"(5)
 //│ = [5]
 
 
-// Keep existing infix continuations, including attached operands and indentation.
-:expect [1, 2]
+// Attached operands start separate expressions for every symbolic operator.
+:w
+:expect [2]
 1
 #>2
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.+1: 	1
+//│ ╙──      	^
+//│ = [2]
+
+:w
+:expect [2, 3]
+1
+#>(2, 3)
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.+1: 	1
+//│ ╙──      	^
+//│ = [2, 3]
+
+:w
+:expect 2
+1
+#@[Int](2)
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.+1: 	1
+//│ ╙──      	^
+//│ = 2
+
+// A separating space makes the same operators continue the preceding expression.
+:expect [1, 2]
+1
+#> 2
 //│ = [1, 2]
 
 :expect [1, 2]
 1
-  #> 2
+#> (2)
+//│ = [1, 2]
+
+// Indented continuations do not need a space after the operator.
+:expect [[1, 2], 3]
+1
+  #>2
+  #>3
+//│ = [[1, 2], 3]
+
+// Operator-only lines still form left-associative infix chains.
+:expect [[1, 2], 3]
+1
+#>
+2
+#>
+3
+//│ = [[1, 2], 3]
+
+// Curly and indented operands also allow infix continuation without a space.
+:expect [1, 2]
+1
+#>{2}
 //│ = [1, 2]
 
 :expect [1, 2]
 1
-#>(2)
+#>
+  2
+//│ = [1, 2]
+
+// The same spacing rule applies after commas.
+:w
+:expect [2]
+1,#>2
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.+1: 	1,#>2
+//│ ╙──      	^
+//│ = [2]
+
+:expect [1, 2]
+1,#> 2
 //│ = [1, 2]
 
 

@@ -82,9 +82,6 @@ object Parser:
     case _ =>
       val r = opStr.last
       (precOf(opStr.head), precOf(r) - (if r === ',' || r === ':' then 1 else 0))
-  // At the start of a new line, an attached operand makes these operators start a fresh
-  // prefix expression. Other symbolic operators continue the previous expression as infix.
-  private val newlinePrefixOps: Set[Str] = Set("!", "+", "-", "~", "@", "|", "&")
   
   type Indent_Curly = Curly.type | Indent.type
   
@@ -1076,12 +1073,15 @@ abstract class Parser(
       // =>
       
       // * Parse newline-operators, eg `2 + 2\n*\n2 + 2` <=> `(2 + 2) * (2 + 2)`
+      // * A directly attached operand or argument list starts a new expression at this boundary.
+      // * Spaces, line breaks, commas, and blocks after the operator allow infix continuation.
+      // * Indented operator splits are handled above and do not need a separating space.
       // TODO also allow uses of SELECT
       case (_: NEWLINE_COMMA, _) :: (OP(opStr), l0) :: rest
       if allowNewlines
       && prec <= NoElsePrec // (Q: why doesn't MinPrec work?)
       && NOISE.get(rest).nonEmpty // * Don't treat as infix if there are no tokens for the RHS (eg `()\n???`)
-      && (!newlinePrefixOps.contains(opStr) || rest.match
+      && (rest.match
         case (_: NEWLINE_COMMA, _) :: _ | (SPACE, _) :: _ | (BRACKETS(_: Indent_Curly, _), _) :: _ | Nil => true
         case _ => false
       ) =>
