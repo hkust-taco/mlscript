@@ -10,4 +10,62 @@
 // :todo
 
 
+1 + ({2, 3})
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: warnPureExprInStmtPos (Lowering.scala:1070)
+//│ FAILURE INFO: Lit of IntLit of 2
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.13: 	1 + ({2, 3})
+//│ ╙──      	      ^
+//│ = 4
+
+1 + {2, 3}
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: warnPureExprInStmtPos (Lowering.scala:1070)
+//│ FAILURE INFO: Lit of IntLit of 2
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.22: 	1 + {2, 3}
+//│ ╙──      	     ^
+//│ = 4
+
+1 + {print("hi"), 3}
+//│ > hi
+//│ = 4
+
+1 + (print("hi"); 3)
+//│ > hi
+//│ = 4
+
+
+if 123
+  then ???
+  else 1
+//│ = 1
+
+if {print("Hello World"), false}
+  then ???
+  else 1
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:1838)
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.45: 	if {print("Hello World"), false}
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.46: 	  then ???
+//│ ╙──      	^^^^^^^^^^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:2134)
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.47: 	  else 1
+//│ ╙──      	  ^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:270)
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+if (print("Hello World"); false)
+  then ???
+  else 1
+//│ > Hello World
+//│ = 1
+
+
 

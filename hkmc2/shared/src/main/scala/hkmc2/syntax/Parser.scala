@@ -572,7 +572,7 @@ abstract class Parser(
       tryParseExp(prec, tok, loc, rule, allowNewlines =
         true /* Making this false somehow makes the following not parse:
           ```
-          if ({print("Hello World"), false})
+          if (print("Hello World"); false)
             then 0(0)
             else 1
           ```
