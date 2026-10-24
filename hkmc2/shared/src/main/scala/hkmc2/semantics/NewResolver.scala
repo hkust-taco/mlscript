@@ -1957,40 +1957,21 @@ class NewResolver:
   // reporting provenance does not multiply identical edges in the inference graph.
   private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks],
       site: Opt[Term])(using ResolutionContext): Unit =
-    // The written annotation, rather than the body of an alias it applies.
-    val annotation = tpe.writtenSource
     // A probe stands for a value not known yet (see NamespaceProbe). Like any value, it
-    // reaches type parameters and inference holes; the classes and aliases that it
-    // reaches name its implicit namespaces. It has no structure to constrain.
+    // reaches type parameters and inference holes, and the namespaces of the types that
+    // it reaches are candidates of its reference. It has no structure to constrain.
     val probe = value.applicationHead._1 match
       case probe: NamespaceProbe => S(probe)
       case _ => N
-    // A probe can also reach the type as a view of a type variable: in `Some(1) |> Wrap`,
-    // the parameter of `Wrap` receives the views of the first parameter type of `|>`.
-    // Only observe these views for types that have a namespace.
-    def requireNamespaceOf(definition: Definition, written: Term)(using ResolutionContext): Unit =
-      namespaceOf(definition).foreach: module =>
-        probe match
-          case S(probe) => requireNamespace(probe, module, written)
-          case N => value match
-            case Marked(_: InstanceShape, _) => listenConstraintViews(value):
-              case Marked(probe: NamespaceProbe, _) => requireNamespace(probe, module, written)
-              case _ => ()
-            case _ => ()
-    // Normalization expands applied aliases, such as `Option[Int]`, so that following
-    // a type does not reach them; the type retains them as its expansions instead.
-    // Types are compared without their expansions, so check a probe against them
-    // before the constraint cache, which an equal type with other expansions may
-    // have filled. Other values subscribe to views, which must happen once.
-    def requireExpandedNamespaces(tpe: DeclaredType)(using ResolutionContext): Unit =
-      tpe.expansions.foreach(expansion => expansion.alias.defn.foreach(requireNamespaceOf(_, expansion.application)))
-    if probe.nonEmpty then requireExpandedNamespaces(tpe)
+    // Types are compared without their alias expansions, which also name namespaces.
+    // Check them before the constraint cache, which an equal type may have filled.
+    probe.foreach(requireTypeNamespaces(_, tpe))
     if !rctx.addTypeConstraint(tpe, value, marks) then return
-    if probe.isEmpty then requireExpandedNamespaces(tpe)
+    val annotation = tpe.resolution.source
+    val required = tpe
     def follow(tpe: DeclaredType, args: TypeApplication, captures: Ls[Marks],
         seen: Set[TypeResolution])(using ResolutionContext): Unit = if !seen(tpe.resolution) then
       val next = seen + tpe.resolution
-      requireExpandedNamespaces(tpe)
       def observe(listener: Listener)(using ResolutionContext): Unit = if probe.isEmpty then
         listenConstraintViews(value): actual =>
           actual.enter(captures) match
@@ -2023,9 +2004,7 @@ class NewResolver:
         case TypeShape.Applied(base, params) =>
           follow(declaredType(base, tpe), typeApplication(params, tpe), captures, next)
         case TypeShape.Alias(symbol, S(rhs)) =>
-          symbol.defn.foreach(requireNamespaceOf(_, annotation))
           follow(declaredType(rhs, aliasBindings(tpe, args, symbol.defn.get.tparams, tpe.positive), tpe.positive), noTypeArguments, captures, next)
-        case TypeShape.Alias(symbol, N) if probe.nonEmpty => symbol.defn.foreach(requireNamespaceOf(_, annotation))
         case TypeShape.Hole(host) => value.enter(captures) match
           case value: TermShape => host.publish(value)
           case NoShape => ()
@@ -2051,11 +2030,13 @@ class NewResolver:
         case TypeShape.SelectedArgument(argument, positive) =>
           listenArgumentParts(argument.instantiate(tpe.instances)): parts =>
             follow(if positive then parts.output else parts.input, args, captures, next)
-        case TypeShape.Nominal(cls) if probe.nonEmpty => requireNamespaceOf(cls, annotation)
+        case TypeShape.Nominal(_) if probe.nonEmpty => ()
         case TypeShape.Nominal(cls) => listenConstraintViews(value): value =>
-          // A probe can reach the class as the view of a type variable (see requireNamespaceOf).
+          // A probe can also reach the type as the view of a type variable: in
+          // `Some(1) |> Wrap`, the parameter of `Wrap` receives the views of the first
+          // parameter type of `|>`. The whole required type names its namespaces.
           value match
-            case Marked(probe: NamespaceProbe, _) => namespaceOf(cls).foreach(requireNamespace(probe, _, annotation))
+            case Marked(probe: NamespaceProbe, _) => requireTypeNamespaces(probe, required)
             case _ => ()
           // Erasing a callback's signature must not erase the obligation to
           // check its implementation. Its unannotated inputs can receive any
@@ -2840,6 +2821,10 @@ class NewResolver:
     * the order in which definitions and receiver shapes become available. */
   def constructorPattern(res: Pattern.Constructor)(using ResolutionContext): Unit = if newResolution then
     val lhs = res.target
+    // The namespaces of a pattern head come from its scrutinees (see scrutineeNamespaces).
+    lhs.withoutCaptures match
+      case ref: UnresolvedRef => rctx.state.implicitNamespaces.get(new Identity(ref)).foreach(_.scrutinized = true)
+      case _ => ()
     def select(sym: DefinitionSymbol[?])(using ResolutionContext): Bool =
       lhs.withoutCaptures match
         case trm: NewResolvable =>
@@ -2951,6 +2936,7 @@ class NewResolver:
     * nominal class; guards and literal tests may conservatively retain shapes.
     * Both scrutinee and constructor shapes can arrive after this registration. */
   def matchShapePat(shape: Shape, pattern: Pattern)(matched: ShapeListener[Shape])(using ResolutionContext): Unit =
+    scrutineeNamespaces(shape, pattern)
     shape match
       case value @ Marked(_: InstanceShape, _) if pattern.isInstanceOf[Pattern.Constructor] || pattern.isInstanceOf[Pattern.Tuple] =>
         listenInstanceViews(value)(matchShapePat(_, pattern)(matched))
@@ -3090,6 +3076,8 @@ class NewResolver:
                         field => matchShapePat(instantiateShape(field, instances), pat)(_ => ()), ctor.target, _ => (), false)
                     case MemberLookup.Declared(member, bindings, marks, annotation, positive) =>
                       listenDeclaredMember(member, bindings, resSym, ctor.target, annotation, _ => (), false, positive, marks, N): field =>
+                        // The views below no longer name the field's declared type.
+                        scrutineeNamespaces(field, pat)
                         listenInstanceViews(instantiateShape(field, instances)): field =>
                           transportShape(field, marks) match
                             case value: TermShape =>
@@ -3214,6 +3202,29 @@ class NewResolver:
       case _ =>
         raise(ErrorReport(msg"This pattern is not supported during shape resolution." -> pattern.toLoc :: Nil))
   
+  /** A constructor pattern can name a member of an implicit namespace of the declared type of
+    * its scrutinee, as a value can of the type that flow requires of it (see unresolvedRef): in
+    * `x is Some(v)`, where `x: Option[Int]`, `Some` selects `Option.Some`. The pattern head
+    * stands for a value of that type. Other scrutinee values, such as constructed instances,
+    * have no declared type and name no namespace. Wrappers test the same scrutinee as the
+    * patterns they wrap; the outputs of chains and transforms have unknown types.
+    */
+  private def scrutineeNamespaces(scrutinee: Shape, pattern: Pattern)(using ResolutionContext): Unit = pattern match
+    case ctor: Pattern.Constructor => (ctor.target.withoutCaptures, scrutinee) match
+      case (ref: UnresolvedRef, value: TermShape) if ref.implicitNamespacing => value match
+        case Marked(instance: InstanceShape, _) => requireTypeNamespaces(ref.namespaceProbe, instance.tpe)
+        case _ => ()
+      case _ => ()
+    case Pattern.Alias(inner, _) => scrutineeNamespaces(scrutinee, inner)
+    case Pattern.Annotated(inner, _) => scrutineeNamespaces(scrutinee, inner)
+    case Pattern.Guarded(inner, _) => scrutineeNamespaces(scrutinee, inner)
+    case Pattern.Negation(inner) => scrutineeNamespaces(scrutinee, inner)
+    case Pattern.Chain(first, _) => scrutineeNamespaces(scrutinee, first)
+    case Pattern.Composition(_, left, right) =>
+      scrutineeNamespaces(scrutinee, left)
+      scrutineeNamespaces(scrutinee, right)
+    case _ => ()
+
   def matchScrutPat(scrutinee: Term, pattern: Pattern)(using ResolutionContext): Unit = if newResolution then
     listenTerm(scrutinee)(sh => matchShapePat(sh, pattern)(_ => ()))
   
@@ -3539,6 +3550,52 @@ class NewResolver:
       member(shape.getMember(ref.id.name).visibleFrom(scope.canAccessPrivatesOf, reportInaccessible = false),
         TypeSubstitution.empty)
 
+  /** `probe` stands for a value of type `tpe`: flow requires this type of the value, or the
+    * value is the scrutinee of the pattern whose head the probe stands for (see
+    * scrutineeNamespaces). The namespaces of the type are candidates of the probe's reference.
+    * Types are compared without their alias expansions, so observations are keyed by both.
+    */
+  private def requireTypeNamespaces(probe: NamespaceProbe, tpe: DeclaredType)(using ResolutionContext): Unit =
+    if rctx.state.implicitNamespaces.contains(new Identity(probe.ref)) &&
+        rctx.state.namespaceObservations.add((probe, tpe, tpe.expansions)) then
+      listenTypeNamespaces(tpe, tpe.writtenSource)(requireNamespace(probe, _, _))
+
+  /** The implicit namespaces (see namespaceOf) of the classes and type aliases that a declared
+    * type names, through aliases, unions, intersections, and bound parameters, including the
+    * applied aliases that normalization expanded. `written` is the type that names them, except
+    * for expanded aliases, which record their own written applications.
+    */
+  private def listenTypeNamespaces(tpe: DeclaredType, written: Term)
+      (found: (ModuleOrObjectSymbol, Term) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+    def named(definition: Definition, source: Term)(using ResolutionContext): Unit =
+      namespaceOf(definition).foreach(found(_, source))
+    def follow(tpe: DeclaredType, seen: Set[TypeResolution])(using ResolutionContext): Unit = if !seen(tpe.resolution) then
+      val next = seen + tpe.resolution
+      tpe.expansions.foreach(expansion => expansion.alias.defn.foreach(named(_, expansion.application)))
+      tpe.resolution.listen:
+        case TypeShape.Alias(symbol, rhs) =>
+          symbol.defn.foreach(named(_, written))
+          rhs.foreach(rhs => follow(declaredType(rhs, tpe), next))
+        case TypeShape.Nominal(cls) => named(cls, written)
+        case TypeShape.Applied(base, _) => follow(declaredType(base, tpe), next)
+        case reference: TypeShape.Reference => follow(referenceType(reference, tpe), next)
+        case TypeShape.Contextual(reference) => follow(reference.tpe.instantiate(tpe.instances), next)
+        case TypeShape.Union(left, right) =>
+          follow(declaredType(left, tpe), next)
+          follow(declaredType(right, tpe), next)
+        case TypeShape.Intersection(left, right) =>
+          follow(declaredType(left, tpe), next)
+          follow(declaredType(right, tpe), next)
+        case TypeShape.Combined(formula) => formula.orderedAtoms.foreach(atom => follow(atom.instantiate(tpe.instances), next))
+        case TypeShape.Polymorphic(_, _, body) => follow(declaredType(body, tpe), next)
+        case TypeShape.Parameter(symbol, _) => tpe.bindings.get(symbol).foreach: bound =>
+          follow(selectArgument(bound.instantiate(tpe.instances), tpe.positive), next)
+        case TypeShape.SelectedArgument(argument, positive) =>
+          listenArgumentParts(argument.instantiate(tpe.instances)): parts =>
+            follow(if positive then parts.output else parts.input, next)
+        case _ => ()
+    follow(tpe, Set.empty)
+
   /** The implicit namespace of the values of a declared type: the companion module or object
     * of its class or type alias (see unresolvedRef). */
   private def namespaceOf(definition: Definition): Opt[ModuleOrObjectSymbol] = definition match
@@ -3600,11 +3657,15 @@ class NewResolver:
           else msg"Implicit namespaces are only taken into account until the block of the reference is resolved."
         rctx.report(ErrorReport(
           msg"${subject(ref)} was resolved before flow revealed its implicit namespace ${module.describeKind} '${module.nme}'." -> ref.toLoc ::
-            msg"Its value is required to have this type, which would have selected '${module.nme}.${name}'." ->
+            msg"${relation(namespaces)}, which would have selected '${module.nme}.${name}'." ->
               namespaces.required(module).toLoc ::
             candidates ::: (reason -> N) :: (msg"Write '${module.nme}.${name}' to select it explicitly." -> N) :: Nil,
           source = Diagnostic.Source.Compilation))
       case _ => ()
+
+  /** How the type that names a namespace relates to the reference. */
+  private def relation(namespaces: ImplicitNamespaces): Message =
+    if namespaces.scrutinized then msg"Its scrutinee has this type" else msg"Its value is required to have this type"
 
   private def subject(ref: UnresolvedRef): Message =
     if ref.lookup is NameLookup.LeadingDot then msg"Leading-dot selection '${ref.writtenName}'"
@@ -3650,11 +3711,12 @@ class NewResolver:
             namespaces.required.toList.map: (module, annotation) =>
               val problem = if namespaces.inaccessible.contains(module) then msg"is not accessible from this reference"
                 else msg"has no accessible member '${name}'"
-              msg"Its value is required to have this type, but the companion ${module.describeKind} '${module.nme}' of this type ${problem}." ->
+              msg"${relation(namespaces)}, but the companion ${module.describeKind} '${module.nme}' of this type ${problem}." ->
                 annotation.toLoc
           // A leading-dot selection only consults implicit namespaces, which flow can fail to reveal.
           val report = if ref.lookup is NameLookup.LeadingDot then
             msg"Cannot resolve leading-dot selection '${ref.writtenName}'" -> ref.toLoc :: (if notes.nonEmpty then notes
+              else if namespaces.exists(_.scrutinized) then msg"Its scrutinee has no declared type with a companion module or object." -> N :: Nil
               else msg"No type with a companion module or object is required of its value." -> N :: Nil)
             else msg"Name not found: ${name}" -> ref.toLoc :: notes
           rctx.report(ErrorReport(report, source = Diagnostic.Source.Compilation))
@@ -3664,7 +3726,8 @@ class NewResolver:
           if selected.map(_._2).distinct.sizeIs > 1 then
             rctx.markError(ref)
             rctx.report(ErrorReport(
-              msg"${subject(ref)} is ambiguous, as flow requires its value to have types with distinct implicit namespaces." -> ref.toLoc ::
+              msg"${subject(ref)} is ambiguous, as ${if namespaces.scrutinized then msg"its scrutinee has"
+                else msg"flow requires its value to have"} types with distinct implicit namespaces." -> ref.toLoc ::
                 selected.map: (module, _) =>
                   msg"This type selects '${module.nme}.${name}'." -> namespaces.required(module).toLoc,
               source = Diagnostic.Source.Compilation))

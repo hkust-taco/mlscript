@@ -275,10 +275,13 @@ through the selections, applications, and instantiations of the chains rooted at
 reference; elaboration gives the receivers of value selections the `ValueReceiver`
 interpretation, unlike the paths of types and patterns. The probe is not a value:
 member lookups ignore it, as do patterns, class operands, interface exposure, and
-call checks. `inferTypeArguments` detects a probe
-reaching a class or type alias, directly or as the view of a type variable, and
-adds the companion's member as a candidate through `AccessPath.valuePath`. That
-path carries the same `Capture`s as a written reference.
+call checks. When a probe reaches a declared type in `inferTypeArguments`, directly
+or as the view of a type variable, `listenTypeNamespaces` finds the companions of
+the classes and aliases that the type names. Their members become candidates
+through `AccessPath.valuePath`, whose paths carry the same `Capture`s as written
+references. A constructor pattern's head observes the declared types of its
+scrutinees with the same traversal (`scrutineeNamespaces`), before `matchShapePat`
+expands them into views.
 
 Normalization expands applied aliases such as `Option[Int]`, so `DeclaredType`
 retains its `expansions` as observation metadata, like its `origin` witness.
@@ -290,6 +293,5 @@ lets capitalized references without namespaces fall back to their wildcard opens
 in source order, then diagnoses missing and ambiguous names. Annotation paths need
 their symbols during elaboration, so their roots fall back immediately. Namespaces revealed
 afterwards are reported against the settled candidates and never change them.
-`slop/ImplicitNamespaces.mls`, `ImplicitNamespaceChains.mls`, and
-`LeadingDotSelections.mls` cover these rules.
-Patterns are deferred (`slop/ImplicitNamespacePatterns.mls`).
+`slop/ImplicitNamespaces.mls`, `ImplicitNamespaceChains.mls`,
+`ImplicitNamespacePatterns.mls`, and `LeadingDotSelections.mls` cover these rules.

@@ -94,6 +94,6 @@ shade(both)
 // Leading-dot selections only denote values.
 :e
 fun typed(x: .Color) = x
-//│ ╔══[COMPILATION ERROR] A leading-dot selection must denote a value, whose required type determines its namespace.
+//│ ╔══[COMPILATION ERROR] A leading-dot selection must denote a value or pattern, whose type determines its namespace.
 //│ ║  l.+1: 	fun typed(x: .Color) = x
 //│ ╙──      	             ^^^^^^

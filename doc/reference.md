@@ -1758,17 +1758,23 @@ implicit member chains, such a name can also be the root of a chain of selection
 and applications; the type required of the result of the chain determines the
 namespace. For instance, `Some` in `get(Some(1))`, `Red` in `paint(Red.lighter)`,
 and `Hex` in `paint(Hex("f00").lighter)` name members of the namespaces of the
-parameter types of `get` and `paint`. Patterns, types, the selection paths in
-them, and `extends` clauses only consult explicit bindings and wildcard opens.
+parameter types of `get` and `paint`. Types, the selection paths in types and
+patterns, and `extends` clauses only consult explicit bindings and wildcard opens.
 So do annotations, which are interpreted as soon as they are elaborated.
+
+In a pattern, the declared type of the scrutinee determines the namespace of the
+head of a constructor pattern, as the type required of a value does. With
+`x: Option[Int]`, `if x is Some(v) then v else 0` tests for `Option.Some`, as do
+nested patterns on fields declared with type `Option[Int]`. Scrutinees without
+declared types, such as constructed values, have no implicit namespace.
 
 A *leading-dot selection* `.name` explicitly requires an implicit namespace: it
 never consults the scope where it is written, neither its explicit bindings nor
 its wildcard opens, and its name need not be capitalized. For instance, with
 `module Color with val red = ...`, `paint(.red)` selects `Color.red`, even where
 another `red` is in scope, and `get(.None)` selects `Option.None`. Leading-dot
-selections can start chains too, as in `paint(.red.lighter)`. They can only
-denote values; patterns do not support them yet.
+selections can start chains too, as in `paint(.red.lighter)`, and they can head
+constructor patterns, as in `if x is .None then 0 else 1`.
 
 Implicit namespaces take precedence over wildcard opens, but not over explicit
 bindings, including selective opens such as `open AltOption { Some }`. A name

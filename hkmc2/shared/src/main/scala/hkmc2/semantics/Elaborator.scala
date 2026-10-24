@@ -1901,15 +1901,13 @@ extends Importer:
       app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
         DummyApp, N, sym)
     // Under new resolution, a leading-dot selection only consults the implicit namespace
-    // that flow requires of its value, as a capitalized value or chain root can.
+    // that flow requires of its value, or that of its scrutinee's type in a pattern, as a
+    // capitalized name can.
     case Sel(Empty(), nme) if newResolution => interp match
-      case Trm | Specialization | Instantiated | ValueReceiver =>
+      case Trm | Specialization | Instantiated | ValueReceiver | Ptrn =>
         interpretRef(Ctx.unresolvedRef(Nil, nme, NameLookup.LeadingDot, tree), interp)
-      case Ptrn =>
-        raise(ErrorReport(msg"Leading-dot selections are not yet supported in patterns." -> tree.toLoc :: Nil))
-        error
       case Receiver | Clss | Tpe =>
-        raise(ErrorReport(msg"A leading-dot selection must denote a value, whose required type determines its namespace." ->
+        raise(ErrorReport(msg"A leading-dot selection must denote a value or pattern, whose type determines its namespace." ->
           tree.toLoc :: Nil))
         error
     case Sel(Empty(), nme) =>
@@ -3345,13 +3343,13 @@ extends Importer:
           case N if newResolution =>
             // New resolution looks the name up in the visible wildcard opens, if any, and
             // reports a missing name once its block is resolved, uniformly. A capitalized
-            // value, value receiver, or instantiated class can also name a member of an
-            // implicit namespace (see NewResolver.unresolvedRef). Patterns, types, and
-            // their paths only consult their opens.
+            // value, value receiver, instantiated class, or pattern head can also name a
+            // member of an implicit namespace (see NewResolver.unresolvedRef). Types and
+            // the paths of types and patterns only consult their opens.
             val sources = candidate.collect { case wildcard: Ctx.WildcardElem => wildcard.sources }.getOrElse(Nil)
             val implicitNamespacing = id.name.isCapitalized && (interp match
-              case Trm | Specialization | Instantiated | ValueReceiver => true
-              case Receiver | Clss | Ptrn | Tpe => false)
+              case Trm | Specialization | Instantiated | ValueReceiver | Ptrn => true
+              case Receiver | Clss | Tpe => false)
             val lookup = if implicitNamespacing then NameLookup.NamespacesThenOpens else NameLookup.Opens
             S(Ctx.WildcardElem(id.name, sources, lookup).ref(S(id)))
           case N => candidate.map(_.ref(S(id)))

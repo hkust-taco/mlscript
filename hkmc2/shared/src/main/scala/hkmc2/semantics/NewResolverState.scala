@@ -94,6 +94,9 @@ final class NewResolverState(val owner: Elaborator.State):
   // outlives the reference's block: a later worksheet block can still reveal a
   // namespace, which must be diagnosed against the settled reference.
   private[semantics] val implicitNamespaces = mutable.HashMap.empty[Identity[UnresolvedRef], ImplicitNamespaces]
+  // The declared types whose implicit namespaces each of these references' probes has
+  // observed, with the expansions that name them (see NewResolver.requireTypeNamespaces).
+  private[semantics] val namespaceObservations = mutable.HashSet.empty[(NamespaceProbe, DeclaredType, Ls[AliasExpansion])]
   private[semantics] val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
   private[semantics] val shapeIdentities = mutable.HashMap.empty[ShapeIdentity.View, ShapeIdentity.View]
   private[semantics] val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
@@ -797,6 +800,9 @@ private[semantics] final class ImplicitNamespaces(val scope: SrcScope):
   var fellBack: Bool = false
   /** Whether the reference's block was elaborated, deciding between namespaces and wildcard opens. */
   var settled: Bool = false
+  /** Whether the reference is the head of a constructor pattern, whose namespaces are those of
+    * its scrutinees' types rather than those required of its value (see NewResolver.scrutineeNamespaces). */
+  var scrutinized: Bool = false
 
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"
