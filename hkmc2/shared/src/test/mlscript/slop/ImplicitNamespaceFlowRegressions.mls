@@ -1,0 +1,166 @@
+:.
+#lang(eagerResolution: true)
+
+import "../../mlscript-compile/Option.mls"
+
+
+// Structural aliases have implicit namespaces too. Direct constraints discover
+// their companions, independently of whether the alias describes a tuple,
+// a record, or a function.
+type Pack[T] = [T]
+module Pack with
+  val One = [1]
+type Rec[T] = {value: T}
+module Rec with
+  val One = {value: 2}
+type Func[T] = () -> T
+module Func with
+  fun One() = 3
+fun takePack(x: Pack[Int]) = x.0
+fun takeRec(x: Rec[Int]) = x.value
+fun takeFunc(x: Func[Int]) = x()
+
+:expect [1, 2, 3]
+[takePack(.One), takeRec(.One), takeFunc(.One)]
+//│ = [1, 2, 3]
+
+// FIXME: A probe arriving through the pipe's type parameter loses the required
+// structural alias. Each call should select the same member as its direct form.
+:fixme
+:expect 1
+.One |> takePack
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.One'
+//│ ║  l.+1: 	.One |> takePack
+//│ ║        	^^^^
+//│ ╙── No type with a companion module or object is required of its value.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
+
+:fixme
+:expect 2
+.One |> takeRec
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.One'
+//│ ║  l.+1: 	.One |> takeRec
+//│ ║        	^^^^
+//│ ╙── No type with a companion module or object is required of its value.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+:fixme
+:expect 3
+.One |> takeFunc
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.One'
+//│ ║  l.+1: 	.One |> takeFunc
+//│ ║        	^^^^
+//│ ╙── No type with a companion module or object is required of its value.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+
+// FIXME: When a wildcard open supplies the same name, losing the required
+// namespace silently selects the wrong value instead of reporting a missing name.
+module OtherPacks with
+  val One = [99]
+
+:fixme
+:expect [1, 1]
+fun directPack() =
+  open OtherPacks
+  takePack(One)
+fun pipedPack() =
+  open OtherPacks
+  One |> takePack
+[directPack(), pipedPack()]
+//│ ═══[RUNTIME ERROR] Expected: '[1, 1]', got: '[1, 99]'
+//│ = [1, 99]
+
+
+// A generic function's declared result still denotes its instantiated type.
+fun identity[A](x: A): A = x
+
+// FIXME: The pattern head cannot discover Option through the result's instantiated
+// type parameter, even when the caller explicitly supplies Option[Int].
+:fixme
+:expect 4
+fun explicitPattern(x: Option[Int]) =
+  if identity[Option[Int]](x) is .Some(v) then v else 0
+explicitPattern(Option.Some(4))
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.Some'
+//│ ║  l.+2: 	  if identity[Option[Int]](x) is .Some(v) then v else 0
+//│ ║        	                                 ^^^^^
+//│ ╙── Its scrutinee has no declared type with a companion module or object.
+//│ ═══[RUNTIME ERROR] Expected: '4', got: '0'
+//│ = 0
+
+module Alternative with
+  data class Some[A](value: A)
+
+// FIXME: Both inferred and explicit type arguments should select Option.Some.
+// Falling back to Alternative.Some makes a matching input take the else branch.
+:fixme
+:expect [5, 6]
+fun inferredFallback(x: Option[Int]) =
+  open Alternative
+  if identity(x) is Some(v) then v else 0
+fun explicitFallback(x: Option[Int]) =
+  open Alternative
+  if identity[Option[Int]](x) is Some(v) then v else 0
+[inferredFallback(Option.Some(5)), explicitFallback(Option.Some(6))]
+//│ ═══[RUNTIME ERROR] Expected: '[5, 6]', got: '[0, 0]'
+//│ = [0, 0]
+
+
+class Color(val name: Str)
+module Color with
+  val Red = Color("red")
+
+// FIXME: Once the alias is defined in this block, its argument must determine the
+// namespace just as it does when the alias precedes the call. Deferred alias
+// interpretation currently loses the Color argument of Later[Color].
+:fixme
+:expect "red"
+fun laterAlias(x: Later[Color]) = x.name
+let laterColor = laterAlias(Red)
+type Later[A] = A
+laterColor
+//│ ╔══[COMPILATION ERROR] Name not found: Red
+//│ ║  l.+2: 	let laterColor = laterAlias(Red)
+//│ ╙──      	                            ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '"red"', got: 'undefined'
+//│ laterColor = undefined
+
+:expect "red"
+type Earlier[A] = A
+fun earlierAlias(x: Earlier[Color]) = x.name
+earlierAlias(Red)
+//│ = "red"
+
+
+module Records with
+  val Fields = {a: 7}
+
+// FIXME: Until Fields falls back to the wildcard open, it publishes a namespace
+// probe. A record spread must wait for a value instead of treating that probe as
+// an unknown record and permanently reporting an eager member-resolution error.
+:fixme
+:expect 7
+fun spreadWildcard() =
+  open Records
+  {...Fields}.a
+spreadWildcard()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	  {...Fields}.a
+//│ ║        	   ^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
+//│ ╟── This spread has no known element shape.
+//│ ║  l.+3: 	  {...Fields}.a
+//│ ╙──      	      ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '7', got: 'undefined'
+
+:expect 7
+fun spreadSelective() =
+  open Records { Fields }
+  {...Fields}.a
+spreadSelective()
+//│ = 7
