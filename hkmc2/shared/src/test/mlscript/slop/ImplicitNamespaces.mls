@@ -277,3 +277,25 @@ alt(settled)
 //│ ╟── Implicit namespaces are only taken into account until the block of the reference is resolved.
 //│ ╙── Write 'AltOption.Some' to select it explicitly.
 //│ = 0
+
+
+// Annotations are interpreted when they are elaborated, before flow can reveal
+// implicit namespaces: their names fall back to their wildcard opens immediately.
+module Marks with
+  class Custom(value: Int)
+  object Plain
+
+:w
+fun annotated() =
+  open Marks
+  @Custom(1)
+  fun first() = 1
+  @Plain
+  fun second() = 2
+  first() + second()
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+3: 	  @Custom(1)
+//│ ╙──      	  ^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+5: 	  @Plain
+//│ ╙──      	  ^^^^^^

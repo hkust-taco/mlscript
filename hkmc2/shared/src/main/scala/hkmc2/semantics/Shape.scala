@@ -1062,8 +1062,9 @@ object DynShape:
 
 /** The value of a capitalized reference whose namespace flow is to determine (see
   * NewResolver.unresolvedRef), like the legacy flow analysis's leading-dot producer.
-  * The probe travels along ordinary value edges, and an application or instantiation
-  * of the reference passes it on as its result. When it reaches a declared type,
+  * The probe travels along ordinary value edges, and selections, applications, and
+  * instantiations of the reference pass it on as their result: the reference is the
+  * root of the chain that they form. When it reaches a declared type,
   * the companion module of that type becomes a candidate namespace of the reference
   * (see NewResolver.inferTypeArguments). It is not an actual value: selections and other
   * operations ignore it rather than diagnose it (see NewResolver.listenReceiver). It refers

@@ -540,6 +540,11 @@ object Elaborator:
       * those of `extends` clauses, it can name a member of an implicit namespace, which
       * flow reveals only once its block is resolved (see NewResolver.unresolvedRef). */
     case Instantiated
+    /** The receiver of a selection that denotes a value, unlike the selections of type
+      * and pattern paths. As for a value, the root of such a chain of selections and
+      * applications can name a member of an implicit namespace: the one required of the
+      * result of the chain (see NewResolver.unresolvedRef). Otherwise as Receiver. */
+    case ValueReceiver
     
     /** The interpretation of the elements of a tuple or record with this interpretation.
       * Elements are values, even when their aggregate is a receiver or a class operand.
@@ -822,7 +827,7 @@ end Elaborator
 
 
 import Elaborator.*
-import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe, Instantiated}
+import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe, Instantiated, ValueReceiver}
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
@@ -1473,7 +1478,7 @@ extends Importer:
   private def interpretRef(ref: Term, interp: Interpretation): Term =
     if newResolution then interp match
       case Trm => requireTerm(ref)
-      case Receiver => listenReceiver(ref)(_ => ())
+      case Receiver | ValueReceiver => listenReceiver(ref)(_ => ())
       case Tpe => ref.typeInterpretation = S(typeResolution(ref))
       case _ => ()
     ref
@@ -1560,7 +1565,11 @@ extends Importer:
     def elaborateSelection(tree: Sel): Term =
       // `.class` chooses the class overload before requesting a receiver value.
       // Interpreting C as a receiver first would also select its companion.
-      val preTrm = subterm(tree.prefix, if newResolution && tree.name.name == "class" then Clss else Receiver)
+      val preTrm = subterm(tree.prefix,
+        if newResolution && tree.name.name == "class" then Clss
+        else interp match
+          case Trm | Specialization | Instantiated | ValueReceiver => ValueReceiver
+          case Receiver | Clss | Ptrn | Tpe => Receiver)
       // Virtual modules have no runtime object. Recognize their literal members
       // before constructing a runtime selection, in either resolution mode.
       // Compare symbols so user-defined bindings named `source` or `unsafe` stay ordinary.
@@ -1716,7 +1725,7 @@ extends Importer:
       // The whole type application owns a by-name invocation's binder group.
       // Do not observe its underlying reference before its arguments are available.
       val baseInterp = interp match
-        case Trm | Receiver | Specialization => Specialization
+        case Trm | Receiver | ValueReceiver | Specialization => Specialization
         case _ => interp
       val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map {
         case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
@@ -3320,12 +3329,12 @@ extends Importer:
           case N if newResolution =>
             // New resolution looks the name up in the visible wildcard opens, if any, and
             // reports a missing name once its block is resolved, uniformly. A capitalized
-            // value or instantiated class can also name a member of an implicit namespace
-            // (see NewResolver.unresolvedRef). Patterns, types, and selection receivers
-            // only consult their opens.
+            // value, value receiver, or instantiated class can also name a member of an
+            // implicit namespace (see NewResolver.unresolvedRef). Patterns, types, and
+            // their paths only consult their opens.
             val sources = candidate.collect { case wildcard: Ctx.WildcardElem => wildcard.sources }.getOrElse(Nil)
             val implicitNamespacing = id.name.isCapitalized && (interp match
-              case Trm | Specialization | Instantiated => true
+              case Trm | Specialization | Instantiated | ValueReceiver => true
               case Receiver | Clss | Ptrn | Tpe => false)
             S(Ctx.WildcardElem(id.name, sources, implicitNamespacing).ref(S(id)))
           case N => candidate.map(_.ref(S(id)))

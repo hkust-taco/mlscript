@@ -77,12 +77,6 @@ pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 //│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.+1: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 //│ ╙──      	                                                        ^
-//│ ╔══[COMPILATION ERROR] This selection of member 'toString' has no resolved target
-//│ ║  l.+1: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
-//│ ╙──      	                                                        ^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'toString' has no resolved target
-//│ ║  l.+1: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
-//│ ╙──      	                                                        ^^^^^^^^^^
 
 :ucs ups
 pattern Negated = ~(Int | Str)

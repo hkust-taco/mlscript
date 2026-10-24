@@ -1753,12 +1753,14 @@ get(Some(1)) // selects Option.Some
 get(None)    // selects Option.None
 ```
 
-This applies to values, including applied ones such as `Some(1)`, and to the
-classes instantiated by `new`. The namespace required of the result of `Some(1)`
-is that of `Some`, but selections do not pass it on: in `f(Red.lighter)`, `Red`
-does not name a member of the namespace that `f` requires. Patterns, types,
-selection receivers, and `extends` clauses only consult explicit bindings and
-wildcard opens.
+This applies to values and to the classes instantiated by `new`. As in Swift's
+implicit member chains, such a name can also be the root of a chain of selections
+and applications; the type required of the result of the chain determines the
+namespace. For instance, `Some` in `get(Some(1))`, `Red` in `paint(Red.lighter)`,
+and `Hex` in `paint(Hex("f00").lighter)` name members of the namespaces of the
+parameter types of `get` and `paint`. Patterns, types, the selection paths in
+them, and `extends` clauses only consult explicit bindings and wildcard opens.
+So do annotations, which are interpreted as soon as they are elaborated.
 
 Implicit namespaces take precedence over wildcard opens, but not over explicit
 bindings, including selective opens such as `open AltOption { Some }`. A name

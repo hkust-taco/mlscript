@@ -1,11 +1,10 @@
 :.
 
 
-// TODO: As in Swift's implicit member chains, a capitalized name could start a chain
-// of selections and applications whose result has the required type, selecting the
-// name in the implicit namespace of that type. Currently, only applications and
-// instantiations pass on the namespace that flow requires of their result
-// (see ImplicitNamespaces.mls), as `Some(1)` does.
+// A capitalized name without an explicit binding can be the root of a chain of
+// selections and applications. As in Swift's implicit member chains, it then names
+// a member of the implicit namespace of the type required of the result of the
+// chain (see ImplicitNamespaces.mls).
 
 class Color(val name: Str) with
   fun lighter = Color("light " + name)
@@ -13,27 +12,56 @@ class Color(val name: Str) with
 module Color with
   val Red = Color("red")
   val Blue = Color("blue")
+  fun Hex(code: Str) = Color("#" + code)
+  class Custom(n: Str) extends Color(n)
+  module Palette with
+    val Dark = Color("dark")
 fun paint(c: Color) = c.name
 
-:todo
+:expect "light red"
 paint(Red.lighter)
+//│ = "light red"
+
+// The arguments of the chain have namespaces of their own.
+:expect "red-blue"
+paint(Red.mix(Blue))
+//│ = "red-blue"
+
+// Chains can start with applications and instantiations, and continue through bindings.
+:expect ["light #f00", "light teal"]
+let hex = Hex("f00").lighter
+[paint(hex), paint(new Custom("teal").lighter)]
+//│ = ["light #f00", "light teal"]
+//│ hex = Color("light #f00")
+
+// The root can name a nested module of the namespace.
+:expect "light dark"
+paint(Palette.Dark.lighter)
+//│ = "light dark"
+
+// The namespace is the one required of the result of the whole chain, not of its root.
+fun shout(s: Str) = s + "!"
+
+:e
+shout(Red.name)
 //│ ╔══[COMPILATION ERROR] Name not found: Red
-//│ ║  l.+1: 	paint(Red.lighter)
+//│ ║  l.+1: 	shout(Red.name)
 //│ ╙──      	      ^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'lighter' has no resolved target
-//│ ║  l.+1: 	paint(Red.lighter)
-//│ ╙──      	      ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:todo
-paint(Red.mix(Blue))
-//│ ╔══[COMPILATION ERROR] Name not found: Red
-//│ ║  l.+1: 	paint(Red.mix(Blue))
-//│ ╙──      	      ^^^
-//│ ╔══[COMPILATION ERROR] Name not found: Blue
-//│ ║  l.+1: 	paint(Red.mix(Blue))
-//│ ╙──      	              ^^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'mix' has no resolved target
-//│ ║  l.+1: 	paint(Red.mix(Blue))
-//│ ╙──      	      ^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+// Implicit namespaces take precedence over wildcard opens, which supply the roots of
+// chains without namespaces.
+module Reds with
+  val Red = Color("crimson")
+
+fun viaNamespace() =
+  open Reds
+  paint(Red.lighter)
+
+fun viaOpen() =
+  open Reds
+  Red.name
+
+:expect ["light red", "crimson"]
+[viaNamespace(), viaOpen()]
+//│ = ["light red", "crimson"]

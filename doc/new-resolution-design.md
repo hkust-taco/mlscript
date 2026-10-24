@@ -270,9 +270,11 @@ User-facing rules are in the [language reference](reference.md#implicit-namespac
 An unbound capitalized value is an `UnresolvedRef` with `implicitNamespacing`. Until
 its block is settled, it publishes only a `NamespaceProbe`, like the legacy flow
 analysis's leading-dot producer. The probe travels along ordinary value edges and
-through applications and instantiations of the reference, but not through
-selections. It is not a value: member lookups ignore it, as do patterns, class
-operands, interface exposure, and call checks. `inferTypeArguments` detects a probe
+through the selections, applications, and instantiations of the chains rooted at the
+reference; elaboration gives the receivers of value selections the `ValueReceiver`
+interpretation, unlike the paths of types and patterns. The probe is not a value:
+member lookups ignore it, as do patterns, class operands, interface exposure, and
+call checks. `inferTypeArguments` detects a probe
 reaching a class or type alias, directly or as the view of a type variable, and
 adds the companion's member as a candidate through `AccessPath.valuePath`. That
 path carries the same `Capture`s as a written reference.
@@ -284,7 +286,8 @@ constraint cache. Interned formula atoms drop them.
 
 `settleUnboundReferences` runs before interface exposure and block completion. It
 lets capitalized references without namespaces fall back to their wildcard opens
-in source order, then diagnoses missing and ambiguous names. Namespaces revealed
+in source order, then diagnoses missing and ambiguous names. Annotation paths need
+their symbols during elaboration, so their roots fall back immediately. Namespaces revealed
 afterwards are reported against the settled candidates and never change them.
-`slop/ImplicitNamespaces.mls` covers these rules. Patterns and selection chains are
-deferred (`slop/ImplicitNamespacePatterns.mls`, `ImplicitNamespaceChains.mls`).
+`slop/ImplicitNamespaces.mls` and `ImplicitNamespaceChains.mls` cover these rules.
+Patterns are deferred (`slop/ImplicitNamespacePatterns.mls`).

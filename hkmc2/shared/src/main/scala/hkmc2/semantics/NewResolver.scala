@@ -3482,7 +3482,9 @@ class NewResolver:
     * A capitalized value (`ref.implicitNamespacing`) can also name a member of an implicit
     * namespace: the companion module of a type that flow requires of its value. For example,
     * where a parameter has type `Option[Int]`, an argument `Some(1)` selects `Option.Some`
-    * if `Some` has no explicit binding. Such namespaces take precedence over wildcard opens,
+    * if `Some` has no explicit binding. The reference can also be the root of a chain of
+    * selections and applications, such as `Red.lighter` or `Hex("f00").lighter`, whose
+    * result determines the namespace. Such namespaces take precedence over wildcard opens,
     * so the opens of these references are only consulted once the rest of their block is
     * resolved, and only if no namespace was found. Until then, the reference only publishes
     * its NamespaceProbe, whose arrival at declared types reveals the namespaces (see
@@ -3603,6 +3605,21 @@ class NewResolver:
           source = Diagnostic.Source.Compilation))
       case _ => ()
 
+  /** Let `ref` fall back to its wildcard opens if no implicit namespace supplied a candidate. */
+  private def fallBack(ref: UnresolvedRef, namespaces: ImplicitNamespaces)(using ResolutionContext): Unit =
+    if !namespaces.fellBack && ref.resolvedMembers.isEmpty && ref.prefixes.nonEmpty then
+      namespaces.fellBack = true
+      ref.prefixes.foreach(resolveThrough(ref, _, namespaces.scope))
+
+  /** Annotations are interpreted when they are elaborated (see annotationSymbol), before
+    * flow could reveal the implicit namespace of the root of their path, which therefore
+    * falls back to its wildcard opens immediately. Its block still diagnoses it. */
+  private def fallBackNow(path: Term)(using ResolutionContext): Unit = path.withoutCaptures match
+    case sel: NewSel => fallBackNow(sel.prefix)
+    case ref: UnresolvedRef => rctx.state.implicitNamespaces.get(new Identity(ref)).foreach: namespaces =>
+      if !namespaces.settled then fallBack(ref, namespaces)
+    case _ => ()
+
   /** Settle the references without explicit bindings of the block just elaborated, then
     * diagnose them. A capitalized reference without an implicit namespace now falls back to
     * its wildcard opens. This happens in source order, as the candidates of one reference
@@ -3614,12 +3631,8 @@ class NewResolver:
   def settleUnboundReferences()(using ResolutionContext): Unit =
     val pending = rctx.state.unboundReferences.toList
     rctx.state.unboundReferences.clear()
-    pending.foreach: (key, scope) =>
-      val ref = key.value
-      rctx.state.implicitNamespaces.get(key).foreach: namespaces =>
-        if ref.resolvedMembers.isEmpty && ref.prefixes.nonEmpty then
-          namespaces.fellBack = true
-          ref.prefixes.foreach(resolveThrough(ref, _, scope))
+    pending.foreach: (key, _) =>
+      rctx.state.implicitNamespaces.get(key).foreach(fallBack(key.value, _))
     pending.foreach: (key, _) =>
       val ref = key.value
       val name = ref.id.name
@@ -3821,9 +3834,14 @@ class NewResolver:
           case shape =>
             member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
         })
-      case N => listenReceiver(sel.prefix): shape =>
-        log(dbg"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-        member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
+      case N =>
+        def select(shape: TermShape)(using ResolutionContext): Unit =
+          log(dbg"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
+          member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
+        // A selection passes on the probe of its receiver, as an application does (see
+        // applyShape): in `paint(Red.lighter)`, the namespace of the root `Red` of the chain
+        // is the one that `paint` requires of the result of the chain.
+        listenReceiverOrProbe(sel.prefix)(select, probe => publishActivated(sel, probe))
       case S(cls) =>
         classSelection(cls)(ref =>
           val cd = ref.definition
@@ -3838,26 +3856,29 @@ class NewResolver:
                 bms.onComplete: () =>
                   bms.asModOrObj.orElse(bms.asTrm).orElse(bms.asCls).foreach: sym =>
                     rctx.recordResolution(sel, sel.resolvedTargets.contains(sym))(sel.resolvedTargets ::= sym)
-                listenTermViews(sel.prefix): receiver =>
-                  val selected = receiver match
-                    case Marked(nominal: NominalInstanceView, context) =>
-                      nominal.ancestor(cd) match
-                        case S(view) => visible(view.getMember(sel.id.name)).withAnnotation(nominal.annotation).withMarks(context :: Nil)
-                        case N =>
-                          // An explicit projection can name a narrower class, but
-                          // it cannot recover that class's implementation arguments.
+                listenTermViews(sel.prefix):
+                  // Projections pass on probes like other selections (see the case above).
+                  case probe @ Marked(_: NamespaceProbe, _) => publishActivated(sel, probe)
+                  case receiver =>
+                    val selected = receiver match
+                      case Marked(nominal: NominalInstanceView, context) =>
+                        nominal.ancestor(cd) match
+                          case S(view) => visible(view.getMember(sel.id.name)).withAnnotation(nominal.annotation).withMarks(context :: Nil)
+                          case N =>
+                            // An explicit projection can name a narrower class, but
+                            // it cannot recover that class's implementation arguments.
+                            val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
+                            MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
+                      case _ =>
+                        // C# selects a declaration, not an instance of C. Transport
+                        // the member through the actual receiver, never the qualifier.
+                        projectedMember(receiver, cd, sel.id.name).map(visible).getOrElse:
+                          // Without a path into this class, only its declared
+                          // interface is available; qualifier values add no evidence.
                           val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
-                          MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap, context :: Nil, nominal.annotation, true)
-                    case _ =>
-                      // C# selects a declaration, not an instance of C. Transport
-                      // the member through the actual receiver, never the qualifier.
-                      projectedMember(receiver, cd, sel.id.name).map(visible).getOrElse:
-                        // Without a path into this class, only its declared
-                        // interface is available; qualifier values add no evidence.
-                        val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
-                        MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap,
-                          declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
-                  member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty)
+                          MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap,
+                            declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
+                    member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty)
               case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty))
         , {
           case Marked(_: NamespaceProbe, _) => () // Not a value; see NamespaceProbe.
@@ -4305,6 +4326,7 @@ class NewResolver:
       def fail()(using ResolutionContext): Unit = if !failed then
         failed = true
         resolError(trm, msg"An annotation's main symbol must be uniquely known when the annotation is elaborated." -> N :: Nil)
+      fallBackNow(trm)
       // This listener validates an elaboration decision; it transports no values.
       // Keep checking late candidates in the defining block, but never mutate its
       // local bookkeeping when a completed block's listeners run in a consumer.
@@ -4312,6 +4334,7 @@ class NewResolver:
         if rctx.canResolve(trm) then shape match
           case sh: SymShape =>
             if symbols.add(sh.sym) && !collecting then fail()
+          case Marked(_: NamespaceProbe, _) => () // Flow cannot decide this name in time.
           case _ => fail()
       collecting = false
       symbols.toList match
@@ -4482,11 +4505,14 @@ class NewResolver:
     log(dbg"listenTerm: trm = ${trm.showDbg}")
     listenValue(trm, false)(listener)
 
-  /** Selections do not pass on namespace probes (see NamespaceProbe): in `Some(1).value`,
-    * the namespace of `Some` is not the one required of the selected member. */
+  /** Member lookups only receive actual values. A namespace probe (see NamespaceProbe) has no
+    * members: wildcard opens ignore it, and selections pass it on (see newSel). */
   def listenReceiver(trm: Term)(listener: Listener)(using ResolutionContext): Unit =
+    listenReceiverOrProbe(trm)(listener, _ => ())
+
+  private def listenReceiverOrProbe(trm: Term)(listener: Listener, probe: Listener)(using ResolutionContext): Unit =
     listenValue(trm, true):
-      case Marked(_: NamespaceProbe, _) => ()
+      case value @ Marked(_: NamespaceProbe, _) => probe(value)
       case shape => listenInstanceViews(shape)(listener)
 
   private def listenValue(trm: Term, receiver: Bool)(listener: Listener)(using ResolutionContext): Unit = trm match
