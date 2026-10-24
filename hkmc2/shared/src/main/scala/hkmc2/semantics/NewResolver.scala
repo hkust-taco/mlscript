@@ -622,7 +622,8 @@ class NewResolver:
                   // Omitted formals use the same source holes as deferred
                   // interpretation. Retaining a partial forwarding application
                   // would nest its environment at each recursive projection.
-                  S(loop(rhs, aliasBindings(base, supplied, parameters, positive), aliases + symbol, positive))
+                  S(loop(rhs, aliasBindings(base, supplied, parameters, positive), aliases + symbol, positive)
+                    .withExpandedAlias(symbol, resolution.source))
               case TypeShape.Contextual(reference) :: Nil =>
                 // Use exactly the interpreter's application rule: move caller
                 // arguments to the template endpoint, substitute there, then
@@ -673,14 +674,18 @@ class NewResolver:
         typeFormula(reference.tpe.instantiate(tpe.instances).withOrigin(tpe.origin)).map(transportType(_, reference.marks))
       case TypeShape.Top :: Nil => TypeFormula.top
       case TypeShape.Bottom :: Nil => TypeFormula.bottom
-      case _ => TypeFormula.atom(tpe)
+      // Formulas are interned, so their atoms must not retain the expansions of one
+      // observation; combinedType attaches its operands' expansions to its result.
+      case _ => TypeFormula.atom(tpe.withoutExpansions)
 
   private def combinedType(source: TypeResolution, left: DeclaredType, right: DeclaredType, union: Bool)
       (using ResolutionContext): DeclaredType =
     val lhs = typeFormula(left)
     val rhs = typeFormula(right)
     val formula = if union then lhs.union(rhs) else lhs.intersection(rhs)
-    if formula.clauses.isEmpty then extremeType(false)
+    // Each operand can name the combination's implicit namespaces (see unresolvedRef).
+    val expansions = left.expansions ::: right.expansions
+    (if formula.clauses.isEmpty then extremeType(false)
     else if formula.clauses.contains(Set.empty) then
       // A top operand can explain a top result after Boolean normalization has
       // erased its atom. Do not blame an opaque operand when a union/intersection
@@ -693,7 +698,7 @@ class NewResolver:
       val resolution = new TypeResolution(source.source, source.fail)
       resolution.publish(TypeShape.Combined(formula))
       DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
-    })
+    })).withExpansions(expansions)
 
   private def declaredType(resolution: TypeResolution, context: DeclaredType)(using ResolutionContext): DeclaredType =
     declaredType(resolution, context.bindings, context.positive).instantiate(context.instances).withOrigin(context.origin)
@@ -1045,7 +1050,7 @@ class NewResolver:
               params.mapTypes(instantiate)
             , callable.result.map(instantiate), scheme, callable.supplied, callable.declaration, callable.asyncResult)
         case literal: IntroShape if !literal.trm.isInstanceOf[Lam] => literal
-        case _: (UnknownValueShape | DynShape | OpaqueTypeShape | ErrShape) => source
+        case _: (UnknownValueShape | DynShape | OpaqueTypeShape | ErrShape | NamespaceProbe) => source
         case source: ContextualSource => contextualView(source, source, TypeSubstitution.empty, instances)
       if instantiated eq source then value else marks match
         case NoMarks => instantiated
@@ -1166,7 +1171,7 @@ class NewResolver:
   private def shapeDependencies(shape: TermShape)(using ResolutionContext): Binders = shape match
     case MarkedShape(inner, _) => shapeDependencies(inner)
     case contextual: ContextualShape => shapeDependencies(contextual.source)
-    case _: (UnknownValueShape | DynShape | OpaqueTypeShape | ErrShape) => S(Set.empty)
+    case _: (UnknownValueShape | DynShape | OpaqueTypeShape | ErrShape | NamespaceProbe) => S(Set.empty)
     case rigid: RigidTypeShape => S(Set(rigid.parameter))
     case intro: IntroShape => intro.trm match
       case lam: Lam => lexicalBinders(lam)
@@ -1720,7 +1725,8 @@ class NewResolver:
     */
   private[semantics] def transportType(bound: DeclaredType, marks: Ls[Marks])(using ResolutionContext): DeclaredType =
     val (base, previous) = bound.resolution.currentShapes.toList match
-      case TypeShape.Contextual(reference) :: Nil => (reference.tpe.instantiate(bound.instances).withOrigin(bound.origin), reference.marks)
+      case TypeShape.Contextual(reference) :: Nil =>
+        (reference.tpe.instantiate(bound.instances).withOrigin(bound.origin).withExpansions(bound.expansions), reference.marks)
       case _ => (bound, Nil)
     softAssert(!base.resolution.currentShapes.exists:
       case TypeShape.Contextual(_) => true
@@ -1739,7 +1745,7 @@ class NewResolver:
             val resolution = new TypeResolution(base.resolution.source, base.resolution.fail)
             resolution.publish(TypeShape.Contextual(reference))
             declaredType(resolution, Map.empty)
-          }).withOrigin(base.origin)
+          }).withOrigin(base.origin).withExpansions(base.expansions)
         case NoShape => extremeType(false)
 
   private def inverseMarks(marks: Ls[Marks])(using ResolutionContext): Ls[Marks] =
@@ -1951,12 +1957,41 @@ class NewResolver:
   // reporting provenance does not multiply identical edges in the inference graph.
   private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks],
       site: Opt[Term])(using ResolutionContext): Unit =
+    // The written annotation, rather than the body of an alias it applies.
+    val annotation = tpe.writtenSource
+    // A probe stands for a value not known yet (see NamespaceProbe). Like any value, it
+    // reaches type parameters and inference holes; the classes and aliases that it
+    // reaches name its implicit namespaces. It has no structure to constrain.
+    val probe = value.applicationHead._1 match
+      case probe: NamespaceProbe => S(probe)
+      case _ => N
+    // A probe can also reach the type as a view of a type variable: in `Some(1) |> Wrap`,
+    // the parameter of `Wrap` receives the views of the first parameter type of `|>`.
+    // Only observe these views for types that have a namespace.
+    def requireNamespaceOf(definition: Definition, written: Term)(using ResolutionContext): Unit =
+      namespaceOf(definition).foreach: module =>
+        probe match
+          case S(probe) => requireNamespace(probe, module, written)
+          case N => value match
+            case Marked(_: InstanceShape, _) => listenConstraintViews(value):
+              case Marked(probe: NamespaceProbe, _) => requireNamespace(probe, module, written)
+              case _ => ()
+            case _ => ()
+    // Normalization expands applied aliases, such as `Option[Int]`, so that following
+    // a type does not reach them; the type retains them as its expansions instead.
+    // Types are compared without their expansions, so check a probe against them
+    // before the constraint cache, which an equal type with other expansions may
+    // have filled. Other values subscribe to views, which must happen once.
+    def requireExpandedNamespaces(tpe: DeclaredType)(using ResolutionContext): Unit =
+      tpe.expansions.foreach(expansion => expansion.alias.defn.foreach(requireNamespaceOf(_, expansion.application)))
+    if probe.nonEmpty then requireExpandedNamespaces(tpe)
     if !rctx.addTypeConstraint(tpe, value, marks) then return
-    val annotation = tpe.resolution.source
+    if probe.isEmpty then requireExpandedNamespaces(tpe)
     def follow(tpe: DeclaredType, args: TypeApplication, captures: Ls[Marks],
         seen: Set[TypeResolution])(using ResolutionContext): Unit = if !seen(tpe.resolution) then
       val next = seen + tpe.resolution
-      def observe(listener: Listener)(using ResolutionContext): Unit =
+      requireExpandedNamespaces(tpe)
+      def observe(listener: Listener)(using ResolutionContext): Unit = if probe.isEmpty then
         listenConstraintViews(value): actual =>
           actual.enter(captures) match
             case actual: TermShape => listener(actual)
@@ -1988,7 +2023,9 @@ class NewResolver:
         case TypeShape.Applied(base, params) =>
           follow(declaredType(base, tpe), typeApplication(params, tpe), captures, next)
         case TypeShape.Alias(symbol, S(rhs)) =>
+          symbol.defn.foreach(requireNamespaceOf(_, annotation))
           follow(declaredType(rhs, aliasBindings(tpe, args, symbol.defn.get.tparams, tpe.positive), tpe.positive), noTypeArguments, captures, next)
+        case TypeShape.Alias(symbol, N) if probe.nonEmpty => symbol.defn.foreach(requireNamespaceOf(_, annotation))
         case TypeShape.Hole(host) => value.enter(captures) match
           case value: TermShape => host.publish(value)
           case NoShape => ()
@@ -2014,7 +2051,12 @@ class NewResolver:
         case TypeShape.SelectedArgument(argument, positive) =>
           listenArgumentParts(argument.instantiate(tpe.instances)): parts =>
             follow(if positive then parts.output else parts.input, args, captures, next)
+        case TypeShape.Nominal(cls) if probe.nonEmpty => requireNamespaceOf(cls, annotation)
         case TypeShape.Nominal(cls) => listenConstraintViews(value): value =>
+          // A probe can reach the class as the view of a type variable (see requireNamespaceOf).
+          value match
+            case Marked(probe: NamespaceProbe, _) => namespaceOf(cls).foreach(requireNamespace(probe, _, annotation))
+            case _ => ()
           // Erasing a callback's signature must not erase the obligation to
           // check its implementation. Its unannotated inputs can receive any
           // value, independently of the calls observed through Function.
@@ -2526,6 +2568,7 @@ class NewResolver:
     listenTermViews(prefix): receiver =>
       if !listenArrayElements(receiver)(listener) then receiver match
         case Marked(_: DynShape, _) => listener(receiver)
+        case Marked(_: NamespaceProbe, _) => () // Not a value; see NamespaceProbe.
         case Marked(unknown: UnknownValueShape, marks) =>
           UnknownValueShape(sel, unknown.fromPublicInterface)(unknown.provenance.via(msg"This array index has no known element shape." -> sel.toLoc))
             .exit(marks) match
@@ -2806,9 +2849,11 @@ class NewResolver:
       else
         rctx.recordResolution(res, false)(res.resolvedTargets ::= sym)
         true
-    def reject(sh: TermShape)(using ResolutionContext): Unit =
-      rctx.markError(res)
-      resolError(res, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a constructor pattern."))
+    def reject(sh: TermShape)(using ResolutionContext): Unit = sh match
+      case Marked(_: NamespaceProbe, _) => () // Not a value; see NamespaceProbe.
+      case _ =>
+        rctx.markError(res)
+        resolError(res, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a constructor pattern."))
     def classPattern(cls: ClassDef | ModuleOrObjectDef)(using ResolutionContext): Unit = if select(cls.sym) then
       val assoc = res.arguments match
         case N => Nil
@@ -3240,6 +3285,12 @@ class NewResolver:
         if checked then res.callableTargets.currentShapes.add(source)
         publish(lhs)
         return
+      // Applying a reference whose namespace flow is to determine produces the value whose
+      // type determines it: in `Some(1)`, the namespace is the one required of the result.
+      // The probe is not a callable target, so it neither satisfies nor fails the call's checks.
+      case Marked(_: NamespaceProbe, _) =>
+        publish(lhs)
+        return
       case _ => ()
     lhs match
       case Marked(nominal: NominalInstanceView, _) if nominal.isInstanceOfClass(prelude.builtins.Function.defn.get) =>
@@ -3423,42 +3474,177 @@ class NewResolver:
         resolError(host, provenance.diagnostic(message, N))
       case _ => ()
 
-  /** Like for imports in Scala, wildcard opens do not provide the members that are inaccessible
-    * from `scope`, where `ref` is written: another opened definition may provide an accessible member.
+  /** A name without an explicit binding is looked up in the wildcard opens visible where it is
+    * written, in `scope`. Like for imports in Scala, wildcard opens do not provide the members
+    * that are inaccessible from `scope`: another opened definition may provide an accessible member.
+    * The reference is diagnosed once the rest of its block is resolved (see settleUnboundReferences).
+    *
+    * A capitalized value (`ref.implicitNamespacing`) can also name a member of an implicit
+    * namespace: the companion module of a type that flow requires of its value. For example,
+    * where a parameter has type `Option[Int]`, an argument `Some(1)` selects `Option.Some`
+    * if `Some` has no explicit binding. Such namespaces take precedence over wildcard opens,
+    * so the opens of these references are only consulted once the rest of their block is
+    * resolved, and only if no namespace was found. Until then, the reference only publishes
+    * its NamespaceProbe, whose arrival at declared types reveals the namespaces (see
+    * requireNamespace).
     */
   def unresolvedRef(ref: UnresolvedRef, scope: SrcScope)(using ResolutionContext): Unit =
-    ref.prefixes.foreach: prefix =>
-      listenReceiver(prefix): shape =>
-        def member(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
-          case MemberLookup.All(members) => members.foreach(member(_, instances))
-          case MemberLookup.Contextual(source, substitution) => member(source, instances.withOverrides(substitution))
-          case MemberLookup.Found(member, marks) if rctx.canResolve(ref) || ref.resolvedMembers.contains(prefix -> member.memberSymbol) =>
-            val candidate = prefix -> member.memberSymbol
-            rctx.recordResolution(ref, ref.resolvedMembers.contains(candidate))(ref.resolvedMembers ::= candidate)
-            publishMember(ref, member, ref.resSym, marks, instances)
-          case MemberLookup.Declared(member, bindings, marks, annotation, positive) if rctx.canResolve(ref) || ref.resolvedMembers.contains(prefix -> member) =>
-            val candidate = prefix -> member
-            rctx.recordResolution(ref, ref.resolvedMembers.contains(candidate))(ref.resolvedMembers ::= candidate)
-            publishDeclared(ref, member, ref.resSym, bindings, marks, annotation, positive, instances)
-          case MemberLookup.Typed(field, tpe, marks) if rctx.canResolve(ref) || ref.resolvedMembers.contains(prefix -> field.sym) =>
-            val candidate = prefix -> field.sym
-            rctx.recordResolution(ref, ref.resolvedMembers.contains(candidate))(ref.resolvedMembers ::= candidate)
-            publishTyped(ref, field, tpe, marks, instances)
-          case MemberLookup.Indexed(_, _) if rctx.canResolve(ref) =>
-            resolError(ref, msg"Tuple elements must be selected by index." -> ref.toLoc :: Nil)
-          case MemberLookup.Dynamic(marks) if rctx.canResolve(ref) || ref.dynamicPrefixes.contains(prefix) =>
-            rctx.recordResolution(ref, ref.dynamicPrefixes.contains(prefix))(ref.dynamicPrefixes ::= prefix)
-            publishDynamic(ref, marks)
-          case MemberLookup.Missing =>
-            // A known miss in one wildcard source is not an error: another may
-            // provide the name. Lowering diagnoses references with no candidates.
-            ()
-          case MemberLookup.Unknown(reason, fromPublicInterface, provenance) =>
-            unknownMember(ref, ref.id.name, reason, fromPublicInterface, provenance)
+    rctx.state.unboundReferences(new Identity(ref)) = scope
+    if ref.implicitNamespacing then
+      rctx.state.implicitNamespaces(new Identity(ref)) = ImplicitNamespaces(scope)
+      publishActivated(ref, ref.namespaceProbe)
+    else ref.prefixes.foreach(resolveThrough(ref, _, scope))
 
-          case _ => () // Completed references only route their selected members.
-        member(shape.getMember(ref.id.name).visibleFrom(scope.canAccessPrivatesOf, reportInaccessible = false),
-          TypeSubstitution.empty)
+  /** Look up the name of `ref`, written in `scope`, as a member of `prefix`: a wildcard open
+    * or an implicit namespace. A namespace is a module, whose members are shared by all paths
+    * to it; a member that `ref` already selects through another prefix is not another candidate.
+    */
+  private def resolveThrough(ref: UnresolvedRef, prefix: Term, scope: SrcScope)(using ResolutionContext): Unit =
+    def isNamespace(receiver: Term): Bool = ref.namespacePrefixes.exists(_ is receiver)
+    // Completed references only route the flows of their selected candidates.
+    def record(member: BlockMemberSymbol)(publish: => Unit)(using ResolutionContext): Unit =
+      val candidate = prefix -> member
+      def shared = ref.resolvedMembers.exists: (receiver, selected) =>
+        (selected is member) && (isNamespace(receiver) || isNamespace(prefix))
+      if ref.resolvedMembers.contains(candidate) then publish
+      else if rctx.canResolve(ref) && !shared then
+        rctx.recordResolution(ref, false)(ref.resolvedMembers ::= candidate)
+        publish
+    listenReceiver(prefix): shape =>
+      def member(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
+        case MemberLookup.All(members) => members.foreach(member(_, instances))
+        case MemberLookup.Contextual(source, substitution) => member(source, instances.withOverrides(substitution))
+        case MemberLookup.Found(member, marks) =>
+          record(member.memberSymbol)(publishMember(ref, member, ref.resSym, marks, instances))
+        case MemberLookup.Declared(member, bindings, marks, annotation, positive) =>
+          record(member)(publishDeclared(ref, member, ref.resSym, bindings, marks, annotation, positive, instances))
+        case MemberLookup.Typed(field, tpe, marks) =>
+          record(field.sym)(publishTyped(ref, field, tpe, marks, instances))
+        case MemberLookup.Indexed(_, _) if rctx.canResolve(ref) =>
+          resolError(ref, msg"Tuple elements must be selected by index." -> ref.toLoc :: Nil)
+        case MemberLookup.Dynamic(marks) if rctx.canResolve(ref) || ref.dynamicPrefixes.contains(prefix) =>
+          rctx.recordResolution(ref, ref.dynamicPrefixes.contains(prefix))(ref.dynamicPrefixes ::= prefix)
+          publishDynamic(ref, marks)
+        case MemberLookup.Missing =>
+          // A known miss in one wildcard source is not an error: another may provide
+          // the name. Settlement diagnoses references with no candidates.
+          ()
+        case MemberLookup.Unknown(reason, fromPublicInterface, provenance) =>
+          unknownMember(ref, ref.id.name, reason, fromPublicInterface, provenance)
+
+        case _ => () // Completed references only route their selected members.
+      member(shape.getMember(ref.id.name).visibleFrom(scope.canAccessPrivatesOf, reportInaccessible = false),
+        TypeSubstitution.empty)
+
+  /** The implicit namespace of the values of a declared type: the companion module or object
+    * of its class or type alias (see unresolvedRef). */
+  private def namespaceOf(definition: Definition): Opt[ModuleOrObjectSymbol] = definition match
+    case cls: ClassDef => cls.bsym.asModOrObj
+    case alias: TypeDef => alias.bsym.asModOrObj
+    case _ => N
+
+  /** Flow requires the value of `probe.ref` to have the type written in `annotation`, of which
+    * `module` is the implicit namespace. Until the reference is settled, the member of `module`
+    * with its name becomes a candidate, reached through a path recovered in the reference's
+    * scope. Later, the namespace can only be diagnosed (see lateNamespace).
+    */
+  private def requireNamespace(probe: NamespaceProbe, module: ModuleOrObjectSymbol, annotation: Term)(using ResolutionContext): Unit =
+    // Imported graphs can carry the probes of other units' references to this
+    // unit's types. Those units settled their references by themselves.
+    rctx.state.implicitNamespaces.get(new Identity(probe.ref)).foreach: namespaces =>
+      if !namespaces.required.contains(module) then
+        namespaces.required(module) = annotation
+        val base = rctx.state.context
+        // The reference's candidates do not depend on the activation in which flow
+        // reached the annotation. A module declared later in the block has no path yet.
+        def required(definition: ModuleOrObjectDef): Unit =
+          addNamespace(probe.ref, namespaces, module, definition)(using base)
+        module.defn match
+          case S(definition) => required(definition)
+          case N => module.defnListeners += required
+
+  private def addNamespace(ref: UnresolvedRef, namespaces: ImplicitNamespaces, module: ModuleOrObjectSymbol,
+      definition: ModuleOrObjectDef)(using ResolutionContext): Unit =
+    val resolved = ref.resolvedMembers.nonEmpty || ref.dynamicPrefixes.nonEmpty
+    if namespaces.settled || namespaces.fellBack && resolved then lateNamespace(ref, namespaces, module, definition)
+    else AccessPath.valuePath(namespaces.scope, module, lexicalBinders(ref).getOrElse(Set.empty))(using rctx.owner, this, rctx) match
+      case R(path) =>
+        namespaces.paths(module) = path
+        rctx.recordResolution(ref, false)(ref.namespacePrefixes ::= path)
+        resolveThrough(ref, path, namespaces.scope)
+      case L(_) => namespaces.inaccessible += module
+
+  /** A namespace found after `ref` fell back to its wildcard opens, or after it was settled,
+    * cannot change its candidates: other code already depends on them. If the namespace defines
+    * another member with the reference's name, report that this member would have been
+    * selected, had flow revealed the namespace in time.
+    */
+  private def lateNamespace(ref: UnresolvedRef, namespaces: ImplicitNamespaces, module: ModuleOrObjectSymbol,
+      definition: ModuleOrObjectDef)(using ResolutionContext): Unit =
+    val name = ref.id.name
+    val lookup = MemberLookup.inClass(definition, N, name).visibleFrom(namespaces.scope.canAccessPrivatesOf, reportInaccessible = false)
+    lookup match
+      case MemberLookup.Found(member, _) if !rctx.hasError(ref) && !ref.resolvedMembers.exists(_._2 is member.memberSymbol) =>
+        rctx.markError(ref)
+        val candidates = ref.resolvedMembers.reverse.map: (prefix, _) =>
+          namespaces.paths.collectFirst { case (namespace, path) if path is prefix => namespace } match
+            case S(namespace) =>
+              msg"It was resolved to '${namespace.nme}.${name}', selected by this type." -> namespaces.required(namespace).toLoc
+            case N => msg"It was resolved to the '${name}' of this wildcard open." -> prefix.toLoc
+        val reason =
+          if namespaces.fellBack then
+            msg"Wildcard opens only supply a capitalized name if no implicit namespace is known for it once the rest of its block is resolved."
+          else msg"Implicit namespaces are only taken into account until the block of the reference is resolved."
+        rctx.report(ErrorReport(
+          msg"Reference '${name}' was resolved before flow revealed its implicit namespace ${module.describeKind} '${module.nme}'." -> ref.toLoc ::
+            msg"Its value is required to have this type, which would have selected '${module.nme}.${name}'." ->
+              namespaces.required(module).toLoc ::
+            candidates ::: (reason -> N) :: (msg"Write '${module.nme}.${name}' to select it explicitly." -> N) :: Nil,
+          source = Diagnostic.Source.Compilation))
+      case _ => ()
+
+  /** Settle the references without explicit bindings of the block just elaborated, then
+    * diagnose them. A capitalized reference without an implicit namespace now falls back to
+    * its wildcard opens. This happens in source order, as the candidates of one reference
+    * can reveal the namespaces of the following ones: in `Wrap(Some(1))`, where an open
+    * supplies `Wrap`, the type of its parameter can be the namespace of `Some`. A namespace
+    * revealed after a reference fell back cannot override its opens (see lateNamespace).
+    * Interface exposure checks and block completion must observe the settled candidates.
+    */
+  def settleUnboundReferences()(using ResolutionContext): Unit =
+    val pending = rctx.state.unboundReferences.toList
+    rctx.state.unboundReferences.clear()
+    pending.foreach: (key, scope) =>
+      val ref = key.value
+      rctx.state.implicitNamespaces.get(key).foreach: namespaces =>
+        if ref.resolvedMembers.isEmpty && ref.prefixes.nonEmpty then
+          namespaces.fellBack = true
+          ref.prefixes.foreach(resolveThrough(ref, _, scope))
+    pending.foreach: (key, _) =>
+      val ref = key.value
+      val name = ref.id.name
+      val namespaces = rctx.state.implicitNamespaces.get(key)
+      namespaces.foreach(_.settled = true)
+      if !rctx.hasError(ref) then
+        if ref.resolvedMembers.isEmpty && ref.dynamicPrefixes.isEmpty then
+          rctx.markError(ref)
+          val notes = namespaces.toList.flatMap: namespaces =>
+            namespaces.required.toList.map: (module, annotation) =>
+              val problem = if namespaces.inaccessible.contains(module) then msg"is not accessible from this reference"
+                else msg"has no accessible member '${name}'"
+              msg"Its value is required to have this type, but the companion ${module.describeKind} '${module.nme}' of this type ${problem}." ->
+                annotation.toLoc
+          rctx.report(ErrorReport(msg"Name not found: ${name}" -> ref.toLoc :: notes, source = Diagnostic.Source.Compilation))
+        else namespaces.foreach: namespaces =>
+          val selected = namespaces.paths.toList.flatMap: (module, path) =>
+            ref.resolvedMembers.collect { case (prefix, member) if prefix is path => module -> member }
+          if selected.map(_._2).distinct.sizeIs > 1 then
+            rctx.markError(ref)
+            rctx.report(ErrorReport(
+              msg"Reference '${name}' is ambiguous, as flow requires its value to have types with distinct implicit namespaces." -> ref.toLoc ::
+                selected.map: (module, _) =>
+                  msg"This type selects '${module.nme}.${name}'." -> namespaces.required(module).toLoc,
+              source = Diagnostic.Source.Compilation))
 
   /** Inspect an overload set only once its definitions have all been published. */
   private def completedClass(shape: SymShape)(selected: ShapeListener[ClassDef], absent: () => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
@@ -3630,8 +3816,11 @@ class NewResolver:
             transportShape(specialized, ref.marks) match
               case value: TermShape => publishViewed(sel, value, ref.instances)
               case NoShape => ())
-        , shape =>
-          member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty))
+        , {
+          case Marked(_: NamespaceProbe, _) => () // As in listenReceiver.
+          case shape =>
+            member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
+        })
       case N => listenReceiver(sel.prefix): shape =>
         log(dbg"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
         member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
@@ -3670,10 +3859,12 @@ class NewResolver:
                           declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
                   member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty)
               case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty))
-        , sh =>
-          rctx.markError(sel)
-          resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
-        )
+        , {
+          case Marked(_: NamespaceProbe, _) => () // Not a value; see NamespaceProbe.
+          case sh =>
+            rctx.markError(sel)
+            resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
+        })
   
   /** Both constructor references and explicit `new` use the same definition and
     * parameter lists, including auxiliary constructor(...) lists. A partial `new`
@@ -3745,11 +3936,14 @@ class NewResolver:
             case ((ps, _), args) => zipArgsIn(marks, ps, args, nw, dsh, instances)
         publishViewed(nw, sh, instances)(using rctx.withInstances(callerInstances))
       )
-    , shape =>
-      if !rctx.hasError(nw) then
-        rctx.markError(nw)
-        resolError(nw, shape.diagnostic(msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'."))
-    )
+    , {
+      // As for applications (see applyShape), `new Some(1)` passes on the probe of `Some`.
+      case probe @ Marked(_: NamespaceProbe, _) => publishActivated(nw, probe)
+      case shape =>
+        if !rctx.hasError(nw) then
+          rctx.markError(nw)
+          resolError(nw, shape.diagnostic(msg"${shape.describe.capitalize} cannot be instantiated with keyword 'new'."))
+    })
   
   /** Assignments return to the binding's lexical scope before contributing
     * candidates. Reads must see every assigned shape, including assignments
@@ -4288,8 +4482,12 @@ class NewResolver:
     log(dbg"listenTerm: trm = ${trm.showDbg}")
     listenValue(trm, false)(listener)
 
+  /** Selections do not pass on namespace probes (see NamespaceProbe): in `Some(1).value`,
+    * the namespace of `Some` is not the one required of the selected member. */
   def listenReceiver(trm: Term)(listener: Listener)(using ResolutionContext): Unit =
-    listenValue(trm, true)(shape => listenInstanceViews(shape)(listener))
+    listenValue(trm, true):
+      case Marked(_: NamespaceProbe, _) => ()
+      case shape => listenInstanceViews(shape)(listener)
 
   private def listenValue(trm: Term, receiver: Bool)(listener: Listener)(using ResolutionContext): Unit = trm match
     case Capture(base, thru) =>

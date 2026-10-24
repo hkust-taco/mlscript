@@ -1,0 +1,38 @@
+:.
+
+import "../../mlscript-compile/Option.mls"
+
+
+// TODO: Constructor patterns could name members of the implicit namespace of their
+// scrutinee's type, just as values name members of the implicit namespace of the
+// type that flow requires of them (see ImplicitNamespaces.mls). Currently, pattern
+// names only resolve through explicit bindings and wildcard opens.
+
+:todo
+fun get(x: Option[Int]) = if x is
+  Some(v) then v
+  None then 0
+get(Option.Some(1))
+//│ ╔══[COMPILATION ERROR] Name not found: Some
+//│ ║  l.+2: 	  Some(v) then v
+//│ ╙──      	  ^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: None
+//│ ║  l.+3: 	  None then 0
+//│ ╙──      	  ^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+// Nested patterns would use the namespaces of the declared field types.
+class Box(val content: Option[Int])
+
+:todo
+fun unbox(b: Box) = if b is
+  Box(Some(v)) then v
+  Box(None) then 0
+unbox(Box(Option.Some(2)))
+//│ ╔══[COMPILATION ERROR] Name not found: Some
+//│ ║  l.+2: 	  Box(Some(v)) then v
+//│ ╙──      	      ^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: None
+//│ ║  l.+3: 	  Box(None) then 0
+//│ ╙──      	      ^^^^
+//│ ═══[RUNTIME ERROR] Error: match error

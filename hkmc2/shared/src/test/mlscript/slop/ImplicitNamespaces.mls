@@ -1,0 +1,279 @@
+:.
+
+import "../../mlscript-compile/Option.mls"
+
+
+// A capitalized name without an explicit binding names a member of the implicit
+// namespace of the type that flow requires of its value: the companion module of
+// the class or type alias of that type. `Option[Int]` applies alias `Option`,
+// whose companion is module `Option`.
+fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
+
+:expect [1, 0]
+[get(Some(1)), get(None)]
+//│ = [1, 0]
+
+// Flow reaches the required type through bindings, unannotated results,
+// generic parameters, and callbacks. It must do so within the block of the
+// reference (see the end of this file).
+:expect [2, 3, 4]
+let stored = Some(2)
+fun make() = Some(3)
+fun id[A](x: A): A = x
+[get(stored), get(make()), get(id(Some(4)))]
+//│ = [2, 3, 4]
+//│ stored = Some(2)
+
+:expect 43
+Option.getOrElse(Option.flatMap(Some(42), x => Some(x + 1)), 7)
+//│ = 43
+
+// Result annotations and ascriptions require types too.
+fun result(): Option[Int] = Some(5)
+
+:expect [5, 6]
+[get(result()), get(Some(6) as Option[Int])]
+//│ = [5, 6]
+
+// An alias without a companion names the namespaces of the types it applies.
+type IntOption = Option[Int]
+fun getInt(x: IntOption) = get(x)
+
+:expect 7
+getInt(Some(7))
+//│ = 7
+
+// Class companions are implicit namespaces as well.
+class Color(val name: Str)
+module Color with
+  val Red = Color("red")
+  val Green = Color("green")
+  val black = Color("black")
+fun paint(c: Color) = c.name
+
+:expect ["red", "green"]
+[paint(Red), paint(Green)]
+//│ = ["red", "green"]
+
+// Instantiating a class with `new` passes on the required type of the instance.
+class Shape
+module Shape with
+  class Circle(val radius: Int) extends Shape
+fun area(s: Shape) = if s is Shape.Circle(r) then r * r else 0
+
+:expect 9
+area(new Circle(3))
+//│ = 9
+
+// Nested scopes reach the namespace through their captures.
+fun nested(n) =
+  fun inner() = get(Some(n))
+  inner()
+
+:expect 8
+nested(8)
+//│ = 8
+
+// Several types requiring the same namespace select a single member.
+fun first(x: Option[Int], y: IntOption) = get(x) + getInt(y)
+
+:expect 10
+let twice = Some(5)
+first(twice, twice)
+//│ = 10
+//│ twice = Some(5)
+
+// Lowercase names do not name members of implicit namespaces.
+:e
+paint(black)
+//│ ╔══[COMPILATION ERROR] Name not found: black
+//│ ║  l.+1: 	paint(black)
+//│ ╙──      	      ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A name that the namespace does not define is not found; the error explains
+// which namespaces were consulted.
+:e
+get(Absent)
+//│ ╔══[COMPILATION ERROR] Name not found: Absent
+//│ ║  l.+1: 	get(Absent)
+//│ ║        	    ^^^^^^
+//│ ╟── Its value is required to have this type, but the companion module 'Option' of this type has no accessible member 'Absent'.
+//│ ║  l.XX: 	fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
+//│ ╙──      	           ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Private members of a namespace are not accessible from outside it.
+class Token
+module Token with
+  private val Secret = new Token
+  val Public = new Token
+fun use(t: Token) = t
+
+:e
+use(Secret)
+//│ ╔══[COMPILATION ERROR] Name not found: Secret
+//│ ║  l.+1: 	use(Secret)
+//│ ║        	    ^^^^^^
+//│ ╟── Its value is required to have this type, but the companion module 'Token' of this type has no accessible member 'Secret'.
+//│ ║  l.XX: 	fun use(t: Token) = t
+//│ ╙──      	           ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A namespace declared in a function is not accessible from outside its invocation.
+fun local() =
+  class Local
+  module Local with
+    val Inside = new Local
+  (x: Local) => x
+
+:e
+local()(Inside)
+//│ ╔══[COMPILATION ERROR] Name not found: Inside
+//│ ║  l.+1: 	local()(Inside)
+//│ ║        	        ^^^^^^
+//│ ╟── Its value is required to have this type, but the companion module 'Local' of this type is not accessible from this reference.
+//│ ║  l.XX: 	  (x: Local) => x
+//│ ╙──      	      ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Implicit namespaces take precedence over wildcard opens, but not over explicit bindings.
+type AltOption[A] = AltOption.{ Some[A] | None }
+module AltOption with
+  data class Some[T](value: T)
+  object None
+fun alt(x: AltOption[Int]) = if x is AltOption.Some(v) then v else 0
+
+fun viaNamespace() =
+  open AltOption
+  get(Some(10))
+
+:expect 10
+viaNamespace()
+//│ = 10
+
+fun viaBinding() =
+  open AltOption { Some }
+  Some(11)
+
+:expect 11
+alt(viaBinding())
+//│ = 11
+
+// Without a required type, the wildcard opens supply the name.
+fun viaOpen() =
+  open AltOption
+  Some(12)
+
+:expect 12
+alt(viaOpen())
+//│ = 12
+
+// A name that flows into types with distinct namespaces is ambiguous.
+:e
+let both = Some(13)
+get(both)
+alt(both)
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as flow requires its value to have types with distinct implicit namespaces.
+//│ ║  l.+1: 	let both = Some(13)
+//│ ║        	           ^^^^
+//│ ╟── This type selects 'Option.Some'.
+//│ ║  l.XX: 	fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
+//│ ║        	           ^^^^^^^^^^^
+//│ ╟── This type selects 'AltOption.Some'.
+//│ ║  l.XX: 	fun alt(x: AltOption[Int]) = if x is AltOption.Some(v) then v else 0
+//│ ╙──      	           ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ both = undefined
+
+:e
+fun either(x: Option[Int] | AltOption[Int]) = x
+either(Some(14))
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as flow requires its value to have types with distinct implicit namespaces.
+//│ ║  l.+2: 	either(Some(14))
+//│ ║        	       ^^^^
+//│ ╟── This type selects 'Option.Some'.
+//│ ║  l.+1: 	fun either(x: Option[Int] | AltOption[Int]) = x
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── This type selects 'AltOption.Some'.
+//│ ║  l.+1: 	fun either(x: Option[Int] | AltOption[Int]) = x
+//│ ╙──      	                            ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Wildcard opens are only consulted once the rest of the block is resolved.
+// Following references, in source order, can find namespaces through their candidates.
+module Wrappers with
+  class Wrap(val inner: Option[Int])
+
+fun wrapped() =
+  open Wrappers
+  open AltOption
+  Wrap(Some(15)).inner
+
+:expect 15
+get(wrapped())
+//│ = 15
+
+// A namespace that flow reveals only after a reference fell back to its opens
+// cannot change the selected definition. Here, the argument of the pipe is settled
+// before the function that requires its namespace.
+:e
+fun piped() =
+  open Wrappers
+  open AltOption
+  Some(16) |> Wrap
+//│ ╔══[COMPILATION ERROR] Reference 'Some' was resolved before flow revealed its implicit namespace module 'Option'.
+//│ ║  l.+4: 	  Some(16) |> Wrap
+//│ ║        	  ^^^^
+//│ ╟── Its value is required to have this type, which would have selected 'Option.Some'.
+//│ ║  l.XX: 	  class Wrap(val inner: Option[Int])
+//│ ║        	                        ^^^^^^^^^^^
+//│ ╟── It was resolved to the 'Some' of this wildcard open.
+//│ ║  l.+3: 	  open AltOption
+//│ ║        	       ^^^^^^^^^
+//│ ╟── Wildcard opens only supply a capitalized name if no implicit namespace is known for it once the rest of its block is resolved.
+//│ ╙── Write 'Option.Some' to select it explicitly.
+
+
+// A reference is settled with its block. A namespace revealed by a later block
+// cannot change the selected definition.
+fun early() =
+  open AltOption
+  Some(17)
+
+:e
+get(early())
+//│ ╔══[COMPILATION ERROR] Reference 'Some' was resolved before flow revealed its implicit namespace module 'Option'.
+//│ ║  l.XX: 	  Some(17)
+//│ ║        	  ^^^^
+//│ ╟── Its value is required to have this type, which would have selected 'Option.Some'.
+//│ ║  l.XX: 	fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
+//│ ║        	           ^^^^^^^^^^^
+//│ ╟── It was resolved to the 'Some' of this wildcard open.
+//│ ║  l.XX: 	  open AltOption
+//│ ║        	       ^^^^^^^^^
+//│ ╟── Wildcard opens only supply a capitalized name if no implicit namespace is known for it once the rest of its block is resolved.
+//│ ╙── Write 'Option.Some' to select it explicitly.
+//│ = 0
+
+let settled = Some(18)
+get(settled)
+//│ = 18
+//│ settled = Some(18)
+
+:e
+alt(settled)
+//│ ╔══[COMPILATION ERROR] Reference 'Some' was resolved before flow revealed its implicit namespace module 'AltOption'.
+//│ ║  l.XX: 	let settled = Some(18)
+//│ ║        	              ^^^^
+//│ ╟── Its value is required to have this type, which would have selected 'AltOption.Some'.
+//│ ║  l.XX: 	fun alt(x: AltOption[Int]) = if x is AltOption.Some(v) then v else 0
+//│ ║        	           ^^^^^^^^^^^^^^
+//│ ╟── It was resolved to 'Option.Some', selected by this type.
+//│ ║  l.XX: 	fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
+//│ ║        	           ^^^^^^^^^^^
+//│ ╟── Implicit namespaces are only taken into account until the block of the reference is resolved.
+//│ ╙── Write 'AltOption.Some' to select it explicitly.
+//│ = 0

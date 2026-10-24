@@ -263,3 +263,28 @@ collection and assignment lowering must handle resolved direct references and
 retain the existing binding/assignment checks. Constructor-pattern resolution
 discards every nested capture when recovering class identity; leaving one behind
 can make generated patterns test a constructor function instead of its class.
+
+## Implicit namespaces
+
+User-facing rules are in the [language reference](reference.md#implicit-namespaces).
+An unbound capitalized value is an `UnresolvedRef` with `implicitNamespacing`. Until
+its block is settled, it publishes only a `NamespaceProbe`, like the legacy flow
+analysis's leading-dot producer. The probe travels along ordinary value edges and
+through applications and instantiations of the reference, but not through
+selections. It is not a value: member lookups ignore it, as do patterns, class
+operands, interface exposure, and call checks. `inferTypeArguments` detects a probe
+reaching a class or type alias, directly or as the view of a type variable, and
+adds the companion's member as a candidate through `AccessPath.valuePath`. That
+path carries the same `Capture`s as a written reference.
+
+Normalization expands applied aliases such as `Option[Int]`, so `DeclaredType`
+retains its `expansions` as observation metadata, like its `origin` witness.
+Expansions do not participate in type equality, so a probe checks them before the
+constraint cache. Interned formula atoms drop them.
+
+`settleUnboundReferences` runs before interface exposure and block completion. It
+lets capitalized references without namespaces fall back to their wildcard opens
+in source order, then diagnoses missing and ambiguous names. Namespaces revealed
+afterwards are reported against the settled candidates and never change them.
+`slop/ImplicitNamespaces.mls` covers these rules. Patterns and selection chains are
+deferred (`slop/ImplicitNamespacePatterns.mls`, `ImplicitNamespaceChains.mls`).

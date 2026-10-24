@@ -72,6 +72,12 @@ trait UnresolvedRefImpl extends NewResolvableImpl:
   // the same member symbol without denoting the same storage location.
   var resolvedMembers: Ls[(Term, BlockMemberSymbol)] = Nil
   var dynamicPrefixes: Ls[Term] = Nil
+  /** Paths to the companion modules that flow selected as implicit namespaces of this reference,
+    * recovered in its scope (see NewResolver.requireNamespace). Like `prefixes`, they are
+    * receivers of candidate members; unlike them, resolution discovers them. */
+  var namespacePrefixes: Ls[Term] = Nil
+  /** The value of this reference before its namespace is known (see NamespaceProbe). */
+  lazy val namespaceProbe: NamespaceProbe = NamespaceProbe(this)
 
 
 trait FldImpl:
@@ -131,6 +137,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case Capture(base, thru) => base.describe
       case SimpleRef(sym) => "reference"
       case MemberRef(sym) => "member reference"
+      case UnresolvedRef(Nil, _) => "reference"
       case UnresolvedRef(_, _) => "wildcard-open reference"
       case App(lhs, rhs) => "application"
       case TyApp(lhs, targs) => "type application"
@@ -215,7 +222,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case SynthSel(pre, _) => Vector.single(pre)
     case sup @ Super(receiver, _, _) => Vector.single(receiver) ++ sup.keyAccess.toVector
     case sel @ NewSel(pre, _, cls) => Vector.single(pre) ++ cls.toVector ++ sel.keyAccess.toVector
-    case ref @ UnresolvedRef(prefixes, _) => prefixes.toVector ++ ref.keyAccess.toVector
+    case ref @ UnresolvedRef(prefixes, _) => prefixes.toVector ++ ref.namespacePrefixes ++ ref.keyAccess.toVector
     case DynSel(o, f, _, _) => Vector.double(o, f)
     case Tup(fields) => fields.flatMap(_.subTerms).toVector
     case Mut(und) => Vector.single(und)

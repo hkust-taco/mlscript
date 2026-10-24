@@ -312,7 +312,11 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case Super(receiver: Term, owner: InnerSymbol, id: Tree.Ident)(val resSym: FlowSymbol) extends Term, NewResolvableImpl, ShapeHost
   /** An optional class selection fixes the lookup scope for an explicit member projection. */
   case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[NewSel])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
-  case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol) extends Term, UnresolvedRefImpl, ShapeHost
+  /** A name without an explicit binding, looked up in the wildcard opens visible where it is written
+    * (`prefixes`, possibly none). With `implicitNamespacing`, a namespace selected by flow takes
+    * precedence over these opens (see NewResolver.unresolvedRef). */
+  case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol, val implicitNamespacing: Bool)
+    extends Term, UnresolvedRefImpl, ShapeHost
   case Capture(base: Term, thru: AnyDefinitionSymbol) extends Term
   // --- LEGACY ---
   /** A term that wraps another term, indicating that the symbol of the inner term is resolved.

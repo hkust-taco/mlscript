@@ -37,7 +37,7 @@ fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╙──      	                     ^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation is not supported here.
 //│ ║  l.+1: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
-//│ ║        	                     ^^^^^^^^^^^^^^^^^^^
+//│ ║        	                     ^^^^^^^^^^^^^^^
 //│ ╟── Note: Patterns only support the `@compile` annotation.
 //│ ║  l.+1: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╙──      	                                     ^^^

@@ -1735,6 +1735,46 @@ over an overloaded class or function supplied by a wildcard open.
 
 If wildcard lookup finds several distinct members with the requested name, the
 reference is ambiguous; the order of the opens does not choose a winner.
+Capitalized values first consult their [implicit namespaces](#implicit-namespaces).
+
+### Implicit Namespaces
+
+With `newResolution` enabled, a capitalized name without an explicit binding can
+name a member of the *implicit namespace* of the type that its value is required
+to have: the companion module or object of the class or type alias of that type.
+Resolution finds these types by following the flow of the value into parameter,
+result, and field annotations, as well as ascriptions.
+
+```mlscript
+import "./Option.mls" // type Option[A] = Option.{ Some[A] | None }
+
+fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
+get(Some(1)) // selects Option.Some
+get(None)    // selects Option.None
+```
+
+This applies to values, including applied ones such as `Some(1)`, and to the
+classes instantiated by `new`. The namespace required of the result of `Some(1)`
+is that of `Some`, but selections do not pass it on: in `f(Red.lighter)`, `Red`
+does not name a member of the namespace that `f` requires. Patterns, types,
+selection receivers, and `extends` clauses only consult explicit bindings and
+wildcard opens.
+
+Implicit namespaces take precedence over wildcard opens, but not over explicit
+bindings, including selective opens such as `open AltOption { Some }`. A name
+whose value flows into types with distinct namespaces, such as `Option[Int]` and
+`AltOption[Int]`, is ambiguous.
+
+Resolution settles each such name once the rest of its block (a file or a
+worksheet block) is resolved. If no namespace is known for the name by then, its
+wildcard opens supply it. Names are settled in source order, so the definitions
+supplied to earlier names can reveal the namespaces of later ones: in
+`Wrap(Some(1))`, where an open supplies `Wrap`, its parameter type can be the
+namespace of `Some`. A namespace revealed later, for instance by a later
+worksheet block, cannot change the definition already selected; resolution
+reports it as an error instead, which qualifying the name resolves.
+Names without explicit bindings that are not found at all are reported at the
+same point, whether or not they are capitalized.
 
 ### `open M in` Scope
 

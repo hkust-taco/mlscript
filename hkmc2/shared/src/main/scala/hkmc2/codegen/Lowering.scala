@@ -924,7 +924,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             source = Diagnostic.Source.Compilation)
         false
       else if sel.projectionClasses.isEmpty then
-        raise:
+        // A missing class name has already been reported (see NewResolver.settleUnboundReferences).
+        val missingName = cls.prefix.withoutCaptures match
+          case ref: UnresolvedRef => ref.isErroneous
+          case _ => false
+        if !missingName then raise:
           ErrorReport(msg"Cannot resolve the projection class" -> cls.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
         false

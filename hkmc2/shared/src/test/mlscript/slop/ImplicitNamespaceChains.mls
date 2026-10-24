@@ -1,0 +1,39 @@
+:.
+
+
+// TODO: As in Swift's implicit member chains, a capitalized name could start a chain
+// of selections and applications whose result has the required type, selecting the
+// name in the implicit namespace of that type. Currently, only applications and
+// instantiations pass on the namespace that flow requires of their result
+// (see ImplicitNamespaces.mls), as `Some(1)` does.
+
+class Color(val name: Str) with
+  fun lighter = Color("light " + name)
+  fun mix(that: Color) = Color(name + "-" + that.name)
+module Color with
+  val Red = Color("red")
+  val Blue = Color("blue")
+fun paint(c: Color) = c.name
+
+:todo
+paint(Red.lighter)
+//│ ╔══[COMPILATION ERROR] Name not found: Red
+//│ ║  l.+1: 	paint(Red.lighter)
+//│ ╙──      	      ^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'lighter' has no resolved target
+//│ ║  l.+1: 	paint(Red.lighter)
+//│ ╙──      	      ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:todo
+paint(Red.mix(Blue))
+//│ ╔══[COMPILATION ERROR] Name not found: Red
+//│ ║  l.+1: 	paint(Red.mix(Blue))
+//│ ╙──      	      ^^^
+//│ ╔══[COMPILATION ERROR] Name not found: Blue
+//│ ║  l.+1: 	paint(Red.mix(Blue))
+//│ ╙──      	              ^^^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'mix' has no resolved target
+//│ ║  l.+1: 	paint(Red.mix(Blue))
+//│ ╙──      	      ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

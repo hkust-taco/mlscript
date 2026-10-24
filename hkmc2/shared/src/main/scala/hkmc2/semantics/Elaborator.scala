@@ -179,7 +179,7 @@ object Elaborator:
       getExplicit(name, captureScopes).orElse:
         if config.language.useNewResolution then
           val sources = visibleWildcardOpens.distinct
-          if sources.isEmpty then N else S(Ctx.WildcardElem(name, sources))
+          if sources.isEmpty then N else S(Ctx.WildcardElem(name, sources, implicitNamespacing = false))
         else N
 
     private def getExplicit(name: Str, captureScopes: Bool)(using config: Config): Opt[Ctx.Elem] =
@@ -504,13 +504,15 @@ object Elaborator:
         else
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon)).withLoc(loc)
       def symbol = symOpt
-    final case class WildcardElem(nme: Str, sources: Ls[OpenSource]) extends Elem:
+    /** A name without an explicit binding, looked up in the wildcard opens `sources`, and,
+      * with `implicitNamespacing`, in implicit namespaces (see Term.UnresolvedRef). */
+    final case class WildcardElem(nme: Str, sources: Ls[OpenSource], implicitNamespacing: Bool) extends Elem:
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         // Each ref is fresh. Locate its outer capture at the opening site too;
         // a chained wildcard reference may already have attached this location.
         val prefixes = sources.map(source => source.elem.ref(S(source.id)).withoutLoc.withLocOf(source.id))
         val name: Ident = id.getOrElse(Ident(nme))
-        val res = new Term.UnresolvedRef(prefixes, name)(FlowSymbol.synthSel(nme)).withLocOf(name)
+        val res = new Term.UnresolvedRef(prefixes, name)(FlowSymbol.synthSel(nme), implicitNamespacing).withLocOf(name)
         rctx.recordLexicalBinders(res, ctx.typeBinders)
         rctx.recordAccessSite(res, ctx.scope)
         summon[NewResolver].unresolvedRef(res, ctx.scope)
@@ -534,6 +536,10 @@ object Elaborator:
     */
   enum Interpretation:
     case Trm, Receiver, Specialization, Clss, Ptrn, Tpe
+    /** The class operand of a `new` expression. Unlike other class operands, such as
+      * those of `extends` clauses, it can name a member of an implicit namespace, which
+      * flow reveals only once its block is resolved (see NewResolver.unresolvedRef). */
+    case Instantiated
     
     /** The interpretation of the elements of a tuple or record with this interpretation.
       * Elements are values, even when their aggregate is a receiver or a class operand.
@@ -816,7 +822,7 @@ end Elaborator
 
 
 import Elaborator.*
-import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe}
+import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe, Instantiated}
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
@@ -1991,7 +1997,8 @@ extends Importer:
           case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
           case c => (false, c)
         val inner = mkNew(
-          subterm(c2, Clss), // * Note: we'll catch bad `new` targets during type checking
+          // * Note: we'll catch bad `new` targets during type checking
+          subterm(c2, if interp is Clss then Clss else Instantiated),
           args.map(subterm(_)),
           bodo
         )(N)
@@ -3115,7 +3122,9 @@ extends Importer:
   def newOf(td: TypeDef): Ctxl[Opt[Term.New]] =
     td.extension
     match
-    case S(ext) => S(term(ProperNew(S(ext), N), Trm))
+    // Inheritance checks need the parent class while this class is elaborated, so the
+    // instantiation of the parent is a class operand rather than a value.
+    case S(ext) => S(term(ProperNew(S(ext), N), Clss))
     case N => N
     match
     case S(n: Term.New) => S(n)
@@ -3308,6 +3317,17 @@ extends Importer:
         // like explicit bindings, they take precedence over wildcard sources.
         state.builtinOpsMap.get(id.name) match
           case S(bi) => S(Ctx.RefElem(bi).ref(S(id)))
+          case N if newResolution =>
+            // New resolution looks the name up in the visible wildcard opens, if any, and
+            // reports a missing name once its block is resolved, uniformly. A capitalized
+            // value or instantiated class can also name a member of an implicit namespace
+            // (see NewResolver.unresolvedRef). Patterns, types, and selection receivers
+            // only consult their opens.
+            val sources = candidate.collect { case wildcard: Ctx.WildcardElem => wildcard.sources }.getOrElse(Nil)
+            val implicitNamespacing = id.name.isCapitalized && (interp match
+              case Trm | Specialization | Instantiated => true
+              case Receiver | Clss | Ptrn | Tpe => false)
+            S(Ctx.WildcardElem(id.name, sources, implicitNamespacing).ref(S(id)))
           case N => candidate.map(_.ref(S(id)))
       case S(elem) => S(elem.ref(S(id)))
   
@@ -3545,6 +3565,7 @@ extends Importer:
     val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
     if newResolution then
+      settleUnboundReferences()
       InterfaceExposure(this).check(exports, Nil)
     rctx.completeBlock(res)
     (res, newCtx)
@@ -3553,6 +3574,7 @@ extends Importer:
     given UnderCtx = UnderCtx.none
     val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     if newResolution then
+      settleUnboundReferences()
       if config.language.strictResolution then
         val exports = res.stats.collect:
           case d: Definition if InterfaceExposure.isPublic(d) => d.bsym

@@ -68,9 +68,15 @@ pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╟── Because the pattern it belongs to is negated.
 //│ ║  l.+1: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╙──      	                           ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.+1: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ╙──      	                                               ^
 
 :e
 pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.+1: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
+//│ ╙──      	                                                        ^
 //│ ╔══[COMPILATION ERROR] This selection of member 'toString' has no resolved target
 //│ ║  l.+1: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 //│ ╙──      	                                                        ^^^^^^^^^^
@@ -112,7 +118,7 @@ pattern BadNegated = (~(Int as x)) => x
 //│ ║  l.+1: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──      	                        ^^^^^^^^
 //│ elaborated pattern body: ¬(member:Int⁰ as x‹›) => x‹open›
-//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.+1: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──      	                                      ^
 
@@ -126,7 +132,7 @@ pattern BadNegated = (~Pair(Int, x)) => x
 //│ ║  l.+1: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──      	                       ^^^^^^^^^^^^
 //│ elaborated pattern body: ¬member:Pair⁰(member:Int⁰, x‹?›) => x‹open›
-//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: x
+//│ ╔══[COMPILATION ERROR] Name not found: x
 //│ ║  l.+1: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──      	                                        ^
 
