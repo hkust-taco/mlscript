@@ -149,8 +149,8 @@ new B().bruh
 :e
 class B extends A(0)
 //│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
-//│ ║  l.150: 	class B extends A(0)
-//│ ╙──       	                ^^^^
+//│ ║  l.+1: 	class B extends A(0)
+//│ ╙──      	                ^^^^
 
 new B
 //│ = B { x: 0 }
@@ -160,17 +160,17 @@ class C
 :e
 class D extends C(0)
 //│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.161: 	class D extends C(0)
-//│ ╙──       	                ^^^^
+//│ ║  l.+1: 	class D extends C(0)
+//│ ╙──      	                ^^^^
 
 :e
 new A(1)(2) with
   fun a = 0
 //│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
-//│ ║  l.167: 	new A(1)(2) with
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.168: 	  fun a = 0
-//│ ╙──       	^^^^^^^^^^^
+//│ ║  l.+1: 	new A(1)(2) with
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  fun a = 0
+//│ ╙──      	^^^^^^^^^^^
 //│ = $anon { x: 1 }
 
 :e
@@ -178,8 +178,8 @@ new A(1)(2)(3)(4) with
   fun a = 0
 //? = $anon { x: 1 }
 //│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
-//│ ║  l.177: 	new A(1)(2)(3)(4) with
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.178: 	  fun a = 0
-//│ ╙──       	^^^^^^^^^^^
+//│ ║  l.+1: 	new A(1)(2)(3)(4) with
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  fun a = 0
+//│ ╙──      	^^^^^^^^^^^
 //│ = $anon { x: 1 }

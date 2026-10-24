@@ -31,11 +31,11 @@ xs.reverse()
 :re
 xs.map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.261: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
+//│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in MiscArrayTests.mls:32
-//│ ║  l.32: 	xs.map(x => x * 2)
+//│ ║  in MiscArrayTests.mls:+1
+//│ ║  l.+1: 	xs.map(x => x * 2)
 //│ ╙──      	       ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
 
@@ -60,13 +60,13 @@ xs |.map(x => x * 2) |.print()
 xs |.
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.61: 	  map(x => x * 2)
+//│ ║  l.+2: 	  map(x => x * 2)
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 2 arguments, but got 1
-//│ ║  l.51: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
+//│ ║  l.XX: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
-//│ ║  l.61: 	  map(x => x * 2)
+//│ ║  l.+2: 	  map(x => x * 2)
 //│ ╙──      	      ^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda5, tmp;
@@ -83,13 +83,13 @@ xs |.
 xs|.
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.84: 	  map(x => x * 2)
+//│ ║  l.+2: 	  map(x => x * 2)
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 2 arguments, but got 1
-//│ ║  l.51: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
+//│ ║  l.XX: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
-//│ ║  l.84: 	  map(x => x * 2)
+//│ ║  l.+2: 	  map(x => x * 2)
 //│ ╙──      	      ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 

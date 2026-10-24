@@ -9,8 +9,8 @@ staged module Expressions with
     let x = 42
     x
 //│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
-//│ ║  l.9: 	    let x = 42
-//│ ╙──     	        ^
+//│ ║  l.+3: 	    let x = 42
+//│ ╙──      	        ^
 //│ > fun ctor_() = ()
 //│ > fun lit() =
 //│ >   let {x}
@@ -182,8 +182,8 @@ staged module OtherBlocks with
 //│ ═══[COMPILATION ERROR] Value.This not supported in staged module.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.174: 	      let a = 1
-//│ ╙──       	          ^
+//│ ║  l.+4: 	      let a = 1
+//│ ╙──      	          ^
 //│ > fun ctor_() = ()
 //│ ═══[RUNTIME ERROR] ReferenceError: a is not defined
 
@@ -247,8 +247,8 @@ staged module LabelBreak with
 //│ ═══[COMPILATION ERROR] Other Blocks not supported in staged module: class hkmc2.codegen.Label.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.240: 	    let x = 1
-//│ ╙──       	        ^
+//│ ║  l.+3: 	    let x = 1
+//│ ╙──      	        ^
 //│ > fun ctor_() = ()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
@@ -260,8 +260,8 @@ staged module A with
   fun g() = {1 : 2}
 //│ ═══[COMPILATION ERROR] Field assignment is not supported in staged modules: a
 //│ ╔══[COMPILATION ERROR] Other Results not supported in staged module: class hkmc2.codegen.Record
-//│ ║  l.260: 	  fun g() = {1 : 2}
-//│ ╙──       	             ^^^^^
+//│ ║  l.+5: 	  fun g() = {1 : 2}
+//│ ╙──      	             ^^^^^
 //│ > fun ctor_() =
 //│ >   x = C(1)
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.

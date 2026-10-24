@@ -30,7 +30,7 @@
 :w
 +(2, 3)
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.31: 	+(2, 3)
+//│ ║  l.+1: 	+(2, 3)
 //│ ╙──      	  ^
 //│ = 3
 
@@ -40,7 +40,7 @@
 :ge
 *(1)
 //│ ╔══[COMPILATION ERROR] Builtin '*' is not a unary operator
-//│ ║  l.41: 	*(1)
+//│ ║  l.+1: 	*(1)
 //│ ╙──      	^^^^
 //│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
@@ -57,7 +57,7 @@
 :ge
 (*)(2)
 //│ ╔══[COMPILATION ERROR] Builtin '*' is not a unary operator
-//│ ║  l.58: 	(*)(2)
+//│ ║  l.+1: 	(*)(2)
 //│ ╙──      	^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'

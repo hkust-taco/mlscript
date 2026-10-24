@@ -14,10 +14,10 @@ fun decimal(n: Num) = n.toFixed(1)
 :e
 "abc".nonexistent
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.15: 	"abc".nonexistent
+//│ ║  l.+1: 	"abc".nonexistent
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── String literal does not contain member 'nonexistent'
-//│ ║  l.15: 	"abc".nonexistent
+//│ ║  l.+1: 	"abc".nonexistent
 //│ ╙──      	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -12,16 +12,16 @@ fun test1() =
   fun sayHi = print("Hi")
   sayHi, sayHi, sayHi
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for sayHi
-//│ ║  l.12: 	  fun sayHi = print("Hi")
+//│ ║  l.+2: 	  fun sayHi = print("Hi")
 //│ ╙──      	              ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Variable not found: sayHi
-//│ ║  l.13: 	  sayHi, sayHi, sayHi
+//│ ║  l.+3: 	  sayHi, sayHi, sayHi
 //│ ╙──      	  ^^^^^
 //│ ╔══[COMPILATION ERROR] Variable not found: sayHi
-//│ ║  l.13: 	  sayHi, sayHi, sayHi
+//│ ║  l.+3: 	  sayHi, sayHi, sayHi
 //│ ╙──      	         ^^^^^
 //│ ╔══[COMPILATION ERROR] Variable not found: sayHi
-//│ ║  l.13: 	  sayHi, sayHi, sayHi
+//│ ║  l.+3: 	  sayHi, sayHi, sayHi
 //│ ╙──      	                ^^^^^
 
 test1()
@@ -38,15 +38,15 @@ fun test2() =
     n then funny(n - 1) + 1
   funny
 //│ ╔══[COMPILATION ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} [outer, 'caseScrut, 'eff] -> 'caseScrut ->{'eff} Int found
-//│ ║  l.35: 	fun test2() =
+//│ ║  l.+1: 	fun test2() =
 //│ ║        	         ^^^^
-//│ ║  l.36: 	  fun funny = case
+//│ ║  l.+2: 	  fun funny = case
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.37: 	    0 then 0
+//│ ║  l.+3: 	    0 then 0
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.38: 	    n then funny(n - 1) + 1
+//│ ║  l.+4: 	    n then funny(n - 1) + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.39: 	... (more lines omitted) ...
+//│ ║  l.+5: 	... (more lines omitted) ...
 //│ ╙──      	^^^^^^^
 
 fun test2() =
@@ -88,7 +88,7 @@ fun test2() =
     case n then funny(n - 1) + 1
   funny
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.87: 	    case 0 then 0
+//│ ║  l.+3: 	    case 0 then 0
 //│ ╙──      	    ^^^^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let test22;
@@ -109,12 +109,12 @@ fun test2() =
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for funny
-//│ ║  l.87: 	    case 0 then 0
+//│ ║  l.+3: 	    case 0 then 0
 //│ ║        	         ^^^^^^^^
-//│ ║  l.88: 	    case n then funny(n - 1) + 1
+//│ ║  l.+4: 	    case n then funny(n - 1) + 1
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Variable not found: funny
-//│ ║  l.89: 	  funny
+//│ ║  l.+5: 	  funny
 //│ ╙──      	  ^^^^^
 
 
@@ -122,6 +122,6 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for test3
-//│ ║  l.123: 	  print("Hi")
-//│ ╙──       	  ^^^^^^^^^^^
+//│ ║  l.+2: 	  print("Hi")
+//│ ╙──      	  ^^^^^^^^^^^
 

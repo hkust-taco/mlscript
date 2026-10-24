@@ -31,7 +31,7 @@ abstract class
     Foo(a)
     Bar(b)
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.32: 	    Bar(b)
+//│ ║  l.+3: 	    Bar(b)
 //│ ╙──      	    ^^^
 
 
@@ -48,15 +48,15 @@ object \$ extends Foo
   A
   B
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.47: 	object \$ extends Foo
+//│ ║  l.+1: 	object \$ extends Foo
 //│ ╙──      	        ^
 //│ ╔══[PARSE ERROR] Expected expression after type declaration keyword; found '\' keyword instead
-//│ ║  l.47: 	object \$ extends Foo
+//│ ║  l.+1: 	object \$ extends Foo
 //│ ╙──      	       ^
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'extends' here
-//│ ║  l.47: 	object \$ extends Foo
+//│ ║  l.+1: 	object \$ extends Foo
 //│ ║        	         ^^^^^^^^^^^^
-//│ ║  l.48: 	  A
+//│ ║  l.+2: 	  A
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

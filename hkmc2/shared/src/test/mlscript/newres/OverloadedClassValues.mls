@@ -173,21 +173,21 @@ new MutableMembers.Item().answer()
 class Parameterized()
 fun Parameterized() = 0
 //│ ╔══[COMPILATION ERROR] Not yet supported: overloading of function 'Parameterized'
-//│ ║  l.174: 	fun Parameterized() = 0
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun Parameterized() = 0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── with class of the same name
-//│ ║  l.173: 	class Parameterized()
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Parameterized()
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 
 :e
 class ParameterizedValue(x)
 val ParameterizedValue = 0
 //│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
-//│ ║  l.184: 	val ParameterizedValue = 0
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	val ParameterizedValue = 0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Arbitrary values cannot be overloaded with class 'ParameterizedValue'
-//│ ║  l.183: 	class ParameterizedValue(x)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class ParameterizedValue(x)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ParameterizedValue = 0
 
 // Distinct term definitions are still duplicate definitions, even beside a class.
@@ -196,17 +196,17 @@ class Duplicate
 fun Duplicate() = 0
 val Duplicate = 1
 //│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
-//│ ║  l.197: 	val Duplicate = 1
-//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	val Duplicate = 1
+//│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Arbitrary values cannot be overloaded with class 'Duplicate'
-//│ ║  l.195: 	class Duplicate
-//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Duplicate
+//│ ╙──      	^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal overloading of value 'Duplicate'
-//│ ║  l.197: 	val Duplicate = 1
-//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	val Duplicate = 1
+//│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── with function of the same name
-//│ ║  l.196: 	fun Duplicate() = 0
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun Duplicate() = 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 
 
 // Inlining the same local definitions twice must keep their class identities separate.

@@ -17,16 +17,16 @@ type Chain[A] = {value: A, next: Chain[Array[A]]}
 private fun walk[A](chain: Chain[A], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.16: 	type Chain[A] = {value: A, next: Chain[Array[A]]}
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[Array[A]]}
 //│ ║        	                                 ^^^^^^^^^^^^^^^
 //│ ╟── Recursive type 'Chain' is not supported by the current regularity check.
-//│ ║  l.16: 	type Chain[A] = {value: A, next: Chain[Array[A]]}
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[Array[A]]}
 //│ ║        	                                 ^^^^^^^^^^^^^^^
 //│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
-//│ ║  l.16: 	type Chain[A] = {value: A, next: Chain[Array[A]]}
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[Array[A]]}
 //│ ╙──      	           ^
 //│ ╔══[COMPILATION ERROR] This selection of member 'next' has no resolved target
-//│ ║  l.18: 	  if n > 0 then walk(chain.next, n - 1) else ()
+//│ ║  l.+3: 	  if n > 0 then walk(chain.next, n - 1) else ()
 //│ ╙──      	                     ^^^^^^^^^^
 
 // A regular parameter permutation has two interfaces, not an expanding environment.
@@ -166,14 +166,14 @@ fun read(chain: Alternating[First, Second]): Int = chain.next.value.second
 type Loop[A] = Loop[Array[A]]
 private fun unused(value: Loop[Int]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.166: 	type Loop[A] = Loop[Array[A]]
-//│ ║         	               ^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Loop[A] = Loop[Array[A]]
+//│ ║        	               ^^^^^^^^^^^^^^
 //│ ╟── Unguarded recursive type alias 'Loop'.
-//│ ║  l.166: 	type Loop[A] = Loop[Array[A]]
-//│ ║         	               ^^^^
+//│ ║  l.+1: 	type Loop[A] = Loop[Array[A]]
+//│ ║        	               ^^^^
 //│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
-//│ ║  l.166: 	type Loop[A] = Loop[Array[A]]
-//│ ╙──       	     ^^^^
+//│ ║  l.+1: 	type Loop[A] = Loop[Array[A]]
+//│ ╙──      	     ^^^^
 
 // An unresolved alias body must keep its argument binding until the target is known.
 type Forward[A] = Identity[A]
@@ -215,14 +215,14 @@ private fun walk[A](chain: Chain[A], n: Int) =
 type Chain[A] = {value: A, next: Chain[A | Array[A]]}
 private fun unused[A](chain: Chain[A]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.215: 	type Chain[A] = {value: A, next: Chain[A | Array[A]]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[A | Array[A]]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Recursive type 'Chain' is not supported by the current regularity check.
-//│ ║  l.215: 	type Chain[A] = {value: A, next: Chain[A | Array[A]]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[A | Array[A]]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
-//│ ║  l.215: 	type Chain[A] = {value: A, next: Chain[A | Array[A]]}
-//│ ╙──       	           ^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[A | Array[A]]}
+//│ ╙──      	           ^
 
 // Growth through a forwarding alias and a mutual cycle is still non-regular.
 :e
@@ -231,41 +231,41 @@ type Left[A] = {value: A, next: Right[Wrap[A]]}
 type Right[B] = {value: B, next: Left[B]}
 private fun unused[A](chain: Left[A]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.230: 	type Left[A] = {value: A, next: Right[Wrap[A]]}
-//│ ║         	                                ^^^^^^^^^^^^^^
+//│ ║  l.+2: 	type Left[A] = {value: A, next: Right[Wrap[A]]}
+//│ ║        	                                ^^^^^^^^^^^^^^
 //│ ╟── Recursive type 'Right' is not supported by the current regularity check.
-//│ ║  l.230: 	type Left[A] = {value: A, next: Right[Wrap[A]]}
-//│ ║         	                                ^^^^^^^^^^^^^^
+//│ ║  l.+2: 	type Left[A] = {value: A, next: Right[Wrap[A]]}
+//│ ║        	                                ^^^^^^^^^^^^^^
 //│ ╟── Type parameter 'B' occurs under a type constructor on a recursive dependency cycle.
-//│ ║  l.231: 	type Right[B] = {value: B, next: Left[B]}
-//│ ╙──       	           ^
+//│ ║  l.+3: 	type Right[B] = {value: B, next: Left[B]}
+//│ ╙──      	           ^
 
 // Tuple and function constructors also count as growth.
 :e
 type Chain[A] = {value: A, next: Chain[[A, A]]}
 private fun unused[A](chain: Chain[A]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.245: 	type Chain[A] = {value: A, next: Chain[[A, A]]}
-//│ ║         	                                 ^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[[A, A]]}
+//│ ║        	                                 ^^^^^^^^^^^^^
 //│ ╟── Recursive type 'Chain' is not supported by the current regularity check.
-//│ ║  l.245: 	type Chain[A] = {value: A, next: Chain[[A, A]]}
-//│ ║         	                                 ^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[[A, A]]}
+//│ ║        	                                 ^^^^^^^^^^^^^
 //│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
-//│ ║  l.245: 	type Chain[A] = {value: A, next: Chain[[A, A]]}
-//│ ╙──       	           ^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[[A, A]]}
+//│ ╙──      	           ^
 
 :e
 type Chain[A] = {value: A, next: Chain[Int -> A]}
 private fun unused[A](chain: Chain[A]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.258: 	type Chain[A] = {value: A, next: Chain[Int -> A]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[Int -> A]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^
 //│ ╟── Recursive type 'Chain' is not supported by the current regularity check.
-//│ ║  l.258: 	type Chain[A] = {value: A, next: Chain[Int -> A]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[Int -> A]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^
 //│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
-//│ ║  l.258: 	type Chain[A] = {value: A, next: Chain[Int -> A]}
-//│ ╙──       	           ^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[Int -> A]}
+//│ ╙──      	           ^
 
 // A forward alias must be resolved before deciding whether an argument grows.
 :e
@@ -273,14 +273,14 @@ type Chain[A] = {value: A, next: Chain[Later[A]]}
 private fun unused[A](chain: Chain[A]) = ()
 type Later[A] = Array[A]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.272: 	type Chain[A] = {value: A, next: Chain[Later[A]]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[Later[A]]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^
 //│ ╟── Recursive type 'Chain' is not supported by the current regularity check.
-//│ ║  l.272: 	type Chain[A] = {value: A, next: Chain[Later[A]]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[Later[A]]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^
 //│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
-//│ ║  l.272: 	type Chain[A] = {value: A, next: Chain[Later[A]]}
-//│ ╙──       	           ^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[Later[A]]}
+//│ ╙──      	           ^
 
 // Boolean combinations can include an omitted argument, which remains a source hole.
 type Chain[A] = {value: A, next: Chain[A | Array]}
@@ -292,14 +292,14 @@ private fun walk[A](chain: Chain[A], n: Int) =
 type Chain[A] = {value: A, next: Chain[{item: A | Int}]}
 private fun unused[A](chain: Chain[A]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.292: 	type Chain[A] = {value: A, next: Chain[{item: A | Int}]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[{item: A | Int}]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Recursive type 'Chain' is not supported by the current regularity check.
-//│ ║  l.292: 	type Chain[A] = {value: A, next: Chain[{item: A | Int}]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[{item: A | Int}]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
-//│ ║  l.292: 	type Chain[A] = {value: A, next: Chain[{item: A | Int}]}
-//│ ╙──       	           ^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[{item: A | Int}]}
+//│ ╙──      	           ^
 
 // Captured forwarding aliases inside a Boolean argument must also saturate.
 type Identity[X] = X
@@ -317,42 +317,42 @@ type Wrap[A] = Array[A]
 type Chain[A] = {value: A, next: Chain[Wrap[Wrap[A]]]}
 private fun unused[A](chain: Chain[A]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.317: 	type Chain[A] = {value: A, next: Chain[Wrap[Wrap[A]]]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	type Chain[A] = {value: A, next: Chain[Wrap[Wrap[A]]]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Recursive type 'Chain' is not supported by the current regularity check.
-//│ ║  l.317: 	type Chain[A] = {value: A, next: Chain[Wrap[Wrap[A]]]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	type Chain[A] = {value: A, next: Chain[Wrap[Wrap[A]]]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
-//│ ║  l.317: 	type Chain[A] = {value: A, next: Chain[Wrap[Wrap[A]]]}
-//│ ╙──       	           ^
+//│ ║  l.+2: 	type Chain[A] = {value: A, next: Chain[Wrap[Wrap[A]]]}
+//│ ╙──      	           ^
 
 // Boolean-only recursion has no structural guard and is rejected.
 :e
 type Choice[A] = A | Choice[A | Int]
 fun choose(value: Choice[Str]): Choice[Str] = value
 //│ ╔══[COMPILATION ERROR] Resolution error in alternation
-//│ ║  l.331: 	type Choice[A] = A | Choice[A | Int]
-//│ ║         	                 ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Choice[A] = A | Choice[A | Int]
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Unguarded recursive type alias 'Choice'.
-//│ ║  l.331: 	type Choice[A] = A | Choice[A | Int]
-//│ ║         	                     ^^^^^^
+//│ ║  l.+1: 	type Choice[A] = A | Choice[A | Int]
+//│ ║        	                     ^^^^^^
 //│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
-//│ ║  l.331: 	type Choice[A] = A | Choice[A | Int]
-//│ ╙──       	     ^^^^^^
+//│ ║  l.+1: 	type Choice[A] = A | Choice[A | Int]
+//│ ╙──      	     ^^^^^^
 
 // Growing arguments do not guard Boolean-only alias recursion either.
 :e
 type Choice[A] = A | Choice[Array[A]]
 private fun unused(value: Choice[Int]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in alternation
-//│ ║  l.345: 	type Choice[A] = A | Choice[Array[A]]
-//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Choice[A] = A | Choice[Array[A]]
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Unguarded recursive type alias 'Choice'.
-//│ ║  l.345: 	type Choice[A] = A | Choice[Array[A]]
-//│ ║         	                     ^^^^^^
+//│ ║  l.+1: 	type Choice[A] = A | Choice[Array[A]]
+//│ ║        	                     ^^^^^^
 //│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
-//│ ║  l.345: 	type Choice[A] = A | Choice[Array[A]]
-//│ ╙──       	     ^^^^^^
+//│ ║  l.+1: 	type Choice[A] = A | Choice[Array[A]]
+//│ ╙──      	     ^^^^^^
 
 // Selecting an absent output resets the observable argument to Any.
 // The current conservative check rejects this regular case; retain the example
@@ -361,17 +361,17 @@ private fun unused(value: Choice[Int]) = ()
 type Chain[A] = {value: A, next: Chain[in Array[A]]}
 private fun read[A](chain: Chain[A]) = chain.next.value
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.361: 	type Chain[A] = {value: A, next: Chain[in Array[A]]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[in Array[A]]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Recursive type 'Chain' is not supported by the current regularity check.
-//│ ║  l.361: 	type Chain[A] = {value: A, next: Chain[in Array[A]]}
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[in Array[A]]}
+//│ ║        	                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
-//│ ║  l.361: 	type Chain[A] = {value: A, next: Chain[in Array[A]]}
-//│ ╙──       	           ^
+//│ ║  l.+1: 	type Chain[A] = {value: A, next: Chain[in Array[A]]}
+//│ ╙──      	           ^
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.362: 	private fun read[A](chain: Chain[A]) = chain.next.value
-//│ ╙──       	                                       ^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	private fun read[A](chain: Chain[A]) = chain.next.value
+//│ ╙──      	                                       ^^^^^^^^^^^^^^^^
 
 // Absorption across recursive steps can depend on the relationship between arguments.
 // After two steps both arguments stabilize, despite a syntactic constructor cycle.
@@ -381,17 +381,17 @@ type Stable[A, B] = {value: A, next: Stable[A | (B & Array[A]), A]}
 private fun walk[A, B](chain: Stable[A, B], n: Int) =
   if n > 0 then walk(chain.next, n - 1) else ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.380: 	type Stable[A, B] = {value: A, next: Stable[A | (B & Array[A]), A]}
-//│ ║         	                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Stable[A, B] = {value: A, next: Stable[A | (B & Array[A]), A]}
+//│ ║        	                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Recursive type 'Stable' is not supported by the current regularity check.
-//│ ║  l.380: 	type Stable[A, B] = {value: A, next: Stable[A | (B & Array[A]), A]}
-//│ ║         	                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	type Stable[A, B] = {value: A, next: Stable[A | (B & Array[A]), A]}
+//│ ║        	                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Type parameter 'A' occurs under a type constructor on a recursive dependency cycle.
-//│ ║  l.380: 	type Stable[A, B] = {value: A, next: Stable[A | (B & Array[A]), A]}
-//│ ╙──       	            ^
+//│ ║  l.+1: 	type Stable[A, B] = {value: A, next: Stable[A | (B & Array[A]), A]}
+//│ ╙──      	            ^
 //│ ╔══[COMPILATION ERROR] This selection of member 'next' has no resolved target
-//│ ║  l.382: 	  if n > 0 then walk(chain.next, n - 1) else ()
-//│ ╙──       	                     ^^^^^^^^^^
+//│ ║  l.+3: 	  if n > 0 then walk(chain.next, n - 1) else ()
+//│ ╙──      	                     ^^^^^^^^^^
 
 // A constructor-free output wildcard preserves A and reaches a finite graph.
 // Normalizing both argument parts must not retain nested wildcard environments.

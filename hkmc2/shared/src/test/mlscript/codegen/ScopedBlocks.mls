@@ -84,7 +84,7 @@ fun f(x) =
     x()
   x
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.84: 	    x()
+//│ ║  l.+6: 	    x()
 //│ ║        	    ^^^
 //│ ╙── Unit value cannot be called like a function.
 

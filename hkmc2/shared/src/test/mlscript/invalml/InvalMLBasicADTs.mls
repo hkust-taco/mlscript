@@ -19,14 +19,14 @@ class Foo with
   constructor
     Bar(x)
 //│ ╔══[COMPILATION ERROR] Invalid ADT parameter.
-//│ ║  l.20: 	    Bar(x)
+//│ ║  l.+3: 	    Bar(x)
 //│ ╙──      	        ^
 
 
 :e
 Nil(1)
 //│ ╔══[COMPILATION ERROR] Type error in application
-//│ ║  l.27: 	Nil(1)
+//│ ║  l.+1: 	Nil(1)
 //│ ║        	^^^^^^
 //│ ╙── because: cannot constrain  IntList  <:  (Int) ->{'eff} ('app)
 //│ Type: ⊥
@@ -34,7 +34,7 @@ Nil(1)
 :e
 Nil()
 //│ ╔══[COMPILATION ERROR] Type error in application
-//│ ║  l.35: 	Nil()
+//│ ║  l.+1: 	Nil()
 //│ ║        	^^^^^
 //│ ╙── because: cannot constrain  IntList  <:  () ->{'eff} ('app)
 //│ Type: ⊥
@@ -43,10 +43,10 @@ Nil()
 :e
 Cons("1", Nil)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.44: 	Cons("1", Nil)
+//│ ║  l.+1: 	Cons("1", Nil)
 //│ ╙──      	     ^^^
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
-//│ ║  l.44: 	Cons("1", Nil)
+//│ ║  l.+1: 	Cons("1", Nil)
 //│ ║        	     ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: IntList
@@ -91,10 +91,10 @@ BoolVal(false)
 :e
 IntVal("1")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.92: 	IntVal("1")
+//│ ║  l.+1: 	IntVal("1")
 //│ ╙──      	       ^^^
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
-//│ ║  l.92: 	IntVal("1")
+//│ ║  l.+1: 	IntVal("1")
 //│ ║        	       ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Value[out Int]
@@ -118,11 +118,11 @@ f
 :e
 Lam(42)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
-//│ ║  l.119: 	Lam(42)
-//│ ╙──       	    ^^
+//│ ║  l.+1: 	Lam(42)
+//│ ╙──      	    ^^
 //│ ╔══[COMPILATION ERROR] Type error in integer literal with expected type (Expr[out 'U]) ->{⊥} Expr[out 'V]
-//│ ║  l.119: 	Lam(42)
-//│ ║         	    ^^
+//│ ║  l.+1: 	Lam(42)
+//│ ║        	    ^^
 //│ ╙── because: cannot constrain  Int  <:  (Expr[in ⊥ out 'U]) ->{⊥} (Expr[in ⊥ out 'V])
 //│ Type: Expr[out ⊤ -> ⊥]
 
@@ -137,8 +137,8 @@ b
 :e
 App(f, b)
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type Expr[out 'U]
-//│ ║  l.138: 	App(f, b)
-//│ ║         	       ^
+//│ ║  l.+1: 	App(f, b)
+//│ ║        	       ^
 //│ ╟── because: cannot constrain  Expr[in ⊥ out 'S]  <:  Expr[in ⊥ out 'U]
 //│ ╟── because: cannot constrain  'S  <:  'U
 //│ ╟── because: cannot constrain  'S  <:  'U1
@@ -164,10 +164,10 @@ fun badSum(xs) =
   if xs is
     Cons(x, xs) then x + badSum(xs)
 //│ ╔══[COMPILATION ERROR] Expect 2 cases, but 1 got.
-//│ ║  l.164: 	  if xs is
-//│ ║         	     ^^^^^
-//│ ║  l.165: 	    Cons(x, xs) then x + badSum(xs)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  if xs is
+//│ ║        	     ^^^^^
+//│ ║  l.+3: 	    Cons(x, xs) then x + badSum(xs)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun badSum(xs) =
@@ -175,19 +175,19 @@ fun badSum(xs) =
     Cons(x, xs) then x + badSum(xs)
     Cons(x, xs) then x + badSum(xs)
 //│ ╔══[COMPILATION ERROR] Duplicate match branches.
-//│ ║  l.174: 	  if xs is
-//│ ║         	     ^^^^^
-//│ ║  l.175: 	    Cons(x, xs) then x + badSum(xs)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.176: 	    Cons(x, xs) then x + badSum(xs)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  if xs is
+//│ ║        	     ^^^^^
+//│ ║  l.+3: 	    Cons(x, xs) then x + badSum(xs)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    Cons(x, xs) then x + badSum(xs)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expect 2 cases, but 1 got.
-//│ ║  l.174: 	  if xs is
-//│ ║         	     ^^^^^
-//│ ║  l.175: 	    Cons(x, xs) then x + badSum(xs)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.176: 	    Cons(x, xs) then x + badSum(xs)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  if xs is
+//│ ║        	     ^^^^^
+//│ ║  l.+3: 	    Cons(x, xs) then x + badSum(xs)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    Cons(x, xs) then x + badSum(xs)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 fun getOrElse(m, d) =
@@ -294,14 +294,14 @@ fun foo(x) =
     None then 0
     42 then 42
 //│ ╔══[COMPILATION ERROR] Mixing ADT pattern matching and general matching is not supported yet.
-//│ ║  l.292: 	  if x is
-//│ ║         	     ^^^^
-//│ ║  l.293: 	    Some(x) then 1
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.294: 	    None then 0
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.295: 	    42 then 42
-//│ ╙──       	^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.+3: 	    Some(x) then 1
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    None then 0
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	    42 then 42
+//│ ╙──      	^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Variable not found: arg$Some$0$
 
 

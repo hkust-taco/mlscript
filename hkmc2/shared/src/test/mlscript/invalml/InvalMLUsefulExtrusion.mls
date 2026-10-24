@@ -97,7 +97,7 @@ foo
 region r in
   foo(r, r, wield, wield)
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'r2
-//│ ║  l.98: 	  foo(r, r, wield, wield)
+//│ ║  l.+2: 	  foo(r, r, wield, wield)
 //│ ║        	         ^
 //│ ╟── because: cannot constrain  Region[in ⊥ out r]  <:  'r2
 //│ ╟── because: cannot constrain  Region[in ⊥ out r]  <:  Region[in ⊥ out 'R]
@@ -106,7 +106,7 @@ region r in
 //│ ╟── because: cannot constrain  'R1  <:  ¬r
 //│ ╙── because: cannot constrain  r  <:  ¬r
 //│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type 'f
-//│ ║  l.98: 	  foo(r, r, wield, wield)
+//│ ║  l.+2: 	  foo(r, r, wield, wield)
 //│ ║        	            ^^^^^
 //│ ╟── because: cannot constrain  (Region[in ⊥ out 'R2]) ->{'R2} (())  <:  'f
 //│ ╟── because: cannot constrain  (Region[in ⊥ out 'R2]) ->{'R2} (())  <:  ('r2) ->{¬'R ∧ ¬'R1 ∧ 'E} (⊤)
@@ -116,7 +116,7 @@ region r in
 //│ ╟── because: cannot constrain  'R1  <:  ¬r
 //│ ╙── because: cannot constrain  r  <:  ¬r
 //│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type 'g
-//│ ║  l.98: 	  foo(r, r, wield, wield)
+//│ ║  l.+2: 	  foo(r, r, wield, wield)
 //│ ║        	                   ^^^^^
 //│ ╟── because: cannot constrain  (Region[in ⊥ out 'R3]) ->{'R3} (())  <:  'g
 //│ ╟── because: cannot constrain  (Region[in ⊥ out 'R3]) ->{'R3} (())  <:  ('r1) ->{¬'R ∧ ¬'R1 ∧ 'E} ('T)
@@ -131,8 +131,8 @@ region r in
   region s in
     foo(r, s, wield, wield)
 //│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type 'f
-//│ ║  l.132: 	    foo(r, s, wield, wield)
-//│ ║         	              ^^^^^
+//│ ║  l.+3: 	    foo(r, s, wield, wield)
+//│ ║        	              ^^^^^
 //│ ╟── because: cannot constrain  (Region[in ⊥ out 'R]) ->{'R} (())  <:  'f
 //│ ╟── because: cannot constrain  (Region[in ⊥ out 'R]) ->{'R} (())  <:  ('r2) ->{¬'R1 ∧ ¬'R2 ∧ 'E} (⊤)
 //│ ╟── because: cannot constrain  'R  <:  ¬'R1 ∧ ¬'R2 ∧ 'E
@@ -141,8 +141,8 @@ region r in
 //│ ╟── because: cannot constrain  'R1  <:  ¬s ∨ r
 //│ ╙── because: cannot constrain  s ∧ ¬r  <:  ¬s ∨ r
 //│ ╔══[COMPILATION ERROR] Type error in reference of type ‹not implemented› with expected type 'g
-//│ ║  l.132: 	    foo(r, s, wield, wield)
-//│ ║         	                     ^^^^^
+//│ ║  l.+3: 	    foo(r, s, wield, wield)
+//│ ║        	                     ^^^^^
 //│ ╟── because: cannot constrain  (Region[in ⊥ out 'R3]) ->{'R3} (())  <:  'g
 //│ ╟── because: cannot constrain  (Region[in ⊥ out 'R3]) ->{'R3} (())  <:  ('r1) ->{¬'R1 ∧ ¬'R2 ∧ 'E} ('T)
 //│ ╟── because: cannot constrain  'R3  <:  ¬'R1 ∧ ¬'R2 ∧ 'E
@@ -165,41 +165,41 @@ fun foo[outer, R <: outer](r1: Region[R]) =
       wield(r1)
     )
 //│ ╔══[COMPILATION ERROR] Unsupported type parameter outer binding
-//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
-//│ ╙──       	        ^^^^^
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	        ^^^^^
 //│ ╔══[COMPILATION ERROR] Unsupported type parameter operator application
-//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
-//│ ╙──       	               ^^^^^^^^^^
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	               ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: R
-//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
-//│ ╙──       	                                      ^
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^
 //│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
-//│ ╙──       	                                      ^
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
-//│ ╙──       	                                      ^
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^
 //│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
-//│ ╙──       	                                      ^
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^
 //│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
-//│ ╙──       	                                      ^
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^
 //│ ╔══[COMPILATION ERROR] Invalid type
-//│ ║  l.162: 	fun foo[outer, R <: outer](r1: Region[R]) =
-//│ ╙──       	                                      ^
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ╙──      	                                      ^
 
 :fixme
 fun foo: [outer, R <: outer] -> Region[R] -> ()
 //│ ╔══[COMPILATION ERROR] Illegal forall annotation.
-//│ ║  l.193: 	fun foo: [outer, R <: outer] -> Region[R] -> ()
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun foo: [outer, R <: outer] -> Region[R] -> ()
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.193: 	fun foo: [outer, R <: outer] -> Region[R] -> ()
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun foo: [outer, R <: outer] -> Region[R] -> ()
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Invalid type
-//│ ║  l.193: 	fun foo: [outer, R <: outer] -> Region[R] -> ()
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun foo: [outer, R <: outer] -> Region[R] -> ()
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 
@@ -230,8 +230,8 @@ region s in
   foo of () =>
     freeze(s, () => wield(s))
 //│ ╔══[COMPILATION ERROR] Type error in function literal with expected type () ->{¬'R ∧ 'E} 'T
-//│ ║  l.231: 	    freeze(s, () => wield(s))
-//│ ║         	              ^^^^^^^^^^^^^^
+//│ ║  l.+3: 	    freeze(s, () => wield(s))
+//│ ║        	              ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'R1  <:  ¬'R ∧ 'E
 //│ ╟── because: cannot constrain  'R1  <:  ¬'R
 //│ ╟── because: cannot constrain  s  <:  ¬'R

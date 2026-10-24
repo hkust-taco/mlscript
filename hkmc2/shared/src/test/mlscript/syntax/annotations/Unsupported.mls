@@ -10,59 +10,59 @@ import "../../../mlscript-compile/StrOps.mls"
 @debug
 open StrOps
 //│ ╔══[WARNING] This annotation has no effect
-//│ ║  l.10: 	@debug
+//│ ║  l.+1: 	@debug
 //│ ║        	^^^^^^
 //│ ╟── Annotations are not supported on open terms.
-//│ ║  l.11: 	open StrOps
+//│ ║  l.+2: 	open StrOps
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @debug 0
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.20: 	@debug 0
+//│ ║  l.+1: 	@debug 0
 //│ ║        	^^^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
-//│ ║  l.20: 	@debug 0
+//│ ║  l.+1: 	@debug 0
 //│ ╙──      	       ^
 //│ = 0
 
 :w
 @debug 1 + 2
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.30: 	@debug 1 + 2
+//│ ║  l.+1: 	@debug 1 + 2
 //│ ║        	^^^^^^
 //│ ╟── This annotation is not supported on application terms.
-//│ ║  l.30: 	@debug 1 + 2
+//│ ║  l.+1: 	@debug 1 + 2
 //│ ╙──      	       ^^^^^
 //│ = 3
 
 :w
 (@debug 1 + 2)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.40: 	(@debug 1 + 2)
+//│ ║  l.+1: 	(@debug 1 + 2)
 //│ ║        	 ^^^^^^
 //│ ╟── This annotation is not supported on application terms.
-//│ ║  l.40: 	(@debug 1 + 2)
+//│ ║  l.+1: 	(@debug 1 + 2)
 //│ ╙──      	        ^^^^^
 //│ = 3
 
 :w
 (@debug 1) + 2
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.50: 	(@debug 1) + 2
+//│ ║  l.+1: 	(@debug 1) + 2
 //│ ║        	 ^^^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
-//│ ║  l.50: 	(@debug 1) + 2
+//│ ║  l.+1: 	(@debug 1) + 2
 //│ ╙──      	        ^
 //│ = 3
 
 :w
 (1 + @debug 2)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.60: 	(1 + @debug 2)
+//│ ║  l.+1: 	(1 + @debug 2)
 //│ ║        	     ^^^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
-//│ ║  l.60: 	(1 + @debug 2)
+//│ ║  l.+1: 	(1 + @debug 2)
 //│ ╙──      	            ^
 //│ = 3
 
@@ -71,10 +71,10 @@ data class Log(msg: Str)
 :w
 id(@Log 5)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.72: 	id(@Log 5)
+//│ ║  l.+1: 	id(@Log 5)
 //│ ║        	   ^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
-//│ ║  l.72: 	id(@Log 5)
+//│ ║  l.+1: 	id(@Log 5)
 //│ ╙──      	        ^
 //│ = 5
 
@@ -82,6 +82,6 @@ id(@Log 5)
 :re
 @1 + 2 class Qux
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
-//│ ║  l.83: 	@1 + 2 class Qux
+//│ ║  l.+1: 	@1 + 2 class Qux
 //│ ╙──      	       ^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: 3 is not a function

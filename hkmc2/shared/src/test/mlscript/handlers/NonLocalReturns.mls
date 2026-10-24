@@ -67,7 +67,7 @@ f()()
 :e
 return 100
 //│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.68: 	return 100
+//│ ║  l.+1: 	return 100
 //│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -76,14 +76,14 @@ if true do
   while false do
     let f = () => return 100
 //│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.77: 	    let f = () => return 100
+//│ ║  l.+3: 	    let f = () => return 100
 //│ ╙──      	                  ^^^^^^^^^^
 
 :e
 fun f() =
   type A = return "lol"
 //│ ╔══[COMPILATION ERROR] Return statements are not allowed in this context.
-//│ ║  l.84: 	  type A = return "lol"
+//│ ║  l.+2: 	  type A = return "lol"
 //│ ╙──      	           ^^^^^^^^^^^^
 
 
@@ -110,11 +110,11 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.108: 	  object A with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  object A with
+//│ ╙──      	         ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.108: 	  object A with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  object A with
+//│ ╙──      	         ^
 //│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_18 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
@@ -137,11 +137,11 @@ fun f() =
   4
 f()
 //│ ╔══[WARNING] Objects are not yet lifted.
-//│ ║  l.135: 	  object A with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  object A with
+//│ ╙──      	         ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.135: 	  object A with
-//│ ╙──       	         ^
+//│ ║  l.+2: 	  object A with
+//│ ╙──      	         ^
 //│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_22 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 

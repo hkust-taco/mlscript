@@ -481,28 +481,28 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.476: 	    module A with
+//│ ║  l.+17: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.472: 	    module A with
+//│ ║  l.+13: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.468: 	    module A with
-//│ ╙──       	           ^
+//│ ║  l.+9: 	    module A with
+//│ ╙──      	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.464: 	    module A with
+//│ ║  l.+5: 	    module A with
+//│ ╙──      	           ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.+5: 	    module A with
+//│ ╙──      	           ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.+9: 	    module A with
+//│ ╙──      	           ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.+13: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.464: 	    module A with
-//│ ╙──       	           ^
-//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.468: 	    module A with
-//│ ╙──       	           ^
-//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.472: 	    module A with
-//│ ╙──       	           ^
-//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.476: 	    module A with
+//│ ║  l.+17: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

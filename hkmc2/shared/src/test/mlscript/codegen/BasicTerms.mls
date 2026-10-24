@@ -16,7 +16,7 @@
 1
 2
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.16: 	1
+//│ ║  l.+1: 	1
 //│ ╙──      	^
 //│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
 //│ Program:
@@ -62,10 +62,10 @@ print("Hi")
 :re
 2(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.63: 	2(2)
+//│ ║  l.+1: 	2(2)
 //│ ║        	^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.63: 	2(2)
+//│ ║  l.+1: 	2(2)
 //│ ╙──      	^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."

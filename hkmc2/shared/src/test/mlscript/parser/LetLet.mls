@@ -4,15 +4,15 @@
 :pe
 let let
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
-//│ ║  l.5: 	let let
-//│ ╙──     	       ^
+//│ ║  l.+1: 	let let
+//│ ╙──      	       ^
 //│ Parsed:
 //│ 	LetLike(Keywrd(keyword 'let'),Error(),None,None)
 
 :pe
 let x = 1 let y = 2
 //│ ╔══[PARSE ERROR] Expected end of input; found 'let' keyword instead
-//│ ║  l.13: 	let x = 1 let y = 2
+//│ ║  l.+1: 	let x = 1 let y = 2
 //│ ╙──      	          ^^^
 //│ Parsed:
 //│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None)

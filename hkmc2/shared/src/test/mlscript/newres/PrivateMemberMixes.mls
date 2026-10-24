@@ -15,10 +15,10 @@ module OpenMixed with
     secret
 [OpenMixed.read(true), OpenMixed.read(false)]
 //│ ╔══[COMPILATION ERROR] This reference may target a private member, which cannot be selected together with other members
-//│ ║  l.15: 	    secret
+//│ ║  l.+9: 	    secret
 //│ ║        	    ^^^^^^
 //│ ╟── private member 'secret' declared here
-//│ ║  l.10: 	  private val secret = "private"
+//│ ║  l.+4: 	  private val secret = "private"
 //│ ║        	              ^^^^^^
 //│ ╙── The receiver may also have a shape whose members are unknown
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -50,10 +50,10 @@ class AliasMixed extends AliasBase with
 let mixed = new AliasMixed
 [mixed.read(true), mixed.read(false)]
 //│ ╔══[COMPILATION ERROR] This reference may target a private member, which cannot be selected together with other members
-//│ ║  l.49: 	  fun read(flag) = (if flag then this else ({Secret: {value(): "dynamic"}} as dyn)).Secret.value()
+//│ ║  l.+8: 	  fun read(flag) = (if flag then this else ({Secret: {value(): "dynamic"}} as dyn)).Secret.value()
 //│ ║        	                                                                                   ^^^^^^^
 //│ ╟── private module 'Secret' declared here
-//│ ║  l.47: 	  private module Secret with
+//│ ║  l.+6: 	  private module Secret with
 //│ ║        	                 ^^^^^^
 //│ ╙── The receiver may also have a shape whose members are unknown
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

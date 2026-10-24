@@ -37,7 +37,7 @@ e.field
 :re
 e.next
 //│ ╔══[COMPILATION ERROR] Cannot access companion Test from the context of this selection
-//│ ║  l.38: 	e.next
+//│ ║  l.+1: 	e.next
 //│ ╙──      	^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   e⁰.nextˀˀˀ
@@ -69,7 +69,7 @@ let e = new Test(123)
 :re
 e.next
 //│ ╔══[COMPILATION ERROR] Cannot access companion Test from the context of this selection
-//│ ║  l.70: 	e.next
+//│ ║  l.+1: 	e.next
 //│ ╙──      	^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   e¹.nextˀˀˀ
@@ -85,7 +85,7 @@ e.next
 :e
 let e = Example.Test(123)
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
-//│ ║  l.86: 	let e = Example.Test(123)
+//│ ║  l.+1: 	let e = Example.Test(123)
 //│ ╙──      	        ^^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   let e²,
@@ -111,8 +111,8 @@ let e = Test(123)
 :fixme // FIXME: error is probably due to some `bms.asTrm` weirdness (guess: due to lightweight elab?)
 Example.t
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
-//│ ║  l.112: 	Example.t
-//│ ╙──       	^^^^^^^
+//│ ║  l.+1: 	Example.t
+//│ ╙──      	^^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   Example⁰.t⁰
 //│ where
@@ -126,11 +126,11 @@ Example.t
 :fixme // TODO: should get an inferred Type view of the field
 Example.t.field
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
-//│ ║  l.127: 	Example.t.field
-//│ ╙──       	^^^^^^^
+//│ ║  l.+1: 	Example.t.field
+//│ ╙──      	^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unresolved selection:
-//│ ║  l.127: 	Example.t.field
-//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	Example.t.field
+//│ ║        	^^^^^^^^^^^^^^^
 //│ ╙── Type `type ⊤` does not contain member 'field'
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   Example⁰.t⁰.fieldˀˀˀ
@@ -142,11 +142,11 @@ Example.t.field
 :fixme // Same
 Example.t.next
 //│ ╔══[COMPILATION ERROR] Cannot use non-term member Example in term position
-//│ ║  l.143: 	Example.t.next
-//│ ╙──       	^^^^^^^
+//│ ║  l.+1: 	Example.t.next
+//│ ╙──      	^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unresolved selection:
-//│ ║  l.143: 	Example.t.next
-//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.+1: 	Example.t.next
+//│ ║        	^^^^^^^^^^^^^^
 //│ ╙── Type `type ⊤` does not contain member 'next'
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   Example⁰.t⁰.nextˀˀˀ

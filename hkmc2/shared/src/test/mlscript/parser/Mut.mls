@@ -4,8 +4,8 @@
 :pe
 mut
 //│ ╔══[PARSE ERROR] Expected expression or block after 'mut' keyword; found end of input instead
-//│ ║  l.5: 	mut
-//│ ╙──     	   ^
+//│ ║  l.+1: 	mut
+//│ ╙──      	   ^
 //│ Parsed:
 //│ 	Error()
 

@@ -5,14 +5,14 @@
 :e
 ..., 1
 //│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
-//│ ║  l.6: 	..., 1
-//│ ╙──     	^^^
+//│ ║  l.+1: 	..., 1
+//│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 fun f = ..., 1
 //│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
-//│ ║  l.13: 	fun f = ..., 1
+//│ ║  l.+1: 	fun f = ..., 1
 //│ ╙──      	        ^^^
 //│ = 1
 
@@ -25,13 +25,13 @@ fun f = ..., 1
 :e
 fun foo(a, ...b, c) = [a, ...b, c]
 //│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.26: 	fun foo(a, ...b, c) = [a, ...b, c]
+//│ ║  l.+1: 	fun foo(a, ...b, c) = [a, ...b, c]
 //│ ╙──      	           ^^^^
 
 :e
 fun foo(a, ...b, c) = [a, ...b]
 //│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.32: 	fun foo(a, ...b, c) = [a, ...b]
+//│ ║  l.+1: 	fun foo(a, ...b, c) = [a, ...b]
 //│ ╙──      	           ^^^^
 
 :re
@@ -45,10 +45,10 @@ fun foo(a, ...b) = [a, ...b]
 :re
 foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.46: 	foo()
+//│ ║  l.+1: 	foo()
 //│ ║        	^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 0
-//│ ║  l.42: 	fun foo(a, ...b) = [a, ...b]
+//│ ║  l.XX: 	fun foo(a, ...b) = [a, ...b]
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
@@ -56,13 +56,13 @@ foo()
 :e
 fun foo(1) = 2
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.57: 	fun foo(1) = 2
+//│ ║  l.+1: 	fun foo(1) = 2
 //│ ╙──      	        ^
 
 :e
 fun foo(...1) = 2
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found spread
-//│ ║  l.63: 	fun foo(...1) = 2
+//│ ║  l.+1: 	fun foo(...1) = 2
 //│ ╙──      	        ^^^^
 
 

@@ -23,7 +23,7 @@ fork(foo, bar)
 region x in
   fork((_ => x.ref 1), (_ => x.ref 2))
 //│ ╔══[COMPILATION ERROR] Type error in function literal with expected type (⊤) ->{'B} 'T2
-//│ ║  l.24: 	  fork((_ => x.ref 1), (_ => x.ref 2))
+//│ ║  l.+2: 	  fork((_ => x.ref 1), (_ => x.ref 2))
 //│ ║        	                        ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  'B
 //│ ╟── because: cannot constrain  x  <:  'B
@@ -56,7 +56,7 @@ region r1 in
   let g = (r => region r2 in f(r, r2)) in
     region r3 in g(r3)
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'r
-//│ ║  l.57: 	    region r3 in g(r3)
+//│ ║  l.+3: 	    region r3 in g(r3)
 //│ ║        	                   ^^
 //│ ╟── because: cannot constrain  Region[in ⊥ out r3]  <:  'r
 //│ ╟── because: cannot constrain  Region[in ⊥ out 'r31]  <:  'r
@@ -67,9 +67,9 @@ region r1 in
 //│ ╟── because: cannot constrain  'r2  <:  r1
 //│ ╙── because: cannot constrain  ¬r1  <:  r1
 //│ ╔══[COMPILATION ERROR] Type error in block
-//│ ║  l.56: 	  let g = (r => region r2 in f(r, r2)) in
+//│ ║  l.+2: 	  let g = (r => region r2 in f(r, r2)) in
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.57: 	    region r3 in g(r3)
+//│ ║  l.+3: 	    region r3 in g(r3)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  ¬'r11  <:  ⊥
@@ -89,7 +89,7 @@ region r1 in
 region x in
   naive_helper(x)
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'r1
-//│ ║  l.90: 	  naive_helper(x)
+//│ ║  l.+2: 	  naive_helper(x)
 //│ ║        	               ^
 //│ ╟── because: cannot constrain  Region[in ⊥ out x]  <:  'r1
 //│ ╟── because: cannot constrain  Region[in ⊥ out 'x1]  <:  'r1
@@ -98,7 +98,7 @@ region x in
 //│ ╟── because: cannot constrain  ⊤  <:  'reg
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[COMPILATION ERROR] Type error in block
-//│ ║  l.90: 	  naive_helper(x)
+//│ ║  l.+2: 	  naive_helper(x)
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  ¬'x2 ∧ 'eff1  <:  ⊥
@@ -138,8 +138,8 @@ region x in
 region x in
   (region y in let t = helper(x) in 42) as [A] -> Int
 //│ ╔══[COMPILATION ERROR] Type error in region expression with expected type [outer, 'A] -> Int
-//│ ║  l.139: 	  (region y in let t = helper(x) in 42) as [A] -> Int
-//│ ║         	                       ^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  (region y in let t = helper(x) in 42) as [A] -> Int
+//│ ║        	                       ^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
 //│ ╟── because: cannot constrain  ¬'y ∧ x  <:  ⊥
 //│ ╟── because: cannot constrain  x  <:  'y
@@ -156,29 +156,29 @@ fun anno2: [outer] -> Int ->{outer} Int
 :e
 fun badanno: outer
 //│ ╔══[COMPILATION ERROR] Illegal outer reference.
-//│ ║  l.157: 	fun badanno: outer
-//│ ╙──       	             ^^^^^
+//│ ║  l.+1: 	fun badanno: outer
+//│ ╙──      	             ^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.157: 	fun badanno: outer
-//│ ╙──       	             ^^^^^
+//│ ║  l.+1: 	fun badanno: outer
+//│ ╙──      	             ^^^^^
 //│ ╔══[COMPILATION ERROR] Invalid type
-//│ ║  l.157: 	fun badanno: outer
-//│ ╙──       	             ^^^^^
+//│ ║  l.+1: 	fun badanno: outer
+//│ ╙──      	             ^^^^^
 
 :e
 fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╔══[COMPILATION ERROR] Only one outer variable can be bound.
-//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
-//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal forall annotation.
-//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
-//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
-//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Invalid type
-//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
-//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 fun annohelper: [outer, T extends outer] -> Region[out T] ->{T} Pair[out Ref[Int, out T], out Ref[Int, out ~outer]]
@@ -219,14 +219,14 @@ fun foo(r1) =
     fork((_ => r1.ref 1), (_ => r2.ref 2))
     foo(r2)
 //│ ╔══[COMPILATION ERROR] Type error in function literal
-//│ ║  l.217: 	fun foo(r1) =
-//│ ║         	       ^^^^^^
-//│ ║  l.218: 	  region r2 in
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.219: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.220: 	    foo(r2)
-//│ ║         	^^^^^^^^^^^
+//│ ║  l.+1: 	fun foo(r1) =
+//│ ║        	       ^^^^^^
+//│ ║  l.+2: 	  region r2 in
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.+3: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    foo(r2)
+//│ ║        	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  (Region[in ⊥ out 'r2]) ->{'eff1} ('app1)
 //│ ╟── because: cannot constrain  Region[in ⊥ out 'r2]  <:  'r1

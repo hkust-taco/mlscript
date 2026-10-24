@@ -23,23 +23,23 @@ object do_not_compile
 :w
 fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
 //│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.24: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
+//│ ║  l.+1: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
 //│ ║        	                     ^^^^^^^^^^^^^^^
 //│ ╟── Note: Patterns only support the `@compile` annotation.
-//│ ║  l.24: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
+//│ ║  l.+1: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
 //│ ╙──      	                                     ^^^
 
 :w
 :e
 fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╔══[COMPILATION ERROR] Name not found: name_not_found
-//│ ║  l.34: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
+//│ ║  l.+1: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╙──      	                     ^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.34: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
+//│ ║  l.+1: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ║        	                     ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: Patterns only support the `@compile` annotation.
-//│ ║  l.34: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
+//│ ║  l.+1: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╙──      	                                     ^^^
 
 pattern Box' = Box
@@ -49,9 +49,9 @@ fun foo(x) = if x is @compile Box' then "yes" else "no"
 :w
 fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
 //│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.50: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
+//│ ║  l.+1: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
 //│ ║        	                     ^^^^^^^^^^^^^^^
 //│ ╟── Note: Patterns only support the `@compile` annotation.
-//│ ║  l.50: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
+//│ ║  l.+1: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
 //│ ╙──      	                                     ^^^^
 

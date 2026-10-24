@@ -6,18 +6,18 @@
 :re
 new
 //│ ╔══[PARSE ERROR] Expected 'with' keyword, expression, or block after `new` keyword; found end of input instead
-//│ ║  l.7: 	new
-//│ ╙──     	   ^
+//│ ║  l.+1: 	new
+//│ ╙──      	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 new 2
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.15: 	new 2
+//│ ║  l.+1: 	new 2
 //│ ║        	^^^^^
 //│ ╟── Invalid class expression: integer literal
-//│ ║  l.15: 	new 2
+//│ ║  l.+1: 	new 2
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -25,10 +25,10 @@ new 2
 :re
 new 2 + 2
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.26: 	new 2 + 2
+//│ ║  l.+1: 	new 2 + 2
 //│ ║        	^^^^^
 //│ ╟── Invalid class expression: integer literal
-//│ ║  l.26: 	new 2 + 2
+//│ ║  l.+1: 	new 2 + 2
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -44,10 +44,10 @@ new! 2 + 2
 :re
 new()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.45: 	new()
+//│ ║  l.+1: 	new()
 //│ ║        	^^^^^
 //│ ╟── Invalid class expression: unit value
-//│ ║  l.45: 	new()
+//│ ║  l.+1: 	new()
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -59,7 +59,7 @@ new!()
 :re
 new {}
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.60: 	new {}
+//│ ║  l.+1: 	new {}
 //│ ║        	^^^
 //│ ╙── Invalid class expression: unit value
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -67,7 +67,7 @@ new {}
 :pe
 new! {}
 //│ ╔══[PARSE ERROR] Expected expression after prefix keyword 'new!'; found end of block instead
-//│ ║  l.68: 	new! {}
+//│ ║  l.+1: 	new! {}
 //│ ╙──      	     ^^
 
 
@@ -84,10 +84,10 @@ new { x = 1 }
 //│       lhs = Ident of "x"
 //│       rhs = IntLit of 1
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.79: 	new { x = 1 }
+//│ ║  l.+1: 	new { x = 1 }
 //│ ╙──      	      ^
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.79: 	new { x = 1 }
+//│ ║  l.+1: 	new { x = 1 }
 //│ ║        	^^^^^^^^^^^
 //│ ╙── Invalid class expression: block
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -96,7 +96,7 @@ new { x = 1 }
 :e
 new! { x = 1 }
 //│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'new!'
-//│ ║  l.97: 	new! { x = 1 }
+//│ ║  l.+1: 	new! { x = 1 }
 //│ ╙──      	^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -104,8 +104,8 @@ new! { x = 1 }
 :e
 let xs = new Oopsie
 //│ ╔══[COMPILATION ERROR] Name not found: Oopsie
-//│ ║  l.105: 	let xs = new Oopsie
-//│ ╙──       	             ^^^^^^
+//│ ║  l.+1: 	let xs = new Oopsie
+//│ ╙──      	             ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = undefined
 

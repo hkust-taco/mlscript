@@ -49,14 +49,14 @@ fun bar(y) =
 :sr
 bar(A).u
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.50: 	bar(A).u
+//│ ║  l.+1: 	bar(A).u
 //│ ║        	^^^^^^^^
 //│ ╟── Cannot resolve member 'u' of a value with unknown shape.
 //│ ╟── Parameter 'y' admits values of unknown shape.
-//│ ║  l.40: 	fun bar(y) =
+//│ ║  l.XX: 	fun bar(y) =
 //│ ║        	        ^
 //│ ╟── 'bar' is exposed by this compilation unit.
-//│ ║  l.40: 	fun bar(y) =
+//│ ║  l.XX: 	fun bar(y) =
 //│ ╙──      	^^^^^^^^^^
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   bar⁰(A⁰)‹app³›.u⁰
@@ -68,14 +68,14 @@ bar(A).u
 :sr
 bar(B).u
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.69: 	bar(B).u
+//│ ║  l.+1: 	bar(B).u
 //│ ║        	^^^^^^^^
 //│ ╟── Cannot resolve member 'u' of a value with unknown shape.
 //│ ╟── Parameter 'y' admits values of unknown shape.
-//│ ║  l.40: 	fun bar(y) =
+//│ ║  l.XX: 	fun bar(y) =
 //│ ║        	        ^
 //│ ╟── 'bar' is exposed by this compilation unit.
-//│ ║  l.40: 	fun bar(y) =
+//│ ║  l.XX: 	fun bar(y) =
 //│ ╙──      	^^^^^^^^^^
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   bar⁰(B⁰)‹app⁴›.u‹u², u⁰›

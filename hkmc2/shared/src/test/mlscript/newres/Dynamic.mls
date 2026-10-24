@@ -78,31 +78,31 @@ explicit."nested".value
 :e
 {value: 1}.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.79: 	{value: 1}.missing
+//│ ║  l.+1: 	{value: 1}.missing
 //│ ║        	 ^^^^^^^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'missing'
-//│ ║  l.79: 	{value: 1}.missing
+//│ ║  l.+1: 	{value: 1}.missing
 //│ ╙──      	 ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 1()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.89: 	1()
+//│ ║  l.+1: 	1()
 //│ ║        	^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.89: 	1()
+//│ ║  l.+1: 	1()
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 dyn
 //│ ╔══[COMPILATION ERROR] Resolution error in dynamic type
-//│ ║  l.99: 	dyn
+//│ ║  l.+1: 	dyn
 //│ ║        	^^^
 //│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (dynamic type)
-//│ ║  l.99: 	dyn
+//│ ║  l.+1: 	dyn
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -124,11 +124,11 @@ fun notCalled(x: dyn) = x.anything(1).result
 let mixed = if hide(true) then ({value: 1} as dyn) else {other: 2}
 mixed.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.125: 	mixed.value
-//│ ║         	^^^^^^^^^^^
+//│ ║  l.+2: 	mixed.value
+//│ ║        	^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'value'
-//│ ║  l.124: 	let mixed = if hide(true) then ({value: 1} as dyn) else {other: 2}
-//│ ╙──       	                                                         ^^^^^^^^
+//│ ║  l.+1: 	let mixed = if hide(true) then ({value: 1} as dyn) else {other: 2}
+//│ ╙──      	                                                         ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mixed = {value: 1}
 

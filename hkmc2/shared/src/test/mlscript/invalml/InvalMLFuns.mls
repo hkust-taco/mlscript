@@ -67,23 +67,23 @@ foo
 fun foo[outer, R <: outer](r1: Region[R]) =
   region r2 in 42
 //│ ╔══[COMPILATION ERROR] Unsupported type parameter outer binding
-//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	        ^^^^^
 //│ ╔══[COMPILATION ERROR] Unsupported type parameter operator application
-//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	               ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: R
-//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	                                      ^
 //│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	                                      ^
 //│ ╔══[COMPILATION ERROR] Expected a type, got ‹error›
-//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	                                      ^
 //│ ╔══[COMPILATION ERROR] Expected a type, got a non-type ‹error›
-//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	                                      ^
 //│ ╔══[COMPILATION ERROR] Invalid type
-//│ ║  l.67: 	fun foo[outer, R <: outer](r1: Region[R]) =
+//│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	                                      ^

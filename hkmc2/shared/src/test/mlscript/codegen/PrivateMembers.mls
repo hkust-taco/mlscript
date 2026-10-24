@@ -124,20 +124,20 @@ LiftedPrivateObject.mkInc(41)
 :e
 PrivateObject.x
 //│ ╔══[COMPILATION ERROR] Cannot access private member 'x' outside its declaring owner
-//│ ║  l.125: 	PrivateObject.x
-//│ ║         	             ^^
+//│ ║  l.+1: 	PrivateObject.x
+//│ ║        	             ^^
 //│ ╟── private member declared here
-//│ ║  l.110: 	  private val x = 40
-//│ ╙──       	              ^
+//│ ║  l.XX: 	  private val x = 40
+//│ ╙──      	              ^
 
 :e
 PrivateObject.inc()
 //│ ╔══[COMPILATION ERROR] Cannot access private member 'inc' outside its declaring owner
-//│ ║  l.134: 	PrivateObject.inc()
-//│ ║         	             ^^^^
+//│ ║  l.+1: 	PrivateObject.inc()
+//│ ║        	             ^^^^
 //│ ╟── private member declared here
-//│ ║  l.111: 	  private fun inc() = x + 2
-//│ ╙──       	              ^^^
+//│ ║  l.XX: 	  private fun inc() = x + 2
+//│ ╙──      	              ^^^
 //│ ═══[RUNTIME ERROR] TypeError: PrivateObject1[inc$accessorSymbol1] is not a function
 
 
@@ -152,10 +152,10 @@ Strange.weird
 :e
 Strange.odd
 //│ ╔══[COMPILATION ERROR] Cannot access private member 'odd' outside its declaring owner
-//│ ║  l.153: 	Strange.odd
-//│ ║         	       ^^^^
+//│ ║  l.+1: 	Strange.odd
+//│ ║        	       ^^^^
 //│ ╟── private member declared here
-//│ ║  l.146: 	  private public fun odd = 2
-//│ ╙──       	                     ^^^
+//│ ║  l.XX: 	  private public fun odd = 2
+//│ ╙──      	                     ^^^
 
 

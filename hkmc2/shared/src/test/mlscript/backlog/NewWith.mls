@@ -5,8 +5,8 @@
 :re
 new
 //│ ╔══[PARSE ERROR] Expected 'with' keyword, expression, or block after `new` keyword; found end of input instead
-//│ ║  l.6: 	new
-//│ ╙──     	   ^
+//│ ║  l.+1: 	new
+//│ ╙──      	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 new Object
@@ -16,7 +16,7 @@ new Object
 :re
 new with
 //│ ╔══[PARSE ERROR] Expected block after 'new' body; found end of input instead
-//│ ║  l.17: 	new with
+//│ ║  l.+1: 	new with
 //│ ╙──      	        ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -24,7 +24,7 @@ new with
 :re
 new Object with
 //│ ╔══[PARSE ERROR] Expected block after 'new' body; found end of input instead
-//│ ║  l.25: 	new Object with
+//│ ║  l.+1: 	new Object with
 //│ ╙──      	               ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -32,17 +32,17 @@ new Object with
 :re
 new Object with 1
 //│ ╔══[PARSE ERROR] Expected block after 'new' body; found literal instead
-//│ ║  l.33: 	new Object with 1
+//│ ║  l.+1: 	new Object with 1
 //│ ╙──      	                ^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.33: 	new Object with 1
+//│ ║  l.+1: 	new Object with 1
 //│ ╙──      	                ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 (new Object) with 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
-//│ ║  l.43: 	(new Object) with 1
+//│ ║  l.+1: 	(new Object) with 1
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -53,7 +53,7 @@ new Object with { val x = 1 }
 :e
 new Object with { val x = 1 } with { val y = 1 }
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
-//│ ║  l.54: 	new Object with { val x = 1 } with { val y = 1 }
+//│ ║  l.+1: 	new Object with { val x = 1 } with { val y = 1 }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -88,7 +88,7 @@ new Foo(123) with { fun foo = 27 }
 :re
 new (Foo(123)) with { fun foo = 27 }
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found application of type Foo.
-//│ ║  l.89: 	new (Foo(123)) with { fun foo = 27 }
+//│ ║  l.+1: 	new (Foo(123)) with { fun foo = 27 }
 //│ ║        	     ^^^^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ > Foo 123 124
@@ -97,7 +97,7 @@ new (Foo(123)) with { fun foo = 27 }
 :e
 new! (Foo(123)) with { fun foo = 27 }
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
-//│ ║  l.98: 	new! (Foo(123)) with { fun foo = 27 }
+//│ ║  l.+1: 	new! (Foo(123)) with { fun foo = 27 }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -105,8 +105,8 @@ new! (Foo(123)) with { fun foo = 27 }
 :re
 new {Foo(123)} with { fun foo = 27 }
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found application of type Foo.
-//│ ║  l.106: 	new {Foo(123)} with { fun foo = 27 }
-//│ ║         	     ^^^^^^^^
+//│ ║  l.+1: 	new {Foo(123)} with { fun foo = 27 }
+//│ ║        	     ^^^^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ > Foo 123 124
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
@@ -122,8 +122,8 @@ new Foo(123) with
 :e
 new Foo(123) with 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
-//│ ║  l.123: 	new Foo(123) with 1
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	new Foo(123) with 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

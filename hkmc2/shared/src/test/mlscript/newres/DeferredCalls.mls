@@ -32,8 +32,8 @@ let direct = new Pair(5)(6)
 fun bad(x) = laterArity(x)
 fun laterArity(x, y) = x
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.32: 	fun bad(x) = laterArity(x)
+//│ ║  l.+1: 	fun bad(x) = laterArity(x)
 //│ ║        	             ^^^^^^^^^^^^^
 //│ ╟── Function 'laterArity' expected 2 arguments, but got 1
-//│ ║  l.33: 	fun laterArity(x, y) = x
+//│ ║  l.+2: 	fun laterArity(x, y) = x
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^

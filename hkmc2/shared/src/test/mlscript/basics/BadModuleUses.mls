@@ -8,8 +8,8 @@ module M with
 module Example with
   fun foo(): module null = M
 //│ ╔══[COMPILATION ERROR] Expected a module type; found null literal.
-//│ ║  l.9: 	  fun foo(): module null = M
-//│ ║       	                    ^^^^
+//│ ║  l.+2: 	  fun foo(): module null = M
+//│ ║        	                    ^^^^
 //│ ╙── Function marked as returning a 'module' must have a module return type.
 
 module Example with
@@ -18,7 +18,7 @@ module Example with
 :e
 let m = Example.foo()
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful application of type M.
-//│ ║  l.19: 	let m = Example.foo()
+//│ ║  l.+1: 	let m = Example.foo()
 //│ ╙──      	        ^^^^^^^^^^^^^
 //│ m = class M
 
@@ -34,7 +34,7 @@ Example.foo()
 :e
 id(Example.foo())
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful application of type M.
-//│ ║  l.35: 	id(Example.foo())
+//│ ║  l.+1: 	id(Example.foo())
 //│ ║        	   ^^^^^^^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
 //│ = class M
@@ -45,21 +45,21 @@ Example.foo().mtd()
 :e
 Example.foo() + 1
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful application of type M.
-//│ ║  l.46: 	Example.foo() + 1
+//│ ║  l.+1: 	Example.foo() + 1
 //│ ╙──      	^^^^^^^^^^^^^
 //│ = "class M {   static {     M1 = this   }   static mtd() {     runtime.checkArgs(\"mtd\", 0, true, arguments.length);     return 42   }   toString() { return runtime.render(this); }   static [definitionMetadata] = [\"class\", \"M\"]; }1"
 
 :e
 M + 1
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
-//│ ║  l.53: 	M + 1
+//│ ║  l.+1: 	M + 1
 //│ ╙──      	^
 //│ = "class M {   static {     M1 = this   }   static mtd() {     runtime.checkArgs(\"mtd\", 0, true, arguments.length);     return 42   }   toString() { return runtime.render(this); }   static [definitionMetadata] = [\"class\", \"M\"]; }1"
 
 :e
 M |> id
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
-//│ ║  l.60: 	M |> id
+//│ ║  l.+1: 	M |> id
 //│ ║        	^
 //│ ╙── Module argument passed to a non-module parameter.
 //│ = class M
@@ -67,7 +67,7 @@ M |> id
 :e
 id <| M
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
-//│ ║  l.68: 	id <| M
+//│ ║  l.+1: 	id <| M
 //│ ║        	      ^
 //│ ╙── Module argument passed to a non-module parameter.
 //│ = class M
@@ -77,7 +77,7 @@ fun (+) lol(a, b) = [a, b]
 :e
 M + 1
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
-//│ ║  l.78: 	M + 1
+//│ ║  l.+1: 	M + 1
 //│ ║        	^
 //│ ╙── Module argument passed to a non-module parameter.
 //│ = [class M, 1]
@@ -85,7 +85,7 @@ M + 1
 :e
 let m = M
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
-//│ ║  l.86: 	let m = M
+//│ ║  l.+1: 	let m = M
 //│ ╙──      	        ^
 //│ m = class M
 
@@ -97,7 +97,7 @@ module B with
   val a: module A = A
 print(B.a)
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful selection of type A.
-//│ ║  l.98: 	print(B.a)
+//│ ║  l.+5: 	print(B.a)
 //│ ╙──      	      ^^^
 //│ > class A
 
@@ -106,16 +106,16 @@ print(B.a)
 :re
 id(module 1)
 //│ ╔══[COMPILATION ERROR] Illegal type declaration in term position.
-//│ ║  l.107: 	id(module 1)
-//│ ╙──       	   ^^^^^^^^
+//│ ║  l.+1: 	id(module 1)
+//│ ╙──      	   ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 :e
 fun f(x) = x is M
 //│ ╔══[COMPILATION ERROR] Pattern name not found: M.
-//│ ║  l.115: 	fun f(x) = x is M
-//│ ╙──       	                ^
+//│ ║  l.+1: 	fun f(x) = x is M
+//│ ╙──      	                ^
 
 f(0)
 //│ = true
@@ -127,8 +127,8 @@ f(M)
 :e
 f(new M)
 //│ ╔══[COMPILATION ERROR] Expected a statically known class; found reference of type M.
-//│ ║  l.128: 	f(new M)
-//│ ║         	      ^
+//│ ║  l.+1: 	f(new M)
+//│ ║        	      ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ = true
 

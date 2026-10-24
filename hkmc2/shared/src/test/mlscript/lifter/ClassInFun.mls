@@ -246,20 +246,20 @@ let res = f(0)
 res.a
 res.b
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.241: 	  class A(...r) with
-//│ ╙──       	          ^^^^
+//│ ║  l.+2: 	  class A(...r) with
+//│ ╙──      	          ^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
-//│ ║  l.242: 	    fun a = r.push_back(x)
-//│ ║         	            ^
+//│ ║  l.+3: 	    fun a = r.push_back(x)
+//│ ║        	            ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.241: 	  class A(...r) with
-//│ ╙──       	             ^
+//│ ║  l.+2: 	  class A(...r) with
+//│ ╙──      	             ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'r'
-//│ ║  l.243: 	    fun b = r
-//│ ║         	            ^
+//│ ║  l.+4: 	    fun b = r
+//│ ║        	            ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.241: 	  class A(...r) with
-//│ ╙──       	             ^
+//│ ║  l.+2: 	  class A(...r) with
+//│ ╙──      	             ^
 //│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
 //│ res = A()
 

@@ -4,8 +4,8 @@
 :pe
 class
 //│ ╔══[PARSE ERROR] Expected expression after type declaration keyword; found end of input instead
-//│ ║  l.5: 	class
-//│ ╙──     	     ^
+//│ ║  l.+1: 	class
+//│ ╙──      	     ^
 //│ Parsed:
 //│ 	Error()
 
@@ -16,7 +16,7 @@ class Foo
 :pe
 class Foo extends
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.17: 	class Foo extends
+//│ ║  l.+1: 	class Foo extends
 //│ ╙──      	                 ^
 //│ Parsed:
 //│ 	TypeDef(Cls,InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Error()),None)
@@ -28,7 +28,7 @@ class Foo extends Bar
 :pe
 class Foo extends Bar with
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.29: 	class Foo extends Bar with
+//│ ║  l.+1: 	class Foo extends Bar with
 //│ ╙──      	                          ^
 //│ Parsed:
 //│ 	TypeDef(Cls,InfixApp(InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Ident(Bar)),Keywrd(keyword 'with'),Error()),None)
@@ -51,7 +51,7 @@ class Foo with
 :pe
 with
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'with' keyword instead
-//│ ║  l.52: 	with
+//│ ║  l.+1: 	with
 //│ ╙──      	^^^^
 //│ Parsed:
 //│ 	Error()
@@ -82,9 +82,9 @@ class
 class
 Foo
 //│ ╔══[PARSE ERROR] Expected expression after type declaration keyword; found new line instead
-//│ ║  l.82: 	class
+//│ ║  l.+1: 	class
 //│ ║        	     ^
-//│ ║  l.83: 	Foo
+//│ ║  l.+2: 	Foo
 //│ ╙──
 //│ Parsed:
 //│ 	Error()
@@ -95,10 +95,10 @@ class
   Foo
 extends Bar
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'extends' keyword instead
-//│ ║  l.96: 	extends Bar
+//│ ║  l.+3: 	extends Bar
 //│ ╙──      	^^^^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.96: 	extends Bar
+//│ ║  l.+3: 	extends Bar
 //│ ╙──      	        ^^^
 //│ Parsed:
 //│ 	TypeDef(Cls,Ident(Foo),None)

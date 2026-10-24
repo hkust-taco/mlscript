@@ -7,11 +7,11 @@
 :re
 0 |
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.8: 	0 |
-//│ ╙──     	   ^
+//│ ║  l.+1: 	0 |
+//│ ╙──      	   ^
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
-//│ ║  l.8: 	0 |
-//│ ╙──     	^^^
+//│ ║  l.+1: 	0 |
+//│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -21,14 +21,14 @@
 0 |
 1
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.21: 	0 |
+//│ ║  l.+1: 	0 |
 //│ ║        	   ^
-//│ ║  l.22: 	1
+//│ ║  l.+2: 	1
 //│ ╙──
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
-//│ ║  l.21: 	0 |
+//│ ║  l.+1: 	0 |
 //│ ║        	^^^
-//│ ║  l.22: 	1
+//│ ║  l.+2: 	1
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -38,17 +38,17 @@ fun inc(x) = x + 1
 :todo // ?
 inc of 1 | + 1
 //│ ╔══[COMPILATION ERROR] Resolution error in alternation
-//│ ║  l.39: 	inc of 1 | + 1
+//│ ║  l.+1: 	inc of 1 | + 1
 //│ ║        	       ^^^^^^^
 //│ ╙── A type cannot be used as a runtime value.
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
-//│ ║  l.39: 	inc of 1 | + 1
+//│ ║  l.+1: 	inc of 1 | + 1
 //│ ╙──      	       ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :todo // ?
 1 |> inc | + 1
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
-//│ ║  l.50: 	1 |> inc | + 1
+//│ ║  l.+1: 	1 |> inc | + 1
 //│ ╙──      	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

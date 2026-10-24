@@ -41,16 +41,16 @@ private fun enclosing[A](x: A) =
 let result = enclosing[First](First(1))
 [result.0.left.first, result.0.right.first, result.1.left.first, result.1.right.second]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.42: 	[result.0.left.first, result.0.right.first, result.1.left.first, result.1.right.second]
+//│ ║  l.+8: 	[result.0.left.first, result.0.right.first, result.1.left.first, result.1.right.second]
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.40: 	  [wrap({left: x, right: First(2)}), wrap({left: x, right: Second(4)})]
+//│ ║  l.+6: 	  [wrap({left: x, right: First(2)}), wrap({left: x, right: Second(4)})]
 //│ ╙──      	                                                           ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.42: 	[result.0.left.first, result.0.right.first, result.1.left.first, result.1.right.second]
+//│ ║  l.+8: 	[result.0.left.first, result.0.right.first, result.1.left.first, result.1.right.second]
 //│ ║        	                                                                 ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.40: 	  [wrap({left: x, right: First(2)}), wrap({left: x, right: Second(4)})]
+//│ ║  l.+6: 	  [wrap({left: x, right: First(2)}), wrap({left: x, right: Second(4)})]
 //│ ╙──      	                         ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[1, 2, 1, 4]', got: 'undefined'

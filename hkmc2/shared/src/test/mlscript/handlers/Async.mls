@@ -49,7 +49,7 @@ f()
 fun f() =
   await(Promise.resolve(1))
 //│ ╔══[COMPILATION ERROR] Only await inside of async bodies are allowed if effect handlers are not enabled.
-//│ ║  l.50: 	  await(Promise.resolve(1))
+//│ ║  l.+2: 	  await(Promise.resolve(1))
 //│ ╙──      	  ^^^^^
 
 :re

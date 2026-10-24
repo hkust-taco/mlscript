@@ -17,11 +17,11 @@ using Foo[Baz] = new Foo
 :re
 foo[Baz]
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Baz (type parameter A) for call: 
-//│ ║  l.18: 	foo[Baz]
+//│ ║  l.+1: 	foo[Baz]
 //│ ║        	^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
-//│ ║       	                         ^
+//│ ║  l.XX: 	fun foo[A](using Foo[A], A) = 42
+//│ ║        	                         ^
 //│ ╙── Missing instance: Expected: Baz (type parameter A); Available: Foo[Baz]
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -29,11 +29,11 @@ foo[Baz]
 :re
 foo
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter A) for call: 
-//│ ║  l.30: 	foo
+//│ ║  l.+1: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
-//│ ║       	                         ^
+//│ ║  l.XX: 	fun foo[A](using Foo[A], A) = 42
+//│ ║        	                         ^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -43,11 +43,11 @@ using Baz = new Baz
 :todo
 foo
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter A) for call: 
-//│ ║  l.44: 	foo
+//│ ║  l.+1: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
-//│ ║       	                         ^
+//│ ║  l.XX: 	fun foo[A](using Foo[A], A) = 42
+//│ ║        	                         ^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -57,10 +57,10 @@ fun foo[A](using Foo[A])(using A) = 42
 :todo
 foo
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter A) for call: 
-//│ ║  l.58: 	foo
+//│ ║  l.+1: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.55: 	fun foo[A](using Foo[A])(using A) = 42
+//│ ║  l.XX: 	fun foo[A](using Foo[A])(using A) = 42
 //│ ║        	                         ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -71,10 +71,10 @@ fun foo[A](using A)(using Foo[A]) = 42
 :todo
 foo
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter A) for call: 
-//│ ║  l.72: 	foo
+//│ ║  l.+1: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	           ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -86,10 +86,10 @@ using Foo[Bar[Baz]] = new Foo
 :re
 foo
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter A) for call: 
-//│ ║  l.87: 	foo
+//│ ║  l.+1: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	           ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -100,10 +100,10 @@ using Bar[Baz] = new Bar
 :re
 foo
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter A) for call: 
-//│ ║  l.101: 	foo
-//│ ║         	^^^
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	           ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -114,10 +114,10 @@ using Bar[Int] = new Bar
 :re
 foo
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter A) for call: 
-//│ ║  l.115: 	foo
-//│ ║         	^^^
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	           ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -127,10 +127,10 @@ using Bar[Baz] = new Bar
 :todo
 foo
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type ‹unspecified› (type parameter A) for call: 
-//│ ║  l.128: 	foo
-//│ ║         	^^^
+//│ ║  l.+1: 	foo
+//│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
+//│ ║  l.XX: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	           ^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

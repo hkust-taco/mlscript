@@ -15,12 +15,12 @@ fun TrmMod = 42
 module TrmMod with
   val whoami = "module"
 //│ ╔══[COMPILATION ERROR] A module companion must be a function with a parameter list
-//│ ║  l.14: 	fun TrmMod = 42
+//│ ║  l.+1: 	fun TrmMod = 42
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── Arbitrary values cannot be overloaded with module 'TrmMod'
-//│ ║  l.15: 	module TrmMod with
+//│ ║  l.+2: 	module TrmMod with
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.16: 	  val whoami = "module"
+//│ ║  l.+3: 	  val whoami = "module"
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -76,7 +76,7 @@ f
 :e
 fun f: TrmMod = 42
 //│ ╔══[COMPILATION ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
-//│ ║  l.77: 	fun f: TrmMod = 42
+//│ ║  l.+1: 	fun f: TrmMod = 42
 //│ ║        	       ^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'module TrmMod'
@@ -141,11 +141,11 @@ module Foo
 :e
 fun f(x: Foo): Foo = x
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.142: 	fun f(x: Foo): Foo = x
-//│ ╙──       	         ^^^
+//│ ║  l.+1: 	fun f(x: Foo): Foo = x
+//│ ╙──      	         ^^^
 //│ ╔══[COMPILATION ERROR] Expected 1 type arguments, got none
-//│ ║  l.142: 	fun f(x: Foo): Foo = x
-//│ ╙──       	               ^^^
+//│ ║  l.+1: 	fun f(x: Foo): Foo = x
+//│ ╙──      	               ^^^
 
 fun f(x: Foo[Int]): Foo[Int] = x
 
@@ -154,10 +154,10 @@ fun f(module x: Foo): module Foo = x
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.155: 	fun f(module x: Foo[Int]): module Foo[Int] = x
-//│ ╙──       	                ^^^^^^^^
+//│ ║  l.+1: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ╙──      	                ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected no type arguments, got 1
-//│ ║  l.155: 	fun f(module x: Foo[Int]): module Foo[Int] = x
-//│ ╙──       	                                  ^^^^^^^^
+//│ ║  l.+1: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ╙──      	                                  ^^^^^^^^
 
 

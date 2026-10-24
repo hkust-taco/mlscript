@@ -50,7 +50,7 @@ fun foo2(r1, r2) =
 region r in
   foo2(r, r)
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'r2
-//│ ║  l.51: 	  foo2(r, r)
+//│ ║  l.+2: 	  foo2(r, r)
 //│ ║        	          ^
 //│ ╟── because: cannot constrain  Region[in ⊥ out r]  <:  'r2
 //│ ╟── because: cannot constrain  Region[in ⊥ out r]  <:  Region[in ⊥ out 'R]
@@ -159,8 +159,8 @@ region r in
   region s in
     foo(r, s, (x, y) => (if rand() then x.ref 0 else y.ref 0))
 //│ ╔══[COMPILATION ERROR] Type error in function literal with expected type 'f
-//│ ║  l.160: 	    foo(r, s, (x, y) => (if rand() then x.ref 0 else y.ref 0))
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	    foo(r, s, (x, y) => (if rand() then x.ref 0 else y.ref 0))
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('x, 'y) ->{'reg ∨ 'reg1} (Ref[Int, in ⊥ out 'reg] ∨ Ref[Int, in ⊥ out 'reg1])  <:  'f
 //│ ╟── because: cannot constrain  ('x, 'y) ->{'reg ∨ 'reg1} (Ref[Int, in ⊥ out 'reg] ∨ Ref[Int, in ⊥ out 'reg1])  <:  ('r1, 'r2) ->{'eff} ('app)
 //│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  'eff

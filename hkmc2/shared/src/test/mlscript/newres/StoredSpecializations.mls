@@ -60,16 +60,16 @@ private val second = declared[Int]
 first[Str]
 second[Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.60: 	first[Str]
+//│ ║  l.+5: 	first[Str]
 //│ ║        	^^^^^^^^^^
 //│ ╟── Function 'inferred' expected 0 type arguments, but got 1
-//│ ║  l.56: 	private fun inferred[A](value: A) = value
+//│ ║  l.+1: 	private fun inferred[A](value: A) = value
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.61: 	second[Str]
+//│ ║  l.+6: 	second[Str]
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Function 'declared' expected 0 type arguments, but got 1
-//│ ║  l.57: 	private fun declared[A](value: A): A = value
+//│ ║  l.+2: 	private fun declared[A](value: A): A = value
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = fun declared
 //│ first = fun inferred
@@ -80,9 +80,9 @@ second[Str]
 private fun identity[A](value: A) = value
 private val tooMany = identity[Int, Str]
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.81: 	private val tooMany = identity[Int, Str]
+//│ ║  l.+2: 	private val tooMany = identity[Int, Str]
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'identity' expected 1 type argument, but got 2
-//│ ║  l.80: 	private fun identity[A](value: A) = value
+//│ ║  l.+1: 	private fun identity[A](value: A) = value
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ tooMany = fun identity

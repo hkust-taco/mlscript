@@ -13,7 +13,7 @@ fun f(using i: Int, j: Num): Num = i + j
 :re
 f(using 42)
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
-//│ ║  l.14: 	f(using 42)
+//│ ║  l.+1: 	f(using 42)
 //│ ╙──      	        ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
@@ -28,17 +28,17 @@ fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
 :re
 f(using 32)
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Int for call: 
-//│ ║  l.29: 	f(using 32)
+//│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.25: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
 //│ ║        	                    ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Int for call: 
-//│ ║  l.29: 	f(using 32)
+//│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.25: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
 //│ ║        	                                  ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -47,10 +47,10 @@ f(using 32)
 :re
 f(using 32)(using 8)
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Int for call: 
-//│ ║  l.48: 	f(using 32)(using 8)
+//│ ║  l.+1: 	f(using 32)(using 8)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.25: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ║  l.XX: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
 //│ ║        	                                  ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -66,10 +66,10 @@ fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
 :expect fun
 f(using 32)
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Int for call: 
-//│ ║  l.67: 	f(using 32)
+//│ ║  l.+1: 	f(using 32)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.63: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
+//│ ║  l.XX: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
 //│ ║        	                            ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ = fun
@@ -78,10 +78,10 @@ f(using 32)
 :re
 f(using 32)(8)
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Int for call: 
-//│ ║  l.79: 	f(using 32)(8)
+//│ ║  l.+1: 	f(using 32)(8)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.63: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
+//│ ║  l.XX: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
 //│ ║        	                            ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

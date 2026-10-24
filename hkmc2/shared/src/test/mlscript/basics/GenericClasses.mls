@@ -30,26 +30,26 @@ abstract class Foo[A] with
 :e
 class Foo[A](x: Foo[A, A])
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.31: 	class Foo[A](x: Foo[A, A])
+//│ ║  l.+1: 	class Foo[A](x: Foo[A, A])
 //│ ║        	                ^^^^^^^^^
 //│ ╟── Type 'Foo' accepts at most 1 type argument, but got 2.
-//│ ║  l.31: 	class Foo[A](x: Foo[A, A])
+//│ ║  l.+1: 	class Foo[A](x: Foo[A, A])
 //│ ║        	                ^^^^^^^^^
 //│ ╟── The type parameters are declared here.
-//│ ║  l.31: 	class Foo[A](x: Foo[A, A])
+//│ ║  l.+1: 	class Foo[A](x: Foo[A, A])
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 class Foo[A](x: Bar[A])
 class Bar(x: Foo[Int])
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.43: 	class Foo[A](x: Bar[A])
+//│ ║  l.+1: 	class Foo[A](x: Bar[A])
 //│ ║        	                ^^^^^^
 //│ ╟── Type 'Bar' accepts at most 0 type arguments, but got 1.
-//│ ║  l.43: 	class Foo[A](x: Bar[A])
+//│ ║  l.+1: 	class Foo[A](x: Bar[A])
 //│ ║        	                ^^^^^^
 //│ ╟── The type parameters are declared here.
-//│ ║  l.44: 	class Bar(x: Foo[Int])
+//│ ║  l.+2: 	class Bar(x: Foo[Int])
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 
 

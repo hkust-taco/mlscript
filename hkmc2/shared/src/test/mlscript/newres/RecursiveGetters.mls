@@ -9,7 +9,7 @@ fun right = left
 :e
 left.oops
 //│ ╔══[COMPILATION ERROR] This selection of member 'oops' has no resolved target
-//│ ║  l.10: 	left.oops
+//│ ║  l.+1: 	left.oops
 //│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -19,7 +19,7 @@ module Loop with
 :e
 Loop.value.oops
 //│ ╔══[COMPILATION ERROR] This selection of member 'oops' has no resolved target
-//│ ║  l.20: 	Loop.value.oops
+//│ ║  l.+1: 	Loop.value.oops
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -92,10 +92,10 @@ import "../../mlscript-compile/GenericLibrary.mls"
 fun invalid = if true then {answer: 44} else invalid
 invalid.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.93: 	invalid.missing
+//│ ║  l.+2: 	invalid.missing
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'missing'
-//│ ║  l.92: 	fun invalid = if true then {answer: 44} else invalid
+//│ ║  l.+1: 	fun invalid = if true then {answer: 44} else invalid
 //│ ╙──      	                            ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -104,11 +104,11 @@ invalid.missing
 fun mixed = if true then {answer: 46} else if true then {other: 47} else mixed
 mixed.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.105: 	mixed.answer
-//│ ║         	^^^^^^^^^^^^
+//│ ║  l.+2: 	mixed.answer
+//│ ║        	^^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'answer'
-//│ ║  l.104: 	fun mixed = if true then {answer: 46} else if true then {other: 47} else mixed
-//│ ╙──       	                                                         ^^^^^^^^^
+//│ ║  l.+1: 	fun mixed = if true then {answer: 46} else if true then {other: 47} else mixed
+//│ ╙──      	                                                         ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Exposure of a getter's enclosing function must still propagate unknown inputs.
@@ -117,12 +117,12 @@ fun exposed(value) =
   fun result = if true then value else result
   result.answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.118: 	  result.answer
-//│ ║         	  ^^^^^^^^^^^^^
+//│ ║  l.+3: 	  result.answer
+//│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.116: 	fun exposed(value) =
-//│ ║         	            ^^^^^
+//│ ║  l.+1: 	fun exposed(value) =
+//│ ║        	            ^^^^^
 //│ ╟── 'exposed' is exposed by this compilation unit.
-//│ ║  l.116: 	fun exposed(value) =
-//│ ╙──       	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun exposed(value) =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^

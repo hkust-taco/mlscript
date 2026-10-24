@@ -85,7 +85,7 @@ fun makeResource(x) = rsc (y => x + y)
 fun badSignature: rsc (Int -> Int)
 fun badSignature(x) = x
 //│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
-//│ ║  l.85: 	fun badSignature: rsc (Int -> Int)
+//│ ║  l.+1: 	fun badSignature: rsc (Int -> Int)
 //│ ╙──      	                       ^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define badSignature⁰ as fun badSignature¹(x: ?): Int⁰ { return (x as! Int⁰) }; end
@@ -94,7 +94,7 @@ fun badSignature(x) = x
 :ge
 fun primitive(value: rsc Int32): Int32 = value
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.95: 	fun primitive(value: rsc Int32): Int32 = value
+//│ ║  l.+1: 	fun primitive(value: rsc Int32): Int32 = value
 //│ ╙──      	                         ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define primitive⁰ as fun primitive¹(value: Int32): Int32 { return value }; end
@@ -102,40 +102,40 @@ fun primitive(value: rsc Int32): Int32 = value
 :w
 fun maybePrimitive(value: rsc? Int32): Int32 = value
 //│ ╔══[WARNING] Primitive type 'Int32' is never a resource, so 'rsc?' has no effect.
-//│ ║  l.103: 	fun maybePrimitive(value: rsc? Int32): Int32 = value
-//│ ╙──       	                               ^^^^^
+//│ ║  l.+1: 	fun maybePrimitive(value: rsc? Int32): Int32 = value
+//│ ╙──      	                               ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define maybePrimitive⁰ as fun maybePrimitive¹(value: Int32): Int32 { return value }; end
 
 :ge
 fun nested(value: rsc rsc? Cell) = value
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.111: 	fun nested(value: rsc rsc? Cell) = value
-//│ ╙──       	                           ^^^^
+//│ ║  l.+1: 	fun nested(value: rsc rsc? Cell) = value
+//│ ╙──      	                           ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define nested⁰ as fun nested¹(value: rsc Cell⁰): ? { return value }; end
 
 :ge
 fun intersection(value: Cell & rsc Cell) = value
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
-//│ ║  l.119: 	fun intersection(value: Cell & rsc Cell) = value
-//│ ╙──       	                                   ^^^^
+//│ ║  l.+1: 	fun intersection(value: Cell & rsc Cell) = value
+//│ ╙──      	                                   ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define intersection⁰ as fun intersection¹(value: Unknown): ? { return value }; end
 
 :ge
 fun functionParameter(value: (rsc Cell) -> Int) = value
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside the parameters of a function type are not supported yet.
-//│ ║  l.127: 	fun functionParameter(value: (rsc Cell) -> Int) = value
-//│ ╙──       	                                  ^^^^
+//│ ║  l.+1: 	fun functionParameter(value: (rsc Cell) -> Int) = value
+//│ ╙──      	                                  ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define functionParameter⁰ as fun functionParameter¹(value: Function⁰): ? { return value }; end
 
 :ge
 fun unitResource(value: rsc ()) = value
 //│ ╔══[COMPILATION ERROR] Resource modifiers on this type are not supported yet.
-//│ ║  l.135: 	fun unitResource(value: rsc ()) = value
-//│ ╙──       	                            ^^
+//│ ║  l.+1: 	fun unitResource(value: rsc ()) = value
+//│ ╙──      	                            ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define unitResource⁰ as fun unitResource¹(value: Unit⁰): ? { return value }; end
 

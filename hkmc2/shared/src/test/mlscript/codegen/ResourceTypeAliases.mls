@@ -141,8 +141,8 @@ fun e2(x: rsc? X) = x
 :w
 fun e5(x: rsc? R) = x
 //│ ╔══[WARNING] Every member of this type is a resource, so 'rsc?' has no effect.
-//│ ║  l.142: 	fun e5(x: rsc? R) = x
-//│ ╙──       	               ^
+//│ ║  l.+1: 	fun e5(x: rsc? R) = x
+//│ ╙──      	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e5⁰ as fun e5¹(x: rsc C²): ? { return x }; end
 
@@ -150,8 +150,8 @@ fun e5(x: rsc? R) = x
 type RM = rsc M
 type MR = rsc? R
 //│ ╔══[WARNING] Every member of this type is a resource, so 'rsc?' has no effect.
-//│ ║  l.151: 	type MR = rsc? R
-//│ ╙──       	               ^
+//│ ║  l.+2: 	type MR = rsc? R
+//│ ╙──      	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
@@ -196,32 +196,32 @@ fun e4(x: rsc T) = x
 :ge
 type P1 = rsc Int32
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.197: 	type P1 = rsc Int32
-//│ ╙──       	              ^^^^^
+//│ ║  l.+1: 	type P1 = rsc Int32
+//│ ╙──      	              ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
 :w
 type P2 = rsc? Int32
 //│ ╔══[WARNING] Primitive type 'Int32' is never a resource, so 'rsc?' has no effect.
-//│ ║  l.205: 	type P2 = rsc? Int32
-//│ ╙──       	               ^^^^^
+//│ ║  l.+1: 	type P2 = rsc? Int32
+//│ ╙──      	               ^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
 :ge
 type P3 = rsc rsc? C
 //│ ╔══[COMPILATION ERROR] A type takes at most one resource modifier.
-//│ ║  l.213: 	type P3 = rsc rsc? C
-//│ ╙──       	                   ^
+//│ ║  l.+1: 	type P3 = rsc rsc? C
+//│ ╙──      	                   ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
 :ge
 type P4 = (rsc C) & D
 //│ ╔══[COMPILATION ERROR] Resource modifiers inside an intersection type are not supported yet.
-//│ ║  l.221: 	type P4 = (rsc C) & D
-//│ ╙──       	               ^
+//│ ║  l.+1: 	type P4 = (rsc C) & D
+//│ ╙──      	               ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 
@@ -256,8 +256,8 @@ fun e17(x: P7) = x
 :ge
 fun e8(x: rsc P2): Int32 = x
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
-//│ ║  l.257: 	fun e8(x: rsc P2): Int32 = x
-//│ ╙──       	              ^^
+//│ ║  l.+1: 	fun e8(x: rsc P2): Int32 = x
+//│ ╙──      	              ^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define e8⁰ as fun e8¹(x: Int32): Int32 { return x }; end
 

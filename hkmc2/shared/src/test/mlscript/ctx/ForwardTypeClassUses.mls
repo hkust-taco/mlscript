@@ -31,10 +31,10 @@ module Example with
   fun foo(): module M = M
 test
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Int for call: 
-//│ ║  l.27: 	fun test = M.mtd()
+//│ ║  l.+1: 	fun test = M.mtd()
 //│ ║        	           ^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.29: 	  fun mtd()(using n: Int) = n
+//│ ║  l.+3: 	  fun mtd()(using n: Int) = n
 //│ ║        	            ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: Str
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -49,10 +49,10 @@ module Example with
   fun foo(): module M = M
 test
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Int for call: 
-//│ ║  l.45: 	fun test = Example.foo().mtd()
+//│ ║  l.+1: 	fun test = Example.foo().mtd()
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.47: 	  fun mtd()(using n: Int) = n
+//│ ║  l.+3: 	  fun mtd()(using n: Int) = n
 //│ ║        	            ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: Str
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

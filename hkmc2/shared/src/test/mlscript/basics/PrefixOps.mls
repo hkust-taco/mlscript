@@ -69,9 +69,9 @@ let res =
 | 1
 | 2
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
-//│ ║  l.69: 	| 1
+//│ ║  l.+1: 	| 1
 //│ ║        	  ^
-//│ ║  l.70: 	| 2
+//│ ║  l.+2: 	| 2
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -126,8 +126,8 @@ x(2, 3)
 :re
 let x = |
 //│ ╔══[PARSE ERROR] Expected expression after prefix keyword '|'; found end of input instead
-//│ ║  l.127: 	let x = |
-//│ ╙──       	         ^
+//│ ║  l.+1: 	let x = |
+//│ ╙──      	         ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = undefined
 
@@ -135,8 +135,8 @@ let x = |
 :re
 let x = (|)
 //│ ╔══[PARSE ERROR] Expected expression after prefix keyword '|'; found end of input instead
-//│ ║  l.136: 	let x = (|)
-//│ ╙──       	          ^
+//│ ║  l.+1: 	let x = (|)
+//│ ╙──      	          ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = undefined
 
@@ -144,8 +144,8 @@ let x = (|)
 :re
 &
 //│ ╔══[PARSE ERROR] Expected expression after prefix keyword '&'; found end of input instead
-//│ ║  l.145: 	&
-//│ ╙──       	 ^
+//│ ║  l.+1: 	&
+//│ ╙──      	 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -153,18 +153,18 @@ let x = (|)
 :e
 fun (|) test = 1
 //│ ╔══[PARSE ERROR] Expected expression after prefix keyword '|'; found end of input instead
-//│ ║  l.154: 	fun (|) test = 1
-//│ ╙──       	      ^
+//│ ║  l.+1: 	fun (|) test = 1
+//│ ╙──      	      ^
 //│ ╔══[COMPILATION ERROR] This ‹erroneous syntax› is not a valid symbolic name
-//│ ║  l.154: 	fun (|) test = 1
-//│ ╙──       	      ^
+//│ ║  l.+1: 	fun (|) test = 1
+//│ ╙──      	      ^
 
 :pe
 :re
 let x = |
 //│ ╔══[PARSE ERROR] Expected expression after prefix keyword '|'; found end of input instead
-//│ ║  l.164: 	let x = |
-//│ ╙──       	         ^
+//│ ║  l.+1: 	let x = |
+//│ ╙──      	         ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = undefined
 

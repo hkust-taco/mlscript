@@ -35,7 +35,7 @@ tuple of
     2
   3
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (integer literal).
-//│ ║  l.35: 	    2
+//│ ║  l.+3: 	    2
 //│ ╙──      	    ^
 //│ = [1, 3]
 

@@ -305,11 +305,11 @@ class M2() extends M1() with
   override fun f(m: Int32): Int = 0
 M2().f(1)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.306: 	M2().f(1)
-//│ ╙──       	       ^
+//│ ║  l.+5: 	M2().f(1)
+//│ ╙──      	       ^
 //│ ╔══[COMPILATION ERROR] Overriding method `f` declares result as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.305: 	  override fun f(m: Int32): Int = 0
-//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  override fun f(m: Int32): Int = 0
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // The same rule on a parameter: `g`'s `m` is unannotated, so it erases to `anyref` rather than `i32`.
@@ -321,8 +321,8 @@ class N2() extends N1() with
 N2().g(1)
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
 //│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null any)`, but the method it overrides declares `i32`
-//│ ║  l.320: 	  override fun g(m): Int32 = 0
-//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  override fun g(m): Int32 = 0
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^
 
 
 // Boxed types are bridged by casts, so they need not match

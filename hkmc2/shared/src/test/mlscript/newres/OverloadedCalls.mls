@@ -58,10 +58,10 @@ nested()
 fun plain(x: Int) = x
 plain.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.59: 	plain.missing
+//│ ║  l.+2: 	plain.missing
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── Function 'plain' does not contain member 'missing'
-//│ ║  l.58: 	fun plain(x: Int) = x
+//│ ║  l.+1: 	fun plain(x: Int) = x
 //│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

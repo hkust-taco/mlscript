@@ -263,8 +263,8 @@ twice
 :e
 twice(_, 1) <| _ |> _ * 2
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.264: 	twice(_, 1) <| _ |> _ * 2
-//│ ║         	               ^
+//│ ║  l.+1: 	twice(_, 1) <| _ |> _ * 2
+//│ ║        	               ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -275,8 +275,8 @@ open Stack
 :e
 fun findFirst(xs) \ f = ???
 //│ ╔══[COMPILATION ERROR] Expected a valid function definition head; found infix operator '\' instead
-//│ ║  l.276: 	fun findFirst(xs) \ f = ???
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun findFirst(xs) \ f = ???
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
 
 fun findFirst(xs, f) = if xs is
   Nil then []
@@ -324,13 +324,13 @@ tuple(1, 2) \ 3
 tuple(1) \ 2
   \ 3
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.324: 	tuple(1) \ 2
-//│ ║         	           ^
-//│ ║  l.325: 	  \ 3
-//│ ║         	^^^^^
+//│ ║  l.+1: 	tuple(1) \ 2
+//│ ║        	           ^
+//│ ║  l.+2: 	  \ 3
+//│ ║        	^^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.324: 	tuple(1) \ 2
-//│ ╙──       	           ^
+//│ ║  l.+1: 	tuple(1) \ 2
+//│ ╙──      	           ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 tuple(1) \ 2
