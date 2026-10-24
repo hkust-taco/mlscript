@@ -1833,6 +1833,17 @@ extends Importer:
       Term.CompType(subterm(lhs, Tpe), subterm(rhs, Tpe), false)//.withLocOf(tree)
     case tree @ InfixApp(lhs, Keywrd(Keyword.backslash), rhs) =>
       subterm(backslashApp(lhs, rhs).withLocOf(tree), interp)
+    // A complete conditional can itself be a condition in an enclosing split. Only report
+    // misplaced connectives when elaborating this as an ordinary expression.
+    case InfixApp(IfLike(kw @ Keywrd(Keyword.`if` | Keyword.`while`), _: Block),
+        connective @ Keywrd(Keyword.`then` | Keyword.`do`), _) =>
+      raise:
+        ErrorReport(
+          msg"Unexpected '${connective.name}' after a complete '${kw.name}' expression." -> connective.toLoc
+            :: msg"A block directly after '${kw.name}' is its full body, including any '${connective.name}' clauses." -> kw.toLoc
+            :: msg"To use a block as the condition, write '${kw.name} ({ ... }) ${connective.name} ...'." -> N :: Nil
+        )
+      error
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)

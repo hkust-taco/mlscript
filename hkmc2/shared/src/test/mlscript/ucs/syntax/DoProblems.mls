@@ -20,15 +20,13 @@ while
     arrMatches
   do
     print(arrMatches)
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
-//│ ║  l.+2: 	    let arrMatches = true
-//│ ║        	        ^^^^^^^^^^^^^^^^^
-//│ ║  l.+3: 	    arrMatches
-//│ ║        	^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected 'do' after a complete 'while' expression.
 //│ ║  l.+4: 	  do
-//│ ║        	^^^^
-//│ ║  l.+5: 	    print(arrMatches)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	  ^^
+//│ ╟── A block directly after 'while' is its full body, including any 'do' clauses.
+//│ ║  l.+1: 	while
+//│ ║        	^^^^^
+//│ ╙── To use a block as the condition, write 'while ({ ... }) do ...'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // ——— ——— ———

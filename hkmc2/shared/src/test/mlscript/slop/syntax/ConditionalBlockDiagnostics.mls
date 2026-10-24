@@ -1,0 +1,78 @@
+:.
+:js
+:qq
+
+
+// A block immediately after `if` is the whole conditional body.
+:e
+:re
+if {print("Hello World"), false}
+  then ???
+  else 1
+//│ ╔══[COMPILATION ERROR] Unexpected 'then' after a complete 'if' expression.
+//│ ║  l.+2: 	  then ???
+//│ ║        	  ^^^^
+//│ ╟── A block directly after 'if' is its full body, including any 'then' clauses.
+//│ ║  l.+1: 	if {print("Hello World"), false}
+//│ ║        	^^
+//│ ╙── To use a block as the condition, write 'if ({ ... }) then ...'.
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.+3: 	  else 1
+//│ ╙──      	  ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:re
+if {} do ()
+//│ ╔══[COMPILATION ERROR] Unexpected 'do' after a complete 'if' expression.
+//│ ║  l.+1: 	if {} do ()
+//│ ║        	      ^^
+//│ ╟── A block directly after 'if' is its full body, including any 'do' clauses.
+//│ ║  l.+1: 	if {} do ()
+//│ ║        	^^
+//│ ╙── To use a block as the condition, write 'if ({ ... }) do ...'.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Parentheses make the block a condition, preserving its side effects.
+:expect 1
+if ({print("Hello World"), false})
+  then ???
+  else 1
+//│ > Hello World
+//│ = 1
+
+:expect 2
+if ({print("condition"), true}) then 2 else ???
+//│ > condition
+//│ = 2
+
+// A completed conditional can still serve as another conditional's condition.
+:expect 4
+if if { true then false, else true } then ??? else 4
+//│ = 4
+
+:expect 5
+if {
+  if { false then false, else true } then 5
+  else ???
+}
+//│ = 5
+
+:expect 6
+if {
+  if
+    true then false
+    else true
+  then ???
+  else 6
+}
+//│ = 6
+
+// An unrelated misplaced connective retains the general diagnostic.
+:e
+:re
+true then 1
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.+1: 	true then 1
+//│ ╙──      	^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

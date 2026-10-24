@@ -5,9 +5,13 @@
 :e
 :sjs
 while {} do()
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
+//│ ╔══[COMPILATION ERROR] Unexpected 'do' after a complete 'while' expression.
 //│ ║  l.+1: 	while {} do()
-//│ ╙──      	         ^^^^
+//│ ║        	         ^^
+//│ ╟── A block directly after 'while' is its full body, including any 'do' clauses.
+//│ ║  l.+1: 	while {} do()
+//│ ║        	^^^^^
+//│ ╙── To use a block as the condition, write 'while ({ ... }) do ...'.
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

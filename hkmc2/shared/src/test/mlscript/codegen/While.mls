@@ -346,11 +346,13 @@ while print("Hello World"); false
 while { print("Hello World"), false }
   then 0(0)
   else 1
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.+1: 	while { print("Hello World"), false }
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected 'then' after a complete 'while' expression.
 //│ ║  l.+2: 	  then 0(0)
-//│ ╙──      	^^^^^^^^^^^
+//│ ║        	  ^^^^
+//│ ╟── A block directly after 'while' is its full body, including any 'then' clauses.
+//│ ║  l.+1: 	while { print("Hello World"), false }
+//│ ║        	^^^^^
+//│ ╙── To use a block as the condition, write 'while ({ ... }) then ...'.
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
 //│ ║  l.+3: 	  else 1
 //│ ╙──      	  ^^^^
@@ -362,13 +364,13 @@ while
     false
   then 0(0)
   else 1
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.+2: 	    print("Hello World")
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+3: 	    false
-//│ ║        	^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected 'then' after a complete 'while' expression.
 //│ ║  l.+4: 	  then 0(0)
-//│ ╙──      	^^^^^^^^^^^
+//│ ║        	  ^^^^
+//│ ╟── A block directly after 'while' is its full body, including any 'then' clauses.
+//│ ║  l.+1: 	while
+//│ ║        	^^^^^
+//│ ╙── To use a block as the condition, write 'while ({ ... }) then ...'.
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
 //│ ║  l.+5: 	  else 1
 //│ ╙──      	  ^^^^
