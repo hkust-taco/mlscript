@@ -63,6 +63,7 @@ sealed trait Shape extends ShapeEvent:
     case ns: NewShape => s"NewShape(${ns.cls.showDbg}, ${ns.argss.map(_.showDbg).mkString(", ")})"
     case is: IntroShape => s"IntroShape(${is.trm.showDbg})"
     case _: DynShape => "DynShape"
+    case probe: NamespaceProbe => s"NamespaceProbe(${probe.ref.showDbg})"
     case us: UnknownValueShape => s"UnknownValueShape(${us.source.showDbg})"
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
     case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
@@ -98,7 +99,7 @@ object ShapeIdentity:
     // These producers own graph nodes, including synthesized inference hosts.
     // Adding a variant requires choosing its equality policy here.
     case _: (TupleShape | RecordShape | IntroShape | DefnShape | BaseShape |
-        AppShape | NewShape | SymShape | ErrShape | DynShape) => shape
+        AppShape | NewShape | SymShape | ErrShape | DynShape | NamespaceProbe) => shape
 
   /** Only one pointer to the existing view; no copied fields or product key. */
   final class View private[ShapeIdentity] (private val shape: ShapeEvent) extends ValueKey:
@@ -1058,6 +1059,23 @@ final class DynShape private () extends CoreHeadShape:
 object DynShape:
   private val instance = new DynShape
   def apply(): DynShape = instance
+
+/** The value of a capitalized reference whose namespace flow is to determine (see
+  * NewResolver.unresolvedRef), like the legacy flow analysis's leading-dot producer.
+  * The probe travels along ordinary value edges, and selections, applications, and
+  * instantiations of the reference pass it on as their result: the reference is the
+  * root of the chain that they form. When it reaches a declared type,
+  * the companion module of that type becomes a candidate namespace of the reference
+  * (see NewResolver.inferTypeArguments). It is not an actual value: selections and other
+  * operations ignore it rather than diagnose it (see NewResolver.listenReceiver). It refers
+  * to nothing, so it records no scope exits; entries still restrict where it can return.
+  */
+final class NamespaceProbe(val ref: Term.UnresolvedRef) extends CoreHeadShape:
+  override def isSelfContained: Bool = true
+  def describe: Str = ref.describe + s" '${ref.writtenName}'"
+  override def toString: Str = s"NamespaceProbe(${ref.id.name})"
+  def toLoc: Opt[Loc] = ref.toLoc
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = MemberLookup.All(Nil)
 
 /** A shared diagnostic witness, independent of resolution marks. Messages,
   * locations, and the flattened chain are evaluated only when reporting an error.

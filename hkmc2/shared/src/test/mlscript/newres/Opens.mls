@@ -122,7 +122,7 @@ fun missing() = {
   absent
 }
 missing()
-//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: absent
+//│ ╔══[COMPILATION ERROR] Name not found: absent
 //│ ║  l.+3: 	  absent
 //│ ╙──      	  ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

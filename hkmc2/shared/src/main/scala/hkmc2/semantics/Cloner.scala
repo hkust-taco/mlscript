@@ -515,11 +515,16 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       case term: NewSel => return cloneSel(term)
       case term @ UnresolvedRef(prefixes, id) =>
         val clonedPrefixes = prefixes.map(_.cloned)
-        val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym)
+        val clonedNamespaces = term.namespacePrefixes.map(_.cloned)
+        val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym, term.lookup)
         def cloneReceiver(receiver: Term): Term =
           val index = prefixes.indexWhere(_ is receiver)
-          assert(index >= 0, "A wildcard candidate must belong to an opened prefix")
-          clonedPrefixes(index)
+          if index >= 0 then clonedPrefixes(index)
+          else
+            val namespace = term.namespacePrefixes.indexWhere(_ is receiver)
+            assert(namespace >= 0, "A candidate must belong to an opened prefix or an implicit namespace")
+            clonedNamespaces(namespace)
+        copy.namespacePrefixes = clonedNamespaces
         copy.resolvedMembers = term.resolvedMembers.map((receiver, member) => cloneReceiver(receiver) -> member.subst)
         copy.dynamicPrefixes = term.dynamicPrefixes.map(cloneReceiver)
         copyNewResolution(term, copy)

@@ -84,6 +84,19 @@ final class NewResolverState(val owner: Elaborator.State):
   // The references, selections, and instantiations written in this unit's current block,
   // with the lexical scope in which each is written (see ResolutionContext.checkAccess).
   private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable | New, SrcScope)]
+  // The references without explicit bindings written in this unit's current block,
+  // in elaboration order, with the lexical scope in which each is written. Their
+  // candidates are settled and diagnosed once the block is elaborated (see
+  // NewResolver.settleUnboundReferences).
+  private[semantics] val unboundReferences = mutable.LinkedHashMap.empty[Identity[UnresolvedRef], SrcScope]
+  // What flow has revealed about the implicit namespaces of this unit's capitalized
+  // references (see NewResolver.unresolvedRef). Unlike the block-local tables, this
+  // outlives the reference's block: a later worksheet block can still reveal a
+  // namespace, which must be diagnosed against the settled reference.
+  private[semantics] val implicitNamespaces = mutable.HashMap.empty[Identity[UnresolvedRef], ImplicitNamespaces]
+  // The declared types whose implicit namespaces each of these references' probes has
+  // observed, with the expansions that name them (see NewResolver.requireTypeNamespaces).
+  private[semantics] val namespaceObservations = mutable.HashSet.empty[(NamespaceProbe, DeclaredType, Ls[AliasExpansion])]
   private[semantics] val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
   private[semantics] val shapeIdentities = mutable.HashMap.empty[ShapeIdentity.View, ShapeIdentity.View]
   private[semantics] val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
@@ -771,6 +784,25 @@ final class ResolutionContext private[semantics] (
 private[semantics] final class IterationFlow(
     val elements: TypeResolution, val iterator: Term.App, val next: Term.App,
     val iteratorMember: FlowSymbol, val nextMember: FlowSymbol, val doneMember: FlowSymbol, val valueMember: FlowSymbol)
+
+/** The namespaces required of a capitalized reference written in `scope` (see
+  * NewResolver.unresolvedRef), each with the declared type through which it was
+  * first required. The namespaces that turned out to be inaccessible from `scope`
+  * are recorded so that a reference left without candidates can explain it.
+  */
+private[semantics] final class ImplicitNamespaces(val scope: SrcScope):
+  val required = mutable.LinkedHashMap.empty[ModuleOrObjectSymbol, Term]
+  /** The paths through which the reference's namespaces became candidate prefixes. */
+  val paths = mutable.LinkedHashMap.empty[ModuleOrObjectSymbol, Term]
+  val inaccessible = mutable.Set.empty[ModuleOrObjectSymbol]
+  /** Whether the reference fell back to its wildcard opens when its block was elaborated
+    * because no namespace was known then. A namespace found later cannot override them. */
+  var fellBack: Bool = false
+  /** Whether the reference's block was elaborated, deciding between namespaces and wildcard opens. */
+  var settled: Bool = false
+  /** Whether the reference is the head of a constructor pattern, whose namespaces are those of
+    * its scrutinees' types rather than those required of its value (see NewResolver.scrutineeNamespaces). */
+  var scrutinized: Bool = false
 
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"

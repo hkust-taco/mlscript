@@ -333,6 +333,9 @@ fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.+1: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╙──      	                      ^
+//│ ╔══[COMPILATION ERROR] Name not found: ?
+//│ ║  l.+1: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ╙──      	                     ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ║        	                 ^^^^^
