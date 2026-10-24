@@ -59,7 +59,7 @@ data class Report(fileName) with
     
   fun wrapUp() =
     wln of ""
-    warnings.forEach of pass1(x => (wln(x), wln("")))
+    warnings.forEach of pass1(x => ({wln(x), wln("")}))
     wln of "### Remaining Available Funds"
     wln of ""
     wln of "|" ~ "Summary" ~ "|   |"

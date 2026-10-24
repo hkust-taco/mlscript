@@ -6,7 +6,7 @@ import "../../../mlscript-compile/Option.mls"
 open Stack
 open Option { Some, None }
 
-pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
+pattern DropZ = ((:x, :y, :z)) => ({x: x, y: y})
 
 :ucs ups
 pattern SumList = (Nil => 0) | ((Int as hd) :: (SumList as tl)) => hd + tl

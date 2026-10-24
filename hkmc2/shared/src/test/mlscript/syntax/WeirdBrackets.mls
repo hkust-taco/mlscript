@@ -5,8 +5,13 @@
 {( 123 )}
 //│ = 123
 
+:e
+:re
 {({( a: 1, b: 2 )})}
-//│ = {a: 1, b: 2}
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block
+//│ ║  l.+1: 	{({( a: 1, b: 2 )})}
+//│ ╙──      	   ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // * `\` is an infix keyword (see `BackslashApps.mls`), so it cannot be used in prefix position

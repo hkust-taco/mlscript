@@ -59,10 +59,10 @@ x // folded into the `else`; no longer observe the value `2`
 // * Reading an uninitialized top-level variable yields undefined.
 // :dopt
 :soir
-scope.locally of (
+scope.locally of {
   let x
   print(x)
-)
+}
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ return Predef⁰.print⁰(undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -414,11 +414,11 @@ class RangeIterator(val start: Int, val end: Int) extends Iterator with
   let current = start
   fun next() =
     if current < end then
-      let result = (done: false, value: current)
+      let result = {done: false, value: current}
       set current += 1
       result
     else
-      (done: true, value: unsafe.undefined)
+      {done: true, value: unsafe.undefined}
 
 renderAsStr of RangeIterator(0, 1)
 //│ = "RangeIterator(0, 1)"

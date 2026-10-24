@@ -33,10 +33,10 @@ arr Iter.joined("")
 arr |. Iter.mapping(=> _ + "!") |. Iter.toArray()
 //│ = ["0!", "1!", "2!", "3!"]
 
-(arr |. Iter.mapping \ _ + "!") |. Iter.toArray()
+((arr |. Iter.mapping) \ _ + "!") |. Iter.toArray()
 //│ = ["0!", "1!", "2!", "3!"]
 
-arr |. Iter.mapping { \ _ + "!" } |. Iter.toArray()
+(arr |. Iter.mapping) { \ _ + "!" } |. Iter.toArray()
 //│ = ["0!", "1!", "2!", "3!"]
 
 arr |> Iter.mapping(_, => _ + "!") |> Iter.toArray

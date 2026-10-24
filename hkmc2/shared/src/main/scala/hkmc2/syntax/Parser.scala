@@ -572,7 +572,7 @@ abstract class Parser(
       tryParseExp(prec, tok, loc, rule, allowNewlines =
         true /* Making this false somehow makes the following not parse:
           ```
-          if (print("Hello World"), false)
+          if ({print("Hello World"), false})
             then 0(0)
             else 1
           ```
@@ -630,6 +630,15 @@ abstract class Parser(
   def simpleExpr(prec: Int, allowNewlines: Bool)(using Line): Tree =
     wrap(prec)(simpleExprImpl(prec, allowNewlines = allowNewlines))
   
+  /** A complete parenthesized RHS with multiple expressions supplies an infix operator's arguments.
+    * Inspect it after parsing at the operator's right precedence: in `a + (b) * c`,
+    * the parentheses still group part of the operand, and multiplication stays inside the RHS.
+    * Single-expression parentheses retain their grouping, including legacy implicit-lambda boundaries.
+    * Curly blocks, nested parentheses, and the unit literal `()` remain single arguments. */
+  private def operatorArgs(rhs: Tree): Ls[Tree] = rhs match
+    case Bra(Round, Block(args)) => args
+    case _ => rhs :: Nil
+  
   def simpleExprImpl(prec: Int, allowNewlines: Bool): Tree =
     yeetSpaces match
     case (IDENT("=", _), l0) :: (IDENT(nme, false), l1) :: rest =>
@@ -684,7 +693,10 @@ abstract class Parser(
       exprCont(lit.asTree.withLoc(S(loc)), prec, allowNewlines = allowNewlines)
     case (br @ BRACKETS(bk @ (Round | Curly | Square), toks), loc) :: _ =>
       consume
-      val ps = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
+      // The lexer removes the outer indentation section inside braces, so their statements
+      // must accept newlines directly; round and square lists retain that indentation section.
+      val ps = rec(toks, S(br.innerLoc), br.describe).concludeWith: p =>
+        if bk is Curly then p.block(allowNewlines = true) else p.blockMaybeIndented
       yeetSpaces match
         case (QUOTE, l) :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
             consume
@@ -981,7 +993,7 @@ abstract class Parser(
             val rhs = expr(opPrec(opStr)._2, allowNewlines = allowNewlines)
             exprCont(opStr match {
                 case "with" => unsupportedQuote(S(l0))
-                case _ => Quoted(App(v, PlainTup(Unquoted(acc), Unquoted(rhs))))
+                case _ => Quoted(App(v, Tup(Unquoted(acc) :: operatorArgs(rhs).map(Unquoted(_)))))
               }, prec, allowNewlines = allowNewlines)
           else acc
         case _ :: (KEYWORD(Keyword("in")), _) :: _ =>
@@ -1096,7 +1108,7 @@ abstract class Parser(
         case _ =>
           opPrec(opStr)._2
         val rhs = expr(rhsPrec, allowNewlines = allowNewlines)
-        exprCont(OpApp(acc, v, rhs :: Nil), prec, allowNewlines = allowNewlines)
+        exprCont(OpApp(acc, v, operatorArgs(rhs)), prec, allowNewlines = allowNewlines)
         
       case (OP("::"), l0) :: (IDENT(id, false), l1) :: _ =>
         consume
@@ -1155,7 +1167,7 @@ abstract class Parser(
                     err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
                     acc
                 }
-              case _ => OpApp(acc, v, rhs :: Nil)
+              case _ => OpApp(acc, v, operatorArgs(rhs))
             }, prec, allowNewlines = allowNewlines)
         
       case (SELECT(name, dyn), l0) :: _ if SelPrec >= prec =>
