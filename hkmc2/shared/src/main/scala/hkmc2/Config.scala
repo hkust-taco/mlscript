@@ -460,7 +460,7 @@ object ConfigParser:
   
   private def parseInt(tree: Tree)(using Raise): Opt[Int] = tree match
     case IntLit(v) => S(v.toInt)
-    case App(Ident("-"), Tup(IntLit(v) :: Nil)) => S(-v.toInt)
+    case PrefixOpApp(Ident("-"), IntLit(v)) => S(-v.toInt)
     case _ =>
       expect("an integer value")(tree)
       N

@@ -80,10 +80,9 @@ let r = 10 in r
 //│   lhs = Ident of "r"
 //│   rhs = S of IntLit of 10
 //│   body = S of Ident of "r"
-//│ App:
-//│   lhs = Ident of "-"
-//│   rhs = Tup of Ls of
-//│     IntLit of 1
+//│ PrefixOpApp:
+//│   op = Ident of "-"
+//│   rhs = IntLit of 1
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.+1: 	let r = 10 in r
 //│ ╙──      	              ^
@@ -118,9 +117,7 @@ let r = id(10)
 //│ App:
 //│   lhs = Ident of "!"
 //│   rhs = Tup of Ls of
-//│     Bra:
-//│       k = Round
-//│       inner = Ident of "r"
+//│     Ident of "r"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ r = 10
 
@@ -317,16 +314,17 @@ let incr = => _ + 1
 * 3
 //│ = 6
 
-:pe
+:ge
 :w
 2, * 3
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.+1: 	2, * 3
-//│ ╙──      	     ^
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.+1: 	2, * 3
 //│ ╙──      	^
-//│ = fun
+//│ ╔══[COMPILATION ERROR] Builtin '*' is not a unary operator
+//│ ║  l.+1: 	2, * 3
+//│ ╙──      	   ^^^
+//│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
+//│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
 
 2,* 3
 //│ = 6
@@ -372,17 +370,15 @@ xs |> Arr.len
 xs |> Arr.len ,+, ys |> Arr.len
 //│ = 5
 
-:pe
-:re
+:w
+:expect 3
 xs |> Arr.len
 ,+
 ys |> Arr.len
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
+//│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.+2: 	,+
-//│ ║        	  ^
-//│ ║  l.+3: 	ys |> Arr.len
-//│ ╙──
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ╙──      	 ^
+//│ = 3
 
 xs |> Arr.len
 ,+ 1

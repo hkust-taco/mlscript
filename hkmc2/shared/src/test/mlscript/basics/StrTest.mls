@@ -58,27 +58,14 @@ concat of
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-:ge
+:expect "ab"
 ~("a", "b")
-//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.+1: 	~("a", "b")
-//│ ╙──      	^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = "ab"
 
 
-:pe
-:ge
+:expect "ab"
 ~ of "a", "b"
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'of' keyword instead
-//│ ║  l.+1: 	~ of "a", "b"
-//│ ╙──      	  ^^
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.+1: 	~ of "a", "b"
-//│ ╙──      	     ^^^
-//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.+1: 	~ of "a", "b"
-//│ ╙──      	^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = "ab"
 
 (~) of "a", "b"
 //│ = "ab"
