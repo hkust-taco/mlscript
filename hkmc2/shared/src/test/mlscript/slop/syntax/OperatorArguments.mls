@@ -65,7 +65,7 @@ fun (%>) collect(...args) = args
 :e
 :re
 1 + (2, 3) * 4
-//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
 //│ ║  l.+1: 	1 + (2, 3) * 4
 //│ ╙──      	    ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -82,7 +82,7 @@ fun (%>) collect(...args) = args
 :e
 :re
 1 %> ((2, 3))
-//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
 //│ ║  l.+1: 	1 %> ((2, 3))
 //│ ╙──      	      ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -90,7 +90,7 @@ fun (%>) collect(...args) = args
 :e
 :re
 id((2, 3))
-//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
 //│ ║  l.+1: 	id((2, 3))
 //│ ╙──      	   ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

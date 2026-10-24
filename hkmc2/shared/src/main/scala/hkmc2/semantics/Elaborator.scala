@@ -1610,7 +1610,7 @@ extends Importer:
     // Argument and parameter lists have already been consumed by their enclosing syntax.
     // A remaining parenthesized block would silently discard all but its last expression.
     case Bra(Round, _: Block) =>
-      raise(ErrorReport(msg"Parentheses must contain a single expression; use '{ ... }' for a block" -> tree.toLoc :: Nil))
+      raise(ErrorReport(msg"Parentheses must contain a single expression; use '{ ... }' for a block or record" -> tree.toLoc :: Nil))
       error
     case Bra(k, e) =>
       k match
