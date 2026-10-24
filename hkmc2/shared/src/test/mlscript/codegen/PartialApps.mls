@@ -106,7 +106,7 @@ i(print)(2)
 //│ ╟── Function literal expected 2 arguments, but got 1
 //│ ║  l.XX: 	let i = _(0, 1, _)
 //│ ╙──      	        ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'i' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'i' expected at least 2 arguments but got 1
 
 // :re
 i((x, y, z) => x + y + z, 2)
@@ -119,11 +119,17 @@ i((...args) => [...args], _)(2)
 //│ ║  l.XX: 	i(print)(2)
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Tuple literal cannot be called like a function.
+//│ ║  l.+1: 	i((...args) => [...args], _)(2)
+//│ ║        	                   ^^^^
+//│ ╟── Tuple literal cannot be called like a function.
 //│ ║  l.XX: 	let i = _(0, 1, _)
 //│ ╙──      	         ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	i((...args) => [...args], _)(2)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Tuple literal cannot be called like a function.
+//│ ║  l.+1: 	i((...args) => [...args], _)(2)
+//│ ║        	                   ^^^^
 //│ ╟── Tuple literal cannot be called like a function.
 //│ ║  l.XX: 	let i = _(0, 1, _)
 //│ ╙──      	         ^^^^^^^^^
@@ -143,14 +149,17 @@ i((...args) => [...args], _)(2)
 :e
 :re
 123 |> (_ + 1 >> _ * 2)
-//│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.XX: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
-//│ ║        	                                 ^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in PartialApps.mls:+1
+//│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	123 |> (_ + 1 >> _ * 2)
-//│ ╙──      	        ^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+1: 	123 |> (_ + 1 >> _ * 2)
+//│ ║        	        ^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
+//│ ╙──      	                                 ^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
 
 (_ + 1 + _ * 2) of 123, 456
 //│ = 1036

@@ -16,7 +16,7 @@
 //│ ——————————————| Resolved tree |—————————————————————————————————————————————————————————————————————
 //│ Blk loc[1:1-1:10]:
 //│   res = App loc[1:1-1:10]:
-//│     lhs = Ref{sym=builtin:+⁰} loc[1:5-1:6] of builtin:+⁰
+//│     lhs = SimpleRef loc[1:5-1:6] of builtin:+⁰
 //│     rhs = Tup loc[1:1-1:10] of Ls of
 //│       Fld loc[1:1-1:4]:
 //│         term = Lit loc[1:1-1:4] of IntLit loc[1:1-1:4] of 111
@@ -37,9 +37,9 @@ pattern IdentityWithUids = x => x
 //│ >      id = Ident loc[1:28-1:29] of "x"
 //│ >    parameters = Ls of
 //│ >      Tuple2:
-//│ >        _1 = x⁰‹51›
-//│ >        _2 = x¹‹52›
-//│ >    transform = SimpleRef loc[1:33-1:34] of x¹‹52›
+//│ >        _1 = x⁰‹47›
+//│ >        _2 = x¹‹48›
+//│ >    transform = SimpleRef loc[1:33-1:34] of x¹‹48›
 
 // Resetting per-block commands also resets UID printing.
 :loc

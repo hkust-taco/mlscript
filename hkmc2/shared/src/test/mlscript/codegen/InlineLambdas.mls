@@ -40,13 +40,13 @@
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda2; lambda2 = (undefined, function (x) { return x }); return lambda2 + 1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = "function (x) {   runtime.checkArgs(\"\", 1, true, arguments.length);   return x }1"
+//│ = "function (x) {   runtime.checkArgs(\"\", 1, arguments.length);   return x }1"
 
 :sjs
 1 + (x => x)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda3; lambda3 = (undefined, function (x) { return x }); return 1 + lambda3
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ = "1function (x) {   runtime.checkArgs(\"\", 1, true, arguments.length);   return x }"
+//│ = "1function (x) {   runtime.checkArgs(\"\", 1, arguments.length);   return x }"
 
 

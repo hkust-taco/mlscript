@@ -60,25 +60,25 @@ module Choice with
   let shouldHaveFunction(options, key: Str, defaultValue, callerName: Str) = if
     let func = options.(key)
     typeof(func) === "function" then func
-    func is undefined then defaultValue
+    func is unsafe.undefined then defaultValue
     else throw TypeError(callerName + ": `" + key + "` is not a string")
   
   let shouldHaveStr(options, key: Str, defaultValue: Str, callerName: Str) = if
     let value = options.(key)
     value is Str then value
-    value is undefined then defaultValue
+    value is unsafe.undefined then defaultValue
     else throw TypeError(callerName + ": `" + key + "` is not a string")
   
   let shouldHaveInt(options, key: Str, callerName: Str) = if
     let value = options.(key)
     value is Int then Some(value)
-    value is undefined then None
+    value is unsafe.undefined then None
     else throw TypeError(callerName + ": `" + key + "` is not an Int")
   
   let shouldHaveBool(options, key: Str, defaultValue: Bool, callerName: Str) = if
     let value = options.(key)
     value is Bool then value
-    value is undefined then defaultValue
+    value is unsafe.undefined then defaultValue
     else throw TypeError(callerName + ": `" + key + "` is not a Boolean")
   
   let shouldHaveRuleLike(options, key: Str, ruleName: Str, callerName: Str) = if
@@ -88,7 +88,7 @@ module Choice with
     choices is [..._] then
       ensureChoices(choices, "Choice.reference")
       rule(ruleName, ...choices)
-    choices is undefined then rule(ruleName)
+    choices is unsafe.undefined then rule(ruleName)
     else throw TypeError(callerName + ": `" + key + "` is neither a rule nor a choice")
   
   fun reference(kind: Str)(fields: Object) =

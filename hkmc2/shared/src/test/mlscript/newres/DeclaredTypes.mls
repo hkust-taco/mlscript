@@ -60,17 +60,17 @@ val box: Base = new Child
 box.extra
 (new Child as Base).extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+6: 	(new Child as Base).extra
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.+6: 	(new Child as Base).extra
-//│ ╙──      	              ^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+5: 	box.extra
 //│ ║        	^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
 //│ ║  l.+4: 	val box: Base = new Child
 //│ ╙──      	         ^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+6: 	(new Child as Base).extra
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.+6: 	(new Child as Base).extra
+//│ ╙──      	              ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ box = Child { extra: 42 }
 
@@ -565,8 +565,6 @@ invoke(Box(() => 42))
 //│ ║  l.+2: 	fun invoke(box: Box) = box.callback()
 //│ ║        	                       ^^^^^^^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.+2: 	fun invoke(box: Box) = box.callback()
-//│ ║        	                       ^^^^^^^^^^^^
 //│ ╟── Constructor parameter 'callback' has no type annotation.
 //│ ║  l.+1: 	class Box(val callback)
 //│ ║        	          ^^^^^^^^^^^^

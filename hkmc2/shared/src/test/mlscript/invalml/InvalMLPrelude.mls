@@ -47,6 +47,9 @@ declare module source with
     name: Str
     file: Str
 
+declare module unsafe with
+  val id"undefined"
+
 declare class Array[T](val length: Int): Array[T]
 
 declare class Symbol
@@ -170,6 +173,8 @@ declare module debug with
 
 declare module annotations with
   object pure
+  object fresh
+  fun jsSymbol(path: Any)
   object untyped
   object tailrec
   object tailcall

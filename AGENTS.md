@@ -22,7 +22,11 @@ Note that this only affects the main compilation tests;
 there is also `cntest` for nofib compilation tests, `catest` for application compilation tests,
 and `cwtest` for WASM compilation tests.
 
-Before finishing your work, run `hkmc2AllTests/test` to make sure the codebase compiles and all tests succeed.
+Before finishing work with retained code or test changes, run `hkmc2AllTests/test`
+to make sure the codebase compiles and all tests succeed;
+this covers `ctest`, so no need to run `ctest` separately.
+Full validation is not required for read-only investigations, documentation-only edits,
+and temporary experiments whose changes have all been reverted.
 
 After you are done fixing all the problems and all the tests pass,
 *you need to commit the resulting golden test output changes*.
@@ -30,10 +34,14 @@ Any commit that does not include the latest changes to test outputs will fail th
 
 Please also read the files in `.github/skills/hkmc2-difftests`.
 
-Use `.mls` diff tests for compiler behavior. Do not add Scala tests that duplicate
+Use `*.mls` diff tests for compiler behavior. Do not add Scala tests that duplicate
 that coverage or merely pin internal representation or assertion details. Reserve
 unit tests for properties diff tests cannot reliably observe, such as concurrency,
 cache isolation, bounded graph growth, or algebraic laws; state the extra coverage.
+
+Before adding new diff tests, make sure they are not already covered by existing tests.
+All new diff-test files you create should go into `hkmc2/shared/src/test/mlscript/slop/`
+unless there is a good reason to put them elsewhere.
 
 When you create a commit, author it under your (the agent's) own identity,
 not under the user's identity.
@@ -43,6 +51,12 @@ Do not change repository-local or global Git identity configuration.
 
 
 ## Design Philosophy
+
+**Confirm language-design decisions before implementing them.** Propose changes
+to source syntax, language semantics, or public library contracts and obtain the
+user's confirmation unless that specific design is already explicitly approved.
+Authorization to fix compiler behavior does not by itself authorize introducing
+annotations, changing member naming or dispatch rules, or extending public APIs.
 
 You are working on an industry-strength compiler codebase.
 Although its test suite is extensive, tests alone are not enough to determine the quality of a change;

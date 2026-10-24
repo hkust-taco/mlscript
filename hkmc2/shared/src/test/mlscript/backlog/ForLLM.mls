@@ -17,24 +17,6 @@ in 42
 
 // ——— ——— ———
 
-// Works
-let x = 1
-in x
-//│ = 1
-
-// Doesn't work
-:fixme
-let
-  x = 1
-in x
-//│ ╔══[COMPILATION ERROR] Illegal position for 'in' modifier.
-//│ ║  l.+3: 	in x
-//│ ╙──      	^^
-//│ = 1
-//│ x = 1
-
-// ——— ——— ———
-
 // FIXME: op-split has no split point!
 // Parses as a prefix `do` in a split instead of an infix `do` that's part of the `if` expression!
 :fixme

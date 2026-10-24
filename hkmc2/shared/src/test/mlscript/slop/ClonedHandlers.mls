@@ -1,0 +1,26 @@
+:.
+:js
+:checkIR
+:effectHandlers
+:lift
+
+open annotations
+
+// Non-local returns synthesize handlers; their methods and resume symbols are
+// bindings too, even though the transformation's source only contains a closure.
+pattern Escaping = x =>
+  fun body() =
+    let exit = () => return x + 1
+    exit()
+    0
+  body()
+
+:noOpt
+fun escaping(x) =
+  if x is (@compile Escaping) as first then
+    if first is (@compile Escaping) as second then second else 0
+  else 0
+
+:expect [3, 4]
+[escaping(1), escaping(2)]
+//│ = [3, 4]

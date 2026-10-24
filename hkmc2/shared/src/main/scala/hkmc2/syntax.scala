@@ -58,7 +58,8 @@ trait AutoLocated extends Located:
   def withoutLoc: this.type = this.synchronized:
     loc = N
     this
-  private[hkmc2] def getLoc: Opt[Loc] = ???
+  /** Read an explicit or previously computed location without traversing children. */
+  private[hkmc2] def getLoc: Opt[Loc] = loc
   
 
 /** If the identifier is an integer, we can still have a string name used as a name hint. */

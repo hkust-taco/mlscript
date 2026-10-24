@@ -63,6 +63,7 @@ object Keyword:
   // val `;` = Keyword(";", ascPrec, eqPrec)
   
   val `if` = Keyword("if", N, nextPrec)
+  val `when` = Keyword("when", N, curPrec)
   val `while` = Keyword("while", N, curPrec)
   val `assert` = Keyword("assert", N, curPrec)
   type `assert` = `assert`.type
@@ -223,7 +224,7 @@ object Keyword:
   
   type Prefix =
     `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `yield`.type |
-    `yield*`.type | `import`.type | `|`.type | `&`.type | `=>`.type
+    `yield*`.type | `import`.type | `|`.type | `&`.type | `=>`.type | `when`.type
   
   type Infix =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type |
@@ -236,7 +237,7 @@ object Keyword:
   
   type Ellipsis = `...`.type | `..`.type
   
-  type IfLike = `if`.type | `while`.type
+  type IfLike = `if`.type | `while`.type | `when`.type
   type SplitLike = IfLike | `case`.type
   
   type LetLike = `let`.type | `set`.type

@@ -334,7 +334,8 @@ module CC with
 //│     flow:getX¹  <~  ((type CC) -> flow:x¹)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-:fixme // TODO: handle lifted class defs: the JS is missing the `.class` access to get the static member `CC2.class.getX`
+// The companion path selects the class overload, including after lifting.
+:expect 123
 CC(123).getX
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   CC⁴(123)‹app¹³›.CC⁴.getX²{ ~> CC⁴.getX²(CC⁴(123)‹app¹³›)‹app¹⁴› }
@@ -342,7 +343,7 @@ CC(123).getX
 //│     app¹³  <~  CC
 //│     app¹³  ~>  {getX: ⋅getX⁰}
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: CC2.getX is not a function
+//│ = 123
 
 
 :breakme // TODO: warn when this happens (accidental infinite recursion)
@@ -432,7 +433,7 @@ let e = new Example.Test(123)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ e = Test(123)
 
-:fixme // Same as test case above (missing `.class` access)
+:expect Test(124)
 e.next
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   e⁰.Example⁰.Test¹.next⁰{ ~> Example⁰.Test¹.next⁰(e⁰)‹app¹⁹› }
@@ -440,6 +441,6 @@ e.next
 //│     e⁰  <~  Test(123)
 //│     e⁰  ~>  {next: ⋅next⁰}
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: runtime.checkSelect(...).next is not a function
+//│ = Test(124)
 
 

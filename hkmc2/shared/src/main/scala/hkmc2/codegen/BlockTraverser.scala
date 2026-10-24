@@ -51,10 +51,11 @@ class BlockTraverser:
     case b @ AssignField(l, n, r, rst) =>
       applyPath(l); applyResult(r); applySubBlock(rst); b.symbol.foreach(_.traverse)
     case Define(defn, rst) => applyDefn(defn); applySubBlock(rst)
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+    case AssignDynField(lhs, fld, kind, rhs, rest) =>
       applyPath(lhs)
       applyResult(rhs)
       applyPath(fld)
+      applyDynSelectKind(kind)
       applySubBlock(rest)
     case Scoped(_, body) => applySubBlock(body)
   
@@ -69,10 +70,10 @@ class BlockTraverser:
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Unit = p match
-    case p @ SuperSelect(qual, base, _) =>
-      applyPath(qual); applyPath(base); p.symbol.traverse
-    case DynSelect(qual, fld, arrayIdx) =>
-      applyPath(qual); applyPath(fld)
+    case p @ SuperSelect(qual, base, key) =>
+      applyPath(qual); applyPath(base); applyPath(key); p.symbol.traverse
+    case DynSelect(qual, fld, kind) =>
+      applyPath(qual); applyPath(fld); applyDynSelectKind(kind)
     case p @ Select(qual, name) =>
       applyPath(qual); p.symbol.foreach(_.traverse)
     case c @ Cast(value, _, _) => applyResult(value)
@@ -85,6 +86,10 @@ class BlockTraverser:
       disamb.traverse
     case Value.This(sym) => sym.traverse
     case Value.Lit(lit) => ()
+  
+  def applyDynSelectKind(kind: DynSelectKind): Unit = kind match
+    case DynSelectKind.Member(sym) => sym.traverse
+    case DynSelectKind.ArrayIdx | DynSelectKind.Unknown => ()
   
   def applyFunDefn(fun: FunDefn): Unit =
     fun.owner.foreach(_.traverse)
@@ -99,7 +104,7 @@ class BlockTraverser:
   
   def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
     val ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-      privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion) = defn
+      privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion, _) = defn
     own.foreach(_.traverse)
     isym.traverse
     sym.traverse
@@ -108,6 +113,7 @@ class BlockTraverser:
     paramsOpt.foreach(applyParamList)
     auxParams.foreach(applyParamList)
     parentPath.foreach(applyPath)
+    defn.methodKeys.valuesIterator.foreach(applyPath)
     methods.foreach(applyFunDefn)
     privateFields.foreach(_.traverse)
     publicFields.foreach: f =>
@@ -123,6 +129,7 @@ class BlockTraverser:
   
   def applyCompanionModule(b: ClsLikeBody): Unit =
     b.isym.traverse
+    b.methodKeys.valuesIterator.foreach(applyPath)
     b.methods.foreach(applyFunDefn)
     b.privateFields.foreach(_.traverse)
     b.publicFields.foreach: f =>
@@ -132,9 +139,8 @@ class BlockTraverser:
   def applyArg(arg: Arg): Unit =
     applyPath(arg.value)
   
-  def applyParamList(pl: ParamList): Unit =
-    pl.params.foreach(_.sym.traverse)
-    pl.restParam.foreach(_.sym.traverse)
+  def applyParamList(pl: LoweredParamList): Unit =
+    pl.allParams.foreach(_.sym.traverse)
   
   def applyCase(cse: Case): Unit = cse match
     case Case.Lit(lit) => ()

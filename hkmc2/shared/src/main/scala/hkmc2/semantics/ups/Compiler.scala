@@ -6,7 +6,7 @@ package ups
 import hkmc2.utils.*, shorthands.*
 
 import syntax.{Keyword, LetBind, Tree}, Tree.{BoolLit, DecLit, Ident, IntLit, StrLit, UnitLit}
-import Term.{Blk, Rcd, Ref, SynthIf, SynthSel}
+import Term.{Blk, Rcd, SynthIf}
 import Pattern.{Instantiation, Head}
 import Elaborator.{Ctx, State, ctx}, utils.TL
 import ucs.{TermSynthesizer, FlatPattern, safeRef}
@@ -79,7 +79,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       case index: Int => s"p_$index"
     /** Convert the field name to an `Ident`. */
     def asIdent: Ident = field match
-      case id: Ident => new Ident(id.name)
+      case id: Ident => id
       case index: Int => Ident(index.toString)
   
   extension (head: Head)
@@ -534,7 +534,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         (makeConsequent, alternative) => Split.Let(
           sym = transformSymbol,
-          term = Term.Lam(params, Blk(letBindings, term.mkClone)),
+          term = Term.Lam(params, Blk(letBindings, term)).mkClone,
           tail = makeSplit(
             // The `outputSymbol` is the output of `pattern`.
             //                vvvvvvvvvvvv
@@ -575,15 +575,7 @@ object Compiler:
     * matcher code, preserving the path chosen by source resolution.
     */
   def preservedReference(term: Term)(using State, codegen.Erasure): Term =
-    /** To make `Lowering` happy about the terms. */
-    def fillImplicitArgs(term: Term): Term = term match
-      case ref: Ref =>
-        if ref.expansion.isDefined then ref else ref.resolve
-      case sel: SynthSel =>
-        fillImplicitArgs(sel.prefix)
-        if sel.expansion.isDefined then sel else sel.resolve
-      case _: Term => term
-    fillImplicitArgs(term.mkClone)
+    term.mkClone
   
   import Pattern.*
   

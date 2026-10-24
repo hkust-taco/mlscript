@@ -44,7 +44,7 @@ case Int then 0
 //│         sym = member:lambda⁰
 //│         dSym = term:lambda¹
 //│         params = Ls of
-//│           ParamList:
+//│           LoweredParamList:
 //│             params = Ls of
 //│               Param:
 //│                 sym = caseScrut⁰

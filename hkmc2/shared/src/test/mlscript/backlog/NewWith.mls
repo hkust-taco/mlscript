@@ -9,7 +9,7 @@ new
 //│ ╙──      	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-new Object
+new Object()
 //│ = {}
 
 :pe
@@ -40,26 +40,26 @@ new Object with 1
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
-(new Object) with 1
+(new Object()) with 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
-//│ ║  l.+1: 	(new Object) with 1
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	(new Object()) with 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // TODO don't show as `$anon`
-new Object with { val x = 1 }
+new Object() with { val x = 1 }
 //│ = $anon { x: 1 }
 
 :e
-new Object with { val x = 1 } with { val y = 1 }
+new Object() with { val x = 1 } with { val y = 1 }
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'with' here
-//│ ║  l.+1: 	new Object with { val x = 1 } with { val y = 1 }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	new Object() with { val x = 1 } with { val y = 1 }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let obj =
-  new Object with
+  new Object() with
     val x = 12
 //│ obj = $anon { x: 12 }
 

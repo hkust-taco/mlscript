@@ -91,3 +91,10 @@ M.D.oops
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
+// A symbolic source alias must still select the declared global property.
+:expect [42, 42]
+declare fun (%%) parseInt(text: Str, radix: Int): Int
+[parseInt("42", 10), "2a" %% 16]
+//│ = [42, 42]
+
+

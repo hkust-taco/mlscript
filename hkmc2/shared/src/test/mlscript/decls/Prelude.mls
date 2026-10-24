@@ -5,12 +5,13 @@ declare type Anything
 declare type Nothing
 
 declare open class Object {
+  constructor(value?)
   fun toString(): Str
 }
-declare fun Object(...args): Object // TODO: use an optional parameter when supported
+declare fun Object(value?): Object
 declare module Object {
   fun entries(target): Array[[Str, Any]]
-  fun getOwnPropertyDescriptor(target, key): Object | undefined
+  fun getOwnPropertyDescriptor(target, key): Object | unsafe.undefined
   fun getOwnPropertyDescriptors(target): Object
   fun
     create
@@ -28,9 +29,11 @@ declare module JSON {
     stringify
 }
 
-declare class Number: Num
+declare class Number: Num {
+  constructor(value?)
+}
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/Number
-declare fun Number(...args): Number // TODO: use an optional parameter when supported
+declare fun Number(value?): Number
 declare module Number {
   val
     MIN_VALUE: Num
@@ -49,17 +52,19 @@ declare class BigInt {
 declare fun BigInt(value: Str | Int | Bool | BigInt): BigInt
 declare module BigInt
 
-// TODO: declare as class Function[...As, B]
-declare open class Function {
+// TODO: support bounds on inline type parameters like `extends Array`
+declare open class Function[A /* extends Array */, B]: ((...A) -> B) {
   val name: Str
   fun bind(thisArg, ...args): Function
-  fun apply(thisArg, args: Array): Any
+  fun apply(thisArg, args: A): B
 }
 declare module Function
 
-declare class String
+declare class String {
+  constructor(value?)
+}
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/String
-declare fun String(...args): Str // TODO: use an optional parameter when supported
+declare fun String(value?): Str
 declare module String {
   fun
     fromCharCode
@@ -68,6 +73,7 @@ declare module String {
 }
 
 declare class RegExp {
+  constructor(source?: Str | RegExp, flags?: Str)
   fun toString(): Str
   fun exec(input: Str): Array[Str] | null
   fun test(input: Str): Bool
@@ -75,33 +81,39 @@ declare class RegExp {
 declare module RegExp
 
 declare class Set[V] {
+  constructor(values?: Iterable[V] | null)
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[V]
   val size: Int
   fun add(value: V): Set[V]
   fun has(value: V): Bool
   fun delete(value: V): Bool
-  fun clear(): undefined
-  fun values(): Iterator[V]
+  fun clear(): unsafe.undefined
+  fun values(): IterableIterator[V]
   fun union(other: Set[V]): Set[V]
   fun difference(other: Set[V]): Set[V]
 }
 declare module Set
 
 declare class Map[K, V] {
+  constructor(entries?: Iterable[[K, V]] | null)
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[[K, V]]
   val size: Int
-  fun get(key: K): V | undefined
+  fun get(key: K): V | unsafe.undefined
   fun has(key: K): Bool
   fun delete(key: K): Bool
-  fun clear(): undefined
+  fun clear(): unsafe.undefined
   fun id"set"(key: K, value: V): Map[K, V]
-  fun keys(): Iterator[K]
-  fun values(): Iterator[V]
-  fun entries(): Iterator[[K, V]]
-  fun forEach(f: (V, K, Map[K, V]) -> Any): undefined
+  fun keys(): IterableIterator[K]
+  fun values(): IterableIterator[V]
+  fun entries(): IterableIterator[[K, V]]
+  fun forEach(f: (V, drop K, drop Map[K, V]) -> Any): unsafe.undefined
 }
 
 declare class Iterator[out T] {
   fun next(): { value: T, done: Bool }
 }
+type Iterable[out A] = {@annotations.jsSymbol(Symbol.iterator) iterator: () -> Iterator[A]}
+type IterableIterator[out A] = Iterator[A] & Iterable[A]
 
 declare module Map
 
@@ -109,7 +121,7 @@ declare class WeakSet[V]
 declare module WeakSet
 
 declare class WeakMap[K, V] {
-  fun get(key: K): V | undefined
+  fun get(key: K): V | unsafe.undefined
   fun has(key: K): Bool
   fun delete(key: K): Bool
   fun id"set"(key: K, value: V): WeakMap[K, V]
@@ -117,20 +129,25 @@ declare class WeakMap[K, V] {
 declare module WeakMap
 
 declare class Error {
+  constructor(message?, options?)
   val message: Str
   val name: Str
-  val stack: Str | undefined
+  val stack: Str | unsafe.undefined
 }
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Error
-declare fun Error(...args): Error // TODO: use optional parameters when supported
+declare fun Error(message?, options?): Error
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypeError/TypeError
-declare class TypeError extends Error
-declare fun TypeError(...args): TypeError
+declare class TypeError extends Error(message, options) {
+  constructor(message?, options?)
+}
+declare fun TypeError(message?, options?): TypeError
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RangeError/RangeError
-declare class RangeError extends Error
-declare fun RangeError(...args): RangeError
+declare class RangeError extends Error(message, options) {
+  constructor(message?, options?)
+}
+declare fun RangeError(message?, options?): RangeError
 
 declare class Date
 declare module Date
@@ -144,7 +161,10 @@ declare module TypedArray
 declare class Int8Array
 declare module Int8Array
 
-declare class Uint8Array
+declare class Uint8Array {
+  // The first argument can be a length, an array-like/iterable, or a buffer.
+  constructor(lengthOrValuesOrBuffer?, byteOffset?: Int, length?: Int)
+}
 declare module Uint8Array
 
 declare class Uint8ClampedArray
@@ -180,13 +200,12 @@ declare module BigUint64Array
 // Awaited recursively unwraps promises, as JavaScript's promise resolution does.
 declare type Awaited[out A]
 // Follow TypeScript's Promise declarations, translating void returns to undefined.
-// Optional parameters and default type arguments are not supported yet: callers
-// must supply the first callback, and then's rejection callback uses a rest list.
+// Default type arguments are not supported yet: callers must supply the first callback.
 // Structural PromiseLike values and tuple-mapped all results remain unsupported.
-declare class Promise[out A](executor: ((A | Promise[A]) -> undefined, Any -> undefined) -> undefined) {
-  fun id"then"[B, C](onFulfilled: Awaited[A] -> (B | Promise[B]), ...onRejected: Array[(Any -> (C | Promise[C])) | undefined | null]): Promise[Awaited[B | C]]
-  fun id"catch"[B](onRejected: (Any -> (B | Promise[B])) | undefined | null): Promise[Awaited[A | B]]
-  fun id"finally"(onFinally: (() -> undefined) | undefined | null): Promise[A]
+declare class Promise[out A](executor: ((A | Promise[A]) -> unsafe.undefined, Any -> unsafe.undefined) -> unsafe.undefined) {
+  fun id"then"[B, C](onFulfilled: Awaited[A] -> (B | Promise[B]), onRejected?: (Any -> (C | Promise[C])) | null): Promise[Awaited[B | C]]
+  fun id"catch"[B](onRejected: (Any -> (B | Promise[B])) | unsafe.undefined | null): Promise[Awaited[A | B]]
+  fun id"finally"(onFinally: (() -> unsafe.undefined) | unsafe.undefined | null): Promise[A]
 }
 declare module Promise {
   fun resolve[A](value: A | Promise[A]): Promise[Awaited[A]]
@@ -204,12 +223,13 @@ declare class Num {
 }
 declare class Int extends Num
 declare class Str {
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[Str]
   val length: Int
   fun toString(): Str
-  fun at(index: Int): Str | undefined
+  fun at(index: Int): Str | unsafe.undefined
   fun charAt(index: Int): Str
   fun charCodeAt(index: Int): Num
-  fun codePointAt(index: Int): Int | undefined
+  fun codePointAt(index: Int): Int | unsafe.undefined
   fun indexOf(value: Str, ...from): Int
   fun lastIndexOf(value: Str, ...from): Int
   fun includes(value: Str, ...from): Bool
@@ -240,41 +260,42 @@ declare class Class
 // the `.class` storage used by generated MLscript constructor functions.
 // The `val length` parameter also supports matching with `Array(length)`.
 declare class Array[T](val length: Int) {
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): IterableIterator[T]
   fun join(...separators): Str
   fun reverse(): Array[T]
   fun sort(...compare): Array[T]
   fun slice(...bounds): Array[T]
   fun copyWithin(target: Int, start: Int, ...end): Array[T]
-  fun entries(): Iterator[[Int, T]]
-  fun keys(): Iterator[Int]
+  fun entries(): IterableIterator[[Int, T]]
+  fun keys(): IterableIterator[Int]
   fun toReversed(): Array[T]
   fun toSorted(...compare): Array[T]
   fun toSpliced(start: Int, ...items): Array[T]
   fun id"with"(index: Int, value: T): Array[T]
-  fun at(index: Int): T | undefined
+  fun at(index: Int): T | unsafe.undefined
   fun fill(value: T, ...bounds): Array[T]
   fun splice(start: Int, ...items): Array[T]
   fun push(...items: Array[T]): Int
   fun unshift(...items: Array[T]): Int
-  fun pop(): T | undefined
-  fun shift(): T | undefined
+  fun pop(): T | unsafe.undefined
+  fun shift(): T | unsafe.undefined
   fun concat(...arrays): Array[Any]
-  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
-  fun forEach(f: (T, Int, Array[T]) -> Any): undefined
-  fun filter(f: (T, Int, Array[T]) -> Bool): Array[T]
-  fun find(f: (T, Int, Array[T]) -> Bool, ...thisArg): T | undefined
-  fun findIndex(f: (T, Int, Array[T]) -> Bool, ...thisArg): Int
-  fun findLast(f: (T, Int, Array[T]) -> Bool, ...thisArg): T | undefined
-  fun findLastIndex(f: (T, Int, Array[T]) -> Bool, ...thisArg): Int
+  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+  fun forEach(f: (T, drop Int, drop Array[T]) -> Any): unsafe.undefined
+  fun filter(f: (T, drop Int, drop Array[T]) -> Bool): Array[T]
+  fun find(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): T | unsafe.undefined
+  fun findIndex(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): Int
+  fun findLast(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): T | unsafe.undefined
+  fun findLastIndex(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): Int
   fun flat(...depth): Array[Any]
-  fun flatMap[U](f: (T, Int, Array[T]) -> (U | Array[U]), ...thisArg): Array[U]
-  fun every(f: (T, Int, Array[T]) -> Bool): Bool
-  fun some(f: (T, Int, Array[T]) -> Bool): Bool
+  fun flatMap[U](f: (T, drop Int, drop Array[T]) -> (U | Array[U]), ...thisArg): Array[U]
+  fun every(f: (T, drop Int, drop Array[T]) -> Bool): Bool
+  fun some(f: (T, drop Int, drop Array[T]) -> Bool): Bool
   // Without an initial value, the first element becomes the accumulator, so the
   // accumulator type would also have to include T. Methods cannot be overloaded
   // by arity, so only the form with an initial value is declared.
-  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
-  fun reduceRight[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
+  fun reduce[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
+  fun reduceRight[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
   fun indexOf(value: T, ...from): Int
   fun lastIndexOf(value: T, ...from): Int
   fun includes(value: T, ...from): Bool
@@ -283,7 +304,7 @@ declare class Array[T](val length: Int) {
 }
 declare module Array {
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
-  fun from(...args): Array[Any] // TODO: use optional parameters when supported
+  fun from(items, mapFn?, thisArg?): Array[Any]
   fun
     concat
     isArray
@@ -291,15 +312,16 @@ declare module Array {
 }
 
 declare class Symbol {
-  val description: Str | undefined
+  val description: Str | unsafe.undefined
 }
 declare fun Symbol(...description): Symbol
 declare module Symbol {
-  // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
+  // Implementation note:
+  // A `TermDef` like `for` needs `rhs` to be defined to be recognized as `isMLsFun`.
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
   // uninitialized `runtime` in the `Rendering` module.
-  fun for: Str -> Any = ()
-  val iterator: Any
+  fun for: Str -> Symbol = ()
+  @annotations.fresh val iterator: Symbol
 }
 
 // MLwasm-specific types
@@ -408,10 +430,13 @@ declare val Infinity
 // Wasm support
 declare object WebAssembly {
   declare class Instance {
+    constructor(compiledModule: Module, imports?)
     val exports: dyn
   }
   declare class Memory
-  declare class Module
+  declare class Module {
+    constructor(bytes)
+  }
   declare module Module {
     fun
       exports
@@ -434,6 +459,11 @@ declare module source {
     line
     name
     file
+}
+
+// This virtual module exposes host values that ordinary MLscript code avoids.
+declare module unsafe {
+  val id"undefined"
 }
 
 declare module js {
@@ -558,6 +588,8 @@ declare module debug {
 
 declare module annotations {
   object pure
+  object fresh
+  fun jsSymbol(path: Symbol)
   object untyped
   object tailrec
   object tailcall
@@ -606,6 +638,5 @@ declare open class HTMLElement {
 // Shared read interfaces for arrays, strings, and lazy views. Element types are
 // covariant, so using these interfaces does not widen an invariant collection.
 type Indexable[out A] = {length: Int, at: Int -> A, slice: Function}
-type Iterable[out A] = {iterator: () -> Iterator[A]}
 type IterableIndexable[out A] = Indexable[A] & Iterable[A]
 

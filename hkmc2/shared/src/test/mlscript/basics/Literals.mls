@@ -46,7 +46,13 @@
 null
 //│ = null
 
+:w
 undefined
+//│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.+1: 	undefined
+//│ ╙──      	^^^^^^^^^
+
+unsafe.undefined
 
 
 0.5

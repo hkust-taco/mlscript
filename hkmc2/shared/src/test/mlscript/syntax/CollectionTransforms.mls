@@ -11,7 +11,7 @@ class Seq[out A] {
   fun map[B](f: A -> B): Seq[B] = new Seq \ elements.map \ pass1 \ f
   
   fun groupMapReduce[B, C](getKey: A -> B, getValue: A -> C, reduce: (C, C) -> C): Map[B, C] =
-    let groups = new Map[B, C]
+    let groups = new Map[B, C]()
     elements.forEach \ pass1 \ e =>
       let
         key = getKey(e)

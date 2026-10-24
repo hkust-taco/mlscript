@@ -168,7 +168,7 @@ f.y
 
 
 
-let f = (new Object with
+let f = (new Object() with
   val x = 12) as dyn
 //│ f = $anon { x: 12 }
 
@@ -184,7 +184,7 @@ f.y
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
-let f = (new mut Object with
+let f = (new mut Object() with
   val x = 12) as dyn
 //│ f = $anon { x: 12 }
 

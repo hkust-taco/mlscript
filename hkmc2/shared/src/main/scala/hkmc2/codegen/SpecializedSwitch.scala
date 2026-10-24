@@ -153,7 +153,7 @@ private[codegen] final class PostCondAnalysis extends CachedAnalysis[Block, Post
     case Assign(NoSymbol, rhs, rest) => res(N, rhs, rest)
     case Assign(lhs: ValueSymbol, rhs, rest) => res(S(lhs), rhs, rest)
     case AssignField(path, _, rhs, rest) => res(N, rhs, rest)
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => res(N, rhs, rest)
+    case AssignDynField(lhs, fld, kind, rhs, rest) => res(N, rhs, rest)
     case Define(defn, rest) => defn match
       case v: ValDefn => res(S(v.sym), v.rhs, rest)
       case c: ClsLikeDefn => analyze(rest).markImpure // TODO: refine for object and module ctors

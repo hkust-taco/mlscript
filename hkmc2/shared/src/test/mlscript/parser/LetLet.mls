@@ -3,7 +3,7 @@
 
 :pe
 let let
-//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding keyword; found end of input instead
 //│ ║  l.+1: 	let let
 //│ ╙──      	       ^
 //│ Parsed:
@@ -35,21 +35,22 @@ let
   x
   y
 //│ Parsed:
-//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),None,None)
-//│ 	LetLike(Keywrd(keyword 'let'),Ident(y),None,None)
+//│ 	LetLike(Keywrd(keyword 'let'),Block(List(Ident(x), Ident(y))),None,None)
 
 let
   x = 1
   y = 2
 //│ Parsed:
-//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None)
-//│ 	LetLike(Keywrd(keyword 'let'),Ident(y),Some(IntLit(2)),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Block(List(Def(Ident(x),IntLit(1)), Def(Ident(y),IntLit(2)))),None,None)
 
+:pe
 let
   x = 1 in x
   y = 2 in y
+//│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
+//│ ║  l.+2: 	  x = 1 in x
+//│ ╙──      	        ^^
 //│ Parsed:
-//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x)))
-//│ 	LetLike(Keywrd(keyword 'let'),Ident(y),Some(IntLit(2)),Some(Ident(y)))
+//│ 	LetLike(Keywrd(keyword 'let'),Block(List(Def(Ident(x),IntLit(1)))),None,None)
 
 

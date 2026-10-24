@@ -129,7 +129,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
           val prod = cd.paramsOpt match
             case S(ps) =>
-              ps.restParam match
+              ps.variadic match
               case S(_) => ???
               case N =>
                 P.Fun(
@@ -248,7 +248,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       C.Flow(p.flow)
   
   def typeParamList(ps: ParamList): Ls[C] =
-    if ps.restParam.nonEmpty then
+    if ps.variadic.nonEmpty then
       ??? // TODO
     ps.params.map(typeParam)
   
@@ -264,7 +264,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       Type.Tup:
         fields.map:
           case f: Fld => typeType(f.term)
-          case Spd(eager, term) => (???, typeType(term))
+          case Spd(eager, term, _) => (???, typeType(term))
     case FunTy(lhs, rhs, _) =>
       Type.Fun(typeType(lhs), typeType(rhs), N)
     case _ => TODO(t)
@@ -325,7 +325,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       d.body.members.get(name) match
       case S(memb: BlockMemberSymbol) =>
         oc
-        .flatMap(findAccessPath(_, d.path, ms))
+        .flatMap(scope => AccessPath.findAccessPath(scope, ms).toOption)
         .map((_, memb))
       case _ => N
     case cs: ClassSymbol =>
@@ -336,7 +336,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         d.body.members.get(name) match
         case S(memb: BlockMemberSymbol) =>
           oc
-          .flatMap(findAccessPath(_, d.path, comp))
+          .flatMap(scope => AccessPath.findAccessPath(scope, comp).toOption)
           .map((_, memb))
         case _ => N
     case _ => N
@@ -461,7 +461,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                       log(dbg"Found companion member ${memb}")
                       sel.trm.originalCtx match
                       case S(oc) =>
-                        val patho = findAccessPath(oc, cd.path, comp)
+                        val patho = AccessPath.findAccessPath(oc, comp).toOption
                         log(dbg"Access path: ${patho}")
                         patho match
                         case S(path) =>
@@ -496,26 +496,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         if fuel === 0 then
           raise(ErrorReport(
             msg"Could not solve all constraints within $MAX_FUEL iterations." -> N :: Nil))
-  
-  def findAccessPath(src: SrcScope, dst: SrcScope, moduleSym: ModuleOrObjectSymbol): Opt[Term] =
-    log(dbg"outermostAcessibleBase ${dst.outermostAcessibleBase}")
-    val (outermostBase, outermostPath) = dst.outermostAcessibleBase
-    var cur = src
-    while cur isnt outermostBase do
-      cur.parent match
-      case N =>
-        return N
-      case S(p) =>
-        cur = p
-    assert(cur is outermostBase)
-    (moduleSym :: outermostPath).reverse match
-    case Nil => die
-    case sym :: syms => S:
-      syms.foldLeft(sym.asInstanceOf[DefinitionSymbol[?]]//FIXME
-        .bms.getOrElse(die).ref(): Term): (a, b) =>
-        Sel(a, Tree.Ident(b.nme))(S(b.asInstanceOf[DefinitionSymbol[?]]//FIXME
-          .bms.getOrElse(die)), FlowSymbol.sel(b.nme), N, N)
-  
   
   import hkmc2.document.*
   import utils.Scope

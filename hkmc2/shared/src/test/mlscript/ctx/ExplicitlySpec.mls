@@ -15,7 +15,7 @@ f(using 42)
 //│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
 //│ ║  l.+1: 	f(using 42)
 //│ ╙──      	        ^^
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
 
 :expect 45.14
 f(using 42, 3.14)

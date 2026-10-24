@@ -67,7 +67,7 @@ case
 //│       form = ReturningIf
 //│       split = Cons:
 //│         branch = Match:
-//│           scrutinee = Ref{sym=caseScrut⁰} of caseScrut⁰
+//│           scrutinee = SimpleRef of caseScrut⁰
 //│           pattern = Constructor:
 //│             target = MemberRef of member:Foo⁰
 //│             arguments = S of Ls of

@@ -24,7 +24,7 @@ module Test with ...
 pattern Flag = "tree" | "trace" | "tokens"
 
 fun flags(tokens) =
-  let result = new Set
+  let result = new Set()
   while tokens is
     Token.Space :: Token.Identifier(":", _) :: Token.Identifier(Flag as flag, _) :: tail then
       result.add(flag)

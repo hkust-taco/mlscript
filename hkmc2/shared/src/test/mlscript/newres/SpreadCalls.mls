@@ -100,7 +100,7 @@ four(...[1, 2], ...[3, 4], 5)
 //│ ╟── Function 'four' expected 4 arguments, but got 5
 //│ ║  l.XX: 	fun four(a, b, c, d) = [a, b, c, d]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
+//│ = [1, 2, 3, 4]
 
 // Opaque values are left to the runtime spread operation to validate.
 :re
@@ -196,7 +196,7 @@ four(...arr)
 //│ ╟── Function 'four' expected 4 arguments, but got 2
 //│ ║  l.XX: 	fun four(a, b, c, d) = [a, b, c, d]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 2
+//│ ═══[RUNTIME ERROR] Error: Function 'four' expected at least 4 arguments but got 2
 
 
 // Exact call arity anchors known suffixes and prefixes around opaque spreads.
@@ -240,7 +240,15 @@ invokeUnknown(...opaque([() => 95]))
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.XX: 	declare type Any
-//│ ╙──      	             ^^^
+//│ ║        	             ^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'f' admits values of unknown shape.
+//│ ║  in SpreadCalls.mls:+1
+//│ ║  l.+1: 	fun invokeUnknown(f) = f()
+//│ ║        	                  ^
+//│ ╟── 'invokeUnknown' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun invokeUnknown(f) = f()
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Unknown elements must not silently resolve against another known candidate.
@@ -277,7 +285,7 @@ four(...opaque([]), 1, 2, 3, 4, 5)
 //│ ╟── Function 'four' expected 4 arguments, but got at least 5
 //│ ║  l.XX: 	fun four(a, b, c, d) = [a, b, c, d]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'four' expected 4 arguments but got 5
+//│ = [1, 2, 3, 4]
 
 // Rest arity may be valid while the callable argument remains unknown.
 :e
@@ -292,7 +300,15 @@ invokeRest(...opaque([() => 97]), Box(0))
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.XX: 	declare type Any
-//│ ╙──      	             ^^^
+//│ ║        	             ^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'f' admits values of unknown shape.
+//│ ║  in SpreadCalls.mls:+1
+//│ ║  l.+1: 	fun invokeRest(f, x, ...tail) = f()
+//│ ║        	               ^
+//│ ╟── 'invokeRest' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun invokeRest(f, x, ...tail) = f()
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // When repeatedTuples receives [Box(98)], both a and b must acquire its element
@@ -329,8 +345,6 @@ invokePublicRest(...callbacks, Box(0))
 //│ ║  l.+1: 	fun invokePublicRest(f, x, ...tail) = f()
 //│ ║        	                                      ^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.+1: 	fun invokePublicRest(f, x, ...tail) = f()
-//│ ║        	                     ^
 //│ ╟── Parameter 'f' admits values of unknown shape.
 //│ ║  l.+1: 	fun invokePublicRest(f, x, ...tail) = f()
 //│ ║        	                     ^

@@ -39,7 +39,7 @@ let x in
 
 
 :soir
-let x = undefined in
+let x = unsafe.undefined in
   if hide(false) do
     x = 1
   print("don't inline cont.")

@@ -14,7 +14,7 @@ pattern Rep0[A] = "" | A ~ Rep0[A]
 // Hypothetical syntax: put pattern parameters in the type parameter list but
 // prefixed with `pattern`.
 pattern Rep0[pattern A] = "" | A ~ Rep0[A]
-//│ ╔══[COMPILATION ERROR] Unsupported type parameter type definition
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter shape: type definition
 //│ ║  l.+1: 	pattern Rep0[pattern A] = "" | A ~ Rep0[A]
 //│ ╙──      	             ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Pattern name not found: A.
@@ -61,7 +61,7 @@ pattern GreaterThan(value) = case
 // Hypothetical syntax (very unlikely to implement): normal view patterns
 fun view = case
   n and n > 5 then n
-  else undefined
+  else unsafe.undefined
 fun foo(x) = if x is
   view as
     Unit then ....

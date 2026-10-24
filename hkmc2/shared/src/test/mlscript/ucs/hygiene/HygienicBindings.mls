@@ -41,7 +41,7 @@ fun h1(a) =
     a is None then 0
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    a is member:Option⁰.Some^term:h1⁰(arg$Some$0$) and
+//│ >    a is member:Option⁰.Some‹class:Some⁰›^term:h1⁰(arg$Some$0$) and
 //│ >      let x = tmp:arg$Some$0$⁰
 //│ >      x is member:Left⁰^term:h1⁰(arg$Left$0$) and
 //│ >        let y = tmp:arg$Left$0$⁰
@@ -50,7 +50,7 @@ fun h1(a) =
 //│ >      y is member:Right⁰^term:h1⁰(arg$Right$0$) and
 //│ >        let z = tmp:arg$Right$0$⁰
 //│ >        else z⁰
-//│ >    a is member:Option⁰.None^term:h1⁰ then 0
+//│ >    a is member:Option⁰.None‹object:None⁰›^term:h1⁰ then 0
 
 h1(Some(Left(42)))
 //│ = 42
@@ -73,7 +73,7 @@ fun h2(a) =
     a is None then 0
 //│ Normalized:
 //│ >  ‹if|while›
-//│ >    a is member:Option⁰.Some^term:h2⁰(arg$Some$0$) and
+//│ >    a is member:Option⁰.Some‹class:Some⁰›^term:h2⁰(arg$Some$0$) and
 //│ >      let x = tmp:arg$Some$0$¹
 //│ >      let x' = x⁰
 //│ >      x' is member:Left⁰^term:h2⁰(arg$Left$0$) and
@@ -84,7 +84,7 @@ fun h2(a) =
 //│ >      y' is member:Right⁰^term:h2⁰(arg$Right$0$) and
 //│ >        let z = tmp:arg$Right$0$¹
 //│ >        else z¹
-//│ >    a is member:Option⁰.None^term:h2⁰ then 0
+//│ >    a is member:Option⁰.None‹object:None⁰›^term:h2⁰ then 0
 
 // :w
 fun h3(x, y, f, p) =

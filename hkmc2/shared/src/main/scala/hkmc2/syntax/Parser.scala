@@ -344,6 +344,15 @@ abstract class Parser(
         case (COMMA, _) :: _ => consume; blockOf(rule, annotations, allowNewlines)
         case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, annotations, allowNewlines)
         case _ => Nil
+    // Definitions can start with keywords or parentheses as well as identifiers
+    // (for example, `this.x = v` and `(obj).x = v` in a `set` block).
+    def blockEntry(lhs: Tree): Ls[Tree] =
+      val entry = cur match
+        case (KEYWORD(Keyword.`=`), _) :: _ =>
+          consume
+          Def(lhs, expr(CommaPrecNext, allowNewlines = allowNewlines))
+        case _ => lhs
+      annotations.annotate(entry) :: blockContOf(rule)
     cur match
     case Nil => Nil
     case (NEWLINE, _) :: _ if allowNewlines => consume; blockOf(rule, annotations, allowNewlines)
@@ -385,7 +394,7 @@ abstract class Parser(
           case _ =>
             val p = kw.rightPrec.getOrElse(CommaPrecNext)
             val res = parseRule(p, subRule, allowNewlines = allowNewlines).getOrElse(errExpr)
-            annotations.annotate(exprCont(res, CommaPrecNext, allowNewlines = allowNewlines)) :: blockContOf(rule)
+            blockEntry(exprCont(res, CommaPrecNext, allowNewlines = allowNewlines))
         case N =>
           
           // TODO dedup this common-looking logic:
@@ -409,7 +418,7 @@ abstract class Parser(
               case S(subRule) =>
                 val e = exprCont(parseRule(CommaPrecNext, subRule, allowNewlines = allowNewlines)
                   .getOrElse(errExpr), CommaPrecNext, allowNewlines = allowNewlines)
-                annotations.annotate(parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)) :: blockContOf(rule)
+                blockEntry(parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr))
               case N =>
                 // TODO dedup?
                 err(msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil)
@@ -418,18 +427,9 @@ abstract class Parser(
             err(msg"Expected ${rule.whatComesAfter} ${rule.mkAfterStr}; found ${tok.describe} instead" -> S(loc) :: Nil)
             annotations.annotate(errExpr) :: blockContOf(rule)
       case N =>
-        val lhs = tryParseExp(CommaPrecNext, tok, loc, rule, allowNewlines = allowNewlines).getOrElse(errExpr)
-        cur match
-        case (KEYWORD(kw @ (Keyword.`=`)), l0) :: _ /* if kw.leftPrecOrMin > prec */ =>
-          consume
-          val rhs = expr(CommaPrecNext, allowNewlines = allowNewlines)
-          Def(lhs, rhs) :: blockContOf(rule)
-        case _ =>
-          annotations.annotate(lhs) :: blockContOf(rule)
+        blockEntry(tryParseExp(CommaPrecNext, tok, loc, rule, allowNewlines = allowNewlines).getOrElse(errExpr))
     case (tok, loc) :: _ =>
-      annotations.annotate(
-        tryParseExp(CommaPrecNext, tok, loc, rule, allowNewlines = allowNewlines).getOrElse(errExpr)
-      ) :: blockContOf(rule)
+      blockEntry(tryParseExp(CommaPrecNext, tok, loc, rule, allowNewlines = allowNewlines).getOrElse(errExpr))
   
   
   private def tryParseExp[A](prec: Int, tok: Token, loc: Loc, rule: ParseRule[A], allowNewlines: Bool): Opt[A] =
@@ -904,6 +904,8 @@ abstract class Parser(
    * which is `Int.MinValue` (see `Keyword.rightPrecOrMin`). A sentinel like -1 would then make the body
    * `{ fun f: Int }` be parsed as an operator split instead of as a refinement of `A`. */
   private def opSplitLeftPrec(tok: Stroken): Int = tok match
+    // An annotation may be the first member of a class/record body.
+    case IDENT("@", _) => Int.MinValue
     case SELECT(_, _) => SelPrec
     case id @ (IDENT(_, true) | KEYWORD(_: Keyword.InfixSplittable)) => id match
       case KEYWORD(Keyword.`of`) => AppPrec
@@ -1098,6 +1100,30 @@ abstract class Parser(
         consume
         consume
         exprCont(MemberProj(acc, new Ident(id).withLoc(S(l1))).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
+      
+      // * Postfix `?` marks an optional parameter, as in `fun f(x, y?)` or `(Int, Int?) -> Int`.
+      // * The marker applies to the whole parameter (so `Int | Str?` means `(Int | Str)?`),
+      // * so it is only recognized below the precedence of `=` (i.e., not within operator operands),
+      // * and only when it ends the element. In `y?: Int`, the lexer merges `?` and `:` into a single
+      // * `?:` operator token, which we split back into the marker followed by the `:` keyword.
+      // * Other operators starting with `?`, such as `??` and `?>`, are distinct operator tokens.
+      // * The marker must be attached to the parameter, without intervening whitespace: otherwise,
+      // * `?` and `?:` are ordinary operators, so that `a ?: b` applies a user-defined `?:` operator,
+      // * while `y ?` and `y ?: Int` are not optional parameters.
+      case (OP("?"), l0) :: rest
+      if prec < Keyword.eqPrec.get && acc.toLoc.exists(_.spanEnd === l0.spanStart)
+      && NOISE.get(rest).match
+        case Nil | (_: NEWLINE_COMMA, _) :: _ => true
+        case _ => false
+      =>
+        consume
+        exprCont(Optional(acc).withLoc(acc.toLoc.fold(S(l0))(l => S(l ++ l0))), prec, allowNewlines = allowNewlines)
+      case (OP("?:"), l0) :: _ if prec < Keyword.eqPrec.get && acc.toLoc.exists(_.spanEnd === l0.spanStart) =>
+        consume
+        val markerLoc = Loc(l0.spanStart, l0.spanStart + 1, l0.origin)
+        cur = (IDENT(":", true), Loc(l0.spanStart + 1, l0.spanEnd, l0.origin)) :: cur
+        exprCont(Optional(acc).withLoc(acc.toLoc.fold(S(markerLoc))(l => S(l ++ markerLoc))), prec, allowNewlines = allowNewlines)
+      
       case (OP(opStr), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
         val v = Ident(opStr).withLoc(S(l0))

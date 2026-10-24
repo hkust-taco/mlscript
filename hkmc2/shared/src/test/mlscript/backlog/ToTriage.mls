@@ -132,17 +132,6 @@ c.x
 
 // ——— ——— ———
 
-:breakme // TODO: warn against using `undefined`
-:w
-fun oops = undefined
-
-// * This used to throw, but we now emit `Unit` upon compiling MIR's `return undefined`
-:noInline
-print(oops)
-//│ > ()
-
-// ——— ——— ———
-
 class C
 
 :sjs

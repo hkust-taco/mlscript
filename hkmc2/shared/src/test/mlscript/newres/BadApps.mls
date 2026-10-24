@@ -48,7 +48,14 @@ call(M)
 //│ ║        	              ^^^
 //│ ╟── Module 'M' cannot be called like a function.
 //│ ║  l.+1: 	module M
-//│ ╙──      	^^^^^^^^
+//│ ║        	^^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.+2: 	fun call(x) = x()
+//│ ║        	         ^
+//│ ╟── 'call' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun call(x) = x()
+//│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Plain class values require new, including when passed through a parameter.
@@ -61,7 +68,14 @@ instantiate(Plain)
 //│ ║        	                       ^^^^^
 //│ ╟── Class 'Plain' must be instantiated with 'new'.
 //│ ║  l.+1: 	class Plain
-//│ ╙──      	^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'cls' admits values of unknown shape.
+//│ ║  l.+2: 	fun instantiate(cls) = cls()
+//│ ║        	                ^^^
+//│ ╟── 'instantiate' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun instantiate(cls) = cls()
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A fully applied constructor really has received all its argument lists.
@@ -74,7 +88,14 @@ overapply(Curried(1)(2))
 //│ ║        	                          ^^^^^^^^^^
 //│ ╟── Instance of class 'Curried' cannot receive more argument lists.
 //│ ║  l.+3: 	overapply(Curried(1)(2))
-//│ ╙──      	          ^^^^^^^^^^^^^
+//│ ║        	          ^^^^^^^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'instance' admits values of unknown shape.
+//│ ║  l.+2: 	fun overapply(instance) = instance()
+//│ ║        	              ^^^^^^^^
+//│ ╟── 'overapply' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun overapply(instance) = instance()
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Explicitly constructed instances must not be told to add another new.
@@ -87,6 +108,13 @@ overapply(new Plain)
 //│ ║        	                          ^^^^^^^^^^
 //│ ╟── Instance of class 'Plain' cannot receive more argument lists.
 //│ ║  l.+3: 	overapply(new Plain)
-//│ ╙──      	          ^^^^^^^^^
+//│ ║        	          ^^^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'instance' admits values of unknown shape.
+//│ ║  l.+2: 	fun overapply(instance) = instance()
+//│ ║        	              ^^^^^^^^
+//│ ╟── 'overapply' is exposed by this compilation unit.
+//│ ║  l.+2: 	fun overapply(instance) = instance()
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

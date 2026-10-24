@@ -19,6 +19,10 @@ trait BlockImpl(using Elaborator.State):
   val desugStmts =
     def desug(stmts: Ls[Tree]): Ls[Tree] =
       stmts match
+      // Expand unscoped groups in the enclosing block so `let` declarations stay
+      // visible to subsequent statements and annotations apply to every entry.
+      case PossiblyAnnotated(anns, LetLike(kw, Block(bindings), N, N)) :: stmts =>
+        desug(bindings.map(b => PossiblyAnnotated(anns, b.asLetLike(kw, N)))) ::: desug(stmts)
       case syntax.Desugared(PossiblyAnnotated(anns, Assert(kw, cond, N, els))) :: stmts =>
         PossiblyAnnotated(anns, Assert(kw, cond, S(Block(stmts)), els)) :: Nil
       case syntax.Desugared(PossiblyAnnotated(anns, td: TypeDef)) :: stmts =>

@@ -112,7 +112,7 @@ Pair(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	Pair(1)
 //│ ║        	^^^^^^^
-//│ ╟── Class 'Pair' expected 2 arguments, but got 1
+//│ ╟── Constructor of class 'Pair' expected 2 arguments, but got 1
 //│ ║  l.XX: 	data class Pair[A](a: A, b: Int) extends Base with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = Pair(1, undefined)
@@ -122,7 +122,7 @@ Pair[Int, Int](1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
 //│ ║  l.+1: 	Pair[Int, Int](1, 2)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Class 'Pair' expected 1 type argument, but got 2
+//│ ╟── Constructor of class 'Pair' expected 1 type argument, but got 2
 //│ ║  l.XX: 	data class Pair[A](a: A, b: Int) extends Base with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = Pair(1, 2)
@@ -156,7 +156,7 @@ Declared()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+3: 	Declared()
 //│ ║        	^^^^^^^^^^
-//│ ╟── Class 'Declared' expected 1 argument, but got 0
+//│ ╟── Constructor of class 'Declared' expected 1 argument, but got 0
 //│ ║  l.+1: 	declare class Declared(val length: Int) with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: globalThis.Declared is not a function
@@ -170,7 +170,7 @@ new Constructed(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.+4: 	new Constructed(1)
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Constructed' expected 2 arguments, but got 1
+//│ ╟── Constructor of class 'Constructed' expected 2 arguments, but got 1
 //│ ║  l.+1: 	class Constructed with
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
@@ -221,7 +221,7 @@ new Mixed(1)(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.+4: 	new Mixed(1)(2)
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── Class 'Mixed' expected 2 arguments, but got 1
+//│ ╟── Constructor of class 'Mixed' expected 2 arguments, but got 1
 //│ ║  l.+1: 	class Mixed(a) with
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
@@ -240,7 +240,7 @@ Cons(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+5: 	Cons(1)
 //│ ║        	^^^^^^^
-//│ ╟── Class 'Cons' expected 2 arguments, but got 1
+//│ ╟── Constructor of class 'Cons' expected 2 arguments, but got 1
 //│ ║  l.+4: 	    Cons(x: Int, xs: IntList)
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot instantiate abstract class 'Cons'
@@ -260,7 +260,7 @@ Some(1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+5: 	Some(1, 2)
 //│ ║        	^^^^^^^^^^
-//│ ╟── Class 'Some' expected 1 argument, but got 2
+//│ ╟── Constructor of class 'Some' expected 1 argument, but got 2
 //│ ║  l.+4: 	    Some(x: T)
 //│ ╙──      	    ^^^^^^^^^
 //│ = Some(1)
@@ -277,7 +277,7 @@ twice(x => x + 1)
 //│ ╟── Function 'twice' expected 2 arguments, but got 1
 //│ ║  l.+1: 	fun twice(f: Int -> Int, x: Int): Int =
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'twice' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'twice' expected at least 2 arguments but got 1
 
 // So do those citing a member, such as an exposed function with an unknown parameter.
 :e
@@ -288,8 +288,6 @@ fun exposed(f) =
 //│ ║  l.+2: 	  let y = f(0)
 //│ ║        	          ^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.+1: 	fun exposed(f) =
-//│ ║        	            ^
 //│ ╟── Parameter 'f' admits values of unknown shape.
 //│ ║  l.+1: 	fun exposed(f) =
 //│ ║        	            ^
@@ -322,4 +320,31 @@ new Opened().f(1, 2)
 //│ ╟── Function 'f' expected 1 argument, but got 2
 //│ ║  l.+2: 	  open fun f(x) =
 //│ ╙──      	  ^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 2
+//│ = 3
+
+// Each call cites the unknown parameter's declaration without repeating the callee span.
+:e
+fun invokeAtEachUse(f) =
+  let alias = f
+  f()
+  alias()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+4: 	  alias()
+//│ ║        	  ^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'f' admits values of unknown shape.
+//│ ║  l.+1: 	fun invokeAtEachUse(f) =
+//│ ║        	                    ^
+//│ ╟── 'invokeAtEachUse' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun invokeAtEachUse(f) =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+3: 	  f()
+//│ ║        	  ^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── Parameter 'f' admits values of unknown shape.
+//│ ║  l.+1: 	fun invokeAtEachUse(f) =
+//│ ║        	                    ^
+//│ ╟── 'invokeAtEachUse' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun invokeAtEachUse(f) =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^

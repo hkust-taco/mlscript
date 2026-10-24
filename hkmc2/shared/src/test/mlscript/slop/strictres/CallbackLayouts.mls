@@ -1,0 +1,454 @@
+:.
+
+// *** Optional and droppable callbacks ***
+
+// A larger body is lowered to a function definition, which checks its arguments at runtime.
+:expect [2, 3, 4]
+[1, 2, 3].map(x =>
+  let y = x + 1
+  let z = y * 2
+  let w = z - y
+  w)
+//│ = [2, 3, 4]
+
+:expect [1, 3, 5]
+[1, 2, 3].map((x, i) => x + i)
+//│ = [1, 3, 5]
+
+:expect [2, 3, 4]
+fun inc(x) = x + 1
+[1, 2, 3].map(inc)
+//│ = [2, 3, 4]
+
+:expect [[2, 3], 6, true]
+let xs = [1, 2, 3]
+[xs.filter(x => x > 1), xs.reduce((acc, x) => acc + x, 0), xs.every(x => x > 0)]
+//│ = [[2, 3], 6, true]
+//│ xs = [1, 2, 3]
+
+:expect [1, null]
+fun app(f: (Int, Int?) -> Any) = f(1)
+app((x, y?) => [x, y])
+//│ = [1, null]
+
+// A callback requiring more arguments than can ever be passed to it is rejected.
+:e
+[1, 2, 3].map((a, b, c, d) => a)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	[1, 2, 3].map((a, b, c, d) => a)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+1: 	[1, 2, 3].map((a, b, c, d) => a)
+//│ ║        	              ^^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 4 arguments but got 3
+
+// A callback may not require an argument that callers may omit.
+:e
+fun app(f: (Int, Int?) -> Any) = f(1)
+app((x, y) => [x, y])
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	app((x, y) => [x, y])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	app((x, y) => [x, y])
+//│ ║        	    ^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	fun app(f: (Int, Int?) -> Any) = f(1)
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
+
+// A callback may only omit droppable parameters.
+:e
+fun app(f: (Int, Int?) -> Any) = f(1)
+app(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	app(x => x)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	app(x => x)
+//│ ║        	    ^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	fun app(f: (Int, Int?) -> Any) = f(1)
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+:e
+fun app(f: (Int, Int) -> Any) = f(1, 2)
+app(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	app(x => x)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	app(x => x)
+//│ ║        	    ^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	fun app(f: (Int, Int) -> Any) = f(1, 2)
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
+//│ = 1
+
+// Extra callback parameters must be optional; they are then always `null`.
+:expect [1, 2, null]
+fun app(f: (Int, Int) -> Any) = f(1, 2)
+app((x, y, z?) => [x, y, z])
+//│ = [1, 2, null]
+
+// Droppable parameters are always passed, so they do not include `null`.
+:expect [1, 3, 5]
+fun cb(f: (Int, drop Int) -> Int) = f(1, 2)
+[cb(x => x), cb((x, i) => x + i), cb((x, i, ...rest) => x + i + rest.length + 2)]
+//│ = [1, 3, 5]
+
+// A callback may use every declared argument, including the array itself.
+:expect 3
+[1, 2].reduce((acc, x, i, arr) => acc + arr.length - i, 0)
+//│ = 3
+
+// Callbacks may omit a droppable rest parameter, but not a non-droppable one.
+:expect [1, 3]
+fun app(f: (Int, drop ...Array[Int]) -> Int) = f(1, 2, 3)
+[app(x => x), app((x, ...xs) => x + xs.length)]
+//│ = [1, 3]
+
+:e
+fun app(f: (Int, ...Array[Int]) -> Int) = f(1, 2, 3)
+app(x => x)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	app(x => x)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	app(x => x)
+//│ ║        	    ^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	fun app(f: (Int, ...Array[Int]) -> Int) = f(1, 2, 3)
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+
+// *** Variadic callback layouts and diagnostic locations ***
+
+// A fixed interface supplies the last argument to the callback's trailing parameter.
+:expect [[2, 2], [2, 2]]
+[[1, 2].map((...prefix, arr) => arr.length), [1, 2].map((x, ...middle, arr) => arr.length)]
+//│ = [[2, 2], [2, 2]]
+
+// The same argument mapping applies to a callback with an explicit interface.
+:expect [2, 2]
+private fun named(...prefix: Array[Any], arr: Array[Int]): Int = arr.length
+[1, 2].map(named)
+//│ = [2, 2]
+
+// Different variadic layouts are not inherently incompatible. Keep cheaply known
+// positions and the rest's Array interface without enumerating possible lengths.
+:expect [3, 1]
+fun variadic(f: (Int, ...Array[Int], Str) -> Int) = f(1, 2, "tail")
+fun optional(f: (Int?, ...Array[Int], Str) -> Int) = f("tail")
+[variadic((...xs) => xs.length), optional((...xs) => xs.length)]
+//│ = [3, 1]
+
+// Diagnose a bad named callback at the call, and show the annotation as context.
+:e
+private fun needsFour(a, b, c, d) = a
+[1].map(needsFour)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	[1].map(needsFour)
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+1: 	private fun needsFour(a, b, c, d) = a
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'needsFour' expected at least 4 arguments but got 3
+
+// Typed callbacks have the same diagnostic location as inferred callbacks.
+:e
+val typed: (Int, Int, Array[Int], Int) -> Int = (a, b, c, d) => a
+[1].map(typed)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	[1].map(typed)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+1: 	val typed: (Int, Int, Array[Int], Int) -> Int = (a, b, c, d) => a
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected at least 4 arguments but got 3
+//│ typed = fun
+
+// The use site survives nested record constraints.
+:e
+fun acceptsRecord(r: { callback: (Int?) -> Int }) = 0
+acceptsRecord({ callback: x => x })
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	acceptsRecord({ callback: x => x })
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	acceptsRecord({ callback: x => x })
+//│ ║        	                          ^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	fun acceptsRecord(r: { callback: (Int?) -> Int }) = 0
+//│ ╙──      	                                 ^^^^^^^^^^^^^
+//│ = 0
+
+// Ascriptions identify the supplied implementation, not an invalid function type.
+:e
+private fun required(x) = x
+let bad = required as ((Int?) -> Int)
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.+2: 	let bad = required as ((Int?) -> Int)
+//│ ║        	          ^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+1: 	private fun required(x) = x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+2: 	let bad = required as ((Int?) -> Int)
+//│ ╙──      	                       ^^^^^^^^^^^^^
+//│ bad = fun required
+
+// Dropping the rest does not permit dropping a non-droppable trailing parameter.
+:e
+private fun requiredTrailing(f: (drop ...Array[Int], Str) -> Int) = f("tail")
+requiredTrailing(() => 0)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	requiredTrailing(() => 0)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	requiredTrailing(() => 0)
+//│ ║        	                 ^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	private fun requiredTrailing(f: (drop ...Array[Int], Str) -> Int) = f("tail")
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 0
+
+// Callbacks may still collect the trailing input in their rest or bind it at the end.
+:expect [1, 4]
+private fun collectTrailing(f: (drop ...Array[Int], Str) -> Int) = f("tail")
+[collectTrailing((...xs) => xs.length), collectTrailing((...xs, last) => last.length)]
+//│ = [1, 4]
+
+// The same omission is rejected for typed callbacks through a generic alias.
+:e
+type RequiredTail[A] = (drop ...Array[Int], A) -> Int
+private fun genericTrailing[A](tail: A, f: RequiredTail[A]) = f(tail)
+val noInputs: () -> Int = () => 0
+genericTrailing("tail", noInputs)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+4: 	genericTrailing("tail", noInputs)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+3: 	val noInputs: () -> Int = () => 0
+//│ ║        	              ^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	type RequiredTail[A] = (drop ...Array[Int], A) -> Int
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 0
+//│ noInputs = fun
+
+// An otherwise identical interface may explicitly allow dropping its trailing input.
+:expect 0
+type DroppableTail[A] = (drop ...Array[Int], drop A) -> Int
+private fun droppableTrailing[A](tail: A, f: DroppableTail[A]) = f(tail)
+droppableTrailing("tail", noInputs)
+//│ = 0
+
+// Leading inputs consume the callback's capacity before any trailing inputs do.
+:e
+private fun mixedTrailing(f: (Int, drop ...Array[Int], drop Str, Str) -> Int) = f(1, "drop", "keep")
+mixedTrailing((first, second) => first)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	mixedTrailing((first, second) => first)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+2: 	mixedTrailing((first, second) => first)
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	private fun mixedTrailing(f: (Int, drop ...Array[Int], drop Str, Str) -> Int) = f(1, "drop", "keep")
+//│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+// Optional leading inputs can be absent, leaving a trailing input within reach.
+// Resolution leaves uncertain layouts to type checking.
+:expect 1
+private fun optionalTrailing(f: (Int?, drop ...Array[Int], Str, drop Str) -> Int) = f("keep", "drop")
+optionalTrailing(first => 1)
+//│ = 1
+
+
+// *** Matching variadic callbacks ***
+
+fun variadicTrailing(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
+
+:expect "a"
+variadicTrailing((x, ...xs, s) => s)
+//│ = "a"
+
+// A callback cannot discard a non-droppable rest parameter.
+:e
+variadicTrailing((x, s) => s)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	variadicTrailing((x, s) => s)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+1: 	variadicTrailing((x, s) => s)
+//│ ║        	                 ^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.XX: 	fun variadicTrailing(f: (Int, ...Array[Int], Str) -> Str) = f(1, 2, 3, "a")
+//│ ╙──      	                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 2
+
+
+// *** Extra optional callback inputs ***
+
+// A callback's extra optional parameter is absent even if a direct call supplied it.
+:e
+private fun extra(x, s?) = s.length
+extra(0, "hi")
+fun invoke(f: Int -> Int) = f(0)
+invoke(extra)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun extra(x, s?) = s.length
+//│ ║        	                           ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+1: 	private fun extra(x, s?) = s.length
+//│ ╙──      	                     ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Narrowing the absent parameter is valid.
+:expect [2, 0]
+private fun extraSafe(x, s?) = if s is ~null as s then s.length else 0
+fun invokeSafe(f: Int -> Int) = f(0)
+[extraSafe(0, "hi"), invokeSafe(extraSafe)]
+//│ = [2, 0]
+
+// A droppable rest argument can supply an extra optional parameter, but can be empty.
+:expect [0, 3]
+fun invokeRest(f: (Int, drop ...Array[Str]) -> Int) = [f(0), f(0, "abc")]
+invokeRest((x, s?) => if s is ~null as s then s.length else 0)
+//│ = [0, 3]
+
+:e
+fun invokeMissingRest(f: (Int, drop ...Array[Str]) -> Int) = f(0)
+invokeMissingRest((x, s?) => s.length)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	invokeMissingRest((x, s?) => s.length)
+//│ ║        	                             ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+2: 	invokeMissingRest((x, s?) => s.length)
+//│ ╙──      	                      ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// *** Returned callbacks ***
+
+// A returned callback's arity should be checked once, whether its factory is public or private.
+:!js
+:e
+fun publicFactory(unused): Int -> Int = (x, y) => 0
+//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ║  l.+1: 	fun publicFactory(unused): Int -> Int = (x, y) => 0
+//│ ║        	                                        ^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+1: 	fun publicFactory(unused): Int -> Int = (x, y) => 0
+//│ ║        	                                        ^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	fun publicFactory(unused): Int -> Int = (x, y) => 0
+//│ ╙──      	                           ^^^^^^^^^^
+
+:!js
+:e
+private fun privateFactory(unused): Int -> Int = (x, y) => 0
+//│ ╔══[COMPILATION ERROR] Resolution error in function literal
+//│ ║  l.+1: 	private fun privateFactory(unused): Int -> Int = (x, y) => 0
+//│ ║        	                                                 ^^^^^^^^^^^
+//│ ╟── Callback parameter list does not match its declared function type.
+//│ ║  l.+1: 	private fun privateFactory(unused): Int -> Int = (x, y) => 0
+//│ ║        	                                                 ^^^^^^^^^^^
+//│ ╟── The expected function type is declared here.
+//│ ║  l.+1: 	private fun privateFactory(unused): Int -> Int = (x, y) => 0
+//│ ╙──      	                                    ^^^^^^^^^^
+
+// Returned callbacks receive their annotated input types even when a factory parameter is unannotated.
+:js
+:expect 3
+fun typedFactory(unused): Str -> Int = text => text.length
+typedFactory(null)("abc")
+//│ = 3
+
+
+// *** Parameter flows across different layouts ***
+
+// A callback collecting a typed variadic interface must retain its element types.
+private fun variadic(f: (...Array[Str]) -> Int) = 0
+variadic((...xs) => xs.map(x => x.length).length)
+//│ = 0
+
+// A trailing parameter may receive a leading argument, a rest element, or a suffix.
+private fun trailing(f: (Str, ...Array[Str]) -> Int) = 0
+trailing((...xs, last) => last.length)
+//│ = 0
+
+private fun collect(f: (Str, ...Array[Str], Str) -> Int) = 0
+collect((...xs) => xs.map(x => x.length).length)
+//│ = 0
+
+class Left(val value: Int)
+class Right(val value: Int)
+
+// Uncertain positions must keep both candidates, so strict resolution sees ambiguity.
+:e
+private fun mixed(f: (Left, ...Array[Right]) -> Int) = 0
+mixed((...xs, last) => last.value)
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+2: 	mixed((...xs, last) => last.value)
+//│ ║        	                       ^^^^^^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Right'
+//│ ║  l.XX: 	class Right(val value: Int)
+//│ ║        	                ^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Left'
+//│ ║  l.XX: 	class Left(val value: Int)
+//│ ╙──      	               ^^^^^
+//│ = 0
+
+// Consuming an unknown prefix must retain the rest's possible element flows.
+private fun dropOne(first, ...rest) = rest
+private fun copy(xs: Array[Str]) = dropOne(...xs, "tail").map(x => x.length)
+
+// The same flow must reach a typed callback's generic element parameter.
+:e
+#lang(eagerResolution: false)
+private fun typed[A](f: (...Array[A]) -> Int, a: A) =
+  mixed(f)
+  a.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+4: 	  a.value
+//│ ║        	  ^^^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Left'
+//│ ║  l.XX: 	class Left(val value: Int)
+//│ ║        	               ^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Right'
+//│ ║  l.XX: 	class Right(val value: Int)
+//│ ╙──      	                ^^^^^
+
+// The trailing interface argument must reach the optional callback's second parameter.
+#lang(eagerResolution: true)
+private fun requiredPair(f: (Str, drop ...Array[Str], drop Str) -> Int) = 0
+requiredPair((first?, second?) => if second is ~null as value then value.length else 0)
+//│ = 0
+
+// A tuple annotation on the interface's rest must not give a sliced rest its
+// original length. Forward the remaining argument without a false arity error.
+private fun tupleRest(f: (...[Str, Str]) -> Int) = 0
+private fun length(s: Str) = s.length
+tupleRest((first?, ...rest) => length(...rest))
+//│ = 0
+
+private fun emptyTupleRest(f: (...[]) -> Int) = 0
+emptyTupleRest((first?, ...rest) => rest.length)
+//│ = 0

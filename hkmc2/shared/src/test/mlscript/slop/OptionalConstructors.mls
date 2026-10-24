@@ -1,0 +1,151 @@
+:.
+
+
+class Main(val first, val second?: Int) {
+  fun values() = [first, second]
+}
+
+:expect [[1, null], [2, 3], [4, null]]
+[Main(1).values(), new Main(2, 3).values(), new Main(4, unsafe.undefined).values()]
+//│ = [[1, null], [2, 3], [4, null]]
+
+// Partial construction preserves optionality through generated forwarding functions.
+:noInline
+:expect [[5, null], [6, 7]]
+val makeMain = new Main
+[makeMain(5).values(), makeMain(6, 7).values()]
+//│ = [[5, null], [6, 7]]
+//│ makeMain = fun
+
+class Auxiliary {
+  constructor(val first, val second?)
+  fun values() = [first, second]
+}
+
+:expect [[8, null], [9, 10]]
+[new Auxiliary(8).values(), new Auxiliary(9, 10).values()]
+//│ = [[8, null], [9, 10]]
+
+class Curried(val first?)(val second?: Int) {
+  constructor(val third?)
+  fun values() = [first, second, third]
+}
+
+:expect [[null, null, null], [11, 12, 13]]
+[new Curried()()().values(), Curried(11)(12)(13).values()]
+//│ = [[null, null, null], [11, 12, 13]]
+
+// Omitted arguments in earlier lists must not shift later arguments into their fields.
+:expect [[null, 21, 22], [23, null, 24]]
+[new Curried()(21)(22).values(), Curried(23)()(24).values()]
+//│ = [[null, 21, 22], [23, null, 24]]
+
+fun spreadFirst(xs: Array[Int]) = new Curried(...xs)(25)(26)
+
+:expect [[null, 25, 26], [27, 25, 26]]
+[spreadFirst([]).values(), spreadFirst([27]).values()]
+//│ = [[null, 25, 26], [27, 25, 26]]
+
+:noInline
+:expect [14, null, null]
+val finish = new Curried(14)
+finish()().values()
+//│ = [14, null, null]
+//│ finish = fun
+
+// Omission supplies null to the constructor body and to mutable fields.
+class Mutable(mut val value?) {
+  val initiallyMissing = value is null
+}
+
+:expect [true, 15]
+val mutable = new mut Mutable()
+set mutable.value = 15
+[mutable.initiallyMissing, mutable.value]
+//│ = [true, 15]
+//│ mutable = Mutable(15)
+
+data class Data(value?)
+
+:expect [null, 16]
+[Data().value, Data(16).value]
+//│ = [null, 16]
+
+// Constructor patterns still match every field, including omitted optional values.
+:expect [true, false]
+fun missing(x) = if x is Data(value) then value is null else false
+[missing(Data()), missing(Data(17))]
+//│ = [true, false]
+
+// Optional fields retain their null alternative in the declared interface.
+class Item(val value)
+class Generic[A](val item?: A)
+fun read(x: Generic[Item]) = if x.item is Item as item then item.value else 0
+
+:expect [0, 18]
+[read(Generic[Item]()), read(Generic(Item(18)))]
+//│ = [0, 18]
+
+// Parent constructors receive omitted arguments through ordinary constructor calls.
+class Child extends Main(19)
+
+:expect [[19, null], [20, null]]
+[(new Child).values(), (new Main(20) with {}).values()]
+//│ = [[19, null], [20, null]]
+
+// Lifted local classes preserve captured values and materialized optional slots.
+:lift
+:expect [29, null]
+fun local(captured) = {
+  class Local(val value?) {
+    fun values() = [captured, value]
+  }
+  new Local()
+}
+local(29).values()
+//│ = [29, null]
+
+// Optionality does not remove required parameters or permit extra arguments.
+:e
+fun missingRequired() = new Main()
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.+1: 	fun missingRequired() = new Main()
+//│ ║        	                        ^^^^^^^^^^
+//│ ╟── Constructor of class 'Main' expected 1 to 2 arguments, but got 0
+//│ ║  l.XX: 	class Main(val first, val second?: Int) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun tooMany() = new Main(1, 2, 3)
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.+1: 	fun tooMany() = new Main(1, 2, 3)
+//│ ║        	                ^^^^^^^^^^^^^^^^^
+//│ ╟── Constructor of class 'Main' expected 1 to 2 arguments, but got 3
+//│ ║  l.XX: 	class Main(val first, val second?: Int) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+class BadOrder(first?, second)
+//│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
+//│ ║  l.+1: 	class BadOrder(first?, second)
+//│ ╙──      	                       ^^^^^^
+
+:e
+class BadAuxiliary {
+  constructor(first?, second)
+}
+//│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
+//│ ║  l.+2: 	  constructor(first?, second)
+//│ ╙──      	                      ^^^^^^
+
+:e
+class BadContext(using value?: Int)
+//│ ╔══[COMPILATION ERROR] Contextual parameters cannot be optional.
+//│ ║  l.+1: 	class BadContext(using value?: Int)
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^
+
+:e
+class BadDrop(drop value)
+//│ ╔══[COMPILATION ERROR] Droppable parameters are only supported in function and lambda parameter lists.
+//│ ║  l.+1: 	class BadDrop(drop value)
+//│ ╙──      	              ^^^^^^^^^^

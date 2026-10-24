@@ -80,17 +80,16 @@ fun customAnnotation(arg) =
 //│ ║  l.+3: 	  @Custom(arg)
 //│ ╙──      	  ^^^^^^^^^^^^
 
-// A qualified annotation cannot wait for its receiver's forward definition.
-:e
+// A declared module's member identity is available before its body completes.
+:w
 fun forwardQualified() =
   @Later.noInline
   fun inner(x) = x
   inner(5)
 module Later { object noInline }
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.+2: 	  @Later.noInline
-//│ ║        	  ^^^^^^^^^^^^^^^
-//│ ╙── An annotation's main symbol must be uniquely known when the annotation is elaborated.
+//│ ╙──      	  ^^^^^^^^^^^^^^^
 
 // Nor can an annotation wait for a forward wildcard source or an alias's value.
 :e

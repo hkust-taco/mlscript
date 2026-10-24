@@ -1,0 +1,37 @@
+:js
+:effectHandlers
+:lift
+
+
+// * Resuming a function calls it again with its saved arguments,
+// * which must include the arguments of its rest parameter.
+
+abstract class Effect with
+  fun perform(arg): Any
+
+:expect [2, 1, [2, 3]]
+handle h = Effect with
+  fun perform(arg)(k) = k(arg + 1)
+fun rest(x, ...xs) =
+  let r = h.perform(x)
+  [r, x, xs]
+rest(1, 2, 3)
+//│ = [2, 1, [2, 3]]
+
+:expect [2, 1, 2, [3], 4]
+handle h = Effect with
+  fun perform(arg)(k) = k(arg + 1)
+fun trailing(x, y?, ...xs, z) =
+  let r = h.perform(x)
+  [r, x, y, xs, z]
+trailing(1, 2, 3, 4)
+//│ = [2, 1, 2, [3], 4]
+
+:expect [2, 1, [2], 3, [4, 5]]
+handle h = Effect with
+  fun perform(arg)(k) = k(arg + 1)
+fun curried(x, ...xs)(y, ...ys) =
+  let r = h.perform(x)
+  [r, x, xs, y, ys]
+curried(1, 2)(3, 4, 5)
+//│ = [2, 1, [2], 3, [4, 5]]

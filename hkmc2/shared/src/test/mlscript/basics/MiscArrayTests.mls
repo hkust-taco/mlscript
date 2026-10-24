@@ -27,17 +27,8 @@ f()
 xs.reverse()
 //│ = [2, 1, 0]
 
-:e
-:re
 xs.map(x => x * 2)
-//│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.XX: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
-//│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in MiscArrayTests.mls:+1
-//│ ║  l.+1: 	xs.map(x => x * 2)
-//│ ╙──      	       ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
+//│ = [4, 2, 0]
 
 xs.map((x, i, a) => x * 2)
 //│ = [4, 2, 0]
@@ -76,7 +67,7 @@ xs |.
 //│ tmp = map(lambda5);
 //│ return Predef.passTo(xs1, tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'map' expected at least 2 arguments but got 1
 
 :e
 :re
@@ -91,7 +82,7 @@ xs|.
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
 //│ ║  l.+2: 	  map(x => x * 2)
 //│ ╙──      	      ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'map' expected at least 2 arguments but got 1
 
 :pt
 xs

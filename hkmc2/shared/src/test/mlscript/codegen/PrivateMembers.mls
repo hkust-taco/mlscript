@@ -31,7 +31,7 @@ class Foo with
 //│     runtime.checkCall(Predef.print(tmp2));
 //│   }
 //│   #y() {
-//│     runtime.checkArgs("y", 0, true, arguments.length);
+//│     runtime.checkArgs("y", 0, arguments.length);
 //│     return 42
 //│   }
 //│   toString() { return runtime.render(this); }

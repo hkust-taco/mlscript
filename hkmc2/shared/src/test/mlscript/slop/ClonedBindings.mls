@@ -1,0 +1,143 @@
+:.
+:js
+:checkIR
+
+open annotations
+
+// Both ordinary pattern methods and each compiled use copy this transformation.
+// Nested closures, let bindings and pattern aliases must refer to their own copy.
+pattern Offset = x =>
+  let base = x + 10
+  let add = y => base + y
+  if [add(2)] is [result] then result else 0
+
+:noOpt
+fun unoptimized(x) =
+  if x is (@compile Offset) as first then
+    if first is (@compile Offset) as second then second else 0
+  else 0
+
+fun optimized(x) =
+  if x is (@compile Offset) as first then
+    if first is (@compile Offset) as second then second else 0
+  else 0
+
+:expect [25, 26, 25, 26]
+[unoptimized(1), unoptimized(2), optimized(1), optimized(2)]
+//│ = [25, 26, 25, 26]
+
+@inline fun inlineOffset(x) = if x is (@compile Offset) as result then result else 0
+fun twice(x) = inlineOffset(x) + inlineOffset(x + 1)
+
+:expect 27
+twice(1)
+//│ = 27
+
+// A transformation can contain recursive definitions and variadic lambdas.
+pattern LocalFunction = x =>
+  fun count(n) = if n == 0 then x else step(n - 1)
+  fun step(n) = count(n) + 1
+  let add = (y, ...ys) => count(y) + ys.length
+  add(2, 3, 4)
+
+:noOpt
+fun localFunction(x) =
+  if x is (@compile LocalFunction) as first then
+    if first is (@compile LocalFunction) as second then second else 0
+  else 0
+
+:expect [9, 10]
+[localFunction(1), localFunction(2)]
+//│ = [9, 10]
+
+// The label and its result slot must be renamed together with break references.
+pattern Labelled = x => do done:
+  if x > 0 do done.break(x + 1)
+  done.break(0)
+
+:noOpt
+fun labelled(x) =
+  if x is (@compile Labelled) as first then
+    if first is (@compile Labelled) as second then second else 0
+  else 0
+
+:expect [3, 0]
+[labelled(1), labelled(-1)]
+//│ = [3, 0]
+
+// Local nominal declarations and their members belong to each cloned body too.
+pattern LocalClass = x =>
+  data class Box(value: Int) with
+    private fun get() = value
+    fun add(y) = get() + y
+  fun read(box: Box): Int = box.add(1)
+  let box = Box(x)
+  read(box)
+
+:noOpt
+fun localClass(x) =
+  if x is (@compile LocalClass) as first then
+    if first is (@compile LocalClass) as second then second else 0
+  else 0
+
+:expect [3, 4]
+[localClass(1), localClass(2)]
+//│ = [3, 4]
+
+// Nominal metadata must follow cloned owners, including override edges and
+// symbols reached through a stored constructor, a module or a type alias.
+pattern LocalMembers = x =>
+  class Base with
+    open fun value(): Int = 0
+  class Derived extends Base with
+    override fun value(): Int = x
+  let ctor = Derived
+  module Factory with
+    type Result = Derived
+    fun create(): Result = new ctor
+  let value = if x > 0 then Factory.create() else new Base
+  value.value() + 1
+
+:noOpt
+fun localMembers(x) =
+  if x is (@compile LocalMembers) as first then
+    if first is (@compile LocalMembers) as second then second else 0
+  else 0
+
+:expect [4, 2]
+[localMembers(2), localMembers(-1)]
+//│ = [4, 2]
+
+// Anonymous refinements carry their own class declaration and method owners.
+pattern Refinement = x =>
+  class Base with
+    open fun value(): Int = 0
+  let value = new Base with
+    override fun value(): Int = x + 1
+  value.value()
+
+:noOpt
+fun refinement(x) =
+  if x is (@compile Refinement) as first then
+    if first is (@compile Refinement) as second then second else 0
+  else 0
+
+:expect [3, 4]
+[refinement(1), refinement(2)]
+//│ = [3, 4]
+
+// Distributing a match over two producer branches copies the same consumer.
+// Its nested function's parameter must be freshened by the IR copier as well.
+@inline fun produce(x) = if x is
+  0 then 1
+  1 then 2
+  2 then 1
+
+:inlineThreshold 100
+fun distribute(x) = if produce(x) is
+  1 then (y => y + x)
+  2 then (y => y - x)
+
+:expect [10, 9, 12]
+[distribute(0)(10), distribute(1)(10), distribute(2)(10)]
+//│ = [10, 9, 12]

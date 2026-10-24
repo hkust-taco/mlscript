@@ -159,6 +159,12 @@ class C
 
 :e
 class D extends C(0)
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.+1: 	class D extends C(0)
+//│ ║        	                ^^^^
+//│ ╟── Class value expected 0 arguments, but got 1
+//│ ║  l.XX: 	class C
+//│ ╙──      	^^^^^^^
 //│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
 //│ ║  l.+1: 	class D extends C(0)
 //│ ╙──      	                ^^^^
@@ -177,6 +183,17 @@ new A(1)(2) with
 new A(1)(2)(3)(4) with
   fun a = 0
 //? = $anon { x: 1 }
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.+1: 	new A(1)(2)(3)(4) with
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  fun a = 0
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Class 'A' expected at most 3 argument lists, but got 4
+//│ ║  l.XX: 	class A(val x) with
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── The constructor is declared here.
+//│ ║  l.XX: 	  constructor(y)(z) 
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
 //│ ║  l.+1: 	new A(1)(2)(3)(4) with
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^

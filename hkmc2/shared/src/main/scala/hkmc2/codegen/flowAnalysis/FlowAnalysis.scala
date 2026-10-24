@@ -155,12 +155,11 @@ object TrackableSelect:
 object MemberRefTo:
   def unapply(p: Path): Opt[(targetSymbol: DefinitionSymbol[?], selectedFrom: Opt[Path])] =
     p.targetSymbol.map: target =>
-      target ->
-      locally:
-        p match
-          case Select(qual, _) => S(qual)
-          case SuperSelect(qual, _, _) => S(qual)
-          case _ => N
+      target -> p.match
+        case Select(qual, _) => S(qual)
+        case DynSelect(qual, _, DynSelectKind.Member(_)) => S(qual)
+        case SuperSelect(qual, _, _) => S(qual)
+        case _ => N
 
 object CtorProducer:
   /** Extracts result forms that produce a concrete `Ctor` flow strategy. */
@@ -236,10 +235,13 @@ class ProdFun(
   val instantiationId: Opt[InstantiationId]
 )(
   val params: Ls[ConsStrat],
+  /** The number of leading `params` that are not optional (see `LoweredParamList.paramCountLB`). */
+  val requiredParamCount: Int,
   val restParam: Opt[ConsStrat],
   val res: ProdStrat,
   val capturedVarUpperbound: StratVar
 ) extends ProdStrat with StratWithOrigin[FunId]:
+  def paramInfo: (Int, Int, Bool) = (params.size, requiredParamCount, restParam.isDefined)
   val dests = MutSet.empty[ConsFun | MarkerConsStrat]
   override def toString(): String =
     s"(${params.map(_.toString()).mkString(", ")}) -> ${res.toString()}"
@@ -401,7 +403,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     
     inline def inFun(fun: FunDefn)(inline body: => Any) =
       // each param list is a closure over the params of the lists before it
-      def withParamListCaptureInfo(paramLists: Iterator[(ParamList, Int)]): Unit = paramLists.nextOption() match
+      def withParamListCaptureInfo(paramLists: Iterator[(LoweredParamList, Int)]): Unit = paramLists.nextOption() match
         case N => body
         case S((pl, whichParamList)) =>
           val locallyDefined = MutSet.from[Symbol](pl.paramSyms)
@@ -440,8 +442,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     
     inline def inLam(lam: Lambda)(inline body: => Any) =
       val locallyDefined = MutSet.empty[Symbol]
-      lam.params.params.foreach(p => locallyDefined += p.sym)
-      lam.params.restParam.foreach(p => locallyDefined += p.sym)
+      lam.params.paramSyms.foreach(locallyDefined += _)
       withCtx(InCtx.Lam(lam))(withCaptureInfo(lam.uid, locallyDefined)(body))()
     
     inline def inTopLvl(inline body: => Any) =
@@ -551,7 +552,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
       applyPath(lhs)
       applyResult(rhs)
       applyBlock(rest)
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+    case AssignDynField(lhs, fld, kind, rhs, rest) =>
       applyPath(lhs)
       applyPath(fld)
       applyResult(rhs)
@@ -595,8 +596,6 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case _ => ()
   
   override def applyPath(p: Path): Unit = p match
-    case DynSelect(qual, fld, arrayIdx) =>
-      applyPath(qual); applyPath(fld)
     case p@TrackableFieldSelect(qual, _ -> _) =>
       res.selToCtxOfSel.addOne(p.uid -> ctxTracker.getAllCtx)
       qual match
@@ -607,7 +606,7 @@ class FlowPreAnalyzer(val pgrm: Program)(using
         if ctxTracker.isEnclosingMatchScrutSym(disamb) =>
           applyValueMemberRef(v, recordAffinity = false)
       case _ => applyPath(qual)
-    case p: (Select | SuperSelect) =>
+    case p: (Select | SuperSelect | DynSelect) =>
       super.applyPath(p)
     case c: Cast => applyResult(c.value)
     case v: Value => applyValue(v)
@@ -637,9 +636,8 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     currentCaptureInfo.foreach(_.locallyDefined += defn.tsym)
     applyPath(defn.rhs)
   
-  override def applyParamList(pl: ParamList): Unit =
-    pl.params.foreach(p => ctxTracker.registerStratVar(p.sym, p.sym.nme))
-    pl.restParam.foreach(p => ctxTracker.registerStratVar(p.sym, p.sym.nme))
+  override def applyParamList(pl: LoweredParamList): Unit =
+    pl.allParams.foreach(p => ctxTracker.registerStratVar(p.sym, p.sym.nme))
   
   override def applyArg(arg: Arg): Unit =
     applyPath(arg.value)
@@ -648,8 +646,10 @@ class FlowPreAnalyzer(val pgrm: Program)(using
     case defn: FunDefn => applyFunDefn(defn)
     case defn: ValDefn => applyValDefn(defn)
     case cls@ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-        privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion)
+        privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion, _)
     =>
+      cls.methodKeys.valuesIterator.foreach(applyPath)
+      mod.foreach(_.methodKeys.valuesIterator.foreach(applyPath))
       ctxTracker.inCls(cls):
         paramsOpt.foreach(applyParamList)
         auxParams.foreach(applyParamList)
@@ -827,6 +827,7 @@ class FlowConstraintsCollector(
         case p: ProdFun =>
           new ProdFun(p.exprId, updateInstantiationId(p.instantiationId))(
             p.params.map(duplicateConsStrat),
+            p.requiredParamCount,
             p.restParam.map(duplicateConsStrat),
             duplicateProdStrat(p.res),
             duplicateVarState(p.capturedVarUpperbound))
@@ -864,7 +865,7 @@ class FlowConstraintsCollector(
     
     def mkFunProdStrat(
       resName: String,
-      params: Ls[ParamList],
+      params: Ls[LoweredParamList],
       body: Block,
       funLamId: FunId
     )(using cc: ConstraintsCollector): ProdStrat =
@@ -876,9 +877,13 @@ class FlowConstraintsCollector(
             lambdaExprId
           case other => lastWords(s"unexpected funLamId shape: $other")
       val res = freshVar(resName, cc.forFun)
-      params.foreach:
-        _.restParam.foreach: p =>
+      params.foreach: ps =>
+        ps.restParam.foreach: p =>
           generatedVars(p.sym).constrainOpaque
+        // * The argument of an optional parameter may be omitted, in which case the parameter is
+        // * `null`, a value that is not tracked by the analysis.
+        ps.params.drop(ps.paramCountLB).foreach: p =>
+          cc.constrain(UnknownProd, generatedVars(p.sym))
       val funValueStrat = params.zipWithIndex.foldRight[ProdStrat](res):
         case ((ps, whichParamList), acc) =>
           val plFunId = paramListFunId(whichParamList)
@@ -890,6 +895,7 @@ class FlowConstraintsCollector(
             cc.constrain(capturedSymStrat, capUB)
           new ProdFun(plFunId, cc.instId)(
             ps.params.map(p => generatedVars(p.sym)),
+            ps.paramCountLB,
             ps.restParam.map(p => generatedVars(p.sym)),
             acc,
             capUB)
@@ -908,6 +914,7 @@ class FlowConstraintsCollector(
         cc.constrain(funProdStrat, generatedVars(fun.dSym))
     
     def processClsLikeDefn(cls: ClsLikeDefn)(using cc: ConstraintsCollector): Unit =
+      cls.methodKeys.valuesIterator.foreach(constrainOpaqueResult)
       cls.privateFields.foreach(sym => generatedVars(sym).constrainOpaque)
       cls.publicFields.foreach: (_, tsym) =>
         generatedVars(tsym).constrainOpaque
@@ -918,6 +925,7 @@ class FlowConstraintsCollector(
       processBlock(cls.preCtor)(using cc, UnknownCons)
       processBlock(cls.ctor)(using cc, UnknownCons)
       cls.companion.foreach: mod =>
+        mod.methodKeys.valuesIterator.foreach(constrainOpaqueResult)
         mod.privateFields.foreach(sym => generatedVars(sym).constrainOpaque)
         mod.publicFields.foreach: (_, tsym) =>
           generatedVars(tsym).constrainOpaque
@@ -963,7 +971,7 @@ class FlowConstraintsCollector(
         constrainOpaqueResult(lhs)
         constrainOpaqueResult(rhs)
         processBlock(rest)
-      case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+      case AssignDynField(lhs, fld, kind, rhs, rest) =>
         constrainOpaqueResult(lhs)
         constrainOpaqueResult(fld)
         constrainOpaqueResult(rhs)
@@ -1049,13 +1057,20 @@ class FlowConstraintsCollector(
         case p: Path =>
           p match
           case refSite@FunRef(f, selectedFrom) =>
+            refSite match
+              case DynSelect(_, key, DynSelectKind.Member(_)) => cc.constrain(processResult(key), UnknownCons)
+              case SuperSelect(_, base, key) =>
+                cc.constrain(processResult(base), UnknownCons)
+                cc.constrain(processResult(key), UnknownCons)
+              case _ => ()
             for qual <- selectedFrom do
               cc.constrain(processResult(qual), UnknownCons)
             funsToProdStratScheme.get(f) match
             case Some(fScheme) =>
               fScheme.instantiate(refSite.uid, f)
             case None => generatedVars(f)
-          case s @ SuperSelect(qual, base, _) =>
+          case s @ SuperSelect(qual, base, key) =>
+            cc.constrain(processResult(key), UnknownCons)
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(base), UnknownCons)
             generatedVars(s.symbol)
@@ -1063,10 +1078,12 @@ class FlowConstraintsCollector(
             cc.constrain(processResult(qual), UnknownCons)
             s.symbol.fold(UnknownProd): selSym =>
               generatedVars(selSym)
-          case DynSelect(qual, fld, arrayIdx) =>
+          case DynSelect(qual, fld, kind) =>
             cc.constrain(processResult(qual), UnknownCons)
             cc.constrain(processResult(fld), UnknownCons)
-            UnknownProd
+            kind match
+              case DynSelectKind.Member(sym) => generatedVars(sym)
+              case DynSelectKind.ArrayIdx | DynSelectKind.Unknown => UnknownProd
           case Cast(value, _, _) =>
             val valueStrat = processResult(value)
             cc.constrain(valueStrat, UnknownCons)

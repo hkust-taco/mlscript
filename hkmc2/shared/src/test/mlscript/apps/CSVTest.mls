@@ -4,7 +4,7 @@
 import "../../mlscript-compile/apps/CSV.mls"
 
 
-let csv = CSV(undefined)
+let csv = CSV()
 //│ csv = CSV(",")
 
 

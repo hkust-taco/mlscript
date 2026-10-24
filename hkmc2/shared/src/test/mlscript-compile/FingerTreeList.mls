@@ -32,7 +32,7 @@ object Nil
 data class View[T](e1: T, rest: FingerTree[T])
 
 class FingerTree[T] extends IterableBase with
-  override fun iterator() =
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator() =
     let current = this
     IteratorImpl of () => if popFront(current) is
       Nil then Result.Done

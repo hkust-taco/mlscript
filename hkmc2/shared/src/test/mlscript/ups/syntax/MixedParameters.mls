@@ -44,7 +44,10 @@ if [0, 0] is P'(Bit, a, b) then "values: " + a + ", " + b
 if [0, 0] is P(a, Bit, b) then "values: " + a + ", " + b
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
 //│ ║  l.+1: 	if [0, 0] is P(a, Bit, b) then "values: " + a + ", " + b
-//│ ╙──      	                                            ^
+//│ ║        	                                            ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.+1: 	if [0, 0] is P(a, Bit, b) then "values: " + a + ", " + b
+//│ ╙──      	               ^
 //│ ═══[RUNTIME ERROR] ReferenceError: a is not defined
 
 pattern S(a, pattern Q, b) = [Q as a, Q as b]
@@ -59,7 +62,10 @@ f([0, 0])
 fun f(x) = if x is S(Bit, a, b) then [a, b]
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
 //│ ║  l.+1: 	fun f(x) = if x is S(Bit, a, b) then [a, b]
-//│ ╙──      	                                      ^
+//│ ║        	                                      ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.+1: 	fun f(x) = if x is S(Bit, a, b) then [a, b]
+//│ ╙──      	                          ^
 
 :re
 f([0, 0])

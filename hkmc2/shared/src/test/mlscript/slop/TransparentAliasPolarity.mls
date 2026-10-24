@@ -1,0 +1,68 @@
+:.
+
+// Alias formals select endpoints relative to their own body. The enclosing
+// function domain changes the argument's interpretation, not which endpoint
+// the alias's output field selects.
+:expect 1
+class Item(val value: Int)
+type Source[out T] = {item: T}
+private fun read[A](source: Source[A]): A = source.item
+read({item: Item(1)}).value
+//│ = 1
+
+// A contravariant alias's own domain reverses the enclosing domain once more.
+:expect 2
+type Sink[in T] = T -> Int
+private fun consume[A](f: Sink[A], value: A): Int = f(value)
+consume(item => item.value, Item(2))
+//│ = 2
+
+// Nested aliases remain transparent under the same enclosing polarity.
+:expect 3
+type Indirect[out T] = Source[T]
+private fun indirect[A](source: Indirect[A]): A = source.item
+indirect({item: Item(3)}).value
+//│ = 3
+
+// Written bounds still restrict the interface, independently of declaration variance.
+:e
+fun inputOnly(source: Source[in Item]) = source.item.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun inputOnly(source: Source[in Item]) = source.item.value
+//│ ║        	                                         ^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.+1: 	fun inputOnly(source: Source[in Item]) = source.item.value
+//│ ║        	                             ^^^^^^^
+//│ ╙── Values read through it have no output bound more specific than 'Any'.
+
+:expect 4
+private fun outputOnly(source: Source[out Item]) = source.item.value
+outputOnly({item: Item(4)})
+//│ = 4
+
+// A written projection is equivalent to the covariant argument shorthand.
+:expect 5
+private fun projected[A](source: Source[in Nothing out A]): A = source.item
+projected({item: Item(5)}).value
+//│ = 5
+
+// The iterator result keeps the same output through another nominal application.
+:expect 6
+type IterSource[out T] = {iterator: () -> Iterator[T]}
+private fun iterated[A](source: IterSource[in Nothing out A]): A = source.iterator().next().value
+iterated({iterator: () => [Item(6)].iterator()}).value
+//│ = 6
+
+// For an invariant result constructor, covariance must discard the input flow.
+:e
+type ArraySource[out T] = {iterator: () -> Array[T]}
+private fun connect[A](source: ArraySource[A], value: A) = ()
+let empty = mut []
+connect({iterator: () => empty}, Item(7))
+empty.0.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
+//│ ║  l.+5: 	empty.0.value
+//│ ╙──      	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ empty = []

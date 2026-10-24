@@ -1,0 +1,43 @@
+#lang(0.3.x)
+
+open annotations { jsSymbol, fresh }
+
+
+@fresh val fileKey = Symbol("file key")
+
+module SymbolKeyLibrary {
+  @fresh val readKey = Symbol("library read")
+  @fresh private val privateKey = Symbol("private key")
+  class Reader {
+    @jsSymbol(readKey) fun read() = 55
+  }
+  module Nested {
+    @fresh val key = Symbol("nested library key")
+    class Reader {
+      @jsSymbol(key) fun read() = 68
+    }
+  }
+  private module PrivateKeys {
+    @fresh val key = Symbol("private module key")
+  }
+  class PrivatePathReader {
+    @jsSymbol(PrivateKeys.key) fun read() = 72
+  }
+  fun make(value) =
+    class Local {
+      @jsSymbol(SymbolKeyLibrary.readKey) fun read() = value
+    }
+    new Local
+  class FileReader {
+    @jsSymbol(fileKey) fun read() = 64
+    @jsSymbol(privateKey) fun readPriv() = 65
+  }
+  fun makeLocal(value) =
+    @fresh val key = Symbol("factory key")
+    class Local {
+      @jsSymbol(key) fun read() = value
+    }
+    new Local
+}
+
+

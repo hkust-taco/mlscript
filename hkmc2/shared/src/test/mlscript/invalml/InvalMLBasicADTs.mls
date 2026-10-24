@@ -164,10 +164,8 @@ fun badSum(xs) =
   if xs is
     Cons(x, xs) then x + badSum(xs)
 //│ ╔══[COMPILATION ERROR] Expect 2 cases, but 1 got.
-//│ ║  l.+2: 	  if xs is
-//│ ║        	     ^^^^^
 //│ ║  l.+3: 	    Cons(x, xs) then x + badSum(xs)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun badSum(xs) =
@@ -175,17 +173,13 @@ fun badSum(xs) =
     Cons(x, xs) then x + badSum(xs)
     Cons(x, xs) then x + badSum(xs)
 //│ ╔══[COMPILATION ERROR] Duplicate match branches.
-//│ ║  l.+2: 	  if xs is
-//│ ║        	     ^^^^^
 //│ ║  l.+3: 	    Cons(x, xs) then x + badSum(xs)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+4: 	    Cons(x, xs) then x + badSum(xs)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Expect 2 cases, but 1 got.
-//│ ║  l.+2: 	  if xs is
-//│ ║        	     ^^^^^
 //│ ║  l.+3: 	    Cons(x, xs) then x + badSum(xs)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+4: 	    Cons(x, xs) then x + badSum(xs)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -294,14 +288,8 @@ fun foo(x) =
     None then 0
     42 then 42
 //│ ╔══[COMPILATION ERROR] Mixing ADT pattern matching and general matching is not supported yet.
-//│ ║  l.+2: 	  if x is
-//│ ║        	     ^^^^
-//│ ║  l.+3: 	    Some(x) then 1
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.+4: 	    None then 0
-//│ ║        	^^^^^^^^^^^^^^^
 //│ ║  l.+5: 	    42 then 42
-//│ ╙──      	^^^^^^^^^^^^^^
+//│ ╙──      	    ^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Variable not found: arg$Some$0$
 
 

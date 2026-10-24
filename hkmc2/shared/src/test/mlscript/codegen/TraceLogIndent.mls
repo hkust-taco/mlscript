@@ -33,7 +33,7 @@ h(3)
 //│ > | | CALL g(2)
 //│ > | | | CALL g(1)
 //│ > | | | | CALL g(0)
-//│ ═══[RUNTIME ERROR] Error: Function 'plus' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'plus' expected at least 2 arguments but got 1
 
 :traceJS
 h(-2)
@@ -60,7 +60,7 @@ f(1,2)(3)
 //│ > | CALL g(2)
 //│ > | | CALL g(1)
 //│ > | | | CALL g(0)
-//│ ═══[RUNTIME ERROR] Error: Function 'plus' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function 'plus' expected at least 2 arguments but got 1
 
 :showRepl
 :traceJS

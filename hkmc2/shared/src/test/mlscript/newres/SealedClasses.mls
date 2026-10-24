@@ -122,7 +122,7 @@ class InvalidNested extends SealedClasses.Nested.Closed
 
 // The prelude's universal superclass is explicitly open.
 :expect 5
-class ExplicitObject extends Object { fun value() = 5 }
+class ExplicitObject extends Object() { fun value() = 5 }
 new ExplicitObject().value()
 //│ = 5
 

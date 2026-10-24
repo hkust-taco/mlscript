@@ -1,0 +1,52 @@
+:.
+
+// Both the instances and the companion module have `test`, but the constructor
+// function passed through `id` has neither set of members.
+class Complex(re, im) {
+  fun test = 1
+}
+module Complex {
+  fun test = 2
+}
+
+:expect 2
+Complex.test
+//│ = 2
+
+:expect 1
+Complex(0, 0).test
+//│ = 1
+
+:e
+id(Complex).test
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	id(Complex).test
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Constructor of class 'Complex' does not contain member 'test'
+//│ ║  l.XX: 	class Complex(re, im) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+Complex(0, 0).missing
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	Complex(0, 0).missing
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'Complex' does not contain member 'missing'
+//│ ║  l.+1: 	Complex(0, 0).missing
+//│ ╙──      	^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+class Curried(re)(im) {
+  fun test = 1
+}
+
+:e
+Curried(0).test
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	Curried(0).test
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── Partially-applied constructor of class 'Curried' does not contain member 'test'
+//│ ║  l.+1: 	Curried(0).test
+//│ ╙──      	^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

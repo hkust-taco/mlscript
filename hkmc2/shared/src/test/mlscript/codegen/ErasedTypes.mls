@@ -1,3 +1,4 @@
+:.
 
 :global
 :sir
@@ -94,7 +95,8 @@ val n: Boxed = o
 //│ define Boxed¹ as class Boxed⁰ {
 //│   private val v⁰: Int⁰;
 //│   constructor Boxed²(v: Int⁰) {
-//│     set Boxed⁰.this.v⁰ = v;
+//│     @private
+//│     define v¹ as val v⁰: Int⁰ = v;
 //│     end
 //│   }
 //│ };
@@ -151,7 +153,8 @@ fun main =
 //│ define Foo¹ as class Foo⁰ {
 //│   private val x⁰: Int⁰;
 //│   constructor Foo²(x: Int⁰) {
-//│     set Foo⁰.this.x⁰ = x;
+//│     @private
+//│     define x¹ as val x⁰: Int⁰ = x;
 //│     end
 //│   }
 //│ };
@@ -172,7 +175,7 @@ fun main =
 //│ define mk⁰ as fun mk¹(a: ?): ? {
 //│   return new Bar⁰((a as! Str⁰))
 //│ };
-//│ define main⁴ as fun main⁵(): ? { let made: ?; set made = mk¹(1); return made.y﹖ };
+//│ define main⁴ as fun main⁵(): ? { let made: ?; set made = mk¹(1); return made.y¹ };
 //│ end
 
 
@@ -220,17 +223,17 @@ class Cell(mut val v: Int) with
   fun whatever(a) = a
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Cell⁰ as class Cell² {
-//│   val v¹: Int⁰;
+//│   val v²: Int⁰;
 //│   constructor Cell¹(v: Int⁰) {
-//│     define v¹ as val v²: Int⁰ = v;
+//│     define v² as val v³: Int⁰ = v;
 //│     end
 //│   }
 //│   method put⁰ = fun put¹(x: ?): ? {
-//│     set Cell².this.v² = (x as! Int⁰);
+//│     set Cell².this.v³ = (x as! Int⁰);
 //│     return runtime⁰.Unit⁰
 //│   }
 //│   method get⁰ = fun get¹(): Int⁰ {
-//│     return Cell².this.v²
+//│     return Cell².this.v³
 //│   }
 //│   method twice⁰ = fun twice¹(x: Int⁰): Int⁰ {
 //│     return (+⁰(x, x) as! Int⁰)
@@ -451,8 +454,12 @@ fun widen(f: Foo): FooAlias = f
 //│   return f
 //│ };
 //│ define Foo⁴ as class Foo³ {
-//│   private val x¹: Int⁰;
-//│   constructor Foo⁵(x: Int⁰) { set Foo³.this.x¹ = x; end }
+//│   private val x²: Int⁰;
+//│   constructor Foo⁵(x: Int⁰) {
+//│     @private
+//│     define x³ as val x²: Int⁰ = x;
+//│     end
+//│   }
 //│ };
 //│ define w⁰ as val w¹: Int⁰ = 2;
 //│ end
@@ -473,12 +480,22 @@ fun useMyI32(x: MyI32): Int32 = useI32(x)
 
 // An alias whose right-hand side does not resolve to a single type symbol behaves as the top type during
 // hierarchy analysis. A cycle is such a case; a union is not, since it erases to its members' LUB.
+:e
 type Cyclic = Cyclic
 class P
 class Q
 type Union = P | Q
 fun useCyclic(x: Cyclic): Cyclic = x
 fun useUnion(x: Union): Union = x
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.+1: 	type Cyclic = Cyclic
+//│ ║        	              ^^^^^^
+//│ ╟── Unguarded recursive type alias 'Cyclic'.
+//│ ║  l.+1: 	type Cyclic = Cyclic
+//│ ║        	              ^^^^^^
+//│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
+//│ ║  l.+1: 	type Cyclic = Cyclic
+//│ ╙──      	     ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useCyclic⁰ as fun useCyclic¹(x: Unknown): Unknown {
 //│   return x
@@ -853,7 +870,7 @@ fun useMember: Int = M.memberGetter
 // Applying the getter applies its *result*, which its signature says nothing about, so the call is untyped
 // and returning it from `: Int` needs a cast. Were the call read as the getter's own auto-invocation, this
 // would silently take the getter's result type and the cast would be dropped.
-fun callMember: Int = M.memberGetter()
+fun callMember: Int = M.memberGetter{as Function}()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define callMember⁰ as fun callMember¹(): Int⁰ { return (M².memberGetter¹() as! Int⁰) }; end
 
@@ -881,9 +898,12 @@ fun test: Function = id
 
 // A cast is inserted at the return value to downcast the `Object` into `Function` - `Function` and `Object`
 // are related in the erased type hierarchy.
-fun test: Function = new Object
+fun test: Function = new Object()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define test⁴ as fun test⁵(): Function⁰ { return (new globalThis⁰.Object⁰() as! Function⁰) }; end
+//│ define test⁴ as fun test⁵(): Function⁰ {
+//│   return (new globalThis⁰.Object⁰(undefined) as! Function⁰)
+//│ };
+//│ end
 
 
 // A written function type erases to `Function` in every position it can be written - parameter, result and `val`
@@ -1247,7 +1267,8 @@ class Box(content: Int) with
 //│ define Box¹ as class Box⁰ {
 //│   private val content⁰: Int⁰;
 //│   constructor Box²(content: Int⁰) {
-//│     set Box⁰.this.content⁰ = content;
+//│     @private
+//│     define content¹ as val content⁰: Int⁰ = content;
 //│     end
 //│   }
 //│   method unwrap⁰ = fun unwrap¹(): ? { return peek⁰(Box⁰.this) }
@@ -1328,15 +1349,16 @@ fun mkCtor(x) =
 //│   return new C⁰(y, x)
 //│ };
 //│ define C as class C⁰ {
-//│   private val x²: ?;
+//│   private val x⁴: ?;
 //│   private val y²: ?;
 //│   constructor C¹(y: ?, x: ?) {
-//│     set C⁰.this.x² = x;
-//│     set C⁰.this.y² = y;
+//│     set C⁰.this.x⁴ = x;
+//│     @private
+//│     define y³ as val y²: ? = y;
 //│     end
 //│   }
 //│   method get⁵ = fun get⁶: ? {
-//│     return +⁰(C⁰.this.x², C⁰.this.y²)
+//│     return +⁰(C⁰.this.x⁴, C⁰.this.y²)
 //│   }
 //│ };
 //│ define mkCtor⁰ as fun mkCtor¹(x: ?): ? { let C$here: ?; set C$here = C$⁰(x); return C$here };

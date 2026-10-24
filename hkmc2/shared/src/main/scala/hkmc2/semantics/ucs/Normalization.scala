@@ -99,7 +99,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   
   extension (split: Split)
     /** Check if any branch in the split tests the given scrutinee. */
-    private def referencesScrutinee(scrutinee: Term.Ref): Bool = split match
+    private def referencesScrutinee(scrutinee: Term.SimpleRef): Bool = split match
       case Split.Cons(Branch(thatScrutinee, _, continuation), tail) =>
         (scrutinee.sym is thatScrutinee.sym) || continuation.referencesScrutinee(scrutinee) || tail.referencesScrutinee(scrutinee)
       case Split.Let(_, _, tail) => tail.referencesScrutinee(scrutinee)
@@ -115,7 +115,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
 
     /** Specialize this split under the given assumption, falling back to the
       * unchanged split when specialization is a no-op. */
-    private def specialized(mode: Mode, scrutinee: Term.Ref, pattern: FlatPattern)(using VarSet): Split =
+    private def specialized(mode: Mode, scrutinee: Term.SimpleRef, pattern: FlatPattern)(using VarSet): Split =
       specialize(split, mode, scrutinee, pattern).getOrElse(split)
 
   /** Replace all `UseSplit(sym)` references in `split` with a duplicate of `body`. */
@@ -217,7 +217,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
   private def specialize(
       split: Split,
       mode: Mode,
-      scrutinee: Term.Ref,
+      scrutinee: Term.SimpleRef,
       pattern: FlatPattern
   )(using VarSet): Opt[Split] = trace(
     pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${split.prettyPrint}",
@@ -340,16 +340,17 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             for args <- argsOpt; (arg, _) <- args do LoweringCtx.loweringCtx.collectScopedSym(arg)
             /** Make a continuation that creates the match. */
             def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
-              val args = argsOpt.map(_.map(_._1)).getOrElse(Nil)
+              val args = argsOpt.getOrElse(Nil)
               // Normalization should reject cases where the user provides
               // more sub-patterns than there are actual class parameters.
               assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
-              def mkArgs(args: Ls[TermSymbol -> LocalVarSymbol])(using LoweringCtx): Case -> Block = args match
+              def mkArgs(args: Ls[TermSymbol -> (LocalVarSymbol -> Opt[Loc])])(using LoweringCtx): Case -> Block = args match
                 case Nil =>
                   Case.Cls(ctorSym, st) -> lowerSplit(tail, cont)
-                case (param, arg) :: args =>
+                case (param, (arg, loc)) :: args =>
                   val (cse, blk) = mkArgs(args)
-                  (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param), N)(false), blk))
+                  // Positional patterns do not spell the field name. Locate the extraction at the sub-pattern.
+                  (cse, Assign(arg, Select(sr, Tree.Ident(param.id.name))(S(param), loc)(false), blk))
               mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
             symbol match
               case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
@@ -552,7 +553,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             val loopEnd: Path =
               Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol), N)(false)
             val blk = blockBuilder
-              .define(FunDefn(N, f, tSym, PlainParamList(Nil)(N) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
+              .define(FunDefn(N, f, tSym, codegen.LoweredParamList.plain(Nil)(N) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
               .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N))
             if summon[LoweringCtx].mayRet then
               blk

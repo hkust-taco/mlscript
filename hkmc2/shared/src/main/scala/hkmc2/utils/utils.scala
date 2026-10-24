@@ -120,12 +120,14 @@ class DebugPrinter(
         if isMethod then flags += "method"
         if hasResultAnnotation then flags += "result annotation"
         flags.mkString("(", ", ", ")")
-      case FldFlags(mut, spec, pat, value) =>
+      case FldFlags(mut, spec, pat, value, opt, droppable) =>
         val flags = Buffer.empty[Str]
         if mut then flags += "mut"
         if spec then flags += "spec"
         if pat then flags += "pat"
         if value then flags += "val"
+        if opt then flags += "opt"
+        if droppable then flags += "drop"
         flags.mkString("(", ", ", ")")
       case ParamListFlags(ctx) =>
         val flags = Buffer.empty[Str]

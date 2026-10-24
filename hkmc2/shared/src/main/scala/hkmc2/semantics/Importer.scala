@@ -66,7 +66,7 @@ class Importer extends NewResolver:
             // binding. Publish its shapes so selection and opens can follow it.
             if newResolution then sym match
               case local: VarSymbol =>
-                val ref = Term.MemberRef(importedSym)(local.id, FlowSymbol.memSym(importedSym))
+                val ref = Term.MemberRef(importedSym)(N, FlowSymbol.memSym(importedSym))
                 rctx.recordLexicalBinders(ref, ctx.typeBinders)
                 pipeTerm(ref, local)
               case _: BlockMemberSymbol => ()

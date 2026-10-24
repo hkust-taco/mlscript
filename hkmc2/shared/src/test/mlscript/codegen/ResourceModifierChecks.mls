@@ -452,7 +452,7 @@ class G6[rsc? in A](val value: A)
 
 :ge
 class G7[out in A]
-//│ ╔══[COMPILATION ERROR] Unsupported type parameter 'out'-modified 'in'-modified identifier
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter shape: 'out'-modified 'in'-modified identifier
 //│ ║  l.+1: 	class G7[out in A]
 //│ ╙──      	                ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -463,7 +463,7 @@ class G8[rsc rsc? A]
 //│ ╔══[COMPILATION ERROR] 'rsc' modifiers on type parameters are not supported yet.
 //│ ║  l.+1: 	class G8[rsc rsc? A]
 //│ ╙──      	         ^^^
-//│ ╔══[COMPILATION ERROR] Unsupported type parameter 'rsc'-modified 'rsc?'-modified identifier
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter shape: 'rsc'-modified 'rsc?'-modified identifier
 //│ ║  l.+1: 	class G8[rsc rsc? A]
 //│ ╙──      	                  ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————

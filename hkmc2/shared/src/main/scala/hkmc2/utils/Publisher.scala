@@ -35,6 +35,14 @@ final class Candidates[A](key: CandidateKey[A]) extends Iterable[A]:
     assert(isEmpty, "Candidate copies must start with an empty host")
     keys ++= other.keys
     ordered ++= other.ordered
+  /** A completed graph may be renamed without an inference context. The caller
+    * supplies portable keys for the rewritten values, as in `copyFrom` above.
+    */
+  def mapFrom(other: Candidates[A])(f: A => A, portableKey: A => Any): Unit =
+    assert(isEmpty, "Candidate copies must start with an empty host")
+    other.foreach: candidate =>
+      val value = f(candidate)
+      if keys.add(portableKey(value)) then ordered += value
   override def size: Int = ordered.size
   override def knownSize: Int = ordered.size
   /** The candidates present when iteration starts. */

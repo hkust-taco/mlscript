@@ -5,10 +5,10 @@ import "../../mlscript-compile/Runtime.mls"
 open Runtime { MatchSuccess, MatchFailure }
 
 
-MatchSuccess(0, new Object)
+MatchSuccess(0, new Object())
 //│ = MatchSuccess(0, {})
 
-if MatchSuccess(0, new Object) is MatchSuccess(x, _) then x
+if MatchSuccess(0, new Object()) is MatchSuccess(x, _) then x
 //│ = 0
 
 MatchFailure("oops")

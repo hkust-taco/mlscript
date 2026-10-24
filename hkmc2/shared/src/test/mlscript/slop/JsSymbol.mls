@@ -1,0 +1,584 @@
+:.
+
+open annotations { fresh, jsSymbol, noInline }
+
+// The key's declared type is intentionally Any: the resolver does not type-check it.
+module Keys {
+  @fresh val first: Any = Symbol("first")
+  @fresh val second = Symbol("second")
+  @fresh val strKey = "hello"
+}
+
+:expect [41, 42, 42, 1337]
+open class Base {
+  @jsSymbol(Keys.first) open fun read() = 41
+  @jsSymbol(Keys.strKey) open fun hi = 1337
+}
+class Child extends Base {
+  @jsSymbol(Keys.first) override fun read() = super.read() + 1
+}
+let c = new Child, [
+  new Base().read()
+  c.read()
+  c.(Keys.first)()
+  c.(Keys.strKey)
+]
+//│ = [41, 42, 42, 1337]
+//│ c = Child
+
+:expect [1337, 1337]
+[c.hi, c.'hello]
+//│ = [1337, 1337]
+
+:e
+c.hello
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	c.hello
+//│ ║        	^^^^^^^
+//│ ╟── Instance of class 'Child' does not contain member 'hello'
+//│ ║  l.XX: 	let c = new Child, [
+//│ ╙──      	        ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Structural signatures and computed record fields use the same key identity.
+:expect [43, 44]
+type Reader = {@jsSymbol(Keys.second) read: () -> Int}
+private fun read(value: Reader) = value.read()
+[read({(Keys.second): () => 43}), read({(Keys.second): () => 44})]
+//│ = [43, 44]
+
+// An immutable value may occur in the middle of a stable path.
+:expect 45
+class KeyHolder {
+  @fresh val key = Symbol("held")
+}
+val holder = new KeyHolder
+class Held {
+  @jsSymbol(holder.key) fun read() = 45
+}
+(new Held).read()
+//│ = 45
+//│ holder = KeyHolder { key: Symbol("held") }
+
+// Local keys must survive substitution, and are evaluated separately on each call.
+:expect [46, 47]
+private fun local(value) =
+  @fresh val key = Symbol("local")
+  class Local {
+    @jsSymbol(key) fun read() = value
+  }
+  (new Local).read()
+[local(46), local(47)]
+//│ = [46, 47]
+
+// The same property key cannot be overridden under a different source name.
+:e
+class Renamed extends Base {
+  @jsSymbol(Keys.first) override fun other() = 0
+}
+//│ ╔══[COMPILATION ERROR] Member 'other' uses the same @jsSymbol key as inherited member 'read'; overrides must keep the inherited name.
+//│ ║  l.+2: 	  @jsSymbol(Keys.first) override fun other() = 0
+//│ ║        	                                     ^^^^^
+//│ ╟── The inherited member is declared here.
+//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read() = 41
+//│ ╙──      	                             ^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Member 'other' is marked 'override' but overrides no inherited member
+//│ ║  l.+2: 	  @jsSymbol(Keys.first) override fun other() = 0
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+class DifferentKey extends Base {
+  @jsSymbol(Keys.second) override fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Overriding member 'read' must use the same @jsSymbol annotation as its parent.
+//│ ║  l.+2: 	  @jsSymbol(Keys.second) override fun read() = 0
+//│ ║        	                                      ^^^^
+//│ ╟── The inherited member is declared here.
+//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read() = 41
+//│ ╙──      	                                 ^^^^
+
+// An override must keep the runtime key declared by its parent.
+:e
+class MissingSymbol extends Base {
+  override fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Overriding member 'read' must use the same @jsSymbol annotation as its parent.
+//│ ║  l.+2: 	  override fun read() = 0
+//│ ║        	               ^^^^
+//│ ╟── The inherited member is declared here.
+//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read() = 41
+//│ ╙──      	                                 ^^^^
+
+:e
+class Duplicate {
+  @jsSymbol(Keys.first) fun read() = 0
+  @jsSymbol(Keys.first) fun other() = 1
+}
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member 'Keys.first'.
+//│ ╟── Member 'read' is defined here.
+//│ ║  l.+2: 	  @jsSymbol(Keys.first) fun read() = 0
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Member 'other' is defined here.
+//│ ║  l.+3: 	  @jsSymbol(Keys.first) fun other() = 1
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+val ordinary = Symbol("ordinary")
+//│ ordinary = Symbol("ordinary")
+
+:e
+class Unmarked {
+  @jsSymbol(ordinary) fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Resolution error in member reference
+//│ ║  l.+2: 	  @jsSymbol(ordinary) fun read() = 0
+//│ ║        	            ^^^^^^^^
+//│ ╟── @jsSymbol requires a val marked @annotations.fresh.
+//│ ║  l.+2: 	  @jsSymbol(ordinary) fun read() = 0
+//│ ║        	            ^^^^^^^^
+//│ ╟── The referenced member is declared here.
+//│ ║  l.XX: 	val ordinary = Symbol("ordinary")
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+class Literal {
+  @jsSymbol("iterator") fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Resolution error in string literal
+//│ ║  l.+2: 	  @jsSymbol("iterator") fun read() = 0
+//│ ║        	            ^^^^^^^^^^
+//│ ╟── @jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh.
+//│ ║  l.+2: 	  @jsSymbol("iterator") fun read() = 0
+//│ ╙──      	            ^^^^^^^^^^
+
+:e
+class Call {
+  @jsSymbol(Symbol("called")) fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	  @jsSymbol(Symbol("called")) fun read() = 0
+//│ ║        	            ^^^^^^^^^^^^^^^^
+//│ ╟── @jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh.
+//│ ║  l.+2: 	  @jsSymbol(Symbol("called")) fun read() = 0
+//│ ╙──      	            ^^^^^^^^^^^^^^^^
+
+let changing = holder
+//│ changing = KeyHolder { key: Symbol("held") }
+
+:e
+class MutablePrefix {
+  @jsSymbol(changing.key) fun read() = 0
+}
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	  @jsSymbol(changing.key) fun read() = 0
+//│ ║        	            ^^^^^^^^^^^^
+//│ ╟── @jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh.
+//│ ║  l.+2: 	  @jsSymbol(changing.key) fun read() = 0
+//│ ╙──      	            ^^^^^^^^^^^^
+
+// The annotation is a prelude declaration, usable through ordinary opens.
+:expect [50, 51]
+private fun opened() =
+  open annotations { jsSymbol }
+  class Opened {
+    @jsSymbol(Keys.first) fun read() = 50
+  }
+  (new Opened).read()
+private fun wildcard() =
+  open annotations
+  class Wildcard {
+    @jsSymbol(Keys.second) fun read() = 51
+  }
+  (new Wildcard).read()
+[opened(), wildcard()]
+//│ = [50, 51]
+
+// A user function with the same spelling does not change a method's key.
+:w
+:expect 52
+private fun shadowed() =
+  fun jsSymbol(key) = key
+  class Ordinary {
+    @jsSymbol(Keys.first) fun read() = 52
+  }
+  (new Ordinary).("read")()
+shadowed()
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+4: 	    @jsSymbol(Keys.first) fun read() = 52
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^
+//│ = 52
+
+// An escaping instance can't refer back to the local key.
+// Hoisting the key would incorrectly share it between different invocations.
+@noInline
+private fun escaping(value) =
+  @fresh val localKey = Symbol("escaping")
+  class Escaped {
+    @jsSymbol(localKey) fun read() = value
+  }
+  new Escaped
+
+// Lowering must report the unavailable key without emitting an out-of-scope reference.
+:sir
+:e
+escaping(54).read()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is not in scope.
+//│ ║  l.+1: 	escaping(54).read()
+//│ ║        	            ^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.XX: 	  @fresh val localKey = Symbol("escaping")
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Imported keys must keep their defining module alive through IR transformations.
+import "../../mlscript-compile/SymbolKeyLibrary.mls"
+
+:expect [55, 56]
+[(new SymbolKeyLibrary.Reader).read(), SymbolKeyLibrary.make(56).read()]
+//│ = [55, 56]
+
+// Direct immutable receiver aliases identify the same fresh field.
+:expect 57
+val holderAlias = holder
+open class HeldBase {
+  @jsSymbol(holder.key) open fun read() = 0
+}
+class HeldChild extends HeldBase {
+  @jsSymbol(holderAlias.key) override fun read() = 57
+}
+(new HeldChild).read()
+//│ = 57
+//│ holderAlias = KeyHolder { key: Symbol("held") }
+
+// A selected receiver alias must replace its entire path, including its prefix.
+:expect 58
+module Aliases {
+  val nested = holder
+}
+class SelectedAlias extends HeldBase {
+  @jsSymbol(Aliases.nested.key) override fun read() = 58
+}
+(new SelectedAlias).read()
+//│ = 58
+
+// Reading and assigning through a structural alias use the same symbol property.
+:expect 59
+type Cell = {@jsSymbol(Keys.first) value: Int}
+private fun update(cell: Cell) =
+  set cell.value = 59
+  cell.value
+update(mut {(Keys.first): 0})
+//│ = 59
+
+// A returned closure captures the original key, even when its name is shadowed.
+:expect [60, 61]
+@noInline
+private fun captured(value) =
+  @fresh val capturedKey = Symbol("captured")
+  class Captured {
+    @jsSymbol(capturedKey) fun read() = value
+  }
+  val instance = new Captured
+  () =>
+    @fresh val capturedKey = Symbol("shadow")
+    instance.read()
+[captured(60)(), captured(61)()]
+//│ = [60, 61]
+
+// Local modules are bindings too; a sibling scope cannot recover their keys.
+@noInline
+private fun moduleKey(value) =
+  module LocalKeys { @fresh val key = Symbol("module key") }
+  class Local {
+    @jsSymbol(LocalKeys.key) fun fetch() = value
+  }
+  new Local
+
+:e
+:sir
+moduleKey(62).fetch()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is not in scope.
+//│ ║  l.+1: 	moduleKey(62).fetch()
+//│ ║        	             ^^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.XX: 	  module LocalKeys { @fresh val key = Symbol("module key") }
+//│ ╙──      	         ^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A structural field needs its key for both reading and writing.
+@noInline
+private fun localCell(value) =
+  @fresh val cellKey = Symbol("cell")
+  type Cell = {@jsSymbol(cellKey) value: Int}
+  val cell: Cell = mut {(cellKey): value}
+  cell
+
+:e
+localCell(0).value
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is not in scope.
+//│ ║  l.+1: 	localCell(0).value
+//│ ║        	            ^^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.XX: 	  @fresh val cellKey = Symbol("cell")
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+set localCell(0).value = 63
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is not in scope.
+//│ ║  l.+1: 	set localCell(0).value = 63
+//│ ║        	                ^^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.XX: 	  @fresh val cellKey = Symbol("cell")
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Opened calls must use the same checked key lowering as explicit selections.
+:e
+private fun openedEscaped() =
+  val instance = moduleKey(0)
+  open instance
+  fetch()
+openedEscaped()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is not in scope.
+//│ ║  l.+4: 	  fetch()
+//│ ║        	  ^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.XX: 	  module LocalKeys { @fresh val key = Symbol("module key") }
+//│ ╙──      	         ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 67
+private fun openedAvailable() =
+  @fresh val key = Symbol("opened")
+  class Opened { @jsSymbol(key) fun fetch() = 67 }
+  val instance = new Opened
+  open instance
+  fetch()
+openedAvailable()
+//│ = 67
+
+// An imported file-level key has a real private export; factory locals do not.
+:expect 64
+:sjs
+new SymbolKeyLibrary.FileReader().read()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ import { _$_modulePrivate_$_fileKey as fileKey } from "./../../mlscript-compile/SymbolKeyLibrary.mjs";
+//│ let tmp22;
+//│ tmp22 = globalThis.Object.freeze(new SymbolKeyLibrary.FileReader());
+//│ return tmp22[fileKey]()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 64
+
+// Private accessor symbols are local to the defining file.
+:e
+:sjs
+new SymbolKeyLibrary.FileReader().readPriv()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'SymbolKeyLibrary.privateKey' here: private member 'privateKey' belongs to another file.
+//│ ║  l.+1: 	new SymbolKeyLibrary.FileReader().readPriv()
+//│ ║        	                                 ^^^^^^^^^
+//│ ╟── The private member is declared here.
+//│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
+//│ ║  l.XX: 	  @fresh private val privateKey = Symbol("private key")
+//│ ║        	                     ^^^^^^^^^^
+//│ ╟── The keyed member 'readPriv' is defined here.
+//│ ║  l.XX: 	    @jsSymbol(privateKey) fun readPriv() = 65
+//│ ╙──      	                              ^^^^^^^^
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:sir
+SymbolKeyLibrary.makeLocal(65).read()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'key' here: 'key' is not in scope.
+//│ ║  l.+1: 	SymbolKeyLibrary.makeLocal(65).read()
+//│ ║        	                              ^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
+//│ ║  l.XX: 	    @fresh val key = Symbol("factory key")
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Inherited implementations also need the key at the super access site.
+@noInline
+private fun baseWithLocalKey() =
+  @fresh val baseKey = Symbol("base")
+  open class LocalBase {
+    @jsSymbol(baseKey) open fun read() = 66
+  }
+  LocalBase.class
+val EscapedBase = baseWithLocalKey()
+//│ EscapedBase = class LocalBase
+
+:e
+class MissingSuperKey extends EscapedBase {
+  fun run() = super.read()
+}
+(new MissingSuperKey).run()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'baseKey' here: 'baseKey' is not in scope.
+//│ ║  l.+2: 	  fun run() = super.read()
+//│ ║        	                   ^^^^^
+//│ ╟── The key's root binding is defined here.
+//│ ║  l.XX: 	  @fresh val baseKey = Symbol("base")
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The annotation's unqualified module reference needs its enclosing path at the caller.
+:expect [68, 69]
+module OuterKeys {
+  module Nested {
+    @fresh val key = Symbol("nested key")
+    class Reader {
+      @jsSymbol(key) fun read() = 69
+    }
+  }
+}
+[new SymbolKeyLibrary.Nested.Reader().read(), new OuterKeys.Nested.Reader().read()]
+//│ = [68, 69]
+
+// Sibling scopes may use a module defined in their common lexical parent.
+:expect [70, 71]
+@noInline
+private fun siblingReaders(value) =
+  module Local {
+    @fresh val key = Symbol("sibling key")
+    class Reader {
+      @jsSymbol(key) fun read() = value
+    }
+  }
+  fun make() = new Local.Reader
+  fun read() = make().read()
+  read()
+[siblingReaders(70), siblingReaders(71)]
+//│ = [70, 71]
+
+// Different implementations of an inherited member retain the same key operand.
+:expect [41, 42]
+private fun inheritedRead(value) = value.read()
+[inheritedRead(new Base), inheritedRead(new Child)]
+//│ = [41, 42]
+
+// A private intermediate module is just as inaccessible across files as a private key val.
+:e
+:sir
+new SymbolKeyLibrary.PrivatePathReader().read()
+//│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'SymbolKeyLibrary.PrivateKeys.key' here: private member 'PrivateKeys' belongs to another file.
+//│ ║  l.+1: 	new SymbolKeyLibrary.PrivatePathReader().read()
+//│ ║        	                                        ^^^^^
+//│ ╟── The private member is declared here.
+//│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
+//│ ║  l.XX: 	  private module PrivateKeys {
+//│ ║        	                 ^^^^^^^^^^^
+//│ ╟── The keyed member 'read' is defined here.
+//│ ║  l.XX: 	    @jsSymbol(PrivateKeys.key) fun read() = 72
+//│ ╙──      	                                   ^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// The same-file accessor remains available even outside the key's owner.
+:expect 73
+module PrivateOwner {
+  @fresh private val key = Symbol("same-file private key")
+  class Reader {
+    @jsSymbol(key) fun read() = 73
+  }
+}
+new PrivateOwner.Reader().read()
+//│ = 73
+
+// Both source aliases remain available when structural interfaces are combined.
+:expect [18, 18]
+type SourceOne = {@jsSymbol(Symbol.iterator) first: () -> Iterator[Int]}
+type SourceTwo = {@jsSymbol(Symbol.iterator) second: () -> Iterator[Int]}
+private fun both(xs: SourceOne & SourceTwo) = [xs.first().next().value, xs.second().next().value]
+both([18])
+//│ = [18, 18]
+
+// A source alias and a string property with the same name are distinct targets.
+:e
+private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
+//│ ╔══[COMPILATION ERROR] This reference has targets with different property keys.
+//│ ║  l.+1: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
+//│ ║        	                                                                        ^^^^^^
+//│ ╟── Candidate 'first' is declared here.
+//│ ║  l.XX: 	type SourceOne = {@jsSymbol(Symbol.iterator) first: () -> Iterator[Int]}
+//│ ║        	                                             ^^^^^
+//│ ╟── Candidate 'first' is declared here.
+//│ ║  l.+1: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
+//│ ╙──      	                                       ^^^^^
+
+// An unused annotation must not rename a field behind its source-level name.
+:w
+:expect [19, 19]
+class Plain {
+  @jsSymbol(Symbol.iterator) val value = 19
+}
+let plain = new Plain
+[plain.value, plain.("value")]
+//│ ╔══[WARNING] Only public methods may use @jsSymbol.
+//│ ║  l.+2: 	  @jsSymbol(Symbol.iterator) val value = 19
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = [19, 19]
+//│ plain = Plain { value: 19 }
+
+@annotations.bufferable
+class BufferedReader {
+  @jsSymbol(Keys.second) fun read(): Str = "abc"
+}
+
+// FIXME: DefnShape.bufferedMembers invents a string-keyed field, but
+// BufferableTransform emits the method under Keys.second.
+:fixme
+:re
+:expect 3
+BufferedReader.read(null, 0)().length
+//│ ═══[RUNTIME ERROR] TypeError: BufferedReader1.read is not a function
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+
+// Under `:ftc`, function values are objects with a `call` method, so a keyed method used as a
+// value must be eta-expanded like a method selected by name.
+:ftc
+:sir
+:expect [74, 75]
+class FtcKeyed {
+  @jsSymbol(Keys.second) fun next(x) = x + 1
+}
+let ftcKeyed = new FtcKeyed
+let ftcNext = ftcKeyed.next
+[ftcKeyed.next(73), ftcNext(74)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1, Function$, tmp2;
+//│ define FtcKeyed⁰ as class FtcKeyed¹ {
+//│   method next⁰ = fun next¹(x) {
+//│     return +⁰(x, 1)
+//│   }
+//│ };
+//│ set ftcKeyed⁰ = new FtcKeyed¹();
+//│ define Function$ as class Function$⁰ extends globalThis⁰.Function⁰ {
+//│   method call⁰ = fun call¹(x) {
+//│     return ftcKeyed⁰.[Keys⁰.second⁰](x)
+//│   }
+//│ };
+//│ set tmp2 = new Function$⁰();
+//│ set ftcNext⁰ = tmp2;
+//│ set tmp = ftcKeyed⁰.[Keys⁰.second⁰](73);
+//│ set tmp1 = ftcNext⁰.call﹖(74);
+//│ return [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [74, 75]
+//│ ftcKeyed = FtcKeyed
+//│ ftcNext = class anonymous
+

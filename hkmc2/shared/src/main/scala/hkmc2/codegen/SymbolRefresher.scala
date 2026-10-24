@@ -59,7 +59,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
       s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
       mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol]))
 
-  def refreshParamList(pl: ParamList) =
+  def refreshParamList(pl: LoweredParamList) =
     for
       p <- pl.restParam ++: pl.params
     do
@@ -96,7 +96,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     val ClsLikeDefn(
       owner, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath,
       methods, privateFields, publicFields, preCtor, ctor, companion,
-      bufferable, termCompanion) = defn
+      bufferable, termCompanion, _) = defn
     assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for ClsLikeDefn is a free variable for this block")
     isym match
       case s: ClassSymbol => refreshClassSymbol(s)
@@ -121,7 +121,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
 
   def applyClsLikeBody(b: ClsLikeBody): Unit =
     val ClsLikeBody(
-      isym, methods, privateFields, publicFields, ctor, annotations
+      isym, methods, privateFields, publicFields, ctor, annotations, _
     ) = b
     isym match
       case s: ModuleOrObjectSymbol => refreshModuleOrObjectSymbol(s)

@@ -88,8 +88,6 @@ apply(x => x)
 //│ ║  l.+1: 	fun apply(f) = f(1)
 //│ ║        	               ^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
-//│ ║  l.+1: 	fun apply(f) = f(1)
-//│ ║        	          ^
 //│ ╟── Parameter 'f' admits values of unknown shape.
 //│ ║  l.+1: 	fun apply(f) = f(1)
 //│ ║        	          ^

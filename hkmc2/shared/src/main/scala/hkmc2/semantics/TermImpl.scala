@@ -22,11 +22,28 @@ type AnyRef_ = AnyRefImpl & Term
 
 trait AnyRefImpl:
   self: Term.Ref | Term.SimpleRef | Term.MemberRef | Term.SelfRef =>
-  def tree: Tree.Ident
   def sym: Symbol
+  /** An identifier records a written use, not a backend name. Desugared uses such
+    * as `_` can instead carry that token's location; wholly synthetic references
+    * have neither an identifier nor a source location. */
+  def sourceId: Opt[Tree.Ident] = this match
+    case ref: Term.Ref => S(ref.tree)
+    case ref: Term.SelfRef => S(ref.tree)
+    case ref: Term.SimpleRef => ref.tree
+    case ref: Term.MemberRef => ref.tree
 
 trait NewRefImpl extends AnyRefImpl:
   self: Term.SimpleRef | Term.MemberRef | Term.SelfRef =>
+
+trait AppImpl:
+  self: Term.App =>
+  /** Callable candidates observed by applyShape, independently of the call's results:
+    * a throwing function is a target even when it produces no value. These are diagnostic
+    * witnesses, not fixed code-generation decisions. A Publisher retains them across blocks
+    * and lets later activations add targets in the consuming unit's private inference data.
+    * completeBlock seals this host along with the application; mkClone copies its snapshot.
+    */
+  private[semantics] val callableTargets: Publisher[TermShape] = new Publisher[TermShape] {}
 
 trait NewSelImpl extends NewResolvableImpl:
   self: Term.NewSel =>
@@ -60,8 +77,8 @@ trait UnresolvedRefImpl extends NewResolvableImpl:
 trait FldImpl:
   self: Fld =>
   def children: Vector[Located] = self.term +: self.asc.toVector
-  def show(using Scope, ShowCfg, Raise): Document = flags.show(true) :: self.term.show
-  def showDbg(using DebugPrinter): Str = flags.show(true) + self.term.showDbg
+  def show(using Scope, ShowCfg, Raise): Document = flags.show(true) :: self.term.show :: flags.showOptMarker
+  def showDbg(using DebugPrinter): Str = flags.show(true) + self.term.showDbg + flags.showOptMarker
   def describe: Str =
     (if self.flags.spec then "specialized " else "") +
     (if self.flags.mut then "mutable " else "") +
@@ -70,7 +87,7 @@ trait FldImpl:
 
 trait BlkImpl:
   this: Blk =>
-  def mkBlkClone(using State, Erasure): Blk = Blk(stats.map(_.mkClone), res.mkClone)
+  def mkBlkClone(using State, Erasure): Blk = Cloner(SymbolSubst.Id).block(this)
   def showTopLevel(using Scope, ShowCfg, Raise): Document =
     (stats ::: (res match
       case Lit(Tree.UnitLit(false)) => Nil
@@ -93,20 +110,15 @@ trait PossiblyErroneous:
 trait NewResolvableImpl extends PossiblyErroneous:
   self: MemberRef | NewSel | UnresolvedRef | Super =>
   var resolvedTargets: Ls[DefinitionSymbol[?]] = Nil // * filled during flow analysis
+  // The implicit property-key expression, resolved in this use site's scope at
+  // block completion. Lowering must not reuse the annotation's lexical environment.
+  var keyAccess: Opt[Term] = N
 
 
 trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
   this: Statement =>
     
-  def mkClone(using State, Erasure): Statement = this match
-    case t: Term => lastWords(s"overridden implementation")
-    case d: Definition => ???
-    case imp: Import => Import(imp.sym, imp.str, imp.file)(imp.toLoc)
-    case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))(toLoc)
-    case RcdField(field, rhs, sym) => RcdField(field.mkClone, rhs.mkClone, sym)
-    case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
-    case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)(toLoc)
-    case sc: SetConfig => sc
+  def mkClone(using State, Erasure): Statement = Cloner(SymbolSubst.Id).statementRoot(this)
   
   def describe: Str =
     val desc = this match
@@ -191,6 +203,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case Blk(stats, res) => stats.toVector :+ res
     case _ => subTerms
   def subTerms: Vector[Term] = this match
+    case ref: MemberRef => ref.keyAccess.toVector
     case Error() | Missing | _: Lit | _: AnyRef_ | _: DynTy | _: UnitVal => Vector.empty
     case Capture(base, thru) => Vector.single(base)
     case Resolved(t, sym) => Vector.single(t)
@@ -201,9 +214,9 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case TyApp(pre, tarsg) => pre +: tarsg.toVector
     case Sel(pre, _) => Vector.single(pre)
     case SynthSel(pre, _) => Vector.single(pre)
-    case Super(receiver, _, _) => Vector.single(receiver)
-    case NewSel(pre, _, cls) => Vector.single(pre) ++ cls.toVector
-    case UnresolvedRef(prefixes, _) => prefixes.toVector
+    case sup @ Super(receiver, _, _) => Vector.single(receiver) ++ sup.keyAccess.toVector
+    case sel @ NewSel(pre, _, cls) => Vector.single(pre) ++ cls.toVector ++ sel.keyAccess.toVector
+    case ref @ UnresolvedRef(prefixes, _) => prefixes.toVector ++ ref.keyAccess.toVector
     case DynSel(o, f, _, _) => Vector.double(o, f)
     case Tup(fields) => fields.flatMap(_.subTerms).toVector
     case Mut(und) => Vector.single(und)
@@ -262,7 +275,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
   
   protected def children: Vector[Located] = this match
     case t: Lit => Vector.single(t.lit.asTree)
-    case t: AnyRef_ => treeOrSubterms(t.tree)
+    case t: AnyRef_ => t.sourceId.toVector
     case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => Vector.double(l.params, l.body)
     case t: App => treeOrSubterms(t.tree)
@@ -465,6 +478,11 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case r: Ref => r.sym.showAsPlain
     case r: Resolved =>
       s"${r.showPlain}‹${r.sym.showDbg}›"
+    case sel: NewSel =>
+      // New selections keep their targets outside the legacy `symbol` field.
+      // Debug output can run during resolution, so show all currently known targets.
+      val targets = sel.resolvedTargets.distinct
+      sel.showPlain + (if targets.isEmpty then "" else targets.map(_.showDbg).mkString("‹", ", ", "›"))
     case trm: Term =>
       // s"$showPlain‹${trm.symbol.getOrElse("")}›"
       s"$showPlain${trm.symbol.fold("")(sym => "‹"+sym.showDbg+"›")}"

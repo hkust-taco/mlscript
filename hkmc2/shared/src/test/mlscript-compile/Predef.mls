@@ -74,11 +74,11 @@ type (>:>) Sup[A, B] = Sub[B, A]
 fun (==) equals(a: Any, b: Any): Bool = if
   a === b then true
   a is Array as a and b is Array as b and a.length === b.length then a.every((a, i, ...) => a == b.at(i))
-  else a !== undefined and a !== null and b !== undefined and b !== null and 
+  else a !== unsafe.undefined and a !== null and b !== unsafe.undefined and b !== null and 
     let ac = a!constructor
-    ac !== undefined and ac === b!constructor and
+    ac !== unsafe.undefined and ac === b!constructor and
       let md = ac!(Symbols.definitionMetadata)
-      md !== undefined and
+      md !== unsafe.undefined and
         md.2.every(field => field !== null and a!(field) == b!(field))
 
 fun (!=) nequals(a: Any, b: Any): Bool = not a == b

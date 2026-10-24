@@ -1,0 +1,70 @@
+:..
+:js
+
+module Named with
+  fun add_++(x, y) = x + y
+
+// The runtime property is `add`, but only `add_++` is written at this use.
+// The call and selection retain the use location; the generated name has none.
+:loc
+:lot
+:expect 3
+Named.add_++(1, 2)
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Return of Call loc[1:1-1:19]:
+//│     fun = Select{sym=term:Named⁰/add⁰} loc[1:1-1:13]:
+//│       qual = MemberRef{disamb=module:Named⁰} loc[1:1-1:6]:
+//│         bms = member:Named¹
+//│         disamb = module:Named⁰
+//│       name = Ident loc[none] of "add"
+//│     argss = Ls of
+//│       Ls of
+//│         Arg:
+//│           value = Lit loc[1:14-1:15] of IntLit loc[1:14-1:15] of 1
+//│         Arg:
+//│           value = Lit loc[1:17-1:18] of IntLit loc[1:17-1:18] of 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+data class Box(value)
+
+// Positional extraction belongs to the argument pattern, not a fictitious `value` token.
+:loc
+:lot
+:expect 42
+if Box(42) is Box(x) then x else 0
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Scoped(syms = {tmp:scrut⁰, x⁰, tmp:arg$Box$0$⁰}):
+//│     body = Assign:
+//│       lhs = tmp:scrut⁰
+//│       rhs = Call loc[1:4-1:11]:
+//│         fun = MemberRef{disamb=term:Box⁰} loc[1:4-1:7]:
+//│           bms = member:Box¹
+//│           disamb = term:Box⁰
+//│         argss = Ls of
+//│           Ls of
+//│             Arg:
+//│               value = Lit loc[1:8-1:10] of IntLit loc[1:8-1:10] of 42
+//│       rest = Match: \
+//│       scrut = SimpleRef loc[none] of tmp:scrut⁰
+//│       arms = Ls of
+//│         Tuple2:
+//│           _1 = Cls:
+//│             cls = class:Box²
+//│             path = MemberRef{disamb=class:Box²} loc[1:15-1:18]:
+//│               bms = member:Box¹
+//│               disamb = class:Box²
+//│           _2 = Assign:
+//│             lhs = tmp:arg$Box$0$⁰
+//│             rhs = Select{sym=term:Box²/value⁰} loc[1:19-1:20]:
+//│               qual = SimpleRef loc[none] of tmp:scrut⁰
+//│               name = Ident loc[none] of "value"
+//│             rest = Assign: \
+//│             lhs = x⁰
+//│             rhs = SimpleRef loc[none] of tmp:arg$Box$0$⁰
+//│             rest = Return of SimpleRef loc[1:27-1:28] of x⁰
+//│       dflt = S of Return of Lit loc[1:34-1:35] of IntLit loc[1:34-1:35] of 0
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42

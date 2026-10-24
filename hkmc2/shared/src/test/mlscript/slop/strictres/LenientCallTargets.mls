@@ -1,0 +1,65 @@
+:.
+#lang(eagerResolution: false)
+
+// Losing a conditional's correlation must not reject a call with a known target.
+:expect 1
+class Item(val value: Int)
+private fun choose(flag: Bool) = if flag then () => Item(1) else {other: 0}
+choose(true)().value
+//│ = 1
+
+// A non-callable candidate can arrive before a forward callable target.
+:expect 2
+private fun forward(flag: Bool) = (if flag then {other: 0} else later)()
+private fun later() = Item(2)
+forward(false).value
+//│ = 2
+
+// Callability does not depend on whether a callable publishes a result.
+private fun never(flag: Bool) = (if flag then () => throw "stopped" else {other: 0})()
+
+// With no callable target, lenient resolution still diagnoses the call.
+:e
+private fun invalid() = {other: 0}
+invalid()()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	invalid()()
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Record literal cannot be called like a function.
+//│ ║  l.+1: 	private fun invalid() = {other: 0}
+//│ ╙──      	                         ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Known result flows survive uncertainty, so ambiguities still surface.
+:e
+class Left(val value: Int)
+class Right(val value: Int)
+private fun alternatives(n: Int) =
+  if n == 0 then () => Left(1)
+  else if n == 1 then () => Right(2)
+  else {other: 0}
+alternatives(0)().value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+7: 	alternatives(0)().value
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Right'
+//│ ║  l.+2: 	class Right(val value: Int)
+//│ ║        	                ^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Left'
+//│ ║  l.+1: 	class Left(val value: Int)
+//│ ╙──      	               ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+#lang(eagerResolution: true)
+
+// Eager resolution continues to reject any non-callable alternative.
+:e
+private fun eager(flag: Bool) = (if flag then () => Item(3) else {other: 0})()
+eager(true)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	private fun eager(flag: Bool) = (if flag then () => Item(3) else {other: 0})()
+//│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Record literal cannot be called like a function.
+//│ ║  l.+1: 	private fun eager(flag: Bool) = (if flag then () => Item(3) else {other: 0})()
+//│ ╙──      	                                                                  ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

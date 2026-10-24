@@ -82,17 +82,10 @@ values([Item(4)]).map((item, ...) => item.value)
 [10, 20].map((item, ...rest) => rest.0 + rest.1.length + 1)
 //│ = [3, 4]
 
-// Fixed callbacks must accept all three arguments supplied by Array.map.
-:ge
+// Callbacks may drop the index and array arguments supplied by Array.map.
+:expect [1]
 [1].map(x => x)
-//│ ╔══[COMPILATION ERROR] Resolution error in function type
-//│ ║  l.XX: 	  fun map[U](f: (T, Int, Array[T]) -> U): Array[U]
-//│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  in Arrays.mls:+1
-//│ ║  l.+1: 	[1].map(x => x)
-//│ ╙──      	        ^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
+//│ = [1]
 
 // Mutable arrays do not propagate stale initializer element shapes to callbacks.
 :ge
@@ -139,7 +132,7 @@ new Array[Int](1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.+1: 	new Array[Int](1, 2)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Array' expected 1 argument, but got 2
+//│ ╟── Constructor of class 'Array' expected 1 argument, but got 2
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.XX: 	declare class Array[T](val length: Int) {
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -150,7 +143,7 @@ new Array[Int]()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.+1: 	new Array[Int]()
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── Class 'Array' expected 1 argument, but got 0
+//│ ╟── Constructor of class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
 //│ ║  l.XX: 	declare class Array[T](val length: Int) {
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -215,8 +208,8 @@ class Total(val total: Int)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'reduce' expected 2 arguments, but got 1
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.XX: 	  fun reduce[U](f: (U, T, Int, Array[T]) -> U, initial: U): U
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  fun reduce[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 3
 
 // A tuple created in one activation of `mk` and passed to another has the path

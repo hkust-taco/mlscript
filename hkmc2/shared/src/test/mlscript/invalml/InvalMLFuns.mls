@@ -66,10 +66,10 @@ foo
 :e
 fun foo[outer, R <: outer](r1: Region[R]) =
   region r2 in 42
-//│ ╔══[COMPILATION ERROR] Unsupported type parameter outer binding
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter shape: outer binding
 //│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	        ^^^^^
-//│ ╔══[COMPILATION ERROR] Unsupported type parameter operator application
+//│ ╔══[COMPILATION ERROR] Unsupported type parameter shape: operator application
 //│ ║  l.+1: 	fun foo[outer, R <: outer](r1: Region[R]) =
 //│ ╙──      	               ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: R

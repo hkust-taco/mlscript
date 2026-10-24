@@ -3,7 +3,7 @@ package hkmc2
 import org.scalatest.funsuite.AnyFunSuite
 import scala.collection.mutable.ArrayBuffer
 
-import hkmc2.utils.*
+import hkmc2.utils.*, shorthands.*
 import hkmc2.semantics.{Elaborator, ResolutionContext, Term, VarSymbol, DynShape, OpaqueTypeShape, TermShape}
 
 
@@ -140,7 +140,7 @@ class PublisherTest extends AnyFunSuite:
     given owner: Elaborator.State = new Elaborator.State
     given state: ResolutionContext = owner.newResolverState.context
     val variable = new VarSymbol(new syntax.Tree.Ident("x"))
-    val use = Term.NewSel(Term.SimpleRef(variable)(new syntax.Tree.Ident("x")),
+    val use = Term.NewSel(Term.SimpleRef(variable)(S(new syntax.Tree.Ident("x"))),
       new syntax.Tree.Ident("value"), None)(semantics.FlowSymbol.sel("value"))
     use.hasDynamicTarget = true
     variable.subscribeToShapes: shape =>
