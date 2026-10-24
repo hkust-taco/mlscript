@@ -1,0 +1,99 @@
+:.
+
+import "../../mlscript-compile/Option.mls"
+
+
+// A leading-dot selection `.name` names a member of the implicit namespace of the
+// type that flow requires of its value (see ImplicitNamespaces.mls). Unlike an
+// unbound capitalized name, it can be lowercase, and it never consults the scope
+// where it is written: neither explicit bindings nor wildcard opens supply it.
+class Color(val name: Str) with
+  fun lighter = Color("light " + name)
+  fun mix(that: Color) = Color(name + "-" + that.name)
+module Color with
+  val red = Color("red")
+  val blue = Color("blue")
+  fun hex(code: Str) = Color("#" + code)
+fun paint(c: Color) = c.name
+fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
+
+:expect ["red", 0, 1]
+[paint(.red), get(.None), get(.Some(1))]
+//│ = ["red", 0, 1]
+
+// Leading-dot selections can start chains of selections and applications, as in
+// the legacy flow analysis (see flows/LeadingDotAccesses.mls).
+:expect ["light red", "red-blue", "light #f00"]
+[paint(.red.lighter), paint(.red.mix(.blue)), paint(.hex("f00").lighter)]
+//│ = ["light red", "red-blue", "light #f00"]
+
+// Flow reaches the required type through bindings, results, and generic functions.
+:expect ["red", "blue"]
+let stored = .red
+fun make() = .blue
+fun id[A](x: A): A = x
+[paint(stored), paint(id(make()))]
+//│ = ["red", "blue"]
+//│ stored = Color("red")
+
+// Explicit bindings and wildcard opens do not supply leading-dot selections.
+val red = 0
+module Reds with
+  val red = Color("crimson")
+//│ red = 0
+
+:expect "red"
+fun viaNamespace() =
+  open Reds
+  paint(.red)
+viaNamespace()
+//│ = "red"
+
+:e
+fun withoutNamespace() =
+  open Reds
+  .red
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.red'
+//│ ║  l.+3: 	  .red
+//│ ║        	  ^^^^
+//│ ╙── No type with a companion module or object is required of its value.
+
+// The namespace must define the name.
+:e
+paint(.green)
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.green'
+//│ ║  l.+1: 	paint(.green)
+//│ ║        	      ^^^^^^
+//│ ╟── Its value is required to have this type, but the companion module 'Color' of this type has no accessible member 'green'.
+//│ ║  l.XX: 	fun paint(c: Color) = c.name
+//│ ╙──      	             ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A leading-dot selection whose value flows into types with distinct namespaces is ambiguous.
+class Shade(val name: Str)
+module Shade with
+  val red = Shade("dark red")
+fun shade(s: Shade) = s.name
+
+:e
+let both = .red
+paint(both)
+shade(both)
+//│ ╔══[COMPILATION ERROR] Leading-dot selection '.red' is ambiguous, as flow requires its value to have types with distinct implicit namespaces.
+//│ ║  l.+1: 	let both = .red
+//│ ║        	           ^^^^
+//│ ╟── This type selects 'Color.red'.
+//│ ║  l.XX: 	fun paint(c: Color) = c.name
+//│ ║        	             ^^^^^
+//│ ╟── This type selects 'Shade.red'.
+//│ ║  l.XX: 	fun shade(s: Shade) = s.name
+//│ ╙──      	             ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ both = undefined
+
+// Leading-dot selections only denote values.
+:e
+fun typed(x: .Color) = x
+//│ ╔══[COMPILATION ERROR] A leading-dot selection must denote a value, whose required type determines its namespace.
+//│ ║  l.+1: 	fun typed(x: .Color) = x
+//│ ╙──      	             ^^^^^^

@@ -3479,7 +3479,7 @@ class NewResolver:
     * that are inaccessible from `scope`: another opened definition may provide an accessible member.
     * The reference is diagnosed once the rest of its block is resolved (see settleUnboundReferences).
     *
-    * A capitalized value (`ref.implicitNamespacing`) can also name a member of an implicit
+    * A capitalized value (NameLookup.NamespacesThenOpens) can also name a member of an implicit
     * namespace: the companion module of a type that flow requires of its value. For example,
     * where a parameter has type `Option[Int]`, an argument `Some(1)` selects `Option.Some`
     * if `Some` has no explicit binding. The reference can also be the root of a chain of
@@ -3488,7 +3488,8 @@ class NewResolver:
     * so the opens of these references are only consulted once the rest of their block is
     * resolved, and only if no namespace was found. Until then, the reference only publishes
     * its NamespaceProbe, whose arrival at declared types reveals the namespaces (see
-    * requireNamespace).
+    * requireNamespace). A leading-dot selection `.name` (NameLookup.LeadingDot) has no
+    * opens: it only names members of implicit namespaces, whatever its capitalization.
     */
   def unresolvedRef(ref: UnresolvedRef, scope: SrcScope)(using ResolutionContext): Unit =
     rctx.state.unboundReferences(new Identity(ref)) = scope
@@ -3598,12 +3599,16 @@ class NewResolver:
             msg"Wildcard opens only supply a capitalized name if no implicit namespace is known for it once the rest of its block is resolved."
           else msg"Implicit namespaces are only taken into account until the block of the reference is resolved."
         rctx.report(ErrorReport(
-          msg"Reference '${name}' was resolved before flow revealed its implicit namespace ${module.describeKind} '${module.nme}'." -> ref.toLoc ::
+          msg"${subject(ref)} was resolved before flow revealed its implicit namespace ${module.describeKind} '${module.nme}'." -> ref.toLoc ::
             msg"Its value is required to have this type, which would have selected '${module.nme}.${name}'." ->
               namespaces.required(module).toLoc ::
             candidates ::: (reason -> N) :: (msg"Write '${module.nme}.${name}' to select it explicitly." -> N) :: Nil,
           source = Diagnostic.Source.Compilation))
       case _ => ()
+
+  private def subject(ref: UnresolvedRef): Message =
+    if ref.lookup is NameLookup.LeadingDot then msg"Leading-dot selection '${ref.writtenName}'"
+    else msg"Reference '${ref.writtenName}'"
 
   /** Let `ref` fall back to its wildcard opens if no implicit namespace supplied a candidate. */
   private def fallBack(ref: UnresolvedRef, namespaces: ImplicitNamespaces)(using ResolutionContext): Unit =
@@ -3647,14 +3652,19 @@ class NewResolver:
                 else msg"has no accessible member '${name}'"
               msg"Its value is required to have this type, but the companion ${module.describeKind} '${module.nme}' of this type ${problem}." ->
                 annotation.toLoc
-          rctx.report(ErrorReport(msg"Name not found: ${name}" -> ref.toLoc :: notes, source = Diagnostic.Source.Compilation))
+          // A leading-dot selection only consults implicit namespaces, which flow can fail to reveal.
+          val report = if ref.lookup is NameLookup.LeadingDot then
+            msg"Cannot resolve leading-dot selection '${ref.writtenName}'" -> ref.toLoc :: (if notes.nonEmpty then notes
+              else msg"No type with a companion module or object is required of its value." -> N :: Nil)
+            else msg"Name not found: ${name}" -> ref.toLoc :: notes
+          rctx.report(ErrorReport(report, source = Diagnostic.Source.Compilation))
         else namespaces.foreach: namespaces =>
           val selected = namespaces.paths.toList.flatMap: (module, path) =>
             ref.resolvedMembers.collect { case (prefix, member) if prefix is path => module -> member }
           if selected.map(_._2).distinct.sizeIs > 1 then
             rctx.markError(ref)
             rctx.report(ErrorReport(
-              msg"Reference '${name}' is ambiguous, as flow requires its value to have types with distinct implicit namespaces." -> ref.toLoc ::
+              msg"${subject(ref)} is ambiguous, as flow requires its value to have types with distinct implicit namespaces." -> ref.toLoc ::
                 selected.map: (module, _) =>
                   msg"This type selects '${module.nme}.${name}'." -> namespaces.required(module).toLoc,
               source = Diagnostic.Source.Compilation))

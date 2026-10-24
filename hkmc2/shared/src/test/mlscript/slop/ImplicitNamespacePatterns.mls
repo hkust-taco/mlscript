@@ -36,3 +36,12 @@ unbox(Box(Option.Some(2)))
 //│ ║  l.+3: 	  Box(None) then 0
 //│ ╙──      	      ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
+
+// Leading-dot selections in patterns would name members of the same namespaces.
+:todo
+fun isNone(x: Option[Int]) = x is .None
+isNone(Option.None)
+//│ ╔══[COMPILATION ERROR] Leading-dot selections are not yet supported in patterns.
+//│ ║  l.+1: 	fun isNone(x: Option[Int]) = x is .None
+//│ ╙──      	                                  ^^^^^
+//│ = false

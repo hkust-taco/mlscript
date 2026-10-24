@@ -179,7 +179,7 @@ object Elaborator:
       getExplicit(name, captureScopes).orElse:
         if config.language.useNewResolution then
           val sources = visibleWildcardOpens.distinct
-          if sources.isEmpty then N else S(Ctx.WildcardElem(name, sources, implicitNamespacing = false))
+          if sources.isEmpty then N else S(Ctx.WildcardElem(name, sources, NameLookup.Opens))
         else N
 
     private def getExplicit(name: Str, captureScopes: Bool)(using config: Config): Opt[Ctx.Elem] =
@@ -504,21 +504,25 @@ object Elaborator:
         else
           Term.SynthSel(prefix, name)(symOpt, FlowSymbol.synthSel(nme), N, S(summon)).withLoc(loc)
       def symbol = symOpt
-    /** A name without an explicit binding, looked up in the wildcard opens `sources`, and,
-      * with `implicitNamespacing`, in implicit namespaces (see Term.UnresolvedRef). */
-    final case class WildcardElem(nme: Str, sources: Ls[OpenSource], implicitNamespacing: Bool) extends Elem:
+    /** A name without an explicit binding, looked up in the wildcard opens `sources` and,
+      * depending on `lookup`, in implicit namespaces (see Term.UnresolvedRef). */
+    final case class WildcardElem(nme: Str, sources: Ls[OpenSource], lookup: NameLookup) extends Elem:
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         // Each ref is fresh. Locate its outer capture at the opening site too;
         // a chained wildcard reference may already have attached this location.
         val prefixes = sources.map(source => source.elem.ref(S(source.id)).withoutLoc.withLocOf(source.id))
         val name: Ident = id.getOrElse(Ident(nme))
-        val res = new Term.UnresolvedRef(prefixes, name)(FlowSymbol.synthSel(nme), implicitNamespacing).withLocOf(name)
-        rctx.recordLexicalBinders(res, ctx.typeBinders)
-        rctx.recordAccessSite(res, ctx.scope)
-        summon[NewResolver].unresolvedRef(res, ctx.scope)
-        res
+        unresolvedRef(prefixes, name, lookup, name)
       def symbol: Opt[Symbol] = N
       def isImport: Bool = true
+    /** A reference to resolve through `prefixes` and implicit namespaces, located at `source`. */
+    def unresolvedRef(prefixes: Ls[Term], name: Ident, lookup: NameLookup, source: Located)
+        (using Elaborator.State, Ctx, NewResolver, ResolutionContext): Term.UnresolvedRef =
+      val res = new Term.UnresolvedRef(prefixes, name)(FlowSymbol.synthSel(name.name), lookup).withLocOf(source)
+      rctx.recordLexicalBinders(res, ctx.typeBinders)
+      rctx.recordAccessSite(res, ctx.scope)
+      summon[NewResolver].unresolvedRef(res, ctx.scope)
+      res
     final case class CaptElem(base: Elem, thru: DefinitionSymbol[?]) extends Elem:
       def ref(id: Opt[Ident])(using Elaborator.State, Ctx, Config, NewResolver, ResolutionContext): Term =
         Term.Capture(base.ref(id), thru)
@@ -1896,6 +1900,18 @@ extends Importer:
         PlainFld(if rhsDelimitsUnders then delimitedTerm(r, Trm, alwaysLambda = false) else subterm(r))
       app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
         DummyApp, N, sym)
+    // Under new resolution, a leading-dot selection only consults the implicit namespace
+    // that flow requires of its value, as a capitalized value or chain root can.
+    case Sel(Empty(), nme) if newResolution => interp match
+      case Trm | Specialization | Instantiated | ValueReceiver =>
+        interpretRef(Ctx.unresolvedRef(Nil, nme, NameLookup.LeadingDot, tree), interp)
+      case Ptrn =>
+        raise(ErrorReport(msg"Leading-dot selections are not yet supported in patterns." -> tree.toLoc :: Nil))
+        error
+      case Receiver | Clss | Tpe =>
+        raise(ErrorReport(msg"A leading-dot selection must denote a value, whose required type determines its namespace." ->
+          tree.toLoc :: Nil))
+        error
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
@@ -3336,7 +3352,8 @@ extends Importer:
             val implicitNamespacing = id.name.isCapitalized && (interp match
               case Trm | Specialization | Instantiated | ValueReceiver => true
               case Receiver | Clss | Ptrn | Tpe => false)
-            S(Ctx.WildcardElem(id.name, sources, implicitNamespacing).ref(S(id)))
+            val lookup = if implicitNamespacing then NameLookup.NamespacesThenOpens else NameLookup.Opens
+            S(Ctx.WildcardElem(id.name, sources, lookup).ref(S(id)))
           case N => candidate.map(_.ref(S(id)))
       case S(elem) => S(elem.ref(S(id)))
   

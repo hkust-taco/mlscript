@@ -267,7 +267,8 @@ can make generated patterns test a constructor function instead of its class.
 ## Implicit namespaces
 
 User-facing rules are in the [language reference](reference.md#implicit-namespaces).
-An unbound capitalized value is an `UnresolvedRef` with `implicitNamespacing`. Until
+An unbound capitalized value is an `UnresolvedRef` with `NameLookup.NamespacesThenOpens`;
+a leading-dot selection is one with `NameLookup.LeadingDot` and no wildcard prefixes. Until
 its block is settled, it publishes only a `NamespaceProbe`, like the legacy flow
 analysis's leading-dot producer. The probe travels along ordinary value edges and
 through the selections, applications, and instantiations of the chains rooted at the
@@ -289,5 +290,6 @@ lets capitalized references without namespaces fall back to their wildcard opens
 in source order, then diagnoses missing and ambiguous names. Annotation paths need
 their symbols during elaboration, so their roots fall back immediately. Namespaces revealed
 afterwards are reported against the settled candidates and never change them.
-`slop/ImplicitNamespaces.mls` and `ImplicitNamespaceChains.mls` cover these rules.
+`slop/ImplicitNamespaces.mls`, `ImplicitNamespaceChains.mls`, and
+`LeadingDotSelections.mls` cover these rules.
 Patterns are deferred (`slop/ImplicitNamespacePatterns.mls`).

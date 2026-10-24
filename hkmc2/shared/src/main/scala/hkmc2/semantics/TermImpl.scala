@@ -78,6 +78,9 @@ trait UnresolvedRefImpl extends NewResolvableImpl:
   var namespacePrefixes: Ls[Term] = Nil
   /** The value of this reference before its namespace is known (see NamespaceProbe). */
   lazy val namespaceProbe: NamespaceProbe = NamespaceProbe(this)
+  def implicitNamespacing: Bool = self.lookup isnt NameLookup.Opens
+  /** The written name, for diagnostics. */
+  def writtenName: Str = if self.lookup is NameLookup.LeadingDot then "." + self.id.name else self.id.name
 
 
 trait FldImpl:
@@ -137,6 +140,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
       case Capture(base, thru) => base.describe
       case SimpleRef(sym) => "reference"
       case MemberRef(sym) => "member reference"
+      case ref: UnresolvedRef if ref.lookup is NameLookup.LeadingDot => "leading-dot selection"
       case UnresolvedRef(Nil, _) => "reference"
       case UnresolvedRef(_, _) => "wildcard-open reference"
       case App(lhs, rhs) => "application"
@@ -315,7 +319,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
         case _: BuiltinSymbol => r.sym.nme
         case _ => r.sym.showName
       case r: MemberRef => r.sym.showName
-      case r: UnresolvedRef => doc"${r.id.name}"
+      case r: UnresolvedRef => doc"${r.writtenName}"
       case sr: SelfRef => s"${sr.sym.showName}.this"
       case Capture(base, thru) =>
         // doc"${base.show}⟨${thru.showName}⟩"
@@ -530,6 +534,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
     case Super(_, owner, id) => s"super[${owner.showDbg}].${id.name}"
     case NewSel(pre, nme, cls) => s"${pre.showDbg}.${cls.fold("")(c => s"${c.showDbg}#")}${nme.name}"
+    case ref: UnresolvedRef if ref.lookup is NameLookup.LeadingDot => ref.writtenName
     case UnresolvedRef(_, id) => s"${id.name}‹open›"
     case DynSel(pre, fld, _, _) => s"${pre.showDbg}[${fld.showDbg}]"
     case IfLike(kw, _, split) => s"${kw.name} { ${split.showDbg} }"

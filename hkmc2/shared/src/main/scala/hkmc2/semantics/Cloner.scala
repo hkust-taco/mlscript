@@ -516,7 +516,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       case term @ UnresolvedRef(prefixes, id) =>
         val clonedPrefixes = prefixes.map(_.cloned)
         val clonedNamespaces = term.namespacePrefixes.map(_.cloned)
-        val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym, term.implicitNamespacing)
+        val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym, term.lookup)
         def cloneReceiver(receiver: Term): Term =
           val index = prefixes.indexWhere(_ is receiver)
           if index >= 0 then clonedPrefixes(index)

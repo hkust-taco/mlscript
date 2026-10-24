@@ -1762,6 +1762,14 @@ parameter types of `get` and `paint`. Patterns, types, the selection paths in
 them, and `extends` clauses only consult explicit bindings and wildcard opens.
 So do annotations, which are interpreted as soon as they are elaborated.
 
+A *leading-dot selection* `.name` explicitly requires an implicit namespace: it
+never consults the scope where it is written, neither its explicit bindings nor
+its wildcard opens, and its name need not be capitalized. For instance, with
+`module Color with val red = ...`, `paint(.red)` selects `Color.red`, even where
+another `red` is in scope, and `get(.None)` selects `Option.None`. Leading-dot
+selections can start chains too, as in `paint(.red.lighter)`. They can only
+denote values; patterns do not support them yet.
+
 Implicit namespaces take precedence over wildcard opens, but not over explicit
 bindings, including selective opens such as `open AltOption { Some }`. A name
 whose value flows into types with distinct namespaces, such as `Option[Int]` and
@@ -1821,7 +1829,9 @@ Flow types (`:flow` mode) enable type inference with a structural/flow-sensitive
 
 ### Leading Dot Access (Flow Values)
 
-In flow mode, a leading dot creates a *flow value* that resolves its type from context:
+With `newResolution` enabled, leading-dot selections resolve through
+[implicit namespaces](#implicit-namespaces). In the legacy flow mode, a leading dot
+creates a *flow value* that resolves its type from context:
 
 ```mlscript
 :flow

@@ -1072,7 +1072,7 @@ object DynShape:
   */
 final class NamespaceProbe(val ref: Term.UnresolvedRef) extends CoreHeadShape:
   override def isSelfContained: Bool = true
-  def describe: Str = s"reference '${ref.id.name}'"
+  def describe: Str = ref.describe + s" '${ref.writtenName}'"
   override def toString: Str = s"NamespaceProbe(${ref.id.name})"
   def toLoc: Opt[Loc] = ref.toLoc
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = MemberLookup.All(Nil)
