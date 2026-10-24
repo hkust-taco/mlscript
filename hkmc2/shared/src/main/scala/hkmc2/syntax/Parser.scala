@@ -89,9 +89,9 @@ object Parser:
   
   object KEYWORD:
     def unapply(t: IDENT): Opt[Keyword] = t match
-      case IDENT(nme, sym) => Keyword.all.get(nme)
-      // case IDENT(nme, sym) => Keyword.all.get(nme).map(_.name)
-      // case IDENT(nme, sym) if Keyword.all.contains(nme) => S(nme)
+      case IDENT(nme, symb) => Keyword.all.get(nme)
+      // case IDENT(nme, symb) => Keyword.all.get(nme).map(_.name)
+      // case IDENT(nme, symb) if Keyword.all.contains(nme) => S(nme)
   
   object OP:
     def unapply(t: IDENT): Opt[Str] = t match
@@ -555,7 +555,7 @@ abstract class Parser(
           
           val continue = toks.headOption match
             case S(LITVAL(_) -> _) => true
-            case S(IDENT(nme, sym) -> _) =>
+            case S(IDENT(nme, symb) -> _) =>
               Keyword.all.contains(nme) && (
                   rule.kwAlts.contains(nme)
                   || prefixRules.kwAlts.contains(nme) && rule.exprAlt.nonEmpty
@@ -601,7 +601,7 @@ abstract class Parser(
         bindings(acc)
       case (_: NEWLINE_COMMA, _) :: _ => // TODO: | ...
         acc.reverse
-      case (IDENT(nme, sym), l0) :: _ =>
+      case (IDENT(nme, symb), l0) :: _ =>
         consume
         yeetSpaces match
           case (IDENT("=", _), l1) :: _ => consume
@@ -630,17 +630,6 @@ abstract class Parser(
   def simpleExpr(prec: Int, allowNewlines: Bool)(using Line): Tree =
     wrap(prec)(simpleExprImpl(prec, allowNewlines = allowNewlines))
   
-  /** An operator remains a value before argument lists, selections, and expression delimiters.
-    * In particular, `op(args)`, `op[T](args)`, and `op \ arg` retain their explicit call syntax.
-    * Curly and indented blocks instead supply a single prefix operand, including when they
-    * start with an operator that would otherwise continue the operator value as an infix split. */
-  private def startsPrefixOperand: Bool = yeetSpaces match
-    case (KEYWORD(Keyword.`else` | Keyword.`in` | Keyword.`finally`), _) :: _ => false
-    case (KEYWORD(kw), _) :: _ => prefixRules.kwAlts.contains(kw.name)
-    case (IDENT(_, _) | ESC_IDENT(_) | LITVAL(_) | QUOTE | SUSPENSION(_), _) :: _ => true
-    case (BRACKETS(_: Indent_Curly, _), _) :: _ => true
-    case _ => false
-  
   def simpleExprImpl(prec: Int, allowNewlines: Bool): Tree =
     yeetSpaces match
     case (IDENT("=", _), l0) :: (IDENT(nme, false), l1) :: rest =>
@@ -665,7 +654,7 @@ abstract class Parser(
     case (tok @ IDENT(nme, _), loc) :: rest if isKey(tok, rest) =>
       consume
       exprCont(Tree.Ident(nme).withLoc(S(loc)), prec, allowNewlines = allowNewlines)
-    case (IDENT(nme, sym), loc) :: _ =>
+    case (IDENT(nme, symb), loc) :: _ =>
       Keyword.all.get(nme) match
       case S(kw) => // * Expressions starting with keywords should be handled in parseRule
         // * I guess this case is not really supposed to ever be reached (?)
@@ -674,7 +663,18 @@ abstract class Parser(
       case N =>
         consume
         val id = new Tree.Ident(nme).withLoc(S(loc))
-        if sym && startsPrefixOperand
+        if symb &&
+          // * An operator identifier behaves like a normal identifier
+          // * when followed by argument lists, selections, and expression delimiters.
+          // * In particular, `op(args)`, `op[T](args)`, and `op \ arg` are normal applications.
+          // * Curly and indented blocks instead supply a single prefix operand, including when they
+          // * start with an operator that would otherwise continue the operator value as an infix split. */
+          yeetSpaces.match
+          case (KEYWORD(Keyword.`else` | Keyword.`in` | Keyword.`finally`), _) :: _ => false
+          case (KEYWORD(kw), _) :: _ => prefixRules.kwAlts.contains(kw.name)
+          case (IDENT(_, _) | ESC_IDENT(_) | LITVAL(_) | QUOTE | SUSPENSION(_), _) :: _ => true
+          case (BRACKETS(_: Indent_Curly, _), _) :: _ => true
+          case _ => false
         then
           val rhs = expr(opPrec(nme)._2, allowNewlines = allowNewlines)
           exprCont(PrefixOpApp(id, rhs), prec, allowNewlines = allowNewlines)
@@ -761,7 +761,7 @@ abstract class Parser(
             case Nil =>
               err(msg"Expected 'else'; found end of input instead" -> lastLoc :: Nil)
               errExpr
-        case (IDENT(nme, sym), loc) :: _ =>
+        case (IDENT(nme, symb), loc) :: _ =>
           consume
           val res =
             if nme === "true" then Tree.BoolLit(true) else if nme === "false" then Tree.BoolLit(false) else Tree.Ident(nme)
@@ -1073,18 +1073,19 @@ abstract class Parser(
       // =>
       
       // * Parse newline-operators, eg `2 + 2\n*\n2 + 2` <=> `(2 + 2) * (2 + 2)`
-      // * A directly attached operand or argument list starts a new expression at this boundary.
-      // * Spaces, line breaks, commas, and blocks after the operator allow infix continuation.
-      // * Indented operator splits are handled above and do not need a separating space.
+      // * An operator followed without space by an operand starts a new expression, as in `2\n+2` <=> `{2, +2}`.
+      // * while an operator followed by spaces, line breaks, commas, and blocks allow infix continuation,
+      // * as in `2\n+ 2` <=> `2 + 2`.
+      // * Indented operator splits, as in `2\n  +2` <=> `2 + 2`, are handled above and do not need separation space.
       // TODO also allow uses of SELECT
       case (_: NEWLINE_COMMA, _) :: (OP(opStr), l0) :: rest
       if allowNewlines
       && prec <= NoElsePrec // (Q: why doesn't MinPrec work?)
       && NOISE.get(rest).nonEmpty // * Don't treat as infix if there are no tokens for the RHS (eg `()\n???`)
-      && (rest.match
+      && rest.match
         case (_: NEWLINE_COMMA, _) :: _ | (SPACE, _) :: _ | (BRACKETS(_: Indent_Curly, _), _) :: _ | Nil => true
         case _ => false
-      ) =>
+      =>
         consume
         consume
         val v = Ident(opStr).withLoc(S(l0))
@@ -1272,7 +1273,7 @@ abstract class Parser(
       exprCont(Reft(acc, Block(res).withLoc(S(l0))), prec, allowNewlines = allowNewlines)
     case (br @ BRACKETS(Indent, toks), l0) :: _
     if prec < AppPrec && (toks.headOption match
-      case S((IDENT(nme, sym), _)) => !sym && !Keyword.all.contains(nme)
+      case S((IDENT(nme, symb), _)) => !symb && !Keyword.all.contains(nme)
       case _ => true
     ) =>
       consume

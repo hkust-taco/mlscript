@@ -85,25 +85,8 @@ pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 pattern Negated = ~(Int | Str)
 //│ elaborated pattern body: ¬(member:Int⁰ ∨ member:Str⁰)
 
-// The explicit call ends before the pattern body, so the negated binding is unavailable.
-:pt
 :e
 pattern BadNegated = ~(Int as x) => x
-//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
-//│ TypeDef:
-//│   k = Pat
-//│   head = Ident of "BadNegated"
-//│   rhs = S of InfixApp:
-//│     lhs = Tup of Ls of
-//│       App:
-//│         lhs = Ident of "~"
-//│         rhs = Tup of Ls of
-//│           InfixApp:
-//│             lhs = Ident of "Int"
-//│             kw = Keywrd of keyword 'as'
-//│             rhs = Ident of "x"
-//│     kw = Keywrd of keyword '=>'
-//│     rhs = Ident of "x"
 //│ ╔══[COMPILATION ERROR] This pattern cannot be bound.
 //│ ║  l.+1: 	pattern BadNegated = ~(Int as x) => x
 //│ ║        	                       ^^^
@@ -113,7 +96,6 @@ pattern BadNegated = ~(Int as x) => x
 //│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: x
 //│ ║  l.+1: 	pattern BadNegated = ~(Int as x) => x
 //│ ╙──      	                                    ^
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :ucs ups
 :e

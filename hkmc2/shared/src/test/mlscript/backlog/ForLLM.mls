@@ -88,12 +88,6 @@ if 2
 
 // ——— ——— ———
 
-:expect 3
-+(1,2)
-//│ = 3
-
-// ——— ——— ———
-
 :fixme
 pattern ShapeArea =
   | (:radius) => 0

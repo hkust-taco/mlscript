@@ -87,8 +87,11 @@ enum Tree extends AutoLocated:
   case Tup(fields: Ls[Tree])
   case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
-  /** Unlike an explicit argument list, a prefix operand must not acquire extra arguments from `\`.
-    * Keeping the source form also lets operator operands delimit implicit lambdas. */
+  /** Not represented as an App on purpose:
+    * first, so that prefix operands do not acquire extra arguments from `\`;
+    * second, to allow operators ended in `>` (except `>` itself) to delimit implicit lambdas during elaboration,
+    * similarly to how it works with OpApp.
+    * Do note that `>> _ + 1` is a prefix op app but `>>(_ + 1)` is a normal app that does not delimit the `_`. */
   case PrefixOpApp(op: Ident, rhs: Tree)
   case OpApp(lhs: Tree, op: Tree, rhss: Ls[Tree])
   case Jux(lhs: Tree, rhs: Tree)
@@ -486,7 +489,7 @@ object Tree:
       case App(lhs, TyTup(targs)) => S(lhs, targs)
       case _ => N
   
-  extension [T <: Keyword & Singleton](kw: Tree.Keywrd[T])
+  extension (kw: Tree.Keywrd[?])
     def name = kw.kw.name
   
   extension (prefix: PrefixOpApp)
