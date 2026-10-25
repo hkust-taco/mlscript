@@ -1,0 +1,41 @@
+:.
+#lang(eagerResolution: true)
+
+module First with
+  data class Some[T](value: T)
+module Second with
+  data class Some[T](value: T)
+type FirstAlias[T] = T
+module FirstAlias with
+  val Some = First.Some
+type SecondAlias[T] = T
+module SecondAlias with
+  val Some = Second.Some
+
+// These aliases have the same interface but different companion namespaces.
+// Each pattern must use the namespace of its own parameter annotation.
+:expect [1, 2]
+fun plain[X](x: FirstAlias[X], y: SecondAlias[X]) =
+  [if x is Some(v) then v else 0, if y is Some(v) then v else 0]
+plain(First.Some(1), Second.Some(2))
+//│ = [1, 2]
+
+// Adding Nothing changes neither the interface nor the declarations named by each
+// annotation. Normalization currently interns both instances with the first
+// annotation's written form, making the second pattern select FirstAlias.Some.
+:fixme
+:expect [3, 4]
+fun unions[X](x: FirstAlias[X] | Nothing, y: SecondAlias[X] | Nothing) =
+  [if x is Some(v) then v else 0, if y is Some(v) then v else 0]
+unions(First.Some(3), Second.Some(4))
+//│ ═══[RUNTIME ERROR] Expected: '[3, 4]', got: '[3, 0]'
+//│ = [3, 0]
+
+// Reversing parameter order changes which namespace contaminates the other one.
+:fixme
+:expect [5, 6]
+fun reversed[X](y: SecondAlias[X] | Nothing, x: FirstAlias[X] | Nothing) =
+  [if x is Some(v) then v else 0, if y is Some(v) then v else 0]
+reversed(Second.Some(6), First.Some(5))
+//│ ═══[RUNTIME ERROR] Expected: '[5, 6]', got: '[0, 6]'
+//│ = [0, 6]

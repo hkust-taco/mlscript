@@ -1,0 +1,42 @@
+:.
+#lang(eagerResolution: true)
+
+class Color(val n: Int)
+module Color with
+  val Palette = [Color(3)]
+fun color(c: Color) = c.n
+
+// The required result type supplies the namespace for a chain's root. A qualified
+// checked index and an implicit tuple selection both find the intended element.
+:expect [3, 3]
+[color(Color.Palette.[0]), color(.Palette.0)]
+//│ = [3, 3]
+
+// Checked indexing is a selection too. Its observation of concrete array elements
+// currently filters out the namespace probe without forwarding it to the result.
+:fixme
+:expect 3
+color(.Palette.[0])
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.Palette'
+//│ ║  l.+1: 	color(.Palette.[0])
+//│ ║        	      ^^^^^^^^
+//│ ╙── No type with an implicit namespace is required of its value.
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+
+module OtherArrays with
+  val Palette = [Color(99)]
+
+// Losing the probe lets the chain's root fall back to a different wildcard member.
+// Replacing the tuple selection with a checked index must not change the namespace.
+:fixme
+:expect [3, 3]
+fun staticIndex() =
+  open OtherArrays
+  color(Palette.0)
+fun checkedIndex(i: Int) =
+  open OtherArrays
+  color(Palette.[i])
+[staticIndex(), checkedIndex(0)]
+//│ ═══[RUNTIME ERROR] Expected: '[3, 3]', got: '[3, 99]'
+//│ = [3, 99]

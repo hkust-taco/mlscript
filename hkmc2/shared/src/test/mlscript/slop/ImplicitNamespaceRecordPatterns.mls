@@ -1,0 +1,55 @@
+:.
+#lang(eagerResolution: true)
+
+import "../../mlscript-compile/Option.mls"
+
+module Alternative with
+  data class Some[T](value: T)
+
+// Both the record test and the field's declared interface are available.
+:expect 1
+fun qualified(x: {value: Option[Int]}) = if x is {value: Option.Some(v)} then v else 0
+qualified({value: Option.Some(1)})
+//│ = 1
+
+// Selecting the field before testing it preserves its implicit namespace.
+:expect 2
+fun selected(x: {value: Option[Int]}) = if x.value is Some(v) then v else 0
+selected({value: Option.Some(2)})
+//│ = 2
+
+// A nested record pattern should observe the same field type. Currently record
+// patterns replace every field with an unknown before matching nested patterns.
+:fixme
+:expect 3
+fun nested(x: {value: Option[Int]}) = if x is {value: .Some(v)} then v else 0
+nested({value: Option.Some(3)})
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.Some'
+//│ ║  l.+1: 	fun nested(x: {value: Option[Int]}) = if x is {value: .Some(v)} then v else 0
+//│ ║        	                                                      ^^^^^
+//│ ╙── No value or type of its scrutinee has an implicit namespace.
+//│ ═══[RUNTIME ERROR] Expected: '3', got: '0'
+//│ = 0
+
+// Losing the field type also lets an unrelated wildcard member win silently.
+:fixme
+:expect 4
+fun fallback(x: {value: Option[Int]}) =
+  open Alternative
+  if x is {value: Some(v)} then v else 0
+fallback({value: Option.Some(4)})
+//│ ═══[RUNTIME ERROR] Expected: '4', got: '0'
+//│ = 0
+
+// Known record values should supply their fields' namespaces as well.
+:fixme
+:expect 5
+let record = {value: Option.Some(5)}
+if record is {value: .Some(v)} then v else 0
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.Some'
+//│ ║  l.+2: 	if record is {value: .Some(v)} then v else 0
+//│ ║        	                     ^^^^^
+//│ ╙── No value or type of its scrutinee has an implicit namespace.
+//│ ═══[RUNTIME ERROR] Expected: '5', got: '0'
+//│ = 0
+//│ record = {value: Some(5)}

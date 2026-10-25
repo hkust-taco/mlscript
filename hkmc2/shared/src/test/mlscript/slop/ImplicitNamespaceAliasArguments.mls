@@ -1,0 +1,76 @@
+:.
+#lang(eagerResolution: true)
+
+class Left(val n: Int)
+module Left with
+  val Pick = Left(1)
+class Right(val n: Int)
+module Right with
+  val Pick = Right(2)
+type Identity[T] = T
+type Wrapped[T] = Identity[T]
+fun left(x: Wrapped[Left]) = x.n
+fun right(x: Wrapped[Right]) = x.n
+
+// Separate references correctly find each namespace through the forwarding alias.
+:expect [1, 2]
+[left(Pick), right(Pick)]
+//│ = [1, 2]
+
+// Distinct namespaces supplying the same name must be ambiguous.
+:e
+fun direct(x: Left | Right) = x.n
+direct(Pick)
+//│ ╔══[COMPILATION ERROR] Reference 'Pick' is ambiguous, as flow requires its value to have types with distinct implicit namespaces.
+//│ ║  l.+2: 	direct(Pick)
+//│ ║        	       ^^^^
+//│ ╟── This type selects 'Left.Pick'.
+//│ ║  l.+1: 	fun direct(x: Left | Right) = x.n
+//│ ║        	              ^^^^
+//│ ╟── This type selects 'Right.Pick'.
+//│ ║  l.+1: 	fun direct(x: Left | Right) = x.n
+//│ ╙──      	                     ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Reusing the same alias-body reference with different arguments must visit both
+// applications. Currently the second visit to Identity in Wrapped is discarded,
+// so this reference silently selects Left.Pick and both calls return 1.
+:breakme
+:e
+let shared = Pick
+[left(shared), right(shared)]
+//│ = [1, 1]
+//│ shared = Left(1)
+
+:breakme
+:e
+fun wrappedUnion(x: Wrapped[Left] | Wrapped[Right]) = x.n
+wrappedUnion(Pick)
+//│ = 1
+
+
+import "../../mlscript-compile/Option.mls"
+
+type OtherOption[T] = OtherOption.Some[T]
+module OtherOption with
+  data class Some[T](value: T)
+
+// The same ambiguity rule applies to the types reaching a pattern's scrutinee.
+:e
+fun directPattern(x: Option[Int] | OtherOption[Int]) = if x is Some(v) then v else 0
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as values with distinct implicit namespaces can reach its scrutinee.
+//│ ║  l.+1: 	fun directPattern(x: Option[Int] | OtherOption[Int]) = if x is Some(v) then v else 0
+//│ ║        	                                                               ^^^^
+//│ ╟── This type selects 'Option.Some'.
+//│ ║  l.+1: 	fun directPattern(x: Option[Int] | OtherOption[Int]) = if x is Some(v) then v else 0
+//│ ║        	                     ^^^^^^^^^^^
+//│ ╟── This type selects 'OtherOption.Some'.
+//│ ║  l.+1: 	fun directPattern(x: Option[Int] | OtherOption[Int]) = if x is Some(v) then v else 0
+//│ ╙──      	                                   ^^^^^^^^^^^^^^^^
+
+// Namespace discovery must retain pending arguments in both directions of flow.
+// Currently this pattern only considers the first application of Wrapped.
+:breakme
+:e
+fun wrappedPattern(x: Wrapped[Option[Int]] | Wrapped[OtherOption[Int]]) =
+  if x is Some(v) then v else 0
