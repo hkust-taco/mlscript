@@ -307,7 +307,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
           definition(companion) match
             case copy: CompanionValue => copy
             case _ => lastWords("A cloned companion must remain a value definition")
-        val copy = source.copy(sym = source.sym.subst, bsym = source.bsym.subst,
+        val copy = source.copy(owner = source.owner.map(_.subst), sym = source.sym.subst, bsym = source.bsym.subst,
           tparams = source.tparams.map(scope.typeParameter), rhs = source.rhs.map(scope.term),
           companion = companion, annotations = source.annotations.map(scope.annotation))(source.toLoc, source.headerLoc)
         copy.sym.defn = S(copy)

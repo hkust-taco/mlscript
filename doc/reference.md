@@ -1740,9 +1740,9 @@ Capitalized values first consult their [implicit namespaces](#implicit-namespace
 ### Implicit Namespaces
 
 With `newResolution` enabled, a capitalized name without an explicit binding can
-name a member of the *implicit namespace* of the type that its value is required
-to have: the companion module or object of the class or type alias of that type.
-Resolution finds these types by following the flow of the value into parameter,
+name a member of an *implicit namespace* of the type that its value is required
+to have, such as the companion module or object of the class or type alias of that
+type. Resolution finds these types by following the flow of the value into parameter,
 result, and field annotations, as well as ascriptions.
 
 ```mlscript
@@ -1753,20 +1753,39 @@ get(Some(1)) // selects Option.Some
 get(None)    // selects Option.None
 ```
 
+The implicit namespaces of a type come from the classes and type aliases that it
+names as written, before aliases are expanded:
+
+- A class has its companion module or object, then the module or object declaring
+  it, then the namespaces of its parent class.
+- A type alias has its companion module or object, then the module or object
+  declaring it, then the namespaces of the classes and aliases that its body names.
+- The components of a union or an intersection are considered separately.
+
+Each class or alias only contributes the first of its namespaces that defines an
+accessible member with the requested name. For instance, where `paint` takes a
+`Palette.Hue`, `paint(Red)` selects `Palette.Hue.Red` if the companion module `Hue`
+defines `Red`, even if the declaring module `Palette` defines another `Red`; and
+where `Bird` extends `Animal` without a companion of its own, a parameter of type
+`Bird` makes the members of the companion of `Animal` available.
+
 This applies to values and to the classes instantiated by `new`. As in Swift's
 implicit member chains, such a name can also be the root of a chain of selections
 and applications; the type required of the result of the chain determines the
 namespace. For instance, `Some` in `get(Some(1))`, `Red` in `paint(Red.lighter)`,
 and `Hex` in `paint(Hex("f00").lighter)` name members of the namespaces of the
-parameter types of `get` and `paint`. Types, the selection paths in types and
-patterns, and `extends` clauses only consult explicit bindings and wildcard opens.
+parameter types of `get` and `paint`. Types, their selection paths, and `extends`
+clauses only consult explicit bindings and wildcard opens.
 So do annotations, which are interpreted as soon as they are elaborated.
 
-In a pattern, the declared type of the scrutinee determines the namespace of the
-head of a constructor pattern, as the type required of a value does. With
-`x: Option[Int]`, `if x is Some(v) then v else 0` tests for `Option.Some`, as do
-nested patterns on fields declared with type `Option[Int]`. Scrutinees without
-declared types, such as constructed values, have no implicit namespace.
+In a pattern, the values that reach the scrutinee determine the namespaces of the
+head of a constructor pattern, as the type required of a value does. A value of a
+declared type has the namespaces of that type, and an instance of a class or object
+has those of its class. With `x: Option[Int]`, `if x is Some(v) then v else 0`
+tests for `Option.Some`, as does `if Option.Some(1) is Some(v) then v else 0`,
+whose class `Some` is declared by module `Option`. Nested patterns observe the
+values of the fields that they match. As for values, the head of a pattern can be
+a chain of selections whose root names the member, as `Plain` in `t is Plain.Grass`.
 
 A *leading-dot selection* `.name` explicitly requires an implicit namespace: it
 never consults the scope where it is written, neither its explicit bindings nor
@@ -1778,8 +1797,8 @@ constructor patterns, as in `if x is .None then 0 else 1`.
 
 Implicit namespaces take precedence over wildcard opens, but not over explicit
 bindings, including selective opens such as `open AltOption { Some }`. A name
-whose value flows into types with distinct namespaces, such as `Option[Int]` and
-`AltOption[Int]`, is ambiguous.
+whose value flows into types whose namespaces provide distinct members, such as
+`Option[Int]` and `AltOption[Int]`, is ambiguous.
 
 Resolution settles each such name once the rest of its block (a file or a
 worksheet block) is resolved. If no namespace is known for the name by then, its

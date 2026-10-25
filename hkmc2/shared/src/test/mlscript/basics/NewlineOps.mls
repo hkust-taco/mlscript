@@ -176,7 +176,7 @@ let x
 //│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.a'
 //│ ║  l.+3: 	.a
 //│ ║        	^^
-//│ ╙── No type with a companion module or object is required of its value.
+//│ ╙── No type with an implicit namespace is required of its value.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

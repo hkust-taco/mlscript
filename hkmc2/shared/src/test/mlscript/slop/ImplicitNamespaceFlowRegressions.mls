@@ -24,44 +24,24 @@ fun takeFunc(x: Func[Int]) = x()
 [takePack(.One), takeRec(.One), takeFunc(.One)]
 //│ = [1, 2, 3]
 
-// FIXME: A probe arriving through the pipe's type parameter loses the required
-// structural alias. Each call should select the same member as its direct form.
-:fixme
+// A probe arriving through the pipe's type parameter reaches the required structural
+// alias as the view of a type variable. Each call selects the same member as its direct form.
 :expect 1
 .One |> takePack
-//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.One'
-//│ ║  l.+1: 	.One |> takePack
-//│ ║        	^^^^
-//│ ╙── No type with a companion module or object is required of its value.
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
+//│ = 1
 
-:fixme
 :expect 2
 .One |> takeRec
-//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.One'
-//│ ║  l.+1: 	.One |> takeRec
-//│ ║        	^^^^
-//│ ╙── No type with a companion module or object is required of its value.
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ = 2
 
-:fixme
 :expect 3
 .One |> takeFunc
-//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.One'
-//│ ║  l.+1: 	.One |> takeFunc
-//│ ║        	^^^^
-//│ ╙── No type with a companion module or object is required of its value.
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 
-// FIXME: When a wildcard open supplies the same name, losing the required
-// namespace silently selects the wrong value instead of reporting a missing name.
+// A wildcard open supplying the same name does not take precedence over the required namespace.
 module OtherPacks with
   val One = [99]
 
-:fixme
 :expect [1, 1]
 fun directPack() =
   open OtherPacks
@@ -70,33 +50,25 @@ fun pipedPack() =
   open OtherPacks
   One |> takePack
 [directPack(), pipedPack()]
-//│ ═══[RUNTIME ERROR] Expected: '[1, 1]', got: '[1, 99]'
-//│ = [1, 99]
+//│ = [1, 1]
 
 
 // A generic function's declared result still denotes its instantiated type.
 fun identity[A](x: A): A = x
 
-// FIXME: The pattern head cannot discover Option through the result's instantiated
-// type parameter, even when the caller explicitly supplies Option[Int].
-:fixme
+// A pattern head discovers Option through the result's instantiated type parameter,
+// whose values include the type argument supplied by the caller.
 :expect 4
 fun explicitPattern(x: Option[Int]) =
   if identity[Option[Int]](x) is .Some(v) then v else 0
 explicitPattern(Option.Some(4))
-//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.Some'
-//│ ║  l.+2: 	  if identity[Option[Int]](x) is .Some(v) then v else 0
-//│ ║        	                                 ^^^^^
-//│ ╙── Its scrutinee has no declared type with a companion module or object.
-//│ ═══[RUNTIME ERROR] Expected: '4', got: '0'
-//│ = 0
+//│ = 4
 
 module Alternative with
   data class Some[A](value: A)
 
-// FIXME: Both inferred and explicit type arguments should select Option.Some.
-// Falling back to Alternative.Some makes a matching input take the else branch.
-:fixme
+// Both inferred and explicit type arguments select Option.Some, rather than falling back
+// to Alternative.Some, which would make a matching input take the else branch.
 :expect [5, 6]
 fun inferredFallback(x: Option[Int]) =
   open Alternative
@@ -105,29 +77,22 @@ fun explicitFallback(x: Option[Int]) =
   open Alternative
   if identity[Option[Int]](x) is Some(v) then v else 0
 [inferredFallback(Option.Some(5)), explicitFallback(Option.Some(6))]
-//│ ═══[RUNTIME ERROR] Expected: '[5, 6]', got: '[0, 0]'
-//│ = [0, 0]
+//│ = [5, 6]
 
 
 class Color(val name: Str)
 module Color with
   val Red = Color("red")
 
-// FIXME: Once the alias is defined in this block, its argument must determine the
-// namespace just as it does when the alias precedes the call. Deferred alias
-// interpretation currently loses the Color argument of Later[Color].
-:fixme
+// Once the alias is defined in this block, its argument determines the namespace
+// just as it does when the alias precedes the call.
 :expect "red"
 fun laterAlias(x: Later[Color]) = x.name
 let laterColor = laterAlias(Red)
 type Later[A] = A
 laterColor
-//│ ╔══[COMPILATION ERROR] Name not found: Red
-//│ ║  l.+2: 	let laterColor = laterAlias(Red)
-//│ ╙──      	                            ^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '"red"', got: 'undefined'
-//│ laterColor = undefined
+//│ = "red"
+//│ laterColor = "red"
 
 :expect "red"
 type Earlier[A] = A
@@ -139,24 +104,14 @@ earlierAlias(Red)
 module Records with
   val Fields = {a: 7}
 
-// FIXME: Until Fields falls back to the wildcard open, it publishes a namespace
-// probe. A record spread must wait for a value instead of treating that probe as
-// an unknown record and permanently reporting an eager member-resolution error.
-:fixme
+// Until Fields falls back to the wildcard open, it publishes a namespace probe.
+// A record spread waits for a value instead of treating that probe as an unknown record.
 :expect 7
 fun spreadWildcard() =
   open Records
   {...Fields}.a
 spreadWildcard()
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+3: 	  {...Fields}.a
-//│ ║        	   ^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'a' across a computed key or unknown record spread.
-//│ ╟── This spread has no known element shape.
-//│ ║  l.+3: 	  {...Fields}.a
-//│ ╙──      	      ^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '7', got: 'undefined'
+//│ = 7
 
 :expect 7
 fun spreadSelective() =

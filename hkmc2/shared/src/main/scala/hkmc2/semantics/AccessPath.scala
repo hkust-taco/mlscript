@@ -113,6 +113,10 @@ object AccessPath:
   def findAccessPath(src: SrcScope, target: DefinitionSymbol[?])(using State): Either[Failure, Term] =
     plan(src, target).map(resolvedPath)
 
+  /** Whether a path to `target` is available from `src`, without building it (see Plan). */
+  def reachable(src: SrcScope, target: DefinitionSymbol[?])(using State): Bool =
+    plan(src, target).isRight
+
   /** Like `findAccessPath`, but the recovered expression is resolved as if it had been
     * written in `src`, so that it can supply values to the inference graph. Elaboration
     * wraps a reference in one `Capture` per resolution boundary between its binding and

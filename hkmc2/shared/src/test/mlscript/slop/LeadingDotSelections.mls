@@ -56,7 +56,7 @@ fun withoutNamespace() =
 //│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.red'
 //│ ║  l.+3: 	  .red
 //│ ║        	  ^^^^
-//│ ╙── No type with a companion module or object is required of its value.
+//│ ╙── No type with an implicit namespace is required of its value.
 
 // The namespace must define the name.
 :e
@@ -64,7 +64,7 @@ paint(.green)
 //│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.green'
 //│ ║  l.+1: 	paint(.green)
 //│ ║        	      ^^^^^^
-//│ ╟── Its value is required to have this type, but the companion module 'Color' of this type has no accessible member 'green'.
+//│ ╟── Its value is required to have this type, but the companion module 'Color' of class 'Color' has no accessible member 'green'.
 //│ ║  l.XX: 	fun paint(c: Color) = c.name
 //│ ╙──      	             ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

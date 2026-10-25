@@ -255,7 +255,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   */
 final class DeclaredType private (private[semantics] val reference: DeclaredType.Reference,
     val bindings: Map[VarSymbol, DeclaredType])(val origin: Opt[TypeInterfaceReason],
-    val expansions: Ls[AliasExpansion]) extends ValueKey:
+    val source: Opt[DeclaredType]) extends ValueKey:
   def resolution: TypeResolution = reference.resolution
   def instances: TypeSubstitution = reference.instances
   def positive: Bool = reference.positive
@@ -271,32 +271,30 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
     * make a later error report the first observation's annotation instead.
     */
   def withOrigin(witness: Opt[TypeInterfaceReason]): DeclaredType =
-    if witness.isEmpty then this else new DeclaredType(reference, bindings)(witness, expansions)
+    if witness.isEmpty then this else new DeclaredType(reference, bindings)(witness, source)
 
-  /** Record that normalization obtained this type by expanding an application of `alias`,
-    * written as `application`. The expansions already recorded happened in the body of the
-    * alias; this application is also their written source. Like witnesses, expansions belong
-    * to the observation rather than to the semantic type: they record how an annotation
-    * names this type, which determines its implicit namespaces (see NewResolver.unresolvedRef),
-    * not its interface.
+  /** Record the type as written, before normalization expanded the aliases it applies or
+    * combined its components (see NewResolver.declaredType). Like witnesses, the written
+    * form belongs to the observation rather than to the semantic type: it records how an
+    * annotation names this type, which determines its implicit namespaces (see
+    * NewResolver.typeNamespaces), not its interface. Substitutions apply to both forms.
+    *
+    * Caches that intern types by semantic equality can share one observation's written
+    * form with another. This is harmless: semantically equal types normalize the same
+    * written occurrences under equal bindings, except for canonical nodes (such as the
+    * canonical parameters of Boolean formulas), which name no declarations and must not
+    * carry written forms (see NewResolver.typeFormula).
     */
-  def withExpandedAlias(alias: TypeAliasSymbol, application: Term): DeclaredType =
-    new DeclaredType(reference, bindings)(origin,
-      AliasExpansion(alias, application) :: expansions.map(_.copy(application = application)))
-  /** Retain the expansions of the types that this type views or combines. */
-  def withExpansions(more: Ls[AliasExpansion]): DeclaredType =
-    val added = more.filterNot(expansions.contains)
-    if added.isEmpty then this else new DeclaredType(reference, bindings)(origin, expansions ::: added)
-  def withoutExpansions: DeclaredType =
-    if expansions.isEmpty then this else new DeclaredType(reference, bindings)(origin, Nil)
-  /** The written type: the alias applications it expands, if they share a single source. */
-  def writtenSource: Term = expansions.map(_.application).distinct match
-    case application :: Nil => application
-    case _ => resolution.source
+  def withSource(written: DeclaredType): DeclaredType =
+    if source.contains(written) then this else new DeclaredType(reference, bindings)(origin, S(written))
+  def withoutSource: DeclaredType =
+    if source.isEmpty then this else new DeclaredType(reference, bindings)(origin, N)
+  /** The type as written. */
+  def written: DeclaredType = source.getOrElse(this)
 
-  private def rebuilt(bindings: Map[VarSymbol, DeclaredType], instances: TypeSubstitution, positive: Bool)
-      (using ResolutionContext): DeclaredType =
-    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive), bindings)(origin, expansions)
+  private def rebuilt(bindings: Map[VarSymbol, DeclaredType], instances: TypeSubstitution, positive: Bool,
+      written: Opt[DeclaredType])(using ResolutionContext): DeclaredType =
+    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive), bindings)(origin, written)
 
   /** Instantiation changes references to source binders, never expands their bounds.
     * A reference already interpreted in another call retains that interpretation.
@@ -306,13 +304,14 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
     withInstances(substitution.withOverrides(instances))
 
   def withInstances(substitution: TypeSubstitution)(using ResolutionContext): DeclaredType =
-    if substitution == instances then this else rebuilt(bindings, substitution, positive)
+    if substitution == instances then this
+    else rebuilt(bindings, substitution, positive, source.map(_.withInstances(substitution)))
   def withPolarity(polarity: Bool)(using ResolutionContext): DeclaredType =
-    if polarity == positive then this else rebuilt(bindings, instances, polarity)
+    if polarity == positive then this else rebuilt(bindings, instances, polarity, source.map(_.withPolarity(polarity)))
   def withoutBinders(symbols: Iterable[VarSymbol])(using ResolutionContext): DeclaredType =
-    rebuilt(bindings -- symbols, instances.without(symbols), positive)
+    rebuilt(bindings -- symbols, instances.without(symbols), positive, source.map(_.withoutBinders(symbols)))
   def withoutOrigin: DeclaredType =
-    if origin.isEmpty then this else new DeclaredType(reference, bindings)(N, expansions)
+    if origin.isEmpty then this else new DeclaredType(reference, bindings)(N, source)
 
 object DeclaredType:
   /** Binding data reuses the immutable map supplied by the caller. Only references
@@ -358,7 +357,7 @@ object DeclaredType:
         positive: Bool): Reference =
       val localValues = if values.valuesIterator.forall(_.reference.pool eq this) then values else
         values.map: (symbol, tpe) =>
-          symbol -> new DeclaredType(local(tpe.reference), tpe.bindings)(tpe.origin, tpe.expansions)
+          symbol -> new DeclaredType(local(tpe.reference), tpe.bindings)(tpe.origin, tpe.source)
       val canonical = if localValues.isEmpty then emptyBindings else
         val binding = new Bindings(localValues)
         bindings.getOrElseUpdate(binding, binding)
@@ -368,7 +367,7 @@ object DeclaredType:
 
   def apply(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType],
       instances: TypeSubstitution, positive: Bool)(origin: Opt[TypeInterfaceReason])(using ResolutionContext): DeclaredType =
-    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive), bindings)(origin, Nil)
+    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive), bindings)(origin, N)
 
   /** Most comparisons stop at reference identity or canonical binding identity.
     * Separate units may retain equivalent DAGs: use a worklist for that boundary,
@@ -408,10 +407,6 @@ object DeclaredType:
                     case S(other) => pending.append(child.reference); pending.append(other.reference)
                     case N => equal = false
         equal
-
-/** A type alias whose application normalization expanded, and the written type that
-  * applies it, directly or through other aliases (see DeclaredType.withExpandedAlias). */
-final case class AliasExpansion(alias: TypeAliasSymbol, application: Term)
 
 /** A type reference observed from a common comparison scope. The marks belong
   * to this endpoint: reversing a constraint swaps endpoints, not an expanded

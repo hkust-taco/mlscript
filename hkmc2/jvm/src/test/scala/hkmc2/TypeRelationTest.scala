@@ -92,7 +92,7 @@ class TypeRelationTest extends AnyFunSuite:
     val (formal, ft) = h.parameter("X")
     val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
     val member = BlockMemberSymbol("Identity", Nil)
-    symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)),
+    symbol.defn = S(TypeDef(N, symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)),
       S(ft.resolution.source), N, Nil)(N, N))
     val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
     val (argument, at) = h.parameter("A")
@@ -107,6 +107,9 @@ class TypeRelationTest extends AnyFunSuite:
     (1 to 1000).foreach: _ =>
       current = h.resolver.declaredType(application.resolution, Map(argument -> current))
       assert(current == original)
+      // The written form of the expanded application names the alias, but must not retain
+      // the written forms of the previous iterations, which would grow with each of them.
+      assert(current.source.exists(_.bindings.valuesIterator.forall(_.source.isEmpty)))
     val value = DynShape()
     h.resolver.publishParameter(target, value)
     assert(seen.toList.map(ShapeIdentity.key(_)) == List(MarkedShape.enter(value, owner, path.id)).map(ShapeIdentity.key(_)))
@@ -120,7 +123,7 @@ class TypeRelationTest extends AnyFunSuite:
     val (unused, _) = h.parameter("Unused")
     val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
     val member = BlockMemberSymbol("Identity", Nil)
-    symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N), TyParam(FldFlags.empty, N, unused)(N)),
+    symbol.defn = S(TypeDef(N, symbol, member, List(TyParam(FldFlags.empty, N, formal)(N), TyParam(FldFlags.empty, N, unused)(N)),
       S(ft.resolution.source), N, Nil)(N, N))
     val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
     val scope = TermSymbol(Fun, N, Tree.Ident("owner"))

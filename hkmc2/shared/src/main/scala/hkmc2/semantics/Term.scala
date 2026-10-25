@@ -1085,6 +1085,8 @@ end ClassDef
 
 
 case class TypeDef(
+  /** The class, module, or object whose body declares the alias, if any. */
+  owner: Opt[InnerSymbol],
   sym: TypeAliasSymbol,
   bsym: BlockMemberSymbol,
   tparams: Ls[TyParam],

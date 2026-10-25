@@ -539,16 +539,37 @@ object Elaborator:
     * a runtime value merely because they use the same reference syntax.
     */
   enum Interpretation:
-    case Trm, Receiver, Specialization, Clss, Ptrn, Tpe
-    /** The class operand of a `new` expression. Unlike other class operands, such as
-      * those of `extends` clauses, it can name a member of an implicit namespace, which
-      * flow reveals only once its block is resolved (see NewResolver.unresolvedRef). */
-    case Instantiated
-    /** The receiver of a selection that denotes a value, unlike the selections of type
-      * and pattern paths. As for a value, the root of such a chain of selections and
-      * applications can name a member of an implicit namespace: the one required of the
-      * result of the chain (see NewResolver.unresolvedRef). Otherwise as Receiver. */
-    case ValueReceiver
+    case Trm, Specialization, Ptrn, Tpe
+    /** The receiver of a selection. The root of a chain of selections of a value or a
+      * pattern is `chained`: like the value or pattern head itself, it can name a member
+      * of an implicit namespace (see NewResolver.unresolvedRef). The selections of types
+      * and annotations are paths through explicit bindings and wildcard opens only.
+      */
+    case Receiver(chained: Bool)
+    /** A class operand. The class `instantiated` by `new` can name a member of an implicit
+      * namespace. Other class operands, such as those of `extends` clauses, are needed
+      * while their class is elaborated, before flow can reveal a namespace (see newOf).
+      */
+    case Clss(instantiated: Bool)
+    /** An annotation, which is interpreted as soon as it is elaborated (see annotationSymbol),
+      * before flow can reveal implicit namespaces. Otherwise as Trm. */
+    case Annotation
+
+    /** Whether a name without an explicit binding can name a member of an implicit namespace
+      * (see NewResolver.unresolvedRef), rather than only consult the visible wildcard opens. */
+    def implicitNamespacing: Bool = this match
+      case Trm | Specialization | Ptrn => true
+      case Receiver(chained) => chained
+      case Clss(instantiated) => instantiated
+      case Tpe | Annotation => false
+
+    /** The interpretation of the receiver of a selection with this interpretation. */
+    def selectionReceiver: Interpretation = Receiver(implicitNamespacing)
+
+    /** The interpretation of the head of an application with this interpretation. */
+    def applicationHead: Interpretation = this match
+      case Annotation => Annotation
+      case _ => Trm
     
     /** The interpretation of the elements of a tuple or record with this interpretation.
       * Elements are values, even when their aggregate is a receiver or a class operand.
@@ -831,7 +852,7 @@ end Elaborator
 
 
 import Elaborator.*
-import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe, Instantiated, ValueReceiver}
+import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe, Annotation}
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
@@ -894,7 +915,7 @@ extends Importer:
       S(Annot.Debug(modify)(tree.toLoc))
     case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
       S(Annot.Affine(whichParamList.toInt)(tree.toLoc))
-    case _ => term(tree, Trm) match
+    case _ => term(tree, Annotation) match
       case Term.Error() => N
       case trm =>
         val symbol = if newResolution then annotationSymbol(trm) else trm.symbol
@@ -1481,8 +1502,8 @@ extends Importer:
     */
   private def interpretRef(ref: Term, interp: Interpretation): Term =
     if newResolution then interp match
-      case Trm => requireTerm(ref)
-      case Receiver | ValueReceiver => listenReceiver(ref)(_ => ())
+      case Trm | Annotation => requireTerm(ref)
+      case Receiver(_) => listenReceiver(ref)(_ => ())
       case Tpe => ref.typeInterpretation = S(typeResolution(ref))
       case _ => ()
     ref
@@ -1570,10 +1591,7 @@ extends Importer:
       // `.class` chooses the class overload before requesting a receiver value.
       // Interpreting C as a receiver first would also select its companion.
       val preTrm = subterm(tree.prefix,
-        if newResolution && tree.name.name == "class" then Clss
-        else interp match
-          case Trm | Specialization | Instantiated | ValueReceiver => ValueReceiver
-          case Receiver | Clss | Ptrn | Tpe => Receiver)
+        if newResolution && tree.name.name == "class" then Clss(instantiated = false) else interp.selectionReceiver)
       // Virtual modules have no runtime object. Recognize their literal members
       // before constructing a runtime selection, in either resolution mode.
       // Compare symbols so user-defined bindings named `source` or `unsafe` stay ordinary.
@@ -1701,9 +1719,9 @@ extends Importer:
       
       val (cp, p) = c match
         case App(c, Tup(params)) =>
-          (subterm(c, Clss), params.map(subterm(_)))
+          (subterm(c, Clss(instantiated = false)), params.map(subterm(_)))
         case c =>
-          (subterm(c, Clss), Nil)
+          (subterm(c, Clss(instantiated = false)), Nil)
       
       (ctx + (id.name -> sym)).givenIn:
         Term.Handle(sym, cp, p, derivedClsSym, tds, subterm(bod, interp))(isAbortive = false)
@@ -1729,7 +1747,7 @@ extends Importer:
       // The whole type application owns a by-name invocation's binder group.
       // Do not observe its underlying reference before its arguments are available.
       val baseInterp = interp match
-        case Trm | Receiver | ValueReceiver | Specialization => Specialization
+        case Trm | Receiver(_) | Specialization => Specialization
         case _ => interp
       val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map {
         case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
@@ -1806,7 +1824,7 @@ extends Importer:
     case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
       ifLike(Keyword.`if`, IfLikeForm.ReturningIf, shorthandSplit(tree), tree.toLoc)
     case InfixApp(Sel(pre, idn: Ident), Keywrd(Keyword.`#`), idp: Ident) =>
-      val c = subterm(idn, Clss)
+      val c = subterm(idn, Clss(instantiated = false))
       if newResolution then
         elaborateProjection(subterm(pre), c, idp)
       else
@@ -1888,7 +1906,7 @@ extends Importer:
         mkNonLabelSelectionApp(tree, sel, args)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
-      val lt = subterm(lhs)
+      val lt = subterm(lhs, interp.applicationHead)
       val rt = subterm(rhs)
       app(lt, rt)(tree, N, sym)
     case tree @ OpApp(lhs, op, rhss) =>
@@ -1903,10 +1921,10 @@ extends Importer:
     // Under new resolution, a leading-dot selection only consults the implicit namespace
     // that flow requires of its value, or that of its scrutinee's type in a pattern, as a
     // capitalized name can.
-    case Sel(Empty(), nme) if newResolution => interp match
-      case Trm | Specialization | Instantiated | ValueReceiver | Ptrn =>
+    case Sel(Empty(), nme) if newResolution =>
+      if interp.implicitNamespacing then
         interpretRef(Ctx.unresolvedRef(Nil, nme, NameLookup.LeadingDot, tree), interp)
-      case Receiver | Clss | Tpe =>
+      else
         raise(ErrorReport(msg"A leading-dot selection must denote a value or pattern, whose type determines its namespace." ->
           tree.toLoc :: Nil))
         error
@@ -1957,7 +1975,7 @@ extends Importer:
     case sel @ Sel(pre, nme) =>
       elaborateSelection(sel)
     case MemberProj(ct, nme) =>
-      val c = subterm(ct, Clss)
+      val c = subterm(ct, Clss(instantiated = false))
       val f = if newResolution then N else c.symbol.flatMap(_.asCls) match
         case S(cls: ClassSymbol) =>
           cls.tree.allSymbols.get(nme.name) match
@@ -2021,7 +2039,8 @@ extends Importer:
           case c => (false, c)
         val inner = mkNew(
           // * Note: we'll catch bad `new` targets during type checking
-          subterm(c2, if interp is Clss then Clss else Instantiated),
+          // The instantiation of a parent class is a class operand itself (see newOf).
+          subterm(c2, Clss(instantiated = !interp.isInstanceOf[Clss])),
           args.map(subterm(_)),
           bodo
         )(N)
@@ -2893,7 +2912,7 @@ extends Importer:
             assert(body.isEmpty)
             val d =
               given Ctx = newCtx
-              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_, Tpe)), N, annotations)(statementLoc, headerLoc)
+              semantics.TypeDef(owner, alsSym, sym, tps, rhs.map(term(_, Tpe)), N, annotations)(statementLoc, headerLoc)
             alsSym.defn = S(d)
             d
         case Pat =>
@@ -3147,7 +3166,7 @@ extends Importer:
     match
     // Inheritance checks need the parent class while this class is elaborated, so the
     // instantiation of the parent is a class operand rather than a value.
-    case S(ext) => S(term(ProperNew(S(ext), N), Clss))
+    case S(ext) => S(term(ProperNew(S(ext), N), Clss(instantiated = false)))
     case N => N
     match
     case S(n: Term.New) => S(n)
@@ -3343,14 +3362,12 @@ extends Importer:
           case N if newResolution =>
             // New resolution looks the name up in the visible wildcard opens, if any, and
             // reports a missing name once its block is resolved, uniformly. A capitalized
-            // value, value receiver, instantiated class, or pattern head can also name a
-            // member of an implicit namespace (see NewResolver.unresolvedRef). Types and
-            // the paths of types and patterns only consult their opens.
+            // value, instantiated class, or pattern head, or the root of a chain of selections
+            // of one, can also name a member of an implicit namespace (see
+            // Interpretation.implicitNamespacing). Types and their paths only consult their opens.
             val sources = candidate.collect { case wildcard: Ctx.WildcardElem => wildcard.sources }.getOrElse(Nil)
-            val implicitNamespacing = id.name.isCapitalized && (interp match
-              case Trm | Specialization | Instantiated | ValueReceiver | Ptrn => true
-              case Receiver | Clss | Tpe => false)
-            val lookup = if implicitNamespacing then NameLookup.NamespacesThenOpens else NameLookup.Opens
+            val lookup = if id.name.isCapitalized && interp.implicitNamespacing then NameLookup.NamespacesThenOpens
+              else NameLookup.Opens
             S(Ctx.WildcardElem(id.name, sources, lookup).ref(S(id)))
           case N => candidate.map(_.ref(S(id)))
       case S(elem) => S(elem.ref(S(id)))

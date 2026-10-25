@@ -3,9 +3,9 @@
 import "../../mlscript-compile/Option.mls"
 
 
-// A capitalized name without an explicit binding names a member of the implicit
-// namespace of the type that flow requires of its value: the companion module of
-// the class or type alias of that type. `Option[Int]` applies alias `Option`,
+// A capitalized name without an explicit binding names a member of an implicit
+// namespace of the type that flow requires of its value, such as the companion module
+// of the class or type alias of that type. `Option[Int]` applies alias `Option`,
 // whose companion is module `Option`.
 fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
 
@@ -55,6 +55,45 @@ fun paint(c: Color) = c.name
 [paint(Red), paint(Green)]
 //│ = ["red", "green"]
 
+// The modules and objects declaring classes and aliases are implicit namespaces too,
+// and so are those of the parents of classes.
+module Shapes with
+  class Circle(val r: Int)
+  val Unit = Circle(1)
+fun radius(c: Shapes.Circle) = c.r
+
+abstract class Animal
+module Animal with
+  fun Polly() = Bird("polly")
+class Bird(val name: Str) extends Animal
+fun name(b: Bird) = b.name
+
+:expect [1, "polly"]
+[radius(Unit), name(Polly())]
+//│ = [1, "polly"]
+
+// Each class or alias only contributes the first of its namespaces that provides the
+// name: its companion, then the module or object declaring it, then the namespaces of
+// its parent or of the types its body names.
+module Palette with
+  class Hue(val name: Str)
+  module Hue with
+    val Red = Hue("hue red")
+  val Red = Hue("palette red")
+  class Parrot(val name: Str) extends Animal
+  val Polly = Parrot("palette polly")
+fun hue(h: Palette.Hue) = h.name
+fun parrot(p: Palette.Parrot) = p.name
+
+type Round = Shapes.Circle
+module Round with
+  val Unit = Shapes.Circle(2)
+fun round(c: Round) = c.r
+
+:expect ["hue red", "palette polly", 2]
+[hue(Red), parrot(Polly), round(Unit)]
+//│ = ["hue red", "palette polly", 2]
+
 // Instantiating a class with `new` passes on the required type of the instance.
 class Shape
 module Shape with
@@ -98,7 +137,7 @@ get(Absent)
 //│ ╔══[COMPILATION ERROR] Name not found: Absent
 //│ ║  l.+1: 	get(Absent)
 //│ ║        	    ^^^^^^
-//│ ╟── Its value is required to have this type, but the companion module 'Option' of this type has no accessible member 'Absent'.
+//│ ╟── Its value is required to have this type, but the companion module 'Option' of type 'Option' has no accessible member 'Absent'.
 //│ ║  l.XX: 	fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
 //│ ╙──      	           ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -115,7 +154,7 @@ use(Secret)
 //│ ╔══[COMPILATION ERROR] Name not found: Secret
 //│ ║  l.+1: 	use(Secret)
 //│ ║        	    ^^^^^^
-//│ ╟── Its value is required to have this type, but the companion module 'Token' of this type has no accessible member 'Secret'.
+//│ ╟── Its value is required to have this type, but the companion module 'Token' of class 'Token' has no accessible member 'Secret'.
 //│ ║  l.XX: 	fun use(t: Token) = t
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -132,7 +171,7 @@ local()(Inside)
 //│ ╔══[COMPILATION ERROR] Name not found: Inside
 //│ ║  l.+1: 	local()(Inside)
 //│ ║        	        ^^^^^^
-//│ ╟── Its value is required to have this type, but the companion module 'Local' of this type is not accessible from this reference.
+//│ ╟── Its value is required to have this type, but the companion module 'Local' of class 'Local' is not accessible from this reference.
 //│ ║  l.XX: 	  (x: Local) => x
 //│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -227,7 +266,7 @@ fun piped() =
 //│ ╔══[COMPILATION ERROR] Reference 'Some' was resolved before flow revealed its implicit namespace module 'Option'.
 //│ ║  l.+4: 	  Some(16) |> Wrap
 //│ ║        	  ^^^^
-//│ ╟── Its value is required to have this type, which would have selected 'Option.Some'.
+//│ ╟── Its value is required to have this type; the companion module 'Option' of type 'Option' would have selected 'Option.Some'.
 //│ ║  l.XX: 	  class Wrap(val inner: Option[Int])
 //│ ║        	                        ^^^^^^^^^^^
 //│ ╟── It was resolved to the 'Some' of this wildcard open.
@@ -248,7 +287,7 @@ get(early())
 //│ ╔══[COMPILATION ERROR] Reference 'Some' was resolved before flow revealed its implicit namespace module 'Option'.
 //│ ║  l.XX: 	  Some(17)
 //│ ║        	  ^^^^
-//│ ╟── Its value is required to have this type, which would have selected 'Option.Some'.
+//│ ╟── Its value is required to have this type; the companion module 'Option' of type 'Option' would have selected 'Option.Some'.
 //│ ║  l.XX: 	fun get(x: Option[Int]) = if x is Option.Some(v) then v else 0
 //│ ║        	           ^^^^^^^^^^^
 //│ ╟── It was resolved to the 'Some' of this wildcard open.
@@ -268,7 +307,7 @@ alt(settled)
 //│ ╔══[COMPILATION ERROR] Reference 'Some' was resolved before flow revealed its implicit namespace module 'AltOption'.
 //│ ║  l.XX: 	let settled = Some(18)
 //│ ║        	              ^^^^
-//│ ╟── Its value is required to have this type, which would have selected 'AltOption.Some'.
+//│ ╟── Its value is required to have this type; the companion module 'AltOption' of type 'AltOption' would have selected 'AltOption.Some'.
 //│ ║  l.XX: 	fun alt(x: AltOption[Int]) = if x is AltOption.Some(v) then v else 0
 //│ ║        	           ^^^^^^^^^^^^^^
 //│ ╟── It was resolved to 'Option.Some', selected by this type.

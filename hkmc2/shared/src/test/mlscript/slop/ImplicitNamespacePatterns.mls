@@ -3,10 +3,11 @@
 import "../../mlscript-compile/Option.mls"
 
 
-// The head of a constructor pattern can name a member of the implicit namespace of the
-// declared type of its scrutinee, as a value names one of the type that flow requires
+// The head of a constructor pattern can name a member of an implicit namespace of the
+// values that reach its scrutinee, as a value names one of the type that flow requires
 // of it (see ImplicitNamespaces.mls): a capitalized name without an explicit binding,
-// or a leading-dot selection (see LeadingDotSelections.mls).
+// or a leading-dot selection (see LeadingDotSelections.mls). A value of a declared type
+// has the namespaces of that type.
 fun get(x: Option[Int]) = if x is
   Some(v) then v
   None then 0
@@ -65,7 +66,7 @@ fun viaBinding(x: Option[Int]) =
 [viaNamespace(Option.Some(5)), viaBinding(Option.Some(5))]
 //│ = [5, 0]
 
-// Without a declared scrutinee type, the wildcard opens supply pattern heads.
+// Without a known scrutinee value, the wildcard opens supply pattern heads.
 fun viaOpen(x) =
   open AltOption
   if x is Some(v) then v else 0
@@ -74,24 +75,56 @@ fun viaOpen(x) =
 viaOpen(AltOption.Some(6))
 //│ = 6
 
-// Constructed scrutinee values do not name namespaces.
-:e
+// Constructed values name the namespaces of their classes: `Option.Some` is declared by module `Option`.
+:expect 7
 fun constructed() = if Option.Some(7) is Some(v) then v else 0
-//│ ╔══[COMPILATION ERROR] Name not found: Some
-//│ ║  l.+1: 	fun constructed() = if Option.Some(7) is Some(v) then v else 0
-//│ ╙──      	                                         ^^^^
+constructed()
+//│ = 7
+
+// The namespaces of a class include those of its parents: a `Just(v)` value reaches the
+// companion of `Maybe`, which `Just` extends.
+abstract class Maybe[out A]
+module Maybe with
+  object Empty extends Maybe[Nothing]
+data class Just[out A](value: A) extends Maybe[A]
+
+:expect [1, 0, 2]
+fun unwrap(m) = if m is
+  Just(v) then v
+  Empty then 0
+fun unwrapJust(m: Just[Int]) = if m is
+  .Empty then 0
+  Just(v) then v
+[unwrap(Just(1)), unwrap(Maybe.Empty), unwrapJust(Just(2))]
+//│ = [1, 0, 2]
+
+// As for values, the head of a pattern can be a chain of selections, whose root names a
+// member of an implicit namespace of the scrutinee (see ImplicitNamespaceChains.mls).
+class Tile
+module Tile with
+  module Plain with
+    object Grass extends Tile
+    object Sand extends Tile
+
+:expect ["grass", "sand", "other"]
+fun tile(t: Tile) = if t is
+  Plain.Grass then "grass"
+  .Plain.Sand then "sand"
+  else "other"
+[tile(Tile.Plain.Grass), tile(Tile.Plain.Sand), tile(new Tile)]
+//│ = ["grass", "sand", "other"]
 
 :e
 fun untyped(x) = if x is .None then 0 else 1
 //│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.None'
 //│ ║  l.+1: 	fun untyped(x) = if x is .None then 0 else 1
 //│ ║        	                         ^^^^^
-//│ ╙── Its scrutinee has no declared type with a companion module or object.
+//│ ╙── No value or type of its scrutinee has an implicit namespace.
 
 // A scrutinee whose declared types have distinct namespaces makes the pattern ambiguous.
 :e
 fun either(x: Option[Int] | AltOption[Int]) = if x is Some(v) then v else 0
-//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as its scrutinee has types with distinct implicit namespaces.
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as values with distinct implicit namespaces can reach its scrutinee.
 //│ ║  l.+1: 	fun either(x: Option[Int] | AltOption[Int]) = if x is Some(v) then v else 0
 //│ ║        	                                                      ^^^^
 //│ ╟── This type selects 'Option.Some'.
@@ -112,7 +145,7 @@ fun typedLater(y: Option[Int]) = later(y)
 //│ ╔══[COMPILATION ERROR] Reference 'Some' was resolved before flow revealed its implicit namespace module 'Option'.
 //│ ║  l.XX: 	  if x is Some(v) then v else 0
 //│ ║        	          ^^^^
-//│ ╟── Its scrutinee has this type, which would have selected 'Option.Some'.
+//│ ╟── Its scrutinee has this type; the companion module 'Option' of type 'Option' would have selected 'Option.Some'.
 //│ ║  l.+1: 	fun typedLater(y: Option[Int]) = later(y)
 //│ ║        	                  ^^^^^^^^^^^
 //│ ╟── It was resolved to the 'Some' of this wildcard open.

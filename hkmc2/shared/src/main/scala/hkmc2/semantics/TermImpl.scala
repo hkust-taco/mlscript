@@ -72,8 +72,8 @@ trait UnresolvedRefImpl extends NewResolvableImpl:
   // the same member symbol without denoting the same storage location.
   var resolvedMembers: Ls[(Term, BlockMemberSymbol)] = Nil
   var dynamicPrefixes: Ls[Term] = Nil
-  /** Paths to the companion modules that flow selected as implicit namespaces of this reference,
-    * recovered in its scope (see NewResolver.requireNamespace). Like `prefixes`, they are
+  /** Paths to the modules and objects that flow selected as implicit namespaces of this reference,
+    * recovered in its scope (see NewResolver.consultNamespace). Like `prefixes`, they are
     * receivers of candidate members; unlike them, resolution discovers them. */
   var namespacePrefixes: Ls[Term] = Nil
   /** The value of this reference before its namespace is known (see NamespaceProbe). */
@@ -592,7 +592,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case Continue(label) => s"${label.nme}.continue"
     case Try(body, finallyDo) => s"try ${body.showDbg} finally ${finallyDo.showDbg}"
     case Ret(res) => s"return ${res.showDbg}"
-    case TypeDef(sym, _, tparams, rhs, _, _) =>
+    case TypeDef(_, sym, _, tparams, rhs, _, _) =>
       s"type ${sym.showDbg}${tparams.map(_.showDbg).mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
     case Missing => "missing"
     case LeadingDotSel(nme) => s"_?_.${nme.name}"

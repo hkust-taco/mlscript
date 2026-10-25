@@ -42,7 +42,7 @@ rcd
 //│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.a'
 //│ ║  l.+2: 	.a
 //│ ║        	^^
-//│ ╙── No type with a companion module or object is required of its value.
+//│ ╙── No type with an implicit namespace is required of its value.
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.+1: 	rcd
 //│ ╙──      	^^^
