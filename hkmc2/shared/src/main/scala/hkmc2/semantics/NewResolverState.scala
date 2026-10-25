@@ -117,7 +117,10 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.tupleShapes, identity)
   private[semantics] val recordShapes: Cache[(Term.Rcd, Ls[RecordShape.Element], TypeSubstitution), RecordShape] =
     new Cache(_.recordShapes, identity)
-  private[semantics] val instanceShapes: Cache[DeclaredType, InstanceShape] =
+  // Instances are keyed by their observation identity, which includes the written form of
+  // their type (see DeclaredType.withSource): equal types written with different aliases
+  // name different implicit namespaces, so their values are different candidates.
+  private[semantics] val instanceShapes: Cache[(DeclaredType, Opt[DeclaredType]), InstanceShape] =
     new Cache(_.instanceShapes, identity)
   // Views constructed by this consumer, for allocation/growth regressions.
   // Adopted canonical producers are not newly allocated (see canonical).
@@ -247,6 +250,10 @@ final class NewResolverState(val owner: Elaborator.State):
   // in recursive pattern calls, where hosts compare source identities.
   private[semantics] val patternOutputs: Cache[Identity[Pattern], UnknownValueShape] =
     new Cache(_.patternOutputs, identity)
+  // The site and diagnostic source of the field reads of each record pattern, recorded by
+  // the elaborator, which knows the type binders in scope (see NewResolver.matchShapePat).
+  private[semantics] val recordPatternReads: Cache[Identity[Pattern.Record], (FlowSymbol, Term)] =
+    new Cache(_.recordPatternReads, identity)
   // Repeated refinement of one input must reuse its synthesized type hosts.
   // Constructor paths distinguish references to the same captured class.
   val patternRefinements: Cache[(Identity[Pattern.Constructor], InnerSymbol, Ls[Marks], ShapeIdentity.Key), DeclaredType] =
@@ -294,6 +301,11 @@ final class NewResolverState(val owner: Elaborator.State):
     new Seen(_.typeConstraints)
   val typeRelations: Seen[(ContextualType, ContextualType)] =
     new Seen(_.typeRelations)
+  // The types whose namespaces probes among the views of a value observe (see
+  // NewResolver.observeRequiredNamespaces). Unlike the semantic constraints above, these
+  // observations are keyed by the written form of the type, which names the namespaces.
+  val namespaceObservations: Seen[(DeclaredType, Opt[DeclaredType], ShapeIdentity.Key)] =
+    new Seen(_.namespaceObservations)
   val typeArgumentArityErrors: Seen[(Identity[TyApp], Int)] =
     new Seen(_.typeArgumentArityErrors)
   val arrayIndexErrors: Seen[Identity[Term]] =
@@ -673,7 +685,7 @@ final class ResolutionContext private[semantics] (
   def canonicalRecord(key: (Term.Rcd, Ls[RecordShape.Element], TypeSubstitution))(make: => RecordShape): RecordShape =
     canonical(key._1, _.recordShapes, key)(shapeView(key._3)(make))
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
-    canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
+    canonical(tpe.resolution, _.instanceShapes, (tpe, tpe.source))(shapeView(tpe.instances)(make))
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
     canonical(spread, _.spreadElements, new Identity(spread))(make)
   def memberVariable(symbol: TermSymbol): ShapeHost =
@@ -764,6 +776,18 @@ final class ResolutionContext private[semantics] (
     instances
   def patternOutput(pattern: Pattern)(make: => UnknownValueShape): UnknownValueShape =
     canonical(pattern, _.patternOutputs, new Identity(pattern))(make)
+  /** Record where the record pattern `pattern` reads its fields, written where `binders` are in scope. */
+  def recordPatternReads(pattern: Pattern.Record, binders: Set[VarSymbol]): Unit =
+    pattern.initialData(state)
+    val site = FlowSymbol.pat()(using owner)
+    recordSiteBinders(site, binders)
+    state.recordPatternReads.update(new Identity(pattern), (site, Term.Error().withLocOf(pattern)))(using state.context)
+  /** Imported definitions match their patterns in their consumers too: read through the
+    * pattern's own graph, like canonical. */
+  def patternReads(pattern: Pattern.Record): Opt[(FlowSymbol, Term)] =
+    val graph = pattern.originalData.owner
+    val defining = if graph == null then this else inGraph(graph.context)
+    defining.state.recordPatternReads.get(new Identity(pattern))(using defining)
   def markExplicitTypeArgument(symbol: VarSymbol): Unit =
     state.explicitTypeArguments += symbol
   def hasExplicitTypeArgument(symbol: VarSymbol): Bool =
@@ -793,9 +817,11 @@ private[semantics] final class ImplicitNamespaces(val scope: SrcScope):
     * Whether a namespace provides a candidate of the reference does not depend on why it is
     * consulted, so each is decided once (see NewResolver.consultNamespace). */
   val consulted = mutable.LinkedHashMap.empty[ModuleOrObjectSymbol, Namespace]
-  /** The written types and the classes whose namespaces were looked for, so that repeated
-    * observations do not repeat their subscriptions (see NewResolver.typeNamespaces). */
-  val observedTypes = mutable.HashSet.empty[DeclaredType]
+  /** The written types, with the arguments that they are applied to, and the classes whose
+    * namespaces were looked for, so that repeated observations do not repeat their
+    * subscriptions (see NewResolver.typeNamespaces). The same alias reference applied to
+    * different arguments names different declarations, so the arguments are part of the key. */
+  val observedTypes = mutable.HashSet.empty[(DeclaredType, Ls[DeclaredType])]
   val observedClasses = mutable.HashSet.empty[ClassLikeDef]
   /** Whether the reference fell back to its wildcard opens when its block was elaborated
     * because no namespace was known then. A namespace found later cannot override them. */

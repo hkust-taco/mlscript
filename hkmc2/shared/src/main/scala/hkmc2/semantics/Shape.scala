@@ -711,7 +711,10 @@ object InstanceShape:
     * reports the first annotation's location. Witness wrappers are not interned;
     * retaining them in a cache would duplicate entries for the same semantic
     * value. All views share the origin-free reference's candidate identity,
-    * so diagnostic evidence cannot multiply inference flow.
+    * so diagnostic evidence cannot multiply inference flow. The written form of
+    * the type is part of that identity instead: it determines which implicit
+    * namespaces the value has (see NewResolver.valueNamespaces), so values of
+    * equal types written with different aliases must not replace one another.
     */
   def apply(tpe: DeclaredType)(resolver: NewResolver)(using state: ResolutionContext): InstanceShape =
     val projected = resolver.projectType(tpe)
@@ -1062,9 +1065,12 @@ object DynShape:
 
 /** The value of a reference whose implicit namespace flow is to determine (see
   * NewResolver.unresolvedRef), like the legacy flow analysis's leading-dot producer.
-  * The probe travels along ordinary value edges, and selections, applications, and
-  * instantiations of the reference pass it on as their result: the reference is the
-  * root of the chain that they form. When it reaches a declared type, the implicit
+  * The probe travels along ordinary value edges, and the operations deriving their result
+  * from an operand pass it on as their result: selections (including projections and
+  * checked or dynamic accesses), applications, type applications, and instantiations
+  * (with `new` or `new!`). The reference is then the root of the chain that they form.
+  * Class selections (`C.class`) denote a definition rather than derive a value, and the
+  * other consumers of values ignore probes. When it reaches a declared type, the implicit
   * namespaces of that type provide candidates of the reference (see
   * NewResolver.inferTypeArguments). It is not an actual value: the consumers of values
   * ignore it rather than diagnose it (see NewResolver.listenInstanceViewsOrProbe). It refers

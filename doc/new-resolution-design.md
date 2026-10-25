@@ -271,33 +271,45 @@ An unbound capitalized value is an `UnresolvedRef` with `NameLookup.NamespacesTh
 a leading-dot selection is one with `NameLookup.LeadingDot` and no wildcard prefixes. Until
 its block is settled, it publishes only a `NamespaceProbe`, like the legacy flow
 analysis's leading-dot producer. The probe travels along ordinary value edges and
-through the selections, applications, type applications, and instantiations of the
-chains rooted at the reference. Elaboration's interpretation roles decide where
-implicit namespacing applies: chained selection receivers (`Receiver(chained = true)`)
-and the classes instantiated by `new` (`Clss(instantiated = true)`) use it, whereas
-types, `extends` clauses, and annotations only consult explicit bindings and wildcard
-opens.
+through the operations of the chains rooted at the reference, which derive their result
+from an operand: selections (including projections and checked or dynamic accesses),
+applications, type applications, and instantiations (with `new` or `new!`).
+Elaboration's interpretation roles decide where implicit namespacing applies: chained
+selection receivers (`Receiver(chained = true)`) and the classes instantiated by `new`
+(`Clss(instantiated = true)`) use it, whereas types, `extends` clauses, and annotations
+only consult explicit bindings and wildcard opens.
 
 The probe is not a value, wherever it arrives: as a value, or as the view of a type
 variable that it reached. `listenInstanceViews`, `listenTermViews`, `listenReceiver`,
 and `listenClass` hide it from the consumers of actual values, and deliver it to the
 chains that pass it on. Type views retain it, as their hosts are shared by all their
-consumers. Constraints observe it at their concrete boundary in `inferTypeArguments`:
-a probe reaching a declared type, directly or as the view of a type variable, stands
-for a value of the whole required type, whose namespaces `typeNamespaces` discovers.
+consumers. Constraints observe it before their semantic caches
+(`observeRequiredNamespaces`): a probe reaching a declared type, directly or as the view
+of a type variable, stands for a value of the whole required type, whose namespaces
+`typeNamespaces` discovers.
 A constructor pattern's head instead observes the values that reach its scrutinee
 (`scrutineeNamespaces`, in `matchShapePat`), before the views of declared types erase
-the declarations that these types name. `valueNamespaces` follows the types of
-declared values, including the values that reach their type parameters, and the
-classes of instances.
+the declarations that these types name. `valueNamespaces` follows the types of declared
+values, including the values that reach their type parameters, and the classes of
+instances. Record patterns read the fields of their input with the member lookups of
+selections, at a site that the elaborator records.
 
-`typeNamespaces` interprets types with the same application, substitution, and
-parameter steps as `inferTypeArguments` and `listenTypeViews`, but observes the
-declarations that types name before normalization erases them: `DeclaredType.source`
-retains the written type of an expanded alias application or Boolean combination.
-Like the `origin` witness, the written form is observation metadata outside type
-equality, so a probe checks the type before the constraint cache, and interned formula
-atoms and contextual nodes drop it. Each class or alias contributes the first of its
+`typeNamespaces` interprets types with the same reduction steps as `inferTypeArguments`
+and `exposeTypeHoles` (`reduceType`: references, contextual references, applications,
+alias bodies, and bound parameters), but observes the declarations that types name before
+normalization erases them, and identifies its visits by the written type together with
+the arguments that it is applied to. `DeclaredType.source` retains the written type of an
+expanded alias application or Boolean combination. Equal types can have different written
+forms, such as `FirstAlias[X] | Nothing` and `SecondAlias[X] | Nothing`, which both
+normalize to the canonical parameter `X`. So the interface graph identifies types
+semantically, whereas namespace discovery identifies its observations by both forms:
+instances of declared types, which are values in flow, and the observations of required
+types by probes. Argument nodes that alias bodies forward to other applications are still
+interned semantically, keeping the written forms of their first observation; keying them
+by written forms would keep recursive forwarding aliases from reaching a fixed point (see
+`slop/ImplicitNamespaceProvenance.mls`). Interned formula atoms and contextual nodes drop
+written forms; written forms keep semantic bindings, so normalizing a type again under its
+own result does not accumulate them. Each class or alias contributes the first of its
 own namespaces (its companion, then its declaring module) that provides an accessible
 member (`firstProvider`), and otherwise the namespaces of its parent or body.
 `ImplicitNamespaces.consulted` decides each namespace once per reference: it is pending
@@ -310,6 +322,5 @@ the references of the current block from `accessSites`. It lets capitalized refe
 without namespaces fall back to their wildcard opens in source order, then diagnoses
 missing and ambiguous names. Namespaces revealed afterwards are reported against the
 settled candidates and never change them; `AccessPath.reachable` checks their paths
-without building them. `slop/ImplicitNamespaces.mls`, `ImplicitNamespaceChains.mls`,
-`ImplicitNamespacePatterns.mls`, `ImplicitNamespaceFlowRegressions.mls`, and
-`LeadingDotSelections.mls` cover these rules.
+without building them. `LeadingDotSelections.mls` and the `ImplicitNamespace*.mls` files
+in `slop/` cover these rules.

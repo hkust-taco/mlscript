@@ -279,11 +279,18 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
     * annotation names this type, which determines its implicit namespaces (see
     * NewResolver.typeNamespaces), not its interface. Substitutions apply to both forms.
     *
-    * Caches that intern types by semantic equality can share one observation's written
-    * form with another. This is harmless: semantically equal types normalize the same
-    * written occurrences under equal bindings, except for canonical nodes (such as the
-    * canonical parameters of Boolean formulas), which name no declarations and must not
-    * carry written forms (see NewResolver.typeFormula).
+    * Equal types can have different written forms: `FirstAlias[X] | Nothing` and
+    * `SecondAlias[X] | Nothing` both normalize to the canonical parameter `X`, but name
+    * the companions of different aliases. So the interface graph identifies types
+    * semantically, whereas namespace discovery identifies its observations by both forms:
+    * the instances of declared types, which are values in flow (see
+    * NewResolverState.instanceShapes), and the observations of required types by
+    * namespace probes (see NewResolver.observeRequiredNamespaces). Interned Boolean
+    * formulas drop the written forms of their atoms, which the written combination
+    * retains. The argument nodes that alias bodies forward to other applications are
+    * interned semantically, so they keep the written forms of their first observation:
+    * keying them by written forms would prevent recursive forwarding aliases from
+    * reaching a fixed point (see slop/ImplicitNamespaceProvenance.mls).
     */
   def withSource(written: DeclaredType): DeclaredType =
     if source.contains(written) then this else new DeclaredType(reference, bindings)(origin, S(written))

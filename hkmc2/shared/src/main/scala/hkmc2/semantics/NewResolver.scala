@@ -866,6 +866,34 @@ class NewResolver:
     TypeApplication(arguments.map(res => AppliedTypeArgument(
       declaredArgument(res, context, false), declaredArgument(res, context, true))))
 
+  /** A step of the interpretation of a type applied to arguments, which the type interpreters
+    * share: `tpe` applied to `args` is what the interpreted type denotes. `marks` are the scope
+    * entries that the step crosses, across which it moved the arguments (see
+    * TypeShape.Contextual), and `alias` is the alias whose body the step expands.
+    */
+  private case class TypeReduction(tpe: DeclaredType, args: TypeApplication, marks: Ls[Marks], alias: Opt[TypeDef])
+
+  /** Interpret `shape` of `current`, applied to `args`, if it only leads to another type: a
+    * reference, a contextual reference, an application, an alias with a body, or a bound
+    * parameter. The interpreters handle the other shapes, such as their structural leaves.
+    */
+  private def reduceType(current: DeclaredType, args: TypeApplication, shape: TypeShape)
+      (using ResolutionContext): Opt[TypeReduction] = shape match
+    case reference: TypeShape.Reference => S(TypeReduction(referenceType(reference, current), args, Nil, N))
+    case TypeShape.Contextual(reference) =>
+      S(TypeReduction(reference.tpe.instantiate(current.instances).withOrigin(current.origin),
+        args.move(inverseMarks(reference.marks)), reference.marks, N))
+    case TypeShape.Applied(base, params) =>
+      S(TypeReduction(declaredType(base, current), typeApplication(params, current), Nil, N))
+    case TypeShape.Alias(symbol, S(rhs)) =>
+      val alias = symbol.defn.get
+      S(TypeReduction(declaredType(rhs, aliasBindings(current, args, alias.tparams, current.positive), current.positive),
+        noTypeArguments, Nil, S(alias)))
+    case TypeShape.Parameter(symbol, _) if current.bindings.contains(symbol) =>
+      S(TypeReduction(selectArgument(current.bindings(symbol).instantiate(current.instances), current.positive),
+        noTypeArguments, Nil, N))
+    case _ => N
+
   private def typeArguments(source: DeclaredType, application: TypeApplication, parameters: Ls[TyParam], positive: Bool)
       (using ResolutionContext): Ls[DeclaredType] =
     parameters.zipWithIndex.map: (parameter, index) =>
@@ -904,21 +932,10 @@ class NewResolver:
       def descend(child: DeclaredType)(using ResolutionContext): Unit = unknown.enter(captures) match
         case value: TermShape => exposeTypeHoles(child, value, marks)
         case NoShape => ()
-      current.resolution.listen:
+      def leaf(shape: TypeShape)(using ResolutionContext): Unit = shape match
         case TypeShape.Hole(host) => unknown.enter(captures) match
           case value: TermShape => host.publish(value)
           case NoShape => ()
-        case TypeShape.Parameter(symbol, _) =>
-          current.bindings.get(symbol).foreach(bound => follow(selectArgument(bound.instantiate(current.instances), current.positive), noTypeArguments, captures, next))
-        case reference: TypeShape.Reference =>
-          follow(referenceType(reference, current), args, captures, next)
-        case TypeShape.Contextual(reference) =>
-          follow(reference.tpe.instantiate(current.instances).withOrigin(current.origin), args.move(inverseMarks(reference.marks)),
-            reference.marks ::: captures, next)
-        case TypeShape.Applied(base, arguments) =>
-          follow(declaredType(base, current), typeApplication(arguments, current), captures, next)
-        case TypeShape.Alias(symbol, S(rhs)) =>
-          follow(declaredType(rhs, aliasBindings(current, args, symbol.defn.get.tparams, current.positive), current.positive), noTypeArguments, captures, next)
         case TypeShape.Nominal(cls) =>
           cls.tparams.zip(typeArguments(current, args, cls.tparams, current.positive)).foreach: (param, argument) =>
             listenArgumentParts(argumentType(argument, param)): parts =>
@@ -944,6 +961,9 @@ class NewResolver:
         case TypeShape.Combined(formula) => formula.orderedAtoms.foreach: atom =>
           follow(atom.instantiate(current.instances), noTypeArguments, captures, next)
         case _ => ()
+      current.resolution.listen: shape =>
+        reduceType(current, args, shape).fold(leaf(shape)): step =>
+          follow(step.tpe, step.args, step.marks ::: captures, next)
     withCanonicalType(tpe)(follow(_, noTypeArguments, Nil, Set.empty))
 
   private def abstractTypes(using rs: ResolutionContext) = rs.state.abstractTypes
@@ -1974,71 +1994,78 @@ class NewResolver:
     * so recursive references reuse the relation even before any bound exists.
     */
   private[semantics] def constrainTypes(lower: ContextualType, upper: ContextualType, site: Opt[Term])(using ResolutionContext): Unit =
-    if rctx.state.typeRelations.add((lower, upper)) then
-      instanceShape(lower.tpe).exit(lower.marks).enter(upper.marks) match
-        case value: TermShape => inferTypeArguments(upper.tpe, value, upper.marks, site)
-        case NoShape => ()
+    val fresh = rctx.state.typeRelations.add((lower, upper))
+    instanceShape(lower.tpe).exit(lower.marks).enter(upper.marks) match
+      case value: TermShape =>
+        // The relation is semantic, whereas the namespaces of the upper type depend on
+        // how it is written (see observeRequiredNamespaces).
+        observeRequiredNamespaces(upper.tpe, value)
+        if fresh then constrainTypeArguments(upper.tpe, value, upper.marks, site)
+      case NoShape => ()
+
+  /** A namespace probe (see NamespaceProbe) reaching a constraint against `tpe` stands for a
+    * value of that type, whose namespaces are candidates of its reference (see
+    * requireTypeNamespaces). It can be the constrained value itself, or reach the constraint as
+    * the view of a type variable: in `Some(1) |> Wrap`, the parameter of `Wrap` receives the
+    * views of the first parameter type of `|>`. Constraints are identified semantically,
+    * whereas the namespaces of a type are named by its written form, which equal types do
+    * not share (see DeclaredType.withSource). So this observation has its own identity, and
+    * precedes the semantic constraint caches.
+    */
+  private def observeRequiredNamespaces(tpe: DeclaredType, value: TermShape)(using ResolutionContext): Unit =
+    value match
+      case Marked(probe: NamespaceProbe, _) => requireTypeNamespaces(probe, tpe)
+      case Marked(_: (InstanceShape | IntersectionView), _) =>
+        if rctx.state.namespaceObservations.add((tpe, tpe.source, ShapeIdentity.key(value))) then
+          listenConstraintViews(value):
+            case Marked(probe: NamespaceProbe, _) => requireTypeNamespaces(probe, tpe)
+            case _ => ()
+      case _ => ()
+
+  private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks],
+      site: Opt[Term])(using ResolutionContext): Unit =
+    observeRequiredNamespaces(tpe, value)
+    constrainTypeArguments(tpe, value, marks, site)
 
   // Keep the first diagnostic use site outside the semantic constraint key, so
   // reporting provenance does not multiply identical edges in the inference graph.
-  private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks],
+  // A probe stands for a value not known yet (see NamespaceProbe). Like any value, it
+  // reaches type parameters and inference holes. It has no structure to constrain.
+  private def constrainTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks],
       site: Opt[Term])(using ResolutionContext): Unit =
-    // A probe stands for a value not known yet (see NamespaceProbe). Like any value, it
-    // reaches type parameters and inference holes, and the namespaces of the types that
-    // it reaches are candidates of its reference. It has no structure to constrain.
-    val probe = value.applicationHead._1 match
-      case probe: NamespaceProbe => S(probe)
-      case _ => N
-    // Types are compared without their written forms, which name their namespaces.
-    // Check them before the constraint cache, which an equal type may have filled.
-    probe.foreach(requireTypeNamespaces(_, tpe))
     if !rctx.addTypeConstraint(tpe, value, marks) then return
     val annotation = tpe.resolution.source
-    val required = tpe
     def follow(tpe: DeclaredType, args: TypeApplication, captures: Ls[Marks],
         seen: Set[TypeResolution])(using ResolutionContext): Unit = if !seen(tpe.resolution) then
       val next = seen + tpe.resolution
-      // Concrete constraints relate the structure of actual values to that of the type. A probe
-      // can also reach them as the view of a type variable: in `Some(1) |> Wrap`, the parameter
-      // of `Wrap` receives the views of the first parameter type of `|>`. It stands for a value
-      // of the whole required type, which names its namespaces.
+      // Concrete constraints relate the structure of actual values to that of the type,
+      // so they ignore probes, which observeRequiredNamespaces already observed.
       def concrete(listener: Listener)(using ResolutionContext): Unit =
         listenConstraintViews(value):
-          case Marked(probe: NamespaceProbe, _) => requireTypeNamespaces(probe, required)
+          case Marked(_: NamespaceProbe, _) => ()
           case actual => listener(actual)
       def observe(listener: Listener)(using ResolutionContext): Unit =
         concrete: actual =>
           actual.enter(captures) match
             case actual: TermShape => listener(actual)
             case NoShape => ()
-      tpe.resolution.listen:
-        case TypeShape.Parameter(symbol, host) => tpe.bindings.get(symbol) match
-          case S(bound) => follow(selectArgument(bound.instantiate(tpe.instances), tpe.positive), noTypeArguments, captures, next)
-          case N =>
-            val target = tpe.instances.get(symbol)
-            val destination = target.fold(host)(_.inferenceHost)
-            val lower = value.enter(captures)
-            if rctx.hasExplicitTypeArgument(target.getOrElse(symbol)) then
-              listenTypeArgument(destination): supplied =>
-                // Compare in the caller's scope, retaining the supplied
-                // reference's endpoint for any further parameter constraint.
-                supplied.exit(captures).exit(marks) match
-                  case Marked(instance: InstanceShape, context) =>
-                    val endpoint = if context == NoMarks then Nil else context :: Nil
-                    value.exit(marks).enter(context) match
-                      case actual: TermShape => inferTypeArguments(instance.tpe, actual, endpoint, site)
-                      case NoShape => ()
-                  case _ => ()
-            else publishParameter(destination, lower)
-        case reference: TypeShape.Reference =>
-          follow(referenceType(reference, tpe), args, captures, next)
-        case TypeShape.Contextual(reference) =>
-          follow(reference.tpe.instantiate(tpe.instances).withOrigin(tpe.origin), args.move(inverseMarks(reference.marks)),
-            reference.marks ::: captures, next)
-        case TypeShape.Applied(base, params) =>
-          follow(declaredType(base, tpe), typeApplication(params, tpe), captures, next)
-        case TypeShape.Alias(symbol, S(rhs)) =>
-          follow(declaredType(rhs, aliasBindings(tpe, args, symbol.defn.get.tparams, tpe.positive), tpe.positive), noTypeArguments, captures, next)
+      def leaf(shape: TypeShape)(using ResolutionContext): Unit = shape match
+        case TypeShape.Parameter(symbol, host) =>
+          val target = tpe.instances.get(symbol)
+          val destination = target.fold(host)(_.inferenceHost)
+          val lower = value.enter(captures)
+          if rctx.hasExplicitTypeArgument(target.getOrElse(symbol)) then
+            listenTypeArgument(destination): supplied =>
+              // Compare in the caller's scope, retaining the supplied
+              // reference's endpoint for any further parameter constraint.
+              supplied.exit(captures).exit(marks) match
+                case Marked(instance: InstanceShape, context) =>
+                  val endpoint = if context == NoMarks then Nil else context :: Nil
+                  value.exit(marks).enter(context) match
+                    case actual: TermShape => inferTypeArguments(instance.tpe, actual, endpoint, site)
+                    case NoShape => ()
+                case _ => ()
+          else publishParameter(destination, lower)
         case TypeShape.Hole(host) => value.enter(captures) match
           case value: TermShape => host.publish(value)
           case NoShape => ()
@@ -2117,8 +2144,11 @@ class NewResolver:
           // A concrete target stays fixed, but must receive bounds that arrive
           // through a symbolic source later. Concrete mismatch reporting is
           // separate from retaining this obligation in the graph.
-          case Marked(_: InstanceShape, _) => listenConstraintViews(value)(inferTypeArguments(tpe, _, marks, site))
+          case Marked(_: InstanceShape, _) => concrete(constrainTypeArguments(tpe, _, marks, site))
           case _ => ()
+      tpe.resolution.listen: shape =>
+        reduceType(tpe, args, shape).fold(leaf(shape)): step =>
+          follow(step.tpe, step.args, step.marks ::: captures, next)
     // Alias expansion guards only unproductive cycles. Descending into a tuple,
     // nominal argument, or arrow installs another edge with its own cycle guard.
     withCanonicalType(tpe)(follow(_, noTypeArguments, Nil, Set.empty))
@@ -2571,9 +2601,10 @@ class NewResolver:
     * evaluated at runtime, so every element is a candidate, as for a spread.
     * Unlike a dynamic access `prefix![idx]`, it does not authorize dynamic
     * operations on the result: only a dynamic array has dynamic elements.
+    * Like other selections, it passes on the probe of its prefix (see NamespaceProbe).
     */
   private def listenArrayIndex(sel: DynSel, prefix: Term)(listener: Listener)(using ResolutionContext): Unit =
-    listenTermViews(prefix): receiver =>
+    listenTermViewsOrProbe(prefix)(receiver =>
       if !listenArrayElements(receiver)(listener) then receiver match
         case Marked(_: DynShape, _) => listener(receiver)
         case Marked(unknown: UnknownValueShape, marks) =>
@@ -2585,6 +2616,7 @@ class NewResolver:
           if rctx.state.arrayIndexErrors.add(new Identity(sel)) then
             resolError(sel, receiver.diagnostic(msg"${receiver.describe.capitalize} does not support checked array indexing.") :::
               (msg"Use '![...]' for a dynamic access." -> N) :: Nil)
+    , listener)
 
   private[semantics] def arrayElementType(array: NominalInstanceView): Opt[DeclaredType] =
     val cls = prelude.builtins.Array.defn.get
@@ -3063,11 +3095,21 @@ class NewResolver:
         matchShapePat(unknown, left)(_ => ())
         matchShapePat(unknown, right)(_ => ())
         matched(unknown)
-      case Pattern.Record(fields) =>
-        // A field-presence test supplies no field interface by itself. Nested
-        // class tests can refine these unknowns before guards use their aliases.
+      case record @ Pattern.Record(fields) =>
+        // A record pattern reads the fields of its input like selections do, and its nested
+        // patterns test these values. An input without a known field interface supplies
+        // unknown fields, which nested class tests can refine before guards use their aliases.
+        // A field-presence test supplies no interface for its output by itself.
         val unknown = unknownOutput
-        fields.foreach((_, pat) => matchShapePat(unknown, pat)(_ => ()))
+        def unknownField(pat: Pattern)(using ResolutionContext): Unit = matchShapePat(unknown, pat)(_ => ())
+        (rctx.patternReads(record), shape) match
+          case (S((site, source)), value: TermShape) => listenInstanceViews(value): view =>
+            fields.foreach: (field, pat) =>
+              listenMemberValue(view.getMember(field.name).visibleFrom(_ => false, reportInaccessible = false),
+                site, source, TypeSubstitution.empty, () => unknownField(pat))(matchShapePat(_, pat)(_ => ()))
+          case (reads, _) =>
+            softAssert(reads.nonEmpty || fields.isEmpty, "The elaborator records where a record pattern reads its fields")
+            fields.foreach((_, pat) => unknownField(pat))
         matched(unknown)
       case Pattern.Transform(pat, parameters, transform) =>
         // The transform is lowered to a separate lambda. Its source references
@@ -3644,41 +3686,35 @@ class NewResolver:
     * candidate (see firstProvider). `witness` is what names the type for the reference: a
     * written type, or an instance of a class whose parent it is; `refine` tells whether its
     * components are their own witnesses. The candidates of distinct declarations are all retained,
-    * and are ambiguous if they differ (see settleUnboundReferences). The types of the
-    * application, substitution, and parameter steps are those of the other type interpreters
-    * (see inferTypeArguments and listenTypeViews), which this traversal only differs from by
-    * observing declarations before normalization erases them.
+    * and are ambiguous if they differ (see settleUnboundReferences). The application,
+    * substitution, and parameter steps are those of the other type interpreters (see
+    * reduceType), which this traversal only differs from by observing declarations before
+    * normalization erases them.
     */
   private def typeNamespaces(ref: UnresolvedRef, namespaces: ImplicitNamespaces, tpe: DeclaredType,
       witness: NamespaceWitness, refine: Bool, provided: Bool)(using ResolutionContext): Unit =
-    // The traversal terminates as the regular types it starts from have finitely many
-    // written types, and written forms are equal when they name the same declarations.
-    def follow(current: DeclaredType, args: => TypeApplication, witness: NamespaceWitness, refine: Bool)
+    // The traversal terminates as the regular types it starts from have finitely many written
+    // types, and written forms are equal when they name the same declarations. A visit also
+    // consumes the arguments that the written type is applied to: the same alias reference in
+    // a body, applied to the arguments of different applications of that body, names
+    // different declarations, so the state of the traversal includes these arguments.
+    def follow(current: DeclaredType, args: TypeApplication, witness: NamespaceWitness, refine: Bool)
         (using ResolutionContext): Unit =
       val written = current.written
-      if namespaces.observedTypes.add(written) then visit(written, args, witness, refine)
+      if namespaces.observedTypes.add((written, arguments(args))) then visit(written, args, witness, refine)
+    def arguments(args: TypeApplication): Ls[DeclaredType] =
+      args.arguments.flatMap(argument => argument.negative :: argument.positive :: Nil)
     // While `refine` holds, the type is written where the reference's value is: the components
     // of a union or an intersection are then the witnesses of their own namespaces. The bodies of
     // aliases and the parents of classes are instead written in their definitions, so their
     // namespaces remain witnessed by the type that names these definitions.
-    def visit(written: DeclaredType, args: => TypeApplication, witness: NamespaceWitness, refine: Bool)
+    def visit(written: DeclaredType, args: TypeApplication, witness: NamespaceWitness, refine: Bool)
         (using ResolutionContext): Unit =
       def component(res: TypeResolution, tpe: DeclaredType)(using ResolutionContext): Unit =
         follow(tpe, noTypeArguments, if refine then NamespaceWitness.Written(res.source) else witness, refine)
-      written.resolution.listen:
+      def leaf(shape: TypeShape)(using ResolutionContext): Unit = shape match
         case TypeShape.Nominal(cls) => classNamespaces(ref, namespaces, cls, witness, provided)
-        case TypeShape.Alias(symbol, rhs) => symbol.defn.foreach: alias =>
-          val supplied = args
-          firstProvider(ref, namespaces, witness, alias): () =>
-            rhs.foreach: rhs =>
-              follow(declaredType(rhs, aliasBindings(written, supplied, alias.tparams, written.positive), written.positive),
-                noTypeArguments, witness, refine = false)
-        case TypeShape.Applied(base, params) =>
-          follow(declaredType(base, written), typeApplication(params, written), witness, refine)
-        case reference: TypeShape.Reference => follow(referenceType(reference, written), args, witness, refine)
-        case TypeShape.Contextual(reference) =>
-          follow(reference.tpe.instantiate(written.instances).withOrigin(written.origin), args.move(inverseMarks(reference.marks)),
-            witness, refine)
+        case TypeShape.Alias(symbol, N) => symbol.defn.foreach(firstProvider(ref, namespaces, witness, _)(() => ()))
         case TypeShape.Union(left, right) =>
           component(left, declaredType(left, written))
           component(right, declaredType(right, written))
@@ -3689,12 +3725,9 @@ class NewResolver:
           formula.orderedAtoms.foreach(atom => component(atom.resolution, atom.instantiate(written.instances)))
         case TypeShape.Polymorphic(params, _, body) =>
           follow(declaredType(body, written.withoutBinders(params.map(_.parameter.symbol))), args, witness, refine)
-        case TypeShape.Parameter(symbol, host) => written.bindings.get(symbol) match
-          case S(bound) =>
-            follow(selectArgument(bound.instantiate(written.instances), written.positive), noTypeArguments, witness, refine)
-          case N => if provided then
-            listenTypeArgument(written.instances.get(symbol).fold(host)(_.inferenceHost)): value =>
-              valueNamespaces(ref, namespaces, instantiateShape(value, written.instances))
+        case TypeShape.Parameter(symbol, host) => if provided then
+          listenTypeArgument(written.instances.get(symbol).fold(host)(_.inferenceHost)): value =>
+            valueNamespaces(ref, namespaces, instantiateShape(value, written.instances))
         case TypeShape.Hole(host) => if provided then host.subscribe: value =>
           valueNamespaces(ref, namespaces, instantiateShape(value, written.instances))
         case TypeShape.Inferred(value) => if provided then valueNamespaces(ref, namespaces, instantiateShape(value, written.instances))
@@ -3707,10 +3740,17 @@ class NewResolver:
           listenArgumentParts(argument.instantiate(written.instances)): parts =>
             follow(if positive then parts.output else parts.input, args, witness, refine)
         case _ => ()
+      written.resolution.listen: shape =>
+        reduceType(written, args, shape) match
+          case S(TypeReduction(next, nextArgs, _, S(alias))) =>
+            firstProvider(ref, namespaces, witness, alias)(() => follow(next, nextArgs, witness, refine = false))
+          // Scope marks do not change which definitions a type names.
+          case S(TypeReduction(next, nextArgs, _, N)) => follow(next, nextArgs, witness, refine)
+          case N => leaf(shape)
     // As in the other type interpreters (see withCanonicalType), wait for the source graph
     // and only follow regular types. Repeated observations subscribe once.
     val written = tpe.written
-    if namespaces.observedTypes.add(written) then withTypeDependencies(written.resolution): _ =>
+    if namespaces.observedTypes.add((written, Nil)) then withTypeDependencies(written.resolution): _ =>
       if regularType(written.resolution) then visit(written, noTypeArguments, witness, refine)
 
   /** The namespaces of the instances of `cls`: its companion, then the module or object
@@ -4795,7 +4835,14 @@ class NewResolver:
       lastWords("Synthetic selections must not enter new resolution")
     case Asc(_, sign) => listenTypeInstances(sign)(listener)
     case sel @ DynSel(prefix, _, true, true) => listenArrayIndex(sel, prefix)(listener)
-    case _: DynSel | _: DynNew => listener(DynShape())
+    // Dynamic accesses and instantiations pass on the probes of their operands, as the
+    // static ones do (see NamespaceProbe).
+    case DynSel(prefix, _, _, _) =>
+      listener(DynShape())
+      listenTermViewsOrProbe(prefix)(_ => (), listener)
+    case DynNew(cls, _) =>
+      listener(DynShape())
+      listenTermViewsOrProbe(cls)(_ => (), listener)
     case application @ TyApp(underlying, args) =>
       def checkArity(callee: TermShape, count: Int)(using ResolutionContext): Unit =
         if count != args.length && rctx.state.typeArgumentArityErrors.add((new Identity(application), count)) then

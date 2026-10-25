@@ -32,21 +32,36 @@ direct(Pick)
 //│ ╙──      	                     ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-// Reusing the same alias-body reference with different arguments must visit both
-// applications. Currently the second visit to Identity in Wrapped is discarded,
-// so this reference silently selects Left.Pick and both calls return 1.
-:breakme
+// Reusing the same alias-body reference with different arguments visits both
+// applications: the arguments are part of the state of namespace discovery.
 :e
 let shared = Pick
 [left(shared), right(shared)]
-//│ = [1, 1]
-//│ shared = Left(1)
+//│ ╔══[COMPILATION ERROR] Reference 'Pick' is ambiguous, as flow requires its value to have types with distinct implicit namespaces.
+//│ ║  l.+1: 	let shared = Pick
+//│ ║        	             ^^^^
+//│ ╟── This type selects 'Left.Pick'.
+//│ ║  l.XX: 	fun left(x: Wrapped[Left]) = x.n
+//│ ║        	            ^^^^^^^^^^^^^
+//│ ╟── This type selects 'Right.Pick'.
+//│ ║  l.XX: 	fun right(x: Wrapped[Right]) = x.n
+//│ ╙──      	             ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ shared = undefined
 
-:breakme
 :e
 fun wrappedUnion(x: Wrapped[Left] | Wrapped[Right]) = x.n
 wrappedUnion(Pick)
-//│ = 1
+//│ ╔══[COMPILATION ERROR] Reference 'Pick' is ambiguous, as flow requires its value to have types with distinct implicit namespaces.
+//│ ║  l.+2: 	wrappedUnion(Pick)
+//│ ║        	             ^^^^
+//│ ╟── This type selects 'Left.Pick'.
+//│ ║  l.+1: 	fun wrappedUnion(x: Wrapped[Left] | Wrapped[Right]) = x.n
+//│ ║        	                    ^^^^^^^^^^^^^
+//│ ╟── This type selects 'Right.Pick'.
+//│ ║  l.+1: 	fun wrappedUnion(x: Wrapped[Left] | Wrapped[Right]) = x.n
+//│ ╙──      	                                    ^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 import "../../mlscript-compile/Option.mls"
@@ -68,9 +83,16 @@ fun directPattern(x: Option[Int] | OtherOption[Int]) = if x is Some(v) then v el
 //│ ║  l.+1: 	fun directPattern(x: Option[Int] | OtherOption[Int]) = if x is Some(v) then v else 0
 //│ ╙──      	                                   ^^^^^^^^^^^^^^^^
 
-// Namespace discovery must retain pending arguments in both directions of flow.
-// Currently this pattern only considers the first application of Wrapped.
-:breakme
+// Namespace discovery retains pending arguments in both directions of flow.
 :e
 fun wrappedPattern(x: Wrapped[Option[Int]] | Wrapped[OtherOption[Int]]) =
   if x is Some(v) then v else 0
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as values with distinct implicit namespaces can reach its scrutinee.
+//│ ║  l.+2: 	  if x is Some(v) then v else 0
+//│ ║        	          ^^^^
+//│ ╟── This type selects 'Option.Some'.
+//│ ║  l.+1: 	fun wrappedPattern(x: Wrapped[Option[Int]] | Wrapped[OtherOption[Int]]) =
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This type selects 'OtherOption.Some'.
+//│ ║  l.+1: 	fun wrappedPattern(x: Wrapped[Option[Int]] | Wrapped[OtherOption[Int]]) =
+//│ ╙──      	                                             ^^^^^^^^^^^^^^^^^^^^^^^^^

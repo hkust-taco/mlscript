@@ -3482,7 +3482,10 @@ extends Importer:
         case (acc, t) =>
           raise(ErrorReport(msg"Unexpected record property pattern." -> t.toLoc :: Nil))
           acc
-      Record(entries.reverse)
+      val res = new Record(entries.reverse)
+      // Field reads can invoke by-name members, with the type binders in scope here.
+      if newResolution && res.fields.nonEmpty then rctx.recordPatternReads(res, ctx.typeBinders)
+      res
     /** Elaborate a pattern argument. */
     def arg(t: Tree): Ctxl[Pattern \/ Pattern] = t match
       case TypeDef(syntax.Pat, body, N) => L(go(body))

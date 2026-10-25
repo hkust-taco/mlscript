@@ -12,24 +12,17 @@ fun color(c: Color) = c.n
 [color(Color.Palette.[0]), color(.Palette.0)]
 //│ = [3, 3]
 
-// Checked indexing is a selection too. Its observation of concrete array elements
-// currently filters out the namespace probe without forwarding it to the result.
-:fixme
+// Checked indexing is a selection too: it forwards the namespace probe of its prefix
+// to its result, while observing the concrete array elements.
 :expect 3
 color(.Palette.[0])
-//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.Palette'
-//│ ║  l.+1: 	color(.Palette.[0])
-//│ ║        	      ^^^^^^^^
-//│ ╙── No type with an implicit namespace is required of its value.
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 
 module OtherArrays with
   val Palette = [Color(99)]
 
-// Losing the probe lets the chain's root fall back to a different wildcard member.
-// Replacing the tuple selection with a checked index must not change the namespace.
-:fixme
+// Replacing the tuple selection with a checked index does not change the namespace,
+// which takes precedence over a different wildcard member.
 :expect [3, 3]
 fun staticIndex() =
   open OtherArrays
@@ -38,5 +31,9 @@ fun checkedIndex(i: Int) =
   open OtherArrays
   color(Palette.[i])
 [staticIndex(), checkedIndex(0)]
-//│ ═══[RUNTIME ERROR] Expected: '[3, 3]', got: '[3, 99]'
-//│ = [3, 99]
+//│ = [3, 3]
+
+// Dynamic accesses forward the probe of their prefix too.
+:expect 3
+color(.Palette![0])
+//│ = 3

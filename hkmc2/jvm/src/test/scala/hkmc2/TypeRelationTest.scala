@@ -104,12 +104,18 @@ class TypeRelationTest extends AnyFunSuite:
     val seen = h.observe(ContextualType(original, Nil))
     val before = target.inferenceHost.listeners.size
     var current = original
-    (1 to 1000).foreach: _ =>
+    var instance = Option.empty[InstanceShape]
+    (1 to 1000).foreach: iteration =>
       current = h.resolver.declaredType(application.resolution, Map(argument -> current))
       assert(current == original)
       // The written form of the expanded application names the alias, but must not retain
       // the written forms of the previous iterations, which would grow with each of them.
       assert(current.source.exists(_.bindings.valuesIterator.forall(_.source.isEmpty)))
+      // Instances are identified with the written forms of their types, which therefore
+      // must not multiply the candidates of a value that is normalized again.
+      val next = h.resolver.instanceShape(current)
+      if iteration > 1 then assert(instance.exists(_ eq next))
+      instance = S(next)
     val value = DynShape()
     h.resolver.publishParameter(target, value)
     assert(seen.toList.map(ShapeIdentity.key(_)) == List(MarkedShape.enter(value, owner, path.id)).map(ShapeIdentity.key(_)))
