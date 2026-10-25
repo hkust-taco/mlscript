@@ -101,6 +101,13 @@ object ShapeIdentity:
     case _: (TupleShape | RecordShape | IntroShape | DefnShape | BaseShape |
         AppShape | NewShape | SymShape | ErrShape | DynShape | NamespaceProbe) => shape
 
+  private def sameTypeUses[K](left: Map[K, DeclaredType], right: Map[K, DeclaredType]): Bool =
+    left.size == right.size && left.forall((key, tpe) => right.get(key).exists(_.observation == tpe.observation))
+
+  private def callableUses(callable: CallableTypeShape): Ls[DeclaredType.Observation] =
+    (callable.paramLists.flatMap(_.allParams.flatMap(_.tpe)) ::: callable.result.toList :::
+      callable.supplied.toList.flatten ::: callable.tparams.flatMap(p => p.lower.toList ::: p.upper.toList)).map(_.observation)
+
   /** Only one pointer to the existing view; no copied fields or product key. */
   final class View private[ShapeIdentity] (private val shape: ShapeEvent) extends ValueKey:
     private def parentHash(parent: Opt[TermShape]): Int = parent.fold(0)(_.comparison.hashCode)
@@ -111,15 +118,15 @@ object ShapeIdentity:
       case MarkedShape(base, marks) => ValueKey.hash(base.comparison.hashCode, marks.hashCode)
       case ContextualShape(source, instances) => ValueKey.hash(source.comparison.hashCode, instances.hashCode)
       case view: ClassValueShape => ValueKey.hash(System.identityHashCode(view.target), parentHash(view.parent))
-      case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.hashCode), parentHash(view.parent))
+      case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.observation.hashCode), parentHash(view.parent))
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
-        view.declaration.fold(0)(System.identityHashCode), view.asyncResult.hashCode)
+        view.declaration.fold(0)(System.identityHashCode), view.asyncResult.hashCode, callableUses(view).hashCode)
       case view: RecordTypeShape => ValueKey.hash(
-        ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.aliases.hashCode)
+        ValueKey.mapHash(view.fields)(_.hashCode, _.observation.hashCode), view.aliases.hashCode)
       case view: IntersectionView => view.values.map(_.comparison).hashCode
       case view: SpecializedShape => ValueKey.hash(view.declaration.comparison.hashCode,
-        view.arguments.hashCode, view.instances.hashCode)
+        view.arguments.map(_.observation).hashCode, view.instances.hashCode)
       case view: UnknownValueShape => ValueKey.hash(System.identityHashCode(view.source), view.fromPublicInterface.hashCode)
       case view: OpaqueTypeShape => System.identityHashCode(view.source)
       case view: RigidTypeShape => ValueKey.hash(System.identityHashCode(view.parameter), System.identityHashCode(view.source))
@@ -137,22 +144,22 @@ object ShapeIdentity:
           case b: ClassValueShape => (a.target eq b.target) && sameParent(a.parent, b.parent)
           case _ => false
         case a: NominalInstanceView => that.shape match
-          case b: NominalInstanceView => (a.defn eq b.defn) && a.bindings == b.bindings && sameParent(a.parent, b.parent)
+          case b: NominalInstanceView => (a.defn eq b.defn) && sameTypeUses(a.bindings, b.bindings) && sameParent(a.parent, b.parent)
           case _ => false
         case a: CallableTypeShape => that.shape match
           case b: CallableTypeShape => (a.source eq b.source) && a.paramLists == b.paramLists && a.result == b.result &&
-            a.scheme == b.scheme && a.supplied == b.supplied &&
+            a.scheme == b.scheme && a.supplied == b.supplied && callableUses(a) == callableUses(b) &&
             a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.asyncResult == b.asyncResult
           case _ => false
         case a: RecordTypeShape => that.shape match
-          case b: RecordTypeShape => a.fields == b.fields && a.aliases == b.aliases
+          case b: RecordTypeShape => sameTypeUses(a.fields, b.fields) && a.aliases == b.aliases
           case _ => false
         case a: IntersectionView => that.shape match
           case b: IntersectionView => a.values.map(_.comparison) == b.values.map(_.comparison)
           case _ => false
         case a: SpecializedShape => that.shape match
           case b: SpecializedShape => a.declaration.comparison == b.declaration.comparison &&
-            a.arguments == b.arguments && a.instances == b.instances
+            a.arguments.map(_.observation) == b.arguments.map(_.observation) && a.instances == b.instances
           case _ => false
         case a: UnknownValueShape => that.shape match
           case b: UnknownValueShape => (a.source eq b.source) && a.fromPublicInterface == b.fromPublicInterface
@@ -711,10 +718,9 @@ object InstanceShape:
     * reports the first annotation's location. Witness wrappers are not interned;
     * retaining them in a cache would duplicate entries for the same semantic
     * value. All views share the origin-free reference's candidate identity,
-    * so diagnostic evidence cannot multiply inference flow. The written form of
-    * the type is part of that identity instead: it determines which implicit
-    * namespaces the value has (see NewResolver.valueNamespaces), so values of
-    * equal types written with different aliases must not replace one another.
+    * so diagnostic evidence cannot multiply inference flow. Namespace plans and
+    * observed arguments do distinguish candidates: equal interfaces can name
+    * different namespaces, including those exposed by their fields and results.
     */
   def apply(tpe: DeclaredType)(resolver: NewResolver)(using state: ResolutionContext): InstanceShape =
     val projected = resolver.projectType(tpe)
@@ -1201,9 +1207,9 @@ object TupleShape:
       case that: ValueField => value.comparison == that.value.comparison && marks == that.marks
       case _ => false
   final case class TypedField(tpe: DeclaredType, marks: Ls[Marks]) extends Fixed:
-    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), tpe.hashCode, marks.hashCode)
+    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), tpe.observation.hashCode, marks.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
-      case that: TypedField => tpe == that.tpe && marks == that.marks
+      case that: TypedField => tpe.observation == that.tpe.observation && marks == that.marks
       case _ => false
   // Mutable tuple slots retain their positions, but their initializer cannot
   // supply the shape of later reads (including reads through a spread copy).

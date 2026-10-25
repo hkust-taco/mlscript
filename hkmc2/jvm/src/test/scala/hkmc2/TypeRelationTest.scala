@@ -25,6 +25,16 @@ class TypeRelationTest extends AnyFunSuite:
     def parameter(name: String): (VarSymbol, DeclaredType) =
       val symbol = VarSymbol(Tree.Ident(name))
       (symbol, tpe(TypeShape.Parameter(symbol, symbol.inferenceHost)))
+    /** A forwarding alias declared in a module, so it contributes a priority step. */
+    def forwarding(name: Str, argument: DeclaredType): DeclaredType =
+      val (formal, body) = parameter(s"${name}Parameter")
+      val moduleName: Tree.Ident = Tree.Ident(s"${name}Namespace")
+      val module = ModuleOrObjectSymbol(Tree.TypeDef(syntax.Mod, moduleName, N), moduleName)
+      val symbol = TypeAliasSymbol(Tree.Ident(name))
+      symbol.defn = S(TypeDef(S(module), symbol, BlockMemberSymbol(name, Nil),
+        List(TyParam(FldFlags.empty, N, formal)(N)), S(body.resolution.source), N, Nil)(N, N))
+      val alias = tpe(TypeShape.Alias(symbol, S(body.resolution)))
+      tpe(TypeShape.Applied(alias.resolution, List(argument.resolution)))
     def observe(reference: ContextualType): ArrayBuffer[TermShape] =
       val values = ArrayBuffer.empty[TermShape]
       resolver.instanceShape(reference.tpe).exit(reference.marks) match
@@ -54,6 +64,61 @@ class TypeRelationTest extends AnyFunSuite:
       h.resolver.publishParameter(a, first)
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(first, second))
+
+  // The worksheets cannot count canonical references, candidates, or subscriptions.
+  // Repeated substitutions exercise the same source graph beyond any finite test depth.
+  test("namespace-bearing alias and Boolean forwarding saturate without growing either graph"):
+    for combination <- 0 to 3 do
+      val h = new Harness
+      import h.given
+      val (argument, at) = h.parameter("A")
+      val (_, original) = h.parameter("Target")
+      val identity = h.forwarding("Identity", at)
+      val source = combination match
+        case 0 => identity
+        case 1 => h.forwarding("Outer", identity)
+        case 2 => h.tpe(TypeShape.Union(at.resolution, identity.resolution))
+        case _ =>
+          val union = h.tpe(TypeShape.Union(at.resolution, identity.resolution))
+          h.tpe(TypeShape.Intersection(union.resolution, at.resolution))
+      var current = original
+      val host = new TermShapeHost
+      def step(): Unit =
+        current = h.resolver.declaredType(source.resolution, Map(argument -> current))
+        val value = h.resolver.instanceShape(current)
+        host.publish(value)
+        h.resolver.constrainTypes(ContextualType(current, Nil), ContextualType(current, Nil), N)
+      (1 to 10).foreach(_ => step())
+      val before = (h.state.state.typeReferences.size, h.state.allocatedShapeViewCount, host.currentShapes.size)
+      val observation = current.observation
+      (1 to 1000).foreach: _ =>
+        step()
+        assert(current.observation == observation)
+      assert((h.state.state.typeReferences.size, h.state.allocatedShapeViewCount, host.currentShapes.size) == before)
+      assert(host.currentShapes.size <= 2)
+
+  test("permuting equal arguments retains two observations without growing projection views"):
+    val h = new Harness
+    import h.given
+    val (argument, at) = h.parameter("A")
+    val (_, target) = h.parameter("Target")
+    val first = h.resolver.declaredType(h.forwarding("First", at).resolution, Map(argument -> target))
+    val second = h.resolver.declaredType(h.forwarding("Second", at).resolution, Map(argument -> target))
+    assert(first == second && first.observation != second.observation)
+    val (left, lt) = h.parameter("Left")
+    val (right, rt) = h.parameter("Right")
+    val wildcard = h.tpe(TypeShape.Wildcard(S(lt.resolution), S(rt.resolution)))
+    var arguments = (first, second)
+    val host = new TermShapeHost
+    def step(): Unit =
+      val current = h.resolver.declaredType(wildcard.resolution, Map(left -> arguments._1, right -> arguments._2))
+      host.publish(h.resolver.instanceShape(h.resolver.selectArgument(current, true)))
+      arguments = arguments.swap
+    (1 to 10).foreach(_ => step())
+    val before = (h.state.state.typeReferences.size, h.state.allocatedShapeViewCount)
+    (1 to 1000).foreach(_ => step())
+    assert(host.currentShapes.size == 2)
+    assert((h.state.state.typeReferences.size, h.state.allocatedShapeViewCount) == before)
 
   test("reference exit and reentry agree with value transport for wildcard and explicit sites"):
     // Check both publication orders and every combination of wildcard/explicit
@@ -108,11 +173,8 @@ class TypeRelationTest extends AnyFunSuite:
     (1 to 1000).foreach: iteration =>
       current = h.resolver.declaredType(application.resolution, Map(argument -> current))
       assert(current == original)
-      // The written form of the expanded application names the alias, but must not retain
-      // the written forms of the previous iterations, which would grow with each of them.
-      assert(current.source.exists(_.bindings.valuesIterator.forall(_.source.isEmpty)))
-      // Instances are identified with the written forms of their types, which therefore
-      // must not multiply the candidates of a value that is normalized again.
+      // Repeated forwarding retains one normalized namespace observation, rather than
+      // a history of the applications that produced it.
       val next = h.resolver.instanceShape(current)
       if iteration > 1 then assert(instance.exists(_ eq next))
       instance = S(next)
@@ -176,7 +238,8 @@ class TypeRelationTest extends AnyFunSuite:
       var current = first
       (1 to 1000).foreach: _ =>
         current = h.resolver.declaredType(wildcard.resolution, Map(formal -> current))
-        assert(current eq first)
+        assert(current.reference eq first.reference)
+        assert(current.observation == first.observation)
       val value = DynShape()
       h.resolver.publishParameter(target, value)
       if output then assert(observed.toList.map(ShapeIdentity.key(_)) == List(MarkedShape.enter(value, scope, site)).map(ShapeIdentity.key(_)))
@@ -205,7 +268,8 @@ class TypeRelationTest extends AnyFunSuite:
     var current = expected
     (1 to 1000).foreach: _ =>
       current = h.resolver.declaredType(source.resolution, Map(a -> current))
-      assert(current eq expected)
+      assert(current.reference eq expected.reference)
+      assert(current.observation == expected.observation)
       h.resolver.listenInstanceViews(h.resolver.instanceShape(current))(_ => ())
     h.resolver.publishParameter(b, late)
     assert(seen.toSet.map(ShapeIdentity.key(_)) == Set(MarkedShape.enter(early, owner, path.id), late).map(ShapeIdentity.key(_)))
@@ -305,8 +369,10 @@ class TypeRelationTest extends AnyFunSuite:
     (1 to 1000).foreach: _ =>
       // Re-selecting an interpreted reference must not change its meaning or
       // allocate another node, even when the later use has opposite polarity.
-      assert(h.resolver.selectArgument(argument, false) eq negative)
-      assert(h.resolver.selectArgument(argument, true) eq positive)
+      assert(h.resolver.selectArgument(argument, false).reference eq negative.reference)
+      assert(h.resolver.selectArgument(argument, false).observation == negative.observation)
+      assert(h.resolver.selectArgument(argument, true).reference eq positive.reference)
+      assert(h.resolver.selectArgument(argument, true).observation == positive.observation)
       assert(h.resolver.selectArgument(negative, true) eq negative)
       assert(h.resolver.selectArgument(positive, false) eq positive)
       h.resolver.constrainTypes(lower, neg, N)
@@ -334,7 +400,8 @@ class TypeRelationTest extends AnyFunSuite:
     val counts = (resolution.inferenceHost.listeners.size, parameter.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
       h.resolver.constrainTypes(reference, reference, N)
-      assert(h.resolver.selectArgument(argument, true) eq selected)
+      assert(h.resolver.selectArgument(argument, true).reference eq selected.reference)
+      assert(h.resolver.selectArgument(argument, true).observation == selected.observation)
     assert((resolution.inferenceHost.listeners.size, parameter.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(value))
     assert(h.state.allocatedTypeInstanceCount == 0)

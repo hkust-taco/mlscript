@@ -105,7 +105,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // * The `FlowSymbol`s are currently used to uniquely identify terms
   val appShapes: Cache[(ShapeIdentity.Key, FlowSymbol), AppShape] =
     new Cache(_.appShapes, identity)
-  val newShapes: Cache[(ClassValueTarget, Ls[Marks], FlowSymbol, Opt[Ls[DeclaredType]]), NewShape] =
+  val newShapes: Cache[(ClassValueTarget, Ls[Marks], FlowSymbol, Opt[Ls[DeclaredType.Observation]]), NewShape] =
     new Cache(_.newShapes, identity)
   val constructorApplications: Seen[(NewShape, TypeSubstitution)] =
     new Seen(_.constructorApplications)
@@ -117,10 +117,9 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.tupleShapes, identity)
   private[semantics] val recordShapes: Cache[(Term.Rcd, Ls[RecordShape.Element], TypeSubstitution), RecordShape] =
     new Cache(_.recordShapes, identity)
-  // Instances are keyed by their observation identity, which includes the written form of
-  // their type (see DeclaredType.withSource): equal types written with different aliases
-  // name different implicit namespaces, so their values are different candidates.
-  private[semantics] val instanceShapes: Cache[(DeclaredType, Opt[DeclaredType]), InstanceShape] =
+  // Observations include namespace plans and observed arguments. Equal interfaces
+  // can name different namespaces, including when projecting their nested fields.
+  private[semantics] val instanceShapes: Cache[DeclaredType.Observation, InstanceShape] =
     new Cache(_.instanceShapes, identity)
   // Views constructed by this consumer, for allocation/growth regressions.
   // Adopted canonical producers are not newly allocated (see canonical).
@@ -139,7 +138,7 @@ final class NewResolverState(val owner: Elaborator.State):
   // consumer-local publisher machinery rather than mutating the source symbol.
   private[semantics] val memberVariables: Cache[TermSymbol, ShapeHost] =
     new Cache(_.memberVariables, identity)
-  val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, DeclaredType], Bool), DeclaredSymShape] =
+  val declaredSymShapes: Cache[(BlockMemberSymbol, FlowSymbol, Ls[Marks], Map[VarSymbol, DeclaredType.Observation], Bool), DeclaredSymShape] =
     new Cache(_.declaredSymShapes, identity)
   val selfShapes: Cache[InnerSymbol, BaseShape] =
     new Cache(_.selfShapes, identity)
@@ -241,7 +240,7 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val fieldProjectionSites: Cache[BlockMemberSymbol, FlowSymbol] =
     new Cache(_.fieldProjectionSites, identity)
   // The flag selects merged member interfaces versus independent constraint inputs.
-  val typeViews: Cache[(DeclaredType, Bool), TermShapeHost] =
+  val typeViews: Cache[(DeclaredType.Observation, Bool), TermShapeHost] =
     new Cache(_.typeViews, identity)
   val patternTypes: Cache[(Identity[Pattern.Constructor], InnerSymbol), DeclaredType] =
     new Cache(_.patternTypes, identity)
@@ -262,8 +261,6 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.primitiveTypes, identity)
   val extremeTypes: Cache[Bool, DeclaredType] =
     new Cache(_.extremeTypes, identity)
-  val variantTypes: Cache[(DeclaredType, Bool), DeclaredType] =
-    new Cache(_.variantTypes, identity)
   val selectedArguments: Cache[(DeclaredType, Bool), DeclaredType] =
     new Cache(_.selectedArguments, identity)
   val abstractTypes: Cache[TypeResolution, DeclaredType] =
@@ -275,8 +272,8 @@ final class NewResolverState(val owner: Elaborator.State):
   val signatureParameters: Cache[VarSymbol, DeclaredType] =
     new Cache(_.signatureParameters, identity)
   // Synthesized applications share their type graph, including the symbolic arguments.
-  val appliedTypes: Cache[(ClassSymbol | TypeAliasSymbol, Ls[DeclaredType]), DeclaredType] =
-    new Cache(_.appliedTypes, identity)
+  val appliedTypeTemplates: Cache[ClassSymbol | TypeAliasSymbol, TypeResolution] =
+    new Cache(_.appliedTypeTemplates, identity)
   val contextualTypes: Cache[ContextualType, DeclaredType] =
     new Cache(_.contextualTypes, identity)
   val tupleArrayParents: Cache[Identity[TupleShape], NominalInstanceView] =
@@ -297,15 +294,8 @@ final class NewResolverState(val owner: Elaborator.State):
   // A method projection or nested constraint can change the observation scope
   // without changing this property. Missing supplied positions remain inferred.
   private[semantics] val explicitTypeArguments = mutable.Set.empty[VarSymbol]
-  private[semantics] val typeConstraints: Seen[(DeclaredType, ShapeIdentity.Key, Ls[Marks])] =
+  private[semantics] val typeConstraints: Seen[(DeclaredType.Observation, ShapeIdentity.Key, Ls[Marks])] =
     new Seen(_.typeConstraints)
-  val typeRelations: Seen[(ContextualType, ContextualType)] =
-    new Seen(_.typeRelations)
-  // The types whose namespaces probes among the views of a value observe (see
-  // NewResolver.observeRequiredNamespaces). Unlike the semantic constraints above, these
-  // observations are keyed by the written form of the type, which names the namespaces.
-  val namespaceObservations: Seen[(DeclaredType, Opt[DeclaredType], ShapeIdentity.Key)] =
-    new Seen(_.namespaceObservations)
   val typeArgumentArityErrors: Seen[(Identity[TyApp], Int)] =
     new Seen(_.typeArgumentArityErrors)
   val arrayIndexErrors: Seen[Identity[Term]] =
@@ -685,7 +675,7 @@ final class ResolutionContext private[semantics] (
   def canonicalRecord(key: (Term.Rcd, Ls[RecordShape.Element], TypeSubstitution))(make: => RecordShape): RecordShape =
     canonical(key._1, _.recordShapes, key)(shapeView(key._3)(make))
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
-    canonical(tpe.resolution, _.instanceShapes, (tpe, tpe.source))(shapeView(tpe.instances)(make))
+    canonical(tpe.resolution, _.instanceShapes, tpe.observation)(shapeView(tpe.instances)(make))
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
     canonical(spread, _.spreadElements, new Identity(spread))(make)
   def memberVariable(symbol: TermSymbol): ShapeHost =
@@ -797,9 +787,9 @@ final class ResolutionContext private[semantics] (
     * flow can revisit it immediately. Distinct instantiations retain their marks.
     */
   def addTypeConstraint(tpe: DeclaredType, value: TermShape, marks: Ls[Marks]): Bool =
-    typeConstraints.add((tpe, ShapeIdentity.key(value), marks))
+    typeConstraints.add((tpe.observation, ShapeIdentity.key(value), marks))
   def hasTypeConstraint(tpe: DeclaredType, value: TermShape, marks: Ls[Marks]): Bool =
-    typeConstraints((tpe, ShapeIdentity.key(value), marks))
+    typeConstraints((tpe.observation, ShapeIdentity.key(value), marks))
 
 /** One pair of call sites per spread source. Incoming alternatives share these
   * observations and the element host, so their Cartesian product is never built.
@@ -817,11 +807,10 @@ private[semantics] final class ImplicitNamespaces(val scope: SrcScope):
     * Whether a namespace provides a candidate of the reference does not depend on why it is
     * consulted, so each is decided once (see NewResolver.consultNamespace). */
   val consulted = mutable.LinkedHashMap.empty[ModuleOrObjectSymbol, Namespace]
-  /** The written types, with the arguments that they are applied to, and the classes whose
-    * namespaces were looked for, so that repeated observations do not repeat their
-    * subscriptions (see NewResolver.typeNamespaces). The same alias reference applied to
-    * different arguments names different declarations, so the arguments are part of the key. */
-  val observedTypes = mutable.HashSet.empty[(DeclaredType, Ls[DeclaredType])]
+  /** Repeated observations must not repeat subscriptions (see NewResolver.typeNamespaces).
+    * Observations include the arguments of deferred applications. Required types constrain
+    * probes, whereas provided types also follow inference inputs, hence the direction flag. */
+  val observedTypes = mutable.HashSet.empty[(DeclaredType.Observation, Bool)]
   val observedClasses = mutable.HashSet.empty[ClassLikeDef]
   /** Whether the reference fell back to its wildcard opens when its block was elaborated
     * because no namespace was known then. A namespace found later cannot override them. */

@@ -283,10 +283,11 @@ The probe is not a value, wherever it arrives: as a value, or as the view of a t
 variable that it reached. `listenInstanceViews`, `listenTermViews`, `listenReceiver`,
 and `listenClass` hide it from the consumers of actual values, and deliver it to the
 chains that pass it on. Type views retain it, as their hosts are shared by all their
-consumers. Constraints observe it before their semantic caches
-(`observeRequiredNamespaces`): a probe reaching a declared type, directly or as the view
-of a type variable, stands for a value of the whole required type, whose namespaces
-`typeNamespaces` discovers.
+consumers. `inferTypeArguments` records an observation before following either endpoint,
+then observes probes reaching a declared type, directly or as the view of a type variable.
+A probe stands for a value of the whole required type, whose namespaces `typeNamespaces`
+discovers. The same observation key governs structural constraints and namespace discovery;
+there is no separate relation table that could discard a later argument's namespace.
 A constructor pattern's head instead observes the values that reach its scrutinee
 (`scrutineeNamespaces`, in `matchShapePat`), before the views of declared types erase
 the declarations that these types name. `valueNamespaces` follows the types of declared
@@ -294,24 +295,35 @@ values, including the values that reach their type parameters, and the classes o
 instances. Record patterns read the fields of their input with the member lookups of
 selections, at a site that the elaborator records.
 
-`typeNamespaces` interprets types with the same reduction steps as `inferTypeArguments`
-and `exposeTypeHoles` (`reduceType`: references, contextual references, applications,
-alias bodies, and bound parameters), but observes the declarations that types name before
-normalization erases them, and identifies its visits by the written type together with
-the arguments that it is applied to. `DeclaredType.source` retains the written type of an
-expanded alias application or Boolean combination. Equal types can have different written
-forms, such as `FirstAlias[X] | Nothing` and `SecondAlias[X] | Nothing`, which both
-normalize to the canonical parameter `X`. So the interface graph identifies types
-semantically, whereas namespace discovery identifies its observations by both forms:
-instances of declared types, which are values in flow, and the observations of required
-types by probes. Argument nodes that alias bodies forward to other applications are still
-interned semantically, keeping the written forms of their first observation; keying them
-by written forms would keep recursive forwarding aliases from reaching a fixed point (see
-`slop/ImplicitNamespaceProvenance.mls`). Interned formula atoms and contextual nodes drop
-written forms; written forms keep semantic bindings, so normalizing a type again under its
-own result does not accumulate them. Each class or alias contributes the first of its
-own namespaces (its companion, then its declaring module) that provides an accessible
-member (`firstProvider`), and otherwise the namespaces of its parent or body.
+Semantic type identity and namespace observations are separate. Interned references and
+synthesized nodes contain only semantic children. Each `DeclaredType` use retains observed
+bindings and, for synthesized nodes, an interpretation with its own observed children.
+Thus `Box[FirstAlias[X] | Nothing]` and `Box[SecondAlias[X] | Nothing]` share an interface
+without exchanging the namespaces of their fields. Views and constraints use
+`DeclaredType.Observation`, which includes these children and namespace behavior but
+excludes diagnostic witnesses. Its equality compares shared children once, including
+across imports. Synthesized applications share a constructor template and supply their
+observed arguments through ordinary bindings.
+
+Before alias and Boolean normalization erase declarations, `namespacePlan` uses the same
+`reduceType` steps as other type interpreters to retain just their root lookup behavior.
+A `TypeNamespaces` plan is a set of independent fallback paths: each tries aliases in order
+before a class or a symbolic inference input. The first occurrence of an alias on a path
+is enough: for a fixed reference name and lexical scope, a second occurrence cannot change
+whether that alias provides an accessible member. Paths are therefore bounded by the
+number of declarations, and repeated identity forwarding reaches a fixed point. A nominal
+leaf keeps its class, not its argument history; a Boolean absorption that erases a nested
+`Array[A]` cannot retain an ever-growing tree of those erased arguments. Incomplete source
+graphs defer the whole application, preserving its pending arguments until completion.
+
+`typeNamespaces` evaluates these paths, selecting argument endpoints according to flow and
+following inference inputs only for provided values. Each class or alias contributes the
+first of its own namespaces (its companion, then its declaring module) that provides an
+accessible member (`firstProvider`), and otherwise those of its parent or body. Boolean
+components contribute independently. When Boolean normalization merges equal semantic
+atoms, their corresponding child observations are joined; unrelated uses are never joined
+merely because they share an interned reference. Scope projection also retains dependencies
+used only by namespace plans, such as the parameter erased from the interface of `Any | A`.
 `ImplicitNamespaces.consulted` decides each namespace once per reference: it is pending
 until defined, then missing the name, inaccessible, selected through a path from
 `AccessPath.valuePath` (whose paths carry the same `Capture`s as written references),

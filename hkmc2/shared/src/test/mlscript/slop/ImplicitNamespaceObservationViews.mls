@@ -1,0 +1,126 @@
+:.
+#lang(eagerResolution: true)
+
+module First with
+  data class Some[T](value: T)
+module Second with
+  data class Some[T](value: T)
+type FirstAlias[T] = T
+module FirstAlias with
+  val Some = First.Some
+type SecondAlias[T] = T
+module SecondAlias with
+  val Some = Second.Some
+
+class Box[A](val value: A)
+type Boxed[A] = Box[A]
+type Pair[A] = [A, A]
+type Pairs[A] = Pair[A]
+type Callback[A] = Int -> A
+type Callbacks[A] = Callback[A]
+type Items[A] = Array[A]
+type Arrays[A] = Items[A]
+
+// Projections of a shared tuple template retain each use's argument namespaces.
+:expect [1, 2]
+fun tuples[X](a: Pairs[FirstAlias[X] | Nothing], b: Pairs[SecondAlias[X] | Nothing]) =
+  [if a.0 is Some(v) then v else 0, if b.1 is Some(v) then v else 0]
+tuples([First.Some(1), First.Some(1)], [Second.Some(2), Second.Some(2)])
+//│ = [1, 2]
+
+// A callable view must preserve the observations in its result type.
+:expect [3, 4]
+fun callbacks[X](a: Callbacks[FirstAlias[X] | Nothing], b: Callbacks[SecondAlias[X] | Nothing]) =
+  [if a(0) is Some(v) then v else 0, if b(0) is Some(v) then v else 0]
+callbacks((_ => First.Some(3)), (_ => Second.Some(4)))
+//│ = [3, 4]
+
+// Array views and checked accesses expose the argument of this application.
+:expect [5, 6]
+fun arrays[X](a: Arrays[FirstAlias[X] | Nothing], b: Arrays[SecondAlias[X] | Nothing]) =
+  [if a.[0] is Some(v) then v else 0, if b.[0] is Some(v) then v else 0]
+arrays([First.Some(5)], [Second.Some(6)])
+//│ = [5, 6]
+
+// Synthesizing the Array parent of a typed tuple uses the same argument template.
+:expect [7, 8]
+fun spreads[X](a: Pairs[FirstAlias[X] | Nothing], b: Pairs[SecondAlias[X] | Nothing]) =
+  let xs = [...a]
+  let ys = [...b]
+  [if xs.[0] is Some(v) then v else 0, if ys.[0] is Some(v) then v else 0]
+spreads([First.Some(7), First.Some(7)], [Second.Some(8), Second.Some(8)])
+//│ = [7, 8]
+
+// Boolean normalization merges equal semantic atoms, including their argument
+// observations. Unlike two independent parameters, these alternatives really join.
+:e
+fun union[X](box: Boxed[FirstAlias[X] | Nothing] | Boxed[SecondAlias[X] | Nothing]) =
+  if box is Box(Some(v)) then v else 0
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as values with distinct implicit namespaces can reach its scrutinee.
+//│ ║  l.+2: 	  if box is Box(Some(v)) then v else 0
+//│ ║        	                ^^^^
+//│ ╟── This type selects 'FirstAlias.Some'.
+//│ ║  l.+1: 	fun union[X](box: Boxed[FirstAlias[X] | Nothing] | Boxed[SecondAlias[X] | Nothing]) =
+//│ ║        	                        ^^^^^^^^^^^^^
+//│ ╟── This type selects 'SecondAlias.Some'.
+//│ ║  l.+1: 	fun union[X](box: Boxed[FirstAlias[X] | Nothing] | Boxed[SecondAlias[X] | Nothing]) =
+//│ ╙──      	                                                         ^^^^^^^^^^^^^^
+
+:e
+fun intersection[X](box: Boxed[FirstAlias[X] | Nothing] & Boxed[SecondAlias[X] | Nothing]) =
+  if box is Box(Some(v)) then v else 0
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as values with distinct implicit namespaces can reach its scrutinee.
+//│ ║  l.+2: 	  if box is Box(Some(v)) then v else 0
+//│ ║        	                ^^^^
+//│ ╟── This type selects 'FirstAlias.Some'.
+//│ ║  l.+1: 	fun intersection[X](box: Boxed[FirstAlias[X] | Nothing] & Boxed[SecondAlias[X] | Nothing]) =
+//│ ║        	                               ^^^^^^^^^^^^^
+//│ ╟── This type selects 'SecondAlias.Some'.
+//│ ║  l.+1: 	fun intersection[X](box: Boxed[FirstAlias[X] | Nothing] & Boxed[SecondAlias[X] | Nothing]) =
+//│ ╙──      	                                                                ^^^^^^^^^^^^^^
+
+// Required types discover namespaces through constructor arguments and identity
+// calls. The two required interfaces are equal, but their uses have different names.
+fun id[A](value: A) = value
+fun both[X, Y](a: Boxed[FirstAlias[X] | Nothing], b: Boxed[SecondAlias[Y] | Nothing]) =
+  [if a.value is First.Some(v) then v else 0, if b.value is Second.Some(v) then v else 0]
+
+:expect [9, 10]
+both(Box(id(Some(9))), Box(id(Some(10))))
+//│ = [9, 10]
+
+// A namespace-bearing alias can be introduced after an earlier alias captured
+// its parameter. The deferred source must keep that observation until completion.
+
+:expect [11, 12]
+type Early[A] = Later[A]
+fun delayed[X](a: Early[FirstAlias[X] | Nothing], b: Early[SecondAlias[X] | Nothing]) =
+  [if a.value is Some(v) then v else 0, if b.value is Some(v) then v else 0]
+type Later[A] = Box[A]
+delayed(Box(First.Some(11)), Box(Second.Some(12)))
+//│ = [11, 12]
+
+// An erased semantic interface can still read a call's type argument to discover
+// namespaces. Projecting its substitution must keep that namespace-only dependency.
+fun erased[A](value: A): Any | A = value
+fun erasedField[A](value: A): {payload: Any | A} = {payload: value}
+
+:expect [13, 14]
+[if erased(First.Some(13)) is Some(v) then v else 0,
+  if erased(Second.Some(14)) is Some(v) then v else 0]
+//│ = [13, 14]
+
+:expect [15, 16]
+[if erasedField(First.Some(15)).payload is Some(v) then v else 0,
+  if erasedField(Second.Some(16)).payload is Some(v) then v else 0]
+//│ = [15, 16]
+
+import "../../mlscript-compile/Option.mls"
+
+// Imported alias bodies and field templates are shared with their defining unit.
+// Their semantic caches must not retain the first importing use's argument names.
+:expect [17, 18]
+fun imported[X](a: Option[FirstAlias[X] | Nothing], b: Option[SecondAlias[X] | Nothing]) =
+  [if a is Some(Some(v)) then v else 0, if b is Some(Some(v)) then v else 0]
+imported(Option.Some(First.Some(17)), Option.Some(Second.Some(18)))
+//│ = [17, 18]

@@ -255,7 +255,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   */
 final class DeclaredType private (private[semantics] val reference: DeclaredType.Reference,
     val bindings: Map[VarSymbol, DeclaredType])(val origin: Opt[TypeInterfaceReason],
-    val source: Opt[DeclaredType]) extends ValueKey:
+    private[semantics] val namespaces: Opt[TypeNamespaces], private[semantics] val interpretation: Opt[TypeShape]) extends ValueKey:
   def resolution: TypeResolution = reference.resolution
   def instances: TypeSubstitution = reference.instances
   def positive: Bool = reference.positive
@@ -266,42 +266,45 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
       if reference.pool eq that.reference.pool then reference eq that.reference
       else DeclaredType.equivalent(reference, that.reference)
     case _ => false
-  /** Witnesses belong to this observation, including witnesses on bound arguments.
-    * Only the immutable semantic reference is canonical; interning a witness would
-    * make a later error report the first observation's annotation instead.
-    */
-  def withOrigin(witness: Opt[TypeInterfaceReason]): DeclaredType =
-    if witness.isEmpty then this else new DeclaredType(reference, bindings)(witness, source)
 
-  /** Record the type as written, before normalization expanded the aliases it applies or
-    * combined its components (see NewResolver.declaredType). Like witnesses, the written
-    * form belongs to the observation rather than to the semantic type: it records how an
-    * annotation names this type, which determines its implicit namespaces (see
-    * NewResolver.typeNamespaces), not its interface. Substitutions apply to both forms.
-    *
-    * Equal types can have different written forms: `FirstAlias[X] | Nothing` and
-    * `SecondAlias[X] | Nothing` both normalize to the canonical parameter `X`, but name
-    * the companions of different aliases. So the interface graph identifies types
-    * semantically, whereas namespace discovery identifies its observations by both forms:
-    * the instances of declared types, which are values in flow (see
-    * NewResolverState.instanceShapes), and the observations of required types by
-    * namespace probes (see NewResolver.observeRequiredNamespaces). Interned Boolean
-    * formulas drop the written forms of their atoms, which the written combination
-    * retains. The argument nodes that alias bodies forward to other applications are
-    * interned semantically, so they keep the written forms of their first observation:
-    * keying them by written forms would prevent recursive forwarding aliases from
-    * reaching a fixed point (see slop/ImplicitNamespaceProvenance.mls).
+  /** Semantic equality deliberately ignores the namespaces of a use. Observations also
+    * distinguish the uses of its arguments: projecting Box[A] must read this A's namespaces,
+    * even when another Box[A] has already exposed the same semantic interface.
     */
-  def withSource(written: DeclaredType): DeclaredType =
-    if source.contains(written) then this else new DeclaredType(reference, bindings)(origin, S(written))
-  def withoutSource: DeclaredType =
-    if source.isEmpty then this else new DeclaredType(reference, bindings)(origin, N)
-  /** The type as written. */
-  def written: DeclaredType = source.getOrElse(this)
+  private[semantics] lazy val observation: DeclaredType.Observation = new DeclaredType.Observation(this)
+  private[semantics] lazy val semantic: DeclaredType =
+    new DeclaredType(reference, reference.bindings.values)(N, N, N)
+  private[semantics] def shapes(using ResolutionContext): Ls[TypeShape] =
+    interpretation.fold(resolution.currentShapes.toList)(_ :: Nil)
+  private[semantics] def listen(listener: ShapeListener[TypeShape])(using ResolutionContext): Unit =
+    interpretation.fold(resolution.listen(listener))(listener(_))
+  private[semantics] def withInterpretation(shape: TypeShape): DeclaredType =
+    new DeclaredType(reference, bindings)(origin, namespaces, S(shape))
+  private[semantics] def withObservedBindings(observed: Map[VarSymbol, DeclaredType]): DeclaredType =
+    assert(observed == bindings, "An observation cannot change semantic bindings")
+    new DeclaredType(reference, observed)(origin, namespaces, interpretation)
+  private[semantics] def withNamespaces(plan: TypeNamespaces): DeclaredType =
+    new DeclaredType(reference, bindings)(origin, S(plan), interpretation)
+  private[semantics] def withoutNamespaces: DeclaredType =
+    if namespaces.isEmpty then this else new DeclaredType(reference, bindings)(origin, N, interpretation)
+  /** The children of a synthesized semantic node, interpreted for this use. Source nodes
+    * instead read their children through bindings. Neither representation contains a history
+    * of alias expansion: that history is reduced to TypeNamespaces' bounded paths.
+    */
+  private[semantics] def interpretedTypes: Ls[DeclaredType] = interpretation.toList.flatMap:
+    case TypeShape.Argument(parts) => parts.input :: parts.output :: Nil
+    case TypeShape.SelectedArgument(argument, _) => argument :: Nil
+    case TypeShape.Contextual(reference) => reference.tpe :: Nil
+    case TypeShape.Combined(formula) => formula.orderedAtoms.toList
+    case _ => lastWords("Only synthesized type nodes have an observation-specific interpretation")
+
+  /** Witnesses belong to this observation and do not multiply inference candidates. */
+  def withOrigin(witness: Opt[TypeInterfaceReason]): DeclaredType =
+    if witness.isEmpty then this else new DeclaredType(reference, bindings)(witness, namespaces, interpretation)
 
   private def rebuilt(bindings: Map[VarSymbol, DeclaredType], instances: TypeSubstitution, positive: Bool,
-      written: Opt[DeclaredType])(using ResolutionContext): DeclaredType =
-    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive), bindings)(origin, written)
+      plans: Opt[TypeNamespaces])(using ResolutionContext): DeclaredType =
+    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive), bindings)(origin, plans, interpretation)
 
   /** Instantiation changes references to source binders, never expands their bounds.
     * A reference already interpreted in another call retains that interpretation.
@@ -312,17 +315,62 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
 
   def withInstances(substitution: TypeSubstitution)(using ResolutionContext): DeclaredType =
     if substitution == instances then this
-    else rebuilt(bindings, substitution, positive, source.map(_.withInstances(substitution)))
+    else rebuilt(bindings, substitution, positive, namespaces.map(_.mapTypes(_.instantiate(substitution))))
   def withPolarity(polarity: Bool)(using ResolutionContext): DeclaredType =
-    if polarity == positive then this else rebuilt(bindings, instances, polarity, source.map(_.withPolarity(polarity)))
+    if polarity == positive then this else rebuilt(bindings, instances, polarity, namespaces)
   def withoutBinders(symbols: Iterable[VarSymbol])(using ResolutionContext): DeclaredType =
-    rebuilt(bindings -- symbols, instances.without(symbols), positive, source.map(_.withoutBinders(symbols)))
+    rebuilt(bindings -- symbols, instances.without(symbols), positive, namespaces.map(_.mapTypes(_.withoutBinders(symbols))))
   def withoutOrigin: DeclaredType =
-    if origin.isEmpty then this else new DeclaredType(reference, bindings)(N, source)
+    if origin.isEmpty then this else new DeclaredType(reference, bindings)(N, namespaces, interpretation)
 
 object DeclaredType:
-  /** Binding data reuses the immutable map supplied by the caller. Only references
-    * participate in equality; its witnesses never supply diagnostics.
+  /** A value's observable type, excluding diagnostic locations. The semantic reference
+    * bounds the structure; namespace paths and child observations distinguish its uses.
+    */
+  private[semantics] final class Observation private[DeclaredType] (val tpe: DeclaredType) extends ValueKey:
+    private val bindings = tpe.bindings.view.mapValues(_.observation).toMap
+    private val children = tpe.interpretation match
+      case S(TypeShape.Combined(formula)) => R(formula.orderedAtoms.map(tpe => tpe -> tpe.observation).toMap)
+      case _ => L(tpe.interpretedTypes.map(_.observation))
+    private val namespaces = tpe.namespaces.map(_.key)
+    protected val valueHash: Int = ValueKey.hash(tpe.hashCode, bindings.hashCode, children.hashCode, namespaces.hashCode)
+    protected def sameValue(other: ValueKey): Bool = other match
+      case that: Observation =>
+        // Observations are DAGs too: two bindings to the same child must not double
+        // equality work at every layer, including when the child was imported.
+        val compared = new java.util.IdentityHashMap[Observation, java.util.IdentityHashMap[Observation, java.lang.Boolean]]
+        def sameMap[K](a: Map[K, Observation], b: Map[K, Observation]): Bool =
+          a.size == b.size && a.forall((key, child) => b.get(key).exists(loop(child, _)))
+        def samePath(a: TypeNamespaces.Path, b: TypeNamespaces.Path): Bool =
+          a.hashCode == b.hashCode && a.aliases == b.aliases && ((a.target, b.target) match
+            case (S(TypeNamespaces.Target.Type(x)), S(TypeNamespaces.Target.Type(y))) => loop(x, y)
+            case _ => a.target == b.target)
+        def loop(a: Observation, b: Observation): Bool =
+          if a eq b then true
+          else if a.hashCode != b.hashCode then false
+          else
+            var partners = compared.get(a)
+            if partners == null then
+              partners = new java.util.IdentityHashMap
+              compared.put(a, partners)
+            val known = partners.get(b)
+            if known != null then known.booleanValue else
+              val result = a.tpe == b.tpe && sameMap(a.bindings, b.bindings) && ((a.children, b.children) match
+                case (L(xs), L(ys)) => xs.size == ys.size && xs.zip(ys).forall(loop)
+                case (R(xs), R(ys)) => sameMap(xs, ys)
+                case _ => false
+              ) && ((a.namespaces, b.namespaces) match
+                case (N, N) => true
+                case (S(xs), S(ys)) => xs.size == ys.size && xs.forall(x => ys.exists(samePath(x, _)))
+                case _ => false)
+              partners.put(b, result)
+              result
+        loop(this, that)
+      case _ => false
+
+
+  /** Binding data contains semantic references only. Per-use namespaces and
+    * diagnostic witnesses belong to the outer DeclaredType's observed bindings.
     * Hash each flat map once at construction; later references retain this object.
     */
   private[semantics] final class Bindings private[DeclaredType] (val values: Map[VarSymbol, DeclaredType]) extends ValueKey:
@@ -364,9 +412,10 @@ object DeclaredType:
         positive: Bool): Reference =
       val localValues = if values.valuesIterator.forall(_.reference.pool eq this) then values else
         values.map: (symbol, tpe) =>
-          symbol -> new DeclaredType(local(tpe.reference), tpe.bindings)(tpe.origin, tpe.source)
+          val reference = local(tpe.reference)
+          symbol -> new DeclaredType(reference, reference.bindings.values)(N, N, N)
       val canonical = if localValues.isEmpty then emptyBindings else
-        val binding = new Bindings(localValues)
+        val binding = new Bindings(localValues.view.mapValues(_.semantic).toMap)
         bindings.getOrElseUpdate(binding, binding)
       val environment = if instances.isEmpty then TypeSubstitution.empty else substitutions.getOrElseUpdate(instances, instances)
       val reference = new Reference(resolution, canonical, environment, positive, this)
@@ -374,7 +423,7 @@ object DeclaredType:
 
   def apply(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType],
       instances: TypeSubstitution, positive: Bool)(origin: Opt[TypeInterfaceReason])(using ResolutionContext): DeclaredType =
-    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive), bindings)(origin, N)
+    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive), bindings)(origin, N, N)
 
   /** Most comparisons stop at reference identity or canonical binding identity.
     * Separate units may retain equivalent DAGs: use a worklist for that boundary,

@@ -51,32 +51,33 @@ fun feed[X](a: FirstAlias[X] | Nothing, b: SecondAlias[X] | Nothing) = [pick(a),
 //│ ║  l.+2: 	fun feed[X](a: FirstAlias[X] | Nothing, b: SecondAlias[X] | Nothing) = [pick(a), pick(b)]
 //│ ╙──      	                                           ^^^^^^^^^^^^^^
 
-// FIXME: An argument that an alias body forwards to a class, such as `A` in `Box[A]` below, is
-// interned semantically: both applications of Boxed bind it to a canonical `X`, so the second
-// application's Box field reuses the first one's argument node, with its written form.
-// Keying these nodes by written forms is not an option: in recursive forwarding aliases such
-// as `type Chain[A] = {value: A, next: Chain[Identity[A]]}`, each level's written form refers
-// to the previous level's node, so the graph would never reach its fixed point. Preserving
-// this provenance requires separating semantic argument nodes from their written observations.
+// Forwarded arguments share their semantic nodes, but each application retains the
+// namespaces of its own argument when a constructor pattern reads the Box field.
 class Box[A](val content: A)
 type Boxed[A] = Box[A]
 
-:fixme
 :expect [7, 8]
 fun boxes[X](x: Boxed[FirstAlias[X] | Nothing], y: Boxed[SecondAlias[X] | Nothing]) =
   [if x is Box(Some(v)) then v else 0, if y is Box(Some(v)) then v else 0]
 boxes(Box(First.Some(7)), Box(Second.Some(8)))
-//│ ═══[RUNTIME ERROR] Expected: '[7, 8]', got: '[7, 0]'
-//│ = [7, 0]
+//│ = [7, 8]
 
-// The same forwarded argument also hides an ambiguity when both fields reach one
+// The two forwarded arguments are ambiguous when their fields reach one
 // pattern. Keeping every namespace on the shared semantic argument would make this
 // ambiguous, but would incorrectly make the independent patterns above ambiguous too.
-:breakme
 :e
 fun pickBox(x) = if x is Some(v) then v else 0
 fun feedBoxes[X](a: Boxed[FirstAlias[X] | Nothing], b: Boxed[SecondAlias[X] | Nothing]) =
   [pickBox(a.content), pickBox(b.content)]
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as values with distinct implicit namespaces can reach its scrutinee.
+//│ ║  l.+1: 	fun pickBox(x) = if x is Some(v) then v else 0
+//│ ║        	                         ^^^^
+//│ ╟── This type selects 'FirstAlias.Some'.
+//│ ║  l.+2: 	fun feedBoxes[X](a: Boxed[FirstAlias[X] | Nothing], b: Boxed[SecondAlias[X] | Nothing]) =
+//│ ║        	                          ^^^^^^^^^^^^^
+//│ ╟── This type selects 'SecondAlias.Some'.
+//│ ║  l.+2: 	fun feedBoxes[X](a: Boxed[FirstAlias[X] | Nothing], b: Boxed[SecondAlias[X] | Nothing]) =
+//│ ╙──      	                                                             ^^^^^^^^^^^^^^
 
 // A probe reaching a required type as the view of a type variable observes the written
 // form of that type, even when it normalizes to a type parameter.
