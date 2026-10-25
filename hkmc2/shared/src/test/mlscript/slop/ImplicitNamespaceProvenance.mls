@@ -69,6 +69,15 @@ boxes(Box(First.Some(7)), Box(Second.Some(8)))
 //│ ═══[RUNTIME ERROR] Expected: '[7, 8]', got: '[7, 0]'
 //│ = [7, 0]
 
+// The same forwarded argument also hides an ambiguity when both fields reach one
+// pattern. Keeping every namespace on the shared semantic argument would make this
+// ambiguous, but would incorrectly make the independent patterns above ambiguous too.
+:breakme
+:e
+fun pickBox(x) = if x is Some(v) then v else 0
+fun feedBoxes[X](a: Boxed[FirstAlias[X] | Nothing], b: Boxed[SecondAlias[X] | Nothing]) =
+  [pickBox(a.content), pickBox(b.content)]
+
 // A probe reaching a required type as the view of a type variable observes the written
 // form of that type, even when it normalizes to a type parameter.
 fun firstOf[X](x: FirstAlias[X]) = if x is First.Some(v) then v else 0
