@@ -1,0 +1,173 @@
+:.
+:js
+:qq
+
+
+// A whole conditional block finishes the conditional; ordinary clause operands keep their continuations.
+:expect [true, 3, 3, 3]
+[
+  if {true then 2, else 3} + 2 == 4,
+  if false then {1} + 2 else 3,
+  if false then {x: 1}.x else 3,
+  if false then {id}(1) else 3
+]
+//│ = [true, 3, 3, 3]
+
+// FIXME: wrapping the condition changes where the same do operand ends.
+// Comparing the two forms records the asymmetry without choosing either boundary rule.
+:fixme
+:expect true
+fun ordinary(c) =
+  let n = 0
+  if c do {set n = 1}; set n = 2
+  n
+fun blockCondition(c) =
+  let n = 0
+  if {c} do {set n = 1}; set n = 2
+  n
+ordinary(false) === blockCondition(false)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+// FIXME: the corresponding then operands stop early and leave else unattached.
+:fixme
+:expect 3
+if {false} then {1} + 2 else 3
+//│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
+//│ ║  l.+1: 	if {false} then {1} + 2 else 3
+//│ ╙──      	                        ^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+
+:fixme
+:expect 3
+if {false} then {x: 1}.x else 3
+//│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
+//│ ║  l.+1: 	if {false} then {x: 1}.x else 3
+//│ ╙──      	                         ^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+
+:fixme
+:expect 3
+if {false} then {id}(1) else 3
+//│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
+//│ ║  l.+1: 	if {false} then {id}(1) else 3
+//│ ╙──      	                        ^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+
+// FIXME: a fallback outside the clause's indentation section must still attach to the if.
+:fixme
+:expect 2
+if {false}
+  then 1
+else 2
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.+3: 	else 2
+//│ ╙──      	^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+:fixme
+:expect 2
+if {false}
+  then
+    1
+else 2
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.+4: 	else 2
+//│ ╙──      	^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+:fixme
+:expect 2
+if
+    false
+  then 1
+else 2
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.+4: 	else 2
+//│ ╙──      	^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+:fixme
+if {false}
+  do ()
+else ()
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.+3: 	else ()
+//│ ╙──      	^^^^
+
+// FIXME: reconcile block clauses with the existing standalone same-indent newline do rule.
+:fixme
+:expect 3
+let n = 0
+if {true do set n = 1}
+do set n += 2
+n
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
+//│ ║  l.+2: 	if {true do set n = 1}
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ n = 0
+
+// Explicit grouping and indentation boundaries protect nested conditionals and their fallbacks.
+:expect [2, 3, 2]
+[
+  if (if {false then true} else false)
+    then 1
+  else 2,
+  if {false} then (if {true then 1} else 2) else 3,
+  if {if {false then true, else false}} then 1 else 2
+]
+//│ = [2, 3, 2]
+
+:expect 3
+if {false} then
+  if {true then 1} else 2
+else 3
+//│ = 3
+
+:expect 3
+if {false} then (if {true} then
+  1
+else 2) else 3
+//│ = 3
+
+:expect 2
+id(if {false}
+  then 1
+  else 2)
+//│ = 2
+
+// An added fallback does not replace one already present in the block.
+:w
+:expect 2
+if {false then 1, else 2} else 3
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.+1: 	if {false then 1, else 2} else 3
+//│ ║        	                  ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.+1: 	if {false then 1, else 2} else 3
+//│ ╙──      	                          ^^^^^^
+//│ = 2
+
+:pe
+:re
+if {true} then
+//│ ╔══[PARSE ERROR] Expected expression or block after 'then' clause; found end of input instead
+//│ ║  l.+1: 	if {true} then
+//│ ╙──      	              ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:pe
+:re
+if {false then 1} else
+//│ ╔══[PARSE ERROR] Expected expression or block after `else` keyword; found end of input instead
+//│ ║  l.+1: 	if {false then 1} else
+//│ ╙──      	                      ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
