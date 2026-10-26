@@ -3523,7 +3523,7 @@ extends Importer:
       // pattern translation.
       case OpApp(lhs, Ident("~"), rhs :: Nil) => Pattern.Concatenation(go(lhs), go(rhs))
       // Constructor patterns can be written in the infix form.
-      case OpApp(lhs, op, rhss) => constructor(term(op, Ptrn), S((lhs :: rhss).map(go)), t)
+      case OpApp(lhs, op, rhss) => constructor(term(op, Ptrn), S(go(lhs) :: rhss.map(go)), t)
       // Constructor patterns without arguments
       case id @ Ident(name) if name.isUncapitalized => Variable(id)
       case id: Ident if newResolution => constructor(term(id, Ptrn), N, id)
