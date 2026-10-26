@@ -75,7 +75,8 @@ object Keyword:
   val whereLhsPrec = nextPrec
   
   val `then` = Keyword("then", thenPrec, eqPrec)
-  val `do` = Keyword("do", thenPrec, eqPrec)
+  // A same-indent newline `do` starts a statement; indented `do` can still continue a condition.
+  val `do` = Keyword("do", thenPrec, eqPrec, canStartInfixOnNewLine = false)
   val `drop` = Keyword("drop", thenPrec, eqPrec)
   
   val `else` = Keyword("else", N, eqPrec)

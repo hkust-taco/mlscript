@@ -13,10 +13,8 @@
 ]
 //│ = [true, 3, 3, 3]
 
-// FIXME: wrapping the condition changes where the same do operand ends.
-// Comparing the two forms records the asymmetry without choosing either boundary rule.
-:fixme
-:expect true
+// Wrapping the condition preserves the boundary and precedence of the do operand.
+:expect [0, 0, 2, 2]
 fun ordinary(c) =
   let n = 0
   if c do {set n = 1}; set n = 2
@@ -25,95 +23,99 @@ fun blockCondition(c) =
   let n = 0
   if {c} do {set n = 1}; set n = 2
   n
-ordinary(false) === blockCondition(false)
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+[ordinary(false), blockCondition(false), ordinary(true), blockCondition(true)]
+//│ = [0, 0, 2, 2]
 
-// FIXME: the corresponding then operands stop early and leave else unattached.
-:fixme
+// Clause operands accept operator, selection, and call continuations before the fallback.
 :expect 3
 if {false} then {1} + 2 else 3
-//│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
-//│ ║  l.+1: 	if {false} then {1} + 2 else 3
-//│ ╙──      	                        ^^^^
-//│ ═══[RUNTIME ERROR] Error: match error
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 
-:fixme
 :expect 3
 if {false} then {x: 1}.x else 3
-//│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
-//│ ║  l.+1: 	if {false} then {x: 1}.x else 3
-//│ ╙──      	                         ^^^^
-//│ ═══[RUNTIME ERROR] Error: match error
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 
-:fixme
 :expect 3
 if {false} then {id}(1) else 3
-//│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
-//│ ║  l.+1: 	if {false} then {id}(1) else 3
-//│ ╙──      	                        ^^^^
-//│ ═══[RUNTIME ERROR] Error: match error
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 
-// FIXME: a fallback outside the clause's indentation section must still attach to the if.
-:fixme
+:expect [3, 1, 1]
+[
+  if {true} then {1} + 2 else ???,
+  if {true} then {x: 1}.x else ???,
+  if {true} then {id}(1) else ???
+]
+//│ = [3, 1, 1]
+
+// Braces around the clauses close the conditional before its result continuation.
+:expect 4
+if {false} {then ??? else 2} + 2
+//│ = 4
+
+// A fallback outside the clause's indentation section still attaches to the if.
 :expect 2
 if {false}
   then 1
 else 2
-//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.+3: 	else 2
-//│ ╙──      	^^^^
-//│ ═══[RUNTIME ERROR] Error: match error
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ = 2
 
-:fixme
 :expect 2
 if {false}
   then
     1
 else 2
-//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.+4: 	else 2
-//│ ╙──      	^^^^
-//│ ═══[RUNTIME ERROR] Error: match error
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ = 2
 
-:fixme
 :expect 2
 if
     false
   then 1
 else 2
-//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.+4: 	else 2
-//│ ╙──      	^^^^
-//│ ═══[RUNTIME ERROR] Error: match error
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ = 2
 
-:fixme
 if {false}
   do ()
 else ()
-//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.+3: 	else ()
-//│ ╙──      	^^^^
 
-// FIXME: reconcile block clauses with the existing standalone same-indent newline do rule.
-:fixme
+:expect 2
+if {false}
+  then
+    ???
+  else 2
+//│ = 2
+
+:expect 2
+if {false}
+then ???
+else 2
+//│ = 2
+
+// A same-indent newline do starts a statement, including after a closed conditional block.
 :expect 3
 let n = 0
 if {true do set n = 1}
 do set n += 2
 n
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
-//│ ║  l.+2: 	if {true do set n = 1}
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
-//│ n = 0
+//│ = 3
+//│ n = 3
+
+:expect 2
+let n = 0
+if {false}
+  do ???
+do set n += 2
+n
+//│ = 2
+//│ n = 2
+
+:expect [2, 3]
+let n = 0
+let total = 0
+while {n < 2} do {set n += 1}; set total += n
+[n, total]
+//│ = [2, 3]
+//│ n = 2
+//│ total = 3
 
 // Explicit grouping and indentation boundaries protect nested conditionals and their fallbacks.
 :expect [2, 3, 2]
@@ -125,6 +127,17 @@ n
   if {if {false then true, else false}} then 1 else 2
 ]
 //│ = [2, 3, 2]
+
+:expect [2, 3]
+fun nested(c) =
+  if {c}
+    then
+      if {false}
+        then ???
+      else 2
+  else 3
+[nested(true), nested(false)]
+//│ = [2, 3]
 
 :expect 3
 if {false} then
@@ -159,7 +172,7 @@ if {false then 1, else 2} else 3
 :pe
 :re
 if {true} then
-//│ ╔══[PARSE ERROR] Expected expression or block after 'then' clause; found end of input instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.+1: 	if {true} then
 //│ ╙──      	              ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

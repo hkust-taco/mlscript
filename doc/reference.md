@@ -943,6 +943,9 @@ else
 Braced or indented blocks can be followed by `then`/`do` to use their value as the condition,
 or by `else` to supply a fallback for their branches. Clauses attach to the nearest `if`/`while`;
 parenthesize a nested conditional used as a condition: `if (if { ... }) then ... else ...`.
+The `then`/`do` operand follows ordinary expression precedence, including after a block condition.
+A same-indent newline `do` starts a new statement; indent it to continue the conditional.
+Other operators after a whole conditional block apply to its result: `if {true then 2, else 3} + 2` is `4`.
 
 ### `if` with Pattern Branches (`is`)
 
