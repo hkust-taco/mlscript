@@ -1,0 +1,3 @@
+gc_id,time,cause,name,duration_ns
+751,2026-10-26T03:09:40.389700583Z,System.gc(),SerialOld,424773750
+752,2026-10-26T03:09:40.815821708Z,System.gc(),SerialOld,96283667

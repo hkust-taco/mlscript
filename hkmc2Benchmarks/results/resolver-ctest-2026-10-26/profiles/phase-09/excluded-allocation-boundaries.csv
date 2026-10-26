@@ -1,0 +1,7 @@
+"thread_id","thread_name","time","class","weight_bytes"
+"13","JFR Periodic Tasks","2026-10-26T03:05:41.687171958Z","java.util.ArrayList","31568"
+"11","Common-Cleaner","2026-10-26T03:05:41.467698875Z","java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode","5152"
+"1","main-ScalaTest-running-ResolverSuiteBenchmark$Batch","2026-10-26T03:05:41.404568333Z","hkmc2.utils.Publisher$$$Lambda+0x00000078013576b8.1373361892","60973772960"
+"10","C1 CompilerThread0","2026-10-26T03:05:41.404212Z","java.lang.String","28760"
+"16","JFR Recording Scheduler","2026-10-26T03:05:41.467666708Z","jdk.jfr.internal.EventInstrumentation$$Lambda+0x00000078010fa8b8.456554442","3090968"
+"9","C2 CompilerThread0","2026-10-26T03:05:57.468333750Z","java.lang.String","280"

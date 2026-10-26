@@ -1,6 +1,10 @@
 Resolver retention: per-commit compiler timing
 2026-10-26
 
+This is a narrow workload experiment, without allocated-byte measurements.
+See ../resolver-ctest-2026-10-26/README.txt for the full sorted, sequential ctest
+comparison, allocation counters, corrected retained-heap measurements and profiles.
+
 The history contains ten resolver improvements. Each passed hkmc2AllTests/test
 before being committed, with its corresponding regression tests and golden
 outputs. The final compiler and regression-test files are identical to the

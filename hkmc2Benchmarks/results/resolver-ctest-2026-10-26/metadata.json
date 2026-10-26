@@ -1,0 +1,309 @@
+{
+  "created": "2026-10-26T09:30:01.162410+08:00",
+  "harness_revision": "925bf62e6d9f13340ecffb8a6838f73f2c678fbc",
+  "jvm": "java version \"21.0.8\" 2025-07-15 LTS\nJava(TM) SE Runtime Environment (build 21.0.8+12-LTS-250)\nJava HotSpot(TM) 64-Bit Server VM (build 21.0.8+12-LTS-250, mixed mode, sharing)",
+  "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+  "jvm_flags": [
+    "-Xms1g",
+    "-Xmx1g",
+    "-Xss8m",
+    "-XX:ActiveProcessorCount=1",
+    "-XX:+UseSerialGC",
+    "-Xbatch"
+  ],
+  "warmups": 12,
+  "samples": 8,
+  "forks": 3,
+  "test_order": "sorted names, sequential ScalaTest run without Distributor",
+  "active_processors": 1,
+  "physical_cpu_affinity": "not pinned; macOS scheduler controls core placement",
+  "background_jit": false,
+  "suite": "every hkmc2.CompileTestRunner case, fresh CompilerCtx per batch",
+  "builds": [
+    {
+      "phase": "00",
+      "label": "baseline",
+      "revision": "8feafb6a165ebd789b8d197d4c603b28c1eb2407",
+      "jar": "/private/tmp/resolver-history-split/phase-00.jar",
+      "sha256": "77fd92c583cdb20f50a65f18a0b8b6b1034dc310e0aa61522adaa96864da4784",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "01",
+      "label": "completion-state",
+      "revision": "a5a0c7e9f8ae08ea016e00270c886ac1c2ae8d04",
+      "jar": "/private/tmp/resolver-history-split/phase-01.jar",
+      "sha256": "a14296728f4ea6c8e28ead92818ea0fc8a8c4b32d6530c90446846986ccd1760",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "02",
+      "label": "shape-identities",
+      "revision": "c0b3ced264e675416adea2c257f75168eaaf1efe",
+      "jar": "/private/tmp/resolver-history-split/phase-02.jar",
+      "sha256": "307887351e116ea53f871802b985074b3b3b6db633e1d754cdc8c89d2ae129d5",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "03",
+      "label": "reference-scope",
+      "revision": "c603ea83dd29b810e0a73c5f263e26f88469bc7a",
+      "jar": "/private/tmp/resolver-history-split/phase-03.jar",
+      "sha256": "652ccf1f9d0f980c9895b6df24641c27ec4996268af2a06d1b7d399cbaa55a9e",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "04",
+      "label": "callback-ownership",
+      "revision": "f0fcf2be33149c7874416b8ffed5ea3d7ff0475b",
+      "jar": "/private/tmp/resolver-history-split/phase-04.jar",
+      "sha256": "e22ff2500c11358a1d454afbec8690fcaaf1d93749e5bf952742211884632615",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "05",
+      "label": "source-metadata",
+      "revision": "ae34c386eafbfc7972a0de433adf83fdf89fdc1a",
+      "jar": "/private/tmp/resolver-history-split/phase-05.jar",
+      "sha256": "f6e33994d13232c46d11a15d6c743f7c816affa5dd6751fd1a1d1771fc6461a5",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "06",
+      "label": "context-values",
+      "revision": "039bc5fab2986b99fee5eaf3a079213d683801b7",
+      "jar": "/private/tmp/resolver-history-split/phase-06.jar",
+      "sha256": "8ac697838bb0e5ea7b53337ffdc657faa2e10b6d4f90c7badbca76027ca8f197",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "07",
+      "label": "one-shot-observers",
+      "revision": "206543e21a53c91bc178a845186ed01859e6a694",
+      "jar": "/private/tmp/resolver-history-split/phase-07.jar",
+      "sha256": "ee776071c0eaf56ba017e86eb6f891615f7d69eed25d1168eef64bf3ea80c291",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "08",
+      "label": "generated-members",
+      "revision": "391866a984ceca89d3d7905aebf03a2d7e8ded8e",
+      "jar": "/private/tmp/resolver-history-split/phase-08.jar",
+      "sha256": "5d659f2f8381669218b79125a21852beecad62e8e6bd3f0a9e931f9d0711f773",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "09",
+      "label": "workspace-release",
+      "revision": "550a374e428bf9243fbdf14c66327024edfff13f",
+      "jar": "/private/tmp/resolver-history-split/phase-09.jar",
+      "sha256": "a5c5dd942b13cd65b07e9c285f7e17acef745e093de9ac6e79cae64294208250",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "10",
+      "label": "interface-pruning",
+      "revision": "f6cce3ecac888a11979fd2c5866bbc2faab96877",
+      "jar": "/private/tmp/resolver-history-split/phase-10.jar",
+      "sha256": "7d62430a8d799b166dfc9a32be34b3507108a04b7b5dfed8e0c9a13373c0f0bb",
+      "validation": "hkmc2AllTests/test"
+    }
+  ],
+  "schedule": [
+    {
+      "fork": 0,
+      "build_index": 6,
+      "phase": "06"
+    },
+    {
+      "fork": 0,
+      "build_index": 5,
+      "phase": "05"
+    },
+    {
+      "fork": 0,
+      "build_index": 2,
+      "phase": "02"
+    },
+    {
+      "fork": 0,
+      "build_index": 4,
+      "phase": "04"
+    },
+    {
+      "fork": 0,
+      "build_index": 0,
+      "phase": "00"
+    },
+    {
+      "fork": 0,
+      "build_index": 8,
+      "phase": "08"
+    },
+    {
+      "fork": 0,
+      "build_index": 9,
+      "phase": "09"
+    },
+    {
+      "fork": 0,
+      "build_index": 7,
+      "phase": "07"
+    },
+    {
+      "fork": 0,
+      "build_index": 10,
+      "phase": "10"
+    },
+    {
+      "fork": 0,
+      "build_index": 1,
+      "phase": "01"
+    },
+    {
+      "fork": 0,
+      "build_index": 3,
+      "phase": "03"
+    },
+    {
+      "fork": 1,
+      "build_index": 7,
+      "phase": "07"
+    },
+    {
+      "fork": 1,
+      "build_index": 3,
+      "phase": "03"
+    },
+    {
+      "fork": 1,
+      "build_index": 5,
+      "phase": "05"
+    },
+    {
+      "fork": 1,
+      "build_index": 6,
+      "phase": "06"
+    },
+    {
+      "fork": 1,
+      "build_index": 1,
+      "phase": "01"
+    },
+    {
+      "fork": 1,
+      "build_index": 4,
+      "phase": "04"
+    },
+    {
+      "fork": 1,
+      "build_index": 0,
+      "phase": "00"
+    },
+    {
+      "fork": 1,
+      "build_index": 9,
+      "phase": "09"
+    },
+    {
+      "fork": 1,
+      "build_index": 8,
+      "phase": "08"
+    },
+    {
+      "fork": 1,
+      "build_index": 2,
+      "phase": "02"
+    },
+    {
+      "fork": 1,
+      "build_index": 10,
+      "phase": "10"
+    },
+    {
+      "fork": 2,
+      "build_index": 3,
+      "phase": "03"
+    },
+    {
+      "fork": 2,
+      "build_index": 0,
+      "phase": "00"
+    },
+    {
+      "fork": 2,
+      "build_index": 8,
+      "phase": "08"
+    },
+    {
+      "fork": 2,
+      "build_index": 5,
+      "phase": "05"
+    },
+    {
+      "fork": 2,
+      "build_index": 9,
+      "phase": "09"
+    },
+    {
+      "fork": 2,
+      "build_index": 7,
+      "phase": "07"
+    },
+    {
+      "fork": 2,
+      "build_index": 10,
+      "phase": "10"
+    },
+    {
+      "fork": 2,
+      "build_index": 6,
+      "phase": "06"
+    },
+    {
+      "fork": 2,
+      "build_index": 2,
+      "phase": "02"
+    },
+    {
+      "fork": 2,
+      "build_index": 1,
+      "phase": "01"
+    },
+    {
+      "fork": 2,
+      "build_index": 4,
+      "phase": "04"
+    }
+  ],
+  "common_archives": [
+    {
+      "classpath_index": 0,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/hkmc2Benchmarks/target/scala-3.8.4/test-classes",
+      "file": "common-00.jar",
+      "sha256": "50466780f372b13923c7fdd155600341b89b4e7d549b77c45b2a6bf8f260718f"
+    },
+    {
+      "classpath_index": 3,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/core/jvm/target/scala-2.13/classes",
+      "file": "common-03.jar",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "classpath_index": 4,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/hkmc2DiffTests/target/scala-3.8.4/test-classes",
+      "file": "common-04.jar",
+      "sha256": "3effec65b09592d777c2f8697e7aaf0ffe49271050c61b1b74e9b398b3af3395"
+    },
+    {
+      "classpath_index": 6,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/hkmc2/jvm/target/scala-3.8.4/test-classes",
+      "file": "common-06.jar",
+      "sha256": "aeb5e7d08437f0056db3ed0a1eee8202c5e5e7bb28eba810f308ebbbd6854641"
+    }
+  ],
+  "mls_corpus_sha256": "58cba4f56b67f380a1a5ae62ebc87bb5ce38a0ad26b08d45b5f86d59391c4fb1",
+  "allocation_api": "com.sun.management.ThreadMXBean.getTotalThreadAllocatedBytes (all JVM threads)",
+  "heap_method": "full GC with context held, full GC after context release, weak-reference check",
+  "measurement_gc": "natural; explicit GC only in the separate final retained-heap batch"
+}

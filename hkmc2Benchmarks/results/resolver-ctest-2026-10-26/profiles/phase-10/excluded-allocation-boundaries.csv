@@ -1,0 +1,6 @@
+"thread_id","thread_name","time","class","weight_bytes"
+"13","JFR Periodic Tasks","2026-10-26T03:07:55.328625375Z","java.util.ArrayList","31568"
+"10","C1 CompilerThread0","2026-10-26T03:07:55.268086Z","java.lang.String","27600"
+"1","main-ScalaTest-running-ResolverSuiteBenchmark$Batch","2026-10-26T03:07:55.267814458Z","hkmc2.semantics.ResolutionContext","56397353568"
+"11","Common-Cleaner","2026-10-26T03:07:55.398605333Z","java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionNode","7360"
+"9","C2 CompilerThread0","2026-10-26T03:08:26.383572083Z","java.lang.String","280"

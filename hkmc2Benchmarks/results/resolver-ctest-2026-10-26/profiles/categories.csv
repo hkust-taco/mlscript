@@ -1,0 +1,15 @@
+phase,kind,category,events,weight_bytes,share_pct
+09,execution,graph-context,7,0,0.5025125628140703
+09,execution,other,1386,0,99.49748743718592
+09,allocation,graph-context,1,5724368,0.004793706304454096
+09,allocation,other,18600,119408516648,99.99520629369555
+10,execution,code-context,14,0,0.6769825918762089
+10,execution,finalization,41,0,1.9825918762088974
+10,execution,graph-context,15,0,0.7253384912959381
+10,execution,other,1709,0,82.64023210831722
+10,execution,retention-bookkeeping,289,0,13.97485493230174
+10,allocation,code-context,785,4505918880,2.9460136713676275
+10,allocation,finalization,83,463749120,0.30320369362812555
+10,allocation,graph-context,1,5724448,0.003742699883898725
+10,allocation,other,22755,134798937272,88.13285872761635
+10,allocation,retention-bookkeeping,2166,13175363752,8.614181207504002
