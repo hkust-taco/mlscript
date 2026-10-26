@@ -263,7 +263,7 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
   protected val valueHash: Int = reference.hashCode
   protected def sameValue(other: ValueKey): Bool = other match
     case that: DeclaredType =>
-      if reference.pool eq that.reference.pool then reference eq that.reference
+      if reference.scope eq that.reference.scope then reference eq that.reference
       else DeclaredType.equivalent(reference, that.reference)
     case _ => false
 
@@ -382,7 +382,7 @@ object DeclaredType:
   private val emptyBindings = new Bindings(Map.empty)
 
   private[semantics] final class Reference private[DeclaredType] (val resolution: TypeResolution, val bindings: Bindings,
-      val instances: TypeSubstitution, val positive: Bool, val pool: References) extends ValueKey:
+      val instances: TypeSubstitution, val positive: Bool, val scope: Object) extends ValueKey:
     protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), System.identityHashCode(resolution),
       bindings.hashCode, instances.hashCode, positive.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
@@ -394,13 +394,16 @@ object DeclaredType:
     * once on import and is then compared through canonical child references.
     */
   private[semantics] final class References(substitutions: scala.collection.mutable.Map[TypeSubstitution, TypeSubstitution]):
+    // References only need to recognize their canonicalization scope. Retaining the
+    // builder itself would keep every sibling reference and import memo alive.
+    private val scope = new Object
     private val bindings = scala.collection.mutable.HashMap.empty[Bindings, Bindings]
     private val references = scala.collection.mutable.HashMap.empty[Reference, Reference]
     private val imported = new java.util.IdentityHashMap[Reference, Reference]
     private[hkmc2] def size: Int = references.size
     private[hkmc2] def importedCount: Int = imported.size
     def local(reference: Reference): Reference =
-      if reference.pool eq this then reference
+      if reference.scope eq scope then reference
       else
         val known = imported.get(reference)
         if known != null then known
@@ -410,7 +413,7 @@ object DeclaredType:
           result
     def apply(resolution: TypeResolution, values: Map[VarSymbol, DeclaredType], instances: TypeSubstitution,
         positive: Bool): Reference =
-      val localValues = if values.valuesIterator.forall(_.reference.pool eq this) then values else
+      val localValues = if values.valuesIterator.forall(_.reference.scope eq scope) then values else
         values.map: (symbol, tpe) =>
           val reference = local(tpe.reference)
           symbol -> new DeclaredType(reference, reference.bindings.values)(N, N, N)
@@ -418,7 +421,7 @@ object DeclaredType:
         val binding = new Bindings(localValues.view.mapValues(_.semantic).toMap)
         bindings.getOrElseUpdate(binding, binding)
       val environment = if instances.isEmpty then TypeSubstitution.empty else substitutions.getOrElseUpdate(instances, instances)
-      val reference = new Reference(resolution, canonical, environment, positive, this)
+      val reference = new Reference(resolution, canonical, environment, positive, scope)
       references.getOrElseUpdate(reference, reference)
 
   def apply(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType],
@@ -433,7 +436,7 @@ object DeclaredType:
   private def equivalent(left: Reference, right: Reference): Bool =
     if left eq right then true
     else if left.hashCode != right.hashCode then false
-    else if left.pool eq right.pool then
+    else if left.scope eq right.scope then
       (left.resolution eq right.resolution) && (left.bindings eq right.bindings) &&
         (left.instances eq right.instances) && left.positive == right.positive
     else
