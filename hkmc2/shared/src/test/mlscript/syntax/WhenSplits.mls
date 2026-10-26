@@ -1,0 +1,60 @@
+:.
+:js
+
+
+:e
+when 0 then 1
+//│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
+//│ ║  l.+1: 	when 0 then 1
+//│ ╙──      	^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+class Foo { when 0 then 1 }
+
+:re
+new Foo
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+class Foo { print \ when Bar then 1 else 0 }
+class Bar extends Foo
+do
+  new Foo
+  new Bar
+//│ > 0
+//│ > 1
+
+
+class Foo {
+  fun test1() = when
+    Baz as x then x.baz()
+    Bar as x then x.bar()
+    Foo then -1
+  fun test2(x) =
+    print \ when Bar as y then y.r else x
+}
+class Bar(val r) extends Foo {
+  fun bar() = 1
+}
+class Baz extends Bar(123) {
+  fun baz() = 2
+}
+
+let
+  foo = new Foo
+  bar = new Bar(456)
+  baz = new Baz
+foo.test2(0)
+bar.test2(12)
+baz.test2(34)
+[foo.test1(), bar.test1(), baz.test1()]
+//│ > 0
+//│ > 456
+//│ > 123
+//│ = [-1, 1, 2]
+//│ bar = Bar(456)
+//│ baz = Baz { r: 123 }
+//│ foo = Foo
+
+

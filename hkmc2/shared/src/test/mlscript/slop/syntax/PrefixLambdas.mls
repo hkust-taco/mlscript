@@ -1,0 +1,88 @@
+:.
+:js
+
+
+:expect [42, 3, 7]
+val constant = => 42
+val successor = => _ + 1
+val sum = => _ + _
+[constant(), successor(2), sum(3, 4)]
+//│ = [42, 3, 7]
+//│ constant = fun
+//│ successor = fun
+//│ sum = fun
+
+// Each explicit delimiter creates its own function, including empty lists.
+:expect [42, 6, 8]
+val nested = => (=> 42)
+val nestedPlaceholder = => (=> _ + 1)
+val mixed = => _ + (=> 3)()
+[nested()(), nestedPlaceholder()(5), mixed(5)]
+//│ = [42, 6, 8]
+//│ mixed = fun
+//│ nested = fun
+//│ nestedPlaceholder = fun
+
+// Explicit lambdas capture their environment without evaluating the body early.
+:expect [0, 1, 2]
+let count = 0
+val next = => {
+  set count = count + 1
+  count
+}
+let before = count
+[before, next(), next()]
+//│ = [0, 1, 2]
+//│ before = 0
+//│ count = 2
+//│ next = fun
+
+// Backslash arguments may explicitly suspend a placeholder-free value.
+:expect 42
+fun invoke(f) = f()
+invoke \ (=> 42)
+//│ = 42
+
+// A lambda remains a value when passed to a non-backslash call.
+:expect 23
+invoke(=> 23)
+//│ = 23
+
+// Parentheses and blocks preserve the explicit lambda's scope.
+:expect 5
+val block = => {
+  val n = 4
+  n + 1
+}
+block()
+//│ = 5
+//│ block = fun
+
+// Explicit prefix lambdas have the same non-local return boundary as `() =>`.
+:e
+fun returning() = => return 17
+//│ ╔══[COMPILATION ERROR] Non-local return statements are only supported with effect handlers enabled.
+//│ ║  l.+1: 	fun returning() = => return 17
+//│ ╙──      	                     ^^^^^^^^^
+
+:effectHandlers
+:lift
+:expect 17
+fun returning() =
+  let escape = => return 17
+  escape()
+  99
+returning()
+//│ = 17
+
+#lang(useNewResolution: false)
+
+:effectHandlers
+:lift
+:expect 17
+fun returning() =
+  let escape = => return 17
+  escape()
+  99
+returning()
+//│ = 17

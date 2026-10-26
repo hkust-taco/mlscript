@@ -67,7 +67,7 @@ true and true
 
 false: Bool
 //│ Parsed:
-//│ 	InfixApp(BoolLit(false),Keywrd(keyword ':'),Ident(Bool))
+//│ 	InfixApp(Ident(false),Keywrd(keyword ':'),Ident(Bool))
 
 f of false
 //│ Parsed:
@@ -206,11 +206,11 @@ region x in
 region x in
   let r = x.ref 42 in let t = r := 0 in !(r)
 //│ Parsed:
-//│ 	Region(Ident(x),Block(List(LetLike(Keywrd(keyword 'let'),Ident(r),Some(RegRef(Ident(x),IntLit(42))),Some(LetLike(Keywrd(keyword 'let'),Ident(t),Some(OpApp(Ident(r),Ident(:=),List(IntLit(0)))),Some(App(Ident(!),Tup(List(Bra(Round,Ident(r))))))))))))
+//│ 	Region(Ident(x),Block(List(LetLike(Keywrd(keyword 'let'),Ident(r),Some(RegRef(Ident(x),IntLit(42))),Some(LetLike(Keywrd(keyword 'let'),Ident(t),Some(OpApp(Ident(r),Ident(:=),List(IntLit(0)))),Some(App(Ident(!),Tup(List(Ident(r)))))))))))
 
 !(r) + 1
 //│ Parsed:
-//│ 	OpApp(App(Ident(!),Tup(List(Bra(Round,Ident(r))))),Ident(+),List(IntLit(1)))
+//│ 	OpApp(App(Ident(!),Tup(List(Ident(r)))),Ident(+),List(IntLit(1)))
 
 Int ->{Any} Int
 //│ Parsed:

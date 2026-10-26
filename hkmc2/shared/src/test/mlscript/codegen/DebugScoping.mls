@@ -1,0 +1,145 @@
+:js
+
+
+// A method must use the same definition-local lowering trace as a free function.
+#dbg(showUids: false)
+module DebugMethods with
+  @dbg('lowering) fun selected(x) = x
+  fun sibling(x) = x
+//│ Lowering.term x⁰ – symbol x⁰
+//│ Expanding term Ref(x⁰)
+//│ ~> Ref(x⁰)
+
+:expect 7
+DebugMethods.selected(7)
+//│ = 7
+
+
+// Changing only UID display should retain the outer definition's trace flag.
+@dbg('lowering, showUids: false) fun debug_outer() =
+  @dbg(showUids: false) fun debug_inner() = 42
+  @dbg(lowering: false) fun debug_muted() = 43
+  debug_inner()
+//│ Lowering.term { fun member:debug_inner⁰() = 42; fun member:debug_muted⁰() = 43; member:debug_inner⁰() }
+//│ Lowering.term 42
+//│ Lowering.term member:debug_inner⁰()
+//│ Expanding term App(Ref(member:debug_inner⁰),Tup(List()))
+//│ ~> App(Ref(member:debug_inner⁰),Tup(List()))
+//│ Expanding term Ref(member:debug_inner⁰)
+//│ ~> Resolved(Ref(member:debug_inner⁰),term:debug_inner¹)
+//│ Lowering.term member:debug_inner⁰‹term:debug_inner¹› – symbol term:debug_inner¹
+//│ Expanding term Resolved(Ref(member:debug_inner⁰),term:debug_inner¹)
+//│ ~> Resolved(Ref(member:debug_inner⁰),term:debug_inner¹)
+
+
+// Diff-test debug commands trace the whole block. A definition's @dbg annotation that does not
+// enable the corresponding phase must not mute them inside that definition.
+:dl
+@dbg(showUids: false) fun command_lowering() = 1601
+//│ Lowering.term 1601
+//│ Lowering.term undefined
+//│ avoidNames Scoped(Set(member:command_lowering⁰),Define(FunDefn(None,member:command_lowering⁰,term:command_lower...
+//│ | avoidNames Define(FunDefn(None,member:command_lowering⁰,term:command_lowering¹,List(LoweredParamList(‹›,List(),...
+//│ | | avoidNames Return(Lit(IntLit(1601)))...
+//│ | | avoidNames End()...
+
+:noCodeGen
+:de
+@dbg('lowering) fun command_elaboration(x) = x
+//│ Elab block List(Annotated(App(Ident(dbg),Tup(List(Ident('lowering)))),TermDef(Fun,App(Ident(command_elaboration[...] LocalScope(block:6)
+//│ | Processing term definition App(Ident(command_elaboration),Tup(List(Ident(x))))
+//│ | Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
+//│ | Elab term Ident(x)
+//│ | | Elab subterm Ident(x)
+//│ | | ~> x¹
+//│ | ~> x¹
+//│ ~> { fun member:command_elaboration⁰(x¹) = x¹; }
+
+
+// A class's lowering trace includes its superclass reference,
+// but not the statements that follow the class definition.
+class DebugParent
+@dbg('lowering, showUids: false) class DebugChild extends DebugParent
+print(1701)
+//│ Lowering.term member:DebugParent⁰ – symbol class:DebugParent¹
+//│ Expanding term Ref(member:DebugParent⁰)
+//│ ~> Resolved(Ref(member:DebugParent⁰),class:DebugParent¹)
+//│ Lowering.term { } (in stmt)
+//│ Lowering.term undefined (in stmt)
+//│ > 1701
+
+
+// An error in an annotated definition must not enable tracing for its following sibling.
+:noCodeGen
+:e
+@dbg('elaboration, showUids: false)
+fun debug_error() = missing_debug_name
+fun after_debug_error(x) = x
+//│ Processing term definition App(Ident(debug_error),Tup(List()))
+//│ Elab term Ident(missing_debug_name)
+//│ | Elab subterm Ident(missing_debug_name)
+//│ ╔══[COMPILATION ERROR] Name not found: missing_debug_name
+//│ ║  l.+2: 	fun debug_error() = missing_debug_name
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^
+//│ | ~> <error>
+//│ ~> <error>
+
+
+// Local values lower to assignments; their debug scope must end before the next value.
+#lang(0.3.x)
+
+:expect 3
+fun debug_local_values() =
+  @dbg('lowering, showUids: false) val selected_local = 1
+  val unrelated_local = 2
+  selected_local + unrelated_local
+debug_local_values()
+//│ Lowering.term 1
+//│ = 3
+
+
+// Classes and their companions share lowering, while each elaboration annotation is scoped.
+@dbg('elaboration, 'lowering, showUids: false)
+class DebugCompanion(value: Int) with
+  fun answer() = 1101
+@dbg('elaboration, showUids: false)
+module DebugCompanion with
+  fun answer() = 1102
+//│ Elaborating ParamTree: ParamTree(‹›,Ident(value),Some(Ident(Int)),None,Set())
+//│ Elab term Ident(Int)
+//│ | Elab subterm Ident(Int)
+//│ | | listen: trm = member:Int⁰
+//│ | ~> member:Int⁰^class:DebugCompanion⁰
+//│ ~> member:Int⁰^class:DebugCompanion⁰
+//│ transportType type of member:Int⁰ (previous = List(), marks = List(↘⟨class:DebugCompanion⁰⟩ϵ))
+//│ | .exit InstanceShape(missing) (↘⟨class:DebugCompanion⁰⟩ϵ)
+//│ | | .exit InstanceShape(missing) (ϵ)
+//│ | | = InstanceShape(missing)
+//│ | = MarkedShape(InstanceShape(missing), ↘⟨class:DebugCompanion⁰⟩ϵ)
+//│ Processing class definition Ident(DebugCompanion)
+//│ | Companion: Some(module:DebugCompanion¹)
+//│ | listen: trm = member:DebugCompanion²
+//│ | Elab block List(TermDef(Fun,App(Ident(answer),Tup(List())),Some(IntLit(1101)))) InnerScope(class:DebugCompanion⁰)
+//│ | | Processing term definition App(Ident(answer),Tup(List()))
+//│ | | Elab term IntLit(1101)
+//│ | | | Elab subterm IntLit(1101)
+//│ | | | ~> 1101
+//│ | | ~> 1101
+//│ | ~> { method fun member:answer⁰() = 1101; }
+//│ Processing module/object definition Ident(DebugCompanion)
+//│ | Companion: Some(class:DebugCompanion⁰)
+//│ | Elab block List(TermDef(Fun,App(Ident(answer),Tup(List())),Some(IntLit(1102)))) InnerScope(module:DebugCompanion¹)
+//│ | | Processing term definition App(Ident(answer),Tup(List()))
+//│ | | Elab term IntLit(1102)
+//│ | | | Elab subterm IntLit(1102)
+//│ | | | ~> 1102
+//│ | | ~> 1102
+//│ | ~> { fun member:answer¹() = 1102; }
+//│ Lowering.term 1101
+//│ Lowering.term { val member:value⁰ = value¹^term:DebugCompanion⁰/value²; } (in stmt)
+//│ Lowering.term value¹^term:DebugCompanion⁰/value² – symbol value¹
+//│ Lowering.term value¹ – symbol value¹
+//│ Lowering.term undefined (in stmt)
+//│ Lowering.term 1102
+//│ Lowering.term { } (in stmt)
+//│ Lowering.term undefined (in stmt)

@@ -8,8 +8,8 @@ import "../../mlscript-compile/Option.mjs"
 :e
 Option.isDefined(new Option.Some(1))
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.9: 	Option.isDefined(new Option.Some(1))
-//│ ║       	                 ^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	Option.isDefined(new Option.Some(1))
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^
 //│ ╙── Dynamic value cannot be instantiated with keyword 'new'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

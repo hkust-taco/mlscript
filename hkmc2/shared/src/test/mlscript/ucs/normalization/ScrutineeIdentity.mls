@@ -32,8 +32,8 @@ fun tuple(x) = if
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    x is []=2 and
-//│ >      let tmp:element0$ = ((tmp:runtime⁰.)Tuple‹module:Tuple›.)get‹term:Tuple/get›(x⁰, 0)
-//│ >      let tmp:element1$ = ((tmp:runtime⁰.)Tuple‹module:Tuple›.)get‹term:Tuple/get›(x⁰, 1)
+//│ >      let tmp:element0$ = tmp:runtime⁰.Tuple‹module:Tuple⁰›.get‹term:Tuple⁰/get⁰›(x⁰, 0)
+//│ >      let tmp:element1$ = tmp:runtime⁰.Tuple‹module:Tuple⁰›.get‹term:Tuple⁰/get⁰›(x⁰, 1)
 //│ >      tmp:element0$ is 0 and
 //│ >        let y = tmp:element1$⁰
 //│ >        tmp:element1$ is 1 then y⁰

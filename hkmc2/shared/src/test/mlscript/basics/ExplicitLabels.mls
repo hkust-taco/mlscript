@@ -32,10 +32,10 @@ let i = 0 in do outLoop:
 :e
 missing.break(1)
 //│ ╔══[COMPILATION ERROR] Name not found: missing
-//│ ║  l.33: 	missing.break(1)
+//│ ║  l.+1: 	missing.break(1)
 //│ ╙──      	^^^^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'break' has no resolved target
-//│ ║  l.33: 	missing.break(1)
+//│ ║  l.+1: 	missing.break(1)
 //│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -43,10 +43,10 @@ missing.break(1)
 :e
 missing.continue
 //│ ╔══[COMPILATION ERROR] Name not found: missing
-//│ ║  l.44: 	missing.continue
+//│ ║  l.+1: 	missing.continue
 //│ ╙──      	^^^^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'continue' has no resolved target
-//│ ║  l.44: 	missing.continue
+//│ ║  l.+1: 	missing.continue
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -55,7 +55,7 @@ missing.continue
 () => do lbl:
   lbl.continue(1)
 //│ ╔══[COMPILATION ERROR] 'continue' does not take arguments.
-//│ ║  l.56: 	  lbl.continue(1)
+//│ ║  l.+2: 	  lbl.continue(1)
 //│ ╙──      	  ^^^^^^^^^^^^^^^
 //│ = fun
 
@@ -64,7 +64,7 @@ missing.continue
 do lbl:
   lbl.break(1, 2)
 //│ ╔══[COMPILATION ERROR] 'break' expects at most one argument.
-//│ ║  l.65: 	  lbl.break(1, 2)
+//│ ║  l.+2: 	  lbl.break(1, 2)
 //│ ╙──      	  ^^^^^^^^^^^^^^^
 
 
@@ -72,10 +72,10 @@ do lbl:
 lbl:
   lbl.break(1)
 //│ ╔══[COMPILATION ERROR] Name not found: lbl
-//│ ║  l.73: 	  lbl.break(1)
+//│ ║  l.+2: 	  lbl.break(1)
 //│ ╙──      	  ^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'break' has no resolved target
-//│ ║  l.73: 	  lbl.break(1)
+//│ ║  l.+2: 	  lbl.break(1)
 //│ ╙──      	  ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ lbl = undefined
@@ -126,11 +126,11 @@ do lbl:
   let lbl = 5
   lbl.break
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.127: 	  lbl.break
-//│ ║         	  ^^^^^^^^^
+//│ ║  l.+3: 	  lbl.break
+//│ ║        	  ^^^^^^^^^
 //│ ╟── Integer literal does not contain member 'break'
-//│ ║  l.126: 	  let lbl = 5
-//│ ╙──       	            ^
+//│ ║  l.+2: 	  let lbl = 5
+//│ ╙──      	            ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -161,9 +161,9 @@ do
   only:
     only.break(x)
 //│ ╔══[COMPILATION ERROR] Name not found: only
-//│ ║  l.162: 	    only.break(x)
-//│ ╙──       	    ^^^^
+//│ ║  l.+4: 	    only.break(x)
+//│ ╙──      	    ^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'break' has no resolved target
-//│ ║  l.162: 	    only.break(x)
-//│ ╙──       	    ^^^^^^^^^^
+//│ ║  l.+4: 	    only.break(x)
+//│ ╙──      	    ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

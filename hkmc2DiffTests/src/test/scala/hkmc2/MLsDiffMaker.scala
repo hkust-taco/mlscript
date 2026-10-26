@@ -182,6 +182,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       noFreeze = noFreeze.isSet,
       noModuleCheck = noModuleCheck.isSet,
       aggressive = aggressive.isSet && noAggressive.isUnset,
+      debug = Config.Debug.default,
       optimizer = Optimizer(
         deforest = Opt.when(deforest.isSet):
           val flags = parseFlags(deforest.get)
@@ -237,12 +238,17 @@ abstract class MLsDiffMaker extends DiffMaker:
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   
   
-  given Elaborator.State = new Elaborator.State:
-    override def dbg: Bool =
-      dbgParsing.isSet
-      // || dbgElab.isSet
-      || dbgResolving.isSet
-      || debug.isSet
+  protected lazy val debugContext = new DebugContext:
+    override protected def forceUids: Bool = dbgParsing.isSet || dbgResolving.isSet || debug.isSet
+  protected lazy val debugOutputHandler = DebugOutputHandler(cctx.fs, str => output(str))
+
+  protected def outputDebugSection(title: Str, contents: Str, out: Config.DebugOutput): Unit = out match
+    case Config.DebugOutput.StdIO =>
+      outputSeparator(title)
+      output(contents)
+    case _ => debugOutputHandler.emit(out, s"${title}\n${contents}")
+
+  given Elaborator.State = new Elaborator.State
   
   
   protected lazy val dbgScp: utils.Scope = // for unique symbol debug-printing only
@@ -254,42 +260,39 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   val dbgPrinter: SymbolPrinter = new SymbolPrinter(dbgScp):
-    override def preProcess(t: Product): Product = super.preProcess:
+    override protected def preProcess(t: Product): Product =
       case class Unexpanded(origin: Resolvable)
       t match
-      case t: Resolvable if t.hasExpansion => t.expanded
-      case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
-      case t => t
-    override def postProcess(t: Product): Str =
-      super.postProcess(t) + (
-        if showLocations.isSet then
-          t match
+        case t: Resolvable if t.hasExpansion => t.expanded
+        case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
+        case t => t
+    override protected def postProcess(t: Product): Str =
+      if showLocations.isSet then
+        t match
           case t: Located => t.toLoc.fold(" loc[none]"): loc =>
             val (sl, _, sc) = loc.origin.fph.getLineColAt(loc.spanStart)
             val (el, _, ec) = loc.origin.fph.getLineColAt(loc.spanEnd)
             s" loc[$sl:$sc-$el:$ec]"
-        else ""
-      )
+          case _ => ""
+      else ""
   
   
-  val etl = new TraceLogger:
-    override def doTrace = dbgElab.isSet || scope.exists:
-      showUCS.get.getOrElse(Set.empty).contains
-    override def emitDbg(str: String): Unit = output(str)
-    override def trace[T](pre: => Str, post: T => Str = noPostTrace)(thunk: => T): T =
-      // * This override is for avoiding to increase the indentation when tracing if doTrace is false,
-      // * so that selectively-enabled tracing doesn't get strange indentation.
-      // * Perhaps this should be the default behavior of TraceLogger.
-      if doTrace then super.trace(pre, post)(thunk)
-      else thunk
+  protected abstract class DiffTraceLogger(indentWhenDisabled: Bool)
+      extends TraceLogger(debugContext, debugOutputHandler, indentWhenDisabled, prefix = "")(using dbgPrinter)
+
+  protected def commandLogger(command: Command[?]): TraceLogger =
+    new DiffTraceLogger(indentWhenDisabled = true):
+      protected def phaseEnabled(config: Config.Debug): Bool = false
+      protected def forceTrace(scope: Opt[Str]): Bool = command.isSet
+
+  val etl = new DiffTraceLogger(indentWhenDisabled = false):
+    protected def phaseEnabled(config: Config.Debug): Bool = config.elaboration
+    protected def forceTrace(scope: Opt[Str]): Bool =
+      dbgElab.isSet || scope.exists(showUCS.get.getOrElse(Set.empty).contains)
   
-  val rtl = new TraceLogger:
-    override def doTrace = dbgResolving.isSet
-    override def emitDbg(str: String): Unit = output(str)
+  val rtl = commandLogger(dbgResolving)
   
-  val ftl = new TraceLogger:
-    override def doTrace = dbgFlow.isSet
-    override def emitDbg(str: String): Unit = output(str)
+  val ftl = commandLogger(dbgFlow)
   
   var curCtx = Elaborator.State.init
   var curICtx = Resolver.ICtx.empty
@@ -413,34 +416,39 @@ abstract class MLsDiffMaker extends DiffMaker:
       case err: Throwable =>
         uncaught(err)
   
-  given tl: TraceLogger with
-    override def doTrace = debug.isSet
-    override def emitDbg(str: String): Unit = output(str)
+  given tl: TraceLogger = commandLogger(debug)
   
   
   def processOrigin(origin: Origin)(using Raise): Unit =
     val oldCtx = curCtx
     
-    given Config = configModify(mkConfig)
+    val baseConfig = configModify(mkConfig)
+    given Config = baseConfig
     
-    val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
+    val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet):
+      override protected def doPrintDbg(msg: Str): Unit = output(msg)
     val tokens = lexer.bracketedTokens
     
     if showParse.isSet || dbgParsing.isSet then
       output(syntax.Lexer.printTokens(tokens))
     
-    val rules = syntax.ParseRules()
-    val p = new syntax.Parser(origin, tokens, rules, raise, dbg = dbgParsing.isSet):
+    val parser = new syntax.Parser(origin, tokens, syntax.ParseRules(), raise, dbg = dbgParsing.isSet):
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
-    val res = p.parseAll(p.block(allowNewlines = true))
+    val res = parser.parseAll(parser.block(allowNewlines = true))
+    val phaseConfig = Config.elaborationConfig(res, file.up)
+    debugContext.configure(phaseConfig.debug)
     
     // If parsed tree is displayed, don't show the string serialization.
-    if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet then
+    if (parseOnly.isSet || showParse.isSet) && !showParsedTree.isSet && !phaseConfig.debug.showParsedTree then
       output(s"Parsed:${res.map("\n\t"+_.showDbg).mkString}")
     
     if showParsedTree.isSet then
       outputSeparator(s"Parsed tree")
       res.foreach(t => output(t.showAsTree))
+    else if phaseConfig.debug.showParsedTree then
+      outputDebugSection("Parsed tree", res.map(_.showAsTree).mkString("\n"), phaseConfig.debug.out)
+    else DebugOutputHandler.showParsedDefinitions(res, phaseConfig, file.up): (tree, out) =>
+      outputDebugSection("Parsed tree", tree.showAsTree, out)
     
     // if showParse.isSet then
     //   output(s"AST: $res")
@@ -467,7 +475,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
     val blk = new syntax.Tree.Block(trees)
-    val elaborationConfig = Config.elaborationConfig(blk)
+    val elaborationConfig = Config.elaborationConfig(blk, file.up)
+    debugContext.configure(elaborationConfig.debug)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
@@ -485,11 +494,13 @@ abstract class MLsDiffMaker extends DiffMaker:
     extractConfig(e.stats)
     
     // If elaborated tree is displayed, don't show the string serialization.
-    if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet then
+    if (showElab.isSet || debug.isSet) && !showElaboratedTree.isSet && !elaborationConfig.debug.showElaboratedTree then
       output(s"Elab: ${e.showDbg}")
     if showElaboratedTree.isSet then
       outputSeparator(s"Elaborated tree")
       output(e.showAsTree)
+    else DebugOutputHandler.showElaboratedTree(e, elaborationConfig)(outputDebugSection)
+    DebugOutputHandler.showElaboratedTerm(e, elaborationConfig, output.ColWidth)(outputDebugSection)(using flowScp)
     
     if showResl.isSet then
       import semantics.ShowCfg
@@ -511,6 +522,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     given Ctx = curCtx
     given Config = Config.extractConfigFromStats(trm)
+    debugContext.configure(config.debug)
     if file.toString =/= runtimeSourceFile.toString && file.toString =/= preludeFile.toString then
       summon[Elaborator.State].initRuntimeSymbolsFromFile(runtimeSourceFile, prelude)(
         using summon[TL], summon[Raise], cctx)

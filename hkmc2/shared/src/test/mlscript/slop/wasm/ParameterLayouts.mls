@@ -1,0 +1,39 @@
+// Keep the default resolution mode covered alongside the strict Wasm tests.
+#lang(0.3.x)
+
+:global
+:wasm
+
+
+// * Calls pad optional parameters to the fixed Wasm arity.
+:expect null
+fun opt(x, y?) = y
+opt(1)
+//│ Wasm result:
+//│ = null
+
+// * Variadic parameters still require packing arguments into an array.
+:e
+fun rest(x, ...xs) = xs
+rest(1, 2)
+//│ ╔══[COMPILATION ERROR] Variadic parameters are not supported by the WebAssembly backend.
+//│ ║  l.+1: 	fun rest(x, ...xs) = xs
+//│ ╙──      	            ^^^^^
+
+// * Trailing parameters are lowered into a rest parameter, which is rejected in the same way.
+:e
+fun trailing(x, ...xs, y) = y
+trailing(1, 2, 3)
+//│ ╔══[COMPILATION ERROR] Variadic parameters are not supported by the WebAssembly backend.
+//│ ║  l.+1: 	fun trailing(x, ...xs, y) = y
+//│ ╙──      	            ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] More arguments were supplied than the WebAssembly call supports.
+//│ ║  l.+2: 	trailing(1, 2, 3)
+//│ ╙──      	^^^^^^^^^^^^^^^^^
+
+// * Constructors bind omitted optional fields to null.
+:expect null
+class OptionalConstructor(val value?)
+(new OptionalConstructor()).value
+//│ Wasm result:
+//│ = null

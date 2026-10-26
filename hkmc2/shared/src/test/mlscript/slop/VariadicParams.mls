@@ -1,0 +1,262 @@
+:.
+open annotations
+
+
+// *** Variadic parameters followed by trailing parameters ***
+
+:sjs
+fun f(x, ...xs, y) = [x, xs, y]
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f;
+//│ f = function f(x, ...args) {
+//│   let y, inlinedVal, tmp, tmp1;
+//│   tmp1 = 1 + args.length;
+//│   runtime.checkArgs("f", 2, tmp1);
+//│   tmp = args.length - 1;
+//│   inlinedVal = runtime.safeCall(args.slice(0, tmp));
+//│   y = args.at(-1);
+//│   return globalThis.Object.freeze([ x, inlinedVal, y ])
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [[1, [], 2], [1, [2], 3], [1, [2, 3], 4]]
+[f(1, 2), f(1, 2, 3), f(1, 2, 3, 4)]
+//│ = [[1, [], 2], [1, [2], 3], [1, [2, 3], 4]]
+
+:e
+f(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	f(1)
+//│ ║        	^^^^
+//│ ╟── Function 'f' expected at least 2 arguments, but got 1
+//│ ║  l.XX: 	fun f(x, ...xs, y) = [x, xs, y]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
+
+fun g(...xs, y, z) = [xs, y, z]
+
+:expect [[[], 1, 2], [[1, 2], 3, 4]]
+[g(1, 2), g(1, 2, 3, 4)]
+//│ = [[[], 1, 2], [[1, 2], 3, 4]]
+
+:expect [1, [2], 3]
+((x, ...xs, y) => [x, xs, y])(1, 2, 3)
+//│ = [1, [2], 3]
+
+
+// *** Optional parameters before a variadic parameter ***
+
+// The required parameters take the first and last arguments, the optional ones
+// take the remaining ones from left to right, and the variadic one takes the rest.
+:sjs
+fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let h;
+//│ h = function h(x, ...args7) {
+//│   let y7, z2, w, inlinedVal12, inlinedVal13, tmp14, tmp15, tmp16;
+//│   tmp16 = 1 + args7.length;
+//│   runtime.checkArgs("h", 2, tmp16);
+//│   tmp15 = args7.length - 1;
+//│   inlinedVal12 = runtime.safeCall(args7.slice(0, tmp15));
+//│   if (runtime.Tuple.isArrayLike(inlinedVal12) && inlinedVal12.length >= 1) {
+//│     y7 = inlinedVal12.at(0);
+//│   } else {
+//│     y7 = null;
+//│   }
+//│   if (runtime.Tuple.isArrayLike(inlinedVal12) && inlinedVal12.length >= 2) {
+//│     z2 = inlinedVal12.at(1);
+//│   } else {
+//│     z2 = null;
+//│   }
+//│   tmp14 = args7.length - 1;
+//│   inlinedVal13 = runtime.safeCall(args7.slice(2, tmp14));
+//│   w = args7.at(-1);
+//│   return globalThis.Object.freeze([ x, y7, z2, inlinedVal13, w ])
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [[1, null, null, [], 2], [1, 2, null, [], 3]]
+[h(1, 2), h(1, 2, 3)]
+//│ = [[1, null, null, [], 2], [1, 2, null, [], 3]]
+
+:expect [[1, 2, 3, [], 4], [1, 2, 3, [4, 5], 6]]
+[h(1, 2, 3, 4), h(1, 2, 3, 4, 5, 6)]
+//│ = [[1, 2, 3, [], 4], [1, 2, 3, [4, 5], 6]]
+
+
+// *** Explicit `undefined` arguments ***
+
+// Keep unsafe.undefined calls as compiler regression probes; their observed results are not guaranteed.
+f(1, unsafe.undefined, unsafe.undefined)
+//│ = [1, [undefined], undefined]
+
+h(1, unsafe.undefined, 2)
+//│ = [1, undefined, null, [], 2]
+
+h(1, 2, unsafe.undefined, unsafe.undefined, unsafe.undefined)
+//│ = [1, 2, undefined, [undefined], undefined]
+
+:noInline
+fun trailingNoInline(x, ...xs, y) = [xs, y]
+trailingNoInline(1, unsafe.undefined, unsafe.undefined)
+//│ = [[undefined], undefined]
+
+
+// *** Spread arguments ***
+
+:expect [1, [2, 3], 4]
+let arr = [2, 3, 4]
+f(1, ...arr)
+//│ = [1, [2, 3], 4]
+//│ arr = [2, 3, 4]
+
+:expect [1, [2], 3]
+f(...[1, 2], 3)
+//│ = [1, [2], 3]
+
+:expect [[1, 2], 3, 4]
+g(...[1, 2, 3, 4])
+//│ = [[1, 2], 3, 4]
+
+
+// *** Resolution of trailing parameters ***
+
+class A(val a: Int)
+class B(val b: Int)
+
+:expect 2
+private fun lastA(...xs, y) = y.a
+lastA(B(0), B(1), A(2))
+//│ = 2
+
+:e
+private fun lastB(...xs, y) = y.b
+lastB(B(0), A(1))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun lastB(...xs, y) = y.b
+//│ ║        	                              ^^^
+//│ ╟── Instance of class 'A' does not contain member 'b'
+//│ ║  l.+2: 	lastB(B(0), A(1))
+//│ ╙──      	            ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// *** Optimizations ***
+
+:expect 6
+@tailrec fun sum(acc, ...xs, last) =
+  if xs.length == 0 then acc + last else sum(acc + last, ...xs)
+sum(0, 1, 2, 3)
+//│ = 6
+
+// Omitted optional arguments are `null`, even when their extraction is not inlined.
+:noInline
+:expect [1, null, [], 2]
+fun h(x, y?, ...xs, w) = [x, y, xs, w]
+h(1, 2)
+//│ = [1, null, [], 2]
+
+// Stack-safe resumption calls the function again with its saved arguments, which must include
+// those of its rest parameter, including the arguments of the trailing parameters lowered into it.
+:effectHandlers
+:lift
+:stackSafe 10
+:expect [[1, 2], 3]
+fun deep(n, ...xs, last) = if n == 0 then [xs, last] else deep(n - 1, ...xs, last)
+deep(100, 1, 2, 3)
+//│ = [[1, 2], 3]
+
+:effectHandlers
+:lift
+:stackSafe 10
+:expect [1, 2, 3]
+fun deepRest(n, ...xs) = if n == 0 then xs else deepRest(n - 1, ...xs)
+deepRest(100, 1, 2, 3)
+//│ = [1, 2, 3]
+
+:effectHandlers
+:lift
+:stackSafe 10
+:expect [1, [], 2]
+fun deepOpt(n, y?, ...xs, last) = if n == 0 then [y, xs, last] else deepOpt(n - 1, y, ...xs, last)
+deepOpt(100, 1, 2)
+//│ = [1, [], 2]
+
+
+// *** Unknown-length spreads ***
+
+class Head(val head: Int)
+class Middle(val middle: Int)
+class Tail(val tail: Int)
+
+// The first fixed argument always belongs to x, even when the spread is empty.
+:expect 1
+private fun last(x, ...middle, y) = y.tail
+fun viaUnknown(xs: Array[Tail]) = last(Head(0), ...xs)
+viaUnknown([Tail(1)])
+//│ = 1
+
+// Unknown lengths remain accepted; runtime checks a count that is too small.
+:re
+viaUnknown([])
+//│ ═══[RUNTIME ERROR] Error: Function 'last' expected at least 2 arguments but got 1
+
+// The middle fixed argument can reach y or the rest, but never the last parameter:
+// a successful call still needs an argument after it to fill z.
+:expect [2, 3]
+private fun lastOfTwo(x, ...middle, y, z) = z.tail
+fun viaTwo(xs: Array[Tail]) = lastOfTwo(Head(0), Middle(0), ...xs)
+[viaTwo([Tail(2)]), viaTwo([Tail(2), Tail(3)])]
+//│ = [2, 3]
+
+// The same matching rule applies at the other end.
+:expect 4
+private fun first(x, ...middle, y) = x.head
+fun viaPrefix(xs: Array[Head]) = first(...xs, Tail(0))
+viaPrefix([Head(4)])
+//│ = 4
+
+// Several unknown spreads do not make the fixed prefix a possible tail argument.
+:expect 6
+fun viaSeveral(xs: Array[Tail], ys: Array[Tail]) = last(Head(0), ...xs, ...ys)
+viaSeveral([Tail(5)], [Tail(6)])
+//│ = 6
+
+// Optional leading parameters yield to trailing parameters when the count is known.
+:expect [[undefined, 7], [8, 9]]
+private fun optional(x?, ...middle, y) = [if x is Head as x then x.head else unsafe.undefined, y.tail]
+[optional(Tail(7)), optional(Head(8), Tail(9))]
+//│ = [[undefined, 7], [8, 9]]
+
+
+// *** Errors ***
+
+:e
+fun bad(...xs, ...ys) = 0
+//│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
+//│ ║  l.+1: 	fun bad(...xs, ...ys) = 0
+//│ ╙──      	               ^^^^^
+
+:e
+fun bad(...xs, y?) = 0
+//│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
+//│ ║  l.+1: 	fun bad(...xs, y?) = 0
+//│ ╙──      	               ^^
+
+:e
+fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
+//│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
+//│ ║  l.+1: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
+//│ ╙──      	                           ^^^^^^^^^^^^^
+
+:e
+fun bad(f: (...Array[Int], Int?) -> Int) = 0
+//│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
+//│ ║  l.+1: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
+//│ ╙──      	                           ^^^^
+
+:e
+class C(x, ...xs, y)
+//│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
+//│ ║  l.+1: 	class C(x, ...xs, y)
+//│ ╙──      	           ^^^^^

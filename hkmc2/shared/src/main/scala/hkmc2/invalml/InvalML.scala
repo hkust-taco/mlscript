@@ -124,13 +124,13 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
   private def typeAndSubstType
       (ty: Term, pol: Bool)(using map: Map[Uid[Symbol], TypeArg])(using ctx: InvalCtx, cctx: CCtx)
       : GeneralType =
-  trace[GeneralType](s"${ctx.lvl}. Typing type ${ty.showDbg}", r => s"~> ${r.showDbg}"):
+  trace[GeneralType](dbg"${ctx.lvl}. Typing type ${ty.showDbg}", r => s"~> ${r.showDbg}"):
     def mono(ty: Term, pol: Bool): Type =
       monoOrErr(typeAndSubstType(ty, pol), ty)
     ty match
     case Capture(base, _) => typeAndSubstType(base, pol)
     case Ref(sym: LocalSymbol) =>
-      log(s"Type lookup: ${sym.nme} ${sym.uid} ${map.keySet}")
+      log(dbg"Type lookup: ${sym.nme} ${sym.uid} ${map.keySet}")
       map.get(sym.uid) match
         case Some(Wildcard(in, out)) => if pol then out else in
         case Some(ty: Type) => ty
@@ -140,7 +140,9 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             error(msg"Variable not found: ${sym.nme}" -> ty.toLoc :: Nil)
     case FunTy(Term.Tup(params), ret, eff) =>
       PolyFunType(params.map {
-        case Fld(_, p, _) => typeAndSubstType(p, !pol)
+        case Fld(flags, p, _) =>
+          if flags.opt then error(msg"Optional parameters are not supported by InvalML." -> p.toLoc :: Nil)
+          typeAndSubstType(p, !pol)
         case spd: Spd => lastWords(s"unexpected spread in function type parameters: $spd")
       }, typeAndSubstType(ret, pol), eff.map(e => typeAndSubstType(e, pol) match {
         case t: Type => t
@@ -434,8 +436,8 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             case _ =>
               error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
               (Bot, Bot, Bot)
-            scrutinee match // * refine
-              case Ref(sym: LocalSymbol) =>
+            scrutinee.sym match // * refine
+              case sym: LocalSymbol =>
                 nestCtx1 += sym -> clsTy
                 nestCtx2 += sym -> tv
               case _ => () // TODO: refine all variables holding this value?
@@ -492,7 +494,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
 
   // * Note: currently, the returned type is not used or useful, but it could be in the future
   private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: InvalCtx, scope: Scope): (GeneralType, Type) =
-  trace[(GeneralType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs.showDbg}", res => s"! ${res._2.showDbg}"):
+  trace[(GeneralType, Type)](dbg"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs.showDbg}", res => s"! ${res._2.showDbg}"):
     given CCtx = CCtx.init(lhs, S(rhs))
     (lhs, rhs) match
     case (Term.Lam(PlainParamList(params), body), ft @ PolyFunType(args, ret, eff)) => // * annoted functions
@@ -619,14 +621,15 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
           }, typeAndSubstType(resTy, true)(using map.toMap), Bot))
 
   private def typeCheck(t: Term)(using ctx: InvalCtx, scope: Scope): (GeneralType, Type) =
-  trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": (${res._1.showDbg}, ${res._2.showDbg})"):
+  trace[(GeneralType, Type)](dbg"${ctx.lvl}. Typing ${t.showDbg}", res => s": (${res._1.showDbg}, ${res._2.showDbg})"):
     given CCtx = CCtx.init(t, N)
     t match
       case Term.Annotated(Annot.Untyped(), _) => (Bot, Bot)
       case sel @ Term.SynthSel(Ref(_: TopLevelSymbol), nme)
         if sel.symbol.isDefined =>
         typeCheck(Ref(sel.symbol.get)(sel.nme, N))
-      case Ref(sym) =>
+      case ref: (Ref | SimpleRef) =>
+        val sym = ref.sym
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)
           case _ =>
@@ -702,7 +705,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
                 ty
             }
             constrain(tryMkMono(ty, term), ClassLikeType(clsSym, targs))
-            require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+            require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
             (clsDfn.paramsOpt.fold(Nil)(_.params).map {
               case Param(_, sym, sign, _) =>
                 if sym.nme === field.name then sign else N
@@ -717,7 +720,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
       case Term.New(cls, args, N) =>
         cls.symbol.flatMap(_.asCls.flatMap(_.defn)) match
         case S(clsDfn: ClassDef.Parameterized) =>
-          require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+          require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
           val argsList = args match
             case Nil => Nil
             case Term.Tup(elems) :: Nil => elems.map:
@@ -740,7 +743,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
                 ty
             }
             val effBuff = ListBuffer.empty[Type]
-            require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
+            require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
             argsList.iterator.zip(clsDfn.params.params).foreach {
               case (arg, Param(sign = S(sign))) =>
                 val (ty, eff) = ascribe(arg, typeAndSubstType(sign, pol = true)(using map.toMap))

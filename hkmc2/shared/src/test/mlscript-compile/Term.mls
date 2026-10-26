@@ -13,7 +13,7 @@ open Predef
 module Term with...
 
 class Symbol(val name: Str)
-type Literal = null | undefined | Str | Int | Num | Bool
+type Literal = null | unsafe.undefined | Str | Int | Num | Bool
 
 class Pattern with
   constructor
@@ -53,7 +53,7 @@ class Term with
     Lit(val lit: Literal)
     Builtin(val name: Str)
     Ref(val sym: Symbol)
-    CSRef(val sym: Symbol, val base: Str, val file: Str | undefined)
+    CSRef(val sym: Symbol, val base: Str, val file: Str | unsafe.undefined)
     App(val lhs: Term, val rhs: Term)
     Sel(val prefix: Term, val nme: Str)
     DynSel(val prefix: Term, val fld: Term, val arrayIdx: Bool)
@@ -74,7 +74,7 @@ class Term with
 
 class Context(val names: Map[Str, Int], val bindings: Map[Symbol, Str], val dependencies: Set[Str], val printOnly: Bool) with
   fun get(sym: Symbol): Str =
-    if bindings.get(sym) is ~undefined as name then name
+    if bindings.get(sym) is ~unsafe.undefined as name then name
     else if printOnly then sym.name
     else throw Error(StrOps.concat("Invalid binding name ", sym.name))
   fun nest: Context = Context(names, new Map(bindings), dependencies, printOnly)
@@ -138,7 +138,7 @@ fun show(t: Term, ctx: Context): Str =
   if t is
     Ref(sym) then ctx.get(sym)
     CSRef(Symbol(name), baseFile, file) then
-      if file is undefined then ctx.depends(baseFile)
+      if file is unsafe.undefined then ctx.depends(baseFile)
       else ctx.depends(path.join of path.dirname(baseFile), file)
       name
     Lit(lit) then String(lit)

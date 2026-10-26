@@ -132,11 +132,11 @@ private fun read[A](parent: Types.Parent[A]) = parent.item
 read(make(Types.Second(9))).second
 read(make(Types.First(8))).second
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.133: 	read(make(Types.First(8))).second
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+9: 	read(make(Types.First(8))).second
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.133: 	read(make(Types.First(8))).second
-//│ ╙──       	          ^^^^^^^^^^^^^^
+//│ ║  l.+9: 	read(make(Types.First(8))).second
+//│ ╙──      	          ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The imported recursive Stack type supplies an argument to Cons, but Cons's

@@ -1,0 +1,46 @@
+:.
+
+
+fun greet(name: Str, greeting?: Str) =
+  (if greeting is null then "Hello, " else greeting + ", ") + name
+print \ greet("Ana")             // prints: Hello, Ana
+print \ greet("Ana", "Hi")       // prints: Hi, Ana
+//│ > Hello, Ana
+//│ > Hi, Ana
+
+:todo
+fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.+1: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
+//│ ╙──      	                             ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unexpected record key shape.
+//│ ║  l.+1: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
+//│ ╙──      	                                             ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in record literal
+//│ ║  l.+1: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
+//│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── A record type requires statically named fields.
+//│ ║  l.+1: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
+//│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+fun add(x, ...xs) = xs.reduce(=> _ + _, x)
+
+fun greet(name, opts?) =
+  add
+  \ if opts is {:greeting} then greeting + ", " else "Hello, "
+  \ name
+  \ if opts is {:loud} and loud then "!" else ""
+
+print \ greet("Ana")             // prints: Hello, Ana
+print \ greet("Ana", greeting: "Hi")       // prints: Hi, Ana
+print \ greet("Ana", loud: true)       // prints: Hi, Ana
+//│ > Hello, Ana
+//│ > Hi, Ana
+//│ > Hello, Ana!
+
+greet("Ana")
+  \ greeting: "Hi"
+  \ loud: true
+//│ = "Hi, Ana!"
+
+

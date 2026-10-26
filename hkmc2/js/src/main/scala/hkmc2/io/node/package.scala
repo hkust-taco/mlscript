@@ -19,6 +19,7 @@ package object node:
   object fs extends js.Object:
     def readFileSync(path: Str, encoding: Str): Str = js.native
     def writeFileSync(path: Str, data: Str): Unit = js.native
+    def appendFileSync(path: Str, data: Str): Unit = js.native
     def readdirSync(path: Str): js.Array[Str] = js.native
     def existsSync(path: Str): Bool = js.native
     def lstatSync(path: Str): Stats = js.native

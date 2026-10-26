@@ -29,16 +29,18 @@ sealed trait Shape extends ShapeEvent:
     * from the observed value to that witness. Wrappers preserve this ordering.
     * An annotation restricting a value and its class declaration are different
     * witnesses: interface errors use the annotation, while toLoc identifies the
-    * declaration. Diagnostic witnesses do not change semantic keys.
+    * declaration. Unknown values cite their provenance; the enclosing resolution
+    * error already locates the operation, so repeating its operand adds no evidence.
+    * Diagnostic witnesses do not change semantic keys.
     */
   final def diagnostic(message: Message): Ls[(Message, Opt[Loc])] = this match
     case value: TermShape => value.applicationHead._1 match
       case view: NominalInstanceView => view.provenance.diagnostic(message, view.annotation.flatMap(_.toLoc).orElse(toLoc))
       case view: ContextualShape => view.source.diagnostic(message)
       case view: SpecializedShape => view.declaration.diagnostic(message)
-      case unknown: UnknownValueShape => unknown.provenance.diagnostic(message, toLoc)
+      case unknown: UnknownValueShape => unknown.provenance.diagnostic(message, N)
       case opaque: OpaqueTypeShape => opaque.provenance.diagnostic(message, toLoc)
-      case rigid: RigidTypeShape => rigid.provenance.diagnostic(message, toLoc)
+      case rigid: RigidTypeShape => rigid.provenance.diagnostic(message, N)
       case _ => (message -> toLoc) :: Nil
     case _: SymShape => (message -> toLoc) :: Nil
   /** Arity errors also cite where the expected parameter lists are declared, when the
@@ -65,6 +67,7 @@ sealed trait Shape extends ShapeEvent:
     case ts: TupleShape => s"TupleShape(${ts.source.showDbg})"
     case rs: RecordShape => s"RecordShape(${rs.source.showDbg})"
     case rs: RecordTypeShape => s"RecordTypeShape(${rs.source.showDbg})"
+    case view: IntersectionView => s"IntersectionView(${view.values.map(_.shwDbg).mkString(", ")})"
     case ts: InstanceShape => s"InstanceShape(${ts.tpe.resolution.source.showDbg})"
     case ts: NominalInstanceView => s"NominalInstanceView(${ts.defn.sym.showDbg})"
     case ts: OpaqueTypeShape => s"OpaqueTypeShape(${ts.source.showDbg})"
@@ -90,7 +93,7 @@ object ShapeIdentity:
   private[semantics] def comparison(shape: ShapeEvent): Key = shape match
     case instance: InstanceShape => instance.candidateIdentity
     case _: (MarkedShape[?] | ContextualShape | ClassValueShape | NominalInstanceView |
-        CallableTypeShape | RecordTypeShape | SpecializedShape | UnknownValueShape |
+        CallableTypeShape | RecordTypeShape | IntersectionView | SpecializedShape | UnknownValueShape |
         OpaqueTypeShape | RigidTypeShape | ActivatedShapeEvent) => new View(shape)
     // These producers own graph nodes, including synthesized inference hosts.
     // Adding a variant requires choosing its equality policy here.
@@ -111,7 +114,9 @@ object ShapeIdentity:
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
         view.declaration.fold(0)(System.identityHashCode), view.asyncResult.hashCode)
-      case view: RecordTypeShape => ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode)
+      case view: RecordTypeShape => ValueKey.hash(
+        ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.aliases.hashCode)
+      case view: IntersectionView => view.values.map(_.comparison).hashCode
       case view: SpecializedShape => ValueKey.hash(view.declaration.comparison.hashCode,
         view.arguments.hashCode, view.instances.hashCode)
       case view: UnknownValueShape => ValueKey.hash(System.identityHashCode(view.source), view.fromPublicInterface.hashCode)
@@ -139,7 +144,10 @@ object ShapeIdentity:
             a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.asyncResult == b.asyncResult
           case _ => false
         case a: RecordTypeShape => that.shape match
-          case b: RecordTypeShape => a.fields == b.fields
+          case b: RecordTypeShape => a.fields == b.fields && a.aliases == b.aliases
+          case _ => false
+        case a: IntersectionView => that.shape match
+          case b: IntersectionView => a.values.map(_.comparison) == b.values.map(_.comparison)
           case _ => false
         case a: SpecializedShape => that.shape match
           case b: SpecializedShape => a.declaration.comparison == b.declaration.comparison &&
@@ -302,7 +310,7 @@ object Marked:
 end Marked
 
 final case class MarkedShape[+T <: NonMarkedShape](sh: T, mark: SomeMarks) extends TermShape:
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     sh.getMemberThrough(name, mark)
   override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool = sh.isInstanceOfClass(cls)
   def describe: Str = sh.describe
@@ -313,7 +321,7 @@ object MarkedShape:
     case sh: NonMarkedShape => MarkedShape(sh, EntryMark(boundary, id, NoMarks))
     case MarkedShape(sh, marks) => MarkedShape(sh, EntryMark(boundary, id, marks))
   def exit(sh: TermShape, boundary: ResolutionBoundary, id: Opt[FlowSymbol])(using TL): TermShape | NoShape =
-  tl.trace[TermShape | NoShape](s".exit MarkedShape (${sh.shwDbg}, ${boundary.showDbg}, ${id.fold("")(_.showDbg)})", res => s"= ${res.shwDbg}"):
+  tl.trace[TermShape | NoShape](dbg".exit MarkedShape (${sh.shwDbg}, ${boundary.showDbg}, ${id.fold("")(_.showDbg)})", res => s"= ${res.shwDbg}"):
     sh match
     // Exits are only ever prepended to a path's trailing exits, never compared
     // against them; they locate what a value refers to. A self-contained value
@@ -340,15 +348,15 @@ end MarkedShape
 
 sealed trait TermShape extends Shape, ShapeLike:
   // Cache all lookup outcomes per shape, without materializing all inherited members.
-  final def getMember(name: Str)(using state: ResolutionContext): MemberLookup =
+  final def getMember(name: MemberKey)(using state: ResolutionContext): MemberLookup =
     state.state.membersCache.getOrElseUpdate((this, name), getMemberImpl(name))
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup
   /** Lookup on this shape as reached through the receiver path `receiver`.
     * Shapes whose members are declared by a nominal class override this to
     * locate the member at the class's definition (see NewResolver.nominalMember);
     * other members are transported through the whole path.
     */
-  def getMemberThrough(name: Str, receiver: Marks)(using ResolutionContext): MemberLookup = receiver match
+  def getMemberThrough(name: MemberKey, receiver: Marks)(using ResolutionContext): MemberLookup = receiver match
     case NoMarks => getMember(name)
     case receiver: SomeMarks => getMember(name).withMarks(receiver :: Nil)
   
@@ -404,7 +412,7 @@ sealed trait TermShape extends Shape, ShapeLike:
     case _ => unappliedParamLists.map(_ -> applicationMarks)
   
   def exit(marks: Marks)(using TL): TermShape | NoShape =
-  tl.trace[TermShape | NoShape](s".exit $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
+  tl.trace[TermShape | NoShape](dbg".exit $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
     marks match
     case NoMarks => this
     case EntryMark(sym, id, rest) =>
@@ -422,7 +430,7 @@ sealed trait TermShape extends Shape, ShapeLike:
       exit(mark).exit(rest)
   
   def enter(marks: Marks)(using tl: TL): TermShape | NoShape =
-  tl.trace[TermShape | NoShape](s".enter $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
+  tl.trace[TermShape | NoShape](dbg".enter $shwDbg (${marks.showDbg})", res => s"= ${res.shwDbg}"):
     marks match
     case NoMarks => this
     case EntryMark(sym, id, rest) =>
@@ -445,6 +453,9 @@ end TermShape
 /** Missing means definitely absent; Unknown must not be treated as a miss when
   * searching wildcard opens, since it can introduce an additional candidate. */
 enum MemberLookup:
+  // A structural intersection can give one source name several runtime keys.
+  // Retain each target so selection reports ambiguity instead of choosing one.
+  case All(members: Ls[MemberLookup])
   case Contextual(source: MemberLookup, instances: TypeSubstitution)
   case Found(member: BlockMemberSymbol | RecordMember, marks: Ls[Marks])
   // Declared members expose signatures only. Their marks transport dependent
@@ -463,6 +474,7 @@ enum MemberLookup:
   case Private(own: MemberLookup, owner: ClassLikeDef, inherited: MemberLookup)
   
   def withMarks(marks: Ls[Marks]): MemberLookup = this match
+    case All(members) => All(members.map(_.withMarks(marks)))
     case Contextual(source, instances) => Contextual(source.withMarks(marks), instances)
     case Private(own, owner, inherited) => Private(own.withMarks(marks), owner, inherited.withMarks(marks))
     case Found(member, inner) => Found(member, inner ::: marks)
@@ -474,6 +486,7 @@ enum MemberLookup:
 
   /** The receiver's annotation remains the diagnostic origin when lookup visits a parent. */
   def withAnnotation(annotation: Opt[Term]): MemberLookup = this match
+    case All(members) => All(members.map(_.withAnnotation(annotation)))
     case Contextual(source, instances) => Contextual(source.withAnnotation(annotation), instances)
     case Private(own, owner, inherited) => Private(own.withAnnotation(annotation), owner, inherited.withAnnotation(annotation))
     case Declared(member, bindings, marks, _, positive) => Declared(member, bindings, marks, annotation, positive)
@@ -493,6 +506,7 @@ enum MemberLookup:
     * rather than a missing member; otherwise, the lookup finds no member.
     */
   def visibleFrom(canAccess: ClassLikeDef => Bool, reportInaccessible: Bool): MemberLookup = this match
+    case All(members) => MemberLookup.all(members.map(_.visibleFrom(canAccess, reportInaccessible)))
     case Contextual(source, instances) => source.visibleFrom(canAccess, reportInaccessible).instantiate(instances)
     case Private(own, owner, inherited) =>
       if canAccess(owner) then own
@@ -502,14 +516,19 @@ enum MemberLookup:
     case _ => this
 
 object MemberLookup:
+  def all(members: Ls[MemberLookup]): MemberLookup = members.filterNot(_ == Missing) match
+    case Nil => Missing
+    case member :: Nil => member
+    case members => All(members)
+
   enum Uncertainty:
     case ValueShape, RecordOverwrite
   
   /** Own members take precedence over inherited ones, including unknown spreads,
     * except for private members as seen from outside their class (see Private). */
-  def inClass(defn: ClassLikeDef, ext: Opt[TermShape], name: Str)(using ResolutionContext): MemberLookup =
+  def inClass(defn: ClassLikeDef, ext: Opt[TermShape], name: MemberKey)(using ResolutionContext): MemberLookup =
     def inherited = ext.fold[MemberLookup](Missing)(_.getMember(name))
-    defn.body.members.get(name) match
+    MemberKey.own(defn, name) match
       case S(member) => own(defn, member, Found(member, Nil), inherited)
       case N => inherited
   
@@ -531,11 +550,11 @@ extension (member: BlockMemberSymbol | RecordMember)
 class ErrShape(val err: ErrorReport) extends CoreHeadShape:
   override def isSelfContained: Bool = true
   def describe: Str = s"error: ${err.mainMsg}"
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup = MemberLookup.Missing
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = MemberLookup.Missing
   def toLoc: Opt[Loc] = N
 
 class AppShape(val receiver: CoreTermShape, val args: Term, val src: Term.App)(using DebugPrinter) extends CoreShape:
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     // An unsaturated term definition is just a concrete function shape
     if !isSaturated then MemberLookup.Missing
     else
@@ -548,15 +567,20 @@ class AppShape(val receiver: CoreTermShape, val args: Term, val src: Term.App)(u
       case ds: DefnShape => ds.classExtends(cls)
       case _ => false)
   def describe: Str =
-    // s"application of ${receiver.describe}"
-    s"instance of ${applicationHead._1.describe}"
+    val head = applicationHead._1
+    if !isSaturated then s"partially-applied ${head.describe}"
+    else head match
+      // Constructor applications produce instances of the associated class,
+      // so their descriptions must not describe the constructor function itself.
+      case ds: DefnShape => s"instance of ${ds.clsDef.fold(ds.describe)(_.describeRef)}"
+      case _ => s"instance of ${head.describe}"
   def toLoc: Opt[Loc] = src.toLoc
   override def toString: String = s"AppShape($receiver, ${args.showDbg})"
 
 class NewShape(val receiver: DefnShape, val classTarget: ClassValueTarget, val clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New,
     val supplied: Opt[Ls[DeclaredType]])(using DebugPrinter) extends CoreShape:
   def cls: ClassSymbol = ClassValueShape.definitionOf(classTarget).sym
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     if isSaturated then receiver.getInstanceMember(name).withMarks(clsMarks)
     else MemberLookup.Missing
   override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool =
@@ -626,7 +650,7 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool =
     (defn is cls) || ext.exists(_.isInstanceOfClass(cls))
   def describe: Str = s"${defn.describe}"
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     MemberLookup.inClass(defn, ext, name)
   def toLoc: Opt[Loc] = defn.headerLoc
 
@@ -636,14 +660,30 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   * Source declarations are witnesses for diagnostics and property selection, not
   * part of semantic equality: a merged field may have several such witnesses.
   */
-final class RecordTypeShape(val fields: Map[Str, DeclaredType])(
-    val source: Term.Rcd, val declarations: Map[Str, RcdField]) extends CoreHeadShape:
+final class RecordTypeShape(val fields: Map[MemberKey, DeclaredType], val aliases: Map[Str, Set[SymbolKey]])(
+    val source: Term.Rcd, val declarations: Map[MemberKey, RcdField]) extends CoreHeadShape:
   def describe: Str = "record type"
   override def toString: Str = s"RecordTypeShape($fields)"
   def toLoc: Opt[Loc] = source.toLoc
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
-    fields.get(name).fold[MemberLookup](MemberLookup.Missing)(tpe =>
-      MemberLookup.Typed(declarations(name), tpe, Nil))
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
+    // Aliases affect lookup and therefore semantic identity, independently of
+    // diagnostic declarations. Intersections retain all aliases for a shared key.
+    val keys = Option.when(fields.contains(name))(name).toList ::: (name match
+      case name: Str => aliases.getOrElse(name, Set.empty).toList.sortBy(_.name)
+      case _ => Nil)
+    MemberLookup.all(keys.map(key => MemberLookup.Typed(declarations(key), fields(key), Nil)))
+
+/** A conjunction exposes members supplied by any component. Keep nominal and
+  * structural interfaces together: `Iterator[T] & Iterable[T]` supplies `next`
+  * and the iteration method on the same value. Constraint inspection still
+  * visits the components separately, retaining every input and output flow.
+  */
+final class IntersectionView(val values: Ls[TermShape]) extends CoreHeadShape:
+  def describe: Str = "intersection type"
+  def toLoc: Opt[Loc] = values.headOption.flatMap(_.toLoc)
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
+    MemberLookup.all(values.map(_.getMember(name)))
+  override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool = values.exists(_.isInstanceOfClass(cls))
 
 /** An instance described by a type, in either position of a constraint. Keep the
   * type reference intact during transport: expanding it to its current positive
@@ -656,7 +696,7 @@ final class InstanceShape private (val tpe: DeclaredType, canonical: Opt[Instanc
   def describe: Str = "value with a declared type"
   override def toString: Str = s"InstanceShape($tpe)"
   def toLoc: Opt[Loc] = tpe.resolution.source.toLoc
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     lastWords("Instance member lookup requires interpreting its type first")
 
 object InstanceShape:
@@ -693,8 +733,8 @@ final case class ContextualShape(source: ContextualSource, instances: TypeSubsti
   def describe: Str = source.describe
   def toLoc: Opt[Loc] = source.toLoc
   override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool = source.isInstanceOfClass(cls)
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup = source.getMember(name).instantiate(instances)
-  override def getMemberThrough(name: Str, receiver: Marks)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = source.getMember(name).instantiate(instances)
+  override def getMemberThrough(name: MemberKey, receiver: Marks)(using ResolutionContext): MemberLookup =
     source.getMemberThrough(name, receiver).instantiate(instances)
 
 /** Explicit type application, such as f[Int], has consumed this declaration's
@@ -709,7 +749,7 @@ final case class SpecializedShape(declaration: DefnShape, arguments: Ls[Declared
     instances: TypeSubstitution) extends NonAppTermShape:
   def describe: Str = declaration.describe
   def toLoc: Opt[Loc] = declaration.toLoc
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup = declaration.getMember(name).instantiate(instances)
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = declaration.getMember(name).instantiate(instances)
 
 /** An inference-event envelope, not a value interface. `publishActivated` saves
   * the current body's original-binder-to-instance map; `listen` checks agreement
@@ -745,21 +785,37 @@ final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSym
     else parent.flatMap:
       case Marked(parent: NominalInstanceView, _) => parent.ancestor(cls)
       case _ => N
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     resolver.nominalMember(this, name, NoMarks)
-  override def getMemberThrough(name: Str, receiver: Marks)(using ResolutionContext): MemberLookup =
+  override def getMemberThrough(name: MemberKey, receiver: Marks)(using ResolutionContext): MemberLookup =
     resolver.nominalMember(this, name, receiver)
 
-/** Parameter types and arity exposed by one list in a declared calling interface.
-  * A rest annotation describes the whole trailing array; hasRest also distinguishes
-  * an unannotated rest parameter from a fixed-arity list.
+/** One declared input, keeping its optional/droppable flags with its type through
+  * substitution and layout matching. An absent type still occupies a parameter position.
   */
-final class DeclaredParams(val params: Ls[Opt[DeclaredType]], val hasRest: Bool, val rest: Opt[DeclaredType]) extends ValueKey:
-  override def toString: Str = s"DeclaredParams($params, $hasRest, $rest)"
-  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), params.hashCode, hasRest.hashCode, rest.hashCode)
+final case class DeclaredParam(tpe: Opt[DeclaredType], flags: FldFlags):
+  def mapType(f: DeclaredType => DeclaredType): DeclaredParam = copy(tpe = tpe.map(f))
+
+/** Parameter types and arity exposed by one list in a declared calling interface.
+  * Leading parameters may be optional; their types then already include `null`
+  * (see `Elaborator.optionalType`). A variadic parameter's type describes the whole
+  * array it receives, and its trailing parameters are required.
+  */
+final class DeclaredParams(val params: Ls[DeclaredParam], val variadic: Opt[Variadic[DeclaredParam]]) extends ValueKey:
+  def hasRest: Bool = variadic.isDefined
+  def rest: Opt[DeclaredType] = variadic.flatMap(_.param.tpe)
+  def trailing: Ls[DeclaredParam] = variadic.fold(Nil)(_.trailing)
+  /** The same leading, rest, and trailing order as `ParamList.allParams`. */
+  lazy val allParams: Ls[DeclaredParam] = params ::: variadic.fold(Nil)(_.allParams)
+  /** The number of leading required (i.e., non-optional) parameters. */
+  lazy val leadingRequired: Int = FldFlags.requiredPrefixLength(params.map(_.flags))
+  override def toString: Str = s"DeclaredParams($params, $variadic)"
+  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), params.hashCode, variadic.hashCode)
   protected def sameValue(other: ValueKey): Bool = other match
-    case that: DeclaredParams => params == that.params && hasRest == that.hasRest && rest == that.rest
+    case that: DeclaredParams => params == that.params && variadic == that.variadic
     case _ => false
+  def mapTypes(f: DeclaredType => DeclaredType): DeclaredParams =
+    DeclaredParams(params.map(_.mapType(f)), variadic.map(_.map(_.mapType(f))))
 
 /** Async lowering wraps the result only after all written parameter lists have
   * been applied. A separate signature can encode those lists as nested arrows,
@@ -787,7 +843,7 @@ final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
   def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.headerLoc)
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup = MemberLookup.Missing
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = MemberLookup.Missing
 
 /** Why observing a type did not expose a member interface. Keep this evidence
   * separate from semantic candidates: normalization can synthesize Any without
@@ -836,13 +892,13 @@ final class OpaqueTypeShape(val source: Term)(val reason: TypeInterfaceReason) e
   override def toString: Str = s"OpaqueTypeShape($source)"
   def toLoc: Opt[Loc] = source.toLoc
   def provenance: ShapeProvenance = reason.provenance
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, false, provenance)
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadShape:
   /** Instance lookup is shared by constructor calls and explicit `new`.
     * Inherited members retain their marks before the caller adds its captures. */
-  def getInstanceMember(name: Str)(using ResolutionContext): MemberLookup = defn match
+  def getInstanceMember(name: MemberKey)(using ResolutionContext): MemberLookup = defn match
     case cd: ClassDef => MemberLookup.inClass(cd, ext, name)
     case _: TermDefinition => ext.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))
     case _ => MemberLookup.Missing
@@ -865,7 +921,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
       case defn: TypeLikeDef => defn.kind.desc + " "
       case defn: TermDefinition =>
         defn.tsym match
-        case _: ClassCtorSymbol => "class "
+        case _: ClassCtorSymbol => "constructor of class "
         case s => s.k.desc + " "
     }'${defn.bsym.nme}'"
   // override def toString: String = s"DefnShape(${defn.describe} ${defn.bsym.nme})"
@@ -897,18 +953,20 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
       val ctor = (cls.paramsOpt.toList ::: cls.auxParams).foldRight[Term](Term.Lit(syntax.Tree.IntLit(0))):
         (params, body) => scoped(Term.Lam(params, body))
       val methods = cls.body.methods.filter(method => method.body.nonEmpty && !method.tsym.isPrivate).map: method =>
-        val ref = scoped(Term.MemberRef(method.bsym)(new syntax.Tree.Ident(method.bsym.nme), FlowSymbol.memSym(method.bsym)))
+        val ref = scoped(Term.MemberRef(method.bsym)(N, FlowSymbol.memSym(method.bsym)))
         field(method.bsym.nme, withBuffer(ref))
       (field("size", Term.Lit(syntax.Tree.IntLit(0))) ::
         field("ctor", withBuffer(ctor)) :: methods).toMap
     case _ => Map.empty
 
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     defn match
     case defn: ModuleOrObjectDef =>
       MemberLookup.inClass(defn, ext, name)
     case cls: ClassDef if cls.annotations.exists(_.isInstanceOf[Annot.Bufferable]) =>
-      bufferedMembers.get(name).fold[MemberLookup](MemberLookup.Missing)(MemberLookup.Found(_, Nil))
+      name match
+        case name: Str => bufferedMembers.get(name).fold[MemberLookup](MemberLookup.Missing)(MemberLookup.Found(_, Nil))
+        case _: SymbolKey => MemberLookup.Missing
     case _: TermDefinition => MemberLookup.Missing
     case _ => MemberLookup.Missing
   /** A definition is identified by its header; a class constructor, by its class's.
@@ -964,7 +1022,7 @@ final class TupleShape private (val source: Term, val elements: Ls[TupleShape.El
   def describe: Str = "tuple literal"
   override def toString: Str = s"TupleShape($source, $elements, $instances)"
   def toLoc: Opt[Loc] = source.toLoc
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup = name.toIntOption match
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = MemberKey.index(name) match
     case S(index) if index >= 0 =>
       // An unknown-length segment can be empty. After reaching one, every
       // following field whose minimum position is at most `index` is possible.
@@ -982,7 +1040,7 @@ final class TupleShape private (val source: Term, val elements: Ls[TupleShape.El
         case Nil => MemberLookup.Missing
         case fields => MemberLookup.Indexed(fields, Nil)
     case _ => arrayParent.getMember(name)
-  override def getMemberThrough(name: Str, receiver: Marks)(using ResolutionContext): MemberLookup = name.toIntOption match
+  override def getMemberThrough(name: MemberKey, receiver: Marks)(using ResolutionContext): MemberLookup = MemberKey.index(name) match
     case S(index) if index >= 0 => super.getMemberThrough(name, receiver)
     case _ => arrayParent.getMemberThrough(name, receiver)
 
@@ -995,7 +1053,7 @@ final class DynShape private () extends CoreHeadShape:
   def describe: Str = "dynamic value"
   override def toString: Str = "DynShape()"
   def toLoc: Opt[Loc] = N
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup = MemberLookup.Dynamic(Nil)
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup = MemberLookup.Dynamic(Nil)
 
 object DynShape:
   private val instance = new DynShape
@@ -1011,8 +1069,9 @@ final class ShapeProvenance private (path: => Ls[(Message, Opt[Loc])], notes: =>
   private lazy val originNotes = notes
   /** A type origin anchors the operation's explanation: first trace the value
     * back to that annotation, then explain the interface it provides. Without
-    * an annotation witness, report the operation at its fallback location first
-    * and follow it with the reasons the value's shape is unknown.
+    * an annotation witness, lead with the operation's explanation and follow it
+    * with the reasons the value's shape is unknown. The fallback identifies other
+    * shape evidence, if any, not the operation already located by the main error.
     */
   def diagnostic(message: Message, fallback: Opt[Loc]): Ls[(Message, Opt[Loc])] = typeOrigin match
     case S(source) => pathNotes ::: (message -> source.toLoc.orElse(fallback)) :: originNotes
@@ -1042,7 +1101,7 @@ final class UnknownValueShape(val source: Term, val fromPublicInterface: Bool)(v
   def describe: Str = "value of unknown shape"
   override def toString: Str = s"UnknownValueShape($source, $fromPublicInterface)"
   def toLoc: Opt[Loc] = source.toLoc
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, fromPublicInterface, provenance)
 
 /** A generic definition must be valid without choosing a caller's type. This
@@ -1055,7 +1114,7 @@ final class RigidTypeShape(val parameter: VarSymbol, val source: Term) extends C
   def toLoc: Opt[Loc] = source.toLoc
   def provenance: ShapeProvenance = ShapeProvenance(
     msg"Type parameter '${parameter.nme}' does not specify a member interface." -> parameter.toLoc :: Nil)
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, false, provenance)
 
 object UnknownValueShape:
@@ -1154,8 +1213,8 @@ object TupleShape:
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Rest => shape == that.shape && segments == that.segments
       case _ => false
-  /** A view of `tuple` retaining only `segments`, which must be taken from
-    * `tuple.segments`. A view of another view refers to that view's parent:
+  /** A view of `tuple` retaining the fields in `segments`, possibly with their
+    * lengths widened by rest slicing. A view of another view refers to that view's parent:
     * a view contributes no spreads of its own, so containsSpread gives the same
     * answer for the parent as for the intermediate view. Nesting views instead
     * would make the candidate's identity record the order in which fields were
@@ -1184,20 +1243,23 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
   def describe: Str = "record literal"
   override def toString: Str = s"RecordShape($source, $elements, $instances)"
   def toLoc: Opt[Loc] = source.toLoc
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     import MemberLookup.*
     def unknown(source: Located) = Unknown(Uncertainty.RecordOverwrite, false,
       ShapeProvenance(msg"This computed key can overwrite the selected member." -> source.toLoc :: Nil))
     def loop(rest: Ls[RecordShape.Element]): MemberLookup = rest match
       case Nil => Missing
-      case RecordShape.Field(field) :: rest => field.field match
-        case Term.Lit(Tree.StrLit(key)) =>
+      case RecordShape.Field(field) :: rest => field.key match
+        case S(key) =>
           if key == name then Found(RecordMember(field, source.mut), Nil) else loop(rest)
         case _ => unknown(field.field)
       case RecordShape.Unknown(shape) :: _ => Unknown(Uncertainty.RecordOverwrite, shape.fromPublicInterface, shape.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)
       case RecordShape.Spread(shape, marks) :: rest =>
         def spread(info: MemberLookup): Opt[MemberLookup] = info match
+          case All(members) => members.flatMap(spread) match
+            case Nil => N
+            case members => S(MemberLookup.all(members))
           case Contextual(source, instances) => spread(source).map(_.instantiate(instances))
           case Dynamic(inner) => S(Dynamic(inner ::: marks :: Nil))
           case Unknown(_, fromPublicInterface, provenance) => S(Unknown(Uncertainty.RecordOverwrite, fromPublicInterface, provenance))
@@ -1258,9 +1320,9 @@ class IntroShape(val trm: IntroTerm, val primitive: Opt[NominalInstanceView]) ex
   def describe: Str = trm.describe
   // Literals have global primitive interfaces; lambdas capture their scopes.
   override def isSelfContained: Bool = !trm.isInstanceOf[Term.Lam]
-  protected def getMemberImpl(name: Str)(using ResolutionContext): MemberLookup =
+  protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMember(name))
-  override def getMemberThrough(name: Str, receiver: Marks)(using ResolutionContext): MemberLookup =
+  override def getMemberThrough(name: MemberKey, receiver: Marks)(using ResolutionContext): MemberLookup =
     primitive.fold[MemberLookup](MemberLookup.Missing)(_.getMemberThrough(name, receiver))
   override def isInstanceOfClass(cls: ClassLikeDef)(using ResolutionContext): Bool =
     primitive.exists(_.isInstanceOfClass(cls))

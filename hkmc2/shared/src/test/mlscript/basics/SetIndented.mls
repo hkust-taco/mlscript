@@ -7,14 +7,14 @@ set this.pc = 0
 set
   (this).pc = 0
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.6: 	set this.pc = 0
-//│ ╙──     	    ^^^^
+//│ ║  l.+1: 	set this.pc = 0
+//│ ╙──      	    ^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.8: 	  (this).pc = 0
-//│ ╙──     	   ^^^^
+//│ ║  l.+3: 	  (this).pc = 0
+//│ ╙──      	   ^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'pc' has no resolved target
-//│ ║  l.6: 	set this.pc = 0
-//│ ╙──     	    ^^^^^^^
+//│ ║  l.+1: 	set this.pc = 0
+//│ ╙──      	    ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Indented set with member selection should also parse fine
@@ -22,9 +22,9 @@ set
 set
   this.pc = 0
 //│ ╔══[COMPILATION ERROR] Cannot use 'this' outside of an object scope
-//│ ║  l.23: 	  this.pc = 0
+//│ ║  l.+2: 	  this.pc = 0
 //│ ╙──      	  ^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'pc' has no resolved target
-//│ ║  l.23: 	  this.pc = 0
+//│ ║  l.+2: 	  this.pc = 0
 //│ ╙──      	  ^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -47,10 +47,10 @@ abstract class Symbol(using ownerState: State) extends MaybeSymbol with Located:
   def showPrefix(using Scope, ShowCfg, Raise): Str = prefix
   
   def showFullName(using Scope, ShowCfg, Raise): Str =
-    showPrefix + showName + State.dbgUid(uid)
+    showPrefix + showName
   
   override def toString: Str =
-    prefix + nme + State.dbgUid(uid)
+    prefix + nme
   
   private[semantics] val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
   def ref(id: Tree.Ident =
@@ -231,7 +231,7 @@ class LabelSymbol(val trm: Opt[Term], name: Str = "lbl")(using State) extends Lo
 class SplitSymbol(val body: Split, name: Str = "split")(using State) extends LocalSymbol:
   var label: Opt[LabelSymbol] = N
   def nme = name
-  def subst(using s: SymbolSubst): SplitSymbol = this // SplitSymbols are not substituted
+  def subst(using s: SymbolSubst): SplitSymbol = s.mapSplitSym(this)
   def toLoc = body.toLoc
   override def prefix: Str = "split:"
 
@@ -293,7 +293,6 @@ final class TypeParameterInstance(val origin: VarSymbol, val siteBinders: Opt[Se
     extends VarSymbol(origin.id):
   require(!origin.isInstanceOf[TypeParameterInstance], "Instantiate original type binders only")
   decl = origin.decl
-  val reference: Term.SimpleRef = Term.SimpleRef(this)(origin.id)
 
 class BuiltinSymbol
     (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool, val isPure: Bool)(using State)

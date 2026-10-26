@@ -1,0 +1,112 @@
+:.
+
+// Each definition is compiled before its calls, so argument flow cannot supply
+// the rest parameter's initial Array interface.
+private fun add(x, ...xs) = xs.reduce(=> _ + _, x)
+
+:expect [1, 6, "abc"]
+[add(1), add(1, 2, 3), add("a", "b", "c")]
+//│ = [1, 6, "abc"]
+
+#lang(strictResolution: true)
+
+// Private functions do not receive the public-interface exposure pass.
+private fun strictAdd(x, ...xs) = xs.reduce(=> _ + _, x)
+
+:expect [1, 6]
+[strictAdd(1), strictAdd(1, 2, 3)]
+//│ = [1, 6]
+
+#lang(strictResolution: false, eagerResolution: true)
+
+private fun eagerAdd(x, ...xs) = xs.reduce(=> _ + _, x)
+
+:expect [1, 6]
+[eagerAdd(1), eagerAdd(1, 2, 3)]
+//│ = [1, 6]
+
+#lang(strictResolution: true, eagerResolution: true)
+
+private fun strictEagerAdd(x, ...xs) = xs.reduce(=> _ + _, x)
+
+:expect [1, 6]
+[strictEagerAdd(1), strictEagerAdd(1, 2, 3)]
+//│ = [1, 6]
+
+// Lambdas and a variadic parameter followed by fixed parameters need the same
+// initial shape, including when the collected array is empty.
+private fun size = (...xs) => xs.length
+private fun middle(first, ...xs, last) = xs.length
+
+:expect [0, 2, 0, 2]
+[size(), size(1, 2), middle(1, 2), middle(1, 2, 3, 4)]
+//│ = [0, 2, 0, 2]
+
+// The initial shape must neither hide argument elements nor invent unknown
+// elements that strict/eager resolution would reject in these callbacks.
+:expect [[1, 2], [3, 4]]
+class Item(val value: Int)
+private fun values(...xs) = xs.map(x => x.value)
+private fun lambdaValues = (...xs) => xs.map(x => x.value)
+[values(Item(1), Item(2)), lambdaValues(Item(3), Item(4))]
+//│ = [[1, 2], [3, 4]]
+
+// Returning or forwarding the rest must preserve its element shapes.
+:expect [5, 6]
+class Entry(val value: Int)
+private fun collect(...xs) = xs
+private fun forward(...xs) = collect(...xs)
+forward(Entry(5), Entry(6)).map(x => x.value)
+//│ = [5, 6]
+
+// A bottom-element seed must not suppress a bad candidate from an actual call.
+:ge
+class Present(val value: Int)
+class Missing
+private fun bad(...xs) = xs.map(x => x.value)
+bad(Present(1), new Missing)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	private fun bad(...xs) = xs.map(x => x.value)
+//│ ║        	                                     ^^^^^^^
+//│ ╟── Instance of class 'Missing' does not contain member 'value'
+//│ ║  l.+4: 	bad(Present(1), new Missing)
+//│ ╙──      	                ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Written element interfaces continue to hide implementation-only members.
+:ge
+class Base
+class Child(val extra: Int) extends Base
+private fun annotated(...xs: Array[Base]) = xs.map(x => x.extra)
+annotated(Child(7))
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	private fun annotated(...xs: Array[Base]) = xs.map(x => x.extra)
+//│ ║        	                                                        ^^^^^^^
+//│ ╟── Value of type 'Base' does not contain member 'extra'
+//│ ║  l.+3: 	private fun annotated(...xs: Array[Base]) = xs.map(x => x.extra)
+//│ ╙──      	                                   ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// An explicit tuple annotation retains its distinct positional element types.
+:expect [8, 9]
+class Left(val left: Int)
+class Right(val right: Int)
+private fun pair(...xs: [Left, Right]) = [xs.0.left, xs.1.right]
+pair(Left(8), Right(9))
+//│ = [8, 9]
+
+// Separate signatures are annotation boundaries too, including ones that
+// intentionally provide no Array members to the implementation.
+:ge
+private fun opaque: (...Any) -> Int
+private fun opaque(...xs) = xs.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	private fun opaque(...xs) = xs.length
+//│ ║        	                            ^^^^^^^^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ║  l.+1: 	private fun opaque: (...Any) -> Int
+//│ ║        	                        ^^^
+//│ ╟── Type 'Any' is declared without a member interface.
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^

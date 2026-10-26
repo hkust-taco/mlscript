@@ -95,7 +95,7 @@ object Foo
 
 fun f(arg) = if
   arg is
-    undefined then "undefined"
+    unsafe.undefined then "undefined"
     null      then "null"
     Object    then String(arg)
 //│ Normalized:
@@ -104,7 +104,7 @@ fun f(arg) = if
 //│ >    arg is null then "null"
 //│ >    arg is member:Object⁰^term:f⁰ then member:String⁰^term:f⁰(arg⁰)
 
-f of undefined
+f of unsafe.undefined
 //│ = "undefined"
 
 f of null
@@ -116,7 +116,7 @@ f of Foo
 fun f(arg) = if
   arg is
     Object    then String(arg)
-    undefined then "undefined"
+    unsafe.undefined then "undefined"
     null      then "null"
 //│ Normalized:
 //│ >  ‹if|while›
@@ -124,7 +124,7 @@ fun f(arg) = if
 //│ >    arg is undefined then "undefined"
 //│ >    arg is null then "null"
 
-f of undefined
+f of unsafe.undefined
 //│ = "undefined"
 
 f of null

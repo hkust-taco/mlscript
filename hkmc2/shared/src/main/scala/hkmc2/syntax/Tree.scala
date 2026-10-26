@@ -87,10 +87,13 @@ enum Tree extends AutoLocated:
   case Tup(fields: Ls[Tree])
   case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
+  /** Retain prefix syntax to allow operators ending in `>` (except `>` itself) to delimit implicit lambdas during elaboration,
+    * similarly to how it works with OpApp.
+    * Do note that `>> _ + 1` is a prefix op app but `>>(_ + 1)` is a normal app that does not delimit the `_`. */
+  case PrefixOpApp(op: Ident, rhs: Tree)
   case OpApp(lhs: Tree, op: Tree, rhss: Ls[Tree])
   case Jux(lhs: Tree, rhs: Tree)
   case Reft(base: Tree, body: Block)
-  case SynthSel(prefix: Tree, name: Ident)
   case Sel(prefix: Tree, name: Ident)
   case MemberProj(cls: Tree, name: Ident)
   case PrefixApp(kw: Keywrd[Keyword.Prefix], rhs: Tree)
@@ -109,6 +112,8 @@ enum Tree extends AutoLocated:
   case Effectful(eff: Tree, body: Tree)
   case Outer(name: Opt[Tree])
   case Spread(kw: Keywrd[Keyword.Ellipsis], body: Opt[Tree])
+  /** A parameter or function type parameter marked optional with a postfix `?`, as in `fun f(x, y?)`. */
+  case Optional(body: Tree)
   case Annotated(annotation: Tree, target: Tree)
   case Directive(prefix: Tree, body: Tree)
   case Constructor(decl: Tree)
@@ -142,6 +147,7 @@ enum Tree extends AutoLocated:
     case Unquoted(body) => Vector.single(body)
     case Tup(fields) => fields.toVector
     case App(lhs, rhs) => Vector.double(lhs, rhs)
+    case PrefixOpApp(op, rhs) => Vector.double(op, rhs)
     case OpApp(lhs, op, rhss) => lhs +: op +: rhss.toVector
     case Jux(lhs, rhs) => Vector.double(lhs, rhs)
     case Reft(base, reft) => Vector.double(base, reft)
@@ -160,12 +166,12 @@ enum Tree extends AutoLocated:
     case Outer(name) => name.toVector
     case TyTup(tys) => tys.toVector
     case Sel(prefix, name) => Vector.double(prefix, name)
-    case SynthSel(prefix, name) => Vector.single(prefix)
     case DynAccess(prefix, fld, _) => Vector.double(prefix, fld)
     case Open(bod) => Vector.single(bod)
     case OpenIn(opened, body) => Vector.double(opened, body)
     case Def(lhs, rhs) => Vector.double(lhs, rhs)
     case Spread(kw, body) => Vector.single(kw) ++ body.toVector
+    case Optional(body) => Vector.single(body)
     case Annotated(annotation, target) => Vector.double(annotation, target)
     case Directive(prefix, body) => Vector.double(prefix, body)
     case Constructor(decl) => Vector.single(decl)
@@ -199,11 +205,11 @@ enum Tree extends AutoLocated:
     case Tup(fields) => "tuple"
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
+    case PrefixOpApp(op, rhs) => "prefix operator application"
     case OpApp(lhs, op, rhss) => "operator application"
     case Jux(lhs, rhs) => "juxtaposition"
     case Reft(base, reft) => "refinement"
     case Sel(prefix, name) => "selection"
-    case SynthSel(prefix, name) => "synthetic selection"
     case DynAccess(prefix, name, _) => "dynamic field access"
     case PrefixApp(kw, body) => s"prefix operator '${kw.name}'"
     case InfixApp(lhs, kw, rhs) => s"infix operator '${kw.name}'"
@@ -212,6 +218,7 @@ enum Tree extends AutoLocated:
     case DynamicNew(body) => "dynamic new"
     case IfLike(Keywrd(Keyword.`if`), split) => "if expression"
     case IfLike(Keywrd(Keyword.`while`), split) => "while expression"
+    case IfLike(Keywrd(Keyword.`when`), split) => "when expression"
     case Case(_, branches) => "case"
     case Region(name, body) => "region"
     case RegRef(reg, value) => "region reference"
@@ -220,6 +227,7 @@ enum Tree extends AutoLocated:
     case Hndl(_, _, _, _) => "handle"
     case Def(lhs, rhs) => "defining assignment"
     case Spread(_, _) => "spread"
+    case Optional(_) => "optional parameter"
     case Annotated(_, _) => "annotated"
     case Directive(_, _) => "directive"
     case Open(_) => "open"
@@ -240,6 +248,17 @@ enum Tree extends AutoLocated:
   
   def showDbg(using DebugPrinter): Str =
     this.showAsPlain
+  
+  // Binding groups use ordinary block syntax: assignments supply initializers,
+  // while other entries are binding heads (including declarations and `+=` forms).
+  def asLetLike(kw: Keywrd[Keyword.LetLike], body: Opt[Tree]): Tree = this match
+    case Annotated(ann, entry) =>
+      Annotated(ann, entry.asLetLike(kw, body)).withLocOf(this)
+    case entry =>
+      val binding = entry match
+        case Def(lhs, rhs) => LetLike(kw, lhs, S(rhs), body)
+        case lhs => LetLike(kw, lhs, N, body)
+      binding.withLocOf(entry)
   
   lazy val desugared: Tree =
     
@@ -272,6 +291,12 @@ enum Tree extends AutoLocated:
     this match
     case Ident(name) if name.startsWith("'") =>
       StrLit(name.drop(1)).withLocOf(this)
+    case IfLike(kw @ Keywrd(Keyword.`when`), split) =>
+      // `when { ... }` -> `if this is { ... }`
+      val ifKw = new Keywrd(Keyword.`if`).withLocOf(kw)
+      val isKw = new Keywrd(Keyword.`is`).withLocOf(kw)
+      val thisKw = new Keywrd(Keyword.`this`).withLocOf(kw)
+      IfLike(ifKw, InfixApp(thisKw, isKw, split).withLocOf(split)).withLocOf(this)
     case IfLike(kw, split) =>
       val split2 = rewriteImplicitSplitLabels(split)
       if split2 is split then this else IfLike(kw, split2).withLocOf(this)
@@ -310,13 +335,20 @@ enum Tree extends AutoLocated:
     case Pun(false, id) =>
       InfixApp(id, Keywrd(Keyword.`:`), id)
     
+    case LetLike(kw, group: Block, N, S(body)) =>
+      // Nest scoped bindings so `set` restores every assigned value after the body.
+      group.stmts.foldRight(body): (binding, body) =>
+        binding.asLetLike(kw, S(body)).desugared
+    case LetLike(kw, group: Block, N, N) =>
+      group.withStmts(group.stmts.map(_.asLetLike(kw, N)))
+    
     // TODO generalize to pattern-let and rm this special case
     case LetLike(kw, und @ Under(), r, b) =>
       LetLike(kw, Ident("_").withLocOf(und), r, b)
     
     // `open` keeps its existing expression grammar; a declaration operand makes it a modifier.
-    case Open(body: (TypeOrTermDef | Modified | Annotated)) =>
-      Annotated(Keywrd(Keyword.`open`).withLocOf(this), body.desugared)
+    case PossiblyAnnotated(anns, opened @ Open(body: (TypeOrTermDef | Modified | Annotated))) =>
+      PossiblyAnnotated(anns, Annotated(Keywrd(Keyword.`open`).withLocOf(opened), body.desugared))
     case PossiblyAnnotated(anns, m: Modified) =>
       PossiblyAnnotated(anns,
         m match
@@ -399,6 +431,18 @@ enum Tree extends AutoLocated:
       // fun f(using <...>)
       case TermDef(Ins, inner, N) =>
         go(inner, flags, modifiers + Ins)
+      // fun f(a?)
+      case Optional(inner) =>
+        go(inner, flags.copy(opt = true), modifiers)
+      // fun f(a?: A)
+      case InfixApp(Optional(inner), kw @ Keywrd(Keyword.`:`), sign) =>
+        go(InfixApp(inner, kw, sign), flags.copy(opt = true), modifiers)
+      // fun f(...a?), which is reported during elaboration
+      case Spread(kw, S(Optional(inner))) =>
+        go(Spread(kw, S(inner)), flags.copy(opt = true), modifiers)
+      // fun f(drop a)
+      case PrefixApp(Keywrd(Keyword.`drop`), inner) =>
+        go(inner, flags.copy(droppable = true), modifiers)
       
       // * Base Case (for `using` clause)
       // fun f(using A)
@@ -443,8 +487,11 @@ object Tree:
       case App(lhs, TyTup(targs)) => S(lhs, targs)
       case _ => N
   
-  extension [T <: Keyword & Singleton](kw: Tree.Keywrd[T])
+  extension (kw: Tree.Keywrd[?])
     def name = kw.kw.name
+  
+  extension (prefix: PrefixOpApp)
+    def toApp: App = new App(prefix.op, PlainTup(prefix.rhs)).withLocOf(prefix)
 
 /**
  * A parameter yet to be elaborated, which is different from

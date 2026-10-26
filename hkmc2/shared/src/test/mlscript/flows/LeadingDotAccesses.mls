@@ -85,14 +85,14 @@ let d = .a
 f(d)
 g(d)
 //│ ╔══[COMPILATION ERROR] Ambiguous selection with multiple apparent targets:
-//│ ║  l.84: 	let d = .a
+//│ ║  l.+2: 	let d = .a
 //│ ║        	        ^^
 //│ ╟── companion member a
-//│ ║  l.79: 	  fun a = new C
+//│ ║  l.XX: 	  fun a = new C
 //│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── companion member a
-//│ ║  l.8: 	  fun a = new A
-//│ ╙──     	  ^^^^^^^^^^^^^
+//│ ║  l.XX: 	  fun a = new A
+//│ ╙──      	  ^^^^^^^^^^^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   fun g⁰::g¹(x⁰: C⁰^g¹) ‹flow:g⁰› = x⁰,
 //│   let d⁰,
@@ -129,8 +129,8 @@ g(.a)
 :e
 f(.w)
 //│ ╔══[COMPILATION ERROR] Cannot resolve leading dot selection
-//│ ║  l.130: 	f(.w)
-//│ ╙──       	  ^^
+//│ ║  l.+1: 	f(.w)
+//│ ╙──      	  ^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   f⁰(_?_.w{ ~> ‹error› })‹app¹³›
 //│ where
@@ -142,8 +142,8 @@ f(.w)
 :e
 .b(new A)
 //│ ╔══[COMPILATION ERROR] Cannot resolve leading dot selection
-//│ ║  l.143: 	.b(new A)
-//│ ╙──       	^^
+//│ ║  l.+1: 	.b(new A)
+//│ ╙──      	^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   _?_.b{ ~> ‹error› }(new A⁰)‹app¹⁴›
 //│ where

@@ -10,7 +10,7 @@ open Option
 x => if x is
   refined(None) then x
 //│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
-//│ ║  l.11: 	  refined(None) then x
+//│ ║  l.+2: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
 //│ >  ‹if|while›
@@ -19,7 +19,7 @@ x => if x is
 x => if x is
   refined(Some) then x
 //│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
-//│ ║  l.20: 	  refined(Some) then x
+//│ ║  l.+2: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
 //│ >  ‹if|while›
@@ -29,7 +29,7 @@ x => if x is
   refined(None) then x
   Some then x
 //│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
-//│ ║  l.29: 	  refined(None) then x
+//│ ║  l.+2: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
 //│ >  ‹if|while› x is Some‹open› then x⁰
@@ -38,10 +38,10 @@ x => if x is
   refined(None) then x
   refined(Some) then x
 //│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
-//│ ║  l.38: 	  refined(None) then x
+//│ ║  l.+2: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use this wildcard-open reference as a pattern.
-//│ ║  l.39: 	  refined(Some) then x
+//│ ║  l.+3: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ Normalized:
 //│ >  ‹if|while›

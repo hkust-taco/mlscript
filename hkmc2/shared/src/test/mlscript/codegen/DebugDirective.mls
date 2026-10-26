@@ -1,0 +1,141 @@
+:js
+
+
+// Shorthand annotation debugging is scoped to the annotated definition.
+@dbg('elaboration, showUids: false) fun debug_me(x) = x
+fun do_not_debug_me(x) = x
+//│ Processing term definition App(Ident(debug_me),Tup(List(Ident(x))))
+//│ Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
+//│ Elab term Ident(x)
+//│ | Elab subterm Ident(x)
+//│ | ~> x⁰
+//│ ~> x⁰
+
+
+// Named flags can be explicitly disabled.
+#dbg(elaboration: false, out: StdIO)
+fun named_debug_config(x) = x
+
+
+// A top-level directive persists into the following block.
+#dbg(elaboration: true, showUids: false)
+//│ Elab block List(App(Directive(Ident(dbg),Tup(List())),Tup(List(InfixApp(Ident(elaboration),Keywrd(keyword ':'),[...] LocalScope(block:4)
+//│ ~> { #config(...); }
+
+fun persistently_debugged(x) = x
+//│ Elab block List(TermDef(Fun,App(Ident(persistently_debugged),Tup(List(Ident(x)))),Some(Ident(x)))) LocalScope(block:5)
+//│ | Processing term definition App(Ident(persistently_debugged),Tup(List(Ident(x))))
+//│ | Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
+//│ | Elab term Ident(x)
+//│ | | Elab subterm Ident(x)
+//│ | | ~> x¹
+//│ | ~> x¹
+//│ ~> { fun member:persistently_debugged⁰(x¹) = x¹; }
+
+#dbg(elaboration: false)
+
+
+module Main with
+  // The IR of `foo1` should be shown
+  @dbg('showParsedTree, 'showElaboratedTree, 'showElaboratedTerm, 'showLoweredTree, 'showOptimizedIR)
+  fun foo1 = 2 + 2
+  // The IR of `foo2` should NOT be shown
+  fun foo2 = 2 + 2
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ Annotated:
+//│   annotation = App:
+//│     lhs = Ident of "dbg"
+//│     rhs = Tup of Ls of
+//│       Ident of "'showParsedTree"
+//│       Ident of "'showElaboratedTree"
+//│       Ident of "'showElaboratedTerm"
+//│       Ident of "'showLoweredTree"
+//│       Ident of "'showOptimizedIR"
+//│   target = TermDef:
+//│     k = Fun
+//│     head = Ident of "foo1"
+//│     rhs = S of OpApp:
+//│       lhs = IntLit of 2
+//│       op = Ident of "+"
+//│       rhss = Ls of
+//│         IntLit of 2
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ TermDefinition:
+//│   k = Fun
+//│   sym = member:foo1⁰
+//│   tsym = term:Main⁰/foo1¹
+//│   body = S of App:
+//│     lhs = Ref{sym=builtin:+⁰} of builtin:+⁰
+//│     rhs = Tup of Ls of
+//│       Fld:
+//│         term = Lit of IntLit of 2
+//│       Fld:
+//│         term = Lit of IntLit of 2
+//│   modulefulness = Modulefulness of N
+//│   annotations = Ls of
+//│     Debug of ...
+//│ —————————————| Elaborated term |————————————————————————————————————————————————————————————————————
+//│ @dbg(...) fun foo1⁰::foo1¹ ‹flow:foo1⁰› = +(2, 2)‹app⁰›
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ FunDefn:
+//│   owner = S of module:Main⁰
+//│   sym = member:foo1⁰
+//│   dSym = term:Main⁰/foo1¹
+//│   body = Return of Lit of IntLit of 4
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @dbg(...) define foo1⁰ as fun foo1¹ { return 4 }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+Main.foo1
+//│ = 4
+
+
+// The readable elaborated term distinguishes symbols that share a name.
+@dbg('showElaboratedTerm)
+fun shadowing(x) =
+  let x = x + 1
+  x
+//│ —————————————| Elaborated term |————————————————————————————————————————————————————————————————————
+//│ @dbg(...) fun shadowing⁰::shadowing¹(x⁰) ‹flow:shadowing⁰› = { let x¹, x¹ = +(x⁰, 1)‹app¹›, x¹ }
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// Whole-program displays and optimization tracing use the same settings.
+#dbg('showParsedTree, 'showElaboratedTree, 'showElaboratedTerm, 'showLoweredTree, 'showIR, 'showOptimizedIR, 'optimizations)
+42
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ App:
+//│   lhs = Directive:
+//│     prefix = Ident of "dbg"
+//│     body = Tup of Nil
+//│   rhs = Tup of Ls of
+//│     Ident of "'showParsedTree"
+//│     Ident of "'showElaboratedTree"
+//│     Ident of "'showElaboratedTerm"
+//│     Ident of "'showLoweredTree"
+//│     Ident of "'showIR"
+//│     Ident of "'showOptimizedIR"
+//│     Ident of "'optimizations"
+//│ IntLit of 42
+//│ —————————————| Elaborated tree |————————————————————————————————————————————————————————————————————
+//│ Blk:
+//│   stats = Ls of
+//│     SetConfig of ...
+//│   res = Lit of IntLit of 42
+//│ —————————————| Elaborated term |————————————————————————————————————————————————————————————————————
+//│ #config(...), 42
+//│ —————————————| Lowered IR Tree |————————————————————————————————————————————————————————————————————
+//│ Program:
+//│   main = Return of Lit of IntLit of 42
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return 42
+//│ ⬤ Simplif. iter. 1
+//│ Captured variables: Set()
+//│ ⬤ Simplif. iter. 1
+//│ Captured variables: Set()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return 42
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+#dbg(showParsedTree: false, showElaboratedTree: false, showElaboratedTerm: false, showLoweredTree: false, showIR: false, showOptimizedIR: false, optimizations: false)

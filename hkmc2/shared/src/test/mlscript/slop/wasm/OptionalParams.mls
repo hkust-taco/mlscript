@@ -1,0 +1,235 @@
+:.
+:noInline
+open annotations
+//│ Wasm result:
+//│ = {}
+
+// Direct calls retain supplied arguments and materialize every omitted slot.
+fun choose(x: Int, y?: Int) = if y is null then x else y
+fun absent(x?) = if x is null then 1 else 0
+fun slots(x?, y?) = absent(x) + absent(y)
+//│ Wasm result:
+//│ = {}
+
+:expect 10
+choose(10)
+//│ Wasm result:
+//│ = 10
+
+:expect 20
+choose(10, 20)
+//│ Wasm result:
+//│ = 20
+
+:expect 2
+slots()
+//│ Wasm result:
+//│ = 2
+
+:expect 2
+slots(null)
+//│ Wasm result:
+//│ = 2
+
+:expect 2
+slots(null, null)
+//│ Wasm result:
+//│ = 2
+
+:expect 1
+slots(unsafe.undefined)
+//│ Wasm result:
+//│ = 1
+
+:expect 1
+slots((), null)
+//│ Wasm result:
+//│ = 1
+
+:expect 1
+slots(0)
+//│ Wasm result:
+//│ = 1
+
+:expect 0
+slots(0, false)
+//│ Wasm result:
+//│ = 0
+
+:expect null
+fun identity(x?) = x
+identity()
+//│ Wasm result:
+//│ = null
+
+// Function values need a Wasm callable representation independently of optional arguments.
+:fixme
+:expect 11
+val indirect: (Int, Int?) -> Anything = choose
+indirect(11)
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref $choose)` to `(ref null any)` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
+//│ ║  l.+2: 	indirect(11)
+//│ ╙──      	^^^^^^^^
+
+// Forwarding preserves supplied Unit values and the distinct null value.
+:expect 0
+fun forward(x) = absent(x)
+forward(unsafe.undefined)
+//│ Wasm result:
+//│ = 0
+
+:expect 1
+forward(null)
+//│ Wasm result:
+//│ = 1
+
+:expect 0
+forward(())
+//│ Wasm result:
+//│ = 0
+
+// Optional fields are nullable even when their written type is a concrete class.
+:expect 12
+class Item(val value: Int)
+class Box(val item?: Item) {
+  fun get() = if item is Item as item then item.value else 0
+}
+if Box().get() is 0 then Box(Item(12)).get() else -1
+//│ Wasm result:
+//│ = 12
+
+// Virtual dispatch and super calls supply omitted arguments independently.
+:expect 13
+class Base() {
+  open fun pick(x?: Int) = if x is null then 13 else x
+}
+class Child() extends Base() {
+  override fun pick(x?: Int) = if x is null then super.pick() else x
+}
+fun dispatch(base: Base) = base.pick()
+dispatch(Child())
+//│ Wasm result:
+//│ = 13
+
+:expect 14
+class Supplied() {
+  fun pick(x?: Int) = if x is null then 0 else x
+}
+Supplied().pick(14)
+//│ Wasm result:
+//│ = 14
+
+// Constructor and parent-initializer calls preserve supplied and omitted fields.
+:expect 16
+class Fields(val first: Int, val second?: Int) {
+  fun read() = if second is null then first else second
+}
+class Inherited() extends Fields(15)
+if Inherited().read() is 15 then Fields(1, 16).read() else -1
+//│ Wasm result:
+//│ = 16
+
+// Required arguments are still checked by resolution.
+:e
+choose()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	choose()
+//│ ║        	^^^^^^^^
+//│ ╟── Function 'choose' expected 1 to 2 arguments, but got 0
+//│ ║  l.XX: 	fun choose(x: Int, y?: Int) = if y is null then x else y
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ = null
+
+// Retain the unsafe constructor-argument regression; its observed result is not a language guarantee.
+:expect 10
+class Normalize(val x?) {
+  fun read() = absent(x)
+}
+let count = 0
+fun argument() =
+  set count = count + 1
+  unsafe.undefined
+Normalize(argument()).read() + Normalize(argument()).read() * 10 + count * 5
+//│ Wasm result:
+//│ = 10
+
+// Null and Unit remain distinct; keep the unsafe constructor call as a regression probe too.
+:expect 1
+class OptionalField(val x?) {
+  fun read() = absent(x)
+}
+let uninitialized = OptionalField(unsafe.undefined).read()
+OptionalField(null).read() + OptionalField(()).read() * 10 + uninitialized * 100
+//│ Wasm result:
+//│ = 1
+
+// TODO: A method call on a class from an earlier Wasm REPL block looks for a struct field.
+:fixme
+:expect 0
+OptionalField(()).read()
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:OptionalField/read` in struct `member:OptionalField` with type `(type $OptionalField (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
+
+// A virtual call with a supplied optional argument preserves its value.
+:expect 17
+class SuppliedBase() {
+  open fun pick(x?) = if x is null then 0 else x
+}
+class SuppliedChild() extends SuppliedBase() {
+  override fun pick(x?) = if x is null then 0 else x
+}
+fun suppliedDispatch(base: SuppliedBase, x) = base.pick(x)
+suppliedDispatch(SuppliedChild(), 17)
+//│ Wasm result:
+//│ = 17
+
+:expect 1112
+class SuppliedBase() {
+  open fun pick(x?) = if x is null then 1 else x
+}
+class SuppliedChild() extends SuppliedBase() {
+  override fun pick(x) = super.pick(x)
+}
+fun suppliedDispatch(base: SuppliedBase, x) = base.pick(x) + base.pick()
+let c = SuppliedChild()
+c.pick(10) + suppliedDispatch(c, 100) + suppliedDispatch(SuppliedBase(), 1000)
+//│ Wasm result:
+//│ = 1112
+
+// Optional slots work with inlining and tail-call jumps as well as real calls.
+#config(inlining: 100)
+//│ Wasm result:
+//│ = {}
+:expect 1
+@inline fun inlined(x?) = absent(x)
+inlined(null) + inlined(()) * 10 + inlined(unsafe.undefined) * 100
+//│ Wasm result:
+//│ = 1
+
+:expect 1
+inlined()
+//│ Wasm result:
+//│ = 1
+
+:expect 1
+@tailrec fun countdown(n: Int, x?) =
+  if n is 0 then absent(x) else countdown(n - 1)
+countdown(3, 18)
+//│ Wasm result:
+//│ = 1
+
+:expect 0
+@tailrec fun keep(n: Int, x?) =
+  if n is 0 then absent(x) else keep(n - 1, x)
+keep(3, ())
+//│ Wasm result:
+//│ = 0
+
+
+// TODO: improve error
+:e
+fun test(x?: Int32) = x
+//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ Wasm result:
+//│ = {}

@@ -49,7 +49,7 @@ fun binaryenCompileToModule(wat, importObject): dyn =
 fun unwrapWasmException(err: dyn, tag) =
   if (
     err !== null &&
-    err !== undefined &&
+    err !== unsafe.undefined &&
     typeof(err.is) === "function" &&
     typeof(err.getArg) === "function" &&
     err.is(tag)

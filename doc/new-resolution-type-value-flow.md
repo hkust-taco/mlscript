@@ -36,6 +36,16 @@ alternative constraint sets or forming products of intersection candidates.
 They deliberately approximate type inference; diagnosing concrete incompatibilities
 such as `Str <: Int` belongs to type checking, not resolution.
 
+This distinction also applies to separate function signatures and callback
+layouts. Skipping an uncertain compatibility check must not skip its flows.
+Every callable component contributes its domain to the implementation parameters,
+and later curried lists remain connected even when an earlier layout differs.
+Each implementation parameter has a shared annotation endpoint that accumulates
+these components; replacing it with the last component would disconnect earlier
+constraints. Matching positions stay precise. Uncertain middle positions receive
+the union of their possible inputs, including typed rest elements. Rest slicing
+may widen lengths, but retains the deferred types of every possible element.
+
 ## Instance wrappers and interface observations
 
 `InstanceShape(DeclaredType)` describes an instance of a type. Parameter/result
@@ -135,7 +145,7 @@ input and output parts:
 | `out U` | `Nothing` | `U` |
 | `in T out U` | `T` | `U` |
 
-Declaration variance applies to an unqualified argument. A written wildcard
+Nominal declaration variance applies to an unqualified argument. A written wildcard
 supplies its own parts and overrides declaration variance. Comparing actual `a`
 with expected `b` installs `a.output <: b.output` and `b.input <: a.input`.
 Missing wildcard parts are actual top/bottom types, not inference holes.
@@ -189,12 +199,26 @@ type checker. The annotated-array case in `VarianceSoundness.mls` resolves
 normally and, with type checking disabled, records the unsafe runtime write.
 InvalML regressions check rejection of the corresponding concrete mismatch.
 
-Aliases bind both argument interpretations before interpreting their bodies at the
-enclosing polarity. This avoids applying the enclosing reversal twice:
-`Identity[T]`, for `type Identity[A] = A`, must behave like `T` in either polarity.
-Captured enclosing binders retain their own bindings. Nominal applications instead
-retain the argument pair composed with the application's polarity, since member
-signatures subsequently interpret that pair from the member's positive interface.
+Alias formals start a new substitution scope. References to already-bound
+enclosing parameters inside an argument still select their bounds according to
+their position in the enclosing signature. A fresh, unbound parameter remains
+itself. Apply declaration variance (or the written wildcard) to that interpreted
+argument, then select its endpoint according to its occurrence inside the alias body.
+For `type Source[out T] = {item: T}`, both `Source[A]` and
+`Source[in Nothing out A]` expose `A` in `item`, including when the application
+occurs in a function domain. The enclosing domain affects the interpretation
+of `A`, not whether the occurrence of `T` in `{item: T}` selects its output.
+
+The implementation keeps the alias body's enclosing polarity so captured outer
+binders retain their interpretation. It therefore reverses only the new formal
+bindings' stored endpoint pairs when that polarity is negative. A globally
+negative occurrence of `T` then selects the original output endpoint, while a
+further domain reversal inside the alias selects the original input endpoint.
+This also keeps `Identity[A]` equivalent to `A` in both polarities.
+Nominal applications retain their composed argument pairs directly: member
+signatures subsequently interpret them from the member's positive interface.
+`TransparentAliasPolarity.mls` covers shorthand and explicit projections;
+`VarianceAliases.mls` covers captured binders and nested identity aliases.
 
 `DeclaredType.positive` records this lexical polarity, independently of a later
 constraint's direction. `TypeShape.Wildcard` retains written parts;
@@ -207,6 +231,33 @@ selected type; an invariant argument makes separate selections for its two parts
 Selections are cached by argument reference and polarity; selecting an existing
 selection is idempotent. Forwarding cycles retain subscriptions but stop repeated observation.
 For a fixed argument-reference set, selection adds at most two nodes per reference.
+
+### Iteration and synthesized applications
+
+Resolution is a best-effort check, not a type checker. Implicit spread observations
+must propagate known flows without rejecting an opaque or inconvenient protocol.
+They preserve every union and intersection component. Member lookup combines
+an intersection's interfaces, while constraints inspect each component independently. An unknown alternative joins the known elements; it never
+replaces them. Definitively completed iterator results supply no element, while
+a missing or unknown `done` still permits observing `value`.
+
+Each non-tuple spread operand owns one `IterationFlow`: stable sites for selecting
+`Symbol.iterator`, calling it, selecting and calling `next`, and reading `done`
+and `value`, plus one deferred element host. These observations use ordinary
+member scope transport and call instantiation. The implicit zero-argument calls
+omit compatibility diagnostics but retain argument and result flow. Tuple
+construction sees one unknown-length segment per operand, regardless of the
+number of incoming iterator or element alternatives. This prevents products of
+alternatives from multiplying through recursive spreads. Imported producers keep
+their canonical sites while publisher storage remains local to each consumer.
+
+Arrays use this same protocol through the prelude's symbol-keyed method. Direct
+Array element-bound observation remains useful for array patterns and rest
+constraints, where the operation describes Array storage rather than iteration.
+The `appliedTypes` table interns synthesized applications by constructor symbol
+and contextual arguments, sharing the mechanism for `Array[T]` and `Awaited[T]`.
+It reifies symbolic argument references before observation; caching their current
+values instead would lose later bounds and caller-specific substitutions.
 
 ## Shared bodies and contextual constraints
 
@@ -581,3 +632,54 @@ Worksheet coverage under `newres` includes `MutableArrays`, `ContextualInference
 generic call isolation, and escaping payloads. Deferred cases retain explicit
 regression expectations;
 see the [future-work reference](new-resolution-future-work.md).
+
+
+### Fresh property keys
+
+`@annotations.jsSymbol(path)` identifies a property by a stable path through modules and
+immutable vals. The terminal val's `@annotations.fresh` marker is a contract,
+not a type check or a proof about its initializer. Resolver key identity includes
+the receiver path, and direct immutable receiver aliases are normalized. Modules
+use their module symbol, independently of a companion function or class overload.
+Key recognition does not evaluate a val initializer or force alias expansion.
+
+Annotations on declared module members can be interpreted from the module's
+syntax before its value definitions complete. This matters for prelude bootstrap:
+`@fresh` must not require a runtime value from the declared
+`annotations` module. Builtin `Symbol` lookup is lazy so interpreting an unrelated
+annotation does not require `Symbol` to be present in an earlier prelude block.
+Completed overload sets are published as soon as their definitions are available,
+allowing a subsequent annotation to select through an earlier immutable val.
+
+Lowering records computed names as explicit class operands and selected keys as
+explicit path operands. Transformations therefore retain their imports and
+captures and substitute their symbols. Computed names are evaluated in the
+class's enclosing scope. Lifting cannot move such a class out of the invocation
+that evaluates its keys; doing so could reuse a key or read it before initialization.
+
+At block completion, resolution recovers an access path from the use site's
+lexical scope to the key's binding, following enclosing modules when necessary.
+Context updates preserve scope identity; entering a nested block creates a new
+scope. Term definitions retain their binding scope, as module definitions do.
+File bindings can also be reached through the compilation unit's existing default
+export or private export ABI. Foreign provenance alone does not make a local
+binding importable.
+
+The legacy resolver uses the same `AccessPath.findAccessPath` helper for implicit
+companion references. It retains the module overload at each step, so a companion
+of a constructor function is reached through its class value, including across
+files and after lifting.
+
+The recovered expression is part of the resolved reference and is cloned and
+lowered like other operands. Lowering does not maintain a separate inventory of
+available bindings. A member's resolved declaration cannot supply a factory-local
+key to an escaped instance's caller. Such accesses fail at the use site; nested
+closures can still capture the key. These checks do not change candidate flows.
+Overrides with a common key retain all their targets and share only the recovered
+key operand.
+
+Private members of classes and modules cannot supply keys across files: their
+generated accessor symbols are local to one emitted JavaScript module. Resolution
+reports the inaccessible private member at the selection, and code generation
+asserts this boundary as a compiler invariant. This restriction does not apply to
+private file-level vals, which use the compilation unit's private export ABI.

@@ -17,7 +17,7 @@ while false then ()
 () =>
   while true then 0
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.18: 	  while true then 0
+//│ ║  l.+2: 	  while true then 0
 //│ ╙──      	                  ^
 //│ = fun
 
@@ -77,15 +77,15 @@ f
 //│ = 42
 
 :e
-fun f = while (print("Hello World"), false)
+fun f = while ({print("Hello World"), false})
   then 0(0)
   else return 1
 f
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.81: 	  then 0(0)
+//│ ║  l.+2: 	  then 0(0)
 //│ ║        	       ^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.81: 	  then 0(0)
+//│ ║  l.+2: 	  then 0(0)
 //│ ╙──      	       ^
 //│ > Hello World
 //│ = 1
@@ -335,11 +335,11 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.335: 	  then 0(0)
-//│ ╙──       	  ^^^^
+//│ ║  l.+2: 	  then 0(0)
+//│ ╙──      	  ^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (false literal)
-//│ ║  l.334: 	while print("Hello World"); false
-//│ ╙──       	                            ^^^^^
+//│ ║  l.+1: 	while print("Hello World"); false
+//│ ╙──      	                            ^^^^^
 //│ > Hello World
 
 :fixme
@@ -347,13 +347,13 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.346: 	while { print("Hello World"), false }
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.347: 	  then 0(0)
-//│ ╙──       	^^^^^^^^^^^
+//│ ║  l.+1: 	while { print("Hello World"), false }
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  then 0(0)
+//│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.348: 	  else 1
-//│ ╙──       	  ^^^^
+//│ ║  l.+3: 	  else 1
+//│ ╙──      	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme
@@ -363,15 +363,15 @@ while
   then 0(0)
   else 1
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.361: 	    print("Hello World")
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.362: 	    false
-//│ ║         	^^^^^^^^^
-//│ ║  l.363: 	  then 0(0)
-//│ ╙──       	^^^^^^^^^^^
+//│ ║  l.+2: 	    print("Hello World")
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	    false
+//│ ║        	^^^^^^^^^
+//│ ║  l.+4: 	  then 0(0)
+//│ ╙──      	^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.364: 	  else 1
-//│ ╙──       	  ^^^^
+//│ ║  l.+5: 	  else 1
+//│ ╙──      	  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

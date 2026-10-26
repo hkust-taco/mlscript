@@ -19,7 +19,7 @@ f => (let g = x => x(x) in f(g(g))) as [A] -> A -> A
 :e
 f => (let g = x => f(x(x)) in g) as [A] -> A -> A
 //│ ╔══[COMPILATION ERROR] Type error in block with expected type (A) ->{⊥} A
-//│ ║  l.20: 	f => (let g = x => f(x(x)) in g) as [A] -> A -> A
+//│ ║  l.+1: 	f => (let g = x => f(x(x)) in g) as [A] -> A -> A
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('x) ->{'eff ∨ 'eff1} ('app)  <:  (A) ->{⊥} (A)
 //│ ╟── because: cannot constrain  A  <:  'x
@@ -44,7 +44,7 @@ let foo(f) = (f(x => x(x)) as [A] -> A -> A) in foo
 :todo
 fun foo(f) = (f(x => x(x)) as [A] -> A -> A)
 //│ ╔══[COMPILATION ERROR] Expected a monomorphic type or an instantiable type here, but ('f) ->{⊥} [outer, 'A] -> ('A) ->{⊥} 'A found
-//│ ║  l.45: 	fun foo(f) = (f(x => x(x)) as [A] -> A -> A)
+//│ ║  l.+1: 	fun foo(f) = (f(x => x(x)) as [A] -> A -> A)
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

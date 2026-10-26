@@ -7,11 +7,11 @@
 :e
 if x else z
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (identifier)
-//│ ║  l.8: 	if x else z
-//│ ╙──     	   ^
+//│ ║  l.+1: 	if x else z
+//│ ╙──      	   ^
 //│ ╔══[COMPILATION ERROR] Name not found: z
-//│ ║  l.8: 	if x else z
-//│ ╙──     	          ^
+//│ ║  l.+1: 	if x else z
+//│ ╙──      	          ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -19,7 +19,7 @@ fun f(x, z) =
   if x
     else z
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (identifier)
-//│ ║  l.19: 	  if x
+//│ ║  l.+2: 	  if x
 //│ ╙──      	     ^
 
 // ——— ——— ———
@@ -48,14 +48,14 @@ if
   and true do
     print("ok")
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (true literal)
-//│ ║  l.46: 	  and true
+//│ ║  l.+3: 	  and true
 //│ ╙──      	      ^^^^
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
-//│ ║  l.47: 	  let x = 1
+//│ ║  l.+4: 	  let x = 1
 //│ ║        	          ^
-//│ ║  l.48: 	  and true do
+//│ ║  l.+5: 	  and true do
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.49: 	    print("ok")
+//│ ║  l.+6: 	    print("ok")
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

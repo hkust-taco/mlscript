@@ -41,12 +41,12 @@ add@1@2
 //│ = fun apply
 
 :sjs
-:fixme
+:expect 123
 @(id, 123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let args13; args13 = []; return runtime.safeCall(123(...args13))
+//│ let f2, args13; f2 = Predef.id; args13 = [ 123 ]; return runtime.safeCall(f2(...args13))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: 123 is not a function
+//│ = 123
 
 (@)(id, 123)
 //│ = 123
@@ -108,8 +108,8 @@ pipeInto @ 1, inc
 :re
 1 pipeInto @ inc
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.109: 	1 pipeInto @ inc
-//│ ╙──       	  ^^^^^^^^
+//│ ║  l.+1: 	1 pipeInto @ inc
+//│ ╙──      	  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: 1 is not a function
 
 (=> 1 pipeInto(_)) @ inc

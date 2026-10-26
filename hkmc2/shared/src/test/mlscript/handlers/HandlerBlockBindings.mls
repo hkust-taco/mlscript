@@ -18,7 +18,7 @@ let x = 123
 :e
 x
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.19: 	x
+//│ ║  l.+1: 	x
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -33,7 +33,7 @@ x + 1
 :e
 x
 //│ ╔══[COMPILATION ERROR] Name not found: x
-//│ ║  l.34: 	x
+//│ ║  l.+1: 	x
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -46,7 +46,7 @@ val y = 123
 :e
 y
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.47: 	y
+//│ ║  l.+1: 	y
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

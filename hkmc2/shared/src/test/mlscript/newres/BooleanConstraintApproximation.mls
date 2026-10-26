@@ -49,10 +49,10 @@ direct(value: {first: 3, second: "second"})
 :e
 (x: Cell[First] & Cell[Second]) => extract(x).first
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.50: 	(x: Cell[First] & Cell[Second]) => extract(x).first
+//│ ║  l.+1: 	(x: Cell[First] & Cell[Second]) => extract(x).first
 //│ ║        	                                   ^^^^^^^^^^^^^^^^
 //│ ╟── Record type does not contain member 'first'
-//│ ║  l.39: 	type Second = {second: Str}
+//│ ║  l.XX: 	type Second = {second: Str}
 //│ ╙──      	               ^^^^^^^^^^^
 //│ = fun
 

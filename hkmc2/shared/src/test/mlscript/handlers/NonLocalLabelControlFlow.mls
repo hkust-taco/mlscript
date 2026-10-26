@@ -6,8 +6,8 @@ do root:
   fun escape() = root.break(42)
   escape()
 //│ ╔══[COMPILATION ERROR] Non-local 'break' is only supported with effect handlers enabled.
-//│ ║  l.6: 	  fun escape() = root.break(42)
-//│ ╙──     	                 ^^^^
+//│ ║  l.+2: 	  fun escape() = root.break(42)
+//│ ╙──      	                 ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -15,7 +15,7 @@ do root:
   fun escape() = root.break
   escape()
 //│ ╔══[COMPILATION ERROR] Non-local 'break' is only supported with effect handlers enabled.
-//│ ║  l.15: 	  fun escape() = root.break
+//│ ║  l.+2: 	  fun escape() = root.break
 //│ ╙──      	                 ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -24,7 +24,7 @@ do root:
   let escape = () => root.continue
   escape()
 //│ ╔══[COMPILATION ERROR] Non-local 'continue' is only supported with effect handlers enabled.
-//│ ║  l.24: 	  let escape = () => root.continue
+//│ ║  l.+2: 	  let escape = () => root.continue
 //│ ╙──      	                     ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

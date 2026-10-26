@@ -7,21 +7,21 @@
 :ge
 Int
 //│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
-//│ ║  l.8: 	Int
-//│ ╙──     	^^^
+//│ ║  l.+1: 	Int
+//│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 Str
 //│ ╔══[COMPILATION ERROR] Symbol 'Str' is virtual (i.e., "compiler fiction"); cannot be used as a term
-//│ ║  l.15: 	Str
+//│ ║  l.+1: 	Str
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 Bool
 //│ ╔══[COMPILATION ERROR] Symbol 'Bool' is virtual (i.e., "compiler fiction"); cannot be used as a term
-//│ ║  l.22: 	Bool
+//│ ║  l.+1: 	Bool
 //│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -44,7 +44,7 @@ case Int then 0
 //│         sym = member:lambda⁰
 //│         dSym = term:lambda¹
 //│         params = Ls of
-//│           ParamList:
+//│           LoweredParamList:
 //│             params = Ls of
 //│               Param:
 //│                 sym = caseScrut⁰

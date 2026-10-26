@@ -1,0 +1,138 @@
+:.
+open annotations
+
+// Missing optional arguments bind null. Unsafe calls below remain regression probes;
+// their observed outputs do not define semantics for unsafe.undefined.
+:noInline
+fun absent(x?) = x is null
+[absent(), absent(unsafe.undefined), absent(null), absent(()), absent(0), absent(false)]
+//│ = [true, true, true, false, false, false]
+
+// Known omissions are explicit null arguments in the shared IR.
+:sir
+:noInline
+:expect true
+absent()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return absent⁰(null)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = true
+
+// Optional defaults also apply through function values and lambdas.
+:noInline
+let callback = absent
+let lambda = (x?) => x is null
+[callback(), callback(unsafe.undefined), lambda(), lambda(unsafe.undefined)]
+//│ = [true, true, true, true]
+//│ callback = fun absent
+//│ lambda = fun lambda
+
+// Each curried parameter list supplies its own defaults.
+:noInline
+fun curried(a, b, c)(x?) = x is null
+[curried(1, 2, 3)(), curried(1, 2, 3)(unsafe.undefined), curried(1, 2, 3)(null), curried(1, 2, 3)(())]
+//│ = [true, true, true, false]
+
+// Inlining binds omitted slots before substituting parameters into the body.
+@inline private fun inlined(x?) = x is null
+[inlined(), inlined(unsafe.undefined), inlined(null), inlined(())]
+//│ = [true, false, true, false]
+
+// Fixed optional slots precede the rest tuple, including calls through spreads.
+:noInline
+fun withRest(x?, ...xs) = [x is null, xs.length]
+fun fromSpread(xs: Array[Any]) = withRest(...xs)
+[withRest(), withRest(unsafe.undefined), withRest(0, 1, 2), fromSpread([]), fromSpread([unsafe.undefined])]
+//│ = [[true, 0], [true, 0], [false, 2], [true, 0], [true, 0]]
+
+// Optional slots must not consume required trailing arguments.
+:noInline
+fun trailing(x?, ...xs, last) = [x is null, xs.length, last]
+fun trailingSpread(xs: Array[Any]) = trailing(...xs, 3)
+[trailing(3), trailing(unsafe.undefined, 3), trailing(0, 2, 3), trailingSpread([]), trailingSpread([unsafe.undefined])]
+//│ = [[true, 0, 3], [false, 0, 3], [false, 1, 3], [true, 0, 3], [false, 0, 3]]
+
+// Tail-call jumps bind null again when the next iteration omits an earlier value.
+@tailrec fun omit(n, x?) = if n == 0 then x is null else omit(n - 1)
+@tailrec fun keep(n, x?) = if n == 0 then x is null else keep(n - 1, x)
+@tailrec fun spreadOmit(n, x?) = if n == 0 then x is null else spreadOmit(...[n - 1])
+@tailrec fun spreadKeep(n, x?) = if n == 0 then x is null else spreadKeep(...[n - 1, x])
+[omit(2, 1), keep(2, unsafe.undefined), spreadOmit(2, 1), spreadKeep(2, unsafe.undefined)]
+//│ = [true, true, true, true]
+
+// Constructor flattening preserves empty slots between parameter lists.
+class Fields(val first?)(val second?) {
+  constructor(val last)
+  fun values() = [first is null, second is null, last]
+}
+fun build(xs: Array[Any]) = new Fields(...xs)(2)(4)
+[new Fields()(2)(4).values(), new Fields(unsafe.undefined)()(4).values(), build([]).values(), build([unsafe.undefined]).values()]
+//│ = [[true, false, 4], [true, true, 4], [true, false, 4], [true, false, 4]]
+
+// Evaluate spread arguments once, before binding constructor fields.
+class Box(val value?)
+let count = 0
+fun makeArgs(present) =
+  set count = count + 1
+  if present then [unsafe.undefined] else []
+let missing = new Box(...makeArgs(false))
+let supplied = new Box(...makeArgs(true))
+[missing.value is null, supplied.value is null, count]
+//│ = [true, true, 2]
+//│ count = 2
+//│ missing = Box(null)
+//│ supplied = Box(null)
+
+// Eliminating constructors must still bind missing fields to null.
+:lift
+:deforest
+data class Data(value?)
+private fun read(d: Data) = d.value is null
+[read(Data()), read(Data(unsafe.undefined)), read(Data(()))]
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = [true, true, false]
+
+// Defined values behave consistently across calls, inlining, spreads, and tail-call jumps.
+:expect [true, true, false, false, false, true, true, true, true]
+[absent(), absent(null), absent(()), absent(0), absent(false), inlined(), fromSpread([]).0, omit(2, 1), spreadOmit(2, 1)]
+//│ = [true, true, false, false, false, true, true, true, true]
+
+// Optional trailing slots and constructor fields retain null when calls are rewritten.
+:expect [[true, 0, 3], [true, 0, 3], true, [true, true, 4]]
+[trailing(3), trailingSpread([]), read(Data()), new Fields()()(4).values()]
+//│ = [[true, 0, 3], [true, 0, 3], true, [true, true, 4]]
+
+// Merged dispatchers reset omitted parameters on each transition.
+:expect [true, true]
+@tailrec fun even(n, x?) = if n == 0 then x is null else odd(n - 1)
+@tailrec fun odd(n, x?) = if n == 0 then x is null else even(n - 1)
+[even(3, 9), odd(3, 10)]
+//│ = [true, true]
+
+// Closures retain each iteration's value, including a newly omitted slot.
+:expect [null, 1, 2]
+@tailrec fun captured(n, fs: Array[() -> Any], x?) =
+  if n == 0 then [(() => x), ...fs].map(f => f())
+  else if n == 1 then captured(0, [(() => x), ...fs])
+  else captured(n - 1, [(() => x), ...fs], n - 1)
+captured(2, [], 2)
+//│ = [null, 1, 2]
+
+// Scoped groups retain both captured values and optional defaults after inlining.
+:expect [[10, null], [10, 11]]
+let
+  offset = 10
+  select(value?) = [offset, value]
+in [select(), select(11)]
+//│ = [[10, null], [10, 11]]
+
+// Constructor slot extraction evaluates the source tuple once.
+:expect [null, 23, 2]
+let calls = 0
+fun values(present) =
+  set calls = calls + 1
+  if present then [23] else []
+[new Box(...values(false)).value, new Box(...values(true)).value, calls]
+//│ = [null, 23, 2]
+//│ calls = 2

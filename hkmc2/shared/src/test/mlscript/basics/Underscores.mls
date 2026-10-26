@@ -12,7 +12,7 @@
 :e
 _
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.13: 	_
+//│ ║  l.+1: 	_
 //│ ║        	^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -27,16 +27,16 @@ _
 //│ = fun
 
 :w
-=> (_, _)
+=> {_, _}
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.30: 	=> (_, _)
+//│ ║  l.+1: 	=> {_, _}
 //│ ╙──      	    ^
 //│ = fun
 
 :w
 => { _, _ }
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.37: 	=> { _, _ }
+//│ ║  l.+1: 	=> { _, _ }
 //│ ╙──      	     ^
 //│ = fun
 
@@ -85,19 +85,19 @@ let test = (=> _.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 :re
 test(f: print)(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.86: 	test(f: print)(1)
+//│ ║  l.+1: 	test(f: print)(1)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature expected 2 arguments, but got 1
-//│ ║  l.76: 	let test = (=> _.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
+//│ ║  l.XX: 	let test = (=> _.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 //│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.86: 	test(f: print)(1)
+//│ ║  l.+1: 	test(f: print)(1)
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Value with no known interface cannot be called like a function.
-//│ ║  l.76: 	let test = (=> _.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
+//│ ║  l.XX: 	let test = (=> _.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 //│ ║        	                                                                      ^^
 //│ ╟── No member interface is known for this type.
-//│ ║  l.76: 	let test = (=> _.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
+//│ ║  l.XX: 	let test = (=> _.f(0, _, 2)) as (({f: (Int, Int, Int) -> ()}, Int) -> ())
 //│ ╙──      	                                                                      ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -154,7 +154,7 @@ x_to(42)
 //│ = {x: 42}
 
 
-let mkObj = => (x: _, y: _, z: 3)
+let mkObj = => {x: _, y: _, z: 3}
 //│ mkObj = fun mkObj
 
 mkObj(1, 2)
@@ -168,8 +168,8 @@ mkObj(1, 2)
 :re
 let mkObj = => x: _, y: _, z: 3
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.169: 	let mkObj = => x: _, y: _, z: 3
-//│ ║         	                        ^
+//│ ║  l.+1: 	let mkObj = => x: _, y: _, z: 3
+//│ ║        	                        ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mkObj = fun mkObj
@@ -186,12 +186,12 @@ let mkObj = => x: _, y: _, z: 3
 let mkObj =
   => x: _, y: _, z: 3
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.187: 	  => x: _, y: _, z: 3
-//│ ║         	              ^
+//│ ║  l.+2: 	  => x: _, y: _, z: 3
+//│ ║        	              ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.187: 	  => x: _, y: _, z: 3
-//│ ╙──       	     ^^^^
+//│ ║  l.+2: 	  => x: _, y: _, z: 3
+//│ ╙──      	     ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mkObj = undefined
 
@@ -219,9 +219,9 @@ let mkObj = => {
 mkObj(1, 2)
 //│ = {x: 1, y: 2, z: 3}
 
-let mkObj = => (
+let mkObj = => {
   x: _, y: _, z: 3
-)
+}
 //│ mkObj = fun mkObj
 
 mkObj(1, 2)
@@ -256,8 +256,8 @@ f(2)
 :e
 x => _
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.257: 	x => _
-//│ ║         	     ^
+//│ ║  l.+1: 	x => _
+//│ ║        	     ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ = fun
 
