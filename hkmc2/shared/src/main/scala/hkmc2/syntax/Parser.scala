@@ -625,21 +625,7 @@ abstract class Parser(
           
     case (tok, loc) :: _ =>
       if verbose then printDbg("$ treat as an expression: " + tok.describe)
-      tryParseExp(prec, tok, loc, rule, allowNewlines =
-        true /* Making this false somehow makes the following not parse:
-          ```
-          if (print("Hello World"); false)
-            then 0(0)
-            else 1
-          ```
-          and this parse incorrectly (as a kw stutter):
-          ```
-          mut
-            let x = 1
-            in x
-          ```
-        */)
-      // TODO(tok)
+      tryParseExp(prec, tok, loc, rule, allowNewlines = false)
     case Nil =>
       rule.emptyAlt match
         case S(res) =>

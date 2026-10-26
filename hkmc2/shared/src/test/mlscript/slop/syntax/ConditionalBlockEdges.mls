@@ -6,9 +6,9 @@
 // A whole conditional block finishes the conditional; ordinary clause operands keep their continuations.
 :expect [true, 3, 3, 3]
 [
-  if {true then 2, else 3} + 2 == 4,
-  if false then {1} + 2 else 3,
-  if false then {x: 1}.x else 3,
+  if {true then 2, else 3} + 2 == 4
+  if false then {1} + 2 else 3
+  if false then {x: 1}.x else 3
   if false then {id}(1) else 3
 ]
 //│ = [true, 3, 3, 3]
@@ -185,6 +185,55 @@ if {false then 1} else
 //│ ╙──      	                      ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+
+if (print("Hello World"); false)
+  then ???
+  else 1
+//│ > Hello World
+//│ = 1
+
+
+if 123
+  then ???
+  else 1
+//│ = 1
+
+if {print("Hello World"), false}
+  then ???
+  else 1
+//│ > Hello World
+//│ = 1
+
+if (print("Hello World"); false)
+  then ???
+  else 1
+//│ > Hello World
+//│ = 1
+
+let x = 1
+//│ x = 1
+
+if x > {print("Hello World"), 1}
+  then ???
+  else 1
+//│ > Hello World
+//│ = 1
+
+:e
+if x {print("Hello World"), > 1}
+  then ???
+  else 1
+//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
+//│ ║  l.+1: 	if x {print("Hello World"), > 1}
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+if x { > 1}
+  then ???
+  else 1
+//│ = 1
+
+
 // Parentheses disable newline separators, but still allow an indented clause's else.
 :expect 123
 (if true
@@ -220,4 +269,47 @@ then 123
   then 123
   else 456)
 //│ = 458
+
+print(if true then
+    123
+  else 456)
+//│ > 123
+
+// :pe
+print(if true then
+    123
+else 456)
+//│ > 123
+
+// :pe
+2 +
+(if true then
+    123
+else 456)
+//│ = 125
+
+2 +
+(if true then
+    123
+  else 456)
+//│ = 125
+
+2 +
+(if true
+    then 123
+  else 456)
+//│ = 125
+
+// :fixme
+2 +
+(if true
+  then 123
+  else 456)
+//│ = 125
+
+if true
+  then 123
+  else 456
+//│ = 123
+
 

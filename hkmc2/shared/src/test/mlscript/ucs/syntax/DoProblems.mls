@@ -1,22 +1,156 @@
 :.
 :js
 
-// * It looks like trying to support both infix `do` and prefix `do` is a problem;
-// * maybe this part of the syntax needs to be redesigned.
+// * Trying to support both infix `do` and prefix `do` can be a bit tricky,
+// *  especially when a prefix `do` can be used as a statement in a UCS/condition block.
 
 
 // ——— ——— ———
 // Bindings inside a block condition are local to that condition.
 
+
+let arr
+fun done = set arr = mut [1,2]
+fun get = arr.pop() ?? 0
+done
+//│ arr = [1, 2]
+
+
 :e
 while
-    let arrMatches = false
-    arrMatches
+    let arrMatches = get
+    arrMatches > 0
   do
     print(arrMatches)
 //│ ╔══[COMPILATION ERROR] Name not found: arrMatches
 //│ ║  l.+5: 	    print(arrMatches)
 //│ ╙──      	          ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+done
+
+let arrMatches in while
+    set arrMatches = get
+    arrMatches > 0
+  do
+    print(arrMatches)
+//│ > 2
+//│ > 1
+
+done
+
+while {
+  let arrMatches = get
+  do print(arrMatches)
+  arrMatches > 0
+} do ()
+//│ > 2
+//│ > 1
+//│ > 0
+
+done
+
+while {
+  let arrMatches = get
+  arrMatches{!> print} > 0
+} do ()
+//│ > 2
+//│ > 1
+//│ > 0
+
+done
+
+:e
+while (
+  let arrMatches = get
+  arrMatches{!> print} > 0
+) do ()
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
+//│ ║  l.+1: 	while (
+//│ ║        	      ^
+//│ ║  l.+2: 	  let arrMatches = get
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	  arrMatches{!> print} > 0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	) do ()
+//│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+done
+
+:e
+while
+    let arrMatches = get
+    arrMatches{!> print} > 0
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
+//│ ║  l.+3: 	    arrMatches{!> print} > 0
+//│ ╙──      	                           ^
+//│ > 2
+
+done
+
+while
+    let arrMatches = get
+    arrMatches{!> print} > 0
+  do ()
+//│ > 2
+//│ > 1
+//│ > 0
+
+done
+
+:e
+while
+  let arrMatches = get
+  arrMatches{!> print} > 0
+do ()
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
+//│ ║  l.+3: 	  arrMatches{!> print} > 0
+//│ ╙──      	                         ^
+//│ > 2
+
+done
+
+// FIXME? weird
+while
+    let arrMatches = get
+    do arrMatches{!> print} > 0
+//│ > 2
+
+done
+
+:e
+while
+    let arrMatches = get in
+      arrMatches{!> print} > 0
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (let)
+//│ ║  l.+2: 	    let arrMatches = get in
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	      arrMatches{!> print} > 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+done
+
+while
+    let arrMatches = get in
+      arrMatches{!> print} > 0
+  do ()
+//│ > 2
+//│ > 1
+//│ > 0
+
+done
+
+while
+    let arrMatches = get
+    arrMatches > 0 |! { print(arrMatches) }
+  do ()
+//│ > 2
+//│ > 1
+//│ > 0
+
+done
+
 
 // ——— ——— ———
 // A new line starting with `do` inside a UCS block still starts a statement;
@@ -26,19 +160,33 @@ let arrMatches = ()
 //│ arrMatches = ()
 
 // * Note: produces a match error
-:fixme
+:e
 if
   arrMatches !== null
   do
-    ()
+    print('ok)
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (null)
 //│ ║  l.+2: 	  arrMatches !== null
 //│ ╙──      	                 ^^^^
+//│ > ok
 //│ ═══[RUNTIME ERROR] Error: match error
 
 // * This one works:
 if
   arrMatches !== null do
-    ()
+    print('ok)
+//│ > ok
+
+if
+    arrMatches !== null
+  do
+    print('ok)
+//│ > ok
+
+if {
+  arrMatches !== null
+} do
+    print('ok)
+//│ > ok
 
 
