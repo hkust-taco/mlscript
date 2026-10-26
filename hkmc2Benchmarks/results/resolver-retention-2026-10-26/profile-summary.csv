@@ -1,0 +1,9 @@
+phase,category,samples,percent,total_main_thread_samples,truncated_stacks
+09,finalization,0,0.0,785,724
+09,retention_bookkeeping,0,0.0,785,724
+09,code_ownership_contexts,0,0.0,785,724
+09,other,785,100.0,785,724
+10,finalization,8,0.7073386383731212,1131,1013
+10,retention_bookkeeping,76,6.719717064544651,1131,1013
+10,code_ownership_contexts,7,0.618921308576481,1131,1013
+10,other,1040,91.95402298850574,1131,1013
