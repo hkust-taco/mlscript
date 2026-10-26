@@ -15,25 +15,33 @@ object NewResolverState:
     * its exporter. Allocate a namespace only when it receives an entry.
     */
   final class Cache[K, V](select: NewResolverState => Cache[K, V], copy: V => V) extends ResolutionRetention.Table:
-    private val entries = mutable.Map.empty[ResolutionContext, mutable.Map[K, V]]
+    import ResolutionRetention.Entry
+    // Only the active map contains usage records. A completed module retains
+    // plain values, avoiding a permanent wrapper per cached inference node.
+    private var entries: Either[mutable.Map[ResolutionContext, mutable.Map[K, Entry[V]]],
+        mutable.Map[ResolutionContext, mutable.Map[K, V]]] = Left(mutable.Map.empty)
     // Null is only a lookup miss; stored values are non-null (including None).
-    // Keep hits allocation-free despite looking up both a context and a key.
-    private def own(key: K)(using context: ResolutionContext): V | Null =
-      val scope = entries.getOrElse(context, null)
-      if scope == null then null else scope.getOrElse(key, null)
+    // Recording a hit reuses the cache lookup, including its structural key.
+    private def own(key: K, read: Bool)(using context: ResolutionContext): V | Null = entries match
+      case Left(active) =>
+        val scope = active.getOrElse(context, null)
+        val entry = if scope == null then null else scope.getOrElse(key, null)
+        if entry == null then null else
+          if read then context.state.workspace.retention.use(entry)
+          entry.value
+      case Right(saved) =>
+        val scope = saved.getOrElse(context, null)
+        if scope == null then null else scope.getOrElse(key, null)
     private def peek(key: K)(using context: ResolutionContext): V | Null =
-      val value = own(key)
+      val value = own(key, false)
       if value != null then value else context.inherited match
         case S(parent) => select(parent.state).peek(key)(using parent)
         case N => null
     private def lookup(key: K)(using context: ResolutionContext): V | Null =
       assert(this eq select(context.state), "A resolver table must belong to the current consumer")
       if context.state.isFinished then return peek(key)
-      val value = own(key)
-      if value != null then
-        context.state.workspace.retention.use(this, key)
-        value
-      else context.inherited match
+      val value = own(key, true)
+      if value != null then value else context.inherited match
         case S(parent) =>
           val inherited = select(parent.state).peek(key)(using parent)
           if inherited == null then null else
@@ -55,32 +63,68 @@ object NewResolverState:
       assert(this eq select(context.state), "A resolver table must belong to the current consumer")
       assert(!context.state.isFinished, "A completed graph cannot change its memoized nodes")
       assert(value != null, "Resolver cache values must be non-null")
-      entries.getOrElseUpdate(context, mutable.Map.empty)(key) = value
-      context.state.workspace.retention.define(this, key)
-    def retain(keep: (ResolutionContext, Any) => Bool): Unit =
-      entries.filterInPlace: (context, values) =>
-        values.filterInPlace((key, _) => keep(context, key))
-        values.nonEmpty
+      entries match
+        case Left(active) =>
+          val retention = context.state.workspace.retention
+          if active.isEmpty then retention.track(this)
+          val entry = active.getOrElseUpdate(context, mutable.Map.empty).getOrElseUpdate(key, new Entry(value))
+          entry.value = value
+          retention.define(entry)
+        case Right(_) => lastWords("A completed cache cannot be updated")
+    def uses: Iterator[ResolutionRetention.Uses] = entries match
+      case Left(active) => active.valuesIterator.flatMap(_.valuesIterator)
+      case Right(_) => Iterator.empty
+    def finish(keep: AnyDefinitionSymbol => Bool): Unit = entries match
+      case Left(active) =>
+        val saved = mutable.Map.empty[ResolutionContext, mutable.Map[K, V]]
+        active.foreach: (context, values) =>
+          val retained = mutable.Map.from(values.iterator.collect:
+            case (key, entry) if entry.needed(keep) => key -> entry.value)
+          if retained.nonEmpty then saved(context) = retained
+        entries = Right(saved)
+      case Right(_) => lastWords("A cache cannot be finalized twice")
 
   final class Seen[A](select: NewResolverState => Seen[A]) extends ResolutionRetention.Table:
-    private val entries = mutable.Map.empty[ResolutionContext, mutable.Set[A]]
+    import ResolutionRetention.Uses
+    private var entries: Either[mutable.Map[ResolutionContext, mutable.Map[A, Uses]],
+        mutable.Map[ResolutionContext, mutable.Set[A]]] = Left(mutable.Map.empty)
+    private def own(value: A, read: Bool)(using context: ResolutionContext): Bool = entries match
+      case Left(active) =>
+        val scope = active.getOrElse(context, null)
+        val entry = if scope == null then null else scope.getOrElse(value, null)
+        if entry == null then false else
+          if read then context.state.workspace.retention.use(entry)
+          true
+      case Right(saved) => saved.get(context).exists(_(value))
     private def contains(value: A)(using context: ResolutionContext): Bool =
-      entries.get(context).exists(_(value)) || context.inherited.exists(parent => select(parent.state).contains(value)(using parent))
+      own(value, false) || context.inherited.exists(parent => select(parent.state).contains(value)(using parent))
     def apply(value: A)(using context: ResolutionContext): Bool =
       assert(this eq select(context.state), "A resolver table must belong to the current consumer")
-      if entries.get(context).exists(_(value)) then
-        if !context.state.isFinished then context.state.workspace.retention.use(this, value)
-        true
-      else context.inherited.exists(parent => select(parent.state).contains(value)(using parent))
+      own(value, true) || context.inherited.exists(parent => select(parent.state).contains(value)(using parent))
     def add(value: A)(using context: ResolutionContext): Bool =
       if apply(value) then false else
         assert(!context.state.isFinished, "A completed graph cannot register edges")
-        context.state.workspace.retention.define(this, value)
-        entries.getOrElseUpdate(context, mutable.Set.empty).add(value)
-    def retain(keep: (ResolutionContext, Any) => Bool): Unit =
-      entries.filterInPlace: (context, values) =>
-        values.filterInPlace(value => keep(context, value))
-        values.nonEmpty
+        entries match
+          case Left(active) =>
+            val retention = context.state.workspace.retention
+            if active.isEmpty then retention.track(this)
+            val entry = new Uses
+            retention.define(entry)
+            active.getOrElseUpdate(context, mutable.Map.empty)(value) = entry
+            true
+          case Right(_) => lastWords("A completed edge table cannot be updated")
+    def uses: Iterator[Uses] = entries match
+      case Left(active) => active.valuesIterator.flatMap(_.valuesIterator)
+      case Right(_) => Iterator.empty
+    def finish(keep: AnyDefinitionSymbol => Bool): Unit = entries match
+      case Left(active) =>
+        val saved = mutable.Map.empty[ResolutionContext, mutable.Set[A]]
+        active.foreach: (context, values) =>
+          val retained = mutable.Set.from(values.iterator.collect:
+            case (value, entry) if entry.needed(keep) => value)
+          if retained.nonEmpty then saved(context) = retained
+        entries = Right(saved)
+      case Right(_) => lastWords("An edge table cannot be finalized twice")
 
 /** Mutable inference storage owned by one compilation unit. Activations and
   * imported callbacks use immutable ResolutionContexts referring to this store;
@@ -108,7 +152,7 @@ final class NewResolverState(val owner: Elaborator.State):
     reachability.follow(exports, workspace.retention)
     workspace.retention.close(reachability)
     workspace.retention.finish(reachability.keeps)
-    copies.filterInPlace((_, data) => workspace.retention.retained(data, reachability.keeps))
+    copies.filterInPlace((_, data) => !data.pruned)
     owner.resolutionSources.definitions.filterInPlace((symbol, _) => reachability.keeps(symbol))
     owner.resolutionSources.sites.filterInPlace((site, _) => reachability.keepsSource(site))
     owner.resolutionSources.parameterSignatures.filterInPlace((parameter, _) => reachability.keepsSource(parameter))

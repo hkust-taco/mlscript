@@ -5,7 +5,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 import hkmc2.utils.*, shorthands.*
-import hkmc2.semantics.{NewResolverState, ResolutionContext, Symbol, AnyDefinitionSymbol}
+import hkmc2.semantics.{NewResolverState, ResolutionContext, ResolutionRetention, Symbol, AnyDefinitionSymbol}
 
 
 type ShapeListener[-A] = A => ResolutionContext ?=> Unit
@@ -81,6 +81,9 @@ object Publisher:
     private[hkmc2] var owner: NewResolverState | Null = null
     private[hkmc2] var completed = false
     private[hkmc2] var pruned = false
+    // Present only while this host's owning unit is being resolved. Copies
+    // start with fresh usage, and module finalization clears this reference.
+    private[hkmc2] var retentionUses: ResolutionRetention.Uses | Null = null
     val listeners: ArrayBuffer[Listener[A]] = ArrayBuffer.empty
     private[hkmc2] def retainListeners(keep: Opt[AnyDefinitionSymbol] => Bool, live: Bool): Unit =
       assert(observers.isEmpty, "Temporary observers must detach before graph finalization")
