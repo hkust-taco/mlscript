@@ -31,7 +31,8 @@ object ResolutionWorkspace:
     private val detach = mutable.ArrayBuffer.empty[() => Unit]
     private var completed = false
     def listen(listener: ShapeListener[Set[VarSymbol]])(using context: ResolutionContext): Unit =
-      // Preserve the graph and substitution used to register each continuation.
+      // Equal inference contexts can belong to different bodies. Preserve each
+      // continuation's owner so its resulting edges have the correct retention.
       listeners += ((context, listener))
     def observe(cancel: () => Unit): Unit =
       if completed then cancel() else detach += cancel
@@ -54,6 +55,7 @@ object ResolutionWorkspace:
   */
 private[hkmc2] final class ResolutionWorkspace(owner: Elaborator.State):
   import ResolutionWorkspace.*
+  val retention = new ResolutionRetention(owner)
   val pendingDependencies = mutable.Map.empty[(ResolutionContext, TypeResolution), PendingDependencies]
   val contexts = mutable.Map.empty[ResolutionContext, ResolutionContext]
   var reporter: Raise | Null = null

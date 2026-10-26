@@ -13,7 +13,6 @@ object InterfaceExposure:
   def isPublic(definition: Definition): Bool =
     (definition.visibility is Visibility.Public) && (definition match
       case td: TermDefinition => (td.k isnt syntax.LetBind) || td.annotations.contains(Annot.Modifier(syntax.Keyword.`public`)(N))
-      case _: TypeDef => false
       case _ => true)
 
 /** Check the inputs admitted by the exposed interface before resolution is sealed.
@@ -143,6 +142,11 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       case _: InstanceShape =>
         watch((ShapeIdentity.key(shape), "instance view"))(resolver.listenInstanceViews(shape))(emit(_, path))
       case ds: DefnShape if ds.defn.sym.getState is rctx.owner =>
+        val symbol = ds.defn match
+          case definition: TermDefinition => definition.tsym
+          case definition: ClassLikeDef => definition.sym
+          case definition: TypeDef => definition.sym
+        rctx.state.workspace.retention.exposedDefinitions += symbol
         parameters(shape.unappliedParams, path)
         ds.clsDef match
           case S(cls) =>
@@ -158,6 +162,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       case _: DefnShape => () // Imported definitions were checked before publication.
       case intro: IntroShape => intro.trm match
         case Lam(_, body) =>
+          rctx.state.workspace.retention.exposedValues += new Identity(intro.trm)
           parameters(shape.unappliedParams, path)
           watch((new Identity(body), marks, instances, "result"))(
             listener => resolver.listenResult(body)(listener)(using rctx.withInstances(instances))): shape =>
@@ -176,7 +181,9 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         case RecordShape.Spread(inner, context) =>
           emit(resolver.instantiateShape(inner, instances.withOverrides(record.instances)).exit(context).exit(marks), path)
         case _ => ()
-      case base: BaseShape => members(base.defn, marks, path)
+      case base: BaseShape =>
+        rctx.state.workspace.retention.exposedDefinitions += base.defn.sym
+        members(base.defn, marks, path)
       case callable: CallableTypeShape =>
         // Written structure constrains external values; missing output parts
         // still admit unknown shapes even when local callers supplied evidence.

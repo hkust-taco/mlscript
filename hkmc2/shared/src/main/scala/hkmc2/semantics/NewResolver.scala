@@ -3826,7 +3826,7 @@ final class NewResolver(prelude: Ctx, config: Config):
     */
   private def consultNamespace(ref: UnresolvedRef, namespaces: ImplicitNamespaces, module: ModuleOrObjectSymbol,
       namespace: => Namespace)(decided: Bool => Unit)(using ResolutionContext): Unit =
-    val base = rctx.state.context
+    val base = rctx.state.context.forCode(rctx.code)
     val consulted = namespaces.consulted.getOrElseUpdate(module, namespace)
     def defined(definition: ModuleOrObjectDef): Unit =
       given ResolutionContext = base
@@ -4960,7 +4960,7 @@ final class NewResolver(prelude: Ctx, config: Config):
           // is observed directly, as well as when its copied listeners fire.
           val graph = tuple.originalData.owner
           assert(graph != null, "A tuple producer must have an inference owner")
-          val defining = rctx.inGraph(graph.nn.context)
+          val defining = rctx.inGraph(graph.nn.context).forCode(rctx.code)
           val record = defining.state.namedTupleRecords.getOrElseUpdate(new Identity(tuple), {
             val record: Rcd = Rcd(false, fields.map((key, value) => RcdField(key, value)(using rctx.owner)))
             record.withLocOf(tuple)

@@ -211,7 +211,7 @@ class CompilerCtx(
       state.publishCompilationUnitAbi:
         CompilationUnitAbi:
           CompilerCtx.allocateModulePrivateExportNames(ir)(using state, summon[Raise])
-      state.newResolverState.finish()
+      state.newResolverState.finish(blk0, exportedSymbol.toList)
       Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig, dependencies.result, lastMod)
     
     val artifact = cache.upsert(file)(
@@ -277,7 +277,7 @@ class CompilerCtx(
         // must be erased before any compilation unit can use them.
         given Ctx = ctx
         elaborationConfig.givenIn(codegen.Erasure(blk))
-        state.newResolverState.finish()
+        state.newResolverState.finish(blk, blk.stats.collect { case definition: semantics.Definition => definition.bsym })
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
     )
   

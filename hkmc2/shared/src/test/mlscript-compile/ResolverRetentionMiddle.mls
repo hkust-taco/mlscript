@@ -1,0 +1,7 @@
+#lang(0.3.x, strictResolution: true)
+import "./ResolverRetentionLibrary.mls"
+
+module ResolverRetentionMiddle with
+  fun choose[A](first: Bool, value: A) = ResolverRetentionLibrary.choose(first, value)
+  fun captured[A](value: A) = ResolverRetentionLibrary.captured(value)
+  fun callbacks[A](value: A) = ResolverRetentionLibrary.callbacks(value)

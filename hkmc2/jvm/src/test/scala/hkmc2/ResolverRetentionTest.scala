@@ -81,6 +81,34 @@ class ResolverRetentionTest extends AnyFunSuite:
     val metadata = sources.definitions.size + sources.sites.size + sources.parameterSignatures.size + sources.recordReads.size
     (listeners, candidates, metadata)
 
+  test("unreachable generic bodies do not grow a compiled interface's retained inference graph"):
+    val cctx = TestFolders.compilerCtx(os.pwd)
+    given DebugPrinter = new DebugPrinter()
+    val trace = TraceLogger.silent
+    val collector = new DiagnosticCollector
+    given Raise = collector.report
+    val prelude = cctx.getPrelude(cctx.paths.preludeFile)(using trace, summon[Raise]).ctx
+    def measure(unused: Int): (Int, Int, Int) =
+      val dir = os.temp.dir(prefix = "resolver-dead-code-")
+      val file = dir / "Library.mls"
+      val definitions = (1 to unused).map(index =>
+        s"""  private fun unused$index[A](value: A) =
+           |    fun wrap[B](item: B) = [item, {stored: item}]
+           |    wrap[A](value)""".stripMargin).mkString("\n")
+      os.write(file,
+        s"""#lang(0.3.x, strictResolution: true)
+           |module Library with
+           |  private fun forward[A](value: A) = value
+           |  fun identity[A](value: A) = forward(value)
+           |$definitions
+           |""".stripMargin)
+      val artifact = cctx.getElaboratedBlock(file, prelude)(using trace, summon[Raise])
+      assert(collector.diagnostics.isEmpty, collector.diagnostics.map(_.theMsg).mkString("\n"))
+      graphSize(artifact, artifact.state.newResolverState)
+    val small = measure(1)
+    val large = measure(40)
+    assert(large == small, s"Unused bodies retained listeners/candidates/metadata: $small -> $large")
+
   test("compiled artifacts release compilation services, workspaces, and interning builders"):
     val cctx = TestFolders.compilerCtx(os.pwd)
     given DebugPrinter = new DebugPrinter()

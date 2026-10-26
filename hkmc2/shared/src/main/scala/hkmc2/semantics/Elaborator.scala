@@ -130,6 +130,15 @@ object Elaborator:
       env.valuesIterator.flatMap(_.symbol).collect:
         case symbol: VarSymbol if symbol.decl.exists(_.isInstanceOf[TyParam]) => symbol
     
+    /** The nearest named definition owns the resolution work installed while
+      * elaborating this code. Anonymous closures stay with their enclosing body.
+      */
+    private[semantics] lazy val resolutionOwner: Opt[AnyDefinitionSymbol] = outer match
+      case OuterCtx.Function(_, symbol) => symbol.orElse(parent.flatMap(_.resolutionOwner))
+      case OuterCtx.NonReturnContext(symbol) => symbol.orElse(parent.flatMap(_.resolutionOwner))
+      case OuterCtx.InnerScope(symbol) => S(symbol.asDefnSym)
+      case _ => parent.flatMap(_.resolutionOwner)
+
     /** The resolution scopes that references from this context capture through. */
     lazy val resolutionBoundaries: Set[ResolutionBoundary] =
       parent.fold(Set.empty[ResolutionBoundary])(_.resolutionBoundaries) ++ outer.resolutionBoundary.map(ResolutionBoundary(_))
@@ -864,7 +873,8 @@ extends Importer:
   val resolver = new NewResolver(prelude, config)
   export resolver.*
   private given NewResolver = resolver
-  private given ResolutionContext = state.newResolverState.context
+  private given (using context: Ctx): ResolutionContext =
+    state.newResolverState.context.forCode(context.resolutionOwner)
   
   val lang = config.language
   val newResolution: Bool = lang.useNewResolution
@@ -879,7 +889,7 @@ extends Importer:
     msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
     :: Nil
   
-  def mkLetBinding(sym: LocalVarSymbol | TermSymbol, rhs: Term, annotations: Ls[Annot])(loc: Opt[Loc]): Ls[Statement] =
+  def mkLetBinding(sym: LocalVarSymbol | TermSymbol, rhs: Term, annotations: Ls[Annot])(loc: Opt[Loc])(using Ctx): Ls[Statement] =
     LetDecl(sym, annotations)(loc) :: defineVar(sym, rhs)(loc) :: Nil
   
   // TODO: remove in favor of new resolution logic
@@ -1132,11 +1142,11 @@ extends Importer:
       patternBranch(() => syntheticLocalRef(scrut), tree.branches, identity)
     ifLike(tree.kw.kw, form, split, tree.toLoc)
   
-  protected def mkSplitLet(binding: LocalVarSymbol, term: Term): Head.Let =
+  protected def mkSplitLet(binding: LocalVarSymbol, term: Term)(using Ctx): Head.Let =
     if newResolution then pipeTerm(term, binding)
     Head.Let(binding, term)
   
-  protected def mkMatch(scrutinee: Term, pattern: Pattern, consequent: SimpleSplit) =
+  protected def mkMatch(scrutinee: Term, pattern: Pattern, consequent: SimpleSplit)(using Ctx) =
     log(dbg"mkMatch: scrutinee = ${scrutinee.showDbg}, pattern = ${pattern.showDbg}, consequent = ${consequent.showDbg}")
     matchScrutPat(scrutinee, pattern)
     // Captures carry the scope crossings needed to resolve extracted bindings,
@@ -1313,7 +1323,7 @@ extends Importer:
       Else(Term.Error().withLocOf(t))(N).withLocOf(t) // To inspect the source of errors.
   
   extension (term: Term)
-    private inline def reference(continuation: Reference => SimpleSplit): SimpleSplit =
+    private inline def reference(continuation: Reference => SimpleSplit)(using Ctx): SimpleSplit =
       term match
         // Local bindings already name the scrutinee; other legacy references can
         // expand during resolution and must be evaluated once before sharing.
@@ -1478,7 +1488,7 @@ extends Importer:
       case _ => N
     withAppendedArg(lhs).getOrElse(App(lhs, Tup(arg :: Nil)))
   
-  private def assignment(lhs: Term, rhs: Term): Term.Assgn =
+  private def assignment(lhs: Term, rhs: Term)(using Ctx): Term.Assgn =
     // Resolve the term interpretation of the l-value before lowering. The
     // selected definition is recorded even when its value publishes no shape.
     // Use this for synthesized assignments as well as source-level `set`.
@@ -1488,7 +1498,7 @@ extends Importer:
       assignVariable(lhs, rhs)
     Term.Assgn(lhs, rhs)
 
-  def ifLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit, loc: Opt[Loc]): Term.IfLike =
+  def ifLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit, loc: Opt[Loc])(using Ctx): Term.IfLike =
     val res = new Term.IfLike(kw, form, split).withLoc(loc)
     if newResolution then
       // Imperative branches are evaluated for effects; lowering discards their
@@ -1502,7 +1512,7 @@ extends Importer:
   /** Request the reference's term interpretation in expression positions.
     * Listeners can wait for forward definitions to complete.
     */
-  private def interpretRef(ref: Term, interp: Interpretation): Term =
+  private def interpretRef(ref: Term, interp: Interpretation)(using Ctx): Term =
     if newResolution then interp match
       case Trm | Annotation => requireTerm(ref)
       case Receiver(_) => listenReceiver(ref)(_ => ())

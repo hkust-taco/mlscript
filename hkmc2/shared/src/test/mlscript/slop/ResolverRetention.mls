@@ -1,7 +1,47 @@
 :.
-import "../../mlscript-compile/ResolverRetentionLibrary.mls" as Library
 
-// Generated buffer members are first observed by an importing compilation.
+// These are compiled artifacts: their workspaces and disconnected listeners
+// have been released before these calls install any consumer-local inference.
+import "../../mlscript-compile/ResolverRetentionLibrary.mls" as Library
+import "../../mlscript-compile/ResolverRetentionMiddle.mls" as Middle
+
+:expect [1, 2, 3, 4]
+class First(val first: Int)
+class Second(val second: Int)
+[Library.choose(true, First(1)).first,
+ Library.choose(false, Second(2)).second,
+ Middle.choose(true, First(3)).first,
+ Middle.choose(false, Second(4)).second]
+//│ = [1, 2, 3, 4]
+
+// Returned closures retain private helper and captured-variable flow through
+// both the defining file and an intermediate exporter's private graph.
+:expect [5, 6, 7, 8]
+[Library.captured(First(5))().first,
+ Middle.captured(Second(6))().second,
+ Library.callbacks(First(7)).read().first,
+ Middle.callbacks(Second(8)).read().second]
+//│ = [5, 6, 7, 8]
+
+:expect [9, 10]
+[Library.unpack(Library.Box(First(9))).first,
+ Library.unpack(Library.Box(Second(10))).second]
+//│ = [9, 10]
+
+// Public type aliases belong to the interface even when no exported value in
+// their defining module mentions them.
+:expect 11
+fun apply(value: First, callback: Library.Callback[First]) = callback(value).first
+apply(First(11), x => x)
+//│ = 11
+
+// A forward alias must preserve its pending inference continuations.
+:expect 12
+Library.delayed(x => x, First(12)).first
+//│ = 12
+
+// Generated buffer members are first observed after the exporting unit has
+// released its workspace. Their creation must belong to the consumer.
 :expect 13
 Library.Buffered.read(null, 0)()
 //│ = 13

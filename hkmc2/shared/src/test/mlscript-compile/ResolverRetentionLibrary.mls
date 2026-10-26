@@ -1,6 +1,28 @@
 #lang(0.3.x, strictResolution: true)
 
 module ResolverRetentionLibrary with
+  private fun forward[A](value: A) = value
+  private fun left[A](value: A) = forward(value)
+  private fun right[A](value: A) = forward(value)
+  fun choose[A](first: Bool, value: A) =
+    if first then left(value) else right(value)
+  fun captured[A](value: A) =
+    let stored = forward(value)
+    () => stored
+  fun callbacks[A](value: A) =
+    fun read() = forward(value)
+    {read: read}
+  class Box[A](val value: A)
+  fun unpack[A](box: Box[A]): A =
+    if box is Box(value) then forward(value) else throw "unreachable"
+  // This body installs inference while the source is checked, but is neither
+  // exposed nor called by anything reachable from the exposed interface.
+  private fun unused[A](value: A): A = value
+  // Eager resolution has already fed this input into the live helper. Its
+  // inference dependencies must stay valid even though the caller is private.
+  private fun unusedCaller[A](value: A) = forward(value)
+  fun delayed[A](callback: Callback[A], value: A): A = forward(callback(value))
+  type Callback[A] = A -> A
   @annotations.bufferable
   class Buffered with
     fun read(): Int = 13

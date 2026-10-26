@@ -5,7 +5,7 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
 import hkmc2.utils.*, shorthands.*
-import hkmc2.semantics.{NewResolverState, ResolutionContext, Symbol}
+import hkmc2.semantics.{NewResolverState, ResolutionContext, Symbol, AnyDefinitionSymbol}
 
 
 type ShapeListener[-A] = A => ResolutionContext ?=> Unit
@@ -24,6 +24,9 @@ object CandidateKey:
 final class Candidates[A](key: CandidateKey[A]) extends Iterable[A]:
   private val keys = mutable.HashSet.empty[Any]
   private val ordered = ArrayBuffer.empty[A]
+  private[hkmc2] def clear(): Unit =
+    keys.clear()
+    ordered.clear()
   def add(candidate: A)(using ResolutionContext): Bool =
     val added = keys.add(key(candidate))
     if added then ordered += candidate
@@ -57,10 +60,21 @@ final class Candidates[A](key: CandidateKey[A]) extends Iterable[A]:
   override def toString: Str = ordered.mkString("{", ", ", "}")
 
 object Publisher:
+  private[hkmc2] final class Listener[A](val code: Opt[AnyDefinitionSymbol], callback: ShapeListener[A]):
+    def apply(shape: A)(using ResolutionContext): Unit = callback(shape)
+
   private[hkmc2] final class Data[A](key: CandidateKey[A]):
     private[hkmc2] var owner: NewResolverState | Null = null
     private[hkmc2] var completed = false
-    val listeners: ArrayBuffer[ShapeListener[A]] = ArrayBuffer.empty
+    private[hkmc2] var pruned = false
+    val listeners: ArrayBuffer[Listener[A]] = ArrayBuffer.empty
+    private[hkmc2] def retainListeners(keep: Opt[AnyDefinitionSymbol] => Bool, live: Bool): Unit =
+      assert(observers.isEmpty, "Temporary observers must detach before graph finalization")
+      if live then listeners.filterInPlace(listener => keep(listener.code))
+      else
+        listeners.clear()
+        shapes.clear()
+        pruned = true
     val shapes: Candidates[A] = Candidates(key)
     // Pass-local observers never become part of a copied inference graph.
     private val observers: ArrayBuffer[ShapeListener[A]] = ArrayBuffer.empty
@@ -76,7 +90,7 @@ object Publisher:
       // listener's original registration graph when this host is re-exported.
       val origin = owner
       listeners.foreach: listener =>
-        result.listeners += (shape => (current: ResolutionContext) ?=>
+        result.listeners += new Listener(listener.code, shape => (current: ResolutionContext) ?=>
           listener(shape)(using if origin == null then current else current.inGraph(origin.context)))
       result.shapes.copyFrom(shapes)
       result
@@ -84,7 +98,8 @@ object Publisher:
     def publish(shape: A)(using state: ResolutionContext): Unit =
       val data = state.local(this)
       if data.shapes.add(shape) then data.notify(shape)
-    def notify(shape: A)(using ResolutionContext): Unit =
+    def notify(shape: A)(using state: ResolutionContext): Unit =
+      state.state.workspace.retention.publishHost(this)
       // Appended listeners receive this candidate through replay.
       val count = listeners.size
       // Temporary analyses can detach their observers during notification.
@@ -96,8 +111,8 @@ object Publisher:
         i += 1
       observed.foreach[Unit](_(shape))
     def addListener(listener: ShapeListener[A])(using origin: ResolutionContext): Unit =
-      origin.local(this).listeners +=
-        (shape => (current: ResolutionContext) ?=> listener(shape)(using current.inGraph(origin)))
+      origin.local(this).listeners += new Listener(origin.code,
+        shape => (current: ResolutionContext) ?=> listener(shape)(using current.inGraph(origin)))
     def replay(listener: ShapeListener[A])(using state: ResolutionContext): Unit =
       val candidates = state.local(this).shapes
       // Apply the contextual listener, rather than discard a contextual thunk.
@@ -120,7 +135,7 @@ trait Publisher[A](using key: CandidateKey[A]):
   private[hkmc2] def isOwnedBy(state: NewResolverState): Bool =
     originalData.owner eq state
 
-  private[hkmc2] def shapeListeners: ArrayBuffer[ShapeListener[A]] = originalData.listeners
+  private[hkmc2] def shapeListeners: ArrayBuffer[Publisher.Listener[A]] = originalData.listeners
   private[hkmc2] def inferenceHost(using state: ResolutionContext): Publisher.Data[A] = state.data(this)
   private[hkmc2] def addShapeListener(listener: ShapeListener[A])(using origin: ResolutionContext): Unit =
     inferenceHost.addListener(listener)
