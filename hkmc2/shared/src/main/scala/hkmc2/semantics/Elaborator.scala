@@ -1282,6 +1282,7 @@ extends Importer:
       termBranch(rhsTree.splitOn(Tree.Trm(scrutinee())), identity)
   
   private def patternBranch(scrutinee: Reference, t: Tree, mk: Tree => Tree): Ctxl[SimpleSplit] = t match
+    case prefix: PrefixOpApp => patternBranch(scrutinee, prefix.toApp, mk)
     case block: Block =>
       val (_, splits) = block.desugStmts.foldLeft((ctx, Ls[SimpleSplit]())):
         case ((curCtx, splits), t) =>
@@ -1469,8 +1470,6 @@ extends Importer:
       else rhs
     def withAppendedArg(lhs: Tree): Opt[Tree.App] = lhs.desugared match
       case InfixApp(lhs, Keywrd(Keyword.backslash), rhs) => withAppendedArg(backslashApp(lhs, rhs))
-      // * Prefix operator applications, such as `-x`, are not calls with argument lists.
-      case App(Ident(op), _) if Parser.prefixOps.contains(op) => N
       case App(f, Tup(args)) => S(App(f, Tup(args :+ arg)))
       case Bra(BracketKind.Curly, Block(stmt :: Nil)) => withAppendedArg(stmt)
       case _ => N
@@ -1904,6 +1903,12 @@ extends Importer:
           mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
         mkNonLabelSelectionApp(tree, sel, args)
+    case prefix @ PrefixOpApp(op, rhs) =>
+      val arg =
+        if underscoreDelimitingSides(op)._2 then
+          Tree.Trm(delimitedTerm(rhs, Trm, alwaysLambda = false)).withLocOf(rhs)
+        else rhs
+      subterm(App(op, PlainTup(arg)).withLocOf(prefix), interp)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
       val lt = subterm(lhs, interp.applicationHead)
@@ -2168,6 +2173,7 @@ extends Importer:
       def go(acc: Term, trees: Ls[Tree]): Term =
         trees match
         case Nil => acc
+        case (prefix: PrefixOpApp) :: trees => go(acc, prefix.toApp :: trees)
         
         // * FIXME this `f.name.head.isLetter` test is a big hack...
         // * TODO would be better to keep the fixity of applications part of the Tree repr.
@@ -3492,6 +3498,7 @@ extends Importer:
       case _ => R(go(t))
     def go(t: Tree): Ctxl[Pattern] = trace[Pattern](dbg"Elab pattern ${t.showDbg}", r => s"~> ${r.showDbg}"):
       t match
+      case prefix: PrefixOpApp => go(prefix.toApp)
       // Annotated patterns like `@compile P`.
       case Tree.Annotated(annotation, target) =>
         go(target).annotate(term(annotation, Trm), t.toLoc)

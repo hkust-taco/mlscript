@@ -245,12 +245,17 @@ _ - _ of 1, 2
 |> (_ - 2)
 //│ = -1
 
-:pe
+:e
+:re
 |> 1
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	|> 1
-//│ ╙──      	   ^
-//│ = fun pipeInto
+//│ ║        	^^^^
+//│ ╟── Function 'pipeInto' expected 2 arguments, but got 1
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 :e
 :re

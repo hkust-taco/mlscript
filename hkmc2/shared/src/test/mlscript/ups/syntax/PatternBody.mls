@@ -82,25 +82,17 @@ pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 pattern Negated = ~(Int | Str)
 //│ elaborated pattern body: ¬(member:Int⁰ ∨ member:Str⁰)
 
-// FIXME: The precedence of `=>` is higher than `~`?
-:pt
+:e
 pattern BadNegated = ~(Int as x) => x
-//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
-//│ TypeDef:
-//│   k = Pat
-//│   head = Ident of "BadNegated"
-//│   rhs = S of App:
-//│     lhs = Ident of "~"
-//│     rhs = Tup of Ls of
-//│       InfixApp:
-//│         lhs = Tup of Ls of
-//│           InfixApp:
-//│             lhs = Ident of "Int"
-//│             kw = Keywrd of keyword 'as'
-//│             rhs = Ident of "x"
-//│         kw = Keywrd of keyword '=>'
-//│         rhs = Ident of "x"
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ╔══[COMPILATION ERROR] This pattern cannot be bound.
+//│ ║  l.+1: 	pattern BadNegated = ~(Int as x) => x
+//│ ║        	                       ^^^
+//│ ╟── Because the pattern it belongs to is negated.
+//│ ║  l.+1: 	pattern BadNegated = ~(Int as x) => x
+//│ ╙──      	                       ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.+1: 	pattern BadNegated = ~(Int as x) => x
+//│ ╙──      	                                    ^
 
 :ucs ups
 :e
