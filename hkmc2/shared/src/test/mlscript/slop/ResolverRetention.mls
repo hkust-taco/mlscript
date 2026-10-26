@@ -1,0 +1,7 @@
+:.
+import "../../mlscript-compile/ResolverRetentionLibrary.mls" as Library
+
+// Generated buffer members are first observed by an importing compilation.
+:expect 13
+Library.Buffered.read(null, 0)()
+//│ = 13

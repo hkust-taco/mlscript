@@ -147,6 +147,10 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.selfShapes, identity)
   val defnShapes: Cache[DefinitionSymbol[?], DefnShape] =
     new Cache(_.defnShapes, identity)
+  // Generated buffered members allocate symbols and source terms. Reuse their
+  // identities through the graph, without a lazy field mutating a finished owner.
+  private[semantics] val bufferedMembers: Cache[ClassSymbol, Map[Str, RecordMember]] =
+    new Cache(_.bufferedMembers, identity)
   // Parameterless definition bodies share a result node before following their
   // references. Keep distinct generic activations separate, and inherit the host
   // identity so imported listeners use the consumer's private publisher data.
@@ -645,6 +649,8 @@ final class ResolutionContext private[semantics] (
     canonical(key._1, _.recordShapes, key)(shapeView(key._3)(make))
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
     canonical(tpe.resolution, _.instanceShapes, tpe.observation)(shapeView(tpe.instances)(make))
+  def bufferedMembers(cls: ClassDef)(make: => Map[Str, RecordMember]): Map[Str, RecordMember] =
+    canonical(cls.sym, _.bufferedMembers, cls.sym)(make)
   def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
     canonical(spread, _.spreadElements, new Identity(spread))(make)
   def memberVariable(symbol: TermSymbol): ShapeHost =
