@@ -6,37 +6,21 @@
 
 
 // ——— ——— ———
-// [Comment from Copilot (Claude Opus 4.6):]
-// Bug: `do` on a new line after `while` condition is not parsed as infix.
-// The parser explicitly excludes `do` from newline-infix handling (Parser.scala ~line 1088)
-// to prevent ambiguity with UCS splits (e.g., `0 then "null"\ndo body` should be two split
-// arms, not `(0 then "null") do body`). Fixing this would require context-sensitive parsing
-// to distinguish `while` conditions from `if` split arms, which is a significant refactoring
-// of the parser's `exprCont` method.
+// Bindings inside a block condition are local to that condition.
 
-:fixme
+:e
 while
-    let arrMatches = true
+    let arrMatches = false
     arrMatches
   do
     print(arrMatches)
-//│ ╔══[COMPILATION ERROR] Unexpected 'do' after a complete 'while' expression.
-//│ ║  l.+4: 	  do
-//│ ║        	  ^^
-//│ ╟── A block directly after 'while' is its full body, including any 'do' clauses.
-//│ ║  l.+1: 	while
-//│ ║        	^^^^^
-//│ ╙── To use a block as the condition, write 'while ({ ... }) do ...'.
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ╔══[COMPILATION ERROR] Name not found: arrMatches
+//│ ║  l.+5: 	    print(arrMatches)
+//│ ╙──      	          ^^^^^^^^^^
 
 // ——— ——— ———
-// [Comment from Copilot (Claude Opus 4.6):]
-// Bug: `do` on a new line inside `if` block is not parsed as infix continuation.
-// Same root cause as the `while...do` bug above: the `do` exclusion in Parser.scala
-// prevents `do` from being treated as a newline-infix operator. In the `if` block,
-// `arrMatches !== null` and `do ()` are parsed as separate block items instead of
-// `arrMatches !== null do ()`. Fixing requires the same context-sensitive parsing
-// refactoring mentioned above.
+// A new line starting with `do` inside a UCS block still starts a statement;
+// it does not complete the preceding condition.
 
 let arrMatches = ()
 //│ arrMatches = ()

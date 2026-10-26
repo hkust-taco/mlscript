@@ -1,0 +1,60 @@
+:.
+:js
+:qq
+
+
+:expect 1
+if {print("condition"), false}
+  then ???
+  else 1
+//│ > condition
+//│ = 1
+
+:expect 2
+if {true} then {2} else {???}
+//│ = 2
+
+:expect 3
+if
+    print("indented condition")
+    true
+  then 3
+  else ???
+//│ > indented condition
+//│ = 3
+
+// Shared bindings remain in scope across the branches of a block.
+:expect 4
+if {let x = 4, false then x}
+else x
+//│ = 4
+
+:expect 3
+let n = 0
+if {true} do set n += 1
+if {false}
+  do ???
+  else set n += 1
+while {n < 3} do set n += 1
+n
+//│ = 3
+//│ n = 3
+
+// Result continuations retain their grouping; nested conditionals need parentheses.
+:expect [4, 2, 3, 5, 6]
+[
+  if {true then 1, else ???} + 3,
+  if {true then {x: 2}, else ???}.x,
+  if {true then id, else ???}(3),
+  if {false then ???} else 5,
+  if (if {true then false, else true}) then ??? else 6
+]
+//│ = [4, 2, 3, 5, 6]
+
+:e
+:re
+if if {true then false, else true} then 1 else 2
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (if expression)
+//│ ║  l.+1: 	if if {true then false, else true} then 1 else 2
+//│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error

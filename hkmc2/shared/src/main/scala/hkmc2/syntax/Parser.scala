@@ -564,7 +564,8 @@ abstract class Parser(
             
           if continue then
             consume
-            rec(toks, S(br.innerLoc), br.describe).concludeWith(_.parseRule(prec, rule, allowNewlines = false))
+            // The block delimits the continuation, whose clauses may span multiple lines.
+            rec(toks, S(br.innerLoc), br.describe).concludeWith(_.parseRule(prec, rule, allowNewlines = true))
           else tryEmpty(br, loc)
           
     case (tok, loc) :: _ =>

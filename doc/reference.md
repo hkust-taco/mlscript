@@ -940,6 +940,10 @@ else
   expr2
 ```
 
+Braced or indented blocks can be followed by `then`/`do` to use their value as the condition,
+or by `else` to supply a fallback for their branches. Clauses attach to the nearest `if`/`while`;
+parenthesize a nested conditional used as a condition: `if (if { ... }) then ... else ...`.
+
 ### `if` with Pattern Branches (`is`)
 
 ```mlscript

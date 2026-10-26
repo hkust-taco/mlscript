@@ -342,39 +342,37 @@ while print("Hello World"); false
 //│ ╙──      	                            ^^^^^
 //│ > Hello World
 
-:fixme
-while { print("Hello World"), false }
+:e
+:expect 1
+fun f = while { print("Hello World"), false }
   then 0(0)
-  else 1
-//│ ╔══[COMPILATION ERROR] Unexpected 'then' after a complete 'while' expression.
+  else return 1
+f
+//│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+2: 	  then 0(0)
-//│ ║        	  ^^^^
-//│ ╟── A block directly after 'while' is its full body, including any 'then' clauses.
-//│ ║  l.+1: 	while { print("Hello World"), false }
-//│ ║        	^^^^^
-//│ ╙── To use a block as the condition, write 'while ({ ... }) then ...'.
-//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.+3: 	  else 1
-//│ ╙──      	  ^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ║        	       ^^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.+2: 	  then 0(0)
+//│ ╙──      	       ^
+//│ > Hello World
+//│ = 1
 
-:fixme
-while
+:e
+:expect 1
+fun f = while
     print("Hello World")
     false
   then 0(0)
-  else 1
-//│ ╔══[COMPILATION ERROR] Unexpected 'then' after a complete 'while' expression.
+  else return 1
+f
+//│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+4: 	  then 0(0)
-//│ ║        	  ^^^^
-//│ ╟── A block directly after 'while' is its full body, including any 'then' clauses.
-//│ ║  l.+1: 	while
-//│ ║        	^^^^^
-//│ ╙── To use a block as the condition, write 'while ({ ... }) then ...'.
-//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.+5: 	  else 1
-//│ ╙──      	  ^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ║        	       ^^^^
+//│ ╟── Integer literal cannot be called like a function.
+//│ ║  l.+4: 	  then 0(0)
+//│ ╙──      	       ^
+//│ > Hello World
+//│ = 1
 
 
 // * https://github.com/hkust-taco/mlscript/issues/401

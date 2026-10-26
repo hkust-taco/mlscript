@@ -178,31 +178,38 @@ class ParseRules(using State):
       case (kw, (lhs, rhs, body)) => LetLike(kw, lhs, rhs, body)
   
   def ifLike(kw: Keyword.IfLike): Alt[Tree] =
+    val elseClause = Kw(`else`)(
+      ParseRule("`else` keyword")(
+        exprOrBlk(ParseRule("`else` expression")(end(())))(discard)*
+      )
+    ) { case (elsKw, default) => (elsKw, default) }
+    val optionalElse = ParseRule(s"'${kw.name}' expression")(
+      end(N), elseClause.map(S(_)))
+    def withDefault(split: Tree, default: Opt[Keywrd[`else`.type] -> Tree]): Tree = default match
+      case S((elsKw, body)) =>
+        val clause = PrefixApp(elsKw, body)
+        val items = split match
+          case Block(stmts) => stmts.appended(clause)
+          case _ => split :: clause :: Nil
+        Block(items)
+      case N => split
+    def blockConnective(con: `then`.type | `do`.type): Alt[Tree => Tree] =
+      Kw(con)(
+        ParseRule(s"'${con.name}' clause")(exprOrBlk(optionalElse)(_ -> _)*)
+      ) { case (conKw, (body, default)) =>
+        (split: Tree) => withDefault(InfixApp(split, conKw, body), default)
+      }
+    // Keep a block's branches and shared bindings together. Only explicit clauses extend
+    // this body; calls, selections and other operators apply to the completed conditional.
+    val afterBlock = ParseRule(s"'${kw.name}' block")(
+      end(identity[Tree]),
+      blockConnective(`then`), blockConnective(`do`),
+      elseClause.map { default => (split: Tree) => withDefault(split, S(default)) },
+    )
     Kw(kw)(
       ParseRule(s"'${kw.name}' keyword")(
-        Expr(
-          ParseRule(s"'${kw.name}' expression")(
-            end(N),
-            Kw(`else`)(
-              ParseRule(s"`else` keyword")(
-                exprOrBlk(ParseRule(s"`else` expression")(end(()))):
-                  discard
-                *
-              )
-            ) {  case (elsKw, default) => S((elsKw, default)) }
-          )
-        ):
-          case (split, S((elsKw, default))) =>
-            val clause = PrefixApp(elsKw, default)
-            val items = split match
-              case Block(stmts) => stmts.appended(clause)
-              case _ => split :: clause :: Nil
-            Block(items)
-          case (split, N) => split
-        ,
-        Blk(
-          ParseRule(s"'${kw.name}' block")(end(()))
-        )(discard)
+        Expr(optionalElse)(withDefault),
+        Blk(afterBlock)((split, continue) => continue(split)),
       )
     ) { case (kw, body) => IfLike(kw, body) }
   
