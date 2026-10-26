@@ -192,6 +192,21 @@ if {false then 1} else
   else 456)
 //│ = 123
 
+(if true
+then 123
+else 456)
+//│ = 123
+
+(if true
+  then 123
+else 456)
+//│ = 123
+
+(if true
+then 123
+  else 456)
+//│ = 123
+
 :expect 125
 2 +
 (if true
@@ -205,3 +220,4 @@ if {false then 1} else
   then 123
   else 456)
 //│ = 458
+
