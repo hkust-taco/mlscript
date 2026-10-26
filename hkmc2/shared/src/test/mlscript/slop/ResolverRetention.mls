@@ -45,3 +45,11 @@ Library.delayed(x => x, First(12)).first
 :expect 13
 Library.Buffered.read(null, 0)()
 //│ = 13
+
+// A re-exported callback enters consumer code which calls the defining library
+// again. The two generic activations must retain their own argument flow.
+:expect [14, 15]
+fun roundTrip[A](value: A) =
+  Middle.callbacks((item: A) => Library.choose(true, item)).read()(value)
+[roundTrip(First(14)).first, roundTrip(Second(15)).second]
+//│ = [14, 15]

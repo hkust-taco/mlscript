@@ -60,8 +60,22 @@ final class Candidates[A](key: CandidateKey[A]) extends Iterable[A]:
   override def toString: Str = ordered.mkString("{", ", ", "}")
 
 object Publisher:
-  private[hkmc2] final class Listener[A](val code: Opt[AnyDefinitionSymbol], callback: ShapeListener[A]):
-    def apply(shape: A)(using ResolutionContext): Unit = callback(shape)
+  private[hkmc2] sealed abstract class Listener[A]:
+    def code: Opt[AnyDefinitionSymbol]
+    def apply(shape: A)(using ResolutionContext): Unit
+
+  // Registration and import are the two graph boundaries a callback crosses.
+  // Store their routing information in the callable itself, so each boundary
+  // needs one object and ownership is read from the original registration.
+  private final class Registered[A](origin: ResolutionContext, callback: ShapeListener[A]) extends Listener[A]:
+    def code: Opt[AnyDefinitionSymbol] = origin.code
+    def apply(shape: A)(using current: ResolutionContext): Unit =
+      callback(shape)(using current.inGraph(origin))
+
+  private final class Imported[A](origin: NewResolverState | Null, callback: Listener[A]) extends Listener[A]:
+    def code: Opt[AnyDefinitionSymbol] = callback.code
+    def apply(shape: A)(using current: ResolutionContext): Unit =
+      callback(shape)(using if origin == null then current else current.inGraph(origin.context))
 
   private[hkmc2] final class Data[A](key: CandidateKey[A]):
     private[hkmc2] var owner: NewResolverState | Null = null
@@ -90,8 +104,7 @@ object Publisher:
       // listener's original registration graph when this host is re-exported.
       val origin = owner
       listeners.foreach: listener =>
-        result.listeners += new Listener(listener.code, shape => (current: ResolutionContext) ?=>
-          listener(shape)(using if origin == null then current else current.inGraph(origin.context)))
+        result.listeners += new Imported(origin, listener)
       result.shapes.copyFrom(shapes)
       result
 
@@ -111,8 +124,7 @@ object Publisher:
         i += 1
       observed.foreach[Unit](_(shape))
     def addListener(listener: ShapeListener[A])(using origin: ResolutionContext): Unit =
-      origin.local(this).listeners += new Listener(origin.code,
-        shape => (current: ResolutionContext) ?=> listener(shape)(using current.inGraph(origin)))
+      origin.local(this).listeners += new Registered(origin, listener)
     def replay(listener: ShapeListener[A])(using state: ResolutionContext): Unit =
       val candidates = state.local(this).shapes
       // Apply the contextual listener, rather than discard a contextual thunk.
