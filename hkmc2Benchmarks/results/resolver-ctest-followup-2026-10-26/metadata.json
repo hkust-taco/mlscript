@@ -1,0 +1,127 @@
+{
+  "created": "2026-10-26T14:32:49.612640+08:00",
+  "harness_revision": "ced10d57e118757d841ba6f3c870ee88aff01f7c",
+  "jvm": "java version \"21.0.8\" 2025-07-15 LTS\nJava(TM) SE Runtime Environment (build 21.0.8+12-LTS-250)\nJava HotSpot(TM) 64-Bit Server VM (build 21.0.8+12-LTS-250, mixed mode, sharing)",
+  "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+  "jvm_flags": [
+    "-Xms1g",
+    "-Xmx1g",
+    "-Xss8m",
+    "-XX:ActiveProcessorCount=1",
+    "-XX:+UseSerialGC",
+    "-Xbatch"
+  ],
+  "warmups": 12,
+  "samples": 8,
+  "forks": 3,
+  "mode": "timing",
+  "heap_samples": 0,
+  "test_order": "sorted names, sequential ScalaTest run without Distributor",
+  "active_processors": 1,
+  "physical_cpu_affinity": "not pinned; macOS scheduler controls core placement",
+  "background_jit": false,
+  "suite": "every hkmc2.CompileTestRunner case, fresh CompilerCtx per batch",
+  "builds": [
+    {
+      "phase": "11",
+      "label": "callable-listeners",
+      "revision": "b0b30e3f714bc7710bc6d1f4823544f108caa1e9",
+      "jar": "/private/tmp/resolver-stages-20261026/phase-11.jar",
+      "sha256": "081045afcefc9b2e321e561feb6299a3cc30ae48b035d882198d69003beb6465",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "12",
+      "label": "entry-local-tracking",
+      "revision": "20090641b23f3a4ebbcf0780ec6d3f7cef5d6de1",
+      "jar": "/private/tmp/resolver-stages-20261026/phase-12.jar",
+      "sha256": "1551b7d5733dc029a98a377c60eec83f65cd533a4e2eccaf2ce87d9bc17785c3",
+      "validation": "hkmc2AllTests/test"
+    },
+    {
+      "phase": "13",
+      "label": "shared-graph-origins",
+      "revision": "ced10d57e118757d841ba6f3c870ee88aff01f7c",
+      "jar": "/private/tmp/resolver-stages-20261026/phase-13.jar",
+      "sha256": "cc590caaa86ffe69e7762b350909260fd7eb6e1c2a4ebbcd58baefc2837aa38c",
+      "validation": "hkmc2AllTests/test"
+    }
+  ],
+  "schedule": [
+    {
+      "fork": 0,
+      "build_index": 1,
+      "phase": "12"
+    },
+    {
+      "fork": 0,
+      "build_index": 2,
+      "phase": "13"
+    },
+    {
+      "fork": 0,
+      "build_index": 0,
+      "phase": "11"
+    },
+    {
+      "fork": 1,
+      "build_index": 2,
+      "phase": "13"
+    },
+    {
+      "fork": 1,
+      "build_index": 1,
+      "phase": "12"
+    },
+    {
+      "fork": 1,
+      "build_index": 0,
+      "phase": "11"
+    },
+    {
+      "fork": 2,
+      "build_index": 2,
+      "phase": "13"
+    },
+    {
+      "fork": 2,
+      "build_index": 1,
+      "phase": "12"
+    },
+    {
+      "fork": 2,
+      "build_index": 0,
+      "phase": "11"
+    }
+  ],
+  "common_archives": [
+    {
+      "classpath_index": 0,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/hkmc2Benchmarks/target/scala-3.8.4/test-classes",
+      "file": "common-00.jar",
+      "sha256": "ffda8f7c58e66794c7df097f9d6ac3279a0a09569640cc258e517f5d491b615f"
+    },
+    {
+      "classpath_index": 3,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/core/jvm/target/scala-2.13/classes",
+      "file": "common-03.jar",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "classpath_index": 4,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/hkmc2DiffTests/target/scala-3.8.4/test-classes",
+      "file": "common-04.jar",
+      "sha256": "34f3ffbdfeb4896cfe0438158ce0439fdc47e9c51f94777564bb8ee438ccb7be"
+    },
+    {
+      "classpath_index": 6,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/hkmc2/jvm/target/scala-3.8.4/test-classes",
+      "file": "common-06.jar",
+      "sha256": "dfc90198e881aedf3bb6072bbbdc4ae8df3cfa9ca74c090263114cf5a38db202"
+    }
+  ],
+  "mls_corpus_sha256": "1269d792303813e0c3a54bde2e3e1a5d637a11269250e511a0765db3187ec667",
+  "allocation_api": "com.sun.management.ThreadMXBean.getTotalThreadAllocatedBytes (all JVM threads)",
+  "heap_method": "heap-pool collection snapshots after fully compacting GC with context held, then released; weak-reference check",
+  "measurement_gc": "natural for timing; explicit full compaction for separate heap batches"
+}

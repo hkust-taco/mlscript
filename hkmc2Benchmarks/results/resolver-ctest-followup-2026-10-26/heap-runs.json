@@ -1,0 +1,83 @@
+[
+  {
+    "fork": 0,
+    "build_index": 1,
+    "phase": "12",
+    "name": "00-phase-12-fork-0",
+    "started": "2026-10-26T14:56:18.002046+08:00",
+    "elapsed_seconds": 24.51252645906061,
+    "returncode": 0
+  },
+  {
+    "fork": 0,
+    "build_index": 2,
+    "phase": "13",
+    "name": "01-phase-13-fork-0",
+    "started": "2026-10-26T14:56:42.535725+08:00",
+    "elapsed_seconds": 24.295515957986936,
+    "returncode": 0
+  },
+  {
+    "fork": 0,
+    "build_index": 0,
+    "phase": "11",
+    "name": "02-phase-11-fork-0",
+    "started": "2026-10-26T14:57:06.852936+08:00",
+    "elapsed_seconds": 24.768925375072286,
+    "returncode": 0
+  },
+  {
+    "fork": 1,
+    "build_index": 2,
+    "phase": "13",
+    "name": "03-phase-13-fork-1",
+    "started": "2026-10-26T14:57:31.643326+08:00",
+    "elapsed_seconds": 24.44270820892416,
+    "returncode": 0
+  },
+  {
+    "fork": 1,
+    "build_index": 1,
+    "phase": "12",
+    "name": "04-phase-12-fork-1",
+    "started": "2026-10-26T14:57:56.107865+08:00",
+    "elapsed_seconds": 24.184552834019996,
+    "returncode": 0
+  },
+  {
+    "fork": 1,
+    "build_index": 0,
+    "phase": "11",
+    "name": "05-phase-11-fork-1",
+    "started": "2026-10-26T14:58:20.310846+08:00",
+    "elapsed_seconds": 24.72820433403831,
+    "returncode": 0
+  },
+  {
+    "fork": 2,
+    "build_index": 2,
+    "phase": "13",
+    "name": "06-phase-13-fork-2",
+    "started": "2026-10-26T14:58:45.060641+08:00",
+    "elapsed_seconds": 24.346383915981278,
+    "returncode": 0
+  },
+  {
+    "fork": 2,
+    "build_index": 1,
+    "phase": "12",
+    "name": "07-phase-12-fork-2",
+    "started": "2026-10-26T14:59:09.425106+08:00",
+    "elapsed_seconds": 24.404517250019126,
+    "returncode": 0
+  },
+  {
+    "fork": 2,
+    "build_index": 0,
+    "phase": "11",
+    "name": "08-phase-11-fork-2",
+    "started": "2026-10-26T14:59:33.851473+08:00",
+    "elapsed_seconds": 24.780014249961823,
+    "returncode": 0
+  }
+]
