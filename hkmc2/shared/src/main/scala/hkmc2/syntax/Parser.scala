@@ -124,6 +124,9 @@ object Parser:
     def body(tokens: LTL): LTL = tokens.dropWhile(isPadding) match
       case (BRACKETS(Indent, inner), _) :: rest if rest.forall(isPadding) => body(inner)
       case rest => rest
+    // Braces establish a block independently of indentation. Round, square, and angle brackets
+    // instead rely on `blockMaybeIndented` seeing the enclosing Indent token to enable newline
+    // separators, as in `f(\n  a\n  b\n)`. Removing it here would lose that distinction.
     if br.k is Curly then body(br.contents) else br.contents
   
   /** Grammar patterns inspect the same brace contents that their nested parser will consume. */
