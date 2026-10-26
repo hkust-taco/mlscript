@@ -78,7 +78,6 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val inheritedViews = mutable.Map.empty[(NewResolverState, ResolutionContext), ResolutionContext]
   private[semantics] val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
   private[semantics] val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
-  private[semantics] val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
   private[semantics] val resolutionProblems =
     mutable.LinkedHashMap.empty[Identity[NewSel | App], mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]
   // The references, selections, and instantiations written in this unit's current block,
@@ -389,7 +388,7 @@ final class ResolutionContext private[semantics] (
   private[hkmc2] def data[A](publisher: Publisher[A]): Publisher.Data[A] =
     val ref = source.fold(publisher.initialData(state))(_.peek(publisher))
     if ref.owner == null then publisher.initialData(state)
-    if publisher.isOwnedBy(state) && !state.completedNodes(new Identity(publisher)) then
+    if publisher.isOwnedBy(state) && !publisher.originalData.completed then
       state.pending.getOrElseUpdate(new Identity(publisher), ref)
     local(ref)
 
@@ -481,7 +480,9 @@ final class ResolutionContext private[semantics] (
         case _ => ()
     state.accessSites.clear()
     state.pending.foreach: (key, value) =>
-      if !key.value.isInstanceOf[Symbol] && state.completedNodes.add(key) then value.completed = true
+      if !key.value.isInstanceOf[Symbol] then
+        assert(value eq key.value.originalData, "Only original host data is sealed with its syntax")
+        value.completed = true
     state.pending.clear()
 
   /** Check the accessibility of the definitions that `term`, written in `scope`, refers to once
@@ -632,7 +633,7 @@ final class ResolutionContext private[semantics] (
 
   def canResolve(host: Publisher[?]): Bool =
     data(host)
-    host.isOwnedBy(state) && !state.completedNodes(new Identity(host))
+    host.isOwnedBy(state) && !host.originalData.completed
 
   def hasError(host: PossiblyErroneous): Bool = host.isErroneous || state.errors(new Identity(host))
   def markError(host: Publisher[?] & PossiblyErroneous): Unit =
