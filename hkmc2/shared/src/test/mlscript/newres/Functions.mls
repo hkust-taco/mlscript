@@ -147,7 +147,6 @@ callid1(Predef)
 //│ | | listen: trm = [1]
 //│ | | listenTerm: trm = 1
 //│ | | listen: trm = 1
-//│ | | listen: trm = member:Num⁰
 //│ | | transportType type of member:Num⁰ (previous = List(), marks = List(↘⟨class:Int⁰⟩ϵ))
 //│ | | | .exit InstanceShape(missing) (↘⟨class:Int⁰⟩ϵ)
 //│ | | | | .exit InstanceShape(missing) (ϵ)

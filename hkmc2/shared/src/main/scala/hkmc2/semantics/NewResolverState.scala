@@ -161,54 +161,12 @@ final class NewResolverState(val owner: Elaborator.State):
   // Its open source type is shared before any environment observes the body.
   val selectedTypes: Cache[(Identity[Term], TypeSymbol), TypeResolution] =
     new Cache(_.selectedTypes, identity)
-  // Recorded before elaborating a declaration's members, including in legacy
-  // exporters. Nominal interfaces may use any enclosing explicit type binder.
-  // Term definitions record the binders enclosing their definition too, without
-  // their own binders, which every application or specialization binds afresh.
-  val lexicalTypeBinders: Cache[AnyDefinitionSymbol, Set[VarSymbol]] =
-    new Cache(_.lexicalTypeBinders, identity)
-  // The explicit type binders in scope where a term is written, for the terms
-  // listed at Elaborator.withTypeBinders. The elaborator records them when
-  // it creates the term, before any listener can build the term's shape, and
-  // binds the term's inference owner at the same time; the resolver reads them
-  // through that owner (see NewResolver.lexicalBinders), so an unowned term is
-  // one that was never recorded. A synthesized record standing in for a tuple's
-  // named fields is recorded by the resolver when it creates the record.
-  private[semantics] val lexicalTermBinders: Cache[Identity[Term], Set[VarSymbol]] =
-    new Cache(_.lexicalTermBinders, identity)
-  // The explicit type binders in scope at the site a flow symbol identifies,
-  // for every site where a by-name definition can be instantiated: a reference
-  // or selection (recorded with its lexicalTermBinders), a type application, a
-  // constructor pattern, or a structural field projection. A symbol shape keeps
-  // its selection's flow symbol wherever the value flows, so the term observing
-  // the shape is not the instantiation site. Recorded in, and read through, the
-  // unit that creates the flow symbol (see ResolutionContext.siteBindersOf).
-  private[semantics] val siteBinders: Cache[FlowSymbol, Set[VarSymbol]] =
-    new Cache(_.siteBinders, identity)
-  // Recorded with lexicalTypeBinders: the resolution scopes enclosing a type
-  // definition. Declared members are located at their class's definition.
-  val lexicalBoundaries: Cache[AnyDefinitionSymbol, Set[ResolutionBoundary]] =
-    new Cache(_.lexicalBoundaries, identity)
   val typeDependencies: Cache[TypeResolution, Set[VarSymbol]] =
     new Cache(_.typeDependencies, identity)
   // Like typeDependencies, but following the references of synthesized nodes;
   // N when not fixed by the source graph (see NewResolver.instanceDependencies).
   val typeInstanceDependencies: Cache[TypeResolution, Opt[Set[VarSymbol]]] =
     new Cache(_.typeInstanceDependencies, identity)
-  // How many type arguments a type reference receives where it is the base of
-  // a type application, recorded when the application is interpreted. A generic
-  // reference without a record is a bare use. Either is intrinsic to the
-  // reference, so a cached dependency summary of its resolution does not depend
-  // on which traversal reached it first (see NewResolver.dependencies). Read
-  // through the reference's owning graph, like lexicalTermBinders.
-  private[semantics] val appliedTypeArguments: Cache[Identity[Term], Int] =
-    new Cache(_.appliedTypeArguments, identity)
-  // The scope of the templates that a synthesized inferred-element or
-  // omitted-argument host receives: the binders that reading its values through
-  // a substitution can require, or N when that scope is not known. Recorded by
-  // the resolver when it creates the host, in the host's owning graph.
-  private[semantics] val templateBinders: Cache[TypeResolution, Opt[Set[VarSymbol]]] =
-    new Cache(_.templateBinders, identity)
   val unguardedTypeDependencies: Cache[TypeResolution, Set[VarSymbol]] =
     new Cache(_.unguardedTypeDependencies, identity)
   val regularTypes: Cache[TypeResolution, Bool] =
@@ -248,10 +206,6 @@ final class NewResolverState(val owner: Elaborator.State):
   // in recursive pattern calls, where hosts compare source identities.
   private[semantics] val patternOutputs: Cache[Identity[Pattern], UnknownValueShape] =
     new Cache(_.patternOutputs, identity)
-  // The site and diagnostic source of the field reads of each record pattern, recorded by
-  // the elaborator, which knows the type binders in scope (see NewResolver.matchShapePat).
-  private[semantics] val recordPatternReads: Cache[Identity[Pattern.Record], (FlowSymbol, Term)] =
-    new Cache(_.recordPatternReads, identity)
   // Repeated refinement of one input must reuse its synthesized type hosts.
   // Constructor paths distinguish references to the same captured class.
   val patternRefinements: Cache[(Identity[Pattern.Constructor], InnerSymbol, Ls[Marks], ShapeIdentity.Key), DeclaredType] =
@@ -268,8 +222,6 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.omittedTypes, identity)
   val exposedTypeHoles: Seen[(DeclaredType, ShapeIdentity.Key, Ls[Marks])] =
     new Seen(_.exposedTypeHoles)
-  val signatureParameters: Cache[VarSymbol, DeclaredType] =
-    new Cache(_.signatureParameters, identity)
   // Synthesized applications share their type graph, including the symbolic arguments.
   val appliedTypeTemplates: Cache[ClassSymbol | TypeAliasSymbol, TypeResolution] =
     new Cache(_.appliedTypeTemplates, identity)
@@ -456,6 +408,7 @@ final class ResolutionContext private[semantics] (
         case _ => ()
       statement match
         case application: App => data(application.callableTargets)
+        case application: TyApp => recordAppliedTypeArguments(application.lhs.withoutCaptures, application.targs.size)
         case cls: ClassLikeDef =>
           cls.ext.foreach(visit)
           cls.auxParams.foreach(_.subTerms.foreach(visit))
@@ -696,7 +649,9 @@ final class ResolutionContext private[semantics] (
       ))(using state.context)
   def recordLexicalBinders(term: Term, binders: Set[VarSymbol]): Unit =
     term.initialData(state)
-    state.lexicalTermBinders.update(new Identity(term), binders)(using state.context)
+    assert(term.isOwnedBy(state), "A term's lexical scope is recorded by its defining unit")
+    assert(term.lexicalTypeBinders.forall(_ == binders), "A term's lexical scope is fixed at its source")
+    term.lexicalTypeBinders = S(binders)
     // A reference or selection is also the site where it invokes a by-name definition.
     val site = term match
       case ref: MemberRef => S(ref.resSym)
@@ -705,33 +660,36 @@ final class ResolutionContext private[semantics] (
       case sup: Super => S(sup.resSym)
       case _ => N
     site.foreach(recordSiteBinders(_, binders))
-  private[semantics] def lexicalBindersOf(term: Term): Opt[Set[VarSymbol]] =
-    val graph = term.originalData.owner
-    if graph == null then N else lexicalTermBinders.get(new Identity(term))(using inGraph(graph.context))
+  private[semantics] def lexicalBindersOf(term: Term): Opt[Set[VarSymbol]] = term.lexicalTypeBinders
   def recordSiteBinders(site: FlowSymbol, binders: Set[VarSymbol]): Unit =
     assert(site.getState is owner, "A site's binders belong to the unit that creates its flow symbol")
-    state.siteBinders.update(site, binders)(using state.context)
+    assert(owner.resolutionSources.sites.get(site).forall(_ == binders), "A site's lexical scope is fixed at its source")
+    owner.resolutionSources.sites(site) = binders
   private[semantics] def siteBindersOf(site: FlowSymbol): Opt[Set[VarSymbol]] =
-    val graph = site.getState.newResolverState
-    graph.siteBinders.get(site)(using graph.context)
-  /** The type binders enclosing a definition, recorded in its own unit before its
-    * members are elaborated (see Elaborator.recordDefinitionScope), even when the
-    * definition is reached through an imported reference. */
+    site.getState.resolutionSources.sites.get(site)
+  def recordDefinitionScope(symbol: AnyDefinitionSymbol, binders: Set[VarSymbol], boundaries: Set[ResolutionBoundary]): Unit =
+    assert(symbol.getState is owner, "Definition scopes belong to their source unit")
+    val sources = owner.resolutionSources
+    val scope = ResolutionSources.Scope(binders, boundaries)
+    assert(sources.definitions.get(symbol).forall(_ == scope), "A definition's lexical scope is fixed at its source")
+    sources.definitions(symbol) = scope
   private[semantics] def definitionBindersOf(symbol: AnyDefinitionSymbol): Opt[Set[VarSymbol]] =
-    val graph = symbol.getState.newResolverState
-    graph.lexicalTypeBinders.get(symbol)(using graph.context)
+    symbol.getState.resolutionSources.definitions.get(symbol).map(_.binders)
+  private[semantics] def definitionBoundariesOf(symbol: AnyDefinitionSymbol): Opt[Set[ResolutionBoundary]] =
+    symbol.getState.resolutionSources.definitions.get(symbol).map(_.boundaries)
   def recordAppliedTypeArguments(base: Term, count: Int): Unit =
-    state.appliedTypeArguments.update(new Identity(base), count)(using state.context)
-  private[semantics] def appliedTypeArgumentsOf(base: Term): Opt[Int] =
-    val key = new Identity(base)
-    val graph = base.originalData.owner
-    (if graph == null then N else appliedTypeArguments.get(key)(using inGraph(graph.context))).orElse(appliedTypeArguments.get(key))
+    base.initialData(state)
+    if base.isOwnedBy(state) then
+      assert(base.appliedTypeArgumentCount.forall(_ == count), "Type application arity is fixed at its source")
+      base.appliedTypeArgumentCount = S(count)
+    else assert(base.appliedTypeArgumentCount.contains(count), "An imported type application must record its source arity")
+  private[semantics] def appliedTypeArgumentsOf(base: Term): Opt[Int] = base.appliedTypeArgumentCount
   def recordTemplateBinders(host: TypeResolution, binders: Opt[Set[VarSymbol]]): Unit =
     host.initialData(state)
-    state.templateBinders.update(host, binders)(using state.context)
-  private[semantics] def templateBindersOf(host: TypeResolution): Opt[Opt[Set[VarSymbol]]] =
-    val graph = host.originalData.owner
-    if graph == null then N else templateBinders.get(host)(using inGraph(graph.context))
+    assert(host.isOwnedBy(state), "Template scopes are recorded by the host's creator")
+    assert(host.templateBinders.forall(_ == binders), "A template's scope is fixed when its host is created")
+    host.templateBinders = S(binders)
+  private[semantics] def templateBindersOf(host: TypeResolution): Opt[Opt[Set[VarSymbol]]] = host.templateBinders
   private[hkmc2] def allocatedTypeInstanceCount: Int = state.allocatedTypeInstances
   /** A type application consumes a scheme even when no term argument follows.
     * Its site is shared across observations and activation views of the source.
@@ -781,13 +739,13 @@ final class ResolutionContext private[semantics] (
     pattern.initialData(state)
     val site = FlowSymbol.pat()(using owner)
     recordSiteBinders(site, binders)
-    state.recordPatternReads.update(new Identity(pattern), (site, Term.Error().withLocOf(pattern)))(using state.context)
+    owner.resolutionSources.recordReads(new Identity(pattern)) = (site, Term.Error().withLocOf(pattern))
   /** Imported definitions match their patterns in their consumers too: read through the
     * pattern's own graph, like canonical. */
   def patternReads(pattern: Pattern.Record): Opt[(FlowSymbol, Term)] =
     val graph = pattern.originalData.owner
-    val defining = if graph == null then this else inGraph(graph.context)
-    defining.state.recordPatternReads.get(new Identity(pattern))(using defining)
+    val defining = if graph == null then owner else graph.owner
+    defining.resolutionSources.recordReads.get(new Identity(pattern))
   def markExplicitTypeArgument(symbol: VarSymbol): Unit =
     state.explicitTypeArguments += symbol
   def hasExplicitTypeArgument(symbol: VarSymbol): Bool =

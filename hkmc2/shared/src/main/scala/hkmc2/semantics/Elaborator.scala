@@ -693,6 +693,7 @@ object Elaborator:
     case Private(sym: BlockMemberSymbol, modulePath: Str)
   
   class State:
+    val resolutionSources = new ResolutionSources
     val newResolverState: NewResolverState = new NewResolverState(this)
     val suid = new Uid.Symbol.State
     given State = this
@@ -996,7 +997,7 @@ extends Importer:
       val resumeSym = VarSymbol(Ident("resume"), erasedType = N)
       val mtdSym = BlockMemberSymbol(spec.methodName, Nil, true)
       val tsym = TermSymbol(Fun, S(clsSym), Ident(spec.methodName))
-      rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
+      recordDefinitionScope(tsym)
       val td = TermDefinition(
         Fun,
         mtdSym,
@@ -1410,15 +1411,14 @@ extends Importer:
     * record these too, since new-resolution consumers can import them.
     */
   private def recordDefinitionScope(symbol: AnyDefinitionSymbol)(using Ctx): Unit =
-    rctx.state.lexicalTypeBinders(symbol) = ctx.typeBinders
-    rctx.state.lexicalBoundaries(symbol) = ctx.resolutionBoundaries
+    rctx.recordDefinitionScope(symbol, ctx.typeBinders, ctx.resolutionBoundaries)
   
   /** A record field is a term definition (see RcdField.apply) written where its
     * record is. A structural projection of the field can instantiate a by-name
-    * member there (see NewResolverState.siteBinders).
+    * member there (see ResolutionSources.sites).
     */
   private def recordFieldScope(field: RcdField)(using Ctx): RcdField =
-    rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
+    rctx.recordDefinitionScope(field.tsym, ctx.typeBinders, ctx.resolutionBoundaries)
     val key = field.key.orElse(symbolKey(field.field, required = false))
     field.copy()(key)
   
@@ -2644,7 +2644,7 @@ extends Importer:
             val tsym = TermSymbol(k, owner, id) // TODO?
             val bindingScope = ctx.scope
             // Recorded before the definition's own type parameters enter scope.
-            rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
+            recordDefinitionScope(tsym)
             
             val elaborateDefinition: Ctx ?=> TermDefinition = newCtx ?=>
               
@@ -2836,7 +2836,7 @@ extends Importer:
             fsym.tsym = S(tsym)
             tsym.defn = S(fdef)
             // A generated field is written inside its class, like a member.
-            rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
+            recordDefinitionScope(tsym)
             fsym.complete()
             fdef :: Nil
           
@@ -2844,7 +2844,7 @@ extends Importer:
           def paramBinding(p: Param): Ls[Statement] =
             val psym = TermSymbol(LetBind, owner, p.sym.id)
             psym.sourceAliases = p.sym.sourceAliases
-            rctx.state.lexicalTypeBinders(psym) = ctx.typeBinders
+            recordDefinitionScope(psym)
             val decl = LetDecl(psym, Nil)(p.toLoc) // TODO: never use term symbols on LetDecl LHS
             val defn = defineVar(psym, syntheticLocalRef(p.sym))(p.toLoc)
             p.fldSym = S(psym)

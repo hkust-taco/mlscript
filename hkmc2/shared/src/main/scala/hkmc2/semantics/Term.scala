@@ -297,6 +297,11 @@ object SrcScope:
 enum Term extends Statement, AutoLocated, ShapePublisher:
   /** Filled by the type interpreter during elaboration; erasure validates the completed result. */
   private[hkmc2] var typeInterpretation: Opt[TypeResolution] = N
+  // Written source facts, installed before resolution observes the term. None
+  // distinguishes an unrecorded lexical scope from a known empty scope. These
+  // facts are independent of consumer graph copies and generic activations.
+  private[semantics] var lexicalTypeBinders: Opt[Set[VarSymbol]] = N
+  private[semantics] var appliedTypeArgumentCount: Opt[Int] = N
 
   case Error()
   case UnitVal()

@@ -943,7 +943,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
     case cls: ClassDef if cls.annotations.exists(_.isInstanceOf[Annot.Bufferable]) =>
       given Elaborator.State = cls.sym.getState
       given state: ResolutionContext = cls.sym.getState.newResolverState.context
-      val binders = state.state.lexicalTypeBinders.get(cls.sym).getOrElse(
+      val binders = state.definitionBindersOf(cls.sym).getOrElse(
         lastWords(s"Buffered class ${cls.sym.nme} must record its enclosing type binders")) ++ cls.tparams.map(_.sym)
       // These synthetic functions read the class's parameter annotations and
       // methods. Record their definition scope in the class's owning graph,

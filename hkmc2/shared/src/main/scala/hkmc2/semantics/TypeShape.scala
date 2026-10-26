@@ -174,6 +174,10 @@ object TypeShape:
   * never performs lookup or resolves an alias by inspecting an elaborated definition.
   */
 final class TypeResolution(val source: Term, diagnosticParent: Opt[TypeResolution]) extends Host[TypeShape]:
+  // Synthesized holes and inferred-element hosts have a source template scope.
+  // The outer option distinguishes an ordinary type node from such a host;
+  // the inner option distinguishes a known scope from an unbounded one.
+  private[semantics] var templateBinders: Opt[Opt[Set[VarSymbol]]] = N
   override def toString: Str = s"TypeResolution($source)"
   private var reported = false
   def hasErrors: Bool = reported

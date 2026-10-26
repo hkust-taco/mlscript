@@ -46,14 +46,15 @@ final class NewResolver(prelude: Ctx, config: Config):
   
   /** Interpret types through completed symbolic candidates, independently of term overloads. */
   def typeResolution(term: Term)(using rs: ResolutionContext): TypeResolution =
-    rs.state.typeInterpretations.get(new Identity(term)).orElse(term.typeInterpretation) match
+    term.typeInterpretation.orElse(rs.state.typeInterpretations.get(new Identity(term))) match
       case S(result) => result
       case N =>
         val result = new TypeResolution(term, N)
         // Cache before following a recursive alias. Imported legacy annotations
         // have no stored interpretation: their new inference graph must remain
         // private to this consumer, including listeners on synthesized hosts.
-        rs.state.typeInterpretations(new Identity(term)) = result
+        if rs.canResolve(term) then term.typeInterpretation = S(result)
+        else rs.state.typeInterpretations(new Identity(term)) = result
         def selectInto(symbol: TypeSymbol, publish: ShapeListener[TypeShape])(using ResolutionContext): Unit =
           term.withoutCaptures match
             case ref: NewResolvable =>
@@ -232,7 +233,7 @@ final class NewResolver(prelude: Ctx, config: Config):
     * a node reads no ambient binding, but it does instantiate its retained
     * reference with the ambient instances, so the reference's own free binders
     * count (see instantiateShape). An inferred-element or omitted-argument host
-    * contributes the scope of its templates (NewResolverState.templateBinders).
+    * contributes the scope of its templates (TypeResolution.templateBinders).
     */
   private def instanceDependencies(resolution: TypeResolution)(using ResolutionContext)
       : Either[Set[TypeResolution], Opt[Set[VarSymbol]]] = dependencies(resolution, DependencyMode.Instances)
@@ -1617,7 +1618,6 @@ final class NewResolver(prelude: Ctx, config: Config):
   // A separate full signature also annotates the implementation's parameters.
   // Register these before its body is elaborated, so observed calls can never
   // publish inferred alternatives for parameters behind this boundary.
-  private def signatureParameters(using rs: ResolutionContext) = rs.state.signatureParameters
   def registerParameterSignature(paramLists: Ls[ParamList], sign: Term)(using ResolutionContext): Unit =
     paramLists.flatMap(_.allParams).filter(_.sign.isEmpty).foreach: param =>
       val resolution = new TypeResolution(sign, N)
@@ -1629,7 +1629,7 @@ final class NewResolver(prelude: Ctx, config: Config):
       // from a single immutable reference that normalization could substitute away.
       resolution.publish(TypeShape.Bottom)
       val tpe = declaredType(resolution, Map.empty)
-      signatureParameters(param.sym) = tpe
+      rctx.owner.resolutionSources.parameterSignatures(param.sym) = tpe
       listenTypeInstances(tpe): shape =>
         if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
     // Check only signatures that explicitly specify one calling convention,
@@ -1665,7 +1665,7 @@ final class NewResolver(prelude: Ctx, config: Config):
             val param = params(index)
             val component = transportType(tpe, marks :: Nil)
             if param.sign.isEmpty then
-              signatureParameters.get(param.sym).get.resolution.publish(TypeShape.Combined(TypeFormula.atom(component)))
+              param.sym.getState.resolutionSources.parameterSignatures(param.sym).resolution.publish(TypeShape.Combined(TypeFormula.atom(component)))
             else
               // An inline annotation keeps its interface, but its inferred type
               // arguments still receive constraints from the separate signature.
@@ -2599,7 +2599,7 @@ final class NewResolver(prelude: Ctx, config: Config):
     * it cannot leave a scope that does not enclose `defn`.
     */
   private def splitReceiverPath(defn: ClassLikeDef, receiver: Marks)(using ResolutionContext): (Marks, ExitMarks) =
-    val enclosing = defn.sym.getState.newResolverState.lexicalBoundaries.get(defn.sym)(using defn.sym.getState.newResolverState.context).getOrElse(
+    val enclosing = rctx.definitionBoundariesOf(defn.sym).getOrElse(
       lastWords(s"Nominal declaration ${defn.sym.nme} must record its enclosing resolution scopes"))
     def exits(path: ExitMarks): (ExitMarks, ExitMarks) = path match
       case ExitMark(boundary, id, rest) if enclosing(boundary) =>
@@ -2791,8 +2791,7 @@ final class NewResolver(prelude: Ctx, config: Config):
         case N => publishParameter(p.sym, sh)(using rctx.withInstances(instances))
 
   private[semantics] def parameterSignature(p: Param)(using ResolutionContext): Opt[DeclaredType] =
-    p.sign.map(sign => declaredType(typeResolution(sign), Map.empty)).orElse(signatureParameters.get(p.sym))
-      .orElse(p.sym.getState.newResolverState.signatureParameters.get(p.sym)(using p.sym.getState.newResolverState.context))
+    p.sign.map(sign => declaredType(typeResolution(sign), Map.empty)).orElse(p.sym.getState.resolutionSources.parameterSignatures.get(p.sym))
 
   /** The number of arguments a parameter list accepts, with `leading` parameters, of which
     * `leadingRequired` are required, and, if `hasRest`, a variadic parameter followed by `trailing` ones. */
@@ -4465,7 +4464,7 @@ final class NewResolver(prelude: Ctx, config: Config):
     * listeners with the site of the selection that produced it, possibly far
     * from the term being observed (for `let m = MutMap.empty`, a later use of
     * `m`), so the instances' scope is the site's, which every such site records
-    * (see NewResolverState.siteBinders).
+    * (see ResolutionSources.sites).
     */
   private def instantiateByName(td: TermDefinition, site: FlowSymbol, marks: Ls[Marks],
       specialization: Opt[(FlowSymbol, Ls[DeclaredType])], bindings: Map[VarSymbol, DeclaredType])
