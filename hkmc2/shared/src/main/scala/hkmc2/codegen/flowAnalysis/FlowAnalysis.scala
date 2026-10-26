@@ -917,8 +917,11 @@ class FlowConstraintsCollector(
             lambdaExprId
           case other => lastWords(s"unexpected funLamId shape: $other")
       val res = freshVar(resName, cc.forFun)
+      val sourceSymbol = funLamId match
+        case (sym: TermSymbol, _) => S(sym)
+        case _: ResultId => N
       val effect =
-        freshVar(s"effect_$funLamId", cc.forFun)
+        freshVar(s"effect_$funLamId", sourceSymbol, cc.forFun)
       params.foreach: ps =>
         ps.restParam.foreach: p =>
           generatedVars(p.sym).constrainOpaque
@@ -1215,7 +1218,14 @@ class FlowConstraintsCollector(
               lastWords("top-level references should use Value.This")
             generatedVars(disamb)
           case Value.SimpleRef(sym) =>
-            if nonlocals.contains(sym) then markUnsafeEta()
+            if nonlocals.contains(sym) then
+              // A special case to avoid regression in deforest/eta-expansion/basic.mls
+              // To be superseded by our capture analysis / masking.
+              val isParam = currentEffect.flatMap(_.sourceSymbol).exists:
+                case fun: TermSymbol => preAnalyzer.res.funSymToFunDefn.get(fun).exists:
+                  _.params.exists(_.paramSyms.contains(sym))
+                case _ => false
+              if !isParam then markUnsafeEta()
             generatedVars(sym)
           case Value.This(_) => UnknownProd
           case Value.Lit(lit) => UnknownProd
