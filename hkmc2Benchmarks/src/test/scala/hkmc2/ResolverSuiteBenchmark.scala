@@ -50,7 +50,15 @@ object ResolverSuiteBenchmark:
       case _ => throw new UnsupportedOperationException("JVM allocation counters are unavailable")
     require(allocation.isThreadAllocatedMemorySupported)
     allocation.setThreadAllocatedMemoryEnabled(true)
-    require(allocation.getTotalThreadAllocatedBytes >= 0, "A JVM-wide allocation counter is required")
+    // The compiler still builds on JDK 17. Only running this benchmark requires
+    // JDK 21's counter, which includes allocations by threads that have exited.
+    val totalAllocation = try classOf[com.sun.management.ThreadMXBean].getMethod("getTotalThreadAllocatedBytes")
+      catch case missing: NoSuchMethodException =>
+        throw new UnsupportedOperationException("This benchmark requires JDK 21 or later", missing)
+    def allocatedBytes: Long = totalAllocation.invoke(allocation) match
+      case bytes: java.lang.Long => bytes.longValue
+      case _ => throw new IllegalStateException("Unexpected JVM allocation counter result")
+    require(allocatedBytes >= 0, "A JVM-wide allocation counter is required")
     val process = ManagementFactory.getOperatingSystemMXBean match
       case bean: com.sun.management.OperatingSystemMXBean => bean
       case _ => throw new UnsupportedOperationException("Process CPU timing is unavailable")
@@ -93,13 +101,13 @@ object ResolverSuiteBenchmark:
       val collectionsBefore = gcCount
       val gcBefore = gcMillis
       val jitBefore = compilation.getTotalCompilationTime
-      val allocatedBefore = allocation.getTotalThreadAllocatedBytes
+      val allocatedBefore = allocatedBytes
       val cpuBefore = process.getProcessCpuTime
       val started = System.nanoTime()
       val context = compileBatch()
       val wallMs = (System.nanoTime() - started) / 1000000.0
       val cpuMs = (process.getProcessCpuTime - cpuBefore) / 1000000.0
-      val allocated = allocation.getTotalThreadAllocatedBytes - allocatedBefore
+      val allocated = allocatedBytes - allocatedBefore
       val collections = gcCount - collectionsBefore
       val gcMs = gcMillis - gcBefore
       val jitMs = compilation.getTotalCompilationTime - jitBefore
