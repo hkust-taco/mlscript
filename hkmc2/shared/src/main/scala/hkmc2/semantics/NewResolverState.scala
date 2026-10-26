@@ -69,14 +69,18 @@ object NewResolverState:
 final class NewResolverState(val owner: Elaborator.State):
   import NewResolverState.{Cache, Seen}
 
-  val context: ResolutionContext = new ResolutionContext(this, N, N, TypeSubstitution.empty)
+  val context: ResolutionContext = new ResolutionContext(this, N, TypeSubstitution.empty)
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
-  private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]
+  private[semantics] val contexts = mutable.Map.empty[ResolutionContext, ResolutionContext]
+  private[semantics] var allocatedActivationContexts: Int = 0
+  private[semantics] def intern(context: ResolutionContext): ResolutionContext =
+    if context == this.context then this.context else contexts.getOrElseUpdate(context, {
+      if context.instances.nonEmpty then allocatedActivationContexts += 1
+      context
+    })
   private[semantics] var reporter: Raise | Null = null
   private[semantics] var traceLogger: TraceLogger = TraceLogger.silent(using new DebugPrinter(S(owner)))
   private[semantics] val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext), InterfaceExposure.Input]
-  private[semantics] val views = mutable.Map.empty[ResolutionContext, ResolutionContext]
-  private[semantics] val inheritedViews = mutable.Map.empty[(NewResolverState, ResolutionContext), ResolutionContext]
   private[semantics] val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
   private[semantics] val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
   private[semantics] val resolutionProblems =
@@ -257,28 +261,37 @@ object ResolutionContext:
 
 /** The graph being observed and the active generic substitution. All contexts
   * of a consumer share its mutable state. The source records the import path,
-  * including intermediate exporters' private inference, while contextBase
-  * keeps substitution changes flat rather than building activation chains.
+  * including intermediate exporters' private inference. Contexts are values:
+  * graph tables do not depend on an interning table keeping them alive. The
+  * active substitution is flat, never a chain of activation parents.
   */
 final class ResolutionContext private[semantics] (
     val state: NewResolverState, private val source: Opt[ResolutionContext],
-    private val contextBase: Opt[ResolutionContext], val instances: TypeSubstitution):
+    val instances: TypeSubstitution) extends ValueKey:
+  protected val valueHash: Int = ValueKey.hash(System.identityHashCode(state), source.hashCode, instances.hashCode)
+  protected def sameValue(other: ValueKey): Bool = other match
+    case that: ResolutionContext => (state eq that.state) && source == that.source && instances == that.instances
+    case _ => false
+
   import NewResolverState.Cache
 
   private given ResolutionContext = this
   def owner: Elaborator.State = state.owner
-  private[semantics] def inherited: Opt[ResolutionContext] = contextBase.orElse(source)
+  private def base: ResolutionContext =
+    if instances.isEmpty then this else new ResolutionContext(state, source, TypeSubstitution.empty)
+  private[semantics] def inherited: Opt[ResolutionContext] =
+    if instances.isEmpty then source else S(base)
   import state.*
   /** Activations share the consuming unit's hosts and memoized source graph.
     * Only the finite substitution varies; composing views never adds a parent
     * context or changes either endpoint's originating graph.
     */
   def withInstances(substitution: TypeSubstitution): ResolutionContext =
-    val base = contextBase.getOrElse(this)
     val canonical = TypeSubstitution.canonical(substitution)
-    if canonical.isEmpty then base
-    else state.contexts.getOrElseUpdate((base, canonical),
-      new ResolutionContext(state, source, S(base), canonical))
+    if canonical == instances then this
+    else
+      val context = new ResolutionContext(state, source, canonical)
+      state.intern(context)
   /** Compilation services are active only while this unit runs resolution.
     * Stored callbacks obtain the consumer's services when they are invoked.
     */
@@ -312,22 +325,18 @@ final class ResolutionContext private[semantics] (
   // Views share the consumer's host copies, but consult the source's bindings and
   // memoized nodes individually. Creating a view never traverses a source map.
   private[hkmc2] def inGraph(graph: ResolutionContext): ResolutionContext =
-    rebase(graph.contextBase.getOrElse(graph), state).withInstances(instances)
-  private def rebase(graph: ResolutionContext, destination: NewResolverState): ResolutionContext =
+    val rebased = rebase(graph.base)
+    val context = rebased.withInstances(instances)
+    state.intern(context)
+  private def rebase(graph: ResolutionContext): ResolutionContext =
     // A callback registered in this consuming unit already names its graph.
     // Sending it through the current import view would create X(Y(X(...)))
     // when an imported callback invokes a consumer callback and returns.
     if graph.state eq state then graph
     else
-      val origin = source.fold(graph)(_.rebase(graph, destination))
+      val origin = source.fold(graph)(_.rebase(graph))
       if origin.state eq state then origin
-      else if state eq destination then
-        state.views.getOrElseUpdate(origin, new ResolutionContext(state, S(origin), N, TypeSubstitution.empty))
-      else state.views.get(origin).getOrElse:
-        // A previously unused path can require a view of an intermediate exporter.
-        // Memoize that read-only view in the consumer, never in the exporter.
-        destination.inheritedViews.getOrElseUpdate((state, origin),
-          new ResolutionContext(state, S(origin), N, TypeSubstitution.empty))
+      else new ResolutionContext(state, S(origin), TypeSubstitution.empty)
 
   private[hkmc2] def local[A](ref: Publisher.Data[A]): Publisher.Data[A] =
     // Explicit references (notably type parameters) need the same intermediate
@@ -621,7 +630,7 @@ final class ResolutionContext private[semantics] (
   /** The largest binder substitution retained by any of those views. */
   private[hkmc2] def largestRetainedSubstitution: Int = state.largestShapeViewSubstitution
   /** Number of activation contexts created by withInstances in the consuming unit. */
-  private[hkmc2] def activationContextCount: Int = state.contexts.size
+  private[hkmc2] def activationContextCount: Int = state.allocatedActivationContexts
   /** Activation views share their consumer's hosts, so they must also share its
     * canonical shapes. As for type instances, adopt an inherited shape before
     * constructing one, and record either result in the consumer's cache.
