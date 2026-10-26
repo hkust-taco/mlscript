@@ -17,9 +17,9 @@ class TypeRelationTest extends AnyFunSuite:
     given trace: TraceLogger = TraceLogger.silent
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
-    val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
+    val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty).resolver
     def tpe(shape: TypeShape): DeclaredType =
-      val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+      val resolution = new TypeResolution(Term.UnitVal(), N)
       resolution.publish(shape)
       DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     def parameter(name: String): (VarSymbol, DeclaredType) =
@@ -282,7 +282,7 @@ class TypeRelationTest extends AnyFunSuite:
     val (a, at) = h.parameter("A")
     val (b, bt) = h.parameter("B")
     def recursiveRecord(element: DeclaredType): DeclaredType =
-      val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+      val resolution = new TypeResolution(Term.UnitVal(), N)
       val value = Term.UnitVal()
       value.typeInterpretation = S(element.resolution)
       val next = Term.UnitVal()
@@ -316,8 +316,8 @@ class TypeRelationTest extends AnyFunSuite:
     val (a, at) = h.parameter("A")
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
-    val early = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val late = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val early = new TypeResolution(Term.UnitVal(), N)
+    val late = new TypeResolution(Term.UnitVal(), N)
     early.publish(TypeShape.Tuple(List(at.resolution, late).map(TypeShape.TupleField(_, spread = false))))
     val left = h.resolver.declaredType(early, Map(a -> h.tpe(TypeShape.Inferred(first))))
     val right = h.resolver.declaredType(early, Map(a -> h.tpe(TypeShape.Inferred(second))))
@@ -347,7 +347,7 @@ class TypeRelationTest extends AnyFunSuite:
     import h.given
     val (input, inputType) = h.parameter("Input")
     val (output, outputType) = h.parameter("Output")
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), N)
     val argument = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     val negative = h.resolver.selectArgument(argument, false)
     val positive = h.resolver.selectArgument(argument, true)
@@ -384,7 +384,7 @@ class TypeRelationTest extends AnyFunSuite:
   test("cyclic argument selections wait for productive bounds without expanding the cycle"):
     val h = new Harness
     import h.given
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), N)
     val argument = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     val selected = h.resolver.selectArgument(argument, true)
     val reference = ContextualType(selected, Nil)
@@ -647,8 +647,8 @@ class TypeRelationTest extends AnyFunSuite:
     // reuse after saturation, which their golden output cannot observe.
     val h = new Harness
     import h.given
-    val left = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val right = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val left = new TypeResolution(Term.UnitVal(), N)
+    val right = new TypeResolution(Term.UnitVal(), N)
     def recursive(resolution: TypeResolution): Unit =
       val next = RcdField.signature(Term.Lit(Tree.StrLit("next")), Term.UnitVal())
       val source: Term.Rcd = Term.Rcd(false, List(next))

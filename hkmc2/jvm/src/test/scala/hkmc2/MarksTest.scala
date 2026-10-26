@@ -23,11 +23,11 @@ class MarksTest extends AnyFunSuite:
     given TraceLogger = TraceLogger.silent
     // Path normalization needs a value that retains scope exits. Dynamic values
     // omit those exits because they carry no references into their source scope.
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), N)
     resolution.publish(TypeShape.Bottom)
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
-    val resolver = Elaborator(summon[TraceLogger], TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
+    val resolver = Elaborator(summon[TraceLogger], TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty).resolver
     val value = resolver.instanceShape(DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N))
     val outer = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("outer")))
     val left = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("left")))

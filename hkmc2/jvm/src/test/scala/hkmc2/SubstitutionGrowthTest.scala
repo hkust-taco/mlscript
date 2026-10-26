@@ -151,8 +151,8 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     given trace: TraceLogger = TraceLogger.silent
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
-    val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
-    val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty).resolver
+    val scheme = new TypeResolution(Term.UnitVal(), N)
     def binder(name: Str): VarSymbol =
       val symbol = VarSymbol(Tree.Ident(name))
       symbol.decl = S(TyParam(FldFlags.empty, N, symbol)(N))
@@ -163,7 +163,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       state.instantiateTypeParameters(scheme, FlowSymbol.app(), List(binder), S(site))(binder)
     /** The type denoted by a binder or instance reference. */
     def typeOf(symbol: VarSymbol): DeclaredType =
-      val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+      val resolution = new TypeResolution(Term.UnitVal(), N)
       resolution.publish(TypeShape.Parameter(symbol, symbol.inferenceHost))
       DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     def instanceOf(tpe: DeclaredType): InstanceShape = resolver.instanceShape(tpe)
@@ -203,7 +203,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
   test("diagnostic witnesses do not multiply inferred values"):
     val h = new Harness
     import h.given
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), N)
     resolution.publish(TypeShape.Bottom)
     val tpe = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     val host = new TermShapeHost
@@ -329,9 +329,9 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val use = Term.UnitVal()
       h.state.recordLexicalBinders(use, Set(b))
       if suppliedAtSource then h.state.recordAppliedTypeArguments(use, 1)
-      val reference = new TypeResolution(use, _ => fail("Unexpected type error"))
+      val reference = new TypeResolution(use, N)
       reference.publish(TypeShape.Alias(symbol, S(body.resolution)))
-      val application = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+      val application = new TypeResolution(Term.UnitVal(), N)
       application.publish(TypeShape.Applied(reference, List(h.typeOf(h.binder("C")).resolution)))
       (DeclaredType(reference, Map.empty, TypeSubstitution.empty, true)(N), DeclaredType(application, Map.empty, TypeSubstitution.empty, true)(N), b)
     def observe(h: Harness, tpe: DeclaredType, b: VarSymbol): Map[VarSymbol, TypeParameterInstance] =

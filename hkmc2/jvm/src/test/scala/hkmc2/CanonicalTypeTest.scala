@@ -12,7 +12,7 @@ class CanonicalTypeTest extends AnyFunSuite:
   test("independent constructions share a bounded canonical type DAG"):
     given owner: Elaborator.State = new Elaborator.State
     given context: ResolutionContext = owner.newResolverState.context
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), N)
     val a = new VarSymbol(syntax.Tree.Ident("A"))
     val b = new VarSymbol(syntax.Tree.Ident("B"))
     def tree(): DeclaredType =
@@ -31,7 +31,7 @@ class CanonicalTypeTest extends AnyFunSuite:
     val source = owner.newResolverState.context
     val consumer = new Elaborator.State().newResolverState.context
     val other = new Elaborator.State().newResolverState.context
-    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val resolution = new TypeResolution(Term.UnitVal(), N)
     val a = new VarSymbol(syntax.Tree.Ident("A"))
     val b = new VarSymbol(syntax.Tree.Ident("B"))
     def tree()(using ResolutionContext): DeclaredType =

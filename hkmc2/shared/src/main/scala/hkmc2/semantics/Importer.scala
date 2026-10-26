@@ -14,7 +14,7 @@ import Elaborator.*
 import hkmc2.syntax.LetBind
 
 
-class Importer extends NewResolver:
+class Importer:
   self: Elaborator =>
   import tl.*
 

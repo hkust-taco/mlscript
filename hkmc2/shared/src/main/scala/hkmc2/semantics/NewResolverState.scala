@@ -73,6 +73,7 @@ final class NewResolverState(val owner: Elaborator.State):
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
   private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]
   private[semantics] var reporter: Raise | Null = null
+  private[semantics] var traceLogger: TraceLogger = TraceLogger.silent(using new DebugPrinter(S(owner)))
   private[semantics] val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext), InterfaceExposure.Input]
   private[semantics] val views = mutable.Map.empty[ResolutionContext, ResolutionContext]
   private[semantics] val inheritedViews = mutable.Map.empty[(NewResolverState, ResolutionContext), ResolutionContext]
@@ -326,9 +327,18 @@ final class ResolutionContext private[semantics] (
     if canonical.isEmpty then base
     else state.contexts.getOrElseUpdate((base, canonical),
       new ResolutionContext(state, source, S(base), canonical))
-  def withReporter(raise: Raise): this.type =
+  /** Compilation services are active only while this unit runs resolution.
+    * Stored callbacks obtain the consumer's services when they are invoked.
+    */
+  def resolving[A](raise: Raise, trace: TraceLogger)(action: => A): A =
+    val previousReporter = state.reporter
+    val previousTrace = state.traceLogger
     state.reporter = raise
-    this
+    state.traceLogger = trace
+    try action finally
+      state.reporter = previousReporter
+      state.traceLogger = previousTrace
+  def trace: TraceLogger = state.traceLogger
   def report(diagnostic: Diagnostic): Unit =
     assert(state.reporter != null, "Resolution requires a diagnostic collector")
     state.reporter.nn(diagnostic)

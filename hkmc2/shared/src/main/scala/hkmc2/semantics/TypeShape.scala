@@ -173,7 +173,7 @@ object TypeShape:
 /** Candidates are published during elaboration. Erasure reads the resulting graph; it
   * never performs lookup or resolves an alias by inspecting an elaborated definition.
   */
-final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => Unit) extends Host[TypeShape]:
+final class TypeResolution(val source: Term, diagnosticParent: Opt[TypeResolution]) extends Host[TypeShape]:
   override def toString: Str = s"TypeResolution($source)"
   private var reported = false
   def hasErrors: Bool = reported
@@ -182,14 +182,23 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
     if currentShapes.add(shape) then notifyShapeListeners(shape)
   def listen(listener: ShapeListener[TypeShape])(using ResolutionContext): Unit =
     subscribeToShapes(listener)
-  def fail(messages: Ls[(Message, Opt[Loc])]): Unit = if !reported then
+  // Derived nodes share the source diagnostic without capturing the resolver or
+  // its compilation's reporter. Erasure and imported inference report to their
+  // current caller, while each node still remembers whether it was invalid.
+  def fail(messages: Ls[(Message, Opt[Loc])])(using raise: Raise): Unit = if !reported then
     reported = true
-    report(messages)
+    diagnosticParent match
+      case S(parent) => parent.fail(messages)
+      case N =>
+        import Message.MessageContext
+        assert(source != Term.Missing, "A synthesized extreme type cannot be invalid")
+        raise(ErrorReport(msg"Resolution error in ${source.describe}" -> source.toLoc :: messages,
+          source = Diagnostic.Source.Compilation))
   /** Resolution is complete, so each node needs one check per erasure pass.
     * A path-local cycle guard would revisit shared alias bodies through every
     * field that references them, expanding a small graph into an exponential tree.
     */
-  def validate(visited: scala.collection.mutable.Set[TypeResolution])(using Erasure): Unit = if visited.add(this) then
+  def validate(visited: scala.collection.mutable.Set[TypeResolution])(using Erasure, Raise): Unit = if visited.add(this) then
     import TypeShape.*
     import Message.MessageContext
     val ambiguousReceiver = source.withoutCaptures match
