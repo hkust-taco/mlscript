@@ -87,9 +87,7 @@ sealed trait Shape extends ShapeEvent:
 object ShapeIdentity:
   type Key = ShapeEvent | View
 
-  private[hkmc2] def key(shape: ShapeEvent)(using ResolutionContext): Key = shape.comparison match
-    case view: View => rctx.state.shapeIdentities.getOrElseUpdate(view, view)
-    case node => node
+  private[hkmc2] def key(shape: ShapeEvent): Key = shape.comparison
 
   private[semantics] def comparison(shape: ShapeEvent): Key = shape match
     case instance: InstanceShape => instance.candidateIdentity

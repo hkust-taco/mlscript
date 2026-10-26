@@ -91,7 +91,6 @@ final class NewResolverState(val owner: Elaborator.State):
   // must be diagnosed against the settled reference.
   private[semantics] val implicitNamespaces = mutable.HashMap.empty[Identity[UnresolvedRef], ImplicitNamespaces]
   private[semantics] val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
-  private[semantics] val shapeIdentities = mutable.HashMap.empty[ShapeIdentity.View, ShapeIdentity.View]
   private[semantics] val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
   private[semantics] val typeReferences = new DeclaredType.References(substitutions)
   val membersCache: Cache[(TermShape, MemberKey), MemberLookup] =
