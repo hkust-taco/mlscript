@@ -15,11 +15,11 @@ object ResolutionWorkspace:
     * optimization, not a condition of observing the imported graph correctly.
     */
   final class Memo[K, V]:
-    private val entries = mutable.Map.empty[(ResolutionContext, K), V]
-    def get(key: K)(using context: ResolutionContext): Opt[V] = entries.get((context, key))
-    def update(key: K, value: V)(using context: ResolutionContext): Unit = entries((context, key)) = value
+    private val entries = mutable.Map.empty[(ResolutionContext.Graph, K), V]
+    def get(key: K)(using context: ResolutionContext): Opt[V] = entries.get((context.graph, key))
+    def update(key: K, value: V)(using context: ResolutionContext): Unit = entries((context.graph, key)) = value
     def getOrElseUpdate(key: K, value: => V)(using context: ResolutionContext): V =
-      entries.getOrElseUpdate((context, key), value)
+      entries.getOrElseUpdate((context.graph, key), value)
 
   /** A pending source summary is a one-shot computation, not an inference
     * edge. Observers are detached once it completes, or when the unit ends with
@@ -56,11 +56,11 @@ object ResolutionWorkspace:
 private[hkmc2] final class ResolutionWorkspace(owner: Elaborator.State):
   import ResolutionWorkspace.*
   val retention = new ResolutionRetention(owner)
-  val pendingDependencies = mutable.Map.empty[(ResolutionContext, TypeResolution), PendingDependencies]
-  val contexts = mutable.Map.empty[ResolutionContext, ResolutionContext]
+  val pendingDependencies = mutable.Map.empty[(ResolutionContext.Graph, TypeResolution), PendingDependencies]
+  val contexts = mutable.Map.empty[ResolutionContext.Graph, ResolutionContext.Graph]
   var reporter: Raise | Null = null
   var traceLogger: TraceLogger = TraceLogger.silent(using new DebugPrinter(S(owner)))
-  val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext), InterfaceExposure.Input]
+  val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext.Graph), InterfaceExposure.Input]
   val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
   val resolutionProblems =
     mutable.LinkedHashMap.empty[Identity[NewSel | App], mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]

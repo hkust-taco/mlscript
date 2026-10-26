@@ -67,10 +67,10 @@ object Publisher:
   // Registration and import are the two graph boundaries a callback crosses.
   // Store their routing information in the callable itself, so each boundary
   // needs one object and ownership is read from the original registration.
-  private final class Registered[A](origin: ResolutionContext, callback: ShapeListener[A]) extends Listener[A]:
-    def code: Opt[AnyDefinitionSymbol] = origin.code
+  private final class Registered[A](origin: ResolutionContext.Graph, val code: Opt[AnyDefinitionSymbol],
+      callback: ShapeListener[A]) extends Listener[A]:
     def apply(shape: A)(using current: ResolutionContext): Unit =
-      callback(shape)(using current.inGraph(origin))
+      callback(shape)(using current.enterGraph(origin, code))
 
   private final class Imported[A](origin: NewResolverState | Null, callback: Listener[A]) extends Listener[A]:
     def code: Opt[AnyDefinitionSymbol] = callback.code
@@ -127,7 +127,7 @@ object Publisher:
         i += 1
       observed.foreach[Unit](_(shape))
     def addListener(listener: ShapeListener[A])(using origin: ResolutionContext): Unit =
-      origin.local(this).listeners += new Registered(origin, listener)
+      origin.local(this).listeners += new Registered(origin.graph, origin.code, listener)
     def replay(listener: ShapeListener[A])(using state: ResolutionContext): Unit =
       val candidates = state.local(this).shapes
       // Apply the contextual listener, rather than discard a contextual thunk.

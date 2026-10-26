@@ -53,3 +53,14 @@ fun roundTrip[A](value: A) =
   Middle.callbacks((item: A) => Library.choose(true, item)).read()(value)
 [roundTrip(First(14)).first, roundTrip(Second(15)).second]
 //│ = [14, 15]
+
+// Two bodies wait for the same forward alias before their callbacks can be
+// checked. Completing that shared work must preserve both callback owners.
+fun callbackFirst(): Deferred[First] = value => Middle.choose(true, value)
+fun callbackSecond(): Deferred[Second] = value => Middle.choose(false, value)
+type Deferred[A] = A -> A
+
+:expect [16, 17]
+[Library.delayed(callbackFirst(), First(16)).first,
+ Library.delayed(callbackSecond(), Second(17)).second]
+//│ = [16, 17]

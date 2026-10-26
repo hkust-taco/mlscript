@@ -18,19 +18,19 @@ object NewResolverState:
     import ResolutionRetention.Entry
     // Only the active map contains usage records. A completed module retains
     // plain values, avoiding a permanent wrapper per cached inference node.
-    private var entries: Either[mutable.Map[ResolutionContext, mutable.Map[K, Entry[V]]],
-        mutable.Map[ResolutionContext, mutable.Map[K, V]]] = Left(mutable.Map.empty)
+    private var entries: Either[mutable.Map[ResolutionContext.Graph, mutable.Map[K, Entry[V]]],
+        mutable.Map[ResolutionContext.Graph, mutable.Map[K, V]]] = Left(mutable.Map.empty)
     // Null is only a lookup miss; stored values are non-null (including None).
     // Recording a hit reuses the cache lookup, including its structural key.
     private def own(key: K, read: Bool)(using context: ResolutionContext): V | Null = entries match
       case Left(active) =>
-        val scope = active.getOrElse(context, null)
+        val scope = active.getOrElse(context.graph, null)
         val entry = if scope == null then null else scope.getOrElse(key, null)
         if entry == null then null else
           if read then context.state.workspace.retention.use(entry)
           entry.value
       case Right(saved) =>
-        val scope = saved.getOrElse(context, null)
+        val scope = saved.getOrElse(context.graph, null)
         if scope == null then null else scope.getOrElse(key, null)
     private def peek(key: K)(using context: ResolutionContext): V | Null =
       val value = own(key, false)
@@ -67,7 +67,7 @@ object NewResolverState:
         case Left(active) =>
           val retention = context.state.workspace.retention
           if active.isEmpty then retention.track(this)
-          val entry = active.getOrElseUpdate(context, mutable.Map.empty).getOrElseUpdate(key, new Entry(value))
+          val entry = active.getOrElseUpdate(context.graph, mutable.Map.empty).getOrElseUpdate(key, new Entry(value))
           entry.value = value
           retention.define(entry)
         case Right(_) => lastWords("A completed cache cannot be updated")
@@ -76,7 +76,7 @@ object NewResolverState:
       case Right(_) => Iterator.empty
     def finish(keep: AnyDefinitionSymbol => Bool): Unit = entries match
       case Left(active) =>
-        val saved = mutable.Map.empty[ResolutionContext, mutable.Map[K, V]]
+        val saved = mutable.Map.empty[ResolutionContext.Graph, mutable.Map[K, V]]
         active.foreach: (context, values) =>
           val retained = mutable.Map.from(values.iterator.collect:
             case (key, entry) if entry.needed(keep) => key -> entry.value)
@@ -86,16 +86,16 @@ object NewResolverState:
 
   final class Seen[A](select: NewResolverState => Seen[A]) extends ResolutionRetention.Table:
     import ResolutionRetention.Uses
-    private var entries: Either[mutable.Map[ResolutionContext, mutable.Map[A, Uses]],
-        mutable.Map[ResolutionContext, mutable.Set[A]]] = Left(mutable.Map.empty)
+    private var entries: Either[mutable.Map[ResolutionContext.Graph, mutable.Map[A, Uses]],
+        mutable.Map[ResolutionContext.Graph, mutable.Set[A]]] = Left(mutable.Map.empty)
     private def own(value: A, read: Bool)(using context: ResolutionContext): Bool = entries match
       case Left(active) =>
-        val scope = active.getOrElse(context, null)
+        val scope = active.getOrElse(context.graph, null)
         val entry = if scope == null then null else scope.getOrElse(value, null)
         if entry == null then false else
           if read then context.state.workspace.retention.use(entry)
           true
-      case Right(saved) => saved.get(context).exists(_(value))
+      case Right(saved) => saved.get(context.graph).exists(_(value))
     private def contains(value: A)(using context: ResolutionContext): Bool =
       own(value, false) || context.inherited.exists(parent => select(parent.state).contains(value)(using parent))
     def apply(value: A)(using context: ResolutionContext): Bool =
@@ -110,7 +110,7 @@ object NewResolverState:
             if active.isEmpty then retention.track(this)
             val entry = new Uses
             retention.define(entry)
-            active.getOrElseUpdate(context, mutable.Map.empty)(value) = entry
+            active.getOrElseUpdate(context.graph, mutable.Map.empty)(value) = entry
             true
           case Right(_) => lastWords("A completed edge table cannot be updated")
     def uses: Iterator[Uses] = entries match
@@ -118,7 +118,7 @@ object NewResolverState:
       case Right(_) => Iterator.empty
     def finish(keep: AnyDefinitionSymbol => Bool): Unit = entries match
       case Left(active) =>
-        val saved = mutable.Map.empty[ResolutionContext, mutable.Set[A]]
+        val saved = mutable.Map.empty[ResolutionContext.Graph, mutable.Set[A]]
         active.foreach: (context, values) =>
           val retained = mutable.Set.from(values.iterator.collect:
             case (value, entry) if entry.needed(keep) => value)
@@ -133,7 +133,7 @@ object NewResolverState:
 final class NewResolverState(val owner: Elaborator.State):
   import NewResolverState.{Cache, Seen}
 
-  val context: ResolutionContext = new ResolutionContext(this, N, TypeSubstitution.empty, N)
+  val context: ResolutionContext.Graph = new ResolutionContext.Graph(this, N, TypeSubstitution.empty)
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
   private[semantics] val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
   private var activeWorkspace: ResolutionWorkspace | Null = new ResolutionWorkspace(owner)
@@ -160,7 +160,7 @@ final class NewResolverState(val owner: Elaborator.State):
     activeWorkspace = null
   private[hkmc2] def isFinished: Bool = activeWorkspace == null
   private[semantics] var allocatedActivationContexts: Int = 0
-  private[semantics] def intern(context: ResolutionContext): ResolutionContext =
+  private[semantics] def intern(context: ResolutionContext.Graph): ResolutionContext.Graph =
     if context == this.context then this.context else workspace.contexts.getOrElseUpdate(context, {
       if context.instances.nonEmpty then allocatedActivationContexts += 1
       context
@@ -314,34 +314,53 @@ final class NewResolverState(val owner: Elaborator.State):
 object ResolutionContext:
   type Listener = TermShape => ResolutionContext ?=> Unit
 
-/** The graph being observed and the active generic substitution. All contexts
-  * of a consumer share its mutable state. The source records the import path,
-  * including intermediate exporters' private inference. Contexts are values:
-  * graph tables do not depend on an interning table keeping them alive. The
-  * active substitution is flat, never a chain of activation parents.
-  */
-final class ResolutionContext private[semantics] (
-    val state: NewResolverState, private val source: Opt[ResolutionContext],
-    val instances: TypeSubstitution, private[hkmc2] val code: Opt[AnyDefinitionSymbol]) extends ValueKey:
-  /** Code ownership controls retention, not inference. Two computations may
-    * observe the same graph in the same substitution from different bodies.
+  /** Graph identity is independent of which body uses it. Table keys and
+    * listener origins retain this shared value, never an owned execution view.
     */
+  final class Graph private[semantics] (override val state: NewResolverState,
+      private[semantics] val parent: Opt[Graph], override val instances: TypeSubstitution) extends ResolutionContext:
+    def graph: Graph = this
+    private[hkmc2] def code: Opt[AnyDefinitionSymbol] = N
+    protected val valueHash: Int = ValueKey.hash(System.identityHashCode(state), parent.hashCode, instances.hashCode)
+    override protected def sameValue(other: ValueKey): Bool = other match
+      case that: ResolutionContext =>
+        val other = that.graph
+        (state eq other.state) && parent == other.parent && instances == other.instances
+      case _ => false
+
+  private final class Owned(val graph: Graph, private[hkmc2] val code: Opt[AnyDefinitionSymbol]) extends ResolutionContext:
+    protected val valueHash: Int = graph.hashCode
+
+/** The graph being observed and the body responsible for the current work.
+  * Graphs share a compilation unit's mutable state and record its import path,
+  * including intermediate exporters' private inference. The active substitution
+  * is flat, never a chain of activation parents. Ownership is a transient view:
+  * retained listeners store their body symbol alongside a shared graph origin.
+  */
+sealed abstract class ResolutionContext extends ValueKey:
+  def graph: ResolutionContext.Graph
+  def state: NewResolverState = graph.state
+  def instances: TypeSubstitution = graph.instances
+  private def source: Opt[ResolutionContext.Graph] = graph.parent
+  private[hkmc2] def code: Opt[AnyDefinitionSymbol]
   private[hkmc2] def forCode(symbol: Opt[AnyDefinitionSymbol]): ResolutionContext =
-    if code == symbol then this else new ResolutionContext(state, source, instances, symbol)
-  protected val valueHash: Int = ValueKey.hash(System.identityHashCode(state), source.hashCode, instances.hashCode)
+    if code == symbol then this
+    else if symbol.isEmpty then graph
+    else new ResolutionContext.Owned(graph, symbol)
+  // Temporary worklists can compare execution views by graph identity too;
+  // callbacks preserve ownership explicitly rather than using it as a key.
   protected def sameValue(other: ValueKey): Bool = other match
-    case that: ResolutionContext => (state eq that.state) && source == that.source && instances == that.instances
+    case that: ResolutionContext => graph == that.graph
     case _ => false
 
   import NewResolverState.Cache
 
   private given ResolutionContext = this
   def owner: Elaborator.State = state.owner
-  private def base: ResolutionContext =
-    if instances.isEmpty then forCode(N) else new ResolutionContext(state, source, TypeSubstitution.empty, N)
-  private[semantics] def inherited: Opt[ResolutionContext] =
+  protected def base: ResolutionContext.Graph =
+    if instances.isEmpty then graph else new ResolutionContext.Graph(state, source, TypeSubstitution.empty)
+  private[semantics] def inherited: Opt[ResolutionContext.Graph] =
     if instances.isEmpty then source else S(base)
-  import state.*
   /** Activations share the consuming unit's hosts and memoized source graph.
     * Only the finite substitution varies; composing views never adds a parent
     * context or changes either endpoint's originating graph.
@@ -349,9 +368,7 @@ final class ResolutionContext private[semantics] (
   def withInstances(substitution: TypeSubstitution): ResolutionContext =
     val canonical = TypeSubstitution.canonical(substitution)
     if canonical == instances then this
-    else
-      val context = new ResolutionContext(state, source, canonical, N)
-      state.intern(context).forCode(code)
+    else state.intern(new ResolutionContext.Graph(state, source, canonical)).forCode(code)
   /** Compilation services are active only while this unit runs resolution.
     * Stored callbacks obtain the consumer's services when they are invoked.
     */
@@ -375,7 +392,7 @@ final class ResolutionContext private[semantics] (
   // these roots before sealing resolution; they are neither copied from imports
   // nor retained across worksheet blocks. One witness suffices for each value.
   def exposeValue(shape: TermShape, provenance: ShapeProvenance): Unit =
-    state.workspace.exposureInputs.getOrElseUpdate((ShapeIdentity.key(shape), this), InterfaceExposure.Input(shape, this)(provenance))
+    state.workspace.exposureInputs.getOrElseUpdate((ShapeIdentity.key(shape), graph), InterfaceExposure.Input(shape, this)(provenance))
   def takeExposureInputs(): Ls[InterfaceExposure.Input] =
     val inputs = state.workspace.exposureInputs.values.toList
     state.workspace.exposureInputs.clear()
@@ -384,21 +401,23 @@ final class ResolutionContext private[semantics] (
   // A listener carries its defining graph, not its defining mutable resolver.
   // Views share the consumer's host copies, but consult the source's bindings and
   // memoized nodes individually. Creating a view never traverses a source map.
-  private[hkmc2] def inGraph(graph: ResolutionContext): ResolutionContext =
-    val rebased = rebase(graph.base)
-    val context = rebased.withInstances(instances)
-    val definingCode = if graph.state eq state then graph.code
-      else graph.code.filter(_.getState is owner).orElse(code)
-    state.intern(context.forCode(N)).forCode(definingCode)
-  private def rebase(graph: ResolutionContext): ResolutionContext =
+  private[hkmc2] def inGraph(origin: ResolutionContext): ResolutionContext =
+    enterGraph(origin.graph, origin.code)
+  private[hkmc2] def enterGraph(origin: ResolutionContext.Graph, body: Opt[AnyDefinitionSymbol]): ResolutionContext =
+    val rebased = rebase(origin.base)
+    val context = rebased.withInstances(instances).graph
+    val definingCode = if origin.state eq state then body
+      else body.filter(_.getState is owner).orElse(code)
+    state.intern(context).forCode(definingCode)
+  protected def rebase(origin: ResolutionContext.Graph): ResolutionContext.Graph =
     // A callback registered in this consuming unit already names its graph.
     // Sending it through the current import view would create X(Y(X(...)))
     // when an imported callback invokes a consumer callback and returns.
-    if graph.state eq state then graph
+    if origin.state eq state then origin
     else
-      val origin = source.fold(graph)(_.rebase(graph))
-      if origin.state eq state then origin
-      else new ResolutionContext(state, S(origin), TypeSubstitution.empty, N)
+      val parent = source.fold(origin)(_.rebase(origin))
+      if parent.state eq state then parent
+      else new ResolutionContext.Graph(state, S(parent), TypeSubstitution.empty)
 
   private[hkmc2] def local[A](ref: Publisher.Data[A]): Publisher.Data[A] =
     val retention = state.workspace.retention
@@ -414,11 +433,11 @@ final class ResolutionContext private[semantics] (
     retention.useHost(result)
     result
 
-  private def peekReference[A](ref: Publisher.Data[A]): Publisher.Data[A] =
+  protected def peekReference[A](ref: Publisher.Data[A]): Publisher.Data[A] =
     val origin = source.fold(ref)(_.peekReference(ref))
     state.copies.get(origin).fold(origin)(_.asInstanceOf[Publisher.Data[A]])
 
-  private def peek[A](publisher: Publisher[A]): Publisher.Data[A] =
+  protected def peek[A](publisher: Publisher[A]): Publisher.Data[A] =
     peekReference(publisher.originalData)
 
   private[hkmc2] def data[A](publisher: Publisher[A]): Publisher.Data[A] =
@@ -759,7 +778,7 @@ final class ResolutionContext private[semantics] (
     */
   def typeApplicationSite(application: TyApp): FlowSymbol =
     val key = new Identity(application)
-    state.typeApplicationSites.getOrElseUpdate(key, typeApplicationSites.get(key).getOrElse:
+    state.typeApplicationSites.getOrElseUpdate(key, state.typeApplicationSites.get(key).getOrElse:
       val site = FlowSymbol("type application")(using owner)
       lexicalBindersOf(application).foreach(recordSiteBinders(site, _))
       site
@@ -769,7 +788,7 @@ final class ResolutionContext private[semantics] (
     * distinguish activations, as they do for a written member selection.
     */
   def fieldProjectionSite(field: BlockMemberSymbol): FlowSymbol =
-    state.fieldProjectionSites.getOrElseUpdate(field, fieldProjectionSites.get(field).getOrElse:
+    state.fieldProjectionSites.getOrElseUpdate(field, state.fieldProjectionSites.get(field).getOrElse:
       val site = FlowSymbol.memSym(field)(using owner)
       // The projection reads the field where its record type is written.
       field.tsym.flatMap(definitionBindersOf).foreach(recordSiteBinders(site, _))
@@ -785,7 +804,7 @@ final class ResolutionContext private[semantics] (
     // Graph views in one consumer must agree even when they reach the same
     // source definition through different imports. Adopt an inherited group
     // before allocating, and put either result in the consumer's canonical cache.
-    val instances = state.typeInstances.getOrElseUpdate(key, typeInstances.get(key).getOrElse {
+    val instances = state.typeInstances.getOrElseUpdate(key, state.typeInstances.get(key).getOrElse {
       // Construct the complete group without activating constraints. Recursive
       // subscribers may use it only after the cache contains every binder.
       val result = parameters.map: parameter =>
@@ -818,9 +837,9 @@ final class ResolutionContext private[semantics] (
     * flow can revisit it immediately. Distinct instantiations retain their marks.
     */
   def addTypeConstraint(tpe: DeclaredType, value: TermShape, marks: Ls[Marks]): Bool =
-    typeConstraints.add((tpe.observation, ShapeIdentity.key(value), marks))
+    state.typeConstraints.add((tpe.observation, ShapeIdentity.key(value), marks))
   def hasTypeConstraint(tpe: DeclaredType, value: TermShape, marks: Ls[Marks]): Bool =
-    typeConstraints((tpe.observation, ShapeIdentity.key(value), marks))
+    state.typeConstraints((tpe.observation, ShapeIdentity.key(value), marks))
 
 /** One pair of call sites per spread source. Incoming alternatives share these
   * observations and the element host, so their Cartesian product is never built.

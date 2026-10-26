@@ -555,7 +555,7 @@ final class NewResolver(prelude: Ctx, config: Config):
       case R(binders) => listener(binders)
       case L(_) =>
         val origin = rctx
-        val key = (origin, resolution)
+        val key = (origin.graph, resolution)
         rctx.state.workspace.pendingDependencies.get(key) match
           case S(pending) => pending.listen(listener)
           case N =>

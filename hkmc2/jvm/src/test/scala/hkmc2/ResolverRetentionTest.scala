@@ -112,6 +112,29 @@ class ResolverRetentionTest extends AnyFunSuite:
       val retained = retainingPath(table)(_.isInstanceOf[ResolutionRetention.Uses])
       assert(retained.isEmpty, retained.getOrElse(""))
 
+  // Registration count should grow the edge list, not duplicate graph contexts.
+  // Also check the distinct owners at invocation: sharing the graph must not
+  // attribute all these callbacks to whichever body registered first or last.
+  test("listeners share graph origins without retaining their owned execution views"):
+    given owner: Elaborator.State = new Elaborator.State
+    val root = owner.newResolverState.context
+    val bodies = List("first", "second").map(name => S(TermSymbol(syntax.Fun, N, syntax.Tree.Ident(name))))
+    val source = new Host[Int]:
+      def showDbg(using DebugPrinter): Str = "listener context retention"
+    val observed = mutable.ArrayBuffer.empty[Opt[AnyDefinitionSymbol]]
+    (1 to 1000).foreach: _ =>
+      bodies.foreach: body =>
+        val context = root.forCode(body)
+        assert(context.graph eq root)
+        assert(root == context && context == root && root.hashCode == context.hashCode)
+        source.addShapeListener(_ => (current: ResolutionContext) ?=> observed += current.code)(using context)
+    source.inferenceHost(using root).publish(1)(using root)
+    assert(observed.toList == List.fill(1000)(bodies).flatten)
+    val retained = retainingPath(source):
+      case context: ResolutionContext => context.code.nonEmpty
+      case _ => false
+    assert(retained.isEmpty, retained.getOrElse(""))
+
   test("unreachable generic bodies do not grow a compiled interface's retained inference graph"):
     val cctx = TestFolders.compilerCtx(os.pwd)
     given DebugPrinter = new DebugPrinter()
