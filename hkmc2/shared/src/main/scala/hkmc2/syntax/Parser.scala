@@ -115,8 +115,7 @@ object Parser:
   
   /** Indentation enclosing an entire brace body is layout, including when comments surround it.
     * Nested indentation following an expression must remain: it can be an operand or continuation.
-    * Normalize before grammar lookahead so `{\n  + 1\n}` continues its left operand just like `{ + 1 }`,
-    * while the lexer retains the original indentation for every bracket kind. */
+    * Normalize before grammar lookahead so `{\n  + 1\n}` continues its left operand just like `{ + 1 }`. */
   private def bracketContents(br: BRACKETS): LTL =
     def isPadding(t: TokLoc): Bool = t._1 match
       case SPACE | NEWLINE | COMMENT(_) => true

@@ -1783,9 +1783,6 @@ M.{expr}                     // evaluate expr with M in scope
 M.{foo Foo::m()}             // member projection in module scope
 ```
 
-The body of `M.{ ... }` follows ordinary brace-block rules, including newline-separated
-declarations and expressions; its bindings remain local to the block.
-
 ### Module Declarations
 
 ```mlscript
