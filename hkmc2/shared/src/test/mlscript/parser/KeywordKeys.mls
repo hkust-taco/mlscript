@@ -3,10 +3,10 @@
 
 // A keyword followed by a colon is a key, like any other identifier.
 :pt
-(class: 1, true: 2, out : 3)
+{class: 1, true: 2, out : 3}
 //│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
 //│ Bra:
-//│   k = Round
+//│   k = Curly
 //│   inner = Block of Ls of
 //│     InfixApp:
 //│       lhs = Ident of "class"
@@ -23,7 +23,7 @@
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = {class: 1, true: 2, out: 3}
 
-let r = (class: 1, true: 2, if: 3)
+let r = {class: 1, true: 2, if: 3}
 r.class + r.true + r.if
 //│ = 6
 //│ r = {class: 1, true: 2, if: 3}

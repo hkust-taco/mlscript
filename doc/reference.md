@@ -346,8 +346,9 @@ tuple
  == tuple(1, 2)
 ```
 
-Explicit operator calls also extend this way: `+(1) \ 2` means `+(1, 2)`.
-Prefix applications have no argument list to extend: `{ %< x } \ y` calls the result of `%< x` with `y`.
+Operator applications also extend this way: `+(1) \ 2` and `{ + 1 } \ 2` both mean `+(1, 2)`;
+`{ a + b } \ c` means `+(a, b, c)`. Parentheses keep the call result separate: `(+ 1) \ 2` calls that result.
+The left-precedence of `\` is very high: `a + f \ x` means `a + f(x)`.
 
 ### Lambdas
 
@@ -480,6 +481,12 @@ on a new line after an expression, it enables [infix continuation](#newline-oper
 Symbolic operator identifiers also support prefix application with one operand,
 using the same right precedence as in infix position.
 Curly and indented blocks provide a single operand; explicit calls and type arguments retain ordinary call syntax.
+
+A parenthesized infix RHS with multiple expressions supplies multiple arguments: `a op (b, c)` means `op(a, b, c)`.
+A single parenthesized expression keeps its grouping, and `a op ()` passes the unit value: `op(a, ())`.
+Precedence is unaffected: `1 + (2) * 3` means `1 + (2 * 3)`.
+Parentheses cannot sequence expressions, so `(2, 3)` alone and `1 + (2, 3) * 4` are rejected;
+use braces for a sequenced operand, as in `1 + ({2, 3})`.
 
 ```mlscript
 fun (%>) wrap(x) = [x]

@@ -1224,10 +1224,10 @@ extends Importer:
     // Handle splits on binary operators.
     // * Each branch scrutinee `rhs` is elaborated as the tree `lhs op rhs`, as in the non-split form,
     // * so that, eg, the RHS of `|>` delimits underscore lambdas (see `underscoreDelimitingSides`).
-    case OpApp(lhs, ident: Ident, rhss) =>
+    case OpApp(lhs, ident: Ident, rhs :: Nil) =>
       val lhsTerm = if underscoreDelimitingSides(ident)._1 then delimitedTerm(lhs, Trm, alwaysLambda = false) else term(lhs, Trm)
       val split = lhsTerm.reference: lhs =>
-        termSplit(rhss, ((rhs: Tree) => OpApp(Tree.Trm(lhs()), ident, rhs :: Nil)) andThen mk)
+        termSplit(rhs :: Nil, ((rhs: Tree) => OpApp(Tree.Trm(lhs()), ident, rhs :: Nil)) andThen mk)
       (ctx, split)
     case OpSplit(lhs, rhss) =>
       val split = term(mk(lhs), Trm).reference: lhs =>
@@ -1411,7 +1411,30 @@ extends Importer:
       (name.startsWith("<") && name =/= "<" && name =/= "<=", name.endsWith(">") && name =/= ">")
     case _ => (false, false)
   
+  /** Named and spread arguments carry syntax around their value; that syntax must survive
+    * introducing an implicit lambda or embedding an already elaborated operand. */
+  private def mapArgumentValue(arg: Tree)(f: Tree => Tree): Tree = arg match
+    case InfixApp(key, kw @ Keywrd(Keyword.`:`), value) => InfixApp(key, kw, f(value)).withLocOf(arg)
+    case Spread(kw, S(value)) => Spread(kw, S(f(value))).withLocOf(arg)
+    case _ => f(arg)
+  
+  /** Preserve operator-specific placeholder boundaries before exposing the argument list to `\`.
+    * Infix operands also inherit an enclosing underscore lambda when their operator does not delimit one;
+    * embedding their elaborated terms keeps ordinary call-argument elaboration from resetting that scope.
+    * Non-delimiting prefix operands stay as syntax for the unary type and dereference interpretations. */
+  private def operatorApp(tree: PrefixOpApp | OpApp)(using Ctx, UnderCtx): Tree.App =
+    def operand(arg: Tree, delimits: Bool): Tree = mapArgumentValue(arg): value =>
+      Tree.Trm(if delimits then delimitedTerm(value, Trm, alwaysLambda = false) else subterm(value)).withLocOf(value)
+    val (op, args) = tree match
+      case PrefixOpApp(op, rhs) =>
+        (op, (if underscoreDelimitingSides(op)._2 then operand(rhs, true) else rhs) :: Nil)
+      case OpApp(lhs, op, rhss) =>
+        val (lhsDelimits, rhsDelimits) = underscoreDelimitingSides(op)
+        (op, operand(lhs, lhsDelimits) :: rhss.map(operand(_, rhsDelimits)))
+    new App(op, Tup(args)).withLocOf(tree)
+  
   /** `f(args) \ a` means `f(args, a)`, and `f \ a` means `f(a)`; returns the corresponding application tree.
+    * Prefix and infix operator applications expose their arguments in the same way.
     * Braces around the LHS are transparent, so that `{f \ a} \ b` means `f(a, b)`,
     * which is also what the operator split of `f` on lines `\ a` and `\ b` means,
     * as it is elaborated as `(f \ a) \ b` (`\` being otherwise right-associative).
@@ -1419,7 +1442,7 @@ extends Importer:
     * With the new underscore syntax, the argument delimits its own implicit lambda,
     * so that `xs.map \ _ + 1` means `xs.map(x => x + 1)`; this is done here rather than in
     * `Tree.desugared`, which does not know the language version. */
-  private def backslashApp(lhs: Tree, rhs: Tree)(using Ctx): Tree.App =
+  private def backslashApp(lhs: Tree, rhs: Tree)(using Ctx, UnderCtx): Tree.App =
     // These delimiters are implicit: synthesizing a prefix `=>` would also
     // suspend arguments without placeholders instead of passing their values.
     def delimited(value: Tree): Tree =
@@ -1427,13 +1450,11 @@ extends Importer:
     // * Field-shaped arguments, such as `key: a` and `...xs` (see `fld`), are not expressions,
     // * so only their values delimit implicit lambdas.
     val arg =
-      if lang.newUnderscoreAndApplicationSyntax then rhs match
-        case InfixApp(key, kw @ Keywrd(Keyword.`:`), value) => InfixApp(key, kw, delimited(value)).withLocOf(rhs)
-        case Spread(kw, S(value)) => Spread(kw, S(delimited(value))).withLocOf(rhs)
-        case _ => delimited(rhs)
+      if lang.newUnderscoreAndApplicationSyntax then mapArgumentValue(rhs)(delimited)
       else rhs
     def withAppendedArg(lhs: Tree): Opt[Tree.App] = lhs.desugared match
       case InfixApp(lhs, Keywrd(Keyword.backslash), rhs) => withAppendedArg(backslashApp(lhs, rhs))
+      case op: (PrefixOpApp | OpApp) => withAppendedArg(operatorApp(op))
       case App(f, Tup(args)) => S(App(f, Tup(args :+ arg)))
       case Bra(BracketKind.Curly, Block(stmt :: Nil)) => withAppendedArg(stmt)
       case _ => N
@@ -1586,6 +1607,11 @@ extends Importer:
     tree.desugared match
     case Tree.Trm(term) => interpretRef(term, interp)
     case unt @ Unt() => unit.withLocOf(unt)
+    // Argument and parameter lists have already been consumed by their enclosing syntax.
+    // A remaining parenthesized block would silently discard all but its last expression.
+    case Bra(Round, _: Block) =>
+      raise(ErrorReport(msg"Parentheses must contain a single expression; use '{ ... }' for a block or record" -> tree.toLoc :: Nil))
+      error
     case Bra(k, e) =>
       k match
       case Round =>
@@ -1866,26 +1892,13 @@ extends Importer:
           mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
         mkNonLabelSelectionApp(tree, sel, args)
-    case prefix @ PrefixOpApp(op, rhs) =>
-      val arg =
-        if underscoreDelimitingSides(op)._2 then
-          Tree.Trm(delimitedTerm(rhs, Trm, alwaysLambda = false)).withLocOf(rhs)
-        else rhs
-      subterm(App(op, PlainTup(arg)).withLocOf(prefix), interp)
+    case prefix: PrefixOpApp => subterm(operatorApp(prefix), interp)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
       val lt = subterm(lhs)
       val rt = subterm(rhs)
       app(lt, rt)(tree, N, sym)
-    case tree @ OpApp(lhs, op, rhss) =>
-      val sym = FlowSymbol.app()
-      val (lhsDelimitsUnders, rhsDelimitsUnders) = underscoreDelimitingSides(op)
-      val lt = if lhsDelimitsUnders then delimitedTerm(lhs, Trm, alwaysLambda = false) else subterm(lhs)
-      val ot = subterm(op)
-      val rts = rhss.map: r =>
-        PlainFld(if rhsDelimitsUnders then delimitedTerm(r, Trm, alwaysLambda = false) else subterm(r))
-      app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
-        DummyApp, N, sym)
+    case tree: OpApp => subterm(operatorApp(tree), interp)
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
@@ -3510,7 +3523,7 @@ extends Importer:
       // pattern translation.
       case OpApp(lhs, Ident("~"), rhs :: Nil) => Pattern.Concatenation(go(lhs), go(rhs))
       // Constructor patterns can be written in the infix form.
-      case OpApp(lhs, op, rhs :: Nil) => constructor(term(op, Ptrn), S(Ls(go(lhs), go(rhs))), t)
+      case OpApp(lhs, op, rhss) => constructor(term(op, Ptrn), S(go(lhs) :: rhss.map(go)), t)
       // Constructor patterns without arguments
       case id @ Ident(name) if name.isUncapitalized => Variable(id)
       case id: Ident if newResolution => constructor(term(id, Ptrn), N, id)

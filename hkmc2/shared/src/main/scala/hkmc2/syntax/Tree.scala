@@ -87,9 +87,7 @@ enum Tree extends AutoLocated:
   case Tup(fields: Ls[Tree])
   case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
-  /** Not represented as an App on purpose:
-    * first, so that prefix operands do not acquire extra arguments from `\`;
-    * second, to allow operators ended in `>` (except `>` itself) to delimit implicit lambdas during elaboration,
+  /** Retain prefix syntax to allow operators ending in `>` (except `>` itself) to delimit implicit lambdas during elaboration,
     * similarly to how it works with OpApp.
     * Do note that `>> _ + 1` is a prefix op app but `>>(_ + 1)` is a normal app that does not delimit the `_`. */
   case PrefixOpApp(op: Ident, rhs: Tree)

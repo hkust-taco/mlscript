@@ -71,7 +71,7 @@ class CompilerTest extends AnyFunSuite:
                   |    else findFirst(xs', f)
                   |
                   |let nums = 1 :: 2 :: 3 :: 4 :: 5 :: Nil
-                  |let result = nums |. findFirst \ _ * 6 is 24
+                  |let result = (nums |. findFirst) \ _ * 6 is 24
                   |""".stripMargin
     val inputPath = "/findFirstTest.mls"
     val outputPath = "/findFirstTest.mjs"

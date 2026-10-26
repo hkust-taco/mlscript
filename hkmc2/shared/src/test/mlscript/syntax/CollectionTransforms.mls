@@ -62,10 +62,10 @@ xs
 
 
 let xs = Seq
-  \ (key: "A", value: 1)
-  \ (key: "B", value: 2)
-  \ (key: "A", value: 3)
-  \ (key: "B", value: 4)
+  \ {key: "A", value: 1}
+  \ {key: "B", value: 2}
+  \ {key: "A", value: 3}
+  \ {key: "B", value: 4}
 //│ xs = Seq({key: "A", value: 1}, {key: "B", value: 2}, {key: "A", value: 3}, {key: "B", value: 4})
 
 xs.groupMapReduce
