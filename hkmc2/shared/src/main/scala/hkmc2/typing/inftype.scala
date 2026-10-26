@@ -58,8 +58,16 @@ object Wildcard:
 
 case class PolyType(tvs: Ls[InfVar], outer: Opt[InfVar], xbds: Ls[K], body: InfType) extends InfType:
   lazy val lvl = (body :: tvs).map(_.lvl).max
-  def show(using Scope, InfCtx, Raise) = showDbg //TODO
-  def showDbg = ???
+  def show(using Scope, InfCtx, Raise) =
+    given Scope = scope.nest
+    val lst = (outer match {
+      case S(outer) =>
+        val op = outer.show
+        (if op === "outer" then op else s"outer $op") :: Nil
+      case N => Nil
+    }) ++ tvs.map(_.show)
+    s"[${lst.mkString(", ")}] -> ${body.show}"
+  def showDbg = s"[${(outer.toList ++ tvs).map(_.showDbg).mkString(", ")}] -> ${body.showDbg}"
 
 case class PolyFunType(args: Ls[InfType], ret: InfType, eff: Type) extends InfType:
   lazy val lvl = (ret :: eff :: args).iterator.map(_.lvl).max

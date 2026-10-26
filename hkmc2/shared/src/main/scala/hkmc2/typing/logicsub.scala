@@ -15,10 +15,10 @@ import Elaborator.Ctx
 import syntax.*
 import Tree.*
 import utils.Scope
-import hkmc2.codegen.ErasedType.eraseSign
+import hkmc2.syntax.Keyword.out
 
 
-class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
+class Typer(using tl: TL)(using Elaborator.State, Raise, codegen.Erasure, Ctx, Config):
   import tl.{trace, log}
   private val builtinOps = Elaborator.binaryOps ++ Elaborator.unaryOps ++ Elaborator.aliasOps.keySet
 
@@ -162,7 +162,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
         ascribe(lam, sigTy)
         ()
       case N =>
-        val outer = freshOuter(new TempSymbol(S(lam), erasedType = N, "outer"))(using ctx)
+        val outer = freshOuter(TempSymbol(S(lam), erasedType = N, "outer"))(using ctx)
         given InfCtx = ctx.nestWithOuter(outer)
         val funTyV = freshVar(sym)
         ctx += sym -> funTyV // for recursive functions
@@ -175,7 +175,6 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
         }
     case _ =>
       error(msg"Function definition shape not yet supported for ${sym.nme}" -> lam.toLoc :: Nil)
-
 
   private class Subst(map: Map[InfVarSymbol, InfVar]) extends TypeMap:
     override def apply(pol: Bool)(t: Type) = t.toBasic match
@@ -197,7 +196,7 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
 
   private def instantiate(x: PolyType)(using ctx: InfCtx, cctx: CCtx) =
     val PolyType(tvs, outer, xbds, body) = x
-    val env = freshEnv(new TempSymbol(N, erasedType = N, "env"))
+    val env = freshEnv(TempSymbol(N, erasedType = N, "env"))
     val map = (outer.map(_.sym -> env).toList ++ tvs.map(v =>
       val nv = InfVar(ctx.lvl, InfVarSymbol(InstSymbol(v.sym), v.sym.hint), false)
       tl.log(s"instantiate ${v.showDbg} ~> ${nv.showDbg}")
@@ -233,7 +232,9 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
     // xbds.foreach(k => ctx.constrain(substMono(map)(k)))
     subst(map)(body)
 
-  private def generalize(ty: InfType, outer: Opt[InfVar], lvl: Int): PolyType = ???
+  private def generalize(ty: InfType, outer: Opt[InfVar], lvl: Int)(using ctx: InfCtx): PolyType =
+    // TODO
+    PolyType(Nil, outer, ctx.xbds.toList, ty)
 
   private def app(lhs: InfType, lhsEff: Type, rhs: Ls[Elem], t: Term)
       (using ctx: InfCtx, cctx: CCtx, scope: Scope)
@@ -330,6 +331,35 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
     case N => 
       (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
 
+  private def typeSplitImpl(split: Split, sign: InfType, eff: Type, pre: MatchCtx)
+      (using InfCtx, CCtx, Scope): Unit = split match
+    case Split.Cons(Branch(s: Ref, cp: FlatPattern.ClassLike, cons), alts) =>
+      val p = pre.pm(s, tryMkMono(typeCheck(s)._1, s), cp)
+      typeSplitImpl(cons, sign, eff, p)
+      typeSplitImpl(alts, sign, eff, p.el)
+    case Split.Cons(Branch(_, p, _), _) =>
+      error(msg"Unsupported pattern" -> p.toLoc :: Nil)
+    case Split.Else(e) =>
+      given InfCtx = pre.thenCtx
+      constrain(ascribe(e, sign)._2, eff)
+    case Split.Let(name, term, tail) =>
+      val nestCtx = pre.thenCtx
+      nestCtx.givenIn:
+        val termTy = typeCheck(term)
+        // val sk = freshSkolem(name)
+        nestCtx += name -> termTy._1
+        typeSplitImpl(tail, sign, eff, pre)
+    case Split.End => //TODO
+    case _ => ???
+
+  private def typeSplit
+      (split: Split, sign: Opt[InfType])(using InfCtx, CCtx, Scope)
+      : (InfType, Type) =
+    val res = sign.getOrElse(freshVar(new TempSymbol(N, erasedType = N, "res")))
+    val eff = freshVar(new TempSymbol(N, erasedType = N, "eff"))
+    typeSplitImpl(split, res, eff, MatchCtx.init)
+    (res, eff)
+
   def ascribe(lhs: Term, rhs: InfType)(using ctx: InfCtx, scope: Scope): (InfType, Type) = // TODO
   trace[(InfType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs.showDbg}", res => s"! ${res._2.showDbg}"):
     given CCtx = CCtx.init(lhs, S(rhs))
@@ -357,8 +387,8 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
       given InfCtx = nextCtx
       constrain(ascribe(term, skolemize(pt))._2, Bot) // * never generalize terms with effects
       (pt, Bot)
-    // case (Term.IfLike(_, IfLikeForm.ReturningIf, split), ty) => // * propagate
-    //   typeAllSplits(split.getExpandedSplit, S(ty))
+    case (Term.IfLike(_, IfLikeForm.ReturningIf, split), ty) => // * propagate
+      typeSplit(split.getExpandedSplit, S(ty))
     case (Term.Asc(term, ty), rhs) =>
       ascribe(term, typeType(ty))
       ascribe(term, rhs)
@@ -410,7 +440,8 @@ class Typer(using elState: Elaborator.State, tl: TL, raise: Raise):
             (Tree.Ident(i.toString): Tree.Ident, tryMkMono(ty, f))
           case (spd: Spd, _) => TODO(s"spread arguments: $spd")
         (InfCtx.refinedObj(fs), eff)
-      // case Term.IfLike(_, IfLikeForm.ReturningIf, split) => typeAllSplits(split.getExpandedSplit, N)
+      case Term.IfLike(_, IfLikeForm.ReturningIf, split) =>
+        typeSplit(split.getExpandedSplit, N)
       case Lam(PlainParamList(params), body) =>
         val nestCtx = ctx.nest
         given InfCtx = nestCtx

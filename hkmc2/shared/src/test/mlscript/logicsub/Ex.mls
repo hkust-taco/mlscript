@@ -1,0 +1,214 @@
+#config(language: Language(typeCheck: TypeChecking()))
+//│ Type: undefined
+
+declare class Str(length: Int, concat: Str -> Str)
+declare fun (+): (Int, Int) -> Int
+//│ Type: undefined
+
+fun addImpl(x, y) = if x is
+  Int then x + y
+  Str then x.Str#concat(y)
+//│ Type: undefined
+
+fun add: ((Int,Int) -> Int) & ((Str,Str) -> Str)
+fun add(x,y) = addImpl(x,y)
+//│ Type: undefined
+
+// FIXME
+add(1, 2)
+//│ Type: 'app
+//│   >: ⊥
+
+// add("a", "b")
+
+fun test(a,b,c,d) = add(a,add(b,add(c,d)))
+//│ Type: undefined
+
+// FIXME
+test(0, 1, 2, 3)
+//│ Type: 'app
+//│   >: ⊥
+
+// test("A", "B", "C", "D")
+
+// Expected type errors:
+// test(0, 1, "oops", 3)
+
+fun selfAdd1(x) = add(x, x)
+//│ Type: undefined
+
+fun intstr: Int | Str
+//│ Type: undefined
+
+// Expected type errors:
+// selfAdd1(intstr)
+
+fun selfAdd2(x) = if x is
+  Int then add(x, x)
+  Str then add(x, x)
+//│ Type: undefined
+
+// FIXME
+// selfAdd2(intstr)
+
+fun selfAdd3: (Int -> Int) & (Str -> Str)
+fun selfAdd3(x) = selfAdd1(x)
+selfAdd3(intstr)
+//│ Type: 'app
+//│   >: Int ∨ Str
+
+// fun selfAdd4:  (Int | Str) -> (Int | Str)
+// fun selfAdd4(x) = selfAdd1(x)
+
+fun selfAdd5: (Int | Str) -> (Int | Str)
+fun selfAdd5(x) = selfAdd3(x)
+//│ Type: undefined
+
+fun cast : ((Int -> Int) & (Str -> Str)) -> (Int | Str) -> (Int | Str)
+fun cast(f) = f
+//│ Type: undefined
+
+// cast(selfAdd1)
+
+
+
+class
+  A()
+  B()
+//│ Type: undefined
+
+// fun useTagged ( x : ([ kind : A , a : Int ] | [ kind : B , b : Str ])) =
+//   if x.kind is
+//     A then x.a + 1
+//     B then x.b.Str#length
+
+// fun test (k , a , b) = useTagged ({ kind : k , a : a , b : b })
+
+fun test : ((A, Int, Any) -> Int) & ((B, Any, Str) -> Int)
+//│ Type: undefined
+
+test as (A | B, Int, Str) -> Int
+//│ Type: (A ∨ B, Int, Str) ->{⊥} Int
+
+
+
+class
+  Tru()
+  Fls()
+//│ Type: undefined
+
+let
+  tru = new Tru()
+  fls = new Fls()
+//│ Type: undefined
+
+fun negImpl(x) = if x is
+  Tru then fls
+  Fls then tru
+negImpl
+//│ Type: [outer] -> ['x] ->{out 'eff} out 'res
+
+fun negate: (Tru -> Fls) & (Fls -> Tru)
+fun negate(x) = negImpl(x)
+//│ Type: undefined
+
+fun bothImpl(x,y) = if
+  x is Tru and y is Tru then tru
+  x is Tru and y is Fls then fls
+  x is Fls and y is Tru then fls
+  x is Fls and y is Fls then fls
+//│ Type: undefined
+
+fun both: ((Tru, Tru) -> Tru) & ((Tru, Fls) -> Fls) & ((Fls, Tru | Fls) -> Fls)
+fun both(x, y) = bothImpl(x,y)
+//│ Type: undefined
+
+
+class Ls[A]()
+//│ Type: undefined
+
+fun foldLeft: [A,B] -> (Ls[A], B, (B, A) -> B) -> B
+//│ Type: undefined
+
+// FIXME
+// fun all(xs) = foldLeft(xs, tru, both)
+// all
+
+// FIXME
+// all as Ls[Tru] -> Tru
+// all as Ls[Fls] -> Tru | Fls
+
+class
+  Nil()
+  Cons[A, B](val hd : A, val tl: B)
+//│ Type: undefined
+
+fun all2(x) = if x is
+  Nil then tru
+  Cons then both(x.Cons#hd, all2(x.Cons#tl))
+//│ Type: undefined
+
+let nil = new Nil()
+fun cons(x,y) = new Cons(x,y)
+//│ Type: undefined
+
+all2(nil)
+//│ Type: 'app
+//│   >: ⊥
+
+all2(cons(tru, nil))
+//│ Type: 'app
+//│   >: ⊥
+
+all2(cons(tru, cons(tru, nil)))
+//│ Type: 'app
+//│   >: ⊥
+
+all2(cons(tru, cons(fls, nil)))
+//│ Type: 'app
+//│   >: ⊥
+
+fun test: Tru -> Tru
+fun test(x) = all2(cons(tru, cons(x, nil)))
+//│ Type: undefined
+
+fun test: Fls -> Tru | Fls
+fun test(x) = all2(cons(tru, cons(x, nil)))
+//│ Type: undefined
+
+fun foldLeft(xs, y, f) = if xs is
+  Nil then y
+  Cons then foldLeft(xs.Cons#tl, f(y,xs.Cons#hd), f)
+//│ Type: undefined
+
+fun all3(xs) = foldLeft(xs, tru, both)
+//│ Type: undefined
+
+all3 as Nil -> Tru
+//│ Type: (Nil) ->{⊥} Tru
+
+// FIXME
+// all3 as Cons[Tru,Nil] -> Tru
+// all3 as Cons[Tru|Fls,Nil] -> Tru | Fls
+
+fun test: (Tru -> Tru) & (Fls -> Tru | Fls)
+fun test(x) = all3(cons(tru, cons(x, nil)))
+//│ Type: undefined
+
+
+
+class
+  None()
+  Some[A](val x: A)
+//│ Type: undefined
+
+let none = new None()
+//│ Type: undefined
+
+fun headOption(x) = if x is
+  Nil then none
+  Cons then new Some(x.Cons#hd)
+//│ Type: undefined
+
+headOption
+//│ Type: [outer] -> ['x] ->{out 'eff} out 'res

@@ -16,7 +16,7 @@ f("a")
 fun g: (Int -> Int) & (Str -> Str)
 //│ Type: undefined
 
-// TODO
+// FIXME
 g(1)
 //│ Type: 'app
 //│   >: ⊥
@@ -27,3 +27,10 @@ fun g: (1 -> 1) & (2 -> 2)
 g(1)
 //│ Type: 'app
 //│   >: 1
+
+fun neg: (true -> false) & (false -> true)
+//│ Type: undefined
+
+// TODO literal pattern
+// fun a: (false -> Int) & (true -> Str)
+// fun a(x) = if neg(x) then 1 else  ""
