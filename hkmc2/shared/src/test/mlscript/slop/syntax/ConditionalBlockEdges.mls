@@ -184,3 +184,37 @@ if {false then 1} else
 //│ ║  l.+1: 	if {false then 1} else
 //│ ╙──      	                      ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// FIXME: parentheses disable newline separators, but should still allow an indented clause's else.
+:fixme
+:expect 123
+(if true
+  then 123
+  else 456)
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.+3: 	  else 456)
+//│ ╙──      	  ^^^^
+//│ = 123
+
+:fixme
+:expect 125
+2 +
+(if true
+  then 123
+  else 456)
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.+4: 	  else 456)
+//│ ╙──      	  ^^^^
+//│ = 125
+
+:fixme
+:expect 458
+2 +
+(if false
+  then 123
+  else 456)
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.+4: 	  else 456)
+//│ ╙──      	  ^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] Expected: '458', got: 'undefined'
