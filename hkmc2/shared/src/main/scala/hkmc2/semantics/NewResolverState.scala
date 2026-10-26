@@ -179,10 +179,7 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.combinedTypes, identity)
   val argumentTypes: Cache[(TypeResolution, TypeArgument), DeclaredType] =
     new Cache(_.argumentTypes, identity)
-  val pendingTypeDependencies: Cache[TypeResolution, TypeDependencyHost] =
-    new Cache(_.pendingTypeDependencies, identity)
-  val dependencySubscriptions: Seen[(TypeResolution, TypeResolution)] =
-    new Seen(_.dependencySubscriptions)
+  private[semantics] val pendingDependencies = mutable.Map.empty[(ResolutionContext, TypeResolution), ResolutionWorkspace.PendingDependencies]
   val quantifiedTypes: Cache[(TypeResolution, Ls[VarSymbol]), TypeResolution] =
     new Cache(_.quantifiedTypes, identity)
   val instantiatedCallables: Cache[(ShapeIdentity.Key, FlowSymbol, Ls[Marks]), CallableTypeShape] =
@@ -840,11 +837,4 @@ private[semantics] final class TermShapeHost extends Host[TermShape]:
   def publish(shape: TermShape)(using ResolutionContext): Unit =
     if currentShapes.add(shape) then notifyShapeListeners(shape)
   def listen(listener: ResolutionContext.Listener)(using ResolutionContext): Unit =
-    subscribeToShapes(listener)
-
-private[semantics] final class TypeDependencyHost extends Host[Set[VarSymbol]]:
-  def showDbg(using DebugPrinter): Str = "type dependencies"
-  def publish(binders: Set[VarSymbol])(using ResolutionContext): Unit =
-    if currentShapes.add(binders) then notifyShapeListeners(binders)
-  def listen(listener: ShapeListener[Set[VarSymbol]])(using ResolutionContext): Unit =
     subscribeToShapes(listener)

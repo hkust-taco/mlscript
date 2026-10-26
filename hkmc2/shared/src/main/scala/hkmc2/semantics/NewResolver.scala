@@ -539,7 +539,7 @@ final class NewResolver(prelude: Ctx, config: Config):
   /** Wait for the source graph before observing a substituted interface. The
     * retained environment is projected only after every forward dependency has
     * a target. Subscriptions and completed summaries are shared by source node;
-    * callbacks and their hosts remain private to each consuming inference graph.
+    * pending callbacks are local to this compilation and removed once ready.
     */
   private def withCanonicalType(tpe: DeclaredType)(listener: ShapeListener[DeclaredType])(using ResolutionContext): Unit =
     withTypeDependencies(tpe.resolution): binders =>
@@ -558,17 +558,22 @@ final class NewResolver(prelude: Ctx, config: Config):
     typeDependencies(resolution) match
       case R(binders) => listener(binders)
       case L(_) =>
-        rctx.state.pendingTypeDependencies.get(resolution) match
-          case S(host) => host.listen(listener)
+        val origin = rctx
+        val key = (origin, resolution)
+        rctx.state.pendingDependencies.get(key) match
+          case S(pending) => pending.listen(listener)
           case N =>
-            val host = new TypeDependencyHost
-            rctx.state.pendingTypeDependencies(resolution) = host
-            host.listen(listener)
-            def retry()(using ResolutionContext): Unit = typeDependencies(resolution) match
-              case R(binders) => host.publish(binders)
-              case L(pending) => pending.foreach: unresolved =>
-                if rctx.state.dependencySubscriptions.add((resolution, unresolved)) then
-                  unresolved.listen(_ => retry())
+            val pending = new ResolutionWorkspace.PendingDependencies
+            rctx.state.pendingDependencies(key) = pending
+            pending.listen(listener)
+            def retry(): Unit = if pending.isPending then
+              typeDependencies(resolution)(using origin) match
+                case R(binders) =>
+                  origin.state.pendingDependencies.remove(key)
+                  pending.complete(binders)
+                case L(unresolved) => unresolved.foreach: dependency =>
+                  if pending.watched.add(dependency) then
+                    pending.observe(dependency.inferenceHost(using origin).observe(_ => retry())(using origin))
             retry()
 
   /** Substitute a bound parameter before storing an argument. Otherwise recursive

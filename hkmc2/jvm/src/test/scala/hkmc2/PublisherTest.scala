@@ -184,6 +184,27 @@ class PublisherTest extends AnyFunSuite:
     assert(observed.toList == List(1, 2))
     assert(routed.toList == List(1, 2, 3, 4))
 
+  // Diff tests cannot reliably exercise observer cancellation during the same
+  // notification that completes a pending type-dependency computation.
+  test("one-shot observers can detach during notification without skipping their neighbors"):
+    given ResolutionContext = new Elaborator.State().newResolverState.context
+    val host = new IntHost
+    val first = ArrayBuffer.empty[Int]
+    val second = ArrayBuffer.empty[Int]
+    val added = ArrayBuffer.empty[Int]
+    var detach: () => Unit = () => ()
+    detach = host.inferenceHost.observe: shape =>
+      first += shape
+      detach()
+      host.inferenceHost.observe(added += _)
+      ()
+    host.inferenceHost.observe(second += _)
+    host.publish(1)
+    host.publish(2)
+    assert(first.toList == List(1))
+    assert(second.toList == List(1, 2))
+    assert(added.toList == List(1, 2))
+
   test("unknown provenance is lazy and does not affect shape identity"):
     import semantics.{ShapeProvenance, UnknownValueShape, RecordShape}
     import Message.MessageContext

@@ -87,15 +87,14 @@ object Publisher:
     def notify(shape: A)(using ResolutionContext): Unit =
       // Appended listeners receive this candidate through replay.
       val count = listeners.size
-      val observerCount = observers.size
+      // Temporary analyses can detach their observers during notification.
+      // Snapshot before invoking listeners, since newly added observers replay.
+      val observed = observers.toList
       var i = 0
       while i < count do
         listeners(i)(shape)
         i += 1
-      i = 0
-      while i < observerCount do
-        observers(i)(shape)
-        i += 1
+      observed.foreach[Unit](_(shape))
     def addListener(listener: ShapeListener[A])(using origin: ResolutionContext): Unit =
       origin.local(this).listeners +=
         (shape => (current: ResolutionContext) ?=> listener(shape)(using current.inGraph(origin)))
