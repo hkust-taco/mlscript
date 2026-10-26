@@ -7,12 +7,18 @@ Test classpath in classpath.txt. The output directory must not already exist.
 from pathlib import Path
 import datetime, hashlib, json, platform, random, subprocess, sys, time, zipfile
 
-if len(sys.argv) != 4:
-    raise SystemExit('Usage: bench_resolver_suite.py <repository> <build-directory> <output-directory>')
-root, archive, output = (Path(value).resolve() for value in sys.argv[1:])
+if len(sys.argv) != 5 or sys.argv[1] not in ('timing', 'heap'):
+    raise SystemExit('Usage: bench_resolver_suite.py <timing|heap> <repository> <build-directory> <output-directory>')
+mode = sys.argv[1]
+root, archive, output = (Path(value).resolve() for value in sys.argv[2:])
 output.mkdir(exist_ok=False)
 flags = ['-Xms1g', '-Xmx1g', '-Xss8m', '-XX:ActiveProcessorCount=1', '-XX:+UseSerialGC', '-Xbatch']
-warmups, samples, forks = 12, 8, 3
+forks = 3
+if mode == 'timing':
+    warmups, samples, heap_samples = 12, 8, 0
+else:
+    warmups, samples, heap_samples = 0, 0, 1
+    flags.append('-XX:MarkSweepAlwaysCompactCount=1')
 builds = json.loads((archive / 'builds.json').read_text())
 entries = (archive / 'classpath.txt').read_text().strip().split(':')
 main = str(root / 'hkmc2/jvm/target/scala-3.8.4/classes')
@@ -54,13 +60,14 @@ metadata = {
     'harness_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip(),
     'jvm':subprocess.run(['java','-version'],text=True,capture_output=True).stderr.strip(),
     'platform':platform.platform(), 'jvm_flags':flags, 'warmups':warmups, 'samples':samples,
-    'forks':forks, 'test_order':'sorted names, sequential ScalaTest run without Distributor',
+    'forks':forks, 'mode':mode, 'heap_samples':heap_samples,
+    'test_order':'sorted names, sequential ScalaTest run without Distributor',
     'active_processors':1, 'physical_cpu_affinity':'not pinned; macOS scheduler controls core placement',
     'background_jit':False, 'suite':'every hkmc2.CompileTestRunner case, fresh CompilerCtx per batch',
     'builds':builds, 'schedule':schedule, 'common_archives':common_archives, 'mls_corpus_sha256':source_hash,
     'allocation_api':'com.sun.management.ThreadMXBean.getTotalThreadAllocatedBytes (all JVM threads)',
-    'heap_method':'full GC with context held, full GC after context release, weak-reference check',
-    'measurement_gc':'natural; explicit GC only in the separate final retained-heap batch',
+    'heap_method':'heap-pool collection snapshots after fully compacting GC with context held, then released; weak-reference check',
+    'measurement_gc':'natural for timing; explicit full compaction for separate heap batches',
 }
 (output / 'metadata.json').write_text(json.dumps(metadata,indent=2)+'\n')
 records = []
@@ -69,7 +76,7 @@ for index, entry in enumerate(schedule):
     build = builds[entry['build_index']]
     cp = list(entries)
     cp[main_index] = build['jar']
-    command = ['java',*flags,'-cp',':'.join(cp),'hkmc2.ResolverSuiteBenchmark',build['revision'],str(entry['fork']),str(warmups),str(samples),str(output)]
+    command = ['java',*flags,'-cp',':'.join(cp),'hkmc2.ResolverSuiteBenchmark',build['revision'],str(entry['fork']),str(warmups),str(samples),str(heap_samples),str(output)]
     name = f"{index:02d}-phase-{build['phase']}-fork-{entry['fork']}"
     started = time.monotonic()
     start_time = datetime.datetime.now().astimezone().isoformat()
@@ -80,7 +87,7 @@ for index, entry in enumerate(schedule):
     assert result.returncode == 0, (name,result.returncode)
     manifest = (output/'ctest-manifest.txt').read_text().splitlines()
     actual = [line.removeprefix('Compiling: ') for line in (output/(name+'.log')).read_text().splitlines() if line.startswith('Compiling: ')]
-    assert actual == manifest*(warmups+samples+1), (name,'test ordering or corpus mismatch')
+    assert actual == manifest*(warmups+samples+heap_samples), (name,'test ordering or corpus mismatch')
     records.append(dict(entry,name=name,started=start_time,elapsed_seconds=elapsed,returncode=result.returncode))
     (output/'runs.json').write_text(json.dumps(records,indent=2)+'\n')
     (output/'progress.json').write_text(json.dumps({'status':'benchmarking','completed':len(records),'total':len(schedule),'last':name},indent=2)+'\n')
