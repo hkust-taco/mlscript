@@ -77,16 +77,19 @@ fun explicit(x) = {
 //│ = [1, 0]
 
 
+// Calling these functions in the block that defines them would reveal the implicit namespace of
+// their argument, which takes precedence over wildcard opens (see slop/ImplicitNamespacePatterns.mls).
 :e
 fun ambiguous(x) = {
   open Constructors
   open Other
   if x is Token then 1 else 0
 }
-ambiguous(new Constructors.Token)
 //│ ╔══[COMPILATION ERROR] Constructor pattern is ambiguous.
 //│ ║  l.+4: 	  if x is Token then 1 else 0
 //│ ╙──      	          ^^^^^
+
+ambiguous(new Constructors.Token)
 //│ = 0
 
 
@@ -96,10 +99,11 @@ fun ambiguousReversed(x) = {
   open Constructors
   if x is Token then 1 else 0
 }
-ambiguousReversed(new Constructors.Token)
 //│ ╔══[COMPILATION ERROR] Constructor pattern is ambiguous.
 //│ ║  l.+4: 	  if x is Token then 1 else 0
 //│ ╙──      	          ^^^^^
+
+ambiguousReversed(new Constructors.Token)
 //│ = 0
 
 

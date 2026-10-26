@@ -1,0 +1,9 @@
+:.
+
+// An implicit namespace need not be nameable where the reference is written:
+// the imported module is only bound under another name here.
+import "../../mlscript-compile/Option.mls" as Opt
+
+:expect [true, false]
+[Opt.isDefined(Some(1)), Opt.isDefined(None)]
+//│ = [true, false]

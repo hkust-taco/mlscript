@@ -1,0 +1,155 @@
+:.
+
+import "../../mlscript-compile/Option.mls"
+
+
+// The head of a constructor pattern can name a member of an implicit namespace of the
+// values that reach its scrutinee, as a value names one of the type that flow requires
+// of it (see ImplicitNamespaces.mls): a capitalized name without an explicit binding,
+// or a leading-dot selection (see LeadingDotSelections.mls). A value of a declared type
+// has the namespaces of that type.
+fun get(x: Option[Int]) = if x is
+  Some(v) then v
+  None then 0
+
+fun getDot(x: Option[Int]) = if x is
+  .Some(v) then v
+  .None then 0
+
+:expect [1, 0, 2, 0]
+[get(Option.Some(1)), get(Option.None), getDot(Option.Some(2)), getDot(Option.None)]
+//│ = [1, 0, 2, 0]
+
+// Nested patterns use the declared types of the fields they match.
+class Box(val content: Option[Int])
+
+fun unbox(b: Box) = if b is
+  Box(Some(v)) then v
+  Box(None) then 0
+
+:expect [3, 0]
+[unbox(Box(Option.Some(3))), unbox(Box(Option.None))]
+//│ = [3, 0]
+
+// Declared results are declared types too, as are class companions' types.
+fun lookup(k: Int): Option[Int] = if k == 0 then Option.Some(4) else Option.None
+
+class Color
+module Color with
+  object Red extends Color
+  object Green extends Color
+fun name(c: Color) = if c is
+  Red then "red"
+  .Green then "green"
+  else "other"
+
+:expect [4, "red", "green"]
+[if lookup(0) is Some(v) then v else 0, name(Color.Red), name(Color.Green)]
+//│ = [4, "red", "green"]
+
+
+// Implicit namespaces take precedence over wildcard opens, but not over explicit bindings.
+type AltOption[A] = AltOption.{ Some[A] | None }
+module AltOption with
+  data class Some[T](value: T)
+  object None
+
+fun viaNamespace(x: Option[Int]) =
+  open AltOption
+  if x is Some(v) then v else 0
+
+fun viaBinding(x: Option[Int]) =
+  open AltOption { Some }
+  if x is Some(v) then v else 0
+
+:expect [5, 0]
+[viaNamespace(Option.Some(5)), viaBinding(Option.Some(5))]
+//│ = [5, 0]
+
+// Without a known scrutinee value, the wildcard opens supply pattern heads.
+fun viaOpen(x) =
+  open AltOption
+  if x is Some(v) then v else 0
+
+:expect 6
+viaOpen(AltOption.Some(6))
+//│ = 6
+
+// Constructed values name the namespaces of their classes: `Option.Some` is declared by module `Option`.
+:expect 7
+fun constructed() = if Option.Some(7) is Some(v) then v else 0
+constructed()
+//│ = 7
+
+// The namespaces of a class include those of its parents: a `Just(v)` value reaches the
+// companion of `Maybe`, which `Just` extends.
+abstract class Maybe[out A]
+module Maybe with
+  object Empty extends Maybe[Nothing]
+data class Just[out A](value: A) extends Maybe[A]
+
+:expect [1, 0, 2]
+fun unwrap(m) = if m is
+  Just(v) then v
+  Empty then 0
+fun unwrapJust(m: Just[Int]) = if m is
+  .Empty then 0
+  Just(v) then v
+[unwrap(Just(1)), unwrap(Maybe.Empty), unwrapJust(Just(2))]
+//│ = [1, 0, 2]
+
+// As for values, the head of a pattern can be a chain of selections, whose root names a
+// member of an implicit namespace of the scrutinee (see ImplicitNamespaceChains.mls).
+class Tile
+module Tile with
+  module Plain with
+    object Grass extends Tile
+    object Sand extends Tile
+
+:expect ["grass", "sand", "other"]
+fun tile(t: Tile) = if t is
+  Plain.Grass then "grass"
+  .Plain.Sand then "sand"
+  else "other"
+[tile(Tile.Plain.Grass), tile(Tile.Plain.Sand), tile(new Tile)]
+//│ = ["grass", "sand", "other"]
+
+:e
+fun untyped(x) = if x is .None then 0 else 1
+//│ ╔══[COMPILATION ERROR] Cannot resolve leading-dot selection '.None'
+//│ ║  l.+1: 	fun untyped(x) = if x is .None then 0 else 1
+//│ ║        	                         ^^^^^
+//│ ╙── No value or type of its scrutinee has an implicit namespace.
+
+// A scrutinee whose declared types have distinct namespaces makes the pattern ambiguous.
+:e
+fun either(x: Option[Int] | AltOption[Int]) = if x is Some(v) then v else 0
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as values with distinct implicit namespaces can reach its scrutinee.
+//│ ║  l.+1: 	fun either(x: Option[Int] | AltOption[Int]) = if x is Some(v) then v else 0
+//│ ║        	                                                      ^^^^
+//│ ╟── This type selects 'Option.Some'.
+//│ ║  l.+1: 	fun either(x: Option[Int] | AltOption[Int]) = if x is Some(v) then v else 0
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── This type selects 'AltOption.Some'.
+//│ ║  l.+1: 	fun either(x: Option[Int] | AltOption[Int]) = if x is Some(v) then v else 0
+//│ ╙──      	                            ^^^^^^^^^^^^^^
+
+// A pattern head is settled with its block: a declared scrutinee type that flow
+// reveals later cannot change the selected definition.
+fun later(x) =
+  open AltOption
+  if x is Some(v) then v else 0
+
+:e
+fun typedLater(y: Option[Int]) = later(y)
+//│ ╔══[COMPILATION ERROR] Reference 'Some' was resolved before flow revealed its implicit namespace module 'Option'.
+//│ ║  l.XX: 	  if x is Some(v) then v else 0
+//│ ║        	          ^^^^
+//│ ╟── Its scrutinee has this type; the companion module 'Option' of type 'Option' would have selected 'Option.Some'.
+//│ ║  l.+1: 	fun typedLater(y: Option[Int]) = later(y)
+//│ ║        	                  ^^^^^^^^^^^
+//│ ╟── It was resolved to the 'Some' of this wildcard open.
+//│ ║  l.XX: 	  open AltOption
+//│ ║        	       ^^^^^^^^^
+//│ ╟── Wildcard opens only supply a capitalized name if no implicit namespace is known for it once the rest of its block is resolved.
+//│ ╙── Write 'Option.Some' to select it explicitly.

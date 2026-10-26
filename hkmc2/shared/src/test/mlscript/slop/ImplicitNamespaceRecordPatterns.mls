@@ -1,0 +1,49 @@
+:.
+#lang(eagerResolution: true)
+
+import "../../mlscript-compile/Option.mls"
+
+module Alternative with
+  data class Some[T](value: T)
+
+// Both the record test and the field's declared interface are available.
+:expect 1
+fun qualified(x: {value: Option[Int]}) = if x is {value: Option.Some(v)} then v else 0
+qualified({value: Option.Some(1)})
+//│ = 1
+
+// Selecting the field before testing it preserves its implicit namespace.
+:expect 2
+fun selected(x: {value: Option[Int]}) = if x.value is Some(v) then v else 0
+selected({value: Option.Some(2)})
+//│ = 2
+
+// A nested record pattern observes the same field type: record patterns read the
+// fields of their input like selections do.
+:expect 3
+fun nested(x: {value: Option[Int]}) = if x is {value: .Some(v)} then v else 0
+nested({value: Option.Some(3)})
+//│ = 3
+
+// The field type also takes precedence over an unrelated wildcard member.
+:expect 4
+fun fallback(x: {value: Option[Int]}) =
+  open Alternative
+  if x is {value: Some(v)} then v else 0
+fallback({value: Option.Some(4)})
+//│ = 4
+
+// Known record values supply their fields' namespaces as well.
+:expect 5
+let record = {value: Option.Some(5)}
+if record is {value: .Some(v)} then v else 0
+//│ = 5
+//│ record = {value: Some(5)}
+
+// Record patterns read the fields of class instances like selections do.
+class Holder(val value: Option[Int])
+
+:expect 6
+fun held(h: Holder) = if h is {value: .Some(v)} then v else 0
+held(Holder(Option.Some(6)))
+//│ = 6

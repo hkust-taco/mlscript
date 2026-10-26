@@ -200,8 +200,8 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
             emit(element, path.via(msg"This value is stored in this array." -> binding.resolution.source.toLoc))
       case view: IntersectionView => view.values.foreach(value => emit(value.exit(marks), path))
       // Structural annotations hide initializer implementations. Unknown and
-      // dynamic values have no static graph.
-      case _: (RecordTypeShape | OpaqueTypeShape | UnknownValueShape | RigidTypeShape | DynShape | ErrShape) => ()
+      // dynamic values have no static graph; namespace probes denote no value.
+      case _: (RecordTypeShape | OpaqueTypeShape | UnknownValueShape | RigidTypeShape | DynShape | ErrShape | NamespaceProbe) => ()
 
   /** An exposed value can be a synthesized local reference. Keep the exposure
     * site's location in its diagnostic provenance, not on that reference. */

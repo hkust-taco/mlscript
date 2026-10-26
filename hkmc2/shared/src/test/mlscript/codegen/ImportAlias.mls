@@ -9,9 +9,6 @@ Example.inc(0)
 //│ ╔══[COMPILATION ERROR] Name not found: Example
 //│ ║  l.+1: 	Example.inc(0)
 //│ ╙──      	^^^^^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'inc' has no resolved target
-//│ ║  l.+1: 	Example.inc(0)
-//│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect 1
@@ -27,9 +24,6 @@ Example.inc(0)
 //│ ╔══[COMPILATION ERROR] Name not found: Example
 //│ ║  l.+1: 	Example.inc(0)
 //│ ╙──      	^^^^^^^
-//│ ╔══[COMPILATION ERROR] This selection of member 'inc' has no resolved target
-//│ ║  l.+1: 	Example.inc(0)
-//│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect 1

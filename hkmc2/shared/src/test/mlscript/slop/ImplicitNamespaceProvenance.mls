@@ -1,0 +1,89 @@
+:.
+#lang(eagerResolution: true)
+
+module First with
+  data class Some[T](value: T)
+module Second with
+  data class Some[T](value: T)
+type FirstAlias[T] = T
+module FirstAlias with
+  val Some = First.Some
+type SecondAlias[T] = T
+module SecondAlias with
+  val Some = Second.Some
+
+// These aliases have the same interface but different companion namespaces.
+// Each pattern must use the namespace of its own parameter annotation.
+:expect [1, 2]
+fun plain[X](x: FirstAlias[X], y: SecondAlias[X]) =
+  [if x is Some(v) then v else 0, if y is Some(v) then v else 0]
+plain(First.Some(1), Second.Some(2))
+//│ = [1, 2]
+
+// Adding Nothing changes neither the interface nor the declarations named by each
+// annotation. Both annotations normalize to the same type, but their values remain
+// distinct candidates, each with the written form that names its namespace.
+:expect [3, 4]
+fun unions[X](x: FirstAlias[X] | Nothing, y: SecondAlias[X] | Nothing) =
+  [if x is Some(v) then v else 0, if y is Some(v) then v else 0]
+unions(First.Some(3), Second.Some(4))
+//│ = [3, 4]
+
+// The order of the parameters does not matter.
+:expect [5, 6]
+fun reversed[X](y: SecondAlias[X] | Nothing, x: FirstAlias[X] | Nothing) =
+  [if x is Some(v) then v else 0, if y is Some(v) then v else 0]
+reversed(Second.Some(6), First.Some(5))
+//│ = [5, 6]
+
+// Values of such types reaching the same scrutinee remain distinct candidates, so their
+// distinct namespaces make the pattern ambiguous.
+:e
+fun pick(x) = if x is Some(v) then v else 0
+fun feed[X](a: FirstAlias[X] | Nothing, b: SecondAlias[X] | Nothing) = [pick(a), pick(b)]
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as values with distinct implicit namespaces can reach its scrutinee.
+//│ ║  l.+1: 	fun pick(x) = if x is Some(v) then v else 0
+//│ ║        	                      ^^^^
+//│ ╟── This type selects 'FirstAlias.Some'.
+//│ ║  l.+2: 	fun feed[X](a: FirstAlias[X] | Nothing, b: SecondAlias[X] | Nothing) = [pick(a), pick(b)]
+//│ ║        	               ^^^^^^^^^^^^^
+//│ ╟── This type selects 'SecondAlias.Some'.
+//│ ║  l.+2: 	fun feed[X](a: FirstAlias[X] | Nothing, b: SecondAlias[X] | Nothing) = [pick(a), pick(b)]
+//│ ╙──      	                                           ^^^^^^^^^^^^^^
+
+// Forwarded arguments share their semantic nodes, but each application retains the
+// namespaces of its own argument when a constructor pattern reads the Box field.
+class Box[A](val content: A)
+type Boxed[A] = Box[A]
+
+:expect [7, 8]
+fun boxes[X](x: Boxed[FirstAlias[X] | Nothing], y: Boxed[SecondAlias[X] | Nothing]) =
+  [if x is Box(Some(v)) then v else 0, if y is Box(Some(v)) then v else 0]
+boxes(Box(First.Some(7)), Box(Second.Some(8)))
+//│ = [7, 8]
+
+// The two forwarded arguments are ambiguous when their fields reach one
+// pattern. Keeping every namespace on the shared semantic argument would make this
+// ambiguous, but would incorrectly make the independent patterns above ambiguous too.
+:e
+fun pickBox(x) = if x is Some(v) then v else 0
+fun feedBoxes[X](a: Boxed[FirstAlias[X] | Nothing], b: Boxed[SecondAlias[X] | Nothing]) =
+  [pickBox(a.content), pickBox(b.content)]
+//│ ╔══[COMPILATION ERROR] Reference 'Some' is ambiguous, as values with distinct implicit namespaces can reach its scrutinee.
+//│ ║  l.+1: 	fun pickBox(x) = if x is Some(v) then v else 0
+//│ ║        	                         ^^^^
+//│ ╟── This type selects 'FirstAlias.Some'.
+//│ ║  l.+2: 	fun feedBoxes[X](a: Boxed[FirstAlias[X] | Nothing], b: Boxed[SecondAlias[X] | Nothing]) =
+//│ ║        	                          ^^^^^^^^^^^^^
+//│ ╟── This type selects 'SecondAlias.Some'.
+//│ ║  l.+2: 	fun feedBoxes[X](a: Boxed[FirstAlias[X] | Nothing], b: Boxed[SecondAlias[X] | Nothing]) =
+//│ ╙──      	                                                             ^^^^^^^^^^^^^^
+
+// A probe reaching a required type as the view of a type variable observes the written
+// form of that type, even when it normalizes to a type parameter.
+fun firstOf[X](x: FirstAlias[X]) = if x is First.Some(v) then v else 0
+fun id[A](a: A) = a
+
+:expect 9
+firstOf(id(Some(9)))
+//│ = 9

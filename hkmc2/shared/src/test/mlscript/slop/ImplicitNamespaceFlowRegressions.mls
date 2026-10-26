@@ -1,0 +1,121 @@
+:.
+#lang(eagerResolution: true)
+
+import "../../mlscript-compile/Option.mls"
+
+
+// Structural aliases have implicit namespaces too. Direct constraints discover
+// their companions, independently of whether the alias describes a tuple,
+// a record, or a function.
+type Pack[T] = [T]
+module Pack with
+  val One = [1]
+type Rec[T] = {value: T}
+module Rec with
+  val One = {value: 2}
+type Func[T] = () -> T
+module Func with
+  fun One() = 3
+fun takePack(x: Pack[Int]) = x.0
+fun takeRec(x: Rec[Int]) = x.value
+fun takeFunc(x: Func[Int]) = x()
+
+:expect [1, 2, 3]
+[takePack(.One), takeRec(.One), takeFunc(.One)]
+//│ = [1, 2, 3]
+
+// A probe arriving through the pipe's type parameter reaches the required structural
+// alias as the view of a type variable. Each call selects the same member as its direct form.
+:expect 1
+.One |> takePack
+//│ = 1
+
+:expect 2
+.One |> takeRec
+//│ = 2
+
+:expect 3
+.One |> takeFunc
+//│ = 3
+
+// A wildcard open supplying the same name does not take precedence over the required namespace.
+module OtherPacks with
+  val One = [99]
+
+:expect [1, 1]
+fun directPack() =
+  open OtherPacks
+  takePack(One)
+fun pipedPack() =
+  open OtherPacks
+  One |> takePack
+[directPack(), pipedPack()]
+//│ = [1, 1]
+
+
+// A generic function's declared result still denotes its instantiated type.
+fun identity[A](x: A): A = x
+
+// A pattern head discovers Option through the result's instantiated type parameter,
+// whose values include the type argument supplied by the caller.
+:expect 4
+fun explicitPattern(x: Option[Int]) =
+  if identity[Option[Int]](x) is .Some(v) then v else 0
+explicitPattern(Option.Some(4))
+//│ = 4
+
+module Alternative with
+  data class Some[A](value: A)
+
+// Both inferred and explicit type arguments select Option.Some, rather than falling back
+// to Alternative.Some, which would make a matching input take the else branch.
+:expect [5, 6]
+fun inferredFallback(x: Option[Int]) =
+  open Alternative
+  if identity(x) is Some(v) then v else 0
+fun explicitFallback(x: Option[Int]) =
+  open Alternative
+  if identity[Option[Int]](x) is Some(v) then v else 0
+[inferredFallback(Option.Some(5)), explicitFallback(Option.Some(6))]
+//│ = [5, 6]
+
+
+class Color(val name: Str)
+module Color with
+  val Red = Color("red")
+
+// Once the alias is defined in this block, its argument determines the namespace
+// just as it does when the alias precedes the call.
+:expect "red"
+fun laterAlias(x: Later[Color]) = x.name
+let laterColor = laterAlias(Red)
+type Later[A] = A
+laterColor
+//│ = "red"
+//│ laterColor = "red"
+
+:expect "red"
+type Earlier[A] = A
+fun earlierAlias(x: Earlier[Color]) = x.name
+earlierAlias(Red)
+//│ = "red"
+
+
+module Records with
+  val Fields = {a: 7}
+
+// Until Fields falls back to the wildcard open, it publishes a namespace probe.
+// A record spread waits for a value instead of treating that probe as an unknown record.
+:expect 7
+fun spreadWildcard() =
+  open Records
+  {...Fields}.a
+spreadWildcard()
+//│ = 7
+
+:expect 7
+fun spreadSelective() =
+  open Records { Fields }
+  {...Fields}.a
+spreadSelective()
+//│ = 7

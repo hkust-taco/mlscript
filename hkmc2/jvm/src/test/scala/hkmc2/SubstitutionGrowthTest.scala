@@ -324,7 +324,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
       val member = BlockMemberSymbol("Identity", Nil)
       val body = h.typeOf(formal)
-      symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)), S(body.resolution.source), N, Nil)(N, N))
+      symbol.defn = S(TypeDef(N, symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)), S(body.resolution.source), N, Nil)(N, N))
       // The use is written where B is in scope.
       val use = Term.UnitVal()
       h.state.recordLexicalBinders(use, Set(b))

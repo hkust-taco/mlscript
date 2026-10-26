@@ -312,7 +312,10 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   case Super(receiver: Term, owner: InnerSymbol, id: Tree.Ident)(val resSym: FlowSymbol) extends Term, NewResolvableImpl, ShapeHost
   /** An optional class selection fixes the lookup scope for an explicit member projection. */
   case NewSel(prefix: Term, id: Tree.Ident, cls: Opt[NewSel])(val resSym: FlowSymbol) extends Term, NewSelImpl, ShapeHost
-  case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol) extends Term, UnresolvedRefImpl, ShapeHost
+  /** A name without an explicit binding, looked up in the wildcard opens visible where it is written
+    * (`prefixes`, possibly none) or in implicit namespaces, as `lookup` specifies. */
+  case UnresolvedRef(prefixes: Ls[Term], id: Tree.Ident)(val resSym: FlowSymbol, val lookup: NameLookup)
+    extends Term, UnresolvedRefImpl, ShapeHost
   case Capture(base: Term, thru: AnyDefinitionSymbol) extends Term
   // --- LEGACY ---
   /** A term that wraps another term, indicating that the symbol of the inner term is resolved.
@@ -670,6 +673,16 @@ final case class DefineVar(sym: LocalSymbol | TermSymbol, rhs: Term)(val toLoc: 
   * Records a function that modifies the current compiler configuration. */
 final case class SetConfig(modify: hkmc2.Config => hkmc2.Config)(val toLoc: Opt[Loc]) extends Statement:
   override def toString: String = "#config(...)"
+
+/** Where an UnresolvedRef looks up its name (see NewResolver.unresolvedRef). */
+enum NameLookup:
+  /** Only in wildcard opens. */
+  case Opens
+  /** In the implicit namespaces that flow reveals, and otherwise in wildcard opens. */
+  case NamespacesThenOpens
+  /** Only in implicit namespaces, for a leading-dot selection `.name`, which never
+    * consults the scope where it is written. */
+  case LeadingDot
 
 enum Visibility:
   case Public, Private
@@ -1072,6 +1085,8 @@ end ClassDef
 
 
 case class TypeDef(
+  /** The class, module, or object whose body declares the alias, if any. */
+  owner: Opt[InnerSymbol],
   sym: TypeAliasSymbol,
   bsym: BlockMemberSymbol,
   tparams: Ls[TyParam],
