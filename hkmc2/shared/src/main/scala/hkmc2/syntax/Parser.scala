@@ -572,7 +572,9 @@ abstract class Parser(
               tryEmpty(tok, loc)
           case N =>
             tryEmpty(tok, loc)
-    case (tok @ (_: NEWLINE_COMMA), l0) :: (id: IDENT, l1) :: _ if allowNewlines && rule.kwAlts.contains(id.name) =>
+    // Expected clause keywords continue this rule even when newline-separated list items
+    // are disabled, as for an indented `else` inside parentheses.
+    case (tok @ (_: NEWLINE_COMMA), l0) :: (id: IDENT, l1) :: _ if rule.kwAlts.contains(id.name) =>
       consume
       parseRule(prec, rule, allowNewlines = allowNewlines)
     case (tok @ (_: NEWLINE_COMMA), l0) :: _ =>
