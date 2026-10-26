@@ -1,7 +1,7 @@
 package hkmc2
 package codegen
 
-import scala.collection.mutable.{Set as MutSet, Buffer}
+import scala.collection.mutable.{Set as MutSet, Buffer, LinkedHashMap}
 
 import hkmc2.utils.*, shorthands.*
 import utils.*
@@ -19,6 +19,40 @@ class FlowAnalysisBasedRewrite(
 )(using Raise) extends PolyInstantiationRewrite(constraintSolver):
 
   private case class EtaParamList(params: LoweredParamList, args: Ls[Arg])
+  
+  // the targets of each param list that eta expansion appends to `id`, with the target params dpe eliminates
+  private def etaTargetLists(id: ConcreteFunId, existingParams: Ls[LoweredParamList]): Ls[(EtaTargets, Set[Int])] =
+    def eliminableParamsOf(targets: EtaTargets): Set[Int] =
+      val paramInfos = targets.prodFuns.map(_.paramInfo)
+      assert(paramInfos.forall(_ === targets.paramInfo),
+        s"eta expansion level disagrees with its targets on arity: ${targets.pp} -> $paramInfos")
+      val eliminable = targets.prodFuns.map: target =>
+        deadParamElimSolver.eliminableParams(target.concreteId)
+      assert(eliminable.size <= 1,
+        s"eta expansion targets disagree on eliminable parameters: " +
+        s"${targets.pp} -> $eliminable")
+      eliminable.headOption.getOrElse(Set.empty)
+    end eliminableParamsOf
+    
+    etaExpansionSolver.etaExpandedFunShape.get(id).toList.flatMap: targetShape =>
+      val existingShape = existingParams.map: pl =>
+        (pl.params.size, pl.paramCountLB, pl.restParam.isDefined)
+      if targetShape.map(_.paramInfo).startsWith(existingShape) then
+        targetShape.drop(existingShape.size).map(targets => targets -> eliminableParamsOf(targets))
+      else
+        lastWords("not the same shape?")
+  
+  
+  // an eta param stands for the `i`-th param of every target, so it takes all their types
+  private def etaParamType(targets: EtaTargets, i: Int): Opt[ErasedValueType] =
+    // the params of the targets' param lists, read from their definitions, which keep up with lifting
+    def targetParams(target: ProdFun): Ls[Param] = target.exprId match
+      case (fun: TermSymbol, idx: Int) => pre.res.funSymToFunDefn(fun).params(idx).params
+      case lamId: ResultId => lamId.getResult match
+        case lam: Lambda => lam.params.params
+        case other => lastWords(s"expected lambda result, got $other")
+    val types = targets.prodFuns.toList.map(targetParams(_)(i).sym.erasedType)
+    if types.forall(_.isDefined) then S(ErasedType.Union.mk(types.flatten)) else N
   
   class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
     
@@ -66,45 +100,25 @@ class FlowAnalysisBasedRewrite(
       finally activeEtaArgss = saved
     
     private def etaParamLists(id: ConcreteFunId, existingParams: Ls[LoweredParamList]): Ls[EtaParamList] =
-      
-      
-      def eliminableParamsOf(targets: EtaTargets): Set[Int] =
-        val paramInfos = targets.prodFuns.map(_.paramInfo)
-        assert(paramInfos.forall(_ === targets.paramInfo),
-          s"eta expansion level disagrees with its targets on arity: ${targets.pp} -> $paramInfos")
-        val eliminable = targets.prodFuns.map: target =>
-          deadParamElimSolver.eliminableParams(target.concreteId)
-        assert(eliminable.size <= 1,
-          s"eta expansion targets disagree on eliminable parameters: " +
-          s"${targets.pp} -> $eliminable")
-        eliminable.headOption.getOrElse(Set.empty)
-      end eliminableParamsOf
-      
-      etaExpansionSolver.etaExpandedFunShape.get(id).toList.flatMap: targetShape =>
-        val existingShape = existingParams.map: pl =>
-          (pl.params.size, pl.paramCountLB, pl.restParam.isDefined)
-        if targetShape.map(_.paramInfo).startsWith(existingShape) then
-          targetShape.drop(existingShape.size).zipWithIndex.map:
-            case (targets, idx) =>
-              val eliminable = eliminableParamsOf(targets)
-              def etaParam(name: Str): Param =
-                Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = N))
-              // * The expanded parameters corresponding to optional parameters of the targets must
-              // * remain optional, since callers may omit their arguments.
-              def optionalEtaParam(name: Str): Param =
-                val sym = new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = N)
-                Param(FldFlags.empty.copy(opt = true), sym, N, Modulefulness.none)(N)
-              val params = (0 until targets.paramCount).iterator.filterNot(eliminable).map: i =>
-                if i < targets.requiredParamCount then etaParam(i.toString) else optionalEtaParam(i.toString)
-              .toList
-              val restParam = Option.when(targets.hasRestParam)(etaParam("rest"))
-              EtaParamList(
-                LoweredParamList(ParamListFlags.empty, params, restParam)(N),
-                params.map(p => Arg(N, p.sym.asSimpleRef)) :::
-                  restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef)),
-              )
-        else
-          lastWords("not the same shape?")
+      etaTargetLists(id, existingParams).zipWithIndex.map:
+        case ((targets, eliminable), idx) =>
+          def etaParam(name: Str, tpe: Opt[ErasedValueType]): Param =
+            Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = tpe))
+          // * The expanded parameters corresponding to optional parameters of the targets must
+          // * remain optional, since callers may omit their arguments.
+          def optionalEtaParam(name: Str, tpe: Opt[ErasedValueType]): Param =
+            val sym = new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = tpe)
+            Param(FldFlags.empty.copy(opt = true), sym, N, Modulefulness.none)(N)
+          val params = (0 until targets.paramCount).iterator.filterNot(eliminable).map: i =>
+            if i < targets.requiredParamCount then etaParam(i.toString, etaParamType(targets, i))
+            else optionalEtaParam(i.toString, etaParamType(targets, i))
+          .toList
+          val restParam = Option.when(targets.hasRestParam)(etaParam("rest", N))
+          EtaParamList(
+            LoweredParamList(ParamListFlags.empty, params, restParam)(N),
+            params.map(p => Arg(N, p.sym.asSimpleRef)) :::
+              restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef)),
+          )
     
     private def etaCall(base: Path): Result =
       Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect, N)
@@ -262,11 +276,42 @@ class FlowAnalysisBasedRewrite(
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
           case S((params, body)) =>
-            if (params is fun.params) && (body is fun.body) then fun
-            else FunDefn(fun.owner, fun.sym, fun.dSym, params, body)(fun.configOverride, fun.annotations)
+            val dSym2 = fun.dSym.subst
+            if (params is fun.params) && (body is fun.body) && (dSym2 is fun.dSym) then fun
+            else FunDefn(fun.owner, fun.sym, dSym2, params, body)(fun.configOverride, fun.annotations)
           case N => super.applyFunDefn(fun)
   
   def otherNewFunDefns: Iterable[FunDefn] = Nil
+  
+  def retypedVariables: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedValueType] = LinkedHashMap.empty
+  
+  // a function is retyped where dpe drops some of its params or eta expansion appends param lists to it;
+  // its params are read from its definition, which keeps up with lifting
+  lazy val retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncType] =
+    val res = LinkedHashMap.empty[(InstantiationId, TermSymbol), ErasedFuncType]
+    val funIds =
+      deadParamElimSolver.eliminableParamsById.keysIterator ++ etaExpansionSolver.etaExpandedFunShape.keysIterator
+    for case ConcreteId((fun: TermSymbol, _), instId) <- funIds if !res.contains(instId -> fun) do
+      val params = pre.res.funSymToFunDefn(fun).params
+      val kept = params.zipWithIndex.map: (pl, i) =>
+        val eliminable = deadParamElimSolver.eliminableParams(ConcreteId((fun, i), instId))
+        pl.params.zipWithIndex.collect:
+          case (p, j) if !eliminable(j) => p.sym.erasedType
+      val eta = etaTargetLists(ConcreteId((fun, 0), instId), params)
+      val etaLists = eta.map: (targets, eliminable) =>
+        (0 until targets.paramCount).filterNot(eliminable).map(etaParamType(targets, _)).toList
+      val ret = eta.lastOption.fold(fun.declaredResultType): (targets, _) =>
+        val results = targets.prodFuns.toList.map: target =>
+          target.exprId match
+            case (targetFun: TermSymbol, idx: Int)
+              if idx == pre.res.funSymToFunDefn(targetFun).params.size - 1
+              && !etaExpansionSolver.etaExpandedFunShape.contains(
+                ConcreteId((targetFun, 0), target.concreteId.instId)) =>
+              targetFun.declaredResultType
+            case _ => N
+        if results.forall(_.isDefined) then S(ErasedType.Union.mk(results.flatten)) else N
+      res(instId -> fun) = ErasedType.FuncRef(S(false), kept ::: etaLists, ret)
+    res
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
   
 end FlowAnalysisBasedRewrite

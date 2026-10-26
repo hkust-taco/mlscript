@@ -44,7 +44,7 @@ c(p(true))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let p$p$worker;
+//│ let p$p$worker, inlinedVal;
 //│ @private @noInline
 //│ define p$p$worker as fun p$p$worker⁰(b, eta$0$0) {
 //│   match b
@@ -73,7 +73,8 @@ c(p(true))
 //│       return 0
 //│   end
 //│ };
-//│ return p$p$worker⁰(true, 0)
+//│ set inlinedVal = p$p$worker⁰(true, 0);
+//│ return (inlinedVal as! Int⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -104,7 +105,7 @@ sumPlus(enum(3))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let enum$enum$worker;
+//│ let enum$enum$worker, inlinedVal;
 //│ @private
 //│ define enum$enum$worker as fun enum$enum$worker⁰(x, eta$0$0, eta$0$1, eta$0$2, eta$0$3, eta$0$4, eta$0$5, eta$0$6) {
 //│   let scrut, tmp;
@@ -113,10 +114,11 @@ sumPlus(enum(3))
 //│     true =>
 //│       return 1
 //│     else
-//│       let fv_tmp, inlinedVal;
+//│       let fv_tmp, inlinedVal1, inlinedVal2;
 //│       set tmp = -⁰(x, 1);
-//│       set inlinedVal = enum$enum$worker⁰(tmp, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
-//│       set fv_tmp = +⁰(x, inlinedVal);
+//│       set inlinedVal2 = enum$enum$worker⁰(tmp, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│       set inlinedVal1 = (inlinedVal2 as! Int⁰);
+//│       set fv_tmp = +⁰(x, inlinedVal1);
 //│       return +⁰(fv_tmp, 1)
 //│   end
 //│ };
@@ -147,7 +149,8 @@ sumPlus(enum(3))
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return enum$enum$worker⁰(3, undefined, undefined, undefined, undefined, undefined, undefined, undefined)
+//│ set inlinedVal = enum$enum$worker⁰(3, undefined, undefined, undefined, undefined, undefined, undefined, undefined);
+//│ return (inlinedVal as! Int⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 11
 
@@ -182,7 +185,7 @@ c(p(true))
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let p$p$worker;
+//│ let p$p$worker, inlinedVal;
 //│ @private @noInline
 //│ define p$p$worker as fun p$p$worker¹(b) {
 //│   match b
@@ -211,6 +214,7 @@ c(p(true))
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
-//│ return p$p$worker¹(true)
+//│ set inlinedVal = p$p$worker¹(true);
+//│ return (inlinedVal as! Int⁰)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1

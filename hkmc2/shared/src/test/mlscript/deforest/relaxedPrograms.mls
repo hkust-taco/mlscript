@@ -130,7 +130,7 @@ fun loopSibling() =
 //│ deforest > 	match: scrut⁶
 //│ deforest > 	fields: scrut⁶.x¹
 //│ deforest > <<< fusing <<<
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:523': unsupported `continue` to label:lbl during rewriting
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:530': unsupported `continue` to label:lbl during rewriting
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 

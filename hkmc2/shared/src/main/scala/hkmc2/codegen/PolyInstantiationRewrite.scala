@@ -41,6 +41,12 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   
   // definitions this rewrite introduces besides the specialized copies
   def otherNewFunDefns: Iterable[FunDefn]
+  
+  // updated erased value types
+  def retypedVariables: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedValueType]
+  
+  // updated erased function types
+  def retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncType]
   // ====== the abstract members ======
   
   
@@ -51,26 +57,33 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   given eState: Elaborator.State = constraintSolver.eState
   given pre: FlowPreAnalyzer = constraintSolver.preAnalyzer
   
-  /** A representation-changing rewrite must describe the new result before recursive calls are rebuilt. */
-  protected def rewrittenFunctionType(fun: TermSymbol, instId: InstantiationId): Opt[ErasedType] = fun.erasedType
-
-  // Refresh an original private function as well when a monomorphic rewrite changes its representation.
-  // Public functions cannot change their calling convention: their unknown consumers prevent such fusion.
+  // the instantiation id where the original definition of a root function is rewritten in place
+  protected final def inPlaceInstId(fun: TermSymbol): InstantiationId =
+    collector.synthesizedInstIdToFunSym.collectFirst:
+      case (instId, f) if f is fun => instId
+    .getOrElse(Nil)
+  
   private lazy val rewrittenFunctionSymbols: Map[TermSymbol, TermSymbol] =
-    val selfInstIds = collector.synthesizedInstIdToFunSym.iterator.map(_.swap).toMap
-    pre.res.rootFunDefns.toList.sortBy(_._1.uid).iterator.flatMap: (sym, fun) =>
-      val tpe = rewrittenFunctionType(sym, selfInstIds.getOrElse(sym, Nil))
-      if tpe == sym.erasedType then N
-      else
-        assert(fun.visibility is Visibility.Private)
-        val fresh = new TermSymbol(sym.k, sym.owner, sym.id, tpe)
-        fresh.sourceAliases = sym.sourceAliases
-        S(sym -> fresh)
+    pre.res.rootFunDefns.keysIterator.flatMap: sym =>
+      retypedFunctions.get(inPlaceInstId(sym) -> sym).collect:
+        case tpe if !sym.erasedType.contains(tpe) => sym -> SymbolRefresher.copyTermSymbol(sym, sym.owner, S(tpe))
     .toMap
-
-  protected def symbolMapping(instId: InstantiationId,
-      refreshed: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]): Map[Symbol, Symbol] =
-    Map.from[Symbol, Symbol](rewrittenFunctionSymbols) ++ refreshed.getOrElse(Map.empty)
+  
+  private lazy val retypedLocals: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedType] =
+    LinkedHashMap.from[(InstantiationId, ValueSymbol), ErasedType](retypedVariables) ++ retypedFunctions.filterNot: (key, _) =>
+      pre.res.rootFunDefns.contains(key._2)
+  
+  private lazy val sharedRetypedSymbols: LinkedHashMap[(InstantiationId, ValueSymbol), ValueSymbol] =
+    retypedLocals.map((key, tpe) => key -> retypedSymbol(key._2, tpe))
+  
+  private def retypedSymbol(previous: Symbol, tpe: ErasedType): ValueSymbol = (previous, tpe) match
+    case (v: VarSymbol, _) if v.erasedType.contains(tpe) => v
+    case (v: VarSymbol, tpe: ErasedValueType) => SymbolRefresher.copyVarSymbol(v, S(tpe))
+    case (t: TempSymbol, _) if t.erasedType.contains(tpe) => t
+    case (t: TempSymbol, _) => SymbolRefresher.copyTempSymbol(t, S(tpe))
+    case (t: TermSymbol, _) if t.erasedType.contains(tpe) => t
+    case (t: TermSymbol, _) => SymbolRefresher.copyTermSymbol(t, t.owner, S(tpe))
+    case _ => lastWords(s"cannot give $previous the erased type $tpe")
   
   
   final def apply(): Program =
@@ -87,7 +100,9 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
       case S(entry) => collector.funToSccGroups(entry).iterator.filterNot(_ is entry)
       case N => collector.funToSccGroups(path.last.getReferredFun.get).iterator
     for
-      instId <- solvers.iterator.flatMap(_.polyInstIds)
+      // a call into an instance whose types change needs a copy even where none of its code changes,
+      // as the original definition keeps the original types
+      instId <- solvers.iterator.flatMap(_.polyInstIds) ++ retypedVariables.keysIterator.map(_._1) ++ retypedFunctions.keysIterator.map(_._1)
       path <- instId.inits
       if path.nonEmpty && !res.contains(path)
       copied = funSymsToBeCopiedAt(path)
@@ -98,7 +113,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
           val name = path.mkFunName + s"$$${f.nme}"
           f -> (
             new BlockMemberSymbol(name, Nil, true),
-            new TermSymbol(Fun, N, Tree.Ident(name), erasedType = rewrittenFunctionType(f, path)))
+            new TermSymbol(Fun, N, Tree.Ident(name), erasedType = retypedFunctions.get(path -> f).orElse(f.erasedType)))
         .toMap
     res
   end newPolyFnSyms
@@ -132,18 +147,28 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   // the rewriter of a copy of `params` and `body`, which maps symbol defined in `initMapping`
   // and refreshes symbols bound in `body` so that a copy never rebinds an original symbol
   protected final def mkCopyRewriter(instId: InstantiationId, params: Ls[LoweredParamList], body: Block, initMapping: Map[LocalVarSymbol, LocalVarSymbol]): Rewriter =
-    val mapping = MutMap.from(initMapping)
-    val walker = SymbolRefresherWalker(mapping.asInstanceOf)
+    val mapping = MutMap.from[Symbol, Symbol](initMapping)
+    val walker = SymbolRefresherWalker(mapping)
     params.foreach(walker.refreshParamList)
     walker.applyBlock(body)
-    mkRewriter(instId, S(mapping))
+    for
+      case sym: ValueSymbol <- mapping.keys.toList.sortBy(_.uid)
+      tpe <- retypedLocals.get(instId -> sym).orElse(retypedLocals.get(Nil -> sym))
+    do sym match
+      case sym: LocalVarSymbol if initMapping.contains(sym) =>
+        assert(initMapping(sym).erasedType.contains(tpe), s"$sym is mapped to ${initMapping(sym)}, which lacks its type $tpe")
+      case _ => mapping(sym) = retypedSymbol(mapping(sym), tpe)
+    mkRewriter(instId, S(mapping.asInstanceOf[collection.Map[LocalVarSymbol, LocalVarSymbol]]))
 
 
   // rewrites the program as seen from one instantiation path `instId`: in place if `refreshSymbolMappingForCopy` is `N`,
   // otherwise into a copy whose symbols are refreshed by the map
   // helps subclass compute the symbol for the instantiated fun defns
   protected abstract class InstantiationRewriter(val instId: InstantiationId, val refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]])
-    extends SymbolMapTransformer(symbolMapping(instId, refreshSymbolMappingForCopy)):
+    extends SymbolMapTransformer(
+      Map.from[Symbol, Symbol](rewrittenFunctionSymbols)
+      ++ sharedRetypedSymbols.collect { case ((id, sym), retyped) if id.isEmpty || id == instId => sym -> retyped }
+      ++ refreshSymbolMappingForCopy.getOrElse(Map.empty)):
     
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn
     

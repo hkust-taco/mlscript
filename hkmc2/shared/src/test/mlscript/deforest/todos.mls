@@ -52,12 +52,12 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ @private
 //│ define test$test as fun test$test⁰(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
-//│   return x(tmp11, t, tmp12, tmp13, tmp14)
+//│   return (x(tmp11, t, tmp12, tmp13, tmp14) as! Int⁰)
 //│ };
 //│ @private
 //│ define test$test1 as fun test$test¹(x) {
 //│   let t, a, arg$AA$0$, tmp11, tmp12, tmp13, tmp14, arg$AA$0$1, arg$AA$0$2;
-//│   return x(arg$AA$0$1, arg$AA$0$2, arg$AA$0$, a, tmp11, t, tmp12, tmp13, tmp14)
+//│   return (x(arg$AA$0$1, arg$AA$0$2, arg$AA$0$, a, tmp11, t, tmp12, tmp13, tmp14) as! Int⁰)
 //│ };
 //│ @affine(1) @private
 //│ define test$x_B as fun test$x_B⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
@@ -234,7 +234,7 @@ f(D(1))
 //│ deforest > 	match: d⁰
 //│ deforest > 	fields: d⁰.x³
 //│ deforest > <<< fusing <<<
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:358': deforestation copying the definition O
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:299': deforestation copying the definition O
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:O for ClsLikeDefn is a free variable for this block
@@ -252,7 +252,7 @@ E(y).get()
 //│ deforest > AA⁰(0) ->
 //│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:358': deforestation copying the definition E
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'Rewrite.scala:299': deforestation copying the definition E
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: BlockMemberSymbol member:E for ClsLikeDefn is a free variable for this block

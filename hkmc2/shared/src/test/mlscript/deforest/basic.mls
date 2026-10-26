@@ -84,7 +84,7 @@ f(p())
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
 //│   let y, arg$Y$0$, arg$X$0$;
-//│   return x(arg$X$0$, arg$Y$0$, y)
+//│   return (x(arg$X$0$, arg$Y$0$, y) as! O⁰)
 //│ };
 //│ @affine(1) @private
 //│ define f$x_X as fun f$x_X⁰(X_a)(fv_arg$X$0$, fv_arg$Y$0$, fv_y) {

@@ -15,6 +15,10 @@ sealed abstract class FinalDest
 case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends FinalDest
 case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
 
+extension (f: SelField) def erasedFieldType(using Raise): Opt[ErasedValueType] = f match
+  case tSym: TermSymbol => tSym.mapErasedValueType
+  case _: Int => N
+
 class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Config, Elaborator.Ctx)
   extends FlowAnalysisSolverResult:
   given preAnalyzer: FlowPreAnalyzer = constraintSolver.preAnalyzer
@@ -118,24 +122,48 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
     end mergeDests
 
     val prodRoots =
-      for
-        ctor <- constraintSolver.ctorsWithDests
-        if mergeDests(ctor, ctor.dests.toSet).isEmpty
-      yield ctor
+      val unconsumed = constraintSolver.collector.allRealCtors.iterator.filter: ctor =>
+        ctor.instantiationId.isDefined && ctor.dests.isEmpty
+      val unmergeable =
+        for
+          ctor <- constraintSolver.ctorsWithDests
+          if mergeDests(ctor, ctor.dests.toSet).isEmpty
+        yield ctor
+      unconsumed ++ unmergeable
     val consRoots =
       for
         dtor <- constraintSolver.consumersWithSrcs
         if dtor.srcs.contains(UnknownProd)
       yield dtor
 
-    val result = FlowWebComputation[Ctor, ConcreteCtorConsumer](
-      p => p.dests.collect:
-        case c: ConcreteCtorConsumer => c,
-      c => c.srcs.collect:
-        case p: Ctor => p,
-      prodRoots,
-      consRoots,
-    )
+    val result =
+      // constructors stored in `c`'s field that must stay unfused when `c` is unfused,
+      // as `c`'s fields keep their declared types
+      def storedCtorsKeptUnfused(c: Ctor): Iterator[Ctor] =
+        for
+          (field, arg) <- c.args.iterator
+          stored <- arg match
+            case stored: Ctor => Iterator.single(stored)
+            case v: StratVar => v.lowerBounds.iterator.collect:
+              case stored: Ctor => stored
+            case _ => Iterator.empty
+          if mergeDests(stored, stored.dests.toSet) match
+            case S(_: FinalDestMatch) =>
+              field.erasedFieldType.exists: tpe =>
+                !ErasedType.needsCast(
+                  ErasedType.Function(S(false)).canonicalize,
+                  tpe.canonicalize).contains(false)
+            case _ => true
+        yield stored
+      FlowWebComputation[Ctor, ConcreteCtorConsumer](
+        p => p.dests.collect:
+          case c: ConcreteCtorConsumer => c,
+        c => c.srcs.collect:
+          case p: Ctor => p,
+        storedCtorsKeptUnfused,
+        prodRoots,
+        consRoots,
+      )
     val toRemoveCtor = result.markedProducers
     val toRemoveDtor = result.markedConsumers
 

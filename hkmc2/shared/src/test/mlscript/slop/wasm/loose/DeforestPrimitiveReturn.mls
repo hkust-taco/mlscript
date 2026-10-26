@@ -1,0 +1,47 @@
+:.
+:sir
+:siret
+:deforest mono
+:lift
+
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ import "..." as Predef; end
+// [Astra] Replacing a fused match with a call must preserve its unboxed result representation.
+// [Astra] The generated call currently has an unknown result, which cannot be coerced to Int32.
+:fixme
+:expect 42
+data class Empty()
+private fun f(n: Int32): Int32 =
+  let b = Empty()
+  if b is Empty then n else n
+wasm.ref.i31(f(wasm.i32.const(42)))
+//│ deforest > >>> fusing >>>
+//│ deforest > Empty⁰() ->
+//│ deforest > 	match: b⁰
+//│ deforest > <<< fusing <<<
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int32, tmp1: Int32, $b_Empty, $b_rest;
+//│ @affine(1) @private
+//│ define $b_Empty as fun $b_Empty⁰()(fv_n: Int32): ? {
+//│   return fv_n
+//│ };
+//│ @private
+//│ define $b_rest as fun $b_rest⁰(): ? {
+//│   return null
+//│ };
+//│ @private
+//│ define f⁰ as fun f¹(n: Int32): Int32 {
+//│   let b: Function⁰;
+//│   set b = $b_Empty⁰();
+//│   return b(n)
+//│ };
+//│ @data
+//│ define Empty¹ as class Empty² {
+//│   constructor Empty⁰
+//│ };
+//│ set tmp = wasm⁰.i32⁰.const⁰(42);
+//│ set tmp1 = f¹(tmp);
+//│ return wasm⁰.ref⁰.i31⁰(tmp1)
+//│ Wasm result:
+//│ = 42

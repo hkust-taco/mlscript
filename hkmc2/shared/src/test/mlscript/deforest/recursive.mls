@@ -976,7 +976,7 @@ f(3)
 //│ let f$a_A, f$a_A1, f$g, f$f, f$g1;
 //│ @private
 //│ define f$g as fun f$g⁰(a) {
-//│   return a(undefined, undefined, undefined)
+//│   return (a(undefined, undefined, undefined) as! Int⁰)
 //│ };
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
@@ -992,7 +992,7 @@ f(3)
 //│ };
 //│ @private
 //│ define f$g1 as fun f$g¹(a) {
-//│   return a(undefined, undefined, undefined)
+//│   return (a(undefined, undefined, undefined) as! Int⁰)
 //│ };
 //│ @affine(1) @private
 //│ define f$a_A as fun f$a_A¹(A_x)(fv_arg$A$0$, fv_y, fv_tmp) {
