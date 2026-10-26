@@ -7,9 +7,23 @@ import Term.*
 
 
 object ResolutionWorkspace:
+  enum DependencyMode:
+    case Bindings, UnguardedBindings, Instances
+
+  /** Recomputable summaries never establish graph identity or install an edge.
+    * Keep only the consumer's observations: inheriting a memoized answer is an
+    * optimization, not a condition of observing the imported graph correctly.
+    */
+  final class Memo[K, V]:
+    private val entries = mutable.Map.empty[(ResolutionContext, K), V]
+    def get(key: K)(using context: ResolutionContext): Opt[V] = entries.get((context, key))
+    def update(key: K, value: V)(using context: ResolutionContext): Unit = entries((context, key)) = value
+    def getOrElseUpdate(key: K, value: => V)(using context: ResolutionContext): V =
+      entries.getOrElseUpdate((context, key), value)
+
   /** A pending source summary is a one-shot computation, not an inference
-    * edge. Observers are detached once it completes. No importer inherits these
-    * continuations.
+    * edge. Observers are detached once it completes, or when the unit ends with
+    * an unresolved source error. No importer inherits these continuations.
     */
   final class PendingDependencies:
     private val listeners = mutable.ArrayBuffer.empty[(ResolutionContext, ShapeListener[Set[VarSymbol]])]
@@ -33,3 +47,34 @@ object ResolutionWorkspace:
       cancel()
       callbacks.foreach: (context, listener) =>
         listener(binders)(using context)
+
+/** The mutable work of the current compilation. No graph node or listener may
+  * capture this object: callbacks obtain the active consumer's workspace through
+  * ResolutionContext. Compiled artifacts release it after erasure and lowering.
+  */
+private[hkmc2] final class ResolutionWorkspace(owner: Elaborator.State):
+  import ResolutionWorkspace.*
+  val pendingDependencies = mutable.Map.empty[(ResolutionContext, TypeResolution), PendingDependencies]
+  val contexts = mutable.Map.empty[ResolutionContext, ResolutionContext]
+  var reporter: Raise | Null = null
+  var traceLogger: TraceLogger = TraceLogger.silent(using new DebugPrinter(S(owner)))
+  val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext), InterfaceExposure.Input]
+  val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
+  val resolutionProblems =
+    mutable.LinkedHashMap.empty[Identity[NewSel | App], mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]
+  // The references, selections, and instantiations written in this unit's current block,
+  // in elaboration order, with the lexical scope in which each is written (see
+  // ResolutionContext.checkAccess). Its references without explicit bindings are also
+  // the worklist of NewResolver.settleUnboundReferences, which runs before checkAccess.
+  val accessSites = mutable.ArrayBuffer.empty[(NewResolvable | New, SrcScope)]
+  // What flow has revealed about the implicit namespaces of this unit's references
+  // (see NewResolver.unresolvedRef). Unlike the block-local tables, this outlives the
+  // reference's block: a later worksheet block can still reveal a namespace, which
+  // must be diagnosed against the settled reference.
+  val implicitNamespaces = mutable.HashMap.empty[Identity[UnresolvedRef], ImplicitNamespaces]
+  val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
+  val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
+  val typeReferences = new DeclaredType.References(substitutions)
+  val membersCache = new Memo[(TermShape, MemberKey), MemberLookup]
+  val dependencySummaries = new Memo[(TypeResolution, DependencyMode), Opt[Set[VarSymbol]]]
+  val regularTypes = new Memo[TypeResolution, Bool]

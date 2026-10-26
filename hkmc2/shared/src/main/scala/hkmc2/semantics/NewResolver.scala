@@ -27,6 +27,7 @@ final class NewResolver(prelude: Ctx, config: Config):
   private given (using ResolutionContext): Elaborator.State = rctx.owner
   private val newResolution = config.language.useNewResolution
   import ResolutionContext.Listener
+  import ResolutionWorkspace.DependencyMode
   
   private def appShapes(using rs: ResolutionContext) = rs.state.appShapes
   private def newShapes(using rs: ResolutionContext) = rs.state.newShapes
@@ -240,8 +241,6 @@ final class NewResolver(prelude: Ctx, config: Config):
 
   // All three queries solve the same source-graph equations, but only instance
   // support follows retained references and only guardedness stops at constructors.
-  private enum DependencyMode:
-    case Bindings, UnguardedBindings, Instances
 
   // N is the unbounded set: binding dependencies never produce it.
   private type Binders = Opt[Set[VarSymbol]]
@@ -253,14 +252,11 @@ final class NewResolver(prelude: Ctx, config: Config):
       : Either[Set[TypeResolution], Binders] =
     val throughReferences = mode == DependencyMode.Instances
     val unguardedOnly = mode == DependencyMode.UnguardedBindings
-    val bindingCache = if unguardedOnly then rctx.state.unguardedTypeDependencies else rctx.state.typeDependencies
     def cached(res: TypeResolution)(using ResolutionContext): Opt[Binders] =
-      if throughReferences then rctx.state.typeInstanceDependencies.get(res)
-      else bindingCache.get(res).map(S(_))
+      rctx.state.workspace.dependencySummaries.get((res, mode))
     def store(res: TypeResolution, binders: Binders)(using ResolutionContext): Unit =
-      if throughReferences then rctx.state.typeInstanceDependencies(res) = binders
-      else bindingCache(res) = binders.getOrElse(
-        lastWords("Binding dependencies are finite: only template hosts are unbounded"))
+      assert(throughReferences || binders.nonEmpty, "Binding dependencies are finite")
+      rctx.state.workspace.dependencySummaries((res, mode)) = binders
     cached(resolution) match
     case S(binders) => R(binders)
     case N =>
@@ -398,7 +394,7 @@ final class NewResolver(prelude: Ctx, config: Config):
     * argument-part selection and absorption across recursive steps can make a
     * rejected cycle finite. Do not describe rejection as proof of non-regularity.
     */
-  private def regularType(root: TypeResolution)(using ResolutionContext): Bool = rctx.state.regularTypes.get(root) match
+  private def regularType(root: TypeResolution)(using ResolutionContext): Bool = rctx.state.workspace.regularTypes.get(root) match
     case S(result) => result
     case N =>
       val visited = mutable.LinkedHashSet.empty[TypeResolution]
@@ -487,7 +483,7 @@ final class NewResolver(prelude: Ctx, config: Config):
       // when an enclosing interface guards the use of an invalid alias.
       visited.foreach(checkGuarded(_, Nil))
       if !guarded then
-        rctx.state.regularTypes(root) = false
+        rctx.state.workspace.regularTypes(root) = false
         return false
       def dependencies(res: TypeResolution): Set[VarSymbol] = typeDependencies(res) match
         case R(binders) => binders
@@ -533,7 +529,7 @@ final class NewResolver(prelude: Ctx, config: Config):
       val result = invalid.isEmpty
       // Failure belongs to this reachable graph, not to unrelated children in
       // it. A later root may observe a regular subgraph of a rejected alias.
-      rctx.state.regularTypes(root) = result
+      rctx.state.workspace.regularTypes(root) = result
       result
 
   /** Wait for the source graph before observing a substituted interface. The
@@ -560,16 +556,16 @@ final class NewResolver(prelude: Ctx, config: Config):
       case L(_) =>
         val origin = rctx
         val key = (origin, resolution)
-        rctx.state.pendingDependencies.get(key) match
+        rctx.state.workspace.pendingDependencies.get(key) match
           case S(pending) => pending.listen(listener)
           case N =>
             val pending = new ResolutionWorkspace.PendingDependencies
-            rctx.state.pendingDependencies(key) = pending
+            rctx.state.workspace.pendingDependencies(key) = pending
             pending.listen(listener)
             def retry(): Unit = if pending.isPending then
               typeDependencies(resolution)(using origin) match
                 case R(binders) =>
-                  origin.state.pendingDependencies.remove(key)
+                  origin.state.workspace.pendingDependencies.remove(key)
                   pending.complete(binders)
                 case L(unresolved) => unresolved.foreach: dependency =>
                   if pending.watched.add(dependency) then
@@ -2903,7 +2899,7 @@ final class NewResolver(prelude: Ctx, config: Config):
   def constructorPattern(res: Pattern.Constructor)(using ResolutionContext): Unit = if newResolution then
     val lhs = res.target
     // The namespaces of a pattern head come from its scrutinees (see scrutineeNamespaces).
-    chainRoot(lhs).foreach(ref => rctx.state.implicitNamespaces.get(new Identity(ref)).foreach(_.scrutinized = true))
+    chainRoot(lhs).foreach(ref => rctx.state.workspace.implicitNamespaces.get(new Identity(ref)).foreach(_.scrutinized = true))
     def select(sym: DefinitionSymbol[?])(using ResolutionContext): Bool =
       lhs.withoutCaptures match
         case trm: NewResolvable =>
@@ -3309,7 +3305,7 @@ final class NewResolver(prelude: Ctx, config: Config):
   private def scrutineeNamespaces(scrutinee: Shape, pattern: Pattern)(using ResolutionContext): Unit = pattern match
     case ctor: Pattern.Constructor => (chainRoot(ctor.target), scrutinee) match
       case (S(ref), value: TermShape) =>
-        rctx.state.implicitNamespaces.get(new Identity(ref)).foreach(valueNamespaces(ref, _, value))
+        rctx.state.workspace.implicitNamespaces.get(new Identity(ref)).foreach(valueNamespaces(ref, _, value))
       case _ => ()
     case Pattern.Alias(inner, _) => scrutineeNamespaces(scrutinee, inner)
     case Pattern.Annotated(inner, _) => scrutineeNamespaces(scrutinee, inner)
@@ -3615,7 +3611,7 @@ final class NewResolver(prelude: Ctx, config: Config):
     */
   def unresolvedRef(ref: UnresolvedRef, scope: SrcScope)(using ResolutionContext): Unit =
     if ref.implicitNamespacing then
-      rctx.state.implicitNamespaces(new Identity(ref)) = ImplicitNamespaces(scope)
+      rctx.state.workspace.implicitNamespaces(new Identity(ref)) = ImplicitNamespaces(scope)
       publishActivated(ref, ref.namespaceProbe)
     else ref.prefixes.foreach(resolveThrough(ref, _, scope))
 
@@ -3664,7 +3660,7 @@ final class NewResolver(prelude: Ctx, config: Config):
   private def requireTypeNamespaces(probe: NamespaceProbe, tpe: DeclaredType)(using ResolutionContext): Unit =
     // Imported graphs can carry the probes of other units' references to this
     // unit's types. Those units settled their references by themselves.
-    rctx.state.implicitNamespaces.get(new Identity(probe.ref)).foreach: namespaces =>
+    rctx.state.workspace.implicitNamespaces.get(new Identity(probe.ref)).foreach: namespaces =>
       typeNamespaces(probe.ref, namespaces, tpe, writtenWitness(tpe), refine = true, provided = false)
 
   /** `value` reaches the scrutinee of the constructor pattern whose head is `ref`. Like a value
@@ -3922,10 +3918,10 @@ final class NewResolver(prelude: Ctx, config: Config):
   def settleUnboundReferences()(using ResolutionContext): Unit =
     val pending = rctx.unboundReferences
     pending.foreach: ref =>
-      rctx.state.implicitNamespaces.get(new Identity(ref)).foreach(fallBack(ref, _))
+      rctx.state.workspace.implicitNamespaces.get(new Identity(ref)).foreach(fallBack(ref, _))
     pending.foreach: ref =>
       val name = ref.id.name
-      val namespaces = rctx.state.implicitNamespaces.get(new Identity(ref))
+      val namespaces = rctx.state.workspace.implicitNamespaces.get(new Identity(ref))
       namespaces.foreach(_.settled = true)
       if !rctx.hasError(ref) then
         if ref.resolvedMembers.isEmpty && ref.dynamicPrefixes.isEmpty then

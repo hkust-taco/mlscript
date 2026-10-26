@@ -24,7 +24,7 @@ class CanonicalTypeTest extends AnyFunSuite:
       val repeated = tree()
       assert(first == repeated && first.hashCode == repeated.hashCode)
       assert(first.observation == repeated.observation)
-    assert(context.state.typeReferences.size == 65)
+    assert(context.state.workspace.typeReferences.size == 65)
 
   test("cross-unit equality and import traverse shared children without expanding paths"):
     given owner: Elaborator.State = new Elaborator.State
@@ -48,9 +48,9 @@ class CanonicalTypeTest extends AnyFunSuite:
       val repeated = DeclaredType(resolution, Map(b -> original, a -> independent), TypeSubstitution.empty, true)(N)(using consumer)
       assert(imported == repeated)
       assert(imported.observation == repeated.observation)
-    assert(consumer.state.typeReferences.size == 66)
-    assert(consumer.state.typeReferences.importedCount == 130)
-    assert(source.state.typeReferences.size == 65)
-    assert(source.state.typeReferences.importedCount == 0)
-    assert(other.state.typeReferences.size == 65)
-    assert(other.state.typeReferences.importedCount == 0)
+    assert(consumer.state.workspace.typeReferences.size == 66)
+    assert(consumer.state.workspace.typeReferences.importedCount == 130)
+    assert(source.state.workspace.typeReferences.size == 65)
+    assert(source.state.workspace.typeReferences.importedCount == 0)
+    assert(other.state.workspace.typeReferences.size == 65)
+    assert(other.state.workspace.typeReferences.importedCount == 0)

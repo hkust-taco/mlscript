@@ -317,7 +317,7 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
 
   private def rebuilt(bindings: Map[VarSymbol, DeclaredType], instances: TypeSubstitution, positive: Bool,
       plans: Opt[TypeNamespaces])(using ResolutionContext): DeclaredType =
-    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive), bindings)(origin, plans, interpretation)
+    new DeclaredType(rctx.state.workspace.typeReferences(resolution, bindings, instances, positive), bindings)(origin, plans, interpretation)
 
   /** Instantiation changes references to source binders, never expands their bounds.
     * A reference already interpreted in another call retains that interpretation.
@@ -439,7 +439,7 @@ object DeclaredType:
 
   def apply(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType],
       instances: TypeSubstitution, positive: Bool)(origin: Opt[TypeInterfaceReason])(using ResolutionContext): DeclaredType =
-    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive), bindings)(origin, N, N)
+    new DeclaredType(rctx.state.workspace.typeReferences(resolution, bindings, instances, positive), bindings)(origin, N, N)
 
   /** Most comparisons stop at reference identity or canonical binding identity.
     * Separate units may retain equivalent DAGs: use a worklist for that boundary,

@@ -355,7 +355,7 @@ end MarkedShape
 sealed trait TermShape extends Shape, ShapeLike:
   // Cache all lookup outcomes per shape, without materializing all inherited members.
   final def getMember(name: MemberKey)(using state: ResolutionContext): MemberLookup =
-    state.state.membersCache.getOrElseUpdate((this, name), getMemberImpl(name))
+    state.state.workspace.membersCache.getOrElseUpdate((this, name), getMemberImpl(name))
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup
   /** Lookup on this shape as reached through the receiver path `receiver`.
     * Shapes whose members are declared by a nominal class override this to

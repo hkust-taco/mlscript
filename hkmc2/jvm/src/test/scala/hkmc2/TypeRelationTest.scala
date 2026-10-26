@@ -89,12 +89,12 @@ class TypeRelationTest extends AnyFunSuite:
         host.publish(value)
         h.resolver.constrainTypes(ContextualType(current, Nil), ContextualType(current, Nil), N)
       (1 to 10).foreach(_ => step())
-      val before = (h.state.state.typeReferences.size, h.state.allocatedShapeViewCount, host.currentShapes.size)
+      val before = (h.state.state.workspace.typeReferences.size, h.state.allocatedShapeViewCount, host.currentShapes.size)
       val observation = current.observation
       (1 to 1000).foreach: _ =>
         step()
         assert(current.observation == observation)
-      assert((h.state.state.typeReferences.size, h.state.allocatedShapeViewCount, host.currentShapes.size) == before)
+      assert((h.state.state.workspace.typeReferences.size, h.state.allocatedShapeViewCount, host.currentShapes.size) == before)
       assert(host.currentShapes.size <= 2)
 
   test("permuting equal arguments retains two observations without growing projection views"):
@@ -115,10 +115,10 @@ class TypeRelationTest extends AnyFunSuite:
       host.publish(h.resolver.instanceShape(h.resolver.selectArgument(current, true)))
       arguments = arguments.swap
     (1 to 10).foreach(_ => step())
-    val before = (h.state.state.typeReferences.size, h.state.allocatedShapeViewCount)
+    val before = (h.state.state.workspace.typeReferences.size, h.state.allocatedShapeViewCount)
     (1 to 1000).foreach(_ => step())
     assert(host.currentShapes.size == 2)
-    assert((h.state.state.typeReferences.size, h.state.allocatedShapeViewCount) == before)
+    assert((h.state.state.workspace.typeReferences.size, h.state.allocatedShapeViewCount) == before)
 
   test("reference exit and reentry agree with value transport for wildcard and explicit sites"):
     // Check both publication orders and every combination of wildcard/explicit
