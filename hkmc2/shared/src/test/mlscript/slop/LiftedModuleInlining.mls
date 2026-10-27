@@ -18,6 +18,10 @@ Captures.Nested.run(3)
 //│ = 42
 
 // An imported alias must also preserve the enclosing receiver when calling read directly.
+:soir
 :expect 42
 Captures.Nested.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver; set receiver = Captures⁰; return receiver.value⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42

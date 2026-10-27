@@ -97,6 +97,7 @@ Outer.Mid.h(42)
 
 // Inlining a module nested in an instance must preserve its captured outer receiver.
 // This is independent of private storage: both the module and its selected field are public.
+:soir
 :expect 107
 class InstanceModules with
   val value = 107
@@ -104,5 +105,24 @@ class InstanceModules with
     fun read() = value
 let instanceModules = new InstanceModules
 instanceModules.Nested.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver;
+//│ define InstanceModules⁰ as class InstanceModules¹ {
+//│   val value⁰;
+//│   constructor() {
+//│     define value⁰ as val value¹ = 107;
+//│     define Nested⁰ as class Nested¹
+//│     module Nested² {
+//│       method read⁰ = fun read¹() {
+//│         return InstanceModules¹.this.value¹
+//│       }
+//│     };
+//│     end
+//│   }
+//│ };
+//│ set instanceModules⁰ = new InstanceModules¹();
+//│ set receiver = instanceModules⁰;
+//│ return receiver.value¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 107
 //│ instanceModules = InstanceModules { value: 107, Nested: class Nested }

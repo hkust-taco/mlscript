@@ -54,7 +54,7 @@ case class Scope
   
   private def thisError(thisSym: InnerSymbol)(using Raise): Str =
     raise:
-      InternalError(msg"`this` not in scope: ${thisSym.toString}" -> N :: Nil,
+      InternalError(msg"Receiver for '${thisSym.nme}' is not in scope" -> thisSym.toLoc :: Nil,
         extraInfo = Some(this, thisSym),
         source = Diagnostic.Source.Compilation)
     "‹MISSING_THIS›"
@@ -76,22 +76,13 @@ case class Scope
   
   def findThis_!(thisSym: InnerSymbol)(using Raise): Str =
     // println(s"findThis_! $thisSym")
-    def getParent = parent.fold(
-      if thisSym.isInstanceOf[TopLevelSymbol]
-      // * TopLevelSymbol scopes are special and not nested in codegen `Scope`s
-      // * to avoid needlessly generating new variable names in separate blocks.
-      then "this"
-      else thisError(thisSym)
-    )
-    curThis match
-    case S(S(sym: TopLevelSymbol)) if sym === State.globalThisSymbol =>
-      // `this` at the top level evaluates to `undefined` in strict mode.
-      // We need this because we generate some code that uses `this`/`globalThis`,
-      // for example the symbol loading code.
-      "globalThis"
-    case S(S(`thisSym`)) => "this" // no need to qualify `this`
-    case S(_) => getParent(_.findThisProxy_!(thisSym))
-    case N => getParent(_.findThis_!(thisSym))
+    // Compilation-unit receivers denote the global object. The scope we reached
+    // does not determine the requested receiver: an escaped class receiver must fail.
+    if thisSym.isInstanceOf[TopLevelSymbol] then "globalThis"
+    else curThis match
+      case S(S(`thisSym`)) => "this" // no need to qualify `this`
+      case S(_) => parent.fold(thisError(thisSym))(_.findThisProxy_!(thisSym))
+      case N => parent.fold(thisError(thisSym))(_.findThis_!(thisSym))
   
   def findThisProxy_!(thisSym: InnerSymbol)(using Raise): Str =
     // println(s"findThisProxy_! $thisSym")
@@ -110,10 +101,13 @@ case class Scope
   def nestRebindThis[R](thisSym: Opt[InnerSymbol])(k: Scope ?=> R): (Opt[Str], R) =
     val nested = Scope(R(this), S(thisSym), MutMap.empty, MutMap.empty)
     val res = k(using nested)
-    getOuterThisScope match
+    // A proxy emitted here captures this scope's JavaScript `this`. Returning a
+    // more distant receiver would rebind its proxy to an intervening class or function.
+    // Ancestor proxies are emitted when their own receiver context is processed.
+    getThisScope match
     case N => (N, res)
-    case S(outer) =>
-      (if outer.thisProxyAccessed then S(outer.thisProxy) else N, res)
+    case S(current) =>
+      (if current.thisProxyAccessed then S(current.thisProxy) else N, res)
   
   
   def inScope(name: Str): Bool =

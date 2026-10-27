@@ -1,0 +1,162 @@
+:.
+:js
+
+
+// Each instance has its own nested modules. Qualified calls must substitute the
+// enclosing instance as well as the intermediate module receivers.
+class ReceiverOwner(val value: Int) with
+  module Middle with
+    val extra = 1
+    module Inner with
+      @annotations.inline
+      fun read() = value + extra
+      @annotations.inline
+      fun after(f) =
+        f()
+        value + extra
+    @annotations.inline
+    fun forward() = Inner.read()
+let firstOwner = new ReceiverOwner(40)
+let secondOwner = new ReceiverOwner(50)
+//│ firstOwner = ReceiverOwner(40)
+//│ secondOwner = ReceiverOwner(50)
+
+:soir
+:expect 41
+firstOwner.Middle.Inner.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver; set receiver = firstOwner⁰; return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41
+
+:soir
+:expect 51
+secondOwner.Middle.Inner.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver; set receiver = secondOwner⁰; return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 51
+
+// Inlining a forwarding method must retain the path needed to inline its callee.
+:soir
+:expect 41
+firstOwner.Middle.forward()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver; set receiver = firstOwner⁰; return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41
+
+// A detached module retains its original outer instance. Its alias does not
+// provide a path back to that instance, so this call must stay intact.
+let detached = firstOwner.Middle.Inner
+//│ detached = class Inner
+
+:soir
+:expect 41
+detached.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return detached⁰.read⁰()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41
+
+// The receiver is chosen before the method runs. Mutating the caller's variable
+// from inside the method must not redirect the inlined body's outer-field read.
+let currentOwner = firstOwner
+fun switchOwner() = set currentOwner = secondOwner
+//│ currentOwner = ReceiverOwner(40)
+
+:soir
+:expect 41
+currentOwner.Middle.Inner.after(switchOwner)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver;
+//│ set receiver = currentOwner⁰;
+//│ set currentOwner⁰ = secondOwner⁰;
+//│ return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41
+
+:expect 51
+currentOwner.Middle.Inner.read()
+//│ = 51
+
+
+// An inherited nested definition still captures the base-class receiver of this instance.
+class DerivedReceiver extends ReceiverOwner(60)
+let derivedReceiver = new DerivedReceiver
+//│ derivedReceiver = DerivedReceiver { value: 60, Middle: class Middle { extra: 1, Inner: class Inner } }
+
+:soir
+:expect 61
+derivedReceiver.Middle.Inner.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver; set receiver = derivedReceiver⁰; return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 61
+
+
+// A getter supplying the receiver prefix must run once even when both the
+// enclosing instance and an intermediate module are referenced by the copied body.
+let receiverLookups = 0
+class ReceiverProvider with
+  fun chosen =
+    set receiverLookups += 1
+    firstOwner
+let provider = new ReceiverProvider
+//│ provider = ReceiverProvider
+//│ receiverLookups = 0
+
+:soir
+:expect 41
+provider.chosen.Middle.Inner.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver; set receiver = provider⁰.chosen⁰; return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41
+
+:expect 1
+receiverLookups
+//│ = 1
+
+
+// The containing module of an alias is not the nested module's captured owner.
+module Aliases with
+  val value = 999
+  val saved = firstOwner.Middle.Inner
+
+:soir
+:expect 41
+Aliases.saved.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return Aliases⁰.saved⁰.read⁰()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41
+
+
+// Instance and companion receivers have distinct symbols even when their source
+// names and member names coincide.
+class PairedReceiver(val value: Int) with
+  module Nested with
+    fun read() = value
+module PairedReceiver with
+  val value = 1000
+  module Nested with
+    fun read() = value
+let pairedReceiver = new PairedReceiver(7)
+//│ pairedReceiver = PairedReceiver(7)
+
+:soir
+:expect 7
+pairedReceiver.Nested.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver; set receiver = pairedReceiver⁰; return receiver.value¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 7
+
+:soir
+:expect 1000
+PairedReceiver.Nested.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return PairedReceiver⁰.value²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1000
