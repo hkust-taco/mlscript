@@ -17,16 +17,16 @@ fun foo(h): Object =
     module A
     A
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.17: 	    module A
+//│ ║  l.+6: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.14: 	    module A
+//│ ║  l.+3: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.14: 	    module A
+//│ ║  l.+3: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.17: 	    module A
+//│ ║  l.+6: 	    module A
 //│ ╙──      	           ^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo;

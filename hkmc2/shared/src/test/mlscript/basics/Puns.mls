@@ -48,7 +48,7 @@ if r is
 if r is
   a: x then x
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (infix operator ':').
-//│ ║  l.49: 	  a: x then x
+//│ ║  l.+2: 	  a: x then x
 //│ ╙──      	  ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -90,7 +90,7 @@ foo(:a)
 :todo // would mean `val a = ‹the old a›`?
 val =a
 //│ ╔══[PARSE ERROR] Expected expression after 'val' binding keyword; found '=' keyword instead
-//│ ║  l.91: 	val =a
+//│ ║  l.+1: 	val =a
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -98,7 +98,7 @@ val =a
 :re
 let =a
 //│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding keyword; found '=' keyword instead
-//│ ║  l.99: 	let =a
+//│ ║  l.+1: 	let =a
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

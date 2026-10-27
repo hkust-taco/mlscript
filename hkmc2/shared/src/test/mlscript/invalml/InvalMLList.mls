@@ -45,13 +45,13 @@ fun mapi = s =>
       i := !(i) + 1
       f(!(i), x)
 //│ ╔══[COMPILATION ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
-//│ ║  l.43: 	    let i = r.ref 0
+//│ ║  l.+4: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.44: 	    f => map(s) of x =>
+//│ ║  l.+5: 	    f => map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.45: 	      i := !(i) + 1
+//│ ║  l.+6: 	      i := !(i) + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.46: 	      f(!(i), x)
+//│ ║  l.+7: 	      f(!(i), x)
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('f) ->{'E1} (List[in ⊥ out 'B])  <:  ((Int, A) ->{E} (A)) ->{E} (List[in ⊥ out A])
 //│ ╟── because: cannot constrain  'E1  <:  E

@@ -48,10 +48,10 @@ Foo
 :e
 Foo.b
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.49: 	Foo.b
+//│ ║  l.+1: 	Foo.b
 //│ ║        	^^^^^
 //│ ╟── Class value does not contain member 'b'
-//│ ║  l.30: 	class Foo {
+//│ ║  l.XX: 	class Foo {
 //│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -61,10 +61,10 @@ let f = Foo
 :e
 f.b
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.62: 	f.b
+//│ ║  l.+1: 	f.b
 //│ ║        	^^^
 //│ ╟── Class value does not contain member 'b'
-//│ ║  l.30: 	class Foo {
+//│ ║  l.XX: 	class Foo {
 //│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -100,12 +100,12 @@ class Foo {
   }
 }
 //│ ╔══[COMPILATION ERROR] Unsupported constructor in this position.
-//│ ║  l.98: 	  constructor(val a) {
+//│ ║  l.+2: 	  constructor(val a) {
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.99: 	    val b = a + 1
+//│ ║  l.+3: 	    val b = a + 1
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.100: 	  }
-//│ ╙──       	^^^
+//│ ║  l.+4: 	  }
+//│ ╙──      	^^^
 
 
 // A `val` constructor parameter becomes a public field.
@@ -126,11 +126,11 @@ class Foo {
 :e
 let f = Foo(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.127: 	let f = Foo(1)
-//│ ║         	        ^^^^^^
+//│ ║  l.+1: 	let f = Foo(1)
+//│ ║        	        ^^^^^^
 //│ ╟── Class 'Foo' must be instantiated with 'new'.
-//│ ║  l.113: 	class Foo {
-//│ ╙──       	^^^^^^^^^
+//│ ║  l.XX: 	class Foo {
+//│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ f = undefined
 

@@ -21,10 +21,10 @@ class Child(val value: Int) extends Base
 private fun read(record: {mut item: in Child out Base}) = record.item.value
 read({mut item: Child(2)})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.21: 	private fun read(record: {mut item: in Child out Base}) = record.item.value
+//│ ║  l.+3: 	private fun read(record: {mut item: in Child out Base}) = record.item.value
 //│ ║        	                                                          ^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.21: 	private fun read(record: {mut item: in Child out Base}) = record.item.value
+//│ ║  l.+3: 	private fun read(record: {mut item: in Child out Base}) = record.item.value
 //│ ╙──      	                                                 ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -43,10 +43,10 @@ private fun test() =
   record.item.value
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.43: 	  record.item.value
+//│ ║  l.+9: 	  record.item.value
 //│ ║        	  ^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.40: 	  let receiver = (new Receiver as Receiver[in Child out Base])
+//│ ║  l.+6: 	  let receiver = (new Receiver as Receiver[in Child out Base])
 //│ ╙──      	                                                        ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -80,10 +80,10 @@ private fun test() =
   record.item.value
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.80: 	  record.item.value
-//│ ║        	  ^^^^^^^^^^^^^^^^^
+//│ ║  l.+10: 	  record.item.value
+//│ ║         	  ^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.77: 	  let receiver = (new Receiver as Receiver[in Child out Base])
+//│ ║  l.+7: 	  let receiver = (new Receiver as Receiver[in Child out Base])
 //│ ╙──      	                                                        ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -120,12 +120,12 @@ class Child(val value: Int)
 private fun read(record: {mut item: in Child}) = record.item.value
 read({mut item: Child(8)})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.120: 	private fun read(record: {mut item: in Child}) = record.item.value
-//│ ║         	                                                 ^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	private fun read(record: {mut item: in Child}) = record.item.value
+//│ ║        	                                                 ^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── This field specifies only an input bound.
-//│ ║  l.120: 	private fun read(record: {mut item: in Child}) = record.item.value
-//│ ║         	                                    ^^^^^^^^
+//│ ║  l.+2: 	private fun read(record: {mut item: in Child}) = record.item.value
+//│ ║        	                                    ^^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -143,11 +143,11 @@ private fun test() =
   assigned(Child(9))
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.137: 	private fun assigned(value) = value.value
-//│ ║         	                              ^^^^^^^^^^^
+//│ ║  l.+3: 	private fun assigned(value) = value.value
+//│ ║        	                              ^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.138: 	private fun store(record: {mut callback: in (Base -> Int) out (Child -> Int)}) =
-//│ ╙──       	                                             ^^^^
+//│ ║  l.+4: 	private fun store(record: {mut callback: in (Base -> Int) out (Child -> Int)}) =
+//│ ╙──      	                                             ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -164,11 +164,11 @@ private fun test() =
   assigned(Child(10))
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.159: 	private fun assigned(value) = value.value
-//│ ║         	                              ^^^^^^^^^^^
+//│ ║  l.+4: 	private fun assigned(value) = value.value
+//│ ║        	                              ^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.162: 	  let view = cell as Cell[in (Base -> Int) out (Child -> Int)]
-//│ ╙──       	                              ^^^^
+//│ ║  l.+7: 	  let view = cell as Cell[in (Base -> Int) out (Child -> Int)]
+//│ ╙──      	                              ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -184,11 +184,11 @@ private fun test() =
   record.item.value
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.184: 	  record.item.value
-//│ ║         	  ^^^^^^^^^^^^^^^^^
+//│ ║  l.+8: 	  record.item.value
+//│ ║        	  ^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.179: 	type Both = ({mut item: Child} & {mut item: in Base out Child})
-//│ ╙──       	                                               ^^^^
+//│ ║  l.+3: 	type Both = ({mut item: Child} & {mut item: in Base out Child})
+//│ ╙──      	                                               ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -224,11 +224,11 @@ type Immutable = {item: in Child out Base}
 private fun read(record: Immutable) = record.item
 read({item: new Child})
 //│ ╔══[COMPILATION ERROR] Resolution error in record literal
-//│ ║  l.223: 	type Immutable = {item: in Child out Base}
-//│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	type Immutable = {item: in Child out Base}
+//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── A field with input/output bounds must be declared 'mut'.
-//│ ║  l.223: 	type Immutable = {item: in Child out Base}
-//│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	type Immutable = {item: in Child out Base}
+//│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = Child
 
 
@@ -260,11 +260,11 @@ private fun test() =
   assigned(Child(15))
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.252: 	private fun assigned(value) = value.value
-//│ ║         	                              ^^^^^^^^^^^
+//│ ║  l.+3: 	private fun assigned(value) = value.value
+//│ ║        	                              ^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.253: 	private fun store(record: {mut callback: in (Base -> Int) out (Child -> Int)}) =
-//│ ╙──       	                                             ^^^^
+//│ ║  l.+4: 	private fun store(record: {mut callback: in (Base -> Int) out (Child -> Int)}) =
+//│ ╙──      	                                             ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -278,11 +278,11 @@ private fun test() =
   read(record).value
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.278: 	  read(record).value
-//│ ║         	  ^^^^^^^^^^^^^^^^^^
+//│ ║  l.+6: 	  read(record).value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.277: 	  let record = ({mut f: Child(1)} as {mut f: Base})
-//│ ╙──       	                                             ^^^^
+//│ ║  l.+5: 	  let record = ({mut f: Child(1)} as {mut f: Base})
+//│ ╙──      	                                             ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -299,11 +299,11 @@ private fun test() =
   holder.record.f.value
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.299: 	  holder.record.f.value
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+8: 	  holder.record.f.value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.295: 	private fun accept(record: {mut f: Base}) = ()
-//│ ╙──       	                                   ^^^^
+//│ ║  l.+4: 	private fun accept(record: {mut f: Base}) = ()
+//│ ╙──      	                                   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -317,11 +317,11 @@ private fun test() =
   read(record).value
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.317: 	  read(record).value
-//│ ║         	  ^^^^^^^^^^^^^^^^^^
+//│ ║  l.+6: 	  read(record).value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.316: 	  let record = (mut {f: Child(3)} as mut {f: Base})
-//│ ╙──       	                                             ^^^^
+//│ ║  l.+5: 	  let record = (mut {f: Child(3)} as mut {f: Base})
+//│ ╙──      	                                             ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -337,11 +337,11 @@ private fun test() =
   holder.record.f.value
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.337: 	  holder.record.f.value
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+8: 	  holder.record.f.value
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.333: 	private fun accept(record: mut {f: Base}) = ()
-//│ ╙──       	                                   ^^^^
+//│ ║  l.+4: 	private fun accept(record: mut {f: Base}) = ()
+//│ ╙──      	                                   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

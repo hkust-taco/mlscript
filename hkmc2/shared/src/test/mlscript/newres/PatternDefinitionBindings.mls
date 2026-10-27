@@ -43,11 +43,11 @@ pattern Bad = s => s.length
 fun read(value) = if value is Bad(n) then n else 0
 read("abc")
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.42: 	pattern Bad = s => s.length
+//│ ║  l.+1: 	pattern Bad = s => s.length
 //│ ║        	                   ^^^^^^^^
 //│ ╟── Cannot resolve member 'length' of a value with unknown shape.
 //│ ╟── Pattern 'Bad' accepts values of unknown shape.
-//│ ║  l.42: 	pattern Bad = s => s.length
+//│ ║  l.+1: 	pattern Bad = s => s.length
 //│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -55,10 +55,10 @@ read("abc")
 :ge
 pattern Bad = Str as s => s.missingMember()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.56: 	pattern Bad = Str as s => s.missingMember()
+//│ ║  l.+1: 	pattern Bad = Str as s => s.missingMember()
 //│ ║        	                          ^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Str' does not contain member 'missingMember'
-//│ ║  l.56: 	pattern Bad = Str as s => s.missingMember()
+//│ ║  l.+1: 	pattern Bad = Str as s => s.missingMember()
 //│ ╙──      	              ^^^
 
 // Deferred constructor resolution must still reach guards and transformations.
@@ -95,38 +95,38 @@ read((name: "ab"))
 :ge
 pattern Bad = ((Str as s => s.length) as n) => n.toUpperCase()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.96: 	pattern Bad = ((Str as s => s.length) as n) => n.toUpperCase()
+//│ ║  l.+1: 	pattern Bad = ((Str as s => s.length) as n) => n.toUpperCase()
 //│ ║        	                                               ^^^^^^^^^^^^^
 //│ ╟── Value of type 'Int' does not contain member 'toUpperCase'
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.226: 	  val length: Int
-//│ ╙──       	              ^^^
+//│ ║  l.XX: 	  val length: Int
+//│ ╙──      	              ^^^
 
 // Conjunction produces a pair, not the string tested by its left operand.
 :ge
 pattern Bad = ((Str & _) as pair) => pair.toUpperCase()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.107: 	pattern Bad = ((Str & _) as pair) => pair.toUpperCase()
-//│ ║         	                                     ^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	pattern Bad = ((Str & _) as pair) => pair.toUpperCase()
+//│ ║        	                                     ^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'toUpperCase' of a value with unknown shape.
 //│ ╟── The output shape of this pattern is not yet known.
-//│ ║  l.107: 	pattern Bad = ((Str & _) as pair) => pair.toUpperCase()
-//│ ╙──       	                ^^^^^^^
+//│ ║  l.+1: 	pattern Bad = ((Str & _) as pair) => pair.toUpperCase()
+//│ ╙──      	                ^^^^^^^
 
 // Rebuilding a constructor must not retain its input's generic field shape.
 :ge
 class Box[A](val value: A)
 pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.119: 	pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
-//│ ║         	                                                    ^^^^^^^^^
+//│ ║  l.+2: 	pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
+//│ ║        	                                                    ^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── The output shape of this pattern is not yet known.
-//│ ║  l.119: 	pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
-//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
+//│ ╙──      	               ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'toUpperCase' has no resolved target
-//│ ║  l.119: 	pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
-//│ ╙──       	                                                    ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	pattern Bad = (Box(Str as s => s.length) as box) => box.value.toUpperCase()
+//│ ╙──      	                                                    ^^^^^^^^^^^^^^^^^^^^^
 
 // FIXME: Concatenation output interfaces are not yet inferred.
 :fixme
@@ -135,11 +135,11 @@ pattern Joined = ("a" ~ "b") as s => s.length
 fun read(value) = if value is Joined(n) then n else 0
 read("ab")
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.134: 	pattern Joined = ("a" ~ "b") as s => s.length
-//│ ║         	                                     ^^^^^^^^
+//│ ║  l.+1: 	pattern Joined = ("a" ~ "b") as s => s.length
+//│ ║        	                                     ^^^^^^^^
 //│ ╟── Cannot resolve member 'length' of a value with unknown shape.
 //│ ╟── The output shape of this pattern is not yet known.
-//│ ║  l.134: 	pattern Joined = ("a" ~ "b") as s => s.length
-//│ ╙──       	                  ^^^^^^^^^
+//│ ║  l.+1: 	pattern Joined = ("a" ~ "b") as s => s.length
+//│ ╙──      	                  ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'

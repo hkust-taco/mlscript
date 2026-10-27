@@ -63,26 +63,26 @@ fun read(box: Box) = box.item.value
 fun call(x) = read(make(x))
 call(Item(2))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.62: 	fun read(box: Box) = box.item.value
+//│ ║  l.+4: 	fun read(box: Box) = box.item.value
 //│ ║        	                     ^^^^^^^^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.61: 	fun make(x): Box = Box(x)
+//│ ║  l.+3: 	fun make(x): Box = Box(x)
 //│ ║        	         ^
 //│ ╟── 'make' is exposed by this compilation unit.
-//│ ║  l.61: 	fun make(x): Box = Box(x)
+//│ ║  l.+3: 	fun make(x): Box = Box(x)
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── Parameter 'box' admits values of unknown shape.
-//│ ║  l.62: 	fun read(box: Box) = box.item.value
+//│ ║  l.+4: 	fun read(box: Box) = box.item.value
 //│ ║        	         ^^^^^^^^
 //│ ╟── 'read' is exposed by this compilation unit.
-//│ ║  l.62: 	fun read(box: Box) = box.item.value
+//│ ║  l.+4: 	fun read(box: Box) = box.item.value
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.63: 	fun call(x) = read(make(x))
+//│ ║  l.+5: 	fun call(x) = read(make(x))
 //│ ║        	         ^
 //│ ╟── 'call' is exposed by this compilation unit.
-//│ ║  l.63: 	fun call(x) = read(make(x))
+//│ ║  l.+5: 	fun call(x) = read(make(x))
 //│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

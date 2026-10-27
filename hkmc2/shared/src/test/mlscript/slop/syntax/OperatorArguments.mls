@@ -1,0 +1,270 @@
+:.
+:js
+:qq
+
+
+fun (%>) collect(...args) = args
+
+// A complete parenthesized infix RHS supplies arguments, except for the unit literal.
+:expect [1, 2, 3]
+1 %> (2, 3)
+//│ = [1, 2, 3]
+
+:expect [1, 2, 3]
+1 %>(2, 3)
+//│ = [1, 2, 3]
+
+:expect [1, ()]
+1 %> ()
+//│ = [1, ()]
+
+:expect true
+() === ()
+//│ = true
+
+:expect []
+%>()
+//│ = []
+
+:expect [1, 2]
+1 %> (2)
+//│ = [1, 2]
+
+:expect [1, ()]
+1 %> (())
+//│ = [1, ()]
+
+:expect [1, 2, 3]
+1 %> (
+  2,
+  3
+)
+//│ = [1, 2, 3]
+
+// The same rule applies to same-indent continuations and indented operator splits.
+:expect [1, 2, 3]
+1
+%> (2, 3)
+//│ = [1, 2, 3]
+
+:expect [[1, 2, 3], 4, 5]
+1
+  %>(2, 3)
+  %>(4, 5)
+//│ = [[1, 2, 3], 4, 5]
+
+// Ordinary operator precedence still determines the complete RHS.
+:expect 7
+1 + (2) * 3
+//│ = 7
+
+:expect [1, 6]
+1 %> (2) * 3
+//│ = [1, 6]
+
+:e
+:re
+1 + (2, 3) * 4
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
+//│ ║  l.+1: 	1 + (2, 3) * 4
+//│ ╙──      	    ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Curly blocks explicitly retain a sequenced operand; parentheses alone cannot sequence.
+:w
+:expect [1, 3]
+1 %> ({ 2, 3 })
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.+1: 	1 %> ({ 2, 3 })
+//│ ╙──      	        ^
+//│ = [1, 3]
+
+:e
+:re
+1 %> ((2, 3))
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
+//│ ║  l.+1: 	1 %> ((2, 3))
+//│ ╙──      	      ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:re
+id((2, 3))
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
+//│ ║  l.+1: 	id((2, 3))
+//│ ╙──      	   ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 5
+((x, y) => x + y)(2, 3)
+//│ = 5
+
+:expect 5
+val add: (Int, Int) -> Int = (x, y) => x + y
+add(2, 3)
+//│ = 5
+//│ add = fun
+
+:expect [1, [2, 3]]
+1 %> ([2, 3])
+//│ = [1, [2, 3]]
+
+// Infix argument lists support the same fields and spreads as ordinary calls.
+:expect [1, 2, 3, 4]
+1 %> (2, ...[3, 4])
+//│ = [1, 2, 3, 4]
+
+:expect [1, {key: 2, value: 3}]
+1 %> (key: 2, value: 3)
+//│ = [1, {key: 2, value: 3}]
+
+// Prefix and infix calls both expose their arguments to '\'.
+:expect [1, 2]
+{ %> 1 } \ 2
+//│ = [1, 2]
+
+:expect [1, 2, 3]
+{ 1 %> 2 } \ 3
+//│ = [1, 2, 3]
+
+:expect [1, 2, 3, 4]
+{ 1 %> (2, 3) } \ 4
+//│ = [1, 2, 3, 4]
+
+:expect [1, (), 2]
+{ 1 %> () } \ 2
+//│ = [1, (), 2]
+
+:expect [1, 2, 3]
+%> 1
+\ 2
+\ 3
+//│ = [1, 2, 3]
+
+:expect [1, 2, 3, 4]
+1 %> (2, 3)
+\ 4
+//│ = [1, 2, 3, 4]
+
+:expect [1, 2, 3, 4]
+1
+  %>(2, 3)
+  \ 4
+//│ = [1, 2, 3, 4]
+
+:expect [1, 2, 3, 4]
+{ 1 %> 2 } \ ...[3, 4]
+//│ = [1, 2, 3, 4]
+
+:expect [1, 2, {key: 3}]
+{ 1 %> 2 } \ key: 3
+//│ = [1, 2, {key: 3}]
+
+// Parentheses still select the result of a call; '\' keeps its existing precedence.
+fun (%?) later(x, y)(z) = [x, y, z]
+
+:expect [1, 2, 3]
+(1 %? 2) \ 3
+//│ = [1, 2, 3]
+
+:expect [1, 2]
+1 %> id \ 2
+//│ = [1, 2]
+
+// Operator operands and added arguments retain their own implicit-lambda boundaries.
+let fs = ({ %> _ + 1 } \ _ * 2)
+//│ fs = [fun, fun]
+
+:expect [4, 6]
+[fs.0(3), fs.1(3)]
+//│ = [4, 6]
+
+let fs = ({ 1 %> _ + 2 } \ _ * 3)
+//│ fs = [1, fun, fun]
+
+:expect [1, 5, 9]
+[fs.0, fs.1(3), fs.2(3)]
+//│ = [1, 5, 9]
+
+let fs = 1 %> (_ + 2, _ * 3)
+//│ fs = [1, fun, fun]
+
+:expect [1, 5, 9]
+[fs.0, fs.1(3), fs.2(3)]
+//│ = [1, 5, 9]
+
+fun (<%) collectLeft(...args) = args
+let fs = ({ _ + 1 <% 4 } \ _ * 2)
+//│ fs = [fun, 4, fun]
+
+:expect [4, 4, 6]
+[fs.0(3), fs.1, fs.2(3)]
+//│ = [4, 4, 6]
+
+fun (%@) collectPlain(...args) = args
+let f = => ({ _ %@ _ } \ _ + 1)
+//│ f = fun f
+
+:expect [1, 2, 4]
+let result = f(1, 2)
+[result.0, result.1, result.2(3)]
+//│ = [1, 2, 4]
+//│ result = [1, 2, fun]
+
+// All operands evaluate once, in argument order, even when a call is extended.
+let log = mut []
+fun tick(x) =
+  do log.push(x)
+  x
+//│ log = []
+
+:expect [1, 2, 3, 4]
+{ tick(1) %> (tick(2), tick(3)) } \ tick(4)
+//│ = [1, 2, 3, 4]
+
+:expect [1, 2, 3, 4]
+log
+//│ = [1, 2, 3, 4]
+
+// A local overload shows the exact multi-argument '+' form without builtin arity restrictions.
+fun addition() =
+  fun (+) gather(...args) = args
+  1 + (2, 3)
+
+:expect [1, 2, 3]
+addition()
+//│ = [1, 2, 3]
+
+// Multi-argument operator calls also work as conditions and constructor patterns.
+fun (%==) equalsSum(x, y, z) = x === y + z
+class (%:) Triple(val x, val y, val z)
+
+:expect true
+if 5 %== (2, 3) then true else false
+//│ = true
+
+:expect true
+if 5
+  %== (2, 3) then true
+  else false
+//│ = true
+
+:expect [1, 2, 3]
+if (1 %: (2, 3)) is x %: (y, z) then [x, y, z] else []
+//│ = [1, 2, 3]
+
+// The legacy resolver receives the same argument lists and call extensions.
+#lang(useNewResolution: false)
+
+:expect [1, 2, 3]
+1 %> (2, 3)
+//│ = [1, 2, 3]
+
+:expect [1, 2, 3]
+{ 1 %> 2 } \ 3
+//│ = [1, 2, 3]
+
+:expect App(Builtin("+"), Tup([Lit(1), Lit(2), Lit(3)]))
+`1 `+ (`2, `3)
+//│ = App(Builtin("+"), Tup([Lit(1), Lit(2), Lit(3)]))
+

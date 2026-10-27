@@ -86,10 +86,7 @@ enum Annot extends Located:
     case Config(_) => doc"@config(...)"
     case Debug(_) => doc"@dbg(...)"
   
-  def mkClone(using State, Erasure): Annot = this match
-    case Trm(trm) => Trm(trm.mkClone)(toLoc)
-    case JsSymbol(key) => JsSymbol(key.copy()(key.term.mkClone))(toLoc)
-    case _ => this
+  def mkClone(using State, Erasure): Annot = Cloner(SymbolSubst.Id).annotation(this)
 
 object Annot:
   
@@ -545,129 +542,10 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
     App(this, Tup(args.toList.map(PlainFld(_)))(Tree.DummyTup))
       (Tree.App(Tree.Dummy, Tree.Dummy), N, FlowSymbol(""))
   
-  /** Duplicate an elaborated expression after resolution, retaining its semantic
-    * identity and completed results. Listeners belong to elaboration and are not copied.
+  /** Clone a resolved expression with fresh bound symbols, retaining source identifiers
+    * and completed resolution. Only already-cached locations are copied.
     */
-  override def mkClone(using State, Erasure): Term =
-    def copyMetadata(source: Term, copy: Term): copy.type =
-      copy.withLocOf(source)
-      copy.typeInterpretation = source.typeInterpretation
-      copy
-    def copyShapes(source: ShapeHost, copy: ShapeHost): copy.type =
-      copy.shapes.copyFrom(source.shapes)
-      copy
-    def copyResolution(source: Resolvable, copy: Resolvable): copy.type =
-      copy.isErroneous = source.isErroneous
-      source.expansion.foreach(expansion => copy.expand(expansion.map(_.mkClone)))
-      copyShapes(source, copy)
-    def copySelection(source: Term & AnySel, copy: Term & AnySel): copy.type =
-      copy.resolvedTargets = source.resolvedTargets
-      copyResolution(source, copy)
-    def copyNewResolution(source: NewResolvable, copy: NewResolvable): copy.type =
-      copy.resolvedTargets = source.resolvedTargets
-      copy.keyAccess = source.keyAccess.map(_.mkClone)
-      copy.isErroneous = source.isErroneous
-      copy
-    // Keep class qualifiers typed as selections while sharing all clone metadata copying.
-    def cloneSel(term: NewSel): NewSel =
-      val copy = new NewSel(term.prefix.mkClone, term.id, term.cls.map(cloneSel))(term.resSym)
-      copy.resolvedMembers = term.resolvedMembers
-      copy.hasDynamicTarget = term.hasDynamicTarget
-      copy.tupleIndex = term.tupleIndex
-      copyMetadata(term, copyNewResolution(term, copyShapes(term, copy)))
-    val that = this match
-      case Error() => Error()
-      case UnitVal() => UnitVal()
-      case DynTy() => DynTy()
-      case Missing => Missing
-      case Lit(Tree.StrLit(value)) => Lit(Tree.StrLit(value))
-      case Lit(Tree.IntLit(value)) => Lit(Tree.IntLit(value))
-      case Lit(Tree.DecLit(value)) => Lit(Tree.DecLit(value))
-      case Lit(Tree.BoolLit(value)) => Lit(Tree.BoolLit(value))
-      case Lit(Tree.UnitLit(value)) => Lit(Tree.UnitLit(value))
-      case term @ SimpleRef(sym) => SimpleRef(sym)(term.tree)
-      case term @ SelfRef(sym) => SelfRef(sym)(term.tree)
-      case term @ MemberRef(sym) => copyNewResolution(term, MemberRef(sym)(term.tree, term.resSym))
-      case term @ Super(receiver, owner, id) =>
-        return copyMetadata(term, copyShapes(term, copyNewResolution(term,
-          Super(receiver.mkClone, owner, id)(term.resSym))))
-      case term: NewSel => return cloneSel(term)
-      case term @ UnresolvedRef(prefixes, id) =>
-        val clonedPrefixes = prefixes.map(_.mkClone)
-        val copy = UnresolvedRef(clonedPrefixes, id)(term.resSym)
-        def cloneReceiver(receiver: Term): Term =
-          val index = prefixes.indexWhere(_ is receiver)
-          assert(index >= 0, "A wildcard candidate must belong to an opened prefix")
-          clonedPrefixes(index)
-        copy.resolvedMembers = term.resolvedMembers.map((receiver, member) => cloneReceiver(receiver) -> member)
-        copy.dynamicPrefixes = term.dynamicPrefixes.map(cloneReceiver)
-        copyNewResolution(term, copyShapes(term, copy))
-      case Capture(base, thru) => Capture(base.mkClone, thru)
-      case term @ Resolved(t, sym) => copyResolution(term, Resolved(t.mkClone, sym)(term.typ))
-      case term @ Ref(sym) => copyResolution(term, Ref(sym)(Tree.Ident(term.tree.name), term.typ))
-      case term @ App(lhs, rhs) =>
-        val copy = App(lhs.mkClone, rhs.mkClone)(term.tree, term.typ, term.resSym)
-        copy.callableTargets.shapes.copyFrom(term.callableTargets.shapes)
-        copyResolution(term, copy)
-      case term @ TyApp(lhs, targs) => copyResolution(term, TyApp(lhs.mkClone, targs.map(_.mkClone))(term.typ))
-      case term @ Sel(prefix, nme) => copySelection(term, Sel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx))
-      case term @ SynthSel(prefix, nme) => copySelection(term, SynthSel(prefix.mkClone, Tree.Ident(nme.name))(term.sym, term.resSym, term.typ, term.originalCtx))
-      case term @ LeadingDotSel(nme) =>
-        val copy = LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx)
-        copy.resolvedTargets = term.resolvedTargets
-        copyResolution(term, copy)
-      case DynSel(prefix, fld, arrayIdx, checked) => DynSel(prefix.mkClone, fld.mkClone, arrayIdx, checked)
-      case term @ Tup(fields) =>
-        val copy = Tup(fields.map {
-          case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
-          case s: Spd => s.copy(term = s.term.mkClone)
-        })(term.tree)
-        copyShapes(term, copy)
-      case Mut(underlying) => Mut(underlying.mkClone.asInstanceOf[Tup | Rcd | New | DynNew])
-      case term @ CtxTup(fields) =>
-        val copy = CtxTup(fields.map {
-          case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
-          case s: Spd => s.copy(term = s.term.mkClone)
-        })(term.tree)
-        copyShapes(term, copy)
-      case term @ IfLike(kw, form, split) => copyShapes(term, IfLike(kw, form, split.mkClone))
-      case SynthIf(split) => SynthIf(split.mkClone)
-      case SynthWhile(split) => SynthWhile(split.mkClone)
-      case Lam(params, body) => Lam(params, body.mkClone)
-      case FunTy(lhs, rhs, eff) => FunTy(lhs.mkClone, rhs.mkClone, eff.map(_.mkClone))
-      case Forall(tvs, outer, body) => Forall(tvs, outer, body.mkClone)
-      case Constrained(constraints, body) => Constrained(constraints, body.mkClone)
-      case WildcardTy(in, out) => WildcardTy(in.map(_.mkClone), out.map(_.mkClone))
-      case blk: Blk => blk.mkBlkClone
-      case term @ Rcd(mut, stats) =>
-        val copy = Rcd(mut, stats.map(_.mkClone))
-        copyShapes(term, copy)
-      case Quoted(body) => Quoted(body.mkClone)
-      case Unquoted(body) => Unquoted(body.mkClone)
-      case term @ New(cls, args, rft) =>
-        copyResolution(term, New(cls.mkClone, args.map(_.mkClone), rft.map { case (cs, ob) => cs -> ObjBody(ob.blk.mkBlkClone) })(term.resSym, term.typ))
-      case DynNew(cls, args) => DynNew(cls.mkClone, args.map(_.mkClone))
-      case term @ SelProj(prefix, cls, proj) =>
-        copySelection(term, SelProj(prefix.mkClone, cls.mkClone, Tree.Ident(proj.name))(term.sym, term.resSym, term.typ, term.originalCtx))
-      case Asc(term, ty) => Asc(term.mkClone, ty.mkClone)
-      case CompType(lhs, rhs, pol) => CompType(lhs.mkClone, rhs.mkClone, pol)
-      case Neg(rhs) => Neg(rhs.mkClone)
-      case Region(name, body) => Region(name, body.mkClone)
-      case RegRef(reg, value) => RegRef(reg.mkClone, value.mkClone)
-      case Assgn(lhs, rhs) => Assgn(lhs.mkClone, rhs.mkClone)
-      case Drop(trm) => Drop(trm.mkClone)
-      case Deref(ref) => Deref(ref.mkClone)
-      case SetRef(ref, value) => SetRef(ref.mkClone, value.mkClone)
-      case Ret(result) => Ret(result.mkClone)
-      case Throw(result) => Throw(result.mkClone)
-      case Label(label, result, body, hasNonLocalContinueDispatch) => Label(label, result, body.mkClone, hasNonLocalContinueDispatch)
-      case Break(label, result, value) => Break(label, result, value.map(_.mkClone))
-      case Continue(label) => Continue(label)
-      case Try(body, finallyDo) => Try(body.mkClone, finallyDo.mkClone)
-      case Annotated(annot, target) => Annotated(annot, target.mkClone)
-      case handle @ Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
-        Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)(handle.isAbortive)
-    copyMetadata(this, that)
+  override def mkClone(using State, Erasure): Term = Cloner(SymbolSubst.Id).term(this)
   
 end Term
 

@@ -4,8 +4,8 @@
 :w
 undefined
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.5: 	undefined
-//│ ╙──     	^^^^^^^^^
+//│ ║  l.+1: 	undefined
+//│ ╙──      	^^^^^^^^^
 
 
 fun oops = unsafe.undefined
@@ -22,14 +22,14 @@ print(oops)
 fun bareValue() = [undefined]
 bareValue()
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.22: 	fun bareValue() = [undefined]
+//│ ║  l.+1: 	fun bareValue() = [undefined]
 //│ ╙──      	                   ^^^^^^^^^
 //│ = [undefined]
 
 :w
 type BareType = undefined
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.30: 	type BareType = undefined
+//│ ║  l.+1: 	type BareType = undefined
 //│ ╙──      	                ^^^^^^^^^
 
 :w
@@ -37,7 +37,7 @@ type BareType = undefined
 fun barePattern(value) = if value is undefined then 1 else 0
 [barePattern(unsafe.undefined), barePattern(null)]
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.37: 	fun barePattern(value) = if value is undefined then 1 else 0
+//│ ║  l.+1: 	fun barePattern(value) = if value is undefined then 1 else 0
 //│ ╙──      	                                     ^^^^^^^^^
 //│ = [1, 0]
 
@@ -48,7 +48,7 @@ fun bareLength(value: Str | BareType) =
   if value is ~undefined as text then text.length else 0
 [bareLength(unsafe.undefined), bareLength("abc")]
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.48: 	  if value is ~undefined as text then text.length else 0
+//│ ║  l.+2: 	  if value is ~undefined as text then text.length else 0
 //│ ╙──      	               ^^^^^^^^^
 //│ = [0, 3]
 
@@ -152,11 +152,11 @@ projected(Box("abc"))
 :e
 fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.153: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
-//│ ║         	                                                     ^^^
+//│ ║  l.+1: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
+//│ ║        	                                                     ^^^
 //│ ╟── Function with a declared signature expected 1 argument, but got 0
-//│ ║  l.153: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
-//│ ╙──       	                   ^^^^^^^^^^
+//│ ║  l.+1: 	fun wrongArity(f: (Int -> Str) | unsafe.undefined) = f()
+//│ ╙──      	                   ^^^^^^^^^^
 
 // Generic forwarding retains the nullable interface; the unsafe call remains a regression probe.
 :re
@@ -202,21 +202,21 @@ let record = {absent: unsafe.undefined, text: "abc"}
 private fun optionalLength(value?) = value.length
 fun forward(value: Str | unsafe.undefined) = optionalLength(value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.202: 	private fun optionalLength(value?) = value.length
-//│ ║         	                                     ^^^^^^^^^^^^
+//│ ║  l.+1: 	private fun optionalLength(value?) = value.length
+//│ ║        	                                     ^^^^^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.202: 	private fun optionalLength(value?) = value.length
-//│ ╙──       	                           ^^^^^^
+//│ ║  l.+1: 	private fun optionalLength(value?) = value.length
+//│ ╙──      	                           ^^^^^^
 
 // The optional parameter's null flow also survives generic result substitution.
 :e
 fun unguardedGeneric(value: Str | unsafe.undefined) = genericIdentity(value).length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.213: 	fun unguardedGeneric(value: Str | unsafe.undefined) = genericIdentity(value).length
-//│ ║         	                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun unguardedGeneric(value: Str | unsafe.undefined) = genericIdentity(value).length
+//│ ║        	                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.163: 	private fun optionalIdentity(value?) = value
-//│ ╙──       	                             ^^^^^^
+//│ ║  l.XX: 	private fun optionalIdentity(value?) = value
+//│ ╙──      	                             ^^^^^^
 
 
 #lang(strictResolution: true)
@@ -228,13 +228,13 @@ class Right(val value: Str)
 :e
 fun ambiguous(value: Left | unsafe.undefined | Right) = value.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
-//│ ║  l.229: 	fun ambiguous(value: Left | unsafe.undefined | Right) = value.value
-//│ ║         	                                                        ^^^^^^^^^^^
+//│ ║  l.+1: 	fun ambiguous(value: Left | unsafe.undefined | Right) = value.value
+//│ ║        	                                                        ^^^^^^^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Right'
-//│ ║  l.226: 	class Right(val value: Str)
-//│ ║         	                ^^^^^
+//│ ║  l.XX: 	class Right(val value: Str)
+//│ ║        	                ^^^^^
 //│ ╟── target: value 'value' in overloaded function and class 'Left'
-//│ ║  l.225: 	class Left(val value: Str)
-//│ ╙──       	               ^^^^^
+//│ ║  l.XX: 	class Left(val value: Str)
+//│ ╙──      	               ^^^^^
 
 

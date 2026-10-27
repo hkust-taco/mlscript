@@ -28,10 +28,10 @@ class Child extends Base with
 fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
 read([new Child])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.28: 	fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
+//│ ║  l.+4: 	fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
 //│ ║        	                                             ^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.28: 	fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
+//│ ║  l.+4: 	fun read(xs: [Base]) = xs.map((item, ...) => item.extra)
 //│ ╙──      	              ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -63,10 +63,10 @@ fun singleton(x) = [x]
 :ge
 [1].nonexistent
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.64: 	[1].nonexistent
+//│ ║  l.+1: 	[1].nonexistent
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── Tuple literal does not contain member 'nonexistent'
-//│ ║  l.64: 	[1].nonexistent
+//│ ║  l.+1: 	[1].nonexistent
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -95,10 +95,10 @@ let xs = mut [Original(1)]
 set xs.0 = Replacement(2)
 xs.map((x, ...) => x.original)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.96: 	xs.map((x, ...) => x.original)
+//│ ║  l.+5: 	xs.map((x, ...) => x.original)
 //│ ║        	                   ^^^^^^^^^^
 //│ ╟── Instance of class 'Replacement' does not contain member 'original'
-//│ ║  l.95: 	set xs.0 = Replacement(2)
+//│ ║  l.+4: 	set xs.0 = Replacement(2)
 //│ ╙──      	           ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ xs = [Replacement(2)]
@@ -130,23 +130,23 @@ new String("hello") is String
 :ge
 new Array[Int](1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.131: 	new Array[Int](1, 2)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	new Array[Int](1, 2)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Array' expected 1 argument, but got 2
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.261: 	declare class Array[T](val length: Int) {
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	declare class Array[T](val length: Int) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [1, 2]
 
 :ge
 new Array[Int]()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.142: 	new Array[Int]()
-//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	new Array[Int]()
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Array' expected 1 argument, but got 0
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.261: 	declare class Array[T](val length: Int) {
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	declare class Array[T](val length: Int) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = []
 
 // Calls select the callable overload even when the class has a companion module.
@@ -192,11 +192,11 @@ class Item(val value: Int)
 class Total(val total: Int)
 [Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.193: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
-//│ ║         	                                     ^^^^^^^^^^^
+//│ ║  l.+3: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ║        	                                     ^^^^^^^^^^^
 //│ ╟── Instance of class 'Total' does not contain member 'missing'
-//│ ║  l.193: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
-//│ ╙──       	                                                  ^^^^^^^^
+//│ ║  l.+3: 	[Item(1)].reduce((acc, item, ...) => acc.missing, Total(0))
+//│ ╙──      	                                                  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Without an initial value, the first element would be the accumulator,
@@ -204,12 +204,12 @@ class Total(val total: Int)
 :e
 [1, 2].reduce((acc, x, ...) => acc + x)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.205: 	[1, 2].reduce((acc, x, ...) => acc + x)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	[1, 2].reduce((acc, x, ...) => acc + x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'reduce' expected 2 arguments, but got 1
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.296: 	  fun reduce[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  fun reduce[U](f: (U, T, drop Int, drop Array[T]) -> U, initial: U): U
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 3
 
 // A tuple created in one activation of `mk` and passed to another has the path
@@ -244,11 +244,11 @@ let items = mut [Item(4)]
 class Item(val value: Int)
 (new Item(1)).[0]
 //│ ╔══[COMPILATION ERROR] Resolution error in array index
-//│ ║  l.245: 	(new Item(1)).[0]
-//│ ║         	 ^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	(new Item(1)).[0]
+//│ ║        	 ^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Item' does not support checked array indexing.
-//│ ║  l.245: 	(new Item(1)).[0]
-//│ ║         	 ^^^^^^^^^^^
+//│ ║  l.+2: 	(new Item(1)).[0]
+//│ ║        	 ^^^^^^^^^^^
 //│ ╙── Use '![...]' for a dynamic access.
 //│ ═══[RUNTIME ERROR] TypeError: tmp49.at is not a function
 
@@ -256,8 +256,8 @@ class Item(val value: Int)
 :e
 fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.257: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
-//│ ║         	                                                ^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
+//│ ║        	                                                ^^^^^^^^^^^^^
 //│ ╟── Value of type 'Int' does not contain member 'whatever'
-//│ ║  l.257: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
-//│ ╙──       	                    ^^^
+//│ ║  l.+1: 	fun first(xs: Array[Int]) = [xs![0].whatever, xs.[0].whatever]
+//│ ╙──      	                    ^^^

@@ -83,45 +83,45 @@ None == Option.None
 :re
 Option.oops
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.84: 	Option.oops
+//│ ║  l.+1: 	Option.oops
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Module 'Option' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
-//│ ║  l.6: 	module Option with ...
-//│ ╙──     	^^^^^^^^^^^^^
+//│ ║  l.XX: 	module Option with ...
+//│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 open Option { oops }
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.95: 	open Option { oops }
+//│ ║  l.+1: 	open Option { oops }
 //│ ║        	              ^^^^
 //│ ╟── Module 'Option' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
-//│ ║  l.6: 	module Option with ...
-//│ ╙──     	^^^^^^^^^^^^^
+//│ ║  l.XX: 	module Option with ...
+//│ ╙──      	^^^^^^^^^^^^^
 
 :e
 :re
 oops
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.106: 	oops
-//│ ║         	^^^^
+//│ ║  l.+1: 	oops
+//│ ║        	^^^^
 //│ ╟── Module 'Option' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
-//│ ║  l.6: 	module Option with ...
-//│ ╙──     	^^^^^^^^^^^^^
+//│ ║  l.XX: 	module Option with ...
+//│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 Option.None.oops
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.118: 	Option.None.oops
-//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	Option.None.oops
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Object 'None' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
-//│ ║  l.10: 	object None
+//│ ║  l.XX: 	object None
 //│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

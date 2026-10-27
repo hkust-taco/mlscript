@@ -27,11 +27,11 @@ fun f(x, ...xs, y) = [x, xs, y]
 :e
 f(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.28: 	f(1)
+//│ ║  l.+1: 	f(1)
 //│ ║        	^^^^
 //│ ╟── Function 'f' expected at least 2 arguments, but got 1
-//│ ║  l.8: 	fun f(x, ...xs, y) = [x, xs, y]
-//│ ╙──     	^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun f(x, ...xs, y) = [x, xs, y]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
 
 fun g(...xs, y, z) = [xs, y, z]
@@ -135,11 +135,11 @@ lastA(B(0), B(1), A(2))
 private fun lastB(...xs, y) = y.b
 lastB(B(0), A(1))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.135: 	private fun lastB(...xs, y) = y.b
-//│ ║         	                              ^^^
+//│ ║  l.+1: 	private fun lastB(...xs, y) = y.b
+//│ ║        	                              ^^^
 //│ ╟── Instance of class 'A' does not contain member 'b'
-//│ ║  l.136: 	lastB(B(0), A(1))
-//│ ╙──       	            ^^^^
+//│ ║  l.+2: 	lastB(B(0), A(1))
+//│ ╙──      	            ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -241,8 +241,8 @@ private fun optional(x?, ...middle, y) = [if x is Head as x then x.head else uns
 private fun integerTail(...rest, value: Int) = value
 integerTail(0, 1, "wrong")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.242: 	integerTail(0, 1, "wrong")
-//│ ╙──       	                  ^^^^^^^
+//│ ║  l.+2: 	integerTail(0, 1, "wrong")
+//│ ╙──      	                  ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @private
 //│ define integerTail⁰ as fun integerTail¹(...args: Array⁰): Int⁰ {
@@ -279,11 +279,11 @@ private class TailChild() extends TailBase() with
 private fun useTailBase(base: TailBase) = base.apply(1)
 useTailBase(TailChild())
 //│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'apply' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
-//│ ║  l.278: 	  override fun apply(...rest, value: Str): Int = 0
-//│ ║         	                              ^^^^^^^^^^
+//│ ║  l.+4: 	  override fun apply(...rest, value: Str): Int = 0
+//│ ║        	                              ^^^^^^^^^^
 //│ ╟── The overridden member 'apply' is defined here
-//│ ║  l.276: 	  open fun apply(...rest, value: Int): Int = 0
-//│ ╙──       	           ^^^^^
+//│ ║  l.+2: 	  open fun apply(...rest, value: Int): Int = 0
+//│ ╙──      	           ^^^^^
 //│ = 0
 
 // An unannotated trailing parameter inherits the base member's representation, even across blocks.
@@ -292,8 +292,8 @@ private class InheritedTail() extends TailBase() with
   override fun apply(...rest, value): Int = 0
 InheritedTail().apply("wrong")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.293: 	InheritedTail().apply("wrong")
-//│ ╙──       	                      ^^^^^^^
+//│ ║  l.+3: 	InheritedTail().apply("wrong")
+//│ ╙──      	                      ^^^^^^^
 //│ = 0
 
 // TODO: Decide which changes to an override's parameter layout are permitted. Adding a required
@@ -312,29 +312,29 @@ useTailBase(ExtraTail())
 :e
 fun bad(...xs, ...ys) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.313: 	fun bad(...xs, ...ys) = 0
-//│ ╙──       	               ^^^^^
+//│ ║  l.+1: 	fun bad(...xs, ...ys) = 0
+//│ ╙──      	               ^^^^^
 
 :e
 fun bad(...xs, y?) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.319: 	fun bad(...xs, y?) = 0
-//│ ╙──       	               ^^
+//│ ║  l.+1: 	fun bad(...xs, y?) = 0
+//│ ╙──      	               ^^
 
 :e
 fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] A parameter list cannot have more than one variadic parameter.
-//│ ║  l.325: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
-//│ ╙──       	                           ^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun bad(f: (...Array[Int], ...Array[Int]) -> Int) = 0
+//│ ╙──      	                           ^^^^^^^^^^^^^
 
 :e
 fun bad(f: (...Array[Int], Int?) -> Int) = 0
 //│ ╔══[COMPILATION ERROR] Optional parameters cannot follow a variadic parameter.
-//│ ║  l.331: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
-//│ ╙──       	                           ^^^^
+//│ ║  l.+1: 	fun bad(f: (...Array[Int], Int?) -> Int) = 0
+//│ ╙──      	                           ^^^^
 
 :e
 class C(x, ...xs, y)
 //│ ╔══[COMPILATION ERROR] Spread parameters are not supported in class parameters.
-//│ ║  l.337: 	class C(x, ...xs, y)
-//│ ╙──       	           ^^^^^
+//│ ║  l.+1: 	class C(x, ...xs, y)
+//│ ╙──      	           ^^^^^

@@ -41,16 +41,16 @@ module Right with
   module Types with
     type Number = Str
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.36: 	fun unused(value: Types.Number) = value
+//│ ║  l.+3: 	fun unused(value: Types.Number) = value
 //│ ║        	                  ^^^^^^^^^^^^
 //│ ╟── This type is ambiguous, as it has multiple resolved targets
-//│ ║  l.36: 	fun unused(value: Types.Number) = value
+//│ ║  l.+3: 	fun unused(value: Types.Number) = value
 //│ ║        	                  ^^^^^^^^^^^^
 //│ ╟── candidate: type alias
-//│ ║  l.39: 	    type Number = Int
+//│ ║  l.+6: 	    type Number = Int
 //│ ║        	    ^^^^^^^^^^^
 //│ ╟── candidate: type alias
-//│ ║  l.42: 	    type Number = Str
+//│ ║  l.+9: 	    type Number = Str
 //│ ╙──      	    ^^^^^^^^^^^
 
 
@@ -232,9 +232,9 @@ private class Derived() extends Base() with
 private fun produce(b) = b.get()
 produce(Derived())
 //│ ╔══[COMPILATION ERROR] Overriding member 'get' produces values represented as 'Str', which the member it overrides cannot produce: its results are represented as 'Base'
-//│ ║  l.231: 	  override fun get() = "str"
-//│ ║         	               ^^^
+//│ ║  l.+4: 	  override fun get() = "str"
+//│ ║        	               ^^^
 //│ ╟── The overridden member 'get' is defined here
-//│ ║  l.229: 	  open fun get() = new Base()
-//│ ╙──       	           ^^^
+//│ ║  l.+2: 	  open fun get() = new Base()
+//│ ╙──      	           ^^^
 //│ = "str"

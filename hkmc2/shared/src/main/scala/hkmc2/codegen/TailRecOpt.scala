@@ -372,7 +372,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val paramSyms =
         if hasWrapper then 
           if funsLen === 1 then
-            funs.head.allParamSyms.map(v => VarSymbol(Tree.Ident(v.id.name), erasedType = v.erasedType))
+            funs.head.allParamSyms.map(v => VarSymbol(v.id, erasedType = v.erasedType))
           else for i <- 0 until maxParamLen yield VarSymbol(Tree.Ident("param" + i), erasedType = N)
         else funs.head.allParamSyms
       .toList

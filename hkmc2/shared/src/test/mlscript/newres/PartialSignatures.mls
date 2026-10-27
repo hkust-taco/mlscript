@@ -32,16 +32,16 @@ class Pair[A, B](val value: [A, B])
 private fun second(pair: Pair[Int]) = pair.value.1
 [second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.33: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ║  l.+5: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.33: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ║  l.+5: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
 //│ ╙──      	                                                    ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.33: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ║  l.+5: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
 //│ ║        	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.33: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
+//│ ║  l.+5: 	[second(Pair([0, First(1)])).first, second(Pair([0, Second(2)])).second]
 //│ ╙──      	                 ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: 'undefined'
@@ -57,16 +57,16 @@ type HalfPair[T] = Pair[Int, T]
 private fun second(pair: HalfPair) = pair.value.1
 [second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.58: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ║  l.+6: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.58: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ║  l.+6: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
 //│ ╙──      	                                                    ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.58: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ║  l.+6: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
 //│ ║        	                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.58: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
+//│ ║  l.+6: 	[second(Pair([0, First(3)])).first, second(Pair([0, Second(4)])).second]
 //│ ╙──      	                 ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[3, 4]', got: 'undefined'
@@ -85,16 +85,16 @@ append(xs, First(5))
 append(ys, Second(6))
 [xs.0.first, ys.0.second]
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.86: 	[xs.0.first, ys.0.second]
+//│ ║  l.+8: 	[xs.0.first, ys.0.second]
 //│ ║        	 ^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.85: 	append(ys, Second(6))
+//│ ║  l.+7: 	append(ys, Second(6))
 //│ ╙──      	           ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.86: 	[xs.0.first, ys.0.second]
+//│ ║  l.+8: 	[xs.0.first, ys.0.second]
 //│ ║        	             ^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.84: 	append(xs, First(5))
+//│ ║  l.+6: 	append(xs, First(5))
 //│ ╙──      	           ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ ═══[RUNTIME ERROR] Expected: '[5, 6]', got: 'undefined'
@@ -125,18 +125,18 @@ class Child extends Base with
 private fun read(x: Base) = x.item().value
 read(new Child)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.125: 	private fun read(x: Base) = x.item().value
-//│ ║         	                            ^^^^^^^^^^^^^^
+//│ ║  l.+7: 	private fun read(x: Base) = x.item().value
+//│ ║        	                            ^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.125: 	private fun read(x: Base) = x.item().value
-//│ ╙──       	                            ^^^^^^
+//│ ║  l.+7: 	private fun read(x: Base) = x.item().value
+//│ ╙──      	                            ^^^^^^
 //│ ╔══[COMPILATION ERROR] Overriding member 'item' produces values represented as 'Other', which the member it overrides cannot produce: its results are represented as 'Item'
-//│ ║  l.124: 	  override fun item() = Other(2)
-//│ ║         	               ^^^^
+//│ ║  l.+6: 	  override fun item() = Other(2)
+//│ ║        	               ^^^^
 //│ ╟── The overridden member 'item' is defined here
-//│ ║  l.122: 	  open fun item() = Item(1)
-//│ ╙──       	           ^^^^
+//│ ║  l.+4: 	  open fun item() = Item(1)
+//│ ╙──      	           ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A separate polymorphic signature retains binders for explicit type application.
@@ -164,11 +164,11 @@ class Child extends Base with
 let identity = (x => x) as [A] -> A -> A
 identity[Base](new Child).extra
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.165: 	identity[Base](new Child).extra
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	identity[Base](new Child).extra
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.165: 	identity[Base](new Child).extra
-//│ ╙──       	         ^^^^
+//│ ║  l.+5: 	identity[Base](new Child).extra
+//│ ╙──      	         ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ identity = fun identity
 
@@ -177,11 +177,11 @@ identity[Base](new Child).extra
 let identity = (x => x) as [A] -> A -> A
 identity[Int, Int](1)
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.178: 	identity[Int, Int](1)
-//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	identity[Int, Int](1)
+//│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature expected 1 type argument, but got 2
-//│ ║  l.177: 	let identity = (x => x) as [A] -> A -> A
-//│ ╙──       	                                  ^^^^^^
+//│ ║  l.+1: 	let identity = (x => x) as [A] -> A -> A
+//│ ╙──      	                                  ^^^^^^
 //│ = 1
 //│ identity = fun identity
 

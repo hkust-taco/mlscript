@@ -51,13 +51,13 @@ xs |.map(x => x * 2) |.print()
 xs |.
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.52: 	  map(x => x * 2)
+//│ ║  l.+2: 	  map(x => x * 2)
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 2 arguments, but got 1
-//│ ║  l.42: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
+//│ ║  l.XX: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
-//│ ║  l.52: 	  map(x => x * 2)
+//│ ║  l.+2: 	  map(x => x * 2)
 //│ ╙──      	      ^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda5, tmp;
@@ -74,13 +74,13 @@ xs |.
 xs|.
   map(x => x * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.75: 	  map(x => x * 2)
+//│ ║  l.+2: 	  map(x => x * 2)
 //│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── Function 'map' expected 2 arguments, but got 1
-//│ ║  l.42: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
+//│ ║  l.XX: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
-//│ ║  l.75: 	  map(x => x * 2)
+//│ ║  l.+2: 	  map(x => x * 2)
 //│ ╙──      	      ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected at least 2 arguments but got 1
 

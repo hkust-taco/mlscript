@@ -4,21 +4,21 @@
 :e
 #dbg('unknown)
 //│ ╔══[COMPILATION ERROR] Unknown debugging aspect 'unknown'
-//│ ║  l.5: 	#dbg('unknown)
-//│ ╙──     	     ^^^^^^^^
+//│ ║  l.+1: 	#dbg('unknown)
+//│ ╙──      	     ^^^^^^^^
 
 
 :e
 #dbg(elaboration: 1)
 //│ ╔══[COMPILATION ERROR] Expected a boolean value
-//│ ║  l.12: 	#dbg(elaboration: 1)
+//│ ║  l.+1: 	#dbg(elaboration: 1)
 //│ ╙──      	                  ^
 
 
 :e
 #dbg(out: File(1))
 //│ ╔══[COMPILATION ERROR] Expected StdIO or File("path")
-//│ ║  l.19: 	#dbg(out: File(1))
+//│ ║  l.+1: 	#dbg(out: File(1))
 //│ ╙──      	          ^^^^^^^
 
 
@@ -26,7 +26,7 @@
 :e
 #dbg('parsing)
 //│ ╔══[COMPILATION ERROR] Unknown debugging aspect 'parsing'
-//│ ║  l.27: 	#dbg('parsing)
+//│ ║  l.+1: 	#dbg('parsing)
 //│ ╙──      	     ^^^^^^^^
 
 
@@ -36,7 +36,7 @@
 @dbg('optimizations, 'lowering, showUids: false) fun mixed_local() = 57
 mixed_local()
 //│ ╔══[WARNING] Debugging aspect 'optimizations' is not supported in @dbg; use #dbg(optimizations: true) instead.
-//│ ║  l.36: 	@dbg('optimizations, 'lowering, showUids: false) fun mixed_local() = 57
+//│ ║  l.+1: 	@dbg('optimizations, 'lowering, showUids: false) fun mixed_local() = 57
 //│ ╙──      	     ^^^^^^^^^^^^^^
 //│ Lowering.term 57
 //│ = 57
@@ -46,7 +46,7 @@ mixed_local()
 :w
 @dbg('lowering) let not_a_definition = 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.47: 	@dbg('lowering) let not_a_definition = 1
+//│ ║  l.+1: 	@dbg('lowering) let not_a_definition = 1
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ not_a_definition = 1
 
@@ -55,5 +55,5 @@ fun local_let() =
   @dbg('lowering) let not_a_definition = 2
   not_a_definition
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.55: 	  @dbg('lowering) let not_a_definition = 2
+//│ ║  l.+2: 	  @dbg('lowering) let not_a_definition = 2
 //│ ╙──      	  ^^^^^^^^^^^^^^^

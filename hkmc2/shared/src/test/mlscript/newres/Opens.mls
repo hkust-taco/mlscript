@@ -100,19 +100,19 @@ fun ambiguous() = {
 }
 ambiguous()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
-//│ ║  l.99: 	  extra
+//│ ║  l.+4: 	  extra
 //│ ║        	  ^^^^^
 //│ ╟── candidate: value 'extra' defined here
-//│ ║  l.8: 	  val extra = 3
-//│ ║       	  ^^^^^^^^^^^^^
+//│ ║  l.XX: 	  val extra = 3
+//│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.97: 	  open Values
+//│ ║  l.+2: 	  open Values
 //│ ║        	       ^^^^^^
 //│ ╟── candidate: value 'extra' defined here
-//│ ║  l.38: 	module Selected { val extra = 6 }
+//│ ║  l.XX: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.98: 	  open Selected
+//│ ║  l.+3: 	  open Selected
 //│ ╙──      	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -123,17 +123,17 @@ fun missing() = {
 }
 missing()
 //│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: absent
-//│ ║  l.122: 	  absent
-//│ ╙──       	  ^^^^^^
+//│ ║  l.+3: 	  absent
+//│ ╙──      	  ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 open Later { absent }
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.131: 	open Later { absent }
-//│ ║         	             ^^^^^^
+//│ ║  l.+1: 	open Later { absent }
+//│ ║        	             ^^^^^^
 //│ ╟── Module 'Later' does not contain member 'absent'
-//│ ║  l.62: 	module Later { val answer = 7 }
+//│ ║  l.XX: 	module Later { val answer = 7 }
 //│ ╙──      	^^^^^^^^^^^^
 
 
@@ -229,20 +229,20 @@ fun twoInstances() = {
 }
 twoInstances()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'value' is ambiguous
-//│ ║  l.228: 	  value
-//│ ║         	  ^^^^^
+//│ ║  l.+6: 	  value
+//│ ║        	  ^^^^^
 //│ ╟── candidate: value 'value' defined here
-//│ ║  l.218: 	  module M { val value = n }
-//│ ║         	             ^^^^^^^^^^^^^
+//│ ║  l.XX: 	  module M { val value = n }
+//│ ║        	             ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.226: 	  open first
-//│ ║         	       ^^^^^
+//│ ║  l.+4: 	  open first
+//│ ║        	       ^^^^^
 //│ ╟── candidate: value 'value' defined here
-//│ ║  l.218: 	  module M { val value = n }
-//│ ║         	             ^^^^^^^^^^^^^
+//│ ║  l.XX: 	  module M { val value = n }
+//│ ║        	             ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.227: 	  open second
-//│ ╙──       	       ^^^^^^
+//│ ║  l.+5: 	  open second
+//│ ╙──      	       ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ first = class M { value: 16 }
 //│ second = class M { value: 17 }
@@ -278,11 +278,11 @@ val Shadowed = 20
 open ClassSource
 new Shadowed
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.279: 	new Shadowed
-//│ ║         	^^^^^^^^^^^^
+//│ ║  l.+4: 	new Shadowed
+//│ ║        	^^^^^^^^^^^^
 //│ ╟── Integer literal cannot be instantiated with keyword 'new'.
-//│ ║  l.277: 	val Shadowed = 20
-//│ ╙──       	               ^^
+//│ ║  l.+2: 	val Shadowed = 20
+//│ ╙──      	               ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ Shadowed = 20
 
@@ -311,20 +311,20 @@ fun ambiguousReversed() = {
 }
 ambiguousReversed()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
-//│ ║  l.310: 	  extra
-//│ ║         	  ^^^^^
+//│ ║  l.+4: 	  extra
+//│ ║        	  ^^^^^
 //│ ╟── candidate: value 'extra' defined here
-//│ ║  l.38: 	module Selected { val extra = 6 }
+//│ ║  l.XX: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.308: 	  open Selected
-//│ ║         	       ^^^^^^^^
+//│ ║  l.+2: 	  open Selected
+//│ ║        	       ^^^^^^^^
 //│ ╟── candidate: value 'extra' defined here
-//│ ║  l.8: 	  val extra = 3
-//│ ║       	  ^^^^^^^^^^^^^
+//│ ║  l.XX: 	  val extra = 3
+//│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.309: 	  open Values
-//│ ╙──       	       ^^^^^^
+//│ ║  l.+3: 	  open Values
+//│ ╙──      	       ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -380,18 +380,18 @@ fun inheritedAmbiguity() = {
 }
 inheritedAmbiguity()
 //│ ╔══[COMPILATION ERROR] Wildcard-open reference 'extra' is ambiguous
-//│ ║  l.378: 	  fun nested() = extra
-//│ ║         	                 ^^^^^
+//│ ║  l.+4: 	  fun nested() = extra
+//│ ║        	                 ^^^^^
 //│ ╟── candidate: value 'extra' defined here
-//│ ║  l.8: 	  val extra = 3
-//│ ║       	  ^^^^^^^^^^^^^
+//│ ║  l.XX: 	  val extra = 3
+//│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.376: 	  open Values
-//│ ║         	       ^^^^^^
+//│ ║  l.+2: 	  open Values
+//│ ║        	       ^^^^^^
 //│ ╟── candidate: value 'extra' defined here
-//│ ║  l.38: 	module Selected { val extra = 6 }
+//│ ║  l.XX: 	module Selected { val extra = 6 }
 //│ ║        	                  ^^^^^^^^^^^^^
 //│ ╟── Opened here
-//│ ║  l.377: 	  open Selected
-//│ ╙──       	       ^^^^^^^^
+//│ ║  l.+3: 	  open Selected
+//│ ╙──      	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -101,8 +101,8 @@ fun g(x) = if x + 1 { == 2 then "a", == 3 then "b" } else "c"
 :pe
 fun h(x) = if x {== 1 then "a" else "b"}
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.102: 	fun h(x) = if x {== 1 then "a" else "b"}
-//│ ╙──       	                               ^^^^
+//│ ║  l.+1: 	fun h(x) = if x {== 1 then "a" else "b"}
+//│ ╙──      	                               ^^^^
 
 
 // * Curly-brace bodies that do not start with an operator are not operator blocks.

@@ -164,14 +164,14 @@ let value = const(1)
 set value = wasm.i64.const(2)
 value
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
-//│ ║  l.164: 	set value = wasm.i64.const(2)
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	set value = wasm.i64.const(2)
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
-//│ ║  l.163: 	let value = const(1)
-//│ ╙──       	    ^^^^^
+//│ ║  l.+1: 	let value = const(1)
+//│ ╙──      	    ^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.163: 	let value = const(1)
-//│ ╙──       	            ^^^^^^^^
+//│ ║  l.+1: 	let value = const(1)
+//│ ╙──      	            ^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i64` to `(ref null any)` in a different type hierarchy
 
 
@@ -180,11 +180,11 @@ value
 fun exported(value) = value
 exported(const(42))
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.180: 	fun exported(value) = value
-//│ ╙──       	                      ^^^^^
+//│ ║  l.+1: 	fun exported(value) = value
+//│ ╙──      	                      ^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.181: 	exported(const(42))
-//│ ╙──       	         ^^^^^^^^^
+//│ ║  l.+2: 	exported(const(42))
+//│ ╙──      	         ^^^^^^^^^
 //│ Wasm result:
 //│ = 42
 
@@ -194,8 +194,8 @@ exported(const(42))
 val annotated: Any = const(42)
 annotated
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.194: 	val annotated: Any = const(42)
-//│ ╙──       	                     ^^^^^^^^^
+//│ ║  l.+1: 	val annotated: Any = const(42)
+//│ ╙──      	                     ^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 
 

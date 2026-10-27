@@ -231,7 +231,7 @@ class LabelSymbol(val trm: Opt[Term], name: Str = "lbl")(using State) extends Lo
 class SplitSymbol(val body: Split, name: Str = "split")(using State) extends LocalSymbol:
   var label: Opt[LabelSymbol] = N
   def nme = name
-  def subst(using s: SymbolSubst): SplitSymbol = this // SplitSymbols are not substituted
+  def subst(using s: SymbolSubst): SplitSymbol = s.mapSplitSym(this)
   def toLoc = body.toLoc
   override def prefix: Str = "split:"
 

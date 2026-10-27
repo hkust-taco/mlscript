@@ -31,11 +31,11 @@ g(2)
 :e
 foo(_, _, 3) of 1, 2
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.32: 	foo(_, _, 3) of 1, 2
+//│ ║  l.+1: 	foo(_, _, 3) of 1, 2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Tuple literal cannot be called like a function.
-//│ ║  l.7: 	fun foo(x, y, z) = [x, y, z]
-//│ ╙──     	                   ^^^^^^^^^
+//│ ║  l.XX: 	fun foo(x, y, z) = [x, y, z]
+//│ ╙──      	                   ^^^^^^^^^
 //│ = fun
 
 {foo(_, _, 3)} of 1, 2
@@ -101,10 +101,10 @@ i(print, 2)
 :re
 i(print)(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.102: 	i(print)(2)
-//│ ║         	^^^^^^^^
+//│ ║  l.+1: 	i(print)(2)
+//│ ║        	^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.91: 	let i = _(0, 1, _)
+//│ ║  l.XX: 	let i = _(0, 1, _)
 //│ ╙──      	        ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'i' expected at least 2 arguments but got 1
 
@@ -113,27 +113,27 @@ i(print)(2)
 :e
 i((x, y, z) => x + y + z, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.102: 	i(print)(2)
-//│ ║         	^^^^^^^^^^^
+//│ ║  l.XX: 	i(print)(2)
+//│ ║        	^^^^^^^^^^^
 //│ ╟── Value of type 'Int' cannot be called like a function.
-//│ ║  l.114: 	i((x, y, z) => x + y + z, 2)
-//│ ╙──       	               ^^^^^^^^^
+//│ ║  l.+1: 	i((x, y, z) => x + y + z, 2)
+//│ ╙──      	               ^^^^^^^^^
 //│ = 3
 
 // :re
 :e
 i((...args) => [...args], _)(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.125: 	i((...args) => [...args], _)(2)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	i((...args) => [...args], _)(2)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Int' cannot be called like a function.
-//│ ║  l.114: 	i((x, y, z) => x + y + z, 2)
-//│ ║         	               ^^^^^^^^^
+//│ ║  l.XX: 	i((x, y, z) => x + y + z, 2)
+//│ ║        	               ^^^^^^^^^
 //│ ╟── Tuple literal cannot be called like a function.
-//│ ║  l.125: 	i((...args) => [...args], _)(2)
-//│ ║         	                   ^^^^
+//│ ║  l.+1: 	i((...args) => [...args], _)(2)
+//│ ║        	                   ^^^^
 //│ ╟── Tuple literal cannot be called like a function.
-//│ ║  l.91: 	let i = _(0, 1, _)
+//│ ║  l.XX: 	let i = _(0, 1, _)
 //│ ╙──      	         ^^^^^^^^^
 //│ = fun
 
@@ -152,18 +152,18 @@ i((...args) => [...args], _)(2)
 :re
 123 |> (_ + 1 >> _ * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.153: 	123 |> (_ + 1 >> _ * 2)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	123 |> (_ + 1 >> _ * 2)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Callback parameter list does not match its declared function type.
-//│ ║  l.153: 	123 |> (_ + 1 >> _ * 2)
-//│ ║         	        ^^^^^^^^^^^^^^
+//│ ║  l.+1: 	123 |> (_ + 1 >> _ * 2)
+//│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── The expected function type is declared here.
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.30: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
+//│ ║  l.XX: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
 //│ ╙──      	                                 ^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
-//│ ║  l.153: 	123 |> (_ + 1 >> _ * 2)
-//│ ╙──       	        ^^^^^
+//│ ║  l.+1: 	123 |> (_ + 1 >> _ * 2)
+//│ ╙──      	        ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 2 arguments but got 1
 
 (_ + 1 + _ * 2) of 123, 456
@@ -208,8 +208,8 @@ data class C(a, b, c)
 :ge
 2 |> C(1, _, 3) |> print
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
-//│ ║  l.209: 	2 |> C(1, _, 3) |> print
-//│ ╙──       	     ^^^^^^^^^^
+//│ ║  l.+1: 	2 |> C(1, _, 3) |> print
+//│ ╙──      	     ^^^^^^^^^^
 //│ = fun
 
 2 |> (C(1, _, 3)) |> print
@@ -255,22 +255,27 @@ _ - _ of 1, 2
 |> (_ - 2)
 //│ = -1
 
-:pe
+:e
+:re
 |> 1
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.259: 	|> 1
-//│ ╙──       	   ^
-//│ = fun pipeInto
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	|> 1
+//│ ║        	^^^^
+//│ ╟── Function 'pipeInto' expected 2 arguments, but got 1
+//│ ║  in ../../mlscript-compile/Predef.mls
+//│ ║  l.XX: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 :e
 :re
 |> (1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.267: 	|> (1)
-//│ ║         	^^^^^^
+//│ ║  l.+1: 	|> (1)
+//│ ║        	^^^^^^
 //│ ╟── Function 'pipeInto' expected 2 arguments, but got 1
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.30: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
+//│ ║  l.XX: 	fun (|>) pipeInto[A, B](x: A, f: A -> B): B = f(x)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
@@ -315,11 +320,11 @@ _ - _ of 1, 2
 :w
 let f = if _ then 1 else 0
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.316: 	let f = if _ then 1 else 0
-//│ ║         	             ^^^^^^
+//│ ║  l.+1: 	let f = if _ then 1 else 0
+//│ ║        	             ^^^^^^
 //│ ╟── This branch is unreachable.
-//│ ║  l.316: 	let f = if _ then 1 else 0
-//│ ╙──       	                    ^^^^^^
+//│ ║  l.+1: 	let f = if _ then 1 else 0
+//│ ╙──      	                    ^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f13; f13 = 1;
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

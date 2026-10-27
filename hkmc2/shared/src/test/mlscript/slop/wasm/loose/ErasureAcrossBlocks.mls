@@ -12,7 +12,7 @@ ident(1)
 :ge
 ident("a")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.13: 	ident("a")
+//│ ║  l.+1: 	ident("a")
 //│ ╙──      	      ^^^
 //│ Wasm result:
 //│ = "a"

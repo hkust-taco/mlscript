@@ -13,10 +13,10 @@ fun f(x) =
   if x < 0 return 0
   Math.sqrt(x)
 //│ ╔══[PARSE ERROR] Unexpected 'return' keyword here
-//│ ║  l.13: 	  if x < 0 return 0
+//│ ║  l.+2: 	  if x < 0 return 0
 //│ ╙──      	           ^^^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
-//│ ║  l.13: 	  if x < 0 return 0
+//│ ║  l.+2: 	  if x < 0 return 0
 //│ ╙──      	         ^
 
 
@@ -26,19 +26,19 @@ fun hasZeroElement(xs) =
     Cons(hd, tl) do set xs = tl
     Nil return false
 //│ ╔══[PARSE ERROR] Unexpected 'return' keyword here
-//│ ║  l.25: 	    Cons(0, tl) return true
+//│ ║  l.+3: 	    Cons(0, tl) return true
 //│ ╙──      	                ^^^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (integer literal).
-//│ ║  l.25: 	    Cons(0, tl) return true
+//│ ║  l.+3: 	    Cons(0, tl) return true
 //│ ╙──      	         ^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (identifier).
-//│ ║  l.25: 	    Cons(0, tl) return true
+//│ ║  l.+3: 	    Cons(0, tl) return true
 //│ ╙──      	            ^^
 //│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
-//│ ║  l.25: 	    Cons(0, tl) return true
+//│ ║  l.+3: 	    Cons(0, tl) return true
 //│ ║        	         ^
 //│ ╟── This branch is unreachable.
-//│ ║  l.25: 	    Cons(0, tl) return true
+//│ ║  l.+3: 	    Cons(0, tl) return true
 //│ ╙──      	            ^^
 
 

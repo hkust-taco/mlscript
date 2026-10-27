@@ -33,10 +33,10 @@ let c = new Child, [
 :e
 c.hello
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.34: 	c.hello
+//│ ║  l.+1: 	c.hello
 //│ ║        	^^^^^^^
 //│ ╟── Instance of class 'Child' does not contain member 'hello'
-//│ ║  l.20: 	let c = new Child, [
+//│ ║  l.XX: 	let c = new Child, [
 //│ ╙──      	        ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -77,13 +77,13 @@ class Renamed extends Base {
   @jsSymbol(Keys.first) override fun other() = 0
 }
 //│ ╔══[COMPILATION ERROR] Member 'other' uses the same @jsSymbol key as inherited member 'read'; overrides must keep the inherited name.
-//│ ║  l.77: 	  @jsSymbol(Keys.first) override fun other() = 0
+//│ ║  l.+2: 	  @jsSymbol(Keys.first) override fun other() = 0
 //│ ║        	                                     ^^^^^
 //│ ╟── The inherited member is declared here.
-//│ ║  l.14: 	  @jsSymbol(Keys.first) open fun read() = 41
+//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read() = 41
 //│ ╙──      	                             ^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Member 'other' is marked 'override' but overrides no inherited member
-//│ ║  l.77: 	  @jsSymbol(Keys.first) override fun other() = 0
+//│ ║  l.+2: 	  @jsSymbol(Keys.first) override fun other() = 0
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -91,10 +91,10 @@ class DifferentKey extends Base {
   @jsSymbol(Keys.second) override fun read() = 0
 }
 //│ ╔══[COMPILATION ERROR] Overriding member 'read' must use the same @jsSymbol annotation as its parent.
-//│ ║  l.91: 	  @jsSymbol(Keys.second) override fun read() = 0
+//│ ║  l.+2: 	  @jsSymbol(Keys.second) override fun read() = 0
 //│ ║        	                                      ^^^^
 //│ ╟── The inherited member is declared here.
-//│ ║  l.14: 	  @jsSymbol(Keys.first) open fun read() = 41
+//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read() = 41
 //│ ╙──      	                                 ^^^^
 
 // An override must keep the runtime key declared by its parent.
@@ -103,10 +103,10 @@ class MissingSymbol extends Base {
   override fun read() = 0
 }
 //│ ╔══[COMPILATION ERROR] Overriding member 'read' must use the same @jsSymbol annotation as its parent.
-//│ ║  l.103: 	  override fun read() = 0
-//│ ║         	               ^^^^
+//│ ║  l.+2: 	  override fun read() = 0
+//│ ║        	               ^^^^
 //│ ╟── The inherited member is declared here.
-//│ ║  l.14: 	  @jsSymbol(Keys.first) open fun read() = 41
+//│ ║  l.XX: 	  @jsSymbol(Keys.first) open fun read() = 41
 //│ ╙──      	                                 ^^^^
 
 :e
@@ -116,11 +116,11 @@ class Duplicate {
 }
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member 'Keys.first'.
 //│ ╟── Member 'read' is defined here.
-//│ ║  l.114: 	  @jsSymbol(Keys.first) fun read() = 0
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  @jsSymbol(Keys.first) fun read() = 0
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'other' is defined here.
-//│ ║  l.115: 	  @jsSymbol(Keys.first) fun other() = 1
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	  @jsSymbol(Keys.first) fun other() = 1
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 val ordinary = Symbol("ordinary")
 //│ ordinary = Symbol("ordinary")
@@ -130,36 +130,36 @@ class Unmarked {
   @jsSymbol(ordinary) fun read() = 0
 }
 //│ ╔══[COMPILATION ERROR] Resolution error in member reference
-//│ ║  l.130: 	  @jsSymbol(ordinary) fun read() = 0
-//│ ║         	            ^^^^^^^^
+//│ ║  l.+2: 	  @jsSymbol(ordinary) fun read() = 0
+//│ ║        	            ^^^^^^^^
 //│ ╟── @jsSymbol requires a val marked @annotations.fresh.
-//│ ║  l.130: 	  @jsSymbol(ordinary) fun read() = 0
-//│ ║         	            ^^^^^^^^
+//│ ║  l.+2: 	  @jsSymbol(ordinary) fun read() = 0
+//│ ║        	            ^^^^^^^^
 //│ ╟── The referenced member is declared here.
-//│ ║  l.125: 	val ordinary = Symbol("ordinary")
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	val ordinary = Symbol("ordinary")
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 class Literal {
   @jsSymbol("iterator") fun read() = 0
 }
 //│ ╔══[COMPILATION ERROR] Resolution error in string literal
-//│ ║  l.144: 	  @jsSymbol("iterator") fun read() = 0
-//│ ║         	            ^^^^^^^^^^
+//│ ║  l.+2: 	  @jsSymbol("iterator") fun read() = 0
+//│ ║        	            ^^^^^^^^^^
 //│ ╟── @jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh.
-//│ ║  l.144: 	  @jsSymbol("iterator") fun read() = 0
-//│ ╙──       	            ^^^^^^^^^^
+//│ ║  l.+2: 	  @jsSymbol("iterator") fun read() = 0
+//│ ╙──      	            ^^^^^^^^^^
 
 :e
 class Call {
   @jsSymbol(Symbol("called")) fun read() = 0
 }
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.155: 	  @jsSymbol(Symbol("called")) fun read() = 0
-//│ ║         	            ^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  @jsSymbol(Symbol("called")) fun read() = 0
+//│ ║        	            ^^^^^^^^^^^^^^^^
 //│ ╟── @jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh.
-//│ ║  l.155: 	  @jsSymbol(Symbol("called")) fun read() = 0
-//│ ╙──       	            ^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  @jsSymbol(Symbol("called")) fun read() = 0
+//│ ╙──      	            ^^^^^^^^^^^^^^^^
 
 let changing = holder
 //│ changing = KeyHolder { key: Symbol("held") }
@@ -169,11 +169,11 @@ class MutablePrefix {
   @jsSymbol(changing.key) fun read() = 0
 }
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.169: 	  @jsSymbol(changing.key) fun read() = 0
-//│ ║         	            ^^^^^^^^^^^^
+//│ ║  l.+2: 	  @jsSymbol(changing.key) fun read() = 0
+//│ ║        	            ^^^^^^^^^^^^
 //│ ╟── @jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh.
-//│ ║  l.169: 	  @jsSymbol(changing.key) fun read() = 0
-//│ ╙──       	            ^^^^^^^^^^^^
+//│ ║  l.+2: 	  @jsSymbol(changing.key) fun read() = 0
+//│ ╙──      	            ^^^^^^^^^^^^
 
 // The annotation is a prelude declaration, usable through ordinary opens.
 :expect [50, 51]
@@ -203,8 +203,8 @@ private fun shadowed() =
   (new Ordinary).("read")()
 shadowed()
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.201: 	    @jsSymbol(Keys.first) fun read() = 52
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    @jsSymbol(Keys.first) fun read() = 52
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^
 //│ = 52
 
 // An escaping instance can't refer back to the local key.
@@ -222,11 +222,11 @@ private fun escaping(value) =
 :e
 escaping(54).read()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'localKey' here: 'localKey' is not in scope.
-//│ ║  l.223: 	escaping(54).read()
-//│ ║         	            ^^^^^
+//│ ║  l.+1: 	escaping(54).read()
+//│ ║        	            ^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.214: 	  @fresh val localKey = Symbol("escaping")
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  @fresh val localKey = Symbol("escaping")
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -301,11 +301,11 @@ private fun moduleKey(value) =
 :sir
 moduleKey(62).fetch()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is not in scope.
-//│ ║  l.302: 	moduleKey(62).fetch()
-//│ ║         	             ^^^^^^
+//│ ║  l.+1: 	moduleKey(62).fetch()
+//│ ║        	             ^^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.294: 	  module LocalKeys { @fresh val key = Symbol("module key") }
-//│ ╙──       	         ^^^^^^^^^
+//│ ║  l.XX: 	  module LocalKeys { @fresh val key = Symbol("module key") }
+//│ ╙──      	         ^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -322,21 +322,21 @@ private fun localCell(value) =
 :e
 localCell(0).value
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is not in scope.
-//│ ║  l.323: 	localCell(0).value
-//│ ║         	            ^^^^^^
+//│ ║  l.+1: 	localCell(0).value
+//│ ║        	            ^^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.317: 	  @fresh val cellKey = Symbol("cell")
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  @fresh val cellKey = Symbol("cell")
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 set localCell(0).value = 63
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'cellKey' here: 'cellKey' is not in scope.
-//│ ║  l.333: 	set localCell(0).value = 63
-//│ ║         	                ^^^^^^
+//│ ║  l.+1: 	set localCell(0).value = 63
+//│ ║        	                ^^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.317: 	  @fresh val cellKey = Symbol("cell")
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  @fresh val cellKey = Symbol("cell")
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Opened calls must use the same checked key lowering as explicit selections.
@@ -347,11 +347,11 @@ private fun openedEscaped() =
   fetch()
 openedEscaped()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'LocalKeys.key' here: 'LocalKeys' is not in scope.
-//│ ║  l.347: 	  fetch()
-//│ ║         	  ^^^^^
+//│ ║  l.+4: 	  fetch()
+//│ ║        	  ^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.294: 	  module LocalKeys { @fresh val key = Symbol("module key") }
-//│ ╙──       	         ^^^^^^^^^
+//│ ║  l.XX: 	  module LocalKeys { @fresh val key = Symbol("module key") }
+//│ ╙──      	         ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect 67
@@ -381,14 +381,14 @@ new SymbolKeyLibrary.FileReader().read()
 :sjs
 new SymbolKeyLibrary.FileReader().readPriv()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'SymbolKeyLibrary.privateKey' here: private member 'privateKey' belongs to another file.
-//│ ║  l.382: 	new SymbolKeyLibrary.FileReader().readPriv()
-//│ ║         	                                 ^^^^^^^^^
+//│ ║  l.+1: 	new SymbolKeyLibrary.FileReader().readPriv()
+//│ ║        	                                 ^^^^^^^^^
 //│ ╟── The private member is declared here.
 //│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
-//│ ║  l.9: 	  @fresh private val privateKey = Symbol("private key")
-//│ ║       	                     ^^^^^^^^^^
+//│ ║  l.XX: 	  @fresh private val privateKey = Symbol("private key")
+//│ ║        	                     ^^^^^^^^^^
 //│ ╟── The keyed member 'readPriv' is defined here.
-//│ ║  l.32: 	    @jsSymbol(privateKey) fun readPriv() = 65
+//│ ║  l.XX: 	    @jsSymbol(privateKey) fun readPriv() = 65
 //│ ╙──      	                              ^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
@@ -399,11 +399,11 @@ new SymbolKeyLibrary.FileReader().readPriv()
 :sir
 SymbolKeyLibrary.makeLocal(65).read()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'key' here: 'key' is not in scope.
-//│ ║  l.400: 	SymbolKeyLibrary.makeLocal(65).read()
-//│ ║         	                              ^^^^^
+//│ ║  l.+1: 	SymbolKeyLibrary.makeLocal(65).read()
+//│ ║        	                              ^^^^^
 //│ ╟── The key's root binding is defined here.
 //│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
-//│ ║  l.35: 	    @fresh val key = Symbol("factory key")
+//│ ║  l.XX: 	    @fresh val key = Symbol("factory key")
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
@@ -427,11 +427,11 @@ class MissingSuperKey extends EscapedBase {
 }
 (new MissingSuperKey).run()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'baseKey' here: 'baseKey' is not in scope.
-//│ ║  l.426: 	  fun run() = super.read()
-//│ ║         	                   ^^^^^
+//│ ║  l.+2: 	  fun run() = super.read()
+//│ ║        	                   ^^^^^
 //│ ╟── The key's root binding is defined here.
-//│ ║  l.416: 	  @fresh val baseKey = Symbol("base")
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  @fresh val baseKey = Symbol("base")
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // The annotation's unqualified module reference needs its enclosing path at the caller.
@@ -474,14 +474,14 @@ private fun inheritedRead(value) = value.read()
 :sir
 new SymbolKeyLibrary.PrivatePathReader().read()
 //│ ╔══[COMPILATION ERROR] Cannot use @jsSymbol key 'SymbolKeyLibrary.PrivateKeys.key' here: private member 'PrivateKeys' belongs to another file.
-//│ ║  l.475: 	new SymbolKeyLibrary.PrivatePathReader().read()
-//│ ║         	                                        ^^^^^
+//│ ║  l.+1: 	new SymbolKeyLibrary.PrivatePathReader().read()
+//│ ║        	                                        ^^^^^
 //│ ╟── The private member is declared here.
 //│ ║  in ../../mlscript-compile/SymbolKeyLibrary.mls
-//│ ║  l.19: 	  private module PrivateKeys {
+//│ ║  l.XX: 	  private module PrivateKeys {
 //│ ║        	                 ^^^^^^^^^^^
 //│ ╟── The keyed member 'read' is defined here.
-//│ ║  l.23: 	    @jsSymbol(PrivateKeys.key) fun read() = 72
+//│ ║  l.XX: 	    @jsSymbol(PrivateKeys.key) fun read() = 72
 //│ ╙──      	                                   ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
@@ -511,14 +511,14 @@ both([18])
 :e
 private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
 //│ ╔══[COMPILATION ERROR] This reference has targets with different property keys.
-//│ ║  l.512: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
-//│ ║         	                                                                        ^^^^^^
+//│ ║  l.+1: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
+//│ ║        	                                                                        ^^^^^^
 //│ ╟── Candidate 'first' is declared here.
-//│ ║  l.504: 	type SourceOne = {@jsSymbol(Symbol.iterator) first: () -> Iterator[Int]}
-//│ ║         	                                             ^^^^^
+//│ ║  l.XX: 	type SourceOne = {@jsSymbol(Symbol.iterator) first: () -> Iterator[Int]}
+//│ ║        	                                             ^^^^^
 //│ ╟── Candidate 'first' is declared here.
-//│ ║  l.512: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
-//│ ╙──       	                                       ^^^^^
+//│ ║  l.+1: 	private fun collision(xs: SourceOne & {first: () -> Iterator[Str]}) = xs.first()
+//│ ╙──      	                                       ^^^^^
 
 // An unused annotation must not rename a field behind its source-level name.
 :w
@@ -529,8 +529,8 @@ class Plain {
 let plain = new Plain
 [plain.value, plain.("value")]
 //│ ╔══[WARNING] Only public methods may use @jsSymbol.
-//│ ║  l.527: 	  @jsSymbol(Symbol.iterator) val value = 19
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  @jsSymbol(Symbol.iterator) val value = 19
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = [19, 19]
 //│ plain = Plain { value: 19 }
 

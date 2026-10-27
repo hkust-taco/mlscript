@@ -13,19 +13,21 @@
 (1,)
 //│ = 1
 
-:w
+:e
+:re
 (1, 2)
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.17: 	(1, 2)
-//│ ╙──      	 ^
-//│ = 2
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
+//│ ║  l.+1: 	(1, 2)
+//│ ╙──      	^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:w
+:e
+:re
 (1, 2,)
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.24: 	(1, 2,)
-//│ ╙──      	 ^
-//│ = 2
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
+//│ ║  l.+1: 	(1, 2,)
+//│ ╙──      	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 []
 //│ = []
@@ -49,7 +51,7 @@ null
 :w
 undefined
 //│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
-//│ ║  l.50: 	undefined
+//│ ║  l.+1: 	undefined
 //│ ╙──      	^^^^^^^^^
 
 unsafe.undefined
@@ -61,7 +63,7 @@ unsafe.undefined
 :todo
 NaN
 //│ ╔══[COMPILATION ERROR] Name not found: NaN
-//│ ║  l.62: 	NaN
+//│ ║  l.+1: 	NaN
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -81,7 +83,7 @@ NaN
 :e
 'AA BB'
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.82: 	'AA BB'
+//│ ║  l.+1: 	'AA BB'
 //│ ╙──      	    ^^^
 //│ = "AA"
 
@@ -104,43 +106,43 @@ NaN
 :w
 "\uFE&&"
 //│ ╔══[WARNING] Invalid Unicode escape sequence: expected 4 hexadecimal digits but got 2
-//│ ║  l.105: 	"\uFE&&"
-//│ ╙──       	   ^^
+//│ ║  l.+1: 	"\uFE&&"
+//│ ╙──      	   ^^
 //│ = "&&"
 
 :w
 "\u{}"
 //│ ╔══[WARNING] Expected at least one hexadecimal digit in Unicode escape sequence
-//│ ║  l.112: 	"\u{}"
-//│ ╙──       	   ^
+//│ ║  l.+1: 	"\u{}"
+//│ ╙──      	   ^
 //│ = ""
 
 :w
 "\u{ffffffff}"
 //│ ╔══[WARNING] Too many hexadecimal digits in Unicode escape sequence
-//│ ║  l.119: 	"\u{ffffffff}"
-//│ ╙──       	          ^^
+//│ ║  l.+1: 	"\u{ffffffff}"
+//│ ╙──      	          ^^
 //│ = ""
 
 :w
 "\u{efefef}"
 //│ ╔══[WARNING] Unicode code point out of range: 0xefefef
-//│ ║  l.126: 	"\u{efefef}"
-//│ ╙──       	    ^^^^^^
+//│ ║  l.+1: 	"\u{efefef}"
+//│ ╙──      	    ^^^^^^
 //│ = ""
 
 :w
 "\u{55"
 //│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
-//│ ║  l.133: 	"\u{55"
-//│ ╙──       	      ^
+//│ ║  l.+1: 	"\u{55"
+//│ ╙──      	      ^
 //│ = "U"
 
 :w
 "\u{41****"
 //│ ╔══[WARNING] Unterminated Unicode escape sequence: missing '}'
-//│ ║  l.140: 	"\u{41****"
-//│ ╙──       	      ^
+//│ ║  l.+1: 	"\u{41****"
+//│ ╙──      	      ^
 //│ = "A****"
 
 print of fold(+) of

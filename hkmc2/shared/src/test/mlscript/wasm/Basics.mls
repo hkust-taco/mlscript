@@ -32,7 +32,7 @@ x
 fun foo() = 42
 foo
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.33: 	foo
+//│ ║  l.+2: 	foo
 //│ ╙──      	^^^
 
 :ge
@@ -40,7 +40,7 @@ class Foo with
   val x = 1
 let f = Foo
 //│ ╔══[COMPILATION ERROR] Plain class references are not supported in Wasm; instantiate the class instead.
-//│ ║  l.41: 	let f = Foo
+//│ ║  l.+3: 	let f = Foo
 //│ ╙──      	        ^^^
 
 
@@ -436,8 +436,8 @@ fun bar() = 42
 fun foo() = bar
 foo()()
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.436: 	fun foo() = bar
-//│ ╙──       	            ^^^
+//│ ║  l.+2: 	fun foo() = bar
+//│ ╙──      	            ^^^
 
 
 // The inferred result stays unboxed, but a boxed argument cannot be passed to an unboxed parameter.
@@ -446,7 +446,7 @@ foo()()
 fun takeTop(m: Int32) = m
 takeTop(1)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.447: 	takeTop(1)
-//│ ╙──       	        ^
+//│ ║  l.+2: 	takeTop(1)
+//│ ╙──      	        ^
 //│ Wasm result:
 //│ = 1

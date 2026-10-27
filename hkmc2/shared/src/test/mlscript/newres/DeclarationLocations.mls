@@ -5,11 +5,11 @@
 module Empty
 Empty.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.6: 	Empty.missing
-//│ ║       	^^^^^^^^^^^^^
+//│ ║  l.+2: 	Empty.missing
+//│ ║        	^^^^^^^^^^^^^
 //│ ╟── Module 'Empty' does not contain member 'missing'
-//│ ║  l.5: 	module Empty
-//│ ╙──     	^^^^^^^^^^^^
+//│ ║  l.+1: 	module Empty
+//│ ╙──      	^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A member annotation must not become the enclosing module's location.
@@ -18,10 +18,10 @@ module Container with
   declare fun text(): Str
 Container.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.19: 	Container.missing
+//│ ║  l.+3: 	Container.missing
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Module 'Container' does not contain member 'missing'
-//│ ║  l.17: 	module Container with
+//│ ║  l.+1: 	module Container with
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -32,10 +32,10 @@ module Outer with
     declare fun text(): Str
 Outer.Inner.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.33: 	Outer.Inner.missing
+//│ ║  l.+4: 	Outer.Inner.missing
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── Module 'Inner' does not contain member 'missing'
-//│ ║  l.31: 	  module Inner with
+//│ ║  l.+2: 	  module Inner with
 //│ ╙──      	  ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -46,10 +46,10 @@ class Base with
 fun hidden(value: Base) = value.missing
 hidden(new Base)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.46: 	fun hidden(value: Base) = value.missing
+//│ ║  l.+3: 	fun hidden(value: Base) = value.missing
 //│ ║        	                          ^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'missing'
-//│ ║  l.46: 	fun hidden(value: Base) = value.missing
+//│ ║  l.+3: 	fun hidden(value: Base) = value.missing
 //│ ╙──      	                  ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -59,10 +59,10 @@ class Receiver with
   declare fun text(): Str
   fun inspect() = this.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.60: 	  fun inspect() = this.missing
+//│ ║  l.+3: 	  fun inspect() = this.missing
 //│ ║        	                  ^^^^^^^^^^^^
 //│ ╟── Class definition 'Receiver' does not contain member 'missing'
-//│ ║  l.58: 	class Receiver with
+//│ ║  l.+1: 	class Receiver with
 //│ ╙──      	^^^^^^^^^^^^^^
 
 // Parameterized classes likewise use the written header, not only its fields.
@@ -70,10 +70,10 @@ class Receiver with
 class Parameterized(value: Int) with
   fun inspect() = this.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.71: 	  fun inspect() = this.missing
+//│ ║  l.+2: 	  fun inspect() = this.missing
 //│ ║        	                  ^^^^^^^^^^^^
 //│ ╟── Class definition 'Parameterized' does not contain member 'missing'
-//│ ║  l.70: 	class Parameterized(value: Int) with
+//│ ║  l.+1: 	class Parameterized(value: Int) with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // A class without fields has a declaration location even in pattern diagnostics.
@@ -81,10 +81,10 @@ class Parameterized(value: Int) with
 class Empty
 if new Empty is Empty(_) then 1 else 0
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.82: 	if new Empty is Empty(_) then 1 else 0
+//│ ║  l.+2: 	if new Empty is Empty(_) then 1 else 0
 //│ ║        	                ^^^^^^^^
 //│ ╟── Class definition 'Empty' does not take pattern arguments.
-//│ ║  l.81: 	class Empty
+//│ ║  l.+1: 	class Empty
 //│ ╙──      	^^^^^^^^^^^
 //│ = 0
 
@@ -101,50 +101,50 @@ data class Pair[A](a: A, b: Int) extends Base with
 module Pair with
   fun make(a) = Pair(a, 0)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.97: 	@note
+//│ ║  l.+1: 	@note
 //│ ╙──      	^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.97: 	@note
+//│ ║  l.+1: 	@note
 //│ ╙──      	^^^^^
 
 :e
 Pair(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.111: 	Pair(1)
-//│ ║         	^^^^^^^
+//│ ║  l.+1: 	Pair(1)
+//│ ║        	^^^^^^^
 //│ ╟── Constructor of class 'Pair' expected 2 arguments, but got 1
-//│ ║  l.98: 	data class Pair[A](a: A, b: Int) extends Base with
+//│ ║  l.XX: 	data class Pair[A](a: A, b: Int) extends Base with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = Pair(1, undefined)
 
 :e
 Pair[Int, Int](1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.121: 	Pair[Int, Int](1, 2)
-//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.+1: 	Pair[Int, Int](1, 2)
+//│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Pair' expected 1 type argument, but got 2
-//│ ║  l.98: 	data class Pair[A](a: A, b: Int) extends Base with
+//│ ║  l.XX: 	data class Pair[A](a: A, b: Int) extends Base with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = Pair(1, 2)
 
 :e
 if Pair(1, 2) is Pair(x) then x
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.131: 	if Pair(1, 2) is Pair(x) then x
-//│ ║         	                 ^^^^^^^
+//│ ║  l.+1: 	if Pair(1, 2) is Pair(x) then x
+//│ ║        	                 ^^^^^^^
 //│ ╟── Class definition 'Pair' expected 2 pattern arguments, but got 1
-//│ ║  l.98: 	data class Pair[A](a: A, b: Int) extends Base with
+//│ ║  l.XX: 	data class Pair[A](a: A, b: Int) extends Base with
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :e
 Pair(1, 2).missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.141: 	Pair(1, 2).missing
-//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	Pair(1, 2).missing
+//│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Pair' does not contain member 'missing'
-//│ ║  l.141: 	Pair(1, 2).missing
-//│ ╙──       	^^^^^^^^^^
+//│ ║  l.+1: 	Pair(1, 2).missing
+//│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A `declare` modifier is part of the header.
@@ -154,11 +154,11 @@ declare class Declared(val length: Int) with
   fun reverse(): Declared
 Declared()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.155: 	Declared()
-//│ ║         	^^^^^^^^^^
+//│ ║  l.+3: 	Declared()
+//│ ║        	^^^^^^^^^^
 //│ ╟── Constructor of class 'Declared' expected 1 argument, but got 0
-//│ ║  l.153: 	declare class Declared(val length: Int) with
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	declare class Declared(val length: Int) with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: globalThis.Declared is not a function
 
 // Arity errors also cite the `constructor(...)` declarations, which the header does not show.
@@ -168,14 +168,14 @@ class Constructed with
   fun f = 1
 new Constructed(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.169: 	new Constructed(1)
-//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	new Constructed(1)
+//│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Constructed' expected 2 arguments, but got 1
-//│ ║  l.166: 	class Constructed with
-//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Constructed with
+//│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
-//│ ║  l.167: 	  constructor(x, y)
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  constructor(x, y)
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^
 //│ = Constructed
 
 // Type alias and pattern headers exclude their right-hand sides.
@@ -183,34 +183,34 @@ new Constructed(1)
 type Alias[A] = Pair[A]
 fun excess(value: Alias[Int, Str]) = ()
 //│ ╔══[COMPILATION ERROR] Resolution error in type application
-//│ ║  l.184: 	fun excess(value: Alias[Int, Str]) = ()
-//│ ║         	                  ^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun excess(value: Alias[Int, Str]) = ()
+//│ ║        	                  ^^^^^^^^^^^^^^^
 //│ ╟── Type 'Alias' accepts at most 1 type argument, but got 2.
-//│ ║  l.184: 	fun excess(value: Alias[Int, Str]) = ()
-//│ ║         	                  ^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun excess(value: Alias[Int, Str]) = ()
+//│ ║        	                  ^^^^^^^^^^^^^^^
 //│ ╟── The type parameters are declared here.
-//│ ║  l.183: 	type Alias[A] = Pair[A]
-//│ ╙──       	^^^^^^^^^^^^
+//│ ║  l.+1: 	type Alias[A] = Pair[A]
+//│ ╙──      	^^^^^^^^^^^^
 
 :e
 pattern Small(n) = n & (0 | 1 | 2)
 Small(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.197: 	Small(1)
-//│ ║         	^^^^^^^^
+//│ ║  l.+2: 	Small(1)
+//│ ║        	^^^^^^^^
 //│ ╟── Pattern 'Small' cannot be called like a function.
-//│ ║  l.196: 	pattern Small(n) = n & (0 | 1 | 2)
-//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	pattern Small(n) = n & (0 | 1 | 2)
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 Constructed.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.207: 	Constructed.missing
-//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	Constructed.missing
+//│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class value does not contain member 'missing'
-//│ ║  l.166: 	class Constructed with
-//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	class Constructed with
+//│ ╙──      	^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -219,14 +219,14 @@ class Mixed(a) with
   constructor(x, y)
 new Mixed(1)(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.220: 	new Mixed(1)(2)
-//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	new Mixed(1)(2)
+//│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Mixed' expected 2 arguments, but got 1
-//│ ║  l.217: 	class Mixed(a) with
-//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class Mixed(a) with
+//│ ║        	^^^^^^^^^^^^^^
 //│ ╟── The constructor is declared here.
-//│ ║  l.219: 	  constructor(x, y)
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	  constructor(x, y)
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^
 //│ = Mixed(_)
 
 // The classes of ADT constructors are located at their own declarations,
@@ -238,17 +238,17 @@ abstract class IntList with
     Cons(x: Int, xs: IntList)
 Cons(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.239: 	Cons(1)
-//│ ║         	^^^^^^^
+//│ ║  l.+5: 	Cons(1)
+//│ ║        	^^^^^^^
 //│ ╟── Constructor of class 'Cons' expected 2 arguments, but got 1
-//│ ║  l.238: 	    Cons(x: Int, xs: IntList)
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    Cons(x: Int, xs: IntList)
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot instantiate abstract class 'Cons'
-//│ ║  l.239: 	Cons(1)
-//│ ║         	^^^^^^^
+//│ ║  l.+5: 	Cons(1)
+//│ ║        	^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.238: 	    Cons(x: Int, xs: IntList)
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    Cons(x: Int, xs: IntList)
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
@@ -258,11 +258,11 @@ class Opt[T] with
     Some(x: T)
 Some(1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.259: 	Some(1, 2)
-//│ ║         	^^^^^^^^^^
+//│ ║  l.+5: 	Some(1, 2)
+//│ ║        	^^^^^^^^^^
 //│ ╟── Constructor of class 'Some' expected 1 argument, but got 2
-//│ ║  l.258: 	    Some(x: T)
-//│ ╙──       	    ^^^^^^^^^
+//│ ║  l.+4: 	    Some(x: T)
+//│ ╙──      	    ^^^^^^^^^
 //│ = Some(1)
 
 // Diagnostics citing a function likewise show only its header.
@@ -272,11 +272,11 @@ fun twice(f: Int -> Int, x: Int): Int =
   f(y)
 twice(x => x + 1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.273: 	twice(x => x + 1)
-//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	twice(x => x + 1)
+//│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'twice' expected 2 arguments, but got 1
-//│ ║  l.270: 	fun twice(f: Int -> Int, x: Int): Int =
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun twice(f: Int -> Int, x: Int): Int =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'twice' expected at least 2 arguments but got 1
 
 // So do those citing a member, such as an exposed function with an unknown parameter.
@@ -285,26 +285,26 @@ fun exposed(f) =
   let y = f(0)
   y
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.285: 	  let y = f(0)
-//│ ║         	          ^^^^
+//│ ║  l.+2: 	  let y = f(0)
+//│ ║        	          ^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'f' admits values of unknown shape.
-//│ ║  l.284: 	fun exposed(f) =
-//│ ║         	            ^
+//│ ║  l.+1: 	fun exposed(f) =
+//│ ║        	            ^
 //│ ╟── 'exposed' is exposed by this compilation unit.
-//│ ║  l.284: 	fun exposed(f) =
-//│ ╙──       	^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun exposed(f) =
+//│ ╙──      	^^^^^^^^^^^^^^
 
 :e
 :re
 declare fun declared(x: Int): Int
 declared(1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.301: 	declared(1, 2)
-//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.+2: 	declared(1, 2)
+//│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Function 'declared' expected 1 argument, but got 2
-//│ ║  l.300: 	declare fun declared(x: Int): Int
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	declare fun declared(x: Int): Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: globalThis.declared is not a function
 
 // An `open` modifier is located at its whole statement; only its start belongs to the header.
@@ -315,20 +315,20 @@ class Opened with
     x + 2
 new Opened().f(1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.316: 	new Opened().f(1, 2)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	new Opened().f(1, 2)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'f' expected 1 argument, but got 2
-//│ ║  l.313: 	  open fun f(x) =
-//│ ╙──       	  ^^^^^^^^^^^^^
+//│ ║  l.+2: 	  open fun f(x) =
+//│ ╙──      	  ^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Open member 'f' is exposed to other compilation units, which can override it; annotate the types of its parameters and result
-//│ ║  l.313: 	  open fun f(x) =
-//│ ║         	           ^
+//│ ║  l.+2: 	  open fun f(x) =
+//│ ║        	           ^
 //│ ╟── Parameter 'x' has no type annotation
-//│ ║  l.313: 	  open fun f(x) =
-//│ ║         	             ^
+//│ ║  l.+2: 	  open fun f(x) =
+//│ ║        	             ^
 //│ ╟── Its result has no type annotation
-//│ ║  l.313: 	  open fun f(x) =
-//│ ╙──       	           ^
+//│ ║  l.+2: 	  open fun f(x) =
+//│ ╙──      	           ^
 //│ = 3
 
 // Each call cites the unknown parameter's declaration without repeating the callee span.
@@ -338,22 +338,22 @@ fun invokeAtEachUse(f) =
   f()
   alias()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.339: 	  alias()
-//│ ║         	  ^^^^^^^
+//│ ║  l.+4: 	  alias()
+//│ ║        	  ^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'f' admits values of unknown shape.
-//│ ║  l.336: 	fun invokeAtEachUse(f) =
-//│ ║         	                    ^
+//│ ║  l.+1: 	fun invokeAtEachUse(f) =
+//│ ║        	                    ^
 //│ ╟── 'invokeAtEachUse' is exposed by this compilation unit.
-//│ ║  l.336: 	fun invokeAtEachUse(f) =
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun invokeAtEachUse(f) =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.338: 	  f()
-//│ ║         	  ^^^
+//│ ║  l.+3: 	  f()
+//│ ║        	  ^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'f' admits values of unknown shape.
-//│ ║  l.336: 	fun invokeAtEachUse(f) =
-//│ ║         	                    ^
+//│ ║  l.+1: 	fun invokeAtEachUse(f) =
+//│ ║        	                    ^
 //│ ╟── 'invokeAtEachUse' is exposed by this compilation unit.
-//│ ║  l.336: 	fun invokeAtEachUse(f) =
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun invokeAtEachUse(f) =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^

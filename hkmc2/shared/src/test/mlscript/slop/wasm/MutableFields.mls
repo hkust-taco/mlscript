@@ -31,13 +31,13 @@ private fun increment() =
   counter.count
 increment()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.30: 	  set counter.count += 1
+//│ ║  l.+4: 	  set counter.count += 1
 //│ ╙──      	      ^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.31: 	  counter.count
+//│ ║  l.+5: 	  counter.count
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.27: 	private class Counter(mut val count)
+//│ ║  l.+1: 	private class Counter(mut val count)
 //│ ╙──      	                              ^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Unknown`
@@ -51,13 +51,13 @@ private fun mix() =
   mixed.value
 mix()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.50: 	  set mixed.value = "hello"
+//│ ║  l.+4: 	  set mixed.value = "hello"
 //│ ╙──      	      ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.51: 	  mixed.value
+//│ ║  l.+5: 	  mixed.value
 //│ ╙──      	  ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.47: 	private class Mixed(mut val value)
+//│ ║  l.+1: 	private class Mixed(mut val value)
 //│ ╙──      	                            ^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Str`
@@ -113,14 +113,14 @@ private fun setTyped(cell: Typed) = set cell.value = "hello"
 private fun typed() = Typed(const(1)).value
 typed()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.112: 	private fun setTyped(cell: Typed) = set cell.value = "hello"
-//│ ╙──       	                                        ^^^^^^^^^^
+//│ ║  l.+2: 	private fun setTyped(cell: Typed) = set cell.value = "hello"
+//│ ╙──      	                                        ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.113: 	private fun typed() = Typed(const(1)).value
-//│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	private fun typed() = Typed(const(1)).value
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.111: 	private class Typed(mut val value)
-//│ ╙──       	                            ^^^^^
+//│ ║  l.+1: 	private class Typed(mut val value)
+//│ ╙──      	                            ^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Str`
 
@@ -132,14 +132,14 @@ private class Named with
 private fun named() = (new Named).value
 named()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.132: 	private fun named() = (new Named).value
-//│ ╙──       	                      ^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	private fun named() = (new Named).value
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.131: 	  fun rename() = set value = "renamed"
-//│ ╙──       	                     ^^^^^
+//│ ║  l.+3: 	  fun rename() = set value = "renamed"
+//│ ╙──      	                     ^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.130: 	  mut val value = const(1)
-//│ ╙──       	                  ^^^^^^^^
+//│ ║  l.+2: 	  mut val value = const(1)
+//│ ╙──      	                  ^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Str`
 
@@ -152,11 +152,11 @@ private fun openAndSet() =
   set value = "opened"
 openAndSet()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.152: 	  set value = "opened"
-//│ ╙──       	      ^^^^^
+//│ ║  l.+5: 	  set value = "opened"
+//│ ╙──      	      ^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.148: 	private class Opened(mut val value)
-//│ ╙──       	                             ^^^^^
+//│ ║  l.+1: 	private class Opened(mut val value)
+//│ ╙──      	                             ^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 
 
@@ -175,14 +175,14 @@ private fun replace() =
   holder.item.get()
 replace()
 //│ ╔══[COMPILATION ERROR] This selection of member 'get' is ambiguous, as it has multiple resolved targets
-//│ ║  l.175: 	  holder.item.get()
-//│ ║         	  ^^^^^^^^^^^^^^^
+//│ ║  l.+9: 	  holder.item.get()
+//│ ║        	  ^^^^^^^^^^^^^^^
 //│ ╟── target: function 'get' in class 'Second'
-//│ ║  l.170: 	  fun get() = const(2)
-//│ ║         	      ^^^
+//│ ║  l.+4: 	  fun get() = const(2)
+//│ ║        	      ^^^
 //│ ╟── target: function 'get' in class 'First'
-//│ ║  l.168: 	  fun get() = const(1)
-//│ ╙──       	      ^^^
+//│ ║  l.+2: 	  fun get() = const(1)
+//│ ╙──      	      ^^^
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -258,8 +258,8 @@ private fun assignLaterString() =
   let later = makeLater()
   set later.value = "hello"
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int32'
-//│ ║  l.259: 	  set later.value = "hello"
-//│ ╙──       	      ^^^^^^^^^^^
+//│ ║  l.+3: 	  set later.value = "hello"
+//│ ╙──      	      ^^^^^^^^^^^
 //│ Wasm result:
 //│ = {}
 
@@ -285,8 +285,8 @@ private fun describe(described: {mut value: Any}) = ()
 private fun mutableView() = describe(Described(const(1)))
 mutableView()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.283: 	private class Described(mut val value)
-//│ ╙──       	                                ^^^^^
+//│ ║  l.+1: 	private class Described(mut val value)
+//│ ╙──      	                                ^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 
 // Fields that a record type does not declare `mut` are assumed not to be assigned through it:

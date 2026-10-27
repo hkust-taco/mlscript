@@ -346,6 +346,10 @@ tuple
  == tuple(1, 2)
 ```
 
+Operator applications also extend this way: `+(1) \ 2` and `{ + 1 } \ 2` both mean `+(1, 2)`;
+`{ a + b } \ c` means `+(a, b, c)`. Parentheses keep the call result separate: `(+ 1) \ 2` calls that result.
+The left-precedence of `\` is very high: `a + f \ x` means `a + f(x)`.
+
 ### Lambdas
 
 ```mlscript
@@ -361,8 +365,10 @@ Each `_` becomes a new anonymous parameter (left to right).
 
 Only a few places can introduce underscore lambdas:
 * the RHS of the `\` keyword;
-* the RHS of any operator that ends with `>` (except the builtin `>`);
+* the RHS of any operator that ends with `>` (except the builtin `>`), in both prefix and infix applications;
 * symmetrically, the LHS of any operator that begins with `<` (except the builtins `<` and `<=`)
+
+For example, `%> _ + 1` means `%>(x => x + 1)`. In an explicit call, use `%>(=> _ + 1)` to introduce that lambda.
 
 This means we can write things like
 ```fs
@@ -465,6 +471,29 @@ Use the symbolic name as an infix operator:
 Operators can also be used as ordinary identifiers:
 ```mlscript
 (++) of "a", "b"
+++("a", "b")
++(2, 3)             // = 5
+```
+
+Whitespace before the operands are allowed in prefix position, as in `let sum = + (2, 3)`;
+on a new line after an expression, it enables [infix continuation](#newline-operator-rules).
+
+Symbolic operator identifiers also support prefix application with one operand,
+using the same right precedence as in infix position.
+Curly and indented blocks provide a single operand; explicit calls and type arguments retain ordinary call syntax.
+
+A parenthesized infix RHS with multiple expressions supplies multiple arguments: `a op (b, c)` means `op(a, b, c)`.
+A single parenthesized expression keeps its grouping, and `a op ()` passes the unit value: `op(a, ())`.
+Precedence is unaffected: `1 + (2) * 3` means `1 + (2 * 3)`.
+Parentheses cannot sequence expressions, so `(2, 3)` alone and `1 + (2, 3) * 4` are rejected;
+use braces for a sequenced operand, as in `1 + ({2, 3})`.
+
+```mlscript
+fun (%>) wrap(x) = [x]
+let a = %> 1 + 2 * 3 // %>(1 + 2 * 3)
+let b = %> foo(1)    // %>(foo(1))
+let c = %>
+  e                  // %> { e }
 ```
 
 ### Function Application Syntaxes
@@ -569,10 +598,21 @@ This can also be laid out on several lines, where as usual the comma is optional
 
 ### Newline Operator Rules
 
-An operator at the start of a new line continues the previous expression:
+At the same indentation, an operator at the start of a line continues the preceding expression when followed by a space,
+line break, or curly/indented block. In all other cases, it starts a new prefix expression.
+This rule applies uniformly to symbolic operators; indented continuations need no separating space:
 ```mlscript
 2
-  + 2       // = 4
++2          // separate prefix expression, yielding 2
+
+2
++ 2         // infix continuation, yielding 4
+
+2
+  +2        // indented continuation, yielding 4
+
+2
+  + 2        // same
 
 2
   + 2
@@ -1948,7 +1988,9 @@ abstract
   class Bar(b)
 ```
 
-### Operator on New Line = Continuation
+### Operator Continuations
+
+See [Newline Operator Rules](#newline-operator-rules) for the spacing distinction between continuations and new prefix expressions.
 
 ```mlscript
 2
@@ -2434,7 +2476,7 @@ decl      ::= 'declare' def
 expr      ::= literal | name | app | lambda | if | case | while
             | let | set | 'return' | 'throw' | 'drop' | 'do'
             | 'new' [mut] class args | 'handle' | 'using'
-            | annotation expr | infix | block
+            | annotation expr | prefix | infix | block
 
 if        ::= 'if' scrutinee? branches
 branches  ::= branch+

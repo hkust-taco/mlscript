@@ -79,7 +79,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       case index: Int => s"p_$index"
     /** Convert the field name to an `Ident`. */
     def asIdent: Ident = field match
-      case id: Ident => new Ident(id.name)
+      case id: Ident => id
       case index: Int => Ident(index.toString)
   
   extension (head: Head)
@@ -534,7 +534,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         (makeConsequent, alternative) => Split.Let(
           sym = transformSymbol,
-          term = Term.Lam(params, Blk(letBindings, term.mkClone)),
+          term = Term.Lam(params, Blk(letBindings, term)).mkClone,
           tail = makeSplit(
             // The `outputSymbol` is the output of `pattern`.
             //                vvvvvvvvvvvv

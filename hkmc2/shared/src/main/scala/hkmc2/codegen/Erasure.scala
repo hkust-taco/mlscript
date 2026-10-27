@@ -20,7 +20,6 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
   private given Erasure = this
   private var completed: Opt[Statement] = N
   private val valueTypes = mutable.Map.empty[TermShape, Opt[ErasedValueType]]
-  private val bodyResults = mutable.Map.empty[TermSymbol, Opt[ErasedValueType]]
 
   def requireCompleted(statement: Statement): Unit =
     assert(completed.exists(_ is statement), "Lowering requires completed erasure of this program")
@@ -30,7 +29,15 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     * Lowering must coerce explicit and implicit returns before they are wrapped.
     */
   def bodyResultType(td: TermDefinition): Opt[ErasedValueType] =
-    bodyResults.getOrElse(td.tsym, td.tsym.declaredResultType)
+    td.tsym.getState.erasedBodyResults.getOrElse(td.tsym, td.tsym.declaredResultType)
+
+  /** Fresh definition symbols need the body's payload representation as well as the
+    * callable's signature. Rename any nominal types allocated by the same copy.
+    */
+  private[hkmc2] def copyBodyResultType(source: TermSymbol, copy: TermSymbol)
+      (mapType: ErasedValueType => ErasedValueType): Unit =
+    source.getState.erasedBodyResults.get(source).foreach: tpe =>
+      copy.getState.erasedBodyResults(copy) = tpe.map(mapType)
 
   private def valueType(shape: TermShape): Opt[ErasedValueType] = valueTypes.getOrElseUpdate(shape, shape match
     case MarkedShape(value, _) => valueType(value)
@@ -85,6 +92,11 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       // Unknown is a real candidate, not the identity of this join: in particular,
       // combining it with an unboxed primitive must preserve incompatibility.
       case types => S(ErasedType.Union.mk(types))
+
+  /** Read a delayed type in the context that completed erasure. Cloning can then
+    * rename its symbol without retaining the entire cloning substitution in a thunk.
+    */
+  def typeSymbol(tpe: ErasedType.ValueLike): TypeSymbol = tpe.sym
 
   /** Erase an interpretation registered during elaboration, without installing new listeners. */
   private def erase(resolution: TypeResolution, seen: Set[TypeResolution]): ErasedValueType =
@@ -181,7 +193,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         // not the payload returned by this body. Check that wrapper in `checkOverride` below.
         if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then observed
         else overrideResultType(td, observed)
-    bodyResults(td.tsym) = resultType
+    td.tsym.getState.erasedBodyResults(td.tsym) = resultType
     // The body produces the payload; callers receive the wrapper object instead.
     // Resolution gives calls of such functions the same wrapper shapes.
     val callableResult =

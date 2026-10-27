@@ -79,7 +79,7 @@ fun after_debug_error(x) = x
 //│ Elab term Ident(missing_debug_name)
 //│ | Elab subterm Ident(missing_debug_name)
 //│ ╔══[COMPILATION ERROR] Name not found: missing_debug_name
-//│ ║  l.76: 	fun debug_error() = missing_debug_name
+//│ ║  l.+2: 	fun debug_error() = missing_debug_name
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^
 //│ | ~> <error>
 //│ ~> <error>
@@ -118,6 +118,7 @@ module DebugCompanion with
 //│ | = MarkedShape(InstanceShape(missing), ↘⟨class:DebugCompanion⁰⟩ϵ)
 //│ Processing class definition Ident(DebugCompanion)
 //│ | Companion: Some(module:DebugCompanion¹)
+//│ | listen: trm = member:DebugCompanion²
 //│ | Elab block List(TermDef(Fun,App(Ident(answer),Tup(List())),Some(IntLit(1101)))) InnerScope(class:DebugCompanion⁰)
 //│ | | Processing term definition App(Ident(answer),Tup(List()))
 //│ | | Elab term IntLit(1101)

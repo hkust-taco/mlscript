@@ -13,23 +13,23 @@ receiver.get()
 :e
 receiver.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.14: 	receiver.missing
+//│ ║  l.+1: 	receiver.missing
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Module 'Left' does not contain member 'missing'
-//│ ║  l.6: 	module Left { fun get() = 1 }
-//│ ║       	^^^^^^^^^^^
+//│ ║  l.XX: 	module Left { fun get() = 1 }
+//│ ║        	^^^^^^^^^^^
 //│ ╟── Module 'Right' does not contain member 'missing'
-//│ ║  l.7: 	module Right { fun get() = 2 }
-//│ ╙──     	^^^^^^^^^^^^
+//│ ║  l.XX: 	module Right { fun get() = 2 }
+//│ ╙──      	^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 1()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.27: 	1()
+//│ ║  l.+1: 	1()
 //│ ║        	^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.27: 	1()
+//│ ║  l.+1: 	1()
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -37,7 +37,7 @@ receiver.missing
 :e
 missingCallee()
 //│ ╔══[COMPILATION ERROR] Name not found: missingCallee
-//│ ║  l.38: 	missingCallee()
+//│ ║  l.+1: 	missingCallee()
 //│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -64,7 +64,7 @@ call()
 :e
 fun unknownReceiver(x) = x.missing
 //│ ╔══[COMPILATION ERROR] This selection of member 'missing' has no resolved target
-//│ ║  l.65: 	fun unknownReceiver(x) = x.missing
+//│ ║  l.+1: 	fun unknownReceiver(x) = x.missing
 //│ ╙──      	                         ^^^^^^^^^
 
 // Allowing multiple targets does not make class definitions assignable.
@@ -74,7 +74,7 @@ module ClassRight { class Item }
 let classes = if hide(true) then ClassLeft else ClassRight
 set classes.Item = 0
 //│ ╔══[COMPILATION ERROR] Assignment requires a term member
-//│ ║  l.75: 	set classes.Item = 0
+//│ ║  l.+4: 	set classes.Item = 0
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ classes = class ClassLeft { Item: class Item }

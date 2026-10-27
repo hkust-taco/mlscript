@@ -6,21 +6,21 @@ private fun foo(x) = x + 1
 :e
 foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.7: 	foo()
-//│ ║       	^^^^^
+//│ ║  l.+1: 	foo()
+//│ ║        	^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 0
-//│ ║  l.4: 	private fun foo(x) = x + 1
-//│ ╙──     	^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	private fun foo(x) = x + 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
 :e
 foo(1, 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.17: 	foo(1, 2)
+//│ ║  l.+1: 	foo(1, 2)
 //│ ║        	^^^^^^^^^
 //│ ╟── Function 'foo' expected 1 argument, but got 2
-//│ ║  l.4: 	private fun foo(x) = x + 1
-//│ ╙──     	^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	private fun foo(x) = x + 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ = 2
 
 
@@ -35,14 +35,14 @@ id
 :e
 fun callid0(p) = p.id(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.36: 	fun callid0(p) = p.id(1)
+//│ ║  l.+1: 	fun callid0(p) = p.id(1)
 //│ ║        	                 ^^^^
 //│ ╟── Cannot resolve member 'id' of a value with unknown shape.
 //│ ╟── Parameter 'p' admits values of unknown shape.
-//│ ║  l.36: 	fun callid0(p) = p.id(1)
+//│ ║  l.+1: 	fun callid0(p) = p.id(1)
 //│ ║        	            ^
 //│ ╟── 'callid0' is exposed by this compilation unit.
-//│ ║  l.36: 	fun callid0(p) = p.id(1)
+//│ ║  l.+1: 	fun callid0(p) = p.id(1)
 //│ ╙──      	^^^^^^^^^^^^^^
 
 
@@ -258,28 +258,28 @@ f.name
 :e
 (x => x).foo
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.259: 	(x => x).foo
-//│ ║         	^^^^^^^^^^^^
+//│ ║  l.+1: 	(x => x).foo
+//│ ║        	^^^^^^^^^^^^
 //│ ╟── Function literal does not contain member 'foo'
-//│ ║  l.259: 	(x => x).foo
-//│ ╙──       	 ^^^^^^
+//│ ║  l.+1: 	(x => x).foo
+//│ ╙──      	 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 f is Int -> Int
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (infix operator '->').
-//│ ║  l.269: 	f is Int -> Int
-//│ ╙──       	     ^^^^^^^^^^
+//│ ║  l.+1: 	f is Int -> Int
+//│ ╙──      	     ^^^^^^^^^^
 //│ = true
 
 :fixme
 (f as Int -> Int).apply
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.276: 	(f as Int -> Int).apply
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	(f as Int -> Int).apply
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature does not contain member 'apply'
-//│ ║  l.276: 	(f as Int -> Int).apply
-//│ ╙──       	      ^^^^^^^^^^
+//│ ║  l.+1: 	(f as Int -> Int).apply
+//│ ╙──      	      ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

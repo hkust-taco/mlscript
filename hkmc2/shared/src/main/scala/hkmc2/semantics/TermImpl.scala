@@ -87,7 +87,7 @@ trait FldImpl:
 
 trait BlkImpl:
   this: Blk =>
-  def mkBlkClone(using State, Erasure): Blk = Blk(stats.map(_.mkClone), res.mkClone)
+  def mkBlkClone(using State, Erasure): Blk = Cloner(SymbolSubst.Id).block(this)
   def showTopLevel(using Scope, ShowCfg, Raise): Document =
     (stats ::: (res match
       case Lit(Tree.UnitLit(false)) => Nil
@@ -118,15 +118,7 @@ trait NewResolvableImpl extends PossiblyErroneous:
 trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
   this: Statement =>
     
-  def mkClone(using State, Erasure): Statement = this match
-    case t: Term => lastWords(s"overridden implementation")
-    case d: Definition => ???
-    case imp: Import => Import(imp.sym, imp.str, imp.file)(imp.toLoc)
-    case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))(toLoc)
-    case f @ RcdField(field, rhs, sym) => RcdField(field.mkClone, rhs.mkClone, sym)(f.mut, f.key)
-    case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
-    case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)(toLoc)
-    case sc: SetConfig => sc
+  def mkClone(using State, Erasure): Statement = Cloner(SymbolSubst.Id).statementRoot(this)
   
   def describe: Str =
     val desc = this match

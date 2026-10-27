@@ -328,12 +328,9 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       arguments: Opt[Ls[SP]],
       outputNeeded: Bool
   ): MakeSplit =
-    // Obtain the `classHead` used for error reporting and the parameter list
-    // from the class definitions.
-    val (classHead, paramsOpt) = classSymbol.defn match
+    val paramsOpt = classSymbol.defn match
       case N => lastWords(s"Class ${classSymbol.name} does not have a definition")
-      // Use the constructor pattern's location for error reporting.
-      case S(cd) => new Tree.Ident(classSymbol.name).withLoc(classTerm.toLoc) -> cd.paramsOpt
+      case S(cd) => cd.paramsOpt
     // Check if the number of arguments matches the number of parameters.
     val allArguments = arguments.getOrElse(Nil)
     val rebuildNeeded = outputNeeded && allArguments.exists(arg => !preservesOriginalScrutinee(arg))
@@ -343,7 +340,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         error(
           msg"This pattern cannot be matched" -> arg.toLoc,
           inaccessible,
-          msg"because rebuilding the matched `${classSymbol.name}` value requires reading every constructor argument" -> classHead.toLoc,
+          msg"because rebuilding the matched `${classSymbol.name}` value requires reading every constructor argument" -> classTerm.toLoc,
           msg"Suggestion: mark this parameter with `val` so it becomes accessible" -> N
         )
       else
@@ -379,7 +376,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           .foldLeft(args.size <= paramList.params.size)(_ && _)
         case N => arguments match
           case S(args) =>
-            error(msg"class ${classSymbol.name} does not have parameters" -> classHead.toLoc,
+            error(msg"class ${classSymbol.name} does not have parameters" -> classTerm.toLoc,
               msg"but the pattern has ${"sub-pattern" countBy args.size}" -> Loc(args))
             false
           case N => true // No parameters, no arguments. This is fine.
@@ -840,7 +837,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           // consequence split.
           (makeConsequent, alternative) => Split.Let(
             sym = lambdaSymbol,
-            term = Term.Lam(PlainParamList(params)(N), transform.mkClone),
+            term = Term.Lam(PlainParamList(params)(N), transform).mkClone,
             // Declare the lambda function at the outermost level. Even if there
             // are multiple disjunctions in the consequent, we will not need to
             // repeat the `transform` term.

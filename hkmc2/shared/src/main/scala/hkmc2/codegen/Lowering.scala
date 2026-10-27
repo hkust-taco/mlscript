@@ -95,6 +95,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def erroneousRef(ref: NewResolvable): Bool =
     ref.isErroneous || ref.resolvedTargets.exists(_.defn.exists(_.isErroneous))
   
+  /** Lowering introduces references after resolution has finished. Their known
+    * targets must be attached directly, including for freshly synthesized definitions.
+    * These references have no written identifier or source location. */
+  private def resolvedMemberRef(member: BlockMemberSymbol, target: DefinitionSymbol[?]): MemberRef =
+    val ref = new MemberRef(member)(N, FlowSymbol.memSym(member))
+    ref.resolvedTargets = target :: Nil
+    ref
+  
   /** Lower the parent reference before the class body.
     * Definition references are stable; classOf already saves computed class values in temporaries.
     * Other paths (notably a class selected through a mutable receiver) must be read here, once,
@@ -208,19 +216,24 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   def unit: Path =
     Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("Unit"))(S(State.unitSymbol), N)(false)
   
+  /** MIR property names may differ from source aliases. Reuse an actual matching
+    * token; a renamed property has no written identifier. The selection carries its use-site location. */
+  private def storageIdent(name: Str, source: Opt[Tree.Ident]): Tree.Ident =
+    source.filter(_.name === name).getOrElse(new Tree.Ident(name))
+
   private def memberIdent(nme: Tree.Ident, sym: Opt[MemberSymbol]): Tree.Ident =
     sym match
     case S(sym) =>
-      new Tree.Ident(sym.nme).withLocOf(nme)
+      storageIdent(sym.nme, S(nme))
     case N =>
       symbolicSuffixBase(nme.name) match
       case S(base) =>
-        new Tree.Ident(base).withLocOf(nme)
+        storageIdent(base, S(nme))
       case N =>
         nme
 
   private def definitionIdent(nme: Tree.Ident, sym: DefinitionSymbol[?]): Tree.Ident =
-    new Tree.Ident(sym.nme).withLocOf(nme)
+    storageIdent(sym.nme, S(nme))
 
   // type Rcd = (mut: Bool, args: List[RcdArg]) // * Better, but Scala's patmat exhaustiveness chokes on it
   type Rcd = (Bool, List[RcdArg], Opt[Loc])
@@ -513,9 +526,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     if newResolution && nw.isErroneous then compError
     else if newResolution then
       trm.classHead match
-      case resolved @ Resolved(_, _: ClassSymbol) =>
-        // Synthesized runtime constructors already carry an explicit class target.
-        subTerm(resolved)(p => k(p, getClassParamLists(p)))
       case _: SimpleRef => classValue
       case resl: NewResolvable =>
         resl.resolvedTargets.distinct match
@@ -664,7 +674,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           remainingParamss match
           case Nil => buildInstantiate(accArgss)
           case ps :: rest =>
-            val freshSyms = ps.params.map(p => new VarSymbol(new Tree.Ident(p.sym.nme), erasedType = N))
+            val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N))
             softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
@@ -829,7 +839,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // the property names; target identifies the definition used by the pattern.
         sel.resolvedMembers.map(_.nme).distinct match
           case name :: Nil =>
-            k(prefix, new Tree.Ident(name).withLocOf(id), S(target))
+            k(prefix, storageIdent(name, S(id)), S(target))
           case Nil => k(prefix, definitionIdent(id, target), S(target))
           case _ => fail:
             ErrorReport(msg"This selection of member '${id.name}' has multiple resolved member names" -> sel.toLoc ::
@@ -1009,12 +1019,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case S(d) if d.hasDeclareModifier.isDefined =>
         // The global property comes from the declaration; a reference may use
         // an alias or have no source identifier at all.
-        val name = new Tree.Ident(d.sym.nme).withLocOf(ref)
-        val sel = SynthSel(State.globalThisSymbol.ref().resolve, name)(S(bs), FlowSymbol.synthSel(name.name), N, N).withLocOf(ref).resolve
-        return disamb.fold(term(sel)(k))(d => term(st.Resolved(sel, d)(N))(k))
-        // * Note: the alternative below, which might seem more appealing,
-        // * works but does not instrument the selection to check for `undefined`!
-        // return k(Value.Ref(State.globalThisSymbol).sel(name, bs).withLocOf(ref))
+        val name = storageIdent(d.sym.nme, ref.sourceId)
+        return setupSelection(SelfRef(State.globalThisSymbol)(Tree.Ident("globalThis")), name, disamb, ref.toLoc)(k)
       case S(td: TermDefinition) if isImplicitNullaryCall(td.tsym) =>
         // * Functions defined in local scopes with no parameter lists are getters
         // * and are lowered to functions with an empty parameter list
@@ -1068,7 +1074,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     @tailrec
     def extractAnnots(t: st, acc: List[Annot]): (List[Annot], st) = t match
       case st.Annotated(Annot.Async(), trm) =>
-        val ident = new Tree.Ident("asyncBody").withLocOf(trm)
+        val ident = new Tree.Ident("asyncBody")
         val bms = BlockMemberSymbol(ident.name, Nil, false)
         val dsym = TermSymbol(
           syntax.Fun,
@@ -1089,9 +1095,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           Annot.RaiseEffects()(N) :: Nil,
           N,
         )(trm.toLoc, trm.toLoc, N)
+        val async = State.toJsAsyncSymbol
+        val toJsAsync = NewSel(SimpleRef(State.runtimeSymbol)(N), Tree.Ident(async.nme), N)(FlowSymbol.synthSel(async.nme))
+        toJsAsync.resolvedTargets = async :: Nil
+        toJsAsync.resolvedMembers = async.bms.get :: Nil
         val rewritten = st.App(
-          State.runtimeSymbol.ref().synthSel(State.toJsAsyncSymbol),
-          st.Tup(PlainFld(st.Blk(td :: Nil, bms.ref(ident).resolved(dsym))) :: Nil)(Tree.DummyTup)
+          toJsAsync,
+          st.Tup(PlainFld(st.Blk(td :: Nil, resolvedMemberRef(bms, dsym))) :: Nil)(Tree.DummyTup)
         )(Tree.DummyApp, N, FlowSymbol.app())
         extractAnnots(rewritten, acc)
       case st.Annotated(annot, trm) => extractAnnots(trm.instantiated, annot :: acc)
@@ -1577,7 +1587,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 val pctor = parentConstructor(params, as, nw.toLoc)
                 ClsLikeDefn(N, isym, sym, N, syntax.Cls, N, Nil, S(parent),
                   mtds, privateFlds, publicFlds, pctor, ctor, N, N, N, keys)(N, Nil)
-              val inner = new New(sym.ref().resolved(isym), Nil, N)(FlowSymbol.neww(), N)
+              val inner = new New(resolvedMemberRef(sym, isym), Nil, N)(FlowSymbol.neww(), N)
               Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
     case Try(sub, finallyDo) =>
@@ -1696,7 +1706,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   def quote(t: st)(k: Result => Block)(using LoweringCtx): Block = t match
     case Lit(lit) =>
       setupTerm("Lit", Value.Lit(lit)(N) :: Nil)(k)
-    case Ref(sym) if Elaborator.binaryOps.contains(sym.nme) => // builtin symbols
+    case BuiltinRef(sym) if Elaborator.binaryOps.contains(sym.nme) =>
       val l = loweringCtx.registerTempSymbol(N, erasedType = N)
       setupTerm("Builtin", Value.Lit(Tree.StrLit(sym.nme))(N) :: Nil)(k)
     case Resolved(Ref(sym), disamb) =>

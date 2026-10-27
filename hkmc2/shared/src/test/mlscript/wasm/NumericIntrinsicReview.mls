@@ -22,10 +22,10 @@ if true then wasm.f64.const(1.5) else wasm.f64.const(2.5)
 :ge
 fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Num' at an unrelated type 'Float64'
-//│ ║  l.23: 	fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
+//│ ║  l.+1: 	fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
 //│ ╙──      	                                              ^^^
 //│ ╔══[COMPILATION ERROR] WatBackend::result for Lit expression not implemented yet
-//│ ║  l.23: 	fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
+//│ ║  l.+1: 	fun chooseFloat(b: Bool): Float64 = if b then 1.5 else wasm.f64.const(2.5)
 //│ ╙──      	                                              ^^^
 
 // A declared function result keeps the type available when its call is not inlined.

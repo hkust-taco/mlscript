@@ -68,10 +68,10 @@ identity()
 val indirect: (Int, Int?) -> Anything = choose
 indirect(11)
 //│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref $choose)` to `(ref null any)` in a different type hierarchy
-//│ ║  l.68: 	val indirect: (Int, Int?) -> Anything = choose
+//│ ║  l.+1: 	val indirect: (Int, Int?) -> Anything = choose
 //│ ╙──      	                                        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
-//│ ║  l.69: 	indirect(11)
+//│ ║  l.+2: 	indirect(11)
 //│ ╙──      	^^^^^^^^
 
 // Forwarding preserves supplied Unit values and the distinct null value.
@@ -136,11 +136,11 @@ if Inherited().read() is 15 then Fields(1, 16).read() else -1
 :e
 choose()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.137: 	choose()
-//│ ║         	^^^^^^^^
+//│ ║  l.+1: 	choose()
+//│ ║        	^^^^^^^^
 //│ ╟── Function 'choose' expected 1 to 2 arguments, but got 0
-//│ ║  l.8: 	fun choose(x: Int, y?: Int) = if y is null then x else y
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun choose(x: Int, y?: Int) = if y is null then x else y
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = null
 
@@ -233,7 +233,7 @@ keep(3, ())
 :e
 fun test(x?: Int32) = x
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.234: 	fun test(x?: Int32) = x
-//│ ╙──       	                      ^
+//│ ║  l.+1: 	fun test(x?: Int32) = x
+//│ ╙──      	                      ^
 //│ Wasm result:
 //│ = {}

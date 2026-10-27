@@ -5,8 +5,8 @@
 :e
 mut "oops"
 //│ ╔══[COMPILATION ERROR] Illegal position for 'mut' modifier.
-//│ ║  l.6: 	mut "oops"
-//│ ╙──     	^^^
+//│ ║  l.+1: 	mut "oops"
+//│ ╙──      	^^^
 //│ = "oops"
 
 // A record field can be declared mutable.
@@ -17,7 +17,7 @@ mut a: 1
 :e
 mut {"oops"}
 //│ ╔══[COMPILATION ERROR] Expected a record after 'mut' keyword; found a block
-//│ ║  l.18: 	mut {"oops"}
+//│ ║  l.+1: 	mut {"oops"}
 //│ ╙──      	     ^^^^^^
 //│ = "oops"
 

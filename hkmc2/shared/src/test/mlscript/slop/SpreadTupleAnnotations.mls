@@ -46,10 +46,10 @@ many([1, 2, 3, 4, 5])
 private fun zero() = 0
 private fun forward(...xs: [Int, ...Array[Int]]) = zero(...xs)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.47: 	private fun forward(...xs: [Int, ...Array[Int]]) = zero(...xs)
+//│ ║  l.+2: 	private fun forward(...xs: [Int, ...Array[Int]]) = zero(...xs)
 //│ ║        	                                                   ^^^^^^^^^^^
 //│ ╟── Function 'zero' expected 0 arguments, but got at least 1
-//│ ║  l.46: 	private fun zero() = 0
+//│ ║  l.+1: 	private fun zero() = 0
 //│ ╙──      	^^^^^^^^^^^^^^^^^^
 
 // Annotation boundaries still hide members of supplied implementation types.
@@ -59,10 +59,10 @@ class Child(val extra: Int) extends Base
 private fun annotated(...xs: [Base, ...Array[Base]]) = xs.map(x => x.extra)
 annotated(Child(10))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.59: 	private fun annotated(...xs: [Base, ...Array[Base]]) = xs.map(x => x.extra)
+//│ ║  l.+3: 	private fun annotated(...xs: [Base, ...Array[Base]]) = xs.map(x => x.extra)
 //│ ║        	                                                                   ^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.59: 	private fun annotated(...xs: [Base, ...Array[Base]]) = xs.map(x => x.extra)
+//│ ║  l.+3: 	private fun annotated(...xs: [Base, ...Array[Base]]) = xs.map(x => x.extra)
 //│ ╙──      	                              ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -71,14 +71,14 @@ annotated(Child(10))
 type Loop = [Int, ...Loop]
 private fun loop(xs: Loop) = xs.length
 //│ ╔══[COMPILATION ERROR] Resolution error in tuple literal
-//│ ║  l.71: 	type Loop = [Int, ...Loop]
+//│ ║  l.+1: 	type Loop = [Int, ...Loop]
 //│ ║        	            ^^^^^^^^^^^^^^
 //│ ╟── Unguarded recursive type alias 'Loop'.
-//│ ║  l.71: 	type Loop = [Int, ...Loop]
+//│ ║  l.+1: 	type Loop = [Int, ...Loop]
 //│ ║        	                     ^^^^
 //│ ╟── Recursive references must pass through a record, tuple, function, or nominal type.
-//│ ║  l.71: 	type Loop = [Int, ...Loop]
+//│ ║  l.+1: 	type Loop = [Int, ...Loop]
 //│ ╙──      	     ^^^^
 //│ ╔══[COMPILATION ERROR] This selection of member 'length' has no resolved target
-//│ ║  l.72: 	private fun loop(xs: Loop) = xs.length
+//│ ║  l.+2: 	private fun loop(xs: Loop) = xs.length
 //│ ╙──      	                             ^^^^^^^^^

@@ -6,21 +6,21 @@
 :re
 .
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.7: 	.
-//│ ╙──     	^
+//│ ║  l.+1: 	.
+//│ ╙──      	^
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.7: 	.
-//│ ╙──     	^
+//│ ║  l.+1: 	.
+//│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
 :re
 . //
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.18: 	. //
+//│ ║  l.+1: 	. //
 //│ ╙──      	^
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.18: 	. //
+//│ ║  l.+1: 	. //
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -28,10 +28,10 @@
 :fixme
 id(.)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.29: 	id(.)
+//│ ║  l.+1: 	id(.)
 //│ ╙──      	   ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.29: 	id(.)
+//│ ║  l.+1: 	id(.)
 //│ ╙──      	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -51,10 +51,10 @@ passTo(2, => incr @ _)()
 :todo
 passTo(2, => incr(.) @ _)()
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.52: 	passTo(2, => incr(.) @ _)()
+//│ ║  l.+1: 	passTo(2, => incr(.) @ _)()
 //│ ╙──      	                  ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.52: 	passTo(2, => incr(.) @ _)()
+//│ ║  l.+1: 	passTo(2, => incr(.) @ _)()
 //│ ╙──      	                  ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -67,16 +67,16 @@ passTo(2, => add(_, 2))()
 :todo
 passTo(2, add(., 2))()
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.68: 	passTo(2, add(., 2))()
+//│ ║  l.+1: 	passTo(2, add(., 2))()
 //│ ╙──      	              ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.68: 	passTo(2, add(., 2))()
+//│ ║  l.+1: 	passTo(2, add(., 2))()
 //│ ╙──      	              ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.68: 	passTo(2, add(., 2))()
+//│ ║  l.+1: 	passTo(2, add(., 2))()
 //│ ║        	          ^^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = => _ + _
+//│ ║  l.XX: 	fun add = => _ + _
 //│ ╙──      	             ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -92,17 +92,17 @@ passTo(1, => (=> add(_, 1)) @ _ + _)(2)
 :todo
 passTo(1, incr(.) @ _ + _)(2)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ║  l.+1: 	passTo(1, incr(.) @ _ + _)(2)
 //│ ╙──      	               ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ║  l.+1: 	passTo(1, incr(.) @ _ + _)(2)
 //│ ╙──      	               ^
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ║  l.+1: 	passTo(1, incr(.) @ _ + _)(2)
 //│ ║        	                    ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.93: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ║  l.+1: 	passTo(1, incr(.) @ _ + _)(2)
 //│ ║        	                        ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -110,24 +110,24 @@ passTo(1, incr(.) @ _ + _)(2)
 :todo
 passTo(1, add(., 1) @ _ + _)(2)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ╙──       	              ^
+//│ ║  l.+1: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ╙──      	              ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ╙──       	              ^
+//│ ║  l.+1: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ╙──      	              ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ║         	          ^^^^^^^^^
+//│ ║  l.+1: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║        	          ^^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = => _ + _
+//│ ║  l.XX: 	fun add = => _ + _
 //│ ╙──      	             ^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ║         	                      ^
+//│ ║  l.+1: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║        	                      ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.111: 	passTo(1, add(., 1) @ _ + _)(2)
-//│ ║         	                          ^
+//│ ║  l.+1: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ║        	                          ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -143,16 +143,16 @@ let f = => add(_, 1)
 let f = add(., 1)
 f(1)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.143: 	let f = add(., 1)
-//│ ╙──       	            ^
+//│ ║  l.+1: 	let f = add(., 1)
+//│ ╙──      	            ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.143: 	let f = add(., 1)
-//│ ╙──       	            ^
+//│ ║  l.+1: 	let f = add(., 1)
+//│ ╙──      	            ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.143: 	let f = add(., 1)
-//│ ║         	        ^^^^^^^^^
+//│ ║  l.+1: 	let f = add(., 1)
+//│ ║        	        ^^^^^^^^^
 //│ ╟── Function literal expected 2 arguments, but got 1
-//│ ║  l.40: 	fun add = => _ + _
+//│ ║  l.XX: 	fun add = => _ + _
 //│ ╙──      	             ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ f = undefined
@@ -164,10 +164,10 @@ let f = => add of _, 1
 :e
 f(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.144: 	f(1)
-//│ ║         	^^^^
+//│ ║  l.XX: 	f(1)
+//│ ║        	^^^^
 //│ ╟── Value of type 'Int' cannot be called like a function.
-//│ ║  l.40: 	fun add = => _ + _
+//│ ║  l.XX: 	fun add = => _ + _
 //│ ╙──      	             ^^^^^
 //│ = 2
 

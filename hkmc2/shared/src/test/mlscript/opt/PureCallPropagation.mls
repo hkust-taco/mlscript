@@ -149,10 +149,10 @@ fun scopedPrefixFoo(x)(y) = x + y
   if maybe is
     false then 0
     true then
-      scope.locally of (
+      scope.locally of {
         let x = hide(0)
         f = scopedPrefixFoo(x)
-      )
+      }
   print of
     "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello", "Hello"
   f(2)

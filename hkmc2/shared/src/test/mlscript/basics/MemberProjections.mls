@@ -36,12 +36,12 @@ M.Foo ::n (foo, 2)
 
 :e
 M.Foo:: n(foo, 2)
-//│ ╔══[COMPILATION ERROR] Name not found: ::
-//│ ║  l.38: 	M.Foo:: n(foo, 2)
-//│ ╙──      	     ^^
 //│ ╔══[COMPILATION ERROR] Name not found: n
-//│ ║  l.38: 	M.Foo:: n(foo, 2)
+//│ ║  l.+1: 	M.Foo:: n(foo, 2)
 //│ ╙──      	        ^
+//│ ╔══[COMPILATION ERROR] Name not found: ::
+//│ ║  l.+1: 	M.Foo:: n(foo, 2)
+//│ ╙──      	     ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -79,10 +79,10 @@ do
 :e
 foo.Foo#m()
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.80: 	foo.Foo#m()
+//│ ║  l.+1: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
 //│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
-//│ ║  l.80: 	foo.Foo#m()
+//│ ║  l.+1: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -90,19 +90,19 @@ foo.Foo#m()
 :re
 foo.M.Foo::m()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.91: 	foo.M.Foo::m()
+//│ ║  l.+1: 	foo.M.Foo::m()
 //│ ║        	         ^^^^^
 //│ ╟── Function literal expected at least 1 argument, but got 0
-//│ ║  l.91: 	foo.M.Foo::m()
+//│ ║  l.+1: 	foo.M.Foo::m()
 //│ ╙──      	           ^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.91: 	foo.M.Foo::m()
+//│ ║  l.+1: 	foo.M.Foo::m()
 //│ ║        	^^^^^
 //│ ╟── Instance of class 'Foo' does not contain member 'M'
-//│ ║  l.11: 	let foo = M.Foo(123)
+//│ ║  l.XX: 	let foo = M.Foo(123)
 //│ ╙──      	          ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
-//│ ║  l.91: 	foo.M.Foo::m()
+//│ ║  l.+1: 	foo.M.Foo::m()
 //│ ╙──      	^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
 
@@ -110,27 +110,27 @@ foo.M.Foo::m()
 :re
 foo.M.Foo#m()
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.111: 	foo.M.Foo#m()
-//│ ╙──       	     ^^^^
+//│ ║  l.+1: 	foo.M.Foo#m()
+//│ ╙──      	     ^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.111: 	foo.M.Foo#m()
-//│ ║         	^^^^^
+//│ ║  l.+1: 	foo.M.Foo#m()
+//│ ║        	^^^^^
 //│ ╟── Instance of class 'Foo' does not contain member 'M'
-//│ ║  l.11: 	let foo = M.Foo(123)
+//│ ║  l.XX: 	let foo = M.Foo(123)
 //│ ╙──      	          ^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
-//│ ║  l.111: 	foo.M.Foo#m()
-//│ ╙──       	     ^^^^
+//│ ║  l.+1: 	foo.M.Foo#m()
+//│ ╙──      	     ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 Foo::m
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.127: 	Foo::m
-//│ ╙──       	^^^
+//│ ║  l.+1: 	Foo::m
+//│ ╙──      	^^^
 //│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
-//│ ║  l.127: 	Foo::m
-//│ ╙──       	^^^
+//│ ║  l.+1: 	Foo::m
+//│ ╙──      	^^^
 //│ = fun
 
 :e
@@ -138,11 +138,11 @@ Foo::m
 :noInline
 Foo::n(foo, 2)
 //│ ╔══[COMPILATION ERROR] Name not found: Foo
-//│ ║  l.139: 	Foo::n(foo, 2)
-//│ ╙──       	^^^
+//│ ║  l.+1: 	Foo::n(foo, 2)
+//│ ╙──      	^^^
 //│ ╔══[COMPILATION ERROR] Cannot resolve the projection class
-//│ ║  l.139: 	Foo::n(foo, 2)
-//│ ╙──       	^^^
+//│ ║  l.+1: 	Foo::n(foo, 2)
+//│ ╙──      	^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda2;
 //│ lambda2 = (undefined, function (self7, ...args7) {

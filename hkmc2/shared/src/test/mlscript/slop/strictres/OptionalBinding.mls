@@ -254,44 +254,44 @@ let methods = new Methods
 private fun unguarded(x?, ...middle, last) = x.length
 fun unknownSpread(xs: Array[Str]) = unguarded(...xs, "last")
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.254: 	private fun unguarded(x?, ...middle, last) = x.length
-//│ ║         	                                             ^^^^^^^^
+//│ ║  l.+1: 	private fun unguarded(x?, ...middle, last) = x.length
+//│ ║        	                                             ^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.254: 	private fun unguarded(x?, ...middle, last) = x.length
-//│ ╙──       	                      ^^
+//│ ║  l.+1: 	private fun unguarded(x?, ...middle, last) = x.length
+//│ ╙──      	                      ^^
 
 // Optionality alone admits null, even when every observed call supplies a string.
 :e
 private fun alwaysSupplied(x?) = x.length
 alwaysSupplied("abc")
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.265: 	private fun alwaysSupplied(x?) = x.length
-//│ ║         	                                 ^^^^^^^^
+//│ ║  l.+1: 	private fun alwaysSupplied(x?) = x.length
+//│ ║        	                                 ^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.265: 	private fun alwaysSupplied(x?) = x.length
-//│ ╙──       	                           ^^
+//│ ║  l.+1: 	private fun alwaysSupplied(x?) = x.length
+//│ ╙──      	                           ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Uncalled bodies have the same nullable parameter shape.
 :e
 private fun neverCalled(x?) = x.length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.277: 	private fun neverCalled(x?) = x.length
-//│ ║         	                              ^^^^^^^^
+//│ ║  l.+1: 	private fun neverCalled(x?) = x.length
+//│ ║        	                              ^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.277: 	private fun neverCalled(x?) = x.length
-//│ ╙──       	                        ^^
+//│ ║  l.+1: 	private fun neverCalled(x?) = x.length
+//│ ╙──      	                        ^^
 
 // Callback constraints must not erase the optional parameter's null alternative.
 :e
 fun invoke(f: Str -> Int) = f("abc")
 invoke((x?) => x.length)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.288: 	invoke((x?) => x.length)
-//│ ║         	               ^^^^^^^^
+//│ ║  l.+2: 	invoke((x?) => x.length)
+//│ ║        	               ^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.288: 	invoke((x?) => x.length)
-//│ ╙──       	        ^^
+//│ ║  l.+2: 	invoke((x?) => x.length)
+//│ ╙──      	        ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Inferred constructor fields retain the optional parameter's null alternative too.
@@ -299,11 +299,11 @@ invoke((x?) => x.length)
 private class NullableField(val value?)
 NullableField("abc").value.length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.300: 	NullableField("abc").value.length
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	NullableField("abc").value.length
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.299: 	private class NullableField(val value?)
-//│ ╙──       	                            ^^^^^^^^^^
+//│ ║  l.+1: 	private class NullableField(val value?)
+//│ ╙──      	                            ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

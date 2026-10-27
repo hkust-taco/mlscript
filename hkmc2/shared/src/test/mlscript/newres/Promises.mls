@@ -35,10 +35,10 @@ asyncResult.then(value => value.answer)
 fun makePromise() = @annotations.async {answer: 42}
 makePromise().answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.36: 	makePromise().answer
+//│ ║  l.+2: 	makePromise().answer
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Promise' does not contain member 'answer'
-//│ ║  l.35: 	fun makePromise() = @annotations.async {answer: 42}
+//│ ║  l.+1: 	fun makePromise() = @annotations.async {answer: 42}
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^
 //│ ╙── This async annotation wraps the body's result in a promise.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -49,10 +49,10 @@ makePromise().answer
 fun asyncFunction() = {answer: 42}
 asyncFunction().answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.50: 	asyncFunction().answer
+//│ ║  l.+3: 	asyncFunction().answer
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Promise' does not contain member 'answer'
-//│ ║  l.48: 	@annotations.async
+//│ ║  l.+1: 	@annotations.async
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╙── This async annotation wraps the body's result in a promise.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -85,10 +85,10 @@ typed(43).then(value => value.answer)
 :e
 typed(43).answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.86: 	typed(43).answer
+//│ ║  l.+1: 	typed(43).answer
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Promise' does not contain member 'answer'
-//│ ║  l.80: 	@annotations.async
+//│ ║  l.XX: 	@annotations.async
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╙── This async annotation wraps the body's result in a promise.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -106,11 +106,11 @@ explicitReturn().then(value => value.answer)
 fun returnedClosure() = () => 42
 returnedClosure()()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.107: 	returnedClosure()()
-//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	returnedClosure()()
+//│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Promise' cannot be called like a function.
-//│ ║  l.105: 	@annotations.async
-//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	@annotations.async
+//│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╙── This async annotation wraps the body's result in a promise.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -143,11 +143,11 @@ remaining(27).then(value => value)
 :e
 curried(20).then(value => value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.144: 	curried(20).then(value => value)
-//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	curried(20).then(value => value)
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Function 'curried' does not contain member 'then'
-//│ ║  l.137: 	fun curried(x: Int)(y: Int): Int = x + y
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun curried(x: Int)(y: Int): Int = x + y
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Generic result inference through a callback must infer Promise, not the body.
@@ -192,11 +192,11 @@ typedRemaining(30).then(value => value)
 :e
 separatelyTyped(20).then(value => value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.193: 	separatelyTyped(20).then(value => value)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	separatelyTyped(20).then(value => value)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function with a declared signature does not contain member 'then'
-//│ ║  l.184: 	fun separatelyTyped: Int -> Int -> Int
-//│ ╙──       	                            ^^^^^^^^^^
+//│ ║  l.XX: 	fun separatelyTyped: Int -> Int -> Int
+//│ ╙──      	                            ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A generic async signature must retain Promise after explicit specialization.
@@ -247,12 +247,12 @@ nominalMethod(new AsyncLibrary.Methods)
 :e
 AsyncLibrary.inferred().answer
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.248: 	AsyncLibrary.inferred().answer
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	AsyncLibrary.inferred().answer
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Promise' does not contain member 'answer'
 //│ ║  in ../../mlscript-compile/AsyncLibrary.mls
-//│ ║  l.3: 	  @annotations.async
-//│ ║       	  ^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  @annotations.async
+//│ ║        	  ^^^^^^^^^^^^^^^^^^
 //│ ╙── This async annotation wraps the body's result in a promise.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -279,8 +279,8 @@ signedClosure().then(callback => callback())
 val plainValue = {answer: 60}
 plainValue.answer
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.278: 	@annotations.async
-//│ ╙──       	^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	@annotations.async
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ = 60
 //│ plainValue = {answer: 60}
 
@@ -422,11 +422,11 @@ declaredPromise().then(value => value.answer)
 fun hidesField(): {answer: Int} = {answer: 68, hidden: 0}
 hidesField().then(value => value.hidden)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.423: 	hidesField().then(value => value.hidden)
-//│ ║         	                           ^^^^^^^^^^^^
+//│ ║  l.+3: 	hidesField().then(value => value.hidden)
+//│ ║        	                           ^^^^^^^^^^^^
 //│ ╟── Record type does not contain member 'hidden'
-//│ ║  l.422: 	fun hidesField(): {answer: Int} = {answer: 68, hidden: 0}
-//│ ╙──       	                   ^^^^^^^^^^^
+//│ ║  l.+2: 	fun hidesField(): {answer: Int} = {answer: 68, hidden: 0}
+//│ ╙──      	                   ^^^^^^^^^^^
 
 // Awaiting a Promise does not make an absent payload member dynamic.
 :!js
@@ -436,11 +436,11 @@ fun missingPayloadField() =
   let value = handlers.await(Promise.resolve({answer: 69}))
   value.missing
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.437: 	  value.missing
-//│ ║         	  ^^^^^^^^^^^^^
+//│ ║  l.+4: 	  value.missing
+//│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── Record literal does not contain member 'missing'
-//│ ║  l.436: 	  let value = handlers.await(Promise.resolve({answer: 69}))
-//│ ╙──       	                                              ^^^^^^^^^^
+//│ ║  l.+3: 	  let value = handlers.await(Promise.resolve({answer: 69}))
+//│ ╙──      	                                              ^^^^^^^^^^
 
 
 // Promise payloads that escape must expose their callbacks' parameter obligations.
@@ -448,20 +448,20 @@ fun missingPayloadField() =
 :e
 val escapedCallback = @annotations.async {value => value.answer}
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.449: 	val escapedCallback = @annotations.async {value => value.answer}
-//│ ║         	                                                   ^^^^^^^^^^^^
+//│ ║  l.+1: 	val escapedCallback = @annotations.async {value => value.answer}
+//│ ║        	                                                   ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── Parameter 'value' admits values of unknown shape.
-//│ ║  l.449: 	val escapedCallback = @annotations.async {value => value.answer}
-//│ ║         	                                          ^^^^^
+//│ ║  l.+1: 	val escapedCallback = @annotations.async {value => value.answer}
+//│ ║        	                                          ^^^^^
 //│ ╟── This value is fulfilled by this promise.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.204: 	declare class Promise[out A](executor: ((A | Promise[A]) -> unsafe.undefined, Any -> unsafe.undefined) -> unsafe.undefined) {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	declare class Promise[out A](executor: ((A | Promise[A]) -> unsafe.undefined, Any -> unsafe.undefined) -> unsafe.undefined) {
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── 'escapedCallback' is exposed by this compilation unit.
-//│ ║  in Promises.mls:449
-//│ ║  l.449: 	val escapedCallback = @annotations.async {value => value.answer}
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ ║  in Promises.mls:+1
+//│ ║  l.+1: 	val escapedCallback = @annotations.async {value => value.answer}
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 
 // A promise with no finite fulfillment has no payload member interface.
 :!js
@@ -470,8 +470,8 @@ val escapedCallback = @annotations.async {value => value.answer}
 fun noFulfillment() = noFulfillment()
 noFulfillment().then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] This selection of member 'answer' has no resolved target
-//│ ║  l.471: 	noFulfillment().then(value => value.answer)
-//│ ╙──       	                              ^^^^^^^^^^^^
+//│ ║  l.+3: 	noFulfillment().then(value => value.answer)
+//│ ╙──      	                              ^^^^^^^^^^^^
 
 // TODO: Infer structural thenables' fulfillment callbacks. Their original fields
 // must not be exposed as the payload while JavaScript adopts the resolved value.
@@ -481,9 +481,9 @@ class Thenable with
   fun id"then"(resolve: {answer: Int} -> unsafe.undefined, reject: Any -> unsafe.undefined) = resolve({answer: 77})
 Promise.resolve(new Thenable).then(value => value.answer)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.482: 	Promise.resolve(new Thenable).then(value => value.answer)
-//│ ║         	                                            ^^^^^^^^^^^^
+//│ ║  l.+3: 	Promise.resolve(new Thenable).then(value => value.answer)
+//│ ║        	                                            ^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'answer' of a value with unknown shape.
 //│ ╟── This value may be a thenable; its fulfillment interface is not known.
-//│ ║  l.482: 	Promise.resolve(new Thenable).then(value => value.answer)
-//│ ╙──       	                ^^^^^^^^^^^^
+//│ ║  l.+3: 	Promise.resolve(new Thenable).then(value => value.answer)
+//│ ╙──      	                ^^^^^^^^^^^^

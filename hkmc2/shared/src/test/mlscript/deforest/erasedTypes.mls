@@ -207,9 +207,9 @@ pass(Box(42)).v
 //│   return box
 //│ };
 //│ set Box_v = 42;
-//│ set tmp = Box_v;
-//│ set tmp1 = pass¹(tmp);
-//│ return tmp1
+//│ set tmp1 = Box_v;
+//│ set tmp = pass¹(tmp1);
+//│ return tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -1036,10 +1036,10 @@ private fun f(a) = if a is A then 0 else 1
 //│   end
 //│ };
 //│ define A⁶ as object A⁵;
-//│ set tmp2 = g$g¹(true);
-//│ set tmp = f$f²(tmp2);
-//│ set tmp3 = g$g⁰(false);
-//│ set tmp1 = f$f¹(tmp3);
+//│ set tmp3 = g$g¹(true);
+//│ set tmp = f$f²(tmp3);
+//│ set tmp2 = g$g⁰(false);
+//│ set tmp1 = f$f¹(tmp2);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: error

@@ -11,16 +11,16 @@ print \ greet("Ana", "Hi")       // prints: Hi, Ana
 :todo
 fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.12: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
+//│ ║  l.+1: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
 //│ ╙──      	                             ^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.12: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
+//│ ║  l.+1: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
 //│ ╙──      	                                             ^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in record literal
-//│ ║  l.12: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
+//│ ║  l.+1: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── A record type requires statically named fields.
-//│ ║  l.12: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
+//│ ║  l.+1: 	fun greet(name: Str, opts?: {greeting?: Str, loud?: Bool}) = ???
 //│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 fun add(x, ...xs) = xs.reduce(=> _ + _, x)

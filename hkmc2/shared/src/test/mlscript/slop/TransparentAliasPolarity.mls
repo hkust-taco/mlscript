@@ -28,11 +28,11 @@ indirect({item: Item(3)}).value
 :e
 fun inputOnly(source: Source[in Item]) = source.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.29: 	fun inputOnly(source: Source[in Item]) = source.item.value
+//│ ║  l.+1: 	fun inputOnly(source: Source[in Item]) = source.item.value
 //│ ║        	                                         ^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'value' of a value with unknown shape.
 //│ ╟── This type argument specifies only an input bound.
-//│ ║  l.29: 	fun inputOnly(source: Source[in Item]) = source.item.value
+//│ ║  l.+1: 	fun inputOnly(source: Source[in Item]) = source.item.value
 //│ ║        	                             ^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 
@@ -62,7 +62,7 @@ let empty = mut []
 connect({iterator: () => empty}, Item(7))
 empty.0.value
 //│ ╔══[COMPILATION ERROR] This selection of member 'value' has no resolved target
-//│ ║  l.63: 	empty.0.value
+//│ ║  l.+5: 	empty.0.value
 //│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ empty = []

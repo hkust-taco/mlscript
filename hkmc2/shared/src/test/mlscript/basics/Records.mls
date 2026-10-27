@@ -17,7 +17,7 @@ let r = {}
 :w
 {1, 2}
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.18: 	{1, 2}
+//│ ║  l.+1: 	{1, 2}
 //│ ╙──      	 ^
 //│ = 2
 
@@ -37,16 +37,16 @@ typeof(rcd)
 
 // * Should we allow this syntax?
 
-let rcd = (foo: 1, bar: "...")
+let rcd = {foo: 1, bar: "..."}
 //│ rcd = {foo: 1, bar: "..."}
 
 [rcd.foo, rcd.bar]
 //│ = [1, "..."]
 
-let rcd = (
+let rcd = {
   foo: 1
   bar: "..."
-)
+}
 //│ rcd = {foo: 1, bar: "..."}
 
 let rcd =
@@ -74,10 +74,10 @@ let rcd =
   bar =
     "..."
 //│ ╔══[COMPILATION ERROR] Name not found: foo
-//│ ║  l.73: 	  foo = 1
+//│ ║  l.+2: 	  foo = 1
 //│ ╙──      	  ^^^
 //│ ╔══[COMPILATION ERROR] Name not found: bar
-//│ ║  l.74: 	  bar =
+//│ ║  l.+3: 	  bar =
 //│ ╙──      	  ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ rcd = undefined
@@ -92,19 +92,19 @@ let rcd = new {
       "..."
   }
 //│ ╔══[COMPILATION ERROR] Name not found: foo
-//│ ║  l.90: 	    foo = 1
+//│ ║  l.+2: 	    foo = 1
 //│ ╙──      	    ^^^
 //│ ╔══[COMPILATION ERROR] Name not found: bar
-//│ ║  l.91: 	    bar =
+//│ ║  l.+3: 	    bar =
 //│ ╙──      	    ^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.89: 	let rcd = new {
+//│ ║  l.+1: 	let rcd = new {
 //│ ║        	          ^^^^^
-//│ ║  l.90: 	    foo = 1
+//│ ║  l.+2: 	    foo = 1
 //│ ║        	^^^^^^^^^^^
-//│ ║  l.91: 	    bar =
+//│ ║  l.+3: 	    bar =
 //│ ║        	^^^^^^^^^
-//│ ║  l.92: 	      "..."
+//│ ║  l.+4: 	      "..."
 //│ ║        	^^^^^^^^^^^
 //│ ╙── Invalid class expression: block
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -124,7 +124,7 @@ id of ({ x: 1 })
 id of ({ x: 1, y: 2 })
 //│ = {x: 1, y: 2}
 
-id of (x: 1, y: 2)
+id of {x: 1, y: 2}
 //│ = {x: 1, y: 2}
 
 id of { x: 1, y: 2 }
@@ -148,12 +148,12 @@ m0.get(41)
 :e
 {get(k): _}
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.149: 	{get(k): _}
-//│ ║         	         ^
+//│ ║  l.+1: 	{get(k): _}
+//│ ║        	         ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ╔══[COMPILATION ERROR] Unexpected record key shape.
-//│ ║  l.149: 	{get(k): _}
-//│ ╙──       	 ^^^^^^
+//│ ║  l.+1: 	{get(k): _}
+//│ ╙──      	 ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -207,21 +207,21 @@ display(x: 88, y: 99, i: 0)
 :todo // * Make second parameter optional
 t('group)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.208: 	t('group)
-//│ ║         	^^^^^^^^^
+//│ ║  l.+1: 	t('group)
+//│ ║        	^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
-//│ ║  l.176: 	fun t(kind, props) =
-//│ ╙──       	^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun t(kind, props) =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected at least 2 arguments but got 1
 
 :todo // * Make second parameter optional
 t('group)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.218: 	t('group)
-//│ ║         	^^^^^^^^^
+//│ ║  l.+1: 	t('group)
+//│ ║        	^^^^^^^^^
 //│ ╟── Function 't' expected 2 arguments, but got 1
-//│ ║  l.176: 	fun t(kind, props) =
-//│ ╙──       	^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun t(kind, props) =
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected at least 2 arguments but got 1
 
 let empty = Object.create of null

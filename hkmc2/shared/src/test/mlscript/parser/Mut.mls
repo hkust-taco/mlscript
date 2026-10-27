@@ -4,8 +4,8 @@
 :pe
 mut
 //│ ╔══[PARSE ERROR] Expected expression or block after 'mut' keyword; found end of input instead
-//│ ║  l.5: 	mut
-//│ ╙──     	   ^
+//│ ║  l.+1: 	mut
+//│ ╙──      	   ^
 //│ Parsed:
 //│ 	Error()
 
@@ -66,7 +66,7 @@ mut
   let
     x = 1 in x
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.67: 	    x = 1 in x
+//│ ║  l.+3: 	    x = 1 in x
 //│ ╙──      	          ^^
 //│ Parsed:
 //│ 	Modified(Keywrd(keyword 'mut'),Block(List(LetLike(Keywrd(keyword 'let'),Block(List(Def(Ident(x),IntLit(1)))),None,None))))
@@ -78,10 +78,10 @@ mut
   let
     y = 2 in y
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.77: 	    x = 1 in x
+//│ ║  l.+3: 	    x = 1 in x
 //│ ╙──      	          ^^
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.79: 	    y = 2 in y
+//│ ║  l.+5: 	    y = 2 in y
 //│ ╙──      	          ^^
 //│ Parsed:
 //│ 	Modified(Keywrd(keyword 'mut'),Block(List(LetLike(Keywrd(keyword 'let'),Block(List(Def(Ident(x),IntLit(1)))),None,None), LetLike(Keywrd(keyword 'let'),Block(List(Def(Ident(y),IntLit(2)))),None,None))))

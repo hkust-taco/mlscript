@@ -1386,7 +1386,7 @@ class BlockSimplifier
                 val usedOriginals = MutSet.empty[Int]
                 def materialize(selected: Selected): Block =
                   if originalConsumerRetained || usedOriginals(selected.index) then
-                    SymbolRefresher(Map.empty).applyBlock(selected.body)
+                    SymbolRefresher(Map.empty).apply(selected.body)
                   else
                     usedOriginals += selected.index
                     selected.body
@@ -1455,47 +1455,6 @@ class BlockSimplifier
             case _ =>
         found
 
-      // * TODO: once bad actors like the current pattern compiler stop duplicating symbols,
-      // *  we can remove this ugly workaround.
-      def hasDuplicateBoundSymbols(fun: FunDefn): Bool =
-        val seen = MutSet.empty[ScopedSymbol | TermSymbol | LabelSymbol | ClassCtorSymbol]
-        var found = false
-        def register(sym: ScopedSymbol | TermSymbol | LabelSymbol | ClassCtorSymbol): Unit =
-          if seen(sym) then found = true
-          else seen += sym
-        def registerParamList(pl: LoweredParamList): Unit =
-          pl.params.foreach(param => register(param.sym))
-          pl.restParam.foreach(param => register(param.sym))
-        (new BlockTraverser:
-          override def applyBlock(b: Block): Unit = b match
-            case Scoped(syms, body) =>
-              syms.foreach(register)
-              applyBlock(body)
-            case Label(lbl, loop, body, rest) =>
-              register(lbl)
-              applyBlock(body)
-              applyBlock(rest)
-            case _ => super.applyBlock(b)
-
-          override def applyFunDefn(fun: FunDefn): Unit =
-            // Local function member symbols are introduced by `Scoped`. Method member symbols
-            // have no enclosing `Scoped` and are registered by their owning class below.
-            register(fun.dSym)
-            fun.params.foreach(registerParamList)
-            applyBlock(fun.body)
-
-          override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
-            // Like local functions, local class-like member symbols are introduced by `Scoped`.
-            // Methods, on the other hand, bind their member symbols directly in the class body.
-            defn.methods.foreach(method => register(method.sym))
-            defn.companion.foreach(_.methods.foreach(method => register(method.sym)))
-            defn.ctorSym.foreach(register)
-            defn.paramsOpt.foreach(registerParamList)
-            defn.auxParams.foreach(registerParamList)
-            super.applyClsLikeDefn(defn)
-        ).applyFunDefn(fun)
-        found
-
       def matchArgs(args: List[Arg], params: LoweredParamList): Option[List[(VarSymbol, Result)]] =
         if args.exists(_.spread.isDefined) then
           // we require a precise match when any arg is a spread arg
@@ -1544,8 +1503,6 @@ class BlockSimplifier
         private[InlinerAnalyzer] var _isLoopBreaker: Bool,
       ):
         def isPrivate = !symbolsToPreserve.contains(defn.sym)
-        private lazy val isPatternHelper = defn.owner.exists(_.isInstanceOf[PatternSymbol])
-        private lazy val hasDuplicateBindings = hasDuplicateBoundSymbols(defn)
         private lazy val hasPrivateMemberAccesses = accessesPrivateMembers(defn.body)
         
         inline def isLoopBreaker = _isLoopBreaker
@@ -1561,10 +1518,6 @@ class BlockSimplifier
         /** Requirements that can reject a non-local body without inspecting its body. */
         def passesStaticRequirements: Bool =
           if defn.noInline then return false
-          // Pattern compiler helpers may intentionally reuse source pattern variables across
-          // mutually-exclusive generated blocks. Symbol-refreshing them as ordinary inline
-          // bodies is not sound, so keep those helpers in place.
-          if isPatternHelper then return false
           // Instance methods access instance state via `this`, so they must not be
           // inlined as if they were static calls. True modules are safe because
           // their `this` references can be replaced by call-site qualifier paths.
@@ -1580,7 +1533,6 @@ class BlockSimplifier
         // i.e. the original definition can be removed and there is only one usage.
         def canBeInlineEliminated: Bool =
           isPrivate && !isMethod && !defn.noInline && useCount <= 1 && !disallowElimination && !isLoopBreaker
-            && !isPatternHelper && !hasDuplicateBindings
             // Class/module references still need the function object that owns their `.class`.
             // Term-only use counts cannot establish that this shared binding is dead;
             // ordinary DCE can remove it once neither interpretation is referenced.
@@ -1589,10 +1541,6 @@ class BlockSimplifier
         
         def inlineCost(newBlk: Block, threshold: Int): Opt[Int] =
           if !passesStaticRequirements then return N
-          // Pattern compiler helpers may intentionally reuse source pattern variables across
-          // mutually-exclusive generated blocks. Symbol-refreshing them as ordinary inline
-          // bodies is not sound, so reject the same shape wherever duplicate bindings occur.
-          if hasDuplicateBindings then return N
           // Accessors for JS-private members use a fresh Symbol shared by the owner
           // definition and its out-of-owner references within one emitted module.
           // There is deliberately no cross-module accessor ABI, so keep such accesses

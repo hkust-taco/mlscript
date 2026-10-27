@@ -26,13 +26,10 @@
 +
 //│ = fun
 
-// * A bit confusing... but at least there's a warning!
-:w
+// * Explicit argument lists are uniform across symbolic operators.
+:expect 5
 +(2, 3)
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.31: 	+(2, 3)
-//│ ╙──      	  ^
-//│ = 3
+//│ = 5
 
 *(2, 3)
 //│ = 6
@@ -40,7 +37,7 @@
 :ge
 *(1)
 //│ ╔══[COMPILATION ERROR] Builtin '*' is not a unary operator
-//│ ║  l.41: 	*(1)
+//│ ║  l.+1: 	*(1)
 //│ ╙──      	^^^^
 //│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
@@ -57,7 +54,7 @@
 :ge
 (*)(2)
 //│ ╔══[COMPILATION ERROR] Builtin '*' is not a unary operator
-//│ ║  l.58: 	(*)(2)
+//│ ║  l.+1: 	(*)(2)
 //│ ╙──      	^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'

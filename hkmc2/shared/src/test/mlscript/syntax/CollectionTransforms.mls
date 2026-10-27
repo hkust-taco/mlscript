@@ -55,17 +55,17 @@ xs
 xs
   .map \ x => _ + 1
 //│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
-//│ ║  l.56: 	  .map \ x => _ + 1
+//│ ║  l.+2: 	  .map \ x => _ + 1
 //│ ║        	              ^
 //│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 let xs = Seq
-  \ (key: "A", value: 1)
-  \ (key: "B", value: 2)
-  \ (key: "A", value: 3)
-  \ (key: "B", value: 4)
+  \ {key: "A", value: 1}
+  \ {key: "B", value: 2}
+  \ {key: "A", value: 3}
+  \ {key: "B", value: 4}
 //│ xs = Seq({key: "A", value: 1}, {key: "B", value: 2}, {key: "A", value: 3}, {key: "B", value: 4})
 
 xs.groupMapReduce
@@ -105,12 +105,12 @@ let xs = Seq(1, 2, 3)
 :fixme
 xs.map(=> _ + 1).map(=> _ * 2)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.106: 	xs.map(=> _ + 1).map(=> _ * 2)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Cannot resolve member 'map' of a value with unknown shape.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.106: 	xs.map(=> _ + 1).map(=> _ * 2)
-//│ ╙──       	^^^^^^
+//│ ║  l.+1: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ╙──      	^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

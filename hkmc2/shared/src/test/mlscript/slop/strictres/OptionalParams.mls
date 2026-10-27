@@ -88,21 +88,21 @@ foo(1, 2)
 :e
 foo()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.89: 	foo()
+//│ ║  l.+1: 	foo()
 //│ ║        	^^^^^
 //│ ╟── Function 'foo' expected 1 to 2 arguments, but got 0
-//│ ║  l.8: 	fun foo(x, y?) = [x, y]
-//│ ╙──     	^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun foo(x, y?) = [x, y]
+//│ ╙──      	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
 :e
 foo(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.99: 	foo(1, 2, 3)
+//│ ║  l.+1: 	foo(1, 2, 3)
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── Function 'foo' expected 1 to 2 arguments, but got 3
-//│ ║  l.8: 	fun foo(x, y?) = [x, y]
-//│ ╙──     	^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun foo(x, y?) = [x, y]
+//│ ╙──      	^^^^^^^^^^^^^^
 //│ = [1, 2]
 
 // Extra arguments are ignored at runtime, as in JavaScript.
@@ -132,11 +132,11 @@ fun bar(x, y?, ...zs) = [x, y, zs]
 :e
 fun len(s?: Str) = s.length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.133: 	fun len(s?: Str) = s.length
-//│ ║         	                   ^^^^^^^^
+//│ ║  l.+1: 	fun len(s?: Str) = s.length
+//│ ║        	                   ^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.133: 	fun len(s?: Str) = s.length
-//│ ╙──       	        ^^^^^^^
+//│ ║  l.+1: 	fun len(s?: Str) = s.length
+//│ ╙──      	        ^^^^^^^
 
 :expect [0, 3]
 fun len(s?: Str) = if s is ~null as s then s.length else 0
@@ -148,18 +148,18 @@ fun len(s?) = s.length
 len("abc")
 len()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.147: 	fun len(s?) = s.length
-//│ ║         	              ^^^^^^^^
+//│ ║  l.+1: 	fun len(s?) = s.length
+//│ ║        	              ^^^^^^^^
 //│ ╟── Null literal does not contain member 'length'
-//│ ║  l.147: 	fun len(s?) = s.length
-//│ ║         	        ^^
+//│ ║  l.+1: 	fun len(s?) = s.length
+//│ ║        	        ^^
 //│ ╟── Cannot resolve member 'length' of a value with unknown shape.
 //│ ╟── Parameter 's' admits values of unknown shape.
-//│ ║  l.147: 	fun len(s?) = s.length
-//│ ║         	        ^^
+//│ ║  l.+1: 	fun len(s?) = s.length
+//│ ║        	        ^^
 //│ ╟── 'len' is exposed by this compilation unit.
-//│ ║  l.147: 	fun len(s?) = s.length
-//│ ╙──       	^^^^^^^^^^^
+//│ ║  l.+1: 	fun len(s?) = s.length
+//│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -222,40 +222,40 @@ sum(3)
 :e
 fun bad(x?, y) = x
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.223: 	fun bad(x?, y) = x
-//│ ╙──       	            ^
+//│ ║  l.+1: 	fun bad(x?, y) = x
+//│ ╙──      	            ^
 
 :e
 fun bad(...xs?) = xs
 //│ ╔══[COMPILATION ERROR] Variadic parameters cannot be optional.
-//│ ║  l.229: 	fun bad(...xs?) = xs
-//│ ╙──       	        ^^^^^^
+//│ ║  l.+1: 	fun bad(...xs?) = xs
+//│ ╙──      	        ^^^^^^
 
 :e
 fun bad(using x?: Int) = x
 //│ ╔══[COMPILATION ERROR] Contextual parameters cannot be optional.
-//│ ║  l.235: 	fun bad(using x?: Int) = x
-//│ ╙──       	        ^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun bad(using x?: Int) = x
+//│ ╙──      	        ^^^^^^^^^^^^^
 
 :e
 let t = [1, 2?]
 //│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
-//│ ║  l.241: 	let t = [1, 2?]
-//│ ╙──       	            ^^
+//│ ║  l.+1: 	let t = [1, 2?]
+//│ ╙──      	            ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ t = undefined
 
 :e
 fun first(t: [Int, Int?]) = t.0
 //│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
-//│ ║  l.249: 	fun first(t: [Int, Int?]) = t.0
-//│ ╙──       	                   ^^^^
+//│ ║  l.+1: 	fun first(t: [Int, Int?]) = t.0
+//│ ╙──      	                   ^^^^
 
 :e
 fun app(f: (Int?, Int) -> Int) = f(1, 2)
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.255: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
-//│ ╙──       	                  ^^^
+//│ ║  l.+1: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
+//│ ╙──      	                  ^^^
 
 // Other operators starting with `?` are unaffected.
 :expect 1
@@ -272,28 +272,28 @@ unsafe.undefined ?: 1
 :e
 fun bad(x, y ?: Int) = x
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
-//│ ║  l.273: 	fun bad(x, y ?: Int) = x
-//│ ╙──       	           ^^^^^^^^
+//│ ║  l.+1: 	fun bad(x, y ?: Int) = x
+//│ ╙──      	           ^^^^^^^^
 
 :pe
 :e
 fun bad(x, y ?) = x
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.280: 	fun bad(x, y ?) = x
-//│ ╙──       	              ^
+//│ ║  l.+1: 	fun bad(x, y ?) = x
+//│ ╙──      	              ^
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
-//│ ║  l.280: 	fun bad(x, y ?) = x
-//│ ╙──       	           ^^^
+//│ ║  l.+1: 	fun bad(x, y ?) = x
+//│ ╙──      	           ^^^
 
 :pe
 :e
 fun bad(f: (Int, Int ?) -> Int) = f(1)
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.290: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
-//│ ╙──       	                      ^
+//│ ║  l.+1: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ╙──      	                      ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.290: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
-//│ ║         	                 ^^^^^
+//│ ║  l.+1: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║        	                 ^^^^^
 //│ ╟── This type has no resolved target
-//│ ║  l.290: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
-//│ ╙──       	                 ^^^^^
+//│ ║  l.+1: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ╙──      	                 ^^^^^

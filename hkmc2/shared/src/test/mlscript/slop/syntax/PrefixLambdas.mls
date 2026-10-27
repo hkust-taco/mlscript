@@ -62,7 +62,7 @@ block()
 :e
 fun returning() = => return 17
 //│ ╔══[COMPILATION ERROR] Non-local return statements are only supported with effect handlers enabled.
-//│ ║  l.63: 	fun returning() = => return 17
+//│ ║  l.+1: 	fun returning() = => return 17
 //│ ╙──      	                     ^^^^^^^^^
 
 :effectHandlers

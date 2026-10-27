@@ -19,15 +19,15 @@ let f = foo(1)(2)
 :e
 f(3)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.20: 	f(3)
+//│ ║  l.+1: 	f(3)
 //│ ║        	^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.6: 	  x + y
-//│ ║       	  ^^^^^
+//│ ║  l.XX: 	  x + y
+//│ ║        	  ^^^^^
 //│ ╟── Value of type 'Int' cannot be called like a function.
-//│ ║  l.6: 	  x + y
-//│ ╙──     	  ^^^^^
+//│ ║  l.XX: 	  x + y
+//│ ╙──      	  ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sr
@@ -47,15 +47,15 @@ let g = f(2)
 :e
 g(3)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.48: 	g(3)
+//│ ║  l.+1: 	g(3)
 //│ ║        	^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── The shape of this value is unknown.
-//│ ║  l.6: 	  x + y
-//│ ║       	  ^^^^^
+//│ ║  l.XX: 	  x + y
+//│ ║        	  ^^^^^
 //│ ╟── Value of type 'Int' cannot be called like a function.
-//│ ║  l.6: 	  x + y
-//│ ╙──     	  ^^^^^
+//│ ║  l.XX: 	  x + y
+//│ ╙──      	  ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

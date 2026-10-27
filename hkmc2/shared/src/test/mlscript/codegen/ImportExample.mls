@@ -20,12 +20,12 @@ Example.pubFun
 :re
 Example.privFun
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.21: 	Example.privFun
+//│ ║  l.+1: 	Example.privFun
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── Module 'Example' does not contain member 'privFun'
 //│ ║  in ../../mlscript-compile/Example.mls
-//│ ║  l.9: 	module Example with ...
-//│ ╙──     	^^^^^^^^^^^^^^
+//│ ║  l.XX: 	module Example with ...
+//│ ╙──      	^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
@@ -61,7 +61,7 @@ inc / 2
 :ge
 n / 2
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
-//│ ║  l.62: 	n / 2
+//│ ║  l.+1: 	n / 2
 //│ ╙──      	^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return runtime.safeCall(n(2))

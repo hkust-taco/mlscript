@@ -30,32 +30,31 @@ val ++ = 0
 
 :e
 val ++ y = 1
-//│ ╔══[COMPILATION ERROR] Invalid value definition head: unexpected identifier in this position
-//│ ║  l.32: 	val ++ y = 1
-//│ ╙──      	       ^
-//│ ++ = 1
+//│ ╔══[COMPILATION ERROR] Expected a valid value definition head; found prefix operator application instead
+//│ ║  l.+1: 	val ++ y = 1
+//│ ╙──      	    ^^^^
 
 :e
 y
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.39: 	y
+//│ ║  l.+1: 	y
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 ++
-//│ = 1
+//│ = 0
 
 
 :e
 fun ++ z = 0
-//│ ╔══[COMPILATION ERROR] Invalid function definition head: unexpected identifier in this position
-//│ ║  l.50: 	fun ++ z = 0
-//│ ╙──      	       ^
+//│ ╔══[COMPILATION ERROR] Expected a valid function definition head; found prefix operator application instead
+//│ ║  l.+1: 	fun ++ z = 0
+//│ ╙──      	    ^^^^
 
 :sjs
 ++
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return 0
+//│ return $_$_
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 0
 
@@ -63,7 +62,7 @@ fun ++ z = 0
 :e
 fun (class Lol) foo = 0
 //│ ╔══[COMPILATION ERROR] This type definition is not a valid symbolic name
-//│ ║  l.64: 	fun (class Lol) foo = 0
+//│ ║  l.+1: 	fun (class Lol) foo = 0
 //│ ╙──      	     ^^^^^^^^^
 
 foo
@@ -72,7 +71,7 @@ foo
 :e
 Lol
 //│ ╔══[COMPILATION ERROR] Name not found: Lol
-//│ ║  l.73: 	Lol
+//│ ║  l.+1: 	Lol
 //│ ╙──      	^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -89,10 +88,10 @@ trait F
 :e
 val badValue(arg) = arg
 //│ ╔══[COMPILATION ERROR] Value definitions cannot have parameter lists
-//│ ║  l.90: 	val badValue(arg) = arg
+//│ ║  l.+1: 	val badValue(arg) = arg
 //│ ╙──      	            ^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: arg
-//│ ║  l.90: 	val badValue(arg) = arg
+//│ ║  l.+1: 	val badValue(arg) = arg
 //│ ╙──      	                    ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ badValue = undefined
@@ -102,20 +101,20 @@ fun localBadValue() =
   val badLocal(arg) = arg
   badLocal
 //│ ╔══[COMPILATION ERROR] Value definitions cannot have parameter lists
-//│ ║  l.102: 	  val badLocal(arg) = arg
-//│ ╙──       	              ^^^^^
+//│ ║  l.+2: 	  val badLocal(arg) = arg
+//│ ╙──      	              ^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: arg
-//│ ║  l.102: 	  val badLocal(arg) = arg
-//│ ╙──       	                      ^^^
+//│ ║  l.+2: 	  val badLocal(arg) = arg
+//│ ╙──      	                      ^^^
 
 :e
 class BadValueMember with
   mut val badMember(arg)(arg2) = arg
 //│ ╔══[COMPILATION ERROR] Mutable value definitions cannot have parameter lists
-//│ ║  l.113: 	  mut val badMember(arg)(arg2) = arg
-//│ ╙──       	                   ^^^^^^^^^^^
+//│ ║  l.+2: 	  mut val badMember(arg)(arg2) = arg
+//│ ╙──      	                   ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: arg
-//│ ║  l.113: 	  mut val badMember(arg)(arg2) = arg
-//│ ╙──       	                                 ^^^
+//│ ║  l.+2: 	  mut val badMember(arg)(arg2) = arg
+//│ ╙──      	                                 ^^^
 
 

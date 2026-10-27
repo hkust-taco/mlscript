@@ -12,10 +12,10 @@ pattern CalculateBMI = ((:weight, :height)) => weight / (height * height)
 
 pattern Rounded = (Num as value) => Math.round(value)
 
-(weight: 70, height: 1.75) is CalculateBMI as Rounded(22)
+({weight: 70, height: 1.75}) is CalculateBMI as Rounded(22)
 //│ = false
 
-(weight: 70, height: 1.75) is CalculateBMI as Rounded(23)
+({weight: 70, height: 1.75}) is CalculateBMI as Rounded(23)
 //│ = true
 
 pattern RoundedBMI = CalculateBMI as Rounded
@@ -39,7 +39,7 @@ fun bmi(record) = if record is MatchOrNone(RoundedBMI) as value then value
 // alternatively?
 fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (application).
-//│ ║  l.40: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
+//│ ║  l.+1: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
 
 :expect Some(23)
@@ -52,7 +52,7 @@ bmi of height: 1.75
 :todo // Make it happen!
 fun bmi'(record) = if record is (@compile MatchOrNone(RoundedBMI)) as value then value
 //│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.21: 	pattern RoundedBMI = CalculateBMI as Rounded
+//│ ║  l.XX: 	pattern RoundedBMI = CalculateBMI as Rounded
 //│ ╙──      	                     ^^^^^^^^^^^^^^^^^^^^^^^
 
 // Calculate the area of different shapes
@@ -66,17 +66,17 @@ fun area(shape) = if shape is ShapeArea as a then Some(a) else None
 area of (radius: 10)
 //│ = Some(314.1592653589793)
 
-area of (width: 10, height: 20)
+area of ({width: 10, height: 20})
 //│ = Some(200)
 
-area of (base: 10, height: 20)
+area of ({base: 10, height: 20})
 //│ = Some(100)
 
 // Fields are tested in the same order as they are written in the pattern.
-area of (radius: 10, height: 20)
+area of ({radius: 10, height: 20})
 //│ = Some(314.1592653589793)
 
-area of (width: 10, height: 20, base: 10)
+area of ({width: 10, height: 20, base: 10})
 //│ = Some(200)
 
 fun area__compiled(shape) = if shape is (@compile ShapeArea) as a then Some(a) else None
@@ -84,13 +84,13 @@ fun area__compiled(shape) = if shape is (@compile ShapeArea) as a then Some(a) e
 area__compiled of (radius: 10)
 //│ = Some(314.1592653589793)
 
-area__compiled of (width: 10, height: 20)
+area__compiled of ({width: 10, height: 20})
 //│ = Some(200)
 
-area__compiled of (base: 10, height: 20)
+area__compiled of ({base: 10, height: 20})
 //│ = Some(100)
 
-area__compiled of (width: 10, height: 20, base: 10)
+area__compiled of ({width: 10, height: 20, base: 10})
 //│ = Some(200)
 
 // Convert between different number systems
@@ -101,7 +101,7 @@ pattern NumberSystem =
 
 fun parseIntegerLiteral(value) = if
   value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
-    (:radix, :digits) is NumberSystem as value then Some(value)
+    ({:radix, :digits}) is NumberSystem as value then Some(value)
   else None
 
 parseIntegerLiteral of "0xFF"
@@ -114,7 +114,7 @@ parseIntegerLiteral of "0o377"
 //│ = Some(255)
 
 pattern IntegerLiteral =
-  ("0" ~ (("x" | "o" | "b") as radix) ~ digits) => (:radix, :digits)
+  ("0" ~ (("x" | "o" | "b") as radix) ~ digits) => ({:radix, :digits})
 
 fun parseIntegerLiteral(value) = if
   value is IntegerLiteral as output then Some(output)

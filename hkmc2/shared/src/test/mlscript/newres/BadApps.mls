@@ -4,11 +4,11 @@
 :e
 42()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.5: 	42()
-//│ ║       	^^^^
+//│ ║  l.+1: 	42()
+//│ ║        	^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.5: 	42()
-//│ ╙──     	^^
+//│ ║  l.+1: 	42()
+//│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -18,10 +18,10 @@ let x = 123
 :e
 x(456)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.19: 	x(456)
+//│ ║  l.+1: 	x(456)
 //│ ║        	^^^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.15: 	let x = 123
+//│ ║  l.XX: 	let x = 123
 //│ ╙──      	        ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -31,10 +31,10 @@ x(456)
 fun result() = 1
 result()()
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.32: 	result()()
+//│ ║  l.+2: 	result()()
 //│ ║        	^^^^^^^^^^
 //│ ╟── Integer literal cannot be called like a function.
-//│ ║  l.31: 	fun result() = 1
+//│ ║  l.+1: 	fun result() = 1
 //│ ╙──      	               ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -44,17 +44,17 @@ module M
 fun call(x) = x()
 call(M)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.44: 	fun call(x) = x()
+//│ ║  l.+2: 	fun call(x) = x()
 //│ ║        	              ^^^
 //│ ╟── Module 'M' cannot be called like a function.
-//│ ║  l.43: 	module M
+//│ ║  l.+1: 	module M
 //│ ║        	^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'x' admits values of unknown shape.
-//│ ║  l.44: 	fun call(x) = x()
+//│ ║  l.+2: 	fun call(x) = x()
 //│ ║        	         ^
 //│ ╟── 'call' is exposed by this compilation unit.
-//│ ║  l.44: 	fun call(x) = x()
+//│ ║  l.+2: 	fun call(x) = x()
 //│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -64,17 +64,17 @@ class Plain
 fun instantiate(cls) = cls()
 instantiate(Plain)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.64: 	fun instantiate(cls) = cls()
+//│ ║  l.+2: 	fun instantiate(cls) = cls()
 //│ ║        	                       ^^^^^
 //│ ╟── Class 'Plain' must be instantiated with 'new'.
-//│ ║  l.63: 	class Plain
+//│ ║  l.+1: 	class Plain
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'cls' admits values of unknown shape.
-//│ ║  l.64: 	fun instantiate(cls) = cls()
+//│ ║  l.+2: 	fun instantiate(cls) = cls()
 //│ ║        	                ^^^
 //│ ╟── 'instantiate' is exposed by this compilation unit.
-//│ ║  l.64: 	fun instantiate(cls) = cls()
+//│ ║  l.+2: 	fun instantiate(cls) = cls()
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -84,17 +84,17 @@ class Curried(x)(y)
 fun overapply(instance) = instance()
 overapply(Curried(1)(2))
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.84: 	fun overapply(instance) = instance()
+//│ ║  l.+2: 	fun overapply(instance) = instance()
 //│ ║        	                          ^^^^^^^^^^
 //│ ╟── Instance of class 'Curried' cannot receive more argument lists.
-//│ ║  l.85: 	overapply(Curried(1)(2))
+//│ ║  l.+3: 	overapply(Curried(1)(2))
 //│ ║        	          ^^^^^^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'instance' admits values of unknown shape.
-//│ ║  l.84: 	fun overapply(instance) = instance()
+//│ ║  l.+2: 	fun overapply(instance) = instance()
 //│ ║        	              ^^^^^^^^
 //│ ╟── 'overapply' is exposed by this compilation unit.
-//│ ║  l.84: 	fun overapply(instance) = instance()
+//│ ║  l.+2: 	fun overapply(instance) = instance()
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -104,17 +104,17 @@ class Plain
 fun overapply(instance) = instance()
 overapply(new Plain)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.104: 	fun overapply(instance) = instance()
-//│ ║         	                          ^^^^^^^^^^
+//│ ║  l.+2: 	fun overapply(instance) = instance()
+//│ ║        	                          ^^^^^^^^^^
 //│ ╟── Instance of class 'Plain' cannot receive more argument lists.
-//│ ║  l.105: 	overapply(new Plain)
-//│ ║         	          ^^^^^^^^^
+//│ ║  l.+3: 	overapply(new Plain)
+//│ ║        	          ^^^^^^^^^
 //│ ╟── Value of unknown shape cannot be called like a function.
 //│ ╟── Parameter 'instance' admits values of unknown shape.
-//│ ║  l.104: 	fun overapply(instance) = instance()
-//│ ║         	              ^^^^^^^^
+//│ ║  l.+2: 	fun overapply(instance) = instance()
+//│ ║        	              ^^^^^^^^
 //│ ╟── 'overapply' is exposed by this compilation unit.
-//│ ║  l.104: 	fun overapply(instance) = instance()
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun overapply(instance) = instance()
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

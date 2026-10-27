@@ -297,17 +297,17 @@ class M2() extends M1() with
   override fun f(m: Int32): Int = 0
 M2().f(1)
 //│ ╔══[COMPILATION ERROR] Overriding member 'f' produces values represented as 'Int', which the member it overrides cannot produce: its results are represented as 'Int32'
-//│ ║  l.297: 	  override fun f(m: Int32): Int = 0
-//│ ║         	               ^
+//│ ║  l.+4: 	  override fun f(m: Int32): Int = 0
+//│ ║        	               ^
 //│ ╟── The overridden member 'f' is defined here
-//│ ║  l.295: 	  open fun f(m: Int32): Int32 = m
-//│ ╙──       	           ^
+//│ ║  l.+2: 	  open fun f(m: Int32): Int32 = m
+//│ ╙──      	           ^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.298: 	M2().f(1)
-//│ ╙──       	       ^
+//│ ║  l.+5: 	M2().f(1)
+//│ ╙──      	       ^
 //│ ╔══[COMPILATION ERROR] Overriding method `f` declares result as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.297: 	  override fun f(m: Int32): Int = 0
-//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  override fun f(m: Int32): Int = 0
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // The same rule on a parameter. An unannotated parameter of an override takes the inherited
@@ -319,17 +319,17 @@ class N2() extends N1() with
   override fun g(m: Int): Int32 = n32
 N2().g(n32)
 //│ ╔══[COMPILATION ERROR] Parameter 'm' of overriding member 'g' is represented as 'Int', which cannot hold the values represented as 'Int32' that the member it overrides accepts
-//│ ║  l.319: 	  override fun g(m: Int): Int32 = n32
-//│ ║         	                 ^^^^^^
+//│ ║  l.+4: 	  override fun g(m: Int): Int32 = n32
+//│ ║        	                 ^^^^^^
 //│ ╟── The overridden member 'g' is defined here
-//│ ║  l.317: 	  open fun g(m: Int32): Int32 = m
-//│ ╙──       	           ^
+//│ ║  l.+2: 	  open fun g(m: Int32): Int32 = m
+//│ ╙──      	           ^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int'
-//│ ║  l.320: 	N2().g(n32)
-//│ ╙──       	       ^^^
+//│ ║  l.+5: 	N2().g(n32)
+//│ ╙──      	       ^^^
 //│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null i31)`, but the method it overrides declares `i32`
-//│ ║  l.319: 	  override fun g(m: Int): Int32 = n32
-//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  override fun g(m: Int): Int32 = n32
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // An unannotated parameter of an override takes the inherited `i32` representation.
@@ -473,11 +473,11 @@ class StrProducer() extends Producer() with
 fun produce(p) = p.get()
 produce(StrProducer())
 //│ ╔══[COMPILATION ERROR] Overriding member 'get' produces values represented as 'Str', which the member it overrides cannot produce: its results are represented as 'Producer'
-//│ ║  l.472: 	  override fun get() = "str"
-//│ ║         	               ^^^
+//│ ║  l.+4: 	  override fun get() = "str"
+//│ ║        	               ^^^
 //│ ╟── The overridden member 'get' is defined here
-//│ ║  l.470: 	  open fun get() = new Producer()
-//│ ╙──       	           ^^^
+//│ ║  l.+2: 	  open fun get() = new Producer()
+//│ ╙──      	           ^^^
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
 
@@ -495,7 +495,7 @@ consume(Consumer())
 consume(EchoConsumer())
 EchoConsumer().take("s")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.496: 	EchoConsumer().take("s")
-//│ ╙──       	                    ^^^
+//│ ║  l.+8: 	EchoConsumer().take("s")
+//│ ╙──      	                    ^^^
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

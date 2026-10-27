@@ -258,14 +258,14 @@ class PrivateOverride extends PublicBase with
 let po = new PrivateOverride
 [po.viaThis, po.pick(true), po.pick(false)]
 //│ ╔══[COMPILATION ERROR] This reference may target a private member, which cannot be selected together with other members
-//│ ║  l.257: 	  fun pick(flag) = (if flag then this else new PublicBase).f
-//│ ║         	                                                          ^^
+//│ ║  l.+6: 	  fun pick(flag) = (if flag then this else new PublicBase).f
+//│ ║        	                                                          ^^
 //│ ╟── private member 'f' declared here
-//│ ║  l.255: 	  private fun f = "B"
-//│ ║         	              ^
+//│ ║  l.+4: 	  private fun f = "B"
+//│ ║        	              ^
 //│ ╟── other target: function 'f'
-//│ ║  l.253: 	  fun f = "A"
-//│ ╙──       	      ^
+//│ ║  l.+2: 	  fun f = "A"
+//│ ╙──      	      ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ po = PrivateOverride
 

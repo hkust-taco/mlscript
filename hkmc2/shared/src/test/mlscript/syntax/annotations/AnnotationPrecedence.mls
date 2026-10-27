@@ -21,84 +21,93 @@ fun foo(x) = if x is (@annotations.compile A(0)) as y then y
 :e
 fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ╔══[PARSE ERROR] Unexpected keyword 'then' in this position
-//│ ║  l.22: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ╙──      	                                                      ^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.22: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ╙──      	                                                      ^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.22: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ╙──      	                                                   ^
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.22: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ╙──      	                                                           ^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.22: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ║        	                                           ^^^^
 //│ ╟── Pattern 'A' cannot be called like a function.
-//│ ║  l.8: 	pattern A(pattern B) = B
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	pattern A(pattern B) = B
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.22: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Object 'compile' cannot be called like a function.
 //│ ║  in ../../decls/Prelude.mls
-//│ ║  l.597: 	  object compile
-//│ ╙──       	  ^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  object compile
+//│ ╙──      	  ^^^^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.22: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
+//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
 //│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: Patterns only support the `@compile` annotation.
 
 :e
 fun foo(x) = if x is @annotations.compile {A(0) as y} then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.54: 	fun foo(x) = if x is @annotations.compile {A(0) as y} then y
-//│ ╙──      	                                                           ^
+//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile {A(0) as y} then y
+//│ ║        	                                                           ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile {A(0) as y} then y
+//│ ╙──      	                                                   ^
 
 :pe // parses as `@annotations.compile(A(0) as y) ‹missing annot body›`
 :e
 fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
 //│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.61: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
 //│ ║        	                                                      ^
 //│ ╟── found a lone annotation instead
-//│ ║  l.61: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
 //│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.61: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
 //│ ╙──      	                                                      ^
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.61: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
 //│ ╙──      	                                                             ^
 
 :pe // parses as `@annotations.compile(A(0) as y) ‹missing annot body›`
 :e
 fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.77: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ║        	                                                     ^
 //│ ╟── found a lone annotation instead
-//│ ║  l.77: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.77: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ╙──      	                                                     ^
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.77: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ╙──      	                                                            ^
 
 :e
 fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.92: 	fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
-//│ ╙──      	                                                             ^
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
+//│ ║        	                                                             ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
+//│ ╙──      	                                                    ^
 
 :fixme
 fun foo(x) = if x is (@annotations.compile A(0) as y) then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.98: 	fun foo(x) = if x is (@annotations.compile A(0) as y) then y
-//│ ╙──      	                                                           ^
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile A(0) as y) then y
+//│ ║        	                                                           ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile A(0) as y) then y
+//│ ╙──      	                                                   ^
 
 
 // Using a dummy annotation to test that annotations gobble
@@ -109,82 +118,82 @@ type Test
 :w
 @Test 1
 //│ ╔══[COMPILATION ERROR] Resolution error in member reference
-//│ ║  l.110: 	@Test 1
-//│ ║         	^^^^^
+//│ ║  l.+1: 	@Test 1
+//│ ║        	^^^^^
 //│ ╙── Expected a term; got type alias 'Test'
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.110: 	@Test 1
-//│ ║         	^^^^^
+//│ ║  l.+1: 	@Test 1
+//│ ║        	^^^^^
 //│ ╟── This annotation is not supported on integer literal terms.
-//│ ║  l.110: 	@Test 1
-//│ ╙──       	      ^
+//│ ║  l.+1: 	@Test 1
+//│ ╙──      	      ^
 //│ = 1
 
 :e
 :w
 @Test 2 + 1
 //│ ╔══[COMPILATION ERROR] Resolution error in member reference
-//│ ║  l.125: 	@Test 2 + 1
-//│ ║         	^^^^^
+//│ ║  l.+1: 	@Test 2 + 1
+//│ ║        	^^^^^
 //│ ╙── Expected a term; got type alias 'Test'
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.125: 	@Test 2 + 1
-//│ ║         	^^^^^
+//│ ║  l.+1: 	@Test 2 + 1
+//│ ║        	^^^^^
 //│ ╟── This annotation is not supported on application terms.
-//│ ║  l.125: 	@Test 2 + 1
-//│ ╙──       	      ^^^^^
+//│ ║  l.+1: 	@Test 2 + 1
+//│ ╙──      	      ^^^^^
 //│ = 3
 
 :e
 :w
 @Test 2 as Int
 //│ ╔══[COMPILATION ERROR] Resolution error in member reference
-//│ ║  l.140: 	@Test 2 as Int
-//│ ║         	^^^^^
+//│ ║  l.+1: 	@Test 2 as Int
+//│ ║        	^^^^^
 //│ ╙── Expected a term; got type alias 'Test'
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.140: 	@Test 2 as Int
-//│ ║         	^^^^^
+//│ ║  l.+1: 	@Test 2 as Int
+//│ ║        	^^^^^
 //│ ╟── This annotation is not supported on type ascription terms.
-//│ ║  l.140: 	@Test 2 as Int
-//│ ╙──       	      ^^^^^^^^
+//│ ║  l.+1: 	@Test 2 as Int
+//│ ╙──      	      ^^^^^^^^
 //│ = 2
 
 :e
 :w
 @Test id(2) as Int
 //│ ╔══[COMPILATION ERROR] Resolution error in member reference
-//│ ║  l.155: 	@Test id(2) as Int
-//│ ║         	^^^^^
+//│ ║  l.+1: 	@Test id(2) as Int
+//│ ║        	^^^^^
 //│ ╙── Expected a term; got type alias 'Test'
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.155: 	@Test id(2) as Int
-//│ ║         	^^^^^
+//│ ║  l.+1: 	@Test id(2) as Int
+//│ ║        	^^^^^
 //│ ╟── This annotation is not supported on type ascription terms.
-//│ ║  l.155: 	@Test id(2) as Int
-//│ ╙──       	      ^^^^^^^^^^^^
+//│ ║  l.+1: 	@Test id(2) as Int
+//│ ╙──      	      ^^^^^^^^^^^^
 //│ = 2
 
 :pe
 :re
 (@Test)
 //│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.170: 	(@Test)
-//│ ║         	      ^
+//│ ║  l.+1: 	(@Test)
+//│ ║        	      ^
 //│ ╟── found a lone annotation instead
-//│ ║  l.170: 	(@Test)
-//│ ╙──       	 ^^^^^
+//│ ║  l.+1: 	(@Test)
+//│ ╙──      	 ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
 :re
 print(@Test)
 //│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.181: 	print(@Test)
-//│ ║         	           ^
+//│ ║  l.+1: 	print(@Test)
+//│ ║        	           ^
 //│ ╟── found a lone annotation instead
-//│ ║  l.181: 	print(@Test)
-//│ ╙──       	      ^^^^^
+//│ ║  l.+1: 	print(@Test)
+//│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

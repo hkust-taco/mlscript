@@ -44,10 +44,10 @@ private val shared = make
 shared(First(1))
 shared(Second(2)).second
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.45: 	shared(Second(2)).second
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+10: 	shared(Second(2)).second
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.44: 	shared(First(1))
+//│ ║  l.+9: 	shared(First(1))
 //│ ╙──      	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ shared = fun
@@ -66,10 +66,10 @@ private val shared = make
 shared(First(3))
 shared(Second(4)).second
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.67: 	shared(Second(4)).second
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+10: 	shared(Second(4)).second
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.66: 	shared(First(3))
+//│ ║  l.+9: 	shared(First(3))
 //│ ╙──      	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ shared = fun
@@ -120,10 +120,10 @@ private val shared = make
 shared(First(11))
 shared(Second(12)).second
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.121: 	shared(Second(12)).second
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+7: 	shared(Second(12)).second
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.120: 	shared(First(11))
-//│ ╙──       	       ^^^^^^^^^
+//│ ║  l.+6: 	shared(First(11))
+//│ ╙──      	       ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ shared = fun

@@ -340,8 +340,8 @@ open Stack
 :ge
 renderAsStr of 1 :: 2 :: 3 :: 4
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Stack.Base'
-//│ ║  l.341: 	renderAsStr of 1 :: 2 :: 3 :: 4
-//│ ╙──       	                              ^
+//│ ║  l.+1: 	renderAsStr of 1 :: 2 :: 3 :: 4
+//│ ╙──      	                              ^
 //│ = "Cons(1, Cons(2, Cons(3, 4)))"
 
 renderAsStr of 1 :: 2 :: 3 :: 4 :: Nil
@@ -401,11 +401,11 @@ renderAsStr of Null
 :e
 renderAsStr of Null.class
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.402: 	renderAsStr of Null.class
-//│ ║         	               ^^^^^^^^^^
+//│ ║  l.+1: 	renderAsStr of Null.class
+//│ ║        	               ^^^^^^^^^^
 //│ ╟── Pattern 'Null' does not contain member 'class'
-//│ ║  l.396: 	pattern Null = null
-//│ ╙──       	^^^^^^^^^^^^
+//│ ║  l.XX: 	pattern Null = null
+//│ ╙──      	^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 declare class Iterator
@@ -414,11 +414,11 @@ class RangeIterator(val start: Int, val end: Int) extends Iterator with
   let current = start
   fun next() =
     if current < end then
-      let result = (done: false, value: current)
+      let result = {done: false, value: current}
       set current += 1
       result
     else
-      (done: true, value: unsafe.undefined)
+      {done: true, value: unsafe.undefined}
 
 renderAsStr of RangeIterator(0, 1)
 //│ = "RangeIterator(0, 1)"

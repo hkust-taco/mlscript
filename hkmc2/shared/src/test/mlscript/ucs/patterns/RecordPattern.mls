@@ -44,7 +44,7 @@ f(a: 1)
 let f = case
   { a: 1 } then a
 //│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.45: 	  { a: 1 } then a
+//│ ║  l.+2: 	  { a: 1 } then a
 //│ ╙──      	                ^
 //│ f = fun
 
@@ -64,10 +64,10 @@ let r = {x: 2, y : 4}
 if r is
   {x:a, y:a} then a
 //│ ╔══[COMPILATION ERROR] Duplicated pattern variable.
-//│ ║  l.65: 	  {x:a, y:a} then a
+//│ ║  l.+2: 	  {x:a, y:a} then a
 //│ ║        	          ^
 //│ ╟── The previous definition is as follows.
-//│ ║  l.65: 	  {x:a, y:a} then a
+//│ ║  l.+2: 	  {x:a, y:a} then a
 //│ ╙──      	     ^
 //│ = 4
 
@@ -151,8 +151,8 @@ foo(1 :: Nil)
 :ge
 foo(1 :: "this is invalid")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Stack.Base'
-//│ ║  l.152: 	foo(1 :: "this is invalid")
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	foo(1 :: "this is invalid")
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^
 //│ = "yeah we're done"
 
 foo(1 :: 2 :: Nil)

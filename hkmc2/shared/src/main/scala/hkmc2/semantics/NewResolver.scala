@@ -205,8 +205,8 @@ class NewResolver:
               fields.reverse.distinctBy(_.key).reverse.map(field => field -> typeResolution(field.rhs))))
           // Signed numeric literals use operator applications in the syntax tree.
           // Their primitive interface is not recovered from these applications yet.
-          case App(Ref(op: BuiltinSymbol), Tup(Fld(_, Lit(_: Tree.IntLit | _: Tree.DecLit), _) :: Nil))
-              if op.nme === "-" || op.nme === "+" =>
+          case App(op: AnyRef_, Tup(Fld(_, Lit(_: Tree.IntLit | _: Tree.DecLit), _) :: Nil))
+              if op.sym.isInstanceOf[BuiltinSymbol] && (op.sym.nme === "-" || op.sym.nme === "+") =>
             result.publish(TypeShape.Abstract)
           // Ignore undefined in annotations: `T | undefined` has the same
           // resolution candidates as T.
@@ -2415,7 +2415,10 @@ class NewResolver:
       (using ResolutionContext): DeclaredType =
     rctx.state.appliedTypes.getOrElseUpdate((symbol, arguments), {
       val source = arguments.head.resolution
-      val head = Term.Ref(symbol)(new Tree.Ident(symbol.nme).withLocOf(source.source), N)
+      val member = symbol.defn.get.bsym
+      // The constructor has no written identifier; its arguments retain their own source origins.
+      val head = Term.MemberRef(member)(N, FlowSymbol.memSym(member))
+      head.resolvedTargets = symbol :: Nil
       // This head is fully applied and has no lexical binders. Reusing an argument's
       // source would misclassify it as a bare generic use in that argument's scope.
       rctx.recordLexicalBinders(head, Set.empty)
@@ -2729,8 +2732,11 @@ class NewResolver:
 
   private def listenIterableElements(value: TermShape, flow: IterationFlow)(using ResolutionContext): Unit =
     val symbols = prelude.builtins.SymbolModule
+    // This expression is a diagnostic witness; lookup uses the canonical path.
+    val module = Term.MemberRef(symbols.bms)(N, FlowSymbol.memSym(symbols.bms))
+    val iterator = Term.NewSel(module, Tree.Ident("iterator"), N)(FlowSymbol.synthSel("iterator"))
     val iteratorKey = SymbolKey(symbols.module :: symbols.iterator :: Nil)(
-      symbols.bms.ref().synthSel(symbols.iterator))
+      iterator)
     listenInstanceViews(value): view =>
       listenMemberValue(view.getMember(iteratorKey).visibleFrom(_ => false, reportInaccessible = false),
         flow.iteratorMember, flow.elements.source, TypeSubstitution.empty,
@@ -4453,8 +4459,7 @@ class NewResolver:
       symbols.toList match
         case symbol :: Nil if !failed => S(symbol)
         case _ => fail(); N
-    // TODO: Ref(sym: BuiltinSymbol) is a legacy representation that still needs
-    // updating to the new reference forms, even when using new resolution.
+    // Imported legacy annotations may still use Ref for builtin markers.
     case Ref(sym: BuiltinSymbol) => S(sym)
     case _ =>
       resolError(trm, msg"An annotation must have a known main symbol." -> N :: Nil)
@@ -4902,8 +4907,9 @@ class NewResolver:
       sym match
       case loc: LocalSymbol =>
         loc.subscribeToShapes(listener)
-      case _: BuiltinSymbol =>
-        lastWords("Builtin symbols must not enter new resolution as SimpleRef")
+      // Primitive operations are handled directly by lowering; they do not
+      // introduce member-resolution candidates.
+      case _: BuiltinSymbol => ()
     case SelfRef(sym) =>
       // A receiver can be referenced before its body is complete or after its
       // definition has already been published. The definition listener handles both.

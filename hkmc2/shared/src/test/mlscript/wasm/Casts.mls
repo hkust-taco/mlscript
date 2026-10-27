@@ -150,11 +150,11 @@ wasm.ref.i31(wasm.i32.const(7))
 :noInline
 wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.151: 	wasm.ref.i31(id(wasm.i32.const(7)))
-//│ ╙──       	                ^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
-//│ ║  l.151: 	wasm.ref.i31(id(wasm.i32.const(7)))
-//│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
 
@@ -178,8 +178,8 @@ unpack(toObj())
 :e
 fun test: Function = id
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.179: 	fun test: Function = id
-//│ ╙──       	                     ^^
+//│ ║  l.+1: 	fun test: Function = id
+//│ ╙──      	                     ^^
 
 :fixme
 fun test: Function = new Object()
@@ -192,16 +192,16 @@ class C
 :e
 fun test: Function = new C
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
-//│ ║  l.193: 	fun test: Function = new C
-//│ ╙──       	                     ^^^^^
+//│ ║  l.+1: 	fun test: Function = new C
+//│ ╙──      	                     ^^^^^
 //│ Wasm result:
 //│ = {}
 
 :e
 fun test: Function = (new C) as Object
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
-//│ ║  l.201: 	fun test: Function = (new C) as Object
-//│ ╙──       	                      ^^^^^
+//│ ║  l.+1: 	fun test: Function = (new C) as Object
+//│ ╙──      	                      ^^^^^
 //│ Wasm result:
 //│ = {}
 
@@ -224,8 +224,8 @@ fun test: Function = castToA(123)
 :e
 castToA(wasm.i32.const(123))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
-//│ ║  l.225: 	castToA(wasm.i32.const(123))
-//│ ╙──       	        ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	castToA(wasm.i32.const(123))
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 123
 

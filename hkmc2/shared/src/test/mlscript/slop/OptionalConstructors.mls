@@ -109,43 +109,43 @@ local(29).values()
 :e
 fun missingRequired() = new Main()
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.110: 	fun missingRequired() = new Main()
-//│ ║         	                        ^^^^^^^^^^
+//│ ║  l.+1: 	fun missingRequired() = new Main()
+//│ ║        	                        ^^^^^^^^^^
 //│ ╟── Constructor of class 'Main' expected 1 to 2 arguments, but got 0
-//│ ║  l.4: 	class Main(val first, val second?: Int) {
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	class Main(val first, val second?: Int) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun tooMany() = new Main(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.119: 	fun tooMany() = new Main(1, 2, 3)
-//│ ║         	                ^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun tooMany() = new Main(1, 2, 3)
+//│ ║        	                ^^^^^^^^^^^^^^^^^
 //│ ╟── Constructor of class 'Main' expected 1 to 2 arguments, but got 3
-//│ ║  l.4: 	class Main(val first, val second?: Int) {
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	class Main(val first, val second?: Int) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 class BadOrder(first?, second)
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.128: 	class BadOrder(first?, second)
-//│ ╙──       	                       ^^^^^^
+//│ ║  l.+1: 	class BadOrder(first?, second)
+//│ ╙──      	                       ^^^^^^
 
 :e
 class BadAuxiliary {
   constructor(first?, second)
 }
 //│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
-//│ ║  l.135: 	  constructor(first?, second)
-//│ ╙──       	                      ^^^^^^
+//│ ║  l.+2: 	  constructor(first?, second)
+//│ ╙──      	                      ^^^^^^
 
 :e
 class BadContext(using value?: Int)
 //│ ╔══[COMPILATION ERROR] Contextual parameters cannot be optional.
-//│ ║  l.142: 	class BadContext(using value?: Int)
-//│ ╙──       	                 ^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class BadContext(using value?: Int)
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^
 
 :e
 class BadDrop(drop value)
 //│ ╔══[COMPILATION ERROR] Droppable parameters are only supported in function and lambda parameter lists.
-//│ ║  l.148: 	class BadDrop(drop value)
-//│ ╙──       	              ^^^^^^^^^^
+//│ ║  l.+1: 	class BadDrop(drop value)
+//│ ╙──      	              ^^^^^^^^^^

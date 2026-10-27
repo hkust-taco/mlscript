@@ -15,7 +15,7 @@ ident(1)
 :ge
 ident("a")
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.16: 	ident("a")
+//│ ║  l.+1: 	ident("a")
 //│ ╙──      	      ^^^
 //│ = "a"
 
@@ -29,7 +29,7 @@ let counter = 1
 set counter = "hello"
 counter
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.29: 	set counter = "hello"
+//│ ║  l.+1: 	set counter = "hello"
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^
 //│ = "hello"
 
@@ -44,7 +44,7 @@ set cell.value = 2
 :ge
 set cell.value = "hello"
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.45: 	set cell.value = "hello"
+//│ ║  l.+1: 	set cell.value = "hello"
 //│ ╙──      	    ^^^^^^^^^^
 
 class Mixed(mut val value)
@@ -61,7 +61,7 @@ let record = mut {count: 0}
 :ge
 set record.count = "many"
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.62: 	set record.count = "many"
+//│ ║  l.+1: 	set record.count = "many"
 //│ ╙──      	    ^^^^^^^^^^^^
 
 let fields = {mut count: 0, label: "count"}
@@ -70,7 +70,7 @@ let fields = {mut count: 0, label: "count"}
 :ge
 set fields.count = "many"
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
-//│ ║  l.71: 	set fields.count = "many"
+//│ ║  l.+1: 	set fields.count = "many"
 //│ ╙──      	    ^^^^^^^^^^^^
 
 // The values that a record type describes can be assigned values of the types of its mutable fields.

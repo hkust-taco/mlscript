@@ -56,10 +56,10 @@ let
   y = 2
 in y
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.55: 	  x = 1 in print(x)
+//│ ║  l.+2: 	  x = 1 in print(x)
 //│ ╙──      	        ^^
 //│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.57: 	in y
+//│ ║  l.+4: 	in y
 //│ ╙──      	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -159,8 +159,8 @@ let
 in print(hidden)
 hidden
 //│ ╔══[COMPILATION ERROR] Name not found: hidden
-//│ ║  l.160: 	hidden
-//│ ╙──       	^^^^^^
+//│ ║  l.+4: 	hidden
+//│ ╙──      	^^^^^^
 //│ > 1
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -170,8 +170,8 @@ let
   later = 1
 in invalid
 //│ ╔══[COMPILATION ERROR] Name not found: later
-//│ ║  l.169: 	  invalid = later
-//│ ╙──       	            ^^^^^
+//│ ║  l.+2: 	  invalid = later
+//│ ╙──      	            ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Per-binding bodies without an outer `in` are also unsupported.
@@ -180,8 +180,8 @@ let nested = let
   x = 1 in x
 nested
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.180: 	  x = 1 in x
-//│ ╙──       	        ^^
+//│ ║  l.+2: 	  x = 1 in x
+//│ ╙──      	        ^^
 //│ nested = ()
 
 :expect 3
@@ -215,8 +215,8 @@ let
   x = 1
   in x
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.216: 	  in x
-//│ ╙──       	     ^
+//│ ║  l.+3: 	  in x
+//│ ╙──      	     ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ x = 1
 

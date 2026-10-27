@@ -66,10 +66,10 @@ class Missing
 private fun bad(...xs) = xs.map(x => x.value)
 bad(Present(1), new Missing)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.66: 	private fun bad(...xs) = xs.map(x => x.value)
+//│ ║  l.+3: 	private fun bad(...xs) = xs.map(x => x.value)
 //│ ║        	                                     ^^^^^^^
 //│ ╟── Instance of class 'Missing' does not contain member 'value'
-//│ ║  l.67: 	bad(Present(1), new Missing)
+//│ ║  l.+4: 	bad(Present(1), new Missing)
 //│ ╙──      	                ^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -80,10 +80,10 @@ class Child(val extra: Int) extends Base
 private fun annotated(...xs: Array[Base]) = xs.map(x => x.extra)
 annotated(Child(7))
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.80: 	private fun annotated(...xs: Array[Base]) = xs.map(x => x.extra)
+//│ ║  l.+3: 	private fun annotated(...xs: Array[Base]) = xs.map(x => x.extra)
 //│ ║        	                                                        ^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'extra'
-//│ ║  l.80: 	private fun annotated(...xs: Array[Base]) = xs.map(x => x.extra)
+//│ ║  l.+3: 	private fun annotated(...xs: Array[Base]) = xs.map(x => x.extra)
 //│ ╙──      	                                   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -101,12 +101,12 @@ pair(Left(8), Right(9))
 private fun opaque: (...Any) -> Int
 private fun opaque(...xs) = xs.length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.102: 	private fun opaque(...xs) = xs.length
-//│ ║         	                            ^^^^^^^^^
+//│ ║  l.+2: 	private fun opaque(...xs) = xs.length
+//│ ║        	                            ^^^^^^^^^
 //│ ╟── Cannot resolve member 'length' of a value with unknown shape.
-//│ ║  l.101: 	private fun opaque: (...Any) -> Int
-//│ ║         	                        ^^^
+//│ ║  l.+1: 	private fun opaque: (...Any) -> Int
+//│ ║        	                        ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../decls/Prelude.mls
-//│ ║  l.2: 	declare type Any
-//│ ╙──     	             ^^^
+//│ ║  l.XX: 	declare type Any
+//│ ╙──      	             ^^^
