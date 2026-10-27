@@ -1166,7 +1166,7 @@ class FlowConstraintsCollector(
             // ? [todo:harry-0]
             // ? It's a special case for module getters but I'm not sure if
             // ? this is good enough. It just conservatively marks it unsafe.
-            if f.irFunDefn.fold(!f.isPure)(_.params.isEmpty) then markUnsafeEta()
+            if f.irFunDefn.fold(!f.isAccessPure)(_.params.isEmpty) then markUnsafeEta()
             refSite match
               case DynSelect(_, key, DynSelectKind.Member(_)) => cc.constrain(processResult(key), UnknownCons)
               case SuperSelect(_, base, key) =>
@@ -1209,7 +1209,7 @@ class FlowConstraintsCollector(
               ()
             case sym: TermSymbol =>
               // (Accessing mutable fields is a Select)
-              if !sym.isPure then markUnsafeEta()
+              if !sym.isAccessPure then markUnsafeEta()
             case _: ModuleOrObjectSymbol =>
               lastWords("module/object references should be handled by CtorProducer")
             case _: TypeAliasSymbol =>

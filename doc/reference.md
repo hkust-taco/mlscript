@@ -734,6 +734,10 @@ new! c           // dynamic instantiation (class value at runtime)
 new Foo(...xs)   // spread args
 ```
 
+`new mut` is an unsafe escape hatch. Optimizations may still assume that `val`
+fields are immutable; mutating them can therefore change optimized program behavior.
+Use `mut val` for fields whose updates must be observed by ordinary code.
+
 ---
 
 ## 8. Objects, Modules, and Companions

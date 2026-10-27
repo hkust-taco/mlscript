@@ -134,7 +134,7 @@ fun observe_captured() =
     local
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function lambda$⁰#0 @ <root> -> Pure
-//│ flow-analysis > function lambda$⁰#1 @ <root> -> UnsafeEta
+//│ flow-analysis > function lambda$⁰#1 @ <root> -> Pure
 //│ flow-analysis > function lambda⁰#0 @ <root> -> Pure
 //│ flow-analysis > function observe_captured⁰#0 @ <root> -> Pure
 //│ flow-analysis > call lambda$⁰@result⁰#0 @ <root> -> Pure

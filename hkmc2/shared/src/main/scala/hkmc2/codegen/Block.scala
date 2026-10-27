@@ -1082,9 +1082,9 @@ sealed abstract class Result extends Located, HasErasedType:
   lazy val isPure: Bool = this match
     case _: Value => true
     case sel @ Select(q, n) =>
-      q.isPure && sel.symbol.exists(_.isPure)
-    case DynSelect(q, fld, DynSelectKind.Member(sym)) => q.isPure && fld.isPure && sym.isPure
-    case sel @ SuperSelect(q, base, key) => q.isPure && base.isPure && key.isPure && sel.symbol.isPure
+      q.isPure && sel.symbol.exists(_.isAccessPure)
+    case DynSelect(q, fld, DynSelectKind.Member(sym)) => q.isPure && fld.isPure && sym.isAccessPure
+    case sel @ SuperSelect(q, base, key) => q.isPure && base.isPure && key.isPure && sel.symbol.isAccessPure
     case c @ Call(fun, ass) if c.isKnownUnsaturatedCall =>
       fun.isPure && ass.forall(_.forall(a => a.spread.isEmpty && a.value.isPure))
     case Call(Value.SimpleRef(bs: BuiltinSymbol), ass) if bs.isPure =>

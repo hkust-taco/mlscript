@@ -1,0 +1,74 @@
+:.
+:js
+
+#config(inlining: None, liftDefns: Some(LiftDefns), flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: true)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+data class Fields(value, mut val changing)
+class BodyFields {
+  val value = 41
+  mut val changing = 41
+  fun getter = changing
+}
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Constructor fields and body fields use different selection paths in flow analysis.
+fun read_param(obj: Fields) = obj.value
+fun read_mutable_param(obj: Fields) = obj.changing
+fun read_body(obj: BodyFields) = obj.value
+fun read_mutable_body(obj: BodyFields) = obj.changing
+fun read_getter(obj: BodyFields) = obj.getter
+fun read_unknown(obj) = obj.("value")
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function read_body⁰#0 @ <root> -> Pure
+//│ flow-analysis > function read_getter⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function read_mutable_body⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function read_mutable_param⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function read_param⁰#0 @ <root> -> Pure
+//│ flow-analysis > function read_unknown⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// The immutable final field does not hide effects from obtaining its receiver.
+class Holder {
+  mut val current: Fields = Fields(41, 0)
+  fun getter: Fields = current
+}
+fun read_mutable_receiver(obj: Holder) = obj.current.value
+fun read_getter_receiver(obj: Holder) = obj.getter.value
+fun read_called_receiver(get: () -> Fields) = get().value
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function read_called_receiver⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function read_getter_receiver⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function read_mutable_receiver⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call get⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Reading a mutable field must observe subsequent writes through the same receiver.
+:expect [41, 42]
+val fields = Fields(41, 41)
+val before = read_mutable_param(fields)
+set fields.changing = 42
+[before, read_mutable_param(fields)]
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > call read_mutable_param⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call read_mutable_param⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ = [41, 42]
+//│ before = 41
+//│ fields = Fields(41, 42)
+
+
+:expect [41, 41, 41]
+[read_param(fields), read_body(new BodyFields), read_unknown(fields)]
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > call read_body⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call read_param⁰@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call read_unknown⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ = [41, 41, 41]
