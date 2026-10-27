@@ -1,6 +1,5 @@
 :.
 :js
-:qq
 
 
 // A whole conditional block finishes the conditional; ordinary clause operands keep their continuations.
@@ -12,6 +11,36 @@
   if false then {id}(1) else 3
 ]
 //│ = [true, 3, 3, 3]
+
+
+:e
+if 2 + 2 is {4 then 2, else 3} + 2
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (operator application).
+//│ ║  l.+1: 	if 2 + 2 is {4 then 2, else 3} + 2
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:fixme
+if 2 {+ 2 is 4 then 2, else 3} + 2
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+
+:e
+if 2 + {2 is 4 then 2, else 3} + 2
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.+1: 	if 2 + {2 is 4 then 2, else 3} + 2
+//│ ╙──      	        ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.+1: 	if 2 + {2 is 4 then 2, else 3} + 2
+//│ ╙──      	                       ^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
+//│ ║  l.+1: 	if 2 + {2 is 4 then 2, else 3} + 2
+//│ ╙──      	                                 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:fixme
+if 2 + 2 {is 4 then 2, else 3} + 2
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+
 
 // Wrapping the condition preserves the boundary and precedence of the do operand.
 :expect [0, 0, 2, 2]

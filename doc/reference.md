@@ -933,21 +933,26 @@ The UCS is MLscript's unified `if`/`while`/`case` expression supporting pattern 
 ```mlscript
 if condition then expr1 else expr2
 
+// Multiline form:
+if condition
+then expr1
+else expr2
+
 // Indented form:
+if condition
+  then expr1
+  else expr2
+
+// Alternatively:
 if condition then
   expr1
 else
   expr2
 ```
 
-Braced or indented blocks can be followed by `then`/`do` to use their value as the condition,
-or by `else` to supply a fallback for their branches. Clauses attach to the nearest `if`/`while`;
-parenthesize a nested conditional used as a condition: `if (if { ... }) then ... else ...`.
-The `then`/`do` operand follows ordinary expression precedence, including after a block condition.
-A same-indent newline `do` starts a new statement; indent it to continue the conditional.
-Other operators after a whole conditional block apply to its result: `if {true then 2, else 3} + 2` is `4`.
-
 ### `if` with Pattern Branches (`is`)
+
+Ifs can be *split* in several places, such as:
 
 ```mlscript
 if x is
@@ -955,10 +960,26 @@ if x is
   None    then 0
 ```
 
+With explicit braces:
+```mlscript
+if x is {
+  Some(v) then v
+  None    then 0
+}
+```
+
 Inline:
+```mlscript
+if x is { Some(v) then v, None then 0 }
+```
+
+Alternatively, using `else` (not always possible or desirable):
 ```mlscript
 if x is Some(v) then v else 0
 ```
+
+Operations after a split conditional block apply to its result:
+`if {true then 2, else 3} + 2` is `4`.
 
 ### Multi-Way `if` (Without Scrutinee)
 
