@@ -20,9 +20,15 @@ if 2 + 2 is {4 then 2, else 3} + 2
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:fixme
+:e
 if 2 {+ 2 is 4 then 2, else 3} + 2
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+//│ ╔══[COMPILATION ERROR] Unexpected prefix operator 'else' in an operator continuation.
+//│ ║  l.+1: 	if 2 {+ 2 is 4 then 2, else 3} + 2
+//│ ╙──      	                       ^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
+//│ ║  l.+1: 	if 2 {+ 2 is 4 then 2, else 3} + 2
+//│ ╙──      	                                 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 if 2 + {2 is 4 then 2, else 3} + 2
@@ -37,9 +43,43 @@ if 2 + {2 is 4 then 2, else 3} + 2
 //│ ╙──      	                                 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:fixme
+:e
 if 2 + 2 {is 4 then 2, else 3} + 2
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+//│ ╔══[COMPILATION ERROR] Unexpected prefix operator 'else' in an operator continuation.
+//│ ║  l.+1: 	if 2 + 2 {is 4 then 2, else 3} + 2
+//│ ╙──      	                       ^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
+//│ ║  l.+1: 	if 2 + 2 {is 4 then 2, else 3} + 2
+//│ ╙──      	                                 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Operator blocks remain part of the condition; parentheses delimit the completed conditional.
+:expect [4, 4, 1]
+[
+  (if 2 {+ 2 is 4 then 2, else 3}) + 2
+  (if 2 + 2 {is 4 then 2, else 3}) + 2
+  if 2 {+ 1, + 1} == 4 then 1 else 0
+]
+//│ = [4, 4, 1]
+
+// Invalid operator-block entries are diagnosed in both expressions and conditional branches.
+:e
+2 {+ 2, let x = 3}
+//│ ╔══[COMPILATION ERROR] Unexpected let in an operator continuation.
+//│ ║  l.+1: 	2 {+ 2, let x = 3}
+//│ ╙──      	        ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+if 2 {+ 2 is 4 then 2, return 3}
+//│ ╔══[COMPILATION ERROR] Unexpected prefix operator 'return' in an operator continuation.
+//│ ║  l.+1: 	if 2 {+ 2 is 4 then 2, return 3}
+//│ ╙──      	                       ^^^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (‹erroneous syntax›)
+//│ ║  l.+1: 	if 2 {+ 2 is 4 then 2, return 3}
+//│ ╙──      	                       ^^^^^^
+//│ = 2
 
 
 // Wrapping the condition preserves the boundary and precedence of the do operand.

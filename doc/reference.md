@@ -978,8 +978,11 @@ Alternatively, using `else` (not always possible or desirable):
 if x is Some(v) then v else 0
 ```
 
-Operations after a split conditional block apply to its result:
+When the whole conditional body is a block, operations after it apply to its result:
 `if {true then 2, else 3} + 2` is `4`.
+Blocks inside a condition follow ordinary expression precedence. Parenthesize the
+completed conditional to operate on its result, as in
+`(if 2 {+ 2 is 4 then 2, else 3}) + 2`, which is also `4`.
 
 ### Multi-Way `if` (Without Scrutinee)
 
