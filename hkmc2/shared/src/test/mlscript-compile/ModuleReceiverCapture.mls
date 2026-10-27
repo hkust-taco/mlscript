@@ -1,0 +1,15 @@
+#lang(0.3.x)
+
+open annotations { inline, noInline }
+
+module ModuleReceiverCapture with
+  mut val value = 41
+  module Nested with
+    @inline
+    fun read() = value
+    @noInline
+    fun run(n: Int): Int =
+      @noInline
+      fun loop(i: Int): Int =
+        if i == 0 then read() else loop(i - 1)
+      loop(n)

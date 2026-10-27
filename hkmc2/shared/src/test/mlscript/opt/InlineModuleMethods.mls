@@ -95,9 +95,8 @@ Outer.Mid.h(42)
 //│ = 170
 
 
-// TODO: inlining a module nested in an instance must preserve its captured outer receiver.
+// Inlining a module nested in an instance must preserve its captured outer receiver.
 // This is independent of private storage: both the module and its selected field are public.
-:fixme
 :expect 107
 class InstanceModules with
   val value = 107
@@ -105,5 +104,5 @@ class InstanceModules with
     fun read() = value
 let instanceModules = new InstanceModules
 instanceModules.Nested.read()
-//│ ═══[RUNTIME ERROR] Expected: '107', got: 'undefined'
+//│ = 107
 //│ instanceModules = InstanceModules { value: 107, Nested: class Nested }

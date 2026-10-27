@@ -1399,11 +1399,32 @@ class BlockSimplifier
           val acc2 = acc + (currentOwner -> currentQual)
           currentQual match
           case s: Select =>
-            s.qual.targetSymbol match
-            case S(ds: InnerSymbol) => loop(s.qual, ds, acc2)
-            case _ => acc2
+            s.qual match
+            case Value.This(sym) => loop(s.qual, sym, acc2)
+            case _ => s.qual.targetSymbol match
+              case S(ds: InnerSymbol) => loop(s.qual, ds, acc2)
+              case _ => acc2
           case _ => acc2
         loop(qual, ownerSym, Map.empty)
+
+      /** Receivers that a copied method body needs from outside its own definitions.
+        * Unlike lexical variables, `This` references are not included in `Block.freeVars`. */
+      def freeReceivers(blk: Block): Set[InnerSymbol] =
+        val referenced = MutSet.empty[InnerSymbol]
+        val defined = MutSet.empty[InnerSymbol]
+        new BlockTraverser:
+          applyBlock(blk)
+          override def applyValue(value: Value): Unit = value match
+            case Value.This(_: TopLevelSymbol) => ()
+            case Value.This(sym) => referenced += sym
+            case _ => super.applyValue(value)
+          override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
+            defined += defn.isym
+            super.applyClsLikeDefn(defn)
+          override def applyCompanionModule(body: ClsLikeBody): Unit =
+            defined += body.isym
+            super.applyCompanionModule(body)
+        referenced.toSet -- defined
 
       def accessesPrivateMembers(blk: Block): Bool =
         var found = false
@@ -1479,8 +1500,8 @@ class BlockSimplifier
         def passesStaticRequirements: Bool =
           if defn.noInline then return false
           // Instance methods access instance state via `this`, so they must not be
-          // inlined as if they were static calls. True modules are safe because
-          // their `this` references can be replaced by call-site qualifier paths.
+          // inlined as if they were static calls. For true modules, substitution of
+          // all enclosing receivers is checked against each call site's qualifier path.
           if isMethod && !isModuleMethod then return false
           // Instantiate nodes are rendered according to the receiving JS builder's
           // freezing policy. Moving a body across compilation units with a different
@@ -1854,8 +1875,14 @@ class BlockSimplifier
           .fold(super.applyResult(call)(k)): blk =>
             val cfg = summon[Config.Inliner]
             val threshold = if insideInlineAnnotatedFunction then cfg.altSmallThreshold else cfg.inlineThreshold
+            val receiverMapping = thisMapping
             info.inlineCost(blk, threshold) match
             case N =>
+              super.applyResult(call)(k)
+            case S(_) if info.isMethod && !freeReceivers(blk).forall(receiverMapping.contains) =>
+              // A captured nested module may have lost the qualifier path to its enclosing receivers.
+              // Keep the call when those receivers cannot be rebound: copying the body would let
+              // its lexical `This` references escape their defining class or module.
               super.applyResult(call)(k)
             case S(cost) =>
               matchAllArgs(argss, info.defn.params) match
@@ -1875,7 +1902,7 @@ class BlockSimplifier
                       erasedType = if extraArgss.isEmpty then call.erasedValueType else N,
                       "inlinedVal",
                     )
-                    val copier = Copier(resSym, mapping, thisMapping)
+                    val copier = Copier(resSym, mapping, receiverMapping)
                     val newBlk = copier.applyBlock(blk)
                     if extraArgss.isEmpty then
                       acc(Scoped(Set.single(resSym), newBlk(k(resSym.asSimpleRef))))
