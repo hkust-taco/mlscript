@@ -159,6 +159,15 @@ then ???
 else 2
 //│ = 2
 
+print \
+  if {false}      //
+  
+    // 
+  
+  then ???
+  else 2
+//│ > 2
+
 // A same-indent newline do starts a statement, including after a closed conditional block.
 :expect 3
 let n = 0

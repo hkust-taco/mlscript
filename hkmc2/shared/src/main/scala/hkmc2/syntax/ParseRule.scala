@@ -194,8 +194,6 @@ class ParseRules(using State):
           case _ => split :: clause :: Nil
         Block(items)
       case N => split
-    // Keep a block's branches and shared bindings together. Only explicit clauses extend
-    // this body; calls, selections and other operators apply to the completed conditional.
     Kw(kw)(
       ParseRule(s"'${kw.name}' keyword")(
         Expr(optionalElse)(withDefault),
