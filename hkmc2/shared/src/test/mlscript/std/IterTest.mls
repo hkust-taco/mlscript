@@ -95,7 +95,30 @@ mkStr of
 //│ 
 //│ = "01"
 
-fun xs = [1, 2, 3] Iter.mapping(=> _ + "!" !> print)
+let xs = [1, 2, 3] Iter.mapping(=> _ + "!" !> print)
+//│ xs = IterableImpl(_)
+
+// Note: spreads can be effectful!
+[...xs]
+//│ > 1!
+//│ > 2!
+//│ > 3!
+//│ = ["1!", "2!", "3!"]
+
+tuple of ...xs
+//│ > 1!
+//│ > 2!
+//│ > 3!
+//│ = ["1!", "2!", "3!"]
+
+// * [todo:effectful-spreads]
+// FIXME: doesn't even lower to anything!
+:sir
+[...xs]
+()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return runtime⁰.Unit⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 xs
 //│ = IterableImpl(_)

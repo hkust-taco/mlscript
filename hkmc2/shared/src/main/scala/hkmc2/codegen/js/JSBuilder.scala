@@ -897,7 +897,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       else doc" # /* Unreachable: $msg */"
     case Unreachable(_) => doc""
     
-    case Throw(res) =>
+    case Throw(res, _) =>
       doc" # throw ${result(res)}${mkSemi}"
     
     case Break(lbl) =>

@@ -39,7 +39,8 @@ enum Annot extends Located:
   case Generator()(val toLoc: Opt[Loc])
   case Async()(val toLoc: Opt[Loc])
   case RaiseEffects()(val toLoc: Opt[Loc])
-  // Whether the function is guaranteed to not raise effects.
+  // * EffectAnalysis Annotations
+  // @pure: overriding annotation indicating that the function is pure.
   case Pure()(val toLoc: Opt[Loc])
   // Buffered classes expose generated allocation and access methods on the class value.
   case Bufferable(keepInstances: Bool)(val toLoc: Opt[Loc])

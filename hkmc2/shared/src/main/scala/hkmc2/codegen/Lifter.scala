@@ -1105,6 +1105,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val bod = Return(call)
+      // The new capture list shifts the parameter list indices used by affine annotations.
+      val annotations = fun.annotations.map:
+        case a @ Annot.Affine(n) => Annot.Affine(n + 1)(a.toLoc)
+        case a => a
       
       FunDefn(
         N,
@@ -1112,7 +1116,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(N, if fun.noInline then fun.annotations else Annot.Inline()(N) :: fun.annotations)
+      )(N, if fun.noInline then annotations else Annot.Inline()(N) :: annotations)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     
