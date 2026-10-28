@@ -1309,6 +1309,29 @@ class BlockSimplifier
           .flatMap(select(_, consumer.arms, consumer.dflt))
           .fold(Unknown(body))(Known(body, _))
     
+    /** A copied definition needs its binding copied with it. An arm may define a
+      * function whose Scoped binding surrounds the whole match; refreshing just
+      * that arm cannot also update references to the definition outside the arm.
+      * Class members are bound implicitly by their containing class or companion. */
+    def canCopyDefinitions(body: Block): Bool =
+      val bindings = MutSet.from(body.scopedVars)
+      val definitions = MutSet.empty[BlockMemberSymbol]
+      (new BlockTraverser:
+        def bindMembers(methods: Ls[FunDefn], fields: Ls[BlockMemberSymbol -> TermSymbol]): Unit =
+          bindings ++= methods.map(_.sym)
+          bindings ++= fields.map(_._1)
+        override def applyDefn(defn: Defn): Unit =
+          definitions += defn.sym
+          super.applyDefn(defn)
+        override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
+          bindMembers(defn.methods, defn.publicFields)
+          super.applyClsLikeDefn(defn)
+        override def applyCompanionModule(body: ClsLikeBody): Unit =
+          bindMembers(body.methods, body.publicFields)
+          super.applyCompanionModule(body)
+      ).applyBlock(body)
+      definitions.forall(bindings.contains)
+    
     override def applyBlock(b: Block): Block = super.applyBlock(b) match
       case m @ Match(scrut, arms, dflt,
         TrivialStatementsAndMatch(k,
@@ -1336,11 +1359,11 @@ class BlockSimplifier
             else
               val selectedCounts = selected.groupMapReduce(_.index)(_ => 1)(_ + _)
               val originalConsumerRetained = unknownCount === 1
-              val wouldDuplicate = selected.exists: selected =>
+              val cannotDuplicate = selected.exists: selected =>
                 selectedCounts(selected.index) + (if originalConsumerRetained then 1 else 0) > 1
-                  && selected.body.size > cfg.inlineThreshold
+                  && (selected.body.size > cfg.inlineThreshold || !canCopyDefinitions(selected.body))
               
-              if wouldDuplicate then m
+              if cannotDuplicate then m
               else
                 registerChange(s"case-of-case on ${target.showDbg}")
                 val usedOriginals = MutSet.empty[Int]
