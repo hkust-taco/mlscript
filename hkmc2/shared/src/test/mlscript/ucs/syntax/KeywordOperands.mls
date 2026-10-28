@@ -1,0 +1,39 @@
+:.
+:js
+
+// Bare `undefined` exercises keyword parsing, including its expected warning.
+:w
+fun classify(x) = if x ===
+  true then "true"
+  false then "false"
+  null then "null"
+  undefined then "undefined"
+  else "other"
+//│ ╔══[WARNING] Direct use of 'undefined' is discouraged; use 'unsafe.undefined' for JavaScript interoperation.
+//│ ║  l.+5: 	  undefined then "undefined"
+//│ ╙──      	  ^^^^^^^^^
+
+:expect ["true", "false", "null", "undefined", "other"]
+[classify(true), classify(false), classify(null), classify(unsafe.undefined), classify(0)]
+//│ = ["true", "false", "null", "undefined", "other"]
+
+// Keyword operands can have their own continuations before the consequent.
+fun guarded(x, enabled) = if x ===
+  true and enabled then 1
+  false and enabled then 2
+  else 0
+
+:expect [1, 2, 0, 0]
+[guarded(true, true), guarded(false, true), guarded(true, false), guarded(false, false)]
+//│ = [1, 2, 0, 0]
+
+fun mixed(x) = if x ===
+  0 then "zero"
+  true then "true"
+  1 then "one"
+  false then "false"
+  else "other"
+
+:expect ["zero", "true", "one", "false", "other"]
+[mixed(0), mixed(true), mixed(1), mixed(false), mixed(2)]
+//│ = ["zero", "true", "one", "false", "other"]

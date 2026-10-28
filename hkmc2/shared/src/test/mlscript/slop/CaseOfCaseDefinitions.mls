@@ -1,0 +1,55 @@
+:.
+:js
+:checkIR
+
+open annotations { inline }
+
+@inline
+fun choose(x: Int): Int = if x is
+  0 then 0
+  1 then 1
+  else 0
+
+// Both known producer arms select the same closure-producing consumer arm.
+fun duplicateClosure(x: Int): Int -> Int =
+  if choose(x) is
+    0 then (y => x + y)
+    else (y => x - y)
+
+:expect [4, -3, 6]
+[duplicateClosure(0)(4), duplicateClosure(1)(4), duplicateClosure(2)(4)]
+//│ = [4, -3, 6]
+
+@inline
+fun partlyKnown(x: Int): Int = if x is
+  0 then 0
+  else x
+
+// The original consumer remains for the unknown arm, so specializing the
+// known arm also needs a second copy of its closure definition.
+fun retainConsumer(x: Int): Int -> Int =
+  if partlyKnown(x) is
+    0 then (y => x + y)
+    else (y => x - y)
+
+:expect [4, -3, -2]
+[retainConsumer(0)(4), retainConsumer(1)(4), retainConsumer(2)(4)]
+//│ = [4, -3, -2]
+
+import "../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+// Inlining the option methods leaves a closure definition in a consumer arm
+// while its binding remains in the enclosing scope.
+fun scan(text: Str, at: Int): Option[[Int, Int]] =
+  fun loop(acc, i: Int): Option[[Int, Int]] = if
+    i < 0 then None
+    i >= text.length then acc.map(n => [n, i])
+    let c = text.charCodeAt(i)
+    (48 <= c) && (c <= 57) then loop(Some(Option.getOrElse(acc, 0) * 10 + c - 48), i + 1)
+    else acc.map(n => [n, i])
+  loop(None, at)
+
+:expect ["None", "Some([123, 4])", "Some([2, 2])", "None"]
+[scan("a123", 0), scan("a123", 1), scan("02x", 0), scan("", 0)].map(render)
+//│ = ["None", "Some([123, 4])", "Some([2, 2])", "None"]

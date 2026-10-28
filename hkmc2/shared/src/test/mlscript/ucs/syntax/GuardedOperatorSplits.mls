@@ -1,0 +1,46 @@
+:.
+:js
+
+fun classify(x, enabled) = if x
+  > 0 and enabled then "positive"
+  < 0 and enabled then "negative"
+  _ then "other"
+
+:expect ["positive", "negative", "other", "other"]
+[classify(1, true), classify(-1, true), classify(0, true), classify(1, false)]
+//│ = ["positive", "negative", "other", "other"]
+
+data class Box(value)
+
+fun nested(x, y) = if x
+  > 0 and y is Box(value) and value
+    > 0 then "both positive"
+    < 0 then "opposite signs"
+  < 0 and y is Box(value) and value
+    < 0 then "both negative"
+    > 0 then "opposite signs"
+  _ then "other"
+
+:expect "both positive|both negative|opposite signs|opposite signs|other|other"
+[nested(1, Box(1)), nested(-1, Box(-1)), nested(1, Box(-1)), nested(-1, Box(1)), nested(1, Box(0)), nested(1, 0)].join("|")
+//│ = "both positive|both negative|opposite signs|opposite signs|other|other"
+
+fun wildcard(x) = if x
+  < 0 then "negative"
+  _ and x is Int then "integer"
+  else "other"
+
+:expect ["negative", "integer", "other"]
+[wildcard(-1), wildcard(0), wildcard("text")]
+//│ = ["negative", "integer", "other"]
+
+let remaining = 2
+while remaining
+  > 0 and remaining is Int do
+    set remaining -= 1
+//│ remaining = 0
+
+
+:expect 0
+remaining
+//│ = 0

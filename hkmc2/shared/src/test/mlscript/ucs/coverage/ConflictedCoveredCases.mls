@@ -1,0 +1,31 @@
+:.
+:js
+
+data class A()
+data class B() extends A()
+
+fun p(x) = true
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if
+  x is B and
+    x is A then 1
+  x is A then 31
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if
+  x is 1 and
+    x is Int then true
+  x is 2 then false
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if
+  x is B and
+    x is A then 1
+    p(x) then 2
+  x is A then 31
+  x is B then 3
+  else 4

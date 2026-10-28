@@ -1,0 +1,71 @@
+:.
+:js
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x, b) =
+  if x == 
+    0 and b then 0
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x, y) =
+  if x == y +
+    5 then 0
+    7 then 0
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x, y) =
+  if x == y *
+    5 then 0
+    6 + 7 then 0
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x, y) =
+  if x ==
+    y +
+      5 then 0
+      7 then 0
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x, b) =
+  if x ==
+    1 and b then 0
+
+
+:e
+:breakme // Exhaustiveness checking is not implemented.
+fun toEnglish(x) =
+  if x ==
+    true then "t"
+    0 then "z"
+
+:e
+:breakme // Exhaustiveness checking is not implemented.
+fun toEnglish(x) =
+  if x ==
+    0 then "z"
+    true then "t"
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun toEnglish(x) =
+  if x ==
+    1 then "o"
+    0 then "z"
+
+fun toEnglish(x) =
+  if x ==
+    0 then 1
+    else 1
+
+:pe
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun toEnglish(x) =
+  if x ==
+    else 1
+

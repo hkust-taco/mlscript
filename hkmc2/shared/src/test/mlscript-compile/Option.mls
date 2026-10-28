@@ -2,13 +2,20 @@
 
 #lang(0.3.x)
 
-type Option[A] = Option.{ Some[A] | None }
+class Option[out A]: Some[A] | None with
+  fun map[B](f: A -> B): Option[B] = if this is
+    Option.Some(value) then Option.Some(f(value))
+    Option.None then Option.None
+  
+  fun filter(p: A -> Bool): Option[A] = if this is
+    Option.Some(value) and p(value) then this
+    else Option.None
 
 module Option with ...
 
 
-data class Some[T](value: T)
-object None
+data class Some[out T](value: T) extends Option[T]
+object None extends Option[Nothing]
 
 fun isDefined[A](x: Option[A]): Bool = if x is
   Some then true

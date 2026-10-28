@@ -1,0 +1,318 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+import "../../../mlscript-compile/Stack.mls"
+open Stack
+
+fun showList[A](xs: Stack[A]) = "[" + xs.map(x => String(x)).join(", ") + "]"
+
+import "../../../mlscript-compile/StrOps.mls"
+
+//  _
+// | |    _____  _____ _ __
+// | |   / _ \ \/ / _ \ '__|
+// | |__|  __/>  <  __/ |
+// |_____\___/_/\_\___|_|
+// 
+
+fun isDigit(n) = (48 <= n) && (n <= 57)
+fun isBlank(n) = (n === 32) || (n === 9) || (n === 10) || (n === 13)
+
+fun scanInt(text: Str, at: Int): Option[[Int, Int]] =
+  fun aux(acc, i: Int): Option[[Int, Int]] = if
+    i < 0 then None
+    i >= text.length then acc.map(n => [n, i])
+    let c = text.charCodeAt(i)
+    isDigit(c) then aux(Some(Option.getOrElse(acc, 0) * 10 + c - 48), i + 1)
+    else acc.map(n => [n, i])
+  aux(None, at)
+
+scanInt("a123", 0) |> render
+//│ = "None"
+
+scanInt("a123", 1) |> render
+//│ = "Some([123, 4])"
+
+scanInt("a123", 2) |> render
+//│ = "Some([23, 4])"
+
+scanInt("a123", 3) |> render
+//│ = "Some([3, 4])"
+
+scanInt("a123", 4) |> render
+//│ = "None"
+
+fun skipBlank(text: Str, at: Int): Int =
+  fun aux(i: Int): Int = if
+    i >= text.length then i
+    isBlank(text.charCodeAt(i)) then aux(i + 1)
+    else i
+  aux(at)
+
+skipBlank("abc", 0)
+//│ = 0
+
+skipBlank("abc", 1)
+//│ = 1
+
+skipBlank("abc", 2)
+//│ = 2
+
+skipBlank("  \t\n\r123", 0)
+//│ = 5
+
+data class Span(start: Int, end: Int)
+
+abstract class Token(val span: Span)
+data class IntegerLiteral(value: Int, span2: Span) extends Token(span2) {
+  fun toString(): Str = "IntegerLiteral(" + String(value) + ")"
+}
+data class LeftParen(at: Int) extends Token(Span(at, at + 1)) {
+  fun toString(): Str = "LeftParen"
+}
+data class RightParen(at: Int) extends Token(Span(at, at + 1)) {
+  fun toString(): Str = "RightParen"
+}
+data class BinaryOperator(value: Str, bp: Int, at: Int) extends Token(Span(at, at + 1)) {
+  fun toString(): Str = "BinaryOperator(" + value + ", " + String(bp) + ")"
+}
+data class EndOfInput(at: Int) extends Token(Span(at, at)) {
+  fun toString(): Str = "EndOfInput"
+}
+data class UnknownInput(rest: Str, at: Int, length: Int) extends Token(Span(at, at + length)) {
+  fun toString(): Str = "UnknownInput(" + rest + ")"
+}
+
+fun scanToken(text: Str, at: Int): [Token, Int] =
+  if
+    let at' = skipBlank(text, at)
+    at' >= text.length then [EndOfInput(at'), at']
+    let head = text.charCodeAt(at')
+    head ===
+      37 then [BinaryOperator("%", 20, at'), at' + 1]
+      40 then [LeftParen(at'), at' + 1]
+      41 then [RightParen(at'), at' + 1]
+      42 then [BinaryOperator("*", 20, at'), at' + 1]
+      43 then [BinaryOperator("+", 10, at'), at' + 1]
+      45 then [BinaryOperator("-", 10, at'), at' + 1]
+      47 then [BinaryOperator("/", 20, at'), at' + 1]
+    (48 <= head) && (head <= 57) and
+      scanInt(text, at') is Some([n, at'']) then
+        [IntegerLiteral(n, Span(at', at'')), at'']
+    else [UnknownInput(text.slice(at'), at', text.length - at'), at']
+
+scanToken("bruh", 0)
+//│ = [UnknownInput(bruh), 0]
+
+scanToken("1", 0)
+//│ = [IntegerLiteral(1), 1]
+
+scanToken("+", 0)
+//│ = [BinaryOperator(+, 10), 1]
+
+scanToken("  42", 0)
+//│ = [IntegerLiteral(42), 4]
+
+fun tokenize(str: Str): Stack[Token] =
+  let text = str
+  fun aux(acc, at) =
+    if scanToken(text, at) is [token, at'] and token is
+      UnknownInput then (token :: acc) |> reverse
+      EndOfInput then acc |> reverse
+      else aux(token :: acc, at')
+  aux(Nil, 0)
+
+tokenize("0") |> showList
+//│ = "[IntegerLiteral(0)]"
+
+tokenize("1 + 2 * 3") |> showList
+//│ = "[IntegerLiteral(1), BinaryOperator(+, 10), IntegerLiteral(2), BinaryOperator(*, 20), IntegerLiteral(3)]"
+
+tokenize("bruh") |> showList
+//│ = "[UnknownInput(bruh)]"
+
+//  ____                _
+// |  _ \ __ _ _ __ ___(_)_ __   __ _
+// | |_) / _` | '__/ __| | '_ \ / _` |
+// |  __/ (_| | |  \__ \ | | | | (_| |
+// |_|   \__,_|_|  |___/_|_| |_|\__, |
+//                              |___/
+
+type Expression = IntegerLiteral | BinaryExpression
+data class BinaryExpression(op: BinaryOperator, left: Expression, right: Expression)
+
+fun bindingPower(t: Expression): Int =
+  if t is
+    IntegerLiteral then 30
+    BinaryExpression(op, _, _) then op.bp
+
+fun showExpression(t: Expression): Str =
+  if t is
+    IntegerLiteral(n, _) then String(n)
+    BinaryExpression(BinaryOperator(op, bp, _), left, right) then
+      let lbp = bindingPower(left)
+      let rbp = bindingPower(right)
+      // All binary operators associate to the left; a right subtree at the
+      // same precedence needs parentheses to preserve the parsed expression.
+      StrOps.parenthesizedIf(showExpression(left), lbp < bp) + " " + op + " " + StrOps.parenthesizedIf(showExpression(right), rbp <= bp)
+
+let s = Span(0, 0)
+IntegerLiteral(42, s) |> showExpression
+let t1 = BinaryExpression(BinaryOperator("+", 10, 0), IntegerLiteral(1, s), IntegerLiteral(2, s))
+t1 |> showExpression
+let t2 = BinaryExpression(BinaryOperator("*", 20, 0), t1, IntegerLiteral(3, s))
+t2 |> showExpression
+let t3 = BinaryExpression(BinaryOperator("*", 20, 0), t2, IntegerLiteral(4, s))
+t3 |> showExpression
+//│ = "(1 + 2) * 3 * 4"
+//│ s = Span(0, 0)
+//│ t1 = BinaryExpression(
+//│   BinaryOperator(+, 10),
+//│   IntegerLiteral(1),
+//│   IntegerLiteral(2)
+//│ )
+//│ t2 = BinaryExpression(
+//│   BinaryOperator(*, 20),
+//│   BinaryExpression(
+//│     BinaryOperator(+, 10),
+//│     IntegerLiteral(1),
+//│     IntegerLiteral(2)
+//│   ),
+//│   IntegerLiteral(3)
+//│ )
+//│ t3 = BinaryExpression(
+//│   BinaryOperator(*, 20),
+//│   BinaryExpression(
+//│     BinaryOperator(*, 20),
+//│     BinaryExpression(
+//│       BinaryOperator(+, 10),
+//│       IntegerLiteral(1),
+//│       IntegerLiteral(2)
+//│     ),
+//│     IntegerLiteral(3)
+//│   ),
+//│   IntegerLiteral(4)
+//│ )
+
+type ParseResult[A] = Some[A] | Failed
+data class Failed(message: Str)
+
+fun showParsedExpression(r: ParseResult[Expression]) = if r is
+  Some(value) then "Some(" + showExpression(value) + ")"
+  Failed(message) then "Failed(" + message + ")"
+
+fun lastPosition(t: Expression): Int =
+  if t is
+    IntegerLiteral(_, span) then span.end
+    BinaryExpression(_, _, right) then lastPosition(right)
+
+fun parseAtom(ts: Stack[Token]): ParseResult[[Expression, Stack[Token]]] =
+  if ts is
+    Cons(IntegerLiteral(n, span), ts') then Some([IntegerLiteral(n, span), ts'])
+    Cons(LeftParen, ts') and parseExpression(0, ts') is
+      Some([body, Cons(RightParen, ts'')]) then Some([body, ts''])
+      Some([body, _]) then Failed("Expected a right parenthesis at " + String(lastPosition(body)))
+      failed then failed
+    Cons(token, _) then Failed("Unexpected token " + String(token) + " at " + String(token.span.start))
+    Nil then Failed("Unexpected end of input")
+fun parseExpression(bp: Int, ts: Stack[Token]): ParseResult[[Expression, Stack[Token]]] =
+  if parseAtom(ts) is
+    Some([leftmost, ts']) then
+      fun aux(left, ts) = if ts is
+        Cons(BinaryOperator(op, bp', opAt), ts') and bp < bp' and
+          parseExpression(bp', ts') is
+            Some([right, ts'']) then
+              aux(BinaryExpression(BinaryOperator(op, bp', opAt), left, right), ts'')
+            failed then failed
+        else Some([left, ts])
+      aux(leftmost, ts')
+    failed then failed
+fun parse(source: Str): ParseResult[Expression] =
+  if parseExpression(0, tokenize(source)) is
+    Some([expr, Nil]) then Some(expr)
+    Some([expr, rest]) then Failed("Unexpected token: " + showList(rest) + " at " + String(lastPosition(expr)))
+    failed then failed
+
+parse("1 + 2 * 3") |> showParsedExpression
+//│ = "Some(1 + 2 * 3)"
+
+parse("(1 + 2) * 3") |> showParsedExpression
+//│ = "Some((1 + 2) * 3)"
+
+parse("2 * (1 + 3 + 5 + 7 + 9 + 11) - 2 - 4 - 6") |> showParsedExpression
+//│ = "Some(2 * (1 + 3 + 5 + 7 + 9 + 11) - 2 - 4 - 6)"
+
+parse("2 * (1 + 3) * (5 + 7) * (9 - 11)") |> showParsedExpression
+//│ = "Some(2 * (1 + 3) * (5 + 7) * (9 - 11))"
+
+parse("(((((((((42)))))))))") |> showParsedExpression
+//│ = "Some(42)"
+
+parse("1 + ") |> showParsedExpression
+//│ = "Failed(Unexpected end of input)"
+
+parse("1 bruh") |> showParsedExpression
+//│ = "Failed(Unexpected token: [UnknownInput(bruh)] at 1)"
+
+parse("1 * (2 + 3") |> showParsedExpression
+//│ = "Failed(Expected a right parenthesis at 10)"
+
+parse("1 - bruh") |> showParsedExpression
+//│ = "Failed(Unexpected token UnknownInput(bruh) at 4)"
+
+//  _____            _             _   _
+// | ____|_   ____ _| |_   _  __ _| |_(_) ___  _ __
+// |  _| \ \ / / _` | | | | |/ _` | __| |/ _ \| '_ \
+// | |___ \ V / (_| | | |_| | (_| | |_| | (_) | | | |
+// |_____| \_/ \__,_|_|\__,_|\__,_|\__|_|\___/|_| |_|
+//
+
+fun evaluate(t: Expression): Option[Int] =
+  if t is
+    IntegerLiteral(n, _) then Some(n)
+    BinaryExpression(BinaryOperator(op, _, _), left, right) and
+      evaluate(left) is Some(leftResult) and
+        evaluate(right) is Some(rightResult) and op ===
+          "+" then Some(leftResult + rightResult)
+          "-" then Some(leftResult - rightResult)
+          "*" then Some(leftResult * rightResult)
+          // "/" then Some(leftResult / rightResult)
+          "%" then Some(leftResult % rightResult)
+    else None
+
+fun evaluation(source: Str): Str =
+  if parse(source) is
+    Some(expression) and evaluate(expression) is
+      Some(result) then String(result)
+      None then "Evaluation failed"
+    Failed(message) then "Parsing failed: " + message
+
+evaluation("1 + 2 * 3")
+//│ = "7"
+
+evaluation("(((((42)))))")
+//│ = "42"
+
+evaluation("1 * (3 + 4) - 5")
+//│ = "2"
+
+evaluation("1 + ")
+//│ = "Parsing failed: Unexpected end of input"
+
+evaluation("1 bruh")
+//│ = "Parsing failed: Unexpected token: [UnknownInput(bruh)] at 1"
+
+:expect "Some(10 - (3 - 1))"
+showParsedExpression(parse("10 - (3 - 1)"))
+//│ = "Some(10 - (3 - 1))"
+
+// Printing and reparsing preserve grouping for subtraction and remainder.
+:expect ["8", "6", "1"]
+["10 - (3 - 1)", "10 - 3 - 1", "7 % (5 % 3)"].map \ source =>
+  assert parse(source) is Some(expr)
+  let printed = showExpression(expr)
+  assert evaluation(printed) === evaluation(source)
+  evaluation(printed)
+//│ = ["8", "6", "1"]

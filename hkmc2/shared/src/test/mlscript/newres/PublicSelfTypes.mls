@@ -1,0 +1,70 @@
+:.
+
+// Variant names in a public self-type belong to the companion's scope, even
+// when the class precedes it. The class's own type parameters remain available.
+class Choice[out A]: Some[A] | None
+module Choice with
+  data class Some[out A](value: A) extends Choice[A]
+  object None extends Choice[Nothing]
+
+:expect 3
+Choice.Some(3).value
+//│ = 3
+
+// The same rule applies to a file-style companion and recursive variants.
+module Library with
+  class Chain[out A]: Link[A] | End
+  module Chain with ...
+  data class Link[out A](head: A, tail: Chain[A]) extends Chain[A]
+  object End extends Chain[Nothing]
+
+:expect 4
+Library.Chain.Link(4, Library.Chain.End).head
+//│ = 4
+
+// Own companion members take precedence over outer names.
+class Variant[A, B]
+class Local[A]: Variant[A]
+module Local with
+  data class Variant[A](value: A) extends Local[A]
+
+// Without a companion, ordinary lexical names remain available.
+class Plain: Child
+class Child extends Plain
+
+// Self-types are resolved even when neither class nor companion is used.
+:e
+class Missing: DoesNotExist
+//│ ╔══[COMPILATION ERROR] Name not found: DoesNotExist
+//│ ║  l.+1: 	class Missing: DoesNotExist
+//│ ╙──      	               ^^^^^^^^^^^^
+
+:e
+class Bad[A]: Variant[A, A]
+module Bad with
+  data class Variant[A](value: A) extends Bad[A]
+//│ ╔══[COMPILATION ERROR] Resolution error in type application
+//│ ║  l.+1: 	class Bad[A]: Variant[A, A]
+//│ ║        	              ^^^^^^^^^^^^^
+//│ ╟── Type 'Variant' accepts at most 1 type argument, but got 2.
+//│ ║  l.+1: 	class Bad[A]: Variant[A, A]
+//│ ║        	              ^^^^^^^^^^^^^
+//│ ╟── The type parameters are declared here.
+//│ ║  l.+3: 	  data class Variant[A](value: A) extends Bad[A]
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+class Bad[A]: MissingVariant[A]
+module Bad with
+  object Present
+//│ ╔══[COMPILATION ERROR] Name not found: MissingVariant
+//│ ║  l.+1: 	class Bad[A]: MissingVariant[A]
+//│ ╙──      	              ^^^^^^^^^^^^^^
+
+// Type checking must eventually enforce the public self-type, not just
+// resolve it. This subclass violates its parent's declared upper bound.
+:e
+:breakme // Pending checking of public self-type constraints.
+class Closed: Allowed
+class Allowed extends Closed
+class Other extends Closed

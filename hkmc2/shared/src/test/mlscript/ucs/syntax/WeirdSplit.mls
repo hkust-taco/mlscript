@@ -1,0 +1,34 @@
+:.
+:js
+
+data class A()
+data class B()
+
+fun f(x) =
+  if x
+    is
+      A then 0
+      B then 1
+
+// Precedence problem: should we restruct terms when push them to the stack?
+:e
+fun f(x) =
+  if x ==
+    1
+      + 2 then 0
+      + _ then 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+5: 	      + _ then 1
+//│ ║        	        ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+
+fun f(x, s, t) =
+  if x
+    is A()
+      and t then 0
+      and s then 2
+    is _ then 1
+
+:expect [0, 2, 1, 1]
+[f(A(), true, true), f(A(), true, false), f(A(), false, false), f(B(), true, true)]
+//│ = [0, 2, 1, 1]

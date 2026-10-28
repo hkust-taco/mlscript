@@ -1,0 +1,66 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+
+
+class Either[out A, out B]: Left[A] | Right[B]
+data class Left[A](leftValue: A) extends Either[A, Nothing]
+data class Right[B](rightValue: B) extends Either[Nothing, B]
+
+:e
+:breakme // The undefined input has no branch; exhaustiveness checking is pending.
+fun f(x) =
+  if x
+    is Left(v) then 0
+    is Right(v) then 1
+    !== unsafe.undefined then 2
+
+:e
+:ge
+fun f(x) =
+  if x
+    is Some(xv) and y is Some(yv) then xv + yv
+    is None and y is None then 0
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.+3: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ╙──      	                    ^
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.+4: 	    is None and y is None then 0
+//│ ╙──      	                ^
+
+data class A()
+data class B()
+
+fun f(a, b) =
+  if a
+    is A() and b is B() then 0
+
+data class C()
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(a, b, c) =
+  if a
+    == 0 and b is B() and c is C() then 0
+
+fun f(x) =
+  if x
+    is A() then "A"
+    is B() then "B"
+
+fun sumOpt(x, y) =
+  if x
+    is Some(xv) and y is
+      Some(yv) then xv + yv
+      None then xv
+    is None and y is
+      Some(yv) then yv
+      None then 0
+
+fun f(x, y, z) =
+  if x is A() and y
+    == z then 1
+    is B() then 0

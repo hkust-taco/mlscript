@@ -1,0 +1,65 @@
+:.
+:js
+
+import "../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+// Constructor aliases and inherited methods replace the prototype's wrappers.
+fun some[A](value: A): Option[A] = Some(value)
+fun none: Option[Nothing] = None
+
+:expect Some(1)
+some(0).map(x => x + 1)
+//│ = Some(1)
+
+:expect None
+none.map(_ => throw Error("None.map evaluated its callback"))
+//│ = None
+
+:expect Some("42")
+Some(42).map(x => String(x))
+//│ = Some("42")
+
+let original = Some(42)
+//│ original = Some(42)
+
+:expect true
+original.filter(x => x > 0) === original
+//│ = true
+
+:expect None
+original.filter(x => x < 0)
+//│ = None
+
+:expect None
+None.filter(_ => throw Error("None.filter evaluated its callback"))
+//│ = None
+
+:expect Some(43)
+original.filter(x => x > 0).map(x => x + 1)
+//│ = Some(43)
+
+:expect None
+original.filter(x => x < 0).map(_ => throw Error("filtered option is empty"))
+//│ = None
+
+:expect [true, false, 42, 0]
+[Option.isDefined(original), Option.isDefined(None),
+ Option.getOrElse(original, 0), Option.getOrElse(None, 0)]
+//│ = [true, false, 42, 0]
+
+:expect Some(43)
+Option.flatMap(original, x => Some(x + 1))
+//│ = Some(43)
+
+:expect None
+Option.flatMap(None, _ => throw Error("None.flatMap evaluated its callback"))
+//│ = None
+
+:expect 42
+Option.unsafe.get(original)
+//│ = 42
+
+:re
+Option.unsafe.get(None)
+//│ ═══[RUNTIME ERROR] Error: None.get

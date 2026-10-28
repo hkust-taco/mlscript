@@ -1,0 +1,49 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+
+fun f(x, y) =
+  if
+    x == 0 then "x"
+    y == 0 then "y"
+    _      then "nah"
+
+
+fun isValid(x) = if x then false else true
+
+fun f(x, allowNone) =
+  if x
+    is Some(x) and isValid(x) then "good"
+    is None and allowNone then "okay"
+    is _ then "bad"
+
+fun f(x, y, z) =
+  if
+    x == 0 then "x"
+    y ==
+      1 then "y = 1"
+      2 and z ==
+        0 then "z = 0"
+        9 then "z = 9"
+        _ then "bruh"
+      3 then "y = 3"
+      _ then "bruh"
+
+:w
+fun f(a, b) =
+  if
+    a == 0 then 0
+    b ==
+      1 then 1
+      2 then 2
+      _ then 7
+    else 3
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.+7: 	      _ then 7
+//│ ║        	        ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.+8: 	    else 3
+//│ ╙──      	    ^^^^^^

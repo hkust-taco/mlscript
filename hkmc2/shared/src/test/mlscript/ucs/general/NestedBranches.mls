@@ -1,0 +1,99 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+import "../../../mlscript-compile/Stack.mls"
+open Stack
+
+
+
+data class Left[out A](leftValue: A)
+data class Right[out A](rightValue: A)
+data class Pair[out A, out B](fst: A, snd: B)
+
+
+let zeroToThree = 0 :: 1 :: 2 :: 3 :: Nil
+//│ zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil))))
+
+fun f(x) = if x % 2 == 0 then Left(x) else Right(x)
+
+
+fun mapPartition(f, xs) = if xs is
+  Nil then Pair(Nil, Nil)
+  Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
+    Left(v)  then Pair(Cons(v, l), r)
+    Right(v) then Pair(l, Cons(v, r))
+
+
+:expect Pair(Cons(1, Cons(2, Cons(3, Cons(4, Nil)))), Nil)
+mapPartition(x => Left(x + 1), zeroToThree)
+//│ = Pair(Cons(1, Cons(2, Cons(3, Cons(4, Nil)))), Nil)
+
+
+:expect Pair(Cons(0, Cons(2, Nil)), Cons(1, Cons(3, Nil)))
+mapPartition(f, zeroToThree)
+//│ = Pair(Cons(0, Cons(2, Nil)), Cons(1, Cons(3, Nil)))
+
+
+fun mapPartition(f, xs) = if xs is
+  Nil then Pair(Nil, Nil)
+  Cons(x, xs) and
+    mapPartition(f, xs) is Pair(l, r) and f(x) is
+      Left(v)  then Pair(Cons(v, l), r)
+      Right(v) then Pair(l, Cons(v, r))
+
+:expect Pair(Cons(0, Cons(2, Nil)), Cons(1, Cons(3, Nil)))
+mapPartition(f, zeroToThree)
+//│ = Pair(Cons(0, Cons(2, Nil)), Cons(1, Cons(3, Nil)))
+
+
+fun mapPartition(f, xs) = if xs is
+  Nil then
+    Pair(Nil, Nil)
+  Cons(x, xs) and
+    mapPartition(f, xs) is
+      Pair(l, r) and
+        f(x) is
+          Left(v)  then
+            Pair(Cons(v, l), r)
+          Right(v) then
+            Pair(l, Cons(v, r))
+
+:expect Pair(Cons(0, Cons(2, Nil)), Cons(1, Cons(3, Nil)))
+mapPartition(f, zeroToThree)
+//│ = Pair(Cons(0, Cons(2, Nil)), Cons(1, Cons(3, Nil)))
+
+fun mapPartition(f, xs) = if xs is
+  Nil then [Nil, Nil]
+  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
+    Left(v)  then [Cons(v, l), r]
+    Right(v) then [l, Cons(v, r)]
+
+
+:expect [Cons(0, Cons(2, Nil)), Cons(1, Cons(3, Nil))]
+mapPartition(f, zeroToThree)
+//│ = [Cons(0, Cons(2, Nil)), Cons(1, Cons(3, Nil))]
+
+// * Vertical alignment is not allowed! (good)
+:e
+fun mapPartition(f, xs) = if xs is
+  Nil then [Nil, Nil]
+  Cons(x, xs) and mapPartition(f, xs) is [l, r]
+          and f(x) is Left(v)  then [Cons(v, l), r]
+                      Right(v) then [l, Cons(v, r)]
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (infix operator 'then').
+//│ ║  l.+5: 	                      Right(v) then [l, Cons(v, r)]
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// Explicit field selections are equivalent to the nested constructor pattern.
+fun mapPartition'(f, xs) =
+  if xs is
+    Nil then Pair(Nil, Nil)
+    Cons(x, xs) and mapPartition'(f, xs) is res and res.fst is l and res.snd is r and f(x) is
+      Left(v)  then Pair(Cons(v, l), r)
+      Right(v) then Pair(l, Cons(v, r))
+
+:expect Pair(Cons(0, Cons(2, Nil)), Cons(1, Cons(3, Nil)))
+mapPartition'(f, zeroToThree)
+//│ = Pair(Cons(0, Cons(2, Nil)), Cons(1, Cons(3, Nil)))

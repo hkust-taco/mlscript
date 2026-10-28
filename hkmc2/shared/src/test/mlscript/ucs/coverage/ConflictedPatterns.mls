@@ -1,0 +1,39 @@
+:.
+:js
+
+// This test file contains the cases where inner cases are conflicting with outer cases.
+
+data class X
+data class Y
+data class Z
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if
+  x is X and x is Y then 1
+  else 2
+
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if
+  x is X and
+    x is Y then 1
+    x is Y then 2
+  else 3
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if
+  x is X and
+    x is Y then 1
+    x is Z then 2
+  else 3
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if
+  x is X and
+    x is Y and
+      x is Z then 1
+  else 2

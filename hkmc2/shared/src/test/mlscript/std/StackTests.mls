@@ -32,23 +32,47 @@ s12.tail isEmpty()
 
 // *** Zipping ***
 
-zip of Nil
+zip(Nil)
 //│ = Nil
 
-zip of s1
+zip(s1)
 //│ = Cons([1], Cons([2], Cons([3], Nil)))
 
-zip of s1, s2
+zip(s1, s2)
 //│ = Cons([1, "a"], Cons([2, "b"], Cons([3, "c"], Nil)))
 
-zip of s1, s3
+zip(s1, s3)
 //│ = Cons([1, true], Cons([2, false], Cons([3], Nil)))
 
 s1 zip(s2)
 //│ = Cons([1, "a"], Cons([2, "b"], Cons([3, "c"], Nil)))
 
-print of ...
-s1 zip of s2, s3
+print \
+  s1 zip(s2, s3)
 //│ > Cons([1, "a", true], Cons([2, "b", false], Cons([3, "c"], Nil)))
 
 
+// Inherited methods on both constructors, including an empty stack.
+:expect [2, 3, 4]
+s1.map(x => x + 1) toArray()
+//│ = [2, 3, 4]
+
+:expect Nil
+Nil.map(_ => throw Error("Nil.map evaluated its callback"))
+//│ = Nil
+
+:expect "1, 2, 3"
+s1.map(x => String(x)).join(", ")
+//│ = "1, 2, 3"
+
+:expect ""
+Nil.join(", ")
+//│ = ""
+
+:expect "a"
+("a" :: Nil).join(", ")
+//│ = "a"
+
+:expect "1, 2, 3, 4, 5, 6, 7, 8"
+(1 :: 2 :: 3 :: 4 :: 5 :: 6 :: 7 :: 8 :: Nil).join(", ")
+//│ = "1, 2, 3, 4, 5, 6, 7, 8"

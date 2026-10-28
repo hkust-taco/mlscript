@@ -121,8 +121,8 @@ Option.None.oops
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── Object 'None' does not contain member 'oops'
 //│ ║  in ../../mlscript-compile/Option.mls
-//│ ║  l.XX: 	object None
-//│ ╙──      	^^^^^^^^^^^
+//│ ║  l.XX: 	object None extends Option[Nothing]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

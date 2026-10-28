@@ -75,3 +75,45 @@ process(Pair(Numb(1), Numb(2)))
 //│ = 2
 
 
+// Inherited pattern fields must not capture bindings from an earlier branch.
+data class Base(x: Int)
+data class Derived(y: Int) extends Base(y + 1)
+
+// The subclass field differs from the inherited base field.
+fun example3(t) =
+  if t is
+    Base(x) and x < 0 then x
+    Derived(y) then y
+    else 42
+
+example3(Derived(1))
+//│ = 1
+
+fun example4(t, x) =
+  if t is
+    Base(x) and x < 0 then x
+    Derived(y) then y + x
+    //                  ^
+    // Note that this branch will be absorbed by the previous one. As the
+    // previous branch shadows the variable `x`, a correct implementation
+    // should restore the original value of `x` in this branch.
+    else 42
+
+assert example4(Base(-1), 0) === -1
+assert example4(Base(1), 2) === 42
+
+assert example4(Derived(1), 4) === 5
+
+data class Base(x: Int)
+data class Derived[A](y: A) extends Base(1)
+
+// Generic subclasses preserve their field after a failed base-class guard.
+fun example5(t) =
+  if t is
+    Base(x) and x < 0 then x
+    Derived(y) then y
+    else 42
+
+:expect "generic"
+example5(Derived("generic"))
+//│ = "generic"

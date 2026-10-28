@@ -1,0 +1,43 @@
+:.
+:js
+
+// This test file contains the cases where latter cases are covered by the former cases.
+
+// B <: A
+data class A()
+data class B() extends A()
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if
+  x is A then 1
+  x is A then 2
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) = if
+  x is A then 1
+  x is B then 2
+
+fun f(x) = if
+  x is A and
+    x is B then 1
+
+:w
+:breakme // The later B case is covered by the nested match.
+fun f(x) = if
+  x is A and
+    x is B then 1
+  x is B then 2
+
+fun p(x): Bool = true
+
+:w
+:breakme // The later B case is covered by the nested match.
+fun f(x) = if
+  x is A and
+    x is B then 1
+    p(x) then 2
+  x is B then 3
+  else 4
+

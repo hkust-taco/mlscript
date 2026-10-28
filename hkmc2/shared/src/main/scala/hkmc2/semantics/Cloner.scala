@@ -329,14 +329,16 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
             val c = s.copy(owner = s.owner.map(_.subst), sym = s.sym.subst, bsym = s.bsym.subst,
               ctorSym = S(s.ctorSym.value.subst), tparams = tparams, params = scope.parameterList(s.params),
               auxParams = auxParams, ext = ext, body = body, companion = s.companion.map(mapClassCompanion),
-              annotations = annotations, ctorAnnotations = s.ctorAnnotations.map(scope.annotation))(s.toLoc, s.headerLoc, s.ctorLoc)
+              annotations = annotations, ctorAnnotations = s.ctorAnnotations.map(scope.annotation),
+              selfType = s.selfType.map(scope.term))(s.toLoc, s.headerLoc, s.ctorLoc)
             c.sym.defn = S(c)
             c
           case s: ClassDef.Plain =>
             val c = s.copy(owner = s.owner.map(_.subst), sym = s.sym.subst, bsym = s.bsym.subst,
               ctorSym = s.ctorSym.map(_.subst), tparams = tparams, auxParams = auxParams, ext = ext,
               body = body, companion = s.companion.map(mapClassCompanion), annotations = annotations,
-              ctorAnnotations = s.ctorAnnotations.map(scope.annotation))(s.toLoc, s.headerLoc, s.ctorLoc)
+              ctorAnnotations = s.ctorAnnotations.map(scope.annotation),
+              selfType = s.selfType.map(scope.term))(s.toLoc, s.headerLoc, s.ctorLoc)
             c.sym.defn = S(c)
             c
           case s: ModuleOrObjectDef =>

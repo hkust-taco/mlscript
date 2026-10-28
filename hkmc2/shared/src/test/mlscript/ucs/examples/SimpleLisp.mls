@@ -1,0 +1,97 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+import "../../../mlscript-compile/Stack.mls"
+open Stack
+
+fun fatal(message: Str): Nothing = throw Error(message)
+
+class Context: Empty | Bind
+object Empty extends Context
+data class Bind(name: Str, datum: Data, tail: Context) extends Context
+fun find(name: Str, context: Context): Data =
+  if context is
+    Empty then fatal("undefined symbol " + name)
+    Bind(name', datum, t) then
+      if name' === name then datum
+      else find(name, t)
+class Data: ListData | Quote | Symbol | Literal | Builtin | Thunk
+data class ListData(list: Stack[Data]) extends Data
+data class Quote(datum: Data) extends Data
+data class Symbol(name: Str) extends Data
+data class Literal(value: Int) extends Data
+data class Builtin(impl: (Stack[Data], Context) -> Data) extends Data
+data class Thunk(impl: (Context) -> Data) extends Data
+
+fun show(datum: Data): Str =
+  if datum is
+    ListData(list) then "(" + list.map(show).join(" ") + ")"
+    Quote(datum) then "'" + show(datum)
+    Symbol(name) then name
+    Literal(value) then String(value)
+    Builtin(impl) then "<builtin>"
+    Thunk(impl) then "<thunk>"
+
+fun add(arguments: Stack[Data], context: Context): Data =
+  if arguments is Cons(Literal(a), Cons(Literal(b), Nil)) then Literal(a + b) else fatal("invalid arguments")
+
+let context = Bind("+", Builtin(add), Empty)
+//│ context = Bind("+", Builtin(fun add), Empty)
+
+fun eval(program: Data, context: Context): Data =
+  if program is
+    Literal(value) then Literal(value)
+    Symbol(name) then find(name, context)
+    Thunk(impl) then impl(context)
+    ListData(Cons(Symbol("let"), Cons(Symbol(name), Cons(datum, Cons(rest, Nil))))) then
+      let datum' = eval(datum, context)
+      let context' = Bind(name, datum', context)
+      eval(rest, context')
+    ListData(Cons(Symbol("val"), Cons(Symbol(name), Cons(datum, Cons(rest, Nil))))) then
+      let datum' = Thunk((context) => eval(datum, context))
+      let context' = Bind(name, datum', context)
+      eval(rest, context')
+    ListData(Cons(Symbol("if"), Cons(test, Cons(thenPart, Cons(elsePart, Nil))))) and
+      eval(test, context) is Literal(0) then eval(elsePart, context)
+      else eval(thenPart, context)
+    ListData(Cons(Symbol("quote"), Cons(datum, Nil))) then datum
+    ListData(Cons(Symbol(callee), arguments)) and
+      let callee' = find(callee, context)
+      let arguments' = arguments.map(argument => eval(argument, context))
+      callee' is Builtin(impl) then impl(arguments', context)
+      else fatal("callee is not callable")
+    else fatal("unknown program")
+
+let data1 = ListData \ Symbol("+") :: Literal(1) :: Literal(2) :: Nil
+show \ data1
+//│ = "(+ 1 2)"
+//│ data1 = ListData(Cons(Symbol("+"), Cons(Literal(1), Cons(Literal(2), Nil))))
+
+show \ eval(data1, context)
+//│ = "3"
+
+let data2 = ListData \ Symbol("let") :: Symbol("x") :: Literal(1) :: (ListData \ Symbol("+") :: Symbol("x") :: Literal(2) :: Nil) :: Nil
+show \ data2
+//│ = "(let x 1 (+ x 2))"
+//│ data2 = ListData(
+//│   Cons(
+//│     Symbol("let"),
+//│     Cons(
+//│       Symbol("x"),
+//│       Cons(
+//│         Literal(1),
+//│         Cons(
+//│           ListData(
+//│             Cons(Symbol("+"), Cons(Symbol("x"), Cons(Literal(2), Nil)))
+//│           ),
+//│           Nil
+//│         )
+//│       )
+//│     )
+//│   )
+//│ )
+
+show \ eval(data2, context)
+//│ = "3"

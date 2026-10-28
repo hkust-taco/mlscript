@@ -1,0 +1,28 @@
+:.
+:js
+
+class Term: Abs | App | Var
+data class Var(name: Str) extends Term
+data class Abs(param: Str, body: Term) extends Term
+data class App(func: Term, arg: Term) extends Term
+
+:fixme // Explicit refinement patterns are not implemented.
+fun is_value_explicit_refinement(term) =
+  if term is refined(Term) and term is
+    Abs(_, _) then true
+    Var(_) then false
+    App(_, _) then false
+//│ ╔══[COMPILATION ERROR] Name not found: refined
+//│ ║  l.+2: 	  if term is refined(Term) and term is
+//│ ╙──      	             ^^^^^^^
+
+fun is_value_automatic_refinement(term) =
+  if term is Term and term is
+    Abs(_, _) then true
+    Var(_) then false
+    App(_, _) then false
+
+fun is_value'(term) =
+  if term is Term and term is
+    Abs(_, _) then true
+    Var(_) then false

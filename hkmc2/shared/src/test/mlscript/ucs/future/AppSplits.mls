@@ -48,5 +48,3 @@ if foo
 //│ ║  l.+2: 	  (0) then "a"
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] Error: match error
-
-

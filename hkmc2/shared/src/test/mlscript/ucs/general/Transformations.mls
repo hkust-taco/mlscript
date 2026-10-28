@@ -1,0 +1,19 @@
+:.
+:js
+
+import "../../../mlscript-compile/Option.mls"
+open Option { Some, None }
+
+fun m3(x: Int): Bool = x % 3 == 0
+fun m5(x: Int): Bool = x % 5 == 0
+
+fun f(x) =
+  if x is
+    Some(v) and m3(v) and m5(v) then "FizzBuzz"
+    Some(v) and m3(v) then "Fizz"
+    Some(v) and m5(v) then "Buzz"
+    else "meh"
+
+:expect ["FizzBuzz", "Fizz", "Buzz", "meh", "meh"]
+[f(Some(15)), f(Some(3)), f(Some(5)), f(Some(7)), f(None)]
+//│ = ["FizzBuzz", "Fizz", "Buzz", "meh", "meh"]

@@ -1,0 +1,47 @@
+:.
+:js
+
+fun mixed_literals(v) =
+  if v is
+    true then "true"
+    false then "false"
+    1 then "1"
+    2 then "2"
+
+fun separated_by_and(v) =
+  if v is
+    true then "true"
+    _ and v is
+      false then "false"
+
+fun dual_patterns(x, y) =
+  if
+    x is "some" and y is "none" then 0
+    x is "none" and y is "some" then 1
+    x is "some" and y is "some" then 2
+    x is "none" and y is "none" then 3
+
+fun unordered_dual_patterns(x, y) =
+  if
+    x is "some" and y is "none" then 0
+    y is "some" and x is "none" then 1
+    y is "some" and x is "some" then 2
+    x is "none" and y is "none" then 3
+
+:expect ["true", "false", "1", "2"]
+[true, false, 1, 2].map(mixed_literals)
+//│ = ["true", "false", "1", "2"]
+
+:expect ["true", "false"]
+[true, false].map(separated_by_and)
+//│ = ["true", "false"]
+
+:expect [0, 1, 2, 3]
+[dual_patterns("some", "none"), dual_patterns("none", "some"),
+ dual_patterns("some", "some"), dual_patterns("none", "none")]
+//│ = [0, 1, 2, 3]
+
+:expect [0, 1, 2, 3]
+[unordered_dual_patterns("some", "none"), unordered_dual_patterns("none", "some"),
+ unordered_dual_patterns("some", "some"), unordered_dual_patterns("none", "none")]
+//│ = [0, 1, 2, 3]

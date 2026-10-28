@@ -83,4 +83,17 @@ if x
   == 1 then false
 //│ = false
 
+data class A()
+data class B()
 
+fun classify(x, enabled) = if x
+  == 0 then "zero"
+  is A() and enabled then "A"
+  is
+    A() then "disabled"
+    B() then "B"
+  else "other"
+
+:expect ["zero", "A", "disabled", "B", "other"]
+[classify(0, true), classify(A(), true), classify(A(), false), classify(B(), true), classify(1, true)]
+//│ = ["zero", "A", "disabled", "B", "other"]

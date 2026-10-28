@@ -234,3 +234,11 @@ if p is Crazy as all then all
 //│   Pair(42, 42),
 //│   Pair(42, 42)
 //│ ]
+
+data class Point(x: Int, y: Int, z: Int)
+
+fun f_0(p) = if p is Point(x, _, z) then x + z
+
+:expect 4
+f_0(Point(1, 2, 3))
+//│ = 4

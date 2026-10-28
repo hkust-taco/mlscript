@@ -3,7 +3,9 @@
 ## Runner And Discovery
 - Discovery root: `hkmc2/shared/src/test`.
 - File type: `.mls`.
-- Diff test runs exclude paths containing `staging` and `mlscript-compile`.
+- Compile tests under `mlscript-compile` have separate runners. Diff tests under
+  `nofib`, `apps`, `wasm`, and `slop` belong to their respective SBT test projects; all
+  remaining diff tests belong to `hkmc2DiffTests`.
 - `DiffMaker.run()` rewrites file content whenever generated output differs from current file text.
 
 ## Per-Block Processing Model

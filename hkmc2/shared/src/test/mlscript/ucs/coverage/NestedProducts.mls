@@ -1,0 +1,101 @@
+:.
+:js
+
+data class Foo[T](x: T)
+
+if 1 is 1 then 1 else 0
+//│ = 1
+
+fun test(x) = if x is 1 then 0 else 1
+
+:w
+:breakme // Pending type checking and coverage diagnostics.
+fun testF(x) = if x is
+  Foo(a) then a
+  Foo(a) then a
+
+data class Bar[Y, Z](y: Y, z: Z)
+
+fun test(f) = if f is
+  Foo(a) then a
+  Bar(b, c) then b + c
+
+
+data class Pair[A, B](fst: A, snd: B)
+
+fun f(x) =
+  if x is
+    Pair(0, 0) then "zeros"
+    Pair(1, 1) then "ones"
+    Pair(y, 1) then x
+    _          then "nah"
+
+data class Z()
+data class O()
+
+// This is not exhaustive.
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun foo(x) = if x is
+  Pair(Z(), Z()) then "zeros"
+  Pair(O(), O()) then "ones"
+
+// Change `Pair` to a real pair.
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun foo(x) = if x is
+  [Z(), Z()] then "zeros"
+  [O(), O()] then "ones"
+
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      Z() then "zeros"
+    O() then if b is
+      O() then "ones"
+
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      Z() then "zeros"
+      else "???"
+    O() then if b is
+      O() then "ones"
+
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      Z() then "zeros"
+      else "???"
+    O() then if b is
+      O() then "zeros"
+      else "???"
+
+data class S(pred: S | Z | O)
+
+// TODO: Cannot check exhaustiveness of nested UCS yet.
+fun foo(x) = if x is
+  Pair(a, b) then if a is
+    Z() then if b is
+      S(x) then x
+      else "???"
+    O() then if b is
+      O() then "zeros"
+      else "???"
+
+foo(Pair(Z(), Z()))
+//│ = "???"
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun foo(x) = if x is
+  Pair(Z(), Z()) then "zeros"
+  Pair(O(), O()) then "ones"
+  Pair(y, O()) then x
+
+fun foo(x, y) = if x is Z() and y is O() then 0 else 1
+
+fun foo(x, y) =
+  if x is
+    Z() and y is O() then 0
+    else 1

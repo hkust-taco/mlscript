@@ -589,7 +589,10 @@ object Term:
     val paramNames = cls.paramsOpt.iterator.flatMap(_.allParams).map(_.sym.nme).toSet
     val bodyFree = cls.body.blk.freeVars
     val extFree = cls.ext.iterator.flatMap(_.freeVars).toSet
-    (bodyFree ++ extFree) -- paramNames
+    val selfFree = cls match
+      case cls: ClassDef => cls.selfType.iterator.flatMap(_.freeVars).toSet
+      case _ => Set.empty[Str]
+    (bodyFree ++ extFree ++ selfFree) -- paramNames
 end Term
 
 import Term.*
@@ -986,6 +989,9 @@ sealed abstract class ClassDef extends ClassLikeDef:
   val body: ObjBody
   val companion: Opt[ClassCompanionSymbol]
   val annotations: Ls[Annot]
+  /** The public self-type, resolved in the companion's scope when one exists.
+    * This is a type constraint, not a runtime superclass or constructor call. */
+  val selfType: Opt[Term]
   /** The modifiers of the class's constructor declarations, as in `private constructor(x)`.
     * The class's parameter lists, whether written in its head or in constructor declarations,
     * form a single constructor, so a modifier written on any of these declarations applies to
@@ -1023,15 +1029,16 @@ object ClassDef:
       comp: Opt[ClassCompanionSymbol],
       auxCtorParams: Ls[ParamList],
       ctorAnnotations: Ls[Annot],
+      selfType: Opt[Term],
   )(toLoc: Opt[Loc], headerLoc: Opt[Loc], ctorLoc: Opt[Loc]): ClassDef =
     params match
       case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym, S(ctorSym.getOrElse(lastWords("Parameterized classes should have a ctor symbol.")))
-        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations, ctorAnnotations)(toLoc, headerLoc, ctorLoc)
+        , tparams, ps, pss ::: auxCtorParams, ext, body, comp, annotations, ctorAnnotations, selfType)(toLoc, headerLoc, ctorLoc)
       case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
         , tparams, ext, body, comp, annotations, auxParams = auxCtorParams, ctorSym = ctorSym,
-        ctorAnnotations = ctorAnnotations)(toLoc, headerLoc, ctorLoc)
+        ctorAnnotations = ctorAnnotations, selfType = selfType)(toLoc, headerLoc, ctorLoc)
   
   def unapply(cls: ClassDef): Opt[(ClassSymbol, Ls[TyParam], Opt[ParamList], ObjBody)] =
     S((cls.sym, cls.tparams, cls.paramsOpt, cls.body))
@@ -1050,6 +1057,7 @@ object ClassDef:
       companion: Opt[ClassCompanionSymbol],
       annotations: Ls[Annot],
       ctorAnnotations: Ls[Annot],
+      selfType: Opt[Term],
   )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc], val ctorLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = S(params)
   
@@ -1066,6 +1074,7 @@ object ClassDef:
       auxParams: List[ParamList],
       ctorSym: Opt[ClassCtorSymbol],
       ctorAnnotations: Ls[Annot],
+      selfType: Opt[Term],
   )(val toLoc: Opt[Loc], val headerLoc: Opt[Loc], val ctorLoc: Opt[Loc]) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
   

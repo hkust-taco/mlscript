@@ -166,8 +166,6 @@ case class Scope
   
   def allocateName(l: Symbol, prefix: Str = "", shadow: Bool = false)(using Raise, Line, Name, FileName): Str =
     
-    val c = cfg
-    
     // * May be useful later?
     /* 
     val base: Str = l match
@@ -175,7 +173,16 @@ case class Scope
         prefix + tmp.nameHints.head
       case _ => if l.nme.isEmpty && prefix.isEmpty then "tmp" else prefix + l.nme
     */
-    val base = if l.nme.isEmpty && prefix.isEmpty then c.defaultName else prefix + l.nme
+    allocateNameWithHint(l, prefix + l.nme, shadow)
+  
+  /** Allocate a name from a complete hint in the same namespace as source declarations.
+   *  Generated suffixes must be part of that hint so helpers cannot collide with
+   *  each other or with a source declaration that already contains the suffix. */
+  def allocateNameWithHint(l: Symbol, nameHint: Str, shadow: Bool)(using Raise, Line, Name, FileName): Str =
+    
+    val c = cfg
+    
+    val base = if nameHint.isEmpty then c.defaultName else nameHint
     
     val realBase = if cfg.escapeChars
       then Scope.replaceInvalidCharacters(base)

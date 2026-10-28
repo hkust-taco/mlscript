@@ -1,0 +1,110 @@
+:.
+:js
+
+:w
+:e
+if
+  _ then 0
+  else 0
+else 1
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.+2: 	  _ then 0
+//│ ║        	    ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.+3: 	  else 0
+//│ ╙──      	  ^^^^^^
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.+4: 	else 1
+//│ ╙──      	^^^^
+//│ = 1
+
+:w
+if else 0 else 1
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.+1: 	if else 0 else 1
+//│ ║        	   ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.+1: 	if else 0 else 1
+//│ ╙──      	          ^^^^^^
+//│ = 0
+
+:w
+:e
+fun f(x) = if x is else 0 else 1
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (prefix operator 'else').
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                   ^^^^^^
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ║        	                   ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                          ^^^^^^
+fun f(x) = if x is else 0 else 1
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (prefix operator 'else').
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                   ^^^^^^
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ║        	                   ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                          ^^^^^^
+fun f(x) = if x is else 0 else 1
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (prefix operator 'else').
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                   ^^^^^^
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ║        	                   ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                          ^^^^^^
+fun f(x) = if x is else 0 else 1
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (prefix operator 'else').
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                   ^^^^^^
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ║        	                   ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.+1: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                          ^^^^^^
+
+:e
+fun f(x) = if x is else 0 
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (prefix operator 'else').
+//│ ║  l.+1: 	fun f(x) = if x is else 0 
+//│ ╙──      	                   ^^^^^^
+fun f(x) = if x is else 0 
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (prefix operator 'else').
+//│ ║  l.+1: 	fun f(x) = if x is else 0 
+//│ ╙──      	                   ^^^^^^
+
+:e
+:breakme // Pending type checking and coverage diagnostics.
+if true
+  then 0
+//│ = 0
+
+// This cannot be parsed. But the next one works.
+:pe
+:e
+:breakme // Pending type checking and coverage diagnostics.
+fun f(x) =
+  if x ===
+    else "bruh"
+
+// But this works.
+fun f(x) =
+  if x ===
+    _ then "bruh"
+
+fun boolToStr(x) =
+  if x is
+    true then "yah"
+    false then "nah"
+
+boolToStr \ true
+boolToStr \ false
+//│ = "nah"

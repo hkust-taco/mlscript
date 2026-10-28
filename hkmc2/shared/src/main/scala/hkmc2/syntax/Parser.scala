@@ -180,6 +180,10 @@ abstract class Parser(
   protected var indent = 0
   private var _cur: Ls[TokLoc] = preprocessTokens(tokens)
   
+  // A leading-and block parses each clause separately, including its consequent.
+  // Nested brackets get their own parser and therefore their own line boundaries.
+  protected def separateLeadingAnd: Bool = false
+  
   private def preprocessTokens(tokens: Ls[TokLoc]): Ls[TokLoc] =
     // Flat token streams can exceed the JavaScript stack even without nested syntax.
     // Keep nonempty suffixes in reverse order so rebuilding can share unchanged tails.
@@ -860,7 +864,10 @@ abstract class Parser(
         prefixRules.getKwAlt(kw, S(loc)) match
         case S(subRule) =>
           consume
-          parseRule(CommaPrecNext, subRule, allowNewlines = false).getOrElse(errExpr)
+          // Keyword atoms such as `true` still have an expression continuation:
+          // in an operand split, `true then ...` must keep its consequent.
+          exprCont(parseRule(CommaPrecNext, subRule, allowNewlines = false).getOrElse(errExpr),
+            CommaPrecNext, allowNewlines = false)
         case N => expr(CommaPrecNext, allowNewlines = false)
       case _ => expr(CommaPrecNext, allowNewlines = false)
     item match
@@ -886,7 +893,7 @@ abstract class Parser(
         (e :: acc, S(e))
       case _ => exprCont(SplitPoint(), prec, allowNewlines = false) match
         case SplitPoint() => // * Note: nothing was parsed!
-          // * Kludge to accommodate the kludge for `then` below
+          // A previous continuation may have consumed the whole branch.
           (acc, N)
         case e => (e :: acc, S(e))
     yeetSpaces match
@@ -897,14 +904,14 @@ abstract class Parser(
     case (SELECT(nme, dyn), l0) :: rest =>
       assert(SelPrec <= prec)
       ??? // TODO?
-    case (IDENT("then", false), l0) :: rest if e.isDefined =>
-      // * Kludge – when we have a proper generally splittable syntax, this will be handled by construction
-      consume
-      val rhs = expr(Keyword.`then`.rightPrecOrMin, allowNewlines = false)
+    case (KEYWORD(Keyword.`then` | Keyword.`and` | Keyword.`do`), _) :: _ if e.isDefined =>
+      // The splitting operator's precedence delimits its operand, not the
+      // branch's guard or consequent. Continue the completed branch at ordinary
+      // expression precedence so nested guards retain their `then`/`do` bodies.
       e match
       case N => die
       case S(e) =>
-        opSplitImpl(lhs, splittingOpLoc, prec, InfixApp(e, new Keywrd(Keyword.`then`).withLoc(S(l0)), rhs) :: acc)
+        opSplitImpl(lhs, splittingOpLoc, prec, exprCont(e, MinPrec, allowNewlines = false) :: acc)
     case (IDENT(op, true), l0) :: rest =>
       assert(opPrec(op)._1 <= prec)
       if rest.collectFirst{ case (_: NEWLINE_COMMA | IDENT("then", false), _) => }.isEmpty // TODO dedup
@@ -924,6 +931,54 @@ abstract class Parser(
           msg"Note: the operator split starts here" -> S(splittingOpLoc)
           :: Nil)
       OpSplit(lhs, newAcc reverse_::: errExpr :: Nil)
+  
+  
+  /** Parse leading conjunctions as the equivalent trailing conjunction with a split on its RHS.
+   *  In `p { and a then x, and b then y }`, `p` is shared by both branches.
+   *  A clause without a consequent instead continues the next clause, as in
+   *  `p { and a, and b then x }`. Delimit clauses at this bracket depth only:
+   *  neither a nested conditional in a guard nor its `then` completes the enclosing clause. */
+  private def andSplit(lhs: Tree, prec: Int): Tree =
+    def hasConsequent(t: Tree): Bool = t match
+      case InfixApp(_, Keywrd(Keyword.`then` | Keyword.`do`), _) => true
+      case InfixApp(_, Keywrd(Keyword.`and` | Keyword.`is` | Keyword.backslash), rhs) => hasConsequent(rhs)
+      case Block(stmts) => stmts.exists(hasConsequent)
+      case App(_, Tup(rhss)) => rhss.exists(hasConsequent)
+      case OpApp(_, _, rhss) => rhss.exists(hasConsequent)
+      case OpSplit(_, rhss) => rhss.exists(hasConsequent)
+      case Annotated(_, target) => hasConsequent(target)
+      case _ => false
+    def prepend(lhs: Tree, kw: Keywrd[Keyword.`and`.type], rhs: Tree): Tree = rhs match
+      // Clauses are parsed down to their consequent, but `and` must still bind
+      // more tightly than weaker operators in the clause, such as `or` and `then`.
+      case InfixApp(cond, conn @ Keywrd(op), body) if op.leftPrecOrMin < Keyword.`and`.rightPrecOrMin =>
+        InfixApp(prepend(lhs, kw, cond), conn, body)
+      case _ => InfixApp(lhs, kw, rhs)
+    type Clause = Keywrd[Keyword.`and`.type] -> Tree
+    @tailrec def clauses(acc: Ls[Clause], pending: Opt[Clause]): Ls[Clause] = yeetSpaces match
+      case (KEYWORD(Keyword.`and`), loc) :: _ =>
+        consume
+        // Preserve the enclosing expression's precedence. For example, the `then`
+        // after `if f \ p { and q } then x` belongs outside the application.
+        val rhs = expr(prec max CommaPrecNext, allowNewlines = false)
+        val key = new Keywrd(Keyword.`and`).withLoc(S(loc))
+        val clause = pending match
+          case S((firstKw, cond)) => (firstKw, prepend(cond, key, rhs))
+          case N => (key, rhs)
+        val (done, next) = if hasConsequent(rhs) then (clause :: acc, N) else (acc, S(clause))
+        cur.dropWhile:
+          case (_: NEWLINE_COMMA | SPACE | COMMENT(_), _) => true
+          case _ => false
+        match
+          case toks @ ((KEYWORD(Keyword.`and`), _) :: _) =>
+            cur = toks
+            clauses(done, next)
+          case _ => (next.toList ::: done).reverse
+      case _ => lastWords("Expected a leading conjunction")
+    clauses(Nil, N) match
+      case (kw, rhs) :: Nil => prepend(lhs, kw, rhs)
+      case (kw, rhs) :: rest => InfixApp(lhs, kw, Block(rhs :: rest.map(_._2)))
+      case Nil => die
   
   
   /** If a block starting with token `tok` is an operator split continuing the preceding expression
@@ -1228,6 +1283,7 @@ abstract class Parser(
       case (_: NEWLINE_COMMA, _) :: (KEYWORD(kw), _) :: _
       if kw.canStartInfixOnNewLine && newlineLeftPrec(kw) > prec
       && infixRules.kwAlts.contains(kw.name)
+      && !(separateLeadingAnd && (kw is Keyword.`and`))
       && (kw isnt Keyword.`do`) // This is to avoid the following case:
         //  ```
         //  0 then "null"
@@ -1243,7 +1299,20 @@ abstract class Parser(
       && infixRules.kwAlts.contains(kw.name)
       =>
         consume
-        if bk is Curly then closedCurlyCont(br, prec, allowNewlines)(_ => acc)
+        if kw is Keyword.`and` then
+          val r = new Parser(origin, toks, rules, raiseFun, dbg):
+            override protected def separateLeadingAnd = true
+            def doPrintDbg(msg: => Str): Unit = outer.printDbg("> " + msg)
+          if bk is Curly then
+            val res = r.concludeWith(_.exprCont(r.andSplit(acc, MinPrec), MinPrec, allowNewlines = true))
+            exprCont(res, prec, allowNewlines)
+          else
+            val (res, rest) = r.continueWith(_.andSplit(acc, prec))
+            rest match
+              case (_, l) :: _ => cur = (NEWLINE, l.left) :: rest ::: cur
+              case _ =>
+            exprCont(res, prec, allowNewlines)
+        else if bk is Curly then closedCurlyCont(br, prec, allowNewlines)(_ => acc)
         else
           val (res, rest) = rec(toks, S(br.innerLoc), br.describe).continueWith:
             _.exprCont(acc, prec, allowNewlines = true)

@@ -252,7 +252,7 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
     case TermDefinition(_, _, _, pss, tps, sign, body, _, _, annotations, _) =>
       pss.toVector.flatMap(_.subTerms) ++ tps.getOrElse(Nil).flatMap(_.subTerms).toVector ++ sign.toVector ++ body.toVector ++ annotations.flatMap(_.subTerms).toVector
     case cls: ClassDef =>
-      (cls.paramsOpt.toVector.flatMap(_.subTerms) :+ cls.body.blk) ++ cls.annotations.flatMap(_.subTerms).toVector
+      (cls.paramsOpt.toVector.flatMap(_.subTerms) :+ cls.body.blk) ++ cls.selfType.toVector ++ cls.annotations.flatMap(_.subTerms).toVector
     case mod: ModuleOrObjectDef =>
       ( mod.paramsOpt.toVector.flatMap(_.subTerms) :+ mod.body.blk) ++ mod.annotations.flatMap(_.subTerms).toVector
     case td: TypeDef =>
@@ -386,6 +386,9 @@ trait StatementImpl extends Located, ProductWithExtraInfo, Describable:
             case _ => doc"")
           :: cld.paramsOpt.map(_.show).toList.mkDocument()
           :: cld.auxParams.map(_.show).mkDocument()
+          :: (cld match
+            case cd: ClassDef => cd.selfType.fold(doc"")(t => doc": ${t.show}")
+            case _ => doc"")
           :: cld.ext.fold(doc"")(e => doc" extends ${e.show}")
           :: doc" ${cld.body.blk.show}"
       case imp: Import =>
