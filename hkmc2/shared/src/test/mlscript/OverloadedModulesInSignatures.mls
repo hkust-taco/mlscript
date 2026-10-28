@@ -102,9 +102,12 @@ fun assertModule(module m: ClsMod): module ClsMod = m
 assertModule(ClsMod).whoami
 //│ = "module"
 
+// FIXME: It should be a resolver error or so. 
+// Now the flow analyzer just treat this as an internal error.
 :breakme
+:fixme
 assertModule(TypMod).whoami
-//│ = "module"
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: type aliases should not occur as runtime member references
 
 :noInline
 print(assertModule(TrmMod).whoami)
@@ -123,9 +126,12 @@ assertNonModule(ClsMod).whoami
 //│ = "module"
 
 // FIXME: should not resolve to module's `.whoami`, hence should be an error
+// FIXME: It should be a resolver error or so. 
+// Now the flow analyzer just treat this as an internal error.
 :breakme
+:fixme
 assertNonModule(TypMod).whoami
-//│ = "module"
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: type aliases should not occur as runtime member references
 
 // FIXME: should not resolve to module's `.whoami`, hence should be an error
 // FIXME: Should module-check as the term module (or probably we will remove module-checks before that)

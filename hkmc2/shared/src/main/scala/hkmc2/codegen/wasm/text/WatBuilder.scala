@@ -2778,7 +2778,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           extraInfo = S(sub.showAsTree),
         ))
 
-      case Throw(res) =>
+      case Throw(res, _) =>
         val excWat = result(res)
         Vector(`throw`(exnTagIdx, Seq(excWat)))
 
