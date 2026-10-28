@@ -3,6 +3,7 @@ package hkmc2
 import collection.mutable.{Map as MutMap, Set as MutSet}
 
 import hkmc2.utils.*, shorthands.*
+import hkmc2.Message.MessageContext
 import hkmc2.io
 import utils.TraceLogger
 
@@ -58,6 +59,11 @@ class CompilerCtx(
   
   private def derive(newFile: io.Path, recorder: CompilerCtx.DependencyRecorder): CompilerCtx =
     CompilerCtx(S(newFile, this), beingCompiled + newFile, fs, cache, S(recorder), paths, rootConfig)
+
+  /** Record explicit source imports separately from internal runtime/cache dependencies.
+    * Keep the artifact itself: its symbols, rather than a second path lookup, own the import. */
+  private[hkmc2] def recordSourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact): Unit =
+    dependencyRecorder.foreach(_.sourceImports += SourceImport(sym, path, artifact))
   
   /** Elaborate (and, when compiler paths are set, lower) a compilation unit, caching the result.
     *
@@ -72,8 +78,17 @@ class CompilerCtx(
         : Artifact =
     
     val lastMod = fs.getLastChangedTimestamp(file)
+    val outerRaise = summon[Raise]
+    var created = false
     
     def mk =
+      created = true
+      val errors = collection.mutable.ArrayBuffer.empty[ErrorReport]
+      given Raise = diagnostic =>
+        diagnostic match
+          case error: ErrorReport => errors += error
+          case _ => ()
+        outerRaise(diagnostic)
       val dependencies = new CompilerCtx.DependencyRecorder
       val modulePath = (file.up / io.RelPath(file.baseName + ".mjs")).toString
       val debug = new DebugContext
@@ -211,7 +226,8 @@ class CompilerCtx(
       state.publishCompilationUnitAbi:
         CompilationUnitAbi:
           CompilerCtx.allocateModulePrivateExportNames(ir)(using state, summon[Raise])
-      Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig, dependencies.result, lastMod)
+      Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig,
+        dependencies.result, dependencies.sourceImports.toList, errors.toList, lastMod)
     
     val artifact = cache.upsert(file)(
       isCurrent = (cachedFile, art) =>
@@ -231,6 +247,20 @@ class CompilerCtx(
           && art.dependencies.forall(dep => sourceIsCurrent(dep.path, dep.lastChangedTimestamp)),
       create = mk,
     )
+    // An artifact retains its symbol identity even when elaboration reported errors. Replaying
+    // those errors prevents a later backend request from treating that artifact as valid.
+    if !created then artifact.errors.foreach(outerRaise)
+    // Recheck on cache hits too: an invalid source graph must not emit output merely because
+    // an earlier request already reported its target mismatch.
+    val checked = collection.mutable.Set.empty[Artifact]
+    def checkTargets(art: Artifact): Unit =
+      if checked.add(art) then art.sourceImports.foreach: dep =>
+        if dep.artifact.config.target =/= art.config.target then
+          raise(ErrorReport(
+            msg"Cannot import ${dep.artifact.config.target.toString} source '${dep.path.toString}' from a ${art.config.target.toString} compilation unit" -> dep.sym.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+        checkTargets(dep.artifact)
+    checkTargets(artifact)
     dependencyRecorder.foreach(_.note(file, artifact))
     artifact
 
@@ -307,6 +337,7 @@ object CompilerCtx:
     CompilerCtx(N, Set.empty, fs, new PlatformCompilerCache, N, paths, rootConfig)
 
   private[hkmc2] final class DependencyRecorder:
+    val sourceImports = collection.mutable.ArrayBuffer.empty[SourceImport]
     // Keep the timestamp in the set element rather than mapping paths to timestamps. If a source
     // changes while one artifact is being built and two branches observe different versions, both
     // versions remain in the snapshot; the older one then makes the artifact immediately stale.
@@ -357,8 +388,27 @@ object CompilerCache:
     val compilationUnit: Elaborator.CompilationUnit,
     val rootConfig: Config,
     val dependencies: Set[SourceDependency],
+    val sourceImports: Ls[SourceImport],
+    val errors: Ls[ErrorReport],
     val lastChangedTimestamp: Long,
-  )
+  ):
+    // Backend memoization is owned by the artifact, not its symbols. Dependencies must be
+    // requested before entering this lock; failures throw without publishing a cache entry.
+    private var wasmFile: Opt[codegen.wasm.text.CompiledWasmFile] = N
+    private var wasmRuntime: Opt[codegen.wasm.text.CompiledWasmFile] = N
+    def materializeWasm(outputs: Ls[(io.Path, Str)])(using cctx: CompilerCtx): Unit = synchronized:
+      outputs.foreach: (path, content) =>
+        if !cctx.fs.exists(path) || cctx.fs.read(path) =/= content then cctx.fs.write(path, content)
+
+    def compiledWasm(runtime: Bool)(build: => codegen.wasm.text.CompiledWasmFile): codegen.wasm.text.CompiledWasmFile = synchronized:
+      (if runtime then wasmRuntime else wasmFile) match
+        case S(result) => result
+        case N =>
+          val result = build
+          if runtime then wasmRuntime = S(result) else wasmFile = S(result)
+          result
+
+  final case class SourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact)
 
   /** The version of one transitive source dependency observed while building an artifact. */
   final case class SourceDependency(path: io.Path, lastChangedTimestamp: Long)

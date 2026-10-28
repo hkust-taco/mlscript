@@ -1,0 +1,70 @@
+
+:global
+:wasm
+
+// Runtime identity and literal storage must survive an import in a later block.
+let before = ()
+fun ownString() = "worksheet"
+//│ Wasm result:
+//│ = {}
+
+import "../../mlscript-compile/wasm/Shared.mls" as Alias
+//│ Wasm result:
+//│ = {}
+
+:expect 1
+Alias.next()
+//│ Wasm result:
+//│ = 1
+
+import "../../mlscript-compile/wasm/Shared.mls"
+//│ Wasm result:
+//│ = {}
+
+:expect 2
+Shared.next()
+//│ Wasm result:
+//│ = 2
+
+:expect "separate λ module"
+Alias.word()
+//│ Wasm result:
+//│ = "separate λ module"
+
+:expect "worksheet"
+ownString()
+//│ Wasm result:
+//│ = "worksheet"
+
+before
+//│ Wasm result:
+//│ = {}
+
+Alias.unit()
+//│ Wasm result:
+//│ = {}
+
+import "../../mlscript-compile/wasm/Box.mls" as BoxAlias
+class Child(x) extends BoxAlias(x) with
+  fun answer() = x + 1
+//│ Wasm result:
+//│ = {}
+
+:expect 42
+new Child(41).answer()
+//│ Wasm result:
+//│ = 42
+
+:expect 42
+new BoxAlias(42).value
+//│ Wasm result:
+//│ = 42
+
+:re
+Alias.fail()
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] 42
+
+:re
+import "../../mlscript-compile/wasm/Explodes.mls"
+//│ ═══[RUNTIME ERROR] Failed to initialize WASM imports: [runtime error] 42

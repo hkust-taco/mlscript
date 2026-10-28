@@ -74,24 +74,20 @@ FieldChild().x
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $FieldBase (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null i31))))))
-//│   (type $FieldChild (sub $FieldBase (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null i31))))))
-//│   (type $FieldBase_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $FieldBase_FieldBase (func (result (ref $FieldBase))))
-//│   (type $FieldChild_typeinfo (sub $FieldBase_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $FieldChild_FieldChild (func (result (ref $FieldChild))))
+//│   (type $TypeInfoBase1 (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase1)))))
+//│   (type $Object1 (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
+//│   (type $FieldBase (sub $Object1 (struct (field $$typeinfo (mut (ref $TypeInfoBase1))) (field $x (mut (ref null i31))))))
+//│   (type $FieldChild (sub $FieldBase (struct (field $$typeinfo (mut (ref $TypeInfoBase1))) (field $x (mut (ref null i31))))))
+//│   (type $FieldChild_ctor (func (result (ref $FieldChild))))
 //│   (type $entry (func (result (ref null i31))))
-//│   (import "repl" "FieldBase" (func $FieldBase_FieldBase (type $FieldBase_FieldBase)))
-//│   (import "repl" "FieldChild" (func $FieldChild_FieldChild (type $FieldChild_FieldChild)))
-//│   (import "repl" "FieldBase_typeinfo" (global $FieldBase_typeinfo (ref $FieldBase_typeinfo)))
-//│   (import "repl" "FieldChild_typeinfo" (global $FieldChild_typeinfo (ref $FieldChild_typeinfo)))
+//│   (import "repl4" "FieldChild_ctor" (func $FieldChild_ctor (type $FieldChild_ctor)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null i31))
 //│       (local.set $tmp
-//│         (call $FieldChild_FieldChild))
+//│         (call $FieldChild_ctor))
 //│       (return
-//│         (struct.get $FieldChild $x
+//│         (struct.get $FieldChild 1
 //│           (ref.cast (ref $FieldChild)
 //│             (local.get $tmp))))))
 //│   (elem $entry declare func $entry))

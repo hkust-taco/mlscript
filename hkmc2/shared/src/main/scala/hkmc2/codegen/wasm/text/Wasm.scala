@@ -35,15 +35,17 @@ extension (doc: Document)
     doc.optionUnless(_.isEmpty).fold(doc): doc =>
       doc"$prefix$doc$postfix"
 
-extension (scp: Scope)
-  /** Convenience function for [[Scope.allocateOrGetName]] with an optional prefix and suffix. */
-  private[text] def allocateOrGetNameWrapped(sym: ScopedSymbol | ClassSymbol, wrapId: Opt[Str] -> Opt[Str])(using Raise): Str =
-    val prefix = wrapId._1.fold("")(prefix => s"${prefix}_")
-    wrapId._2 match
-      case S(suffix) =>
-        scp.lookup(sym).getOrElse:
-          scp.addToBindings(sym, s"$prefix${sym.nme}_$suffix", shadow = false)
-      case N => scp.allocateOrGetName(sym, prefix)
+/** Each WAT namespace owns bindings for (origin symbol, representation). Wrapped names must
+  * use the same allocator as ordinary names: a suffix is not a reservation of that spelling. */
+private[text] final class WasmScope(using State):
+  private val scope = Scope.empty(Scope.Cfg.default)
+  private val bindings = scala.collection.mutable.Map.empty[(ScopedSymbol | ClassSymbol, Opt[Str] -> Opt[Str]), Str]
+  def allocateOrGetNameWrapped(sym: ScopedSymbol | ClassSymbol, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
+    bindings.getOrElseUpdate((sym, wrap), {
+      val hint = wrap._1.fold("")(_ + "_") + sym.nme + wrap._2.fold("")("_" + _)
+      val ascii = hint.flatMap(c => if c <= 127 then c.toString else f"_u${c.toInt}%04x")
+      scope.allocateName(TempSymbol(N, erasedType = N, ascii))
+    })
 
 /** Trait indicating a WAT representation is available. */
 trait ToWat:
@@ -225,30 +227,35 @@ sealed abstract class Index extends ToWat
 case class SymIdx(val id: Str) extends Index:
   def toWat: Document = doc"$$$id"
 
+/** A numeric index, used for field offsets whose names are only debug information. */
+case class NumIdx(value: Int) extends Index:
+  require(value >= 0)
+  def toWat: Document = doc"$value"
+
 /** An index that is bound to an index space. */
 sealed abstract class CtxIdx(idx: Index) extends ToWat:
   def toWat: Document = idx.toWat
 
 /** An index bound to the ''types'' index space. */
-case class TypeIdx(idx: Index) extends CtxIdx(idx)
+case class TypeIdx(idx: SymIdx) extends CtxIdx(idx)
 
 /** An index bound to the ''global'' index space. */
-case class GlobalIdx(idx: Index) extends CtxIdx(idx)
+case class GlobalIdx(idx: SymIdx) extends CtxIdx(idx)
 
 /** An index bound to the ''memory'' index space. */
-case class MemIdx(idx: Index) extends CtxIdx(idx)
+case class MemIdx(idx: SymIdx) extends CtxIdx(idx)
 
 /** An index bound to the ''funcs'' index space. */
-case class FuncIdx(idx: Index) extends CtxIdx(idx)
+case class FuncIdx(idx: SymIdx) extends CtxIdx(idx)
 
 /** An index bound to the ''locals'' index space. */
-case class LocalIdx(idx: Index) extends CtxIdx(idx)
+case class LocalIdx(idx: SymIdx) extends CtxIdx(idx)
 
 /** An index bound to the ''fields'' index space. */
 case class FieldIdx(idx: Index) extends CtxIdx(idx)
 
 /** An index bound to the ''tags'' index space. */
-case class TagIdx(idx: Index) extends CtxIdx(idx)
+case class TagIdx(idx: SymIdx) extends CtxIdx(idx)
 
 /** An import entry. */
 case class Import[ET <: ExternType](module: Str, name: Str, externType: ET) extends ToWat:
@@ -312,6 +319,9 @@ object ExternType:
     val id: SymIdx = SymIdx(summon[Ctx].globalScp.allocateOrGetNameWrapped(sym, wrapId))
 
     def toWat: Document = doc"""(global ${id.toWat} ${globalType.toWat})"""
+  case class Tag(typeUse: TypeUse, override val sym: ExternSymbol)(using Ctx, Raise) extends ExternType(sym):
+    val id: SymIdx = SymIdx(summon[Ctx].tagScp.allocateOrGetNameWrapped(sym, N -> N))
+    def toWat: Document = doc"(tag ${id.toWat} ${typeUse.toWat})"
 end ExternType
 
 sealed abstract class ExternType(val sym: ScopedSymbol | ClassSymbol) extends ToWat:

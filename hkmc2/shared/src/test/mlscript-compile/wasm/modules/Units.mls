@@ -1,0 +1,10 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+#config(inlining: None)
+import "./UnitValue.mls"
+
+module Units with
+  fun own() = ()
+  fun foreign() = UnitValue()

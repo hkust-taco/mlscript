@@ -1485,7 +1485,9 @@ class BlockSimplifier
           // Instantiate nodes are rendered according to the receiving JS builder's
           // freezing policy. Moving a body across compilation units with a different
           // policy could silently turn mutable values into frozen values, or vice versa.
-          if defn.dSym.getState.compilationUnitConfig.exists(_.noFreeze =/= config.noFreeze)
+          // Lowering also selects target-specific runtime intrinsics.
+          if defn.dSym.getState.compilationUnitConfig.exists(cfg =>
+            cfg.noFreeze =/= config.noFreeze || cfg.target =/= config.target)
           then return false
           true
 

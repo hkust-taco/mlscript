@@ -224,6 +224,8 @@ final class SessionExportCtx(
   *   The expression of the function body.
   * @param exportName
   *   Optional export name.
+  * @param optionalParams
+  *   Physical parameter indices that host wrappers must supply as null when omitted.
   * @param wrapId
   *   A pair of optional strings for adding a prefix and suffix to the generated identifier of this function.
   */
@@ -235,11 +237,14 @@ class FuncInfo(
     val locals: Seq[SlotSymbol -> SymIdx],
     val body: Expr,
     val exportName: Opt[Str],
+    val optionalParams: Set[Int],
     val wrapId: Opt[Str] -> Opt[Str] = N -> N,
 )(using Ctx, Raise, State) extends ToWat:
 
   /** Symbolic identifier for the function. */
   val id = SymIdx(summon[Ctx].funcScp.allocateOrGetNameWrapped(sym, wrapId))
+
+  assert(optionalParams.forall(i => i >= 0 && i < params.size), "Optional parameter index outside the Wasm signature")
 
   /** Returns the type of this function as a [[SignatureType]]. */
   def getSignatureType: SignatureType = SignatureType(
@@ -247,9 +252,11 @@ class FuncInfo(
     results = resultTypes,
   )
 
+  def emittedExportName: Opt[Str] = summon[Ctx].fileExportName(sym, "func", wrapId, exportName)
+
   def toWat: Document =
     doc"""(func ${id.toWat}${
-        exportName.fold(doc""): e =>
+        emittedExportName.fold(doc""): e =>
           doc""" (export "$e")"""
       } ${typeUse.toWat}${
         getSignatureType.toWat.surroundUnlessEmpty(doc" ")
@@ -286,9 +293,11 @@ class GlobalInfo(
   /** Symbolic identifier for the global. */
   val id: SymIdx = SymIdx(summon[Ctx].globalScp.allocateOrGetNameWrapped(sym, wrapId))
 
+  def emittedExportName: Opt[Str] = summon[Ctx].fileExportName(sym, "global", wrapId, exportName)
+
   def toWat: Document =
     doc"""(global ${id.toWat}${
-        exportName.fold(doc""): name =>
+        emittedExportName.fold(doc""): name =>
           doc""" (export "$name")"""
       } ${globalType.toWat} ${init.toWat})"""
 end GlobalInfo
@@ -793,53 +802,137 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   /** The [[Elaborator.Ctx]] associated with this instance. */
   def elabCtx: Elaborator.Ctx = summon[Elaborator.Ctx]
 
+  private var fileNames: Opt[FileExportNames] = N
+  private val importedTypes = MutMap.empty[(ValueSymbol, Opt[Str] -> Opt[Str]), TypeIdx]
+  private val pendingTypes = MutMap.empty[BlockMemberSymbol, () => TypeInfo]
+  private val pendingFunctions = MutMap.empty[ScopedSymbol | ClassSymbol, () => Import[ExternType.Func]]
+  private val pendingGlobals = MutMap.empty[ScopedSymbol, () => Import[ExternType.Global]]
+
+  def enableFileExports(): Unit = fileNames = S(new FileExportNames)
+
+  def fileExportName(sym: ScopedSymbol | ClassSymbol, kind: Str, wrap: Opt[Str] -> Opt[Str], requested: Opt[Str])
+        (using Raise): Opt[Str] =
+    fileNames.fold(requested)(names => S(names(sym, kind, wrap)))
+
+  /** Capture definitions only; dependency interfaces retain ownership of imported bindings. */
+  def fileInterface(classes: Vector[AbiClass], namespaces: Vector[AbiNamespace], defaultExport: Opt[BlockMemberSymbol])
+        (using Raise): FileInterface =
+    FileInterface(
+      types.valuesIterator.map(t => AbiType(TypeIdx(t.id), t.sym, t.wrapId, t.compType, t.objectTag)).toVector,
+      orderedTypeGroups.map(_.map(TypeIdx(_)).toVector).toVector,
+      funcs.valuesIterator.collect:
+        case f: FuncInfo => AbiFunction(f.sym, f.wrapId, f.emittedExportName.get, f.typeUse.typeIdx, f.optionalParams)
+      .toVector,
+      globals.valuesIterator.collect:
+        case g: GlobalInfo => AbiGlobal(GlobalIdx(g.id), g.sym, g.wrapId, g.emittedExportName.get, g.globalType)
+      .toVector,
+      classes, namespaces, defaultExport,
+    )
+
+  /** Register the complete interface for lookup, without emitting unused imports or
+    * reserving their WAT names. Code generation demands individual bindings; each
+    * binding brings in the transitive closure of its signature/layout types. */
+  def importFile(dep: FileImport)(using Ctx, Raise): (TypeRelocation, GlobalIdx => GlobalIdx) =
+    val byIndex = dep.interface.types.map(t => t.index -> t).toMap
+    val groupOf = dep.interface.typeGroups.flatMap(group => group.map(_ -> group)).toMap
+    lazy val relocate: TypeRelocation = new TypeRelocation(index =>
+      val ty = byIndex.getOrElse(index, lastWords(s"WASM interface has an unbound type edge: $index"))
+      importedTypes.getOrElse(ty.sym -> ty.wrap, {
+        // Recursive group membership and member order are part of Wasm type identity.
+        // Demand the whole originating group, reserving every index before following edges.
+        val group = groupOf.getOrElse(index, lastWords(s"WASM interface type has no group: $index"))
+        val members = group.map(byIndex)
+        assert(members.forall(t => !importedTypes.contains(t.sym -> t.wrap)),
+          "Partially imported recursive type group")
+        val indices = members.map: t =>
+          val result = TypeIdx(SymIdx(typeScp.allocateOrGetNameWrapped(t.sym, t.wrap)))
+          importedTypes(t.sym -> t.wrap) = result
+          result
+        val ids = indices.map(_.idx)
+        ids.foreach(id => importedTypeGroups(id) = ids)
+        members.foreach(t => addType(TypeInfo(t.sym, relocate.body(t.body), t.tag, t.wrap)))
+        importedTypes(ty.sym -> ty.wrap)
+      }))
+    dep.interface.types.foreach: ty =>
+      ty.sym match
+        case sym: BlockMemberSymbol if ty.wrap == (N -> N) =>
+          pendingTypes.getOrElseUpdate(sym, () => getTypeInfo_!(relocate.index(ty.index)))
+        case _ => ()
+    dep.interface.functions.foreach: f =>
+      lazy val imported =
+        val binding = Import(dep.name, f.name, ExternType.Func(TypeUse(relocate.index(f.ty)), f.sym, f.wrap))
+        addFunctionImport(binding)
+        binding
+      pendingFunctions.getOrElseUpdate(f.sym, () => imported)
+    val globals = dep.interface.globals.map: g =>
+      lazy val imported =
+        val binding = Import(dep.name, g.name, ExternType.Global(relocate.global(g.ty), g.sym, g.wrap))
+        addGlobalImport(binding)
+        binding
+      val binding = pendingGlobals.getOrElseUpdate(g.sym, () => imported)
+      g.index -> (() => GlobalIdx(binding().externType.id))
+    .toMap
+    (relocate, index => globals.getOrElse(index,
+      lastWords(s"WASM interface has an unbound global edge: $index"))())
+
+  /** Give a synthetic local class symbol the originating class's lazy type binding. */
+  def aliasType(alias: BlockMemberSymbol, original: BlockMemberSymbol): Unit =
+    pendingTypes(alias) = () => getTypeInfo_!(original)
+
+  /** Aliases refer to the same imported storage/function, never to a copied value. */
+  def aliasBinding(alias: ScopedSymbol, original: ScopedSymbol): Unit =
+    namedFuncs.get(original).foreach(namedFuncs(alias) = _)
+    namedGlobals.get(original).foreach(namedGlobals(alias) = _)
+    pendingFunctions.get(original).foreach(pendingFunctions(alias) = _)
+    pendingGlobals.get(original).foreach(pendingGlobals(alias) = _)
+
   /** [[Scope]] for generating WAT identifiers of types. */
-  private[text] val typeScp = Scope.empty(Scope.Cfg.default)
+  private[text] val typeScp = new WasmScope
 
   /** [[ListMap]] containing all type definitions in the module mapped by their symbolic identifiers. */
   private var types = ListMap.empty[SymIdx, TypeInfo]
 
-  /** Types that must be emitted together as one recursive type group. */
-  private val recursiveTypes = LinkedHashSet.empty[SymIdx]
+  /** Imported recursive groups retain their originating member order. */
+  private val importedTypeGroups = MutMap.empty[SymIdx, Vector[SymIdx]]
 
   /** [[MutMap]] containing type symbols mapped to their corresponding [[TypeInfo]] instance. */
   private val namedTypes = MutMap.empty[BlockMemberSymbol, TypeInfo]
   
   /** [[Scope]] for generating WAT identifiers of data segments. */
-  private[text] val dataSegmentScp = Scope.empty(Scope.Cfg.default)
+  private[text] val dataSegmentScp = new WasmScope
 
   /** [[ListMap]] containing all data segments in the module. */
   private var dataSegments = ListMap.empty[SymIdx, DataSegment]
   
   /** [[Scope]] for generating WAT identifiers of element segments. */
-  private[text] val elemSegmentScp = Scope.empty(Scope.Cfg.default)
+  private[text] val elemSegmentScp = new WasmScope
 
   /** [[ListMap]] containing all element segments in the module. */
   private var elemSegments = ListMap.empty[SymIdx, ElemSegment]
 
   /** [[Scope]] for generating WAT identifiers of functions. */
-  private[text] val funcScp = Scope.empty(Scope.Cfg.default)
+  private[text] val funcScp = new WasmScope
 
   /** [[ListMap]] containing all function definitions and imports in the module mapped by their symbolic identifiers. */
   private var funcs = ListMap.empty[SymIdx, FuncInfo | Import[ExternType.Func]]
 
   /** [[MutMap]] containing function symbols mapped to the corresponding [[FuncInfo]] or [[Import]] instance. */
-  private val namedFuncs = MutMap.empty[ExternSymbol, FuncInfo | Import[ExternType.Func]]
+  private val namedFuncs = MutMap.empty[ScopedSymbol | ClassSymbol, FuncInfo | Import[ExternType.Func]]
 
   /** [[Scope]] for generating WAT identifiers of memories. */
-  private[text] val memoryScp = Scope.empty(Scope.Cfg.default)
+  private[text] val memoryScp = new WasmScope
 
   /** [[ListMap]] containing all memory definitions and imports in the module mapped by their symbolic identifiers. */
   private var memories = ListMap.empty[SymIdx, MemInfo | Import[ExternType.Mem]]
   
   /** [[Scope]] for generating WAT identifiers of tags. */
-  private[text] val tagScp = Scope.empty(Scope.Cfg.default)
+  private[text] val tagScp = new WasmScope
 
   /** [[ListMap]] containing all tag definitions in the module. */
-  private var tags = ListMap.empty[SymIdx, TagInfo]
+  private var tags = ListMap.empty[SymIdx, TagInfo | Import[ExternType.Tag]]
 
   /** [[Scope]] for generating WAT identifiers of globals. */
-  private[text] val globalScp = Scope.empty(Scope.Cfg.default)
+  private[text] val globalScp = new WasmScope
 
   /** [[ListMap]] containing all global definitions and imports in the module. */
   private var globals = ListMap.empty[SymIdx, GlobalInfo | Import[ExternType.Global]]
@@ -860,10 +953,10 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   private val cachedFunctionImports = MutMap.empty[(Str, Str), FuncIdx]
   private val cachedGlobalImports = MutMap.empty[(Str, Str), GlobalIdx]
 
-  private val singletonByBms = MutMap.empty[BlockMemberSymbol, Ctx.SingletonInfo]
-  private val singletonByIsym = MutMap.empty[ModuleOrObjectSymbol, Ctx.SingletonInfo]
+  private val singletonByBms = MutMap.empty[BlockMemberSymbol, () => Ctx.SingletonInfo]
+  private val singletonByIsym = MutMap.empty[ModuleOrObjectSymbol, () => Ctx.SingletonInfo]
   private val singletonInitActions = ArrayBuf.empty[Expr]
-  private val virtualTables = MutMap.empty[BlockMemberSymbol, Ctx.VirtualTable]
+  private val virtualTables = MutMap.empty[BlockMemberSymbol, () => Ctx.VirtualTable]
   private def imports: Seq[Import[?]] =
     val importedFuncs = funcs.collect:
       case (_, imp: Import[ExternType.Func]) => imp
@@ -871,14 +964,16 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
       case (_, imp: Import[ExternType.Global]) => imp
     val importedMems = memories.collect:
       case (_, imp: Import[ExternType.Mem]) => imp
-    (importedFuncs ++ importedGlobals ++ importedMems).toSeq
+    val importedTags = tags.valuesIterator.collect:
+      case imp @ Import(_, _, _: ExternType.Tag) => imp
+    (importedFuncs ++ importedGlobals ++ importedMems).toSeq ++ importedTags
 
   private def globalExternType(globalEntry: GlobalInfo | Import[ExternType.Global])(using
       Ctx,
       Raise,
   ): ExternType.Global =
     globalEntry match
-      case globalInfo: GlobalInfo => ExternType.Global(globalInfo.globalType, globalInfo.sym)
+      case globalInfo: GlobalInfo => ExternType.Global(globalInfo.globalType, globalInfo.sym, globalInfo.wrapId)
       case globalImport: Import[ExternType.Global] => globalImport.externType
 
   /** Returns a new number to be used as an object tag. */
@@ -886,10 +981,6 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     val tag = objectTagNum
     objectTagNum += 1
     tag
-
-  /** Marks the type at `idx` as a member of the module's recursive type group. */
-  def addToRecursiveTypes(idx: TypeIdx): Unit = idx.idx match
-    case sym: SymIdx => recursiveTypes += sym
 
   /** Adds a type into this context. */
   def addType(typeInfo: TypeInfo): TypeIdx =
@@ -914,7 +1005,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   /** Returns the [[TypeInfo]] instance associated with the given `typeref`. */
   def getTypeInfo(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeInfo] = typeref match
     case TypeIdx(idx @ SymIdx(nme)) => types.get(idx)
-    case sym: BlockMemberSymbol => namedTypes.get(sym)
+    case sym: BlockMemberSymbol => namedTypes.get(sym).orElse(pendingTypes.get(sym).map(_()))
 
   /** Same as [[getTypeInfo]] but throws an exception when the `typeref` is not found. */
   def getTypeInfo_!(typeref: TypeIdx | BlockMemberSymbol): TypeInfo =
@@ -922,12 +1013,13 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
 
   /** Records the derived virtual-dispatch layout for `sym`. */
-  def registerVirtualTable(sym: BlockMemberSymbol, info: Ctx.VirtualTable): Unit =
-    virtualTables(sym) = info
+  def registerVirtualTable(sym: BlockMemberSymbol, info: => Ctx.VirtualTable): Unit =
+    lazy val cached = info
+    virtualTables(sym) = () => cached
 
   /** Returns the derived virtual-dispatch layout for `sym`. */
   def getVirtualTable(sym: BlockMemberSymbol): Opt[Ctx.VirtualTable] =
-    virtualTables.get(sym)
+    virtualTables.get(sym).map(_())
 
   /** Adds a function import into this context.
     *
@@ -1008,6 +1100,10 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     dataSegments = dataSegments + (seg.id -> seg)
 
   /** Adds a tag into this context. */
+  def addTagImport(imp: Import[ExternType.Tag]): TagIdx =
+    tags += imp.externType.id -> imp
+    TagIdx(imp.externType.id)
+
   def addTag(tagInfo: TagInfo): TagIdx =
     val id = tagInfo.id
     tags = tags + (id -> tagInfo)
@@ -1026,41 +1122,40 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
 
   /** Returns the [[FuncIdx]] of the given `funcref`.
     */
-  def getFunc(funcref: FuncIdx | ExternSymbol): Opt[FuncIdx] = funcref match
-    case funcidx: FuncIdx => S(funcidx)
-    case sym: ExternSymbol =>
-      namedFuncs.get(sym).map: funcInfo =>
-        funcInfo match
-          case fi: FuncInfo => FuncIdx(fi.id)
-          case imp: Import[ExternType.Func] => FuncIdx(imp.externType.id)
+  def getFunc(funcref: FuncIdx | ScopedSymbol | ClassSymbol): Opt[FuncIdx] = funcref match
+    case idx: FuncIdx => S(idx)
+    case sym: (ScopedSymbol | ClassSymbol) =>
+      getFuncEntry(sym).map:
+        case fi: FuncInfo => FuncIdx(fi.id)
+        case imp: Import[ExternType.Func] => FuncIdx(imp.externType.id)
 
   /** Same as [[getFunc]] but throws an exception when the `funcref` is not found. */
-  def getFunc_!(funcref: FuncIdx | ExternSymbol): FuncIdx =
+  def getFunc_!(funcref: FuncIdx | ScopedSymbol | ClassSymbol): FuncIdx =
     getFunc(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
-  private def getFuncEntry(funcref: FuncIdx | ExternSymbol): Opt[FuncInfo | Import[ExternType.Func]] = funcref match
+  private def getFuncEntry(funcref: FuncIdx | ScopedSymbol | ClassSymbol): Opt[FuncInfo | Import[ExternType.Func]] = funcref match
     case FuncIdx(idx @ SymIdx(_)) => funcs.get(idx)
-    case funcref: ExternSymbol => namedFuncs.get(funcref)
+    case funcref: (ScopedSymbol | ClassSymbol) => namedFuncs.get(funcref).orElse(pendingFunctions.get(funcref).map(_()))
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
-  def getFuncInfo(funcref: FuncIdx | ExternSymbol): Opt[FuncInfo] =
+  def getFuncInfo(funcref: FuncIdx | ScopedSymbol | ClassSymbol): Opt[FuncInfo] =
     getFuncEntry(funcref).collect:
       case funcInfo: FuncInfo => funcInfo
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
-  def getFuncInfo_!(funcref: FuncIdx | ExternSymbol): FuncInfo =
+  def getFuncInfo_!(funcref: FuncIdx | ScopedSymbol | ClassSymbol): FuncInfo =
     getFuncInfo(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
   /** Returns the type use associated with the given `funcref`, whether it is a definition or an import. */
-  def getFuncTypeUse(funcref: FuncIdx | ExternSymbol): Opt[TypeUse] =
+  def getFuncTypeUse(funcref: FuncIdx | ScopedSymbol | ClassSymbol): Opt[TypeUse] =
     getFuncEntry(funcref).map:
       case funcInfo: FuncInfo => funcInfo.typeUse
       case funcImport: Import[ExternType.Func] => funcImport.externType.typeUse
 
   /** Same as [[getFuncTypeUse]] but throws an exception when the `funcref` is not found. */
-  def getFuncTypeUse_!(funcref: FuncIdx | ExternSymbol): TypeUse =
+  def getFuncTypeUse_!(funcref: FuncIdx | ScopedSymbol | ClassSymbol): TypeUse =
     getFuncTypeUse(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
@@ -1068,7 +1163,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   def getGlobal(globalref: GlobalIdx | ScopedSymbol)(using Ctx, Raise): Opt[GlobalIdx] = globalref match
     case globalidx: GlobalIdx => S(globalidx)
     case sym: ScopedSymbol =>
-      namedGlobals.get(sym).map: globalEntry =>
+      getGlobalEntry(sym).map: globalEntry =>
         GlobalIdx(globalExternType(globalEntry).id)
 
   /** Same as [[getGlobal]] but throws an exception when the `globalref` is not found. */
@@ -1079,7 +1174,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   private def getGlobalEntry(globalref: GlobalIdx | ScopedSymbol): Opt[GlobalInfo | Import[ExternType.Global]] =
     globalref match
       case GlobalIdx(idx @ SymIdx(_)) => globals.get(idx)
-      case sym: ScopedSymbol => namedGlobals.get(sym)
+      case sym: ScopedSymbol => namedGlobals.get(sym).orElse(pendingGlobals.get(sym).map(_()))
 
   /** Returns the global extern metadata associated with the given `globalref`. */
   def getGlobalType(globalref: GlobalIdx | ScopedSymbol)(using Ctx, Raise): Opt[ExternType.Global] =
@@ -1112,7 +1207,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     globalDefs.map(addGlobal)
 
   /** Checks whether the global variable scope contains the variable `sym`. */
-  def containsGlobal(sym: ScopedSymbol): Bool = namedGlobals.contains(sym)
+  def containsGlobal(sym: ScopedSymbol): Bool = namedGlobals.contains(sym) || pendingGlobals.contains(sym)
   
   /** Returns all globals in this context. */
   def getGlobals: Seq[ScopedSymbol] = namedGlobals.keys.toSeq
@@ -1124,19 +1219,21 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     * used during singleton registration.
     */
   def getSingletonInfo(sym: BlockMemberSymbol | InnerSymbol): Opt[Ctx.SingletonInfo] = sym match
-    case bms: BlockMemberSymbol => singletonByBms.get(bms)
-    case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym)
+    case bms: BlockMemberSymbol => singletonByBms.get(bms).map(_())
+    case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym).map(_())
     case _: InnerSymbol => N
 
   /** Registers singleton metadata under both its block-member symbol and optional module/object symbol alias.
+    * Delay resolving imported storage and its types until the singleton is actually used.
     */
   def registerSingleton(
       bms: BlockMemberSymbol,
       isym: Opt[ModuleOrObjectSymbol],
-      info: Ctx.SingletonInfo,
+      info: => Ctx.SingletonInfo,
   ): Unit =
-    singletonByBms(bms) = info
-    isym.foreach(singletonByIsym(_) = info)
+    lazy val cached = info
+    singletonByBms(bms) = () => cached
+    isym.foreach(singletonByIsym(_) = () => cached)
 
   /** Appends one eager singleton initialization action for synthesized module start code. */
   def addSingletonInitAction(action: Expr): Unit =
@@ -1165,36 +1262,40 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   def getOrCreateWasmIntrinsicTag(name: Str, createTag: => TagIdx): TagIdx =
     wasmIntrinsicTags.getOrElseUpdate(name, createTag)
 
-  /** Groups the recursive types into the order they must be declared in.
-    *
-    * Wasm requires every type a definition references to be declared before it, so class layouts are ordered by
-    * the classes their parents and fields mention. A cycle cannot be ordered, so each strongly connected
-    * component holding more than one type is emitted as one `(rec ...)` group. Within a group, field references
-    * may point forward, but a superclass must still precede its subclasses.
+  /** Order all type definitions by their dependencies, including lazy imports demanded
+    * after local class placeholders. Imported recursive groups are indivisible: changing
+    * their member order changes Wasm type identity and would break cross-instance linking.
+    * Local cycles form new groups, with superclasses before subclasses within each group.
     */
-  private def orderedRecursiveTypes: Ls[Ls[SymIdx]] =
-    def named(idx: TypeIdx): Opt[SymIdx] = idx.idx match
-      case sym: SymIdx => S(sym)
+  private def orderedTypeGroups: Ls[Ls[SymIdx]] =
     def parents(id: SymIdx): Ls[SymIdx] = types(id).compType match
-      case structTy: StructType => structTy.parents.flatMap(named).toList
+      case st: StructType => st.parents.map(_.idx).toList
       case _ => Nil
-    def dependencies(id: SymIdx): Ls[SymIdx] = types.get(id).map(_.compType) match
-      case S(structTy: StructType) =>
-        val fields = structTy.fields.flatMap: (_, field) =>
-          field.ty match
-            case RefType(idx: TypeIdx, _) => named(idx)
-            case _ => N
-        (parents(id) ++ fields).iterator.filter(recursiveTypes).distinct.toList
+    def references(ty: ValType): Ls[SymIdx] = ty match
+      case RefType(idx: TypeIdx, _) => idx.idx :: Nil
       case _ => Nil
-    SccAnalysis.sccsFrom(dependencies, recursiveTypes).map: component =>
-      val members = component.toSet
-      // A field can lead the first traversal to a descendant before its immediate superclass. Order the
-      // component again using only inheritance edges; these must be acyclic even inside a recursive group.
-      SccAnalysis.sccsFrom((id: SymIdx) => parents(id).filter(members), component).flatMap: inheritanceComponent =>
-        assert(inheritanceComponent.size === 1 && !parents(inheritanceComponent.head).contains(inheritanceComponent.head),
-          s"Cyclic superclass dependencies in recursive type group: $inheritanceComponent")
-        inheritanceComponent
-  end orderedRecursiveTypes
+    def dependencies(id: SymIdx): Ls[SymIdx] = types(id).compType match
+      case st: StructType => parents(id) ++ st.fields.toList.flatMap(f => references(f._2.ty))
+      case ArrayType(elem, _) => references(elem)
+      case FunctionType(SignatureType(params, results)) =>
+        params.toList.flatMap(p => references(p.valtype)) ++ results.toList.flatMap(r => references(r.valtype))
+    def groupHead(id: SymIdx): SymIdx = importedTypeGroups.get(id).fold(id)(_.head)
+    def groupMembers(id: SymIdx): Ls[SymIdx] = importedTypeGroups.get(id).fold(id :: Nil)(_.toList)
+    def groupDependencies(id: SymIdx): Ls[SymIdx] =
+      groupMembers(id).flatMap(dependencies).map(groupHead).filterNot(_ == id).distinct
+    val roots = types.keysIterator.map(groupHead).toVector.distinct
+    SccAnalysis.sccsFrom(groupDependencies, roots).map: component =>
+      component match
+        case id :: Nil if importedTypeGroups.contains(id) => groupMembers(id)
+        case _ =>
+          assert(component.forall(id => !importedTypeGroups.contains(id)),
+            "An imported recursive group cannot depend on local type definitions")
+          val members = component.toSet
+          SccAnalysis.sccsFrom((id: SymIdx) => parents(id).filter(members), component).flatMap: inheritanceComponent =>
+            assert(inheritanceComponent.size === 1 && !parents(inheritanceComponent.head).contains(inheritanceComponent.head),
+              s"Cyclic superclass dependencies in recursive type group: $inheritanceComponent")
+            inheritanceComponent
+  end orderedTypeGroups
 
   def toWat: Document =
     val definedGlobals = globals.valuesIterator.collect:
@@ -1203,19 +1304,14 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
       case memInfo: MemInfo => memInfo.toWat
     val funcDefns = funcs.valuesIterator.collect:
       case funcInfo: FuncInfo => funcInfo.toWat
-    val components = orderedRecursiveTypes.map:
+    val typeDefns = orderedTypeGroups.map:
       case id :: Nil => types(id).toWat
       case component => doc"(rec #{  # ${component.map(types(_).toWat).mkDocument(doc" # ")} #} )"
-    val firstMember = types.keysIterator.find(recursiveTypes)
-    val typeDefns = types.iterator.flatMap: (id, typeInfo) =>
-      if !recursiveTypes(id) then typeInfo.toWat :: Nil
-      else if firstMember.contains(id) then components
-      else Nil
     doc"(module #{  # ${
         (
           typeDefns
             ++ imports.iterator.map(_.toWat)
-            ++ tags.valuesIterator.map(_.toWat)
+            ++ tags.valuesIterator.collect { case t: TagInfo => t.toWat }
             ++ definedGlobals
             ++ memDefns
             ++ funcDefns

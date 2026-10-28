@@ -1,0 +1,77 @@
+
+:global
+:wasm
+
+:ge
+fun Nested() =
+  #config(target: Wasm)
+  42
+//│ ╔══[COMPILATION ERROR] Compilation target can only be set by a top-level '#config' directive
+//│ ║  l.+2: 	  #config(target: Wasm)
+//│ ╙──      	          ^^^^^^^^^^^^
+//│ Wasm result:
+//│ = {}
+
+:ge
+@config(target: Wasm)
+fun Annotated() = 42
+//│ ╔══[COMPILATION ERROR] Compilation target can only be set by a top-level '#config' directive
+//│ ║  l.+1: 	@config(target: Wasm)
+//│ ╙──      	        ^^^^^^^^^^^^
+//│ Wasm result:
+//│ = {}
+
+:ge
+#config(target: SomethingElse)
+//│ ╔══[COMPILATION ERROR] Expected CompilationTarget.JS or CompilationTarget.Wasm
+//│ ║  l.+1: 	#config(target: SomethingElse)
+//│ ╙──      	                ^^^^^^^^^^^^^
+//│ Wasm result:
+//│ = {}
+
+:ge
+import "node:fs"
+//│ ═══[COMPILATION ERROR] Import of symbol `node:fs` not implemented yet
+
+:ge
+import "../../mlscript-compile/wasm/Shared.mjs"
+//│ ═══[COMPILATION ERROR] Import of symbol `../../mlscript-compile/wasm/Shared.mjs` not implemented yet
+
+:ge
+import "../../mlscript-compile/Example.mls"
+//│ ╔══[COMPILATION ERROR] Cannot import JavaScript source into a WASM worksheet
+//│ ║  l.XX: 	module Example with ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	
+//│ ║        	^
+//│ ║  l.XX: 	
+//│ ║        	^
+//│ ║  l.XX: 	fun pubFun = privFun
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	... (more lines omitted) ...
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:ge
+module M with
+  val value = 42
+fun Dynamic() = M
+//│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
+//│ ║  l.+3: 	fun Dynamic() = M
+//│ ║        	                ^
+//│ ╙── Function must be marked as returning a 'module' in order to return a module.
+//│ ╔══[COMPILATION ERROR] First-class module values are not supported by the WASM backend
+//│ ║  l.+3: 	fun Dynamic() = M
+//│ ╙──      	                ^
+
+:ge
+module Multiple with
+  fun f(x)(y) = x + y
+//│ ╔══[COMPILATION ERROR] WASM functions require exactly one parameter list
+//│ ║  l.+2: 	  fun f(x)(y) = x + y
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^
+
+:e
+:ge
+import "../../mlscript-compile/wasm/modules/NoDefault.mls"
+//│ ═══[COMPILATION ERROR] File '../../mlscript-compile/wasm/modules/NoDefault.mls' does not define a default export named 'NoDefault'
+//│ ═══[COMPILATION ERROR] Import of symbol `../../mlscript-compile/wasm/modules/NoDefault.mjs` not implemented yet

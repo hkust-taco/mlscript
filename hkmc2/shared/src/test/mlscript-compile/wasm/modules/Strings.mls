@@ -1,0 +1,10 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+#config(inlining: None)
+import "./Words.mls" as WordsAlias
+
+module Strings with
+  val own = "importer"
+  fun word() = WordsAlias.word()

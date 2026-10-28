@@ -1,0 +1,5 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+val Value = 42

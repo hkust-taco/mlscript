@@ -1,0 +1,6 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+open class Box(val value) with
+  virtual fun answer() = value

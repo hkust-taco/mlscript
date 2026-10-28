@@ -1,0 +1,6 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+#config(inlining: None)
+fun Increment(x) = x + 1

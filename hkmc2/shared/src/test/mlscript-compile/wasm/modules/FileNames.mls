@@ -1,0 +1,12 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+#config(inlining: None)
+import "./left/Answer.mls" as Left
+import "./right/Answer.mls" as Right
+import "./a # % ü/Answer.mls" as Special
+
+module FileNames with
+  fun sameName() = Left() + Right()
+  fun escapedPath() = Special()

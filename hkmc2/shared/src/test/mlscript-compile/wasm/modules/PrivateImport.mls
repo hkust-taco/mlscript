@@ -1,0 +1,6 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+import "./PrivateHelpers.mls"
+fun PrivateImport() = PrivateHelpers.answer(41)

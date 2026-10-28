@@ -1,0 +1,13 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+module Shared with
+  let count = 0
+  val greeting = "separate λ module"
+  fun next() =
+    set count += 1
+    count
+  fun word() = greeting
+  fun unit() = ()
+  fun fail() = throw 42

@@ -872,7 +872,7 @@ extends Importer:
       | Keyword.`private`
     )) => S(Annot.Modifier(kw)(tree.toLoc))
     case App(Ident("config"), Tup(args)) =>
-      val modify = ConfigParser.parseOverrides(args)
+      val modify = ConfigParser.parseOverrides(args, allowCompilationTarget = false)
       S(Annot.Config(modify)(tree.toLoc))
     case App(Ident("dbg"), Tup(args)) =>
       val modify = ConfigParser.parseDebugDirective(args, definitionLocal = true, wd)
@@ -1625,7 +1625,7 @@ extends Importer:
       else term(e, interp)
     case b: Block =>
       ctx.nestLocal("‹block›").givenIn:
-        block(b, hasResult = true, resultInterp = interp)._1 match
+        block(b, hasResult = true, resultInterp = interp, isTopLevel = false)._1 match
         case Term.Blk(Nil, res) => res
         case res => res
     case lit: Literal =>
@@ -1805,7 +1805,7 @@ extends Importer:
       if newResolution then checkAscription(body, sign)
       Term.Asc(body, sign)
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
-      block(Block(tree :: Nil), hasResult = false, resultInterp = interp)._1
+      block(Block(tree :: Nil), hasResult = false, resultInterp = interp, isTopLevel = false)._1
     case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>
       app(Ctx.RefElem(State.builtinOpsMap("!")).ref(S(new Ident("not").withLocOf(kw))), withTypeBinders(Term.Tup(
         PlainFld(subterm(rhs)) :: Nil)(DummyTup)))(DummyApp, N, FlowSymbol("not-app"))
@@ -2002,7 +2002,7 @@ extends Importer:
           clsSym ->
             // TODO integrate context inherited from cls
             // TODO make context with var symbols for class parameters
-            ObjBody(block(rft, hasResult = false, resultInterp = Trm)._1)
+            ObjBody(block(rft, hasResult = false, resultInterp = Trm, isTopLevel = false)._1)
       body match
       case S(Apps(c, args)) =>
         val (mut, c2) = c match
@@ -2117,7 +2117,7 @@ extends Importer:
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       error
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
-      blockOrRcd(body, hasResult = true, resultInterp = interp) match
+      blockOrRcd(body, hasResult = true, resultInterp = interp, isTopLevel = false) match
       case (Blk(Nil, Term.UnitVal()), ctx) =>
         withTypeBinders(Rcd(mut = true, Nil)).withLocOf(body)
       case (blk: Blk, ctx) =>
@@ -2239,10 +2239,10 @@ extends Importer:
   
   
   def block(sts: Ls[Tree], hasResult: Bool)(using UnderCtx): Ctxl[(Blk, Ctx)] =
-    block(new Block(sts), hasResult, Trm)
+    block(new Block(sts), hasResult, Trm, isTopLevel = false)
   
-  def block(blk: Block, hasResult: Bool, resultInterp: Interpretation)(using UnderCtx): Ctxl[(Blk, Ctx)] =
-    blockOrRcd(blk, hasResult, resultInterp) match
+  private def block(blk: Block, hasResult: Bool, resultInterp: Interpretation, isTopLevel: Bool)(using UnderCtx): Ctxl[(Blk, Ctx)] =
+    blockOrRcd(blk, hasResult, resultInterp, isTopLevel) match
     case (blk: Blk, ctx) => (blk, ctx)
     case (rcd: Rcd, ctx) => (Blk(Nil, rcd), ctx)
   
@@ -2264,7 +2264,7 @@ extends Importer:
   // * for these, elaborate with `hasResult = false`, which uses `undefined` as the result
   // * when there is no other result available. This is fine since the value is never used.
   // * These useless trailing `undefined`s are then removed by `Lowering`.
-  def blockOrRcd(blk: Block, hasResult: Bool, resultInterp: Interpretation)(using UnderCtx)
+  def blockOrRcd(blk: Block, hasResult: Bool, resultInterp: Interpretation, isTopLevel: Bool)(using UnderCtx)
     : Ctxl[(Blk | Rcd, Ctx)]
     = trace[(Blk | Rcd, Ctx)](
         pre = dbg"Elab block ${blk.desugStmts.showAsPlain.truncate(100, "[...]")} ${ctx.outer}", r => s"~> ${r._1.showDbg}"
@@ -2472,7 +2472,7 @@ extends Importer:
         val (newCtx, newAcc) = pathAndAlias match
           case S((StrLit(path), alias)) =>
             val stmt = importPath(path, alias)(statementLoc)
-            (ctx + (stmt.sym.nme -> stmt.sym),
+            (ctx + (alias.fold(stmt.sym.nme)(_.name) -> stmt.sym),
               stmt :: acc)
           case S((pathArg, _)) =>
             raise(ErrorReport(
@@ -2867,7 +2867,7 @@ extends Importer:
         def mkBody(extraParams: Ls[ParamList])(using Ctx) = withFields(extraParams):
           body match
           case N | S(Error()) => (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
-          case S(b: Block) => block(b, hasResult = false, resultInterp = Trm)
+          case S(b: Block) => block(b, hasResult = false, resultInterp = Trm, isTopLevel = false)
           case S(t) =>
             raise(ErrorReport(
               msg"Illegal body of ${k.desc} definition (should be a block; found ${t.describe})." -> t.toLoc :: Nil))
@@ -3033,7 +3033,7 @@ extends Importer:
         go(Directive(prefix, args) :: sts, annotations, acc)(statementLoc)
       case (directive @ Directive(Ident("config"), Tup(args))) :: sts =>
         reportUnusedAnnotations
-        val modify = ConfigParser.parseOverrides(args)
+        val modify = ConfigParser.parseOverrides(args, allowCompilationTarget = isTopLevel)
         go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case (directive @ Directive(Ident("lang"), Tup(args))) :: sts =>
         reportUnusedAnnotations
@@ -3562,7 +3562,7 @@ extends Importer:
   
   def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] =
     given UnderCtx = UnderCtx.none
-    val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
+    val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm, isTopLevel = true)
     // TODO handle name clashes
     if newResolution then
       InterfaceExposure(this).check(exports, Nil)
@@ -3571,7 +3571,7 @@ extends Importer:
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = UnderCtx.none
-    val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
+    val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm, isTopLevel = true)
     if newResolution then
       if config.language.strictResolution then
         val exports = res.stats.collect:

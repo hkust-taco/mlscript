@@ -1,0 +1,53 @@
+
+:global
+:js
+
+// Main -> Left  -> Counter
+//      -> Right -> Counter
+import "../../mlscript-compile/wasm/modules/diamond/Main.mjs"
+
+// Instances of Counter.Cell travel Left -> Right -> Left through compiled WASM calls.
+:expect 42
+Main.leftToRight()
+//│ = 42
+
+:expect 42
+Main.roundTrip()
+//│ = 42
+
+// WASM booleans cross the host boundary as boxed integers, 1 and 0.
+:expect 1
+Main.leftRecognizesRight()
+//│ = 1
+
+:expect 1
+Main.rightRecognizesLeft()
+//│ = 1
+
+// Structurally identical classes from the shared module remain nominally distinct.
+:expect 0
+Main.leftRecognizesOther()
+//│ = 0
+
+:expect 0
+Main.rightRecognizesOther()
+//│ = 0
+
+:expect -1
+Main.rejectsOtherField()
+//│ = -1
+
+:expect 12
+Main.result()
+//│ = 12
+
+import "../../mlscript-compile/wasm/modules/diamond/Counter.mjs"
+
+// Importing the shared dependency again must not reinitialize its state.
+:expect 3
+Counter.next()
+//│ = 3
+
+:expect 12
+Main.result()
+//│ = 12

@@ -26,15 +26,15 @@ useBox(id(new Box(42)))
 //│   (global $Box_typeinfo (export "Box_typeinfo") (ref $Box_typeinfo) (struct.new $Box_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $Box_init (type $Box_init) (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))
+//│   (func $Box_init (export "Box_init") (type $Box_init) (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))
 //│     (block (result (ref $Box))
-//│       (struct.set $Box $v
+//│       (struct.set $Box 1
 //│         (local.get $this)
 //│         (local.get $v))
 //│       (return
 //│         (ref.cast (ref $Box)
 //│           (local.get $this)))))
-//│   (func $Box_ctor (export "Box") (type $Box_ctor) (param $v (ref null i31)) (result (ref $Box))
+//│   (func $Box_ctor (export "Box_ctor") (type $Box_ctor) (param $v (ref null i31)) (result (ref $Box))
 //│     (local $this (ref $Box))
 //│     (block (result (ref $Box))
 //│       (local.set $this
@@ -52,7 +52,7 @@ useBox(id(new Box(42)))
 //│       (local.get $a)))
 //│   (func $useBox (export "useBox") (type $useBox) (param $b (ref $Box)) (result (ref null i31))
 //│     (return
-//│       (struct.get $Box $v
+//│       (struct.get $Box 1
 //│         (local.get $b))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref $Box))

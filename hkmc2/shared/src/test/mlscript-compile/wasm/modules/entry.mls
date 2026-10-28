@@ -1,0 +1,6 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+// The generated entry point must not shadow this source default export.
+fun entry() = 42

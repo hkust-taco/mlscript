@@ -1,0 +1,6 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+import "./ObjectValue.mls"
+fun ObjectImport() = ObjectValue.answer

@@ -1,0 +1,88 @@
+:.
+:noInline
+
+#lang(0.3.x)
+//│ Wasm result:
+//│ = {}
+
+import "../../../mlscript-compile/wasm/modules/Optional.mls" as Alias
+//│ Wasm result:
+//│ = {}
+
+:expect 41
+Alias()
+//│ Wasm result:
+//│ = 41
+
+:expect 41
+Alias(null)
+//│ Wasm result:
+//│ = 41
+
+:expect 42
+Alias(())
+//│ Wasm result:
+//│ = 42
+
+:expect 42
+Alias(42)
+//│ Wasm result:
+//│ = 42
+
+:expect 41
+new Alias().choose()
+//│ Wasm result:
+//│ = 41
+
+:expect 42
+new Alias(42).choose()
+//│ Wasm result:
+//│ = 42
+
+:expect 43
+new Alias().choose(43)
+//│ Wasm result:
+//│ = 43
+
+// Both the parent initializer and virtual calls cross the file boundary.
+open class Child extends Alias() {
+  override fun choose(x?: Int): Int =
+    if x is null then super.choose() + 2 else super.choose(x)
+}
+fun dispatch(base: Alias): Int = base.choose()
+//│ Wasm result:
+//│ = {}
+
+:expect 43
+dispatch(new Child())
+//│ Wasm result:
+//│ = 43
+
+:expect 42
+new Child().choose(42)
+//│ Wasm result:
+//│ = 42
+
+import "../../../mlscript-compile/wasm/modules/OptionalCalls.mls" as Calls
+//│ Wasm result:
+//│ = {}
+
+:expect 41
+Calls.read(new Alias())
+//│ Wasm result:
+//│ = 41
+
+:expect 42
+Calls.choose(12)
+//│ Wasm result:
+//│ = 42
+
+:expect 33
+Calls.choose(12, 1)
+//│ Wasm result:
+//│ = 33
+
+:expect 15
+Calls.choose(12, 1, 2)
+//│ Wasm result:
+//│ = 15

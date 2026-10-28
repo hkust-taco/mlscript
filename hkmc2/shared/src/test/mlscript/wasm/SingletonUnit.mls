@@ -7,43 +7,16 @@
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Unit_init (func (param $this (ref $Unit)) (result (ref $Unit))))
-//│   (type $Unit_ctor (func (result (ref $Unit))))
+//│   (type $TypeInfoBase1 (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase1)))))
+//│   (type $Object1 (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
+//│   (type $Unit (sub $Object1 (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
 //│   (type $entry (func (result (ref $Unit))))
-//│   (type $start (func))
-//│   (global $Unit_typeinfo (export "Unit_typeinfo") (ref $Unit_typeinfo) (struct.new $Unit_typeinfo
-//│     (i32.const 1)
-//│     (ref.null $TypeInfoBase)))
-//│   (global $Unit$inst (export "Unit$inst") (mut (ref null $Unit)) (ref.null $Unit))
-//│   (func $Unit_init (type $Unit_init) (param $this (ref $Unit)) (result (ref $Unit))
-//│     (return
-//│       (ref.cast (ref $Unit)
-//│         (local.get $this))))
-//│   (func $Unit_Unit (type $Unit_ctor) (result (ref $Unit))
-//│     (local $this (ref $Unit))
-//│     (block (result (ref $Unit))
-//│       (local.set $this
-//│         (struct.new $Unit
-//│           (global.get $Unit_typeinfo)))
-//│       (drop
-//│         (call $Unit_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
-//│   (func $start (type $start)
-//│     (global.set $Unit$inst
-//│       (call $Unit_Unit)))
+//│   (import "system" "Unit$inst" (global $Unit$inst (mut (ref null $Unit))))
 //│   (func $entry (export "entry") (type $entry) (result (ref $Unit))
 //│     (return
 //│       (ref.cast (ref $Unit)
 //│         (global.get $Unit$inst))))
-//│   (elem $Unit_init declare func $Unit_init)
-//│   (elem $Unit_Unit declare func $Unit_Unit)
-//│   (elem $start declare func $start)
-//│   (elem $entry declare func $entry)
-//│   (start $start))
+//│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = {}
 

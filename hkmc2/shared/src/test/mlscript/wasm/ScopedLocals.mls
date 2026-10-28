@@ -153,18 +153,18 @@ new Foo(42, 1).Foo#a
 //│   (global $Foo_typeinfo (export "Foo_typeinfo") (ref $Foo_typeinfo) (struct.new $Foo_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $a (ref null any)) (param $b (ref null any)) (result (ref $Foo))
+//│   (func $Foo_init (export "Foo_init") (type $Foo_init) (param $this (ref $Foo)) (param $a (ref null any)) (param $b (ref null any)) (result (ref $Foo))
 //│     (block (result (ref $Foo))
-//│       (struct.set $Foo $a
+//│       (struct.set $Foo 1
 //│         (local.get $this)
 //│         (local.get $a))
-//│       (struct.set $Foo $b
+//│       (struct.set $Foo 2
 //│         (local.get $this)
 //│         (local.get $b))
 //│       (return
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this)))))
-//│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $a (ref null any)) (param $b (ref null any)) (result (ref $Foo))
+//│   (func $Foo_ctor (export "Foo_ctor") (type $Foo_ctor) (param $a (ref null any)) (param $b (ref null any)) (result (ref $Foo))
 //│     (local $this (ref $Foo))
 //│     (block (result (ref $Foo))
 //│       (local.set $this
@@ -189,7 +189,7 @@ new Foo(42, 1).Foo#a
 //│           (ref.i31
 //│             (i32.const 1))))
 //│       (return
-//│         (struct.get $Foo $a
+//│         (struct.get $Foo 1
 //│           (local.get $tmp)))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)

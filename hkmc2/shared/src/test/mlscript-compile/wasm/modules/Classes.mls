@@ -1,0 +1,16 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+import "./left/Box.mls" as Left
+import "./right/Box.mls" as Right
+
+class Child(x) extends Left(x)
+
+module Classes with
+  fun field() = new Left(42).value
+  fun inherited() = new Child(42).Left#value
+  fun aliased() = new Right(42)
+  fun nominal() =
+    if new Left(20) is Right then 0
+    else new Left(20).value + new Right(22).value

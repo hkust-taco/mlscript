@@ -19,19 +19,19 @@ a.A#get() + A(2).get()
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
-//│   (global $a (export "a") (mut (ref null any)) (ref.null any))
 //│   (global $A_typeinfo (export "A_typeinfo") (ref $A_typeinfo) (struct.new $A_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $A_init (type $A_init) (param $this (ref $A)) (param $x (ref null any)) (result (ref $A))
+//│   (global $a (export "a") (mut (ref null any)) (ref.null any))
+//│   (func $A_init (export "A_init") (type $A_init) (param $this (ref $A)) (param $x (ref null any)) (result (ref $A))
 //│     (block (result (ref $A))
-//│       (struct.set $A $x
+//│       (struct.set $A 1
 //│         (local.get $this)
 //│         (local.get $x))
 //│       (return
 //│         (ref.cast (ref $A)
 //│           (local.get $this)))))
-//│   (func $A_ctor (export "A") (type $A_ctor) (param $x (ref null any)) (result (ref $A))
+//│   (func $A_ctor (export "A_ctor") (type $A_ctor) (param $x (ref null any)) (result (ref $A))
 //│     (local $this (ref $A))
 //│     (block (result (ref $A))
 //│       (local.set $this
@@ -44,9 +44,9 @@ a.A#get() + A(2).get()
 //│           (local.get $x)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $A_get (type $A_get) (param $this (ref $A)) (result (ref null any))
+//│   (func $A_get (export "A_get") (type $A_get) (param $this (ref $A)) (result (ref null any))
 //│     (return
-//│       (struct.get $A $x
+//│       (struct.get $A 1
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
@@ -173,20 +173,19 @@ c.Counter#inc().Counter#double().Counter#get()
 //│ Wasm result:
 //│ = 4
 
-:todo
 let d = Counter(c.Counter#get())
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
+//│ Wasm result:
+//│ = {}
 
-:todo
+:expect 10
 d.Counter#inc().Counter#double().Counter#get()
-//│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
-//│ ║  l.XX: 	let d = Counter(c.Counter#get())
-//│ ╙──      	    ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/inc` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
+//│ Wasm result:
+//│ = 10
 
-:todo
+:expect 4
 c.Counter#get()
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
+//│ Wasm result:
+//│ = 4
 
 
 class GetterOnly() with
@@ -221,19 +220,19 @@ Prim(0).take(n32)
 //│   (type $Prim_ctor (func (param $v (ref null any)) (result (ref $Prim))))
 //│   (type $Prim_take (func (param $this (ref $Prim)) (param $m i32) (result i32)))
 //│   (type $entry (func (result i32)))
-//│   (global $n32 (export "n32") (mut i32) (i32.const 0))
 //│   (global $Prim_typeinfo (export "Prim_typeinfo") (ref $Prim_typeinfo) (struct.new $Prim_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $Prim_init (type $Prim_init) (param $this (ref $Prim)) (param $v (ref null any)) (result (ref $Prim))
+//│   (global $n32 (export "n32") (mut i32) (i32.const 0))
+//│   (func $Prim_init (export "Prim_init") (type $Prim_init) (param $this (ref $Prim)) (param $v (ref null any)) (result (ref $Prim))
 //│     (block (result (ref $Prim))
-//│       (struct.set $Prim $v
+//│       (struct.set $Prim 1
 //│         (local.get $this)
 //│         (local.get $v))
 //│       (return
 //│         (ref.cast (ref $Prim)
 //│           (local.get $this)))))
-//│   (func $Prim_ctor (export "Prim") (type $Prim_ctor) (param $v (ref null any)) (result (ref $Prim))
+//│   (func $Prim_ctor (export "Prim_ctor") (type $Prim_ctor) (param $v (ref null any)) (result (ref $Prim))
 //│     (local $this (ref $Prim))
 //│     (block (result (ref $Prim))
 //│       (local.set $this
@@ -246,7 +245,7 @@ Prim(0).take(n32)
 //│           (local.get $v)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Prim_take (type $Prim_take) (param $this (ref $Prim)) (param $m i32) (result i32)
+//│   (func $Prim_take (export "Prim_take") (type $Prim_take) (param $this (ref $Prim)) (param $m i32) (result i32)
 //│     (return
 //│       (local.get $m)))
 //│   (func $entry (export "entry") (type $entry) (result i32)

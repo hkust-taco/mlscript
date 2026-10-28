@@ -165,11 +165,11 @@ OptionalField(null).read() + OptionalField(()).read() * 10 + uninitialized * 100
 //│ Wasm result:
 //│ = 1
 
-// TODO: A method call on a class from an earlier Wasm REPL block looks for a struct field.
-:fixme
+// Optional method calls retain their signature across Wasm REPL blocks.
 :expect 0
 OptionalField(()).read()
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:OptionalField/read` in struct `member:OptionalField` with type `(type $OptionalField (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
+//│ Wasm result:
+//│ = 0
 
 // A virtual call with a supplied optional argument preserves its value.
 :expect 17

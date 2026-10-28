@@ -54,25 +54,22 @@ class Importer extends NewResolver:
           reportCycle(cctx.allFilesBeingImported :+ file)
         else
           cctx.withActiveDependency(file)(reportCycle):
-            val importedSym = tl.trace(dbg">>> Importing $file"):
+            val artifact = tl.trace(dbg">>> Importing $file"):
               given TL = tl
-              val artifact = cctx.getElaboratedBlock(file, prelude)
-              artifact.compilationUnit.defaultExport.getOrElse:
-                lastWords(s"File $file does not define a symbol named $nme")
-            val sym: VarSymbol | BlockMemberSymbol = alias.fold(importedSym): alias =>
-              VarSymbol(alias, erasedType = N)
+              cctx.getElaboratedBlock(file, prelude)
+            val importedSym = artifact.compilationUnit.defaultExport.getOrElse:
+              raise(ErrorReport(msg"File '$path' does not define a default export named '$nme'" -> id.toLoc :: Nil))
+              BlockMemberSymbol(nme, Nil)
+            // An alias changes the lexical binding, not the imported definition's identity.
+            // Keeping its symbol also preserves statically known class/module information.
+            val sym = importedSym
 
-            // An import alias denotes the imported value, just like a local
-            // binding. Publish its shapes so selection and opens can follow it.
-            if newResolution then sym match
-              case local: VarSymbol =>
-                val ref = Term.MemberRef(importedSym)(N, FlowSymbol.memSym(importedSym))
-                rctx.recordLexicalBinders(ref, ctx.typeBinders)
-                pipeTerm(ref, local)
-              case _: BlockMemberSymbol => ()
+            // New resolution also follows this original symbol's published shapes directly;
+            // no local alias symbol needs a separate shape subscription.
 
             val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
-            Import(sym, jsFile.toString, jsFile)(loc)
+            cctx.recordSourceImport(sym, file, artifact)
+            Import(sym, jsFile.toString, file)(loc)
         
       case _ =>
         if file.ext =/= "mls" then raise:

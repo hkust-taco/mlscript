@@ -1,0 +1,7 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+#config(inlining: None)
+import "./Fail.mls"
+fun Exceptions() = Fail()

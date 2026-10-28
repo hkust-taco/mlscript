@@ -1,0 +1,214 @@
+
+:global
+:js
+
+// Load the actual compiled files, including their dependency loaders and WAT.
+import "../../mlscript-compile/wasm/modules/Answer.mjs"
+import "../../mlscript-compile/wasm/modules/Functions.mjs"
+import "../../mlscript-compile/wasm/modules/Numbers.mjs"
+import "../../mlscript-compile/wasm/modules/Strings.mjs"
+import "../../mlscript-compile/wasm/modules/PrivateImport.mjs"
+import "../../mlscript-compile/wasm/modules/TransitiveImport.mjs"
+import "../../mlscript-compile/wasm/modules/Classes.mjs"
+import "../../mlscript-compile/wasm/modules/FieldLayouts.mjs"
+import "../../mlscript-compile/wasm/modules/inheritance/Operations.mjs"
+import "../../mlscript-compile/wasm/modules/Virtual.mjs"
+import "../../mlscript-compile/wasm/modules/ObjectValue.mjs"
+import "../../mlscript-compile/wasm/modules/ObjectImport.mjs"
+import "../../mlscript-compile/wasm/modules/Units.mjs"
+import "../../mlscript-compile/wasm/modules/Value.mjs"
+import "../../mlscript-compile/wasm/modules/entry.mjs"
+import "../../mlscript-compile/wasm/modules/FileNames.mjs"
+import "../../mlscript-compile/wasm/modules/Exceptions.mjs"
+import "../../mlscript-compile/wasm/Box.mjs"
+import "../../mlscript-compile/wasm/modules/Overloaded.mjs"
+
+:expect 42
+Answer()
+//│ = 42
+
+:expect 42
+Functions.answer()
+//│ = 42
+
+:expect 42
+Functions.increment()
+//│ = 42
+
+:expect 42
+Functions.recursive()
+//│ = 42
+
+:expect 40
+Numbers.value
+//│ = 40
+
+:expect 42
+Numbers.answer()
+//│ = 42
+
+:expect "importer"
+Strings.own
+//│ = "importer"
+
+// Strings still uses the dependency's literal memory after its own module loads.
+:expect "dependency"
+Strings.word()
+//│ = "dependency"
+
+:expect 42
+PrivateImport()
+//│ = 42
+
+:expect 42
+TransitiveImport()
+//│ = 42
+
+:expect 42
+Classes.field()
+//│ = 42
+
+:expect 84
+FieldLayouts.inherited()
+//│ = 84
+
+:expect 42
+FieldLayouts.own()
+//│ = 42
+
+:expect 30
+FieldLayouts.earlier()
+//│ = 30
+
+// The subclass, base initializer, and callers belong to three compiled files.
+:expect 42
+Operations.readBase(Operations.make(21))
+//│ = 42
+
+:expect 21
+Operations.readDerived(Operations.make(21))
+//│ = 21
+
+:expect 42
+Operations.baseMethod(Operations.make(21))
+//│ = 42
+
+:expect 23
+Operations.dispatchBase(Operations.make(21))
+//│ = 23
+
+:expect 63
+Operations.dispatchDerived(Operations.make(21))
+//│ = 63
+
+:expect 1
+Operations.isBase(Operations.make(21))
+//│ = 1
+
+:expect 1
+Operations.isDerived(Operations.make(21))
+//│ = 1
+
+:expect 42
+Classes.inherited()
+//│ = 42
+
+:expect 42
+Classes.nominal()
+//│ = 42
+
+:expect "object"
+typeof(Classes.aliased())
+//│ = "object"
+
+:expect "object"
+typeof(Box(42))
+//│ = "object"
+
+:expect 42
+Virtual()
+//│ = 42
+
+:expect "object"
+typeof(ObjectValue)
+//│ = "object"
+
+:expect 42
+ObjectImport()
+//│ = 42
+
+// Compare identity at the host boundary, not just the printed Unit representation.
+:expect true
+Units.own() === Units.foreign()
+//│ = true
+
+:expect 42
+Value
+//│ = 42
+
+:expect 42
+entry()
+//│ = 42
+
+:expect 42
+FileNames.sameName()
+//│ = 42
+
+:expect 42
+FileNames.escapedPath()
+//│ = 42
+
+:re
+Exceptions()
+//│ ═══[RUNTIME ERROR] 42
+
+// The host wrapper exposes both a function companion and its class constructor.
+:expect 42
+Overloaded(41)
+//│ = 42
+
+:expect "object"
+typeof(Overloaded.class(41))
+//│ = "object"
+
+
+// Host calls use the same omitted-argument representation as compiled callers.
+import "../../mlscript-compile/wasm/modules/Optional.mjs"
+
+:expect 41
+Optional()
+//│ = 41
+
+:expect 41
+Optional(null)
+//│ = 41
+
+:expect 42
+Optional(42)
+//│ = 42
+
+:expect 42
+Optional(unsafe.undefined)
+//│ = 42
+
+import "../../mlscript-compile/wasm/modules/OptionalCalls.mjs"
+
+:expect 41
+OptionalCalls.read(Optional.class())
+//│ = 41
+
+:expect 42
+OptionalCalls.read(Optional.class(42))
+//│ = 42
+
+:expect 42
+OptionalCalls.choose(12)
+//│ = 42
+
+:expect 33
+OptionalCalls.choose(12, 1)
+//│ = 33
+
+:expect 15
+OptionalCalls.choose(12, 1, 2)
+//│ = 15

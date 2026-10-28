@@ -1,0 +1,7 @@
+#lang(0.2.x)
+
+#config(target: CompilationTarget.Wasm)
+
+let seed = 42
+object ObjectValue with
+  val answer = seed
