@@ -15,11 +15,11 @@ object ResolutionWorkspace:
     * optimization, not a condition of observing the imported graph correctly.
     */
   final class Memo[K, V]:
-    private val entries = mutable.Map.empty[(ResolutionContext.Graph, K), V]
-    def get(key: K)(using context: ResolutionContext): Opt[V] = entries.get((context.graph, key))
-    def update(key: K, value: V)(using context: ResolutionContext): Unit = entries((context.graph, key)) = value
+    private val entries = mutable.Map.empty[(ResolutionContext, K), V]
+    def get(key: K)(using context: ResolutionContext): Opt[V] = entries.get((context, key))
+    def update(key: K, value: V)(using context: ResolutionContext): Unit = entries((context, key)) = value
     def getOrElseUpdate(key: K, value: => V)(using context: ResolutionContext): V =
-      entries.getOrElseUpdate((context.graph, key), value)
+      entries.getOrElseUpdate((context, key), value)
 
   /** A pending source summary is a one-shot computation, not an inference
     * edge. Observers are detached once it completes, or when the unit ends with
@@ -31,8 +31,7 @@ object ResolutionWorkspace:
     private val detach = mutable.ArrayBuffer.empty[() => Unit]
     private var completed = false
     def listen(listener: ShapeListener[Set[VarSymbol]])(using context: ResolutionContext): Unit =
-      // Equal inference contexts can belong to different bodies. Preserve each
-      // continuation's owner so its resulting edges have the correct retention.
+      // Preserve the graph and substitution used to register each continuation.
       listeners += ((context, listener))
     def observe(cancel: () => Unit): Unit =
       if completed then cancel() else detach += cancel
@@ -55,12 +54,11 @@ object ResolutionWorkspace:
   */
 private[hkmc2] final class ResolutionWorkspace(owner: Elaborator.State):
   import ResolutionWorkspace.*
-  val retention = new ResolutionRetention(owner)
-  val pendingDependencies = mutable.Map.empty[(ResolutionContext.Graph, TypeResolution), PendingDependencies]
-  val contexts = mutable.Map.empty[ResolutionContext.Graph, ResolutionContext.Graph]
+  val pendingDependencies = mutable.Map.empty[(ResolutionContext, TypeResolution), PendingDependencies]
+  val contexts = mutable.Map.empty[ResolutionContext, ResolutionContext]
   var reporter: Raise | Null = null
   var traceLogger: TraceLogger = TraceLogger.silent(using new DebugPrinter(S(owner)))
-  val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext.Graph), InterfaceExposure.Input]
+  val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext), InterfaceExposure.Input]
   val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
   val resolutionProblems =
     mutable.LinkedHashMap.empty[Identity[NewSel | App], mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]

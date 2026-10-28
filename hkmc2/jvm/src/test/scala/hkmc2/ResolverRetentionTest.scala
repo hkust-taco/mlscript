@@ -81,88 +81,6 @@ class ResolverRetentionTest extends AnyFunSuite:
     val metadata = sources.definitions.size + sources.sites.size + sources.parameterSignatures.size + sources.recordReads.size
     (listeners, candidates, metadata)
 
-  // Repeated reads from equal graph contexts must merge their ownership without
-  // accumulating tracking records. Diff tests cannot observe that storage bound
-  // or verify that pruning releases metadata for entries that remain reachable.
-  test("shared cache entries retain all readers with bounded temporary tracking"):
-    given owner: Elaborator.State = new Elaborator.State
-    val root = owner.newResolverState.context
-    val live = TermSymbol(syntax.Fun, N, syntax.Tree.Ident("live"))
-    val dead = TermSymbol(syntax.Fun, N, syntax.Tree.Ident("dead"))
-    val writing = root.forCode(S(dead))
-    val reading = root.forCode(S(live))
-    val cache = root.state.reportedArities
-    val seen = root.state.arrayIndexErrors
-    val shared = new Identity[Term](Term.UnitVal())
-    val unused = new Identity[Term](Term.UnitVal())
-    cache.update(shared, mutable.Set(1))(using writing)
-    cache.update(unused, mutable.Set(2))(using writing)
-    assert(seen.add(shared)(using writing))
-    assert(seen.add(unused)(using writing))
-    (1 to 1000).foreach: _ =>
-      assert(cache.get(shared)(using reading).get.toSet == Set(1))
-      assert(seen(shared)(using reading))
-    assert(cache.uses.size == 2 && seen.uses.size == 2)
-    root.state.workspace.retention.finish(_ == live)
-    assert(cache.get(shared)(using reading).get.toSet == Set(1))
-    assert(cache.get(unused)(using reading).isEmpty)
-    assert(seen(shared)(using reading))
-    assert(!seen(unused)(using reading))
-    List(cache, seen).foreach: table =>
-      val retained = retainingPath(table)(_.isInstanceOf[ResolutionRetention.Uses])
-      assert(retained.isEmpty, retained.getOrElse(""))
-
-  // Registration count should grow the edge list, not duplicate graph contexts.
-  // Also check the distinct owners at invocation: sharing the graph must not
-  // attribute all these callbacks to whichever body registered first or last.
-  test("listeners share graph origins without retaining their owned execution views"):
-    given owner: Elaborator.State = new Elaborator.State
-    val root = owner.newResolverState.context
-    val bodies = List("first", "second").map(name => S(TermSymbol(syntax.Fun, N, syntax.Tree.Ident(name))))
-    val source = new Host[Int]:
-      def showDbg(using DebugPrinter): Str = "listener context retention"
-    val observed = mutable.ArrayBuffer.empty[Opt[AnyDefinitionSymbol]]
-    (1 to 1000).foreach: _ =>
-      bodies.foreach: body =>
-        val context = root.forCode(body)
-        assert(context.graph eq root)
-        assert(root == context && context == root && root.hashCode == context.hashCode)
-        source.addShapeListener(_ => (current: ResolutionContext) ?=> observed += current.code)(using context)
-    source.inferenceHost(using root).publish(1)(using root)
-    assert(observed.toList == List.fill(1000)(bodies).flatten)
-    val retained = retainingPath(source):
-      case context: ResolutionContext => context.code.nonEmpty
-      case _ => false
-    assert(retained.isEmpty, retained.getOrElse(""))
-
-  test("unreachable generic bodies do not grow a compiled interface's retained inference graph"):
-    val cctx = TestFolders.compilerCtx(os.pwd)
-    given DebugPrinter = new DebugPrinter()
-    val trace = TraceLogger.silent
-    val collector = new DiagnosticCollector
-    given Raise = collector.report
-    val prelude = cctx.getPrelude(cctx.paths.preludeFile)(using trace, summon[Raise]).ctx
-    def measure(unused: Int): (Int, Int, Int) =
-      val dir = os.temp.dir(prefix = "resolver-dead-code-")
-      val file = dir / "Library.mls"
-      val definitions = (1 to unused).map(index =>
-        s"""  private fun unused$index[A](value: A) =
-           |    fun wrap[B](item: B) = [item, {stored: item}]
-           |    wrap[A](value)""".stripMargin).mkString("\n")
-      os.write(file,
-        s"""#lang(0.3.x, strictResolution: true)
-           |module Library with
-           |  private fun forward[A](value: A) = value
-           |  fun identity[A](value: A) = forward(value)
-           |$definitions
-           |""".stripMargin)
-      val artifact = cctx.getElaboratedBlock(file, prelude)(using trace, summon[Raise])
-      assert(collector.diagnostics.isEmpty, collector.diagnostics.map(_.theMsg).mkString("\n"))
-      graphSize(artifact, artifact.state.newResolverState)
-    val small = measure(1)
-    val large = measure(40)
-    assert(large == small, s"Unused bodies retained listeners/candidates/metadata: $small -> $large")
-
   test("compiled artifacts release compilation services, workspaces, and interning builders"):
     val cctx = TestFolders.compilerCtx(os.pwd)
     given DebugPrinter = new DebugPrinter()
@@ -205,6 +123,5 @@ class ResolverRetentionTest extends AnyFunSuite:
     List(artifact, imported).foreach: root =>
       val retained = retainingPath(root): value =>
         value.isInstanceOf[Elaborator] || value.isInstanceOf[CompilerCtx] ||
-          value.isInstanceOf[ResolutionWorkspace] || value.isInstanceOf[ResolutionRetention.Uses] ||
-          value.isInstanceOf[DeclaredType.References] || (value eq collector)
+          value.isInstanceOf[ResolutionWorkspace] || value.isInstanceOf[DeclaredType.References] || (value eq collector)
       assert(retained.isEmpty, retained.getOrElse(""))

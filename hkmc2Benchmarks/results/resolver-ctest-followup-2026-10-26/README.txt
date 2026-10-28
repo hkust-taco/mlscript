@@ -1,6 +1,41 @@
 Resolver retention simplifications: full-ctest follow-up
 2026-10-26
 
+Decision, 2026-10-28
+
+Drop interface-reachability pruning and its ownership-tracking machinery. The
+compiler implementation is restored exactly to 550a374e4, preserving the earlier
+lifetime cleanups. Keep the measurements below as the record of the discarded
+experiment; "final build" below means the measured experimental ced10d57e, not
+the implementation selected for the PR. The restoration is not re-benchmarked.
+
+Against the historical pre-pruning build, the optimized experiment still cost
+16.1% more time and 3.6% more allocation, with essentially identical retained
+session heap (315.8 versus 315.3 MiB). Its benefit on synthetic unused private
+bodies did not justify the ongoing bookkeeping and design complexity on ctest.
+The useful pre-pruning cleanups reduced retained heap from 349.7 to 315.3 MiB
+and allocation from 8396.2 to 8142.0 MiB; their small timing change is not evidence
+of an established speedup. All comparisons remain subject to the caveats below.
+
+Remove the reachability traversal, reader/writer tracking, body ownership in
+contexts and listeners, tracked/completed cache variants, and pruning flags.
+Module finalization still detaches pending observers and releases the temporary
+workspace. Compiled artifacts still release elaborators, compiler contexts,
+diagnostic collectors and reference-interning builders. Graph routing continues
+to preserve intermediate exporters and isolate each consumer's mutations.
+
+Keep all MLscript behavior regressions and the cyclic re-export graph-growth
+test. Remove the tests requiring bounded retention of unused private bodies,
+bounded ownership metadata, and sharing of owned execution views: their tested
+machinery is gone. Keep the whole-artifact retention and importer-isolation
+tests. Private bodies' inference graphs can again remain in a compiled unit;
+more selective retention would need representative memory savings and a cheaper
+design, potentially based on lazy body inference, before being reconsidered.
+
+Validation after removal: hkmc2AllTests/test passed on 2026-10-28 (116 seconds),
+including the retained regression and graph-growth tests. Metals compilation
+also passed. No golden output changed.
+
 Results (MiB = 1,048,576 bytes; cumulative stages)
 
 Revision   Stage                         Seconds  Fork-mean range  Allocated MiB  Retained MiB

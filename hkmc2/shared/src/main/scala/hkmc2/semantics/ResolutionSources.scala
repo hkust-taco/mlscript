@@ -8,8 +8,8 @@ import hkmc2.utils.*, shorthands.*
 object ResolutionSources:
   final case class Scope(binders: Set[VarSymbol], boundaries: Set[ResolutionBoundary])
 
-  /** Visit source dependencies without flattening nested definitions. Sealing
-    * and retention must agree on what belongs to the unit, including children
+  /** Visit source dependencies without flattening nested definitions. Seal
+    * every host belonging to the unit, including children
     * omitted by the ordinary term traversal: parent clauses, auxiliary lists,
     * quantifier bounds, patterns, refinements, and handler definitions.
     */
