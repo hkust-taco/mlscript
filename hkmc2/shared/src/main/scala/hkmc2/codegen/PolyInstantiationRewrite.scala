@@ -19,7 +19,7 @@ abstract class FlowAnalysisSolverResult:
 end FlowAnalysisSolverResult
 
 
-type RewrittenFunDefn = (params: Ls[LoweredParamList], body: Block)
+type RewrittenFunDefn = (params: Ls[LoweredParamList], body: Block, annotations: Ls[Annot])
 
 
 abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolver):
@@ -90,8 +90,8 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
         (referringFun, (bms, tSym)) <- funSymMap.toList.sortBy(_._1.uid)
       yield
         val original = pre.res.funSymToFunDefn(referringFun)
-        val (params, body) = mkCopyRewriter(instId, original.params, original.body, Map.empty).rewriteFunDefn(original)
-        FunDefn(N, bms, tSym, params, body)(original.configOverride, Annot.Private :: original.annotations)
+        val (params, body, annotations) = mkCopyRewriter(instId, original.params, original.body, Map.empty).rewriteFunDefn(original)
+        FunDefn(N, bms, tSym, params, body)(original.configOverride, Annot.Private :: annotations)
     
     val newFuns = newPolyFuns ++ otherNewFunDefns
     

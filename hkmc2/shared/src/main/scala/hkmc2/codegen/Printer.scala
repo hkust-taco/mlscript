@@ -73,7 +73,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       val docDefault = dflt.fold(doc"")(e => doc" # else #{  # ${print(e)} #} ")
       doc"match ${print(scrut)} #{  # ${docCases}$docDefault #}  # ${print(rest)}"
     case Return(res) => doc"return ${print(res)}"
-    case Throw(exc) => doc"throw ${print(exc)}"
+    case Throw(exc, annotations) => doc"${printAnnotations(annotations, doc" ")}throw ${print(exc)}"
     case Label(label, loop, body, rest) =>
       val l2 = scope.allocateOrGetName(label)
       // * ^ if we print the same block with a top-level label more than once, using `scope.allocateName` will crash...

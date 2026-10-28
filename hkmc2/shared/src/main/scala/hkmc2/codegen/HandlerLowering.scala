@@ -331,7 +331,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
           msg"`try`-`finally` blocks are not currently supported with effect handlers enabled." ->
           N :: Nil,
           source = Diagnostic.Source.Compilation))
-      case Throw(_) => blk
+      case Throw(_, _) => blk
       case Scoped(_, body) => go(body) // PreHandlerLowering
 
     val initId = allocId()
