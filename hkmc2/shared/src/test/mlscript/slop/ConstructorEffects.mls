@@ -26,11 +26,10 @@ fun external() = new External()
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function effectful⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function external⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function instantiated⁰#0 @ <root> -> Pure
-//│ flow-analysis > function mutable_field⁰#0 @ <root> -> Pure
-//│ flow-analysis > function nested⁰#0 @ <root> -> Pure
-//│ flow-analysis > function stored⁰#0 @ <root> -> Pure
-//│ flow-analysis > call print@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function instantiated⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutable_field⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function nested⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function stored⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -94,12 +93,12 @@ val saved = make()
 [calls, saved()]
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function keep⁰#0 @ <root> -> Pure
-//│ flow-analysis > function keep⁰#1 @ <root> -> Pure
+//│ flow-analysis > function keep⁰#1 @ <root> -> UnsafeEta
 //│ flow-analysis > function make⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call +⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call +⁰@result²#0 @ <root> -> Pure
 //│ flow-analysis > call keep⁰@result³#0 @ <root> -> Pure
-//│ flow-analysis > call make⁰@result²#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call saved⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call make⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call saved⁰@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ = [1, 7]
 //│ calls = 1
@@ -117,10 +116,10 @@ set current = 42
 saved_snapshot()
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function keep_snapshot⁰#0 @ <root> -> Pure
-//│ flow-analysis > function keep_snapshot⁰#1 @ <root> -> Pure
+//│ flow-analysis > function keep_snapshot⁰#1 @ <root> -> UnsafeEta
 //│ flow-analysis > function snapshot⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > call keep_snapshot⁰@result²#0 @ <root> -> Pure
-//│ flow-analysis > call saved_snapshot⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call saved_snapshot⁰@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > call snapshot⁰@result¹#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ = 41
@@ -140,13 +139,13 @@ class Recursive(val value, val n) {
 fun build(n) = Recursive(n, n)
 build(3).value
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function build⁰#0 @ build² -> Pure
-//│ flow-analysis > function build⁰#0 @ build³ -> Pure
-//│ flow-analysis > function build⁰#0 @ build¹ -> Pure
-//│ flow-analysis > call -⁰@result¹#0 @ <root> -> Pure
-//│ flow-analysis > call >⁰@result²#0 @ <root> -> Pure
-//│ flow-analysis > call build⁰@result³#0 @ <root> -> Pure
-//│ flow-analysis > call build⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > function build⁰#0 @ build² -> UnsafeEta
+//│ flow-analysis > function build⁰#0 @ build³ -> UnsafeEta
+//│ flow-analysis > function build⁰#0 @ build¹ -> UnsafeEta
+//│ flow-analysis > call -⁰@result²#0 @ <root> -> Pure
+//│ flow-analysis > call >⁰@result³#0 @ <root> -> Pure
+//│ flow-analysis > call build⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call build⁰@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ = 3
 
@@ -183,7 +182,7 @@ fun curried(first, second) = Curried(first)(second)
 fun new_curried(first, second) = new Curried(first)(second)
 fun partial(first) = Curried(first)
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function curried⁰#0 @ curried¹ -> Pure
-//│ flow-analysis > function new_curried⁰#0 @ new_curried¹ -> Pure
+//│ flow-analysis > function curried⁰#0 @ curried¹ -> UnsafeEta
+//│ flow-analysis > function new_curried⁰#0 @ new_curried¹ -> UnsafeEta
 //│ flow-analysis > function partial⁰#0 @ partial¹ -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<

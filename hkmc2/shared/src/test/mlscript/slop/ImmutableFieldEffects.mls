@@ -24,11 +24,11 @@ fun read_mutable_body(obj: BodyFields) = obj.changing
 fun read_getter(obj: BodyFields) = obj.getter
 fun read_unknown(obj) = obj.("value")
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function read_body⁰#0 @ <root> -> Pure
+//│ flow-analysis > function read_body⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function read_getter⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function read_mutable_body⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function read_mutable_param⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > function read_param⁰#0 @ <root> -> Pure
+//│ flow-analysis > function read_param⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function read_unknown⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
