@@ -276,6 +276,28 @@ lambda = (undefined, function (Predef2, a, b, field) {
   static check(...args) {
     return runtime.safeCall(Predef.js_assert(...args))
   }
+  static orElse(x, d) {
+    let tmp;
+    if (x === null) {
+      return d
+    }
+    tmp = x === runtime.Unit;
+    if (tmp === true) {
+      return d
+    }
+    return x;
+  }
+  static orElseApply(x, d) {
+    let tmp;
+    if (x === null) {
+      return runtime.safeCall(d(x))
+    }
+    tmp = x === runtime.Unit;
+    if (tmp === true) {
+      return runtime.safeCall(d(x))
+    }
+    return x;
+  }
   static notImplemented(msg) {
     let tmp;
     tmp = "Not implemented: " + msg;

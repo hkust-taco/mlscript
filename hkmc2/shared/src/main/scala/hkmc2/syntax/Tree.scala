@@ -122,7 +122,10 @@ enum Tree extends AutoLocated:
    *  into a `Term`, so we need to embed `Term` into `Tree` using `Trm`. */
   case Trm(term: semantics.Term)
   
-  def splitOn(acc: Tree): Tree = this match
+  /** Substitute the shared prefix into an operator continuation. Conditional branches
+   *  such as `else` can also occur in an `OpSplit`, but only UCS elaboration handles
+   *  them: using that split as an ordinary term must report invalid source syntax. */
+  def splitOn(acc: Tree)(using Raise): Tree = this match
     case SplitPoint() => acc
     case Sel(pre, id) => Sel(pre.splitOn(acc), id)
     case App(lhs, rhs) => App(lhs.splitOn(acc), rhs)
@@ -130,7 +133,9 @@ enum Tree extends AutoLocated:
     case OpSplit(lhs, rhss) => OpSplit(lhs.splitOn(acc), rhss)
     case InfixApp(lhs, kw, rhs) => InfixApp(lhs.splitOn(acc), kw, rhs)
     case _: (Ident | Literal | Error) => acc
-    case _ => die
+    case _ =>
+      raise(ErrorReport(msg"Unexpected ${describe} in an operator continuation." -> toLoc :: Nil))
+      Error().withLocOf(this)
   
   def children: Vector[Located] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Vector.empty
