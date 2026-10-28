@@ -38,10 +38,10 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
       val outerParams = fun.params.flatMap: pl =>
         pl.allParams.map: p =>
           val v = p.sym
-          val nv = VarSymbol(v.id, erasedType = v.erasedType)
+          val nv = VarSymbol(v.id, erasedType = v.erasedType, mut = v.mut)
           (p, p.copy(sym = nv)(p.toLoc))
       val symMap = outerParams.iterator.map(p => p._1.sym -> p._2.sym).toMap
-      val thisVar = VarSymbol(Tree.Ident("this"), erasedType = fun.owner.flatMap(_.asThis.erasedValueType))
+      val thisVar = VarSymbol(Tree.Ident("this"), erasedType = fun.owner.flatMap(_.asThis.erasedValueType), mut = true)
       val thisParam = fun.owner.map(_ => Param.simple(thisVar))
       val outerDsym = TermSymbol(
         syntax.Fun,

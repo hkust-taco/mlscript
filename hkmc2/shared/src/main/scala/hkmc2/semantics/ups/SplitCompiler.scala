@@ -1319,7 +1319,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       s"compilePattern >>> $blk"
   ):
     val unapply = scoped("ucs:translation"):
-      val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
+      val inputSymbol = VarSymbol(Ident("input"), erasedType = N, mut = true)
       val topmost = makeMatchSplit(inputSymbol.toScrut, pd.pattern, true)(
         makeConsequent = (output, bindings) =>
           def getBinding(p: Param) = bindings.get(p.sym).fold(Term.Error().withLocOf(p))(_())
@@ -1346,7 +1346,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       // We don't report errors here because they have been already reported in
       // the translation of `unapply` function.
       given Raise = Function.const(())
-      val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
+      val inputSymbol = VarSymbol(Ident("input"), erasedType = N, mut = true)
       val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pd.pattern)
         ((consumedOutput, remainingOutput, bindings) => Split.Else:
           makeMatchSuccess(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
@@ -1383,7 +1383,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
       case _ => N
     term.getOrElse:
       val unapply = scoped("ucs:translation"):
-        val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
+        val inputSymbol = VarSymbol(Ident("input"), erasedType = N, mut = true)
         val topmost = makeMatchSplit(inputSymbol.toScrut, pattern, true)
           ((output, bindings) => Split.Else(makeMatchSuccess(output())), failure)
         log(dbg"Translated `unapply`: ${topmost.prettyPrint}")
@@ -1392,7 +1392,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         // We don't report errors here because they have been already reported in
         // the translation of `unapply` function.
         given Raise = Function.const(())
-        val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
+        val inputSymbol = VarSymbol(Ident("input"), erasedType = N, mut = true)
         val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pattern)
           ((consumedOutput, remainingOutput, bindings) => Split.Else:
             makeMatchSuccess(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)

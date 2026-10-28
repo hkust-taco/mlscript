@@ -1372,6 +1372,23 @@ case class Record(mut: Bool, elems: Ls[RcdArg])(val toLoc: Opt[Loc]) extends Res
 sealed abstract class Path extends TrivialResult:
   override def withLoc(loc: Opt[Loc]): Path
   override def withLocOf(source: Located): Path = withLoc(source.toLoc)
+  /** Whether repeated reads denote the same value, even across calls that mutate state.
+    * Purity alone is insufficient: local variables may be reassigned, and pure getters
+    * may allocate fresh objects. Immutable members require a stable qualifier too.
+    */
+  def isStable: Bool =
+    def stableMember(sym: DefinitionSymbol[?]): Bool = sym match
+      case _: ClassLikeSymbol => true
+      case sym: TermSymbol => (sym.k is syntax.ImmutVal) || (sym.k is syntax.Ins)
+      case _ => false
+    this match
+    case _: Value.This | _: Value.Lit => true
+    case Value.SimpleRef(_: BuiltinSymbol) => true
+    case Value.SimpleRef(sym: VarSymbol) => !sym.mut
+    case Value.MemberRef(_, disamb) => stableMember(disamb)
+    case sel: Select => sel.qual.isStable && sel.symbol.exists(stableMember)
+    case Cast(path: Path, _, false) => path.isStable
+    case _ => false
   def selN(id: Tree.Ident): Path = Select(this, id)(N, N)(false)
   def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym), N)(false)
   def selSN(id: Str): Path = selN(new Tree.Ident(id))

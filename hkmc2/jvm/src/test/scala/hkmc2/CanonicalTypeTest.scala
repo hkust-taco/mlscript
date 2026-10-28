@@ -13,8 +13,8 @@ class CanonicalTypeTest extends AnyFunSuite:
     given owner: Elaborator.State = new Elaborator.State
     given context: ResolutionContext = owner.newResolverState.context
     val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val a = new VarSymbol(syntax.Tree.Ident("A"))
-    val b = new VarSymbol(syntax.Tree.Ident("B"))
+    val a = new VarSymbol(syntax.Tree.Ident("A"), mut = true)
+    val b = new VarSymbol(syntax.Tree.Ident("B"), mut = true)
     def tree(): DeclaredType =
       val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
       (1 to 64).foldLeft(leaf): (child, _) =>
@@ -31,8 +31,8 @@ class CanonicalTypeTest extends AnyFunSuite:
     val consumer = new Elaborator.State().newResolverState.context
     val other = new Elaborator.State().newResolverState.context
     val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val a = new VarSymbol(syntax.Tree.Ident("A"))
-    val b = new VarSymbol(syntax.Tree.Ident("B"))
+    val a = new VarSymbol(syntax.Tree.Ident("A"), mut = true)
+    val b = new VarSymbol(syntax.Tree.Ident("B"), mut = true)
     def tree()(using ResolutionContext): DeclaredType =
       val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
       (1 to 64).foldLeft(leaf): (child, _) =>

@@ -23,7 +23,7 @@ class TypeRelationTest extends AnyFunSuite:
       resolution.publish(shape)
       DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
     def parameter(name: String): (VarSymbol, DeclaredType) =
-      val symbol = VarSymbol(Tree.Ident(name))
+      val symbol = VarSymbol(Tree.Ident(name), mut = true)
       (symbol, tpe(TypeShape.Parameter(symbol, symbol.inferenceHost)))
     def observe(reference: ContextualType): ArrayBuffer[TermShape] =
       val values = ArrayBuffer.empty[TermShape]

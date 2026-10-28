@@ -723,7 +723,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
         postCompiler.buildMatcher(postPattern, ResultMode.Full)
       (stepMatcher, stepImpls, postMatcherOpt)
 
-    val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
+    val inputSymbol = VarSymbol(Ident("input"), erasedType = N, mut = true)
     val phaseSymbol = TempSymbol(N, erasedType = N, "phase")
     val focusSymbol = TempSymbol(N, erasedType = N, "focus")
     // The phase whose step failed, selecting the link whose alternatives
@@ -803,7 +803,7 @@ class FixedPointCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, 
     log(dbg"Classes: ${classes.map(cls => s"${cls.symbol.nme}(${cls.alts})").mkString(", ")}")
 
     // ---- Machine state ----
-    val inputSymbol = VarSymbol(Ident("input"), erasedType = N)
+    val inputSymbol = VarSymbol(Ident("input"), erasedType = N, mut = true)
     val modeSymbol = TempSymbol(N, erasedType = N, "mode")
     val focusSymbol = TempSymbol(N, erasedType = N, "focus")
     val stackSymbol = TempSymbol(N, erasedType = N, "stack")

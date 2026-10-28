@@ -9,10 +9,9 @@ fun f(x, ...xs, y) = [x, xs, y]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f(x, ...args) {
-//│   let y, receiver, inlinedVal, tmp, tmp1;
-//│   receiver = runtime;
+//│   let y, inlinedVal, tmp, tmp1;
 //│   tmp1 = 1 + args.length;
-//│   receiver.checkArgs("f", 2, tmp1);
+//│   runtime.checkArgs("f", 2, tmp1);
 //│   tmp = args.length - 1;
 //│   inlinedVal = runtime.safeCall(args.slice(0, tmp));
 //│   y = args.at(-1);
@@ -54,10 +53,9 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let h;
 //│ h = function h(x, ...args7) {
-//│   let y7, z2, w, receiver7, inlinedVal12, inlinedVal13, tmp14, tmp15, tmp16;
-//│   receiver7 = runtime;
+//│   let y7, z2, w, inlinedVal12, inlinedVal13, tmp14, tmp15, tmp16;
 //│   tmp16 = 1 + args7.length;
-//│   receiver7.checkArgs("h", 2, tmp16);
+//│   runtime.checkArgs("h", 2, tmp16);
 //│   tmp15 = args7.length - 1;
 //│   inlinedVal12 = runtime.safeCall(args7.slice(0, tmp15));
 //│   if (runtime.Tuple.isArrayLike(inlinedVal12) && inlinedVal12.length >= 1) {

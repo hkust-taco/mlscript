@@ -266,12 +266,15 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
   def subst(using sub: SymbolSubst): InstSymbol = sub.mapInstSym(this)
 
 
-class VarSymbol(val id: Ident)(using State)
+/** A named binding. When mut is false, its value is fixed after initialization;
+  * imports and lowered immutable vals use this to retain stability through IR rewrites.
+  */
+class VarSymbol(val id: Ident, val mut: Bool)(using State)
     extends LocalVarSymbol(id.name)
     with HasDelayedErasedType[ErasedValueType]
     with NamedSymbol:
-  def this(id: Ident, erasedType: Opt[ErasedValueType])(using State) =
-    this(id)
+  def this(id: Ident, erasedType: Opt[ErasedValueType], mut: Bool)(using State) =
+    this(id, mut)
     this.erasedType = erasedType
   val name: Str = id.name
   var sourceAliases: Ls[Str] = Nil
@@ -290,7 +293,7 @@ class VarSymbol(val id: Ident)(using State)
   * reads those binders (see NewResolver.closure).
   */
 final class TypeParameterInstance(val origin: VarSymbol, val siteBinders: Opt[Set[VarSymbol]])(using State)
-    extends VarSymbol(origin.id):
+    extends VarSymbol(origin.id, mut = origin.mut):
   require(!origin.isInstanceOf[TypeParameterInstance], "Instantiate original type binders only")
   decl = origin.decl
 

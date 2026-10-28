@@ -44,7 +44,7 @@ object LoweredParamList:
     * the extraction prologue in `Lowering.lowerTrailingParams`; wrappers simply forward the arguments. */
   def callingConvention(ps: ParamList)(using State): LoweredParamList = ps.variadic match
     case S(Variadic(_, _ :: _)) =>
-      val args = VarSymbol(Tree.Ident("args"), erasedType = S(ErasedType.Array))
+      val args = VarSymbol(Tree.Ident("args"), erasedType = S(ErasedType.Array), mut = true)
       LoweredParamList(ps.flags, ps.params.take(ps.leadingRequiredCount), S(Param.simple(args)))(ps.toLoc)
     case variadic =>
       LoweredParamList(ps.flags, ps.params, variadic.map(_.param))(ps.toLoc)

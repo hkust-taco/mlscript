@@ -372,8 +372,8 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val paramSyms =
         if hasWrapper then 
           if funsLen === 1 then
-            funs.head.allParamSyms.map(v => VarSymbol(v.id, erasedType = v.erasedType))
-          else for i <- 0 until maxParamLen yield VarSymbol(Tree.Ident("param" + i), erasedType = N)
+            funs.head.allParamSyms.map(v => VarSymbol(v.id, erasedType = v.erasedType, mut = true))
+          else for i <- 0 until maxParamLen yield VarSymbol(Tree.Ident("param" + i), erasedType = N, mut = true)
         else funs.head.allParamSyms
       .toList
     val paramSymsArr = ArrayBuffer.from(paramSyms)
@@ -486,7 +486,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           f.dSym -> DeferredCast(TempSymbol(N, S(ErasedType.Bool), s"${f.dSym.nme}$$deferred"), t)
 
     val loopSym = LabelSymbol(N, "loopLabel")
-    val curIdSym = VarSymbol(Tree.Ident("id"), erasedType = S(ErasedType.Int))
+    val curIdSym = VarSymbol(Tree.Ident("id"), erasedType = S(ErasedType.Int), mut = true)
     
     val loopDefnPath = owner match
       case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym), N)(false)
@@ -538,7 +538,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           .toSet
       
       val copiedParamSyms = copiedParams.map: x =>
-          x -> VarSymbol(x.id, erasedType = x.erasedType)
+          x -> VarSymbol(x.id, erasedType = x.erasedType, mut = x.mut)
         .toMap
       
       val subst = new SymbolSubst:

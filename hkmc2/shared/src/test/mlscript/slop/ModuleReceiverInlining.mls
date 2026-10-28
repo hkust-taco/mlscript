@@ -160,3 +160,124 @@ PairedReceiver.Nested.read()
 //│ return PairedReceiver⁰.value²
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1000
+
+
+// Stable roots and chains of immutable fields need no receiver temporary.
+class ReceiverBox(val owner: ReceiverOwner)
+val fixedOwner = new ReceiverOwner(70)
+module StableReceivers with
+  val box = new ReceiverBox(new ReceiverOwner(80))
+//│ fixedOwner = ReceiverOwner(70)
+
+:soir
+:expect 71
+fixedOwner.Middle.Inner.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return +⁰(fixedOwner⁰.value⁰, fixedOwner⁰.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 71
+
+:soir
+:expect 81
+StableReceivers.box.owner.Middle.Inner.read()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ return +⁰(StableReceivers⁰.box⁰.owner⁰.value⁰, StableReceivers⁰.box⁰.owner⁰.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 81
+
+
+// Local vals retain their stability when lowering and inlining copy their symbols.
+@annotations.inline
+fun readLocal(value) =
+  val owner = new ReceiverOwner(value)
+  owner.Middle.Inner.read()
+
+:soir
+:expect 192
+readLocal(90) + readLocal(100)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let inlinedVal, inlinedVal1, owner, owner1;
+//│ set owner1 = new ReceiverOwner⁰((90 as! Int⁰));
+//│ set inlinedVal = +⁰(owner1.value⁰, owner1.Middle⁰.extra⁰);
+//│ set owner = new ReceiverOwner⁰((100 as! Int⁰));
+//│ set inlinedVal1 = +⁰(owner.value⁰, owner.Middle⁰.extra⁰);
+//│ return +⁰(inlinedVal, inlinedVal1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 192
+
+// A local let still needs a snapshot before a callback can reassign it.
+@annotations.inline
+fun changeLocal() =
+  let owner = firstOwner
+  fun change() = set owner = secondOwner
+  owner.Middle.Inner.after(change)
+
+:soir
+:expect 41
+changeLocal()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let owner; set owner = firstOwner⁰; return +⁰(owner.value⁰, owner.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41
+
+
+// A mutable member makes the whole path unstable, even under a stable module.
+module SwitchingReceiver with
+  mut val current = firstOwner
+fun switchField() = set SwitchingReceiver.current = secondOwner
+
+:soir
+:expect 41
+SwitchingReceiver.current.Middle.Inner.after(switchField)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver;
+//│ set receiver = SwitchingReceiver⁰.current⁰;
+//│ set SwitchingReceiver⁰.current⁰ = secondOwner⁰;
+//│ return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41
+
+
+// An immutable final member does not make its mutable qualifier stable.
+val firstBox = new ReceiverBox(firstOwner)
+val secondBox = new ReceiverBox(secondOwner)
+let currentBox = firstBox
+fun switchBox() = set currentBox = secondBox
+//│ currentBox = ReceiverBox(ReceiverOwner(40))
+//│ firstBox = ReceiverBox(ReceiverOwner(40))
+//│ secondBox = ReceiverBox(ReceiverOwner(50))
+
+:soir
+:expect 41
+currentBox.owner.Middle.Inner.after(switchBox)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver;
+//│ set receiver = currentBox⁰.owner⁰;
+//│ set currentBox⁰ = secondBox⁰;
+//│ return +⁰(receiver.value⁰, receiver.Middle⁰.extra⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41
+
+
+// A getter can be pure while still returning a different receiver on each read.
+class GeneratedReceiver with
+  mut val count = 0
+  module Nested with
+    @annotations.inline
+    fun bump() =
+      set count += 1
+      count
+module ReceiverFactory with
+  fun fresh = new GeneratedReceiver
+
+:soir
+:expect 1
+ReceiverFactory.fresh.Nested.bump()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let receiver, tmp;
+//│ set receiver = ReceiverFactory⁰.fresh⁰;
+//│ set tmp = +⁰(receiver.count⁰, 1);
+//│ set receiver.count⁰ = tmp;
+//│ return receiver.count⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 1

@@ -287,7 +287,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val localVals = stats.collect:
       case td: TermDefinition if td.k.isInstanceOf[syntax.Val] && td.owner.isEmpty && td.body.isDefined
           && td.hasDeclareModifier.isEmpty && !loweringCtx.symbolsToPreserve(td.sym) =>
-        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.mapErasedValueType)
+        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.mapErasedValueType, mut = td.k is syntax.MutVal)
         loweringCtx.collectScopedSym(newSym)
         td.tsym -> newSym
     
@@ -672,7 +672,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           remainingParamss match
           case Nil => buildInstantiate(accArgss)
           case ps :: rest =>
-            val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N))
+            val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N, mut = p.sym.mut))
             softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
@@ -771,6 +771,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       sym.owner match
       case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.erasedType, loco), rest)(S(sym))
       case N => nope
+    case sym: VarSymbol if !sym.mut => nope
     case sym: LocalVarSymbol =>
       Assign(sym, castTo(rhs, sym.erasedType, loco), rest)
     case sym => nope
@@ -983,8 +984,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       if sym.binary then
         val t1 = new Tree.Ident("arg1")
         val t2 = new Tree.Ident("arg2")
-        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)(t1.toLoc)
-        val p2 = Param(FldFlags.empty, VarSymbol(t2, erasedType = N), N, Modulefulness.none)(t2.toLoc)
+        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N, mut = true), N, Modulefulness.none)(t1.toLoc)
+        val p2 = Param(FldFlags.empty, VarSymbol(t2, erasedType = N, mut = true), N, Modulefulness.none)(t2.toLoc)
         val ps = PlainParamList(p1 :: p2 :: Nil)(N)
         val bod = st.App(ref, st.Tup(List(st.SimpleRef(p1.sym)(N), st.SimpleRef(p2.sym)(N)))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
@@ -999,7 +1000,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         return k(Lambda(paramLists.head, bodyBlock)(Nil, ref.toLoc))
       if sym.unary then
         val t1 = new Tree.Ident("arg")
-        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)(t1.toLoc)
+        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N, mut = true), N, Modulefulness.none)(t1.toLoc)
         val ps = PlainParamList(p1 :: Nil)(N)
         val bod = st.App(ref, st.Tup(List(st.SimpleRef(p1.sym)(N)))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)

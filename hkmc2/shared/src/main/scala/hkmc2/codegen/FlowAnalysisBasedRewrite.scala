@@ -88,11 +88,11 @@ class FlowAnalysisBasedRewrite(
             case (targets, idx) =>
               val eliminable = eliminableParamsOf(targets)
               def etaParam(name: Str): Param =
-                Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = N))
+                Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = N, mut = true))
               // * The expanded parameters corresponding to optional parameters of the targets must
               // * remain optional, since callers may omit their arguments.
               def optionalEtaParam(name: Str): Param =
-                val sym = new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = N)
+                val sym = new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = N, mut = true)
                 Param(FldFlags.empty.copy(opt = true), sym, N, Modulefulness.none)(N)
               val params = (0 until targets.paramCount).iterator.filterNot(eliminable).map: i =>
                 if i < targets.requiredParamCount then etaParam(i.toString) else optionalEtaParam(i.toString)

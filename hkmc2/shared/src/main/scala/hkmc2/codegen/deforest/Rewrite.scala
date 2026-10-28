@@ -117,7 +117,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
                 selInfo.field,
                 new VarSymbol(
                   Tree.Ident(s"${clsNme}_${selInfo.field.fieldName}"),
-                  erasedType = selInfo.field.erasedFieldType))
+                  erasedType = selInfo.field.erasedFieldType, mut = true))
           )
         
         // ctor dest branch function computations
@@ -160,7 +160,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             completeArgs.map: selField =>
               selsInfos.get(selField) match
               case Some(selId) => branchSelSyms(selId)
-              case None => VarSymbol(Tree.Ident(s"_${selField.fieldName}"), erasedType = selField.erasedFieldType)
+              case None => VarSymbol(Tree.Ident(s"_${selField.fieldName}"), erasedType = selField.erasedFieldType, mut = true)
         )
         
         val (parents, _) = getParentLabelOrMatchesAndRestBefore(dest.exprId)
@@ -418,7 +418,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     // the rewriter of an extracted part (branch body functions and match rest functions),
     // whose free variables `fvs` become the `fv_` parameters it returns
     def mkExtractedBodyRewriter(instId: InstantiationId, body: Block, fvs: Ls[LocalVarSymbol]): (Rewriter, Ls[VarSymbol]) =
-      val fvParams = fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.mapErasedValueType))
+      val fvParams = fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.mapErasedValueType, mut = true))
       mkCopyRewriter(instId, Nil, body, Map.from(fvs.iterator.zip(fvParams))) -> fvParams
   
     // Functions for fused match branches; each runs one arm and then its rest

@@ -1406,11 +1406,10 @@ class BlockSimplifier
           case _ => acc2
         loop(qual, ownerSym, Nil)
 
-      /** Capture receiver prefixes before entering the copied body: callbacks may reassign
-        * the caller's instance variable, and getters must run only once. Selections of
-        * nested module definitions cannot be reassigned, so keep those paths rooted in
-        * the captured parent. This also preserves the enclosing-receiver relationships
-        * needed to inline further calls in the copied body.
+      /** Capture unstable receiver prefixes before entering the copied body: callbacks may
+        * reassign variables, and getters must run only once. Keep stable paths intact,
+        * including immutable selections rooted in a captured parent, so further inlining
+        * can still recover their enclosing receivers.
         */
       def bindThisMapping(paths: Ls[(InnerSymbol, Path)]): (Block => Block, Map[InnerSymbol, Path]) =
         val (acc, _, mapping) = paths.foldLeft((blockBuilder, Map.empty[Path, Path], Map.empty[InnerSymbol, Path])):
@@ -1419,12 +1418,10 @@ class BlockSimplifier
               case s: Select =>
                 Select(evaluated.getOrElse(s.qual, s.qual), s.name)(s.symbol, s.toLoc)(s.sanitize)
               case _ => path
-            val (prefix, bound) = path match
-              case s: Select if sym.isInstanceOf[ModuleOrObjectSymbol]
-                && s.symbol.contains(sym.asDefnSym) && evaluated.contains(s.qual) =>
-                (acc, rhs)
-              case _ =>
-                val receiver = TempSymbol(N, erasedType = path.erasedValueType, "receiver")
+            val (prefix, bound) =
+              if rhs.isStable then (acc, rhs)
+              else
+                val receiver = VarSymbol(syntax.Tree.Ident("receiver"), erasedType = path.erasedValueType, mut = false)
                 (acc.assignScoped(receiver, rhs), receiver.asSimpleRef)
             (prefix, evaluated + (path -> bound), mapping + (sym -> bound))
         (acc, mapping)
@@ -1937,7 +1934,7 @@ class BlockSimplifier
                             annotations = call.metadata.annotations.filterNot(_.isInstanceOf[Annot.TailCall]),
                           ), call.toLoc)))))
                   case (sym, value) :: argRest =>
-                    val newSym = VarSymbol(sym.id, erasedType = sym.erasedType)
+                    val newSym = VarSymbol(sym.id, erasedType = sym.erasedType, mut = sym.mut)
                     go(acc.assignScoped(newSym, value), argRest, mapping + (sym -> newSym))
                 go(receiverPrefix, matchedArgs, Map.empty)
         
