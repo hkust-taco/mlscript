@@ -153,7 +153,7 @@ pattern EvaluatedTerm =
   | Infix("/", EvaluatedTerm as left, EvaluatedTerm as right) => left / right
   | Prefix("-", EvaluatedTerm as operand) => -operand
   | Prefix("+", EvaluatedTerm as operand) => +operand
-//│ Lines of IR: 297
+//│ Lines of IR: 302
 
 // Some helper functions to create `Term`s.
 fun wrapLiteral(value) = if value is Int then Literal(value) else value
@@ -211,12 +211,12 @@ evaluate of (8 /:/ 2) +:+ (3 *:* 4) -:- 5
 evaluate of Infix("**", Literal(1), Literal(2))
 //│ = None
 
-pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
+pattern DropZ = ((:x, :y, :z)) => ({x: x, y: y})
 
-(x: 1, y: 2, z: 3) is DropZ((x: 1, y: 2))
+({x: 1, y: 2, z: 3}) is DropZ((x: 1, y: 2))
 //│ = true
 
-(x: 1, y: 2, z: 3) is DropZ((x: 1, y: 3))
+({x: 1, y: 2, z: 3}) is DropZ((x: 1, y: 3))
 //│ = false
 
 pattern ShapeArea = 

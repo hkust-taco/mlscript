@@ -13,6 +13,14 @@ import Elaborator.*
 import hkmc2.syntax.LetBind
 
 
+/** Best-effort name, member, and call resolution, not a type checker.
+  * Shape propagation helps find targets and diagnose obvious mistakes; it does
+  * not prove type safety, even in strict mode. Leave complicated or expensive
+  * compatibility checks to a later type-checking pass and accept those cases
+  * leniently. This does not permit dropping flows: selections and ambiguity
+  * detection need every possible target. Approximate complicated relationships
+  * by joining their flows, even when lengths or correlations are lost.
+  */
 class NewResolver:
   self: Elaborator =>
   import tl.*
@@ -90,7 +98,7 @@ class NewResolver:
           member.asTpe.orElse(member.asModOrObj) match
             case S(symbol) => select(symbol)
             case N =>
-              result.fail(msg"${member.describe.capitalize} cannot be used as a type" -> member.toLoc :: Nil)
+              result.fail(msg"${member.describe.capitalize} cannot be used as a type" -> member.headerLoc :: Nil)
               result.publish(TypeShape.Abstract)
         term match
           // Imported declarations can still contain legacy references.
@@ -133,28 +141,32 @@ class NewResolver:
             result.publish(TypeShape.Parameter(sym, sym.inferenceHost))
           case Ref(sym: VarSymbol) if sym.decl.exists(_.isInstanceOf[TyParam]) =>
             result.publish(TypeShape.Parameter(sym, sym.inferenceHost))
-          case Tup(fields) if fields.forall(_.isInstanceOf[Fld]) =>
-            result.publish(TypeShape.Tuple(fields.collect { case Fld(_, sign, _) => typeResolution(sign) }))
+          case Tup(fields) => result.publish:
+            TypeShape.Tuple:
+              fields.map:
+                case Fld(_, sign, _) => TypeShape.TupleField(typeResolution(sign), spread = false)
+                case Spd(_, sign, _) => TypeShape.TupleField(typeResolution(sign), spread = true)
           case record: Rcd =>
             val fields = record.stats.collect { case field: RcdField => field }
-            if fields.length != record.stats.length || fields.exists(field => field.field match
-              case Lit(_: Tree.StrLit) => false
-              case _ => true)
+            if fields.length != record.stats.length || fields.exists(_.key.isEmpty)
             then
               result.fail(msg"A record type requires statically named fields." -> record.toLoc :: Nil)
               result.publish(TypeShape.Abstract)
             else result.publish(TypeShape.Record(record,
-              fields.reverse.distinctBy(_.sym.nme).reverse.map(field => field -> typeResolution(field.rhs))))
+              fields.reverse.distinctBy(_.key).reverse.map(field => field -> typeResolution(field.rhs))))
           // Signed numeric literals use operator applications in the syntax tree.
           // Their primitive interface is not recovered from these applications yet.
-          case App(Ref(op: BuiltinSymbol), Tup(Fld(_, Lit(_: Tree.IntLit | _: Tree.DecLit), _) :: Nil))
-              if op.nme === "-" || op.nme === "+" =>
+          case App(op: AnyRef_, Tup(Fld(_, Lit(_: Tree.IntLit | _: Tree.DecLit), _) :: Nil))
+              if op.sym.isInstanceOf[BuiltinSymbol] && (op.sym.nme === "-" || op.sym.nme === "+") =>
             result.publish(TypeShape.Abstract)
+          // Ignore undefined in annotations: `T | undefined` has the same
+          // resolution candidates as T.
+          case Lit(Tree.UnitLit(false)) => result.publish(TypeShape.Bottom)
           case literal: Lit =>
             // Singleton annotations retain literal values, which read no binders.
             rctx.recordTemplateBinders(result, S(Set.empty))
             listenTerm(literal)(shape => result.publish(TypeShape.Inferred(shape)))
-          case _: Tup | Missing | Error() =>
+          case Missing | Error() =>
             result.publish(TypeShape.Abstract)
           case _ => listen(term, discardMarks = true):
             case shape: SymShape => shape.sym.onComplete: () =>
@@ -329,7 +341,8 @@ class NewResolver:
                   case S(TypeShape.Nominal(_)) => args.foreach(guardedChild)
                   // An abstract constructor could forward an argument unchanged.
                   case _ => args.foreach(child)
-              case TypeShape.Tuple(fields) => fields.foreach(guardedChild)
+              case TypeShape.Tuple(fields) => fields.foreach: field =>
+                if field.spread then child(field.tpe) else guardedChild(field.tpe)
               case TypeShape.Record(_, fields) => fields.foreach((_, field) => guardedChild(field))
               case TypeShape.Function(params, result) => guardedChild(typeResolution(params)); guardedChild(result)
               case TypeShape.Polymorphic(params, _, body) =>
@@ -400,7 +413,7 @@ class NewResolver:
               applications += ((res, symbol, rhs, args))
             visit(base)
             args.foreach(visit)
-          case TypeShape.Tuple(fields) => fields.foreach(visit)
+          case TypeShape.Tuple(fields) => fields.foreach(field => visit(field.tpe))
           case TypeShape.Record(_, fields) => fields.foreach((_, field) => visit(field))
           case TypeShape.Function(params, result) => visit(typeResolution(params)); visit(result)
           case TypeShape.Polymorphic(params, _, body) =>
@@ -451,6 +464,9 @@ class NewResolver:
                 case S(TypeShape.Nominal(_)) => ()
                 case _ => args.foreach(follow)
             case TypeShape.Union(left, right) => follow(left); follow(right)
+            // A spread splices its operand into this tuple; it does not place
+            // that operand under a tuple field that could guard recursion.
+            case TypeShape.Tuple(fields) => fields.filter(_.spread).foreach(field => follow(field.tpe))
             case TypeShape.Intersection(left, right) => follow(left); follow(right)
             case TypeShape.Negation(base) => follow(base)
             case TypeShape.Wildcard(input, output) => input.foreach(follow); output.foreach(follow)
@@ -493,9 +509,8 @@ class NewResolver:
                 // Constructor analysis ignores scope crossings, but still follows
                 // the alias's substitution. The guard bounds body expansion;
                 // substitution values are finite immutable reference DAGs.
-                val substitutions = symbol.defn.get.tparams.zip(args).map: (formal, argument) =>
-                  formal.sym -> argumentType(declaredArgument(argument, tpe, true), formal)
-                uses(declaredType(rhs, tpe.bindings ++ substitutions, tpe.positive), wrapped, next, aliases + symbol)
+                val substitutions = aliasBindings(tpe, typeApplication(args, tpe), symbol.defn.get.tparams, tpe.positive)
+                uses(declaredType(rhs, substitutions, tpe.positive), wrapped, next, aliases + symbol)
               case S(_) => dependencies(tpe.resolution).flatMap(bound(_, wrapped))
               case N => dependencies(tpe.resolution).flatMap(bound(_, true))
             case _ => dependencies(tpe.resolution).flatMap(bound(_, true))
@@ -594,7 +609,7 @@ class NewResolver:
           // Normalize both parts before retaining the argument. Otherwise even
           // out A keeps another A-to-wildcard environment at each recursive
           // step. Preserve the written source: it overrides declaration variance.
-          val parts = TypeArgument(input.fold(extremeType(false, S(resolution)))(loop(_, bindings, aliases, !positive)),
+          val parts = TypeArgument(input.fold(extremeType(false))(loop(_, bindings, aliases, !positive)),
             output.fold(missingOutput(resolution))(loop(_, bindings, aliases, positive)))
           normalizedArgument(resolution, parts)
         case TypeShape.Applied(base, arguments) :: Nil =>
@@ -607,7 +622,7 @@ class NewResolver:
                   // Omitted formals use the same source holes as deferred
                   // interpretation. Retaining a partial forwarding application
                   // would nest its environment at each recursive projection.
-                  S(loop(rhs, typeBindings(base, supplied, parameters, true), aliases + symbol, positive))
+                  S(loop(rhs, aliasBindings(base, supplied, parameters, positive), aliases + symbol, positive))
               case TypeShape.Contextual(reference) :: Nil =>
                 // Use exactly the interpreter's application rule: move caller
                 // arguments to the template endpoint, substitute there, then
@@ -628,8 +643,8 @@ class NewResolver:
     else loop(resolution, bindings, Set.empty, positive)
 
   /** Preserve both occurrences of an unqualified argument before substitution
-    * can select either bound. A nominal application composes these with its own
-    * polarity; an alias binds them before interpreting its body at that polarity.
+    * can select either bound. Applications compose these with their polarity;
+    * aliasBindings also accounts for the alias body's local substitution scope.
     */
   private def declaredArgument(resolution: TypeResolution, context: DeclaredType, positive: Bool)
       (using ResolutionContext): DeclaredType =
@@ -712,29 +727,28 @@ class NewResolver:
         case _ => argument
 
   private def instanceType(instance: TypeParameterInstance)(using ResolutionContext): DeclaredType =
-    declaredType(typeResolution(instance.reference), Map.empty)
+    parameterType(TypeShape.Parameter(instance, instance.inferenceHost))
 
   private def parameterType(parameter: TypeShape.Parameter)(using ResolutionContext): DeclaredType =
     rctx.state.parameterTypes.getOrElseUpdate(parameter, {
-      val source = SimpleRef(parameter.symbol)(parameter.symbol.id)
+      // This endpoint is shared across occurrences. Written uses and declaration
+      // notes carry their own locations; the canonical parameter has no source use.
+      val source = SimpleRef(parameter.symbol)(N)
       val resolution = new TypeResolution(source, messages => resolError(source, messages))
       resolution.publish(parameter)
       declaredType(resolution, Map.empty)
     })
 
   private def extremeType(top: Bool)(using ResolutionContext): DeclaredType =
-    extremeType(top, N)
-
-  private def extremeType(top: Bool, source: Opt[TypeResolution])(using ResolutionContext): DeclaredType =
-    rctx.state.extremeTypes.getOrElseUpdate((top, source), {
-      val resolution = new TypeResolution(source.fold[Term](Term.Missing)(_.source),
+    rctx.state.extremeTypes.getOrElseUpdate(top, {
+      val resolution = new TypeResolution(Term.Missing,
         _ => lastWords("A synthesized extreme type cannot be invalid"))
       resolution.publish(if top then TypeShape.Top else TypeShape.Bottom)
       declaredType(resolution, Map.empty)
     })
 
   private def missingOutput(source: TypeResolution)(using ResolutionContext): DeclaredType =
-    extremeType(true, S(source)).withOrigin(S(TypeInterfaceReason.MissingOutput(source.source)))
+    extremeType(true).withOrigin(S(TypeInterfaceReason.MissingOutput(source.source)))
 
   /** Written wildcards override declaration variance. Unqualified arguments have
     * already been interpreted in both polarities; declaration variance keeps the
@@ -814,11 +828,11 @@ class NewResolver:
       declaredType(resolution, Map.empty)
     })
 
-  /** Save both interpretations before traversing the template reference. A
-    * nominal template uses the application's polarity, whereas an alias binds
-    * the positive pair and composes polarity while interpreting its body. This
-    * keeps Identity[A] transparent and preserves captured enclosing binders.
-    * Each interpretation is itself an input/output argument pair.
+  /** Save both interpretations before traversing the template reference. Each
+    * interpretation is itself an input/output argument pair, interpreted in the
+    * caller's scope. Applications choose their polarity before applying variance;
+    * aliasBindings reorients new formals for lookup inside the alias body without
+    * changing the bindings of captured enclosing parameters.
     *
     * Supplied arguments belong to the application scope and move back to the
     * template's endpoint before substitution. Omitted arguments instead belong
@@ -851,6 +865,20 @@ class NewResolver:
     effectiveBindings(source) ++ parameters.zip(typeArguments(source, arguments, parameters, positive)).map: (parameter, argument) =>
       parameter.sym -> argumentType(argument, parameter)
 
+  /** Interpret arguments in the caller's polarity, but select their bounds
+    * relative to the alias body. The body retains the caller's polarity for its
+    * captured binders; reverse the new formal bindings under a negative caller
+    * so the enclosing domain does not also reverse which bound they select.
+    * Thus `Source[in Nothing out A]` still reads A from `{item: T}` under a
+    * domain. Both declaration variance and written bounds use this same rule.
+    */
+  private def aliasBindings(source: DeclaredType, arguments: TypeApplication, parameters: Ls[TyParam], positive: Bool)
+      (using ResolutionContext): Map[VarSymbol, DeclaredType] =
+    effectiveBindings(source) ++ parameters.zip(typeArguments(source, arguments, parameters, positive)).map: (parameter, argument) =>
+      val bound = argumentType(argument, parameter)
+      parameter.sym -> (if positive then bound else normalizedArgument(bound.resolution,
+        TypeArgument(selectArgument(bound, true), selectArgument(bound, false))))
+
   /** External inputs contribute unknowns only to missing annotation parts.
     * A written binder still denotes its declared type, including after a partial
     * application fixes it; exposure must not add arbitrary values to that binder.
@@ -878,12 +906,12 @@ class NewResolver:
         case TypeShape.Applied(base, arguments) =>
           follow(declaredType(base, current), typeApplication(arguments, current), captures, next)
         case TypeShape.Alias(symbol, S(rhs)) =>
-          follow(declaredType(rhs, typeBindings(current, args, symbol.defn.get.tparams, true), current.positive), noTypeArguments, captures, next)
+          follow(declaredType(rhs, aliasBindings(current, args, symbol.defn.get.tparams, current.positive), current.positive), noTypeArguments, captures, next)
         case TypeShape.Nominal(cls) =>
           cls.tparams.zip(typeArguments(current, args, cls.tparams, current.positive)).foreach: (param, argument) =>
             listenArgumentParts(argumentType(argument, param)): parts =>
               exposeTypeHoles(transportType(parts.output, captures), unknown, marks)
-        case TypeShape.Tuple(fields) => fields.foreach(field => descend(declaredType(field, current)))
+        case TypeShape.Tuple(fields) => fields.foreach(field => descend(declaredType(field.tpe, current)))
         case TypeShape.Record(_, fields) => fields.foreach((_, field) => descend(declaredType(field, current)))
         case TypeShape.Function(_, result) => descend(declaredType(result, current))
         case TypeShape.Polymorphic(parameters, _, body) =>
@@ -943,6 +971,11 @@ class NewResolver:
     listenInstanceViews(value, mergeIntersections = false)(listener)
 
   private def listenInstanceViews(value: TermShape, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit = value match
+    case Marked(view: IntersectionView, marks) if !mergeIntersections =>
+      view.values.foreach: value =>
+        transportShape(value, marks :: Nil) match
+          case value: TermShape => listenInstanceViews(value, mergeIntersections)(listener)
+          case NoShape => ()
     case Marked(instance: InstanceShape, marks) =>
       listenTypeViews(transportType(instance.tpe, marks :: Nil), mergeIntersections)(listener)
     case _ => listener(value)
@@ -992,7 +1025,9 @@ class NewResolver:
         case record: RecordTypeShape =>
           val projected = project(instances, shapeDependencies(record), TypeSubstitution.empty)
           if projected.isEmpty then record else rctx.shapeView(projected):
-            RecordTypeShape(record.fields.map((name, tpe) => name -> instantiateType(tpe, projected)))(record.source, record.declarations)
+            RecordTypeShape(record.fields.map((name, tpe) => name -> instantiateType(tpe, projected)), record.aliases)(record.source, record.declarations)
+        case view: IntersectionView =>
+          IntersectionView(view.values.map(instantiateShape(_, instances)))
         case specialized: SpecializedShape =>
           val projected = project(instances, shapeDependencies(specialized), specialized.instances)
           if projected.isEmpty then specialized else rctx.shapeView(projected):
@@ -1007,7 +1042,7 @@ class NewResolver:
               TypeScheme(scheme.owner, scheme.parameters.map: parameter =>
                 DeclaredTypeParameter(parameter.parameter, parameter.lower.map(instantiate), parameter.upper.map(instantiate)))
             CallableTypeShape(callable.source, callable.paramLists.ne_map: params =>
-              DeclaredParams(params.params.map(_.map(instantiate)), params.hasRest, params.rest.map(instantiate))
+              params.mapTypes(instantiate)
             , callable.result.map(instantiate), scheme, callable.supplied, callable.declaration, callable.asyncResult)
         case literal: IntroShape if !literal.trm.isInstanceOf[Lam] => literal
         case _: (UnknownValueShape | DynShape | OpaqueTypeShape | ErrShape) => source
@@ -1156,8 +1191,10 @@ class NewResolver:
       union(declared, nominal.parent.fold(S(Set.empty))(shapeSupport))
     case record: RecordTypeShape =>
       record.fields.values.foldLeft[Binders](S(Set.empty))((acc, field) => union(acc, typeSupport(field)))
+    case view: IntersectionView =>
+      view.values.foldLeft[Binders](S(Set.empty))((acc, value) => union(acc, shapeSupport(value)))
     case callable: CallableTypeShape =>
-      val types = callable.paramLists.flatMap(params => params.params.flatten ::: params.rest.toList) :::
+      val types = callable.paramLists.flatMap(params => params.allParams.flatMap(_.tpe)) :::
         callable.result.toList ::: callable.supplied.toList.flatten :::
         callable.scheme.toList.flatMap(_.parameters.flatMap(parameter => parameter.lower.toList ::: parameter.upper.toList))
       types.foldLeft[Binders](S(Set.empty))((acc, tpe) => union(acc, typeSupport(tpe)))
@@ -1272,19 +1309,30 @@ class NewResolver:
     * field combinations; a separate cache keyed by whole record sets is unnecessary.
     */
   private def intersectViews(values: Ls[TermShape])(publish: Listener)(using ResolutionContext): Unit =
-    val records = values.collect:
+    val flattened = values.flatMap:
+      case Marked(view: IntersectionView, marks) => view.values.flatMap(value => transportShape(value, marks :: Nil) match
+        case value: TermShape => S(value)
+        case NoShape => N)
+      case value => value :: Nil
+    val records = flattened.collect:
       case Marked(record: RecordTypeShape, marks) =>
-        RecordTypeShape(record.fields.map((name, tpe) => name -> transportType(tpe, marks :: Nil)))(record.source, record.declarations)
-    records.headOption.foreach: first =>
+        RecordTypeShape(record.fields.map((name, tpe) => name -> transportType(tpe, marks :: Nil)), record.aliases)(record.source, record.declarations)
+    val merged = records.headOption.map: first =>
       val merged = records.tail.foldLeft(first): (left, right) =>
         val fields = right.fields.foldLeft(left.fields):
           case (fields, (name, tpe)) => fields.updated(name, fields.get(name).fold(tpe)(previous =>
             combinedType(previous.resolution, previous, tpe, false)))
-        RecordTypeShape(fields)(left.source, right.declarations ++ left.declarations)
-      publish(merged)
-    values.distinctBy(ShapeIdentity.key).foreach:
-      case Marked(_: RecordTypeShape, _) => ()
-      case other => publish(other)
+        val aliases = right.aliases.foldLeft(left.aliases):
+          case (aliases, (name, keys)) => aliases.updated(name, aliases.getOrElse(name, Set.empty) ++ keys)
+        RecordTypeShape(fields, aliases)(left.source, right.declarations ++ left.declarations)
+      merged
+    val components = merged.toList ::: flattened.filter:
+      case Marked(_: RecordTypeShape, _) => false
+      case _ => true
+    components.distinctBy(ShapeIdentity.key) match
+      case value :: Nil => publish(value)
+      case Nil => ()
+      case values => publish(IntersectionView(values))
 
   private def listenTypeViews(tpe: DeclaredType)(listener: Listener)(using ResolutionContext): Unit =
     listenTypeViews(tpe, mergeIntersections = true)(listener)
@@ -1372,7 +1420,7 @@ class NewResolver:
                 // references, not symbols: Id[Id[T]] has two distinct references.
                 if aliases(current.resolution) then publish(OpaqueTypeShape(source)(TypeInterfaceReason.RecursiveAlias(symbol)))
                 else rhs match
-                  case S(rhs) => follow(declaredType(rhs, bind(symbol.defn.get.tparams, true), current.positive), noTypeArguments,
+                  case S(rhs) => follow(declaredType(rhs, aliasBindings(current, args, symbol.defn.get.tparams, current.positive), current.positive), noTypeArguments,
                     aliases + current.resolution, source, publish)
                   case N => publish(OpaqueTypeShape(source)(TypeInterfaceReason.AbstractDeclaration(symbol, source)))
               case TypeShape.Applied(base, params) =>
@@ -1406,10 +1454,21 @@ class NewResolver:
                     case NoShape => ())
               case TypeShape.Function(params, ret) =>
                 val ps = params match
-                  case Tup(fields) => DeclaredParams(fields.collect:
-                    case Fld(_, sign, _) => S(declaredType(typeResolution(sign), current.withPolarity(!current.positive)))
-                  , fields.exists(!_.isInstanceOf[Fld]), N)
-                  case single => DeclaredParams(S(declaredType(typeResolution(single), current.withPolarity(!current.positive))) :: Nil, false, N)
+                  case Tup(fields) =>
+                    def parameter(fld: Fld) =
+                      DeclaredParam(S(declaredType(typeResolution(fld.term), current.withPolarity(!current.positive))), fld.flags)
+                    // Elaboration reports function types with several variadic parameters.
+                    val (leading, variadic) = fields.span(_.isInstanceOf[Fld])
+                    val leadingFlds = leading.collect { case fld: Fld => fld }
+                    DeclaredParams(leadingFlds.map(parameter), variadic match
+                      case (spd: Spd) :: trailing =>
+                        val trailingFlds = trailing.collect { case fld: Fld => fld }
+                        S(Variadic(DeclaredParam(S(declaredType(typeResolution(spd.term), current.withPolarity(!current.positive))),
+                          FldFlags.empty.copy(droppable = spd.droppable)), trailingFlds.map(parameter)))
+                      case _ => N)
+                  case single =>
+                    DeclaredParams(DeclaredParam(S(declaredType(typeResolution(single), current.withPolarity(!current.positive))),
+                      FldFlags.empty) :: Nil, N)
                 publish(CallableTypeShape(source, ps ne_:: Nil,
                   S(declaredType(ret, current)), N, N, N, N))
               case TypeShape.Polymorphic(params, _, body) =>
@@ -1426,11 +1485,32 @@ class NewResolver:
                       case NoShape => ()
                   case _ => publish(shape))
               case TypeShape.Tuple(fields) =>
-                publish(TupleShape(current.resolution.source,
-                  fields.map(field => TupleShape.TypedField(declaredType(field, current), Nil)))(this))
+                def expand(rest: Ls[TypeShape.TupleField], reversed: Ls[TupleShape.Element])(using ResolutionContext): Unit = rest match
+                  case Nil => publish(TupleShape(current.resolution.source, reversed.reverse)(this))
+                  case TypeShape.TupleField(field, false) :: tail =>
+                    expand(tail, TupleShape.TypedField(declaredType(field, current), Nil) :: reversed)
+                  case TypeShape.TupleField(field, true) :: tail =>
+                    listenTypeViews(declaredType(field, current), mergeIntersections = false):
+                      case Marked(tuple: TupleShape, marks) =>
+                        expand(tail, TupleShape.Spread(tuple, marks) :: reversed)
+                      case Marked(array: NominalInstanceView, marks) if arrayElementType(array).nonEmpty =>
+                        // Retain the symbolic element endpoint: sampling its
+                        // current values would lose inference from later calls.
+                        val element = TupleShape.TypedField(arrayElementType(array).get, marks :: Nil)
+                        expand(tail, TupleShape.Unknown(field.source, element) :: reversed)
+                      case shape @ Marked(_: DynShape | _: UnknownValueShape | _: OpaqueTypeShape, _) =>
+                        expand(tail, TupleShape.Unknown(field.source, TupleShape.ValueField(shape, Nil)) :: reversed)
+                      case shape =>
+                        field.fail(msg"A tuple type spread requires an Array or tuple interface." -> field.source.toLoc ::
+                          shape.diagnostic(msg"This type does not supply an array interface."))
+                expand(fields, Nil)
               case TypeShape.Record(source, fields) =>
-                publish(RecordTypeShape(fields.map((field, sign) => field.sym.nme -> declaredType(sign, current)).toMap)(
-                  source, fields.map((field, _) => field.sym.nme -> field).toMap))
+                val aliases = fields.flatMap:
+                  case (field @ RcdField(Lit(Tree.StrLit(name)), _, _), _) => field.key.collect:
+                    case key: SymbolKey => name -> Set(key)
+                  case _ => N
+                publish(RecordTypeShape(fields.map((field, sign) => field.key.get -> declaredType(sign, current)).toMap, aliases.toMap)(
+                  source, fields.map((field, _) => field.key.get -> field).toMap))
               case TypeShape.Union(left, right) => next(left); next(right)
               case TypeShape.Intersection(left, right) if !mergeIntersections => next(left); next(right)
               case TypeShape.Intersection(left, right) =>
@@ -1455,20 +1535,60 @@ class NewResolver:
   // publish inferred alternatives for parameters behind this boundary.
   private def signatureParameters(using rs: ResolutionContext) = rs.state.signatureParameters
   def registerParameterSignature(paramLists: Ls[ParamList], sign: Term)(using ResolutionContext): Unit =
-    def bind(paramLists: Ls[ParamList], tpe: DeclaredType)(using ResolutionContext): Unit = paramLists match
+    paramLists.flatMap(_.allParams).filter(_.sign.isEmpty).foreach: param =>
+      val resolution = new TypeResolution(sign, messages => resolError(sign, messages))
+      // Components can arrive later through aliases. Keep one endpoint for every
+      // parameter so existing observations and input constraints see all of them.
+      // Its templates may mention binders inside any quantified component.
+      rctx.recordTemplateBinders(resolution, N)
+      // Bottom contributes no values and keeps this accumulating union distinct
+      // from a single immutable reference that normalization could substitute away.
+      resolution.publish(TypeShape.Bottom)
+      val tpe = declaredType(resolution, Map.empty)
+      signatureParameters(param.sym) = tpe
+      listenTypeInstances(tpe): shape =>
+        if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
+    // Check only signatures that explicitly specify one calling convention,
+    // following aliases and quantifiers. Compound signatures still contribute
+    // every component's flows, but rejecting one possible layout would turn this
+    // best-effort check into a false incompatibility.
+    def singleArrow(res: TypeResolution, seen: Set[TypeResolution])(using ResolutionContext): Bool =
+      if seen(res) then false else
+        def next(inner: TypeResolution): Bool = singleArrow(inner, seen + res)
+        res.currentShapes.toList match
+          case TypeShape.Function(_, _) :: Nil => true
+          case TypeShape.Reference(base, _, _, _) :: Nil => next(base)
+          case TypeShape.Contextual(ref) :: Nil => next(ref.tpe.resolution)
+          case TypeShape.Applied(base, _) :: Nil => next(base)
+          case TypeShape.Alias(_, S(rhs)) :: Nil => next(rhs)
+          case TypeShape.Polymorphic(_, _, body) :: Nil => next(body)
+          case _ => false
+    def bind(paramLists: Ls[ParamList], tpe: DeclaredType, checkLayout: Bool)(using ResolutionContext): Unit = paramLists match
       case Nil => ()
-      case ps :: tail => listenTypeViews(tpe):
+      case ps :: tail => listenTypeViews(tpe, mergeIntersections = false):
         case Marked(callable: CallableTypeShape, marks) =>
           val declared = callable.paramLists.head
-          if !declared.hasRest then ps.params.zip(declared.params).foreach: (param, sign) =>
-            if param.sign.isEmpty then sign.foreach: tpe =>
-              val contextual = transportType(tpe, marks :: Nil)
-              signatureParameters(param.sym) = contextual
-              listenTypeInstances(contextual): shape =>
-                if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
-          callable.result.foreach(tpe => bind(tail, transportType(tpe, marks :: Nil)))
+          // Once alternatives have been approximated, a later curried list is
+          // still part of those alternatives, even if this component is one arrow.
+          val check = checkLayout && singleArrow(tpe.resolution, Set.empty)
+          if Arity(ps) != Arity(declared) then
+            if check then
+              rctx.report(ErrorReport(
+                msg"Implementation parameter list does not match its separate signature." -> ps.toLoc ::
+                msg"The signature has different required, optional, variadic, or trailing parameter positions." -> sign.toLoc :: Nil))
+          val params = ps.allParams
+          zipDeclaredParameters(Arity(ps), declared): (index, tpe) =>
+            val param = params(index)
+            val component = transportType(tpe, marks :: Nil)
+            if param.sign.isEmpty then
+              signatureParameters.get(param.sym).get.resolution.publish(TypeShape.Combined(TypeFormula.atom(component)))
+            else
+              // An inline annotation keeps its interface, but its inferred type
+              // arguments still receive constraints from the separate signature.
+              constrainParameter(param, instanceShape(component), Nil)
+          callable.result.foreach(tpe => bind(tail, transportType(tpe, marks :: Nil), check))
         case _ => ()
-    bind(paramLists, declaredType(typeResolution(sign), Map.empty))
+    bind(paramLists, declaredType(typeResolution(sign), Map.empty), true)
 
   /** Synthesized constructor fields retain their source declaration on the symbol. */
   private[semantics] def resultSignature(td: TermDefinition)(using ResolutionContext): Opt[Term] = td.tsym.decl match
@@ -1520,24 +1640,10 @@ class NewResolver:
     * before a caller can substitute its own type argument.
     */
   private def awaitedType(tpe: DeclaredType)(using ResolutionContext): DeclaredType =
-    rctx.state.awaitedTypes.getOrElseUpdate(tpe, {
-      val symbol = prelude.builtins.Awaited match
-        case symbol: TypeAliasSymbol => symbol
-        case _ => lastWords("The builtin Awaited must be an abstract type alias")
-      // The synthesized `Awaited` is always applied to the payload. Give it its own
-      // source, recorded as applied to one argument and written outside every
-      // binder. Reusing the payload's source would summarize it as a bare generic
-      // use in that source's scope (see dependencies), which is unknown whenever
-      // the source records no scope, and the promise would retain whole substitutions.
-      val head = Term.Ref(symbol)(new syntax.Tree.Ident(symbol.nme).withLocOf(tpe.resolution.source), N)
-      rctx.recordLexicalBinders(head, Set.empty)
-      rctx.recordAppliedTypeArguments(head, 1)
-      val constructor = new TypeResolution(head, tpe.resolution.fail)
-      constructor.publish(TypeShape.Alias(symbol, N))
-      val resolution = new TypeResolution(tpe.resolution.source, tpe.resolution.fail)
-      resolution.publish(TypeShape.Applied(constructor, tpe.resolution :: Nil))
-      declaredType(resolution, tpe)
-    })
+    val symbol = prelude.builtins.Awaited match
+      case symbol: TypeAliasSymbol => symbol
+      case _ => lastWords("The builtin Awaited must be an abstract type alias")
+    appliedType(symbol, new ::(tpe, Nil))
 
   private def listenAwaitedValue(value: TermShape, source: Term)(listener: Listener)(using ResolutionContext): Unit =
     listenInstanceViews(value)(view => listenAwaitedView(view, source)(listener))
@@ -1562,7 +1668,8 @@ class NewResolver:
             // JavaScript may adopt a structural thenable instead of returning
             // the object itself. Until its callback interface can be inferred,
             // preserve uncertainty rather than exposing the object's fields.
-            case _ => value.getMember("then") match
+            // Awaiting a value only calls its public `then` method.
+            case _ => value.getMember("then").visibleFrom(_ => false, reportInaccessible = false) match
               case MemberLookup.Missing => publish(value)
               case _ => publish(UnknownValueShape(source, fromPublicInterface = false)(ShapeProvenance(
                 msg"This value may be a thenable; its fulfillment interface is not known." -> value.toLoc :: Nil)))
@@ -1623,7 +1730,7 @@ class NewResolver:
     // consumes a candidate's entry site and the new entry supplies its own.
     // Deferred references use exactly the same transport as ordinary values.
     // The nested trace shows the carrier standing in for `base` (see markCarrier).
-    trace[DeclaredType](s"transportType ${base.resolution.showDbg} (previous = ${previous.map(_.showDbg)}, marks = ${marks.map(_.showDbg)})"):
+    trace[DeclaredType](dbg"transportType ${base.resolution.showDbg} (previous = ${previous.map(_.showDbg)}, marks = ${marks.map(_.showDbg)})"):
       markCarrier.exit(previous).exit(marks) match
         case Marked(_, NoMarks) => base
         case Marked(_, path: SomeMarks) =>
@@ -1704,8 +1811,10 @@ class NewResolver:
             listenTypeViews(signature(td.sign.get, positive))(publish)
           else td.params match
             case params: NELs[ParamList] => publish(CallableTypeShape(source,
-              params.ne_map(ps => DeclaredParams(ps.params.map(_.sign.map(signature(_, !positive))),
-                ps.restParam.nonEmpty, ps.restParam.flatMap(_.sign).map(signature(_, !positive)))),
+              params.ne_map: ps =>
+                def parameter(p: Param) = DeclaredParam(p.sign.map(signature(_, !positive)), p.flags)
+                DeclaredParams(ps.params.map(parameter), ps.variadic.map(_.map(parameter)))
+              ,
               result, N, N, S(td), N))
             case Nil if td.asyncAnnotation.nonEmpty =>
               publish(promiseShape(td.asyncAnnotation.get, result.getOrElse(extremeType(true))))
@@ -1737,7 +1846,7 @@ class NewResolver:
       // type argument without leaking this abstract candidate into the caller.
       val site = FlowSymbol("generic interface")
       params.foreach: param =>
-        val ref = SimpleRef(param)(param.id)
+        val ref = SimpleRef(param)(N)
         val unknown = RigidTypeShape(param, ref)
         publishParameter(param, MarkedShape.enter(unknown, ResolutionBoundary(owner), S(site)))
 
@@ -1782,8 +1891,8 @@ class NewResolver:
       (using ResolutionContext): Unit =
     parameters.foreach: parameter =>
       val instance = ContextualType(parameterType(parameter.parameter).instantiate(substitution), Nil)
-      parameter.lower.foreach(bound => constrainTypes(ContextualType(bound.instantiate(substitution), Nil), instance))
-      parameter.upper.foreach(bound => constrainTypes(instance, ContextualType(bound.instantiate(substitution), Nil)))
+      parameter.lower.foreach(bound => constrainTypes(ContextualType(bound.instantiate(substitution), Nil), instance, N))
+      parameter.upper.foreach(bound => constrainTypes(instance, ContextualType(bound.instantiate(substitution), Nil), N))
 
   /** Consume the scheme at its authoritative site. Specialized values and curried
     * tails carry instantiated references and no scheme, so later calls reuse it.
@@ -1800,7 +1909,7 @@ class NewResolver:
           def instantiate(tpe: DeclaredType): DeclaredType = tpe.instantiate(substitution)
           val instantiated = CallableTypeShape(callable.source,
             callable.paramLists.ne_map: params =>
-              DeclaredParams(params.params.map(_.map(instantiate)), params.hasRest, params.rest.map(instantiate))
+              params.mapTypes(instantiate)
             , callable.result.map(instantiate), N, N, callable.declaration, callable.asyncResult)
           // Reentrant observations must find the view before supplied arguments
           // can publish candidates or trigger another observation of this call.
@@ -1822,23 +1931,26 @@ class NewResolver:
       resultSignature(definition).foreach: sign =>
         val expected = declaredType(typeResolution(sign), Map.empty)
         listenResult(body): shape =>
-          inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil)
+          inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil, S(body))
 
   def checkAscription(body: Term, sign: Term)(using ResolutionContext): Unit =
     val expected = declaredType(typeResolution(sign), Map.empty)
     listenTerm(body): shape =>
-      inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil)
+      inferTypeArguments(expected.instantiate(rctx.instances), shape, Nil, S(body))
 
   /** Keep both endpoints symbolic. Register before following either endpoint,
     * so recursive references reuse the relation even before any bound exists.
     */
-  private[semantics] def constrainTypes(lower: ContextualType, upper: ContextualType)(using ResolutionContext): Unit =
+  private[semantics] def constrainTypes(lower: ContextualType, upper: ContextualType, site: Opt[Term])(using ResolutionContext): Unit =
     if rctx.state.typeRelations.add((lower, upper)) then
       instanceShape(lower.tpe).exit(lower.marks).enter(upper.marks) match
-        case value: TermShape => inferTypeArguments(upper.tpe, value, upper.marks)
+        case value: TermShape => inferTypeArguments(upper.tpe, value, upper.marks, site)
         case NoShape => ()
 
-  private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
+  // Keep the first diagnostic use site outside the semantic constraint key, so
+  // reporting provenance does not multiply identical edges in the inference graph.
+  private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks],
+      site: Opt[Term])(using ResolutionContext): Unit =
     if !rctx.addTypeConstraint(tpe, value, marks) then return
     val annotation = tpe.resolution.source
     def follow(tpe: DeclaredType, args: TypeApplication, captures: Ls[Marks],
@@ -1864,7 +1976,7 @@ class NewResolver:
                   case Marked(instance: InstanceShape, context) =>
                     val endpoint = if context == NoMarks then Nil else context :: Nil
                     value.exit(marks).enter(context) match
-                      case actual: TermShape => inferTypeArguments(instance.tpe, actual, endpoint)
+                      case actual: TermShape => inferTypeArguments(instance.tpe, actual, endpoint, site)
                       case NoShape => ()
                   case _ => ()
             else publishParameter(destination, lower)
@@ -1876,24 +1988,11 @@ class NewResolver:
         case TypeShape.Applied(base, params) =>
           follow(declaredType(base, tpe), typeApplication(params, tpe), captures, next)
         case TypeShape.Alias(symbol, S(rhs)) =>
-          follow(declaredType(rhs, typeBindings(tpe, args, symbol.defn.get.tparams, true), tpe.positive), noTypeArguments, captures, next)
+          follow(declaredType(rhs, aliasBindings(tpe, args, symbol.defn.get.tparams, tpe.positive), tpe.positive), noTypeArguments, captures, next)
         case TypeShape.Hole(host) => value.enter(captures) match
           case value: TermShape => host.publish(value)
           case NoShape => ()
-        case TypeShape.Tuple(fields) => observe:
-          case unknown @ Marked(_: UnknownValueShape, _) =>
-            fields.foreach(field => inferTypeArguments(declaredType(field, tpe), unknown, marks))
-          case Marked(tuple: TupleShape, context) =>
-            fields.zipWithIndex.foreach: (field, index) =>
-              tuple.getMember(index.toString) match
-                case MemberLookup.Indexed(actual, inner) => actual.foreach: element =>
-                  listenTupleField(element): shape =>
-                    shape.exit(inner).exit(context) match
-                      case value: TermShape =>
-                        inferTypeArguments(declaredType(field, tpe), value, marks)
-                      case NoShape => ()
-                case _ => ()
-          case _ => ()
+        case TypeShape.Tuple(_) => observe(constrainTuple(tpe, _, marks, site))
         case TypeShape.Union(left, right) =>
           follow(declaredType(left, tpe), noTypeArguments, captures, next)
           follow(declaredType(right, tpe), noTypeArguments, captures, next)
@@ -1906,8 +2005,8 @@ class NewResolver:
         // candidates through listenConstraintViews, avoiding candidate products.
         case TypeShape.Combined(formula) =>
           formula.orderedAtoms.foreach(atom => follow(atom.instantiate(tpe.instances), noTypeArguments, captures, next))
-        case TypeShape.Record(_, fields) => observe(constrainRecord(fields.map((field, sign) => field -> declaredType(sign, tpe)), _, marks))
-        case TypeShape.Function(_, _) => observe(constrainFunction(tpe, _, marks))
+        case TypeShape.Record(_, fields) => observe(constrainRecord(fields.map((field, sign) => field -> declaredType(sign, tpe)), _, marks, site))
+        case TypeShape.Function(_, _) => observe(constrainFunction(tpe, _, marks, site))
         case TypeShape.Polymorphic(_, _, body) =>
           follow(declaredType(body, tpe), args, captures, next)
         case TypeShape.Wildcard(input, _) => input.foreach(res => follow(declaredType(res, tpe.withPolarity(!tpe.positive)), args, captures, next))
@@ -1935,8 +2034,8 @@ class NewResolver:
             def constrain(param: TyParam, bound: DeclaredType, pattern: DeclaredType)(using ResolutionContext): Unit =
               listenArgumentParts(bound.instantiate(instances)): actual =>
                 listenArgumentParts(argumentType(pattern, param)): expected =>
-                  constrainTypes(ContextualType(actual.output, context), ContextualType(expected.output, Nil))
-                  constrainTypes(ContextualType(expected.input, Nil), ContextualType(actual.input, context))
+                  constrainTypes(ContextualType(actual.output, context), ContextualType(expected.output, Nil), site)
+                  constrainTypes(ContextualType(expected.input, Nil), ContextualType(actual.input, context), site)
             def originalParameters()(using ResolutionContext): Unit = cls.tparams.zip(arguments).foreach: (param, pattern) =>
               val bound = parameterType(TypeShape.Parameter(param.sym, param.sym.inferenceHost))
               constrain(param, argumentType(bound, param), pattern)
@@ -1951,7 +2050,7 @@ class NewResolver:
               case _: UnknownValueShape =>
                 cls.tparams.zip(arguments).foreach: (param, argument) =>
                   listenArgumentParts(argumentType(argument, param)): parts =>
-                    inferTypeArguments(parts.output, value, marks)
+                    inferTypeArguments(parts.output, value, marks, site)
               case ds: DefnShape =>
                 if ds.clsDef.contains(cls) then originalParameters() else ds.ext.foreach(parent)
               case base: BaseShape =>
@@ -1968,50 +2067,109 @@ class NewResolver:
           // A concrete target stays fixed, but must receive bounds that arrive
           // through a symbolic source later. Concrete mismatch reporting is
           // separate from retaining this obligation in the graph.
-          case Marked(_: InstanceShape, _) => listenConstraintViews(value)(inferTypeArguments(tpe, _, marks))
+          case Marked(_: InstanceShape, _) => listenConstraintViews(value)(inferTypeArguments(tpe, _, marks, site))
           case _ => ()
     // Alias expansion guards only unproductive cycles. Descending into a tuple,
     // nominal argument, or arrow installs another edge with its own cycle guard.
     withCanonicalType(tpe)(follow(_, noTypeArguments, Nil, Set.empty))
+
+  /** Expand fixed tuple spreads before matching positions. Unknown-length
+    * segments share the remaining middle elements, as with declared parameter
+    * lists; their symbolic fields retain both input and output type arguments.
+    */
+  private def constrainTuple(expected: DeclaredType, actual: TermShape, marks: Ls[Marks],
+      site: Opt[Term])(using ResolutionContext): Unit =
+    listenTypeViews(expected, mergeIntersections = false):
+      case Marked(tuple: TupleShape, context) =>
+        def constrain(field: TupleShape.Fixed, value: TermShape)(using ResolutionContext): Unit =
+          listenTupleField(field):
+            case Marked(instance: InstanceShape, inner) =>
+              inferTypeArguments(transportType(instance.tpe, inner :: context :: Nil), value, marks, site)
+            case _ => ()
+        val (leading, rest) = tuple.segments.span(_.isInstanceOf[TupleShape.Fixed])
+        val (trailing, middle) = rest.reverse.span(_.isInstanceOf[TupleShape.Fixed])
+        val positions = leading ::: trailing.reverse
+        actual match
+          case unknown @ Marked(_: UnknownValueShape, _) =>
+            tuple.segments.foreach(segment => constrain(segment.element, unknown))
+          case Marked(supplied: TupleShape, suppliedContext) =>
+            val arity = Arity(leading.length, leading.length, middle.nonEmpty, trailing.length)
+            zipTupleShapes(Nil, arity, supplied, suppliedContext): (index, shape) =>
+              shape match
+                case value: TermShape if arity.hasRest && index == leading.length =>
+                  listenArrayElements(value): element =>
+                    middle.foreach(segment => constrain(segment.element, element))
+                case value: TermShape =>
+                  val position = if arity.hasRest && index > leading.length then index - 1 else index
+                  constrain(positions(position).element, value)
+                case NoShape => ()
+          case _ =>
+            listenArrayElements(actual): element =>
+              tuple.segments.foreach(segment => constrain(segment.element, element))
+      case _ => ()
 
   /** Structural constraints follow declared fields only. This supplies generic
     * argument inference and callback checking without refining the annotation
     * with additional properties from an actual record.
     */
   private def constrainRecord(fields: Ls[(RcdField, DeclaredType)],
-      actual: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
+      actual: TermShape, marks: Ls[Marks], site: Opt[Term])(using ResolutionContext): Unit =
     fields.foreach: (field, expected) =>
       val flow = rctx.fieldProjectionSite(field.sym)
-      def receive(value: TermShape)(using ResolutionContext): Unit = inferTypeArguments(expected, value, marks)
-      def member(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
-        case MemberLookup.Contextual(source, substitution) => member(source, instances.withOverrides(substitution))
-        case MemberLookup.Found(RecordMember(member, true), _) => receive(UnknownValueShape.at(member.rhs))
-        case MemberLookup.Found(member, inner) =>
-          fromBMS(member.memberSymbol, flow, inner, value => receive(instantiateShape(value, instances)), field.rhs, _ => (), false)(using rctx.withInstances(instances))
-        case MemberLookup.Declared(member, bound, inner, annotation, positive) =>
-          listenDeclaredMember(member, bound, flow, field.rhs, annotation, _ => (), false, positive, inner, N): value =>
-            transportShape(instantiateShape(value, instances), inner) match
-              case value: TermShape => receive(value)
-              case NoShape => ()
-        case MemberLookup.Typed(_, tpe, inner) =>
-          receive(instanceShape(transportType(instantiateType(tpe, instances), inner)))
-        case MemberLookup.Dynamic(inner) => DynShape().exit(inner) match
-          case value: TermShape => receive(value)
-          case NoShape => ()
-        case _ => ()
+      def receive(value: TermShape)(using ResolutionContext): Unit = inferTypeArguments(expected, value, marks, site)
+
       actual match
         case Marked(_: UnknownValueShape, _) => receive(actual)
-        case _ => member(actual.getMember(field.sym.nme), TypeSubstitution.empty)
+        // A structural interface only describes public members.
+        case _ => listenMemberValue(actual.getMember(field.key.get).visibleFrom(_ => false, reportInaccessible = false),
+          flow, field.rhs, TypeSubstitution.empty, () => ())(receive)
+
+  /** Read a member using the same declaration and scope rules for ordinary
+    * constraints and implicit protocol observations. The caller decides whether
+    * a missing/opaque member contributes uncertainty or no new constraint.
+    */
+  private def listenMemberValue(info: MemberLookup, flow: FlowSymbol, source: Term,
+      instances: TypeSubstitution, unresolved: () => ResolutionContext ?=> Unit)(receive: Listener)
+      (using ResolutionContext): Unit = info match
+    case MemberLookup.All(members) => members.foreach(listenMemberValue(_, flow, source, instances, unresolved)(receive))
+    case MemberLookup.Contextual(nested, substitution) => listenMemberValue(nested, flow, source, instances.withOverrides(substitution), unresolved)(receive)
+    case MemberLookup.Found(RecordMember(member, true), _) => receive(UnknownValueShape.at(member.rhs))
+    case MemberLookup.Found(member, inner) =>
+      fromBMS(member.memberSymbol, flow, inner, value => receive(instantiateShape(value, instances)), source, _ => (), false)(using rctx.withInstances(instances))
+    case MemberLookup.Declared(member, bound, inner, annotation, positive) =>
+      listenDeclaredMember(member, bound, flow, source, annotation, _ => (), false, positive, inner, N): value =>
+        transportShape(instantiateShape(value, instances), inner) match
+          case value: TermShape => receive(value)
+          case NoShape => ()
+    case MemberLookup.Typed(_, tpe, inner) =>
+      receive(instanceShape(transportType(instantiateType(tpe, instances), inner)))
+    case MemberLookup.Dynamic(inner) => DynShape().exit(inner) match
+      case value: TermShape => receive(value)
+      case NoShape => ()
+    case MemberLookup.Indexed(fields, inner) => fields.foreach: field =>
+      listenTupleField(field): value =>
+        transportShape(instantiateShape(value, instances), inner) match
+          case value: TermShape => receive(value)
+          case NoShape => ()
+    case _ => unresolved()
 
   /** Function constraints reverse the parameter flow and preserve result flow.
     * Read an implementation only while checking it against its declared interface;
     * calls through that interface continue to expose only the declared result.
     */
-  private[semantics] def constrainFunction(expected: DeclaredType, source: TermShape, marks: Ls[Marks])(using ResolutionContext): Unit =
+  private[semantics] def constrainFunction(expected: DeclaredType, source: TermShape, marks: Ls[Marks],
+      site: Opt[Term])(using ResolutionContext): Unit =
     val ShapeParts(actual, instances, _) = shapeParts(source)
+    def arityError(expected: DeclaredType)(using ResolutionContext): Unit =
+      val messages =
+        msg"Callback parameter list does not match its declared function type." -> actual.toLoc ::
+        msg"The expected function type is declared here." -> expected.resolution.source.toLoc :: Nil
+      site match
+        case S(use) => resolError(use, messages)
+        case N => rctx.report(ErrorReport(messages))
     actual match
       case Marked(_: InstanceShape, _) =>
-        listenConstraintViews(actual)(constrainFunction(expected, _, marks))
+        listenConstraintViews(actual)(constrainFunction(expected, _, marks, site))
         return
       case _ => ()
     val context = actual.applicationHead._2
@@ -2025,72 +2183,172 @@ class NewResolver:
         case _ => ()
       case _ => ()
     def matchLists(expected: DeclaredType, remaining: Ls[(ParamList, Ls[Marks])])(using ResolutionContext): Unit =
-      listenTypeViews(expected):
+      listenTypeViews(expected, mergeIntersections = false):
         case Marked(callable: CallableTypeShape, expectedContext) => remaining match
           case (params, _) :: tail =>
             val declared = callable.paramLists.head
-            if declared.params.length < params.params.length
-                || (declared.params.length > params.params.length && params.restParam.isEmpty)
-                || (declared.hasRest && params.restParam.isEmpty) then
-              resolError(expected.resolution.source, msg"Callback parameter list does not match its declared function type." -> actual.toLoc :: Nil)
-            else
-              params.params.zip(declared.params).foreach: (param, sign) =>
-                sign.foreach: tpe =>
-                  listenTypeInstances(tpe): shape =>
-                    constrainParameterIn(param, shape.exit(expectedContext).enter(context), context, instances)
-              params.restParam.foreach: rest =>
-                val fields = declared.params.drop(params.params.length).map:
-                  case S(tpe) => TupleShape.TypedField(tpe, Nil)
-                  case N => TupleShape.UnknownField(callable.source, Nil)
-                val suffix = if declared.hasRest
-                  then TupleShape.Unknown(callable.source, TupleShape.UnknownField(callable.source, Nil)) :: Nil
-                  else Nil
-                val tuple = TupleShape(callable.source, fields ::: suffix)(this)
-                constrainParameterIn(rest, tuple.exit(expectedContext).enter(context), context, instances)
-              callable.result.foreach: ret =>
-                tail match
-                  case Nil => results: shape =>
-                    shape.exit(context).enter(expectedContext) match
-                      case value: TermShape => inferTypeArguments(ret, value, marks)
-                      case NoShape => ()
-                  case _ => matchLists(ret, tail)
+            if callbackArityMismatch(Arity(params), declared) then
+              arityError(expected)
+            // Diagnostics must not disconnect parameter or result constraints.
+            val allParams = params.allParams
+            zipCallbackArguments(context, Arity(params), declared, callable.source, expectedContext)(
+              (index, shape) => constrainParameterIn(allParams(index), shape, context, instances, site))
+            callable.result.foreach: ret =>
+              tail match
+                case Nil => results: shape =>
+                  shape.exit(context).enter(expectedContext) match
+                    case value: TermShape => inferTypeArguments(ret, value, marks, site)
+                    case NoShape => ()
+                case _ => matchLists(ret, tail)
           case Nil => ()
         case Marked(record: RecordTypeShape, _) =>
           constrainRecord(record.fields.iterator.map((name, tpe) => record.declarations(name) -> tpe).toList,
-            actual, marks)
+            actual, marks, site)
         case _ => ()
     actual match
       case Marked(_: UnknownValueShape, _) =>
-        listenTypeViews(expected):
+        listenTypeViews(expected, mergeIntersections = false):
           case Marked(callable: CallableTypeShape, _) =>
-            callable.result.foreach(ret => inferTypeArguments(ret, actual, marks))
+            callable.result.foreach(ret => inferTypeArguments(ret, actual, marks, site))
           case _ => ()
       case Marked(givenType: CallableTypeShape, actualContext) =>
-        listenTypeViews(expected):
+        listenTypeViews(expected, mergeIntersections = false):
           case Marked(wanted: CallableTypeShape, expectedContext) =>
             val domain = givenType.paramLists.head
             val expectedDomain = wanted.paramLists.head
-            if domain.params.length != expectedDomain.params.length || domain.hasRest != expectedDomain.hasRest then
-              resolError(expected.resolution.source, msg"Callback parameter list does not match its declared function type." -> actual.toLoc :: Nil)
-            else
-              domain.params.zip(expectedDomain.params).foreach:
-                case (S(givenParam), S(wantedParam)) =>
-                  listenTypeInstances(wantedParam): shape =>
-                    shape.exit(expectedContext).enter(actualContext) match
-                      case value: TermShape => inferTypeArguments(givenParam, value, context)
-                      case NoShape => ()
-                case _ => ()
-              wanted.result.foreach: ret =>
-                def receive(shape: TermShape)(using ResolutionContext): Unit = shape.exit(actualContext).enter(expectedContext) match
-                  case value: TermShape => inferTypeArguments(ret, value, marks)
+            if callbackArityMismatch(Arity(domain), expectedDomain) then
+              arityError(expected)
+            val allParams = domain.allParams
+            zipCallbackArguments(actualContext :: Nil, Arity(domain), expectedDomain, wanted.source, expectedContext)(
+              (index, shape) => allParams(index).tpe.foreach: tpe =>
+                shape match
+                  case value: TermShape => inferTypeArguments(tpe, value, context, site)
                   case NoShape => ()
-                listenCallableResult(givenType)(receive)
+              )
+            wanted.result.foreach: ret =>
+              def receive(shape: TermShape)(using ResolutionContext): Unit = shape.exit(actualContext).enter(expectedContext) match
+                case value: TermShape => inferTypeArguments(ret, value, marks, site)
+                case NoShape => ()
+              listenCallableResult(givenType)(receive)
           case _ => ()
       case _ => matchLists(expected, actual.unappliedParams)
 
+  /** Check obvious arity and droppability mismatches. Different variadic layouts
+    * need not agree: a callback may collect trailing arguments in its rest parameter
+    * or take fixed interface arguments from the end. More involved compatibility
+    * questions belong to type checking, rather than a structural-equality check.
+    * For fixed callbacks, diagnose trailing inputs that remain out of reach even
+    * when callers omit all optional leading and variadic arguments.
+    */
+  private def callbackArityMismatch(actual: Arity, expected: DeclaredParams): Bool =
+    val trailingCapacity = (actual.leading - expected.leadingRequired).max(0)
+    actual.required > Arity(expected).required
+      || !actual.hasRest && expected.variadic.exists(!_.param.flags.droppable)
+      || !actual.hasRest && expected.params.drop(actual.leading).exists(!_.flags.droppable)
+      || !actual.hasRest && expected.trailing.drop(trailingCapacity).exists(!_.flags.droppable)
+
+  /** Approximate a declared argument list without choosing a compound signature's
+    * branch or enumerating spread lengths. Equal layouts retain whole parameter
+    * annotations. Otherwise align a guaranteed prefix and suffix, and join all
+    * remaining flows at every possible middle position. In particular, an unknown
+    * position must not erase a known element type or a symbolic inference endpoint.
+    */
+  private def zipDeclaredParameters(arity: Arity, declared: DeclaredParams)(
+      publish: (Int, DeclaredType) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+    def assign(index: Int, param: DeclaredParam): Unit = param.tpe.foreach(publish(index, _))
+    if arity == Arity(declared) then
+      declared.allParams.zipWithIndex.foreach((sign, index) => assign(index, sign))
+    else
+      val sharedTail = arity.trailing.min(declared.trailing.length)
+      val alignedTail = arity.trailing == declared.trailing.length
+      val prefix = if alignedTail then arity.leading.min(declared.params.length)
+        else arity.leadingRequired.min(declared.leadingRequired)
+      declared.params.take(prefix).zipWithIndex.foreach((sign, index) => assign(index, sign))
+      declared.trailing.takeRight(sharedTail).zipWithIndex.foreach: (sign, index) =>
+        assign(arity.leading + 1 + arity.trailing - sharedTail + index, sign)
+      val positions = (prefix until arity.leading) ++
+        (arity.leading + 1 until arity.leading + 1 + arity.trailing - sharedTail)
+      val middle = declared.params.drop(prefix) ::: declared.trailing.dropRight(sharedTail)
+      middle.foreach(sign => positions.foreach(assign(_, sign)))
+      def restElement(element: DeclaredType, marks: Marks)(using ResolutionContext): Unit =
+        val tpe = transportType(element, marks :: Nil)
+        positions.foreach(index => publish(index, tpe))
+        if arity.hasRest then publish(arity.leading, arrayType(tpe))
+      declared.rest.foreach: rest =>
+        listenTypeViews(rest, mergeIntersections = false):
+          case Marked(array: NominalInstanceView, marks) =>
+            arrayElementType(array).foreach(restElement(_, marks))
+          case Marked(tuple: TupleShape, marks) =>
+            tuple.segments.foreach: segment =>
+              listenTupleField(segment.element):
+                // Written tuple types retain their symbolic element endpoints.
+                case Marked(instance: InstanceShape, inner) =>
+                  restElement(transportType(instance.tpe, inner :: Nil), marks)
+                case _ => arrayElementType(tuple.arrayParent).foreach(restElement(_, marks))
+          case _ => ()
+      if arity.hasRest then
+        // Slicing can change a tuple-typed rest's length. Keep its element types
+        // above, but widen the length to avoid false arity errors on forwarding.
+        // Scalar middle inputs likewise contribute an Array of their declared type.
+        middle.flatMap(_.tpe).foreach(tpe => publish(arity.leading, arrayType(tpe)))
+        if middle.flatMap(_.tpe).isEmpty then
+          // Even an empty or still-unresolved rest supplies the Array interface.
+          publish(arity.leading, arrayType(extremeType(false)))
+
+  private def arrayType(element: DeclaredType)(using ResolutionContext): DeclaredType =
+    appliedType(prelude.builtins.Array, new ::(element, Nil))
+
+  /** Synthesized applications need stable resolution identities: reference interning
+    * cannot merge newly allocated TypeResolution nodes. Share the entire application
+    * by constructor and symbolic arguments, rather than making a cache per builtin.
+    * Combined atoms embed each argument's bindings, polarity, and scope transfers;
+    * observing its current values here would lose later inference flows.
+    */
+  private def appliedType(symbol: ClassSymbol | TypeAliasSymbol, arguments: NELs[DeclaredType])
+      (using ResolutionContext): DeclaredType =
+    rctx.state.appliedTypes.getOrElseUpdate((symbol, arguments), {
+      val source = arguments.head.resolution
+      val member = symbol.defn.get.bsym
+      // The constructor has no written identifier; its arguments retain their own source origins.
+      val head = Term.MemberRef(member)(N, FlowSymbol.memSym(member))
+      head.resolvedTargets = symbol :: Nil
+      // This head is fully applied and has no lexical binders. Reusing an argument's
+      // source would misclassify it as a bare generic use in that argument's scope.
+      rctx.recordLexicalBinders(head, Set.empty)
+      rctx.recordAppliedTypeArguments(head, arguments.length)
+      val constructor = new TypeResolution(head, source.fail)
+      softAssert(symbol.defn.get.tparams.length == arguments.length, "A synthesized type application must supply every parameter")
+      symbol match
+        case cls: ClassSymbol => constructor.publish(TypeShape.Nominal(cls.defn.get))
+        case alias: TypeAliasSymbol =>
+          constructor.publish(TypeShape.Alias(alias, alias.defn.get.rhs.map(typeResolution)))
+      val args = arguments.map: argument =>
+        val resolution = new TypeResolution(argument.resolution.source, argument.resolution.fail)
+        resolution.publish(TypeShape.Combined(TypeFormula.atom(argument)))
+        resolution
+      val resolution = new TypeResolution(source.source, source.fail)
+      resolution.publish(TypeShape.Applied(constructor, args))
+      declaredType(resolution, Map.empty)
+    })
+
+  /** Fixed callback interfaces describe an ordinary argument tuple. Variable
+    * layouts use the same flow approximation as separate signatures.
+    */
+  private def zipCallbackArguments(mss: Ls[Marks], arity: Arity, declared: DeclaredParams, source: Term, marks: Marks)(
+      publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+    def fields(params: Ls[DeclaredParam]): Ls[TupleShape.Fixed] = params.map: param =>
+      param.tpe match
+        case S(tpe) => TupleShape.TypedField(tpe, Nil)
+        case N => TupleShape.UnknownField(source, Nil)
+    if !declared.hasRest && declared.leadingRequired == declared.params.length && arity.required <= declared.params.length then
+      zipTupleShapes(mss, arity, TupleShape(source, fields(declared.params))(this), marks)(publish)
+    else
+      zipDeclaredParameters(arity, declared): (index, tpe) =>
+        listenTypeInstances(tpe)(shape => publish(index, shape.exit(marks).enter(mss)))
+  
   private def listenSignatureResult(tpe: DeclaredType, count: Int)(listener: Listener)(using ResolutionContext): Unit =
     if count == 0 then listenTypeInstances(tpe)(listener)
-    else listenTypeViews(tpe):
+    else listenTypeViews(tpe, mergeIntersections = false):
       case Marked(callable: CallableTypeShape, marks) =>
         callable.result.foreach(tpe => listenSignatureResult(transportType(tpe, marks :: Nil), count - 1)(listener))
       case _ => ()
@@ -2166,13 +2424,31 @@ class NewResolver:
     * through one path then cross the same scope twice when they are read
     * through the other path.
     */
-  private[semantics] def nominalMember(view: NominalInstanceView, name: Str, receiver: Marks)(using ResolutionContext): MemberLookup =
+  private[semantics] def nominalMember(view: NominalInstanceView, name: MemberKey, receiver: Marks)(using ResolutionContext): MemberLookup =
     val defn = view.defn
     // Module/object references introduce no value invocation boundary.
     val scope = defn.sym match
       case _: ModuleOrObjectSymbol => N
       case symbol => S(ResolutionBoundary(symbol))
-    defn.body.members.get(name) match
+    def inherited: MemberLookup =
+      (MemberKey.index(name), arrayElementType(view)) match
+        // An element's value keeps its whole path, including its provenance.
+        case (S(index), S(element)) if index >= 0 =>
+          MemberLookup.Indexed(TupleShape.TypedField(element, Nil) :: Nil, Nil).withMarks(receiver :: Nil)
+        case _ =>
+          // The parent is referenced inside the class, like its own members'
+          // annotations: `class Int extends Num` captures `Num` into Int's
+          // scope. An inherited member exits that scope before the receiver
+          // path applies, just like an own member.
+          val parentMember = nominalParent(view).fold[MemberLookup](MemberLookup.Missing): parent =>
+            val Marked(parentView, inner) = parent
+            markCarrier.exit(inner).exit(receiver) match
+              case Marked(_, path) => parentView.getMemberThrough(name, path)
+              // The parent interface is not reachable through this receiver;
+              // applying these marks to its members yields no candidates.
+              case NoShape => parentView.getMember(name).withMarks(inner :: receiver :: Nil)
+          parentMember.withAnnotation(view.annotation)
+    MemberKey.own(defn, name) match
       case S(member) =>
         val (location, provenance) = splitReceiverPath(defn, receiver)
         // Supplied arguments are outside the class; its parameter annotations
@@ -2184,28 +2460,13 @@ class NewResolver:
             case provenance: ExitMark => transportType(bound, provenance :: Nil)
           symbol -> argument
         val local = captureNominalBindings(defn, transported)
-        MemberLookup.Declared(member, local, scope.toList.map(ExitMark(_, N, NoMarks)), view.annotation, true)
-          .withMarks(location match
-            case NoMarks => Nil
-            case location: SomeMarks => location :: Nil)
-      case N =>
-        (name.toIntOption, arrayElementType(view)) match
-          // An element's value keeps its whole path, including its provenance.
-          case (S(index), S(element)) if index >= 0 =>
-            MemberLookup.Indexed(TupleShape.TypedField(element, Nil) :: Nil, Nil).withMarks(receiver :: Nil)
-          case _ =>
-            // The parent is referenced inside the class, like its own members'
-            // annotations: `class Int extends Num` captures `Num` into Int's
-            // scope. An inherited member exits that scope before the receiver
-            // path applies, just like an own member.
-            val inherited = nominalParent(view).fold[MemberLookup](MemberLookup.Missing): parent =>
-              val Marked(parentView, inner) = parent
-              markCarrier.exit(inner).exit(receiver) match
-                case Marked(_, path) => parentView.getMemberThrough(name, path)
-                // The parent interface is not reachable through this receiver;
-                // applying these marks to its members yields no candidates.
-                case NoShape => parentView.getMember(name).withMarks(inner :: receiver :: Nil)
-            inherited.withAnnotation(view.annotation)
+        MemberLookup.own(defn, member,
+          MemberLookup.Declared(member, local, scope.toList.map(ExitMark(_, N, NoMarks)), view.annotation, true)
+            .withMarks(location match
+              case NoMarks => Nil
+              case location: SomeMarks => location :: Nil),
+          inherited)
+      case N => inherited
 
   /** Supplied class arguments are outside the instance scope. Both member and
     * parent annotations refer to those parameters from inside that scope.
@@ -2296,7 +2557,7 @@ class NewResolver:
           case nominal: NominalInstanceView => arrayElementType(nominal).foreach: element =>
             listenTerm(rhs): value =>
               value.enter(context) match
-                case value: TermShape => inferTypeArguments(element, value, context)
+                case value: TermShape => inferTypeArguments(element, value, context, S(rhs))
                 case NoShape => ()
           case _ => ()
 
@@ -2312,9 +2573,10 @@ class NewResolver:
       case TupleShape.ViewedField(source, instances, _) =>
         listenTupleField(source)(value => receive(instantiateShape(value, instances)))(using rctx.withInstances(instances))
 
-  /** Array spreads have unknown length, but their declared element type still
-    * constrains every element. Never recover elements from constructor values:
-    * Arrays are mutable, and the one-number constructor creates empty slots.
+  /** Array patterns and rest-parameter constraints read Array's element bound.
+    * Spreads instead observe the iteration protocol below. Never recover array
+    * elements from constructor values: arrays are mutable, and the one-number
+    * constructor creates empty slots.
     */
   private[semantics] def listenArrayElements(shape: TermShape)(listener: Listener)(using ResolutionContext): Bool =
     shape.applicationHead._1 match
@@ -2324,6 +2586,55 @@ class NewResolver:
             case value: TermShape => listener(value)
             case NoShape => ())
       case _ => listenClassArgument(shape, prelude.builtins.Array.defn.get)(listener)
+
+  /** Follow the actual iteration protocol. Each spread owns stable selection and
+    * application sites; all operand alternatives contribute to one element host.
+    * Unknown steps stay permissive and never replace already-known element flows.
+    */
+  private def iterationFlow(source: Term, scope: Opt[Set[VarSymbol]])(using ResolutionContext): IterationFlow =
+    rctx.spreadFlow(source):
+      def site(name: Str): FlowSymbol = FlowSymbol(name)(using rctx.owner)
+      val empty = Tup(Nil)(Tree.Tup(Nil)).withLocOf(source)
+      scope.foreach(rctx.recordLexicalBinders(empty, _))
+      def call(name: Str): App =
+        val tree = new Tree.App(Tree.Ident(name), Tree.Tup(Nil))
+        tree.withLocOf(source)
+        val result = new App(Term.Missing, empty)(tree, N, site(name))
+        scope.foreach(rctx.recordLexicalBinders(result, _))
+        result
+      val elements = new TypeResolution(source, messages => resolError(source, messages))
+      rctx.recordTemplateBinders(elements, scope)
+      val flow = new IterationFlow(elements, call("iterator"), call("next"),
+        site("iterator member"), site("next member"), site("iteration done"), site("iteration value"))
+      def select(value: TermShape, key: MemberKey, site: FlowSymbol)(receive: Listener)(using ResolutionContext): Unit =
+        listenInstanceViews(value): view =>
+          listenMemberValue(view.getMember(key).visibleFrom(_ => false, reportInaccessible = false),
+            site, source, TypeSubstitution.empty, () => receive(UnknownValueShape.spread(source, view)))(receive)
+      listenTerm(flow.iterator): iterator =>
+        select(iterator, "next", flow.nextMember)(applyShape(_, empty, flow.next, checked = false))
+      listenTerm(flow.next): step =>
+        select(step, "done", flow.doneMember): done =>
+          val completed = done match
+            case Marked(intro: IntroShape, _) => intro.trm match
+              case Lit(Tree.BoolLit(true)) => true
+              case _ => false
+            case _ => false
+          if !completed then
+            select(step, "value", flow.valueMember)(value => elements.publish(TypeShape.Inferred(value)))
+      flow
+
+  private def listenIterableElements(value: TermShape, flow: IterationFlow)(using ResolutionContext): Unit =
+    val symbols = prelude.builtins.SymbolModule
+    // This expression is a diagnostic witness; lookup uses the canonical path.
+    val module = Term.MemberRef(symbols.bms)(N, FlowSymbol.memSym(symbols.bms))
+    val iterator = Term.NewSel(module, Tree.Ident("iterator"), N)(FlowSymbol.synthSel("iterator"))
+    val iteratorKey = SymbolKey(symbols.module :: symbols.iterator :: Nil)(
+      iterator)
+    listenInstanceViews(value): view =>
+      listenMemberValue(view.getMember(iteratorKey).visibleFrom(_ => false, reportInaccessible = false),
+        flow.iteratorMember, flow.elements.source, TypeSubstitution.empty,
+        () => flow.elements.publish(TypeShape.Inferred(UnknownValueShape.spread(flow.elements.source, view)))):
+          method => applyShape(method, flow.iterator.rhs, flow.iterator, checked = false)
 
   private[semantics] def listenPromisePayload(shape: TermShape)(listener: Listener)(using ResolutionContext): Bool =
     listenClassArgument(shape, prelude.builtins.Promise.defn.get)(listener)
@@ -2358,96 +2669,125 @@ class NewResolver:
   /** Subscribe once to complete argument-tuple candidates. A pending spread is not
     * an argument, nor evidence of an arity mismatch; each resolved combination is.
     */
-  def zipArgs(mss: Ls[Marks], ps: Ls[Param], r: Opt[Param], args: Term, src: Term, funSh: TermShape)(using ResolutionContext): Unit =
-    zipArgsIn(mss, ps, r, args, src, funSh, rctx.instances)
+  def zipArgs(mss: Ls[Marks], ps: ParamList, args: Term, src: Term, funSh: TermShape)(using ResolutionContext): Unit =
+    zipArgsIn(mss, ps, args, src, funSh, rctx.instances)
 
-  private def zipArgsIn(mss: Ls[Marks], ps: Ls[Param], r: Opt[Param], args: Term, src: Term, funSh: TermShape,
+  private def zipArgsIn(mss: Ls[Marks], ps: ParamList, args: Term, src: Term, funSh: TermShape,
       instances: TypeSubstitution)(using ResolutionContext): Unit =
-    val params = ps ::: r.toList
-    zipArgumentShapes(mss, ps.length, r.nonEmpty, args, src, funSh): (index, shape) =>
-      constrainParameterIn(params(index), shape, mss, instances)
+    val params = ps.allParams
+    zipArgumentShapes(mss, Arity(ps), args, src, funSh)(
+      (index, shape) => constrainParameterIn(params(index), shape, mss, instances, S(src)))
 
   private[semantics] def constrainParameter(p: Param, shape: TermShape | NoShape, marks: Ls[Marks])(using ResolutionContext): Unit =
-    constrainParameterIn(p, shape, marks, rctx.instances)
+    constrainParameterIn(p, shape, marks, rctx.instances, N)
 
   private def constrainParameterIn(p: Param, shape: TermShape | NoShape, marks: Ls[Marks],
-      instances: TypeSubstitution)(using ResolutionContext): Unit =
-    shape match
-      case NoShape => ()
-      case sh: TermShape =>
-        parameterSignature(p) match
-          case S(tpe) => inferTypeArguments(tpe.instantiate(instances), sh, marks)
-          case N => publishParameter(p.sym, sh)(using rctx.withInstances(instances))
+      instances: TypeSubstitution, site: Opt[Term])(using ResolutionContext): Unit = shape match
+    case NoShape => ()
+    case sh: TermShape =>
+      parameterSignature(p) match
+        case S(tpe) => inferTypeArguments(tpe.instantiate(instances), sh, marks, site)
+        case N => publishParameter(p.sym, sh)(using rctx.withInstances(instances))
 
   private[semantics] def parameterSignature(p: Param)(using ResolutionContext): Opt[DeclaredType] =
     p.sign.map(sign => declaredType(typeResolution(sign), Map.empty)).orElse(signatureParameters.get(p.sym))
       .orElse(p.sym.getState.newResolverState.signatureParameters.get(p.sym)(using p.sym.getState.newResolverState.context))
 
-  private def zipArgumentShapes(mss: Ls[Marks], expectedCount: Int, hasRest: Bool,
+  /** The number of arguments a parameter list accepts, with `leading` parameters, of which
+    * `leadingRequired` are required, and, if `hasRest`, a variadic parameter followed by `trailing` ones. */
+  private case class Arity(leadingRequired: Int, leading: Int, hasRest: Bool, trailing: Int):
+    require(hasRest || trailing == 0)
+    def required: Int = leadingRequired + trailing
+    def describe: Message =
+      if hasRest then msg"at least ${required.toString} ${"argument".pluralized(required)}"
+      else if required == leading then msg"${required.toString} ${"argument".pluralized(required)}"
+      else msg"${required.toString} to ${leading.toString} arguments"
+  private object Arity:
+    def apply(ps: ParamList): Arity = Arity(ps.leadingRequiredCount, ps.params.length, ps.variadic.nonEmpty, ps.trailingParams.length)
+    def apply(ps: DeclaredParams): Arity = Arity(ps.leadingRequired, ps.params.length, ps.hasRest, ps.trailing.length)
+  
+  /** Publish the shapes of the arguments matching each parameter position, where index
+    * `arity.leading` denotes the variadic parameter and the following indices its trailing parameters,
+    * as in `ParamList.allParams`. Optional parameters already include null at their declarations. */
+  private def zipArgumentShapes(mss: Ls[Marks], arity: Arity,
       args: Term, src: Term, funSh: TermShape)(publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
-    def matchSegments(tuple: TupleShape, marks: Marks)(using ResolutionContext): Unit =
-      val segments = tuple.segments
-      val knownCount = segments.count(_.isInstanceOf[TupleShape.Fixed])
-      // Distribute only successful argument counts. Unknown spreads retain all
-      // possible fixed positions and the residual tail for a rest parameter.
-      val extra = (expectedCount - knownCount).max(0)
+    checkArgumentArity(args, arity, src, funSh):
+      case (tuple, marks) => zipTupleShapes(mss, arity, tuple, marks)(publish)
+
+  /** Calls and tuple patterns match the same leading/rest/trailing layout.
+    * Share position bounds and rest slicing so both preserve possible elements
+    * without assigning them impossible positions or inventing minimum lengths.
+    */
+  private def zipTupleShapes(mss: Ls[Marks], arity: Arity, tuple: TupleShape, marks: Marks)(
+      publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+    val Arity(leadingRequired, expectedCount, hasRest, trailing) = arity
+    val knownCount = tuple.segments.count(_.isInstanceOf[TupleShape.Fixed])
+    val unknownCount = tuple.segments.length - knownCount
+    val minExtra = (arity.required - knownCount).max(0)
+    val extra = (expectedCount - knownCount).max(0)
+    // Match leading positions from the left and trailing positions from the right.
+    // A fixed field cannot cross the required parameters at the opposite end.
+    // When all unknown segments precede it, they must supply any missing required
+    // arguments. These bounds avoid enumerating spread lengths or their combinations.
+    def assignPositions(segments: Ls[TupleShape.Segment], count: Int, reserved: Int, position: Int => Int): Unit =
       def assign(segment: TupleShape.Segment, positions: Range)(using ResolutionContext): Unit =
         positions.foreach: index =>
           listenTupleField(segment.element): sh =>
-            publish(index, sh.exit(marks).enter(mss))
-      def loop(rest: Ls[TupleShape.Segment], before: Int, unknownBefore: Bool)(using ResolutionContext): Unit = rest match
+            publish(position(index), sh.exit(marks).enter(mss))
+      def loop(rest: Ls[TupleShape.Segment], before: Int, unknownBefore: Int): Unit = rest match
         case Nil => ()
         case (field: TupleShape.Fixed) :: tail =>
-          val unknownAfter = tail.exists(_.isInstanceOf[TupleShape.Unknown])
-          // With no later unknown segment, preceding spreads must supply all
-          // missing fixed arguments, even when the function has a rest parameter.
-          val first = if unknownBefore && !unknownAfter then before + extra else before
-          val last = if !unknownBefore then before
-            else if hasRest then expectedCount - 1 else before + extra
-          assign(field, first.max(0) until (last + 1).min(expectedCount))
+          val unknownAfter = unknownCount - unknownBefore
+          val after = knownCount - before - 1
+          if unknownAfter > 0 || after >= reserved then
+            val first = if unknownBefore > 0 && unknownAfter == 0 then before + minExtra else before
+            val last = if unknownBefore == 0 then before
+              else if hasRest then count - 1 else before + extra
+            assign(field, first until (last + 1).min(count))
           loop(tail, before + 1, unknownBefore)
         case (unknown: TupleShape.Unknown) :: tail =>
-          val end = if hasRest then expectedCount else before + extra
+          val end = if hasRest then count else (before + extra).min(count)
           assign(unknown, before until end)
-          loop(tail, before, true)
-      loop(segments, 0, false)
-      if hasRest then
-        // If consumption reaches an unknown segment, some subsequent fields
-        // may have been consumed too. Approximate that optional prefix with an
-        // unknown segment, retaining the suffix that must remain. Publishing
-        // separate concrete tails here would turn uncertainty into false arity
-        // failures when the rest tuple is spread into another call.
-        def drop(xs: Ls[TupleShape.Segment], count: Int, approximate: Bool)(using ResolutionContext): Ls[TupleShape.Segment] =
-          if count == 0 then xs
-          else xs match
-            case Nil => Nil
-            case (_: TupleShape.Fixed) :: rest => drop(rest, count - 1, approximate)
-            case (unknown: TupleShape.Unknown) :: Nil =>
-              // Consuming a prefix changes the length, but not the element
-              // shape, when there are no following fields to merge into it.
-              if approximate then unknown :: Nil else Nil
-            case (_: TupleShape.Unknown) :: rest =>
-              val suffix = drop(rest, count, false)
-              if approximate then TupleShape.Unknown(tuple.source, TupleShape.UnknownField(tuple.source, Nil)) :: suffix else suffix
-        val remaining = drop(segments, expectedCount, true)
-        val rest = if expectedCount == 0 then tuple else TupleShape.restView(tuple, remaining)(this)
-        publish(expectedCount, rest.exit(marks).enter(mss))
-    checkArgumentArity(args, expectedCount, hasRest, src, funSh):
-      case (tuple, marks) => matchSegments(tuple, marks)
+          loop(tail, before, unknownBefore + 1)
+      loop(segments, 0, 0)
+    assignPositions(tuple.segments, expectedCount, trailing, identity)
+    assignPositions(tuple.segments.reverse, trailing, leadingRequired, index => expectedCount + trailing - index)
+    if hasRest then
+      // If consumption reaches an unknown segment, some subsequent fields
+      // may have been consumed too. Widen their lengths, keeping every field's
+      // deferred element flow. Replacing them with an opaque unknown would lose
+      // member targets and ambiguities; retaining them as fixed fields would
+      // invent a minimum length when the rest is spread into another call.
+      def drop(xs: Ls[TupleShape.Segment], count: Int, approximate: Bool)(using ResolutionContext): Ls[TupleShape.Segment] =
+        if count == 0 then xs
+        else xs match
+          case Nil => Nil
+          case (_: TupleShape.Fixed) :: rest => drop(rest, count - 1, approximate)
+          case (unknown: TupleShape.Unknown) :: Nil =>
+            // Consuming a prefix changes the length, but not the element
+            // shape, when there are no following fields to merge into it.
+            if approximate then unknown :: Nil else Nil
+          case (_: TupleShape.Unknown) :: rest =>
+            val suffix = drop(rest, count, false)
+            if approximate then
+              xs.take(xs.length - suffix.length).map(segment => TupleShape.Unknown(tuple.source, segment.element)) ::: suffix
+            else suffix
+      val remaining = drop(drop(tuple.segments, expectedCount, true).reverse, trailing, true).reverse
+      val rest = if remaining == tuple.segments then tuple else TupleShape.restView(tuple, remaining)(this)
+      publish(expectedCount, rest.exit(marks).enter(mss))
   
-  private def checkArgumentArity(args: Term, expected: Int, rest: Bool, src: Term,
+  private def checkArgumentArity(args: Term, arity: Arity, src: Term,
       callable: TermShape)(matched: ShapeListener[(TupleShape, Marks)])(using ResolutionContext): Unit =
     val reportKey = new Object
     listenTermViews(args):
       case Marked(tuple: TupleShape, marks) =>
         val known = tuple.segments.count(_.isInstanceOf[TupleShape.Fixed])
         val unknown = known != tuple.segments.length
-        val mismatch = (!unknown && known < expected) || (!rest && known > expected)
+        val mismatch = (!unknown && known < arity.required) || (!arity.hasRest && known > arity.leading)
         if mismatch then
           if rctx.state.reportedArities.getOrElseUpdate(reportKey, mutable.Set.empty).add(known) then
             val count = if unknown then msg"at least ${known}" else msg"${known}"
-            resolError(src, callable.diagnostic(msg"${callable.describe.capitalize} expected ${expected} ${
-              "argument".pluralized(expected)}, but got ${count}"))
+            resolError(src, callable.arityDiagnostic(msg"${callable.describe.capitalize} expected ${arity.describe}, but got ${count}"))
         else matched((tuple, marks))
       case _ => resolError(src, msg"Expected an argument tuple." -> args.toLoc :: Nil)
   
@@ -2476,17 +2816,17 @@ class NewResolver:
           case N =>
             if args.nonEmpty || cls.isInstanceOf[ClassDef] then
               rctx.markError(res)
-              resolError(res, msg"${cls.describe.capitalize} does not take pattern arguments." -> cls.toLoc :: Nil)
+              resolError(res, msg"${cls.describe.capitalize} does not take pattern arguments." -> cls.headerLoc :: Nil)
             Nil
           case S(ps) =>
             // Elaboration reports and removes rest parameters of class-like definitions,
             // so the arity of a constructor pattern is the number of plain parameters.
-            softAssert(ps.restParam.isEmpty, "Unexected rest parameter in class-like definition")
+            softAssert(ps.variadic.isEmpty, "Unexected rest parameter in class-like definition")
             if args.sizeCompare(ps.params) =/= 0 then
               rctx.markError(res)
               resolError(res,
                 msg"${cls.describe.capitalize} expected ${ps.params.length} ${
-                  "pattern argument".pluralized(ps.params.length)}, but got ${args.length}" -> cls.toLoc :: Nil)
+                  "pattern argument".pluralized(ps.params.length)}, but got ${args.length}" -> cls.headerLoc :: Nil)
             ps.params.lazyZip(args).flatMap: (p, a) =>
               p.fldSym match
                 case S(fldSym: BlockMemberSymbol) =>
@@ -2557,10 +2897,9 @@ class NewResolver:
     * supply undeclared assumptions to guards or transformations.
     */
   def checkPatternDefinition(definition: PatternDef)(using ResolutionContext): Unit =
-    val source = Term.MemberRef(definition.bsym)(new syntax.Tree.Ident(definition.bsym.nme).withLocOf(definition),
-      FlowSymbol.pat()(using rctx.owner))
+    val source = Term.MemberRef(definition.bsym)(N, FlowSymbol.pat()(using rctx.owner))
     val unknown = UnknownValueShape(source, fromPublicInterface = false)(ShapeProvenance(
-      msg"Pattern '${definition.sym.nme}' accepts values of unknown shape." -> definition.toLoc :: Nil))
+      msg"Pattern '${definition.sym.nme}' accepts values of unknown shape." -> definition.headerLoc :: Nil))
     matchShapePat(unknown, definition.pattern)(_ => ())
 
   /** Propagate possible values to pattern bindings. Constructor tests filter by
@@ -2672,7 +3011,7 @@ class NewResolver:
         // The transform is lowered to a separate lambda. Its source references
         // already name these parameter symbols, not the aliases used by guards.
         parameters.foreach: (binding, parameter) =>
-          pipeTerm(Term.SimpleRef(binding)(binding.id), parameter)
+          pipeTerm(Term.SimpleRef(binding)(N), parameter)
         matchShapePat(shape, pat)(_ => ())
         listenTerm(transform)(matched)
       case Pattern.Guarded(pat, _) => matchShapePat(shape, pat)(matched)
@@ -2683,8 +3022,10 @@ class NewResolver:
           case CtorPatternShape(cls, fs, _, resSym, constructorMarks) =>
             // Nominal views already live outside the instance. Cancel the
             // constructor's own exit, retaining its enclosing lexical path.
+            // A self-contained value such as unit would discard those outer
+            // exits and lose the context of a class returned from a function.
             val context = cls match
-              case _: ClassDef => MarkedShape.enter(unitResultShape, ResolutionBoundary(cls.sym), N).exit(constructorMarks) match
+              case _: ClassDef => MarkedShape.enter(markCarrier, ResolutionBoundary(cls.sym), N).exit(constructorMarks) match
                 case Marked(_, marks) => marks :: Nil
                 case NoShape => lastWords("A wildcard constructor entry cannot reject its own exit")
               case _: ModuleOrObjectDef => Nil
@@ -2697,6 +3038,7 @@ class NewResolver:
               if sh.isInstanceOfClass(cls) then
                 fs.foreach: (bms, pat) =>
                   def member(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
+                    case MemberLookup.All(members) => members.foreach(member(_, instances))
                     case MemberLookup.Contextual(source, substitution) => member(source, instances.withOverrides(substitution))
                     case MemberLookup.Found(sym: BlockMemberSymbol, marks) =>
                       fromBMS(sym, resSym, marks,
@@ -2725,7 +3067,9 @@ class NewResolver:
                       // between nominal matching and member lookup, not recovery
                       // from a malformed class (filtered by classPattern above).
                       softAssert(false, "Matched constructor is missing its field")
-                  member(sh.getMember(bms.nme), TypeSubstitution.empty)
+                  // The pattern reads the field of `cls` even when it is private,
+                  // ignoring the private members of the same name of `cls`'s subclasses.
+                  member(sh.getMember(bms.nme).visibleFrom(_ is cls, reportInaccessible = false), TypeSubstitution.empty)
                 matched(if fs.forall((_, pat) => preservesInput(pat)) then sh else unknownOutput)
             // A structural annotation describes possible class instances too.
             // A successful class test supplies the tested class's declared
@@ -2794,41 +3138,11 @@ class NewResolver:
           val known = segments.count(_.isInstanceOf[TupleShape.Fixed])
           val uncertain = known != segments.length
           if (uncertain || known >= required) && (spread.nonEmpty || known <= required) then
-            def bind(segment: TupleShape.Segment, p: Pattern)(using ResolutionContext): Unit =
-              def receive(value: TermShape)(using ResolutionContext): Unit = value.exit(marks) match
-                case value: TermShape => matchShapePat(value, p)(_ => ())
-                case NoShape => ()
-              listenTupleField(segment.element)(receive)
-            // A spread can move subsequent fields. Retain every possible position
-            // rather than treating the first unknown segment as the only candidate.
-            def positions(xs: Ls[TupleShape.Segment], ps: Ls[Pattern])(using ResolutionContext): Unit =
-              var before = 0
-              var unknownBefore = false
-              xs.foreach:
-                case field: TupleShape.Fixed =>
-                  ps.iterator.zipWithIndex.foreach: (p, index) =>
-                    if index >= before && (if !unknownBefore then index == before
-                        else spread.nonEmpty || index <= before + required - known) then bind(field, p)
-                  before += 1
-                case unknown: TupleShape.Unknown =>
-                  ps.drop(before).foreach(bind(unknown, _))
-                  unknownBefore = true
-            positions(segments, leading)
-            positions(segments.reverse, trailing.reverse)
-            spread.foreach: (_, p, _) =>
-              // Stop trimming at an unknown segment: its possible lengths include
-              // consuming the remaining prefix/suffix, so all later values may remain.
-              def trim(xs: Ls[TupleShape.Segment], count: Int): Ls[TupleShape.Segment] =
-                if count == 0 then xs else xs match
-                  case (_: TupleShape.Fixed) :: tail => trim(tail, count - 1)
-                  case _ => xs
-              val middle = trim(trim(segments, leading.length).reverse, trailing.length).reverse
-              // Reusing an unchanged view also bounds recursive tail matching on
-              // arrays with unknown length; wrapping it again would grow forever.
-              val rest = if middle == segments then tuple
-                else TupleShape.restView(tuple, middle)(this)
-              rest.exit(marks) match
-                case value: TermShape => matchShapePat(value, p)(_ => ())
+            val patterns = leading ::: spread.toList.flatMap((_, rest, trailing) => rest :: trailing)
+            val arity = Arity(leading.length, leading.length, spread.nonEmpty, trailing.length)
+            zipTupleShapes(Nil, arity, tuple, marks): (index, value) =>
+              value match
+                case value: TermShape => matchShapePat(value, patterns(index))(_ => ())
                 case NoShape => ()
             tuple.exit(marks) match
               case value: TermShape => matched(value)
@@ -2889,10 +3203,13 @@ class NewResolver:
         listenTypeArgument(parameter): bound =>
           bound.applicationHead._1 match
             case _: RigidTypeShape => ()
-            case _ => inferTypeArguments(instanceType(instance), instantiateShape(bound, substitution), marks)
+            case _ => inferTypeArguments(instanceType(instance), instantiateShape(bound, substitution), marks, N)
     substitution
 
   def appShape(source: TermShape, args: Term, res: App)(using ResolutionContext): Unit =
+    applyShape(source, args, res, checked = true)
+
+  private def applyShape(source: TermShape, args: Term, res: App, checked: Bool)(using ResolutionContext): Unit =
     val callerInstances = rctx.instances
     val ShapeParts(lhs, lexical, supplied) = shapeParts(source)
     val captured = callerInstances.withOverrides(lexical)
@@ -2905,25 +3222,33 @@ class NewResolver:
     def publish(value: TermShape)(using ResolutionContext): Unit =
       publishViewed(res, value, instances)(using rctx.withInstances(callerInstances))
     lhs match
+      case Marked(view: IntersectionView, marks) =>
+        view.values.foreach: value =>
+          transportShape(value, marks :: Nil) match
+            case value: TermShape => applyShape(value, args, res, checked)
+            case NoShape => ()
+        return
       case Marked(_: InstanceShape, _) =>
-        listenInstanceViews(instantiateShape(lhs, instances))(appShape(_, args, res))
+        listenInstanceViews(instantiateShape(lhs, instances), mergeIntersections = checked)(applyShape(_, args, res, checked))
         return
       case _ => ()
-    // Only explicit dynamic values authorize calls without a known interface.
-    // An unknown alternative must invalidate the call even if other candidates
-    // happen to be callable in this compilation unit.
+    // Explicit calls require a known interface or an explicitly dynamic value.
+    // Implicit protocol observations instead retain unknown results below and
+    // leave protocol compatibility to type checking.
     lhs match
       case Marked(_: DynShape, _) =>
+        if checked then res.callableTargets.currentShapes.add(source)
         publish(lhs)
         return
       case _ => ()
     lhs match
       case Marked(nominal: NominalInstanceView, _) if nominal.isInstanceOfClass(prelude.builtins.Function.defn.get) =>
+        if checked then res.callableTargets.currentShapes.add(source)
         // The builtin Function class guarantees callability, including through
         // aliases and subclasses, but supplies neither an arity nor a result
         // interface. Check the argument tuple and leave arity checks to runtime;
         // the result must remain unknown rather than acquiring dynamic access.
-        checkArgumentArity(args, 0, true, res, lhs)(_ => ())
+        if checked then checkArgumentArity(args, Arity(0, 0, true, 0), res, lhs)(_ => ())
         // The call identifies the result in the flow graph, while the annotation
         // explains its missing interface. Preserve that distinction so subsequent
         // selections and applications both diagnose the restricting type once.
@@ -2931,16 +3256,17 @@ class NewResolver:
         publish(UnknownValueShape(res, fromPublicInterface = false)(nominal.annotation.fold(provenance)(provenance.withTypeOrigin)))
         return
       case Marked(original: CallableTypeShape, context) =>
+        if checked then res.callableTargets.currentShapes.add(source)
         val viewed = instantiateShape(original, instances) match
           case callable: CallableTypeShape => callable
           case _ => lastWords("A callable view must remain callable")
         val callable = instantiateCallable(viewed, res.resSym, lexicalBinders(res), context :: Nil)
         val ps = callable.paramLists.head
-        zipArgumentShapes(context :: Nil, ps.params.length, ps.hasRest, args, res, lhs): (index, value) =>
-          (if index < ps.params.length then ps.params(index) else ps.rest).foreach: tpe =>
+        if checked then zipArgumentShapes(context :: Nil, Arity(ps), args, res, lhs)((index, value) =>
+          ps.allParams(index).tpe.foreach: tpe =>
             value match
-              case value: TermShape => inferTypeArguments(tpe, value, context :: Nil)
-              case NoShape => ()
+              case value: TermShape => inferTypeArguments(tpe, value, context :: Nil, S(res))
+              case NoShape => ())
         def publish(shape: TermShape)(using ResolutionContext): Unit = transportShape(shape, context :: Nil) match
           case value: TermShape =>
             publishViewed(res, value, TypeSubstitution.empty)(using rctx.withInstances(callerInstances))
@@ -2949,18 +3275,21 @@ class NewResolver:
         return
       case _ => ()
     val sh = appShapes.getOrElseUpdate((ShapeIdentity.key(lhs), res.resSym), {
-      log(s"appShape: lhs = ${lhs.shwDbg}, args = ${args.showDbg}, res = ${res.showDbg}")
+      log(dbg"appShape: lhs = ${lhs.shwDbg}, args = ${args.showDbg}, res = ${res.showDbg}")
       new AppShape(lhs, args, res)
     })
     lhs.unappliedParams match
     case Nil => ()
     case (ps, mss) :: pss =>
-      zipArgsIn(mss, ps.params, ps.restParam, args, res, lhs, instances)
-    log(s"appShape isSaturated? ${sh.isSaturated}; head? ${sh.applicationHead._1.shwDbg}, ${sh.applicationHead._2.map(_.showDbg)}")
+      if checked then zipArgsIn(mss, ps, args, res, lhs, instances)
+      else
+        // Protocol observations supply no arguments, so a rest parameter is empty.
+        ps.variadic.foreach(v => constrainParameterIn(v.param,
+          TupleShape(args, Nil)(this), mss, instances, N))
+    log(dbg"appShape isSaturated? ${sh.isSaturated}; head? ${sh.applicationHead._1.shwDbg}, ${sh.applicationHead._2.map(_.showDbg)}")
     def register(using ResolutionContext) = publish(sh)
-    log(s"lhs ${lhs.isSaturated} ${lhs.unappliedParams.map(_.mapFirst(_.showDbg).mapSecond(_.map(_.showDbg)))}")
-    if lhs.isSaturated && !rctx.hasError(res) then
-      rctx.markError(res)
+    log(dbg"lhs ${lhs.isSaturated} ${lhs.unappliedParams.map(_.mapFirst(_.showDbg).mapSecond(_.map(_.showDbg)))}")
+    if lhs.isSaturated then
       // Marks transport a value across scopes; they do not apply arguments.
       // Inspect the value beneath them, retaining actual calls/instantiations
       // so an already constructed instance never gets the suggestion to use new.
@@ -2971,7 +3300,17 @@ class NewResolver:
           msg"${lhs.describe.capitalize} cannot receive more argument lists."
         case _ =>
           msg"${lhs.describe.capitalize} cannot be called like a function."
-      resolError(res, lhs.diagnostic(message))
+      if checked then
+        // Conditional and recursive flow can lose the correlation that selects
+        // a callable branch. In lenient mode a known callable target suffices,
+        // just as a known member target does; never discard the other flows.
+        val exposed = lhs.applicationHead._1 match
+          case unknown: UnknownValueShape => unknown.fromPublicInterface
+          case _ => false
+        rctx.resolutionProblem(res, config.language.eagerResolution || exposed)(lhs.diagnostic(message))
+      publish(UnknownValueShape.at(res))
+      return
+    if checked then res.callableTargets.currentShapes.add(source)
     if sh.isSaturated then
       def go(body: Term, mss: Ls[Marks])(using ResolutionContext) =
         listenResult(body): sh =>
@@ -2993,7 +3332,7 @@ class NewResolver:
             // TODO: handle `mss`
             register
           case _ =>
-            log(s"appShape: td.body = ${td.body}")
+            log(dbg"appShape: td.body = ${td.body}")
             listenDefinitionResult(td, instances): result =>
               transportShape(result, mss) match
                 case value: TermShape => publish(value)
@@ -3077,17 +3416,21 @@ class NewResolver:
         msg"Cannot resolve member '$name' across a computed key or unknown record spread."
     host match
       case sel: NewSel =>
-        rctx.missingMember(sel, config.language.eagerResolution || fromPublicInterface):
+        rctx.resolutionProblem(sel, config.language.eagerResolution || fromPublicInterface):
           provenance.diagnostic(message, N)
       case _ if !rctx.hasError(host) =>
         rctx.markError(host)
         resolError(host, provenance.diagnostic(message, N))
       case _ => ()
 
-  def unresolvedRef(ref: UnresolvedRef)(using ResolutionContext): Unit =
+  /** Like for imports in Scala, wildcard opens do not provide the members that are inaccessible
+    * from `scope`, where `ref` is written: another opened definition may provide an accessible member.
+    */
+  def unresolvedRef(ref: UnresolvedRef, scope: SrcScope)(using ResolutionContext): Unit =
     ref.prefixes.foreach: prefix =>
       listenReceiver(prefix): shape =>
         def member(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
+          case MemberLookup.All(members) => members.foreach(member(_, instances))
           case MemberLookup.Contextual(source, substitution) => member(source, instances.withOverrides(substitution))
           case MemberLookup.Found(member, marks) if rctx.canResolve(ref) || ref.resolvedMembers.contains(prefix -> member.memberSymbol) =>
             val candidate = prefix -> member.memberSymbol
@@ -3114,7 +3457,8 @@ class NewResolver:
             unknownMember(ref, ref.id.name, reason, fromPublicInterface, provenance)
 
           case _ => () // Completed references only route their selected members.
-        member(shape.getMember(ref.id.name), TypeSubstitution.empty)
+        member(shape.getMember(ref.id.name).visibleFrom(scope.canAccessPrivatesOf, reportInaccessible = false),
+          TypeSubstitution.empty)
 
   /** Inspect an overload set only once its definitions have all been published. */
   private def completedClass(shape: SymShape)(selected: ShapeListener[ClassDef], absent: () => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
@@ -3159,7 +3503,7 @@ class NewResolver:
         val count = if ref.supplied.nonEmpty then 0 else ref.definition.tparams.length
         if count != args.length && rctx.state.typeArgumentArityErrors.add((new Identity(application), count)) then
           resolError(trm, msg"Class '${ref.definition.sym.nme}' expected ${count} type ${
-            "argument".pluralized(count)}, but got ${args.length}" -> ref.definition.toLoc :: Nil)
+            "argument".pluralized(count)}, but got ${args.length}" -> ref.definition.headerLoc :: Nil)
         val supplied = args.map(arg => declaredType(typeResolution(arg), Map.empty).instantiate(rctx.instances))
         if ref.supplied.nonEmpty then selected(ref)
         else
@@ -3215,6 +3559,7 @@ class NewResolver:
     */
   def resolveSuper(sup: Super)(using ResolutionContext): Unit =
     def receive(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
+      case MemberLookup.All(members) => members.foreach(receive(_, instances))
       case MemberLookup.Contextual(source, substitution) => receive(source, instances.withOverrides(substitution))
       case MemberLookup.Found(member, marks) => publishMember(sup, member, sup.resSym, marks, instances)
       case MemberLookup.Declared(member, bindings, marks, annotation, positive) =>
@@ -3227,18 +3572,24 @@ class NewResolver:
         def captures(term: Term): Ls[Marks] = term match
           case Capture(base, thru) => EntryMark(ResolutionBoundary(thru), N, NoMarks) :: captures(base)
           case _ => Nil
-        receive(info.withMarks(captures(sup.receiver)), TypeSubstitution.empty)
+        // Like in JavaScript, private members are not available through `super`, even where they are accessible:
+        // `super` looks up the members inherited by the parent class (see also Lowering.superReference).
+        receive(info.withMarks(captures(sup.receiver)).visibleFrom(_ => false, reportInaccessible = false),
+          TypeSubstitution.empty)
     sup.owner.asDefnSym.defn match
       case S(defn) => completed(defn)
       case N => sup.owner.asDefnSym.defnListeners += completed
 
-  def newSel(sel: NewSel)(using ResolutionContext): Unit =
-    log(s"newSel? sel = ${sel.showDbg}")
+  /** `scope` is where `sel` is written, which determines the private members it can select. */
+  def newSel(sel: NewSel, scope: SrcScope)(using ResolutionContext): Unit =
+    log(dbg"newSel? sel = ${sel.showDbg}")
+    def visible(info: MemberLookup): MemberLookup = info.visibleFrom(scope.canAccessPrivatesOf, reportInaccessible = true)
     def member(info: MemberLookup, description: Message, diagnostic: Message => Ls[(Message, Opt[Loc])],
         instances: TypeSubstitution)(using ResolutionContext): Unit = info match
+      case MemberLookup.All(members) => members.foreach(member(_, description, diagnostic, instances))
       case MemberLookup.Contextual(source, substitution) => member(source, description, diagnostic, instances.withOverrides(substitution))
       case MemberLookup.Found(bms, marks) if rctx.canResolve(sel) || sel.resolvedMembers.contains(bms.memberSymbol) =>
-        log(s"newSel member: bms = ${bms.memberSymbol.showDbg}, mss = ${marks.map(_.showDbg)}")
+        log(dbg"newSel member: bms = ${bms.memberSymbol.showDbg}, mss = ${marks.map(_.showDbg)}")
         rctx.recordResolution(sel, sel.resolvedMembers.contains(bms.memberSymbol))(sel.resolvedMembers ::= bms.memberSymbol)
         publishMember(sel, bms, sel.resSym, marks, instances)
       case MemberLookup.Declared(member, bindings, marks, annotation, positive) if rctx.canResolve(sel) || sel.resolvedMembers.contains(member) =>
@@ -3261,7 +3612,7 @@ class NewResolver:
         rctx.recordResolution(sel, sel.hasDynamicTarget)(sel.hasDynamicTarget = true)
         publishDynamic(sel, marks)
       case MemberLookup.Missing if rctx.canResolve(sel) =>
-        rctx.missingMember(sel, config.language.eagerResolution):
+        rctx.resolutionProblem(sel, config.language.eagerResolution):
           diagnostic(msg"$description does not contain member '${sel.id.name}'")
       case MemberLookup.Unknown(reason, fromPublicInterface, provenance) =>
         unknownMember(sel, sel.id.name, reason, fromPublicInterface, provenance)
@@ -3280,15 +3631,15 @@ class NewResolver:
               case value: TermShape => publishViewed(sel, value, ref.instances)
               case NoShape => ())
         , shape =>
-          member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty))
+          member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty))
       case N => listenReceiver(sel.prefix): shape =>
-        log(s"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
-        member(shape.getMember(sel.id.name), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
+        log(dbg"newSel: sel = ${sel.showDbg}, shape = ${shape.shwDbg}")
+        member(visible(shape.getMember(sel.id.name)), msg"${shape.describe.capitalize}", shape.diagnostic, TypeSubstitution.empty)
       case S(cls) =>
         classSelection(cls)(ref =>
           val cd = ref.definition
           listenExt(cd, ext =>
-            val info = DefnShape(cd, ext).getInstanceMember(sel.id.name)
+            val info = visible(DefnShape(cd, ext).getInstanceMember(sel.id.name))
             info match
               case MemberLookup.Found(bms: BlockMemberSymbol, declarationMarks) =>
                 // Resolve the projection target even in an unused function. Wait
@@ -3302,7 +3653,7 @@ class NewResolver:
                   val selected = receiver match
                     case Marked(nominal: NominalInstanceView, context) =>
                       nominal.ancestor(cd) match
-                        case S(view) => view.getMember(sel.id.name).withAnnotation(nominal.annotation).withMarks(context :: Nil)
+                        case S(view) => visible(view.getMember(sel.id.name)).withAnnotation(nominal.annotation).withMarks(context :: Nil)
                         case N =>
                           // An explicit projection can name a narrower class, but
                           // it cannot recover that class's implementation arguments.
@@ -3311,14 +3662,14 @@ class NewResolver:
                     case _ =>
                       // C# selects a declaration, not an instance of C. Transport
                       // the member through the actual receiver, never the qualifier.
-                      projectedMember(receiver, cd, sel.id.name).getOrElse:
+                      projectedMember(receiver, cd, sel.id.name).map(visible).getOrElse:
                         // Without a path into this class, only its declared
                         // interface is available; qualifier values add no evidence.
                         val opaque = abstractType(new TypeResolution(sel, msgs => resolError(sel, msgs)))
                         MemberLookup.Declared(bms, cd.tparams.map(_.sym -> opaque).toMap,
                           declarationMarks ::: ExitMark(ResolutionBoundary(cd.sym), N, NoMarks) :: Nil, N, true)
-                  member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.toLoc) :: Nil, TypeSubstitution.empty)
-              case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.toLoc) :: Nil, TypeSubstitution.empty))
+                  member(selected, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty)
+              case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty))
         , sh =>
           rctx.markError(sel)
           resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
@@ -3377,8 +3728,21 @@ class NewResolver:
         val sh = newShapes.getOrElseUpdate((ref.target, marks, nw.resSym, ref.supplied),
           NewShape(dsh, ref.target, marks, nw.args, nw, ref.supplied))
         if rctx.state.constructorApplications.add((sh, instances)) then
+          // A class without parameter lists still accepts one empty argument tuple.
+          // Zipping alone would silently ignore that tuple, and any lists supplied
+          // after a constructor is saturated. Anonymous refinements forward these
+          // arguments through their synthetic parent New, which checks them there.
+          if nw.rft.isEmpty then
+            val paramCount = dsh.unappliedParams.length
+            val maxLists = paramCount.max(1)
+            if nw.args.length > maxLists then
+              resolError(nw, dsh.arityDiagnostic(
+                msg"Class '${cd.sym.nme}' expected at most ${maxLists} ${"argument list".pluralized(maxLists)}, but got ${nw.args.length}"))
+            if paramCount == 0 then
+              nw.args.headOption.foreach: args =>
+                checkArgumentArity(args, Arity(0, 0, false, 0), nw, dsh)(_ => ())
           dsh.unappliedParams.lazyZip(nw.args).foreach:
-            case ((ps, _), args) => zipArgsIn(marks, ps.params, ps.restParam, args, nw, dsh, instances)
+            case ((ps, _), args) => zipArgsIn(marks, ps, args, nw, dsh, instances)
         publishViewed(nw, sh, instances)(using rctx.withInstances(callerInstances))
       )
     , shape =>
@@ -3436,10 +3800,22 @@ class NewResolver:
           case N => listenResult(body)(publishActivated(host, _))
 
   def pipeTerm(from: Term, to: ShapeHost)(using ResolutionContext): Unit =
-    log(s"pipeTerm: from = ${from.showDbg}, to = ${to.showDbg}; ${to.currentShapes}")
+    log(dbg"pipeTerm: from = ${from.showDbg}, to = ${to.showDbg}; ${to.currentShapes}")
     listenTerm(from): sh =>
       publishActivated(to, sh)
   
+  /** The synthetic handler is an instance with real method definitions. Publish
+    * it after building those definitions, so forward selections made while
+    * elaborating the handled body resolve through ordinary member lookup. */
+  def resolveAbortiveHandler(handle: Handle)(using ResolutionContext): Unit =
+    assert(handle.isAbortive)
+    val definition = handle.derivedClsSym.defn.get
+    listenExt(definition, parent =>
+      val receiver = selfShapes.getOrElseUpdate(handle.derivedClsSym, BaseShape(definition, parent))
+      MarkedShape.exit(receiver, ResolutionBoundary(handle.derivedClsSym), N) match
+        case value: TermShape => publishActivated(handle.lhs, value)
+        case NoShape => lastWords("A new handler instance must be reachable outside its class"))
+
   // Classes without an explicit parent expose Object's declarations. Share this
   // root interface between inferred instances, nominal annotations, and this-values;
   // Object itself must terminate the chain. This does not add a runtime constructor call.
@@ -3451,22 +3827,61 @@ class NewResolver:
     * definitions and follows inherited members using the same shapes as ordinary selection.
     */
   def registerInheritance(defn: ClassLikeDef)(using ResolutionContext): Unit =
-    defn.body.members.values.toList.distinct.foreach: member =>
+    // Distinct source aliases cannot define the same JavaScript property twice.
+    // Otherwise lookup could infer the first body while runtime keeps the last.
+    defn.body.methods.filterNot(_.tsym.isPrivate).flatMap(td =>
+      MemberKey.symbol(td).map(_ -> td)
+    ).groupMap(_._1)(_._2).foreach:
+      case (key, definitions) if definitions.map(_.tsym).distinct.sizeCompare(1) > 0 =>
+        defn.isErroneous = true
+        definitions.foreach(_.isErroneous = true)
+        rctx.report:
+          ErrorReport(msg"Duplicate definition of member '${key.name}'." -> N
+          :: definitions.map: td =>
+            msg"Member '${td.tsym.nme}' is defined here." -> td.toLoc)
+      case _ => ()
+    defn.body.members.valuesIterator.distinct.foreach: member =>
       member.asTrm.filterNot(sym => sym.isInstanceOf[ClassCtorSymbol] || sym.isPrivate).foreach: own =>
         // Bind this host to the defining unit before an importer can observe its edges.
         own.overrideLinks.inferenceHost
+        MemberKey.symbol(member).foreach: key =>
+          listenInheritedMember(defn, key): lookup =>
+            def check(info: MemberLookup): Unit = info match
+              case MemberLookup.All(members) => members.foreach(check)
+              case MemberLookup.Contextual(source, _) => check(source)
+              case MemberLookup.Found(base: BlockMemberSymbol, _) => collision(base)
+              case MemberLookup.Declared(base, _, _, _, _) => collision(base)
+              case _ => ()
+            def collision(base: BlockMemberSymbol): Unit = if base.nme != member.nme then
+              defn.isErroneous = true
+              own.defn.foreach(_.isErroneous = true)
+              rctx.report(ErrorReport(
+                msg"Member '${member.nme}' uses the same @jsSymbol key as inherited member '${base.nme}'; overrides must keep the inherited name." -> own.toLoc ::
+                msg"The inherited member is declared here." -> base.toLoc :: Nil))
+            check(lookup.visibleFrom(_ => false, reportInaccessible = false))
         listenInheritedMember(defn, member.nme): lookup =>
           def record(info: MemberLookup): Unit = info match
+            case MemberLookup.All(members) => members.foreach(record)
             case MemberLookup.Contextual(source, _) => record(source)
             case MemberLookup.Found(base: BlockMemberSymbol, _) => link(base)
             case MemberLookup.Declared(base, _, _, _, _) => link(base)
             case _ => ()
           def link(base: BlockMemberSymbol): Unit = base.onComplete: () =>
             base.asTrm.filterNot(_.isPrivate).foreach: target =>
-              if target isnt own then own.overrideLinks.inferenceHost.publish(target)
-          record(lookup)
+              if target isnt own then
+                if MemberKey.symbol(member) != MemberKey.symbol(base) then
+                  // Source aliases must not silently redirect an override to a
+                  // different runtime property. In particular, omitting jsSymbol
+                  // on an override would leave the inherited protocol installed.
+                  own.defn.foreach(_.isErroneous = true)
+                  rctx.report(ErrorReport(
+                    msg"Overriding member '${member.nme}' must use the same @jsSymbol annotation as its parent." -> own.toLoc ::
+                    msg"The inherited member is declared here." -> target.toLoc :: Nil))
+                own.overrideLinks.inferenceHost.publish(target)
+          // Private members are not overridden, so they do not hide the inherited members they shadow.
+          record(lookup.visibleFrom(_ => false, reportInaccessible = false))
 
-  private def listenInheritedMember(defn: ClassLikeDef, name: Str)
+  private def listenInheritedMember(defn: ClassLikeDef, name: MemberKey)
       (listener: ShapeListener[MemberLookup])(using ResolutionContext): Unit =
     // Legacy preludes may have no Object declaration or even an enclosing prelude context.
     // Their root classes have no implicit nominal parent in the legacy resolver.
@@ -3559,9 +3974,9 @@ class NewResolver:
   private def fromBMSAt(bms: BlockMemberSymbol, resSym: FlowSymbol, markss: Ls[Marks], listener: Listener,
       trm: Term, selected: ShapeListener[DefinitionSymbol[?]], receiver: Bool,
       specialization: Opt[(FlowSymbol, Ls[DeclaredType])])(using ResolutionContext): Unit =
-    log(s"listenBMS: bms = ${bms.describe}")
+    log(dbg"listenBMS: bms = ${bms.describe}")
     bms.onComplete: () =>
-      log(s"listenedBMS: bms = ${bms.describe}")
+      log(dbg"listenedBMS: bms = ${bms.describe}")
       valueTarget(bms, receiver) match
       case S(sym: (ModuleOrObjectSymbol | TermSymbol | ClassSymbol | PatternSymbol)) =>
         // Selection is independent of the selected value's shape. In particular,
@@ -3569,7 +3984,7 @@ class NewResolver:
         // Pattern resolution supplies its own interpretation of the selected head.
         selected(sym)
         val wrappedListener: Listener = sh =>
-          log(s"fromBMS: bms = ${bms.showDbg}, sh = ${sh.shwDbg}, flow = ${resSym.showDbg}, markss = ${markss.map(_.showDbg)}")
+          log(dbg"fromBMS: bms = ${bms.showDbg}, sh = ${sh.shwDbg}, flow = ${resSym.showDbg}, markss = ${markss.map(_.showDbg)}")
           val sh0 = sh
           // Modules, objects, and runtime pattern objects introduce no value
           // boundary. Pattern bodies have separate matching scopes; passing the
@@ -3582,15 +3997,15 @@ class NewResolver:
             case value: TermShape => transportShape(value, markss)
             case NoShape => NoShape) match
             case NoShape =>
-              log(s"FILTER OUT ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
+              log(dbg"FILTER OUT ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
             case sh: TermShape =>
               if sh0.isInstanceOf[MarkedShape[?]]
-              then log(s"MATCH ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
-              else log(s"PUSH ${sh.shwDbg}")
+              then log(dbg"MATCH ${sh.shwDbg} for ${sym.showDbg} % ${resSym.showDbg}")
+              else log(dbg"PUSH ${sh.shwDbg}")
               listener(sh)
         sym.defn match
         case S(td: TermDefinition) if td.params.isEmpty =>
-          log(s"listenTerm: td.body = ${td.body.fold("N")(_.showDbg)}")
+          log(dbg"listenTerm: td.body = ${td.body.fold("N")(_.showDbg)}")
           val callerInstances = rctx.instances
           val instances = if isByName(td) then instantiateByName(td, resSym,
             ExitMark(ResolutionBoundary(td.tsym), S(resSym), NoMarks) :: markss, specialization, Map.empty)
@@ -3619,7 +4034,7 @@ class NewResolver:
               )(using rctx.withInstances(instances))
         case S(d: TermDefinition) if !d.tsym.isInstanceOf[ClassCtorSymbol] &&
             ((d.sign.nonEmpty && (!d.flags.hasResultAnnotation || d.params.forall(ps =>
-              (ps.params ::: ps.restParam.toList).forall(_.sign.nonEmpty)))) ||
+              ps.allParams.forall(_.sign.nonEmpty)))) ||
               (d.body.isEmpty && d.tsym.owner.exists(_.asDefnSym.defn.exists(_.tparams.nonEmpty)))) =>
           listenDeclaredMember(bms, instanceBindings(d), resSym, trm, N, selected, receiver, true, markss, specialization): value =>
             transportShape(value, markss) match
@@ -3669,11 +4084,26 @@ class NewResolver:
     * definitions. Keep validating selections/opens: a later distinct candidate
     * must be an error, since it cannot change an already interpreted annotation.
     */
+  private def staticAnnotationSymbol(trm: Term): Opt[Symbol] = trm.withoutCaptures match
+    case ref: NewRefImpl => S(ref.sym)
+    case Ref(sym) => S(sym)
+    case sel: NewSel => staticAnnotationSymbol(sel.prefix).flatMap(_.asMod).flatMap(_.tree.definedSymbols.get(sel.id.name))
+    case sel: Sel => staticAnnotationSymbol(sel.prefix).flatMap(_.asMod).flatMap(_.tree.definedSymbols.get(sel.nme.name))
+    case _ => N
+
+  /** Only member identity is needed to interpret an annotation. In particular a
+    * declared module has no runtime initializer to infer, and its syntax already
+    * identifies its members before their definitions are elaborated. Ordinary
+    * resolution still checks access and records targets for those selections.
+    */
   def annotationSymbol(trm: Term)(using ResolutionContext): Opt[Symbol] = trm match
     case Capture(base, _) => annotationSymbol(base)
     case TyApp(base, _) => annotationSymbol(base)
     case App(base, _) => annotationSymbol(base)
     case ref: NewRefImpl => S(ref.sym)
+    case _ if staticAnnotationSymbol(trm).nonEmpty =>
+      requireTerm(trm)
+      staticAnnotationSymbol(trm)
     case _: NewSel | _: UnresolvedRef =>
       val symbols = mutable.LinkedHashSet.empty[BlockMemberSymbol]
       var collecting = true
@@ -3693,18 +4123,82 @@ class NewResolver:
       symbols.toList match
         case symbol :: Nil if !failed => S(symbol)
         case _ => fail(); N
-    // TODO: Ref(sym: BuiltinSymbol) is a legacy representation that still needs
-    // updating to the new reference forms, even when using new resolution.
+    // Imported legacy annotations may still use Ref for builtin markers.
     case Ref(sym: BuiltinSymbol) => S(sym)
     case _ =>
       resolError(trm, msg"An annotation must have a known main symbol." -> N :: Nil)
       N
 
+  /** Resolve the identity of a computed key, without checking its value's type.
+    * `fresh` is a user contract: distinct marked vals denote distinct keys.
+    * Modules and immutable vals make the path stable; calls and mutable bindings
+    * cannot be used to identify a property at compile time. A forward val's marker
+    * is checked when its definition completes, not by forcing its initializer.
+    */
+  def symbolKey(term: Term, required: Bool)(using ResolutionContext): Opt[SymbolKey] =
+    def member(t: Term): Opt[Symbol] = staticAnnotationSymbol(t).orElse:
+      if required then annotationSymbol(t)
+      else
+        val members = mutable.LinkedHashSet.empty[BlockMemberSymbol]
+        listen(t, discardMarks = false):
+          case sh: SymShape => members += sh.sym
+          case _ => ()
+        members.toList match
+          case sym :: Nil => S(sym)
+          case _ => N
+    def stable(sym: Symbol): Bool = sym.asMod.nonEmpty || (sym match
+      case bms: BlockMemberSymbol => bms.trmTree.exists(_.k is ImmutVal) || bms.asTrm.exists(_.k is ImmutVal)
+      case tsym: TermSymbol => tsym.k is ImmutVal
+      case _ => false)
+    def canonicalPath(path: Ls[Symbol], seen: Set[Symbol]): Ls[Symbol] =
+      path.foldLeft(Ls.empty[Symbol]): (prefix, sym) =>
+        sym.asMod match
+          case S(module) => prefix :+ module
+          case N =>
+            val base = sym.asTrm.flatMap(_.defn).map(_.sym).getOrElse(sym)
+            val alias = if seen(base) then N else base.asTrm.flatMap(_.defn).flatMap(_.body).flatMap(stablePath)
+            alias match
+              // An immutable alias replaces the whole receiver path, not just
+              // its last name: M.alias may refer to a val outside M. Only follow
+              // stable references; calls and other initializers remain opaque.
+              case S(target) => canonicalPath(target, seen + base)
+              case N => prefix :+ base
+    def stablePath(t: Term): Opt[Ls[Symbol]] = t.withoutCaptures match
+      case ref: NewRefImpl => member(t).filter(stable).map(_ :: Nil)
+      case Ref(sym) if stable(sym) => S(sym :: Nil)
+      case sel: NewSel =>
+        for
+          prefix <- stablePath(sel.prefix)
+          sym <- member(sel).filter(stable)
+        yield prefix :+ sym
+      case sel: Sel =>
+        for
+          prefix <- stablePath(sel.prefix)
+          sym <- member(sel).filter(stable)
+        yield prefix :+ sym
+      case _ => N
+    def fresh(sym: Symbol): Bool = sym.asTrm.flatMap(_.defn).exists(_.annotations.exists(_.isInstanceOf[Annot.Fresh]))
+    stablePath(term) match
+      case S(path) if path.last.asMod.isEmpty && (required || fresh(path.last)) =>
+        if required then
+          def check(): Unit = if !fresh(path.last) then
+            resolError(term, msg"@jsSymbol requires a val marked @annotations.fresh." -> term.toLoc ::
+              msg"The referenced member is declared here." -> path.last.toLoc :: Nil)
+          path.last match
+            case member: BlockMemberSymbol => member.onComplete(() => check())
+            case _ => check()
+        requireTerm(term)
+        S(SymbolKey(canonicalPath(path.init, Set.empty) :+ path.last.asTrm.flatMap(_.defn).map(_.sym).getOrElse(path.last))(term))
+      case _ =>
+        if required then resolError(term,
+          msg"@jsSymbol requires a stable path of modules and immutable vals ending in a val marked @annotations.fresh." -> term.toLoc :: Nil)
+        N
+
   /** Values prefer the function/constructor overload; selection receivers prefer
     * the module overload. Keep that choice through captures so nested functions
     * and opened names use the same interpretation as direct references.
     */
-  private def valueTarget(member: BlockMemberSymbol, receiver: Bool): Opt[DefinitionSymbol[?]] =
+  private[semantics] def valueTarget(member: BlockMemberSymbol, receiver: Bool): Opt[DefinitionSymbol[?]] =
     if receiver then member.asModOrObj.orElse(member.asTrm).orElse(member.asCls).orElse(member.asPat)
     else member.asTrm.orElse(member.asModOrObj).orElse(member.asCls).orElse(member.asPat)
 
@@ -3791,7 +4285,7 @@ class NewResolver:
     flow.exits.getOrElse(N, Vector.empty).foreach(value => listenTerm(value)(listener))
 
   def listenTerm(trm: Term)(listener: Listener)(using ResolutionContext): Unit =
-    log(s"listenTerm: trm = ${trm.showDbg}")
+    log(dbg"listenTerm: trm = ${trm.showDbg}")
     listenValue(trm, false)(listener)
 
   def listenReceiver(trm: Term)(listener: Listener)(using ResolutionContext): Unit =
@@ -3854,7 +4348,7 @@ class NewResolver:
 
   private def listen(trm: Term, discardMarks: Bool)(receive: ShapeListener[Shape])(using ResolutionContext): Unit =
     val listener = activationListener(receive)
-    log(s"listen: trm = ${trm.showDbg}")
+    log(dbg"listen: trm = ${trm.showDbg}")
     trm.addShapeListener(listener)
     trm match
     case _: SynthSel =>
@@ -3966,7 +4460,7 @@ class NewResolver:
           // fields into one trailing record. Shape positions must match that layout.
           case Fld(_, _, S(_)) :: rest => expand(rest, reversed)
           case (field: Fld) :: rest => expand(rest, TupleShape.Field(field, Nil) :: reversed)
-          case Spd(_, term) :: rest =>
+          case Spd(_, term, _) :: rest =>
             val spreadKey = new Object
             listenTermViews(term): sh =>
               if rctx.state.spreadInputs.getOrElseUpdate(spreadKey, mutable.Set.empty).add(ShapeIdentity.key(sh)) then sh match
@@ -3986,8 +4480,8 @@ class NewResolver:
                 case Marked(_: DynShape, marks) =>
                   val spread = TupleShape(term, TupleShape.Unknown(term, TupleShape.ValueField(DynShape(), Nil)) :: Nil)(this)
                   expand(rest, TupleShape.Spread(spread, marks) :: reversed)
-                case shape @ Marked(_, marks) =>
-                  // An array spread contributes an unknown number of elements,
+                case shape =>
+                  // An iterable spread contributes an unknown number of elements,
                   // so its candidates would differ only in their element values.
                   // Distinct element types (e.g. one annotation observed through
                   // different activations) must not each become an operand: a
@@ -3998,23 +4492,12 @@ class NewResolver:
                   // one inferred element type, as for a tuple's Array interface.
                   // Combinations of independent operands carry no correlation
                   // between their element values, so no information is lost.
-                  val elements = rctx.spreadElementType(term):
-                    val host = new TypeResolution(term, messages => resolError(term, messages))
-                    // Elements of every operand shape are observed in the tuple's scope.
-                    rctx.recordTemplateBinders(host, lexicalBinders(tuple))
-                    host
-                  val typed = listenArrayElements(shape)(element => elements.publish(TypeShape.Inferred(element)))
-                  if typed then
-                    val element = TupleShape.TypedField(declaredType(elements, Map.empty), Nil)
-                    val spread = TupleShape(term, TupleShape.Unknown(term, element) :: Nil)(this)
-                    if rctx.state.spreadInputs.getOrElseUpdate(spreadKey, mutable.Set.empty).add(ShapeIdentity.key(spread)) then
-                      expand(rest, TupleShape.Spread(spread, NoMarks) :: reversed)
-                  else
-                    // Other opaque iterables have no known element type. Their
-                    // runtime spread remains permitted without authorizing calls.
-                    val element = TupleShape.ValueField(UnknownValueShape.spread(term, shape), Nil)
-                    val unknown = TupleShape(term, TupleShape.Unknown(term, element) :: Nil)(this)
-                    expand(rest, TupleShape.Spread(unknown, marks) :: reversed)
+                  val flow = iterationFlow(term, lexicalBinders(tuple))
+                  listenIterableElements(shape, flow)
+                  val element = TupleShape.TypedField(declaredType(flow.elements, Map.empty), Nil)
+                  val spread = TupleShape(term, TupleShape.Unknown(term, element) :: Nil)(this)
+                  if rctx.state.spreadInputs.getOrElseUpdate(spreadKey, mutable.Set.empty).add(ShapeIdentity.key(spread)) then
+                    expand(rest, TupleShape.Spread(spread, NoMarks) :: reversed)
         expand(elements, Nil)
     case record: Rcd => listenAggregate(record, listener): publish =>
         def expand(stats: Ls[Statement], reversed: Ls[RecordShape.Element])(using ResolutionContext): Unit = stats match
@@ -4037,6 +4520,9 @@ class NewResolver:
                 case _ => expand(rest, RecordShape.Unknown(UnknownValueShape.spread(term, shape)) :: reversed)
           case _ :: rest => expand(rest, reversed)
         expand(record.stats, Nil)
+    // Ignore undefined during resolution. Runtime literals and pattern tests
+    // are compiled from the term itself and do not need a shape.
+    case Lit(Tree.UnitLit(false)) => ()
     case intro: IntroTerm =>
       // Literals and lambdas have the declared interface of their builtin class,
       // including inherited members. Retain their own shape for calls, pattern
@@ -4050,7 +4536,7 @@ class NewResolver:
         case _ => N
       def publish(parent: Opt[NominalInstanceView])(using ResolutionContext): Unit =
         listener(introShapes.getOrElseUpdate(new Identity(intro), {
-          log(s"introShape: intro = $intro")
+          log(dbg"introShape: intro = $intro")
           IntroShape(intro, parent)
         }))
       primitive match
@@ -4072,8 +4558,9 @@ class NewResolver:
       sym match
       case loc: LocalSymbol =>
         loc.subscribeToShapes(listener)
-      case _: BuiltinSymbol =>
-        lastWords("Builtin symbols must not enter new resolution as SimpleRef")
+      // Primitive operations are handled directly by lowering; they do not
+      // introduce member-resolution candidates.
+      case _: BuiltinSymbol => ()
     case SelfRef(sym) =>
       // A receiver can be referenced before its body is complete or after its
       // definition has already been published. The definition listener handles both.
@@ -4127,9 +4614,13 @@ class NewResolver:
       // Finally is evaluated for effects; normal completion returns the body's
       // value. Its cleanup value must not contribute candidates to this result.
       if resultFlow(cleanup).normal then listen(body, discardMarks)(listener)
-    case Label(label, _, body, _) =>
+    case Label(label, _, body, hasContinueDispatch) =>
       val flow = resultFlow(body)
-      if flow.normal then listen(body, discardMarks)(listener)
+      if flow.normal then listen(body, discardMarks):
+        // Lowering uses runtime.Continue to re-enter the label. Only normal
+        // results and non-local break values flow out of the label.
+        case value: TermShape if hasContinueDispatch && value.isInstanceOfClass(State.continueSymbol.defn.get) => ()
+        case value => listener(value)
       flow.exits.getOrElse(S(label), Vector.empty).foreach(value => listen(value, discardMarks)(listener))
     case annotated @ Annotated(annotation @ Annot.Async(), body) =>
       listener(promiseShape(annotation, resultType(body, lexicalBinders(annotated), rctx.instances)(listenResult(body))))
@@ -4140,6 +4631,18 @@ class NewResolver:
       // Quotation constructs a runtime syntax value; splicing supplies syntax
       // for a different stage. Neither has the value interface of its operand.
       listener(UnknownValueShape.at(trm))
+    case handle: Handle if handle.isAbortive =>
+      resolveAbortiveHandler(handle)
+      listenResult(handle.body)(listener)
+      handle.defs.foreach: method =>
+        // Parameters arrive through the method and handler-instance boundaries.
+        // The result leaves both boundaries, joining every invocation at the
+        // handler site rather than returning to the abandoned continuation.
+        listenDefinitionResult(method.td, rctx.instances): result =>
+          result.exit(ExitMark(ResolutionBoundary(method.td.tsym), N, NoMarks))
+            .exit(ExitMark(ResolutionBoundary(handle.derivedClsSym), N, NoMarks)) match
+              case value: TermShape => listener(value)
+              case NoShape => ()
     case _: Handle =>
       // An effect handler can abort or replace the continuation's result. The
       // normal body's interface alone therefore cannot describe this value.

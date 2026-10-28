@@ -14,15 +14,15 @@ fun decimal(n: Num) = n.toFixed(1)
 :e
 "abc".nonexistent
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.15: 	"abc".nonexistent
+//│ ║  l.+1: 	"abc".nonexistent
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── String literal does not contain member 'nonexistent'
-//│ ║  l.15: 	"abc".nonexistent
+//│ ║  l.+1: 	"abc".nonexistent
 //│ ╙──      	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect [true, 2, false, 1]
-let values = new mut Set
+let values = new mut Set()
 values.add("a")
 values.add("b")
 let present = values.has("a")
@@ -38,7 +38,7 @@ values.delete("a")
 let re = new RegExp("a+")
 let groups = new RegExp("ab").exec("abc")
 [re.test("aa"), (if groups is Array as array then array.at(0) else "missing"),
- re.exec("c"), (new Map).has("missing")]
+ re.exec("c"), new Map().has("missing")]
 //│ = [true, "ab", null, false]
 //│ groups = ["ab"]
 //│ re = /a+/

@@ -47,9 +47,8 @@ class SubstitutionGrowthTest extends AnyFunSuite:
   private final case class Measurement(views: Int, largestSubstitution: Int, activations: Int, typeInstances: Int)
 
   private val cctx = TestFolders.compilerCtx(os.pwd)
-  private given DebugPrinter = new DebugPrinter
-  private val tl = new TraceLogger:
-    override def doTrace: Bool = false
+  private given DebugPrinter = new DebugPrinter()
+  private val tl = TraceLogger.silent
 
   /** Resolves a generated unit through ordinary elaboration, in a fresh state. */
   private def measure(name: Str, source: Str): Measurement =
@@ -124,13 +123,32 @@ class SubstitutionGrowthTest extends AnyFunSuite:
         assert(m.views <= 2 * k + 4)
         assert(m.activations <= 2 * k + 4)
 
+  // Each spread observes both branches of a recursive iterable producer. The
+  // element hosts must join those flows instead of enumerating their product.
+  // Diff tests check the resulting members; only this test observes graph size.
+  test("recursive iterable spreads keep inference growth bounded"):
+    for k <- List(2, 6, 10, 14) do
+      val spreads = List.fill(k)("...xs").mkString(", ")
+      val m = measure(s"Iterable_$k",
+        s"""#lang(0.3.x)
+           |
+           |class Item(val value: Int)
+           |private fun forward[A](xs: Iterable[A] | Array[A], n: Int): Iterable[A] | Array[A] =
+           |  if n == 0 then xs else forward([$spreads], n - 1)
+           |fun use(xs: Iterable[Item]) = [...forward(xs, 2)].map(x => x.value)
+           |""".stripMargin)
+      withClue(s"recursive iterable with $k spreads: $m"):
+        assert(m.largestSubstitution <= 4)
+        assert(m.views <= 80 * k + 300)
+        assert(m.activations <= 20 * k + 100)
+        assert(m.typeInstances <= 8 * k + 20)
+
   /** Shapes and instances for the substitution laws below. */
   private class Harness:
     given owner: Elaborator.State = new Elaborator.State
     given state: ResolutionContext = owner.newResolverState.context
     given Raise = diagnostic => fail(diagnostic.theMsg)
-    given trace: TraceLogger = new TraceLogger:
-      override def doTrace: Boolean = false
+    given trace: TraceLogger = TraceLogger.silent
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
     val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
@@ -306,7 +324,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
       val member = BlockMemberSymbol("Identity", Nil)
       val body = h.typeOf(formal)
-      symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)), S(body.resolution.source), N, Nil)(N))
+      symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)), S(body.resolution.source), N, Nil)(N, N))
       // The use is written where B is in scope.
       val use = Term.UnitVal()
       h.state.recordLexicalBinders(use, Set(b))

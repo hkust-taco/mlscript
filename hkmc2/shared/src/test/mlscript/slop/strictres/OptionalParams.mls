@@ -1,0 +1,341 @@
+:.
+open annotations
+
+
+// *** Syntax ***
+
+:pt
+fun foo(x, y?) = [x, y]
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ TermDef:
+//│   k = Fun
+//│   head = App:
+//│     lhs = Ident of "foo"
+//│     rhs = Tup of Ls of
+//│       Ident of "x"
+//│       Optional of Ident of "y"
+//│   rhs = S of Tup of Ls of
+//│     Ident of "x"
+//│     Ident of "y"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:pt
+fun annotatedFoo(x, y?: Int | Str, z?) = [x, y, z]
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ TermDef:
+//│   k = Fun
+//│   head = App:
+//│     lhs = Ident of "annotatedFoo"
+//│     rhs = Tup of Ls of
+//│       Ident of "x"
+//│       InfixApp:
+//│         lhs = Optional of Ident of "y"
+//│         kw = Keywrd of keyword ':'
+//│         rhs = InfixApp:
+//│           lhs = Ident of "Int"
+//│           kw = Keywrd of keyword '|'
+//│           rhs = Ident of "Str"
+//│       Optional of Ident of "z"
+//│   rhs = S of Tup of Ls of
+//│     Ident of "x"
+//│     Ident of "y"
+//│     Ident of "z"
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:pt
+fun app(f: (Int, x: Int, Int?, y?: Int) -> Int) = f(1, 2)
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ TermDef:
+//│   k = Fun
+//│   head = App:
+//│     lhs = Ident of "app"
+//│     rhs = Tup of Ls of
+//│       InfixApp:
+//│         lhs = Ident of "f"
+//│         kw = Keywrd of keyword ':'
+//│         rhs = InfixApp:
+//│           lhs = Tup of Ls of
+//│             Ident of "Int"
+//│             InfixApp:
+//│               lhs = Ident of "x"
+//│               kw = Keywrd of keyword ':'
+//│               rhs = Ident of "Int"
+//│             Optional of Ident of "Int"
+//│             InfixApp:
+//│               lhs = Optional of Ident of "y"
+//│               kw = Keywrd of keyword ':'
+//│               rhs = Ident of "Int"
+//│           kw = Keywrd of keyword '->'
+//│           rhs = Ident of "Int"
+//│   rhs = S of App:
+//│     lhs = Ident of "f"
+//│     rhs = Tup of Ls of
+//│       IntLit of 1
+//│       IntLit of 2
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+// *** Calls ***
+
+:expect [1, null]
+foo(1)
+//│ = [1, null]
+
+:expect [1, 2]
+foo(1, 2)
+//│ = [1, 2]
+
+:e
+foo()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	foo()
+//│ ║        	^^^^^
+//│ ╟── Function 'foo' expected 1 to 2 arguments, but got 0
+//│ ║  l.XX: 	fun foo(x, y?) = [x, y]
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
+
+:e
+foo(1, 2, 3)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	foo(1, 2, 3)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Function 'foo' expected 1 to 2 arguments, but got 3
+//│ ║  l.XX: 	fun foo(x, y?) = [x, y]
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ = [1, 2]
+
+// Extra arguments are ignored at runtime, as in JavaScript.
+:expect [1, 2]
+fun call(f: Function, ...args) = f(...args)
+call(foo, 1, 2, 3)
+//│ = [1, 2]
+
+:re
+call(foo)
+//│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
+
+fun bar(x, y?, ...zs) = [x, y, zs]
+
+:expect [[1, null, []], [1, 2, []], [1, 2, [3, 4]]]
+[bar(1), bar(1, 2), bar(1, 2, 3, 4)]
+//│ = [[1, null, []], [1, 2, []], [1, 2, [3, 4]]]
+
+:expect [1, null]
+((x, y?) => [x, y])(1)
+//│ = [1, null]
+
+
+// *** Body typing ***
+
+// Without an argument, an optional parameter is `null`.
+:e
+fun len(s?: Str) = s.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun len(s?: Str) = s.length
+//│ ║        	                   ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+1: 	fun len(s?: Str) = s.length
+//│ ╙──      	        ^^^^^^^
+
+:expect [0, 3]
+fun len(s?: Str) = if s is ~null as s then s.length else 0
+[len(), len("abc")]
+//│ = [0, 3]
+
+:e
+fun len(s?) = s.length
+len("abc")
+len()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun len(s?) = s.length
+//│ ║        	              ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+1: 	fun len(s?) = s.length
+//│ ║        	        ^^
+//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── Parameter 's' admits values of unknown shape.
+//│ ║  l.+1: 	fun len(s?) = s.length
+//│ ║        	        ^^
+//│ ╟── 'len' is exposed by this compilation unit.
+//│ ║  l.+1: 	fun len(s?) = s.length
+//│ ╙──      	^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// *** Droppable parameters ***
+
+:pt
+fun app(f: (Int, drop Int, drop x: Int) -> Int) = f(1, 2, 3)
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ TermDef:
+//│   k = Fun
+//│   head = App:
+//│     lhs = Ident of "app"
+//│     rhs = Tup of Ls of
+//│       InfixApp:
+//│         lhs = Ident of "f"
+//│         kw = Keywrd of keyword ':'
+//│         rhs = InfixApp:
+//│           lhs = Tup of Ls of
+//│             Ident of "Int"
+//│             PrefixApp:
+//│               kw = Keywrd of keyword 'drop'
+//│               rhs = Ident of "Int"
+//│             PrefixApp:
+//│               kw = Keywrd of keyword 'drop'
+//│               rhs = InfixApp:
+//│                 lhs = Ident of "x"
+//│                 kw = Keywrd of keyword ':'
+//│                 rhs = Ident of "Int"
+//│           kw = Keywrd of keyword '->'
+//│           rhs = Ident of "Int"
+//│   rhs = S of App:
+//│     lhs = Ident of "f"
+//│     rhs = Tup of Ls of
+//│       IntLit of 1
+//│       IntLit of 2
+//│       IntLit of 3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect 1
+fun first(x, drop y) = x
+first(1, 2)
+//│ = 1
+
+// Rest parameters may also be droppable.
+:expect 1
+fun first(x, drop ...xs) = x
+first(1, 2, 3)
+//│ = 1
+
+// *** Optimizations ***
+
+:expect 6
+@tailrec fun sum(n, acc?) =
+  if n == 0 then acc else sum(n - 1, (if acc is Int then acc else 0) + n)
+sum(3)
+//│ = 6
+
+// The omitted optional argument must be reset in each iteration.
+:soir
+:expect [[null], [null]]
+@tailrec fun last(n, prev?) =
+  if n == 0 then [prev] else if n == 1 then last(n - 1) else last(n - 1, n)
+[last(1), last(3)]
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp, tmp1;
+//│ @tailrec
+//│ define last⁰ as fun last¹(n, prev?) {
+//│   loop loopLabel:
+//│     let scrut, scrut1, tmp2, tmp3;
+//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     match scrut
+//│       true =>
+//│         return [prev]
+//│       else
+//│         set scrut1 = Predef⁰.equals⁰(n, 1);
+//│         match scrut1
+//│           true =>
+//│             set tmp2 = -⁰(n, 1);
+//│             set n = tmp2;
+//│             set prev = null;
+//│             continue loopLabel
+//│           else
+//│             let n_tmp;
+//│             set tmp3 = -⁰(n, 1);
+//│             set n_tmp = n;
+//│             set n = tmp3;
+//│             set prev = n_tmp;
+//│             continue loopLabel
+//│         end
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ set tmp = last¹(1, null);
+//│ set tmp1 = last¹(3, null);
+//│ return [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [[null], [null]]
+
+
+// *** Errors ***
+
+:e
+fun bad(x?, y) = x
+//│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
+//│ ║  l.+1: 	fun bad(x?, y) = x
+//│ ╙──      	            ^
+
+:e
+fun bad(...xs?) = xs
+//│ ╔══[COMPILATION ERROR] Variadic parameters cannot be optional.
+//│ ║  l.+1: 	fun bad(...xs?) = xs
+//│ ╙──      	        ^^^^^^
+
+:e
+fun bad(using x?: Int) = x
+//│ ╔══[COMPILATION ERROR] Contextual parameters cannot be optional.
+//│ ║  l.+1: 	fun bad(using x?: Int) = x
+//│ ╙──      	        ^^^^^^^^^^^^^
+
+:e
+let t = [1, 2?]
+//│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
+//│ ║  l.+1: 	let t = [1, 2?]
+//│ ╙──      	            ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ t = undefined
+
+:e
+fun first(t: [Int, Int?]) = t.0
+//│ ╔══[COMPILATION ERROR] Illegal position for an optional marker '?': only parameters and function type parameters can be optional.
+//│ ║  l.+1: 	fun first(t: [Int, Int?]) = t.0
+//│ ╙──      	                   ^^^^
+
+:e
+fun app(f: (Int?, Int) -> Int) = f(1, 2)
+//│ ╔══[COMPILATION ERROR] A required parameter cannot follow an optional parameter.
+//│ ║  l.+1: 	fun app(f: (Int?, Int) -> Int) = f(1, 2)
+//│ ╙──      	                  ^^^
+
+// Other operators starting with `?` are unaffected.
+:expect 1
+fun (??) orElse(x, y) = if x is unsafe.undefined then y else x
+unsafe.undefined ?? 1
+//│ = 1
+
+// The optional marker must be attached to its parameter, so `?:` can otherwise be an operator.
+:expect 1
+fun (?:) elvis(x, y) = if x is unsafe.undefined then y else x
+unsafe.undefined ?: 1
+//│ = 1
+
+:e
+fun bad(x, y ?: Int) = x
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
+//│ ║  l.+1: 	fun bad(x, y ?: Int) = x
+//│ ╙──      	           ^^^^^^^^
+
+:pe
+:e
+fun bad(x, y ?) = x
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.+1: 	fun bad(x, y ?) = x
+//│ ╙──      	              ^
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found operator application
+//│ ║  l.+1: 	fun bad(x, y ?) = x
+//│ ╙──      	           ^^^
+
+:pe
+:e
+fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.+1: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ╙──      	                      ^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ║        	                 ^^^^^
+//│ ╟── This type has no resolved target
+//│ ║  l.+1: 	fun bad(f: (Int, Int ?) -> Int) = f(1)
+//│ ╙──      	                 ^^^^^

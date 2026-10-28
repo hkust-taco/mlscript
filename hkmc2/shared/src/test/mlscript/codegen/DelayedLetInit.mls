@@ -52,7 +52,7 @@ let y = 1
 :e
 z = 1
 //│ ╔══[COMPILATION ERROR] Name not found: z
-//│ ║  l.53: 	z = 1
+//│ ║  l.+1: 	z = 1
 //│ ╙──      	^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
@@ -64,7 +64,7 @@ fun f() = 1
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f() {
-//│   runtime.checkArgs("f", 0, true, arguments.length);
+//│   runtime.checkArgs("f", 0, arguments.length);
 //│   return 1
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -81,7 +81,7 @@ f(x) = x + 1
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f1, f2;
 //│ f2 = function f(x1) {
-//│   runtime.checkArgs("f", 1, true, arguments.length);
+//│   runtime.checkArgs("f", 1, arguments.length);
 //│   return x1 + 1
 //│ };
 //│ f1 = f2;
@@ -108,15 +108,19 @@ let foo
 if true
 then foo = 0
 else foo = 1
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.109: 	then foo = 0
-//│ ╙──       	         ^
+//│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: if expression
+//│ ║  l.+2: 	if true
+//│ ║        	   ^^^^
+//│ ║  l.+3: 	then foo = 0
+//│ ╙──      	^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'else'
+//│ ║  l.+4: 	else foo = 1
+//│ ╙──      	^^^^^^^^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo1;
-//│ if (true === true) {
-//│   block$res14 = foo1;
-//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ foo = undefined
 
 let foo
@@ -140,7 +144,7 @@ fun f() =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f3;
 //│ f3 = function f() {
-//│   runtime.checkArgs("f", 0, true, arguments.length);
+//│   runtime.checkArgs("f", 0, arguments.length);
 //│   foo2 = 42;
 //│   return runtime.Unit
 //│ };
@@ -160,15 +164,12 @@ foo
 
 :fixme
 fun f() = foo = 0
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.162: 	fun f() = foo = 0
-//│ ╙──       	              ^
+//│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: term definition
+//│ ║  l.+1: 	fun f() = foo = 0
+//│ ╙──      	^^^^^^^^^^^^^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let f4;
-//│ f4 = function f() {
-//│   runtime.checkArgs("f", 0, true, arguments.length);
-//│   return foo2
-//│ };
+//│ throw "This code cannot be run as its compilation yielded an error."
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

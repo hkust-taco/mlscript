@@ -7,8 +7,8 @@ fun Nested() =
   #config(target: Wasm)
   42
 //│ ╔══[COMPILATION ERROR] Compilation target can only be set by a top-level '#config' directive
-//│ ║  l.7: 	  #config(target: Wasm)
-//│ ╙──     	          ^^^^^^^^^^^^
+//│ ║  l.+2: 	  #config(target: Wasm)
+//│ ╙──      	          ^^^^^^^^^^^^
 //│ Wasm result:
 //│ = {}
 
@@ -16,7 +16,7 @@ fun Nested() =
 @config(target: Wasm)
 fun Annotated() = 42
 //│ ╔══[COMPILATION ERROR] Compilation target can only be set by a top-level '#config' directive
-//│ ║  l.16: 	@config(target: Wasm)
+//│ ║  l.+1: 	@config(target: Wasm)
 //│ ╙──      	        ^^^^^^^^^^^^
 //│ Wasm result:
 //│ = {}
@@ -24,7 +24,7 @@ fun Annotated() = 42
 :ge
 #config(target: SomethingElse)
 //│ ╔══[COMPILATION ERROR] Expected CompilationTarget.JS or CompilationTarget.Wasm
-//│ ║  l.25: 	#config(target: SomethingElse)
+//│ ║  l.+1: 	#config(target: SomethingElse)
 //│ ╙──      	                ^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = {}
@@ -40,15 +40,15 @@ import "../../mlscript-compile/wasm/Shared.mjs"
 :ge
 import "../../mlscript-compile/Example.mls"
 //│ ╔══[COMPILATION ERROR] Cannot import JavaScript source into a WASM worksheet
-//│ ║  l.9: 	module Example with ...
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.10: 	
+//│ ║  l.XX: 	module Example with ...
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	
 //│ ║        	^
-//│ ║  l.11: 	
+//│ ║  l.XX: 	
 //│ ║        	^
-//│ ║  l.12: 	fun pubFun = privFun
+//│ ║  l.XX: 	fun pubFun = privFun
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.13: 	... (more lines omitted) ...
+//│ ║  l.XX: 	... (more lines omitted) ...
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :ge
@@ -56,18 +56,18 @@ module M with
   val value = 42
 fun Dynamic() = M
 //│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
-//│ ║  l.57: 	fun Dynamic() = M
+//│ ║  l.+3: 	fun Dynamic() = M
 //│ ║        	                ^
 //│ ╙── Function must be marked as returning a 'module' in order to return a module.
 //│ ╔══[COMPILATION ERROR] First-class module values are not supported by the WASM backend
-//│ ║  l.57: 	fun Dynamic() = M
+//│ ║  l.+3: 	fun Dynamic() = M
 //│ ╙──      	                ^
 
 :ge
 module Multiple with
   fun f(x)(y) = x + y
 //│ ╔══[COMPILATION ERROR] WASM functions require exactly one parameter list
-//│ ║  l.68: 	  fun f(x)(y) = x + y
+//│ ║  l.+2: 	  fun f(x)(y) = x + y
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^
 
 :e

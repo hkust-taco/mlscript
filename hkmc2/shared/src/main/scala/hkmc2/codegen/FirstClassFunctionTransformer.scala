@@ -4,7 +4,7 @@ package codegen
 import hkmc2.utils.*, shorthands.*
 import utils.*
 import semantics.*
-import syntax.{Tree, SpreadKind}
+import syntax.Tree
 import semantics.Elaborator.{ctx, State}
 import hkmc2.Message.MessageContext
 
@@ -21,32 +21,31 @@ class FirstClassFunctionTransformer
       funDefns += (fun.sym -> fun)
       super.applyFunDefn(fun)
 
-  private def generateFCFunctionClass(p: Path, params: ParamList) =
+  private def generateFCFunctionClass(p: Path, params: LoweredParamList) =
     val clsSym = ClassSymbol(
       syntax.Tree.DummyTypeDef(syntax.Cls),
       syntax.Tree.Ident("Function$")
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
-    val args = params.params.map(_.sym.asSimpleRef.asArg) :::
-      params.restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef))
-    val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), params :: Nil,
-      Return(Call(p, args ne_:: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
+    val forwarding = OptionalParams.forwarding(params, fixedArity = false)
+    val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), forwarding.params :: Nil,
+      Return(Call(p, forwarding.args ne_:: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
       Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function), N)(false)),
       callDef :: Nil, Nil, Nil, Assign.discard(
         Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun, N),
-        End()), End(), None, None)(N, annotations = Nil)
+        End()), End(), None, None, None, methodKeys = Map.empty)(N, annotations = Nil)
 
-  private def getParamList(l: BlockMemberSymbol): Option[ParamList] = funDefns.get(l) match
+  private def getParamList(l: BlockMemberSymbol): Option[LoweredParamList] = funDefns.get(l) match
     case Some(fd) => fd.params.headOption
     case _ => l.tsym.flatMap(getParamList)
 
-  private def getParamList(ts: TermSymbol): Option[ParamList] =
+  private def getParamList(ts: TermSymbol): Option[LoweredParamList] =
     ts.irFunDefn.flatMap(_.params.headOption).orElse:
       // FIXME: remove this fallback once imported functions have their `irFunDefn` properly linked.
       ts.defn.collectFirst:
         case TermDefinition(k = syntax.Fun, params = params @ (_ :: _)) =>
-          params.head
+          LoweredParamList.callingConvention(params.head)
   
   private def isGetter(l: BlockMemberSymbol): Bool = funDefns.get(l) match
     case Some(fd) => fd.params.isEmpty
@@ -59,7 +58,7 @@ class FirstClassFunctionTransformer
         case TermDefinition(k = syntax.Fun, params = Nil) => true
         case _ => false
   
-  private def etaExpandPath(p: Path, params: ParamList)(k: Path => Block): Block =
+  private def etaExpandPath(p: Path, params: LoweredParamList)(k: Path => Block): Block =
     val clsDef = generateFCFunctionClass(p, params)
     val tmp = new TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)))
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
@@ -72,22 +71,31 @@ class FirstClassFunctionTransformer
         else etaExpandPath(ref, getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list.")))(k)
       case _ => k(p)
     case sel: Select => sel.symbol match
-      case Some(s: TermSymbol) if (s.k is syntax.Fun) =>
-        if isGetter(s) then k(p)
-        else
-          val params = getParamList(s).getOrElse:
-            raise:
-              ErrorReport(msg"Cannot get ${s.nme}'s parameter list."
-                -> sel.toLoc :: Nil,
-                source = Diagnostic.Source.Compilation)
-            PlainParamList(Nil)(N)
-          etaExpandPath(sel, params)(k)
+      case Some(s: TermSymbol) if (s.k is syntax.Fun) => etaExpandMethod(sel, s)(k)
       case Some(_) => k(p)
       case _ =>
         raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function." -> sel.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
         k(p)
+    // * A member selected through its runtime key, such as an `@jsSymbol` method, is a method
+    // * reference just like a resolved `Select`.
+    case DynSelect(_, _, DynSelectKind.Member(s)) if s.k is syntax.Fun => etaExpandMethod(p, s)(k)
     case _ => k(p)
+  
+  private def etaExpandMethod(p: Path, s: TermSymbol)(k: Path => Block): Block =
+    if isGetter(s) then k(p)
+    else
+      val params = getParamList(s).getOrElse:
+        raise:
+          ErrorReport(msg"Cannot get ${s.nme}'s parameter list."
+            -> p.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation)
+        LoweredParamList.plain(Nil)(N)
+      etaExpandPath(p, params)(k)
+  
+  /** A resolved function member is called directly; any other term member holds a function object. */
+  private def resolvedCallee(fun: Path, s: TermSymbol): Path =
+    if s.k is syntax.Fun then fun else fun.selSN("call")
 
   override def applyResult(r: Result)(k: Result => Block): Block = r match
     case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
@@ -101,13 +109,12 @@ class FirstClassFunctionTransformer
           case _ => k(call(fun))
         case ref @ Value.MemberRef(_, _) => k(call(fun))
         case sel: Select => sel.symbol match
-          case Some(s: TermSymbol) =>
-            if s.k is syntax.Fun then k(call(fun))
-            else k(call(sel.selSN("call")))
+          case Some(s: TermSymbol) => k(call(resolvedCallee(fun, s)))
           case _ =>
             raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation))
             k(call(fun))
+        case DynSelect(_, _, DynSelectKind.Member(s)) => k(call(resolvedCallee(fun, s)))
         case s: DynSelect =>
           raise(ErrorReport(msg"Cannot determine if the dynamic selection is a function object." -> s.toLoc :: Nil,
               source = Diagnostic.Source.Compilation))
@@ -121,7 +128,7 @@ class FirstClassFunctionTransformer
       case Nil => fd
       case _ :: Nil => fd
       case head :: tail =>
-        def rec(params: List[ParamList]): Block = params match
+        def rec(params: List[LoweredParamList]): Block = params match
           case head :: rest =>
             val newBody = rec(rest)
             val funSym = new BlockMemberSymbol("lambda$", Nil, false)

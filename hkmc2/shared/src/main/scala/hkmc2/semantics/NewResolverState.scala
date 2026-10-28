@@ -79,13 +79,16 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
   private[semantics] val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
   private[semantics] val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
-  private[semantics] val missingMembers = mutable.LinkedHashMap.empty[Identity[NewSel],
-    mutable.ListBuffer[(Bool, () => Ls[(Message, Opt[Loc])])]]
+  private[semantics] val resolutionProblems =
+    mutable.LinkedHashMap.empty[Identity[NewSel | App], mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]
+  // The references, selections, and instantiations written in this unit's current block,
+  // with the lexical scope in which each is written (see ResolutionContext.checkAccess).
+  private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable | New, SrcScope)]
   private[semantics] val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
   private[semantics] val shapeIdentities = mutable.HashMap.empty[ShapeIdentity.View, ShapeIdentity.View]
   private[semantics] val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
   private[semantics] val typeReferences = new DeclaredType.References(substitutions)
-  val membersCache: Cache[(TermShape, Str), MemberLookup] =
+  val membersCache: Cache[(TermShape, MemberKey), MemberLookup] =
     new Cache(_.membersCache, identity)
   // Shape components of cache keys use ShapeIdentity.key, like hosts' candidates.
   val spreadInputs: Cache[Object, mutable.Set[ShapeIdentity.Key]] =
@@ -113,8 +116,8 @@ final class NewResolverState(val owner: Elaborator.State):
   // Adopted canonical producers are not newly allocated (see canonical).
   private[semantics] var allocatedShapeViews: Int = 0
   private[semantics] var largestShapeViewSubstitution: Int = 0
-  // The inferred element type of each array spread (see the tuple listener).
-  private[semantics] val spreadElements: Cache[Identity[Term], TypeResolution] =
+  // Stable iteration observations and joined elements for each spread operand.
+  private[semantics] val spreadElements: Cache[Identity[Term], IterationFlow] =
     new Cache(_.spreadElements, identity)
   val introShapes: Cache[Identity[IntroTerm], IntroShape] =
     new Cache(_.introShapes, identity)
@@ -141,8 +144,6 @@ final class NewResolverState(val owner: Elaborator.State):
   // candidates. Register each host before following recursive function results.
   val resultTypes: Cache[(Identity[Term], TypeSubstitution), DeclaredType] =
     new Cache(_.resultTypes, identity)
-  val awaitedTypes: Cache[DeclaredType, DeclaredType] =
-    new Cache(_.awaitedTypes, identity)
   // Keyed like inference candidates (see ShapeIdentity), so each candidate has one awaited type.
   val awaitedValues: Cache[(ShapeIdentity.Key, TypeSubstitution), DeclaredType] =
     new Cache(_.awaitedValues, identity)
@@ -245,7 +246,7 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.patternRefinements, identity)
   val primitiveTypes: Cache[ClassSymbol, DeclaredType] =
     new Cache(_.primitiveTypes, identity)
-  val extremeTypes: Cache[(Bool, Opt[TypeResolution]), DeclaredType] =
+  val extremeTypes: Cache[Bool, DeclaredType] =
     new Cache(_.extremeTypes, identity)
   val variantTypes: Cache[(DeclaredType, Bool), DeclaredType] =
     new Cache(_.variantTypes, identity)
@@ -259,6 +260,9 @@ final class NewResolverState(val owner: Elaborator.State):
     new Seen(_.exposedTypeHoles)
   val signatureParameters: Cache[VarSymbol, DeclaredType] =
     new Cache(_.signatureParameters, identity)
+  // Synthesized applications share their type graph, including the symbolic arguments.
+  val appliedTypes: Cache[(ClassSymbol | TypeAliasSymbol, Ls[DeclaredType]), DeclaredType] =
+    new Cache(_.appliedTypes, identity)
   val contextualTypes: Cache[ContextualType, DeclaredType] =
     new Cache(_.contextualTypes, identity)
   val tupleArrayParents: Cache[Identity[TupleShape], NominalInstanceView] =
@@ -383,20 +387,25 @@ final class ResolutionContext private[semantics] (
   /** Number of lazily copied graph nodes, for isolation/scale regressions. */
   private[hkmc2] def copiedHostCount: Int = state.copies.size
 
-  // A receiver shape can lack a member that another shape supplies later in
-  // inference. Retain lazy witnesses by selection, including those from later
-  // activations of completed syntax, and report them together at block completion.
-  // Eager problems invalidate the selection immediately, regardless of its targets;
+  // A candidate can lack a member or be non-callable while another candidate
+  // supplies a target later in inference. Retain lazy witnesses by use site,
+  // including later activations of completed syntax, and report them together
+  // at block completion. Eager problems invalidate the use immediately;
   // delaying their report lets the same error include every relevant witness.
-  private def hasSelectionTarget(selection: NewSel): Bool =
-    selection.resolvedTargets.nonEmpty || selection.hasDynamicTarget || selection.tupleIndex.nonEmpty
-  def missingMember(selection: NewSel, eager: Bool)(messages: => Ls[(Message, Opt[Loc])]): Unit =
-    val key = new Identity(selection)
+  def resolutionProblem(term: NewSel | App, eager: Bool)(messages: => Ls[(Message, Opt[Loc])]): Unit =
+    val key = new Identity[NewSel | App](term)
     // Accumulate witnesses for this block's error without replaying errors on
-    // completed selections or adding follow-on errors to unrelated failures.
-    if !hasError(selection) || state.missingMembers.contains(key) then
-      if eager then markError(selection)
-      state.missingMembers.getOrElseUpdate(key, mutable.ListBuffer.empty) += ((eager, () => messages))
+    // completed terms or adding follow-on errors to unrelated failures.
+    if !hasError(term) || state.resolutionProblems.contains(key) then
+      if eager then markError(term)
+      state.resolutionProblems.getOrElseUpdate(key, mutable.ListBuffer.empty) += (() =>
+        // Keep this observation's graph: an intermediate exporter can have
+        // callable witnesses in its private copy of a third file's application.
+        val unresolved = term match
+          case selection: NewSel =>
+            selection.resolvedTargets.isEmpty && !selection.hasDynamicTarget && selection.tupleIndex.isEmpty
+          case application: App => application.callableTargets.currentShapes(using this).isEmpty
+        if eager || unresolved then messages else Nil)
 
   /** Seal the decisions and original host data read by erasure/lowering. The
     * inference graph keeps private, live host data and all its listeners, so
@@ -429,6 +438,7 @@ final class ResolutionContext private[semantics] (
         case term: Term => data(term)
         case _ => ()
       statement match
+        case application: App => data(application.callableTargets)
         case cls: ClassLikeDef =>
           cls.ext.foreach(visit)
           cls.auxParams.foreach(_.subTerms.foreach(visit))
@@ -445,19 +455,165 @@ final class ResolutionContext private[semantics] (
         case _ => ()
       statement.subStatements.foreach(visit)
     visit(block)
-    state.missingMembers.foreach: (key, problems) =>
-      val selection = key.value
-      val unresolved = !hasSelectionTarget(selection)
-      val messages = problems.iterator.collect:
-        case (eager, messages) if eager || unresolved => messages()
-      .flatten.toList.distinct
+    state.resolutionProblems.foreach: (key, problems) =>
+      val term = key.value
+      val messages = problems.iterator.flatMap(_()).toList.distinct
       if messages.nonEmpty then
-        markError(selection)
-        reportResolutionError(selection, messages)
-    state.missingMembers.clear()
+        markError(term)
+        reportResolutionError(term, messages)
+    state.resolutionProblems.clear()
+    state.accessSites.foreach: (term, scope) =>
+      checkAccess(term, scope)
+      // Access checks can insert already-resolved key expressions. Bind their
+      // hosts to this unit before sealing, just like the written source terms.
+      term match
+        case ref: NewResolvable => ref.keyAccess.foreach(visit)
+        case nw: New if nw.args.isEmpty && nw.rft.isEmpty => checkPartialInstantiation(nw)
+        case _ => ()
+    state.accessSites.clear()
     state.pending.foreach: (key, value) =>
       if !key.value.isInstanceOf[Symbol] && state.completedNodes.add(key) then value.completed = true
     state.pending.clear()
+
+  /** Check the accessibility of the definitions that `term`, written in `scope`, refers to once
+    * its block is complete, as its targets are only final then (see checkAccess). The elaborator
+    * records the references, selections, and instantiations written in the source.
+    */
+  def recordAccessSite(term: NewResolvable | New, scope: SrcScope): Unit =
+    state.accessSites += ((term, scope))
+
+  /** Check written instantiations once their aliases and forward references have
+    * resolved. Using the per-block source sites avoids repeating the warning when
+    * generic functions are instantiated or their inference is imported elsewhere. */
+  private def checkPartialInstantiation(term: New): Unit = if !hasError(term) then
+    ClassValueShape.targetsOf(term).map(ClassValueShape.definitionOf).distinct match
+      case cls :: Nil =>
+        (cls.paramsOpt.toList ::: cls.auxParams) match
+          case params :: Nil if params.paramCountLB == 0 && !params.flags.ctx =>
+            val construction = term.toLoc.fold(s"new ${cls.sym.nme}"): loc =>
+              loc.origin.fph.blockStr.slice(loc.spanStart, loc.spanEnd)
+            report(WarningReport(
+              msg"This 'new' expression partially applies class '${cls.sym.nme}' instead of constructing an instance." -> term.toLoc ::
+              msg"Use `$construction()` to construct an instance, or `=> $construction()` to create an explicit zero-argument lambda." -> N ::
+              msg"The constructor accepts an empty argument list." -> params.toLoc :: Nil))
+          case _ => ()
+      case _ => ()
+
+  /** Private members are only accessible from within their owner and its companion (see
+    * SrcScope.canAccessPrivatesOf); member lookups performed elsewhere skip them in favor of
+    * inherited members (see MemberLookup.visibleFrom), so a reference written there only
+    * targets a private member when there is no such alternative, which is an error.
+    * Likewise, a private constructor is only accessible from within its class and its companion.
+    * Both referring to the class's constructor function and instantiating the class with `new`,
+    * including in another class's `extends` clause, access its constructor. Instantiating
+    * a class through a variable also accesses the constructor of each class that the variable
+    * may hold; calling a constructor function held by a variable does not, as the reference
+    * that produced this function already did.
+    * Finally, a reference that may target an accessible private member must target only that member:
+    * see checkPrivateMix below.
+    */
+  private def checkAccess(term: NewResolvable | New, scope: SrcScope): Unit = if !hasError(term) then
+    val loc = term match
+      case ref: MemberRef => ref.toLoc
+      case sel: NewSel => sel.id.toLoc
+      case ref: UnresolvedRef => ref.id.toLoc
+      case sup: Super => sup.id.toLoc
+      case nw: New => nw.toLoc
+    def declaredAt(definition: Definition): Opt[Loc] = definition match
+      case td: TermDefinition => td.tsym.toLoc
+      case _ => definition.sym.toLoc
+    def checkPrivate(kind: Str, definition: Definition, owner: Opt[InnerSymbol]): Ls[Diagnostic] =
+      if definition.visibility isnt Visibility.Private then Nil else owner match
+        // File-private definitions are handled by compilation-unit exports.
+        case S(_: TopLevelSymbol) | N => Nil
+        case S(owner) => owner.asDefnSym.defn match
+          case S(ownerDefn) if !scope.canAccessPrivatesOf(ownerDefn) =>
+            ErrorReport(msg"Cannot access private $kind '${definition.bsym.nme}' outside its declaring owner" -> loc ::
+              msg"private $kind declared here" -> declaredAt(definition) :: Nil,
+              source = Diagnostic.Source.Compilation) :: Nil
+          case _ => Nil
+    /** The definition of `target` if it is a member stored privately at runtime,
+      * along with a description of its kind. */
+    def privateMember(target: DefinitionSymbol[?]): Opt[(Str, Definition)] =
+      codegen.MemberStorage.sourcePrivateDefinition(target).map: definition =>
+        val kind = target match
+          case ctor: ClassCtorSymbol => ctor.associatedCls.describeKind
+          case _: TermSymbol => "member"
+          case _ => target.describeKind
+        kind -> definition
+    /** Lowering compiles a reference with several targets, or with a receiver of unknown shape, to a property access
+      * (see Lowering.newSelection and Lowering.openSelection). That access cannot reach private storage, so it would
+      * silently select another member for the receivers whose private member is accessible.
+      * Since private members are never overridden, no other target can stand for a private target either. */
+    def checkPrivateMix(ref: NewResolvable): Ls[Diagnostic] =
+      val targets = ref.resolvedTargets.distinct
+      val (privates, others) = targets.partitionMap(target => privateMember(target).toLeft(target))
+      val dynamic = ref match
+        case sel: NewSel => sel.hasDynamicTarget
+        case ref: UnresolvedRef => ref.dynamicPrefixes.nonEmpty
+        case _ => false
+      if privates.isEmpty || targets.sizeIs == 1 && !dynamic then Nil
+      else
+        ErrorReport(
+          msg"This reference may target a private member, which cannot be selected together with other members" -> loc ::
+          privates.map((kind, definition) => msg"private $kind '${definition.bsym.nme}' declared here" -> declaredAt(definition)) :::
+          others.map(target => msg"other target: ${target.describeKind} '${target.nme}'" -> target.toLoc) :::
+          (if dynamic then msg"The receiver may also have a shape whose members are unknown" -> N :: Nil else Nil),
+          source = Diagnostic.Source.Compilation) :: Nil
+    def checkConstructor(cls: ClassDef): Ls[Diagnostic] = cls.privateCtor match
+      case S(modifier) if !scope.canAccessPrivatesOf(cls) =>
+        ErrorReport(msg"Cannot access the private constructor of class '${cls.sym.nme}' outside the class" -> loc ::
+          msg"private constructor declared here" -> modifier.toLoc :: Nil, source = Diagnostic.Source.Compilation) :: Nil
+      case _ => Nil
+    val accessViolations = term match
+      case nw: New =>
+        ClassValueShape.targetsOf(nw).map(ClassValueShape.definitionOf).distinct.flatMap(checkConstructor)
+      case ref: NewResolvable => ref.resolvedTargets.distinct.flatMap:
+        case ctor: ClassCtorSymbol => ctor.associatedCls.defn.toList.flatMap: cls =>
+          checkPrivate("class", cls, cls.owner) ::: checkConstructor(cls)
+        case member: TermSymbol => member.defn.toList.flatMap(checkPrivate("member", _, member.owner))
+        case member: InnerSymbol => member.asDefnSym.defn.toList.flatMap: definition =>
+          checkPrivate(member.asDefnSym.describeKind, definition, definition.owner)
+        case _ => Nil
+    // An inaccessible private target, reported above, already explains why the reference is rejected.
+    val violations =
+      if accessViolations.nonEmpty then accessViolations
+      else term match
+        case ref: NewResolvable => checkPrivateMix(ref)
+        case _: New => Nil
+    if violations.nonEmpty then
+      markError(term)
+      violations.foreach(report)
+    else term match
+      case ref: NewResolvable =>
+        // Overrides can have several targets but still share one property key.
+        // Keep those targets and their flows; recover only their common operand.
+        ref.resolvedTargets.map(_.asTrm.flatMap(_.defn).flatMap(MemberKey.symbol)).distinct match
+          case S(key) :: Nil =>
+            AccessPath.symbolKey(scope, key)(using state.owner) match
+              case R(path) => ref.keyAccess = S(path)
+              case L(AccessPath.Failure.PrivateMember(member)) =>
+                markError(ref)
+                report(ErrorReport(
+                  msg"Cannot use @jsSymbol key '${key.name}' here: private member '${member.nme}' belongs to another file." -> loc ::
+                    msg"The private member is declared here." -> member.toLoc ::
+                    ref.resolvedTargets.distinct.map(target =>
+                      msg"The keyed member '${target.nme}' is defined here." -> target.toLoc),
+                  source = Diagnostic.Source.Compilation))
+              case L(AccessPath.Failure.OutOfScope) =>
+                markError(ref)
+                report(ErrorReport(
+                  msg"Cannot use @jsSymbol key '${key.name}' here: '${key.path.head.nme}' is not in scope." -> loc ::
+                    msg"The key's root binding is defined here." -> key.path.head.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation))
+          case keys if keys.exists(_.nonEmpty) =>
+            markError(ref)
+            report(ErrorReport(
+              msg"This reference has targets with different property keys." -> loc ::
+                ref.resolvedTargets.distinct.map(target => msg"Candidate '${target.nme}' is declared here." -> target.toLoc),
+              source = Diagnostic.Source.Compilation))
+          case _ => ()
+      case _: New => ()
 
   def canResolve(host: Publisher[?]): Bool =
     data(host)
@@ -505,7 +661,7 @@ final class ResolutionContext private[semantics] (
     canonical(key._1, _.recordShapes, key)(shapeView(key._3)(make))
   def canonicalInstance(tpe: DeclaredType)(make: => InstanceShape): InstanceShape =
     canonical(tpe.resolution, _.instanceShapes, tpe)(shapeView(tpe.instances)(make))
-  def spreadElementType(spread: Term)(make: => TypeResolution): TypeResolution =
+  def spreadFlow(spread: Term)(make: => IterationFlow): IterationFlow =
     canonical(spread, _.spreadElements, new Identity(spread))(make)
   def memberVariable(symbol: TermSymbol): ShapeHost =
     state.memberVariables.getOrElseUpdate(symbol,
@@ -607,6 +763,14 @@ final class ResolutionContext private[semantics] (
     typeConstraints.add((tpe, ShapeIdentity.key(value), marks))
   def hasTypeConstraint(tpe: DeclaredType, value: TermShape, marks: Ls[Marks]): Bool =
     typeConstraints((tpe, ShapeIdentity.key(value), marks))
+
+/** One pair of call sites per spread source. Incoming alternatives share these
+  * observations and the element host, so their Cartesian product is never built.
+  * Publisher storage and listeners remain owned by the consuming resolution graph.
+  */
+private[semantics] final class IterationFlow(
+    val elements: TypeResolution, val iterator: Term.App, val next: Term.App,
+    val iteratorMember: FlowSymbol, val nextMember: FlowSymbol, val doneMember: FlowSymbol, val valueMember: FlowSymbol)
 
 private[semantics] final class TermShapeHost extends Host[TermShape]:
   def showDbg(using DebugPrinter): Str = "instance views"

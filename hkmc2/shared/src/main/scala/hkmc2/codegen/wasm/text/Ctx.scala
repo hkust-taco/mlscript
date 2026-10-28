@@ -10,7 +10,7 @@ import document.*
 import document.Document
 import semantics.{
   BlockMemberSymbol, ClassSymbol, ClassLikeSymbol, ClassCtorSymbol, Elaborator,
-  InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, ParamList, Symbol, TempSymbol, TermSymbol,
+  InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, Symbol, TempSymbol, TermSymbol,
 },
   Elaborator.State
 import text.Param as WasmParam
@@ -49,7 +49,7 @@ object SessionBinding:
         // An imported subclass layout refers to its ancestors even when no source expression
         // names them. Parents must precede children in Wasm's type declaration order.
         sym match
-          case cls: ClassLikeSymbol => cls.irClassHeader.flatMap(_.parent).foreach(applySymbol)
+          case cls: ClassLikeSymbol => cls.irClassHeader.flatMap(_.parent.knownSymbol).foreach(applySymbol)
           case ctor: ClassCtorSymbol => applySymbol(ctor.associatedCls)
           case member: BlockMemberSymbol => member.asClsOrMod.foreach(applySymbol)
           case member: TermSymbol => member.owner.foreach(applySymbol)
@@ -224,6 +224,8 @@ final class SessionExportCtx(
   *   The expression of the function body.
   * @param exportName
   *   Optional export name.
+  * @param optionalParams
+  *   Physical parameter indices that host wrappers must supply as null when omitted.
   * @param wrapId
   *   A pair of optional strings for adding a prefix and suffix to the generated identifier of this function.
   */
@@ -235,11 +237,14 @@ class FuncInfo(
     val locals: Seq[SlotSymbol -> SymIdx],
     val body: Expr,
     val exportName: Opt[Str],
+    val optionalParams: Set[Int],
     val wrapId: Opt[Str] -> Opt[Str] = N -> N,
 )(using Ctx, Raise, State) extends ToWat:
 
   /** Symbolic identifier for the function. */
   val id = SymIdx(summon[Ctx].funcScp.allocateOrGetNameWrapped(sym, wrapId))
+
+  assert(optionalParams.forall(i => i >= 0 && i < params.size), "Optional parameter index outside the Wasm signature")
 
   /** Returns the type of this function as a [[SignatureType]]. */
   def getSignatureType: SignatureType = SignatureType(
@@ -514,7 +519,7 @@ object FunctionCtx:
   *   When set, overrides the loaded type of each param slot at its position (index 0 = `this`).
   */
 class FunctionCtx(
-    _params: Ls[ParamList],
+    _params: Ls[LoweredParamList],
     thisSym: Opt[InnerSymbol],
     paramTypes: Opt[Seq[ValType]] = N,
 )(using Ctx, Raise, State):
@@ -621,10 +626,19 @@ end FunctionCtx
   * Returns the result of the `mkBody` function along with the [[FunctionCtx]].
   */
 def genFuncBody[T](
-    params: Ls[ParamList],
+    params: Ls[LoweredParamList],
     thisSym: Opt[InnerSymbol],
     paramTypes: Opt[Seq[ValType]] = N,
 )(mkBody: FunctionCtx ?=> T)(using Ctx, Raise, State): T -> FunctionCtx =
+  // * Calls pad omitted optional arguments with null to preserve Wasm's fixed arity.
+  // * Variadic parameters still need argument packing: binding one as a plain parameter would
+  // * pass a single argument rather than an array of the remaining ones.
+  params.foreach: ps =>
+    ps.restParam.foreach: p =>
+      // * The rest parameter introduced when lowering trailing parameters has no location of its own.
+      raise(ErrorReport(
+        msg"Variadic parameters are not supported by the WebAssembly backend." -> p.toLoc.orElse(ps.toLoc) :: Nil,
+        source = Diagnostic.Source.Compilation))
   val funcCtx = FunctionCtx(params, thisSym, paramTypes)
   val result = mkBody(using funcCtx)
   result -> funcCtx
@@ -807,7 +821,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
       types.valuesIterator.map(t => AbiType(TypeIdx(t.id), t.sym, t.wrapId, t.compType, t.objectTag)).toVector,
       orderedTypeGroups.map(_.map(TypeIdx(_)).toVector).toVector,
       funcs.valuesIterator.collect:
-        case f: FuncInfo => AbiFunction(f.sym, f.wrapId, f.emittedExportName.get, f.typeUse.typeIdx)
+        case f: FuncInfo => AbiFunction(f.sym, f.wrapId, f.emittedExportName.get, f.typeUse.typeIdx, f.optionalParams)
       .toVector,
       globals.valuesIterator.collect:
         case g: GlobalInfo => AbiGlobal(GlobalIdx(g.id), g.sym, g.wrapId, g.emittedExportName.get, g.globalType)

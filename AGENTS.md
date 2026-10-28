@@ -5,8 +5,9 @@
 
 When working on Scala code, use the Metals MCP tools when available for semantic
 symbol searches, inspection, documentation, and finding usages, and for quick
-file or module compilation feedback. Codex's project configuration in
-`.codex/config.toml` can launch the headless Metals server automatically.
+file or module compilation feedback. The project configurations for Codex
+(`.codex/config.toml`) and Claude Code (`.mcp.json`) can launch the headless
+Metals server automatically; keep their Metals versions in sync.
 If Metals is unavailable, continue with source searches and SBT, and report the
 connection problem. Metals compilation and test tools do not replace the SBT
 test prerequisites and final validation below.
@@ -21,7 +22,11 @@ Note that this only affects the main compilation tests;
 there is also `cntest` for nofib compilation tests, `catest` for application compilation tests,
 and `cwtest` for WASM compilation tests.
 
-Before finishing your work, run `hkmc2AllTests/test` to make sure the codebase compiles and all tests succeed.
+Before finishing work with retained code or test changes, run `hkmc2AllTests/test`
+to make sure the codebase compiles and all tests succeed;
+this covers `ctest`, so no need to run `ctest` separately.
+Full validation is not required for read-only investigations, documentation-only edits,
+and temporary experiments whose changes have all been reverted.
 
 After you are done fixing all the problems and all the tests pass,
 *you need to commit the resulting golden test output changes*.
@@ -29,10 +34,14 @@ Any commit that does not include the latest changes to test outputs will fail th
 
 Please also read the files in `.github/skills/hkmc2-difftests`.
 
-Use `.mls` diff tests for compiler behavior. Do not add Scala tests that duplicate
+Use `*.mls` diff tests for compiler behavior. Do not add Scala tests that duplicate
 that coverage or merely pin internal representation or assertion details. Reserve
 unit tests for properties diff tests cannot reliably observe, such as concurrency,
 cache isolation, bounded graph growth, or algebraic laws; state the extra coverage.
+
+Before adding new diff tests, make sure they are not already covered by existing tests.
+All new diff-test files you create should go into `hkmc2/shared/src/test/mlscript/slop/`
+unless there is a good reason to put them elsewhere.
 
 When you create a commit, author it under your (the agent's) own identity,
 not under the user's identity.
@@ -42,6 +51,12 @@ Do not change repository-local or global Git identity configuration.
 
 
 ## Design Philosophy
+
+**Confirm language-design decisions before implementing them.** Propose changes
+to source syntax, language semantics, or public library contracts and obtain the
+user's confirmation unless that specific design is already explicitly approved.
+Authorization to fix compiler behavior does not by itself authorize introducing
+annotations, changing member naming or dispatch rules, or extending public APIs.
 
 You are working on an industry-strength compiler codebase.
 Although its test suite is extensive, tests alone are not enough to determine the quality of a change;
@@ -73,6 +88,7 @@ exactly where the mutable state is supposed to be defined and used.
 
 Never use default arguments in core business logic.
 Default arguments should be reserved for user-facing APIs.
+Do NOT encode default arguments through overloading to skirt this rule.
 
 Keep it DRY: if you find yourself copying and pasting code,
 consider refactoring it into a reusable function or class.
@@ -92,6 +108,10 @@ invariant, behavior, or failure being prevented. Name the relevant data and oper
 avoid vague claims about where a "lifecycle" or "responsibility" belongs. If history
 or a rejected alternative matters, include enough context to explain the tradeoff
 after commits are squashed.
+
+Do NOT include comments that simply describe what the code is doing
+without adding any additional insight, or comments that talk about
+parts of the system that are not directly related to the code being commented on.
 
 
 ## User-Facing Diagnostics
@@ -120,8 +140,13 @@ while we often leave some there for easier future editing by programmers,
 it seems AI agent toolings like `apply_patch` reliably removes them anyway, which is okay
 (note: this is discussed at https://github.com/openai/codex/issues/21121#issuecomment-4608911199).
 
+When removing a block of code separated by empty lines, remove the separating empty lines as well,
+eg, `A\nB\nC` -> `A\nC` (not `A\n\nC`) and `A\n\nB\nC` -> `A\n\nC` (not `A\nC` nor `A\n\n\nC`).
+
 **Important:** When working on a PR, make sure to check the diff of the whole PR (including all commits)
-to ensure that no needless empty-line changes are included in the PR. If you find any, please remove them.
+for accidental empty-line or indentation changes introduced by AI agents. Distinguish that diff noise
+from intentional edits by the user or other human contributors by checking the commit history.
+Preserve intentional contributor edits, including added indentation on empty lines.
 
 
 ## Manipulating IR representations

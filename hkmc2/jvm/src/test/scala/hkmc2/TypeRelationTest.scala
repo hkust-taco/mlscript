@@ -13,9 +13,8 @@ class TypeRelationTest extends AnyFunSuite:
     given owner: Elaborator.State = new Elaborator.State
     given state: ResolutionContext = owner.newResolverState.context
     given Raise = diagnostic => fail(diagnostic.theMsg)
-    given DebugPrinter = new DebugPrinter
-    given trace: TraceLogger = new TraceLogger:
-      override def doTrace: Boolean = false
+    given DebugPrinter = new DebugPrinter()
+    given trace: TraceLogger = TraceLogger.silent
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
     val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
@@ -43,15 +42,15 @@ class TypeRelationTest extends AnyFunSuite:
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     h.resolver.publishParameter(a, first)
-    h.resolver.constrainTypes(ar, br)
-    h.resolver.constrainTypes(br, ar)
+    h.resolver.constrainTypes(ar, br, N)
+    h.resolver.constrainTypes(br, ar, N)
     val seen = h.observe(br)
     h.resolver.publishParameter(a, second)
     assert(seen.toSet == Set(first, second))
     val counts = (a.inferenceHost.listeners.size, b.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
-      h.resolver.constrainTypes(ar, br)
-      h.resolver.constrainTypes(br, ar)
+      h.resolver.constrainTypes(ar, br, N)
+      h.resolver.constrainTypes(br, ar, N)
       h.resolver.publishParameter(a, first)
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(first, second))
@@ -94,7 +93,7 @@ class TypeRelationTest extends AnyFunSuite:
     val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
     val member = BlockMemberSymbol("Identity", Nil)
     symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N)),
-      S(ft.resolution.source), N, Nil)(N))
+      S(ft.resolution.source), N, Nil)(N, N))
     val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
     val (argument, at) = h.parameter("A")
     val application = h.tpe(TypeShape.Applied(alias.resolution, List(at.resolution)))
@@ -122,7 +121,7 @@ class TypeRelationTest extends AnyFunSuite:
     val symbol = TypeAliasSymbol(Tree.Ident("Identity"))
     val member = BlockMemberSymbol("Identity", Nil)
     symbol.defn = S(TypeDef(symbol, member, List(TyParam(FldFlags.empty, N, formal)(N), TyParam(FldFlags.empty, N, unused)(N)),
-      S(ft.resolution.source), N, Nil)(N))
+      S(ft.resolution.source), N, Nil)(N, N))
     val alias = h.tpe(TypeShape.Alias(symbol, S(ft.resolution)))
     val scope = TermSymbol(Fun, N, Tree.Ident("owner"))
     val owner = ResolutionBoundary(scope)
@@ -225,7 +224,7 @@ class TypeRelationTest extends AnyFunSuite:
     val first = IntroShape(Term.UnitVal(), N)
     val later = DynShape()
     h.resolver.publishParameter(a, first)
-    h.resolver.constrainTypes(left, right)
+    h.resolver.constrainTypes(left, right, N)
     val seen = h.observe(ContextualType(bt, Nil))
     assert(seen.toList == List(first))
     def counts = List(left.tpe.resolution.inferenceHost.listeners.size, right.tpe.resolution.inferenceHost.listeners.size,
@@ -234,7 +233,7 @@ class TypeRelationTest extends AnyFunSuite:
     h.resolver.publishParameter(a, later)
     assert(seen.toList == List(first, later))
     (1 to 1000).foreach: _ =>
-      h.resolver.constrainTypes(left, right)
+      h.resolver.constrainTypes(left, right, N)
     assert(counts == before)
     assert(h.state.allocatedTypeInstanceCount == 0)
 
@@ -246,7 +245,7 @@ class TypeRelationTest extends AnyFunSuite:
     val second = DynShape()
     val early = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     val late = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    early.publish(TypeShape.Tuple(List(at.resolution, late)))
+    early.publish(TypeShape.Tuple(List(at.resolution, late).map(TypeShape.TupleField(_, spread = false))))
     val left = h.resolver.declaredType(early, Map(a -> h.tpe(TypeShape.Inferred(first))))
     val right = h.resolver.declaredType(early, Map(a -> h.tpe(TypeShape.Inferred(second))))
     val leftSeen = h.observe(ContextualType(left, Nil))
@@ -254,7 +253,7 @@ class TypeRelationTest extends AnyFunSuite:
     assert(leftSeen.isEmpty && rightSeen.isEmpty)
     // Closing a recursive dependency must wake both observers without merging
     // their environments or allocating a parameter for the forward reference.
-    late.publish(TypeShape.Tuple(List(at.resolution, early)))
+    late.publish(TypeShape.Tuple(List(at.resolution, early).map(TypeShape.TupleField(_, spread = false))))
     def firstField(values: ArrayBuffer[TermShape]): Set[TermShape] = values.toList match
       case (tuple: TupleShape) :: Nil => tuple.elements.head match
         case TupleShape.TypedField(tpe, marks) => h.observe(ContextualType(tpe, marks)).toSet
@@ -263,10 +262,10 @@ class TypeRelationTest extends AnyFunSuite:
     assert(firstField(leftSeen) == Set(first))
     assert(firstField(rightSeen) == Set(second))
     (1 to 1000).foreach: _ =>
-      h.resolver.constrainTypes(ContextualType(left, Nil), ContextualType(right, Nil))
+      h.resolver.constrainTypes(ContextualType(left, Nil), ContextualType(right, Nil), N)
     val saturated = (early.inferenceHost.listeners.size, late.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
-      h.resolver.constrainTypes(ContextualType(left, Nil), ContextualType(right, Nil))
+      h.resolver.constrainTypes(ContextualType(left, Nil), ContextualType(right, Nil), N)
     assert((early.inferenceHost.listeners.size, late.inferenceHost.listeners.size) == saturated)
     assert(h.state.allocatedTypeInstanceCount == 0)
 
@@ -286,7 +285,7 @@ class TypeRelationTest extends AnyFunSuite:
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     val lower = ContextualType(h.tpe(TypeShape.Inferred(first)), Nil)
-    h.resolver.constrainTypes(lower, neg)
+    h.resolver.constrainTypes(lower, neg, N)
     assert(negativeValues.isEmpty && positiveValues.isEmpty)
     resolution.publish(TypeShape.Argument(TypeArgument(inputType, outputType)))
     assert(negativeValues.toList == List(first))
@@ -301,7 +300,7 @@ class TypeRelationTest extends AnyFunSuite:
       assert(h.resolver.selectArgument(argument, true) eq positive)
       assert(h.resolver.selectArgument(negative, true) eq negative)
       assert(h.resolver.selectArgument(positive, false) eq positive)
-      h.resolver.constrainTypes(lower, neg)
+      h.resolver.constrainTypes(lower, neg, N)
     assert((resolution.inferenceHost.listeners.size, input.inferenceHost.listeners.size, output.inferenceHost.listeners.size) == counts)
     assert(negativeValues.toList == List(first))
     assert(positiveValues.toList == List(second))
@@ -322,10 +321,10 @@ class TypeRelationTest extends AnyFunSuite:
     val value = IntroShape(Term.UnitVal(), N)
     h.resolver.publishParameter(parameter, value)
     assert(seen.toList == List(value))
-    h.resolver.constrainTypes(reference, reference)
+    h.resolver.constrainTypes(reference, reference, N)
     val counts = (resolution.inferenceHost.listeners.size, parameter.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
-      h.resolver.constrainTypes(reference, reference)
+      h.resolver.constrainTypes(reference, reference, N)
       assert(h.resolver.selectArgument(argument, true) eq selected)
     assert((resolution.inferenceHost.listeners.size, parameter.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(value))
@@ -339,21 +338,21 @@ class TypeRelationTest extends AnyFunSuite:
     val second = h.resolver.omittedType(h.tpe(TypeShape.Abstract).resolution, parameter)
     val left = ContextualType(first, Nil)
     val right = ContextualType(second, Nil)
-    h.resolver.constrainTypes(left, right)
-    h.resolver.constrainTypes(right, left)
+    h.resolver.constrainTypes(left, right, N)
+    h.resolver.constrainTypes(right, left, N)
     val seen = h.observe(right)
     assert(seen.isEmpty)
     val bound = IntroShape(Term.UnitVal(), N)
     val input = ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil)
-    h.resolver.constrainTypes(input, left)
+    h.resolver.constrainTypes(input, left, N)
     def listeners(tpe: DeclaredType): Int = tpe.resolution.currentShapes.toList match
       case TypeShape.Hole(host) :: Nil => host.listeners.size
       case _ => fail("An omitted argument must retain its inference host")
     val counts = (listeners(first), listeners(second))
     (1 to 1000).foreach: _ =>
-      h.resolver.constrainTypes(left, right)
-      h.resolver.constrainTypes(right, left)
-      h.resolver.constrainTypes(input, left)
+      h.resolver.constrainTypes(left, right, N)
+      h.resolver.constrainTypes(right, left, N)
+      h.resolver.constrainTypes(input, left, N)
     assert(seen.toList == List(bound))
     assert((listeners(first), listeners(second)) == counts)
     assert(h.state.allocatedTypeInstanceCount == 0)
@@ -378,8 +377,8 @@ class TypeRelationTest extends AnyFunSuite:
     h.resolver.listenInstanceViews(h.resolver.instanceShape(hole)(using right))(rightValues += _)(using right)
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
-    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(first)), Nil), ContextualType(hole, Nil))(using left)
-    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(second)), Nil), ContextualType(hole, Nil))(using right)
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(first)), Nil), ContextualType(hole, Nil), N)(using left)
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(second)), Nil), ContextualType(hole, Nil), N)(using right)
     assert(leftValues.toList == List(first))
     assert(rightValues.toList == List(second))
     assert(exporter.isEmpty)
@@ -397,7 +396,7 @@ class TypeRelationTest extends AnyFunSuite:
     val name: Tree.Ident = Tree.Ident("Closed")
     val symbol = ClassSymbol(Tree.TypeDef(Cls, name, N), name)
     val defn = ClassDef.Plain(N, Cls, symbol, BlockMemberSymbol("Closed", Nil), Nil, N,
-      ObjBody(Term.Blk(Nil, Term.UnitVal())), N, Nil, Nil, N)(N)
+      ObjBody(Term.Blk(Nil, Term.UnitVal())), N, Nil, Nil, N, Nil)(N, N, N)
     h.state.state.lexicalTypeBinders(symbol) = Set.empty
     val original = NominalInstanceView(defn, Map.empty, N)(N, ShapeProvenance.empty)(h.resolver)
     val scheme = h.tpe(TypeShape.Top).resolution
@@ -422,22 +421,22 @@ class TypeRelationTest extends AnyFunSuite:
     val (b, bt) = h.parameter("B")
     val (_, result) = h.parameter("Result")
     val input = ContextualType(h.tpe(TypeShape.Intersection(at.resolution, bt.resolution)), Nil)
-    val expected = ContextualType(h.tpe(TypeShape.Tuple(result.resolution :: Nil)), Nil)
+    val expected = ContextualType(h.tpe(TypeShape.Tuple(TypeShape.TupleField(result.resolution, spread = false) :: Nil)), Nil)
     val seen = h.observe(ContextualType(result, Nil))
     def tuple(value: TermShape): TermShape =
-      h.resolver.instanceShape(h.tpe(TypeShape.Tuple(h.tpe(TypeShape.Inferred(value)).resolution :: Nil)))
+      h.resolver.instanceShape(h.tpe(TypeShape.Tuple(TypeShape.TupleField(h.tpe(TypeShape.Inferred(value)).resolution, spread = false) :: Nil)))
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     val left = tuple(first)
     val right = tuple(second)
-    h.resolver.constrainTypes(input, expected)
+    h.resolver.constrainTypes(input, expected, N)
     h.resolver.publishParameter(a, left)
     assert(seen.toList == List(first))
     h.resolver.publishParameter(b, right)
     assert(seen.toSet == Set(first, second))
     val counts = (a.inferenceHost.listeners.size, b.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
-      h.resolver.constrainTypes(input, expected)
+      h.resolver.constrainTypes(input, expected, N)
       h.resolver.publishParameter(a, left)
       h.resolver.publishParameter(b, right)
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
@@ -453,10 +452,10 @@ class TypeRelationTest extends AnyFunSuite:
     val first = IntroShape(Term.UnitVal(), N)
     val second = DynShape()
     h.state.markExplicitTypeArgument(a)
-    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(first)), Nil), ContextualType(at, Nil))
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(first)), Nil), ContextualType(at, Nil), N)
     h.resolver.publishParameter(a, h.resolver.instanceShape(one))
     h.resolver.publishParameter(a, h.resolver.instanceShape(two))
-    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(second)), Nil), ContextualType(at, Nil))
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(second)), Nil), ContextualType(at, Nil), N)
     for target <- List(one, two); bound <- List(first, second) do
       assert(h.state.hasTypeConstraint(target, bound, Nil))
     assert(a.currentShapes.toSet == Set(h.resolver.instanceShape(one), h.resolver.instanceShape(two)))
@@ -479,7 +478,7 @@ class TypeRelationTest extends AnyFunSuite:
     h.state.markExplicitTypeArgument(b)
     h.resolver.publishParameter(a, h.resolver.instanceShape(bt).exit(sourceMarks).enter(targetMarks))
     h.resolver.publishParameter(b, h.resolver.instanceShape(concrete).enter(sourceMarks))
-    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, targetMarks))
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, targetMarks), N)
     assert(h.state.hasTypeConstraint(concrete, bound, Nil))
     val expected = h.resolver.instanceShape(concrete).enter(sourceMarks) match
       case value: TermShape => ShapeIdentity.key(value)
@@ -499,7 +498,7 @@ class TypeRelationTest extends AnyFunSuite:
     h.state.markExplicitTypeArgument(a)
     h.resolver.publishParameter(a, h.resolver.instanceShape(one).enter(firstMarks))
     h.resolver.publishParameter(a, h.resolver.instanceShape(two).enter(secondMarks))
-    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, firstMarks))
+    h.resolver.constrainTypes(ContextualType(h.tpe(TypeShape.Inferred(bound)), Nil), ContextualType(at, firstMarks), N)
     assert(h.state.hasTypeConstraint(one, bound, Nil))
     assert(!h.state.hasTypeConstraint(two, bound, Nil))
 
@@ -515,12 +514,12 @@ class TypeRelationTest extends AnyFunSuite:
     h.state.markExplicitTypeArgument(b)
     h.resolver.publishParameter(a, h.resolver.instanceShape(bt))
     h.resolver.publishParameter(b, h.resolver.instanceShape(at))
-    h.resolver.constrainTypes(lower, ContextualType(at, Nil))
+    h.resolver.constrainTypes(lower, ContextualType(at, Nil), N)
     h.resolver.publishParameter(b, h.resolver.instanceShape(concrete))
     assert(h.state.hasTypeConstraint(concrete, bound, Nil))
     val counts = (a.inferenceHost.listeners.size, b.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
-      h.resolver.constrainTypes(lower, ContextualType(at, Nil))
+      h.resolver.constrainTypes(lower, ContextualType(at, Nil), N)
       h.resolver.publishParameter(a, h.resolver.instanceShape(bt))
       h.resolver.publishParameter(b, h.resolver.instanceShape(at))
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
@@ -545,8 +544,8 @@ class TypeRelationTest extends AnyFunSuite:
     val (b, bt) = h.parameter("B")
     val ar = ContextualType(at, Nil)
     val br = ContextualType(bt, Nil)
-    h.resolver.constrainTypes(ar, br)
-    h.resolver.constrainTypes(br, ar)
+    h.resolver.constrainTypes(ar, br, N)
+    h.resolver.constrainTypes(br, ar, N)
     val output = new TermShapeHost
     h.resolver.listenInstanceViews(h.resolver.instanceShape(bt))(output.publish)
     val exporter = ArrayBuffer.empty[TermShape]

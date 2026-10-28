@@ -215,7 +215,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       override def applyPath(p: Path): Unit = p match
         // A direct superclass reference, like an extends or Instantiate operand, does not
         // let the class escape as a value. Its receiver still needs ordinary capture analysis.
-        case sel @ SuperSelect(qual, RefOfDefn(S(cls: ClassSymbol), _), _) =>
+        case sel @ SuperSelect(qual, RefOfDefn(S(cls: ClassSymbol), _), key) =>
+          applyPath(key)
           applyPath(qual)
           cls.traverse
           sel.symbol.traverse
@@ -246,12 +247,18 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           tsym.owner.foreach(_.traverse)
           sym.traverse
           applyPath(rhs)
-        case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-            privateFields, publicFields, preCtor, ctor, mod, bufferable)
+        case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
+            privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion, _)
         =>
           own.foreach(_.traverse)
           isym.traverse
           sym.traverse
+          termCompanion.foreach(_.traverse)
+          // Computed names are evaluated when this class is defined. Moving the
+          // class out of its enclosing invocation could read a key before its
+          // initialization or share the first invocation's key with later calls.
+          if cls.methodKeys.nonEmpty || mod.exists(_.methodKeys.nonEmpty) then ignored += isym
+          cls.methodKeys.valuesIterator.foreach(applyPath)
           // Check if `extends` is a complex expression, i.e. not just extending a class.
           // If it's just a class, add it to an graph where edges are class extensions.
           // If B extends A, then A -> B is an edge
@@ -606,13 +613,15 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       S(ClassCtorSymbol(syntax.Fun, N, clsSym)),
       syntax.Cls,
       N,
-      PlainParamList(sortedVars.iterator.map(_.param).toList)(N) :: Nil, None, Nil, Nil,
+      LoweredParamList.plain(sortedVars.iterator.map(_.param).toList)(N) :: Nil, None, Nil, Nil,
       Nil,
       End(),
       sortedVars.iterator.foldLeft[Block](End()):
         case (acc, (_, _, vd)) => Define(vd, acc),
       N,
       N,
+      N,
+      Map.empty,
     )(N, Nil)
     
     (defn, sortedVars.iterator.map(x => (x.ctorSyms.local, x.valDefn.tsym)).toList)
@@ -917,9 +926,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       else b
   
   // some helpers
-  private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(Tree.Ident(p.sym.nme), erasedType = p.sym.erasedType))(p.toLoc)
+  private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(p.sym.id, erasedType = p.sym.erasedType))(p.toLoc)
   private def dupParams(plist: List[Param]): List[Param] = plist.map(dupParam)
-  private def dupParamList(plist: ParamList): ParamList =
+  private def dupParamList(plist: LoweredParamList): LoweredParamList =
     plist.copy(params = dupParams(plist.params), restParam = plist.restParam.map(dupParam))(plist.toLoc)
   
   /* CONCRETE IMPLS */
@@ -1068,7 +1077,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     private def mkFlattenedDefn: LifterResult[FunDefn] =  
       val newPlists = fun.params match
         case head :: next => head.copy(params = auxParams ::: head.params)(head.toLoc) :: next
-        case Nil => PlainParamList(auxParams)(N) :: Nil
+        case Nil => LoweredParamList.plain(auxParams)(N) :: Nil
       val rewriter = new BlockRewriter(N)
       val newBod = rewriter.rewrite(fun.body)
       val withCapture = addExtraSyms(newBod)
@@ -1080,7 +1089,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     // Definition with the auxiliary parameters as a new first parameter list.
     private def mkAuxDefn: FunDefn =
-      val newPList = PlainParamList(dupParams(auxParams))(N)
+      val newPList = LoweredParamList.plain(dupParams(auxParams))(N)
       val (newPlists, syms, restSym) = fun.params match
         case head :: _ =>
           val duped = dupParamList(head)
@@ -1096,6 +1105,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val bod = Return(call)
+      // The new capture list shifts the parameter list indices used by affine annotations.
+      val annotations = fun.annotations.map:
+        case a @ Annot.Affine(n) => Annot.Affine(n + 1)(a.toLoc)
+        case a => a
       
       FunDefn(
         N,
@@ -1103,7 +1116,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(N, if fun.noInline then fun.annotations else Annot.Inline()(N) :: fun.annotations)
+      )(N, if fun.noInline then annotations else Annot.Inline()(N) :: annotations)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     
@@ -1181,7 +1194,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         ::: capturesOrdered.map(x => capSymsMap_(x).vs)
         ::: passedSymsOrdered.map(x => passedSymsMap_(x).vs))
       .map(Param.simple(_))
-    lazy val auxParamList = PlainParamList(auxParams)(N)
+    lazy val auxParamList = LoweredParamList.plain(auxParams)(N)
     
     // Whether this can be lifted without the need to pass extra parameters.
     lazy val isTrivial = auxParams.isEmpty
@@ -1194,8 +1207,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     // Contains *all* parameters, and applies them all at once in a single `Instantiate`
     def mkFlattenedDefn: FunDefn =
       // Symbols for the aux parameter list
-      val auxSyms = auxParams.map(p => VarSymbol(Tree.Ident(p.sym.nme), erasedType = p.sym.erasedType))
-      val auxParamListLocal = PlainParamList(auxSyms.map(Param.simple(_)))(N)
+      val auxSyms = auxParams.map(p => VarSymbol(p.sym.id, erasedType = p.sym.erasedType))
+      val auxParamListLocal = LoweredParamList.plain(auxSyms.map(Param.simple(_)))(N)
       
       val dupedClsAuxParams = cls.auxParams.map(dupParamList(_))
       val dupedMainOpt = cls.paramsOpt.map(dupParamList(_))
@@ -1214,7 +1227,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       ))
       
       // Uses the symbols from pl1.
-      def applyPlToPl(pl1: ParamList, pl2: ParamList): List[Arg] = (pl1.restParam, pl2.restParam) match
+      def applyPlToPl(pl1: LoweredParamList, pl2: LoweredParamList): List[Arg] = (pl1.restParam, pl2.restParam) match
         case (S(rp), S(_)) => pl1.params.foldRight(Arg(S(SpreadKind.Eager), rp.sym.asSimpleRef) :: Nil)((p, ls) => p.sym.asSimpleRef.asArg :: ls)
         case (N, N) => pl1.paramSyms.map(s => s.asSimpleRef.asArg)
         case _ => die

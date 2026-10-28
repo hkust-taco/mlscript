@@ -83,7 +83,7 @@ fun invalidValue() = {
 }
 invalidValue()
 //│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
-//│ ║  l.82: 	  Alias
+//│ ║  l.+3: 	  Alias
 //│ ║        	  ^^^^^
 //│ ╙── Expected a term; got type alias 'Alias'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

@@ -1,0 +1,127 @@
+:.
+:js
+
+
+fun Seq[A](...xs: Array[A]) = new Seq(xs)
+class Seq[out A] {
+  
+  // constructor(val ...xs: A) // TODO: support
+  constructor(val elements: Array[A])
+  
+  fun map[B](f: A -> B): Seq[B] = new Seq \ elements.map \ pass1 \ f
+  
+  fun groupMapReduce[B, C](getKey: A -> B, getValue: A -> C, reduce: (C, C) -> C): Map[B, C] =
+    let groups = new Map[B, C]()
+    elements.forEach \ pass1 \ e =>
+      let
+        key = getKey(e)
+        value = getValue(e)
+      if groups.has(key) then
+        let oldValue = groups.get(key)
+        groups.set(key, reduce(oldValue, value))
+      else
+        groups.set(key, value)
+    groups
+  
+  override fun toString() = "Seq(" + elements.map(pass1 \ renderAsStr).join(", ") + ")"
+}
+
+
+let xs = Seq(1, 2, 3)
+//│ xs = Seq(1, 2, 3)
+
+xs.map(=> _ + 1).map(=> _ * 2).map(=> _ - 1)
+//│ = Seq(3, 5, 7)
+
+xs
+  .map(=> _ + 1)
+  .map(=> _ * 2)
+  .map(=> _ - 1)
+//│ = Seq(3, 5, 7)
+
+xs
+  .map \ _ + 1
+  .map \ _ * 2
+  .map \ _ - 1
+//│ = Seq(3, 5, 7)
+
+xs
+  .map \ x => x + 1
+  .map \ x => x * 2
+  .map \ x => x - 1
+//│ = Seq(3, 5, 7)
+
+:e
+xs
+  .map \ x => _ + 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+2: 	  .map \ x => _ + 1
+//│ ║        	              ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+let xs = Seq
+  \ {key: "A", value: 1}
+  \ {key: "B", value: 2}
+  \ {key: "A", value: 3}
+  \ {key: "B", value: 4}
+//│ xs = Seq({key: "A", value: 1}, {key: "B", value: 2}, {key: "A", value: 3}, {key: "B", value: 4})
+
+xs.groupMapReduce
+  \ x => x.'key
+  \ x => x.'value
+  \ (x, y) => x + y
+//│ = Map(2) {"A" => 4, "B" => 6}
+
+xs.groupMapReduce
+  \ => _.'key
+  \ => _.'value
+  \ => _ + _
+//│ = Map(2) {"A" => 4, "B" => 6}
+
+xs.groupMapReduce
+  \ _.key
+  \ _.value
+  \ _ + _
+//│ = Map(2) {"A" => 4, "B" => 6}
+
+
+let xs = Seq
+  \ { key: "A", value: 1 }
+  \ { key: "B", value: 2 }
+//│ xs = Seq({key: "A", value: 1}, {key: "B", value: 2})
+
+
+fun Seq[A](...xs: Array[A]): Seq[A] = new Seq(xs)
+class Seq[out A] {
+  constructor(val elements: Array[A])
+  fun map[B](f: A -> B) = new Seq \ elements.map \ pass1 \ f
+}
+
+let xs = Seq(1, 2, 3)
+//│ xs = Seq { elements: [1, 2, 3] }
+
+:fixme
+xs.map(=> _ + 1).map(=> _ * 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'map' of a value with unknown shape.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.+1: 	xs.map(=> _ + 1).map(=> _ * 2)
+//│ ╙──      	^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+declare fun Seq[A](...xs: A): Seq[A]
+declare class Seq[out A] {
+  fun map[B](f: A -> B): Seq[B]
+}
+
+(x: Seq[{k: {k: Int}}]) => x.map(=> _.k).map(=> _.k)
+//│ = fun
+
+
+
+

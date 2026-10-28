@@ -63,7 +63,7 @@ staged module M with
 staged module M with
   fun g()() = 1
 //│ ╔══[COMPILATION ERROR] :ftc must be enabled to desugar functions with multiple parameter lists.
-//│ ║  l.64: 	  fun g()() = 1
+//│ ║  l.+2: 	  fun g()() = 1
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ > fun ctor_() = ()
 //│ > fun g()() = 1
@@ -88,5 +88,5 @@ let x = M."f_instr"().body.rest.rhs.cls.l.value
 let y = M."g_instr"().body.rest.rhs.cls.l.value
 //│ x = class Function$
 //│ y = class Function$
-(new x).call(2)
+new x().call(2)
 //│ = 2

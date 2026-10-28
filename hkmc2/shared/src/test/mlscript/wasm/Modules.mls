@@ -170,3 +170,45 @@ Overloaded(41)
 :expect "object"
 typeof(Overloaded.class(41))
 //│ = "object"
+
+
+// Host calls use the same omitted-argument representation as compiled callers.
+import "../../mlscript-compile/wasm/modules/Optional.mjs"
+
+:expect 41
+Optional()
+//│ = 41
+
+:expect 41
+Optional(null)
+//│ = 41
+
+:expect 42
+Optional(42)
+//│ = 42
+
+:expect 42
+Optional(unsafe.undefined)
+//│ = 42
+
+import "../../mlscript-compile/wasm/modules/OptionalCalls.mjs"
+
+:expect 41
+OptionalCalls.read(Optional.class())
+//│ = 41
+
+:expect 42
+OptionalCalls.read(Optional.class(42))
+//│ = 42
+
+:expect 42
+OptionalCalls.choose(12)
+//│ = 42
+
+:expect 33
+OptionalCalls.choose(12, 1)
+//│ = 33
+
+:expect 15
+OptionalCalls.choose(12, 1, 2)
+//│ = 15

@@ -94,7 +94,8 @@ session and filesystem.
   object defaults are opaque GC objects themselves. This is not a JavaScript
   object-field or prototype mapping. Host getters do not expose assignment.
   An explicit function companion remains callable; its `.class` property wraps
-  the separate class constructor.
+  the separate class constructor. Omitted optional arguments bind `null` in both
+  source calls and host wrappers; explicitly supplied host values are preserved.
 - Signatures and storage retain the typed IR representation, including concrete
   class references and unboxed `Int32`, `Int64`, `Float32`, and `Float64` values.
   JavaScript callers use `BigInt` for `Int64` arguments and results. Arbitrary

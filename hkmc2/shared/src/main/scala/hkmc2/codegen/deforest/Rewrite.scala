@@ -31,8 +31,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     matchOrLabelId match
     case l: LabelSymbol => l -> instId
     case scrutId: ResultId => ConcreteId(scrutId, instId)
-  extension (vs: Ls[VarSymbol]) def asParamList: ParamList =
-    ParamList(ParamListFlags.empty, vs.map(Param.simple), N)(N)
+  extension (vs: Ls[VarSymbol]) def asParamList: LoweredParamList =
+    LoweredParamList(ParamListFlags.empty, vs.map(Param.simple), N)(N)
   extension (c: CtorCls) def ctorClsName: String = c match
     case cls: ClassLikeSymbol => cls.nme
     case n: Int => s"tup$n"
@@ -304,8 +304,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   // from the polymorphic analysis
   protected class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
     
-    def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
-      fun.params.mapConserve(applyParamList) -> applyBlock(fun.body)
+    override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
+      (fun.params.mapConserve(applyParamList), applyBlock(fun.body), fun.annotations)
     
     // calls `fun` with possibly remapped `args`
     def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
@@ -465,10 +465,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     new Rewriter(Nil, N):
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
-          case Some((params, rewrittenBody)) =>
+          case Some((params, rewrittenBody, annotations)) =>
             // deforest never changes fun params in place
             assert(params is fun.params)
-            FunDefn(fun.owner, fun.sym, fun.dSym, params, rewrittenBody)(fun.configOverride, fun.annotations)
+            FunDefn(fun.owner, fun.sym, fun.dSym, params, rewrittenBody)(fun.configOverride, annotations)
           case None => super.applyFunDefn(fun)
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
 end DeforestRewriter

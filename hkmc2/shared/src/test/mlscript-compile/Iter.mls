@@ -5,6 +5,7 @@
 import "./Option.mls"
 import "./Stack.mls"
 
+open annotations { jsSymbol }
 open Option { Some, None }
 open Stack { Nil, Cons }
 
@@ -12,8 +13,7 @@ open Stack { Nil, Cons }
 module Iter with ...
 
 open class IterableBase with
-  set this.(Symbol.iterator) = iterator
-  open fun iterator() = throw new Error("Not implemented: iterator()")
+  @jsSymbol(Symbol.iterator) open fun iterator() = throw new Error("Not implemented: iterator()")
 
   // require that subclasses are immutable
   fun toArray(): Array = [...this]
@@ -74,11 +74,12 @@ open class IterableBase with
 // * Implements the `IterableImpl` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol
 class IterableImpl(mk: () -> Iterator) extends IterableBase with
-  override fun iterator() = mk()
+  @jsSymbol(Symbol.iterator) override fun iterator() = mk()
 
 // * Implements the `Iterator` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
-class IteratorImpl(val next: Function)
+class IteratorImpl(val next: Function) with
+  @jsSymbol(Symbol.iterator) fun iterator() = this
 
 module Result with
   class Next(val value) with
@@ -91,9 +92,9 @@ module Result with
 // indicate the object's class in the error message, which is useful for debugging.
 fun getIterator(something): Iterator =
   let test = something.(Symbol.iterator)
-  if test is undefined then
+  if test is unsafe.undefined then
     throw TypeError of "Not an iterable: " + if
-      something is undefined then "undefined"
+      something is unsafe.undefined then "undefined"
       something is null then "null"
       let prototype = Reflect.getPrototypeOf of something
       prototype is null then "object"
@@ -104,7 +105,7 @@ fun adaptIterable(iterable, makeNext: Function) = IterableImpl of () =>
   let iterator = getIterator of iterable
   IteratorImpl of makeNext of iterator
 
-fun mapping(xs, op: Function) =
+fun mapping[A, B](xs: Iterable[A], op: A -> B) =
   xs adaptIterable of (iterator: Iterator) => () =>
     let next = iterator.next()
     if next.done then
@@ -112,7 +113,7 @@ fun mapping(xs, op: Function) =
     else
       Result.Next of op(next.value)
 
-fun withMap(op) = _ mapping(op)
+fun withMap[A, B](op: A -> B) = => _ mapping(op)
 
 fun flattening(xss) =
   IterableImpl of () =>
@@ -144,7 +145,7 @@ fun flattening(xss) =
               Result.Done
           else Result.Next of next.value
 
-fun filtering(xs, op: Function) =
+fun filtering[A](xs: Iterable[A], op: A -> Bool) =
   xs adaptIterable of (iterator: Iterator) => () =>
     let next = iterator.next()
     while next.done is false and op(next.value) is false do
@@ -153,21 +154,21 @@ fun filtering(xs, op: Function) =
       Result.Done
     else Result.Next of next.value
 
-fun withFilter(op) = _ filtering(op)
+fun withFilter[A](op: A -> Bool) = => _ filtering(op)
 
 fun taking(xs, n) =
   filtering of xs, _ =>
     set n -= 1
     n >= 0
 
-fun withMax(n) = _ taking(n)
+fun withMax(n) = => _ taking(n)
 
 fun leaving(xs, n) =
   filtering of xs, _ =>
     set n -= 1
     n < 0
 
-fun withoutAtLeast(n) = _ leaving(n)
+fun withoutAtLeast(n) = => _ leaving(n)
 
 fun zippingWithIndex(xs) =
   let i = 0
@@ -176,7 +177,7 @@ fun zippingWithIndex(xs) =
     set i = i + 1
     [x, j]
 
-fun foldingImpl(iterator: Iterator, acc, op: Function) =
+fun foldingImpl[A, B](iterator: Iterator[A], acc: B, op: (B, A) -> B) =
   let next = iterator.next()
   while next.done is false do
     set acc = op(acc, next.value)
@@ -198,20 +199,20 @@ fun appended(xs, ys) =
         else Result.Done
       else Result.Next of next.value
 
-fun withAppended(xs) = _ appended(xs)
+fun withAppended(xs) = => _ appended(xs)
 
-fun reduced(xs, op: Function) =
+fun reduced[A](xs: Iterable[A], op: (A, A) -> A) =
   let iterator = getIterator of xs
   let next = iterator.next()
   if next.done do
     throw new Error("Empty iterator")
   foldingImpl(iterator, next.value, op)
 
-fun folded(xs, z, op: Function) =
+fun folded[A, B](xs: Iterable[A], z: B, op: (B, A) -> B) =
   let iterator = getIterator of xs
   foldingImpl(iterator, z, op)
 
-fun rightFolded(xs, z, op: Function) =
+fun rightFolded[A, B](xs: Iterable[A], z: B, op: (A, B) -> B) =
   let iterator = getIterator of xs
   fun go() = if
     let next = iterator.next()
@@ -231,7 +232,7 @@ fun joined(xs, sep) =
       String(next.value)
       (acc, x) => acc + sep + String(x)
 
-fun firstDefined(xs, op: Function) =
+fun firstDefined[A, B](xs: Iterable[A], op: A -> Option[B]) =
   let iterator = getIterator of xs
   let next = iterator.next()
   let result = None
@@ -242,7 +243,7 @@ fun firstDefined(xs, op: Function) =
   result
 
 // `exists` is a keyword
-fun some(xs, op: Function) =
+fun some[A](xs: Iterable[A], op: A -> Bool) =
   let iterator = getIterator of xs
   let next = iterator.next()
   while next.done is false do
@@ -251,7 +252,7 @@ fun some(xs, op: Function) =
   false
 
 // `forall` is a keyword
-fun every(xs, op: Function) =
+fun every[A](xs: Iterable[A], op: A -> Bool) =
   let iterator = getIterator of xs
   let next = iterator.next()
   while next.done is false do
@@ -259,7 +260,7 @@ fun every(xs, op: Function) =
     set next = iterator.next()
   true
 
-fun each(xs, op: Function) =
+fun each[A](xs: Iterable[A], op: A -> Any) =
   let iterator = getIterator of xs
   let next = iterator.next()
   while next.done is false do

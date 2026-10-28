@@ -1,5 +1,7 @@
 :js
 
+#lang(0.3.x)
+
 
 let x =
   let y = 1 + 3 * 4
@@ -25,7 +27,7 @@ fun g(x, y, z) =
     y then 0
     z then
       let a = 1
-      (_ + a)
+      => _ + a
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let g;
 //│ g = function g(x1, y, z) {
@@ -73,6 +75,7 @@ fun f() = if A(1, Nil) is
 
 
 
+:e
 fun f(x) =
   x = while x is
     A(a, _) then a()
@@ -80,6 +83,10 @@ fun f(x) =
   else
     x()
   x
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+6: 	    x()
+//│ ║        	    ^^^
+//│ ╙── Unit value cannot be called like a function.
 
 
 
@@ -188,7 +195,7 @@ data class Bar(x)
 :sjs
 data class Baz(z) extends Bar(z * 1) with
   val k = 1 + 2 + 3
-  fun baz = this.bar * 2
+  fun baz = this.x * 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let Baz1;
 //│ Baz1 = function Baz(z) {
@@ -206,7 +213,7 @@ data class Baz(z) extends Bar(z * 1) with
 //│     this.k = 6;
 //│   }
 //│   get baz() {
-//│     return this.bar * 2;
+//│     return this.x * 2;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Baz", ["z"]];

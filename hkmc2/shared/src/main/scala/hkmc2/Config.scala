@@ -33,7 +33,11 @@ case class Config(
   commentGeneratedCode: Bool,
   noFreeze: Bool,
   noModuleCheck: Bool,
+  aggressive: Bool,
+  debug: Debug,
   optimizer: Optimizer,
+  // Check internal invariants whose checks are too costly to always run, such as MemberStorage.privateOwner's.
+  checkInvariants: Bool,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -85,21 +89,66 @@ object Config:
     commentGeneratedCode = false,
     noFreeze = false,
     noModuleCheck = false,
+    aggressive = false,
+    debug = Debug.default,
     optimizer = Optimizer.FastOpt,
+    checkInvariants = false,
   )
   object default:
     val patMatConsequentSharingThreshold = S(15)
     val deadBranchRemoval = false // TODO
     val inlineThreshold = 10
   
+  /** A language version, as named in `#lang` directives (e.g., `0.3.1` or `0.3.x`).
+    * A `patch` of `N` stands for the `x` of a version like `0.3.x`, which denotes the latest state
+    * of its minor series and is thus newer than every numbered patch of that series
+    * (e.g., `0.3.1 < 0.3.x < 0.4.0`).
+    * Version-gated features are enabled by comparing versions with the ordering defined here.
+    * Version names must not be compared as strings, since that would make `0.10.x` older than `0.3.1`;
+    * nor can versions be plain `(Int, Int, Opt[Int])` tuples compared with the standard tuple ordering,
+    * since `Option`'s standard ordering puts `None` first, which would make `0.3.x` older than `0.3.1`. */
+  case class Version(major: Int, minor: Int, patch: Opt[Int]) extends Ordered[Version]:
+    def compare(that: Version): Int =
+      if major =/= that.major then major.compare(that.major)
+      else if minor =/= that.minor then minor.compare(that.minor)
+      else (patch, that.patch) match
+        case (S(p1), S(p2)) => p1.compare(p2)
+        case (S(_), N) => -1
+        case (N, S(_)) => 1
+        case (N, N) => 0
+    def name: Str = s"$major.$minor.${patch.fold("x")(_.toString)}"
+  end Version
+  
+  object Version:
+    // * Only accept canonical version names, so that each version has exactly one name
+    // * (e.g., reject `0.03.1` as an alias of `0.3.1`).
+    private val component = "0|[1-9][0-9]*"
+    private val VersionName = s"($component)\\.($component)\\.($component|x)".r
+    def parse(name: Str): Opt[Version] = name match
+      case VersionName(majorName, minorName, patchName) =>
+        for
+          major <- majorName.toIntOption
+          minor <- minorName.toIntOption
+          patch <- if patchName === "x" then S(N) else patchName.toIntOption.map(S(_))
+        yield Version(major, minor, patch)
+      case _ => N
+  end Version
+  
   case class Language(
     allowUnresolvedAccesses: Bool,
     useNewResolution: Bool,
     strictResolution: Bool, // Reject multiple resolved selection targets as well as missing targets
     // Unknown inputs admitted by a public interface are checked regardless of this flag.
-    eagerResolution: Bool, // Reject selections whose prefixes have shapes that do not support them, even though the selection might have other valid targets
+    eagerResolution: Bool, // Reject invalid selection/call candidates even when other candidates supply valid targets
     typeCheck: Opt[TypeChecking],
-  )(val versionName: Str)
+  )(
+    // * `N` when no version was specified with `#lang` (see `Language.default`),
+    // * in which case no version-gated feature is enabled.
+    val version: Opt[Version],
+  ):
+    def newUnderscoreAndApplicationSyntax: Bool =
+      version.exists(_ > Language.v0_3_1.version.get)
+  end Language
   
   object Language:
     
@@ -110,30 +159,77 @@ object Config:
       eagerResolution = false,
       allowUnresolvedAccesses = true,
     )(
-      versionName = "0.2.x",
+      version = S(Version(0, 2, N)),
     )
     
-    val v0_3_x = Language(
+    val v0_3_1 = Language(
       typeCheck = N,
       useNewResolution = true,
       strictResolution = false,
       eagerResolution = false,
       allowUnresolvedAccesses = false,
     )(
-      versionName = "0.3.x",
+      version = S(Version(0, 3, S(1))),
     )
     
-    val presets: Map[Str, Language] = Ls(
-      v0_2_x,
-      v0_3_x,
-    ).map(l => l.versionName -> l).toMap
+    val v0_3_x = v0_3_1.copy(
+    )(
+      version = S(Version(0, 3, N)),
+    )
     
-    val default = v0_2_x
+    val presets: Map[Version, Language] = Ls(
+      v0_2_x,
+      v0_3_1,
+      v0_3_x,
+    ).map: lang =>
+      lang.version.getOrElse(lastWords("language presets must specify a version")) -> lang
+    .toMap
+    
+    // * The language used when no version is specified with `#lang`.
+    // * It behaves like the oldest preset, but has no version, so that a missing `#lang` can be reported.
+    val default = v0_2_x.copy()(version = N)
+    
+    val latestVersion = Version(0, 3, N)
+    val latest = presets(latestVersion)
     
   end Language
   
   // TODO
   case class TypeChecking()
+
+  enum DebugOutput:
+    case StdIO
+    /** A relative path written in a directive is resolved, when the directive is parsed,
+      * against the directory of the file in which it is written, as for imports. */
+    case File(path: io.Path)
+
+  case class Debug(
+    showParsedTree: Bool,
+    elaboration: Bool,
+    showElaboratedTree: Bool,
+    showElaboratedTerm: Bool,
+    lowering: Bool,
+    showLoweredTree: Bool,
+    optimizations: Bool,
+    showIR: Bool,
+    showOptimizedIR: Bool,
+    showUids: Bool,
+    out: DebugOutput,
+  )
+  object Debug:
+    val default = Debug(
+      showParsedTree = false,
+      elaboration = false,
+      showElaboratedTree = false,
+      showElaboratedTerm = false,
+      lowering = false,
+      showLoweredTree = false,
+      optimizations = false,
+      showIR = false,
+      showOptimizedIR = false,
+      showUids = true,
+      out = DebugOutput.StdIO,
+    )
   
   case class SanityChecks(light: Bool, checkUnreachable: Bool)
   
@@ -170,6 +266,7 @@ object Config:
     debugEta: Bool = false,
     debugDpe: Bool = false,
     debugDce: Bool = false,
+    logEffects: Bool = false,
   ):
     def effectiveDebugEta: Bool = debug || debugEta
     def effectiveDebugDpe: Bool = debug || debugDpe
@@ -226,15 +323,21 @@ object Config:
   /** File directives apply to the whole compilation unit, including elaboration.
     * Read them before constructing the elaborator so its resolver agrees with lowering.
     * Elaboration still records SetConfig statements and reports directive errors once. */
-  def elaborationConfig(prgm: syntax.Tree.Block)(using Config): Config =
+  def elaborationConfig(prgm: syntax.Tree.Block, sourceDir: io.Path)(using Config): Config =
+    elaborationConfig(prgm.desugStmts, sourceDir)
+
+  /** Read directives from parsed trees before elaboration or tree display.
+    * `sourceDir` is the directory of the file containing the trees. */
+  def elaborationConfig(trees: Ls[syntax.Tree], sourceDir: io.Path)(using Config): Config =
     import syntax.Tree.*
     given Raise = _ => ()
     def modifier(tree: syntax.Tree): Config => Config = tree match
       case App(Directive(prefix, _), args) => modifier(Directive(prefix, args))
       case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args, allowCompilationTarget = true)
       case Directive(Ident("lang"), Tup(args)) => ConfigParser.parseLanguageDirective(args)
+      case Directive(Ident("dbg"), Tup(args)) => ConfigParser.parseDebugDirective(args, definitionLocal = false, sourceDir)
       case _ => identity
-    prgm.desugStmts.foldLeft(config)((cfg, tree) => modifier(tree)(cfg))
+    trees.foldLeft(config)((cfg, tree) => modifier(tree)(cfg))
 
   def extractConfigFromStats(prgm: semantics.Term.Blk)(using Config) =
     // Extract cumulative config modifications from SetConfig statements
@@ -366,7 +469,7 @@ object ConfigParser:
   
   private def parseInt(tree: Tree)(using Raise): Opt[Int] = tree match
     case IntLit(v) => S(v.toInt)
-    case App(Ident("-"), Tup(IntLit(v) :: Nil)) => S(-v.toInt)
+    case PrefixOpApp(Ident("-"), IntLit(v)) => S(-v.toInt)
     case _ =>
       expect("an integer value")(tree)
       N
@@ -403,12 +506,12 @@ object ConfigParser:
 
   private def parseLanguagePreset(tree: Tree)(using Raise): Opt[Config.Language] =
     parseVersionName(tree).flatMap: name =>
-      Config.Language.presets.get(name) match
+      Config.Version.parse(name).flatMap(Config.Language.presets.get) match
         case S(language) => S(language)
         case N =>
           raise(ErrorReport(
             msg"Unknown language version '${name}'" -> tree.toLoc ::
-              msg"Available language versions: ${Config.Language.presets.keys.toList.sorted.mkString(", ")}" -> N ::
+              msg"Available language versions: ${Config.Language.presets.keys.toList.sorted.map(_.name).mkString(", ")}" -> N ::
               Nil,
             source = Diagnostic.Source.Compilation))
           N
@@ -425,19 +528,19 @@ object ConfigParser:
   private def parseLanguageFieldModifier(tree: Tree)(using Raise): Opt[Config.Language => Config.Language] = tree match
     case NamedArg("allowUnresolvedAccesses", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        lang => lang.copy(allowUnresolvedAccesses = v)(lang.versionName)
+        lang => lang.copy(allowUnresolvedAccesses = v)(lang.version)
     case NamedArg("useNewResolution", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        lang => lang.copy(useNewResolution = v)(lang.versionName)
+        lang => lang.copy(useNewResolution = v)(lang.version)
     case NamedArg("strictResolution", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        lang => lang.copy(strictResolution = v)(lang.versionName)
+        lang => lang.copy(strictResolution = v)(lang.version)
     case NamedArg("eagerResolution", value) =>
       parsedLanguageModifier(value)(parseBool): v =>
-        lang => lang.copy(eagerResolution = v)(lang.versionName)
+        lang => lang.copy(eagerResolution = v)(lang.version)
     case NamedArg("typeCheck", value) =>
       parsedLanguageModifier(value)(tree => parseOpt(tree)(parseTypeChecking)): v =>
-        lang => lang.copy(typeCheck = v)(lang.versionName)
+        lang => lang.copy(typeCheck = v)(lang.version)
     case other =>
       unsupported("Language", other)
       N
@@ -496,6 +599,72 @@ object ConfigParser:
       case S(modify) =>
         cfg => cfg.copy(language = modify(cfg.language))
       case N => identity
+
+  private def parseDebugOutput(tree: Tree, sourceDir: io.Path)(using Raise): Opt[Config.DebugOutput] = tree match
+    case Ident("StdIO") | Call("StdIO", Nil) =>
+      S(Config.DebugOutput.StdIO)
+    case Call("File", StrLit(path) :: Nil) =>
+      S(Config.DebugOutput.File(io.Path.resolve(sourceDir, path)))
+    case _ =>
+      expect("StdIO or File(\"path\")")(tree)
+      N
+
+  private def updateDebugFlag(name: Str, value: Bool, tree: Tree, definitionLocal: Bool)(using Raise): Config.Debug => Config.Debug =
+    if definitionLocal && name === "optimizations" then
+      raise(WarningReport(
+        msg"Debugging aspect '${name}' is not supported in @dbg; use #dbg(${name}: ${value.toString}) instead." -> tree.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
+    name match
+      case "showParsedTree" => _.copy(showParsedTree = value)
+      case "elaboration" => _.copy(elaboration = value)
+      case "showElaboratedTree" => _.copy(showElaboratedTree = value)
+      case "showElaboratedTerm" => _.copy(showElaboratedTerm = value)
+      case "lowering" => _.copy(lowering = value)
+      case "showLoweredTree" => _.copy(showLoweredTree = value)
+      case "optimizations" => _.copy(optimizations = value)
+      case "showIR" => _.copy(showIR = value)
+      case "showOptimizedIR" => _.copy(showOptimizedIR = value)
+      case "showUids" => _.copy(showUids = value)
+      case _ =>
+        raise(ErrorReport(
+          msg"Unknown debugging aspect '${name}'" -> tree.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation))
+        identity
+
+  private def parseDebugArg(arg: Tree, definitionLocal: Bool, sourceDir: io.Path)(using Raise): Config.Debug => Config.Debug = arg match
+    case Quoted(Ident(name)) =>
+      updateDebugFlag(name, true, arg, definitionLocal)
+    case Ident(name) if name.startsWith("'") =>
+      updateDebugFlag(name.drop(1), true, arg, definitionLocal)
+    case NamedArg("out", value) =>
+      parseDebugOutput(value, sourceDir) match
+        case S(out) => _.copy(out = out)
+        case N => identity
+    case NamedArg(name, value) =>
+      parseBool(value) match
+        case S(enabled) => updateDebugFlag(name, enabled, arg, definitionLocal)
+        case N => identity
+    case _ =>
+      unsupported("debugging", arg)
+      identity
+
+  /** Parse `#dbg(...)` and `@dbg(...)` arguments into a cumulative debug configuration.
+    * `sourceDir` is the directory of the file containing them. */
+  def parseDebugDirective(args: Ls[Tree], definitionLocal: Bool, sourceDir: io.Path)(using Raise): Config => Config =
+    val modifyDebug = args.foldLeft(identity[Config.Debug]): (acc, arg) =>
+      val modify = parseDebugArg(arg, definitionLocal, sourceDir)
+      debug => modify(acc(debug))
+    new (Config => Config):
+      def apply(cfg: Config): Config = cfg.copy(debug = modifyDebug(cfg.debug))
+      override def toString: Str = "..."
+
+  /** Select parsed-tree displays without duplicating diagnostics reported by elaboration. */
+  def discoverDebugFromAnnotations(annotations: Ls[Tree], base: Config, sourceDir: io.Path): Opt[Config] =
+    given Raise = _ => ()
+    val modifiers = annotations.collect:
+      case App(Ident("dbg"), Tup(args)) => parseDebugDirective(args, definitionLocal = true, sourceDir)
+    if modifiers.isEmpty then N
+    else S(modifiers.foldLeft(base)((cfg, modify) => modify(cfg)))
 
   /** Parse the `None`/`Some(...)` syntax for optional config fields.
     * Also accepts unwrapped values as a convenience (treated as `Some(value)`). */
@@ -568,6 +737,7 @@ object ConfigParser:
       var debugEta = base.debugEta
       var debugDpe = base.debugDpe
       var debugDce = base.debugDce
+      var logEffects = base.logEffects
       args.foreach:
         case NamedArg("debug", value) =>
           setFrom(value)(parseBool)(v => debug = v)
@@ -587,6 +757,8 @@ object ConfigParser:
           setFrom(value)(parseBool)(v => debugDpe = v)
         case NamedArg("debugDce", value) =>
           setFrom(value)(parseBool)(v => debugDce = v)
+        case NamedArg("logEffects", value) =>
+          setFrom(value)(parseBool)(v => logEffects = v)
         case other =>
           unsupported(passName, other)
       S(Config.FlowAnalysisConfig(
@@ -599,6 +771,7 @@ object ConfigParser:
         debugEta,
         debugDpe,
         debugDce,
+        logEffects,
       ))
     case _ =>
       expect(s"${passName}(...)")(tree)
@@ -635,6 +808,8 @@ object ConfigParser:
       parsedField(value)(parseBool)(v => _.copy(noFreeze = v))
     case "noModuleCheck" =>
       parsedField(value)(parseBool)(v => _.copy(noModuleCheck = v))
+    case "aggressive" =>
+      parsedField(value)(parseBool)(v => _.copy(aggressive = v))
     case "rewriteWhileLoops" =>
       parsedField(value)(parseBool)(v => _.copy(rewriteWhileLoops = v))
     case "stageCode" =>

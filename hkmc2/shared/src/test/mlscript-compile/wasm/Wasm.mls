@@ -49,7 +49,7 @@ fun binaryenCompileToModule(wat, importObject): dyn =
 fun unwrapWasmException(err: dyn, tag) =
   if (
     err !== null &&
-    err !== undefined &&
+    err !== unsafe.undefined &&
     typeof(err.is) === "function" &&
     typeof(err.getArg) === "function" &&
     err.is(tag)
@@ -60,7 +60,7 @@ fun unwrapWasmException(err: dyn, tag) =
 fun binaryenRunFunc(wat, importObject: dyn, func: Function): Any =
   let wasmInst = binaryenCompileToModule of wat, importObject
   let exnTag =
-    if wasmInst.exports.mlx_exn === undefined
+    if wasmInst.exports.mlx_exn === unsafe.undefined
     then importObject.system.mlx_exn
     else wasmInst.exports.mlx_exn
   Runtime.try_catch of

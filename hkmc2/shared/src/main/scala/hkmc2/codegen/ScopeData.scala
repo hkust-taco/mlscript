@@ -118,7 +118,7 @@ object ScopeData:
         case Companion(clsBody, compDefn) => Set(clsBody.isym)
         case _: ClassCtor => Set.empty
         case Func(fun, _) => fun.params.flatMap: p =>
-            p.restParam.map(_.sym) ++ p.params.map(_.sym)
+            p.paramSyms
           .toSet
         case ScopedBlock(_, block) => block.syms.toSet
         case _: Loop => Set.empty
@@ -185,8 +185,8 @@ object ScopeData:
         traverser.applySymbol(s)
       obj match
       case ScopedObject.Top(b) => traverser.applyBlock(b)
-      case ScopedObject.Class(ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-          privateFields, publicFields, preCtor, ctor, mod, bufferable), _)
+      case ScopedObject.Class(cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
+          privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion, _), _)
       =>
         // do not traverse the companion -- it is a separate kind of scoped object
         // and will therefore be traversed separately
@@ -194,9 +194,11 @@ object ScopeData:
         isym.traverse
         sym.traverse
         ctorSym.foreach(_.traverse)
+        termCompanion.foreach(_.traverse)
         paramsOpt.foreach(traverser.applyParamList)
         auxParams.foreach(traverser.applyParamList)
         parentPath.foreach(traverser.applyPath)
+        cls.methodKeys.valuesIterator.foreach(traverser.applyPath)
         methods.foreach(traverser.applyFunDefn)
         privateFields.foreach(_.traverse)
         publicFields.foreach: f =>

@@ -58,15 +58,15 @@ class CompilerTest extends AnyFunSuite:
     val compiler = MLsCompiler(_ => diagnostic => fail(diagnostic.toString))
     val a = Path("/A.mls")
     val b = Path("/B.mls")
-    fs.write(a, "#config(target: Wasm)\nfun A() = 41")
-    fs.write(b, "#config(target: Wasm)\nimport \"./A.mls\"\nfun B() = A()")
+    fs.write(a, "#lang(0.2.x)\n#config(target: Wasm)\nfun A() = 41")
+    fs.write(b, "#lang(0.2.x)\n#config(target: Wasm)\nimport \"./A.mls\"\nfun B() = A()")
     compiler.compileModule(b)
     val before = fs.read(Path("/B.wat"))
     compiler.compileModule(a)
     assert(fs.readCount(a) == 1 && fs.readCount(b) == 1)
     assert(fs.exists(Path("/std/RuntimeWasm.wat")))
     assert(fs.read(Path("/B.mjs")).contains("await import(\"./A.mjs\")"))
-    fs.write(a, "#config(target: Wasm)\nfun A() = 42")
+    fs.write(a, "#lang(0.2.x)\n#config(target: Wasm)\nfun A() = 42")
     compiler.compileModule(b)
     assert(fs.readCount(a) == 2 && fs.readCount(b) == 2)
     assert(fs.read(Path("/B.wat")) != before, "Inlined dependency changes must regenerate the importer")
@@ -90,7 +90,7 @@ class CompilerTest extends AnyFunSuite:
                   |    else findFirst(xs', f)
                   |
                   |let nums = 1 :: 2 :: 3 :: 4 :: 5 :: Nil
-                  |let result = nums \findFirst of x => x * 6 is 24
+                  |let result = (nums |. findFirst) \ _ * 6 is 24
                   |""".stripMargin
     val inputPath = "/findFirstTest.mls"
     val outputPath = "/findFirstTest.mjs"
@@ -271,8 +271,7 @@ class CompilerTest extends AnyFunSuite:
     compiler.compile("/B.mls")
 
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     given Raise = diagnostic => fail(diagnostic.toString)
     val prelude = cctx.getPrelude(paths.preludeFile).ctx
     val artifact = cctx.getElaboratedBlock(Path("/A.mls"), prelude)
@@ -294,8 +293,7 @@ class CompilerTest extends AnyFunSuite:
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     given Raise = diagnostic => fail(diagnostic.toString)
     val prelude = cctx.getPrelude(paths.preludeFile).ctx
     val map = prelude.builtins.Array.defn.get.body.members("map").asTrm.get.defn.get
@@ -335,8 +333,7 @@ class CompilerTest extends AnyFunSuite:
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     given Raise = diagnostic => fail(diagnostic.toString)
     fs.write("/Generic.mls", """#lang(0.3.x, strictResolution: true)
                                  |module Generic with
@@ -372,8 +369,7 @@ class CompilerTest extends AnyFunSuite:
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     given Raise = diagnostic => fail(diagnostic.toString)
     fs.write("/Types.mls", """#lang(0.3.x, strictResolution: true)
                                |module Types with
@@ -410,8 +406,7 @@ class CompilerTest extends AnyFunSuite:
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     given Raise = diagnostic => fail(diagnostic.toString)
     val prelude = cctx.getPrelude(paths.preludeFile).ctx
     val parameter = prelude.builtins.Array.defn.get.tparams.head.sym
@@ -444,8 +439,7 @@ class CompilerTest extends AnyFunSuite:
     val fs = new InMemoryFileSystem(loadStandardLibrary())
     given cctx: CompilerCtx = CompilerCtx.fresh(fs, paths, Config.default(io.Path("/")))
     given DebugPrinter = new DebugPrinter
-    given TL = new TraceLogger:
-      override def doTrace = false
+    given TL = TraceLogger.silent
     val errors = scala.collection.mutable.ArrayBuffer.empty[Diagnostic]
     given Raise = errors += _
     fs.write("/Unsafe.mls", """#lang(0.3.x, strictResolution: false)

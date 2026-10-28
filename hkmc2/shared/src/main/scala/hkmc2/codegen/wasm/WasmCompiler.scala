@@ -117,7 +117,13 @@ export default $default;
     def function(sym: ValueSymbol): Opt[AbiFunction] =
       abi.functions.find(_.sym == sym).orElse(constructor(sym))
     def callable(f: AbiFunction): Str =
-      s"((...args) => invoke(wasmExports[${makeStringLiteral(f.name)}], ...args))"
+      val invoke = s"invoke(wasmExports[${makeStringLiteral(f.name)}], ...args)"
+      if f.optionalParams.isEmpty then s"((...args) => $invoke)"
+      else
+        // WebAssembly's JS boundary supplies undefined for missing arguments. Only absent
+        // optional slots become null; explicit undefined and required slots keep their values.
+        val padding = f.optionalParams.toVector.sorted.map(i => s"if (args.length <= $i) args[$i] = null;").mkString(" ")
+        s"((...args) => { $padding return $invoke; })"
     def value(sym: ValueSymbol): Str =
       val singleton = abi.classes.find(_.sym == sym).flatMap(_.singleton).flatMap { case (_, idx, _) =>
         abi.globals.find(_.index == idx).map(g => s"wasmExports[${makeStringLiteral(g.name)}].value")

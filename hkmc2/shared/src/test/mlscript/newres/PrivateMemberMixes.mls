@@ -1,0 +1,86 @@
+:.
+:js
+
+
+// A dynamic alternative in a wildcard open must not turn a private access into an inherited public access.
+:e
+class OpenBase with
+  val secret = "base"
+class OpenMixed extends OpenBase with
+  private val secret = "private"
+module OpenMixed with
+  fun read(flag) =
+    let source = if flag then new OpenMixed else ({secret: "dynamic"} as dyn)
+    open source
+    secret
+[OpenMixed.read(true), OpenMixed.read(false)]
+//│ ╔══[COMPILATION ERROR] This reference may target a private member, which cannot be selected together with other members
+//│ ║  l.+9: 	    secret
+//│ ║        	    ^^^^^^
+//│ ╟── private member 'secret' declared here
+//│ ║  l.+4: 	  private val secret = "private"
+//│ ║        	              ^^^^^^
+//│ ╙── The receiver may also have a shape whose members are unknown
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A wildcard open with one private target is still allowed inside the companion.
+:expect "private"
+class OpenSingle with
+  private val secret = "private"
+module OpenSingle with
+  fun read() =
+    let source = new OpenSingle
+    open source
+    secret
+OpenSingle.read()
+//│ = "private"
+
+
+// A public type alias supplies no runtime storage for its private module companion.
+:e
+class AliasBase with
+  module Secret with
+    fun value() = "base"
+class AliasMixed extends AliasBase with
+  type Secret = Int
+  private module Secret with
+    fun value() = "private"
+  fun read(flag) = (if flag then this else ({Secret: {value(): "dynamic"}} as dyn)).Secret.value()
+let mixed = new AliasMixed
+[mixed.read(true), mixed.read(false)]
+//│ ╔══[COMPILATION ERROR] This reference may target a private member, which cannot be selected together with other members
+//│ ║  l.+8: 	  fun read(flag) = (if flag then this else ({Secret: {value(): "dynamic"}} as dyn)).Secret.value()
+//│ ║        	                                                                                   ^^^^^^^
+//│ ╟── private module 'Secret' declared here
+//│ ║  l.+6: 	  private module Secret with
+//│ ║        	                 ^^^^^^
+//│ ╙── The receiver may also have a shape whose members are unknown
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ mixed = AliasMixed { Secret: class Secret }
+
+
+// The alias stays public, and selecting just its private module remains valid inside the owner.
+:expect [3, "private", "private"]
+class AliasSingle with
+  type Secret = Int
+  private module Secret with
+    fun value() = "private"
+  fun own() = Secret.value()
+  fun read() = this.Secret.value()
+let single = new AliasSingle
+fun useType(value: single.Secret) = value + 1
+[useType(2), single.own(), single.read()]
+//│ = [3, "private", "private"]
+//│ single = AliasSingle
+
+
+// A private type alias does not make its public module companion's storage private.
+:expect ["public", "dynamic"]
+module AliasPublic with
+  private type Secret = Int
+  module Secret with
+    fun value() = "public"
+  fun read(flag) = (if flag then this else ({Secret: {value(): "dynamic"}} as dyn)).Secret.value()
+[AliasPublic.read(true), AliasPublic.read(false)]
+//│ = ["public", "dynamic"]

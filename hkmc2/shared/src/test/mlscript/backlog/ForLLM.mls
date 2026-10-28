@@ -17,24 +17,6 @@ in 42
 
 // ——— ——— ———
 
-// Works
-let x = 1
-in x
-//│ = 1
-
-// Doesn't work
-:fixme
-let
-  x = 1
-in x
-//│ ╔══[COMPILATION ERROR] Illegal position for 'in' modifier.
-//│ ║  l.29: 	in x
-//│ ╙──      	^^
-//│ = 1
-//│ x = 1
-
-// ——— ——— ———
-
 // FIXME: op-split has no split point!
 // Parses as a prefix `do` in a split instead of an infix `do` that's part of the `if` expression!
 :fixme
@@ -106,35 +88,25 @@ if 2
 
 // ——— ——— ———
 
-:w
-:fixme // * Should be a call of two arguments, not a sequenced expression
-+(1,2)
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.111: 	+(1,2)
-//│ ╙──       	  ^
-//│ = 2
-
-// ——— ——— ———
-
 :fixme
 pattern ShapeArea =
   | (:radius) => 0
   | x => 1
 //│ ╔══[COMPILATION ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.121: 	  | (:radius) => 0
-//│ ║         	      ^^^^^^
+//│ ║  l.+2: 	  | (:radius) => 0
+//│ ║        	      ^^^^^^
 //│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.122: 	  | x => 1
-//│ ╙──       	    ^^^^^^
+//│ ║  l.+3: 	  | x => 1
+//│ ╙──      	    ^^^^^^
 
 :fixme
 pattern P = {:radius} => radius
 //│ ╔══[COMPILATION ERROR] Expected a valid parameter, found type definition
-//│ ║  l.131: 	pattern P = {:radius} => radius
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	pattern P = {:radius} => radius
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: radius
-//│ ║  l.131: 	pattern P = {:radius} => radius
-//│ ╙──       	                         ^^^^^^
+//│ ║  l.+1: 	pattern P = {:radius} => radius
+//│ ╙──      	                         ^^^^^^
 //│ = fun
 
 pattern P = ({:radius}) => radius
@@ -144,7 +116,21 @@ pattern P = ((:radius)) => radius
 :fixme
 pattern P = (:radius) => radius
 //│ ╔══[WARNING] Unused pattern binding: radius.
-//│ ║  l.145: 	pattern P = (:radius) => radius
-//│ ╙──       	              ^^^^^^
+//│ ║  l.+1: 	pattern P = (:radius) => radius
+//│ ╙──      	              ^^^^^^
 
 // ——— ——— ———
+
+// TODO: Calls through one partial application must retain writes to its earlier parameter.
+// BlockSimplifier removes the write and repeats counter(0) at each call to next.
+:fixme
+:noInline
+:expect [1, 2]
+fun counter(x)() =
+  set x = x + 1
+  x
+let next = counter(0)
+[next(), next()]
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: '[1, 1]'
+//│ = [1, 1]
+//│ next = fun

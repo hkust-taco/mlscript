@@ -11,7 +11,7 @@ fun res() = 1
 //│ REPL> Sending: block$res3 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let res2;try { res2 = function res() {   runtime.checkArgs("res", 0, true, arguments.length);   return 1 };; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: let res2;try { res2 = function res() {   runtime.checkArgs("res", 0, arguments.length);   return 1 };; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:

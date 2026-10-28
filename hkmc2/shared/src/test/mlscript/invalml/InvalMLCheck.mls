@@ -10,10 +10,10 @@ fun foo: Int -> Int
 fun foo: Int -> Int
 //│ ╔══[COMPILATION ERROR] Multiple declarations of symbol 'foo'
 //│ ╟── declared here
-//│ ║  l.9: 	fun foo: Int -> Int
-//│ ║       	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun foo: Int -> Int
+//│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── declared here
-//│ ║  l.10: 	fun foo: Int -> Int
+//│ ║  l.+2: 	fun foo: Int -> Int
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -21,17 +21,17 @@ fun id(x) = x
 fun id(y) = y
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'id'
 //│ ╟── defined here
-//│ ║  l.20: 	fun id(x) = x
+//│ ║  l.+1: 	fun id(x) = x
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.21: 	fun id(y) = y
+//│ ║  l.+2: 	fun id(y) = y
 //│ ╙──      	^^^^^^^^^^^^^
 
 :e
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type Int
-//│ ║  l.32: 	fun bar(x) = let t = x + 1 in "aaa"
+//│ ║  l.+2: 	fun bar(x) = let t = x + 1 in "aaa"
 //│ ║        	                     ^
 //│ ╙── because: cannot constrain  Str  <:  Int
 
@@ -40,7 +40,7 @@ fun baz: Int -> Int
 fun baz(x) = "bbb"
 //│ ═══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
-//│ ║  l.40: 	fun baz(x) = "bbb"
+//│ ║  l.+2: 	fun baz(x) = "bbb"
 //│ ║        	             ^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 
@@ -54,7 +54,7 @@ add(1, 2) as Int
 :e
 add(0, 0) as Str
 //│ ╔══[COMPILATION ERROR] Type error in application of type ‹not implemented› with expected type Str
-//│ ║  l.55: 	add(0, 0) as Str
+//│ ║  l.+1: 	add(0, 0) as Str
 //│ ║        	^^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: Str
@@ -62,7 +62,7 @@ add(0, 0) as Str
 :e
 fun errAdd(x: Int) = x + "1"
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
-//│ ║  l.63: 	fun errAdd(x: Int) = x + "1"
+//│ ║  l.+1: 	fun errAdd(x: Int) = x + "1"
 //│ ║        	                         ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 
@@ -82,11 +82,11 @@ high(x => x)
 :e
 high(x => x + 1)
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type Int
-//│ ║  l.83: 	high(x => x + 1)
+//│ ║  l.+1: 	high(x => x + 1)
 //│ ║        	          ^
 //│ ╙── because: cannot constrain  A  <:  Int
 //│ ╔══[COMPILATION ERROR] Type error in application with expected type A
-//│ ║  l.83: 	high(x => x + 1)
+//│ ║  l.+1: 	high(x => x + 1)
 //│ ║        	          ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  A
 //│ Type: Int
@@ -110,8 +110,8 @@ fun baz(z) =
 :e
 baz as Int -> (([A] -> A -> A), Int) -> Int
 //│ ╔══[COMPILATION ERROR] Cannot type non-function term Ref(member:baz) as (Int) ->{⊥} ([outer, 'A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
-//│ ║  l.111: 	baz as Int -> (([A] -> A -> A), Int) -> Int
-//│ ╙──       	^^^
+//│ ║  l.+1: 	baz as Int -> (([A] -> A -> A), Int) -> Int
+//│ ╙──      	^^^
 //│ Type: ⊥
 
 
@@ -121,8 +121,8 @@ baz(42)
 :e
 baz(42) as (([A] -> A -> A), Int) -> Int
 //│ ╔══[COMPILATION ERROR] Cannot type non-function term App(Ref(member:baz),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) as ([outer, 'A] -> ('A) ->{⊥} 'A, Int) ->{⊥} Int
-//│ ║  l.122: 	baz(42) as (([A] -> A -> A), Int) -> Int
-//│ ╙──       	^^^^^^^
+//│ ║  l.+1: 	baz(42) as (([A] -> A -> A), Int) -> Int
+//│ ╙──      	^^^^^^^
 //│ Type: ⊥
 
 (z => (f, x) => baz(z)(f, x)) as Int -> (([A] -> A -> A), Int) -> Int
@@ -142,11 +142,11 @@ id as [A] -> A -> A
 :e
 42 as Int | Num
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (alternation)
-//│ ║  l.143: 	42 as Int | Num
-//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	42 as Int | Num
+//│ ╙──      	^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Term shape not yet supported by InvalML: CompType(Asc(Lit(IntLit(42)),Ref(member:Int)),Ref(member:Num),true)
-//│ ║  l.143: 	42 as Int | Num
-//│ ╙──       	^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	42 as Int | Num
+//│ ╙──      	^^^^^^^^^^^^^^^
 //│ Type: ⊥
 
 42 as (Int | Num)
@@ -176,8 +176,8 @@ foo
 :e
 foo(42, 1)
 //│ ╔══[COMPILATION ERROR] Type error in integer literal with expected type ¬'A
-//│ ║  l.177: 	foo(42, 1)
-//│ ║         	        ^
+//│ ║  l.+1: 	foo(42, 1)
+//│ ║        	        ^
 //│ ╟── because: cannot constrain  Int  <:  ¬'A
 //│ ╟── because: cannot constrain  'A  <:  ¬{Int}
 //│ ╙── because: cannot constrain  Int  <:  ¬{Int}

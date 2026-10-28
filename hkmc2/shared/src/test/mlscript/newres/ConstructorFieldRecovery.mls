@@ -9,11 +9,11 @@ class Broken(val missing, val clash) {
 if Broken(1, 2) is Broken(x, _) then x else 0
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'clash'.
 //│ ╟── Defined at: 
-//│ ║  l.6: 	class Broken(val missing, val clash) {
-//│ ║       	                          ^^^^^^^^^
+//│ ║  l.+1: 	class Broken(val missing, val clash) {
+//│ ║        	                          ^^^^^^^^^
 //│ ╟── Defined at: 
-//│ ║  l.7: 	  val clash = 0
-//│ ╙──     	  ^^^^^^^^^^^^^
+//│ ║  l.+2: 	  val clash = 0
+//│ ╙──      	  ^^^^^^^^^^^^^
 //│ = 0
 
 
@@ -25,10 +25,10 @@ class Replaced(val field) {
 if Replaced({answer: 1}) is Replaced(x) then x.answer else 0
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'field'.
 //│ ╟── Defined at: 
-//│ ║  l.22: 	class Replaced(val field) {
+//│ ║  l.+1: 	class Replaced(val field) {
 //│ ║        	               ^^^^^^^^^
 //│ ╟── Defined at: 
-//│ ║  l.23: 	  val field = {other: 0}
+//│ ║  l.+2: 	  val field = {other: 0}
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^
 //│ = 0
 
@@ -43,10 +43,10 @@ class Child extends BadBase(1, 2)
 recover(new Child)
 //│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'clash'.
 //│ ╟── Defined at: 
-//│ ║  l.39: 	class BadBase(val missing, val clash) {
+//│ ║  l.+2: 	class BadBase(val missing, val clash) {
 //│ ║        	                           ^^^^^^^^^
 //│ ╟── Defined at: 
-//│ ║  l.40: 	  val clash = 0
+//│ ║  l.+3: 	  val clash = 0
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ = 0
 

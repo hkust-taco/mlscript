@@ -33,7 +33,7 @@ Runtime.Tuple.slice([1, 2, 3, 4], 1, 1)
 fun lookup(map: WeakMap[Object, Str], key: Object) = if map.get(key) is
   Str as value then value
   else "missing"
-val key = new Object
+val key = new Object()
 val map = new WeakMap
 map.set(key, "value")
 lookup(map, key)
@@ -44,7 +44,7 @@ lookup(map, key)
 // This runtime primitive preserves undefined; user-call instrumentation forbids returning it.
 :noSanityCheck
 :expect true
-Runtime.Tuple.get([undefined], 0) is undefined
+Runtime.Tuple.get([unsafe.undefined], 0) is unsafe.undefined
 //│ = true
 
 // Tuple runtime operations also support lazy views.
@@ -64,11 +64,11 @@ Term.show(Term.Lam([termSymbol], Term.Ref(termSymbol)), termContext)
 //│ = "(x_0) =>\n  x_0"
 
 :expect ["null", "undefined", "true", "42"]
-[null, undefined, true, 42].map((lit, ...rest) => Term.show(Term.Lit(lit), termContext))
+[null, unsafe.undefined, true, 42].map((lit, ...rest) => Term.show(Term.Lit(lit), termContext))
 //│ = ["null", "undefined", "true", "42"]
 
 :expect "undefined"
-Term.showPattern(Term.LitPattern(undefined), termContext)
+Term.showPattern(Term.LitPattern(unsafe.undefined), termContext)
 //│ = "undefined"
 
 // Shared read interfaces retain element types without invariant Array[Any] annotations.
@@ -84,7 +84,7 @@ fun iteratedValue(xs: IterableIndexable[Item]) = xs.iterator().next().value.valu
 :expect 7
 class SpecialItem extends Item(7)
 fun iteratorValue(xs: Iterator[Item]) = xs.next().value.value
-val items: Set[SpecialItem] = new Set
+val items: Set[SpecialItem] = new Set()
 items.add(new SpecialItem)
 val specialized: Iterator[SpecialItem] = items.values()
 iteratorValue(specialized)

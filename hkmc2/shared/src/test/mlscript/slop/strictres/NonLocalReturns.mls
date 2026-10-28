@@ -1,0 +1,115 @@
+:.
+:effectHandlers
+:lift
+
+import "../../../mlscript-compile/NonLocalReturnLibrary.mls"
+
+:expect [42, 5]
+[NonLocalReturnLibrary.result[Int](42).0, NonLocalReturnLibrary.result[Str]("hello").0.length]
+//│ = [42, 5]
+
+
+// Both normal completion and a non-local return contribute result members.
+:expect [42, 0]
+fun mkAnswer(value) = {answer: value}
+fun answer(early) =
+  let escape = => return mkAnswer(42)
+  if early do escape()
+  mkAnswer(0)
+[answer(true).answer, answer(false).answer]
+//│ = [42, 0]
+
+// Returned closures retain the enclosing call's arguments and callable shape.
+:expect [42, 5]
+fun factory[A](value: A) =
+  let escape = => return () => value
+  escape()
+  throw 0
+[factory[Int](42)(), factory[Str]("hello")().length]
+//│ = [42, 5]
+
+// A local class captures the enclosing function's handler, not a new return scope.
+:expect "42"
+fun throughClass(value) =
+  class Worker with
+    let escape = => return {answer: value}
+    fun run() = escape()
+  (new Worker).run()
+  throw 0
+throughClass(42).answer.toString()
+//│ = "42"
+
+// A nested function's non-local return belongs to that function.
+:expect [23, 17]
+fun enclosing() =
+  let escape = => return [inner(), 17]
+  fun inner() =
+    let escape = => return 23
+    escape()
+    99
+  escape()
+  throw 0
+enclosing()
+//│ = [23, 17]
+
+// Getter results use the same flow, even though they have no parameter list.
+:expect 42
+val getter =
+  let escape = => return {answer: 42}
+  escape()
+  throw 0
+getter.answer
+//│ = 42
+//│ getter = {answer: 42}
+
+// The shared abortive-handler machinery also transports non-local label payloads.
+:expect 42
+val fromLabel = do done:
+  fun escape() = done.break({answer: 42})
+  escape()
+  throw 0
+fromLabel.answer
+//│ = 42
+//│ fromLabel = {answer: 42}
+
+:expect 3
+fun loop() =
+  let i = 0 in do done:
+    fun step() =
+      if i >= 3 do done.break([i])
+      set i += 1
+      done.continue
+    step()
+loop().0
+//│ = 3
+
+// Resolution must retain both possible targets, rather than dropping either exit.
+:e
+fun ambiguous(early) =
+  let escape = => return {answer: 42}
+  if early do escape()
+  {answer: 0}
+ambiguous(true).answer
+//│ ╔══[COMPILATION ERROR] This selection of member 'answer' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+5: 	ambiguous(true).answer
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── target: record field 'answer'
+//│ ║  l.+2: 	  let escape = => return {answer: 42}
+//│ ║        	                          ^^^^^^
+//│ ╟── target: record field 'answer'
+//│ ║  l.+4: 	  {answer: 0}
+//│ ╙──      	   ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// User bindings with runtime names must not capture generated control-flow references.
+:expect 3
+fun shadowedLoop(runtime, Runtime, Continue) =
+  let i = 0 in do done:
+    fun step() =
+      if i >= 3 do done.break(i)
+      set i += 1
+      done.continue
+    step()
+shadowedLoop(0, 0, 0)
+//│ = 3

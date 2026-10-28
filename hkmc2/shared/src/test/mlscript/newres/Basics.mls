@@ -26,36 +26,34 @@ id
 :sir
 Predef.id
 //│ Elab block List(Sel(Ident(Predef),Ident(id))) LocalScope(block:3)
-//│ | Elab term Sel(Ident(Predef),Ident(id))
-//│ | | Elab subterm Sel(Ident(Predef),Ident(id))
-//│ | | | Elab subterm Ident(Predef)
-//│ | | | | listen: trm = member:Predef⁰
-//│ | | | | listenBMS: bms = module
-//│ | | | | listenedBMS: bms = module
-//│ | | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
-//│ | | | | PUSH module:Predef¹
-//│ | | | ~> member:Predef⁰
-//│ | | | newSel? sel = member:Predef⁰.id
+//│ | Elab subterm Sel(Ident(Predef),Ident(id))
+//│ | | Elab subterm Ident(Predef)
 //│ | | | listen: trm = member:Predef⁰
 //│ | | | listenBMS: bms = module
 //│ | | | listenedBMS: bms = module
 //│ | | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
 //│ | | | PUSH module:Predef¹
-//│ | | | newSel: sel = member:Predef⁰.id, shape = module:Predef¹
-//│ | | | newSel member: bms = member:id¹, mss = List()
-//│ | | | listenTerm: trm = member:Predef⁰.id
-//│ | | | listen: trm = member:Predef⁰.id
-//│ | | | listenBMS: bms = function
-//│ | | | listenedBMS: bms = function
-//│ | | | fromBMS: bms = member:id¹, sh = member:id¹, flow = ⋅id⁰, markss = List()
-//│ | | | .exit MarkedShape (member:id¹, term:Predef¹/id⁰, ⋅id⁰)
-//│ | | | = MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
-//│ | | | PUSH MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
-//│ | | ~> member:Predef⁰.id
-//│ | ~> member:Predef⁰.id
-//│ ~> { member:Predef⁰.id }
-//│ listenTerm: trm = member:Predef⁰.id
-//│ listen: trm = member:Predef⁰.id
+//│ | | ~> member:Predef⁰
+//│ | | newSel? sel = member:Predef⁰.id
+//│ | | listen: trm = member:Predef⁰
+//│ | | listenBMS: bms = module
+//│ | | listenedBMS: bms = module
+//│ | | fromBMS: bms = member:Predef⁰, sh = module:Predef¹, flow = Predef², markss = List()
+//│ | | PUSH module:Predef¹
+//│ | | newSel: sel = member:Predef⁰.id, shape = module:Predef¹
+//│ | | newSel member: bms = member:id¹, mss = List()
+//│ | | listenTerm: trm = member:Predef⁰.id
+//│ | | listen: trm = member:Predef⁰.id
+//│ | | listenBMS: bms = function
+//│ | | listenedBMS: bms = function
+//│ | | fromBMS: bms = member:id¹, sh = member:id¹, flow = ⋅id⁰, markss = List()
+//│ | | .exit MarkedShape (member:id¹, term:Predef¹/id⁰, ⋅id⁰)
+//│ | | = MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
+//│ | | PUSH MarkedShape(member:id¹, ↗⟨term:Predef¹/id⁰⟩%⟨⋅id⁰⟩ϵ)
+//│ | ~> member:Predef⁰.id‹term:Predef¹/id⁰›
+//│ ~> { member:Predef⁰.id‹term:Predef¹/id⁰› }
+//│ listenTerm: trm = member:Predef⁰.id‹term:Predef¹/id⁰›
+//│ listen: trm = member:Predef⁰.id‹term:Predef¹/id⁰›
 //│ listenBMS: bms = function
 //│ listenedBMS: bms = function
 //│ fromBMS: bms = member:id¹, sh = member:id¹, flow = ⋅id⁰, markss = List()
@@ -86,12 +84,12 @@ Predef.id(1)
 :e
 Predef.idd(1)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.87: 	Predef.idd(1)
+//│ ║  l.+1: 	Predef.idd(1)
 //│ ║        	^^^^^^^^^^
 //│ ╟── Module 'Predef' does not contain member 'idd'
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.16: 	module Predef with ...
-//│ ╙──      	       ^^^^^^
+//│ ║  l.XX: 	module Predef with ...
+//│ ╙──      	^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -139,21 +137,21 @@ p.id
 :e
 (1).id
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.140: 	(1).id
-//│ ║         	^^^^^^
+//│ ║  l.+1: 	(1).id
+//│ ║        	^^^^^^
 //│ ╟── Integer literal does not contain member 'id'
-//│ ║  l.140: 	(1).id
-//│ ╙──       	 ^
+//│ ║  l.+1: 	(1).id
+//│ ╙──      	 ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 1.id
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.150: 	1.id
-//│ ║         	^^^^
+//│ ║  l.+1: 	1.id
+//│ ║        	^^^^
 //│ ╟── Integer literal does not contain member 'id'
-//│ ║  l.150: 	1.id
-//│ ╙──       	^
+//│ ║  l.+1: 	1.id
+//│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect "ha ha "
@@ -169,9 +167,9 @@ print(1)
 :e
 ().id
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.170: 	().id
-//│ ║         	^^^^^
+//│ ║  l.+1: 	().id
+//│ ║        	^^^^^
 //│ ╟── Unit value does not contain member 'id'
-//│ ║  l.170: 	().id
-//│ ╙──       	^^
+//│ ║  l.+1: 	().id
+//│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

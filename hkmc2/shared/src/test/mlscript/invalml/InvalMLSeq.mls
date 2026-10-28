@@ -30,13 +30,13 @@ fun mapi = s => f =>
       i := !(i) + 1
       f(!(i), x)
 //│ ╔══[COMPILATION ERROR] Type error in region expression with expected type Seq[out A, out E]
-//│ ║  l.28: 	    let i = r.ref 0
+//│ ║  l.+4: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
-//│ ║  l.29: 	    map(s) of x =>
+//│ ║  l.+5: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.30: 	      i := !(i) + 1
+//│ ║  l.+6: 	      i := !(i) + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.31: 	      f(!(i), x)
+//│ ║  l.+7: 	      f(!(i), x)
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Seq[in ⊥ out 'B, in ⊥ out 'E1]  <:  Seq[in ⊥ out A, in ⊥ out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
@@ -106,13 +106,13 @@ r := 1
 r := 1
 ! r // because of the space, this is a NL-op
 //│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
-//│ ║  l.106: 	r := 1
-//│ ║         	^^^^^^
-//│ ║  l.107: 	! r // because of the space, this is a NL-op
-//│ ╙──       	^^^
+//│ ║  l.+1: 	r := 1
+//│ ║        	^^^^^^
+//│ ║  l.+2: 	! r // because of the space, this is a NL-op
+//│ ╙──      	^^^
 //│ ╔══[COMPILATION ERROR] Variable not found: !
-//│ ║  l.107: 	! r // because of the space, this is a NL-op
-//│ ╙──       	^
+//│ ║  l.+2: 	! r // because of the space, this is a NL-op
+//│ ╙──      	^
 //│ Type: ⊥
 
 r := 1, // `,` to avoid parsing `! r` on next line as continuation of expression

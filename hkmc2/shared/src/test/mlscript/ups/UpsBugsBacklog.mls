@@ -48,8 +48,11 @@ if tokens is @compile Parse as stack do print(stack)
 if tokens is
   @compile Parse as stack do print(stack)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'stack'
-//│ ║  l.49: 	  @compile Parse as stack do print(stack)
-//│ ╙──      	                                   ^^^^^
+//│ ║  l.+2: 	  @compile Parse as stack do print(stack)
+//│ ║        	                                   ^^^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.+2: 	  @compile Parse as stack do print(stack)
+//│ ╙──      	                    ^^^^^
 
 // What's actually intended:
 if tokens is

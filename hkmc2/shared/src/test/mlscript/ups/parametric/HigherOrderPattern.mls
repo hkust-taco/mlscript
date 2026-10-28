@@ -10,20 +10,20 @@ object A
 :e
 null is @compile Nullable
 //│ ╔══[COMPILATION ERROR] Pattern `Nullable` has one pattern parameter.
-//│ ║  l.6: 	pattern Nullable(pattern T) = null | T
-//│ ║       	                 ^^^^^^^^^
+//│ ║  l.XX: 	pattern Nullable(pattern T) = null | T
+//│ ║        	                 ^^^^^^^^^
 //│ ╟── But zero pattern arguments were provided.
-//│ ║  l.11: 	null is @compile Nullable
+//│ ║  l.+1: 	null is @compile Nullable
 //│ ╙──      	                 ^^^^^^^^
 //│ = false
 
 :e
 null is @compile Nullable(A, A)
 //│ ╔══[COMPILATION ERROR] Pattern `Nullable` has one pattern parameter.
-//│ ║  l.6: 	pattern Nullable(pattern T) = null | T
-//│ ║       	                 ^^^^^^^^^
+//│ ║  l.XX: 	pattern Nullable(pattern T) = null | T
+//│ ║        	                 ^^^^^^^^^
 //│ ╟── But two pattern arguments were provided.
-//│ ║  l.21: 	null is @compile Nullable(A, A)
+//│ ║  l.+1: 	null is @compile Nullable(A, A)
 //│ ╙──      	                 ^^^^^^^^^^^^^^
 //│ = false
 

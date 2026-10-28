@@ -5,32 +5,57 @@
 {( 123 )}
 //│ = 123
 
-{({( a: 1, b: 2 )})}
-//│ = {a: 1, b: 2}
-
-
 :e
-\{ Int }
-//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
-//│ ║  l.13: 	\{ Int }
-//│ ╙──      	^^^^^^^^
+:re
+{({( a: 1, b: 2 )})}
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
+//│ ║  l.+1: 	{({( a: 1, b: 2 )})}
+//│ ╙──      	   ^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
+
+// * `\` is an infix keyword (see `BackslashApps.mls`), so it cannot be used in prefix position
+// * nor be defined as an operator
+
+:pe
+:re
+\{ Int }
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.+1: 	\{ Int }
+//│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:pe
+:re
+\(0)
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.+1: 	\(0)
+//│ ╙──      	^
+//│ ╔══[PARSE ERROR] Expected end of input; found parenthesis section instead
+//│ ║  l.+1: 	\(0)
+//│ ╙──      	 ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:pe
 :e
-\(0)
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.20: 	\(0)
-//│ ║        	^^^^
-//│ ╟── Function 'passTo' expected 2 arguments, but got 1
-//│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.46: 	fun (\) passTo(receiver, f: dyn)(...args) = f(receiver, ...args)
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ = fun
-
 fun (\) huh(x) = x
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.+1: 	fun (\) huh(x) = x
+//│ ╙──      	     ^
+//│ ╔══[COMPILATION ERROR] This ‹erroneous syntax› is not a valid symbolic name
+//│ ║  l.+1: 	fun (\) huh(x) = x
+//│ ╙──      	      ^
 
+:pe
+:re
 \(0)
-//│ = 0
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.+1: 	\(0)
+//│ ╙──      	^
+//│ ╔══[PARSE ERROR] Expected end of input; found parenthesis section instead
+//│ ║  l.+1: 	\(0)
+//│ ╙──      	 ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 // Writing record patterns in this way is strange. In the previous `Desugarer`,
@@ -38,7 +63,7 @@ fun (\) huh(x) = x
 // syntax. In the new `Desugarer`, we chose not to support this syntax.
 fun f(x) = if x is {( Int then 1, Bool then 2 )}
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (parenthesis section).
-//│ ║  l.39: 	fun f(x) = if x is {( Int then 1, Bool then 2 )}
+//│ ║  l.+1: 	fun f(x) = if x is {( Int then 1, Bool then 2 )}
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -47,29 +72,28 @@ fun f(x) = if x is {( Int then 1, Bool then 2 )}
 :e
 fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (parenthesis section).
-//│ ║  l.48: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
+//│ ║  l.+1: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+:pe
 :e
 fun f(x) = if x is \{ Int then 1, Bool then 2 }
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (refinement).
-//│ ║  l.54: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
-//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.+1: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
+//│ ╙──      	                   ^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (‹erroneous syntax›).
+//│ ║  l.+1: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
+//│ ╙──      	                                               ^
 
+:pe
 :e
 fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.60: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ║        	                   ^^^^^^
-//│ ╟── Function 'huh' cannot be used as a constructor pattern.
-//│ ║  l.30: 	fun (\) huh(x) = x
-//│ ╙──      	^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.60: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ║        	                   ^^^^^^^^^^^^^^^^^^^
-//│ ╟── Function 'huh' cannot be used as a constructor pattern.
-//│ ║  l.30: 	fun (\) huh(x) = x
-//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found '\' keyword instead
+//│ ║  l.+1: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╙──      	                   ^
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (‹erroneous syntax›).
+//│ ║  l.+1: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╙──      	                                               ^
 
 class Box[T](val content: T)
 

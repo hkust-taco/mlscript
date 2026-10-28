@@ -58,9 +58,9 @@ private fun make[A](item: A) =
 make(Second(8)).value.second
 make(First(9)).value.second
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.59: 	make(First(9)).value.second
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+10: 	make(First(9)).value.second
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'First' does not contain member 'second'
-//│ ║  l.59: 	make(First(9)).value.second
-//│ ╙──      	     ^^^^^^^^
+//│ ║  l.+10: 	make(First(9)).value.second
+//│ ╙──       	     ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

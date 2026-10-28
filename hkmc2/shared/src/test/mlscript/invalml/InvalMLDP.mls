@@ -270,8 +270,8 @@ region r in
 //│ > interviewee score: 30, salary: 1
 //│ = 80
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'results
-//│ ║  l.251: 	  let m = select(interviewees, 4, results)
-//│ ║         	                                  ^^^^^^^
+//│ ║  l.+7: 	  let m = select(interviewees, 4, results)
+//│ ║        	                                  ^^^^^^^
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'results
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList['A1, in ⊥ out 'R1]
 //│ ╟── because: cannot constrain  'R  <:  'R1
@@ -332,8 +332,8 @@ region r in
 //│ > candidates:
 //│ = 80
 //│ ╔══[COMPILATION ERROR] Type error in reference with expected type 'interviewees
-//│ ║  l.328: 	    let m = wrongSelect(interviewees, 4000, results)
-//│ ║         	                        ^^^^^^^^^^^^
+//│ ║  l.+8: 	    let m = wrongSelect(interviewees, 4000, results)
+//│ ║        	                        ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  'interviewees
 //│ ╟── because: cannot constrain  ArrayList['A, in ⊥ out 'R]  <:  ArrayList[in 'T out 'T1, in ⊥ out 'R1]
 //│ ╟── because: cannot constrain  'R  <:  'R1

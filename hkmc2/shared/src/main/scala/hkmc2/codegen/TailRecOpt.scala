@@ -236,7 +236,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
   
   // Tries to rewrite an application of an arg list to a param list without needing to forcibly
   // unspread the arguments.
-  private def rewriteArgsList(f: FunDefn, paramList: ParamList, args: List[Arg]): CallArgsResult =
+  private def rewriteArgsList(f: FunDefn, paramList: LoweredParamList, args: List[Arg]): CallArgsResult =
     val (headArgs, restArgs) = paramList.restParam match
       case Some(value) => args.splitAt(paramList.params.length)
       case None => (args, Nil)
@@ -251,14 +251,24 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       case _ => a.value
     if hasSpread then return CallArgsResult.ForceSpread
     
+    // * Arguments in excess of the parameters are ignored at runtime (as in JavaScript);
+    // * the general path evaluates them and only extracts the arguments matching the parameters.
+    if hd.length > paramList.params.length then return CallArgsResult.ForceSpread
+    
+    // * Optional parameters whose arguments are omitted must be reset to `null`,
+    // * rather than keeping the values they had in the previous iteration.
+    val hdPadded = OptionalParams.pad(paramList.params, headArgs) match
+      case S(args) => args.map(_.value)
+      case N => return CallArgsResult.ForceSpread
+    
     if paramList.restParam.isDefined then
       val rest =
         restArgs match
           case Arg(S(SpreadKind.Eager), value) :: Nil => value
           case _ => Tuple(true, restArgs)(N)
-      CallArgsResult.Success(hd.appended(rest))
+      CallArgsResult.Success(hdPadded.appended(rest))
     else
-      CallArgsResult.Success(hd)
+      CallArgsResult.Success(hdPadded)
   
   /**
     * Applies a parameter list to an argument list, both of which could contain arbitrary spreads.
@@ -271,7 +281,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     * - The second return value is a list of paths containing the arguments in order. If there is a spread parameter, it will be
     *   the last one.
     */
-  def forceSpread(plist: ParamList, args: List[Arg]): (Block => Block, List[Path]) =
+  def forceSpread(plist: LoweredParamList, args: List[Arg]): (Block => Block, List[Path]) =
     // Forcibly spread the args in an array.
     // Assume the lengths are correct
     val paramList = plist.params
@@ -281,9 +291,16 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
   
     val tupleRes = Tuple(false, args)(N)
     
-    // Main args
-    def mainArgs(rest: List[Path]) = (0 until paramList.size).toList.foldRight(rest):
-      case (n, acc) => DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(n))(N), true)(N) :: acc
+    var prefix = blockBuilder.assignScoped(tupleSym, tupleRes)
+    // Materialize optional slots before assigning any loop parameter, so missing arguments reset
+    // the slots to null and reads remain independent of parameter assignment order.
+    val mainArgs = paramList.zipWithIndex.map: (param, index) =>
+      if param.flags.opt then
+        val slot = TempSymbol(N, erasedType = param.sym.erasedType, "optionalArg")
+        prefix = prefix.scopedVars(Set(slot)).chain(rest =>
+          OptionalParams.bindFromTuple(tupleSym.asSimpleRef, index, slot, true, rest))
+        slot.asSimpleRef
+      else DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(N)
     
     // If the rest param exists, append a slice
     val (initialBlk: (Block => Block), pathList: List[Path]) =
@@ -299,12 +316,10 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
             :: Value.Lit(Tree.IntLit(0))(N).asArg
             :: Nil) ne_:: Nil
         )(CallMetadata.defaultMlsFun, N)
-        val blk = blockBuilder
-          .assignScoped(tupleSym, tupleRes)
-          .assignScoped(sliceResSym, sliceRes)
-        (blk, mainArgs(sliceResSym.asSimpleRef :: Nil))
+        val blk = prefix.assignScoped(sliceResSym, sliceRes)
+        (blk, mainArgs :+ sliceResSym.asSimpleRef)
       else
-        (blockBuilder.assignScoped(tupleSym, tupleRes), mainArgs(Nil))
+        (prefix, mainArgs)
     end val
     (initialBlk, pathList)
   
@@ -357,7 +372,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val paramSyms =
         if hasWrapper then 
           if funsLen === 1 then
-            funs.head.allParamSyms.map(v => VarSymbol(Tree.Ident(v.id.name), erasedType = v.erasedType))
+            funs.head.allParamSyms.map(v => VarSymbol(v.id, erasedType = v.erasedType))
           else for i <- 0 until maxParamLen yield VarSymbol(Tree.Ident("param" + i), erasedType = N)
         else funs.head.allParamSyms
       .toList
@@ -764,9 +779,9 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       val newParamLists =
         val initial = paramSyms.map(Param.simple(_))
         if funsLen > 1 then
-          PlainParamList(Param.simple(curIdSym) :: initial)(N) :: Nil
+          LoweredParamList.plain(Param.simple(curIdSym) :: initial)(N) :: Nil
         else
-          PlainParamList(initial)(N) :: Nil
+          LoweredParamList.plain(initial)(N) :: Nil
       val annotations = 
         if funsLen == 1 && funs.head.inline then Annot.Inline()(N) :: Annot.Private :: Nil
         else Annot.Private :: Nil

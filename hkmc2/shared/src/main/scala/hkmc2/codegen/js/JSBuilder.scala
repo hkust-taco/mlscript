@@ -48,7 +48,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   
   val freeze = if !config.noFreeze then "globalThis.Object.freeze" else ""
   lazy val freezeDefns = if freezeDefinitions && !config.noFreeze then "globalThis.Object.freeze" else ""
-  private val privateAccessorSymbols = LinkedHashMap.empty[semantics.TermSymbol, semantics.TempSymbol]
+  private val privateAccessorSymbols = LinkedHashMap.empty[DefinitionSymbol[?], semantics.TempSymbol]
   
   // TODO use this to avoid parens when we generate recomposed expressions later
   enum Context:
@@ -69,23 +69,25 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     raise(ErrorReport(errMsg -> N :: Nil,
       source = Diagnostic.Source.Compilation))
     doc" # ${mkErr(errMsg)};"
-
-  // * True only for true modules (`syntax.Mod`); objects/patterns share the
-  // * `ModuleOrObjectSymbol` type but compile as instance-based singletons.
-  private def isModuleOwner(owner: semantics.InnerSymbol): Bool = owner match
-    case mod: semantics.ModuleOrObjectSymbol => mod.tree.k is syntax.Mod
-    case _ => false
   
-  private def getPrivateAccessorSymbol(ts: semantics.TermSymbol): semantics.TempSymbol =
-    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.name}$$accessorSymbol"))
-
-  private def selectPrivateField(ts: semantics.TermSymbol, loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
-    ts.owner.collect:
-      case owner if ts.isPrivate =>
-        val privateName = owner.privatesScope.allocateOrGetName(ts)
-        if scope.inScopeOwners(owner)
-        then doc".#$privateName"
-        else doc"[${scope.lookup_!(getPrivateAccessorSymbol(ts), loc)}]"
+  private def getPrivateAccessorSymbol(ts: DefinitionSymbol[?])(using Raise): semantics.TempSymbol =
+    // Accessor symbols are shared only within this emitted module. Allocating a
+    // fresh symbol in an importer cannot reach the defining module's accessor.
+    softAssert(ts.getState is State, s"Cannot generate a cross-file access to private member '${ts.nme}'")
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.nme}$$accessorSymbol"))
+  
+  /** Private names belong to the containing IR class, shared by its instance and static members.
+    * Accesses outside that class's lexical scope need an accessor. */
+  private def privateScopeIn(owner: InnerSymbol, inScopeClasses: Set[InnerSymbol]): Opt[Scope] =
+    val cls = owner.irClassContainer
+    Option.when(inScopeClasses.contains(cls))(cls.privatesScope)
+  
+  private def selectPrivateField(sym: DefinitionSymbol[?], loc: Opt[Loc])(using Raise, Scope): Opt[Document] =
+    val stored = MemberStorage.symbol(sym)
+    MemberStorage.privateOwner(stored).map: owner =>
+      privateScopeIn(owner, scope.inScopeClasses) match
+      case S(privates) => doc".#${privates.allocateOrGetName(stored)}"
+      case N => doc"[${scope.lookup_!(getPrivateAccessorSymbol(stored), loc)}]"
 
   private def withPrivateAccessorDecls(doc: Document)(using Raise, Scope): Document =
     val accessors = (
@@ -99,27 +101,23 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     privateAccessorSymbols.iterator.toList.sortBy(_._1.uid).foreach: (_, sym) =>
       scope.allocateOrGetName(sym)
 
-  private def collectExternalPrivateAccessors(p: Program)(using State): Unit =
+  private def collectExternalPrivateAccessors(p: Program)(using State, Raise): Unit =
     privateAccessorSymbols.clear()
-    var owners: List[InnerSymbol] = Nil
-    def withOwner(owner: InnerSymbol)(body: => Unit): Unit =
-      val oldOwners = owners
-      owners = owner :: owners
+    var inScopeClasses: Set[InnerSymbol] = Set.empty
+    def withClass(cls: InnerSymbol)(body: => Unit): Unit =
+      val oldClasses = inScopeClasses
+      inScopeClasses += cls
       body
-      owners = oldOwners
-    def needsAccessor(ts: semantics.TermSymbol): Bool =
-      ts.isPrivate && ts.owner.exists(owner => !owners.exists(_ is owner))
-    def note(sym: Opt[DefinitionSymbol[?]]): Unit =
-      sym match
-      case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
-        getPrivateAccessorSymbol(ts)
+      inScopeClasses = oldClasses
+    def needsAccessor(sym: DefinitionSymbol[?]): Bool =
+      MemberStorage.privateOwner(sym).exists(privateScopeIn(_, inScopeClasses).isEmpty)
+    def note(sym: Opt[MemberSymbol]): Unit =
+      sym.collect { case member: DefinitionSymbol[?] => MemberStorage.symbol(member) } match
+      case S(stored) if needsAccessor(stored) =>
+        getPrivateAccessorSymbol(stored)
       case _ =>
-    def noteAssign(sym: Opt[MemberSymbol]): Unit =
-      sym match
-      case S(ts: semantics.TermSymbol) if needsAccessor(ts) =>
-        getPrivateAccessorSymbol(ts)
-      case _ =>
-    object collector extends BlockTraverser:
+    new BlockTraverser:
+      applyBlock(p.main)
       override def applyPath(p: Path): Unit = p match
         case sel @ Select(qual, _) =>
           applyPath(qual)
@@ -129,24 +127,21 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         case assign @ AssignField(lhs, _, rhs, rest) =>
           applyPath(lhs)
           applyResult(rhs)
-          noteAssign(assign.symbol)
+          note(assign.symbol)
           applyBlock(rest)
         case _ => super.applyBlock(b)
-      override def applyDefn(defn: Defn): Unit = defn match
-        case cls: ClsLikeDefn =>
-          withOwner(cls.isym):
-            cls.parentPath.foreach(applyPath)
-            applyBlock(cls.preCtor)
-            applyBlock(cls.ctor)
-            cls.methods.foreach(applyDefn)
-            cls.companion.foreach(applyClsLikeBody)
-        case _ => super.applyDefn(defn)
-      def applyClsLikeBody(body: ClsLikeBody): Unit =
-        withOwner(body.isym):
-          applyBlock(body.ctor)
-          body.methods.foreach(applyDefn)
-    collector.applyBlock(p.main)
-
+      override def applyClsLikeDefn(cls: ClsLikeDefn): Unit =
+        cls.methodKeys.valuesIterator.foreach(applyPath)
+        cls.companion.foreach(_.methodKeys.valuesIterator.foreach(applyPath))
+        withClass(cls.isym):
+          cls.parentPath.foreach(applyPath)
+          applyBlock(cls.preCtor)
+          applyBlock(cls.ctor)
+          cls.methods.foreach(applyDefn)
+          cls.companion.foreach: body =>
+            applyBlock(body.ctor)
+            body.methods.foreach(applyDefn)
+  
   private def modulePrivateExportName(sym: BlockMemberSymbol)(using Raise): Str =
     sym.getState.compilationUnitPrivateName(sym).getOrElse:
       raise:
@@ -156,17 +151,18 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
           source = Diagnostic.Source.Compilation,
         )
       "‹MISSING_PRIVATE_EXPORT_NAME›"
-
+  
   private def relativeImportPath(path: Str, wd: io.Path): Str =
     if path.startsWith("/")
     then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
     else path
-
+  
   private case class Imports(
     defaults: Ls[ImportSymbol -> Str],
     privates: Ls[BlockMemberSymbol -> Str],
   ):
     def symbols: Ls[ImportSymbol] = defaults.map(_._1) ::: privates.map(_._1)
+  end Imports
   
   
   /** Recovers imports that are not necessarily recorded in `p.imports`.
@@ -270,7 +266,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
   def operand(a: Arg)(using Raise, Scope): Document =
     if a.spread.nonEmpty then die else subexpression(a.value)
   
-  private def curriedFunctionBody(paramLists: Ls[ParamList], body: Block, generator: Bool): Block =
+  private def curriedFunctionBody(paramLists: Ls[LoweredParamList], body: Block, generator: Bool): Block =
     paramLists match
     case Nil => body
     case params :: Nil =>
@@ -366,16 +362,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         // lexical-`this` behavior of the Lambda IR.
         doc"(function* ($params) ${ braced(bodyDoc) }).bind(this)"
       else doc"($params) => ${ braced(bodyDoc) }"
-    case s @ SuperSelect(qual, base, id) =>
-      doc"Reflect.get(${resultQual(base)}.prototype, ${makeStringLiteral(id.name)}, ${result(qual)})"
+    case s @ SuperSelect(qual, base, key) =>
+      doc"Reflect.get(${resultQual(base)}.prototype, ${result(key)}, ${result(qual)})"
     case s @ Select(qual, id) => 
       val checkCurrentSelection = checkSelections && s.sanitize
       val dotClass = s.symbol match
         case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
-      val field = s.symbol match
-        case S(ts: semantics.TermSymbol) => selectPrivateField(ts, s.toLoc)
-        case _ => N
+      val field = s.symbol.flatMap(selectPrivateField(_, s.toLoc))
       val name = symbolicSuffixBase(id.name).getOrElse(id.name)
       val fieldDoc = field.getOrElse:
         if isValidFieldName(name)
@@ -390,10 +384,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
         doc"$runtimeVar.checkSelect($sel, ${makeStringLiteral(id.name)}, $qualJS)"
       else sel
-    case DynSelect(qual, fld, ai) =>
-      if ai
-      then doc"${resultQual(qual)}.at(${result(fld)})"
-      else doc"${result(qual)}[${result(fld)}]"
+    case DynSelect(qual, fld, kind) => kind match
+      case DynSelectKind.ArrayIdx => doc"${resultQual(qual)}.at(${result(fld)})"
+      // * `resultQual` parenthesizes a literal receiver, notably a negative number such as `-1`,
+      // * which would otherwise bind more loosely than the following bracket.
+      case DynSelectKind.Member(_) | DynSelectKind.Unknown => doc"${resultQual(qual)}[${result(fld)}]"
     case Instantiate(mut, cls, argss) =>
       val calls = argss.foldLeft(resultInst(cls)): (acc, args) =>
         doc"${acc}(${args.map(argument).mkDocument(", ")})"
@@ -506,11 +501,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         } = ${result(r)};${returningTerm(rst, endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match
-        case S(ts: semantics.TermSymbol) => selectPrivateField(ts, n.toLoc)
+        case S(member: DefinitionSymbol[?]) => selectPrivateField(member, n.toLoc)
         case _ => N
       val name = symbolicSuffixBase(n.name).getOrElse(n.name)
       doc" # ${result(p)}${field.getOrElse(fieldSelect(name))} = ${result(r)};${returningTerm(rst, endSemi)}"
-    case AssignDynField(p, f, ai, r, rst) =>
+    case AssignDynField(p, f, _, r, rst) =>
       doc" # ${result(p)}[${result(f)}] = ${result(r)};${returningTerm(rst, endSemi)}"
     case Define(defn, rst) =>
       inline def mkThis(sym: InnerSymbol): Document =
@@ -573,7 +568,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               doc"${scope.lookup_!(sym, dSym.toLoc)} = (undefined, $functionKeyword ($params) ${ braced(bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
-              privFlds, pubFlds, preCtor, ctor, modo, bufferable)
+              privFlds, pubFlds, preCtor, ctor, modo, bufferable, termCompanion, clsMethodKeys)
           =>
             // After ClassParamFlattener, all classes have paramsOpt = N and exactly one auxParams entry.
             assert(paramsOpt.isEmpty,
@@ -589,59 +584,72 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             // Invalid parameterized objects can still reach this point without a constructor.
             softTODO(sourceParamsOpt.isEmpty || isym.shouldBeLifted,
               s"Missing constructor function for parameterized class ${isym.nme}")
-            
-            def mkMethodName(td: FunDefn, owner: InnerSymbol): Document =
-              if td.dSym.isPrivate
-              then doc"#${owner.privatesScope.allocateOrGetName(td.dSym)}"
-              else doc"${td.sym.nme}"
 
-            def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str, owner: InnerSymbol)(using Scope): Document =
+            // A private nested class is a field of its enclosing receiver, just like a private val.
+            // Its generated constructor and module companion must initialize the same binding.
+            def binding(using Scope): Document = ownr match
+              case S(owner) => doc"${result(owner.asThis)}${selectPrivateField(isym, isym.toLoc).getOrElse(fieldSelect(sym.nme))}"
+              case N => scope.lookup_!(sym, sym.toLoc)
+            
+            def mkMethodName(td: FunDefn, keys: Map[TermSymbol, Path]): Document =
+              if td.dSym.isPrivate
+              then doc"#${isym.privatesScope.allocateOrGetName(td.dSym)}"
+              else keys.get(td.dSym).fold(doc"${td.sym.nme}")(
+                key => outerScope.givenIn { doc"[${result(key)}]" })
+
+            def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str, keys: Map[TermSymbol, Path])(using Scope): Document =
               mtds.map:
                 case td @ FunDefn(params = ps :: pss, body = bod) =>
                   val result = curriedFunctionBody(pss, bod, td.generator)
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result, isLambda = false)
                   val generatorPrefix = if td.generator && pss.isEmpty then "*" else ""
-                  doc" # $mtdPrefix$generatorPrefix${mkMethodName(td, owner)}($params) ${ braced(bodyDoc) }"
+                  doc" # $mtdPrefix$generatorPrefix${mkMethodName(td, keys)}($params) ${ braced(bodyDoc) }"
                 case td @ FunDefn(params = Nil, body = bod) =>
-                  doc" # ${mtdPrefix}get ${mkMethodName(td, owner)}() ${ braced(body(bod, endSemi = true)) }"
+                  doc" # ${mtdPrefix}get ${mkMethodName(td, keys)}() ${ braced(body(bod, endSemi = true)) }"
               .mkDocument(doc"")
             
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
-                  methods: Ls[FunDefn],
-                  mtdPrefix: Str, isym: InnerSymbol)(using Scope): Document =
+                  methods: Ls[FunDefn], ctor: Block,
+                  mtdPrefix: Str, owner: InnerSymbol)(using Scope): Document =
               // * Note: the non-mut-val parts of `pubFlds` are not used because in JS, fields are not declared
               val mutPubFields =
                 pubFlds.collect:
                   case (_, sym) if sym.k is MutVal =>
                     sym -> TermSymbol(
-                      syntax.LetBind, S(isym), Tree.Ident(sym.nme), erasedType = sym.erasedType)
-              val allPrivFlds = privFlds ++ mutPubFields.map(_._2)
+                      syntax.LetBind, S(owner), Tree.Ident(sym.nme), erasedType = sym.erasedType)
+              // Explicit function companions already declare their private method slots.
+              // Other nested class bindings need fields declared in this receiver's class.
+              val classFields = collection.mutable.ListBuffer.empty[DefinitionSymbol[?]]
+              new BlockTraverserShallow:
+                applyBlock(ctor)
+                override def applyDefn(defn: Defn): Unit = defn match
+                  case cls: ClsLikeDefn =>
+                    val stored = MemberStorage.symbol(cls.isym)
+                    if (stored is cls.isym) && MemberStorage.privateOwner(stored).contains(owner) then
+                      // softAssert(!classFields.contains(stored), s"Duplicate private class field '${stored.nme}'")
+                      classFields += stored
+                  case _ => super.applyDefn(defn)
+              val allPrivFlds = privFlds ++ mutPubFields.map(_._2) ++ classFields.toList
               val privDecls = allPrivFlds.map: fld =>
-                val nme = isym.privatesScope.allocateOrGetName(fld)
-                doc" # $mtdPrefix#$nme;"
-              def termSymOwnerQual(ts: TermSymbol) =
-                ts.owner match
-                case S(owner) =>
-                  if isModuleOwner(owner) then
-                    scope.lookup_!(owner, ts.toLoc)
-                  else
-                    scope.findThis_!(owner)
-                case N => lastWords(s"Expected TermSymbol $ts to have an owner")
+                doc" # $mtdPrefix#${isym.privatesScope.allocateOrGetName(fld)};"
+              def privateOwnerQual(sym: DefinitionSymbol[?]) =
+                val owner = MemberStorage.privateOwner(sym).getOrElse(lastWords(s"Expected private member $sym"))
+                result(owner.asThis)
               val accessors = mutPubFields.flatMap: (valSym, letSym) =>
                 doc" # ${mtdPrefix}get ${escapeField(valSym.name, "")
-                  }() { return ${termSymOwnerQual(letSym) }${selectPrivateField(letSym, letSym.toLoc).get}; }"
+                  }() { return ${privateOwnerQual(letSym) }${selectPrivateField(letSym, letSym.toLoc).get}; }"
                 :: doc" # ${mtdPrefix}set ${escapeField(valSym.name, "")
-                  }(value) { ${termSymOwnerQual(letSym)}${selectPrivateField(letSym, letSym.toLoc).get} = value; }"
+                  }(value) { ${privateOwnerQual(letSym)}${selectPrivateField(letSym, letSym.toLoc).get} = value; }"
                 :: Nil
               val privateAccessors = allPrivFlds.filter(privateAccessorSymbols.contains).flatMap: fld =>
                 doc" # ${mtdPrefix}get [${scope.lookup_!(getPrivateAccessorSymbol(fld), fld.toLoc)}]() { return ${
-                    termSymOwnerQual(fld)
+                    privateOwnerQual(fld)
                   }${
                     selectPrivateField(fld, fld.toLoc).get
                   }; }"
                 :: doc" # ${mtdPrefix}set [${scope.lookup_!(getPrivateAccessorSymbol(fld), fld.toLoc)}](value) { ${
-                    termSymOwnerQual(fld)
+                    privateOwnerQual(fld)
                   }${
                     selectPrivateField(fld, fld.toLoc).get
                   } = value; }"
@@ -650,7 +658,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 td.dSym.isPrivate && privateAccessorSymbols.contains(td.dSym)
               ).flatMap: td =>
                 doc" # ${mtdPrefix}get [${scope.lookup_!(getPrivateAccessorSymbol(td.dSym), td.dSym.toLoc)}]() { return ${
-                    termSymOwnerQual(td.dSym)
+                    privateOwnerQual(td.dSym)
                   }${
                     selectPrivateField(td.dSym, td.dSym.toLoc).get
                   }; }" :: Nil
@@ -661,11 +669,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               case S(mod) =>
                 val (thisProxy, res) = outerScope.nestRebindThis(S(mod.isym)):
                   val mtdPrefix = "static "
-                  val privs = mkPrivs(mod.publicFields, mod.privateFields, mod.methods, mtdPrefix, mod.isym)
+                  val privs = mkPrivs(mod.publicFields, mod.privateFields, mod.methods, mod.ctor, mtdPrefix, mod.isym)
                   val ctorCode = if mod.ctor.isEmpty then doc"" else doc" # static " :: braced:
                     body(mod.ctor, endSemi = true)
                   privs :: ctorCode :: {
-                    mkMethods(mod.methods, mtdPrefix, mod.isym)
+                    mkMethods(mod.methods, mtdPrefix, mod.methodKeys)
                   }
                 // * Note that `thisProxy` might be defined at this point,
                 // * if the module accesses the self-reference of an outer definition.
@@ -675,7 +683,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             
             val mtdPrefix = ""
             
-            val privs = mkPrivs(pubFlds, privFlds, mtds, mtdPrefix, isym)
+            val privs = mkPrivs(pubFlds, privFlds, mtds, preCtor ~ ctor, mtdPrefix, isym)
             
             val isSingleton = (kind is syntax.Obj) || (kind is syntax.Pat)
             
@@ -683,17 +691,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               if isSingleton
               then
                 val fz = doc" # $freeze(this);"
-                ownr match
-                case S(owner) =>
-                  (doc" # ${result(owner.asThis)}.${sym.nme} = this;", fz)
-                case N =>
-                  (doc" # ${scope.lookup_!(sym, sym.toLoc)} = this;", fz)
+                (doc" # $binding = this;", fz)
               else (doc"", doc"")
             
             val ctorCode = scope.nest.givenIn:
               val preCtorCode = nonNestedScoped(preCtor)(bd => block(bd, true))
               val defaultSuperCall = if par.isDefined && preCtor.isEmpty then doc" # super();" else doc""
-              doc"$defaultSuperCall$preCtorCode$singletonInit${nonNestedScoped(ctor)(bd => block(bd, endSemi = true))}${
+              doc"${normalizeOptionalParams(backendParamList)}$defaultSuperCall$preCtorCode$singletonInit${nonNestedScoped(ctor)(bd => block(bd, endSemi = true))}${
                   kind match
                   case syntax.Obj =>
                     doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")};"
@@ -701,7 +705,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 }$singletonFreeze"
             
             val ctorBod = {{
-                val extraPath = if isym.shouldBeLifted then ".class" else ""
                 doc" # static " :: braced:
                   val v = result(isym.asThis)
                   if isSingleton
@@ -709,9 +712,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   else
                     ownr match
                     case S(owner) =>
-                      doc" # ${result(owner.asThis)}.${sym.nme}$extraPath = $v"
+                      val target = Select(owner.asThis, Tree.Ident(sym.nme))(S(isym), isym.toLoc)(false)
+                      doc" # ${result(target)} = $v"
                     case N =>
-                      doc" # ${scope.lookup_!(sym, sym.toLoc)}$extraPath = $v"
+                      doc" # ${result(sym.asMemberRef(isym))} = $v"
               }} :: (
                 if ctorCode.isEmpty then doc""
                 else doc" # constructor(${ctorParams.unzip._2.mkDocument(", ")}) " :: braced(ctorCode)
@@ -741,7 +745,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                     .mkDocument(" ")
                   else doc""
                 } :: {
-                  mkMethods(mtds, mtdPrefix, isym)
+                  mkMethods(mtds, mtdPrefix, clsMethodKeys)
                 } :: {
                   // * If this class has a `toString` implementation, then delegate
                   // * `prettyPrint` to `toString`.
@@ -772,13 +776,14 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               // Source params are used for the wrapper to preserve the curried calling convention.
               // All args are forwarded to the flat `new Class.class(...)` constructor.
               val sourceAuxParams = isym.defn.map(_.auxParams).getOrElse(Nil)
-              val allSourceParams = sourceParamsOpt.toList ::: sourceAuxParams
+              val allSourceParams =
+                sourceParamsOpt.iterator.++(sourceAuxParams).map(LoweredParamList.fixed).toList
               
               val fun = allSourceParams match
                 case ps_ :: pss_ if sourceParamsOpt.isDefined => outerScope.nest.givenIn:
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End(), isLambda = false)
                   val pss = pss_.map(setupFunction(N, _, End(), isLambda = false)._1)
-                  val argsDoc = allSourceParams.flatMap(_.paramSyms)
+                  val argsDoc = allSourceParams.iterator.flatMap(_.paramSyms)
                     .map(p => scope.lookup_!(p, p.toLoc)).mkDocument(", ")
                   val inner = doc"new ${sym.nme}.class($argsDoc)"
                   val bod = braced(doc" # return $freeze($inner);")
@@ -789,20 +794,11 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   S(doc"function $nme($ps) ${ funBodRet }")
                 case _ => N
               
-              ownr match
-              case S(owner) =>
-                val ths = mkThis(owner)
-                fun match
-                case S(f) =>
-                  doc"${ths}.${sym.nme} = ${f}; # $freezeDefns($clsJS);"
-                case N =>
-                  doc"$freezeDefns(${clsJS});"
+              fun match
+              case S(f) =>
+                doc"$binding = ${f}; # $freezeDefns($clsJS);"
               case N =>
-                fun match
-                case S(f) =>
-                  doc"${scope.lookup_!(sym, sym.toLoc)} = ${f}; # $freezeDefns($clsJS);"
-                case N =>
-                  doc"$freezeDefns(${clsJS});"
+                doc"$freezeDefns(${clsJS});"
         
         thisProxy match
           case S(proxy) if !scope.thisProxyDefined =>
@@ -901,7 +897,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       else doc" # /* Unreachable: $msg */"
     case Unreachable(_) => doc""
     
-    case Throw(res) =>
+    case Throw(res, _) =>
       doc" # throw ${result(res)}${mkSemi}"
     
     case Break(lbl) =>
@@ -956,7 +952,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     *   but the result has the same semantics.
     *  */
   def reserveNames(p: Program)(using Scope, Raise): Unit =
-    def go(blk: Block): Unit = tl.trace(s"avoidNames ${blk.toString.take(100)}..."):
+    def go(blk: Block): Unit = tl.trace(dbg"avoidNames ${blk.showAsPlain.take(100)}..."):
       blk match
       case Define(defn, rest) =>
         defn match
@@ -1084,12 +1080,18 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
         (if enumerable then doc"enumerable: true, # " else doc"") :: doc"value: ${value}"
     })"
   
-  def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)
+  private def normalizeOptionalParams(params: LoweredParamList)(using Raise, Scope): Document =
+    params.params.filter(_.flags.opt).map: p =>
+      val name = scope.lookup_!(p.sym, p.toLoc)
+      doc" # $name ??= null;"
+    .mkDocument("")
+  
+  def setupFunction(name: Option[Str], params: LoweredParamList, body: Block, isLambda: Bool)
       (using Raise, Scope): (Document, Document) =
     val paramsList = params.params.map(p => scope.allocateName(p.sym))
       .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
       .mkDocument(", ")
-    (paramsList, this.body(body, endSemi = false))
+    (paramsList, normalizeOptionalParams(params) :: this.body(body, endSemi = false))
 
 
 
@@ -1195,13 +1197,7 @@ object JSBuilder:
       * functions as companions: the class property belongs to a compiler-created function,
       * never to an existing value. Foreign declarations use their native binding instead. */
     def shouldBeLifted: Bool =
-      val bsym = dsym.asBlkMember
-      (
-        (dsym.asTrm orElse bsym.flatMap(_.asTrm)).isDefined ||
-        (dsym.asCls orElse bsym.flatMap(_.asCls)).flatMap(_.defn).exists(_.paramsOpt.isDefined)
-      ) && 
-        (dsym.asModOrObj orElse dsym.asCls).isDefined &&
-        dsym.defn.forall(_.hasDeclareModifier.isEmpty)
+      dsym.asClsOrMod.exists(_.irTermCompanion.isDefined)
   
 end JSBuilder
 
@@ -1221,16 +1217,18 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
   
   val functionParamVarargSymbol = semantics.TempSymbol(N, erasedType = N, "args")
   
-  override def setupFunction(name: Option[Str], params: ParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
+  override def setupFunction(name: Option[Str], params: LoweredParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
     // * We used to instrument `fun f(x, y) = x + y` into something like
     // * `function f(...args) { runtime.checkArgs("f", 2, true, args.length); let x = args[0]; let y = args[1]; x + y }`
     // * which was very verbose, in addition to possibly making things quite inefficient.
     // * Now, we no longer instrument lambdas (which affects extra parameter lists),
     // * and we instead use the JS builtin `arguments` array to get the number of received arguments, as in
-    // * `function f(x, y) { runtime.checkArgs("f", 2, true, arguments.length); x + y }`
+    // * `function f(x, y) { runtime.checkArgs("f", 2, arguments.length); x + y }`
     // * The idea is that later on, we'll add a runtime type sanity check as well anyway,
     // * which will check arguments against the erased parameter type,
     // * including checking they are not `undefined`, which should achieve most of the benefit.
+    // * Following JavaScript, extra arguments are ignored, so we only check for missing arguments
+    // * (optional parameters are not counted in `paramCountLB`; missing optional arguments become `null`).
     /*
     if instrument then
       val paramsList = params.params.map(p => scope.allocateName(p.sym))
@@ -1245,13 +1243,11 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
         case S(p) => doc"\nlet $p = $runtimeVar.Tuple.slice($paramsStr, ${params.paramCountLB}, 0);"
       (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign$restAssign${this.body(body, endSemi = false)}")
     */
+    val (paramsList, bodyDoc) = super.setupFunction(name, params, body, isLambda)
     if instrument && !isLambda then
       val functionName = JSBuilder.makeStringLiteral(name.fold("")(n => s"${JSBuilder.escapeStringCharacters(n)}"))
-      val checkArgsNum = doc"\n$runtimeVar.checkArgs($functionName, ${params.paramCountLB}, ${params.paramCountUB.toString}, arguments.length);"
-      val paramsList = params.params.map(p => scope.allocateName(p.sym))
-        .++(params.restParam.map(p => "..." + scope.allocateName(p.sym)))
-        .mkDocument(", ")
+      val checkArgsNum = doc"\n$runtimeVar.checkArgs($functionName, ${params.paramCountLB}, arguments.length);"
       (paramsList,
-        doc"$checkArgsNum${this.body(body, endSemi = false)}")
+        doc"$checkArgsNum$bodyDoc")
     else
-      super.setupFunction(name, params, body, isLambda = isLambda)
+      (paramsList, bodyDoc)

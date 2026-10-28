@@ -32,6 +32,13 @@ class CompilerCtx(
       * symbols they define — must not depend on which of them is compiled or imported first. */
     val rootConfig: Config,
 ):
+  private val outputHandler: DebugOutputHandler = importing match
+    case S((_, parent)) => parent.outputHandler
+    case N => DebugOutputHandler(fs, println)
+
+  private abstract class PhaseTraceLogger(context: DebugContext)(using DebugPrinter)
+      extends TraceLogger(context, outputHandler, indentWhenDisabled = true, prefix = ""):
+    protected final def forceTrace(scope: Opt[Str]): Bool = false
   
   def allFilesBeingImported: Ls[io.Path] =
     importing match
@@ -84,6 +91,7 @@ class CompilerCtx(
         outerRaise(diagnostic)
       val dependencies = new CompilerCtx.DependencyRecorder
       val modulePath = (file.up / io.RelPath(file.baseName + ".mjs")).toString
+      val debug = new DebugContext
       val state = new Elaborator.State
       given Elaborator.State = state
 
@@ -96,20 +104,27 @@ class CompilerCtx(
           includeZero = true,
         ))
       )
-      val backendTL = new TraceLogger:
-        override def doTrace: Bool = false
+      val backendTL = TraceLogger.silent
 
       val parse =
         given CompilerCtx = this
-        ParserSetup(file)
+        ParserSetup(file, outputHandler)
+      val parsed = parse.resultBlk
+      val phaseConfig = Config.elaborationConfig(parsed, file.up)
+      debug.configure(phaseConfig.debug)
+      val etl = new PhaseTraceLogger(debug):
+        protected def phaseEnabled(config: Config.Debug): Bool = config.elaboration
+      val ltl = new PhaseTraceLogger(debug):
+        protected def phaseEnabled(config: Config.Debug): Bool = config.lowering
+      val dtl = new PhaseTraceLogger(debug):
+        protected def phaseEnabled(config: Config.Debug): Bool = config.optimizations
+
       given Elaborator.Ctx = prelude
       val artifactCtx = derive(parse.origin.fileName, dependencies)
-      val parsed = parse.resultBlk
-      val elaborationConfig = Config.elaborationConfig(parsed)
       val elab =
         given CompilerCtx = artifactCtx
-        given Config = elaborationConfig
-        Elaborator(tl, file.up, prelude)
+        given Config = phaseConfig
+        Elaborator(etl, file.up, prelude)
 
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)
@@ -125,12 +140,18 @@ class CompilerCtx(
       // The runtime itself supplies these symbols once its own body is elaborated.
       if !isRuntime then
         state.initRuntimeSymbolsFromFile(paths.runtimeSourceFile, prelude)(
-          using tl, summon[Raise], artifactCtx)
-      val (blk0, _) = elaborationConfig.givenIn(elab.importFrom(parsed, exportedSymbol.toList))
+          using etl, summon[Raise], artifactCtx)
+      val (blk0, _) = phaseConfig.givenIn(elab.importFrom(parsed, exportedSymbol.toList))
       if isRuntime then
         state.initRuntimeSymbolsFromBlock(blk0)
 
       val artifactConfig = Config.extractConfigFromStats(blk0)
+      def display(title: Str, contents: Str, out: Config.DebugOutput): Unit =
+        outputHandler.emit(out, s"${title}\n${contents}")
+      DebugOutputHandler.showElaboratedTree(blk0, artifactConfig)(display)
+      DebugOutputHandler.showElaboratedTerm(blk0, artifactConfig, 100)(display)(using
+        Scope.empty(Scope.Cfg.default.copy(escapeChars = false, useSuperscripts = true, includeZero = true)),
+        summon[Raise])
       if !artifactConfig.language.useNewResolution then artifactConfig.givenIn:
         given Elaborator.State = state
         val resolver = Resolver(backendTL)
@@ -166,12 +187,30 @@ class CompilerCtx(
       // and only fully-transformed definitions are valid to splice into another unit.
       def optimize(lowered: codegen.Program): codegen.Program =
         given Config = artifactConfig
-        val printer = (p: codegen.Program) => p.showAsTree // TODO: proper printing like in diff-tests
+        given ShowCfg = ShowCfg(
+          showErasedTypes = false,
+          showExpansionMappings = false,
+          showFlowSymbols = true,
+          debug = false,
+        )
+        val irPrintingScp = Scope.empty(Scope.Cfg.default.copy(
+          escapeChars = false,
+          useSuperscripts = false,
+          includeZero = false,
+        ))
+        val blockPrinter = codegen.Printer()
+        val printer = (p: codegen.Program) =>
+          blockPrinter.worksheet(p)(using irPrintingScp).mkString(100)
         val pipeline = new codegen.CompilationPipeline:
           override def extraSymbolsToPreserveFrom(prog: codegen.Program): Set[codegen.ScopedSymbol] =
             collectCompilationUnitSymbols(prog)
-        backendTL.givenIn:
-          pipeline.run(lowered, printer, exportedSymbol.toSet, backendTL)
+          override def preOptimizeHook(prog: codegen.Program): Unit =
+            DebugOutputHandler.showLoweredTree(prog)(display)
+            DebugOutputHandler.showIR(prog, false, blockPrinter, 100)(display)(using artifactConfig, irPrintingScp)
+        val optimized = ltl.givenIn:
+          pipeline.run(lowered, printer, exportedSymbol.toSet, dtl)
+        DebugOutputHandler.showIR(optimized, true, blockPrinter, 100)(display)(using artifactConfig, irPrintingScp)
+        optimized
 
       // Every compilation unit is lowered, so that its symbols carry the IR definitions an
       // importer's inliner may splice in — and so that the importer never has to lower it itself,
@@ -180,8 +219,8 @@ class CompilerCtx(
         artifactConfig.givenIn:
           given Elaborator.State = state
           given codegen.Erasure = codegen.Erasure(blk)(using artifactConfig, prelude, state)
-          val low = backendTL.givenIn:
-            new codegen.Lowering()(using artifactConfig, backendTL, summon[Raise], state, prelude, summon[SymbolPrinter])
+          val low = ltl.givenIn:
+            new codegen.Lowering()(using artifactConfig, ltl, summon[Raise], state, prelude, summon[SymbolPrinter])
           optimize(low.program(blk, Set.empty))
 
       state.publishCompilationUnitAbi:
@@ -244,19 +283,24 @@ class CompilerCtx(
           s"Cached prelude for $file was elaborated under a different root configuration")
         art.lastChangedTimestamp >= lastMod,
       create =
+        val debug = new DebugContext
         val state = new Elaborator.State
         given Elaborator.State = state
         given Config = rootConfig
         given CompilerCtx = this
-        val parse = ParserSetup(file)
-        val elaborationConfig = Config.elaborationConfig(parse.resultBlk)
+        given DebugPrinter = new DebugPrinter(S(state))
+        val parse = ParserSetup(file, outputHandler)
+        val elaborationConfig = Config.elaborationConfig(parse.resultBlk, file.up)
+        debug.configure(elaborationConfig.debug)
+        val etl = new PhaseTraceLogger(debug):
+          protected def phaseEnabled(config: Config.Debug): Bool = config.elaboration
         // The prelude defines the builtins consulted during its own resolution.
         // Seed lookup with the block's original symbols, as block elaboration does,
         // so those lookups share the declarations that are being elaborated.
         val initCtx = State.init.nestLocal("prelude").withMembers(parse.resultBlk.definedSymbols)
         val elab =
           given Config = elaborationConfig
-          Elaborator(tl, file.up, initCtx)
+          Elaborator(etl, file.up, initCtx)
         val (blk, ctx) = elaborationConfig.givenIn(elab.importFrom(parse.resultBlk, Nil)(using initCtx))
         // Prelude declarations have no executable program, but their signatures and nominal hierarchy
         // must be erased before any compilation unit can use them.

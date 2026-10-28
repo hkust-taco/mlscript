@@ -138,6 +138,7 @@ class CompilerCacheTest extends AnyFunSuite:
         underlyingFs.read(path)
 
       def write(path: io.Path, content: String): Unit = underlyingFs.write(path, content)
+      def append(path: io.Path, content: String): Unit = underlyingFs.append(path, content)
       def exists(path: io.Path): Boolean = underlyingFs.exists(path)
       def getLastChangedTimestamp(path: io.Path): Long =
         underlyingFs.getLastChangedTimestamp(path)
@@ -204,6 +205,7 @@ class CompilerCacheTest extends AnyFunSuite:
         def write(path: io.Path, content: String): Unit =
           writes.getOrElseUpdate(path, new AtomicInteger).incrementAndGet()
           io.FileSystem.default.write(path, content)
+        def append(path: io.Path, content: String): Unit = io.FileSystem.default.append(path, content)
         def exists(path: io.Path): Boolean = io.FileSystem.default.exists(path)
         def getLastChangedTimestamp(path: io.Path): Long = io.FileSystem.default.getLastChangedTimestamp(path)
       given CompilerCtx = CompilerCtx.fresh(fs, TestFolders.compilerPaths(os.pwd), Config.default(TestFolders.mainTestDir(os.pwd)))

@@ -53,9 +53,15 @@ b.x
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 124
 
-:breakme
 :e
 b.y
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'y' outside its declaring owner
+//│ ║  l.+1: 	b.y
+//│ ║        	 ^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	class Bar(y) extends Foo(y + 1) {
+//│ ╙──      	          ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 b.z
 //│ = 125
@@ -64,9 +70,15 @@ b.z
 let b = new Bar(123)
 //│ b = Bar(_)
 
-:breakme
 :e
 b.y
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'y' outside its declaring owner
+//│ ║  l.+1: 	b.y
+//│ ║        	 ^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	class Bar(y) extends Foo(y + 1) {
+//│ ╙──      	          ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect 124
 b.x
@@ -80,7 +92,7 @@ b.z
 class Baz extends Bar(42) {
   val a = [this.z, this.x]
 }
-(new Baz).a
+new Baz().a
 //│ = [44, 43]
 
 
@@ -96,7 +108,7 @@ module Outer {
 :e
 object Derived extends Outer.Inner1
 //│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
-//│ ║  l.97: 	object Derived extends Outer.Inner1
+//│ ║  l.+1: 	object Derived extends Outer.Inner1
 //│ ╙──      	                       ^^^^^^^^^^^^
 
 :sr
@@ -118,8 +130,8 @@ Derived."x"
 :e
 object Derived extends Outer.Inner2
 //│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
-//│ ║  l.119: 	object Derived extends Outer.Inner2
-//│ ╙──       	                       ^^^^^^^^^^^^
+//│ ║  l.+1: 	object Derived extends Outer.Inner2
+//│ ╙──      	                       ^^^^^^^^^^^^
 
 :sr
 :sir

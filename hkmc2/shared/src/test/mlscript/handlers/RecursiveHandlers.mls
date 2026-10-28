@@ -19,14 +19,14 @@ h1.perform("hello")
 :e
 h1
 //│ ╔══[COMPILATION ERROR] Name not found: h1
-//│ ║  l.20: 	h1
+//│ ║  l.+1: 	h1
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 h1.perform("oops")
 //│ ╔══[COMPILATION ERROR] Name not found: h1
-//│ ║  l.27: 	h1.perform("oops")
+//│ ║  l.+1: 	h1.perform("oops")
 //│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -73,10 +73,10 @@ handle h2 = Effect with
   h2.perform(3)
 ]
 //│ ╔══[COMPILATION ERROR] Name not found: h2
-//│ ║  l.67: 	      then h2.perform(arg - 1) + " " + arg
+//│ ║  l.+5: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
 //│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.68: 	      else "0"
+//│ ║  l.+6: 	      else "0"
 //│ ╙──      	      ^^^^
 //│ > –––
 //│ > performing 2

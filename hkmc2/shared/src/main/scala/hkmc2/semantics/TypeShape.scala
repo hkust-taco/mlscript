@@ -45,7 +45,8 @@ object TypeShape:
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Combined => formula == that.formula
       case _ => false
-  final case class Tuple(fields: Ls[TypeResolution]) extends TypeShape:
+  final case class TupleField(tpe: TypeResolution, spread: Bool)
+  final case class Tuple(fields: Ls[TupleField]) extends TypeShape:
     protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), fields.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Tuple => fields == that.fields
@@ -184,10 +185,13 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
   def fail(messages: Ls[(Message, Opt[Loc])]): Unit = if !reported then
     reported = true
     report(messages)
-  def validate(seen: Set[TypeResolution])(using Erasure): Unit = if !seen(this) then
+  /** Resolution is complete, so each node needs one check per erasure pass.
+    * A path-local cycle guard would revisit shared alias bodies through every
+    * field that references them, expanding a small graph into an exponential tree.
+    */
+  def validate(visited: scala.collection.mutable.Set[TypeResolution])(using Erasure): Unit = if visited.add(this) then
     import TypeShape.*
     import Message.MessageContext
-    val next = seen + this
     val ambiguousReceiver = source.withoutCaptures match
       case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.sizeCompare(1) > 0
       case sel: Term.NewSel => sel.hasAmbiguousClass
@@ -196,47 +200,47 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
     else if ambiguousReceiver || shapes.sizeCompare(1) > 0 then
       def declarations(resolution: TypeResolution, seen: Set[TypeResolution]): Ls[(Message, Opt[Loc])] =
         if seen(resolution) then Nil else resolution.shapes.toList.flatMap:
-          case Nominal(defn) => msg"candidate: ${defn.sym.describeKind}" -> defn.toLoc :: Nil
-          case Alias(symbol, _) => msg"candidate: ${symbol.describeKind}" -> symbol.toLoc :: Nil
+          case Nominal(defn) => msg"candidate: ${defn.sym.describeKind}" -> defn.headerLoc :: Nil
+          case Alias(symbol, _) => msg"candidate: ${symbol.describeKind}" -> symbol.defn.flatMap(_.headerLoc).orElse(symbol.toLoc) :: Nil
           case Reference(base, _, _, _) => declarations(base, seen + resolution)
           case _ => Nil
       val candidates = source.withoutCaptures match
         case ref: Term.UnresolvedRef => ref.resolvedMembers.distinct.map: (prefix, member) =>
-          msg"candidate: ${member.describe}" -> member.toLoc
+          msg"candidate: ${member.describe}" -> member.headerLoc
         case _ => declarations(this, Set.empty).distinct
       fail(msg"This type is ambiguous, as it has multiple resolved targets" -> source.toLoc :: candidates)
     shapes.foreachGrowing:
-      case Alias(_, rhs) => rhs.foreach(_.validate(next))
-      case Reference(base, _, _, _) => base.validate(next)
+      case Alias(_, rhs) => rhs.foreach(_.validate(visited))
+      case Reference(base, _, _, _) => base.validate(visited)
       case Applied(base, args) =>
-        base.validate(next)
-        args.foreach(_.validate(next))
+        base.validate(visited)
+        args.foreach(_.validate(visited))
         def checkArity(base: TypeResolution, seen: Set[TypeResolution]): Unit = if !seen(base) then
           def check(name: Str, count: Int, loc: Opt[Loc]): Unit = if args.length > count then
             fail(msg"Type '$name' accepts at most $count type ${"argument".pluralized(count)}, but got ${args.length}." ->
               source.toLoc :: (msg"The type parameters are declared here." -> loc) :: Nil)
           base.shapes.toList match
-            case Nominal(defn) :: Nil => check(defn.sym.nme, defn.tparams.length, defn.toLoc)
-            case Alias(symbol, _) :: Nil => symbol.defn.foreach(d => check(symbol.nme, d.tparams.length, d.toLoc))
+            case Nominal(defn) :: Nil => check(defn.sym.nme, defn.tparams.length, defn.headerLoc)
+            case Alias(symbol, _) :: Nil => symbol.defn.foreach(d => check(symbol.nme, d.tparams.length, d.headerLoc))
             case Reference(inner, _, _, _) :: Nil => checkArity(inner, seen + base)
             case _ => ()
         checkArity(base, Set.empty)
-      case Wildcard(input, output) => input.foreach(_.validate(next)); output.foreach(_.validate(next))
-      case Argument(parts) => parts.input.resolution.validate(next); parts.output.resolution.validate(next)
-      case SelectedArgument(argument, _) => argument.resolution.validate(next)
-      case Contextual(reference) => reference.tpe.resolution.validate(next)
-      case Function(_, result) => result.validate(next)
+      case Wildcard(input, output) => input.foreach(_.validate(visited)); output.foreach(_.validate(visited))
+      case Argument(parts) => parts.input.resolution.validate(visited); parts.output.resolution.validate(visited)
+      case SelectedArgument(argument, _) => argument.resolution.validate(visited)
+      case Contextual(reference) => reference.tpe.resolution.validate(visited)
+      case Function(_, result) => result.validate(visited)
       case Polymorphic(params, _, body) =>
         params.foreach: param =>
-          param.lower.foreach(_.validate(next))
-          param.upper.foreach(_.validate(next))
-        body.validate(next)
-      case Tuple(fields) => fields.foreach(_.validate(next))
-      case Record(_, fields) => fields.foreach(_._2.validate(next))
-      case Union(left, right) => left.validate(next); right.validate(next)
-      case Intersection(left, right) => left.validate(next); right.validate(next)
-      case Negation(base) => base.validate(next)
-      case Combined(formula) => formula.orderedAtoms.foreach(_.resolution.validate(next))
+          param.lower.foreach(_.validate(visited))
+          param.upper.foreach(_.validate(visited))
+        body.validate(visited)
+      case Tuple(fields) => fields.foreach(_.tpe.validate(visited))
+      case Record(_, fields) => fields.foreach(_._2.validate(visited))
+      case Union(left, right) => left.validate(visited); right.validate(visited)
+      case Intersection(left, right) => left.validate(visited); right.validate(visited)
+      case Negation(base) => base.validate(visited)
+      case Combined(formula) => formula.orderedAtoms.foreach(_.resolution.validate(visited))
       case _ => ()
 
 /** A type with its lexical type-parameter bindings. These bindings describe declared

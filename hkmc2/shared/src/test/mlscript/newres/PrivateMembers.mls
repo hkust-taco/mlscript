@@ -1,0 +1,319 @@
+:.
+
+
+// * Private members are only accessible from within their owner and its companion,
+// * including from the definitions nested in them.
+
+module M with
+  private val secret = 41
+  private fun inc(x) = x + 1
+  fun reveal = inc(secret)
+  module Nested with
+    fun reveal = M.inc(M.secret)
+
+:expect 42
+M.reveal
+//│ = 42
+
+:expect 42
+M.Nested.reveal
+//│ = 42
+
+:e
+M.secret
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'secret' outside its declaring owner
+//│ ║  l.+1: 	M.secret
+//│ ║        	 ^^^^^^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	  private val secret = 41
+//│ ╙──      	              ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+M.inc(1)
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'inc' outside its declaring owner
+//│ ║  l.+1: 	M.inc(1)
+//│ ║        	 ^^^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	  private fun inc(x) = x + 1
+//│ ╙──      	              ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+class Box(val value) with
+  private val secret = value + 1
+  fun reveal = secret
+  fun sameSecret(that: Box) = this.secret == that.secret
+
+:expect [2, true]
+[Box(1).reveal, Box(1).sameSecret(Box(1))]
+//│ = [2, true]
+
+:e
+Box(1).secret
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'secret' outside its declaring owner
+//│ ║  l.+1: 	Box(1).secret
+//│ ║        	      ^^^^^^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	  private val secret = value + 1
+//│ ╙──      	              ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+fun peek(box: Box) = box.Box#secret
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'secret' outside its declaring owner
+//│ ║  l.+1: 	fun peek(box: Box) = box.Box#secret
+//│ ║        	                             ^^^^^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	  private val secret = value + 1
+//│ ╙──      	              ^^^^^^
+
+// * The parameters of a class that are not declared with `val` are private.
+
+class Point(x, val y)
+
+:e
+Point(1, 2).x
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'x' outside its declaring owner
+//│ ║  l.+1: 	Point(1, 2).x
+//│ ║        	           ^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	class Point(x, val y)
+//│ ╙──      	            ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 2
+Point(1, 2).y
+//│ = 2
+
+
+// * A class and its companion can access each other's private members.
+
+class Pair(val fst, val snd) with
+  private val sum = fst + snd
+  private fun scaled(k) = Pair.scale(sum, k)
+module Pair with
+  private fun scale(n, k) = n * k
+  fun sumOf(p: Pair) = p.sum
+  fun scaledOf(p: Pair, k) = p.scaled(k)
+[Pair.sumOf(Pair(1, 2)), Pair.scaledOf(Pair(1, 2), 10)]
+//│ = [3, 30]
+
+:e
+Pair.scale(1, 2)
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'scale' outside its declaring owner
+//│ ║  l.+1: 	Pair.scale(1, 2)
+//│ ║        	    ^^^^^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	  private fun scale(n, k) = n * k
+//│ ╙──      	              ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// * Subclasses cannot access the private members of their parents,
+// * unless they are nested in them.
+
+class Base with
+  private fun secret = 1
+
+:e
+class Derived extends Base with
+  fun get = this.secret
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'secret' outside its declaring owner
+//│ ║  l.+2: 	  fun get = this.secret
+//│ ║        	                ^^^^^^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	  private fun secret = 1
+//│ ╙──      	              ^^^^^^
+
+:e
+class Derived extends Base with
+  fun get = super.secret
+//│ ╔══[COMPILATION ERROR] Resolution error in super reference
+//│ ║  l.+2: 	  fun get = super.secret
+//│ ║        	            ^^^^^^^^^^^^
+//│ ╟── No inherited member 'secret' is available through 'super'
+//│ ║  l.+2: 	  fun get = super.secret
+//│ ╙──      	            ^^^^^^^^^^^^
+
+class Outer with
+  private val v = 1
+  fun mk = new Inner
+  class Inner extends Outer with
+    fun get = this.v
+
+:expect 1
+new Outer().mk.get
+//│ = 1
+
+
+// * Private members do not hide inherited members from the code that cannot access them,
+// * just like JavaScript's private class elements do not hide inherited properties.
+
+class Named(val name)
+class Tagged(name, val tag) extends Named(name + "!") with
+  fun describe = name + ":" + tag
+
+:expect ["a!", "a:1"]
+[Tagged("a", 1).name, Tagged("a", 1).describe]
+//│ = ["a!", "a:1"]
+
+class Parent with
+  val label = "parent"
+class Child extends Parent with
+  private val label = "child"
+  fun own = label
+let c = new Child
+//│ c = Child { label: "parent" }
+
+:expect ["parent", "child"]
+[c.label, c.own]
+//│ = ["parent", "child"]
+
+// * Private members are not available through `super`.
+
+class A with
+  fun f = "A"
+class B extends A with
+  private fun f = "B"
+  fun g = f
+class C extends B with
+  fun h = super.f
+
+:expect ["A", "B", "A"]
+[new C().f, new C().g, new C().h]
+//│ = ["A", "B", "A"]
+
+
+// * A reference whose possible receivers include an inaccessible private member is rejected.
+
+:e
+class Secretive with
+  private val v = 1
+class Open with
+  val v = 2
+private fun get(x) = x.v
+[get(new Secretive), get(new Open)]
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'v' outside its declaring owner
+//│ ║  l.+5: 	private fun get(x) = x.v
+//│ ║        	                      ^^
+//│ ╟── private member declared here
+//│ ║  l.+2: 	  private val v = 1
+//│ ╙──      	              ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// * Explicit opens can name inaccessible members, but not use them,
+// * while wildcard opens do not provide them.
+
+module Lib1 with
+  private fun hidden = 1
+
+open Lib1 { hidden }
+
+:e
+hidden
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'hidden' outside its declaring owner
+//│ ║  l.+1: 	hidden
+//│ ║        	^^^^^^
+//│ ╟── private member declared here
+//│ ║  l.XX: 	  private fun hidden = 1
+//│ ╙──      	              ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+module Lib2 with
+  private fun helper = 1
+  fun api = helper + 1
+
+open Lib2
+
+:e
+helper
+//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: helper
+//│ ║  l.+1: 	helper
+//│ ╙──      	^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:expect 2
+api
+//│ = 2
+
+module Lib3 with
+  fun helper = "public"
+
+open Lib3
+
+:expect "public"
+helper
+//│ = "public"
+
+
+// * Definitions from other files.
+
+import "../../mlscript-compile/PrivateLibrary.mls"
+open PrivateLibrary { Counter, Registry }
+
+:expect [2, 3, 3]
+[Counter.make(1).peek, Counter.nextOf(Counter.make(2)), Registry.count]
+//│ = [2, 3, 3]
+
+:e
+Counter.make(1).next
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'next' outside its declaring owner
+//│ ║  l.+1: 	Counter.make(1).next
+//│ ║        	               ^^^^^
+//│ ╟── private member declared here
+//│ ║  in ../../mlscript-compile/PrivateLibrary.mls
+//│ ║  l.XX: 	    private val next = start + 1
+//│ ╙──      	                ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+Registry.size
+//│ ╔══[COMPILATION ERROR] Cannot access private member 'size' outside its declaring owner
+//│ ║  l.+1: 	Registry.size
+//│ ║        	        ^^^^^
+//│ ╟── private member declared here
+//│ ║  in ../../mlscript-compile/PrivateLibrary.mls
+//│ ║  l.XX: 	    private val size = 3
+//│ ╙──      	                ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+Counter(1)
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'Counter' outside the class
+//│ ║  l.+1: 	Counter(1)
+//│ ║        	^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  in ../../mlscript-compile/PrivateLibrary.mls
+//│ ║  l.XX: 	    private constructor
+//│ ╙──      	    ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// * Private members are not available through `super`, even where they are accessible.
+
+:e
+class SuperOuter with
+  private fun secret = 1
+  class SuperInner extends SuperOuter with
+    fun get = super.secret
+//│ ╔══[COMPILATION ERROR] Resolution error in super reference
+//│ ║  l.+4: 	    fun get = super.secret
+//│ ║        	              ^^^^^^^^^^^^
+//│ ╟── No inherited member 'secret' is available through 'super'
+//│ ║  l.+4: 	    fun get = super.secret
+//│ ╙──      	              ^^^^^^^^^^^^
+
+
+// * `super` skips private members of the parent to find an inherited public member.
+
+:expect 1
+class SuperPublic with
+  fun secret = 1
+class SuperPrivate extends SuperPublic with
+  private fun secret = 2
+class SuperChild extends SuperPrivate with
+  fun get = super.secret
+new SuperChild().get
+//│ = 1

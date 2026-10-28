@@ -85,7 +85,7 @@ fun ambiguous(x) = {
 }
 ambiguous(new Constructors.Token)
 //│ ╔══[COMPILATION ERROR] Constructor pattern is ambiguous.
-//│ ║  l.84: 	  if x is Token then 1 else 0
+//│ ║  l.+4: 	  if x is Token then 1 else 0
 //│ ╙──      	          ^^^^^
 //│ = 0
 
@@ -98,7 +98,7 @@ fun ambiguousReversed(x) = {
 }
 ambiguousReversed(new Constructors.Token)
 //│ ╔══[COMPILATION ERROR] Constructor pattern is ambiguous.
-//│ ║  l.97: 	  if x is Token then 1 else 0
+//│ ║  l.+4: 	  if x is Token then 1 else 0
 //│ ╙──      	          ^^^^^
 //│ = 0
 
@@ -108,8 +108,8 @@ ambiguousReversed(new Constructors.Token)
 fun unknown(x) = if x is _ as MissingConstructor then 1 else 0
 unknown(0)
 //│ ╔══[COMPILATION ERROR] Name not found: MissingConstructor
-//│ ║  l.108: 	fun unknown(x) = if x is _ as MissingConstructor then 1 else 0
-//│ ╙──       	                              ^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun unknown(x) = if x is _ as MissingConstructor then 1 else 0
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^
 //│ = 0
 
 
@@ -154,8 +154,8 @@ fun sameMember(x) = {
 }
 sameMember(new first.Token)
 //│ ╔══[COMPILATION ERROR] Constructor pattern is ambiguous.
-//│ ║  l.153: 	  if x is Token then 1 else 0
-//│ ╙──       	          ^^^^^
+//│ ║  l.+4: 	  if x is Token then 1 else 0
+//│ ╙──      	          ^^^^^
 //│ = 0
 
 
@@ -165,11 +165,11 @@ val NotAPattern = 1
 fun invalid(x) = if x is NotAPattern then 1 else 0
 invalid(0)
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.165: 	fun invalid(x) = if x is NotAPattern then 1 else 0
-//│ ║         	                         ^^^^^^^^^^^
+//│ ║  l.+2: 	fun invalid(x) = if x is NotAPattern then 1 else 0
+//│ ║        	                         ^^^^^^^^^^^
 //│ ╟── Integer literal cannot be used as a constructor pattern.
-//│ ║  l.164: 	val NotAPattern = 1
-//│ ╙──       	                  ^
+//│ ║  l.+1: 	val NotAPattern = 1
+//│ ╙──      	                  ^
 //│ = 0
 //│ NotAPattern = 1
 
@@ -205,13 +205,13 @@ fun ambiguousNew() = {
 }
 ambiguousNew()
 //│ ╔══[COMPILATION ERROR] The class instantiated here is ambiguous
-//│ ║  l.204: 	  new Token
-//│ ║         	      ^^^^^
+//│ ║  l.+4: 	  new Token
+//│ ║        	      ^^^^^
 //│ ╟── target: class 'Token'
-//│ ║  l.10: 	  class Token
+//│ ║  l.XX: 	  class Token
 //│ ║        	        ^^^^^
 //│ ╟── target: class 'Token'
-//│ ║  l.68: 	module Other { class Token }
+//│ ║  l.XX: 	module Other { class Token }
 //│ ╙──      	                     ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

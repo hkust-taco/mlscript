@@ -1,0 +1,188 @@
+:.
+:js
+
+#config(inlining: None, liftDefns: Some(LiftDefns), flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: true)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Constructor bodies remain available in later compilation blocks.
+class Stored(val value: Int)
+class Nested(val value: Int) { val stored = Stored(value) }
+class MutableField(mut val value: Int)
+class Effectful() { print("constructed") }
+declare class External()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > call print@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+fun stored(value: Int) = Stored(value)
+fun instantiated(value: Int) = new Stored(value)
+fun nested(value: Int) = Nested(value)
+fun mutable_field(value: Int) = MutableField(value)
+fun effectful() = Effectful()
+fun external() = new External()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function effectful⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function external⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function instantiated⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function mutable_field⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function nested⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function stored⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Constructor summaries must retain effects of calls, writes, and captured reads.
+let state = 0
+fun update() = set state += 1
+class Called() { val value = update() }
+class Written() { set state += 1 }
+class Observed() { val value = state }
+class Callback(run: () -> Int) { val value = run() }
+fun called() = Called()
+fun written() = Written()
+fun observed() = Observed()
+fun callback(run: () -> Int) = Callback(run)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function callback⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function called⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function observed⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function update⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function written⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +⁰@result³#0 @ <root> -> Pure
+//│ flow-analysis > call +⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call run@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call update⁰@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ state = 0
+
+
+// Constructor arguments still execute, even when the constructor body is pure.
+declare fun argument_effect(): Int
+fun effectful_argument() = Stored(argument_effect())
+fun spread_arguments(args) = new Stored(...args)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function effectful_argument⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function spread_arguments⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call argument_effect@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// Parent initialization remains conservative until super calls have effect summaries.
+class Parent() { print("parent") }
+class Child() extends Parent()
+fun inherited() = Child()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function inherited⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call print@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call super⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// An effectful constructor must execute before its returned closure is called.
+:expect [1, 7]
+let calls = 0
+class Counted() {
+  set calls += 1
+  val value = 7
+}
+@affine(1) fun keep(item: Counted)() = item.value
+fun make() = keep(Counted())
+val saved = make()
+[calls, saved()]
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function keep⁰#0 @ <root> -> Pure
+//│ flow-analysis > function keep⁰#1 @ <root> -> UnsafeEta
+//│ flow-analysis > function make⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +⁰@result²#0 @ <root> -> Pure
+//│ flow-analysis > call keep⁰@result³#0 @ <root> -> Pure
+//│ flow-analysis > call make⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call saved⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ = [1, 7]
+//│ calls = 1
+//│ saved = fun
+
+
+// Reads of captured mutable state cannot move past a subsequent write.
+:expect 41
+let current = 41
+class Snapshot() { val value = current }
+@affine(1) fun keep_snapshot(item: Snapshot)() = item.value
+fun snapshot() = keep_snapshot(Snapshot())
+val saved_snapshot = snapshot()
+set current = 42
+saved_snapshot()
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function keep_snapshot⁰#0 @ <root> -> Pure
+//│ flow-analysis > function keep_snapshot⁰#1 @ <root> -> UnsafeEta
+//│ flow-analysis > function snapshot⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call keep_snapshot⁰@result²#0 @ <root> -> Pure
+//│ flow-analysis > call saved_snapshot⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call snapshot⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ = 41
+//│ current = 42
+//│ saved_snapshot = fun
+
+
+// Recursive function/constructor dependencies share one effect fixed point.
+#config(flowBasedOpt: Some(FlowBasedOpt(logEffects: true, mono: false)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+:expect 3
+class Recursive(val value, val n) {
+  val next = if n > 0 then build(n - 1) else null
+}
+fun build(n) = Recursive(n, n)
+build(3).value
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function build⁰#0 @ build² -> UnsafeEta
+//│ flow-analysis > function build⁰#0 @ build³ -> UnsafeEta
+//│ flow-analysis > function build⁰#0 @ build¹ -> UnsafeEta
+//│ flow-analysis > call -⁰@result²#0 @ <root> -> Pure
+//│ flow-analysis > call >⁰@result³#0 @ <root> -> Pure
+//│ flow-analysis > call build⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call build⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ = 3
+
+
+let recursive_effects = 0
+class RecursiveEffect(val n) {
+  set recursive_effects += 1
+  val next = if n > 0 then build_effectful(n - 1) else null
+}
+fun build_effectful(n) = RecursiveEffect(n)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function build_effectful⁰#0 @ build_effectful² -> UnsafeEta
+//│ flow-analysis > function build_effectful⁰#0 @ build_effectful¹ -> UnsafeEta
+//│ flow-analysis > call +⁰@result³#0 @ <root> -> Pure
+//│ flow-analysis > call -⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call >⁰@result²#0 @ <root> -> Pure
+//│ flow-analysis > call build_effectful⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ recursive_effects = 0
+
+
+:expect 4
+build_effectful(3)
+recursive_effects
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > call build_effectful⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ = 4
+
+
+// Saturated constructor wrappers and direct instantiations share the body summary.
+class Curried(val first)(val second)
+fun curried(first, second) = Curried(first)(second)
+fun new_curried(first, second) = new Curried(first)(second)
+fun partial(first) = Curried(first)
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function curried⁰#0 @ curried¹ -> UnsafeEta
+//│ flow-analysis > function new_curried⁰#0 @ new_curried¹ -> UnsafeEta
+//│ flow-analysis > function partial⁰#0 @ partial¹ -> UnsafeEta
+//│ flow-analysis > <<< effect-analysis results <<<

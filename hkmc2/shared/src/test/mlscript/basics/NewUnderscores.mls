@@ -1,0 +1,195 @@
+:.
+:js
+
+#lang(0.3.x)
+
+
+// * With the new underscore syntax, '_' placeholders must be delimited
+// * by a prefix '=>', by the RHS of an operator whose name ends with '>',
+// * or by the LHS of an operator whose name starts with '<'.
+
+:e
+_ + 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+1: 	_ + 1
+//│ ║        	^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+(_ + 1)
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+1: 	(_ + 1)
+//│ ║        	 ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+let f = => _ + 1
+//│ f = fun f
+
+:expect 4
+f(3)
+//│ = 4
+
+
+:expect 4
+3 |> _ + 1
+//│ = 4
+
+// * The builtin comparison '>' does not delimit placeholders.
+:expect true
+3 |> (100 > _)
+//│ = true
+
+:e
+3 > _
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+1: 	3 > _
+//│ ║        	    ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// * Parentheses are transparent: they neither delimit nor block placeholders.
+:expect 4
+3 |> (_ + 1)
+//│ = 4
+
+:expect 4
+(=> (_ + 1))(3)
+//│ = 4
+
+:expect 7
+let g = (=> _ * 2) >> _ + 1
+g(3)
+//│ = 7
+//│ g = fun
+
+// * Chains of '>>' are left-associative, so each RHS delimits its own lambda.
+:expect 7
+let h = (=> _ * 2) >> _ + 2 >> _ - 1
+h(3)
+//│ = 7
+//│ h = fun
+
+// * Each operator RHS delimits its own lambda.
+:expect 7
+3 |> _ + (2 |> _ * 2)
+//│ = 7
+
+let xs = [1]
+//│ xs = [1]
+
+set xs |>= _.concat of [2]
+
+:expect [1, 2]
+xs
+//│ = [1, 2]
+
+
+// * Symmetrically, the LHS of an operator starting with '<' delimits placeholders.
+
+:expect 4
+_ + 1 <| 3
+//│ = 4
+
+:expect 8
+let k = _ * 2 << (=> _ + 1)
+k(3)
+//│ = 8
+//│ k = fun
+
+// * The builtin comparisons '<' and '<=' do not delimit placeholders.
+
+:e
+_ < 3
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+1: 	_ < 3
+//│ ║        	^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+_ <= 3
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+1: 	_ <= 3
+//│ ║        	^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// * Operators not ending with '>' do not delimit placeholders.
+
+:e
+3 |. _ + 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+1: 	3 |. _ + 1
+//│ ║        	     ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+3 + _
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+1: 	3 + _
+//│ ║        	    ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// * Only the RHS of the operator is delimited.
+:e
+_ |> f
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+1: 	_ |> f
+//│ ║        	^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+(=> _ + 1) << _ * 2
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder
+//│ ║  l.+1: 	(=> _ + 1) << _ * 2
+//│ ║        	              ^
+//│ ╙── Use a prefix '=>' to introduce an implicit lambda, as in `foo(=> _ + 1)`
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// * Operator splits
+
+:expect 7
+3
+  |> _ * 2
+  |> _ + 1
+//│ = 7
+
+:expect true
+3
+  |> (100 > _)
+//│ = true
+
+:expect "b"
+if 3
+  |> _ + 1 is 5 then "a"
+  |> _ * 2 is 6 then "b"
+  else "c"
+//│ = "b"
+
+// * Blocks are transparent, like parentheses.
+
+:expect 4
+3 |>
+  _ + 1
+//│ = 4
+
+:expect 4
+(=>
+  _ + 1
+)(3)
+//│ = 4
+
+:expect "b"
+if 3 |>
+  _ + 1 is 5 then "a"
+  _ * 2 is 6 then "b"
+  else "c"
+//│ = "b"
+

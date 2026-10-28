@@ -134,3 +134,10 @@ id(2)
 //│ > => 0
 //│ = 0
 
+
+// * All the parameters are shown, including variadic and trailing ones.
+fun variadic(x, y?, ...xs, z) = x
+variadic(1, 2, 3, 4, 5)
+//│ > CALL variadic(1, 2, ...[ 3, 4 ], 5)
+//│ > => 1
+//│ = 1

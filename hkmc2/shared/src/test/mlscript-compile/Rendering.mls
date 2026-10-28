@@ -62,7 +62,7 @@ let identifierPattern = new RegExp of
 private fun noNeedForQuotes(id) = identifierPattern.test(id)
 
 // Use this object instead when no options object is given.
-let emptyOptions = new Object
+let emptyOptions = new Object()
 
 let DEFAULT_BREAK_LENGTH = 80
 
@@ -263,8 +263,8 @@ fun render(target, ...args): Str =
           [keyStr, valueStr]
         (get: getter, "set": setter) then
           let valueStr = if
-            setter is undefined then "[Getter]"
-            getter is undefined then "[Setter]"
+            setter is unsafe.undefined then "[Getter]"
+            getter is unsafe.undefined then "[Setter]"
             else "[Getter/Setter]"
           [keyStr, valueStr]
         else [keyStr, "‹Non-data property›"] // LP: not sure what to do (thsi was proposed by Copilot...)
@@ -350,12 +350,12 @@ fun render(target, ...args): Str =
       else layoutMultiLine()
   fun renderValue(arg: Any, level: Int, keyLength: Int, startPos: Int): Str = if
     arg is // Primitive values
-      undefined then "undefined"
+      unsafe.undefined then "undefined"
       null      then "null"
       Str       then JSON.stringify(arg)
       BigInt as arg then arg.toString() + "n"
       Symbol as arg and
-        arg.description is undefined then "Symbol()"
+        arg.description is unsafe.undefined then "Symbol()"
         else "Symbol(\"" + arg.description + "\")"
       Num as arg then arg.toString()
       RegExp as arg then arg.toString()

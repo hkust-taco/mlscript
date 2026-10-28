@@ -73,7 +73,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       val docDefault = dflt.fold(doc"")(e => doc" # else #{  # ${print(e)} #} ")
       doc"match ${print(scrut)} #{  # ${docCases}$docDefault #}  # ${print(rest)}"
     case Return(res) => doc"return ${print(res)}"
-    case Throw(exc) => doc"throw ${print(exc)}"
+    case Throw(exc, annotations) => doc"${printAnnotations(annotations, doc" ")}throw ${print(exc)}"
     case Label(label, loop, body, rest) =>
       val l2 = scope.allocateOrGetName(label)
       // * ^ if we print the same block with a top-level label more than once, using `scope.allocateName` will crash...
@@ -92,10 +92,10 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       doc"set ${print(lhs)} = ${print(rhs)}; # ${print(rest)}"
     case asf @ AssignField(lhs, nme, rhs, rest) =>
       doc"set ${print(lhs)}.${showMemberSymbol(nme.name, asf.symbol)} = ${print(rhs)}; # ${print(rest)}"
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-      doc"set ${print(lhs)}${if arrayIdx then "." else "!"}${print(fld)} = ${print(rhs)}; # ${print(rest)}"
+    case AssignDynField(lhs, fld, kind, rhs, rest) =>
+      doc"set ${printDynSelection(lhs, fld, kind)} = ${print(rhs)}; # ${print(rest)}"
     case Define(defn, rest) =>
-      doc"${printFlags(defn)}define ${print(defn.sym)} as ${print(defn)}; # ${print(rest)}"
+      doc"${printDefinition(defn)}; # ${print(rest)}"
     case Scoped(syms, body) =>
       scope.nest.givenIn:
         import hkmc2.given_Ordering_Uid // Not sure why needed...
@@ -118,6 +118,9 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     //   if cfg.staged then doc"staged " else doc""
     printAnnotations(defn.annotations, doc" # ")
 
+  def printDefinition(defn: Defn)(using Scope): Document =
+    doc"${printFlags(defn)}define ${print(defn.sym)} as ${print(defn)}"
+
   def printAnnotations(annotations: Ls[Annot], trailing: Document)(using Scope): Document =
     if annotations.isEmpty then doc""
     else annotations.map(_.show).mkDocument(doc" ") :: trailing
@@ -126,7 +129,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       privateFields: Ls[TermSymbol],
       publicFields: Ls[(BlockMemberSymbol, TermSymbol)],
       methods: Ls[FunDefn],
-      auxParams: Ls[ParamList],
+      auxParams: Ls[LoweredParamList],
       preCtor: Opt[Block],
       ctor: Block,
       ctorSym: Opt[TermSymbol],
@@ -160,11 +163,11 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     then doc""
     else doc" " :: braced(doc"${docPrivFlds}${docPubFlds}${docCtor}${docMethods}")
   
-  def printParamLists(paramss: Ls[ParamList])(using Scope): Document =
+  def printParamLists(paramss: Ls[LoweredParamList])(using Scope): Document =
     paramss
       .map: pl =>
         val allParams =
-          pl.params.map(x => doc"${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}") ++
+          pl.params.map(x => doc"${scope.allocateName(x.sym)}${if x.flags.opt then "?" else ""}${erasedTypeAnnot(x.sym)}") ++
           pl.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}")
         allParams.mkDocument("(", ", ", ")")
       .mkDocument("")
@@ -179,7 +182,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case ValDefn(tsym, sym, rhs) =>
       doc"val ${print(tsym)}${erasedTypeAnnot(tsym)} = ${print(rhs)}"
     case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
-        privateFields, publicFields, preCtor, ctor, mod, bufferable)
+        privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion, _)
     => scope.nest.givenIn:
       val ctorParams = printParamLists(paramsOpt.toList)
       val docStaged = if cls.isStaged then doc"staged " else doc""
@@ -211,14 +214,19 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case Value.This(sym) => doc"${print(sym)}.this"
     case Value.Lit(lit) => doc"${lit.idStr}"
   
+  /** Prints `q.i` for an array index, `q.[k]` for a key resolved to a member, and `q!k` otherwise. */
+  private def printDynSelection(qual: Path, fld: Path, kind: DynSelectKind)(using Scope): Document = kind match
+    case DynSelectKind.ArrayIdx => doc"${print(qual)}.${print(fld)}"
+    case DynSelectKind.Member(_) => doc"${print(qual)}.[${print(fld)}]"
+    case DynSelectKind.Unknown => doc"${print(qual)}!${print(fld)}"
+  
   def print(path: Path)(using Scope): Document = path match
-    case sel @ SuperSelect(qual, base, name) =>
-      doc"super[${print(base)}](${print(qual)}).${showMemberSymbol(name.name, S(sel.symbol))}"
+    case sel @ SuperSelect(qual, base, key) =>
+      doc"super[${print(base)}](${print(qual)}).[${print(key)}]"
     case sel @ Select(qual, name) =>
       val docQual = print(qual)
       doc"${docQual}.${showMemberSymbol(name.name, sel.symbol)}"
-    case DynSelect(qual, fld, arrayIdx) =>
-      doc"${print(qual)}${if arrayIdx then "." else "!"}${print(fld)}"
+    case DynSelect(qual, fld, kind) => printDynSelection(qual, fld, kind)
     case x: Value => print(x)
     case Cast(value, target, check) =>
       // * `as!` and `as!!` mark a cast asserted with and without a runtime check respectively.
@@ -236,10 +244,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if mut then "mut " else ""}${print(cls)}${chainedArgs}"
     case Lambda(params, body) =>
       scope.nest.givenIn:
-        val allParams =
-          params.params.map(x => doc"${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}") ++
-          params.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}")
-        val docParams = allParams.mkDocument("(", ", ", ")")
+        val docParams = printParamLists(params :: Nil)
         doc"$docParams => ${bracedbk(print(body))}"
     case Tuple(mut, elems) =>
       val docElems = elems.map(x => print(x)).mkDocument(", ")

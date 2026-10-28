@@ -17,7 +17,8 @@ final case class AbiType(
     body: CompType,
     tag: Opt[Int],
 )
-final case class AbiFunction(sym: ExternSymbol, wrap: Opt[Str] -> Opt[Str], name: Str, ty: TypeIdx)
+/** Optional slot indices retain source omission semantics after parameter types are erased. */
+final case class AbiFunction(sym: ExternSymbol, wrap: Opt[Str] -> Opt[Str], name: Str, ty: TypeIdx, optionalParams: Set[Int])
 final case class AbiGlobal(index: GlobalIdx, sym: ScopedSymbol, wrap: Opt[Str] -> Opt[Str], name: Str, ty: GlobalType)
 final case class AbiClass(
     sym: BlockMemberSymbol,

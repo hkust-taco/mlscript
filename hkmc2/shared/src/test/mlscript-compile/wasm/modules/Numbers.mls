@@ -1,3 +1,5 @@
+#lang(0.2.x)
+
 #config(target: CompilationTarget.Wasm)
 
 module Numbers with

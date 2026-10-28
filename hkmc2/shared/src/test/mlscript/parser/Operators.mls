@@ -7,7 +7,7 @@
 
 +1
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(IntLit(1))))
+//│ 	PrefixOpApp(Ident(+),IntLit(1))
 
 1 + 2
 //│ Parsed:
@@ -15,15 +15,25 @@
 
 1 + +2
 //│ Parsed:
-//│ 	OpApp(IntLit(1),Ident(+),List(App(Ident(+),Tup(List(IntLit(2))))))
+//│ 	OpApp(IntLit(1),Ident(+),List(PrefixOpApp(Ident(+),IntLit(2))))
 
 +1 + +2
 //│ Parsed:
-//│ 	OpApp(App(Ident(+),Tup(List(IntLit(1)))),Ident(+),List(App(Ident(+),Tup(List(IntLit(2))))))
+//│ 	OpApp(PrefixOpApp(Ident(+),IntLit(1)),Ident(+),List(PrefixOpApp(Ident(+),IntLit(2))))
 
 + + 1 + + + 2
 //│ Parsed:
-//│ 	OpApp(App(Ident(+),Tup(List(App(Ident(+),Tup(List(IntLit(1))))))),Ident(+),List(App(Ident(+),Tup(List(App(Ident(+),Tup(List(IntLit(2)))))))))
+//│ 	OpApp(PrefixOpApp(Ident(+),PrefixOpApp(Ident(+),IntLit(1))),Ident(+),List(PrefixOpApp(Ident(+),PrefixOpApp(Ident(+),IntLit(2)))))
+
+// `!` uses its ordinary right precedence, below arithmetic and comparisons.
+! foo(1) + 2 < 4
+//│ Parsed:
+//│ 	PrefixOpApp(Ident(!),OpApp(OpApp(App(Ident(foo),Tup(List(IntLit(1)))),Ident(+),List(IntLit(2))),Ident(<),List(IntLit(4))))
+
+// Explicit calls still end at their argument list.
+!(foo(1)) + 2 < 4
+//│ Parsed:
+//│ 	OpApp(OpApp(App(Ident(!),Tup(List(App(Ident(foo),Tup(List(IntLit(1))))))),Ident(+),List(IntLit(2))),Ident(<),List(IntLit(4)))
 
 1 + 2 * 3
 //│ Parsed:
@@ -87,13 +97,10 @@ x =>
 //│ Parsed:
 //│ 	OpApp(IntLit(1),Ident(+),List(Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(2)),None), TypeDef(Cls,Ident(A),None), Ident(x), IntLit(42)))))
 
-:pe
+// * As in other blocks, commas separate the items of operator blocks
 1 +
  2,
  3
-//│ ╔══[PARSE ERROR] Unexpected comma in this position
-//│ ║  l.92: 	 2,
-//│ ╙──      	  ^
 //│ Parsed:
 //│ 	OpApp(IntLit(1),Ident(+),List(Block(List(IntLit(2), IntLit(3)))))
 

@@ -47,10 +47,10 @@ abstract class Symbol(using ownerState: State) extends MaybeSymbol with Located:
   def showPrefix(using Scope, ShowCfg, Raise): Str = prefix
   
   def showFullName(using Scope, ShowCfg, Raise): Str =
-    showPrefix + showName + State.dbgUid(uid)
+    showPrefix + showName
   
   override def toString: Str =
-    prefix + nme + State.dbgUid(uid)
+    prefix + nme
   
   private[semantics] val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
   def ref(id: Tree.Ident =
@@ -231,7 +231,7 @@ class LabelSymbol(val trm: Opt[Term], name: Str = "lbl")(using State) extends Lo
 class SplitSymbol(val body: Split, name: Str = "split")(using State) extends LocalSymbol:
   var label: Opt[LabelSymbol] = N
   def nme = name
-  def subst(using s: SymbolSubst): SplitSymbol = this // SplitSymbols are not substituted
+  def subst(using s: SymbolSubst): SplitSymbol = s.mapSplitSym(this)
   def toLoc = body.toLoc
   override def prefix: Str = "split:"
 
@@ -293,7 +293,6 @@ final class TypeParameterInstance(val origin: VarSymbol, val siteBinders: Opt[Se
     extends VarSymbol(origin.id):
   require(!origin.isInstanceOf[TypeParameterInstance], "Instantiate original type binders only")
   decl = origin.decl
-  val reference: Term.SimpleRef = Term.SimpleRef(this)(origin.id)
 
 class BuiltinSymbol
     (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool, val isPure: Bool)(using State)
@@ -353,6 +352,12 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   
   def symbols = tsym.toList ::: trees.collect:
     case t: Tree.TypeDef => t.symbol
+  
+  /** The headers of this symbol's definitions (see `Definition.headerLoc`), spanning from the
+    * first to the last when the symbol is overloaded. Diagnostics citing a member as a witness
+    * use this rather than `toLoc`, which spans the definitions' whole trees, including their bodies. */
+  def headerLoc: Option[Loc] =
+    Loc.mk(symbols.iterator.flatMap(_.defn.flatMap(_.headerLoc))).orElse(toLoc)
   def describe: Str =
     symbols match
     case Nil => s"symbol"
@@ -419,13 +424,15 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def showPrefix(using Scope, ShowCfg, Raise): Str =
     "term:" + owner.map(_.showName + "/").getOrElse("")
   def isExplicitlyPrivate: Bool = defn.exists(_.visibility is Visibility.Private)
-  lazy val isPrivate: Bool =
+  def isPrivate: Bool =
     // Top-level term symbols have `owner = None`, but the synthetic global
     // object itself is represented by a `TopLevelSymbol`; excluding it here
     // keeps global definitions and builtins out of JS `#` private lowering if a
     // generated symbol is ever attached to the global owner.
     owner.exists(!_.isInstanceOf[TopLevelSymbol]) &&
-      ((k is LetBind) || isExplicitlyPrivate)
+      // Refreshed IR symbols have no source definition. Their current definition
+      // retains visibility, including after a method is copied by the inliner.
+      ((k is LetBind) || irDefn.fold(isExplicitlyPrivate)(_.visibility is Visibility.Private))
   
   /** The erased type of this term's return value.
     *
@@ -454,6 +461,10 @@ class ClassCtorSymbol(
   override val owner: Opt[InnerSymbol],
   val associatedCls: ClassSymbol,
 )(using State) extends TermSymbol(k, owner, associatedCls.id, N):
+  // Constructor functions occupy the class binding, not a private method slot.
+  // MemberStorage determines that binding's runtime privacy from the class and module.
+  // Their source accessibility is checked through the class and its constructor modifiers.
+  override def isPrivate: Bool = false
   override def subst(using sub: SymbolSubst): ClassCtorSymbol = sub.mapClassCtorSym(this)
   override def mayRaiseEffects(using Config) =
     super.mayRaiseEffects || config.checkInstantiateEffect
@@ -501,11 +512,13 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol, HasErasedType:
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
   /** Published by erasure before class bodies are lowered, including for external declarations.
-    * Full IR class definitions refresh this header when rewritten, just as they own `irDefn`.
+    * Full IR class definitions attach companion modules to their containing class and refresh
+    * these headers when rewritten, just as they own `irDefn`.
     * Keeping the header separately is necessary for forward parents and declarations without
     * executable bodies; consumers must not reconstruct it from semantic terms.
     */
   var irClassHeader: Opt[codegen.ClassHeader] = N
+  def irTermCompanion: Opt[TermSymbol] = irClassHeader.flatMap(_.termCompanion)
 
 
 type AnyDefinitionSymbol = DefinitionSymbol[?]
@@ -543,13 +556,15 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
     case cd: codegen.ClsLikeDefn => cd
   
   /** Whether we know it's pure when selected (eg getters are not always pure). */
-  def isPure: Bool =
+  def isAccessPure: Bool =
     this match
     case _: ModuleOrObjectSymbol => true
     case _ =>
       defn.exists:
         case d: ClassDef => true
+        case TermDefinition(k = syntax.MutVal) => false
         case TermDefinition(k = _: syntax.ValLike) => true
+        case d @ TermDefinition(k = syntax.Fun, params = Nil) => !d.mayRaiseEffects
         case TermDefinition(k = syntax.Fun, params = _ :: _) =>
           true // References to functions are only guaranteed to be pure when the functions have parameter lists
         case _ => false
@@ -577,6 +592,11 @@ sealed trait InnerSymbol(using State) extends Symbol, ShapePublisher:
   // ensure that any implementation of InnerSymbol is also a DefinitionSymbol.
   self: DefinitionSymbol[? <: ClassLikeDef] =>
   val privatesScope: Scope = Scope.empty(Scope.Cfg.default) // * Scope for private members of this symbol
+  /** The IR class containing this owner's members, shared by instance and static receivers.
+    * This is needed because in the IR,
+    * a module actually stores its members as static members of its companion class. */
+  def irClassContainer: InnerSymbol =
+    asClsOrMod.flatMap(_.irClassHeader.flatMap(_.companionClass)).getOrElse(this)
   // TODO(Derppening): Can we meaningfully infer the erased type of `this` from the definition?
   val thisProxy: TempSymbol = TempSymbol(N, erasedType = N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol

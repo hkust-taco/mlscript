@@ -1,4 +1,6 @@
+:.
 :js
+
 
 data class Pair[A, B](fst: A, snd: B)
 
@@ -55,10 +57,10 @@ bar(Pair(4, 3))
 fun baz(p) = p is
   (Pair(a, b) | Int) where a > b
 //│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.56: 	  (Pair(a, b) | Int) where a > b
+//│ ║  l.+2: 	  (Pair(a, b) | Int) where a > b
 //│ ╙──      	                           ^
 //│ ╔══[COMPILATION ERROR] Name not found: b
-//│ ║  l.56: 	  (Pair(a, b) | Int) where a > b
+//│ ║  l.+2: 	  (Pair(a, b) | Int) where a > b
 //│ ╙──      	                               ^
 
 
@@ -108,61 +110,64 @@ fun get(p, m) = if p is
   Pair(k, v) where m.get(k) is w then v === w
   else false
 //│ ╔══[COMPILATION ERROR] Name not found: w
-//│ ║  l.108: 	  Pair(k, v) where m.get(k) is w then v === w
-//│ ╙──       	                                            ^
+//│ ║  l.+2: 	  Pair(k, v) where m.get(k) is w then v === w
+//│ ╙──      	                                            ^
+//│ ╔══[COMPILATION ERROR] This selection of member 'get' has no resolved target
+//│ ║  l.+2: 	  Pair(k, v) where m.get(k) is w then v === w
+//│ ╙──      	                   ^^^^^
 
 :fixme // TODO?
 fun get(p, m) =
-  p is Pair(k, v) where m.get(k) is w and v === w
+  p is Pair(k, v) where m.Map#get(k) is w and v === w
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'where' here
-//│ ║  l.116: 	  p is Pair(k, v) where m.get(k) is w and v === w
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  p is Pair(k, v) where m.Map#get(k) is w and v === w
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :fixme // TODO?
 fun get(p, m) =
-  p is Pair(k, v) where m.get(k) is w where v === w
+  p is Pair(k, v) where m.Map#get(k) is w where v === w
 //│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'where' here
-//│ ║  l.123: 	  p is Pair(k, v) where m.get(k) is w where v === w
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  p is Pair(k, v) where m.Map#get(k) is w where v === w
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-let m0 = {get: _ + 1}
+let m0 = {get: => _ + 1}
 //│ m0 = {get: fun get}
 
 
 class C1(m) with
-  pattern P = Pair(k, v) where m.get(k) is w and v === w
+  pattern P = Pair(k, v) where m.Map#get(k) is w and v === w
 
-C1(m0).P.unapply(Pair(3, 4))
+C1(m0).P.'unapply(Pair(3, 4))
 //│ = MatchSuccess(Pair(3, 4), null)
 
-C1(m0).P.unapply(Pair(3, 5))
+C1(m0).P.'unapply(Pair(3, 5))
 //│ = MatchFailure(null)
 
 
 :e
 class C2(m) with
-  pattern P = Pair(k, v) where m.get(k) is w where v === w
+  pattern P = Pair(k, v) where m.Map#get(k) is w where v === w
 //│ ╔══[COMPILATION ERROR] Name not found: w
-//│ ║  l.145: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
-//│ ╙──       	                                                         ^
+//│ ║  l.+2: 	  pattern P = Pair(k, v) where m.Map#get(k) is w where v === w
+//│ ╙──      	                                                             ^
 
 :re
-C2(m0).P.unapply(Pair(3, 4))
+C2(m0).P.'unapply(Pair(3, 4))
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
-C2(m0).P.unapply(Pair(3, 5))
+C2(m0).P.'unapply(Pair(3, 5))
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 class C3(m) with
-  pattern P = Pair(k, v) where m.get(k) is (w where v === w)
+  pattern P = Pair(k, v) where m.Map#get(k) is (w where v === w)
 
-C3(m0).P.unapply(Pair(3, 4))
+C3(m0).P.'unapply(Pair(3, 4))
 //│ = MatchSuccess(Pair(3, 4), null)
 
-C3(m0).P.unapply(Pair(3, 5))
+C3(m0).P.'unapply(Pair(3, 5))
 //│ = MatchFailure(null)
 
 
