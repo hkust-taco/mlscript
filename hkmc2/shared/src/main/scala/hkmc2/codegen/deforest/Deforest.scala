@@ -16,7 +16,7 @@ case class FinalDestMatch(dtor: CtorDtorId, sels: Set[CtorDtorId]) extends Final
 case class FinalDestSel(dtors: Set[CtorDtorId], field: SelField) extends FinalDest
 
 extension (f: SelField) def erasedFieldType(using Raise): Opt[ErasedValueType] = f match
-  case tSym: TermSymbol => tSym.mapErasedValueType
+  case tSym: TermSymbol => tSym.erasedType
   case _: Int => N
 
 class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Config, Elaborator.Ctx)

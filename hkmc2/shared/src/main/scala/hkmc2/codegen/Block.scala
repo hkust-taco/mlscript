@@ -386,7 +386,7 @@ object Block:
     val types = Buffer.empty[ErasedValueType]
     val collector = new BlockTraverserShallow:
       override def applyBlock(b: Block): Unit = b match
-        case Return(res) => if !res.isUndefined then types += res.erasedValueType_!
+        case Return(res) => if !res.isUndefined then types += res.erasedType_!
         case _ => super.applyBlock(b)
     collector.applyBlock(block)
     Option.when(types.nonEmpty)(ErasedType.Union.mk(types))
@@ -596,7 +596,7 @@ object HandleBlock:
         N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
         handler.body
         )(N, annotations = Nil)
-      val rSym = TempSymbol(N, erasedType = N, "suspendRes")
+      val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
       FunDefn.withFreshSymbol(
         S(cls),
         handler.sym,
@@ -839,7 +839,7 @@ object FunDefn:
     // * its uses opaque to dead-parameter elimination and deforestation.
     // * Definitions without parameter lists are getters, whose value representation is still unknown.
     val erasedType = Option.when(params.nonEmpty):
-      ErasedType.FuncRef(S(false), params.map(_.params.map(_.sym.erasedType)), N)
+      ErasedFuncSignature.Signature(params.map(_.params.map(_.sym.erasedType)), N)
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasedType)
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
@@ -866,7 +866,7 @@ object ValDefn:
       annotations: Ls[Annot],
     )(using State)
     : ValDefn =
-      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasedType = rhs.erasedValueType), sym, rhs)(configOverride, annotations)
+      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasure = rhs.erasedType), sym, rhs)(configOverride, annotations)
 
 
 /** Class metadata, available independently of its executable body.
@@ -927,7 +927,7 @@ object ClassHeader:
 // * a lone module is represented as an empty class with a `companion` module.
 final case class ClsLikeDefn(
     owner: Opt[InnerSymbol],
-    isym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol,
+    isym: ClassLikeDefSymbol,
     sym: BlockMemberSymbol,
     ctorSym: Opt[ClassCtorSymbol],
     k: syntax.ClsLikeKind,
@@ -1044,7 +1044,7 @@ sealed trait TrivialResult extends Result
 /** The source expression that produced an IR result is independent of its operands.
   * Rewrites preserve this span; generated results with no source expression use `N`.
   */
-sealed abstract class Result extends Located, HasErasedType:
+sealed abstract class Result extends Located:
   val toLoc: Opt[Loc]
   /** Return a result with explicit provenance without mutating a shared IR node. */
   def withLoc(loc: Opt[Loc]): Result
@@ -1142,13 +1142,11 @@ sealed abstract class Result extends Located, HasErasedType:
     case Value.Lit(lit) => 0
     case DynSelect(qual, fld, _) => qual.size + fld.size
 
-  lazy val erasedType: Opt[ErasedType] = this match
+  /** The erased type of the value produced by this result. */
+  lazy val erasedType: Opt[ErasedValueType] = this match
     case Value.SimpleRef(sym) => sym match
-      case hasErasedType: HasErasedType => hasErasedType.erasedType
-      case _ => 
-        // * Some symbols may not have an erased type (e.g. `BuiltinSymbol`, where it may represent more than one
-        // * function).
-        N
+      case l: LocalVarSymbol => l.erasedType
+      case sym: BuiltinSymbol => S(sym.erasedType)
     // * A reference to a class is the class *object* (a `Class`).
     case Value.MemberRef(_, _: ClassSymbol) => N
     case Value.MemberRef(_, disamb: ModuleOrObjectSymbol) => disamb.erasedType
@@ -1158,29 +1156,33 @@ sealed abstract class Result extends Located, HasErasedType:
     // * A `val` or `fun` is a block *member*, so its references are `MemberRef`s rather than `SimpleRef`s, and
     // * its declared type lives on the associated `TermSymbol` - the same shape `Select` reads below.
     case Value.MemberRef(_, disamb: TermSymbol) => disamb.erasedType
-    case Value.This(clsOrMod: (ClassSymbol | ModuleOrObjectSymbol)) => clsOrMod.erasedType
+    case Value.This(cls: ClassSymbol) => S(ErasedType.ValueLike(rsc = S(false), cls))
+    case Value.This(mod: ModuleOrObjectSymbol) => mod.erasedType
     case Value.Lit(_: Tree.IntLit) => S(ErasedType.Int)
     case Value.Lit(_: Tree.DecLit) => S(ErasedType.Num)
     case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
     case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
     // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
-    // * WORKAROUND (see `semantics.BuiltinOperatorResults`): builtin operators have no declared signature,
-    // * so their results are approximated from the representations of their operands.
+    // * WORKAROUND (see `semantics.BuiltinOperatorResults`): dynamic arithmetic signatures do not
+    // * express operand-dependent results, which resolution approximates from their representations.
     case Call(Value.SimpleRef(op: BuiltinSymbol), args :: Nil) if args.forall(_.spread.isEmpty) =>
-      ErasedType.builtinOperatorResult(op.nme, args.map(_.value))
-    case Call(fun, argss) => fun.targetSymbol match
-      case S(ts: TermSymbol) => ts.erasedType match
-        case S(ErasedType.FuncRef(rsc, paramLists, ret)) =>
-          argss.sizeCompare(paramLists) match
-            // * An exactly-applied call yields the function's result type.
-            case 0 => ret
-            // * An under-applied call yields a function type over the remaining parameter lists.
-            case c if c < 0 => S(ErasedType.FuncRef(rsc, paramLists.drop(argss.length), ret))
-            // * An over-applied call applies arguments to whatever the function returns, which the function's
-            // * signature is oblivious about.
-            case _ => N
-        case _ => N
-      case _ => N
+      ErasedType.builtinOperatorResult(op.nme, args.map(_.value)).orElse(op.erasedSignature.flatMap(_.ret))
+    case Call(fun, argss) =>
+      val signature = fun match
+        case Value.SimpleRef(bs: BuiltinSymbol) => bs.erasedSignature
+        case _ => fun.targetSymbol.flatMap:
+          case ts: TermSymbol => ts.erasedSignature
+          case _ => N
+      signature match
+        case S(sig) => argss.sizeCompare(sig.paramLists) match
+          // * An exactly-applied call yields the function's result type.
+          case 0 => sig.ret
+          // * An under-applied call yields a closure, not a residual definition signature.
+          case c if c < 0 => S(ErasedType.Function(rsc = S(false)))
+          // * An over-applied call applies arguments to whatever the function returns, which the function's
+          // * signature is oblivious about.
+          case _ => N
+        case N => N
     // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
     // * unresolved selection (dynamic field access) stays unknown.
     case sel: SuperSelect => sel.symbol.erasedType
@@ -1189,14 +1191,18 @@ sealed abstract class Result extends Located, HasErasedType:
       case S(ts: TermSymbol) => ts.erasedType
       // * A class reference is the class object, so it stays unknown.
       case S(_: ClassSymbol) => N
-      case S(d: (ModuleOrObjectSymbol | TypeAliasSymbol)) => d.erasedType
+      case S(d: ModuleOrObjectSymbol) => d.erasedType
+      // * A type alias is not a value; this can only occur in ill-formed programs.
+      case S(_: TypeAliasSymbol) => N
       case _ => N
     case Cast(_, target, _) => S(target)
     // * `Instantiate` always yields an instance of the class, since the constructor is guaranteed to be fully-applied
     // * after lowering.
-    case Instantiate(_, cls, _) => cls.targetSymbol.flatMap:
-      case ctor: ClassCtorSymbol => ctor.associatedCls.erasedType
-      case sym => sym.asCls.flatMap(_.erasedType)
+    case Instantiate(_, cls, _) =>
+      val clsSym = cls.targetSymbol.flatMap:
+        case ctor: ClassCtorSymbol => S(ctor.associatedCls)
+        case sym => sym.asCls
+      clsSym.map(sym => ErasedType.ValueLike(rsc = S(false), sym))
     // * A tuple literal is typed as `Array` at runtime.
     case Tuple(_, _) => S(ErasedType.Array)
     // * Avoid a redundant cast around a function literal: in JavaScript that
@@ -1214,6 +1220,9 @@ sealed abstract class Result extends Located, HasErasedType:
     case Cast(value, _, _) => value.isUndefined
     case _ => false
 
+  /** The value type, using the top type when no representation is known. */
+  lazy val erasedType_! : ErasedValueType = erasedType.getOrElse(ErasedType.Unknown)
+
   /** Coerces this result to `expected`, yielding it unchanged when no coercion is required.
     *
     * Narrowing to an unrelated type is reported as an error, and this result is yielded unchanged.
@@ -1222,7 +1231,7 @@ sealed abstract class Result extends Located, HasErasedType:
     * point the coercion is introduced, so that the transformers rebuilding casts downstream need not carry a
     * [[Config]] of their own.
     */
-  def coerceTo(expected: ErasedType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
+  def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
     coerceToOr[this.type | Cast](expected, loc)(identity): (actual, declared) =>
       raise:
         ErrorReport(msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'" -> loc :: Nil,
@@ -1230,9 +1239,9 @@ sealed abstract class Result extends Located, HasErasedType:
       this
 
   // `coerceTo` continuing with `coerced`, except that a value of a type unrelated to `expected` goes to `unrelated`
-  def coerceToOr[R](expected: ErasedType, loc: Opt[Loc])(coerced: (this.type | Cast) => R)
-      (unrelated: (CanonicalErasedType, CanonicalErasedType) => R)(using Ctx, State, Raise, Config): R =
-    val actual = erasedValueType_!.canonicalize
+  def coerceToOr[R](expected: ErasedValueType, loc: Opt[Loc])(coerced: (this.type | Cast) => R)
+      (unrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => R)(using Ctx, State, Raise, Config): R =
+    val actual = erasedType_!.canonicalize
     val declared = expected.canonicalize
     val cast =
       if isUndefined && !declared.isInstanceOf[ErasedType.Incompatible] then S(true)
@@ -1240,13 +1249,10 @@ sealed abstract class Result extends Located, HasErasedType:
     cast match
       case S(false) => coerced(this)
       case S(true) =>
-        val target = expected match
-          case ft: ErasedFuncType => ErasedType.Function(ft.rsc)
-          case v: ErasedValueType => v
-        coerced(Cast(this, target, config.checkCasts && !isUndefined)(loc))
+        coerced(Cast(this, expected, config.checkCasts && !isUndefined)(loc))
       case N =>
         // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
-        def membersOf(et: CanonicalErasedType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
+        def membersOf(et: CanonicalErasedValueType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
           case ErasedType.Incompatible(l, r) => S(l -> r)
           case _ => N
         membersOf(actual).orElse(membersOf(declared)) match
@@ -1303,9 +1309,9 @@ object Call:
     fun match
     case Value.SimpleRef(sym: BuiltinSymbol) =>
       argss match
-      case (Arg(N, arg1: Value) :: Arg(N, arg2: Value) :: Nil) :: Nil =>
+      case (Arg(N, arg1: Value) :: Arg(N, arg2: Value) :: Nil) :: Nil if sym.binary =>
         evalBuiltin(sym, arg1, arg2)(toLoc)(return _)
-      case (Arg(N, arg1: Value) :: Nil) :: Nil =>
+      case (Arg(N, arg1: Value) :: Nil) :: Nil if sym.unary =>
         evalBuiltin(sym, arg1)(toLoc)(return _)
       case _ =>
     case _ =>

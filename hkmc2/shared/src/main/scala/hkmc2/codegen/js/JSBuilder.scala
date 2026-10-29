@@ -74,7 +74,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     // Accessor symbols are shared only within this emitted module. Allocating a
     // fresh symbol in an importer cannot reach the defining module's accessor.
     softAssert(ts.getState is State, s"Cannot generate a cross-file access to private member '${ts.nme}'")
-    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.nme}$$accessorSymbol"))
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, initErasedType = N, s"${ts.nme}$$accessorSymbol"))
   
   /** Private names belong to the containing IR class, shared by its instance and static members.
     * Accesses outside that class's lexical scope need an accessor. */
@@ -312,8 +312,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if disamb.shouldBeLifted then doc"${scope.lookup_!(bms, bms.toLoc)}.class"
       else scope.lookup_!(bms, r.toLoc)
     case Value.SimpleRef(l: BuiltinSymbol) =>
-      if l.nullary then l.nme
-      else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
+      errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
     case Cast(value, _, _) => result(value)
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
@@ -616,7 +615,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                 pubFlds.collect:
                   case (_, sym) if sym.k is MutVal =>
                     sym -> TermSymbol(
-                      syntax.LetBind, S(owner), Tree.Ident(sym.nme), erasedType = sym.erasedType)
+                      syntax.LetBind, S(owner), Tree.Ident(sym.nme), erasure = sym.erasedType)
               // Explicit function companions already declare their private method slots.
               // Other nested class bindings need fields declared in this receiver's class.
               val classFields = collection.mutable.ListBuffer.empty[DefinitionSymbol[?]]
@@ -1214,7 +1213,7 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
   override def checkSelections: Bool = instrument
   override def freezeDefinitions: Bool = instrument
   
-  val functionParamVarargSymbol = semantics.TempSymbol(N, erasedType = N, "args")
+  val functionParamVarargSymbol = semantics.TempSymbol(N, initErasedType = N, "args")
   
   override def setupFunction(name: Option[Str], params: LoweredParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
     // * We used to instrument `fun f(x, y) = x + y` into something like

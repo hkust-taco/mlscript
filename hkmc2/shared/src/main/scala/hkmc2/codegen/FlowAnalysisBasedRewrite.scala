@@ -169,7 +169,7 @@ class FlowAnalysisBasedRewrite(
                 mayRaiseEffects = true,
                 annotations = c.metadata.annotations.filterNot(_.isInstanceOf[Annot.Pure])), c.toLoc))
           case _ =>
-            val tmp = TempSymbol(N, erasedType = N, "eta$res")
+            val tmp = TempSymbol(N, initErasedType = N, "eta$res")
             Scoped(
               Set.single(tmp),
               Assign(tmp, res2, Return(etaCall(tmp.asPath).withLocOf(res2))))
@@ -190,7 +190,7 @@ class FlowAnalysisBasedRewrite(
             case arg :: tl =>
               applyArg(arg): arg2 =>
                 if idx < lastImpureEliminableIdx then
-                  val tmp = TempSymbol(N, erasedType = arg2.value.erasedValueType, "arg")
+                  val tmp = TempSymbol(N, initErasedType = arg2.value.erasedType, "arg")
                   Scoped(
                     Set.single(tmp),
                     Assign(tmp, arg2.value, rec(tl, idx + 1, true, arg2.copy(value = tmp.asPath) :: accRev)))
@@ -294,8 +294,8 @@ class FlowAnalysisBasedRewrite(
   
   // a function is retyped where dpe drops some of its params or eta expansion appends param lists to it;
   // its params are read from its definition, which keeps up with lifting
-  lazy val retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncType] =
-    val res = LinkedHashMap.empty[(InstantiationId, TermSymbol), ErasedFuncType]
+  lazy val retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncSignature] =
+    val res = LinkedHashMap.empty[(InstantiationId, TermSymbol), ErasedFuncSignature]
     val funIds =
       deadParamElimSolver.eliminableParamsById.keysIterator ++ etaExpansionSolver.etaExpandedFunShape.keysIterator
     for case ConcreteId((fun: TermSymbol, _), instId) <- funIds if !res.contains(instId -> fun) do
@@ -317,7 +317,7 @@ class FlowAnalysisBasedRewrite(
               targetFun.declaredResultType
             case _ => N
         if results.forall(_.isDefined) then S(ErasedType.Union.mk(results.flatten)) else N
-      res(instId -> fun) = ErasedType.FuncRef(S(false), kept ::: etaLists, ret)
+      res(instId -> fun) = ErasedFuncSignature.Signature(kept ::: etaLists, ret)
     res
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
   

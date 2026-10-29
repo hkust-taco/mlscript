@@ -165,7 +165,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
               case S(true) => inherited
               case N => observed
 
-  private def definitionType(td: TermDefinition): Opt[ErasedType] =
+  private def definitionType(td: TermDefinition): Opt[ErasedValueType | ErasedFuncSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
     // An ordinary paramless function instead returns the value denoted by the entire signature.
@@ -212,7 +212,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         val physicalParamLists =
           if paramLists.isEmpty && td.owner.isEmpty && !declared then Nil :: Nil else paramLists
         if physicalParamLists.isEmpty then callableResult
-        else S(ErasedType.FuncRef(rsc = S(false), physicalParamLists, callableResult))
+        else S(ErasedFuncSignature.Signature(physicalParamLists, callableResult))
       case _: syntax.Val => resultType
       case syntax.RecordField => if config.language.useNewResolution then resultType else N
       case _ => N
@@ -363,8 +363,8 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     // are the class's lists, and a saturated call always produces its instance.
     statements.foreach:
       case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>
-        if !symbol.isErased then symbol.erasedType =
-          if config.language.useNewResolution then S(ErasedType.FuncRef(S(false),
+        if !symbol.isErased then symbol.erasedSignature =
+          if config.language.useNewResolution then S(ErasedFuncSignature.Signature(
             (cls.paramsOpt.toList ::: cls.auxParams).map(_.params.map(_.sym.erasedType)), S(nominalType(cls))))
           else N
       case _ => ()
@@ -378,14 +378,14 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     def eraseDefinition(td: TermDefinition, visiting: Set[TermSymbol]): Unit =
       if !td.tsym.isErased && !visiting(td.tsym) then
         td.tsym.overriddenMembers.flatMap(definitionsBySymbol.get).foreach(eraseDefinition(_, visiting + td.tsym))
-        td.tsym.erasedType = definitionType(td)
+        td.tsym.initializeErasure(definitionType(td))
     definitions.distinctBy(_.tsym).foreach(eraseDefinition(_, Set.empty))
     declarations.variables.foreach:
       case sym: VarSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
       case sym: TermSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
       // A temporary's erased type is populated at most once (see TempSymbol); without inferred inputs, it stays
       // unknown, as it was before erasure.
-      case sym: TempSymbol if sym.erasedType.isEmpty => inferredType(sym).foreach(sym.populateErasedType(_))
+      case sym: TempSymbol if sym.erasedType.isEmpty => inferredType(sym).foreach(tpe => sym.erasedType = S(tpe))
       case _ => ()
     // These checks compare erased signatures, so they run once every definition of the program is erased.
     statements.foreach:
@@ -420,10 +420,9 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       ErasedType.needsCast(actual.getOrElse(ErasedType.Unknown).canonicalize,
         expected.getOrElse(ErasedType.Unknown).canonicalize).contains(false)
     def describe(tpe: Opt[ErasedValueType]): Str = tpe.getOrElse(ErasedType.Unknown).canonicalize.describe
-    def signature(sym: TermSymbol): (Ls[Ls[Opt[ErasedValueType]]], Opt[ErasedValueType]) = sym.erasedType match
-      case S(ft: ErasedFuncType) => (ft.paramLists, ft.ret)
-      case S(vt: ErasedValueType) => (Nil, S(vt))
-      case N => (Nil, N)
+    def signature(sym: TermSymbol): (Ls[Ls[Opt[ErasedValueType]]], Opt[ErasedValueType]) = sym.erasedSignature match
+      case S(sig) => (sig.paramLists, sig.ret)
+      case N => (Nil, sym.erasedType)
     if td.tsym.isErased then
       val (params, result) = signature(td.tsym)
       td.tsym.overriddenMembers.filter(_.isErased).foreach: base =>

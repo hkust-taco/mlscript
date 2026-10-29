@@ -45,8 +45,9 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   // updated erased value types
   def retypedVariables: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedValueType]
   
-  // updated erased function types
-  def retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncType]
+  // Updated calling signatures, including parameter removal and eta expansion. Each rewrite computes
+  // the complete signature once so copied and in-place definitions use the same calling convention.
+  def retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncSignature]
   // ====== the abstract members ======
   
   
@@ -66,22 +67,23 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   private lazy val rewrittenFunctionSymbols: Map[TermSymbol, TermSymbol] =
     pre.res.rootFunDefns.keysIterator.flatMap: sym =>
       retypedFunctions.get(inPlaceInstId(sym) -> sym).collect:
-        case tpe if !sym.erasedType.contains(tpe) => sym -> SymbolRefresher.copyTermSymbol(sym, sym.owner, S(tpe))
+        case sig if !sym.erasedSignature.contains(sig) => sym -> SymbolRefresher.copyTermSymbol(sym, sym.owner, S(sig))
     .toMap
   
-  private lazy val retypedLocals: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedType] =
-    LinkedHashMap.from[(InstantiationId, ValueSymbol), ErasedType](retypedVariables) ++ retypedFunctions.filterNot: (key, _) =>
+  private lazy val retypedLocals: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedValueType | ErasedFuncSignature] =
+    LinkedHashMap.from[(InstantiationId, ValueSymbol), ErasedValueType | ErasedFuncSignature](retypedVariables) ++ retypedFunctions.filterNot: (key, _) =>
       pre.res.rootFunDefns.contains(key._2)
   
   private lazy val sharedRetypedSymbols: LinkedHashMap[(InstantiationId, ValueSymbol), ValueSymbol] =
     retypedLocals.map((key, tpe) => key -> retypedSymbol(key._2, tpe))
   
-  private def retypedSymbol(previous: Symbol, tpe: ErasedType): ValueSymbol = (previous, tpe) match
+  private def retypedSymbol(previous: Symbol, tpe: ErasedValueType | ErasedFuncSignature): ValueSymbol = (previous, tpe) match
     case (v: VarSymbol, _) if v.erasedType.contains(tpe) => v
     case (v: VarSymbol, tpe: ErasedValueType) => SymbolRefresher.copyVarSymbol(v, S(tpe))
     case (t: TempSymbol, _) if t.erasedType.contains(tpe) => t
-    case (t: TempSymbol, _) => SymbolRefresher.copyTempSymbol(t, S(tpe))
-    case (t: TermSymbol, _) if t.erasedType.contains(tpe) => t
+    case (t: TempSymbol, tpe: ErasedValueType) => SymbolRefresher.copyTempSymbol(t, S(tpe))
+    case (t: TermSymbol, sig: ErasedFuncSignature) if t.erasedSignature.contains(sig) => t
+    case (t: TermSymbol, tpe: ErasedValueType) if t.erasedSignature.isEmpty && t.erasedType.contains(tpe) => t
     case (t: TermSymbol, _) => SymbolRefresher.copyTermSymbol(t, t.owner, S(tpe))
     case _ => lastWords(s"cannot give $previous the erased type $tpe")
   
@@ -113,7 +115,8 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
           val name = path.mkFunName + s"$$${f.nme}"
           f -> (
             new BlockMemberSymbol(name, Nil, true),
-            new TermSymbol(Fun, N, Tree.Ident(name), erasedType = retypedFunctions.get(path -> f).orElse(f.erasedType)))
+            new TermSymbol(Fun, N, Tree.Ident(name), erasure =
+              retypedFunctions.get(path -> f).orElse(f.erasedSignature).orElse(f.erasedType)))
         .toMap
     res
   end newPolyFnSyms

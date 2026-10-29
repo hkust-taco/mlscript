@@ -281,7 +281,10 @@ class BlockTransformer(subst: SymbolSubst):
     val ClsLikeDefn(own, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods,
       privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion, _) = defn
     val own2 = own.mapConserve(_.subst)
-    val isym2 = isym.subst
+    val isym2: ClassLikeDefSymbol = isym match
+      case sym: ClassSymbol => sym.subst
+      case sym: ModuleOrObjectSymbol => sym.subst
+      case sym: PatternSymbol => sym.subst
     val sym2 = sym.subst
     val ctorSym2 = ctorSym.mapConserve(_.subst)
     val termCompanion2 = termCompanion.mapConserve(_.subst)

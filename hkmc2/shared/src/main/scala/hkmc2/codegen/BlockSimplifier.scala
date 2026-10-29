@@ -1149,7 +1149,7 @@ class BlockSimplifier
         applyResult(c):
           case p: Path => k(p)
           case r =>
-            val tmp = TempSymbol(N, erasedType = r.erasedValueType, "cast")
+            val tmp = TempSymbol(N, initErasedType = r.erasedType, "cast")
             Scoped(Set.single(tmp), Assign(tmp, r, k(tmp.asPath)))
       case Value.SimpleRef(loc: LocalVar) if !inDryRun && !capturedVars(loc) =>
         
@@ -1194,7 +1194,7 @@ class BlockSimplifier
       // * makes that check redundant. Keep every narrowing cast and its evaluation order.
       case c @ Cast(value, target, check) if !inDryRun =>
         applyResult(value): value2 =>
-          if ErasedType.needsCast(value2.erasedValueType_!.canonicalize, target.canonicalize).contains(false) then
+          if ErasedType.needsCast(value2.erasedType_!.canonicalize, target.canonicalize).contains(false) then
             registerChange(s"rm redundant cast ${c.showDbg}")
             k(value2)
           else k(if value2 is value then c else Cast(value2, target, check)(c.toLoc))
@@ -1222,7 +1222,7 @@ class BlockSimplifier
               case Nil => k(Nil)
               case arg :: tail => applyArg(arg): arg2 =>
                 if index <= lastImpure then
-                  val tmp = TempSymbol(N, erasedType = arg2.value.erasedValueType, "arg")
+                  val tmp = TempSymbol(N, initErasedType = arg2.value.erasedType, "arg")
                   Scoped(Set.single(tmp), Assign(tmp, arg2.value,
                     rewriteArgs(tail, index + 1)(args => k(arg2.copy(value = tmp.asPath) :: args))))
                 else rewriteArgs(tail, index + 1)(args => k(arg2 :: args))
@@ -1477,7 +1477,7 @@ class BlockSimplifier
             val (prefix, bound) =
               if rhs.isStable then (acc, rhs)
               else
-                val receiver = VarSymbol(syntax.Tree.Ident("receiver"), erasedType = path.erasedValueType, mut = false)
+                val receiver = VarSymbol(syntax.Tree.Ident("receiver"), erasedType = path.erasedType, mut = false)
                 (acc.assignScoped(receiver, rhs), receiver.asSimpleRef)
             val updatedMapping = if bound is path then mapping else mapping.updated(sym, bound)
             (prefix, evaluated + (path -> bound), updatedMapping)
@@ -1977,7 +1977,7 @@ class BlockSimplifier
                   case Nil =>
                     val resSym = TempSymbol(
                       N,
-                      erasedType = if extraArgss.isEmpty then call.erasedValueType else N,
+                      initErasedType = if extraArgss.isEmpty then call.erasedType else N,
                       "inlinedVal",
                     )
                     val copier = Copier(resSym, mapping, boundReceivers)

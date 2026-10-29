@@ -31,8 +31,9 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
 
   private def refreshTermSymbol(s: TermSymbol) =
     // Inner symbol (if present) must be traversed at this point.
-    val owner = s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol])
-    assertUpdate(s, SymbolRefresher.copyTermSymbol(s, owner, s.erasedType))
+    val ns = s.withSameErasure(s.k, s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), s.id)
+    ns.sourceAliases = s.sourceAliases
+    assertUpdate(s, ns)
 
   private def refreshClassSymbol(s: ClassSymbol) =
     val ns = new ClassSymbol(s.tree, s.id)
@@ -52,7 +53,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     val ns = new ClassCtorSymbol(s.k,
       s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
       mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol])
-    ns.erasedType = s.erasedType
+    ns.initializeErasure(s.erasedSignature.orElse(s.erasedType))
     assertUpdate(s, ns)
 
   def refreshParamList(pl: LoweredParamList) =
@@ -138,11 +139,11 @@ object SymbolRefresher:
     ns.sourceAliases = s.sourceAliases
     ns
   
-  def copyTempSymbol(s: TempSymbol, erasedType: Opt[ErasedType])(using State): TempSymbol =
+  def copyTempSymbol(s: TempSymbol, erasedType: Opt[ErasedValueType])(using State): TempSymbol =
     new TempSymbol(s.trm, erasedType, s.nme)
   
-  def copyTermSymbol(s: TermSymbol, owner: Opt[InnerSymbol], erasedType: Opt[ErasedType])(using State): TermSymbol =
-    val ns = new TermSymbol(s.k, owner, s.id, erasedType)
+  def copyTermSymbol(s: TermSymbol, owner: Opt[InnerSymbol], erasure: Opt[ErasedValueType | ErasedFuncSignature])(using State): TermSymbol =
+    val ns = new TermSymbol(s.k, owner, s.id, erasure)
     ns.sourceAliases = s.sourceAliases
     ns
   
