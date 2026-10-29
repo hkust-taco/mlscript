@@ -1412,19 +1412,26 @@ class BlockSimplifier
         * including immutable selections rooted in a captured parent, so further inlining
         * can still recover their enclosing receivers.
         */
-      def bindThisMapping(paths: Ls[(InnerSymbol, Path)]): (Block => Block, Map[InnerSymbol, Path]) =
-        val (acc, _, mapping) = paths.foldLeft((blockBuilder, Map.empty[Path, Path], Map.empty[InnerSymbol, Path])):
+      def bindThisMapping(
+          paths: Ls[(InnerSymbol, Path)],
+          receiverMapping: Map[InnerSymbol, Path],
+      ): (Block => Block, Map[InnerSymbol, Path]) =
+        // Reuse the availability map; only paths changed by receiver captures need updating.
+        val (acc, _, mapping) = paths.foldLeft((blockBuilder, Map.empty[Path, Path], receiverMapping)):
           case ((acc, evaluated, mapping), (sym, path)) =>
             val rhs = path match
               case s: Select =>
-                Select(evaluated.getOrElse(s.qual, s.qual), s.name)(s.symbol, s.toLoc)(s.sanitize)
+                val qual = evaluated.getOrElse(s.qual, s.qual)
+                if qual is s.qual then s
+                else Select(qual, s.name)(s.symbol, s.toLoc)(s.sanitize)
               case _ => path
             val (prefix, bound) =
               if rhs.isStable then (acc, rhs)
               else
                 val receiver = VarSymbol(syntax.Tree.Ident("receiver"), erasedType = path.erasedValueType, mut = false)
                 (acc.assignScoped(receiver, rhs), receiver.asSimpleRef)
-            (prefix, evaluated + (path -> bound), mapping + (sym -> bound))
+            val updatedMapping = if bound is path then mapping else mapping.updated(sym, bound)
+            (prefix, evaluated + (path -> bound), updatedMapping)
         (acc, mapping)
 
       /** Receivers that a copied method body needs from outside its own definitions.
@@ -1896,10 +1903,11 @@ class BlockSimplifier
             val cfg = summon[Config.Inliner]
             val threshold = if insideInlineAnnotatedFunction then cfg.altSmallThreshold else cfg.inlineThreshold
             val receiverPaths = thisMapping
+            val receiverMapping = receiverPaths.toMap
             info.inlineCost(blk, threshold) match
             case N =>
               super.applyResult(call)(k)
-            case S(_) if info.isMethod && !freeReceivers(blk).forall(sym => receiverPaths.exists(_._1 === sym)) =>
+            case S(_) if info.isMethod && !freeReceivers(blk).forall(receiverMapping.contains) =>
               // A captured nested module may have lost the qualifier path to its enclosing receivers.
               // Keep the call when those receivers cannot be rebound: copying the body would let
               // its lexical `This` references escape their defining class or module.
@@ -1914,7 +1922,7 @@ class BlockSimplifier
                 registerChange(s"inline call ${callee.showDbg}")
                 log(dbg"Inline call for ${callee}, with args ${argss}")
                 val extraArgss = argss.drop(info.defn.params.length)
-                val (receiverPrefix, boundReceivers) = bindThisMapping(receiverPaths)
+                val (receiverPrefix, boundReceivers) = bindThisMapping(receiverPaths, receiverMapping)
                 def go(acc: Block => Block, args: List[(VarSymbol, Result)], mapping: Map[Symbol, Symbol]): Block =
                   args match
                   case Nil =>
