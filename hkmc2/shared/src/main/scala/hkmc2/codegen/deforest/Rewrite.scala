@@ -346,13 +346,13 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         param.erasedType = if types.forall(_.isEmpty) then N
           else S(ErasedType.Union.mk(types.map(_.getOrElse(ErasedType.Unknown))))
     for (branchId, (_, sym)) <- branchFunSyms do
-      sym.erasedSignature = S(ErasedFuncSignature.Signature(
+      sym.initializeErasure(S(ErasedFuncSignature.Signature(
         branchFunParamFieldSyms(branchId).map(_.erasedType) ::
           dtorBranchFnFvs(branchId._1).map(s => retypedVariables.get(branchId._1.instId -> s).orElse(s.erasedType))
-          :: Nil, N))
+          :: Nil, N)))
     for (restId, (_, sym)) <- restFunSyms do
-      sym.erasedSignature = S(ErasedFuncSignature.Signature(
-        restFnFvs(restId).map(s => retypedVariables.get(restId.getInstId -> s).orElse(s.erasedType)) :: Nil, N))
+      sym.initializeErasure(S(ErasedFuncSignature.Signature(
+        restFnFvs(restId).map(s => retypedVariables.get(restId.getInstId -> s).orElse(s.erasedType)) :: Nil, N)))
   }
 
   // Rewrites the program under a specific instantiation id

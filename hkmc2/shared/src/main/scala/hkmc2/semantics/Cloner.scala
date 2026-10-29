@@ -196,12 +196,11 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
   private def prepare(stats: Ls[Statement]): Unit =
     prepareDefinitions(stats)
     prepareLocals(stats)
-    // An annotation can name a class nested in a later declaration. Wait until
-    // all nominal symbols are allocated before renaming erased signatures.
     (terms.iterator ++ constructors.iterator).foreach: (source, copy) =>
-      if source.isErased then source.erasedSignature match
-        case S(sig) => copy.erasedSignature = S(signature(sig))
-        case N => copy.erasedType = source.erasedType.map(valueType)
+      copy.initializeErasure:
+        source.erasure.map:
+          case sig: ErasedFuncSignature => signature(sig)
+          case tpe: ErasedValueType => valueType(tpe)
       summon[Erasure].copyBodyResultType(source, copy)(valueType)
     // All member names, including nested classes' methods, now have replacements.
     // Override edges must follow them for common-member selection during lowering.

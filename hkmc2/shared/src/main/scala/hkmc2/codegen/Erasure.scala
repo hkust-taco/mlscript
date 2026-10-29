@@ -353,7 +353,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         case sym: BlockMemberSymbol => sym.tsym
         case _ => N
       field.foreach: sym =>
-        if !sym.isErased then sym.erasedType =
+        if !sym.isErased then sym.initializeErasure:
           if p.flags.mut then declaredType(p.sign, p.modulefulness).orElse(inferredType(sym))
           else p.sym.erasedType
     val observed =
@@ -363,7 +363,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     // are the class's lists, and a saturated call always produces its instance.
     statements.foreach:
       case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>
-        if !symbol.isErased then symbol.erasedSignature =
+        if !symbol.isErased then symbol.initializeErasure:
           if config.language.useNewResolution then S(ErasedFuncSignature.Signature(
             (cls.paramsOpt.toList ::: cls.auxParams).map(_.params.map(_.sym.erasedType)), S(nominalType(cls))))
           else N
@@ -382,7 +382,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     definitions.distinctBy(_.tsym).foreach(eraseDefinition(_, Set.empty))
     declarations.variables.foreach:
       case sym: VarSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
-      case sym: TermSymbol if !sym.isErased => sym.erasedType = inferredType(sym)
+      case sym: TermSymbol if !sym.isErased => sym.initializeErasure(inferredType(sym))
       // A temporary's erased type is populated at most once (see TempSymbol); without inferred inputs, it stays
       // unknown, as it was before erasure.
       case sym: TempSymbol if sym.erasedType.isEmpty => inferredType(sym).foreach(tpe => sym.erasedType = S(tpe))

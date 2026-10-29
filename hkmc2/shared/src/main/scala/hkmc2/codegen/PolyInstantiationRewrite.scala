@@ -82,8 +82,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
     case (v: VarSymbol, tpe: ErasedValueType) => SymbolRefresher.copyVarSymbol(v, S(tpe))
     case (t: TempSymbol, _) if t.erasedType.contains(tpe) => t
     case (t: TempSymbol, tpe: ErasedValueType) => SymbolRefresher.copyTempSymbol(t, S(tpe))
-    case (t: TermSymbol, sig: ErasedFuncSignature) if t.erasedSignature.contains(sig) => t
-    case (t: TermSymbol, tpe: ErasedValueType) if t.erasedSignature.isEmpty && t.erasedType.contains(tpe) => t
+    case (t: TermSymbol, _) if t.erasure.contains(tpe) => t
     case (t: TermSymbol, _) => SymbolRefresher.copyTermSymbol(t, t.owner, S(tpe))
     case _ => lastWords(s"cannot give $previous the erased type $tpe")
   
@@ -116,7 +115,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
           f -> (
             new BlockMemberSymbol(name, Nil, true),
             new TermSymbol(Fun, N, Tree.Ident(name), erasure =
-              retypedFunctions.get(path -> f).orElse(f.erasedSignature).orElse(f.erasedType)))
+              retypedFunctions.get(path -> f).orElse(f.erasure)))
         .toMap
     res
   end newPolyFnSyms

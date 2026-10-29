@@ -53,7 +53,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     val ns = new ClassCtorSymbol(s.k,
       s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
       mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol])
-    ns.initializeErasure(s.erasedSignature.orElse(s.erasedType))
+    ns.initializeErasure(s.erasure)
     assertUpdate(s, ns)
 
   def refreshParamList(pl: LoweredParamList) =

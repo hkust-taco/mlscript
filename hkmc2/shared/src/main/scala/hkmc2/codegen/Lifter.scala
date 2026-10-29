@@ -601,7 +601,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         (sym -> varSym, p, vd)
     
     val ctorSym = ClassCtorSymbol(syntax.Fun, N, clsSym)
-    ctorSym.erasedType = N
+    ctorSym.initializeErasure(N)
     val defn = ClsLikeDefn(
       None, clsSym, BlockMemberSymbol(nme, Nil),
       S(ctorSym),
@@ -1246,10 +1246,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val ref = obj.cls.sym.asMemberRef(obj.cls.isym)
       val inst = Instantiate(false, ref, argsList)(InstantiateMetadata.empty, N)
       // * The wrapper's signature describes its added parameter lists and the instance it returns.
-      flattenedDSym.erasedSignature = S(ErasedFuncSignature.Signature(
+      flattenedDSym.initializeErasure(S(ErasedFuncSignature.Signature(
         paramLists = allParamLists.map(_.params.map(_.sym.erasedType)),
         ret = inst.erasedType,
-      ))
+      )))
       val bod = Return(inst)
       
       FunDefn(N, flattenedSym, flattenedDSym, allParamLists, bod)(N, annotations = Nil)
