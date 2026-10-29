@@ -19,7 +19,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     assertUpdate(s, new TempSymbol(s.trm, s.erasedType, s.nme))
 
   private def refreshVarSymbol(s: VarSymbol) =
-    val ns = new VarSymbol(s.id, s.erasedType)
+    val ns = new VarSymbol(s.id, s.erasedType, mut = s.mut)
     ns.sourceAliases = s.sourceAliases
     assertUpdate(s, ns)
   
@@ -50,9 +50,6 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
 
   private def refreshPatternSymbol(s: PatternSymbol) =
     assertUpdate(s, new PatternSymbol(s.id, s.params, s.body))
-
-  private def refreshTopLevelSymbol(s: TopLevelSymbol) =
-    assertUpdate(s, new TopLevelSymbol(s.nme))
 
   private def refreshClassCtorSymbol(s: ClassCtorSymbol) =
     assertUpdate(s, new ClassCtorSymbol(s.k,
@@ -102,7 +99,6 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
       case s: ClassSymbol => refreshClassSymbol(s)
       case s: ModuleOrObjectSymbol => refreshModuleOrObjectSymbol(s)
       case s: PatternSymbol => refreshPatternSymbol(s)
-      case s: TopLevelSymbol => refreshTopLevelSymbol(s)
     ctorSym.foreach(refreshClassCtorSymbol)
     paramsOpt.foreach(refreshParamList)
     auxParams.foreach(refreshParamList)
@@ -123,9 +119,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     val ClsLikeBody(
       isym, methods, privateFields, publicFields, ctor, annotations, _
     ) = b
-    isym match
-      case s: ModuleOrObjectSymbol => refreshModuleOrObjectSymbol(s)
-      case s: TopLevelSymbol => refreshTopLevelSymbol(s)
+    refreshModuleOrObjectSymbol(isym)
     methods.foreach: mtd =>
       // For methods, the BlockMemberSymbol is owned by the class itself
       refreshBlockMemberSymbol(mtd.sym)

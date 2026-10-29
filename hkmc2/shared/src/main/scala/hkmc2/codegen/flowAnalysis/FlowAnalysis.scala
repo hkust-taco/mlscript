@@ -1214,8 +1214,6 @@ class FlowConstraintsCollector(
               lastWords("module/object references should be handled by CtorProducer")
             case _: TypeAliasSymbol =>
               lastWords("type aliases should not occur as runtime member references")
-            case _: TopLevelSymbol =>
-              lastWords("top-level references should use Value.This")
             generatedVars(disamb)
           case Value.SimpleRef(sym) =>
             if nonlocals.contains(sym) then

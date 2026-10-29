@@ -66,7 +66,7 @@ type ScopedSymbol = LocalVarSymbol | BlockMemberSymbol
 /** A "catch-all" symbol for value-like things.
   * Slightly better than just `Symbol`, but we should still try migrating away to more specific symbol types.
   */
-type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
+type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | ThisSymbol
 
 /** Symbols of lexical bindings required by MIR, including assignment destinations.
   * A `MemberRef` requires its block member binding regardless of the selected definition:
@@ -953,9 +953,7 @@ final case class ClsLikeDefn(
   methods.foreach: m =>
     m.dSym.irDefn = S(m)
   companion.foreach: c =>
-    c.isym match
-      case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym), termCompanion))
-      case _ => ()
+    c.isym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym), termCompanion))
     c.methods.foreach: m =>
       m.dSym.irDefn = S(m)
   val defnSym = S(isym)
@@ -968,7 +966,7 @@ final case class ClsLikeDefn(
 
 // * This is only supposed to be for companion module definitions (notably, not for `object`)
 final case class ClsLikeBody(
-    isym: DefinitionSymbol[? <: ModuleOrObjectDef] & InnerSymbol,
+    isym: ModuleOrObjectSymbol,
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
@@ -1372,6 +1370,26 @@ case class Record(mut: Bool, elems: Ls[RcdArg])(val toLoc: Opt[Loc]) extends Res
 sealed abstract class Path extends TrivialResult:
   override def withLoc(loc: Opt[Loc]): Path
   override def withLocOf(source: Located): Path = withLoc(source.toLoc)
+  /** Whether repeated reads denote the same value, even across calls that mutate state.
+    * That is to say, whether the value is referentially transparent.
+    * This is a stronger property than "purity" as the absence of side effects:
+    * local variables may be reassigned, and pure getters may allocate fresh objects,
+    * with different identities.
+    * Immutable members require a stable qualifier too.
+    */
+  lazy val isStable: Bool =
+    def stableMember(sym: DefinitionSymbol[?]): Bool = sym match
+      case _: ClassLikeSymbol => true
+      case sym: TermSymbol => (sym.k is syntax.ImmutVal) || (sym.k is syntax.Ins)
+      case _ => false
+    this match
+    case _: Value.This | _: Value.Lit => true
+    case Value.SimpleRef(_: BuiltinSymbol) => true
+    case Value.SimpleRef(sym: LocalVarSymbol) => !sym.mut
+    case Value.MemberRef(_, disamb) => stableMember(disamb)
+    case sel: Select => sel.qual.isStable && sel.symbol.exists(stableMember)
+    case Cast(path: Path, _, false) => path.isStable
+    case _ => false
   def selN(id: Tree.Ident): Path = Select(this, id)(N, N)(false)
   def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym), N)(false)
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
@@ -1431,7 +1449,7 @@ enum Value extends Path with ProductWithExtraInfo:
     * @param disamb The symbol disambiguating the definition that the reference refers to.
     */
   case MemberRef(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?])(val toLoc: Opt[Loc])
-  case This(sym: InnerSymbol)(val toLoc: Opt[Loc])
+  case This(sym: ThisSymbol)(val toLoc: Opt[Loc])
   case Lit(lit: Literal)(val toLoc: Opt[Loc])
 
   override def withLoc(loc: Opt[Loc]): Value = if loc == toLoc then this else this match
@@ -1469,7 +1487,7 @@ object Value:
         case bms: BlockMemberSymbol => bms.asMemberRef:
           disamb.getOrElse:
             lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
-        case sym: InnerSymbol => sym.asThis
+        case sym: ThisSymbol => sym.asThis
         case NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
     
     // * Some helper constructors that allow omitting the disambiguation symbol.
@@ -1535,7 +1553,7 @@ extension (s: SimpleSymbol)
 extension (bms: BlockMemberSymbol)
   inline def asMemberRef(disamb: DefinitionSymbol[?]): Value.MemberRef = Value.MemberRef(bms, disamb)(N)
 
-extension (sym: InnerSymbol)
+extension (sym: ThisSymbol)
   inline def asThis: Value.This = Value.This(sym)(N)
 
 extension (l: ValueSymbol)

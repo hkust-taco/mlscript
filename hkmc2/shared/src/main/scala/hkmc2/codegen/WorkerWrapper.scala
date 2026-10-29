@@ -48,7 +48,7 @@ class WorkerWrapper
       body.size <= cfg.altSmallThreshold
   
   private def freshParam(param: Param, mapping: collection.mutable.Map[Symbol, Symbol]): Param =
-    val freshSym = new VarSymbol(param.sym.id, erasedType = param.sym.erasedType)
+    val freshSym = new VarSymbol(param.sym.id, erasedType = param.sym.erasedType, mut = param.sym.mut)
     mapping(param.sym) = freshSym
     Param(param.flags, freshSym, param.sign, param.modulefulness)(param.toLoc).withSignTypeOf(param)
   

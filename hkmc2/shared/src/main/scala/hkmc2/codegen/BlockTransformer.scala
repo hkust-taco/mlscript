@@ -227,7 +227,6 @@ class BlockTransformer(subst: SymbolSubst):
     case sym: BuiltinSymbol => sym.subst
   
   def applyImportSymbol(sym: ImportSymbol): ImportSymbol = sym match
-    case sym: TempSymbol => sym.subst
     case sym: VarSymbol => sym.subst
     case sym: BlockMemberSymbol => sym.subst
   
