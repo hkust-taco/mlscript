@@ -1389,11 +1389,12 @@ class BlockSimplifier
             case _ => N
           case _ => N
 
-      /** Recover receivers from the resolved nested definitions, ordered outermost first.
-        * For `instance.Nested.f()`, Nested's enclosing IR class identifies the owner of
-        * `instance`, even though that variable does not itself name a class definition.
-        * Only a selection of the receiver's own definition proves this relationship:
-        * a field holding an alias of Nested need not belong to Nested's captured owner.
+      /** Find the paths that replace `this` references, ordered outermost first.
+        * If class `Owner` contains module `Nested`, then `instance.Nested.f()` gives
+        * `Owner.this -> instance` and `Nested.this -> instance.Nested`, in that order.
+        * The selected member must be the declared module itself. If `holder.saved` is
+        * an alias of `instance.Nested`, it gives no path from `holder` back to `instance`;
+        * stop there instead of incorrectly replacing `Owner.this` with `holder`.
         */
       def buildThisMapping(qual: Path, ownerSym: InnerSymbol): Ls[(InnerSymbol, Path)] =
         def loop(currentQual: Path, currentOwner: InnerSymbol, acc: Ls[(InnerSymbol, Path)]): Ls[(InnerSymbol, Path)] =
@@ -1895,11 +1896,10 @@ class BlockSimplifier
             val cfg = summon[Config.Inliner]
             val threshold = if insideInlineAnnotatedFunction then cfg.altSmallThreshold else cfg.inlineThreshold
             val receiverPaths = thisMapping
-            val receiverMapping = receiverPaths.toMap
             info.inlineCost(blk, threshold) match
             case N =>
               super.applyResult(call)(k)
-            case S(_) if info.isMethod && !freeReceivers(blk).forall(receiverMapping.contains) =>
+            case S(_) if info.isMethod && !freeReceivers(blk).forall(sym => receiverPaths.exists(_._1 === sym)) =>
               // A captured nested module may have lost the qualifier path to its enclosing receivers.
               // Keep the call when those receivers cannot be rebound: copying the body would let
               // its lexical `This` references escape their defining class or module.
