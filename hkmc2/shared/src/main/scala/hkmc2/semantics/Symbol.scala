@@ -455,7 +455,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   private def erasure: Opt[ErasedValueType | ErasedFuncSignature] =
     assert(isErased, s"Erasure of '$nme' read before initialization")
     assignedErasure
-  def initializeErasure(value: Opt[ErasedValueType | ErasedFuncSignature]): Unit =
+  private def initializeErasure(value: Opt[ErasedValueType | ErasedFuncSignature]): Unit =
     assert(!isErased, "Erasure initialized more than once")
     assert(value != null, "An initialized erasure cannot be null")
     assignedErasure = value

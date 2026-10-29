@@ -266,7 +266,10 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       field.foreach: sym =>
         if !sym.isErased then sym.erasedType = p.sym.erasedType
     statements.foreach:
-      case td: TermDefinition if !td.tsym.isErased => td.tsym.initializeErasure(definitionType(td))
+      case td: TermDefinition if !td.tsym.isErased => definitionType(td) match
+        case S(sig: ErasedFuncSignature) => td.tsym.erasedSignature = S(sig)
+        case S(tpe: ErasedValueType) => td.tsym.erasedType = S(tpe)
+        case N => td.tsym.erasedType = N
       case _ => ()
     statements.foreach:
       case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.erasedType = N
