@@ -1,53 +1,55 @@
 :classTags debug mono
 :js
-:noFreeze
 
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
 //│ <<< end class-tags transform-phase
 
 class Foo(val x, val y)
-class Bar(val x)
-//│ >>> start class-tags collection-phase
-//│ <<< end class-tags collection-phase
-//│ >>> start class-tags transform-phase
-//│ <<< end class-tags transform-phase
-
-
 fun foo(x, y) = new Foo(x, y)
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
 //│ <<< end class-tags transform-phase
 
 
+class Foo(val x, val y)
+class Bar(val x)
 fun foo(x, y) =
   let f = new Foo(x, y)
   @matchShapes(Foo(_, _)) shape.match of f, () => new Bar(f.Foo#x + f.Foo#y)
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@130 in foo
-//│ class-tags collection-phase > track consumption at match@138 in foo
+//│ class-tags collection-phase > track construction of Foo@138 in foo
+//│ class-tags collection-phase > track consumption at match@146 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@130
-//│ class-tags web-computation-phase >   field accesses: Foo.x@126, Foo.y@127
-//│ class-tags web-computation-phase >   pattern matches: match@138
+//│ class-tags web-computation-phase >   producers: Foo@138
+//│ class-tags web-computation-phase >   field accesses: Foo.x@128, Foo.y@129
+//│ class-tags web-computation-phase >   pattern matches: match@146
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
-//│ class-tags transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
+//│ class-tags transform-phase > allocated tag 1 for Bar(x: _)
+//│ class-tags transform-phase > duplicated Foo as Foo__Tagged
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _)->0
 //│ <<< end class-tags transform-phase
 
 
+class Bar(val x)
 private fun bar(x) = new Bar(x)
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Bar(x: _)
 //│ <<< end class-tags transform-phase
 
 
+class Foo(val x, val y)
+class Bar(val x)
 module Baz with
   fun bar(x) = new Bar(x)
   private fun barr(x) =
@@ -58,24 +60,27 @@ module Baz with
     let f = new Foo(x, x)
     @matchShapes(Foo(_, _)) shape.match of f, () => new Bar(f.Foo#x + f.Foo#y)
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@265 in Baz.barr
-//│ class-tags collection-phase > track consumption at Foo.x@250, Foo.y@251 in Baz.barr
-//│ class-tags collection-phase > track construction of Foo@273 in Baz.baz
-//│ class-tags collection-phase > track consumption at match@281 in Baz.baz
+//│ class-tags collection-phase > track construction of Foo@330 in Baz.barr
+//│ class-tags collection-phase > track consumption at Foo.x@315, Foo.y@316 in Baz.barr
+//│ class-tags collection-phase > track construction of Foo@338 in Baz.baz
+//│ class-tags collection-phase > track consumption at match@346 in Baz.baz
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@273
-//│ class-tags web-computation-phase >   field accesses: Foo.x@258, Foo.y@259
-//│ class-tags web-computation-phase >   pattern matches: match@281
+//│ class-tags web-computation-phase >   producers: Foo@338
+//│ class-tags web-computation-phase >   field accesses: Foo.x@323, Foo.y@324
+//│ class-tags web-computation-phase >   pattern matches: match@346
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
-//│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
-//│ class-tags transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
+//│ class-tags transform-phase > allocated tag 0 for Bar(x: _)
+//│ class-tags transform-phase > allocated tag 1 for Foo(x: _, y: _)
+//│ class-tags transform-phase > duplicated Foo as Foo__Tagged
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _)->1
 //│ <<< end class-tags transform-phase
 
 
 :ssjs
+class Foo(val x, val y)
 fun foo(x, y) =
   let f = new Foo(x, y)
   bar(f) * baz(f)
@@ -84,51 +89,74 @@ private fun bar(f) =
 private fun baz(f) =
   @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x - f.Foo#y
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@405 in foo
-//│ class-tags collection-phase > track consumption at match@420 in bar
-//│ class-tags collection-phase > track consumption at match@430 in baz
+//│ class-tags collection-phase > track construction of Foo@507 in foo
+//│ class-tags collection-phase > track consumption at match@522 in bar
+//│ class-tags collection-phase > track consumption at match@532 in baz
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@405
-//│ class-tags web-computation-phase >   field accesses: Foo.x@396, Foo.y@397, Foo.x@401, Foo.y@402
-//│ class-tags web-computation-phase >   pattern matches: match@420, match@430
+//│ class-tags web-computation-phase >   producers: Foo@507
+//│ class-tags web-computation-phase >   field accesses: Foo.x@494, Foo.y@495, Foo.x@499, Foo.y@500
+//│ class-tags web-computation-phase >   pattern matches: match@522, match@532
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
-//│ class-tags transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
-//│ class-tags transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
+//│ class-tags transform-phase > duplicated Foo as Foo__Tagged
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _)->0
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _)->0
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let bar1, foo2, baz;
+//│ let bar1, Foo7, foo2, baz, Foo__Tagged5;
 //│ foo2 = function foo(x, y) {
 //│   runtime.checkArgs("foo", 2, true, arguments.length);
-//│   let tmp, shapeMatchResult, shapeMatchResult1;
-//│   tmp = (new Foo1.class(x, y));
-//│   tmp.__tag$ = 0;
-//│   if (tmp.__tag$ === 0) {
-//│     shapeMatchResult1 = tmp.x + tmp.y;
-//│   }
-//│   if (tmp.__tag$ === 0) {
-//│     shapeMatchResult = tmp.x - tmp.y;
-//│     return shapeMatchResult1 * shapeMatchResult
-//│   }
-//│   return shapeMatchResult1 * undefined;
+//│   let f, tmp, tmp1;
+//│   f = globalThis.Object.freeze(new Foo__Tagged5.class(x, y, 0));
+//│   tmp = runtime.checkCall(bar1(f));
+//│   tmp1 = runtime.checkCall(baz(f));
+//│   return tmp * tmp1
 //│ };
 //│ bar1 = function bar(f) {
 //│   runtime.checkArgs("bar", 1, true, arguments.length);
-//│   let shapeMatchResult;
 //│   if (f.__tag$ === 0) {
-//│     shapeMatchResult = f.x + f.y;
+//│     return f.x + f.y
 //│   }
-//│   return shapeMatchResult
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
 //│ baz = function baz(f) {
 //│   runtime.checkArgs("baz", 1, true, arguments.length);
-//│   let shapeMatchResult;
-//│   if (f.__tag$ === 0) { shapeMatchResult = f.x - f.y; }
-//│   return shapeMatchResult
+//│   if (f.__tag$ === 0) {
+//│     return f.x - f.y
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
+//│ Foo7 = function Foo(x, y) {
+//│   return globalThis.Object.freeze(new Foo.class(x, y));
+//│ };
+//│ globalThis.Object.freeze(class Foo6 {
+//│   static {
+//│     Foo7.class = this
+//│   }
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", ["x", "y"]];
+//│ });
+//│ Foo__Tagged5 = function Foo__Tagged(x, y, __tag$) {
+//│   return globalThis.Object.freeze(new Foo__Tagged.class(x, y, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Foo__Tagged4 extends Foo7.class {
+//│   static {
+//│     Foo__Tagged5.class = this
+//│   }
+//│   constructor(x, y, __tag$) {
+//│     super(x, y);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo__Tagged", ["x", "y", "__tag$"]];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -137,11 +165,14 @@ foo(2, 1)
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
 //│ <<< end class-tags transform-phase
 //│ = 3
 
 
 :ssjs
+class Foo(val x, val y)
+class Bar(val x)
 fun foo(x, y) =
   let f = new Foo(x, y)
   baz(f)
@@ -153,67 +184,120 @@ private fun baz(t) =
     () => t.Foo#x + t.Foo#y
     () => t.Bar#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@569 in foo
-//│ class-tags collection-phase > track construction of Bar@574 in bar
-//│ class-tags collection-phase > track consumption at match@588 in baz
+//│ class-tags collection-phase > track construction of Foo@708 in foo
+//│ class-tags collection-phase > track construction of Bar@713 in bar
+//│ class-tags collection-phase > track consumption at match@727 in baz
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@569, Bar@574
-//│ class-tags web-computation-phase >   field accesses: Foo.x@563, Foo.y@564, Bar.x@566
-//│ class-tags web-computation-phase >   pattern matches: match@588
+//│ class-tags web-computation-phase >   producers: Foo@708, Bar@713
+//│ class-tags web-computation-phase >   field accesses: Foo.x@696, Foo.y@697, Bar.x@699
+//│ class-tags web-computation-phase >   pattern matches: match@727
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
 //│ class-tags transform-phase > allocated tag 1 for Bar(x: _)
-//│ class-tags transform-phase > match shapes Foo(x: _, y: _), Bar(x: _) against Foo(x: _, y: _)@0, Bar(x: _)@1
+//│ class-tags transform-phase > duplicated Foo as Foo__Tagged
+//│ class-tags transform-phase > duplicated Bar as Bar__Tagged
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _)->0, Bar(x: _)->1
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let bar2, foo3, baz1;
+//│ let Bar7, Foo9, bar2, baz1, foo3, Foo__Tagged7, Bar__Tagged1;
 //│ foo3 = function foo(x, y) {
 //│   runtime.checkArgs("foo", 2, true, arguments.length);
-//│   let tmp1;
-//│   tmp1 = (new Foo1.class(x, y));
-//│   tmp1.__tag$ = 0;
-//│   if (tmp1.__tag$ === 0) {
-//│     return tmp1.x + tmp1.y
-//│   } else if (tmp1.__tag$ === 1) {
-//│     return tmp1.x
-//│   }
-//│   return runtime.Unit;
+//│   let f1;
+//│   f1 = globalThis.Object.freeze(new Foo__Tagged7.class(x, y, 0));
+//│   return runtime.checkCall(baz1(f1))
 //│ };
 //│ bar2 = function bar(x) {
 //│   runtime.checkArgs("bar", 1, true, arguments.length);
-//│   let tmp1;
-//│   tmp1 = (new Bar1.class(x));
-//│   tmp1.__tag$ = 1;
-//│   if (tmp1.__tag$ === 0) {
-//│     return tmp1.x + tmp1.y
-//│   } else if (tmp1.__tag$ === 1) {
-//│     return tmp1.x
-//│   }
-//│   return runtime.Unit;
+//│   let b;
+//│   b = globalThis.Object.freeze(new Bar__Tagged1.class(x, 1));
+//│   return runtime.checkCall(baz1(b))
 //│ };
 //│ baz1 = function baz(t) {
 //│   runtime.checkArgs("baz", 1, true, arguments.length);
-//│   let shapeMatchResult2;
+//│   let shapeMatchResult, shapeMatchBranch;
 //│   if (t.__tag$ === 0) {
-//│     shapeMatchResult2 = t.x + t.y;
-//│   } else if (t.__tag$ === 1) { shapeMatchResult2 = t.x; }
-//│   return shapeMatchResult2
+//│     shapeMatchBranch = 0;
+//│   } else if (t.__tag$ === 1) {
+//│     shapeMatchBranch = 1;
+//│   } else {
+//│     shapeMatchBranch = -1;
+//│   }
+//│   if (shapeMatchBranch === 0) {
+//│     shapeMatchResult = t.x + t.y;
+//│   } else {
+//│     if (shapeMatchBranch === 1) {
+//│       shapeMatchResult = t.x;
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"))
+//│     }
+//│     return shapeMatchResult
+//│   }
+//│   return shapeMatchResult
 //│ };
+//│ Foo9 = function Foo(x, y) {
+//│   return globalThis.Object.freeze(new Foo.class(x, y));
+//│ };
+//│ globalThis.Object.freeze(class Foo8 {
+//│   static {
+//│     Foo9.class = this
+//│   }
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", ["x", "y"]];
+//│ });
+//│ Foo__Tagged7 = function Foo__Tagged(x, y, __tag$) {
+//│   return globalThis.Object.freeze(new Foo__Tagged.class(x, y, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Foo__Tagged6 extends Foo9.class {
+//│   static {
+//│     Foo__Tagged7.class = this
+//│   }
+//│   constructor(x, y, __tag$) {
+//│     super(x, y);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo__Tagged", ["x", "y", "__tag$"]];
+//│ });
+//│ Bar7 = function Bar(x) {
+//│   return globalThis.Object.freeze(new Bar.class(x));
+//│ };
+//│ globalThis.Object.freeze(class Bar6 {
+//│   static {
+//│     Bar7.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", ["x"]];
+//│ });
+//│ Bar__Tagged1 = function Bar__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new Bar__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Bar__Tagged extends Bar7.class {
+//│   static {
+//│     Bar__Tagged1.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar__Tagged", ["x", "__tag$"]];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
+:ssjs
 class Some(val x)
 object None
-//│ >>> start class-tags collection-phase
-//│ <<< end class-tags collection-phase
-//│ >>> start class-tags transform-phase
-//│ <<< end class-tags transform-phase
-
-
-:ssjs
 private fun foo(x) =
   if x > 0 then new Some(x) else None
 fun bar(x) =
@@ -222,33 +306,30 @@ fun bar(x) =
     () => t.Some#x,
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Some@707, None@708 in foo
-//│ class-tags collection-phase > track consumption at match@718 in bar
+//│ class-tags collection-phase > track construction of Some@863, None@864 in foo
+//│ class-tags collection-phase > track consumption at match@874 in bar
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Some@707, None@708
-//│ class-tags web-computation-phase >   field accesses: Some.x@701
-//│ class-tags web-computation-phase >   pattern matches: match@718
+//│ class-tags web-computation-phase >   producers: Some@863, None@864
+//│ class-tags web-computation-phase >   field accesses: Some.x@855
+//│ class-tags web-computation-phase >   pattern matches: match@874
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Some(x: _)
 //│ class-tags transform-phase > allocated tag 1 for None
-//│ class-tags transform-phase > match shapes Some(x: _), None against Some(x: _)@0, None@1
+//│ class-tags transform-phase > duplicated Some as Some__Tagged
+//│ class-tags transform-phase > match shapes Some(x: _)->0, None->1
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let bar3, foo4;
+//│ let bar3, Some1, foo4, None1, Some__Tagged1;
 //│ foo4 = function foo(x) {
 //│   runtime.checkArgs("foo", 1, true, arguments.length);
 //│   let scrut;
 //│   scrut = x > 0;
 //│   if (scrut === true) {
-//│     let tmp1;
-//│     tmp1 = (new Some1.class(x));
-//│     tmp1.__tag$ = 0;
-//│     return tmp1
+//│     return globalThis.Object.freeze(new Some__Tagged1.class(x, 0))
 //│   }
-//│   None1.__tag$ = 1;
 //│   return None1;
 //│ };
 //│ bar3 = function bar(x) {
@@ -256,231 +337,455 @@ fun bar(x) =
 //│   let inlinedVal, scrut;
 //│   scrut = x > 0;
 //│   if (scrut === true) {
-//│     let tmp1;
-//│     tmp1 = (new Some1.class(x));
-//│     tmp1.__tag$ = 0;
-//│     inlinedVal = tmp1;
+//│     inlinedVal = globalThis.Object.freeze(new Some__Tagged1.class(x, 0));
 //│   } else {
-//│     None1.__tag$ = 1;
 //│     inlinedVal = None1;
 //│   }
 //│   if (inlinedVal.__tag$ === 0) {
 //│     return inlinedVal.x
-//│   } else if (inlinedVal.__tag$ === 1) { return 0 }
-//│   return runtime.Unit;
+//│   } else if (inlinedVal.__tag$ === 1) {
+//│     return 0
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
+//│ Some1 = function Some(x) {
+//│   return globalThis.Object.freeze(new Some.class(x));
+//│ };
+//│ globalThis.Object.freeze(class Some {
+//│   static {
+//│     Some1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Some", ["x"]];
+//│ });
+//│ Some__Tagged1 = function Some__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new Some__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Some__Tagged extends Some1.class {
+//│   static {
+//│     Some__Tagged1.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Some__Tagged", ["x", "__tag$"]];
+//│ });
+//│ globalThis.Object.freeze(class None {
+//│   static {
+//│     new this
+//│   }
+//│   constructor() {
+//│     None1 = this;
+//│     this.__tag$ = 1;
+//│     Object.defineProperty(this, "class", {
+//│       value: None
+//│     });
+//│     globalThis.Object.freeze(this);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "None"];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :ssjs
+class Foo(val x, val y)
 fun callCtor(x, y) =
   let f = Foo(x, y)
   @matchShapes(Foo(_, _)) shape.match of f, () => f.Foo#x + f.Foo#y
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@787 in callCtor
-//│ class-tags collection-phase > track consumption at match@794 in callCtor
+//│ class-tags collection-phase > track construction of Foo@975 in callCtor
+//│ class-tags collection-phase > track consumption at match@982 in callCtor
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@787
-//│ class-tags web-computation-phase >   field accesses: Foo.x@783, Foo.y@784
-//│ class-tags web-computation-phase >   pattern matches: match@794
+//│ class-tags web-computation-phase >   producers: Foo@975
+//│ class-tags web-computation-phase >   field accesses: Foo.x@967, Foo.y@968
+//│ class-tags web-computation-phase >   pattern matches: match@982
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: _)
-//│ class-tags transform-phase > match shapes Foo(x: _, y: _) against Foo(x: _, y: _)@0
+//│ class-tags transform-phase > duplicated Foo as Foo__Tagged
+//│ class-tags transform-phase > match shapes Foo(x: _, y: _)->0
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let callCtor;
+//│ let Foo11, callCtor, Foo__Tagged9;
 //│ callCtor = function callCtor(x, y) {
 //│   runtime.checkArgs("callCtor", 2, true, arguments.length);
-//│   let tmp1;
-//│   tmp1 = runtime.checkCall(Foo1(x, y));
-//│   tmp1.__tag$ = 0;
-//│   if (tmp1.__tag$ === 0) { return tmp1.x + tmp1.y }
-//│   return runtime.Unit;
+//│   let f1;
+//│   f1 = globalThis.Object.freeze(new Foo__Tagged9.class(x, y, 0));
+//│   if (f1.__tag$ === 0) {
+//│     return f1.x + f1.y
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
+//│ Foo11 = function Foo(x, y) {
+//│   return globalThis.Object.freeze(new Foo.class(x, y));
+//│ };
+//│ globalThis.Object.freeze(class Foo10 {
+//│   static {
+//│     Foo11.class = this
+//│   }
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", ["x", "y"]];
+//│ });
+//│ Foo__Tagged9 = function Foo__Tagged(x, y, __tag$) {
+//│   return globalThis.Object.freeze(new Foo__Tagged.class(x, y, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Foo__Tagged8 extends Foo11.class {
+//│   static {
+//│     Foo__Tagged9.class = this
+//│   }
+//│   constructor(x, y, __tag$) {
+//│     super(x, y);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo__Tagged", ["x", "y", "__tag$"]];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :ssjs
+class Bar(val x)
 fun foo(x, y) =
   let f = [1, 2, 3]
   if f is
     [x, y, z] then new Bar(x + y + z)
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of tup(size 3)@866 in foo
-//│ class-tags collection-phase > track consumption at tup(size 3).0@860, tup(size 3).1@861, tup(size 3).2@862 in foo
+//│ class-tags collection-phase > track construction of tup(size 3)@1082 in foo
+//│ class-tags collection-phase > track consumption at tup(size 3).0@1074, tup(size 3).2@1076, tup(size 3).1@1075 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Bar(x: _)
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let foo5;
+//│ let Bar9, foo5;
 //│ foo5 = function foo(x, y) {
 //│   runtime.checkArgs("foo", 2, true, arguments.length);
-//│   let f, element2$, element1$, element0$, tmp1, tmp2;
-//│   f = ([
+//│   let f1, element2$, element1$, element0$, tmp2, tmp3;
+//│   f1 = globalThis.Object.freeze([
 //│     1,
 //│     2,
 //│     3
 //│   ]);
-//│   if (runtime.Tuple.isArrayLike(f) && f.length === 3) {
-//│     element0$ = runtime.checkCall(runtime.Tuple.get(f, 0));
-//│     element1$ = runtime.checkCall(runtime.Tuple.get(f, 1));
-//│     element2$ = runtime.checkCall(runtime.Tuple.get(f, 2));
-//│     tmp1 = element0$ + element1$;
-//│     tmp2 = tmp1 + element2$;
-//│     return (new Bar1.class(tmp2))
+//│   if (runtime.Tuple.isArrayLike(f1) && f1.length === 3) {
+//│     element0$ = runtime.checkCall(runtime.Tuple.get(f1, 0));
+//│     element1$ = runtime.checkCall(runtime.Tuple.get(f1, 1));
+//│     element2$ = runtime.checkCall(runtime.Tuple.get(f1, 2));
+//│     tmp2 = element0$ + element1$;
+//│     tmp3 = tmp2 + element2$;
+//│     return globalThis.Object.freeze(new Bar9.class(tmp3))
 //│   }
-//│   throw (new globalThis.Error("match error"));
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
+//│ Bar9 = function Bar(x) {
+//│   return globalThis.Object.freeze(new Bar.class(x));
+//│ };
+//│ globalThis.Object.freeze(class Bar8 {
+//│   static {
+//│     Bar9.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", ["x"]];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :ssjs
+class Bar(val x)
+class Some(val x)
+object None
 fun foo(x, y) =
   let t = new Some(x)
   let p = @matchShapes(Some(_), None) shape.match of t, () => new Bar(t.Some#x), () => new Bar(0)
   @matchShapes(Bar(_)) shape.match of p, () => p.Bar#x + 1
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Some@952 in foo
-//│ class-tags collection-phase > track consumption at match@967, match@960 in foo
+//│ class-tags collection-phase > track construction of Some@1191 in foo
+//│ class-tags collection-phase > track consumption at match@1199, match@1206 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Some@952, Bar@956, Bar@959
-//│ class-tags web-computation-phase >   field accesses: Some.x@946, Bar.x@949
-//│ class-tags web-computation-phase >   pattern matches: match@960, match@967
+//│ class-tags web-computation-phase >   producers: Some@1191, Bar@1195, Bar@1198
+//│ class-tags web-computation-phase >   field accesses: Some.x@1181, Bar.x@1184
+//│ class-tags web-computation-phase >   pattern matches: match@1199, match@1206
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Some(x: _)
 //│ class-tags transform-phase > allocated tag 1 for Bar(x: _)
 //│ class-tags transform-phase > allocated tag 2 for Bar(x: 0)
-//│ class-tags transform-phase > match shapes Some(x: _), None against Some(x: _)@0
-//│ class-tags transform-phase > match shapes Bar(x: _) against Bar(x: _)@1, Bar(x: 0)@2
+//│ class-tags transform-phase > duplicated Some as Some__Tagged
+//│ class-tags transform-phase > duplicated Bar as Bar__Tagged
+//│ class-tags transform-phase > match shapes Some(x: _)->0, None-><none>
+//│ class-tags transform-phase > match shapes Bar(x: _)->1|2
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let foo6;
+//│ let Bar11, Some3, foo6, None3, Some__Tagged3, Bar__Tagged3;
 //│ foo6 = function foo(x, y) {
 //│   runtime.checkArgs("foo", 2, true, arguments.length);
-//│   let tmp1, shapeMatchResult2;
-//│   tmp1 = (new Some1.class(x));
-//│   tmp1.__tag$ = 0;
-//│   if (tmp1.__tag$ === 0) {
-//│     let tmp2;
-//│     tmp2 = (new Bar1.class(tmp1.x));
-//│     tmp2.__tag$ = 1;
-//│     shapeMatchResult2 = tmp2;
+//│   let t, shapeMatchResult;
+//│   t = globalThis.Object.freeze(new Some__Tagged3.class(x, 0));
+//│   if (t.__tag$ === 0) {
+//│     shapeMatchResult = globalThis.Object.freeze(new Bar__Tagged3.class(t.x, 1));
+//│     if (shapeMatchResult.__tag$ === 1) {
+//│       return shapeMatchResult.x + 1
+//│     } else if (shapeMatchResult.__tag$ === 2) {
+//│       return shapeMatchResult.x + 1
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│   }
-//│   if (shapeMatchResult2.__tag$ === 1) {
-//│     return shapeMatchResult2.x + 1
-//│   } else if (shapeMatchResult2.__tag$ === 2) {
-//│     return shapeMatchResult2.x + 1
-//│   }
-//│   return runtime.Unit;
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
+//│ Bar11 = function Bar(x) {
+//│   return globalThis.Object.freeze(new Bar.class(x));
+//│ };
+//│ globalThis.Object.freeze(class Bar10 {
+//│   static {
+//│     Bar11.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", ["x"]];
+//│ });
+//│ Bar__Tagged3 = function Bar__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new Bar__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Bar__Tagged2 extends Bar11.class {
+//│   static {
+//│     Bar__Tagged3.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar__Tagged", ["x", "__tag$"]];
+//│ });
+//│ Some3 = function Some(x) {
+//│   return globalThis.Object.freeze(new Some.class(x));
+//│ };
+//│ globalThis.Object.freeze(class Some2 {
+//│   static {
+//│     Some3.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Some", ["x"]];
+//│ });
+//│ Some__Tagged3 = function Some__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new Some__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Some__Tagged2 extends Some3.class {
+//│   static {
+//│     Some__Tagged3.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Some__Tagged", ["x", "__tag$"]];
+//│ });
+//│ globalThis.Object.freeze(class None2 {
+//│   static {
+//│     new this
+//│   }
+//│   constructor() {
+//│     None3 = this;
+//│     Object.defineProperty(this, "class", {
+//│       value: None2
+//│     });
+//│     globalThis.Object.freeze(this);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "None"];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
+:ssjs
+class Bar(val x)
 class C(val x)
 class D(val x)
-//│ >>> start class-tags collection-phase
-//│ <<< end class-tags collection-phase
-//│ >>> start class-tags transform-phase
-//│ <<< end class-tags transform-phase
-
-:ssjs
 fun foo(x) =
   let t = if x then new Bar(new C(0)) else new Bar(new D(1))
   @matchShapes(Bar(_)) shape.match of t, () => t.Bar#x.x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Bar@1078, Bar@1080 in foo
-//│ class-tags collection-phase > track consumption at match@1084 in foo
+//│ class-tags collection-phase > track construction of Bar@1342, Bar@1340 in foo
+//│ class-tags collection-phase > track consumption at match@1346 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@1077, Bar@1078, D@1079, Bar@1080
-//│ class-tags web-computation-phase >   field accesses: Bar.x@1074
-//│ class-tags web-computation-phase >   pattern matches: match@1084
+//│ class-tags web-computation-phase >   producers: C@1339, Bar@1340, D@1341, Bar@1342
+//│ class-tags web-computation-phase >   field accesses: Bar.x@1330
+//│ class-tags web-computation-phase >   pattern matches: match@1346
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: 0)
 //│ class-tags transform-phase > allocated tag 1 for Bar(x: C(x: 0))
 //│ class-tags transform-phase > allocated tag 2 for D(x: 1)
 //│ class-tags transform-phase > allocated tag 3 for Bar(x: D(x: 1))
-//│ class-tags transform-phase > match shapes Bar(x: _) against Bar(x: C(x: 0))@1, Bar(x: D(x: 1))@3
+//│ class-tags transform-phase > duplicated Bar as Bar__Tagged
+//│ class-tags transform-phase > match shapes Bar(x: _)->1|3
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let foo7;
+//│ let Bar13, C1, D1, foo7, Bar__Tagged5;
 //│ foo7 = function foo(x) {
 //│   runtime.checkArgs("foo", 1, true, arguments.length);
-//│   let tmp1;
+//│   let tmp2, tmp3, tmp4;
 //│   if (x === true) {
-//│     let tmp2, tmp3;
-//│     tmp2 = (new C1.class(0));
-//│     tmp2.__tag$ = 0;
-//│     tmp3 = (new Bar1.class(tmp2));
-//│     tmp3.__tag$ = 1;
-//│     tmp1 = tmp3;
+//│     tmp2 = globalThis.Object.freeze(new C1.class(0));
+//│     tmp3 = globalThis.Object.freeze(new Bar__Tagged5.class(tmp2, 1));
 //│   } else {
-//│     let tmp2, tmp3;
-//│     tmp2 = (new D1.class(1));
-//│     tmp2.__tag$ = 2;
-//│     tmp3 = (new Bar1.class(tmp2));
-//│     tmp3.__tag$ = 3;
-//│     tmp1 = tmp3;
+//│     tmp4 = globalThis.Object.freeze(new D1.class(1));
+//│     tmp3 = globalThis.Object.freeze(new Bar__Tagged5.class(tmp4, 3));
 //│   }
-//│   if (tmp1.__tag$ === 1) {
-//│     return runtime.checkSelect(tmp1.x.x, "x", tmp1.x)
-//│   } else if (tmp1.__tag$ === 3) {
-//│     return runtime.checkSelect(tmp1.x.x, "x", tmp1.x)
+//│   if (tmp3.__tag$ === 1) {
+//│     return runtime.checkSelect(tmp3.x.x, "x", tmp3.x)
+//│   } else if (tmp3.__tag$ === 3) {
+//│     return runtime.checkSelect(tmp3.x.x, "x", tmp3.x)
 //│   }
-//│   return runtime.Unit;
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
+//│ Bar13 = function Bar(x) {
+//│   return globalThis.Object.freeze(new Bar.class(x));
+//│ };
+//│ globalThis.Object.freeze(class Bar12 {
+//│   static {
+//│     Bar13.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", ["x"]];
+//│ });
+//│ Bar__Tagged5 = function Bar__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new Bar__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Bar__Tagged4 extends Bar13.class {
+//│   static {
+//│     Bar__Tagged5.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar__Tagged", ["x", "__tag$"]];
+//│ });
+//│ C1 = function C(x) {
+//│   return globalThis.Object.freeze(new C.class(x));
+//│ };
+//│ globalThis.Object.freeze(class C {
+//│   static {
+//│     C1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C", ["x"]];
+//│ });
+//│ D1 = function D(x) {
+//│   return globalThis.Object.freeze(new D.class(x));
+//│ };
+//│ globalThis.Object.freeze(class D {
+//│   static {
+//│     D1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "D", ["x"]];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :ssjs
+class C(val x)
 fun foo(x) =
   let t = if x then new C(0) else new C(0)
   @matchShapes(C(_)) shape.match of t, () => t.C#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@1148, C@1149 in foo
-//│ class-tags collection-phase > track consumption at match@1153 in foo
+//│ class-tags collection-phase > track construction of C@1432, C@1431 in foo
+//│ class-tags collection-phase > track consumption at match@1436 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@1148, C@1149
-//│ class-tags web-computation-phase >   field accesses: C.x@1145
-//│ class-tags web-computation-phase >   pattern matches: match@1153
+//│ class-tags web-computation-phase >   producers: C@1431, C@1432
+//│ class-tags web-computation-phase >   field accesses: C.x@1426
+//│ class-tags web-computation-phase >   pattern matches: match@1436
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: 0)
-//│ class-tags transform-phase > match shapes C(x: _) against C(x: 0)@0
+//│ class-tags transform-phase > duplicated C as C__Tagged
+//│ class-tags transform-phase > match shapes C(x: _)->0
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let foo8;
+//│ let C3, foo8, C__Tagged1;
 //│ foo8 = function foo(x) {
 //│   runtime.checkArgs("foo", 1, true, arguments.length);
-//│   let tmp1;
+//│   let tmp2;
 //│   if (x === true) {
-//│     let tmp2;
-//│     tmp2 = (new C1.class(0));
-//│     tmp2.__tag$ = 0;
-//│     tmp1 = tmp2;
+//│     tmp2 = globalThis.Object.freeze(new C__Tagged1.class(0, 0));
 //│   } else {
-//│     let tmp2;
-//│     tmp2 = (new C1.class(0));
-//│     tmp2.__tag$ = 0;
-//│     tmp1 = tmp2;
+//│     tmp2 = globalThis.Object.freeze(new C__Tagged1.class(0, 0));
 //│   }
-//│   if (tmp1.__tag$ === 0) { return tmp1.x }
-//│   return runtime.Unit;
+//│   if (tmp2.__tag$ === 0) {
+//│     return tmp2.x
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
+//│ C3 = function C(x) {
+//│   return globalThis.Object.freeze(new C.class(x));
+//│ };
+//│ globalThis.Object.freeze(class C2 {
+//│   static {
+//│     C3.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C", ["x"]];
+//│ });
+//│ C__Tagged1 = function C__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new C__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class C__Tagged extends C3.class {
+//│   static {
+//│     C__Tagged1.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C__Tagged", ["x", "__tag$"]];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 :ssjs
+class Bar(val x)
 fun foo(x) =
   let tuple = if x then [1, 3] else [1, 4]
   let value = new Bar(tuple)
@@ -488,77 +793,79 @@ fun foo(x) =
     () => 3,
     () => 4
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Bar@1213 in foo
-//│ class-tags collection-phase > track consumption at match@1218 in foo
+//│ class-tags collection-phase > track construction of Bar@1517 in foo
+//│ class-tags collection-phase > track consumption at match@1522 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: tup(size 2)@1211, tup(size 2)@1212, Bar@1213
-//│ class-tags web-computation-phase >   pattern matches: match@1218
+//│ class-tags web-computation-phase >   producers: tup(size 2)@1515, tup(size 2)@1516, Bar@1517
+//│ class-tags web-computation-phase >   pattern matches: match@1522
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
-//│ class-tags transform-phase > allocated tag 0 for Bar(x: tup(size 2)(1, 3))
-//│ class-tags transform-phase > allocated tag 1 for Bar(x: tup(size 2)(1, 4))
-//│ class-tags transform-phase > match shapes Bar(x: tup(size 2)(1, 3)), Bar(x: tup(size 2)(1, 4)) against Bar(x: tup(size 2)(1, 3))@0, Bar(x: tup(size 2)(1, 4))@1
+//│ class-tags transform-phase > allocated tag 0 for Bar(x: tup(size 2)(1, 4))
+//│ class-tags transform-phase > allocated tag 1 for Bar(x: tup(size 2)(1, 3))
+//│ class-tags transform-phase > duplicated Bar as Bar__Tagged
+//│ class-tags transform-phase > no tag for tup(size 2)@result of shape tup(size 2)(1, 3)
+//│ class-tags transform-phase > no tag for tup(size 2)@result of shape tup(size 2)(1, 4)
+//│ class-tags transform-phase > match shapes Bar(x: tup(size 2)(1, 3))->1, Bar(x: tup(size 2)(1, 4))->0
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let foo9;
+//│ let Bar15, foo9, Bar__Tagged7;
 //│ foo9 = function foo(x) {
 //│   runtime.checkArgs("foo", 1, true, arguments.length);
-//│   let tmp1, tmp2, tmp3;
+//│   let value, tmp2, shapeTag, tmp3;
 //│   if (x === true) {
-//│     tmp1 = ([
+//│     tmp2 = globalThis.Object.freeze([
 //│       1,
 //│       3
 //│     ]);
 //│   } else {
-//│     tmp1 = ([
+//│     tmp2 = globalThis.Object.freeze([
 //│       1,
 //│       4
 //│     ]);
 //│   }
-//│   tmp2 = (new Bar1.class(tmp1));
-//│   if (runtime.Tuple.isArrayLike(tmp1) && tmp1.length === 2) {
-//│     let tmp4, tmp5;
-//│     tmp4 = tmp1.at(0) === 1;
-//│     if (tmp4 === true) {
-//│       let tmp6;
-//│       tmp6 = tmp1.at(1) === 3;
-//│       tmp5 = tmp6;
-//│     } else {
-//│       tmp5 = false;
-//│     }
-//│     tmp3 = tmp5;
-//│   } else {
-//│     tmp3 = false;
-//│   }
+//│   tmp3 = tmp2.at(1) === 4;
 //│   if (tmp3 === true) {
-//│     tmp2.__tag$ = 0;
+//│     shapeTag = 0;
 //│   } else {
-//│     let tmp4;
-//│     if (runtime.Tuple.isArrayLike(tmp1) && tmp1.length === 2) {
-//│       let tmp5, tmp6;
-//│       tmp5 = tmp1.at(0) === 1;
-//│       if (tmp5 === true) {
-//│         let tmp7;
-//│         tmp7 = tmp1.at(1) === 4;
-//│         tmp6 = tmp7;
-//│       } else {
-//│         tmp6 = false;
-//│       }
-//│       tmp4 = tmp6;
-//│     } else {
-//│       tmp4 = false;
-//│     }
-//│     if (tmp4 === true) {
-//│       tmp2.__tag$ = 1;
-//│     }
+//│     shapeTag = 1;
 //│   }
-//│   if (tmp2.__tag$ === 0) {
+//│   value = globalThis.Object.freeze(new Bar__Tagged7.class(tmp2, shapeTag));
+//│   if (value.__tag$ === 1) {
 //│     return 3
-//│   } else if (tmp2.__tag$ === 1) { return 4 }
-//│   return runtime.Unit;
+//│   } else if (value.__tag$ === 0) {
+//│     return 4
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
+//│ Bar15 = function Bar(x) {
+//│   return globalThis.Object.freeze(new Bar.class(x));
+//│ };
+//│ globalThis.Object.freeze(class Bar14 {
+//│   static {
+//│     Bar15.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", ["x"]];
+//│ });
+//│ Bar__Tagged7 = function Bar__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new Bar__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Bar__Tagged6 extends Bar15.class {
+//│   static {
+//│     Bar__Tagged7.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar__Tagged", ["x", "__tag$"]];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -567,6 +874,7 @@ foo(true)
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
 //│ <<< end class-tags transform-phase
 //│ = 3
 
@@ -576,37 +884,126 @@ foo(false)
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
 //│ <<< end class-tags transform-phase
 //│ = 4
 
 
 // do not insert a tag for t, since it is not matched by shape.match
 :ssjs
+class Bar(val x)
+class C(val x)
+class D(val x)
 fun foo(x) =
   let t = if x then new Bar(new C(0)) else new Bar(new D(1))
   if t is
     Bar then t.Bar#x.x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Bar@1322, Bar@1324 in foo
+//│ class-tags collection-phase > track construction of Bar@1650, Bar@1648 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for C(x: 0)
+//│ class-tags transform-phase > allocated tag 1 for Bar(x: C(x: 0))
+//│ class-tags transform-phase > allocated tag 2 for D(x: 1)
+//│ class-tags transform-phase > allocated tag 3 for Bar(x: D(x: 1))
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let foo10;
+//│ let Bar17, C5, D3, foo10;
 //│ foo10 = function foo(x) {
 //│   runtime.checkArgs("foo", 1, true, arguments.length);
-//│   let tmp1, tmp2, tmp3;
+//│   let tmp2, tmp3, tmp4;
 //│   if (x === true) {
-//│     tmp1 = (new C1.class(0));
-//│     tmp2 = (new Bar1.class(tmp1));
+//│     tmp2 = globalThis.Object.freeze(new C5.class(0));
+//│     tmp3 = globalThis.Object.freeze(new Bar17.class(tmp2));
 //│   } else {
-//│     tmp3 = (new D1.class(1));
-//│     tmp2 = (new Bar1.class(tmp3));
+//│     tmp4 = globalThis.Object.freeze(new D3.class(1));
+//│     tmp3 = globalThis.Object.freeze(new Bar17.class(tmp4));
 //│   }
-//│   if (tmp2 instanceof Bar1.class) {
-//│     return runtime.checkSelect(tmp2.x.x, "x", tmp2.x)
+//│   if (tmp3 instanceof Bar17.class) {
+//│     return runtime.checkSelect(tmp3.x.x, "x", tmp3.x)
 //│   }
-//│   throw (new globalThis.Error("match error"));
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
+//│ Bar17 = function Bar(x) {
+//│   return globalThis.Object.freeze(new Bar.class(x));
+//│ };
+//│ globalThis.Object.freeze(class Bar16 {
+//│   static {
+//│     Bar17.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", ["x"]];
+//│ });
+//│ C5 = function C(x) {
+//│   return globalThis.Object.freeze(new C.class(x));
+//│ };
+//│ globalThis.Object.freeze(class C4 {
+//│   static {
+//│     C5.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C", ["x"]];
+//│ });
+//│ D3 = function D(x) {
+//│   return globalThis.Object.freeze(new D.class(x));
+//│ };
+//│ globalThis.Object.freeze(class D2 {
+//│   static {
+//│     D3.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "D", ["x"]];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+class C(val x)
+fun tupleLength(flag, a, b, c) =
+  let t = if flag then [a, b] else [a, b, c]
+  let v = new C(t)
+  @matchShapes(C([_, _]), C([_, _, _])) shape.match of v, () => "two", () => "three"
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of C@1727 in tupleLength
+//│ class-tags collection-phase > track consumption at match@1732 in tupleLength
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: tup(size 2)@1725, tup(size 3)@1726, C@1727
+//│ class-tags web-computation-phase >   pattern matches: match@1732
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for C(x: tup(size 3)(_, _, _))
+//│ class-tags transform-phase > allocated tag 1 for C(x: tup(size 2)(_, _))
+//│ class-tags transform-phase > duplicated C as C__Tagged
+//│ class-tags transform-phase > no tag for tup(size 2)@result of shape tup(size 2)(_, _)
+//│ class-tags transform-phase > no tag for tup(size 3)@result of shape tup(size 3)(_, _, _)
+//│ class-tags transform-phase > match shapes C(x: tup(size 2)(_, _))->1, C(x: tup(size 3)(_, _, _))->0
+//│ <<< end class-tags transform-phase
+
+:expect "two"
+tupleLength(true, 1, 2, 3)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
+//│ <<< end class-tags transform-phase
+//│ = "two"
+
+:expect "three"
+tupleLength(false, 1, 2, 3)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
+//│ <<< end class-tags transform-phase
+//│ = "three"
 

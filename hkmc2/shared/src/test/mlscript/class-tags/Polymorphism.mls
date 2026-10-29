@@ -1,21 +1,15 @@
 :classTags debug
 :js
-:noFreeze
 
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
 //│ <<< end class-tags transform-phase
+:ssjs
 class Box(val x)
 class A(val x)
 class B(val x)
-//│ >>> start class-tags collection-phase
-//│ <<< end class-tags collection-phase
-//│ >>> start class-tags transform-phase
-//│ <<< end class-tags transform-phase
-
-
-:ssjs
 private fun wrap(x) = new Box(x)
 fun poly(flag) =
   let a = wrap(new A(0))
@@ -23,59 +17,160 @@ fun poly(flag) =
   let value = if flag then a else b
   @matchShapes(Box(A(_)), Box(B(_))) shape.match of value, () => 1, () => 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@127 in wrap
-//│ class-tags collection-phase > track consumption at match@150 in poly
+//│ class-tags collection-phase > track construction of Box@117 in wrap
+//│ class-tags collection-phase > track consumption at match@130 in poly
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@127, Box@127, A@130, B@138
-//│ class-tags web-computation-phase >   pattern matches: match@150
+//│ class-tags web-computation-phase >   producers: Box@117, A@120, B@123
+//│ class-tags web-computation-phase >   pattern matches: match@130
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
-//│ class-tags transform-phase > allocated tag 0 for Box(x: A(x: 0))
-//│ class-tags transform-phase > allocated tag 1 for Box(x: B(x: 0))
-//│ class-tags transform-phase > allocated tag 2 for A(x: 0)
+//│ class-tags transform-phase > allocated tag 0 for Box(x: _)
+//│ class-tags transform-phase > allocated tag 1 for A(x: 0)
+//│ class-tags transform-phase > allocated tag 2 for Box(x: A(x: 0))
 //│ class-tags transform-phase > allocated tag 3 for B(x: 0)
-//│ class-tags transform-phase > match shapes Box(x: A(x: _)), Box(x: B(x: _)) against Box(x: A(x: 0))@0, Box(x: B(x: 0))@1
+//│ class-tags transform-phase > allocated tag 4 for Box(x: B(x: 0))
+//│ class-tags transform-phase > duplicated Box as Box__Tagged
+//│ class-tags transform-phase > duplicated A as A__Tagged
+//│ class-tags transform-phase > duplicated B as B__Tagged
+//│ class-tags transform-phase > match shapes Box(x: A(x: _))->2, Box(x: B(x: _))->4
 //│ <<< end class-tags transform-phase
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
-//│ let poly, wrap;
+//│ let poly, Box1, A1, wrap, B1, Box__Tagged1, A__Tagged1, B__Tagged1;
 //│ wrap = function wrap(x) {
 //│   runtime.checkArgs("wrap", 1, true, arguments.length);
 //│   let tmp, tmp1;
-//│   tmp = (new Box1.class(x));
-//│   tmp1 = x.__tag$ === 2;
+//│   tmp = x.__tag$ === 1;
+//│   tmp1 = x.__tag$ === 3;
+//│   if (tmp === true) {
+//│     return globalThis.Object.freeze(new Box__Tagged1.class(x, 2))
+//│   }
 //│   if (tmp1 === true) {
-//│     tmp.__tag$ = 0;
-//│     return tmp
+//│     return globalThis.Object.freeze(new Box__Tagged1.class(x, 4))
 //│   }
-//│   {
-//│     let tmp2;
-//│     tmp2 = x.__tag$ === 3;
-//│     if (tmp2 === true) {
-//│       tmp.__tag$ = 1;
-//│       return tmp
-//│     }
-//│     return tmp;
-//│   }
+//│   return globalThis.Object.freeze(new Box__Tagged1.class(x, 0));
 //│ };
 //│ poly = function poly(flag) {
 //│   runtime.checkArgs("poly", 1, true, arguments.length);
-//│   let a, b, tmp, tmp1, tmp2;
-//│   tmp1 = (new A1.class(0));
-//│   tmp1.__tag$ = 2;
-//│   a = runtime.checkCall(wrap(tmp1));
-//│   tmp2 = (new B1.class(0));
-//│   tmp2.__tag$ = 3;
-//│   b = runtime.checkCall(wrap(tmp2));
-//│   if (flag === true) {
-//│     tmp = a;
+//│   let tmp, tmp1, tmp2, inlinedVal, inlinedVal1, tmp3, tmp4, tmp5, tmp6;
+//│   tmp = globalThis.Object.freeze(new A__Tagged1.class(0, 1));
+//│   tmp5 = tmp.__tag$ === 1;
+//│   tmp6 = tmp.__tag$ === 3;
+//│   if (tmp5 === true) {
+//│     inlinedVal = globalThis.Object.freeze(new Box__Tagged1.class(tmp, 2));
 //│   } else {
-//│     tmp = b;
+//│     if (tmp6 === true) {
+//│       inlinedVal = globalThis.Object.freeze(new Box__Tagged1.class(tmp, 4));
+//│     } else {
+//│       inlinedVal = globalThis.Object.freeze(new Box__Tagged1.class(tmp, 0));
+//│     }
 //│   }
-//│   if (tmp.__tag$ === 0) { return 1 } else if (tmp.__tag$ === 1) { return 2 }
-//│   return runtime.Unit;
+//│   tmp1 = globalThis.Object.freeze(new B__Tagged1.class(0, 3));
+//│   tmp3 = tmp1.__tag$ === 1;
+//│   tmp4 = tmp1.__tag$ === 3;
+//│   if (tmp3 === true) {
+//│     inlinedVal1 = globalThis.Object.freeze(new Box__Tagged1.class(tmp1, 2));
+//│   } else {
+//│     if (tmp4 === true) {
+//│       inlinedVal1 = globalThis.Object.freeze(new Box__Tagged1.class(tmp1, 4));
+//│     } else {
+//│       inlinedVal1 = globalThis.Object.freeze(new Box__Tagged1.class(tmp1, 0));
+//│     }
+//│   }
+//│   if (flag === true) {
+//│     tmp2 = inlinedVal;
+//│   } else {
+//│     tmp2 = inlinedVal1;
+//│   }
+//│   if (tmp2.__tag$ === 2) {
+//│     return 1
+//│   } else if (tmp2.__tag$ === 4) {
+//│     return 2
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
+//│ Box1 = function Box(x) {
+//│   return globalThis.Object.freeze(new Box.class(x));
+//│ };
+//│ globalThis.Object.freeze(class Box {
+//│   static {
+//│     Box1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Box", ["x"]];
+//│ });
+//│ Box__Tagged1 = function Box__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new Box__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Box__Tagged extends Box1.class {
+//│   static {
+//│     Box__Tagged1.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Box__Tagged", ["x", "__tag$"]];
+//│ });
+//│ A1 = function A(x) {
+//│   return globalThis.Object.freeze(new A.class(x));
+//│ };
+//│ globalThis.Object.freeze(class A {
+//│   static {
+//│     A1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", ["x"]];
+//│ });
+//│ A__Tagged1 = function A__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new A__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class A__Tagged extends A1.class {
+//│   static {
+//│     A__Tagged1.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A__Tagged", ["x", "__tag$"]];
+//│ });
+//│ B1 = function B(x) {
+//│   return globalThis.Object.freeze(new B.class(x));
+//│ };
+//│ globalThis.Object.freeze(class B {
+//│   static {
+//│     B1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "B", ["x"]];
+//│ });
+//│ B__Tagged1 = function B__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new B__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class B__Tagged extends B1.class {
+//│   static {
+//│     B__Tagged1.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "B__Tagged", ["x", "__tag$"]];
+//│ });
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect 1
@@ -83,5 +178,6 @@ poly(false) - poly(true)
 //│ >>> start class-tags collection-phase
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
 //│ <<< end class-tags transform-phase
 //│ = 1

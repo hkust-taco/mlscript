@@ -9,13 +9,11 @@
 ====================================================================================================
 
 :classTags mono
-:noFreeze
 
+:ge
 class A(val x)
 class B(val x)
 class Wide(val f0, val f1, val f2, val f3, val f4, val f5, val f6, val f7, val f8, val f9, val f10, val f11, val f12, val f13, val f14, val f15, val f16, val f17, val f18, val f19, val f20)
-
-:ge
 fun flattenBudget(flag) =
   let field = if flag then new A(0) else new B(0)
   let value = new Wide(field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field, field)
