@@ -77,6 +77,7 @@ fun f() = if A(1, Nil) is
 
 :e
 fun f(x) =
+  let =x
   x = while x is
     A(a, _) then a()
     B(a, _) then a()
@@ -84,7 +85,7 @@ fun f(x) =
     x()
   x
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.+6: 	    x()
+//│ ║  l.+7: 	    x()
 //│ ║        	    ^^^
 //│ ╙── Unit value cannot be called like a function.
 

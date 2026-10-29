@@ -778,10 +778,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def assignSymbol(target: Symbol, diagnostic: Symbol, rhs: Result, rest: Block, loco: Opt[Loc])(using LoweringCtx): Block =
     def nope = fail:
       ErrorReport(
-        msg"Cannot assign to ${diagnostic match
-            case sym: BlockMemberSymbol => sym.describe
-            case sym => "symbol"
-          } '${diagnostic.nme}'" -> loco
+        (diagnostic match
+          // Implicit lambda parameters have generated names; their source location identifies the placeholder.
+          case sym: LocalVarSymbol if !sym.mut && sym.decl.isEmpty => msg"Cannot assign to an immutable binding"
+          case _ => msg"Cannot assign to ${diagnostic match
+              case sym: BlockMemberSymbol => sym.describe
+              case sym: LocalVarSymbol if sym.decl.exists(_.isInstanceOf[Param]) => "immutable parameter"
+              case sym => "symbol"
+            } '${diagnostic.nme}'") -> loco
           :: diagnostic.toLoc.match
             case s @ S(_) => msg"Defined here:" -> s :: Nil
             case N => Nil,

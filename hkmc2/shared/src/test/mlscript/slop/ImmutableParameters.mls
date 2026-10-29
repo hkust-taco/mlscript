@@ -1,0 +1,245 @@
+:.
+:js
+
+#lang(0.3.x)
+
+
+:ge
+let assignImplicit = => set (_) = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to an immutable binding
+//│ ║  l.+1: 	let assignImplicit = => set (_) = 1
+//│ ║        	                             ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	let assignImplicit = => set (_) = 1
+//│ ╙──      	                             ^
+//│ assignImplicit = fun
+
+
+:ge
+fun assign(x: Int) = set x = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+1: 	fun assign(x: Int) = set x = 1
+//│ ║        	                         ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun assign(x: Int) = set x = 1
+//│ ╙──      	           ^
+
+:ge
+let assignLambda = x => set x += 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+1: 	let assignLambda = x => set x += 1
+//│ ║        	                            ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	let assignLambda = x => set x += 1
+//│ ╙──      	                   ^
+//│ assignLambda = fun
+
+:ge
+let assignLet(x) = set x = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+1: 	let assignLet(x) = set x = 1
+//│ ║        	                       ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	let assignLet(x) = set x = 1
+//│ ╙──      	              ^
+//│ assignLet = fun
+
+// An earlier parameter cannot be mutated through a nested closure.
+:ge
+fun assignCaptured(x) = () => set x += 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+1: 	fun assignCaptured(x) = () => set x += 1
+//│ ║        	                                  ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun assignCaptured(x) = () => set x += 1
+//│ ╙──      	                   ^
+
+// Definition-style assignments must not bypass parameter immutability.
+:ge
+fun redefine(x) =
+  x = 1
+  x
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+2: 	  x = 1
+//│ ║        	  ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun redefine(x) =
+//│ ╙──      	             ^
+
+:ge
+fun scoped(x) = set x = 1 in x
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+1: 	fun scoped(x) = set x = 1 in x
+//│ ║        	                    ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun scoped(x) = set x = 1 in x
+//│ ╙──      	           ^
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+1: 	fun scoped(x) = set x = 1 in x
+//│ ║        	                    ^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun scoped(x) = set x = 1 in x
+//│ ╙──      	           ^
+
+:ge
+fun optional(x?) = set x = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+1: 	fun optional(x?) = set x = 1
+//│ ║        	                       ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun optional(x?) = set x = 1
+//│ ╙──      	             ^
+
+:ge
+fun variadic(...xs, last) =
+  set xs = []
+  set last = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'xs'
+//│ ║  l.+2: 	  set xs = []
+//│ ║        	      ^^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun variadic(...xs, last) =
+//│ ╙──      	                ^^
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'last'
+//│ ║  l.+3: 	  set last = 1
+//│ ║        	      ^^^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun variadic(...xs, last) =
+//│ ╙──      	                    ^^^^
+
+:ge
+class Methods {
+  fun update(x) = set x = 1
+}
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+2: 	  fun update(x) = set x = 1
+//│ ║        	                      ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  fun update(x) = set x = 1
+//│ ╙──      	             ^
+
+
+// Formerly in backlog/ForLLM.mls: mutation of the captured parameter was lost.
+:ge
+:noInline
+fun counter(x)() =
+  set x = x + 1
+  x
+let next = counter(0)
+[next(), next()]
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+2: 	  set x = x + 1
+//│ ║        	      ^^^^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun counter(x)() =
+//│ ╙──      	            ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ next = fun
+
+
+// A copy in the final body is fresh on every call, including through partial application.
+:noInline
+:expect [1, 1]
+fun counter(x)() =
+  let =x
+  set x += 1
+  x
+let next = counter(0)
+[next(), next()]
+//│ = [1, 1]
+//│ next = fun
+
+
+// Allocate the local before returning the closure to retain state between calls.
+:expect [1, 2, 11, 3]
+fun counter(x) =
+  let =x
+  () =>
+    set x += 1
+    x
+let next = counter(0)
+let other = counter(10)
+[next(), next(), other(), next()]
+//│ = [1, 2, 11, 3]
+//│ next = fun
+//│ other = fun
+
+:noInline
+:expect [1, 2, 11, 3]
+fun counter(x) =
+  let =x
+  () =>
+    set x += 1
+    x
+let next = counter(0)
+let other = counter(10)
+[next(), next(), other(), next()]
+//│ = [1, 2, 11, 3]
+//│ next = fun
+//│ other = fun
+
+
+:ge
+@annotations.async
+fun assignAsync(x: Int): Int =
+  set x += 1
+  x
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+3: 	  set x += 1
+//│ ║        	      ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	fun assignAsync(x: Int): Int =
+//│ ╙──      	                ^
+
+
+#lang(strictResolution: true)
+
+:ge
+fun strictAssign(x: Int): Int =
+  set x += 1
+  x
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+2: 	  set x += 1
+//│ ║        	      ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun strictAssign(x: Int): Int =
+//│ ╙──      	                 ^
+
+:ge
+fun strictRedefine(x: Int): Int =
+  x = 1
+  x
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+2: 	  x = 1
+//│ ║        	  ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun strictRedefine(x: Int): Int =
+//│ ╙──      	                   ^
+
+:expect 42
+fun strictCopy(x: Int): Int =
+  let =x
+  set x += 1
+  x
+strictCopy(41)
+//│ = 42
+
+
+#lang(useNewResolution: false, strictResolution: false)
+
+:ge
+fun legacyAssign(x) = set x = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+1: 	fun legacyAssign(x) = set x = 1
+//│ ║        	                          ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun legacyAssign(x) = set x = 1
+//│ ╙──      	                 ^
+
+:expect 42
+fun legacyCopy(x) =
+  let =x
+  set x += 1
+  x
+legacyCopy(41)
+//│ = 42

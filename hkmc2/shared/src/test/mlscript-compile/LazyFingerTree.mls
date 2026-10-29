@@ -11,6 +11,7 @@ fun normIdx(i, len) =
   else i
 
 fun concatHelper(a: Array, l: Int, ...args: Array[Indexable]) =
+  let =l
   let idx = 0
   let init_len = a.length
   set a.length = init_len + args.length * 2
@@ -32,6 +33,8 @@ fun normIdxSlice(i, len) =
   else i
 
 fun sliceHelper(beg: Int, fin: Int, arr: Indexable) =
+  let =beg
+  let =fin
   let len = arr.length
   set beg = normIdxSlice(beg, len)
   set fin = normIdxSlice(fin, len)

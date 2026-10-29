@@ -51,6 +51,8 @@ class FingerTree[T] extends IterableBase with
   override fun at(i) = get(i)(this)
   override fun concat(other) = FingerTreeList_StressTest.concat(this, other)
   override fun slice(beg, end) = 
+    let =beg
+    let =end
     let len = this.length
     set beg = normIdxSlice(beg, len)
     set end = normIdxSlice(end, len)

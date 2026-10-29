@@ -40,6 +40,7 @@ f(1)
 // (This can be used to very efficiently compile resumable functions, i.e. for effect handlers and co-routines.)
 :sjs
 fun f(x) =
+  let =x
   let acc = ""
   if x is 0 do
     set acc += "a"
@@ -96,6 +97,7 @@ f(2)
 // yet possible to explicitly write in the source language
 :sjs
 fun f(x) =
+  let =x
   let acc = ""
   if x is 0 do
     set acc += "a"
@@ -173,6 +175,7 @@ f(-1)
 
 :sjs
 fun f(x) =
+  let =x
   let acc = ""
   if x is 0 do
     set acc += "M"
@@ -211,6 +214,7 @@ f(2)
 // Do not specialize all into one switch
 :sjs
 fun f(x) =
+  let =x
   let acc = ""
   if x is 0 do
     set acc += "M"
@@ -244,6 +248,7 @@ f(4)
 // Do not optimize
 :sjs
 fun f(x, y) =
+  let =x
   fun bad() = set x = 1000
   if x is 0 do
     set x = 1
@@ -257,14 +262,15 @@ fun f(x, y) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f5;
 //│ f5 = function f(x, y) {
-//│   let scrut;
+//│   let x1, scrut;
+//│   x1 = x;
 //│   if (x === 0) {
 //│     scrut = Predef.equals(y, 0);
 //│     if (scrut === true) {
-//│       x = 1000;
-//│     } else { x = 1; }
+//│       x1 = 1000;
+//│     } else { x1 = 1; }
 //│   }
-//│   if (x === 1) { return "x = 1" }
+//│   if (x1 === 1) { return "x = 1" }
 //│   return "x != 1";
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -277,9 +283,11 @@ f(0, 0)
 f(0, 1)
 //│ = "x = 1"
 
-// Optimize
+// TODO: Recover switch specialization when the first test reads the immutable parameter
+// through the local copy, while later tests read the updated local.
 :sjs
 fun f(x, y) =
+  let =x
   fun bad() = set x = 1000
   if x is 0 do
     set x = 1
@@ -294,15 +302,16 @@ fun f(x, y) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
 //│ f6 = function f(x, y) {
-//│   let scrut;
-//│   switch (x) {
-//│     case 0:
-//│       scrut = Predef.equals(y, 0);
-//│       if (scrut === true) { x = 1; } else { x = 1; }
-//│     case 1:
-//│       return "x = 1";
+//│   let x1, scrut;
+//│   x1 = x;
+//│   if (x === 0) {
+//│     scrut = Predef.equals(y, 0);
+//│     if (scrut === true) {
+//│       x1 = 1;
+//│     } else { x1 = 1; }
 //│   }
-//│   return "x != 1"
+//│   if (x1 === 1) { return "x = 1" }
+//│   return "x != 1";
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

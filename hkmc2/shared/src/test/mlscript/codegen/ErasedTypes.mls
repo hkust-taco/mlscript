@@ -200,12 +200,22 @@ fun add2(x: Int, y: Int): Int = x + y
 //│ end
 
 
-// A parameter keeps its annotated type regardless of a later reassignment.
+// An annotation does not permit reassignment of an immutable parameter.
+:ge
 fun keep(x: Int) =
   set x = 5
   x
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+2: 	  set x = 5
+//│ ║        	      ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun keep(x: Int) =
+//│ ╙──      	         ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define keep⁰ as fun keep¹(x: Int⁰): ? { set x = 5; return x }; end
+//│ define keep⁰ as fun keep¹(x: Int⁰): ? {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ };
+//│ end
 
 
 // One class, four facets of the same rule:
@@ -281,35 +291,35 @@ fun counter(x: Int) =
 //│ end
 
 
-// When the captured slot keeps a definite erased type (the parameter `x` is annotated `Int`),
-// the generated capture field inherits it: both the constructor parameter `x$0` and the
-// `val x$0` field are typed `Int`, and the auxiliary parameter of the lifted function is
-// typed as well. Without this, the capture class is untyped and the field reads are `?`.
+// A mutable copy has its own unannotated storage. Capturing it shares that slot,
+// while the function's `Int` result annotation still enforces a return coercion.
 :lift
 fun resetCounter(x: Int): Int =
+  let =x
   fun reset() = set x = x + 1
   reset()
   x
 resetCounter(41)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let reset, Capture$resetCounter;
-//│ define reset as fun reset⁰(resetCounter$cap: Capture$resetCounter⁰): ? {
-//│   let tmp: ?;
-//│   set tmp = +⁰(resetCounter$cap.x$0⁰, 1);
-//│   set resetCounter$cap.x$0⁰ = (tmp as! Int⁰);
-//│   return runtime⁰.Unit⁰
-//│ };
-//│ define Capture$resetCounter as class Capture$resetCounter⁰ {
-//│   constructor Capture$resetCounter¹(x$0: Int⁰) {
-//│     define x$0¹ as val x$0⁰: Int⁰ = x$0;
+//│ let reset, Capture$scope0;
+//│ define Capture$scope0 as class Capture$scope0³ {
+//│   constructor Capture$scope0²(x$0: ?) {
+//│     define x$0⁰ as val x$0¹: ? = x$0;
 //│     end
 //│   }
 //│ };
+//│ define reset as fun reset⁰(scope0$cap: Capture$scope0³): ? {
+//│   let tmp: ?;
+//│   set tmp = +⁰(scope0$cap.x$0¹, 1);
+//│   set scope0$cap.x$0¹ = tmp;
+//│   return runtime⁰.Unit⁰
+//│ };
 //│ define resetCounter⁰ as fun resetCounter¹(x: Int⁰): Int⁰ {
-//│   let resetCounter$cap: Capture$resetCounter⁰;
-//│   set resetCounter$cap = new mut Capture$resetCounter⁰(x);
-//│   do reset⁰(resetCounter$cap);
-//│   return resetCounter$cap.x$0⁰
+//│   let x1: ?, scope0$cap: Capture$scope0³;
+//│   set scope0$cap = new mut Capture$scope0³(x1);
+//│   set scope0$cap.x$0¹ = x;
+//│   do reset⁰(scope0$cap);
+//│   return (scope0$cap.x$0¹ as! Int⁰)
 //│ };
 //│ return resetCounter¹(41)
 

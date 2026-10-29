@@ -32,6 +32,7 @@ fun toArray(xs) =
   xs reverse() toReverseArray()
 
 fun toReverseArray(xs) =
+  let =xs
   let
     arr = mut []
     i = 0
