@@ -278,10 +278,12 @@ private def matchChainToSwitch(m: MatchChain): SwitchLike =
   SwitchLike(m.scrut, cases, m.dflt, m.rest)
 
 object SpecializedSwitch:
-  /** Recover a common scrutinee when copy propagation rewrote only the first match.
+  /** Recover a common scrutinee when copy propagation rewrote the scrutinee of only the first match.
     * Immediately after `local = source`, either reference tests the same value. Only
     * replace that first scrutinee: fallthrough postconditions and subsequent matches
     * must still refer to `local`, since either binding may change inside a case.
+    * TODO: Find a better design; this is a very ad-hoc solution to prevent regressions from simple transformations
+    *   One possibility would be to reuse the copy-propagation analysis, refactored to a reusable analysis.
     */
   def followingAssignment(assign: Assign)(using PostCondAnalysis): Block = assign match
     case Assign(local: LocalVarSymbol, source: Value.SimpleRef, first: Match)

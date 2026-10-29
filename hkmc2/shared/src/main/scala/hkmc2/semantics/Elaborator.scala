@@ -2576,13 +2576,19 @@ extends Importer:
           val r = term(rhs, Trm)
           ctx.get(id.name) match
           case S(elem) =>
+            def whoops = raise:
+              ErrorReport(msg"Symbol '${id.name
+                }' is not a local variable and cannot be explicitly initialized" -> id.toLoc
+                :: elem.symbol.flatMap(_.toLoc).match
+                  case s @ S(_) => msg"Defined here:" -> s :: Nil
+                  case N => Nil)
             elem.symbol match
             case S(sym: LocalVarSymbol) if !sym.mut =>
-              // Parameters already have values: `x = rhs` must not bypass the assignment check.
-              go(sts, Nil, assignment(elem.ref(S(id)), r).withLocOf(definition) :: acc)(N)
+              whoops
+              go(sts, Nil, Term.Error().withLocOf(id) :: acc)(N)
             case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, defineVar(sym, r)(statementLoc) :: acc)(N)
             case S(sym) =>
-              raise(ErrorReport(msg"Symbol '${id.name}' is not a variable and cannot be reassigned" -> id.toLoc :: Nil))
+              whoops
               go(sts, Nil, Term.Error().withLocOf(id) :: acc)(N)
             case N =>
               raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
