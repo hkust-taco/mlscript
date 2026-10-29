@@ -224,7 +224,6 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     case imp: Import =>
       val sym: ImportSymbol = imp.sym match
         case s: VarSymbol => s.subst
-        case s: TempSymbol => s.subst
         case s: BlockMemberSymbol => s.subst
       Import(sym, imp.str, imp.file)(imp.toLoc)
     case LetDecl(sym, annotations) =>

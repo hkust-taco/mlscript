@@ -1373,10 +1373,13 @@ sealed abstract class Path extends TrivialResult:
   override def withLoc(loc: Opt[Loc]): Path
   override def withLocOf(source: Located): Path = withLoc(source.toLoc)
   /** Whether repeated reads denote the same value, even across calls that mutate state.
-    * Purity alone is insufficient: local variables may be reassigned, and pure getters
-    * may allocate fresh objects. Immutable members require a stable qualifier too.
+    * That is to say, whether the value is referentially transparent.
+    * This is a stronger property than "purity" as the absence of side effects:
+    * local variables may be reassigned, and pure getters may allocate fresh objects,
+    * with different identities.
+    * Immutable members require a stable qualifier too.
     */
-  def isStable: Bool =
+  lazy val isStable: Bool =
     def stableMember(sym: DefinitionSymbol[?]): Bool = sym match
       case _: ClassLikeSymbol => true
       case sym: TermSymbol => (sym.k is syntax.ImmutVal) || (sym.k is syntax.Ins)
@@ -1384,7 +1387,7 @@ sealed abstract class Path extends TrivialResult:
     this match
     case _: Value.This | _: Value.Lit => true
     case Value.SimpleRef(_: BuiltinSymbol) => true
-    case Value.SimpleRef(sym: VarSymbol) => !sym.mut
+    case Value.SimpleRef(sym: LocalVarSymbol) => !sym.mut
     case Value.MemberRef(_, disamb) => stableMember(disamb)
     case sel: Select => sel.qual.isStable && sel.symbol.exists(stableMember)
     case Cast(path: Path, _, false) => path.isStable

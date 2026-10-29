@@ -771,9 +771,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       sym.owner match
       case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.erasedType, loco), rest)(S(sym))
       case N => nope
-    case sym: VarSymbol if !sym.mut => nope
     case sym: LocalVarSymbol =>
-      Assign(sym, castTo(rhs, sym.erasedType, loco), rest)
+      if !sym.mut then nope else Assign(sym, castTo(rhs, sym.erasedType, loco), rest)
     case sym => nope
 
   private def defineSymbol(sym: Symbol, rhs: Result, rest: Block)(using LoweringCtx): Block =

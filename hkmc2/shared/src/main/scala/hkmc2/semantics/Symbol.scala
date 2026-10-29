@@ -166,7 +166,7 @@ type NoSymbol = NoSymbol.type
   * User-facing imports bind variable or member symbols, while compiler-generated imports
   * such as prelude/runtime imports may bind temporary term values directly.
   */
-type ImportSymbol = TempSymbol | VarSymbol | BlockMemberSymbol
+type ImportSymbol = VarSymbol | BlockMemberSymbol
 
 
 abstract class FlowSymbol(label: Str)(using State) extends Symbol:
@@ -240,6 +240,7 @@ type SimpleRefSymbol = LocalVarSymbol | BuiltinSymbol | LabelSymbol
 sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(name) with LocalSymbol with HasErasedType:
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
   var decl: Opt[Declaration] = N
+  def mut: Bool
   def subst(using s: SymbolSubst): LocalVarSymbol
 
 /** A temporary variable introduced by lowering.
@@ -254,6 +255,7 @@ class TempSymbol(val trm: Opt[Term], override var erasedType: Opt[ErasedType], d
   // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def prefix: Str = "tmp:"
+  def mut: Bool = true // TODO: support immutable temporary variables (currently the UPS assigns some)
   override def subst(using s: SymbolSubst): TempSymbol = s.mapTempSym(this)
 
 
