@@ -241,7 +241,8 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
   var decl: Opt[Declaration] = N
   /** Whether the binding may be reassigned after initialization. Initializing an immutable
-    * binding is allowed; reading a binding before initialization is undefined behavior. */
+    * binding is allowed. Forwarding an uninitialized value (e.g. as an argument) is not a use;
+    * actually using it before initialization is undefined behavior. */
   def mut: Bool
   def subst(using s: SymbolSubst): LocalVarSymbol
 
