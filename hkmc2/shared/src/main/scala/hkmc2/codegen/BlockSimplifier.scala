@@ -1390,11 +1390,20 @@ class BlockSimplifier
           case _ => N
 
       /** Find the paths that replace `this` references, ordered outermost first.
-        * If class `Owner` contains module `Nested`, then `instance.Nested.f()` gives
-        * `Owner.this -> instance` and `Nested.this -> instance.Nested`, in that order.
-        * The selected member must be the declared module itself. If `holder.saved` is
-        * an alias of `instance.Nested`, it gives no path from `holder` back to `instance`;
-        * stop there instead of incorrectly replacing `Owner.this` with `holder`.
+        * For example:
+        * {{{
+        * class Owner(val value) with
+        *   module Nested with
+        *     fun f() = value
+        * val instance = new Owner(1)
+        * class Holder(val saved)
+        * val holder = new Holder(instance.Nested)
+        * }}}
+        * `instance.Nested.f()` gives `Owner.this -> instance`, then
+        * `Nested.this -> instance.Nested`.
+        * `holder.saved.f()` gives only `Nested.this -> holder.saved`.
+        * The `saved` field belongs to `Holder` and stores the nested module;
+        * its access path does not expose the `Owner` instance needed by `f`.
         */
       def buildThisMapping(qual: Path, ownerSym: InnerSymbol): Ls[(InnerSymbol, Path)] =
         def loop(currentQual: Path, currentOwner: InnerSymbol, acc: Ls[(InnerSymbol, Path)]): Ls[(InnerSymbol, Path)] =
