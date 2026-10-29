@@ -283,8 +283,8 @@ f(0, 0)
 f(0, 1)
 //│ = "x = 1"
 
-// TODO: Recover switch specialization when the first test reads the immutable parameter
-// through the local copy, while later tests read the updated local.
+// Specialize even when copy propagation makes the first test read the parameter,
+// while later tests read the updated local.
 :sjs
 fun f(x, y) =
   let =x
@@ -304,14 +304,14 @@ fun f(x, y) =
 //│ f6 = function f(x, y) {
 //│   let x1, scrut;
 //│   x1 = x;
-//│   if (x === 0) {
-//│     scrut = Predef.equals(y, 0);
-//│     if (scrut === true) {
-//│       x1 = 1;
-//│     } else { x1 = 1; }
+//│   switch (x1) {
+//│     case 0:
+//│       scrut = Predef.equals(y, 0);
+//│       if (scrut === true) { x1 = 1; } else { x1 = 1; }
+//│     case 1:
+//│       return "x = 1";
 //│   }
-//│   if (x1 === 1) { return "x = 1" }
-//│   return "x != 1";
+//│   return "x != 1"
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

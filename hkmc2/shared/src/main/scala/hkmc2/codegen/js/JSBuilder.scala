@@ -493,10 +493,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     t match
     case Assign(NoSymbol, r, rst) =>
       doc" # ${result(r)};${returningTerm(rst, endSemi)}"
-    case Assign(l: (LocalVarSymbol | TermSymbol), r, rst) =>
+    case assign @ Assign(l: (LocalVarSymbol | TermSymbol), r, rst) =>
       doc" # ${
           result(l.asPath.withLoc(N)) // TODO: improve location
-        } = ${result(r)};${returningTerm(rst, endSemi)}"
+        } = ${result(r)};${returningTerm(SpecializedSwitch.followingAssignment(assign), endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match
         case S(member: DefinitionSymbol[?]) => selectPrivateField(member, n.toLoc)

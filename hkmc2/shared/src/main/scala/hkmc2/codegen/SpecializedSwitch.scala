@@ -278,6 +278,18 @@ private def matchChainToSwitch(m: MatchChain): SwitchLike =
   SwitchLike(m.scrut, cases, m.dflt, m.rest)
 
 object SpecializedSwitch:
+  /** Recover a common scrutinee when copy propagation rewrote only the first match.
+    * Immediately after `local = source`, either reference tests the same value. Only
+    * replace that first scrutinee: fallthrough postconditions and subsequent matches
+    * must still refer to `local`, since either binding may change inside a case.
+    */
+  def followingAssignment(assign: Assign)(using PostCondAnalysis): Block = assign match
+    case Assign(local: LocalVarSymbol, source: Value.SimpleRef, first: Match)
+      if first.scrut == source && unapply(first).isEmpty =>
+      val candidate = first.copy(scrut = Value.SimpleRef(local)(first.scrut.toLoc))
+      if unapply(candidate).isDefined then candidate else first
+    case _ => assign.rest
+  
   def unapply(b: Block)(using PostCondAnalysis) = b match
     case m @ Match(scrut = r @ Value.SimpleRef(l)) =>
       val chain = findMatchChainRec(m, r, Nil)
