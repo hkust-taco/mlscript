@@ -1769,7 +1769,10 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             ctx.getFunc(ExternSymbol.forReference(bms, disamb)) match
               case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncTypeUse_!(funcIdx).typeIdx, nullable = false))
               case N => getVar(bms, r.toLoc)
-    case Value.This(sym) =>
+    case Value.This(_: TopLevelSymbol) =>
+      errExpr:
+        Ls(msg"The global object is not supported in Wasm." -> r.toLoc)
+    case Value.This(sym: InnerSymbol) =>
       singletonInfoFor(sym) match
         case S(info) => singletonGlobalGet(info)
         case N =>
@@ -2779,7 +2782,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           extraInfo = S(sub.showAsTree),
         ))
 
-      case Throw(res) =>
+      case Throw(res, _) =>
         val excWat = result(res)
         Vector(`throw`(exnTagIdx, Seq(excWat)))
 

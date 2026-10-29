@@ -33,7 +33,7 @@ object ImplctRet extends TailOp(transfersControl = false):
     case Value.Lit(Tree.UnitLit(false)) => End()
     case _ => Return(r)
 object Thrw extends TailOp(transfersControl = true):
-  def apply(r: Result): Block = Throw(r)
+  def apply(r: Result): Block = Throw(r, annotations = Nil)
 
 
 class LoweringCtx(
@@ -76,7 +76,7 @@ import LoweringCtx.loweringCtx
 object Lowering:
   
   def compError: Block =
-    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error."))(N))
+    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error."))(N), annotations = Nil)
   
   def fail(err: ErrorReport)(using Raise): Block =
     raise(err)
@@ -290,14 +290,24 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val localVals = stats.collect:
       case td: TermDefinition if td.k.isInstanceOf[syntax.Val] && td.owner.isEmpty && td.body.isDefined
           && td.hasDeclareModifier.isEmpty && !loweringCtx.symbolsToPreserve(td.sym) =>
-        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.erasedType)
+        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.erasedType, mut = td.k is syntax.MutVal)
         loweringCtx.collectScopedSym(newSym)
         td.tsym -> newSym
+    
+    // Statement lowering is in CPS, so directly lowering the rest from its continuation
+    // retains every earlier statement's lowering frames. Large module initializers can
+    // then exhaust the JavaScript stack. Finish each prefix before lowering its successor;
+    // Begin reconnects their fallthroughs without changing returns or nested scopes.
+    var next: Opt[() => Block] = N
+    def continueBlock(stats: Ls[Statement], res: Rcd \/ Term)(using LoweringCtx): Block =
+      assert(next.isEmpty, "Statement lowering must invoke its continuation at most once")
+      next = S(() => blockImpl(stats, res))
+      End()
     
     def blockImpl(stats: Ls[Statement], res: Rcd \/ Term)(using LoweringCtx): Block =
       stats match
       case (t: sem.Term) :: stats =>
-        term(t, inStmtPos = true)(Assign.discard(_, blockImpl(stats, res)))
+        term(t, inStmtPos = true)(Assign.discard(_, continueBlock(stats, res)))
       case Nil =>
         res match
         case R(res) => term(res, inStmtPos = inStmtPos)(k)
@@ -308,36 +318,36 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case R(_) => wat("RcdField in non-Rcd context", res)
         case L((mut, flds, loc)) =>
           subTerm(bod): l =>
-            blockImpl(stats, L((mut, RcdArg(N, l) :: flds, loc)))
+            continueBlock(stats, L((mut, RcdArg(N, l) :: flds, loc)))
       case RcdField(lhs, rhs, _) :: stats =>
         res match
         case R(_) => wat("RcdField in non-Rcd context", res)
         case L((mut, flds, loc)) =>
           subTerm(lhs): l =>
             subTerm_nonTail(rhs): r =>
-              blockImpl(stats, L((mut, RcdArg(S(l), r) :: flds, loc)))
+              continueBlock(stats, L((mut, RcdArg(S(l), r) :: flds, loc)))
       case (decl @ LetDecl(sym, annotations)) :: stats =>
         reportAnnotations(decl, annotations)
         if sym.asTrm.forall(_.owner.isEmpty) then
           sym match
           case sym: ScopedSymbol => loweringCtx.collectScopedSym(sym)
           case sym => lastWords(s"tried to collect non-scoped local symbol ${sym.showDbg}")
-        blockImpl(stats, res)
+        continueBlock(stats, res)
       case DefineVar(sym, rhs) :: stats =>
         term(rhs): r =>
-          defineSymbol(sym, r, blockImpl(stats, res))
+          defineSymbol(sym, r, continueBlock(stats, res))
       case (_: SetConfig) :: stats =>
         // Config changes are handled at the program level; skip during block lowering
-        blockImpl(stats, res)
+        continueBlock(stats, res)
       case (imp: Import) :: stats =>
         raise(ErrorReport(
           msg"Imports must be at the top level" ->
           imp.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
-        blockImpl(stats, res)
+        continueBlock(stats, res)
       case (d: Definition) :: stats if d.isErroneous =>
         // * References to erroneous definitions are not compiled either (see `erroneousRef`).
-        blockImpl(stats, res)
+        continueBlock(stats, res)
       case (d: Declaration) :: stats =>
         d match
         case td: TermDefinition =>
@@ -347,7 +357,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             loweringCtx.collectScopedSym(td.sym)
           td.body match
           case N => // abstract declarations have no lowering
-            blockImpl(stats, res)
+            continueBlock(stats, res)
           case S(bod) =>
             td.k match
             case knd: syntax.Val =>
@@ -356,35 +366,35 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               localVal match
               case S(sym) =>
                 debugLoweringThen[Result](td.extraAnnotations)(term_nonTail(bod)(_)): r =>
-                  defineSymbol(sym, r, blockImpl(stats, res))
+                  defineSymbol(sym, r, continueBlock(stats, res))
               case N =>
                 debugLoweringThen[Path](td.extraAnnotations)(k => subTerm_nonTail(bod)(k)(using LoweringCtx.nestFunc(N))): r =>
                   // Assign(td.sym, r,
                   //   term(st.Blk(stats, res))(k)))
                   Define(
                     ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
-                    blockImpl(stats, res),
+                    continueBlock(stats, res),
                   )
             case syntax.Fun =>
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
               val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
                 setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
               Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations),
-                blockImpl(stats, res))
+                continueBlock(stats, res))
             case syntax.LetBind | syntax.HandlerBind | syntax.RecordField => fail:
               ErrorReport(
                 msg"Unexpected declaration kind '${td.k.str}' in lowering" -> td.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
         case cls: ClassLikeDef if cls.sym.defn.exists(_.hasDeclareModifier.isDefined) =>
           // * Declarations have no lowering
-          blockImpl(stats, res)
+          continueBlock(stats, res)
         case cls: ClassDef if cls.moduleCompanion.isDefined =>
           // * Class definitions are pure, but their companions might not be,
           // * as they may contain static initialization code;
           // * therefore, we lower classes at the point where the companion is defined,
           // * if it is defined, rather than at the point where the class is defined.
           reportAnnotations(cls, cls.extraAnnotations)
-          blockImpl(stats, res)
+          continueBlock(stats, res)
         case _defn: ClassLikeDef =>
           if _defn.owner.isEmpty then loweringCtx.collectScopedSym(_defn.bsym)
           val defn = _defn match
@@ -490,17 +500,25 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           defn.ext match
           case N =>
             debugLoweringThen[ClsLikeDefn](defn.extraAnnotations)(lowerClass(N, ConstructorParams(Nil, false)))
-              (Define(_, blockImpl(stats, res)))
+              (Define(_, continueBlock(stats, res)))
           case S(ext) =>
             assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
             debugLoweringThen[ClsLikeDefn](defn.extraAnnotations)(define =>
               classOf(ext.cls, ext): (clsp, params) =>
                 withClassParent(clsp)(parent => lowerClass(S(parent), params)(define))
-            )(Define(_, blockImpl(stats, res)))
+            )(Define(_, continueBlock(stats, res)))
         case td: TypeDef => // * Type definitions are erased
-          blockImpl(stats, res)
+          continueBlock(stats, res)
     
-    blockImpl(imps ::: funs ::: rest, res)(using loweringCtx.withLocalVals(localVals))
+    continueBlock(imps ::: funs ::: rest, res)(using loweringCtx.withLocalVals(localVals))
+    var prefixes: Ls[Block] = Nil
+    while next.isDefined do
+      val lowerNext = next.get
+      next = N
+      prefixes ::= lowerNext()
+    prefixes match
+      case last :: earlier => earlier.foldLeft(last)((rest, prefix) => Begin(prefix, rest))
+      case Nil => lastWords("Block lowering produced no statements")
   
   def classOf(trm: Term, nw: PossiblyErroneous)(k: (Path, ConstructorParams) => Block)(using LoweringCtx): Block =
     def classValue: Block = nw match
@@ -675,7 +693,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           remainingParamss match
           case Nil => buildInstantiate(accArgss)
           case ps :: rest =>
-            val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N))
+            val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N, mut = false))
             softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
@@ -775,7 +793,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.erasedType, loco), rest)(S(sym))
       case N => nope
     case sym: LocalVarSymbol =>
-      Assign(sym, castTo(rhs, sym.erasedType, loco), rest)
+      if !sym.mut then nope else Assign(sym, castTo(rhs, sym.erasedType, loco), rest)
     case sym => nope
 
   private def defineSymbol(sym: Symbol, rhs: Result, rest: Block)(using LoweringCtx): Block =
@@ -987,7 +1005,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case S(sig) =>
         val params = sig.paramLists.head.zipWithIndex.map: (erasedType, i) =>
           val id = new Tree.Ident(if sym.unary then "arg" else s"arg${i + 1}")
-          Param(FldFlags.empty, VarSymbol(id, erasedType = erasedType), N, Modulefulness.none)(id.toLoc)
+          Param(FldFlags.empty, VarSymbol(id, erasedType = erasedType, mut = false), N, Modulefulness.none)(id.toLoc)
         val ps = PlainParamList(params)(N)
         val bod = st.App(ref, st.Tup(params.map(p => st.SimpleRef(p.sym)(N)))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
@@ -1045,7 +1063,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         k(loweringCtx(sym.asSimpleRef.withLocOf(ref)))
       case (sym: BlockMemberSymbol, _) =>
         k(loweringCtx(sym.asMemberRef(disamb.orElse(sym.asPrincipal).get).withLocOf(ref)))
-      case (sym: InnerSymbol, _) =>
+      case (sym: ThisSymbol, _) =>
         k(loweringCtx(sym.asThis.withLocOf(ref)))
       case (sym, disamb) =>
         lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")

@@ -73,7 +73,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       val docDefault = dflt.fold(doc"")(e => doc" # else #{  # ${print(e)} #} ")
       doc"match ${print(scrut)} #{  # ${docCases}$docDefault #}  # ${print(rest)}"
     case Return(res) => doc"return ${print(res)}"
-    case Throw(exc) => doc"throw ${print(exc)}"
+    case Throw(exc, annotations) => doc"${printAnnotations(annotations, doc" ")}throw ${print(exc)}"
     case Label(label, loop, body, rest) =>
       val l2 = scope.allocateOrGetName(label)
       // * ^ if we print the same block with a top-level label more than once, using `scope.allocateName` will crash...
@@ -91,7 +91,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case Assign(lhs: (LocalVarSymbol | TermSymbol), rhs, rest) =>
       doc"set ${print(lhs)} = ${print(rhs)}; # ${print(rest)}"
     case asf @ AssignField(lhs, nme, rhs, rest) =>
-      doc"set ${print(lhs)}.${showMemberSymbol(nme.name, asf.symbol)} = ${print(rhs)}; # ${print(rest)}"
+      doc"set ${print(lhs)}.${showRefSymbol(nme.name, asf.symbol)} = ${print(rhs)}; # ${print(rest)}"
     case AssignDynField(lhs, fld, kind, rhs, rest) =>
       doc"set ${printDynSelection(lhs, fld, kind)} = ${print(rhs)}; # ${print(rest)}"
     case Define(defn, rest) =>
@@ -197,7 +197,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
         case None => doc""
       doc"${docCls}${docModule}"
   
-  private def showMemberSymbol(name: Str, sym: Opt[MemberSymbol]): Document =
+  private def showRefSymbol(name: Str, sym: Opt[Symbol]): Document =
     sym.fold(doc"${name}﹖")(sym =>
       if summon[ShowCfg].debug then doc"‹${sym.toString}›" else summon[SymbolPrinter].printSymbol(sym))
   
@@ -209,8 +209,8 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
   
   def print(value: Value)(using Scope): Document = value match
     case Value.SimpleRef(l) => print(l)
-    case Value.MemberRef(bms, disamb) => showMemberSymbol(bms.nme, S(disamb))
-    case Value.This(sym) if sym === State.globalThisSymbol => showMemberSymbol(sym.nme, S(sym.asDefnSym))
+    case Value.MemberRef(bms, disamb) => showRefSymbol(bms.nme, S(disamb))
+    case Value.This(sym: TopLevelSymbol) => showRefSymbol(sym.nme, S(sym))
     case Value.This(sym) => doc"${print(sym)}.this"
     case Value.Lit(lit) => doc"${lit.idStr}"
   
@@ -225,7 +225,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       doc"super[${print(base)}](${print(qual)}).[${print(key)}]"
     case sel @ Select(qual, name) =>
       val docQual = print(qual)
-      doc"${docQual}.${showMemberSymbol(name.name, sel.symbol)}"
+      doc"${docQual}.${showRefSymbol(name.name, sel.symbol)}"
     case DynSelect(qual, fld, kind) => printDynSelection(qual, fld, kind)
     case x: Value => print(x)
     case Cast(value, target, check) =>

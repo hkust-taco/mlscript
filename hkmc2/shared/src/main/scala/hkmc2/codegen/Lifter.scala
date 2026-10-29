@@ -585,7 +585,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         val ident = new Tree.Ident(nme)
         // * The capture field stands for the same slot as the captured local, so it takes the local's type.
         val capturedType = sym.erasedType
-        val varSym = VarSymbol(ident, erasedType = capturedType)
+        val varSym = VarSymbol(ident, erasedType = capturedType, mut = false)
         val fldSym = BlockMemberSymbol(nme, Nil)
         val tSym = TermSymbol(syntax.MutVal, S(clsSym), ident, erasure = capturedType)
         
@@ -871,6 +871,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       case l: LocalVarSymbol => l.erasedType
       case cls: ClassLikeDefSymbol => cls.asThis.erasedType
 
+    /** Receiver bindings are fixed; only passed locals can be reassigned by the lifted body. */
+    protected def reqPassedSymMutated(s: LocalOrReceiverSymbol): Bool = s match
+      case l: LocalVarSymbol => usedVars.accessMapWithIgnored(obj.toInfo).mutated(l)
+      case _: ClassLikeDefSymbol => false
+
     /** Type of a neighbouring definition passed as a value, rather than as a receiver. */
     protected def reqDefnErasedType(s: LiftedSym): Opt[ErasedValueType] = s match
       case t: TermSymbol => t.erasedType
@@ -884,11 +889,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     * A rewritten scope with a generic VarSymbol capture symbol.
     */
   sealed trait GenericRewrittenScope[T] extends RewrittenScope[T]:
-    lazy val captureSym = VarSymbol(Tree.Ident(obj.nme + "$cap"), erasedType = captureType)
+    lazy val captureSym = VarSymbol(Tree.Ident(obj.nme + "$cap"), erasedType = captureType, mut = false)
     override lazy val capturePath = captureSym.asSimpleRef
     protected val liftedObjsOrdered: List[InnerSymbol] = node.liftedObjSyms.toList.sortBy(_.uid)
     protected val liftedObjsSyms: Map[InnerSymbol, VarSymbol] = liftedObjsOrdered.map: s =>
-        s -> VarSymbol(Tree.Ident(s.nme + "$"), erasedType = N)
+        s -> VarSymbol(Tree.Ident(s.nme + "$"), erasedType = N, mut = false)
       .toMap
     override lazy val liftedObjsMap: Map[InnerSymbol, LocalPath] = liftedObjsSyms.map:
       case k -> v => k -> v.asLocalPath
@@ -923,8 +928,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         AssignField(sym.asThis, captureSym.id, inst, b)(S(captureSym))
       else b
   
-  // some helpers
-  private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(p.sym.id, erasedType = p.sym.erasedType))(p.toLoc)
+  // These fresh bindings only forward arguments; the callee body runs in a separate scope.
+  private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(p.sym.id, erasedType = p.sym.erasedType, mut = false))(p.toLoc)
   private def dupParams(plist: List[Param]): List[Param] = plist.map(dupParam)
   private def dupParamList(plist: LoweredParamList): LoweredParamList =
     plist.copy(params = dupParams(plist.params), restParam = plist.restParam.map(dupParam))(plist.toLoc)
@@ -1039,16 +1044,18 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
   class LiftedFunc(override val obj: ScopedObject.Func)(using ctx: LifterCtxNew) extends LiftedScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
     private val passedSymsMap_ : Map[LocalOrReceiverSymbol, VarSymbol] = passedSymsOrdered.map: s =>
         // * The auxiliary parameter stands for the same slot as the passed local, so it takes the local's
-        // * type.
-        s -> VarSymbol(Tree.Ident(s.nme), erasedType = reqPassedSymErasedType(s))
+        // * type. A directly passed local may be written by a single lifted mutator without
+        // * needing shared capture storage; use the access analysis to preserve those writes.
+        s -> VarSymbol(Tree.Ident(s.nme), erasedType = reqPassedSymErasedType(s),
+          mut = reqPassedSymMutated(s))
       .toMap
     private lazy val capSymsMap_ : Map[ScopedInfo, VarSymbol] = capturesOrdered.map: i =>
         val nme = data.getNode(i).obj.nme
-        i -> VarSymbol(Tree.Ident(nme + "$cap"), erasedType = ctx.rewrittenScopes(i).captureType)
+        i -> VarSymbol(Tree.Ident(nme + "$cap"), erasedType = ctx.rewrittenScopes(i).captureType, mut = false)
       .toMap
     private val defnSymsMap_ : Map[LiftedSym, VarSymbol] = reqDefnsOrdered.sortBy(_.uid).map: i =>
         val nme = data.getNode(i).obj.nme
-        i -> VarSymbol(Tree.Ident(nme + "$"), erasedType = reqDefnErasedType(i))
+        i -> VarSymbol(Tree.Ident(nme + "$"), erasedType = reqDefnErasedType(i), mut = false)
       .toMap
     
     override protected val passedSymsMap = passedSymsMap_.view.mapValues(_.asLocalPath).toMap
@@ -1103,6 +1110,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val bod = Return(call)
+      // The new capture list shifts the parameter list indices used by affine annotations.
+      val annotations = fun.annotations.map:
+        case a @ Annot.Affine(n) => Annot.Affine(n + 1)(a.toLoc)
+        case a => a
       
       FunDefn(
         N,
@@ -1110,7 +1121,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         auxDsym,
         newPlists,
         bod
-      )(N, if fun.noInline then fun.annotations else Annot.Inline()(N) :: fun.annotations)
+      )(N, if fun.noInline then annotations else Annot.Inline()(N) :: annotations)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     
@@ -1147,7 +1158,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         val erasedType = reqPassedSymErasedType(s)
         s ->
           (
-            VarSymbol(Tree.Ident(s.nme), erasedType),
+            VarSymbol(Tree.Ident(s.nme), erasedType, mut = reqPassedSymMutated(s)),
             TermSymbol(syntax.LetBind, S(obj.cls.isym), Tree.Ident(s.nme), erasedType)
           )
       .toMap
@@ -1156,7 +1167,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         val capturedType = ctx.rewrittenScopes(i).captureType
         i ->
           (
-            VarSymbol(Tree.Ident(nme), capturedType),
+            VarSymbol(Tree.Ident(nme), capturedType, mut = false),
             TermSymbol(syntax.LetBind, S(obj.cls.isym), Tree.Ident(nme), capturedType)
           )
       .toMap
@@ -1164,7 +1175,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         val erasedType = reqDefnErasedType(i)
         i -> 
           (
-            VarSymbol(Tree.Ident(i.nme + "$"), erasedType),
+            VarSymbol(Tree.Ident(i.nme + "$"), erasedType, mut = false),
             TermSymbol(syntax.LetBind, S(obj.cls.isym), Tree.Ident(i.nme + "$"), erasedType)
           )
       .toMap
@@ -1201,7 +1212,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     // Contains *all* parameters, and applies them all at once in a single `Instantiate`
     def mkFlattenedDefn: FunDefn =
       // Symbols for the aux parameter list
-      val auxSyms = auxParams.map(p => VarSymbol(p.sym.id, erasedType = p.sym.erasedType))
+      val auxSyms = auxParams.map(p => VarSymbol(p.sym.id, erasedType = p.sym.erasedType, mut = false))
       val auxParamListLocal = LoweredParamList.plain(auxSyms.map(Param.simple(_)))(N)
       
       val dupedClsAuxParams = cls.auxParams.map(dupParamList(_))

@@ -1,5 +1,6 @@
 :.
 :flowBasedOpt
+:lift
 :noInline
 open annotations
 

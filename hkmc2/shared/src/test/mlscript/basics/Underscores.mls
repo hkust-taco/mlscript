@@ -27,9 +27,9 @@ _
 //│ = fun
 
 :w
-=> (_, _)
+=> {_, _}
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.+1: 	=> (_, _)
+//│ ║  l.+1: 	=> {_, _}
 //│ ╙──      	    ^
 //│ = fun
 
@@ -154,7 +154,7 @@ x_to(42)
 //│ = {x: 42}
 
 
-let mkObj = => (x: _, y: _, z: 3)
+let mkObj = => {x: _, y: _, z: 3}
 //│ mkObj = fun mkObj
 
 mkObj(1, 2)
@@ -219,9 +219,9 @@ let mkObj = => {
 mkObj(1, 2)
 //│ = {x: 1, y: 2, z: 3}
 
-let mkObj = => (
+let mkObj = => {
   x: _, y: _, z: 3
-)
+}
 //│ mkObj = fun mkObj
 
 mkObj(1, 2)

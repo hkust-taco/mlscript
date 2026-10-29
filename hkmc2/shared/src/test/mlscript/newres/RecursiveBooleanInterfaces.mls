@@ -313,7 +313,7 @@ type NotInt = ~Int
 private fun unused(x: NotInt) = ()
 
 // A constructor underneath negation still guards its recursive reference.
-type Loop = ~[Loop]
+type Loop = ~([Loop])
 private fun unused(x: Loop) = ()
 
 // A bound on a quantified parameter is not a structural guard.

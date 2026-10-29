@@ -37,16 +37,16 @@ typeof(rcd)
 
 // * Should we allow this syntax?
 
-let rcd = (foo: 1, bar: "...")
+let rcd = {foo: 1, bar: "..."}
 //│ rcd = {foo: 1, bar: "..."}
 
 [rcd.foo, rcd.bar]
 //│ = [1, "..."]
 
-let rcd = (
+let rcd = {
   foo: 1
   bar: "..."
-)
+}
 //│ rcd = {foo: 1, bar: "..."}
 
 let rcd =
@@ -124,7 +124,7 @@ id of ({ x: 1 })
 id of ({ x: 1, y: 2 })
 //│ = {x: 1, y: 2}
 
-id of (x: 1, y: 2)
+id of {x: 1, y: 2}
 //│ = {x: 1, y: 2}
 
 id of { x: 1, y: 2 }

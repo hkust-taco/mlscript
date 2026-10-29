@@ -31,7 +31,7 @@ class BufferableTransform()(using State, Raise):
               // TODO: https://github.com/hkust-taco/mlscript/pull/504#discussion_r3827173721
               val varMap = allVars
                 .map: sym =>
-                  (sym, VarSymbol(sym.id, erasedType = N))
+                  (sym, VarSymbol(sym.id, erasedType = N, mut = sym.mut))
                 .toMap
               def mapParam(p: Param) =
                 Param(p.flags, varMap(p.sym), p.sign, p.modulefulness)(p.toLoc)
@@ -74,8 +74,8 @@ class BufferableTransform()(using State, Raise):
                         k(res)
                   case _ => super.applyPath(p)(k)
             def transformFunDefn(f: FunDefn, isCtor: Bool): FunDefn =
-              val buf = VarSymbol(new Tree.Ident("buf"), erasedType = N)
-              val idx = VarSymbol(new Tree.Ident("idx"), erasedType = S(ErasedType.Int))
+              val buf = VarSymbol(new Tree.Ident("buf"), erasedType = N, mut = false)
+              val idx = VarSymbol(new Tree.Ident("idx"), erasedType = S(ErasedType.Int), mut = false)
               val (newParams, symMap) = mkSymbolReplacer(f.params)
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
               FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id, erasure = N), LoweredParamList.plain(

@@ -383,7 +383,7 @@ makeFoo()
 
 // * Notice that the symbols are wired correctly
 :soir
-scope.locally of (
+scope.locally of {
   @inline private fun test() =
     module A with
       fun foo = B.bar()
@@ -391,7 +391,7 @@ scope.locally of (
       fun bar() = A.foo
     () => A.foo
   test()
-)
+}
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let A, B, lambda;
 //│ define A as class A³

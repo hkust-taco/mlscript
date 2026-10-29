@@ -19,6 +19,11 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
   def requireCompleted(statement: Statement): Unit =
     assert(completed.exists(_ is statement), "Lowering requires completed erasure of this program")
 
+  /** Read a delayed type in the context that completed erasure. Cloning can then
+    * rename its symbol without retaining the entire cloning substitution in a thunk.
+    */
+  def typeSymbol(tpe: ErasedType.ValueLike): TypeSymbol = tpe.sym
+
   /** Erase an interpretation registered during elaboration, without installing new listeners. */
   private def erase(resolution: TypeResolution, seen: Set[TypeResolution]): ErasedValueType =
     import TypeShape.*

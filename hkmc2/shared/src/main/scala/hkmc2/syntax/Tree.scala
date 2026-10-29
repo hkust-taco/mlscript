@@ -87,6 +87,10 @@ enum Tree extends AutoLocated:
   case Tup(fields: Ls[Tree])
   case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
+  /** Retain prefix syntax to allow operators ending in `>` (except `>` itself) to delimit implicit lambdas during elaboration,
+    * similarly to how it works with OpApp.
+    * Do note that `>> _ + 1` is a prefix op app but `>>(_ + 1)` is a normal app that does not delimit the `_`. */
+  case PrefixOpApp(op: Ident, rhs: Tree)
   case OpApp(lhs: Tree, op: Tree, rhss: Ls[Tree])
   case Jux(lhs: Tree, rhs: Tree)
   case Reft(base: Tree, body: Block)
@@ -118,7 +122,10 @@ enum Tree extends AutoLocated:
    *  into a `Term`, so we need to embed `Term` into `Tree` using `Trm`. */
   case Trm(term: semantics.Term)
   
-  def splitOn(acc: Tree): Tree = this match
+  /** Substitute the shared prefix into an operator continuation. Conditional branches
+   *  such as `else` can also occur in an `OpSplit`, but only UCS elaboration handles
+   *  them: using that split as an ordinary term must report invalid source syntax. */
+  def splitOn(acc: Tree)(using Raise): Tree = this match
     case SplitPoint() => acc
     case Sel(pre, id) => Sel(pre.splitOn(acc), id)
     case App(lhs, rhs) => App(lhs.splitOn(acc), rhs)
@@ -126,7 +133,9 @@ enum Tree extends AutoLocated:
     case OpSplit(lhs, rhss) => OpSplit(lhs.splitOn(acc), rhss)
     case InfixApp(lhs, kw, rhs) => InfixApp(lhs.splitOn(acc), kw, rhs)
     case _: (Ident | Literal | Error) => acc
-    case _ => die
+    case _ =>
+      raise(ErrorReport(msg"Unexpected ${describe} in an operator continuation." -> toLoc :: Nil))
+      Error().withLocOf(this)
   
   def children: Vector[Located] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Vector.empty
@@ -143,6 +152,7 @@ enum Tree extends AutoLocated:
     case Unquoted(body) => Vector.single(body)
     case Tup(fields) => fields.toVector
     case App(lhs, rhs) => Vector.double(lhs, rhs)
+    case PrefixOpApp(op, rhs) => Vector.double(op, rhs)
     case OpApp(lhs, op, rhss) => lhs +: op +: rhss.toVector
     case Jux(lhs, rhs) => Vector.double(lhs, rhs)
     case Reft(base, reft) => Vector.double(base, reft)
@@ -200,6 +210,7 @@ enum Tree extends AutoLocated:
     case Tup(fields) => "tuple"
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
+    case PrefixOpApp(op, rhs) => "prefix operator application"
     case OpApp(lhs, op, rhss) => "operator application"
     case Jux(lhs, rhs) => "juxtaposition"
     case Reft(base, reft) => "refinement"
@@ -481,8 +492,11 @@ object Tree:
       case App(lhs, TyTup(targs)) => S(lhs, targs)
       case _ => N
   
-  extension [T <: Keyword & Singleton](kw: Tree.Keywrd[T])
+  extension (kw: Tree.Keywrd[?])
     def name = kw.kw.name
+  
+  extension (prefix: PrefixOpApp)
+    def toApp: App = new App(prefix.op, PlainTup(prefix.rhs)).withLocOf(prefix)
 
 /**
  * A parameter yet to be elaborated, which is different from

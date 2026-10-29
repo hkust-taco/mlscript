@@ -6,7 +6,7 @@ import syntax.*, Elaborator.State, ucs.FlatPattern, ups.SplitCompiler.SymbolScru
 
 final case class Branch(scrutinee: Term.SimpleRef, pattern: FlatPattern, continuation: Split) extends AutoLocated:
   def mkClone(using State, codegen.Erasure): Branch =
-    Branch(scrutinee.mkClone.asInstanceOf, pattern.mkClone, continuation.mkClone)
+    Cloner(SymbolSubst.Id).branch(this)
   
   override def children: Vector[Located] = Vector.triple(scrutinee, pattern, continuation)
   
@@ -29,13 +29,7 @@ enum Split extends AutoLocated with ProductWithTail:
   
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
-  def mkClone(using State, codegen.Erasure): Split = this match
-    case Cons(head, tail) => Cons(head.mkClone, tail.mkClone)
-    case Let(sym, term, tail) => Let(sym, term.mkClone, tail.mkClone)
-    case Else(default) => Else(default.mkClone)
-    case End => End
-    case LetSplit(sym, tail) => LetSplit(sym, tail.mkClone)
-    case UseSplit(sym) => UseSplit(sym)
+  def mkClone(using State, codegen.Erasure): Split = Cloner(SymbolSubst.Id).split(this)
   
   /** Used to indicate whether the `Split` was duplicated during desugaring or
     * normalization. */

@@ -29,7 +29,7 @@ object MemberStorage:
       case cls: InnerSymbol => cls.asDefnSym.irClsLikeDefn.flatMap: definition =>
         if (definition.visibility is Visibility.Private)
         && definition.companion.forall(_.visibility is Visibility.Private)
-        then definition.owner.filterNot(_.isInstanceOf[TopLevelSymbol])
+        then definition.owner
         else N
       case _ => N
     if config.checkInvariants && sym.defn.isDefined then
@@ -59,7 +59,7 @@ object MemberStorage:
     */
   def sourcePrivateDefinition(sym: AnyDefinitionSymbol): Opt[Definition] =
     def privatelyStored(definition: Definition, owner: Opt[InnerSymbol]): Opt[Definition] = owner match
-      case S(_: TopLevelSymbol) | N => N
+      case N => N
       case S(_) =>
         val stored = definition.bsym.symbols.filter:
           case _: TypeAliasSymbol => false

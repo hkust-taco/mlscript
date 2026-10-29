@@ -453,7 +453,7 @@ object Elaborator:
         */
       val primitivelyRepresentedRoots: Set[TypeSymbol] = Set(Num, Str, Bool)
   
-  type RefSymbol = SimpleRefSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
+  type RefSymbol = SimpleRefSymbol | TermSymbol | BlockMemberSymbol | ThisSymbol
   
   object Ctx:
     /** The opening site is diagnostic metadata, excluded from equality so
@@ -476,7 +476,7 @@ object Elaborator:
           sym match
           case sym: SimpleRefSymbol =>
             Term.SimpleRef(sym)(id)
-          case sym: InnerSymbol =>
+          case sym: ThisSymbol =>
             Term.SelfRef(sym)(id.getOrElse(Ident(sym.nme)))
           case sym: MemberSymbol =>
             // A reference can invoke a by-name definition, instantiating its
@@ -700,15 +700,15 @@ object Elaborator:
     def tupleSymbol: ModuleOrObjectSymbol = runtimeSymbols.tuple
     def strSymbol: ModuleOrObjectSymbol = runtimeSymbols.str
     // In JavaScript, `import` can be used for getting current file path, as `import.meta`
-    val importSymbol = new VarSymbol(Ident("import"), erasedType = N)
+    val importSymbol = new VarSymbol(Ident("import"), erasedType = N, mut = false)
     @deprecated("Use the `NoSymbol` singleton instead.")
     val noSymbol = NoSymbol
-    val runtimeSymbol = TempSymbol(N, initErasedType = N, "runtime")
+    val runtimeSymbol = VarSymbol(Ident("runtime"), erasedType = N, mut = false)
     val definitionMetadataSymbol = TempSymbol(N, initErasedType = N, "definitionMetadata")
     val prettyPrintSymbol = TempSymbol(N, initErasedType = N, "prettyPrint")
-    val termSymbol = TempSymbol(N, initErasedType = N, "Term")
-    val blockSymbol = TempSymbol(N, initErasedType = N, "Block")
-    val optionSymbol = TempSymbol(N, initErasedType = N, "option")
+    val termSymbol = VarSymbol(Ident("Term"), erasedType = N, mut = false)
+    val blockSymbol = VarSymbol(Ident("Block"), erasedType = N, mut = false)
+    val optionSymbol = VarSymbol(Ident("option"), erasedType = N, mut = false)
     val wasmSymbol = TempSymbol(N, initErasedType = N, "wasm")
     lazy val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
@@ -958,8 +958,8 @@ extends Importer:
     val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident(effectClassName))
     recordDefinitionScope(clsSym)
     val htds = methods.map: spec =>
-      val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme), erasedType = N))
-      val resumeSym = VarSymbol(Ident("resume"), erasedType = N)
+      val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme), erasedType = N, mut = false))
+      val resumeSym = VarSymbol(Ident("resume"), erasedType = N, mut = false)
       val mtdSym = BlockMemberSymbol(spec.methodName, Nil, true)
       val tsym = TermSymbol(Fun, S(clsSym), Ident(spec.methodName))
       rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
@@ -1180,7 +1180,7 @@ extends Importer:
   private def branch(using Ctx): Cfg[PartialFunction[Tree, (Ctx, SimpleSplit)]] =
     // Interleaved-`let` bindings like `{ x is A then 0; let x = 1; ... }`.
     case LetLike(Keywrd(`let`), ident: Ident, S(rhsTree), N) =>
-      val symbol = VarSymbol(ident, erasedType = N)
+      val symbol = VarSymbol(ident, erasedType = N, mut = true)
       val head = mkSplitLet(symbol, term(rhsTree, Trm))
       ((ctx + (ident.name -> symbol)), head ~: End)
     // Interleaved-`do` statements like `{ x is A then 0; do log(1); ... }`.
@@ -1228,10 +1228,10 @@ extends Importer:
     // Handle splits on binary operators.
     // * Each branch scrutinee `rhs` is elaborated as the tree `lhs op rhs`, as in the non-split form,
     // * so that, eg, the RHS of `|>` delimits underscore lambdas (see `underscoreDelimitingSides`).
-    case OpApp(lhs, ident: Ident, rhss) =>
+    case OpApp(lhs, ident: Ident, rhs :: Nil) =>
       val lhsTerm = if underscoreDelimitingSides(ident)._1 then delimitedTerm(lhs, Trm, alwaysLambda = false) else term(lhs, Trm)
       val split = lhsTerm.reference: lhs =>
-        termSplit(rhss, ((rhs: Tree) => OpApp(Tree.Trm(lhs()), ident, rhs :: Nil)) andThen mk)
+        termSplit(rhs :: Nil, ((rhs: Tree) => OpApp(Tree.Trm(lhs()), ident, rhs :: Nil)) andThen mk)
       (ctx, split)
     case OpSplit(lhs, rhss) =>
       val split = term(mk(lhs), Trm).reference: lhs =>
@@ -1250,6 +1250,7 @@ extends Importer:
       termBranch(rhsTree.splitOn(Tree.Trm(scrutinee())), identity)
   
   private def patternBranch(scrutinee: Reference, t: Tree, mk: Tree => Tree): Ctxl[SimpleSplit] = t match
+    case prefix: PrefixOpApp => patternBranch(scrutinee, prefix.toApp, mk)
     case block: Block =>
       val (_, splits) = block.desugStmts.foldLeft((ctx, Ls[SimpleSplit]())):
         case ((curCtx, splits), t) =>
@@ -1428,7 +1429,30 @@ extends Importer:
       (name.startsWith("<") && name =/= "<" && name =/= "<=", name.endsWith(">") && name =/= ">")
     case _ => (false, false)
   
+  /** Named and spread arguments carry syntax around their value; that syntax must survive
+    * introducing an implicit lambda or embedding an already elaborated operand. */
+  private def mapArgumentValue(arg: Tree)(f: Tree => Tree): Tree = arg match
+    case InfixApp(key, kw @ Keywrd(Keyword.`:`), value) => InfixApp(key, kw, f(value)).withLocOf(arg)
+    case Spread(kw, S(value)) => Spread(kw, S(f(value))).withLocOf(arg)
+    case _ => f(arg)
+  
+  /** Preserve operator-specific placeholder boundaries before exposing the argument list to `\`.
+    * Infix operands also inherit an enclosing underscore lambda when their operator does not delimit one;
+    * embedding their elaborated terms keeps ordinary call-argument elaboration from resetting that scope.
+    * Non-delimiting prefix operands stay as syntax for the unary type and dereference interpretations. */
+  private def operatorApp(tree: PrefixOpApp | OpApp)(using Ctx, UnderCtx): Tree.App =
+    def operand(arg: Tree, delimits: Bool): Tree = mapArgumentValue(arg): value =>
+      Tree.Trm(if delimits then delimitedTerm(value, Trm, alwaysLambda = false) else subterm(value)).withLocOf(value)
+    val (op, args) = tree match
+      case PrefixOpApp(op, rhs) =>
+        (op, (if underscoreDelimitingSides(op)._2 then operand(rhs, true) else rhs) :: Nil)
+      case OpApp(lhs, op, rhss) =>
+        val (lhsDelimits, rhsDelimits) = underscoreDelimitingSides(op)
+        (op, operand(lhs, lhsDelimits) :: rhss.map(operand(_, rhsDelimits)))
+    new App(op, Tup(args)).withLocOf(tree)
+  
   /** `f(args) \ a` means `f(args, a)`, and `f \ a` means `f(a)`; returns the corresponding application tree.
+    * Prefix and infix operator applications expose their arguments in the same way.
     * Braces around the LHS are transparent, so that `{f \ a} \ b` means `f(a, b)`,
     * which is also what the operator split of `f` on lines `\ a` and `\ b` means,
     * as it is elaborated as `(f \ a) \ b` (`\` being otherwise right-associative).
@@ -1436,7 +1460,7 @@ extends Importer:
     * With the new underscore syntax, the argument delimits its own implicit lambda,
     * so that `xs.map \ _ + 1` means `xs.map(x => x + 1)`; this is done here rather than in
     * `Tree.desugared`, which does not know the language version. */
-  private def backslashApp(lhs: Tree, rhs: Tree)(using Ctx): Tree.App =
+  private def backslashApp(lhs: Tree, rhs: Tree)(using Ctx, UnderCtx): Tree.App =
     // These delimiters are implicit: synthesizing a prefix `=>` would also
     // suspend arguments without placeholders instead of passing their values.
     def delimited(value: Tree): Tree =
@@ -1444,15 +1468,11 @@ extends Importer:
     // * Field-shaped arguments, such as `key: a` and `...xs` (see `fld`), are not expressions,
     // * so only their values delimit implicit lambdas.
     val arg =
-      if lang.newUnderscoreAndApplicationSyntax then rhs match
-        case InfixApp(key, kw @ Keywrd(Keyword.`:`), value) => InfixApp(key, kw, delimited(value)).withLocOf(rhs)
-        case Spread(kw, S(value)) => Spread(kw, S(delimited(value))).withLocOf(rhs)
-        case _ => delimited(rhs)
+      if lang.newUnderscoreAndApplicationSyntax then mapArgumentValue(rhs)(delimited)
       else rhs
     def withAppendedArg(lhs: Tree): Opt[Tree.App] = lhs.desugared match
       case InfixApp(lhs, Keywrd(Keyword.backslash), rhs) => withAppendedArg(backslashApp(lhs, rhs))
-      // * Prefix operator applications, such as `-x`, are not calls with argument lists.
-      case App(Ident(op), _) if Parser.prefixOps.contains(op) => N
+      case op: (PrefixOpApp | OpApp) => withAppendedArg(operatorApp(op))
       case App(f, Tup(args)) => S(App(f, Tup(args :+ arg)))
       case Bra(BracketKind.Curly, Block(stmt :: Nil)) => withAppendedArg(stmt)
       case _ => N
@@ -1605,6 +1625,11 @@ extends Importer:
     tree.desugared match
     case Tree.Trm(term) => interpretRef(term, interp)
     case unt @ Unt() => unit.withLocOf(unt)
+    // Argument and parameter lists have already been consumed by their enclosing syntax.
+    // A remaining parenthesized block would silently discard all but its last expression.
+    case Bra(Round, _: Block) =>
+      raise(ErrorReport(msg"Parentheses must contain a single expression; use '{ ... }' for a block or record" -> tree.toLoc :: Nil))
+      error
     case Bra(k, e) =>
       k match
       case Round =>
@@ -1662,7 +1687,7 @@ extends Importer:
       Term.Try(subterm(tryBody, interp), subterm(finallyBody))
     case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       
-      val sym = VarSymbol(id, erasedType = N)
+      val sym = VarSymbol(id, erasedType = N, mut = true)
       log(dbg"Processing `handle` statement $id (${sym}) ${ctx.outer}")
       
       val derivedClsSym = ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident(s"Handler$$${id.name}$$"))
@@ -1744,7 +1769,7 @@ extends Importer:
     case InfixApp(TyTup(tvs), Keywrd(Keyword.`->`), body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       def genSym(id: Tree.Ident) =
-        val sym = VarSymbol(id, erasedType = N)
+        val sym = VarSymbol(id, erasedType = N, mut = false)
         sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc)) // TODO vce
         boundVars += id.name -> sym
         sym
@@ -1885,20 +1910,13 @@ extends Importer:
           mkNonLocalContinueInvocation(binding, nme)
       case LabelLookup.NotFound =>
         mkNonLabelSelectionApp(tree, sel, args)
+    case prefix: PrefixOpApp => subterm(operatorApp(prefix), interp)
     case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol.app()
       val lt = subterm(lhs)
       val rt = subterm(rhs)
       app(lt, rt)(tree, N, sym)
-    case tree @ OpApp(lhs, op, rhss) =>
-      val sym = FlowSymbol.app()
-      val (lhsDelimitsUnders, rhsDelimitsUnders) = underscoreDelimitingSides(op)
-      val lt = if lhsDelimitsUnders then delimitedTerm(lhs, Trm, alwaysLambda = false) else subterm(lhs)
-      val ot = subterm(op)
-      val rts = rhss.map: r =>
-        PlainFld(if rhsDelimitsUnders then delimitedTerm(r, Trm, alwaysLambda = false) else subterm(r))
-      app(ot, withTypeBinders(Term.Tup(PlainFld(lt) :: rts)(DummyTup)))(
-        DummyApp, N, sym)
+    case tree: OpApp => subterm(operatorApp(tree), interp)
     case Sel(Empty(), nme) =>
       Term.LeadingDotSel(nme)(S(summon)).withLocOf(tree)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("break")) =>
@@ -1962,8 +1980,8 @@ extends Importer:
               msg"  add a space before ‹identifier› to make it an operator application." -> N ::
               Nil
           N
-      val self = VarSymbol(Ident("self"), erasedType = N)
-      val args = VarSymbol(Ident("args"), erasedType = N)
+      val self = VarSymbol(Ident("self"), erasedType = N, mut = false)
+      val args = VarSymbol(Ident("args"), erasedType = N, mut = false)
       val ps = ParamList.withRest(ParamListFlags.empty,
         Param.simple(self) :: Nil,
         S:
@@ -2041,7 +2059,7 @@ extends Importer:
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
     case tree @ Case(kw, _) =>
-      val scrut = VarSymbol(Ident("caseScrut"), erasedType = N)
+      val scrut = VarSymbol(Ident("caseScrut"), erasedType = N, mut = false)
       val body = caseSplit(scrut, tree)
       val params = Param.simple(scrut) :: Nil
       withTypeBinders(Term.Lam(PlainParamList(params)(N), body)).mkLocWith(kw)
@@ -2093,7 +2111,7 @@ extends Importer:
     case PrefixApp(kw @ Keywrd(Keyword.`drop`), body) =>
       Term.Drop(subterm(body)).mkLocWith(kw)
     case Region(id: Ident, body) =>
-      val sym = VarSymbol(id, erasedType = N)
+      val sym = VarSymbol(id, erasedType = N, mut = true)
       given Ctx = ctx + (id.name -> sym)
       Term.Region(sym, subterm(body))
     case RegRef(reg, value) => Term.RegRef(subterm(reg), subterm(value))
@@ -2137,6 +2155,7 @@ extends Importer:
       def go(acc: Term, trees: Ls[Tree]): Term =
         trees match
         case Nil => acc
+        case (prefix: PrefixOpApp) :: trees => go(acc, prefix.toApp :: trees)
         
         // * FIXME this `f.name.head.isLetter` test is a big hack...
         // * TODO would be better to keep the fixity of applications part of the Tree repr.
@@ -2195,7 +2214,7 @@ extends Importer:
         // * so the parameter and the reference are both located at the `_`,
         // * which lets diagnostics about either point to it.
         val id = new Ident("_" + unds.size).withLocOf(und)
-        val sym = VarSymbol(id, erasedType = N)
+        val sym = VarSymbol(id, erasedType = N, mut = true)
         unds += sym
         syntheticLocalRef(sym).withLocOf(und)
     case Annotated(lhs, rhs) =>
@@ -2505,7 +2524,7 @@ extends Importer:
             recordFieldScope(MemberKey.symbol(annotations).fold(RcdField.signature(field, rhs_t))(
               key => RcdField.signature(field, rhs_t, key))) :: acc
           case id: Ident =>
-            val sym = new VarSymbol(id, erasedType = N)
+            val sym = new VarSymbol(id, erasedType = N, mut = true)
             newCtx += id.name -> sym
             recordFieldScope(RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym).ref(S(id))))
               :: defineVar(sym, rhs_t)(Loc(rlhs, rhs))
@@ -2736,7 +2755,7 @@ extends Importer:
           case S(ts) =>
             ts.tys.flatMap: targ =>
               def mk(id: Ident, vce: Opt[Bool]): Ls[TyParam] =
-                val vs = VarSymbol(id, erasedType = N)
+                val vs = VarSymbol(id, erasedType = N, mut = false)
                 val res = TyParam(FldFlags.empty, vce, vs)(targ.toLoc)
                 vs.decl = S(res)
                 res :: Nil
@@ -3146,7 +3165,7 @@ extends Importer:
   
   def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): TermSymbol | VarSymbol =
     if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasure = N)
-    else VarSymbol(id, erasedType = N)
+    else VarSymbol(id, erasedType = N, mut = true)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
@@ -3164,7 +3183,7 @@ extends Importer:
         // * so the annotation of `y?: T` denotes `T | null` both for callers and in the body.
         val sig = if flg.opt then writtenSig.map(optionalType(_, t.toLoc)) else writtenSig
         if newResolution then sig.foreach(registerSignature)
-        val sym = VarSymbol(canonicalId)
+        val sym = VarSymbol(canonicalId, mut = true)
         sym.sourceAliases = aliases
         val p = Param(flg, sym, sig, mfn)(t.toLoc)
         sym.decl = S(p)
@@ -3398,7 +3417,7 @@ extends Importer:
           // We create a symbol specifically for `Param` for each variable to
           // avoid redundantly redeclaring symbols in `Scope` during code
           // generation, which triggers the assertion in `Scope.addToBindings`.
-          val parameterSymbol = VarSymbol(symbol.id, erasedType = N)
+          val parameterSymbol = VarSymbol(symbol.id, erasedType = N, mut = symbol.mut)
           (name -> parameterSymbol, symbol -> parameterSymbol)
       .toList.unzip
       pattern.variables.report // Report all invalid variables we found in `pattern`.
@@ -3446,6 +3465,7 @@ extends Importer:
       case _ => R(go(t))
     def go(t: Tree): Ctxl[Pattern] = trace[Pattern](dbg"Elab pattern ${t.showDbg}", r => s"~> ${r.showDbg}"):
       t match
+      case prefix: PrefixOpApp => go(prefix.toApp)
       // Annotated patterns like `@compile P`.
       case Tree.Annotated(annotation, target) =>
         go(target).annotate(term(annotation, Trm), t.toLoc)
@@ -3521,7 +3541,7 @@ extends Importer:
       // pattern translation.
       case OpApp(lhs, Ident("~"), rhs :: Nil) => Pattern.Concatenation(go(lhs), go(rhs))
       // Constructor patterns can be written in the infix form.
-      case OpApp(lhs, op, rhs :: Nil) => constructor(term(op, Ptrn), S(Ls(go(lhs), go(rhs))), t)
+      case OpApp(lhs, op, rhss) => constructor(term(op, Ptrn), S(go(lhs) :: rhss.map(go)), t)
       // Constructor patterns without arguments
       case id @ Ident(name) if name.isUncapitalized => Variable(id)
       case id: Ident if newResolution => constructor(term(id, Ptrn), N, id)
@@ -3545,7 +3565,7 @@ extends Importer:
     case TyTup(ps) =>
       val vs = ps.flatMap:
         case id: Ident =>
-          val sym = VarSymbol(id, erasedType = N)
+          val sym = VarSymbol(id, erasedType = N, mut = false)
           sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
           Param.simple(sym) :: Nil
         case t =>

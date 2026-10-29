@@ -1,0 +1,58 @@
+:.
+:js
+:lift
+
+#config(deforest: Some(Deforest(debug: false)), flowBasedOpt: Some(FlowBasedOpt(logEffects: true)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+data class (::) Cons(h, t)
+data object Nil
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > <<< effect-analysis results <<<
+
+
+// * The unannotated counterpart of deforest/eta-expansion/recursive.mls.
+// * Track inferred effects while that test overrides them with @pure.
+:expect 3
+:aggressive
+fun append(xs, ys) = if xs is
+  Nil then ys
+  h :: t then h :: append(t, ys)
+fun flatten(xss) = if xss is
+  Nil then Nil
+  h :: t then append(h, flatten(t))
+fun len(ls) = if ls is
+  Nil then 0
+  h :: t then 1 + len(t)
+len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
+//│ flow-analysis > >>> effect-analysis results >>>
+//│ flow-analysis > function append⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function flatten$flatten⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function flatten_append$append⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function flatten⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > function len$len⁰#0 @ <root> -> Pure
+//│ flow-analysis > function len$ls_Cons⁰#0 @ <root> -> Pure
+//│ flow-analysis > function len$ls_Cons⁰#1 @ <root> -> Pure
+//│ flow-analysis > function len$ls_Nil⁰#0 @ <root> -> Pure
+//│ flow-analysis > function len$ls_Nil⁰#1 @ <root> -> Pure
+//│ flow-analysis > function len$ls_rest⁰#0 @ <root> -> Pure
+//│ flow-analysis > function len⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call +⁰@result³#0 @ <root> -> Pure
+//│ flow-analysis > call +⁰@result⁸#0 @ <root> -> Pure
+//│ flow-analysis > call append⁰@result⁵#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call append⁰@result⁷#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call flatten$flatten⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call flatten$flatten⁰@result¹⁴#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call flatten_append$append⁰@result¹³#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call flatten_append$append⁰@result¹¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call flatten⁰@result⁶#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call id@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call len$len⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call len$len⁰@result⁹#0 @ <root> -> Pure
+//│ flow-analysis > call len$ls_Cons⁰@result¹⁰#0 @ <root> -> Pure
+//│ flow-analysis > call len$ls_Nil⁰@result¹⁵#0 @ <root> -> Pure
+//│ flow-analysis > call len⁰@result⁴#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call ls⁰@result¹²#0 @ <root> -> Pure
+//│ flow-analysis > <<< effect-analysis results <<<
+//│ = 3

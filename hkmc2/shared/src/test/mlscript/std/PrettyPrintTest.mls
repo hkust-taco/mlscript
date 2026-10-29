@@ -78,7 +78,7 @@ show of x: 0, y: [shortText, shortText, shortText], z: [longText, 0, 0]
 
 // It should break `y` but keep `x` and `z` inline.
 show of
-  x: (a: "A", b: "B", c: "C")
+  x: {a: "A", b: "B", c: "C"}
   y: [shortText, shortText, shortText, shortText, shortText]
   z: [1, 2, 3, 4]
 //│ > {                                                                         ┊

@@ -164,10 +164,10 @@ type NoSymbol = NoSymbol.type
 
 /** Symbols bound by `Program.imports`.
   *
-  * User-facing imports bind variable or member symbols, while compiler-generated imports
-  * such as prelude/runtime imports may bind temporary term values directly.
+  * Imports bind member symbols or immutable variable symbols. Compiler-generated
+  * prelude/runtime imports use the same immutable bindings as source import aliases.
   */
-type ImportSymbol = TempSymbol | VarSymbol | BlockMemberSymbol
+type ImportSymbol = VarSymbol | BlockMemberSymbol
 
 
 abstract class FlowSymbol(label: Str)(using State) extends Symbol:
@@ -232,7 +232,7 @@ class LabelSymbol(val trm: Opt[Term], name: Str = "lbl")(using State) extends Lo
 class SplitSymbol(val body: Split, name: Str = "split")(using State) extends LocalSymbol:
   var label: Opt[LabelSymbol] = N
   def nme = name
-  def subst(using s: SymbolSubst): SplitSymbol = this // SplitSymbols are not substituted
+  def subst(using s: SymbolSubst): SplitSymbol = s.mapSplitSym(this)
   def toLoc = body.toLoc
   override def prefix: Str = "split:"
 
@@ -243,6 +243,10 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   var decl: Opt[Declaration] = N
   /** The [[ErasedValueType]] of this variable, or `N` if the erased type is not known. */
   def erasedType: Opt[ErasedValueType]
+  /** Whether the binding may be reassigned after initialization. Initializing an immutable
+    * binding is allowed. Forwarding an uninitialized value (e.g. as an argument) is not a use;
+    * actually using it before initialization is undefined behavior. */
+  def mut: Bool
   def subst(using s: SymbolSubst): LocalVarSymbol
 
 /** A temporary variable introduced by lowering.
@@ -258,6 +262,7 @@ class TempSymbol(val trm: Opt[Term], initErasedType: Opt[ErasedValueType], dbgNm
   
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def prefix: Str = "tmp:"
+  def mut: Bool = true // TODO: support immutable temporary variables (currently the UPS assigns some)
   override def subst(using s: SymbolSubst): TempSymbol = s.mapTempSym(this)
   
   def erasedType: Opt[ErasedValueType] = _erasedType
@@ -277,12 +282,15 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
   def subst(using sub: SymbolSubst): InstSymbol = sub.mapInstSym(this)
 
 
-class VarSymbol(val id: Ident)(using State)
+/** A named binding. When mut is false, its value is fixed after initialization;
+  * imports and lowered immutable vals use this to retain stability through IR rewrites.
+  */
+class VarSymbol(val id: Ident, val mut: Bool)(using State)
     extends LocalVarSymbol(id.name)
     with HasDelayedErasedType[ErasedValueType]
     with NamedSymbol:
-  def this(id: Ident, erasedType: Opt[ErasedValueType])(using State) =
-    this(id)
+  def this(id: Ident, erasedType: Opt[ErasedValueType], mut: Bool)(using State) =
+    this(id, mut)
     this.erasedType = erasedType
   val name: Str = id.name
   var sourceAliases: Ls[Str] = Nil
@@ -301,7 +309,7 @@ class VarSymbol(val id: Ident)(using State)
   * reads those binders (see NewResolver.closure).
   */
 final class TypeParameterInstance(val origin: VarSymbol, val siteBinders: Opt[Set[VarSymbol]])(using State)
-    extends VarSymbol(origin.id):
+    extends VarSymbol(origin.id, mut = origin.mut):
   require(!origin.isInstanceOf[TypeParameterInstance], "Instantiate original type binders only")
   decl = origin.decl
 
@@ -462,11 +470,11 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     "term:" + owner.map(_.showName + "/").getOrElse("")
   def isExplicitlyPrivate: Bool = defn.exists(_.visibility is Visibility.Private)
   def isPrivate: Bool =
-    // Top-level term symbols have `owner = None`, but the synthetic global
-    // object itself is represented by a `TopLevelSymbol`; excluding it here
-    // keeps global definitions and builtins out of JS `#` private lowering if a
-    // generated symbol is ever attached to the global owner.
-    owner.exists(!_.isInstanceOf[TopLevelSymbol]) &&
+    // Note: Top-level definitions have no owner and do not use JS private fields;
+    //    They are not directly accessible from other modules in source code,
+    //    but are actually exported internally under mangled names.
+    //    So, we do not consider them private for the purpose of this check.
+    owner.isDefined &&
       // Refreshed IR symbols have no source definition. Their current definition
       // retains visibility, including after a method is copied by the inliner.
       ((k is LetBind) || irDefn.fold(isExplicitlyPrivate)(_.visibility is Visibility.Private))
@@ -627,13 +635,15 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
     case cd: codegen.ClsLikeDefn => cd
   
   /** Whether we know it's pure when selected (eg getters are not always pure). */
-  def isPure: Bool =
+  def isAccessPure: Bool =
     this match
     case _: ModuleOrObjectSymbol => true
     case _ =>
       defn.exists:
         case d: ClassDef => true
+        case TermDefinition(k = syntax.MutVal) => false
         case TermDefinition(k = _: syntax.ValLike) => true
+        case d @ TermDefinition(k = syntax.Fun, params = Nil) => !d.mayRaiseEffects
         case TermDefinition(k = syntax.Fun, params = _ :: _) =>
           true // References to functions are only guaranteed to be pure when the functions have parameter lists
         case _ => false
@@ -647,15 +657,19 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
     case sym: TypeAliasSymbol => "type alias"
     case sym: PatternSymbol => "pattern"
     case sym: TermSymbol => sym.k.desc
-    case top: TopLevelSymbol => "top-level"
   
 end DefinitionSymbol
+
+/** Symbols denoting receivers in semantic terms and IR. Unlike inner receivers,
+  * the global object has no class-like definition, private scope, or captured-this proxy. */
+sealed trait ThisSymbol extends Symbol:
+  def subst(using SymbolSubst): ThisSymbol
 
 /** This is the symbol associated to specific definitions.
   * One overloaded `BlockMemberSymbol` may correspond to multiple `InnerSymbol`s
   * A `Ref(_: InnerSymbol)` represents a `this`-like reference to the current object. */
   // TODO prevent from appearing in Ref
-sealed trait InnerSymbol(using State) extends Symbol, ShapePublisher:
+sealed trait InnerSymbol(using State) extends ThisSymbol, ShapePublisher:
   // Ideally, InnerSymbol should extend DefinitionSymbol, but that requires us to specify the type
   // parameter to all occurrences of InnerSymbol. So, we use a self-type annotation instead to
   // ensure that any implementation of InnerSymbol is also a DefinitionSymbol.
@@ -738,9 +752,7 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   override def subst(using sub: SymbolSubst): PatternSymbol = sub.mapPatSym(this)
 
 class TopLevelSymbol(blockNme: Str)(using State)
-    extends MemberSymbol
-    with DefinitionSymbol[ModuleOrObjectDef]
-    with InnerSymbol:
+    extends ThisSymbol:
   def nme = blockNme
   def toLoc: Option[Loc] = N
   override def prefix: Str = "globalThis:"

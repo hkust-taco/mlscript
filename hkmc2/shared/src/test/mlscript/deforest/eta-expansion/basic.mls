@@ -51,6 +51,8 @@ c(p(true))
 //│ = 1
 
 
+// https://github.com/hkust-taco/mlscript/pull/562#discussion_r4320986578
+// TODO: this is a narrow, special-cased fix, to be superceded by capture-analysis
 :expect O
 fun p() = X(Y(O))
 fun f(x) = if x is

@@ -88,16 +88,6 @@ if 2
 
 // ——— ——— ———
 
-:w
-:fixme // * Should be a call of two arguments, not a sequenced expression
-+(1,2)
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.+1: 	+(1,2)
-//│ ╙──      	  ^
-//│ = 2
-
-// ——— ——— ———
-
 :fixme
 pattern ShapeArea =
   | (:radius) => 0
@@ -130,3 +120,17 @@ pattern P = (:radius) => radius
 //│ ╙──      	              ^^^^^^
 
 // ——— ——— ———
+
+// TODO: Calls through one partial application must retain writes to its earlier parameter.
+// BlockSimplifier removes the write and repeats counter(0) at each call to next.
+:fixme
+:noInline
+:expect [1, 2]
+fun counter(x)() =
+  set x = x + 1
+  x
+let next = counter(0)
+[next(), next()]
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: '[1, 1]'
+//│ = [1, 1]
+//│ next = fun

@@ -216,7 +216,6 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       * references can denote either the default export or a private member of a foreign unit. */
     (new BlockTraverser:
       override def applyValue(value: Value): Unit = value match
-        case Value.SimpleRef(sym: TempSymbol) => note(sym)
         case Value.SimpleRef(sym: VarSymbol) => note(sym)
         case Value.MemberRef(sym, _) => note(sym)
         case _ =>
@@ -896,7 +895,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       else doc" # /* Unreachable: $msg */"
     case Unreachable(_) => doc""
     
-    case Throw(res) =>
+    case Throw(res, _) =>
       doc" # throw ${result(res)}${mkSemi}"
     
     case Break(lbl) =>

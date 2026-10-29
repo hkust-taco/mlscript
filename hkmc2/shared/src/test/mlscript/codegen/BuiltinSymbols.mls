@@ -56,18 +56,19 @@ case Int then 0
 //│               _1 = Cls:
 //│                 cls = class:Int⁰
 //│                 path = Select{sym=term:Runtime⁰/unreachable⁰}:
-//│                   qual = SimpleRef of tmp:runtime⁰
+//│                   qual = SimpleRef of runtime⁰
 //│                   name = Ident of "unreachable"
 //│               _2 = Return of Lit of IntLit of 0
-//│           dflt = S of Throw of Instantiate:
-//│             mut = false
-//│             cls = Select{sym=class:Error⁰}:
-//│               qual = This of globalThis:globalThis⁰
-//│               name = Ident of "Error"
-//│             argss = Ls of
-//│               Ls of
-//│                 Arg:
-//│                   value = Lit of StrLit of "match error"
+//│           dflt = S of Throw:
+//│             exc = Instantiate:
+//│               mut = false
+//│               cls = Select{sym=class:Error⁰}:
+//│                 qual = This of globalThis:globalThis⁰
+//│                 name = Ident of "Error"
+//│               argss = Ls of
+//│                 Ls of
+//│                   Arg:
+//│                     value = Lit of StrLit of "match error"
 //│       rest = Return of MemberRef{disamb=term:lambda¹}:
 //│         bms = member:lambda⁰
 //│         disamb = term:lambda¹

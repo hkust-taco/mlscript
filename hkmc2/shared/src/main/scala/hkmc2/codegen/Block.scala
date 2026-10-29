@@ -66,7 +66,7 @@ type ScopedSymbol = LocalVarSymbol | BlockMemberSymbol
 /** A "catch-all" symbol for value-like things.
   * Slightly better than just `Symbol`, but we should still try migrating away to more specific symbol types.
   */
-type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
+type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | ThisSymbol
 
 /** Symbols of lexical bindings required by MIR, including assignment destinations.
   * A `MemberRef` requires its block member binding regardless of the selected definition:
@@ -130,7 +130,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) =>
       s"""|Define(${defn.showDbg})
           |${rest.showDbg}""".stripMargin
-    case Throw(exc) => s"Throw(${exc.showDbg})"
+    case Throw(exc, _) => s"Throw(${exc.showDbg})"
     case Scoped(syms, body) =>
       s"""|Scoped(${syms.toList.map(_.showDbg).sorted.mkString(", ")}) {
           |${body.showDbg}
@@ -177,7 +177,7 @@ sealed abstract class Block extends Product:
   
   lazy val size: Int = 1 + this.match
     case Return(r: Result) => r.size
-    case Throw(r: Result) => r.size
+    case Throw(r: Result, _) => r.size
     case _: End | _: Break | _: Continue | _: Unreachable => 0
     case Begin(sub, rst) => sub.size + rst.size
     case Assign(_, r, rst) => r.size + rst.size
@@ -206,7 +206,7 @@ sealed abstract class Block extends Product:
       ++ arms.iterator.flatMap:
         (pat, arm) => arm.freeVars ++ pat.freeVars
     case Return(res) => res.freeVars
-    case Throw(exc) => exc.freeVars
+    case Throw(exc, _) => exc.freeVars
     case Label(label, _, body, rest) => (body.freeVars - label) ++ rest.freeVars 
     case Break(label) => Set.single(label)
     case Continue(label) => Set.single(label)
@@ -238,7 +238,7 @@ sealed abstract class Block extends Product:
     
     // TODO rm Lam from results and thus the need for these cases
     case Return(r) => r.subBlocks
-    case Throw(r) => r.subBlocks
+    case Throw(r, _) => r.subBlocks
     
     case _: Return | _: Throw | _: Break | _: Continue | _: End | _: Unreachable => Nil
   
@@ -404,7 +404,7 @@ case class Match(
 
 case class Return(res: Result) extends BlockTail
 
-case class Throw(exc: Result) extends BlockTail
+case class Throw(exc: Result, annotations: Ls[Annot]) extends BlockTail
 
 object Throw:
   /** Throws a runtime `Error` carrying `msg`.
@@ -416,7 +416,7 @@ object Throw:
     mut = false,
     State.globalThisSymbol.asThis.selN(Tree.Ident("Error")),
     (Value.Lit(Tree.StrLit(msg))(N).asArg :: Nil) :: Nil,
-  )(InstantiateMetadata.empty, N))
+  )(InstantiateMetadata.empty, N), annotations = Nil)
 
 case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block)
 extends Block with NonBlockTail with ProductWithTail
@@ -1080,9 +1080,9 @@ sealed abstract class Result extends Located:
   lazy val isPure: Bool = this match
     case _: Value => true
     case sel @ Select(q, n) =>
-      q.isPure && sel.symbol.exists(_.isPure)
-    case DynSelect(q, fld, DynSelectKind.Member(sym)) => q.isPure && fld.isPure && sym.isPure
-    case sel @ SuperSelect(q, base, key) => q.isPure && base.isPure && key.isPure && sel.symbol.isPure
+      q.isPure && sel.symbol.exists(_.isAccessPure)
+    case DynSelect(q, fld, DynSelectKind.Member(sym)) => q.isPure && fld.isPure && sym.isAccessPure
+    case sel @ SuperSelect(q, base, key) => q.isPure && base.isPure && key.isPure && sel.symbol.isAccessPure
     case c @ Call(fun, ass) if c.isKnownUnsaturatedCall =>
       fun.isPure && ass.forall(_.forall(a => a.spread.isEmpty && a.value.isPure))
     case Call(Value.SimpleRef(bs: BuiltinSymbol), ass) if bs.isPure =>
@@ -1376,6 +1376,26 @@ case class Record(mut: Bool, elems: Ls[RcdArg])(val toLoc: Opt[Loc]) extends Res
 sealed abstract class Path extends TrivialResult:
   override def withLoc(loc: Opt[Loc]): Path
   override def withLocOf(source: Located): Path = withLoc(source.toLoc)
+  /** Whether repeated reads denote the same value, even across calls that mutate state.
+    * That is to say, whether the value is referentially transparent.
+    * This is a stronger property than "purity" as the absence of side effects:
+    * local variables may be reassigned, and pure getters may allocate fresh objects,
+    * with different identities.
+    * Immutable members require a stable qualifier too.
+    */
+  lazy val isStable: Bool =
+    def stableMember(sym: DefinitionSymbol[?]): Bool = sym match
+      case _: ClassLikeSymbol => true
+      case sym: TermSymbol => (sym.k is syntax.ImmutVal) || (sym.k is syntax.Ins)
+      case _ => false
+    this match
+    case _: Value.This | _: Value.Lit => true
+    case Value.SimpleRef(_: BuiltinSymbol) => true
+    case Value.SimpleRef(sym: LocalVarSymbol) => !sym.mut
+    case Value.MemberRef(_, disamb) => stableMember(disamb)
+    case sel: Select => sel.qual.isStable && sel.symbol.exists(stableMember)
+    case Cast(path: Path, _, false) => path.isStable
+    case _ => false
   def selN(id: Tree.Ident): Path = Select(this, id)(N, N)(false)
   def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym), N)(false)
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
@@ -1435,7 +1455,7 @@ enum Value extends Path with ProductWithExtraInfo:
     * @param disamb The symbol disambiguating the definition that the reference refers to.
     */
   case MemberRef(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?])(val toLoc: Opt[Loc])
-  case This(sym: InnerSymbol)(val toLoc: Opt[Loc])
+  case This(sym: ThisSymbol)(val toLoc: Opt[Loc])
   case Lit(lit: Literal)(val toLoc: Opt[Loc])
 
   override def withLoc(loc: Opt[Loc]): Value = if loc == toLoc then this else this match
@@ -1473,7 +1493,7 @@ object Value:
         case bms: BlockMemberSymbol => bms.asMemberRef:
           disamb.getOrElse:
             lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
-        case sym: InnerSymbol => sym.asThis
+        case sym: ThisSymbol => sym.asThis
         case NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
     
     // * Some helper constructors that allow omitting the disambiguation symbol.
@@ -1539,7 +1559,7 @@ extension (s: SimpleSymbol)
 extension (bms: BlockMemberSymbol)
   inline def asMemberRef(disamb: DefinitionSymbol[?]): Value.MemberRef = Value.MemberRef(bms, disamb)(N)
 
-extension (sym: InnerSymbol)
+extension (sym: ThisSymbol)
   inline def asThis: Value.This = Value.This(sym)(N)
 
 extension (l: ValueSymbol)

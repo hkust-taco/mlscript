@@ -170,10 +170,10 @@ staged module BadArguments with
 :fixme
 staged module OtherBlocks with
   fun scope() =
-    scope.locally of (
+    scope.locally of {
       let a = 1
       a
-    )
+    }
   fun breakAndLabel() =
     if 1 is
       2 then 0

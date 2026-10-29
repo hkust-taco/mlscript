@@ -93,8 +93,8 @@ let indentRegex = new RegExp("""^(\s*)""")
 type IndentedNode = {text: Str, children: Array[IndentedNode]}
 
 fun parseIndentedText(text: Str) =
-  let root = (text: "", children: mut [])
-  let stack = mut [(node: root, indent: -1)]
+  let root = {text: "", children: mut []}
+  let stack = mut [{node: root, indent: -1}]
   text.split("\n")
     Iter.filtering((line: Str) => line.trim().length > 0)
     Iter.each of (line: Str) =>
@@ -102,7 +102,7 @@ fun parseIndentedText(text: Str) =
       let text = line.substring(indent)
       while indent <= stack.[stack.length - 1].indent do
         stack.pop()
-      let newNode = (text: text, children: mut [])
+      let newNode = {text: text, children: mut []}
       stack.[stack.length - 1].node.children.push of newNode
       stack.push of node: newNode, indent: indent
   root.children

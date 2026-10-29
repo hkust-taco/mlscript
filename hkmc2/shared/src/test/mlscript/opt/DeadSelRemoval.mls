@@ -18,11 +18,12 @@ do
 //│ > 2
 
 
-scope.locally of (
+:expect 123
+scope.locally of {
   val x = 1
   val y = print(2)
   123
-)
+}
 //│ > 2
 //│ = 123
 
@@ -37,11 +38,12 @@ module Foo with
 Foo.x
 //│ = 1
 
-// * The first selection is pure and can be removed
+// * TODO: The first selection is free of side effects and should be dropped,
+// * but it is not pure, as it reads mutable state, and we do not currently distinguish the two.
 :soir
 Foo.x, Foo.x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ return Foo⁰.x⁰
+//│ do Foo⁰.x⁰; return Foo⁰.x⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 
@@ -74,19 +76,21 @@ let a = Foo.y in Foo.x
 //│ = 4
 
 
-(
+:expect 42
+{
   val a = print("hi")
   42
-)
+}
 //│ > hi
 //│ = 42
 
 :soir
 :ssjs
-(
+:expect 42
+{
   val a = Foo.y
   42
-)
+}
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ do Foo⁰.y⁰; return 42
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————

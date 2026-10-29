@@ -151,7 +151,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty)))
     val heads = expandedPatterns.iterator.flatMap((_, p) => p.heads).distinct
     // This is the parameter of the current multi-matcher.
-    val scrutinee = VarSymbol(Ident("input"), erasedType = N)
+    val scrutinee = VarSymbol(Ident("input"), erasedType = N, mut = false)
     // Allocate branches in source order before the default, but accumulate
     // them in reverse order so they can be prepended to the default below.
     val branches = heads.foldLeft(Ls.empty[Branch]): (branches, head) =>
@@ -197,7 +197,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
     val subPatternsByField = fields.map: field =>
       field -> patterns.iterator.flatMap((_, p) => p.collectSubPatterns(field)).toList
     val subScrutinees = Map.from(subPatternsByField.iterator.map: (field, subPatterns) =>
-      field -> MatcherResult(VarSymbol(field.asIdent, erasedType = N), subPatterns.iterator.map(_.label).toSet))
+      field -> MatcherResult(VarSymbol(field.asIdent, erasedType = N, mut = false), subPatterns.iterator.map(_.label).toSet))
     // Let bindings that bind the sub-scrutinee to the result of each matcher.
     val bindings = subPatternsByField.foldLeft(Ls.empty[Statement]): (statements, entry) =>
       val (field, subPatterns) = entry
@@ -522,7 +522,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
       // declared at the outermost level.
         val transformSymbol = TempSymbol(N, initErasedType = N, "transform")
         // The transform function takes a single record as the argument.
-        val bindingsSymbol = VarSymbol(Ident("args"), erasedType = N)
+        val bindingsSymbol = VarSymbol(Ident("args"), erasedType = N, mut = false)
         val params = paramList(param(bindingsSymbol))
         // Because we pass the extracted values using recoreds. We need to bind
         // each property to its corresponding variable which is accessible from
@@ -534,7 +534,7 @@ class Compiler(using Context)(using codegen.Erasure)(using tl: TL)(using Ctx, St
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         (makeConsequent, alternative) => Split.Let(
           sym = transformSymbol,
-          term = Term.Lam(params, Blk(letBindings, term.mkClone)),
+          term = Term.Lam(params, Blk(letBindings, term)).mkClone,
           tail = makeSplit(
             // The `outputSymbol` is the output of `pattern`.
             //                vvvvvvvvvvvv
