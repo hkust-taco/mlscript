@@ -453,7 +453,7 @@ object Elaborator:
         */
       val primitivelyRepresentedRoots: Set[TypeSymbol] = Set(Num, Str, Bool)
   
-  type RefSymbol = SimpleRefSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
+  type RefSymbol = SimpleRefSymbol | TermSymbol | BlockMemberSymbol | ThisSymbol
   
   object Ctx:
     /** The opening site is diagnostic metadata, excluded from equality so
@@ -476,7 +476,7 @@ object Elaborator:
           sym match
           case sym: SimpleRefSymbol =>
             Term.SimpleRef(sym)(id)
-          case sym: InnerSymbol =>
+          case sym: ThisSymbol =>
             Term.SelfRef(sym)(id.getOrElse(Ident(sym.nme)))
           case sym: MemberSymbol =>
             // A reference can invoke a by-name definition, instantiating its

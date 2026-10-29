@@ -66,7 +66,7 @@ type ScopedSymbol = LocalVarSymbol | BlockMemberSymbol
 /** A "catch-all" symbol for value-like things.
   * Slightly better than just `Symbol`, but we should still try migrating away to more specific symbol types.
   */
-type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
+type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | ThisSymbol
 
 /** Symbols of lexical bindings required by MIR, including assignment destinations.
   * A `MemberRef` requires its block member binding regardless of the selected definition:
@@ -953,9 +953,7 @@ final case class ClsLikeDefn(
   methods.foreach: m =>
     m.dSym.irDefn = S(m)
   companion.foreach: c =>
-    c.isym match
-      case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym), termCompanion))
-      case _ => ()
+    c.isym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym), termCompanion))
     c.methods.foreach: m =>
       m.dSym.irDefn = S(m)
   val defnSym = S(isym)
@@ -968,7 +966,7 @@ final case class ClsLikeDefn(
 
 // * This is only supposed to be for companion module definitions (notably, not for `object`)
 final case class ClsLikeBody(
-    isym: DefinitionSymbol[? <: ModuleOrObjectDef] & InnerSymbol,
+    isym: ModuleOrObjectSymbol,
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
@@ -1451,7 +1449,7 @@ enum Value extends Path with ProductWithExtraInfo:
     * @param disamb The symbol disambiguating the definition that the reference refers to.
     */
   case MemberRef(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?])(val toLoc: Opt[Loc])
-  case This(sym: InnerSymbol)(val toLoc: Opt[Loc])
+  case This(sym: ThisSymbol)(val toLoc: Opt[Loc])
   case Lit(lit: Literal)(val toLoc: Opt[Loc])
 
   override def withLoc(loc: Opt[Loc]): Value = if loc == toLoc then this else this match
@@ -1489,7 +1487,7 @@ object Value:
         case bms: BlockMemberSymbol => bms.asMemberRef:
           disamb.getOrElse:
             lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
-        case sym: InnerSymbol => sym.asThis
+        case sym: ThisSymbol => sym.asThis
         case NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
     
     // * Some helper constructors that allow omitting the disambiguation symbol.
@@ -1555,7 +1553,7 @@ extension (s: SimpleSymbol)
 extension (bms: BlockMemberSymbol)
   inline def asMemberRef(disamb: DefinitionSymbol[?]): Value.MemberRef = Value.MemberRef(bms, disamb)(N)
 
-extension (sym: InnerSymbol)
+extension (sym: ThisSymbol)
   inline def asThis: Value.This = Value.This(sym)(N)
 
 extension (l: ValueSymbol)

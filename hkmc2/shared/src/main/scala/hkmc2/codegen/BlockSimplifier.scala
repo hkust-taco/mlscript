@@ -1435,7 +1435,7 @@ class BlockSimplifier
           applyBlock(blk)
           override def applyValue(value: Value): Unit = value match
             case Value.This(_: TopLevelSymbol) => ()
-            case Value.This(sym) => referenced += sym
+            case Value.This(sym: InnerSymbol) => referenced += sym
             case _ => super.applyValue(value)
           override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
             defined += defn.isym
@@ -1801,14 +1801,14 @@ class BlockSimplifier
             case _ => super.applyBlock(b)
         
           override def applyValue(v: Value)(k: Value => Block): Block = v match
-            case Value.This(sym) if thisMapping.contains(sym) =>
+            case Value.This(sym: InnerSymbol) if thisMapping.contains(sym) =>
               thisMapping(sym) match
               case v2: Value => k(v2)
               case _ => super.applyValue(v)(k)
             case _ => super.applyValue(v)(k)
 
           override def applyPath(p: Path)(k: Path => Block): Block = p match
-            case Value.This(sym) if thisMapping.contains(sym) =>
+            case Value.This(sym: InnerSymbol) if thisMapping.contains(sym) =>
               k(thisMapping(sym))
             case _ => super.applyPath(p)(k)
 

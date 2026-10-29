@@ -174,7 +174,6 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     stats.foreach:
       case d: ClassLikeDef => d.sym match
         case s: (ClassSymbol | ModuleOrObjectSymbol | PatternSymbol) => bindInner(s)
-        case _: TopLevelSymbol => lastWords("A top-level compilation unit is not a nested declaration")
       case d: TypeDef => aliases.getOrElseUpdate(d.sym, new TypeAliasSymbol(d.sym.id))
       case _ => ()
     stats.foreach:

@@ -433,11 +433,8 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     "term:" + owner.map(_.showName + "/").getOrElse("")
   def isExplicitlyPrivate: Bool = defn.exists(_.visibility is Visibility.Private)
   def isPrivate: Bool =
-    // Top-level term symbols have `owner = None`, but the synthetic global
-    // object itself is represented by a `TopLevelSymbol`; excluding it here
-    // keeps global definitions and builtins out of JS `#` private lowering if a
-    // generated symbol is ever attached to the global owner.
-    owner.exists(!_.isInstanceOf[TopLevelSymbol]) &&
+    // Top-level definitions have no owner and do not use JS private fields.
+    owner.isDefined &&
       // Refreshed IR symbols have no source definition. Their current definition
       // retains visibility, including after a method is copied by the inliner.
       ((k is LetBind) || irDefn.fold(isExplicitlyPrivate)(_.visibility is Visibility.Private))
@@ -586,15 +583,19 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
     case sym: TypeAliasSymbol => "type alias"
     case sym: PatternSymbol => "pattern"
     case sym: TermSymbol => sym.k.desc
-    case top: TopLevelSymbol => "top-level"
   
 end DefinitionSymbol
+
+/** Symbols denoting receivers in semantic terms and IR. Unlike inner receivers,
+  * the global object has no class-like definition, private scope, or captured-this proxy. */
+sealed trait ThisSymbol extends Symbol:
+  def subst(using SymbolSubst): ThisSymbol
 
 /** This is the symbol associated to specific definitions.
   * One overloaded `BlockMemberSymbol` may correspond to multiple `InnerSymbol`s
   * A `Ref(_: InnerSymbol)` represents a `this`-like reference to the current object. */
   // TODO prevent from appearing in Ref
-sealed trait InnerSymbol(using State) extends Symbol, ShapePublisher:
+sealed trait InnerSymbol(using State) extends ThisSymbol, ShapePublisher:
   // Ideally, InnerSymbol should extend DefinitionSymbol, but that requires us to specify the type
   // parameter to all occurrences of InnerSymbol. So, we use a self-type annotation instead to
   // ensure that any implementation of InnerSymbol is also a DefinitionSymbol.
@@ -681,9 +682,7 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   override def subst(using sub: SymbolSubst): PatternSymbol = sub.mapPatSym(this)
 
 class TopLevelSymbol(blockNme: Str)(using State)
-    extends MemberSymbol
-    with DefinitionSymbol[ModuleOrObjectDef]
-    with InnerSymbol:
+    extends ThisSymbol:
   def nme = blockNme
   def toLoc: Option[Loc] = N
   override def prefix: Str = "globalThis:"
