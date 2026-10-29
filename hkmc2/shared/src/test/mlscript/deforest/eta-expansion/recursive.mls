@@ -91,10 +91,12 @@ sum(enum(5), 0)
 // But instead of running an additional block simplifier before the fused pass, it'd be better to enable scoped branches to address this
 :expect 3
 :soir
-fun append(xs, ys) = if xs is
+:aggressive
+// FIXME: Remove these @pure overrides when immutable list-field reads are inferred pure.
+@annotations.pure fun append(xs, ys) = if xs is
   Nil then ys
   h :: t then h :: append(t, ys)
-fun flatten(xss) = if xss is
+@annotations.pure fun flatten(xss) = if xss is
   Nil then Nil
   h :: t then append(h, flatten(t))
 fun len(ls) = if ls is
@@ -132,7 +134,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│       set ys = flatten$flatten⁰(arg$Cons$1$);
 //│       return flatten_append$append$worker⁰(arg$Cons$0$, ys, eta$0$1, eta$0$2, eta$0$4)
 //│     else
-//│       throw new globalThis⁰.Error⁰("match error")
+//│       @pure throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ @private
@@ -147,9 +149,10 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│       set inlinedVal = flatten_append$append$worker⁰(arg$Cons$1$, ys, undefined, undefined, undefined);
 //│       return +⁰(1, inlinedVal)
 //│     else
-//│       throw new globalThis⁰.Error⁰("match error")
+//│       @pure throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
+//│ @pure
 //│ define append⁰ as fun append¹(xs, ys) {
 //│   let arg$Cons$0$, arg$Cons$1$, tmp5;
 //│   match xs
@@ -161,9 +164,10 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│       set tmp5 = append¹(arg$Cons$1$, ys);
 //│       return Cons⁰(arg$Cons$0$, tmp5)
 //│     else
-//│       throw new globalThis⁰.Error⁰("match error")
+//│       @pure throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
+//│ @pure
 //│ define flatten⁰ as fun flatten¹(xss) {
 //│   let arg$Cons$0$, arg$Cons$1$, tmp5;
 //│   match xss
@@ -175,7 +179,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│       set tmp5 = flatten¹(arg$Cons$1$);
 //│       return append¹(arg$Cons$0$, tmp5)
 //│     else
-//│       throw new globalThis⁰.Error⁰("match error")
+//│       @pure throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ define len⁰ as fun len¹(ls) {
@@ -188,7 +192,7 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│       set tmp5 = len¹(arg$Cons$1$);
 //│       return +⁰(1, tmp5)
 //│     else
-//│       throw new globalThis⁰.Error⁰("match error")
+//│       @pure throw new globalThis⁰.Error⁰("match error")
 //│   end
 //│ };
 //│ set tmp = Cons⁰(2, Nil⁰);

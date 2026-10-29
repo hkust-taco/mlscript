@@ -33,7 +33,7 @@ object ImplctRet extends TailOp(transfersControl = false):
     case Value.Lit(Tree.UnitLit(false)) => End()
     case _ => Return(r)
 object Thrw extends TailOp(transfersControl = true):
-  def apply(r: Result): Block = Throw(r)
+  def apply(r: Result): Block = Throw(r, annotations = Nil)
 
 
 class LoweringCtx(
@@ -76,7 +76,7 @@ import LoweringCtx.loweringCtx
 object Lowering:
   
   def compError: Block =
-    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error."))(N))
+    Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error."))(N), annotations = Nil)
   
   def fail(err: ErrorReport)(using Raise): Block =
     raise(err)
@@ -287,7 +287,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val localVals = stats.collect:
       case td: TermDefinition if td.k.isInstanceOf[syntax.Val] && td.owner.isEmpty && td.body.isDefined
           && td.hasDeclareModifier.isEmpty && !loweringCtx.symbolsToPreserve(td.sym) =>
-        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.mapErasedValueType)
+        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.mapErasedValueType, mut = td.k is syntax.MutVal)
         loweringCtx.collectScopedSym(newSym)
         td.tsym -> newSym
     
@@ -690,7 +690,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           remainingParamss match
           case Nil => buildInstantiate(accArgss)
           case ps :: rest =>
-            val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N))
+            val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N, mut = false))
             softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
@@ -790,7 +790,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.erasedType, loco), rest)(S(sym))
       case N => nope
     case sym: LocalVarSymbol =>
-      Assign(sym, castTo(rhs, sym.erasedType, loco), rest)
+      if !sym.mut then nope else Assign(sym, castTo(rhs, sym.erasedType, loco), rest)
     case sym => nope
 
   private def defineSymbol(sym: Symbol, rhs: Result, rest: Block)(using LoweringCtx): Block =
@@ -1001,8 +1001,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       if sym.binary then
         val t1 = new Tree.Ident("arg1")
         val t2 = new Tree.Ident("arg2")
-        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)(t1.toLoc)
-        val p2 = Param(FldFlags.empty, VarSymbol(t2, erasedType = N), N, Modulefulness.none)(t2.toLoc)
+        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N, mut = false), N, Modulefulness.none)(t1.toLoc)
+        val p2 = Param(FldFlags.empty, VarSymbol(t2, erasedType = N, mut = false), N, Modulefulness.none)(t2.toLoc)
         val ps = PlainParamList(p1 :: p2 :: Nil)(N)
         val bod = st.App(ref, st.Tup(List(st.SimpleRef(p1.sym)(N), st.SimpleRef(p2.sym)(N)))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
@@ -1017,7 +1017,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         return k(Lambda(paramLists.head, bodyBlock)(Nil, ref.toLoc))
       if sym.unary then
         val t1 = new Tree.Ident("arg")
-        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N), N, Modulefulness.none)(t1.toLoc)
+        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N, mut = false), N, Modulefulness.none)(t1.toLoc)
         val ps = PlainParamList(p1 :: Nil)(N)
         val bod = st.App(ref, st.Tup(List(st.SimpleRef(p1.sym)(N)))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
@@ -1074,7 +1074,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         k(loweringCtx(sym.asSimpleRef.withLocOf(ref)))
       case (sym: BlockMemberSymbol, _) =>
         k(loweringCtx(sym.asMemberRef(disamb.orElse(sym.asPrincipal).get).withLocOf(ref)))
-      case (sym: InnerSymbol, _) =>
+      case (sym: ThisSymbol, _) =>
         k(loweringCtx(sym.asThis.withLocOf(ref)))
       case (sym, disamb) =>
         lastWords(s"Unexpected symbol kind ${sym.getClass.getSimpleName}: $sym")

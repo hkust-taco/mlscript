@@ -468,6 +468,33 @@ abstract class Parser(
           N
   
   
+  /** A block closes its expression unless the grammar admits the next infix keyword.
+   *  Once admitted, use normal infix parsing for operand precedence and indentation: an
+   *  indented clause can finish before the enclosing rule consumes a dedented `else`.
+   *  Explicit braces around clauses instead enclose both the infix and the rest of the rule. */
+  private def blockContinuation[A](block: Tree, prec: Int, infixes: Set[Keyword], rest: ParseRule[A]): Opt[(Tree, A)] =
+    def startsInfix(toks: Ls[TokLoc]): Bool = toks match
+      case (KEYWORD(kw), _) :: _ => infixes.contains(kw)
+      case _ => false
+    yeetSpaces match
+      case (_: NEWLINE_COMMA, _) :: (KEYWORD(kw), _) :: _
+      if infixes.contains(kw) && kw.canStartInfixOnNewLine =>
+        consume
+        blockContinuation(block, prec, infixes, rest)
+      case (br @ BRACKETS(Curly, toks), _) :: _ if startsInfix(toks) =>
+        consume
+        rec(toks, S(br.innerLoc), br.describe)
+          .concludeWith(_.blockContinuation(block, prec, infixes, rest))
+      case _ =>
+        val continued = yeetSpaces match
+          case (br @ BRACKETS(Indent, toks), _) :: _ if startsInfix(toks) =>
+            consume
+            indentedExprCont(br, block, prec, allowNewlines = true)
+          case toks if startsInfix(toks) => exprCont(block, prec, allowNewlines = true)
+          case _ => block
+        parseRule(prec, rest, allowNewlines = true).map(continued -> _)
+  
+  
   /** A result of None means there was an error (already reported) and nothing could be parsed. */
   def parseRule[A](prec: Int, rule: ParseRule[A], allowNewlines: Bool)(using Line): Opt[A] =
     wrap(prec, rule, s"allowNewlines = $allowNewlines")(parseRuleImpl(prec, rule, allowNewlines = allowNewlines))
@@ -545,7 +572,9 @@ abstract class Parser(
               tryEmpty(tok, loc)
           case N =>
             tryEmpty(tok, loc)
-    case (tok @ (_: NEWLINE_COMMA), l0) :: (id: IDENT, l1) :: _ if allowNewlines && rule.kwAlts.contains(id.name) =>
+    // Expected clause keywords continue this rule even when newline-separated list items
+    // are disabled, as for an indented `else` inside parentheses.
+    case (tok @ (_: NEWLINE_COMMA), l0) :: (id: IDENT, l1) :: _ if rule.kwAlts.contains(id.name) =>
       consume
       parseRule(prec, rule, allowNewlines = allowNewlines)
     case (tok @ (_: NEWLINE_COMMA), l0) :: _ =>
@@ -574,7 +603,7 @@ abstract class Parser(
           if verbose then printDbg("$ found blockAlt; proceed with block")
           val e = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block(allowNewlines = true))
             |> Tree.Block.apply
-          parseRule(prec, exprAlt.rest, allowNewlines = true).map(res => exprAlt.k(e, res))
+          blockContinuation(e, prec, exprAlt.infixes, exprAlt.rest).map(exprAlt.k.tupled)
         case N =>
           
           if verbose then printDbg("$ no blockAlt; proceed with rule")
@@ -590,26 +619,13 @@ abstract class Parser(
             
           if continue then
             consume
-            rec(toks, S(br.innerLoc), br.describe).concludeWith(_.parseRule(prec, rule, allowNewlines = false))
+            // The block delimits the continuation, whose clauses may span multiple lines.
+            rec(toks, S(br.innerLoc), br.describe).concludeWith(_.parseRule(prec, rule, allowNewlines = true))
           else tryEmpty(br, loc)
           
     case (tok, loc) :: _ =>
       if verbose then printDbg("$ treat as an expression: " + tok.describe)
-      tryParseExp(prec, tok, loc, rule, allowNewlines =
-        true /* Making this false somehow makes the following not parse:
-          ```
-          if (print("Hello World"); false)
-            then 0(0)
-            else 1
-          ```
-          and this parse incorrectly (as a kw stutter):
-          ```
-          mut
-            let x = 1
-            in x
-          ```
-        */)
-      // TODO(tok)
+      tryParseExp(prec, tok, loc, rule, allowNewlines = false)
     case Nil =>
       rule.emptyAlt match
         case S(res) =>
@@ -980,6 +996,16 @@ abstract class Parser(
     exprCont(res, prec, allowNewlines = allowNewlines)
   
   
+  /** Indentation continues the current expression; unconsumed clauses belong to the enclosing rule. */
+  private def indentedExprCont(br: BRACKETS, acc: Tree, prec: Int, allowNewlines: Bool): Tree =
+    val (res, rest) = rec(br.contents, S(br.innerLoc), br.describe).continueWith:
+      _.exprCont(acc, prec, allowNewlines = true)
+    rest match
+      case (_, l) :: _ => cur = (NEWLINE, l.left) :: rest ::: cur
+      case _ =>
+    exprCont(res, prec, allowNewlines = allowNewlines)
+  
+  
   /** `gobbleSpaces` is currently only used to prevent `@foo (2 + 2)` from parsing as `@foo(2 + 2) ...` */
   final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool, gobbleSpaces: Bool = true)(using Line): Tree =
     wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines, gobbleSpaces))
@@ -1228,12 +1254,6 @@ abstract class Parser(
       case (_: NEWLINE_COMMA, _) :: (KEYWORD(kw), _) :: _
       if kw.canStartInfixOnNewLine && newlineLeftPrec(kw) > prec
       && infixRules.kwAlts.contains(kw.name)
-      && (kw isnt Keyword.`do`) // This is to avoid the following case:
-        //  ```
-        //  0 then "null"
-        //  do console.log("non-null")
-        //  ```
-        // Otherwise, `do` will be parsed as an infix operator
       =>
         consume
         exprCont(acc, prec, allowNewlines = allowNewlines)
@@ -1244,15 +1264,7 @@ abstract class Parser(
       =>
         consume
         if bk is Curly then closedCurlyCont(br, prec, allowNewlines)(_ => acc)
-        else
-          val (res, rest) = rec(toks, S(br.innerLoc), br.describe).continueWith:
-            _.exprCont(acc, prec, allowNewlines = true)
-          rest match
-          case (_, l) :: _ =>
-            printDbg(s"!! REDUCING BRACKET")
-            cur = (NEWLINE, l.left) :: rest ::: cur
-          case _ =>
-          exprCont(res, prec, allowNewlines = allowNewlines)
+        else indentedExprCont(br, acc, prec, allowNewlines)
         
       
       case (KEYWORD(kw), l0) :: _ if kw.leftPrecOrMin > prec =>

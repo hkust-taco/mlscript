@@ -61,7 +61,7 @@ object Pattern:
         preallocated.get(name).foreach: expected =>
           assert(symbols.forall(_ is expected), "Guard bindings must retain their extraction parameter symbol")
         // All alternatives share one symbol; keep the first written binder as its declaration origin.
-        val symbol = symbols.headOption.orElse(preallocated.get(name)).getOrElse(VarSymbol(aliases.head.id, erasedType = N))
+        val symbol = symbols.headOption.orElse(preallocated.get(name)).getOrElse(VarSymbol(aliases.head.id, erasedType = N, mut = true))
         aliases.foreach: alias =>
           // For guarded patterns (`p where t`), the variables in `p` have to be
           // allocated before `t` is elaborated. In that case, we don't need to
