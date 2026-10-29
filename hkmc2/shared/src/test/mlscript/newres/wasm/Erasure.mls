@@ -164,11 +164,11 @@ let value = const(1)
 set value = wasm.i64.const(2)
 value
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
-//│ ║  l.+2: 	set value = wasm.i64.const(2)
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
 //│ ║  l.+1: 	let value = const(1)
 //│ ╙──      	    ^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+2: 	set value = wasm.i64.const(2)
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ║  l.+1: 	let value = const(1)
 //│ ╙──      	            ^^^^^^^^

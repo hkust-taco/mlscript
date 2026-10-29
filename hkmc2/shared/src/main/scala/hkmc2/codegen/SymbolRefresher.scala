@@ -48,9 +48,6 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
   private def refreshPatternSymbol(s: PatternSymbol) =
     assertUpdate(s, new PatternSymbol(s.id, s.params, s.body))
 
-  private def refreshTopLevelSymbol(s: TopLevelSymbol) =
-    assertUpdate(s, new TopLevelSymbol(s.nme))
-
   private def refreshClassCtorSymbol(s: ClassCtorSymbol) =
     val ns = new ClassCtorSymbol(s.k,
       s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
@@ -101,7 +98,6 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
       case s: ClassSymbol => refreshClassSymbol(s)
       case s: ModuleOrObjectSymbol => refreshModuleOrObjectSymbol(s)
       case s: PatternSymbol => refreshPatternSymbol(s)
-      case s: TopLevelSymbol => refreshTopLevelSymbol(s)
     ctorSym.foreach(refreshClassCtorSymbol)
     paramsOpt.foreach(refreshParamList)
     auxParams.foreach(refreshParamList)
@@ -122,9 +118,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     val ClsLikeBody(
       isym, methods, privateFields, publicFields, ctor, annotations, _
     ) = b
-    isym match
-      case s: ModuleOrObjectSymbol => refreshModuleOrObjectSymbol(s)
-      case s: TopLevelSymbol => refreshTopLevelSymbol(s)
+    refreshModuleOrObjectSymbol(isym)
     methods.foreach: mtd =>
       // For methods, the BlockMemberSymbol is owned by the class itself
       refreshBlockMemberSymbol(mtd.sym)
@@ -140,7 +134,7 @@ object SymbolRefresher:
   
   // fresh copies that keep a symbol's source names but hold the given erased type
   def copyVarSymbol(s: VarSymbol, erasedType: Opt[ErasedValueType])(using State): VarSymbol =
-    val ns = new VarSymbol(s.id, erasedType)
+    val ns = new VarSymbol(s.id, erasedType, mut = s.mut)
     ns.sourceAliases = s.sourceAliases
     ns
   

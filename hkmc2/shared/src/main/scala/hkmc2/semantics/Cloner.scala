@@ -94,7 +94,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
 
   private def bindLocal(symbol: LocalVarSymbol): Unit = symbol match
     case s: VarSymbol => variables.getOrElseUpdate(s, {
-      val copy = new VarSymbol(s.id)
+      val copy = new VarSymbol(s.id, mut = s.mut)
       if s.isErased then copy.erasedType = s.erasedType.map(valueType)
       copy.sourceAliases = s.sourceAliases
       copy.decl = s.decl
@@ -174,7 +174,6 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     stats.foreach:
       case d: ClassLikeDef => d.sym match
         case s: (ClassSymbol | ModuleOrObjectSymbol | PatternSymbol) => bindInner(s)
-        case _: TopLevelSymbol => lastWords("A top-level compilation unit is not a nested declaration")
       case d: TypeDef => aliases.getOrElseUpdate(d.sym, new TypeAliasSymbol(d.sym.id))
       case _ => ()
     stats.foreach:
@@ -225,7 +224,6 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     case imp: Import =>
       val sym: ImportSymbol = imp.sym match
         case s: VarSymbol => s.subst
-        case s: TempSymbol => s.subst
         case s: BlockMemberSymbol => s.subst
       Import(sym, imp.str, imp.file)(imp.toLoc)
     case LetDecl(sym, annotations) =>

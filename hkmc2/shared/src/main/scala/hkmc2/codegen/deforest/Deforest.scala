@@ -212,6 +212,7 @@ object Deforest:
       mono = dCfg.mono,
       nonAffineTracking = dCfg.effectiveTrackNonAffine,
       accumulatorTracking = dCfg.effectiveTrackAccumulator,
+      logEffects = dCfg.config.logEffects,
     )
     val solver = new DeforestFusionSolver(flowAnalysisRes)
     if !solver.hasWorkToDo then p

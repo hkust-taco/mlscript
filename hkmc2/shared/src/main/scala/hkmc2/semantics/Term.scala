@@ -39,7 +39,8 @@ enum Annot extends Located:
   case Generator()(val toLoc: Opt[Loc])
   case Async()(val toLoc: Opt[Loc])
   case RaiseEffects()(val toLoc: Opt[Loc])
-  // Whether the function is guaranteed to not raise effects.
+  // * EffectAnalysis Annotations
+  // @pure: overriding annotation indicating that the function is pure.
   case Pure()(val toLoc: Opt[Loc])
   // Buffered classes expose generated allocation and access methods on the class value.
   case Bufferable(keepInstances: Bool)(val toLoc: Opt[Loc])
@@ -306,7 +307,7 @@ enum Term extends Statement, AutoLocated, ShapePublisher:
   
   // --- NEW ---
   case SimpleRef(sym: SimpleRefSymbol)(val tree: Opt[Tree.Ident]) extends Term, NewRefImpl
-  case SelfRef(sym: InnerSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
+  case SelfRef(sym: ThisSymbol)(val tree: Tree.Ident) extends Term, NewRefImpl
   case MemberRef(sym: MemberSymbol)(val tree: Opt[Tree.Ident], val resSym: FlowSymbol) extends Term, NewResolvableImpl, NewRefImpl
   /** A direct reference to an inherited implementation, retaining the lexical receiver. */
   case Super(receiver: Term, owner: InnerSymbol, id: Tree.Ident)(val resSym: FlowSymbol) extends Term, NewResolvableImpl, ShapeHost

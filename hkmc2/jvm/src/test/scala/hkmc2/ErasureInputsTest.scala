@@ -12,7 +12,7 @@ class ErasureInputsTest extends AnyFunSuite:
     given owner: Elaborator.State = new Elaborator.State
     given defining: ResolutionContext = owner.newResolverState.context
     val inputs = owner.newResolverState.erasureInputs
-    val symbol = VarSymbol(new syntax.Tree.Ident("value"))
+    val symbol = VarSymbol(new syntax.Tree.Ident("value"), mut = true)
     val source = new TermShapeHost
     inputs.register(symbol)(source.subscribeToShapes)
     val initial = DynShape()

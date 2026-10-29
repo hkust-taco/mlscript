@@ -4899,8 +4899,8 @@ class NewResolver:
         case S(cls) =>
           val tpe = rctx.state.primitiveTypes.getOrElseUpdate(cls, primitiveType(cls, intro))
           listenPrimitiveInterface(tpe)(nominal => publish(S(nominal)))
-    case Ref(sym) if sym is sym.getState.globalThisSymbol => listener(DynShape())
-    case SelfRef(sym) if sym is sym.getState.globalThisSymbol => listener(DynShape())
+    case Ref(_: TopLevelSymbol) => listener(DynShape())
+    case SelfRef(_: TopLevelSymbol) => listener(DynShape())
     case ref @ Ref(loc: LocalSymbol) =>
       loc.subscribeToShapes(listener)
     case ref @ SimpleRef(sym) =>
@@ -4910,7 +4910,7 @@ class NewResolver:
       // Primitive operations are handled directly by lowering; they do not
       // introduce member-resolution candidates.
       case _: BuiltinSymbol => ()
-    case SelfRef(sym) =>
+    case SelfRef(sym: InnerSymbol) =>
       // A receiver can be referenced before its body is complete or after its
       // definition has already been published. The definition listener handles both.
       def completed(defn: ClassLikeDef)(using ResolutionContext): Unit =

@@ -45,7 +45,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   
   private def isFused(p: ProdStrat): Bool = p match
     case c: Ctor => solver.finalCtorDests.contains(c.concreteId)
-    case _: (ProdFun | MarkerProdStrat) => false
+    case _: ProdFun | UnknownProd => false
+    case UnsafeEta | NoProd => lastWords("effect producer in value flow")
     case _: StratVar => lastWords("unexpected strat var")
 
   private def producersOf(values: ProdStrat): Ls[ProdStrat] = values match
@@ -67,6 +68,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           case N => S(c.allocatedType)
         case _: ProdFun => S(ErasedType.Function(S(false)))
         case UnknownProd => N
+        case UnsafeEta | NoProd => lastWords("effect producer in value flow")
         case _: StratVar => lastWords("unexpected strat var")
       val types = producers.map(producerType)
       if types.forall(_.isEmpty) then declared
@@ -156,7 +158,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
               val clsNme = selInfo.selectsFrom.ctorClsName
               fieldSym.getOrElseUpdate(
                 selInfo.field,
-                new VarSymbol(Tree.Ident(s"${clsNme}_${selInfo.field.fieldName}")))
+                new VarSymbol(Tree.Ident(s"${clsNme}_${selInfo.field.fieldName}"), mut = false))
           )
         
         // ctor dest branch function computations
@@ -190,7 +192,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             completeArgs.map: selField =>
               selsInfos.get(selField) match
               case Some(selId) => branchSelSyms(selId)
-              case None => VarSymbol(Tree.Ident(s"_${selField.fieldName}"))
+              case None => VarSymbol(Tree.Ident(s"_${selField.fieldName}"), mut = false)
         )
         
         val (parents, _) = getParentLabelOrMatchesAndRestBefore(dest.exprId)
@@ -367,9 +369,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
       val declared = fun.dSym.declaredResultType
-      fun.params.mapConserve(applyParamList) ->
-        returningInto(declared -> retypedFunctions.get(instId -> fun.dSym).fold(declared)(_.ret)):
-          applyBlock(fun.body)
+      val params = fun.params.mapConserve(applyParamList)
+      val body = returningInto(declared -> retypedFunctions.get(instId -> fun.dSym).fold(declared)(_.ret)):
+        applyBlock(fun.body)
+      (params, body, fun.annotations)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
       returningInto(fun.dSym.declaredResultType -> fun.dSym.subst.declaredResultType):
@@ -544,8 +547,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     // the rewriter of an extracted part (branch body functions and match rest functions),
     // whose free variables `fvs` become the `fv_` parameters it returns
     def mkExtractedBodyRewriter(instId: InstantiationId, body: Block, fvs: Ls[LocalVarSymbol]): (Rewriter, Ls[VarSymbol]) =
+      // Forwarding an uninitialized pattern slot to an fv_ parameter is not a use; its
+      // first assignment is still initialization. Preserve the original mutability for
+      // copied bodies that genuinely reassign an already initialized input.
       val fvParams = fvs.map: s =>
-        new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = retypedVariables.get(instId -> s).orElse(s.mapErasedValueType))
+        new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = retypedVariables.get(instId -> s).orElse(s.mapErasedValueType), mut = s.mut)
       mkCopyRewriter(instId, Nil, body, Map.from(fvs.iterator.zip(fvParams))) -> fvParams
   
     // Functions for fused match branches; each runs one arm and then its rest
@@ -592,8 +598,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     new Rewriter(Nil, N):
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
-          case Some((params, rewrittenBody)) =>
-            FunDefn(fun.owner, fun.sym, fun.dSym.subst, params, rewrittenBody)(fun.configOverride, fun.annotations)
+          case Some((params, rewrittenBody, annotations)) =>
+            FunDefn(fun.owner, fun.sym, fun.dSym.subst, params, rewrittenBody)(fun.configOverride, annotations)
           case None => super.applyFunDefn(fun)
   
   lazy val retypedVariables =

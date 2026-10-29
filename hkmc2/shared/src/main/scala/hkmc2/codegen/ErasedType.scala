@@ -398,9 +398,8 @@ sealed abstract class ErasedType:
   final def describe(using Ctx, State): Str =
     def ownerOf(s: Symbol): Opt[InnerSymbol] = s.asClsOrMod.flatMap: s =>
       s.irClsLikeDefn.map(_.owner).orElse(s.defn.map(_.owner)).flatten
-    def qualify(s: Symbol, acc: Ls[Str]): Ls[Str] = s match
-      case _: TopLevelSymbol => acc
-      case _ => ownerOf(s).fold(s.nme :: acc)(o => qualify(o, s.nme :: acc))
+    def qualify(s: Symbol, acc: Ls[Str]): Ls[Str] =
+      ownerOf(s).fold(s.nme :: acc)(o => qualify(o, s.nme :: acc))
     canonicalize match
       case ErasedType.Unknown => "Unknown"
       case ErasedType.Incompatible(l, r) => s"‹incompatible(${l.describe}, ${r.describe})›"

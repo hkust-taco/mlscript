@@ -1,0 +1,36 @@
+:.
+:js
+
+
+// Async lowering moves the body to a helper with fresh parameter bindings.
+// Assignments must target those bindings, just as reads do.
+:await
+:expect 42
+@annotations.async
+fun increment(n: Int): Int =
+  set n += 1
+  n
+increment(41)
+//│ = 42
+
+
+// A suspended computation must resume with the updated helper parameter.
+:await
+:expect 42
+@annotations.async
+fun incrementAfterAwait(n: Int): Int =
+  set n += handlers.await(Promise.resolve(1))
+  n
+incrementAfterAwait(41)
+//│ = 42
+
+// Nested closures must write the same binding that their enclosing body reads.
+:await
+:expect 42
+@annotations.async
+fun incrementInClosure(n: Int): Int =
+  let update = () => set n += 1
+  update()
+  n
+incrementInClosure(41)
+//│ = 42

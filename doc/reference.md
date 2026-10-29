@@ -734,6 +734,10 @@ new! c           // dynamic instantiation (class value at runtime)
 new Foo(...xs)   // spread args
 ```
 
+`new mut` is an unsafe escape hatch. Optimizations may still assume that `val`
+fields are immutable; mutating them can therefore change optimized program behavior.
+Use `mut val` for fields whose updates must be observed by ordinary code.
+
 ---
 
 ## 8. Objects, Modules, and Companions
@@ -938,7 +942,17 @@ The UCS is MLscript's unified `if`/`while`/`case` expression supporting pattern 
 ```mlscript
 if condition then expr1 else expr2
 
+// Multiline form:
+if condition
+then expr1
+else expr2
+
 // Indented form:
+if condition
+  then expr1
+  else expr2
+
+// Alternatively:
 if condition then
   expr1
 else
@@ -947,16 +961,37 @@ else
 
 ### `if` with Pattern Branches (`is`)
 
+Ifs can be *split* in several places, such as:
+
 ```mlscript
 if x is
   Some(v) then v
   None    then 0
 ```
 
+With explicit braces:
+```mlscript
+if x is {
+  Some(v) then v
+  None    then 0
+}
+```
+
 Inline:
+```mlscript
+if x is { Some(v) then v, None then 0 }
+```
+
+Alternatively, using `else` (not always possible or desirable):
 ```mlscript
 if x is Some(v) then v else 0
 ```
+
+When the whole conditional body is a block, operations after it apply to its result:
+`if {true then 2, else 3} + 2` is `4`.
+Blocks inside a condition follow ordinary expression precedence. Parenthesize the
+completed conditional to operate on its result, as in
+`(if 2 {+ 2 is 4 then 2, else 3}) + 2`, which is also `4`.
 
 ### Multi-Way `if` (Without Scrutinee)
 

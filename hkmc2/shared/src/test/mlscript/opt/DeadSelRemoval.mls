@@ -38,11 +38,12 @@ module Foo with
 Foo.x
 //│ = 1
 
-// * The first selection is pure and can be removed
+// * TODO: The first selection is free of side effects and should be dropped,
+// * but it is not pure, as it reads mutable state, and we do not currently distinguish the two.
 :soir
 Foo.x, Foo.x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ return Foo⁰.x⁰
+//│ do Foo⁰.x⁰; return Foo⁰.x⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
 

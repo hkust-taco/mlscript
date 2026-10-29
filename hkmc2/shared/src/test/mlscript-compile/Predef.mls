@@ -103,7 +103,12 @@ fun renderAsStr(arg) =
 val js_assert = globalThis.console.("assert") // `console.("assert")` gives "Unexpected moduleful reference of type console."
 fun check(...args) = js_assert(...args)
 
-fun (??) notImplemented(msg) = throw Error("Not implemented: " + msg)
+
+fun (??) orElse[A](x: A, d: A) = if (x is null) || (x === ()) then d else x
+fun (??>) orElseApply[A](x: A, d: (drop A) -> A) = if (x is null) || (x === ()) then d(x) else x
+
+
+fun (??!) notImplemented(msg) = throw Error("Not implemented: " + msg)
 fun (???) notImplementedError = throw Error("Not implemented")
 
 

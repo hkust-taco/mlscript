@@ -207,9 +207,9 @@ pass(Box(42)).v
 //│   return box
 //│ };
 //│ set Box_v = 42;
-//│ set tmp1 = Box_v;
-//│ set tmp = pass¹(tmp1);
-//│ return tmp
+//│ set tmp = Box_v;
+//│ set tmp1 = pass¹(tmp);
+//│ return tmp1
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -479,7 +479,7 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│ deforest > 	fields: b⁹.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Int⁰, get$b_Box, get$b_rest, get$get, idpoly$idpoly, idpoly$idpoly1, tmp1: Function⁰, tmp2: Function⁰, tmp3: Int⁰, tmp4: Int⁰, Box_v: Int⁰, Box_v1: Int⁰;
+//│ let tmp: Int⁰, get$b_Box, get$b_rest, get$get, idpoly$idpoly, idpoly$idpoly1, tmp1: Int⁰, tmp2: Int⁰, tmp3: Function⁰, tmp4: Function⁰, Box_v: Int⁰, Box_v1: Int⁰;
 //│ @private @private
 //│ define get$get as fun get$get¹(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: ?;
@@ -520,13 +520,13 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│   end
 //│ };
 //│ set Box_v = 42;
-//│ set tmp1 = get$b_Box¹(Box_v);
-//│ set tmp2 = idpoly$idpoly¹(tmp1);
-//│ set tmp = get$get¹(tmp2);
+//│ set tmp3 = get$b_Box¹(Box_v);
+//│ set tmp4 = idpoly$idpoly¹(tmp3);
+//│ set tmp = get$get¹(tmp4);
 //│ set Box_v1 = 1;
-//│ set tmp3 = Box_v1;
-//│ set tmp4 = idpoly$idpoly²(tmp3);
-//│ return +⁰(tmp, tmp4)
+//│ set tmp1 = Box_v1;
+//│ set tmp2 = idpoly$idpoly²(tmp1);
+//│ return +⁰(tmp, tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 43
 
@@ -1036,10 +1036,10 @@ private fun f(a) = if a is A then 0 else 1
 //│   end
 //│ };
 //│ define A⁶ as object A⁵;
-//│ set tmp3 = g$g¹(true);
-//│ set tmp = f$f²(tmp3);
-//│ set tmp2 = g$g⁰(false);
-//│ set tmp1 = f$f¹(tmp2);
+//│ set tmp2 = g$g¹(true);
+//│ set tmp = f$f²(tmp2);
+//│ set tmp3 = g$g⁰(false);
+//│ set tmp1 = f$f¹(tmp3);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: error

@@ -536,7 +536,7 @@ final class ResolutionContext private[semantics] (
     def checkPrivate(kind: Str, definition: Definition, owner: Opt[InnerSymbol]): Ls[Diagnostic] =
       if definition.visibility isnt Visibility.Private then Nil else owner match
         // File-private definitions are handled by compilation-unit exports.
-        case S(_: TopLevelSymbol) | N => Nil
+        case N => Nil
         case S(owner) => owner.asDefnSym.defn match
           case S(ownerDefn) if !scope.canAccessPrivatesOf(ownerDefn) =>
             ErrorReport(msg"Cannot access private $kind '${definition.bsym.nme}' outside its declaring owner" -> loc ::

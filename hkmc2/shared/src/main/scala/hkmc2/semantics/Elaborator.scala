@@ -454,7 +454,7 @@ object Elaborator:
         */
       val primitivelyRepresentedRoots: Set[TypeSymbol] = Set(Num, Str, Bool)
   
-  type RefSymbol = SimpleRefSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
+  type RefSymbol = SimpleRefSymbol | TermSymbol | BlockMemberSymbol | ThisSymbol
   
   object Ctx:
     /** The opening site is diagnostic metadata, excluded from equality so
@@ -477,7 +477,7 @@ object Elaborator:
           sym match
           case sym: SimpleRefSymbol =>
             Term.SimpleRef(sym)(id)
-          case sym: InnerSymbol =>
+          case sym: ThisSymbol =>
             Term.SelfRef(sym)(id.getOrElse(Ident(sym.nme)))
           case sym: MemberSymbol =>
             // A reference can invoke a by-name definition, instantiating its
@@ -708,15 +708,15 @@ object Elaborator:
     def tupleSymbol: ModuleOrObjectSymbol = runtimeSymbols.tuple
     def strSymbol: ModuleOrObjectSymbol = runtimeSymbols.str
     // In JavaScript, `import` can be used for getting current file path, as `import.meta`
-    val importSymbol = new VarSymbol(Ident("import"), erasedType = N)
+    val importSymbol = new VarSymbol(Ident("import"), erasedType = N, mut = false)
     @deprecated("Use the `NoSymbol` singleton instead.")
     val noSymbol = NoSymbol
-    val runtimeSymbol = TempSymbol(N, erasedType = N, "runtime")
+    val runtimeSymbol = VarSymbol(Ident("runtime"), erasedType = N, mut = false)
     val definitionMetadataSymbol = TempSymbol(N, erasedType = N, "definitionMetadata")
     val prettyPrintSymbol = TempSymbol(N, erasedType = N, "prettyPrint")
-    val termSymbol = TempSymbol(N, erasedType = N, "Term")
-    val blockSymbol = TempSymbol(N, erasedType = N, "Block")
-    val optionSymbol = TempSymbol(N, erasedType = N, "option")
+    val termSymbol = VarSymbol(Ident("Term"), erasedType = N, mut = false)
+    val blockSymbol = VarSymbol(Ident("Block"), erasedType = N, mut = false)
+    val optionSymbol = VarSymbol(Ident("option"), erasedType = N, mut = false)
     val wasmSymbol = TempSymbol(N, erasedType = N, "wasm")
     lazy val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
@@ -962,8 +962,8 @@ extends Importer:
     val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident(effectClassName))
     recordDefinitionScope(clsSym)
     val htds = methods.map: spec =>
-      val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme), erasedType = N))
-      val resumeSym = VarSymbol(Ident("resume"), erasedType = N)
+      val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme), erasedType = N, mut = false))
+      val resumeSym = VarSymbol(Ident("resume"), erasedType = N, mut = false)
       val mtdSym = BlockMemberSymbol(spec.methodName, Nil, true)
       val tsym = TermSymbol(Fun, S(clsSym), Ident(spec.methodName))
       rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
@@ -1184,7 +1184,7 @@ extends Importer:
   private def branch(using Ctx): Cfg[PartialFunction[Tree, (Ctx, SimpleSplit)]] =
     // Interleaved-`let` bindings like `{ x is A then 0; let x = 1; ... }`.
     case LetLike(Keywrd(`let`), ident: Ident, S(rhsTree), N) =>
-      val symbol = VarSymbol(ident)
+      val symbol = VarSymbol(ident, mut = true)
       val head = mkSplitLet(symbol, term(rhsTree, Trm))
       ((ctx + (ident.name -> symbol)), head ~: End)
     // Interleaved-`do` statements like `{ x is A then 0; do log(1); ... }`.
@@ -1693,7 +1693,7 @@ extends Importer:
       Term.Try(subterm(tryBody, interp), subterm(finallyBody))
     case (hd @ Hndl(id: Ident, c, Block(sts_), S(bod))) => ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
       
-      val sym = VarSymbol(id, erasedType = N)
+      val sym = VarSymbol(id, erasedType = N, mut = true)
       log(dbg"Processing `handle` statement $id (${sym}) ${ctx.outer}")
       
       val derivedClsSym = ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident(s"Handler$$${id.name}$$"))
@@ -1769,7 +1769,7 @@ extends Importer:
     case InfixApp(TyTup(tvs), Keywrd(Keyword.`->`), body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       def genSym(id: Tree.Ident) =
-        val sym = VarSymbol(id, erasedType = N)
+        val sym = VarSymbol(id, erasedType = N, mut = false)
         sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc)) // TODO vce
         boundVars += id.name -> sym
         sym
@@ -1980,8 +1980,8 @@ extends Importer:
               msg"  add a space before ‹identifier› to make it an operator application." -> N ::
               Nil
           N
-      val self = VarSymbol(Ident("self"), erasedType = N)
-      val args = VarSymbol(Ident("args"), erasedType = N)
+      val self = VarSymbol(Ident("self"), erasedType = N, mut = false)
+      val args = VarSymbol(Ident("args"), erasedType = N, mut = false)
       val ps = ParamList.withRest(ParamListFlags.empty,
         Param.simple(self) :: Nil,
         S:
@@ -2059,7 +2059,7 @@ extends Importer:
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
     case tree @ Case(kw, _) =>
-      val scrut = VarSymbol(Ident("caseScrut"))
+      val scrut = VarSymbol(Ident("caseScrut"), mut = false)
       val body = caseSplit(scrut, tree)
       val params = Param.simple(scrut) :: Nil
       withTypeBinders(Term.Lam(PlainParamList(params)(N), body)).mkLocWith(kw)
@@ -2111,7 +2111,7 @@ extends Importer:
     case PrefixApp(kw @ Keywrd(Keyword.`drop`), body) =>
       Term.Drop(subterm(body)).mkLocWith(kw)
     case Region(id: Ident, body) =>
-      val sym = VarSymbol(id, erasedType = N)
+      val sym = VarSymbol(id, erasedType = N, mut = true)
       given Ctx = ctx + (id.name -> sym)
       Term.Region(sym, subterm(body))
     case RegRef(reg, value) => Term.RegRef(subterm(reg), subterm(value))
@@ -2214,7 +2214,7 @@ extends Importer:
         // * so the parameter and the reference are both located at the `_`,
         // * which lets diagnostics about either point to it.
         val id = new Ident("_" + unds.size).withLocOf(und)
-        val sym = VarSymbol(id)
+        val sym = VarSymbol(id, mut = true)
         unds += sym
         syntheticLocalRef(sym).withLocOf(und)
     case Annotated(lhs, rhs) =>
@@ -2527,7 +2527,7 @@ extends Importer:
             val field = Term.Lit(StrLit(id.name)).withLocOf(id)
             recordFieldScope(RcdField.signature(field, rhs_t, mutField, MemberKey.symbol(annotations))) :: acc
           case id: Ident =>
-            val sym = new VarSymbol(id)
+            val sym = new VarSymbol(id, mut = true)
             newCtx += id.name -> sym
             recordFieldScope(RcdField.source(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym).ref(S(id)), mutField))
               :: defineVar(sym, rhs_t)(Loc(rlhs, rhs))
@@ -2758,7 +2758,7 @@ extends Importer:
           case S(ts) =>
             ts.tys.flatMap: targ =>
               def mk(id: Ident, vce: Opt[Bool]): Ls[TyParam] =
-                val vs = VarSymbol(id, erasedType = N)
+                val vs = VarSymbol(id, erasedType = N, mut = false)
                 val res = TyParam(FldFlags.empty, vce, vs)(targ.toLoc)
                 vs.decl = S(res)
                 res :: Nil
@@ -3168,7 +3168,7 @@ extends Importer:
   
   def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): TermSymbol | VarSymbol =
     if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id)
-    else VarSymbol(id)
+    else VarSymbol(id, mut = true)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
@@ -3186,7 +3186,7 @@ extends Importer:
         // * so the annotation of `y?: T` denotes `T | null` both for callers and in the body.
         val sig = if flg.opt then writtenSig.map(optionalType(_, t.toLoc)) else writtenSig
         if newResolution then sig.foreach(registerSignature)
-        val sym = VarSymbol(canonicalId)
+        val sym = VarSymbol(canonicalId, mut = true)
         sym.sourceAliases = aliases
         val p = Param(flg, sym, sig, mfn)(t.toLoc)
         sym.decl = S(p)
@@ -3420,7 +3420,7 @@ extends Importer:
           // We create a symbol specifically for `Param` for each variable to
           // avoid redundantly redeclaring symbols in `Scope` during code
           // generation, which triggers the assertion in `Scope.addToBindings`.
-          val parameterSymbol = VarSymbol(symbol.id, erasedType = N)
+          val parameterSymbol = VarSymbol(symbol.id, erasedType = N, mut = symbol.mut)
           (name -> parameterSymbol, symbol -> parameterSymbol)
       .toList.unzip
       pattern.variables.report // Report all invalid variables we found in `pattern`.
@@ -3568,7 +3568,7 @@ extends Importer:
     case TyTup(ps) =>
       val vs = ps.flatMap:
         case id: Ident =>
-          val sym = VarSymbol(id, erasedType = N)
+          val sym = VarSymbol(id, erasedType = N, mut = false)
           sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
           Param.simple(sym) :: Nil
         case t =>
