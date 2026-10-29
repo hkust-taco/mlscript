@@ -433,7 +433,10 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     "term:" + owner.map(_.showName + "/").getOrElse("")
   def isExplicitlyPrivate: Bool = defn.exists(_.visibility is Visibility.Private)
   def isPrivate: Bool =
-    // Top-level definitions have no owner and do not use JS private fields.
+    // Note: Top-level definitions have no owner and do not use JS private fields;
+    //    They are not directly accessible from other modules in source code,
+    //    but are actually exported internally under mangled names.
+    //    So, we do not consider them private for the purpose of this check.
     owner.isDefined &&
       // Refreshed IR symbols have no source definition. Their current definition
       // retains visibility, including after a method is copied by the inliner.
