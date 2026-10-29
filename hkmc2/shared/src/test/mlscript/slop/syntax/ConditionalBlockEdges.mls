@@ -1,0 +1,393 @@
+:.
+:js
+
+
+// A whole conditional block finishes the conditional; ordinary clause operands keep their continuations.
+:expect [true, 3, 3, 3]
+[
+  if {true then 2, else 3} + 2 == 4
+  if false then {1} + 2 else 3
+  if false then {x: 1}.x else 3
+  if false then {id}(1) else 3
+]
+//│ = [true, 3, 3, 3]
+
+
+:e
+if 2 + 2 is {4 then 2, else 3} + 2
+//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (operator application).
+//│ ║  l.+1: 	if 2 + 2 is {4 then 2, else 3} + 2
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+if 2 {+ 2 is 4 then 2, else 3} + 2
+//│ ╔══[COMPILATION ERROR] Unexpected prefix operator 'else' in an operator continuation.
+//│ ║  l.+1: 	if 2 {+ 2 is 4 then 2, else 3} + 2
+//│ ╙──      	                       ^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
+//│ ║  l.+1: 	if 2 {+ 2 is 4 then 2, else 3} + 2
+//│ ╙──      	                                 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+if 2 + {2 is 4 then 2, else 3} + 2
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.+1: 	if 2 + {2 is 4 then 2, else 3} + 2
+//│ ╙──      	        ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.+1: 	if 2 + {2 is 4 then 2, else 3} + 2
+//│ ╙──      	                       ^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
+//│ ║  l.+1: 	if 2 + {2 is 4 then 2, else 3} + 2
+//│ ╙──      	                                 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+if 2 + 2 {is 4 then 2, else 3} + 2
+//│ ╔══[COMPILATION ERROR] Unexpected prefix operator 'else' in an operator continuation.
+//│ ║  l.+1: 	if 2 + 2 {is 4 then 2, else 3} + 2
+//│ ╙──      	                       ^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
+//│ ║  l.+1: 	if 2 + 2 {is 4 then 2, else 3} + 2
+//│ ╙──      	                                 ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Operator blocks remain part of the condition; parentheses delimit the completed conditional.
+:expect [4, 4, 1]
+[
+  (if 2 {+ 2 is 4 then 2, else 3}) + 2
+  (if 2 + 2 {is 4 then 2, else 3}) + 2
+  if 2 {+ 1, + 1} == 4 then 1 else 0
+]
+//│ = [4, 4, 1]
+
+// Invalid operator-block entries are diagnosed in both expressions and conditional branches.
+:e
+2 {+ 2, let x = 3}
+//│ ╔══[COMPILATION ERROR] Unexpected let in an operator continuation.
+//│ ║  l.+1: 	2 {+ 2, let x = 3}
+//│ ╙──      	        ^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+if 2 {+ 2 is 4 then 2, return 3}
+//│ ╔══[COMPILATION ERROR] Unexpected prefix operator 'return' in an operator continuation.
+//│ ║  l.+1: 	if 2 {+ 2 is 4 then 2, return 3}
+//│ ╙──      	                       ^^^^^^
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (‹erroneous syntax›)
+//│ ║  l.+1: 	if 2 {+ 2 is 4 then 2, return 3}
+//│ ╙──      	                       ^^^^^^
+//│ = 2
+
+
+// Wrapping the condition preserves the boundary and precedence of the do operand.
+:expect [0, 0, 2, 2]
+fun ordinary(c) =
+  let n = 0
+  if c do {set n = 1}; set n = 2
+  n
+fun blockCondition(c) =
+  let n = 0
+  if {c} do {set n = 1}; set n = 2
+  n
+[ordinary(false), blockCondition(false), ordinary(true), blockCondition(true)]
+//│ = [0, 0, 2, 2]
+
+// Clause operands accept operator, selection, and call continuations before the fallback.
+:expect 3
+if {false} then {1} + 2 else 3
+//│ = 3
+
+:expect 3
+if {false} then {x: 1}.x else 3
+//│ = 3
+
+:expect 3
+if {false} then {id}(1) else 3
+//│ = 3
+
+:expect [3, 1, 1]
+[
+  if {true} then {1} + 2 else ???,
+  if {true} then {x: 1}.x else ???,
+  if {true} then {id}(1) else ???
+]
+//│ = [3, 1, 1]
+
+// Braces around the clauses close the conditional before its result continuation.
+:expect 4
+if {false} {then ??? else 2} + 2
+//│ = 4
+
+// A fallback outside the clause's indentation section still attaches to the if.
+:expect 2
+if {false}
+  then 1
+else 2
+//│ = 2
+
+:expect 2
+if {false}
+  then
+    1
+else 2
+//│ = 2
+
+:expect 2
+if
+    false
+  then 1
+else 2
+//│ = 2
+
+if {false}
+  do ()
+else ()
+
+:expect 2
+if {false}
+  then
+    ???
+  else 2
+//│ = 2
+
+:expect 2
+if {false}
+then ???
+else 2
+//│ = 2
+
+print \
+  if {false}      //
+  
+    // 
+  
+  then ???
+  else 2
+//│ > 2
+
+// A same-indent newline do starts a statement, including after a closed conditional block.
+:expect 3
+let n = 0
+if {true do set n = 1}
+do set n += 2
+n
+//│ = 3
+//│ n = 3
+
+:expect 2
+let n = 0
+if {false}
+  do ???
+do set n += 2
+n
+//│ = 2
+//│ n = 2
+
+:expect [2, 3]
+let n = 0
+let total = 0
+while {n < 2} do {set n += 1}; set total += n
+[n, total]
+//│ = [2, 3]
+//│ n = 2
+//│ total = 3
+
+// Explicit grouping and indentation boundaries protect nested conditionals and their fallbacks.
+:expect [2, 3, 2]
+[
+  if (if {false then true} else false)
+    then 1
+  else 2,
+  if {false} then (if {true then 1} else 2) else 3,
+  if {if {false then true, else false}} then 1 else 2
+]
+//│ = [2, 3, 2]
+
+:expect [2, 3]
+fun nested(c) =
+  if {c}
+    then
+      if {false}
+        then ???
+      else 2
+  else 3
+[nested(true), nested(false)]
+//│ = [2, 3]
+
+:expect 3
+if {false} then
+  if {true then 1} else 2
+else 3
+//│ = 3
+
+:expect 3
+if {false} then (if {true} then
+  1
+else 2) else 3
+//│ = 3
+
+:expect 2
+id(if {false}
+  then 1
+  else 2)
+//│ = 2
+
+// An added fallback does not replace one already present in the block.
+:w
+:expect 2
+if {false then 1, else 2} else 3
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.+1: 	if {false then 1, else 2} else 3
+//│ ║        	                  ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.+1: 	if {false then 1, else 2} else 3
+//│ ╙──      	                          ^^^^^^
+//│ = 2
+
+:pe
+:re
+if {true} then
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.+1: 	if {true} then
+//│ ╙──      	              ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:pe
+:re
+if {false then 1} else
+//│ ╔══[PARSE ERROR] Expected expression or block after `else` keyword; found end of input instead
+//│ ║  l.+1: 	if {false then 1} else
+//│ ╙──      	                      ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+if (print("Hello World"); false)
+  then ???
+  else 1
+//│ > Hello World
+//│ = 1
+
+
+if 123
+  then ???
+  else 1
+//│ = 1
+
+if {print("Hello World"), false}
+  then ???
+  else 1
+//│ > Hello World
+//│ = 1
+
+if (print("Hello World"); false)
+  then ???
+  else 1
+//│ > Hello World
+//│ = 1
+
+let x = 1
+//│ x = 1
+
+if x > {print("Hello World"), 1}
+  then ???
+  else 1
+//│ > Hello World
+//│ = 1
+
+:e
+if x {print("Hello World"), > 1}
+  then ???
+  else 1
+//│ ╔══[COMPILATION ERROR] Unsupported refinement in this position.
+//│ ║  l.+1: 	if x {print("Hello World"), > 1}
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+if x { > 1}
+  then ???
+  else 1
+//│ = 1
+
+
+// Parentheses disable newline separators, but still allow an indented clause's else.
+:expect 123
+(if true
+  then 123
+  else 456)
+//│ = 123
+
+(if true
+then 123
+else 456)
+//│ = 123
+
+(if true
+  then 123
+else 456)
+//│ = 123
+
+(if true
+then 123
+  else 456)
+//│ = 123
+
+:expect 125
+2 +
+(if true
+  then 123
+  else 456)
+//│ = 125
+
+:expect 458
+2 +
+(if false
+  then 123
+  else 456)
+//│ = 458
+
+print(if true then
+    123
+  else 456)
+//│ > 123
+
+// :pe
+print(if true then
+    123
+else 456)
+//│ > 123
+
+// :pe
+2 +
+(if true then
+    123
+else 456)
+//│ = 125
+
+2 +
+(if true then
+    123
+  else 456)
+//│ = 125
+
+2 +
+(if true
+    then 123
+  else 456)
+//│ = 125
+
+// :fixme
+2 +
+(if true
+  then 123
+  else 456)
+//│ = 125
+
+if true
+  then 123
+  else 456
+//│ = 123
+
+

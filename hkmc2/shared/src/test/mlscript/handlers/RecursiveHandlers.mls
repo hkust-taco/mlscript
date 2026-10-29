@@ -75,9 +75,6 @@ handle h2 = Effect with
 //│ ╔══[COMPILATION ERROR] Name not found: h2
 //│ ║  l.+5: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
-//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.+6: 	      else "0"
-//│ ╙──      	      ^^^^
 //│ > –––
 //│ > performing 2
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -178,7 +175,7 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:147:7", null, null, 1, 2, arg, k, 0)
+//│         return runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:144:7", null, null, 1, 2, arg, k, 0)
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
@@ -209,7 +206,7 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:152:7", null, null, 1, 2, arg, k, 0)
+//│         return runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:149:7", null, null, 1, 2, arg, k, 0)
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
@@ -256,7 +253,7 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:154:3", null, null, 1, 1, h22, 0)
+//│         return runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:151:3", null, null, 1, 1, h22, 0)
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
