@@ -74,8 +74,8 @@ class BufferableTransform()(using State, Raise):
                         k(res)
                   case _ => super.applyPath(p)(k)
             def transformFunDefn(f: FunDefn, isCtor: Bool): FunDefn =
-              val buf = VarSymbol(new Tree.Ident("buf"), erasedType = N, mut = true)
-              val idx = VarSymbol(new Tree.Ident("idx"), erasedType = S(ErasedType.Int), mut = true)
+              val buf = VarSymbol(new Tree.Ident("buf"), erasedType = N, mut = false)
+              val idx = VarSymbol(new Tree.Ident("idx"), erasedType = S(ErasedType.Int), mut = false)
               val (newParams, symMap) = mkSymbolReplacer(f.params)
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
               FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id, erasedType = N), LoweredParamList.plain(

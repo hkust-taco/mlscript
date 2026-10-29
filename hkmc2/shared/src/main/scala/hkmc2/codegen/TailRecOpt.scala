@@ -369,12 +369,14 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       else (true, BlockMemberSymbol(funs.iterator.map(_.sym.nme).mkString("_"), Nil, true))
     
     val maxParamLen = maxInt(funs, paramsLen)
+    // Tail calls overwrite these slots. Even without a wrapper, immutable generated
+    // parameters need fresh mutable bindings before the body is rewritten into a loop.
     val paramSyms =
-        if hasWrapper then 
-          if funsLen === 1 then
-            funs.head.allParamSyms.map(v => VarSymbol(v.id, erasedType = v.erasedType, mut = true))
-          else for i <- 0 until maxParamLen yield VarSymbol(Tree.Ident("param" + i), erasedType = N, mut = true)
-        else funs.head.allParamSyms
+        if funsLen === 1 then
+          funs.head.allParamSyms.map: v =>
+            if !hasWrapper && v.mut then v
+            else VarSymbol(v.id, erasedType = v.erasedType, mut = true)
+        else for i <- 0 until maxParamLen yield VarSymbol(Tree.Ident("param" + i), erasedType = N, mut = true)
       .toList
     val paramSymsArr = ArrayBuffer.from(paramSyms)
     // Function -> param -> param symbol in the rewritten function
@@ -760,9 +762,12 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     
     if !hasWrapper then
       val f = funs.head
+      val paramSubst = new SymbolSubst:
+        override def mapVarSym(sym: VarSymbol): VarSymbol = paramSymsMap(f.dSym).getOrElse(sym, sym)
+      val paramRewriter = new BlockTransformer(paramSubst)
       val defn = FunDefn(
         owner, bms, dSym,
-        f.params,
+        f.params.mapConserve(paramRewriter.applyParamList),
         loop)(N, annotations = f.annotations)
       (N, defn :: Nil)
     else

@@ -954,8 +954,8 @@ extends Importer:
     val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident(effectClassName))
     recordDefinitionScope(clsSym)
     val htds = methods.map: spec =>
-      val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme), erasedType = N, mut = true))
-      val resumeSym = VarSymbol(Ident("resume"), erasedType = N, mut = true)
+      val valueSym = spec.valueParamName.map(nme => VarSymbol(Ident(nme), erasedType = N, mut = false))
+      val resumeSym = VarSymbol(Ident("resume"), erasedType = N, mut = false)
       val mtdSym = BlockMemberSymbol(spec.methodName, Nil, true)
       val tsym = TermSymbol(Fun, S(clsSym), Ident(spec.methodName))
       rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
@@ -1751,7 +1751,7 @@ extends Importer:
     case InfixApp(TyTup(tvs), Keywrd(Keyword.`->`), body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       def genSym(id: Tree.Ident) =
-        val sym = VarSymbol(id, erasedType = N, mut = true)
+        val sym = VarSymbol(id, erasedType = N, mut = false)
         sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc)) // TODO vce
         boundVars += id.name -> sym
         sym
@@ -1962,8 +1962,8 @@ extends Importer:
               msg"  add a space before ‹identifier› to make it an operator application." -> N ::
               Nil
           N
-      val self = VarSymbol(Ident("self"), erasedType = N, mut = true)
-      val args = VarSymbol(Ident("args"), erasedType = N, mut = true)
+      val self = VarSymbol(Ident("self"), erasedType = N, mut = false)
+      val args = VarSymbol(Ident("args"), erasedType = N, mut = false)
       val ps = ParamList.withRest(ParamListFlags.empty,
         Param.simple(self) :: Nil,
         S:
@@ -2041,7 +2041,7 @@ extends Importer:
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
     case tree @ Case(kw, _) =>
-      val scrut = VarSymbol(Ident("caseScrut"), erasedType = N, mut = true)
+      val scrut = VarSymbol(Ident("caseScrut"), erasedType = N, mut = false)
       val body = caseSplit(scrut, tree)
       val params = Param.simple(scrut) :: Nil
       withTypeBinders(Term.Lam(PlainParamList(params)(N), body)).mkLocWith(kw)
@@ -2737,7 +2737,7 @@ extends Importer:
           case S(ts) =>
             ts.tys.flatMap: targ =>
               def mk(id: Ident, vce: Opt[Bool]): Ls[TyParam] =
-                val vs = VarSymbol(id, erasedType = N, mut = true)
+                val vs = VarSymbol(id, erasedType = N, mut = false)
                 val res = TyParam(FldFlags.empty, vce, vs)(targ.toLoc)
                 vs.decl = S(res)
                 res :: Nil
@@ -3547,7 +3547,7 @@ extends Importer:
     case TyTup(ps) =>
       val vs = ps.flatMap:
         case id: Ident =>
-          val sym = VarSymbol(id, erasedType = N, mut = true)
+          val sym = VarSymbol(id, erasedType = N, mut = false)
           sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
           Param.simple(sym) :: Nil
         case t =>

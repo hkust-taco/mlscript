@@ -281,3 +281,64 @@ ReceiverFactory.fresh.Nested.bump()
 //│ return receiver.count⁰
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1
+
+
+// A lifted reader receives an immutable owner parameter; its fields stay direct paths.
+:lift
+:soir
+:expect 91
+fun liftedReader() =
+  val owner = new ReceiverOwner(90)
+  @annotations.noInline
+  fun read() = owner.Middle.Inner.read()
+  read()
+liftedReader()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let read, owner;
+//│ @noInline
+//│ define read as fun read¹(owner1) {
+//│   return +⁰(owner1.value⁰, owner1.Middle⁰.extra⁰)
+//│ };
+//│ define liftedReader⁰ as fun liftedReader¹() {
+//│   let owner1;
+//│   set owner1 = new ReceiverOwner⁰(90);
+//│   return read¹(owner1)
+//│ };
+//│ set owner = new ReceiverOwner⁰(90);
+//│ return read¹(owner)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 91
+
+// A local passed directly to one lifted writer can still be reassigned. The first
+// call must retain the old receiver, while the following call sees the new owner.
+:lift
+:soir
+:expect [41, 51]
+fun liftedWriter() =
+  let owner = firstOwner
+  @annotations.noInline
+  fun write() =
+    let before = owner.Middle.Inner.read()
+    set owner = secondOwner
+    [before, owner.Middle.Inner.read()]
+  write()
+liftedWriter()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let write, owner;
+//│ @noInline
+//│ define write as fun write⁰(owner1) {
+//│   let inlinedVal, inlinedVal1;
+//│   set inlinedVal = +⁰(owner1.value⁰, owner1.Middle⁰.extra⁰);
+//│   set owner1 = secondOwner⁰;
+//│   set inlinedVal1 = +⁰(owner1.value⁰, owner1.Middle⁰.extra⁰);
+//│   return [inlinedVal, inlinedVal1]
+//│ };
+//│ define liftedWriter⁰ as fun liftedWriter¹() {
+//│   let owner1;
+//│   set owner1 = firstOwner⁰;
+//│   return write⁰(owner1)
+//│ };
+//│ set owner = firstOwner⁰;
+//│ return write⁰(owner)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [41, 51]

@@ -418,7 +418,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     // the rewriter of an extracted part (branch body functions and match rest functions),
     // whose free variables `fvs` become the `fv_` parameters it returns
     def mkExtractedBodyRewriter(instId: InstantiationId, body: Block, fvs: Ls[LocalVarSymbol]): (Rewriter, Ls[VarSymbol]) =
-      val fvParams = fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.mapErasedValueType, mut = false))
+      // These bindings replace existing locals in a copied body. Preserve their mutability:
+      // an Assign may initialize a pattern slot or reassign an already initialized input.
+      val fvParams = fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.mapErasedValueType, mut = s.mut))
       mkCopyRewriter(instId, Nil, body, Map.from(fvs.iterator.zip(fvParams))) -> fvParams
   
     // Functions for fused match branches; each runs one arm and then its rest

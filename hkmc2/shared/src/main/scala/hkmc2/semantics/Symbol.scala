@@ -163,8 +163,8 @@ type NoSymbol = NoSymbol.type
 
 /** Symbols bound by `Program.imports`.
   *
-  * User-facing imports bind variable or member symbols, while compiler-generated imports
-  * such as prelude/runtime imports may bind temporary term values directly.
+  * Imports bind member symbols or immutable variable symbols. Compiler-generated
+  * prelude/runtime imports use the same immutable bindings as source import aliases.
   */
 type ImportSymbol = VarSymbol | BlockMemberSymbol
 
@@ -240,6 +240,8 @@ type SimpleRefSymbol = LocalVarSymbol | BuiltinSymbol | LabelSymbol
 sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(name) with LocalSymbol with HasErasedType:
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
   var decl: Opt[Declaration] = N
+  /** Whether the binding may be reassigned after initialization. Initializing an immutable
+    * binding is allowed; reading a binding before initialization is undefined behavior. */
   def mut: Bool
   def subst(using s: SymbolSubst): LocalVarSymbol
 

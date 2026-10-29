@@ -1,0 +1,87 @@
+:.
+:global
+:js
+:sir
+:deforest
+:lift
+
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ import "..." as Predef; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+data class MutableInputBox(value: Int)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @data
+//│ define MutableInputBox⁰ as class MutableInputBox² {
+//│   val value⁰;
+//│   constructor MutableInputBox¹(value) { define value⁰ as val value¹ = value; end }
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// The value crossing the extracted match boundary is already initialized. Its
+// update must remain a reassignment, unlike the initialization of pattern slots.
+:expect 41
+@annotations.noInline
+fun updateInitialized(n: Int) =
+  let current = n
+  let box = MutableInputBox(1)
+  if box is MutableInputBox(value) then
+    set current = current + value
+    current
+updateInitialized(40)
+//│ deforest > >>> fusing >>>
+//│ deforest > MutableInputBox¹(1) ->
+//│ deforest > 	match: box⁰
+//│ deforest > 	fields: box⁰.value¹
+//│ deforest > MutableInputBox¹(1) ->
+//│ deforest > 	match: box⁰
+//│ deforest > 	fields: box⁰.value¹
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let updateInitialized$updateInitialized, updateInitialized$box_MutableInputBox, updateInitialized$box_rest, updateInitialized$box_MutableInputBox1, updateInitialized$box_rest1;
+//│ @private @noInline
+//│ define updateInitialized$updateInitialized as fun updateInitialized$updateInitialized⁰(n) {
+//│   let current, box, value, arg$MutableInputBox$0$, tmp, MutableInputBox_value;
+//│   set current = n;
+//│   set MutableInputBox_value = 1;
+//│   set box = updateInitialized$box_MutableInputBox⁰(MutableInputBox_value);
+//│   return box(arg$MutableInputBox$0$, value, tmp, current)
+//│ };
+//│ @affine(1) @private
+//│ define updateInitialized$box_MutableInputBox as fun updateInitialized$box_MutableInputBox¹(MutableInputBox_value)(fv_arg$MutableInputBox$0$, fv_value, fv_tmp, fv_current) {
+//│   set fv_arg$MutableInputBox$0$ = MutableInputBox_value;
+//│   set fv_value = fv_arg$MutableInputBox$0$;
+//│   set fv_tmp = +⁰(fv_current, fv_value);
+//│   set fv_current = fv_tmp;
+//│   return fv_current
+//│ };
+//│ @affine(1) @private
+//│ define updateInitialized$box_MutableInputBox1 as fun updateInitialized$box_MutableInputBox⁰(MutableInputBox_value)(fv_arg$MutableInputBox$0$, fv_value, fv_tmp, fv_current) {
+//│   set fv_arg$MutableInputBox$0$ = MutableInputBox_value;
+//│   set fv_value = fv_arg$MutableInputBox$0$;
+//│   set fv_tmp = +⁰(fv_current, fv_value);
+//│   set fv_current = fv_tmp;
+//│   return fv_current
+//│ };
+//│ @private
+//│ define updateInitialized$box_rest as fun updateInitialized$box_rest⁰() {
+//│   return null
+//│ };
+//│ @private
+//│ define updateInitialized$box_rest1 as fun updateInitialized$box_rest¹() {
+//│   return null
+//│ };
+//│ @noInline
+//│ define updateInitialized⁰ as fun updateInitialized¹(n) {
+//│   let current, box, value, arg$MutableInputBox$0$, tmp, MutableInputBox_value;
+//│   set current = n;
+//│   set MutableInputBox_value = 1;
+//│   set box = updateInitialized$box_MutableInputBox¹(MutableInputBox_value);
+//│   return box(arg$MutableInputBox$0$, value, tmp, current)
+//│ };
+//│ return updateInitialized$updateInitialized⁰(40)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41

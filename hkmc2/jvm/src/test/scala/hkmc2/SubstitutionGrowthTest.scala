@@ -154,7 +154,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     def binder(name: Str): VarSymbol =
-      val symbol = VarSymbol(Tree.Ident(name), mut = true)
+      val symbol = VarSymbol(Tree.Ident(name), mut = false)
       symbol.decl = S(TyParam(FldFlags.empty, N, symbol)(N))
       symbol
     def instance(binder: VarSymbol): TypeParameterInstance = instanceAt(binder, Set.empty)

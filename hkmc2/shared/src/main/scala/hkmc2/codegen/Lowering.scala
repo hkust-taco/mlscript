@@ -672,7 +672,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           remainingParamss match
           case Nil => buildInstantiate(accArgss)
           case ps :: rest =>
-            val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N, mut = p.sym.mut))
+            val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N, mut = false))
             softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
             val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
@@ -983,8 +983,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       if sym.binary then
         val t1 = new Tree.Ident("arg1")
         val t2 = new Tree.Ident("arg2")
-        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N, mut = true), N, Modulefulness.none)(t1.toLoc)
-        val p2 = Param(FldFlags.empty, VarSymbol(t2, erasedType = N, mut = true), N, Modulefulness.none)(t2.toLoc)
+        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N, mut = false), N, Modulefulness.none)(t1.toLoc)
+        val p2 = Param(FldFlags.empty, VarSymbol(t2, erasedType = N, mut = false), N, Modulefulness.none)(t2.toLoc)
         val ps = PlainParamList(p1 :: p2 :: Nil)(N)
         val bod = st.App(ref, st.Tup(List(st.SimpleRef(p1.sym)(N), st.SimpleRef(p2.sym)(N)))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
@@ -999,7 +999,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         return k(Lambda(paramLists.head, bodyBlock)(Nil, ref.toLoc))
       if sym.unary then
         val t1 = new Tree.Ident("arg")
-        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N, mut = true), N, Modulefulness.none)(t1.toLoc)
+        val p1 = Param(FldFlags.empty, VarSymbol(t1, erasedType = N, mut = false), N, Modulefulness.none)(t1.toLoc)
         val ps = PlainParamList(p1 :: Nil)(N)
         val bod = st.App(ref, st.Tup(List(st.SimpleRef(p1.sym)(N)))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)

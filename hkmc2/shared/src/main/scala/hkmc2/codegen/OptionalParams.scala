@@ -26,7 +26,7 @@ object OptionalParams:
         params.restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef)))
     else
       val required = params.params.take(params.paramCountLB)
-      val raw = VarSymbol(Tree.Ident("args"), erasedType = S(ErasedType.Array), mut = true)
+      val raw = VarSymbol(Tree.Ident("args"), erasedType = S(ErasedType.Array), mut = false)
       val suffix = if fixedArity then
         (0 until params.params.length - required.length).map(index =>
           DynSelect(raw.asSimpleRef, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(params.toLoc).asArg).toList
