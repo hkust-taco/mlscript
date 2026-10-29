@@ -443,7 +443,8 @@ sealed abstract class MemberSymbol(using State) extends Symbol:
 class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.Ident)(using State)
     extends MemberSymbol
     with DefinitionSymbol[TermDefinition]
-    with NamedSymbol:
+    with NamedSymbol
+:
   // `null` marks source declarations not yet visited by Erasure; `N` is an initialized, unknown erasure.
   // Generated MIR symbols initialize the same slot directly, retaining signatures separately from value types.
   private var assignedErasure: Opt[ErasedValueType | ErasedFuncSignature] = null
@@ -451,13 +452,13 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
       erasure: Opt[ErasedValueType | ErasedFuncSignature])(using State) =
     this(k, owner, id)
     initializeErasure(erasure)
+  
   def isErased: Bool = assignedErasure != null
-  private def erasure: Opt[ErasedValueType | ErasedFuncSignature] =
+  def erasure: Opt[ErasedValueType | ErasedFuncSignature] =
     assert(isErased, s"Erasure of '$nme' read before initialization")
     assignedErasure
-  private def initializeErasure(value: Opt[ErasedValueType | ErasedFuncSignature]): Unit =
+  def initializeErasure(value: Opt[ErasedValueType | ErasedFuncSignature]): Unit =
     assert(!isErased, "Erasure initialized more than once")
-    assert(value != null, "An initialized erasure cannot be null")
     assignedErasure = value
   
   var sourceAliases: Ls[Str] = Nil
@@ -489,16 +490,10 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     case S(tpe: ErasedValueType) => S(tpe)
     case N => N
   
-  /** Initializes the value type, rejecting even a previously initialized unknown erasure. */
-  def erasedType_=(newType: Opt[ErasedValueType]): Unit = initializeErasure(newType)
-  
   /** The erased signature of a `fun` definition with parameter lists, or `N` if this term has none. */
   def erasedSignature: Opt[ErasedFuncSignature] = erasure match
     case S(sig: ErasedFuncSignature) => S(sig)
     case S(_: ErasedValueType) | N => N
-  
-  /** Initializes the signature, rejecting even a previously initialized unknown erasure. */
-  def erasedSignature_=(newSignature: Opt[ErasedFuncSignature]): Unit = initializeErasure(newSignature)
   
   /** Creates a symbol with the same erased type or signature as this one. */
   def withSameErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)(using State): TermSymbol =
