@@ -813,7 +813,7 @@ val over: Int = thunk(2)
 //│   define lambda as fun lambda⁰(b: Int⁰): ? {
 //│     return +⁰(b, 1)
 //│   };
-//│   return (lambda⁰ as! Function⁰)
+//│   return lambda⁰
 //│ };
 //│ set tmp = thunk¹();
 //│ set tmp1 = tmp(2);
@@ -906,8 +906,8 @@ fun test: Function = new Object()
 
 
 // A written arrow type erases to `Function` in every position it can be written - parameter, result and `val`
-// alike - and the parameter and result shapes erase away with it. A lambda flowing into such a slot is cast
-// into a `Function` on the way.
+// alike - and the parameter and result shapes erase away with it. A returned lambda needs no cast; a lambda
+// first bound to a generated definition with an unknown signature still needs one.
 fun applyF(f: Int -> Int): Int = f(1)
 applyF((x: Int) => x)
 fun mk: Int -> Int = (x: Int) => x
@@ -923,7 +923,7 @@ val g: Int -> Int = (x: Int) => x
 //│   define lambda2 as fun lambda¹(x: Int⁰): ? {
 //│     return x
 //│   };
-//│   return (lambda¹ as! Function⁰)
+//│   return lambda¹
 //│ };
 //│ define lambda as fun lambda²(x: Int⁰): ? {
 //│   return x
@@ -1072,7 +1072,7 @@ module Plain with
 //│     let lambda;
 //│     @private
 //│     define lambda as fun lambda⁴(x: Int⁰): ? { return x };
-//│     return (lambda⁴ as! Function⁰)
+//│     return lambda⁴
 //│   }
 //│ };
 //│ end

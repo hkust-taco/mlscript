@@ -1437,7 +1437,7 @@ class BlockSimplifier
             val (prefix, bound) =
               if rhs.isStable then (acc, rhs)
               else
-                val receiver = VarSymbol(syntax.Tree.Ident("receiver"), erasedType = path.erasedValueType, mut = false)
+                val receiver = VarSymbol(syntax.Tree.Ident("receiver"), erasedType = path.erasedType, mut = false)
                 (acc.assignScoped(receiver, rhs), receiver.asSimpleRef)
             val updatedMapping = if bound is path then mapping else mapping.updated(sym, bound)
             (prefix, evaluated + (path -> bound), updatedMapping)
@@ -1937,7 +1937,7 @@ class BlockSimplifier
                   case Nil =>
                     val resSym = TempSymbol(
                       N,
-                      erasedType = if extraArgss.isEmpty then call.erasedValueType else N,
+                      initErasedType = if extraArgss.isEmpty then call.erasedType else N,
                       "inlinedVal",
                     )
                     val copier = Copier(resSym, mapping, boundReceivers)

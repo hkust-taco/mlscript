@@ -651,7 +651,7 @@ object RcdField:
     val id = new Tree.Ident(name)
     id.withLocOf(field)
     val sym = new BlockMemberSymbol(name, Nil)
-    val tsym = TermSymbol(RecordField, N, id, erasedType = N)
+    val tsym = TermSymbol(RecordField, N, id, erasure = N)
     sym.tsym = S(tsym)
     // Value-field lookup removes the synthetic definition's capture mark, leaving
     // enclosing call-site marks intact. A structural type field instead refers
@@ -901,7 +901,7 @@ sealed abstract class TypeLikeDef extends Definition:
 sealed abstract class ClassLikeDef extends TypeLikeDef:
   val owner: Opt[InnerSymbol]
   val kind: ClsLikeKind
-  val sym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol
+  val sym: ClassLikeDefSymbol
   val bsym: BlockMemberSymbol
   val ctorSym: Opt[ClassCtorSymbol]
   val tparams: Ls[TyParam]

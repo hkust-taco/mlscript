@@ -404,14 +404,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         // the Label body into the rest. Wrap with an exit label and temp variable so every path stores its
         // result, breaks to exitLabel, then the original cont runs once.
         val exitLabel = new LabelSymbol(N, sym.nme + "$x")
-        val tmp = new TempSymbol(N, erasedType = N)
+        val tmp = new TempSymbol(N, initErasedType = N)
         LoweringCtx.loweringCtx.collectScopedSym(tmp)
         // The representations of the results stored into `tmp`, recorded as each path is lowered. As with the
         // `if`-result temp below, `tmp` is named before those paths are lowered, so the join can only be
         // applied once both have been seen - here, before `cont` reads it.
         var pathTypes: Ls[Opt[codegen.ErasedValueType]] = Nil
         val exitCont: Result => Block = r =>
-          pathTypes ::= r.erasedValueType
+          pathTypes ::= r.erasedType
           Assign(tmp, r, Break(exitLabel))
         val bodyBlock = lowerSplit(sym.body, exitCont)
         val tailBlock = lowerSplit(tail, exitCont)
@@ -444,7 +444,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     if branchTypes.nonEmpty && branchTypes.forall(_.isDefined) then
       branchTypes.flatten.map(_.canonicalize).reduce(ErasedType.lub) match
       case _: ErasedType.Incompatible => ()
-      case joined => sym.populateErasedType(joined)
+      case joined => sym.erasedType = S(joined)
 
   import syntax.Keyword.{`if`, `while`}
   
@@ -486,7 +486,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // 3. The term is a `while` and the result is used.
       lazy val l =
         usesResTmp = true
-        val res = new TempSymbol(t, erasedType = N)
+        val res = new TempSymbol(t, initErasedType = N)
         outerCtx.collectScopedSym(res)
         res
       // The symbol for the loop label if the term is a `while`.
@@ -495,7 +495,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val res = new BlockMemberSymbol("while", Nil, false)
         outerCtx.collectScopedSym(res)
         res
-      lazy val tSym = TermSymbol.fromFunBms(f, N, erasedType = N)
+      // * The loop function takes one empty parameter list and returns either a body result or Runtime.LoopEnd.
+      lazy val tSym = TermSymbol.fromFunBms(f, N,
+        erasedSignature = S(codegen.ErasedFuncSignature.Signature(paramLists = Nil :: Nil, ret = N)))
       val normalized = tl.scoped("ucs:normalize"):
         normalize(inputSplit)(using VarSet())
       tl.scoped("ucs:normalized"):
@@ -505,7 +507,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         case IfLikeForm.ReturningIf =>
           if (k is Ret) || (k is Thrw) then k(r)
           else
-            branchTypes ::= r.erasedValueType
+            branchTypes ::= r.erasedType
             Assign(l, r, End())
         case IfLikeForm.ImperativeIf => Assign.discard(r, End())
         case IfLikeForm.While => Assign(NoSymbol, r, loopCont)
@@ -544,8 +546,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
           // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
           // as shouldRewriteWhile is always true when effect handler lowering is on
           if config.shouldRewriteWhile then
-            val loopResult = TempSymbol(N, erasedType = N)
-            val isReturned = TempSymbol(N, erasedType = S(ErasedType.Bool))
+            val loopResult = TempSymbol(N, initErasedType = N)
+            val isReturned = TempSymbol(N, initErasedType = S(ErasedType.Bool))
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =

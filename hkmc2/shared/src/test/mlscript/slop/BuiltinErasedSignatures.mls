@@ -1,0 +1,104 @@
+:.
+:js
+:noInline
+:checkIR
+
+
+// Definite builtin result types need no return casts. Arithmetic remains dynamic: the same binary
+// symbol can add strings or numbers, whereas a direct unary use has its own one-argument symbol.
+:sir
+:siret
+:expect [true, true, "number", -42, 3, "ab"]
+fun equal(x, y): Bool = x === y
+fun negate(x): Bool = not x
+fun kind(x): Str = typeof(x)
+fun negative(x) = -x
+fun add(x, y) = x + y
+[equal(1, 1), negate(false), kind(1), negative(42), add(1, 2), add("a", "b")]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Bool⁰, tmp1: Bool⁰, tmp2: Str⁰, tmp3: ?, tmp4: ?, tmp5: ?;
+//│ define equal⁰ as fun equal¹(x: ?, y: ?): Bool⁰ {
+//│   return ===⁰(x, y)
+//│ };
+//│ define negate⁰ as fun negate¹(x: ?): Bool⁰ {
+//│   return !⁰(x)
+//│ };
+//│ define kind⁰ as fun kind¹(x: ?): Str⁰ {
+//│   return typeof⁰(x)
+//│ };
+//│ define negative⁰ as fun negative¹(x: ?): ? {
+//│   return -⁰(x)
+//│ };
+//│ define add⁰ as fun add¹(x: ?, y: ?): ? {
+//│   return +⁰(x, y)
+//│ };
+//│ set tmp = equal¹(1, 1);
+//│ set tmp1 = negate¹(false);
+//│ set tmp2 = kind¹(1);
+//│ set tmp3 = negative¹(42);
+//│ set tmp4 = add¹(1, 2);
+//│ set tmp5 = add¹("a", "b");
+//│ return [tmp, tmp1, tmp2, tmp3, tmp4, tmp5]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [true, true, "number", -42, 3, "ab"]
+
+
+// Passing an operator as a value still picks its binary form. Prefix and aliased uses keep their
+// selected arity even when unary and binary occurrences appear in the same definition.
+:sir
+:expect [39, -42, 42, 39]
+fun operators(x, y) =
+  let subtract = (-)
+  [(-)(x, y), (-)(x), (+.)(x), subtract(x, y)]
+operators(42, 3)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define operators⁰ as fun operators¹(x, y) {
+//│   let subtract, tmp, tmp1, tmp2, tmp3, subtract1;
+//│   @private
+//│   define subtract1 as fun subtract⁰(arg1, arg2) {
+//│     return -¹(arg1, arg2)
+//│   };
+//│   set subtract = subtract⁰;
+//│   set tmp = -¹(x, y);
+//│   set tmp1 = -⁰(x);
+//│   set tmp2 = +¹(x);
+//│   set tmp3 = subtract(x, y);
+//│   return [tmp, tmp1, tmp2, tmp3]
+//│ };
+//│ return operators¹(42, 3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [39, -42, 42, 39]
+
+
+// The old resolver must select the same builtin symbols as the new resolver.
+#lang(useNewResolution: false)
+
+:sir
+:siret
+:expect [true, "number", -42, 39]
+fun legacyEqual(x, y): Bool = x !== y
+fun legacyKind(x): Str = typeof(x)
+fun legacyNegative(x) = -x
+fun legacySubtract(x, y) = x - y
+[legacyEqual(1, 2), legacyKind(1), legacyNegative(42), legacySubtract(42, 3)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Bool⁰, tmp1: Str⁰, tmp2: ?, tmp3: ?;
+//│ define legacyEqual⁰ as fun legacyEqual¹(x: ?, y: ?): Bool⁰ {
+//│   return !==⁰(x, y)
+//│ };
+//│ define legacyKind⁰ as fun legacyKind¹(x: ?): Str⁰ {
+//│   return typeof⁰(x)
+//│ };
+//│ define legacyNegative⁰ as fun legacyNegative¹(x: ?): ? {
+//│   return -⁰(x)
+//│ };
+//│ define legacySubtract⁰ as fun legacySubtract¹(x: ?, y: ?): ? {
+//│   return -¹(x, y)
+//│ };
+//│ set tmp = legacyEqual¹(1, 2);
+//│ set tmp1 = legacyKind¹(1);
+//│ set tmp2 = legacyNegative¹(42);
+//│ set tmp3 = legacySubtract¹(42, 3);
+//│ return [tmp, tmp1, tmp2, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [true, "number", -42, 39]

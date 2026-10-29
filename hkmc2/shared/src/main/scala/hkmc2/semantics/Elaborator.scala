@@ -704,12 +704,12 @@ object Elaborator:
     @deprecated("Use the `NoSymbol` singleton instead.")
     val noSymbol = NoSymbol
     val runtimeSymbol = VarSymbol(Ident("runtime"), erasedType = N, mut = false)
-    val definitionMetadataSymbol = TempSymbol(N, erasedType = N, "definitionMetadata")
-    val prettyPrintSymbol = TempSymbol(N, erasedType = N, "prettyPrint")
+    val definitionMetadataSymbol = TempSymbol(N, initErasedType = N, "definitionMetadata")
+    val prettyPrintSymbol = TempSymbol(N, initErasedType = N, "prettyPrint")
     val termSymbol = VarSymbol(Ident("Term"), erasedType = N, mut = false)
     val blockSymbol = VarSymbol(Ident("Block"), erasedType = N, mut = false)
     val optionSymbol = VarSymbol(Ident("option"), erasedType = N, mut = false)
-    val wasmSymbol = TempSymbol(N, erasedType = N, "wasm")
+    val wasmSymbol = TempSymbol(N, initErasedType = N, "wasm")
     lazy val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
@@ -738,14 +738,18 @@ object Elaborator:
     def matchSuccessTrmSymbol: TermSymbol = runtimeSymbols.matchSuccessTrm
     def matchFailureClsSymbol: ClassSymbol = runtimeSymbols.matchFailureCls
     def matchFailureTrmSymbol: TermSymbol = runtimeSymbols.matchFailureTrm
+    val builtinOpsByArity: Map[(Str, BuiltinSymbol.Arity), BuiltinSymbol] =
+      import BuiltinSymbol.Arity.*
+      List(Unary -> unaryOps, Binary -> binaryOps, Variadic -> anyOps).flatMap: (arity, ops) =>
+        ops.map(op => (op, arity) -> BuiltinSymbol(op, arity, isPure = !impureOps(op)))
+      .toMap
     val builtinOpsMap =
+      import BuiltinSymbol.Arity.*
+      // A bare operator denotes its binary function when both arities exist. Direct applications
+      // select their own arity in `app`, without affecting aliases or lexically shadowed operators.
       val baseBuiltins = builtins.map: op =>
-          op -> BuiltinSymbol(op,
-            binary = binaryOps(op),
-            unary = unaryOps(op),
-            nullary = false,
-            functionLike = anyOps(op),
-            isPure = !impureOps(op))
+          op -> builtinOpsByArity.get((op, Binary)).orElse(builtinOpsByArity.get((op, Unary)))
+            .getOrElse(builtinOpsByArity((op, Variadic)))
         .toMap
       baseBuiltins ++ aliasOps.map:
         case (alias, base) => alias -> baseBuiltins(base)
@@ -1181,7 +1185,7 @@ extends Importer:
       ((ctx + (ident.name -> symbol)), head ~: End)
     // Interleaved-`do` statements like `{ x is A then 0; do log(1); ... }`.
     case PrefixApp(Keywrd(`do`), rhsTree) =>
-      (ctx, mkSplitLet(TempSymbol(N, erasedType = N, "unused"), term(rhsTree, Trm)) ~: End)
+      (ctx, mkSplitLet(TempSymbol(N, initErasedType = N, "unused"), term(rhsTree, Trm)) ~: End)
     // Although the `else`-clause marks the end of the split, we cannot
     // stop and still have to elaborate the remaining trees.
     case PrefixApp(kwTree @ Keywrd(`else`), elseTree) =>
@@ -1286,7 +1290,7 @@ extends Importer:
           case Term.SimpleRef(_: LocalVarSymbol) => continuation(() => term)
           // Member references can invoke getters; evaluate those only once.
           case _ =>
-            val symbol = TempSymbol(N, erasedType = N, "scrut")
+            val symbol = TempSymbol(N, initErasedType = N, "scrut")
             mkSplitLet(symbol, term) ~: continuation(() => syntheticLocalRef(symbol))
   
   private type TT = (Tree, Tree)
@@ -1394,8 +1398,22 @@ extends Importer:
     case _ => Term.Annotated(annotation, target)
   
   private def app(lt: Term, rt: Term)(tree: Tree.App, typ: Opt[typing.Type], resSym: FlowSymbol)(using Ctx): Term =
-    val res = withTypeBinders(new Term.App(lt, rt)(tree, typ, resSym))
-    if newResolution then listenTerm(lt)(shape => appShape(shape, rt, res))
+    val arity = rt match
+      case Term.Tup(_ :: Nil) => S(BuiltinSymbol.Arity.Unary)
+      case Term.Tup(_ :: _ :: Nil) => S(BuiltinSymbol.Arity.Binary)
+      case _ => N
+    def select(sym: BuiltinSymbol): BuiltinSymbol =
+      arity.flatMap(a => State.builtinOpsByArity.get((sym.nme, a))).getOrElse(sym)
+    val appliedFun = lt match
+      case ref @ Term.Ref(sym: BuiltinSymbol) =>
+        val selected = select(sym)
+        if selected is sym then ref else selected.ref(ref.tree)
+      case ref @ Term.SimpleRef(sym: BuiltinSymbol) =>
+        val selected = select(sym)
+        if selected is sym then ref else Term.SimpleRef(selected)(ref.tree).withLocOf(ref)
+      case _ => lt
+    val res = withTypeBinders(new Term.App(appliedFun, rt)(tree, typ, resSym))
+    if newResolution then listenTerm(appliedFun)(shape => appShape(shape, rt, res))
     res
   
   /** With the new underscore syntax, some operator operands delimit their own implicit lambdas:
@@ -1655,7 +1673,7 @@ extends Importer:
         error
       else
         val lt = subterm(lhs)
-        val sym = TempSymbol(S(lt), erasedType = N, "old")
+        val sym = TempSymbol(S(lt), initErasedType = N, "old")
         Blk(
           LetDecl(sym, Nil)(tree.toLoc) :: defineVar(sym, lt)(tree.toLoc) :: Nil, Term.Try(Blk(
             assignment(lt, subterm(rhs)) :: Nil,
@@ -2078,10 +2096,10 @@ extends Importer:
         subterm(body)
     case PrefixApp(kw @ Keywrd(Keyword.`do`), InfixApp(labelId: Ident, Keywrd(Keyword.`:`), body)) =>
       val labelSym = new LabelSymbol(N, labelId.name)
-      val resultSym = new TempSymbol(N, erasedType = N, s"${labelId.name}$$result")
-      val nonLocalHandlerSym = TempSymbol(N, erasedType = N, s"nonLocalHandler$$${labelId.name}")
-      val nonLocalBreakMethodMarker = TempSymbol(N, erasedType = N, s"nonLocalBreakMethod$$${labelId.name}")
-      val nonLocalContinueMethodMarker = TempSymbol(N, erasedType = N, s"nonLocalContinueMethod$$${labelId.name}")
+      val resultSym = new TempSymbol(N, initErasedType = N, s"${labelId.name}$$result")
+      val nonLocalHandlerSym = TempSymbol(N, initErasedType = N, s"nonLocalHandler$$${labelId.name}")
+      val nonLocalBreakMethodMarker = TempSymbol(N, initErasedType = N, s"nonLocalBreakMethod$$${labelId.name}")
+      val nonLocalContinueMethodMarker = TempSymbol(N, initErasedType = N, s"nonLocalContinueMethod$$${labelId.name}")
       val bodyTerm = ctx.withLabel(
         labelSym, resultSym, nonLocalHandlerSym, nonLocalBreakMethodMarker, nonLocalContinueMethodMarker).givenIn:
         subterm(body)
@@ -2650,7 +2668,7 @@ extends Importer:
                 case N => N
                 case _ if ctx.mode is Mode.Light => S(Term.Missing)
                 case S(rhs) => S:
-                  val nonLocalRetHandler = TempSymbol(N, erasedType = N, s"nonLocalRetHandler$$${id.name}")
+                  val nonLocalRetHandler = TempSymbol(N, initErasedType = N, s"nonLocalRetHandler$$${id.name}")
                   val hasGeneratorAnnotation = annotations.exists(_.isInstanceOf[Annot.Generator])
                   val hasAsyncAnnotation = annotations.exists(_.isInstanceOf[Annot.Async])
                   if pss.isEmpty && hasGeneratorAnnotation then
@@ -3146,7 +3164,7 @@ extends Importer:
     case N => N
   
   def fieldOrVarSym(k: TermDefKind, id: Ident)(using Ctx): TermSymbol | VarSymbol =
-    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasedType = N)
+    if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasure = N)
     else VarSymbol(id, erasedType = N, mut = true)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =

@@ -9,7 +9,6 @@ import utils.*
 import semantics.*
 import semantics.Elaborator.{Ctx, State, ctx}
 import semantics.Term.*
-import sourcecode.{FileName, Line}
 
 /** A primitive type of the block IR. */
 enum PrimitiveType:
@@ -33,7 +32,7 @@ object ErasedType:
     * Implementation Note: This type should **not** be used to represent references of type aliases or the top type -
     * [[ValueLike]] and [[Unknown]] should be used instead.
     */
-  case class AnyRef(rsc: Opt[Bool], tpeSym: TypeSymbol) extends ErasedValueType, CanonicalErasedType:
+  case class AnyRef(rsc: Opt[Bool], tpeSym: TypeSymbol) extends ErasedValueType, CanonicalErasedValueType:
     override def sym(using Ctx, State): TypeSymbol = tpeSym
 
   /** A value type that is not yet canonicalized.
@@ -55,22 +54,8 @@ object ErasedType:
     // Ensures `toString` returns a stable string
     override def toString: Str = "ValueLike(?)"
 
-  /** A reference to a function of a possibly-known shape.
-    *
-    * - `rsc` is true if this reference is a resource function.
-    */
-  case class FuncRef(override val rsc: Opt[Bool], override val paramLists: Ls[Ls[Opt[ErasedValueType]]], override val ret: Opt[ErasedValueType]) extends ErasedFuncType:
-    ErasedFuncType.assertHasParamLists(paramLists)
-    override type Canonical = CanonicalFuncRef
-    override protected def computeCanonicalize(using Ctx, State): CanonicalFuncRef =
-      CanonicalFuncRef(rsc, paramLists.map(_.map(_.map(_.canonicalize))), ret.map(_.canonicalize))
-
-  /** An analogue to `FuncRef` for function types with canonicalized parameter and return types. */
-  case class CanonicalFuncRef(override val rsc: Opt[Bool], override val paramLists: Ls[Ls[Opt[CanonicalErasedValueType]]], override val ret: Opt[CanonicalErasedValueType]) extends ErasedFuncType with CanonicalErasedType:
-    ErasedFuncType.assertHasParamLists(paramLists)
-
   /** A primitive type. */
-  case class Primitive(prim: PrimitiveType) extends ErasedValueType, CanonicalErasedType:
+  case class Primitive(prim: PrimitiveType) extends ErasedValueType, CanonicalErasedValueType:
     override def sym(using Ctx, State): TypeSymbol = prim.sym
 
   /** A union of erased types.
@@ -106,7 +91,7 @@ object ErasedType:
     * Reached by an absent annotation (`erasedType_!` folds `N` here), by an alias the IR cannot resolve, and
     * by the surface top `Anything`, which has no erased counterpart of its own.
     */
-  case object Unknown extends ErasedValueType, CanonicalErasedType:
+  case object Unknown extends ErasedValueType, CanonicalErasedValueType:
     // * No symbol denotes this type: `Anything` is the surface top, which is a different thing.
     override def sym(using Ctx, State): NoSymbol = NoSymbol
 
@@ -120,7 +105,7 @@ object ErasedType:
     * site.
     */
   case class Incompatible(lhs: CanonicalErasedValueType, rhs: CanonicalErasedValueType)
-      extends ErasedValueType, CanonicalErasedType:
+      extends ErasedValueType, CanonicalErasedValueType:
     override def sym(using Ctx, State): NoSymbol = NoSymbol
 
   /** The builtin `Unit` reference type. */
@@ -229,7 +214,7 @@ object ErasedType:
           lastWords(s"no upper bound is defined for '$lhs' and '$rhs'")
         case (l: TypeSymbol, r: TypeSymbol) => CanonicalErasedValueType(rsc = S(false), lubSym(l, r))
 
-  /** Erases a type-annotated term to an [[ErasedType]].
+  /** Erases a type-annotated term to an [[ErasedValueType]].
     *
     * Used by the legacy resolver after resolution. Canonicalization is separate and may inspect the
     * nominal hierarchy published by Erasure.
@@ -287,7 +272,7 @@ object ErasedType:
     *
     * Returns `S(true)` if a cast is needed, `S(false)` if no cast is needed, or `N` if the two types are unrelated.
     */
-  def needsCast(actual: CanonicalErasedType, expected: CanonicalErasedType)(using Ctx, State): Opt[Bool] =
+  def needsCast(actual: CanonicalErasedValueType, expected: CanonicalErasedValueType)(using Ctx, State): Opt[Bool] =
     (actual, expected) match
       // * A type with no upper bound has no representation of its own, so nothing can be coerced into or out of
       // * it - not even widened into the top type.
@@ -315,24 +300,17 @@ object ErasedType:
             // * for this decision and emit a conservative checked cast.
             case _ => S(true)
 
-/** A generics-erased type of the Block IR. */
-sealed abstract class ErasedType:
-  type Canonical <: CanonicalErasedType
-
-  /** The symbol denoting this erased type, or `NoSymbol` when none does.
-    *
-    * The lattice is keyed on `TypeSymbol`, so `NoSymbol` means this type has no place in it: no ancestor chain to
-    * walk and no name to report.
-    */
-  def sym(using Ctx, State): TypeSymbol | NoSymbol
+/** An erased type or signature of the Block IR, which has a canonical form that is computed once and memoized. */
+sealed trait Canonicalizable:
+  type Canonical <: Canonicalizable
 
   /** Memoized canonical form, written once by [[canonicalize]] and read only through it.
     *
-    * Note that the canonicalized type is only meaningful within the `State` it was computed under.
+    * Note that the canonical form is only meaningful within the `State` it was computed under.
     */
   private var _canonicalized: Opt[Canonical] = N
 
-  /** The canonical form of this type, computed by [[computeCanonicalize]] on first use and memoized thereafter.
+  /** The canonical form, computed by [[computeCanonicalize]] on first use and memoized thereafter.
     *
     * Callers are encouraged to always canonicalize types before using them.
     */
@@ -343,17 +321,27 @@ sealed abstract class ErasedType:
       _canonicalized = S(n)
       n
 
-  /** Computes the canonical form of this type, by resolving type aliases to their target type, reclassifying unboxed
-    * primitive symbols to [[Primitive]], and collapsing unions to their least upper bound (LUB).
+  /** Computes the canonical form, by resolving type aliases to their target type, reclassifying unboxed primitive
+    * symbols to [[ErasedType.Primitive]], and collapsing unions to their least upper bound (LUB).
     *
     * Each overriding implementation performs the ones that apply to it; alias resolution and primitive
-    * reclassification both happen in [[CanonicalErasedValueType.apply]].
+    * reclassification both happen in [[CanonicalErasedValueType.apply]], and a signature canonicalizes its parameter
+    * and return types.
     *
-    * Intersections are never decomposed and is erased to [[Unknown]].
+    * Intersections are never decomposed and are erased to [[ErasedType.Unknown]].
     *
     * Call [[canonicalize]] rather than this, so that the result is memoized.
     */
   protected def computeCanonicalize(using Ctx, State): Canonical
+
+/** A generics-erased type of a value in the Block IR. */
+sealed abstract class ErasedValueType extends Canonicalizable:
+  type Canonical <: CanonicalErasedValueType
+
+  /** The symbol denoting this erased type, or `NoSymbol` for [[ErasedType.Union]], [[ErasedType.Unknown]] and
+    * [[ErasedType.Incompatible]].
+    */
+  def sym(using Ctx, State): TypeSymbol | NoSymbol
 
   /** Renders this type for a user-facing diagnostic.
     *
@@ -377,40 +365,49 @@ sealed abstract class ErasedType:
           val name = qualify(tpeSym, Nil).mkString(".")
           if tpeSym.asMod.isDefined then s"module $name" else name
 
-/** Base class indicating that the [[ErasedType]] is a value type. */
-sealed abstract class ErasedValueType extends ErasedType:
-  type Canonical <: CanonicalErasedValueType
+object ErasedFuncSignature:
+  /** The signature of a definition, whose parameter and return types may be unknown. */
+  case class Signature(override val paramLists: Ls[Ls[Opt[ErasedValueType]]], override val ret: Opt[ErasedValueType]) extends ErasedFuncSignature:
+    assertHasParamLists(paramLists)
+    override type Canonical = CanonicalSignature
+    override protected def computeCanonicalize(using Ctx, State): CanonicalSignature =
+      CanonicalSignature(paramLists.map(_.map(_.map(_.canonicalize))), ret.map(_.canonicalize))
 
-object ErasedFuncType:
+  /** An analogue to `Signature` with canonicalized parameter and return types. */
+  case class CanonicalSignature(override val paramLists: Ls[Ls[Opt[CanonicalErasedValueType]]], override val ret: Opt[CanonicalErasedValueType]) extends ErasedFuncSignature:
+    assertHasParamLists(paramLists)
+    override type Canonical = this.type
+    override protected def computeCanonicalize(using Ctx, State): this.type = this
+
   /** Enforces the invariant that `paramLists` must be non-empty.
     *
-    * See the documentation of [[ErasedFuncType]] for the rationale.
+    * See the documentation of [[ErasedFuncSignature]] for the rationale.
     */
   def assertHasParamLists(paramLists: Ls[Ls[?]]): Unit =
-    assert(paramLists.nonEmpty, "a function type must describe at least one parameter list")
+    assert(paramLists.nonEmpty, "a signature must describe at least one parameter list")
 
-/** Base class indicating that the [[ErasedType]] is a function type.
+/** The erased signature of a definition.
   *
-  * `paramLists` mirrors the definition's parameter *lists*, so that curried functions can be represented - functions
-  * that are partially applied yield a function type with fewer parameter lists.
+  * A signature is not an [[ErasedValueType]], as it types no value: a reference to a definition evaluates to a
+  * first-class function, whose value type is [[ErasedType.Function]].
+  *
+  * `paramLists` mirrors the definition's parameter *lists*, so that calls to curried functions can be typed by the
+  * number of argument lists they apply.
   *
   * Note that `paramLists` should never be empty: a definition declaring no parameter list at all is either compiled
   * to a getter and erased to its result instead, or given an implicitly-added empty parameter list which the erased
-  * type mirrors.
+  * signature mirrors.
   */
-sealed abstract class ErasedFuncType extends ErasedType:
-  val rsc: Opt[Bool]
+sealed abstract class ErasedFuncSignature extends Canonicalizable:
+  type Canonical <: ErasedFuncSignature.CanonicalSignature
   val paramLists: Ls[Ls[Opt[ErasedValueType]]]
   val ret: Opt[ErasedValueType]
-  final override def sym(using Ctx, State): TypeSymbol = ctx.builtins.Function
 
-/** An [[ErasedType]] that is resolved into a canonical representation. */
-sealed trait CanonicalErasedType extends ErasedType:
+/** The canonical form of an [[ErasedValueType]]. */
+sealed trait CanonicalErasedValueType extends ErasedValueType:
   type Canonical = this.type
 
   override protected def computeCanonicalize(using Ctx, State): this.type = this
-
-type CanonicalErasedValueType = CanonicalErasedType & ErasedValueType
 
 object CanonicalErasedValueType:
   /** Creates an instance with the given type symbol, canonicalizing it if needed.
@@ -464,43 +461,12 @@ object CanonicalErasedValueType:
         case S(prim) => ErasedType.Primitive(prim)
         case _ => ErasedType.AnyRef(rsc, base)
 
-/** Trait representing a Block IR element that has an [[ErasedType]]. */
-trait HasErasedType:
-  /** The [[ErasedType]] of this element, or `N` if the erased type is not known. */
-  def erasedType: Opt[ErasedType]
-
-  /** Similar to `erasedType`, but coerces to the top type if the specific erased type is not known.
-    *
-    * Parameter and return types of [[ErasedFuncType]]s are recursively coerced.
-    */
-  lazy val erasedType_! : ErasedType = erasedType.fold(ErasedType.Unknown):
-    case f @ ErasedType.FuncRef(rsc, paramLists, ret) => f.copy(
-      paramLists = paramLists.map(_.map(p => S(p.getOrElse(ErasedType.Unknown)))),
-      ret = S(ret.getOrElse(ErasedType.Unknown)),
-    )
-    case f @ ErasedType.CanonicalFuncRef(rsc, paramLists, ret) => f.copy(
-      paramLists = paramLists.map(_.map(p => S(p.getOrElse(ErasedType.Unknown)))),
-      ret = S(ret.getOrElse(ErasedType.Unknown)),
-    )
-    case vt: ErasedValueType => vt
-
-  /** Returns the [[ErasedValueType]] of this element, or `N` if the erased type is not known.
-    *
-    * If this type is a [[ErasedFuncType]], the result is the [[ErasedType]] of a first-class function.
-    */
-  lazy val erasedValueType: Opt[ErasedValueType] = erasedType.collect:
-    case ft: ErasedFuncType => ErasedType.Function(ft.rsc)
-    case vt: ErasedValueType => vt
-
-  /** Similar to `erasedValueType`, but coerces to the top type if the specific erased value type is not known. */
-  lazy val erasedValueType_! : ErasedValueType = erasedValueType.getOrElse(ErasedType.Unknown)
-
 /** Erased types of source declarations are initialized by Erasure after resolution finishes.
   * `null` means no representation has been assigned; `N` is an initialized, unknown representation.
-  * The checked getter also protects HasErasedType's lazy derived values from caching an early `N`.
+  * The checked getter also protects derived values from caching an early `N`.
   * IR-generated symbols may initialize the same slot directly at construction.
   */
-trait HasDelayedErasedType[T <: ErasedType] extends HasErasedType:
+trait HasDelayedErasedType[T <: ErasedValueType]:
   private var assignedErasedType: Opt[T] = null
   final def isErased: Bool = assignedErasedType != null
   final def erasedType: Opt[T] =
@@ -510,37 +476,3 @@ trait HasDelayedErasedType[T <: ErasedType] extends HasErasedType:
     assert(!isErased, "Erased type initialized more than once")
     assert(value != null, "An initialized erased type cannot be null")
     assignedErasedType = value
-
-/** A [[HasErasedType]] whose erased type can be populated exactly once post-construction. */
-trait HasOnceMutableErasedType extends HasErasedType:
-  // Implementation Note: Provided for overriding classes to implement `erasedType` directly as an `override var`
-  def erasedType_=(newType: Opt[ErasedType]): Unit
-
-  /** Populates the erased type, or raises a soft assertion if the type was already populated. */
-  def populateErasedType(newType: ErasedType)(using Line, FileName, Raise): Unit =
-    softAssert(erasedType.isEmpty, s"Cannot refine already-refined erased type $erasedType to $newType")
-    if erasedType.isEmpty then erasedType = S(newType)
-
-extension (s: ValueSymbol | DefinitionSymbol[?])
-  /** Maps the symbol to its erased value type, if it has one.
-    *
-    * This is the type of the *value* a reference to the symbol denotes, so a symbol standing for a function
-    * collapses to the first-class `Function` type instead of keeping its [[ErasedFuncType]] shape - the same
-    * narrowing [[Result.coerceTo]] performs when it introduces a cast.
-    */
-  def mapErasedValueType(using Raise): Opt[ErasedValueType] = s match
-    case v: VarSymbol => v.erasedType
-    case t: TempSymbol => t.erasedValueType
-    case c: (ClassSymbol | ModuleOrObjectSymbol) => c.erasedValueType
-    case t: TermSymbol => t.erasedValueType
-    // * A pattern is not a value and carries no erased type of its own, so a reference to one is
-    // * left unknown rather than treated as an unexpected symbol.
-    case _: PatternSymbol => N
-    // * A builtin operator carries no erased type, as one symbol stands for its nullary, unary and binary forms.
-    case _: BuiltinSymbol => N
-    // * What a member reference denotes depends on the member: a function value has the `Function` type, but a
-    // * class object has none, so this is left unknown rather than guessed from the disambiguating term symbol.
-    case _: BlockMemberSymbol => N
-    case s =>
-      softAssert(false, s"Unexpected symbol type for symbol `$s`: ${s.getClass.getName}")
-      N

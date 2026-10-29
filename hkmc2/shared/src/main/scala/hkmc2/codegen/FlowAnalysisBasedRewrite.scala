@@ -155,7 +155,7 @@ class FlowAnalysisBasedRewrite(
                 mayRaiseEffects = true,
                 annotations = c.metadata.annotations.filterNot(_.isInstanceOf[Annot.Pure])), c.toLoc))
           case _ =>
-            val tmp = TempSymbol(N, erasedType = N, "eta$res")
+            val tmp = TempSymbol(N, initErasedType = N, "eta$res")
             Scoped(
               Set.single(tmp),
               Assign(tmp, res2, Return(etaCall(tmp.asPath).withLocOf(res2))))
@@ -176,7 +176,7 @@ class FlowAnalysisBasedRewrite(
             case arg :: tl =>
               applyArg(arg): arg2 =>
                 if idx < lastImpureEliminableIdx then
-                  val tmp = TempSymbol(N, erasedType = arg2.value.erasedValueType, "arg")
+                  val tmp = TempSymbol(N, initErasedType = arg2.value.erasedType, "arg")
                   Scoped(
                     Set.single(tmp),
                     Assign(tmp, arg2.value, rec(tl, idx + 1, true, arg2.copy(value = tmp.asPath) :: accRev)))
@@ -261,6 +261,13 @@ class FlowAnalysisBasedRewrite(
   // ====== start: implements the abstract members of `PolyInstantiationRewrite` ======
   def solvers: Iterable[FlowAnalysisSolverResult] =
     deadParamElimSolver :: etaExpansionSolver :: deadConstructorElimSolver :: Nil
+  
+  override def specializedSignature(fun: TermSymbol, instId: InstantiationId, sig: ErasedFuncSignature): ErasedFuncSignature =
+    val paramLists = sig.paramLists.zipWithIndex.map: (pl, i) =>
+      val eliminable = deadParamElimSolver.eliminableParams(ConcreteId((fun, i), instId))
+      pl.zipWithIndex.collect:
+        case (t, j) if !eliminable(j) => t
+    ErasedFuncSignature.Signature(paramLists, sig.ret)
   
   def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
   

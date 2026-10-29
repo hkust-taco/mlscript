@@ -72,7 +72,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           case N => (ps :: Nil, rhs)
       case _ => N
 
-  private def definitionType(td: TermDefinition): Opt[ErasedType] =
+  private def definitionType(td: TermDefinition): Opt[ErasedValueType | ErasedFuncSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
     // An ordinary paramless function instead returns the value denoted by the entire signature.
@@ -105,7 +105,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         val physicalParamLists =
           if paramLists.isEmpty && td.owner.isEmpty && !declared then Nil :: Nil else paramLists
         if physicalParamLists.isEmpty then resultType
-        else S(ErasedType.FuncRef(rsc = S(false), physicalParamLists, resultType))
+        else S(ErasedFuncSignature.Signature(physicalParamLists, resultType))
       case _: syntax.Val => resultType
       case _ => N
 
@@ -264,12 +264,12 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         case sym: BlockMemberSymbol => sym.tsym
         case _ => N
       field.foreach: sym =>
-        if !sym.isErased then sym.erasedType = p.sym.erasedType
+        if !sym.isErased then sym.initializeErasure(p.sym.erasedType)
     statements.foreach:
-      case td: TermDefinition if !td.tsym.isErased => td.tsym.erasedType = definitionType(td)
+      case td: TermDefinition if !td.tsym.isErased => td.tsym.initializeErasure(definitionType(td))
       case _ => ()
     statements.foreach:
-      case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.erasedType = N
+      case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.initializeErasure(N)
       case _ => ()
     completed = S(root)
 

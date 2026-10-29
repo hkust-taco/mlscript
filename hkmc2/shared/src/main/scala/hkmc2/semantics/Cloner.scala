@@ -4,7 +4,7 @@ package semantics
 import scala.collection.mutable
 
 import hkmc2.utils.*, shorthands.*
-import syntax.*, Elaborator.State, codegen.{Erasure, ErasedType, ErasedValueType, ErasedFuncType, CanonicalErasedValueType}
+import syntax.*, Elaborator.State, codegen.{Erasure, ErasedType, ErasedValueType, ErasedFuncSignature, CanonicalErasedValueType}
 import Term.*
 import ucs.FlatPattern
 
@@ -74,10 +74,8 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       new ErasedType.ValueLike(source.rsc, symbol)
     case ErasedType.Union(members) => ErasedType.Union(members.map(valueType))
 
-  private def erasedType(source: ErasedType): ErasedType = source match
-    case source: ErasedValueType => valueType(source)
-    case source: ErasedFuncType => ErasedType.FuncRef(source.rsc,
-      source.paramLists.map(_.map(_.map(valueType))), source.ret.map(valueType))
+  private def signature(source: ErasedFuncSignature): ErasedFuncSignature =
+    ErasedFuncSignature.Signature(source.paramLists.map(_.map(_.map(valueType))), source.ret.map(valueType))
 
   private def located[A <: AutoLocated](source: AutoLocated, copy: A): A =
     if source is copy then copy else copy.withLoc(source.getLoc)
@@ -102,7 +100,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       copy
     })
     case s: TempSymbol => temporaries.getOrElseUpdate(s, {
-      val copy = new TempSymbol(s.trm, s.erasedType.map(erasedType), s.nme)
+      val copy = new TempSymbol(s.trm, s.erasedType.map(valueType), s.nme)
       copy.shapes.copyFrom(s.shapes)
       copy
     })
@@ -198,10 +196,11 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
   private def prepare(stats: Ls[Statement]): Unit =
     prepareDefinitions(stats)
     prepareLocals(stats)
-    // An annotation can name a class nested in a later declaration. Wait until
-    // all nominal symbols are allocated before renaming erased signatures.
     terms.foreach: (source, copy) =>
-      if source.isErased then copy.erasedType = source.erasedType.map(erasedType)
+      copy.initializeErasure:
+        source.erasure.map:
+          case sig: ErasedFuncSignature => signature(sig)
+          case tpe: ErasedValueType => valueType(tpe)
     // All member names, including nested classes' methods, now have replacements.
     // Override edges must follow them for common-member selection during lowering.
     (members.iterator ++ terms.iterator).foreach: (source, copy) =>
