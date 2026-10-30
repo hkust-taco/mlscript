@@ -70,6 +70,38 @@ operators(42, 3)
 //│ = [39, -42, 42, 39]
 
 
+// Operand representations determine arithmetic results, while unknown operands still need a narrowing cast.
+:sir
+:siret
+:expect [42, 1.5, "x42", 42]
+fun integerSum(x: Int, y: Int): Int = x + y
+fun quotient(x: Int, y: Int): Num = x / y
+fun concatenate(x: Str, y: Any): Str = x + y
+fun unknownSum(x: Any, y: Any): Int = x + y
+[integerSum(40, 2), quotient(3, 2), concatenate("x", 42), unknownSum(40, 2)]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰, tmp1: Num⁰, tmp2: Str⁰, tmp3: Int⁰;
+//│ define integerSum⁰ as fun integerSum¹(x: Int⁰, y: Int⁰): Int⁰ {
+//│   return +⁰(x, y)
+//│ };
+//│ define quotient⁰ as fun quotient¹(x: Int⁰, y: Int⁰): Num⁰ {
+//│   return /⁰(x, y)
+//│ };
+//│ define concatenate⁰ as fun concatenate¹(x: Str⁰, y: Unknown): Str⁰ {
+//│   return +⁰(x, y)
+//│ };
+//│ define unknownSum⁰ as fun unknownSum¹(x: Unknown, y: Unknown): Int⁰ {
+//│   return (+⁰(x, y) as! Int⁰)
+//│ };
+//│ set tmp = integerSum¹(40, 2);
+//│ set tmp1 = quotient¹(3, 2);
+//│ set tmp2 = concatenate¹("x", 42);
+//│ set tmp3 = unknownSum¹(40, 2);
+//│ return [tmp, tmp1, tmp2, tmp3]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 1.5, "x42", 42]
+
+
 // The old resolver must select the same builtin symbols as the new resolver.
 #lang(useNewResolution: false)
 

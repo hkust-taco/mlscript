@@ -1,7 +1,7 @@
 # Extraction plan for PR #575
 
-Status: consolidated plan approved on 2026-10-30. E01–E03 and B01 are merged
-upstream; nine thematic extraction batches remain, followed by the reduced #575.
+Status: consolidated plan approved on 2026-10-30. E01–E03 and B01–B02 are merged
+upstream; eight thematic extraction batches remain, followed by the reduced #575.
 
 ## Scope and baseline
 
@@ -49,24 +49,27 @@ change. Do not split a theme into tiny PRs solely to reduce its snapshot diff.
 | E02 | [#595](https://github.com/hkust-taco/mlscript/pull/595) | Corrected the defensive EOF error payload and stack result. Current parsing consumes all tokens, so existing tests do not exercise that fallback and goldens are unchanged. |
 | E03 | [#596](https://github.com/hkust-taco/mlscript/pull/596) | Fixed the fish formatter's list tail and added empty/singleton/multiple-item regressions. Both nonempty cases failed before the fix. |
 | B01 (E04–E07) | [#597](https://github.com/hkust-taco/mlscript/pull/597) | Corrected library and fixture declarations; override-fixture annotations stay with B05 and E36 remains deferred. |
+| B02 (E09, E16) | [#598](https://github.com/hkust-taco/mlscript/pull/598) | Resolved builtin results and abortive expression flow, with independent JS/Wasm regressions. |
 
-Each extraction passed `hkmc2AllTests/test` with 1,155 tests. The latest verified
-upstream snapshot is `2ece680d5`, containing all four merges. Those upstream
+E01–E03 and B01 each passed `hkmc2AllTests/test` with 1,155 tests; B02 passed
+with 1,157. The latest verified upstream snapshot is `1ad11c54c`, containing
+all five merges. Those upstream
 commits have been integrated back into this branch, including E03's added
 formatter regressions. Integration commit `23aa31d66`
 passed `hkmc2AllTests/test` with 1,165 tests. The B01 merge preserves the
-implementation and test tree exactly; only this plan changes.
+implementation and test tree exactly; only this plan changes. The B02
+integration adds its upstream regressions and passed all 1,167 tests.
 
 ## Consolidated batches
 
-**Nine batches remain, plus the final shape-erasure PR.** E03 and B01 are merged,
+**Eight batches remain, plus the final shape-erasure PR.** E03 and B01–B02 are merged,
 including E04's nofib aliases in the library/fixture batch. There is no
 additional tiny nofib PR. The E-numbers remain stable references to individual
 work items; B01–B10 below define the actual PR boundaries.
 
 B01 is merged as #597 (extracted locally as `771a80b9f` on
-`codex/pr575-fixture-corrections`). B02 is extracted locally as `aef07eead` on
-`codex/pr575-expression-results` and awaits merge. B03–B10 are not yet extracted.
+`codex/pr575-fixture-corrections`). B02 is merged as #598 (extracted locally
+as `aef07eead` on `codex/pr575-expression-results`). B03–B10 are not yet extracted.
 A prerequisite names a batch that must be merged first.
 
 | Batch | Review theme | Work items | Prerequisites | Scope |
@@ -112,8 +115,8 @@ The existing narrowing-cast tests retain their purpose through `Num` operands
 and a fractional SCC result. Shape-based symbol-slot erasure remains in #575.
 
 B02 places the builtin-approximation paragraph under Standard Operators in
-doc/reference.md. When integrating it, remove the duplicate paragraph from
-the residual Runtime Representations section while retaining the other text.
+doc/reference.md. Its integration removes the duplicate from the residual
+Runtime Representations section while retaining the other text.
 
 ## What independently mergeable means
 
@@ -450,7 +453,7 @@ The earlier #592 reconciliation used an unchanged-tree merge only after exact
 tree equality was established. Do not apply that strategy blindly to future
 extractions, whose patches may have been adapted to a smaller base.
 
-The four completed upstream merges are synchronized back into this branch,
+The five completed upstream merges are synchronized back into this branch,
 including E03's formatter regressions. Proceed by batch; do not create further
 branches for individual E-numbers.
 

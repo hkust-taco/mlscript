@@ -565,6 +565,11 @@ and  or  not        // boolean keywords
 
 Note: `==` is a deep structural equality (compares arrays and class fields recursively), while `===` is JavaScript strict equality.
 
+The builtin operators are not yet declared as overloaded functions: their results are approximated
+from their operands. For example, the sum of two `Int`s is an `Int` (an overflow to `Infinity` is
+not detected), and `+` with a `Str` operand is a `Str`. On the Wasm backend, which implements the
+operators with dynamically typed runtime functions, their results are treated as unknown values.
+
 ### Comma-Operators
 
 Prefix a comma before an operator to apply it to the entire LHS:
@@ -1685,11 +1690,6 @@ them), and its results must fit the inherited result. A mismatch is a compilatio
 subclasses in other compilation units must implement an open member with its representations,
 an open member whose parameters receive values from outside the compilation unit must annotate
 the types of its parameters and result.
-
-The builtin operators are not yet declared as overloaded functions: their results are approximated
-from their operands. For example, the sum of two `Int`s is an `Int` (an overflow to `Infinity` is
-not detected), and `+` with a `Str` operand is a `Str`. On the Wasm backend, which implements the
-operators with dynamically typed runtime functions, their results are treated as unknown values.
 
 `undefined` denotes an unspecified value of any representation. It can be stored in or passed to
 any slot, but reading it back is undefined behavior: the JavaScript backend produces JavaScript
