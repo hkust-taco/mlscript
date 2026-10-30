@@ -912,9 +912,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def assignNamedField(prefix: Path, name: Tree.Ident, value: Path, rest: Block,
       keyAccess: Opt[Term])(target: Opt[DefinitionSymbol[?]])(using LoweringCtx): Block =
     target match
-      // Plain class parameters use private fields to retain their values for methods.
-      // Explicit `val` parameters expose fields whose writes follow the object's mutability.
-      case S(sym: TermSymbol) if sym.isPrivate && (sym.k is syntax.ImmutVal) && sym.decl.exists(_.isInstanceOf[Param]) =>
+      case S(sym: TermSymbol) if sym.isPrivate && (sym.k is syntax.ImmutVal) =>
         cannotAssign(sym, sym, name.toLoc)
       case _ => namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
         case DynSelect(_, key, kind) => AssignDynField(prefix, key, kind, value, rest)
