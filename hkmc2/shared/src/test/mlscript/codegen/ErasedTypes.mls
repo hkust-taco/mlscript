@@ -183,7 +183,9 @@ fun main =
 // than a cast. The definition is still lowered - uncast - so the blocks after it keep compiling.
 :ge
 fun test(x: Int): Int = "oops"
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	fun test(x: Int): Int = "oops"
+//│ ╙──      	                        ^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define test⁰ as fun test¹(x: Int⁰): Int⁰ { return "oops" }; end
 
@@ -350,7 +352,9 @@ fun f(o: Object, i: Int, x: Int32) =
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Object' at an unrelated type 'Int32'
 //│ ║  l.+8: 	  useInt32(o)
 //│ ╙──      	           ^
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.+8: 	  useInt32(o)
+//│ ╙──      	  ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useObj⁰ as fun useObj¹(o: Object⁰): ? {
 //│   return o
@@ -596,8 +600,12 @@ fun intoMixed(n: Int32) = mixed(n)
 :ge
 fun outOfMixed(x: Int32 | Str): Str = x
 fun mixedIntoObject(x: Int32 | Str): Object = x
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	fun outOfMixed(x: Int32 | Str): Str = x
+//│ ╙──      	                                      ^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+2: 	fun mixedIntoObject(x: Int32 | Str): Object = x
+//│ ╙──      	                                              ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define outOfMixed⁰ as fun outOfMixed¹(x: ‹incompatible(Int32, Str⁰)›): Str⁰ {
 //│   return x
@@ -1062,7 +1070,9 @@ fun viaUntyped(x, y): Str = @untyped addInts(x, y)
 // Without the annotation the same body is rejected - the guard rail doing its job.
 :ge
 fun viaTyped(x, y): Str = addInts(x, y)
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+1: 	fun viaTyped(x, y): Str = addInts(x, y)
+//│ ╙──      	                          ^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define viaTyped⁰ as fun viaTyped¹(x: ?, y: ?): Str⁰ { return globalThis⁰.addInts⁰(x, y) }; end
 
@@ -1146,7 +1156,9 @@ fun refUntyped(x: Int): Str = @untyped x
 
 :ge
 fun refTyped(x: Int): Str = x
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+1: 	fun refTyped(x: Int): Str = x
+//│ ╙──      	                            ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define refTyped⁰ as fun refTyped¹(x: Int⁰): Str⁰ { return x }; end
 
@@ -1164,7 +1176,9 @@ fun selUntyped(): Int = @untyped Plain.f
 
 :ge
 fun selTyped(): Int = Plain.f
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Int'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Int'
+//│ ║  l.+1: 	fun selTyped(): Int = Plain.f
+//│ ╙──      	                      ^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define selTyped⁰ as fun selTyped¹(): Int⁰ { return Plain².f⁷ }; end
 

@@ -363,7 +363,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     *
     * Emits an error if the two types have incompatible type hierarchies.
     */
-  private def castConserve(expr: Expr, target: ValType)(using Raise): Expr =
+  private def castConserve(expr: Expr, target: ValType, loc: Opt[Loc])(using Raise): Expr =
     require(expr.resultTypes.size == 1, "expected single-result expression for cast")
     expr.resultType -> target match
       case (S(ty), _) if ty.isSubtypeOf(target) => expr
@@ -373,13 +373,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         errExpr(
           Ls(msg"Cannot cast a Wasm value of type `${
               ty.fold("(none)")(_.toWat.mkString())
-            }` to `${target.toWat.mkString()}` in a different type hierarchy" -> N),
+            }` to `${target.toWat.mkString()}` in a different type hierarchy" -> loc),
           extraInfo = S(expr.toWat.mkString()),
         )
 
   /** Compiles `r` and narrows it to `target`, the declared type of the slot it flows into. */
   private def castToValType(r: codegen.Result, target: ValType)(using FunctionCtx, Raise, SessionExportCtx): Expr =
-    castConserve(result(r), target)
+    castConserve(result(r), target, r.toLoc)
 
   /** Supply every physical parameter, including null for omitted optional arguments, and cast
     * supplied values to the callee's signature. Source arity checking happens before parameter
@@ -391,7 +391,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       source = Diagnostic.Source.Compilation))
     declParams.zipWithIndex.map: (p, index) =>
       wasmArgs.lift(index) match
-        case S(arg) => castConserve(arg, p.valtype)
+        case S(arg) => castConserve(arg, p.valtype, loc)
         case N => p.valtype match
           case rt: RefType if rt.nullable => ref.`null`(rt.heapType)
           case _ => errExpr(Ls(msg"Missing argument cannot be represented as null by the WebAssembly backend." -> loc))
@@ -1599,6 +1599,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       castConserve(
         global.get(globalIdx, ctx.getGlobalType_!(globalIdx).globalType.valType),
         l.localType,
+        loc,
       )
     case N =>
       errExpr(
@@ -1719,7 +1720,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         // The slot carries the *base* declaration's result type, but the resolved method's declared result may be
         // overridden to be narrower. Restore the slot's result value to the resolved method's declared type here -
         // the checked cast ensures that a value that doesn't conform will trap at runtime.
-        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym))
+        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym), qual.toLoc)
         Ls(receiverExpr, adaptedCall)
       case N =>
         val funcTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(methodSym).typeIdx)
@@ -1782,6 +1783,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
               nullable = false,
             ),
+            r.toLoc,
           )
 
     case Call(Value.SimpleRef(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
@@ -1960,14 +1962,14 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             case other => lastWords(s"Expected struct type for $selCls, found ${other.toWat.mkString()}")
           val getExpr = struct.get(
             fieldidx,
-            ref = castConserve(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
+            ref = castConserve(qualRes, RefType(ctx.getType_!(selCls), nullable = false), sel.toLoc),
             ty = fieldTy,
           )
           selSym.asTrm.flatMap(_.erasedType).flatMap(_.wasmType) match
-            case S(declared) => castConserve(getExpr, declared)
+            case S(declared) => castConserve(getExpr, declared, sel.toLoc)
             case N => fieldTy match
               case rt: RefType if rt.nullable && rt.heapType != HeapType.Any =>
-                castConserve(getExpr, rt.copy(nullable = false))
+                castConserve(getExpr, rt.copy(nullable = false), sel.toLoc)
               case _ => getExpr
         case N =>
           errExpr(
@@ -2183,13 +2185,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                       })",
                   )
                 val fieldidx = fieldSelect(selCls, fieldSym)
-                val objRef = castConserve(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
+                val objRef = castConserve(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false), lhs.toLoc)
                 val structInfo = ctx.getTypeInfo_!(selCls)
                 val fieldType = structInfo.compType match
                   case st: StructType => classField(selCls, fieldSym).ty
                   case other => lastWords(s"Expected struct type for $selCls, found ${other.toWat.mkString()}")
                 val rhsCasted = fieldType match
-                  case rt: RefType => castConserve(rhsExpr, rt)
+                  case rt: RefType => castConserve(rhsExpr, rt, rhs.toLoc)
                   case _ => rhsExpr
                 struct.set(fieldidx, objRef, rhsCasted)
               case N =>
@@ -2499,7 +2501,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val operand = result(res)
         // Storage and calling conventions may widen a reference (e.g. a singleton's nullable global).
         // Restore the IR value's type at the return boundary so Block.returnType also describes the emitted value.
-        val resWat = res.erasedType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _))
+        val resWat = res.erasedType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _, res.toLoc))
         val returned = resWat.resultType match
           case S(refTy: RefType) =>
             refTy.heapType match
