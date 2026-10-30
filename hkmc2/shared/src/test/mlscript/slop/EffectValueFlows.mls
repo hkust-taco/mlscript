@@ -1,0 +1,32 @@
+:.
+:global
+:js
+:noInline
+:lift
+:deforest
+
+// Effect summaries must stay separate from runtime value producers when fusion
+// recomputes erased slot types. Exercise both function scheme copies and the
+// conservative fallback used for getter effects.
+:expect [42, 1]
+data class EffectValueBox(value: Int)
+private fun emit(f) = f("getter")
+module CountedGetter with
+  mut val calls: Int = 0
+  fun value: Int =
+    emit(print)
+    set calls += 1
+    40
+private fun produce(n: Int): EffectValueBox = EffectValueBox(n + 2)
+private fun consume(box: EffectValueBox): Int =
+  if box is EffectValueBox(value) then value else 0
+val result = consume(produce(CountedGetter.value))
+[result, CountedGetter.calls]
+//│ deforest > >>> fusing >>>
+//│ deforest > EffectValueBox⁰(tmp⁰) ->
+//│ deforest > 	match: box⁰
+//│ deforest > 	fields: box⁰.value⁰
+//│ deforest > <<< fusing <<<
+//│ > getter
+//│ = [42, 1]
+//│ result = 42

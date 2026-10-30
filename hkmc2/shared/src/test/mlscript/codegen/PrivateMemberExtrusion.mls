@@ -144,7 +144,7 @@ module Pair with
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ const sum$accessorSymbol = globalThis.Symbol("sum");
 //│ const scaled$accessorSymbol = globalThis.Symbol("scaled");
-//│ let Pair1, tmp3, tmp4, p, inlinedVal, p1, inlinedVal1;
+//│ let Pair1, tmp3, tmp4, inlinedVal, inlinedVal1;
 //│ Pair1 = function Pair(fst, snd) {
 //│   return globalThis.Object.freeze(new Pair.class(fst, snd));
 //│ };
@@ -162,11 +162,11 @@ module Pair with
 //│   static #scale(n, k) {
 //│     return n * k
 //│   }
-//│   static sumOf(p2) {
-//│     return p2.#sum
+//│   static sumOf(p) {
+//│     return p.#sum
 //│   }
-//│   static scaledOf(p2, k) {
-//│     return p2.#scaled(k)
+//│   static scaledOf(p, k) {
+//│     return p.#scaled(k)
 //│   }
 //│   #sum;
 //│   get [sum$accessorSymbol]() { return this.#sum; }
@@ -181,11 +181,9 @@ module Pair with
 //│   static [definitionMetadata] = ["class", "Pair", ["fst", "snd"]];
 //│ });
 //│ tmp3 = Pair1(1, 2);
-//│ p = tmp3 /* as! Pair */;
-//│ inlinedVal = p[sum$accessorSymbol];
+//│ inlinedVal = tmp3[sum$accessorSymbol];
 //│ tmp4 = Pair1(1, 2);
-//│ p1 = tmp4 /* as! Pair */;
-//│ inlinedVal1 = p1[scaled$accessorSymbol](10);
+//│ inlinedVal1 = tmp4[scaled$accessorSymbol](10);
 //│ return globalThis.Object.freeze([ inlinedVal, inlinedVal1 ])
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [3, 30]

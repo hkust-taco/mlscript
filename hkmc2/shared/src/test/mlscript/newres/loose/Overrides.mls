@@ -33,7 +33,7 @@ private fun readOther(x) = x.foo()
 //│ let tmp, tmp1, tmp2, tmp3;
 //│ @private
 //│ define readOther⁰ as fun readOther¹(x) {
-//│   return x.foo﹖()
+//│   return (x.foo﹖() as! Int⁰)
 //│ };
 //│ define Other⁰ as class Other¹ {
 //│   method foo¹ = fun foo²() {

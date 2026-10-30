@@ -13,8 +13,8 @@ topA + topB
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
-//│   (global $topA (export "topA") (mut (ref null any)) (ref.null any))
-//│   (global $topB (export "topB") (mut (ref null any)) (ref.null any))
+//│   (global $topA (export "topA") (mut (ref null i31)) (ref.null i31))
+//│   (global $topB (export "topB") (mut (ref null i31)) (ref.null i31))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (block (result (ref null any))
 //│       (global.set $topA
@@ -44,11 +44,11 @@ chain(1)
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $chain (func (param $x (ref null any)) (result (ref null any))))
+//│   (type $chain (func (param $x (ref null i31)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
-//│   (func $chain (export "chain") (type $chain) (param $x (ref null any)) (result (ref null any))
+//│   (func $chain (export "chain") (type $chain) (param $x (ref null i31)) (result (ref null any))
 //│     (local $a (ref null any))
 //│     (local $b (ref null any))
 //│     (block (result (ref null any))
@@ -145,15 +145,15 @@ new Foo(42, 1).Foo#a
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $a (mut (ref null any))) (field $b (mut (ref null any))))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $a (mut (ref null i31))) (field $b (mut (ref null i31))))))
 //│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Foo_init (func (param $this (ref $Foo)) (param $a (ref null any)) (param $b (ref null any)) (result (ref $Foo))))
-//│   (type $Foo_ctor (func (param $a (ref null any)) (param $b (ref null any)) (result (ref $Foo))))
-//│   (type $entry (func (result (ref null any))))
+//│   (type $Foo_init (func (param $this (ref $Foo)) (param $a (ref null i31)) (param $b (ref null i31)) (result (ref $Foo))))
+//│   (type $Foo_ctor (func (param $a (ref null i31)) (param $b (ref null i31)) (result (ref $Foo))))
+//│   (type $entry (func (result (ref null i31))))
 //│   (global $Foo_typeinfo (export "Foo_typeinfo") (ref $Foo_typeinfo) (struct.new $Foo_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $a (ref null any)) (param $b (ref null any)) (result (ref $Foo))
+//│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $a (ref null i31)) (param $b (ref null i31)) (result (ref $Foo))
 //│     (block (result (ref $Foo))
 //│       (struct.set $Foo $a
 //│         (local.get $this)
@@ -164,14 +164,14 @@ new Foo(42, 1).Foo#a
 //│       (return
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this)))))
-//│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $a (ref null any)) (param $b (ref null any)) (result (ref $Foo))
+//│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $a (ref null i31)) (param $b (ref null i31)) (result (ref $Foo))
 //│     (local $this (ref $Foo))
 //│     (block (result (ref $Foo))
 //│       (local.set $this
 //│         (struct.new $Foo
 //│           (global.get $Foo_typeinfo)
-//│           (ref.null any)
-//│           (ref.null any)))
+//│           (ref.null i31)
+//│           (ref.null i31)))
 //│       (drop
 //│         (call $Foo_init
 //│           (local.get $this)
@@ -179,9 +179,9 @@ new Foo(42, 1).Foo#a
 //│           (local.get $b)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $tmp (ref $Foo))
-//│     (block (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
+//│     (local $tmp (ref null $Foo))
+//│     (block (result (ref null i31))
 //│       (local.set $tmp
 //│         (call $Foo_ctor
 //│           (ref.i31
@@ -190,7 +190,8 @@ new Foo(42, 1).Foo#a
 //│             (i32.const 1))))
 //│       (return
 //│         (struct.get $Foo $a
-//│           (local.get $tmp)))))
+//│           (ref.cast (ref $Foo)
+//│             (local.get $tmp))))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
 //│   (elem $entry declare func $entry))

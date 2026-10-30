@@ -197,9 +197,9 @@ fun readLocal(value) =
 readLocal(90) + readLocal(100)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let inlinedVal, inlinedVal1, owner, owner1;
-//│ set owner1 = new ReceiverOwner⁰((90 as! Int⁰));
+//│ set owner1 = new ReceiverOwner⁰(90);
 //│ set inlinedVal = +⁰(owner1.value⁰, owner1.Middle⁰.extra⁰);
-//│ set owner = new ReceiverOwner⁰((100 as! Int⁰));
+//│ set owner = new ReceiverOwner⁰(100);
 //│ set inlinedVal1 = +⁰(owner.value⁰, owner.Middle⁰.extra⁰);
 //│ return +⁰(inlinedVal, inlinedVal1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

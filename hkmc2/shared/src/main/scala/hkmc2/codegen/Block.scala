@@ -374,7 +374,8 @@ end Block
 object Block:
   /** The union of the types returned from `block`, whose canonical form is their least upper bound.
     *
-    * `N` means there are no returns; an untyped return contributes `Unknown` instead. Nested function, lambda,
+    * `N` means there are no constraining returns: `undefined` can inhabit any representation. Other untyped
+    * returns contribute `Unknown` instead. Nested function, lambda,
     * and class bodies have their own returns and are excluded. All other returns count, including unreachable
     * ones, since backends such as Wasm still validate their types.
     *
@@ -385,7 +386,7 @@ object Block:
     val types = Buffer.empty[ErasedValueType]
     val collector = new BlockTraverserShallow:
       override def applyBlock(b: Block): Unit = b match
-        case Return(res) => types += res.erasedType_!
+        case Return(res) => if !res.isUndefined then types += res.erasedType_!
         case _ => super.applyBlock(b)
     collector.applyBlock(block)
     Option.when(types.nonEmpty)(ErasedType.Union.mk(types))
@@ -1252,8 +1253,20 @@ sealed abstract class Result extends Located:
       clsSym.map(sym => ErasedType.ValueLike(rsc = S(false), sym))
     // * A tuple literal is typed as `Array` at runtime.
     case Tuple(_, _) => S(ErasedType.Array)
-    case _: Lambda => S(ErasedType.Function(rsc = S(false)))
+    // * Avoid a redundant cast around a function literal: in JavaScript that
+    // * would also prevent assignment from supplying the function's inferred name.
+    case _: Lambda => S(ErasedType.Function(S(false)))
     case _ => N
+
+  /** `undefined` is an unspecified value of any representation, including unboxed primitives.
+    * Casts retain the expected representation but do not constrain the underlying unspecified value.
+    * Reading back an `undefined` stored in a slot is undefined behavior (see Runtime Representations in
+    * `doc/reference.md`), so a backend may materialize it as any value of the slot's representation.
+    */
+  def isUndefined: Bool = this match
+    case Value.Lit(Tree.UnitLit(false)) => true
+    case Cast(value, _, _) => value.isUndefined
+    case _ => false
 
   /** The value type, using the top type when no representation is known. */
   lazy val erasedType_! : ErasedValueType = erasedType.getOrElse(ErasedType.Unknown)
@@ -1267,22 +1280,36 @@ sealed abstract class Result extends Located:
     * [[Config]] of their own.
     */
   def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
+    coerceToOr[this.type | Cast](expected, loc)(identity): (actual, declared) =>
+      raise:
+        ErrorReport(msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'" -> loc :: Nil,
+          source = Diagnostic.Source.Compilation)
+      this
+
+  // `coerceTo` continuing with `coerced`, except that a value of a type unrelated to `expected` goes to `unrelated`
+  def coerceToOr[R](expected: ErasedValueType, loc: Opt[Loc])(coerced: (this.type | Cast) => R)
+      (unrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => R)(using Ctx, State, Raise, Config): R =
     val actual = erasedType_!.canonicalize
     val declared = expected.canonicalize
-    ErasedType.needsCast(actual, declared) match
-      case S(false) => this
-      case S(true) => Cast(this, expected, config.checkCasts)(loc)
+    val cast =
+      if isUndefined && !declared.isInstanceOf[ErasedType.Incompatible] then S(true)
+      else ErasedType.needsCast(actual, declared)
+    cast match
+      case S(false) => coerced(this)
+      case S(true) =>
+        coerced(Cast(this, expected, config.checkCasts && !isUndefined)(loc))
       case N =>
         // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
         def membersOf(et: CanonicalErasedValueType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
           case ErasedType.Incompatible(l, r) => S(l -> r)
           case _ => N
-        val message = membersOf(actual).orElse(membersOf(declared)) match
-          case S((l, r)) => msg"Types '${l.describe}' and '${r.describe}' have no common representation"
-          case N => msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'"
-        raise:
-          ErrorReport(message -> loc :: Nil, source = Diagnostic.Source.Compilation)
-        this
+        membersOf(actual).orElse(membersOf(declared)) match
+          case S((l, r)) =>
+            raise:
+              ErrorReport(msg"Types '${l.describe}' and '${r.describe}' have no common representation" -> loc :: Nil,
+                source = Diagnostic.Source.Compilation)
+            coerced(this)
+          case N => unrelated(actual, declared)
 
 /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
  * regardless of whether the check for effect is inserted or not.
@@ -1397,7 +1424,8 @@ case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: I
   *
   * Invariants:
   * - `value` is not a `Cast`.
-  * - `target` must be a proper subtype of `value`'s erased type.
+  * - `target` must be a proper subtype of `value`'s erased type, unless `value` is `undefined`, whose
+  *   representation is supplied by the cast.
   */
 case class Cast private(value: Result, target: ErasedValueType, check: Bool)(val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): Cast = if loc == toLoc then this else copy()(loc)
@@ -1405,7 +1433,8 @@ case class Cast private(value: Result, target: ErasedValueType, check: Bool)(val
 object Cast:
   /** Builds a cast while collapsing a nested cast.
     *
-    * This node is malformed if the target type is not a proper subtype of the value's erased type.
+    * Except for `undefined`, this node is malformed if the target type is not a proper subtype of the value's
+    * erased type.
     *
     * Collapsing `Cast(Cast(v, T), U)` to `Cast(v, U)` drops the inner test. The `T`-typed intermediate goes with it,
     * so no value is left in a wrongly-typed slot. However, an unchecked failure *can be lost* - if a cast is

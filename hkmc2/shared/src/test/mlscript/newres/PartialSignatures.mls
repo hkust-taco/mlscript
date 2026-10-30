@@ -131,6 +131,12 @@ read(new Child)
 //│ ╟── The shape of this value is unknown.
 //│ ║  l.+7: 	private fun read(x: Base) = x.item().value
 //│ ╙──      	                            ^^^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'item' produces values represented as 'Other', which the member it overrides cannot produce: its results are represented as 'Item'
+//│ ║  l.+6: 	  override fun item() = Other(2)
+//│ ║        	               ^^^^
+//│ ╟── The overridden member 'item' is defined here
+//│ ║  l.+4: 	  open fun item() = Item(1)
+//│ ╙──      	           ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A separate polymorphic signature retains binders for explicit type application.

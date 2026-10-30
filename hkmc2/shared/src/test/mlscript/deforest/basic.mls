@@ -23,7 +23,7 @@ let lsit = [2, 1] in
 //│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(lsit⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lsit, useless, a, b, element1$, element0$, tmp, $lsit_tup2, $lsit_rest, tup2_0, tup2_1;
+//│ let useless, a, b, element1$, element0$, tmp, $lsit_tup2, $lsit_rest, lsit, tup2_0, tup2_1;
 //│ @affine(1) @private
 //│ define $lsit_tup2 as fun $lsit_tup2⁰(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
@@ -72,7 +72,7 @@ f(p())
 //│ deforest > 	fields: arg$X$0$⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, f$x_X, f$x_rest, f$arg$X$0$_Y, f$arg$X$0$_rest, p$p, f$f;
+//│ let f$x_X, f$x_rest, f$arg$X$0$_Y, f$arg$X$0$_rest, p$p, tmp, f$f;
 //│ @private
 //│ define p$p as fun p$p⁰() {
 //│   let tmp1, Y_b, X_a;
@@ -83,8 +83,8 @@ f(p())
 //│ };
 //│ @private
 //│ define f$f as fun f$f⁰(x) {
-//│   let y, arg$X$0$, arg$Y$0$;
-//│   return x(arg$X$0$, arg$Y$0$, y)
+//│   let y, arg$Y$0$, arg$X$0$;
+//│   return (x(arg$X$0$, arg$Y$0$, y) as! O⁰)
 //│ };
 //│ @affine(1) @private
 //│ define f$x_X as fun f$x_X⁰(X_a)(fv_arg$X$0$, fv_arg$Y$0$, fv_y) {
@@ -216,7 +216,7 @@ if [1, 2] is
 //│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(scrut⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let scrut, a, b, element1$, element0$, $scrut_tup2, $scrut_rest, tup2_0, tup2_1;
+//│ let a, b, element1$, element0$, $scrut_tup2, $scrut_rest, scrut, tup2_0, tup2_1;
 //│ @affine(1) @private
 //│ define $scrut_tup2 as fun $scrut_tup2⁰(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;

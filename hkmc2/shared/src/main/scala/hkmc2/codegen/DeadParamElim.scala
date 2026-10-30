@@ -90,6 +90,7 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver, traceLogge
         case c: ConsFun => (c, idx),
       (consFun, idx) => consFun.srcs.collect:
         case p: ProdFun => (p, idx),
+      _ => Nil,
       prodRoots,
       consRoots,
     )
@@ -133,6 +134,7 @@ object DeadParamElim:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
+    eCtx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program = cfg.flowBasedOpt.fold(p):
     FlowAnalysisBasedRewrite.rewriteWith(p, _, eta = false, dce = false)

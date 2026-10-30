@@ -7,7 +7,7 @@
 // * which must include the arguments of its rest parameter.
 
 abstract class Effect with
-  fun perform(arg): Any
+  fun perform(arg: Any): Any
 
 :expect [2, 1, [2, 3]]
 handle h = Effect with

@@ -10,9 +10,10 @@ fun nonsense(xs) = if xs is
 //│ let nonsense;
 //│ nonsense = function nonsense(xs) {
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 0) {
-//│     let tmp;
+//│     let inlinedVal, tmp;
 //│     tmp = xs.length - 0;
-//│     return runtime.safeCall(xs.slice(0, tmp))
+//│     inlinedVal = runtime.safeCall(xs.slice(0, tmp));
+//│     return inlinedVal /* as! Str */
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│ };
@@ -38,7 +39,7 @@ fun lead_and_last(xs) = if xs is
 //│     tmp2 = xs.length - 1;
 //│     runtime.safeCall(xs.slice(1, tmp2));
 //│     lastElement1$ = runtime.Tuple.get(xs, -1);
-//│     return element0$ + lastElement1$
+//│     return element0$ + lastElement1$ /* as! Int */
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   }
@@ -78,7 +79,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│       element1$ = runtime.Tuple.get(inlinedVal, 1);
 //│       tmp6 = element0$ + element0$1;
 //│       tmp7 = tmp6 + element1$;
-//│       return tmp7 + lastElement1$
+//│       return tmp7 + lastElement1$ /* as! Int */
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {

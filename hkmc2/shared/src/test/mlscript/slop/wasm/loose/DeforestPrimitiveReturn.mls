@@ -32,7 +32,7 @@ wasm.ref.i31(f(wasm.i32.const(42)))
 //│ };
 //│ @private
 //│ define f⁰ as fun f¹(n: Int32): Int32 {
-//│   let b: ?;
+//│   let b: Function⁰;
 //│   set b = $b_Empty⁰();
 //│   return b(n)
 //│ };

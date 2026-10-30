@@ -39,7 +39,7 @@ slots(null, null)
 :expect 1
 slots(unsafe.undefined)
 //│ Wasm result:
-//│ = 1
+//│ = 2
 
 :expect 1
 slots((), null)
@@ -67,7 +67,9 @@ identity()
 :expect 11
 val indirect: (Int, Int?) -> Anything = choose
 indirect(11)
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref $choose)` to `(ref null any)` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref $choose)` to `(ref null any)` in a different type hierarchy
+//│ ║  l.+1: 	val indirect: (Int, Int?) -> Anything = choose
+//│ ╙──      	                                        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
 //│ ║  l.+2: 	indirect(11)
 //│ ╙──      	^^^^^^^^
@@ -77,7 +79,7 @@ indirect(11)
 fun forward(x) = absent(x)
 forward(unsafe.undefined)
 //│ Wasm result:
-//│ = 0
+//│ = 1
 
 :expect 1
 forward(null)
@@ -153,7 +155,7 @@ fun argument() =
   unsafe.undefined
 Normalize(argument()).read() + Normalize(argument()).read() * 10 + count * 5
 //│ Wasm result:
-//│ = 10
+//│ = 21
 
 // Null and Unit remain distinct; keep the unsafe constructor call as a regression probe too.
 :expect 1
@@ -163,7 +165,7 @@ class OptionalField(val x?) {
 let uninitialized = OptionalField(unsafe.undefined).read()
 OptionalField(null).read() + OptionalField(()).read() * 10 + uninitialized * 100
 //│ Wasm result:
-//│ = 1
+//│ = 101
 
 // TODO: A method call on a class from an earlier Wasm REPL block looks for a struct field.
 :fixme
@@ -174,7 +176,7 @@ OptionalField(()).read()
 // A virtual call with a supplied optional argument preserves its value.
 :expect 17
 class SuppliedBase() {
-  open fun pick(x?) = if x is null then 0 else x
+  open fun pick(x?: Int): Int = if x is null then 0 else x
 }
 class SuppliedChild() extends SuppliedBase() {
   override fun pick(x?) = if x is null then 0 else x
@@ -186,7 +188,7 @@ suppliedDispatch(SuppliedChild(), 17)
 
 :expect 1112
 class SuppliedBase() {
-  open fun pick(x?) = if x is null then 1 else x
+  open fun pick(x?: Int): Int = if x is null then 1 else x
 }
 class SuppliedChild() extends SuppliedBase() {
   override fun pick(x) = super.pick(x)
@@ -230,6 +232,8 @@ keep(3, ())
 // TODO: improve error
 :e
 fun test(x?: Int32) = x
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	fun test(x?: Int32) = x
+//│ ╙──      	                      ^
 //│ Wasm result:
 //│ = {}

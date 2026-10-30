@@ -52,3 +52,189 @@ module Right with
 //│ ╟── candidate: type alias
 //│ ║  l.+9: 	    type Number = Str
 //│ ╙──      	    ^^^^^^^^^^^
+
+
+// Stored function values retain a value representation through bindings and record fields.
+:noInline
+:expect 42
+private fun increment(value) = value + 1
+let stored = increment
+let record = {apply: stored}
+record.apply(41)
+//│ = 42
+//│ record = {apply: fun increment}
+//│ stored = fun increment
+
+
+// A class value in a binding is a constructor object, distinct from an instance.
+:noInline
+:expect 42
+private class Box(val value)
+let factory = Box
+factory(42).value
+//│ = 42
+//│ factory = fun Box { class: class Box }
+
+
+// Preserve curried physical parameter lists and partially applied function values.
+:noInline
+:expect 42
+private fun add(x)(y) = x + y
+let plusOne = add(1)
+plusOne(41)
+//│ = 42
+//│ plusOne = fun
+
+
+// Nested functions' returns do not contribute to the enclosing function's result.
+:noInline
+:expect 42
+private fun enclosing() =
+  fun inner() = return "inner"
+  inner()
+  return 42
+enclosing()
+//│ = 42
+
+
+// Contextual declared shapes must retain their generic call-site substitutions.
+:noInline
+:expect [42, "text"]
+private fun identity[A](value: A): A = value
+private fun forward(value) = identity(value)
+[forward(42), forward("text")]
+//│ = [42, "text"]
+
+
+// Unknown from an exported input absorbs concrete references without changing their ABI.
+:noInline
+:expect [42, "text"]
+fun exported(value) = value
+[exported(42), exported("text")]
+//│ = [42, "text"]
+
+
+// Named tuple fields have source slots even though resolution synthesizes their declarations.
+:noInline
+:expect 42
+let tuple = [answer: 42]
+tuple.0.answer
+//│ = 42
+//│ tuple = [{answer: 42}]
+
+
+// Pattern bindings and lambda inputs also receive the observed runtime shapes.
+:noInline
+:expect 42
+let apply = (value) => if value is [head, ..tail] then head else 0
+apply([42, 1])
+//│ = 42
+//│ apply = fun
+
+
+// A later worksheet block can add shapes without rewriting a compiled declaration's slot.
+:noInline
+fun reused(value) = value
+reused(42)
+//│ = 42
+
+:expect "next"
+reused("next")
+//│ = "next"
+
+
+// Imported source definitions keep the representation assigned by their defining unit.
+:expect 36
+import "../../mlscript-compile/NamedFieldLibrary.mjs"
+NamedFieldLibrary.select(NamedFieldLibrary.fields.0)
+//│ = 36
+
+
+// Private constructor functions retain the inferred representation of their arguments and fields.
+:noInline
+:sir
+:siret
+:expect 42
+private class PrivateBox(val value) with
+  private constructor
+private module PrivateBox with
+  fun make(value) = PrivateBox(value)
+PrivateBox.make(42).value
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: PrivateBox⁰;
+//│ @private
+//│ define PrivateBox¹ as class PrivateBox⁰ {
+//│   val value⁰: Int⁰;
+//│   constructor PrivateBox²(value: Int⁰) {
+//│     define value⁰ as val value¹: Int⁰ = value;
+//│     end
+//│   }
+//│ }
+//│ module PrivateBox³ {
+//│   method make⁰ = fun make¹(value1: Int⁰): PrivateBox⁰ {
+//│     return PrivateBox²(value1)
+//│   }
+//│ };
+//│ set tmp = PrivateBox³.make¹(42);
+//│ return tmp.value¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+#lang(0.3.x)
+
+
+// Placeholder parameters stay untyped until erasure observes their arguments.
+:noInline
+:sir
+:siret
+:expect 42
+let increment = => _ + 1
+increment(41)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let increment;
+//│ @private
+//│ define increment as fun increment⁰(_0: Int⁰): ? {
+//│   return +⁰(_0, 1)
+//│ };
+//│ set increment¹ = increment⁰;
+//│ return increment¹(41)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+//│ increment = fun increment
+
+
+// A trailing argument's implicit lambda receives its caller's inferred parameter type.
+:noInline
+:sir
+:siret
+:expect 42
+private fun apply(value, f) = f(value)
+apply(41) \ _ + 1
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private
+//│ define apply⁰ as fun apply¹(value: Int⁰, f: Function⁰): Int⁰ {
+//│   return (f(value) as! Int⁰)
+//│ };
+//│ define lambda as fun lambda⁰(_0: Int⁰): ? { return +⁰(_0, 1) };
+//│ return apply¹(41, lambda⁰)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// Overrides are checked against the representations of the members they override, on every target.
+:ge
+private class Base() with
+  open fun get() = new Base()
+private class Derived() extends Base() with
+  override fun get() = "str"
+private fun produce(b) = b.get()
+produce(Derived())
+//│ ╔══[COMPILATION ERROR] Overriding member 'get' produces values represented as 'Str', which the member it overrides cannot produce: its results are represented as 'Base'
+//│ ║  l.+4: 	  override fun get() = "str"
+//│ ║        	               ^^^
+//│ ╟── The overridden member 'get' is defined here
+//│ ║  l.+2: 	  open fun get() = new Base()
+//│ ╙──      	           ^^^
+//│ = "str"

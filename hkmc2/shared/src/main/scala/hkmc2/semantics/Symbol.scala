@@ -249,11 +249,14 @@ sealed abstract class LocalVarSymbol(name: Str)(using State) extends FlowSymbol(
   def mut: Bool
   def subst(using s: SymbolSubst): LocalVarSymbol
 
-/** A temporary variable introduced by lowering.
+/** A temporary variable introduced by elaboration or lowering.
   *
-  * An initially unknown `erasedType` may be refined once: a temp holding a branching term's result is named before
-  * those branches are lowered, so `Normalization` populates it with the join of their representations once they have
-  * all been seen. `Normalization.joinTempType` is its only write site.
+  * An initially unknown `erasedType` may be refined once, in two places:
+  * - A temp holding a branching term's result is named before those branches are lowered, so
+  *   `Normalization.joinTempType` populates it with the join of their representations once they have all
+  *   been seen.
+  * - A temp that elaboration declares with `LetDecl` (see `ErasureDeclarations`) is a slot like a source
+  *   variable: `Erasure` populates it with the representation inferred from the values flowing into it.
   */
 class TempSymbol(val trm: Opt[Term], initErasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State)
     extends LocalVarSymbol(dbgNme):
@@ -542,7 +545,7 @@ class ClassCtorSymbol(
   override val k: syntax.Fun.type,
   override val owner: Opt[InnerSymbol],
   val associatedCls: ClassSymbol,
-)(using State) extends TermSymbol(k, owner, associatedCls.id, N):
+)(using State) extends TermSymbol(k, owner, associatedCls.id):
   // Constructor functions occupy the class binding, not a private method slot.
   // MemberStorage determines that binding's runtime privacy from the class and module.
   // Their source accessibility is checked through the class and its constructor modifiers.

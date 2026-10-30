@@ -14,7 +14,7 @@ generated().next()
 :sir
 :siret
 @annotations.generator
-fun counted(): Int =
+fun counted() =
   yield 0
   1
 let iterator = counted()

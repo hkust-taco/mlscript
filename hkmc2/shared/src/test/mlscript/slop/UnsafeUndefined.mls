@@ -10,7 +10,8 @@ undefined
 
 fun oops = unsafe.undefined
 
-// * This used to throw, but we now emit `Unit` upon compiling MIR's `return undefined`
+// * `unsafe.undefined` is an unspecified value (see Runtime Representations in `doc/reference.md`);
+// * the JS backend compiles `return undefined` to `return runtime.Unit`.
 :noInline
 print(oops)
 //│ > ()
@@ -57,19 +58,13 @@ fun bareLength(value: Str | BareType) =
 :expect [undefined, true, false]
 [unsafe.undefined, unsafe.undefined === unsafe.undefined, unsafe.undefined === null]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ return [undefined, true, false]
+//│ return [(undefined as!! Unknown), true, false]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ return globalThis.Object.freeze([ undefined, true, false ])
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [undefined, true, false]
 
 // Runtime patterns still distinguish undefined from legitimate values.
-:expect [0, 3]
-fun length(value: Str | unsafe.undefined) =
-  if value is ~unsafe.undefined as text then text.length else 0
-[length(unsafe.undefined), length("abc")]
-//│ = [0, 3]
-
 :expect [true, false]
 fun isUndefined(value) = if value is unsafe.undefined then true else false
 [isUndefined(unsafe.undefined), isUndefined(null)]

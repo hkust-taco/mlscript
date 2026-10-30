@@ -320,6 +320,15 @@ new Opened().f(1, 2)
 //│ ╟── Function 'f' expected 1 argument, but got 2
 //│ ║  l.+2: 	  open fun f(x) =
 //│ ╙──      	  ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Open member 'f' is exposed to other compilation units, which can override it; annotate the types of its parameters and result
+//│ ║  l.+2: 	  open fun f(x) =
+//│ ║        	           ^
+//│ ╟── Parameter 'x' has no type annotation
+//│ ║  l.+2: 	  open fun f(x) =
+//│ ║        	             ^
+//│ ╟── Its result has no type annotation
+//│ ║  l.+2: 	  open fun f(x) =
+//│ ╙──      	           ^
 //│ = 3
 
 // Each call cites the unknown parameter's declaration without repeating the callee span.

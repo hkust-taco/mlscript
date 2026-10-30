@@ -69,7 +69,9 @@ extension (et: ErasedValueType)
             val structSym =
               if tpeSym eq State.unitSymbol then S(State.unitBlockMemberSymbol)
               else tpeSym.asBlkMember
-            structSym.flatMap(ctx.getType).map(RefType(_, nullable = false))
+            // Source slots also admit undefined, represented by a null reference.
+            // Known receivers and newly allocated instances can still use non-null references.
+            structSym.flatMap(ctx.getType).map(RefType(_, nullable = true))
         case ErasedType.Primitive(prim) => S(prim.wasmType)
         case _ => N
 
@@ -363,7 +365,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     *
     * Emits an error if the two types have incompatible type hierarchies.
     */
-  private def castConserve(expr: Expr, target: ValType)(using Raise): Expr =
+  private def castConserve(expr: Expr, target: ValType, loc: Opt[Loc])(using Raise): Expr =
     require(expr.resultTypes.size == 1, "expected single-result expression for cast")
     expr.resultType -> target match
       case (S(ty), _) if ty.isSubtypeOf(target) => expr
@@ -373,25 +375,33 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         errExpr(
           Ls(msg"Cannot cast a Wasm value of type `${
               ty.fold("(none)")(_.toWat.mkString())
-            }` to `${target.toWat.mkString()}` in a different type hierarchy" -> N),
+            }` to `${target.toWat.mkString()}` in a different type hierarchy" -> loc),
           extraInfo = S(expr.toWat.mkString()),
         )
 
   /** Compiles `r` and narrows it to `target`, the declared type of the slot it flows into. */
   private def castToValType(r: codegen.Result, target: ValType)(using FunctionCtx, Raise, SessionExportCtx): Expr =
-    castConserve(result(r), target)
+    // Undefined supplies no value to convert: construct an unspecified value directly in the
+    // destination representation. This also covers placeholders introduced after lowering by DPE.
+    if r.isUndefined then target.zeroValue.getOrElse(lastWords("Undefined requires a defaultable value type"))
+    else castConserve(result(r), target, r.toLoc)
 
-  /** Supply every physical parameter, including null for omitted optional arguments, and cast
-    * supplied values to the callee's signature. Source arity checking happens before parameter
-    * flags are erased; a missing slot must still have a representation that can carry null. */
-  private def adaptCallArgs(wasmArgs: Seq[Expr], funcTypeInfo: TypeInfo, loc: Opt[Loc])(using Raise): Seq[Expr] =
+  /** Compile arguments in their physical parameter representations, including undefined placeholders,
+    * and supply null for omitted optional arguments. A method's already-evaluated receiver occupies
+    * the first parameter. Source arity checking happens before parameter flags are erased; a missing
+    * slot must still have a representation that can carry null.
+    */
+  private def adaptCallArgs(args: Seq[Arg], funcTypeInfo: TypeInfo, receiver: Opt[Expr], loc: Opt[Loc])
+      (using FunctionCtx, Raise, SessionExportCtx): Seq[Expr] =
     val declParams = funcTypeInfo.asFunctionType_!.sigType.params
-    if wasmArgs.size > declParams.size then raise(ErrorReport(
+    val prefix = receiver.map(castConserve(_, declParams.head.valtype, loc)).toSeq
+    val suppliedParams = declParams.drop(prefix.size)
+    if args.size > suppliedParams.size then raise(ErrorReport(
       msg"More arguments were supplied than the WebAssembly call supports." -> loc :: Nil,
       source = Diagnostic.Source.Compilation))
-    declParams.zipWithIndex.map: (p, index) =>
-      wasmArgs.lift(index) match
-        case S(arg) => castConserve(arg, p.valtype)
+    prefix ++ suppliedParams.zipWithIndex.map: (p, index) =>
+      args.lift(index) match
+        case S(arg) => argument(arg, S(p.valtype))
         case N => p.valtype match
           case rt: RefType if rt.nullable => ref.`null`(rt.heapType)
           case _ => errExpr(Ls(msg"Missing argument cannot be represented as null by the WebAssembly backend." -> loc))
@@ -934,11 +944,12 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       exportName: Opt[Str],
       funcTy: TypeIdx,
   )(using Raise): Unit =
+    val signature = ctx.getTypeInfo_!(funcTy).asFunctionType_!.sigType
     ctx.addFunc(FuncInfo(
       sym,
       wrapId = if sym.asClsOrMod.isDefined then (N -> S("ctor")) else (S(defn.sym.nme) -> N),
       typeUse = TypeUse(funcTy),
-      params = params.map(_.resolvedParam),
+      params = params.zip(signature.params).map { case ((symbol, id), param) => symbol -> WasmParam(id, param.valtype) },
       resultTypes = resultTypes,
       locals = Seq.empty,
       body = ref.`null`(ctx.getType_!(defn.sym)),
@@ -1404,6 +1415,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     genFuncBody(
       classCtorParamList(clsLikeDefn) :: Nil,
       thisSym = S(clsLikeDefn.isym),
+      resultType = N,
       paramTypes = S(Seq(RefType(ctx.getType_!(clsLikeDefn.sym), nullable = false))),
     ):
       val thisVar = funcCtx.lookupLocal_!(clsLikeDefn.isym, N)
@@ -1450,11 +1462,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               case S(parentSym) =>
                 val parentTypeRef = ctx.getType_!(parentSym)
                 val parentInitFunc = initFuncSym(parentSym)
-                val parentFuncType = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(parentInitFunc).typeIdx)
+                val parentInitType = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(parentInitFunc).typeIdx)
                 val superCall = call(
                   funcidx = ctx.getFunc_!(parentInitFunc),
-                  operands = adaptCallArgs(local.get(thisVar, RefType(parentTypeRef, nullable = false)) +:
-                    args.map(argument), parentFuncType, clsLikeDefn.sym.toLoc),
+                  operands = adaptCallArgs(args, parentInitType,
+                    S(local.get(thisVar, RefType(parentTypeRef, nullable = false))), clsLikeDefn.sym.toLoc),
                   returnTypes = Seq(Result(RefType(parentTypeRef, nullable = false))),
                 )
                 prefixWat :+ drop(superCall)
@@ -1599,6 +1611,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       castConserve(
         global.get(globalIdx, ctx.getGlobalType_!(globalIdx).globalType.valType),
         l.localType,
+        loc,
       )
     case N =>
       errExpr(
@@ -1633,13 +1646,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         ),
       )
 
-  def argument(a: Arg)(using FunctionCtx, Raise, SessionExportCtx): Expr =
+  private def argument(a: Arg, expected: Opt[ValType])(using FunctionCtx, Raise, SessionExportCtx): Expr =
     if a.spread.nonEmpty then
       errExpr(
         Ls(msg"WatBackend::argument for spread expression not implemented yet" -> a.value.toLoc),
         extraInfo = S(a.showAsTree),
       )
-    else result(a.value)
+    else expected.fold(result(a.value))(castToValType(a.value, _))
 
   def operand(a: Arg)(using FunctionCtx, Raise, SessionExportCtx): Expr =
     if a.spread.nonEmpty then die else subexpression(a.value)
@@ -1709,7 +1722,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           ownerTypeInfoRef,
           RefType(virtualMethodTypeIdx, nullable = true),
         )
-        val operands = adaptCallArgs(receiverRef +: args.map(argument), ctx.getTypeInfo_!(virtualMethodTypeIdx), qual.toLoc)
+        val operands = adaptCallArgs(args, ctx.getTypeInfo_!(virtualMethodTypeIdx), S(receiverRef), qual.toLoc)
         val virtualCall = call_ref(
           target = methodRef,
           operands = operands,
@@ -1719,11 +1732,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         // The slot carries the *base* declaration's result type, but the resolved method's declared result may be
         // overridden to be narrower. Restore the slot's result value to the resolved method's declared type here -
         // the checked cast ensures that a value that doesn't conform will trap at runtime.
-        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym))
+        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym), N)
         Ls(receiverExpr, adaptedCall)
       case N =>
         val funcTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(methodSym).typeIdx)
-        val operands = adaptCallArgs(result(qual) +: args.map(argument), funcTypeInfo, qual.toLoc)
+        val operands = adaptCallArgs(args, funcTypeInfo, S(result(qual)), qual.toLoc)
         Ls(call(
           funcidx = ctx.getFunc_!(methodSym),
           operands = operands,
@@ -1782,6 +1795,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
               nullable = false,
             ),
+            r.toLoc,
           )
 
     case Call(Value.SimpleRef(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
@@ -1866,7 +1880,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               case S(_) =>
                 call(
                   funcidx = getIntrinsic(intrName),
-                  operands = args.map(argument),
+                  operands = args.map(argument(_, N)),
                   returnTypes = Seq(Result(RefType.anyref)),
                 )
         case N =>
@@ -1880,7 +1894,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     extraInfo = S(fun.toString),
                   )
               val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(baseFuncIdx).typeIdx)
-              val wasmArgs = adaptCallArgs(args.map(argument), baseTypeInfo, c.toLoc)
+              val wasmArgs = adaptCallArgs(args, baseTypeInfo, N, c.toLoc)
 
               call(
                 funcidx = baseFuncIdx,
@@ -1907,7 +1921,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     ),
                   )
               val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
-              val wasmArgs = adaptCallArgs(args.map(argument), baseTypeInfo, c.toLoc)
+              val wasmArgs = adaptCallArgs(args, baseTypeInfo, N, c.toLoc)
 
               call_ref(
                 target = base,
@@ -1960,14 +1974,14 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             case other => lastWords(s"Expected struct type for $selCls, found ${other.toWat.mkString()}")
           val getExpr = struct.get(
             fieldidx,
-            ref = castConserve(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
+            ref = castConserve(qualRes, RefType(ctx.getType_!(selCls), nullable = false), sel.toLoc),
             ty = fieldTy,
           )
           selSym.asTrm.flatMap(_.erasedType).flatMap(_.wasmType) match
-            case S(declared) => castConserve(getExpr, declared)
+            case S(declared) => castConserve(getExpr, declared, sel.toLoc)
             case N => fieldTy match
               case rt: RefType if rt.nullable && rt.heapType != HeapType.Any =>
-                castConserve(getExpr, rt.copy(nullable = false))
+                castConserve(getExpr, rt.copy(nullable = false), sel.toLoc)
               case _ => getExpr
         case N =>
           errExpr(
@@ -2051,11 +2065,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         lastWords(s"Missing type definition for class constructor ${ctorClsBlkSym.toString}")
       val ctorClsTypeIdx = ctx.getType(ctorClsBlkSym).getOrElse:
         lastWords(s"Missing class definition for class ${ctorClsBlkSym.toString}")
-      val ctorArgs = adaptCallArgs(as.map(argument), ctorTypeIdx, r.toLoc)
+      val ctorArgs = adaptCallArgs(as, ctorTypeIdx, N, r.toLoc)
       call(funcidx = ctorFuncIdx, operands = ctorArgs, Seq(Result(RefType(ctorClsTypeIdx, nullable = false))))
 
     case Tuple(mut, elems) =>
-      val tupleValues = elems.map(argument)
+      val tupleValues = elems.map(argument(_, N))
       array.new_fixed(tupleArrayType(mut), tupleValues)
 
     case Cast(value, target, _) =>
@@ -2100,7 +2114,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       arg: Arg,
   )(using Ctx, FunctionCtx, Raise, SessionExportCtx): IntrinsicArg =
     def compileOperand: (Expr, Opt[Str]) =
-      val operand = argument(arg)
+      val operand =
+        if arg.value.isUndefined then argument(arg, declared.flatMap(_.wasmType))
+        else argument(arg, N)
       operand -> declared
         .filter(_.wasmType.exists(expected => !operand.resultType.exists(_.isSubtypeOf(expected))))
         .map(_.describe)
@@ -2183,13 +2199,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                       })",
                   )
                 val fieldidx = fieldSelect(selCls, fieldSym)
-                val objRef = castConserve(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
+                val objRef = castConserve(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false), lhs.toLoc)
                 val structInfo = ctx.getTypeInfo_!(selCls)
                 val fieldType = structInfo.compType match
                   case st: StructType => classField(selCls, fieldSym).ty
                   case other => lastWords(s"Expected struct type for $selCls, found ${other.toWat.mkString()}")
                 val rhsCasted = fieldType match
-                  case rt: RefType => castConserve(rhsExpr, rt)
+                  case rt: RefType => castConserve(rhsExpr, rt, rhs.toLoc)
                   case _ => rhsExpr
                 struct.set(fieldidx, objRef, rhsCasted)
               case N =>
@@ -2297,8 +2313,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                   // Nested functions are not predeclared in `program` - declare them now.
                   // Note that predeclaring functions twice causes an orphaned type to be duplicated in the module.
                   if ctx.getFunc(sym).isEmpty then predeclareTopLevelFun(sym, ps)
-                  val (bodyWat, fnCtx) = setupFunction(N, ps, result)
                   val predeclared = ctx.getFuncInfo_!(sym)
+                  val (bodyWat, fnCtx) = setupFunction(N, ps, result, resultType = predeclared.resultTypes.headOption.map(_.valtype))
 
                   val funcInfo = FuncInfo(
                     sym,
@@ -2370,7 +2386,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                       lastWords(s"Expected struct type for ${clsLikeDefn.sym}, found ${other.toWat.mkString()}")
 
                   val initFuncRef = initFuncSym(clsLikeDefn.sym)
-                  val (ctorCode, ctorFnCtx) = genFuncBody(ctorParamList :: Nil, thisSym = N):
+                  val (ctorCode, ctorFnCtx) = genFuncBody(ctorParamList :: Nil, thisSym = N, resultType = N):
                     val thisVar = bindCtorThis(clsLikeDefn.isym)
                     val initCall = call(
                       funcidx = ctx.getFunc_!(initFuncRef),
@@ -2415,11 +2431,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                       ps: LoweredParamList,
                       bod: Block,
                   ): Unit =
-                    val paramTypes = ctx.getVirtualTable(clsLikeDefn.sym).flatMap: vt =>
-                      vt.slotOf.get(sym).map: slot =>
-                        RefType(ctx.getType_!(vt.slots(slot).owner), nullable = false) +: vt.slots(slot).paramTypes
-                    val (bodyWat, fnCtx) = setupFunction(S(clsLikeDefn.isym), ps, bod, paramTypes = paramTypes)
                     val predeclaredMethod = ctx.getFuncInfo_!(sym)
+                    // Reuse the physical signature, including a non-null receiver and any inherited virtual slot.
+                    val paramTypes = S(predeclaredMethod.getSignatureType.params.map(_.valtype))
+                    val (bodyWat, fnCtx) = setupFunction(S(clsLikeDefn.isym), ps, bod,
+                      resultType = predeclaredMethod.resultTypes.headOption.map(_.valtype), paramTypes = paramTypes)
                     val funcInfo = FuncInfo(
                       sym,
                       wrapId = S(clsLikeDefn.sym.nme) -> N,
@@ -2496,10 +2512,14 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         end match
 
       case Return(res) =>
-        val operand = result(res)
-        // Storage and calling conventions may widen a reference (e.g. a singleton's nullable global).
-        // Restore the IR value's type at the return boundary so Block.returnType also describes the emitted value.
-        val resWat = res.erasedType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _))
+        // Use the physical result slot for every return, including optimizer-generated undefined.
+        // Overrides share the introducing method's slot, which can be narrower than their own
+        // inferred reference result. Primitive mismatches remain errors, not conversions.
+        val target = funcCtx.resultType.orElse(res.erasedType.flatMap(_.wasmType))
+        val resWat =
+          if res.isUndefined then target.fold(result(res))(castToValType(res, _))
+          else result(res)
+        def coerced = target.fold(resWat)(castConserve(resWat, _, res.toLoc))
         val returned = resWat.resultType match
           case S(refTy: RefType) =>
             refTy.heapType match
@@ -2507,8 +2527,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                 errExpr(Ls(msg"Returning function instances is not supported" -> res.toLoc))
               case typeidx: TypeIdx if ctx.getTypeInfo_!(typeidx).compType.isInstanceOf[FunctionType] =>
                 errExpr(Ls(msg"Returning function instances is not supported" -> res.toLoc))
-              case _ => resWat
-          case _ => resWat
+              case _ => coerced
+          case _ => coerced
 
         Vector(`return`(S(returned)))
 
@@ -2893,18 +2913,22 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
       // Compile the entry function under a dedicated local scope so that any temp locals introduced
       // during codegen (e.g., via `local.tee`) are declared in the entry function.
-      val (entryBody, entryFnCtx) = genFuncBody(Nil, thisSym = N):
+      val entryType = ctx.elabCtx.givenIn(Block.returnType(p.main).map(_.canonicalize))
+      val entrySlot = entryType.flatMap(_.wasmType)
+      val (entryBody, entryFnCtx) = genFuncBody(Nil, thisSym = N, resultType = entrySlot):
         normalizeValueExprs(block(p.main), p.main.isAbortive).mergeAsBlock.getOrElse(nop)
 
       val entrySym = BlockMemberSymbol("entry", Nil)
+      // Body generation can register synthetic types such as Unit on first use.
+      val entryResultType = entryType.flatMap(_.wasmType).getOrElse(RefType.anyref)
 
-      val (entryFnExpr, entryResultType) = ctx.elabCtx.givenIn:
-        Block.returnType(p.main).map(_.canonicalize) match
+      val entryFnExpr = ctx.elabCtx.givenIn:
+        entryType match
           case S(ErasedType.Incompatible(lhs, rhs)) =>
             errExpr(Ls(msg"Wasm entry function has incompatible result types `${lhs.describe}` and `${rhs.describe}`" -> N),
-              extraInfo = S(entryBody.toWat.mkString())) -> RefType.anyref
+              extraInfo = S(entryBody.toWat.mkString()))
           // A block with no returns places no constraint on the REPL's single-result signature.
-          case ty => entryBody -> ty.flatMap(_.wasmType).getOrElse(RefType.anyref)
+          case _ => entryBody
       val entryResultTypes = Seq(Result(entryResultType))
 
       val entryFnTy = ctx.addType(TypeInfo(
@@ -2982,9 +3006,10 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       thisSym: Opt[InnerSymbol],
       params: LoweredParamList,
       body: Block,
+      resultType: Opt[ValType],
       paramTypes: Opt[Seq[ValType]] = N,
   )(using Raise, SessionExportCtx): (Expr, FunctionCtx) =
-    genFuncBody(params :: Nil, thisSym = thisSym, paramTypes = paramTypes):
+    genFuncBody(params :: Nil, thisSym = thisSym, resultType = resultType, paramTypes = paramTypes):
       block(body).mergeAsBlock.getOrElse(nop)
 
 end WatBuilder

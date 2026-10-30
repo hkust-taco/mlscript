@@ -11,7 +11,7 @@
 //│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Unit_init (func (param $this (ref $Unit)) (result (ref $Unit))))
 //│   (type $Unit_ctor (func (result (ref $Unit))))
-//│   (type $entry (func (result (ref $Unit))))
+//│   (type $entry (func (result (ref null $Unit))))
 //│   (type $start (func))
 //│   (global $Unit_typeinfo (export "Unit_typeinfo") (ref $Unit_typeinfo) (struct.new $Unit_typeinfo
 //│     (i32.const 1)
@@ -35,10 +35,9 @@
 //│   (func $start (type $start)
 //│     (global.set $Unit$inst
 //│       (call $Unit_Unit)))
-//│   (func $entry (export "entry") (type $entry) (result (ref $Unit))
+//│   (func $entry (export "entry") (type $entry) (result (ref null $Unit))
 //│     (return
-//│       (ref.cast (ref $Unit)
-//│         (global.get $Unit$inst))))
+//│       (global.get $Unit$inst)))
 //│   (elem $Unit_init declare func $Unit_init)
 //│   (elem $Unit_Unit declare func $Unit_Unit)
 //│   (elem $start declare func $start)
@@ -86,7 +85,7 @@ x
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $entry (func (result (ref null i31))))
-//│   (global $x (export "x") (mut (ref null any)) (ref.null any))
+//│   (global $x (export "x") (mut (ref null i31)) (ref.null i31))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (block (result (ref null i31))
 //│       (global.set $x

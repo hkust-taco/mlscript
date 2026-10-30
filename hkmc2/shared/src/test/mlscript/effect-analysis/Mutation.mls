@@ -27,11 +27,12 @@ fun mutate_local() =
 
 
 // * Reassigning a local copy does not mutate the input binding.
+// The inferred Int slot requires a checked cast at initialization, which is unsafe for eta expansion.
 fun mutate_alias(value) =
   let local = value
   set local = 42
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function mutate_alias⁰#0 @ <root> -> Pure
+//│ flow-analysis > function mutate_alias⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 

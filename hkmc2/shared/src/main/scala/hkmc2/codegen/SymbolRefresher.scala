@@ -16,12 +16,10 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     mapping(k) = v
   
   private def refreshTempSymbol(s: TempSymbol) =
-    assertUpdate(s, new TempSymbol(s.trm, s.erasedType, s.nme))
+    assertUpdate(s, SymbolRefresher.copyTempSymbol(s, s.erasedType))
 
   private def refreshVarSymbol(s: VarSymbol) =
-    val ns = new VarSymbol(s.id, s.erasedType, mut = s.mut)
-    ns.sourceAliases = s.sourceAliases
-    assertUpdate(s, ns)
+    assertUpdate(s, SymbolRefresher.copyVarSymbol(s, s.erasedType))
   
   private def refreshBlockMemberSymbol(s: BlockMemberSymbol) =
     val ns = new BlockMemberSymbol(s.nme, s.trees, s.nameIsMeaningful)
@@ -52,9 +50,11 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     assertUpdate(s, new PatternSymbol(s.id, s.params, s.body))
 
   private def refreshClassCtorSymbol(s: ClassCtorSymbol) =
-    assertUpdate(s, new ClassCtorSymbol(s.k,
+    val ns = new ClassCtorSymbol(s.k,
       s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
-      mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol]))
+      mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol])
+    ns.initializeErasure(s.erasure)
+    assertUpdate(s, ns)
 
   def refreshParamList(pl: LoweredParamList) =
     for
@@ -135,6 +135,15 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     applyBlock(ctor)
 
 object SymbolRefresher:
+  
+  // fresh copies that keep a symbol's source names but hold the given erased type
+  def copyVarSymbol(s: VarSymbol, erasedType: Opt[ErasedValueType])(using State): VarSymbol =
+    val ns = new VarSymbol(s.id, erasedType, mut = s.mut)
+    ns.sourceAliases = s.sourceAliases
+    ns
+  
+  def copyTempSymbol(s: TempSymbol, erasedType: Opt[ErasedValueType])(using State): TempSymbol =
+    new TempSymbol(s.trm, erasedType, s.nme)
   
   def copyTermSymbol(s: TermSymbol, owner: Opt[InnerSymbol], erasure: Opt[ErasedValueType | ErasedCallableSignature])(using State): TermSymbol =
     val ns = new TermSymbol(s.k, owner, s.id, erasure)

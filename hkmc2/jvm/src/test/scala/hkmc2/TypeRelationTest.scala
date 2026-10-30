@@ -214,8 +214,8 @@ class TypeRelationTest extends AnyFunSuite:
       value.typeInterpretation = S(element.resolution)
       val next = Term.UnitVal()
       next.typeInterpretation = S(resolution)
-      val valueField = RcdField.signature(Term.Lit(Tree.StrLit("value")), value)
-      val nextField = RcdField.signature(Term.Lit(Tree.StrLit("next")), next)
+      val valueField = RcdField.signature(Term.Lit(Tree.StrLit("value")), value, false, N)
+      val nextField = RcdField.signature(Term.Lit(Tree.StrLit("next")), next, false, N)
       val source: Term.Rcd = Term.Rcd(false, List(valueField, nextField))
       resolution.publish(TypeShape.Record(source, List(valueField -> element.resolution, nextField -> resolution)))
       DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
@@ -574,7 +574,7 @@ class TypeRelationTest extends AnyFunSuite:
     val left = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     val right = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     def recursive(resolution: TypeResolution): Unit =
-      val next = RcdField.signature(Term.Lit(Tree.StrLit("next")), Term.UnitVal())
+      val next = RcdField.signature(Term.Lit(Tree.StrLit("next")), Term.UnitVal(), false, N)
       val source: Term.Rcd = Term.Rcd(false, List(next))
       resolution.publish(TypeShape.Record(source, List(next -> resolution)))
     recursive(left)
@@ -584,10 +584,10 @@ class TypeRelationTest extends AnyFunSuite:
       case (value: RecordTypeShape) :: Nil => value
       case _ => fail("Expected one merged record")
     val first = record(intersection)
-    val next = first.fields("next")
+    val next = first.fields("next").output
     val saturated = record(next)
     val counts = (left.inferenceHost.listeners.size, right.inferenceHost.listeners.size)
     (1 to 1000).foreach: _ =>
-      assert(record(saturated.fields("next")) eq saturated)
+      assert(record(saturated.fields("next").output) eq saturated)
     assert((left.inferenceHost.listeners.size, right.inferenceHost.listeners.size) == counts)
     assert(h.state.allocatedTypeInstanceCount == 0)

@@ -132,7 +132,9 @@ val fv = Foo(1)
 //│   fun get⁰::get¹ ‹flow:get⁰› = fv¹^get¹.a⁴, val fv¹::fv² ‹flow:fv⁰› = Foo⁴^fv²(1)‹app⁵›
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp;
-//│ define get⁰ as fun get¹() { return fv⁰.a⁰ };
+//│ define get⁰ as fun get¹() {
+//│   return (fv⁰.a⁰ as! Int⁰)
+//│ };
 //│ set tmp = Foo⁰(1);
 //│ define fv¹ as val fv⁰ = tmp;
 //│ end

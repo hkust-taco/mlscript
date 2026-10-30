@@ -78,7 +78,9 @@ new Abstract
 
 :sir
 :expect 10
-class SuperBase { open fun foo(x) = x + 1 }
+// Open members of public classes are exposed to other compilation units, which can override them,
+// so their parameter and result types are annotated.
+class SuperBase { open fun foo(x: Int): Int = x + 1 }
 class SuperChild extends SuperBase { override fun foo(x) = super.foo(x + 1) * 2 }
 new SuperChild().foo(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -145,7 +147,7 @@ class GenericChild[A](x: A) extends GenericBase[A](x) {
 :fixme
 :expect 8
 class ForwardChild extends ForwardBase { override fun f(x) = super.f(x) + 1 }
-class ForwardBase { open fun f(x) = x + 2 }
+class ForwardBase { open fun f(x: Int): Int = x + 2 }
 new ForwardChild().f(5)
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 //│ ═══[RUNTIME ERROR] Expected: '8', got: 'undefined'
@@ -434,7 +436,7 @@ let changingParent = makeParent(4)
 class SavedParent extends changingParent { override fun f() = super.f() }
 set changingParent = makeParent(9)
 new SavedParent().f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3794'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3887'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 4
@@ -449,7 +451,7 @@ let changingHolder = Holder(5)
 class SavedNestedParent extends changingHolder.Parent { override fun f() = super.f() }
 set changingHolder = Holder(11)
 new SavedNestedParent().f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3794'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:3887'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 5

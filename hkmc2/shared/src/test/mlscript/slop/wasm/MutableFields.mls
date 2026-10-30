@@ -1,0 +1,304 @@
+:.
+#lang(strictResolution: true)
+#lang(eagerResolution: true)
+open wasm { i32 }
+open i32 { const }
+//│ Wasm result:
+//│ = {}
+
+
+// A mutable field without a declared type takes the representation of its initializer and of the
+// values assigned to it. Here, all of them are unboxed `Int32`s, so the field stores an `i32`:
+// storing them in a field of the unknown representation would require boxing them, which is an error.
+:noInline
+:expect 42
+private class Cell(mut val value)
+private fun assign() =
+  let cell = Cell(const(1))
+  set cell.value = const(42)
+  cell.value
+assign()
+//│ Wasm result:
+//│ = 42
+
+// Compound assignments are assignments too. On Wasm, the builtin operators are dynamically typed
+// runtime functions, so their results have the unknown representation.
+:ge
+private class Counter(mut val count)
+private fun increment() =
+  let counter = Counter(const(1))
+  set counter.count += 1
+  counter.count
+increment()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+4: 	  set counter.count += 1
+//│ ╙──      	      ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+5: 	  counter.count
+//│ ╙──      	  ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class Counter(mut val count)
+//│ ╙──      	                              ^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Unknown`
+
+// Assigning a value of an unrelated representation is rejected where the field is assigned and read.
+:ge
+private class Mixed(mut val value)
+private fun mix() =
+  let mixed = Mixed(const(1))
+  set mixed.value = "hello"
+  mixed.value
+mix()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+4: 	  set mixed.value = "hello"
+//│ ╙──      	      ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+5: 	  mixed.value
+//│ ╙──      	  ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	private class Mixed(mut val value)
+//│ ╙──      	                            ^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Str`
+
+// Assignments in methods, through `this` or through the field's name, reach the field too.
+:noInline
+:expect 43
+private class Box with
+  mut val value = const(1)
+  fun put(v) = set this.value = v
+  fun reset() = set value = const(0)
+private fun putInBox() =
+  let box = new Box
+  box.reset()
+  box.put(const(43))
+  box.value
+putInBox()
+//│ Wasm result:
+//│ = 43
+
+// An assignment reaches the fields of every class its receiver can be an instance of, including
+// inherited fields, whatever the class through which the receiver is passed.
+:noInline
+:expect 44
+private class Base(mut val value)
+private class Derived(x) extends Base(x)
+private fun setBase(base) = set base.value = const(44)
+private fun inherit() =
+  let derived = Derived(const(1))
+  setBase(derived)
+  derived.value
+inherit()
+//│ Wasm result:
+//│ = 44
+
+// Assignments through class projections reach the projected field.
+:noInline
+:expect 45
+private class Projected(mut val value)
+private fun project() =
+  let projected = Projected(const(1))
+  set projected.Projected#value = const(45)
+  projected.Projected#value
+project()
+//│ Wasm result:
+//│ = 45
+
+
+// Assignments reach the field whatever the receiver's interface: here, a type annotation...
+:ge
+private class Typed(mut val value)
+private fun setTyped(cell: Typed) = set cell.value = "hello"
+private fun typed() = Typed(const(1)).value
+typed()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+2: 	private fun setTyped(cell: Typed) = set cell.value = "hello"
+//│ ╙──      	                                        ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+3: 	private fun typed() = Typed(const(1)).value
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	private class Typed(mut val value)
+//│ ╙──      	                            ^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Str`
+
+// ...and here, the class's own scope, from a nested definition.
+:ge
+private class Named with
+  mut val value = const(1)
+  fun rename() = set value = "renamed"
+private fun named() = (new Named).value
+named()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+4: 	private fun named() = (new Named).value
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+3: 	  fun rename() = set value = "renamed"
+//│ ╙──      	                     ^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+2: 	  mut val value = const(1)
+//│ ╙──      	                  ^^^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ═══[COMPILATION ERROR] Wasm entry function has incompatible result types `Int32` and `Str`
+
+// ...and here, a wildcard open.
+:ge
+private class Opened(mut val value)
+private fun openAndSet() =
+  let cell = Opened(const(1))
+  open cell
+  set value = "opened"
+openAndSet()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+5: 	  set value = "opened"
+//│ ╙──      	      ^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	private class Opened(mut val value)
+//│ ╙──      	                             ^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+
+
+// Reading a mutable field returns its initializer and the values assigned to it. Here, `get` could
+// otherwise be resolved statically to the method of `First` only, which would be called on the
+// instance of `Second` assigned to the field. Strict resolution rejects the ambiguous selection.
+:ge
+private class First with
+  fun get() = const(1)
+private class Second with
+  fun get() = const(2)
+private class Holder(mut val item)
+private fun replace() =
+  let holder = Holder(new First)
+  set holder.item = new Second
+  holder.item.get()
+replace()
+//│ ╔══[COMPILATION ERROR] This selection of member 'get' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+9: 	  holder.item.get()
+//│ ║        	  ^^^^^^^^^^^^^^^
+//│ ╟── target: function 'get' in class 'Second'
+//│ ║  l.+4: 	  fun get() = const(2)
+//│ ║        	      ^^^
+//│ ╟── target: function 'get' in class 'First'
+//│ ║  l.+2: 	  fun get() = const(1)
+//│ ╙──      	      ^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Declaring the field's type gives the selection a single target, dispatched at run time.
+:noInline
+:expect 2
+private open class Getter with
+  open fun get(): Int32 = const(0)
+private class FirstGetter extends Getter with
+  override fun get() = const(1)
+private class SecondGetter extends Getter with
+  override fun get() = const(2)
+private class GetterHolder(mut val item: Getter)
+private fun replaceGetter() =
+  let holder = GetterHolder(new FirstGetter)
+  set holder.item = new SecondGetter
+  holder.item.get()
+replaceGetter()
+//│ Wasm result:
+//│ = 2
+
+
+// An exposed mutable field can use an unboxed representation when its type is declared.
+:noInline
+:expect 2
+class Declared(mut val value: Int32)
+private fun declared() =
+  let cell = Declared(const(1))
+  set cell.value = const(2)
+  cell.value
+declared()
+//│ Wasm result:
+//│ = 2
+
+// Other compilation units cannot assign to a private field.
+:noInline
+:expect 3
+class Hidden with
+  private mut val value = const(1)
+  fun bump() = set value = const(3)
+  fun get() = value
+private fun hidden() =
+  let cell = new Hidden
+  cell.bump()
+  cell.get()
+hidden()
+//│ Wasm result:
+//│ = 3
+
+
+// Assignments in later blocks use the representation inferred in the field's own block.
+:noInline
+private class Later(mut val value)
+private fun makeLater() = Later(const(1))
+//│ Wasm result:
+//│ = {}
+
+// FIXME: Using a private class in a later Wasm worksheet block fails the cast to its struct at run time,
+// whether its fields are mutable or not (as in `ReadLater` below).
+:fixme
+:noInline
+:expect 46
+private fun assignLater() =
+  let later = makeLater()
+  set later.value = const(46)
+  later.value
+assignLater()
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+:ge
+private fun assignLaterString() =
+  let later = makeLater()
+  set later.value = "hello"
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int32'
+//│ ║  l.+3: 	  set later.value = "hello"
+//│ ╙──      	      ^^^^^^^^^^^
+//│ Wasm result:
+//│ = {}
+
+:noInline
+private class ReadLater(val value)
+private fun makeReadLater() = ReadLater(const(1))
+//│ Wasm result:
+//│ = {}
+
+:fixme
+:noInline
+:expect 1
+makeReadLater().value
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// Through a record type declaring a mutable field, the values it describes can be assigned values of that field's
+// type: here, values of the unknown representation, which an unboxed field cannot hold.
+:ge
+private class Described(mut val value)
+private fun describe(described: {mut value: Any}) = ()
+private fun mutableView() = describe(Described(const(1)))
+mutableView()
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	private class Described(mut val value)
+//│ ╙──      	                                ^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+
+// Fields that a record type does not declare `mut` are assumed not to be assigned through it:
+// type checking will reject such assignments.
+:noInline
+:expect 1
+private class Viewed(mut val value)
+private fun view(viewed: {value: Any}) = ()
+private fun immutableView() =
+  let viewed = Viewed(const(1))
+  view(viewed)
+  viewed.value
+immutableView()
+//│ Wasm result:
+//│ = 1

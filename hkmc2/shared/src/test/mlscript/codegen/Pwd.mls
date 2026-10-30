@@ -12,7 +12,7 @@ in folderName2 === folderName1 || folderName2 === "shared"
 //│ folderName1 = runtime.safeCall(tmp.pop());
 //│ tmp1 = runtime.safeCall(globalThis.process.cwd());
 //│ tmp2 = runtime.safeCall(tmp1.split("/"));
-//│ folderName2 = runtime.safeCall(tmp2.pop());
+//│ folderName2 = runtime.safeCall(tmp2.pop()) /* as! Str */;
 //│ tmp3 = folderName2 === folderName1;
 //│ if (tmp3 === false) { return folderName2 === "shared" }
 //│ return true;

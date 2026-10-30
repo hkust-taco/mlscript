@@ -239,7 +239,7 @@ let lifted = capturedVariadic(30)
 //│   return sum⁰(base, first, ...args)
 //│ };
 //│ define sum as fun sum⁰(base: Int⁰, first: Int⁰, ...args: Array⁰)(extra: Int⁰): Int⁰ {
-//│   let optional: Unknown, middle: ?, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Unknown, tmp6: Unknown, leadingArgs: Array⁰;
+//│   let optional: Unknown, middle: Array⁰, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Unknown, tmp6: Unknown, leadingArgs: Array⁰;
 //│   do runtime⁰.checkVariadicArgs⁰("sum", 2, 1, args);
 //│   set leadingArgs = runtime⁰.Tuple⁰.slice⁰(args, 0, 1);
 //│   match leadingArgs
@@ -249,8 +249,8 @@ let lifted = capturedVariadic(30)
 //│     else
 //│       set optional = null;
 //│       end
-//│   set middle = runtime⁰.Tuple⁰.slice⁰(args, 1, 1);
-//│   set last = args.-1;
+//│   set middle = (runtime⁰.Tuple⁰.slice⁰(args, 1, 1) as! Array⁰);
+//│   set last = (args.-1 as! Int⁰);
 //│   set tmp2 = +⁰(base, first);
 //│   match optional
 //│     Int⁰ =>
@@ -264,7 +264,7 @@ let lifted = capturedVariadic(30)
 //│   set tmp6 = +⁰(tmp5, last);
 //│   return (+⁰(tmp6, extra) as! Int⁰)
 //│ };
-//│ define capturedVariadic⁰ as fun capturedVariadic¹(base: Int⁰): ? {
+//│ define capturedVariadic⁰ as fun capturedVariadic¹(base: Int⁰): Function⁰ {
 //│   return sum$⁰(base)
 //│ };
 //│ set lifted⁰ = capturedVariadic¹(30);

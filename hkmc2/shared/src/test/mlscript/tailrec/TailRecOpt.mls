@@ -50,7 +50,7 @@ f(10000, 20000, 0)
 //│                 set id = 0;
 //│                 continue loopLabel
 //│               else
-//│                 return param2
+//│                 return (param2 as! Int⁰)
 //│             end
 //│         end
 //│       else
@@ -170,7 +170,7 @@ fun g(n) =
 //│             set id = 1;
 //│             continue loopLabel
 //│           else
-//│             return param5
+//│             return (param5 as! Array⁰)
 //│         end
 //│       1 =>
 //│         let tmp, tmp1, tmp2, argList, inlinedVal, tmp3;

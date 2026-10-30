@@ -115,7 +115,7 @@ object ShapeIdentity:
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
         view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode)
       case view: RecordTypeShape => ValueKey.hash(
-        ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.aliases.hashCode)
+        ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.mutable.hashCode, view.aliases.hashCode)
       case view: IntersectionView => view.values.map(_.comparison).hashCode
       case view: SpecializedShape => ValueKey.hash(view.declaration.comparison.hashCode,
         view.arguments.hashCode, view.instances.hashCode)
@@ -144,7 +144,7 @@ object ShapeIdentity:
             a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.wrappedResult == b.wrappedResult
           case _ => false
         case a: RecordTypeShape => that.shape match
-          case b: RecordTypeShape => a.fields == b.fields && a.aliases == b.aliases
+          case b: RecordTypeShape => a.fields == b.fields && a.mutable == b.mutable && a.aliases == b.aliases
           case _ => false
         case a: IntersectionView => that.shape match
           case b: IntersectionView => a.values.map(_.comparison) == b.values.map(_.comparison)
@@ -462,7 +462,7 @@ enum MemberLookup:
   // type arguments; they never authorize reading an implementation's value flow.
   case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term], positive: Bool)
   // A structural field already has its lexical bindings and intersection applied.
-  case Typed(field: RcdField, tpe: DeclaredType, marks: Ls[Marks])
+  case Typed(field: RcdField, tpe: TypeArgument, marks: Ls[Marks])
   // A preceding spread can place several different fields at the same index.
   case Indexed(fields: Ls[TupleShape.Fixed], marks: Ls[Marks])
   case Dynamic(marks: Ls[Marks])
@@ -659,8 +659,12 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   * Field types are deferred references, including for recursive intersections.
   * Source declarations are witnesses for diagnostics and property selection, not
   * part of semantic equality: a merged field may have several such witnesses.
+  * Each field retains its read (output) and write (input) types separately: substitution can
+  * select different bounds for them, even when both were written as the same type variable.
+  * Immutable fields have Nothing as their input. The `mutable` fields (see RcdField) are
+  * part of the interface: values constrained by it admit their inputs as writes.
   */
-final class RecordTypeShape(val fields: Map[MemberKey, DeclaredType], val aliases: Map[Str, Set[SymbolKey]])(
+final class RecordTypeShape(val fields: Map[MemberKey, TypeArgument], val mutable: Set[MemberKey], val aliases: Map[Str, Set[SymbolKey]])(
     val source: Term.Rcd, val declarations: Map[MemberKey, RcdField]) extends CoreHeadShape:
   def describe: Str = "record type"
   override def toString: Str = s"RecordTypeShape($fields)"
@@ -856,6 +860,7 @@ final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams
   */
 enum TypeInterfaceReason:
   case MissingOutput(source: Term)
+  case MissingFieldOutput(source: Term)
   case ContravariantParameter(parameter: TyParam, source: Term)
   case Unrestricted(source: Term)
   case AbstractDeclaration(symbol: TypeAliasSymbol, source: Term)
@@ -864,10 +869,12 @@ enum TypeInterfaceReason:
   case Unavailable(source: Term)
 
   def provenance: ShapeProvenance =
+    def missingOutput(source: Term, subject: Str): Ls[(Message, Opt[Loc])] =
+      (msg"This $subject specifies only an input bound." -> source.toLoc) ::
+        (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
     val result = ShapeProvenance(this match
-      case MissingOutput(source) =>
-        (msg"This type argument specifies only an input bound." -> source.toLoc) ::
-          (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
+      case MissingOutput(source) => missingOutput(source, "type argument")
+      case MissingFieldOutput(source) => missingOutput(source, "field")
       case ContravariantParameter(parameter, source) =>
         (msg"This type argument supplies only an input bound for '${parameter.sym.nme}'." -> source.toLoc) ::
           (msg"Type parameter '${parameter.sym.nme}' is declared contravariant here." -> parameter.sym.toLoc) ::
@@ -1233,8 +1240,10 @@ object TupleShape:
 
 /** A field found by record member lookup. Spreading r into `mut {...r}` reuses
   * its field symbols, but writes can change the copied values even if r is immutable.
-  * Store mutability on this lookup result: the mutable copy's initializer no longer
-  * determines its value shape, while reads from an immutable r can still use it.
+  * Store mutability on this lookup result: reads through the mutable copy also return
+  * the values assigned to the field, while reads from an immutable r can only return its
+  * initializer. Reads through any copy of r of a field declared `mut` (see RcdField) are mutable
+  * lookups too, as a copy reads the value that r holds when it is made.
   */
 final case class RecordMember(field: RcdField, mutable: Bool)
 
@@ -1255,7 +1264,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
       case Nil => Missing
       case RecordShape.Field(field) :: rest => field.key match
         case S(key) =>
-          if key == name then Found(RecordMember(field, source.mut), Nil) else loop(rest)
+          if key == name then Found(RecordMember(field, field.mut || source.mut), Nil) else loop(rest)
         case _ => unknown(field.field)
       case RecordShape.Unknown(shape) :: _ => Unknown(Uncertainty.RecordOverwrite, shape.fromPublicInterface, shape.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)

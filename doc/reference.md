@@ -114,7 +114,7 @@ true        // Boolean literal
 false       // Boolean literal
 ()          // Unit literal (empty tuple/record)
 null        // Null
-undefined   // Undefined
+undefined   // Undefined: an unspecified value (see Runtime Representations)
 ```
 
 **String escape sequences:**
@@ -807,9 +807,14 @@ Modules cannot extend classes. Objects can extend classes.
 
 ```mlscript
 {a: 1, b: 2}          // immutable (frozen) record
-mut {a: 1, b: 2}      // mutable record
+{mut a: 1, b: 2}      // record whose field `a` is mutable
+mut {a: 1, b: 2}      // mutable record: all its fields are mutable
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
+
+Only mutable fields can be assigned. Fields are immutable unless they are declared `mut` or
+their whole record is mutable. A mutable record also makes mutable the fields it copies from
+the records it spreads. A record spreading another one copies the current values of its fields.
 
 ### Field Access
 
@@ -1623,6 +1628,75 @@ candidate and a known candidate with an invalid operation, the known error is
 still reported. Dynamic values also do not remove the need for an unambiguous
 class or type identity in constructor patterns, class projections, or type references.
 
+### Runtime Representations
+
+Compilation chooses a runtime *representation* for each slot that holds values: parameters,
+results, fields, and variables. On the JavaScript backend, all values share one representation,
+so representations mostly matter on the Wasm backend, where an `Int32` is an unboxed `i32` and
+a class instance is a reference to the class's struct. A type annotation determines the
+representation of its slot. With new resolution (`#lang(0.3.x)`), an unannotated slot takes the
+representation of the values that resolution observes flowing into it:
+
+```mlscript
+private fun roundtrip(value) = value  // `value` and the result are represented as `Int32`
+roundtrip(wasm.i32.const(42))
+```
+
+A value is converted to the representation of each slot it flows into. Converting between
+unrelated representations is a compilation error, whether the slot's representation is declared
+or inferred, and so is a slot whose values have no common representation. This also rejects
+programs whose only problem is a misleading annotation, which the JavaScript backend would run:
+
+```mlscript
+class Tree
+class App(callee: Tree, argument: Tree)
+fun mk(t: Tree) = App(t, 1 :: Nil)  // error: a list is used at the representation of `Tree`
+
+let value = wasm.i32.const(1)
+set value = wasm.i64.const(2)       // error: `Int32` and `Int64` have no common representation
+```
+
+Slots that can receive values from outside the compilation unit admit them: the unannotated
+parameters of exposed definitions (see Resolution Interfaces) are inferred with unknown inputs.
+Worksheet blocks are compiled one after the other, so without `#lang(strictResolution: true)`,
+later blocks must use an earlier block's definitions with the representations inferred from that
+block's own uses.
+
+A mutable field holds its initializer and then the values assigned to it, through any receiver that
+can be an instance of its class, so an unannotated mutable field takes the representation of all of
+them. Since other compilation units can assign values to the mutable fields that a compilation unit
+exposes, those must declare their types, as their representations must not depend on the values that
+the compilation unit happens to assign to them:
+
+```mlscript
+private class Cell(mut val value)  // `value` is represented as `Int32`
+private fun reset(cell) = set cell.value = wasm.i32.const(0)
+reset(Cell(wasm.i32.const(1)))
+
+class Counter(mut val count)       // error: `count` is exposed, so its type must be declared
+class Counter(mut val count: Int)  // ok
+```
+
+Mutable record fields (see Record Literals) can be assigned too, but cannot declare their types:
+when exposed, they take the unknown representation. Through a record type declaring a mutable
+field, the values it describes can be assigned values of that field's input type, which their own
+fields therefore admit. Exposing a record also exposes values stored by assignments, including
+through fields copied by a mutable spread: those values can be read by clients just like initializers.
+
+An override shares the representations of the member it overrides. Its unannotated parameters
+take the inherited parameters' representations, its annotated parameters must admit them (and,
+on the Wasm backend, which compiles overrides with the overridden method's signature, match
+them), and its results must fit the inherited result. A mismatch is a compilation error. Since
+subclasses in other compilation units must implement an open member with its representations,
+an open member whose parameters receive values from outside the compilation unit must annotate
+the types of its parameters and result.
+
+`undefined` denotes an unspecified value of any representation. It can be stored in or passed to
+any slot, but reading it back is undefined behavior: the JavaScript backend produces JavaScript
+`undefined` (or `()` for a function returning it), while the Wasm backend may produce any value
+of the slot's representation, such as `0` for an `Int32` or a null reference. Compiler-generated
+placeholders, such as the arguments supplied for eliminated dead parameters, rely on this.
+
 ### Generic Type Parameters
 
 Covariant, contravariant, invariant:
@@ -1689,7 +1763,26 @@ lookup still combines the fields of record intersections.
 
 ```mlscript
 type Point = { x: Num, y: Num }
+type Cursor = { mut position: Int }
+type CursorView = { mut position: in Int out (Int | Str) }
 ```
+
+The values that a record type describes can be assigned values of the input types of its mutable
+fields through it, but not values of its other fields. In `{ mut f: in S out T }`, writes accept `S`
+and reads expose `T`. Omitting `in` gives `Nothing` as the input; omitting `out` gives `Any` as the
+output. `{ mut f: U }` uses `U` in both positions, while `{ f: U }` has only a read interface.
+
+Field outputs are covariant and field inputs are contravariant. Thus `{ mut f: S } <: { mut f: T }`
+contributes both `S <: T` for reads and `T <: S` for writes; `mut { f: S }` follows the same rule.
+The two occurrences are interpreted separately before substituting type arguments:
+for `type Cell[A] = { mut f: A }`, `Cell[in S out T]` exposes
+`{ mut f: in S out T }`, not a single invariant occurrence of either bound. Enclosing negative
+positions reverse these choices, just as for function inputs. Intersecting record interfaces
+intersects their shared fields' output types and unions their input types. Assigning a callback
+through a mutable field constrains it against the input type, independently of the read interface.
+
+New resolution propagates these constraints for type-argument inference and callback checking.
+It does not perform complete structural subtyping checks; InvalML does not yet support record types.
 
 Under new resolution, recursive type aliases must be guarded: every recursive
 cycle must pass through a record, tuple, function arrow, or nominal type.

@@ -548,6 +548,3 @@ class Int31(v: Int) with
   fun zext() = bitand(v, bitnot(shl(1, 31))) as Int
   fun sext() = bitor(v, shl(1, 31)) as Int
 
-fun plus_impl(lhs, rhs) = if lhs is
-  Int31 and rhs is Int31 then lhs + rhs
-  else unreachable

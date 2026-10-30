@@ -163,7 +163,7 @@ fun distribute(x) = if produce(x) is
 // calls expose the iterator or promise. Both explicit and implicit returns matter.
 pattern GeneratorResult = x =>
   data class Payload(value: Int)
-  @generator fun values(): Payload =
+  @generator fun values() =
     yield x
     return Payload(42)
   let iterator = values()
@@ -180,7 +180,7 @@ fun clonedGenerator(x) =
 //│ = [[3, 42], [4, 42]]
 
 pattern AsyncResult = x =>
-  @async fun answer(): Int = 42
+  @async fun answer() = 42
   answer()
 
 :noOpt
@@ -207,3 +207,30 @@ fun clonedAsyncGetter(x) =
 :expect [42, 42]
 Promise.all([clonedAsyncGetter(3), clonedAsyncGetter(4)])
 //│ = [42, 42]
+
+// Per-field mutability survives copying even when the whole record is immutable.
+pattern MutableRecord = x =>
+  let record = {mut value: x}
+  set record.value = x + 1
+  record.value
+
+:noOpt
+fun clonedMutableRecord(x) =
+  if x is (@compile MutableRecord) as result then result else 0
+
+:expect [4, 5]
+[clonedMutableRecord(3), clonedMutableRecord(4)]
+//│ = [4, 5]
+
+// An inferred result can name a class declared inside the function's own body.
+// Cloning still needs to rename that result through the nested body's bindings;
+// otherwise the original and copied classes are reported as unrelated types.
+:fixme
+pattern InnerClass = x =>
+  fun make() =
+    data class Box(value: Int)
+    Box(x)
+  make().value
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Box' at an unrelated type 'Box'
+//│ ║  l.+4: 	    Box(x)
+//│ ╙──      	    ^^^^^^

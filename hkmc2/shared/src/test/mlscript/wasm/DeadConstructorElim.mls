@@ -1,8 +1,6 @@
 :.
 :noInline
 
-:global
-:wasm
 
 
 data class Box(x)
@@ -10,7 +8,7 @@ data class Box(x)
 //│ = {}
 
 
-// a cast observes its operand even when the cast's result is unused, so the allocation must remain live
+// A cast proved to succeed does not keep an otherwise-unused allocation live.
 :flowBasedOpt mono
 :soir
 fun cast() =
@@ -19,7 +17,7 @@ fun cast() =
   42
 cast()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define cast⁰ as fun cast¹() { let x; set x = Box⁰(1); do (x as! Box¹); return 42 }; return cast¹()
+//│ define cast⁰ as fun cast¹() { return 42 }; return cast¹()
 //│ Wasm result:
 //│ = 42
 
@@ -32,7 +30,7 @@ fun cast() =
   42
 cast()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define cast² as fun cast³() { let x; set x = Box⁰(1); do (x as! Box¹); return 42 }; return cast³()
+//│ define cast² as fun cast³() { do (undefined as! Box⁰); return 42 }; return cast³()
 //│ Wasm result:
 //│ = 42
 
@@ -48,7 +46,7 @@ f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define f⁰ as fun f¹() {
 //│   let mk;
-//│   define mk as fun mk⁰() { return (Box⁰(1) as! Box¹) };
+//│   define mk as fun mk⁰() { return undefined };
 //│   do mk⁰();
 //│   return 42
 //│ };
@@ -58,8 +56,7 @@ f()
 
 
 
-// although dead param elim removes the param, the checked cast output due to
-// the call to `take` still consumes the `Box(1)` so the allocation is not removed
+// A known identity call also permits removal of its unused argument and allocation.
 :flowBasedOpt mono
 :soir
 fun f() =
@@ -69,12 +66,8 @@ fun f() =
 f()
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define f² as fun f³() {
-//│   let take, tmp;
-//│   define take as fun take⁰() {
-//│     return undefined
-//│   };
-//│   set tmp = Box⁰(1);
-//│   do (tmp as! Box¹);
+//│   let take;
+//│   define take as fun take⁰() { return undefined };
 //│   do take⁰();
 //│   return 42
 //│ };

@@ -40,7 +40,7 @@ data class Outer(a, b) with
 //│         this.c = c;
 //│         Predef.print(this$Outer.a);
 //│         Predef.print(this.c);
-//│         tmp2 = this.i1(this$Outer.a);
+//│         tmp2 = this.i1(this$Outer.a /* as! Int */);
 //│         Predef.print(tmp2);
 //│       }
 //│       i1(d) {
@@ -65,7 +65,7 @@ data class Outer(a, b) with
 //│   o2(c, d) {
 //│     let tmp;
 //│     tmp = this.Inner(c);
-//│     return tmp.i1(d)
+//│     return tmp.i1(d /* as! Int */)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Outer", ["a", "b"]];

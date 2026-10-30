@@ -90,7 +90,7 @@ capture(39)
 //│   return +⁰(tmp, second)
 //│ };
 //│ define capture⁰ as fun capture¹(value: Int⁰): Int⁰ {
-//│   return (addCaptured⁰(value, 1)(2) as! Int⁰)
+//│   return addCaptured⁰(value, 1)(2)
 //│ };
 //│ return capture¹(39)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -141,7 +141,7 @@ fun capturedGenerator(value: Int) =
   generate("unused", 2)
 capturedGenerator(40).next().value
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: Unknown, capturedGenerator_generate$generate, capturedGenerator_generate$generate1, capturedGenerator$capturedGenerator;
+//│ let tmp: Iterator⁰, tmp1: Unknown, capturedGenerator_generate$generate, capturedGenerator_generate$generate1, capturedGenerator$capturedGenerator;
 //│ @private @generator
 //│ define capturedGenerator_generate$generate as fun capturedGenerator_generate$generate⁰(value: Int⁰, n: Int⁰): generator Int⁰ {
 //│   return +⁰(value, n)
@@ -151,10 +151,10 @@ capturedGenerator(40).next().value
 //│   return +⁰(value, n)
 //│ };
 //│ @private
-//│ define capturedGenerator$capturedGenerator as fun capturedGenerator$capturedGenerator⁰(value: Int⁰): ? {
+//│ define capturedGenerator$capturedGenerator as fun capturedGenerator$capturedGenerator⁰(value: Int⁰): Iterator⁰ {
 //│   return capturedGenerator_generate$generate¹(value, 2)
 //│ };
-//│ define capturedGenerator⁰ as fun capturedGenerator¹(value: Int⁰): ? {
+//│ define capturedGenerator⁰ as fun capturedGenerator¹(value: Int⁰): Iterator⁰ {
 //│   return capturedGenerator_generate$generate⁰(value, 2)
 //│ };
 //│ set tmp = capturedGenerator$capturedGenerator⁰(40);
@@ -176,7 +176,7 @@ fun capturedGeneratorFunction(value: Int) =
   generate
 capturedGeneratorFunction(40)(2).next().value
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let generate, baseCall: ?, tmp: ?, tmp1: Unknown, generate$;
+//│ let generate, baseCall: Function⁰, tmp: ?, tmp1: Unknown, generate$;
 //│ define generate$ as fun generate$⁰(value: Int⁰)(n: Int⁰): Iterator⁰ {
 //│   return generate⁰(value, n)
 //│ };
@@ -184,7 +184,7 @@ capturedGeneratorFunction(40)(2).next().value
 //│ define generate as fun generate⁰(value: Int⁰, n: Int⁰): generator Int⁰ {
 //│   return +⁰(value, n)
 //│ };
-//│ define capturedGeneratorFunction⁰ as fun capturedGeneratorFunction¹(value: Int⁰): ? {
+//│ define capturedGeneratorFunction⁰ as fun capturedGeneratorFunction¹(value: Int⁰): Function⁰ {
 //│   return generate$⁰(value)
 //│ };
 //│ set baseCall = capturedGeneratorFunction¹(40);
@@ -208,7 +208,7 @@ fun capturedAsyncFunction(value: Int) =
   add
 capturedAsyncFunction(40)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add, baseCall: ?, add$, add1;
+//│ let add, baseCall: Function⁰, add$, add1;
 //│ define add1 as fun add²(value: Int⁰, n: Int⁰)(): Int⁰ {
 //│   return +⁰(value, n)
 //│ };
@@ -220,7 +220,7 @@ capturedAsyncFunction(40)(2)
 //│   set tmp = add²(value, n);
 //│   return runtime⁰.toJsAsync﹖(tmp)
 //│ };
-//│ define capturedAsyncFunction⁰ as fun capturedAsyncFunction¹(value: Int⁰): ? {
+//│ define capturedAsyncFunction⁰ as fun capturedAsyncFunction¹(value: Int⁰): Function⁰ {
 //│   return add$⁰(value)
 //│ };
 //│ set baseCall = capturedAsyncFunction¹(40);
@@ -242,7 +242,7 @@ fun capturedCurriedAsyncFunction(value: Int) =
   add
 capturedCurriedAsyncFunction(39)(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add, baseCall: ?, callPrefix: ?, add$, add1;
+//│ let add, baseCall: Function⁰, callPrefix: ?, add$, add1;
 //│ define add1 as fun add⁴(value: Int⁰, first: Int⁰, second: Int⁰)(): Int⁰ {
 //│   let tmp: Int⁰;
 //│   set tmp = +⁰(value, first);
@@ -256,7 +256,7 @@ capturedCurriedAsyncFunction(39)(1)(2)
 //│   set tmp = add⁴(value, first, second);
 //│   return runtime⁰.toJsAsync﹖(tmp)
 //│ };
-//│ define capturedCurriedAsyncFunction⁰ as fun capturedCurriedAsyncFunction¹(value: Int⁰): ? {
+//│ define capturedCurriedAsyncFunction⁰ as fun capturedCurriedAsyncFunction¹(value: Int⁰): Function⁰ {
 //│   return add$¹(value)
 //│ };
 //│ set baseCall = capturedCurriedAsyncFunction¹(39);
@@ -293,7 +293,7 @@ singleton(42)
 //│   return null
 //│ };
 //│ define singleton⁰ as fun singleton¹(value: Int⁰): Int⁰ {
-//│   let empty: ?;
+//│   let empty: Function⁰;
 //│   set empty = $empty_Empty⁰();
 //│   return (empty(value) as! Int⁰)
 //│ };
@@ -325,19 +325,19 @@ continuation(42, "done")
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let $item_Item, $item_rest;
 //│ @affine(1) @private
-//│ define $item_Item as fun $item_Item⁰(Item_value: Int⁰)(fv_arg$Item$0$: ?, fv_x: ?, fv_tmp: ?, fv_ignored: ?, fv_result: Str⁰): ? {
+//│ define $item_Item as fun $item_Item⁰(Item_value: Int⁰)(fv_arg$Item$0$: ?, fv_x: Int⁰, fv_tmp: Int⁰, fv_ignored: Int⁰, fv_result: Str⁰): ? {
 //│   set fv_arg$Item$0$ = Item_value;
 //│   set fv_x = fv_arg$Item$0$;
 //│   set fv_tmp = fv_x;
 //│   return $item_rest⁰(fv_ignored, fv_tmp, fv_result)
 //│ };
 //│ @private
-//│ define $item_rest as fun $item_rest⁰(fv_ignored: ?, fv_tmp: ?, fv_result: Str⁰): ? {
+//│ define $item_rest as fun $item_rest⁰(fv_ignored: Int⁰, fv_tmp: Int⁰, fv_result: Str⁰): ? {
 //│   set fv_ignored = fv_tmp;
 //│   return fv_result
 //│ };
 //│ define continuation⁰ as fun continuation¹(value: Int⁰, result: Str⁰): Str⁰ {
-//│   let item: ?, ignored: ?, x: ?, arg$Item$0$: ?, tmp: ?, Item_value: Int⁰;
+//│   let ignored: Int⁰, x: Int⁰, arg$Item$0$: ?, tmp: Int⁰, item: Function⁰, Item_value: Int⁰;
 //│   set Item_value = value;
 //│   set item = $item_Item⁰(Item_value);
 //│   return (item(arg$Item$0$, x, tmp, ignored, result) as! Str⁰)
