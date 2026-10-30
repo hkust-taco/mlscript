@@ -293,6 +293,11 @@ class VarSymbol(val id: Ident, val mut: Bool)(using State)
     this(id, mut)
     this.erasedType = erasedType
   val name: Str = id.name
+  /** Alternate source spellings of this binding, populated by `Elaborator.param` when a symbolic
+    * suffix is removed from its canonical name (e.g. `foo_+` becomes `foo`, with alias `foo_+`).
+    * Elaboration copies these names to generated constructor fields and class-local bindings so
+    * their scopes and member lookup retain both spellings. Symbol cloning/refreshing preserves them.
+    */
   var sourceAliases: Ls[Str] = Nil
   override def toLoc: Opt[Loc] = id.toLoc
   // override def toString: Str = s"$name@$uid"
@@ -454,6 +459,19 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     initializeErasure(erasure)
   
   def isErased: Bool = assignedErasure != null
+  /** The erased signature stored for this definition. `N` denotes an initialized unknown erasure;
+    * reading this before `initializeErasure` is an error.
+    *
+    * Stored value definitions use the `ErasedValueType` arm, including function-valued slots whose
+    * representation is `Function`. Function definitions use the `ErasedCallableSignature` arm:
+    * `ErasedFuncSignature` describes one or more physical parameter lists (including an implicit empty list),
+    * while `ErasedGetterSignature` describes getters with no physical parameter list.
+    *
+    * For a getter, `erasedType` exposes the call result's value type, while the stored signature also
+    * records the body's result and wrapper kind. For example, an async getter's body returns `Int`
+    * but a read yields `Promise`; retaining only `Promise` would lose the payload representation
+    * needed when lowering or cloning the body.
+    */
   def erasure: Opt[ErasedValueType | ErasedCallableSignature] =
     assert(isErased, s"Erasure of '$nme' read before initialization")
     assignedErasure

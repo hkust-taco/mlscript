@@ -72,18 +72,6 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           case N => (ps :: Nil, rhs)
       case _ => N
 
-  /** Computes the erased signature stored on a term definition's symbol.
-    *
-    * Stored value definitions use the `ErasedValueType` arm, including function-valued slots whose
-    * representation is `Function`. Function definitions use the `ErasedCallableSignature` arm:
-    * `ErasedFuncSignature` describes one or more physical parameter lists (including an implicit empty list),
-    * while `ErasedGetterSignature` describes getters with no physical parameter list.
-    *
-    * For a getter, `TermSymbol.erasedType` exposes the call result's value type, while the stored
-    * signature also records the body's result and wrapper kind. For example, an async getter's body
-    * returns `Int` but a read yields `Promise`; retaining only `Promise` would lose the payload
-    * representation needed when lowering or cloning the body.
-    */
   private def erasedDefinitionSignature(td: TermDefinition): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
