@@ -787,6 +787,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case _ => msg"Cannot assign to ${diagnostic match
               case sym: BlockMemberSymbol => sym.describe
               case sym: LocalVarSymbol if sym.decl.exists(_.isInstanceOf[Param]) => "immutable parameter"
+              // Constructor fields retain their Param declaration, but writes target the field.
+              case sym: TermSymbol if sym.k is syntax.ImmutVal => "immutable field"
               case sym: TermSymbol if (sym.k is syntax.ParamBind) || sym.decl.exists(_.isInstanceOf[Param]) => "immutable parameter"
               case sym => "symbol"
             } '${diagnostic.nme}'") -> loco

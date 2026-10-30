@@ -8,7 +8,7 @@
 class DirectWrite with
   private val value = 0
   fun update() = set value = 1
-//│ ╔══[COMPILATION ERROR] Cannot assign to symbol 'value'
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
 //│ ║  l.+3: 	  fun update() = set value = 1
 //│ ║        	                     ^^^^^
 //│ ╟── Defined here:
@@ -19,7 +19,7 @@ class DirectWrite with
 class QualifiedWrite with
   private val value = 0
   fun update() = set this.value += 1
-//│ ╔══[COMPILATION ERROR] Cannot assign to symbol 'value'
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
 //│ ║  l.+3: 	  fun update() = set this.value += 1
 //│ ║        	                         ^^^^^^
 //│ ╟── Defined here:
@@ -30,7 +30,7 @@ class QualifiedWrite with
 class CapturedWrite with
   private val value = 0
   fun updater() = () => set value = 1
-//│ ╔══[COMPILATION ERROR] Cannot assign to symbol 'value'
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
 //│ ║  l.+3: 	  fun updater() = () => set value = 1
 //│ ║        	                            ^^^^^
 //│ ╟── Defined here:
@@ -42,7 +42,7 @@ class CapturedWrite with
 class OtherInstanceWrite with
   private val value = 0
   fun update(other: OtherInstanceWrite) = set other.value = 1
-//│ ╔══[COMPILATION ERROR] Cannot assign to symbol 'value'
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
 //│ ║  l.+3: 	  fun update(other: OtherInstanceWrite) = set other.value = 1
 //│ ║        	                                                   ^^^^^^
 //│ ╟── Defined here:
@@ -53,7 +53,7 @@ class OtherInstanceWrite with
 class ConstructorWrite with
   private val value = 0
   set value = 1
-//│ ╔══[COMPILATION ERROR] Cannot assign to symbol 'value'
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
 //│ ║  l.+3: 	  set value = 1
 //│ ║        	      ^^^^^
 //│ ╟── Defined here:
@@ -64,7 +64,7 @@ class ConstructorWrite with
 object ObjectWrite with
   private val value = 0
   fun update() = set value = 1
-//│ ╔══[COMPILATION ERROR] Cannot assign to symbol 'value'
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
 //│ ║  l.+3: 	  fun update() = set value = 1
 //│ ║        	                     ^^^^^
 //│ ╟── Defined here:
@@ -96,7 +96,7 @@ let second = new State(10)
 class LegacyWrite with
   private val value = 0
   fun update() = set this.value = 1
-//│ ╔══[COMPILATION ERROR] Cannot assign to symbol 'value'
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
 //│ ║  l.+3: 	  fun update() = set this.value = 1
 //│ ║        	                         ^^^^^^
 //│ ╟── Defined here:

@@ -9,7 +9,7 @@ open annotations
 :ge
 class HeaderWrite(x) with
   set x = 1
-//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'x'
 //│ ║  l.+2: 	  set x = 1
 //│ ║        	      ^
 //│ ╟── Defined here:
@@ -54,7 +54,7 @@ class AuxiliaryRedefine with
 :ge
 class HeaderCapture(x) with
   fun update() = () => set x += 1
-//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'x'
 //│ ║  l.+2: 	  fun update() = () => set x += 1
 //│ ║        	                           ^
 //│ ╟── Defined here:
