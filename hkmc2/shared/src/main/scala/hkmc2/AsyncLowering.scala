@@ -21,7 +21,7 @@ import scala.collection.mutable.ArrayBuffer
 
 class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
   
-  object Rewriter extends BlockTransformer(SymbolSubst.Id):
+  private class Rewriter(subst: SymbolSubst) extends BlockTransformer(subst):
     val collectedFunDefn: ArrayBuffer[FunDefn] = new ArrayBuffer
     var inAsyncFun: Bool = false
     
@@ -51,7 +51,9 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
           ErasedFuncSignature.Signature(
             paramLists = 
               (thisParam.map(_.sym.erasedType).toList ++ outerParams.map(_._2.sym.erasedType)) :: Nil :: Nil,
-            ret = N,
+            result =
+              if fun.generator then ErasedResult.Generator(fun.dSym.erasedResult.bodyType)
+              else ErasedResult.Direct(fun.dSym.erasedResult.bodyType),
           )
       )
       val vars = fun.params.flatMap(_.paramSyms)
@@ -73,7 +75,7 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
       val wrapperBody = blockBuilder
         .assignScoped(tmp, outerCall)
         .ret(Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N))
-      FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, wrapperBody)(fun.configOverride, noAsync)
+      FunDefn(fun.owner, fun.sym, subst.mapTermSym(fun.dSym), fun.params, wrapperBody)(fun.configOverride, noAsync)
     
     override def applyMainBlock(main: Block): Block =
       collectedFunDefn.foldRight(super.applyMainBlock(main)): (defn, acc) =>
@@ -92,4 +94,25 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
           super.applyPath(p)(k)
   
   def transform(prog: Program): Program =
-    Rewriter.applyProgram(prog)
+    // The source symbol's Async result remains available to imported or cloned source
+    // bodies. The lowered wrapper returns Promise directly and needs a fresh symbol.
+    // Allocate every replacement first so forward and recursive calls see the same one.
+    val wrappers = mutable.Map.empty[TermSymbol, TermSymbol]
+    new BlockTraverser:
+      applyProgram(prog)
+      override def applyFunDefn(fun: FunDefn): Unit =
+        if fun.async then fun.dSym.erasure match
+          case S(sig: ErasedCallableSignature) if sig.result.isInstanceOf[ErasedResult.Async[?]] =>
+            val copy = TermSymbol(fun.dSym.k, fun.dSym.owner, fun.dSym.id,
+              S(sig.withResult(ErasedResult.Direct(sig.ret))))
+            copy.sourceAliases = fun.dSym.sourceAliases
+            assert(!wrappers.contains(fun.dSym), "An async symbol must have only one definition")
+            wrappers(fun.dSym) = copy
+          case _ =>
+            // Legacy erasure still describes async bodies with a Direct result.
+            softAssert(!config.language.useNewResolution,
+              "An async definition must have an async erased result")
+        super.applyFunDefn(fun)
+    val subst = new SymbolSubst:
+      override def mapTermSym(sym: TermSymbol): TermSymbol = wrappers.getOrElse(sym, sym)
+    new Rewriter(subst).applyProgram(prog)

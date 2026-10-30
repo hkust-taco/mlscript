@@ -497,7 +497,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         res
       // * The loop function takes one empty parameter list and returns either a body result or Runtime.LoopEnd.
       lazy val tSym = TermSymbol.fromFunBms(f, N,
-        erasedSignature = S(codegen.ErasedFuncSignature.Signature(paramLists = Nil :: Nil, ret = N)))
+        erasedSignature = S(codegen.ErasedFuncSignature.Signature(paramLists = Nil :: Nil, result = codegen.ErasedResult.Direct(N))))
       val normalized = tl.scoped("ucs:normalize"):
         normalize(inputSplit)(using VarSet())
       tl.scoped("ucs:normalized"):

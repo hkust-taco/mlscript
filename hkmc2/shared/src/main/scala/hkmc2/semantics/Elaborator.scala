@@ -314,6 +314,7 @@ object Elaborator:
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
+      lazy val Iterator = assumeBuiltinCls("Iterator")
       lazy val Awaited = assumeBuiltinTpe("Awaited")
       lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")

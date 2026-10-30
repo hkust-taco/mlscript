@@ -214,12 +214,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       * in definitions, assignments, or metadata must not become imports. `VarSymbol` and
       * `TempSymbol` references can be transitive default imports left in copied IR, while member
       * references can denote either the default export or a private member of a foreign unit. */
-    (new BlockTraverser:
+    new BlockTraverser:
+      applyBlock(p.main)
       override def applyValue(value: Value): Unit = value match
         case Value.SimpleRef(sym: VarSymbol) => note(sym)
         case Value.MemberRef(sym, _) => note(sym)
         case _ =>
-    ).applyBlock(p.main)
     
     // Maps deduplicate repeated references; sorting makes output deterministic across independently
     // elaborated states, where symbol UIDs alone are not globally unique.

@@ -789,20 +789,21 @@ private[codegen] object InlinerBodySummary:
   def compute(fun: FunDefn): InlinerBodySummary =
     val entries = Buffer.empty[Entry]
     var transitiveCallTargets = Set.empty[TermSymbol]
-
-    (new BlockTraverser:
+    
+    new BlockTraverser:
       var hasCallGraphSource = true
-
+      applyBlock(fun.body)
+      
       def withoutCallGraphSource(thunk: => Unit): Unit =
         val previous = hasCallGraphSource
         hasCallGraphSource = false
         try thunk
         finally hasCallGraphSource = previous
-
+      
       def recordFunction(fun: FunDefn, isMethod: Bool): Unit =
         entries += Entry.NestedFunction(fun, isMethod)
         transitiveCallTargets ++= fun.getOrComputeInlinerBodySummary.transitiveCallTargets
-
+      
       override def applyDefn(defn: Defn): Unit = defn match
         case fun: FunDefn =>
           recordFunction(fun, false)
@@ -820,15 +821,15 @@ private[codegen] object InlinerBodySummary:
             // whether its surrounding block has a call-graph source.
             applySubBlock(module.ctor)
         case _ => super.applyDefn(defn)
-
+      
       override def applyResult(result: Result): Unit = result match
         case call @ Call(TermSymbolPath(callee), argss) =>
           entries += Entry.DirectCall(callee, call, hasCallGraphSource)
           if hasCallGraphSource then transitiveCallTargets += callee
           argss.foreach(_.foreach(applyArg))
         case _ => super.applyResult(result)
-    ).applyBlock(fun.body)
-
+    end new
+    
     InlinerBodySummary(entries.toList, transitiveCallTargets)
 
 object FunDefn:

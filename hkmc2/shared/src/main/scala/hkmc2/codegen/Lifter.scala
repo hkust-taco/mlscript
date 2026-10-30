@@ -1246,7 +1246,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       // * The wrapper's signature describes its added parameter lists and the instance it returns.
       flattenedDSym.initializeErasure(S(ErasedFuncSignature.Signature(
         paramLists = allParamLists.map(_.params.map(_.sym.erasedType)),
-        ret = inst.erasedType,
+        result = ErasedResult.Direct(inst.erasedType),
       )))
       val bod = Return(inst)
       

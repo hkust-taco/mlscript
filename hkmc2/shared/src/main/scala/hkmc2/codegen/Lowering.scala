@@ -378,7 +378,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             case syntax.Fun =>
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
               val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
-                setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+                setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.erasedResult.bodyType)
               Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations),
                 continueBlock(stats, res))
             case syntax.LetBind | syntax.HandlerBind | syntax.RecordField => fail:
@@ -1085,7 +1085,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           syntax.Fun,
           N,
           ident,
-          erasure = S(ErasedFuncSignature.Signature(paramLists = Nil :: Nil, ret = N)),
+          erasure = S(ErasedFuncSignature.Signature(paramLists = Nil :: Nil, result = ErasedResult.Direct(N))),
         )
         val td: TermDefinition = TermDefinition(
           syntax.Fun,
@@ -1404,7 +1404,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             N
           case Some(bod) =>
             reportAnnotations(td, td.annotations)
-            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.erasedResult.bodyType)
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
       loweringCtx.collectScopedSym(lhs)
@@ -1822,7 +1822,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       .flatMap: td =>
         td.body.map: bod =>
           val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
-            setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.declaredResultType)
+            setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.erasedResult.bodyType)
           reportAnnotations(td, td.extraAnnotations)
           val cfgOverride = definitionConfigOverride(td.extraAnnotations)
           FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(cfgOverride, td.annotations)

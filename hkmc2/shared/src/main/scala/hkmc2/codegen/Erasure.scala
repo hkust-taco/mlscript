@@ -72,7 +72,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           case N => (ps :: Nil, rhs)
       case _ => N
 
-  private def definitionType(td: TermDefinition): Opt[ErasedValueType | ErasedFuncSignature] =
+  private def erasedDefinitionSignature(td: TermDefinition): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
     // An ordinary paramless function instead returns the value denoted by the entire signature.
@@ -95,6 +95,14 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
       then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
       else declaredType(resultSign, td.modulefulness)
+    // The body produces the payload; callers receive the wrapper object instead.
+    // Resolution gives calls of such functions the same wrapper shapes.
+    val result =
+      if !config.language.useNewResolution then ErasedResult.Direct(resultType)
+      else td.resultWrapperAnnotation match
+        case S(_: Annot.Async) => ErasedResult.Async(resultType)
+        case S(_: Annot.Generator) => ErasedResult.Generator(resultType)
+        case N => ErasedResult.Direct(resultType)
     td.k match
       case syntax.Fun =>
         val paramLists = sigShape match
@@ -104,8 +112,8 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         // Member getters and global declarations denote their result directly.
         val physicalParamLists =
           if paramLists.isEmpty && td.owner.isEmpty && !declared then Nil :: Nil else paramLists
-        if physicalParamLists.isEmpty then resultType
-        else S(ErasedFuncSignature.Signature(physicalParamLists, resultType))
+        if physicalParamLists.isEmpty then S(ErasedGetterSignature.Signature(result))
+        else S(ErasedFuncSignature.Signature(physicalParamLists, result))
       case _: syntax.Val => resultType
       case _ => N
 
@@ -266,7 +274,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       field.foreach: sym =>
         if !sym.isErased then sym.initializeErasure(p.sym.erasedType)
     statements.foreach:
-      case td: TermDefinition if !td.tsym.isErased => td.tsym.initializeErasure(definitionType(td))
+      case td: TermDefinition if !td.tsym.isErased => td.tsym.initializeErasure(erasedDefinitionSignature(td))
       case _ => ()
     statements.foreach:
       case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.initializeErasure(N)
