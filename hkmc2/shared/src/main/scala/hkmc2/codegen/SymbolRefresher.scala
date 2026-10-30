@@ -31,10 +31,10 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
   private def refreshLabelSymbol(s: LabelSymbol) =
     assertUpdate(s, new LabelSymbol(s.trm, s.nme))
 
-  private def refreshTermSymbol(s: TermSymbol) =
+  private def refreshTermSymbol(s: TermSymbol, erasure: Opt[ErasedValueType | ErasedCallableSignature]) =
     // Inner symbol (if present) must be traversed at this point.
     val ns = SymbolRefresher.copyTermSymbol(s,
-      s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), s.erasure)
+      s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), erasure)
     assertUpdate(s, ns)
 
   private def refreshClassSymbol(s: ClassSymbol) =
@@ -76,17 +76,20 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
       applyBlock(rest)
     case _ => super.applyBlock(b)
   
+  protected def functionSignature(fun: FunDefn): FunDefn.Signature = fun.signature
+  
   override def applyFunDefn(fun: FunDefn): Unit =
     val FunDefn(owner, sym, dSym, params, body) = fun
     assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for FunDefn is a free variable for this block")
-    refreshTermSymbol(dSym)
-    params.foreach(refreshParamList)
+    val signature = functionSignature(fun)
+    refreshTermSymbol(dSym, S(signature.erasure))
+    signature.params.foreach(refreshParamList)
     applyBlock(body)
   
   override def applyValDefn(defn: ValDefn): Unit =
     val ValDefn(tsym, sym, result) = defn
     assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for ValDefn is a free variable for this block")
-    refreshTermSymbol(tsym)
+    refreshTermSymbol(tsym, tsym.erasure)
     applyResult(result)
   
   override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
@@ -106,7 +109,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
       // For methods, the BlockMemberSymbol is owned by the class itself
       refreshBlockMemberSymbol(mtd.sym)
       applyFunDefn(mtd)
-    privateFields.foreach(refreshTermSymbol)
+    privateFields.foreach(s => refreshTermSymbol(s, s.erasure))
     publicFields.foreach: p =>
       refreshBlockMemberSymbol(p._1)
       // For public fields, we have ValDefn for defining the variable
@@ -124,7 +127,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
       // For methods, the BlockMemberSymbol is owned by the class itself
       refreshBlockMemberSymbol(mtd.sym)
       applyFunDefn(mtd)
-    privateFields.foreach(refreshTermSymbol)
+    privateFields.foreach(s => refreshTermSymbol(s, s.erasure))
     publicFields.foreach: p =>
       refreshBlockMemberSymbol(p._1)
       // For public fields, we have ValDefn for defining the variable

@@ -515,18 +515,6 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     case S(sig: ErasedFuncSignature) => S(sig)
     case S(_: ErasedValueType | _: ErasedGetterSignature) | N => N
   
-  /** Creates a symbol with the same erased type or signature as this one. */
-  def withSameErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)(using State): TermSymbol =
-    withMappedErasure(k, owner, id)(identity)
-  
-  /** Creates a symbol with the same erased type as this one, or its erased signature mapped by `f`. */
-  def withMappedErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)
-      (f: ErasedFuncSignature => ErasedFuncSignature)(using State): TermSymbol =
-    val erasure = this.erasure match
-      case S(sig: ErasedFuncSignature) => S(f(sig))
-      case other => other
-    new TermSymbol(k, owner, id, erasure)
-  
   /** The complete result behavior. Value slots have a direct result; getters retain
     * their wrapper kind without acquiring a first-class function representation.
     */

@@ -967,7 +967,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val rewritten = rewriter.rewrite(obj.fun.body)
       val withCapture = addExtraSyms(rewritten)
-      LifterResult(obj.fun.copy(body = withCapture)(obj.fun.configOverride, obj.fun.annotations), rewriter.extraDefns.toList)
+      LifterResult(obj.fun.withBody(withCapture), rewriter.extraDefns.toList)
   
   class RewrittenClassCtor(override val obj: ScopedObject.ClassCtor)(using ctx: LifterCtxNew) extends RewrittenScope[Unit](obj):
     override lazy val capturePath: Path = lastWords("tried to create a capture class for a class ctor")
@@ -1078,30 +1078,24 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     private lazy val mainParams = fun.params match
       case head :: next => head.copy(params = auxParams ::: head.params)(head.toLoc) :: next
       case Nil => LoweredParamList.plain(auxParams)(N) :: Nil
+    private lazy val mainSignature = fun.signature.withParams(mainParams).withAnnotations(
+      if liftedFromStagedModule && !fun.isStaged then Annot.Modifier(Keyword.`staged`)(N) :: fun.annotations
+      else fun.annotations)
     // Captures change the physical signature. Keep the source declaration's published signature
     // intact; rewritten direct calls and the partial-application wrapper use this fresh identity.
     lazy val mainDsym =
       if isTrivial then fun.dSym
-      else SymbolRefresher.copyTermSymbol(fun.dSym, N, S(ErasedFuncSignature.Signature(
-        mainParams.map(_.params.map(_.sym.erasedType)), fun.dSym.erasedResult)))
+      else mainSignature.freshSymbol(fun.dSym, N)
     val auxSym = BlockMemberSymbol(fun.sym.nme + "$", Nil, fun.sym.nameIsMeaningful)
-    private lazy val auxDsym =
-      val result = if fun.params.tail.nonEmpty then S(ErasedType.Function(S(false)))
-        else fun.dSym.declaredResultType
-      new TermSymbol(syntax.Fun, N, Tree.Ident(auxSym.nme), S(ErasedFuncSignature.Signature(
-        auxParams.map(_.sym.erasedType) :: fun.params.head.params.map(_.sym.erasedType) :: Nil,
-        ErasedResult.Direct(result))))
+    private lazy val auxDsym = new TermSymbol(syntax.Fun, N, Tree.Ident(auxSym.nme))
     
     // Definition with the auxiliary parameters merged into the first parameter list.
     private def mkFlattenedDefn: LifterResult[FunDefn] =  
-      val newPlists = mainParams
       val rewriter = new BlockRewriter(N)
       val newBod = rewriter.rewrite(fun.body)
       val withCapture = addExtraSyms(newBod)
-      val newDefn = fun.copy(owner = N, sym = mainSym, dSym = mainDsym, params = newPlists, body = withCapture)(
-        fun.configOverride,
-        if liftedFromStagedModule && !fun.isStaged then Annot.Modifier(Keyword.`staged`)(N) :: fun.annotations
-        else fun.annotations)
+      val newDefn = fun.copy(owner = N, sym = mainSym, dSym = mainDsym,
+        signature = mainSignature, body = withCapture)(fun.configOverride)
       LifterResult(newDefn, rewriter.extraDefns.toList)
     
     // Definition with the auxiliary parameters as a new first parameter list.
@@ -1133,9 +1127,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         N,
         auxSym,
         auxDsym,
-        newPlists,
+        FunDefn.Signature(newPlists, call.erasedType,
+          if fun.noInline then annotations else Annot.Inline()(N) :: annotations),
         bod
-      )(N, if fun.noInline then annotations else Annot.Inline()(N) :: annotations)
+      )(N)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     
@@ -1257,14 +1252,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val ref = obj.cls.sym.asMemberRef(obj.cls.isym)
       val inst = Instantiate(false, ref, argsList)(InstantiateMetadata.empty, N)
-      // * The wrapper's signature describes its added parameter lists and the instance it returns.
-      flattenedDSym.initializeErasure(S(ErasedFuncSignature.Signature(
-        paramLists = allParamLists.map(_.params.map(_.sym.erasedType)),
-        result = ErasedResult.Direct(inst.erasedType),
-      )))
       val bod = Return(inst)
       
-      FunDefn(N, flattenedSym, flattenedDSym, allParamLists, bod)(N, annotations = Nil)
+      FunDefn(N, flattenedSym, flattenedDSym, FunDefn.Signature(allParamLists, inst.erasedType, Nil), bod)(N)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     

@@ -496,8 +496,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         outerCtx.collectScopedSym(res)
         res
       // * The loop function takes one empty parameter list and returns either a body result or Runtime.LoopEnd.
-      lazy val tSym = TermSymbol.fromFunBms(f, N,
-        erasedSignature = S(codegen.ErasedFuncSignature.Signature(paramLists = Nil :: Nil, result = codegen.ErasedResult.Direct(N))))
+      lazy val loopSignature = FunDefn.Signature(codegen.LoweredParamList.plain(Nil)(N) :: Nil, N, Nil)
+      lazy val tSym =
+        val sym = TermSymbol(syntax.Fun, N, Tree.Ident(f.nme))
+        loopSignature.publish(sym)
+        sym
       val normalized = tl.scoped("ucs:normalize"):
         normalize(inputSplit)(using VarSet())
       tl.scoped("ucs:normalized"):
@@ -557,7 +560,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             val loopEnd: Path =
               Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol), N)(false)
             val blk = blockBuilder
-              .define(FunDefn(N, f, tSym, codegen.LoweredParamList.plain(Nil)(N) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
+              .define(FunDefn(N, f, tSym, loopSignature, Begin(body, Return(loopEnd)))(configOverride = N))
               .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, N))
             if summon[LoweringCtx].mayRet then
               blk

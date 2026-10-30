@@ -389,30 +389,33 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         f.dSym -> mp
       .toMap
     
+    val curIdSym = VarSymbol(Tree.Ident("id"), erasedType = S(ErasedType.Int), mut = true)
+    val loopSignature =
+      if !hasWrapper then
+        val f = funs.head
+        val paramRewriter = new BlockTransformer(new SymbolSubst:
+          override def mapVarSym(sym: VarSymbol): VarSymbol = paramSymsMap(f.dSym).getOrElse(sym, sym))
+        f.signature.withParams(f.params.mapConserve(paramRewriter.applyParamList))
+      else
+        val initial = paramSyms.map(Param.simple(_))
+        val params = LoweredParamList.plain(
+          if funsLen > 1 then Param.simple(curIdSym) :: initial else initial)(N) :: Nil
+        // The dispatcher can exit through any member's return, so its result type is their LUB.
+        val memberRets = funs.map(_.dSym.declaredResultType)
+        val ret =
+          if funsLen == 1 then memberRets.head
+          else if memberRets.exists(_.isEmpty) then N
+          else S(memberRets.flatten.map(_.canonicalize).reduce(ErasedType.lub))
+        val annotations =
+          if funsLen == 1 && funs.head.inline then Annot.Inline()(N) :: Annot.Private :: Nil
+          else Annot.Private :: Nil
+        FunDefn.Signature(params, ret, annotations)
     val dSym =
       if !hasWrapper then funs.head.dSym
       else
-        val erasure: Opt[ErasedValueType | ErasedCallableSignature] =
-          if funsLen === 1 then
-            // * The loop stands for the same function as its single member, with its parameter lists
-            // * flattened - construct a new signature to reflect this.
-            funs.head.dSym.erasedSignature match
-              case S(sig) => S(ErasedFuncSignature.Signature(paramSyms.map(_.erasedType) :: Nil, sig.result))
-              case N => funs.head.dSym.erasedType
-          else
-            // * The dispatcher can exit through any member's return, so its result type is the LUB of its members.
-            val memberRets = funs.map(_.dSym.declaredResultType)
-            val ret =
-              if memberRets.exists(_.isEmpty) then N
-              else S(memberRets.flatten.map(_.canonicalize).reduce(ErasedType.lub))
-            S(ErasedFuncSignature.Signature(
-              paramLists = (S(ErasedType.Int) :: paramSyms.map(_.erasedType)) :: Nil,
-              result = ErasedResult.Direct(ret),
-            ))
-        val res = TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme), erasure)
-        // * Link the loop function to the BMS so that the erased type is accessible.
-        // * This never overwrites an already-elaborated `tsym` because it is always freshly created here (guarded by
-        // * `hasWrapper`).
+        val res = TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme))
+        loopSignature.publish(res)
+        // The dispatcher has a fresh binding; publishing its signature also types recursive calls.
         bms.tsym = S(res)
         res
     val dSymIds = funs.iterator.map(_.dSym).zipWithIndex.toMap
@@ -486,7 +489,6 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           f.dSym -> DeferredCast(TempSymbol(N, S(ErasedType.Bool), s"${f.dSym.nme}$$deferred"), t)
 
     val loopSym = LabelSymbol(N, "loopLabel")
-    val curIdSym = VarSymbol(Tree.Ident("id"), erasedType = S(ErasedType.Int), mut = true)
     
     val loopDefnPath = owner match
       case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym), N)(false)
@@ -759,14 +761,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           case ((_, o), acc) => Assign(o.flag, Value.Lit(Tree.BoolLit(false))(N), acc))
     
     if !hasWrapper then
-      val f = funs.head
-      val paramSubst = new SymbolSubst:
-        override def mapVarSym(sym: VarSymbol): VarSymbol = paramSymsMap(f.dSym).getOrElse(sym, sym)
-      val paramRewriter = new BlockTransformer(paramSubst)
-      val defn = FunDefn(
-        owner, bms, dSym,
-        f.params.mapConserve(paramRewriter.applyParamList),
-        loop)(N, annotations = f.annotations)
+      val defn = FunDefn(owner, bms, dSym, loopSignature, loop)(N)
       (N, defn :: Nil)
     else
       val wrappers = funs.map: f =>
@@ -778,20 +773,8 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           coerceToDeclaredReturn(rewriteKnownCall(f, paramArgs), f.dSym),
         )
         val annots = if f.inline then f.annotations else Annot.Inline()(N) :: f.annotations
-        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(N, annots)
-      val newParamLists =
-        val initial = paramSyms.map(Param.simple(_))
-        if funsLen > 1 then
-          LoweredParamList.plain(Param.simple(curIdSym) :: initial)(N) :: Nil
-        else
-          LoweredParamList.plain(initial)(N) :: Nil
-      val annotations = 
-        if funsLen == 1 && funs.head.inline then Annot.Inline()(N) :: Annot.Private :: Nil
-        else Annot.Private :: Nil
-      val loopDefn = FunDefn(
-        owner, bms, dSym,
-        newParamLists,
-        loop)(N, annotations = annotations)
+        FunDefn(f.owner, f.sym, f.dSym, f.signature.withAnnotations(annots), newBod)(N)
+      val loopDefn = FunDefn(owner, bms, dSym, loopSignature, loop)(N)
       (S(loopDefn), wrappers)
   
   def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol])(using (ScopeData, AccessMap)) =

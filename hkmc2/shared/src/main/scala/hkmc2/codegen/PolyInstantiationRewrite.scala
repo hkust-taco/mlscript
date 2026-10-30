@@ -19,7 +19,7 @@ abstract class FlowAnalysisSolverResult:
 end FlowAnalysisSolverResult
 
 
-type RewrittenFunDefn = (params: Ls[LoweredParamList], body: Block, annotations: Ls[Annot])
+type RewrittenFunDefn = (signature: FunDefn.Signature, body: Block)
 
 
 abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolver):
@@ -44,7 +44,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   
   // Complete signatures after parameter removal or eta expansion. Copied and in-place definitions
   // must use the same convention without mutating the source symbol's write-once signature.
-  def retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncSignature]
+  def rewrittenSignatures: Map[(InstantiationId, TermSymbol), FunDefn.Signature]
   // ====== the abstract members ======
   
   
@@ -61,16 +61,25 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
       case (instId, f) if f is fun => instId
     .getOrElse(Nil)
   
+  protected def signatureAt(instId: InstantiationId, fun: TermSymbol): FunDefn.Signature =
+    rewrittenSignatures.get(instId -> fun).orElse(rewrittenSignatures.get(Nil -> fun))
+      .getOrElse(pre.res.funSymToFunDefn(fun).signature)
+  
   private lazy val rewrittenFunctionSymbols: Map[TermSymbol, TermSymbol] =
     pre.res.rootFunDefns.keysIterator.flatMap: sym =>
-      retypedFunctions.get(inPlaceInstId(sym) -> sym).collect:
-        case sig if !sym.erasedSignature.contains(sig) => sym -> SymbolRefresher.copyTermSymbol(sym, sym.owner, S(sig))
+      rewrittenSignatures.get(inPlaceInstId(sym) -> sym).collect:
+        case sig if sig.erasure isnt pre.res.funSymToFunDefn(sym).signature.erasure =>
+          sym -> sig.freshSymbol(sym, sym.owner)
     .toMap
   
   // Nested definitions can also be rewritten in place; copied bodies override these identities below.
-  private lazy val rewrittenNestedSymbols = retypedFunctions.collect:
-    case ((instId, sym), sig) if !pre.res.rootFunDefns.contains(sym) =>
-      (instId -> sym) -> SymbolRefresher.copyTermSymbol(sym, sym.owner, S(sig))
+  private lazy val rewrittenNestedSymbols = rewrittenSignatures.collect:
+    case ((instId, sym), sig) if !pre.res.rootFunDefns.contains(sym)
+      && (sig.erasure isnt pre.res.funSymToFunDefn(sym).signature.erasure) =>
+      (instId -> sym) -> sig.freshSymbol(sym, sym.owner)
+  
+  private def nestedSymbolsAt(instId: InstantiationId): Map[TermSymbol, TermSymbol] =
+    rewrittenNestedSymbols.collect { case ((id, sym), rewritten) if id == instId => sym -> rewritten }
   
   final def apply(): Program =
     if !solvers.exists(_.hasWorkToDo) then pre.pgrm
@@ -86,7 +95,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
       case S(entry) => collector.funToSccGroups(entry).iterator.filterNot(_ is entry)
       case N => collector.funToSccGroups(path.last.getReferredFun.get).iterator
     for
-      instId <- solvers.iterator.flatMap(_.polyInstIds) ++ retypedFunctions.keysIterator.map(_._1)
+      instId <- solvers.iterator.flatMap(_.polyInstIds)
       path <- instId.inits
       if path.nonEmpty && !res.contains(path)
       copied = funSymsToBeCopiedAt(path)
@@ -97,8 +106,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
           val name = path.mkFunName + s"$$${f.nme}"
           f -> (
             new BlockMemberSymbol(name, Nil, true),
-            new TermSymbol(Fun, N, Tree.Ident(name), erasure =
-              retypedFunctions.get(path -> f).orElse(f.erasure)))
+            new TermSymbol(Fun, N, Tree.Ident(name), S(signatureAt(path, f).erasure)))
         .toMap
     res
   end newPolyFnSyms
@@ -111,8 +119,8 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
         (referringFun, (bms, tSym)) <- funSymMap.toList.sortBy(_._1.uid)
       yield
         val original = pre.res.funSymToFunDefn(referringFun)
-        val (params, body, annotations) = mkCopyRewriter(instId, original.params, original.body, Map.empty).rewriteFunDefn(original)
-        FunDefn(N, bms, tSym, params, body)(original.configOverride, Annot.Private :: annotations)
+        val (signature, body) = mkCopyRewriter(instId, signatureAt(instId, referringFun).params, original.body, Map.empty).rewriteFunDefn(original)
+        FunDefn(N, bms, tSym, signature.withAnnotations(Annot.Private :: signature.annotations), body)(original.configOverride)
     
     val newFuns = newPolyFuns ++ otherNewFunDefns
     
@@ -133,14 +141,10 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   // and refreshes symbols bound in `body` so that a copy never rebinds an original symbol
   protected final def mkCopyRewriter(instId: InstantiationId, params: Ls[LoweredParamList], body: Block, initMapping: Map[LocalVarSymbol, LocalVarSymbol]): Rewriter =
     val mapping = MutMap.from[Symbol, Symbol](initMapping)
-    val walker = SymbolRefresherWalker(mapping)
+    val walker = new SymbolRefresherWalker(mapping):
+      override protected def functionSignature(fun: FunDefn): FunDefn.Signature = signatureAt(instId, fun.dSym)
     params.foreach(walker.refreshParamList)
     walker.applyBlock(body)
-    for
-      case sym: TermSymbol <- mapping.keys.toList.sortBy(_.uid)
-      sig <- retypedFunctions.get(instId -> sym).orElse(retypedFunctions.get(Nil -> sym))
-      case copy: TermSymbol <- mapping.get(sym)
-    do mapping(sym) = SymbolRefresher.copyTermSymbol(copy, copy.owner, S(sig))
     mkRewriter(instId, S(mapping))
 
 
@@ -150,7 +154,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   protected abstract class InstantiationRewriter(val instId: InstantiationId, val refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]])
     extends SymbolMapTransformer(
       Map.from[Symbol, Symbol](rewrittenFunctionSymbols)
-      ++ rewrittenNestedSymbols.collect { case ((id, sym), rewritten) if id.isEmpty || id == instId => sym -> rewritten }
+      ++ nestedSymbolsAt(Nil) ++ nestedSymbolsAt(instId)
       ++ refreshSymbolMappingForCopy.getOrElse(Map.empty)):
     
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn

@@ -300,18 +300,24 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     allBranchesOfDtor.keysIterator.foreach(fvsForDtor)
   }
 
-  // Captures are known only after free-variable analysis. Publish both physical lists before any
-  // calls are rewritten, so partially applying the field list has the Function representation.
-  locally {
-    for (branchId, (_, sym)) <- branchFunSyms do
-      sym.initializeErasure(S(ErasedFuncSignature.Signature(
-        branchFunParamFieldSyms(branchId).map(_.erasedType) ::
-          dtorBranchFnFvs(branchId._1).map(_.erasedType) :: Nil, ErasedResult.Direct(N))))
-    for (restId, (_, sym)) <- restFunSyms do
-      sym.initializeErasure(S(ErasedFuncSignature.Signature(
-        restFnFvs(restId).map(_.erasedType) :: Nil, ErasedResult.Direct(N))))
-  }
-
+  private def captureParams(fvs: Ls[LocalVarSymbol]): LoweredParamList =
+    // The extracted body may initialize a captured pattern slot before reading it, or reassign
+    // a genuinely mutable input. Preserve its slot type and mutability in the new binding.
+    fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.erasedType, mut = s.mut)).asParamList
+  
+  // Prepare the actual bindings after free-variable analysis, and publish their shared signatures
+  // before rewriting calls. In particular, applying just a branch's field list returns Function.
+  private val branchSignatures = branchFunSyms.map: (branchId, syms) =>
+    val signature = FunDefn.Signature(
+      branchFunParamFieldSyms(branchId).asParamList :: captureParams(dtorBranchFnFvs(branchId._1)) :: Nil,
+      N, AffineAnnotForBranchFns :: PrivateModifier :: Nil)
+    signature.publish(syms._2)
+    branchId -> signature
+  private val restSignatures = restFunSyms.map: (restId, syms) =>
+    val signature = FunDefn.Signature(captureParams(restFnFvs(restId)) :: Nil, N, PrivateModifier :: Nil)
+    signature.publish(syms._2)
+    restId -> signature
+  
   // Rewrites the program under a specific instantiation id
   // from the polymorphic analysis
   protected class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
@@ -323,11 +329,11 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       try rewrite finally returnType = enclosing
     
     override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
-      val body = returningInto(fun.dSym.erasedResult.bodyType)(applyBlock(fun.body))
-      (fun.params.mapConserve(applyParamList), body, fun.annotations)
+      val body = returningInto(fun.signature.result.bodyType)(applyBlock(fun.body))
+      (fun.signature.withParams(fun.params.mapConserve(applyParamList)), body)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
-      returningInto(fun.dSym.erasedResult.bodyType)(super.applyFunDefn(fun))
+      returningInto(fun.signature.result.bodyType)(super.applyFunDefn(fun))
     
     // Fusion replaces a return by a closure/continuation call whose result is unknown. Preserve
     // the original body's result boundary, just as lowering does for a call to a function value.
@@ -437,7 +443,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   // ====== start: implements the abstract members of `PolyInstantiationRewrite` ======
   def solvers: Iterable[FlowAnalysisSolverResult] = solver :: Nil
   
-  def retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncSignature] = LinkedHashMap.empty
+  val rewrittenSignatures: Map[(InstantiationId, TermSymbol), FunDefn.Signature] = Map.empty
   
   def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
   
@@ -445,12 +451,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     
     // the rewriter of an extracted part (branch body functions and match rest functions),
     // whose free variables `fvs` become the `fv_` parameters it returns
-    def mkExtractedBodyRewriter(instId: InstantiationId, body: Block, fvs: Ls[LocalVarSymbol]): (Rewriter, Ls[VarSymbol]) =
-      // Forwarding an uninitialized pattern slot to an fv_ parameter is not a use; its
-      // first assignment is still initialization. Preserve the original mutability for
-      // copied bodies that genuinely reassign an already initialized input.
-      val fvParams = fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.erasedType, mut = s.mut))
-      mkCopyRewriter(instId, Nil, body, Map.from(fvs.iterator.zip(fvParams))) -> fvParams
+    def mkExtractedBodyRewriter(instId: InstantiationId, body: Block, fvs: Ls[LocalVarSymbol],
+        signature: FunDefn.Signature): Rewriter =
+      val fvParams = signature.params.last.paramSyms
+      mkCopyRewriter(instId, Nil, body, Map.from(fvs.iterator.zip(fvParams)))
   
     // Functions for fused match branches; each runs one arm and then its rest
     val newBranchFuns =
@@ -458,14 +462,12 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         val instId = dtorId.getInstId
         val ogBody = branchOriginalBodies(dtorId.exprId -> whichBranch)
         val (restFunBms, restFunTSym) = restFunSyms(dtorId)
-        val (rewriter, fvParams) = mkExtractedBodyRewriter(instId, ogBody, dtorBranchFnFvs(branchId._1))
+        val signature = branchSignatures(branchId)
+        val rewriter = mkExtractedBodyRewriter(instId, ogBody, dtorBranchFnFvs(branchId._1), signature)
         val actualBody = Begin(
           rewriter.applyBlock(ogBody),
           rewriter.mkCall(restFunBms.asMemberRef(restFunTSym), restFnFvs(dtorId))(Return(_)))
-        FunDefn(N, bms, tSym,
-          branchFunParamFieldSyms(branchId).asParamList :: fvParams.asParamList :: Nil,
-          actualBody
-        )(N, annotations = AffineAnnotForBranchFns :: PrivateModifier :: Nil)
+        FunDefn(N, bms, tSym, signature, actualBody)(N)
     end newBranchFuns
     
     // Continuation functions for the code after fused matches or labels
@@ -473,7 +475,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       for (restFunId, (bms, tsym)) <- restFunSyms yield
         val instId = restFunId.getInstId
         val (ogBody, parent) = restOriginalBodiesAndParentRest(restFunId.withoutInstId)
-        val (rewriter, fvParams) = mkExtractedBodyRewriter(instId, ogBody, restFnFvs(restFunId))
+        val signature = restSignatures(restFunId)
+        val rewriter = mkExtractedBodyRewriter(instId, ogBody, restFnFvs(restFunId), signature)
         val transformedOgBody = rewriter.applyBlock(ogBody)
         val actualBody = parent match
           case Some(parentRestId) =>
@@ -485,7 +488,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
               rewriter.mkCall(parentFunBms.asMemberRef(parentFunTSym), parentFunFvs)(Return(_)))
           case None =>
             Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true))(N)))
-        FunDefn(N, bms, tsym, fvParams.asParamList :: Nil, actualBody)(N, annotations = PrivateModifier :: Nil)
+        FunDefn(N, bms, tsym, signature, actualBody)(N)
     end newRestFuns
     
     newBranchFuns ++ newRestFuns
@@ -496,10 +499,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     new Rewriter(Nil, N):
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
-          case Some((params, rewrittenBody, annotations)) =>
+          case Some((signature, rewrittenBody)) =>
             // deforest never changes fun params in place
-            assert(params is fun.params)
-            FunDefn(fun.owner, fun.sym, fun.dSym, params, rewrittenBody)(fun.configOverride, annotations)
+            assert(signature is fun.signature)
+            fun.withBody(rewrittenBody)
           case None => super.applyFunDefn(fun)
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
 end DeforestRewriter

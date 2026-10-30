@@ -435,9 +435,6 @@ sealed abstract class ErasedCallableSignature extends Canonicalizable:
       ErasedFuncSignature.Signature(sig.paramLists.map(_.map(_.map(f))), result.map(f))
     case _: ErasedGetterSignature => ErasedGetterSignature.Signature(result.map(f))
 
-  def withResult(result: ErasedResult[ErasedValueType]): ErasedCallableSignature = this match
-    case sig: ErasedFuncSignature => ErasedFuncSignature.Signature(sig.paramLists, result)
-    case _: ErasedGetterSignature => ErasedGetterSignature.Signature(result)
 end ErasedCallableSignature
 
 

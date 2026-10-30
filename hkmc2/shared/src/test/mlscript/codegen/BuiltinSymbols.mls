@@ -43,12 +43,20 @@ case Int then 0
 //│       defn = FunDefn:
 //│         sym = member:lambda⁰
 //│         dSym = term:lambda¹
-//│         params = Ls of
-//│           LoweredParamList:
-//│             params = Ls of
-//│               Param:
-//│                 sym = caseScrut⁰
-//│                 modulefulness = Modulefulness of N
+//│         signature = Signature:
+//│           params = Ls of
+//│             LoweredParamList:
+//│               params = Ls of
+//│                 Param:
+//│                   sym = caseScrut⁰
+//│                   modulefulness = Modulefulness of N
+//│           annotations = Ls of
+//│             Modifier of keyword 'private'
+//│           erasure = Signature:
+//│             paramLists = Ls of
+//│               Ls of
+//│                 N
+//│             result = Direct of N
 //│         body = Match:
 //│           scrut = SimpleRef of caseScrut⁰
 //│           arms = Ls of

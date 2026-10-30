@@ -81,6 +81,10 @@ module Main with
 //│   owner = S of module:Main⁰
 //│   sym = member:foo1⁰
 //│   dSym = term:Main⁰/foo1¹
+//│   signature = Signature:
+//│     annotations = Ls of
+//│       Debug of ...
+//│     erasure = Signature of Direct of N
 //│   body = Return of Lit of IntLit of 4
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @dbg(...) define foo1⁰ as fun foo1¹ { return 4 }

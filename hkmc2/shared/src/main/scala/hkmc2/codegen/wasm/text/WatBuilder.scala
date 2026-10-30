@@ -2268,7 +2268,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           case defn: (FunDefn | ClsLikeDefn) =>
             val res: Opt[Expr] = boundary:
               defn match
-                case FunDefn(params = Nil) =>
+                case FunDefn(_, _, _, Nil, _) =>
                   lastWords("cannot generate function with no parameter list")
                 case fd @ FunDefn(own, sym, dSym, ps :: pss, bod) =>
                   if own.nonEmpty then
