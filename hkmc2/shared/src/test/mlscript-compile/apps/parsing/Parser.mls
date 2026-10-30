@@ -207,7 +207,7 @@ fun parse(tokens: Stack[Token.Token]) =
           consume
           let op = Tree.Ident(name, true)
           let rhs = expr(rightPrec, termOptions)
-          Tree.App(op, acc :: rhs :: Nil) exprCont(prec, options)
+          Tree.App(op, Tree.Tuple(acc :: rhs :: Nil)) exprCont(prec, options)
         else
           acc
     // * the case of application
