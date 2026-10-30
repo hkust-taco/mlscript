@@ -201,6 +201,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
         source.erasure.map:
           case sig: ErasedFuncSignature => signature(sig)
           case tpe: ErasedValueType => valueType(tpe)
+      summon[Erasure].copyBodyResultType(source, copy)(valueType)
     // All member names, including nested classes' methods, now have replacements.
     // Override edges must follow them for common-member selection during lowering.
     (members.iterator ++ terms.iterator).foreach: (source, copy) =>

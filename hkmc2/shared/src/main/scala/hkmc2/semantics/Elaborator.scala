@@ -314,6 +314,7 @@ object Elaborator:
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
+      lazy val Iterator = assumeBuiltinCls("Iterator")
       lazy val Awaited = assumeBuiltinTpe("Awaited")
       lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")
@@ -658,6 +659,13 @@ object Elaborator:
   
   class State:
     val newResolverState: NewResolverState = new NewResolverState(this)
+    /** Erasure records each definition's body result separately from its callable wrapper.
+      * Keep these completed results with their symbols' owning state: imported patterns and
+      * later worksheet blocks can clone their bodies after the original Erasure pass is gone.
+      * Only Erasure writes this map, when erasing a definition or copying its result to a fresh
+      * symbol; resolution never changes it. Cloning renames nominal types in the copied result.
+      */
+    private[hkmc2] val erasedBodyResults = mutable.Map.empty[TermSymbol, Opt[codegen.ErasedValueType]]
     val suid = new Uid.Symbol.State
     given State = this
     private var _compilationUnit: Opt[CompilationUnit] = N

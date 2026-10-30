@@ -19,6 +19,21 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
   def requireCompleted(statement: Statement): Unit =
     assert(completed.exists(_ is statement), "Lowering requires completed erasure of this program")
 
+  /** Async definitions expose a promise and generators an iterator, but their original
+    * bodies produce the payload (of the promise, or of the generator's final step).
+    * Lowering must coerce explicit and implicit returns before they are wrapped.
+    */
+  def bodyResultType(td: TermDefinition): Opt[ErasedValueType] =
+    td.tsym.getState.erasedBodyResults.getOrElse(td.tsym, td.tsym.declaredResultType)
+
+  /** Fresh definition symbols need the body's payload representation as well as the
+    * callable's signature. Rename any nominal types allocated by the same copy.
+    */
+  private[hkmc2] def copyBodyResultType(source: TermSymbol, copy: TermSymbol)
+      (mapType: ErasedValueType => ErasedValueType): Unit =
+    source.getState.erasedBodyResults.get(source).foreach: tpe =>
+      copy.getState.erasedBodyResults(copy) = tpe.map(mapType)
+
   /** Read a delayed type in the context that completed erasure. Cloning can then
     * rename its symbol without retaining the entire cloning substitution in a thunk.
     */
@@ -95,6 +110,15 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
       then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
       else declaredType(resultSign, td.modulefulness)
+    td.tsym.getState.erasedBodyResults(td.tsym) = resultType
+    // The body produces the payload; callers receive the wrapper object instead.
+    // Resolution gives calls of such functions the same wrapper shapes.
+    val callableResult =
+      if !config.language.useNewResolution then resultType
+      else td.resultWrapperAnnotation match
+        case S(_: Annot.Async) => S(ErasedType.ValueLike(S(false), summon[Ctx].builtins.Promise))
+        case S(_: Annot.Generator) => S(ErasedType.ValueLike(S(false), summon[Ctx].builtins.Iterator))
+        case N => resultType
     td.k match
       case syntax.Fun =>
         val paramLists = sigShape match
@@ -104,8 +128,8 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         // Member getters and global declarations denote their result directly.
         val physicalParamLists =
           if paramLists.isEmpty && td.owner.isEmpty && !declared then Nil :: Nil else paramLists
-        if physicalParamLists.isEmpty then resultType
-        else S(ErasedFuncSignature.Signature(physicalParamLists, resultType))
+        if physicalParamLists.isEmpty then callableResult
+        else S(ErasedFuncSignature.Signature(physicalParamLists, callableResult))
       case _: syntax.Val => resultType
       case _ => N
 

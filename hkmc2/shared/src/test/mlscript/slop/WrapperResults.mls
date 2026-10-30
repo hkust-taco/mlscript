@@ -1,0 +1,120 @@
+:.
+#lang(0.3.x, strictResolution: true)
+open annotations
+
+// Call sites use Promise, while both return paths coerce the body's annotated payload.
+:noInline
+:sir
+:siret
+:await
+:expect [42, 43]
+@async fun answer(early: Bool, value: Any): Int =
+  if early do return value
+  value
+fun asPromise(value: Promise[Int]): Promise[Int] = value
+Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Promise⁰, tmp1: Promise⁰, tmp2: Promise⁰, tmp3: Promise⁰, tmp4: Array⁰, answer;
+//│ define answer as fun answer⁰(early: Bool⁰, value: Unknown)(): ? {
+//│   match early
+//│     true =>
+//│       return (value as! Int⁰)
+//│     else
+//│       return (value as! Int⁰)
+//│   end
+//│ };
+//│ define answer¹ as fun answer²(early: Bool⁰, value: Unknown): Promise⁰ {
+//│   let tmp5: Function⁰;
+//│   set tmp5 = answer⁰(early, value);
+//│   return runtime⁰.toJsAsync﹖(tmp5)
+//│ };
+//│ define asPromise⁰ as fun asPromise¹(value: Promise⁰): Promise⁰ {
+//│   return value
+//│ };
+//│ set tmp = answer²(true, 42);
+//│ set tmp1 = asPromise¹(tmp);
+//│ set tmp2 = answer²(false, 43);
+//│ set tmp3 = asPromise¹(tmp2);
+//│ set tmp4 = [tmp1, tmp3];
+//│ return globalThis⁰.Promise¹.all⁰(tmp4)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 43]
+
+// A generator override's callable returns Iterator, but its body's payload can have any representation.
+:noInline
+:sir
+:siret
+:expect {value: "payload", done: true}
+private class GeneratorBase() with
+  @annotations.generator
+  open fun generate(value: Any): Any = value
+private class GeneratorChild() extends GeneratorBase() with
+  @annotations.generator
+  override fun generate(value: Any) = value
+GeneratorChild().generate("payload").next()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ?, tmp1: Iterator⁰;
+//│ @private
+//│ define GeneratorBase⁰ as class GeneratorBase² {
+//│   constructor GeneratorBase¹
+//│   method generate⁰ = fun generate¹(value: Unknown): Iterator⁰ {
+//│     return value
+//│   }
+//│ };
+//│ @private
+//│ define GeneratorChild⁰ as class GeneratorChild² extends GeneratorBase² {
+//│   constructor GeneratorChild¹
+//│   method generate² = fun generate³(value: Unknown): Iterator⁰ {
+//│     return value
+//│   }
+//│ };
+//│ set tmp = GeneratorChild¹();
+//│ set tmp1 = tmp.generate³("payload");
+//│ return tmp1.next⁰()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = {value: "payload", done: true}
+
+// A separate signature keeps the iterator wrapper pending through all curried lists.
+fun curried: Int -> Int -> Int
+@generator fun curried(x)(y) =
+  yield x
+  y
+
+:expect [{value: 20, done: false}, {value: 22, done: true}]
+let remaining = curried(20)
+let iterator = remaining(22)
+[iterator.next(), iterator.next()]
+//│ = [{value: 20, done: false}, {value: 22, done: true}]
+//│ iterator =  {}
+//│ remaining = fun
+
+:e
+curried(20).next()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	curried(20).next()
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature does not contain member 'next'
+//│ ║  l.XX: 	fun curried: Int -> Int -> Int
+//│ ╙──      	                    ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A nominal method interface hides its body but still describes the returned iterator.
+class Methods with
+  @generator fun values[T](value: T): T = value
+fun fromMethod(receiver: Methods) = receiver.values[Int](44).next()
+
+:expect {value: 44, done: true}
+fromMethod(new Methods)
+//│ = {value: 44, done: true}
+
+// Imported pattern bodies retain their payload metadata when cloned in a later unit.
+import "../../mlscript-compile/AsyncLibrary.mls"
+
+:noOpt
+fun importedAsync(x) =
+  if x is (@compile AsyncLibrary.Result) as result then result else Promise.resolve(0)
+
+:await
+:expect [42, 42]
+Promise.all([importedAsync(3), importedAsync(4)])
+//│ = [42, 42]
