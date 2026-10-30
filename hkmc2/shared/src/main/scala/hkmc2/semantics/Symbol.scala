@@ -281,6 +281,12 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
   override def toLoc: Option[Loc] = origin.toLoc
   def subst(using sub: SymbolSubst): InstSymbol = sub.mapInstSym(this)
 
+class InfVarSymbol(val origin: Symbol | Term, val hint: Str = "")(using State) extends LocalSymbol:
+  override def nme: Str = origin match
+    case x: Symbol => x.nme ++ hint
+    case x: Term => hint
+  override def toLoc: Option[Loc] = origin.toLoc
+  def subst(using sub: SymbolSubst): InfVarSymbol = ???
 
 /** A named binding. When mut is false, its value is fixed after initialization;
   * imports and lowered immutable vals use this to retain stability through IR rewrites.
