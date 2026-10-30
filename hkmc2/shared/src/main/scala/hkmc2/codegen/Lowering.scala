@@ -372,7 +372,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   // Assign(td.sym, r,
                   //   term(st.Blk(stats, res))(k)))
                   Define(
-                    ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc))(cfgOverride, td.annotations),
+                    // A field synthesized from a constructor parameter has an unlocated body (the parameter
+                    // reference); its declared name then locates diagnostics about the field's representation.
+                    ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc.orElse(td.tsym.toLoc)))(cfgOverride, td.annotations),
                     continueBlock(stats, res),
                   )
             case syntax.Fun =>
@@ -1933,9 +1935,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     *  - Otherwise, `r` is returned unchanged.
     *
     * An absent `expected` is an unannotated slot, which holds the top reference type rather than no type at all.
+    * When the caller has no better location for the coercion (e.g., an implicit return), diagnostics point at
+    * the coerced value itself.
     */
   def castTo[R <: Result](r: R, expected: Opt[ErasedValueType], loc: Opt[Loc]): (R | Cast) =
-    r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc)
+    r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(r.toLoc))
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
