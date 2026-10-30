@@ -7,9 +7,9 @@ module ObjectBuffer with
   abstract class ObjectBuffer with
     val buf
     fun mkNew[A](cls: { size: Int, ctor: (ObjectBuffer, Int) -> A }): A
-    fun del(cls: { size: Int }, inst)
-    fun read(idx)
-    fun write(idx, v)
+    fun del(cls: { size: Int }, inst: Int): Any
+    fun read(idx: Int): Any
+    fun write(idx: Int, v: Any): Any
 
   class DefaultObjectBuffer(initLength) extends ObjectBuffer with
     val buf = new mut Array(max(16, initLength))

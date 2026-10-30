@@ -37,7 +37,7 @@ new Child().Child#get()
 
 // Fields and assignments share the same resolution path.
 :expect 12
-class Cell { mut val value = 10 }
+class Cell { mut val value: Int = 10 }
 let cell = new Cell
 set cell.Cell#value = 12
 cell.Cell#value
@@ -105,7 +105,7 @@ apply(identity, new Answer).get()
 
 // The receiver of a projection is evaluated once, including writes.
 :expect 1
-module Counter { mut val count = 0 }
+module Counter { mut val count: Int = 0 }
 fun receiver() = {
   set Counter.count = Counter.count + 1
   cell

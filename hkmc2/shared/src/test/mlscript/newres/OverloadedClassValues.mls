@@ -155,7 +155,7 @@ module MutableMembers {
   class Item {
     fun answer() = 53
   }
-  mut val value = 17
+  mut val value: Int = 17
 }
 set MutableMembers.value = 18
 
