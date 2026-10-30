@@ -320,8 +320,13 @@ fun f(a)(b) = f(a)(b)
 //│       defn = FunDefn:
 //│         sym = member:f$tailrec¹
 //│         dSym = term:f$tailrec²
-//│         params = Ls of
-//│           LoweredParamList: ‹empty›
+//│         signature = Signature:
+//│           params = Ls of
+//│             LoweredParamList: ‹empty›
+//│           erasure = Signature:
+//│             paramLists = Ls of
+//│               Nil
+//│             result = Direct of N
 //│         body = Label:
 //│           label = label:loopLabel⁰
 //│           loop = true
@@ -331,17 +336,25 @@ fun f(a)(b) = f(a)(b)
 //│       defn = FunDefn:
 //│         sym = member:f⁴
 //│         dSym = term:f⁵
-//│         params = Ls of
-//│           LoweredParamList:
-//│             params = Ls of
-//│               Param:
-//│                 sym = a⁰
-//│                 modulefulness = Modulefulness of N
-//│           LoweredParamList:
-//│             params = Ls of
-//│               Param:
-//│                 sym = b⁰
-//│                 modulefulness = Modulefulness of N
+//│         signature = Signature:
+//│           params = Ls of
+//│             LoweredParamList:
+//│               params = Ls of
+//│                 Param:
+//│                   sym = a⁰
+//│                   modulefulness = Modulefulness of N
+//│             LoweredParamList:
+//│               params = Ls of
+//│                 Param:
+//│                   sym = b⁰
+//│                   modulefulness = Modulefulness of N
+//│           erasure = Signature:
+//│             paramLists = Ls of
+//│               Ls of
+//│                 N
+//│               Ls of
+//│                 N
+//│             result = Direct of N
 //│         body = Return of Call:
 //│           fun = MemberRef{disamb=term:f$tailrec²}:
 //│             bms = member:f$tailrec¹

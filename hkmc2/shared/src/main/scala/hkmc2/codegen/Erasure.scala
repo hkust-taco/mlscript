@@ -107,7 +107,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       case syntax.Fun =>
         val paramLists = sigShape match
           case S((ps, _)) => ps
-          case N => td.params.map(_.params.map(_.sym.erasedType))
+          case N => td.params.map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType))
         // Block-level nullary functions take an implicit empty list and references auto-invoke them.
         // Member getters and global declarations denote their result directly.
         val physicalParamLists =

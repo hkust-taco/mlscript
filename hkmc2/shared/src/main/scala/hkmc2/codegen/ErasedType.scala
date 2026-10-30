@@ -420,6 +420,12 @@ enum ErasedResult[+T <: ErasedValueType](val bodyType: Opt[T]):
     case Generator(tpe) => Generator(tpe.map(f))
 end ErasedResult
 
+object ErasedResult:
+  def fromAnnotations(bodyType: Opt[ErasedValueType], annotations: Ls[semantics.Annot]): ErasedResult[ErasedValueType] =
+    if annotations.exists(_.isInstanceOf[semantics.Annot.Async]) then Async(bodyType)
+    else if annotations.exists(_.isInstanceOf[semantics.Annot.Generator]) then Generator(bodyType)
+    else Direct(bodyType)
+
 
 /** Immutable result information shared by parameterized definitions and getters.
   * TermSymbol publishes the complete signature once, before lowering or importing it.
@@ -435,9 +441,6 @@ sealed abstract class ErasedCallableSignature extends Canonicalizable:
       ErasedFuncSignature.Signature(sig.paramLists.map(_.map(_.map(f))), result.map(f))
     case _: ErasedGetterSignature => ErasedGetterSignature.Signature(result.map(f))
 
-  def withResult(result: ErasedResult[ErasedValueType]): ErasedCallableSignature = this match
-    case sig: ErasedFuncSignature => ErasedFuncSignature.Signature(sig.paramLists, result)
-    case _: ErasedGetterSignature => ErasedGetterSignature.Signature(result)
 end ErasedCallableSignature
 
 
