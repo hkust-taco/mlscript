@@ -75,10 +75,26 @@ GeneratorChild().generate("payload").next()
 //│ = {value: "payload", done: true}
 
 // A separate signature keeps the iterator wrapper pending through all curried lists.
+:checkIR
+:soir
+:siret
 fun curried: Int -> Int -> Int
 @generator fun curried(x)(y) =
   yield x
   y
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let curried$worker;
+//│ @inline
+//│ define curried⁰ as fun curried¹(x: ?)(y: ?): Iterator⁰ {
+//│   return curried$worker⁰(x, y)
+//│ };
+//│ @generator
+//│ define curried$worker as fun curried$worker⁰(x: ?, y: ?): generator Int⁰ {
+//│   do yield⁰(x);
+//│   return (y as! Int⁰)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 :expect [{value: 20, done: false}, {value: 22, done: true}]
 let remaining = curried(20)
@@ -161,6 +177,53 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43, 44]
 //│ results = ResultGetters(_)
+
+// Both forward references and recursive calls follow the direct-result wrapper.
+:checkIR
+:soir
+:siret
+:expect [{value: 1, done: false}, {value: 0, done: false}, {value: 42, done: true}]
+@noInline fun forward(): Iterator[Any] = recursive(1)(42)
+@generator fun recursive(count: Int)(result: Int): Int =
+  yield count
+  if count > 0 do yield* recursive(count - 1)(result)
+  result
+let recursiveIterator = forward()
+[recursiveIterator.next(), recursiveIterator.next(), recursiveIterator.next()]
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp: Unknown, tmp1: Unknown, tmp2: Unknown, recursive$worker;
+//│ @noInline
+//│ define forward⁰ as fun forward¹(): Iterator⁰ {
+//│   return recursive$worker⁰(1, 42)
+//│ };
+//│ @inline
+//│ define recursive⁰ as fun recursive¹(count: Int⁰)(result: Int⁰): Iterator⁰ {
+//│   return recursive$worker⁰(count, result)
+//│ };
+//│ @generator
+//│ define recursive$worker as fun recursive$worker⁰(count: Int⁰, result: Int⁰): generator Int⁰ {
+//│   let scrut: ?, tmp3: Int⁰;
+//│   do yield⁰(count);
+//│   set scrut = >⁰(count, 0);
+//│   match scrut
+//│     true =>
+//│       let inlinedVal: Iterator⁰;
+//│       set tmp3 = -⁰(count, 1);
+//│       set inlinedVal = recursive$worker⁰(tmp3, result);
+//│       do yield*⁰(inlinedVal);
+//│       return result
+//│     else
+//│       return result
+//│   end
+//│ };
+//│ set recursiveIterator⁰ = forward¹();
+//│ set tmp = recursiveIterator⁰.next⁰();
+//│ set tmp1 = recursiveIterator⁰.next⁰();
+//│ set tmp2 = recursiveIterator⁰.next⁰();
+//│ return [tmp, tmp1, tmp2]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [{value: 1, done: false}, {value: 0, done: false}, {value: 42, done: true}]
+//│ recursiveIterator =  {}
 
 // TODO: AsyncLowering hoists the helper out of the local constructor's scope.
 :fixme
