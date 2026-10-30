@@ -403,3 +403,14 @@ not true
 not false
 //│ Wasm result:
 //│ = 1
+
+
+// Operators are implemented by dynamically typed runtime intrinsics, so the slots their results flow into
+// keep the default reference representation, even when other inputs are integers (see `BuiltinOperatorResults`).
+:noInline
+:expect 43
+private fun pass(a) = a
+let unused = pass(1)
+pass(42 + 1)
+//│ Wasm result:
+//│ = 43

@@ -160,7 +160,15 @@ f(1)
 let f = => add of _, 1
 //│ f = fun f
 
+// The sum computed by `add` now also reaches the erroneous `f` defined above, which this call reports.
+:e
 f(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.XX: 	f(1)
+//│ ║        	^^^^
+//│ ╟── Value of type 'Int' cannot be called like a function.
+//│ ║  l.XX: 	fun add = => _ + _
+//│ ╙──      	             ^^^^^
 //│ = 2
 
 

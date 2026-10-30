@@ -135,6 +135,38 @@ object ErasedType:
     */
   def Function(rsc: Opt[Bool]): ErasedValueType = ErasedType.ValueLike(rsc, ctx.builtins.Function)
 
+  /** WORKAROUND (see [[semantics.BuiltinOperatorResults]]): the representation of an application of the builtin
+    * operator named `op`, approximated from the representations of its operands with the same rules as resolution.
+    * Comparing representations requires a context, so the choice is deferred until the type is canonicalized.
+    * Only the JavaScript backend sees these applications: lowering for Wasm replaces them by intrinsic calls.
+    */
+  def builtinOperatorResult(op: Str, operands: Ls[Path]): Opt[ErasedValueType] =
+    import semantics.BuiltinOperatorResults, BuiltinOperatorResults.{PrimitiveClass, Alternative}
+    if !BuiltinOperatorResults.approximates(op, operands.length) then N
+    else S(ErasedType.ValueLike(rsc = S(false), {
+      val builtins = ctx.builtins
+      def primitiveOf(operand: Path): Opt[PrimitiveClass] =
+        val actual = operand.erasedType_!.canonicalize
+        def within(cls: ClassSymbol) =
+          needsCast(actual, ErasedType.ValueLike(rsc = S(false), cls).canonicalize).contains(false)
+        if within(builtins.Int) then S(PrimitiveClass.Int)
+        else if within(builtins.Num) then S(PrimitiveClass.Num)
+        else if within(builtins.Str) then S(PrimitiveClass.Str)
+        else if within(builtins.Bool) then S(PrimitiveClass.Bool)
+        else if within(builtins.BigInt) then S(PrimitiveClass.BigInt)
+        else N
+      BuiltinOperatorResults(op, operands.map(primitiveOf)) match
+        case S(Alternative.Of(primitive) :: Nil) => primitive match
+          case PrimitiveClass.Int => builtins.Int
+          case PrimitiveClass.Num => builtins.Num
+          case PrimitiveClass.Str => builtins.Str
+          case PrimitiveClass.Bool => builtins.Bool
+          case PrimitiveClass.BigInt => builtins.BigInt
+        // Applications that yield an operand (the comma and short-circuiting operators) do not reach the IR as
+        // calls. Like applications without an approximation, they keep the top representation.
+        case _ => builtins.Anything
+    }))
+
   /** Determines the direct parent from published metadata, treating a missing header as unknown. */
   private def parentOf(sym: BaseTypeSymbol): ClassHeader.Parent =
     sym.irClassHeader.fold(ClassHeader.Parent.Unknown)(_.parent)

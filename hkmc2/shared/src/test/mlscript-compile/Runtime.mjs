@@ -871,7 +871,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       if (scrut === true) {
         tmp1 = reps + 1;
         reps = tmp1;
-        scrut1 = reps > 10;
+        scrut1 = tmp1 > 10;
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         }
@@ -900,7 +900,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
       if (scrut === true) {
         tmp = reps + 1;
         reps = tmp;
-        scrut1 = reps > 10;
+        scrut1 = tmp > 10;
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         }
