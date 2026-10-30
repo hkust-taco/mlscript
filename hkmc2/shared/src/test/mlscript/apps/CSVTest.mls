@@ -5,7 +5,7 @@ import "../../mlscript-compile/apps/CSV.mls"
 
 
 let csv = CSV()
-//│ csv = CSV(",")
+//│ csv = CSV(_)
 
 
 csv.strDelimiter

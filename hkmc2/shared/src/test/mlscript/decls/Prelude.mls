@@ -623,7 +623,7 @@ declare val document: dyn
 declare val customElements: dyn
 // Preserve the nominal superclass while its host members remain dynamic.
 declare open class HTMLElement {
-  val textContent: dyn
+  mut val textContent: dyn
   val innerHTML: dyn
   val shadowRoot: dyn
   val appendChild: dyn

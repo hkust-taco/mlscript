@@ -341,7 +341,6 @@ enum Tree extends AutoLocated:
       InfixApp(id, Keywrd(Keyword.`:`), id)
     
     case LetLike(kw @ Keywrd(Keyword.`let`), Pun(true, id), N, body) =>
-      // Ordinary let elaboration resolves the initializer before introducing the new binding.
       LetLike(kw, id, S(id), body)
     
     case LetLike(kw, group: Block, N, S(body)) =>

@@ -914,7 +914,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       candidates: Ls[DefinitionSymbol[?]])(using LoweringCtx): Block =
     // Lenient and dynamic lookup can omit the single IR target while retaining known
     // candidates. None of those immutable fields may be written without @unsafe.
-    val immutable = (target.toList ::: candidates).collectFirst:
+    val immutable = target.iterator.++(candidates).collectFirst:
       case sym: TermSymbol if sym.k is syntax.ImmutVal => sym
     immutable match
       case S(sym) if !unsafe => cannotAssign(sym, sym, name.toLoc)

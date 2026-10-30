@@ -160,12 +160,12 @@ Box(41).mk()
 //│ = 42
 
 
-class Counter(val x) with
+class Counter(mut val x) with
   fun inc() = 
-    @unsafe set x += 1
+    set x += 1
     this
   fun double() =
-    @unsafe set x *= 2
+    set x *= 2
     this
   fun get() = x
 let c = Counter(1)

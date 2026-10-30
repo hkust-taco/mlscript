@@ -8,11 +8,11 @@ open Predef
 
 
 // The default delimiter is the comma, but this can be overriden here.
-data class CSV(strDelimiter?) with ...
+class CSV(strDelim?) with ...
 
 
 // Check to see if the delimiter is defined. If not, then default to comma.
-if strDelimiter is null then @unsafe set strDelimiter = ","
+val strDelimiter = strDelim ?? ","
 
 val objPattern = new mut RegExp of
   // Delimiters.

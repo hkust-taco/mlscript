@@ -9,13 +9,13 @@ abstract class ThreadEffect with
   fun fork(thread: () -> ()): ()
   fun yld(): ()
 
-class Lock(val locked) with
+class Lock(mut val locked) with
   fun lock(th: ThreadEffect) =
     while locked do
       th.yld()
-    @unsafe set locked = true
+    set locked = true
   fun unlock() =
-    @unsafe set locked = false
+    set locked = false
 
 fun f(h, x) =
   print("f " + x)
