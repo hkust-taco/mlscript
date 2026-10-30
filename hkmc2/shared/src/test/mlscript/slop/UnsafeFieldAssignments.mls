@@ -38,6 +38,20 @@ publicCell.value
 //│ = 3
 //│ publicCell = Public(3)
 
+// Inline do branches must preserve the annotation and only write when taken.
+:expect [3, 0]
+fun updateIf(enabled: Bool, cell: Public) =
+  if enabled do @unsafe set cell.value = 1
+  if enabled do @unsafe set cell.value += 2
+let taken = new mut Public(0)
+let skipped = new mut Public(0)
+updateIf(true, taken)
+updateIf(false, skipped)
+[taken.value, skipped.value]
+//│ = [3, 0]
+//│ skipped = Public(0)
+//│ taken = Public(3)
+
 // The annotation survives class-body cloning and can write private fields too.
 :expect 4
 class Private with
