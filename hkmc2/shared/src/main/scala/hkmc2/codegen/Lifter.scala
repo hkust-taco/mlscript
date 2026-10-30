@@ -1075,17 +1075,19 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     val fun = obj.fun
     
     val mainSym = fun.sym
-    private lazy val mainParams = fun.params match
+    private lazy val mainParams = if isTrivial then fun.params else fun.params match
       case head :: next => head.copy(params = auxParams ::: head.params)(head.toLoc) :: next
       case Nil => LoweredParamList.plain(auxParams)(N) :: Nil
-    private lazy val mainSignature = fun.signature.withParams(mainParams).withAnnotations(
+    private lazy val mainSignature =
+      if isTrivial then fun.signature else FunDefn.Signature.fromParams(mainParams, fun.signature.result)
+    private lazy val mainAnnotations =
       if liftedFromStagedModule && !fun.isStaged then Annot.Modifier(Keyword.`staged`)(N) :: fun.annotations
-      else fun.annotations)
+      else fun.annotations
     // Captures change the physical signature. Keep the source declaration's published signature
     // intact; rewritten direct calls and the partial-application wrapper use this fresh identity.
     lazy val mainDsym =
       if isTrivial then fun.dSym
-      else mainSignature.freshSymbol(fun.dSym, N)
+      else SymbolRefresher.copyTermSymbol(fun.dSym, N, S(mainSignature.erasure))
     val auxSym = BlockMemberSymbol(fun.sym.nme + "$", Nil, fun.sym.nameIsMeaningful)
     private lazy val auxDsym = new TermSymbol(syntax.Fun, N, Tree.Ident(auxSym.nme))
     
@@ -1095,7 +1097,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val newBod = rewriter.rewrite(fun.body)
       val withCapture = addExtraSyms(newBod)
       val newDefn = fun.copy(owner = N, sym = mainSym, dSym = mainDsym,
-        signature = mainSignature, body = withCapture)(fun.configOverride)
+        signature = mainSignature, body = withCapture)(fun.configOverride, mainAnnotations)
       LifterResult(newDefn, rewriter.extraDefns.toList)
     
     // Definition with the auxiliary parameters as a new first parameter list.
@@ -1127,10 +1129,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         N,
         auxSym,
         auxDsym,
-        FunDefn.Signature(newPlists, call.erasedType,
-          if fun.noInline then annotations else Annot.Inline()(N) :: annotations),
+        FunDefn.Signature.fromParams(newPlists, ErasedResult.Direct(call.erasedType)),
         bod
-      )(N)
+      )(N, if fun.noInline then annotations else Annot.Inline()(N) :: annotations)
     
     private val aux = Lazy[Defn](mkAuxDefn)
     
@@ -1254,7 +1255,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val inst = Instantiate(false, ref, argsList)(InstantiateMetadata.empty, N)
       val bod = Return(inst)
       
-      FunDefn(N, flattenedSym, flattenedDSym, FunDefn.Signature(allParamLists, inst.erasedType, Nil), bod)(N)
+      FunDefn(N, flattenedSym, flattenedDSym, FunDefn.Signature.fromParams(allParamLists, ErasedResult.Direct(inst.erasedType)), bod)(N, Nil)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     

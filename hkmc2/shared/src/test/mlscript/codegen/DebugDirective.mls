@@ -82,8 +82,6 @@ module Main with
 //│   sym = member:foo1⁰
 //│   dSym = term:Main⁰/foo1¹
 //│   signature = Signature:
-//│     annotations = Ls of
-//│       Debug of ...
 //│     erasure = Signature of Direct of N
 //│   body = Return of Lit of IntLit of 4
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————

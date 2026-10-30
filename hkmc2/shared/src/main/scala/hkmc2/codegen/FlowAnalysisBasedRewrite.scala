@@ -125,12 +125,16 @@ class FlowAnalysisBasedRewrite(
     override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
       val rewrite = functionRewrites.get(instId -> fun.dSym).orElse(functionRewrites.get(Nil -> fun.dSym))
       val signature = rewrite.fold(fun.signature)(_.signature)
-      val signature2 = signature.withParams(signature.params.mapConserve(applyParamList))
+      val params2 = signature.params.mapConserve(applyParamList)
+      val signature2 = if params2 is signature.params then signature else signature.copy(params = params2)
       val etaArgss = signature2.params.takeRight(rewrite.fold(0)(_.etaCount)).map(EtaParamList(_).args)
       val body2 = withEliminatedParams(rewrite.fold(Set.empty[VarSymbol])(_.removed)):
         withEtaArgss(etaArgss):
           applyFunBodyLikeBlock(fun.body)
-      (signature2, body2)
+      // Calls added for eta expansion may be effectful even when the original body was pure.
+      val annotations = if rewrite.exists(_.etaCount > 0) then fun.annotations.filterNot(_.isInstanceOf[Annot.Pure])
+        else fun.annotations
+      (signature2, body2, annotations)
     
     
     // traversal
@@ -245,9 +249,9 @@ class FlowAnalysisBasedRewrite(
       val own2 = fun.owner.mapConserve(_.subst)
       val sym2 = fun.sym.subst
       val dSym2 = fun.dSym.subst
-      val (signature2, body2) = rewriteFunDefn(fun)
+      val (signature2, body2, annotations) = rewriteFunDefn(fun)
       if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (signature2 is fun.signature) && (body2 is fun.body)
-        then fun else FunDefn(own2, sym2, dSym2, signature2, body2)(fun.configOverride)
+        then fun else FunDefn(own2, sym2, dSym2, signature2, body2)(fun.configOverride, annotations)
     
     override def applyLam(lam: Lambda): Lambda =
       val lamId: ConcreteFunId = ConcreteId(lam.uid, instId)
@@ -275,10 +279,10 @@ class FlowAnalysisBasedRewrite(
     new Rewriter(Nil, N):
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
-          case S((signature, body)) =>
+          case S((signature, body, annotations)) =>
             val dSym2 = fun.dSym.subst
             if (signature is fun.signature) && (body is fun.body) && (dSym2 is fun.dSym) then fun
-            else FunDefn(fun.owner, fun.sym, dSym2, signature, body)(fun.configOverride)
+            else FunDefn(fun.owner, fun.sym, dSym2, signature, body)(fun.configOverride, annotations)
           case N => super.applyFunDefn(fun)
   
   def otherNewFunDefns: Iterable[FunDefn] = Nil
@@ -297,7 +301,9 @@ class FlowAnalysisBasedRewrite(
       val eta = etaTargetLists(ConcreteId((fun, 0), instId), original.params)
       val etaParams = etaParamLists(eta)
       val params = kept ::: etaParams.map(_.params)
-      val signature = if eta.isEmpty then original.signature.withParams(kept) else
+      val signature = if eta.isEmpty then
+        if kept is original.params then original.signature else FunDefn.Signature.fromParams(kept, original.signature.result)
+      else
         assert(!original.async && !original.generator, "Cannot eta-expand a wrapped result")
         val results = eta.last._1.prodFuns.toList.map: target =>
           target.exprId match
@@ -308,8 +314,7 @@ class FlowAnalysisBasedRewrite(
               targetFun.declaredResultType
             case _ => N
         val result = if results.forall(_.isDefined) then S(ErasedType.Union.mk(results.flatten)) else N
-        // Calls added for the new parameter lists may be effectful even when the original body was pure.
-        FunDefn.Signature(params, result, original.annotations.filterNot(_.isInstanceOf[Annot.Pure]))
+        FunDefn.Signature.fromParams(params, ErasedResult.Direct(result))
       res(instId -> fun) = FunctionRewrite(signature, removed, etaParams.size)
     res
   

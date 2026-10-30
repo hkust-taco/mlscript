@@ -74,7 +74,7 @@ class WorkerWrapper
     val (workerParams, paramMapping) = flattenParams(fun.params)
     val workerSym = new BlockMemberSymbol(s"${fun.sym.nme}$$worker", Nil, nameIsMeaningful = true)
     val workerBody = rewriteParams(body, paramMapping)
-    val workerSignature = fun.signature.withParams(workerParams :: Nil).withAnnotations(withoutInline(fun.annotations))
+    val workerSignature = FunDefn.Signature.fromParams(workerParams :: Nil, fun.signature.result)
     val workerDSym = TermSymbol(syntax.Fun, N, syntax.Tree.Ident(workerSym.nme))
     workerSym.tsym = S(workerDSym)
     val worker = FunDefn(
@@ -83,7 +83,7 @@ class WorkerWrapper
       workerDSym,
       workerSignature,
       workerBody,
-    )(fun.configOverride)
+    )(fun.configOverride, withoutInline(fun.annotations))
     val workerArgs = fun.params.flatMap(_.params).map: param =>
       Arg(N, param.sym.asSimpleRef)
     val wrapperBody = Return(
@@ -95,11 +95,12 @@ class WorkerWrapper
       case Annot.NoInline() | Annot.Generator() => false
       case _ => true)
     val wrapperSignature =
-      if fun.generator then FunDefn.Signature(fun.params, fun.signature.erasure.ret, wrapperAnnotations)
-      else fun.signature.withAnnotations(wrapperAnnotations)
+      if fun.generator then FunDefn.Signature.fromParams(fun.params,
+        ErasedResult.fromAnnotations(fun.signature.erasure.ret, wrapperAnnotations))
+      else fun.signature
     val wrapperDSym =
       if wrapperSignature.erasure isnt fun.signature.erasure then
-        val copy = wrapperSignature.freshSymbol(fun.dSym, fun.owner)
+        val copy = SymbolRefresher.copyTermSymbol(fun.dSym, fun.owner, S(wrapperSignature.erasure))
         assert(!wrapperSymbols.contains(fun.dSym), "A generator symbol must have only one definition")
         wrapperSymbols(fun.dSym) = copy
         copy
@@ -110,14 +111,14 @@ class WorkerWrapper
       wrapperDSym,
       wrapperSignature,
       wrapperBody,
-    )(fun.configOverride)
+    )(fun.configOverride, wrapperAnnotations)
     log(dbg"▶ Worker-wrapper: ${fun.dSym.showDbg} -> ${worker.dSym.showDbg}")
     Scoped(Set.single(worker.sym), Define(wrapper, Define(worker, rest)))
   
   private def mkInlineOnly(fun: FunDefn, body: Block): FunDefn =
     val annotations = withInline(fun.annotations)
     if (annotations is fun.annotations) && (body is fun.body) then fun
-    else fun.copy(fun.owner, fun.sym, fun.dSym, fun.signature.withAnnotations(annotations), body)(fun.configOverride)
+    else fun.copy(fun.owner, fun.sym, fun.dSym, fun.signature, body)(fun.configOverride, annotations)
   
   override def applyProgram(prog: Program): Program =
     val transformed = super.applyProgram(prog)

@@ -308,14 +308,14 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   // Prepare the actual bindings after free-variable analysis, and publish their shared signatures
   // before rewriting calls. In particular, applying just a branch's field list returns Function.
   private val branchSignatures = branchFunSyms.map: (branchId, syms) =>
-    val signature = FunDefn.Signature(
+    val signature = FunDefn.Signature.fromParams(
       branchFunParamFieldSyms(branchId).asParamList :: captureParams(dtorBranchFnFvs(branchId._1)) :: Nil,
-      N, AffineAnnotForBranchFns :: PrivateModifier :: Nil)
-    signature.publish(syms._2)
+      ErasedResult.Direct(N))
+    syms._2.initializeErasure(S(signature.erasure))
     branchId -> signature
   private val restSignatures = restFunSyms.map: (restId, syms) =>
-    val signature = FunDefn.Signature(captureParams(restFnFvs(restId)) :: Nil, N, PrivateModifier :: Nil)
-    signature.publish(syms._2)
+    val signature = FunDefn.Signature.fromParams(captureParams(restFnFvs(restId)) :: Nil, ErasedResult.Direct(N))
+    syms._2.initializeErasure(S(signature.erasure))
     restId -> signature
   
   // Rewrites the program under a specific instantiation id
@@ -330,7 +330,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     
     override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
       val body = returningInto(fun.signature.result.bodyType)(applyBlock(fun.body))
-      (fun.signature.withParams(fun.params.mapConserve(applyParamList)), body)
+      val params = fun.params.mapConserve(applyParamList)
+      val signature = if params is fun.params then fun.signature else fun.signature.copy(params = params)
+      (signature, body, fun.annotations)
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
       returningInto(fun.signature.result.bodyType)(super.applyFunDefn(fun))
@@ -467,7 +469,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         val actualBody = Begin(
           rewriter.applyBlock(ogBody),
           rewriter.mkCall(restFunBms.asMemberRef(restFunTSym), restFnFvs(dtorId))(Return(_)))
-        FunDefn(N, bms, tSym, signature, actualBody)(N)
+        FunDefn(N, bms, tSym, signature, actualBody)(N, AffineAnnotForBranchFns :: PrivateModifier :: Nil)
     end newBranchFuns
     
     // Continuation functions for the code after fused matches or labels
@@ -488,7 +490,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
               rewriter.mkCall(parentFunBms.asMemberRef(parentFunTSym), parentFunFvs)(Return(_)))
           case None =>
             Begin(transformedOgBody, Return(Value.Lit(Tree.UnitLit(true))(N)))
-        FunDefn(N, bms, tsym, signature, actualBody)(N)
+        FunDefn(N, bms, tsym, signature, actualBody)(N, PrivateModifier :: Nil)
     end newRestFuns
     
     newBranchFuns ++ newRestFuns
@@ -499,7 +501,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     new Rewriter(Nil, N):
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
-          case Some((signature, rewrittenBody)) =>
+          case Some((signature, rewrittenBody, _)) =>
             // deforest never changes fun params in place
             assert(signature is fun.signature)
             fun.withBody(rewrittenBody)

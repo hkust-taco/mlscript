@@ -390,7 +390,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     // TODO: remove it. only for test
     val debug = (k: Block) => call(sym, Nil)(fnPrintCode(_)(k))
     val newFun = f.copy(owner = f.owner, sym = genSym, dSym = dSym,
-      signature = FunDefn.Signature(Ls(LoweredParamList.plain(Nil)(N)), N, f.annotations), body = newBody)(f.configOverride)
+      signature = FunDefn.Signature.fromParams(Ls(LoweredParamList.plain(Nil)(N)), ErasedResult.fromAnnotations(N, f.annotations)),
+      body = newBody)(f.configOverride, f.annotations)
     (newFun, debug)
 
   override def applyBlock(b: Block): Block = super.applyBlock(b) match

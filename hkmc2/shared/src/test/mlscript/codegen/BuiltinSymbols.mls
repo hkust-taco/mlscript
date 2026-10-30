@@ -50,8 +50,6 @@ case Int then 0
 //│                 Param:
 //│                   sym = caseScrut⁰
 //│                   modulefulness = Modulefulness of N
-//│           annotations = Ls of
-//│             Modifier of keyword 'private'
 //│           erasure = Signature:
 //│             paramLists = Ls of
 //│               Ls of

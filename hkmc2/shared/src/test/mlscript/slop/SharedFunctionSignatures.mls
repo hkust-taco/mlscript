@@ -38,6 +38,54 @@ private fun partial(unused: Str, value: Int): Int -> Int = add(value)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
 
+// Capture lifting introduces an immutable parameter. Tail-call conversion refreshes
+// it into a mutable loop slot together with the function symbol. The forwarding
+// wrapper must call that refreshed definition, including through partial application.
+:noInline
+:lift
+:flowBasedOpt off
+:soir
+:siret
+:checkIR
+:expect [42, 43]
+fun makeCountdown(result: Int): Int -> Int =
+  fun countdown(remaining: Int): Int =
+    if remaining == 0 then result else countdown(remaining - 1)
+  countdown
+let countdown = makeCountdown(42)
+[countdown(3), makeCountdown(43)(4)]
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let countdown, tmp: ?, baseCall: Function⁰, tmp1: ?, countdown$;
+//│ @inline
+//│ define countdown$ as fun countdown$⁰(result: Int⁰)(remaining: Int⁰): Int⁰ {
+//│   return countdown⁰(result, remaining)
+//│ };
+//│ define countdown as fun countdown⁰(result: Int⁰, remaining: Int⁰): Int⁰ {
+//│   loop loopLabel:
+//│     let scrut: ?, tmp2: Int⁰;
+//│     set scrut = Predef⁰.equals⁰(remaining, 0);
+//│     match scrut
+//│       true =>
+//│         return result
+//│       else
+//│         set tmp2 = -⁰(remaining, 1);
+//│         set remaining = tmp2;
+//│         continue loopLabel
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ define makeCountdown⁰ as fun makeCountdown¹(result: Int⁰): Function⁰ {
+//│   return countdown$⁰(result)
+//│ };
+//│ set countdown¹ = makeCountdown¹(42);
+//│ set tmp = countdown¹(3);
+//│ set baseCall = makeCountdown¹(43);
+//│ set tmp1 = baseCall(4);
+//│ return [tmp, tmp1]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 43]
+//│ countdown = fun
+
 // A specialized outer function copies a nested function whose own parameter list changes.
 // Keep the nested definition in place to exercise binding refresh without lifting.
 :noInline

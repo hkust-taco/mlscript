@@ -323,8 +323,6 @@ fun f(a)(b) = f(a)(b)
 //│         signature = Signature:
 //│           params = Ls of
 //│             LoweredParamList: ‹empty›
-//│           annotations = Ls of
-//│             Modifier of keyword 'private'
 //│           erasure = Signature:
 //│             paramLists = Ls of
 //│               Nil
@@ -350,8 +348,6 @@ fun f(a)(b) = f(a)(b)
 //│                 Param:
 //│                   sym = b⁰
 //│                   modulefulness = Modulefulness of N
-//│           annotations = Ls of
-//│             Inline
 //│           erasure = Signature:
 //│             paramLists = Ls of
 //│               Ls of

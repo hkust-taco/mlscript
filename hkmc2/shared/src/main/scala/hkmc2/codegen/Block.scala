@@ -717,16 +717,17 @@ final case class FunDefn private(
     body: Block,
   )(
     val configOverride: Opt[Config],
+    val annotations: Ls[Annot],
 ) extends Defn:
   // Keep this in the constructor so both `apply` and `copy` enforce it.
-  signature.publish(dSym)
+  if !dSym.isErased then dSym.initializeErasure(S(signature.erasure))
+  else assert(dSym.erasure.exists(_ is signature.erasure), s"Conflicting signature for '${dSym.nme}'")
   def params: Ls[LoweredParamList] = signature.params
-  val annotations: Ls[Annot] = signature.annotations
   def copy(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol,
-      signature: FunDefn.Signature, body: Block)(configOverride: Opt[Config]): FunDefn =
-    FunDefn(owner, sym, dSym, signature, body)(configOverride)
+      signature: FunDefn.Signature, body: Block)(configOverride: Opt[Config], annotations: Ls[Annot]): FunDefn =
+    FunDefn(owner, sym, dSym, signature, body)(configOverride, annotations)
   def withBody(body: Block): FunDefn =
-    if body is this.body then this else copy(owner, sym, dSym, signature, body)(configOverride)
+    if body is this.body then this else copy(owner, sym, dSym, signature, body)(configOverride, annotations)
   val defnSym = S(dSym)
   val asPath = sym.asMemberRef(dSym)
   lazy val tailRec: Bool = annotations.exists(_.isInstanceOf[Annot.TailRec])
@@ -751,7 +752,7 @@ final case class FunDefn private(
       _inlinerBodySummary = summary
       summary
   
-  // `configOverride` lives in a secondary constructor list, so case-class equality would ignore it.
+  // `configOverride` and `annotations` live in a secondary constructor list, so case-class equality would ignore them.
   // Compare the shared erasure by identity, just as construction does.
   // We currently use structural equality in JSBackendDiffMaker.scala
   // to make sure that structurally equal blocks retain object identity.
@@ -842,53 +843,20 @@ private[codegen] object InlinerBodySummary:
     InlinerBodySummary(entries.toList, transitiveCallTargets)
 
 object FunDefn:
-  /** Owns the bindings and annotations from which the erased calling convention is derived.
-    * A body-only rewrite shares this object. Renaming parameter bindings may share its erasure;
-    * changing their types, arity, or result convention requires a new erasure and a fresh symbol.
+  /** Parameter bindings and the immutable erasure shared with the definition symbol. Copies refresh
+    * their symbols and bindings; a change of parameter types, arity, or result also needs a new erasure.
     */
-  final case class Signature private(
-    val params: Ls[LoweredParamList],
-    val annotations: Ls[Annot],
-    val erasure: ErasedCallableSignature,
+  final case class Signature(
+    params: Ls[LoweredParamList],
+    erasure: ErasedCallableSignature,
   ):
     def result: ErasedResult[ErasedValueType] = erasure.result
-    
-    /** Publish before constructing recursive/forward calls, or check a previously published header.
-      * No structural comparison is needed: only this signature's erasure may be used by the definition.
-      */
-    def publish(sym: TermSymbol): Unit =
-      if !sym.isErased then sym.initializeErasure(S(erasure))
-      else assert(sym.erasure.exists(_ is erasure), s"Conflicting signature for '${sym.nme}'")
-    
-    def freshSymbol(original: TermSymbol, owner: Opt[InnerSymbol])(using State): TermSymbol =
-      SymbolRefresher.copyTermSymbol(original, owner, S(erasure))
-    
-    def withParams(params: Ls[LoweredParamList]): Signature =
-      if params is this.params then this
-      else
-        // Binding refreshes retain their type objects. Compare against the original bindings,
-        // whose types were checked against the declaration header at the lowering boundary.
-        val sameTypes = this.params.corresponds(params): (before, after) =>
-          before.params.corresponds(after.params): (p, q) =>
-            p.sym.erasedType.corresponds(q.sym.erasedType)(_ is _)
-        new Signature(params, annotations, if sameTypes then erasure else Signature.erase(params, result))
-    
-    // Wrapper changes also change the body's result convention. Build a new signature with the
-    // appropriate body type instead of treating these as ordinary optimization annotations.
-    def withAnnotations(annotations: Ls[Annot]): Signature =
-      if annotations is this.annotations then this
-      else
-        assert(Signature.wrapper(annotations) == Signature.wrapper(this.annotations),
-          "Changing async/generator annotations requires a new result convention")
-        new Signature(params, annotations, erasure)
   
   object Signature:
-    private def wrapper(annotations: Ls[Annot]): Opt[Annot] =
-      annotations.find(_.isInstanceOf[Annot.Async]).orElse(annotations.find(_.isInstanceOf[Annot.Generator]))
-    
-    private def erase(params: Ls[LoweredParamList], result: ErasedResult[ErasedValueType]): ErasedCallableSignature =
-      if params.isEmpty then ErasedGetterSignature.Signature(result)
-      else ErasedFuncSignature.Signature(params.map(_.params.map(_.sym.erasedType)), result)
+    def fromParams(params: Ls[LoweredParamList], result: ErasedResult[ErasedValueType]): Signature =
+      val erasure = if params.isEmpty then ErasedGetterSignature.Signature(result)
+        else ErasedFuncSignature.Signature(params.map(_.params.map(_.sym.erasedType)), result)
+      Signature(params, erasure)
     
     private def matchesParams(erasure: ErasedCallableSignature, params: Ls[LoweredParamList])
         (sameType: (ErasedValueType, ErasedValueType) => Bool): Bool = erasure match
@@ -897,17 +865,10 @@ object FunDefn:
           types.corresponds(ps.params)((t, p) => t.corresponds(p.sym.erasedType)(sameType))
       case _: ErasedGetterSignature => params.isEmpty
     
-    def apply(params: Ls[LoweredParamList], bodyType: Opt[ErasedValueType], annotations: Ls[Annot]): Signature =
-      val result = wrapper(annotations) match
-        case S(_: Annot.Async) => ErasedResult.Async(bodyType)
-        case S(_: Annot.Generator) => ErasedResult.Generator(bodyType)
-        case _ => ErasedResult.Direct(bodyType)
-      new Signature(params, annotations, erase(params, result))
-    
     /** Adopt the declaration header once, at the source-to-IR boundary. Legacy erasure may still
       * describe an async/generator body with a Direct result; subsequent rewrites retain that header.
       */
-    def fromLowering(params: Ls[LoweredParamList], annotations: Ls[Annot], sym: TermSymbol)(using Ctx, State): Signature =
+    def fromLowering(params: Ls[LoweredParamList], sym: TermSymbol)(using Ctx, State): Signature =
       val erasure = sym.erasure match
         case S(sig: ErasedCallableSignature) => sig
         case _ => lastWords(s"Missing callable signature for '${sym.nme}'")
@@ -916,20 +877,20 @@ object FunDefn:
       // compares the shared erasure object, without traversing the parameters or their types.
       assert(matchesParams(erasure, params)((l, r) => (l is r) || l.canonicalize == r.canonicalize),
         s"Lowered parameters disagree with the signature of '${sym.nme}'")
-      new Signature(params, annotations, erasure)
+      Signature(params, erasure)
   
   def apply(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol,
-      signature: Signature, body: Block)(configOverride: Opt[Config]): FunDefn =
-    new FunDefn(owner, sym, dSym, signature, body)(configOverride)
+      signature: Signature, body: Block)(configOverride: Opt[Config], annotations: Ls[Annot]): FunDefn =
+    new FunDefn(owner, sym, dSym, signature, body)(configOverride, annotations)
   
   def unapply(fun: FunDefn): Some[(Opt[InnerSymbol], BlockMemberSymbol, TermSymbol, Ls[LoweredParamList], Block)] =
     Some((fun.owner, fun.sym, fun.dSym, fun.params, fun.body))
   
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
-    val signature = Signature(params, N, annotations)
+    val signature = Signature.fromParams(params, ErasedResult.fromAnnotations(N, annotations))
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
     sym.tsym = S(tSym)
-    FunDefn(owner, sym, tSym, signature, body)(configOverride)
+    FunDefn(owner, sym, tSym, signature, body)(configOverride, annotations)
 
 final case class ValDefn(
     tsym: TermSymbol,

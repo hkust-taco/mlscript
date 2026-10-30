@@ -380,7 +380,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
                 setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.erasedResult.bodyType)
               Define(FunDefn(td.owner, td.sym, td.tsym,
-                FunDefn.Signature.fromLowering(paramLists, td.annotations, td.tsym), bodyBlock)(cfgOverride),
+                FunDefn.Signature.fromLowering(paramLists, td.tsym), bodyBlock)(cfgOverride, td.annotations),
                 continueBlock(stats, res))
             case syntax.LetBind | syntax.HandlerBind | syntax.RecordField => fail:
               ErrorReport(
@@ -1827,7 +1827,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           reportAnnotations(td, td.extraAnnotations)
           val cfgOverride = definitionConfigOverride(td.extraAnnotations)
           FunDefn(td.owner, td.sym, td.tsym,
-            FunDefn.Signature.fromLowering(paramLists, td.annotations, td.tsym), bodyBlock)(cfgOverride)
+            FunDefn.Signature.fromLowering(paramLists, td.tsym), bodyBlock)(cfgOverride, td.annotations)
     val publicFlds = clsBody.publicFlds.collect:
       case f if !f.tsym.isPrivate =>
         f.sym -> f.tsym

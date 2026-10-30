@@ -19,7 +19,7 @@ abstract class FlowAnalysisSolverResult:
 end FlowAnalysisSolverResult
 
 
-type RewrittenFunDefn = (signature: FunDefn.Signature, body: Block)
+type RewrittenFunDefn = (signature: FunDefn.Signature, body: Block, annotations: Ls[Annot])
 
 
 abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolver):
@@ -69,14 +69,14 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
     pre.res.rootFunDefns.keysIterator.flatMap: sym =>
       rewrittenSignatures.get(inPlaceInstId(sym) -> sym).collect:
         case sig if sig.erasure isnt pre.res.funSymToFunDefn(sym).signature.erasure =>
-          sym -> sig.freshSymbol(sym, sym.owner)
+          sym -> SymbolRefresher.copyTermSymbol(sym, sym.owner, S(sig.erasure))
     .toMap
   
   // Nested definitions can also be rewritten in place; copied bodies override these identities below.
   private lazy val rewrittenNestedSymbols = rewrittenSignatures.collect:
     case ((instId, sym), sig) if !pre.res.rootFunDefns.contains(sym)
       && (sig.erasure isnt pre.res.funSymToFunDefn(sym).signature.erasure) =>
-      (instId -> sym) -> sig.freshSymbol(sym, sym.owner)
+      (instId -> sym) -> SymbolRefresher.copyTermSymbol(sym, sym.owner, S(sig.erasure))
   
   private def nestedSymbolsAt(instId: InstantiationId): Map[TermSymbol, TermSymbol] =
     rewrittenNestedSymbols.collect { case ((id, sym), rewritten) if id == instId => sym -> rewritten }
@@ -119,8 +119,8 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
         (referringFun, (bms, tSym)) <- funSymMap.toList.sortBy(_._1.uid)
       yield
         val original = pre.res.funSymToFunDefn(referringFun)
-        val (signature, body) = mkCopyRewriter(instId, signatureAt(instId, referringFun).params, original.body, Map.empty).rewriteFunDefn(original)
-        FunDefn(N, bms, tSym, signature.withAnnotations(Annot.Private :: signature.annotations), body)(original.configOverride)
+        val (signature, body, annotations) = mkCopyRewriter(instId, signatureAt(instId, referringFun).params, original.body, Map.empty).rewriteFunDefn(original)
+        FunDefn(N, bms, tSym, signature, body)(original.configOverride, Annot.Private :: annotations)
     
     val newFuns = newPolyFuns ++ otherNewFunDefns
     
