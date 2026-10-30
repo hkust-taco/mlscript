@@ -52,7 +52,8 @@ change. Do not split a theme into tiny PRs solely to reduce its snapshot diff.
 Each extraction passed `hkmc2AllTests/test` with 1,155 tests. The latest verified
 upstream snapshot is `66add69d3cd8ef16ba3ab5104c4670371456f562`, containing all
 three merges. Those upstream commits have been integrated back into this branch,
-including E03's added formatter regressions.
+including E03's added formatter regressions. Integration commit `23aa31d66`
+passed `hkmc2AllTests/test` with 1,165 tests.
 
 ## Consolidated batches
 
@@ -61,11 +62,13 @@ so E04's remaining nofib aliases join the library/fixture batch. There is no
 additional tiny nofib PR. The E-numbers remain stable references to individual
 work items; B01–B10 below define the actual PR boundaries.
 
-All batches are pending. A prerequisite names a batch that must be merged first.
+All batches are pending merge. B01 is extracted locally as `771a80b9f` on
+`codex/pr575-fixture-corrections`; B02–B10 are not yet extracted. A prerequisite
+names a batch that must be merged first.
 
 | Batch | Review theme | Work items | Prerequisites | Scope |
 | --- | --- | --- | --- | --- |
-| B01 | Library and fixture corrections | E04–E07; E36 conditional | — | Remaining nofib character-list aliases, class-object references, open-method signatures and exported mutable-storage annotations. Include the unused Runtime helper cleanup only if its removal is confirmed; never give it a separate PR. |
+| B01 | Library and fixture corrections | E04–E07 | — | Remaining nofib character-list aliases, class-object references, open-method signatures and exported mutable-storage annotations. E36 remains deferred in the residual PR. |
 | B02 | Expression-result resolution | E09, E16 | — | Builtin result information and correct treatment of returns, abortive branches and loops. |
 | B03 | Async and generator results | E10–E11 | — | Body payloads versus Promise/Iterator results, including cloning and currying. |
 | B04 | Callable signatures through transformations | E12–E13, E25–E26, E28 | — | Constructor companions, generated functions, cloned symbols, eta expansion, DPE and deforestation-generated callables. |
@@ -84,6 +87,18 @@ An internal work-item dependency does not require another PR when both items
 belong to the same batch. Do not introduce unused APIs or temporary incomplete
 behavior merely to reproduce the original fine-grained sequence.
 
+B01 was extracted from `66add69d3` and passed `hkmc2AllTests/test` with 1,155
+tests. Its reviewed diff contains 16 files, 42 additions and 36 deletions,
+including regenerated golden output. It changes MLscript fixtures and their
+declarations without changing the Scala compiler.
+
+Extraction exposed an E14 dependency in the open-method annotations in
+T/newres/wasm/Super.mls and T/slop/wasm/OptionalParams.mls: annotating the base
+method alone makes Wasm reject the unannotated override's result. Keep these
+annotations and the paired T/newres/Overrides.mls changes with B05. Preserve
+the unannotated overrides so the tests continue to exercise signature
+inheritance; do not add annotations that hide the calling-convention bug.
+
 ## What independently mergeable means
 
 Every batch targets `hkmc2`, includes its own tests and current golden outputs,
@@ -93,9 +108,9 @@ mean targeting another unmerged extraction branch.
 
 A dash means no semantic prerequisite was identified by source inspection.
 It is a standalone candidate, not a claim that the batch has already passed
-tests. The remaining consolidated batches have not been built in isolation.
-The complete original source snapshot passed 1,165 tests, and E01–E03 passed
-their own full suites, but neither establishes the correctness of the remaining
+tests. B02–B10 have not been built in isolation. The complete original source
+snapshot passed 1,165 tests, and E01–E03 and B01 passed their own full suites,
+but these results do not establish the correctness of the remaining
 intermediate subsets.
 
 Prefer explicit annotations in extracted regressions so that representation
@@ -262,11 +277,11 @@ as fixmes rather than weakening their expectations.
 | E36 (conditional) | Remove the unused Runtime Int31 addition prototype | — | The deletion of `Runtime.plus_impl` at the end of C/Runtime.mls and its generated output. First check callers on the extraction base and confirm removal of the exported helper is intended. The `wasm.plus_impl` intrinsic is a different symbol and must remain. If the public-contract removal is not intended, omit this extraction and resolve the three-line deletion explicitly in the residual PR. |
 
 E35 belongs to B06 with its behavior changes; it does not need a separate PR.
-Account for every removed scenario when consolidating the tests. E36 is
-conditional within B01 and is not a prerequisite for the compiler improvements.
-If the helper removal is not intended, leave that decision in the residual PR
-rather than creating a cleanup PR. Neither item justifies dropping regression
-coverage.
+Account for every removed scenario when consolidating the tests. E36 was left
+out of B01 because removal of the exported helper was not confirmed. Leave
+that decision in the residual PR rather than creating a cleanup PR; it is not
+a prerequisite for the compiler improvements. Neither item justifies dropping
+regression coverage.
 
 ## 6. What remains in #575
 
