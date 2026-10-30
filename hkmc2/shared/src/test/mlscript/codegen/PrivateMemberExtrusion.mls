@@ -181,10 +181,10 @@ module Pair with
 //│   static [definitionMetadata] = ["class", "Pair", ["fst", "snd"]];
 //│ });
 //│ tmp3 = Pair1(1, 2);
-//│ p = tmp3;
+//│ p = tmp3 /* as! Pair */;
 //│ inlinedVal = p[sum$accessorSymbol];
 //│ tmp4 = Pair1(1, 2);
-//│ p1 = tmp4;
+//│ p1 = tmp4 /* as! Pair */;
 //│ inlinedVal1 = p1[scaled$accessorSymbol](10);
 //│ return globalThis.Object.freeze([ inlinedVal, inlinedVal1 ])
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

@@ -314,7 +314,15 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Value.SimpleRef(l: BuiltinSymbol) =>
       errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
-    case Cast(value, _, _) => result(value)
+    case Cast(value, target, check) =>
+      val valueDoc = result(value)
+      config.target match
+        case CompilationTarget.JS(true) =>
+          // Escaped source identifiers can contain line breaks and comment terminators. Keep the annotation
+          // on one line and inside its comment, without adding expression wrappers that affect JS syntax.
+          val name = escapeStringCharacters(target.describe).replace("*/", "* /")
+          doc"${valueDoc} /* as${if check then "!" else "!!"} $name */"
+        case _ => valueDoc
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
       if l.binary then
         val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"
