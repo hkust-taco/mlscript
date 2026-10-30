@@ -151,6 +151,7 @@ a.read
 :expect 2
 :noInline
 class C(x) with
+  let =x
   class A with
     fun get() = x
   fun f() =

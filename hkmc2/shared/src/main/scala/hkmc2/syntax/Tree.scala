@@ -573,6 +573,8 @@ case object ImmutVal extends Val("val", "value")
 case object MutVal extends Val("mut val", "mutable value")
 case object RecordField extends ValLike("field", "record field")
 case object LetBind extends ValLike("let", "let binding")
+// Constructor parameters can have lexical storage without declaring a selectable member.
+case object ParamBind extends ValLike("parameter", "immutable parameter")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object Fun extends TermDefKind("fun", "function")
 case object Ins extends Val("using", "implicit instance")

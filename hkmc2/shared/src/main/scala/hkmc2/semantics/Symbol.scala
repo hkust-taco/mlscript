@@ -489,6 +489,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def showPrefix(using Scope, ShowCfg, Raise): Str =
     "term:" + owner.map(_.showName + "/").getOrElse("")
   def isExplicitlyPrivate: Bool = defn.exists(_.visibility is Visibility.Private)
+  def isLexicalBinding: Bool = (k is LetBind) || (k is ParamBind)
   def isPrivate: Bool =
     // Note: Top-level definitions have no owner and do not use JS private fields;
     //    They are not directly accessible from other modules in source code,
@@ -497,7 +498,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     owner.isDefined &&
       // Refreshed IR symbols have no source definition. Their current definition
       // retains visibility, including after a method is copied by the inliner.
-      ((k is LetBind) || irDefn.fold(isExplicitlyPrivate)(_.visibility is Visibility.Private))
+      (isLexicalBinding || irDefn.fold(isExplicitlyPrivate)(_.visibility is Visibility.Private))
   
   /** The erased type of what a reference to this term evaluates to.
     *

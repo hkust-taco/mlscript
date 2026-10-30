@@ -384,7 +384,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               Define(FunDefn(td.owner, td.sym, td.tsym,
                 FunDefn.Signature.fromLowering(paramLists, td.tsym), bodyBlock)(cfgOverride, td.annotations),
                 continueBlock(stats, res))
-            case syntax.LetBind | syntax.HandlerBind | syntax.RecordField => fail:
+            case syntax.LetBind | syntax.ParamBind | syntax.HandlerBind | syntax.RecordField => fail:
               ErrorReport(
                 msg"Unexpected declaration kind '${td.k.str}' in lowering" -> td.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
@@ -778,8 +778,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       WarningReport(msg"Pure expression in statement position" -> loc :: Nil, extraInfo,
         source = Diagnostic.Source.Compilation)
 
-  private def assignSymbol(target: Symbol, diagnostic: Symbol, rhs: Result, rest: Block, loco: Opt[Loc])(using LoweringCtx): Block =
-    def nope = fail:
+  private def cannotAssign(target: Symbol, diagnostic: Symbol, loco: Opt[Loc])(using LoweringCtx): Block =
+    fail:
       ErrorReport(
         (diagnostic match
           // Implicit lambda parameters have generated names; their source location identifies the placeholder.
@@ -787,6 +787,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case _ => msg"Cannot assign to ${diagnostic match
               case sym: BlockMemberSymbol => sym.describe
               case sym: LocalVarSymbol if sym.decl.exists(_.isInstanceOf[Param]) => "immutable parameter"
+              case sym: TermSymbol if (sym.k is syntax.ParamBind) || sym.decl.exists(_.isInstanceOf[Param]) => "immutable parameter"
               case sym => "symbol"
             } '${diagnostic.nme}'") -> loco
           :: diagnostic.toLoc.match
@@ -794,6 +795,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             case N => Nil,
         source = Diagnostic.Source.Compilation,
         extraInfo = S(target.getClass))
+
+  private def assignSymbol(target: Symbol, diagnostic: Symbol, rhs: Result, rest: Block, loco: Opt[Loc])(using LoweringCtx): Block =
+    def nope = cannotAssign(target, diagnostic, loco)
     target match
     case sym: TermSymbol if (sym.k is MutVal) || (sym.k is LetBind) =>
       sym.owner match
@@ -907,9 +911,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
   private def assignNamedField(prefix: Path, name: Tree.Ident, value: Path, rest: Block,
       keyAccess: Opt[Term])(target: Opt[DefinitionSymbol[?]])(using LoweringCtx): Block =
-    namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
-      case DynSelect(_, key, kind) => AssignDynField(prefix, key, kind, value, rest)
-      case _ => AssignField(prefix, name, value, rest)(target)
+    target match
+      // Plain class parameters use private fields to retain their values for methods.
+      // Explicit `val` parameters expose fields whose writes follow the object's mutability.
+      case S(sym: TermSymbol) if sym.isPrivate && (sym.k is syntax.ImmutVal) && sym.decl.exists(_.isInstanceOf[Param]) =>
+        cannotAssign(sym, sym, name.toLoc)
+      case _ => namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
+        case DynSelect(_, key, kind) => AssignDynField(prefix, key, kind, value, rest)
+        case _ => AssignField(prefix, name, value, rest)(target)
 
   /** A `DynSel` term (`x.[i]` or `x.(k)`) carries no resolved member, only an array-index flag. */
   private def dynSelectKind(arrayIdx: Bool): DynSelectKind =
