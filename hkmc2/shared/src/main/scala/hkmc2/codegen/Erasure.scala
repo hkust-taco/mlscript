@@ -72,7 +72,19 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
           case N => (ps :: Nil, rhs)
       case _ => N
 
-  private def definitionType(td: TermDefinition): Opt[ErasedValueType | ErasedCallableSignature] =
+  /** Computes the erased signature stored on a term definition's symbol.
+    *
+    * Stored value definitions use the `ErasedValueType` arm, including function-valued slots whose
+    * representation is `Function`. Function definitions use the `ErasedCallableSignature` arm:
+    * `ErasedFuncSignature` describes one or more physical parameter lists (including an implicit empty list),
+    * while `ErasedGetterSignature` describes getters with no physical parameter list.
+    *
+    * For a getter, `TermSymbol.erasedType` exposes the call result's value type, while the stored
+    * signature also records the body's result and wrapper kind. For example, an async getter's body
+    * returns `Int` but a read yields `Promise`; retaining only `Promise` would lose the payload
+    * representation needed when lowering or cloning the body.
+    */
+  private def erasedDefinitionSignature(td: TermDefinition): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
     // An ordinary paramless function instead returns the value denoted by the entire signature.
@@ -274,7 +286,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       field.foreach: sym =>
         if !sym.isErased then sym.initializeErasure(p.sym.erasedType)
     statements.foreach:
-      case td: TermDefinition if !td.tsym.isErased => td.tsym.initializeErasure(definitionType(td))
+      case td: TermDefinition if !td.tsym.isErased => td.tsym.initializeErasure(erasedDefinitionSignature(td))
       case _ => ()
     statements.foreach:
       case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.initializeErasure(N)
