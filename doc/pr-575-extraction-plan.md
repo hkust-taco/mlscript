@@ -53,12 +53,11 @@ change. Do not split a theme into tiny PRs solely to reduce its snapshot diff.
 
 E01–E03 and B01 each passed `hkmc2AllTests/test` with 1,155 tests; B02 passed
 with 1,157. The latest verified upstream snapshot is `1ad11c54c`, containing
-all five merges. Those upstream
-commits have been integrated back into this branch, including E03's added
-formatter regressions. Integration commit `23aa31d66`
-passed `hkmc2AllTests/test` with 1,165 tests. The B01 merge preserves the
+all five merges. Those upstream commits have been integrated back into this
+branch, including E03's added formatter regressions. Integration commit
+`23aa31d66` passed `hkmc2AllTests/test` with 1,165 tests. The B01 merge preserves the
 implementation and test tree exactly; only this plan changes. The B02
-integration adds its upstream regressions and passed all 1,167 tests.
+integration (`5058fd321`) adds its upstream regressions and passed all 1,167 tests.
 
 ## Consolidated batches
 
@@ -69,7 +68,9 @@ work items; B01–B10 below define the actual PR boundaries.
 
 B01 is merged as #597 (extracted locally as `771a80b9f` on
 `codex/pr575-fixture-corrections`). B02 is merged as #598 (extracted locally
-as `aef07eead` on `codex/pr575-expression-results`). B03–B10 are not yet extracted.
+as `aef07eead` on `codex/pr575-expression-results`). B03 is extracted locally
+as `9afbadaf7` on `codex/pr575-async-generator-results` and awaits merge.
+B04–B10 are not yet extracted.
 A prerequisite names a batch that must be merged first.
 
 | Batch | Review theme | Work items | Prerequisites | Scope |
@@ -118,6 +119,25 @@ B02 places the builtin-approximation paragraph under Standard Operators in
 doc/reference.md. Its integration removes the duplicate from the residual
 Runtime Representations section while retaining the other text.
 
+B03 was extracted from `1ad11c54c`. Its seven Scala files contain 98 additions
+and 27 deletions; the complete reviewed diff is 12 files, 282 additions and
+39 deletions. Async/generator callable results expose Promise/Iterator while
+body returns retain their declared payload. Completed payload metadata stays
+with the defining unit and is renamed for cloned bodies. Generator wrappers
+survive curried and generic callable interfaces; symbol-type inference remains
+in #575.
+
+Metals compilation, `ctest`, `cwtest`, the focused async/generator/cloning suites,
+and `hkmc2AllTests/test` passed; the full suite ran 1,158 tests. The base rejected
+an annotated async result at a Promise parameter and lost generators' `next`
+interface. Regressions cover explicit/implicit returns, generator overrides,
+curried and nominal interfaces, local nominal payload cloning, and an imported
+pattern cloned in another unit. B03 annotates the extracted cloned payloads
+and `counted` example so they work independently of inference; preserve the
+original unannotated coverage when integrating it. The full-suite golden
+changes outside those regressions are two existing diagnostic line numbers in
+T/newres/Overrides.mls.
+
 ## What independently mergeable means
 
 Every batch targets `hkmc2`, includes its own tests and current golden outputs,
@@ -127,8 +147,8 @@ mean targeting another unmerged extraction branch.
 
 A dash means no semantic prerequisite was identified by source inspection.
 It is a standalone candidate, not a claim that the batch has already passed
-tests. B03–B10 have not been built in isolation. The complete original source
-snapshot passed 1,165 tests, and E01–E03 and B01–B02 passed their own full suites,
+tests. B04–B10 have not been built in isolation. The complete original source
+snapshot passed 1,165 tests, and E01–E03 and B01–B03 passed their own full suites,
 but these results do not establish the correctness of the remaining
 intermediate subsets.
 
