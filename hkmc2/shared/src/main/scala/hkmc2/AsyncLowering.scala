@@ -108,7 +108,10 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
             copy.sourceAliases = fun.dSym.sourceAliases
             assert(!wrappers.contains(fun.dSym), "An async symbol must have only one definition")
             wrappers(fun.dSym) = copy
-          case _ => ()
+          case _ =>
+            // Legacy erasure still describes async bodies with a Direct result.
+            softAssert(!config.language.useNewResolution,
+              "An async definition must have an async erased result")
         super.applyFunDefn(fun)
     val subst = new SymbolSubst:
       override def mapTermSym(sym: TermSymbol): TermSymbol = wrappers.getOrElse(sym, sym)
