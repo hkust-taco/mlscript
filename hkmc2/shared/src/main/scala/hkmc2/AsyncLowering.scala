@@ -98,7 +98,8 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
     // bodies. The lowered wrapper returns Promise directly and needs a fresh symbol.
     // Allocate every replacement first so forward and recursive calls see the same one.
     val wrappers = mutable.Map.empty[TermSymbol, TermSymbol]
-    (new BlockTraverser:
+    new BlockTraverser:
+      applyProgram(prog)
       override def applyFunDefn(fun: FunDefn): Unit =
         if fun.async then fun.dSym.erasure match
           case S(sig: ErasedCallableSignature) if sig.result.isInstanceOf[ErasedResult.Async[?]] =>
@@ -109,7 +110,6 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
             wrappers(fun.dSym) = copy
           case _ => ()
         super.applyFunDefn(fun)
-    ).applyProgram(prog)
     val subst = new SymbolSubst:
       override def mapTermSym(sym: TermSymbol): TermSymbol = wrappers.getOrElse(sym, sym)
     new Rewriter(subst).applyProgram(prog)
