@@ -178,7 +178,9 @@ mut val resumePc: Int = -1
 object FatalEffect
 object PrintStackEffect
 
-data class FunctionContFrame(next: FunctionContFrame | null, saved: Array) with
+open js { plainField }
+
+data class FunctionContFrame(@plainField mut val next: FunctionContFrame | null, saved: Array) with
   fun resume(value) =
     let
       i = 0
@@ -222,14 +224,18 @@ data class FunctionContFrame(next: FunctionContFrame | null, saved: Array) with
       loc is null then "pc=" + saved.[1]
       else loc
 
-data class HandlerContFrame(next: FunctionContFrame | null, nextHandler: HandlerContFrame | null, handler: Any)
+data class HandlerContFrame(
+  @plainField mut val next: FunctionContFrame | null
+  @plainField mut val nextHandler: HandlerContFrame | null
+  handler: Any
+)
 
 data class ContTrace(
-  next: FunctionContFrame | null,
-  last: ContTrace | HandlerContFrame | FunctionContFrame | null,
-  nextHandler: HandlerContFrame | null,
-  lastHandler: ContTrace | HandlerContFrame | null,
-  resumed: Bool
+  @plainField mut val next: FunctionContFrame | null
+  @plainField mut val last: ContTrace | HandlerContFrame | FunctionContFrame | null
+  @plainField mut val nextHandler: HandlerContFrame | null
+  @plainField mut val lastHandler: ContTrace | HandlerContFrame | null
+  @plainField mut val resumed: Bool
 )
 // PrintStackEffect stores the showLocals flag; FatalEffect has no handler function.
 data class EffectSig(contTrace: ContTrace, handler: Any, handlerFun: Function | Bool | null)
@@ -372,22 +378,22 @@ fun debugEff(eff) =
 // runtime implementations
 fun unwind(...saved) =
   set
-    @unsafe curEffect.contTrace.last.next = new mut FunctionContFrame(null, saved)
-    @unsafe curEffect.contTrace.last = curEffect.contTrace.last.next
+    curEffect.contTrace.last.next = new mut FunctionContFrame(null, saved)
+    curEffect.contTrace.last = curEffect.contTrace.last.next
 
 fun mkEffect(handler: Any, handlerFun: Function | Bool | null) =
   let res = new mut EffectSig(new mut ContTrace(null, null, null, null, false), handler, handlerFun)
   set
-    @unsafe res.contTrace.last = res.contTrace
-    @unsafe res.contTrace.lastHandler = res.contTrace
+    res.contTrace.last = res.contTrace
+    res.contTrace.lastHandler = res.contTrace
     curEffect = res
 
 fun handleBlockImpl(cur: EffectSig, handler: Any) =
   let handlerFrame = new mut HandlerContFrame(null, null, handler)
   set
-    @unsafe cur.contTrace.lastHandler.nextHandler = handlerFrame
-    @unsafe cur.contTrace.lastHandler = handlerFrame
-    @unsafe cur.contTrace.last = handlerFrame
+    cur.contTrace.lastHandler.nextHandler = handlerFrame
+    cur.contTrace.lastHandler = handlerFrame
+    cur.contTrace.last = handlerFrame
   handleEffects(cur)
 
 fun enterHandleBlock(handler: Any, body: () -> Any) =
@@ -435,14 +441,14 @@ fun handleEffect(cur: EffectSig): Any =
     false
   )
   
-  if cur.contTrace.last === handlerFrame do @unsafe set saved.last = saved
-  if cur.contTrace.lastHandler === handlerFrame do @unsafe set saved.lastHandler = saved
+  if cur.contTrace.last === handlerFrame do set saved.last = saved
+  if cur.contTrace.lastHandler === handlerFrame do set saved.lastHandler = saved
   
   set
-    @unsafe cur.contTrace.last = handlerFrame
-    @unsafe cur.contTrace.lastHandler = handlerFrame
-    @unsafe handlerFrame.next = null
-    @unsafe handlerFrame.nextHandler = null
+    cur.contTrace.last = handlerFrame
+    cur.contTrace.lastHandler = handlerFrame
+    handlerFrame.next = null
+    handlerFrame.nextHandler = null
 
   // handle the effect
   set curEffect = null
@@ -451,13 +457,13 @@ fun handleEffect(cur: EffectSig): Any =
     set cur = curEffect
     // relink the saved frames
     if saved.next !== null do
-      @unsafe set cur.contTrace.last.next = saved.next
+      set cur.contTrace.last.next = saved.next
     if saved.last !== saved do
-      @unsafe set cur.contTrace.last = saved.last
+      set cur.contTrace.last = saved.last
     if saved.nextHandler !== null do
       set
-        @unsafe cur.contTrace.lastHandler.nextHandler = saved.nextHandler
-        @unsafe cur.contTrace.lastHandler = saved.lastHandler
+        cur.contTrace.lastHandler.nextHandler = saved.nextHandler
+        cur.contTrace.lastHandler = saved.lastHandler
     cur
   else
     // resume the unlinked handle blocks
@@ -466,7 +472,7 @@ fun handleEffect(cur: EffectSig): Any =
 fun resume(contTrace: ContTrace)(value: Any): Any =
   if contTrace.resumed do
     throw Error("Multiple resumption")
-  @unsafe set contTrace.resumed = true
+  set contTrace.resumed = true
   handleEffects(resumeContTrace(contTrace, value))
 
 fun resumeContTrace(contTrace: ContTrace, value: Any): Any =
@@ -481,12 +487,12 @@ fun resumeContTrace(contTrace: ContTrace, value: Any): Any =
         set value = curEffect
       if value is EffectSig as effect then
         set
-          @unsafe effect.contTrace.last.next = cont.next
-          @unsafe effect.contTrace.lastHandler.nextHandler = handlerCont
+          effect.contTrace.last.next = cont.next
+          effect.contTrace.lastHandler.nextHandler = handlerCont
         if contTrace.last !== cont do
-          @unsafe set effect.contTrace.last = contTrace.last
+          set effect.contTrace.last = contTrace.last
         if handlerCont !== null do
-          @unsafe set effect.contTrace.lastHandler = contTrace.lastHandler
+          set effect.contTrace.lastHandler = contTrace.lastHandler
         return value
       else
         set cont = cont.next
