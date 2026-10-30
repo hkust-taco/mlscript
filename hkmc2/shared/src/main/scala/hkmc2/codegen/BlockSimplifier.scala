@@ -1636,7 +1636,7 @@ class BlockSimplifier
             // * A non-local definition cannot be eliminated from the local block. This is based
             // * on where the definition was encountered, rather than symbol state: incremental
             // * worksheet blocks can share a state while still having distinct function bodies.
-            map = map + (f.dSym -> info)
+            map += f.dSym -> info
             true
           else
             val info = map(f.dSym)
