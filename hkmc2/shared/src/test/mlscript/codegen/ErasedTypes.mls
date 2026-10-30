@@ -1219,7 +1219,7 @@ asWrapper(fortyTwo).whoami
 //│ set tmp1 = asWrapper¹((tmp as!! Wrapper⁰));
 //│ return tmp1.whoami¹
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ return (42).whoami
+//│ return (42 /* as!! Wrapper */).whoami
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 // A cast literal as a tuple-pattern scrutinee, whose test reads `.length` off it.
@@ -1244,9 +1244,9 @@ if asWrapper(fortyTwo) is
 //│     return "other"
 //│ end
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ if (runtime.Tuple.isArrayLike(42) && (42).length === 2) {
-//│   runtime.Tuple.get(42, 0);
-//│   runtime.Tuple.get(42, 1);
+//│ if (runtime.Tuple.isArrayLike(42 /* as!! Wrapper */) && (42 /* as!! Wrapper */).length === 2) {
+//│   runtime.Tuple.get(42 /* as!! Wrapper */, 0);
+//│   runtime.Tuple.get(42 /* as!! Wrapper */, 1);
 //│   return "pair"
 //│ }
 //│ return "other";

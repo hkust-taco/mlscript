@@ -14,7 +14,7 @@ fun f(x, ...xs, y) = [x, xs, y]
 //│   runtime.checkArgs("f", 2, tmp1);
 //│   tmp = args.length - 1;
 //│   inlinedVal = runtime.safeCall(args.slice(0, tmp));
-//│   xs = inlinedVal;
+//│   xs = inlinedVal /* as! Array */;
 //│   y = args.at(-1);
 //│   return globalThis.Object.freeze([ x, xs, y ])
 //│ };
@@ -71,7 +71,7 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│   }
 //│   tmp14 = args7.length - 1;
 //│   inlinedVal13 = runtime.safeCall(args7.slice(2, tmp14));
-//│   xs7 = inlinedVal13;
+//│   xs7 = inlinedVal13 /* as! Array */;
 //│   w = args7.at(-1);
 //│   return globalThis.Object.freeze([ x, y7, z2, xs7, w ])
 //│ };

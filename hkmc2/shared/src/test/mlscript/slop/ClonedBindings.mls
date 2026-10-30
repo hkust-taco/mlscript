@@ -192,6 +192,22 @@ fun clonedAsync(x) =
 Promise.all([clonedAsync(3), clonedAsync(4)])
 //│ = [42, 42]
 
+// Getter signatures retain the wrapper kind and rename a locally declared payload class.
+pattern AsyncGetterResult = x =>
+  class Payload with
+    fun answer: Int = 42
+    @async fun wrapped: Payload = this
+  new Payload().wrapped.then(payload => payload.answer)
+
+:noOpt
+fun clonedAsyncGetter(x) =
+  if x is (@compile AsyncGetterResult) as result then result else Promise.resolve(0)
+
+:await
+:expect [42, 42]
+Promise.all([clonedAsyncGetter(3), clonedAsyncGetter(4)])
+//│ = [42, 42]
+
 // Per-field mutability survives copying even when the whole record is immutable.
 pattern MutableRecord = x =>
   let record = {mut value: x}

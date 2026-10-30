@@ -1,7 +1,7 @@
 # Extraction plan for PR #575
 
-Status: consolidated plan approved on 2026-10-30. E01–E03 and B01–B02 are merged
-upstream; eight thematic extraction batches remain, followed by the reduced #575.
+Status: consolidated plan approved on 2026-10-30. E01–E03 and B01–B04 are merged
+upstream; six thematic extraction batches remain, followed by the reduced #575.
 
 ## Scope and baseline
 
@@ -50,27 +50,38 @@ change. Do not split a theme into tiny PRs solely to reduce its snapshot diff.
 | E03 | [#596](https://github.com/hkust-taco/mlscript/pull/596) | Fixed the fish formatter's list tail and added empty/singleton/multiple-item regressions. Both nonempty cases failed before the fix. |
 | B01 (E04–E07) | [#597](https://github.com/hkust-taco/mlscript/pull/597) | Corrected library and fixture declarations; override-fixture annotations stay with B05 and E36 remains deferred. |
 | B02 (E09, E16) | [#598](https://github.com/hkust-taco/mlscript/pull/598) | Resolved builtin results and abortive expression flow, with independent JS/Wasm regressions. |
+| B03 (E10–E11) | [#599](https://github.com/hkust-taco/mlscript/pull/599) | Separated async/generator body payloads from Promise/Iterator call results, including cloning and currying. |
+| B04 (E13, E25–E26, E28) | [#600](https://github.com/hkust-taco/mlscript/pull/600) | Shared immutable callable signatures across definitions and their symbols; preserved them through copying and calling-convention changes. E12 stays with B07. |
 
 E01–E03 and B01 each passed `hkmc2AllTests/test` with 1,155 tests; B02 passed
-with 1,157. The latest verified upstream snapshot is `1ad11c54c`, containing
-all five merges. Those upstream commits have been integrated back into this
+with 1,157. The upstream snapshot `1ad11c54c` contains
+those five merges. Those upstream commits have been integrated back into this
 branch, including E03's added formatter regressions. Integration commit
 `23aa31d66` passed `hkmc2AllTests/test` with 1,165 tests. The B01 merge preserves the
 implementation and test tree exactly; only this plan changes. The B02
 integration (`5058fd321`) adds its upstream regressions and passed all 1,167 tests.
+The latest upstream snapshot is `5091705f5`, containing B03 (`ca9b82d08`) and
+B04 (`5091705f5`). This integration adopts the shared `FunDefn.Signature` and
+`ErasedResult` representation while retaining inferred signatures and the
+representation-changing deforestation work below. The old body-result map is
+removed because callable signatures now carry and clone their payload types.
+Metals compilation and `hkmc2AllTests/test` passed on the integrated branch;
+the full suite ran 1,172 tests. The incoming JS cast-comment fixtures use broad
+input annotations and an unchecked nominal receiver so inference and redundant
+cast elimination preserve the coercions those rendering tests exercise.
 
 ## Consolidated batches
 
-**Eight batches remain, plus the final shape-erasure PR.** E03 and B01–B02 are merged,
+**Six batches remain, plus the final shape-erasure PR.** E01–E03 and B01–B04 are merged,
 including E04's nofib aliases in the library/fixture batch. There is no
 additional tiny nofib PR. The E-numbers remain stable references to individual
 work items; B01–B10 below define the actual PR boundaries.
 
 B01 is merged as #597 (extracted locally as `771a80b9f` on
 `codex/pr575-fixture-corrections`). B02 is merged as #598 (extracted locally
-as `aef07eead` on `codex/pr575-expression-results`). B03 is extracted locally
-as `9afbadaf7` on `codex/pr575-async-generator-results` and awaits merge.
-B04–B10 are not yet extracted.
+as `aef07eead` on `codex/pr575-expression-results`). B03 is merged as #599
+(extracted locally as `9afbadaf7` on `codex/pr575-async-generator-results`).
+B04 is merged as #600. B05–B10 are not yet extracted.
 A prerequisite names a batch that must be merged first.
 
 | Batch | Review theme | Work items | Prerequisites | Scope |
@@ -78,10 +89,10 @@ A prerequisite names a batch that must be merged first.
 | B01 | Library and fixture corrections | E04–E07 | — | Remaining nofib character-list aliases, class-object references, open-method signatures and exported mutable-storage annotations. E36 remains deferred in the residual PR. |
 | B02 | Expression-result resolution | E09, E16 | — | Builtin result information and correct treatment of returns, abortive branches and loops. |
 | B03 | Async and generator results | E10–E11 | — | Body payloads versus Promise/Iterator results, including cloning and currying. |
-| B04 | Callable signatures through transformations | E12–E13, E25–E26, E28 | — | Constructor companions, generated functions, cloned symbols, eta expansion, DPE and deforestation-generated callables. |
+| B04 | Callable signatures through transformations | E13, E25–E26, E28 | — | Generated functions, cloned symbols, eta expansion, DPE and deforestation-generated callables. |
 | B05 | Representation boundaries and Wasm calling conventions | E08, E14–E15 | — | Override compatibility, physical parameter/result types, undefined in every representation and conversion diagnostic locations. |
 | B06 | Optional and variadic arguments | E17–E18, E35 | B05 | Typed argument extraction, positional alignment and consolidation of the associated regressions. |
-| B07 | Optimizer safety | E19–E24 | — | Preserve checks and evaluation order; validate constructor effects, field mappings, branch selection and storage compatibility before elimination/fusion. |
+| B07 | Optimizer safety | E12, E19–E24 | — | Type constructor companions; preserve checks and evaluation order; validate constructor effects, field mappings, branch selection and storage compatibility before elimination/fusion. |
 | B08 | Representation-changing deforestation | E27, E29–E30 | B04, B05, B07 | Separate effects from values, retype every affected slot and function instance, and prove casts against all incoming producers. |
 | B09 | Mutable-field resolution and exposure | E31–E32 | — | Shadowing, assignments, interface-permitted writes and structural read/write constraints. |
 | B10 | Mutable-record declarations | E33–E34 | B09 | Explicit input/output bounds and per-field mutability, with documentation and regressions. |
@@ -138,6 +149,23 @@ original unannotated coverage when integrating it. The full-suite golden
 changes outside those regressions are two existing diagnostic line numbers in
 T/newres/Overrides.mls.
 
+B04 replaces separate parameter/signature reconstruction with a plain shared
+`FunDefn.Signature`, checked by the private constructor and explicit `copy`.
+Binding copies refresh the symbol and parameters together; changes to the
+calling convention prepare a new signature and symbol before rewriting calls.
+Regressions cover simple and curried async capture wrappers, generators,
+tail-recursive parameter refresh, DPE/eta specialization, nested and forward
+calls, declared return representations, and optional parameters before a
+variadic with trailing source parameters. Its full upstream suite passed
+1,163 tests.
+
+E12 moves from B04 to B07: typing constructor companions removes checked casts
+that previously hid constructor applications from fusion, exposing unsafe
+optional-field fusion without the optimizer-safety changes. Keep constructor
+typing and those safety checks together. This integration preserves E12 and
+the remaining B07/B08 implementation on the inference branch, and adapts its
+retyped parameter bindings and specialized functions to shared signatures.
+
 ## What independently mergeable means
 
 Every batch targets `hkmc2`, includes its own tests and current golden outputs,
@@ -147,8 +175,8 @@ mean targeting another unmerged extraction branch.
 
 A dash means no semantic prerequisite was identified by source inspection.
 It is a standalone candidate, not a claim that the batch has already passed
-tests. B04–B10 have not been built in isolation. The complete original source
-snapshot passed 1,165 tests, and E01–E03 and B01–B03 passed their own full suites,
+tests. B05–B10 have not been built in isolation. The complete original source
+snapshot passed 1,165 tests, and E01–E03 and B01–B04 passed their own full suites,
 but these results do not establish the correctness of the remaining
 intermediate subsets.
 
@@ -473,15 +501,15 @@ The earlier #592 reconciliation used an unchanged-tree merge only after exact
 tree equality was established. Do not apply that strategy blindly to future
 extractions, whose patches may have been adapted to a smaller base.
 
-The five completed upstream merges are synchronized back into this branch,
+The seven completed upstream merges are synchronized back into this branch,
 including E03's formatter regressions. Proceed by batch; do not create further
 branches for individual E-numbers.
 
 A practical order is:
 
-1. B01 is merged: library and fixture corrections, including the E04 aliases.
-2. B02–B05: result resolution, wrappers, callable signatures and representation
-   boundaries.
+1. B01–B04 are merged: library/fixture corrections, result resolution, wrappers
+   and callable signatures.
+2. B05: representation boundaries and Wasm calling conventions.
 3. B06–B08: optional arguments, optimizer safety, then representation-changing
    deforestation after its prerequisites have landed.
 4. B09, then B10: mutable-field resolution before the declaration extensions.
@@ -519,5 +547,5 @@ existing recursive type-relation test remains useful when changing record
 interfaces. Do not add unit tests that merely assert an internal erased-type
 field equals the value assigned by the implementation.
 
-This planning change itself is documentation-only. It does not rerun the
-compiler suite or claim that the remaining consolidated batches are validated.
+Validation of an integrated inference branch does not establish that the
+remaining consolidated batches work independently on their extraction bases.

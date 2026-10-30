@@ -242,7 +242,9 @@ class BlockTransformer(subst: SymbolSubst):
     val params2 = fun.params.mapConserve(applyParamList)
     val body2 = applyFunBodyLikeBlock(fun.body)
     if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (params2 is fun.params) && (body2 is fun.body)
-      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.configOverride, fun.annotations)
+      then fun else
+        val signature = if params2 is fun.params then fun.signature else fun.signature.copy(params = params2)
+        FunDefn(own2, sym2, dSym2, signature, body2)(fun.configOverride, fun.annotations)
   
   def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
     val ValDefn(tsym, sym, rhs) = defn
@@ -332,7 +334,11 @@ class BlockTransformer(subst: SymbolSubst):
   def applyParamList(pl: LoweredParamList): LoweredParamList =
     def applyParam(p: Param): Param =
       val sym2 = p.sym.subst
-      if sym2 is p.sym then p else p.copy(sym = sym2)(p.toLoc)
+      if sym2 is p.sym then p else
+        // A binding substitution retains the calling convention. Type-changing rewrites must
+        // construct their parameter lists and signatures together instead.
+        assert(p.sym.erasedType.corresponds(sym2.erasedType)(_ is _), "Parameter renaming changed its erased type")
+        p.copy(sym = sym2)(p.toLoc)
     val params2 = pl.params.mapConserve(applyParam)
     val restParam2 = pl.restParam.mapConserve(applyParam)
     if (params2 is pl.params) && (restParam2 is pl.restParam)

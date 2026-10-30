@@ -422,7 +422,7 @@ get(idpoly(Box(42)))
 //│ deforest > 	fields: b⁸.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let get$b_Box, get$b_rest, get$get, idpoly$idpoly, tmp: Function⁰, tmp1: Function⁰, Box_v: Int⁰;
+//│ let get$b_Box, get$b_rest, get$get, tmp: Function⁰, tmp1: Function⁰, idpoly$idpoly, Box_v: Int⁰;
 //│ @private @private
 //│ define get$get as fun get$get⁰(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: ?;
@@ -479,7 +479,7 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│ deforest > 	fields: b⁹.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Int⁰, get$b_Box, get$b_rest, get$get, idpoly$idpoly, idpoly$idpoly1, tmp1: Function⁰, tmp2: Int⁰, tmp3: Int⁰, tmp4: Function⁰, Box_v: Int⁰, Box_v1: Int⁰;
+//│ let tmp: Int⁰, get$b_Box, get$b_rest, get$get, tmp1: Int⁰, tmp2: Int⁰, tmp3: Function⁰, tmp4: Function⁰, idpoly$idpoly, idpoly$idpoly1, Box_v: Int⁰, Box_v1: Int⁰;
 //│ @private @private
 //│ define get$get as fun get$get¹(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: ?;
@@ -520,13 +520,13 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│   end
 //│ };
 //│ set Box_v = 42;
-//│ set tmp4 = get$b_Box¹(Box_v);
-//│ set tmp1 = idpoly$idpoly¹(tmp4);
-//│ set tmp = get$get¹(tmp1);
+//│ set tmp3 = get$b_Box¹(Box_v);
+//│ set tmp4 = idpoly$idpoly¹(tmp3);
+//│ set tmp = get$get¹(tmp4);
 //│ set Box_v1 = 1;
-//│ set tmp2 = Box_v1;
-//│ set tmp3 = idpoly$idpoly²(tmp2);
-//│ return +⁰(tmp, tmp3)
+//│ set tmp1 = Box_v1;
+//│ set tmp2 = idpoly$idpoly²(tmp1);
+//│ return +⁰(tmp, tmp2)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 43
 
@@ -545,7 +545,7 @@ get(idTwice(Box(42)))
 //│ deforest > 	fields: b¹⁰.v¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let get$b_Box, get$b_rest, get$get, idTwice$idTwice, idTwice_idpoly$idpoly, idTwice_idpoly$idpoly1, tmp: Function⁰, tmp1: Function⁰, Box_v: Int⁰;
+//│ let get$b_Box, get$b_rest, get$get, tmp: Function⁰, tmp1: Function⁰, idTwice$idTwice, idTwice_idpoly$idpoly, idTwice_idpoly$idpoly1, Box_v: Int⁰;
 //│ @private @private
 //│ define get$get as fun get$get²(b: Function⁰): Int⁰ {
 //│   let v: Int⁰, arg$Box$0$: ?;
@@ -598,9 +598,9 @@ get(idTwice(Box(42)))
 //│   end
 //│ };
 //│ set Box_v = 42;
-//│ set tmp1 = get$b_Box²(Box_v);
-//│ set tmp = idTwice$idTwice⁰(tmp1);
-//│ return get$get²(tmp)
+//│ set tmp = get$b_Box²(Box_v);
+//│ set tmp1 = idTwice$idTwice⁰(tmp);
+//│ return get$get²(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -968,7 +968,7 @@ private fun f(a) = if a is A then 0 else 1
 //│ deforest > 	match: a²
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Int⁰, tmp1: Int⁰, f$a_A, f$a_rest, f$a_A1, f$a_rest1, g$g, f$f, g$g1, f$f1, tmp2: Function⁰, tmp3: Function⁰;
+//│ let tmp: Int⁰, tmp1: Int⁰, f$a_A, f$a_rest, f$a_A1, f$a_rest1, g$g, tmp2: Function⁰, tmp3: Function⁰, f$f, g$g1, f$f1;
 //│ @private @private
 //│ define g$g as fun g$g⁰(c: Bool⁰): Function⁰ {
 //│   match c

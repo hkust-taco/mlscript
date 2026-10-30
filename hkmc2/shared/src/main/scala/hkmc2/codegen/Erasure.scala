@@ -24,21 +24,6 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
   def requireCompleted(statement: Statement): Unit =
     assert(completed.exists(_ is statement), "Lowering requires completed erasure of this program")
 
-  /** Async definitions expose a promise and generators an iterator, but their original
-    * bodies produce the payload (of the promise, or of the generator's final step).
-    * Lowering must coerce explicit and implicit returns before they are wrapped.
-    */
-  def bodyResultType(td: TermDefinition): Opt[ErasedValueType] =
-    td.tsym.getState.erasedBodyResults.getOrElse(td.tsym, td.tsym.declaredResultType)
-
-  /** Fresh definition symbols need the body's payload representation as well as the
-    * callable's signature. Rename any nominal types allocated by the same copy.
-    */
-  private[hkmc2] def copyBodyResultType(source: TermSymbol, copy: TermSymbol)
-      (mapType: ErasedValueType => ErasedValueType): Unit =
-    source.getState.erasedBodyResults.get(source).foreach: tpe =>
-      copy.getState.erasedBodyResults(copy) = tpe.map(mapType)
-
   private def valueType(shape: TermShape): Opt[ErasedValueType] = valueTypes.getOrElseUpdate(shape, shape match
     case MarkedShape(value, _) => valueType(value)
     case ContextualShape(value, _) => valueType(value)
@@ -165,7 +150,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
               case S(true) => inherited
               case N => observed
 
-  private def definitionType(td: TermDefinition): Opt[ErasedValueType | ErasedFuncSignature] =
+  private def erasedDefinitionSignature(td: TermDefinition): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
     // An ordinary paramless function instead returns the value denoted by the entire signature.
@@ -193,26 +178,25 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         // not the payload returned by this body. Check that wrapper in `checkOverride` below.
         if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then observed
         else overrideResultType(td, observed)
-    td.tsym.getState.erasedBodyResults(td.tsym) = resultType
     // The body produces the payload; callers receive the wrapper object instead.
     // Resolution gives calls of such functions the same wrapper shapes.
-    val callableResult =
-      if !config.language.useNewResolution then resultType
+    val result =
+      if !config.language.useNewResolution then ErasedResult.Direct(resultType)
       else td.resultWrapperAnnotation match
-        case S(_: Annot.Async) => S(ErasedType.ValueLike(S(false), summon[Ctx].builtins.Promise))
-        case S(_: Annot.Generator) => S(ErasedType.ValueLike(S(false), summon[Ctx].builtins.Iterator))
-        case N => resultType
+        case S(_: Annot.Async) => ErasedResult.Async(resultType)
+        case S(_: Annot.Generator) => ErasedResult.Generator(resultType)
+        case N => ErasedResult.Direct(resultType)
     td.k match
       case syntax.Fun =>
         val paramLists = sigShape match
           case S((ps, _)) => ps
-          case N => td.params.map(_.params.map(_.sym.erasedType))
+          case N => td.params.map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType))
         // Block-level nullary functions take an implicit empty list and references auto-invoke them.
         // Member getters and global declarations denote their result directly.
         val physicalParamLists =
           if paramLists.isEmpty && td.owner.isEmpty && !declared then Nil :: Nil else paramLists
-        if physicalParamLists.isEmpty then callableResult
-        else S(ErasedFuncSignature.Signature(physicalParamLists, callableResult))
+        if physicalParamLists.isEmpty then S(ErasedGetterSignature.Signature(result))
+        else S(ErasedFuncSignature.Signature(physicalParamLists, result))
       case _: syntax.Val => resultType
       case syntax.RecordField => if config.language.useNewResolution then resultType else N
       case _ => N
@@ -365,7 +349,8 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       case cls: ClassLikeDef => cls.ctorSym.foreach: symbol =>
         if !symbol.isErased then symbol.initializeErasure:
           if config.language.useNewResolution then S(ErasedFuncSignature.Signature(
-            (cls.paramsOpt.toList ::: cls.auxParams).map(_.params.map(_.sym.erasedType)), S(nominalType(cls))))
+            (cls.paramsOpt.toList ::: cls.auxParams).map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType)),
+            ErasedResult.Direct(S(nominalType(cls)))))
           else N
       case _ => ()
     val definitions = statements.collect { case td: TermDefinition => td } ++ observed.collect {
@@ -378,7 +363,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     def eraseDefinition(td: TermDefinition, visiting: Set[TermSymbol]): Unit =
       if !td.tsym.isErased && !visiting(td.tsym) then
         td.tsym.overriddenMembers.flatMap(definitionsBySymbol.get).foreach(eraseDefinition(_, visiting + td.tsym))
-        td.tsym.initializeErasure(definitionType(td))
+        td.tsym.initializeErasure(erasedDefinitionSignature(td))
     definitions.distinctBy(_.tsym).foreach(eraseDefinition(_, Set.empty))
     declarations.variables.foreach:
       case sym: VarSymbol if !sym.isErased => sym.erasedType = inferredType(sym)

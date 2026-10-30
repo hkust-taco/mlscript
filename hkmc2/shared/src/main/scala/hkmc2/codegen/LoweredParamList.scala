@@ -32,6 +32,13 @@ object LoweredParamList:
   def plain(params: Ls[Param])(toLoc: Opt[Loc]): LoweredParamList =
     LoweredParamList(ParamListFlags.empty, params, N)(toLoc)
   
+  /** The fixed physical parameters, shared by erasure and lowering. Optional parameters before
+    * a variadic with trailing parameters are extracted from its rest array inside the body.
+    */
+  def fixedPrefix(ps: ParamList): Ls[Param] = ps.variadic match
+    case S(Variadic(_, _ :: _)) => ps.params.take(ps.leadingRequiredCount)
+    case _ => ps.params
+  
   /** Classes and generated pattern methods have only fixed parameters. Keep the check at their
     * source-to-IR boundary so a future source change cannot silently discard a variadic parameter. */
   def fixed(ps: ParamList): LoweredParamList =
@@ -45,6 +52,6 @@ object LoweredParamList:
   def callingConvention(ps: ParamList)(using State): LoweredParamList = ps.variadic match
     case S(Variadic(_, _ :: _)) =>
       val args = VarSymbol(Tree.Ident("args"), erasedType = S(ErasedType.Array), mut = false)
-      LoweredParamList(ps.flags, ps.params.take(ps.leadingRequiredCount), S(Param.simple(args)))(ps.toLoc)
+      LoweredParamList(ps.flags, fixedPrefix(ps), S(Param.simple(args)))(ps.toLoc)
     case variadic =>
       LoweredParamList(ps.flags, ps.params, variadic.map(_.param))(ps.toLoc)

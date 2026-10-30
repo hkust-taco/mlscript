@@ -7,10 +7,11 @@ import Config.*
 import Message.MessageContext
 
 
-/** The compilation target of a program. */
-enum CompilationTarget:
-  case JS
-  case Wasm
+/** The compilation target of a program, with a name for diagnostics independent of its backend options. */
+enum CompilationTarget(val displayName: Str):
+  // Cast comments expose the IR coercions that JavaScript otherwise erases.
+  case JS(emitCastComments: Bool) extends CompilationTarget("JavaScript")
+  case Wasm extends CompilationTarget("Wasm")
 
 
 def config(using Config): Config = summon
@@ -81,7 +82,7 @@ object Config:
     effectHandlers = N,
     liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
-    target = CompilationTarget.JS,
+    target = CompilationTarget.JS(emitCastComments = false),
     rewriteWhileLoops = false,
     stageCode = false,
     qqEnabled = false,

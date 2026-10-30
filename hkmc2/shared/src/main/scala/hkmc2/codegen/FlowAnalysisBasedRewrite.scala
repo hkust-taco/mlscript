@@ -18,7 +18,9 @@ class FlowAnalysisBasedRewrite(
   val deadConstructorElimSolver: DeadConstructorElimResult,
 )(using Raise) extends PolyInstantiationRewrite(constraintSolver):
 
-  private case class EtaParamList(params: LoweredParamList, args: Ls[Arg])
+  private case class EtaParamList(params: LoweredParamList):
+    def args: Ls[Arg] = params.params.map(p => Arg(N, p.sym.asSimpleRef)) :::
+      params.restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef))
   
   // the targets of each param list that eta expansion appends to `id`, with the target params dpe eliminates
   private def etaTargetLists(id: ConcreteFunId, existingParams: Ls[LoweredParamList]): Ls[(EtaTargets, Set[Int])] =
@@ -54,7 +56,48 @@ class FlowAnalysisBasedRewrite(
     val types = targets.prodFuns.toList.map(targetParams(_)(i).sym.erasedType)
     if types.forall(_.isDefined) then S(ErasedType.Union.mk(types.flatten)) else N
   
-  class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
+  private def filterParamList(pl: LoweredParamList, eliminable: Set[Int]): (LoweredParamList, Set[VarSymbol]) =
+    if eliminable.isEmpty then pl -> Set.empty
+    else
+      val removed = MutSet.empty[VarSymbol]
+      val keptParams = Buffer.empty[Param]
+      pl.params.zipWithIndex.foreach:
+        case (param, i) =>
+          if eliminable(i) then removed.add(param.sym)
+          else keptParams.append(param)
+      LoweredParamList(pl.flags, keptParams.toList, pl.restParam)(pl.toLoc) -> removed.toSet
+  
+  private def filterFunParams(funSym: TermSymbol, params: Ls[LoweredParamList], instId: InstantiationId): (Ls[LoweredParamList], Set[VarSymbol]) =
+    val removed = MutSet.empty[VarSymbol]
+    var changed = false
+    val params2 = params.zipWithIndex.map:
+      case (pl, whichParamList) =>
+        val (pl2, removed2) =
+          filterParamList(pl, deadParamElimSolver.eliminableParams(ConcreteId((funSym, whichParamList), instId)))
+        if pl2 isnt pl then changed = true
+        removed ++= removed2
+        pl2
+    (if changed then params2 else params) -> removed.toSet
+  
+  
+  private def etaParamLists(targets: Ls[(EtaTargets, Set[Int])]): Ls[EtaParamList] =
+    targets.zipWithIndex.map:
+      case ((targets, eliminable), idx) =>
+        def etaParam(name: Str, tpe: Opt[ErasedValueType]): Param =
+          Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = tpe, mut = false))
+        // * The expanded parameters corresponding to optional parameters of the targets must
+        // * remain optional, since callers may omit their arguments.
+        def optionalEtaParam(name: Str, tpe: Opt[ErasedValueType]): Param =
+          val sym = new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = tpe, mut = false)
+          Param(FldFlags.empty.copy(opt = true), sym, N, Modulefulness.none)(N)
+        val params = (0 until targets.paramCount).iterator.filterNot(eliminable).map: i =>
+          if i < targets.requiredParamCount then etaParam(i.toString, etaParamType(targets, i))
+          else optionalEtaParam(i.toString, etaParamType(targets, i))
+        .toList
+        val restParam = Option.when(targets.hasRestParam)(etaParam("rest", N))
+        EtaParamList(LoweredParamList(ParamListFlags.empty, params, restParam)(N))
+  
+  class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
     
     // dead parameter elimination states and helper functions
     private val activeEliminatedParams = MutSet.empty[VarSymbol]
@@ -66,30 +109,6 @@ class FlowAnalysisBasedRewrite(
         try thunk
         finally activeEliminatedParams --= removed
     
-    private def filterParamList(pl: LoweredParamList, eliminable: Set[Int]): (LoweredParamList, Set[VarSymbol]) =
-      if eliminable.isEmpty then pl -> Set.empty
-      else
-        val removed = MutSet.empty[VarSymbol]
-        val keptParams = Buffer.empty[Param]
-        pl.params.zipWithIndex.foreach:
-          case (param, i) =>
-            if eliminable(i) then removed.add(param.sym)
-            else keptParams.append(param)
-        LoweredParamList(pl.flags, keptParams.toList, pl.restParam)(pl.toLoc) -> removed.toSet
-    
-    private def filterFunParams(funSym: TermSymbol, params: Ls[LoweredParamList]): (Ls[LoweredParamList], Set[VarSymbol]) =
-      val removed = MutSet.empty[VarSymbol]
-      var changed = false
-      val params2 = params.zipWithIndex.map:
-        case (pl, whichParamList) =>
-          val (pl2, removed2) =
-            filterParamList(pl, deadParamElimSolver.eliminableParams(ConcreteId((funSym, whichParamList), instId)))
-          if pl2 isnt pl then changed = true
-          removed ++= removed2
-          pl2
-      (if changed then params2 else params) -> removed.toSet
-    
-    
     // eta expansion states and helper functions
     private var activeEtaArgss: Ls[Ls[Arg]] = Nil
     
@@ -99,44 +118,23 @@ class FlowAnalysisBasedRewrite(
       try thunk
       finally activeEtaArgss = saved
     
-    private def etaParamLists(id: ConcreteFunId, existingParams: Ls[LoweredParamList]): Ls[EtaParamList] =
-      etaTargetLists(id, existingParams).zipWithIndex.map:
-        case ((targets, eliminable), idx) =>
-          def etaParam(name: Str, tpe: Opt[ErasedValueType]): Param =
-            Param.simple(new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = tpe, mut = false))
-          // * The expanded parameters corresponding to optional parameters of the targets must
-          // * remain optional, since callers may omit their arguments.
-          def optionalEtaParam(name: Str, tpe: Opt[ErasedValueType]): Param =
-            val sym = new VarSymbol(new Tree.Ident(s"eta$$$idx$$$name"), erasedType = tpe, mut = false)
-            Param(FldFlags.empty.copy(opt = true), sym, N, Modulefulness.none)(N)
-          val params = (0 until targets.paramCount).iterator.filterNot(eliminable).map: i =>
-            if i < targets.requiredParamCount then etaParam(i.toString, etaParamType(targets, i))
-            else optionalEtaParam(i.toString, etaParamType(targets, i))
-          .toList
-          val restParam = Option.when(targets.hasRestParam)(etaParam("rest", N))
-          EtaParamList(
-            LoweredParamList(ParamListFlags.empty, params, restParam)(N),
-            params.map(p => Arg(N, p.sym.asSimpleRef)) :::
-              restParam.toList.map(p => Arg(S(SpreadKind.Eager), p.sym.asSimpleRef)),
-          )
-    
     private def etaCall(base: Path): Result =
       Call(base, activeEtaArgss.ne_!)(CallMetadata.mlsFunWithEffect, N)
     
     
     override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
-      val FunDefn(_, _, dSym, params, body) = fun
-      val etaParams = etaParamLists(ConcreteId((dSym, 0), instId), params)
-      val (keptParams, removed) = filterFunParams(dSym, params)
-      val params2 = keptParams.mapConserve(applyParamList) ::: etaParams.map(_.params)
-      val body2 = withEliminatedParams(removed):
-        withEtaArgss(etaParams.map(_.args)):
-          applyFunBodyLikeBlock(body)
-      // Calls added for the new parameter lists may be effectful even when the original body was pure.
-      val annotations2 =
-        if etaParams.nonEmpty then fun.annotations.filterNot(_.isInstanceOf[Annot.Pure])
+      val rewrite = functionRewrites.get(instId -> fun.dSym).orElse(functionRewrites.get(Nil -> fun.dSym))
+      val signature = rewrite.fold(fun.signature)(_.signature)
+      val params2 = signature.params.mapConserve(applyParamList)
+      val signature2 = if params2 is signature.params then signature else signature.copy(params = params2)
+      val etaArgss = signature2.params.takeRight(rewrite.fold(0)(_.etaCount)).map(EtaParamList(_).args)
+      val body2 = withEliminatedParams(rewrite.fold(Set.empty[VarSymbol])(_.removed)):
+        withEtaArgss(etaArgss):
+          applyFunBodyLikeBlock(fun.body)
+      // Calls added for eta expansion may be effectful even when the original body was pure.
+      val annotations = if rewrite.exists(_.etaCount > 0) then fun.annotations.filterNot(_.isInstanceOf[Annot.Pure])
         else fun.annotations
-      (params2, body2, annotations2)
+      (signature2, body2, annotations)
     
     
     // traversal
@@ -251,14 +249,13 @@ class FlowAnalysisBasedRewrite(
       val own2 = fun.owner.mapConserve(_.subst)
       val sym2 = fun.sym.subst
       val dSym2 = fun.dSym.subst
-      val (params2, body2, annotations2) = rewriteFunDefn(fun)
-      if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (params2 is fun.params) && (body2 is fun.body)
-        && (annotations2 is fun.annotations)
-        then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.configOverride, annotations2)
+      val (signature2, body2, annotations) = rewriteFunDefn(fun)
+      if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (signature2 is fun.signature) && (body2 is fun.body)
+        then fun else FunDefn(own2, sym2, dSym2, signature2, body2)(fun.configOverride, annotations)
     
     override def applyLam(lam: Lambda): Lambda =
       val lamId: ConcreteFunId = ConcreteId(lam.uid, instId)
-      val etaParams = etaParamLists(lamId, lam.params :: Nil)
+      val etaParams = etaParamLists(etaTargetLists(lamId, lam.params :: Nil))
       val (params2, removed) =
         filterParamList(lam.params, deadParamElimSolver.eliminableParams(lamId))
       val body2 = withEliminatedParams(removed):
@@ -276,39 +273,41 @@ class FlowAnalysisBasedRewrite(
   def solvers: Iterable[FlowAnalysisSolverResult] =
     deadParamElimSolver :: etaExpansionSolver :: deadConstructorElimSolver :: Nil
   
-  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
+  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
   
   def mkRootRewriter(rewrittenInPlace: Map[TermSymbol, RewrittenFunDefn]) =
     new Rewriter(Nil, N):
       override def applyFunDefn(fun: FunDefn): FunDefn =
         rewrittenInPlace.get(fun.dSym) match
-          case S((params, body, annotations)) =>
+          case S((signature, body, annotations)) =>
             val dSym2 = fun.dSym.subst
-            if (params is fun.params) && (body is fun.body) && (dSym2 is fun.dSym) && (annotations is fun.annotations) then fun
-            else FunDefn(fun.owner, fun.sym, dSym2, params, body)(fun.configOverride, annotations)
+            if (signature is fun.signature) && (body is fun.body) && (dSym2 is fun.dSym) then fun
+            else FunDefn(fun.owner, fun.sym, dSym2, signature, body)(fun.configOverride, annotations)
           case N => super.applyFunDefn(fun)
   
   def otherNewFunDefns: Iterable[FunDefn] = Nil
   
   def retypedVariables: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedValueType] = LinkedHashMap.empty
   
-  // a function is retyped where dpe drops some of its params or eta expansion appends param lists to it;
-  // its params are read from its definition, which keeps up with lifting
-  lazy val retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncSignature] =
-    val res = LinkedHashMap.empty[(InstantiationId, TermSymbol), ErasedFuncSignature]
+  private case class FunctionRewrite(signature: FunDefn.Signature, removed: Set[VarSymbol], etaCount: Int)
+  
+  // Compute the rewritten parameters and signatures before rewriting function bodies.
+  // Reuse these signatures for recursive and forward calls and their target definitions.
+  private lazy val functionRewrites: LinkedHashMap[(InstantiationId, TermSymbol), FunctionRewrite] =
+    val res = LinkedHashMap.empty[(InstantiationId, TermSymbol), FunctionRewrite]
     val funIds =
       deadParamElimSolver.eliminableParamsById.keysIterator ++ etaExpansionSolver.etaExpandedFunShape.keysIterator
     for case ConcreteId((fun: TermSymbol, _), instId) <- funIds if !res.contains(instId -> fun) do
-      val params = pre.res.funSymToFunDefn(fun).params
-      val kept = params.zipWithIndex.map: (pl, i) =>
-        val eliminable = deadParamElimSolver.eliminableParams(ConcreteId((fun, i), instId))
-        pl.params.zipWithIndex.collect:
-          case (p, j) if !eliminable(j) => p.sym.erasedType
-      val eta = etaTargetLists(ConcreteId((fun, 0), instId), params)
-      val etaLists = eta.map: (targets, eliminable) =>
-        (0 until targets.paramCount).filterNot(eliminable).map(etaParamType(targets, _)).toList
-      val ret = eta.lastOption.fold(fun.declaredResultType): (targets, _) =>
-        val results = targets.prodFuns.toList.map: target =>
+      val original = pre.res.funSymToFunDefn(fun)
+      val (kept, removed) = filterFunParams(fun, original.params, instId)
+      val eta = etaTargetLists(ConcreteId((fun, 0), instId), original.params)
+      val etaParams = etaParamLists(eta)
+      val params = kept ::: etaParams.map(_.params)
+      val signature = if eta.isEmpty then
+        if kept is original.params then original.signature else FunDefn.Signature.fromParams(kept, original.signature.result)
+      else
+        assert(!original.async && !original.generator, "Cannot eta-expand a wrapped result")
+        val results = eta.last._1.prodFuns.toList.map: target =>
           target.exprId match
             case (targetFun: TermSymbol, idx: Int)
               if idx == pre.res.funSymToFunDefn(targetFun).params.size - 1
@@ -316,9 +315,13 @@ class FlowAnalysisBasedRewrite(
                 ConcreteId((targetFun, 0), target.concreteId.instId)) =>
               targetFun.declaredResultType
             case _ => N
-        if results.forall(_.isDefined) then S(ErasedType.Union.mk(results.flatten)) else N
-      res(instId -> fun) = ErasedFuncSignature.Signature(kept ::: etaLists, ret)
+        val result = if results.forall(_.isDefined) then S(ErasedType.Union.mk(results.flatten)) else N
+        FunDefn.Signature.fromParams(params, ErasedResult.Direct(result))
+      res(instId -> fun) = FunctionRewrite(signature, removed, etaParams.size)
     res
+  
+  lazy val rewrittenSignatures: Map[(InstantiationId, TermSymbol), FunDefn.Signature] =
+    collection.immutable.ListMap.from(functionRewrites.iterator.map((id, rewrite) => id -> rewrite.signature))
   // ====== end: implements the abstract members of `PolyInstantiationRewrite` ======
   
 end FlowAnalysisBasedRewrite

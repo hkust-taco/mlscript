@@ -1676,7 +1676,7 @@ class BlockSimplifier
             // * A non-local definition cannot be eliminated from the local block. This is based
             // * on where the definition was encountered, rather than symbol state: incremental
             // * worksheet blocks can share a state while still having distinct function bodies.
-            map = map + (f.dSym -> info)
+            map += f.dSym -> info
             true
           else
             val info = map(f.dSym)
@@ -1925,13 +1925,13 @@ class BlockSimplifier
               val newBdy = enterFunctionBody(fun, applyBlock(fun.body))
               newFunctionBody(fun.dSym) = S(newBdy)
               if newBdy is fun.body then fun else
-              FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, newBdy)(fun.configOverride, fun.annotations)
+              fun.withBody(newBdy)
             case S(N) =>
               // The expansion of the function body itself reaches its own definition, which is impossible
               lastWords("Function body contains its own definition.")
             case S(S(blk)) =>
               if blk is fun.body then fun else
-              FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, blk)(fun.configOverride, fun.annotations)
+              fun.withBody(blk)
 
         private def inlineCall(
             call: Call,

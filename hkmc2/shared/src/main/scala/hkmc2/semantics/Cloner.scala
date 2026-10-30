@@ -4,7 +4,7 @@ package semantics
 import scala.collection.mutable
 
 import hkmc2.utils.*, shorthands.*
-import syntax.*, Elaborator.State, codegen.{Erasure, ErasedType, ErasedValueType, ErasedFuncSignature, CanonicalErasedValueType}
+import syntax.*, Elaborator.State, codegen.{Erasure, ErasedType, ErasedValueType, ErasedCallableSignature, CanonicalErasedValueType}
 import Term.*
 import ucs.FlatPattern
 
@@ -73,9 +73,6 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       val symbol = mapType(summon[Erasure].typeSymbol(source))
       new ErasedType.ValueLike(source.rsc, symbol)
     case ErasedType.Union(members) => ErasedType.Union(members.map(valueType))
-
-  private def signature(source: ErasedFuncSignature): ErasedFuncSignature =
-    ErasedFuncSignature.Signature(source.paramLists.map(_.map(_.map(valueType))), source.ret.map(valueType))
 
   private def located[A <: AutoLocated](source: AutoLocated, copy: A): A =
     if source is copy then copy else copy.withLoc(source.getLoc)
@@ -199,9 +196,8 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     (terms.iterator ++ constructors.iterator).foreach: (source, copy) =>
       copy.initializeErasure:
         source.erasure.map:
-          case sig: ErasedFuncSignature => signature(sig)
+          case sig: ErasedCallableSignature => sig.mapTypes(valueType)
           case tpe: ErasedValueType => valueType(tpe)
-      summon[Erasure].copyBodyResultType(source, copy)(valueType)
     // All member names, including nested classes' methods, now have replacements.
     // Override edges must follow them for common-member selection during lowering.
     (members.iterator ++ terms.iterator).foreach: (source, copy) =>

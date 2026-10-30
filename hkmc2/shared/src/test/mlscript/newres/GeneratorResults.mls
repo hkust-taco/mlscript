@@ -21,7 +21,7 @@ let iterator = counted()
 iterator.next()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @generator
-//│ define counted⁰ as fun counted¹(): Iterator⁰ {
+//│ define counted⁰ as fun counted¹(): generator Int⁰ {
 //│   do yield⁰(0);
 //│   return 1
 //│ };

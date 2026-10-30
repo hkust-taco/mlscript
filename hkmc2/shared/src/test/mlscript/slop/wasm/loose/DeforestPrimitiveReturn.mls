@@ -6,8 +6,8 @@
 
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ import "..." as Predef; end
-// [Astra] Replacing a fused match with a call must preserve its unboxed result representation.
-// [Astra] The generated call currently has an unknown result, which cannot be coerced to Int32.
+// Replacing a fused match with a call must preserve its unboxed result representation.
+// The generated call currently has an unknown result, which cannot be coerced to Int32.
 :fixme
 :expect 42
 data class Empty()

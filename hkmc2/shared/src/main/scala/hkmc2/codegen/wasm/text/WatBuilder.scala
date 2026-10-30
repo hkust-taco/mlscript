@@ -1304,9 +1304,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   /** Declares placeholders for all methods on one top-level class. */
   private def predeclareClassMethods(defn: ClsLikeDefn)(using Raise): Unit =
     defn.methods.foreach:
-      case methodDefn @ FunDefn(_, _, _, Nil | _ :: Nil, _) =>
+      case methodDefn @ FunDefn(params = Nil | _ :: Nil) =>
         predeclareMethod(methodDefn, defn)
-      case FunDefn(_, sym, _, _ :: _ :: _, _) =>
+      case FunDefn(sym = sym, params = _ :: _ :: _) =>
         raise(ErrorReport(
           msg"WatBuilder::predeclareClassMethods for ClsLikeDefn(...) with `multi-parameter-list method` not implemented yet" ->
             sym.toLoc :: Nil,
@@ -2454,9 +2454,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                   end overwriteMethod
 
                   clsLikeDefn.methods.foreach:
-                    case FunDefn(_, sym, _, Nil, bod) =>
+                    case FunDefn(sym = sym, params = Nil, body = bod) =>
                       overwriteMethod(sym, LoweredParamList.plain(Nil)(N), bod)
-                    case FunDefn(_, sym, _, ps :: Nil, bod) =>
+                    case FunDefn(sym = sym, params = ps :: Nil, body = bod) =>
                       overwriteMethod(sym, ps, bod)
                     case methodDefn =>
                       lastWords(

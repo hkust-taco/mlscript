@@ -21,7 +21,10 @@ import scala.collection.mutable.ArrayBuffer
 
 class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
   
-  object Rewriter extends BlockTransformer(SymbolSubst.Id):
+  private type Wrapper = (symbol: TermSymbol, signature: FunDefn.Signature)
+  
+  private class Rewriter(wrappers: collection.Map[TermSymbol, Wrapper]) extends BlockTransformer(new SymbolSubst:
+    override def mapTermSym(sym: TermSymbol): TermSymbol = wrappers.get(sym).fold(sym)(_.symbol)):
     val collectedFunDefn: ArrayBuffer[FunDefn] = new ArrayBuffer
     var inAsyncFun: Bool = false
     
@@ -43,19 +46,12 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
       val symMap = outerParams.iterator.map(p => p._1.sym -> p._2.sym).toMap
       val thisVar = VarSymbol(Tree.Ident("this"), erasedType = fun.owner.flatMap(_.asThis.erasedType), mut = false)
       val thisParam = fun.owner.map(_ => Param.simple(thisVar))
-      val outerDsym = TermSymbol(
-        syntax.Fun,
-        N,
-        fun.dSym.id,
-        erasure = S:
-          ErasedFuncSignature.Signature(
-            paramLists = 
-              (thisParam.map(_.sym.erasedType).toList ++ outerParams.map(_._2.sym.erasedType)) :: Nil :: Nil,
-            ret = N,
-          )
-      )
-      val vars = fun.params.flatMap(_.paramSyms)
+      val outerDsym = TermSymbol(syntax.Fun, N, fun.dSym.id)
       val noAsync = fun.annotations.filterNot(_.isInstanceOf[Annot.Async])
+      val outerSignature = FunDefn.Signature.fromParams(
+        LoweredParamList.plain((thisParam.iterator ++ outerParams.iterator.map(_._2)).toList)(N) ::
+          LoweredParamList.plain(Nil)(N) :: Nil,
+        ErasedResult.fromAnnotations(fun.signature.result.bodyType, noAsync))
       // The extracted helper has fresh parameter bindings. Substitute assignment
       // destinations as well as reads, including assignments inside nested closures.
       val paramSubst = new SymbolSubst:
@@ -66,14 +62,15 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
             k(Value.SimpleRef(thisVar)(v.toLoc))
           case _ => super.applyValue(v)(k)
       val newBody = transformer.applyBlock(wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))
-      collectedFunDefn += FunDefn(N, outerBms, outerDsym, LoweredParamList.plain((thisParam.iterator ++ outerParams.iterator.map(_._2)).toList)(N) :: LoweredParamList.plain(Nil)(N) :: Nil, newBody)(fun.configOverride, noAsync)
+      collectedFunDefn += FunDefn(N, outerBms, outerDsym, outerSignature, newBody)(fun.configOverride, noAsync)
       val callArgs = (fun.owner.iterator.map(s => Arg(N, Value.This(s)(N))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym)(N))))).toList
       val outerCall = Call(Value.MemberRef(outerBms, outerDsym)(N), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val tmp = TempSymbol(N, initErasedType = outerCall.erasedType, "tmp")
       val wrapperBody = blockBuilder
         .assignScoped(tmp, outerCall)
         .ret(Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N))
-      FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, wrapperBody)(fun.configOverride, noAsync)
+      val wrapper = wrappers(fun.dSym)
+      FunDefn(fun.owner, fun.sym, wrapper.symbol, wrapper.signature, wrapperBody)(fun.configOverride, noAsync)
     
     override def applyMainBlock(main: Block): Block =
       collectedFunDefn.foldRight(super.applyMainBlock(main)): (defn, acc) =>
@@ -92,4 +89,18 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
           super.applyPath(p)(k)
   
   def transform(prog: Program): Program =
-    Rewriter.applyProgram(prog)
+    // The source symbol's Async result remains available to imported or cloned source
+    // bodies. The lowered wrapper returns Promise directly and needs a fresh symbol.
+    // Allocate every replacement first so forward and recursive calls see the same one.
+    val wrappers = mutable.Map.empty[TermSymbol, Wrapper]
+    new BlockTraverser:
+      applyProgram(prog)
+      override def applyFunDefn(fun: FunDefn): Unit =
+        if fun.async then
+          val result = ErasedResult.fromAnnotations(fun.signature.erasure.ret,
+            fun.annotations.filterNot(_.isInstanceOf[Annot.Async]))
+          val signature = FunDefn.Signature.fromParams(fun.params, result)
+          assert(!wrappers.contains(fun.dSym), "An async symbol must have only one definition")
+          wrappers(fun.dSym) = (SymbolRefresher.copyTermSymbol(fun.dSym, fun.owner, S(signature.erasure)), signature)
+        super.applyFunDefn(fun)
+    new Rewriter(wrappers).applyProgram(prog)

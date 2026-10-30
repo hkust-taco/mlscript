@@ -19,14 +19,14 @@ GeneratorChild().generate("payload").next()
 //│ @private
 //│ define GeneratorBase⁰ as class GeneratorBase² {
 //│   constructor GeneratorBase¹
-//│   method generate⁰ = fun generate¹(value: Unknown): Iterator⁰ {
+//│   method generate⁰ = fun generate¹(value: Unknown): generator Unknown {
 //│     return value
 //│   }
 //│ };
 //│ @private
 //│ define GeneratorChild¹ as class GeneratorChild⁰ extends GeneratorBase² {
 //│   constructor GeneratorChild²
-//│   method generate² = fun generate³(value: Unknown): Iterator⁰ {
+//│   method generate² = fun generate³(value: Unknown): generator Unknown {
 //│     return value
 //│   }
 //│ };

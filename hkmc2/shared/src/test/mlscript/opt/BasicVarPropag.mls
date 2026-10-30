@@ -396,7 +396,7 @@ hide of print(res)
 //│ scrut5 = Predef.maybe;
 //│ if (scrut5 === true) {
 //│   let y3;
-//│   y3 = runtime.checkCall(Predef.hide(1));
+//│   y3 = runtime.checkCall(Predef.hide(1)) /* as! Int */;
 //│   res2 = y3;
 //│ } else {
 //│   Predef.notImplementedError;

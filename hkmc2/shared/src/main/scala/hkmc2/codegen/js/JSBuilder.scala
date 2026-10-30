@@ -214,12 +214,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       * in definitions, assignments, or metadata must not become imports. `VarSymbol` and
       * `TempSymbol` references can be transitive default imports left in copied IR, while member
       * references can denote either the default export or a private member of a foreign unit. */
-    (new BlockTraverser:
+    new BlockTraverser:
+      applyBlock(p.main)
       override def applyValue(value: Value): Unit = value match
         case Value.SimpleRef(sym: VarSymbol) => note(sym)
         case Value.MemberRef(sym, _) => note(sym)
         case _ =>
-    ).applyBlock(p.main)
     
     // Maps deduplicate repeated references; sorting makes output deterministic across independently
     // elaborated states, where symbol UIDs alone are not globally unique.
@@ -314,7 +314,15 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case Value.SimpleRef(l: BuiltinSymbol) =>
       errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
-    case Cast(value, _, _) => result(value)
+    case Cast(value, target, check) =>
+      val valueDoc = result(value)
+      config.target match
+        case CompilationTarget.JS(true) =>
+          // Escaped source identifiers can contain line breaks and comment terminators. Keep the annotation
+          // on one line and inside its comment, without adding expression wrappers that affect JS syntax.
+          val name = escapeStringCharacters(target.describe).replace("*/", "* /")
+          doc"${valueDoc} /* as${if check then "!" else "!!"} $name */"
+        case _ => valueDoc
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
       if l.binary then
         val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"

@@ -118,7 +118,7 @@ print(x)
 //│ } else {
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
-//│ x = tmp;
+//│ x = tmp /* as! Int */;
 //│ return Predef.print(x)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > 1
