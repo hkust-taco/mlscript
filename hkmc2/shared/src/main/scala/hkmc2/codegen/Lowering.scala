@@ -621,20 +621,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val isConstructor = fr.targetSymbol.exists:
       case _: ClassCtorSymbol => true
       case _ => false
-    val useMlsDefaults = isMlsFun && fr.targetSymbol.match
-      case S(fs: TermSymbol) => fs.defn.exists(_.hasDeclareModifier.isEmpty)
-      case _ => false
     def zipArgs(remainingParamss: Ls[ParamList], remainingArgss: Ls[Term], acc: Ls[Ls[Arg]], mayRaiseEffects: Bool): Block =
       (remainingParamss, remainingArgss) match
       case (ps :: remainingParams, args :: remainingArgs) =>
         def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
         if isConstructor then lowerConstructorArgs(args, ps, isMlsFun)(next)
-        else lowerArgs(args, expectedParamTypes(ps)): as =>
-          // Trailing parameters are selected from the end of the source argument list. Padding
-          // that list here would shift them; their extraction prologue supplies missing nulls.
-          if useMlsDefaults && ps.variadic.forall(_.trailing.isEmpty) && as.forall(_.spread.isEmpty) then
-            next(OptionalParams.pad(ps.params, as).getOrElse(as))
-          else next(as)
+        else lowerArgs(args, expectedParamTypes(ps))(next)
       case (Nil, Nil) =>
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
       case (Nil, args :: remainingArgss) =>
@@ -1964,10 +1956,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals)):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
-    Program(
+    val lowered = Program(
       imps.map(imp => imp.sym -> imp.str),
       blk
     )
+    TargetOverrideChecks(summon[Erasure].validatedOverrideEdges)
+    lowered
   
   
   def setupSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =

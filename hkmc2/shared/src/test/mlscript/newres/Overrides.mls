@@ -78,7 +78,8 @@ new Abstract
 
 :sir
 :expect 10
-class SuperBase { open fun foo(x) = x + 1 }
+// Unannotated overrides inherit the base member's declared signature.
+class SuperBase { open fun foo(x: Int): Int = x + 1 }
 class SuperChild extends SuperBase { override fun foo(x) = super.foo(x + 1) * 2 }
 new SuperChild().foo(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -145,7 +146,7 @@ class GenericChild[A](x: A) extends GenericBase[A](x) {
 :fixme
 :expect 8
 class ForwardChild extends ForwardBase { override fun f(x) = super.f(x) + 1 }
-class ForwardBase { open fun f(x) = x + 2 }
+class ForwardBase { open fun f(x: Int): Int = x + 2 }
 new ForwardChild().f(5)
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 //│ ═══[RUNTIME ERROR] Expected: '8', got: 'undefined'
@@ -209,6 +210,12 @@ class BadKind extends Base { override fun foo = 1 }
 //│ ║  l.+1: 	class BadKind extends Base { override fun foo = 1 }
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Inherited member 'foo' is defined here
+//│ ║  l.XX: 	class Base { open fun foo() = 1 }
+//│ ╙──      	                      ^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'foo' must preserve the number of parameter lists
+//│ ║  l.+1: 	class BadKind extends Base { override fun foo = 1 }
+//│ ║        	                                          ^^^
+//│ ╟── The overridden member 'foo' is defined here
 //│ ║  l.XX: 	class Base { open fun foo() = 1 }
 //│ ╙──      	                      ^^^
 

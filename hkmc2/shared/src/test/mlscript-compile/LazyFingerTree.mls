@@ -74,7 +74,10 @@ class View(val underlying: Indexable, val start: Int, val end: Int) extends Lazy
     if i < -length || i >= length do
       throw RangeError("View.at: Index out of bounds")
     underlying.at(normIdx(i, length) + start)
-  override fun slice(beg, fin) = sliceHelper(beg, fin, this)
+  override fun slice(...bounds: Array[Int]) = sliceHelper(
+    if bounds.length > 0 then bounds.[0] else 0,
+    if bounds.length > 1 then bounds.[1] else length,
+    this)
 
   val len = underlying.length - start - end
   override fun length = len
@@ -119,7 +122,10 @@ class Splice(val bits: Array, val len: Int) extends LazyFT with
 
   override fun at(i) = materialize().at(i)
   // called on eager spreads in matches
-  override fun slice(beg, fin) = sliceHelper(beg, fin, this)
+  override fun slice(...bounds: Array[Int]) = sliceHelper(
+    if bounds.length > 0 then bounds.[0] else 0,
+    if bounds.length > 1 then bounds.[1] else length,
+    this)
   override fun concat(...args: Array[Indexable]) =
     if materialized === null 
     then concatHelper(mut [SpliceMarker, this], len, ...args)

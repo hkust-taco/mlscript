@@ -1,7 +1,7 @@
 :.
 
 :expect 10
-class Base() { open fun f(x) = x + 1 }
+class Base() { open fun f(x: Int): Int = x + 1 }
 class Child() extends Base() { override fun f(x) = super.f(x + 1) * 2 }
 Child().f(3)
 //│ Wasm result:
@@ -25,7 +25,7 @@ readAbstract(Concrete())
 //│ = 7
 
 :expect 10
-class GetterBase() { open fun value = 5 }
+class GetterBase() { open fun value: Int = 5 }
 class GetterChild() extends GetterBase() { override fun value = super.value * 2 }
 GetterChild().value
 //│ Wasm result:
@@ -51,7 +51,7 @@ abstractField(ConcreteField())
 :inlineThreshold 10000
 :expect 10
 fun local() = {
-  class Base() { open fun f(x) = x + 1 }
+  class Base() { open fun f(x: Int): Int = x + 1 }
   class Child() extends Base() { override fun f(x) = super.f(x) * 2 }
   Child().f(4)
 }

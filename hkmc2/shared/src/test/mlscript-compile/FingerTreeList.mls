@@ -42,11 +42,17 @@ class FingerTree[T] extends IterableBase with
   open override fun toString(): Str = "[" + this joined(", ") + "]"
   override fun length: Int = FingerTreeList.length(this)
   override fun at(i: Int): T = get(i)(this)
-  override fun concat(other: FingerTree[T] | Array[T]): FingerTree[T] = FingerTreeList.concat(this, other)
-  override fun slice(beg: Int, end: Int): FingerTree[T] = 
+  override fun concat(...others: Array[FingerTree[T] | Array[T]]): FingerTree[T] =
+    let acc = this
+    let index = 0
+    while index < others.length do
+      set acc = FingerTreeList.concat(acc, others.[index])
+      set index += 1
+    acc
+  override fun slice(...bounds: Array[Int]): FingerTree[T] =
     let len = this.length
-    set beg = normIdxSlice(beg, len)
-    set end = normIdxSlice(end, len)
+    let beg = if bounds.length > 0 then normIdxSlice(bounds.[0], len) else 0
+    let end = if bounds.length > 1 then normIdxSlice(bounds.[1], len) else len
     if beg >= len do
       return Empty
     if end >= len do

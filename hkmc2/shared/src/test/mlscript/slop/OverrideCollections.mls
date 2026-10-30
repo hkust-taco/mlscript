@@ -1,0 +1,66 @@
+:.
+
+import "../../mlscript-compile/Iter.mls"
+import "../../mlscript-compile/FingerTreeList.mls"
+import "../../mlscript-compile/FingerTreeList_StressTest.mls"
+import "../../mlscript-compile/LazyArray.mls"
+import "../../mlscript-compile/LazyFingerTree.mls"
+
+:silent
+val tree = FingerTreeList.mk(1, 2, 3)
+val stressTree = FingerTreeList_StressTest.mk(1, 2, 3)
+val arrayView = LazyArray.mk(1, 2, 3)
+val arraySplice = LazyArray.concat([1], [2, 3])
+val treeView = LazyFingerTree.mk(1, 2, 3)
+val treeSplice = LazyFingerTree.concat([1], [2, 3])
+
+// Missing bounds are decoded from argument count before index normalization.
+:expect [[1, 2, 3], [2, 3]]
+[Iter.toArray(tree.slice()), Iter.toArray(tree.slice(1))]
+//│ = [[1, 2, 3], [2, 3]]
+
+:expect [[1, 2, 3], [2, 3]]
+[Iter.toArray(stressTree.slice()), Iter.toArray(stressTree.slice(1))]
+//│ = [[1, 2, 3], [2, 3]]
+
+:expect [[1, 2, 3], [2, 3]]
+[Iter.toArray(arrayView.slice()), Iter.toArray(arrayView.slice(1))]
+//│ = [[1, 2, 3], [2, 3]]
+
+:expect [[1, 2, 3], [2, 3]]
+[Iter.toArray(arraySplice.slice()), Iter.toArray(arraySplice.slice(1))]
+//│ = [[1, 2, 3], [2, 3]]
+
+:expect [[1, 2, 3], [2, 3]]
+[Iter.toArray(treeView.slice()), Iter.toArray(treeView.slice(1))]
+//│ = [[1, 2, 3], [2, 3]]
+
+:expect [[1, 2, 3], [2, 3]]
+[Iter.toArray(treeSplice.slice()), Iter.toArray(treeSplice.slice(1))]
+//│ = [[1, 2, 3], [2, 3]]
+
+// Base-typed dispatch must preserve the same omitted bounds for every override.
+:expect [true, true, true, true, true, true]
+@annotations.noInline private fun baseSlices(xs: Iter.IterableBase): Bool =
+  JSON.stringify([Iter.toArray(xs.slice()), Iter.toArray(xs.slice(1))]) === "[[1,2,3],[2,3]]"
+[
+  baseSlices(tree), baseSlices(stressTree),
+  baseSlices(arrayView), baseSlices(arraySplice),
+  baseSlices(treeView), baseSlices(treeSplice)
+]
+//│ = [true, true, true, true, true, true]
+
+// Finger trees consume every sequence in the inherited rest tuple, including none.
+:expect [[1, 2, 3], [1, 2, 3, 4, 5, 6]]
+[Iter.toArray(tree.concat()), Iter.toArray(tree.concat([4], [5, 6]))]
+//│ = [[1, 2, 3], [1, 2, 3, 4, 5, 6]]
+
+:expect [[1, 2, 3], [1, 2, 3, 4, 5, 6]]
+[Iter.toArray(stressTree.concat()), Iter.toArray(stressTree.concat([4], [5, 6]))]
+//│ = [[1, 2, 3], [1, 2, 3, 4, 5, 6]]
+
+:expect [[[1, 2, 3], [1, 2, 3, 4, 5, 6]], [[1, 2, 3], [1, 2, 3, 4, 5, 6]]]
+@annotations.noInline private fun baseConcats(xs: Iter.IterableBase): Any =
+  [Iter.toArray(xs.concat()), Iter.toArray(xs.concat([4], [5, 6]))]
+[baseConcats(tree), baseConcats(stressTree)]
+//│ = [[[1, 2, 3], [1, 2, 3, 4, 5, 6]], [[1, 2, 3], [1, 2, 3, 4, 5, 6]]]

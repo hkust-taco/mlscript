@@ -1,0 +1,130 @@
+:.
+
+
+// An annotated override must fit the base result even on JavaScript.
+:ge
+class Producer() with
+  open fun get(): Producer = Producer()
+class StrProducer() extends Producer() with
+  override fun get(): Str = "str"
+StrProducer().get()
+//│ ╔══[COMPILATION ERROR] Overriding member 'get' produces values represented as 'Str', which the member it overrides cannot produce: its results are represented as 'Producer'
+//│ ║  l.+4: 	  override fun get(): Str = "str"
+//│ ║        	               ^^^
+//│ ╟── The overridden member 'get' is defined here
+//│ ║  l.+2: 	  open fun get(): Producer = Producer()
+//│ ╙──      	           ^^^
+//│ = "str"
+
+
+// Parameters cannot narrow the inherited representation.
+:ge
+class Consumer() with
+  open fun take(value: Int): Int = value
+class StrConsumer() extends Consumer() with
+  override fun take(value: Str): Int = 0
+StrConsumer().take("str")
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'take' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+4: 	  override fun take(value: Str): Int = 0
+//│ ║        	                    ^^^^^^^^^^
+//│ ╟── The overridden member 'take' is defined here
+//│ ║  l.+2: 	  open fun take(value: Int): Int = value
+//│ ╙──      	           ^^^^
+//│ = 0
+
+
+// An unannotated parameter inherits the base type across worksheet blocks.
+:ge
+class EchoConsumer() extends Consumer() with
+  override fun take(value) = value
+EchoConsumer().take("str")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+3: 	EchoConsumer().take("str")
+//│ ╙──      	                    ^^^^^
+//│ = "str"
+
+
+// JavaScript accepts a parameter representation that includes every inherited input.
+:noInline
+:expect [42, 0]
+class BroadConsumer() extends Consumer() with
+  override fun take(value: Any): Int = if value is Int then value else 0
+fun consume(receiver: Consumer): Int = receiver.take(42)
+[consume(BroadConsumer()), BroadConsumer().take("str")]
+//│ = [42, 0]
+
+
+// Trailing parameters use the same representation checks when layouts correspond.
+:ge
+private class TailBase() with
+  open fun apply(...rest, value: Int): Int = 0
+private class TailChild() extends TailBase() with
+  override fun apply(...rest, value: Str): Int = 0
+private fun useTailBase(base: TailBase): Int = base.apply(1)
+useTailBase(TailChild())
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'apply' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+4: 	  override fun apply(...rest, value: Str): Int = 0
+//│ ║        	                              ^^^^^^^^^^
+//│ ╟── The overridden member 'apply' is defined here
+//│ ║  l.+2: 	  open fun apply(...rest, value: Int): Int = 0
+//│ ╙──      	           ^^^^^
+//│ = 0
+
+
+// An unannotated rest parameter already binds an Array, with or without trailing parameters.
+:noInline
+:expect [3, 5, 2]
+class RestBase() with
+  open fun count(...values): Int = 0
+  open fun tail(...values, last: Int): Int = last
+  open fun broad(...values: Any): Int = 1
+class RestChild() extends RestBase() with
+  override fun count(...values: Array[Int]): Int = values.length
+  override fun tail(...values: Array[Int], last): Int = values.length + last
+  override fun broad(...values): Int = 2
+fun countRest(receiver: RestBase): Int = receiver.count(1, 2, 3)
+fun countTail(receiver: RestBase): Int = receiver.tail(1, 2, 3)
+[countRest(RestChild()), countTail(RestChild()), RestChild().broad(1)]
+//│ = [3, 5, 2]
+
+
+// Inherited trailing slots constrain uses in the override body before argument extraction.
+:ge
+private fun text(value: Str): Int = 0
+private class InheritedTail() extends TailBase() with
+  override fun apply(...rest, value): Int = text(value)
+InheritedTail().apply(1)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+3: 	  override fun apply(...rest, value): Int = text(value)
+//│ ╙──      	                                                 ^^^^^
+//│ = 0
+
+
+// Optional leading slots leave the fixed physical prefix when trailing parameters follow.
+// A mismatch in the next curried list must identify its own parameter.
+:ge
+class CurriedBase() with
+  open fun apply(value?: Int, ...rest, last: Int)(extra: Int): Int = last
+class CurriedChild() extends CurriedBase() with
+  override fun apply(value?: Int, ...rest, last: Int)(extra: Str): Int = last
+//│ ╔══[COMPILATION ERROR] Parameter 'extra' of overriding member 'apply' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+4: 	  override fun apply(value?: Int, ...rest, last: Int)(extra: Str): Int = last
+//│ ║        	                                                      ^^^^^^^^^^
+//│ ╟── The overridden member 'apply' is defined here
+//│ ║  l.+2: 	  open fun apply(value?: Int, ...rest, last: Int)(extra: Int): Int = last
+//│ ╙──      	           ^^^^^
+
+
+// An extra required trailing slot is rejected before a valid base call can reach it.
+:ge
+:re
+private class ExtraTail() extends TailBase() with
+  override fun apply(...rest, first: Int, value: Int): Int = 0
+useTailBase(ExtraTail())
+//│ ╔══[COMPILATION ERROR] Overriding member 'apply' requires at least 2 arguments, but the overridden member permits 1
+//│ ║  l.+2: 	  override fun apply(...rest, first: Int, value: Int): Int = 0
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'apply' is defined here
+//│ ║  l.XX: 	  open fun apply(...rest, value: Int): Int = 0
+//│ ╙──      	           ^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'apply' expected at least 2 arguments but got 1

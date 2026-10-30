@@ -721,6 +721,21 @@ class Circle(radius: Num) extends Shape with
   fun area = Math.PI * radius * radius
 ```
 
+An overriding method must preserve argument binding for every call permitted by the inherited
+method. Parameter names may change, but corresponding parameters must receive the same arguments,
+omitted-argument defaults, and rest slices. A parameter marked `drop` in the inherited contract may
+be omitted only when this leaves the other parameters' bindings unchanged. Additional optional
+parameters are permitted only when they cannot consume arguments belonging to inherited parameters.
+Equal parameter counts alone do not establish compatibility: moving a trailing parameter or changing
+where a rest slice begins can change which argument a parameter receives.
+
+An override must accept the runtime representations of the inherited parameters, and its results
+must fit the inherited result representation. Unannotated parameters inherit their representations;
+an ordinary member without a result annotation uses the inherited result representation too.
+An annotated parameter may accept a wider representation on JavaScript. Wasm compiles overrides
+with the introducing method's physical signature, so their parameter representations must match.
+A representation mismatch is a compilation error.
+
 ### Covariant/Contravariant Type Parameters
 
 ```mlscript
