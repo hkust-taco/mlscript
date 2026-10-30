@@ -81,7 +81,7 @@ fun next(it) =
 //│   i = it.i.value;
 //│   scrut = i == it.end;
 //│   if (scrut === true) {
-//│     return None1()
+//│     return None1() /* as! Option */
 //│   }
 //│   {
 //│     let xs, inlinedVal;
@@ -90,7 +90,7 @@ fun next(it) =
 //│     res = Some1(inlinedVal);
 //│     tmp = i + it.step;
 //│     it.i.value = tmp;
-//│     return res;
+//│     return res /* as! Option */;
 //│   }
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

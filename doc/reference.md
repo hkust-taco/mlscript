@@ -565,6 +565,11 @@ and  or  not        // boolean keywords
 
 Note: `==` is a deep structural equality (compares arrays and class fields recursively), while `===` is JavaScript strict equality.
 
+The builtin operators are not yet declared as overloaded functions: their results are approximated
+from their operands. For example, the sum of two `Int`s is an `Int` (an overflow to `Infinity` is
+not detected), and `+` with a `Str` operand is a `Str`. On the Wasm backend, which implements the
+operators with dynamically typed runtime functions, their results are treated as unknown values.
+
 ### Comma-Operators
 
 Prefix a comma before an operator to apply it to the entire LHS:

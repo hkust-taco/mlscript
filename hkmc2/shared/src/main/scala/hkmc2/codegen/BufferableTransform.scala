@@ -78,9 +78,11 @@ class BufferableTransform()(using State, Raise):
               val idx = VarSymbol(new Tree.Ident("idx"), erasedType = S(ErasedType.Int), mut = false)
               val (newParams, symMap) = mkSymbolReplacer(f.params)
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
-              FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id, erasure = N), LoweredParamList.plain(
-                Param.simple(buf) :: Param.simple(idx) :: Nil)(N) :: newParams,
-                if isCtor then Begin(blk, Return(idx.asSimpleRef)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
+              val signature = FunDefn.Signature.fromParams(LoweredParamList.plain(
+                Param.simple(buf) :: Param.simple(idx) :: Nil)(N) :: newParams, ErasedResult.fromAnnotations(N, f.annotations))
+              val dSym = SymbolRefresher.copyTermSymbol(f.dSym, f.owner, S(signature.erasure))
+              FunDefn(f.owner, f.sym, dSym, signature,
+                if isCtor then Begin(blk, Return(idx.asSimpleRef)) else blk)(f.configOverride, f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 

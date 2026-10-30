@@ -13,3 +13,8 @@ module AsyncLibrary with
   class Methods with
     @annotations.async
     fun result(value: Int): Int = value
+
+  // Consumers compile this body in their own unit, after the defining erasure pass.
+  pattern Result = x =>
+    @annotations.async fun answer(): Int = 42
+    answer()

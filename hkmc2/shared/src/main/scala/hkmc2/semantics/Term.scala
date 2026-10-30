@@ -755,6 +755,20 @@ final case class TermDefinition(
     if (k is syntax.Fun) && body.nonEmpty then annotations.collectFirst:
       case annotation: Annot.Async => annotation
     else N
+  /** A generator call returns a generator object; the body's result is only the payload of its
+    * final step. The elaborator rejects the annotation on functions without a parameter list,
+    * which are then compiled as ordinary functions.
+    */
+  def generatorAnnotation: Opt[Annot.Generator] =
+    if (k is syntax.Fun) && body.nonEmpty && params.nonEmpty then annotations.collectFirst:
+      case annotation: Annot.Generator => annotation
+    else N
+  /** The annotation whose lowering replaces the function's result by a wrapper object
+    * (a promise or a generator) once all of its written parameter lists have been applied.
+    * Async generators are not modeled: a function with both annotations is treated as async.
+    */
+  def resultWrapperAnnotation: Opt[Annot.Async | Annot.Generator] =
+    asyncAnnotation.orElse(generatorAnnotation)
   /** A result annotation denotes the whole result; a separate function signature
     * includes the arrows corresponding to the definition's written parameter lists.
     */

@@ -113,7 +113,7 @@ object ShapeIdentity:
       case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.hashCode), parentHash(view.parent))
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
-        view.declaration.fold(0)(System.identityHashCode), view.asyncResult.hashCode)
+        view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode)
       case view: RecordTypeShape => ValueKey.hash(
         ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.aliases.hashCode)
       case view: IntersectionView => view.values.map(_.comparison).hashCode
@@ -141,7 +141,7 @@ object ShapeIdentity:
         case a: CallableTypeShape => that.shape match
           case b: CallableTypeShape => (a.source eq b.source) && a.paramLists == b.paramLists && a.result == b.result &&
             a.scheme == b.scheme && a.supplied == b.supplied &&
-            a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.asyncResult == b.asyncResult
+            a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.wrappedResult == b.wrappedResult
           case _ => false
         case a: RecordTypeShape => that.shape match
           case b: RecordTypeShape => a.fields == b.fields && a.aliases == b.aliases
@@ -817,15 +817,19 @@ final class DeclaredParams(val params: Ls[DeclaredParam], val variadic: Opt[Vari
   def mapTypes(f: DeclaredType => DeclaredType): DeclaredParams =
     DeclaredParams(params.map(_.mapType(f)), variadic.map(_.map(_.mapType(f))))
 
-/** Async lowering wraps the result only after all written parameter lists have
-  * been applied. A separate signature can encode those lists as nested arrows,
+/** Async and generator lowering wrap the result only after all written parameter lists
+  * have been applied. A separate signature can encode those lists as nested arrows,
   * so the pending wrapper must survive observing the next callable interface.
   */
-final case class AsyncResult(annotation: Annot.Async, remainingLists: Int) extends ValueKey:
-  // Every async annotation wraps the result in Promise. Its span is evidence.
-  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), remainingLists.hashCode)
+final case class WrappedResult(annotation: Annot.Async | Annot.Generator, remainingLists: Int) extends ValueKey:
+  // Every async annotation wraps the result in Promise and every generator annotation
+  // in Iterator, so only the annotation's kind matters. Its span is evidence.
+  private def isAsync: Bool = annotation match
+    case _: Annot.Async => true
+    case _: Annot.Generator => false
+  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), isAsync.hashCode, remainingLists.hashCode)
   protected def sameValue(other: ValueKey): Bool = other match
-    case that: AsyncResult => remainingLists == that.remainingLists
+    case that: WrappedResult => isAsync == that.isAsync && remainingLists == that.remainingLists
     case _ => false
   require(remainingLists > 0)
 
@@ -839,7 +843,7 @@ final case class AsyncResult(annotation: Annot.Async, remainingLists: Int) exten
   */
 final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams],
     result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[DeclaredType]],
-    declaration: Opt[TermDefinition], asyncResult: Opt[AsyncResult]) extends CoreHeadShape:
+    declaration: Opt[TermDefinition], wrappedResult: Opt[WrappedResult]) extends CoreHeadShape:
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
   def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.headerLoc)

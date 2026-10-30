@@ -34,7 +34,7 @@ printCode(DynSelect(ValueSimpleRef(Symbol("p")), ValueSimpleRef(Symbol("field"))
 :silent
 class A(val x)(y)
 class B
-let aSym = ConcreteClassSymbol("A", A, Some([Symbol("x")]), [[Symbol("y")]])
+let aSym = ConcreteClassSymbol("A", A.class, Some([Symbol("x")]), [[Symbol("y")]])
 let bSym = ConcreteClassSymbol("B", B, None, [])
 
 printCode(Call(ValueSimpleRef(Symbol("f")), [Arg(ValueLit(3))]))

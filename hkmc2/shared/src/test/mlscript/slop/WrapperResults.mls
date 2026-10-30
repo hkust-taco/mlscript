@@ -1,0 +1,248 @@
+:.
+#lang(0.3.x, strictResolution: true)
+open annotations
+
+// Call sites use Promise, while both return paths coerce the body's annotated payload.
+:noInline
+:sir
+:siret
+:await
+:expect [42, 43]
+@async fun answer(early: Bool, value: Any): Int =
+  if early do return value
+  value
+fun asPromise(value: Promise[Int]): Promise[Int] = value
+Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Promise⁰, tmp1: Promise⁰, tmp2: Promise⁰, tmp3: Promise⁰, tmp4: Array⁰, answer;
+//│ define answer as fun answer⁰(early: Bool⁰, value: Unknown)(): Int⁰ {
+//│   match early
+//│     true =>
+//│       return (value as! Int⁰)
+//│     else
+//│       return (value as! Int⁰)
+//│   end
+//│ };
+//│ define answer¹ as fun answer²(early: Bool⁰, value: Unknown): Promise⁰ {
+//│   let tmp5: Function⁰;
+//│   set tmp5 = answer⁰(early, value);
+//│   return runtime⁰.toJsAsync﹖(tmp5)
+//│ };
+//│ define asPromise⁰ as fun asPromise¹(value: Promise⁰): Promise⁰ {
+//│   return value
+//│ };
+//│ set tmp = answer²(true, 42);
+//│ set tmp1 = asPromise¹(tmp);
+//│ set tmp2 = answer²(false, 43);
+//│ set tmp3 = asPromise¹(tmp2);
+//│ set tmp4 = [tmp1, tmp3];
+//│ return globalThis⁰.Promise¹.all⁰(tmp4)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 43]
+
+// A generator override's callable returns Iterator, but its body's payload can have any representation.
+:noInline
+:sir
+:siret
+:expect {value: "payload", done: true}
+private class GeneratorBase() with
+  @annotations.generator
+  open fun generate(value: Any): Any = value
+private class GeneratorChild() extends GeneratorBase() with
+  @annotations.generator
+  override fun generate(value: Any) = value
+GeneratorChild().generate("payload").next()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ?, tmp1: Iterator⁰;
+//│ @private
+//│ define GeneratorBase⁰ as class GeneratorBase² {
+//│   constructor GeneratorBase¹
+//│   method generate⁰ = fun generate¹(value: Unknown): generator Unknown {
+//│     return value
+//│   }
+//│ };
+//│ @private
+//│ define GeneratorChild⁰ as class GeneratorChild² extends GeneratorBase² {
+//│   constructor GeneratorChild¹
+//│   method generate² = fun generate³(value: Unknown): generator ? {
+//│     return value
+//│   }
+//│ };
+//│ set tmp = GeneratorChild¹();
+//│ set tmp1 = tmp.generate³("payload");
+//│ return tmp1.next⁰()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = {value: "payload", done: true}
+
+// A separate signature keeps the iterator wrapper pending through all curried lists.
+:checkIR
+:soir
+:siret
+fun curried: Int -> Int -> Int
+@generator fun curried(x)(y) =
+  yield x
+  y
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let curried$worker;
+//│ @inline
+//│ define curried⁰ as fun curried¹(x: ?)(y: ?): Iterator⁰ {
+//│   return curried$worker⁰(x, y)
+//│ };
+//│ @generator
+//│ define curried$worker as fun curried$worker⁰(x: ?, y: ?): generator Int⁰ {
+//│   do yield⁰(x);
+//│   return (y as! Int⁰)
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [{value: 20, done: false}, {value: 22, done: true}]
+let remaining = curried(20)
+let iterator = remaining(22)
+[iterator.next(), iterator.next()]
+//│ = [{value: 20, done: false}, {value: 22, done: true}]
+//│ iterator =  {}
+//│ remaining = fun
+
+:e
+curried(20).next()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	curried(20).next()
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── Function with a declared signature does not contain member 'next'
+//│ ║  l.XX: 	fun curried: Int -> Int -> Int
+//│ ╙──      	                    ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A nominal method interface hides its body but still describes the returned iterator.
+class Methods with
+  @generator fun values[T](value: T): T = value
+fun fromMethod(receiver: Methods) = receiver.values[Int](44).next()
+
+:expect {value: 44, done: true}
+fromMethod(new Methods)
+//│ = {value: 44, done: true}
+
+// Imported pattern bodies retain their payload metadata when cloned in a later unit.
+import "../../mlscript-compile/AsyncLibrary.mls"
+
+:noOpt
+fun importedAsync(x) =
+  if x is (@compile AsyncLibrary.Result) as result then result else Promise.resolve(0)
+
+:await
+:expect [42, 42]
+Promise.all([importedAsync(3), importedAsync(4)])
+//│ = [42, 42]
+
+// Async and ordinary getters both expose Promise, but only the async body returns Int.
+:sir
+:siret
+:await
+:expect [42, 43, 44]
+class ResultGetters(value: Any) with
+  @async fun wrapped: Int = value
+  fun direct: Promise[Int] = Promise.resolve(43)
+  fun ordinary(): Promise[Int] = Promise.resolve(44)
+let results = new ResultGetters(42)
+Promise.all([results.wrapped, results.direct, results.ordinary()])
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Promise⁰, tmp1: Array⁰, wrapped;
+//│ define wrapped as fun wrapped⁰(this1: ResultGetters⁰)(): Int⁰ {
+//│   return (this1.value⁰ as! Int⁰)
+//│ };
+//│ define ResultGetters¹ as class ResultGetters⁰ {
+//│   private val value⁰: Unknown;
+//│   constructor ResultGetters²(value: Unknown) {
+//│     @private
+//│     define value¹ as val value⁰: Unknown = value;
+//│     end
+//│   }
+//│   method wrapped¹ = fun wrapped²: Promise⁰ {
+//│     let tmp2: Function⁰;
+//│     set tmp2 = wrapped⁰(ResultGetters⁰.this);
+//│     return runtime⁰.toJsAsync﹖(tmp2)
+//│   }
+//│   method direct⁰ = fun direct¹: Promise⁰ {
+//│     return globalThis⁰.Promise¹.resolve⁰(43)
+//│   }
+//│   method ordinary⁰ = fun ordinary¹(): Promise⁰ {
+//│     return globalThis⁰.Promise¹.resolve⁰(44)
+//│   }
+//│ };
+//│ set results⁰ = new ResultGetters⁰(42);
+//│ set tmp = results⁰.ordinary¹();
+//│ set tmp1 = [results⁰.wrapped², results⁰.direct¹, tmp];
+//│ return globalThis⁰.Promise¹.all⁰(tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 43, 44]
+//│ results = ResultGetters(_)
+
+// Both forward references and recursive calls follow the direct-result wrapper.
+:checkIR
+:soir
+:siret
+:expect [{value: 1, done: false}, {value: 0, done: false}, {value: 42, done: true}]
+@noInline fun forward(): Iterator[Any] = recursive(1)(42)
+@generator fun recursive(count: Int)(result: Int): Int =
+  yield count
+  if count > 0 do yield* recursive(count - 1)(result)
+  result
+let recursiveIterator = forward()
+[recursiveIterator.next(), recursiveIterator.next(), recursiveIterator.next()]
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp: Unknown, tmp1: Unknown, tmp2: Unknown, recursive$worker;
+//│ @noInline
+//│ define forward⁰ as fun forward¹(): Iterator⁰ {
+//│   return recursive$worker⁰(1, 42)
+//│ };
+//│ @inline
+//│ define recursive⁰ as fun recursive¹(count: Int⁰)(result: Int⁰): Iterator⁰ {
+//│   return recursive$worker⁰(count, result)
+//│ };
+//│ @generator
+//│ define recursive$worker as fun recursive$worker⁰(count: Int⁰, result: Int⁰): generator Int⁰ {
+//│   let scrut: ?, tmp3: Int⁰;
+//│   do yield⁰(count);
+//│   set scrut = >⁰(count, 0);
+//│   match scrut
+//│     true =>
+//│       let inlinedVal: Iterator⁰;
+//│       set tmp3 = -⁰(count, 1);
+//│       set inlinedVal = recursive$worker⁰(tmp3, result);
+//│       do yield*⁰(inlinedVal);
+//│       return result
+//│     else
+//│       return result
+//│   end
+//│ };
+//│ set recursiveIterator⁰ = forward¹();
+//│ set tmp = recursiveIterator⁰.next⁰();
+//│ set tmp1 = recursiveIterator⁰.next⁰();
+//│ set tmp2 = recursiveIterator⁰.next⁰();
+//│ return [tmp, tmp1, tmp2]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [{value: 1, done: false}, {value: 0, done: false}, {value: 42, done: true}]
+//│ recursiveIterator =  {}
+
+// TODO: AsyncLowering hoists the helper out of the local constructor's scope.
+:fixme
+:await
+:expect 42
+fun localAsyncPayload() =
+  data class Payload(value: Int)
+  @async fun answer(): Payload = Payload(42)
+  answer().then(payload => payload.value)
+localAsyncPayload()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Payload'
+//│ ║  l.+3: 	  @async fun answer(): Payload = Payload(42)
+//│ ║        	                                 ^^^^^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.+2: 	  data class Payload(value: Int)
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'answer'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.+3: 	  @async fun answer(): Payload = Payload(42)
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: Payload is not defined
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'

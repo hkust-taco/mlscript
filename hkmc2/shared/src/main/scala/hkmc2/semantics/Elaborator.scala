@@ -314,6 +314,7 @@ object Elaborator:
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
+      lazy val Iterator = assumeBuiltinCls("Iterator")
       lazy val Awaited = assumeBuiltinTpe("Awaited")
       lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")
@@ -660,6 +661,10 @@ object Elaborator:
     val newResolverState: NewResolverState = new NewResolverState(this)
     val suid = new Uid.Symbol.State
     given State = this
+    // LitSymbol.apply interns literal constructors within this compilation. Their symbols
+    // retain this State and a representative source span; a global cache would keep both
+    // alive and reuse another compilation's owner and location for the same literal value.
+    private[semantics] val literalSymbols = mutable.HashMap.empty[Literal, LitSymbol]
     private var _compilationUnit: Opt[CompilationUnit] = N
     private var _compilationUnitAbi: Opt[CompilationUnitAbi] = N
     /** Publish semantic provenance before optimizing this compilation unit. */
@@ -1413,7 +1418,11 @@ extends Importer:
         if selected is sym then ref else Term.SimpleRef(selected)(ref.tree).withLocOf(ref)
       case _ => lt
     val res = withTypeBinders(new Term.App(appliedFun, rt)(tree, typ, resSym))
-    if newResolution then listenTerm(appliedFun)(shape => appShape(shape, rt, res))
+    if newResolution then appliedFun match
+      // Builtin operators have no shapes of their own; see NewResolver.builtinApplication.
+      case Term.SimpleRef(op: BuiltinSymbol) => builtinApplication(op, rt, res)
+      case Term.Ref(op: BuiltinSymbol) => builtinApplication(op, rt, res)
+      case _ => listenTerm(appliedFun)(shape => appShape(shape, rt, res))
     res
   
   /** With the new underscore syntax, some operator operands delimit their own implicit lambdas:
@@ -1493,7 +1502,8 @@ extends Importer:
     if newResolution then
       // Imperative branches are evaluated for effects; lowering discards their
       // values and returns unit, including when a loop executes zero iterations.
-      if form.isImperative then pipeTerm(unit, res)
+      if form.isImperative then
+        if completesNormally(res) then pipeTerm(unit, res)
       else split.results.foreach: trm =>
           pipeTerm(trm, res)
     res

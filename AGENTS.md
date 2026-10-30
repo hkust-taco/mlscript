@@ -95,6 +95,10 @@ consider refactoring it into a reusable function or class.
 The goal of minimizing code duplication is to improve maintainability:
 the logic for handling cases that ought to be similar should be centralized.
 
+Long positional patterns containing `_, _, _, ...` are a code smell.
+Use named field patterns when matching a few fields of a case class or extractor,
+and preserve named patterns when refactoring the representation they match.
+
 **Document your code**:
 Use comments to explain the intent behind complex logic,
 especially if it is not immediately clear from the code itself.
@@ -112,6 +116,10 @@ after commits are squashed.
 Do NOT include comments that simply describe what the code is doing
 without adding any additional insight, or comments that talk about
 parts of the system that are not directly related to the code being commented on.
+
+Avoid passive tense, words like "actually", "just", etc.,
+avoid needlessly contrasting presently irrelevant things with expressions like "instead of",
+and use clear language and terminology.
 
 
 ## User-Facing Diagnostics

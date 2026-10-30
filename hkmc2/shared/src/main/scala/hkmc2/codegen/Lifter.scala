@@ -967,7 +967,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val rewritten = rewriter.rewrite(obj.fun.body)
       val withCapture = addExtraSyms(rewritten)
-      LifterResult(obj.fun.copy(body = withCapture)(obj.fun.configOverride, obj.fun.annotations), rewriter.extraDefns.toList)
+      LifterResult(obj.fun.withBody(withCapture), rewriter.extraDefns.toList)
   
   class RewrittenClassCtor(override val obj: ScopedObject.ClassCtor)(using ctx: LifterCtxNew) extends RewrittenScope[Unit](obj):
     override lazy val capturePath: Path = lastWords("tried to create a capture class for a class ctor")
@@ -1074,22 +1074,30 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     val fun = obj.fun
     
-    val (mainSym, mainDsym) = (fun.sym, fun.dSym)
+    val mainSym = fun.sym
+    private lazy val mainParams = if isTrivial then fun.params else fun.params match
+      case head :: next => head.copy(params = auxParams ::: head.params)(head.toLoc) :: next
+      case Nil => LoweredParamList.plain(auxParams)(N) :: Nil
+    private lazy val mainSignature =
+      if isTrivial then fun.signature else FunDefn.Signature.fromParams(mainParams, fun.signature.result)
+    private lazy val mainAnnotations =
+      if liftedFromStagedModule && !fun.isStaged then Annot.Modifier(Keyword.`staged`)(N) :: fun.annotations
+      else fun.annotations
+    // Captures change the physical signature. Keep the source declaration's published signature
+    // intact; rewritten direct calls and the partial-application wrapper use this fresh identity.
+    lazy val mainDsym =
+      if isTrivial then fun.dSym
+      else SymbolRefresher.copyTermSymbol(fun.dSym, N, S(mainSignature.erasure))
     val auxSym = BlockMemberSymbol(fun.sym.nme + "$", Nil, fun.sym.nameIsMeaningful)
-    val auxDsym = fun.dSym.withSameErasure(syntax.Fun, fun.owner, Tree.Ident(auxSym.nme))
+    private lazy val auxDsym = new TermSymbol(syntax.Fun, N, Tree.Ident(auxSym.nme))
     
     // Definition with the auxiliary parameters merged into the first parameter list.
     private def mkFlattenedDefn: LifterResult[FunDefn] =  
-      val newPlists = fun.params match
-        case head :: next => head.copy(params = auxParams ::: head.params)(head.toLoc) :: next
-        case Nil => LoweredParamList.plain(auxParams)(N) :: Nil
       val rewriter = new BlockRewriter(N)
       val newBod = rewriter.rewrite(fun.body)
       val withCapture = addExtraSyms(newBod)
-      val newDefn = fun.copy(owner = N, sym = mainSym, dSym = mainDsym, params = newPlists, body = withCapture)(
-        fun.configOverride,
-        if liftedFromStagedModule && !fun.isStaged then Annot.Modifier(Keyword.`staged`)(N) :: fun.annotations
-        else fun.annotations)
+      val newDefn = fun.copy(owner = N, sym = mainSym, dSym = mainDsym,
+        signature = mainSignature, body = withCapture)(fun.configOverride, mainAnnotations)
       LifterResult(newDefn, rewriter.extraDefns.toList)
     
     // Definition with the auxiliary parameters as a new first parameter list.
@@ -1108,18 +1116,20 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           syms.map(sym => Arg(N, sym.asSimpleRef)) ::: Arg(S(SpreadKind.Eager), value.asSimpleRef) :: Nil
         case None => syms.map(s => Arg(N, s.asSimpleRef))
       
-      val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
+      val call = Call(mainSym.asMemberRef(mainDsym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val bod = Return(call)
-      // The new capture list shifts the parameter list indices used by affine annotations.
-      val annotations = fun.annotations.map:
+      // The wrapper forwards a Promise, Iterator, or remaining function directly. Its Direct signature
+      // must not be lowered as another async or generator body. The added capture list still shifts
+      // the parameter list indices used by affine annotations.
+      val annotations = fun.annotations.collect:
         case a @ Annot.Affine(n) => Annot.Affine(n + 1)(a.toLoc)
-        case a => a
+        case a if !a.isInstanceOf[Annot.Generator] && !a.isInstanceOf[Annot.Async] => a
       
       FunDefn(
         N,
         auxSym,
         auxDsym,
-        newPlists,
+        FunDefn.Signature.fromParams(newPlists, ErasedResult.Direct(call.erasedType)),
         bod
       )(N, if fun.noInline then annotations else Annot.Inline()(N) :: annotations)
     
@@ -1243,14 +1253,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val ref = obj.cls.sym.asMemberRef(obj.cls.isym)
       val inst = Instantiate(false, ref, argsList)(InstantiateMetadata.empty, N)
-      // * The wrapper's signature describes its added parameter lists and the instance it returns.
-      flattenedDSym.initializeErasure(S(ErasedFuncSignature.Signature(
-        paramLists = allParamLists.map(_.params.map(_.sym.erasedType)),
-        ret = inst.erasedType,
-      )))
       val bod = Return(inst)
       
-      FunDefn(N, flattenedSym, flattenedDSym, allParamLists, bod)(N, annotations = Nil)
+      FunDefn(N, flattenedSym, flattenedDSym, FunDefn.Signature.fromParams(allParamLists, ErasedResult.Direct(inst.erasedType)), bod)(N, Nil)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     

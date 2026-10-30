@@ -323,7 +323,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     end val
     (initialBlk, pathList)
   
-  def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol])(using accessInfo: (ScopeData, AccessMap)): (Opt[FunDefn], List[FunDefn]) =
+  def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol])(using accessInfo: (ScopeData, AccessMap)): (Opt[FunDefn], List[(TermSymbol, FunDefn)]) =
     // sort the functions so the order is more predictable
     val funs = scc.funs.sortBy(f => f.dSym.uid)
     val fSyms = funs.iterator.map(_.dSym).toSet
@@ -343,7 +343,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     if calls.isEmpty then
       if checkAnnotations then for f <- funs if f.tailRec do
         raise(WarningReport(msg"This function is marked @tailrec but has no direct self-recursion." -> f.dSym.toLoc :: Nil))
-      return (N, funs)
+      return (N, funs.map(f => f.dSym -> f))
     
     if !nonTailCalls.isEmpty then
       if checkAnnotations then for f <- funs if f.tailRec do
@@ -389,30 +389,36 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         f.dSym -> mp
       .toMap
     
-    val dSym =
-      if !hasWrapper then funs.head.dSym
+    val curIdSym = VarSymbol(Tree.Ident("id"), erasedType = S(ErasedType.Int), mut = true)
+    val loopSignature =
+      if !hasWrapper then
+        val f = funs.head
+        val paramRewriter = new BlockTransformer(new SymbolSubst:
+          override def mapVarSym(sym: VarSymbol): VarSymbol = paramSymsMap(f.dSym).getOrElse(sym, sym))
+        val params = f.params.mapConserve(paramRewriter.applyParamList)
+        if params is f.params then f.signature else FunDefn.Signature.fromParams(params, f.signature.result)
       else
-        val erasure: Opt[ErasedValueType | ErasedFuncSignature] =
-          if funsLen === 1 then
-            // * The loop stands for the same function as its single member, with its parameter lists
-            // * flattened - construct a new signature to reflect this.
-            funs.head.dSym.erasedSignature match
-              case S(sig) => S(ErasedFuncSignature.Signature(paramSyms.map(_.erasedType) :: Nil, sig.ret))
-              case N => funs.head.dSym.erasedType
-          else
-            // * The dispatcher can exit through any member's return, so its result type is the LUB of its members.
-            val memberRets = funs.map(_.dSym.declaredResultType)
-            val ret =
-              if memberRets.exists(_.isEmpty) then N
-              else S(memberRets.flatten.map(_.canonicalize).reduce(ErasedType.lub))
-            S(ErasedFuncSignature.Signature(
-              paramLists = (S(ErasedType.Int) :: paramSyms.map(_.erasedType)) :: Nil,
-              ret = ret,
-            ))
-        val res = TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme), erasure)
-        // * Link the loop function to the BMS so that the erased type is accessible.
-        // * This never overwrites an already-elaborated `tsym` because it is always freshly created here (guarded by
-        // * `hasWrapper`).
+        val initial = paramSyms.map(Param.simple(_))
+        val params = LoweredParamList.plain(
+          if funsLen > 1 then Param.simple(curIdSym) :: initial else initial)(N) :: Nil
+        // The dispatcher can exit through any member's return, so its result type is their LUB.
+        val memberRets = funs.map(_.dSym.declaredResultType)
+        val ret =
+          if funsLen == 1 then memberRets.head
+          else if memberRets.exists(_.isEmpty) then N
+          else S(memberRets.flatten.map(_.canonicalize).reduce(ErasedType.lub))
+        FunDefn.Signature.fromParams(params, ErasedResult.Direct(ret))
+    val loopAnnotations =
+      if !hasWrapper then funs.head.annotations
+      else if funsLen == 1 && funs.head.inline then Annot.Inline()(N) :: Annot.Private :: Nil
+      else Annot.Private :: Nil
+    val dSym =
+      if !hasWrapper then
+        val f = funs.head
+        if loopSignature is f.signature then f.dSym
+        else SymbolRefresher.copyTermSymbol(f.dSym, owner, S(loopSignature.erasure))
+      else
+        val res = TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme), S(loopSignature.erasure))
         bms.tsym = S(res)
         res
     val dSymIds = funs.iterator.map(_.dSym).zipWithIndex.toMap
@@ -486,7 +492,6 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           f.dSym -> DeferredCast(TempSymbol(N, S(ErasedType.Bool), s"${f.dSym.nme}$$deferred"), t)
 
     val loopSym = LabelSymbol(N, "loopLabel")
-    val curIdSym = VarSymbol(Tree.Ident("id"), erasedType = S(ErasedType.Int), mut = true)
     
     val loopDefnPath = owner match
       case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym), N)(false)
@@ -759,15 +764,8 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           case ((_, o), acc) => Assign(o.flag, Value.Lit(Tree.BoolLit(false))(N), acc))
     
     if !hasWrapper then
-      val f = funs.head
-      val paramSubst = new SymbolSubst:
-        override def mapVarSym(sym: VarSymbol): VarSymbol = paramSymsMap(f.dSym).getOrElse(sym, sym)
-      val paramRewriter = new BlockTransformer(paramSubst)
-      val defn = FunDefn(
-        owner, bms, dSym,
-        f.params.mapConserve(paramRewriter.applyParamList),
-        loop)(N, annotations = f.annotations)
-      (N, defn :: Nil)
+      val defn = FunDefn(owner, bms, dSym, loopSignature, loop)(N, loopAnnotations)
+      (N, (funs.head.dSym -> defn) :: Nil)
     else
       val wrappers = funs.map: f =>
         val paramArgs = f.allParamSyms.map(s => s.asSimpleRef)
@@ -778,31 +776,20 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           coerceToDeclaredReturn(rewriteKnownCall(f, paramArgs), f.dSym),
         )
         val annots = if f.inline then f.annotations else Annot.Inline()(N) :: f.annotations
-        FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(N, annots)
-      val newParamLists =
-        val initial = paramSyms.map(Param.simple(_))
-        if funsLen > 1 then
-          LoweredParamList.plain(Param.simple(curIdSym) :: initial)(N) :: Nil
-        else
-          LoweredParamList.plain(initial)(N) :: Nil
-      val annotations = 
-        if funsLen == 1 && funs.head.inline then Annot.Inline()(N) :: Annot.Private :: Nil
-        else Annot.Private :: Nil
-      val loopDefn = FunDefn(
-        owner, bms, dSym,
-        newParamLists,
-        loop)(N, annotations = annotations)
+        f.dSym -> FunDefn(f.owner, f.sym, f.dSym, f.signature, newBod)(N, annots)
+      val loopDefn = FunDefn(owner, bms, dSym, loopSignature, loop)(N, loopAnnotations)
       (S(loopDefn), wrappers)
   
   def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol])(using (ScopeData, AccessMap)) =
-    val (newFsOpt, fsOpt) = partFns(fs).map(optScc(_, owner)).foldLeft[(List[FunDefn], List[FunDefn])](Nil, Nil):
+    val (newFsOpt, fsOpt) = partFns(fs).map(optScc(_, owner)).foldLeft[(List[FunDefn], List[(TermSymbol, FunDefn)])](Nil, Nil):
       case ((newFns, fns), (newFnOpt, fns_)) => newFnOpt match
         case Some(value) => (value :: newFns, fns_ ::: fns)
         case None => (newFns, fns_ ::: fns)
     // preserve the order of function defns
-    val fMap = fsOpt.map(f => (f.dSym, f)).toMap
+    val fMap = fsOpt.toMap
     val fsRet = fs.mapConserve(f => fMap(f.dSym))
-    (newFsOpt, fsRet)
+    val replacements = fsOpt.collect { case (sym, f) if sym isnt f.dSym => sym -> f.dSym }.toMap
+    (newFsOpt, fsRet, replacements)
   
   def reportClassesTailrec(c: ClsLikeDefn) =
     new BlockTraverserShallow():
@@ -816,32 +803,25 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         case _ => super.applyResult(r)
   
   def optFunctionsFlat(fs: List[FunDefn], owner: Opt[InnerSymbol])(using (ScopeData, AccessMap)) =
-    val (a, b) = optFunctions(fs, owner)
-    a ::: b
+    val (a, b, replacements) = optFunctions(fs, owner)
+    (a ::: b, replacements)
     
-  def optClasses(cs: List[ClsLikeDefn])(using (ScopeData, AccessMap)) = cs.map: c =>
-    // Class methods cannot yet be optimized as they cannot yet be marked final.
-    
-    if c.k is syntax.Cls then
-      if checkAnnotations then reportClassesTailrec(c)
-      val companion = c.companion.mapConserve: comp =>
-        val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
-        if cMtds is comp.methods
-        then comp
-        else comp.copy(methods = cMtds)
-      if (c.companion is companion)
-      then c
-      else c.copy(companion = companion)(c.configOverride, c.annotations)
-    else
-      val mtds = optFunctionsFlat(c.methods, S(c.isym))
-      val companion = c.companion.mapConserve: comp =>
-        val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
-        if cMtds is comp.methods
-        then comp
-        else comp.copy(methods = cMtds)
-      if (c.methods is mtds) && (c.companion is companion)
-      then c
-      else c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations)
+  def optClasses(cs: List[ClsLikeDefn])(using (ScopeData, AccessMap)) =
+    val rewritten = cs.map: c =>
+      // Class methods cannot yet be optimized as they cannot yet be marked final.
+      val (mtds, replacements) = if c.k is syntax.Cls then
+        if checkAnnotations then reportClassesTailrec(c)
+        (c.methods, Map.empty[TermSymbol, TermSymbol])
+      else optFunctionsFlat(c.methods, S(c.isym))
+      val (companion, companionReplacements) = c.companion match
+        case S(comp) =>
+          val (cMtds, replacements) = optFunctionsFlat(comp.methods, S(comp.isym))
+          (if cMtds is comp.methods then c.companion else S(comp.copy(methods = cMtds)), replacements)
+        case N => (N, Map.empty[TermSymbol, TermSymbol])
+      val cls = if (c.methods is mtds) && (c.companion is companion) then c
+        else c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations)
+      cls -> (replacements ++ companionReplacements)
+    (rewritten.map(_._1), rewritten.iterator.flatMap(_._2).toMap)
   
   def transform(prog: Program): Program =
     if !config.tailRecOpt then return prog
@@ -871,10 +851,10 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     // Filter out functions that should not be tail-rec optimized
     val (tailRecFuns, _) = funs.partition: f =>
       f.configOverride.forall(_.tailRecOpt) && !f.generator
-    val (optFNew, optF) = optFunctions(tailRecFuns, N)
-    val optC = optClasses(clses)
+    val (optFNew, optF, funReplacements) = optFunctions(tailRecFuns, N)
+    val (optC, methodReplacements) = optClasses(clses)
     
-    val fMap = optF.map(f => f.dSym -> f).toMap
+    val fMap = tailRecFuns.iterator.zip(optF).map((before, after) => before.dSym -> after).toMap
     // Scala needs this annotation to type check for some reason
     val cMap: Map[DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol, ClsLikeDefn] =
       optC.map(c => c.isym -> c).toMap
@@ -892,16 +872,23 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         
         case _ => super.applyDefn(defn)(k)
     
-    val result = Scoped(
+    val rewritten = Scoped(
       optFNew.map(_.sym).toSet,
       optFNew.foldLeft(transformer.applyBlock(b)):
         case (acc, f) => Define(f, acc))
+    // Fresh mutable parameter bindings also get a fresh definition symbol. Update all references,
+    // including forward references and calls in nested functions outside the optimized SCC.
+    val replacements = funReplacements ++ methodReplacements
+    val result = if replacements.isEmpty then rewritten else
+      val subst = new SymbolSubst:
+        override def mapTermSym(sym: TermSymbol): TermSymbol = replacements.getOrElse(sym, sym)
+      BlockTransformer(subst).applyBlock(rewritten)
     
     if checkAnnotations then
       // Report @tailrec on functions that weren't processed by the optimization above,
       // e.g. nested functions or functions with @config(tailRecOpt: false).
       // Class/module methods are handled separately by optClasses and are skipped here.
-      val tailRecFunSyms = tailRecFuns.map(_.dSym).toSet
+      val tailRecFunSyms = optF.map(_.dSym).toSet
       new BlockTraverser:
         override def applyFunDefn(fun: FunDefn): Unit =
           if fun.tailRec && !tailRecFunSyms.contains(fun.dSym) then

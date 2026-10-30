@@ -75,7 +75,8 @@ fun f() = if A(1, Nil) is
 
 
 
-:e
+// Every branch repeats, so this loop never assigns Unit to x.
+:sjs
 fun f(x) =
   let =x
   x = while x is
@@ -84,10 +85,24 @@ fun f(x) =
   else
     x()
   x
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.+7: 	    x()
-//│ ║        	    ^^^
-//│ ╙── Unit value cannot be called like a function.
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let f3;
+//│ f3 = function f(x1) {
+//│   let x2;
+//│   x2 = x1;
+//│   lbl: while (true) {
+//│     if (x2 instanceof A1.class) {
+//│       runtime.safeCall(x2.a());
+//│       continue lbl
+//│     } else if (x2 instanceof B1.class) {
+//│       runtime.safeCall(x2.a());
+//│       continue lbl
+//│     }
+//│     runtime.safeCall(x2());
+//│     continue lbl;
+//│   }
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
 

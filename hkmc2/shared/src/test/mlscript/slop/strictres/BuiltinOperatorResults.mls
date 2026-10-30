@@ -1,0 +1,116 @@
+:.
+
+// Arithmetic results are values of primitive classes, not callable values.
+:e
+(1 + 2)()
+(1 / 2)()
+(5 % 2)()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	(1 + 2)()
+//│ ║        	^^^^^^^^^
+//│ ╟── Value of type 'Int' cannot be called like a function.
+//│ ║  l.+1: 	(1 + 2)()
+//│ ╙──      	 ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	(1 / 2)()
+//│ ║        	^^^^^^^^^
+//│ ╟── Value of type 'Num' cannot be called like a function.
+//│ ║  l.+2: 	(1 / 2)()
+//│ ╙──      	 ^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+3: 	(5 % 2)()
+//│ ║        	^^^^^^^^^
+//│ ╟── Value of type 'Num' cannot be called like a function.
+//│ ║  l.+3: 	(5 % 2)()
+//│ ╙──      	 ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// A string operand determines concatenation even when the other operand is unknown.
+:e
+fun concat(value: Any) = "prefix" + value
+concat(42)()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	concat(42)()
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Value of type 'Str' cannot be called like a function.
+//│ ║  l.+1: 	fun concat(value: Any) = "prefix" + value
+//│ ╙──      	                         ^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Comparisons and unary operators have results even with unknown operands.
+:e
+fun compare(left: Any, right: Any) = left < right
+fun kind(value: Any) = typeof(value)
+fun positive(value: Any) = (+.)(value)
+[compare(1, 2)(), kind(42)(), positive("42")()]
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+4: 	[compare(1, 2)(), kind(42)(), positive("42")()]
+//│ ║        	 ^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Bool' cannot be called like a function.
+//│ ║  l.+1: 	fun compare(left: Any, right: Any) = left < right
+//│ ╙──      	                                     ^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+4: 	[compare(1, 2)(), kind(42)(), positive("42")()]
+//│ ║        	                  ^^^^^^^^^^
+//│ ╟── Value of type 'Str' cannot be called like a function.
+//│ ║  l.+2: 	fun kind(value: Any) = typeof(value)
+//│ ╙──      	                       ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+4: 	[compare(1, 2)(), kind(42)(), positive("42")()]
+//│ ║        	                              ^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Num' cannot be called like a function.
+//│ ║  l.+3: 	fun positive(value: Any) = (+.)(value)
+//│ ╙──      	                           ^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// An unclassified operand contributes an unknown result, not an absence of results.
+:e
+fun dynamicSum(left: Any, right: Any) = left + right
+dynamicSum(1, 2)()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	dynamicSum(1, 2)()
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of unknown shape cannot be called like a function.
+//│ ╟── The shape of this value is unknown.
+//│ ║  l.+1: 	fun dynamicSum(left: Any, right: Any) = left + right
+//│ ╙──      	                                        ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Sequencing forwards its right operand, preserving independent calls' result shapes.
+:expect [41, 42]
+private fun comma(value) = (;)(0, value)
+[comma(() => 41)(), comma(() => 42)()]
+//│ = [41, 42]
+
+// Disabling cast comments must preserve the same builtin-result resolution.
+:noCastComments
+:expect 42
+(;)(0, () => 42)()
+//│ = 42
+
+// Short-circuiting operators retain both their Boolean and right-operand alternatives.
+:e
+let conjunction = true && {left: 42}
+let disjunction = false || {right: 43}
+[conjunction.missing, disjunction.missing]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	[conjunction.missing, disjunction.missing]
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Bool' does not contain member 'missing'
+//│ ║  l.+1: 	let conjunction = true && {left: 42}
+//│ ║        	                  ^^^^^^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'missing'
+//│ ║  l.+1: 	let conjunction = true && {left: 42}
+//│ ╙──      	                           ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	[conjunction.missing, disjunction.missing]
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Bool' does not contain member 'missing'
+//│ ║  l.+2: 	let disjunction = false || {right: 43}
+//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Record literal does not contain member 'missing'
+//│ ║  l.+2: 	let disjunction = false || {right: 43}
+//│ ╙──      	                            ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ conjunction = {left: 42}
+//│ disjunction = {right: 43}

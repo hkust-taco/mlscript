@@ -10,7 +10,7 @@ import hkmc2.utils.*
 
 import Elaborator.State
 import Tree.Ident
-import hkmc2.codegen.{ErasedType, ErasedFuncSignature, ErasedValueType, HasDelayedErasedType}
+import hkmc2.codegen.{ErasedType, ErasedResult, ErasedCallableSignature, ErasedFuncSignature, ErasedGetterSignature, ErasedValueType, HasDelayedErasedType}
 import hkmc2.utils.SymbolSubst
 import sourcecode.{FileName, Line}
 
@@ -293,6 +293,11 @@ class VarSymbol(val id: Ident, val mut: Bool)(using State)
     this(id, mut)
     this.erasedType = erasedType
   val name: Str = id.name
+  /** Alternate source spellings of this binding, populated by `Elaborator.param` when a symbolic
+    * suffix is removed from its canonical name (e.g. `foo_+` becomes `foo`, with alias `foo_+`).
+    * Elaboration copies these names to generated constructor fields and class-local bindings so
+    * their scopes and member lookup retain both spellings. Symbol cloning/refreshing preserves them.
+    */
   var sourceAliases: Ls[Str] = Nil
   override def toLoc: Opt[Loc] = id.toLoc
   // override def toString: Str = s"$name@$uid"
@@ -342,7 +347,7 @@ final class BuiltinSymbol(val nme: Str, val arity: BuiltinSymbol.Arity, val isPu
       case "!" | "==" | "!=" | "===" | "!==" | "<" | "<=" | ">" | ">=" => S(ErasedType.Bool)
       case "typeof" => S(ErasedType.Str)
       case _ => N
-    ErasedFuncSignature.Signature(List(List.fill(count)(N)), ret)
+    ErasedFuncSignature.Signature(List(List.fill(count)(N)), ErasedResult.Direct(ret))
   
   // * A basic approximation of builtin operator types
   lazy val signature : semantics.flow.Producer =
@@ -447,18 +452,32 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
 :
   // `null` marks source declarations not yet visited by Erasure; `N` is an initialized, unknown erasure.
   // Generated MIR symbols initialize the same slot directly, retaining signatures separately from value types.
-  private var assignedErasure: Opt[ErasedValueType | ErasedFuncSignature] = null
+  private var assignedErasure: Opt[ErasedValueType | ErasedCallableSignature] = null
   def this(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident,
-      erasure: Opt[ErasedValueType | ErasedFuncSignature])(using State) =
+      erasure: Opt[ErasedValueType | ErasedCallableSignature])(using State) =
     this(k, owner, id)
     initializeErasure(erasure)
   
   def isErased: Bool = assignedErasure != null
-  def erasure: Opt[ErasedValueType | ErasedFuncSignature] =
+  /** The erased signature stored for this definition. `N` denotes an initialized unknown erasure;
+    * reading this before `initializeErasure` is an error.
+    *
+    * Stored value definitions use the `ErasedValueType` arm, including function-valued slots whose
+    * representation is `Function`. Function definitions use the `ErasedCallableSignature` arm:
+    * `ErasedFuncSignature` describes one or more physical parameter lists (including an implicit empty list),
+    * while `ErasedGetterSignature` describes getters with no physical parameter list.
+    *
+    * For a getter, `erasedType` exposes the call result's value type, while the stored signature also
+    * records the body's result and wrapper kind. For example, an async getter's body returns `Int`
+    * but a read yields `Promise`; retaining only `Promise` would lose the payload representation
+    * needed when lowering or cloning the body.
+    */
+  def erasure: Opt[ErasedValueType | ErasedCallableSignature] =
     assert(isErased, s"Erasure of '$nme' read before initialization")
     assignedErasure
-  def initializeErasure(value: Opt[ErasedValueType | ErasedFuncSignature]): Unit =
+  def initializeErasure(value: Opt[ErasedValueType | ErasedCallableSignature]): Unit =
     assert(!isErased, "Erasure initialized more than once")
+    assert(value != null, "An initialized erasure cannot be null")
     assignedErasure = value
   
   var sourceAliases: Ls[Str] = Nil
@@ -487,34 +506,25 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     */
   def erasedType: Opt[ErasedValueType] = erasure match
     case S(_: ErasedFuncSignature) => S(ErasedType.Function(rsc = S(false)))
+    case S(sig: ErasedGetterSignature) => sig.ret
     case S(tpe: ErasedValueType) => S(tpe)
     case N => N
   
   /** The erased signature of a `fun` definition with parameter lists, or `N` if this term has none. */
   def erasedSignature: Opt[ErasedFuncSignature] = erasure match
     case S(sig: ErasedFuncSignature) => S(sig)
-    case S(_: ErasedValueType) | N => N
+    case S(_: ErasedValueType | _: ErasedGetterSignature) | N => N
   
-  /** Creates a symbol with the same erased type or signature as this one. */
-  def withSameErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)(using State): TermSymbol =
-    withMappedErasure(k, owner, id)(identity)
-  
-  /** Creates a symbol with the same erased type as this one, or its erased signature mapped by `f`. */
-  def withMappedErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)
-      (f: ErasedFuncSignature => ErasedFuncSignature)(using State): TermSymbol =
-    val erasure = this.erasure match
-      case S(sig: ErasedFuncSignature) => S(f(sig))
-      case other => other
-    new TermSymbol(k, owner, id, erasure)
-  
-  /** The erased type of this term's return value.
-    *
-    * This method differs for `fun` definitions with parameter lists, whose result type is that of their signature.
+  /** The complete result behavior. Value slots have a direct result; getters retain
+    * their wrapper kind without acquiring a first-class function representation.
     */
-  def declaredResultType: Opt[ErasedValueType] = erasure match
-    case S(sig: ErasedFuncSignature) => sig.ret
-    case S(tpe: ErasedValueType) => S(tpe)
-    case N => N
+  def erasedResult: ErasedResult[ErasedValueType] = erasure match
+    case S(sig: ErasedCallableSignature) => sig.result
+    case S(tpe: ErasedValueType) => ErasedResult.Direct(S(tpe))
+    case N => ErasedResult.Direct(N)
+
+  /** The representation seen by a caller, including async/generator wrapping. */
+  def declaredResultType: Opt[ErasedValueType] = erasedResult.callType
 
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
   def mayRaiseEffects(using Config) =
@@ -556,9 +566,8 @@ sealed abstract case class LitSymbol(lit: Literal)(using State) extends CtorSymb
   def toLoc: Option[Loc] = lit.toLoc
   override def prefix: Str = "lit:"
 object LitSymbol:
-  val cache: scala.collection.concurrent.Map[Literal, LitSymbol] = scala.collection.concurrent.TrieMap.empty
   def apply(lit: Literal)(using State): LitSymbol =
-    cache.getOrElseUpdate(lit, new LitSymbol(lit){})
+    State.literalSymbols.getOrElseUpdate(lit, new LitSymbol(lit){})
 
 
 /** A TypeSymbol that is not an alias. */
