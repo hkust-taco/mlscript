@@ -7,7 +7,7 @@ class C(val x)
 let c = C(1)
 //│ c = C(1)
 
-set c.x = 2
+@unsafe set c.x = 2
 
 c
 //│ = C(1)
@@ -21,7 +21,7 @@ let f = Foo(1)(2)
 f.y
 //│ = 2
 
-set f.y = 3
+@unsafe set f.y = 3
 
 f.y
 //│ = 2

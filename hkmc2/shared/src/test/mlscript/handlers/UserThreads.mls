@@ -13,9 +13,9 @@ class Lock(val locked) with
   fun lock(th: ThreadEffect) =
     while locked do
       th.yld()
-    set locked = true
+    @unsafe set locked = true
   fun unlock() =
-    set locked = false
+    @unsafe set locked = false
 
 fun f(h, x) =
   print("f " + x)

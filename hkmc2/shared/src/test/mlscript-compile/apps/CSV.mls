@@ -12,7 +12,7 @@ data class CSV(strDelimiter?) with ...
 
 
 // Check to see if the delimiter is defined. If not, then default to comma.
-if strDelimiter is null then set strDelimiter = ","
+if strDelimiter is null then @unsafe set strDelimiter = ","
 
 val objPattern = new mut RegExp of
   // Delimiters.

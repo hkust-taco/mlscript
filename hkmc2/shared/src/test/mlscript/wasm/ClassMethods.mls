@@ -162,10 +162,10 @@ Box(41).mk()
 
 class Counter(val x) with
   fun inc() = 
-    set x += 1
+    @unsafe set x += 1
     this
   fun double() =
-    set x *= 2
+    @unsafe set x *= 2
     this
   fun get() = x
 let c = Counter(1)

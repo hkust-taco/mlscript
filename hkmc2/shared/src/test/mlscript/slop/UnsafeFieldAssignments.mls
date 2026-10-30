@@ -1,0 +1,214 @@
+:.
+:js
+:checkIR
+
+
+class Public(val value)
+class Body with
+  val value = 0
+
+// An unfrozen receiver does not by itself permit writes to immutable fields.
+:ge
+let rejected = new mut Public(0)
+set rejected.value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+2: 	set rejected.value = 1
+//│ ║        	            ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	class Public(val value)
+//│ ╙──      	                 ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ rejected = Public(0)
+
+:ge
+fun rejectBody(obj: Body) = set obj.value += 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to symbol 'value'
+//│ ║  l.+1: 	fun rejectBody(obj: Body) = set obj.value += 1
+//│ ║        	                                   ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	  val value = 0
+//│ ╙──      	      ^^^^^
+
+// Both plain and compound assignments can explicitly opt into unsafe field writes.
+:expect 3
+let publicCell = new mut Public(0)
+@unsafe set publicCell.value = 1
+@unsafe set publicCell.value += 2
+publicCell.value
+//│ = 3
+//│ publicCell = Public(3)
+
+// The annotation survives class-body cloning and can write private fields too.
+:expect 4
+class Private with
+  private val value = 0
+  fun update() = @unsafe set this.value += 4
+  fun read() = value
+let privateCell = new mut Private
+privateCell.update()
+privateCell.read()
+//│ = 4
+//│ privateCell = Private
+
+// A set group can annotate its individual entries.
+:expect [5, 6]
+let left = new mut Public(0)
+let right = new mut Public(0)
+set
+  @unsafe left.value = 5
+  @unsafe right.value = 6
+[left.value, right.value]
+//│ = [5, 6]
+//│ left = Public(5)
+//│ right = Public(6)
+
+// Ordinary mutable fields still work on frozen objects.
+:expect [true, 7]
+class Mutable(mut val value)
+let mutable = new Mutable(0)
+set mutable.value = 7
+[globalThis.Object.isFrozen(mutable), mutable.value]
+//│ = [true, 7]
+//│ mutable = Mutable(7)
+
+// Permission is local to the write; it does not reach into its RHS or a function body.
+:ge
+fun nestedRhs(a: Public, b: Public) =
+  @unsafe set a.value =
+    set b.value = 1
+    2
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+3: 	    set b.value = 1
+//│ ║        	         ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	class Public(val value)
+//│ ╙──      	                 ^^^^^
+
+:w
+:ge
+@unsafe fun annotatedFunction(a: Public) = set a.value = 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+1: 	@unsafe fun annotatedFunction(a: Public) = set a.value = 1
+//│ ╙──      	^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+1: 	@unsafe fun annotatedFunction(a: Public) = set a.value = 1
+//│ ║        	                                                ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	class Public(val value)
+//│ ╙──      	                 ^^^^^
+
+// A name that shadows the builtin cannot grant unsafe permission.
+:w
+:ge
+fun shadowed(a: Public) =
+  let unsafe = 0
+  @unsafe set a.value = 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+3: 	  @unsafe set a.value = 1
+//│ ║        	  ^^^^^^^
+//│ ╟── This annotation is not supported on assignment terms.
+//│ ║  l.+3: 	  @unsafe set a.value = 1
+//│ ╙──      	              ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+3: 	  @unsafe set a.value = 1
+//│ ║        	               ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	class Public(val value)
+//│ ╙──      	                 ^^^^^
+
+// The receiver is evaluated without inheriting the outer write's permission.
+:ge
+fun nestedReceiver(a: Public) =
+  @unsafe set (set a.value = 1 in a).value = 2
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+2: 	  @unsafe set (set a.value = 1 in a).value = 2
+//│ ║        	                    ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	class Public(val value)
+//│ ╙──      	                 ^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+2: 	  @unsafe set (set a.value = 1 in a).value = 2
+//│ ║        	                    ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	class Public(val value)
+//│ ╙──      	                 ^^^^^
+
+// Wildcard opens must obey the same rule as explicit selections.
+:ge
+fun opened(a: Public) =
+  open a
+  set value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+3: 	  set value = 1
+//│ ║        	      ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	class Public(val value)
+//│ ╙──      	                 ^^^^^
+
+:expect 9
+fun openedUnsafe(a: Public) =
+  open a
+  @unsafe set value = 9
+let openedCell = new mut Public(0)
+openedUnsafe(openedCell)
+openedCell.value
+//│ = 9
+//│ openedCell = Public(9)
+
+// @unsafe does not make a parameter binding assignable.
+:ge
+fun parameter(x) = @unsafe set x = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+1: 	fun parameter(x) = @unsafe set x = 1
+//│ ║        	                               ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun parameter(x) = @unsafe set x = 1
+//│ ╙──      	              ^
+
+
+#lang(strictResolution: false)
+
+// All known candidates must permit a write, even when lookup is lenient.
+:ge
+class Other(val value)
+fun ambiguous(a: Public | Other) = set a.value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+2: 	fun ambiguous(a: Public | Other) = set a.value = 1
+//│ ║        	                                        ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	class Other(val value)
+//│ ╙──      	                ^^^^^
+
+
+// A dynamic alternative must not hide a known immutable field.
+:ge
+fun partlyDynamic(a: Public, b: dyn, choose: Bool) =
+  let target = if choose then a else b
+  set target.value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+3: 	  set target.value = 1
+//│ ║        	            ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	class Public(val value)
+//│ ╙──      	                 ^^^^^
+
+
+#lang(useNewResolution: false, strictResolution: false)
+
+class Legacy(val value)
+
+:ge
+fun legacyRejected(a: Legacy) = set a.value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+1: 	fun legacyRejected(a: Legacy) = set a.value = 1
+//│ ║        	                                     ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.XX: 	class Legacy(val value)
+//│ ╙──      	                 ^^^^^
+
+:expect 8
+let legacy = new mut Legacy(0)
+@unsafe set legacy.value = 8
+legacy.value
+//│ = 8
+//│ legacy = Legacy(8)

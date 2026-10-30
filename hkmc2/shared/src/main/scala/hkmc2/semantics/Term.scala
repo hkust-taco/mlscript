@@ -28,6 +28,7 @@ enum Annot extends Located:
   case JsSymbol(key: SymbolKey)(val toLoc: Opt[Loc])
   case Fresh()(val toLoc: Opt[Loc])
   case Untyped()(val toLoc: Opt[Loc])
+  case Unsafe()(val toLoc: Opt[Loc])
   case Modifier(mod: Keyword)(val toLoc: Opt[Loc])
   case Trm(trm: Term)(val toLoc: Opt[Loc])
   // NOTE: The presence of TailRec and TailCall annotations does not affect whether a function is optimized or not;
@@ -65,13 +66,14 @@ enum Annot extends Located:
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
     case JsSymbol(key) => Vector.single(key.term)
-    case Fresh() | _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
+    case Fresh() | _: Modifier | Untyped() | Unsafe() | TailRec() | TailCall() | Inline() | NoInline()
       | Generator() | Async() | RaiseEffects() | Pure() | _: Bufferable | _: Config | _: Debug | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case JsSymbol(key) => doc"@jsSymbol(${key.term.show})"
     case Fresh() => doc"@annotations.fresh"
     case Untyped() => doc"@untyped"
+    case Unsafe() => doc"@unsafe"
     case Inline() => doc"@inline"
     case NoInline() => doc"@noInline"
     case Generator() => doc"@generator"

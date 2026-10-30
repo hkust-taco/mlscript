@@ -739,9 +739,20 @@ new! c           // dynamic instantiation (class value at runtime)
 new Foo(...xs)   // spread args
 ```
 
-`new mut` is an unsafe escape hatch. Optimizations may still assume that `val`
-fields are immutable; mutating them can therefore change optimized program behavior.
-Use `mut val` for fields whose updates must be observed by ordinary code.
+`new mut` creates an unfrozen instance, but writes to non-`mut` `val` fields
+require an explicit annotation on each assignment:
+
+```mlscript
+class Box(val value)
+let box = new mut Box(1)
+@unsafe set box.value = 3
+```
+
+`@unsafe` permits the field write; it does not unfreeze the receiver or change
+optimization assumptions. Optimizations may still assume that `val` fields are
+immutable, so mutating them can change optimized program behavior. Use `mut val`
+for fields whose updates must be observed by ordinary code. The annotation does
+not grant permission to assignments nested in the receiver or right-hand side.
 
 ---
 

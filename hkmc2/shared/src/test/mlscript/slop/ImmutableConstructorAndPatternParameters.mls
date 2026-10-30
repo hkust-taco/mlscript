@@ -75,7 +75,7 @@ class HeaderRedefine(x) with
 :expect 1
 class PublicHeader(val x)
 let publicHeader = new mut PublicHeader(0)
-set publicHeader.x = 1
+@unsafe set publicHeader.x = 1
 publicHeader.x
 //│ = 1
 //│ publicHeader = PublicHeader(1)
@@ -84,7 +84,7 @@ publicHeader.x
 class PublicAuxiliary with
   constructor(val x)
 let publicAuxiliary = new mut PublicAuxiliary(0)
-set publicAuxiliary.x = 1
+@unsafe set publicAuxiliary.x = 1
 publicAuxiliary.x
 //│ = 1
 //│ publicAuxiliary = PublicAuxiliary { x: 1 }

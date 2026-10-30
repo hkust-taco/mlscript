@@ -905,6 +905,8 @@ extends Importer:
               case _ =>
                 raise(ErrorReport(msg"@jsSymbol requires one stable path to a val marked @annotations.fresh." -> tree.toLoc :: Nil))
                 N
+          case ctx.builtins.unsafe.bms =>
+            return S(Annot.Unsafe()(tree.toLoc))
           case ctx.builtins.annotations.untyped =>
             return S(Annot.Untyped()(tree.toLoc))
           case ctx.builtins.annotations.tailcall =>
