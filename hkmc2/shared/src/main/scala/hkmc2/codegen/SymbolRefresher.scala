@@ -33,8 +33,8 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
 
   private def refreshTermSymbol(s: TermSymbol) =
     // Inner symbol (if present) must be traversed at this point.
-    val ns = s.withSameErasure(s.k, s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), s.id)
-    ns.sourceAliases = s.sourceAliases
+    val ns = SymbolRefresher.copyTermSymbol(s,
+      s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), s.erasure)
     assertUpdate(s, ns)
 
   private def refreshClassSymbol(s: ClassSymbol) =
@@ -132,6 +132,11 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     applyBlock(ctor)
 
 object SymbolRefresher:
+  
+  def copyTermSymbol(s: TermSymbol, owner: Opt[InnerSymbol], erasure: Opt[ErasedValueType | ErasedCallableSignature])(using State): TermSymbol =
+    val ns = new TermSymbol(s.k, owner, s.id, erasure)
+    ns.sourceAliases = s.sourceAliases
+    ns
   
   def initSymbolSubst(m: collection.Map[Symbol, Symbol]) =
     new SymbolSubst:

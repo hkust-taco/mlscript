@@ -1,0 +1,284 @@
+:.
+#lang(0.3.x)
+open annotations
+
+// A generated lambda has a function representation, even when its result is unspecified.
+:noInline
+:sir
+:siret
+:checkIR
+:expect 42
+val increment: Int -> Int = (value: Int) => value + 1
+increment(41)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ define lambda as fun lambda⁰(value: Int⁰): ? {
+//│   return +⁰(value, 1)
+//│ };
+//│ define increment⁰ as val increment¹: Function⁰ = lambda⁰;
+//│ return increment¹(41)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+//│ increment = fun
+
+// Eta expansion types the appended parameter and replaces the function result by the final result.
+:noInline
+:flowBasedOpt debugEta poly
+:lift
+:soir
+:siret
+:checkIR
+:expect 3
+@affine(1) fun add(first: Int)(second: Int): Int = first + second
+fun partiallyApply(value: Int): Int -> Int = add(value)
+partiallyApply(1)(2)
+//│ eta-expansion > >>> eta-expansion targets shapes >>>
+//│ eta-expansion > partiallyApply⁰#0 @ partiallyApply¹: [1, 1]
+//│ eta-expansion > partiallyApply⁰#0 @ partiallyApply²: [1, 1]
+//│ eta-expansion > <<< eta-expansion targets shapes <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let partiallyApply$partiallyApply;
+//│ @private
+//│ define partiallyApply$partiallyApply as fun partiallyApply$partiallyApply⁰(value: Int⁰)(eta$0$0: Int⁰): Int⁰ {
+//│   return add⁰(value)(eta$0$0)
+//│ };
+//│ @affine(1)
+//│ define add¹ as fun add⁰(first: Int⁰)(second: Int⁰): Int⁰ {
+//│   return +⁰(first, second)
+//│ };
+//│ define partiallyApply⁰ as fun partiallyApply¹(value: Int⁰)(eta$0$0: Int⁰): Int⁰ {
+//│   return add⁰(value)(eta$0$0)
+//│ };
+//│ return partiallyApply$partiallyApply⁰(1)(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+// Both the monomorphic original and specialized copies must reflect removed parameters.
+:noInline
+:flowBasedOpt mono
+:soir
+:siret
+:checkIR
+:expect 42
+private fun discarded(unused: Str, value: Int): Int = value
+discarded("unused", 42)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define discarded⁰ as fun discarded¹(value: Int⁰): Int⁰ { return value };
+//│ return discarded¹(42)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// Lifting includes captured arguments in the fresh signature, including partial application wrappers.
+:lift
+:noInline
+:flowBasedOpt poly
+:soir
+:siret
+:checkIR
+:expect 42
+fun capture(value: Int): Int =
+  fun addCaptured(first: Int)(second: Int): Int = value + first + second
+  let partial = addCaptured(1)
+  partial(2)
+capture(39)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let addCaptured;
+//│ define addCaptured as fun addCaptured⁰(value: Int⁰, first: Int⁰)(second: Int⁰): Int⁰ {
+//│   let tmp: Int⁰;
+//│   set tmp = +⁰(value, first);
+//│   return +⁰(tmp, second)
+//│ };
+//│ define capture⁰ as fun capture¹(value: Int⁰): Int⁰ {
+//│   return (addCaptured⁰(value, 1)(2) as! Int⁰)
+//│ };
+//│ return capture¹(39)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// A lifted function value needs a separate capture list; its wrapper returns the remaining function.
+:lift
+:noInline
+:flowBasedOpt off
+:soir
+:siret
+:checkIR
+:expect 42
+fun captureFunction(value: Int): Int -> Int -> Int =
+  fun addValue(first: Int)(second: Int): Int = value + first + second
+  addValue
+captureFunction(39)(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let addValue, baseCall: Function⁰, callPrefix: ?, addValue$;
+//│ @inline
+//│ define addValue$ as fun addValue$⁰(value: Int⁰)(first: Int⁰): Function⁰ {
+//│   return addValue⁰(value, first)
+//│ };
+//│ define addValue as fun addValue⁰(value: Int⁰, first: Int⁰)(second: Int⁰): Int⁰ {
+//│   let tmp: Int⁰;
+//│   set tmp = +⁰(value, first);
+//│   return +⁰(tmp, second)
+//│ };
+//│ define captureFunction⁰ as fun captureFunction¹(value: Int⁰): Function⁰ {
+//│   return addValue$⁰(value)
+//│ };
+//│ set baseCall = captureFunction¹(39);
+//│ set callPrefix = baseCall(1);
+//│ return callPrefix(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// Parameter-only lifting and DPE preserve the generator payload descriptor.
+:lift
+:noInline
+:flowBasedOpt poly
+:soir
+:siret
+:checkIR
+:expect 42
+fun capturedGenerator(value: Int) =
+  @generator fun generate(unused: Str, n: Int): Int = value + n
+  generate("unused", 2)
+capturedGenerator(40).next().value
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp: ?, tmp1: Unknown, capturedGenerator_generate$generate, capturedGenerator_generate$generate1, capturedGenerator$capturedGenerator;
+//│ @private @generator
+//│ define capturedGenerator_generate$generate as fun capturedGenerator_generate$generate⁰(value: Int⁰, n: Int⁰): generator Int⁰ {
+//│   return +⁰(value, n)
+//│ };
+//│ @private @generator
+//│ define capturedGenerator_generate$generate1 as fun capturedGenerator_generate$generate¹(value: Int⁰, n: Int⁰): generator Int⁰ {
+//│   return +⁰(value, n)
+//│ };
+//│ @private
+//│ define capturedGenerator$capturedGenerator as fun capturedGenerator$capturedGenerator⁰(value: Int⁰): ? {
+//│   return capturedGenerator_generate$generate¹(value, 2)
+//│ };
+//│ define capturedGenerator⁰ as fun capturedGenerator¹(value: Int⁰): ? {
+//│   return capturedGenerator_generate$generate⁰(value, 2)
+//│ };
+//│ set tmp = capturedGenerator$capturedGenerator⁰(40);
+//│ set tmp1 = tmp.next⁰();
+//│ return tmp1.value⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// A capture wrapper forwards a generator's iterator directly instead of wrapping it again.
+:lift
+:noInline
+:flowBasedOpt off
+:soir
+:siret
+:checkIR
+:expect 42
+fun capturedGeneratorFunction(value: Int) =
+  @generator fun generate(n: Int): Int = value + n
+  generate
+capturedGeneratorFunction(40)(2).next().value
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let generate, baseCall: ?, tmp: ?, tmp1: Unknown, generate$;
+//│ define generate$ as fun generate$⁰(value: Int⁰)(n: Int⁰): Iterator⁰ {
+//│   return generate⁰(value, n)
+//│ };
+//│ @generator
+//│ define generate as fun generate⁰(value: Int⁰, n: Int⁰): generator Int⁰ {
+//│   return +⁰(value, n)
+//│ };
+//│ define capturedGeneratorFunction⁰ as fun capturedGeneratorFunction¹(value: Int⁰): ? {
+//│   return generate$⁰(value)
+//│ };
+//│ set baseCall = capturedGeneratorFunction¹(40);
+//│ set tmp = baseCall(2);
+//│ set tmp1 = tmp.next⁰();
+//│ return tmp1.value⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// Fused singleton matches produce a nullary branch closure and preserve the enclosing result slot.
+:noInline
+:deforest mono
+:lift
+:sir
+:siret
+:checkIR
+:expect 42
+data class Empty()
+fun singleton(value: Int): Int =
+  let empty = Empty()
+  if empty is Empty then value else 0
+singleton(42)
+//│ deforest > >>> fusing >>>
+//│ deforest > Empty⁰() ->
+//│ deforest > 	match: empty⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let $empty_Empty, $empty_rest;
+//│ @affine(1) @private
+//│ define $empty_Empty as fun $empty_Empty⁰()(fv_value: Int⁰): ? {
+//│   return fv_value
+//│ };
+//│ @private
+//│ define $empty_rest as fun $empty_rest⁰(): ? {
+//│   return null
+//│ };
+//│ define singleton⁰ as fun singleton¹(value: Int⁰): Int⁰ {
+//│   let empty: ?;
+//│   set empty = $empty_Empty⁰();
+//│   return (empty(value) as! Int⁰)
+//│ };
+//│ @data
+//│ define Empty¹ as class Empty² { constructor Empty⁰ };
+//│ return singleton¹(42)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// Extracted continuations preserve result coercions as well as their captured argument types.
+:noInline
+:deforest mono
+:lift
+:sir
+:siret
+:checkIR
+:expect "done"
+data class Item(value: Int)
+fun continuation(value: Int, result: Str): Str =
+  let item = Item(value)
+  let ignored = if item is Item(x) then x else 0
+  result
+continuation(42, "done")
+//│ deforest > >>> fusing >>>
+//│ deforest > Item⁰(value¹) ->
+//│ deforest > 	match: item⁰
+//│ deforest > 	fields: item⁰.value²
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let $item_Item, $item_rest;
+//│ @affine(1) @private
+//│ define $item_Item as fun $item_Item⁰(Item_value: Int⁰)(fv_arg$Item$0$: ?, fv_x: ?, fv_tmp: ?, fv_ignored: ?, fv_result: Str⁰): ? {
+//│   set fv_arg$Item$0$ = Item_value;
+//│   set fv_x = fv_arg$Item$0$;
+//│   set fv_tmp = fv_x;
+//│   return $item_rest⁰(fv_ignored, fv_tmp, fv_result)
+//│ };
+//│ @private
+//│ define $item_rest as fun $item_rest⁰(fv_ignored: ?, fv_tmp: ?, fv_result: Str⁰): ? {
+//│   set fv_ignored = fv_tmp;
+//│   return fv_result
+//│ };
+//│ define continuation⁰ as fun continuation¹(value: Int⁰, result: Str⁰): Str⁰ {
+//│   let item: ?, ignored: ?, x: ?, arg$Item$0$: ?, tmp: ?, Item_value: Int⁰;
+//│   set Item_value = value;
+//│   set item = $item_Item⁰(Item_value);
+//│   return (item(arg$Item$0$, x, tmp, ignored, result) as! Str⁰)
+//│ };
+//│ @data
+//│ define Item¹ as class Item² {
+//│   val value³: Int⁰;
+//│   constructor Item⁰(value: Int⁰) {
+//│     define value³ as val value²: Int⁰ = value;
+//│     end
+//│   }
+//│ };
+//│ return continuation¹(42, "done")
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "done"

@@ -72,7 +72,7 @@ f(p())
 //│ deforest > 	fields: arg$X$0$⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, p$p, f$f, f$x_X, f$x_rest, f$arg$X$0$_Y, f$arg$X$0$_rest;
+//│ let tmp, f$x_X, f$x_rest, f$arg$X$0$_Y, f$arg$X$0$_rest, p$p, f$f;
 //│ @private
 //│ define p$p as fun p$p⁰() {
 //│   let tmp1, Y_b, X_a;

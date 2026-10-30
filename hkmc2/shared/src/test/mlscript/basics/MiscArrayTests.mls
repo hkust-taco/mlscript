@@ -56,6 +56,9 @@ xs |.
 //│ ╟── Function 'map' expected 2 arguments, but got 1
 //│ ║  l.XX: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
+//│ ║  l.+2: 	  map(x => x * 2)
+//│ ╙──      	      ^^^^^^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda5, tmp;
 //│ lambda5 = (undefined, function (x) {
@@ -76,6 +79,9 @@ xs|.
 //│ ╟── Function 'map' expected 2 arguments, but got 1
 //│ ║  l.XX: 	fun map(xs: Array, f) = xs.map((x, ...bs) => f(x))
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Function' at an unrelated type 'Array'
+//│ ║  l.+2: 	  map(x => x * 2)
+//│ ╙──      	      ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected at least 2 arguments but got 1
 
 :pt

@@ -834,7 +834,12 @@ private[codegen] object InlinerBodySummary:
 
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
-    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasure = N)
+    // Generated callables have a known physical shape even when their body result is unknown.
+    // Getters expose their evaluated result directly instead of acquiring a Function representation.
+    val signature =
+      if params.isEmpty then ErasedGetterSignature.Signature(ErasedResult.Direct(N))
+      else ErasedFuncSignature.Signature(params.map(_.params.map(_.sym.erasedType)), ErasedResult.Direct(N))
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), S(signature))
     sym.tsym = S(tSym)
     FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
 

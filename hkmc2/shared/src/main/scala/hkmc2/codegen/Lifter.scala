@@ -1074,15 +1074,27 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     val fun = obj.fun
     
-    val (mainSym, mainDsym) = (fun.sym, fun.dSym)
+    val mainSym = fun.sym
+    private lazy val mainParams = fun.params match
+      case head :: next => head.copy(params = auxParams ::: head.params)(head.toLoc) :: next
+      case Nil => LoweredParamList.plain(auxParams)(N) :: Nil
+    // Captures change the physical signature. Keep the source declaration's published signature
+    // intact; rewritten direct calls and the partial-application wrapper use this fresh identity.
+    lazy val mainDsym =
+      if isTrivial then fun.dSym
+      else SymbolRefresher.copyTermSymbol(fun.dSym, N, S(ErasedFuncSignature.Signature(
+        mainParams.map(_.params.map(_.sym.erasedType)), fun.dSym.erasedResult)))
     val auxSym = BlockMemberSymbol(fun.sym.nme + "$", Nil, fun.sym.nameIsMeaningful)
-    val auxDsym = fun.dSym.withSameErasure(syntax.Fun, fun.owner, Tree.Ident(auxSym.nme))
+    private lazy val auxDsym =
+      val result = if fun.params.tail.nonEmpty then S(ErasedType.Function(S(false)))
+        else fun.dSym.declaredResultType
+      new TermSymbol(syntax.Fun, N, Tree.Ident(auxSym.nme), S(ErasedFuncSignature.Signature(
+        auxParams.map(_.sym.erasedType) :: fun.params.head.params.map(_.sym.erasedType) :: Nil,
+        ErasedResult.Direct(result))))
     
     // Definition with the auxiliary parameters merged into the first parameter list.
     private def mkFlattenedDefn: LifterResult[FunDefn] =  
-      val newPlists = fun.params match
-        case head :: next => head.copy(params = auxParams ::: head.params)(head.toLoc) :: next
-        case Nil => LoweredParamList.plain(auxParams)(N) :: Nil
+      val newPlists = mainParams
       val rewriter = new BlockRewriter(N)
       val newBod = rewriter.rewrite(fun.body)
       val withCapture = addExtraSyms(newBod)
@@ -1108,12 +1120,13 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           syms.map(sym => Arg(N, sym.asSimpleRef)) ::: Arg(S(SpreadKind.Eager), value.asSimpleRef) :: Nil
         case None => syms.map(s => Arg(N, s.asSimpleRef))
       
-      val call = Call(fun.sym.asMemberRef(fun.dSym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
+      val call = Call(mainSym.asMemberRef(mainDsym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val bod = Return(call)
-      // The new capture list shifts the parameter list indices used by affine annotations.
-      val annotations = fun.annotations.map:
+      // The wrapper returns the main call's result directly, including an already-created Iterator.
+      // Its capture list shifts affine indices, but it must not run as a second generator body.
+      val annotations = fun.annotations.collect:
         case a @ Annot.Affine(n) => Annot.Affine(n + 1)(a.toLoc)
-        case a => a
+        case a if !a.isInstanceOf[Annot.Generator] => a
       
       FunDefn(
         N,

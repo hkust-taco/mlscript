@@ -12,7 +12,7 @@ import hkmc2.codegen.flowAnalysis.*
 
 
 
-class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[LocalVarSymbol])(using Raise)
+class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbols: Set[LocalVarSymbol])(using Raise, Elaborator.Ctx, Config)
   extends PolyInstantiationRewrite(solver.constraintSolver):
   
   type MatchOrLabelId = ResultId | LabelSymbol
@@ -145,7 +145,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             val scrutName = dest._1.getReferredSym.nme
             val branchFnNme = s"${dest.instId.mkFunName}$$$scrutName$branchName"
             new BlockMemberSymbol(branchFnNme, Nil, true)
-            -> new TermSymbol(Fun, N, Tree.Ident(branchFnNme), erasure = N)
+            -> new TermSymbol(Fun, N, Tree.Ident(branchFnNme))
         )
         // compute the function parameters corresponding to ctor fields of branch funs
         branchFunParamFieldSyms.getOrElseUpdate(
@@ -174,7 +174,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
             locally:
               val restFunName = dest.instId.mkFunName + s"$$${nme}_rest"
               new BlockMemberSymbol(restFunName, Nil, true)
-              -> new TermSymbol(Fun, N, Tree.Ident(restFunName), erasure = N)
+              -> new TermSymbol(Fun, N, Tree.Ident(restFunName))
           )
           val (ps, restBeforeParent) = getParentLabelOrMatchesAndRestBefore(matchOrLabelId)
           restOriginalBodiesAndParentRest.getOrElseUpdate(
@@ -300,12 +300,38 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     allBranchesOfDtor.keysIterator.foreach(fvsForDtor)
   }
 
+  // Captures are known only after free-variable analysis. Publish both physical lists before any
+  // calls are rewritten, so partially applying the field list has the Function representation.
+  locally {
+    for (branchId, (_, sym)) <- branchFunSyms do
+      sym.initializeErasure(S(ErasedFuncSignature.Signature(
+        branchFunParamFieldSyms(branchId).map(_.erasedType) ::
+          dtorBranchFnFvs(branchId._1).map(_.erasedType) :: Nil, ErasedResult.Direct(N))))
+    for (restId, (_, sym)) <- restFunSyms do
+      sym.initializeErasure(S(ErasedFuncSignature.Signature(
+        restFnFvs(restId).map(_.erasedType) :: Nil, ErasedResult.Direct(N))))
+  }
+
   // Rewrites the program under a specific instantiation id
   // from the polymorphic analysis
-  protected class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
+  protected class Rewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) extends InstantiationRewriter(instId, refreshSymbolMappingForCopy):
+    
+    private var returnType: Opt[ErasedValueType] = N
+    private def returningInto[A](tpe: Opt[ErasedValueType])(rewrite: => A): A =
+      val enclosing = returnType
+      returnType = tpe
+      try rewrite finally returnType = enclosing
     
     override def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn =
-      (fun.params.mapConserve(applyParamList), applyBlock(fun.body), fun.annotations)
+      val body = returningInto(fun.dSym.erasedResult.bodyType)(applyBlock(fun.body))
+      (fun.params.mapConserve(applyParamList), body, fun.annotations)
+    
+    override def applyFunDefn(fun: FunDefn): FunDefn =
+      returningInto(fun.dSym.erasedResult.bodyType)(super.applyFunDefn(fun))
+    
+    // Fusion replaces a return by a closure/continuation call whose result is unknown. Preserve
+    // the original body's result boundary, just as lowering does for a call to a function value.
+    private def returnCall(call: Result): Block = Return(returnType.fold(call)(call.coerceTo(_, N)))
     
     // calls `fun` with possibly remapped `args`
     def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
@@ -356,8 +382,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       case ctor@CtorProducer(_, args, _) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
         assert(args.isEmpty)
         val (branchFunBms, branchFunTSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))
-        val lambdaSym = new TempSymbol(N, initErasedType = N, "deforest$lam")
         mkCall(branchFunBms.asMemberRef(branchFunTSym), Nil): callBranchFun =>
+          val lambdaSym = new TempSymbol(N, initErasedType = callBranchFun.erasedType, "deforest$lam")
           Scoped(
             Set.single(lambdaSym),
             Assign(
@@ -386,13 +412,13 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
       b match
       case m@Match(scrut, _, _, _) if solver.finalDtorSrcs.isDefinedAt(scrut.uid.concreteId) =>
         applyPath(scrut): newScrut =>
-          mkCall(newScrut, dtorBranchFnFvs(scrut.uid.concreteId))(Return(_))
+          mkCall(newScrut, dtorBranchFnFvs(scrut.uid.concreteId))(returnCall)
       case Break(label) =>
         val labelRestFunId = label.withInstId(instId)
         restFunSyms.get(labelRestFunId) match
         case None => super.applyBlock(b)
         case Some((bms, tSym)) =>
-          mkCall(bms.asMemberRef(tSym), restFnFvs(labelRestFunId))(Return(_))
+          mkCall(bms.asMemberRef(tSym), restFnFvs(labelRestFunId))(returnCall)
       // copying a definition would need fresh symbols for it; lifting removes the nested ones beforehand
       case Define(defn, _) if refreshSymbolMappingForCopy.isDefined =>
         softAssert(false, s"deforestation copying the definition ${defn.sym.nme}")
@@ -411,7 +437,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   // ====== start: implements the abstract members of `PolyInstantiationRewrite` ======
   def solvers: Iterable[FlowAnalysisSolverResult] = solver :: Nil
   
-  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
+  def retypedFunctions: LinkedHashMap[(InstantiationId, TermSymbol), ErasedFuncSignature] = LinkedHashMap.empty
+  
+  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
   
   def otherNewFunDefns: Iterable[FunDefn] =
     
