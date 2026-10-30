@@ -673,7 +673,7 @@ sealed abstract class Defn:
         && c.methodKeys.valuesIterator.forall(_.isPure)
   
   def subBlocks: Ls[Block] = this match
-    case FunDefn(_, _, _, _, body) => body :: Nil
+    case FunDefn(body = body) => body :: Nil
     case _: ValDefn => Nil
     case cls @ ClsLikeDefn(preCtor = preCtor, ctor = ctor, methods = mtds, companion = comp) =>
       Iterator(preCtor, ctor)
@@ -703,7 +703,7 @@ sealed abstract class Defn:
         ++ cls.methodKeys.valuesIterator.flatMap(_.freeVars)
   
   lazy val size: Int = this match
-    case FunDefn(_, _, _, params, body) => 1 + body.size
+    case FunDefn(body = body) => 1 + body.size
     case ValDefn(_, _, rhs) => 1
     case cls @ ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion, _) =>
       1 + methods.map(_.size).sum + preCtor.size + ctor.size + stat.fold(0)(_.size) + cls.methodKeys.valuesIterator.map(_.size).sum
@@ -753,7 +753,6 @@ final case class FunDefn private(
       summary
   
   // `configOverride` and `annotations` live in a secondary constructor list, so case-class equality would ignore them.
-  // Compare the shared erasure by identity, just as construction does.
   // We currently use structural equality in JSBackendDiffMaker.scala
   // to make sure that structurally equal blocks retain object identity.
   override def equals(obj: Any): Bool = obj match
@@ -765,7 +764,7 @@ final case class FunDefn private(
         body == that.body &&
         configOverride == that.configOverride &&
         annotations == that.annotations &&
-        (signature.erasure is that.signature.erasure)
+        signature.erasure == that.signature.erasure
     case _ => false
   override def hashCode: Int =
     (owner, sym, dSym, params, body, configOverride, annotations).hashCode
@@ -883,7 +882,7 @@ object FunDefn:
       signature: Signature, body: Block)(configOverride: Opt[Config], annotations: Ls[Annot]): FunDefn =
     new FunDefn(owner, sym, dSym, signature, body)(configOverride, annotations)
   
-  def unapply(fun: FunDefn): Some[(Opt[InnerSymbol], BlockMemberSymbol, TermSymbol, Ls[LoweredParamList], Block)] =
+  def unapply(fun: FunDefn): Some[(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol, params: Ls[LoweredParamList], body: Block)] =
     Some((fun.owner, fun.sym, fun.dSym, fun.params, fun.body))
   
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =

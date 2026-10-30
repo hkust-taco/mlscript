@@ -543,7 +543,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             defn.defnSym.collectFirst{ case s: InnerSymbol => s }):
           defn match
             
-          case FunDefn(_, _, _, Nil, _) =>
+          case FunDefn(params = Nil) =>
             lastWords("cannot generate function with no parameter list")
           case defn @ FunDefn(own, sym, dSym, ps :: pss, bod) =>
             val result = curriedFunctionBody(pss, bod, defn.generator)
@@ -605,13 +605,13 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
 
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str, keys: Map[TermSymbol, Path])(using Scope): Document =
               mtds.map:
-                case td @ FunDefn(_, _, _, ps :: pss, bod) =>
+                case td @ FunDefn(params = ps :: pss, body = bod) =>
                   val result = curriedFunctionBody(pss, bod, td.generator)
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result, isLambda = false)
                   val generatorPrefix = if td.generator && pss.isEmpty then "*" else ""
                   doc" # $mtdPrefix$generatorPrefix${mkMethodName(td, keys)}($params) ${ braced(bodyDoc) }"
-                case td @ FunDefn(_, _, _, Nil, bod) =>
+                case td @ FunDefn(params = Nil, body = bod) =>
                   doc" # ${mtdPrefix}get ${mkMethodName(td, keys)}() ${ braced(body(bod, endSemi = true)) }"
               .mkDocument(doc"")
             
@@ -738,7 +738,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   if checkSelections
                   then mtds
                     .flatMap:
-                      case td @ FunDefn(_, _, _, ps :: pss, bod) =>
+                      case td @ FunDefn(params = ps :: pss, body = bod) =>
                         softAssert(td.dSym.isPrivate === (td.visibility is Visibility.Private),
                           s"Mismatched visibility for ${td.sym.nme}: ${td.dSym.isPrivate} vs ${td.visibility}")
                         if td.dSym.isPrivate then N else S:

@@ -289,8 +289,8 @@ class FlowAnalysisBasedRewrite(
   
   private case class FunctionRewrite(signature: FunDefn.Signature, removed: Set[VarSymbol], etaCount: Int)
   
-  // Prepare actual parameter bindings once, before publishing symbols for forward/recursive calls.
-  // The body rewrite consumes this same plan instead of independently reconstructing its signature.
+  // Compute the rewritten parameters and signatures before rewriting function bodies.
+  // Reuse these signatures for recursive and forward calls and their target definitions.
   private lazy val functionRewrites: LinkedHashMap[(InstantiationId, TermSymbol), FunctionRewrite] =
     val res = LinkedHashMap.empty[(InstantiationId, TermSymbol), FunctionRewrite]
     val funIds =

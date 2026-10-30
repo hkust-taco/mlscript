@@ -301,12 +301,13 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   }
 
   private def captureParams(fvs: Ls[LocalVarSymbol]): LoweredParamList =
-    // The extracted body may initialize a captured pattern slot before reading it, or reassign
-    // a genuinely mutable input. Preserve its slot type and mutability in the new binding.
+    // Parameters replace the extracted body's free variables. Preserve each variable's erased type
+    // and mutability so the body's reads and assignments remain valid.
     fvs.map(s => new VarSymbol(Tree.Ident(s"fv_${s.nme}"), erasedType = s.erasedType, mut = s.mut)).asParamList
   
-  // Prepare the actual bindings after free-variable analysis, and publish their shared signatures
-  // before rewriting calls. In particular, applying just a branch's field list returns Function.
+  // Each extracted branch function takes constructor fields in its first parameter list and captured
+  // variables in its second. Initialize its signature before rewriting calls so that applying the
+  // field arguments alone has type Function.
   private val branchSignatures = branchFunSyms.map: (branchId, syms) =>
     val signature = FunDefn.Signature.fromParams(
       branchFunParamFieldSyms(branchId).asParamList :: captureParams(dtorBranchFnFvs(branchId._1)) :: Nil,
@@ -337,8 +338,8 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     override def applyFunDefn(fun: FunDefn): FunDefn =
       returningInto(fun.signature.result.bodyType)(super.applyFunDefn(fun))
     
-    // Fusion replaces a return by a closure/continuation call whose result is unknown. Preserve
-    // the original body's result boundary, just as lowering does for a call to a function value.
+    // Fusion replaces a returned value with a call whose result type is unknown. Preserve
+    // the original function's return type by coercing the call's result.
     private def returnCall(call: Result): Block = Return(returnType.fold(call)(call.coerceTo(_, N)))
     
     // calls `fun` with possibly remapped `args`
