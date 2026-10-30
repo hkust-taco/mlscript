@@ -289,5 +289,5 @@ fun parse(tokens: Stack[Token.Token]) =
     token :: _ then
       let message = "expect EOF instead of " + token
       tracer.print of message, source.line
-      tree Tree.Error(message)
+      Tree.Error(Tree.Sequence(tree), message) :: Nil
     Nil then tree
