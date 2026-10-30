@@ -27,8 +27,8 @@ open class IterableBase with
     else array
   
   // * Functions that create a fresh new result
-  open fun at(idx) = asArray.at(idx)
-  open fun concat(...xs) = asArray.concat(...xs)
+  open fun at(idx: Int): Any = asArray.at(idx)
+  open fun concat(...xs): Any = asArray.concat(...xs)
   fun copyWithin(...args) = asArray.copyWithin(...args)
   fun entries() = asArray.entries()
   fun every(...args) = asArray.every(...args)
@@ -48,7 +48,7 @@ open class IterableBase with
   fun map(...args) = asArray.map(...args)
   fun reduce(...args) = asArray.reduce(...args)
   fun reduceRight(...args) = asArray.reduceRight(...args)
-  open fun slice(...args) = asArray.slice(...args)
+  open fun slice(...args): Any = asArray.slice(...args)
   fun some(...args) = asArray.some(...args)
   fun toLocaleString(...args) = asArray.toLocaleString(...args)
   fun toReversed() = asArray.toReversed()

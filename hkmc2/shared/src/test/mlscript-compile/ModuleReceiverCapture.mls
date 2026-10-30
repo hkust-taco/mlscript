@@ -3,7 +3,7 @@
 open annotations { inline, noInline }
 
 module ModuleReceiverCapture with
-  mut val value = 41
+  mut val value: Int = 41
   module Nested with
     @inline
     fun read() = value

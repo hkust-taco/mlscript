@@ -54,7 +54,7 @@ finish()().values()
 //│ finish = fun
 
 // Omission supplies null to the constructor body and to mutable fields.
-class Mutable(mut val value?) {
+class Mutable(mut val value?: Int) {
   val initiallyMissing = value is null
 }
 
