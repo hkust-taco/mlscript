@@ -51,8 +51,8 @@ change. Do not split a theme into tiny PRs solely to reduce its snapshot diff.
 
 Each extraction passed `hkmc2AllTests/test` with 1,155 tests. The latest verified
 upstream snapshot is `66add69d3cd8ef16ba3ab5104c4670371456f562`, containing all
-three merges. Integration of those upstream commits back into this branch is
-still pending. Preserve E03's added formatter regressions when synchronizing.
+three merges. Those upstream commits have been integrated back into this branch,
+including E03's added formatter regressions.
 
 ## Consolidated batches
 
@@ -419,9 +419,9 @@ The earlier #592 reconciliation used an unchanged-tree merge only after exact
 tree equality was established. Do not apply that strategy blindly to future
 extractions, whose patches may have been adapted to a smaller base.
 
-Before the next extraction, synchronize the three completed upstream merges
-back into this branch, including E03's formatter regressions. Then proceed by
-batch; do not create further branches for individual E-numbers.
+The three completed upstream merges are synchronized back into this branch,
+including E03's formatter regressions. Proceed by batch; do not create further
+branches for individual E-numbers.
 
 A practical order is:
 
