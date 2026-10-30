@@ -267,7 +267,7 @@ class FlowAnalysisBasedRewrite(
       val eliminable = deadParamElimSolver.eliminableParams(ConcreteId((fun, i), instId))
       pl.zipWithIndex.collect:
         case (t, j) if !eliminable(j) => t
-    ErasedFuncSignature.Signature(paramLists, sig.ret)
+    ErasedFuncSignature.Signature(paramLists, sig.result)
   
   def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]) = new Rewriter(instId, refreshSymbolMappingForCopy)
   

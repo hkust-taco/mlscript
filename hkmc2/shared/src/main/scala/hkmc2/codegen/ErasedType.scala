@@ -397,17 +397,59 @@ sealed abstract class ErasedValueType extends Canonicalizable:
           val name = qualify(tpeSym, Nil).mkString(".")
           if tpeSym.asMod.isDefined then s"module $name" else name
 
+/** The result behavior of a definition, before any async or generator wrapping.
+  * `bodyType` types explicit and implicit returns; `callType` types a fully applied call
+  * (or a getter read). In particular, Async(Int) and Direct(Promise) have the same call
+  * representation but different body representations. Generator's payload is its final
+  * return; yielded values and values passed to `next` are not tracked here.
+  */
+enum ErasedResult[+T <: ErasedValueType](val bodyType: Opt[T]):
+  case Direct(tpe: Opt[T]) extends ErasedResult(tpe)
+  case Async(tpe: Opt[T]) extends ErasedResult(tpe)
+  case Generator(tpe: Opt[T]) extends ErasedResult(tpe)
+
+  def callType: Opt[ErasedValueType] = this match
+    case Direct(tpe) => tpe
+    case Async(_) => S(ErasedType.ValueLike(S(false), ctx.builtins.Promise))
+    case Generator(_) => S(ErasedType.ValueLike(S(false), ctx.builtins.Iterator))
+
+  def map[U <: ErasedValueType](f: T => U): ErasedResult[U] = this match
+    case Direct(tpe) => Direct(tpe.map(f))
+    case Async(tpe) => Async(tpe.map(f))
+    case Generator(tpe) => Generator(tpe.map(f))
+
+/** Immutable result information shared by parameterized definitions and getters.
+  * TermSymbol publishes the complete signature once, before lowering or importing it.
+  * Copying a source body must rename its payload types along with the parameter types.
+  */
+sealed abstract class ErasedCallableSignature extends Canonicalizable:
+  type Canonical <: ErasedCallableSignature
+  val result: ErasedResult[ErasedValueType]
+  def ret: Opt[ErasedValueType] = result.callType
+
+  def mapTypes(f: ErasedValueType => ErasedValueType): ErasedCallableSignature = this match
+    case sig: ErasedFuncSignature =>
+      ErasedFuncSignature.Signature(sig.paramLists.map(_.map(_.map(f))), result.map(f))
+    case _: ErasedGetterSignature => ErasedGetterSignature.Signature(result.map(f))
+
+  def withResult(result: ErasedResult[ErasedValueType]): ErasedCallableSignature = this match
+    case sig: ErasedFuncSignature => ErasedFuncSignature.Signature(sig.paramLists, result)
+    case _: ErasedGetterSignature => ErasedGetterSignature.Signature(result)
+
 object ErasedFuncSignature:
-  /** The signature of a definition, whose parameter and return types may be unknown. */
-  case class Signature(override val paramLists: Ls[Ls[Opt[ErasedValueType]]], override val ret: Opt[ErasedValueType]) extends ErasedFuncSignature:
+  /** The signature of a definition, whose parameter and body-result types may be unknown. */
+  case class Signature(override val paramLists: Ls[Ls[Opt[ErasedValueType]]],
+      override val result: ErasedResult[ErasedValueType]) extends ErasedFuncSignature:
     assertHasParamLists(paramLists)
     override type Canonical = CanonicalSignature
     override protected def computeCanonicalize(using Ctx, State): CanonicalSignature =
-      CanonicalSignature(paramLists.map(_.map(_.map(_.canonicalize))), ret.map(_.canonicalize))
+      CanonicalSignature(paramLists.map(_.map(_.map(_.canonicalize))), result.map(_.canonicalize))
 
-  /** An analogue to `Signature` with canonicalized parameter and return types. */
-  case class CanonicalSignature(override val paramLists: Ls[Ls[Opt[CanonicalErasedValueType]]], override val ret: Opt[CanonicalErasedValueType]) extends ErasedFuncSignature:
+  /** An analogue to `Signature` with canonicalized parameter and result representations. */
+  case class CanonicalSignature(override val paramLists: Ls[Ls[Opt[CanonicalErasedValueType]]],
+      override val result: ErasedResult[CanonicalErasedValueType])(using Ctx, State) extends ErasedFuncSignature:
     assertHasParamLists(paramLists)
+    override val ret: Opt[CanonicalErasedValueType] = result.callType.map(_.canonicalize)
     override type Canonical = this.type
     override protected def computeCanonicalize(using Ctx, State): this.type = this
 
@@ -418,22 +460,39 @@ object ErasedFuncSignature:
   def assertHasParamLists(paramLists: Ls[Ls[?]]): Unit =
     assert(paramLists.nonEmpty, "a signature must describe at least one parameter list")
 
-/** The erased signature of a definition.
+/** The erased signature of a definition with parameter lists.
   *
   * A signature is not an [[ErasedValueType]], as it types no value: a reference to a definition evaluates to a
   * first-class function, whose value type is [[ErasedType.Function]].
   *
   * `paramLists` mirrors the definition's parameter *lists*, so that calls to curried functions can be typed by the
-  * number of argument lists they apply.
+  * number of argument lists they apply. A partial application returns Function; only the last application wraps
+  * an async or generator result.
   *
-  * Note that `paramLists` should never be empty: a definition declaring no parameter list at all is either compiled
-  * to a getter and erased to its result instead, or given an implicitly-added empty parameter list which the erased
-  * signature mirrors.
+  * `paramLists` is nonempty. A definition with no written parameter lists is either a getter, described by
+  * [[ErasedGetterSignature]], or takes an implicit empty parameter list, which this signature includes.
   */
-sealed abstract class ErasedFuncSignature extends Canonicalizable:
+sealed abstract class ErasedFuncSignature extends ErasedCallableSignature:
   type Canonical <: ErasedFuncSignature.CanonicalSignature
   val paramLists: Ls[Ls[Opt[ErasedValueType]]]
-  val ret: Opt[ErasedValueType]
+
+object ErasedGetterSignature:
+  case class Signature(override val result: ErasedResult[ErasedValueType]) extends ErasedGetterSignature:
+    override type Canonical = CanonicalSignature
+    override protected def computeCanonicalize(using Ctx, State): CanonicalSignature =
+      CanonicalSignature(result.map(_.canonicalize))
+
+  case class CanonicalSignature(override val result: ErasedResult[CanonicalErasedValueType])
+      (using Ctx, State) extends ErasedGetterSignature:
+    override val ret: Opt[CanonicalErasedValueType] = result.callType.map(_.canonicalize)
+    override type Canonical = this.type
+    override protected def computeCanonicalize(using Ctx, State): this.type = this
+
+/** A getter evaluates to its call result, without allocating a first-class function.
+  * It still needs the body's result descriptor for async payload coercions.
+  */
+sealed abstract class ErasedGetterSignature extends ErasedCallableSignature:
+  type Canonical <: ErasedGetterSignature.CanonicalSignature
 
 /** The canonical form of an [[ErasedValueType]]. */
 sealed trait CanonicalErasedValueType extends ErasedValueType:

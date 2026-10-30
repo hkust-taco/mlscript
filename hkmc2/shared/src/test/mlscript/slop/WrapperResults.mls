@@ -15,7 +15,7 @@ fun asPromise(value: Promise[Int]): Promise[Int] = value
 Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Promise⁰, tmp1: Promise⁰, tmp2: Promise⁰, tmp3: Promise⁰, tmp4: Array⁰, answer;
-//│ define answer as fun answer⁰(early: Bool⁰, value: Unknown)(): ? {
+//│ define answer as fun answer⁰(early: Bool⁰, value: Unknown)(): Int⁰ {
 //│   match early
 //│     true =>
 //│       return (value as! Int⁰)
@@ -57,14 +57,14 @@ GeneratorChild().generate("payload").next()
 //│ @private
 //│ define GeneratorBase⁰ as class GeneratorBase² {
 //│   constructor GeneratorBase¹
-//│   method generate⁰ = fun generate¹(value: Unknown): Iterator⁰ {
+//│   method generate⁰ = fun generate¹(value: Unknown): generator Unknown {
 //│     return value
 //│   }
 //│ };
 //│ @private
 //│ define GeneratorChild⁰ as class GeneratorChild² extends GeneratorBase² {
 //│   constructor GeneratorChild¹
-//│   method generate² = fun generate³(value: Unknown): Iterator⁰ {
+//│   method generate² = fun generate³(value: Unknown): generator ? {
 //│     return value
 //│   }
 //│ };
@@ -118,3 +118,68 @@ fun importedAsync(x) =
 :expect [42, 42]
 Promise.all([importedAsync(3), importedAsync(4)])
 //│ = [42, 42]
+
+// Async and ordinary getters both expose Promise, but only the async body returns Int.
+:sir
+:siret
+:await
+:expect [42, 43, 44]
+class ResultGetters(value: Any) with
+  @async fun wrapped: Int = value
+  fun direct: Promise[Int] = Promise.resolve(43)
+  fun ordinary(): Promise[Int] = Promise.resolve(44)
+let results = new ResultGetters(42)
+Promise.all([results.wrapped, results.direct, results.ordinary()])
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Promise⁰, tmp1: Array⁰, wrapped;
+//│ define wrapped as fun wrapped⁰(this1: ResultGetters⁰)(): Int⁰ {
+//│   return (this1.value⁰ as! Int⁰)
+//│ };
+//│ define ResultGetters¹ as class ResultGetters⁰ {
+//│   private val value⁰: Unknown;
+//│   constructor ResultGetters²(value: Unknown) {
+//│     @private
+//│     define value¹ as val value⁰: Unknown = value;
+//│     end
+//│   }
+//│   method wrapped¹ = fun wrapped²: Promise⁰ {
+//│     let tmp2: Function⁰;
+//│     set tmp2 = wrapped⁰(ResultGetters⁰.this);
+//│     return runtime⁰.toJsAsync﹖(tmp2)
+//│   }
+//│   method direct⁰ = fun direct¹: Promise⁰ {
+//│     return globalThis⁰.Promise¹.resolve⁰(43)
+//│   }
+//│   method ordinary⁰ = fun ordinary¹(): Promise⁰ {
+//│     return globalThis⁰.Promise¹.resolve⁰(44)
+//│   }
+//│ };
+//│ set results⁰ = new ResultGetters⁰(42);
+//│ set tmp = results⁰.ordinary¹();
+//│ set tmp1 = [results⁰.wrapped², results⁰.direct¹, tmp];
+//│ return globalThis⁰.Promise¹.all⁰(tmp1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [42, 43, 44]
+//│ results = ResultGetters(_)
+
+// TODO: AsyncLowering hoists the helper out of the local constructor's scope.
+:fixme
+:await
+:expect 42
+fun localAsyncPayload() =
+  data class Payload(value: Int)
+  @async fun answer(): Payload = Payload(42)
+  answer().then(payload => payload.value)
+localAsyncPayload()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Payload'
+//│ ║  l.+3: 	  @async fun answer(): Payload = Payload(42)
+//│ ║        	                                 ^^^^^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.+2: 	  data class Payload(value: Int)
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'answer'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.+3: 	  @async fun answer(): Payload = Payload(42)
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: Payload is not defined
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'

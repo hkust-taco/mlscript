@@ -44,10 +44,17 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case cet: CanonicalErasedValueType => print(cet)
     case _ => print(et.canonicalize)
 
+  def print(result: ErasedResult[ErasedValueType])(using Scope): Document =
+    val payload = result.bodyType.fold(doc"?")(print)
+    result match
+      case ErasedResult.Direct(_) => payload
+      case ErasedResult.Async(_) => doc"async $payload"
+      case ErasedResult.Generator(_) => doc"generator $payload"
+
   def print(sig: ErasedFuncSignature)(using Scope): Document =
     val canon = sig.canonicalize
     // * Curried functions are rendered as `(A) => (B) => R`, one arrow per parameter list.
-    canon.paramLists.foldRight(canon.ret.fold(doc"?")(print)): (ps, acc) =>
+    canon.paramLists.foldRight(print(canon.result)): (ps, acc) =>
       doc"(${ps.map(_.fold(doc"?")(print)).mkDocument(sep = doc", ")}) => $acc"
 
   /** Renders the type annotation for a symbol of erased type `tpe`. */
@@ -58,7 +65,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
   /** Renders a function's return type, as declared by its definition symbol. */
   def returnTypeAnnot(dSym: TermSymbol)(using Scope): Document =
     if !summon[ShowCfg].showErasedTypes || !(dSym.k is syntax.Fun) then doc""
-    else doc": ${dSym.declaredResultType.fold(doc"?")(print)}"
+    else doc": ${print(dSym.erasedResult)}"
   
   def print(blk: Block)(using Scope): Document = blk match
     case Match(scrut, arms, dflt, rest) =>

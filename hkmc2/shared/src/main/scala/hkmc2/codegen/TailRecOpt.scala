@@ -392,12 +392,12 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val dSym =
       if !hasWrapper then funs.head.dSym
       else
-        val erasure: Opt[ErasedValueType | ErasedFuncSignature] =
+        val erasure: Opt[ErasedValueType | ErasedCallableSignature] =
           if funsLen === 1 then
             // * The loop stands for the same function as its single member, with its parameter lists
             // * flattened - construct a new signature to reflect this.
             funs.head.dSym.erasedSignature match
-              case S(sig) => S(ErasedFuncSignature.Signature(paramSyms.map(_.erasedType) :: Nil, sig.ret))
+              case S(sig) => S(ErasedFuncSignature.Signature(paramSyms.map(_.erasedType) :: Nil, sig.result))
               case N => funs.head.dSym.erasedType
           else
             // * The dispatcher can exit through any member's return, so its result type is the LUB of its members.
@@ -407,7 +407,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
               else S(memberRets.flatten.map(_.canonicalize).reduce(ErasedType.lub))
             S(ErasedFuncSignature.Signature(
               paramLists = (S(ErasedType.Int) :: paramSyms.map(_.erasedType)) :: Nil,
-              ret = ret,
+              result = ErasedResult.Direct(ret),
             ))
         val res = TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme), erasure)
         // * Link the loop function to the BMS so that the erased type is accessible.
