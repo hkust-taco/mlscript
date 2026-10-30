@@ -61,7 +61,7 @@ xs |.
 //│ lambda5 = (undefined, function (x) {
 //│   return x * 2
 //│ });
-//│ tmp = map(lambda5);
+//│ tmp = map(lambda5 /* as! Array */);
 //│ return Predef.passTo(xs1, tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected at least 2 arguments but got 1

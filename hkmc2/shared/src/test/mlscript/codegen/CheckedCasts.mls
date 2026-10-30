@@ -1,16 +1,34 @@
 :.
+:js
+:noInline
 // `:noCheckCasts` is the only input to a `Cast`'s `check` flag, via `Config.checkCasts`. Nothing
 // expands a check into a runtime type test since `CheckedCastExpansion` was removed, so the two
-// blocks below generate the same code and differ only in how the IR prints the cast: `as!` when
-// checked, `as!!` when not.
+// blocks below execute the same code. Both the IR and the JS cast comments show `as!` when
+// checked, `as!!` when not. Diff tests enable these comments; normal compilation omits them.
 
 :sir
+:sjs
+:expect 3
 fun checked(x: Num, y: Int): Int = x + y
+checked(1, 2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define checked⁰ as fun checked¹(x, y) { return (+⁰(x, y) as! Int⁰) }; end
+//│ define checked⁰ as fun checked¹(x, y) { return (+⁰(x, y) as! Int⁰) }; return checked¹(1, 2)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let checked; checked = function checked(x, y) { return x + y /* as! Int */ }; return checked(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
 
 :noCheckCasts
 :sir
+:sjs
+:expect 3
 fun unchecked(x: Num, y: Int): Int = x + y
+unchecked(1, 2)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define unchecked⁰ as fun unchecked¹(x, y) { return (+⁰(x, y) as!! Int⁰) }; end
+//│ define unchecked⁰ as fun unchecked¹(x, y) { return (+⁰(x, y) as!! Int⁰) }; return unchecked¹(1, 2)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let unchecked;
+//│ unchecked = function unchecked(x, y) { return x + y /* as!! Int */ };
+//│ return unchecked(1, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3

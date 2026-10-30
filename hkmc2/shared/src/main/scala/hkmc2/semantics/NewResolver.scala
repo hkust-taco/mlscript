@@ -3284,7 +3284,7 @@ class NewResolver:
       else if is(builtins.BigInt) then S(PrimitiveClass.BigInt)
       else N
     operands match
-      case S(terms) if (config.target is CompilationTarget.JS) && BuiltinOperatorResults.approximates(op.nme, terms.length) =>
+      case S(terms) if config.target.isInstanceOf[CompilationTarget.JS] && BuiltinOperatorResults.approximates(op.nme, terms.length) =>
         BuiltinOperatorResults(op.nme, terms.map(_ => N)) match
           // Approximations that hold for operands of any class do not wait for the operands' shapes.
           case S(alternatives) => produce(terms, S(alternatives))

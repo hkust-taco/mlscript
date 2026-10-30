@@ -98,7 +98,7 @@ let f = Foo // should compile to `(x, y) => Foo(x, y)(use[Int])`
 //│     res.z = z2;
 //│     return runtime.Unit
 //│   });
-//│   f4 = lambda4;
+//│   f4 = lambda4 /* as! Function */;
 //│   runtime.safeCall(f4(tmp2));
 //│   return tmp2
 //│ };

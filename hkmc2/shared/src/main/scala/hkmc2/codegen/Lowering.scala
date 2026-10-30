@@ -1322,7 +1322,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             val compileTarget = config.target
             if compileTarget != CompilationTarget.Wasm then return fail:
               ErrorReport(
-                msg"WebAssembly intrinsics are not available when targeting ${compileTarget.toString}"
+                msg"WebAssembly intrinsics are not available when targeting ${compileTarget.displayName}"
                   -> t.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation,
               )
