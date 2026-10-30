@@ -77,6 +77,7 @@ print of Box(foo()).value
 
 :sjs
 fun foo(x) =
+  let =x
   set x = 1
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo7; foo7 = function foo(x) { return runtime.Unit };

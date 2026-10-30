@@ -4,6 +4,7 @@
 :expect 6
 data class A(a) with
   fun f(b) =
+    let =b
     fun g(c) = 
       set b = 2
       a + b + c

@@ -44,6 +44,8 @@ class FingerTree[T] extends IterableBase with
   override fun at(i: Int): T = get(i)(this)
   override fun concat(other: FingerTree[T] | Array[T]): FingerTree[T] = FingerTreeList.concat(this, other)
   override fun slice(beg: Int, end: Int): FingerTree[T] = 
+    let =beg
+    let =end
     let len = this.length
     set beg = normIdxSlice(beg, len)
     set end = normIdxSlice(end, len)

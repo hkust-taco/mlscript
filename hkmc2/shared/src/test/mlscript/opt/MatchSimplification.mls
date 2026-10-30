@@ -19,6 +19,7 @@ let x = true in if x then 1 else 0
 // :sir
 :soir
 fun f(x) =
+  let =x
   if x is 0 do
     set x = 1
   if x is 1 do

@@ -2224,7 +2224,7 @@ extends Importer:
         // * so the parameter and the reference are both located at the `_`,
         // * which lets diagnostics about either point to it.
         val id = new Ident("_" + unds.size).withLocOf(und)
-        val sym = VarSymbol(id, erasedType = N, mut = true)
+        val sym = VarSymbol(id, erasedType = N, mut = false)
         unds += sym
         syntheticLocalRef(sym).withLocOf(und)
     case Annotated(lhs, rhs) =>
@@ -2586,10 +2586,19 @@ extends Importer:
           val r = term(rhs, Trm)
           ctx.get(id.name) match
           case S(elem) =>
+            def whoops = raise:
+              ErrorReport(msg"Symbol '${id.name
+                }' is not a local variable and cannot be explicitly initialized" -> id.toLoc
+                :: elem.symbol.flatMap(_.toLoc).match
+                  case s @ S(_) => msg"Defined here:" -> s :: Nil
+                  case N => Nil)
             elem.symbol match
+            case S(sym: LocalVarSymbol) if !sym.mut =>
+              whoops
+              go(sts, Nil, Term.Error().withLocOf(id) :: acc)(N)
             case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, defineVar(sym, r)(statementLoc) :: acc)(N)
             case S(sym) =>
-              raise(ErrorReport(msg"Symbol '${id.name}' is not a variable and cannot be reassigned" -> id.toLoc :: Nil))
+              whoops
               go(sts, Nil, Term.Error().withLocOf(id) :: acc)(N)
             case N =>
               raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
@@ -3177,7 +3186,7 @@ extends Importer:
     if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasure = N)
     else VarSymbol(id, erasedType = N, mut = true)
   
-  def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
+  def param(t: Tree, inUsing: Bool, inDataClass: Bool, inFunction: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
       case pt @ ParamTree(flags, id, sign, spd, modifiers) =>
         log(dbg"Elaborating ParamTree: ${pt}")
@@ -3193,7 +3202,7 @@ extends Importer:
         // * so the annotation of `y?: T` denotes `T | null` both for callers and in the body.
         val sig = if flg.opt then writtenSig.map(optionalType(_, t.toLoc)) else writtenSig
         if newResolution then sig.foreach(registerSignature)
-        val sym = VarSymbol(canonicalId, mut = true)
+        val sym = VarSymbol(canonicalId, mut = !inFunction)
         sym.sourceAliases = aliases
         val p = Param(flg, sym, sig, mfn)(t.toLoc)
         sym.decl = S(p)
@@ -3289,7 +3298,7 @@ extends Importer:
    *                  If `inPattern` is `true`, only parameters with `pat` flag
    *                  will be added to the context.
    * @param inFunction Whether the parameter list belongs to a function or lambda,
-   *                   whose parameters may be optional or droppable.
+   *                   whose parameters are immutable and may be optional or droppable.
    * @param inConstructor Whether the parameter list belongs to a class constructor.
    */
   def params(t: Tree, inDataClass: Bool, inPattern: Bool, inFunction: Bool, inConstructor: Bool): Ctxl[(ParamList, Ctx)] = t match
@@ -3304,7 +3313,7 @@ extends Importer:
         case hd :: tl =>
           val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam
-          param(hd, inUsing, inDataClass)(using ctx) match
+          param(hd, inUsing, inDataClass, inFunction)(using ctx) match
           case R((p, spd, aliases)) =>
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))

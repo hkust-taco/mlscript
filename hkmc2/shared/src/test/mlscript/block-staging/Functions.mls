@@ -145,11 +145,14 @@ staged module CallSubst with
 :ftc
 staged module Arguments with
   fun f(x) =
+    let =x
     x = 1
     x
   fun g(x)(y, z)() = z
 //│ > fun ctor_() = ()
 //│ > fun f(x) =
+//│ >   let {x}
+//│ >   x = x1
 //│ >   x = 1
 //│ >   x
 //│ > fun g(x) =

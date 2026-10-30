@@ -14,6 +14,7 @@ fun enforceArray = case
   ow then throw Error("Expected an Array, got: " + String(ow))
 
 fun concatHelper(a: Array, l: Int, ...args: Array[Indexable]) =
+  let =l
   let
     idx = 0
     init_len = a.length
@@ -36,6 +37,8 @@ fun normIdxSlice(i, len) =
   else i
 
 fun sliceHelper(beg: Int, fin: Int, arr: Indexable) =
+  let =beg
+  let =fin
   let len = arr.length
   set beg = normIdxSlice(beg, len)
   set fin = normIdxSlice(fin, len)

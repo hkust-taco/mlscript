@@ -41,6 +41,7 @@ let typeOptions =
   allowOperators: false, allowLiterals: true, 
 
 fun parse(tokens: Stack[Token.Token]) =
+  let =tokens
   let counter = 0
   
   fun consume =

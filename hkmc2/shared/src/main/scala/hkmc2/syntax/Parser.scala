@@ -398,7 +398,7 @@ abstract class Parser(
         errExpr :: Nil
       case _ =>
         blockOf(rule, a :: annotations, allowNewlines = allowNewlines)
-    case (tok @ (id: IDENT), loc) :: rest if id.name =/= ":" && !isKey(id, rest) =>
+    case (tok @ (id: IDENT), loc) :: rest if id.name =/= ":" && id.name =/= "=" && !isKey(id, rest) =>
       Keyword.all.get(id.name) match
       case S(kw) =>
         consume
@@ -521,6 +521,9 @@ abstract class Parser(
       Keyword.all.get(id.name) match
       case S(Keyword.`:`) | N =>
         // encountering `:` should lead to parsing an expr (likely a pun)
+        tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
+      case S(Keyword.`=`) if rule.exprAlt.isDefined && !rule.kwAlts.contains("=") =>
+        // A leading `=x` is a pun; an expected `=` still separates a binding's head and RHS.
         tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
       case S(kw) =>
         rule.getKwAlt(kw, S(loc)) match

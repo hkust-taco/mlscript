@@ -157,6 +157,7 @@ fun filtering[A](xs: Iterable[A], op: A -> Bool) =
 fun withFilter[A](op: A -> Bool) = => _ filtering(op)
 
 fun taking(xs, n) =
+  let =n
   filtering of xs, _ =>
     set n -= 1
     n >= 0
@@ -164,6 +165,7 @@ fun taking(xs, n) =
 fun withMax(n) = => _ taking(n)
 
 fun leaving(xs, n) =
+  let =n
   filtering of xs, _ =>
     set n -= 1
     n < 0
@@ -178,6 +180,7 @@ fun zippingWithIndex(xs) =
     [x, j]
 
 fun foldingImpl[A, B](iterator: Iterator[A], acc: B, op: (B, A) -> B) =
+  let =acc
   let next = iterator.next()
   while next.done is false do
     set acc = op(acc, next.value)
