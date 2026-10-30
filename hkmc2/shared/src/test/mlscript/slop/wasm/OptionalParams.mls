@@ -67,7 +67,9 @@ identity()
 :expect 11
 val indirect: (Int, Int?) -> Anything = choose
 indirect(11)
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref $choose)` to `(ref null any)` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref $choose)` to `(ref null any)` in a different type hierarchy
+//│ ║  l.+1: 	val indirect: (Int, Int?) -> Anything = choose
+//│ ╙──      	                                        ^^^^^^
 //│ ╔══[COMPILATION ERROR] Expected static function reference in Call(...) expression
 //│ ║  l.+2: 	indirect(11)
 //│ ╙──      	^^^^^^^^
@@ -230,6 +232,8 @@ keep(3, ())
 // TODO: improve error
 :e
 fun test(x?: Int32) = x
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+1: 	fun test(x?: Int32) = x
+//│ ╙──      	                      ^
 //│ Wasm result:
 //│ = {}

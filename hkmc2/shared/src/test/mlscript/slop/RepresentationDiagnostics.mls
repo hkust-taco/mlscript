@@ -1,0 +1,9 @@
+:.
+
+
+// A constructor field's synthetic initializer has no source location; use its declared name.
+:ge
+class IncompatibleField(val value: Int32 | Int64)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	class IncompatibleField(val value: Int32 | Int64)
+//│ ╙──      	                            ^^^^^

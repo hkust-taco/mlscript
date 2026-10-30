@@ -319,7 +319,9 @@ class N1() with
 class N2() extends N1() with
   override fun g(m): Int32 = 0
 N2().g(1)
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
+//│ ║  l.+4: 	  override fun g(m): Int32 = 0
+//│ ╙──      	                             ^
 //│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null any)`, but the method it overrides declares `i32`
 //│ ║  l.+4: 	  override fun g(m): Int32 = 0
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^

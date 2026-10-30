@@ -154,7 +154,9 @@ wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ║  l.+1: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ║  l.+1: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
 
 
@@ -190,13 +192,17 @@ class C
 
 :e
 fun test: Function = new C
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ║  l.+1: 	fun test: Function = new C
+//│ ╙──      	                     ^^^^^
 //│ Wasm result:
 //│ = {}
 
 :e
 fun test: Function = (new C) as Object
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'C' at an unrelated type 'Function'
+//│ ║  l.+1: 	fun test: Function = (new C) as Object
+//│ ╙──      	                      ^^^^^
 //│ Wasm result:
 //│ = {}
 
