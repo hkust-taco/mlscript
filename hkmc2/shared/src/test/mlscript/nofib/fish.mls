@@ -8,3 +8,18 @@
 import "../../mlscript-compile/nofib/fish.mls"
 fish.main()
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+import "../../mlscript-compile/nofib/NofibPrelude.mls"
+
+// main does not call fmt; consume its result as a list to check the terminating tail.
+:expect "[]"
+NofibPrelude.nofibListToString(fish.fmt(NofibPrelude.Nil))
+//│ = "[]"
+
+:expect "[|(1,2,3,4]"
+NofibPrelude.nofibListToString(fish.fmt(NofibPrelude.list([1, 2, 3, 4])))
+//│ = "[|(1,2,3,4]"
+
+:expect "[|(1,2,3,4,|(5,6,7,8]"
+NofibPrelude.nofibListToString(fish.fmt(NofibPrelude.list([1, 2, 3, 4], [5, 6, 7, 8])))
+//│ = "[|(1,2,3,4,|(5,6,7,8]"
