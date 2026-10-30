@@ -194,6 +194,77 @@ capturedGeneratorFunction(40)(2).next().value
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
+// A capture wrapper forwards an async function's Promise without becoming another async body.
+:lift
+:noInline
+:flowBasedOpt off
+:soir
+:siret
+:checkIR
+:await
+:expect 42
+fun capturedAsyncFunction(value: Int) =
+  @async fun add(n: Int): Int = value + n
+  add
+capturedAsyncFunction(40)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let add, baseCall: ?, add$, add1;
+//│ define add1 as fun add²(value: Int⁰, n: Int⁰)(): Int⁰ {
+//│   return +⁰(value, n)
+//│ };
+//│ define add$ as fun add$⁰(value: Int⁰)(n: Int⁰): Promise⁰ {
+//│   return add³(value, n)
+//│ };
+//│ define add as fun add³(value: Int⁰, n: Int⁰): Promise⁰ {
+//│   let tmp: Function⁰;
+//│   set tmp = add²(value, n);
+//│   return runtime⁰.toJsAsync﹖(tmp)
+//│ };
+//│ define capturedAsyncFunction⁰ as fun capturedAsyncFunction¹(value: Int⁰): ? {
+//│   return add$⁰(value)
+//│ };
+//│ set baseCall = capturedAsyncFunction¹(40);
+//│ return baseCall(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// A curried async capture wrapper returns the remaining function before the final application.
+:lift
+:noInline
+:flowBasedOpt off
+:soir
+:siret
+:checkIR
+:await
+:expect 42
+fun capturedCurriedAsyncFunction(value: Int) =
+  @async fun add(first: Int)(second: Int): Int = value + first + second
+  add
+capturedCurriedAsyncFunction(39)(1)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let add, baseCall: ?, callPrefix: ?, add$, add1;
+//│ define add1 as fun add⁴(value: Int⁰, first: Int⁰, second: Int⁰)(): Int⁰ {
+//│   let tmp: Int⁰;
+//│   set tmp = +⁰(value, first);
+//│   return +⁰(tmp, second)
+//│ };
+//│ define add$ as fun add$¹(value: Int⁰)(first: Int⁰): Function⁰ {
+//│   return add⁵(value, first)
+//│ };
+//│ define add as fun add⁵(value: Int⁰, first: Int⁰)(second: Int⁰): Promise⁰ {
+//│   let tmp: Function⁰;
+//│   set tmp = add⁴(value, first, second);
+//│   return runtime⁰.toJsAsync﹖(tmp)
+//│ };
+//│ define capturedCurriedAsyncFunction⁰ as fun capturedCurriedAsyncFunction¹(value: Int⁰): ? {
+//│   return add$¹(value)
+//│ };
+//│ set baseCall = capturedCurriedAsyncFunction¹(39);
+//│ set callPrefix = baseCall(1);
+//│ return callPrefix(2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
 // Fused singleton matches produce a nullary branch closure and preserve the enclosing result slot.
 :noInline
 :deforest mono

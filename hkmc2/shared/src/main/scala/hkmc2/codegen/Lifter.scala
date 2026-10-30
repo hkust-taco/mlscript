@@ -1122,11 +1122,12 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       val call = Call(mainSym.asMemberRef(mainDsym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val bod = Return(call)
-      // The wrapper returns the main call's result directly, including an already-created Iterator.
-      // Its capture list shifts affine indices, but it must not run as a second generator body.
+      // The wrapper forwards a Promise, Iterator, or remaining function directly. Its Direct signature
+      // must not be lowered as another async or generator body. The added capture list still shifts
+      // the parameter list indices used by affine annotations.
       val annotations = fun.annotations.collect:
         case a @ Annot.Affine(n) => Annot.Affine(n + 1)(a.toLoc)
-        case a if !a.isInstanceOf[Annot.Generator] => a
+        case a if !a.isInstanceOf[Annot.Generator] && !a.isInstanceOf[Annot.Async] => a
       
       FunDefn(
         N,
