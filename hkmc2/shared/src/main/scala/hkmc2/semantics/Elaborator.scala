@@ -660,6 +660,10 @@ object Elaborator:
     val newResolverState: NewResolverState = new NewResolverState(this)
     val suid = new Uid.Symbol.State
     given State = this
+    // LitSymbol.apply interns literal constructors within this compilation. Their symbols
+    // retain this State and a representative source span; a global cache would keep both
+    // alive and reuse another compilation's owner and location for the same literal value.
+    private[semantics] val literalSymbols = mutable.HashMap.empty[Literal, LitSymbol]
     private var _compilationUnit: Opt[CompilationUnit] = N
     private var _compilationUnitAbi: Opt[CompilationUnitAbi] = N
     /** Publish semantic provenance before optimizing this compilation unit. */
