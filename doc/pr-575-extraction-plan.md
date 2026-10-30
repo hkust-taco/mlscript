@@ -1,16 +1,18 @@
 # Extraction plan for PR #575
 
-Status: proposed; no extraction branches or pull requests have been created.
+Status: consolidated plan approved on 2026-10-30. E01–E03 are merged upstream;
+ten thematic extraction batches remain, followed by the reduced #575.
 
 ## Scope and baseline
 
 This plan decomposes [PR #575](https://github.com/hkust-taco/mlscript/pull/575),
-“Compute erased types from new-resolution shape analysis”, as inspected on
-2026-10-30. The source snapshot is `2a3d9933236da5b470a6f66b05d8a5bc6b4b7741`;
-the target `hkmc2` snapshot is `aa2df379b12e6fcbefca76b7a5af8a2c881e8004`.
-The local source and GitHub PR heads agree.
+“Compute erased types from new-resolution shape analysis”. The original analysis
+on 2026-10-30 used source snapshot `2a3d9933236da5b470a6f66b05d8a5bc6b4b7741`
+and target `hkmc2` snapshot `aa2df379b12e6fcbefca76b7a5af8a2c881e8004`.
+These remain the references for the detailed work-item inventory below.
 
-The remaining diff is **174 files, 6,650 additions and 1,624 deletions**:
+At that original snapshot, the diff was **174 files, 6,650 additions and 1,624
+deletions**; these are historical totals, not a count of the remaining work:
 
 | Category | Files | Added / removed lines |
 | --- | ---: | ---: |
@@ -32,30 +34,76 @@ cloned-class signature regression again. Their original commits remain in #575's
 ancestry because #592 was squash-merged, but those changes are absent from the
 current diff.
 
-The proposed decomposition is **35 extraction PRs**, one conditional cleanup,
-and the remaining shape-erasure PR. This is a deliberately fine-grained plan.
-An extraction must still have a meaningful behavior or invariant of its own;
-do not create inert infrastructure PRs merely to increase the count.
+The revised unit of review is a **coherent theme with a few hundred changed
+implementation lines**, counting additions and removals rather than net growth.
+Count Scala changes and substantive MLscript fixture changes separately from
+regression inputs, embedded golden output and generated JavaScript. Extensive
+diff-test updates are acceptable when they follow from that bounded source
+change. Do not split a theme into tiny PRs solely to reduce its snapshot diff.
+
+## Completed extractions
+
+| Work item | Merged PR | Outcome |
+| --- | --- | --- |
+| E01 | [#594](https://github.com/hkust-taco/mlscript/pull/594) | Parser/operator construction and printing agree on tuple arguments; three golden files updated. |
+| E02 | [#595](https://github.com/hkust-taco/mlscript/pull/595) | Corrected the defensive EOF error payload and stack result. Current parsing consumes all tokens, so existing tests do not exercise that fallback and goldens are unchanged. |
+| E03 | [#596](https://github.com/hkust-taco/mlscript/pull/596) | Fixed the fish formatter's list tail and added empty/singleton/multiple-item regressions. Both nonempty cases failed before the fix. |
+
+Each extraction passed `hkmc2AllTests/test` with 1,155 tests. The latest verified
+upstream snapshot is `66add69d3cd8ef16ba3ab5104c4670371456f562`, containing all
+three merges. Integration of those upstream commits back into this branch is
+still pending. Preserve E03's added formatter regressions when synchronizing.
+
+## Consolidated batches
+
+**Ten batches remain, plus the final shape-erasure PR.** E03 is already merged,
+so E04's remaining nofib aliases join the library/fixture batch. There is no
+additional tiny nofib PR. The E-numbers remain stable references to individual
+work items; B01–B10 below define the actual PR boundaries.
+
+All batches are pending. A prerequisite names a batch that must be merged first.
+
+| Batch | Review theme | Work items | Prerequisites | Scope |
+| --- | --- | --- | --- | --- |
+| B01 | Library and fixture corrections | E04–E07; E36 conditional | — | Remaining nofib character-list aliases, class-object references, open-method signatures and exported mutable-storage annotations. Include the unused Runtime helper cleanup only if its removal is confirmed; never give it a separate PR. |
+| B02 | Expression-result resolution | E09, E16 | — | Builtin result information and correct treatment of returns, abortive branches and loops. |
+| B03 | Async and generator results | E10–E11 | — | Body payloads versus Promise/Iterator results, including cloning and currying. |
+| B04 | Callable signatures through transformations | E12–E13, E25–E26, E28 | — | Constructor companions, generated functions, cloned symbols, eta expansion, DPE and deforestation-generated callables. |
+| B05 | Representation boundaries and Wasm calling conventions | E08, E14–E15 | — | Override compatibility, physical parameter/result types, undefined in every representation and conversion diagnostic locations. |
+| B06 | Optional and variadic arguments | E17–E18, E35 | B05 | Typed argument extraction, positional alignment and consolidation of the associated regressions. |
+| B07 | Optimizer safety | E19–E24 | — | Preserve checks and evaluation order; validate constructor effects, field mappings, branch selection and storage compatibility before elimination/fusion. |
+| B08 | Representation-changing deforestation | E27, E29–E30 | B04, B05, B07 | Separate effects from values, retype every affected slot and function instance, and prove casts against all incoming producers. |
+| B09 | Mutable-field resolution and exposure | E31–E32 | — | Shadowing, assignments, interface-permitted writes and structural read/write constraints. |
+| B10 | Mutable-record declarations | E33–E34 | B09 | Explicit input/output bounds and per-field mutability, with documentation and regressions. |
+
+B08 and B09 are likely the largest batches. Keep their coupled invariants
+intact, but keep neighboring themes in their own batches. Check the actual
+implementation diff before finalizing each extraction; these boundaries are
+based on source inspection, not measurements of completed standalone patches.
+An internal work-item dependency does not require another PR when both items
+belong to the same batch. Do not introduce unused APIs or temporary incomplete
+behavior merely to reproduce the original fine-grained sequence.
 
 ## What independently mergeable means
 
-Every extraction targets `hkmc2`, includes its own tests and current golden
-outputs, and must work without unmerged parts of #575. A prerequisite in the
-tables means **wait for that PR to merge, then branch from updated hkmc2**.
-It does not mean targeting another unmerged extraction branch.
+Every batch targets `hkmc2`, includes its own tests and current golden outputs,
+and must work without unmerged parts of #575. A prerequisite in the batch table
+means **wait for that PR to merge, then branch from updated hkmc2**. It does not
+mean targeting another unmerged extraction branch.
 
 A dash means no semantic prerequisite was identified by source inspection.
-It is a standalone candidate, not a claim that an isolated patch has already
-passed tests. None of these individual extractions has been built yet. The
-complete source snapshot passed 1,165 tests, but that does not establish the
-correctness of intermediate subsets.
+It is a standalone candidate, not a claim that the batch has already passed
+tests. The remaining consolidated batches have not been built in isolation.
+The complete original source snapshot passed 1,165 tests, and E01–E03 passed
+their own full suites, but neither establishes the correctness of the remaining
+intermediate subsets.
 
 Prefer explicit annotations in extracted regressions so that representation
 fixes can be demonstrated before inference is enabled. Keep the original
 unannotated variants for the final integration tests. Preserve a regression's
 purpose when doing this: an annotation must not hide the very bug being tested.
-If a proposed split cannot pass independently without a workaround, join it to
-its actual prerequisite or retain it in #575.
+If a proposed batch cannot pass independently without a workaround, reassess
+its actual prerequisites or retain the inseparable logic in #575.
 
 Paths below use these repository-relative roots:
 
@@ -64,29 +112,34 @@ Paths below use these repository-relative roots:
 - **C**: `hkmc2/shared/src/test/mlscript-compile/`
 - **J**: `hkmc2/jvm/src/test/scala/hkmc2/`
 
-## 1. Small source and diagnostic corrections
+The following sections retain the detailed work-item scopes and regression
+checks. Their E-number dependencies describe implementation relationships;
+the consolidated batch table above controls PR boundaries and merge order.
 
-These are good first extractions. They require no new representation inference.
+## 1. Source and diagnostic work items
 
-| ID | Proposed PR | Prerequisites | Exact scope and independent acceptance check |
+E01–E03 are complete. E04–E07 belong to B01; E08 belongs to B05. None requires
+new representation inference.
+
+| ID | Work item | Implementation dependencies | Scope and regression checks |
 | --- | --- | --- | --- |
 | E01 | Fix binary-operator application nodes in the parser example | — | In C/apps/parsing/{Parser,Rules,Tree}.mls, wrap binary operands in `Tree.Tuple` when constructing and matching `Tree.App`. Keep the parser and printer agreement in one PR. Exercise multiplication and mixed-precedence expressions; regenerate T/apps/parsing/{ParserTest,LoopExpressions,ParserErrorTest}.mls outputs as applicable. Exclude the EOF error fix. |
-| E02 | Construct a valid error tree for trailing parser input | — | Only the final unexpected-token branch in C/apps/parsing/Parser.mls: produce `Tree.Error(Tree.Sequence(tree), message) :: Nil`. Exercise the trailing-input/error path in T/apps/parsing/ParserErrorTest.mls and verify the preserved partial tree. Reconcile the shared file with E01 if it has already landed. |
-| E03 | Use a list accumulator in the fish benchmark | — | Replace `showl(xs, "")` by `showl(xs, Nil)` in C/nofib/fish.mls. Compile the port and run its existing nofib regression. No compiler changes. |
+| E02 | Construct a valid error tree for trailing parser input | — | Only the final unexpected-token branch in C/apps/parsing/Parser.mls: produce `Tree.Error(Tree.Sequence(tree), message) :: Nil`. Completed in #595. Review confirmed that current parsing consumes all tokens; the full suite passed without a golden change. Do not claim that existing parser-error tests exercise this defensive fallback. |
+| E03 | Use a list accumulator in the fish benchmark | — | Replace `showl(xs, "")` by `showl(xs, Nil)` in C/nofib/fish.mls. Completed in #596 with additional empty/singleton/multiple-item formatter regressions in the existing nofib test. Both nonempty cases reproduced the invalid-tail failure before the fix. Preserve the separate main benchmark stack-overflow expectation. |
 | E04 | Correct the Haskell string aliases in two nofib ports | — | Add `type String = List[Char]` in C/nofib/{lambda,lastpiece}.mls. These are two instances of the same porting error; keep them together. Compile and run both ports without changing the compiler or expected benchmark results merely to accommodate the aliases. |
 | E05 | Pass class objects to reflection fixtures | — | Use `A.class` / `Pair.class` for `ConcreteClassSymbol` in T/block-staging/PrintCode.mls and T/newres/ShapeFixture.mls. Distinguish the constructor function from the class object. Check the existing generated-code and shape expectations. |
 | E06 | Declare the public open-method contracts in library fixtures | — | The signature additions in C/Iter.mls, C/ObjectBuffer.mls, and `NonLocalReturn.ret` in C/Runtime.mls. Keep actual parameter/result choices visible for review; this is a library-contract change, not an inferred-type implementation. Compile these libraries and run their consumers, including handlers and object-buffer tests. |
 | E07 | Declare the types of exported mutable storage in fixtures | — | The mutable-slot annotations in C/{Runtime,TreeTracer,ModuleReceiverCapture}.mls and C/apps/Accounting.mls. Retain intentional `Any` and nullable slots. Include matching declaration-only adjustments in existing tests when they document the same contract, but leave new exposure diagnostics in #575. Compile and run the affected library/application consumers. |
-| E08 | Locate representation-conversion diagnostics at their source | — | S/codegen/Lowering.scala: the constructor-field name fallback and `castTo` value-location fallback. S/codegen/wasm/text/WatBuilder.scala: the `loc` argument and propagation in `castConserve`. Extract only diagnostic-location changes, not the surrounding undefined or physical-signature changes. Use explicitly annotated failing field, argument, and return conversions to verify useful spans on JS and Wasm. |
+| E08 | Locate representation-conversion diagnostics at their source | — | S/codegen/Lowering.scala: the constructor-field name fallback and `castTo` value-location fallback. S/codegen/wasm/text/WatBuilder.scala: the `loc` argument and propagation in `castConserve`. Track the diagnostic-location hunks separately from the surrounding E14/E15 changes within B05. Use explicitly annotated failing field, argument, and return conversions to verify useful spans on JS and Wasm. |
 
-Suggested focused runs: `catest pars` then `adtest parsing/` for E01/E02;
-`cntest fish` then `ndtest fish` for E03; the corresponding `lambda` and
-`lastpiece` selectors for E04. The general prerequisites and full-suite gate
-below apply to all entries.
+For B01, compile and run the `lambda` and `lastpiece` nofib ports with the
+corresponding `cntest` / `ndtest` selectors, alongside the affected fixture
+consumers. The general prerequisites and full-suite gate below apply to every
+completed batch.
 
 ## 2. Resolution and representation fixes that do not need inference
 
-| ID | Proposed PR | Prerequisites | Exact scope and independent acceptance check |
+| ID | Work item | Implementation dependencies | Scope and regression checks |
 | --- | --- | --- | --- |
 | E09 | Give builtin applications consistent result information | — | S/semantics/BuiltinOperatorResults.scala, `NewResolver.builtinApplication` and its primitive-interface helpers, the Elaborator application hook, `ErasedType.builtinOperatorResult`, and the corresponding `Result.erasedType` case in Block.scala. Keep the resolver and IR rules together. Test arithmetic, comparisons, string concatenation, unknown operands, and operand-forwarding operators; retain the Wasm unknown-result rule. Use T/newres/CurriedFunctions.mls, the affected PartialApps tests, codegen/CheckedCasts.mls, and wasm/BuiltinOperators.mls. Review the documented Int-overflow approximation explicitly; this is the existing workaround, not a new overloading design. |
 | E10 | Separate async body payloads from callable Promise results | — | Extract the async part of `Erasure.bodyResultType`, completed body-result storage in Elaborator.State, `copyBodyResultType` in Cloner, and the Lowering consumers. Callable signatures describe Promise; explicit and implicit returns are coerced to the annotated payload. Use existing async tests and the AsyncResult pattern in T/slop/ClonedBindings.mls, with annotated payloads where needed. Keep body-result state with the defining unit so imported/cloned bodies remain valid. Do not enable inferred results. |
@@ -99,10 +152,9 @@ below apply to all entries.
 | E17 | Coerce tuple-extracted arguments into their declared slots | — | S/codegen/OptionalParams.scala: `bindFromTuple` coercions and the representation of the once-evaluated `optionalArg` temporary; Lowering's rest/trailing extraction assignments. Test required and omitted optional slots, constructor spreads evaluated once, and tail-call rebinding. Use annotated slots, so the boundary error is observable without inference. Keep omission-as-null semantics unchanged. |
 | E18 | Align typed arguments with optional and trailing parameter positions | E17 | `Lowering.expectedParamTypes(ps, args)` and its call sites. Fixed argument lists align from both ends; unknown spreads use only the known required prefix and rely on extraction coercions for other slots. Extract integerTail, typedLayout and forwardedTail from T/slop/VariadicParams.mls. Leave override-specific cases with E14. |
 
-E10 and E11 are intentionally ordered by feature. Landing generator result shapes
-while retaining a payload-shaped callable signature would leave the compiler's
-two views inconsistent. Similarly, E14 supplies the physical result context
-needed by E15's backend emission.
+B03 keeps E10/E11 together: generator result shapes and the callable wrapper
+signature must agree. B05 likewise keeps E14/E15 together, since the physical
+result context is needed for undefined emission at the destination representation.
 
 Useful existing suites: `dtest codegen/ErasedTypes`,
 `dtest newres/GeneratorResults`, `sdtest ClonedBindings`,
@@ -116,22 +168,22 @@ Several optimizer changes were exposed by more precise source types but also
 apply to existing explicitly annotated programs. Extract the safety restrictions
 before broadening the set of casts/constructors through which fusion operates.
 
-| ID | Proposed PR | Prerequisites | Exact scope and independent acceptance check |
+| ID | Work item | Implementation dependencies | Scope and regression checks |
 | --- | --- | --- | --- |
 | E19 | Eliminate casts made redundant by propagation and inlining | — | Only the Cast handling in BlockSimplifier.applyPath/applyResult. Recheck the rewritten operand, remove a proven redundant checked cast, preserve narrowing checks and evaluation order, and materialize a path temporary when needed. Use cast regressions in T/codegen/ErasedTypes.mls and T/opt/ConstantFolding.mls, adding a focused slop regression only where current coverage is insufficient. |
 | E20 | Preserve checked argument evaluation when propagating partial calls | — | The unsaturated direct-member-call case in BlockSimplifier. Evaluate checked/effectful arguments at the original site and snapshot preceding arguments before later effects. Extract checkedPrefix/capturePrefix from T/opt/PureCallPropagation.mls and discardPartial from T/wasm/Casts.mls. Verify discarded partial applications still execute failing checks and later source-variable mutation does not change captured arguments. |
-| E21 | Preserve constructor and superclass effects during elision | — | `ConstructorElision.isHarmless/harmlessClass`, its DCE use, and fusion's constructor/qualifier/argument-replay eligibility checks. Missing definitions, inheritance cycles, checks, calls and other unproved effects stay conservative. Extract CastEffect and EffectfulParent/Child tests from T/slop/Erasure.mls and exercise both DCE and fusion. Keep field-position proofs for E22. |
+| E21 | Preserve constructor and superclass effects during elision | — | `ConstructorElision.isHarmless/harmlessClass`, its DCE use, and fusion's constructor/qualifier/argument-replay eligibility checks. Missing definitions, inheritance cycles, checks, calls and other unproved effects stay conservative. Extract CastEffect and EffectfulParent/Child tests from T/slop/Erasure.mls and exercise both DCE and fusion. Include the E22 field-position proofs in the same B07 batch. |
 | E22 | Validate the parameter-to-field mapping before field fusion | E21 | `ConstructorElision.preservesParameterFields` and its use in fusion eligibility. A constructor can be harmless yet replace or reassign a field, so effect freedom alone is insufficient. Check the current IR layout, pre-constructor, parameter writes and actual field stores. Extract ChangedField and Captured/readCaptured from T/slop/Erasure.mls. |
 | E23 | Preserve ordered match selection and producer-specific default layouts in fusion | E21, E22 | `DeforestFusionSolver.matches/selectedBranch`, its eligibility use, and the corresponding Rewrite branch selection and BranchId changes. Unknown earlier predicates must block choosing a later arm; inheritance and tuple/Object tests must agree with runtime matching. A shared default body must still have different field parameters for different constructor layouts. Extract the Parent/Child, arrayKind/objectKind, and A/B/Target default tests from T/slop/Erasure.mls. |
 | E24 | Keep stored constructors unfused when their container cannot hold the replacement | — | `FlowWebComputation.impliedProducers`, DPE's empty callback, the unconsumed-constructor roots, and the field-storage constraints in Deforest.scala. Preserve an unfused nominal field's declared representation; do not store a replacement closure into it. Extract the two H/Box cases in T/deforest/erasedTypes.mls: nominal field stays unfused, Any field permits fusion. Verify propagation through nested containers. |
 | E25 | Type generated deforestation callables and nullary closure temporaries | — | The erased signatures for branch/rest functions and the `deforest$lam` temporary's type in Rewrite.scala. Preserve the two physical parameter lists of branch functions and the captured-value list. On this base use the original slots' representations; E29 later substitutes retyped slots. Exercise an explicitly annotated nullary singleton match and inspect its generated signature/temporary. |
 | E26 | Preserve the result slot when fusion replaces a return with a call | E25 | The scoped enclosing-return context and `returnCall` at fused matches and extracted rest calls in Rewrite.scala. Coerce the replacement call to the original annotated result. Test boxed reference/Int returns and nested extracted bodies. Carry T/slop/wasm/loose/DeforestPrimitiveReturn.mls as a known failing regression, not as a claimed fix: an unknown closure result still cannot represent an unboxed Int32 without further calling-signature work. |
-| E27 | Keep flow-analysis effects separate from runtime values | — | The separate `unknownEffect` fallback and the distinction between effect and value strategy variables in FlowAnalysis.scala. Introduce each bookkeeping part with its consumer: E29 adds the runtime-slot collection, while this PR fixes the fallback that currently mixes effects into primitive value flow. Exercise effect-analysis suites and the counted getter in T/slop/EffectValueFlows.mls, retaining effects and conservative eta behavior. No representation inference is needed. |
+| E27 | Keep flow-analysis effects separate from runtime values | — | The separate `unknownEffect` fallback and the distinction between effect and value strategy variables in FlowAnalysis.scala. Introduce each bookkeeping part with its consumer: E29 adds the runtime-slot collection, while this item fixes the fallback that currently mixes effects into primitive value flow. Exercise effect-analysis suites and the counted getter in T/slop/EffectValueFlows.mls, retaining effects and conservative eta behavior. No representation inference is needed. |
 | E28 | Keep erased function signatures in sync with eta expansion and DPE | — | The function-signature part of PolyInstantiationRewrite's replacement-symbol machinery, `etaTargetLists/etaParamType`, and FlowAnalysisBasedRewrite's complete rewritten signatures. Use fresh symbols for changed write-once signatures, including in-place roots and copied functions; preserve optional/rest list structure. Add SymbolRefresher helpers only as used here. Extract the typed eta example from T/opt/EtaExpansion.mls, annotating g and f's results as necessary; retain DPE and mixed-target coverage. Leave value-slot retyping to E29. |
 | E29 | Retype every slot and function instance affected by deforestation | E15, E21–E28 | The remaining `StratVar.instantiationId/symbolFlows` bookkeeping, value-symbol replacement in PolyInstantiationRewrite/SymbolRefresher, and Rewrite's producer-based parameter/result/local/capture typing, instance-copy selection and boundary coercions. Exercise mono/poly recursion, identity forwarding, nested instances, field projection, mixed fused/unfused sources, and effectful non-returning paths from T/deforest/erasedTypes.mls. This is one representation-changing transformation: do not land parameter retyping while leaving its locals, return slots, captures or callers stale. |
 | E30 | Prove casts against all incoming producers before allowing fusion | E29 | `CastConsumer`, propagation/copying/solver invalidation, the required context plumbing, and removal of casts whose operand representation actually changes through fusion. Keep narrowing casts needed for physical Wasm slots when fusion does not change the operand. Extract makeOpaqueBox/mixedBox and mixed-source cases in T/deforest/erasedTypes.mls plus T/slop/wasm/loose/FlowCastProofs.mls. A single unknown or incompatible producer must invalidate the proof, including across copied/recursive schemes. |
 
-E29 is likely the largest extracted compiler PR. Splitting its implementation
+B08 is one of the largest batches. Splitting E29's implementation
 into “parameters first, locals later” would knowingly violate the one-
 representation-per-slot invariant. Its review should instead follow:
 
@@ -165,18 +217,19 @@ Do not turn precise mutable reads on while omitting assignment or interface
 exposure inputs. That would make the intermediate compiler trust an initializer
 after another value can have replaced it.
 
-| ID | Proposed PR | Prerequisites | Exact scope and independent acceptance check |
+| ID | Work item | Implementation dependencies | Scope and regression checks |
 | --- | --- | --- | --- |
-| E31 | Follow only surviving record fields during interface exposure | — | The reverse, shadow-aware traversal and contextual memoization in InterfaceExposure's record case, initially for initializer exposure. Preserve unknown-key conservatism and nested spread contexts. Re-express overwrittenSource, direct/spread replacement, and computed-key cases from T/slop/strictres/MutableFields.mls using escaping callbacks, so they test resolution/exposure without the later missing-field-annotation diagnostic. Do not take assignment-flow code yet. |
+| E31 | Follow only surviving record fields during interface exposure | — | The reverse, shadow-aware traversal and contextual memoization in InterfaceExposure's record case, including initializer exposure. Preserve unknown-key conservatism and nested spread contexts. Re-express overwrittenSource, direct/spread replacement, and computed-key cases from T/slop/strictres/MutableFields.mls using escaping callbacks, so they test resolution/exposure without the later missing-field-annotation diagnostic. Include E32's assignment-flow handling in the same B09 batch. |
 | E32 | Account for every write when resolving and exposing mutable fields | E31 | NewResolver's `assignField/writeField/listenAssignedValues/assignableTargets`, projected lookup, class/record read paths, Elaborator's assignment hook, owned caches, and InterfaceExposure's unknown writes and assigned-value traversal. Include the structural input/output representation and constraints: RecordTypeShape/MemberLookup.Typed carry TypeArgument pairs through identity, substitution, support, transport, intersections and reads; `declaredField`, `constrainRecord` and `listenFieldInput` propagate writes negatively and reads positively. Exercise classes and existing `mut {f: T}` syntax, including existing interval type arguments, before introducing per-field syntax. Test projections, all receiver forms, multiple classes, escaping callbacks, late assignments, nested spreads, immutable-copy controls and both structural constraint directions. Adapt TypeRelationTest while preserving its bounded-growth property. Exclude erasure observations and the requirement to annotate exposed fields. |
-| E33 | Support explicit input/output bounds on mutable record fields | E32 | The typeArgument elaboration helper, direct field-bound syntax, missing-output provenance, and immutable-field rejection. Test `mut {f: in S out T}`, parenthesized bounds, input-only/output-only fields, nested negative positions, aliases and recursive interfaces. Use the relevant MutableFieldVariance blocks with whole-record mutability until E34 lands. Do not claim complete structural subtype checking or add it in this extraction. |
+| E33 | Support explicit input/output bounds on mutable record fields | E32 | The typeArgument elaboration helper, direct field-bound syntax, missing-output provenance, and immutable-field rejection. Test `mut {f: in S out T}`, parenthesized bounds, input-only/output-only fields, nested negative positions, aliases and recursive interfaces. Use the relevant MutableFieldVariance blocks with both whole-record and per-field mutability alongside E34 in B10. Do not claim complete structural subtype checking or add it in this extraction. |
 | E34 | Allow individual record fields to be declared mutable | E32, E33 | The `RcdField.mut` metadata, value/type elaboration, pretty-printing, cloning, RecordShape lookup, exposure and structural-interface flag threading, and Lowering's `allocatesMutable`. Support `{mut f: value, label: other}` end to end, including its type form and spread copies. Extract the mixed-field and copied-record tests from MutableFields, the MutableRecord pattern from ClonedBindings, and the BadMut expectation change. Move the corresponding reference documentation here. Keep source erasure deferral for record slots in #575. |
 
 E32 keeps direct assignments and writes admitted by declared interfaces together.
 Separating them would let a newly precise read ignore a write through a
 structural interface. The input/output representation is therefore used by its
-actual readers and writers in the same PR. This is the other deliberately larger
-extraction, alongside E29.
+actual readers and writers in B09, alongside E31's exposure traversal. Keep
+this batch separate from B10's declaration extensions and from B08's optimizer
+transformations.
 
 E32's tests should demonstrate incorrect member resolution or lost exposure,
 not merely report an internal inferred representation. Many current
@@ -189,11 +242,11 @@ stay with #575. In particular:
 - ordinary mutable-record variance tests can be moved to E32 using whole-record
   syntax, without prematurely introducing E34;
 - per-field values and their full type semantics must be present together when
-  E34 lands.
+  B10 lands.
 
-E33/E34 are language-feature reviews. They preserve the syntax and behavior
-already proposed by #575; extraction does not authorize inventing further
-syntax, changing dispatch, or extending the public library API.
+B10 is a language-feature review covering E33/E34. It preserves the syntax and
+behavior already proposed by #575; extraction does not authorize inventing
+further syntax, changing dispatch, or extending the public library API.
 
 Use `dtest newres/Records`, the appropriate split blocks from
 `sdtest strictres/MutableFields` and `sdtest strictres/MutableFieldVariance`,
@@ -203,15 +256,16 @@ as fixmes rather than weakening their expectations.
 
 ## 5. Test consolidation and one optional cleanup
 
-| ID | Proposed PR | Prerequisites | Exact scope and independent acceptance check |
+| ID | Work item | Implementation dependencies | Scope and regression checks |
 | --- | --- | --- | --- |
-| E35 | Consolidate optional-binding regressions without losing coverage | E15, E17, E18 | Reconcile T/slop/OptionalBinding.mls and T/slop/strictres/OptionalNull.mls into T/slop/strictres/OptionalBinding.mls, along with the duplicated tail-recursive case removed from strictres/OptionalParams.mls. Audit cases one by one: omission, supplied null/undefined, lambdas, currying, spreads, tail recursion, closures, constructor elimination and dynamic construction. Keep typed-extraction cases with E17/E18 initially; consolidate after they land. Do not copy current golden output into an older compiler or treat unsafe.undefined observations as new semantics. |
+| E35 | Consolidate optional-binding regressions without losing coverage | E15, E17, E18 | Reconcile T/slop/OptionalBinding.mls and T/slop/strictres/OptionalNull.mls into T/slop/strictres/OptionalBinding.mls, along with the duplicated tail-recursive case removed from strictres/OptionalParams.mls. Audit cases one by one: omission, supplied null/undefined, lambdas, currying, spreads, tail recursion, closures, constructor elimination and dynamic construction. Consolidate these tests with the E17/E18 typed-extraction changes in B06. Do not copy current golden output into an older compiler or treat unsafe.undefined observations as new semantics. |
 | E36 (conditional) | Remove the unused Runtime Int31 addition prototype | — | The deletion of `Runtime.plus_impl` at the end of C/Runtime.mls and its generated output. First check callers on the extraction base and confirm removal of the exported helper is intended. The `wasm.plus_impl` intrinsic is a different symbol and must remain. If the public-contract removal is not intended, omit this extraction and resolve the three-line deletion explicitly in the residual PR. |
 
-E36 is not a prerequisite for the compiler improvements. E35 is optional as a
-separate review if the test moves prove inseparable from their behavior changes;
-in that case distribute the cases to their owning PRs and account for every
-removed scenario. Neither cleanup is justification for dropping regression
+E35 belongs to B06 with its behavior changes; it does not need a separate PR.
+Account for every removed scenario when consolidating the tests. E36 is
+conditional within B01 and is not a prerequisite for the compiler improvements.
+If the helper removal is not intended, leave that decision in the residual PR
+rather than creating a cleanup PR. Neither item justifies dropping regression
 coverage.
 
 ## 6. What remains in #575
@@ -333,11 +387,12 @@ Do not collect all these cases into a generic “update tests” PR.
 ## 8. Extraction and merge procedure
 
 1. Keep the source snapshot above as the reference for the intended final
-   behavior. For each selected ID, create a branch such as
-   `codex/pr575-parser-operator-tuples` from current `hkmc2`, after its
+   behavior. For each selected batch, create a branch such as
+   `codex/pr575-fixture-corrections` from current `hkmc2`, after its
    prerequisites have merged.
-2. Extract the smallest complete implementation, documentation and regression
-   set. Use the shared-file map. The historical commits are research aids, not
+2. Extract the complete implementation, documentation and regressions for that
+   theme. Check the implementation size separately from test/golden volume,
+   and use the shared-file map. The historical commits are research aids, not
    cherry-pick units: `b87501d07`, `081891b34`, `65660c479` and the merge
    resolutions each mix multiple subjects.
 3. Demonstrate the issue independently, preferably with an existing .mls test.
@@ -352,9 +407,10 @@ Do not collect all these cases into a generic “update tests” PR.
    this branch. Resolve adaptations by preserving both the extracted fix and
    the remaining inference logic. Do not delete the implementation from this
    branch to shrink the diff.
-6. Recompute `git diff hkmc2...HEAD`, record the merged PR link/status in this
-   plan, and inspect what remains. Validate any conflict resolution that changes
-   code. The extraction is complete only when its independent behavior is
+6. Recompute `git diff hkust-taco/hkmc2...HEAD`, record the merged PR link/status
+   in this plan, and inspect what remains. Validate any retained code/test
+   changes from synchronization, including new upstream regressions. The
+   extraction is fully integrated only when its independent behavior is
    upstream and its corresponding diff has disappeared here.
 
 GitHub may squash the extracted PRs. Merge the real upstream commits back;
@@ -363,13 +419,19 @@ The earlier #592 reconciliation used an unchanged-tree merge only after exact
 tree equality was established. Do not apply that strategy blindly to future
 extractions, whose patches may have been adapted to a smaller base.
 
+Before the next extraction, synchronize the three completed upstream merges
+back into this branch, including E03's formatter regressions. Then proceed by
+batch; do not create further branches for individual E-numbers.
+
 A practical order is:
 
-1. E01–E08, then E13, E19 and E20 for quick independent reviews.
-2. E09–E12, E14–E18 for resolution/backend correctness prerequisites.
-3. E21–E30 in prerequisite order for optimizer work.
-4. E31–E34 in prerequisite order for mutable records.
-5. E35, decide E36, then review the reduced #575.
+1. B01: library and fixture corrections, including the remaining E04 aliases.
+2. B02–B05: result resolution, wrappers, callable signatures and representation
+   boundaries.
+3. B06–B08: optional arguments, optimizer safety, then representation-changing
+   deforestation after its prerequisites have landed.
+4. B09, then B10: mutable-field resolution before the declaration extensions.
+5. Review the reduced #575 as the final shape-erasure feature.
 
 The optimizer and mutable-record sequences need not block one another.
 Whenever two ready entries only share golden output, merge one and regenerate
@@ -377,7 +439,7 @@ the other's outputs rather than creating an artificial dependency.
 
 ## 9. Validation and review gates
 
-For every code/test extraction:
+For every completed code/test batch:
 
 - Use Metals for quick Scala inspection and compilation feedback.
 - Keep a persistent SBT shell. Before individual diff tests, run `ctest`;
@@ -386,8 +448,9 @@ For every code/test extraction:
 - Use `dtest` for the main suite, `sdtest` for slop, `wdtest` for the Wasm
   suite, and `adtest` / `ndtest` for the corresponding application/nofib tests.
   Main-suite newres/wasm tests still use `dtest`.
-- Finish with `hkmc2AllTests/test`. A focused pass or Metals compile is not a
-  substitute. Commit the latest generated .mls/.mjs output with the owning PR.
+- Finish with `hkmc2AllTests/test` on the complete batch. A focused pass or
+  Metals compile is not a substitute. Commit the latest generated .mls/.mjs
+  output with the owning PR; do not create a separate golden-update PR.
 - Read the complete PR diff, including test directives, removed test blocks,
   expected errors, evaluation counts and generated casts. A regenerated golden
   file is evidence to review, not automatic proof of correctness.
@@ -403,4 +466,4 @@ interfaces. Do not add unit tests that merely assert an internal erased-type
 field equals the value assigned by the implementation.
 
 This planning change itself is documentation-only. It does not rerun the
-compiler suite or claim that the proposed intermediate branches are validated.
+compiler suite or claim that the remaining consolidated batches are validated.
