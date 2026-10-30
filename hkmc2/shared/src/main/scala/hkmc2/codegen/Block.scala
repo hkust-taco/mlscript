@@ -791,8 +791,8 @@ private[codegen] object InlinerBodySummary:
     var transitiveCallTargets = Set.empty[TermSymbol]
     
     new BlockTraverser:
-      applyBlock(fun.body)
       var hasCallGraphSource = true
+      applyBlock(fun.body)
       
       def withoutCallGraphSource(thunk: => Unit): Unit =
         val previous = hasCallGraphSource
