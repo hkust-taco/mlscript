@@ -65,8 +65,9 @@ additional tiny nofib PR. The E-numbers remain stable references to individual
 work items; B01–B10 below define the actual PR boundaries.
 
 B01 is merged as #597 (extracted locally as `771a80b9f` on
-`codex/pr575-fixture-corrections`). B02–B10 are not yet extracted. A prerequisite
-names a batch that must be merged first.
+`codex/pr575-fixture-corrections`). B02 is extracted locally as `aef07eead` on
+`codex/pr575-expression-results` and awaits merge. B03–B10 are not yet extracted.
+A prerequisite names a batch that must be merged first.
 
 | Batch | Review theme | Work items | Prerequisites | Scope |
 | --- | --- | --- | --- | --- |
@@ -101,6 +102,19 @@ annotations and the paired T/newres/Overrides.mls changes with B05. Preserve
 the unannotated overrides so the tests continue to exercise signature
 inheritance; do not add annotations that hide the calling-convention bug.
 
+B02 was extracted from `2ece680d5`. Its six Scala files contain 236 additions
+and 18 deletions; the complete reviewed diff, including documentation and
+regressions with regenerated goldens, is 23 files, 534 additions and 90 deletions.
+Metals compilation, the focused suites, and `hkmc2AllTests/test` passed; the full
+suite ran 1,157 tests. Builtin-call checks, exhaustive-loop results and explicitly
+typed Wasm early returns were demonstrated to fail on the extraction base.
+The existing narrowing-cast tests retain their purpose through `Num` operands
+and a fractional SCC result. Shape-based symbol-slot erasure remains in #575.
+
+B02 places the builtin-approximation paragraph under Standard Operators in
+doc/reference.md. When integrating it, remove the duplicate paragraph from
+the residual Runtime Representations section while retaining the other text.
+
 ## What independently mergeable means
 
 Every batch targets `hkmc2`, includes its own tests and current golden outputs,
@@ -110,8 +124,8 @@ mean targeting another unmerged extraction branch.
 
 A dash means no semantic prerequisite was identified by source inspection.
 It is a standalone candidate, not a claim that the batch has already passed
-tests. B02–B10 have not been built in isolation. The complete original source
-snapshot passed 1,165 tests, and E01–E03 and B01 passed their own full suites,
+tests. B03–B10 have not been built in isolation. The complete original source
+snapshot passed 1,165 tests, and E01–E03 and B01–B02 passed their own full suites,
 but these results do not establish the correctness of the remaining
 intermediate subsets.
 
