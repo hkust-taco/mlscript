@@ -117,6 +117,10 @@ Do NOT include comments that simply describe what the code is doing
 without adding any additional insight, or comments that talk about
 parts of the system that are not directly related to the code being commented on.
 
+Avoid passive tense, words like "actually", "just", etc.,
+avoid needlessly contrasting presently irrelevant things with expressions like "instead of",
+and use clear language and terminology.
+
 
 ## User-Facing Diagnostics
 
