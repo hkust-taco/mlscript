@@ -19,14 +19,14 @@ specialize("unused", 41)
 //│ define specialize$specialize as fun specialize$specialize⁰(value: Int⁰): Int⁰ {
 //│   let inner;
 //│   define inner as fun inner⁰(n: Int⁰): Int⁰ {
-//│     return (+⁰(n, 1) as! Int⁰)
+//│     return +⁰(n, 1)
 //│   };
 //│   return inner⁰(value)
 //│ };
 //│ define specialize⁰ as fun specialize¹(unused: Str⁰, value: Int⁰): Int⁰ {
 //│   let inner;
 //│   define inner as fun inner¹(n: Int⁰): Int⁰ {
-//│     return (+⁰(n, 1) as! Int⁰)
+//│     return +⁰(n, 1)
 //│   };
 //│   return inner¹(value)
 //│ };

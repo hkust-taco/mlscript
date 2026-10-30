@@ -1413,7 +1413,11 @@ extends Importer:
         if selected is sym then ref else Term.SimpleRef(selected)(ref.tree).withLocOf(ref)
       case _ => lt
     val res = withTypeBinders(new Term.App(appliedFun, rt)(tree, typ, resSym))
-    if newResolution then listenTerm(appliedFun)(shape => appShape(shape, rt, res))
+    if newResolution then appliedFun match
+      // Builtin operators have no shapes of their own; see NewResolver.builtinApplication.
+      case Term.SimpleRef(op: BuiltinSymbol) => builtinApplication(op, rt, res)
+      case Term.Ref(op: BuiltinSymbol) => builtinApplication(op, rt, res)
+      case _ => listenTerm(appliedFun)(shape => appShape(shape, rt, res))
     res
   
   /** With the new underscore syntax, some operator operands delimit their own implicit lambdas:
@@ -1493,7 +1497,8 @@ extends Importer:
     if newResolution then
       // Imperative branches are evaluated for effects; lowering discards their
       // values and returns unit, including when a loop executes zero iterations.
-      if form.isImperative then pipeTerm(unit, res)
+      if form.isImperative then
+        if completesNormally(res) then pipeTerm(unit, res)
       else split.results.foreach: trm =>
           pipeTerm(trm, res)
     res

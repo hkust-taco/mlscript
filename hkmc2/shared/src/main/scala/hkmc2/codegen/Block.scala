@@ -1156,6 +1156,10 @@ sealed abstract class Result extends Located:
     case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
     case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
     // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
+    // * WORKAROUND (see `semantics.BuiltinOperatorResults`): dynamic arithmetic signatures do not
+    // * express operand-dependent results, which resolution approximates from their representations.
+    case Call(Value.SimpleRef(op: BuiltinSymbol), args :: Nil) if args.forall(_.spread.isEmpty) =>
+      ErasedType.builtinOperatorResult(op.nme, args.map(_.value)).orElse(op.erasedSignature.flatMap(_.ret))
     case Call(fun, argss) =>
       val signature = fun match
         case Value.SimpleRef(bs: BuiltinSymbol) => bs.erasedSignature

@@ -540,7 +540,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // it, instead of forcing the branches through the top type and rejecting the read.
       if usesResTmp then joinTempType(l, branchTypes)
       // Embed the `body` into `Label` if the term is a `while`.
-      lazy val rest = if usesResTmp then k(l.asSimpleRef) else k(lowering.unit)
+      lazy val rest =
+        // The loop label is generated here and can only be continued, never
+        // broken to by source code. An abortive body therefore cannot reach k.
+        if form === IfLikeForm.While && body.isAbortive then End()
+        else if usesResTmp then k(l.asSimpleRef) else k(lowering.unit)
       val block =
         if form === IfLikeForm.While then
           // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
@@ -568,6 +572,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
               blk.rest(rest)
           else
             Begin(Label(loopLabel, true, body, End()), rest)
+        else if body.isAbortive then
+          // Do not lower the continuation of an exhaustive returning split.
+          // Its unreachable result need not inhabit the function's representation.
+          body
         else if k.isInstanceOf[TailOp]
           && !form.isImperative
             // * ^ Generated imperative `if` branches do not always yield a value, so if we removed this,

@@ -3206,6 +3206,85 @@ class NewResolver:
             case _ => inferTypeArguments(instanceType(instance), instantiateShape(bound, substitution), marks, N)
     substitution
 
+  /** The type of the instances of a primitive class, whose views locate their provenance at `source`. */
+  private def primitiveType(cls: ClassSymbol, source: Term)(using ResolutionContext): DeclaredType =
+    val resolution = new TypeResolution(source, messages => resolError(source, messages))
+    resolution.publish(TypeShape.Nominal(cls.defn.get))
+    declaredType(resolution, Map.empty)
+
+  /** The declared interface of a primitive class. */
+  private def listenPrimitiveInterface(tpe: DeclaredType)(listener: NominalInstanceView => Unit)
+      (using ResolutionContext): Unit =
+    listenTypeViews(tpe):
+      case nominal: NominalInstanceView => listener(nominal)
+      case _ => softAssert(false, "Primitive class must expose a nominal interface")
+
+  /** WORKAROUND (see BuiltinOperatorResults): builtin operators have no declared interface, so without this,
+    * their applications would have no shapes at all, and a slot they flow into would only be inferred from its
+    * other inputs. When targeting JavaScript, approximate the results from the primitive classes of the operands.
+    * Applications the rules cannot approximate produce unknown values, as do all applications when targeting
+    * Wasm, whose backend implements the operators with dynamically typed runtime intrinsics.
+    */
+  def builtinApplication(op: BuiltinSymbol, args: Term, res: App)(using ResolutionContext): Unit =
+    import BuiltinOperatorResults.{PrimitiveClass, Alternative}
+    def publish(shape: TermShape)(using ResolutionContext): Unit = publishViewed(res, shape, rctx.instances)
+    var publishedUnknown = false
+    def unknown()(using ResolutionContext): Unit = if !publishedUnknown then
+      publishedUnknown = true
+      publish(UnknownValueShape.at(res))
+    val forwarded = mutable.Set.empty[Int]
+    // Unlike literals, which share their class's cached interface, results locate their provenance at the application.
+    val resultTypes = mutable.Map.empty[PrimitiveClass, DeclaredType]
+    val operands: Opt[Ls[Term]] = args match
+      case Tup(fields) => fields.foldRight(S(Nil): Opt[Ls[Term]]):
+        case (Fld(_, value, _), S(rest)) => S(value :: rest)
+        case _ => N
+      case _ => N
+    def produce(terms: Ls[Term], approximation: Opt[Ls[Alternative]])(using ResolutionContext): Unit =
+      approximation match
+        case S(alternatives) => alternatives.foreach:
+          case Alternative.Of(primitive) =>
+            val builtins = prelude.builtins
+            val cls = primitive match
+              case PrimitiveClass.Int => builtins.Int
+              case PrimitiveClass.Num => builtins.Num
+              case PrimitiveClass.Str => builtins.Str
+              case PrimitiveClass.Bool => builtins.Bool
+              case PrimitiveClass.BigInt => builtins.BigInt
+            listenPrimitiveInterface(resultTypes.getOrElseUpdate(primitive, primitiveType(cls, res)))(publish)
+          case Alternative.Operand(index) => if forwarded.add(index) then listenTerm(terms(index))(publish)
+        case N => unknown()
+    def primitiveOf(view: TermShape)(using ResolutionContext): Opt[PrimitiveClass] =
+      val builtins = prelude.builtins
+      def is(cls: ClassSymbol) = view.isInstanceOfClass(cls.defn.get)
+      if is(builtins.Int) then S(PrimitiveClass.Int)
+      else if is(builtins.Num) then S(PrimitiveClass.Num)
+      else if is(builtins.Str) then S(PrimitiveClass.Str)
+      else if is(builtins.Bool) then S(PrimitiveClass.Bool)
+      else if is(builtins.BigInt) then S(PrimitiveClass.BigInt)
+      else N
+    operands match
+      case S(terms) if (config.target is CompilationTarget.JS) && BuiltinOperatorResults.approximates(op.nme, terms.length) =>
+        BuiltinOperatorResults(op.nme, terms.map(_ => N)) match
+          // Approximations that hold for operands of any class do not wait for the operands' shapes.
+          case S(alternatives) => produce(terms, S(alternatives))
+          case N =>
+            // Combine each class newly seen for one operand with the classes already seen for the others. Classes
+            // seen in different activations are combined as well, which over-approximates the results. An operand
+            // without any shapes yields no results, like any other use of a value without shapes.
+            val seen = terms.map(_ => mutable.LinkedHashSet.empty[Opt[PrimitiveClass]])
+            terms.zipWithIndex.foreach: (term, index) =>
+              listenTerm(term): shape =>
+                listenInstanceViews(shape): view =>
+                  val primitive = primitiveOf(view)
+                  if seen(index).add(primitive) then
+                    val choices = seen.zipWithIndex.map: (classes, other) =>
+                      if other == index then primitive :: Nil else classes.toList
+                    choices.foldRight(Nil :: Nil: Ls[Ls[Opt[PrimitiveClass]]]): (options, suffixes) =>
+                      options.flatMap(option => suffixes.map(option :: _))
+                    .foreach(classes => produce(terms, BuiltinOperatorResults(op.nme, classes)))
+      case _ => unknown()
+
   def appShape(source: TermShape, args: Term, res: App)(using ResolutionContext): Unit =
     applyShape(source, args, res, checked = true)
 
@@ -4226,15 +4305,27 @@ class NewResolver:
       case _: Definition => normal
       case term: Term => resultFlow(term)
       case _ => sequence(stat.subTerms)
-    def split(branches: SimpleSplit, onEnd: ResultFlow): ResultFlow = branches match
-      case SimpleSplit.Else(value) => resultFlow(value)
+    def irrefutable(pattern: Pattern): Bool = pattern match
+      case Pattern.Wildcard() => true
+      case Pattern.Alias(inner, _) => irrefutable(inner)
+      case Pattern.Annotated(inner, _) => irrefutable(inner)
+      case Pattern.Composition(true, left, right) => irrefutable(left) || irrefutable(right)
+      case Pattern.Composition(false, left, right) => irrefutable(left) && irrefutable(right)
+      case _ => false
+    def split(branches: SimpleSplit, onEnd: ResultFlow, repeats: Bool): ResultFlow = branches match
+      case SimpleSplit.Else(value) =>
+        val flow = resultFlow(value)
+        if repeats then flow.copy(normal = false) else flow
       case SimpleSplit.End => onEnd
-      case SimpleSplit.Cons(SimpleSplit.Head.Let(_, value), tail) => resultFlow(value).andThen(split(tail, onEnd))
+      case SimpleSplit.Cons(SimpleSplit.Head.Let(_, value), tail) => resultFlow(value).andThen(split(tail, onEnd, repeats))
       case SimpleSplit.Cons(SimpleSplit.Head.Match(scrutinee, pattern, consequent), tail) =>
         // A failed pattern can skip its guards. Retain that path as well as
         // any control transfer from a guard which is evaluated.
         val guards = pattern.subTerms.foldLeft(normal)((flow, term) => flow.or(resultFlow(term)))
-        resultFlow(scrutinee).andThen(guards.andThen(split(consequent, onEnd).or(split(tail, onEnd))))
+        val alternative = split(tail, onEnd, repeats)
+        val matched = split(consequent, alternative, repeats)
+        resultFlow(scrutinee).andThen(guards.andThen(
+          if irrefutable(pattern) then matched else matched.or(alternative)))
     def quoted(term: Term, depth: Int): ResultFlow = term match
       // Only splices crossing back to the current stage execute now. Nested
       // quotations delay their own splices, including any returns they contain.
@@ -4259,9 +4350,9 @@ class NewResolver:
         if last.normal then first.or(last.copy(normal = false)) else last
       case IfLike(_, form, branches) =>
         // Falling off an imperative split returns unit; falling off a returning
-        // split throws a match error. A loop may finish without running its body.
-        val flow = split(branches, if form.isImperative then normal else ResultFlow(false, Map.empty))
-        if form == IfLikeForm.While then flow.or(normal) else flow
+        // split throws a match error. A loop's completed branch starts another
+        // iteration; only falling off the split can produce a normal unit result.
+        split(branches, if form.isImperative then normal else ResultFlow(false, Map.empty), form == IfLikeForm.While)
       case Quoted(body) => quoted(body, 1)
       case _: Lam | _: Unquoted | _: FunTy | _: Forall | _: Constrained | _: WildcardTy
           | _: CompType | _: Neg | _: DynTy => normal
@@ -4273,6 +4364,8 @@ class NewResolver:
       case Asc(value, _) => resultFlow(value)
       case TyApp(value, _) => resultFlow(value)
       case _ => sequence(term.subTerms)
+
+  protected def completesNormally(term: Term): Bool = resultFlow(term).normal
 
   /** Function results include explicit returns, whereas listenTerm observes only
     * normal completion. Share this rule between calls, result checking, getters,
@@ -4542,14 +4635,8 @@ class NewResolver:
       primitive match
         case N => publish(N)
         case S(cls) =>
-          val tpe = rctx.state.primitiveTypes.getOrElseUpdate(cls, {
-            val resolution = new TypeResolution(intro, messages => resolError(intro, messages))
-            resolution.publish(TypeShape.Nominal(cls.defn.get))
-            declaredType(resolution, Map.empty)
-          })
-          listenTypeViews(tpe):
-            case nominal: NominalInstanceView => publish(S(nominal))
-            case _ => softAssert(false, "Primitive class must expose a nominal interface")
+          val tpe = rctx.state.primitiveTypes.getOrElseUpdate(cls, primitiveType(cls, intro))
+          listenPrimitiveInterface(tpe)(nominal => publish(S(nominal)))
     case Ref(_: TopLevelSymbol) => listener(DynShape())
     case SelfRef(_: TopLevelSymbol) => listener(DynShape())
     case ref @ Ref(loc: LocalSymbol) =>

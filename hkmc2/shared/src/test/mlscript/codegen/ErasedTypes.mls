@@ -188,15 +188,15 @@ fun test(x: Int): Int = "oops"
 //│ define test⁰ as fun test¹(x: Int⁰): Int⁰ { return "oops" }; end
 
 
-// The return coercion is what an annotated result buys. `(+)` is a builtin and carries no erased type, so
+// The return coercion is what an annotated result buys. The sum of two `Num`s is a `Num`, so
 // `add2` narrows its result to `Int` while `add1`, having nothing to narrow to, leaves it alone.
-fun add1(x: Int, y: Int) = x + y
-fun add2(x: Int, y: Int): Int = x + y
+fun add1(x: Num, y: Num) = x + y
+fun add2(x: Num, y: Num): Int = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define add1⁰ as fun add1¹(x: Int⁰, y: Int⁰): ? {
+//│ define add1⁰ as fun add1¹(x: Num⁰, y: Num⁰): ? {
 //│   return +⁰(x, y)
 //│ };
-//│ define add2⁰ as fun add2¹(x: Int⁰, y: Int⁰): Int⁰ { return (+⁰(x, y) as! Int⁰) };
+//│ define add2⁰ as fun add2¹(x: Num⁰, y: Num⁰): Int⁰ { return (+⁰(x, y) as! Int⁰) };
 //│ end
 
 
@@ -219,7 +219,7 @@ fun keep(x: Int) =
 class Cell(mut val v: Int) with
   fun put(x) = set v = x
   fun get(): Int = v
-  fun twice(x: Int): Int = x + x
+  fun twice(x: Num): Int = x + x
   fun whatever(a) = a
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define Cell⁰ as class Cell² {
@@ -235,7 +235,7 @@ class Cell(mut val v: Int) with
 //│   method get⁰ = fun get¹(): Int⁰ {
 //│     return Cell².this.v³
 //│   }
-//│   method twice⁰ = fun twice¹(x: Int⁰): Int⁰ {
+//│   method twice⁰ = fun twice¹(x: Num⁰): Int⁰ {
 //│     return (+⁰(x, x) as! Int⁰)
 //│   }
 //│   method whatever⁰ = fun whatever¹(a: ?): ? { return a }
@@ -266,7 +266,7 @@ fun counter(x: Int) =
 //│   }
 //│ };
 //│ define bump as fun bump⁰(scope0$cap: Capture$scope0¹, x: Int⁰): ? {
-//│   let tmp: ?;
+//│   let tmp: Unknown;
 //│   set tmp = +⁰(scope0$cap.n$0¹, x);
 //│   set scope0$cap.n$0¹ = tmp;
 //│   return runtime⁰.Unit⁰
@@ -294,9 +294,9 @@ resetCounter(41)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let reset, Capture$resetCounter;
 //│ define reset as fun reset⁰(resetCounter$cap: Capture$resetCounter⁰): ? {
-//│   let tmp: ?;
+//│   let tmp: Int⁰;
 //│   set tmp = +⁰(resetCounter$cap.x$0⁰, 1);
-//│   set resetCounter$cap.x$0⁰ = (tmp as! Int⁰);
+//│   set resetCounter$cap.x$0⁰ = tmp;
 //│   return runtime⁰.Unit⁰
 //│ };
 //│ define Capture$resetCounter as class Capture$resetCounter⁰ {
@@ -602,16 +602,12 @@ fun mixedIntoObject(x: Int32 | Str): Object = x
 // through `sccG`'s arm with a `Num`, so the cast is deferred to the exit.
 :soir
 fun sccF(): Int = sccG()
-fun sccG(): Num = sccF() + 1
+fun sccG(): Num = sccF() + 0.5
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define sccF⁰ as fun sccF¹(): Int⁰ {
 //│   return (sccG⁰() as! Int⁰)
 //│ };
-//│ define sccG¹ as fun sccG⁰(): Num⁰ {
-//│   let tmp: Int⁰;
-//│   set tmp = sccF¹();
-//│   return (+⁰(tmp, 1) as! Num⁰)
-//│ };
+//│ define sccG¹ as fun sccG⁰(): Num⁰ { let tmp: Int⁰; set tmp = sccF¹(); return +⁰(tmp, 0.5) };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let sccF_sccG;
@@ -628,7 +624,7 @@ fun sccG(): Num = sccF() + 1
 //│       1 =>
 //│         let tmp: Int⁰, exitResult: Num⁰;
 //│         set tmp = (sccF_sccG⁰(0) as! Int⁰);
-//│         set exitResult = (+⁰(tmp, 1) as! Num⁰);
+//│         set exitResult = +⁰(tmp, 0.5);
 //│         match sccF$deferred
 //│           true =>
 //│             return (exitResult as! Int⁰)
@@ -662,7 +658,7 @@ annotHelper(100000)
 //│   return (annotHelper⁰(n) as! Unit⁰)
 //│ };
 //│ define annotHelper¹ as fun annotHelper⁰(n: ?): ? {
-//│   let scrut: ?, tmp: ?;
+//│   let scrut: ?, tmp: Unknown;
 //│   set scrut = <=⁰(n, 0);
 //│   match scrut
 //│     true =>
@@ -683,7 +679,7 @@ annotHelper(100000)
 //│         set id = 1;
 //│         continue loopLabel
 //│       1 =>
-//│         let scrut: ?, tmp: ?;
+//│         let scrut: ?, tmp: Unknown;
 //│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>
@@ -729,14 +725,14 @@ sccHelper(100000)
 //│   return (r as! Int⁰)
 //│ };
 //│ define sccHelper¹ as fun sccHelper⁰(n: Int⁰): Num⁰ {
-//│   let scrut: ?, tmp: ?;
+//│   let scrut: ?, tmp: Int⁰;
 //│   set scrut = <=⁰(n, 0);
 //│   match scrut
 //│     true =>
 //│       return 0
 //│     else
 //│       set tmp = -⁰(n, 1);
-//│       return sccLoop¹((tmp as! Int⁰))
+//│       return sccLoop¹(tmp)
 //│   end
 //│ };
 //│ return sccHelper⁰(100000)
@@ -750,14 +746,14 @@ sccHelper(100000)
 //│         set id = 1;
 //│         continue loopLabel
 //│       1 =>
-//│         let scrut: ?, tmp: ?;
+//│         let scrut: ?, tmp: Int⁰;
 //│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>
 //│             return 0
 //│           else
 //│             set tmp = -⁰(param0, 1);
-//│             set param0 = (tmp as! Int⁰);
+//│             set param0 = tmp;
 //│             set id = 0;
 //│             continue loopLabel
 //│         end
@@ -787,7 +783,7 @@ useFn(curried(1))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Function⁰;
 //│ define curried⁰ as fun curried¹(a: Int⁰)(b: Int⁰): Int⁰ {
-//│   return (+⁰(a, b) as! Int⁰)
+//│   return +⁰(a, b)
 //│ };
 //│ define useFn⁰ as fun useFn¹(g: Function⁰): ? {
 //│   return g(1)
@@ -1347,7 +1343,7 @@ fun capturingLoop(n: Int, acc: Str) =
     capturingLoop(n - 1, h())
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): ? {
-//│   let scrut: ?, g: ?, h: ?, tmp: ?, tmp1: ?;
+//│   let scrut: ?, g: ?, h: ?, tmp: Int⁰, tmp1: ?;
 //│   set scrut = <=⁰(n, 0);
 //│   match scrut
 //│     true =>
@@ -1362,14 +1358,14 @@ fun capturingLoop(n: Int, acc: Str) =
 //│       set h = g;
 //│       set tmp = -⁰(n, 1);
 //│       set tmp1 = h();
-//│       return capturingLoop¹((tmp as! Int⁰), (tmp1 as! Str⁰))
+//│       return capturingLoop¹(tmp, (tmp1 as! Str⁰))
 //│   end
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): ? {
 //│   loop loopLabel:
-//│     let scrut: ?, tmp: ?, tmp1: ?, acc1: Str⁰;
+//│     let scrut: ?, tmp: Int⁰, tmp1: ?, acc1: Str⁰;
 //│     set acc1 = acc;
 //│     set scrut = <=⁰(n, 0);
 //│     match scrut
@@ -1383,7 +1379,7 @@ fun capturingLoop(n: Int, acc: Str) =
 //│         };
 //│         set tmp = -⁰(n, 1);
 //│         set tmp1 = g⁴();
-//│         set n = (tmp as! Int⁰);
+//│         set n = tmp;
 //│         set acc = (tmp1 as! Str⁰);
 //│         continue loopLabel
 //│     end

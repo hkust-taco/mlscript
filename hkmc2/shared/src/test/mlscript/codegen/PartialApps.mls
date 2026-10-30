@@ -108,25 +108,27 @@ i(print)(2)
 //│ ╙──      	        ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'i' expected at least 2 arguments but got 1
 
-// :re
+// The sum flows to every call of `i`'s argument, including the ill-arity `i(print)(2)` above,
+// whose application of that result is reported when this block resolves the sum.
+:e
 i((x, y, z) => x + y + z, 2)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.XX: 	i(print)(2)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Value of type 'Int' cannot be called like a function.
+//│ ║  l.+1: 	i((x, y, z) => x + y + z, 2)
+//│ ╙──      	               ^^^^^^^^^
 //│ = 3
 
 // :re
 :e
 i((...args) => [...args], _)(2)
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.XX: 	i(print)(2)
-//│ ║        	^^^^^^^^^^^
-//│ ╟── Tuple literal cannot be called like a function.
-//│ ║  l.+1: 	i((...args) => [...args], _)(2)
-//│ ║        	                   ^^^^
-//│ ╟── Tuple literal cannot be called like a function.
-//│ ║  l.XX: 	let i = _(0, 1, _)
-//│ ╙──      	         ^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Resolution error in application
 //│ ║  l.+1: 	i((...args) => [...args], _)(2)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Int' cannot be called like a function.
+//│ ║  l.XX: 	i((x, y, z) => x + y + z, 2)
+//│ ║        	               ^^^^^^^^^
 //│ ╟── Tuple literal cannot be called like a function.
 //│ ║  l.+1: 	i((...args) => [...args], _)(2)
 //│ ║        	                   ^^^^
