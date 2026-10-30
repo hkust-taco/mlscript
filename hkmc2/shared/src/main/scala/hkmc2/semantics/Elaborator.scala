@@ -377,6 +377,7 @@ object Elaborator:
         val bitor = assumeObject("bitor")
         val shl = assumeObject("shl")
         val try_catch = assumeObject("try_catch")
+        val plainField = assumeObject("plainField")
       object wasm extends VirtualModule(assumeBuiltinMod("wasm")):
         /** The nested modules of `wasm`, which group the instruction intrinsics by the family they emit, e.g.
           * `wasm.i32`.
@@ -905,6 +906,8 @@ extends Importer:
               case _ =>
                 raise(ErrorReport(msg"@jsSymbol requires one stable path to a val marked @annotations.fresh." -> tree.toLoc :: Nil))
                 N
+          case ctx.builtins.js.plainField =>
+            return S(Annot.PlainField()(tree.toLoc))
           case ctx.builtins.unsafe.bms =>
             return S(Annot.Unsafe()(tree.toLoc))
           case ctx.builtins.annotations.untyped =>
@@ -2838,7 +2841,7 @@ extends Importer:
               ,
               TermDefFlags.empty,
               p.modulefulness,
-              if isPublicField then Nil else Annot.Private :: Nil,
+              if isPublicField then p.annotations else Annot.Private :: Nil,
               N,
             )(p.toLoc, p.toLoc, S(ctx.scope))
             assert(p.fldSym.isEmpty)
@@ -2944,7 +2947,7 @@ extends Importer:
                 case p @ Param(flags = FldFlags(false, false, true, false, _, _)) => S(p)
                 // All flags are `false`.
                 case p @ Param(flags = FldFlags(false, false, false, false, _, _)) => S(p)
-                case Param(flags, sym, _, _) =>
+                case Param(flags = flags, sym = sym) =>
                   raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with modifiers: ${
                     flags.show(false)}" -> sym.toLoc :: Nil))
                   N
@@ -3042,7 +3045,7 @@ extends Importer:
                     sym,
                     ctsym,
                     allCtorPss,
-                    S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none)(tp.toLoc))),
+                    S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none, Nil)(tp.toLoc))),
                     S(resultType),
                     N,
                     TermDefFlags.empty,
@@ -3191,9 +3194,9 @@ extends Importer:
     if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id, erasure = N)
     else VarSymbol(id, erasedType = N, mut = true)
   
-  def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
+  def param(t: Tree, inUsing: Bool, inDataClass: Bool, inConstructor: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
-      case pt @ ParamTree(flags, id, sign, spd, modifiers) =>
+      case pt @ ParamTree(flags, id, sign, spd, modifiers, annotations) =>
         log(dbg"Elaborating ParamTree: ${pt}")
         val flg = flags.copy(isVal = flags.isVal || inDataClass)
         val (canonicalId, aliases) = symbolicSuffixBase(id.name) match
@@ -3209,7 +3212,13 @@ extends Importer:
         if newResolution then sig.foreach(registerSignature)
         val sym = VarSymbol(canonicalId, mut = false)
         sym.sourceAliases = aliases
-        val p = Param(flg, sym, sig, mfn)(t.toLoc)
+        // Constructor annotations describe the generated field; the parameter binding stays immutable.
+        val fieldAnnotations = annotations.flatMap(annot).filter:
+          case _: Annot.PlainField if inConstructor && flg.isVal => true
+          case annotation =>
+            raise(WarningReport(msg"This annotation is not supported on this parameter." -> annotation.toLoc :: Nil))
+            false
+        val p = Param(flg, sym, sig, mfn, fieldAnnotations)(t.toLoc)
         sym.decl = S(p)
         if newResolution then
           // Optional parameters admit null regardless of which calls we observe.
@@ -3318,7 +3327,7 @@ extends Importer:
         case hd :: tl =>
           val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam
-          param(hd, inUsing, inDataClass)(using ctx) match
+          param(hd, inUsing, inDataClass, inConstructor)(using ctx) match
           case R((p, spd, aliases)) =>
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))

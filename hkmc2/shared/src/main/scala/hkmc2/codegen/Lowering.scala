@@ -698,7 +698,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case ps :: rest =>
             val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N, mut = false))
             softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
-            val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
+            val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness, p.annotations)(p.toLoc))
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
             if ctorParamLists.isMls then
               val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
@@ -1025,7 +1025,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case S(sig) =>
         val params = sig.paramLists.head.zipWithIndex.map: (erasedType, i) =>
           val id = new Tree.Ident(if sym.unary then "arg" else s"arg${i + 1}")
-          Param(FldFlags.empty, VarSymbol(id, erasedType = erasedType, mut = false), N, Modulefulness.none)(id.toLoc)
+          Param(FldFlags.empty, VarSymbol(id, erasedType = erasedType, mut = false), N, Modulefulness.none, Nil)(id.toLoc)
         val ps = PlainParamList(params)(N)
         val bod = st.App(ref, st.Tup(params.map(p => st.SimpleRef(p.sym)(N)))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
@@ -2102,6 +2102,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()
       case Annot.Pure() => ()
+      case a: Annot.PlainField => target match
+        case td: TermDefinition if (td.k is syntax.MutVal) && td.owner.nonEmpty && !td.tsym.isPrivate => ()
+        case _ => warn(a, S(msg"Only public mutable fields may be marked @js.plainField."))
       case a: Annot.Fresh => target match
         case TermDefinition(k = syntax.ImmutVal) => ()
         case _ => warn(a, S(msg"Only immutable vals may be marked @annotations.fresh."))

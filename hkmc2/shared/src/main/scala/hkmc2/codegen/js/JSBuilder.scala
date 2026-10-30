@@ -618,10 +618,16 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
                   methods: Ls[FunDefn], ctor: Block,
                   mtdPrefix: Str, owner: InnerSymbol)(using Scope): Document =
+              def isPlainField(sym: TermSymbol): Bool =
+                // Refreshed symbols carry annotations on their current IR definition.
+                // Declared fields without initializers retain their source definition.
+                val annotations = sym.irDefn.map(_.annotations).orElse(sym.defn.map(_.annotations))
+                softAssert(annotations.nonEmpty, s"Missing definition for mutable field '${sym.nme}'")
+                annotations.exists(_.exists(_.isInstanceOf[Annot.PlainField]))
               // * Note: the non-mut-val parts of `pubFlds` are not used because in JS, fields are not declared
               val mutPubFields =
                 pubFlds.collect:
-                  case (_, sym) if sym.k is MutVal =>
+                  case (_, sym) if (sym.k is MutVal) && !isPlainField(sym) =>
                     sym -> TermSymbol(
                       syntax.LetBind, S(owner), Tree.Ident(sym.nme), erasure = sym.erasedType)
               // Explicit function companions already declare their private method slots.

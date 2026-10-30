@@ -473,6 +473,7 @@ declare module js {
     bitor
     shl
     try_catch
+  object plainField
 }
 
 declare module wasm {

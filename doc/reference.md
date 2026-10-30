@@ -195,6 +195,21 @@ set
   y += 2
 ```
 
+For a public mutable field, `@js.plainField` generates a JavaScript data property
+without a getter, setter, or private backing slot. It works on constructor fields
+and fields declared in class or object bodies:
+
+```mlscript
+class Counter(@js.plainField mut val value: Int)
+let counter = new mut Counter(0)
+set counter.value += 1
+```
+
+The field remains mutable for compiler analysis, so reads must observe writes.
+Unlike ordinary `mut val` fields, plain fields become read-only when their receiver
+is frozen. Use `new mut` when the field must remain writable.
+Overrides must preserve the presence or absence of `@js.plainField` on the inherited field.
+
 ### Top-Level Value (`val`)
 
 ```mlscript
