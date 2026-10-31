@@ -9,15 +9,21 @@ import semantics.Elaborator.{Ctx, State}
 import semantics.Term.*
 import hkmc2.Message.MessageContext
 
-/** The capability to inspect completed resolution. Created only after elaboration/resolution;
-  * executable lowering additionally requires this instance's whole-program pass to have finished.
+/** Computes the runtime representations and nominal class hierarchy that lowering needs from
+  * resolved source declarations. Each instance processes one program or prelude, initializes its
+  * symbols' erased signatures, and checks override compatibility. Lowering requires the instance
+  * that completed this pass for its program, so it can read those signatures without rerunning resolution.
   */
 final class Erasure private (using Config, Ctx, State)(using Raise):
   private given Erasure = this
   private var completed: Opt[Statement] = N
   private var overrideEdges: Ls[(TermSymbol, TermSymbol)] = Nil
 
-  /** Completed source-layout edges, including declarations without executable IR bodies. */
+  /** Returns the `(overriding, inherited)` declaration pairs whose source layouts preserve argument
+    * bindings, including abstract and external declarations. [[TargetOverrideChecks]] uses them to
+    * check the target's calling convention after lowering. Available only after this erasure pass
+    * completes; a pair can remain in the result even if its representation check reported an error.
+    */
   def validatedOverrideEdges: Ls[(TermSymbol, TermSymbol)] =
     assert(completed.nonEmpty, "Override edges are available only after completed erasure")
     overrideEdges
@@ -49,8 +55,18 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         case Unit :: Nil => ErasedType.Unit
         case _ => ErasedType.Unknown
 
+  /** Computes the runtime value representation denoted by a completed type interpretation.
+    * Follows aliases and references, discards type arguments, and preserves nominal types, unions,
+    * and function representations. Cycles, resolution errors, and unsupported shapes yield `Unknown`.
+    * [[OverrideLayout]] uses this to erase the result remaining after it extracts a callable's lists.
+    */
   private[codegen] def eraseResolved(resolution: TypeResolution): ErasedValueType = erase(resolution, Set.empty)
 
+  /** Computes the runtime value representation denoted by a source type signature. With the new
+    * resolver, elaboration must have registered the term's type interpretation and resolution must
+    * have completed; an unknown representation yields `S(Unknown)`. The legacy resolver reads the
+    * resolved syntax and can return `N` when it cannot derive a representation.
+    */
   private[codegen] def eraseSignature(sign: Term): Opt[ErasedValueType] =
     if config.language.useNewResolution then
       assert(sign.typeInterpretation.isDefined, "Signature was not registered during elaboration")
@@ -62,6 +78,12 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
       case N => sign.flatMap(eraseSignature)
 
+  /** Computes the representation to publish on a member symbol: a value type, a getter result,
+    * or a function's parameter lists and result. Parameter symbols must already have their erased
+    * types. Declared functions can obtain their lists from callable arrows; unannotated overrides
+    * can obtain their result from a layout-compatible inherited member that has completed erasure.
+    * For example, `declare fun f: (Int) -> Str` publishes one `Int` parameter and a `Str` result.
+    */
   private def erasedDefinitionSignature(td: TermDefinition): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
@@ -273,6 +295,12 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     overrideEdges = overrideChecks.validatedEdges
     val inheritedParams = overrideChecks.inheritedParameters
     val parameterSymbols = parameters.iterator.map(_.sym).toSet
+    /** Initializes a parameter's representation from its annotation or the joined representations
+      * of its inherited counterparts. A rest parameter with neither gets `Array`; an ordinary
+      * parameter with neither keeps no known representation. Recursion initializes local inherited
+      * parameters first, while `visiting` breaks inheritance cycles; pending inherited parameters
+      * contribute `Unknown`. Making a required inherited parameter optional also admits its null default.
+      */
     def eraseParameter(p: Param, visiting: Set[VarSymbol]): Unit =
       if !p.sym.isErased && !visiting(p.sym) then
         p.sym.erasedType = declaredType(p.sign, p.modulefulness).orElse:
@@ -308,6 +336,11 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     // Erase inherited results before their overrides, guarding against erroneous inheritance cycles.
     val definitions = statements.collect { case td: TermDefinition => td }.distinctBy(_.tsym)
     val definitionsBySymbol = definitions.map(td => td.tsym -> td).toMap
+    /** Publishes a declaration's erased signature after initializing its local inherited members,
+      * so an unannotated override can inherit their result representation. Imported members already
+      * have erased signatures. `visiting` breaks erroneous inheritance cycles; signature computation
+      * only consults inherited results whose members have completed erasure.
+      */
     def eraseDefinition(td: TermDefinition, visiting: Set[TermSymbol]): Unit =
       if !td.tsym.isErased && !visiting(td.tsym) then
         td.tsym.overriddenMembers.flatMap(definitionsBySymbol.get).foreach(eraseDefinition(_, visiting + td.tsym))
@@ -321,7 +354,9 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     completed = S(root)
 
 object Erasure:
-  /** Prelude declarations use the same pass even though they have no executable program. */
+  /** Assigns runtime representations and checks overrides in a resolved program or prelude,
+    * returning the completed erasure capability that lowering requires for this root.
+    */
   def apply(root: Statement)(using Config, Ctx, State)(using Raise): Erasure =
     val erasure = new Erasure
     erasure.run(root)

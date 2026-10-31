@@ -924,7 +924,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     val funcTy = declareClassFuncType(defn, suffix, params, results, thisType)
     predeclareClassFuncWithType(defn, suffix, params, results, sym, exportName, funcTy)
 
-  /** Registers a placeholder class-associated function using a predeclared Wasm function type. */
+  /** Registers a class-associated function's signature and placeholder body before generating its
+    * implementation. `params` supplies symbols and names in the order of `funcTy`'s physical slots;
+    * slot types come from `funcTy`, and `resultTypes` must agree with it. This lets an overriding
+    * method retain its own parameter identities while using its inherited virtual signature.
+    */
   private def predeclareClassFuncWithType(
       defn: ClsLikeDefn,
       suffix: Str,
@@ -2984,6 +2988,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   def block(t: Block)(using FunctionCtx, Raise, SessionExportCtx): Vector[Expr] =
     nonNestedScoped(t)(returningTerm)
 
+  /** Compiles a function's IR body to one Wasm expression and returns the context that records its
+    * parameters and locals. `resultType` and `paramTypes` describe the registered function signature,
+    * including the shared virtual signature for an override; body generation uses them for returns
+    * and parameter loads. [[FunctionCtx]] defines the fallback when either constraint is absent.
+    */
   def setupFunction(
       thisSym: Opt[InnerSymbol],
       params: LoweredParamList,

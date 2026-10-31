@@ -7,15 +7,29 @@ import semantics.Elaborator.{Ctx, State}
 import hkmc2.Message.MessageContext
 
 
-/** Check the additional calling-convention restrictions imposed by a compilation target.
-  * Source override checks establish argument binding and result compatibility before lowering.
-  * Wasm also calls an override directly through the introducing method's fixed physical slots,
-  * so an override's wider accepted inputs must fit those slots as well.
+/** Checks whether overrides can use their compilation target's runtime calling convention.
+  * Wasm gives every implementation of a virtual method the function signature of the method that
+  * introduced its slot. Direct calls to an override use that signature too, so every value the
+  * overriding parameter accepts must fit the inherited physical parameter slot.
+  *
+  * For example, overriding a parameter of type `Int` with one of type `Any` satisfies the source
+  * checks in [[OverrideChecks]], but a direct call could then supply a string to the inherited
+  * `Int` slot. This checker rejects that widening for Wasm. Other targets have no extra checks here.
   */
 object TargetOverrideChecks:
+  /** A parameter's erased representation and the source information used to explain a mismatch.
+    * Imported erased signatures retain parameter positions and types but no parameter names.
+    */
   private case class Parameter(name: Opt[Str], representation: Opt[ErasedValueType], loc: Opt[Loc])
+  /** The fixed parameter lists to compare at the calling boundary. `hasRest` records whether an
+    * executable definition also has a rest parameter, which requires a separate backend diagnostic.
+    */
   private case class Signature(params: Ls[Ls[Parameter]], hasRest: Bool)
 
+  /** Obtains a member's parameter representations after lowering. An executable definition supplies
+    * its lowered parameter lists and their source locations; a member without an IR body supplies
+    * the fixed lists published by erasure. The latter covers abstract, external, and prelude members.
+    */
   private def signature(symbol: TermSymbol): Signature = symbol.irFunDefn match
     case S(definition) => Signature(
       definition.params.map(_.params.map(p => Parameter(S(p.sym.nme), p.sym.erasedType, p.toLoc))),
@@ -27,12 +41,23 @@ object TargetOverrideChecks:
       val params = symbol.erasedSignature.toList.flatMap(_.paramLists)
       Signature(params.map(_.map(Parameter(N, _, symbol.toLoc))), false)
 
+  /** Reports Wasm parameter widening errors for `(overriding, inherited)` pairs supplied by
+    * [[Erasure.validatedOverrideEdges]]. Run this after lowering ordinary compilation units;
+    * prelude declarations have no bodies to lower, so their completed erasure supplies the signatures.
+    *
+    * Checks corresponding fixed slots only when both signatures have the same parameter-list
+    * arities and neither has a lowered rest parameter. The Wasm backend diagnoses unsupported rest
+    * parameters and incompatible physical arities when it constructs functions and virtual slots.
+    * Parameters that already fail the source representation check produce no additional error here.
+    * This method has no effect for other targets.
+    */
   def apply(edges: Ls[(TermSymbol, TermSymbol)])(using Config, Ctx, State, Raise): Unit =
     if summon[Config].target is CompilationTarget.Wasm then
       def within(actual: Opt[ErasedValueType], expected: Opt[ErasedValueType]): Bool =
         ErasedType.needsCast(actual.getOrElse(ErasedType.Unknown).canonicalize,
           expected.getOrElse(ErasedType.Unknown).canonicalize).contains(false)
       def describe(tpe: Opt[ErasedValueType]): Str = tpe.getOrElse(ErasedType.Unknown).canonicalize.describe
+      /** Treats a member with no parameter lists as one empty physical list for arity comparison. */
       def fixedLists(signature: Signature): Ls[Ls[Parameter]] = signature.params match
         case Nil => Nil :: Nil
         case params => params

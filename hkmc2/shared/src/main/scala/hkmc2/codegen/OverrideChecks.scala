@@ -7,11 +7,23 @@ import semantics.Elaborator.{Ctx, State}
 import hkmc2.Message.MessageContext
 
 
-/** Validate source declarations, including abstract and unused members that need not survive
-  * lowering. Parameter correspondence is established before erasure assigns inherited types;
-  * representation checks read those completed types afterwards. No metadata is added to symbols.
+/** Checks that member overrides preserve the argument bindings and runtime representations
+  * promised by their inherited declarations. The checks cover every supplied declaration,
+  * including abstract and unused members, before lowering changes their parameter lists.
+  *
+  * [[Erasure]] constructs one instance after resolution completes. Construction uses [[OverrideLayout]]
+  * to match each override's parameters with its inherited parameters, reports incompatible layouts,
+  * and retains the compatible pairs in [[validatedEdges]]. [[inheritedParameters]] supplies the
+  * correspondence that erasure needs to assign representations to unannotated overriding parameters.
+  * After erasure initializes the parameter and member signatures, [[checkRepresentations]] checks
+  * that the override accepts every inherited input and produces only permitted results.
   */
 final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, State, Erasure, Raise):
+  /** A declaration pair with compatible argument bindings, ready for representation checking.
+    * `parameters` pairs each overriding input with its inherited counterpart. The result fields
+    * hold representations obtained from declared callable arrows; an absent result means that
+    * [[checkRepresentations]] must read the member's completed erased signature.
+    */
   private case class Edge(overriding: TermDefinition, inherited: TermSymbol,
       parameters: Ls[(OverrideLayout.Input, OverrideLayout.Input)],
       result: Opt[ErasedValueType], inheritedResult: Opt[ErasedValueType])
@@ -36,15 +48,33 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
             Nil
           case Right(edge) => edge :: Nil
   
+  /** The `(overriding, inherited)` member pairs whose source layouts preserve argument bindings.
+    * Erasure uses these pairs to inherit result representations; [[TargetOverrideChecks]] uses
+    * them to check the target's calling convention. Layout validation does not establish representation
+    * compatibility: [[checkRepresentations]] reports those errors without removing pairs from this list.
+    */
   val validatedEdges: Ls[(TermSymbol, TermSymbol)] = edges.map(edge => edge.overriding.tsym -> edge.inherited)
   
-  /** Multiple possible ancestors all constrain an overriding input. Their representations are
-    * joined by Erasure, rather than choosing an ancestor according to resolution delivery order.
+  /** Maps each written overriding parameter to the inherited inputs that deliver the same argument,
+    * omitted-argument default, or rest slice. Each input refers either to a written parameter or to
+    * a representation obtained from a declared callable arrow. Erasure joins all these inherited
+    * representations when the overriding parameter has no annotation of its own. Parameters with
+    * no inherited counterpart have no entry.
     */
   val inheritedParameters: Map[VarSymbol, Ls[OverrideLayout.Input]] = edges.flatMap(_.parameters).flatMap:
     (param, inherited) => param.parameter.map(_.sym -> inherited)
   .groupMap(_._1)(_._2)
   
+  /** Reports representation incompatibilities for the declaration pairs that passed layout checking.
+    * An overriding parameter must hold every value its inherited counterpart accepts; an overriding
+    * result must fit the inherited result representation. Both comparisons canonicalize the types
+    * and require the value to fit without a cast, treating an absent representation as `Unknown`.
+    *
+    * For example, overriding `(Int) -> Any` with `(Any) -> Int` accepts every inherited input and
+    * returns a permitted result. [[TargetOverrideChecks]] imposes additional restrictions for Wasm.
+    * Run this after erasure initializes parameter and member signatures; pairs whose members have
+    * not both completed erasure are skipped.
+    */
   def checkRepresentations(): Unit =
     def within(actual: Opt[ErasedValueType], expected: Opt[ErasedValueType]): Bool =
       ErasedType.needsCast(actual.getOrElse(ErasedType.Unknown).canonicalize,
