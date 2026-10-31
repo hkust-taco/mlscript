@@ -176,7 +176,7 @@ OptionalField(()).read()
 // A virtual call with a supplied optional argument preserves its value.
 :expect 17
 class SuppliedBase() {
-  open fun pick(x?) = if x is null then 0 else x
+  open fun pick(x?: Int): Int = if x is null then 0 else x
 }
 class SuppliedChild() extends SuppliedBase() {
   override fun pick(x?) = if x is null then 0 else x
@@ -188,10 +188,10 @@ suppliedDispatch(SuppliedChild(), 17)
 
 :expect 1112
 class SuppliedBase() {
-  open fun pick(x?) = if x is null then 1 else x
+  open fun pick(x?: Int): Int = if x is null then 1 else x
 }
 class SuppliedChild() extends SuppliedBase() {
-  override fun pick(x) = super.pick(x)
+  override fun pick(x?) = super.pick(x)
 }
 fun suppliedDispatch(base: SuppliedBase, x) = base.pick(x) + base.pick()
 let c = SuppliedChild()

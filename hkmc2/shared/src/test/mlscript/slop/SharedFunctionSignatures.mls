@@ -239,7 +239,7 @@ let lifted = capturedVariadic(30)
 //│   return sum⁰(base, first, ...args)
 //│ };
 //│ define sum as fun sum⁰(base: Int⁰, first: Int⁰, ...args: Array⁰)(extra: Int⁰): Int⁰ {
-//│   let optional: Unknown, middle: ?, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Unknown, tmp6: Unknown, leadingArgs: Array⁰;
+//│   let optional: Unknown, middle: Array⁰, last: Int⁰, tmp2: Int⁰, tmp3: Unknown, tmp4: Unknown, tmp5: Unknown, tmp6: Unknown, leadingArgs: Array⁰;
 //│   do runtime⁰.checkVariadicArgs⁰("sum", 2, 1, args);
 //│   set leadingArgs = runtime⁰.Tuple⁰.slice⁰(args, 0, 1);
 //│   match leadingArgs

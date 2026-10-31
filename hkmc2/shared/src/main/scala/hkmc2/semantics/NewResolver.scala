@@ -190,7 +190,7 @@ class NewResolver:
         lhs match
           case Tup(fields) => fields.foreach:
             case Fld(_, term, _) => registerSignature(term)
-            case _ => ()
+            case Spd(_, term, _) => registerSignature(term)
           case single => registerSignature(single)
         registerSignature(rhs)
       case _ => ()

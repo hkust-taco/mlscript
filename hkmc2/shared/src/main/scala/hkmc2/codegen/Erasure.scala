@@ -9,15 +9,17 @@ import semantics.Elaborator.{Ctx, State}
 import semantics.Term.*
 import hkmc2.Message.MessageContext
 
-/** The capability to inspect completed resolution. Created only after elaboration/resolution;
-  * executable lowering additionally requires this instance's whole-program pass to have finished.
+/** Computes the runtime representations and nominal class hierarchy that lowering needs from
+  * resolved source declarations. Each instance processes one program or prelude, initializes its
+  * symbols' erased signatures, and checks override compatibility during construction. Lowering
+  * requires the instance constructed for its program, so it can read those completed signatures.
   */
-final class Erasure private (using Config, Ctx, State)(using Raise):
+final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
   private given Erasure = this
-  private var completed: Opt[Statement] = N
 
+  /** Checks that lowering uses the same source root whose signatures this instance initialized. */
   def requireCompleted(statement: Statement): Unit =
-    assert(completed.exists(_ is statement), "Lowering requires completed erasure of this program")
+    assert(root is statement, "Lowering requires completed erasure of this program")
 
   /** Read a delayed type in the context that completed erasure. Cloning can then
     * rename its symbol without retaining the entire cloning substitution in a thunk.
@@ -43,7 +45,19 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         case Unit :: Nil => ErasedType.Unit
         case _ => ErasedType.Unknown
 
-  private def eraseSignature(sign: Term): Opt[ErasedValueType] =
+  /** Computes the runtime value representation denoted by a completed type interpretation.
+    * Follows aliases and references, discards type arguments, and preserves nominal types, unions,
+    * and function representations. Cycles, resolution errors, and unsupported shapes yield `Unknown`.
+    * [[OverrideLayout]] uses this to erase the result remaining after it extracts a callable's lists.
+    */
+  private[codegen] def eraseResolved(resolution: TypeResolution): ErasedValueType = erase(resolution, Set.empty)
+
+  /** Computes the runtime value representation denoted by a source type signature. With the new
+    * resolver, elaboration must have registered the term's type interpretation and resolution must
+    * have completed; an unknown representation yields `S(Unknown)`. The legacy resolver reads the
+    * resolved syntax and can return `N` when it cannot derive a representation.
+    */
+  private[codegen] def eraseSignature(sign: Term): Opt[ErasedValueType] =
     if config.language.useNewResolution then
       assert(sign.typeInterpretation.isDefined, "Signature was not registered during elaboration")
       S(erase(sign.typeInterpretation.get, Set.empty))
@@ -54,32 +68,28 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       case S(msym) => S(ErasedType.ValueLike(rsc = S(false), msym))
       case N => sign.flatMap(eraseSignature)
 
-  /** Splits written arrows, retaining an unknown arity when a parameter tuple contains a spread. */
-  private def splitSignature(sign: Term): Opt[(Ls[Ls[Opt[ErasedValueType]]], Term)] =
-    def paramsOf(lhs: Term): Opt[Ls[Opt[ErasedValueType]]] = lhs match
-      case Tup(fields) =>
-        val noParams: Opt[Ls[Opt[ErasedValueType]]] = S(Nil)
-        fields.foldRight(noParams): (fld, acc) =>
-          (fld, acc) match
-            case (Fld(_, t, _), S(rest)) => S(eraseSignature(t) :: rest)
-            case _ => N
-      case single => S(eraseSignature(single) :: Nil)
-    sign match
-      case Forall(_, _, body) => splitSignature(body)
-      case FunTy(lhs, rhs, _) => paramsOf(lhs).map: ps =>
-        splitSignature(rhs) match
-          case S((rest, ret)) => (ps :: rest, ret)
-          case N => (ps :: Nil, rhs)
-      case _ => N
-
-  private def erasedDefinitionSignature(td: TermDefinition): Opt[ErasedValueType | ErasedCallableSignature] =
+  /** Computes the representation to publish on a member symbol: a value type, a getter result,
+    * or a function's parameter lists and result. Parameter symbols must already have their erased
+    * types. Declared functions can obtain their lists from callable arrows; unannotated overrides
+    * can obtain their result from an inherited member in `overrideEdges` that has completed erasure.
+    * Those pairs must already have passed source layout validation.
+    * For example, `declare fun f: (Int) -> Str` publishes one `Int` parameter and a `Str` result.
+    */
+  private def erasedDefinitionSignature(td: TermDefinition,
+      overrideEdges: Ls[(TermSymbol, TermSymbol)]): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
     // An ordinary paramless function instead returns the value denoted by the entire signature.
     val sigShape =
-      if (td.k is syntax.Fun) && td.params.isEmpty && declared then td.sign.flatMap(splitSignature)
+      if (td.k is syntax.Fun) && td.params.isEmpty && declared then
+        OverrideLayout.signature(td).toOption.flatMap: signature =>
+          // A rest tuple has no fixed physical arity. Preserve any preceding fixed lists,
+          // whose result remains a callable, and use the same normalized aliases as overrides.
+          val fixed = signature.params.takeWhile(_.variadic.isEmpty)
+          if fixed.isEmpty then N
+          else S((fixed.map(_.params.map(_.representation)),
+            if fixed.length < signature.params.length then S(ErasedType.Function(S(false))) else signature.result))
       else N
-    val resultSign = sigShape.map(_._2).orElse(td.resultSignature)
     def fullResult(res: TypeResolution, count: Int, seen: Set[TypeResolution]): ErasedValueType =
       if seen(res) then ErasedType.Unknown
       else if count == 0 then erase(res, Set.empty)
@@ -94,7 +104,12 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
           && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
       then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
-      else declaredType(resultSign, td.modulefulness)
+      else sigShape.fold(declaredType(td.resultSignature, td.modulefulness))(_._2).orElse:
+        // An unannotated override implements the inherited result. Async/generator annotations
+        // describe a body payload; their inherited callable result describes the wrapper.
+        if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then N
+        else overrideEdges.collectFirst { case (child, base) if (child is td.tsym) && base.isErased => base }
+          .flatMap(_.declaredResultType)
     // The body produces the payload; callers receive the wrapper object instead.
     // Resolution gives calls of such functions the same wrapper shapes.
     val result =
@@ -117,62 +132,76 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
       case _: syntax.Val => resultType
       case _ => N
 
-  private def run(root: Statement): Unit =
-    val visited = mutable.Set.empty[Identity[Statement]]
-    val statements = mutable.ArrayBuffer.empty[Statement]
-    val parameters = mutable.ArrayBuffer.empty[Param]
-    val parentConstructions = mutable.Set.empty[Identity[Statement]]
-    def parentHead(term: Term): Unit = if parentConstructions.add(Identity(term)) then term match
-      // Legacy resolution can expand a parent reference to an implicit constructor call.
-      // Follow only the class head; constructions in argument expressions are real allocations.
-      case ref: Resolvable if ref.expanded isnt ref => parentHead(ref.expanded)
-      case New(cls, _, _) => parentHead(cls)
-      case App(lhs, _) => parentHead(lhs)
-      case TyApp(lhs, _) => parentHead(lhs)
-      case _ => ()
-    def params(ps: ParamList): Unit = ps.foreach(parameters += _)
-    // Handler continuations and rejected class rest parameters can survive as references after their
-    // parameter list has been removed. The symbol retains the source declaration needed for erasure.
-    def referencedParameter(sym: VarSymbol): Unit = sym.decl match
-      case S(p: Param) =>
-        parameters += p
-        p.subTerms.foreach(visit)
-      case _ => ()
-    def visit(statement: Statement): Unit = if visited.add(Identity(statement)) then
-      statements += statement
-      statement match
-        case td: TermDefinition => td.params.foreach(params); td.tparams.foreach(_.foreach(parameters += _))
-        case cls: ClassLikeDef =>
-          cls.paramsOpt.foreach(params)
-          cls.auxParams.foreach: ps =>
-            params(ps)
-            ps.subTerms.foreach(visit)
-          cls.ext.foreach: parent =>
-            parentHead(parent)
-            visit(parent)
-          cls match
-            case pat: PatternDef =>
-              parameters ++= pat.parameters
-              pat.parameters.flatMap(_.subTerms).foreach(visit)
-              pat.pattern.subTerms.foreach(visit)
-            case _ => ()
-        case Lam(ps, _) => params(ps)
-        case Handle(_, _, _, _, definitions, _) => definitions.foreach: d =>
-          referencedParameter(d.resumeSym)
-          visit(d.td)
-        case Ref(sym: VarSymbol) => referencedParameter(sym)
-        case SimpleRef(sym: VarSymbol) => referencedParameter(sym)
-        case New(_, _, refinement) => refinement.foreach: (symbol, body) =>
-          symbol.defn.fold(visit(body.blk))(visit)
-        case Rcd(_, stats) => stats.foreach(visit)
+  /** The `(overriding, inherited)` declaration pairs whose source layouts preserve argument bindings,
+    * including abstract and external declarations. Construction initializes the whole program's
+    * representations before publishing these pairs for [[TargetOverrideChecks]] to use after lowering.
+    * A pair can remain in the result even if its representation check reported an error.
+    */
+  val validatedOverrideEdges: Ls[(TermSymbol, TermSymbol)] =
+    val (statements, parameters, parentConstructions) =
+      // One ordered identity set both bounds traversal of shared syntax and preserves diagnostic order.
+      // Only this collection step can extend the inputs to the subsequent erasure phases.
+      val visited = mutable.LinkedHashSet.empty[Identity[Statement]]
+      val parameters = List.newBuilder[Param]
+      val parentConstructions = mutable.Set.empty[Identity[Statement]]
+      def parentHead(term: Term): Unit = if parentConstructions.add(Identity(term)) then term match
+        // Legacy resolution can expand a parent reference to an implicit constructor call.
+        // Follow only the class head; constructions in argument expressions are real allocations.
+        case ref: Resolvable if ref.expanded isnt ref => parentHead(ref.expanded)
+        case New(cls, _, _) => parentHead(cls)
+        case App(lhs, _) => parentHead(lhs)
+        case TyApp(lhs, _) => parentHead(lhs)
         case _ => ()
-      statement.subStatements.foreach(visit)
-      // Legacy resolution may insert executable terms (for example implicit applications).
-      // Expanded nodes may share their children with the source tree; visit their identities only once.
-      statement match
-        case term: Resolvable => visit(term.expanded)
+      def params(ps: ParamList): Unit = ps.foreach(parameters += _)
+      // Handler continuations and rejected class rest parameters can survive as references after their
+      // parameter list has been removed. The symbol retains the source declaration needed for erasure.
+      def referencedParameter(sym: VarSymbol): Unit = sym.decl match
+        case S(p: Param) =>
+          parameters += p
+          p.subTerms.foreach(visit)
         case _ => ()
-    visit(root)
+      def visit(statement: Statement): Unit = if visited.add(Identity(statement)) then
+        statement match
+          case td: TermDefinition => td.params.foreach(params); td.tparams.foreach(_.foreach(parameters += _))
+          case cls: ClassLikeDef =>
+            cls.paramsOpt.foreach(params)
+            cls.auxParams.foreach: ps =>
+              params(ps)
+              ps.subTerms.foreach(visit)
+            cls.ext.foreach: parent =>
+              parentHead(parent)
+              visit(parent)
+            cls match
+              case pat: PatternDef =>
+                parameters ++= pat.parameters
+                pat.parameters.flatMap(_.subTerms).foreach(visit)
+                pat.pattern.subTerms.foreach(visit)
+              case _ => ()
+          case Lam(ps, _) => params(ps)
+          case Handle(defs = definitions) => definitions.foreach: d =>
+            referencedParameter(d.resumeSym)
+            visit(d.td)
+          case Ref(sym: VarSymbol) => referencedParameter(sym)
+          case SimpleRef(sym: VarSymbol) => referencedParameter(sym)
+          case New(_, _, refinement) => refinement.foreach: (symbol, body) =>
+            symbol.defn.fold(visit(body.blk))(visit)
+          case Rcd(_, stats) => stats.foreach(visit)
+          case _ => ()
+        statement.subStatements.foreach(visit)
+        // Legacy resolution may insert executable terms (for example implicit applications).
+        // Expanded nodes may share their children with the source tree; visit their identities only once.
+        statement match
+          case term: Resolvable => visit(term.expanded)
+          case _ => ()
+      visit(root)
+      (visited.iterator.map(_.value).toList, parameters.result(), parentConstructions.toSet)
+
+    val restParameters = statements.iterator.flatMap:
+      case td: TermDefinition => td.params.iterator
+      case cls: ClassLikeDef => cls.paramsOpt.iterator ++ cls.auxParams.iterator
+      case Lam(ps, _) => Iterator.single(ps)
+      case _ => Iterator.empty
+    .flatMap(_.variadic.iterator.map(_.param.sym)).toSet
 
     def parentClasses(parent: New): Ls[ClassLikeDef] =
       (parent.cls.resolvedSym.flatMap(_.asClsOrMod).flatMap(_.defn).toList :::
@@ -205,6 +234,7 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
     // Public members replace inherited runtime keys; private members retain their declaration identity.
     // A subclass cannot implement a private declaration by introducing the same name.
     type ImplementationKey = Either[TermSymbol, MemberKey]
+    // Cache effective members so subclasses share the work of checking common ancestors.
     // Definitions are keyed by identity: as case classes, they would otherwise
     // be hashed and compared through their entire bodies on every lookup.
     val effectiveMembers = mutable.Map.empty[Identity[ClassLikeDef], Map[ImplementationKey, TermSymbol]]
@@ -263,8 +293,40 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         (direct ::: app.shapes.toList.flatMap(constructed)).distinct.foreach(checkConstruction(app, _))
       case _ => ()
 
+    // Establish source argument correspondence before inheriting representations. Equal leading
+    // counts alone do not suffice: optional and trailing parameters can redistribute the inputs.
+    val overrideChecks = new OverrideChecks(statements.collect { case td: TermDefinition => td })
+    val inheritedParams = overrideChecks.inheritedParameters
+    val parameterSymbols = parameters.iterator.map(_.sym).toSet
+    /** Initializes a parameter's representation from its annotation or the joined representations
+      * of its inherited counterparts. A rest parameter with neither gets `Array`; an ordinary
+      * parameter with neither keeps no known representation. Recursion initializes local inherited
+      * parameters first, while `visiting` breaks inheritance cycles; pending inherited parameters
+      * contribute `Unknown`. Making a required inherited parameter optional also admits its null default.
+      */
+    def eraseParameter(p: Param, visiting: Set[VarSymbol]): Unit =
+      if !p.sym.isErased && !visiting(p.sym) then
+        p.sym.erasedType = declaredType(p.sign, p.modulefulness).orElse:
+          inheritedParams.get(p.sym) match
+            case S(inherited) =>
+              // Imported parameters are already erased; erroneous inheritance cycles can leave a
+              // local parameter pending. Do not read it or initialize a symbol twice on such a cycle.
+              inherited.flatMap(_.parameter).foreach: param =>
+                if parameterSymbols(param.sym) then eraseParameter(param, visiting + p.sym)
+              val types = inherited.map: input =>
+                input.parameter match
+                  case S(param) =>
+                    if param.sym.isErased then param.sym.erasedType.getOrElse(ErasedType.Unknown) else ErasedType.Unknown
+                  case N => input.representation.getOrElse(ErasedType.Unknown)
+              // Making a required slot optional additionally admits null on direct subclass calls.
+              // Its inherited argument channel is unchanged for calls through the base interface.
+              val defaults = if p.flags.opt && inherited.exists(!_.flags.opt) then ErasedType.Unknown :: Nil else Nil
+              S(ErasedType.Union.mk(types ::: defaults))
+            // Rest binding constructs an Array, including when lowering slices off trailing
+            // arguments. Use that representation unless a declared or inherited type supplies one.
+            case N => Option.when(restParameters(p.sym))(ErasedType.Array)
     parameters.foreach: p =>
-      if !p.sym.isErased then p.sym.erasedType = declaredType(p.sign, p.modulefulness)
+      eraseParameter(p, Set.empty)
       // Public fields have a BlockMemberSymbol; private/auxiliary constructor fields have a TermSymbol.
       // Their source signatures belong to the parameter, not to the synthesized field definition.
       val field = p.fldSym.flatMap:
@@ -273,17 +335,23 @@ final class Erasure private (using Config, Ctx, State)(using Raise):
         case _ => N
       field.foreach: sym =>
         if !sym.isErased then sym.initializeErasure(p.sym.erasedType)
-    statements.foreach:
-      case td: TermDefinition if !td.tsym.isErased => td.tsym.initializeErasure(erasedDefinitionSignature(td))
-      case _ => ()
+    // Retain the traversed declarations: handlers remove the resumption parameter list from them.
+    // Erase inherited results before their overrides, guarding against erroneous inheritance cycles.
+    val definitions = statements.collect { case td: TermDefinition => td }.distinctBy(_.tsym)
+    val definitionsBySymbol = definitions.map(td => td.tsym -> td).toMap
+    /** Publishes a declaration's erased signature after initializing its local inherited members,
+      * so an unannotated override can inherit their result representation. Imported members already
+      * have erased signatures. `visiting` breaks erroneous inheritance cycles; signature computation
+      * only consults inherited results whose members have completed erasure.
+      */
+    def eraseDefinition(td: TermDefinition, visiting: Set[TermSymbol]): Unit =
+      if !td.tsym.isErased && !visiting(td.tsym) then
+        td.tsym.overriddenMembers.flatMap(definitionsBySymbol.get).foreach(eraseDefinition(_, visiting + td.tsym))
+        td.tsym.initializeErasure(erasedDefinitionSignature(td, overrideChecks.validatedEdges))
+    definitions.foreach(eraseDefinition(_, Set.empty))
     statements.foreach:
       case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.initializeErasure(N)
       case _ => ()
-    completed = S(root)
-
-object Erasure:
-  /** Prelude declarations use the same pass even though they have no executable program. */
-  def apply(root: Statement)(using Config, Ctx, State)(using Raise): Erasure =
-    val erasure = new Erasure
-    erasure.run(root)
-    erasure
+    // Compare signatures only after every definition has completed erasure.
+    overrideChecks.checkRepresentations()
+    overrideChecks.validatedEdges

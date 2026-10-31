@@ -1,0 +1,86 @@
+:.
+
+
+// An unannotated override inherits an abstract declaration's unboxed parameters and result.
+// Both virtual dispatch and a direct call must use that calling convention.
+:noInline
+:expect 42
+abstract class Base() with
+  fun take(value: Int32): Int32
+class Child() extends Base() with
+  override fun take(value) = value
+fun dispatch(receiver: Base, value: Int32): Int32 = receiver.take(value)
+wasm.i32.add(dispatch(Child(), wasm.i32.const(40)), Child().take(wasm.i32.const(2)))
+//│ Wasm result:
+//│ = 42
+
+
+// Wasm's shared slot cannot accept a broader input through a direct call on the override.
+:ge
+class Consumer() with
+  open fun take(value: Int): Int = value
+class BroadConsumer() extends Consumer() with
+  override fun take(value: Any): Int = 0
+BroadConsumer().take("str")
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'take' receives values represented as 'Unknown', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as 'Int'
+//│ ║  l.+4: 	  override fun take(value: Any): Int = 0
+//│ ║        	                    ^^^^^^^^^^
+//│ ╟── The overridden member 'take' is defined here
+//│ ║  l.+2: 	  open fun take(value: Int): Int = value
+//│ ╙──      	           ^^^^
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// An override inherits the concrete base result while calling its implementation through super.
+:noInline
+:expect 42
+class NumberBase() with
+  open fun read(): Int32 = wasm.i32.const(41)
+class NumberChild() extends NumberBase() with
+  override fun read() = wasm.i32.add(super.read(), wasm.i32.const(1))
+fun readNumber(receiver: NumberBase): Int32 = receiver.read()
+readNumber(NumberChild())
+//│ Wasm result:
+//│ = 42
+
+
+// An optional override additionally accepts a missing argument on direct subclass calls.
+// Its default-capable representation must still fit the required base slot.
+:ge
+private class RequiredInputContract() with
+  open fun pick(value: Int): Int = value
+private class OptionalInput() extends RequiredInputContract() with
+  override fun pick(value?): Int = 0
+OptionalInput().pick()
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'pick' receives values represented as 'Unknown', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as 'Int'
+//│ ║  l.+4: 	  override fun pick(value?): Int = 0
+//│ ║        	                    ^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  open fun pick(value: Int): Int = value
+//│ ╙──      	           ^^^^
+//│ Wasm result:
+//│ = 0
+
+// An earlier worksheet block publishes the aliased callable contract without an IR body.
+// The importing override must retain that contract even though neither declaration is used.
+type DeclaredInput = (Int) -> Int
+declare class DeclaredInputContract {
+  declare fun pick: DeclaredInput
+}
+//│ Wasm result:
+//│ = {}
+
+:ge
+type WiderDeclaredInput = (Any) -> Int
+declare class WiderDeclaredInputContract extends DeclaredInputContract {
+  declare override fun pick: WiderDeclaredInput
+}
+//│ ╔══[COMPILATION ERROR] Parameter 1 of overriding member 'pick' receives values represented as 'Unknown', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as 'Int'
+//│ ║  l.+3: 	  declare override fun pick: WiderDeclaredInput
+//│ ║        	                       ^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.XX: 	  declare fun pick: DeclaredInput
+//│ ╙──      	              ^^^^
+//│ Wasm result:
+//│ = {}

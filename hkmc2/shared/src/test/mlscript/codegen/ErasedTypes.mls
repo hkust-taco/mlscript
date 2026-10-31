@@ -255,10 +255,10 @@ class Cell(mut val v: Int) with
 //│ end
 
 
-// A rest parameter has no annotation to erase, so both it and the list it binds stay `?`.
+// A rest parameter binds an Array even without an annotation; the unannotated result stays `?`.
 fun rest(a, ...xs) = xs
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define rest⁰ as fun rest¹(a: ?, ...xs: ?): ? { return xs }; end
+//│ define rest⁰ as fun rest¹(a: ?, ...xs: Array⁰): ? { return xs }; end
 
 
 // Closure capture (`:lift`): the captured local `n` is unannotated, so the generated capture class and its

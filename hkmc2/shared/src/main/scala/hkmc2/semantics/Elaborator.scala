@@ -2927,7 +2927,11 @@ extends Importer:
             assert(body.isEmpty)
             val d =
               given Ctx = newCtx
-              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_, Tpe)), N, annotations)(statementLoc, headerLoc)
+              val sign = rhs.map(term(_, Tpe))
+              // A declared callable can obtain its physical parameters through an alias.
+              // Register their types here, while this unit still owns the alias's syntax.
+              if newResolution then sign.foreach(registerSignature)
+              semantics.TypeDef(alsSym, sym, tps, sign, N, annotations)(statementLoc, headerLoc)
             alsSym.defn = S(d)
             d
         case Pat =>

@@ -1,0 +1,14 @@
+#lang(0.2.x)
+
+module LegacyOverrideDeclarations with
+  declare open class OptionalBase {
+    declare fun pick: (Int, Str?) -> Int
+  }
+  type Callable = (Int) -> Int
+  declare open class AliasedBase {
+    declare fun pick: Callable
+  }
+  type Identity[R] = R
+  declare open class CurriedBase {
+    declare fun pick: (Int) -> Identity[Callable]
+  }
