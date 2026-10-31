@@ -35,7 +35,7 @@ val charPrecList: List[Str] = List(
     "< >",
     "+ -",
     "* / %",
-    "~",
+    "~ ? #",
     "", // Precedence of application
     "", // Precedence of `new`
     // ".",
@@ -60,6 +60,9 @@ object Parser:
     charPrecList.zipWithIndex.flatMap {
       case (cs, i) => cs.filterNot(_ === ' ').map(_ -> (i + Keyword.maxPrec.get))
     }.toMap.withDefaultValue(Int.MaxValue)
+  
+  symbolicIdentifierChars.foreach: c =>
+    assert(precOf.contains(c), s"Symbolic character has no precedence: $c")
   
   // * Note: keywords without a specified right precedence are now assumed to have right precedence `CommaPrecNext`
   
