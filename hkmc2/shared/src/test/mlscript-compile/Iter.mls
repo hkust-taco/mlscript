@@ -4,77 +4,102 @@
 
 import "./Option.mls"
 import "./Stack.mls"
+import "./Predef.mls"
 
 open annotations { jsSymbol }
 open Option { Some, None }
 open Stack { Nil, Cons }
+open Predef { id"??" }
 
 
 module Iter with ...
 
-open class IterableBase with
-  @jsSymbol(Symbol.iterator) open fun iterator() = throw new Error("Not implemented: iterator()")
+open class IterableBase[A] with
+  @jsSymbol(Symbol.iterator) open fun iterator(): Iterator[A] = throw new Error("Not implemented: iterator()")
 
   // require that subclasses are immutable
-  fun toArray(): Array = [...this]
+  fun toArray(): Array[A] = [...this]
   
   let array = null
   
-  fun asArray: Array =
+  fun asArray: Array[A] =
     if array is null then
       set array = toArray() Object.freeze()
       array
     else array
   
   // * Functions that create a fresh new result
-  open fun at(idx: Int): Any = asArray.at(idx)
-  open fun concat(...xs): Any = asArray.concat(...xs)
-  fun copyWithin(...args) = asArray.copyWithin(...args)
-  fun entries() = asArray.entries()
-  fun every(...args) = asArray.every(...args)
-  fun filter(...args) = asArray.filter(...args)
-  fun find(...args) = asArray.find(...args)
-  fun findIndex(...args) = asArray.findIndex(...args)
-  fun findLast(...args) = asArray.findLast(...args)
-  fun findLastIndex(...args) = asArray.findLastIndex(...args)
-  fun flat(...args) = asArray.flat(...args)
-  fun flatMap(...args) = asArray.flatMap(...args)
-  fun forEach(...args) = asArray.forEach(...args)
-  fun includes(...args) = asArray.includes(...args)
-  fun indexOf(...args) = asArray.indexOf(...args)
-  fun join(...args) = asArray.join(...args)
-  fun keys() = asArray.keys()
-  fun lastIndexOf(...args) = asArray.lastIndexOf(...args)
-  fun map(...args) = asArray.map(...args)
-  fun reduce(...args) = asArray.reduce(...args)
-  fun reduceRight(...args) = asArray.reduceRight(...args)
-  open fun slice(...args): Any = asArray.slice(...args)
-  fun some(...args) = asArray.some(...args)
-  fun toLocaleString(...args) = asArray.toLocaleString(...args)
-  fun toReversed() = asArray.toReversed()
-  fun toSorted(...args) = asArray.toSorted(...args)
-  fun toSpliced(...args) = asArray.toSpliced(...args)
-  open fun toString() = asArray.toString()
+  // Omitted MLscript arguments bind null; supply the native defaults explicitly.
+  open fun at(idx: Int): A | unsafe.undefined = asArray.at(idx)
+  open fun concat(...xs: Array[A | Array[A]]): Iterable[A] = asArray.concat(...xs)
+  fun copyWithin(target: Int, start: Int, end?: Int): Array[A] =
+    asArray.copyWithin(target, start, end ?? length)
+  fun entries(): IterableIterator[[Int, A]] = asArray.entries()
+  fun every(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): Bool =
+    if thisArg is null then asArray.every(f) else asArray.every(f, thisArg)
+  fun filter(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): Array[A] =
+    if thisArg is null then asArray.filter(f) else asArray.filter(f, thisArg)
+  fun find(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): A | unsafe.undefined =
+    if thisArg is null then asArray.find(f) else asArray.find(f, thisArg)
+  fun findIndex(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): Int =
+    if thisArg is null then asArray.findIndex(f) else asArray.findIndex(f, thisArg)
+  fun findLast(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): A | unsafe.undefined =
+    if thisArg is null then asArray.findLast(f) else asArray.findLast(f, thisArg)
+  fun findLastIndex(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): Int =
+    if thisArg is null then asArray.findLastIndex(f) else asArray.findLastIndex(f, thisArg)
+  fun flat(depth?: Int): Array[Any] = asArray.flat(depth ?? 1)
+  fun flatMap[B](f: (A, drop Int, drop Array[A]) -> (B | Array[B]), thisArg?): Array[B] =
+    if thisArg is null then asArray.flatMap(f) else asArray.flatMap(f, thisArg)
+  fun forEach(f: (A, drop Int, drop Array[A]) -> Any, thisArg?): unsafe.undefined =
+    if thisArg is null then asArray.forEach(f) else asArray.forEach(f, thisArg)
+  fun includes(value: A, fromIndex?: Int): Bool = asArray.includes(value, fromIndex ?? 0)
+  fun indexOf(value: A, fromIndex?: Int): Int = asArray.indexOf(value, fromIndex ?? 0)
+  fun join(separator?: Str): Str = asArray.join(separator ?? ",")
+  fun keys(): IterableIterator[Int] = asArray.keys()
+  fun lastIndexOf(value: A, fromIndex?: Int): Int =
+    if fromIndex is null then asArray.lastIndexOf(value) else asArray.lastIndexOf(value, fromIndex)
+  fun map[B](f: (A, drop Int, drop Array[A]) -> B, thisArg?): Array[B] =
+    if thisArg is null then asArray.map(f) else asArray.map(f, thisArg)
+  // Match Array's explicitly initialized accumulator contract.
+  fun reduce[B](f: (B, A, drop Int, drop Array[A]) -> B, initial: B): B = asArray.reduce(f, initial)
+  fun reduceRight[B](f: (B, A, drop Int, drop Array[A]) -> B, initial: B): B = asArray.reduceRight(f, initial)
+  open fun slice(start?: Int, end?: Int): Iterable[A] =
+    asArray.slice(start ?? 0, end ?? length)
+  fun some(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): Bool =
+    if thisArg is null then asArray.some(f) else asArray.some(f, thisArg)
+  fun toLocaleString(locales?: Str | Array[Str], options?: Any): Str =
+    asArray.toLocaleString(locales ?? unsafe.undefined, options ?? unsafe.undefined)
+  fun toReversed(): Array[A] = asArray.toReversed()
+  fun toSorted(compare?: (A, A) -> Num): Array[A] =
+    if compare is null then asArray.toSorted() else asArray.toSorted(compare)
+  fun toSpliced(start: Int, deleteCount?: Int, ...items: Array[A]): Array[A] =
+    asArray.toSpliced(start, deleteCount ?? length, ...items)
+  open fun toString(): Str = asArray.toString()
   // `with` is an mls keyword
-  fun id"with"(...args) = asArray.with(...args)
+  fun id"with"(index: Int, value: A): Array[A] = asArray.with(index, value)
   
   // * Functions that modify the array in place
-  fun fill(...args) = toArray().fill(...args)
-  fun pop() = toArray().pop()
-  fun push(...args) = toArray().push(...args)
-  fun reverse() = toArray().reverse()
-  fun shift() = toArray().shift()
-  fun sort(...args) = toArray().sort(...args)
-  fun splice(...args) = toArray().splice(...args)
-  fun unshift(...args) = toArray().unshift(...args)
+  fun fill(value: A, start?: Int, end?: Int): Array[A] =
+    let result = toArray()
+    result.fill(value, start ?? 0, end ?? result.length)
+  fun pop(): A | unsafe.undefined = toArray().pop()
+  fun push(...items: Array[A]): Int = toArray().push(...items)
+  fun reverse(): Array[A] = toArray().reverse()
+  fun shift(): A | unsafe.undefined = toArray().shift()
+  fun sort(compare?: (A, A) -> Num): Array[A] =
+    if compare is null then toArray().sort() else toArray().sort(compare)
+  fun splice(start: Int, deleteCount?: Int, ...items: Array[A]): Array[A] =
+    let result = toArray()
+    result.splice(start, deleteCount ?? result.length, ...items)
+  fun unshift(...items: Array[A]): Int = toArray().unshift(...items)
   
-  open fun length = asArray.length
-  fun values() = iterator()
+  open fun length: Int = asArray.length
+  fun values(): Iterator[A] = iterator()
 
 // * Implements the `IterableImpl` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol
-class IterableImpl(mk: () -> Iterator) extends IterableBase with
-  @jsSymbol(Symbol.iterator) override fun iterator() = mk()
+class IterableImpl[A](mk: () -> Iterator[A]) extends IterableBase[A] with
+  @jsSymbol(Symbol.iterator) override fun iterator(): Iterator[A] = mk()
 
 // * Implements the `Iterator` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol

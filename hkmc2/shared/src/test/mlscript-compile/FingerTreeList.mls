@@ -2,9 +2,11 @@
 
 import "./Option.mls"
 import "./Iter.mls"
+import "./Predef.mls"
 
 open Option
 open Iter
+open Predef { id"??" }
 open FingerTreeList
 
 fun normIdx(idx, len) =
@@ -31,8 +33,8 @@ fun getNodeSize(node) = if node is
 object Nil
 data class View[T](e1: T, rest: FingerTree[T])
 
-class FingerTree[T] extends IterableBase with
-  @annotations.jsSymbol(Symbol.iterator) override fun iterator() =
+class FingerTree[T] extends IterableBase[T] with
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator(): Iterator[T] =
     let current = this
     IteratorImpl of () => if popFront(current) is
       Nil then Result.Done
@@ -42,20 +44,19 @@ class FingerTree[T] extends IterableBase with
   open override fun toString(): Str = "[" + this joined(", ") + "]"
   override fun length: Int = FingerTreeList.length(this)
   override fun at(i: Int): T = get(i)(this)
-  override fun concat(other: FingerTree[T] | Array[T]): FingerTree[T] = FingerTreeList.concat(this, other)
-  override fun slice(beg: Int, end: Int): FingerTree[T] = 
-    let =beg
-    let =end
+  override fun concat(...xs: Array[FingerTree[T] | Array[T]]): FingerTree[T] =
+    xs.reduce((acc, other) => FingerTreeList.concat(acc, other), this)
+  override fun slice(start?: Int, end?: Int): FingerTree[T] = 
     let len = this.length
-    set beg = normIdxSlice(beg, len)
-    set end = normIdxSlice(end, len)
+    let beg = normIdxSlice(start ?? 0, len)
+    let fin = normIdxSlice(end ?? len, len)
     if beg >= len do
       return Empty
-    if end >= len do
-      set end = len
-    if end <= beg do
+    if fin >= len do
+      set fin = len
+    if fin <= beg do
       return Empty
-    FingerTreeList.dropLeftRight(beg, len - end)(this)
+    FingerTreeList.dropLeftRight(beg, len - fin)(this)
 
 object Empty extends FingerTree[Nothing] with
   override fun toString(): Str = "[" + this joined(", ") + "]"

@@ -9,9 +9,11 @@
 
 import "./Option.mls"
 import "./Iter.mls"
+import "./Predef.mls"
 
 open Option
 open Iter
+open Predef { id"??" }
 open FingerTreeList_StressTest
 
 fun normIdx(idx, len) =
@@ -38,7 +40,7 @@ fun getNodeSize(node) = if node is
 object Nil
 data class View[T](e1: T, rest: FingerTree[T])
 
-class FingerTree[T] extends IterableBase with
+class FingerTree[T] extends IterableBase[T] with
   @annotations.jsSymbol(Symbol.iterator) override fun iterator() =
     let current = this
     IteratorImpl of () => if popFront(current) is
@@ -49,20 +51,27 @@ class FingerTree[T] extends IterableBase with
   open override fun toString() = "[" + this joined(", ") + "]"
   override fun length = FingerTreeList_StressTest.length(this)
   override fun at(i) = get(i)(this)
-  override fun concat(other) = FingerTreeList_StressTest.concat(this, other)
-  override fun slice(beg, end) = 
-    let =beg
-    let =end
+  // TODO: Array.reduce's generic accumulator triggers inconsistent receiver-parent
+  // shapes during unannotated inference (see slop/GenericParentSelf.mls).
+  // Keep the loop until that resolver bug is fixed.
+  override fun concat(...xs) =
+    let result = this
+    let idx = 0
+    while idx < xs.length do
+      set result = FingerTreeList_StressTest.concat(result, xs.at(idx))
+      set idx = idx + 1
+    result
+  override fun slice(start?, end?) = 
     let len = this.length
-    set beg = normIdxSlice(beg, len)
-    set end = normIdxSlice(end, len)
+    let beg = normIdxSlice(start ?? 0, len)
+    let fin = normIdxSlice(end ?? len, len)
     if beg >= len do
       return Empty
-    if end >= len do
-      set end = len
-    if end <= beg do
+    if fin >= len do
+      set fin = len
+    if fin <= beg do
       return Empty
-    FingerTreeList_StressTest.dropLeftRight(beg, len - end)(this)
+    FingerTreeList_StressTest.dropLeftRight(beg, len - fin)(this)
 
 object Empty extends FingerTree[Nothing] with
   override fun toString() = "[" + this joined(", ") + "]"

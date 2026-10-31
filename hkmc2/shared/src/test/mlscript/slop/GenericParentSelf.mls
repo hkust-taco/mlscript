@@ -1,0 +1,14 @@
+:.
+
+// TODO: Passing this through Array.reduce's generic accumulator triggers the
+// resolver's receiver-parent identity assertion, even with an empty input.
+// This reproduces the failure in FingerTreeList_StressTest.concat without recursion.
+:fixme
+class Base[A]
+class Tree[A] extends Base[A] with
+  fun concat(...xs) = xs.reduce((acc, other) => acc, this)
+(new Tree[Int]).concat()
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:4678'
+//│ ╟── The compilation result may be incorrect.
+//│ ╙── This is a compiler bug; please report it to the maintainers.
+//│ = Tree
