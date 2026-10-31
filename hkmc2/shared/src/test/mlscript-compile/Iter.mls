@@ -96,6 +96,13 @@ open class IterableBase[A] with
   open fun length: Int = asArray.length
   fun values(): Iterator[A] = iterator()
 
+// Materialization guarantees indexing; a slice may already be an eager collection.
+type LazyIterable[A] = IterableBase[A] & {
+  materialize: () -> Indexable[A]
+  concat: (...Array[Indexable[A]]) -> LazyIterable[A]
+  slice: (Int?, Int?) -> IterableBase[A]
+}
+
 // * Implements the `IterableImpl` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol
 class IterableImpl[A](mk: () -> Iterator[A]) extends IterableBase[A] with

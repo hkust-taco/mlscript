@@ -34,7 +34,7 @@ fun normIdxSlice(i, len) =
     else 0
   else i
 
-fun sliceHelper[A](start: Int | null, end: Int | null, arr: Indexable[A]) =
+fun sliceHelper[A](start: Int | null, end: Int | null, arr: Indexable[A]): IterableBase[A] =
   let len = arr.length
   let beg = normIdxSlice(start ?? 0, len)
   let fin = normIdxSlice(end ?? len, len)
@@ -57,7 +57,7 @@ fun sliceHelper[A](start: Int | null, end: Int | null, arr: Indexable[A]) =
 class LazyFT[A] extends IterableBase[A] with
 
   open override fun toString(): Str = "[" + this joined(", ") + "]"
-  open override fun concat(...xs: Array[Indexable[A]]): Splice[A] = concatHelper(mut [SpliceMarker, this], this.length, ...xs)
+  open override fun concat(...xs: Array[Indexable[A]]): LazyIterable[A] = concatHelper(mut [SpliceMarker, this], this.length, ...xs)
 
 class View[A](val underlying: Indexable[A], val start: Int, val end: Int) extends LazyFT[A] with
 
@@ -77,7 +77,7 @@ class View[A](val underlying: Indexable[A], val start: Int, val end: Int) extend
     if idx < -length || idx >= length do
       throw RangeError("View.at: Index out of bounds")
     underlying.at(normIdx(idx, length) + start)
-  override fun slice(start?: Int, end?: Int) = sliceHelper(start, end, this)
+  override fun slice(start?: Int, end?: Int): IterableBase[A] = sliceHelper(start, end, this)
 
   val len = underlying.length - start - end
   override fun length: Int = len
@@ -122,8 +122,8 @@ class Splice[A](val bits: Array, val len: Int) extends LazyFT[A] with
 
   override fun at(idx: Int): A = materialize().at(idx)
   // called on eager spreads in matches
-  override fun slice(start?: Int, end?: Int) = sliceHelper(start, end, this)
-  override fun concat(...xs: Array[Indexable[A]]): Splice[A] =
+  override fun slice(start?: Int, end?: Int): IterableBase[A] = sliceHelper(start, end, this)
+  override fun concat(...xs: Array[Indexable[A]]): LazyIterable[A] =
     if materialized === null 
     then concatHelper(mut [SpliceMarker, this], len, ...xs)
     else concatHelper(mut [SpliceMarker, materialized], len, ...xs)   
@@ -135,9 +135,9 @@ class Splice[A](val bits: Array, val len: Int) extends LazyFT[A] with
 module LazyFingerTree with...
 
 
-fun mk[A](...args: Array[A]): View[A] = View of FingerTreeList.mk(...args), 0, 0
-fun concat[A](...args: Array[Indexable[A]]): Splice[A] = concatHelper(mut [], 0, ...args)
-fun dropLeftRight[A](beg: Int, fin: Int)(xs: Indexable[A]) =
+fun mk[A](...args: Array[A]): LazyIterable[A] = View of FingerTreeList.mk(...args), 0, 0
+fun concat[A](...args: Array[Indexable[A]]): LazyIterable[A] = concatHelper(mut [], 0, ...args)
+fun dropLeftRight[A](beg: Int, fin: Int)(xs: Indexable[A]): IterableBase[A] =
   if beg < 0 || fin < 0 do
     throw RangeError("LazyFingerTree.dropLeftRight: indices must be non-negative")
   if beg > xs.length || fin > xs.length do
@@ -155,7 +155,7 @@ fun equals(xs: Indexable, ys: Indexable) =
 // The following functions are not meant for users; it's meant referred to by Runtime.mls
 // TODO: use `LazyFingerTree.internals.concat` when this is implemented
 
-fun __concat(...args) = 
+fun __concat(...args): LazyIterable[Any] = 
   let len = 0
   let idx = 0
   while (idx < args.length) do
