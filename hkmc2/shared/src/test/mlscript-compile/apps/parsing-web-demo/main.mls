@@ -136,7 +136,7 @@ let errorDisplayStyle = """
 class CollapsibleTree extends HTMLElement with
   fun connectedCallback() =
     let rawText = this.textContent
-    set this.textContent = ""
+    @unsafe set this.textContent = ""
     let treeData = parseIndentedText(rawText)
     let treeElement = createDetailsTree(treeData)
     this.appendChild(treeElement)

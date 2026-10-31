@@ -5,7 +5,7 @@
 class Foo with
   val x = 0
   fun change =
-    set x += 1
+    @unsafe set x += 1
 
 
 // Dynamic receivers allow these tests to add fields while retaining runtime checks.
@@ -111,7 +111,7 @@ class Foo(val x)
 let f = new Foo(0)
 //│ f = Foo(0)
 
-set f.x = 1
+@unsafe set f.x = 1
 
 :expect 0
 f.x
@@ -121,7 +121,7 @@ f.x
 let f = new mut Foo(0)
 //│ f = Foo(0)
 
-set f.x = 1
+@unsafe set f.x = 1
 
 :expect 1
 f.x

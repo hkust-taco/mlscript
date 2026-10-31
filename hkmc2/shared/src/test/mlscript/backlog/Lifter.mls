@@ -82,6 +82,7 @@ test(2)
 
 :todo
 fun foo(x, y) =
+  let =y
   module M with
     val test = 2
     fun foo() =
@@ -89,7 +90,7 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.+2: 	  module M with
+//│ ║  l.+3: 	  module M with
 //│ ╙──      	         ^
 
 :expect 14
@@ -97,6 +98,7 @@ foo(10, 0)
 //│ = 14
 
 fun foo(x, y) =
+  let =y
   module M with
     fun foo() =
       set y = 2
@@ -104,7 +106,7 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.+2: 	  module M with
+//│ ║  l.+3: 	  module M with
 //│ ╙──      	         ^
 
 :expect 12

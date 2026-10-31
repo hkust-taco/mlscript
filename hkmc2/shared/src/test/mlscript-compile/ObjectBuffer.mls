@@ -43,7 +43,7 @@ module ObjectBuffer with
           // compute closest power of 2 enough for 2 * needed
           Math.pow(2, Math.ceil(Math.log2(needed)) + 1)
       set
-        buf.length = newLen
+        @unsafe buf.length = newLen
       // Add the new block to head of free list
       _free(oldLen, newLen - oldLen)
 

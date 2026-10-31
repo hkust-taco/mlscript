@@ -1,0 +1,64 @@
+:.
+
+// Repeated observations of this must share the same generic parent template.
+// Array.reduce instantiates its accumulator even when the input is empty.
+:expect Tree
+class Base[A]
+class Tree[A] extends Base[A] with
+  fun concat(...xs) = xs.reduce((acc, other) => acc, this)
+(new Tree[Int]).concat()
+//│ = Tree
+
+#lang(strictResolution: true, eagerResolution: true)
+
+// Different constructor arguments and repeated method calls reuse that template.
+:expect true
+let ints = new Tree[Int]
+let strings = new Tree[Str]
+ints.concat() === ints && strings.concat(ints) === strings
+  && ints.concat(strings).concat() === ints
+//│ = true
+//│ ints = Tree
+//│ strings = Tree
+
+// Imported receiver shapes must use the consuming graph's generic activations.
+:expect true
+import "../../mlscript-compile/GenericLibrary.mls"
+let importedInts = new GenericLibrary.Child[Int](1)
+let importedStrings = new GenericLibrary.Child[Str]("two")
+importedInts.retain() === importedInts && importedStrings.retain(importedInts) === importedStrings
+  && importedInts.retain(importedStrings).retain() === importedInts
+//│ = true
+//│ importedInts = Child(_)
+//│ importedStrings = Child(_)
+
+// Inherited field types still follow each receiver's type arguments.
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Parent[A](val item: A)
+class Child[A](item: A) extends Parent[A](item) with
+  fun retain() = [].reduce((acc, other) => acc, this)
+[(new Child[First](First(1))).retain().item.first,
+ (new Child[Second](Second(2))).retain().item.second]
+//│ = [1, 2]
+
+:e
+(new Child[First](First(1))).retain().item.second
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	(new Child[First](First(1))).retain().item.second
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'First' does not contain member 'second'
+//│ ║  l.+1: 	(new Child[First](First(1))).retain().item.second
+//│ ╙──      	           ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Parent templates retain binders from enclosing generic functions too.
+:expect 3
+private fun make[A](item: A) =
+  class Parent(val value: A)
+  class Child(item: A) extends Parent(item) with
+    fun retain() = [].reduce((acc, other) => acc, this)
+  (new Child(item)).retain()
+make(3).value
+//│ = 3

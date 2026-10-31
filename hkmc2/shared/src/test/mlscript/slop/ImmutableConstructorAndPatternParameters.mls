@@ -1,0 +1,323 @@
+:.
+:js
+:checkIR
+
+open annotations
+
+
+// Constructor inputs stay immutable in the body and in captured methods.
+:ge
+class HeaderWrite(x) with
+  set x = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'x'
+//│ ║  l.+2: 	  set x = 1
+//│ ║        	      ^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	class HeaderWrite(x) with
+//│ ╙──      	                  ^
+
+:ge
+class AuxiliaryWrite with
+  constructor(x)
+  set x = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+3: 	  set x = 1
+//│ ║        	      ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  constructor(x)
+//│ ╙──      	              ^
+
+:ge
+class CapturedWrite with
+  constructor(x)(y?)
+  fun update() = () => set y = x
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'y'
+//│ ║  l.+3: 	  fun update() = () => set y = x
+//│ ║        	                           ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  constructor(x)(y?)
+//│ ╙──      	                 ^
+
+:e
+class AuxiliaryRedefine with
+  constructor(x)
+  x = 1
+//│ ╔══[COMPILATION ERROR] Symbol 'x' is not a local variable and cannot be explicitly initialized
+//│ ║  l.+3: 	  x = 1
+//│ ║        	  ^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  constructor(x)
+//│ ╙──      	              ^
+
+
+// Captured class parameters remain immutable when stored in private fields.
+:ge
+class HeaderCapture(x) with
+  fun update() = () => set x += 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'x'
+//│ ║  l.+2: 	  fun update() = () => set x += 1
+//│ ║        	                           ^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	class HeaderCapture(x) with
+//│ ╙──      	                    ^
+
+:e
+class HeaderRedefine(x) with
+  x = 1
+//│ ╔══[COMPILATION ERROR] Symbol 'x' is not a local variable and cannot be explicitly initialized
+//│ ║  l.+2: 	  x = 1
+//│ ║        	  ^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	class HeaderRedefine(x) with
+//│ ╙──      	                     ^
+
+// Explicit fields keep the existing mutability of the receiver.
+:expect 1
+class PublicHeader(val x)
+let publicHeader = new mut PublicHeader(0)
+@unsafe set publicHeader.x = 1
+publicHeader.x
+//│ = 1
+//│ publicHeader = PublicHeader(1)
+
+:expect 1
+class PublicAuxiliary with
+  constructor(val x)
+let publicAuxiliary = new mut PublicAuxiliary(0)
+@unsafe set publicAuxiliary.x = 1
+publicAuxiliary.x
+//│ = 1
+//│ publicAuxiliary = PublicAuxiliary { x: 1 }
+
+
+// Explicit copies give each instance its own mutable state for both parameter lists.
+:noInline
+:expect [[2, 11], [3, 12], [21, 31], [4, 13]]
+class Copies(first) with
+  constructor(second)
+  let =first
+  let =second
+  fun next() =
+    set first += 1
+    set second += 1
+    [first, second]
+let a = new mut Copies(1)(10)
+let b = new mut Copies(20)(30)
+[a.next(), a.next(), b.next(), a.next()]
+//│ = [[2, 11], [3, 12], [21, 31], [4, 13]]
+//│ a = Copies(_)
+//│ b = Copies(_)
+
+
+// Mutable fields are separate from the immutable incoming constructor arguments.
+// FIXME: flow analysis cannot track an auxiliary field alongside a main parameter list.
+:fixme
+:expect [10, 3]
+class MutableFields(mut val x: Int) with
+  constructor(mut val y: Int)
+  fun update() =
+    set x += 1
+    set y += 1
+let fields = new mut MutableFields(1)(2)
+fields.update()
+set fields.x = 10
+[fields.x, fields.y]
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
+
+
+// Both forms of explicit mutable field still support writes.
+:expect [2, 3]
+class MutableHeader(mut val x: Int) with
+  fun update() = set x += 1
+class MutableAuxiliary with
+  constructor(mut val x: Int)
+  fun update() = set x += 1
+let mutableHeader = new mut MutableHeader(1)
+let mutableAuxiliary = new mut MutableAuxiliary(2)
+mutableHeader.update()
+mutableAuxiliary.update()
+[mutableHeader.x, mutableAuxiliary.x]
+//│ = [2, 3]
+//│ mutableAuxiliary = MutableAuxiliary
+//│ mutableHeader = MutableHeader(2)
+
+
+// Plain auxiliary parameters stay lexical and remain available to methods.
+class ReadOnly with
+  constructor(x: Int)
+  fun read() = x
+
+:expect 42
+new ReadOnly(42).read()
+//│ = 42
+
+:e
+new ReadOnly(42).x
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	new ReadOnly(42).x
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── Instance of class 'ReadOnly' does not contain member 'x'
+//│ ║  l.+1: 	new ReadOnly(42).x
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Pattern inputs and declared extraction parameters cannot be overwritten in guards.
+:ge
+// FIXME: the IR checker finds shared parameter symbols in generated pattern methods.
+:fixme
+pattern WritePattern(pattern P) = P where {set P = P, true}
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'P'
+//│ ║  l.+1: 	pattern WritePattern(pattern P) = P where {set P = P, true}
+//│ ║        	                                               ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	pattern WritePattern(pattern P) = P where {set P = P, true}
+//│ ╙──      	                             ^
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'P'
+//│ ║  l.+1: 	pattern WritePattern(pattern P) = P where {set P = P, true}
+//│ ║        	                                               ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	pattern WritePattern(pattern P) = P where {set P = P, true}
+//│ ╙──      	                             ^
+//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol P⁰ is bound more than once
+//│ ║  l.+1: 	pattern WritePattern(pattern P) = P where {set P = P, true}
+//│ ╙──      	                             ^
+
+:ge
+pattern WriteExtraction(value) = (Int as value) where {set value = 0, true}
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+1: 	pattern WriteExtraction(value) = (Int as value) where {set value = 0, true}
+//│ ║        	                                                           ^^^^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	pattern WriteExtraction(value) = (Int as value) where {set value = 0, true}
+//│ ╙──      	                        ^^^^^
+
+:e
+pattern RedefineExtraction(value) = (Int as value) where {value = 0, true}
+//│ ╔══[COMPILATION ERROR] Symbol 'value' is not a local variable and cannot be explicitly initialized
+//│ ║  l.+1: 	pattern RedefineExtraction(value) = (Int as value) where {value = 0, true}
+//│ ║        	                                                          ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	pattern RedefineExtraction(value) = (Int as value) where {value = 0, true}
+//│ ╙──      	                           ^^^^^
+
+
+// A transformation's implicit lambda parameters obey the same rule.
+:ge
+pattern WriteTransform = value =>
+  set value = 0
+  value
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+2: 	  set value = 0
+//│ ║        	      ^^^^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	pattern WriteTransform = value =>
+//│ ╙──      	                         ^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot assign to an immutable binding
+//│ ║  l.+2: 	  set value = 0
+//│ ║        	      ^^^^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	pattern WriteTransform = value =>
+//│ ╙──      	                         ^^^^^
+
+:ge
+pattern CapturedTransform = value =>
+  () => set value = 0
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'value'
+//│ ║  l.+2: 	  () => set value = 0
+//│ ║        	            ^^^^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	pattern CapturedTransform = value =>
+//│ ╙──      	                            ^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot assign to an immutable binding
+//│ ║  l.+2: 	  () => set value = 0
+//│ ║        	            ^^^^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	pattern CapturedTransform = value =>
+//│ ╙──      	                            ^^^^^
+
+
+// Guard-local copies must not change the extracted value.
+:expect 0
+pattern Checked(value) = (Int as value) where
+  let =value
+  set value += 1
+  value == 1
+if 0 is Checked(n) then n else -1
+//│ = 0
+
+
+// Both generated matchers and compiled pattern uses preserve local-copy semantics.
+pattern Increment = value =>
+  let =value
+  set value += 1
+  value
+
+fun interpreted(value) = if value is Increment as result then result else 0
+fun compiled(value) = if value is (@compile Increment) as result then result else 0
+
+:expect [2, 3, 2, 3]
+[interpreted(1), interpreted(2), compiled(1), compiled(2)]
+//│ = [2, 3, 2, 3]
+
+
+// Lexical constructor parameters can share names with public members.
+:expect 42
+class SameName with
+  constructor(value)
+  fun value() = 42
+new SameName(0).value()
+//│ = 42
+
+// Cloning a transformation must preserve lexical constructor storage and explicit copies.
+pattern ConstructorCopy = value =>
+  class Local with
+    constructor(x)
+    let =x
+    fun next() =
+      set x += 1
+      x
+  let local = new mut Local(value)
+  local.next() + local.next()
+fun copyInterpreted(value) = if value is ConstructorCopy as result then result else 0
+fun copyCompiled(value) = if value is (@compile ConstructorCopy) as result then result else 0
+
+:expect [5, 7, 5, 7]
+[copyInterpreted(1), copyInterpreted(2), copyCompiled(1), copyCompiled(2)]
+//│ = [5, 7, 5, 7]
+
+
+#lang(useNewResolution: false, strictResolution: false)
+
+:ge
+class LegacyHeader(x) with
+  fun update() = set x = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+2: 	  fun update() = set x = 1
+//│ ║        	                     ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	class LegacyHeader(x) with
+//│ ╙──      	                   ^
+
+:ge
+class LegacyAuxiliary with
+  constructor(x)
+  fun update() = set x = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+3: 	  fun update() = set x = 1
+//│ ║        	                     ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  constructor(x)
+//│ ╙──      	              ^
+
+:expect [2, 3]
+class LegacyCopy with
+  constructor(x)
+  let =x
+  fun next() =
+    set x += 1
+    x
+let counter = new mut LegacyCopy(1)
+[counter.next(), counter.next()]
+//│ = [2, 3]
+//│ counter = LegacyCopy

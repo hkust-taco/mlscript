@@ -1,8 +1,10 @@
 #lang(0.3.x)
 import "./Iter.mls"
+import "./Predef.mls"
 import "./FingerTreeList.mls"
 
 open Iter
+open Predef { id"??" }
 open LazyFingerTree
 open FingerTreeList
 
@@ -10,10 +12,11 @@ fun normIdx(i, len) =
   if i < 0 then len + i
   else i
 
-fun concatHelper(a: Array, l: Int, ...args: Array[Indexable]) =
+fun concatHelper[A](a: Array, l: Int, ...args: Array[Indexable[A]]): Splice[A] =
+  let =l
   let idx = 0
   let init_len = a.length
-  set a.length = init_len + args.length * 2
+  @unsafe set a.length = init_len + args.length * 2
   while (idx < args.length) do
     let x = args.[idx]
 
@@ -31,10 +34,10 @@ fun normIdxSlice(i, len) =
     else 0
   else i
 
-fun sliceHelper(beg: Int, fin: Int, arr: Indexable) =
+fun sliceHelper[A](start: Int | null, end: Int | null, arr: Indexable[A]): IterableBase[A] =
   let len = arr.length
-  set beg = normIdxSlice(beg, len)
-  set fin = normIdxSlice(fin, len)
+  let beg = normIdxSlice(start ?? 0, len)
+  let fin = normIdxSlice(end ?? len, len)
   if beg >= len do
     return View of [], 0, 0
   if fin >= len do
@@ -51,14 +54,14 @@ fun sliceHelper(beg: Int, fin: Int, arr: Indexable) =
         else View of arr, beg, (len - fin)
 
 // Marker base class for View and Splice
-class LazyFT extends IterableBase with
+class LazyFT[A] extends IterableBase[A] with
 
-  open override fun toString() = "[" + this joined(", ") + "]"
-  open override fun concat(...args: Array[Indexable]) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
+  open override fun toString(): Str = "[" + this joined(", ") + "]"
+  open override fun concat(...xs: Array[Indexable[A]]): LazyIterable[A] = concatHelper(mut [SpliceMarker, this], this.length, ...xs)
 
-class View(val underlying: Indexable, val start: Int, val end: Int) extends LazyFT with
+class View[A](val underlying: Indexable[A], val start: Int, val end: Int) extends LazyFT[A] with
 
-  @annotations.jsSymbol(Symbol.iterator) override fun iterator() =
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator(): Iterator[A] =
     let idx = start
     let until = underlying.length - end
     IteratorImpl of () =>
@@ -68,28 +71,25 @@ class View(val underlying: Indexable, val start: Int, val end: Int) extends Lazy
         Result.Next of next
       else Result.Done
 
-  fun materialize(): Indexable = underlying.slice(start, underlying.length - end)
+  fun materialize(): Indexable[A] = underlying.slice(start, underlying.length - end)
   
-  override fun at(i) =
-    if i < -length || i >= length do
+  override fun at(idx: Int): A =
+    if idx < -length || idx >= length do
       throw RangeError("View.at: Index out of bounds")
-    underlying.at(normIdx(i, length) + start)
-  override fun slice(...bounds: Array[Int]) = sliceHelper(
-    if bounds.length > 0 then bounds.[0] else 0,
-    if bounds.length > 1 then bounds.[1] else length,
-    this)
+    underlying.at(normIdx(idx, length) + start)
+  override fun slice(start?: Int, end?: Int): IterableBase[A] = sliceHelper(start, end, this)
 
   val len = underlying.length - start - end
-  override fun length = len
-  override fun toString() = "[" + this joined(", ") + "]"
+  override fun length: Int = len
+  override fun toString(): Str = "[" + this joined(", ") + "]"
 
 object SpliceMarker
-class Splice(val bits: Array, val len: Int) extends LazyFT with
+class Splice[A](val bits: Array, val len: Int) extends LazyFT[A] with
   let materialized = null
 
-  @annotations.jsSymbol(Symbol.iterator) override fun iterator() = materialize().iterator()
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator(): Iterator[A] = materialize().iterator()
 
-  fun reify =
+  fun reify: IterableIndexable[A] =
     let acc = FingerTreeList.mk()
     val stack: Array[[Int, Indexable]] = mut []
     stack.push([0, bits])
@@ -115,32 +115,29 @@ class Splice(val bits: Array, val len: Int) extends LazyFT with
           else stack.push([0, next])
     acc
 
-  fun materialize(): IterableIndexable =
+  fun materialize(): IterableIndexable[A] =
     if materialized == null do
       set materialized = reify
     materialized
 
-  override fun at(i) = materialize().at(i)
+  override fun at(idx: Int): A = materialize().at(idx)
   // called on eager spreads in matches
-  override fun slice(...bounds: Array[Int]) = sliceHelper(
-    if bounds.length > 0 then bounds.[0] else 0,
-    if bounds.length > 1 then bounds.[1] else length,
-    this)
-  override fun concat(...args: Array[Indexable]) =
+  override fun slice(start?: Int, end?: Int): IterableBase[A] = sliceHelper(start, end, this)
+  override fun concat(...xs: Array[Indexable[A]]): LazyIterable[A] =
     if materialized === null 
-    then concatHelper(mut [SpliceMarker, this], len, ...args)
-    else concatHelper(mut [SpliceMarker, materialized], len, ...args)   
+    then concatHelper(mut [SpliceMarker, this], len, ...xs)
+    else concatHelper(mut [SpliceMarker, materialized], len, ...xs)   
   
-  override fun length = len
-  override fun toString() = "[" + materialize() joined(", ") + "]"
+  override fun length: Int = len
+  override fun toString(): Str = "[" + materialize() joined(", ") + "]"
 
 
 module LazyFingerTree with...
 
 
-fun mk(...args) = View of FingerTreeList.mk(...args), 0, 0
-fun concat(...args: Array[Indexable]) = concatHelper(mut [], 0, ...args)
-fun dropLeftRight(beg: Int, fin: Int)(xs: Indexable) =
+fun mk[A](...args: Array[A]): LazyIterable[A] = View of FingerTreeList.mk(...args), 0, 0
+fun concat[A](...args: Array[Indexable[A]]): LazyIterable[A] = concatHelper(mut [], 0, ...args)
+fun dropLeftRight[A](beg: Int, fin: Int)(xs: Indexable[A]): IterableBase[A] =
   if beg < 0 || fin < 0 do
     throw RangeError("LazyFingerTree.dropLeftRight: indices must be non-negative")
   if beg > xs.length || fin > xs.length do
@@ -158,7 +155,7 @@ fun equals(xs: Indexable, ys: Indexable) =
 // The following functions are not meant for users; it's meant referred to by Runtime.mls
 // TODO: use `LazyFingerTree.internals.concat` when this is implemented
 
-fun __concat(...args) = 
+fun __concat(...args): LazyIterable[Any] = 
   let len = 0
   let idx = 0
   while (idx < args.length) do

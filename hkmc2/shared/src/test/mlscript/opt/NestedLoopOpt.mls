@@ -51,6 +51,7 @@ innerUpdatesOuterCondition()
 // * The outer body must account for inner-loop zero-iteration and loop-back states.
 :soir
 fun nestedLoopBackPost(flag) =
+  let =flag
   let x = 1
   while flag do
     let inner = flag
@@ -62,13 +63,14 @@ fun nestedLoopBackPost(flag) =
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define nestedLoopBackPost⁰ as fun nestedLoopBackPost¹(flag) {
-//│   let x;
+//│   let flag1, x;
+//│   set flag1 = flag;
 //│   set x = 1;
 //│   loop lbl:
 //│     let inner;
-//│     match flag
+//│     match flag1
 //│       true =>
-//│         set inner = flag;
+//│         set inner = flag1;
 //│         loop lbl1:
 //│           match inner
 //│             true =>
@@ -79,7 +81,7 @@ fun nestedLoopBackPost(flag) =
 //│               end
 //│           end
 //│         do Predef⁰.print⁰(x);
-//│         set flag = false;
+//│         set flag1 = false;
 //│         continue lbl
 //│       else
 //│         end
@@ -99,6 +101,7 @@ print(nestedLoopBackPost(true))
 // * A returning path in an inner loop must not leak its assignment into the outer loop exit.
 :soir
 fun innerReturnDoesNotPolluteOuterExit(flag) =
+  let =flag
   let x = 1
   while flag do
     while true do
@@ -108,14 +111,16 @@ fun innerReturnDoesNotPolluteOuterExit(flag) =
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define innerReturnDoesNotPolluteOuterExit⁰ as fun innerReturnDoesNotPolluteOuterExit¹(flag) {
+//│   let flag1;
+//│   set flag1 = flag;
 //│   loop lbl:
-//│     match flag
+//│     match flag1
 //│       true =>
 //│         match true
 //│           true =>
 //│             return 2
 //│           else
-//│             set flag = false;
+//│             set flag1 = false;
 //│             continue lbl
 //│         end
 //│       else
@@ -135,6 +140,8 @@ print(innerReturnDoesNotPolluteOuterExit(true))
 // * Inner and outer loops can both skip, so the final value must merge several paths.
 :soir
 fun nestedInnerMaySkip(flag, innerFlag) =
+  let =flag
+  let =innerFlag
   let x = 1
   while flag do
     while innerFlag do
@@ -144,21 +151,23 @@ fun nestedInnerMaySkip(flag, innerFlag) =
   x
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define nestedInnerMaySkip⁰ as fun nestedInnerMaySkip¹(flag, innerFlag) {
-//│   let x;
+//│   let flag1, innerFlag1, x;
+//│   set flag1 = flag;
+//│   set innerFlag1 = innerFlag;
 //│   set x = 1;
 //│   loop lbl:
-//│     match flag
+//│     match flag1
 //│       true =>
 //│         loop lbl1:
-//│           match innerFlag
+//│           match innerFlag1
 //│             true =>
 //│               set x = 2;
-//│               set innerFlag = false;
+//│               set innerFlag1 = false;
 //│               continue lbl1
 //│             else
 //│               end
 //│           end
-//│         set flag = false;
+//│         set flag1 = false;
 //│         continue lbl
 //│       else
 //│         end

@@ -1,7 +1,9 @@
 #lang(0.3.x)
 import "./Iter.mls"
+import "./Predef.mls"
 
 open Iter
+open Predef { id"??" }
 open LazyArray
 
 // Helper Methods
@@ -13,11 +15,12 @@ fun enforceArray = case
   (LazyArr | Array | String | Str | TypedArray) as a then a
   ow then throw Error("Expected an Array, got: " + String(ow))
 
-fun concatHelper(a: Array, l: Int, ...args: Array[Indexable]) =
+fun concatHelper[A](a: Array, l: Int, ...args: Array[Indexable[A]]): Splice[A] =
+  let =l
   let
     idx = 0
     init_len = a.length
-  set a.length = init_len + args.length * 2
+  @unsafe set a.length = init_len + args.length * 2
   while (idx < args.length) do
     let x = args.[idx]
     set 
@@ -35,10 +38,10 @@ fun normIdxSlice(i, len) =
     else 0
   else i
 
-fun sliceHelper(beg: Int, fin: Int, arr: Indexable) =
+fun sliceHelper[A](start: Int | null, end: Int | null, arr: Indexable[A]): LazyIterable[A] =
   let len = arr.length
-  set beg = normIdxSlice(beg, len)
-  set fin = normIdxSlice(fin, len)
+  let beg = normIdxSlice(start ?? 0, len)
+  let fin = normIdxSlice(end ?? len, len)
   if beg >= len do
     return View of [], 0, 0
   if fin >= len do
@@ -52,16 +55,16 @@ fun sliceHelper(beg: Int, fin: Int, arr: Indexable) =
     else View of enforceArray(arr), beg, (arr.length - fin)
 
 // Marker base class for View and Splice
-class LazyArr extends IterableBase with
+class LazyArr[A] extends IterableBase[A] with
 
-  open override fun toString() = "[" + this joined(", ") + "]"
-  open override fun concat(...args: Array[Indexable]) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
+  open override fun toString(): Str = "[" + this joined(", ") + "]"
+  open override fun concat(...xs: Array[Indexable[A]]): LazyIterable[A] = concatHelper(mut [SpliceMarker, this], this.length, ...xs)
 
 // Requires that the underlying iterable is constant-time indexable
 // Note: Ideally `underlying` should be typed as `IterableBase`, but `Array` currently does not extend it.
-class View(val underlying: Indexable, val start: Int, val end: Int) extends LazyArr with
+class View[A](val underlying: Indexable[A], val start: Int, val end: Int) extends LazyArr[A] with
 
-  @annotations.jsSymbol(Symbol.iterator) override fun iterator() =
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator(): Iterator[A] =
     let idx = start
     let until = underlying.length - end
     IteratorImpl of () =>
@@ -71,26 +74,23 @@ class View(val underlying: Indexable, val start: Int, val end: Int) extends Lazy
         Result.Next of next
       else Result.Done
 
-  fun materialize(): Indexable = underlying.slice(start, underlying.length - end)
+  fun materialize(): Indexable[A] = underlying.slice(start, underlying.length - end)
   
-  override fun at(i) =
-    if i < -length || i >= length do
+  override fun at(idx: Int): A =
+    if idx < -length || idx >= length do
       throw RangeError("View.at: Index out of bounds")
-    underlying.at(normIdx(i, length) + start)
-  override fun slice(...bounds: Array[Int]) = sliceHelper(
-    if bounds.length > 0 then bounds.[0] else 0,
-    if bounds.length > 1 then bounds.[1] else length,
-    this)
+    underlying.at(normIdx(idx, length) + start)
+  override fun slice(start?: Int, end?: Int): LazyIterable[A] = sliceHelper(start, end, this)
 
   val len = underlying.length - start - end
-  override fun length = len
-  override fun toString() = "[" + this joined(", ") + "]"
+  override fun length: Int = len
+  override fun toString(): Str = "[" + this joined(", ") + "]"
 
 object SpliceMarker
-class Splice(val bits: Array, val len: Int) extends LazyArr with
+class Splice[A](val bits: Array, val len: Int) extends LazyArr[A] with
   let materialized = null
 
-  @annotations.jsSymbol(Symbol.iterator) override fun iterator() =
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator(): Iterator[A] =
     let idx = 0
     let uitr = null
     
@@ -114,7 +114,7 @@ class Splice(val bits: Array, val len: Int) extends LazyArr with
       else Result.Done
     IteratorImpl of nextf
 
-  fun reify = 
+  fun reify: Array[A] = 
     let counter = 0
     let arr = new mut Array(len)
     val stack: Array[[Int, Indexable]] = mut []
@@ -138,31 +138,28 @@ class Splice(val bits: Array, val len: Int) extends LazyArr with
         stack.push([0, vals.at(idx + 1)])
     arr
 
-  fun materialize(): Array =
+  fun materialize(): Array[A] =
     if materialized === null do
       set materialized = reify
     materialized
   
-  override fun at(i) = materialize().at(i)
-  override fun slice(...bounds: Array[Int]) = sliceHelper(
-    if bounds.length > 0 then bounds.[0] else 0,
-    if bounds.length > 1 then bounds.[1] else length,
-    this)
-  override fun concat(...args: Array[Indexable]) = 
+  override fun at(idx: Int): A | unsafe.undefined = materialize().at(idx)
+  override fun slice(start?: Int, end?: Int): LazyIterable[A] = sliceHelper(start, end, this)
+  override fun concat(...xs: Array[Indexable[A]]): LazyIterable[A] = 
     if materialized === null 
-    then concatHelper(mut [SpliceMarker, this], len, ...args)
-    else concatHelper(mut [SpliceMarker, materialized], len, ...args)
+    then concatHelper(mut [SpliceMarker, this], len, ...xs)
+    else concatHelper(mut [SpliceMarker, materialized], len, ...xs)
   
-  override fun length = len
-  override fun toString() = "[" + materialize() joined(", ") + "]"
+  override fun length: Int = len
+  override fun toString(): Str = "[" + materialize() joined(", ") + "]"
 
 
 module LazyArray with...
 
 
-fun mk(...args) = View of args, 0, 0
-fun concat(...args: Array[Indexable]) = concatHelper(mut [], 0, ...args)
-fun dropLeftRight(beg: Int, fin: Int)(xs: Indexable) = 
+fun mk[A](...args: Array[A]): LazyIterable[A] = View of args, 0, 0
+fun concat[A](...args: Array[Indexable[A]]): LazyIterable[A] = concatHelper(mut [], 0, ...args)
+fun dropLeftRight[A](beg: Int, fin: Int)(xs: Indexable[A]): LazyIterable[A] = 
   if beg < 0 || fin < 0 do
     throw RangeError("LazyArray.dropLeftRight: indices must be non-negative")
   if beg > xs.length || fin > xs.length do
@@ -179,7 +176,7 @@ fun equals(xs: Indexable, ys: Indexable) =
 
 // This is not meant for users; it's referred to by Runtime.mls
 // TODO: use `LazyArray.internals.concat` when this is implemented
-fun __concat(...args) =
+fun __concat(...args): LazyIterable[Any] =
   let len = 0
   let idx = 0
   while (idx < args.length) do

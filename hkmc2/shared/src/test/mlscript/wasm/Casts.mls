@@ -96,12 +96,13 @@ inc(id(41))
 //│ = 42
 
 
-// `set x = (id(7) as!! Int)`
+// `set slot.x = (id(7) as!! Int)`: an immutable parameter can still refer to a mutable object.
 :noInline
-fun setter(x: Int) =
-  set x = id(7)
-  x
-setter(1)
+class AssignmentSlot(mut val x: Int)
+fun setter(slot: AssignmentSlot) =
+  set slot.x = id(7)
+  slot.x
+setter(new mut AssignmentSlot(1))
 //│ Wasm result:
 //│ = 7
 

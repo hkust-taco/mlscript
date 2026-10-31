@@ -384,7 +384,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               Define(FunDefn(td.owner, td.sym, td.tsym,
                 FunDefn.Signature.fromLowering(paramLists, td.tsym), bodyBlock)(cfgOverride, td.annotations),
                 continueBlock(stats, res))
-            case syntax.LetBind | syntax.HandlerBind | syntax.RecordField => fail:
+            case syntax.LetBind | syntax.ParamBind | syntax.HandlerBind | syntax.RecordField => fail:
               ErrorReport(
                 msg"Unexpected declaration kind '${td.k.str}' in lowering" -> td.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
@@ -690,7 +690,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case ps :: rest =>
             val freshSyms = ps.params.map(p => new VarSymbol(p.sym.id, erasedType = N, mut = false))
             softTODO(ps.variadic.isEmpty, "Eta expanding rest parameters in constructor definitions is not yet supported")
-            val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness)(p.toLoc))
+            val freshParams = (ps.params zip freshSyms).map((p, s) => Param(p.flags, s, N, p.modulefulness, p.annotations)(p.toLoc))
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
             if ctorParamLists.isMls then
               val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
@@ -770,18 +770,28 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       WarningReport(msg"Pure expression in statement position" -> loc :: Nil, extraInfo,
         source = Diagnostic.Source.Compilation)
 
-  private def assignSymbol(target: Symbol, diagnostic: Symbol, rhs: Result, rest: Block, loco: Opt[Loc])(using LoweringCtx): Block =
-    def nope = fail:
+  private def cannotAssign(target: Symbol, diagnostic: Symbol, loco: Opt[Loc])(using LoweringCtx): Block =
+    fail:
       ErrorReport(
-        msg"Cannot assign to ${diagnostic match
-            case sym: BlockMemberSymbol => sym.describe
-            case sym => "symbol"
-          } '${diagnostic.nme}'" -> loco
+        (diagnostic match
+          // Implicit lambda parameters have generated names; their source location identifies the placeholder.
+          case sym: LocalVarSymbol if !sym.mut && sym.decl.isEmpty => msg"Cannot assign to an immutable binding"
+          case _ => msg"Cannot assign to ${diagnostic match
+              case sym: BlockMemberSymbol => sym.describe
+              case sym: LocalVarSymbol if sym.decl.exists(_.isInstanceOf[Param]) => "immutable parameter"
+              // Constructor fields retain their Param declaration, but writes target the field.
+              case sym: TermSymbol if sym.k is syntax.ImmutVal => "immutable field"
+              case sym: TermSymbol if (sym.k is syntax.ParamBind) || sym.decl.exists(_.isInstanceOf[Param]) => "immutable parameter"
+              case sym => "symbol"
+            } '${diagnostic.nme}'") -> loco
           :: diagnostic.toLoc.match
             case s @ S(_) => msg"Defined here:" -> s :: Nil
             case N => Nil,
         source = Diagnostic.Source.Compilation,
         extraInfo = S(target.getClass))
+
+  private def assignSymbol(target: Symbol, diagnostic: Symbol, rhs: Result, rest: Block, loco: Opt[Loc])(using LoweringCtx): Block =
+    def nope = cannotAssign(target, diagnostic, loco)
     target match
     case sym: TermSymbol if (sym.k is MutVal) || (sym.k is LetBind) =>
       sym.owner match
@@ -894,8 +904,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         k(Select(prefix, name)(target, loc)(sanitize))
 
   private def assignNamedField(prefix: Path, name: Tree.Ident, value: Path, rest: Block,
-      keyAccess: Opt[Term])(target: Opt[DefinitionSymbol[?]])(using LoweringCtx): Block =
-    namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
+      keyAccess: Opt[Term], unsafe: Bool)(target: Opt[DefinitionSymbol[?]],
+      candidates: Ls[DefinitionSymbol[?]])(using LoweringCtx): Block =
+    // Lenient and dynamic lookup can omit the single IR target while retaining known
+    // candidates. None of those immutable fields may be written without @unsafe.
+    val immutable = target.iterator.++(candidates).collectFirst:
+      case sym: TermSymbol if sym.k is syntax.ImmutVal => sym
+    immutable match
+    case S(sym) if !unsafe => cannotAssign(sym, sym, name.toLoc)
+    case _ => namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
       case DynSelect(_, key, kind) => AssignDynField(prefix, key, kind, value, rest)
       case _ => AssignField(prefix, name, value, rest)(target)
 
@@ -1000,7 +1017,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case S(sig) =>
         val params = sig.paramLists.head.zipWithIndex.map: (erasedType, i) =>
           val id = new Tree.Ident(if sym.unary then "arg" else s"arg${i + 1}")
-          Param(FldFlags.empty, VarSymbol(id, erasedType = erasedType, mut = false), N, Modulefulness.none)(id.toLoc)
+          Param(FldFlags.empty, VarSymbol(id, erasedType = erasedType, mut = false), N, Modulefulness.none, Nil)(id.toLoc)
         val ps = PlainParamList(params)(N)
         val bod = st.App(ref, st.Tup(params.map(p => st.SimpleRef(p.sym)(N)))
           (Tree.Tup(Nil // FIXME should not be required (using dummy value)
@@ -1411,6 +1428,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             k(resSym.asSimpleRef))
     case st.Blk(sts, res) => block(sts, R(res), inStmtPos = inStmtPos)(k)
     case Assgn(lhs, rhs) =>
+      // The permission belongs to this write, not to assignments in its receiver or RHS.
+      val unsafe = allAnnots.exists(_.isInstanceOf[Annot.Unsafe])
       // * An assignment LHS is an l-value: normal term lowering would read the
       // * selected field, possibly with access instrumentation, while here we
       // * need the selected prefix/name/symbol in order to emit `AssignField`.
@@ -1440,11 +1459,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             case S(sym: TermSymbol) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
-                  assignNamedField(p, memberIdent(ref.id, member), castTo(r, sym.erasedType, ref.toLoc), k(unit), ref.keyAccess)(S(sym))
+                  assignNamedField(p, memberIdent(ref.id, member), castTo(r, sym.erasedType, ref.toLoc),
+                    k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets)
             case N if ref.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
-                  assignNamedField(p, memberIdent(ref.id, member), r, k(unit), ref.keyAccess)(N)
+                  assignNamedField(p, memberIdent(ref.id, member), r, k(unit), ref.keyAccess, unsafe)(N, ref.resolvedTargets)
             case _ => fail:
               ErrorReport(msg"Assignment requires a term member" -> ref.toLoc :: Nil,
                 source = Diagnostic.Source.Compilation)
@@ -1457,11 +1477,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case S(sym: TermSymbol) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                assignNamedField(p, name, castTo(r, sym.erasedType, sel.toLoc), k(unit), sel.keyAccess)(S(sym))
+                assignNamedField(p, name, castTo(r, sym.erasedType, sel.toLoc), k(unit), sel.keyAccess, unsafe)(S(sym), sel.resolvedTargets)
           case N if sel.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                assignNamedField(p, name, r, k(unit), sel.keyAccess)(N)
+                assignNamedField(p, name, r, k(unit), sel.keyAccess, unsafe)(N, sel.resolvedTargets)
           case _ => fail:
             ErrorReport(msg"Assignment requires a term member" -> sel.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
@@ -1474,7 +1494,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               castTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc),
               k(unit),
               N,
-            )(resolvedSelectionSymbol)
+              unsafe,
+            )(resolvedSelectionSymbol, Nil)
       case sel @ SynthSel(prefix, nme) =>
         // * See the doc in the `term` case for `SynthSel` for why we fall back to `sel.sym` here
         val sym = resolvedSelectionSymbol match
@@ -1485,7 +1506,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         softAssert(sym.nonEmpty, s"Missing symbol for synthetic assignment target ${sel.showDbg}")
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            assignNamedField(p, memberIdent(nme, sel.sym), castTo(r, fieldErasedType(sym), sel.toLoc), k(unit), N)(sym)
+            assignNamedField(p, memberIdent(nme, sel.sym), castTo(r, fieldErasedType(sym), sel.toLoc), k(unit), N, unsafe)(sym, Nil)
       case sel @ DynSel(prefix, fld, ai, _) =>
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
@@ -1500,7 +1521,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               castTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc),
               k(unit),
               N,
-            )(resolvedSelectionSymbol)
+              unsafe,
+            )(resolvedSelectionSymbol, Nil)
       case _ => fail:
         ErrorReport(
           msg"Unexpected left-hand side in assignment (${lhs.describe})" -> lhs.toLoc :: Nil, S(lhs),
@@ -2074,6 +2096,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case Annot.Modifier(syntax.Keyword.`public` | syntax.Keyword.`private` | syntax.Keyword.`virtual`) => ()
       case Annot.Modifier(syntax.Keyword("staged")) => ()
       case Annot.Pure() => ()
+      case a: Annot.PlainField => target match
+        case td: TermDefinition if (td.k is syntax.MutVal) && td.owner.nonEmpty && !td.tsym.isPrivate => ()
+        case _ => warn(a, S(msg"Only public mutable fields may be marked @js.plainField."))
       case a: Annot.Fresh => target match
         case TermDefinition(k = syntax.ImmutVal) => ()
         case _ => warn(a, S(msg"Only immutable vals may be marked @annotations.fresh."))
@@ -2102,6 +2127,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     
     annotations.foreach:
       case Annot.Untyped() => ()
+      case a: Annot.Unsafe => receiver match
+        case _: Assgn => ()
+        case _ => warn(a, S(msg"Only assignments may be marked @unsafe."))
       case annot: Annot.Trm => receiver match
         case st.App(BuiltinRef(_), _) => warn(annot)
         case st.App(_, _) | New(_, _, _) | DynNew(_, _) | Mut(_: New | _: DynNew) => ()

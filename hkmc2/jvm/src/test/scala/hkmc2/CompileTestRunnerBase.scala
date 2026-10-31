@@ -56,10 +56,11 @@ abstract class CompileTestRunnerBase(
         val compiler = MLsCompiler(mkRaise = report.mkRaise)
         compiler.compileModule(file)
         
-        if report.badLines.nonEmpty then
-          fail(s"Unexpected diagnostic at: " +
-            report.badLines.distinct.sorted
-              .map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
+        if report.hasDiagnostics then
+          val locations = report.badLines.distinct.sorted
+            .map("\n\t"+relativeName+"."+file.ext+":"+_)
+          fail(if locations.isEmpty then s"Unexpected diagnostic in: $relativeName.${file.ext}"
+            else "Unexpected diagnostic at: " + locations.mkString(", "))
   }
 
 end CompileTestRunnerBase

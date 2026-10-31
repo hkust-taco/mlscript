@@ -1,0 +1,115 @@
+:.
+:js
+:noInline
+
+// The first case resets the local after an opaque call. The next case completes
+// normally, so specialization must retain both the assignment and the switch break.
+:sjs
+fun copySwitch(initial, choose, effect) =
+  let state = initial
+  if state is 0 do
+    effect()
+    if choose then set state = 1
+    else set state = 1
+  if state is 1 do
+    effect()
+  if initial is 0 do return [state, "started at zero"]
+  [state, initial]
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let copySwitch;
+//│ copySwitch = function copySwitch(initial, choose, effect) {
+//│   let state;
+//│   state = initial;
+//│   switch (state) {
+//│     case 0:
+//│       runtime.safeCall(effect());
+//│       if (choose === true) {
+//│         state = 1;
+//│       } else {
+//│         state = 1;
+//│       }
+//│     case 1:
+//│       runtime.safeCall(effect());
+//│       break;
+//│   }
+//│   if (initial === 0) {
+//│     return globalThis.Object.freeze([
+//│       state,
+//│       "started at zero"
+//│     ])
+//│   }
+//│   return globalThis.Object.freeze([ state, initial ]);
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+let calls = 0
+fun tick() = set calls += 1
+//│ calls = 0
+
+:expect [1, "started at zero"]
+copySwitch(0, true, tick)
+//│ = [1, "started at zero"]
+
+:expect [1, "started at zero"]
+copySwitch(0, false, tick)
+//│ = [1, "started at zero"]
+
+:expect [1, 1]
+copySwitch(1, true, tick)
+//│ = [1, 1]
+
+:expect [2, 2]
+copySwitch(2, true, tick)
+//│ = [2, 2]
+
+:expect 5
+calls
+//│ = 5
+
+// An unknown value in one branch prevents fallthrough, even though both bindings
+// were equal at the first test and another branch assigns the next case's literal.
+:sjs
+fun divergingCopy(initial, choose, next) =
+  let state = initial
+  if state is 0 do
+    set state = 1
+    if choose then set state = 1
+    else set state = next
+  if state is 1 do return "one"
+  [state, initial]
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let divergingCopy;
+//│ divergingCopy = function divergingCopy(initial, choose, next) {
+//│   let state;
+//│   state = initial;
+//│   if (initial === 0) {
+//│     if (choose === true) {
+//│       state = 1;
+//│     } else {
+//│       state = next;
+//│     }
+//│   }
+//│   if (state === 1) { return "one" }
+//│   return globalThis.Object.freeze([ state, initial ]);
+//│ };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect "one"
+divergingCopy(0, true, 2)
+//│ = "one"
+
+:expect [2, 0]
+divergingCopy(0, false, 2)
+//│ = [2, 0]
+
+:expect "one"
+divergingCopy(0, false, 1)
+//│ = "one"
+
+:expect "one"
+divergingCopy(1, false, 2)
+//│ = "one"
+
+:expect [2, 2]
+divergingCopy(2, true, 1)
+//│ = [2, 2]

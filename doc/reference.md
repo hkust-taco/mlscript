@@ -195,6 +195,24 @@ set
   y += 2
 ```
 
+In JavaScript, `mut val` is implemented through a private backing field.
+If the `mut val` is public, its JavaScript generated code uses a getter and setter.
+This means the field remain mutable even when its owner is frozen.
+To circumvent this (for example, for performance reasons),
+`@js.plainField` generates a plain JavaScript data property
+without a getter, setter, or private backing field.
+It works on constructor fields and fields declared in class or object bodies:
+
+```mlscript
+class Counter(@js.plainField mut val value: Int)
+let counter = new mut Counter(0) // Note: `new mut`
+set counter.value += 1
+```
+
+Unlike ordinary `mut val` fields, plain fields become read-only when their receiver
+is frozen. Use `new mut` when the field must remain writable.
+Overrides must preserve the presence or absence of `@js.plainField` on the inherited field.
+
 ### Top-Level Value (`val`)
 
 ```mlscript
@@ -754,8 +772,18 @@ new! c           // dynamic instantiation (class value at runtime)
 new Foo(...xs)   // spread args
 ```
 
-`new mut` is an unsafe escape hatch. Optimizations may still assume that `val`
-fields are immutable; mutating them can therefore change optimized program behavior.
+`new mut` creates an unfrozen instance, but writes to non-`mut` `val` fields
+require an explicit annotation on each assignment:
+
+```mlscript
+class Box(val value)
+let box = new mut Box(1)
+@unsafe set box.value = 3
+```
+
+`@unsafe set` permits the field write
+It is an unsafe escape hatch: optimizations may still assume that non-`mut` `val` fields are
+immutable, so an update through `@unsafe set` could be missed if the program optimizes away a `val` read.
 Use `mut val` for fields whose updates must be observed by ordinary code.
 
 ---

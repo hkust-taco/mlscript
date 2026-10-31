@@ -89,18 +89,12 @@ foo(:a)
 
 :todo // would mean `val a = ‹the old a›`?
 val =a
-//│ ╔══[PARSE ERROR] Expected expression after 'val' binding keyword; found '=' keyword instead
+//│ ╔══[COMPILATION ERROR] Expected a valid value definition head; found pun instead
 //│ ║  l.+1: 	val =a
-//│ ╙──      	    ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ╙──      	     ^
 
-:pe
-:re
 let =a
-//│ ╔══[PARSE ERROR] Expected expression or block after 'let' binding keyword; found '=' keyword instead
-//│ ║  l.+1: 	let =a
-//│ ╙──      	    ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ a = 1
 
 
 import "../../mlscript-compile/LazyArray.mls"

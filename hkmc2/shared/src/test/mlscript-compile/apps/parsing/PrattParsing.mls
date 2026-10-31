@@ -18,6 +18,7 @@ type Stack[A] = Cons[A] | Nil
 module PrattParsing with ...
 
 fun parse(tokens) =
+  let =tokens
   fun advance = if tokens is
     Token.Space :: tail then
       set tokens = tail

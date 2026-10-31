@@ -275,6 +275,7 @@ fun mutate_local_if(cond) =
 // * Loops retain shared writes.
 let state = 0
 fun mutate_loop(again) =
+  let =again
   while again do
     set state = 42
     set again = false
@@ -286,6 +287,7 @@ fun mutate_loop(again) =
 
 // * Local mutation in a loop remains pure.
 fun mutate_local_loop(again) =
+  let =again
   let local = 0
   while again do
     set local = 42

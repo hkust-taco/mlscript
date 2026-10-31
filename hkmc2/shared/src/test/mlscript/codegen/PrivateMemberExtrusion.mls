@@ -81,6 +81,7 @@ f.g()(1)
 
 :lift
 class Foo(a) with
+  let =a
   private mut val b = a + 1
   private fun y() = a + b
   val f = x =>
@@ -105,6 +106,7 @@ f.g()(1)
 // * Same, but not lifted:
 
 class Foo(a) with
+  let =a
   private mut val b = a + 1
   private fun y() = a + b
   val f = x =>

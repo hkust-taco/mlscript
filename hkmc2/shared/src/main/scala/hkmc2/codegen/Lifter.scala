@@ -589,7 +589,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         val fldSym = BlockMemberSymbol(nme, Nil)
         val tSym = TermSymbol(syntax.MutVal, S(clsSym), ident, erasure = capturedType)
         
-        val p = Param(FldFlags.empty.copy(isVal = true), varSym, N, Modulefulness.none)(varSym.toLoc)
+        val p = Param(FldFlags.empty.copy(isVal = true), varSym, N, Modulefulness.none, Nil)(varSym.toLoc)
         varSym.decl = S(p) // * Currently this is only accessed to create the class' toString method
         
         val vd = ValDefn(
@@ -1065,7 +1065,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     lazy val auxParams: List[Param] =
       (reqDefnsOrdered.map(defnSymsMap_) ::: capturesOrdered.map(capSymsMap_) ::: passedSymsOrdered.map(passedSymsMap_))
       .map: s =>
-        val decl = Param(FldFlags.empty.copy(isVal = false), s, N, Modulefulness.none)(s.toLoc)
+        val decl = Param(FldFlags.empty.copy(isVal = false), s, N, Modulefulness.none, Nil)(s.toLoc)
         s.decl = S(decl)
         decl
     

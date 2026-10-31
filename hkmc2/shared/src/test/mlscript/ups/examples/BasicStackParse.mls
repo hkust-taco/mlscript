@@ -23,6 +23,7 @@ pattern Parse =
   | ("(" :: (Parse as rest))                      => "(" :: rest
 
 fun parse(tokens) =
+  let =tokens
   while tokens is
     Parse as stack do
       set tokens = stack

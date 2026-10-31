@@ -87,13 +87,15 @@ class SubstitutionGrowthTest extends AnyFunSuite:
   // Constructor patterns synthesize omitted type arguments in the pattern's
   // lexical scope. Missing that scope made recursive FingerTreeList patterns
   // retain unrelated callers' binders, allocating over 15000 views instead of
-  // about 1400. Allow headroom while checking graph size independently of the
-  // machine-dependent timeout; the .mls tests cover observable behavior.
+  // about 1400. With the generic IterableBase interface, the library now needs
+  // about 3600 views. Allow headroom while keeping the bound below the previous
+  // runaway growth, independently of machine-dependent timeouts; the .mls tests
+  // cover observable behavior.
   test("FingerTreeList constructor-pattern inference stays bounded"):
     val m = measure(TestFolders.compileTestDir(os.pwd) / "FingerTreeList.mls")
     withClue(s"FingerTreeList inference: $m"):
       assert(m.largestSubstitution <= 4)
-      assert(m.views < 3000)
+      assert(m.views < 6000)
 
   // The branching chain above, passing a promise produced outside every generic
   // scope. Its views are projected onto the support of its payload, which is

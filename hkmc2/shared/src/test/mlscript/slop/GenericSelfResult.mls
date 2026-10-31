@@ -1,0 +1,44 @@
+:.
+#lang(strictResolution: true, eagerResolution: true)
+
+// TODO: Storing a variadic reducer's this-result mixes receiver arguments from
+// separate calls, so these valid field selections report the other call's type.
+:fixme
+:expect [1, 2]
+class First(val first: Int)
+class Second(val second: Int)
+class Parent[A](val item: A)
+class Child[A](item: A) extends Parent[A](item) with
+  fun retain(...xs) = xs.reduce((acc, other) => acc, this)
+let first = (new Child[First](First(1))).retain()
+let second = (new Child[Second](Second(2))).retain()
+[first.item.first, second.item.second]
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+8: 	[first.item.first, second.item.second]
+//│ ║        	 ^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Second' does not contain member 'first'
+//│ ║  l.+7: 	let second = (new Child[Second](Second(2))).retain()
+//│ ╙──      	                        ^^^^^^
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+8: 	[first.item.first, second.item.second]
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'First' does not contain member 'second'
+//│ ║  l.+6: 	let first = (new Child[First](First(1))).retain()
+//│ ╙──      	                       ^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2]', got: 'undefined'
+//│ first = Child(_)
+//│ second = Child(_)
+
+// TODO: Storing a nested receiver returned through the variadic reducer
+// duplicates the enclosing function's exit mark.
+:fixme
+:expect 3
+private fun make[A](item: A) =
+  class Parent(val value: A)
+  class Child(item: A) extends Parent(item) with
+    fun retain(...xs) = xs.reduce((acc, other) => acc, this)
+  (new Child(item)).retain()
+let nested = make(3)
+nested.value
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: Repeated exit from the same lexical resolution scope

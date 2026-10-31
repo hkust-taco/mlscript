@@ -293,7 +293,10 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
           case pat => pat :: acc
       .foldSingleton(Or.apply)(identity)
     case Not(pattern) => Not(pattern.simplify)
-    case Rename(pattern, name) => Rename(pattern.simplify, name)
+    case Rename(pattern, name) => pattern.simplify match
+      // A dead aliased alternative must not prevent later alternatives from matching.
+      case `Never` => Never
+      case simplified => Rename(simplified, name)
     case Extract(pattern, correspondence, term) => pattern.simplify match
       case `Never` => Never // Lift up `Never`. Let the caller reduce it.
       case simplified => Extract(simplified, correspondence, term)

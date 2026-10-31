@@ -132,7 +132,9 @@ x + y
 
 data class Tuple(a, b)
 fun f(used1: Int) =
+  let =used1
   fun g1(used2: Int) =
+    let =used2
     fun h() = 
       set used1 = 10
       set used2 = 100
@@ -168,6 +170,7 @@ a.toString() + b + c + d
 :sir
 :expect 7
 fun f(unused, immutable, mutated) =
+  let =mutated
   fun g() =
     set mutated = 2
     immutable + mutated
@@ -176,25 +179,26 @@ fun f(unused, immutable, mutated) =
   a + h() + unused
 f(1, 2, 1000)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g, h, Capture$f;
-//│ define g as fun g²(f$cap, immutable) {
-//│   set f$cap.mutated$0⁰ = 2;
-//│   return +⁰(immutable, f$cap.mutated$0⁰)
-//│ };
-//│ define h as fun h⁰(f$cap) {
-//│   return f$cap.mutated$0⁰
-//│ };
-//│ define Capture$f as class Capture$f¹ {
-//│   constructor Capture$f⁰(mutated$0) {
-//│     define mutated$0¹ as val mutated$0⁰ = mutated$0;
+//│ let g, h, Capture$scope0;
+//│ define Capture$scope0 as class Capture$scope0¹ {
+//│   constructor Capture$scope0⁰(mutated$0) {
+//│     define mutated$0⁰ as val mutated$0¹ = mutated$0;
 //│     end
 //│   }
 //│ };
+//│ define g as fun g²(scope0$cap, immutable) {
+//│   set scope0$cap.mutated$0¹ = 2;
+//│   return +⁰(immutable, scope0$cap.mutated$0¹)
+//│ };
+//│ define h as fun h⁰(scope0$cap) {
+//│   return scope0$cap.mutated$0¹
+//│ };
 //│ define f⁴ as fun f⁵(unused, immutable, mutated) {
-//│   let a, tmp, tmp1, f$cap;
-//│   set f$cap = new mut Capture$f¹(mutated);
-//│   set a = g²(f$cap, immutable);
-//│   set tmp = h⁰(f$cap);
+//│   let mutated1, a, tmp, tmp1, scope0$cap;
+//│   set scope0$cap = new mut Capture$scope0¹(mutated1);
+//│   set scope0$cap.mutated$0¹ = mutated;
+//│   set a = g²(scope0$cap, immutable);
+//│   set tmp = h⁰(scope0$cap);
 //│   set tmp1 = +⁰(a, tmp);
 //│   return +⁰(tmp1, unused)
 //│ };
@@ -250,6 +254,7 @@ g()
 fun g() =
   let y = 0
   fun f(x) =
+    let =x
     let k = 4
     set y = 2
     // set x = 3
@@ -263,8 +268,8 @@ fun g() =
 g()(1)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let h, f, baseCall, Capture$scope0, f$;
-//│ define Capture$scope0 as class Capture$scope0¹ {
-//│   constructor Capture$scope0⁰(y$0) {
+//│ define Capture$scope0 as class Capture$scope0³ {
+//│   constructor Capture$scope0²(y$0) {
 //│     define y$0⁰ as val y$0¹ = y$0;
 //│     end
 //│   }
@@ -279,14 +284,15 @@ g()(1)
 //│   return f⁶(scope0$cap, x)
 //│ };
 //│ define f as fun f⁶(scope0$cap, x) {
-//│   let k;
+//│   let x1, k;
+//│   set x1 = x;
 //│   set k = 4;
 //│   set scope0$cap.y$0¹ = 2;
-//│   return x
+//│   return x1
 //│ };
 //│ define g³ as fun g⁴() {
 //│   let y, scope0$cap, f$here;
-//│   set scope0$cap = new mut Capture$scope0¹(y);
+//│   set scope0$cap = new mut Capture$scope0³(y);
 //│   set scope0$cap.y$0¹ = 0;
 //│   set f$here = f$⁰(scope0$cap);
 //│   return f$here
@@ -311,6 +317,9 @@ ret()
 
 :expect 6
 fun f(x, y, z) =
+  let =x
+  let =y
+  let =z
   fun g() =
     set x = 1
     h()
@@ -325,6 +334,7 @@ f(0, 0, 0)()
 //│ = 6
 
 fun f(x, cond) =
+  let =x
   set x = 1
   set x = 2
   if cond then
@@ -364,6 +374,7 @@ fun f(es, vs) =
 :expect 1
 :sir
 fun f(x) =
+  let =x
   fun g() =
     set x += 1
     x
@@ -380,15 +391,16 @@ f(0)
 //│   return x
 //│ };
 //│ define f⁷ as fun f⁸(x) {
-//│   let scrut, tmp;
+//│   let x1, scrut, tmp;
+//│   set x1 = x;
 //│   set scrut = true;
 //│   match scrut
 //│     true =>
-//│       return g⁵(x)
+//│       return g⁵(x1)
 //│     else
-//│       set tmp = +⁰(x, 1);
-//│       set x = tmp;
-//│       return x
+//│       set tmp = +⁰(x1, 1);
+//│       set x1 = tmp;
+//│       return x1
 //│   end
 //│ };
 //│ return f⁸(0)
@@ -439,33 +451,35 @@ fun f(x) =
 
 :sir
 fun f(x) =
+  let =x
   fun g() = x
   let a = g
   set x += 1
   [a, g]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let g, Capture$f, g$;
-//│ @inline
-//│ define g$ as fun g$²(f$cap)() {
-//│   return g⁷(f$cap)
-//│ };
-//│ define g as fun g⁷(f$cap) {
-//│   return f$cap.x$0⁰
-//│ };
-//│ define Capture$f as class Capture$f³ {
-//│   constructor Capture$f²(x$0) {
-//│     define x$0¹ as val x$0⁰ = x$0;
+//│ let g, Capture$scope0, g$;
+//│ define Capture$scope0 as class Capture$scope0⁵ {
+//│   constructor Capture$scope0⁴(x$0) {
+//│     define x$0⁰ as val x$0¹ = x$0;
 //│     end
 //│   }
 //│ };
+//│ @inline
+//│ define g$ as fun g$²(scope0$cap)() {
+//│   return g⁷(scope0$cap)
+//│ };
+//│ define g as fun g⁷(scope0$cap) {
+//│   return scope0$cap.x$0¹
+//│ };
 //│ define f¹¹ as fun f¹²(x) {
-//│   let a, tmp, f$cap, g$here;
-//│   set f$cap = new mut Capture$f³(x);
-//│   set g$here = g$²(f$cap);
+//│   let x1, a, tmp, scope0$cap, g$here;
+//│   set scope0$cap = new mut Capture$scope0⁵(x1);
+//│   set scope0$cap.x$0¹ = x;
+//│   set g$here = g$²(scope0$cap);
 //│   set a = g$here;
-//│   set tmp = +⁰(f$cap.x$0⁰, 1);
-//│   set f$cap.x$0⁰ = tmp;
-//│   set g$here = g$²(f$cap);
+//│   set tmp = +⁰(scope0$cap.x$0¹, 1);
+//│   set scope0$cap.x$0¹ = tmp;
+//│   set g$here = g$²(scope0$cap);
 //│   return [a, g$here]
 //│ };
 //│ end

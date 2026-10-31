@@ -127,9 +127,14 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
   trace[GeneralType](dbg"${ctx.lvl}. Typing type ${ty.showDbg}", r => s"~> ${r.showDbg}"):
     def mono(ty: Term, pol: Bool): Type =
       monoOrErr(typeAndSubstType(ty, pol), ty)
+    def typeSymbol(t: Term): Opt[TypeSymbol] =
+      // Legacy references may expand to implicit constructor calls in term position;
+      // types still denote the declaration. Imported new-resolution references need completion.
+      t.symbol.flatMap(_.asTpe).orElse(t.resolvedSym.flatMap(_.asTpe))
     ty match
     case Capture(base, _) => typeAndSubstType(base, pol)
-    case Ref(sym: LocalSymbol) =>
+    case ref: (Ref | SimpleRef) if ref.sym.isInstanceOf[LocalSymbol] =>
+      val sym = ref.sym
       log(dbg"Type lookup: ${sym.nme} ${sym.uid} ${map.keySet}")
       map.get(sym.uid) match
         case Some(Wildcard(in, out)) => if pol then out else in
@@ -156,7 +161,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
       genPolyType(tvs, outVar, typeAndSubstType(body, pol))
     case Term.TyApp(cls, targs) =>
       // log(s"Type application: ${cls.nme} with ${targs}")
-      cls.symbol.flatMap(_.asTpe) match
+      typeSymbol(cls) match
       case S(tpeSym) =>
         if tpeSym.nme === "Any" then Top // FIXME hygiene
         else if tpeSym.nme === "Nothing" then Bot // FIXME hygiene
@@ -191,10 +196,10 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
       mono(rhs, !pol).!
     case CompType(lhs, rhs, union) =>
       Type.mkComposedType(mono(lhs, pol), mono(rhs, pol), union)
-    case UnitVal() =>
+    case UnitVal() | Lit(_: UnitLit) =>
       InvalCtx.unitTy
     case _ =>
-      ty.symbol.flatMap(_.asTpe) match
+      typeSymbol(ty) match
       case S(cls: (ClassSymbol | TypeAliasSymbol)) => typeAndSubstType(Term.TyApp(ty, Nil)(N), pol)
       case S(_) | N => error(msg"Invalid type" -> ty.toLoc :: Nil, S(ty)) // TODO
 
@@ -218,6 +223,26 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
   private def typeType(ty: Term)(using ctx: InvalCtx, cctx: CCtx): GeneralType =
     typeAndSubstType(ty, pol = true)(using Map.empty)
   
+  /** Read foreign signatures on demand: the shared prelude also contains declarations
+    * for language features InvalML does not support, which need not be typed until used.
+    */
+  private def declaredType(td: TermDefinition)(using ctx: InvalCtx, cctx: CCtx): GeneralType =
+    given InvalCtx = ctx.nextLevel
+    val tvars = td.tparams.toList.flatten.map(p => p.sym.uid -> freshVar(p.sym))
+    given Map[Uid[Symbol], TypeArg] = tvars.toMap
+    def signature(t: Term): GeneralType = typeAndSubstType(t, pol = true)
+    val ty = td.sign match
+      case S(sign) if !td.flags.hasResultAnnotation => signature(sign)
+      case sign =>
+        td.params.foldRight(sign.fold[GeneralType](Top)(signature)): (ps, ret) =>
+          if ps.variadic.nonEmpty then
+            error(msg"InvalML does not support variadic foreign function signatures." -> td.toLoc :: Nil)
+          else
+            // InvalML's fixed-arity arrow safely describes calls supplying every optional
+            // argument. It does not yet express the additional arities accepted by the host.
+            PolyFunType(ps.params.map(_.sign.fold[GeneralType](Top)(signature)), ret, Bot)
+    if tvars.isEmpty then ty else PolyType(tvars.map(_._2), N, ty)
+
   private def instantiate(ty: PolyType)(using ctx: InvalCtx): GeneralType =
     ty.instantiate(infVarState.nextUid, freshEnv(new TempSymbol(N, initErasedType = N, "env")), ctx.lvl)(tl)
 
@@ -391,7 +416,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             if !isGeneric then // no GADT reasoning so far
               constrain(clsTy, tryMkMono(typeAndSubstType(ext, true)(using map.toMap), scrutinee))
             params.iterator.zip(paramList).foreach:
-              case (p, Param(_, _, S(ty), _)) =>
+              case (p, Param(sign = S(ty))) =>
                 nestCtx += p._1 -> typeAndSubstType(ty, true)(using map.toMap)
               case (_, p) =>
                 error(msg"Invalid ADT parameter." -> p.toLoc :: Nil)
@@ -601,7 +626,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
       case clsDef: ClassDef.Parameterized =>
         if clsDef.tparams.isEmpty then
           ctx += clsDef.bsym -> PolyFunType(clsDef.params.params.map {
-            case Param(_, _, S(ty), _) => typeType(ty)
+            case Param(sign = S(ty)) => typeType(ty)
             case p =>
               error(msg"Invalid ADT parameter." -> p.toLoc :: Nil)
               Bot
@@ -614,7 +639,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             case v: InfVar => v :: Nil
             case other => lastWords(s"unexpected non-InfVar type argument in ADT ctor: $other")
           }, N, PolyFunType(clsDef.params.params.map {
-            case Param(_, _, S(ty), _) => typeAndSubstType(ty, true)(using map.toMap)
+            case Param(sign = S(ty)) => typeAndSubstType(ty, true)(using map.toMap)
             case p =>
               error(msg"Invalid ADT parameter." -> p.toLoc :: Nil)
               Bot
@@ -633,9 +658,9 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
         ctx.get(sym) match
           case Some(ty) => (ty, Bot)
           case _ =>
-            // (error(msg"Variable not found: ${sym.nme} (${sym.toString} @ ${sym.uid.toString})"
-            (error(msg"Variable not found: ${sym.nme}"
-              -> t.toLoc :: Nil), Bot)
+            sym.asTrm.flatMap(_.defn).filter(Inheritance.isExternal) match
+              case S(td) => (declaredType(td), Bot)
+              case N => (error(msg"Variable not found: ${sym.nme}" -> t.toLoc :: Nil), Bot)
       case Blk(stats, res) =>
         val effBuff = ListBuffer.empty[Type]
         def goStats(stats: Ls[Statement]): Unit = stats match
@@ -687,7 +712,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
         val nestCtx = ctx.nest
         given InvalCtx = nestCtx
         val tvs = params.map:
-          case Param(_, sym, sign, _) =>
+          case Param(sym = sym, sign = sign) =>
             val ty = sign.map(s => typeType(s)(using nestCtx)).getOrElse(freshVar(sym))
             nestCtx += sym -> ty
             ty
@@ -707,7 +732,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             constrain(tryMkMono(ty, term), ClassLikeType(clsSym, targs))
             require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
             (clsDfn.paramsOpt.fold(Nil)(_.params).map {
-              case Param(_, sym, sign, _) =>
+              case Param(sym = sym, sign = sign) =>
                 if sym.nme === field.name then sign else N
             }.filter(_.isDefined)) match
               case S(res) :: Nil => (typeAndSubstType(res, pol = true)(using map.toMap), eff)
@@ -719,39 +744,34 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
         app((funTy, lhsEff), rhs, t)
       case Term.New(cls, args, N) =>
         cls.symbol.flatMap(_.asCls.flatMap(_.defn)) match
-        case S(clsDfn: ClassDef.Parameterized) =>
-          require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
-          val argsList = args match
-            case Nil => Nil
-            case Term.Tup(elems) :: Nil => elems.map:
-              case PlainFld(term) => term
-              case _ => ???
-            case _ => ???
-          if argsList.length != clsDfn.params.params.length then
-            (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Bot)
+        case S(clsDfn) =>
+          // Host classes commonly declare their constructor in the body. All constructor
+          // lists participate in argument checking, including omitted optional arguments.
+          val paramLists = clsDfn.paramsOpt.toList ::: clsDfn.auxParams match
+            case Nil => PlainParamList(Nil)(clsDfn.toLoc) :: Nil
+            case lists => lists
+          val argLists = if args.isEmpty then Term.Tup(Nil)(Tree.DummyTup) :: Nil else args
+          if paramLists.length != argLists.length then
+            (error(msg"The number of constructor parameter lists is incorrect" -> t.toLoc :: Nil), Bot)
           else
-            val map = HashMap[Uid[Symbol], TypeArg]()
-            val targs = clsDfn.tparams.map {
-              case TyParam(_, S(_), targ) =>
-                val ty = freshVar(targ)
-                map += targ.uid -> ty
-                ty
-              case TyParam(_, N, targ) =>
-                // val ty = freshWildcard // FIXME probably not correct
-                val ty = freshVar(targ)
-                map += targ.uid -> ty
-                ty
-            }
+            val map = clsDfn.tparams.map(tp => tp.sym.uid -> freshVar(tp.sym)).toMap
             val effBuff = ListBuffer.empty[Type]
-            require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
-            argsList.iterator.zip(clsDfn.params.params).foreach {
-              case (arg, Param(sign = S(sign))) =>
-                val (ty, eff) = ascribe(arg, typeAndSubstType(sign, pol = true)(using map.toMap))
-                effBuff += eff
-              case _ => ???
-            }
-            (ClassLikeType(clsDfn.sym, targs), effBuff.foldLeft[Type](Bot)((res, e) => res | e))
-        case S(clsDfn: ClassDef.Plain) => ??? // TODO
+            paramLists.lazyZip(argLists).foreach:
+              case (ps, Term.Tup(elems)) if ps.variadic.isEmpty =>
+                if elems.length < ps.paramCountLB || elems.length > ps.params.length then
+                  error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil)
+                elems.zip(ps.params).foreach:
+                  case (PlainFld(arg), param) =>
+                    val (_, eff) = param.sign match
+                      case S(sign) => ascribe(arg, typeAndSubstType(sign, pol = true)(using map))
+                      case N => typeCheck(arg)
+                    effBuff += eff
+                  case (arg, _) =>
+                    error(msg"InvalML does not support spread constructor arguments." -> arg.toLoc :: Nil)
+              case (_, args) =>
+                error(msg"InvalML requires fixed constructor parameter lists and positional arguments." -> args.toLoc :: Nil)
+            (ClassLikeType(clsDfn.sym, clsDfn.tparams.map(tp => map(tp.sym.uid))),
+              effBuff.foldLeft[Type](Bot)((res, e) => res | e))
         case N => 
           (error(msg"Not a valid class: ${cls.describe}" -> cls.toLoc :: Nil), Bot)
       case Term.Asc(term, ty) =>

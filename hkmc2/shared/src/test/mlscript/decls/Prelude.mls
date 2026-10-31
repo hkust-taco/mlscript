@@ -280,17 +280,17 @@ declare class Array[T](val length: Int) {
   fun pop(): T | unsafe.undefined
   fun shift(): T | unsafe.undefined
   fun concat(...arrays): Array[Any]
-  fun map[U](f: (T, drop Int, drop Array[T]) -> U): Array[U]
-  fun forEach(f: (T, drop Int, drop Array[T]) -> Any): unsafe.undefined
-  fun filter(f: (T, drop Int, drop Array[T]) -> Bool): Array[T]
+  fun map[U](f: (T, drop Int, drop Array[T]) -> U, thisArg?): Array[U]
+  fun forEach(f: (T, drop Int, drop Array[T]) -> Any, thisArg?): unsafe.undefined
+  fun filter(f: (T, drop Int, drop Array[T]) -> Bool, thisArg?): Array[T]
   fun find(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): T | unsafe.undefined
   fun findIndex(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): Int
   fun findLast(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): T | unsafe.undefined
   fun findLastIndex(f: (T, drop Int, drop Array[T]) -> Bool, ...thisArg): Int
   fun flat(...depth): Array[Any]
   fun flatMap[U](f: (T, drop Int, drop Array[T]) -> (U | Array[U]), ...thisArg): Array[U]
-  fun every(f: (T, drop Int, drop Array[T]) -> Bool): Bool
-  fun some(f: (T, drop Int, drop Array[T]) -> Bool): Bool
+  fun every(f: (T, drop Int, drop Array[T]) -> Bool, thisArg?): Bool
+  fun some(f: (T, drop Int, drop Array[T]) -> Bool, thisArg?): Bool
   // Without an initial value, the first element becomes the accumulator, so the
   // accumulator type would also have to include T. Methods cannot be overloaded
   // by arity, so only the form with an initial value is declared.
@@ -461,7 +461,7 @@ declare module source {
     file
 }
 
-// This virtual module exposes host values that ordinary MLscript code avoids.
+// This virtual module exposes unsafe host values; @unsafe permits writes to immutable fields.
 declare module unsafe {
   val id"undefined"
 }
@@ -473,6 +473,7 @@ declare module js {
     bitor
     shl
     try_catch
+  object plainField
 }
 
 declare module wasm {
@@ -623,7 +624,7 @@ declare val document: dyn
 declare val customElements: dyn
 // Preserve the nominal superclass while its host members remain dynamic.
 declare open class HTMLElement {
-  val textContent: dyn
+  mut val textContent: dyn
   val innerHTML: dyn
   val shadowRoot: dyn
   val appendChild: dyn

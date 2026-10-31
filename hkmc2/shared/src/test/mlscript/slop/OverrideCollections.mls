@@ -14,7 +14,7 @@ val arraySplice = LazyArray.concat([1], [2, 3])
 val treeView = LazyFingerTree.mk(1, 2, 3)
 val treeSplice = LazyFingerTree.concat([1], [2, 3])
 
-// Missing bounds are decoded from argument count before index normalization.
+// Omitted bounds use the start and end of the collection before index normalization.
 :expect [[1, 2, 3], [2, 3]]
 [Iter.toArray(tree.slice()), Iter.toArray(tree.slice(1))]
 //│ = [[1, 2, 3], [2, 3]]
