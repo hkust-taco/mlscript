@@ -3859,7 +3859,7 @@ class NewResolver:
         MarkedShape.exit(shape, ResolutionBoundary(thru), N) match
           case value: TermShape => assign(base, value)
           case NoShape => ()
-      case MemberRef(sym: TermSymbol) if sym.isLexicalBinding =>
+      case MemberRef(sym: TermSymbol) if sym.isLetOrParamBinding =>
         publishActivated(rctx.memberVariable(sym), shape)
       case SimpleRef(sym: LocalSymbol) => publishActivated(sym, shape)
       case Ref(sym: LocalSymbol) => publishActivated(sym, shape)
@@ -4089,7 +4089,7 @@ class NewResolver:
           // generated matcher object does not enter or leave those scopes.
           val exited = sym match
             case _: ModuleOrObjectSymbol | _: PatternSymbol => sh
-            case sym: TermSymbol if sym.isLexicalBinding => sh
+            case sym: TermSymbol if sym.isLetOrParamBinding => sh
             case _ => MarkedShape.exit(sh, ResolutionBoundary(sym), S(resSym))
           (exited match
             case value: TermShape => transportShape(value, markss)
@@ -4151,7 +4151,7 @@ class NewResolver:
             //   ??? // TODO error?
             wrappedListener(defnShapes.getOrElseUpdate(sym, DefnShape(d, extsh)))
           )
-        case N if sym.asTrm.exists(_.isLexicalBinding) =>
+        case N if sym.asTrm.exists(_.isLetOrParamBinding) =>
           listenMemberVariable(sym.asTrm.get)(wrappedListener)
         case N =>
           softAssert(false, s"Symbol definition of ${sym} is not set upon completion of ${bms}")
@@ -4681,9 +4681,9 @@ class NewResolver:
       symbol.defn match
         case S(defn) => completed(defn)
         case N => symbol.defnListeners += completed
-    case ref @ MemberRef(sym: TermSymbol) if sym.isLexicalBinding =>
-      // A lexical binding has no evaluation boundary of its own. Surrounding
-      // function/class captures still enter and exit through Capture normally.
+    case ref @ MemberRef(sym: TermSymbol) if sym.isLetOrParamBinding =>
+      // Forward the binding's shapes without adding scope entry/exit marks
+      // for this plain let or param binding.
       recordValueTarget(ref, sym)
       rctx.memberVariable(sym).subscribeToShapes(listener)
     case MemberRef(_: TermSymbol) =>

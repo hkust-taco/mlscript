@@ -3212,7 +3212,7 @@ extends Importer:
         if newResolution then sig.foreach(registerSignature)
         val sym = VarSymbol(canonicalId, mut = false)
         sym.sourceAliases = aliases
-        // Constructor annotations describe the generated field; the parameter binding stays immutable.
+        // Constructor parameter annotations apply to the generated field; the parameter binding stays immutable.
         val fieldAnnotations = annotations.flatMap(annot).filter:
           case _: Annot.PlainField if inConstructor && flg.isVal => true
           case annotation =>

@@ -919,10 +919,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val immutable = target.iterator.++(candidates).collectFirst:
       case sym: TermSymbol if sym.k is syntax.ImmutVal => sym
     immutable match
-      case S(sym) if !unsafe => cannotAssign(sym, sym, name.toLoc)
-      case _ => namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
-        case DynSelect(_, key, kind) => AssignDynField(prefix, key, kind, value, rest)
-        case _ => AssignField(prefix, name, value, rest)(target)
+    case S(sym) if !unsafe => cannotAssign(sym, sym, name.toLoc)
+    case _ => namedSelection(prefix, name, target, keyAccess, name.toLoc, false):
+      case DynSelect(_, key, kind) => AssignDynField(prefix, key, kind, value, rest)
+      case _ => AssignField(prefix, name, value, rest)(target)
 
   /** A `DynSel` term (`x.[i]` or `x.(k)`) carries no resolved member, only an array-index flag. */
   private def dynSelectKind(arrayIdx: Bool): DynSelectKind =

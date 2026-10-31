@@ -195,17 +195,20 @@ set
   y += 2
 ```
 
-For a public mutable field, `@js.plainField` generates a JavaScript data property
-without a getter, setter, or private backing slot. It works on constructor fields
-and fields declared in class or object bodies:
+In JavaScript, `mut val` is implemented through a private backing field.
+If the `mut val` is public, its JavaScript generated code uses a getter and setter.
+This means the field remain mutable even when its owner is frozen.
+To circumvent this (for example, for performance reasons),
+`@js.plainField` generates a plain JavaScript data property
+without a getter, setter, or private backing field.
+It works on constructor fields and fields declared in class or object bodies:
 
 ```mlscript
 class Counter(@js.plainField mut val value: Int)
-let counter = new mut Counter(0)
+let counter = new mut Counter(0) // Note: `new mut`
 set counter.value += 1
 ```
 
-The field remains mutable for compiler analysis, so reads must observe writes.
 Unlike ordinary `mut val` fields, plain fields become read-only when their receiver
 is frozen. Use `new mut` when the field must remain writable.
 Overrides must preserve the presence or absence of `@js.plainField` on the inherited field.
@@ -763,11 +766,10 @@ let box = new mut Box(1)
 @unsafe set box.value = 3
 ```
 
-`@unsafe` permits the field write; it does not unfreeze the receiver or change
-optimization assumptions. Optimizations may still assume that `val` fields are
-immutable, so mutating them can change optimized program behavior. Use `mut val`
-for fields whose updates must be observed by ordinary code. The annotation does
-not grant permission to assignments nested in the receiver or right-hand side.
+`@unsafe set` permits the field write
+It is an unsafe escape hatch: optimizations may still assume that non-`mut` `val` fields are
+immutable, so an update through `@unsafe set` could be missed if the program optimizes away a `val` read.
+Use `mut val` for fields whose updates must be observed by ordinary code.
 
 ---
 
