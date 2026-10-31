@@ -178,7 +178,9 @@ mut val resumePc: Int = -1
 object FatalEffect
 object PrintStackEffect
 
-data class FunctionContFrame(next: FunctionContFrame | null, saved: Array) with
+open js { plainField }
+
+data class FunctionContFrame(@plainField mut val next: FunctionContFrame | null, saved: Array) with
   fun resume(value) =
     let
       i = 0
@@ -222,14 +224,18 @@ data class FunctionContFrame(next: FunctionContFrame | null, saved: Array) with
       loc is null then "pc=" + saved.[1]
       else loc
 
-data class HandlerContFrame(next: FunctionContFrame | null, nextHandler: HandlerContFrame | null, handler: Any)
+data class HandlerContFrame(
+  @plainField mut val next: FunctionContFrame | null
+  @plainField mut val nextHandler: HandlerContFrame | null
+  handler: Any
+)
 
 data class ContTrace(
-  next: FunctionContFrame | null,
-  last: ContTrace | HandlerContFrame | FunctionContFrame | null,
-  nextHandler: HandlerContFrame | null,
-  lastHandler: ContTrace | HandlerContFrame | null,
-  resumed: Bool
+  @plainField mut val next: FunctionContFrame | null
+  @plainField mut val last: ContTrace | HandlerContFrame | FunctionContFrame | null
+  @plainField mut val nextHandler: HandlerContFrame | null
+  @plainField mut val lastHandler: ContTrace | HandlerContFrame | null
+  @plainField mut val resumed: Bool
 )
 // PrintStackEffect stores the showLocals flag; FatalEffect has no handler function.
 data class EffectSig(contTrace: ContTrace, handler: Any, handlerFun: Function | Bool | null)

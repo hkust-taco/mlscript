@@ -160,7 +160,7 @@ Box(41).mk()
 //│ = 42
 
 
-class Counter(val x) with
+class Counter(mut val x) with
   fun inc() = 
     set x += 1
     this

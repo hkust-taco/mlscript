@@ -67,6 +67,7 @@ declare module js with
     bitor
     shl
     try_catch
+  object plainField
 
 declare module wasm with
   module i32 with

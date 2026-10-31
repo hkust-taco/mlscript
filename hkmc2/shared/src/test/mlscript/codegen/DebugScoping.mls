@@ -48,7 +48,7 @@ DebugMethods.selected(7)
 @dbg('lowering) fun command_elaboration(x) = x
 //│ Elab block List(Annotated(App(Ident(dbg),Tup(List(Ident('lowering)))),TermDef(Fun,App(Ident(command_elaboration[...] LocalScope(block:6)
 //│ | Processing term definition App(Ident(command_elaboration),Tup(List(Ident(x))))
-//│ | Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set())
+//│ | Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set(),List())
 //│ | Elab term Ident(x)
 //│ | | Elab subterm Ident(x)
 //│ | | ~> x¹
@@ -105,7 +105,7 @@ class DebugCompanion(value: Int) with
 @dbg('elaboration, showUids: false)
 module DebugCompanion with
   fun answer() = 1102
-//│ Elaborating ParamTree: ParamTree(‹›,Ident(value),Some(Ident(Int)),None,Set())
+//│ Elaborating ParamTree: ParamTree(‹›,Ident(value),Some(Ident(Int)),None,Set(),List())
 //│ Elab term Ident(Int)
 //│ | Elab subterm Ident(Int)
 //│ | | listen: trm = member:Int⁰

@@ -461,7 +461,7 @@ declare module source {
     file
 }
 
-// This virtual module exposes host values that ordinary MLscript code avoids.
+// This virtual module exposes unsafe host values; @unsafe permits writes to immutable fields.
 declare module unsafe {
   val id"undefined"
 }
@@ -473,6 +473,7 @@ declare module js {
     bitor
     shl
     try_catch
+  object plainField
 }
 
 declare module wasm {
@@ -623,7 +624,7 @@ declare val document: dyn
 declare val customElements: dyn
 // Preserve the nominal superclass while its host members remain dynamic.
 declare open class HTMLElement {
-  val textContent: dyn
+  mut val textContent: dyn
   val innerHTML: dyn
   val shadowRoot: dyn
   val appendChild: dyn

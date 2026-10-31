@@ -1,0 +1,258 @@
+:.
+:js
+:checkIR
+
+
+open js { plainField }
+
+fun isDataField(obj, name) =
+  let descriptor = globalThis.Object.getOwnPropertyDescriptor(obj, name)
+  if descriptor === unsafe.undefined then false
+  else globalThis.Reflect.has(descriptor, "value")
+
+fun hasAccessor(obj, name) =
+  let descriptor = globalThis.Object.getOwnPropertyDescriptor(globalThis.Object.getPrototypeOf(obj), name)
+  if descriptor === unsafe.undefined then false
+  else globalThis.Reflect.has(descriptor, "get") and globalThis.Reflect.has(descriptor, "set")
+
+// Annotated constructor fields use data properties; ordinary mut vals keep accessors.
+:ssjs
+class Header(@plainField mut val value: Int, mut val ordinary: Int)
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let Header1;
+//│ Header1 = function Header(value, ordinary) {
+//│   return globalThis.Object.freeze(new Header.class(value, ordinary));
+//│ };
+//│ globalThis.Object.freeze(class Header {
+//│   static {
+//│     Header1.class = this
+//│   }
+//│   constructor(value, ordinary) {
+//│     this.value = value;
+//│     this.ordinary = ordinary;
+//│   }
+//│   #ordinary;
+//│   get ordinary() { return this.#ordinary; }
+//│   set ordinary(value) { this.#ordinary = value; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Header", ["value", "ordinary"]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [true, false, false, true, 3, 4]
+let header = new mut Header(1, 2)
+set header.value += 2
+set header.ordinary += 2
+[isDataField(header, "value"), hasAccessor(header, "value"), isDataField(header, "ordinary"), hasAccessor(header, "ordinary"), header.value, header.ordinary]
+//│ = [true, false, false, true, 3, 4]
+//│ header = Header(3, 4)
+
+// Body fields and auxiliary constructor fields retain the same annotation.
+:ssjs
+class Body with
+  @js.plainField mut val value = 5
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let Body1;
+//│ globalThis.Object.freeze(class Body {
+//│   static {
+//│     Body1 = this
+//│   }
+//│   constructor() {
+//│     this.value = 5;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Body"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+class Auxiliary with
+  constructor(@plainField mut val value: Int)
+
+:expect [true, false, true, false, 6, 8]
+let body = new mut Body
+let auxiliary = new mut Auxiliary(7)
+set body.value += 1
+set auxiliary.value += 1
+[isDataField(body, "value"), hasAccessor(body, "value"), isDataField(auxiliary, "value"), hasAccessor(auxiliary, "value"), body.value, auxiliary.value]
+//│ = [true, false, true, false, 6, 8]
+//│ auxiliary = Auxiliary { value: 8 }
+//│ body = Body { value: 6 }
+
+// Flattening curried constructor parameters must preserve both field annotations.
+:expect [true, true, 11, 21]
+class Curried(@plainField mut val first: Int)(@plainField mut val second: Int)
+let curried = new mut Curried(10)(20)
+set curried.first += 1
+set curried.second += 1
+[isDataField(curried, "first"), isDataField(curried, "second"), curried.first, curried.second]
+//│ = [true, true, 11, 21]
+//│ curried = Curried(11)
+
+// Freezing seals plain fields while ordinary mut vals still use their private backing slots.
+:expect [true, false, 1, 3]
+let frozen = new Header(1, 2)
+set frozen.ordinary += 1
+[globalThis.Object.isFrozen(frozen), globalThis.Reflect.set(frozen, "value", 99), frozen.value, frozen.ordinary]
+//│ = [true, false, 1, 3]
+//│ frozen = Header(1, 3)
+
+// Mutable field reads must observe writes through aliases, including calls.
+fun readValue(obj: Header) = obj.value
+fun advance(obj: Header) = set obj.value += 1
+fun observe(obj: Header) =
+  let before = readValue(obj)
+  advance(obj)
+  [before, readValue(obj)]
+
+:expect [3, 4]
+observe(header)
+//│ = [3, 4]
+
+// Local classes exercise both semantic cloning and IR symbol refreshing.
+:lift
+:expect [true, false, true, false, 11, 20]
+fun make(initial: Int) =
+  class Local with
+    @plainField mut val value = initial
+  new mut Local
+let first = make(10)
+let second = make(20)
+set first.value += 1
+[isDataField(first, "value"), hasAccessor(first, "value"), isDataField(second, "value"), hasAccessor(second, "value"), first.value, second.value]
+//│ = [true, false, true, false, 11, 20]
+//│ first = Local { value: 11 }
+//│ second = Local { value: 20 }
+
+// Public fields on object definitions also emit direct properties.
+:ssjs
+object PlainObject with
+  @plainField mut val value = 1
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let PlainObject1;
+//│ globalThis.Object.freeze(class PlainObject {
+//│   static {
+//│     new this
+//│   }
+//│   constructor() {
+//│     PlainObject1 = this;
+//│     this.value = 1;
+//│     Object.defineProperty(this, "class", {
+//│       value: PlainObject
+//│     });
+//│     globalThis.Object.freeze(this);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "PlainObject"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect true
+isDataField(PlainObject, "value")
+//│ = true
+
+// Module fields use the static field generation path.
+:expect true
+module PlainModule with
+  @plainField mut val value = 1
+isDataField(PlainModule, "value")
+//│ = true
+
+// Overrides must keep the same representation in both directions.
+class AccessorBase with
+  open mut val value = 1
+
+:e
+class PlainChild extends AccessorBase with
+  @plainField override mut val value = 2
+//│ ╔══[COMPILATION ERROR] Overriding mutable field 'value' must preserve the @js.plainField annotation
+//│ ║  l.+2: 	  @plainField override mut val value = 2
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Inherited member 'value' is defined here
+//│ ║  l.XX: 	  open mut val value = 1
+//│ ╙──      	               ^^^^^
+
+class PlainBase with
+  @plainField open mut val value = 1
+
+:e
+class AccessorChild extends PlainBase with
+  override mut val value = 2
+//│ ╔══[COMPILATION ERROR] Overriding mutable field 'value' must preserve the @js.plainField annotation
+//│ ║  l.+2: 	  override mut val value = 2
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Inherited member 'value' is defined here
+//│ ║  l.XX: 	  @plainField open mut val value = 1
+//│ ╙──      	                           ^^^^^
+
+:expect [true, false, 3]
+class PlainOverride extends PlainBase with
+  @plainField override mut val value = 2
+let plainOverride = new mut PlainOverride
+set plainOverride.value += 1
+[isDataField(plainOverride, "value"), hasAccessor(plainOverride, "value"), plainOverride.value]
+//│ = [true, false, 3]
+//│ plainOverride = PlainOverride { value: 3 }
+
+// Abstract declarations retain the annotation without an initializer in the IR.
+:expect [true, false, 5]
+abstract class PlainAbstract with
+  @plainField mut val value: Int
+class PlainImplementation extends PlainAbstract with
+  @plainField override mut val value = 4
+let implemented = new mut PlainImplementation
+set implemented.value += 1
+[isDataField(implemented, "value"), hasAccessor(implemented, "value"), implemented.value]
+//│ = [true, false, 5]
+//│ implemented = PlainImplementation { value: 5 }
+
+// The annotation does not change the mutability or visibility of unsupported targets.
+:w
+class Immutable(@plainField val value: Int)
+//│ ╔══[WARNING] Only public mutable fields may be marked @js.plainField.
+//│ ║  l.+1: 	class Immutable(@plainField val value: Int)
+//│ ╙──      	                ^^^^^^^^^^^
+
+:w
+class Hidden with
+  @plainField private mut val value = 1
+//│ ╔══[WARNING] Only public mutable fields may be marked @js.plainField.
+//│ ║  l.+2: 	  @plainField private mut val value = 1
+//│ ╙──      	  ^^^^^^^^^^^
+
+:w
+fun parameter(@plainField value: Int) = value
+//│ ╔══[WARNING] This annotation is not supported on this parameter.
+//│ ║  l.+1: 	fun parameter(@plainField value: Int) = value
+//│ ╙──      	              ^^^^^^^^^^^
+
+:w
+@plainField fun method() = 1
+//│ ╔══[WARNING] Only public mutable fields may be marked @js.plainField.
+//│ ║  l.+1: 	@plainField fun method() = 1
+//│ ╙──      	^^^^^^^^^^^
+
+// Annotation identity follows resolution, so a shadowing name has no effect.
+:w
+:expect [false, true]
+module Other with
+  object plainField
+class Shadowed with
+  @Other.plainField mut val value = 1
+let shadowed = new mut Shadowed
+[isDataField(shadowed, "value"), hasAccessor(shadowed, "value")]
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+4: 	  @Other.plainField mut val value = 1
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^
+//│ = [false, true]
+//│ shadowed = Shadowed
+
+
+#lang(useNewResolution: false, strictResolution: false)
+
+:expect [true, false, 31]
+class Legacy(@js.plainField mut val value: Int)
+let legacy = new mut Legacy(30)
+set legacy.value += 1
+[isDataField(legacy, "value"), hasAccessor(legacy, "value"), legacy.value]
+//│ = [true, false, 31]
+//│ legacy = Legacy(31)

@@ -1,0 +1,104 @@
+:.
+:js
+:checkIR
+
+
+// An ordinary private val must reject the same writes as stored parameters.
+:ge
+class DirectWrite with
+  private val value = 0
+  fun update() = set value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
+//│ ║  l.+3: 	  fun update() = set value = 1
+//│ ║        	                     ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  private val value = 0
+//│ ╙──      	              ^^^^^
+
+:ge
+class QualifiedWrite with
+  private val value = 0
+  fun update() = set this.value += 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
+//│ ║  l.+3: 	  fun update() = set this.value += 1
+//│ ║        	                         ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  private val value = 0
+//│ ╙──      	              ^^^^^
+
+:ge
+class CapturedWrite with
+  private val value = 0
+  fun updater() = () => set value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
+//│ ║  l.+3: 	  fun updater() = () => set value = 1
+//│ ║        	                            ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  private val value = 0
+//│ ╙──      	              ^^^^^
+
+// Class privacy permits access to another instance, but does not permit mutation.
+:ge
+class OtherInstanceWrite with
+  private val value = 0
+  fun update(other: OtherInstanceWrite) = set other.value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
+//│ ║  l.+3: 	  fun update(other: OtherInstanceWrite) = set other.value = 1
+//│ ║        	                                                   ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  private val value = 0
+//│ ╙──      	              ^^^^^
+
+:ge
+class ConstructorWrite with
+  private val value = 0
+  set value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
+//│ ║  l.+3: 	  set value = 1
+//│ ║        	      ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  private val value = 0
+//│ ╙──      	              ^^^^^
+
+:ge
+object ObjectWrite with
+  private val value = 0
+  fun update() = set value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
+//│ ║  l.+3: 	  fun update() = set value = 1
+//│ ║        	                     ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  private val value = 0
+//│ ╙──      	              ^^^^^
+
+
+// Initialization, private mut vals, and let-bound state remain valid on frozen instances.
+:expect [[41, 1, 1], [41, 2, 2], [10, 1, 1]]
+class State(initial: Int) with
+  private val value = initial
+  private mut val count = 0
+  let local = 0
+  fun next() =
+    set this.count += 1
+    set local += 1
+    [value, count, local]
+let first = new State(41)
+let second = new State(10)
+[first.next(), first.next(), second.next()]
+//│ = [[41, 1, 1], [41, 2, 2], [10, 1, 1]]
+//│ first = State(_)
+//│ second = State(_)
+
+
+#lang(useNewResolution: false, strictResolution: false)
+
+:ge
+class LegacyWrite with
+  private val value = 0
+  fun update() = set this.value = 1
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable field 'value'
+//│ ║  l.+3: 	  fun update() = set this.value = 1
+//│ ║        	                         ^^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+2: 	  private val value = 0
+//│ ╙──      	              ^^^^^

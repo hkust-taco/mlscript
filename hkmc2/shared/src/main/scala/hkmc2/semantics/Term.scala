@@ -28,6 +28,8 @@ enum Annot extends Located:
   case JsSymbol(key: SymbolKey)(val toLoc: Opt[Loc])
   case Fresh()(val toLoc: Opt[Loc])
   case Untyped()(val toLoc: Opt[Loc])
+  case Unsafe()(val toLoc: Opt[Loc])
+  case PlainField()(val toLoc: Opt[Loc])
   case Modifier(mod: Keyword)(val toLoc: Opt[Loc])
   case Trm(trm: Term)(val toLoc: Opt[Loc])
   // NOTE: The presence of TailRec and TailCall annotations does not affect whether a function is optimized or not;
@@ -65,13 +67,15 @@ enum Annot extends Located:
   def subTerms: Vector[Term] = this match
     case Trm(trm) => Vector.single(trm)
     case JsSymbol(key) => Vector.single(key.term)
-    case Fresh() | _: Modifier | Untyped() | TailRec() | TailCall() | Inline() | NoInline()
+    case Fresh() | _: Modifier | Untyped() | Unsafe() | PlainField() | TailRec() | TailCall() | Inline() | NoInline()
       | Generator() | Async() | RaiseEffects() | Pure() | _: Bufferable | _: Config | _: Debug | _: Affine => Vector.empty
   
   def show(using Scope, ShowCfg, Raise): Document = this match
     case JsSymbol(key) => doc"@jsSymbol(${key.term.show})"
     case Fresh() => doc"@annotations.fresh"
     case Untyped() => doc"@untyped"
+    case Unsafe() => doc"@unsafe"
+    case PlainField() => doc"@js.plainField"
     case Inline() => doc"@inline"
     case NoInline() => doc"@noInline"
     case Generator() => doc"@generator"
@@ -261,7 +265,7 @@ object Resolvable:
         Nil,
         if defn.tparams.isEmpty
         then N
-        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none)(tp.toLoc))),
+        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none, Nil)(tp.toLoc))),
         defn.rhs,
         TermDefFlags.empty, // TODO: handle class-like definitions with flags
         Modulefulness.none, // TODO: handle modulefulness for class-like definitions
@@ -272,7 +276,7 @@ object Resolvable:
         defn.paramsOpt.toList ::: defn.auxParams, 
         if defn.tparams.isEmpty
         then N
-        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none)(tp.toLoc))),
+        else S(defn.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none, Nil)(tp.toLoc))),
         N, // TODO: handle class-like definitions with signatures
         TermDefFlags.empty, // TODO: handle class-like definitions with flags
         Modulefulness.none, // TODO: handle modulefulness for class-like definitions
@@ -1171,9 +1175,10 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol)(val to
 
 
 object Param:
-  def simple(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none)(sym.toLoc)
+  def simple(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none, Nil)(sym.toLoc)
 
-final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulefulness: Modulefulness)
+final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulefulness: Modulefulness,
+    annotations: Ls[Annot])
 (val toLoc: Opt[Loc]) extends Declaration:
   var fldSym: Opt[MemberSymbol] = N
   
@@ -1187,11 +1192,12 @@ final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulef
     signType = p.signType
     this
   
-  def subTerms: Ls[Term] = sign.toList
+  def subTerms: Ls[Term] = sign.toList ::: annotations.flatMap(_.subTerms)
   
   
   def show(using Scope, ShowCfg, Raise): Document =
-    doc"${flags.show(true)}${sym.showName}${flags.showOptMarker}${sign.fold(doc"")(": " :: _.show)}"
+    annotations.map(a => a.show :: " ").mkDocument(doc"") ::
+      doc"${flags.show(true)}${sym.showName}${flags.showOptMarker}${sign.fold(doc"")(": " :: _.show)}"
   
   def showDbg(using DebugPrinter): Str =
     flags.show(true) + sym.showDbg + flags.showOptMarker + sign.fold("")(": " + _.showDbg)

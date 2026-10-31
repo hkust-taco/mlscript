@@ -391,7 +391,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             if !isGeneric then // no GADT reasoning so far
               constrain(clsTy, tryMkMono(typeAndSubstType(ext, true)(using map.toMap), scrutinee))
             params.iterator.zip(paramList).foreach:
-              case (p, Param(_, _, S(ty), _)) =>
+              case (p, Param(sign = S(ty))) =>
                 nestCtx += p._1 -> typeAndSubstType(ty, true)(using map.toMap)
               case (_, p) =>
                 error(msg"Invalid ADT parameter." -> p.toLoc :: Nil)
@@ -601,7 +601,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
       case clsDef: ClassDef.Parameterized =>
         if clsDef.tparams.isEmpty then
           ctx += clsDef.bsym -> PolyFunType(clsDef.params.params.map {
-            case Param(_, _, S(ty), _) => typeType(ty)
+            case Param(sign = S(ty)) => typeType(ty)
             case p =>
               error(msg"Invalid ADT parameter." -> p.toLoc :: Nil)
               Bot
@@ -614,7 +614,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             case v: InfVar => v :: Nil
             case other => lastWords(s"unexpected non-InfVar type argument in ADT ctor: $other")
           }, N, PolyFunType(clsDef.params.params.map {
-            case Param(_, _, S(ty), _) => typeAndSubstType(ty, true)(using map.toMap)
+            case Param(sign = S(ty)) => typeAndSubstType(ty, true)(using map.toMap)
             case p =>
               error(msg"Invalid ADT parameter." -> p.toLoc :: Nil)
               Bot
@@ -687,7 +687,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
         val nestCtx = ctx.nest
         given InvalCtx = nestCtx
         val tvs = params.map:
-          case Param(_, sym, sign, _) =>
+          case Param(sym = sym, sign = sign) =>
             val ty = sign.map(s => typeType(s)(using nestCtx)).getOrElse(freshVar(sym))
             nestCtx += sym -> ty
             ty
@@ -707,7 +707,7 @@ class InvalTyper(using codegen.Erasure)(using elState: Elaborator.State, tl: TL)
             constrain(tryMkMono(ty, term), ClassLikeType(clsSym, targs))
             require(clsDfn.paramsOpt.forall(_.variadic.isEmpty))
             (clsDfn.paramsOpt.fold(Nil)(_.params).map {
-              case Param(_, sym, sign, _) =>
+              case Param(sym = sym, sign = sign) =>
                 if sym.nme === field.name then sign else N
             }.filter(_.isDefined)) match
               case S(res) :: Nil => (typeAndSubstType(res, pol = true)(using map.toMap), eff)

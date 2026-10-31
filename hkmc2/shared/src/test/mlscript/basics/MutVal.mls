@@ -21,7 +21,7 @@ object O with
   fun gy = y
   fun sy = set y += 1
 
-set O.x = 2
+@unsafe set O.x = 2
 
 O.x
 //│ = 1

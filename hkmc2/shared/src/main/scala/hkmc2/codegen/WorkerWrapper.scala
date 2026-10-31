@@ -54,7 +54,7 @@ class WorkerWrapper
   private def freshParam(param: Param, mapping: collection.mutable.Map[Symbol, Symbol]): Param =
     val freshSym = new VarSymbol(param.sym.id, erasedType = param.sym.erasedType, mut = param.sym.mut)
     mapping(param.sym) = freshSym
-    Param(param.flags, freshSym, param.sign, param.modulefulness)(param.toLoc).withSignTypeOf(param)
+    Param(param.flags, freshSym, param.sign, param.modulefulness, param.annotations)(param.toLoc).withSignTypeOf(param)
   
   private def flattenParams(params: Ls[LoweredParamList]): (LoweredParamList, Map[Symbol, Symbol]) =
     val mapping = collection.mutable.LinkedHashMap.empty[Symbol, Symbol]

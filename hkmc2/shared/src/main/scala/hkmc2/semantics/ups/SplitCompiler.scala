@@ -366,8 +366,8 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
                 }${"argument" countBy args.size}." -> loc
           // Check the fields are accessible.
           paramList.params.iterator.zip(args).map:
-            case (param @ Param(flags, _, _, _), Wildcard()) if !flags.isVal && !rebuildNeeded => true
-            case (param @ Param(flags, _, _, _), arg) if !flags.isVal =>
+            case (param @ Param(flags = flags), Wildcard()) if !flags.isVal && !rebuildNeeded => true
+            case (param @ Param(flags = flags), arg) if !flags.isVal =>
               reportInaccessibleParameter(param, arg)
               false
             case _ => true
@@ -510,7 +510,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
           // Match arguments and parameters pairwisely.
           val (patternArguments, extractionSubPatterns) =
             arguments.iterator.zip(defn.parameters).toList.partitionMap:
-              case (patternArgument, Param(FldFlags(pat = true), _, _, _)) =>
+              case (patternArgument, Param(flags = FldFlags(pat = true))) =>
                 L(patternArgument)
               case (subPattern, _) => R(subPattern)
           (patternArguments, S(extractionSubPatterns), false)

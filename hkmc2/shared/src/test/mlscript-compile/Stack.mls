@@ -64,7 +64,7 @@ fun (:::) concat(xs, ys) = if
         rest = tail' // the remaining of `xs`
       while rest is head :: tail do
         let next = new mut ::(head, ys)
-        set current.tail = next
+        @unsafe set current.tail = next
         Object.freeze(current)
         set
           current = next
