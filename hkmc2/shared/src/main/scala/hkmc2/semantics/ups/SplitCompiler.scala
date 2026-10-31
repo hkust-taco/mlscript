@@ -1225,10 +1225,12 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     // Instantiate the pattern and all patterns used in it.
     val instantiator = new Instantiator
     val (synonym, context) = instantiator(pattern)
+    val variables = pattern.variables.symbols
     // Decide whether the compiled matcher needs to create `MatchSuccess` or can
     // represent success and failure using Boolean values.
     //
     // We must stay in `Full` mode when
+    // - the surrounding branch can use aliases bound inside the pattern;
     // - the pattern explicitly matches extraction arguments, or when any
     //   reachable instantiated pattern definition has extraction slots;
     // - otherwise, if the use site needs an output, we only need `Full`
@@ -1239,7 +1241,7 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
     // obtain the scrutinee directly.
     val canReuseScrutineeOutput = synonym.preservesOriginalScrutinee(using context, summon[Raise])
     val resultMode =
-      if hasExplicitExtractionMatches(scrutinee, pattern) ||
+      if variables.nonEmpty || hasExplicitExtractionMatches(scrutinee, pattern) ||
           carriesExtractionSlots(context)
       then ResultMode.Full
       else if outputNeeded && !canReuseScrutineeOutput then ResultMode.Full
@@ -1260,8 +1262,12 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         val f1 = Split.Let(recordSymbol, recordTerm, _)
         // 2. Check if the direct result is a `MatchSuccess` and bind the output.
         val outputSymbol = TempSymbol(N, initErasedType = N, "patternOutput")
-        val bindingsSymbol = TempSymbol(N, initErasedType = N, "bindings") // TODO: This is useless.
-        val consequent = makeConsequent(outputSymbol.toScrut, SeqMap.empty)
+        val bindingsSymbol = TempSymbol(N, initErasedType = N, "bindings")
+        // The branch refers to the original alias symbols; the matcher's bindings
+        // record supplies their values.
+        val bindings = variables.map(symbol => symbol -> new LazyScrut(S(symbol.nme)))
+        val consequent = bindings.foldRight(makeConsequent(outputSymbol.toScrut, SeqMap.from(bindings))):
+          case ((symbol, value), tail) => value.toLet(sel(bindingsSymbol.safeRef, symbol.nme), tail)
         val pattern = matchSuccessPattern(S(outputSymbol :: bindingsSymbol :: Nil))
         val branch = Branch(recordSymbol.safeRef, pattern, consequent)
         f1(branch ~: alternative)
