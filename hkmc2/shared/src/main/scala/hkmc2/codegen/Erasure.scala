@@ -14,7 +14,7 @@ import hkmc2.Message.MessageContext
   * symbols' erased signatures, and checks override compatibility during construction. Lowering
   * requires the instance constructed for its program, so it can read those completed signatures.
   */
-final class Erasure private (root: Statement)(using Config, Ctx, State)(using Raise):
+final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
   private given Erasure = this
 
   /** Checks that lowering uses the same source root whose signatures this instance initialized. */
@@ -355,10 +355,3 @@ final class Erasure private (root: Statement)(using Config, Ctx, State)(using Ra
     // Compare signatures only after every definition has completed erasure.
     overrideChecks.checkRepresentations()
     overrideChecks.validatedEdges
-
-object Erasure:
-  /** Assigns runtime representations and checks overrides in a resolved program or prelude,
-    * returning the completed erasure capability that lowering requires for this root.
-    */
-  def apply(root: Statement)(using Config, Ctx, State)(using Raise): Erasure =
-    new Erasure(root)
