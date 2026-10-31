@@ -3989,8 +3989,13 @@ class NewResolver:
   def listenExt(defn: ClassLikeDef, listener: ShapeListener[Opt[TermShape]])(using ResolutionContext): Unit =
     defn.ext match
     case S(trm) =>
-      listenTerm(trm): sh =>
-        listener(S(sh))
+      // Definition and receiver shapes cache the parent's source template.
+      // Observing it under a caller's substitution would bake that activation
+      // into the shared shape; the resulting value view carries the substitution.
+      val callerInstances = rctx.instances
+      // Imported callbacks must keep the consuming graph while restoring the caller.
+      listenTerm(trm)(sh => listener(S(sh))(using rctx.withInstances(callerInstances)))(
+        using rctx.withInstances(TypeSubstitution.empty))
     case N =>
       listener(implicitParent(defn))
   
