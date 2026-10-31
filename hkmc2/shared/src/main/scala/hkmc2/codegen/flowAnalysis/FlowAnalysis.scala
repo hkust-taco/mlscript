@@ -736,6 +736,23 @@ class FlowConstraintsCollector(
   given tl: TraceLogger = preAnalyzer.tl
   import StratVar.freshVar
   
+  
+  private case class Ctx(
+    fun: Opt[FunCtx],
+    suppressEffect: Bool, // e.g., if @pure
+  )
+  
+  private case class FunCtx(
+    effect: StratVar,
+    paramLists: Ls[LoweredParamList],
+  ):
+    def isOwnParam(sym: Symbol): Bool =
+      paramLists.exists(_.paramSyms.contains(sym))
+  
+  private object Ctx:
+    val default = Ctx(fun = N, suppressEffect = false)
+  
+  
   private class ConstraintsCollector private (
     val forFunGroup: Opt[TermSymbol],
     val forFun: Opt[TermSymbol],
@@ -743,8 +760,13 @@ class FlowConstraintsCollector(
   ):
     def constraints: Ls[ProdStrat -> ConsStrat] = buffer.toList
     val instId: Opt[InstantiationId] = forFunGroup.fold(S(Nil))(_ => N)
-    def constrain(p: ProdStrat, c: ConsStrat) = buffer.prepend(p -> c)
-    def constrain(cs: Iterable[ProdStrat -> ConsStrat]) = buffer.prependAll(cs)
+    def constrain(p: ProdStrat, c: ConsStrat): Unit =
+      buffer.prepend(p -> c)
+    def constrain(cs: Iterable[ProdStrat -> ConsStrat]): Unit =
+      buffer.prependAll(cs)
+    def constrainOpaque(v: StratVar): Unit =
+      constrain(UnknownProd, v)
+      constrain(v, UnknownCons)
     def forActualRootFun(fun: TermSymbol): ConstraintsCollector =
       assert(preAnalyzer.res.rootFunDefns.contains(fun))
       new ConstraintsCollector(forFunGroup, S(fun), buffer)
@@ -788,9 +810,79 @@ class FlowConstraintsCollector(
   for (sym, v) <- preAnalyzer.res.generatedVars if mono || v.generatedForFun.isEmpty do
     symbolFlows += ((sym, Nil, v))
   
-  locally {
-    val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
+  private def instantiate(
+    pScheme: ProdStratScheme,
+    referSite: ResultId,
+    referringTo: TermSymbol,
+  )(using cc: ConstraintsCollector): StratVar =
+    val groupRep: TermSymbol = funToSccRep(referringTo).get
+    val stratVarMap = MutMap.empty[StratVar, StratVar]
+    def updateInstantiationId(instId: Opt[InstantiationId]) =
+      S(instId.fold(referSite :: Nil)(referSite :: _))
+    def duplicateVarStateOpt(s: StratVar | NoProd): StratVar | NoProd =
+      s match
+      case v: StratVar => duplicateVarState(v)
+      case NoProd => NoProd
+    def duplicateVarState(s: StratVar) =
+      if s.generatedForFun.flatMap(funToSccRep).contains(groupRep)
+      then stratVarMap.getOrElseUpdate(s, {
+        val instId = updateInstantiationId(s.instantiationId)
+        val v = freshVar(s.name, s.sourceSymbol, cc.forFun, instId)
+        if symbolFlowVars(s) then
+          symbolFlowVars += v
+          for sym <- s.sourceSymbol if cc.forFunGroup.isEmpty do
+            symbolFlows += ((sym, instId.get, v))
+        v
+      })
+      else s
+    def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
+      case v: StratVar => duplicateVarState(v)
+      case p: ProdFun =>
+        new ProdFun(p.exprId, updateInstantiationId(p.instantiationId))(
+          p.params.map(duplicateConsStrat),
+          p.requiredParamCount,
+          p.restParam.map(duplicateConsStrat),
+          duplicateProdStrat(p.res),
+          duplicateVarState(p.capturedVarUpperbound),
+          duplicateVarStateOpt(p.effect))
+      case UnknownProd => UnknownProd
+      case UnsafeEta => UnsafeEta
+      case NoProd => NoProd
+      case c: Ctor => registerCtor(
+        new Ctor(c.exprId, updateInstantiationId(c.instantiationId))(
+          c.ctor,
+          c.args.map((a, b) => a -> duplicateProdStrat(b))))
+    def duplicateConsStrat(c: ConsStrat): ConsStrat = c match
+      case v: StratVar => duplicateVarState(v)
+      case c: ConsFun =>
+        new ConsFun(c.exprId, updateInstantiationId(c.instantiationId))(
+          c.params.map(duplicateProdStrat),
+          duplicateConsStrat(c.res),
+          duplicateVarStateOpt(c.effect))
+      case c: CastConsumer => new CastConsumer(c.exprId, updateInstantiationId(c.instantiationId), c.target)
+      case UnknownCons => UnknownCons
+      case NonAffine => NonAffine
+      case Accumulator => Accumulator
+      case pAcc: PossibleAccumulator => duplicateVarState(pAcc.s).asPossibleAccumulator
+      case iPrm: IntoParam => duplicateVarState(iPrm.s).asIntoParam
+      case fSel: FieldSel =>
+        new FieldSel(fSel.exprId, updateInstantiationId(fSel.instantiationId))(
+          fSel.field,
+          fSel.selectsFrom,
+          duplicateVarState(fSel.consVar))
+      case dtor: Dtor => new Dtor(dtor.exprId, updateInstantiationId(dtor.instantiationId))
+    val newProd = duplicateVarState(pScheme.s)
+    pScheme.constraints.foreach: (p, c) =>
+      cc.constrain(duplicateProdStrat(p), duplicateConsStrat(c))
+    newProd
 
+  private val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
+
+  /** Analyze and prepare reusable function schemes ([[ProdStratScheme]]) and store
+   *  them into [[funsToProdStratScheme]].
+   */
+  // TODO: analyze in mono mode too!
+  private def analyze(): Unit =
     if !mono then
       // Computing the ProdStratScheme for each scc group, this way the sccs of the call graph is
       // never materialized
@@ -810,9 +902,10 @@ class FlowConstraintsCollector(
           for f <- groupedFuns do funToSccGroups(f) = groupedFuns
           val groupRep = groupedFuns.head
           ConstraintsCollector(Some(groupRep), N).givenIn: cc ?=>
+            given Ctx = Ctx.default
             for funSym <- groupedFuns do
               given ConstraintsCollector = cc.forActualRootFun(funSym)
-              processFunctionBody(preAnalyzer.res.funSymToFunDefn(funSym))
+              processFunctionDefn(preAnalyzer.res.funSymToFunDefn(funSym))
             if nonAffineTracking then
               for
                 sym <- preAnalyzer.res.nonAffineSyms
@@ -825,13 +918,18 @@ class FlowConstraintsCollector(
       
       ProdStratSchemeAnalysisInScc.queryAll(preAnalyzer.res.rootFunDefns.keys)
     end if
-
+  end analyze
+  
+  /** Collect the program's constraints by processing the program recursively,
+   * and then assemble the program's global constraints.
+   */
+  private def collect(): Unit =
     // collect constraints from the top-level block
     globalCollector.givenIn: cc ?=>
       cc.constrain(preAnalyzer.res.primitiveStratVar, UnknownCons)
       cc.constrain(UnknownProd, preAnalyzer.res.primitiveStratVar)
       cc.constrain(UnsafeEta, unknownEffect)
-      processBlock(preAnalyzer.pgrm.main)(using cc, UnknownCons, N)
+      processBlock(preAnalyzer.pgrm.main)(using cc, UnknownCons, Ctx.default)
 
       // this places non-affine constraints correctly:
       // - in mono mode there are no per-scc collectors,
@@ -862,151 +960,85 @@ class FlowConstraintsCollector(
           val pScheme = funsToProdStratScheme(funSym)
           val synthesizedRefUid =
             preAnalyzer.res.funSymToFunDefn(funSym).sym.asMemberRef(funSym).uid
-          val selfProd = pScheme.instantiate(synthesizedRefUid, funSym)
+          val selfProd = instantiate(pScheme, synthesizedRefUid, funSym)
           cc.constrain(selfProd, UnknownCons)
           val selfInstId = synthesizedRefUid :: Nil
           synthesizedInstIdToFunSym(selfInstId) = funSym
     
-    // =========================
+  end collect
     
-    extension (pScheme: ProdStratScheme) def instantiate(
-      referSite: ResultId,
-      referringTo: TermSymbol
-    )(using cc: ConstraintsCollector): StratVar =
-      val groupRep: TermSymbol = funToSccRep(referringTo).get
-      val stratVarMap = MutMap.empty[StratVar, StratVar]
-      def updateInstantiationId(instId: Opt[InstantiationId]) =
-        S(instId.fold(referSite :: Nil)(referSite :: _))
-      def duplicateVarStateOpt(s: StratVar | NoProd): StratVar | NoProd =
-        s match
-        case v: StratVar => duplicateVarState(v)
-        case NoProd => NoProd
-      def duplicateVarState(s: StratVar) =
-        if s.generatedForFun.fold(false):
-          forFun => funToSccRep(forFun).fold(false)(_ is groupRep)
-        then stratVarMap.getOrElseUpdate(s, {
-          val instId = updateInstantiationId(s.instantiationId)
-          val v = freshVar(s.name, s.sourceSymbol, cc.forFun, instId)
-          if symbolFlowVars(s) then
-            symbolFlowVars += v
-            for sym <- s.sourceSymbol if cc.forFunGroup.isEmpty do
-              symbolFlows += ((sym, instId.get, v))
-          v
-        })
-        else s
-      def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
-        case v: StratVar => duplicateVarState(v)
-        case p: ProdFun =>
-          new ProdFun(p.exprId, updateInstantiationId(p.instantiationId))(
-            p.params.map(duplicateConsStrat),
-            p.requiredParamCount,
-            p.restParam.map(duplicateConsStrat),
-            duplicateProdStrat(p.res),
-            duplicateVarState(p.capturedVarUpperbound),
-            duplicateVarStateOpt(p.effect))
-        case UnknownProd => UnknownProd
-        case UnsafeEta => UnsafeEta
-        case NoProd => NoProd
-        case c: Ctor => registerCtor(
-          new Ctor(c.exprId, updateInstantiationId(c.instantiationId))(
-            c.ctor,
-            c.args.map((a, b) => a -> duplicateProdStrat(b))))
-      def duplicateConsStrat(c: ConsStrat): ConsStrat = c match
-        case v: StratVar => duplicateVarState(v)
-        case c: ConsFun =>
-          new ConsFun(c.exprId, updateInstantiationId(c.instantiationId))(
-            c.params.map(duplicateProdStrat),
-            duplicateConsStrat(c.res),
-            duplicateVarStateOpt(c.effect))
-        case c: CastConsumer => new CastConsumer(c.exprId, updateInstantiationId(c.instantiationId), c.target)
-        case UnknownCons => UnknownCons
-        case NonAffine => NonAffine
-        case Accumulator => Accumulator
-        case pAcc: PossibleAccumulator => duplicateVarState(pAcc.s).asPossibleAccumulator
-        case iPrm: IntoParam => duplicateVarState(iPrm.s).asIntoParam
-        case fSel: FieldSel =>
-          new FieldSel(fSel.exprId, updateInstantiationId(fSel.instantiationId))(
-            fSel.field,
-            fSel.selectsFrom,
-            duplicateVarState(fSel.consVar))
-        case dtor: Dtor => new Dtor(dtor.exprId, updateInstantiationId(dtor.instantiationId))
-      val newProd = duplicateVarState(pScheme.s)
-      pScheme.constraints.foreach: (p, c) =>
-        cc.constrain(duplicateProdStrat(p), duplicateConsStrat(c))
-      newProd
+  private def processFunctionBody(
+    resName: String,
+    params: NELs[LoweredParamList],
+    body: Block,
+    funLamId: FunId,
+    annotations: Ls[Annot],
+  )(using cc: ConstraintsCollector, ctx: Ctx): ProdStrat =
+    def paramListFunId(whichParamList: Int): FunId =
+      funLamId match
+        case (sym: TermSymbol, -1) => (sym, whichParamList)
+        case lambdaExprId: ResultId =>
+          assert(whichParamList == 0)
+          lambdaExprId
+        case other => lastWords(s"unexpected funLamId shape: $other")
+    val res = freshVar(resName, cc.forFun)
+    val sourceSymbol = funLamId match
+      case (sym: TermSymbol, _) => S(sym)
+      case _: ResultId => N
+    val effect =
+      freshVar(s"effect_$funLamId", sourceSymbol, cc.forFun, cc.instId)
+    params.foreach: ps =>
+      ps.restParam.foreach: p =>
+        cc.constrainOpaque(generatedVars(p.sym))
+      // * The argument of an optional parameter may be omitted, in which case the parameter is
+      // * `null`, a value that is not tracked by the analysis.
+      ps.params.drop(ps.paramCountLB).foreach: p =>
+        cc.constrain(UnknownProd, generatedVars(p.sym))
+    val funValueStrat = params.zipWithIndex.foldRight[ProdStrat](res):
+      case ((ps, whichParamList), acc) =>
+        val plFunId = paramListFunId(whichParamList)
+        // A declared curried function runs its body only at the final list.
+        // Applying earlier parameter lists only captures arguments; each needs its own, initially pure summary.
+        val effectParamList =
+          if whichParamList == params.size - 1 then effect
+          else freshVar(s"effect_$plFunId", cc.forFun)
+        val capUB = freshVar(s"cap_ub_$plFunId", cc.forFun)
+        for
+          v <- preAnalyzer.res.capturedVars(plFunId)
+          capturedSymStrat <- generatedVars.get(v)
+        do
+          cc.constrain(capturedSymStrat, capUB)
+        new ProdFun(plFunId, cc.instId)(
+          ps.params.map(p => generatedVars(p.sym)),
+          ps.paramCountLB,
+          ps.restParam.map(p => generatedVars(p.sym)),
+          acc,
+          capUB,
+          effectParamList)
     
-    extension (v: StratVar)
-      def constrainOpaque(using cc: ConstraintsCollector): Unit =
-        cc.constrain(UnknownProd, v)
-        cc.constrain(v, UnknownCons)
-    
-    def mkFunProdStrat(
-      resName: String,
-      params: NELs[LoweredParamList],
-      body: Block,
-      funLamId: FunId,
-      annotations: Ls[Annot]
-    )(using cc: ConstraintsCollector): ProdStrat =
-      def paramListFunId(whichParamList: Int): FunId =
-        funLamId match
-          case (sym: TermSymbol, -1) => (sym, whichParamList)
-          case lambdaExprId: ResultId =>
-            assert(whichParamList == 0)
-            lambdaExprId
-          case other => lastWords(s"unexpected funLamId shape: $other")
-      val res = freshVar(resName, cc.forFun)
-      val sourceSymbol = funLamId match
-        case (sym: TermSymbol, _) => S(sym)
-        case _: ResultId => N
-      val effect =
-        freshVar(s"effect_$funLamId", sourceSymbol, cc.forFun, cc.instId)
-      params.foreach: ps =>
-        ps.restParam.foreach: p =>
-          generatedVars(p.sym).constrainOpaque
-        // * The argument of an optional parameter may be omitted, in which case the parameter is
-        // * `null`, a value that is not tracked by the analysis.
-        ps.params.drop(ps.paramCountLB).foreach: p =>
-          cc.constrain(UnknownProd, generatedVars(p.sym))
-      val funValueStrat = params.zipWithIndex.foldRight[ProdStrat](res):
-        case ((ps, whichParamList), acc) =>
-          val plFunId = paramListFunId(whichParamList)
-          // A declared curried function runs its body only at the final list.
-          // Applying earlier parameter lists only captures arguments; each needs its own, initially pure summary.
-          val effectParamList =
-            if whichParamList == params.size - 1 then effect
-            else freshVar(s"effect_$plFunId", cc.forFun)
-          val capUB = freshVar(s"cap_ub_$plFunId", cc.forFun)
-          for
-            v <- preAnalyzer.res.capturedVars(plFunId)
-            capturedSymStrat <- generatedVars.get(v)
-          do
-            cc.constrain(capturedSymStrat, capUB)
-          new ProdFun(plFunId, cc.instId)(
-            ps.params.map(p => generatedVars(p.sym)),
-            ps.paramCountLB,
-            ps.restParam.map(p => generatedVars(p.sym)),
-            acc,
-            capUB,
-            effectParamList)
-      // An explicit @pure annotation overrides the latent effect. Keep analyzing body
-      // calls, but do not let their effects flow into this trusted override.
-      processBlock(body)(using cc, res,
-        if annotations.exists(_.isInstanceOf[Annot.Pure])
-        then N else S(effect))
-      funValueStrat
+    given ctx: Ctx = Ctx(
+      fun = S(FunCtx(effect, params)), 
+      suppressEffect = annotations.exists(_.isInstanceOf[Annot.Pure])
+    )
+    processBlock(body)(using cc, res)
+    funValueStrat
 
-    def processFunctionDefn(fun: FunDefn)(using cc: ConstraintsCollector): Unit =
-      val isRoot = preAnalyzer.res.rootFunDefns.contains(fun.dSym)
-      if mono || !isRoot then
-        given ConstraintsCollector = if isRoot then cc.forActualRootFun(fun.dSym) else cc
-        processFunctionBody(fun)
-
-    def processFunctionBody(fun: FunDefn)(using cc: ConstraintsCollector): Unit =
+  private def processFunctionDefn(fun: FunDefn)(using cc: ConstraintsCollector, ctx: Ctx): Unit =
+    val isRoot = preAnalyzer.res.rootFunDefns.contains(fun.dSym)
+    // In the poly mode, it uses the same collector (buffer) for each SCC
+    val reuseCollector = !isRoot || cc.forFun.contains(fun.dSym)
+    if mono || reuseCollector then
+      given ConstraintsCollector =
+        if reuseCollector then cc else cc.forActualRootFun(fun.dSym)
       fun.params match
       case Nil =>
-        processBlock(fun.body)(using cc, generatedVars(fun.dSym), S(generatedEffects(fun.dSym)))
+        given ctx: Ctx = Ctx(
+          fun = S(FunCtx(generatedEffects(fun.dSym), Nil)), 
+          suppressEffect = fun.annotations.exists(_.isInstanceOf[Annot.Pure])
+        )
+        processBlock(fun.body)(using cc, generatedVars(fun.dSym))
       case nel: NELs[?] =>
-        val funProdStrat = mkFunProdStrat(
+        val funProdStrat = processFunctionBody(
           s"${fun.dSym.nme}_res",
           nel,
           fun.body,
@@ -1014,259 +1046,262 @@ class FlowConstraintsCollector(
           fun.annotations)
         cc.constrain(funProdStrat, generatedVars(fun.dSym))
     
-    def processClsLikeDefn(cls: ClsLikeDefn)(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): Unit =
-      cls.methodKeys.valuesIterator.foreach(constrainOpaqueResult)
-      cls.privateFields.foreach(sym => generatedVars(sym).constrainOpaque)
-      cls.publicFields.foreach: (_, tsym) =>
-        generatedVars(tsym).constrainOpaque
-      cls.methods.foreach: fun =>
-        generatedVars(fun.dSym).constrainOpaque
-        fun.params.foreach(_.allParams.foreach(p => generatedVars(p.sym).constrainOpaque))
-        processBlock(fun.body)(using cc, UnknownCons, N /* methods are always considered impure; we don't track their effects */)
-      processBlock(cls.preCtor)(using cc, UnknownCons, N /* FIXME: ctor effects should NOT be discarded */)
-      processBlock(cls.ctor)(using cc, UnknownCons, N /* FIXME: ctor effects should NOT be discarded */)
-      cls.companion.foreach: mod =>
-        mod.methodKeys.valuesIterator.foreach(constrainOpaqueResult)
-        mod.privateFields.foreach(sym => generatedVars(sym).constrainOpaque)
-        mod.publicFields.foreach: (_, tsym) =>
-          generatedVars(tsym).constrainOpaque
-        mod.methods.foreach: fun =>
-          processFunctionDefn(fun)
-        processBlock(mod.ctor)(using cc, UnknownCons, N /* FIXME: ctor effects should NOT be discarded */)
-    
-    def constrainOpaqueResult(r: Result)(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): Unit =
-      cc.constrain(processResult(r), UnknownCons)
+  private def processClsLikeDefn(cls: ClsLikeDefn)(using cc: ConstraintsCollector, ctx: Ctx): Unit =
+    cls.methodKeys.valuesIterator.foreach(constrainOpaqueResult)
+    cls.privateFields.foreach: sym => 
+      cc.constrainOpaque(generatedVars(sym))
+    cls.publicFields.foreach: (_, tsym) => 
+      cc.constrainOpaque(generatedVars(tsym))
+    cls.methods.foreach: fun =>
+      cc.constrainOpaque(generatedVars(fun.dSym))
+      fun.params.foreach(_.allParams.foreach(p => cc.constrainOpaque(generatedVars(p.sym))))
+      processBlock(fun.body)(using cc, UnknownCons, Ctx(S(FunCtx(unknownEffect, fun.params)), fun.annotations.exists(_.isInstanceOf[Annot.Pure])) /* methods are always considered impure; we don't track their effects */)
+    processBlock(cls.preCtor)(using cc, UnknownCons, Ctx(S(FunCtx(unknownEffect, Nil)), suppressEffect = false) /* FIXME: ctor effects should NOT be discarded */)
+    processBlock(cls.ctor)(using cc, UnknownCons, Ctx(S(FunCtx(unknownEffect, Nil)), suppressEffect = false) /* FIXME: ctor effects should NOT be discarded */)
+    cls.companion.foreach: mod =>
+      mod.methodKeys.valuesIterator.foreach(constrainOpaqueResult)
+      mod.privateFields.foreach: sym => 
+        cc.constrainOpaque(generatedVars(sym))
+      mod.publicFields.foreach: (_, tsym) =>
+        cc.constrainOpaque(generatedVars(tsym))
+      mod.methods.foreach: fun =>
+        processFunctionDefn(fun)
+      processBlock(mod.ctor)(using cc, UnknownCons, Ctx(S(FunCtx(unknownEffect, Nil)), suppressEffect = false) /* FIXME: ctor effects should NOT be discarded */)
+  
+  private def constrainOpaqueResult(r: Result)(using cc: ConstraintsCollector, ctx: Ctx): Unit =
+    cc.constrain(processResult(r), UnknownCons)
 
-    def markUnsafeEta()(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): Unit =
-      // TODO: don't register such constraints unless a flag is on
-      currentEffect.foreach(e => cc.constrain(UnsafeEta, e))
+  private def constrainEffect(prod: ProdStrat)(using cc: ConstraintsCollector, ctx: Ctx): Unit =
+    if !ctx.suppressEffect then
+      ctx.fun.foreach: fun =>
+        cc.constrain(prod, fun.effect)
 
-    def processBlock(b: Block)(using cc: ConstraintsCollector, blkRes: ConsStrat, currentEffect: Opt[StratVar]): Unit =
-      val instId = cc.instId
-      b match
-      case Return(res) => cc.constrain(processResult(res), blkRes)
-      case Throw(exc, annotations) =>
-        if annotations.exists(_.isInstanceOf[Annot.Pure]) then
-          constrainOpaqueResult(exc)(using cc, N)
-        else
-          markUnsafeEta()
-          constrainOpaqueResult(exc)
-      case Match(scrut, arms, dflt, rest) =>
-        val scrutStrat = processResult(scrut)
-        cc.constrain(scrutStrat, new Dtor(scrut.uid, instId))
-        for case (Case.Cls(cls, path), _) <- arms do
-          cc.constrain(processResult(path), UnknownCons)
-        (arms.map(_._2) ++ dflt).foreach(processBlock)
-        processBlock(rest)
-      case Label(l, loop, body, rest) =>
-        processBlock(body)
-        processBlock(rest)
-      case Break(label) => ()
-      case Continue(label) => ()
-      case Scoped(syms, body) => processBlock(body)
-      case Begin(sub, rest) =>
-        processBlock(sub)
-        processBlock(rest)
-      case Assign(lhs, rhs, rest, _) =>
+  private def processBlock(b: Block)(using cc: ConstraintsCollector, blkRes: ConsStrat, ctx: Ctx): Unit =
+    val instId = cc.instId
+    b match
+    case Return(res) => cc.constrain(processResult(res), blkRes)
+    case Throw(exc, annotations) =>
+      if annotations.exists(_.isInstanceOf[Annot.Pure]) then
+        // TODO: the @pure annotation on throw also suppresses the effects of
+        // the result. This is due to a limitation that constructors' effects
+        // are not analyzed, so constructing an error object is always
+        // effectful.
+        constrainOpaqueResult(exc)(using cc, ctx.copy(suppressEffect = true))
+      else
+        constrainEffect(UnsafeEta)
+        constrainOpaqueResult(exc)
+    case Match(scrut, arms, dflt, rest) =>
+      val scrutStrat = processResult(scrut)
+      cc.constrain(scrutStrat, new Dtor(scrut.uid, instId))
+      for case (Case.Cls(cls, path), _) <- arms do
+        cc.constrain(processResult(path), UnknownCons)
+      (arms.map(_._2) ++ dflt).foreach(processBlock)
+      processBlock(rest)
+    case Label(l, loop, body, rest) =>
+      processBlock(body)
+      processBlock(rest)
+    case Break(label) => ()
+    case Continue(label) => ()
+    case Scoped(syms, body) => processBlock(body)
+    case Begin(sub, rest) =>
+      processBlock(sub)
+      processBlock(rest)
+    case Assign(lhs, rhs, rest, _) =>
+      val rhsStrat = processResult(rhs)
+      lhs.match
+        case NoSymbol => ()
+        case lhs: (LocalVarSymbol | TermSymbol) =>
+          if nonlocals.contains(lhs) then constrainEffect(UnsafeEta)
+          cc.constrain(rhsStrat, generatedVars(lhs))
+      processBlock(rest)
+    case TryBlock(sub, finallyDo, rest) =>
+      processBlock(sub)
+      processBlock(finallyDo)
+      processBlock(rest)
+    case AssignField(lhs, nme, rhs, rest) =>
+      constrainEffect(UnsafeEta)
+      constrainOpaqueResult(lhs)
+      constrainOpaqueResult(rhs)
+      processBlock(rest)
+    case AssignDynField(lhs, fld, kind, rhs, rest) =>
+      constrainEffect(UnsafeEta)
+      constrainOpaqueResult(lhs)
+      constrainOpaqueResult(fld)
+      constrainOpaqueResult(rhs)
+      processBlock(rest)
+    case Define(defn, rest) =>
+      defn match
+      case ValDefn(tsym, sym, rhs) =>
         val rhsStrat = processResult(rhs)
-        lhs.match
-          case NoSymbol => ()
-          case lhs: (LocalVarSymbol | TermSymbol) =>
-            if nonlocals.contains(lhs) then markUnsafeEta()
-            cc.constrain(rhsStrat, generatedVars(lhs))
-        processBlock(rest)
-      case TryBlock(sub, finallyDo, rest) =>
-        processBlock(sub)
-        processBlock(finallyDo)
-        processBlock(rest)
-      case AssignField(lhs, nme, rhs, rest) =>
-        markUnsafeEta()
-        constrainOpaqueResult(lhs)
-        constrainOpaqueResult(rhs)
-        processBlock(rest)
-      case AssignDynField(lhs, fld, kind, rhs, rest) =>
-        markUnsafeEta()
-        constrainOpaqueResult(lhs)
-        constrainOpaqueResult(fld)
-        constrainOpaqueResult(rhs)
-        processBlock(rest)
-      case Define(defn, rest) =>
-        defn match
-        case ValDefn(tsym, sym, rhs) =>
-          val rhsStrat = processResult(rhs)
-          cc.constrain(rhsStrat, generatedVars(tsym))
-        case fun: FunDefn =>
-          // The eta optimizer requires lifting. 
-          // Other definitions are deliberately opaque.
-          markUnsafeEta()
-          processFunctionDefn(fun)
-        case cls: ClsLikeDefn =>
-          markUnsafeEta()
-          processClsLikeDefn(cls)
-        processBlock(rest)
-      case End(msg) => ()
-      case Unreachable(_) => ()
+        cc.constrain(rhsStrat, generatedVars(tsym))
+      case fun: FunDefn =>
+        // The eta optimizer requires lifting.
+        // Other definitions are deliberately opaque.
+        constrainEffect(UnsafeEta)
+        processFunctionDefn(fun)
+      case cls: ClsLikeDefn =>
+        constrainEffect(UnsafeEta)
+        processClsLikeDefn(cls)
+      processBlock(rest)
+    case End(msg) => ()
+    case Unreachable(_) => ()
     
-    def processResult(r: Result)(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): ProdStrat =
-      val instId = cc.instId
-      def freshCallEffect(): StratVar =
-        val effect = freshVar("call_effect", cc.forFun)
-        // A call's effect contributes to the enclosing function's latent effect.
-        currentEffect.foreach: enclosingEffect =>
-          cc.constrain(effect, enclosingEffect)
-        effect
-      def constrainConstructorEffect(result: Result): Unit =
-        val unsafeEta = result match
-          case call: Call => !FlowAnalysis.isPureCall(call, call.argss.size - 1)
-          case _: Instantiate => true
-          case _ => false
-        // Constructor bodies are not modeled here; instantiation may have effects.
-        if unsafeEta then markUnsafeEta()
-      def handleCallLike(callId: CallId, fStrat: ProdStrat, args: List[Arg]): ProdStrat =
-        val argsStrat = args.map(a => processResult(a.value))
-        if args.exists(_.spread.isDefined) then
-          // TODO: preserve callee-effect precision for spread calls
-          // * Needs to address [todo:effectful-spreads]
-          markUnsafeEta()
-          cc.constrain(fStrat, UnknownCons)
-          argsStrat.foreach(arg => cc.constrain(arg, UnknownCons))
-          UnknownProd
-        else
-          val callRes = freshVar("call_res", cc.forFun)
-          val effect = freshCallEffect()
-          cc.constrain(fStrat, new ConsFun(callId, instId)(
-            argsStrat,
-            callRes,
-            effect,
-          ))
-          callRes
-      r match
-        case sel@TrackableSelect(from, field, owner) =>
-          markUnsafeEta()
-          val fromStrat = processResult(from)
-          val selRes = freshVar("sel_res", cc.forFun)
-          cc.constrain(
-            fromStrat,
-            new FieldSel(sel.uid, instId)(field, owner, selRes))
-          selRes
-        case c@CtorProducer(ctor, args, selectedFrom) if args.forall(_.spread.isEmpty) =>
-          constrainConstructorEffect(c)
-          for qual <- selectedFrom do
-            cc.constrain(processResult(qual), UnknownCons)
-          val argsStrat = args.map:
-            case Arg(_, a) => processResult(a)
-          ctor match
-          case cls: ClassSymbol =>
-            cls.tree.clsParams.size match
-            case 1 =>
-              val clsParams = cls.tree.clsParams.head // TODO use irDefn here and elsewhere
-              // TODO: properly check the parameter lists, which may change after passes like lifting
-              // softTODO(argsStrat.size === clsParams.size, s"mismatched ctor arg and cls param sizes")
-              registerCtor(new Ctor(c.uid, instId)(ctor, clsParams.zip(argsStrat)))
-            case _ =>
-              // - the size of 0 means we don't know the cls param symbols,
-              // so we constrain args with UnknownCons and this CtorProducer gives UnknownProd
-              // - if size > 1, we cannot handle multiple parameter class flow now,
-              //   constrain args with UnknownCons and this CtorProducer gives UnknownProd
-              for a <- argsStrat do cc.constrain(a, UnknownCons)
-              UnknownProd
-          case _: ModuleOrObjectSymbol => registerCtor(new Ctor(c.uid, instId)(ctor, Nil))
-          case tupSize: Int =>
-            registerCtor(new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList))
-        case c@CtorProducer(_, args, selectedFrom) =>
-          markUnsafeEta()
-          for qual <- selectedFrom do
-            cc.constrain(processResult(qual), UnknownCons)
-          args.foreach(arg => cc.constrain(processResult(arg.value), UnknownCons))
-          UnknownProd
-        case c@Call(fun, argss) =>
-          // each later arg list applies the result of the previous one
-          argss.iterator.zipWithIndex.foldLeft(processResult(fun)):
-            case (fStrat, (args, whichArgList)) => handleCallLike((c.uid, whichArgList), fStrat, args)
-        case i@Instantiate(_, cls, argss) =>
-          constrainConstructorEffect(i)
-          constrainOpaqueResult(cls)
-          argss.flatten.foreach(a => constrainOpaqueResult(a.value))
-          UnknownProd
-        case lam@Lambda(ps, body) =>
-          mkFunProdStrat("lam_res", ps ne_:: Nil, body, lam.uid, Nil)
-        case _: Tuple => lastWords("should be handled in CtorProducer")
-        case Record(_, fields) =>
-          if fields.exists(_.spread) then markUnsafeEta()
-          fields.foreach:
-            case RcdArg(idx, value) =>
-              idx.foreach(p => cc.constrain(processResult(p), UnknownCons))
-              cc.constrain(processResult(value), UnknownCons)
-          UnknownProd
-        case p: Path =>
-          p match
-          case refSite @ FunRef(f, selectedFrom) =>
-            // ? [todo:harry-0]
-            // ? It's a special case for module getters but I'm not sure if
-            // ? this is good enough. It just conservatively marks it unsafe.
-            if f.irFunDefn.fold(!f.isAccessPure)(_.params.isEmpty) then markUnsafeEta()
-            refSite match
-              case DynSelect(_, key, DynSelectKind.Member(_)) => cc.constrain(processResult(key), UnknownCons)
-              case SuperSelect(_, base, key) =>
-                cc.constrain(processResult(base), UnknownCons)
-                cc.constrain(processResult(key), UnknownCons)
-              case _ => ()
-            for qual <- selectedFrom do
-              cc.constrain(processResult(qual), UnknownCons)
-            funsToProdStratScheme.get(f) match
-            case Some(fScheme) =>
-              fScheme.instantiate(refSite.uid, f)
-            case None => generatedVars(f)
-          case s @ SuperSelect(qual, base, key) =>
-            markUnsafeEta()
-            cc.constrain(processResult(key), UnknownCons)
-            cc.constrain(processResult(qual), UnknownCons)
+  private def processResult(r: Result)(using cc: ConstraintsCollector, ctx: Ctx): ProdStrat =
+    val instId = cc.instId
+    def freshCallEffect(): StratVar =
+      val effect = freshVar("call_effect", cc.forFun)
+      // A call's effect contributes to the enclosing function's latent effect.
+      constrainEffect(effect)
+      effect
+    def constrainConstructorEffect(result: Result): Unit =
+      val unsafeEta = result match
+        case call: Call => !FlowAnalysis.isPureCall(call, call.argss.size - 1)
+        case _: Instantiate => true
+        case _ => false
+      // Constructor bodies are not modeled here; instantiation may have effects.
+      if unsafeEta then constrainEffect(UnsafeEta)
+    def handleCallLike(callId: CallId, fStrat: ProdStrat, args: List[Arg]): ProdStrat =
+      val argsStrat = args.map(a => processResult(a.value))
+      if args.exists(_.spread.isDefined) then
+        // TODO: preserve callee-effect precision for spread calls
+        // * Needs to address [todo:effectful-spreads]
+        constrainEffect(UnsafeEta)
+        cc.constrain(fStrat, UnknownCons)
+        argsStrat.foreach(arg => cc.constrain(arg, UnknownCons))
+        UnknownProd
+      else
+        val callRes = freshVar("call_res", cc.forFun)
+        val effect = freshCallEffect()
+        cc.constrain(fStrat, new ConsFun(callId, instId)(
+          argsStrat,
+          callRes,
+          effect,
+        ))
+        callRes
+    r match
+      case sel@TrackableSelect(from, field, owner) =>
+        constrainEffect(UnsafeEta)
+        val fromStrat = processResult(from)
+        val selRes = freshVar("sel_res", cc.forFun)
+        cc.constrain(
+          fromStrat,
+          new FieldSel(sel.uid, instId)(field, owner, selRes))
+        selRes
+      case c@CtorProducer(ctor, args, selectedFrom) if args.forall(_.spread.isEmpty) =>
+        constrainConstructorEffect(c)
+        for qual <- selectedFrom do
+          cc.constrain(processResult(qual), UnknownCons)
+        val argsStrat = args.map:
+          case Arg(_, a) => processResult(a)
+        ctor match
+        case cls: ClassSymbol =>
+          cls.tree.clsParams.size match
+          case 1 =>
+            val clsParams = cls.tree.clsParams.head // TODO use irDefn here and elsewhere
+            // TODO: properly check the parameter lists, which may change after passes like lifting
+            // softTODO(argsStrat.size === clsParams.size, s"mismatched ctor arg and cls param sizes")
+            registerCtor(new Ctor(c.uid, instId)(ctor, clsParams.zip(argsStrat)))
+          case _ =>
+            // - the size of 0 means we don't know the cls param symbols,
+            // so we constrain args with UnknownCons and this CtorProducer gives UnknownProd
+            // - if size > 1, we cannot handle multiple parameter class flow now,
+            //   constrain args with UnknownCons and this CtorProducer gives UnknownProd
+            for a <- argsStrat do cc.constrain(a, UnknownCons)
+            UnknownProd
+        case _: ModuleOrObjectSymbol => registerCtor(new Ctor(c.uid, instId)(ctor, Nil))
+        case tupSize: Int =>
+          registerCtor(new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList))
+      case c@CtorProducer(_, args, selectedFrom) =>
+        constrainEffect(UnsafeEta)
+        for qual <- selectedFrom do
+          cc.constrain(processResult(qual), UnknownCons)
+        args.foreach(arg => cc.constrain(processResult(arg.value), UnknownCons))
+        UnknownProd
+      case c@Call(fun, argss) =>
+        // each later arg list applies the result of the previous one
+        argss.iterator.zipWithIndex.foldLeft(processResult(fun)):
+          case (fStrat, (args, whichArgList)) => handleCallLike((c.uid, whichArgList), fStrat, args)
+      case i@Instantiate(_, cls, argss) =>
+        constrainConstructorEffect(i)
+        constrainOpaqueResult(cls)
+        argss.flatten.foreach(a => constrainOpaqueResult(a.value))
+        UnknownProd
+      case lam@Lambda(ps, body) =>
+        processFunctionBody("lam_res", ps ne_:: Nil, body, lam.uid, Nil)
+      case _: Tuple => lastWords("should be handled in CtorProducer")
+      case Record(_, fields) =>
+        if fields.exists(_.spread) then constrainEffect(UnsafeEta)
+        fields.foreach:
+          case RcdArg(idx, value) =>
+            idx.foreach(p => cc.constrain(processResult(p), UnknownCons))
+            cc.constrain(processResult(value), UnknownCons)
+        UnknownProd
+      case refSite @ FunRef(f, selectedFrom) =>
+        // ? [todo:harry-0]
+        // ? It's a special case for module getters but I'm not sure if
+        // ? this is good enough. It just conservatively marks it unsafe.
+        if f.irFunDefn.fold(!f.isAccessPure)(_.params.isEmpty) then constrainEffect(UnsafeEta)
+        refSite match
+          case DynSelect(_, key, DynSelectKind.Member(_)) => cc.constrain(processResult(key), UnknownCons)
+          case SuperSelect(_, base, key) =>
             cc.constrain(processResult(base), UnknownCons)
-            generatedVars(s.symbol)
-          case s @ Select(qual, name) =>
-            markUnsafeEta()
-            cc.constrain(processResult(qual), UnknownCons)
-            s.symbol.fold(UnknownProd): selSym =>
-              generatedVars(selSym)
-          case DynSelect(qual, fld, kind) =>
-            markUnsafeEta()
-            cc.constrain(processResult(qual), UnknownCons)
-            cc.constrain(processResult(fld), UnknownCons)
-            kind match
-              case DynSelectKind.Member(sym) => generatedVars(sym)
-              case DynSelectKind.ArrayIdx | DynSelectKind.Unknown => UnknownProd
-          case c @ Cast(value, target, check) =>
-            if check then markUnsafeEta()
-            val valueStrat = processResult(value)
-            cc.constrain(valueStrat, new CastConsumer(c.uid, instId, target))
-            valueStrat
-          case Value.MemberRef(_, disamb) =>
-            disamb match
-            case _: ClassSymbol | _: PatternSymbol =>
-              // Just accessing the binding is pure.
-              ()
-            case sym: TermSymbol =>
-              // (Accessing mutable fields is a Select)
-              if !sym.isAccessPure then markUnsafeEta()
-            case _: ModuleOrObjectSymbol =>
-              lastWords("module/object references should be handled by CtorProducer")
-            case _: TypeAliasSymbol =>
-              lastWords("type aliases should not occur as runtime member references")
-            generatedVars(disamb)
-          case Value.SimpleRef(sym) =>
-            if nonlocals.contains(sym) then
-              // A special case to avoid regression in deforest/eta-expansion/basic.mls
-              // To be superseded by our capture analysis / masking.
-              val isParam = currentEffect.flatMap(_.sourceSymbol).exists:
-                case fun: TermSymbol => preAnalyzer.res.funSymToFunDefn.get(fun).exists:
-                  _.params.exists(_.paramSyms.contains(sym))
-                case _ => false
-              if !isParam then markUnsafeEta()
-            generatedVars(sym)
-          case Value.This(_) => UnknownProd
-          case Value.Lit(lit) => UnknownProd
-  }
+            cc.constrain(processResult(key), UnknownCons)
+          case _ => ()
+        for qual <- selectedFrom do
+          cc.constrain(processResult(qual), UnknownCons)
+        funsToProdStratScheme.get(f) match
+        case Some(fScheme) =>
+          instantiate(fScheme, refSite.uid, f)
+        case None => generatedVars(f)
+      case s @ SuperSelect(qual, base, key) =>
+        constrainEffect(UnsafeEta)
+        cc.constrain(processResult(key), UnknownCons)
+        cc.constrain(processResult(qual), UnknownCons)
+        cc.constrain(processResult(base), UnknownCons)
+        generatedVars(s.symbol)
+      case s @ Select(qual, name) =>
+        constrainEffect(UnsafeEta)
+        cc.constrain(processResult(qual), UnknownCons)
+        s.symbol.fold(UnknownProd): selSym =>
+          generatedVars(selSym)
+      case DynSelect(qual, fld, kind) =>
+        constrainEffect(UnsafeEta)
+        cc.constrain(processResult(qual), UnknownCons)
+        cc.constrain(processResult(fld), UnknownCons)
+        kind match
+          case DynSelectKind.Member(sym) => generatedVars(sym)
+          case DynSelectKind.ArrayIdx | DynSelectKind.Unknown => UnknownProd
+      case c @ Cast(value, target, check) =>
+        if check then constrainEffect(UnsafeEta)
+        val valueStrat = processResult(value)
+        cc.constrain(valueStrat, new CastConsumer(c.uid, instId, target))
+        valueStrat
+      case Value.MemberRef(_, disamb) =>
+        disamb match
+        case _: ClassSymbol | _: PatternSymbol =>
+          // Just accessing the binding is pure.
+          ()
+        case sym: TermSymbol =>
+          // (Accessing mutable fields is a Select)
+          if !sym.isAccessPure then constrainEffect(UnsafeEta)
+        case _: ModuleOrObjectSymbol =>
+          lastWords("module/object references should be handled by CtorProducer")
+        case _: TypeAliasSymbol =>
+          lastWords("type aliases should not occur as runtime member references")
+        generatedVars(disamb)
+      case Value.SimpleRef(sym) =>
+        if nonlocals.contains(sym) then
+          if !ctx.fun.exists(_.isOwnParam(sym)) then
+            constrainEffect(UnsafeEta)
+        generatedVars(sym)
+      case Value.This(_) => UnknownProd
+      case Value.Lit(lit) => UnknownProd
+
+  analyze()
+  collect()
+  
 end FlowConstraintsCollector
+
 
 class FlowConstraintSolver(val collector: FlowConstraintsCollector):
   given Elaborator.Ctx = collector.eCtx
