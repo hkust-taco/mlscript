@@ -11,12 +11,6 @@ fun trimStart(str) =
 //│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
 //│ ║  l.+2: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
 //│ ╙──      	                        ^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
-//│ ║  l.+2: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
-//│ ║        	                                                            ^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.+2: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
-//│ ╙──      	                                      ^^^^
 
 :fixme
 fun trimStart(str) =
@@ -24,12 +18,6 @@ fun trimStart(str) =
 //│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
 //│ ║  l.+2: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──      	                        ^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
-//│ ║  l.+2: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
-//│ ║        	                                                            ^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.+2: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
-//│ ╙──      	                                      ^^^^
 
 :fixme
 fun trimStart(str) =
@@ -37,12 +25,6 @@ fun trimStart(str) =
 //│ ╔══[COMPILATION ERROR] String concatenation is not supported in pattern compilation.
 //│ ║  l.+2: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
 //│ ╙──      	                       ^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
-//│ ║  l.+2: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
-//│ ║        	                                                          ^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.+2: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
-//│ ╙──      	                                     ^^^^
 
 
 // * Note: `@compile(...)` is parsed as a whole annotation

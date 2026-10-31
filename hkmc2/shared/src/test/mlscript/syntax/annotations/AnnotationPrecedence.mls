@@ -8,48 +8,34 @@
 pattern A(pattern B) = B
 
 
+:expect 0
 fun foo(x) = if x is @annotations.compile A(0) as y then y
+foo(0)
+//│ = 0
 
+:expect 0
 fun foo(x) = if x is (@annotations.compile A(0)) as y then y
+foo(0)
+//│ = 0
 
 // :pt
 // :re
 // if 1 is (@annotations.compile A(0)) as y then y
 
-:pe
-:e
+:expect 0
 fun foo(x) = if x is @annotations.compile (A(0) as y) then y
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'then' keyword instead
-//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
-//│ ╙──      	                                                      ^^^^
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern split (juxtaposition).
-//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile (A(0) as y) then y
-//│ ╙──      	                                                           ^
+foo(0)
+//│ = 0
 
-:e
+:expect 0
 fun foo(x) = if x is @annotations.compile {A(0) as y} then y
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile {A(0) as y} then y
-//│ ║        	                                                           ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.+1: 	fun foo(x) = if x is @annotations.compile {A(0) as y} then y
-//│ ╙──      	                                                   ^
+foo(0)
+//│ = 0
 
-:pe // parses as `@annotations.compile(A(0) as y) ‹missing annot body›`
-:e
+:expect 0
 fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
-//│ ╔══[PARSE ERROR] Expected start of expression in this position
-//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
-//│ ║        	                                                      ^
-//│ ╟── found a lone annotation instead
-//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
-//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
-//│ ╙──      	                                                      ^
-//│ ╔══[COMPILATION ERROR] Name not found: y
-//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile (A(0) as y)) then y
-//│ ╙──      	                                                             ^
+foo(0)
+//│ = 0
 
 :pe // parses as `@annotations.compile(A(0) as y) ‹missing annot body›`
 :e
@@ -67,23 +53,15 @@ fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile(A(0) as y)) then y
 //│ ╙──      	                                                            ^
 
-:e
+:expect 0
 fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
-//│ ║        	                                                             ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile {A(0) as y}) then y
-//│ ╙──      	                                                    ^
+foo(0)
+//│ = 0
 
-:fixme
+:expect 0
 fun foo(x) = if x is (@annotations.compile A(0) as y) then y
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile A(0) as y) then y
-//│ ║        	                                                           ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.+1: 	fun foo(x) = if x is (@annotations.compile A(0) as y) then y
-//│ ╙──      	                                                   ^
+foo(0)
+//│ = 0
 
 
 // Using a dummy annotation to test that annotations gobble

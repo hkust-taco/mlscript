@@ -1,0 +1,40 @@
+:js
+
+
+// A space starts the annotation's target, including after a qualified name.
+:expect 42
+@annotations.untyped (40 + 2)
+//│ = 42
+
+:expect [0, -1]
+pattern Identity(pattern P) = P
+fun grouped(x) = if x is @annotations.compile (Identity(0)) then 0 else -1
+[grouped(0), grouped(1)]
+//│ = [0, -1]
+
+// Attached parentheses supply annotation arguments; separated parentheses group the target.
+:parseOnly
+@marker (target)
+//│ Parsed:
+//│ 	Annotated(Ident(marker),Bra(Round,Ident(target)))
+
+:parseOnly
+@module.marker (target)
+//│ Parsed:
+//│ 	Annotated(Sel(Ident(module),Ident(marker)),Bra(Round,Ident(target)))
+
+:parseOnly
+@module.nested.marker (target)
+//│ Parsed:
+//│ 	Annotated(Sel(Sel(Ident(module),Ident(nested)),Ident(marker)),Bra(Round,Ident(target)))
+
+:parseOnly
+@module.marker(argument) (target)
+//│ Parsed:
+//│ 	Annotated(App(Sel(Ident(module),Ident(marker)),Tup(List(Ident(argument)))),Bra(Round,Ident(target)))
+
+// Type applications must also retain the separation before the target.
+:parseOnly
+@module.marker[T] (target)
+//│ Parsed:
+//│ 	Annotated(App(Sel(Ident(module),Ident(marker)),TyTup(List(Ident(T)))),Bra(Round,Ident(target)))

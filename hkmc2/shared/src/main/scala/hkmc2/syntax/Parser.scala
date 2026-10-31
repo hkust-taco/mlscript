@@ -1014,26 +1014,29 @@ abstract class Parser(
     wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines, gobbleSpaces))
   
   final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool, gobbleSpaces: Bool): Tree =
+    // Qualified annotation names must retain the space separating them from their target.
+    def continueWith(tree: Tree): Tree =
+      exprCont(tree, prec, allowNewlines = allowNewlines, gobbleSpaces = gobbleSpaces)
     cur match
       
       case (SPACE, l0) :: _ if gobbleSpaces =>
         consume
         acc match // TODO: [CY] looks fishy. a better way? [LP] indeed; ref should be a prefix keyword!
         case Sel(reg, Ident("ref")) => RegRef(reg, simpleExprImpl(0, allowNewlines = false))
-        case _ => exprCont(acc, prec, allowNewlines = allowNewlines)
+        case _ => continueWith(acc)
         
       case (QUOTE, l) :: _ => cur match
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
           consume
           consume
           val rhs = effectfulRhs(kw.rightPrecOrMin, allowNewlines = allowNewlines)
-          exprCont(Quoted(InfixApp(PlainTup(acc), new Keywrd(kw).withLoc(S(l0)), Unquoted(rhs))), prec, allowNewlines = allowNewlines)
+          continueWith(Quoted(InfixApp(PlainTup(acc), new Keywrd(kw).withLoc(S(l0)), Unquoted(rhs))))
         case _ :: (br @ Bracketed(Round, _), loc) :: _ =>
           consume
           consume
           val as = bracketedBlock(br).map(t => Unquoted(t))
           val res = App(Unquoted(acc), Tup(as).withLoc(S(loc)))
-          exprCont(Quoted(res), prec, allowNewlines = allowNewlines)
+          continueWith(Quoted(res))
         case _ :: (OP(opStr), l0) :: _ =>
           if opPrec(opStr)._1 > prec then
             consume
@@ -1043,10 +1046,10 @@ abstract class Parser(
               case (_: NEWLINE_COMMA, l0) :: _ => consume
               case _ =>
             val rhs = expr(opPrec(opStr)._2, allowNewlines = allowNewlines)
-            exprCont(opStr match {
+            continueWith(opStr match {
                 case "with" => unsupportedQuote(S(l0))
                 case _ => Quoted(App(v, Tup(Unquoted(acc) :: operatorArgs(rhs).map(Unquoted(_)))))
-              }, prec, allowNewlines = allowNewlines)
+              })
           else acc
         case _ :: (KEYWORD(Keyword("in")), _) :: _ =>
           acc
@@ -1073,30 +1076,30 @@ abstract class Parser(
         val rhs = effectfulRhs(kw.rightPrecOrMin, allowNewlines = allowNewlines)
         val res = acc match
           case _ => InfixApp(PlainTup(acc), new Keywrd(kw).withLoc(S(l0)), rhs)
-        exprCont(res, prec, allowNewlines = allowNewlines)
+        continueWith(res)
         
       case (IDENT("!", _), l0) :: (br @ Bracketed(bk, toks), l1) :: _ =>
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
-        exprCont(DynAccess(acc, Bra(bk, inner), true), prec, allowNewlines = allowNewlines)
+        continueWith(DynAccess(acc, Bra(bk, inner), true))
       // `obj.[idx]` indexes an array; `obj.(fld)` should eventually no longer be dynamic either.
       case (PERIOD, l0) :: (br @ Bracketed(bk @ (Round | Square), toks), l1) :: _ =>
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
-        exprCont(DynAccess(acc, Bra(bk, inner), bk is Round).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
+        continueWith(DynAccess(acc, Bra(bk, inner), bk is Round).withLoc(S(l0 ++ l1)))
       
       case (PERIOD, l0) :: (br @ Bracketed(Curly, _), l1) :: _ =>
         consume
         consume
         val inner = bracketedBlock(br)
-        exprCont(OpenIn(acc, Block(inner)), prec, allowNewlines = allowNewlines)
+        continueWith(OpenIn(acc, Block(inner)))
         
       case (PERIOD, l0) :: (LITVAL(lit: (Tree & Literal)), l1) :: _ =>
         consume
         consume
-        exprCont(DynAccess(acc, lit.withLoc(S(l1)), true).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
+        continueWith(DynAccess(acc, lit.withLoc(S(l1)), true).withLoc(S(l0 ++ l1)))
         
         /* 
       case (PERIOD, l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
@@ -1121,16 +1124,16 @@ abstract class Parser(
           // * If the indented block doesn't have any newlines or commas,
           // * this is not truly a split, and we can parse it as a normal expression continuation.
           cur = toks ::: cur
-          exprCont(acc, prec, allowNewlines = allowNewlines)
+          continueWith(acc)
         else
           val r = rec(toks, S(loc), "operator block")
           val res = r.opSplit(acc, l0, prec)
           r.yeetSpaces match
           case Nil =>
-            exprCont(res, prec, allowNewlines = allowNewlines)
+            continueWith(res)
           case toks =>
             cur = toks ::: cur
-            exprCont(res, prec, allowNewlines = allowNewlines)
+            continueWith(res)
       
       // TODO
       // case (NEWLINE, _) :: (SELECT(nme), _) :: _
@@ -1160,12 +1163,12 @@ abstract class Parser(
         case _ =>
           opPrec(opStr)._2
         val rhs = expr(rhsPrec, allowNewlines = allowNewlines)
-        exprCont(OpApp(acc, v, operatorArgs(rhs)), prec, allowNewlines = allowNewlines)
+        continueWith(OpApp(acc, v, operatorArgs(rhs)))
         
       case (OP("::"), l0) :: (IDENT(id, false), l1) :: _ =>
         consume
         consume
-        exprCont(MemberProj(acc, new Ident(id).withLoc(S(l1))).withLoc(S(l0 ++ l1)), prec, allowNewlines = allowNewlines)
+        continueWith(MemberProj(acc, new Ident(id).withLoc(S(l1))).withLoc(S(l0 ++ l1)))
       
       // * Postfix `?` marks an optional parameter, as in `fun f(x, y?)` or `(Int, Int?) -> Int`.
       // * The marker applies to the whole parameter (so `Int | Str?` means `(Int | Str)?`),
@@ -1183,12 +1186,12 @@ abstract class Parser(
         case _ => false
       =>
         consume
-        exprCont(Optional(acc).withLoc(acc.toLoc.fold(S(l0))(l => S(l ++ l0))), prec, allowNewlines = allowNewlines)
+        continueWith(Optional(acc).withLoc(acc.toLoc.fold(S(l0))(l => S(l ++ l0))))
       case (OP("?:"), l0) :: _ if prec < Keyword.eqPrec.get && acc.toLoc.exists(_.spanEnd === l0.spanStart) =>
         consume
         val markerLoc = Loc(l0.spanStart, l0.spanStart + 1, l0.origin)
         cur = (IDENT(":", true), Loc(l0.spanStart + 1, l0.spanEnd, l0.origin)) :: cur
-        exprCont(Optional(acc).withLoc(acc.toLoc.fold(S(markerLoc))(l => S(l ++ markerLoc))), prec, allowNewlines = allowNewlines)
+        continueWith(Optional(acc).withLoc(acc.toLoc.fold(S(markerLoc))(l => S(l ++ markerLoc))))
       
       case (OP(opStr), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
@@ -1202,12 +1205,11 @@ abstract class Parser(
             consume
             // rec(toks, S(br.innerLoc), br.describe).concludeWith(f(_, true))
             val rhs = rec(toks, S(l0), "operator split").concludeWith(_.split)
-            exprCont(OpApp(acc, v, Block(rhs).withLoc(S(l0)) :: Nil),
-              prec, allowNewlines = allowNewlines)
+            continueWith(OpApp(acc, v, Block(rhs).withLoc(S(l0)) :: Nil))
           case _ => 
             // val rhs = simpleExpr(opPrec(opStr)._2)
             val rhs = expr(opPrec(opStr)._2, allowNewlines = allowNewlines)
-            exprCont(opStr match {
+            continueWith(opStr match {
               case "with" =>
                 rhs match {
                   // TODO?
@@ -1220,7 +1222,7 @@ abstract class Parser(
                     acc
                 }
               case _ => OpApp(acc, v, operatorArgs(rhs))
-            }, prec, allowNewlines = allowNewlines)
+            })
         
       case (SELECT(name, dyn), l0) :: _ if SelPrec >= prec =>
         consume
@@ -1228,14 +1230,14 @@ abstract class Parser(
           DynAccess(acc, new Ident(name).withLoc(S(l0)), true)
         else
           Sel(acc, new Ident(name).withLoc(S(l0)))
-        exprCont(tree, prec, allowNewlines = allowNewlines)
+        continueWith(tree)
         
       case (br @ Bracketed(Angle | Square, _), loc) :: _ =>
         consume
         val as = bracketedBlock(br)
         // val res = TyApp(acc, as.map(_.mapSecond.to))
         val res = TyApp(acc, as).withLoc(acc.toLoc.fold(some(loc))(_ ++ loc |> some))
-        exprCont(res, prec, allowNewlines = allowNewlines)
+        continueWith(res)
         /*
       /*case (br @ BRACKETS(Square, toks), loc) :: _ => // * Currently unreachable because we match Square brackets as tparams
         consume
@@ -1247,19 +1249,19 @@ abstract class Parser(
         consume
         val as = bracketedBlock(br)
         val res = App(acc, Tup(as).withLoc(S(loc)))
-        exprCont(res, prec, allowNewlines = allowNewlines)
+        continueWith(res)
       case (KEYWORD(Keyword.`of`), _) :: _ if prec <= AppPrec =>
         consume
         val as = blockMaybeIndented
         val res = App(acc, Tup(as))
-        exprCont(res, prec, allowNewlines = allowNewlines)
+        continueWith(res)
       
       case (_: NEWLINE_COMMA, _) :: (KEYWORD(kw), _) :: _
       if kw.canStartInfixOnNewLine && newlineLeftPrec(kw) > prec
       && infixRules.kwAlts.contains(kw.name)
       =>
         consume
-        exprCont(acc, prec, allowNewlines = allowNewlines)
+        continueWith(acc)
         
       case (br @ Bracketed(bk @ (_: Indent_Curly), toks @ ((KEYWORD(kw), _) :: _)), loc) :: _
       if kw.leftPrecOrMin > prec
@@ -1292,7 +1294,7 @@ abstract class Parser(
                 if verbose then printDbg("$ parsing the right-hand side")
                 val rhs = expr(kw.rightPrecOrMin, allowNewlines = allowNewlines)
                 parseRule(kw.rightPrecOrMin, exprAlt.rest, allowNewlines = allowNewlines).map: rest =>
-                  exprCont(exprAlt.k(rhs, rest)(acc), prec, allowNewlines = allowNewlines) // FIXME prec??
+                  continueWith(exprAlt.k(rhs, rest)(acc)) // FIXME prec??
                 .getOrElse(errExpr)
               case N =>
                 // TODO other alts...?
