@@ -306,10 +306,11 @@ declare class LegacyNarrowingOverride extends LegacyOverrideDeclarations.Optiona
 declare class LegacyAliasedOverride extends LegacyOverrideDeclarations.AliasedBase {
   declare override fun pick: (Int) -> Int
 }
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' has a callable type whose parameter layout cannot be determined from its declaration
-//│ ║  l.XX: 	    declare fun pick: Callable
-//│ ║        	                      ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' cannot be checked against the member it overrides, which has a callable type whose parameter layout cannot be determined from its declaration
+//│ ║  l.+2: 	  declare override fun pick: (Int) -> Int
+//│ ║        	                       ^^^^
 //│ ╟── The overridden member 'pick' is defined here
+//│ ║  in ../../mlscript-compile/LegacyOverrideDeclarations.mls
 //│ ║  l.XX: 	    declare fun pick: Callable
 //│ ╙──      	                ^^^^
 
@@ -319,10 +320,11 @@ declare class LegacyAliasedOverride extends LegacyOverrideDeclarations.AliasedBa
 declare class LegacyNamedOverride extends LegacyOverrideDeclarations.NamedBase {
   declare override fun name: Str
 }
-//│ ╔══[COMPILATION ERROR] Overriding member 'name' has a callable type whose parameter layout cannot be determined from its declaration
-//│ ║  l.XX: 	    declare fun name: Name
-//│ ║        	                      ^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'name' cannot be checked against the member it overrides, which has a callable type whose parameter layout cannot be determined from its declaration
+//│ ║  l.+2: 	  declare override fun name: Str
+//│ ║        	                       ^^^^
 //│ ╟── The overridden member 'name' is defined here
+//│ ║  in ../../mlscript-compile/LegacyOverrideDeclarations.mls
 //│ ║  l.XX: 	    declare fun name: Name
 //│ ╙──      	                ^^^^
 
@@ -374,10 +376,11 @@ declare class GenericValueOverride extends GenericValueBase {
 declare class ImportedLegacyCurriedOverride extends LegacyOverrideDeclarations.CurriedBase {
   declare override fun pick: (Int) -> Int
 }
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' has a callable type whose parameter layout cannot be determined from its declaration
-//│ ║  l.XX: 	    declare fun pick: (Int) -> Identity[Callable]
-//│ ║        	                               ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' cannot be checked against the member it overrides, which has a callable type whose parameter layout cannot be determined from its declaration
+//│ ║  l.+2: 	  declare override fun pick: (Int) -> Int
+//│ ║        	                       ^^^^
 //│ ╟── The overridden member 'pick' is defined here
+//│ ║  in ../../mlscript-compile/LegacyOverrideDeclarations.mls
 //│ ║  l.XX: 	    declare fun pick: (Int) -> Identity[Callable]
 //│ ╙──      	                ^^^^
 

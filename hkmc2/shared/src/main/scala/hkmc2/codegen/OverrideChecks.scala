@@ -50,16 +50,21 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
       // `Inheritance.validateMember` reports a change of member kind. Such members have no
       // corresponding parameter lists, so they produce neither a layout error nor an edge.
       base.defn.toList.filterNot(Inheritance.changesMemberKind(td, _)).flatMap: inherited =>
-        val checked = for
-          actual <- layout(td)
-          expected <- layout(inherited)
-          parameters <- OverrideLayout.correspondingParameters(actual.params, expected.params)
-        yield Edge(td, base, parameters, actual.result, expected.result)
-        checked match
-          case Left(failure) =>
-            report(base, msg"Overriding member '${td.tsym.nme}' ${failure.message}", failure.toLoc.orElse(td.tsym.toLoc))
+        def fail(failure: OverrideLayout.Failure): Ls[Edge] =
+          report(base, msg"Overriding member '${td.tsym.nme}' ${failure.message}", failure.toLoc.orElse(td.tsym.toLoc))
+          Nil
+        (layout(td), layout(inherited)) match
+          case (Left(failure), _) => fail(failure)
+          // The inherited declaration's own type is at fault, possibly in another compilation unit.
+          // Report at the override, whose bindings cannot be checked, and name the inherited member.
+          case (_, Left(failure)) =>
+            report(base, msg"Overriding member '${td.tsym.nme}' cannot be checked against the member it overrides, which ${
+              failure.message}", td.tsym.toLoc)
             Nil
-          case Right(edge) => edge :: Nil
+          case (Right(actual), Right(expected)) =>
+            OverrideLayout.correspondingParameters(actual.params, expected.params) match
+              case Left(failure) => fail(failure)
+              case Right(parameters) => Edge(td, base, parameters, actual.result, expected.result) :: Nil
   
   /** The `(overriding, inherited)` member pairs whose source layouts preserve argument bindings.
     * Erasure uses these pairs to inherit result representations; [[TargetOverrideChecks]] uses
