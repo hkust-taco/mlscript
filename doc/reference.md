@@ -752,6 +752,8 @@ must fit the inherited result representation. Unannotated parameters inherit the
 an ordinary member without a result annotation uses the inherited result representation too.
 An annotated parameter may accept a wider representation on JavaScript. Wasm compiles overrides
 with the introducing method's physical signature, so their parameter representations must match.
+For the same reason, Wasm also requires an override to keep the introducing method's number of
+parameters, rejecting the additional optional parameters that JavaScript permits.
 A representation mismatch is a compilation error.
 
 ### Covariant/Contravariant Type Parameters
