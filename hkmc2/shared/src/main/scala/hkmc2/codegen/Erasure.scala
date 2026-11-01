@@ -108,8 +108,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         // An unannotated override implements the inherited result. Async/generator annotations
         // describe a body payload; their inherited callable result describes the wrapper.
         if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then N
-        else overrides.validatedEdges.collectFirst { case (child, base) if (child is td.tsym) && base.isErased => base }
-          .flatMap(_.declaredResultType)
+        else overrides.validatedBases.getOrElse(td.tsym, Nil).find(_.isErased).flatMap(_.declaredResultType)
     // The body produces the payload; callers receive the wrapper object instead.
     // Resolution gives calls of such functions the same wrapper shapes.
     val result =

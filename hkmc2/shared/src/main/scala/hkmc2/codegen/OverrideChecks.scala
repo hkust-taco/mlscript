@@ -66,6 +66,12 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     */
   val validatedEdges: Ls[(TermSymbol, TermSymbol)] = edges.map(edge => edge.overriding.tsym -> edge.inherited)
   
+  /** The inherited members of each overriding member in [[validatedEdges]], in the same order.
+    * Erasure looks up an unannotated override's inherited result here for every definition,
+    * so the lookup must not scan all edges of the program.
+    */
+  val validatedBases: Map[TermSymbol, Ls[TermSymbol]] = validatedEdges.groupMap(_._1)(_._2)
+  
   /** Maps each written overriding parameter to the inherited inputs that deliver the same argument,
     * omitted-argument default, or rest slice. Each input refers either to a written parameter or to
     * a representation obtained from a declared callable arrow. Erasure joins all these inherited
