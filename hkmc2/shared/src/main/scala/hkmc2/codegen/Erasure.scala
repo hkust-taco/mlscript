@@ -107,8 +107,12 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       else sigShape.fold(declaredType(td.resultSignature, td.modulefulness))(_._2).orElse:
         // An unannotated override implements the inherited result. Async/generator annotations
         // describe a body payload; their inherited callable result describes the wrapper.
+        // A structural intersection can give a member several bases: an unannotated one publishes
+        // no result, so inherit from the first base that declares one; representation checking
+        // then reports any other base whose result the override does not fit.
         if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then N
-        else overrides.validatedBases.getOrElse(td.tsym, Nil).find(_.isErased).flatMap(_.declaredResultType)
+        else overrides.validatedBases.getOrElse(td.tsym, Nil).iterator.filter(_.isErased)
+          .flatMap(_.declaredResultType).nextOption()
     // The body produces the payload; callers receive the wrapper object instead.
     // Resolution gives calls of such functions the same wrapper shapes.
     val result =
