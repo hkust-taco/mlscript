@@ -91,7 +91,7 @@ object OverrideLayout:
       * before the declaration can be classified as a getter.
       */
     def writtenCallable(term: Term): Bool = term match
-      case Term.FunTy(_, _, _) => true
+      case _: Term.FunTy => true
       case Term.Capture(base, _) => writtenCallable(base)
       case Term.Forall(_, _, body) => writtenCallable(body)
       case Term.CompType(left, right, _) => writtenCallable(left) || writtenCallable(right)
@@ -103,7 +103,7 @@ object OverrideLayout:
     def legacyCallableHead(term: Term, seen: Set[TypeAliasSymbol], followingAlias: Bool): Bool = term match
       case Term.Capture(base, _) => legacyCallableHead(base, seen, followingAlias)
       case Term.Forall(_, _, body) => legacyCallableHead(body, seen, followingAlias)
-      case Term.FunTy(_, _, _) => true
+      case _: Term.FunTy => true
       case _ => term.resolvedSym match
         // The legacy fallback has no argument environment. An alias ending in a parameter
         // could be Id[Callable], so only a known non-callable head may terminate that alias.
