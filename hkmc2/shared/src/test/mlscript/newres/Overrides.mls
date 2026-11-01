@@ -102,6 +102,14 @@ new SuperChild().foo(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 10
 
+// An unannotated base publishes no signature to inherit. Exposed open members must be
+// annotated, so these classes stay private to the worksheet.
+:expect 10
+private class UnannotatedSuperBase { open fun foo(x) = x + 1 }
+private class UnannotatedSuperChild extends UnannotatedSuperBase { override fun foo(x) = super.foo(x + 1) * 2 }
+new UnannotatedSuperChild().foo(3)
+//│ = 10
+
 :expect 11
 class SuperInherited extends SuperChild { fun bar(x) = super.foo(x) + 1 }
 new SuperInherited().bar(3)
