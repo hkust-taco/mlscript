@@ -313,6 +313,19 @@ declare class LegacyAliasedOverride extends LegacyOverrideDeclarations.AliasedBa
 //│ ║  l.XX: 	    declare fun pick: Callable
 //│ ╙──      	                ^^^^
 
+// An imported legacy getter whose alias denotes a non-callable value has no parameter lists,
+// so overriding it with the same value type must not need layout recovery.
+:fixme
+declare class LegacyNamedOverride extends LegacyOverrideDeclarations.NamedBase {
+  declare override fun name: Str
+}
+//│ ╔══[COMPILATION ERROR] Overriding member 'name' has a callable type whose parameter layout cannot be determined from its declaration
+//│ ║  l.XX: 	    declare fun name: Name
+//│ ║        	                      ^^^^
+//│ ╟── The overridden member 'name' is defined here
+//│ ║  l.XX: 	    declare fun name: Name
+//│ ╙──      	                ^^^^
+
 // The same imported callable alias cannot hide additional curried lists in a result.
 :ge
 declare class LegacyCurriedBase {

@@ -12,3 +12,7 @@ module LegacyOverrideDeclarations with
   declare open class CurriedBase {
     declare fun pick: (Int) -> Identity[Callable]
   }
+  type Name = Str
+  declare open class NamedBase {
+    declare fun name: Name
+  }
