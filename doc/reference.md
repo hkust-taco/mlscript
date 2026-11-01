@@ -761,8 +761,9 @@ abstract member) of an `open` or `abstract` class, or of an `open` object, must 
 of all its parameters and its result when its compilation unit exposes it, that is, when it can be
 reached from the unit's exported definitions. Each type can come from an annotation, a separate
 full signature such as `fun f: (Int) -> Int`, or the corresponding part of an overridden member's
-signature, which an override inherits unchanged without refining it. Other members, including those
-of private and local classes, are overridden only within their own unit and need no annotations.
+signature, which an override inherits unchanged without refining it. Other members need no such
+annotations. This exemption includes members of private and local classes that remain unexposed;
+an exported function can expose such a class by returning its constructor.
 Private members cannot be overridden at all, so marking one `open` causes a warning.
 
 ### Covariant/Contravariant Type Parameters
