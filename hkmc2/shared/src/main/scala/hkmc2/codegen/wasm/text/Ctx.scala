@@ -500,18 +500,14 @@ object FunctionCtx:
     */
   private case class ControlFlowCtx(scp: Scope, breakLabel: LabelSymbol, continueLabel: Opt[LabelSymbol])
 
-/** Tracks the parameter slots, local variables, jump labels, and return convention used while
-  * generating one Wasm function body. Slot types describe the emitted function signature: virtual
-  * overrides use their inherited signature even when their source annotations give narrower results.
+/** Tracks the parameter slots, local variables, and jump labels used while generating one Wasm
+  * function body. Slot types describe the emitted function signature: virtual overrides use their
+  * inherited parameter slots.
   *
   * @param _params
   *   The parameters of this function.
   * @param thisSym
   *   The implicit `this` parameter symbol if this function is generated from a non-static method, or `N` otherwise.
-  * @param resultType
-  *   The Wasm type to which explicit return values must conform. Virtual overrides share their
-  *   introducing method's result slot. `N` supplies no function-level constraint, so return emission
-  *   uses each IR value's erased type; it does not mean that the body must return no value.
   * @param paramTypes
   *   Physical types for parameter slots, with the receiver first when `thisSym` is present. Slots
   *   without an entry derive their type from the parameter symbol. Methods pass their registered
@@ -520,7 +516,6 @@ object FunctionCtx:
 class FunctionCtx(
     _params: Ls[LoweredParamList],
     thisSym: Opt[InnerSymbol],
-    val resultType: Opt[ValType],
     paramTypes: Opt[Seq[ValType]] = N,
 )(using Ctx, Raise, State):
 
@@ -622,8 +617,8 @@ class FunctionCtx(
 end FunctionCtx
 
 /** Generates a body in a fresh [[FunctionCtx]] and returns it with the context that records its
-  * parameters and locals for the function declaration. `resultType` constrains explicit returns;
-  * `paramTypes` supplies physical slot types, including any implicit receiver, as in [[FunctionCtx]].
+  * parameters and locals for the function declaration. `paramTypes` supplies physical slot types,
+  * including any implicit receiver, as in [[FunctionCtx]].
   *
   * Reports unsupported rest parameters before invoking `mkBody`. Optional fixed parameters retain
   * their slots: callers supply null for omitted arguments when the slot's type permits it.
@@ -631,7 +626,6 @@ end FunctionCtx
 def genFuncBody[T](
     params: Ls[LoweredParamList],
     thisSym: Opt[InnerSymbol],
-    resultType: Opt[ValType],
     paramTypes: Opt[Seq[ValType]] = N,
 )(mkBody: FunctionCtx ?=> T)(using Ctx, Raise, State): T -> FunctionCtx =
   // * Calls pad omitted optional arguments with null to preserve Wasm's fixed arity.
@@ -643,7 +637,7 @@ def genFuncBody[T](
       raise(ErrorReport(
         msg"Variadic parameters are not supported by the WebAssembly backend." -> p.toLoc.orElse(ps.toLoc) :: Nil,
         source = Diagnostic.Source.Compilation))
-  val funcCtx = FunctionCtx(params, thisSym, resultType, paramTypes)
+  val funcCtx = FunctionCtx(params, thisSym, paramTypes)
   val result = mkBody(using funcCtx)
   result -> funcCtx
 
