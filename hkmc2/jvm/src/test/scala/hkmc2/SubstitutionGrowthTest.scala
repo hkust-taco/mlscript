@@ -86,16 +86,39 @@ class SubstitutionGrowthTest extends AnyFunSuite:
 
   // Constructor patterns synthesize omitted type arguments in the pattern's
   // lexical scope. Missing that scope made recursive FingerTreeList patterns
-  // retain unrelated callers' binders, allocating over 15000 views instead of
-  // about 1400. With the generic IterableBase interface, the library now needs
-  // about 3600 views. Allow headroom while keeping the bound below the previous
-  // runaway growth, independently of machine-dependent timeouts; the .mls tests
-  // cover observable behavior.
+  // retain unrelated callers' binders, allocating over 15000 views. The generic
+  // IterableBase signatures add views at the tree's constructor-pattern sites;
+  // skipping wildcard field reads keeps the current fixture near 3200 views.
+  // Check allocations independently of machine-dependent timeouts; the .mls
+  // tests cover observable behavior.
   test("FingerTreeList constructor-pattern inference stays bounded"):
     val m = measure(TestFolders.compileTestDir(os.pwd) / "FingerTreeList.mls")
     withClue(s"FingerTreeList inference: $m"):
       assert(m.largestSubstitution <= 4)
-      assert(m.views < 6000)
+      assert(m.views < 3500)
+
+  // A constructor test still refines the input when every field is a wildcard,
+  // but it needs none of those fields' values. Reading each ignored field used
+  // to allocate a view per field and construction site. Keep the cost bounded
+  // by the number of constructions as the number of ignored fields grows.
+  test("wildcard constructor fields do not allocate substitution views"):
+    val callSites = 10
+    for width <- List(2, 6, 10, 14) do
+      val fields = (1 to width).map(i => s"val field$i: A").mkString(", ")
+      val wildcards = List.fill(width)("_").mkString(", ")
+      val arguments = List.fill(width)("Item(42)").mkString(", ")
+      val calls = List.fill(callSites)(s"discard(new Box[Item]($arguments))").mkString(", ")
+      val m = measure(s"IgnoredFields_$width",
+        s"""#lang(0.3.x)
+           |
+           |class Item(val value: Int)
+           |class Box[A]($fields)
+           |private fun discard(box) = if box is Box($wildcards) then 1 else 0
+           |fun use() = [$calls]
+           |""".stripMargin)
+      withClue(s"$width ignored fields at $callSites construction sites: $m"):
+        assert(m.largestSubstitution <= 1)
+        assert(m.views <= 2 * callSites)
 
   // The branching chain above, passing a promise produced outside every generic
   // scope. Its views are projected onto the support of its payload, which is

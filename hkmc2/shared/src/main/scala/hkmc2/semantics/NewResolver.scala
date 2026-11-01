@@ -3055,7 +3055,9 @@ class NewResolver:
                   case NoShape => ()
             def check(sh: TermShape, unknown: Opt[TermShape])(using ResolutionContext): Unit =
               if sh.isInstanceOfClass(cls) then
-                fs.foreach: (bms, pat) =>
+                // Wildcards bind no values and test no field shape. Reading their
+                // fields would instantiate generic views that no listener uses.
+                for (bms, pat) <- fs if !pat.isInstanceOf[Pattern.Wildcard] do
                   def member(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
                     case MemberLookup.All(members) => members.foreach(member(_, instances))
                     case MemberLookup.Contextual(source, substitution) => member(source, instances.withOverrides(substitution))
