@@ -212,12 +212,6 @@ class BadKind extends Base { override fun foo = 1 }
 //│ ╟── Inherited member 'foo' is defined here
 //│ ║  l.XX: 	class Base { open fun foo() = 1 }
 //│ ╙──      	                      ^^^
-//│ ╔══[COMPILATION ERROR] Overriding member 'foo' must preserve the number of parameter lists
-//│ ║  l.+1: 	class BadKind extends Base { override fun foo = 1 }
-//│ ║        	                                          ^^^
-//│ ╟── The overridden member 'foo' is defined here
-//│ ║  l.XX: 	class Base { open fun foo() = 1 }
-//│ ╙──      	                      ^^^
 
 :e
 class AbstractCall() { fun f() }

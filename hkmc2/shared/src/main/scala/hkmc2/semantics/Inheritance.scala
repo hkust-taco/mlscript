@@ -61,6 +61,15 @@ object Inheritance:
           case target :: Nil => S(target)
           case _ => N
 
+  /** Whether an override of `inherited` turns a field, getter, or method into another kind of member.
+    * Getter evaluation and method selection have different effects and calling conventions.
+    * A shared target symbol must never cause a getter read to be treated as a pure method value.
+    * An external declaration can describe a method through a callable type with no written
+    * parameters, so written parameter lists do not determine its kind.
+    */
+  def changesMemberKind(td: TermDefinition, inherited: TermDefinition): Bool =
+    !isExternal(td) && (td.k != inherited.k || td.params.nonEmpty != inherited.params.nonEmpty)
+  
   /** Check only completed edges; an empty list during resolution can still acquire a parent. */
   def validateMember(td: TermDefinition)(using Erasure, Raise): Unit =
     val bases = td.tsym.overriddenMembers
@@ -77,10 +86,7 @@ object Inheritance:
           fail(msg"Overriding member '${base.nme}' requires the 'override' modifier", S(base))
         if td.tsym.isPrivate then
           fail(msg"Overriding member '${base.nme}' cannot be private", S(base))
-        // Getter evaluation and method selection have different effects and calling conventions.
-        // A shared target symbol must never cause a getter read to be treated as a pure method value.
-        if !isExternal(td) && (td.k != inherited.k ||
-            td.params.nonEmpty != inherited.params.nonEmpty) then
+        if changesMemberKind(td, inherited) then
           fail(msg"Overriding member '${base.nme}' must preserve whether the member is a field, getter, or method", S(base))
         // Mixing a data property with an inherited accessor changes initialization and freezing behavior.
         if (td.k is syntax.MutVal) && (inherited.k is syntax.MutVal) &&
