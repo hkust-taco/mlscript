@@ -88,7 +88,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
   val inheritedParameters: Map[VarSymbol, Ls[OverrideLayout.Input]] = edges.flatMap(_.parameters).flatMap:
     (param, inherited) => param.parameter.map(_.sym -> inherited)
   .groupMap(_._1)(_._2)
-
+  
   /** Reports overridable members that [[InterfaceExposure]] found reachable from this compilation unit's
     * exports, in classes and objects that other units may extend, when their signatures leave a parameter
     * or the result unspecified. Overrides in other units inherit these members' representations, which
@@ -149,7 +149,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
               } must be annotated or inherited from an overridden member", td.headerLoc)
               ::: missing.map(param => msg"Parameter '${param.sym.nme}' has no type annotation" -> param.toLoc),
             source = Diagnostic.Source.Compilation))
-
+  
   /** Reports representation incompatibilities for the declaration pairs that passed layout checking.
     * An overriding parameter must hold every value its inherited counterpart accepts; an overriding
     * result must fit the inherited result representation. Both comparisons canonicalize the types
