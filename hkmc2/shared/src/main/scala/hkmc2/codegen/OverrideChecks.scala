@@ -88,7 +88,68 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
   val inheritedParameters: Map[VarSymbol, Ls[OverrideLayout.Input]] = edges.flatMap(_.parameters).flatMap:
     (param, inherited) => param.parameter.map(_.sym -> inherited)
   .groupMap(_._1)(_._2)
-  
+
+  /** Reports overridable members that [[InterfaceExposure]] found reachable from this compilation unit's
+    * exports, in classes and objects that other units may extend, when their signatures leave a parameter
+    * or the result unspecified. Overrides in other units inherit these members' representations, which
+    * erasure cannot recover from an unannotated base: an exposed `open fun f(x) = x + 1` would give
+    * every such override an unknown parameter and result.
+    *
+    * A parameter or result is specified when the member annotates it, gives a separate full signature,
+    * or inherits it from the corresponding parameter or result of an overridden member that specifies it.
+    * Overrides inherit signatures unchanged, so they need not restate them. Overridden members of other
+    * compilation units count as specified: their own unit applies this check to the members it lets
+    * other units override.
+    */
+  def checkExposedSignatures(): Unit =
+    /** The inherited declarations whose layouts correspond to `td`'s, with the parameter pairs. */
+    def correspondingBases(td: TermDefinition): Ls[(TermDefinition, Ls[(OverrideLayout.Input, OverrideLayout.Input)])] =
+      td.tsym.overriddenMembers.flatMap(_.defn).filterNot(Inheritance.changesMemberKind(td, _)).flatMap: inherited =>
+        val parameters = for
+          actual <- layout(td)
+          expected <- layout(inherited)
+          parameters <- OverrideLayout.correspondingParameters(actual.params, expected.params)
+        yield parameters
+        parameters.toOption.map(inherited -> _)
+    // A separate signature, as in `fun f: (Int) -> Int` followed by `fun f(x) = x`, types every written
+    // parameter; a result annotation describes only the result.
+    def hasFullSignature(td: TermDefinition): Bool =
+      td.sign.isDefined && !td.flags.hasResultAnnotation && td.params.nonEmpty
+    /** Whether `base`, overridden from `td`, specifies a part; `visiting` stops at inheritance cycles. */
+    def inheritedSpecifies(td: TermDefinition, base: TermDefinition, visiting: Set[TermSymbol])(
+        specifies: Set[TermSymbol] => Bool): Bool =
+      (base.tsym.getState isnt td.tsym.getState) || (!visiting(base.tsym) && specifies(visiting + base.tsym))
+    def parameterSpecified(td: TermDefinition, param: Param, visiting: Set[TermSymbol]): Bool =
+      param.sign.isDefined || hasFullSignature(td) || locally:
+        val inherited = correspondingBases(td).flatMap: (base, parameters) =>
+          parameters.collect { case (actual, input) if actual.parameter.exists(_.sym is param.sym) => base -> input }
+        // Erasure joins every corresponding inherited representation, so each must be specified.
+        // An input recovered from a declared callable arrow has a written type.
+        inherited.nonEmpty && inherited.forall: (base, input) =>
+          inheritedSpecifies(td, base, visiting): visiting =>
+            input.parameter.forall(parameterSpecified(base, _, visiting))
+    def resultSpecified(td: TermDefinition, visiting: Set[TermSymbol]): Bool =
+      // Erasure does not inherit a result for async and generator bodies, whose results are wrappers.
+      td.sign.isDefined || (td.resultWrapperAnnotation.isEmpty && correspondingBases(td).exists: (base, _) =>
+        inheritedSpecifies(td, base, visiting)(resultSpecified(base, _)))
+    definitions.foreach: td =>
+      td.tsym.getState.newResolverState.exposedOpenMember(td.tsym).foreach: path =>
+        val parameters = td.params.flatMap: ps =>
+          ps.params ::: ps.variadic.toList.flatMap(variadic => variadic.param :: variadic.trailing)
+        val missing = parameters.filterNot(parameterSpecified(td, _, Set(td.tsym)))
+        val missingResult = !resultSpecified(td, Set(td.tsym))
+        val required = (missingResult, missing.nonEmpty) match
+          case (true, true) => S("its result type and the types of its parameters")
+          case (true, false) => S(if td.k is syntax.Fun then "its result type" else "its type")
+          case (false, true) => S("the types of its parameters")
+          case (false, false) => N
+        required.foreach: required =>
+          raise(ErrorReport(
+            path.diagnostic(msg"Open member '${td.tsym.nme}' is exposed by this compilation unit, so ${required
+              } must be annotated or inherited from an overridden member", td.headerLoc)
+              ::: missing.map(param => msg"Parameter '${param.sym.nme}' has no type annotation" -> param.toLoc),
+            source = Diagnostic.Source.Compilation))
+
   /** Reports representation incompatibilities for the declaration pairs that passed layout checking.
     * An overriding parameter must hold every value its inherited counterpart accepts; an overriding
     * result must fit the inherited result representation. Both comparisons canonicalize the types

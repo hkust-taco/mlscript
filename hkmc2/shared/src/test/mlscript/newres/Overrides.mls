@@ -1,6 +1,6 @@
 :.
 
-class Base { open fun foo(): Int = 1 }
+class Base { open fun foo() = 1 }
 class Left extends Base { override fun foo() = 2 }
 class Right extends Base { override fun foo() = 3 }
 class Inherited extends Base
@@ -41,7 +41,7 @@ class MissingOverride extends Base { fun foo() = 2 }
 //│ ║  l.+1: 	class MissingOverride extends Base { fun foo() = 2 }
 //│ ║        	                                     ^^^^^^^^^^^^^
 //│ ╟── Inherited member 'foo' is defined here
-//│ ║  l.XX: 	class Base { open fun foo(): Int = 1 }
+//│ ║  l.XX: 	class Base { open fun foo() = 1 }
 //│ ╙──      	                      ^^^
 
 :e
@@ -102,11 +102,10 @@ new SuperChild().foo(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 10
 
-// An unannotated base publishes no signature to inherit. Exposed open members must be
-// annotated, so these classes stay private to the worksheet.
+// An unannotated base publishes no signature to inherit.
 :expect 10
-private class UnannotatedSuperBase { open fun foo(x) = x + 1 }
-private class UnannotatedSuperChild extends UnannotatedSuperBase { override fun foo(x) = super.foo(x + 1) * 2 }
+class UnannotatedSuperBase { open fun foo(x) = x + 1 }
+class UnannotatedSuperChild extends UnannotatedSuperBase { override fun foo(x) = super.foo(x + 1) * 2 }
 new UnannotatedSuperChild().foo(3)
 //│ = 10
 
@@ -123,7 +122,7 @@ new SuperClosure().foo(3)
 //│ = 10
 
 :expect 13
-class GetterBase(val n) { open fun value: Int = n + 1 }
+class GetterBase(val n) { open fun value = n + 1 }
 class GetterChild(n) extends GetterBase(n) {
   override fun value = super.value + super.n
 }
@@ -132,8 +131,8 @@ new GetterChild(6).value
 
 :expect 12
 class ReceiverBase {
-  open fun value(): Int = 1
-  open fun run(): Int = this.value() + 2
+  open fun value() = 1
+  open fun run() = this.value() + 2
 }
 class ReceiverChild extends ReceiverBase {
   override fun value() = 10
@@ -195,12 +194,12 @@ class PrivateSuper extends PrivateBase { fun f() = super.secret() }
 //│ ╙──      	                                                   ^^^^^^^^^^^^
 
 :e
-class ConcreteMissing { fun foo(): Int }
+class ConcreteMissing { fun foo() }
 //│ ╔══[COMPILATION ERROR] Class 'ConcreteMissing' has unimplemented members
-//│ ║  l.+1: 	class ConcreteMissing { fun foo(): Int }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class ConcreteMissing { fun foo() }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.+1: 	class ConcreteMissing { fun foo(): Int }
+//│ ║  l.+1: 	class ConcreteMissing { fun foo() }
 //│ ╙──      	                            ^^^
 
 :e
@@ -218,16 +217,16 @@ class BadKind extends Base { override fun foo = 1 }
 //│ ║  l.+1: 	class BadKind extends Base { override fun foo = 1 }
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Inherited member 'foo' is defined here
-//│ ║  l.XX: 	class Base { open fun foo(): Int = 1 }
+//│ ║  l.XX: 	class Base { open fun foo() = 1 }
 //│ ╙──      	                      ^^^
 
 :e
-class AbstractCall() { fun f(): Int }
+class AbstractCall() { fun f() }
 //│ ╔══[COMPILATION ERROR] Class 'AbstractCall' has unimplemented members
-//│ ║  l.+1: 	class AbstractCall() { fun f(): Int }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class AbstractCall() { fun f() }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'f' requires an implementation
-//│ ║  l.+1: 	class AbstractCall() { fun f(): Int }
+//│ ║  l.+1: 	class AbstractCall() { fun f() }
 //│ ╙──      	                           ^
 
 :e
@@ -272,7 +271,7 @@ class PrivateAbstract { private fun hidden() }
 
 // The nearest common ancestor is used even when a deeper ancestor is also common.
 :expect [5, 6]
-class MiddleBase extends Base { open override fun foo(): Int = 4 }
+class MiddleBase extends Base { open override fun foo() = 4 }
 class DeepLeft extends MiddleBase { override fun foo() = 5 }
 class DeepRight extends MiddleBase { override fun foo() = 6 }
 private fun readDeep(x) = x.foo()
@@ -302,7 +301,7 @@ private fun ambiguous(x) = x.foo()
 //│ ║  l.+1: 	class Unrelated { fun foo() = 0 }
 //│ ║        	                      ^^^
 //│ ╟── target: function 'foo' in class 'Base'
-//│ ║  l.XX: 	class Base { open fun foo(): Int = 1 }
+//│ ║  l.XX: 	class Base { open fun foo() = 1 }
 //│ ╙──      	                      ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -338,7 +337,7 @@ ImplementedObject.foo()
 // Evaluating a class value must not re-evaluate the parent at every super call.
 :expect 8
 fun makeParent(n) = {
-  class Parent { open fun f(): Int = n }
+  class Parent { open fun f() = n }
   Parent
 }
 let parent = makeParent(4)
@@ -453,7 +452,7 @@ new SavedParent().f()
 // This also encounters the constructor-shape cache limitation above.
 :fixme
 :expect 5
-class Holder(n) { class Parent { open fun f(): Int = n } }
+class Holder(n) { class Parent { open fun f() = n } }
 let changingHolder = Holder(5)
 class SavedNestedParent extends changingHolder.Parent { override fun f() = super.f() }
 set changingHolder = Holder(11)

@@ -757,10 +757,12 @@ parameters, rejecting the additional optional parameters that JavaScript permits
 A representation mismatch is a compilation error.
 
 Because overrides inherit these representations, an overridable member (one marked `open`, or an
-abstract member) that its compilation unit exposes must annotate the types of all its parameters
-and its result; a separate full signature such as `fun f: (Int) -> Int` also suffices. A member is
-exposed when it can be reached from the unit's exported definitions. Open members of private or
-local classes are overridden only within their own unit and need no annotations.
+abstract member) of an `open` or `abstract` class, or of an `open` object, must specify the types
+of all its parameters and its result when its compilation unit exposes it, that is, when it can be
+reached from the unit's exported definitions. Each type can come from an annotation, a separate
+full signature such as `fun f: (Int) -> Int`, or the corresponding part of an overridden member's
+signature, which an override inherits unchanged without refining it. Other members, including those
+of private and local classes, are overridden only within their own unit and need no annotations.
 
 ### Covariant/Contravariant Type Parameters
 

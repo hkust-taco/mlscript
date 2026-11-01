@@ -301,6 +301,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     // Retain the traversed declarations: handlers remove the resumption parameter list from them.
     val definitions = statements.collect { case td: TermDefinition => td }.distinctBy(_.tsym)
     val overrideChecks = new OverrideChecks(definitions)
+    overrideChecks.checkExposedSignatures()
     val inheritedParams = overrideChecks.inheritedParameters
     val parameterSymbols = parameters.iterator.map(_.sym).toSet
     /** Initializes a parameter's representation from its annotation or the joined representations
