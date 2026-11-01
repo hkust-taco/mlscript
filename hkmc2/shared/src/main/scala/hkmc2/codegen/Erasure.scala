@@ -70,19 +70,19 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
 
   /** Computes the representation to publish on a member symbol: a value type, a getter result,
     * or a function's parameter lists and result. Parameter symbols must already have their erased
-    * types. Declared functions can obtain their lists from callable arrows; unannotated overrides
-    * can obtain their result from an inherited member in `overrideEdges` that has completed erasure.
-    * Those pairs must already have passed source layout validation.
+    * types. Declared functions can obtain their lists from callable arrows, using the layouts that
+    * `overrides` computed; unannotated overrides can obtain their result from an inherited member
+    * that passed source layout validation in `overrides` and has completed erasure.
     * For example, `declare fun f: (Int) -> Str` publishes one `Int` parameter and a `Str` result.
     */
   private def erasedDefinitionSignature(td: TermDefinition,
-      overrideEdges: Ls[(TermSymbol, TermSymbol)]): Opt[ErasedValueType | ErasedCallableSignature] =
+      overrides: OverrideChecks): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
     // A declared function with no written parameters obtains its calling convention from its arrows.
     // An ordinary paramless function instead returns the value denoted by the entire signature.
     val sigShape =
       if (td.k is syntax.Fun) && td.params.isEmpty && declared then
-        OverrideLayout.signature(td).toOption.flatMap: signature =>
+        overrides.layout(td).toOption.flatMap: signature =>
           // A rest tuple has no fixed physical arity. Preserve any preceding fixed lists,
           // whose result remains a callable, and use the same normalized aliases as overrides.
           val fixed = signature.params.takeWhile(_.variadic.isEmpty)
@@ -108,7 +108,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         // An unannotated override implements the inherited result. Async/generator annotations
         // describe a body payload; their inherited callable result describes the wrapper.
         if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then N
-        else overrideEdges.collectFirst { case (child, base) if (child is td.tsym) && base.isErased => base }
+        else overrides.validatedEdges.collectFirst { case (child, base) if (child is td.tsym) && base.isErased => base }
           .flatMap(_.declaredResultType)
     // The body produces the payload; callers receive the wrapper object instead.
     // Resolution gives calls of such functions the same wrapper shapes.
@@ -347,7 +347,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     def eraseDefinition(td: TermDefinition, visiting: Set[TermSymbol]): Unit =
       if !td.tsym.isErased && !visiting(td.tsym) then
         td.tsym.overriddenMembers.flatMap(definitionsBySymbol.get).foreach(eraseDefinition(_, visiting + td.tsym))
-        td.tsym.initializeErasure(erasedDefinitionSignature(td, overrideChecks.validatedEdges))
+        td.tsym.initializeErasure(erasedDefinitionSignature(td, overrideChecks))
     definitions.foreach(eraseDefinition(_, Set.empty))
     statements.foreach:
       case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.initializeErasure(N)

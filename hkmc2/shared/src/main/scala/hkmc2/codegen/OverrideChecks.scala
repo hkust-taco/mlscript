@@ -1,6 +1,8 @@
 package hkmc2
 package codegen
 
+import scala.collection.mutable
+
 import hkmc2.utils.*, shorthands.*
 import semantics.*
 import semantics.Elaborator.{Ctx, State}
@@ -31,13 +33,24 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
       parameters: Ls[(OverrideLayout.Input, OverrideLayout.Input)],
       result: Opt[ErasedValueType], inheritedResult: Opt[ErasedValueType])
   
+  // Definitions are keyed by identity: as case classes, they would otherwise be hashed and
+  // compared through their entire bodies on every lookup.
+  private val layouts =
+    mutable.Map.empty[Identity[TermDefinition], Either[OverrideLayout.Failure, OverrideLayout.Signature]]
+  
+  /** The source layout of `td`, computed once per declaration. A base member with several overrides
+    * and a declared member whose erased signature uses its layout then share one traversal of its type.
+    */
+  def layout(td: TermDefinition): Either[OverrideLayout.Failure, OverrideLayout.Signature] =
+    layouts.getOrElseUpdate(Identity(td), OverrideLayout.signature(td))
+  
   private val edges = definitions.flatMap: td =>
     td.tsym.overriddenMembers.flatMap: base =>
       softAssert(base.defn.nonEmpty, "An inherited declaration must retain its source signature for override validation")
       base.defn.toList.flatMap: inherited =>
         val checked = for
-          actual <- OverrideLayout.signature(td)
-          expected <- OverrideLayout.signature(inherited)
+          actual <- layout(td)
+          expected <- layout(inherited)
           parameters <- OverrideLayout.correspondingParameters(actual.params, expected.params)
         yield Edge(td, base, parameters, actual.result, expected.result)
         checked match
