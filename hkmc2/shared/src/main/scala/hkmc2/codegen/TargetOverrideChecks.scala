@@ -17,6 +17,8 @@ import hkmc2.Message.MessageContext
   * `Int` slot. This checker rejects that widening for Wasm. Other targets have no extra checks here.
   */
 object TargetOverrideChecks:
+  import OverrideChecks.{report, within, describe}
+  
   /** A parameter's erased representation and the source information used to explain a mismatch.
     * Imported erased signatures retain parameter positions and types but no parameter names.
     */
@@ -53,10 +55,6 @@ object TargetOverrideChecks:
     */
   def apply(edges: Ls[(TermSymbol, TermSymbol)])(using Config, Ctx, State, Raise): Unit =
     if summon[Config].target is CompilationTarget.Wasm then
-      def within(actual: Opt[ErasedValueType], expected: Opt[ErasedValueType]): Bool =
-        ErasedType.needsCast(actual.getOrElse(ErasedType.Unknown).canonicalize,
-          expected.getOrElse(ErasedType.Unknown).canonicalize).contains(false)
-      def describe(tpe: Opt[ErasedValueType]): Str = tpe.getOrElse(ErasedType.Unknown).canonicalize.describe
       /** Treats a member with no parameter lists as one empty physical list for arity comparison. */
       def fixedLists(signature: Signature): Ls[Ls[Parameter]] = signature.params match
         case Nil => Nil :: Nil
@@ -67,9 +65,6 @@ object TargetOverrideChecks:
         // The Wasm backend rejects rest parameters independently; their lowered array does not
         // describe a supported fixed-slot ABI and must not be compared as an ordinary parameter.
         if !actual.hasRest && !inherited.hasRest then
-          def report(message: Message, loc: Opt[Loc]): Unit = raise(ErrorReport(
-            (message -> loc) :: (msg"The overridden member '${base.nme}' is defined here" -> base.toLoc) :: Nil,
-            source = Diagnostic.Source.Compilation))
           val params = fixedLists(actual)
           val baseParams = fixedLists(inherited)
           // Physical arity is checked when Wasm constructs the actual virtual slot, including
@@ -82,7 +77,7 @@ object TargetOverrideChecks:
                 if within(inheritedParam.representation, param.representation)
                     && !within(param.representation, inheritedParam.representation) then
                   val parameter = param.name.fold(msg"Parameter ${index + 1}")(name => msg"Parameter '$name'")
-                  report(
+                  report(base,
                     msg"$parameter of overriding member '${overriding.nme}' receives values represented as '${
                       describe(param.representation)}', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as '${
                       describe(inheritedParam.representation)}'",

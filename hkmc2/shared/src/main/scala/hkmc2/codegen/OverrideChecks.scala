@@ -20,6 +20,8 @@ import hkmc2.Message.MessageContext
   * `definitions` contains at most one declaration per member symbol.
   */
 final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, State, Erasure, Raise):
+  import OverrideChecks.{report, within, describe}
+  
   /** A declaration pair with compatible argument bindings, ready for representation checking.
     * `parameters` pairs each overriding input with its inherited counterpart. The result fields
     * hold representations obtained from declared callable arrows; an absent result means that
@@ -28,11 +30,6 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
   private case class Edge(overriding: TermDefinition, inherited: TermSymbol,
       parameters: Ls[(OverrideLayout.Input, OverrideLayout.Input)],
       result: Opt[ErasedValueType], inheritedResult: Opt[ErasedValueType])
-  
-  private def report(base: TermSymbol, message: Message, loc: Opt[Loc]): Unit =
-    raise(ErrorReport(
-      (message -> loc) :: (msg"The overridden member '${base.nme}' is defined here" -> base.toLoc) :: Nil,
-      source = Diagnostic.Source.Compilation))
   
   private val edges = definitions.flatMap: td =>
     td.tsym.overriddenMembers.flatMap: base =>
@@ -77,10 +74,6 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
     * not both completed erasure are skipped.
     */
   def checkRepresentations(): Unit =
-    def within(actual: Opt[ErasedValueType], expected: Opt[ErasedValueType]): Bool =
-      ErasedType.needsCast(actual.getOrElse(ErasedType.Unknown).canonicalize,
-        expected.getOrElse(ErasedType.Unknown).canonicalize).contains(false)
-    def describe(tpe: Opt[ErasedValueType]): Str = tpe.getOrElse(ErasedType.Unknown).canonicalize.describe
     def input(param: OverrideLayout.Input): Opt[ErasedValueType] = param.parameter match
       case S(param) => param.sym.erasedType
       case N => param.representation
@@ -103,3 +96,22 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
             msg"${param.label.capitalize} of overriding member '${td.tsym.nme}' is represented as '${describe(actualType)
               }', which cannot hold the values represented as '${describe(baseType)}' that the member it overrides accepts",
             param.toLoc)
+
+object OverrideChecks:
+  /** Whether a value represented as `actual` fits `expected` without a cast, after canonicalizing both.
+    * An absent representation stands for `Unknown`.
+    */
+  def within(actual: Opt[ErasedValueType], expected: Opt[ErasedValueType])(using Ctx, State): Bool =
+    ErasedType.needsCast(canonical(actual), canonical(expected)).contains(false)
+  
+  /** The user-facing description of a canonicalized representation; an absent one is `Unknown`. */
+  def describe(tpe: Opt[ErasedValueType])(using Ctx, State): Str = canonical(tpe).describe
+  
+  private def canonical(tpe: Opt[ErasedValueType])(using Ctx, State): CanonicalErasedValueType =
+    tpe.getOrElse(ErasedType.Unknown).canonicalize
+  
+  /** Reports an override incompatibility at `loc` and points at the overridden member's declaration. */
+  def report(base: TermSymbol, message: Message, loc: Opt[Loc])(using Raise): Unit =
+    raise(ErrorReport(
+      (message -> loc) :: (msg"The overridden member '${base.nme}' is defined here" -> base.toLoc) :: Nil,
+      source = Diagnostic.Source.Compilation))
