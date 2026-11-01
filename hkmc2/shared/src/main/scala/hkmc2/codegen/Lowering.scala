@@ -1978,12 +1978,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       inScopedBlockExcept(symbolsToPreserve)(using LoweringCtx.empty(symbolsToPreserve ++ topLevelVals)):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
-    val lowered = Program(
+    Program(
       imps.map(imp => imp.sym -> imp.str),
       blk
     )
-    TargetOverrideChecks(summon[Erasure].validatedOverrideEdges)
-    lowered
   
   
   def setupSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =

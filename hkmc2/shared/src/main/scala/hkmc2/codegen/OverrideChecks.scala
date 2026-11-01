@@ -15,23 +15,25 @@ import hkmc2.Message.MessageContext
   *
   * [[Erasure]] constructs one instance after resolution completes. Construction uses [[OverrideLayout]]
   * to match each override's parameters with its inherited parameters, reports incompatible layouts,
-  * and retains the compatible pairs in [[validatedEdges]]. [[inheritedParameters]] supplies the
-  * correspondence that erasure needs to assign representations to unannotated overriding parameters.
-  * After erasure initializes the parameter and member signatures, [[checkRepresentations]] checks
-  * that the override accepts every inherited input and produces only permitted results.
+  * and retains the compatible pairs. [[inheritedParameters]] supplies the correspondence that erasure
+  * needs to assign representations to unannotated overriding parameters.
+  * After erasure initializes the parameter and member signatures, [[checkSignatures]] checks
+  * that the override accepts every inherited input and produces only permitted results, and applies
+  * the compilation target's additional calling-convention restrictions to the same signatures.
   * `definitions` contains at most one declaration per member symbol.
   */
 final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, State, Erasure, Raise):
   import OverrideChecks.{report, within, describe}
   
   /** A declaration pair with compatible argument bindings, ready for representation checking.
-    * `parameters` pairs each overriding input with its inherited counterpart. The result fields
-    * hold representations obtained from declared callable arrows; an absent result means that
-    * [[checkRepresentations]] must read the member's completed erased signature.
+    * `parameters` pairs each overriding input with its inherited counterpart. The signatures retain
+    * the complete layouts, including unmatched optional or dropped inputs, for target arity checks.
+    * Their results hold representations obtained from declared callable arrows; an absent result means
+    * that [[checkSignatures]] must read the member's completed erased signature.
     */
   private case class Edge(overriding: TermDefinition, inherited: TermSymbol,
       parameters: Ls[(OverrideLayout.Input, OverrideLayout.Input)],
-      result: Opt[ErasedValueType], inheritedResult: Opt[ErasedValueType])
+      signature: OverrideLayout.Signature, inheritedSignature: OverrideLayout.Signature)
   
   // Definitions are keyed by identity: as case classes, they would otherwise be hashed and
   // compared through their entire bodies on every lookup.
@@ -64,20 +66,13 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
           case (Right(actual), Right(expected)) =>
             OverrideLayout.correspondingParameters(actual.params, expected.params) match
               case Left(failure) => fail(failure)
-              case Right(parameters) => Edge(td, base, parameters, actual.result, expected.result) :: Nil
+              case Right(parameters) => Edge(td, base, parameters, actual, expected) :: Nil
   
-  /** The `(overriding, inherited)` member pairs whose source layouts preserve argument bindings.
-    * Erasure uses these pairs to inherit result representations; [[TargetOverrideChecks]] uses
-    * them to check the target's calling convention. Layout validation does not establish representation
-    * compatibility: [[checkRepresentations]] reports those errors without removing pairs from this list.
-    */
-  val validatedEdges: Ls[(TermSymbol, TermSymbol)] = edges.map(edge => edge.overriding.tsym -> edge.inherited)
-  
-  /** The inherited members of each overriding member in [[validatedEdges]], in the same order.
+  /** The inherited members whose source layouts preserve each overriding member's argument bindings.
     * Erasure looks up an unannotated override's inherited result here for every definition,
     * so the lookup must not scan all edges of the program.
     */
-  val validatedBases: Map[TermSymbol, Ls[TermSymbol]] = validatedEdges.groupMap(_._1)(_._2)
+  val validatedBases: Map[TermSymbol, Ls[TermSymbol]] = edges.groupMap(_.overriding.tsym)(_.inherited)
   
   /** Maps each written overriding parameter to the inherited inputs that deliver the same argument,
     * omitted-argument default, or rest slice. Each input refers either to a written parameter or to
@@ -150,17 +145,35 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
               ::: missing.map(param => msg"Parameter '${param.sym.nme}' has no type annotation" -> param.toLoc),
             source = Diagnostic.Source.Compilation))
   
-  /** Reports representation incompatibilities for the declaration pairs that passed layout checking.
+  /** Computes why a source-compatible override cannot use Wasm's fixed parameter slots.
+    * A variadic list needs argument packing that the Wasm backend does not implement. With fixed
+    * lists, each source parameter occupies one slot, including optional and `drop` parameters, so the override
+    * must preserve every list's length even when its source bindings permit adding or dropping inputs.
+    */
+  private def wasmLayoutFailure(edge: Edge): Opt[OverrideLayout.Failure] =
+    val actual = edge.signature.params
+    val inherited = edge.inheritedSignature.params
+    val rest = actual.iterator.flatMap(_.variadic).nextOption()
+    if rest.nonEmpty || inherited.exists(_.variadic.nonEmpty) then S(OverrideLayout.Failure(
+      msg"cannot use a variadic signature on the Wasm target", rest.flatMap(_.param.toLoc).orElse(edge.overriding.headerLoc)))
+    else if actual.map(_.params.length) != inherited.map(_.params.length) then S(OverrideLayout.Failure(
+      msg"must preserve the number of parameters in each parameter list on the Wasm target", edge.overriding.headerLoc))
+    else N
+  
+  /** Reports source and target incompatibilities for declaration pairs that passed binding checks.
     * An overriding parameter must hold every value its inherited counterpart accepts; an overriding
     * result must fit the inherited result representation. Both comparisons canonicalize the types
     * and require the value to fit without a cast, treating an absent representation as `Unknown`.
     *
     * For example, overriding `(Int) -> Any` with `(Any) -> Int` accepts every inherited input and
-    * returns a permitted result. [[TargetOverrideChecks]] imposes additional restrictions for Wasm.
+    * returns a permitted result on JavaScript. Wasm uses the inherited method's fixed parameter slots
+    * for direct calls to the override too: its layout must pass [[wasmLayoutFailure]], and its inputs
+    * must also fit the inherited representations. A parameter comparison reports the source failure
+    * first, or the additional Wasm restriction when the source comparison succeeds.
     * Run this after erasure initializes parameter and member signatures; pairs whose members have
     * not both completed erasure are skipped.
     */
-  def checkRepresentations(): Unit =
+  def checkSignatures(): Unit =
     def input(param: OverrideLayout.Input): Opt[ErasedValueType] = param.parameter match
       case S(param) => param.sym.erasedType
       case N => param.representation
@@ -170,12 +183,16 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
       val td = edge.overriding
       val base = edge.inherited
       if td.tsym.isErased && base.isErased then
-        val actualResult = result(td.tsym, edge.result)
-        val baseResult = result(base, edge.inheritedResult)
+        val actualResult = result(td.tsym, edge.signature.result)
+        val baseResult = result(base, edge.inheritedSignature.result)
         if !within(actualResult, baseResult) then report(base,
           msg"Overriding member '${td.tsym.nme}' produces values represented as '${describe(actualResult)
             }', which the member it overrides cannot produce: its results are represented as '${describe(baseResult)}'",
           td.tsym.toLoc)
+        val isWasm = config.target is CompilationTarget.Wasm
+        val targetFailure = if isWasm then wasmLayoutFailure(edge) else N
+        targetFailure.foreach: failure =>
+          report(base, msg"Overriding member '${td.tsym.nme}' ${failure.message}", failure.toLoc)
         edge.parameters.foreach: (param, inherited) =>
           val actualType = input(param)
           val baseType = input(inherited)
@@ -183,22 +200,27 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
             msg"${param.label.capitalize} of overriding member '${td.tsym.nme}' is represented as '${describe(actualType)
               }', which cannot hold the values represented as '${describe(baseType)}' that the member it overrides accepts",
             param.toLoc)
+          else if isWasm && targetFailure.isEmpty && !within(actualType, baseType) then report(base,
+            msg"${param.label.capitalize} of overriding member '${td.tsym.nme}' receives values represented as '${
+              describe(actualType)}', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as '${
+              describe(baseType)}'",
+            param.toLoc)
 
 object OverrideChecks:
   /** Whether a value represented as `actual` fits `expected` without a cast, after canonicalizing both.
     * An absent representation stands for `Unknown`.
     */
-  def within(actual: Opt[ErasedValueType], expected: Opt[ErasedValueType])(using Ctx, State): Bool =
+  private def within(actual: Opt[ErasedValueType], expected: Opt[ErasedValueType])(using Ctx, State): Bool =
     ErasedType.needsCast(canonical(actual), canonical(expected)).contains(false)
   
   /** The user-facing description of a canonicalized representation; an absent one is `Unknown`. */
-  def describe(tpe: Opt[ErasedValueType])(using Ctx, State): Str = canonical(tpe).describe
+  private def describe(tpe: Opt[ErasedValueType])(using Ctx, State): Str = canonical(tpe).describe
   
   private def canonical(tpe: Opt[ErasedValueType])(using Ctx, State): CanonicalErasedValueType =
     tpe.getOrElse(ErasedType.Unknown).canonicalize
   
   /** Reports an override incompatibility at `loc` and points at the overridden member's declaration. */
-  def report(base: TermSymbol, message: Message, loc: Opt[Loc])(using Raise): Unit =
+  private def report(base: TermSymbol, message: Message, loc: Opt[Loc])(using Raise): Unit =
     raise(ErrorReport(
       (message -> loc) :: (msg"The overridden member '${base.nme}' is defined here" -> base.toLoc) :: Nil,
       source = Diagnostic.Source.Compilation))

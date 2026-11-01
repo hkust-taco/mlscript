@@ -135,12 +135,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       case _: syntax.Val => resultType
       case _ => N
 
-  /** The `(overriding, inherited)` declaration pairs whose source layouts preserve argument bindings,
-    * including abstract and external declarations. Construction initializes the whole program's
-    * representations before publishing these pairs for [[TargetOverrideChecks]] to use after lowering.
-    * A pair can remain in the result even if its representation check reported an error.
-    */
-  val validatedOverrideEdges: Ls[(TermSymbol, TermSymbol)] =
+  locally:
     val (statements, parameters, parentConstructions) =
       // One ordered identity set both bounds traversal of shared syntax and preserves diagnostic order.
       // Only this collection step can extend the inputs to the subsequent erasure phases.
@@ -357,5 +352,4 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       case LetDecl(sym: TermSymbol, _) if !sym.isErased => sym.initializeErasure(N)
       case _ => ()
     // Compare signatures only after every definition has completed erasure.
-    overrideChecks.checkRepresentations()
-    overrideChecks.validatedEdges
+    overrideChecks.checkSignatures()

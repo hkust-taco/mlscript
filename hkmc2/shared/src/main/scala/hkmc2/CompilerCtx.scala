@@ -275,8 +275,7 @@ class CompilerCtx(
         // Prelude declarations have no executable program, but their signatures and nominal hierarchy
         // must be erased before any compilation unit can use them.
         given Ctx = ctx
-        val erasure = elaborationConfig.givenIn(codegen.Erasure(blk))
-        elaborationConfig.givenIn(codegen.TargetOverrideChecks(erasure.validatedOverrideEdges))
+        elaborationConfig.givenIn(codegen.Erasure(blk))
         PreludeArtifact(parse.resultBlk, blk, ctx, state, rootConfig, lastMod),
     )
   
