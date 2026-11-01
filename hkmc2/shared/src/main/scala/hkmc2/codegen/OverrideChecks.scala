@@ -17,6 +17,7 @@ import hkmc2.Message.MessageContext
   * correspondence that erasure needs to assign representations to unannotated overriding parameters.
   * After erasure initializes the parameter and member signatures, [[checkRepresentations]] checks
   * that the override accepts every inherited input and produces only permitted results.
+  * `definitions` contains at most one declaration per member symbol.
   */
 final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, State, Erasure, Raise):
   /** A declaration pair with compatible argument bindings, ready for representation checking.
@@ -33,7 +34,7 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
       (message -> loc) :: (msg"The overridden member '${base.nme}' is defined here" -> base.toLoc) :: Nil,
       source = Diagnostic.Source.Compilation))
   
-  private val edges = definitions.distinctBy(_.tsym).flatMap: td =>
+  private val edges = definitions.flatMap: td =>
     td.tsym.overriddenMembers.flatMap: base =>
       softAssert(base.defn.nonEmpty, "An inherited declaration must retain its source signature for override validation")
       base.defn.toList.flatMap: inherited =>

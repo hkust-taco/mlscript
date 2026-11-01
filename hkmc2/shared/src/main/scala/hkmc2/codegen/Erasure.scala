@@ -295,7 +295,9 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
 
     // Establish source argument correspondence before inheriting representations. Equal leading
     // counts alone do not suffice: optional and trailing parameters can redistribute the inputs.
-    val overrideChecks = new OverrideChecks(statements.collect { case td: TermDefinition => td })
+    // Retain the traversed declarations: handlers remove the resumption parameter list from them.
+    val definitions = statements.collect { case td: TermDefinition => td }.distinctBy(_.tsym)
+    val overrideChecks = new OverrideChecks(definitions)
     val inheritedParams = overrideChecks.inheritedParameters
     val parameterSymbols = parameters.iterator.map(_.sym).toSet
     /** Initializes a parameter's representation from its annotation or the joined representations
@@ -335,9 +337,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case _ => N
       field.foreach: sym =>
         if !sym.isErased then sym.initializeErasure(p.sym.erasedType)
-    // Retain the traversed declarations: handlers remove the resumption parameter list from them.
     // Erase inherited results before their overrides, guarding against erroneous inheritance cycles.
-    val definitions = statements.collect { case td: TermDefinition => td }.distinctBy(_.tsym)
     val definitionsBySymbol = definitions.map(td => td.tsym -> td).toMap
     /** Publishes a declaration's erased signature after initializing its local inherited members,
       * so an unannotated override can inherit their result representation. Imported members already
