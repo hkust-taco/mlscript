@@ -83,6 +83,10 @@ object Inheritance:
       source = Diagnostic.Source.Compilation))
     if hasModifier(td, Keyword.`override`) && bases.isEmpty then
       fail(msg"Member '${td.tsym.nme}' is marked 'override' but overrides no inherited member", N)
+    // Private members are never overridden: a subclass member with the same name is a distinct member.
+    if hasModifier(td, Keyword.`open`) && td.owner.isDefined && td.tsym.isExplicitlyPrivate then
+      raise(WarningReport(msg"Private member '${td.tsym.nme}' cannot be overridden, so 'open' has no effect" -> td.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
     bases.foreach: base =>
       base.defn.foreach: inherited =>
         if !isOpen(inherited) then

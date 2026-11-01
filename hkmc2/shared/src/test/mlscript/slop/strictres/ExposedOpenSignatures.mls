@@ -100,3 +100,13 @@ object Constant with
 Constant.get()
 //│ = 1
 
+// Private members cannot be overridden.
+:w
+open class WithPrivate() with
+  private open fun helper(x) = x
+  fun get() = helper(1)
+WithPrivate().get()
+//│ ╔══[WARNING] Private member 'helper' cannot be overridden, so 'open' has no effect
+//│ ║  l.+2: 	  private open fun helper(x) = x
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 1

@@ -763,6 +763,7 @@ reached from the unit's exported definitions. Each type can come from an annotat
 full signature such as `fun f: (Int) -> Int`, or the corresponding part of an overridden member's
 signature, which an override inherits unchanged without refining it. Other members, including those
 of private and local classes, are overridden only within their own unit and need no annotations.
+Private members cannot be overridden at all, so marking one `open` causes a warning.
 
 ### Covariant/Contravariant Type Parameters
 
