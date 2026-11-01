@@ -756,6 +756,12 @@ For the same reason, Wasm also requires an override to keep the introducing meth
 parameters, rejecting the additional optional parameters that JavaScript permits.
 A representation mismatch is a compilation error.
 
+Because overrides inherit these representations, an overridable member (one marked `open`, or an
+abstract member) that its compilation unit exposes must annotate the types of all its parameters
+and its result; a separate full signature such as `fun f: (Int) -> Int` also suffices. A member is
+exposed when it can be reached from the unit's exported definitions. Open members of private or
+local classes are overridden only within their own unit and need no annotations.
+
 ### Covariant/Contravariant Type Parameters
 
 ```mlscript

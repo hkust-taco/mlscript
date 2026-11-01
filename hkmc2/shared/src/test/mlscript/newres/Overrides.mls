@@ -1,6 +1,6 @@
 :.
 
-class Base { open fun foo() = 1 }
+class Base { open fun foo(): Int = 1 }
 class Left extends Base { override fun foo() = 2 }
 class Right extends Base { override fun foo() = 3 }
 class Inherited extends Base
@@ -41,7 +41,7 @@ class MissingOverride extends Base { fun foo() = 2 }
 //│ ║  l.+1: 	class MissingOverride extends Base { fun foo() = 2 }
 //│ ║        	                                     ^^^^^^^^^^^^^
 //│ ╟── Inherited member 'foo' is defined here
-//│ ║  l.XX: 	class Base { open fun foo() = 1 }
+//│ ║  l.XX: 	class Base { open fun foo(): Int = 1 }
 //│ ╙──      	                      ^^^
 
 :e
@@ -50,7 +50,7 @@ class SpuriousOverride { override fun missing() = 2 }
 //│ ║  l.+1: 	class SpuriousOverride { override fun missing() = 2 }
 //│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-abstract class Abstract { fun foo() }
+abstract class Abstract { fun foo(): Int }
 class Implemented extends Abstract { fun foo() = 4 }
 
 :expect 4
@@ -63,7 +63,7 @@ class Incomplete extends Abstract
 //│ ║  l.+1: 	class Incomplete extends Abstract
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 
 :e
@@ -72,8 +72,8 @@ new Abstract
 //│ ║  l.+1: 	new Abstract
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sir
@@ -115,7 +115,7 @@ new SuperClosure().foo(3)
 //│ = 10
 
 :expect 13
-class GetterBase(val n) { open fun value = n + 1 }
+class GetterBase(val n) { open fun value: Int = n + 1 }
 class GetterChild(n) extends GetterBase(n) {
   override fun value = super.value + super.n
 }
@@ -124,8 +124,8 @@ new GetterChild(6).value
 
 :expect 12
 class ReceiverBase {
-  open fun value() = 1
-  open fun run() = this.value() + 2
+  open fun value(): Int = 1
+  open fun run(): Int = this.value() + 2
 }
 class ReceiverChild extends ReceiverBase {
   override fun value() = 10
@@ -173,7 +173,7 @@ class AbstractSuper extends Abstract { fun foo() = super.foo() }
 //│ ║  l.+1: 	class AbstractSuper extends Abstract { fun foo() = super.foo() }
 //│ ║        	                                                   ^^^^^^^^^
 //│ ╟── Candidate 'foo' is declared here
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 
 :e
@@ -187,12 +187,12 @@ class PrivateSuper extends PrivateBase { fun f() = super.secret() }
 //│ ╙──      	                                                   ^^^^^^^^^^^^
 
 :e
-class ConcreteMissing { fun foo() }
+class ConcreteMissing { fun foo(): Int }
 //│ ╔══[COMPILATION ERROR] Class 'ConcreteMissing' has unimplemented members
-//│ ║  l.+1: 	class ConcreteMissing { fun foo() }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class ConcreteMissing { fun foo(): Int }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.+1: 	class ConcreteMissing { fun foo() }
+//│ ║  l.+1: 	class ConcreteMissing { fun foo(): Int }
 //│ ╙──      	                            ^^^
 
 :e
@@ -201,7 +201,7 @@ object MissingObject extends Abstract
 //│ ║  l.+1: 	object MissingObject extends Abstract
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 
 :e
@@ -210,27 +210,27 @@ class BadKind extends Base { override fun foo = 1 }
 //│ ║  l.+1: 	class BadKind extends Base { override fun foo = 1 }
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Inherited member 'foo' is defined here
-//│ ║  l.XX: 	class Base { open fun foo() = 1 }
+//│ ║  l.XX: 	class Base { open fun foo(): Int = 1 }
 //│ ╙──      	                      ^^^
 
 :e
-class AbstractCall() { fun f() }
+class AbstractCall() { fun f(): Int }
 //│ ╔══[COMPILATION ERROR] Class 'AbstractCall' has unimplemented members
-//│ ║  l.+1: 	class AbstractCall() { fun f() }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	class AbstractCall() { fun f(): Int }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'f' requires an implementation
-//│ ║  l.+1: 	class AbstractCall() { fun f() }
+//│ ║  l.+1: 	class AbstractCall() { fun f(): Int }
 //│ ╙──      	                           ^
 
 :e
-abstract class AbstractCallable() { fun f() }
+abstract class AbstractCallable() { fun f(): Int }
 AbstractCallable()
 //│ ╔══[COMPILATION ERROR] Cannot instantiate abstract class 'AbstractCallable'
 //│ ║  l.+2: 	AbstractCallable()
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.+1: 	abstract class AbstractCallable() { fun f() }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	abstract class AbstractCallable() { fun f(): Int }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect 6
@@ -249,7 +249,7 @@ new Abstract with { fun other() = 9 }
 //│ ║  l.+1: 	new Abstract with { fun other() = 9 }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 //│ = $anon
 
@@ -264,7 +264,7 @@ class PrivateAbstract { private fun hidden() }
 
 // The nearest common ancestor is used even when a deeper ancestor is also common.
 :expect [5, 6]
-class MiddleBase extends Base { open override fun foo() = 4 }
+class MiddleBase extends Base { open override fun foo(): Int = 4 }
 class DeepLeft extends MiddleBase { override fun foo() = 5 }
 class DeepRight extends MiddleBase { override fun foo() = 6 }
 private fun readDeep(x) = x.foo()
@@ -294,7 +294,7 @@ private fun ambiguous(x) = x.foo()
 //│ ║  l.+1: 	class Unrelated { fun foo() = 0 }
 //│ ║        	                      ^^^
 //│ ╟── target: function 'foo' in class 'Base'
-//│ ║  l.XX: 	class Base { open fun foo() = 1 }
+//│ ║  l.XX: 	class Base { open fun foo(): Int = 1 }
 //│ ╙──      	                      ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -314,7 +314,7 @@ class StillMissing extends MissingInherited
 //│ ║  l.+2: 	class StillMissing extends MissingInherited
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 
 :expect 4
@@ -330,7 +330,7 @@ ImplementedObject.foo()
 // Evaluating a class value must not re-evaluate the parent at every super call.
 :expect 8
 fun makeParent(n) = {
-  class Parent { open fun f() = n }
+  class Parent { open fun f(): Int = n }
   Parent
 }
 let parent = makeParent(4)
@@ -346,8 +346,8 @@ new abstractValue
 //│ ║  l.+2: 	new abstractValue
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ abstractValue = class Abstract
 
@@ -358,8 +358,8 @@ abstractCtor()
 //│ ║  l.+2: 	abstractCtor()
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.XX: 	abstract class AbstractCallable() { fun f() }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	abstract class AbstractCallable() { fun f(): Int }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ abstractCtor = fun AbstractCallable { class: class AbstractCallable }
 
@@ -370,7 +370,7 @@ class StoredIncomplete extends abstractParent
 //│ ║  l.+2: 	class StoredIncomplete extends abstractParent
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 //│ abstractParent = class Abstract
 
@@ -445,7 +445,7 @@ new SavedParent().f()
 // This also encounters the constructor-shape cache limitation above.
 :fixme
 :expect 5
-class Holder(n) { class Parent { open fun f() = n } }
+class Holder(n) { class Parent { open fun f(): Int = n } }
 let changingHolder = Holder(5)
 class SavedNestedParent extends changingHolder.Parent { override fun f() = super.f() }
 set changingHolder = Holder(11)

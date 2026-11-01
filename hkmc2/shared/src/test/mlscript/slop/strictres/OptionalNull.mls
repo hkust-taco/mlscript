@@ -196,7 +196,7 @@ let
 // The implicit receiver in `when` agrees with explicit `this`; `super` still
 // resolves the parent method and passes optional arguments through its call.
 class Parent {
-  open fun value(x?) = x
+  open fun value(x?: Any): Any = x
 }
 class Child(val field?) extends Parent {
   override fun value(x?) = when

@@ -118,9 +118,9 @@ let right = delayed(Second(9), First(10))
 :ge
 class Item(val value: Int)
 class Other(val other: Int)
-class Base with
+private class Base with
   open fun item() = Item(1)
-class Child extends Base with
+private class Child extends Base with
   override fun item() = Other(2)
 private fun read(x: Base) = x.item().value
 read(new Child)

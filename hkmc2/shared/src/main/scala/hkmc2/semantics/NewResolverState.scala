@@ -74,6 +74,11 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]
   private[semantics] var reporter: Raise | Null = null
   private[semantics] val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext), InterfaceExposure.Input]
+  /** Open members whose exposed signatures [[InterfaceExposure]] has checked. Each worksheet block
+    * runs its own exposure pass, and a later block re-exposes the earlier classes it extends or uses;
+    * recording checked members here reports missing annotations once, in the pass that first exposes them.
+    */
+  private[semantics] val checkedOpenMembers = mutable.Set.empty[TermSymbol]
   private[semantics] val views = mutable.Map.empty[ResolutionContext, ResolutionContext]
   private[semantics] val inheritedViews = mutable.Map.empty[(NewResolverState, ResolutionContext), ResolutionContext]
   private[semantics] val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]

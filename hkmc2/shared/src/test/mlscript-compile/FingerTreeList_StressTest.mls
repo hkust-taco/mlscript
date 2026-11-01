@@ -48,7 +48,7 @@ class FingerTree[T] extends IterableBase[T] with
       View(head, tail) then
         set current = tail
         Result.Next of head
-  open override fun toString() = "[" + this joined(", ") + "]"
+  open override fun toString(): Str = "[" + this joined(", ") + "]"
   override fun length = FingerTreeList_StressTest.length(this)
   override fun at(i) = get(i)(this)
   override fun concat(...xs) =

@@ -310,7 +310,7 @@ declared(1, 2)
 // An `open` modifier is located at its whole statement; only its start belongs to the header.
 :e
 class Opened with
-  open fun f(x) =
+  open fun f(x: Int): Int =
     x + 1
     x + 2
 new Opened().f(1, 2)
@@ -318,8 +318,8 @@ new Opened().f(1, 2)
 //│ ║  l.+5: 	new Opened().f(1, 2)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'f' expected 1 argument, but got 2
-//│ ║  l.+2: 	  open fun f(x) =
-//│ ╙──      	  ^^^^^^^^^^^^^
+//│ ║  l.+2: 	  open fun f(x: Int): Int =
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = 3
 
 // Each call cites the unknown parameter's declaration without repeating the callee span.

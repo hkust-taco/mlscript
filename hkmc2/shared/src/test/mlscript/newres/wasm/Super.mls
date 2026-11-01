@@ -8,15 +8,16 @@ Child().f(3)
 //│ = 10
 
 // Unannotated base members publish no representations, so their overrides inherit none.
+// Exposed open members must be annotated, so these classes stay private to the worksheet.
 :expect 10
-class UnannotatedBase() { open fun f(x) = x + 1 }
-class UnannotatedChild() extends UnannotatedBase() { override fun f(x) = super.f(x + 1) * 2 }
+private class UnannotatedBase() { open fun f(x) = x + 1 }
+private class UnannotatedChild() extends UnannotatedBase() { override fun f(x) = super.f(x + 1) * 2 }
 UnannotatedChild().f(3)
 //│ Wasm result:
 //│ = 10
 
 :expect 21
-class Root() { open fun f() = 1 }
+class Root() { open fun f(): Int = 1 }
 class Middle() extends Root()
 class Leaf() extends Middle() { override fun f() = 21 }
 fun read(x: Root) = x.f()
@@ -25,7 +26,7 @@ read(Leaf())
 //│ = 21
 
 :expect 7
-abstract class Abstract() { fun f() }
+abstract class Abstract() { fun f(): Int }
 class Concrete() extends Abstract() { fun f() = 7 }
 fun readAbstract(x: Abstract) = x.f()
 readAbstract(Concrete())
@@ -40,8 +41,8 @@ GetterChild().value
 //│ = 10
 
 :expect 10
-class UnannotatedGetterBase() { open fun value = 5 }
-class UnannotatedGetterChild() extends UnannotatedGetterBase() { override fun value = super.value * 2 }
+private class UnannotatedGetterBase() { open fun value = 5 }
+private class UnannotatedGetterChild() extends UnannotatedGetterBase() { override fun value = super.value * 2 }
 UnannotatedGetterChild().value
 //│ Wasm result:
 //│ = 10

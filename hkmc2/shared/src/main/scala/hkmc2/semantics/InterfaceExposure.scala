@@ -103,9 +103,41 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         val tuple = TupleShape(ref, TupleShape.Unknown(ref, TupleShape.ValueField(unknown, Nil)) :: Nil)(resolver)
         resolver.constrainParameter(rest, tuple.enter(marks), marks)
 
+  /** An override in another compilation unit inherits the representations of an exposed open member's
+    * parameters and result, so the member must declare all of them. Erasure cannot recover what an
+    * unannotated base leaves unknown: for example, an unannotated `open fun f(x) = x + 1` would give
+    * every inheriting override an unknown parameter and result. Open members that no exposure path
+    * reaches are overridden only inside their own compilation unit and need no annotations.
+    */
+  private def checkOpenSignature(cls: ClassLikeDef, td: TermDefinition, path: Path)(using ResolutionContext): Unit =
+    // Only classes can be extended; open members of objects and modules have no overrides.
+    // An imported class's members belong to the interface its own compilation unit exposes.
+    if cls.isInstanceOf[ClassDef] && rctx.state.isOwnedSym(td.tsym) && Inheritance.isOpen(td)
+        && rctx.state.checkedOpenMembers.add(td.tsym) then
+      // A separate full signature, as in `fun f: (Int) -> Int` followed by `fun f(x) = x`, also
+      // types the written parameters; a result annotation describes only the result.
+      val fullSignature = td.sign.isDefined && !td.flags.hasResultAnnotation && td.params.nonEmpty
+      val parameters = if fullSignature then Nil else td.params.flatMap: ps =>
+        ps.params ::: ps.variadic.toList.flatMap(v => v.param :: v.trailing)
+      val missing = parameters.filter(_.sign.isEmpty)
+      val required = (td.sign.isEmpty, missing.nonEmpty) match
+        case (true, true) => S("its result type and the types of its parameters")
+        case (true, false) => S(if td.k is syntax.Fun then "its result type" else "its type")
+        case (false, true) => S("the types of its parameters")
+        case (false, false) => N
+      required.foreach: required =>
+        rctx.report(ErrorReport(
+          path.diagnostic(msg"Open member '${td.tsym.nme}' is exposed by this compilation unit, so it must annotate ${required}.",
+            td.headerLoc) ::: missing.map(p => msg"Parameter '${p.sym.nme}' has no type annotation." -> p.toLoc)))
+  
   private def members(cls: ClassLikeDef, marks: Ls[Marks], path: Path)(using ResolutionContext): Unit =
     cls.body.blk.stats.foreach:
-      case d: Definition if InterfaceExposure.isPublic(d) => member(d.bsym, marks, path.via(msg"Member '${d.bsym.nme}' is accessible here." -> d.headerLoc))
+      case d: Definition if InterfaceExposure.isPublic(d) =>
+        d match
+          // The member is the diagnostic's main location, so the class's exposure path explains it.
+          case td: TermDefinition => checkOpenSignature(cls, td, path)
+          case _ => ()
+        member(d.bsym, marks, path.via(msg"Member '${d.bsym.nme}' is accessible here." -> d.headerLoc))
       case _ => ()
     cls.ext.foreach: parent =>
       term(parent, marks, path.via(msg"This parent contributes inherited members." -> parent.toLoc))
