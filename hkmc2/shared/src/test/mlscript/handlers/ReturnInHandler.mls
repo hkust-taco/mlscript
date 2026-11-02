@@ -40,7 +40,7 @@ let l = () =>
   return 3
   4
 //│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.40: 	  return 3
+//│ ║  l.+4: 	  return 3
 //│ ╙──      	  ^^^^^^^^
 //│ l = fun
 
@@ -59,7 +59,7 @@ let l = () =>
   4
 l()
 //│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.58: 	  return 3
+//│ ║  l.+7: 	  return 3
 //│ ╙──      	  ^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

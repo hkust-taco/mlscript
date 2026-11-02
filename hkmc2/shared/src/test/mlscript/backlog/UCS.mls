@@ -17,25 +17,27 @@ if 1 + 1
     * 2 == 1 then "A"
     |> id is r then r
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.16: 	    * 2 == 4 then "X"
+//│ ║  l.+2: 	    * 2 == 4 then "X"
 //│ ║        	        ^^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.16: 	    * 2 == 4 then "X"
+//│ ║  l.+2: 	    * 2 == 4 then "X"
 //│ ╙──      	    ^
-//│ ╔══[PARSE ERROR] Unexpected literal in this operator split inner position
-//│ ║  l.16: 	    * 2 == 4 then "X"
-//│ ║        	           ^
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
+//│ ║  l.+2: 	    * 2 == 4 then "X"
+//│ ║        	             ^^^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.16: 	    * 2 == 4 then "X"
+//│ ║  l.+2: 	    * 2 == 4 then "X"
 //│ ╙──      	    ^
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.16: 	    * 2 == 4 then "X"
-//│ ╙──      	           ^
-//│ ╔══[COMPILATION ERROR] Unrecognized term split (integer literal)
-//│ ║  l.16: 	    * 2 == 4 then "X"
-//│ ╙──      	      ^
-//│ ═══[COMPILATION ERROR] Unrecognized term split (reference term)
-//│ ═══[RUNTIME ERROR] Error: match error
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.+1: 	if 1 + 1
+//│ ║        	   ^^^^^
+//│ ║  l.+2: 	    * 2 == 4 then "X"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	    * 2 == 1 then "A"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    |> id is r then r
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // ——— ——— ———
 
@@ -83,16 +85,16 @@ let foo =
   case
     Tuple(...elements) then elements
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern (spread).
-//│ ║  l.84: 	    Tuple(...elements) then elements
+//│ ║  l.+3: 	    Tuple(...elements) then elements
 //│ ╙──      	          ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.84: 	    Tuple(...elements) then elements
+//│ ║  l.+3: 	    Tuple(...elements) then elements
 //│ ║        	    ^^^^^^^^^^^^^^^^^^
 //│ ╟── Class definition 'Tuple' expected 3 pattern arguments, but got 1
-//│ ║  l.80: 	data class Tuple(a, b, c)
+//│ ║  l.XX: 	data class Tuple(a, b, c)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Name not found: elements
-//│ ║  l.84: 	    Tuple(...elements) then elements
+//│ ║  l.+3: 	    Tuple(...elements) then elements
 //│ ╙──      	                            ^^^^^^^^
 //│ foo = fun foo
 
@@ -110,22 +112,22 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.109: 	fun foo(x) = if x is Foo.
-//│ ╙──       	                        ^
+//│ ║  l.+1: 	fun foo(x) = if x is Foo.
+//│ ╙──      	                        ^
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (identifier).
-//│ ║  l.109: 	fun foo(x) = if x is Foo.
-//│ ╙──       	                     ^^^
+//│ ║  l.+1: 	fun foo(x) = if x is Foo.
+//│ ╙──      	                     ^^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (operator split).
-//│ ║  l.119: 	fun foo(x) = if x is Foo
-//│ ║         	                     ^^^
-//│ ║  l.120: 	  .Bar then "Bar"
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.121: 	  .Foo then "Foo"
-//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun foo(x) = if x is Foo
+//│ ║        	                     ^^^
+//│ ║  l.+2: 	  .Bar then "Bar"
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	  .Foo then "Foo"
+//│ ╙──      	^^^^^^^^^^^^^^^^^
 
 // ——— ——— ———
 

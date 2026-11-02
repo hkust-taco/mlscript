@@ -19,7 +19,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     assertUpdate(s, new TempSymbol(s.trm, s.erasedType, s.nme))
 
   private def refreshVarSymbol(s: VarSymbol) =
-    val ns = new VarSymbol(s.id, s.erasedType)
+    val ns = new VarSymbol(s.id, s.erasedType, mut = s.mut)
     ns.sourceAliases = s.sourceAliases
     assertUpdate(s, ns)
   
@@ -31,10 +31,10 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
   private def refreshLabelSymbol(s: LabelSymbol) =
     assertUpdate(s, new LabelSymbol(s.trm, s.nme))
 
-  private def refreshTermSymbol(s: TermSymbol) =
+  private def refreshTermSymbol(s: TermSymbol, erasure: Opt[ErasedValueType | ErasedCallableSignature]) =
     // Inner symbol (if present) must be traversed at this point.
-    val ns = new TermSymbol(s.k, s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), s.id, s.erasedType)
-    ns.sourceAliases = s.sourceAliases
+    val ns = SymbolRefresher.copyTermSymbol(s,
+      s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]), erasure)
     assertUpdate(s, ns)
 
   private def refreshClassSymbol(s: ClassSymbol) =
@@ -51,15 +51,12 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
   private def refreshPatternSymbol(s: PatternSymbol) =
     assertUpdate(s, new PatternSymbol(s.id, s.params, s.body))
 
-  private def refreshTopLevelSymbol(s: TopLevelSymbol) =
-    assertUpdate(s, new TopLevelSymbol(s.nme))
-
   private def refreshClassCtorSymbol(s: ClassCtorSymbol) =
     assertUpdate(s, new ClassCtorSymbol(s.k,
       s.owner.map(o => mapping.getOrElse(o, o).asInstanceOf[InnerSymbol]),
       mapping.getOrElse(s.associatedCls, s.associatedCls).asInstanceOf[ClassSymbol]))
 
-  def refreshParamList(pl: ParamList) =
+  def refreshParamList(pl: LoweredParamList) =
     for
       p <- pl.restParam ++: pl.params
     do
@@ -79,30 +76,32 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
       applyBlock(rest)
     case _ => super.applyBlock(b)
   
+  protected def functionSignature(fun: FunDefn): FunDefn.Signature = fun.signature
+  
   override def applyFunDefn(fun: FunDefn): Unit =
     val FunDefn(owner, sym, dSym, params, body) = fun
     assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for FunDefn is a free variable for this block")
-    refreshTermSymbol(dSym)
-    params.foreach(refreshParamList)
+    val signature = functionSignature(fun)
+    refreshTermSymbol(dSym, S(signature.erasure))
+    signature.params.foreach(refreshParamList)
     applyBlock(body)
   
   override def applyValDefn(defn: ValDefn): Unit =
     val ValDefn(tsym, sym, result) = defn
     assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for ValDefn is a free variable for this block")
-    refreshTermSymbol(tsym)
+    refreshTermSymbol(tsym, tsym.erasure)
     applyResult(result)
   
   override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
     val ClsLikeDefn(
       owner, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath,
       methods, privateFields, publicFields, preCtor, ctor, companion,
-      bufferable, termCompanion) = defn
+      bufferable, termCompanion, _) = defn
     assert(mapping.isDefinedAt(sym), s"BlockMemberSymbol ${sym} for ClsLikeDefn is a free variable for this block")
     isym match
       case s: ClassSymbol => refreshClassSymbol(s)
       case s: ModuleOrObjectSymbol => refreshModuleOrObjectSymbol(s)
       case s: PatternSymbol => refreshPatternSymbol(s)
-      case s: TopLevelSymbol => refreshTopLevelSymbol(s)
     ctorSym.foreach(refreshClassCtorSymbol)
     paramsOpt.foreach(refreshParamList)
     auxParams.foreach(refreshParamList)
@@ -110,7 +109,7 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
       // For methods, the BlockMemberSymbol is owned by the class itself
       refreshBlockMemberSymbol(mtd.sym)
       applyFunDefn(mtd)
-    privateFields.foreach(refreshTermSymbol)
+    privateFields.foreach(s => refreshTermSymbol(s, s.erasure))
     publicFields.foreach: p =>
       refreshBlockMemberSymbol(p._1)
       // For public fields, we have ValDefn for defining the variable
@@ -121,16 +120,14 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
 
   def applyClsLikeBody(b: ClsLikeBody): Unit =
     val ClsLikeBody(
-      isym, methods, privateFields, publicFields, ctor, annotations
+      isym, methods, privateFields, publicFields, ctor, annotations, _
     ) = b
-    isym match
-      case s: ModuleOrObjectSymbol => refreshModuleOrObjectSymbol(s)
-      case s: TopLevelSymbol => refreshTopLevelSymbol(s)
+    refreshModuleOrObjectSymbol(isym)
     methods.foreach: mtd =>
       // For methods, the BlockMemberSymbol is owned by the class itself
       refreshBlockMemberSymbol(mtd.sym)
       applyFunDefn(mtd)
-    privateFields.foreach(refreshTermSymbol)
+    privateFields.foreach(s => refreshTermSymbol(s, s.erasure))
     publicFields.foreach: p =>
       refreshBlockMemberSymbol(p._1)
       // For public fields, we have ValDefn for defining the variable
@@ -138,6 +135,11 @@ class SymbolRefresherWalker(mapping: MutMap[Symbol, Symbol])(using State) extend
     applyBlock(ctor)
 
 object SymbolRefresher:
+  
+  def copyTermSymbol(s: TermSymbol, owner: Opt[InnerSymbol], erasure: Opt[ErasedValueType | ErasedCallableSignature])(using State): TermSymbol =
+    val ns = new TermSymbol(s.k, owner, s.id, erasure)
+    ns.sourceAliases = s.sourceAliases
+    ns
   
   def initSymbolSubst(m: collection.Map[Symbol, Symbol]) =
     new SymbolSubst:

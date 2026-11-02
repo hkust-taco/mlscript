@@ -1,0 +1,253 @@
+:.
+
+// Arrays use their declared iteration method, including through structural Iterable.
+:expect [1, 2, 3]
+private fun lengths(xs: Iterable[Str]) = [...xs].map(s => s.length)
+lengths(["a", "bb", "ccc"])
+//│ = [1, 2, 3]
+
+// The source alias invokes the real symbol-keyed native method.
+:expect "hello"
+private fun first(xs: Array[Str]) = xs.iterator().next().value
+first(["hello"])
+//│ = "hello"
+
+// Computed protocol fields and inferred function bodies preserve captured values.
+:expect [4, 5]
+private fun once(x) = {(Symbol.iterator): () =>
+  let pending = true
+  {next: () => if pending then
+    set pending = false
+    {done: false, value: x}
+  else {done: true}}
+}
+class Box(val value: Int)
+[...once(Box(4)), ...once(Box(5))].map(x => x.value)
+//│ = [4, 5]
+
+// User methods can implement the same protocol without a result annotation.
+:expect ["6"]
+class Single(val item: Int) {
+  @annotations.jsSymbol(Symbol.iterator) fun iterate() =
+    let pending = true
+    {next: () => if pending then
+      set pending = false
+      {done: false, value: item}
+    else {done: true}}
+}
+[...Single(6)].map(n => n.toString())
+//│ = ["6"]
+
+// Native collections share the same protocol path.
+:expect [1, 2, 3]
+lengths(new Set(["a", "bb", "ccc"]))
+//│ = [1, 2, 3]
+
+// Every compound interface contributes, even alongside an opaque alternative.
+#lang(eagerResolution: false)
+
+:e
+class Left(val value: Int)
+class Right(val value: Int)
+fun ambiguous(xs: Iterable[Left] | Iterable[Right] | {}) = [...xs].0.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+3: 	fun ambiguous(xs: Iterable[Left] | Iterable[Right] | {}) = [...xs].0.value
+//│ ║        	                                                           ^^^^^^^^^^^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Right'
+//│ ║  l.+2: 	class Right(val value: Int)
+//│ ║        	                ^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Left'
+//│ ║  l.+1: 	class Left(val value: Int)
+//│ ╙──      	               ^^^^^
+
+#lang(eagerResolution: true)
+
+// Opaque or unusable protocols are accepted; later type checking can reject them.
+fun opaque(xs: {}) = [...xs]
+fun opaqueMethod(xs: {(Symbol.iterator): Any}) = [...xs]
+type Empty = {}
+fun opaqueIterator(xs: {(Symbol.iterator): () -> Empty}) = [...xs]
+
+// A pending producer must eventually feed the existing spread observation.
+:expect [7]
+private fun delayed() = [...later()].map(x => x.value)
+private fun later() = once(Box(7))
+delayed()
+//│ = [7]
+
+// Recursive forwarding reuses observations and retains the caller's element type.
+:expect [8]
+private fun forward[A](xs: Iterable[A], n: Int): Array[A] =
+  if n == 0 then [...xs] else forward([...xs], n - 1)
+forward([Box(8)], 3).map(x => x.value)
+//│ = [8]
+
+// Ordinary argument spreads use the same element flow as array construction.
+:expect [2, 3]
+private fun lengthsOf(...xs) = xs.map(s => s.length)
+lengthsOf(...new Set[Str](["aa", "bbb"]))
+//│ = [2, 3]
+
+// Map entries and native string iteration expose their declared element types.
+:expect [9]
+private fun entries(m: Map[Str, Box]) = [...m].map(pair => pair.1.value)
+entries(new Map([["nine", Box(9)]]))
+//│ = [9]
+
+:expect [1, 1]
+private fun characters(s: Str) = [...s].map(c => c.length)
+characters("ab")
+//│ = [1, 1]
+
+// Inherited source aliases dispatch through the overriding symbol property.
+:expect [10, 10, 11]
+open class Parent {
+  @annotations.jsSymbol(Symbol.iterator) open fun iterator() = [Box(0)].iterator()
+}
+class Child extends Parent {
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator() = [Box(10)].iterator()
+}
+class ViaSuper extends Parent {
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator() = super.iterator()
+}
+[...(new Child), ...(new Child).iterator(), ...(new ViaSuper)].map(x => if x.value == 0 then 11 else x.value)
+//│ = [10, 10, 11]
+
+// A definite completion result contributes no element, even if it has a value.
+:expect [12]
+private fun completion() = {(Symbol.iterator): () => (
+  {next: () => ({done: true, value: "not an element"})}
+)}
+[...completion(), Box(12)].map(x => x.value)
+//│ = [12]
+
+// An opaque or incorrectly callable protocol contributes uncertainty, not errors.
+fun opaqueNext(xs: {(Symbol.iterator): () -> ({next: Any})}) = [...xs]
+fun requiredInputs(xs: {(Symbol.iterator): Int -> ({next: Str -> ({value: Box})})}) = [...xs]
+
+// Missing done information must not prevent reading a known value.
+:expect 13
+private fun partial(xs: {(Symbol.iterator): () -> ({next: () -> ({value: Box})})}) = [...xs].0.value
+partial(once(Box(13)))
+//│ = 13
+
+// Compound results and methods retain every known branch, including with unknowns.
+#lang(eagerResolution: false)
+
+:e
+fun intersection(xs: Iterable[Left] & Iterable[Right] & Empty) = [...xs].0.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+1: 	fun intersection(xs: Iterable[Left] & Iterable[Right] & Empty) = [...xs].0.value
+//│ ║        	                                                                 ^^^^^^^^^^^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Right'
+//│ ║  l.XX: 	class Right(val value: Int)
+//│ ║        	                ^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Left'
+//│ ║  l.XX: 	class Left(val value: Int)
+//│ ╙──      	               ^^^^^
+
+:e
+fun methodAlternatives(xs: {(Symbol.iterator): (() -> Iterator[Left]) | (() -> Iterator[Right]) | Empty}) = [...xs].0.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+1: 	fun methodAlternatives(xs: {(Symbol.iterator): (() -> Iterator[Left]) | (() -> Iterator[Right]) | Empty}) = [...xs].0.value
+//│ ║        	                                                                                                            ^^^^^^^^^^^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Right'
+//│ ║  l.XX: 	class Right(val value: Int)
+//│ ║        	                ^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Left'
+//│ ║  l.XX: 	class Left(val value: Int)
+//│ ╙──      	               ^^^^^
+
+:e
+fun resultAlternatives(xs: {(Symbol.iterator): () -> ({next: () -> ({value: Left} | {value: Right} | Empty)})}) = [...xs].0.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+1: 	fun resultAlternatives(xs: {(Symbol.iterator): () -> ({next: () -> ({value: Left} | {value: Right} | Empty)})}) = [...xs].0.value
+//│ ║        	                                                                                                                  ^^^^^^^^^^^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Right'
+//│ ║  l.XX: 	class Right(val value: Int)
+//│ ║        	                ^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Left'
+//│ ║  l.XX: 	class Left(val value: Int)
+//│ ╙──      	               ^^^^^
+
+// A known target can still be resolved alongside an opaque protocol alternative.
+:expect 14
+private fun partlyKnown(xs: Iterable[Box] | Empty) = [...xs].0.value
+partlyKnown([Box(14)])
+//│ = 14
+
+#lang(eagerResolution: true)
+
+// Generic iterable callers keep their own element types through annotations.
+:expect [15, 16]
+class First(val first: Int)
+class Second(val second: Int)
+private fun copy[A](xs: Iterable[A]): Array[A] = [...xs]
+[copy([First(15)]).0.first, copy(new Set[Second]([Second(16)])).0.second]
+//│ = [15, 16]
+
+// A named iterator method alone does not implement the JavaScript protocol.
+:e
+fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
+//│ ║        	                                                     ^^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── This spread has no known element shape.
+//│ ║  l.+1: 	fun namedOnly(xs: {iterator: () -> Iterator[Box]}) = [...xs].0.value
+//│ ╙──      	                                                         ^^
+
+// Iterator only promises next; iterable implementations supply their own method.
+import "../../../mlscript-compile/Iter.mjs"
+
+:expect [48, 49]
+let count = 48
+let iterator = Iter.IteratorImpl(() =>
+  if count <= 49 then
+    let value = count
+    set count = count + 1
+    {value: value, done: false}
+  else {done: true})
+[...iterator]
+//│ = [48, 49]
+//│ count = 50
+//│ iterator = IteratorImpl(fun)
+
+:e
+private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
+//│ ║        	                                                       ^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'Iterator' does not contain member 'iterator'
+//│ ║  l.+1: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
+//│ ╙──      	                                      ^^^^^^^^^^^^^
+
+// Abstract members retain their source name and runtime key in implementations.
+:expect [17]
+abstract class AbstractSource {
+  @annotations.jsSymbol(Symbol.iterator) fun iterator(): Iterator[Int]
+}
+class ConcreteSource extends AbstractSource {
+  @annotations.jsSymbol(Symbol.iterator) override fun iterator() = [17].iterator()
+}
+[...(new ConcreteSource)]
+//│ = [17]
+
+// Ordinary rest parameters receive an empty array in an implicit iterator call.
+:expect [1]
+private fun restIterator() = {(Symbol.iterator): (...args) => [1].iterator()}
+[...restIterator()]
+//│ = [1]
+
+// Resolution leaves protocol compatibility to type checking. An iterator with
+// trailing parameters must not trigger the post-lowering rest-parameter assertion.
+:!js
+private fun trailingIterator() = {(Symbol.iterator): (...args, last) => [1].iterator()}
+[...trailingIterator()]
+
+// The same applies to the implicit call of next, after the iterator is obtained.
+:!js
+private fun trailingNext() = {(Symbol.iterator): () => (
+  {next: (...args, last) => ({done: true})}
+)}
+[...trailingNext()]

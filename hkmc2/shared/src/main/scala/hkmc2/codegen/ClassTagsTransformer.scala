@@ -636,7 +636,7 @@ private class ShapeProp(
       (mkUnion(bodyShape :: restShape :: Nil), restCtx)
     case Scoped(_, body) => prop(body, ctx)
     case Return(res) => (checkResult(res, ctx), ctx)
-    case Throw(exc) => checkResult(exc, ctx); (BotShape, ctx)
+    case Throw(exc, _) => checkResult(exc, ctx); (BotShape, ctx)
     case _ => (BotShape, ctx)
 end ShapeProp
 
@@ -653,6 +653,8 @@ class ClassTagsTransformer private (
   shapeTags: collection.Map[Shape, Int],
   patternShapesByCall: collection.Map[ResultId, List[Shape]],
   debug: Bool,
+  // Emits the transform-phase debug lines; enabled exactly when `debug` holds.
+  logger: TL,
 )(using Config, Erasure, State, Elaborator.Ctx, TL, Raise, FlowAnalysis.State) extends BlockTransformer(SymbolSubst.Id):
   import ClassTagsTransformer.classFields
 
@@ -713,7 +715,7 @@ class ClassTagsTransformer private (
     .sortBy(_._2)
     if debug then
       for (shape, tag) <- entries do
-        summon[TL].emitDbg(s"class-tags transform-phase > allocated tag $tag for ${shape.show}")
+        logger.log(s"class-tags transform-phase > allocated tag $tag for ${shape.show}")
     entries
 
   private lazy val tagOfShape: Map[Shape, Int] =
@@ -796,12 +798,13 @@ class ClassTagsTransformer private (
       syntax.Tree.DummyTypeDef(syntax.Cls), new syntax.Tree.Ident(nme))
     val ctorSym = ClassCtorSymbol(syntax.Fun, defn.owner, isym)
     val forwarded = defn.auxParams.flatMap(_.params).map: param =>
-      Param(param.flags, VarSymbol(param.sym.id, param.sym.erasedType), N, param.modulefulness)(param.toLoc)
+      Param(param.flags, VarSymbol(param.sym.id, erasedType = param.sym.erasedType, mut = param.sym.mut), N, param.modulefulness, param.annotations)(param.toLoc)
     val tagParam = Param(
       FldFlags.empty.copy(isVal = true),
-      VarSymbol(tagField, S(ErasedType.Int)),
+      VarSymbol(tagField, erasedType = S(ErasedType.Int), mut = false),
       N,
       Modulefulness.none,
+      Nil,
     )(N)
     tagParam.sym.decl = S(tagParam)
 
@@ -839,7 +842,7 @@ class ClassTagsTransformer private (
       ctorSym = S(ctorSym),
       k = syntax.Cls,
       paramsOpt = N,
-      auxParams = PlainParamList(forwarded :+ tagParam)(N) :: Nil,
+      auxParams = LoweredParamList.plain(forwarded :+ tagParam)(N) :: Nil,
       parentPath = S(parentPath),
       methods = Nil,
       privateFields = Nil,
@@ -849,6 +852,7 @@ class ClassTagsTransformer private (
       companion = N,
       bufferable = N,
       termCompanion = termCompanion,
+      methodKeys = Map.empty,
     )(N, Nil)
 
   private def mkDuplicatedCtor(result: Result, tag: Path): Opt[Result] = result match
@@ -869,7 +873,7 @@ class ClassTagsTransformer private (
   private def bindResult(result: Result)(k: Path => Block): Block = result match
     case path: Path => k(path)
     case result =>
-      val symbol = new TempSymbol(N, erasedType = result.erasedValueType, "tmp")
+      val symbol = new TempSymbol(N, initErasedType = result.erasedType, "tmp")
       val reference = symbol.asSimpleRef.withLocOf(result)
       Scoped(Set.single(symbol), Assign(symbol, result, k(reference)))
 
@@ -879,7 +883,7 @@ class ClassTagsTransformer private (
     owner: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol, value: Path,
   ): (BlockMemberSymbol -> TermSymbol, Block => Block) =
     val tagMember = new BlockMemberSymbol(tagField.name, Nil, nameIsMeaningful = false)
-    val tagTerm = TermSymbol(syntax.ImmutVal, S(owner), tagField, erasedType = S(ErasedType.Int))
+    val tagTerm = TermSymbol(syntax.ImmutVal, S(owner), tagField, erasure = S(ErasedType.Int))
     (tagMember -> tagTerm, rest => Define(ValDefn(tagTerm, tagMember, value)(N, Nil), rest))
 
   private lazy val objectTags: Map[ModuleOrObjectSymbol, Int] =
@@ -967,7 +971,7 @@ class ClassTagsTransformer private (
       case N => shape match
         case LitShape(lit) => mkEquals(argument, lit)(k)
         case TupleShape(length, _) =>
-          val isTuple = new TempSymbol(N, erasedType = S(ErasedType.Bool), "isTuple")
+          val isTuple = new TempSymbol(N, initErasedType = S(ErasedType.Bool), "isTuple")
           def set(value: Bool): Block = Assign(isTuple, Value.Lit(syntax.Tree.BoolLit(value))(N), End())
           Scoped(Set.single(isTuple), new Match(
             argument,
@@ -994,7 +998,7 @@ class ClassTagsTransformer private (
     case DynamicShape => Nil
     case TupleShape(_, elements) =>
       (argument, expected, waitlist) :: elements.zipWithIndex.flatMap: (element, index) =>
-        val elementPath = DynSelect(argument, Value.Lit(syntax.Tree.IntLit(index))(N), true)(argument.toLoc)
+        val elementPath = DynSelect(argument, Value.Lit(syntax.Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(argument.toLoc)
         val elementWaitlist = waitlist.map:
           case TupleShape(_, otherElements) => otherElements.lift(index).getOrElse(DynamicShape)
           case _ => DynamicShape
@@ -1072,7 +1076,7 @@ class ClassTagsTransformer private (
         val candidates = orderedCandidates(result)
         candidates match
           case Nil =>
-            if debug then summon[TL].emitDbg(s"class-tags transform-phase > no tag for ${
+            if debug then logger.log(s"class-tags transform-phase > no tag for ${
               ClassTagsDebug.showCtor(ctor)}@${result.uid} of shape ${
               shapeByResultId.get(result.uid).fold("<unknown>")(_.show.take(160))}")
             k(result)
@@ -1086,7 +1090,7 @@ class ClassTagsTransformer private (
               case N => leaveUntagged(result, ctor)(k)
           case _ =>
             val arguments = ctorArguments(candidates, args)
-            val tagSymbol = new TempSymbol(N, erasedType = S(ErasedType.Int), "shapeTag")
+            val tagSymbol = new TempSymbol(N, initErasedType = S(ErasedType.Int), "shapeTag")
             mkDuplicatedCtor(result, tagSymbol.asSimpleRef) match
               case S(construction) =>
                 Scoped(Set.single(tagSymbol), Begin(
@@ -1099,15 +1103,15 @@ class ClassTagsTransformer private (
 
   override def applyProgram(program: Program): Program =
     if debug then
-      summon[TL].emitDbg(">>> start class-tags transform-phase")
+      logger.log(">>> start class-tags transform-phase")
     rejectUnsupportedShapeMatches(program)
     rejectMutableFields()
     // * allocate every tag before any of them is looked up
     if tagOfShape.isEmpty && debug then
-      summon[TL].emitDbg("class-tags transform-phase > no shapes to tag")
+      logger.log("class-tags transform-phase > no shapes to tag")
     if debug then
       for (cls, duplicate) <- duplicates do
-        summon[TL].emitDbg(
+        logger.log(
           s"class-tags transform-phase > duplicated ${cls.nme} as ${duplicate.sym.nme}")
     val transformed = super.applyProgram(program)
     val unownedDuplicates: Set[ScopedSymbol] = duplicates.valuesIterator.collect:
@@ -1117,7 +1121,7 @@ class ClassTagsTransformer private (
       if unownedDuplicates.isEmpty then transformed
       else Program(transformed.imports, Scoped(unownedDuplicates, transformed.main))
     if debug then
-      summon[TL].emitDbg("<<< end class-tags transform-phase")
+      logger.log("<<< end class-tags transform-phase")
     result
 
   override def applyBlock(block: Block): Block = block match
@@ -1224,7 +1228,7 @@ class ClassTagsTransformer private (
                   val shown = patternShapes.zip(branchTags).map: entry =>
                     val tags = if entry._2.isEmpty then "<none>" else entry._2.mkString("|")
                     s"${entry._1.show}->$tags"
-                  summon[TL].emitDbg(
+                  logger.log(
                     s"class-tags transform-phase > match shapes ${shown.mkString(", ")}")
                 if patternShapes.exists(_.containsUnion) then
                   softAssert(false, "@matchShapes patterns must not contain union shapes.")
@@ -1243,7 +1247,7 @@ class ClassTagsTransformer private (
                   ))
                   N
                 else
-                  val resultSymbol = new TempSymbol(N, erasedType = call.erasedValueType, "shapeMatchResult")
+                  val resultSymbol = new TempSymbol(N, initErasedType = call.erasedType, "shapeMatchResult")
                   val resultRef = resultSymbol.asSimpleRef.withLocOf(call)
                   val tagAccess = Select(scrutinee, tagField)(N, scrutinee.toLoc)(false)
                   S(Scoped(Set.single(resultSymbol),
@@ -1254,7 +1258,7 @@ class ClassTagsTransformer private (
         tag: Path, branches: List[(List[Int], FunDefn)], resultSymbol: TempSymbol, rest: Block,
       ): Block =
         val reachable = branches.zipWithIndex.filter(_._1._1.nonEmpty)
-        val index = new TempSymbol(N, erasedType = S(ErasedType.Int), "shapeMatchBranch")
+        val index = new TempSymbol(N, initErasedType = S(ErasedType.Int), "shapeMatchBranch")
         val indexRef = index.asSimpleRef
         val arms = reachable.flatMap: entry =>
           entry._1._1.map: expected =>
@@ -1288,10 +1292,7 @@ class ClassTagsTransformer private (
               super.applyResult(result)(k)
           case _ => super.applyResult(result)(k)
     val body = transformer.applyFunBodyLikeBlock(fun.body)
-    val transformed =
-      if body is fun.body then fun
-      else FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, body)(fun.configOverride, fun.annotations)
-    super.applyFunDefn(transformed)
+    super.applyFunDefn(fun.withBody(body))
 end ClassTagsTransformer
 
 
@@ -1367,20 +1368,20 @@ object ClassTagsTransformer:
 
   private def logWebs(webs: List[Web])(using tl: TL): Unit =
     if webs.nonEmpty then
-      tl.emitDbg(">>> start class-tags web-computation-phase")
+      tl.log(">>> start class-tags web-computation-phase")
       for (web, index) <- webs.zipWithIndex do
         val producers = web.markedProducers.toList.sortBy(_.exprId.uid)
         val fieldAccesses = web.markedConsumers.collect:
           case access: FieldSel => access
         val patternMatches = web.markedConsumers.collect:
           case patternMatch: Dtor => patternMatch
-        tl.emitDbg(s"class-tags web-computation-phase > web $index:")
-        tl.emitDbg(s"class-tags web-computation-phase >   producers: ${producers.map(ClassTagsDebug.showProducer).mkString(", ")}")
+        tl.log(s"class-tags web-computation-phase > web $index:")
+        tl.log(s"class-tags web-computation-phase >   producers: ${producers.map(ClassTagsDebug.showProducer).mkString(", ")}")
         if fieldAccesses.nonEmpty then
-          tl.emitDbg(s"class-tags web-computation-phase >   field accesses: ${fieldAccesses.toList.sortBy(_.exprId.uid).map(ClassTagsDebug.showFieldAccess).mkString(", ")}")
+          tl.log(s"class-tags web-computation-phase >   field accesses: ${fieldAccesses.toList.sortBy(_.exprId.uid).map(ClassTagsDebug.showFieldAccess).mkString(", ")}")
         if patternMatches.nonEmpty then
-          tl.emitDbg(s"class-tags web-computation-phase >   pattern matches: ${patternMatches.toList.sortBy(_.exprId.uid).map(ClassTagsDebug.showPatternMatch).mkString(", ")}")
-      tl.emitDbg("<<< end class-tags web-computation-phase")
+          tl.log(s"class-tags web-computation-phase >   pattern matches: ${patternMatches.toList.sortBy(_.exprId.uid).map(ClassTagsDebug.showPatternMatch).mkString(", ")}")
+      tl.log("<<< end class-tags web-computation-phase")
 
   extension (cls: ClassLikeSymbol) def classFields: Opt[List[TermSymbol]] = cls match
     case cls: ClassSymbol => cls.tree.clsParams match
@@ -1410,25 +1411,26 @@ object ClassTagsTransformer:
           logNonAffine = false,
           logAccumulator = false,
         )
+        def mkTl(prefix: Str, debug: Bool): TL =
+          FlowAnalysis.mkTraceLogger(flowCfg.copy(debug = debug), prefix, tl.sink)(using tl.debugPrinter)
+        // The class-tags debug lines carry their phase names in the messages themselves.
+        val classTagsTl = mkTl("", dCfg.debug)
         val flowAnalysisRes =
-          FlowAnalysis.mkTraceLogger(flowCfg, "class-tags flow-analysis-phase > ", tl).givenIn:
-            FlowAnalysis(p, mono = true, nonAffineTracking = false, accumulatorTracking = false)
+          mkTl("class-tags flow-analysis-phase > ", false).givenIn:
+            FlowAnalysis(p, mono = true, nonAffineTracking = false, accumulatorTracking = false, logEffects = false)
         given fState: FlowAnalysis.State = flowAnalysisRes.fState
         val matchResultIds = matchCalls.iterator.map(_.uid).toSet
-        val collectorTl = new TraceLogger(using tl.debugPrinter):
-          override def doTrace: Bool = dCfg.debug
-          override def emitDbg(str: Str): Unit =
-            tl.emitDbg(s"class-tags collection-phase > $str")
+        val collectorTl = mkTl("class-tags collection-phase > ", dCfg.debug)
         val entryPoints = collectorTl.givenIn:
-          if dCfg.debug then tl.emitDbg(">>> start class-tags collection-phase")
+          if dCfg.debug then classTagsTl.log(">>> start class-tags collection-phase")
           val result = WebEntryCollector(p, flowAnalysisRes)
-          if dCfg.debug then tl.emitDbg("<<< end class-tags collection-phase")
+          if dCfg.debug then classTagsTl.log("<<< end class-tags collection-phase")
           result
         val matchConsumers = flowAnalysisRes.consumersWithSrcs.iterator.collect:
           case patternMatch: Dtor if matchResultIds.contains(patternMatch.exprId) => patternMatch
         .toList.distinct
         val webs = mkWebs(entryPoints, matchConsumers)
-        if dCfg.debug then logWebs(webs)
+        if dCfg.debug then logWebs(webs)(using classTagsTl)
         val taggedResultIds = webs.iterator
           .flatMap(_.markedProducers.iterator)
           .map(_.exprId).toSet
@@ -1474,4 +1476,5 @@ object ClassTagsTransformer:
           shapeProp.shapeTags,
           patternShapesByCall,
           dCfg.debug,
+          classTagsTl,
         ).applyProgram(p)

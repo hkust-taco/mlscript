@@ -14,12 +14,12 @@ let topBox = new Box(0)
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@61
-//│ class-tags web-computation-phase >   pattern matches: match@64
+//│ class-tags web-computation-phase >   producers: Box@57
+//│ class-tags web-computation-phase >   pattern matches: match@61
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ ╔══[COMPILATION ERROR] shape.match is not supported at the top level.
-//│ ║  l.12: 	@matchShapes(Box(_)) shape.match of topBox, () => 1
+//│ ║  l.+3: 	@matchShapes(Box(_)) shape.match of topBox, () => 1
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
 //│ <<< end class-tags transform-phase
@@ -37,12 +37,12 @@ class Initialized() with
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@109
+//│ class-tags web-computation-phase >   producers: Box@108
 //│ class-tags web-computation-phase >   pattern matches: match@112
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ ╔══[COMPILATION ERROR] shape.match is not supported in class value initializers.
-//│ ║  l.35: 	    @matchShapes(Box(_)) shape.match of box, () => 1
+//│ ║  l.+5: 	    @matchShapes(Box(_)) shape.match of box, () => 1
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class-tags transform-phase > no shapes to tag
 //│ <<< end class-tags transform-phase
@@ -59,12 +59,12 @@ fun localFunction() =
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@166
-//│ class-tags web-computation-phase >   pattern matches: match@169
+//│ class-tags web-computation-phase >   producers: Box@170
+//│ class-tags web-computation-phase >   pattern matches: match@174
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ ╔══[COMPILATION ERROR] shape.match is not supported in nested functions.
-//│ ║  l.56: 	    @matchShapes(Box(_)) shape.match of value, () => 1
+//│ ║  l.+5: 	    @matchShapes(Box(_)) shape.match of value, () => 1
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
 //│ class-tags transform-phase > duplicated Box as Box__Tagged
@@ -77,19 +77,19 @@ fun unannotated() =
   let value = new Box(0)
   shape.match of value, () => 1
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@243 in unannotated
-//│ class-tags collection-phase > track consumption at match@246 in unannotated
+//│ class-tags collection-phase > track construction of Box@255 in unannotated
+//│ class-tags collection-phase > track consumption at match@259 in unannotated
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@243
-//│ class-tags web-computation-phase >   pattern matches: match@246
+//│ class-tags web-computation-phase >   producers: Box@255
+//│ class-tags web-computation-phase >   pattern matches: match@259
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
 //│ class-tags transform-phase > duplicated Box as Box__Tagged
 //│ ╔══[COMPILATION ERROR] shape.match must be annotated with @matchShapes.
-//│ ║  l.78: 	  shape.match of value, () => 1
+//│ ║  l.+4: 	  shape.match of value, () => 1
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ <<< end class-tags transform-phase
 
@@ -104,20 +104,20 @@ fun mismatchedBranches(t) =
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
 //│ class-tags web-computation-phase >   producers: 
-//│ class-tags web-computation-phase >   pattern matches: match@314
+//│ class-tags web-computation-phase >   pattern matches: match@333
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > no shapes to tag
 //│ ╔══[COMPILATION ERROR] Malformed annotated shape.match call.
-//│ ║  l.100: 	  @matchShapes(C(_), D(_)) shape.match of t,
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.101: 	    () => 0
-//│ ║         	^^^^^^^^^^^
+//│ ║  l.+4: 	  @matchShapes(C(_), D(_)) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	    () => 0
+//│ ║        	^^^^^^^^^^^
 //│ ╟── The number of @matchShapes patterns (2) does not match the number of shape.match branches (1).
-//│ ║  l.100: 	  @matchShapes(C(_), D(_)) shape.match of t,
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.101: 	    () => 0
-//│ ╙──       	^^^^^^^^^^^
+//│ ║  l.+4: 	  @matchShapes(C(_), D(_)) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	    () => 0
+//│ ╙──      	^^^^^^^^^^^
 //│ <<< end class-tags transform-phase
 
 
@@ -131,15 +131,15 @@ fun branchWithParameter(t) =
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
 //│ class-tags web-computation-phase >   producers: 
-//│ class-tags web-computation-phase >   pattern matches: match@364
+//│ class-tags web-computation-phase >   pattern matches: match@388
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > no shapes to tag
 //│ ╔══[COMPILATION ERROR] Annotated shape.match branches must take no arguments.
-//│ ║  l.127: 	  @matchShapes(C(_)) shape.match of t,
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.128: 	    x => x
-//│ ║         	^^^^^^^^^^
+//│ ║  l.+3: 	  @matchShapes(C(_)) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    x => x
+//│ ║        	^^^^^^^^^^
 //│ ╙── This branch takes arguments.
 //│ <<< end class-tags transform-phase
 
@@ -154,22 +154,22 @@ fun missingPatternArgument(t) =
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
 //│ class-tags web-computation-phase >   producers: 
-//│ class-tags web-computation-phase >   pattern matches: match@411
+//│ class-tags web-computation-phase >   pattern matches: match@440
 //│ <<< end class-tags web-computation-phase
 //│ ╔══[COMPILATION ERROR] Expected constructor arity 1 in @matchShapes pattern for C, but found 0.
-//│ ║  l.150: 	  @matchShapes(C) shape.match of t,
-//│ ╙──       	               ^
+//│ ║  l.+3: 	  @matchShapes(C) shape.match of t,
+//│ ╙──      	               ^
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > no shapes to tag
 //│ class-tags transform-phase > match shapes _-><none>
 //│ ╔══[COMPILATION ERROR] The scrutinee of this shape.match may be a value built outside this module, which carries no class tag.
-//│ ║  l.150: 	  @matchShapes(C) shape.match of t,
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.151: 	    () => 0
-//│ ║         	^^^^^^^^^^^
+//│ ║  l.+3: 	  @matchShapes(C) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    () => 0
+//│ ║        	^^^^^^^^^^^
 //│ ╟── Only values constructed in this module can be dispatched on by their class tags.
-//│ ║  l.150: 	  @matchShapes(C) shape.match of t,
-//│ ╙──       	                                 ^
+//│ ║  l.+3: 	  @matchShapes(C) shape.match of t,
+//│ ╙──      	                                 ^
 //│ <<< end class-tags transform-phase
 
 
@@ -181,23 +181,23 @@ fun foo() =
   @matchShapes(D(_)) shape.match of t,
     () => t.D#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@467 in foo
-//│ class-tags collection-phase > track consumption at match@471 in foo
+//│ class-tags collection-phase > track construction of C@500 in foo
+//│ class-tags collection-phase > track consumption at match@505 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@467
-//│ class-tags web-computation-phase >   pattern matches: match@471
+//│ class-tags web-computation-phase >   producers: C@500
+//│ class-tags web-computation-phase >   pattern matches: match@505
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: 0)
 //│ class-tags transform-phase > duplicated C as C__Tagged
 //│ class-tags transform-phase > match shapes D(x: _)-><none>
 //│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
-//│ ║  l.181: 	  @matchShapes(D(_)) shape.match of t,
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.182: 	    () => t.D#x
-//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	  @matchShapes(D(_)) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+6: 	    () => t.D#x
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ <<< end class-tags transform-phase
 
 :ge
@@ -210,19 +210,19 @@ fun unknownScrutinee(t) =
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
 //│ class-tags web-computation-phase >   producers: 
-//│ class-tags web-computation-phase >   pattern matches: match@533
+//│ class-tags web-computation-phase >   pattern matches: match@573
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > no shapes to tag
 //│ class-tags transform-phase > match shapes C(x: _)-><none>
 //│ ╔══[COMPILATION ERROR] The scrutinee of this shape.match may be a value built outside this module, which carries no class tag.
-//│ ║  l.206: 	  @matchShapes(C(_)) shape.match of t,
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.207: 	    () => 0
-//│ ║         	^^^^^^^^^^^
+//│ ║  l.+3: 	  @matchShapes(C(_)) shape.match of t,
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	    () => 0
+//│ ║        	^^^^^^^^^^^
 //│ ╟── Only values constructed in this module can be dispatched on by their class tags.
-//│ ║  l.206: 	  @matchShapes(C(_)) shape.match of t,
-//│ ╙──       	                                    ^
+//│ ║  l.+3: 	  @matchShapes(C(_)) shape.match of t,
+//│ ╙──      	                                    ^
 //│ <<< end class-tags transform-phase
 
 
@@ -240,23 +240,23 @@ fun mutatedField() =
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: A@607, MutableBox@608
-//│ class-tags web-computation-phase >   pattern matches: match@614
+//│ class-tags web-computation-phase >   producers: A@651, MutableBox@652
+//│ class-tags web-computation-phase >   pattern matches: match@660
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
 //│ class-tags transform-phase > allocated tag 1 for MutableBox(x: A(x: 0))
 //│ class-tags transform-phase > allocated tag 2 for B(x: 0)
 //│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
-//│ ║  l.232: 	class MutableBox(mut val x)
-//│ ╙──       	                         ^
+//│ ║  l.+1: 	class MutableBox(mut val x)
+//│ ╙──      	                         ^
 //│ ╔══[COMPILATION ERROR] This construction needs a class tag, but the tag cannot be attached to it.
-//│ ║  l.236: 	  let value = new MutableBox(new A(0))
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	  let value = new MutableBox(new A(0))
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── The constructed value can flow to code outside this module, which must not see a tagged copy of its class.
 //│ ╔══[COMPILATION ERROR] Class tags do not support set operations yet.
-//│ ║  l.237: 	  set value.MutableBox#x = new B(0)
-//│ ╙──       	      ^^^^^
+//│ ║  l.+6: 	  set value.MutableBox#x = new B(0)
+//│ ╙──      	      ^^^^^
 //│ class-tags transform-phase > match shapes MutableBox(x: A(x: _))->1, MutableBox(x: B(x: _))-><none>
 //│ <<< end class-tags transform-phase
 
@@ -271,20 +271,20 @@ fun constructorMutation() =
   let value = new Altered(new A(0))
   @matchShapes(Altered(A(_)), Altered(B(_))) shape.match of value, () => 1, () => 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Altered@708 in constructorMutation
-//│ class-tags collection-phase > track consumption at match@713 in constructorMutation
+//│ class-tags collection-phase > track construction of Altered@759 in constructorMutation
+//│ class-tags collection-phase > track consumption at match@766 in constructorMutation
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: A@707, Altered@708
-//│ class-tags web-computation-phase >   pattern matches: match@713
+//│ class-tags web-computation-phase >   producers: A@758, Altered@759
+//│ class-tags web-computation-phase >   pattern matches: match@766
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
 //│ class-tags transform-phase > allocated tag 1 for Altered(x: A(x: 0))
 //│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
-//│ ║  l.268: 	class Altered(mut val x) with
-//│ ╙──       	                      ^
+//│ ║  l.+3: 	class Altered(mut val x) with
+//│ ╙──      	                      ^
 //│ class-tags transform-phase > duplicated A as A__Tagged
 //│ class-tags transform-phase > duplicated Altered as Altered__Tagged
 //│ class-tags transform-phase > match shapes Altered(x: A(x: _))->1, Altered(x: B(x: _))-><none>
@@ -299,13 +299,13 @@ fun dynamicField(flag, external) =
   let value = new Box(field)
   @matchShapes(Box(_)) shape.match of value, () => 1
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@822 in dynamicField
-//│ class-tags collection-phase > track consumption at match@825 in dynamicField
+//│ class-tags collection-phase > track construction of Box@882 in dynamicField
+//│ class-tags collection-phase > track consumption at match@886 in dynamicField
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: A@821, Box@822
-//│ class-tags web-computation-phase >   pattern matches: match@825
+//│ class-tags web-computation-phase >   producers: A@881, Box@882
+//│ class-tags web-computation-phase >   pattern matches: match@886
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
@@ -326,8 +326,8 @@ fun unknownAlternative(flag, external) =
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: A@941, B@944
-//│ class-tags web-computation-phase >   pattern matches: match@949
+//│ class-tags web-computation-phase >   producers: A@1008, B@1012
+//│ class-tags web-computation-phase >   pattern matches: match@1019
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
@@ -336,11 +336,11 @@ fun unknownAlternative(flag, external) =
 //│ class-tags transform-phase > duplicated B as B__Tagged
 //│ class-tags transform-phase > match shapes A(x: _)->0, B(x: _)->1
 //│ ╔══[COMPILATION ERROR] The scrutinee of this shape.match may be a value built outside this module, which carries no class tag.
-//│ ║  l.324: 	  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Only values constructed in this module can be dispatched on by their class tags.
-//│ ║  l.324: 	  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
-//│ ╙──       	                                          ^^^^^
+//│ ║  l.+5: 	  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
+//│ ╙──      	                                          ^^^^^
 //│ <<< end class-tags transform-phase
 
 
@@ -355,14 +355,14 @@ fun escapingAlternative() =
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: A@1043
-//│ class-tags web-computation-phase >   pattern matches: match@1046
+//│ class-tags web-computation-phase >   producers: A@1124
+//│ class-tags web-computation-phase >   pattern matches: match@1128
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
 //│ ╔══[COMPILATION ERROR] This construction needs a class tag, but the tag cannot be attached to it.
-//│ ║  l.351: 	  let value = new A(0)
-//│ ║         	              ^^^^^^^^
+//│ ║  l.+3: 	  let value = new A(0)
+//│ ║        	              ^^^^^^^^
 //│ ╙── The constructed value can flow to code outside this module, which must not see a tagged copy of its class.
 //│ class-tags transform-phase > match shapes A(x: _)->0
 //│ <<< end class-tags transform-phase
@@ -376,23 +376,23 @@ fun curriedBranch() =
   let result = @matchShapes(Box(_)) shape.match of value, curried
   result()
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@1106 in curriedBranch
-//│ class-tags collection-phase > track consumption at match@1107 in curriedBranch
+//│ class-tags collection-phase > track construction of Box@1193 in curriedBranch
+//│ class-tags collection-phase > track consumption at match@1194 in curriedBranch
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@1106
-//│ class-tags web-computation-phase >   pattern matches: match@1107
+//│ class-tags web-computation-phase >   producers: Box@1193
+//│ class-tags web-computation-phase >   pattern matches: match@1194
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
 //│ class-tags transform-phase > duplicated Box as Box__Tagged
 //│ ╔══[COMPILATION ERROR] Annotated shape.match branches must be anonymous functions.
-//│ ║  l.376: 	  let result = @matchShapes(Box(_)) shape.match of value, curried
-//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	  let result = @matchShapes(Box(_)) shape.match of value, curried
+//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is a named function.
-//│ ║  l.376: 	  let result = @matchShapes(Box(_)) shape.match of value, curried
-//│ ╙──       	                                                          ^^^^^^^
+//│ ║  l.+5: 	  let result = @matchShapes(Box(_)) shape.match of value, curried
+//│ ╙──      	                                                          ^^^^^^^
 //│ <<< end class-tags transform-phase
 
 
@@ -404,23 +404,23 @@ fun uncurriedBranch() =
   let result = @matchShapes(C(_)) shape.match of value, f
   result
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@1177 in uncurriedBranch
-//│ class-tags collection-phase > track consumption at match@1178 in uncurriedBranch
+//│ class-tags collection-phase > track construction of C@1273 in uncurriedBranch
+//│ class-tags collection-phase > track consumption at match@1274 in uncurriedBranch
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@1177
-//│ class-tags web-computation-phase >   pattern matches: match@1178
+//│ class-tags web-computation-phase >   producers: C@1273
+//│ class-tags web-computation-phase >   pattern matches: match@1274
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: 0)
 //│ class-tags transform-phase > duplicated C as C__Tagged
 //│ ╔══[COMPILATION ERROR] Annotated shape.match branches must be anonymous functions.
-//│ ║  l.404: 	  let result = @matchShapes(C(_)) shape.match of value, f
-//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	  let result = @matchShapes(C(_)) shape.match of value, f
+//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is a named function.
-//│ ║  l.404: 	  let result = @matchShapes(C(_)) shape.match of value, f
-//│ ╙──       	                                                        ^
+//│ ║  l.+5: 	  let result = @matchShapes(C(_)) shape.match of value, f
+//│ ╙──      	                                                        ^
 //│ <<< end class-tags transform-phase
 
 :ge
@@ -434,23 +434,23 @@ private fun recursiveBranch() =
   else 42
 fun recursiveMatch() = recursiveBranch()
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@1253 in recursiveBranch
-//│ class-tags collection-phase > track consumption at match@1254 in recursiveBranch
+//│ class-tags collection-phase > track construction of Box@1356 in recursiveBranch
+//│ class-tags collection-phase > track consumption at match@1357 in recursiveBranch
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@1253
-//│ class-tags web-computation-phase >   pattern matches: match@1254
+//│ class-tags web-computation-phase >   producers: Box@1356
+//│ class-tags web-computation-phase >   pattern matches: match@1357
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
 //│ class-tags transform-phase > duplicated Box as Box__Tagged
 //│ ╔══[COMPILATION ERROR] Annotated shape.match branches must be anonymous functions.
-//│ ║  l.433: 	    @matchShapes(Box(_)) shape.match of value, recursiveBranch
-//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+7: 	    @matchShapes(Box(_)) shape.match of value, recursiveBranch
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is a named function.
-//│ ║  l.433: 	    @matchShapes(Box(_)) shape.match of value, recursiveBranch
-//│ ╙──       	                                               ^^^^^^^^^^^^^^^
+//│ ║  l.+7: 	    @matchShapes(Box(_)) shape.match of value, recursiveBranch
+//│ ╙──      	                                               ^^^^^^^^^^^^^^^
 //│ <<< end class-tags transform-phase
 //│ remaining = 1
 
@@ -465,25 +465,25 @@ fun flattenBudget(flag) =
   let value = new TooManyShapes(field, field, field, field, field, field, field, field, field)
   @matchShapes(TooManyShapes(_, _, _, _, _, _, _, _, _)) shape.match of value, () => 1
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of TooManyShapes@1401 in flattenBudget
-//│ class-tags collection-phase > track consumption at match@1404 in flattenBudget
+//│ class-tags collection-phase > track construction of TooManyShapes@1514 in flattenBudget
+//│ class-tags collection-phase > track consumption at match@1518 in flattenBudget
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: A@1399, B@1400, TooManyShapes@1401
-//│ class-tags web-computation-phase >   pattern matches: match@1404
+//│ class-tags web-computation-phase >   producers: A@1512, B@1513, TooManyShapes@1514
+//│ class-tags web-computation-phase >   pattern matches: match@1518
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
-//│ ╔══[COMPILATION ERROR] Flattening this shape would produce more than 256 alternatives.
-//│ ║  l.465: 	  let value = new TooManyShapes(field, field, field, field, field, field, field, field, field)
-//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class-tags transform-phase > allocated tag 0 for A(x: 0)
 //│ class-tags transform-phase > allocated tag 1 for B(x: 0)
+//│ ╔══[COMPILATION ERROR] Flattening this shape would produce more than 256 alternatives.
+//│ ║  l.+6: 	  let value = new TooManyShapes(field, field, field, field, field, field, field, field, field)
+//│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ class-tags transform-phase > duplicated A as A__Tagged
 //│ class-tags transform-phase > duplicated B as B__Tagged
-//│ class-tags transform-phase > no tag for TooManyShapes@result of shape TooManyShapes(f: (B(x: 0) | A(x: 0)), c: (B(x: 0) | A(x: 0)), g: (B(x: 0) | A(x: 0)), b: (B(x: 0) | A(x: 0)), a: (B(x: 0) | A(x: 0)), h: (B(x: 0) | A(x: 0)), i:
-//│ class-tags transform-phase > match shapes TooManyShapes(f: _, c: _, g: _, b: _, a: _, h: _, i: _, e: _, d: _)-><none>
+//│ class-tags transform-phase > no tag for TooManyShapes@result of shape TooManyShapes(f: (B(x: 0) | A(x: 0)), c: (B(x: 0) | A(x: 0)), b: (B(x: 0) | A(x: 0)), g: (B(x: 0) | A(x: 0)), a: (B(x: 0) | A(x: 0)), h: (B(x: 0) | A(x: 0)), e:
+//│ class-tags transform-phase > match shapes TooManyShapes(f: _, c: _, b: _, g: _, a: _, h: _, e: _, d: _, i: _)-><none>
 //│ ╔══[COMPILATION ERROR] Annotated shape.match has no tagged class shapes for its scrutinee.
-//│ ║  l.466: 	  @matchShapes(TooManyShapes(_, _, _, _, _, _, _, _, _)) shape.match of value, () => 1
-//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+7: 	  @matchShapes(TooManyShapes(_, _, _, _, _, _, _, _, _)) shape.match of value, () => 1
+//│ ╙──      	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ <<< end class-tags transform-phase

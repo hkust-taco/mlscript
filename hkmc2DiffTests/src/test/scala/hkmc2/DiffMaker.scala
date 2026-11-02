@@ -142,7 +142,6 @@ abstract class DiffMaker:
   val strw = new java.io.StringWriter
   val out = new java.io.PrintWriter(strw)
   val output = Outputter(out)
-  val report = ReportFormatter(output(_), file.up, colorize = false)
   
   private def emitOutputSeparator(): Unit =
     output.linesDelta += 1
@@ -179,6 +178,14 @@ abstract class DiffMaker:
     val globalStartLineNum = origin.startLineNum
     val blockLineNum = origin.startLineNum
     // * ^ In previous DiffTest versions, these two could be different due to relative line numbers
+    
+    val report = new ReportFormatter(output(_), file.up, colorize = false):
+      override protected def hideLineNumbers(reportedOrigin: Origin): Bool =
+        // * Hide absolute line numbers to reduce diff-test churn,
+        // * unless there is an unexpected failure, which the line number will help diagnose.
+        // Unexpected diagnostics are recorded in failures before being formatted.
+        // Only this block's origin admits line numbers relative to its source.
+        failures.isEmpty && (reportedOrigin isnt origin)
     
     var parseErrors, typeErrors, compilationErrors, runtimeErrors, warnings, internalErrors = 0
     
@@ -226,7 +233,7 @@ abstract class DiffMaker:
         // throw d
       if fullExceptionStack.isSet then
         d.printStackTrace()
-      report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
+      report(blockLineNum, d :: Nil, failures.isEmpty || showRelativeLineNums.isSet)
     
     processOrigin(origin)(using raise)
     

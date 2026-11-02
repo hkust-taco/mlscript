@@ -1,0 +1,28 @@
+:.
+:js
+
+
+1 + {print("hi"), 3}
+//│ > hi
+//│ = 4
+
+1 + (print("hi"); 3)
+//│ > hi
+//│ = 4
+
+
+:w
+1 + ({2, 3})
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.+1: 	1 + ({2, 3})
+//│ ╙──      	      ^
+//│ = 4
+
+:w
+1 + {2, 3}
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.+1: 	1 + {2, 3}
+//│ ╙──      	     ^
+//│ = 4
+
+

@@ -47,9 +47,8 @@ class SubstitutionGrowthTest extends AnyFunSuite:
   private final case class Measurement(views: Int, largestSubstitution: Int, activations: Int, typeInstances: Int)
 
   private val cctx = TestFolders.compilerCtx(os.pwd)
-  private given DebugPrinter = new DebugPrinter
-  private val tl = new TraceLogger:
-    override def doTrace: Bool = false
+  private given DebugPrinter = new DebugPrinter()
+  private val tl = TraceLogger.silent
 
   /** Resolves a generated unit through ordinary elaboration, in a fresh state. */
   private def measure(name: Str, source: Str): Measurement =
@@ -87,14 +86,39 @@ class SubstitutionGrowthTest extends AnyFunSuite:
 
   // Constructor patterns synthesize omitted type arguments in the pattern's
   // lexical scope. Missing that scope made recursive FingerTreeList patterns
-  // retain unrelated callers' binders, allocating over 15000 views instead of
-  // about 1400. Allow headroom while checking graph size independently of the
-  // machine-dependent timeout; the .mls tests cover observable behavior.
+  // retain unrelated callers' binders, allocating over 15000 views. The generic
+  // IterableBase signatures add views at the tree's constructor-pattern sites;
+  // skipping wildcard field reads keeps the current fixture near 3200 views.
+  // Check allocations independently of machine-dependent timeouts; the .mls
+  // tests cover observable behavior.
   test("FingerTreeList constructor-pattern inference stays bounded"):
     val m = measure(TestFolders.compileTestDir(os.pwd) / "FingerTreeList.mls")
     withClue(s"FingerTreeList inference: $m"):
       assert(m.largestSubstitution <= 4)
-      assert(m.views < 3000)
+      assert(m.views < 3500)
+
+  // A constructor test still refines the input when every field is a wildcard,
+  // but it needs none of those fields' values. Reading each ignored field used
+  // to allocate a view per field and construction site. Keep the cost bounded
+  // by the number of constructions as the number of ignored fields grows.
+  test("wildcard constructor fields do not allocate substitution views"):
+    val callSites = 10
+    for width <- List(2, 6, 10, 14) do
+      val fields = (1 to width).map(i => s"val field$i: A").mkString(", ")
+      val wildcards = List.fill(width)("_").mkString(", ")
+      val arguments = List.fill(width)("Item(42)").mkString(", ")
+      val calls = List.fill(callSites)(s"discard(new Box[Item]($arguments))").mkString(", ")
+      val m = measure(s"IgnoredFields_$width",
+        s"""#lang(0.3.x)
+           |
+           |class Item(val value: Int)
+           |class Box[A]($fields)
+           |private fun discard(box) = if box is Box($wildcards) then 1 else 0
+           |fun use() = [$calls]
+           |""".stripMargin)
+      withClue(s"$width ignored fields at $callSites construction sites: $m"):
+        assert(m.largestSubstitution <= 1)
+        assert(m.views <= 2 * callSites)
 
   // The branching chain above, passing a promise produced outside every generic
   // scope. Its views are projected onto the support of its payload, which is
@@ -124,19 +148,38 @@ class SubstitutionGrowthTest extends AnyFunSuite:
         assert(m.views <= 2 * k + 4)
         assert(m.activations <= 2 * k + 4)
 
+  // Each spread observes both branches of a recursive iterable producer. The
+  // element hosts must join those flows instead of enumerating their product.
+  // Diff tests check the resulting members; only this test observes graph size.
+  test("recursive iterable spreads keep inference growth bounded"):
+    for k <- List(2, 6, 10, 14) do
+      val spreads = List.fill(k)("...xs").mkString(", ")
+      val m = measure(s"Iterable_$k",
+        s"""#lang(0.3.x)
+           |
+           |class Item(val value: Int)
+           |private fun forward[A](xs: Iterable[A] | Array[A], n: Int): Iterable[A] | Array[A] =
+           |  if n == 0 then xs else forward([$spreads], n - 1)
+           |fun use(xs: Iterable[Item]) = [...forward(xs, 2)].map(x => x.value)
+           |""".stripMargin)
+      withClue(s"recursive iterable with $k spreads: $m"):
+        assert(m.largestSubstitution <= 4)
+        assert(m.views <= 80 * k + 300)
+        assert(m.activations <= 20 * k + 100)
+        assert(m.typeInstances <= 8 * k + 20)
+
   /** Shapes and instances for the substitution laws below. */
   private class Harness:
     given owner: Elaborator.State = new Elaborator.State
     given state: ResolutionContext = owner.newResolverState.context
     given Raise = diagnostic => fail(diagnostic.theMsg)
-    given trace: TraceLogger = new TraceLogger:
-      override def doTrace: Boolean = false
+    given trace: TraceLogger = TraceLogger.silent
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])
     val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     def binder(name: Str): VarSymbol =
-      val symbol = VarSymbol(Tree.Ident(name))
+      val symbol = VarSymbol(Tree.Ident(name), mut = false)
       symbol.decl = S(TyParam(FldFlags.empty, N, symbol)(N))
       symbol
     def instance(binder: VarSymbol): TypeParameterInstance = instanceAt(binder, Set.empty)

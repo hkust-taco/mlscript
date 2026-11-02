@@ -80,12 +80,11 @@ let r = 10 in r
 //│   lhs = Ident of "r"
 //│   rhs = S of IntLit of 10
 //│   body = S of Ident of "r"
-//│ App:
-//│   lhs = Ident of "-"
-//│   rhs = Tup of Ls of
-//│     IntLit of 1
+//│ PrefixOpApp:
+//│   op = Ident of "-"
+//│   rhs = IntLit of 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.75: 	let r = 10 in r
+//│ ║  l.+1: 	let r = 10 in r
 //│ ╙──      	              ^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = -1
@@ -118,9 +117,7 @@ let r = id(10)
 //│ App:
 //│   lhs = Ident of "!"
 //│   rhs = Tup of Ls of
-//│     Bra:
-//│       k = Round
-//│       inner = Ident of "r"
+//│     Ident of "r"
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ r = 10
 
@@ -174,8 +171,8 @@ let x
   |> (a: _)
 .a
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
-//│ ║  l.175: 	.a
-//│ ╙──       	^^
+//│ ║  l.+3: 	.a
+//│ ╙──      	^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -317,16 +314,17 @@ let incr = => _ + 1
 * 3
 //│ = 6
 
-:pe
+:ge
 :w
 2, * 3
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.322: 	2, * 3
-//│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.322: 	2, * 3
-//│ ╙──       	^
-//│ = fun
+//│ ║  l.+1: 	2, * 3
+//│ ╙──      	^
+//│ ╔══[COMPILATION ERROR] Builtin '*' is not a unary operator
+//│ ║  l.+1: 	2, * 3
+//│ ╙──      	   ^^^
+//│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
+//│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
 
 2,* 3
 //│ = 6
@@ -372,17 +370,15 @@ xs |> Arr.len
 xs |> Arr.len ,+, ys |> Arr.len
 //│ = 5
 
-:pe
-:re
+:w
+:expect 3
 xs |> Arr.len
 ,+
 ys |> Arr.len
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.378: 	,+
-//│ ║         	  ^
-//│ ║  l.379: 	ys |> Arr.len
-//│ ╙──
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.+2: 	,+
+//│ ╙──      	 ^
+//│ = 3
 
 xs |> Arr.len
 ,+ 1
@@ -394,9 +390,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.394: 	+,
-//│ ║         	  ^
-//│ ║  l.395: 	ys |> Arr.len
+//│ ║  l.+2: 	+,
+//│ ║        	  ^
+//│ ║  l.+3: 	ys |> Arr.len
 //│ ╙──
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -427,22 +423,22 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.428: 	new Foo(1) ,is Foo
-//│ ╙──       	            ^^
+//│ ║  l.+1: 	new Foo(1) ,is Foo
+//│ ╙──      	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.428: 	new Foo(1) ,is Foo
-//│ ╙──       	               ^^^
+//│ ║  l.+1: 	new Foo(1) ,is Foo
+//│ ╙──      	               ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme // ?
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.439: 	is Foo
-//│ ╙──       	^^
+//│ ║  l.+2: 	is Foo
+//│ ╙──      	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.439: 	is Foo
-//│ ╙──       	   ^^^
+//│ ║  l.+2: 	is Foo
+//│ ╙──      	   ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

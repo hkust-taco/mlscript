@@ -7,40 +7,40 @@ class Foo
 class Foo
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 'Foo'
 //│ ╟── defined here
-//│ ║  l.6: 	class Foo
-//│ ║       	^^^^^^^^^
+//│ ║  l.+1: 	class Foo
+//│ ║        	^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.7: 	class Foo
-//│ ╙──     	^^^^^^^^^
+//│ ║  l.+2: 	class Foo
+//│ ╙──      	^^^^^^^^^
 
 :e
 class Foo
 object Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
-//│ ║  l.17: 	class Foo
+//│ ║  l.+1: 	class Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.18: 	object Foo
+//│ ║  l.+2: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 
 :e
 object Foo
 class Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
-//│ ║  l.28: 	class Foo
+//│ ║  l.+2: 	class Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.27: 	object Foo
+//│ ║  l.+1: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 
 :e
 fun Foo = 1
 object Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of function 'Foo'
-//│ ║  l.37: 	fun Foo = 1
+//│ ║  l.+1: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.38: 	object Foo
+//│ ║  l.+2: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 
 :e
@@ -48,10 +48,10 @@ object Foo
 fun Foo: Int
 object Foo
 //│ ╔══[COMPILATION ERROR] A term declaration cannot have an implemented object companion
-//│ ║  l.48: 	fun Foo: Int
+//│ ║  l.+1: 	fun Foo: Int
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── Companion 'Foo' is defined here
-//│ ║  l.49: 	object Foo
+//│ ║  l.+2: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 
 :todo
@@ -60,22 +60,22 @@ fun Foo = 1
 object Foo
 class Foo
 //│ ╔══[COMPILATION ERROR] Illegal overloading of function 'Foo'
-//│ ║  l.59: 	fun Foo = 1
+//│ ║  l.+1: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.60: 	object Foo
+//│ ║  l.+2: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] A class companion must be a function with a parameter list
-//│ ║  l.59: 	fun Foo = 1
+//│ ║  l.+1: 	fun Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Arbitrary values cannot be overloaded with class 'Foo'
-//│ ║  l.61: 	class Foo
+//│ ║  l.+3: 	class Foo
 //│ ╙──      	^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Illegal overloading of class 'Foo'
-//│ ║  l.61: 	class Foo
+//│ ║  l.+3: 	class Foo
 //│ ║        	^^^^^^^^^
 //│ ╟── with object of the same name
-//│ ║  l.60: 	object Foo
+//│ ║  l.+2: 	object Foo
 //│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'class' of object '[object Object]'
 
@@ -92,10 +92,10 @@ module Foo
 val Foo = 1
 module Foo
 //│ ╔══[COMPILATION ERROR] A module companion must be a function with a parameter list
-//│ ║  l.92: 	val Foo = 1
+//│ ║  l.+1: 	val Foo = 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── Arbitrary values cannot be overloaded with module 'Foo'
-//│ ║  l.93: 	module Foo
+//│ ║  l.+2: 	module Foo
 //│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Cannot create property 'class' on number '1'
 //│ Foo = 1
@@ -105,11 +105,11 @@ module Foo
 fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 fun (**) f2(a, b) = "(" + a + " + " + b + ")"
 //│ ╔══[COMPILATION ERROR] Symbolic name '**' of definition 'f1' is already used
-//│ ║  l.105: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── by sibling member 'f2'
-//│ ║  l.106: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1 ** 2
 //│ = "(1 + 2)"
@@ -119,10 +119,10 @@ fun (**) t() = 0
 fun (++) t() = 1
 //│ ╔══[COMPILATION ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
-//│ ║  l.118: 	fun (**) t() = 0
-//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun (**) t() = 0
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.119: 	fun (++) t() = 1
-//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	fun (++) t() = 1
+//│ ╙──      	^^^^^^^^^^^^^^^^
 
 

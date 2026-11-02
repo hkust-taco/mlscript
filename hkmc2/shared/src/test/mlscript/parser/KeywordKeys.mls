@@ -1,0 +1,43 @@
+:js
+
+
+// A keyword followed by a colon is a key, like any other identifier.
+:pt
+{class: 1, true: 2, out : 3}
+//│ ———————————————| Parsed tree |——————————————————————————————————————————————————————————————————————
+//│ Bra:
+//│   k = Curly
+//│   inner = Block of Ls of
+//│     InfixApp:
+//│       lhs = Ident of "class"
+//│       kw = Keywrd of keyword ':'
+//│       rhs = IntLit of 1
+//│     InfixApp:
+//│       lhs = Ident of "true"
+//│       kw = Keywrd of keyword ':'
+//│       rhs = IntLit of 2
+//│     InfixApp:
+//│       lhs = Ident of "out"
+//│       kw = Keywrd of keyword ':'
+//│       rhs = IntLit of 3
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = {class: 1, true: 2, out: 3}
+
+let r = {class: 1, true: 2, if: 3}
+r.class + r.true + r.if
+//│ = 6
+//│ r = {class: 1, true: 2, if: 3}
+
+fun f(x) = x
+f(class: 1)
+//│ = {class: 1}
+
+{fun: 4}
+//│ = {fun: 4}
+
+// Keywords keep their meaning in other positions.
+:expect true
+true
+//│ = true
+
+class C(val x: Int)

@@ -6,8 +6,8 @@
 :fixme
 let x: Int
 //│ ╔══[COMPILATION ERROR] Unsupported let binding shape
-//│ ║  l.7: 	let x: Int
-//│ ╙──     	    ^^^^^^
+//│ ║  l.+1: 	let x: Int
+//│ ╙──      	    ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 let x

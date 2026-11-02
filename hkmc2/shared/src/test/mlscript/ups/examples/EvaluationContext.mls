@@ -260,6 +260,7 @@ step(App(id_x, id_y)).show
 //│ = "λy. y"
 
 fun evalByValue(term: Term): Term =
+  let =term
   while term is
     ByValue.Context(ByValue.Redex) as [subterm, remake] then
       set term = remake(subterm)
@@ -277,22 +278,23 @@ evalByValue(App(succ, App(succ, zero))).show
 :fixme
 // More inconsistent origin locations to fix...
 fun evalByValue'(term) =
+  let =term
   while term is
     (@compile ByValue.Context(ByValue.Redex)) as [subterm, remake] then
       set term = remake(subterm)
     else term
 //│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.215: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
-//│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
+//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.218: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
-//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.283: 	    else term
-//│ ╙──       	         ^^^^
+//│ ║  l.+6: 	    else term
+//│ ╙──      	         ^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.283: 	    else term
-//│ ╙──       	         ^^^^
+//│ ║  l.+6: 	    else term
+//│ ╙──      	         ^^^^
 
 object ByName with
   // Call-by-name allows reducing any beta redex. The argument `n` may be any
@@ -326,6 +328,7 @@ type EvaluationSystem = {
 }
 
 fun stepByStep(system: EvaluationSystem, term: Term, maxSteps: Int) =
+  let =term
   let numSteps = 0
   print of "Term: " + term.show
   while numSteps < maxSteps and system.Context.unapply(system.Redex, term) is

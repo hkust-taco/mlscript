@@ -47,7 +47,7 @@ class Foo with
 :e
 fun test(x) = x.m
 //│ ╔══[COMPILATION ERROR] Cannot resolve selection
-//│ ║  l.48: 	fun test(x) = x.m
+//│ ║  l.+1: 	fun test(x) = x.m
 //│ ╙──      	              ^^^
 //│ —————————————————| Flowed |—————————————————————————————————————————————————————————————————————————
 //│   fun test⁰::test¹(x¹) ‹flow:test⁰› = x¹.mˀˀˀ

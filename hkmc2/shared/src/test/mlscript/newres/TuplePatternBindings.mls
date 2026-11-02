@@ -29,13 +29,13 @@ select([["first", 2], 3])
 fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
 opaque([{name: "hidden"}, 1])
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ║  l.+1: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
 //│ ║        	                                                          ^^^^^^^^^
 //│ ╟── Cannot resolve member 'name' of a value with unknown shape.
-//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ║  l.+1: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
 //│ ║        	                     ^
 //│ ╟── Type parameter 'A' does not specify a member interface.
-//│ ║  l.29: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
+//│ ║  l.+1: 	fun opaque[A](pair: [A, Int]) = if pair is [item, _] then item.name
 //│ ╙──      	           ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -59,3 +59,37 @@ fun classify(value) =
   else 3
 [classify([1]), classify([0]), classify([-1]), classify(0), classify(1), classify([]), classify([1, 2])]
 //│ = [1, 3, 3, 2, 3, 3, 3]
+
+// Consuming a leading element can consume the fixed suffix when the spread is empty.
+:expect 0
+private fun zero() = 0
+fun dropThenCall(xs: Array[Int]) = if [...xs, 42] is [_, ...rest] then zero(...rest)
+dropThenCall([])
+//│ = 0
+
+// A successful two-ended pattern needs a value after the fixed head.
+class Head(val head: Int)
+class Tail(val tail: Int)
+
+:expect 7
+fun trailing(xs: Array[Tail]) = if [Head(0), ...xs] is [_, ...middle, last] then last.tail
+trailing([Tail(7)])
+//│ = 7
+
+// Match the same case from the other end.
+:expect 8
+fun leading(xs: Array[Head]) = if [...xs, Tail(0)] is [first, ...middle, _] then first.head
+leading([Head(8)])
+//│ = 8
+
+// The remainder can also be empty after removing a trailing element.
+:expect 0
+fun dropLastThenCall(xs: Array[Int]) = if [42, ...xs] is [...rest, _] then zero(...rest)
+dropLastThenCall([])
+//│ = 0
+
+// Widening a possibly consumed field's length must retain its element flow.
+:expect [2, 3]
+fun restLengths(xs: Array[Str]) = if [...xs, "end"] is [_, ...rest] then rest.map(text => text.length)
+restLengths(["a", "bb"])
+//│ = [2, 3]

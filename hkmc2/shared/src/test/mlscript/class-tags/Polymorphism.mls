@@ -17,13 +17,13 @@ fun poly(flag) =
   let value = if flag then a else b
   @matchShapes(Box(A(_)), Box(B(_))) shape.match of value, () => 1, () => 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Box@117 in wrap
-//│ class-tags collection-phase > track consumption at match@130 in poly
+//│ class-tags collection-phase > track construction of Box@114 in wrap
+//│ class-tags collection-phase > track consumption at match@132 in poly
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@117, A@120, B@123
-//│ class-tags web-computation-phase >   pattern matches: match@130
+//│ class-tags web-computation-phase >   producers: Box@114, A@118, B@122
+//│ class-tags web-computation-phase >   pattern matches: match@132
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: _)
@@ -39,7 +39,7 @@ fun poly(flag) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let poly, Box1, A1, wrap, B1, Box__Tagged1, A__Tagged1, B__Tagged1;
 //│ wrap = function wrap(x) {
-//│   runtime.checkArgs("wrap", 1, true, arguments.length);
+//│   runtime.checkArgs("wrap", 1, arguments.length);
 //│   let tmp, tmp1;
 //│   tmp = x.__tag$ === 1;
 //│   tmp1 = x.__tag$ === 3;
@@ -52,7 +52,7 @@ fun poly(flag) =
 //│   return globalThis.Object.freeze(new Box__Tagged1.class(x, 0));
 //│ };
 //│ poly = function poly(flag) {
-//│   runtime.checkArgs("poly", 1, true, arguments.length);
+//│   runtime.checkArgs("poly", 1, arguments.length);
 //│   let tmp, tmp1, tmp2, inlinedVal, inlinedVal1, tmp3, tmp4, tmp5, tmp6;
 //│   tmp = globalThis.Object.freeze(new A__Tagged1.class(0, 1));
 //│   tmp5 = tmp.__tag$ === 1;

@@ -16,14 +16,14 @@ private fun bar(ls) =
   @matchShapes(Cons(1, Cons(2, Cons(3, Cons(_, Cons(_, Cons(_, Nil)))))))
   shape.match of ls, () => ls.Cons#xs.Cons#xs.Cons#xs.Cons#x + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x + + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x 
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Cons@150, Cons@151, Cons@147, Cons@146, Cons@149, Cons@148 in foo
-//│ class-tags collection-phase > track consumption at match@179 in bar
+//│ class-tags collection-phase > track construction of Cons@143, Cons@145, Cons@144, Cons@147, Cons@146, Cons@148 in foo
+//│ class-tags collection-phase > track consumption at match@182 in bar
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Nil@145, Cons@146, Cons@147, Cons@148, Cons@149, Cons@150, Cons@151
-//│ class-tags web-computation-phase >   field accesses: Cons.x@124, Cons.xs@125, Cons.xs@126, Cons.xs@127, Cons.x@128, Cons.xs@129, Cons.xs@130, Cons.xs@131, Cons.xs@132, Cons.x@133, Cons.xs@134, Cons.xs@135, Cons.xs@136, Cons.xs@137, Cons.xs@138
-//│ class-tags web-computation-phase >   pattern matches: match@179
+//│ class-tags web-computation-phase >   producers: Nil@142, Cons@143, Cons@144, Cons@145, Cons@146, Cons@147, Cons@148
+//│ class-tags web-computation-phase >   field accesses: Cons.x@120, Cons.xs@121, Cons.xs@122, Cons.xs@123, Cons.x@124, Cons.xs@125, Cons.xs@126, Cons.xs@127, Cons.xs@128, Cons.x@129, Cons.xs@130, Cons.xs@131, Cons.xs@132, Cons.xs@133, Cons.xs@134
+//│ class-tags web-computation-phase >   pattern matches: match@182
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Cons(x: _, xs: Nil)
@@ -38,7 +38,7 @@ private fun bar(ls) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Nil1, Cons1, bar, foo, Cons__Tagged1;
 //│ foo = function foo(x, y, z) {
-//│   runtime.checkArgs("foo", 3, true, arguments.length);
+//│   runtime.checkArgs("foo", 3, arguments.length);
 //│   let ls, tmp, tmp1, tmp2, tmp3, tmp4;
 //│   tmp = globalThis.Object.freeze(new Cons__Tagged1.class(z, Nil1, 0));
 //│   tmp1 = globalThis.Object.freeze(new Cons__Tagged1.class(y, tmp, 1));
@@ -49,7 +49,7 @@ private fun bar(ls) =
 //│   return runtime.checkCall(bar(ls))
 //│ };
 //│ bar = function bar(ls) {
-//│   runtime.checkArgs("bar", 1, true, arguments.length);
+//│   runtime.checkArgs("bar", 1, arguments.length);
 //│   if (ls.__tag$ === 5) {
 //│     let tmp, tmp1;
 //│     tmp = ls.xs.xs.xs.x + ls.xs.xs.xs.xs.x;
@@ -115,14 +115,14 @@ private fun foofoo(t) =
     () => t.C#x.D#x + 1
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@373, D@370, C@371 in foo
-//│ class-tags collection-phase > track consumption at match@386 in foofoo
+//│ class-tags collection-phase > track construction of C@388, D@385, C@386 in foo
+//│ class-tags collection-phase > track consumption at match@406 in foofoo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@370, C@371, E@372, C@373
-//│ class-tags web-computation-phase >   field accesses: D.x@359, C.x@360
-//│ class-tags web-computation-phase >   pattern matches: match@386
+//│ class-tags web-computation-phase >   producers: D@385, C@386, E@387, C@388
+//│ class-tags web-computation-phase >   field accesses: D.x@373, C.x@374
+//│ class-tags web-computation-phase >   pattern matches: match@406
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for D(x: _)
@@ -137,7 +137,7 @@ private fun foofoo(t) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let E1, foofoo, C1, D1, foo1, D__Tagged1, C__Tagged1, E__Tagged1;
 //│ foo1 = function foo(x, y) {
-//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   runtime.checkArgs("foo", 2, arguments.length);
 //│   let tmp, tmp1, tmp2;
 //│   if (y === true) {
 //│     tmp = globalThis.Object.freeze(new D__Tagged1.class(x, 0));
@@ -149,7 +149,7 @@ private fun foofoo(t) =
 //│   return runtime.checkCall(foofoo(tmp1));
 //│ };
 //│ foofoo = function foofoo(t) {
-//│   runtime.checkArgs("foofoo", 1, true, arguments.length);
+//│   runtime.checkArgs("foofoo", 1, arguments.length);
 //│   if (t.__tag$ === 1) {
 //│     return t.x.x + 1
 //│   } else if (t.__tag$ === 3) {
@@ -253,14 +253,14 @@ private fun foofoo(t) =
     () => t.C#x.D#x + 1
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of D@548, C@550 in foo
-//│ class-tags collection-phase > track consumption at match@563 in foofoo
+//│ class-tags collection-phase > track construction of C@582, D@580 in foo
+//│ class-tags collection-phase > track consumption at match@600 in foofoo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@548, E@549, C@550
-//│ class-tags web-computation-phase >   field accesses: D.x@537, C.x@538
-//│ class-tags web-computation-phase >   pattern matches: match@563
+//│ class-tags web-computation-phase >   producers: D@580, E@581, C@582
+//│ class-tags web-computation-phase >   field accesses: D.x@568, C.x@569
+//│ class-tags web-computation-phase >   pattern matches: match@600
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for D(x: _)
@@ -275,7 +275,7 @@ private fun foofoo(t) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let E3, foofoo1, C3, D3, foo2, D__Tagged3, E__Tagged3, C__Tagged3;
 //│ foo2 = function foo(x, y) {
-//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   runtime.checkArgs("foo", 2, arguments.length);
 //│   let t, tmp, shapeTag, tmp1;
 //│   if (y === true) {
 //│     tmp = globalThis.Object.freeze(new D__Tagged3.class(x, 0));
@@ -292,7 +292,7 @@ private fun foofoo(t) =
 //│   return runtime.checkCall(foofoo1(t))
 //│ };
 //│ foofoo1 = function foofoo(t) {
-//│   runtime.checkArgs("foofoo", 1, true, arguments.length);
+//│   runtime.checkArgs("foofoo", 1, arguments.length);
 //│   if (t.__tag$ === 3) {
 //│     return t.x.x + 1
 //│   } else if (t.__tag$ === 2) {
@@ -399,13 +399,13 @@ fun pair(x, y) =
     () => 2
     () => 3
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Pair@737 in pair
-//│ class-tags collection-phase > track consumption at match@746 in pair
+//│ class-tags collection-phase > track construction of Pair@787 in pair
+//│ class-tags collection-phase > track consumption at match@800 in pair
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@733, E@734, D@735, E@736, Pair@737
-//│ class-tags web-computation-phase >   pattern matches: match@746
+//│ class-tags web-computation-phase >   producers: D@783, E@784, D@785, E@786, Pair@787
+//│ class-tags web-computation-phase >   pattern matches: match@800
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for D(x: 1)
@@ -424,7 +424,7 @@ fun pair(x, y) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let D5, E5, pair, Pair1, D__Tagged5, E__Tagged5, Pair__Tagged1;
 //│ pair = function pair(x, y) {
-//│   runtime.checkArgs("pair", 2, true, arguments.length);
+//│   runtime.checkArgs("pair", 2, arguments.length);
 //│   let p, tmp, tmp1, shapeTag, tmp2, tmp3, tmp4, tmp5, tmp6;
 //│   if (x === true) {
 //│     tmp = globalThis.Object.freeze(new D__Tagged5.class(1, 0));

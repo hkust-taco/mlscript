@@ -12,5 +12,5 @@ private fun tagged() =
   @matchShapes(Box(_)) shape.match of value, () => 1
 tagged()
 //│ ╔══[COMPILATION ERROR] WatBuilder::result for field selection without a resolved symbol is not implemented (field `__tag$`). Use `_.[_]` for index-based accesses.
-//│ ║  l.12: 	  @matchShapes(Box(_)) shape.match of value, () => 1
+//│ ║  l.+4: 	  @matchShapes(Box(_)) shape.match of value, () => 1
 //│ ╙──      	                                      ^^^^^

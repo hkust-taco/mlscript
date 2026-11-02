@@ -184,6 +184,7 @@ and then use one of the following commands.
 - `hkmc2AppsTests/test` for running the applications compile and diff tests.
 - `hkmc2NofibTests/test` for running the nofib compile and diff tests.
 - `hkmc2WasmTests/test` for running the wasm compile and diff tests.
+- `hkmc2SlopTests/test` for running the AI-authored regression diff-tests in `hkmc2/shared/src/test/mlscript/slop`, which are excluded from the main diff-tests.
 - `hkmc2MostTests/test` for running all of the above.
 - `hkmc2AllTests/test` for running all default hkmc2 tests, including ScalaJS-compiled tests.
 - `~hkmc2DiffTests/Test/run` for running the test watcher,
@@ -193,6 +194,11 @@ and then use one of the following commands.
 
 Individual tests can be run with `-z`.
 For example, `~mlscriptJVM/testOnly mlscript.DiffTests -- -z parser` will watch for file changes and continuously run all parser tests (those that have "parser" in their name).
+
+Run `ctest` before running individual diff-tests, including `sdtest`,
+so the generated JavaScript dependencies are available.
+Also run `cwtest` before individual Wasm diff-tests, including those under `slop/wasm`.
+`hkmc2SlopTests/test` runs the main and Wasm compilation prerequisites automatically.
 
 #### Useful SBT commands aliases (use these for more pleasant development)
 
@@ -207,6 +213,7 @@ or specify a string to filter the tests to run.
 
 - `ctest` aka "main compilation tests" for running specific tests in `hkmc2/shared/src/test/mlscript-compile`
 - `dtest` aka "main diff-tests" for running only the main diff-tests in `hkmc2/shared/src/test/mlscript`
+- `sdtest` for running only the diff-tests in `hkmc2/shared/src/test/mlscript/slop`
 - You can find other similar command aliases in `build.sbt`.
 
 The command aliases below are shorthand for running aggregated tests; they take no arguments.

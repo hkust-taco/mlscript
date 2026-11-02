@@ -7,7 +7,8 @@ import utils.*
 import hkmc2.semantics.*
 
 
-class ParserSetup(file: io.Path)(using Elaborator.State, Raise, CompilerCtx):
+class ParserSetup(file: io.Path, outputHandler: DebugOutputHandler)
+    (using Elaborator.State, Raise, CompilerCtx, Config, DebugPrinter):
   
   val block = CompilerCtx.get.fs.read(file)
   val fph = new FastParseHelpers(block)
@@ -18,9 +19,21 @@ class ParserSetup(file: io.Path)(using Elaborator.State, Raise, CompilerCtx):
   
   val rules = syntax.ParseRules()
   val parser = new syntax.Parser(origin, tokens, rules, raise, dbg = false):
+    // * Tracing is not supported for compiled files,
+    // * as debug flags to enable traces are only available after parsing.
     def doPrintDbg(msg: => Str): Unit = ()
   
   val result = parser.parseAll(parser.block(allowNewlines = true))
+  val effectiveConfig = Config.elaborationConfig(result, file.up)
+  
+  if effectiveConfig.debug.showParsedTree
+  then
+    outputHandler.emit(
+      effectiveConfig.debug.out,
+      s"Parsed tree\n${result.map(_.showAsTree).mkString("\n")}",
+    )
+  else DebugOutputHandler.showParsedDefinitions(result, effectiveConfig, file.up): (tree, out) =>
+    outputHandler.emit(out, s"Parsed tree\n${tree.showAsTree}")
   
   val resultBlk = new syntax.Tree.Block(result)
 
@@ -50,10 +63,9 @@ class MLsCompiler
   def compileModule(file: io.Path): Unit =
     
     given Raise = mkRaise(file)
-    given DebugPrinter = new DebugPrinter
+    given DebugPrinter = new DebugPrinter(N)
     
-    val compilerTL = new TraceLogger:
-      override def doTrace: Bool = false
+    val compilerTL = TraceLogger.silent
     
     val preludeCtx = cctx.getPrelude(preludeFile)(using compilerTL, summon[Raise]).ctx
     val artifact = cctx.getElaboratedBlock(file, preludeCtx)(using compilerTL)

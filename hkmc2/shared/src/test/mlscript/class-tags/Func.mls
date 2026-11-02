@@ -18,16 +18,16 @@ fun f(x) =
 private fun g(t) = t.Foo#x
 private fun h(t) = t.Bar#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@116, Bar@117 in f
-//│ class-tags collection-phase > track consumption at match@126 in f
-//│ class-tags collection-phase > track consumption at Foo.x@104 in g
-//│ class-tags collection-phase > track consumption at Bar.x@107 in h
+//│ class-tags collection-phase > track construction of Foo@113, Bar@114 in f
+//│ class-tags collection-phase > track consumption at match@127 in f
+//│ class-tags collection-phase > track consumption at Foo.x@100 in g
+//│ class-tags collection-phase > track consumption at Bar.x@103 in h
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@116, Bar@117
-//│ class-tags web-computation-phase >   field accesses: Foo.x@104, Bar.x@107
-//│ class-tags web-computation-phase >   pattern matches: match@126
+//│ class-tags web-computation-phase >   producers: Foo@113, Bar@114
+//│ class-tags web-computation-phase >   field accesses: Foo.x@100, Bar.x@103
+//│ class-tags web-computation-phase >   pattern matches: match@127
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: true, y: 0)
@@ -39,7 +39,7 @@ private fun h(t) = t.Bar#x
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f, g, Bar1, Foo1, h, Foo__Tagged1, Bar__Tagged1;
 //│ f = function f(x) {
-//│   runtime.checkArgs("f", 1, true, arguments.length);
+//│   runtime.checkArgs("f", 1, arguments.length);
 //│   let tmp;
 //│   if (x === true) {
 //│     tmp = globalThis.Object.freeze(new Foo__Tagged1.class(x, 0, 0));
@@ -54,11 +54,11 @@ private fun h(t) = t.Bar#x
 //│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
 //│ g = function g(t) {
-//│   runtime.checkArgs("g", 1, true, arguments.length);
+//│   runtime.checkArgs("g", 1, arguments.length);
 //│   return t.x
 //│ };
 //│ h = function h(t) {
-//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   runtime.checkArgs("h", 1, arguments.length);
 //│   return t.x
 //│ };
 //│ Foo1 = function Foo(x, y) {
@@ -134,14 +134,14 @@ fun f(x, y) =
       let m = t.Bar#x
       @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@336, C@335, D@337, Bar@338 in f
-//│ class-tags collection-phase > track consumption at match@369 in f
+//│ class-tags collection-phase > track construction of C@349, Bar@352, Foo@350, D@351 in f
+//│ class-tags collection-phase > track consumption at match@397 in f
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@335, Foo@336, D@337, Bar@338
-//│ class-tags web-computation-phase >   field accesses: Foo.x@311, C.x@313, Bar.x@318, D.x@322
-//│ class-tags web-computation-phase >   pattern matches: match@352, match@367, match@369
+//│ class-tags web-computation-phase >   producers: C@349, Foo@350, D@351, Bar@352
+//│ class-tags web-computation-phase >   field accesses: Foo.x@324, C.x@326, Bar.x@331, D.x@335
+//│ class-tags web-computation-phase >   pattern matches: match@371, match@393, match@397
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: _)
@@ -161,7 +161,7 @@ fun f(x, y) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f1, Bar3, Foo3, C1, D1, C__Tagged1, Foo__Tagged3, D__Tagged1, Bar__Tagged3;
 //│ f1 = function f(x, y) {
-//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   runtime.checkArgs("f", 2, arguments.length);
 //│   let tmp, tmp1, tmp2;
 //│   if (x === true) {
 //│     tmp = globalThis.Object.freeze(new C__Tagged1.class(y, 0));
@@ -320,16 +320,16 @@ fun f(x, y) =
 private fun g(t) = t.Foo#x
 private fun h(t) = t.Bar#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@727, Bar@730, Foo@728, D@729 in f
-//│ class-tags collection-phase > track consumption at match@763 in f
-//│ class-tags collection-phase > track consumption at Foo.x@711 in g
-//│ class-tags collection-phase > track consumption at Bar.x@714 in h
+//│ class-tags collection-phase > track construction of Foo@787, C@786, D@788, Bar@789 in f
+//│ class-tags collection-phase > track consumption at match@838 in f
+//│ class-tags collection-phase > track consumption at Foo.x@769 in g
+//│ class-tags collection-phase > track consumption at Bar.x@772 in h
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@727, Foo@728, D@729, Bar@730
-//│ class-tags web-computation-phase >   field accesses: C.x@700, D.x@708, Foo.x@711, Bar.x@714
-//│ class-tags web-computation-phase >   pattern matches: match@745, match@761, match@763
+//│ class-tags web-computation-phase >   producers: C@786, Foo@787, D@788, Bar@789
+//│ class-tags web-computation-phase >   field accesses: C.x@758, D.x@766, Foo.x@769, Bar.x@772
+//│ class-tags web-computation-phase >   pattern matches: match@810, match@834, match@838
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: _)
@@ -349,7 +349,7 @@ private fun h(t) = t.Bar#x
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f2, g1, Bar5, Foo5, C3, h1, D3, C__Tagged3, Foo__Tagged5, D__Tagged3, Bar__Tagged5;
 //│ f2 = function f(x, y) {
-//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   runtime.checkArgs("f", 2, arguments.length);
 //│   let tmp, tmp1, tmp2;
 //│   if (x === true) {
 //│     tmp = globalThis.Object.freeze(new C__Tagged3.class(y, 0));
@@ -380,11 +380,11 @@ private fun h(t) = t.Bar#x
 //│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
 //│ g1 = function g(t) {
-//│   runtime.checkArgs("g", 1, true, arguments.length);
+//│   runtime.checkArgs("g", 1, arguments.length);
 //│   return t.x
 //│ };
 //│ h1 = function h(t) {
-//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   runtime.checkArgs("h", 1, arguments.length);
 //│   return t.x
 //│ };
 //│ Foo5 = function Foo(x, y) {
@@ -516,16 +516,16 @@ private fun h(t) =
   let m = t.Bar#x
   @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@1146, D@1147, Bar@1148, C@1145 in f
-//│ class-tags collection-phase > track consumption at match@1157 in f
-//│ class-tags collection-phase > track consumption at Foo.x@1120, match@1172 in g
-//│ class-tags collection-phase > track consumption at match@1187, Bar.x@1128 in h
+//│ class-tags collection-phase > track construction of C@1259, Bar@1262, Foo@1260, D@1261 in f
+//│ class-tags collection-phase > track consumption at match@1275 in f
+//│ class-tags collection-phase > track consumption at match@1297, Foo.x@1233 in g
+//│ class-tags collection-phase > track consumption at Bar.x@1241, match@1319 in h
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@1145, Foo@1146, D@1147, Bar@1148
-//│ class-tags web-computation-phase >   field accesses: Foo.x@1120, C.x@1122, Bar.x@1128, D.x@1132
-//│ class-tags web-computation-phase >   pattern matches: match@1157, match@1172, match@1187
+//│ class-tags web-computation-phase >   producers: C@1259, Foo@1260, D@1261, Bar@1262
+//│ class-tags web-computation-phase >   field accesses: Foo.x@1233, C.x@1235, Bar.x@1241, D.x@1245
+//│ class-tags web-computation-phase >   pattern matches: match@1275, match@1297, match@1319
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: _)
@@ -543,7 +543,7 @@ private fun h(t) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f3, g2, Bar7, Foo7, C5, h2, D5, C__Tagged5, Foo__Tagged7, D__Tagged5, Bar__Tagged7;
 //│ f3 = function f(x, y) {
-//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   runtime.checkArgs("f", 2, arguments.length);
 //│   let tmp, tmp1, tmp2;
 //│   if (x === true) {
 //│     tmp = globalThis.Object.freeze(new C__Tagged5.class(y, 0));
@@ -560,7 +560,7 @@ private fun h(t) =
 //│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
 //│ g2 = function g(t) {
-//│   runtime.checkArgs("g", 1, true, arguments.length);
+//│   runtime.checkArgs("g", 1, arguments.length);
 //│   let m, shapeMatchResult, shapeMatchBranch;
 //│   m = t.x;
 //│   if (m.__tag$ === 0) {
@@ -583,7 +583,7 @@ private fun h(t) =
 //│   return shapeMatchResult
 //│ };
 //│ h2 = function h(t) {
-//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   runtime.checkArgs("h", 1, arguments.length);
 //│   let m, shapeMatchResult, shapeMatchBranch;
 //│   m = t.x;
 //│   if (m.__tag$ === 0) {
@@ -737,16 +737,16 @@ private fun h(t) =
   let m = t.Bar#x
   @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of D@1505, C@1503, Bar@1506, Foo@1504 in f
-//│ class-tags collection-phase > track consumption at match@1515, match@1525 in f
-//│ class-tags collection-phase > track consumption at Foo.x@1478, match@1542 in g
-//│ class-tags collection-phase > track consumption at Bar.x@1486, match@1557 in h
+//│ class-tags collection-phase > track construction of Bar@1662, Foo@1660, C@1659, D@1661 in f
+//│ class-tags collection-phase > track consumption at match@1691, match@1675 in f
+//│ class-tags collection-phase > track consumption at Foo.x@1633, match@1716 in g
+//│ class-tags collection-phase > track consumption at Bar.x@1641, match@1738 in h
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@1503, Foo@1504, D@1505, Bar@1506
-//│ class-tags web-computation-phase >   field accesses: Foo.x@1478, C.x@1480, Bar.x@1486, D.x@1490
-//│ class-tags web-computation-phase >   pattern matches: match@1515, match@1525, match@1542, match@1557
+//│ class-tags web-computation-phase >   producers: C@1659, Foo@1660, D@1661, Bar@1662
+//│ class-tags web-computation-phase >   field accesses: Foo.x@1633, C.x@1635, Bar.x@1641, D.x@1645
+//│ class-tags web-computation-phase >   pattern matches: match@1675, match@1691, match@1716, match@1738
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: _)
@@ -765,7 +765,7 @@ private fun h(t) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f4, g3, Bar9, Foo9, C7, h3, D7, C__Tagged7, Foo__Tagged9, D__Tagged7, Bar__Tagged9;
 //│ f4 = function f(x, y) {
-//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   runtime.checkArgs("f", 2, arguments.length);
 //│   let tmp, tmp1, tmp2, shapeMatchResult;
 //│   if (x === true) {
 //│     tmp = globalThis.Object.freeze(new C__Tagged7.class(y, 0));
@@ -800,7 +800,7 @@ private fun h(t) =
 //│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
 //│ g3 = function g(t) {
-//│   runtime.checkArgs("g", 1, true, arguments.length);
+//│   runtime.checkArgs("g", 1, arguments.length);
 //│   let m, shapeMatchResult, shapeMatchBranch;
 //│   m = t.x;
 //│   if (m.__tag$ === 0) {
@@ -823,7 +823,7 @@ private fun h(t) =
 //│   return shapeMatchResult
 //│ };
 //│ h3 = function h(t) {
-//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   runtime.checkArgs("h", 1, arguments.length);
 //│   let m, shapeMatchResult, shapeMatchBranch;
 //│   m = t.x;
 //│   if (m.__tag$ === 0) {
@@ -992,16 +992,16 @@ fun f(x, y) =
 private fun g(x) = new C(x)
 private fun h(x) = new D(x)
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Bar@1903, Foo@1902 in f
-//│ class-tags collection-phase > track consumption at match@1938 in f
-//│ class-tags collection-phase > track construction of C@1942 in g
-//│ class-tags collection-phase > track construction of D@1945 in h
+//│ class-tags collection-phase > track construction of Foo@2128, Bar@2129 in f
+//│ class-tags collection-phase > track consumption at match@2180 in f
+//│ class-tags collection-phase > track construction of C@2187 in g
+//│ class-tags collection-phase > track construction of D@2191 in h
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Foo@1902, Bar@1903, C@1942, D@1945
-//│ class-tags web-computation-phase >   field accesses: Foo.x@1874, C.x@1876, Bar.x@1881, D.x@1885
-//│ class-tags web-computation-phase >   pattern matches: match@1919, match@1936, match@1938
+//│ class-tags web-computation-phase >   producers: Foo@2128, Bar@2129, C@2187, D@2191
+//│ class-tags web-computation-phase >   field accesses: Foo.x@2099, C.x@2101, Bar.x@2106, D.x@2110
+//│ class-tags web-computation-phase >   pattern matches: match@2151, match@2176, match@2180
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Foo(x: _, y: 0)
@@ -1021,7 +1021,7 @@ private fun h(x) = new D(x)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f5, g4, Bar11, Foo11, C9, h4, D9, Foo__Tagged11, Bar__Tagged11, C__Tagged9, D__Tagged9;
 //│ f5 = function f(x, y) {
-//│   runtime.checkArgs("f", 2, true, arguments.length);
+//│   runtime.checkArgs("f", 2, arguments.length);
 //│   let tmp;
 //│   if (x === true) {
 //│     tmp = globalThis.Object.freeze(new Foo__Tagged11.class(y, 0, 0));
@@ -1052,11 +1052,11 @@ private fun h(x) = new D(x)
 //│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
 //│ g4 = function g(x) {
-//│   runtime.checkArgs("g", 1, true, arguments.length);
+//│   runtime.checkArgs("g", 1, arguments.length);
 //│   return globalThis.Object.freeze(new C__Tagged9.class(x, 2))
 //│ };
 //│ h4 = function h(x) {
-//│   runtime.checkArgs("h", 1, true, arguments.length);
+//│   runtime.checkArgs("h", 1, arguments.length);
 //│   return globalThis.Object.freeze(new D__Tagged9.class(x, 3))
 //│ };
 //│ Foo11 = function Foo(x, y) {
@@ -1187,13 +1187,13 @@ fun bar(x, y) =
     () => 3
     () => 4
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Bar@2283, Foo@2282 in bar
-//│ class-tags collection-phase > track consumption at match@2292 in bar
+//│ class-tags collection-phase > track construction of Foo@2567, Bar@2568 in bar
+//│ class-tags collection-phase > track consumption at match@2581 in bar
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@2276, D@2277, Foo@2282, Bar@2283
-//│ class-tags web-computation-phase >   pattern matches: match@2292
+//│ class-tags web-computation-phase >   producers: C@2559, D@2560, Foo@2567, Bar@2568
+//│ class-tags web-computation-phase >   pattern matches: match@2581
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: 0)
@@ -1211,14 +1211,14 @@ fun bar(x, y) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Bar13, Foo13, bar, C11, D11, foo, C__Tagged11, D__Tagged11, Foo__Tagged13, Bar__Tagged13;
 //│ foo = function foo(x) {
-//│   runtime.checkArgs("foo", 1, true, arguments.length);
+//│   runtime.checkArgs("foo", 1, arguments.length);
 //│   if (x === true) {
 //│     return globalThis.Object.freeze(new C__Tagged11.class(0, 0))
 //│   }
 //│   return globalThis.Object.freeze(new D__Tagged11.class(0, 1));
 //│ };
 //│ bar = function bar(x, y) {
-//│   runtime.checkArgs("bar", 2, true, arguments.length);
+//│   runtime.checkArgs("bar", 2, arguments.length);
 //│   let tmp, inlinedVal;
 //│   if (x === true) {
 //│     inlinedVal = globalThis.Object.freeze(new C__Tagged11.class(0, 0));
@@ -1382,16 +1382,16 @@ fun second() =
   let value = new B(0)
   @matchShapes(B(_)) shape.match of value, () => 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track consumption at match@2504 in inspect
-//│ class-tags collection-phase > track construction of Box@2508, A@2511 in first
-//│ class-tags collection-phase > track consumption at match@2514 in first
-//│ class-tags collection-phase > track construction of Box@2518, B@2521 in second
-//│ class-tags collection-phase > track consumption at match@2524 in second
+//│ class-tags collection-phase > track consumption at match@2809 in inspect
+//│ class-tags collection-phase > track construction of A@2819, Box@2815 in first
+//│ class-tags collection-phase > track consumption at match@2823 in first
+//│ class-tags collection-phase > track construction of Box@2829, B@2833 in second
+//│ class-tags collection-phase > track consumption at match@2837 in second
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: Box@2508, A@2511, Box@2518, B@2521
-//│ class-tags web-computation-phase >   pattern matches: match@2504, match@2514, match@2524
+//│ class-tags web-computation-phase >   producers: Box@2815, A@2819, Box@2829, B@2833
+//│ class-tags web-computation-phase >   pattern matches: match@2809, match@2823, match@2837
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
@@ -1407,14 +1407,14 @@ fun second() =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let Box1, A1, inspect, second, B1, first, Box__Tagged1, A__Tagged1, B__Tagged1;
 //│ inspect = function inspect(value) {
-//│   runtime.checkArgs("inspect", 1, true, arguments.length);
+//│   runtime.checkArgs("inspect", 1, arguments.length);
 //│   if (value.__tag$ === 0) {
 //│     return 0
 //│   }
 //│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
 //│ first = function first() {
-//│   runtime.checkArgs("first", 0, true, arguments.length);
+//│   runtime.checkArgs("first", 0, arguments.length);
 //│   let value, tmp;
 //│   tmp = globalThis.Object.freeze(new Box__Tagged1.class(0, 0));
 //│   runtime.checkCall(inspect(tmp));
@@ -1425,7 +1425,7 @@ fun second() =
 //│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
 //│ };
 //│ second = function second() {
-//│   runtime.checkArgs("second", 0, true, arguments.length);
+//│   runtime.checkArgs("second", 0, arguments.length);
 //│   let value, tmp;
 //│   tmp = globalThis.Object.freeze(new Box__Tagged1.class(0, 0));
 //│   runtime.checkCall(inspect(tmp));
@@ -1530,13 +1530,13 @@ fun foo() =
     () => 1
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@2679, D@2680 in bar
-//│ class-tags collection-phase > track consumption at match@2689 in foo
+//│ class-tags collection-phase > track construction of D@3006, C@3005 in bar
+//│ class-tags collection-phase > track consumption at match@3019 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: C@2679, D@2680
-//│ class-tags web-computation-phase >   pattern matches: match@2689
+//│ class-tags web-computation-phase >   producers: C@3005, D@3006
+//│ class-tags web-computation-phase >   pattern matches: match@3019
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for C(x: _)
@@ -1548,7 +1548,7 @@ fun foo() =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let bar1, C13, D13, foo1, C__Tagged13, D__Tagged13;
 //│ bar1 = function bar(x) {
-//│   runtime.checkArgs("bar", 1, true, arguments.length);
+//│   runtime.checkArgs("bar", 1, arguments.length);
 //│   let tmp;
 //│   if (x === true) {
 //│     tmp = runtime.checkCall(bar1(false));
@@ -1557,7 +1557,7 @@ fun foo() =
 //│   return globalThis.Object.freeze(new D__Tagged13.class(0, 1));
 //│ };
 //│ foo1 = function foo() {
-//│   runtime.checkArgs("foo", 0, true, arguments.length);
+//│   runtime.checkArgs("foo", 0, arguments.length);
 //│   let value;
 //│   value = runtime.checkCall(bar1(true));
 //│   if (value.__tag$ === 0) {

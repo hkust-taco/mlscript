@@ -1,0 +1,257 @@
+:.
+
+// *** Named function-type parameters ***
+
+// Names in function types label parameters; their annotations supply the types.
+:expect 3
+fun named(f: (s: Str) -> Int) = f("abc")
+named(s => s.length)
+//│ = 3
+
+// Optional named parameters retain both the annotation and the null case.
+:expect [0, 3]
+fun namedOptional(f: (s?: Str) -> Int) = [f(), f("abc")]
+namedOptional((s?) => if s is ~null as s then s.length else 0)
+//│ = [0, 3]
+
+:e
+fun missingNamed(f: (s?: Str) -> Int) = f()
+missingNamed((s?) => s.length)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	missingNamed((s?) => s.length)
+//│ ║        	                     ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+2: 	missingNamed((s?) => s.length)
+//│ ║        	              ^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+1: 	fun missingNamed(f: (s?: Str) -> Int) = f()
+//│ ╙──      	                     ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Normalization also applies through aliases, generics, and droppable parameters.
+:expect 3
+type Named[A] = (x: A, drop index: Int) -> Int
+fun namedGeneric[A](x: A, f: Named[A]) = f(x, 0)
+namedGeneric("abc", x => x.length)
+//│ = 3
+
+:expect [0, 3]
+fun namedSignature: (text?: Str) -> Int
+fun namedSignature(text?) = if text is ~null as text then text.length else 0
+[namedSignature(), namedSignature("abc")]
+//│ = [0, 3]
+
+
+// *** Separate signatures ***
+
+fun sig: (Int, Int?) -> Int
+fun sig(x, y?) = x
+
+:e
+fun sig2: (Int, Int?) -> Int
+fun sig2(x, y) = x
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ║  l.+2: 	fun sig2(x, y) = x
+//│ ║        	        ^^^^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+1: 	fun sig2: (Int, Int?) -> Int
+//│ ╙──      	          ^^^^^^^^^^^^^^^^^^
+
+// A separate signature determines how many arguments can be passed.
+:e
+sig()
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+1: 	sig()
+//│ ║        	^^^^^
+//│ ╟── Function 'sig' expected 1 to 2 arguments, but got 0
+//│ ║  l.XX: 	fun sig(x, y?) = x
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'sig' expected at least 1 argument but got 0
+
+// Aliases must not hide a mismatch between a signature and its implementation.
+type OptionalFn = (Int?) -> Int
+
+:e
+private fun aliased: OptionalFn
+private fun aliased(x) = x
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ║  l.+2: 	private fun aliased(x) = x
+//│ ║        	                   ^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+1: 	private fun aliased: OptionalFn
+//│ ╙──      	                     ^^^^^^^^^^
+
+:e
+private fun tooFew: (Int, Int) -> Int
+private fun tooFew(x) = x
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ║  l.+2: 	private fun tooFew(x) = x
+//│ ║        	                  ^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+1: 	private fun tooFew: (Int, Int) -> Int
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^
+
+:e
+private fun tooMany: Int -> Int
+private fun tooMany(x, y?) = x
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ║  l.+2: 	private fun tooMany(x, y?) = x
+//│ ║        	                   ^^^^^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+1: 	private fun tooMany: Int -> Int
+//│ ╙──      	                     ^^^^^^^^^^
+
+:e
+private fun missingRest: (Int, ...Array[Int], Str) -> Str
+private fun missingRest(x, y?) = y
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ║  l.+2: 	private fun missingRest(x, y?) = y
+//│ ║        	                       ^^^^^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+1: 	private fun missingRest: (Int, ...Array[Int], Str) -> Str
+//│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+private fun misplacedRest: (Int, ...Array[Int], Str) -> Str
+private fun misplacedRest(x, y, ...rest) = "ok"
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ║  l.+2: 	private fun misplacedRest(x, y, ...rest) = "ok"
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+1: 	private fun misplacedRest: (Int, ...Array[Int], Str) -> Str
+//│ ╙──      	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+private fun extraRest: Int -> Int
+private fun extraRest(x, ...rest) = x
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ║  l.+2: 	private fun extraRest(x, ...rest) = x
+//│ ║        	                     ^^^^^^^^^^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+1: 	private fun extraRest: Int -> Int
+//│ ╙──      	                       ^^^^^^^^^^
+
+// A matching generic alias retains its parameter annotations.
+:expect 3
+type Unary[A, B] = (value: A) -> B
+private fun length: Unary[Str, Int]
+private fun length(s) = s.length
+length("abc")
+//│ = 3
+
+// Check each written curried list, including aliases of later arrows.
+:e
+type Next = (Int?) -> Int
+private fun curried: Int -> Next
+private fun curried(x)(y) = x
+//│ ╔══[COMPILATION ERROR] Implementation parameter list does not match its separate signature.
+//│ ║  l.+3: 	private fun curried(x)(y) = x
+//│ ║        	                      ^^^
+//│ ╟── The signature has different required, optional, variadic, or trailing parameter positions.
+//│ ║  l.+2: 	private fun curried: Int -> Next
+//│ ╙──      	                     ^^^^^^^^^^^
+
+
+// *** Variadic and curried signature inputs ***
+
+// Each part of a separate variadic signature supplies the implementation's interface.
+:expect [1, [2, 3], 4]
+fun signed: (Str, ...Array[Str], Str) -> [Int, Array[Int], Int]
+fun signed(x, ...middle, y) = [x.length, middle.map(s => s.length), y.length]
+signed("a", "bb", "ccc", "tail")
+//│ = [1, [2, 3], 4]
+
+// The rest can be empty while the trailing parameter still has its own type.
+:expect [1, [], 4]
+signed("a", "tail")
+//│ = [1, [], 4]
+
+// Optional leading parameters inherit the union with null.
+:expect [[0, [], 4], [2, [3], 4]]
+fun optional: (Str?, ...Array[Str], Str) -> Any
+fun optional(x?, ...middle, y) =
+  [if x is ~null as x then x.length else 0, middle.map(s => s.length), y.length]
+[optional("tail"), optional("bb", "ccc", "tail")]
+//│ = [[0, [], 4], [2, [3], 4]]
+
+// Generic aliases transport the rest's element annotation as well.
+:expect [1, [2], 4]
+type Parts[A] = (Str, ...Array[A], Str) -> Any
+fun aliased: Parts[Str]
+fun aliased(x, ...middle, y) = [x.length, middle.map(s => s.length), y.length]
+aliased("a", "bb", "tail")
+//│ = [1, [2], 4]
+
+// Later curried lists use the same mapping.
+:expect [1, [2], 4]
+fun curried: Int -> (Str, ...Array[Str], Str) -> Any
+fun curried(n)(x, ...middle, y) = [n * x.length, middle.map(s => s.length), y.length]
+curried(1)("a", "bb", "tail")
+//│ = [1, [2], 4]
+
+
+// *** Compound signature inputs ***
+
+// Every callable component supplies parameter flow, even when its layout differs.
+// There are no calls here from which to recover a missing declared input.
+type UnionInputs = (Str -> Int) | ((Str, Str) -> Int)
+private fun unionInput: UnionInputs
+private fun unionInput(...xs) = xs.map(x => x.length).length
+
+type IntersectionInputs = (Str -> Int) & ((Str, Str) -> Int)
+private fun intersectionInput: IntersectionInputs
+private fun intersectionInput(...xs) = xs.map(x => x.length).length
+
+// A disagreement in an earlier list must not erase later curried parameters.
+type CurriedInputs = (Int -> (Str -> Int)) | ((Int, Int) -> (Str -> Int))
+private fun curriedInput: CurriedInputs
+private fun curriedInput(...xs)(s) = s.length
+
+// Later lists remain alternatives; inspecting one arrow must not reject its layout.
+type CurriedAlternatives = (Int -> (Str -> Int)) | (Int -> ((Str, Str) -> Int))
+private fun curriedAlternatives: CurriedAlternatives
+private fun curriedAlternatives(n)(...xs) = xs.map(x => x.length).length
+
+class Left(val value: Int)
+class Right(val value: Int)
+
+// Both member targets must survive; choosing only the matching arrow hides ambiguity.
+:e
+private fun unionAmbiguous: (Left -> Int) | ((Right, Int) -> Int)
+private fun unionAmbiguous(x) = x.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+2: 	private fun unionAmbiguous(x) = x.value
+//│ ║        	                                ^^^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Right'
+//│ ║  l.XX: 	class Right(val value: Int)
+//│ ║        	                ^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Left'
+//│ ║  l.XX: 	class Left(val value: Int)
+//│ ╙──      	               ^^^^^
+
+:e
+private fun intersectionAmbiguous: (Left -> Int) & ((Right, Int) -> Int)
+private fun intersectionAmbiguous(x) = x.value
+//│ ╔══[COMPILATION ERROR] This selection of member 'value' is ambiguous, as it has multiple resolved targets
+//│ ║  l.+2: 	private fun intersectionAmbiguous(x) = x.value
+//│ ║        	                                       ^^^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Right'
+//│ ║  l.XX: 	class Right(val value: Int)
+//│ ║        	                ^^^^^
+//│ ╟── target: value 'value' in overloaded function and class 'Left'
+//│ ║  l.XX: 	class Left(val value: Int)
+//│ ╙──      	               ^^^^^
+
+// Constraints from the implementation must reach every symbolic domain.
+// The callback is never supplied by a call; only the compound signature connects it.
+#lang(eagerResolution: false)
+private fun domains[A, B](a: A, b: B) =
+  private fun apply: ((A -> Int) -> Int) & (((B -> Int), Int) -> Int)
+  private fun apply(f, padding?) = f({first: 1, second: "two"})
+  [a.first, b.second]
+
+// An inline annotation receives constraints without exposing additional members.
+private fun explicit[A](a: A) =
+  private fun read: Str -> Int
+  private fun read(s: A) = s.length
+  a.length

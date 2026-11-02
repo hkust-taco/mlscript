@@ -66,7 +66,7 @@ type ScopedSymbol = LocalVarSymbol | BlockMemberSymbol
 /** A "catch-all" symbol for value-like things.
   * Slightly better than just `Symbol`, but we should still try migrating away to more specific symbol types.
   */
-type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | InnerSymbol
+type ValueSymbol = SimpleSymbol | TermSymbol | BlockMemberSymbol | ThisSymbol
 
 /** Symbols of lexical bindings required by MIR, including assignment destinations.
   * A `MemberRef` requires its block member binding regardless of the selected definition:
@@ -121,14 +121,16 @@ sealed abstract class Block extends Product:
     case AssignField(lhs, nme, rhs, rest) =>
       s"""|AssignField(${lhs.showDbg}.${nme} = ${rhs.showDbg})
           |${rest.showDbg}""".stripMargin
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-      val access = if arrayIdx then s"[${fld.showDbg}]" else s".${fld.showDbg}"
+    case AssignDynField(lhs, fld, kind, rhs, rest) =>
+      val access = kind match
+        case DynSelectKind.ArrayIdx => s"[${fld.showDbg}]"
+        case DynSelectKind.Member(_) | DynSelectKind.Unknown => s".${fld.showDbg}"
       s"""|AssignDynField(${lhs.showDbg}$access = ${rhs.showDbg})
           |${rest.showDbg}""".stripMargin
     case Define(defn, rest) =>
       s"""|Define(${defn.showDbg})
           |${rest.showDbg}""".stripMargin
-    case Throw(exc) => s"Throw(${exc.showDbg})"
+    case Throw(exc, _) => s"Throw(${exc.showDbg})"
     case Scoped(syms, body) =>
       s"""|Scoped(${syms.toList.map(_.showDbg).sorted.mkString(", ")}) {
           |${body.showDbg}
@@ -175,7 +177,7 @@ sealed abstract class Block extends Product:
   
   lazy val size: Int = 1 + this.match
     case Return(r: Result) => r.size
-    case Throw(r: Result) => r.size
+    case Throw(r: Result, _) => r.size
     case _: End | _: Break | _: Continue | _: Unreachable => 0
     case Begin(sub, rst) => sub.size + rst.size
     case Assign(_, r, rst) => r.size + rst.size
@@ -204,7 +206,7 @@ sealed abstract class Block extends Product:
       ++ arms.iterator.flatMap:
         (pat, arm) => arm.freeVars ++ pat.freeVars
     case Return(res) => res.freeVars
-    case Throw(exc) => exc.freeVars
+    case Throw(exc, _) => exc.freeVars
     case Label(label, _, body, rest) => (body.freeVars - label) ++ rest.freeVars 
     case Break(label) => Set.single(label)
     case Continue(label) => Set.single(label)
@@ -213,7 +215,7 @@ sealed abstract class Block extends Product:
     case Assign(NoSymbol, rhs, rest) => rhs.freeVars ++ rest.freeVars
     case Assign(lhs: LocalVarSymbol, rhs, rest) => Set.single(lhs) ++ rhs.freeVars ++ rest.freeVars
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
+    case AssignDynField(lhs, fld, kind, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
     case Scoped(syms, body) => body.freeVars -- syms
     case End(msg) => Set.empty
@@ -236,7 +238,7 @@ sealed abstract class Block extends Product:
     
     // TODO rm Lam from results and thus the need for these cases
     case Return(r) => r.subBlocks
-    case Throw(r) => r.subBlocks
+    case Throw(r, _) => r.subBlocks
     
     case _: Return | _: Throw | _: Break | _: Continue | _: End | _: Unreachable => Nil
   
@@ -314,11 +316,11 @@ sealed abstract class Block extends Product:
       then this
       else AssignField(lhs, nme, rhs, newRest)(a.symbol)
       
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
+    case AssignDynField(lhs, fld, kind, rhs, rest) =>
       val newRest = rest.flatten(k)
       if newRest is rest
       then this
-      else AssignDynField(lhs, fld, arrayIdx, rhs, newRest)
+      else AssignDynField(lhs, fld, kind, rhs, newRest)
     
     case Define(defn, rest) =>
       val newDefn = defn match
@@ -326,7 +328,7 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)(configOverride = d.configOverride, annotations = d.annotations)
+          else d.withBody(newBody)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
@@ -334,7 +336,7 @@ sealed abstract class Block extends Product:
           def flattenMethods(ms: List[FunDefn]) = ms.mapConserve:
             case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)(configOverride = f.configOverride, annotations = f.annotations)
+              if newBody is body then f else f.withBody(newBody)
           val newMethods = flattenMethods(c.methods)
           val newCompanion = c.companion.mapConserve: c =>
             val newCtor = c.ctor.flattened
@@ -383,7 +385,7 @@ object Block:
     val types = Buffer.empty[ErasedValueType]
     val collector = new BlockTraverserShallow:
       override def applyBlock(b: Block): Unit = b match
-        case Return(res) => types += res.erasedValueType_!
+        case Return(res) => types += res.erasedType_!
         case _ => super.applyBlock(b)
     collector.applyBlock(block)
     Option.when(types.nonEmpty)(ErasedType.Union.mk(types))
@@ -402,7 +404,7 @@ case class Match(
 
 case class Return(res: Result) extends BlockTail
 
-case class Throw(exc: Result) extends BlockTail
+case class Throw(exc: Result, annotations: Ls[Annot]) extends BlockTail
 
 object Throw:
   /** Throws a runtime `Error` carrying `msg`.
@@ -414,7 +416,7 @@ object Throw:
     mut = false,
     State.globalThisSymbol.asThis.selN(Tree.Ident("Error")),
     (Value.Lit(Tree.StrLit(msg))(N).asArg :: Nil) :: Nil,
-  )(InstantiateMetadata.empty, N))
+  )(InstantiateMetadata.empty, N), annotations = Nil)
 
 case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block)
 extends Block with NonBlockTail with ProductWithTail
@@ -437,7 +439,7 @@ case class Assign(lhs: Assignable, rhs: Result, rest: Block) extends Block with 
 case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[MemberSymbol])
   extends Block with ProductWithTail with NonBlockTail
 
-case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block)
+case class AssignDynField(lhs: Path, fld: Path, kind: DynSelectKind, rhs: Result, rest: Block)
   extends Block with ProductWithTail with NonBlockTail
 
 case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail with NonBlockTail:
@@ -492,9 +494,9 @@ object AssignField:
     case Scoped(syms, body) => Scoped(syms, AssignField(lhs, nme, rhs, body)(symbol))
     case _ => new AssignField(lhs, nme, rhs, rest)(symbol)
 object AssignDynField:
-  def apply(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block): Block = rest match
-    case Scoped(syms, body) => Scoped(syms, AssignDynField(lhs, fld, arrayIdx, rhs, body))
-    case _ => new AssignDynField(lhs, fld, arrayIdx, rhs, rest)
+  def apply(lhs: Path, fld: Path, kind: DynSelectKind, rhs: Result, rest: Block): Block = rest match
+    case Scoped(syms, body) => Scoped(syms, AssignDynField(lhs, fld, kind, rhs, body))
+    case _ => new AssignDynField(lhs, fld, kind, rhs, rest)
 object Define:
   def apply(defn: Defn, rest: Block): Block = rest match
     case Scoped(syms, body) => Scoped(syms, Define(defn, body))
@@ -585,15 +587,15 @@ object HandleBlock:
   )(using Elaborator.State, Elaborator.Ctx) =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
-    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil)(N) :: Nil, body)(N, annotations = Nil)
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, LoweredParamList.plain(Nil)(N) :: Nil, body)(N, annotations = Nil)
     
     val handlerMtds = handlers.map: handler =>
       val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
       val fDef = FunDefn.withFreshSymbol(
-        N, sym, PlainParamList(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
+        N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
         handler.body
         )(N, annotations = Nil)
-      val rSym = TempSymbol(N, erasedType = N, "suspendRes")
+      val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
       FunDefn.withFreshSymbol(
         S(cls),
         handler.sym,
@@ -616,6 +618,7 @@ object HandleBlock:
       N,
       N,
       N,
+      Map.empty,
     )(N, Nil)
 
     blockBuilder
@@ -667,12 +670,17 @@ sealed abstract class Defn:
       // * Simple heuristic. TODO: check the purity of the ctor somehow? (ignore pure local field inits)
       c.companion.isEmpty
         && (!(c.k is syntax.Obj) || c.ctor.isEmpty)
+        && c.methodKeys.valuesIterator.forall(_.isPure)
   
   def subBlocks: Ls[Block] = this match
     case FunDefn(body = body) => body :: Nil
     case _: ValDefn => Nil
-    case ClsLikeDefn(preCtor = preCtor, ctor = ctor, methods = mtds, companion = comp) =>
-      preCtor :: ctor :: mtds.flatMap(_.subBlocks) ::: comp.toList.flatMap(_.subBlocks)
+    case cls @ ClsLikeDefn(preCtor = preCtor, ctor = ctor, methods = mtds, companion = comp) =>
+      Iterator(preCtor, ctor)
+        .++(mtds.iterator.flatMap(_.subBlocks))
+        .++(comp.iterator.flatMap(_.subBlocks))
+        .++(cls.methodKeys.valuesIterator.flatMap(_.subBlocks))
+        .toList
   
   // * Note that `privateFields` abd `publicFields` can't possibly be free since they are never
   // * referred to directly (they are only accessed through selections).
@@ -684,32 +692,42 @@ sealed abstract class Defn:
         // * Value definitions without an owner are similar to local variables;
         // * they need to be declared with `let` in JS, which is why we add them here.
         vd.sym.optionIf(tsym.owner.isEmpty)
-    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
-        methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
+    case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
+        methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion, _) =>
       preCtor.freeVars
         ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
         -- auxParams.flatMap(_.paramSyms)
         ++ stat.iterator.flatMap(_.freeVars)
         ++ sym.optionIf(own.isEmpty)
         ++ parentSym.iterator.flatMap(_.freeVars)
+        ++ cls.methodKeys.valuesIterator.flatMap(_.freeVars)
   
   lazy val size: Int = this match
-    case FunDefn(_, _, _, params, body) => 1 + body.size
+    case FunDefn(body = body) => 1 + body.size
     case ValDefn(_, _, rhs) => 1
-    case ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion) =>
-      1 + methods.map(_.size).sum + preCtor.size + ctor.size + stat.fold(0)(_.size)
+    case cls @ ClsLikeDefn(_, _, _, _, _, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, stat, bufferable, termCompanion, _) =>
+      1 + methods.map(_.size).sum + preCtor.size + ctor.size + stat.fold(0)(_.size) + cls.methodKeys.valuesIterator.map(_.size).sum
   
 
-final case class FunDefn(
+final case class FunDefn private(
     owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
     dSym: TermSymbol,
-    params: Ls[ParamList],
+    signature: FunDefn.Signature,
     body: Block,
   )(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
 ) extends Defn:
+  // Keep this in the constructor so both `apply` and `copy` enforce it.
+  if !dSym.isErased then dSym.initializeErasure(S(signature.erasure))
+  else assert(dSym.erasure.exists(_ is signature.erasure), s"Conflicting signature for '${dSym.nme}'")
+  def params: Ls[LoweredParamList] = signature.params
+  def copy(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol,
+      signature: FunDefn.Signature, body: Block)(configOverride: Opt[Config], annotations: Ls[Annot]): FunDefn =
+    FunDefn(owner, sym, dSym, signature, body)(configOverride, annotations)
+  def withBody(body: Block): FunDefn =
+    if body is this.body then this else copy(owner, sym, dSym, signature, body)(configOverride, annotations)
   val defnSym = S(dSym)
   val asPath = sym.asMemberRef(dSym)
   lazy val tailRec: Bool = annotations.exists(_.isInstanceOf[Annot.TailRec])
@@ -734,8 +752,7 @@ final case class FunDefn(
       _inlinerBodySummary = summary
       summary
   
-  // `configOverride` and `annotations` live in a secondary constructor list,
-  // so case-class equality would otherwise ignore them.
+  // `configOverride` and `annotations` live in a secondary constructor list, so case-class equality would ignore them.
   // We currently use structural equality in JSBackendDiffMaker.scala
   // to make sure that structurally equal blocks retain object identity.
   override def equals(obj: Any): Bool = obj match
@@ -746,7 +763,8 @@ final case class FunDefn(
         params == that.params &&
         body == that.body &&
         configOverride == that.configOverride &&
-        annotations == that.annotations
+        annotations == that.annotations &&
+        signature.erasure == that.signature.erasure
     case _ => false
   override def hashCode: Int =
     (owner, sym, dSym, params, body, configOverride, annotations).hashCode
@@ -780,51 +798,98 @@ private[codegen] object InlinerBodySummary:
   def compute(fun: FunDefn): InlinerBodySummary =
     val entries = Buffer.empty[Entry]
     var transitiveCallTargets = Set.empty[TermSymbol]
-
-    (new BlockTraverser:
+    
+    new BlockTraverser:
       var hasCallGraphSource = true
-
+      applyBlock(fun.body)
+      
       def withoutCallGraphSource(thunk: => Unit): Unit =
         val previous = hasCallGraphSource
         hasCallGraphSource = false
         try thunk
         finally hasCallGraphSource = previous
-
+      
       def recordFunction(fun: FunDefn, isMethod: Bool): Unit =
         entries += Entry.NestedFunction(fun, isMethod)
         transitiveCallTargets ++= fun.getOrComputeInlinerBodySummary.transitiveCallTargets
-
+      
       override def applyDefn(defn: Defn): Unit = defn match
         case fun: FunDefn =>
           recordFunction(fun, false)
         case cls: ClsLikeDefn =>
           cls.parentPath.foreach(applyPath)
+          cls.methodKeys.valuesIterator.foreach(applyPath)
           cls.methods.foreach(recordFunction(_, true))
           withoutCallGraphSource:
             applySubBlock(cls.preCtor)
             applySubBlock(cls.ctor)
           cls.companion.foreach: module =>
+            module.methodKeys.valuesIterator.foreach(applyPath)
             module.methods.foreach(recordFunction(_, true))
             // The module constructor is run with the enclosing constructor and therefore inherits
             // whether its surrounding block has a call-graph source.
             applySubBlock(module.ctor)
         case _ => super.applyDefn(defn)
-
+      
       override def applyResult(result: Result): Unit = result match
         case call @ Call(TermSymbolPath(callee), argss) =>
           entries += Entry.DirectCall(callee, call, hasCallGraphSource)
           if hasCallGraphSource then transitiveCallTargets += callee
           argss.foreach(_.foreach(applyArg))
         case _ => super.applyResult(result)
-    ).applyBlock(fun.body)
-
+    end new
+    
     InlinerBodySummary(entries.toList, transitiveCallTargets)
 
 object FunDefn:
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
-    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme), erasedType = N)
+  /** Parameter bindings and the immutable erasure shared with the definition symbol. Copies refresh
+    * their symbols and bindings; a change of parameter types, arity, or result also needs a new erasure.
+    */
+  final case class Signature(
+    params: Ls[LoweredParamList],
+    erasure: ErasedCallableSignature,
+  ):
+    def result: ErasedResult[ErasedValueType] = erasure.result
+  
+  object Signature:
+    def fromParams(params: Ls[LoweredParamList], result: ErasedResult[ErasedValueType]): Signature =
+      val erasure = if params.isEmpty then ErasedGetterSignature.Signature(result)
+        else ErasedFuncSignature.Signature(params.map(_.params.map(_.sym.erasedType)), result)
+      Signature(params, erasure)
+    
+    private def matchesParams(erasure: ErasedCallableSignature, params: Ls[LoweredParamList])
+        (sameType: (ErasedValueType, ErasedValueType) => Bool): Bool = erasure match
+      case sig: ErasedFuncSignature =>
+        sig.paramLists.corresponds(params): (types, ps) =>
+          types.corresponds(ps.params)((t, p) => t.corresponds(p.sym.erasedType)(sameType))
+      case _: ErasedGetterSignature => params.isEmpty
+    
+    /** Adopt the declaration header once, at the source-to-IR boundary. Legacy erasure may still
+      * describe an async/generator body with a Direct result; subsequent rewrites retain that header.
+      */
+    def fromLowering(params: Ls[LoweredParamList], sym: TermSymbol)(using Ctx, State): Signature =
+      val erasure = sym.erasure match
+        case S(sig: ErasedCallableSignature) => sig
+        case _ => lastWords(s"Missing callable signature for '${sym.nme}'")
+      // Source cloning may reconstruct nominal types independently in the header and bindings.
+      // Compare their canonical representations once here; constructing or copying FunDefn only
+      // compares the shared erasure object, without traversing the parameters or their types.
+      assert(matchesParams(erasure, params)((l, r) => (l is r) || l.canonicalize == r.canonicalize),
+        s"Lowered parameters disagree with the signature of '${sym.nme}'")
+      Signature(params, erasure)
+  
+  def apply(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol,
+      signature: Signature, body: Block)(configOverride: Opt[Config], annotations: Ls[Annot]): FunDefn =
+    new FunDefn(owner, sym, dSym, signature, body)(configOverride, annotations)
+  
+  def unapply(fun: FunDefn): Some[(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol, params: Ls[LoweredParamList], body: Block)] =
+    Some((fun.owner, fun.sym, fun.dSym, fun.params, fun.body))
+  
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[LoweredParamList], body: Block)(configOverride: Opt[Config], annotations: Ls[Annot])(using State) =
+    val signature = Signature.fromParams(params, ErasedResult.fromAnnotations(N, annotations))
+    val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
     sym.tsym = S(tSym)
-    FunDefn(owner, sym, tSym, params, body)(configOverride, annotations)
+    FunDefn(owner, sym, tSym, signature, body)(configOverride, annotations)
 
 final case class ValDefn(
     tsym: TermSymbol,
@@ -848,7 +913,7 @@ object ValDefn:
       annotations: Ls[Annot],
     )(using State)
     : ValDefn =
-      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasedType = rhs.erasedValueType), sym, rhs)(configOverride, annotations)
+      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme), erasure = rhs.erasedType), sym, rhs)(configOverride, annotations)
 
 
 /** Class metadata, available independently of its executable body.
@@ -909,12 +974,12 @@ object ClassHeader:
 // * a lone module is represented as an empty class with a `companion` module.
 final case class ClsLikeDefn(
     owner: Opt[InnerSymbol],
-    isym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol,
+    isym: ClassLikeDefSymbol,
     sym: BlockMemberSymbol,
     ctorSym: Opt[ClassCtorSymbol],
     k: syntax.ClsLikeKind,
-    paramsOpt: Opt[ParamList],
-    auxParams: List[ParamList],
+    paramsOpt: Opt[LoweredParamList],
+    auxParams: List[LoweredParamList],
     parentPath: Opt[Path],
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
@@ -924,6 +989,8 @@ final case class ClsLikeDefn(
     companion: Opt[ClsLikeBody],
     bufferable: Option[Bool],
     termCompanion: Opt[TermSymbol],
+    // Computed names are structural operands evaluated in the class's enclosing scope.
+    methodKeys: Map[TermSymbol, Path],
 )(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
@@ -940,32 +1007,36 @@ final case class ClsLikeDefn(
   methods.foreach: m =>
     m.dSym.irDefn = S(m)
   companion.foreach: c =>
-    c.isym match
-      case sym: ModuleOrObjectSymbol => sym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym), termCompanion))
-      case _ => ()
+    c.isym.irClassHeader = S(ClassHeader(ClassHeader.Parent.Root, S(isym), termCompanion))
     c.methods.foreach: m =>
       m.dSym.irDefn = S(m)
   val defnSym = S(isym)
+  override def equals(obj: Any): Bool = obj match
+    case that: ClsLikeDefn => productIterator.sameElements(that.productIterator) &&
+      configOverride == that.configOverride && annotations == that.annotations
+    case _ => false
+  override def hashCode: Int = (productIterator.toList, configOverride, annotations).hashCode
 
 
 // * This is only supposed to be for companion module definitions (notably, not for `object`)
 final case class ClsLikeBody(
-    isym: DefinitionSymbol[? <: ModuleOrObjectDef] & InnerSymbol,
+    isym: ModuleOrObjectSymbol,
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
     ctor: Block,
     annotations: Ls[Annot],
+    methodKeys: Map[TermSymbol, Path],
 ):
   lazy val visibility: Visibility = Visibility.of(annotations)
   def isStaged: Bool = annotations.exists:
     case Annot.Modifier(Keyword.`staged`) => true
     case _ => false
   def subBlocks: Ls[Block] =
-    ctor :: methods.flatMap(_.subBlocks)
+    ctor :: methods.flatMap(_.subBlocks) ::: methodKeys.valuesIterator.flatMap(_.subBlocks).toList
   lazy val freeVars: Set[FreeSymbol] =
-    ctor.freeVars ++ methods.flatMap(_.freeVars)
-  lazy val size = 1 + methods.map(_.size).sum + ctor.size
+    ctor.freeVars ++ methods.flatMap(_.freeVars) ++ methodKeys.valuesIterator.flatMap(_.freeVars)
+  lazy val size = 1 + methods.map(_.size).sum + ctor.size + methodKeys.valuesIterator.map(_.size).sum
 
 /*
 object ClsLikeBody:
@@ -982,7 +1053,7 @@ object ClsLikeBody:
 final case class Handler(
     sym: BlockMemberSymbol,
     resumeSym: VarSymbol,
-    params: Ls[ParamList],
+    params: Ls[LoweredParamList],
     body: Block,
 ):
   lazy val freeVars: Set[FreeSymbol] = body.freeVars -- params.flatMap(_.paramSyms) - sym - resumeSym
@@ -1020,7 +1091,7 @@ sealed trait TrivialResult extends Result
 /** The source expression that produced an IR result is independent of its operands.
   * Rewrites preserve this span; generated results with no source expression use `N`.
   */
-sealed abstract class Result extends Located, HasErasedType:
+sealed abstract class Result extends Located:
   val toLoc: Opt[Loc]
   /** Return a result with explicit provenance without mutating a shared IR node. */
   def withLoc(loc: Opt[Loc]): Result
@@ -1036,7 +1107,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case Value.Lit(lit) => lit.idStr
     case Select(q, n) => s"Select(${q.showDbg}, ${n.showDbg})"
     case SuperSelect(q, base, n) => s"SuperSelect(${q.showDbg}, ${base.showDbg}, ${n.showDbg})"
-    case DynSelect(q, fld, arrayIdx) => s"DynSelect(${q.showDbg}, ${fld.showDbg}, $arrayIdx)"
+    case DynSelect(q, fld, kind) => s"DynSelect(${q.showDbg}, ${fld.showDbg}, ${kind.showDbg})"
     case Call(fun, argss) => s"Call(${fun.showDbg}, [${
       argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
     case Lambda(params, body) => s"Lambda(${params.showDbg}, ${body.showDbg})"
@@ -1063,8 +1134,9 @@ sealed abstract class Result extends Located, HasErasedType:
   lazy val isPure: Bool = this match
     case _: Value => true
     case sel @ Select(q, n) =>
-      q.isPure && sel.symbol.exists(_.isPure)
-    case sel @ SuperSelect(q, base, _) => q.isPure && base.isPure && sel.symbol.isPure
+      q.isPure && sel.symbol.exists(_.isAccessPure)
+    case DynSelect(q, fld, DynSelectKind.Member(sym)) => q.isPure && fld.isPure && sym.isAccessPure
+    case sel @ SuperSelect(q, base, key) => q.isPure && base.isPure && key.isPure && sel.symbol.isAccessPure
     case c @ Call(fun, ass) if c.isKnownUnsaturatedCall =>
       fun.isPure && ass.forall(_.forall(a => a.spread.isEmpty && a.value.isPure))
     case Call(Value.SimpleRef(bs: BuiltinSymbol), ass) if bs.isPure =>
@@ -1081,7 +1153,8 @@ sealed abstract class Result extends Located, HasErasedType:
     case Call(fun, argss) => fun.subBlocks ::: argss.flatten.flatMap(_.value.subBlocks)
     case Instantiate(mut, cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
-    case SuperSelect(qual, base, _) => qual.subBlocks ::: base.subBlocks
+    case DynSelect(qual, fld, _) => qual.subBlocks ::: fld.subBlocks
+    case SuperSelect(qual, base, key) => qual.subBlocks ::: base.subBlocks ::: key.subBlocks
     case Lambda(params, body) => body :: Nil
     case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
@@ -1091,7 +1164,7 @@ sealed abstract class Result extends Located, HasErasedType:
     case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.iterator.flatten.flatMap(_.value.freeVars).toSet
     case Cast(value, _, _) => value.freeVars
     case Select(qual, name) => qual.freeVars
-    case SuperSelect(qual, base, _) => qual.freeVars ++ base.freeVars
+    case SuperSelect(qual, base, key) => qual.freeVars ++ base.freeVars ++ key.freeVars
     case Lambda(params, body) => body.freeVars -- params.paramSyms
     case Tuple(mut, elems) => elems.iterator.flatMap(_.value.freeVars).toSet
     case Record(mut, args) =>
@@ -1100,29 +1173,27 @@ sealed abstract class Result extends Located, HasErasedType:
     case Value.MemberRef(bms, disamb) => Set.single(bms)
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
-    case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
+    case DynSelect(qual, fld, _) => qual.freeVars ++ fld.freeVars
   
   lazy val size: Int = this match
     case Call(fun, argss) => fun.size + argss.iterator.flatten.map(_.value.size).sum
     case Instantiate(mut, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
     case Cast(value, _, _) => value.size
     case Select(qual, name) => qual.size
-    case SuperSelect(qual, base, _) => qual.size + base.size
+    case SuperSelect(qual, base, key) => qual.size + base.size + key.size
     case Lambda(params, body) => 1 + body.size
     case Tuple(mut, elems) => elems.iterator.map(_.value.size).sum
     case Record(mut, args) => args.iterator.map(arg => arg.idx.fold(0)(_.size) + arg.value.size).sum
     case _: Value.RefLike => 0
     case Value.Lit(l: Tree.StrLit) => l.value.length / 4
     case Value.Lit(lit) => 0
-    case DynSelect(qual, fld, arrayIdx) => qual.size + fld.size
+    case DynSelect(qual, fld, _) => qual.size + fld.size
 
-  lazy val erasedType: Opt[ErasedType] = this match
+  /** The erased type of the value produced by this result. */
+  lazy val erasedType: Opt[ErasedValueType] = this match
     case Value.SimpleRef(sym) => sym match
-      case hasErasedType: HasErasedType => hasErasedType.erasedType
-      case _ => 
-        // * Some symbols may not have an erased type (e.g. `BuiltinSymbol`, where it may represent more than one
-        // * function).
-        N
+      case l: LocalVarSymbol => l.erasedType
+      case sym: BuiltinSymbol => S(sym.erasedType)
     // * A reference to a class is the class *object* (a `Class`).
     case Value.MemberRef(_, _: ClassSymbol) => N
     case Value.MemberRef(_, disamb: ModuleOrObjectSymbol) => disamb.erasedType
@@ -1132,43 +1203,60 @@ sealed abstract class Result extends Located, HasErasedType:
     // * A `val` or `fun` is a block *member*, so its references are `MemberRef`s rather than `SimpleRef`s, and
     // * its declared type lives on the associated `TermSymbol` - the same shape `Select` reads below.
     case Value.MemberRef(_, disamb: TermSymbol) => disamb.erasedType
-    case Value.This(clsOrMod: (ClassSymbol | ModuleOrObjectSymbol)) => clsOrMod.erasedType
+    case Value.This(cls: ClassSymbol) => S(ErasedType.ValueLike(rsc = S(false), cls))
+    case Value.This(mod: ModuleOrObjectSymbol) => mod.erasedType
     case Value.Lit(_: Tree.IntLit) => S(ErasedType.Int)
     case Value.Lit(_: Tree.DecLit) => S(ErasedType.Num)
     case Value.Lit(_: Tree.StrLit) => S(ErasedType.Str)
     case Value.Lit(_: Tree.BoolLit) => S(ErasedType.Bool)
     // * Note: `UnitLit` stays untyped: Neither `null` nor `undefined` can be reasonably typed as `Unit`
-    case Call(fun, argss) => fun.targetSymbol match
-      case S(ts: TermSymbol) => ts.erasedType match
-        case S(ErasedType.FuncRef(rsc, paramLists, ret)) =>
-          argss.sizeCompare(paramLists) match
-            // * An exactly-applied call yields the function's result type.
-            case 0 => ret
-            // * An under-applied call yields a function type over the remaining parameter lists.
-            case c if c < 0 => S(ErasedType.FuncRef(rsc, paramLists.drop(argss.length), ret))
-            // * An over-applied call applies arguments to whatever the function returns, which the function's
-            // * signature is oblivious about.
-            case _ => N
-        case _ => N
-      case _ => N
+    // * WORKAROUND (see `semantics.BuiltinOperatorResults`): dynamic arithmetic signatures do not
+    // * express operand-dependent results, which resolution approximates from their representations.
+    case Call(Value.SimpleRef(op: BuiltinSymbol), args :: Nil) if args.forall(_.spread.isEmpty) =>
+      ErasedType.builtinOperatorResult(op.nme, args.map(_.value)).orElse(op.erasedSignature.flatMap(_.ret))
+    case Call(fun, argss) =>
+      val signature = fun match
+        case Value.SimpleRef(bs: BuiltinSymbol) => bs.erasedSignature
+        case _ => fun.targetSymbol.flatMap:
+          case ts: TermSymbol => ts.erasedSignature
+          case _ => N
+      signature match
+        case S(sig) => argss.sizeCompare(sig.paramLists) match
+          // * An exactly-applied call yields the function's result type.
+          case 0 => sig.ret
+          // * An under-applied call yields a closure, not a residual definition signature.
+          case c if c < 0 => S(ErasedType.Function(rsc = S(false)))
+          // * An over-applied call applies arguments to whatever the function returns, which the function's
+          // * signature is oblivious about.
+          case _ => N
+        case N => N
     // * A resolved selection has the type of the member it refers to (e.g. `this.field`); an
     // * unresolved selection (dynamic field access) stays unknown.
     case sel: SuperSelect => sel.symbol.erasedType
+    case DynSelect(_, _, DynSelectKind.Member(sym)) => sym.erasedType
     case sel @ Select(_, _) => sel.symbol match
       case S(ts: TermSymbol) => ts.erasedType
       // * A class reference is the class object, so it stays unknown.
       case S(_: ClassSymbol) => N
-      case S(d: (ModuleOrObjectSymbol | TypeAliasSymbol)) => d.erasedType
+      case S(d: ModuleOrObjectSymbol) => d.erasedType
+      // * A type alias is not a value; this can only occur in ill-formed programs.
+      case S(_: TypeAliasSymbol) => N
       case _ => N
     case Cast(_, target, _) => S(target)
     // * `Instantiate` always yields an instance of the class, since the constructor is guaranteed to be fully-applied
     // * after lowering.
-    case Instantiate(_, cls, _) => cls.targetSymbol.flatMap:
-      case ctor: ClassCtorSymbol => ctor.associatedCls.erasedType
-      case sym => sym.asCls.flatMap(_.erasedType)
+    case Instantiate(_, cls, _) =>
+      val clsSym = cls.targetSymbol.flatMap:
+        case ctor: ClassCtorSymbol => S(ctor.associatedCls)
+        case sym => sym.asCls
+      clsSym.map(sym => ErasedType.ValueLike(rsc = S(false), sym))
     // * A tuple literal is typed as `Array` at runtime.
     case Tuple(_, _) => S(ErasedType.Array)
+    case _: Lambda => S(ErasedType.Function(rsc = S(false)))
     case _ => N
+
+  /** The value type, using the top type when no representation is known. */
+  lazy val erasedType_! : ErasedValueType = erasedType.getOrElse(ErasedType.Unknown)
 
   /** Coerces this result to `expected`, yielding it unchanged when no coercion is required.
     *
@@ -1178,19 +1266,15 @@ sealed abstract class Result extends Located, HasErasedType:
     * point the coercion is introduced, so that the transformers rebuilding casts downstream need not carry a
     * [[Config]] of their own.
     */
-  def coerceTo(expected: ErasedType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
-    val actual = erasedValueType_!.canonicalize
+  def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Cast =
+    val actual = erasedType_!.canonicalize
     val declared = expected.canonicalize
     ErasedType.needsCast(actual, declared) match
       case S(false) => this
-      case S(true) =>
-        val target = expected match
-          case ft: ErasedFuncType => ErasedType.Function(ft.rsc)
-          case v: ErasedValueType => v
-        Cast(this, target, config.checkCasts)(loc)
+      case S(true) => Cast(this, expected, config.checkCasts)(loc)
       case N =>
         // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
-        def membersOf(et: CanonicalErasedType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
+        def membersOf(et: CanonicalErasedValueType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
           case ErasedType.Incompatible(l, r) => S(l -> r)
           case _ => N
         val message = membersOf(actual).orElse(membersOf(declared)) match
@@ -1246,9 +1330,9 @@ object Call:
     fun match
     case Value.SimpleRef(sym: BuiltinSymbol) =>
       argss match
-      case (Arg(N, arg1: Value) :: Arg(N, arg2: Value) :: Nil) :: Nil =>
+      case (Arg(N, arg1: Value) :: Arg(N, arg2: Value) :: Nil) :: Nil if sym.binary =>
         evalBuiltin(sym, arg1, arg2)(toLoc)(return _)
-      case (Arg(N, arg1: Value) :: Nil) :: Nil =>
+      case (Arg(N, arg1: Value) :: Nil) :: Nil if sym.unary =>
         evalBuiltin(sym, arg1)(toLoc)(return _)
       case _ =>
     case _ =>
@@ -1335,7 +1419,7 @@ object Cast:
       case Cast(inner, _, innerCheck) => new Cast(inner, target, check || innerCheck)(toLoc)
       case _ => new Cast(value, target, check)(toLoc)
 
-case class Lambda(params: ParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
+case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
   def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(annot, loc)
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
 
@@ -1350,6 +1434,26 @@ case class Record(mut: Bool, elems: Ls[RcdArg])(val toLoc: Opt[Loc]) extends Res
 sealed abstract class Path extends TrivialResult:
   override def withLoc(loc: Opt[Loc]): Path
   override def withLocOf(source: Located): Path = withLoc(source.toLoc)
+  /** Whether repeated reads denote the same value, even across calls that mutate state.
+    * That is to say, whether the value is referentially transparent.
+    * This is a stronger property than "purity" as the absence of side effects:
+    * local variables may be reassigned, and pure getters may allocate fresh objects,
+    * with different identities.
+    * Immutable members require a stable qualifier too.
+    */
+  lazy val isStable: Bool =
+    def stableMember(sym: DefinitionSymbol[?]): Bool = sym match
+      case _: ClassLikeSymbol => true
+      case sym: TermSymbol => (sym.k is syntax.ImmutVal) || (sym.k is syntax.Ins)
+      case _ => false
+    this match
+    case _: Value.This | _: Value.Lit => true
+    case Value.SimpleRef(_: BuiltinSymbol) => true
+    case Value.SimpleRef(sym: LocalVarSymbol) => !sym.mut
+    case Value.MemberRef(_, disamb) => stableMember(disamb)
+    case sel: Select => sel.qual.isStable && sel.symbol.exists(stableMember)
+    case Cast(path: Path, _, false) => path.isStable
+    case _ => false
   def selN(id: Tree.Ident): Path = Select(this, id)(N, N)(false)
   def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym), N)(false)
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
@@ -1358,6 +1462,7 @@ sealed abstract class Path extends TrivialResult:
     case ref: Value.MemberRef => S(ref.disamb)
     case sel: Select => sel.symbol
     case sel: SuperSelect => S(sel.symbol)
+    case DynSelect(_, _, DynSelectKind.Member(sym)) => S(sym)
     case _ => N
 
 /**
@@ -1372,11 +1477,35 @@ case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol
   * reference or a previously evaluated value. No extends expression is re-evaluated at a
   * super call. Both operands are explicit so lifting and inlining preserve their bindings.
   */
-case class SuperSelect(qual: Path, base: Path, name: Tree.Ident)(val symbol: TermSymbol, val toLoc: Opt[Loc]) extends Path:
+case class SuperSelect(qual: Path, base: Path, key: Path)(val symbol: TermSymbol, val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): SuperSelect = if loc == toLoc then this else copy()(symbol, loc)
 
-case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool)(val toLoc: Opt[Loc]) extends Path:
+/** A selection whose field is computed at runtime by the `fld` operand.
+  * `kind` says how `fld` is interpreted, and whether resolution knows the selected member.
+  */
+case class DynSelect(qual: Path, fld: Path, kind: DynSelectKind)(val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): DynSelect = if loc == toLoc then this else copy()(loc)
+
+/** How the computed field operand of a [[DynSelect]] or an [[AssignDynField]] is interpreted. */
+enum DynSelectKind:
+  /** An integer index into an array-like value. When reading, a negative index counts from the end,
+    * as with JavaScript's `Array.prototype.at`. */
+  case ArrayIdx
+  /** The runtime key of the statically resolved member `symbol`, such as a method declared with
+    * `@jsSymbol(key)`. The key is an ordinary operand rather than a name, so that captures, imports,
+    * substitution and lifting see its dependencies. Passes that reason about resolved members
+    * (purity, erased types, call targets, flow analysis) treat it like a resolved [[Select]]. */
+  case Member(symbol: TermSymbol)
+  /** A property key not resolved to any known member. */
+  case Unknown
+  
+  def isArrayIdx: Bool = this match
+    case ArrayIdx => true
+    case Member(_) | Unknown => false
+  
+  def showDbg(using DebugPrinter): Str = this match
+    case Member(sym) => s"Member(${sym.showDbg})"
+    case ArrayIdx | Unknown => toString
 
 enum Value extends Path with ProductWithExtraInfo:
   case SimpleRef(sym: SimpleSymbol)(val toLoc: Opt[Loc])
@@ -1384,7 +1513,7 @@ enum Value extends Path with ProductWithExtraInfo:
     * @param disamb The symbol disambiguating the definition that the reference refers to.
     */
   case MemberRef(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?])(val toLoc: Opt[Loc])
-  case This(sym: InnerSymbol)(val toLoc: Opt[Loc])
+  case This(sym: ThisSymbol)(val toLoc: Opt[Loc])
   case Lit(lit: Literal)(val toLoc: Opt[Loc])
 
   override def withLoc(loc: Opt[Loc]): Value = if loc == toLoc then this else this match
@@ -1422,7 +1551,7 @@ object Value:
         case bms: BlockMemberSymbol => bms.asMemberRef:
           disamb.getOrElse:
             lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
-        case sym: InnerSymbol => sym.asThis
+        case sym: ThisSymbol => sym.asThis
         case NoSymbol => lastWords("NoSymbol should not be used as a Path/Value")
     
     // * Some helper constructors that allow omitting the disambiguation symbol.
@@ -1447,6 +1576,7 @@ object TermSymbolPath:
       case S(sym: TermSymbol) => S(sym)
       case _ => N
     case selection: SuperSelect => S(selection.symbol)
+    case DynSelect(_, _, DynSelectKind.Member(sym)) => S(sym)
     case _ => N
 
 case class Arg(spread: Opt[SpreadKind], value: Path)
@@ -1487,7 +1617,7 @@ extension (s: SimpleSymbol)
 extension (bms: BlockMemberSymbol)
   inline def asMemberRef(disamb: DefinitionSymbol[?]): Value.MemberRef = Value.MemberRef(bms, disamb)(N)
 
-extension (sym: InnerSymbol)
+extension (sym: ThisSymbol)
   inline def asThis: Value.This = Value.This(sym)(N)
 
 extension (l: ValueSymbol)

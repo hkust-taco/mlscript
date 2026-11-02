@@ -17,22 +17,22 @@ fun foo(h): Object =
     module A
     A
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.17: 	    module A
+//│ ║  l.+6: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.14: 	    module A
+//│ ║  l.+3: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.14: 	    module A
+//│ ║  l.+3: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.17: 	    module A
+//│ ║  l.+6: 	    module A
 //│ ╙──      	           ^
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let foo;
 //│ runtime.checkCall(runtime.resetEffects());
 //│ foo = function foo(h) {
-//│   runtime.checkArgs("foo", 1, true, arguments.length);
+//│   runtime.checkArgs("foo", 1, arguments.length);
 //│   let A2, A3;
 //│   if (false === true) {
 //│     globalThis.Object.freeze(class A {

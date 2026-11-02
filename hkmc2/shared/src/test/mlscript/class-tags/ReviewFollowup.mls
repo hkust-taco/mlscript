@@ -13,10 +13,10 @@ fun unknownThroughField(flag, external) =
   @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
 unknownThroughField(false, new B(0))
 //│ ╔══[COMPILATION ERROR] The scrutinee of this shape.match may be a value built outside this module, which carries no class tag.
-//│ ║  l.13: 	  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
+//│ ║  l.+9: 	  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Only values constructed in this module can be dispatched on by their class tags.
-//│ ║  l.13: 	  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
+//│ ║  l.+9: 	  @matchShapes(A(_), B(_)) shape.match of value, () => 1, () => 2
 //│ ╙──      	                                          ^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'match')
 

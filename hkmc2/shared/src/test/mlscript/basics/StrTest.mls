@@ -30,55 +30,42 @@ concat of
 :e
 (~)("a", "b", "c")
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.31: 	(~)("a", "b", "c")
+//│ ║  l.+1: 	(~)("a", "b", "c")
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Function 'concat2' expected 2 arguments, but got 3
 //│ ║  in ../../mlscript-compile/StrOps.mls
-//│ ║  l.6: 	fun (~) concat2(a, b) = a + b
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun (~) concat2(a, b) = a + b
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ = "ab"
 
 
 :e
 (~)("a")
 //│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.43: 	(~)("a")
+//│ ║  l.+1: 	(~)("a")
 //│ ║        	^^^^^^^^
 //│ ╟── Function 'concat2' expected 2 arguments, but got 1
 //│ ║  in ../../mlscript-compile/StrOps.mls
-//│ ║  l.6: 	fun (~) concat2(a, b) = a + b
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	fun (~) concat2(a, b) = a + b
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ = "aundefined"
 
 :ge
 ~"a"
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.54: 	~"a"
+//│ ║  l.+1: 	~"a"
 //│ ╙──      	^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-:ge
+:expect "ab"
 ~("a", "b")
-//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.62: 	~("a", "b")
-//│ ╙──      	^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = "ab"
 
 
-:pe
-:ge
+:expect "ab"
 ~ of "a", "b"
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'of' keyword instead
-//│ ║  l.71: 	~ of "a", "b"
-//│ ╙──      	  ^^
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.71: 	~ of "a", "b"
-//│ ╙──      	     ^^^
-//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.71: 	~ of "a", "b"
-//│ ╙──      	^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ = "ab"
 
 (~) of "a", "b"
 //│ = "ab"

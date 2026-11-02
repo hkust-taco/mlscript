@@ -30,7 +30,7 @@ box_#.add_++(1)
 :sjs
 fun (++) foo_+(x) = x + 1
 //│ ╔══[COMPILATION ERROR] Cannot combine an explicit symbolic name with a symbolic suffix identifier.
-//│ ║  l.31: 	fun (++) foo_+(x) = x + 1
+//│ ║  l.+1: 	fun (++) foo_+(x) = x + 1
 //│ ╙──      	         ^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let foo; foo = function foo(x) { return x + 1 };
@@ -40,7 +40,7 @@ fun (++) foo_+(x) = x + 1
 :sjs
 foo_+
 //│ ╔══[COMPILATION ERROR] Name not found: foo_+
-//│ ║  l.41: 	foo_+
+//│ ║  l.+1: 	foo_+
 //│ ╙──      	^^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."
@@ -51,7 +51,7 @@ foo_+
 :sjs
 (++)
 //│ ╔══[COMPILATION ERROR] Name not found: ++
-//│ ║  l.52: 	(++)
+//│ ║  l.+1: 	(++)
 //│ ╙──      	 ^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ throw "This code cannot be run as its compilation yielded an error."

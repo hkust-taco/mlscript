@@ -31,9 +31,9 @@ module Changing with
   fun length() = value.length
 Changing.length()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.31: 	  fun length() = value.length
+//│ ║  l.+4: 	  fun length() = value.length
 //│ ║        	                 ^^^^^^^^^^^^
 //│ ╟── Integer literal does not contain member 'length'
-//│ ║  l.30: 	  fun replace() = set value = 42
+//│ ║  l.+3: 	  fun replace() = set value = 42
 //│ ╙──      	                              ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

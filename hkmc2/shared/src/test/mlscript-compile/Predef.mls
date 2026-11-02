@@ -74,11 +74,11 @@ type (>:>) Sup[A, B] = Sub[B, A]
 fun (==) equals(a: Any, b: Any): Bool = if
   a === b then true
   a is Array as a and b is Array as b and a.length === b.length then a.every((a, i, ...) => a == b.at(i))
-  else a !== undefined and a !== null and b !== undefined and b !== null and 
+  else a !== unsafe.undefined and a !== null and b !== unsafe.undefined and b !== null and 
     let ac = a!constructor
-    ac !== undefined and ac === b!constructor and
+    ac !== unsafe.undefined and ac === b!constructor and
       let md = ac!(Symbols.definitionMetadata)
-      md !== undefined and
+      md !== unsafe.undefined and
         md.2.every(field => field !== null and a!(field) == b!(field))
 
 fun (!=) nequals(a: Any, b: Any): Bool = not a == b
@@ -103,7 +103,12 @@ fun renderAsStr(arg) =
 val js_assert = globalThis.console.("assert") // `console.("assert")` gives "Unexpected moduleful reference of type console."
 fun check(...args) = js_assert(...args)
 
-fun (??) notImplemented(msg) = throw Error("Not implemented: " + msg)
+
+fun (??) orElse[A](x: A, d: A) = if (x is null) || (x === ()) then d else x
+fun (??>) orElseApply[A](x: A, d: (drop A) -> A) = if (x is null) || (x === ()) then d(x) else x
+
+
+fun (??!) notImplemented(msg) = throw Error("Not implemented: " + msg)
 fun (???) notImplementedError = throw Error("Not implemented")
 
 

@@ -12,11 +12,11 @@ object Foo with
 :re
 Foo.x
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.13: 	Foo.x
+//│ ║  l.+1: 	Foo.x
 //│ ║        	^^^^^
 //│ ╟── Object 'Foo' does not contain member 'x'
-//│ ║  l.7: 	object Foo with
-//│ ╙──     	^^^^^^^^^^
+//│ ║  l.XX: 	object Foo with
+//│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -34,10 +34,10 @@ object Oops with
     print(fakeField)
   print(this.fakeField) // shouldn't work!
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.35: 	  print(this.fakeField) // shouldn't work!
+//│ ║  l.+5: 	  print(this.fakeField) // shouldn't work!
 //│ ║        	        ^^^^^^^^^^^^^^
 //│ ╟── Module/object definition 'Oops' does not contain member 'fakeField'
-//│ ║  l.31: 	object Oops with
+//│ ║  l.+1: 	object Oops with
 //│ ╙──      	^^^^^^^^^^^
 //│ > 1
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -46,10 +46,10 @@ object Oops with
 :re
 Oops.fakeField
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.47: 	Oops.fakeField
+//│ ║  l.+1: 	Oops.fakeField
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Object 'Oops' does not contain member 'fakeField'
-//│ ║  l.31: 	object Oops with
+//│ ║  l.XX: 	object Oops with
 //│ ╙──      	^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

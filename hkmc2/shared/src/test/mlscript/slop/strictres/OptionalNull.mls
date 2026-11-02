@@ -1,0 +1,209 @@
+:.
+open annotations
+
+
+// Optionality survives lowering, and normalization precedes every use in the body.
+:sir
+:sjs
+:noInline
+fun optional(x?) = x
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define optional⁰ as fun optional¹(x?) { return x }; end
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let optional; optional = function optional(x) { x ??= null; return x };
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+[optional(), optional(unsafe.undefined), optional(null), optional(0), optional(false), optional("")]
+//│ = [null, undefined, null, 0, false, ""]
+
+:sjs
+:noInline
+let optionalLambda = (x?) => x
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let optionalLambda, optionalLambda1;
+//│ optionalLambda1 = function optionalLambda(x) {
+//│   x ??= null;
+//│   return x
+//│ };
+//│ optionalLambda = optionalLambda1;
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ optionalLambda = fun optionalLambda
+
+[optionalLambda(), optionalLambda(unsafe.undefined), optionalLambda(1)]
+//│ = [null, null, 1]
+
+// Inlining supplies null for omissions. Unsafe calls remain regression probes,
+// without prescribing a particular result for unsafe.undefined.
+@inline private fun inlineOptional(x?) = x
+[inlineOptional(), inlineOptional(unsafe.undefined), inlineOptional(2)]
+//│ = [null, undefined, 2]
+
+fun relay(x) = inlineOptional(x)
+[relay(unsafe.undefined), relay(12)]
+//│ = [undefined, 12]
+
+:noInline
+fun curried(x?)(y?) = [x, y]
+[curried()(), curried(unsafe.undefined)(3), curried(4)(unsafe.undefined)]
+//│ = [[null, null], [null, 3], [4, null]]
+
+class Methods {
+  fun optional(x?) = x
+}
+
+let methods = new Methods
+[methods.optional(), methods.optional(unsafe.undefined), methods.optional(5)]
+//│ = [null, null, 5]
+//│ methods = Methods
+
+// A spread can omit a slot or explicitly supply undefined.
+fun spread(xs: Array[Any]) = optional(...xs)
+[spread([]), spread([unsafe.undefined]), spread([6])]
+//│ = [null, null, 6]
+
+// Retain the unsafe flow through optional-parameter narrowing as a regression probe.
+:re
+private fun narrow(x?) = if x is ~null as x then x.length else 0
+[narrow(unsafe.undefined), narrow("hi")]
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'length')
+
+// Unknown-length spreads may be empty even when their element type excludes null.
+:e
+private fun unguarded(x?, ...middle, last) = x.length
+fun unknownSpread(xs: Array[Str]) = unguarded(...xs, "last")
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun unguarded(x?, ...middle, last) = x.length
+//│ ║        	                                             ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+1: 	private fun unguarded(x?, ...middle, last) = x.length
+//│ ╙──      	                      ^^
+
+// Optionality alone admits null, even when every observed call supplies a string.
+:e
+private fun alwaysSupplied(x?) = x.length
+alwaysSupplied("abc")
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun alwaysSupplied(x?) = x.length
+//│ ║        	                                 ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+1: 	private fun alwaysSupplied(x?) = x.length
+//│ ╙──      	                           ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Uncalled bodies have the same nullable parameter shape.
+:e
+private fun neverCalled(x?) = x.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	private fun neverCalled(x?) = x.length
+//│ ║        	                              ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+1: 	private fun neverCalled(x?) = x.length
+//│ ╙──      	                        ^^
+
+// Callback constraints must not erase the optional parameter's null alternative.
+:e
+fun invoke(f: Str -> Int) = f("abc")
+invoke((x?) => x.length)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	invoke((x?) => x.length)
+//│ ║        	               ^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+2: 	invoke((x?) => x.length)
+//│ ╙──      	        ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Inferred constructor fields retain the optional parameter's null alternative too.
+:e
+private class NullableField(val value?)
+NullableField("abc").value.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	NullableField("abc").value.length
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Null literal does not contain member 'length'
+//│ ║  l.+1: 	private class NullableField(val value?)
+//│ ╙──      	                            ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Tail-call jumps must reset omitted slots on every iteration, including spread calls.
+:re
+@tailrec fun loop(n, x?) =
+  if n == 0 then x else if n == 1 then loop(0, unsafe.undefined) else loop(n - 1, n)
+@tailrec fun spreadLoop(n, x?) = if n == 0 then x else spreadLoop(...[n - 1])
+@tailrec fun spreadUndefined(n, x?) = if n == 0 then x else spreadUndefined(...[n - 1, unsafe.undefined])
+[loop(3), spreadLoop(3, 7), spreadUndefined(3, 8)]
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+// Merged tail-call dispatchers have their own physical parameter list.
+:re
+@tailrec fun even(n, x?) = if n == 0 then x else odd(n - 1, unsafe.undefined)
+@tailrec fun odd(n, x?) = if n == 0 then x else even(n - 1)
+[even(3, 9), odd(3, 10)]
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+// Captured parameters are copied per iteration and must already have their body values.
+@tailrec fun captures(n, x?, ...fs: Array[() -> Any]) =
+  if n == 0 then [(() => x), ...fs].map(f => f())
+  else if n == 1 then captures(0, unsafe.undefined, (() => x), ...fs)
+  else captures(n - 1, n - 1, (() => x), ...fs)
+[captures(2, 2), captures(2)]
+//│ = [[(), 1, 2], [(), 1, null]]
+
+// Constructor elimination must supply null for omitted optional fields.
+:lift
+:deforest
+data class Data(value?)
+private fun read(item) = item.value
+[read(Data(unsafe.undefined)), read(Data()), read(Data(11))]
+//│ deforest > >>> fusing >>>
+//│ deforest > Data⁰(11) ->
+//│ deforest > 	select: value
+//│ deforest > Data⁰(null) ->
+//│ deforest > 	select: value
+//│ deforest > Data⁰(undefined) ->
+//│ deforest > 	select: value
+//│ deforest > <<< fusing <<<
+//│ = [undefined, null, 11]
+
+// Dynamic construction keeps normalization when lowering cannot see the target class.
+:lift
+:deforest
+data class Dynamic(value?)
+private fun readDynamic(item: Dynamic) = item.value
+let dynamicClass = Dynamic.class
+[readDynamic(new! dynamicClass(unsafe.undefined)), readDynamic(new! dynamicClass(13))]
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = [null, 13]
+//│ dynamicClass = class Dynamic
+
+
+// Scoped binding groups preserve captures and normalize omitted optional arguments.
+let
+  offset = 10
+  select(value?) = [offset, value]
+in [select(), select(11), select(unsafe.undefined)]
+//│ = [[10, null], [10, 11], [10, undefined]]
+
+// Unscoped groups retain the complete optional, variadic, and trailing layout.
+:expect [[1, null, [], 9], [1, 2, [3, 4], 5]]
+let
+  collect(first, optional?, ...middle, last) = [first, optional, middle, last]
+[collect(1, 9), collect(1, 2, 3, 4, 5)]
+//│ = [[1, null, [], 9], [1, 2, [3, 4], 5]]
+//│ collect = fun
+
+// The implicit receiver in `when` agrees with explicit `this`; `super` still
+// resolves the parent method and passes optional arguments through its call.
+class Parent {
+  open fun value(x?) = x
+}
+class Child(val field?) extends Parent {
+  override fun value(x?) = when
+    Child as child then [child.field, this.field, super.value(x)]
+    else []
+}
+
+:expect [[null, null, null], [7, 7, 9], [7, 7, null]]
+[(new Child()).value(), (new Child(7)).value(9), (new Child(7)).value(unsafe.undefined)]
+//│ = [[null, null, null], [7, 7, 9], [7, 7, null]]

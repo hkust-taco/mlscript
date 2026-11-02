@@ -125,13 +125,13 @@ class DeforestFusionSolver(val constraintSolver: FlowConstraintSolver)(using Con
 
   tl.log(">>> fusing >>>")
   for case (c, dest) <- finalCtorDests do
-    tl.log(s"${pp(c)} ->")
+    tl.log(dbg"${pp(c)} ->")
     dest match
     case FinalDestMatch(dtor, sels) =>
-      tl.log(s"\tmatch: ${pp(dtor)}")
-      for s <- sels.toSeq.sortBy(_.exprId.uid) do tl.log(s"\tfields: ${pp(s)}")
+      tl.log(dbg"\tmatch: ${pp(dtor)}")
+      for s <- sels.toSeq.sortBy(_.exprId.uid) do tl.log(dbg"\tfields: ${pp(s)}")
     case FinalDestSel(dtors, field) =>
-      tl.log(s"\tselect: ${pp(field)}")
+      tl.log(dbg"\tselect: ${pp(field)}")
   tl.log("<<< fusing <<<")
 end DeforestFusionSolver
 
@@ -152,6 +152,7 @@ object Deforest:
       mono = dCfg.mono,
       nonAffineTracking = dCfg.effectiveTrackNonAffine,
       accumulatorTracking = dCfg.effectiveTrackAccumulator,
+      logEffects = dCfg.config.logEffects,
     )
     val solver = new DeforestFusionSolver(flowAnalysisRes)
     if !solver.hasWorkToDo then p

@@ -1,0 +1,59 @@
+:js
+
+
+:e
+#dbg('unknown)
+//│ ╔══[COMPILATION ERROR] Unknown debugging aspect 'unknown'
+//│ ║  l.+1: 	#dbg('unknown)
+//│ ╙──      	     ^^^^^^^^
+
+
+:e
+#dbg(elaboration: 1)
+//│ ╔══[COMPILATION ERROR] Expected a boolean value
+//│ ║  l.+1: 	#dbg(elaboration: 1)
+//│ ╙──      	                  ^
+
+
+:e
+#dbg(out: File(1))
+//│ ╔══[COMPILATION ERROR] Expected StdIO or File("path")
+//│ ║  l.+1: 	#dbg(out: File(1))
+//│ ╙──      	          ^^^^^^^
+
+
+// Parsing happens before directives can be read.
+:e
+#dbg('parsing)
+//│ ╔══[COMPILATION ERROR] Unknown debugging aspect 'parsing'
+//│ ║  l.+1: 	#dbg('parsing)
+//│ ╙──      	     ^^^^^^^^
+
+
+// Unsupported local phases warn without suppressing supported ones.
+:w
+:expect 57
+@dbg('optimizations, 'lowering, showUids: false) fun mixed_local() = 57
+mixed_local()
+//│ ╔══[WARNING] Debugging aspect 'optimizations' is not supported in @dbg; use #dbg(optimizations: true) instead.
+//│ ║  l.+1: 	@dbg('optimizations, 'lowering, showUids: false) fun mixed_local() = 57
+//│ ╙──      	     ^^^^^^^^^^^^^^
+//│ Lowering.term 57
+//│ = 57
+
+
+// Annotations on statements other than definitions have no effect.
+:w
+@dbg('lowering) let not_a_definition = 1
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+1: 	@dbg('lowering) let not_a_definition = 1
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ not_a_definition = 1
+
+:w
+fun local_let() =
+  @dbg('lowering) let not_a_definition = 2
+  not_a_definition
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+2: 	  @dbg('lowering) let not_a_definition = 2
+//│ ╙──      	  ^^^^^^^^^^^^^^^

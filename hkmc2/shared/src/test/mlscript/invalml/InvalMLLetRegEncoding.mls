@@ -13,7 +13,7 @@ letreg(r => r)
 :e
 letreg(r => r).ref 1
 //│ ╔══[COMPILATION ERROR] Type error in block
-//│ ║  l.14: 	letreg(r => r).ref 1
+//│ ║  l.+1: 	letreg(r => r).ref 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'E  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
@@ -30,7 +30,7 @@ letreg(r => !(r.ref 1))
 :e
 !(letreg(r => r.ref 1))
 //│ ╔══[COMPILATION ERROR] Type error in block
-//│ ║  l.31: 	!(letreg(r => r.ref 1))
+//│ ║  l.+1: 	!(letreg(r => r.ref 1))
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'E  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
@@ -53,7 +53,7 @@ f
 :e
 letreg(r => arg => r.ref arg)(0)
 //│ ╔══[COMPILATION ERROR] Type error in block
-//│ ║  l.54: 	letreg(r => arg => r.ref arg)(0)
+//│ ║  l.+1: 	letreg(r => arg => r.ref arg)(0)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'eff ∨ 'E  <:  ⊥
 //│ ╟── because: cannot constrain  'eff  <:  ⊥
@@ -73,7 +73,7 @@ fun letreg: [E,Res] -> ([R] -> Region[out R] -> Res) ->{E} Res
 :e
 letreg(r => r.ref 1)
 //│ ╔══[COMPILATION ERROR] Type error in function literal with expected type (Region[out R]) ->{⊥} 'Res
-//│ ║  l.74: 	letreg(r => r.ref 1)
+//│ ║  l.+1: 	letreg(r => r.ref 1)
 //│ ║        	       ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╙── because: cannot constrain  R  <:  ⊥
@@ -82,7 +82,7 @@ letreg(r => r.ref 1)
 :e
 letreg(r => !(r.ref 1))
 //│ ╔══[COMPILATION ERROR] Type error in function literal with expected type (Region[out R]) ->{⊥} 'Res
-//│ ║  l.83: 	letreg(r => !(r.ref 1))
+//│ ║  l.+1: 	letreg(r => !(r.ref 1))
 //│ ║        	       ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'reg1  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ⊥

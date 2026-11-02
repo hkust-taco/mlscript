@@ -19,13 +19,13 @@ private fun inspect(t) =
   @matchShapes(C(_)) shape.match of t,
     () => t.C#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@110 in foo
+//│ class-tags collection-phase > track construction of C@107 in foo
 //│ class-tags collection-phase > track consumption at match@118 in inspect
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@108, E@109, C@110
-//│ class-tags web-computation-phase >   field accesses: C.x@99
+//│ class-tags web-computation-phase >   producers: D@105, E@106, C@107
+//│ class-tags web-computation-phase >   field accesses: C.x@95
 //│ class-tags web-computation-phase >   pattern matches: match@118
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
@@ -41,7 +41,7 @@ private fun inspect(t) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let E1, inspect, C1, D1, foo, D__Tagged1, E__Tagged1, C__Tagged1;
 //│ foo = function foo(x, y) {
-//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   runtime.checkArgs("foo", 2, arguments.length);
 //│   let t, tmp, shapeTag, tmp1;
 //│   if (y === true) {
 //│     tmp = globalThis.Object.freeze(new D__Tagged1.class(x, 0));
@@ -58,7 +58,7 @@ private fun inspect(t) =
 //│   return runtime.checkCall(inspect(t))
 //│ };
 //│ inspect = function inspect(t) {
-//│   runtime.checkArgs("inspect", 1, true, arguments.length);
+//│   runtime.checkArgs("inspect", 1, arguments.length);
 //│   if (t.__tag$ === 2) {
 //│     return t.x
 //│   } else if (t.__tag$ === 3) {
@@ -160,14 +160,14 @@ private fun inspect(t) =
   @matchShapes(C(_)) shape.match of t,
     () => t.C#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@275, C@273 in foo
-//│ class-tags collection-phase > track consumption at match@283 in inspect
+//│ class-tags collection-phase > track construction of C@282, C@284 in foo
+//│ class-tags collection-phase > track consumption at match@295 in inspect
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: D@272, C@273, E@274, C@275
-//│ class-tags web-computation-phase >   field accesses: C.x@263
-//│ class-tags web-computation-phase >   pattern matches: match@283
+//│ class-tags web-computation-phase >   producers: D@281, C@282, E@283, C@284
+//│ class-tags web-computation-phase >   field accesses: C.x@271
+//│ class-tags web-computation-phase >   pattern matches: match@295
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for D(x: _)
@@ -180,7 +180,7 @@ private fun inspect(t) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let E3, inspect1, C3, D3, foo1, C__Tagged3;
 //│ foo1 = function foo(x, y) {
-//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   runtime.checkArgs("foo", 2, arguments.length);
 //│   let tmp, tmp1, tmp2;
 //│   if (y === true) {
 //│     tmp = globalThis.Object.freeze(new D3.class(x));
@@ -192,7 +192,7 @@ private fun inspect(t) =
 //│   return runtime.checkCall(inspect1(tmp1));
 //│ };
 //│ inspect1 = function inspect(t) {
-//│   runtime.checkArgs("inspect", 1, true, arguments.length);
+//│   runtime.checkArgs("inspect", 1, arguments.length);
 //│   if (t.__tag$ === 1) {
 //│     return t.x
 //│   } else if (t.__tag$ === 3) {
@@ -268,14 +268,14 @@ private fun inspect(t) =
     () => t.C#x.E#x
     () => t.C#x.F#y
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@423, C@421 in foo
-//│ class-tags collection-phase > track consumption at match@436 in inspect
+//│ class-tags collection-phase > track construction of C@439, C@441 in foo
+//│ class-tags collection-phase > track consumption at match@458 in inspect
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
 //│ class-tags web-computation-phase > web 0:
-//│ class-tags web-computation-phase >   producers: E@420, C@421, F@422, C@423
-//│ class-tags web-computation-phase >   field accesses: E.x@407, C.x@408, F.y@410, C.x@411
-//│ class-tags web-computation-phase >   pattern matches: match@436
+//│ class-tags web-computation-phase >   producers: E@438, C@439, F@440, C@441
+//│ class-tags web-computation-phase >   field accesses: E.x@424, C.x@425, F.y@427, C.x@428
+//│ class-tags web-computation-phase >   pattern matches: match@458
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > allocated tag 0 for E(x: _)
@@ -289,7 +289,7 @@ private fun inspect(t) =
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let E5, F1, inspect2, C5, foo2, E__Tagged3, C__Tagged5;
 //│ foo2 = function foo(x, y) {
-//│   runtime.checkArgs("foo", 2, true, arguments.length);
+//│   runtime.checkArgs("foo", 2, arguments.length);
 //│   let tmp, tmp1, tmp2;
 //│   if (y === true) {
 //│     tmp = globalThis.Object.freeze(new E__Tagged3.class(x, 0));
@@ -301,7 +301,7 @@ private fun inspect(t) =
 //│   return runtime.checkCall(inspect2(tmp1));
 //│ };
 //│ inspect2 = function inspect(t) {
-//│   runtime.checkArgs("inspect", 1, true, arguments.length);
+//│   runtime.checkArgs("inspect", 1, arguments.length);
 //│   let shapeMatchResult, shapeMatchBranch;
 //│   if (t.__tag$ === 3) {
 //│     shapeMatchBranch = 0;

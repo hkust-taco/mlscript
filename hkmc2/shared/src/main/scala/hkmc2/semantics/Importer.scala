@@ -23,18 +23,15 @@ class Importer extends NewResolver:
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     
-    val file =
-      if path.startsWith("/")
-      then io.Path(path)
-      else wd / io.RelPath(path)
+    val file = io.Path.resolve(wd, path)
     
     val nme = file.baseName
     val id = alias.getOrElse(new syntax.Tree.Ident(nme)) // TODO loc
     
-    lazy val sym = VarSymbol(id, erasedType = N)
+    lazy val sym = VarSymbol(id, erasedType = N, mut = false)
     
     if path.startsWith(".") || path.startsWith("/") then // leave alone imports like "fs"
-      log(s"importing $file")
+      log(dbg"importing $file")
       
       val nme = file.baseName
       val id = new syntax.Tree.Ident(nme) // TODO loc
@@ -57,19 +54,19 @@ class Importer extends NewResolver:
           reportCycle(cctx.allFilesBeingImported :+ file)
         else
           cctx.withActiveDependency(file)(reportCycle):
-            val importedSym = tl.trace(s">>> Importing $file"):
+            val importedSym = tl.trace(dbg">>> Importing $file"):
               given TL = tl
               val artifact = cctx.getElaboratedBlock(file, prelude)
               artifact.compilationUnit.defaultExport.getOrElse:
                 lastWords(s"File $file does not define a symbol named $nme")
             val sym: VarSymbol | BlockMemberSymbol = alias.fold(importedSym): alias =>
-              VarSymbol(alias, erasedType = N)
+              VarSymbol(alias, erasedType = N, mut = false)
 
             // An import alias denotes the imported value, just like a local
             // binding. Publish its shapes so selection and opens can follow it.
             if newResolution then sym match
               case local: VarSymbol =>
-                val ref = Term.MemberRef(importedSym)(local.id, FlowSymbol.memSym(importedSym))
+                val ref = Term.MemberRef(importedSym)(N, FlowSymbol.memSym(importedSym))
                 rctx.recordLexicalBinders(ref, ctx.typeBinders)
                 pipeTerm(ref, local)
               case _: BlockMemberSymbol => ()

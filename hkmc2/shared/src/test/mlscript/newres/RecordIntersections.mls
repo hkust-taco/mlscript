@@ -28,10 +28,10 @@ common(left: "left", common: 5, tag: "l")
 :e
 fun missing(value: Choice) = value.left
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.29: 	fun missing(value: Choice) = value.left
+//│ ║  l.+1: 	fun missing(value: Choice) = value.left
 //│ ║        	                             ^^^^^^^^^^
 //│ ╟── Record type does not contain member 'left'
-//│ ║  l.23: 	type Choice = ({left: Str} | {right: Int}) & {tag: Str, common: Int}
+//│ ║  l.XX: 	type Choice = ({left: Str} | {right: Int}) & {tag: Str, common: Int}
 //│ ╙──      	                              ^^^^^^^^^^
 
 // Common fields may themselves contain unions of record intersections.
@@ -61,10 +61,10 @@ fun cycle(value: Loop[{x: Int}, {y: Str}]) =
 fun hidden(value: A & B) = value.extra
 hidden(a: 1, b: 2, extra: 3)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.61: 	fun hidden(value: A & B) = value.extra
+//│ ║  l.+1: 	fun hidden(value: A & B) = value.extra
 //│ ║        	                           ^^^^^^^^^^^
 //│ ╟── Record type does not contain member 'extra'
-//│ ║  l.14: 	type A = {a: Int}
+//│ ║  l.XX: 	type A = {a: Int}
 //│ ╙──      	          ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -92,9 +92,9 @@ fun invalidCallback(): {run: Object -> Int} & {tag: Int} =
   {run: x => x.secret, tag: 0}
 invalidCallback()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.92: 	  {run: x => x.secret, tag: 0}
+//│ ║  l.+2: 	  {run: x => x.secret, tag: 0}
 //│ ║        	             ^^^^^^^^
 //│ ╟── Value of type 'Object' does not contain member 'secret'
-//│ ║  l.91: 	fun invalidCallback(): {run: Object -> Int} & {tag: Int} =
+//│ ║  l.+1: 	fun invalidCallback(): {run: Object -> Int} & {tag: Int} =
 //│ ╙──      	                             ^^^^^^
 //│ = {run: fun, tag: 0}

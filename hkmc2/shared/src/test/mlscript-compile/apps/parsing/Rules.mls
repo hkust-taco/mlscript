@@ -36,8 +36,8 @@ fun idFirst(value, _) = value
 fun idSecond(_, value) = value
 fun someFirst(value, _) = Some(value)
 fun listFirst(value, _) = value :: Nil
-fun listLike(fields: {head: Str, tail: Str, name: Str, sep: Keywords.Keyword | undefined}) =
-  let mkTail = if fields.("sep") is undefined then id else keyword(fields.("sep"))
+fun listLike(fields: {head: Str, tail: Str, name: Str, sep: Keywords.Keyword | unsafe.undefined}) =
+  let mkTail = if fields.("sep") is unsafe.undefined then id else keyword(fields.("sep"))
   reference(fields.head) of
     process: Cons, name: "the first " + fields.name
     choices: tuple of end(Nil), mkTail of reference(fields.tail) of
@@ -209,7 +209,7 @@ val termRule: ParseRule.ParseRule[Tree] = rule of
         Tree.Infix(Keywords._equalequal, lhs, rhs)
       // Comparison: <expr> * <expr>
       makeInfixChoice of Keywords._asterisk, "term", (lhs, rhs) =>
-        Tree.App(Tree.Ident("*", true), lhs :: rhs :: Nil)
+        Tree.App(Tree.Ident("*", true), Tree.Tuple(lhs :: rhs :: Nil))
       // Selection: <expr> "." <identifier>
       // Access: <expr> "." "(" <expr> ")"
       keyword(Keywords._period) of

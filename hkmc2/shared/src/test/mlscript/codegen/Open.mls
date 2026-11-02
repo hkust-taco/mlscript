@@ -21,18 +21,18 @@ x + y
 :e
 z
 //│ ╔══[COMPILATION ERROR] Name not found: z
-//│ ║  l.22: 	z
+//│ ║  l.+1: 	z
 //│ ╙──      	^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 open Foo { a }
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.29: 	open Foo { a }
+//│ ║  l.+1: 	open Foo { a }
 //│ ║        	           ^
 //│ ╟── Module 'Foo' does not contain member 'a'
-//│ ║  l.5: 	module Foo with
-//│ ╙──     	^^^^^^^^^^
+//│ ║  l.XX: 	module Foo with
+//│ ╙──      	^^^^^^^^^^
 
 
 open Bar { y, Baz }
@@ -53,10 +53,10 @@ val str = "oops"
 :e
 open str { length, oops }
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.54: 	open str { length, oops }
+//│ ║  l.+1: 	open str { length, oops }
 //│ ║        	                   ^^^^
 //│ ╟── String literal does not contain member 'oops'
-//│ ║  l.50: 	val str = "oops"
+//│ ║  l.XX: 	val str = "oops"
 //│ ╙──      	          ^^^^^^
 
 length
@@ -66,10 +66,10 @@ length
 :re
 oops === ()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.67: 	oops === ()
+//│ ║  l.+1: 	oops === ()
 //│ ║        	^^^^
 //│ ╟── String literal does not contain member 'oops'
-//│ ║  l.50: 	val str = "oops"
+//│ ║  l.XX: 	val str = "oops"
 //│ ╙──      	          ^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

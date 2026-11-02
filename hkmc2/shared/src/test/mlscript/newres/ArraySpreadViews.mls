@@ -41,10 +41,10 @@ class First(val first: Int)
 class Second(val second: Int)
 fun pick(xs: Array[First]) = [...xs, Second(2)].0.first
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.42: 	fun pick(xs: Array[First]) = [...xs, Second(2)].0.first
+//│ ║  l.+3: 	fun pick(xs: Array[First]) = [...xs, Second(2)].0.first
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.42: 	fun pick(xs: Array[First]) = [...xs, Second(2)].0.first
+//│ ║  l.+3: 	fun pick(xs: Array[First]) = [...xs, Second(2)].0.first
 //│ ╙──      	                                     ^^^^^^^^^
 
 // A fixed prefix remains precise even when a later spread has a different type.
@@ -71,10 +71,10 @@ class First(val first: Int)
 class Second(val second: Int)
 fun pick(xs: Array[First], ys: Array[First]) = [0, ...xs, ...ys, Second(2)].1.first
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.72: 	fun pick(xs: Array[First], ys: Array[First]) = [0, ...xs, ...ys, Second(2)].1.first
+//│ ║  l.+3: 	fun pick(xs: Array[First], ys: Array[First]) = [0, ...xs, ...ys, Second(2)].1.first
 //│ ║        	                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Instance of class 'Second' does not contain member 'first'
-//│ ║  l.72: 	fun pick(xs: Array[First], ys: Array[First]) = [0, ...xs, ...ys, Second(2)].1.first
+//│ ║  l.+3: 	fun pick(xs: Array[First], ys: Array[First]) = [0, ...xs, ...ys, Second(2)].1.first
 //│ ╙──      	                                                                 ^^^^^^^^^
 
 // Fields whose minimum position is past the selected index cannot contribute.

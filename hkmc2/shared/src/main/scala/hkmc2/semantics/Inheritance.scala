@@ -82,3 +82,8 @@ object Inheritance:
         if !isExternal(td) && (td.k != inherited.k ||
             td.params.nonEmpty != inherited.params.nonEmpty) then
           fail(msg"Overriding member '${base.nme}' must preserve whether the member is a field, getter, or method", S(base))
+        // Mixing a data property with an inherited accessor changes initialization and freezing behavior.
+        if (td.k is syntax.MutVal) && (inherited.k is syntax.MutVal) &&
+            td.annotations.exists(_.isInstanceOf[Annot.PlainField]) !=
+              inherited.annotations.exists(_.isInstanceOf[Annot.PlainField]) then
+          fail(msg"Overriding mutable field '${base.nme}' must preserve the @js.plainField annotation", S(base))

@@ -1,0 +1,64 @@
+:.
+:noInline
+:flowBasedOpt poly
+
+
+// Specialization removes the first parameter and copies the nested definition. The return annotations
+// must survive on both copied symbols; `inner` stays nested so its symbol must be refreshed too.
+:checkIR
+:soir
+:siret
+:expect 42
+fun specialize(unused: Str, value: Int): Int =
+  fun inner(n: Int): Int = n + 1
+  inner(value)
+specialize("unused", 41)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let specialize$specialize;
+//│ @private
+//│ define specialize$specialize as fun specialize$specialize⁰(value: Int⁰): Int⁰ {
+//│   let inner;
+//│   define inner as fun inner⁰(n: Int⁰): Int⁰ {
+//│     return +⁰(n, 1)
+//│   };
+//│   return inner⁰(value)
+//│ };
+//│ define specialize⁰ as fun specialize¹(unused: Str⁰, value: Int⁰): Int⁰ {
+//│   let inner;
+//│   define inner as fun inner¹(n: Int⁰): Int⁰ {
+//│     return +⁰(n, 1)
+//│   };
+//│   return inner¹(value)
+//│ };
+//│ return specialize$specialize⁰(41)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// Wasm requires lifting the capturing helper. Its parameter types and the specialized caller's return
+// type must survive lifting and specialization so the backend uses the right calling convention.
+:!js
+:wasm
+:lift
+:checkIR
+:soir
+:siret
+fun specializeCapture(unused: Str, value: Int): Int =
+  fun inner(n: Int): Int = n + value
+  inner(1)
+specializeCapture("unused", 41)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let inner, specializeCapture$specializeCapture;
+//│ @private
+//│ define specializeCapture$specializeCapture as fun specializeCapture$specializeCapture⁰(value: Int⁰): Int⁰ {
+//│   return inner²(value, 1)
+//│ };
+//│ define inner as fun inner²(value: Int⁰, n: Int⁰): Int⁰ {
+//│   return (wasm⁰.plus_impl﹖(n, value) as! Int⁰)
+//│ };
+//│ define specializeCapture⁰ as fun specializeCapture¹(unused: Str⁰, value: Int⁰): Int⁰ {
+//│   return inner²(value, 1)
+//│ };
+//│ return specializeCapture$specializeCapture⁰(41)
+//│ Wasm result:
+//│ = 42

@@ -23,7 +23,7 @@ let s12 = s1 ::: s2
 //│ s12 = Cons(1, Cons(2, Cons(3, Cons("a", Cons("b", Cons("c", Nil))))))
 
 // * Should not have any effect
-set s12.tail = Nil
+@unsafe set s12.tail = Nil
 
 :expect false
 s12.tail isEmpty()

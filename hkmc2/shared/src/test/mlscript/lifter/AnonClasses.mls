@@ -2,7 +2,7 @@
 
 
 fun foo() =
-  new Object with
+  new Object() with
     fun test = 1
 
 foo().test

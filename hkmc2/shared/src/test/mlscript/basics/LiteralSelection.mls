@@ -42,7 +42,7 @@ obj
 :pe
 obj. a
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.43: 	obj. a
+//│ ║  l.+1: 	obj. a
 //│ ╙──      	   ^
 //│ = {a: 1}
 
@@ -56,20 +56,20 @@ obj .("a")
 obj
   .("a")
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.57: 	  .("a")
+//│ ║  l.+2: 	  .("a")
 //│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.57: 	  .("a")
+//│ ║  l.+2: 	  .("a")
 //│ ╙──      	  ^
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
-//│ ║  l.57: 	  .("a")
+//│ ║  l.+2: 	  .("a")
 //│ ╙──      	  ^
 //│ = {a: 1}
 
 :pe
 obj. ("a")
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.70: 	obj. ("a")
+//│ ║  l.+1: 	obj. ("a")
 //│ ╙──      	   ^
 //│ = {a: 1}
 
@@ -83,20 +83,20 @@ obj ."a"
 obj
   ."a"
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.84: 	  ."a"
+//│ ║  l.+2: 	  ."a"
 //│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.84: 	  ."a"
+//│ ║  l.+2: 	  ."a"
 //│ ╙──      	  ^
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
-//│ ║  l.84: 	  ."a"
+//│ ║  l.+2: 	  ."a"
 //│ ╙──      	  ^
 //│ = {a: 1}
 
 :pe
 obj. "a"
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.97: 	obj. "a"
+//│ ║  l.+1: 	obj. "a"
 //│ ╙──      	   ^
 //│ = {a: 1}
 
@@ -112,8 +112,8 @@ obj." "
 :w
 obj."¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.113: 	obj."¯\_(ツ)_/¯"
-//│ ╙──       	       ^
+//│ ║  l.+1: 	obj."¯\_(ツ)_/¯"
+//│ ╙──      	       ^
 //│ = 2
 
 :fixme
@@ -124,22 +124,22 @@ obj."¯\\_(ツ)_/¯"
 :w
 "¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.125: 	"¯\_(ツ)_/¯"
-//│ ╙──       	   ^
+//│ ║  l.+1: 	"¯\_(ツ)_/¯"
+//│ ╙──      	   ^
 //│ = "¯_(ツ)_/¯"
 
 :w
 let obj = "¯\_(ツ)_/¯": 2
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.132: 	let obj = "¯\_(ツ)_/¯": 2
-//│ ╙──       	             ^
+//│ ║  l.+1: 	let obj = "¯\_(ツ)_/¯": 2
+//│ ╙──      	             ^
 //│ obj = {"¯_(ツ)_/¯": 2}
 
 :w
 obj."¯\_(ツ)_/¯"
 //│ ╔══[WARNING] Found invalid escape character
-//│ ║  l.139: 	obj."¯\_(ツ)_/¯"
-//│ ╙──       	       ^
+//│ ║  l.+1: 	obj."¯\_(ツ)_/¯"
+//│ ╙──      	       ^
 //│ = 2
 
 :expect "¯\\_(ツ)_/¯"

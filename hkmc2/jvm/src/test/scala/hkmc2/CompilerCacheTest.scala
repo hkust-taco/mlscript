@@ -138,6 +138,7 @@ class CompilerCacheTest extends AnyFunSuite:
         underlyingFs.read(path)
 
       def write(path: io.Path, content: String): Unit = underlyingFs.write(path, content)
+      def append(path: io.Path, content: String): Unit = underlyingFs.append(path, content)
       def exists(path: io.Path): Boolean = underlyingFs.exists(path)
       def getLastChangedTimestamp(path: io.Path): Long =
         underlyingFs.getLastChangedTimestamp(path)

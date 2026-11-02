@@ -6,20 +6,20 @@ data class Pair[A, B](val first: A, val second: B)
 :e
 pattern LessArity = Pair("meow")
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.7: 	pattern LessArity = Pair("meow")
-//│ ║       	                    ^^^^^^^^^^^^
+//│ ║  l.+1: 	pattern LessArity = Pair("meow")
+//│ ║        	                    ^^^^^^^^^^^^
 //│ ╟── Class definition 'Pair' expected 2 pattern arguments, but got 1
-//│ ║  l.4: 	data class Pair[A, B](val first: A, val second: B)
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	data class Pair[A, B](val first: A, val second: B)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 pattern MoreArity = Pair("meow", "woof", "moo")
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.16: 	pattern MoreArity = Pair("meow", "woof", "moo")
+//│ ║  l.+1: 	pattern MoreArity = Pair("meow", "woof", "moo")
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class definition 'Pair' expected 2 pattern arguments, but got 3
-//│ ║  l.4: 	data class Pair[A, B](val first: A, val second: B)
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	data class Pair[A, B](val first: A, val second: B)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Nested modifiers and annotations belong to the whole declaration span.
 open annotations
@@ -29,10 +29,10 @@ public data class AnnotatedPair(val first, val second)
 :e
 pattern WrongAnnotatedArity = AnnotatedPair("one")
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.30: 	pattern WrongAnnotatedArity = AnnotatedPair("one")
+//│ ║  l.+1: 	pattern WrongAnnotatedArity = AnnotatedPair("one")
 //│ ║        	                              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Class definition 'AnnotatedPair' expected 2 pattern arguments, but got 1
-//│ ║  l.27: 	public data class AnnotatedPair(val first, val second)
+//│ ║  l.XX: 	public data class AnnotatedPair(val first, val second)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // A following declaration must not inherit the preceding annotation's span.
@@ -41,8 +41,8 @@ data class NextPair(val first, val second)
 :e
 pattern WrongNextArity = NextPair("one")
 //│ ╔══[COMPILATION ERROR] Resolution error in constructor
-//│ ║  l.42: 	pattern WrongNextArity = NextPair("one")
+//│ ║  l.+1: 	pattern WrongNextArity = NextPair("one")
 //│ ║        	                         ^^^^^^^^^^^^^^^
 //│ ╟── Class definition 'NextPair' expected 2 pattern arguments, but got 1
-//│ ║  l.39: 	data class NextPair(val first, val second)
+//│ ║  l.XX: 	data class NextPair(val first, val second)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

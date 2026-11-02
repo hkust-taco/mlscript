@@ -7,11 +7,11 @@ object Foo
 :fixme // Support?
 new Foo
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.8: 	new Foo
-//│ ║       	^^^^^^^
+//│ ║  l.+1: 	new Foo
+//│ ║        	^^^^^^^
 //│ ╟── Object 'Foo' cannot be instantiated with keyword 'new'.
-//│ ║  l.5: 	object Foo
-//│ ╙──     	^^^^^^^^^^
+//│ ║  l.XX: 	object Foo
+//│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
@@ -21,11 +21,11 @@ new! Foo
 :fixme // Support?
 new! Foo.class
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.22: 	new! Foo.class
+//│ ║  l.+1: 	new! Foo.class
 //│ ║        	     ^^^^^^^^^
 //│ ╟── Object 'Foo' does not contain member 'class'
-//│ ║  l.5: 	object Foo
-//│ ╙──     	^^^^^^^^^^
+//│ ║  l.XX: 	object Foo
+//│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 new! Foo!class
@@ -34,32 +34,32 @@ new! Foo!class
 :fixme // Support?
 object Bar extends Foo
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.35: 	object Bar extends Foo
+//│ ║  l.+1: 	object Bar extends Foo
 //│ ║        	                   ^^^
 //│ ╟── Object 'Foo' cannot be instantiated with keyword 'new'.
-//│ ║  l.5: 	object Foo
-//│ ╙──     	^^^^^^^^^^
+//│ ║  l.XX: 	object Foo
+//│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 :re
 object Bar extends Foo!class
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.46: 	object Bar extends Foo!class
+//│ ║  l.+1: 	object Bar extends Foo!class
 //│ ║        	                   ^^^^^^^^^
 //│ ╟── Invalid class expression: dynamic selection
-//│ ║  l.46: 	object Bar extends Foo!class
+//│ ║  l.+1: 	object Bar extends Foo!class
 //│ ╙──      	                   ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme // Support?
 object Bar extends! Foo!class
 //│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
-//│ ║  l.56: 	object Bar extends! Foo!class
+//│ ║  l.+1: 	object Bar extends! Foo!class
 //│ ║        	                  ^^^^^^^^^^^
-//│ ╟── Invalid class expression: reference
-//│ ║  l.56: 	object Bar extends! Foo!class
-//│ ╙──      	                  ^
+//│ ╟── Invalid class expression: dereference
+//│ ║  l.+1: 	object Bar extends! Foo!class
+//│ ╙──      	                    ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

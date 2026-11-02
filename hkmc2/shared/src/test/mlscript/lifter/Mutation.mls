@@ -76,7 +76,7 @@ b_x.1()
 
 
 fun foo() =
-  let x = undefined
+  let x = unsafe.undefined
   fun bar() =
     x = 2
   [bar, () => x]

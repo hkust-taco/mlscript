@@ -73,21 +73,28 @@ M.D
 :fixme // FIXME: Should report a proper error about lack of declared C companion module
 C.oops
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.74: 	C.oops
+//│ ║  l.+1: 	C.oops
 //│ ║        	^^^^^^
 //│ ╟── Class value does not contain member 'oops'
-//│ ║  l.38: 	declare class C
+//│ ║  l.XX: 	declare class C
 //│ ╙──      	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :ge
 M.D.oops
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.84: 	M.D.oops
+//│ ║  l.+1: 	M.D.oops
 //│ ║        	^^^^^^^^
 //│ ╟── Class value does not contain member 'oops'
-//│ ║  l.48: 	  declare class D
+//│ ║  l.XX: 	  declare class D
 //│ ╙──      	  ^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// A symbolic source alias must still select the declared global property.
+:expect [42, 42]
+declare fun (%%) parseInt(text: Str, radix: Int): Int
+[parseInt("42", 10), "2a" %% 16]
+//│ = [42, 42]
 
 

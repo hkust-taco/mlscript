@@ -2,7 +2,7 @@
 :js
 
 
-let rcd = { x: 0, y: undefined, z: null}
+let rcd = { x: 0, y: unsafe.undefined, z: null}
 //│ rcd = {x: 0, y: undefined, z: null}
 
 rcd!constructor

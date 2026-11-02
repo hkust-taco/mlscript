@@ -15,11 +15,11 @@ print
     "A"
   )
 //│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (parenthesis section).
-//│ ║  l.14: 	  (
+//│ ║  l.+2: 	  (
 //│ ║        	  ^
-//│ ║  l.15: 	    "A"
+//│ ║  l.+3: 	    "A"
 //│ ║        	^^^^^^^
-//│ ║  l.16: 	  )
+//│ ║  l.+4: 	  )
 //│ ╙──      	^^^
 //│ = fun print
 
@@ -29,16 +29,16 @@ print of
   "A"
 )
 //│ ╔══[WARNING] This parenthesis section should be indented
-//│ ║  l.28: 	(
+//│ ║  l.+2: 	(
 //│ ║        	^
-//│ ║  l.29: 	  "A"
+//│ ║  l.+3: 	  "A"
 //│ ║        	^^^^^
-//│ ║  l.30: 	)
+//│ ║  l.+4: 	)
 //│ ║        	^
 //│ ╟── since it is a continuation of the new line here
-//│ ║  l.27: 	print of
+//│ ║  l.+1: 	print of
 //│ ║        	        ^
-//│ ║  l.28: 	(
+//│ ║  l.+2: 	(
 //│ ╙──
 //│ > A
 
@@ -46,12 +46,12 @@ print of
 print of
 ("A")
 //│ ╔══[WARNING] This parenthesis section should be indented
-//│ ║  l.47: 	("A")
+//│ ║  l.+2: 	("A")
 //│ ║        	^^^^^
 //│ ╟── since it is a continuation of the new line here
-//│ ║  l.46: 	print of
+//│ ║  l.+1: 	print of
 //│ ║        	        ^
-//│ ║  l.47: 	("A")
+//│ ║  l.+2: 	("A")
 //│ ╙──
 //│ > A
 
@@ -67,15 +67,15 @@ print of
     "A"
 )
 //│ ╔══[PARSE ERROR] Mistmatched closing indentation
-//│ ║  l.67: 	    "A"
+//│ ║  l.+3: 	    "A"
 //│ ║        	       ^
-//│ ║  l.68: 	)
+//│ ║  l.+4: 	)
 //│ ║
 //│ ╟── does not correspond to opening parenthesis
-//│ ║  l.66: 	  (
+//│ ║  l.+2: 	  (
 //│ ╙──      	  ^
 //│ ╔══[PARSE ERROR] Unexpected closing parenthesis
-//│ ║  l.68: 	)
+//│ ║  l.+4: 	)
 //│ ╙──      	^
 //│ > A
 

@@ -51,8 +51,8 @@ extension (ty: ValType)
     case F64Type => S(Instructions.f64.const(0))
     case V128Type => N
 
-extension (et: ErasedType)
-  /** Returns the corresponding Wasm type for this [[ErasedType]]. */
+extension (et: ErasedValueType)
+  /** Returns the corresponding Wasm type for this [[ErasedValueType]]. */
   private[text] def wasmType(using Ctx, State): Opt[ValType] =
     import Ctx.ctx
     val elabCtx = ctx.elabCtx
@@ -90,16 +90,18 @@ extension (sym: WasmSlotSymbol)
       case bms: BlockMemberSymbol =>
         // A BMS's erased type lives in its associated TermSymbol
         bms.tsym.flatMap(_.erasedType).flatMap(_.wasmType).getOrElse(RefType.anyref)
-      case s: HasErasedType =>
+      case s: LocalVarSymbol =>
         s.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
 
 extension (sym: WasmSlotSymbol)
   /** The Wasm value type a parameter slot for `sym` should be declared with. */
   private[text] def paramType(using Ctx, State): ValType =
-    sym match
-      case s: HasErasedType =>
-        s.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
-      case _ => RefType.anyref
+    summon[Ctx].elabCtx.givenIn:
+      sym match
+        case l: LocalVarSymbol => l.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
+        case cls: ClassSymbol => CanonicalErasedValueType(rsc = S(false), cls).wasmType.getOrElse(RefType.anyref)
+        case mod: ModuleOrObjectSymbol => mod.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
+        case _: (PatternSymbol | TopLevelSymbol | BlockMemberSymbol) => RefType.anyref
 
 /** The declared Wasm value type of the parameter slot for `sym` at position `idx`, honoring an optional per-position
   * override (index 0 = `this`). Falls back to `sym.paramType` if no override is given.
@@ -165,7 +167,7 @@ object WatBuilder:
 
   private def declareIntrinsicType(name: Str)(using Ctx, Raise, State): TypeIdx =
     summon[Ctx].addType(TypeInfo(
-      sym = TempSymbol(N, erasedType = N, name),
+      sym = TempSymbol(N, initErasedType = N, name),
       compType = FunctionType(
         params = intrinsicParamSuffixes(name).map(nme => WasmParam(SymIdx(nme), RefType.anyref)),
         results = Seq(Result(RefType.anyref)),
@@ -177,7 +179,7 @@ object WatBuilder:
     */
   private def mkIntrinsicParams(suffixes: Ls[Str])(using State): Ls[TempSymbol -> SymIdx] =
     suffixes.map: suffix =>
-      val sym = TempSymbol(N, erasedType = N, suffix)
+      val sym = TempSymbol(N, initErasedType = N, suffix)
       sym -> SymIdx(suffix)
 
   /** Allocates the Wasm type and function definition for an intrinsic with the given signature.
@@ -190,7 +192,7 @@ object WatBuilder:
   )(using Ctx, Raise, State): FuncIdx =
     val funcTy = WatBuilder.declareIntrinsicType(name)
     val funcInfo = FuncInfo(
-      sym = TempSymbol(N, erasedType = N, name),
+      sym = TempSymbol(N, initErasedType = N, name),
       typeUse = TypeUse(funcTy),
       params = params.map(_.resolvedParam),
       locals = Seq.empty,
@@ -296,14 +298,14 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
 
   /** Synthetic field symbol for the object-header pointer to a class's shared RTTI object. */
-  private val typeInfoFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$typeinfo"), erasedType = N)
+  private val typeInfoFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$typeinfo"), erasure = N)
 
   /** Synthetic field symbol for the runtime class tag stored in RTTI. */
   private val tagFieldSym: TermSymbol =
-    TermSymbol(syntax.MutVal, owner = N, Ident("$tag"), erasedType = S(ErasedType.Int))
+    TermSymbol(syntax.MutVal, owner = N, Ident("$tag"), erasure = S(ErasedType.Int))
 
   /** Synthetic field symbol for the direct-parent RTTI reference used by runtime subtype checks. */
-  private val parentFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$parent"), erasedType = N)
+  private val parentFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$parent"), erasure = N)
 
   private case class StringLitInfo(offset: Int, byteLen: Int, watBytes: Str)
   private val stringLits: LinkedHashMap[Str, StringLitInfo] = LinkedHashMap.empty
@@ -361,7 +363,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     *
     * Emits an error if the two types have incompatible type hierarchies.
     */
-  private def castConserve(expr: Expr, target: ValType)(using Raise): Expr =
+  private def castConserve(expr: Expr, target: ValType, loc: Opt[Loc])(using Raise): Expr =
     require(expr.resultTypes.size == 1, "expected single-result expression for cast")
     expr.resultType -> target match
       case (S(ty), _) if ty.isSubtypeOf(target) => expr
@@ -371,21 +373,28 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         errExpr(
           Ls(msg"Cannot cast a Wasm value of type `${
               ty.fold("(none)")(_.toWat.mkString())
-            }` to `${target.toWat.mkString()}` in a different type hierarchy" -> N),
+            }` to `${target.toWat.mkString()}` in a different type hierarchy" -> loc),
           extraInfo = S(expr.toWat.mkString()),
         )
 
   /** Compiles `r` and narrows it to `target`, the declared type of the slot it flows into. */
   private def castToValType(r: codegen.Result, target: ValType)(using FunctionCtx, Raise, SessionExportCtx): Expr =
-    castConserve(result(r), target)
+    castConserve(result(r), target, r.toLoc)
 
-  /** Casts each argument in `wasmArgs` down to the corresponding declared parameter type read from `funcTypeInfo`. */
-  private def castArgsToParams(wasmArgs: Seq[Expr], funcTypeInfo: TypeInfo)(using Raise): Seq[Expr] =
+  /** Supply every physical parameter, including null for omitted optional arguments, and cast
+    * supplied values to the callee's signature. Source arity checking happens before parameter
+    * flags are erased; a missing slot must still have a representation that can carry null. */
+  private def adaptCallArgs(wasmArgs: Seq[Expr], funcTypeInfo: TypeInfo, loc: Opt[Loc])(using Raise): Seq[Expr] =
     val declParams = funcTypeInfo.asFunctionType_!.sigType.params
-    wasmArgs.zip(declParams).map: (arg, p) =>
-      p.valtype match
-        case rt: RefType => castConserve(arg, rt)
-        case _ => arg
+    if wasmArgs.size > declParams.size then raise(ErrorReport(
+      msg"More arguments were supplied than the WebAssembly call supports." -> loc :: Nil,
+      source = Diagnostic.Source.Compilation))
+    declParams.zipWithIndex.map: (p, index) =>
+      wasmArgs.lift(index) match
+        case S(arg) => castConserve(arg, p.valtype, loc)
+        case N => p.valtype match
+          case rt: RefType if rt.nullable => ref.`null`(rt.heapType)
+          case _ => errExpr(Ls(msg"Missing argument cannot be represented as null by the WebAssembly backend." -> loc))
 
   /** Returns the default Wasm value for one struct field when eagerly constructing an object instance. */
   private def defaultStructFieldValue(field: Field)(using Raise): Expr = field.ty.zeroValue.getOrElse:
@@ -472,7 +481,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       ctorSym = N,
       k = syntax.Obj,
       paramsOpt = N,
-      auxParams = PlainParamList(Nil)(N) :: Nil,
+      auxParams = LoweredParamList.plain(Nil)(N) :: Nil,
       parentPath = N,
       methods = Nil,
       privateFields = Nil,
@@ -482,6 +491,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       companion = N,
       bufferable = N,
       termCompanion = N,
+      methodKeys = Map.empty,
     )(N, Nil)
 
   /** Registers the synthetic `Unit` singleton. */
@@ -815,7 +825,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       thisType: Opt[ValType],
   )(using Raise): TypeIdx =
     ctx.addType(TypeInfo(
-      sym = TempSymbol(N, erasedType = N, defn.sym.nme),
+      sym = TempSymbol(N, initErasedType = N, defn.sym.nme),
       FunctionType(
         params = params.zipWithIndex.map: (p, idx) =>
           WasmParam(p._2, resolveParamType(p._1, idx, thisType.map(Seq(_)))),
@@ -883,7 +893,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   )(using Raise): TypeIdx =
     ctx.getOrCreateWasmIntrinsicType(WasmIntrinsicType.VirtualMethod(baseSym, paramTypes.toList, resultType)):
       ctx.addType(TypeInfo(
-        sym = TempSymbol(N, erasedType = N, s"virtual${paramTypes.size + 1}"),
+        sym = TempSymbol(N, initErasedType = N, s"virtual${paramTypes.size + 1}"),
         compType = virtualMethodSignature(baseSym, paramTypes, resultType),
         objectTag = N,
       ))
@@ -939,7 +949,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   /** Returns the single flattened constructor parameter list. After ClassParamFlattener, all classes have paramsOpt = N
     * and exactly one auxParams entry.
     */
-  private def classCtorParamList(defn: ClsLikeDefn): ParamList =
+  private def classCtorParamList(defn: ClsLikeDefn): LoweredParamList =
     assert(
       defn.paramsOpt.isEmpty,
       s"WatBuilder: expected paramsOpt to be None after flattening for class ${defn.sym.nme}",
@@ -1029,11 +1039,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     * Note that only top-level functions that will be lowered by the [[FunDefn]] arm of [[returningTerm]] can be
     * pre-declared with this function - see [[isPredeclarableTopLevelFun]].
     */
-  private def predeclareTopLevelFun(sym: BlockMemberSymbol, ps: ParamList)(using Raise): Unit =
+  private def predeclareTopLevelFun(sym: BlockMemberSymbol, ps: LoweredParamList)(using Raise): Unit =
     val params = ps.paramSyms.map(p => p -> SymIdx(p.nme))
     val resultTypes = Seq(Result(declaredResultType(sym)))
     val funcTy = ctx.addType(TypeInfo(
-      sym = TempSymbol(N, erasedType = N, sym.nme),
+      sym = TempSymbol(N, initErasedType = N, sym.nme),
       compType = FunctionType(
         params = params.map((p, idx) => WasmParam(idx, p.paramType)),
         results = resultTypes,
@@ -1135,7 +1145,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       case func: SessionFunc =>
         // If the function symbol comes from a class or module, generate a TempSymbol to avoid symbol collision with
         // the class/module itself
-        val funcTySym = TempSymbol(N, erasedType = N, func.sym.nme)
+        val funcTySym = TempSymbol(N, initErasedType = N, func.sym.nme)
         val typeIdx =
           ctx.addType(TypeInfo(sym = funcTySym, wrapId = func.wrapId, compType = func.funcType, objectTag = N))
         ctx.addFunctionImport(WasmImport(
@@ -1171,7 +1181,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         typeInfoTypeIdxs(cls.sym) = typeInfoTypeIdx
         val globalExtern = ExternType.Global(
           GlobalType(RefType(typeInfoTypeIdx, nullable = false), mutable = false),
-          TempSymbol(N, erasedType = N, cls.sym.nme),
+          TempSymbol(N, initErasedType = N, cls.sym.nme),
           wrapId = N -> S("typeinfo"),
         )
         val globalIdx = ctx.addGlobalImport(WasmImport(
@@ -1200,7 +1210,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     val vt = ctx.getVirtualTable(defn.sym)
     val vtSlots = vt.fold(Nil)(_.slots)
     val newSlotFields = vtSlots.zipWithIndex.drop(parentVirtualMethodCount).map: (slotInfo, slot) =>
-      val fieldSym = TermSymbol(syntax.MutVal, owner = N, Ident(s"slot$slot"), erasedType = N)
+      val fieldSym = TermSymbol(syntax.MutVal, owner = N, Ident(s"slot$slot"), erasure = N)
       fieldSym -> Field(
         RefType(virtualMethodFuncType(defn.sym, slotInfo.paramTypes, slotInfo.resultType), nullable = true),
         mutable = true,
@@ -1208,7 +1218,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       )
 
     val typeInfoType = ctx.addType(TypeInfo(
-      sym = TempSymbol(N, erasedType = N, defn.sym.nme),
+      sym = TempSymbol(N, initErasedType = N, defn.sym.nme),
       compType = StructType(fields = inheritedFields ++ newSlotFields, parents = Seq(parentTypeInfoIdx)),
       objectTag = N,
       wrapId = N -> S("typeinfo"),
@@ -1283,9 +1293,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   /** Declares placeholders for all methods on one top-level class. */
   private def predeclareClassMethods(defn: ClsLikeDefn)(using Raise): Unit =
     defn.methods.foreach:
-      case methodDefn @ FunDefn(_, _, _, Nil | _ :: Nil, _) =>
+      case methodDefn @ FunDefn(params = Nil | _ :: Nil) =>
         predeclareMethod(methodDefn, defn)
-      case FunDefn(_, sym, _, _ :: _ :: _, _) =>
+      case FunDefn(sym = sym, params = _ :: _ :: _) =>
         raise(ErrorReport(
           msg"WatBuilder::predeclareClassMethods for ClsLikeDefn(...) with `multi-parameter-list method` not implemented yet" ->
             sym.toLoc :: Nil,
@@ -1295,7 +1305,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
   /** Gets (and caches) the exception tag used for MLX `throw`. */
   private def exnTagIdx(using Raise): TagIdx =
-    val sym = TempSymbol(N, erasedType = N, "mlx_exn")
+    val sym = TempSymbol(N, initErasedType = N, "mlx_exn")
     ctx.getOrCreateWasmIntrinsicTag(
       "mlx_exn",
       ctx.addTag(TagInfo(
@@ -1345,7 +1355,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       module = ExternIntrinsics.SystemModule,
       name = ExternIntrinsics.StringFromUtf16ImportName,
     ):
-      val importTySym = TempSymbol(N, erasedType = N, ExternIntrinsics.StringFromUtf16ImportName)
+      val importTySym = TempSymbol(N, initErasedType = N, ExternIntrinsics.StringFromUtf16ImportName)
       val importTy = ctx.addType(TypeInfo(
         sym = importTySym,
         compType = FunctionType(
@@ -1416,7 +1426,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       case TryBlock(sub, finallyDo, _) => TryBlock(sub, finallyDo, rest)
       case Assign(lhs, rhs, _) => Assign(lhs, rhs, rest)
       case af @ AssignField(lhs, nme, rhs, _) => AssignField(lhs, nme, rhs, rest)(af.symbol)
-      case AssignDynField(lhs, fld, arrayIdx, rhs, _) => AssignDynField(lhs, fld, arrayIdx, rhs, rest)
+      case AssignDynField(lhs, fld, kind, rhs, _) => AssignDynField(lhs, fld, kind, rhs, rest)
       case Define(defn, _) => Define(defn, rest)
       case Match(scrut, arms, dflt, _) => Match(scrut, arms, dflt, rest)
       case Label(label, loop, body, _) => Label(label, loop, body, rest)
@@ -1440,9 +1450,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               case S(parentSym) =>
                 val parentTypeRef = ctx.getType_!(parentSym)
                 val parentInitFunc = initFuncSym(parentSym)
+                val parentFuncType = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(parentInitFunc).typeIdx)
                 val superCall = call(
                   funcidx = ctx.getFunc_!(parentInitFunc),
-                  operands = local.get(thisVar, RefType(parentTypeRef, nullable = false)) +: args.map(argument),
+                  operands = adaptCallArgs(local.get(thisVar, RefType(parentTypeRef, nullable = false)) +:
+                    args.map(argument), parentFuncType, clsLikeDefn.sym.toLoc),
                   returnTypes = Seq(Result(RefType(parentTypeRef, nullable = false))),
                 )
                 prefixWat :+ drop(superCall)
@@ -1587,6 +1599,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       castConserve(
         global.get(globalIdx, ctx.getGlobalType_!(globalIdx).globalType.valType),
         l.localType,
+        loc,
       )
     case N =>
       errExpr(
@@ -1683,10 +1696,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val baseSym = vt.slots(slot).owner
         val paramTypes = vt.slots(slot).paramTypes
         val resultType = vt.slots(slot).resultType
-        softAssert(
-          args.size == paramTypes.size,
-          s"Virtual call arity mismatch for $methodSym: ${args.size} args vs ${paramTypes.size} declared params",
-        )
         val ownerTypeInfoIdx = typeInfoTypeIdxs(ownerCls)
         val receiverTmp = mkTempLocal("receiver", erasedType = N)
         val receiverExpr = local.set(receiverTmp, result(qual))
@@ -1701,7 +1710,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           ownerTypeInfoRef,
           RefType(virtualMethodTypeIdx, nullable = true),
         )
-        val operands = castArgsToParams(receiverRef +: args.map(argument), ctx.getTypeInfo_!(virtualMethodTypeIdx))
+        val operands = adaptCallArgs(receiverRef +: args.map(argument), ctx.getTypeInfo_!(virtualMethodTypeIdx), qual.toLoc)
         val virtualCall = call_ref(
           target = methodRef,
           operands = operands,
@@ -1711,11 +1720,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         // The slot carries the *base* declaration's result type, but the resolved method's declared result may be
         // overridden to be narrower. Restore the slot's result value to the resolved method's declared type here -
         // the checked cast ensures that a value that doesn't conform will trap at runtime.
-        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym))
+        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym), qual.toLoc)
         Ls(receiverExpr, adaptedCall)
       case N =>
         val funcTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(methodSym).typeIdx)
-        val operands = castArgsToParams(result(qual) +: args.map(argument), funcTypeInfo)
+        val operands = adaptCallArgs(result(qual) +: args.map(argument), funcTypeInfo, qual.toLoc)
         Ls(call(
           funcidx = ctx.getFunc_!(methodSym),
           operands = operands,
@@ -1737,6 +1746,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         operands = Seq(ref.i31(i32.const(lit.offset)), ref.i31(i32.const(lit.byteLen))),
         returnTypes = Seq(Result(RefType.anyref)),
       )
+    case Value.Lit(UnitLit(true)) => ref.`null`(HeapType.Any)
     case Value.Lit(UnitLit(false)) =>
       // `undefined` is the IR's canonical "no meaningful value", so it lowers to `$Unit` (similar to
       // `normalizeValueExprs`).
@@ -1760,7 +1770,10 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             ctx.getFunc(ExternSymbol.forReference(bms, disamb)) match
               case S(funcIdx) => ref.func(funcIdx, RefType(ctx.getFuncTypeUse_!(funcIdx).typeIdx, nullable = false))
               case N => getVar(bms, r.toLoc)
-    case Value.This(sym) =>
+    case Value.This(_: TopLevelSymbol) =>
+      errExpr:
+        Ls(msg"The global object is not supported in Wasm." -> r.toLoc)
+    case Value.This(sym: InnerSymbol) =>
       singletonInfoFor(sym) match
         case S(info) => singletonGlobalGet(info)
         case N =>
@@ -1770,6 +1783,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
               nullable = false,
             ),
+            r.toLoc,
           )
 
     case Call(Value.SimpleRef(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
@@ -1818,8 +1832,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             case S(body) =>
               val declaredParams = fun.targetSymbol match
                 case S(ts: TermSymbol) =>
-                  ts.erasedType.collect:
-                    case ft: ErasedFuncType => ft.paramLists
+                  ts.erasedSignature.map(_.paramLists)
                 case _ => N
               val ps = declaredParams match
                 case S(pl :: Nil) => pl
@@ -1869,7 +1882,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     extraInfo = S(fun.toString),
                   )
               val baseTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(baseFuncIdx).typeIdx)
-              val wasmArgs = castArgsToParams(args.map(argument), baseTypeInfo)
+              val wasmArgs = adaptCallArgs(args.map(argument), baseTypeInfo, c.toLoc)
 
               call(
                 funcidx = baseFuncIdx,
@@ -1879,7 +1892,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             case _ =>
               val base = subexpression(fun)
               if base.resultTypes.exists(_ is UnreachableType) then return base
-              val wasmArgs = args.map(argument)
 
               val baseTypeIdx = base.resultType match
                 case S(RefType(idx: TypeIdx, _)) => idx
@@ -1897,6 +1909,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     ),
                   )
               val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
+              val wasmArgs = adaptCallArgs(args.map(argument), baseTypeInfo, c.toLoc)
 
               call_ref(
                 target = base,
@@ -1949,14 +1962,14 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             case other => lastWords(s"Expected struct type for $selCls, found ${other.toWat.mkString()}")
           val getExpr = struct.get(
             fieldidx,
-            ref = castConserve(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
+            ref = castConserve(qualRes, RefType(ctx.getType_!(selCls), nullable = false), sel.toLoc),
             ty = fieldTy,
           )
           selSym.asTrm.flatMap(_.erasedType).flatMap(_.wasmType) match
-            case S(declared) => castConserve(getExpr, declared)
+            case S(declared) => castConserve(getExpr, declared, sel.toLoc)
             case N => fieldTy match
               case rt: RefType if rt.nullable && rt.heapType != HeapType.Any =>
-                castConserve(getExpr, rt.copy(nullable = false))
+                castConserve(getExpr, rt.copy(nullable = false), sel.toLoc)
               case _ => getExpr
         case N =>
           errExpr(
@@ -1969,9 +1982,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             extraInfo = S(sel),
           )
 
-    case dyn @ DynSelect(qual, fld, arrayIdx) =>
+    case dyn @ DynSelect(qual, fld, kind) =>
       val qualRes = result(qual)
-      if arrayIdx then
+      if kind.isArrayIdx then
         val idxBuilder = compileTupleIndex(
           fld = fld,
           loc = fld.toLoc,
@@ -2040,7 +2053,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         lastWords(s"Missing type definition for class constructor ${ctorClsBlkSym.toString}")
       val ctorClsTypeIdx = ctx.getType(ctorClsBlkSym).getOrElse:
         lastWords(s"Missing class definition for class ${ctorClsBlkSym.toString}")
-      val ctorArgs = castArgsToParams(as.map(argument), ctorTypeIdx)
+      val ctorArgs = adaptCallArgs(as.map(argument), ctorTypeIdx, r.toLoc)
       call(funcidx = ctorFuncIdx, operands = ctorArgs, Seq(Result(RefType(ctorClsTypeIdx, nullable = false))))
 
     case Tuple(mut, elems) =>
@@ -2118,7 +2131,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       name,
       ExternType.Func(
         TypeUse(typeIdx),
-        TempSymbol(N, erasedType = N, name),
+        TempSymbol(N, initErasedType = N, name),
         wrapId = N -> N,
       ),
     ))
@@ -2172,13 +2185,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                       })",
                   )
                 val fieldidx = fieldSelect(selCls, fieldSym)
-                val objRef = castConserve(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
+                val objRef = castConserve(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false), lhs.toLoc)
                 val structInfo = ctx.getTypeInfo_!(selCls)
                 val fieldType = structInfo.compType match
                   case st: StructType => classField(selCls, fieldSym).ty
                   case other => lastWords(s"Expected struct type for $selCls, found ${other.toWat.mkString()}")
                 val rhsCasted = fieldType match
-                  case rt: RefType => castConserve(rhsExpr, rt)
+                  case rt: RefType => castConserve(rhsExpr, rt, rhs.toLoc)
                   case _ => rhsExpr
                 struct.set(fieldidx, objRef, rhsCasted)
               case N =>
@@ -2201,11 +2214,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val rstBlk = returningTerm(rst)
         assignInstr +: rstBlk
 
-      case assign @ AssignDynField(lhs, fld, arrayIdx, rhs, rst) =>
+      case assign @ AssignDynField(lhs, fld, kind, rhs, rst) =>
         val lhsExpr = result(lhs)
         val rhsExpr = result(rhs)
         val assignInstr =
-          if arrayIdx then
+          if kind.isArrayIdx then
             val tupleArrayType = this.tupleArrayType(mut = true)
             val tupleRef = ref.cast(lhsExpr, RefType(tupleArrayType, nullable = false))
             val idxBuilder = compileTupleIndex(
@@ -2218,7 +2231,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             array.set(tupleArrayType, tupleRef, idxExpr, rhsExpr)
           else
             errExpr(
-              Ls(msg"WatBuilder::returningTerm for AssignDynField(...) where `arrayIdx = false` is not implemented yet" ->
+              Ls(msg"WatBuilder::returningTerm for AssignDynField(...) with a non-index key is not implemented yet" ->
                 lhs.toLoc),
               extraInfo = S(assign),
             )
@@ -2401,7 +2414,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
                   def overwriteMethod(
                       sym: BlockMemberSymbol,
-                      ps: ParamList,
+                      ps: LoweredParamList,
                       bod: Block,
                   ): Unit =
                     val paramTypes = ctx.getVirtualTable(clsLikeDefn.sym).flatMap: vt =>
@@ -2427,9 +2440,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                   end overwriteMethod
 
                   clsLikeDefn.methods.foreach:
-                    case FunDefn(_, sym, _, Nil, bod) =>
-                      overwriteMethod(sym, PlainParamList(Nil)(N), bod)
-                    case FunDefn(_, sym, _, ps :: Nil, bod) =>
+                    case FunDefn(sym = sym, params = Nil, body = bod) =>
+                      overwriteMethod(sym, LoweredParamList.plain(Nil)(N), bod)
+                    case FunDefn(sym = sym, params = ps :: Nil, body = bod) =>
                       overwriteMethod(sym, ps, bod)
                     case methodDefn =>
                       lastWords(
@@ -2488,7 +2501,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val operand = result(res)
         // Storage and calling conventions may widen a reference (e.g. a singleton's nullable global).
         // Restore the IR value's type at the return boundary so Block.returnType also describes the emitted value.
-        val resWat = res.erasedValueType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _))
+        val resWat = res.erasedType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _, res.toLoc))
         val returned = resWat.resultType match
           case S(refTy: RefType) =>
             refTy.heapType match
@@ -2635,6 +2648,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                         val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
                         val scrutValue = i31.get(scrutAsI31, signed = true)
                         i32.eq(scrutValue, withValidIntLit(value, lit.toLoc)(i32.const))
+                      case UnitLit(true) => ref.is_null(getScrutExpr)
                       case _ =>
                         break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 
@@ -2770,7 +2784,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           extraInfo = S(sub.showAsTree),
         ))
 
-      case Throw(res) =>
+      case Throw(res, _) =>
         val excWat = result(res)
         Vector(`throw`(exnTagIdx, Seq(excWat)))
 
@@ -2896,7 +2910,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       val entryResultTypes = Seq(Result(entryResultType))
 
       val entryFnTy = ctx.addType(TypeInfo(
-        sym = TempSymbol(N, erasedType = N, entrySym.nme),
+        sym = TempSymbol(N, initErasedType = N, entrySym.nme),
         FunctionType(params = Seq.empty, results = entryResultTypes),
         objectTag = N,
       ))
@@ -2919,7 +2933,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               memuse = N,
               sym = TempSymbol(
                 N,
-                erasedType = S(ErasedType.Str),
+                initErasedType = S(ErasedType.Str),
                 s.take(WatBuilder.StringConstantIdentMaxLength),
               ),
             ))
@@ -2927,13 +2941,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       val initActions = ctx.getSingletonInitActions
       if initActions.nonEmpty then
         val initTy = ctx.addType(TypeInfo(
-          sym = TempSymbol(N, erasedType = N, "start"),
+          sym = TempSymbol(N, initErasedType = N, "start"),
           compType = FunctionType(params = Seq.empty, results = Seq.empty),
           objectTag = N,
         ))
         val initBody = initActions.mergeAsBlock_!
         val initFn = ctx.addFunc(FuncInfo(
-          sym = TempSymbol(N, erasedType = N, "start"),
+          sym = TempSymbol(N, initErasedType = N, "start"),
           typeUse = TypeUse(initTy),
           params = Seq.empty,
           resultTypes = initBody.resultTypes.map(ty => Result(ty.asValType_!)),
@@ -2968,7 +2982,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
   def setupFunction(
       thisSym: Opt[InnerSymbol],
-      params: ParamList,
+      params: LoweredParamList,
       body: Block,
       paramTypes: Opt[Seq[ValType]] = N,
   )(using Raise, SessionExportCtx): (Expr, FunctionCtx) =

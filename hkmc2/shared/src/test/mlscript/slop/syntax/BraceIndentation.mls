@@ -1,0 +1,164 @@
+:.
+:js
+
+
+module M with {
+  val x = 10
+  module N with { val n = 2 }
+}
+
+// Local opens accept the same multiline bodies as ordinary brace blocks.
+// The token snapshot also checks that the lexer retains the enclosing indentation.
+:p
+:expect 13
+M.{
+  let y = x + 1
+  y + 2
+}
+//│ ┊M┊`.`┊{⟨┊→⟨┊let┊ ┊y┊ ┊=┊ ┊x┊ ┊+┊ ┊1┊↵┊y┊ ┊+┊ ┊2┊⟩←┊↵┊⟩}┊
+//│ Parsed:
+//│ 	OpenIn(Ident(M),Block(List(LetLike(Keywrd(keyword 'let'),Ident(y),Some(OpApp(Ident(x),Ident(+),List(IntLit(1)))),None), OpApp(Ident(y),Ident(+),List(IntLit(2))))))
+//│ = 13
+
+:expect 13
+id(M.{
+  let y = x + 1
+  y + 2
+})
+//│ = 13
+
+:expect 13
+M.{ let y = x + 1
+y + 2 }
+//│ = 13
+
+:expect 13
+M.{
+  let y = x + 1
+  z => y + z
+}(2)
+//│ = 13
+
+:expect 13
+M.{ // opening comment
+  // leading comment
+  let y = x + 1
+  y + 2 // trailing comment
+  // closing comment
+}
+//│ = 13
+
+:expect 14
+id(
+  M.{
+    let y = x + 1
+    y + 2 } + 1
+)
+//│ = 14
+
+:expect 13
+M.{
+  let y = x + 1
+  N.{
+    y + n
+  }
+}
+//│ = 13
+
+:expect ()
+M.{
+  // Empty local open.
+}
+
+// Neither the opened members nor local bindings escape the braces.
+:e
+:re
+x
+//│ ╔══[COMPILATION ERROR] Name not found: x
+//│ ║  l.+1: 	x
+//│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+:re
+y
+//│ ╔══[COMPILATION ERROR] Name not found: y
+//│ ║  l.+1: 	y
+//│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+
+// Only indentation enclosing the entire brace body is transparent.
+:expect 3
+id({
+  let x =
+    let inner = 1
+    inner + 1
+  x + 1
+})
+//│ = 3
+
+:expect 3
+id({ let x = 1
+x + 2 })
+//│ = 3
+
+
+// Multiline continuations retain both their attachment precedence and their closing boundary.
+:expect 14
+2 * 3 {
+  + 1
+} * 2
+//│ = 14
+
+:expect 251
+1 + 2 {
+  * 3
+  * 4 + 1
+} * 10
+//│ = 251
+
+:expect 26
+2 { // opening comment
+  // continuation after a comment
+  + 2
+} {
+  * 3 + 1
+} * 2
+//│ = 26
+
+:expect 3
+"ab" {
+  .length
+} + 1
+//│ = 3
+
+:expect 84
+42 {
+  as Int
+} * 2
+//│ = 84
+
+:expect false
+(true) {
+  and false
+}
+//│ = false
+
+fun choose(x) = if x {
+  == 1 then 10
+  == 2 then 20
+} else 30
+
+:expect [10, 20, 30]
+[choose(1), choose(2), choose(3)]
+//│ = [10, 20, 30]
+
+// A single-branch continuation still diagnoses an `else` inside its braces.
+:pe
+fun bad(x) = if x {
+  == 1 then 10 else 20
+}
+//│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
+//│ ║  l.+2: 	  == 1 then 10 else 20
+//│ ╙──      	               ^^^^

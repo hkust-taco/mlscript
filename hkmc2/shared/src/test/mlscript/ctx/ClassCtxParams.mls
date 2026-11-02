@@ -32,10 +32,10 @@ class Bar(using val s: Str)
 :e
 Bar
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Str for call: 
-//│ ║  l.33: 	Bar
+//│ ║  l.+1: 	Bar
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.30: 	class Bar(using val s: Str)
+//│ ║  l.XX: 	class Bar(using val s: Str)
 //│ ║        	          ^^^^^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Str; Available: Int
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -45,10 +45,10 @@ class Bar(using s: Str)
 :e
 Bar
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Str for call: 
-//│ ║  l.46: 	Bar
+//│ ║  l.+1: 	Bar
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.43: 	class Bar(using s: Str)
+//│ ║  l.XX: 	class Bar(using s: Str)
 //│ ║        	          ^^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Str; Available: Int
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -83,10 +83,10 @@ class Foo(using Int)(using Str) with
 :e
 Foo
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type Str for call: 
-//│ ║  l.84: 	Foo
+//│ ║  l.+1: 	Foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.79: 	class Foo(using Int)(using Str) with
+//│ ║  l.XX: 	class Foo(using Int)(using Str) with
 //│ ║        	                     ^^^^^^^^^
 //│ ╙── Missing instance: Expected: Str; Available: Int
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -121,14 +121,14 @@ class Foo(using T) with
 :sjs
 x => x.Foo#S
 //│ ╔══[COMPILATION ERROR] Class 'Foo' does not contain member 'S'.
-//│ ║  l.122: 	x => x.Foo#S
-//│ ╙──       	           ^
+//│ ║  l.+1: 	x => x.Foo#S
+//│ ╙──      	           ^
 //│ ╔══[COMPILATION ERROR] Cannot query instance of type T for call: 
-//│ ║  l.122: 	x => x.Foo#S
-//│ ║         	      ^^^^
+//│ ║  l.+1: 	x => x.Foo#S
+//│ ║        	      ^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.101: 	class Foo(using T) with
-//│ ║         	          ^^^^^^^
+//│ ║  l.XX: 	class Foo(using T) with
+//│ ║        	          ^^^^^^^
 //│ ╙── Missing instance: Expected: T; Available: Int
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let lambda; lambda = (undefined, function (x) { return x.S }); return lambda

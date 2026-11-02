@@ -80,16 +80,16 @@ m.id
 //│ ————————————————| Resolved |————————————————————————————————————————————————————————————————————————
 //│   m⁰.id‹id², id⁰›
 //│ ╔══[COMPILATION ERROR] This selection of member 'id' is ambiguous, as it has multiple resolved targets
-//│ ║  l.79: 	m.id
+//│ ║  l.+1: 	m.id
 //│ ║        	^^^^
 //│ ╟── target: function 'id' in module 'Predef'
 //│ ║  in ../../mlscript-compile/Predef.mls
-//│ ║  l.19: 	fun id(x) = x
+//│ ║  l.XX: 	fun id(x) = x
 //│ ║        	    ^^
 //│ ╟── target: function 'id' in module 'Bar'
-//│ ║  in NestedModules.mls:6
-//│ ║  l.8: 	    fun id(x) = x
-//│ ╙──     	        ^^
+//│ ║  in NestedModules.mls:XX
+//│ ║  l.XX: 	    fun id(x) = x
+//│ ╙──      	        ^^
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 

@@ -200,10 +200,10 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[COMPILATION ERROR] Unrecognized pattern split (operator application).
-//│ ║  l.200: 	    0 ::
-//│ ║         	    ^^^^
-//│ ║  l.201: 	      Nil() then "oh"
-//│ ╙──       	^^^^^^
+//│ ║  l.+3: 	    0 ::
+//│ ║        	    ^^^^
+//│ ║  l.+4: 	      Nil() then "oh"
+//│ ╙──      	^^^^^^
 
 
 fun f(x) =

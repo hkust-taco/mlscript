@@ -94,6 +94,7 @@ let x = 3 in
 
 // * Similar: we might want to use the extracted value of `x` upon stopping the loop
 fun f(xs) =
+  let =xs
   while xs is
     [y, ..ys] and
       y > 0 do

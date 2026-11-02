@@ -18,5 +18,5 @@ module Fixed with
   fun value() = 0
   fun change() = set value = 1
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
-//│ ║  l.19: 	  fun change() = set value = 1
+//│ ║  l.+3: 	  fun change() = set value = 1
 //│ ╙──      	                     ^^^^^
