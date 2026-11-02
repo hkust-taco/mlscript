@@ -12,8 +12,8 @@ private fun f(a) =
 private fun g(a) = 2
 f(unsafe.undefined)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > f⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > g⁰#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > f⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private

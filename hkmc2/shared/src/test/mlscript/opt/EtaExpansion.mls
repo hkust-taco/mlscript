@@ -256,8 +256,8 @@ app(returnRest2(0))
 //│ eta-expansion > returnRest2⁰#0 @ <root>: [1, 1+rest]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > returnRest2⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > rest2⁰#0 @ <root> -> eliminable: {0}
+//│ dead-param-elim > returnRest2⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > rest2⁰#1 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————

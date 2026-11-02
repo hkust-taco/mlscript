@@ -46,7 +46,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   private def isFused(p: ProdStrat): Bool = p match
     case c: Ctor => solver.finalCtorDests.contains(c.concreteId)
     case _: ProdFun | UnknownProd => false
-    case UnsafeEta | NoProd => lastWords("effect producer in value flow")
+    case UnsafeEta => lastWords("effect producer in value flow")
     case _: StratVar => lastWords("unexpected strat var")
 
   private def producersOf(values: ProdStrat): Ls[ProdStrat] = values match
@@ -68,7 +68,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           case N => S(c.allocatedType)
         case _: ProdFun => S(ErasedType.Function(S(false)))
         case UnknownProd => N
-        case UnsafeEta | NoProd => lastWords("effect producer in value flow")
+        case UnsafeEta => lastWords("effect producer in value flow")
         case _: StratVar => lastWords("unexpected strat var")
       val types = producers.map(producerType)
       if types.forall(_.isEmpty) then declared

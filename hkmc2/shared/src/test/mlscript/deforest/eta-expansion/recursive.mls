@@ -112,8 +112,8 @@ len(flatten(id((1 :: 2 :: Nil) :: (3 :: Nil) :: Nil)))
 //│ deforest > 	fields: ls¹.t⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > flatten_append$append⁰#0 @ <root>: [2, 5]
 //│ eta-expansion > flatten$flatten⁰#0 @ <root>: [1, 5]
+//│ eta-expansion > flatten_append$append⁰#0 @ <root>: [2, 5]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp, tmp1, tmp2, tmp3, tmp4, flatten$flatten, flatten_append$append$worker, flatten$flatten$worker, inlinedVal;

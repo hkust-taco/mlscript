@@ -13,11 +13,9 @@ enum EffectSummary:
 
 object EffectAnalysis:
   
-  def summarize(effectVar: StratVar | NoProd): EffectSummary =
-    effectVar match
-    case NoProd => EffectSummary.Pure
-    case effectVar: StratVar =>
-      if effectVar.lowerBounds.forall(_.isInstanceOf[StratVar])
+  def summarize(effectVar: EffectVar): EffectSummary =
+    effectVar.fold(EffectSummary.Pure): v =>
+      if v.lowerBounds.forall(_.isInstanceOf[StratVar])
       then EffectSummary.Pure
       else EffectSummary.UnsafeEta
   

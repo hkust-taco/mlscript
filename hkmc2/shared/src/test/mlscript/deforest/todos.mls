@@ -35,8 +35,6 @@ fun f(a) = if a is
 let p = AA(AA(AA(10)))
 test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > >>> fusing >>>
-//│ deforest > B⁰ ->
-//│ deforest > 	match: x⁰
 //│ deforest > AA⁰(tmp⁰) ->
 //│ deforest > 	match: x⁰
 //│ deforest > 	fields: x⁰.x¹
@@ -46,23 +44,20 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > AA⁰(10) ->
 //│ deforest > 	match: arg$AA$0$¹
 //│ deforest > 	fields: arg$AA$0$¹.x¹
+//│ deforest > B⁰ ->
+//│ deforest > 	match: x⁰
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, test$x_B, test$x_rest, test$x_AA, test$x_rest1, test$arg$AA$0$_AA, test$arg$AA$0$_rest, test$arg$AA$0$_AA1, test$arg$AA$0$_rest1, test$test, test$test1, tmp8, tmp9, tmp10, AA_x, AA_x1, AA_x2, deforest$lam;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, test$x_AA, test$x_rest, test$arg$AA$0$_AA, test$arg$AA$0$_rest, test$arg$AA$0$_AA1, test$arg$AA$0$_rest1, test$x_B, test$x_rest1, test$test, test$test1, tmp8, tmp9, tmp10, AA_x, AA_x1, AA_x2, deforest$lam;
 //│ @private
 //│ define test$test as fun test$test⁰(x) {
-//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
-//│   return (x(tmp11, t, tmp12, tmp13, tmp14) as! Int⁰)
-//│ };
-//│ @private
-//│ define test$test1 as fun test$test¹(x) {
 //│   let t, a, arg$AA$0$, tmp11, tmp12, tmp13, tmp14, arg$AA$0$1, arg$AA$0$2;
 //│   return (x(arg$AA$0$1, arg$AA$0$2, arg$AA$0$, a, tmp11, t, tmp12, tmp13, tmp14) as! Int⁰)
 //│ };
-//│ @affine(1) @private
-//│ define test$x_B as fun test$x_B⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
-//│   set fv_tmp = 4;
-//│   return test$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
+//│ @private
+//│ define test$test1 as fun test$test¹(x) {
+//│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
+//│   return (x(tmp11, t, tmp12, tmp13, tmp14) as! Int⁰)
 //│ };
 //│ @affine(1) @private
 //│ define test$x_AA as fun test$x_AA⁰(AA_x3)(fv_arg$AA$0$, fv_arg$AA$0$1, fv_arg$AA$0$2, fv_a, fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
@@ -81,16 +76,13 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│   set fv_tmp = fv_a;
 //│   return test$arg$AA$0$_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
-//│ @private
-//│ define test$x_rest as fun test$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
-//│   set fv_t = fv_tmp;
-//│   set fv_tmp1 = +⁰(fv_t, 20);
-//│   set fv_tmp2 = -⁰(fv_tmp1, 3);
-//│   set fv_tmp3 = +⁰(fv_tmp2, 2);
-//│   return -⁰(fv_tmp3, 1)
+//│ @affine(1) @private
+//│ define test$x_B as fun test$x_B⁰()(fv_tmp, fv_t, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│   set fv_tmp = 4;
+//│   return test$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
 //│ };
 //│ @private
-//│ define test$x_rest1 as fun test$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│ define test$x_rest as fun test$x_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   set fv_t = fv_tmp;
 //│   set fv_tmp1 = +⁰(fv_t, 20);
 //│   set fv_tmp2 = -⁰(fv_tmp1, 3);
@@ -104,6 +96,14 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ @private
 //│ define test$arg$AA$0$_rest1 as fun test$arg$AA$0$_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
 //│   return test$arg$AA$0$_rest¹(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3)
+//│ };
+//│ @private
+//│ define test$x_rest1 as fun test$x_rest⁰(fv_t, fv_tmp, fv_tmp1, fv_tmp2, fv_tmp3) {
+//│   set fv_t = fv_tmp;
+//│   set fv_tmp1 = +⁰(fv_t, 20);
+//│   set fv_tmp2 = -⁰(fv_tmp1, 3);
+//│   set fv_tmp3 = +⁰(fv_tmp2, 2);
+//│   return -⁰(fv_tmp3, 1)
 //│ };
 //│ define test⁰ as fun test¹(x) {
 //│   let t, a, arg$AA$0$, arg$AA$0$1, arg$AA$0$2, tmp11, tmp12, tmp13, tmp14;
@@ -158,15 +158,15 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ set tmp3 = f¹(p⁰);
 //│ set tmp4 = +⁰(tmp2, tmp3);
 //│ set AA_x = 10;
-//│ set tmp8 = test$arg$AA$0$_AA¹(AA_x);
-//│ set AA_x1 = tmp8;
-//│ set tmp9 = test$arg$AA$0$_AA⁰(AA_x1);
-//│ set AA_x2 = tmp9;
-//│ set tmp10 = test$x_AA⁰(AA_x2);
-//│ set tmp5 = test$test¹(tmp10);
+//│ set tmp10 = test$arg$AA$0$_AA¹(AA_x);
+//│ set AA_x1 = tmp10;
+//│ set tmp8 = test$arg$AA$0$_AA⁰(AA_x1);
+//│ set AA_x2 = tmp8;
+//│ set tmp9 = test$x_AA⁰(AA_x2);
+//│ set tmp5 = test$test⁰(tmp9);
 //│ set tmp6 = +⁰(tmp4, tmp5);
 //│ set deforest$lam = test$x_B⁰();
-//│ set tmp7 = test$test⁰(deforest$lam);
+//│ set tmp7 = test$test¹(deforest$lam);
 //│ return +⁰(tmp6, tmp7)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 78

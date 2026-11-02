@@ -18,8 +18,8 @@ fun node_pure(x) = leaf_pure(x)
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function leaf_pure⁰#0 @ <root> -> Pure
 //│ flow-analysis > function node_pure⁰#0 @ <root> -> Pure
-//│ flow-analysis > call +⁰@result¹#0 @ <root> -> Pure
-//│ flow-analysis > call leaf_pure⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call +⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call leaf_pure⁰@result¹#0 @ <root> -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -51,8 +51,8 @@ fun node_unsafe(x) = leaf_unsafe(x)
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function leaf_unsafe⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function node_unsafe⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call leaf_unsafe⁰@result⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call unsafe@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_unsafe⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call unsafe@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -62,8 +62,8 @@ fun node_unsafe(x) = leaf_unsafe(x)
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function leaf_unsafe⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function node_unsafe⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call leaf_unsafe⁰@result⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call print@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_unsafe⁰@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call print@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -87,14 +87,14 @@ fun node() =
 //│ flow-analysis > function leaf_unsafe_private⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function leaf_unsafe_public⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function node⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call leaf_pure_private⁰@result²#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call leaf_pure_public⁰@result³#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call leaf_unsafe_private⁰@result⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call leaf_unsafe_public⁰@result¹#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call x²@result⁶#0 @ <root> -> Pure
-//│ flow-analysis > call x³@result⁷#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call x¹@result⁵#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call x⁰@result⁴#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_pure_private⁰@result⁵#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_pure_public⁰@result⁴#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_unsafe_private⁰@result⁷#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_unsafe_public⁰@result⁶#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call x²@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call x³@result³#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call x¹@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call x⁰@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 // * Recursive calls propagate pure and unsafe.
@@ -103,9 +103,9 @@ fun node_recursive_unsafe() = unsafe(); node_recursive_unsafe()
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function node_recursive_pure⁰#0 @ <root> -> Pure
 //│ flow-analysis > function node_recursive_unsafe⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call ,⁰@result⁰#0 @ <root> -> Pure
+//│ flow-analysis > call ,⁰@result²#0 @ <root> -> Pure
 //│ flow-analysis > call node_recursive_unsafe⁰@result¹#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call unsafe@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call unsafe@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -115,8 +115,8 @@ fun node_pure() = leaf_pure()
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function leaf_pure⁰#0 @ <root> -> Pure
 //│ flow-analysis > function node_pure⁰#0 @ <root> -> Pure
-//│ flow-analysis > call leaf_pure⁰@result⁰#0 @ <root> -> Pure
-//│ flow-analysis > call unsafe@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_pure⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call unsafe@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -127,9 +127,9 @@ fun node_pure() = leaf_pure()()
 //│ flow-analysis > function leaf_pure⁰#0 @ <root> -> Pure
 //│ flow-analysis > function leaf_pure⁰#1 @ <root> -> Pure
 //│ flow-analysis > function node_pure⁰#0 @ <root> -> Pure
-//│ flow-analysis > call leaf_pure⁰@result⁰#0 @ <root> -> Pure
-//│ flow-analysis > call leaf_pure⁰@result⁰#1 @ <root> -> Pure
-//│ flow-analysis > call unsafe@result¹#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_pure⁰@result¹#0 @ <root> -> Pure
+//│ flow-analysis > call leaf_pure⁰@result¹#1 @ <root> -> Pure
+//│ flow-analysis > call unsafe@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -158,9 +158,9 @@ fun box_unsafe(box: Box) = box.unsafe()
 //│ flow-analysis > function box_instantiation⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function box_pure⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > function box_unsafe⁰#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call pure@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call pure@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call unsafe@result²#0 @ <root> -> UnsafeEta
 //│ flow-analysis > call unsafe@result¹#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call unsafe@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -194,8 +194,8 @@ fun node_pure_4(xs) = leaf_pure_2(1, 2, 3)
 //│ flow-analysis > function node_pure_3⁰#0 @ <root> -> Pure
 //│ flow-analysis > function node_pure_4⁰#0 @ <root> -> Pure
 //│ flow-analysis > call leaf_pure_1⁰@result¹#0 @ <root> -> Pure
-//│ flow-analysis > call leaf_pure_2⁰@result⁰#0 @ <root> -> Pure
-//│ flow-analysis > call unsafe@result²#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call leaf_pure_2⁰@result²#0 @ <root> -> Pure
+//│ flow-analysis > call unsafe@result⁰#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -232,30 +232,30 @@ fun node() =
   leaf_unsafe_public(unsafe)
   leaf_unsafe_private(unsafe)
 //│ flow-analysis > >>> effect-analysis results >>>
-//│ flow-analysis > function answer⁰#0 @ answer³ -> Pure
-//│ flow-analysis > function answer⁰#0 @ node⁰.answer² -> Pure
-//│ flow-analysis > function answer⁰#0 @ node⁰.answer¹ -> Pure
-//│ flow-analysis > function leaf_pure_private⁰#0 @ leaf_pure_private² -> UnsafeEta
-//│ flow-analysis > function leaf_pure_private⁰#0 @ node⁰.leaf_pure_private¹ -> UnsafeEta
-//│ flow-analysis > function leaf_pure_public⁰#0 @ leaf_pure_public² -> UnsafeEta
-//│ flow-analysis > function leaf_pure_public⁰#0 @ node⁰.leaf_pure_public¹ -> UnsafeEta
-//│ flow-analysis > function leaf_unsafe_private⁰#0 @ leaf_unsafe_private² -> UnsafeEta
-//│ flow-analysis > function leaf_unsafe_private⁰#0 @ node⁰.leaf_unsafe_private¹ -> UnsafeEta
-//│ flow-analysis > function leaf_unsafe_public⁰#0 @ leaf_unsafe_public² -> UnsafeEta
-//│ flow-analysis > function leaf_unsafe_public⁰#0 @ node⁰.leaf_unsafe_public¹ -> UnsafeEta
-//│ flow-analysis > function node¹#0 @ node⁰ -> UnsafeEta
-//│ flow-analysis > call leaf_pure_private⁰@result³#0 @ node⁰ -> UnsafeEta
-//│ flow-analysis > call leaf_pure_public⁰@result¹#0 @ node⁰ -> UnsafeEta
-//│ flow-analysis > call leaf_unsafe_private⁰@result⁷#0 @ node⁰ -> UnsafeEta
-//│ flow-analysis > call leaf_unsafe_public⁰@result⁵#0 @ node⁰ -> UnsafeEta
-//│ flow-analysis > call x²@result⁴#0 @ leaf_unsafe_public² -> UnsafeEta
-//│ flow-analysis > call x²@result⁴#0 @ node⁰.leaf_unsafe_public¹ -> UnsafeEta
-//│ flow-analysis > call x³@result⁶#0 @ leaf_unsafe_private² -> UnsafeEta
-//│ flow-analysis > call x³@result⁶#0 @ node⁰.leaf_unsafe_private¹ -> UnsafeEta
-//│ flow-analysis > call x¹@result²#0 @ leaf_pure_private² -> UnsafeEta
-//│ flow-analysis > call x¹@result²#0 @ node⁰.leaf_pure_private¹ -> Pure
-//│ flow-analysis > call x⁰@result⁰#0 @ leaf_pure_public² -> UnsafeEta
-//│ flow-analysis > call x⁰@result⁰#0 @ node⁰.leaf_pure_public¹ -> Pure
+//│ flow-analysis > function answer⁰#0 @ answer¹ -> Pure
+//│ flow-analysis > function answer⁰#0 @ node¹.answer² -> Pure
+//│ flow-analysis > function answer⁰#0 @ node¹.answer³ -> Pure
+//│ flow-analysis > function leaf_pure_private⁰#0 @ leaf_pure_private¹ -> UnsafeEta
+//│ flow-analysis > function leaf_pure_private⁰#0 @ node¹.leaf_pure_private² -> UnsafeEta
+//│ flow-analysis > function leaf_pure_public⁰#0 @ leaf_pure_public¹ -> UnsafeEta
+//│ flow-analysis > function leaf_pure_public⁰#0 @ node¹.leaf_pure_public² -> UnsafeEta
+//│ flow-analysis > function leaf_unsafe_private⁰#0 @ leaf_unsafe_private¹ -> UnsafeEta
+//│ flow-analysis > function leaf_unsafe_private⁰#0 @ node¹.leaf_unsafe_private² -> UnsafeEta
+//│ flow-analysis > function leaf_unsafe_public⁰#0 @ leaf_unsafe_public¹ -> UnsafeEta
+//│ flow-analysis > function leaf_unsafe_public⁰#0 @ node¹.leaf_unsafe_public² -> UnsafeEta
+//│ flow-analysis > function node⁰#0 @ node¹ -> UnsafeEta
+//│ flow-analysis > call leaf_pure_private⁰@result⁵#0 @ node¹ -> UnsafeEta
+//│ flow-analysis > call leaf_pure_public⁰@result⁴#0 @ node¹ -> UnsafeEta
+//│ flow-analysis > call leaf_unsafe_private⁰@result⁷#0 @ node¹ -> UnsafeEta
+//│ flow-analysis > call leaf_unsafe_public⁰@result⁶#0 @ node¹ -> UnsafeEta
+//│ flow-analysis > call x²@result²#0 @ leaf_unsafe_public¹ -> UnsafeEta
+//│ flow-analysis > call x²@result²#0 @ node¹.leaf_unsafe_public² -> UnsafeEta
+//│ flow-analysis > call x³@result³#0 @ leaf_unsafe_private¹ -> UnsafeEta
+//│ flow-analysis > call x³@result³#0 @ node¹.leaf_unsafe_private² -> UnsafeEta
+//│ flow-analysis > call x¹@result¹#0 @ leaf_pure_private¹ -> UnsafeEta
+//│ flow-analysis > call x¹@result¹#0 @ node¹.leaf_pure_private² -> Pure
+//│ flow-analysis > call x⁰@result⁰#0 @ leaf_pure_public¹ -> UnsafeEta
+//│ flow-analysis > call x⁰@result⁰#0 @ node¹.leaf_pure_public² -> Pure
 //│ flow-analysis > <<< effect-analysis results <<<
 
 
@@ -269,6 +269,6 @@ fun node_unsafe() = M.leaf_unsafe
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > function node_pure⁰#0 @ node_pure¹ -> UnsafeEta
 //│ flow-analysis > function node_unsafe⁰#0 @ node_unsafe¹ -> UnsafeEta
-//│ flow-analysis > call unsafe@result⁰#0 @ leaf_unsafe⁰ -> UnsafeEta
-//│ flow-analysis > call unsafe@result⁰#0 @ node_unsafe¹.leaf_unsafe¹ -> UnsafeEta
+//│ flow-analysis > call unsafe@result⁰#0 @ leaf_unsafe¹ -> UnsafeEta
+//│ flow-analysis > call unsafe@result⁰#0 @ node_unsafe¹.leaf_unsafe⁰ -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<

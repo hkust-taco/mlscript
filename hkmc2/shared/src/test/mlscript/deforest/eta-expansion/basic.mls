@@ -69,8 +69,8 @@ g(f(p()))
 //│ deforest > 	fields: y⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p$p⁰#0 @ <root>: [0, 2, 2]
 //│ eta-expansion > f$x_X⁰#0 @ <root>: [1, 2, 2]
+//│ eta-expansion > p$p⁰#0 @ <root>: [0, 2, 2]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = O
 
@@ -110,18 +110,18 @@ fun main(x) =
   c(p(2))
 main(3)
 //│ deforest > >>> fusing >>>
-//│ deforest > X⁰(tmp³) ->
-//│ deforest > 	match: x⁵
-//│ deforest > 	fields: x⁵.a⁰
-//│ deforest > Y⁰(tmp⁴) ->
+//│ deforest > Y⁰(tmp³) ->
 //│ deforest > 	match: arg$X$0$¹
 //│ deforest > 	fields: arg$X$0$¹.b⁰
-//│ deforest > X⁰(tmp³) ->
+//│ deforest > X⁰(tmp⁴) ->
 //│ deforest > 	match: x⁵
 //│ deforest > 	fields: x⁵.a⁰
-//│ deforest > Y⁰(tmp⁴) ->
+//│ deforest > Y⁰(tmp³) ->
 //│ deforest > 	match: arg$X$0$¹
 //│ deforest > 	fields: arg$X$0$¹.b⁰
+//│ deforest > X⁰(tmp⁴) ->
+//│ deforest > 	match: x⁵
+//│ deforest > 	fields: x⁵.a⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
 //│ eta-expansion > main_p$p⁰#0 @ <root>: [2, 3]

@@ -98,8 +98,8 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
     val res = LinkedHashMap.empty[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]]
     def funSymsToBeCopiedAt(path: InstantiationId): Iterator[TermSymbol] =
       collector.synthesizedInstIdToFunSym.get(path) match
-      case S(entry) => collector.funToSccGroups(entry).iterator.filterNot(_ is entry)
-      case N => collector.funToSccGroups(path.last.getReferredFun.get).iterator
+      case S(entry) => collector.funToScc(entry).iterator.filterNot(_ is entry)
+      case N => collector.funToScc(path.last.getReferredFun.get).iterator
     for
       // a call into an instance whose types change needs a copy even where none of its code changes,
       // as the original definition keeps the original types

@@ -178,17 +178,17 @@ c2 of A(A(A(A(A(A(1))))))
 //│   end
 //│ };
 //│ set A_a = 1;
-//│ set tmp = c2$arg$A$0$_A⁴(A_a);
-//│ set A_a1 = tmp;
-//│ set tmp1 = c2$arg$A$0$_A³(A_a1);
-//│ set A_a2 = tmp1;
-//│ set tmp2 = c2$arg$A$0$_A²(A_a2);
-//│ set A_a3 = tmp2;
-//│ set tmp3 = c2$arg$A$0$_A¹(A_a3);
-//│ set A_a4 = tmp3;
-//│ set tmp4 = c2$arg$A$0$_A⁰(A_a4);
-//│ set A_a5 = tmp4;
-//│ set tmp5 = c2$x_A⁰(A_a5);
-//│ return c2$c2⁰(tmp5)
+//│ set tmp2 = c2$arg$A$0$_A⁴(A_a);
+//│ set A_a1 = tmp2;
+//│ set tmp = c2$arg$A$0$_A³(A_a1);
+//│ set A_a2 = tmp;
+//│ set tmp5 = c2$arg$A$0$_A²(A_a2);
+//│ set A_a3 = tmp5;
+//│ set tmp4 = c2$arg$A$0$_A¹(A_a3);
+//│ set A_a4 = tmp4;
+//│ set tmp3 = c2$arg$A$0$_A⁰(A_a4);
+//│ set A_a5 = tmp3;
+//│ set tmp1 = c2$x_A⁰(A_a5);
+//│ return c2$c2⁰(tmp1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 1

@@ -64,11 +64,11 @@ private fun arrayKind(value: Any) = if value is Array then 1 else 0
 private fun objectKind(value: Any) = if value is Object then 1 else 0
 [arrayKind([1, 2]), objectKind([3, 4]), objectKind(Child(0))]
 //│ deforest > >>> fusing >>>
-//│ deforest > Child⁰(0) ->
+//│ deforest > [1, 2] ->
 //│ deforest > 	match: value⁰
 //│ deforest > [3, 4] ->
-//│ deforest > 	match: value⁰
-//│ deforest > [1, 2] ->
+//│ deforest > 	match: value¹
+//│ deforest > Child⁰(0) ->
 //│ deforest > 	match: value¹
 //│ deforest > <<< fusing <<<
 //│ = [1, 1, 1]
