@@ -68,7 +68,7 @@ set fields.changing = 42
 [read_param(fields), read_body(new BodyFields), read_unknown(fields)]
 //│ flow-analysis > >>> effect-analysis results >>>
 //│ flow-analysis > call read_body⁰@result¹#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call read_param⁰@result²#0 @ <root> -> UnsafeEta
-//│ flow-analysis > call read_unknown⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call read_param⁰@result⁰#0 @ <root> -> UnsafeEta
+//│ flow-analysis > call read_unknown⁰@result²#0 @ <root> -> UnsafeEta
 //│ flow-analysis > <<< effect-analysis results <<<
 //│ = [41, 41, 41]
