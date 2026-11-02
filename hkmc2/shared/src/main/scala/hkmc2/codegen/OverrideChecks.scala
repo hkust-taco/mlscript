@@ -35,16 +35,22 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
       parameters: Ls[(OverrideLayout.Input, OverrideLayout.Input)],
       signature: OverrideLayout.Signature, inheritedSignature: OverrideLayout.Signature)
   
-  // Definitions are keyed by identity: as case classes, they would otherwise be hashed and
-  // compared through their entire bodies on every lookup.
+  // Each entry retains the declaration it was computed from, which `layout` checks on every lookup.
   private val layouts =
-    mutable.Map.empty[Identity[TermDefinition], Either[OverrideLayout.Failure, OverrideLayout.Signature]]
+    mutable.Map.empty[TermSymbol, (TermDefinition, Either[OverrideLayout.Failure, OverrideLayout.Signature])]
   
-  /** The source layout of `td`, computed once per declaration. A base member with several overrides
+  /** The source layout of `td`, computed once per member. A base member with several overrides
     * and a declared member whose erased signature uses its layout then share one traversal of its type.
+    *
+    * Lookups pass the declaration that erasure traverses for an overriding member and the symbol's
+    * `defn` for an inherited member. These coincide for class members. A handler member is
+    * elaborated again without its resumption parameter list, under the same symbol, but nothing
+    * overrides a handler member, so only its traversed declaration reaches this cache.
     */
   def layout(td: TermDefinition): Either[OverrideLayout.Failure, OverrideLayout.Signature] =
-    layouts.getOrElseUpdate(Identity(td), OverrideLayout.signature(td))
+    val (computedFrom, layout) = layouts.getOrElseUpdate(td.tsym, td -> OverrideLayout.signature(td))
+    softAssert(computedFrom is td, s"Member '${td.tsym.nme}' must have a single declaration for its override layout")
+    layout
   
   private val edges = definitions.flatMap: td =>
     td.tsym.overriddenMembers.flatMap: base =>
