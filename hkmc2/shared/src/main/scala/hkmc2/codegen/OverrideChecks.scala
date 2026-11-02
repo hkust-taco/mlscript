@@ -55,8 +55,8 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
   private val edges = definitions.flatMap: td =>
     td.tsym.overriddenMembers.flatMap: base =>
       softAssert(base.defn.nonEmpty, "An inherited declaration must retain its source signature for override validation")
-      // `Inheritance.validateMember` reports a change of member kind. Such members have no
-      // corresponding parameter lists, so they produce neither a layout error nor an edge.
+      // `Inheritance.validateMember` reports an override that changes the kind of definition; comparing
+      // the pair's layouts would only restate that error, so the pair yields neither a layout error nor an edge.
       base.defn.toList.filterNot(Inheritance.changesMemberKind(td, _)).flatMap: inherited =>
         def fail(failure: OverrideLayout.Failure): Ls[Edge] =
           report(base, msg"Overriding member '${td.tsym.nme}' ${failure.message}", failure.toLoc.orElse(td.tsym.toLoc))

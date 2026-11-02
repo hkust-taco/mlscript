@@ -66,14 +66,14 @@ object Inheritance:
           case target :: Nil => S(target)
           case _ => N
 
-  /** Whether an override of `inherited` turns a field, getter, or method into another kind of member.
-    * Getter evaluation and method selection have different effects and calling conventions.
-    * A shared target symbol must never cause a getter read to be treated as a pure method value.
-    * An external declaration can describe a method through a callable type with no written
-    * parameters, so written parameter lists do not determine its kind.
+  /** Whether an override of `inherited` uses a different kind of definition, such as a `fun` overriding
+    * a `val`, or a `mut val` overriding a `val`. A value is computed once when its object is constructed,
+    * a mutable value can also be reassigned, and a function is evaluated on each access, so a selection
+    * typed through the inherited member would assume the wrong evaluation. Functions with different
+    * parameter lists, including a function without any overriding one with a parameter list, are
+    * rejected by [[codegen.OverrideLayout]]'s parameter list comparison.
     */
-  def changesMemberKind(td: TermDefinition, inherited: TermDefinition): Bool =
-    !isExternal(td) && (td.k != inherited.k || td.params.nonEmpty != inherited.params.nonEmpty)
+  def changesMemberKind(td: TermDefinition, inherited: TermDefinition): Bool = td.k != inherited.k
   
   /** Check only completed edges; an empty list during resolution can still acquire a parent. */
   def validateMember(td: TermDefinition)(using Erasure, Raise): Unit =
@@ -96,7 +96,7 @@ object Inheritance:
         if td.tsym.isPrivate then
           fail(msg"Overriding member '${base.nme}' cannot be private", S(base))
         if changesMemberKind(td, inherited) then
-          fail(msg"Overriding member '${base.nme}' must preserve whether the member is a field, getter, or method", S(base))
+          fail(msg"Overriding member '${base.nme}' is a ${td.k.desc}, but the member it overrides is a ${inherited.k.desc}", S(base))
         // Mixing a data property with an inherited accessor changes initialization and freezing behavior.
         if (td.k is syntax.MutVal) && (inherited.k is syntax.MutVal) &&
             td.annotations.exists(_.isInstanceOf[Annot.PlainField]) !=

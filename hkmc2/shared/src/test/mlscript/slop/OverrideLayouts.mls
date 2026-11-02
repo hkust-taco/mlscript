@@ -211,21 +211,27 @@ declare class ArrowNarrowing extends ArrowTypedBase {
 //│ ║  l.+2: 	  declare fun pick: (Int) -> Int
 //│ ╙──      	              ^^^^
 
-// A written method does not override a getter-shaped declaration in the current
-// member model; that existing diagnostic must not be bypassed by layout checking.
-:ge
+// A written method can override a declared callable member that has the same parameter lists.
+// The declared base class has no runtime definition in this test.
+:re
 private class WrittenOverArrow() extends ArrowTypedBase with
   override fun pick(value: Int): Int = value
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve whether the member is a field, getter, or method
-//│ ║  l.+2: 	  override fun pick(value: Int): Int = value
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Inherited member 'pick' is defined here
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+
+// A function without parameter lists cannot override a declared callable member's list.
+:ge
+private class ParameterlessOverArrow() extends ArrowTypedBase with
+  override fun pick = 1
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
+//│ ║  l.+2: 	  override fun pick = 1
+//│ ║        	               ^^^^
+//│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.XX: 	  declare fun pick: (Int) -> Int
 //│ ╙──      	              ^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 
-// Ordinary getters return their whole annotated function value; their arrows are
-// not additional parameter lists of the member itself.
+// A function without parameter lists returns its whole annotated function value;
+// the arrows of that value are not parameter lists of the member itself.
 :expect 7
 private class FunctionGetter() with
   open fun get: (Int) -> Int = (value: Int) => value
