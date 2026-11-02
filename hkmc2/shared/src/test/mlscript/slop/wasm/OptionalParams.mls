@@ -191,7 +191,7 @@ class SuppliedBase() {
   open fun pick(x?: Int): Int = if x is null then 1 else x
 }
 class SuppliedChild() extends SuppliedBase() {
-  override fun pick(x) = super.pick(x)
+  override fun pick(x?) = super.pick(x)
 }
 fun suppliedDispatch(base: SuppliedBase, x) = base.pick(x) + base.pick()
 let c = SuppliedChild()

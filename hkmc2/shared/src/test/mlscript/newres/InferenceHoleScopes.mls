@@ -14,6 +14,7 @@ call(2)
 :expect 3
 fun getIterator(xs): Iterator = xs.(Symbol.iterator)()
 fun foldingImpl(iterator: Iterator, acc, op: Function) =
+  let =acc
   let next = iterator.next()
   while next.done is false do
     set acc = op(acc, next.value)

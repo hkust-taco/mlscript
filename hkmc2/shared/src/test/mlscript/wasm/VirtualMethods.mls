@@ -310,8 +310,7 @@ M2().f(1)
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-// The same rule on a parameter. An unannotated parameter of an override takes the inherited
-// representation, so only a declared one can differ: here `m: Int` erases to `anyref` rather than `i32`.
+// An annotated override parameter must use the inherited unboxed representation.
 :ge
 class N1() with
   open fun g(m: Int32): Int32 = m
@@ -472,14 +471,15 @@ class StrProducer() extends Producer() with
   override fun get() = "str"
 fun produce(p) = p.get()
 produce(StrProducer())
-//│ ╔══[COMPILATION ERROR] Overriding member 'get' produces values represented as 'Str', which the member it overrides cannot produce: its results are represented as 'Producer'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Producer' at an unrelated type 'Str'
+//│ ║  l.+5: 	fun produce(p) = p.get()
+//│ ╙──      	                 ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Producer'
 //│ ║  l.+4: 	  override fun get() = "str"
-//│ ║        	               ^^^
-//│ ╟── The overridden member 'get' is defined here
-//│ ║  l.+2: 	  open fun get() = new Producer()
-//│ ╙──      	           ^^^
-//│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+//│ ╙──      	                       ^^^^^
+//│ ╔══[COMPILATION ERROR] Wasm function `get` expects result to have type `(ref null $Producer)`, but got `(ref null any)`
+//│ ║  l.+4: 	  override fun get() = "str"
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^
 
 
 // An unannotated parameter of an override takes the inherited representation, inferred here from calls through

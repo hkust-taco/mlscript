@@ -19,13 +19,16 @@ let x = true in if x then 1 else 0
 // :sir
 :soir
 fun f(x) =
+  let =x
   if x is 0 do
     set x = 1
   if x is 1 do
     print("!")
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define f⁰ as fun f¹(x) {
-//│   match x
+//│   let x1;
+//│   set x1 = (x as! Int⁰);
+//│   match x1
 //│     0 =>
 //│       do Predef⁰.print⁰("!");
 //│       return runtime⁰.Unit⁰

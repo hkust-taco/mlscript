@@ -1,0 +1,116 @@
+:.
+
+import "../../mlscript-compile/Iter.mls"
+import "../../mlscript-compile/LazyArray.mls"
+import "../../mlscript-compile/LazyFingerTree.mls"
+
+class Item(val value: Int)
+
+// Both implementations expose materialization through the same public interface.
+fun first(xs: Iter.LazyIterable[Item]): Int = xs.materialize().at(0).value
+
+:expect [1, 2, 3, 4]
+[
+  first(LazyArray.mk(Item(1)))
+  first(LazyArray.concat([Item(2)]))
+  first(LazyFingerTree.mk(Item(3)))
+  first(LazyFingerTree.concat([Item(4)]))
+]
+//│ = [1, 2, 3, 4]
+
+// Concatenation retains the lazy interface before and after forcing a splice.
+fun concatenated(xs: Iter.LazyIterable[Item]): Array[Int] =
+  val joined: Iter.LazyIterable[Item] = xs.concat([Item(5)])
+  joined.materialize()
+  val extended: Iter.LazyIterable[Item] = joined.concat([Item(6)], [Item(7)])
+  val values: Indexable[Item] = extended.materialize()
+  [values.at(0).value, values.at(1).value, values.at(2).value, values.at(3).value]
+
+:expect true
+concatenated(LazyArray.mk(Item(1))) == [1, 5, 6, 7]
+  && concatenated(LazyFingerTree.mk(Item(2))) == [2, 5, 6, 7]
+//│ = true
+
+// A slice may return an eager tree. Its declared interface still supports the
+// common iterable operations without promising materialize on that result.
+fun sliced(xs: Iter.LazyIterable[Item]): Array[Int] =
+  val result: Iter.IterableBase[Item] = xs.slice(1)
+  result.map(x => x.value)
+
+:expect true
+sliced(LazyArray.mk(Item(1), Item(2))) == [2]
+  && sliced(LazyArray.concat([Item(1)], [Item(2)])) == [2]
+  && sliced(LazyFingerTree.mk(Item(1), Item(2))) == [2]
+  && sliced(LazyFingerTree.concat([Item(1)], [Item(2)])) == [2]
+//│ = true
+
+// Public factory signatures must not reveal storage fields or reification helpers.
+:e
+fun arrayStorage() = LazyArray.mk(1).underlying
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun arrayStorage() = LazyArray.mk(1).underlying
+//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Intersection type does not contain member 'underlying'
+//│ ║  in ../../mlscript-compile/Iter.mls
+//│ ║  l.XX: 	  materialize: () -> Indexable[A]
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  concat: (...Array[Indexable[A]]) -> LazyIterable[A]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  slice: (Int?, Int?) -> IterableBase[A]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun treeStorage() = LazyFingerTree.concat([1]).bits
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun treeStorage() = LazyFingerTree.concat([1]).bits
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Intersection type does not contain member 'bits'
+//│ ║  in ../../mlscript-compile/Iter.mls
+//│ ║  l.XX: 	  materialize: () -> Indexable[A]
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  concat: (...Array[Indexable[A]]) -> LazyIterable[A]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  slice: (Int?, Int?) -> IterableBase[A]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun arrayReification() = LazyArray.concat([1]).reify
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun arrayReification() = LazyArray.concat([1]).reify
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Intersection type does not contain member 'reify'
+//│ ║  in ../../mlscript-compile/Iter.mls
+//│ ║  l.XX: 	  materialize: () -> Indexable[A]
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  concat: (...Array[Indexable[A]]) -> LazyIterable[A]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  slice: (Int?, Int?) -> IterableBase[A]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun treeReification() = LazyFingerTree.concat([1]).reify
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun treeReification() = LazyFingerTree.concat([1]).reify
+//│ ║        	                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Intersection type does not contain member 'reify'
+//│ ║  in ../../mlscript-compile/Iter.mls
+//│ ║  l.XX: 	  materialize: () -> Indexable[A]
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  concat: (...Array[Indexable[A]]) -> LazyIterable[A]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  slice: (Int?, Int?) -> IterableBase[A]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+fun materializeSlice(xs: Iter.LazyIterable[Int]) = xs.slice().materialize()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun materializeSlice(xs: Iter.LazyIterable[Int]) = xs.slice().materialize()
+//│ ║        	                                                   ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Value of type 'IterableBase' does not contain member 'materialize'
+//│ ║  in ../../mlscript-compile/Iter.mls
+//│ ║  l.XX: 	  slice: (Int?, Int?) -> IterableBase[A]
+//│ ║        	                         ^^^^^^^^^^^^^^^
+//│ ╟── Record type does not contain member 'materialize'
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.XX: 	type Iterable[out A] = {@annotations.jsSymbol(Symbol.iterator) iterator: () -> Iterator[A]}
+//│ ╙──      	                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^

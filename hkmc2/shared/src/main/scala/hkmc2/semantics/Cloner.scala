@@ -249,7 +249,8 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     Modulefulness(source.msym.map(_.subst))(source.modified)
 
   private def parameter(source: Param): Param =
-    val copy = Param(source.flags, source.sym.subst, source.sign.map(term), modulefulness(source.modulefulness))(source.toLoc)
+    val copy = Param(source.flags, source.sym.subst, source.sign.map(term), modulefulness(source.modulefulness),
+      source.annotations.map(annotation))(source.toLoc)
     copy.fldSym = source.fldSym.map(_.subst)
     copy.sym.decl = S(copy)
     source.fldSym.toList.flatMap:

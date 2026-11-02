@@ -7,20 +7,23 @@
 
 :soir
 private fun f(a) =
+  let =a
   a = 3
   g(a)
 private fun g(a) = 2
 f(unsafe.undefined)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > f⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > g⁰#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
-//│ define f⁰ as fun f¹() { return g⁰() };
+//│ define f⁰ as fun f¹(a) {
+//│   do (a as! Int⁰);
+//│   return g⁰()
+//│ };
 //│ @private
 //│ define g¹ as fun g⁰() { return 2 };
-//│ return f¹()
+//│ return f¹(undefined)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 2
 

@@ -193,6 +193,7 @@ data class Cons(hd, tl)
 
 :sjs
 fun f(ls) =
+  let =ls
   while ls is
     Cons(h, tl) then
       set ls = tl
@@ -202,12 +203,14 @@ fun f(ls) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f6;
 //│ f6 = function f(ls) {
+//│   let ls1;
+//│   ls1 = ls;
 //│   lbl9: while (true) {
 //│     let arg$Cons$0$, arg$Cons$1$;
-//│     if (ls instanceof Cons1.class) {
-//│       arg$Cons$0$ = ls.hd;
-//│       arg$Cons$1$ = ls.tl;
-//│       ls = arg$Cons$1$;
+//│     if (ls1 instanceof Cons1.class) {
+//│       arg$Cons$0$ = ls1.hd;
+//│       arg$Cons$1$ = ls1.tl;
+//│       ls1 = arg$Cons$1$;
 //│       Predef.print(arg$Cons$0$);
 //│       continue lbl9
 //│     }
@@ -231,6 +234,7 @@ f(Cons(1, Cons(2, Cons(3, 0))))
 //│ > Done!
 
 fun f(ls) =
+  let =ls
   while
     do print(ls)
     ls is Cons(h, tl) do set ls = tl

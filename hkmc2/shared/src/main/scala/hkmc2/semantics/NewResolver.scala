@@ -10,7 +10,6 @@ import syntax.*
 import Term.*
 
 import Elaborator.*
-import hkmc2.syntax.LetBind
 
 
 /** Best-effort name, member, and call resolution, not a type checker.
@@ -1706,21 +1705,19 @@ class NewResolver:
 
   /** A generator call returns an iterator over its yielded values. Neither the yielded
     * values nor the body's final payload are tracked, so the iterator yields `Any`.
+    * The structural interface also admits library implementations without nominal inheritance.
     */
-  private def iteratorShape(annotation: Annot.Generator)(using ResolutionContext): NominalInstanceView =
-    val cls = prelude.builtins.Iterator.defn.get
-    softAssert(cls.tparams.length == 1 && cls.ext.isEmpty,
-      "The builtin Iterator must have one element parameter and the implicit Object parent")
-    val provenance = ShapeProvenance(
-      msg"This generator annotation makes calls return an iterator instead of the body's result." -> N :: Nil)
-      .withTypeOrigin(annotation)
-    NominalInstanceView(cls, Map(cls.tparams.head.sym -> extremeType(true)), implicitParent(cls))(N, provenance)(this)
+  private def iteratorShape(using ResolutionContext): InstanceShape =
+    val symbol = prelude.builtins.Iterator match
+      case symbol: TypeAliasSymbol => symbol
+      case _ => lastWords("The builtin Iterator must be a structural type alias")
+    instanceShape(appliedType(symbol, new ::(extremeType(true), Nil)))
 
   /** The object that replaces a function's result once all its written parameter lists are applied. */
   private def wrapperShape(annotation: Annot.Async | Annot.Generator, payload: DeclaredType)
-      (using ResolutionContext): NominalInstanceView = annotation match
+      (using ResolutionContext): TermShape = annotation match
     case annotation: Annot.Async => promiseShape(annotation, payload)
-    case annotation: Annot.Generator => iteratorShape(annotation)
+    case _: Annot.Generator => iteratorShape
 
   /** Reify the projection before observing its operand. Expanding an inferred
     * body's type parameter here would freeze the declaration's abstract view
@@ -1779,7 +1776,7 @@ class NewResolver:
         // The body and signature are written inside the definition, where its own binders are in scope.
         val scope = lexicalBinders(td.tsym).map(_ ++ definitionBinders(td))
         listener(promiseShape(annotation, resultType(source, scope, instances)(bodyResult)))
-      case S(annotation: Annot.Generator) => listener(iteratorShape(annotation))
+      case S(_: Annot.Generator) => listener(iteratorShape)
       case N => bodyResult(listener)
 
   /** Observe one application of a declared callable. Partial application keeps
@@ -3143,7 +3140,9 @@ class NewResolver:
                   case NoShape => ()
             def check(sh: TermShape, unknown: Opt[TermShape])(using ResolutionContext): Unit =
               if sh.isInstanceOfClass(cls) then
-                fs.foreach: (bms, pat) =>
+                // Wildcards bind no values and test no field shape. Reading their
+                // fields would instantiate generic views that no listener uses.
+                for (bms, pat) <- fs if !pat.isInstanceOf[Pattern.Wildcard] do
                   def member(info: MemberLookup, instances: TypeSubstitution)(using ResolutionContext): Unit = info match
                     case MemberLookup.All(members) => members.foreach(member(_, instances))
                     case MemberLookup.Contextual(source, substitution) => member(source, instances.withOverrides(substitution))
@@ -3953,7 +3952,7 @@ class NewResolver:
         MarkedShape.exit(shape, ResolutionBoundary(thru), N) match
           case value: TermShape => assign(base, value)
           case NoShape => ()
-      case MemberRef(sym: TermSymbol) if sym.k is LetBind =>
+      case MemberRef(sym: TermSymbol) if sym.isLetOrParamBinding =>
         publishActivated(rctx.memberVariable(sym), shape)
       case SimpleRef(sym: LocalSymbol) => publishActivated(sym, shape)
       case Ref(sym: LocalSymbol) => publishActivated(sym, shape)
@@ -4222,8 +4221,13 @@ class NewResolver:
   def listenExt(defn: ClassLikeDef, listener: ShapeListener[Opt[TermShape]])(using ResolutionContext): Unit =
     defn.ext match
     case S(trm) =>
-      listenTerm(trm): sh =>
-        listener(S(sh))
+      // Definition and receiver shapes cache the parent's source template.
+      // Observing it under a caller's substitution would bake that activation
+      // into the shared shape; the resulting value view carries the substitution.
+      val callerInstances = rctx.instances
+      // Imported callbacks must keep the consuming graph while restoring the caller.
+      listenTerm(trm)(sh => listener(S(sh))(using rctx.withInstances(callerInstances)))(
+        using rctx.withInstances(TypeSubstitution.empty))
     case N =>
       listener(implicitParent(defn))
   
@@ -4322,7 +4326,7 @@ class NewResolver:
           // generated matcher object does not enter or leave those scopes.
           val exited = sym match
             case _: ModuleOrObjectSymbol | _: PatternSymbol => sh
-            case sym: TermSymbol if sym.k is LetBind => sh
+            case sym: TermSymbol if sym.isLetOrParamBinding => sh
             case _ => MarkedShape.exit(sh, ResolutionBoundary(sym), S(resSym))
           (exited match
             case value: TermShape => transportShape(value, markss)
@@ -4389,7 +4393,7 @@ class NewResolver:
             //   ??? // TODO error?
             wrappedListener(defnShapes.getOrElseUpdate(sym, DefnShape(d, extsh)))
           )
-        case N if sym.asTrm.exists(_.k is LetBind) =>
+        case N if sym.asTrm.exists(_.isLetOrParamBinding) =>
           listenMemberVariable(sym.asTrm.get)(wrappedListener)
         case N =>
           softAssert(false, s"Symbol definition of ${sym} is not set upon completion of ${bms}")
@@ -4924,15 +4928,15 @@ class NewResolver:
       symbol.defn match
         case S(defn) => completed(defn)
         case N => symbol.defnListeners += completed
-    case ref @ MemberRef(sym: TermSymbol) if sym.k is LetBind =>
-      // A let-binding has no evaluation boundary of its own. Surrounding
-      // function/class captures still enter and exit through Capture normally.
+    case ref @ MemberRef(sym: TermSymbol) if sym.isLetOrParamBinding =>
+      // Forward the binding's shapes without adding scope entry/exit marks
+      // for this plain let or param binding.
       recordValueTarget(ref, sym)
       rctx.memberVariable(sym).subscribeToShapes(listener)
     case MemberRef(_: TermSymbol) =>
-      // Ctx.RefElem only refers to let-bound term symbols directly. Other definitions,
+      // Ctx.RefElem only refers to lexical term bindings directly. Other definitions,
       // including class parameter fields, are referenced through their BlockMemberSymbol.
-      lastWords("Only let-bound term symbols can be referenced directly")
+      lastWords("Only lexical term bindings can be referenced directly")
     case ref @ MemberRef(sym: BlockMemberSymbol) =>
       val fs = ref.resSym
       val sh = symShapes.getOrElseUpdate((sym, fs, Nil), CoreSymShape(sym, fs, Nil))

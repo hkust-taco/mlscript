@@ -161,7 +161,7 @@ Box(41).mk()
 //│ = 42
 
 
-class Counter(val x) with
+class Counter(mut val x) with
   fun inc() = 
     set x += 1
     this
@@ -176,18 +176,18 @@ c.Counter#inc().Counter#double().Counter#get()
 
 :todo
 let d = Counter(c.Counter#get())
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null i31))))))`
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
 
 :todo
 d.Counter#inc().Counter#double().Counter#get()
 //│ ╔══[COMPILATION ERROR] Cannot find variable `d` (VarSymbol) in local or global scope.
 //│ ║  l.XX: 	let d = Counter(c.Counter#get())
 //│ ╙──      	    ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/inc` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null i31))))))`
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/inc` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
 
 :todo
 c.Counter#get()
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null i31))))))`
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing field `term:Counter/get` in struct `member:Counter` with type `(type $Counter (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))`
 
 
 class GetterOnly() with

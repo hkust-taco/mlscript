@@ -314,7 +314,7 @@ object Elaborator:
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
-      lazy val Iterator = assumeBuiltinCls("Iterator")
+      lazy val Iterator = assumeBuiltinTpe("Iterator")
       lazy val Awaited = assumeBuiltinTpe("Awaited")
       lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")
@@ -377,6 +377,7 @@ object Elaborator:
         val bitor = assumeObject("bitor")
         val shl = assumeObject("shl")
         val try_catch = assumeObject("try_catch")
+        val plainField = assumeObject("plainField")
       object wasm extends VirtualModule(assumeBuiltinMod("wasm")):
         /** The nested modules of `wasm`, which group the instruction intrinsics by the family they emit, e.g.
           * `wasm.i32`.
@@ -905,6 +906,10 @@ extends Importer:
               case _ =>
                 raise(ErrorReport(msg"@jsSymbol requires one stable path to a val marked @annotations.fresh." -> tree.toLoc :: Nil))
                 N
+          case ctx.builtins.js.plainField =>
+            return S(Annot.PlainField()(tree.toLoc))
+          case ctx.builtins.unsafe.bms =>
+            return S(Annot.Unsafe()(tree.toLoc))
           case ctx.builtins.annotations.untyped =>
             return S(Annot.Untyped()(tree.toLoc))
           case ctx.builtins.annotations.tailcall =>
@@ -1732,7 +1737,7 @@ extends Importer:
             params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
-                  raise(ErrorReport(msg"Handler function cannot be a getter" -> td.toLoc :: Nil))
+                  raise(ErrorReport(msg"Handler function must have a parameter list before its continuation parameter list" -> td.toLoc :: Nil))
                 val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)(td.toLoc, td.headerLoc, td.scope)
                 S(HandlerTermDefinition(value.sym, newTd))
               case _ =>
@@ -2229,7 +2234,7 @@ extends Importer:
         // * so the parameter and the reference are both located at the `_`,
         // * which lets diagnostics about either point to it.
         val id = new Ident("_" + unds.size).withLocOf(und)
-        val sym = VarSymbol(id, mut = true)
+        val sym = VarSymbol(id, mut = false)
         unds += sym
         syntheticLocalRef(sym).withLocOf(und)
     case Annotated(lhs, rhs) =>
@@ -2594,10 +2599,22 @@ extends Importer:
           val r = term(rhs, Trm)
           ctx.get(id.name) match
           case S(elem) =>
+            def whoops = raise:
+              ErrorReport(msg"Symbol '${id.name
+                }' is not a local variable and cannot be explicitly initialized" -> id.toLoc
+                :: elem.symbol.flatMap(_.toLoc).match
+                  case s @ S(_) => msg"Defined here:" -> s :: Nil
+                  case N => Nil)
             elem.symbol match
+            case S(sym: LocalVarSymbol) if !sym.mut =>
+              whoops
+              go(sts, Nil, Term.Error().withLocOf(id) :: acc)(N)
+            case S(sym: TermSymbol) if sym.k is ParamBind =>
+              whoops
+              go(sts, Nil, Term.Error().withLocOf(id) :: acc)(N)
             case S(sym: (LocalSymbol | TermSymbol)) => go(sts, Nil, defineVar(sym, r)(statementLoc) :: acc)(N)
             case S(sym) =>
-              raise(ErrorReport(msg"Symbol '${id.name}' is not a variable and cannot be reassigned" -> id.toLoc :: Nil))
+              whoops
               go(sts, Nil, Term.Error().withLocOf(id) :: acc)(N)
             case N =>
               raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
@@ -2832,7 +2849,7 @@ extends Importer:
               ,
               TermDefFlags.empty,
               p.modulefulness,
-              if isPublicField then Nil else Annot.Private :: Nil,
+              if isPublicField then p.annotations else Annot.Private :: Nil,
               N,
             )(p.toLoc, p.toLoc, S(ctx.scope))
             assert(p.fldSym.isEmpty)
@@ -2844,9 +2861,9 @@ extends Importer:
             fsym.complete()
             fdef :: Nil
           
-          // Other parameters are only bound locally in the class body.
+          // Keep these immutable bindings lexical: constructor parameters may share names with members.
           def paramBinding(p: Param): Ls[Statement] =
-            val psym = TermSymbol(LetBind, owner, p.sym.id)
+            val psym = TermSymbol(ParamBind, owner, p.sym.id)
             psym.sourceAliases = p.sym.sourceAliases
             rctx.state.lexicalTypeBinders(psym) = ctx.typeBinders
             val decl = LetDecl(psym, Nil)(p.toLoc) // TODO: never use term symbols on LetDecl LHS
@@ -2938,7 +2955,7 @@ extends Importer:
                 case p @ Param(flags = FldFlags(false, false, true, false, _, _)) => S(p)
                 // All flags are `false`.
                 case p @ Param(flags = FldFlags(false, false, false, false, _, _)) => S(p)
-                case Param(flags, sym, _, _) =>
+                case Param(flags = flags, sym = sym) =>
                   raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with modifiers: ${
                     flags.show(false)}" -> sym.toLoc :: Nil))
                   N
@@ -3036,7 +3053,7 @@ extends Importer:
                     sym,
                     ctsym,
                     allCtorPss,
-                    S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none)(tp.toLoc))),
+                    S(tps.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none, Nil)(tp.toLoc))),
                     S(resultType),
                     N,
                     TermDefFlags.empty,
@@ -3185,9 +3202,9 @@ extends Importer:
     if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id)
     else VarSymbol(id, mut = true)
   
-  def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
+  def param(t: Tree, inUsing: Bool, inDataClass: Bool, inConstructor: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
-      case pt @ ParamTree(flags, id, sign, spd, modifiers) =>
+      case pt @ ParamTree(flags, id, sign, spd, modifiers, annotations) =>
         log(dbg"Elaborating ParamTree: ${pt}")
         val flg = flags.copy(isVal = flags.isVal || inDataClass)
         val (canonicalId, aliases) = symbolicSuffixBase(id.name) match
@@ -3201,9 +3218,15 @@ extends Importer:
         // * so the annotation of `y?: T` denotes `T | null` both for callers and in the body.
         val sig = if flg.opt then writtenSig.map(optionalType(_, t.toLoc)) else writtenSig
         if newResolution then sig.foreach(registerSignature)
-        val sym = VarSymbol(canonicalId, mut = true)
+        val sym = VarSymbol(canonicalId, mut = false)
         sym.sourceAliases = aliases
-        val p = Param(flg, sym, sig, mfn)(t.toLoc)
+        // Constructor parameter annotations apply to the generated field; the parameter binding stays immutable.
+        val fieldAnnotations = annotations.flatMap(annot).filter:
+          case _: Annot.PlainField if inConstructor && flg.isVal => true
+          case annotation =>
+            raise(WarningReport(msg"This annotation is not supported on this parameter." -> annotation.toLoc :: Nil))
+            false
+        val p = Param(flg, sym, sig, mfn, fieldAnnotations)(t.toLoc)
         sym.decl = S(p)
         if newResolution then
           // Optional parameters admit null regardless of which calls we observe.
@@ -3312,7 +3335,7 @@ extends Importer:
         case hd :: tl =>
           val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam
-          param(hd, inUsing, inDataClass)(using ctx) match
+          param(hd, inUsing, inDataClass, inConstructor)(using ctx) match
           case R((p, spd, aliases)) =>
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
@@ -3435,7 +3458,7 @@ extends Importer:
           // We create a symbol specifically for `Param` for each variable to
           // avoid redundantly redeclaring symbols in `Scope` during code
           // generation, which triggers the assertion in `Scope.addToBindings`.
-          val parameterSymbol = VarSymbol(symbol.id, erasedType = N, mut = symbol.mut)
+          val parameterSymbol = VarSymbol(symbol.id, erasedType = N, mut = false)
           (name -> parameterSymbol, symbol -> parameterSymbol)
       .toList.unzip
       pattern.variables.report // Report all invalid variables we found in `pattern`.

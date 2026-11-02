@@ -1,0 +1,112 @@
+:.
+
+
+// Overrides in other compilation units inherit the representations of an open member's
+// parameters and result, so an exposed open member of an extensible class must specify them.
+:e
+open class Base() with
+  open fun scale(x, y: Int) = x * y
+//│ ╔══[COMPILATION ERROR] Open member 'scale' is exposed by this compilation unit, so its result type and the types of its parameters must be annotated or inherited from an overridden member
+//│ ║  l.+2: 	  open fun scale(x, y: Int) = x * y
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'Base' is exposed by this compilation unit.
+//│ ║  l.+1: 	open class Base() with
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── Parameter 'x' has no type annotation
+//│ ║  l.+2: 	  open fun scale(x, y: Int) = x * y
+//│ ╙──      	                 ^
+
+// Abstract members and open fields are overridable too.
+:e
+abstract class Shape() with
+  fun area()
+  open val name = "shape"
+//│ ╔══[COMPILATION ERROR] Open member 'area' is exposed by this compilation unit, so its result type must be annotated or inherited from an overridden member
+//│ ║  l.+2: 	  fun area()
+//│ ║        	  ^^^^^^^^^^
+//│ ╟── 'Shape' is exposed by this compilation unit.
+//│ ║  l.+1: 	abstract class Shape() with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Open member 'name' is exposed by this compilation unit, so its type must be annotated or inherited from an overridden member
+//│ ║  l.+3: 	  open val name = "shape"
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╟── 'Shape' is exposed by this compilation unit.
+//│ ║  l.+1: 	abstract class Shape() with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+
+// A separate full signature types the written parameters.
+open class Signed() with
+  open fun scale: (Int, Int) -> Int
+  open fun scale(x, y) = x * y
+
+// An override inherits a specified signature unchanged and need not restate it.
+open class Typed() with
+  open fun scale(x: Int, y: Int): Int = x * y
+open class Inheriting() extends Typed() with
+  open override fun scale(x, y) = x + y
+Inheriting().scale(2, 3)
+//│ = 5
+
+// A parameter that corresponds to no inherited parameter inherits no type.
+:e
+open class Extended() extends Typed() with
+  open override fun scale(x, y, factor?) = x * y
+//│ ╔══[COMPILATION ERROR] Open member 'scale' is exposed by this compilation unit, so the types of its parameters must be annotated or inherited from an overridden member
+//│ ║  l.+2: 	  open override fun scale(x, y, factor?) = x * y
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── 'Extended' is exposed by this compilation unit.
+//│ ║  l.+1: 	open class Extended() extends Typed() with
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Parameter 'factor' has no type annotation
+//│ ║  l.+2: 	  open override fun scale(x, y, factor?) = x * y
+//│ ╙──      	                                ^^^^^^^
+
+// Only `open` and `abstract` classes can be extended by other compilation units.
+class Sealed() with
+  open fun scale(x) = x * 2
+class SealedChild() extends Sealed() with
+  override fun scale(x) = x * 3
+SealedChild().scale(2)
+//│ = 6
+
+// Open members that no exposure path reaches are overridden only in this unit.
+private open class LocalBase() with
+  open fun scale(x) = x * 2
+LocalBase().scale(2)
+//│ = 4
+
+fun localClasses() =
+  open class Inner() with
+    open fun get() = 1
+  class InnerChild() extends Inner() with
+    override fun get() = 2
+  InnerChild().get()
+localClasses()
+//│ = 2
+
+// An `open` object may become extensible, so its open members are checked as well.
+:e
+open object OpenConstant with
+  open fun get() = 1
+//│ ╔══[COMPILATION ERROR] Open member 'get' is exposed by this compilation unit, so its result type must be annotated or inherited from an overridden member
+//│ ║  l.+2: 	  open fun get() = 1
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── 'OpenConstant' is exposed by this compilation unit.
+//│ ║  l.+1: 	open object OpenConstant with
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+
+object Constant with
+  open fun get() = 1
+Constant.get()
+//│ = 1
+
+// Private members cannot be overridden.
+:w
+open class WithPrivate() with
+  private open fun helper(x) = x
+  fun get() = helper(1)
+WithPrivate().get()
+//│ ╔══[WARNING] Private member 'helper' cannot be overridden, so 'open' has no effect
+//│ ║  l.+2: 	  private open fun helper(x) = x
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = 1

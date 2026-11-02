@@ -15,7 +15,7 @@ private class GeneratorChild() extends GeneratorBase() with
   override fun generate(value: Any) = value
 GeneratorChild().generate("payload").next()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: GeneratorChild⁰, tmp1: Iterator⁰;
+//│ let tmp: GeneratorChild⁰, tmp1: Unknown;
 //│ @private
 //│ define GeneratorBase⁰ as class GeneratorBase² {
 //│   constructor GeneratorBase¹

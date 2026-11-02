@@ -78,6 +78,7 @@ fun f() = if A(1, Nil) is
 // Every branch repeats, so this loop never assigns Unit to x.
 :sjs
 fun f(x) =
+  let =x
   x = while x is
     A(a, _) then a()
     B(a, _) then a()
@@ -87,15 +88,17 @@ fun f(x) =
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f3;
 //│ f3 = function f(x1) {
+//│   let x2;
+//│   x2 = x1;
 //│   lbl: while (true) {
-//│     if (x1 instanceof A1.class) {
-//│       runtime.safeCall(x1.a());
+//│     if (x2 instanceof A1.class) {
+//│       runtime.safeCall(x2.a());
 //│       continue lbl
-//│     } else if (x1 instanceof B1.class) {
-//│       runtime.safeCall(x1.a());
+//│     } else if (x2 instanceof B1.class) {
+//│       runtime.safeCall(x2.a());
 //│       continue lbl
 //│     }
-//│     runtime.safeCall(x1());
+//│     runtime.safeCall(x2());
 //│     continue lbl;
 //│   }
 //│ };

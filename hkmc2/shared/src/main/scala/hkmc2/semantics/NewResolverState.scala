@@ -75,6 +75,17 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val contexts = mutable.Map.empty[(ResolutionContext, TypeSubstitution), ResolutionContext]
   private[semantics] var reporter: Raise | Null = null
   private[semantics] val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext), InterfaceExposure.Input]
+  /** The overridable members of extensible classes and objects that [[InterfaceExposure]] reached,
+    * each with the first exposure path that reached it. Erasure, which knows the parameters an
+    * override inherits, requires these members to have fully specified signatures. A worksheet block
+    * exposes its definitions before it is erased, and later blocks can only re-expose them.
+    */
+  private[semantics] val exposedOpenMembers = mutable.Map.empty[TermSymbol, ShapeProvenance]
+  
+  /** How [[InterfaceExposure]] first reached `member`, if `member` is an exposed overridable member
+    * of an extensible class or object of this compilation unit.
+    */
+  def exposedOpenMember(member: TermSymbol): Opt[ShapeProvenance] = exposedOpenMembers.get(member)
   private[semantics] val views = mutable.Map.empty[ResolutionContext, ResolutionContext]
   private[semantics] val inheritedViews = mutable.Map.empty[(NewResolverState, ResolutionContext), ResolutionContext]
   private[semantics] val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]

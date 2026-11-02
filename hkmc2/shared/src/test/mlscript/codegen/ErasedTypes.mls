@@ -201,12 +201,22 @@ fun add2(x: Num, y: Num): Int = x + y
 //│ end
 
 
-// A parameter keeps its annotated type regardless of a later reassignment.
+// An annotation does not permit reassignment of an immutable parameter.
+:ge
 fun keep(x: Int) =
   set x = 5
   x
+//│ ╔══[COMPILATION ERROR] Cannot assign to immutable parameter 'x'
+//│ ║  l.+2: 	  set x = 5
+//│ ║        	      ^^^^^
+//│ ╟── Defined here:
+//│ ║  l.+1: 	fun keep(x: Int) =
+//│ ╙──      	         ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define keep⁰ as fun keep¹(x: Int⁰): Int⁰ { set x = 5; return x }; end
+//│ define keep⁰ as fun keep¹(x: Int⁰): Int⁰ {
+//│   throw "This code cannot be run as its compilation yielded an error."
+//│ };
+//│ end
 
 
 // One class, four facets of the same rule:
@@ -282,35 +292,35 @@ fun counter(x: Int) =
 //│ end
 
 
-// When the captured slot keeps a definite erased type (the parameter `x` is annotated `Int`),
-// the generated capture field inherits it: both the constructor parameter `x$0` and the
-// `val x$0` field are typed `Int`, and the auxiliary parameter of the lifted function is
-// typed as well. Losing these types would introduce casts when the captured value is read back.
+// The mutable copy infers `Int` from the parameter and subsequent writes. Its capture field
+// preserves that representation, so both reading it and returning it need no cast.
 :lift
 fun resetCounter(x: Int): Int =
+  let =x
   fun reset() = set x = x + 1
   reset()
   x
 resetCounter(41)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let reset, Capture$resetCounter;
-//│ define reset as fun reset⁰(resetCounter$cap: Capture$resetCounter⁰): Unit⁰ {
-//│   let tmp: Int⁰;
-//│   set tmp = +⁰(resetCounter$cap.x$0⁰, 1);
-//│   set resetCounter$cap.x$0⁰ = tmp;
-//│   return runtime⁰.Unit⁰
-//│ };
-//│ define Capture$resetCounter as class Capture$resetCounter⁰ {
-//│   constructor Capture$resetCounter¹(x$0: Int⁰) {
-//│     define x$0¹ as val x$0⁰: Int⁰ = x$0;
+//│ let reset, Capture$scope0;
+//│ define Capture$scope0 as class Capture$scope0³ {
+//│   constructor Capture$scope0²(x$0: Int⁰) {
+//│     define x$0⁰ as val x$0¹: Int⁰ = x$0;
 //│     end
 //│   }
 //│ };
+//│ define reset as fun reset⁰(scope0$cap: Capture$scope0³): Unit⁰ {
+//│   let tmp: Int⁰;
+//│   set tmp = +⁰(scope0$cap.x$0¹, 1);
+//│   set scope0$cap.x$0¹ = tmp;
+//│   return runtime⁰.Unit⁰
+//│ };
 //│ define resetCounter⁰ as fun resetCounter¹(x: Int⁰): Int⁰ {
-//│   let resetCounter$cap: Capture$resetCounter⁰;
-//│   set resetCounter$cap = new mut Capture$resetCounter⁰(x);
-//│   do reset⁰(resetCounter$cap);
-//│   return resetCounter$cap.x$0⁰
+//│   let x1: Int⁰, scope0$cap: Capture$scope0³;
+//│   set scope0$cap = new mut Capture$scope0³(x1);
+//│   set scope0$cap.x$0¹ = x;
+//│   do reset⁰(scope0$cap);
+//│   return scope0$cap.x$0¹
 //│ };
 //│ return resetCounter¹(41)
 
@@ -951,56 +961,29 @@ fun useStr(s: Str) = s
 
 
 // A `declare`d function is never auto-invoked - `Lowering.ref` lowers the reference to a `globalThis`
-// selection - so its arrows are *its own parameter lists*, and the chain's last component is its result.
+// selection. Its parameter lists are its written ones: with none, the arrows of its type describe the
+// function value that the selection yields, so a call applies that value, whose result is not erased.
 declare fun addInts: (Int, Int) -> Int
 fun useAdd() = useInt(addInts(1, 2))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useAdd⁰ as fun useAdd¹(): Int⁰ {
-//│   let tmp: Int⁰;
+//│   let tmp: ?;
 //│   set tmp = globalThis⁰.addInts⁰(1, 2);
-//│   return useInt¹(tmp)
+//│   return useInt¹((tmp as! Int⁰))
 //│ };
 //│ end
 
 
-// That result is genuinely typed, so a wrong use is rejected rather than silently accepted.
-:ge
-fun badAdd() = useStr(addInts(1, 2))
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
-//│ ║  l.+1: 	fun badAdd() = useStr(addInts(1, 2))
-//│ ╙──      	                      ^^^^^^^^^^^^^
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define badAdd⁰ as fun badAdd¹(): Str⁰ {
-//│   let tmp: Int⁰;
-//│   set tmp = globalThis⁰.addInts⁰(1, 2);
-//│   return useStr¹(tmp)
-//│ };
-//│ end
-
-
-// An unparenthesized left-hand side is a single parameter, as in `declare fun log: Str -> Any`.
-declare fun showInt: Int -> Str
-fun useShow() = useStr(showInt(1))
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define useShow⁰ as fun useShow¹(): Str⁰ {
-//│   let tmp: Str⁰;
-//│   set tmp = globalThis⁰.showInt⁰(1);
-//│   return useStr¹(tmp)
-//│ };
-//│ end
-
-
-// Each arrow is a separate parameter list, so an under-applied call yields a function over those remaining.
-// A local's slot holds an erased *value* type, which cannot carry them, so `useCurried`'s intermediate is
-// only a `Function` and its final application still needs a cast.
-declare fun curried: Int -> Int -> Int
+// Each written parameter list is a separate physical list, so an under-applied call yields a function over
+// those remaining. A local's slot holds an erased *value* type, which cannot carry them, so `useCurried`'s
+// intermediate is only a `Function` and its final application still needs a cast.
+declare fun curried(x: Int)(y: Int): Int
 fun useCurried() = useInt(curried(1)(2))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useCurried⁰ as fun useCurried¹(): Int⁰ {
-//│   let callPrefix: Function⁰, tmp: ?;
-//│   set callPrefix = globalThis⁰.curried²(1);
-//│   set tmp = callPrefix(2);
-//│   return useInt¹((tmp as! Int⁰))
+//│   let tmp: Int⁰;
+//│   set tmp = globalThis⁰.curried²(1)(2);
+//│   return useInt¹(tmp)
 //│ };
 //│ end
 
@@ -1026,6 +1009,21 @@ fun useParse() = useInt(parseIt("1", 10))
 //│ end
 
 
+// That result is genuinely typed, so a wrong use is rejected rather than silently accepted.
+:ge
+fun badParse() = useStr(parseIt("1", 10))
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+1: 	fun badParse() = useStr(parseIt("1", 10))
+//│ ╙──      	                        ^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define badParse⁰ as fun badParse¹(): Str⁰ {
+//│   let tmp: Int⁰;
+//│   set tmp = globalThis⁰.parseIt⁰("1", 10);
+//│   return useStr¹(tmp)
+//│ };
+//│ end
+
+
 // A *non*-`declare`d `fun` writing no parameter lists is a getter: referencing it calls it, so its arrows
 // are the *result*. Reading them as parameters would type `getFn` as `Int` when it yields a function.
 fun getFn: Int -> Int
@@ -1041,11 +1039,11 @@ fun useGetFn() = useFn(getFn)
 
 // `@untyped` disclaims the callee's declared result, so the call erases to the top type and reaches a
 // differently-typed slot as a checked downcast. This is what lets an interop body call a mistyped operator.
-fun viaUntyped(x, y): Str = @untyped addInts(x, y)
+fun viaUntyped(s, radix): Str = @untyped parseIt(s, radix)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define viaUntyped⁰ as fun viaUntyped¹(x: ?, y: ?): Str⁰ {
+//│ define viaUntyped⁰ as fun viaUntyped¹(s: ?, radix: ?): Str⁰ {
 //│   let tmp: Unknown;
-//│   set tmp = globalThis⁰.addInts⁰(x, y);
+//│   set tmp = globalThis⁰.parseIt⁰((s as! Str⁰), (radix as! Int⁰));
 //│   return (tmp as! Str⁰)
 //│ };
 //│ end
@@ -1053,12 +1051,15 @@ fun viaUntyped(x, y): Str = @untyped addInts(x, y)
 
 // Without the annotation the same body is rejected - the guard rail doing its job.
 :ge
-fun viaTyped(x, y): Str = addInts(x, y)
+fun viaTyped(s, radix): Str = parseIt(s, radix)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
-//│ ║  l.+1: 	fun viaTyped(x, y): Str = addInts(x, y)
-//│ ╙──      	                          ^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun viaTyped(s, radix): Str = parseIt(s, radix)
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define viaTyped⁰ as fun viaTyped¹(x: ?, y: ?): Str⁰ { return globalThis⁰.addInts⁰(x, y) }; end
+//│ define viaTyped⁰ as fun viaTyped¹(s: ?, radix: ?): Str⁰ {
+//│   return globalThis⁰.parseIt⁰((s as! Str⁰), (radix as! Int⁰))
+//│ };
+//│ end
 
 
 // A member is reached by *selection*, which - unlike a bare reference - is never auto-invoked, so its
@@ -1372,7 +1373,7 @@ fun capturingLoop(n: Int, acc: Str) =
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): Str⁰ {
+//│ define capturingLoop⁰ as fun capturingLoop²(n: Int⁰, acc: Str⁰): Str⁰ {
 //│   loop loopLabel:
 //│     let scrut: ?, tmp: Int⁰, tmp1: ?, acc1: Str⁰;
 //│     set acc1 = acc;

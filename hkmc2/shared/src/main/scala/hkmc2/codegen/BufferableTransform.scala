@@ -34,7 +34,7 @@ class BufferableTransform()(using State, Raise):
                   (sym, VarSymbol(sym.id, erasedType = N, mut = sym.mut))
                 .toMap
               def mapParam(p: Param) =
-                Param(p.flags, varMap(p.sym), p.sign, p.modulefulness)(p.toLoc)
+                Param(p.flags, varMap(p.sym), p.sign, p.modulefulness, p.annotations)(p.toLoc)
               (params.map(pl => LoweredParamList(pl.flags, pl.params.map(mapParam), pl.restParam.map(mapParam))(pl.toLoc)), varMap.toMap)
             def mkFieldReplacer(buf: VarSymbol, baseIdx: VarSymbol, symMap: Map[SimpleSymbol, SimpleSymbol]) =
               def getOffset(off: Int, loc: Opt[Loc])(k: Path => Block): Block =

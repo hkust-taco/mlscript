@@ -231,10 +231,10 @@ private class Derived() extends Base() with
   override fun get() = "str"
 private fun produce(b) = b.get()
 produce(Derived())
-//│ ╔══[COMPILATION ERROR] Overriding member 'get' produces values represented as 'Str', which the member it overrides cannot produce: its results are represented as 'Base'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Base' at an unrelated type 'Str'
+//│ ║  l.+5: 	private fun produce(b) = b.get()
+//│ ╙──      	                         ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Base'
 //│ ║  l.+4: 	  override fun get() = "str"
-//│ ║        	               ^^^
-//│ ╟── The overridden member 'get' is defined here
-//│ ║  l.+2: 	  open fun get() = new Base()
-//│ ╙──      	           ^^^
+//│ ╙──      	                       ^^^^^
 //│ = "str"

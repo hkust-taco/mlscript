@@ -677,8 +677,8 @@ final class RecordTypeShape(val fields: Map[MemberKey, TypeArgument], val mutabl
       case _ => Nil)
     MemberLookup.all(keys.map(key => MemberLookup.Typed(declarations(key), fields(key), Nil)))
 
-/** A conjunction exposes members supplied by any component. Keep nominal and
-  * structural interfaces together: `Iterator[T] & Iterable[T]` supplies `next`
+/** A conjunction exposes members supplied by any component, including mixtures of nominal and
+  * structural interfaces. For example, `Iterator[T] & Iterable[T]` supplies `next`
   * and the iteration method on the same value. Constraint inspection still
   * visits the components separately, retaining every input and output flow.
   */

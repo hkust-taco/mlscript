@@ -307,6 +307,7 @@ choose(true)
 :noInline
 :expect 42
 private fun loop(flag) =
+  let =flag
   while flag
     then set flag = false
     else return const(42)

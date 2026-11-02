@@ -53,7 +53,7 @@ private class GeneratorChild() extends GeneratorBase() with
   override fun generate(value: Any) = value
 GeneratorChild().generate("payload").next()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: GeneratorChild⁰, tmp1: Iterator⁰;
+//│ let tmp: GeneratorChild⁰, tmp1: Unknown;
 //│ @private
 //│ define GeneratorBase⁰ as class GeneratorBase² {
 //│   constructor GeneratorBase¹
@@ -85,7 +85,7 @@ fun curried: Int -> Int -> Int
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let curried$worker;
 //│ @inline
-//│ define curried⁰ as fun curried¹(x: Int⁰)(y: Int⁰): Iterator⁰ {
+//│ define curried⁰ as fun curried¹(x: Int⁰)(y: Int⁰): Unknown {
 //│   return curried$worker⁰(x, y)
 //│ };
 //│ @generator
@@ -191,13 +191,13 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 let recursiveIterator = forward()
 [recursiveIterator.next(), recursiveIterator.next(), recursiveIterator.next()]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: Unknown, tmp1: Unknown, tmp2: Unknown, recursive$worker;
+//│ let tmp: ?, tmp1: ?, tmp2: ?, recursive$worker;
 //│ @noInline
-//│ define forward⁰ as fun forward¹(): Iterator⁰ {
+//│ define forward⁰ as fun forward¹(): Unknown {
 //│   return recursive$worker⁰(1, 42)
 //│ };
 //│ @inline
-//│ define recursive⁰ as fun recursive¹(count: Int⁰)(result: Int⁰): Iterator⁰ {
+//│ define recursive⁰ as fun recursive¹(count: Int⁰)(result: Int⁰): Unknown {
 //│   return recursive$worker⁰(count, result)
 //│ };
 //│ @generator
@@ -207,7 +207,7 @@ let recursiveIterator = forward()
 //│   set scrut = >⁰(count, 0);
 //│   match scrut
 //│     true =>
-//│       let inlinedVal: Iterator⁰;
+//│       let inlinedVal: Unknown;
 //│       set tmp3 = -⁰(count, 1);
 //│       set inlinedVal = recursive$worker⁰(tmp3, result);
 //│       do yield*⁰(inlinedVal);

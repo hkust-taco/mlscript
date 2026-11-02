@@ -260,6 +260,7 @@ step(App(id_x, id_y)).show
 //│ = "λy. y"
 
 fun evalByValue(term: Term): Term =
+  let =term
   while term is
     ByValue.Context(ByValue.Redex) as [subterm, remake] then
       set term = remake(subterm)
@@ -277,6 +278,7 @@ evalByValue(App(succ, App(succ, zero))).show
 :fixme
 // More inconsistent origin locations to fix...
 fun evalByValue'(term) =
+  let =term
   while term is
     (@compile ByValue.Context(ByValue.Redex)) as [subterm, remake] then
       set term = remake(subterm)
@@ -288,10 +290,10 @@ fun evalByValue'(term) =
 //│ ║  l.XX: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.+5: 	    else term
+//│ ║  l.+6: 	    else term
 //│ ╙──      	         ^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.+5: 	    else term
+//│ ║  l.+6: 	    else term
 //│ ╙──      	         ^^^^
 
 object ByName with
@@ -326,6 +328,7 @@ type EvaluationSystem = {
 }
 
 fun stepByStep(system: EvaluationSystem, term: Term, maxSteps: Int) =
+  let =term
   let numSteps = 0
   print of "Term: " + term.show
   while numSteps < maxSteps and system.Context.unapply(system.Redex, term) is

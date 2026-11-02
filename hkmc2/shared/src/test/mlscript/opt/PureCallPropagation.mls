@@ -192,6 +192,7 @@ fun scopedPrefixFoo(x)(y) = x + y
 :inlineThreshold 0
 private fun checkedPrefix(x: Int)(y: Int): Int = x + y
 private fun capturePrefix(n: Any) =
+  let =n
   let f = checkedPrefix(n)
   set n = 20
   f(3)

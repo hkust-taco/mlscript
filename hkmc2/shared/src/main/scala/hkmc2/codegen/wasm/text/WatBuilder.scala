@@ -934,7 +934,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     val funcTy = declareClassFuncType(defn, suffix, params, results, thisType)
     predeclareClassFuncWithType(defn, suffix, params, results, sym, exportName, funcTy)
 
-  /** Registers a placeholder class-associated function using a predeclared Wasm function type. */
+  /** Registers a class-associated function's signature and placeholder body before generating its
+    * implementation. `params` supplies symbols and names in the order of `funcTy`'s physical slots;
+    * slot types come from `funcTy`, and `resultTypes` must agree with it. This lets an overriding
+    * method retain its own parameter identities while using its inherited virtual signature.
+    */
   private def predeclareClassFuncWithType(
       defn: ClsLikeDefn,
       suffix: Str,
@@ -1732,7 +1736,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         // The slot carries the *base* declaration's result type, but the resolved method's declared result may be
         // overridden to be narrower. Restore the slot's result value to the resolved method's declared type here -
         // the checked cast ensures that a value that doesn't conform will trap at runtime.
-        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym), N)
+        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym), qual.toLoc)
         Ls(receiverExpr, adaptedCall)
       case N =>
         val funcTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(methodSym).typeIdx)
@@ -2512,14 +2516,15 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         end match
 
       case Return(res) =>
-        // Use the physical result slot for every return, including optimizer-generated undefined.
-        // Overrides share the introducing method's slot, which can be narrower than their own
-        // inferred reference result. Primitive mismatches remain errors, not conversions.
-        val target = funcCtx.resultType.orElse(res.erasedType.flatMap(_.wasmType))
-        val resWat =
-          if res.isUndefined then target.fold(result(res))(castToValType(res, _))
+        val operand =
+          // Undefined supplies no value to convert; materialize it in the physical result slot.
+          if res.isUndefined then funcCtx.resultType.fold(result(res))(castToValType(res, _))
           else result(res)
-        def coerced = target.fold(resWat)(castConserve(resWat, _, res.toLoc))
+        // Storage and calling conventions may widen a reference (e.g. a singleton's nullable global).
+        // Restore the IR value's type at the return boundary so Block.returnType also describes the emitted value.
+        val resWat =
+          if res.isUndefined then operand
+          else res.erasedType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _, res.toLoc))
         val returned = resWat.resultType match
           case S(refTy: RefType) =>
             refTy.heapType match
@@ -2527,8 +2532,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                 errExpr(Ls(msg"Returning function instances is not supported" -> res.toLoc))
               case typeidx: TypeIdx if ctx.getTypeInfo_!(typeidx).compType.isInstanceOf[FunctionType] =>
                 errExpr(Ls(msg"Returning function instances is not supported" -> res.toLoc))
-              case _ => coerced
-          case _ => coerced
+              case _ => resWat
+          case _ => resWat
 
         Vector(`return`(S(returned)))
 
@@ -3002,6 +3007,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   def block(t: Block)(using FunctionCtx, Raise, SessionExportCtx): Vector[Expr] =
     nonNestedScoped(t)(returningTerm)
 
+  /** Compiles a function's IR body to one Wasm expression and returns the context that records its
+    * parameters and locals. `paramTypes` describes the registered function signature's parameter slots,
+    * including the shared virtual signature for an override; [[FunctionCtx]] defines the fallback when
+    * it is absent.
+    */
   def setupFunction(
       thisSym: Opt[InnerSymbol],
       params: LoweredParamList,

@@ -1,0 +1,138 @@
+:js
+:invalml
+
+
+// These host declarations come from the normal Prelude, including its signatures.
+:expect 42
+parseInt("42", 10)
+//│ = 42
+//│ Type: Int
+
+:expect "42"
+String(42)
+//│ = "42"
+//│ Type: Str
+
+:expect 3
+(new Array(3)).Array#length
+//│ = 3
+//│ Type: Int
+
+:e
+:!js
+parseInt(42, 10)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+1: 	parseInt(42, 10)
+//│ ╙──      	         ^^
+//│ ╔══[COMPILATION ERROR] Type error in integer literal with expected type Str
+//│ ║  l.+1: 	parseInt(42, 10)
+//│ ║        	         ^^
+//│ ╙── because: cannot constrain  Int  <:  Str
+//│ Type: Int
+
+// Error has an auxiliary constructor with optional parameters in the normal Prelude.
+:js
+:silent
+new Error()
+//│ Type: Error
+
+new Error("message")
+//│ = Error: message
+//│ Type: Error
+
+:e
+:!js
+new Error("message", (), 3)
+//│ ╔══[COMPILATION ERROR] The number of parameters is incorrect
+//│ ║  l.+1: 	new Error("message", (), 3)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Type: Error
+
+// Auxiliary constructor arguments still constrain generic type parameters.
+:js
+class Box[A] with
+  constructor(value: A)
+
+new Box(42)
+//│ = Box
+//│ Type: Box['A]
+//│ Where:
+//│   Int <: 'A
+
+// Optional fields include the null value used when their argument is omitted.
+class OptionalBox(val value?: Int)
+
+:expect null
+(new OptionalBox()).OptionalBox#value
+//│ = null
+//│ Type: Int ∨ ()
+
+:expect null
+(new OptionalBox(null)).OptionalBox#value
+//│ = null
+//│ Type: Int ∨ ()
+
+:e
+:!js
+(new OptionalBox()).OptionalBox#value + 1
+//│ ╔══[COMPILATION ERROR] Type error in field selection with expected type Int
+//│ ║  l.+1: 	(new OptionalBox()).OptionalBox#value + 1
+//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── because: cannot constrain  Int ∨ ()  <:  Int
+//│ Type: Int
+
+class NeedsInt with
+  constructor(value: Int)
+
+:e
+:!js
+new NeedsInt("wrong")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	new NeedsInt("wrong")
+//│ ╙──      	             ^^^^^^^
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
+//│ ║  l.+1: 	new NeedsInt("wrong")
+//│ ║        	             ^^^^^^^
+//│ ╙── because: cannot constrain  Str  <:  Int
+//│ Type: NeedsInt
+
+// The annotation is supplied by the shared virtual js module.
+:js
+:ssjs
+class Plain(@js.plainField mut val value: Int)
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let Plain1;
+//│ Plain1 = function Plain(value) {
+//│   return globalThis.Object.freeze(new Plain.class(value));
+//│ };
+//│ (class Plain {
+//│   static {
+//│     Plain1.class = this
+//│   }
+//│   constructor(value) {
+//│     this.value = value;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Plain", ["value"]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// InvalML's operator declarations retain their types and primitive JS implementation.
+:expect 3
+1 + 2
+//│ = 3
+//│ Type: Int
+
+:expect 3.5
+1.0 +. 2.5
+//│ = 3.5
+//│ Type: Num
+
+:e
+:!js
+1 + "wrong"
+//│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
+//│ ║  l.+1: 	1 + "wrong"
+//│ ║        	    ^^^^^^^
+//│ ╙── because: cannot constrain  Str  <:  Int
+//│ Type: Int

@@ -102,7 +102,7 @@ characters("ab")
 // Inherited source aliases dispatch through the overriding symbol property.
 :expect [10, 10, 11]
 open class Parent {
-  @annotations.jsSymbol(Symbol.iterator) open fun iterator() = [Box(0)].iterator()
+  @annotations.jsSymbol(Symbol.iterator) open fun iterator(): Iterator[Box] = [Box(0)].iterator()
 }
 class Child extends Parent {
   @annotations.jsSymbol(Symbol.iterator) override fun iterator() = [Box(10)].iterator()
@@ -218,9 +218,10 @@ private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
 //│ ║        	                                                       ^^^^^^^^^^^^^^^^^
-//│ ╟── Value of type 'Iterator' does not contain member 'iterator'
-//│ ║  l.+1: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
-//│ ╙──      	                                      ^^^^^^^^^^^^^
+//│ ╟── Record type does not contain member 'iterator'
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	type Iterator[out T] = { next: () -> ({ value: T, done: Bool }) }
+//│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Abstract members retain their source name and runtime key in implementations.
 :expect [17]

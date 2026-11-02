@@ -178,7 +178,9 @@ mut val resumePc: Int = -1
 object FatalEffect
 object PrintStackEffect
 
-data class FunctionContFrame(next: FunctionContFrame | null, saved: Array) with
+open js { plainField }
+
+data class FunctionContFrame(@plainField mut val next: FunctionContFrame | null, saved: Array) with
   fun resume(value) =
     let
       i = 0
@@ -222,14 +224,18 @@ data class FunctionContFrame(next: FunctionContFrame | null, saved: Array) with
       loc is null then "pc=" + saved.[1]
       else loc
 
-data class HandlerContFrame(next: FunctionContFrame | null, nextHandler: HandlerContFrame | null, handler: Any)
+data class HandlerContFrame(
+  @plainField mut val next: FunctionContFrame | null
+  @plainField mut val nextHandler: HandlerContFrame | null
+  handler: Any
+)
 
 data class ContTrace(
-  next: FunctionContFrame | null,
-  last: ContTrace | HandlerContFrame | FunctionContFrame | null,
-  nextHandler: HandlerContFrame | null,
-  lastHandler: ContTrace | HandlerContFrame | null,
-  resumed: Bool
+  @plainField mut val next: FunctionContFrame | null
+  @plainField mut val last: ContTrace | HandlerContFrame | FunctionContFrame | null
+  @plainField mut val nextHandler: HandlerContFrame | null
+  @plainField mut val lastHandler: ContTrace | HandlerContFrame | null
+  @plainField mut val resumed: Bool
 )
 // PrintStackEffect stores the showLocals flag; FatalEffect has no handler function.
 data class EffectSig(contTrace: ContTrace, handler: Any, handlerFun: Function | Bool | null)
@@ -300,6 +306,7 @@ fun showStackTrace(header: Str, tr: EffectSig, debug: Bool, showLocals: Bool) =
   msg
 
 fun showFunctionContChain(cont: Any, hl: Map[Str, Set], vis: Set, reps: Int): Str =
+  let =reps
   if cont is FunctionContFrame as frame then
     let result = frame!constructor!name + "(pc=" + frame.saved.[1]
     hl.forEach((m, marker, ...) => if m.has(cont) do set result += ", " + marker)
@@ -317,6 +324,7 @@ fun showFunctionContChain(cont: Any, hl: Map[Str, Set], vis: Set, reps: Int): St
     "(NOT CONT)"
 
 fun showHandlerContChain(cont: Any, hl: Map[Str, Set], vis: Set, reps: Int): Str =
+  let =reps
   if cont is HandlerContFrame as frame then
     let result = frame.handler!constructor!name
     hl.forEach((m, marker, ...) => if m.has(cont) do set result += ", " + marker)
@@ -396,6 +404,7 @@ fun enterHandleBlock(handler: Any, body: () -> Any) =
     handleBlockImpl(curEffect, handler)
 
 fun handleEffects(cur: Any): Any =
+  let =cur
   while cur is
     EffectSig as effect then
       let nxt = handleEffect(effect)
@@ -409,6 +418,7 @@ fun handleEffects(cur: Any): Any =
 
 // return either new effect, final result or the same continuation if there is no handler
 fun handleEffect(cur: EffectSig): Any =
+  let =cur
   // debugEff(cur)
   // find the handle block corresponding to the current effect
   let prevHandlerFrame = cur.contTrace
@@ -466,6 +476,7 @@ fun resume(contTrace: ContTrace)(value: Any): Any =
   handleEffects(resumeContTrace(contTrace, value))
 
 fun resumeContTrace(contTrace: ContTrace, value: Any): Any =
+  let =value
   let cont = contTrace.next
   let handlerCont = contTrace.nextHandler
   while

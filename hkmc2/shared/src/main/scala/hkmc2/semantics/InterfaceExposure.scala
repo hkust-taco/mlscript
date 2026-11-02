@@ -103,9 +103,24 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
         val tuple = TupleShape(ref, TupleShape.Unknown(ref, TupleShape.ValueField(unknown, Nil)) :: Nil)(resolver)
         resolver.constrainParameter(rest, tuple.enter(marks), marks)
 
+  /** Records an exposed overridable member of a class or object that other compilation units may
+    * extend. An override in such a unit inherits the member's parameter and result representations,
+    * so [[codegen.OverrideChecks]] later requires them to be specified. Members of other classes and
+    * objects are overridden only inside their own compilation unit and need no annotations.
+    */
+  private def recordOpenMember(cls: ClassLikeDef, td: TermDefinition, path: Path)(using ResolutionContext): Unit =
+    // An imported class's members belong to the interface its own compilation unit exposes.
+    if Inheritance.isExtensible(cls) && rctx.state.isOwnedSym(td.tsym) && Inheritance.isOpen(td)
+        && !rctx.state.exposedOpenMembers.contains(td.tsym) then
+      rctx.state.exposedOpenMembers(td.tsym) = path
+  
   private def members(cls: ClassLikeDef, marks: Ls[Marks], path: Path)(using ResolutionContext): Unit =
     cls.body.blk.stats.foreach:
       case d: Definition if InterfaceExposure.isPublic(d) =>
+        d match
+          // The member is the later diagnostic's main location, so the class's exposure path explains it.
+          case td: TermDefinition => recordOpenMember(cls, td, path)
+          case _ => ()
         member(d.bsym, marks, path.via(msg"Member '${d.bsym.nme}' is accessible here." -> d.headerLoc))
         d match
           // Diagnostics about the field are located at the field itself.

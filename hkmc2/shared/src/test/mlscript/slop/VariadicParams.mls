@@ -296,14 +296,19 @@ InheritedTail().apply("wrong")
 //│ ╙──      	                      ^^^^^^^
 //│ = 0
 
-// TODO: Decide which changes to an override's parameter layout are permitted. Adding a required
-// trailing slot currently makes a valid call through the base member fail at run time.
+// Adding a required trailing slot rejects calls permitted by the base member's signature.
+// Override checking reports that mismatch before the runtime arity check can fail.
 :ge
-:breakme
 :re
 private class ExtraTail() extends TailBase() with
   override fun apply(...rest, first: Int, value: Int): Int = 0
 useTailBase(ExtraTail())
+//│ ╔══[COMPILATION ERROR] Overriding member 'apply' requires at least 2 arguments, but the overridden member permits 1
+//│ ║  l.+2: 	  override fun apply(...rest, first: Int, value: Int): Int = 0
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'apply' is defined here
+//│ ║  l.XX: 	  open fun apply(...rest, value: Int): Int = 0
+//│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'apply' expected at least 2 arguments but got 1
 
 
