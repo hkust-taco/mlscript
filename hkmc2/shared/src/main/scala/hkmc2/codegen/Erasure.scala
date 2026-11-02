@@ -45,19 +45,12 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case Unit :: Nil => ErasedType.Unit
         case _ => ErasedType.Unknown
 
-  /** Computes the runtime value representation denoted by a completed type interpretation.
-    * Follows aliases and references, discards type arguments, and preserves nominal types, unions,
-    * and function representations. Cycles, resolution errors, and unsupported shapes yield `Unknown`.
-    * [[OverrideLayout]] uses this to erase the result remaining after it extracts a callable's lists.
-    */
-  private[codegen] def eraseResolved(resolution: TypeResolution): ErasedValueType = erase(resolution, Set.empty)
-
   /** Computes the runtime value representation denoted by a source type signature. With the new
     * resolver, elaboration must have registered the term's type interpretation and resolution must
     * have completed; an unknown representation yields `S(Unknown)`. The legacy resolver reads the
     * resolved syntax and can return `N` when it cannot derive a representation.
     */
-  private[codegen] def eraseSignature(sign: Term): Opt[ErasedValueType] =
+  private def eraseSignature(sign: Term): Opt[ErasedValueType] =
     if config.language.useNewResolution then
       assert(sign.typeInterpretation.isDefined, "Signature was not registered during elaboration")
       S(erase(sign.typeInterpretation.get, Set.empty))
@@ -70,26 +63,14 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
 
   /** Computes the representation to publish on a member symbol: a value type, a getter result,
     * or a function's parameter lists and result. Parameter symbols must already have their erased
-    * types. Declared functions can obtain their lists from callable arrows, using the layouts that
-    * `overrides` computed; unannotated overrides can obtain their result from an inherited member
+    * types. A function's physical parameter lists are its written ones: arrows in the type of a
+    * function without parameter lists, as in `declare fun f: (Int) -> Str`, describe the function
+    * value it returns. Unannotated overrides can obtain their result from an inherited member
     * that passed source layout validation in `overrides` and has completed erasure.
-    * For example, `declare fun f: (Int) -> Str` publishes one `Int` parameter and a `Str` result.
     */
   private def erasedDefinitionSignature(td: TermDefinition,
       overrides: OverrideChecks): Opt[ErasedValueType | ErasedCallableSignature] =
     val declared = Annot.declareModifierOf(td.annotations).isDefined
-    // A declared function with no written parameters obtains its calling convention from its arrows.
-    // An ordinary paramless function instead returns the value denoted by the entire signature.
-    val sigShape =
-      if (td.k is syntax.Fun) && td.params.isEmpty && declared then
-        overrides.layout(td).toOption.flatMap: signature =>
-          // A rest tuple has no fixed physical arity. Preserve any preceding fixed lists,
-          // whose result remains a callable, and use the same normalized aliases as overrides.
-          val fixed = signature.params.takeWhile(_.variadic.isEmpty)
-          if fixed.isEmpty then N
-          else S((fixed.map(_.params.map(_.representation)),
-            if fixed.length < signature.params.length then S(ErasedType.Function(S(false))) else signature.result))
-      else N
     def fullResult(res: TypeResolution, count: Int, seen: Set[TypeResolution]): ErasedValueType =
       if seen(res) then ErasedType.Unknown
       else if count == 0 then erase(res, Set.empty)
@@ -104,7 +85,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
       if config.language.useNewResolution && td.sign.nonEmpty && (td.k is syntax.Fun)
           && !td.flags.hasResultAnnotation && td.params.nonEmpty && !td.modulefulness.isModuleful
       then S(fullResult(td.sign.get.typeInterpretation.get, td.params.length, Set.empty))
-      else sigShape.fold(declaredType(td.resultSignature, td.modulefulness))(_._2).orElse:
+      else declaredType(td.resultSignature, td.modulefulness).orElse:
         // An unannotated override implements the inherited result. Async/generator annotations
         // describe a body payload; their inherited callable result describes the wrapper.
         // A structural intersection can give a member several bases: an unannotated one publishes
@@ -123,9 +104,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case N => ErasedResult.Direct(resultType)
     td.k match
       case syntax.Fun =>
-        val paramLists = sigShape match
-          case S((ps, _)) => ps
-          case N => td.params.map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType))
+        val paramLists = td.params.map(LoweredParamList.fixedPrefix(_).map(_.sym.erasedType))
         // Block-level nullary functions take an implicit empty list and references auto-invoke them.
         // Member getters and global declarations denote their result directly.
         val physicalParamLists =
@@ -312,13 +291,10 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
             case S(inherited) =>
               // Imported parameters are already erased; erroneous inheritance cycles can leave a
               // local parameter pending. Do not read it or initialize a symbol twice on such a cycle.
-              inherited.flatMap(_.parameter).foreach: param =>
+              inherited.foreach: param =>
                 if parameterSymbols(param.sym) then eraseParameter(param, visiting + p.sym)
-              val types = inherited.map: input =>
-                input.parameter match
-                  case S(param) =>
-                    if param.sym.isErased then param.sym.erasedType.getOrElse(ErasedType.Unknown) else ErasedType.Unknown
-                  case N => input.representation.getOrElse(ErasedType.Unknown)
+              val types = inherited.map: param =>
+                if param.sym.isErased then param.sym.erasedType.getOrElse(ErasedType.Unknown) else ErasedType.Unknown
               // Making a required slot optional additionally admits null on direct subclass calls.
               // Its inherited argument channel is unchanged for calls through the base interface.
               val defaults = if p.flags.opt && inherited.exists(!_.flags.opt) then ErasedType.Unknown :: Nil else Nil

@@ -180,62 +180,97 @@ private abstract class AbstractNarrowing() extends AbstractLayout() with
 //│ ║  l.+2: 	  fun pick(value?: Any): Any
 //│ ╙──      	      ^^^^
 
-// Explicit arrow declarations carry the same optional/rest binding contract without
-// having parameter symbols or executable method bodies.
+// Declarations without bodies carry the same optional/rest binding contract
+// as executable methods.
 :ge
-declare class ArrowBase {
-  declare fun pick: (Any, Any?) -> Any
+declare class DeclaredBase {
+  declare fun pick(first: Any, second?: Any): Any
 }
-declare class ArrowRebinding extends ArrowBase {
-  declare override fun pick: (...Array[Any], Any) -> Any
+declare class DeclaredRebinding extends DeclaredBase {
+  declare override fun pick(...middle: Array[Any], last: Any): Any
 }
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 1
-//│ ║  l.+5: 	  declare override fun pick: (...Array[Any], Any) -> Any
-//│ ║        	                             ^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'first'
+//│ ║  l.+5: 	  declare override fun pick(...middle: Array[Any], last: Any): Any
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.+2: 	  declare fun pick: (Any, Any?) -> Any
+//│ ║  l.+2: 	  declare fun pick(first: Any, second?: Any): Any
 //│ ╙──      	              ^^^^
 
 // The same declaration-only path checks scalar representations after correspondence.
 :ge
-declare class ArrowTypedBase {
-  declare fun pick: (Int) -> Int
+declare class DeclaredTypedBase {
+  declare fun pick(value: Int): Int
 }
-declare class ArrowNarrowing extends ArrowTypedBase {
-  declare override fun pick: (Str) -> Int
+declare class DeclaredNarrowing extends DeclaredTypedBase {
+  declare override fun pick(value: Str): Int
 }
-//│ ╔══[COMPILATION ERROR] Parameter 1 of overriding member 'pick' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
-//│ ║  l.+5: 	  declare override fun pick: (Str) -> Int
-//│ ║        	                              ^^^
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'pick' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+5: 	  declare override fun pick(value: Str): Int
+//│ ║        	                            ^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.+2: 	  declare fun pick: (Int) -> Int
+//│ ║  l.+2: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
 
-// A written method can override a declared callable member that has the same parameter lists.
+// A written method can override a declared method that has the same parameter lists.
 // A call through the declared base passes its argument list to the overriding method.
 :noInline
 :expect 40
-set globalThis.RuntimeArrowBase = globalThis.eval("(class RuntimeArrowBase { pick(x) { return x + 1 } })")
-declare class RuntimeArrowBase {
-  declare fun pick: (Int) -> Int
+set globalThis.RuntimeDeclaredBase = globalThis.eval("(class RuntimeDeclaredBase { pick(x) { return x + 1 } })")
+declare class RuntimeDeclaredBase {
+  declare fun pick(value: Int): Int
 }
-private class WrittenOverArrow() extends RuntimeArrowBase with
+private class WrittenOverDeclared() extends RuntimeDeclaredBase with
   override fun pick(value: Int): Int = value * 10
-private fun throughDeclared(base: RuntimeArrowBase) = base.pick(4)
-throughDeclared(WrittenOverArrow())
+private fun throughDeclared(base: RuntimeDeclaredBase) = base.pick(4)
+throughDeclared(WrittenOverDeclared())
 //│ = 40
 
-// A function without parameter lists cannot override a declared callable member's list.
+// A function without parameter lists cannot override a declared method's list.
 :ge
-private class ParameterlessOverArrow() extends ArrowTypedBase with
+private class ParameterlessOverDeclared() extends DeclaredTypedBase with
   override fun pick = 1
 //│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
 //│ ║  l.+2: 	  override fun pick = 1
 //│ ║        	               ^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.XX: 	  declare fun pick: (Int) -> Int
+//│ ║  l.XX: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+
+// The arrows in the type of a declared or abstract member without parameter lists describe
+// the function value it holds; they are not parameter lists, so a method cannot override it.
+:ge
+declare class DeclaredFunctionValue {
+  declare fun pick: (Int) -> Int
+}
+declare class MethodOverDeclaredValue extends DeclaredFunctionValue {
+  declare override fun pick(value: Int): Int
+}
+private abstract class AbstractFunctionValue() with
+  fun pick: (Int) -> Int
+private class MethodOverAbstractValue() extends AbstractFunctionValue() with
+  override fun pick(value: Int): Int = value
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
+//│ ║  l.+5: 	  declare override fun pick(value: Int): Int
+//│ ║        	                           ^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  declare fun pick: (Int) -> Int
+//│ ╙──      	              ^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
+//│ ║  l.+10: 	  override fun pick(value: Int): Int = value
+//│ ║         	                   ^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+8: 	  fun pick: (Int) -> Int
+//│ ╙──      	      ^^^^
+
+// A member holding a function value implements such a member, and calls apply that value.
+:noInline
+:expect 40
+private class ValueOverAbstractValue() extends AbstractFunctionValue() with
+  fun pick = (value: Int) => value * 10
+private fun throughValue(base: AbstractFunctionValue) = base.pick(4)
+throughValue(ValueOverAbstractValue())
+//│ = 40
 
 // A function without parameter lists returns its whole annotated function value;
 // the arrows of that value are not parameter lists of the member itself.
@@ -260,152 +295,3 @@ private class FilledAbsentOptional() extends DropBeforeOptional() with
 //│ ╟── The overridden member 'pick' is defined here
 //│ ║  l.+2: 	  open fun pick(first: Any, drop ignored: Any, last?: Any): Any = last
 //│ ╙──      	           ^^^^
-
-
-// Aliases preserve the same physical arrow contract, including optional input flags.
-type AliasedLayout = (Int, Str?) -> Any
-type SameAliasedLayout = AliasedLayout
-declare class AliasedLayoutBase {
-  declare fun pick: SameAliasedLayout
-}
-declare class SameAliasOverride extends AliasedLayoutBase {
-  declare override fun pick: (Int, Str?) -> Int
-}
-
-:ge
-type RequiredAliasedLayout = (Int, Str) -> Int
-declare class NarrowedAliasOverride extends AliasedLayoutBase {
-  declare override fun pick: RequiredAliasedLayout
-}
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 2 arguments, but the overridden member permits 1
-//│ ║  l.+1: 	type RequiredAliasedLayout = (Int, Str) -> Int
-//│ ║        	                             ^^^^^^^^^^
-//│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.XX: 	  declare fun pick: SameAliasedLayout
-//│ ╙──      	              ^^^^
-
-
-// A compound callback result is one returned value, not another physical parameter list.
-type NullableCallback = ((Str) -> Str) | null
-type ReturnsNullableCallback = (Int) -> NullableCallback
-declare class CallbackResultBase {
-  declare fun make: ReturnsNullableCallback
-}
-declare class CallbackResultOverride extends CallbackResultBase {
-  declare override fun make: ReturnsNullableCallback
-}
-
-
-// An imported legacy declaration exposes written arrows without new-resolution metadata.
-import "../../mlscript-compile/LegacyOverrideDeclarations.mls"
-declare class LegacyCompatibleOverride extends LegacyOverrideDeclarations.OptionalBase {
-  declare override fun pick: (Int, Str?) -> Int
-}
-
-:ge
-declare class LegacyNarrowingOverride extends LegacyOverrideDeclarations.OptionalBase {
-  declare override fun pick: (Int, Str) -> Int
-}
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 2 arguments, but the overridden member permits 1
-//│ ║  l.+2: 	  declare override fun pick: (Int, Str) -> Int
-//│ ║        	                             ^^^^^^^^^^
-//│ ╟── The overridden member 'pick' is defined here
-//│ ║  in ../../mlscript-compile/LegacyOverrideDeclarations.mls
-//│ ║  l.XX: 	    declare fun pick: (Int, Str?) -> Int
-//│ ╙──      	                ^^^^
-
-// An imported alias without completed operand metadata must not bypass layout validation.
-:ge
-declare class LegacyAliasedOverride extends LegacyOverrideDeclarations.AliasedBase {
-  declare override fun pick: (Int) -> Int
-}
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' cannot be checked against the member it overrides, which has a callable type whose parameter layout cannot be determined from its declaration
-//│ ║  l.+2: 	  declare override fun pick: (Int) -> Int
-//│ ║        	                       ^^^^
-//│ ╟── The overridden member 'pick' is defined here
-//│ ║  in ../../mlscript-compile/LegacyOverrideDeclarations.mls
-//│ ║  l.XX: 	    declare fun pick: Callable
-//│ ╙──      	                ^^^^
-
-// An imported legacy getter whose alias denotes a non-callable value has no parameter lists,
-// so overriding it with the same value type must not need layout recovery.
-:fixme
-declare class LegacyNamedOverride extends LegacyOverrideDeclarations.NamedBase {
-  declare override fun name: Str
-}
-//│ ╔══[COMPILATION ERROR] Overriding member 'name' cannot be checked against the member it overrides, which has a callable type whose parameter layout cannot be determined from its declaration
-//│ ║  l.+2: 	  declare override fun name: Str
-//│ ║        	                       ^^^^
-//│ ╟── The overridden member 'name' is defined here
-//│ ║  in ../../mlscript-compile/LegacyOverrideDeclarations.mls
-//│ ║  l.XX: 	    declare fun name: Name
-//│ ╙──      	                ^^^^
-
-// The same imported callable alias cannot hide additional curried lists in a result.
-:ge
-declare class LegacyCurriedBase {
-  declare fun pick: (Int) -> LegacyOverrideDeclarations.Callable
-}
-declare class LegacyCurriedOverride extends LegacyCurriedBase {
-  declare override fun pick: (Int) -> LegacyOverrideDeclarations.Callable
-}
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' has an aliased callable type whose parameter layout cannot be determined from its declaration
-//│ ║  l.+5: 	  declare override fun pick: (Int) -> LegacyOverrideDeclarations.Callable
-//│ ║        	                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.+2: 	  declare fun pick: (Int) -> LegacyOverrideDeclarations.Callable
-//│ ╙──      	              ^^^^
-
-
-// A supplied callable result can hide another binding layout behind a type parameter.
-// Until that layout is instantiated, reject it instead of accepting changed second-stage bindings.
-type ReturnFn[R] = (Int) -> R
-type ResultIdentity[R] = R
-declare class GenericResultBase {
-  declare fun pick: ReturnFn[(Any, Any?) -> Any]
-}
-
-:ge
-declare class GenericResultRebinding extends GenericResultBase {
-  declare override fun pick: ReturnFn[ResultIdentity[(...Array[Any], Any) -> Any]]
-}
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' has a declared callable type whose parameter layout cannot be determined
-//│ ║  l.XX: 	type ReturnFn[R] = (Int) -> R
-//│ ║        	                            ^
-//│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.XX: 	  declare fun pick: ReturnFn[(Any, Any?) -> Any]
-//│ ╙──      	              ^^^^
-
-// Non-callable supplied results retain ordinary generic erasure, including alias forwarding.
-declare class GenericValueBase {
-  declare fun pick: ReturnFn[Int]
-}
-declare class GenericValueOverride extends GenericValueBase {
-  declare override fun pick: ReturnFn[ResultIdentity[Int]]
-}
-
-// The same unsupported second-stage alias must not be skipped in an imported legacy signature.
-:ge
-declare class ImportedLegacyCurriedOverride extends LegacyOverrideDeclarations.CurriedBase {
-  declare override fun pick: (Int) -> Int
-}
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' cannot be checked against the member it overrides, which has a callable type whose parameter layout cannot be determined from its declaration
-//│ ║  l.+2: 	  declare override fun pick: (Int) -> Int
-//│ ║        	                       ^^^^
-//│ ╟── The overridden member 'pick' is defined here
-//│ ║  in ../../mlscript-compile/LegacyOverrideDeclarations.mls
-//│ ║  l.XX: 	    declare fun pick: (Int) -> Identity[Callable]
-//│ ╙──      	                ^^^^
-
-
-// Explicit output bounds must not hide the same specialized callable stage.
-:ge
-declare class GenericOutputResultRebinding extends GenericResultBase {
-  declare override fun pick: ReturnFn[out ((...Array[Any], Any) -> Any)]
-}
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' has a declared callable type whose parameter layout cannot be determined
-//│ ║  l.XX: 	type ReturnFn[R] = (Int) -> R
-//│ ║        	                            ^
-//│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.XX: 	  declare fun pick: ReturnFn[(Any, Any?) -> Any]
-//│ ╙──      	              ^^^^

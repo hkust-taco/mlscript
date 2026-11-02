@@ -745,7 +745,9 @@ omitted-argument defaults, and rest slices. A parameter marked `drop` in the inh
 be omitted only when this leaves the other parameters' bindings unchanged. Additional optional
 parameters are permitted only when they cannot consume arguments belonging to inherited parameters.
 Equal parameter counts alone do not establish compatibility: moving a trailing parameter or changing
-where a rest slice begins can change which argument a parameter receives.
+where a rest slice begins can change which argument a parameter receives. A member's parameter lists
+are the ones it writes: an abstract or `declare`d `fun f: (Int) -> Int` has none and holds a function
+value, so only a member without parameter lists can override it, while `fun f(x: Int): Int` has one.
 
 An override must accept the runtime representations of the inherited parameters, and its results
 must fit the inherited result representation. Unannotated parameters inherit their representations;

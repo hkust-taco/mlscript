@@ -62,25 +62,23 @@ OptionalInput().pick()
 //│ Wasm result:
 //│ = 0
 
-// An earlier worksheet block publishes the aliased callable contract without an IR body.
-// The importing override must retain that contract even though neither declaration is used.
-type DeclaredInput = (Int) -> Int
+// An earlier worksheet block publishes a declared contract without an IR body.
+// A later override must retain that contract even though neither declaration is used.
 declare class DeclaredInputContract {
-  declare fun pick: DeclaredInput
+  declare fun pick(value: Int): Int
 }
 //│ Wasm result:
 //│ = {}
 
 :ge
-type WiderDeclaredInput = (Any) -> Int
 declare class WiderDeclaredInputContract extends DeclaredInputContract {
-  declare override fun pick: WiderDeclaredInput
+  declare override fun pick(value: Any): Int
 }
-//│ ╔══[COMPILATION ERROR] Parameter 1 of overriding member 'pick' receives values represented as 'Unknown', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as 'Int'
-//│ ║  l.+1: 	type WiderDeclaredInput = (Any) -> Int
-//│ ║        	                           ^^^
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'pick' receives values represented as 'Unknown', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as 'Int'
+//│ ║  l.+2: 	  declare override fun pick(value: Any): Int
+//│ ║        	                            ^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.XX: 	  declare fun pick: DeclaredInput
+//│ ║  l.XX: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
 //│ = {}
@@ -90,13 +88,13 @@ declare class WiderDeclaredInputContract extends DeclaredInputContract {
 // These unused declarations have no emitted bodies; erasure must check their target restrictions.
 :ge
 declare class ExtraOptionalInputContract extends DeclaredInputContract {
-  declare override fun pick: (Int, Any?) -> Int
+  declare override fun pick(value: Int, extra?: Any): Int
 }
 //│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameters in each parameter list on the Wasm target
-//│ ║  l.+2: 	  declare override fun pick: (Int, Any?) -> Int
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  declare override fun pick(value: Int, extra?: Any): Int
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.XX: 	  declare fun pick: DeclaredInput
+//│ ║  l.XX: 	  declare fun pick(value: Int): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
 //│ = {}
@@ -105,16 +103,16 @@ declare class ExtraOptionalInputContract extends DeclaredInputContract {
 // Dropping a permitted source input still changes the number of Wasm parameter slots.
 :ge
 declare class DroppableInputContract {
-  declare fun pick: (Int, drop Any) -> Int
+  declare fun pick(value: Int, drop ignored: Any): Int
 }
 declare class DroppedInputContract extends DroppableInputContract {
-  declare override fun pick: (Int) -> Int
+  declare override fun pick(value: Int): Int
 }
 //│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameters in each parameter list on the Wasm target
-//│ ║  l.+5: 	  declare override fun pick: (Int) -> Int
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	  declare override fun pick(value: Int): Int
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.+2: 	  declare fun pick: (Int, drop Any) -> Int
+//│ ║  l.+2: 	  declare fun pick(value: Int, drop ignored: Any): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
 //│ = {}
@@ -123,16 +121,16 @@ declare class DroppedInputContract extends DroppableInputContract {
 // A binding-compatible rest signature needs an explicit target error, even without an IR body.
 :ge
 declare class RestInputContract {
-  declare fun pick: (...Array[Any]) -> Int
+  declare fun pick(...values: Array[Any]): Int
 }
 declare class RestInputOverride extends RestInputContract {
-  declare override fun pick: (...Array[Any]) -> Int
+  declare override fun pick(...values: Array[Any]): Int
 }
 //│ ╔══[COMPILATION ERROR] Overriding member 'pick' cannot use a variadic signature on the Wasm target
-//│ ║  l.+5: 	  declare override fun pick: (...Array[Any]) -> Int
-//│ ║        	                                 ^^^^^^^^^^
+//│ ║  l.+5: 	  declare override fun pick(...values: Array[Any]): Int
+//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.+2: 	  declare fun pick: (...Array[Any]) -> Int
+//│ ║  l.+2: 	  declare fun pick(...values: Array[Any]): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
 //│ = {}
@@ -141,16 +139,16 @@ declare class RestInputOverride extends RestInputContract {
 // Ignoring an inherited rest input leaves the base's unsupported calling convention in place.
 :ge
 declare class DroppableRestInputContract {
-  declare fun pick: (Int, drop ...Array[Any]) -> Int
+  declare fun pick(value: Int, drop ...ignored: Array[Any]): Int
 }
 declare class DroppedRestInputContract extends DroppableRestInputContract {
-  declare override fun pick: (Int) -> Int
+  declare override fun pick(value: Int): Int
 }
 //│ ╔══[COMPILATION ERROR] Overriding member 'pick' overrides a variadic signature, which the Wasm target does not support
-//│ ║  l.+5: 	  declare override fun pick: (Int) -> Int
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+5: 	  declare override fun pick(value: Int): Int
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
-//│ ║  l.+2: 	  declare fun pick: (Int, drop ...Array[Any]) -> Int
+//│ ║  l.+2: 	  declare fun pick(value: Int, drop ...ignored: Array[Any]): Int
 //│ ╙──      	              ^^^^
 //│ Wasm result:
 //│ = {}
