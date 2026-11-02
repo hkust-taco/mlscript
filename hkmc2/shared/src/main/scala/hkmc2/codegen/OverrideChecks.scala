@@ -152,19 +152,23 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
             source = Diagnostic.Source.Compilation))
   
   /** Computes why a source-compatible override cannot use Wasm's fixed parameter slots.
-    * A variadic list needs argument packing that the Wasm backend does not implement. With fixed
+    * A variadic list needs argument packing that the Wasm backend does not implement. An override
+    * without a variadic list of its own can still drop an inherited one, as with `(Int)` overriding
+    * `(Int, drop ...Array[Any])`; the message then names the inherited signature. With fixed
     * lists, each source parameter occupies one slot, including optional and `drop` parameters, so the override
     * must preserve every list's length even when its source bindings permit adding or dropping inputs.
     */
   private def wasmLayoutFailure(edge: Edge): Opt[OverrideLayout.Failure] =
     val actual = edge.signature.params
     val inherited = edge.inheritedSignature.params
-    val rest = actual.iterator.flatMap(_.variadic).nextOption()
-    if rest.nonEmpty || inherited.exists(_.variadic.nonEmpty) then S(OverrideLayout.Failure(
-      msg"cannot use a variadic signature on the Wasm target", rest.flatMap(_.param.toLoc).orElse(edge.overriding.headerLoc)))
-    else if actual.map(_.params.length) != inherited.map(_.params.length) then S(OverrideLayout.Failure(
-      msg"must preserve the number of parameters in each parameter list on the Wasm target", edge.overriding.headerLoc))
-    else N
+    actual.iterator.flatMap(_.variadic).nextOption() match
+      case S(rest) => S(OverrideLayout.Failure(
+        msg"cannot use a variadic signature on the Wasm target", rest.param.toLoc.orElse(edge.overriding.headerLoc)))
+      case N if inherited.exists(_.variadic.nonEmpty) => S(OverrideLayout.Failure(
+        msg"overrides a variadic signature, which the Wasm target does not support", edge.overriding.headerLoc))
+      case N if actual.map(_.params.length) != inherited.map(_.params.length) => S(OverrideLayout.Failure(
+        msg"must preserve the number of parameters in each parameter list on the Wasm target", edge.overriding.headerLoc))
+      case N => N
   
   /** Reports source and target incompatibilities for declaration pairs that passed binding checks.
     * An overriding parameter must hold every value its inherited counterpart accepts; an overriding

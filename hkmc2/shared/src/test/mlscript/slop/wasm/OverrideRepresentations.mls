@@ -146,7 +146,7 @@ declare class DroppableRestInputContract {
 declare class DroppedRestInputContract extends DroppableRestInputContract {
   declare override fun pick: (Int) -> Int
 }
-//│ ╔══[COMPILATION ERROR] Overriding member 'pick' cannot use a variadic signature on the Wasm target
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' overrides a variadic signature, which the Wasm target does not support
 //│ ║  l.+5: 	  declare override fun pick: (Int) -> Int
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── The overridden member 'pick' is defined here
