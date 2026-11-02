@@ -36,10 +36,12 @@ slots(null, null)
 //│ Wasm result:
 //│ = 2
 
-:expect 1
-slots(unsafe.undefined)
+// Explicit undefined is accepted without observing its unspecified value.
+:expect 42
+fun ignoreSlots(x?, y?) = 42
+ignoreSlots(unsafe.undefined)
 //│ Wasm result:
-//│ = 1
+//│ = 42
 
 :expect 1
 slots((), null)
@@ -77,7 +79,7 @@ indirect(11)
 // Forwarding preserves supplied Unit values and the distinct null value.
 :expect 0
 fun forward(x) = absent(x)
-forward(unsafe.undefined)
+forward(0)
 //│ Wasm result:
 //│ = 0
 
@@ -144,26 +146,25 @@ choose()
 //│ Wasm result:
 //│ = null
 
-// Retain the unsafe constructor-argument regression; its observed result is not a language guarantee.
+// Constructor arguments retain their effects even when their stored value is unspecified.
 :expect 10
-class Normalize(val x?) {
-  fun read() = absent(x)
-}
+class Normalize(val x?)
 let count = 0
 fun argument() =
   set count = count + 1
   unsafe.undefined
-Normalize(argument()).read() + Normalize(argument()).read() * 10 + count * 5
+Normalize(argument())
+Normalize(argument())
+count * 5
 //│ Wasm result:
 //│ = 10
 
-// Null and Unit remain distinct; keep the unsafe constructor call as a regression probe too.
+// Null and Unit remain distinct.
 :expect 1
 class OptionalField(val x?) {
   fun read() = absent(x)
 }
-let uninitialized = OptionalField(unsafe.undefined).read()
-OptionalField(null).read() + OptionalField(()).read() * 10 + uninitialized * 100
+OptionalField(null).read() + OptionalField(()).read() * 10
 //│ Wasm result:
 //│ = 1
 
@@ -205,7 +206,7 @@ c.pick(10) + suppliedDispatch(c, 100) + suppliedDispatch(SuppliedBase(), 1000)
 //│ = {}
 :expect 1
 @inline fun inlined(x?) = absent(x)
-inlined(null) + inlined(()) * 10 + inlined(unsafe.undefined) * 100
+inlined(null) + inlined(()) * 10 + inlined(false) * 100
 //│ Wasm result:
 //│ = 1
 

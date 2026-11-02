@@ -21,7 +21,7 @@ useBox(id(new Box(42)))
 //│   (type $Box_init (func (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))))
 //│   (type $Box_ctor (func (param $v (ref null i31)) (result (ref $Box))))
 //│   (type $id (func (param $a (ref null any)) (result (ref null any))))
-//│   (type $useBox (func (param $b (ref $Box)) (result (ref null i31))))
+//│   (type $useBox (func (param $b (ref null $Box)) (result (ref null i31))))
 //│   (type $entry (func (result (ref null i31))))
 //│   (global $Box_typeinfo (export "Box_typeinfo") (ref $Box_typeinfo) (struct.new $Box_typeinfo
 //│     (i32.const 1)
@@ -50,12 +50,13 @@ useBox(id(new Box(42)))
 //│   (func $id (export "id") (type $id) (param $a (ref null any)) (result (ref null any))
 //│     (return
 //│       (local.get $a)))
-//│   (func $useBox (export "useBox") (type $useBox) (param $b (ref $Box)) (result (ref null i31))
+//│   (func $useBox (export "useBox") (type $useBox) (param $b (ref null $Box)) (result (ref null i31))
 //│     (return
 //│       (struct.get $Box $v
-//│         (local.get $b))))
+//│         (ref.cast (ref $Box)
+//│           (local.get $b)))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
-//│     (local $tmp (ref $Box))
+//│     (local $tmp (ref null $Box))
 //│     (local $tmp1 (ref null any))
 //│     (block (result (ref null i31))
 //│       (local.set $tmp
@@ -155,9 +156,7 @@ wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ║  l.+1: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
-//│ ║  l.+1: 	wasm.ref.i31(id(wasm.i32.const(7)))
-//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
 
 

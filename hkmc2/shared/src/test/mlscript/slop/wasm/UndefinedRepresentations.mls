@@ -1,0 +1,214 @@
+:.
+
+
+// Undefined can fill scalar and nominal slots. Discard the unspecified values,
+// but retain the calls' effects and compile the unused stores without optimization.
+:noOpt
+:expect 6
+private class Token()
+private class Slots(mut val a: Int32, val b: Int64, val c: Float32, val d: Float64, val ref: Token)
+let calls = 0
+private fun absentI32(): Int32 =
+  set calls = calls + 1
+  unsafe.undefined
+private fun absentI64(): Int64 =
+  set calls = calls + 1
+  unsafe.undefined
+private fun absentF32(): Float32 =
+  set calls = calls + 1
+  unsafe.undefined
+private fun absentF64(): Float64 =
+  set calls = calls + 1
+  unsafe.undefined
+private fun absentRef(): Token =
+  set calls = calls + 1
+  unsafe.undefined
+private fun accept(a: Int32, b: Int64, c: Float32, d: Float64, ref: Token): Int =
+  val local: Int32 = unsafe.undefined
+  val slots = new mut Slots(unsafe.undefined, unsafe.undefined, unsafe.undefined, unsafe.undefined, unsafe.undefined)
+  set slots.a = unsafe.undefined
+  wasm.i32.add(unsafe.undefined, wasm.i32.const(0))
+  set calls = calls + 1
+  0
+absentI32()
+absentI64()
+absentF32()
+absentF64()
+absentRef()
+accept(unsafe.undefined, unsafe.undefined, unsafe.undefined, unsafe.undefined, unsafe.undefined)
+calls
+//│ Wasm result:
+//│ = 6
+
+
+// An undefined return must not constrain the concrete branch's representation.
+:noInline
+:expect 42
+private fun choose(flag: Bool, value: Int32): Int32 =
+  if flag do return value
+  unsafe.undefined
+choose(false, wasm.i32.const(1))
+choose(true, wasm.i32.const(42))
+//│ Wasm result:
+//│ = 42
+
+
+// The conditional temporary must keep the concrete branch's unboxed representation.
+:noInline
+:expect 42
+private fun conditional(flag: Bool): Int32 =
+  wasm.i32.add((if flag then wasm.i32.const(42) else unsafe.undefined), wasm.i32.const(0))
+conditional(true)
+//│ Wasm result:
+//│ = 42
+
+
+// FIXME: Top-level lowering drops the undefined branch's implicit return. Wasm then
+// generates an anyref fallthrough value for an i32 entry function.
+:fixme
+:noInline
+:expect 42
+private fun flag(): Bool = true
+if flag() then wasm.i32.const(42) else unsafe.undefined
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (mlscript-compile/wasm/Wasm.mls:12)
+//│ // Standard Error:
+//│ [wasm-validator error in function entry] function body type must match, if function returns, on 
+//│ (block (result anyref)
+//│  (local.set $0
+//│   (call $flag)
+//│  )
+//│  (block $match
+//│   (local.set $1
+//│    (ref.null none)
+//│   )
+//│   (if
+//│    (i32.eq
+//│     (i31.get_s
+//│      (ref.cast i31ref
+//│       (local.get $0)
+//│      )
+//│     )
+//│     (i32.const 1)
+//│    )
+//│    (then
+//│     (block $arm
+//│      (return
+//│       (i32.const 42)
+//│      )
+//│     )
+//│    )
+//│   )
+//│  )
+//│  (local.get $1)
+//│ )
+//│ Assertion failed
+//│ 
+
+
+// Dead-parameter elimination introduces undefined after lowering. The functions'
+// declared unboxed result slots must survive even when their results are unused.
+:noInline
+:flowBasedOpt mono
+:soir
+:expect 42
+private fun discard(): Int =
+  fun i32(value: Int32): Int32 = value
+  fun i64(value: Int64): Int64 = value
+  fun f32(value: Float32): Float32 = value
+  fun f64(value: Float64): Float64 = value
+  i32(wasm.i32.const(1))
+  i64(wasm.i64.const(2))
+  f32(wasm.f32.const(3.0))
+  f64(wasm.f64.const(4.0))
+  42
+discard()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define discard⁰ as fun discard¹() {
+//│   let f32, f64, i64, i32;
+//│   define i32 as fun i32⁰() {
+//│     return undefined
+//│   };
+//│   define i64 as fun i64⁰() {
+//│     return undefined
+//│   };
+//│   define f32 as fun f32⁰() {
+//│     return undefined
+//│   };
+//│   define f64 as fun f64⁰() {
+//│     return undefined
+//│   };
+//│   do wasm⁰.i32¹.const⁰(1);
+//│   do i32⁰();
+//│   do wasm⁰.i64¹.const¹(2);
+//│   do i64⁰();
+//│   do wasm⁰.f32¹.const²(3.0);
+//│   do f32⁰();
+//│   do wasm⁰.f64¹.const³(4.0);
+//│   do f64⁰();
+//│   return 42
+//│ };
+//│ return discard¹()
+//│ Wasm result:
+//│ = 42
+
+
+// Calls returning undefined still run when used as arguments to another call.
+:noInline
+:expect 42
+let effects = 0
+private fun absent(): Int64 =
+  set effects = effects + 1
+  unsafe.undefined
+private fun consume(value: Int64): Int = effects
+consume(absent()) + 41
+//│ Wasm result:
+//│ = 42
+
+
+// Virtual and super calls use the declared parameter and result slots.
+:noInline
+:expect 42
+private class Base() with
+  open fun take(value: Int32): Int32 = unsafe.undefined
+private class Child() extends Base() with
+  override fun take(value): Int32 = super.take(unsafe.undefined)
+private fun dispatch(receiver: Base): Int32 = receiver.take(unsafe.undefined)
+dispatch(Child())
+42
+//│ Wasm result:
+//│ = 42
+
+
+// Null remains an ordinary value and cannot fill an unboxed result slot.
+:ge
+private fun badNull(): Int32 = null
+42
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ║  l.+1: 	private fun badNull(): Int32 = null
+//│ ╙──      	                               ^^^^
+//│ ╔══[COMPILATION ERROR] Wasm function `badNull` expects result to have type `i32`, but got `(ref null any)`
+//│ ║  l.+1: 	private fun badNull(): Int32 = null
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+// Undefined cannot make an intrinsically incompatible declaration representable.
+:ge
+private fun incompatible(): Int32 | Int64 = unsafe.undefined
+42
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	private fun incompatible(): Int32 | Int64 = unsafe.undefined
+//│ ╙──      	                                            ^^^^^^^^^^^^^^^^
+//│ Wasm result:
+//│ = 42
+
+
+// Nullable storage for undefined must preserve checked nominal casts for ordinary null.
+:noInline
+:re
+private class NonNull()
+private fun needToken(value: NonNull): Int = 42
+needToken(null)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast

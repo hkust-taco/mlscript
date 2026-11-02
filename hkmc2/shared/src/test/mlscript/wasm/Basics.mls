@@ -179,7 +179,7 @@ new Foo(42).Foo#a
 //│       (return
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $tmp (ref $Foo))
+//│     (local $tmp (ref null $Foo))
 //│     (block (result (ref null any))
 //│       (local.set $tmp
 //│         (call $Foo_ctor
@@ -187,7 +187,8 @@ new Foo(42).Foo#a
 //│             (i32.const 42))))
 //│       (return
 //│         (struct.get $Foo $a
-//│           (local.get $tmp)))))
+//│           (ref.cast (ref $Foo)
+//│             (local.get $tmp))))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
 //│   (elem $entry declare func $entry))
@@ -218,9 +219,9 @@ getX(Foo(Bar(42)))
 //│   (type $Bar_init (func (param $this (ref $Bar)) (param $x (ref null any)) (result (ref $Bar))))
 //│   (type $Bar_ctor (func (param $x (ref null any)) (result (ref $Bar))))
 //│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Foo_init (func (param $this (ref $Foo)) (param $bar (ref $Bar)) (result (ref $Foo))))
-//│   (type $Foo_ctor (func (param $bar (ref $Bar)) (result (ref $Foo))))
-//│   (type $getX (func (param $f (ref $Foo)) (result (ref null any))))
+//│   (type $Foo_init (func (param $this (ref $Foo)) (param $bar (ref null $Bar)) (result (ref $Foo))))
+//│   (type $Foo_ctor (func (param $bar (ref null $Bar)) (result (ref $Foo))))
+//│   (type $getX (func (param $f (ref null $Foo)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (global $Bar_typeinfo (export "Bar_typeinfo") (ref $Bar_typeinfo) (struct.new $Bar_typeinfo
 //│     (i32.const 1)
@@ -249,7 +250,7 @@ getX(Foo(Bar(42)))
 //│           (local.get $x)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $bar (ref $Bar)) (result (ref $Foo))
+//│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $bar (ref null $Bar)) (result (ref $Foo))
 //│     (block (result (ref $Foo))
 //│       (struct.set $Foo $bar
 //│         (local.get $this)
@@ -257,7 +258,7 @@ getX(Foo(Bar(42)))
 //│       (return
 //│         (ref.cast (ref $Foo)
 //│           (local.get $this)))))
-//│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $bar (ref $Bar)) (result (ref $Foo))
+//│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $bar (ref null $Bar)) (result (ref $Foo))
 //│     (local $this (ref $Foo))
 //│     (block (result (ref $Foo))
 //│       (local.set $this
@@ -270,12 +271,13 @@ getX(Foo(Bar(42)))
 //│           (local.get $bar)))
 //│       (return
 //│         (local.get $this))))
-//│   (func $getX (export "getX") (type $getX) (param $f (ref $Foo)) (result (ref null any))
+//│   (func $getX (export "getX") (type $getX) (param $f (ref null $Foo)) (result (ref null any))
 //│     (return
 //│       (struct.get $Bar $x
 //│         (ref.cast (ref $Bar)
 //│           (struct.get $Foo $bar
-//│             (local.get $f))))))
+//│             (ref.cast (ref $Foo)
+//│               (local.get $f)))))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
@@ -355,7 +357,7 @@ new Foo(42).Foo#y
 //│       (return
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (local $tmp (ref $Foo))
+//│     (local $tmp (ref null $Foo))
 //│     (block (result (ref null any))
 //│       (local.set $tmp
 //│         (call $Foo_ctor
@@ -363,7 +365,8 @@ new Foo(42).Foo#y
 //│             (i32.const 42))))
 //│       (return
 //│         (struct.get $Foo $y
-//│           (local.get $tmp)))))
+//│           (ref.cast (ref $Foo)
+//│             (local.get $tmp))))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
 //│   (elem $entry declare func $entry))

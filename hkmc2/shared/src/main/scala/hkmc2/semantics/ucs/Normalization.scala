@@ -411,7 +411,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         // applied once both have been seen - here, before `cont` reads it.
         var pathTypes: Ls[Opt[codegen.ErasedValueType]] = Nil
         val exitCont: Result => Block = r =>
-          pathTypes ::= r.erasedType
+          if !r.isUndefined then pathTypes ::= r.erasedType
           Assign(tmp, r, Break(exitLabel))
         val bodyBlock = lowerSplit(sym.body, exitCont)
         val tailBlock = lowerSplit(tail, exitCont)
@@ -507,7 +507,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         case IfLikeForm.ReturningIf =>
           if (k is Ret) || (k is Thrw) then k(r)
           else
-            branchTypes ::= r.erasedType
+            if !r.isUndefined then branchTypes ::= r.erasedType
             Assign(l, r, End())
         case IfLikeForm.ImperativeIf => Assign.discard(r, End())
         case IfLikeForm.While => Assign(NoSymbol, r, loopCont)

@@ -52,13 +52,12 @@ unit
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Unit (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $Unit_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $entry (func (result (ref $Unit))))
+//│   (type $entry (func (result (ref null $Unit))))
 //│   (import "repl" "Unit_typeinfo" (global $Unit_typeinfo (ref $Unit_typeinfo)))
 //│   (import "repl" "Unit$inst" (global $Unit (mut (ref null $Unit))))
-//│   (func $entry (export "entry") (type $entry) (result (ref $Unit))
+//│   (func $entry (export "entry") (type $entry) (result (ref null $Unit))
 //│     (return
-//│       (ref.cast (ref $Unit)
-//│         (global.get $Unit))))
+//│       (global.get $Unit)))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = {}
