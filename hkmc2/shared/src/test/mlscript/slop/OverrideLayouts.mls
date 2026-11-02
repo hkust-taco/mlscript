@@ -212,11 +212,18 @@ declare class ArrowNarrowing extends ArrowTypedBase {
 //│ ╙──      	              ^^^^
 
 // A written method can override a declared callable member that has the same parameter lists.
-// The declared base class has no runtime definition in this test.
-:re
-private class WrittenOverArrow() extends ArrowTypedBase with
-  override fun pick(value: Int): Int = value
-//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+// A call through the declared base passes its argument list to the overriding method.
+:noInline
+:expect 40
+set globalThis.RuntimeArrowBase = globalThis.eval("(class RuntimeArrowBase { pick(x) { return x + 1 } })")
+declare class RuntimeArrowBase {
+  declare fun pick: (Int) -> Int
+}
+private class WrittenOverArrow() extends RuntimeArrowBase with
+  override fun pick(value: Int): Int = value * 10
+private fun throughDeclared(base: RuntimeArrowBase) = base.pick(4)
+throughDeclared(WrittenOverArrow())
+//│ = 40
 
 // A function without parameter lists cannot override a declared callable member's list.
 :ge
