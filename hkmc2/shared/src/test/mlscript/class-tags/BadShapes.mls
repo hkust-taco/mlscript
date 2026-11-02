@@ -474,11 +474,11 @@ fun flattenBudget(flag) =
 //│ class-tags web-computation-phase >   pattern matches: match@1518
 //│ <<< end class-tags web-computation-phase
 //│ >>> start class-tags transform-phase
-//│ class-tags transform-phase > allocated tag 0 for A(x: 0)
-//│ class-tags transform-phase > allocated tag 1 for B(x: 0)
 //│ ╔══[COMPILATION ERROR] Flattening this shape would produce more than 256 alternatives.
 //│ ║  l.+6: 	  let value = new TooManyShapes(field, field, field, field, field, field, field, field, field)
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ class-tags transform-phase > allocated tag 0 for A(x: 0)
+//│ class-tags transform-phase > allocated tag 1 for B(x: 0)
 //│ class-tags transform-phase > duplicated A as A__Tagged
 //│ class-tags transform-phase > duplicated B as B__Tagged
 //│ class-tags transform-phase > no tag for TooManyShapes@result of shape TooManyShapes(f: (B(x: 0) | A(x: 0)), c: (B(x: 0) | A(x: 0)), b: (B(x: 0) | A(x: 0)), g: (B(x: 0) | A(x: 0)), a: (B(x: 0) | A(x: 0)), h: (B(x: 0) | A(x: 0)), e:
