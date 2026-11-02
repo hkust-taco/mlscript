@@ -304,6 +304,12 @@ class M1() with
 class M2() extends M1() with
   override fun f(m: Int32): Int = 0
 M2().f(1)
+//│ ╔══[COMPILATION ERROR] Overriding member 'f' produces values represented as 'Int', which the member it overrides cannot produce: its results are represented as 'Int32'
+//│ ║  l.+4: 	  override fun f(m: Int32): Int = 0
+//│ ║        	               ^
+//│ ╟── The overridden member 'f' is defined here
+//│ ║  l.+2: 	  open fun f(m: Int32): Int32 = m
+//│ ╙──      	           ^
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
 //│ ║  l.+5: 	M2().f(1)
 //│ ╙──      	       ^
@@ -312,19 +318,25 @@ M2().f(1)
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-// The same rule on a parameter: `g`'s `m` is unannotated, so it erases to `anyref` rather than `i32`.
+// An annotated override parameter must use the inherited unboxed representation.
 :ge
 class N1() with
   open fun g(m: Int32): Int32 = m
 class N2() extends N1() with
-  override fun g(m): Int32 = 0
-N2().g(1)
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
-//│ ║  l.+4: 	  override fun g(m): Int32 = 0
-//│ ╙──      	                             ^
-//│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null any)`, but the method it overrides declares `i32`
-//│ ║  l.+4: 	  override fun g(m): Int32 = 0
-//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^
+  override fun g(m: Int): Int32 = n32
+N2().g(n32)
+//│ ╔══[COMPILATION ERROR] Parameter 'm' of overriding member 'g' is represented as 'Int', which cannot hold the values represented as 'Int32' that the member it overrides accepts
+//│ ║  l.+4: 	  override fun g(m: Int): Int32 = n32
+//│ ║        	                 ^^^^^^
+//│ ╟── The overridden member 'g' is defined here
+//│ ║  l.+2: 	  open fun g(m: Int32): Int32 = m
+//│ ╙──      	           ^
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Int'
+//│ ║  l.+5: 	N2().g(n32)
+//│ ╙──      	       ^^^
+//│ ╔══[COMPILATION ERROR] Overriding method `g` declares parameter 1 as `(ref null i31)`, but the method it overrides declares `i32`
+//│ ║  l.+4: 	  override fun g(m: Int): Int32 = n32
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // Boxed types are bridged by casts, so they need not match

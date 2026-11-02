@@ -43,6 +43,11 @@ Before adding new diff tests, make sure they are not already covered by existing
 All new diff-test files you create should go into `hkmc2/shared/src/test/mlscript/slop/`
 unless there is a good reason to put them elsewhere.
 
+The legacy resolver (the `0.2.x` language, used whenever new resolution is disabled,
+including diff tests that do not import their directory's `.mls` configuration with `:.`)
+will be sunset soon. Do not spend effort fixing, extending, or adding tests for behavior
+specific to it; keep its existing tests passing and focus on new-resolution behavior.
+
 When you create a commit, author it under your (the agent's) own identity,
 not under the user's identity.
 Set this identity for the commit command only

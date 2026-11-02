@@ -924,7 +924,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     val funcTy = declareClassFuncType(defn, suffix, params, results, thisType)
     predeclareClassFuncWithType(defn, suffix, params, results, sym, exportName, funcTy)
 
-  /** Registers a placeholder class-associated function using a predeclared Wasm function type. */
+  /** Registers a class-associated function's signature and placeholder body before generating its
+    * implementation. `params` supplies symbols and names in the order of `funcTy`'s physical slots;
+    * slot types come from `funcTy`, and `resultTypes` must agree with it. This lets an overriding
+    * method retain its own parameter identities while using its inherited virtual signature.
+    */
   private def predeclareClassFuncWithType(
       defn: ClsLikeDefn,
       suffix: Str,
@@ -934,11 +938,12 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       exportName: Opt[Str],
       funcTy: TypeIdx,
   )(using Raise): Unit =
+    val signature = ctx.getTypeInfo_!(funcTy).asFunctionType_!.sigType
     ctx.addFunc(FuncInfo(
       sym,
       wrapId = if sym.asClsOrMod.isDefined then (N -> S("ctor")) else (S(defn.sym.nme) -> N),
       typeUse = TypeUse(funcTy),
-      params = params.map(_.resolvedParam),
+      params = params.zip(signature.params).map { case ((symbol, id), param) => symbol -> WasmParam(id, param.valtype) },
       resultTypes = resultTypes,
       locals = Seq.empty,
       body = ref.`null`(ctx.getType_!(defn.sym)),
@@ -2417,11 +2422,10 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                       ps: LoweredParamList,
                       bod: Block,
                   ): Unit =
-                    val paramTypes = ctx.getVirtualTable(clsLikeDefn.sym).flatMap: vt =>
-                      vt.slotOf.get(sym).map: slot =>
-                        RefType(ctx.getType_!(vt.slots(slot).owner), nullable = false) +: vt.slots(slot).paramTypes
-                    val (bodyWat, fnCtx) = setupFunction(S(clsLikeDefn.isym), ps, bod, paramTypes = paramTypes)
                     val predeclaredMethod = ctx.getFuncInfo_!(sym)
+                    // Reuse the physical signature, including a non-null receiver and any inherited virtual slot.
+                    val paramTypes = S(predeclaredMethod.getSignatureType.params.map(_.valtype))
+                    val (bodyWat, fnCtx) = setupFunction(S(clsLikeDefn.isym), ps, bod, paramTypes = paramTypes)
                     val funcInfo = FuncInfo(
                       sym,
                       wrapId = S(clsLikeDefn.sym.nme) -> N,
@@ -2980,6 +2984,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   def block(t: Block)(using FunctionCtx, Raise, SessionExportCtx): Vector[Expr] =
     nonNestedScoped(t)(returningTerm)
 
+  /** Compiles a function's IR body to one Wasm expression and returns the context that records its
+    * parameters and locals. `paramTypes` describes the registered function signature's parameter slots,
+    * including the shared virtual signature for an override; [[FunctionCtx]] defines the fallback when
+    * it is absent.
+    */
   def setupFunction(
       thisSym: Opt[InnerSymbol],
       params: LoweredParamList,

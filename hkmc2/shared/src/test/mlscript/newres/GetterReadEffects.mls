@@ -85,7 +85,7 @@ fun test() =
   box.value
   calls
 test()
-//│ ╔══[COMPILATION ERROR] Overriding member 'value' must preserve whether the member is a field, getter, or method
+//│ ╔══[COMPILATION ERROR] Overriding member 'value' is a function, but the member it overrides is a value
 //│ ║  l.+6: 	    fun value: Int =
 //│ ║        	    ^^^^^^^^^^^^^^^^
 //│ ║  l.+7: 	      set calls += 1
