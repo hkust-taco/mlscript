@@ -134,7 +134,7 @@ fun f(x, y) =
       let m = t.Bar#x
       @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@349, Bar@352, Foo@350, D@351 in f
+//│ class-tags collection-phase > track construction of C@349, Foo@350, D@351, Bar@352 in f
 //│ class-tags collection-phase > track consumption at match@397 in f
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
@@ -320,7 +320,7 @@ fun f(x, y) =
 private fun g(t) = t.Foo#x
 private fun h(t) = t.Bar#x
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Foo@787, C@786, D@788, Bar@789 in f
+//│ class-tags collection-phase > track construction of C@786, Foo@787, D@788, Bar@789 in f
 //│ class-tags collection-phase > track consumption at match@838 in f
 //│ class-tags collection-phase > track consumption at Foo.x@769 in g
 //│ class-tags collection-phase > track consumption at Bar.x@772 in h
@@ -516,9 +516,9 @@ private fun h(t) =
   let m = t.Bar#x
   @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@1259, Bar@1262, Foo@1260, D@1261 in f
+//│ class-tags collection-phase > track construction of C@1259, Foo@1260, D@1261, Bar@1262 in f
 //│ class-tags collection-phase > track consumption at match@1275 in f
-//│ class-tags collection-phase > track consumption at match@1297, Foo.x@1233 in g
+//│ class-tags collection-phase > track consumption at Foo.x@1233, match@1297 in g
 //│ class-tags collection-phase > track consumption at Bar.x@1241, match@1319 in h
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
@@ -737,8 +737,8 @@ private fun h(t) =
   let m = t.Bar#x
   @matchShapes(C(_), D(_)) shape.match of m, () => m.C#x + 1, () => m.D#x + 2
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Bar@1662, Foo@1660, C@1659, D@1661 in f
-//│ class-tags collection-phase > track consumption at match@1691, match@1675 in f
+//│ class-tags collection-phase > track construction of C@1659, Foo@1660, D@1661, Bar@1662 in f
+//│ class-tags collection-phase > track consumption at match@1675, match@1691 in f
 //│ class-tags collection-phase > track consumption at Foo.x@1633, match@1716 in g
 //│ class-tags collection-phase > track consumption at Bar.x@1641, match@1738 in h
 //│ <<< end class-tags collection-phase
@@ -1383,7 +1383,7 @@ fun second() =
   @matchShapes(B(_)) shape.match of value, () => 2
 //│ >>> start class-tags collection-phase
 //│ class-tags collection-phase > track consumption at match@2809 in inspect
-//│ class-tags collection-phase > track construction of A@2819, Box@2815 in first
+//│ class-tags collection-phase > track construction of Box@2815, A@2819 in first
 //│ class-tags collection-phase > track consumption at match@2823 in first
 //│ class-tags collection-phase > track construction of Box@2829, B@2833 in second
 //│ class-tags collection-phase > track consumption at match@2837 in second
@@ -1530,7 +1530,7 @@ fun foo() =
     () => 1
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of D@3006, C@3005 in bar
+//│ class-tags collection-phase > track construction of C@3005, D@3006 in bar
 //│ class-tags collection-phase > track consumption at match@3019 in foo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase

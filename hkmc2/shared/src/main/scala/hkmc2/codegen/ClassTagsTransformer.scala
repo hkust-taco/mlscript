@@ -64,7 +64,7 @@ class WebEntryCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ext
     val collector = new ResultCollector()
     collector.applyBlock(fun.body)
 
-    val seenProducerEntryPoints = MutSet.empty[Ctor]
+    val seenProducerEntryPoints = MutLinkedHashSet.empty[Ctor]
     for
       resultId <- collector.resultIds
       ctor <- concreteCtorsByResultId.getOrElse(resultId, Nil)
@@ -77,7 +77,7 @@ class WebEntryCollector(val flowRes: FlowConstraintSolver)(using val tl: TL) ext
     if !seenProducerEntryPoints.isEmpty then
       tl.log(s"track construction of ${seenProducerEntryPoints.map(ClassTagsDebug.showProducer).mkString(", ")} in $funName")
 
-    val seenConsumerEntryPoints = MutSet.empty[ConcreteCtorConsumer]
+    val seenConsumerEntryPoints = MutLinkedHashSet.empty[ConcreteCtorConsumer]
     for
       resultId <- collector.resultIds
       consumer <- concreteConsumersByResultId.getOrElse(resultId, Nil)
@@ -646,6 +646,7 @@ class ClassTagsTransformer private (
   taggedResultIds: Set[ResultId],
   escapingResultIds: Set[ResultId],
   matchedResultIds: Set[ResultId],
+  scrutineeProducersByMatchId: collection.Map[ResultId, Set[ResultId]],
   unknownScrutineeMatchIds: Set[ResultId],
   argProducersByResultId: collection.Map[ResultId, Set[ResultId]],
   shapeByResultId: collection.Map[ResultId, Shape],
@@ -855,17 +856,22 @@ class ClassTagsTransformer private (
       methodKeys = Map.empty,
     )(N, Nil)
 
-  private def mkDuplicatedCtor(result: Result, tag: Path): Opt[Result] = result match
-    case DuplicableCtor(cls, clsPath, args, mut, annotations) =>
+  // The tagged copy replacing the class constructed by `result`, with a path referring to it.
+  private def duplicateOf(result: Result): Opt[ClsLikeDefn -> Path] = result match
+    case DuplicableCtor(cls, clsPath, _, _, _) =>
       duplicates.get(cls).flatMap: duplicate =>
         (clsPath, duplicate.owner) match
-          case (sel: Select, _) => S(Select(
+          case (sel: Select, _) => S(duplicate -> Select(
             sel.qual, new syntax.Tree.Ident(duplicate.sym.nme),
           )(S(duplicate.isym), clsPath.toLoc)(sel.sanitize))
           case (_: Value.MemberRef, N) =>
-            S(duplicate.sym.asMemberRef(duplicate.isym).withLocOf(clsPath))
+            S(duplicate -> duplicate.sym.asMemberRef(duplicate.isym).withLocOf(clsPath))
           case _ => N
-      .map: path =>
+    case _ => N
+
+  private def mkDuplicatedCtor(result: Result, tag: Path): Opt[Result] = result match
+    case DuplicableCtor(_, _, args, mut, annotations) =>
+      duplicateOf(result).map: (_, path) =>
         Instantiate(mut, path, (args :+ tag.asArg) :: Nil)(
           InstantiateMetadata(annotations), result.toLoc)
     case _ => N // TODO: raise an error?
@@ -879,12 +885,34 @@ class ClassTagsTransformer private (
 
   private def mkTagValue(tag: Int): Path = Value.Lit(syntax.Tree.IntLit(tag))(N)
 
+  private val tagMemberDefs = MutMap.empty[ClassSymbol | ModuleOrObjectSymbol, BlockMemberSymbol -> TermSymbol]
+
+  private def mkTagSymbol(owner: ClassSymbol | ModuleOrObjectSymbol): BlockMemberSymbol -> TermSymbol =
+    tagMemberDefs.getOrElseUpdate(owner, {
+      val member = new BlockMemberSymbol(tagField.name, Nil, nameIsMeaningful = false)
+      member -> TermSymbol(syntax.ImmutVal, S(owner), tagField, erasure = S(ErasedType.Int))
+    })
+
   private def mkTagField(
-    owner: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol, value: Path,
+    owner: ClassSymbol | ModuleOrObjectSymbol, value: Path,
   ): (BlockMemberSymbol -> TermSymbol, Block => Block) =
-    val tagMember = new BlockMemberSymbol(tagField.name, Nil, nameIsMeaningful = false)
-    val tagTerm = TermSymbol(syntax.ImmutVal, S(owner), tagField, erasure = S(ErasedType.Int))
-    (tagMember -> tagTerm, rest => Define(ValDefn(tagTerm, tagMember, value)(N, Nil), rest))
+    val (member, term) = mkTagSymbol(owner)
+    (member -> term, rest => Define(ValDefn(term, member, value)(N, Nil), rest))
+
+  private def getTagSymbol(result: Result): Opt[ClassSymbol | ModuleOrObjectSymbol] =
+    if !taggedResultIds.contains(result.uid) || orderedCandidates(result).isEmpty then N
+    else result match
+      case CtorProducer(obj: ModuleOrObjectSymbol, _, _) => Option.when(objectTags.contains(obj))(obj)
+      case _ => duplicateOf(result).flatMap:
+        case (duplicate, _) => duplicate.isym match
+          case cls: ClassSymbol => S(cls)
+          case _ => N
+
+  private def getTagSymbol(matchId: ResultId): Opt[TermSymbol] =
+    scrutineeProducersByMatchId.getOrElse(matchId, Set.empty)
+      .map(producer => getTagSymbol(producer.getResult)).toList match
+        case S(carrier) :: Nil => S(mkTagSymbol(carrier)._2)
+        case _ => N
 
   private lazy val objectTags: Map[ModuleOrObjectSymbol, Int] =
     taggedResultIds.iterator.flatMap: resultId =>
@@ -1249,7 +1277,7 @@ class ClassTagsTransformer private (
                 else
                   val resultSymbol = new TempSymbol(N, initErasedType = call.erasedType, "shapeMatchResult")
                   val resultRef = resultSymbol.asSimpleRef.withLocOf(call)
-                  val tagAccess = Select(scrutinee, tagField)(N, scrutinee.toLoc)(false)
+                  val tagAccess = Select(scrutinee, tagField)(getTagSymbol(call.uid), scrutinee.toLoc)(false)
                   S(Scoped(Set.single(resultSymbol),
                     bindResult(tagAccess): tag =>
                       mkTagDispatch(tag, branchTags.zip(branchDefns), resultSymbol, k(resultRef))))
@@ -1431,16 +1459,19 @@ object ClassTagsTransformer:
         .toList.distinct
         val webs = mkWebs(entryPoints, matchConsumers)
         if dCfg.debug then logWebs(webs)(using classTagsTl)
-        val taggedResultIds = webs.iterator
-          .flatMap(_.markedProducers.iterator)
+        val markedProducers = webs.flatMap(_.markedProducers).sortBy(_.exprId.uid)
+        val taggedResultIds = markedProducers.iterator
           .map(_.exprId).toSet
-        val escapingResultIds = webs.iterator
-          .flatMap(_.markedProducers.iterator)
+        val escapingResultIds = markedProducers.iterator
           .filter(_.dests.contains(UnknownCons))
           .map(_.exprId).toSet
-        val matchedResultIds = matchConsumers.iterator.flatMap(_.srcs).collect:
-          case ctor: Ctor => ctor.exprId
-        .toSet
+        val scrutineeProducersByMatchId = matchConsumers
+          .map: patternMatch =>
+            patternMatch.exprId -> patternMatch.srcs.toList.collect:
+              case ctor: Ctor => ctor.exprId
+            .sortBy(_.uid).toSet
+          .groupMapReduce(_._1)(_._2)(_ ++ _)
+        val matchedResultIds = scrutineeProducersByMatchId.valuesIterator.flatten.toSet
         val unknownScrutineeMatchIds = matchConsumers.iterator
           .filter(_.srcs.contains(UnknownProd))
           .map(_.exprId).toSet
@@ -1451,12 +1482,11 @@ object ClassTagsTransformer:
             case variable: StratVar =>
               variable.lowerBounds.iterator.flatMap(concreteProducers(_, seen + variable))
             case _ => Iterator.empty
-        val argProducersByResultId = webs.iterator
-          .flatMap(_.markedProducers.iterator)
+        val argProducersByResultId = markedProducers
           .map: ctor =>
             ctor.exprId -> ctor.args.iterator
               .flatMap((_, arg) => concreteProducers(arg, Set.empty)).map(_.exprId).toSet
-          .toList.groupMapReduce(_._1)(_._2)(_ ++ _)
+          .groupMapReduce(_._1)(_._2)(_ ++ _)
         val funSymToFunDefn = flowAnalysisRes.preAnalyzer.res.funSymToFunDefn
         val patternShapesByCall = matchCalls.iterator.flatMap: call =>
           call.metadata.annotations.collectFirst:
@@ -1469,6 +1499,7 @@ object ClassTagsTransformer:
           taggedResultIds,
           escapingResultIds,
           matchedResultIds,
+          scrutineeProducersByMatchId,
           unknownScrutineeMatchIds,
           argProducersByResultId,
           shapeProp.shapeByResultId,

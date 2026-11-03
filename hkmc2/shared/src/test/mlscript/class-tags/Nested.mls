@@ -16,7 +16,7 @@ private fun bar(ls) =
   @matchShapes(Cons(1, Cons(2, Cons(3, Cons(_, Cons(_, Cons(_, Nil)))))))
   shape.match of ls, () => ls.Cons#xs.Cons#xs.Cons#xs.Cons#x + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x + + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x 
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of Cons@143, Cons@145, Cons@144, Cons@147, Cons@146, Cons@148 in foo
+//│ class-tags collection-phase > track construction of Cons@143, Cons@144, Cons@145, Cons@146, Cons@147, Cons@148 in foo
 //│ class-tags collection-phase > track consumption at match@182 in bar
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
@@ -115,7 +115,7 @@ private fun foofoo(t) =
     () => t.C#x.D#x + 1
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@388, D@385, C@386 in foo
+//│ class-tags collection-phase > track construction of D@385, C@386, C@388 in foo
 //│ class-tags collection-phase > track consumption at match@406 in foofoo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
@@ -253,7 +253,7 @@ private fun foofoo(t) =
     () => t.C#x.D#x + 1
     () => 0
 //│ >>> start class-tags collection-phase
-//│ class-tags collection-phase > track construction of C@582, D@580 in foo
+//│ class-tags collection-phase > track construction of D@580, C@582 in foo
 //│ class-tags collection-phase > track consumption at match@600 in foofoo
 //│ <<< end class-tags collection-phase
 //│ >>> start class-tags web-computation-phase
