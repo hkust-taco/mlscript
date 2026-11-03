@@ -53,9 +53,6 @@ object DiffTestRunner:
         .filter(module => module.segments.contains("mlscript-compile") && os.isFile(module))
         .toList
     
-    /** Whether runs on this state elaborate the modules their tests import before starting them. */
-    def warmsUpImports: Bool = true
-    
     /** Elaborates the Prelude and the modules imported by the diff tests `files` in `cctx`, before
       * these tests start.
       *
@@ -133,10 +130,6 @@ object DiffTestRunner:
       // println(s"Filtering: $file ${modified(file)}")
       modified(file)
     
-    // * This state serves the `:tests` command of watcher sessions, which run a few changed tests
-    // * and report them as soon as possible; like the watcher itself, they elaborate imports on demand.
-    override def warmsUpImports: Bool = false
-    
   end StateWithGit
   
   lazy val State = new State
@@ -183,12 +176,15 @@ class DiffTestRunnerBase(val state: DiffTestRunner.State) extends TimeOutTests:
   private lazy val diffTestFilesByName: Map[Str, os.Path] =
     diffTestFiles.iterator.map(file => relativeName(file) -> file).toMap
   
-  /** Elaborates the modules imported by the tests this run selects, such as with `-z`, before starting
-    * them (see `DiffTestRunner.State.warmUpImports`), so that no test's time limit covers them.
-    * ScalaTest then runs each test on a fresh runner instance with its name (see `ParallelTestExecution`).
+  /** On CI, elaborates the modules imported by the tests this run selects, such as with `-z`, before
+    * starting them (see `DiffTestRunner.State.warmUpImports`), so that no test's time limit covers them.
+    * Development machines elaborate these modules in the first tests importing them well within the
+    * time limit, and the watcher's `:tests` command reports its few changed tests sooner without waiting
+    * for a warm-up. ScalaTest then runs each test on a fresh runner instance with its name
+    * (see `ParallelTestExecution`).
     */
   override def run(testName: Opt[Str], args: Args): Status =
-    if testName.isEmpty && warmsUpImports then
+    if testName.isEmpty && TimeOutTests.OnCI then
       warmUpImports(args.filter(testNames, tags, suiteId).collect:
         case (name, false) => diffTestFilesByName(name))
     super.run(testName, args)
