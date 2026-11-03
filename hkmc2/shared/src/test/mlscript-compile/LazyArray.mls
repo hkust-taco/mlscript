@@ -143,7 +143,7 @@ class Splice[A](val bits: Array, val len: Int) extends LazyArr[A] with
       set materialized = reify
     materialized
   
-  override fun at(idx: Int): A | unsafe.undefined = materialize().at(idx)
+  override fun at(idx: Int): A | () = materialize().at(idx)
   override fun slice(start?: Int, end?: Int): LazyIterable[A] = sliceHelper(start, end, this)
   override fun concat(...xs: Array[Indexable[A]]): LazyIterable[A] = 
     if materialized === null 

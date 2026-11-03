@@ -1898,12 +1898,13 @@ extends Importer:
           mkNonLabelSelectionApp(tree, sel, args)
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
+          // * As with a local break, a valueless break gives the label the Unit result.
           mkNonLocalEffectInvocation(
             binding.nonLocalHandlerSymbol,
             "break",
             nme,
             args,
-            value.toList,
+            value.getOrElse(unit) :: Nil,
           )
       case LabelLookup.NotFound =>
         mkNonLabelSelectionApp(tree, sel, args)
@@ -1946,7 +1947,7 @@ extends Importer:
           error
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
-          mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", nme, Nil, Nil)
+          mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", nme, Nil, unit :: Nil)
       case LabelLookup.NotFound =>
         elaborateSelection(sel)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>

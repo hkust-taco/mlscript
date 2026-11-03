@@ -114,7 +114,7 @@ true        // Boolean literal
 false       // Boolean literal
 ()          // Unit literal (empty tuple/record)
 null        // Null
-undefined   // Undefined
+undefined   // Undefined: an unspecified value (see Runtime Representations)
 ```
 
 **String escape sequences:**
@@ -233,6 +233,22 @@ fun foo() =
   val result = compute()
   result + 1
 ```
+
+### Runtime Representations
+
+Type annotations can require a particular runtime representation, including the unboxed
+Wasm types `Int32`, `Int64`, `Float32`, and `Float64`.
+
+`undefined` denotes an unspecified value of any representation. It can be stored in or passed
+to any slot, but reading it back is undefined behavior: the JavaScript backend produces JS
+`undefined` (or `()` for a function returning it), while the Wasm backend may produce any value
+of the slot's representation, such as zero or a null reference. Compiler-generated placeholders,
+such as those left by dead-parameter elimination, rely on this rule. `null` remains an ordinary
+value and does not have this freedom to inhabit unboxed representations.
+
+In the IR, `undefined` has type `Nothing`: joining it with another representation leaves that
+representation unchanged, and casting the literal leaves it unchanged. This type does not imply
+unreachable control flow; evaluating an expression of type `Nothing` can still have effects.
 
 ---
 

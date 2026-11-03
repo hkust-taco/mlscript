@@ -32,7 +32,7 @@ callF(B())
 //│   (type $B_typeinfo (sub $A_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
 //│   (type $B_init (func (param $this (ref $B)) (result (ref $B))))
 //│   (type $B_ctor (func (result (ref $B))))
-//│   (type $callF (func (param $a (ref $A)) (result (ref null any))))
+//│   (type $callF (func (param $a (ref null $A)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $times_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
@@ -52,15 +52,14 @@ callF(B())
 //│         (local.get $this))))
 //│   (func $A_ctor (export "A") (type $A_ctor) (result (ref $A))
 //│     (local $this (ref $A))
-//│     (block (result (ref $A))
-//│       (local.set $this
-//│         (struct.new $A
-//│           (global.get $A_typeinfo)))
-//│       (drop
-//│         (call $A_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $A
+//│         (global.get $A_typeinfo)))
+//│     (drop
+//│       (call $A_init
+//│         (local.get $this)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $A_f (type $virtual2) (param $this (ref $A)) (param $x (ref null any)) (result (ref null any))
 //│     (return
 //│       (call $plus_impl
@@ -68,31 +67,29 @@ callF(B())
 //│         (ref.i31
 //│           (i32.const 1)))))
 //│   (func $B_init (type $B_init) (param $this (ref $B)) (result (ref $B))
-//│     (block (result (ref $B))
-//│       (drop
-//│         (call $A_init
-//│           (local.get $this)))
-//│       (return
-//│         (ref.cast (ref $B)
-//│           (local.get $this)))))
+//│     (drop
+//│       (call $A_init
+//│         (local.get $this)))
+//│     (return
+//│       (ref.cast (ref $B)
+//│         (local.get $this))))
 //│   (func $B_ctor (export "B") (type $B_ctor) (result (ref $B))
 //│     (local $this (ref $B))
-//│     (block (result (ref $B))
-//│       (local.set $this
-//│         (struct.new $B
-//│           (global.get $B_typeinfo)))
-//│       (drop
-//│         (call $B_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $B
+//│         (global.get $B_typeinfo)))
+//│     (drop
+//│       (call $B_init
+//│         (local.get $this)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $B_f (type $virtual2) (param $this (ref $A)) (param $x (ref null any)) (result (ref null any))
 //│     (return
 //│       (call $times_impl
 //│         (local.get $x)
 //│         (ref.i31
 //│           (i32.const 2)))))
-//│   (func $callF (export "callF") (type $callF) (param $a (ref $A)) (result (ref null any))
+//│   (func $callF (export "callF") (type $callF) (param $a (ref null $A)) (result (ref null any))
 //│     (local $receiver (ref null any))
 //│     (return
 //│       (block (result (ref null any))
@@ -110,28 +107,27 @@ callF(B())
 //│                   (local.get $receiver)))))))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
-//│     (local $a (ref $A))
+//│     (local $a (ref null $A))
 //│     (local $receiver (ref null any))
-//│     (block (result (ref null any))
-//│       (local.set $tmp
-//│         (call $B_ctor))
-//│       (local.set $a
-//│         (ref.cast (ref $A)
-//│           (local.get $tmp)))
-//│       (return
-//│         (block (result (ref null any))
-//│           (local.set $receiver
-//│             (local.get $a))
-//│           (call_ref $virtual2
-//│             (ref.cast (ref $A)
-//│               (local.get $receiver))
-//│             (ref.i31
-//│               (i32.const 5))
-//│             (struct.get $A_typeinfo $slot0
-//│               (ref.cast (ref $A_typeinfo)
-//│                 (struct.get $Object $$typeinfo
-//│                   (ref.cast (ref $Object)
-//│                     (local.get $receiver))))))))))
+//│     (local.set $tmp
+//│       (call $B_ctor))
+//│     (local.set $a
+//│       (ref.cast (ref $A)
+//│         (local.get $tmp)))
+//│     (return
+//│       (block (result (ref null any))
+//│         (local.set $receiver
+//│           (local.get $a))
+//│         (call_ref $virtual2
+//│           (ref.cast (ref $A)
+//│             (local.get $receiver))
+//│           (ref.i31
+//│             (i32.const 5))
+//│           (struct.get $A_typeinfo $slot0
+//│             (ref.cast (ref $A_typeinfo)
+//│               (struct.get $Object $$typeinfo
+//│                 (ref.cast (ref $Object)
+//│                   (local.get $receiver)))))))))
 //│   (elem $A_init declare func $A_init)
 //│   (elem $A_ctor declare func $A_ctor)
 //│   (elem $A_f declare func $A_f)
@@ -191,7 +187,7 @@ callPrim(W())
 //│   (type $W_typeinfo (sub $V_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual2))))))
 //│   (type $W_init (func (param $this (ref $W)) (result (ref $W))))
 //│   (type $W_ctor (func (result (ref $W))))
-//│   (type $callPrim (func (param $a (ref $V)) (result i32)))
+//│   (type $callPrim (func (param $a (ref null $V)) (result i32)))
 //│   (type $entry (func (result i32)))
 //│   (global $n32 (export "n32") (mut i32) (i32.const 0))
 //│   (global $V_typeinfo (export "V_typeinfo") (ref $V_typeinfo) (struct.new $V_typeinfo
@@ -208,41 +204,38 @@ callPrim(W())
 //│         (local.get $this))))
 //│   (func $V_ctor (export "V") (type $V_ctor) (result (ref $V))
 //│     (local $this (ref $V))
-//│     (block (result (ref $V))
-//│       (local.set $this
-//│         (struct.new $V
-//│           (global.get $V_typeinfo)))
-//│       (drop
-//│         (call $V_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $V
+//│         (global.get $V_typeinfo)))
+//│     (drop
+//│       (call $V_init
+//│         (local.get $this)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $V_f (type $virtual2) (param $this (ref $V)) (param $m i32) (result i32)
 //│     (return
 //│       (local.get $m)))
 //│   (func $W_init (type $W_init) (param $this (ref $W)) (result (ref $W))
-//│     (block (result (ref $W))
-//│       (drop
-//│         (call $V_init
-//│           (local.get $this)))
-//│       (return
-//│         (ref.cast (ref $W)
-//│           (local.get $this)))))
+//│     (drop
+//│       (call $V_init
+//│         (local.get $this)))
+//│     (return
+//│       (ref.cast (ref $W)
+//│         (local.get $this))))
 //│   (func $W_ctor (export "W") (type $W_ctor) (result (ref $W))
 //│     (local $this (ref $W))
-//│     (block (result (ref $W))
-//│       (local.set $this
-//│         (struct.new $W
-//│           (global.get $W_typeinfo)))
-//│       (drop
-//│         (call $W_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $W
+//│         (global.get $W_typeinfo)))
+//│     (drop
+//│       (call $W_init
+//│         (local.get $this)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $W_f (type $virtual2) (param $this (ref $V)) (param $m i32) (result i32)
 //│     (return
 //│       (local.get $m)))
-//│   (func $callPrim (export "callPrim") (type $callPrim) (param $a (ref $V)) (result i32)
+//│   (func $callPrim (export "callPrim") (type $callPrim) (param $a (ref null $V)) (result i32)
 //│     (local $receiver (ref null any))
 //│     (return
 //│       (block (result i32)
@@ -260,31 +253,30 @@ callPrim(W())
 //│   (func $entry (export "entry") (type $entry) (result i32)
 //│     (local $tmp i32)
 //│     (local $tmp1 (ref null any))
-//│     (local $a (ref $V))
+//│     (local $a (ref null $V))
 //│     (local $receiver (ref null any))
-//│     (block (result i32)
-//│       (local.set $tmp
-//│         (i32.const 7))
-//│       (global.set $n32
-//│         (local.get $tmp))
-//│       (local.set $tmp1
-//│         (call $W_ctor))
-//│       (local.set $a
-//│         (ref.cast (ref $V)
-//│           (local.get $tmp1)))
-//│       (return
-//│         (block (result i32)
-//│           (local.set $receiver
-//│             (local.get $a))
-//│           (call_ref $virtual2
-//│             (ref.cast (ref $V)
-//│               (local.get $receiver))
-//│             (global.get $n32)
-//│             (struct.get $V_typeinfo $slot0
-//│               (ref.cast (ref $V_typeinfo)
-//│                 (struct.get $Object $$typeinfo
-//│                   (ref.cast (ref $Object)
-//│                     (local.get $receiver))))))))))
+//│     (local.set $tmp
+//│       (i32.const 7))
+//│     (global.set $n32
+//│       (local.get $tmp))
+//│     (local.set $tmp1
+//│       (call $W_ctor))
+//│     (local.set $a
+//│       (ref.cast (ref $V)
+//│         (local.get $tmp1)))
+//│     (return
+//│       (block (result i32)
+//│         (local.set $receiver
+//│           (local.get $a))
+//│         (call_ref $virtual2
+//│           (ref.cast (ref $V)
+//│             (local.get $receiver))
+//│           (global.get $n32)
+//│           (struct.get $V_typeinfo $slot0
+//│             (ref.cast (ref $V_typeinfo)
+//│               (struct.get $Object $$typeinfo
+//│                 (ref.cast (ref $Object)
+//│                   (local.get $receiver)))))))))
 //│   (elem $V_init declare func $V_init)
 //│   (elem $V_ctor declare func $V_ctor)
 //│   (elem $V_f declare func $V_f)
@@ -373,8 +365,8 @@ readChild(new Child())
 //│   (type $Child_typeinfo (sub $Parent_typeinfo (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual1))))))
 //│   (type $Child_init (func (param $this (ref $Child)) (result (ref $Child))))
 //│   (type $Child_ctor (func (result (ref $Child))))
-//│   (type $readChild (func (param $c (ref $Child)) (result (ref $Child))))
-//│   (type $entry (func (result (ref $Child))))
+//│   (type $readChild (func (param $c (ref null $Child)) (result (ref null $Child))))
+//│   (type $entry (func (result (ref null $Child))))
 //│   (global $Parent_typeinfo (export "Parent_typeinfo") (ref $Parent_typeinfo) (struct.new $Parent_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)
@@ -389,47 +381,44 @@ readChild(new Child())
 //│         (local.get $this))))
 //│   (func $Parent_ctor (export "Parent") (type $Parent_ctor) (result (ref $Parent))
 //│     (local $this (ref $Parent))
-//│     (block (result (ref $Parent))
-//│       (local.set $this
-//│         (struct.new $Parent
-//│           (global.get $Parent_typeinfo)))
-//│       (drop
-//│         (call $Parent_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $Parent
+//│         (global.get $Parent_typeinfo)))
+//│     (drop
+//│       (call $Parent_init
+//│         (local.get $this)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $Parent_get (type $virtual1) (param $this (ref $Parent)) (result (ref null any))
 //│     (return
 //│       (call $Parent_ctor)))
 //│   (func $Child_init (type $Child_init) (param $this (ref $Child)) (result (ref $Child))
-//│     (block (result (ref $Child))
-//│       (drop
-//│         (call $Parent_init
-//│           (local.get $this)))
-//│       (return
-//│         (ref.cast (ref $Child)
-//│           (local.get $this)))))
+//│     (drop
+//│       (call $Parent_init
+//│         (local.get $this)))
+//│     (return
+//│       (ref.cast (ref $Child)
+//│         (local.get $this))))
 //│   (func $Child_ctor (export "Child") (type $Child_ctor) (result (ref $Child))
 //│     (local $this (ref $Child))
-//│     (block (result (ref $Child))
-//│       (local.set $this
-//│         (struct.new $Child
-//│           (global.get $Child_typeinfo)))
-//│       (drop
-//│         (call $Child_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $Child
+//│         (global.get $Child_typeinfo)))
+//│     (drop
+//│       (call $Child_init
+//│         (local.get $this)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $Child_get (type $virtual1) (param $this (ref $Parent)) (result (ref null any))
 //│     (return
 //│       (call $Child_ctor)))
-//│   (func $readChild (export "readChild") (type $readChild) (param $c (ref $Child)) (result (ref $Child))
+//│   (func $readChild (export "readChild") (type $readChild) (param $c (ref null $Child)) (result (ref null $Child))
 //│     (local $receiver (ref null any))
 //│     (return
-//│       (block (result (ref $Child))
+//│       (block (result (ref null $Child))
 //│         (local.set $receiver
 //│           (local.get $c))
-//│         (ref.cast (ref $Child)
+//│         (ref.cast (ref null $Child)
 //│           (call_ref $virtual1
 //│             (ref.cast (ref $Parent)
 //│               (local.get $receiver))
@@ -438,14 +427,13 @@ readChild(new Child())
 //│                 (struct.get $Object $$typeinfo
 //│                   (ref.cast (ref $Object)
 //│                     (local.get $receiver))))))))))
-//│   (func $entry (export "entry") (type $entry) (result (ref $Child))
-//│     (local $tmp (ref $Child))
-//│     (block (result (ref $Child))
-//│       (local.set $tmp
-//│         (call $Child_ctor))
-//│       (return
-//│         (call $readChild
-//│           (local.get $tmp)))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null $Child))
+//│     (local $tmp (ref null $Child))
+//│     (local.set $tmp
+//│       (call $Child_ctor))
+//│     (return
+//│       (call $readChild
+//│         (local.get $tmp))))
 //│   (elem $Parent_init declare func $Parent_init)
 //│   (elem $Parent_ctor declare func $Parent_ctor)
 //│   (elem $Parent_get declare func $Parent_get)

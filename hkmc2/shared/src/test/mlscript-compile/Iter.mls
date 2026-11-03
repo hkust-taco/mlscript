@@ -30,7 +30,7 @@ open class IterableBase[A] with
   
   // * Functions that create a fresh new result
   // Omitted MLscript arguments bind null; supply the native defaults explicitly.
-  open fun at(idx: Int): A | unsafe.undefined = asArray.at(idx)
+  open fun at(idx: Int): A | () = asArray.at(idx)
   open fun concat(...xs: Array[A | Array[A]]): Iterable[A] = asArray.concat(...xs)
   fun copyWithin(target: Int, start: Int, end?: Int): Array[A] =
     asArray.copyWithin(target, start, end ?? length)
@@ -39,18 +39,18 @@ open class IterableBase[A] with
     if thisArg is null then asArray.every(f) else asArray.every(f, thisArg)
   fun filter(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): Array[A] =
     if thisArg is null then asArray.filter(f) else asArray.filter(f, thisArg)
-  fun find(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): A | unsafe.undefined =
+  fun find(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): A | () =
     if thisArg is null then asArray.find(f) else asArray.find(f, thisArg)
   fun findIndex(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): Int =
     if thisArg is null then asArray.findIndex(f) else asArray.findIndex(f, thisArg)
-  fun findLast(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): A | unsafe.undefined =
+  fun findLast(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): A | () =
     if thisArg is null then asArray.findLast(f) else asArray.findLast(f, thisArg)
   fun findLastIndex(f: (A, drop Int, drop Array[A]) -> Bool, thisArg?): Int =
     if thisArg is null then asArray.findLastIndex(f) else asArray.findLastIndex(f, thisArg)
   fun flat(depth?: Int): Array[Any] = asArray.flat(depth ?? 1)
   fun flatMap[B](f: (A, drop Int, drop Array[A]) -> (B | Array[B]), thisArg?): Array[B] =
     if thisArg is null then asArray.flatMap(f) else asArray.flatMap(f, thisArg)
-  fun forEach(f: (A, drop Int, drop Array[A]) -> Any, thisArg?): unsafe.undefined =
+  fun forEach(f: (A, drop Int, drop Array[A]) -> Any, thisArg?): () =
     if thisArg is null then asArray.forEach(f) else asArray.forEach(f, thisArg)
   fun includes(value: A, fromIndex?: Int): Bool = asArray.includes(value, fromIndex ?? 0)
   fun indexOf(value: A, fromIndex?: Int): Int = asArray.indexOf(value, fromIndex ?? 0)
@@ -82,10 +82,10 @@ open class IterableBase[A] with
   fun fill(value: A, start?: Int, end?: Int): Array[A] =
     let result = toArray()
     result.fill(value, start ?? 0, end ?? result.length)
-  fun pop(): A | unsafe.undefined = toArray().pop()
+  fun pop(): A | () = toArray().pop()
   fun push(...items: Array[A]): Int = toArray().push(...items)
   fun reverse(): Array[A] = toArray().reverse()
-  fun shift(): A | unsafe.undefined = toArray().shift()
+  fun shift(): A | () = toArray().shift()
   fun sort(compare?: (A, A) -> Num): Array[A] =
     if compare is null then toArray().sort() else toArray().sort(compare)
   fun splice(start: Int, deleteCount?: Int, ...items: Array[A]): Array[A] =

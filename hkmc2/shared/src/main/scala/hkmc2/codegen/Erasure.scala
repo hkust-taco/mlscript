@@ -43,6 +43,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         case Function(_, _) :: Nil => ErasedType.Function(S(false))
         case Polymorphic(_, _, body) :: Nil => erase(body, next)
         case Unit :: Nil => ErasedType.Unit
+        case Bottom :: Nil => ErasedType.Nothing
         case _ => ErasedType.Unknown
 
   /** Computes the runtime value representation denoted by a source type signature. With the new

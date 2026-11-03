@@ -24,26 +24,24 @@ a.A#get() + A(2).get()
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $A_init (type $A_init) (param $this (ref $A)) (param $x (ref null any)) (result (ref $A))
-//│     (block (result (ref $A))
-//│       (struct.set $A $x
-//│         (local.get $this)
-//│         (local.get $x))
-//│       (return
-//│         (ref.cast (ref $A)
-//│           (local.get $this)))))
+//│     (struct.set $A $x
+//│       (local.get $this)
+//│       (local.get $x))
+//│     (return
+//│       (ref.cast (ref $A)
+//│         (local.get $this))))
 //│   (func $A_ctor (export "A") (type $A_ctor) (param $x (ref null any)) (result (ref $A))
 //│     (local $this (ref $A))
-//│     (block (result (ref $A))
-//│       (local.set $this
-//│         (struct.new $A
-//│           (global.get $A_typeinfo)
-//│           (ref.null any)))
-//│       (drop
-//│         (call $A_init
-//│           (local.get $this)
-//│           (local.get $x)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $A
+//│         (global.get $A_typeinfo)
+//│         (ref.null any)))
+//│     (drop
+//│       (call $A_init
+//│         (local.get $this)
+//│         (local.get $x)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $A_get (type $A_get) (param $this (ref $A)) (result (ref null any))
 //│     (return
 //│       (struct.get $A $x
@@ -52,27 +50,26 @@ a.A#get() + A(2).get()
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
 //│     (local $tmp2 (ref null any))
-//│     (block (result (ref null any))
-//│       (global.set $a
-//│         (call $A_ctor
-//│           (ref.i31
-//│             (i32.const 1))))
-//│       (local.set $tmp
-//│         (call $A_get
-//│           (ref.cast (ref $A)
-//│             (global.get $a))))
-//│       (local.set $tmp1
-//│         (call $A_ctor
-//│           (ref.i31
-//│             (i32.const 2))))
-//│       (local.set $tmp2
-//│         (call $A_get
-//│           (ref.cast (ref $A)
-//│             (local.get $tmp1))))
-//│       (return
-//│         (call $plus_impl
-//│           (local.get $tmp)
-//│           (local.get $tmp2)))))
+//│     (global.set $a
+//│       (call $A_ctor
+//│         (ref.i31
+//│           (i32.const 1))))
+//│     (local.set $tmp
+//│       (call $A_get
+//│         (ref.cast (ref $A)
+//│           (global.get $a))))
+//│     (local.set $tmp1
+//│       (call $A_ctor
+//│         (ref.i31
+//│           (i32.const 2))))
+//│     (local.set $tmp2
+//│       (call $A_get
+//│         (ref.cast (ref $A)
+//│           (local.get $tmp1))))
+//│     (return
+//│       (call $plus_impl
+//│         (local.get $tmp)
+//│         (local.get $tmp2))))
 //│   (elem $A_init declare func $A_init)
 //│   (elem $A_ctor declare func $A_ctor)
 //│   (elem $A_get declare func $A_get)
@@ -226,46 +223,43 @@ Prim(0).take(n32)
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Prim_init (type $Prim_init) (param $this (ref $Prim)) (param $v (ref null any)) (result (ref $Prim))
-//│     (block (result (ref $Prim))
-//│       (struct.set $Prim $v
-//│         (local.get $this)
-//│         (local.get $v))
-//│       (return
-//│         (ref.cast (ref $Prim)
-//│           (local.get $this)))))
+//│     (struct.set $Prim $v
+//│       (local.get $this)
+//│       (local.get $v))
+//│     (return
+//│       (ref.cast (ref $Prim)
+//│         (local.get $this))))
 //│   (func $Prim_ctor (export "Prim") (type $Prim_ctor) (param $v (ref null any)) (result (ref $Prim))
 //│     (local $this (ref $Prim))
-//│     (block (result (ref $Prim))
-//│       (local.set $this
-//│         (struct.new $Prim
-//│           (global.get $Prim_typeinfo)
-//│           (ref.null any)))
-//│       (drop
-//│         (call $Prim_init
-//│           (local.get $this)
-//│           (local.get $v)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $Prim
+//│         (global.get $Prim_typeinfo)
+//│         (ref.null any)))
+//│     (drop
+//│       (call $Prim_init
+//│         (local.get $this)
+//│         (local.get $v)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $Prim_take (type $Prim_take) (param $this (ref $Prim)) (param $m i32) (result i32)
 //│     (return
 //│       (local.get $m)))
 //│   (func $entry (export "entry") (type $entry) (result i32)
 //│     (local $tmp i32)
 //│     (local $tmp1 (ref null any))
-//│     (block (result i32)
-//│       (local.set $tmp
-//│         (i32.const 7))
-//│       (global.set $n32
-//│         (local.get $tmp))
-//│       (local.set $tmp1
-//│         (call $Prim_ctor
-//│           (ref.i31
-//│             (i32.const 0))))
-//│       (return
-//│         (call $Prim_take
-//│           (ref.cast (ref $Prim)
-//│             (local.get $tmp1))
-//│           (global.get $n32)))))
+//│     (local.set $tmp
+//│       (i32.const 7))
+//│     (global.set $n32
+//│       (local.get $tmp))
+//│     (local.set $tmp1
+//│       (call $Prim_ctor
+//│         (ref.i31
+//│           (i32.const 0))))
+//│     (return
+//│       (call $Prim_take
+//│         (ref.cast (ref $Prim)
+//│           (local.get $tmp1))
+//│         (global.get $n32))))
 //│   (elem $Prim_init declare func $Prim_init)
 //│   (elem $Prim_ctor declare func $Prim_ctor)
 //│   (elem $Prim_take declare func $Prim_take)

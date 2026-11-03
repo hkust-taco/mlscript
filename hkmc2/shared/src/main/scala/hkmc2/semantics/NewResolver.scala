@@ -1370,9 +1370,14 @@ class NewResolver:
             // within a conjunction, never across separate union clauses.
             // Each component is also its own diagnostic witness. Aliases and
             // applications preserve that witness while following their definition.
+            // Observe components through their cached views: a raw `follow`
+            // neither deduplicates a component's views nor shares them between the
+            // formulas that contain it, and re-delivered views multiply in products.
+            // A cycle that reaches a component again ends at its cached host, so
+            // the component starts without the `aliases` of this observation.
             def conjunction(remaining: Ls[DeclaredType], values: Ls[TermShape])(using ResolutionContext): Unit = remaining match
-              case head :: tail => follow(head, noTypeArguments, aliases, head.resolution.source,
-                value => conjunction(tail, value :: values))
+              case head :: tail => listenTypeViews(head, mergeIntersections): value =>
+                conjunction(tail, value :: values)
               case Nil => intersectViews(values.reverse)(publish)
             shape match
               case TypeShape.Dynamic => publish(DynShape())

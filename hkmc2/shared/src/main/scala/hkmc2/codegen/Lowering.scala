@@ -1186,7 +1186,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case st.Break(label, result, value) =>
       value match
         case S(v) => term(v)(r => Assign(result, r, Break(label)))
-        case N => Assign(result, Value.Lit(Tree.UnitLit(false))(trm.toLoc), Break(label))
+        // * A valueless break makes the label's result Unit, like a plain `do` block. Using `undefined` would let
+        // * safe code read an unspecified value.
+        case N => Assign(result, unit, Break(label))
     case st.Continue(label) =>
       Continue(label)
     case st.Asc(lhs, rhs) =>
@@ -1952,7 +1954,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * When the caller has no better location for the coercion (e.g., an implicit return), diagnostics point at
     * the coerced value itself.
     */
-  def castTo[R <: Result](r: R, expected: Opt[ErasedValueType], loc: Opt[Loc]): (R | Cast) =
+  def castTo[R <: Result](r: R, expected: Opt[ErasedValueType], loc: Opt[Loc]): (R | Path) =
     r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(r.toLoc))
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */

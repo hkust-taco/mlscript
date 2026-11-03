@@ -36,6 +36,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
 
   def print(cet: CanonicalErasedValueType)(using Scope): Document = cet match
     case ErasedType.Unknown => doc"Unknown"
+    case ErasedType.Nothing => doc"Nothing"
     case ErasedType.Incompatible(lhs, rhs) => doc"‹incompatible(${print(lhs)}, ${print(rhs)})›"
     case ErasedType.AnyRef(rsc, tpeSym: TypeSymbol) => doc"${rsc.fold("rsc? ")(if _ then "rsc " else "")}${printTpe(tpeSym)}"
     case ErasedType.Primitive(prim) => doc"${prim.toString}"
