@@ -820,8 +820,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       
       doc" # $resJS"
       
-    // Representation casts around undefined must preserve the call convention's Unit result.
-    case Return(res) if res.isUndefined => doc" # return $runtimeVar.Unit$mkSemi"
+    case Return(Value.Lit(UnitLit(false))) => doc" # return $runtimeVar.Unit$mkSemi"
     case Return(res) => doc" # return ${result(res)}${mkSemi}"
     
     case Match(scrut, Nil, els, rest) =>

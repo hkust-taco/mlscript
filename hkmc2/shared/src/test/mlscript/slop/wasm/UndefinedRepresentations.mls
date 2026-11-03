@@ -212,3 +212,65 @@ private fun needToken(value: NonNull): Int = 42
 needToken(null)
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// A temporary joining only undefined branches has type Nothing. Its destination
+// supplies the unboxed representation; evaluating the condition still has effects.
+:noOpt
+:expect 42
+let branchCalls = 0
+private fun branchFlag(): Bool =
+  set branchCalls = branchCalls + 1
+  true
+private fun ignoreI32(value: Int32): Int = 41
+ignoreI32(if branchFlag() then unsafe.undefined else unsafe.undefined) + branchCalls
+//│ Wasm result:
+//│ = 42
+
+
+// A Nothing-returning call still executes when used in an unboxed result or argument slot.
+:noInline
+:expect 42
+let bottomCalls = 0
+private fun bottom(): Nothing =
+  set bottomCalls = bottomCalls + 1
+  unsafe.undefined
+private fun bottomResult(): Float64 = bottom()
+private fun ignoreI64(value: Int64): Int = 40
+bottomResult()
+ignoreI64(bottom()) + bottomCalls
+//│ Wasm result:
+//│ = 42
+
+
+// Inlining substitutes undefined into an existing checked cast. Smart construction
+// must collapse that cast while retaining the effects before the return.
+:soir
+:expect 42
+open annotations
+private class CastTarget()
+let castCalls = 0
+@inline private fun narrow(value: Any): CastTarget =
+  set castCalls = castCalls + 1
+  value
+narrow(unsafe.undefined)
+castCalls + 41
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ @inline @private
+//│ define narrow⁰ as fun narrow¹(value) {
+//│   let tmp1;
+//│   set tmp1 = wasm⁰.plus_impl﹖(castCalls⁰, 1);
+//│   set castCalls⁰ = tmp1;
+//│   return (value as! CastTarget⁰)
+//│ };
+//│ @private
+//│ define CastTarget¹ as class CastTarget⁰ {
+//│   constructor CastTarget²
+//│ };
+//│ set castCalls⁰ = 0;
+//│ set tmp = wasm⁰.plus_impl﹖(castCalls⁰, 1);
+//│ set castCalls⁰ = tmp;
+//│ return wasm⁰.plus_impl﹖(castCalls⁰, 41)
+//│ Wasm result:
+//│ = 42

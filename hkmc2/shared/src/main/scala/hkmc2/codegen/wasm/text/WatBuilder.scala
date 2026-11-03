@@ -379,11 +379,17 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           extraInfo = S(expr.toWat.mkString()),
         )
 
+  private def isBottom(r: codegen.Result): Bool =
+    ctx.elabCtx.givenIn(r.erasedType_!.canonicalize == ErasedType.Nothing)
+
   /** Compiles `r` and narrows it to `target`, the declared type of the slot it flows into. */
   private def castToValType(r: codegen.Result, target: ValType)(using FunctionCtx, Raise, SessionExportCtx): Expr =
-    // Undefined supplies no value to convert: construct an unspecified value directly in the
-    // destination representation. This also covers placeholders introduced after lowering by DPE.
-    if r.isUndefined then target.zeroValue.getOrElse(lastWords("Undefined requires a defaultable value type"))
+    // Nothing supplies no representation to convert. Evaluate non-literal operands for their effects,
+    // then materialize an unspecified value in the destination slot, including for DPE placeholders.
+    if isBottom(r) then
+      val unspecified = target.zeroValue.getOrElse(lastWords("Undefined requires a defaultable value type"))
+      if r.isUndefined then unspecified
+      else Seq(asStatement(result(r)), unspecified).mergeAsBlock_!
     else castConserve(result(r), target, r.toLoc)
 
   /** Compile arguments in their physical parameter representations, including undefined placeholders,
@@ -2079,7 +2085,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     case Cast(value, target, _) =>
       target.wasmType match
         // Nullable storage admits undefined, but an ordinary nominal cast must still reject null.
-        case S(ty: RefType) if ty.heapType.isInstanceOf[TypeIdx] && !value.isUndefined =>
+        case S(ty: RefType) if ty.heapType.isInstanceOf[TypeIdx] && !isBottom(value) =>
           castToValType(value, ty.copy(nullable = false))
         case S(ty) => castToValType(value, ty)
         case N =>
@@ -2122,7 +2128,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   )(using Ctx, FunctionCtx, Raise, SessionExportCtx): IntrinsicArg =
     def compileOperand: (Expr, Opt[Str]) =
       val operand =
-        if arg.value.isUndefined then argument(arg, declared.flatMap(_.wasmType))
+        if isBottom(arg.value) then argument(arg, declared.flatMap(_.wasmType))
         else argument(arg, N)
       operand -> declared
         .filter(_.wasmType.exists(expected => !operand.resultType.exists(_.isSubtypeOf(expected))))
@@ -2192,7 +2198,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
       case assign @ AssignField(lhs, nme, rhs, rst) =>
         val lhsExpr = result(lhs)
-        val rhsExpr = result(rhs)
         val assignInstr = assign.symbol match
           case S(selSym) =>
             selSym.asTrm match
@@ -2211,9 +2216,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                 val fieldType = structInfo.compType match
                   case st: StructType => classField(selCls, fieldSym).ty
                   case other => lastWords(s"Expected struct type for $selCls, found ${other.toWat.mkString()}")
-                val rhsCasted = fieldType match
-                  case rt: RefType => castConserve(rhsExpr, rt, rhs.toLoc)
-                  case _ => rhsExpr
+                val rhsCasted = castToValType(rhs, fieldType)
                 struct.set(fieldidx, objRef, rhsCasted)
               case N =>
                 lastWords(
@@ -2519,15 +2522,12 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         end match
 
       case Return(res) =>
-        val operand =
-          // Undefined supplies no value to convert; materialize it in the physical result slot.
-          if res.isUndefined then funcCtx.resultType.fold(result(res))(castToValType(res, _))
-          else result(res)
         // Storage and calling conventions may widen a reference (e.g. a singleton's nullable global).
         // Restore the IR value's type at the return boundary so Block.returnType also describes the emitted value.
+        // Nothing leaves the representation to the physical result slot and must preserve operand effects.
         val resWat =
-          if res.isUndefined then operand
-          else res.erasedType.flatMap(_.wasmType).fold(operand)(castConserve(operand, _, res.toLoc))
+          if isBottom(res) then funcCtx.resultType.fold(result(res))(castToValType(res, _))
+          else res.erasedType.flatMap(_.wasmType).fold(result(res))(castToValType(res, _))
         val returned = resWat.resultType match
           case S(refTy: RefType) =>
             refTy.heapType match

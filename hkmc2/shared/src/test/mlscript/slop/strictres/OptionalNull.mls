@@ -160,7 +160,7 @@ private fun read(item) = item.value
 //│ deforest > 	select: value
 //│ deforest > Data⁰(null) ->
 //│ deforest > 	select: value
-//│ deforest > Data⁰(optionalArg⁰) ->
+//│ deforest > Data⁰(undefined) ->
 //│ deforest > 	select: value
 //│ deforest > <<< fusing <<<
 //│ = [undefined, null, 11]

@@ -1952,7 +1952,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * When the caller has no better location for the coercion (e.g., an implicit return), diagnostics point at
     * the coerced value itself.
     */
-  def castTo[R <: Result](r: R, expected: Opt[ErasedValueType], loc: Opt[Loc]): (R | Cast) =
+  def castTo[R <: Result](r: R, expected: Opt[ErasedValueType], loc: Opt[Loc]): (R | Path) =
     r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(r.toLoc))
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */

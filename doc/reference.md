@@ -246,6 +246,10 @@ of the slot's representation, such as zero or a null reference. Compiler-generat
 such as those left by dead-parameter elimination, rely on this rule. `null` remains an ordinary
 value and does not have this freedom to inhabit unboxed representations.
 
+In the IR, `undefined` has type `Nothing`: joining it with another representation leaves that
+representation unchanged, and casting the literal leaves it unchanged. This type does not imply
+unreachable control flow; evaluating an expression of type `Nothing` can still have effects.
+
 ---
 
 ## 5. Functions
