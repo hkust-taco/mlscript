@@ -70,14 +70,14 @@ fun unknowns(x: Any | Hidden) = x.absent
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+2: 	fun unknowns(x: Any | Hidden) = x.absent
 //│ ║        	                                ^^^^^^^^
-//│ ╟── Cannot resolve member 'absent' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'absent'
 //│ ║  l.+2: 	fun unknowns(x: Any | Hidden) = x.absent
 //│ ║        	                ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
 //│ ║  in ../../decls/Prelude.mls
 //│ ║  l.XX: 	declare type Any
 //│ ║        	             ^^^
-//│ ╟── Cannot resolve member 'absent' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'absent'
 //│ ║  in SelectionDiagnostics.mls:+1
 //│ ║  l.+2: 	fun unknowns(x: Any | Hidden) = x.absent
 //│ ║        	                      ^^^^^^
