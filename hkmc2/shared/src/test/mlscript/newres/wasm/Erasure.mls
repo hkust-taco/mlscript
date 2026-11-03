@@ -172,7 +172,9 @@ value
 //│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ║  l.+1: 	let value = const(1)
 //│ ╙──      	            ^^^^^^^^
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i64` to `(ref null any)` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i64` to `(ref null any)` in a different type hierarchy
+//│ ║  l.+1: 	let value = const(1)
+//│ ╙──      	    ^^^^^
 
 
 // External callers already contribute Unknown; it conflicts with an unboxed input.
@@ -196,7 +198,9 @@ annotated
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
 //│ ║  l.+1: 	val annotated: Any = const(42)
 //│ ╙──      	                     ^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ║  l.+1: 	val annotated: Any = const(42)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // Undefined contributes no representation constraint to the result slot.

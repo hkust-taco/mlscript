@@ -122,7 +122,7 @@ read({mut item: Child(8)})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+2: 	private fun read(record: {mut item: in Child}) = record.item.value
 //│ ║        	                                                 ^^^^^^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ╟── This field specifies only an input bound.
 //│ ║  l.+2: 	private fun read(record: {mut item: in Child}) = record.item.value
 //│ ║        	                                    ^^^^^^^^

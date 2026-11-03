@@ -1,6 +1,6 @@
 package hkmc2
 
-import org.scalatest.{funsuite, ParallelTestExecution}
+import org.scalatest.{funsuite, Args, ParallelTestExecution, Status}
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 import os.up
 
@@ -37,6 +37,58 @@ object DiffTestRunner:
     // * directory, so that source locations baked into generated code agree.
     val cctx: CompilerCtx =
       CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(workingDir), Config.default(dir))
+    
+    val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
+    val predefPath = dir/"mlscript-compile"/"Predef.mls"
+    
+    private val importPattern = """(?m)^\s*import\s+"([^"]+\.mls)"""".r
+    
+    /** The library modules that the diff test `file` elaborates through `cctx`, besides the Prelude:
+      * the `Predef` that every test imports, and the `mlscript-compile` modules that `file` imports.
+      * Other imported files can be fixtures whose diagnostics the importing test is expected to show.
+      */
+    def importedModules(file: os.Path): Ls[os.Path] =
+      predefPath :: importPattern.findAllMatchIn(os.read(file))
+        .map(m => os.Path(m.group(1), file / os.up))
+        .filter(module => module.segments.contains("mlscript-compile") && os.isFile(module))
+        .toList
+    
+    /** Elaborates the Prelude and the modules imported by the diff tests `files` in `cctx`, before
+      * these tests start.
+      *
+      * `cctx` elaborates each imported module once, under a lock dedicated to its path. Otherwise, the
+      * first test to import a module pays for elaborating it, and the other tests importing it meanwhile
+      * block on that lock, all within their own time limits. A small test such as `basics/Puns.mls` then
+      * timed out on slow CI runners while `LazyArray.mls` was being elaborated, and stopping its thread
+      * discarded that elaboration, so that the next test importing it timed out too.
+      *
+      * The tests importing a module do not see the diagnostics raised while elaborating it here, so the
+      * warm-up prints them. The compile tests fail on them.
+      */
+    def warmUpImports(files: Iterable[os.Path]): Unit =
+      import java.util.concurrent.{Callable, Executors}
+      import scala.jdk.CollectionConverters.*
+      val start = System.currentTimeMillis()
+      val modules = files.iterator.flatMap(importedModules).distinct.toList.sortBy(_.toString)
+      // * Modules are warmed up in parallel; synchronizing each report keeps its lines together.
+      val report = ReportFormatter(System.out.println, dir, colorize = true, wrap = S(body => this.synchronized(body)))
+      def warmUp[A](path: os.Path)(obtain: (TL, Raise) ?=> A): Opt[A] =
+        given DebugPrinter = new DebugPrinter(N)
+        given TL = TraceLogger.silent
+        given Raise = report.mkRaise(path)
+        try S(obtain) catch case err: Throwable =>
+          this.synchronized:
+            System.err.println(s"Uncaught exception while warming up ${path.relativeTo(dir)}:")
+            err.printStackTrace()
+          N
+      warmUp(preludePath)(cctx.getPrelude(preludePath)).foreach: prelude =>
+        // * Modules sharing a dependency wait on its path lock, as tests importing them would.
+        val tasks = modules.map[Callable[Unit]]: module =>
+          () => warmUp(module)(cctx.getElaboratedBlock(module, prelude.ctx)): Unit
+        val pool = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors)
+        try pool.invokeAll(tasks.asJava) finally pool.shutdown()
+      println(s"Warmed up the Prelude and ${modules.size} imported module(s) in ${
+        System.currentTimeMillis() - start} ms")
     
     // To be overridden in subproject-specific State classes
     def testDir: os.Path = dir
@@ -117,15 +169,31 @@ class DiffTestRunnerBase(val state: DiffTestRunner.State) extends TimeOutTests:
     new MainDiffMaker(workingDir.toString, file, preludePath, predefPath, relativeName):
       def cctx = state.cctx
   
+  private def relativeName(file: os.Path): Str =
+    val basePath = file.segments.drop(dir.segmentCount).toList.init
+    basePath.map(_ + "/").mkString + file.baseName
+  
+  private lazy val diffTestFilesByName: Map[Str, os.Path] =
+    diffTestFiles.iterator.map(file => relativeName(file) -> file).toMap
+  
+  /** On CI, elaborates the modules imported by the tests this run selects, such as with `-z`, before
+    * starting them (see `DiffTestRunner.State.warmUpImports`), so that no test's time limit covers them.
+    * Development machines elaborate these modules in the first tests importing them well within the
+    * time limit, and the watcher's `:tests` command reports its few changed tests sooner without waiting
+    * for a warm-up. ScalaTest then runs each test on a fresh runner instance with its name
+    * (see `ParallelTestExecution`).
+    */
+  override def run(testName: Opt[Str], args: Args): Status =
+    if testName.isEmpty && TimeOutTests.OnCI then
+      warmUpImports(args.filter(testNames, tags, suiteId).collect:
+        case (name, false) => diffTestFilesByName(name))
+    super.run(testName, args)
+  
   diffTestFiles.foreach: file =>
     
-    val basePath = file.segments.drop(dir.segmentCount).toList.init
-    val relativeName = basePath.map(_ + "/").mkString + file.baseName
+    val relativeName = this.relativeName(file)
     
     test(relativeName):
-      
-      val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
-      val predefPath = dir/"mlscript-compile"/"Predef.mls"
       
       val dm = createDiffMaker(file, preludePath, predefPath, relativeName)
       

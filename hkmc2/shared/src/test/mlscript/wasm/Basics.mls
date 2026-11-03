@@ -58,20 +58,15 @@ foo() + foo()
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $foo (func (result (ref null i31))))
-//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry (func (result (ref null any))))
-//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
+//│   (type $entry (func (result (ref null i31))))
 //│   (func $foo (export "foo") (type $foo) (result (ref null i31))
 //│     (return
 //│       (ref.i31
 //│         (i32.const 42))))
-//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (return
-//│       (call $plus_impl
-//│         (ref.i31
-//│           (i32.const 42))
-//│         (ref.i31
-//│           (i32.const 42)))))
+//│       (ref.i31
+//│         (i32.const 84))))
 //│   (elem $foo declare func $foo)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
@@ -102,10 +97,11 @@ addOne(41) + useIt(41)
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (func $addOne (export "addOne") (type $addOne) (param $x (ref null i31)) (result (ref null any))
 //│     (return
-//│       (call $plus_impl
-//│         (local.get $x)
-//│         (ref.i31
-//│           (i32.const 1)))))
+//│       (ref.cast (ref null i31)
+//│         (call $plus_impl
+//│           (local.get $x)
+//│           (ref.i31
+//│             (i32.const 1))))))
 //│   (func $useIt (export "useIt") (type $useIt) (param $v (ref null i31)) (result (ref null any))
 //│     (return
 //│       (call $addOne
@@ -113,19 +109,18 @@ addOne(41) + useIt(41)
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
-//│     (block (result (ref null any))
-//│       (local.set $tmp
-//│         (call $addOne
-//│           (ref.i31
-//│             (i32.const 41))))
-//│       (local.set $tmp1
-//│         (call $useIt
-//│           (ref.i31
-//│             (i32.const 41))))
-//│       (return
-//│         (call $plus_impl
-//│           (local.get $tmp)
-//│           (local.get $tmp1)))))
+//│     (local.set $tmp
+//│       (call $addOne
+//│         (ref.i31
+//│           (i32.const 41))))
+//│     (local.set $tmp1
+//│       (call $useIt
+//│         (ref.i31
+//│           (i32.const 41))))
+//│     (return
+//│       (call $plus_impl
+//│         (local.get $tmp)
+//│         (local.get $tmp1))))
 //│   (elem $addOne declare func $addOne)
 //│   (elem $useIt declare func $useIt)
 //│   (elem $entry declare func $entry))
@@ -155,37 +150,33 @@ new Foo(42).Foo#a
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $a (ref null i31)) (result (ref $Foo))
-//│     (block (result (ref $Foo))
-//│       (struct.set $Foo $a
-//│         (local.get $this)
-//│         (local.get $a))
-//│       (return
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this)))))
+//│     (struct.set $Foo $a
+//│       (local.get $this)
+//│       (local.get $a))
+//│     (return
+//│       (ref.cast (ref $Foo)
+//│         (local.get $this))))
 //│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $a (ref null i31)) (result (ref $Foo))
 //│     (local $this (ref $Foo))
-//│     (block (result (ref $Foo))
-//│       (local.set $this
-//│         (struct.new $Foo
-//│           (global.get $Foo_typeinfo)
-//│           (ref.null i31)))
-//│       (drop
-//│         (call $Foo_init
-//│           (local.get $this)
-//│           (local.get $a)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $Foo
+//│         (global.get $Foo_typeinfo)
+//│         (ref.null i31)))
+//│     (drop
+//│       (call $Foo_init
+//│         (local.get $this)
+//│         (local.get $a)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref null $Foo))
-//│     (block (result (ref null i31))
-//│       (local.set $tmp
-//│         (call $Foo_ctor
-//│           (ref.i31
-//│             (i32.const 42))))
-//│       (return
-//│         (struct.get $Foo $a
-//│           (ref.cast (ref $Foo)
-//│             (local.get $tmp))))))
+//│     (local.set $tmp
+//│       (call $Foo_ctor
+//│         (ref.i31
+//│           (i32.const 42))))
+//│     (return
+//│       (struct.get $Foo $a
+//│         (local.get $tmp))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
 //│   (elem $entry declare func $entry))
@@ -227,68 +218,61 @@ getX(Foo(Bar(42)))
 //│     (i32.const 2)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Bar_init (type $Bar_init) (param $this (ref $Bar)) (param $x (ref null i31)) (result (ref $Bar))
-//│     (block (result (ref $Bar))
-//│       (struct.set $Bar $x
-//│         (local.get $this)
-//│         (local.get $x))
-//│       (return
-//│         (ref.cast (ref $Bar)
-//│           (local.get $this)))))
+//│     (struct.set $Bar $x
+//│       (local.get $this)
+//│       (local.get $x))
+//│     (return
+//│       (ref.cast (ref $Bar)
+//│         (local.get $this))))
 //│   (func $Bar_ctor (export "Bar") (type $Bar_ctor) (param $x (ref null i31)) (result (ref $Bar))
 //│     (local $this (ref $Bar))
-//│     (block (result (ref $Bar))
-//│       (local.set $this
-//│         (struct.new $Bar
-//│           (global.get $Bar_typeinfo)
-//│           (ref.null i31)))
-//│       (drop
-//│         (call $Bar_init
-//│           (local.get $this)
-//│           (local.get $x)))
-//│       (return
-//│         (local.get $this))))
-//│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $bar (ref null $Bar)) (result (ref $Foo))
-//│     (block (result (ref $Foo))
-//│       (struct.set $Foo $bar
+//│     (local.set $this
+//│       (struct.new $Bar
+//│         (global.get $Bar_typeinfo)
+//│         (ref.null i31)))
+//│     (drop
+//│       (call $Bar_init
 //│         (local.get $this)
-//│         (local.get $bar))
-//│       (return
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this)))))
+//│         (local.get $x)))
+//│     (return
+//│       (local.get $this)))
+//│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $bar (ref null $Bar)) (result (ref $Foo))
+//│     (struct.set $Foo $bar
+//│       (local.get $this)
+//│       (local.get $bar))
+//│     (return
+//│       (ref.cast (ref $Foo)
+//│         (local.get $this))))
 //│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $bar (ref null $Bar)) (result (ref $Foo))
 //│     (local $this (ref $Foo))
-//│     (block (result (ref $Foo))
-//│       (local.set $this
-//│         (struct.new $Foo
-//│           (global.get $Foo_typeinfo)
-//│           (ref.null $Bar)))
-//│       (drop
-//│         (call $Foo_init
-//│           (local.get $this)
-//│           (local.get $bar)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $Foo
+//│         (global.get $Foo_typeinfo)
+//│         (ref.null $Bar)))
+//│     (drop
+//│       (call $Foo_init
+//│         (local.get $this)
+//│         (local.get $bar)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $getX (export "getX") (type $getX) (param $f (ref null $Foo)) (result (ref null any))
 //│     (return
 //│       (struct.get $Bar $x
-//│         (ref.cast (ref $Bar)
-//│           (struct.get $Foo $bar
-//│             (ref.cast (ref $Foo)
-//│               (local.get $f)))))))
+//│         (struct.get $Foo $bar
+//│           (local.get $f)))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null $Bar))
 //│     (local $tmp1 (ref null $Foo))
-//│     (block (result (ref null any))
-//│       (local.set $tmp
-//│         (call $Bar_ctor
-//│           (ref.i31
-//│             (i32.const 42))))
-//│       (local.set $tmp1
-//│         (call $Foo_ctor
-//│           (local.get $tmp)))
-//│       (return
-//│         (call $getX
-//│           (local.get $tmp1)))))
+//│     (local.set $tmp
+//│       (call $Bar_ctor
+//│         (ref.i31
+//│           (i32.const 42))))
+//│     (local.set $tmp1
+//│       (call $Foo_ctor
+//│         (local.get $tmp)))
+//│     (return
+//│       (call $getX
+//│         (local.get $tmp1))))
 //│   (elem $Bar_init declare func $Bar_init)
 //│   (elem $Bar_ctor declare func $Bar_ctor)
 //│   (elem $Foo_init declare func $Foo_init)
@@ -326,42 +310,38 @@ new Foo(42).Foo#y
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $x (ref null i31)) (result (ref $Foo))
-//│     (block (result (ref $Foo))
-//│       (struct.set $Foo $x
-//│         (local.get $this)
-//│         (local.get $x))
-//│       (struct.set $Foo $y
-//│         (local.get $this)
-//│         (struct.get $Foo $x
-//│           (local.get $this)))
-//│       (return
-//│         (ref.cast (ref $Foo)
-//│           (local.get $this)))))
+//│     (struct.set $Foo $x
+//│       (local.get $this)
+//│       (local.get $x))
+//│     (struct.set $Foo $y
+//│       (local.get $this)
+//│       (struct.get $Foo $x
+//│         (local.get $this)))
+//│     (return
+//│       (ref.cast (ref $Foo)
+//│         (local.get $this))))
 //│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $x (ref null i31)) (result (ref $Foo))
 //│     (local $this (ref $Foo))
-//│     (block (result (ref $Foo))
-//│       (local.set $this
-//│         (struct.new $Foo
-//│           (global.get $Foo_typeinfo)
-//│           (ref.null i31)
-//│           (ref.null i31)))
-//│       (drop
-//│         (call $Foo_init
-//│           (local.get $this)
-//│           (local.get $x)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $Foo
+//│         (global.get $Foo_typeinfo)
+//│         (ref.null i31)
+//│         (ref.null i31)))
+//│     (drop
+//│       (call $Foo_init
+//│         (local.get $this)
+//│         (local.get $x)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref null $Foo))
-//│     (block (result (ref null i31))
-//│       (local.set $tmp
-//│         (call $Foo_ctor
-//│           (ref.i31
-//│             (i32.const 42))))
-//│       (return
-//│         (struct.get $Foo $y
-//│           (ref.cast (ref $Foo)
-//│             (local.get $tmp))))))
+//│     (local.set $tmp
+//│       (call $Foo_ctor
+//│         (ref.i31
+//│           (i32.const 42))))
+//│     (return
+//│       (struct.get $Foo $y
+//│         (local.get $tmp))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
 //│   (elem $entry declare func $entry))
@@ -389,39 +369,36 @@ O.y
 //│     (ref.null $TypeInfoBase)))
 //│   (global $O$inst (export "O$inst") (mut (ref null $O)) (ref.null $O))
 //│   (func $O_init (type $O_init) (param $this (ref $O)) (result (ref $O))
-//│     (block (result (ref $O))
-//│       (struct.set $O $x
-//│         (local.get $this)
-//│         (ref.i31
-//│           (i32.const 1)))
-//│       (struct.set $O $y
-//│         (local.get $this)
-//│         (struct.get $O $x
-//│           (local.get $this)))
-//│       (return
-//│         (ref.cast (ref $O)
-//│           (local.get $this)))))
+//│     (struct.set $O $x
+//│       (local.get $this)
+//│       (ref.i31
+//│         (i32.const 1)))
+//│     (struct.set $O $y
+//│       (local.get $this)
+//│       (struct.get $O $x
+//│         (local.get $this)))
+//│     (return
+//│       (ref.cast (ref $O)
+//│         (local.get $this))))
 //│   (func $O_ctor (type $O_ctor) (result (ref $O))
 //│     (local $this (ref $O))
-//│     (block (result (ref $O))
-//│       (local.set $this
-//│         (struct.new $O
-//│           (global.get $O_typeinfo)
-//│           (ref.null i31)
-//│           (ref.null i31)))
-//│       (drop
-//│         (call $O_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $O
+//│         (global.get $O_typeinfo)
+//│         (ref.null i31)
+//│         (ref.null i31)))
+//│     (drop
+//│       (call $O_init
+//│         (local.get $this)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $start (type $start)
 //│     (global.set $O$inst
 //│       (call $O_ctor)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (return
 //│       (struct.get $O $y
-//│         (ref.cast (ref $O)
-//│           (global.get $O$inst)))))
+//│         (global.get $O$inst))))
 //│   (elem $O_init declare func $O_init)
 //│   (elem $O_ctor declare func $O_ctor)
 //│   (elem $start declare func $start)

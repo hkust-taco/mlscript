@@ -111,7 +111,7 @@ object Instructions:
     mnemonic = "return",
     instrargs = Seq.empty,
     stackargs = value.toSeq,
-    resultTypes = value.fold(Seq.empty)(_.resultTypes),
+    resultType = S(UnreachableType),
   )
 
   /** Creates a `throw` instruction. */

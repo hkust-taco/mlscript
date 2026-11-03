@@ -905,7 +905,7 @@ f(A, A)
 //│ define f$f as fun f$f⁰(a: A³, b: Function⁰): Int⁰ {
 //│   match a
 //│     AA⁰ =>
-//│       return f$f⁰(a, (undefined as!! Function⁰))
+//│       return f$f⁰(a, undefined)
 //│     else
 //│       return (b() as! Int⁰)
 //│   end
@@ -976,7 +976,7 @@ private fun f(a) = if a is A then 0 else 1
 //│       return f$a_A⁰()
 //│     else
 //│       do fail⁰();
-//│       return (undefined as!! Function⁰)
+//│       return undefined
 //│   end
 //│ };
 //│ @private @private
@@ -990,7 +990,7 @@ private fun f(a) = if a is A then 0 else 1
 //│       return f$a_A¹()
 //│     else
 //│       do fail⁰();
-//│       return (undefined as!! Function⁰)
+//│       return undefined
 //│   end
 //│ };
 //│ @private @private

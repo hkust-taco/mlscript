@@ -104,13 +104,11 @@ FieldChild().x
 //│   (import "repl" "FieldChild_typeinfo" (global $FieldChild_typeinfo (ref $FieldChild_typeinfo)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref null $FieldChild))
-//│     (block (result (ref null i31))
-//│       (local.set $tmp
-//│         (call $FieldChild_FieldChild))
-//│       (return
-//│         (struct.get $FieldChild $x
-//│           (ref.cast (ref $FieldChild)
-//│             (local.get $tmp))))))
+//│     (local.set $tmp
+//│       (call $FieldChild_FieldChild))
+//│     (return
+//│       (struct.get $FieldChild $x
+//│         (local.get $tmp))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 9

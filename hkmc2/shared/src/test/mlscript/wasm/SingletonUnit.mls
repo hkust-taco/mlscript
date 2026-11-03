@@ -23,15 +23,14 @@
 //│         (local.get $this))))
 //│   (func $Unit_Unit (type $Unit_ctor) (result (ref $Unit))
 //│     (local $this (ref $Unit))
-//│     (block (result (ref $Unit))
-//│       (local.set $this
-//│         (struct.new $Unit
-//│           (global.get $Unit_typeinfo)))
-//│       (drop
-//│         (call $Unit_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $Unit
+//│         (global.get $Unit_typeinfo)))
+//│     (drop
+//│       (call $Unit_init
+//│         (local.get $this)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $start (type $start)
 //│     (global.set $Unit$inst
 //│       (call $Unit_Unit)))
@@ -87,13 +86,12 @@ x
 //│   (type $entry (func (result (ref null i31))))
 //│   (global $x (export "x") (mut (ref null i31)) (ref.null i31))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
-//│     (block (result (ref null i31))
-//│       (global.set $x
-//│         (ref.i31
-//│           (i32.const 1)))
-//│       (return
-//│         (ref.i31
-//│           (i32.const 1)))))
+//│     (global.set $x
+//│       (ref.i31
+//│         (i32.const 1)))
+//│     (return
+//│       (ref.i31
+//│         (i32.const 1))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1

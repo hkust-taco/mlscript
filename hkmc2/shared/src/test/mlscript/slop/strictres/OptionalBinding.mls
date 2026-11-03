@@ -19,7 +19,7 @@ fun absent(x?) = x is null
 //│   end
 //│ };
 //│ set tmp = absent¹();
-//│ set tmp1 = absent¹((undefined as!! Unknown));
+//│ set tmp1 = absent¹(undefined);
 //│ set tmp2 = absent¹(null);
 //│ set tmp3 = absent¹(runtime⁰.Unit⁰);
 //│ set tmp4 = absent¹(0);

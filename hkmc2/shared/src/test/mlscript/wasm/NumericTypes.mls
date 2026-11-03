@@ -194,13 +194,12 @@ x
 //│   (global $x (export "x") (mut f32) (f32.const 0.0))
 //│   (func $entry (export "entry") (type $entry) (result f32)
 //│     (local $tmp f32)
-//│     (block (result f32)
-//│       (local.set $tmp
-//│         (f32.const 1.5))
-//│       (global.set $x
-//│         (local.get $tmp))
-//│       (return
-//│         (global.get $x))))
+//│     (local.set $tmp
+//│       (f32.const 1.5))
+//│     (global.set $x
+//│       (local.get $tmp))
+//│     (return
+//│       (global.get $x)))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1.5
@@ -261,53 +260,49 @@ wasm.f64.add(Boxed(wasm.i64.const(1), wasm.f64.const(1.5)).f, wasm.f64.const(0.2
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Boxed_init (type $Boxed_init) (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))
-//│     (block (result (ref $Boxed))
-//│       (struct.set $Boxed $i
-//│         (local.get $this)
-//│         (local.get $i))
-//│       (struct.set $Boxed $f
-//│         (local.get $this)
-//│         (local.get $f))
-//│       (return
-//│         (ref.cast (ref $Boxed)
-//│           (local.get $this)))))
+//│     (struct.set $Boxed $i
+//│       (local.get $this)
+//│       (local.get $i))
+//│     (struct.set $Boxed $f
+//│       (local.get $this)
+//│       (local.get $f))
+//│     (return
+//│       (ref.cast (ref $Boxed)
+//│         (local.get $this))))
 //│   (func $Boxed_ctor (export "Boxed") (type $Boxed_ctor) (param $i i64) (param $f f64) (result (ref $Boxed))
 //│     (local $this (ref $Boxed))
-//│     (block (result (ref $Boxed))
-//│       (local.set $this
-//│         (struct.new $Boxed
-//│           (global.get $Boxed_typeinfo)
-//│           (i64.const 0)
-//│           (f64.const 0.0)))
-//│       (drop
-//│         (call $Boxed_init
-//│           (local.get $this)
-//│           (local.get $i)
-//│           (local.get $f)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $Boxed
+//│         (global.get $Boxed_typeinfo)
+//│         (i64.const 0)
+//│         (f64.const 0.0)))
+//│     (drop
+//│       (call $Boxed_init
+//│         (local.get $this)
+//│         (local.get $i)
+//│         (local.get $f)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $entry (export "entry") (type $entry) (result f64)
 //│     (local $tmp i64)
 //│     (local $tmp1 f64)
 //│     (local $tmp2 (ref null $Boxed))
 //│     (local $tmp3 f64)
-//│     (block (result f64)
-//│       (local.set $tmp
-//│         (i64.const 1))
-//│       (local.set $tmp1
-//│         (f64.const 1.5))
-//│       (local.set $tmp2
-//│         (call $Boxed_ctor
-//│           (local.get $tmp)
-//│           (local.get $tmp1)))
-//│       (local.set $tmp3
-//│         (f64.const 0.25))
-//│       (return
-//│         (f64.add
-//│           (struct.get $Boxed $f
-//│             (ref.cast (ref $Boxed)
-//│               (local.get $tmp2)))
-//│           (local.get $tmp3)))))
+//│     (local.set $tmp
+//│       (i64.const 1))
+//│     (local.set $tmp1
+//│       (f64.const 1.5))
+//│     (local.set $tmp2
+//│       (call $Boxed_ctor
+//│         (local.get $tmp)
+//│         (local.get $tmp1)))
+//│     (local.set $tmp3
+//│       (f64.const 0.25))
+//│     (return
+//│       (f64.add
+//│         (struct.get $Boxed $f
+//│           (local.get $tmp2))
+//│         (local.get $tmp3))))
 //│   (elem $Boxed_init declare func $Boxed_init)
 //│   (elem $Boxed_ctor declare func $Boxed_ctor)
 //│   (elem $entry declare func $entry))

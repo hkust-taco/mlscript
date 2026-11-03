@@ -127,6 +127,24 @@ avoid needlessly contrasting presently irrelevant things with expressions like "
 and use clear language and terminology.
 
 
+## Performance Gotchas
+
+Be careful not to materialize intermediate collections needlessly:
+instead of `someCollection.toList.map(...).filter(...)` or `someList.map(...).filter(...)`,
+use, eg, `someCollection.iterator.map(...).filter(...).toList`.
+When repeated concatenation with potentially long prefixes is required,
+prefer a `Vector` over a `List`. Generally avoid introducing new uses of `Seq`.
+
+Prefer `Set.single(1)` and `1 :: Nil` instead of the variadic constructors,
+ie, instead of `Set(1)` and `List(1)`,
+as the latter may allocate an array for the arguments.
+
+Use `lazyZip` instead of `zip`, and always make sure that either
+(1) zipped collections have the same length; or
+(2) dropping elements from the longer one is the intended behavior,
+in which case this should be explained clearly in a comment.
+
+
 ## User-Facing Diagnostics
 
 Never use `showDbg`, `shwDbg`, raw AST/IR `toString` output, or other debug-only

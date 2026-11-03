@@ -32,15 +32,11 @@ counter
 //│   (import "repl" "counter" (global $counter (mut (ref null i31))))
 //│   (import "repl" "step" (global $step (mut (ref null i31))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
-//│     (local $tmp (ref null any))
-//│     (block (result (ref null i31))
-//│       (local.set $tmp
+//│     (return
+//│       (ref.cast (ref null i31)
 //│         (call $plus_impl
 //│           (global.get $counter)
-//│           (global.get $step)))
-//│       (return
-//│         (ref.cast (ref null i31)
-//│           (local.get $tmp)))))
+//│           (global.get $step)))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -97,23 +93,21 @@ val copied: Int32 = idI32(typed)
 //│         (local.get $this))))
 //│   (func $Unit_Unit (type $Unit_ctor) (result (ref $Unit))
 //│     (local $this (ref $Unit))
-//│     (block (result (ref $Unit))
-//│       (local.set $this
-//│         (struct.new $Unit
-//│           (global.get $Unit_typeinfo)))
-//│       (drop
-//│         (call $Unit_init
-//│           (local.get $this)))
-//│       (return
-//│         (local.get $this))))
+//│     (local.set $this
+//│       (struct.new $Unit
+//│         (global.get $Unit_typeinfo)))
+//│     (drop
+//│       (call $Unit_init
+//│         (local.get $this)))
+//│     (return
+//│       (local.get $this)))
 //│   (func $start (type $start)
 //│     (global.set $Unit$inst
 //│       (call $Unit_Unit)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (block (result (ref null $Unit))
-//│       (global.set $copied
-//│         (global.get $typed))
-//│       (global.get $Unit$inst)))
+//│     (global.set $copied
+//│       (global.get $typed))
+//│     (global.get $Unit$inst))
 //│   (elem $Unit_init declare func $Unit_init)
 //│   (elem $Unit_Unit declare func $Unit_Unit)
 //│   (elem $start declare func $start)

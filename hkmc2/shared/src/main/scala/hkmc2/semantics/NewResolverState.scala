@@ -93,6 +93,8 @@ final class NewResolverState(val owner: Elaborator.State):
   private[semantics] val completedNodes = mutable.Set.empty[Identity[Publisher[?]]]
   private[semantics] val resolutionProblems =
     mutable.LinkedHashMap.empty[Identity[NewSel | App], mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]
+  private[semantics] val wildcardMisses =
+    mutable.LinkedHashMap.empty[Identity[UnresolvedRef], mutable.LinkedHashMap[Identity[Term], () => Ls[(Message, Opt[Loc])]]]
   // The references, selections, and instantiations written in this unit's current block,
   // with the lexical scope in which each is written (see ResolutionContext.checkAccess).
   private[semantics] val accessSites = mutable.ArrayBuffer.empty[(NewResolvable | New, SrcScope)]
@@ -429,6 +431,17 @@ final class ResolutionContext private[semantics] (
           case application: App => application.callableTargets.currentShapes(using this).isEmpty
         if eager || unresolved then messages else Nil)
 
+  /** A wildcard source can publish a matching alternative after its first miss.
+    * Keep one witness per reference and opened source until the block completes;
+    * a source with no matching alternatives contributes nothing to the lookup.
+    * Only eager lookup records these misses. Unknown public inputs retain their
+    * separate error path, even when a different source supplies a candidate.
+    */
+  def missingWildcardMember(ref: UnresolvedRef, prefix: Term)(messages: => Ls[(Message, Opt[Loc])]): Unit =
+    if !hasError(ref) then
+      state.wildcardMisses.getOrElseUpdate(new Identity(ref), mutable.LinkedHashMap.empty)
+        .getOrElseUpdate(new Identity(prefix), () => messages)
+
   /** Seal the decisions and original host data read by erasure/lowering. The
     * inference graph keeps private, live host data and all its listeners, so
     * later calls can still transport arguments and results through these nodes.
@@ -477,6 +490,17 @@ final class ResolutionContext private[semantics] (
         case _ => ()
       statement.subStatements.foreach(visit)
     visit(block)
+    state.wildcardMisses.foreach: (key, sources) =>
+      val ref = key.value
+      if !hasError(ref) then
+        val messages = sources.iterator.flatMap: (prefix, witness) =>
+          if ref.resolvedMembers.exists(_._1 eq prefix.value) || ref.dynamicPrefixes.exists(_ eq prefix.value)
+          then witness() else Nil
+        .toList.distinct
+        if messages.nonEmpty then
+          markError(ref)
+          reportResolutionError(ref, messages)
+    state.wildcardMisses.clear()
     state.resolutionProblems.foreach: (key, problems) =>
       val term = key.value
       val messages = problems.iterator.flatMap(_()).toList.distinct

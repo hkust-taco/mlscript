@@ -1,0 +1,115 @@
+:.
+#lang(strictResolution: true)
+#lang(eagerResolution: true)
+
+declare type Hidden
+type HiddenAlias = Hidden
+
+// An opaque component contributes no members to an intersection. Aliases and
+// operand order must preserve the interface supplied by the record component.
+:expect [41, 42]
+fun left(value: HiddenAlias & {value: Int}) = value.value
+fun right(value: {value: Int} & HiddenAlias) = value.value
+[left(value: 41), right(value: 42)]
+//│ = [41, 42]
+
+// Each union alternative receives the field supplied by the intersection.
+:expect [43, 44]
+fun distributed(value: (Hidden | {other: Bool}) & {value: Int}) = value.value
+[distributed(value: 43), distributed(other: true, value: 44)]
+//│ = [43, 44]
+
+// An opaque open exposes no members, even if its runtime value has that field.
+:expect 45
+fun opened(value: HiddenAlias) =
+  let known = {answer: 45}
+  open value
+  open known
+  answer
+opened(answer: 99)
+//│ = 45
+
+// Eager resolution requires the member on every union alternative.
+:ge
+fun union(value: Hidden | {value: Int}) = value.value
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun union(value: Hidden | {value: Int}) = value.value
+//│ ║        	                                          ^^^^^^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'value'
+//│ ║  l.+1: 	fun union(value: Hidden | {value: Int}) = value.value
+//│ ║        	                 ^^^^^^
+//│ ╟── Type 'Hidden' is declared without a member interface.
+//│ ║  l.XX: 	declare type Hidden
+//│ ╙──      	             ^^^^^^
+
+// An empty static interface does not promise that a spread has no runtime keys.
+:ge
+fun unknownSpread(value: Hidden) =
+  let spread = {answer: 0, ...value}
+  spread.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+3: 	  spread.answer
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'answer' across a computed key or unknown record spread.
+//│ ╟── This spread has no known element shape.
+//│ ║  l.+2: 	  let spread = {answer: 0, ...value}
+//│ ╙──      	                              ^^^^^
+
+// A later explicit field overrides any hidden runtime field in the spread.
+:expect 46
+fun overwrittenSpread(value: Hidden) =
+  let spread = {...value, answer: 46}
+  spread.answer
+overwrittenSpread(answer: 99)
+//│ = 46
+
+// A Unit annotation uses the same missing-member diagnostic as a Unit literal.
+:ge
+fun annotatedUnit(value: ()) = value.length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun annotatedUnit(value: ()) = value.length
+//│ ║        	                               ^^^^^^^^^^^^
+//│ ╟── Unit value does not contain member 'length'
+//│ ║  l.+1: 	fun annotatedUnit(value: ()) = value.length
+//│ ╙──      	                         ^^
+
+:ge
+fun literalUnit() = ().length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun literalUnit() = ().length
+//│ ║        	                    ^^^^^^^^^
+//│ ╟── Unit value does not contain member 'length'
+//│ ║  l.+1: 	fun literalUnit() = ().length
+//│ ╙──      	                    ^^
+
+// Following aliases and captured result types retains the original Unit witness.
+:ge
+type End = ()
+fun delayedUnit(value: End) = (() => value)().length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	fun delayedUnit(value: End) = (() => value)().length
+//│ ║        	                              ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Unit value does not contain member 'length'
+//│ ║  l.+1: 	type End = ()
+//│ ╙──      	           ^^
+
+// The Unit alternative of a Prelude result must remain visible to member lookup.
+:ge
+fun arrayResult(values: Array[Str]) = values.at(0).length
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun arrayResult(values: Array[Str]) = values.at(0).length
+//│ ║        	                                      ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Unit value does not contain member 'length'
+//│ ║  in ../decls/Prelude.mls
+//│ ║  l.XX: 	  fun at(index: Int): T | ()
+//│ ╙──      	                          ^^
+
+// A Unit open has an empty interface and cannot obscure another source's member.
+:expect 47
+fun openedUnit(value: ()) =
+  let known = {answer: 47}
+  open value
+  open known
+  answer
+openedUnit(())
+//│ = 47

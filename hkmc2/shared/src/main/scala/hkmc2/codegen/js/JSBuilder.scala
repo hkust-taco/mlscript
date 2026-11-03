@@ -301,6 +301,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case s: Select if s.sanitize => doc"(${res})"
     case _ => res
   
+  @tailrec
+  private def isWasmIntrinsic(path: Path): Bool = path match
+    case Select(qual, _) => isWasmIntrinsic(qual)
+    case Value.SimpleRef(sym) => sym is State.wasmSymbol
+    case _ => false
+
   def result(r: Result)(using Raise, Scope): Document = r match
     case Value.This(ts: semantics.ModuleOrObjectSymbol) if ts.asMod.isDefined =>
       // * Module self-references use the module name itself instead of `this`
@@ -350,6 +356,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if c.metadata.isMlsFun then
         if checkMLsCalls then doc"$runtimeVar.checkCall($calls)" else calls
       else doc"$runtimeVar.safeCall($calls)"
+    case c @ Call(fun, _) if isWasmIntrinsic(fun) =>
+      val message = msg"WebAssembly intrinsics are not available when targeting JavaScript"
+      raise(ErrorReport(message -> c.toLoc :: Nil, source = Diagnostic.Source.Compilation))
+      doc"(()=>{${mkErr(message)}})()"
     case c @ Call(fun, argss) =>
       val base = subexpression(fun)
       val calls = argss.foldLeft(base): (acc, args) =>

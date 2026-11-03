@@ -234,6 +234,22 @@ fun foo() =
   result + 1
 ```
 
+### Runtime Representations
+
+Type annotations can require a particular runtime representation, including the unboxed
+Wasm types `Int32`, `Int64`, `Float32`, and `Float64`.
+
+`undefined` denotes an unspecified value of any representation. It can be stored in or passed
+to any slot, but reading it back is undefined behavior: the JavaScript backend produces JS
+`undefined` (or `()` for a function returning it), while the Wasm backend may produce any value
+of the slot's representation, such as zero or a null reference. Compiler-generated placeholders,
+such as those left by dead-parameter elimination, rely on this rule. `null` remains an ordinary
+value and does not have this freedom to inhabit unboxed representations.
+
+In the IR, `undefined` has type `Nothing`: joining it with another representation leaves that
+representation unchanged, and casting the literal leaves it unchanged. This type does not imply
+unreachable control flow; evaluating an expression of type `Nothing` can still have effects.
+
 ---
 
 ## 5. Functions
@@ -1685,7 +1701,7 @@ candidate and a known candidate with an invalid operation, the known error is
 still reported. Dynamic values also do not remove the need for an unambiguous
 class or type identity in constructor patterns, class projections, or type references.
 
-### Runtime Representations
+### Inferred Runtime Representations
 
 Compilation chooses a runtime *representation* for each slot that holds values: parameters,
 results, fields, and variables. On the JavaScript backend, all values share one representation,
@@ -1739,12 +1755,6 @@ when exposed, they take the unknown representation. Through a record type declar
 field, the values it describes can be assigned values of that field's input type, which their own
 fields therefore admit. Exposing a record also exposes values stored by assignments, including
 through fields copied by a mutable spread: those values can be read by clients just like initializers.
-
-`undefined` denotes an unspecified value of any representation. It can be stored in or passed to
-any slot, but reading it back is undefined behavior: the JavaScript backend produces JavaScript
-`undefined` (or `()` for a function returning it), while the Wasm backend may produce any value
-of the slot's representation, such as `0` for an `Int32` or a null reference. Compiler-generated
-placeholders, such as the arguments supplied for eliminated dead parameters, rely on this.
 
 ### Generic Type Parameters
 

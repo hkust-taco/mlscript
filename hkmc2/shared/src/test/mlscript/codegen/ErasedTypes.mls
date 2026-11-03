@@ -542,16 +542,16 @@ fun unionIntoSubtype(x: A | B) = takesSubtype(x)
 //│ define takesSubtype⁰ as fun takesSubtype¹(a: A⁰): Unit⁰ {
 //│   return runtime⁰.Unit⁰
 //│ };
-//│ define unionIntoBase⁰ as fun unionIntoBase¹(x: Base⁰): Unknown {
+//│ define unionIntoBase⁰ as fun unionIntoBase¹(x: Base⁰): Unit⁰ {
 //│   return takesBase¹(x)
 //│ };
-//│ define memberIntoUnion⁰ as fun memberIntoUnion¹(a: A⁰): Unknown {
+//│ define memberIntoUnion⁰ as fun memberIntoUnion¹(a: A⁰): Unit⁰ {
 //│   return takesUnion¹(a)
 //│ };
-//│ define baseIntoUnion⁰ as fun baseIntoUnion¹(b: Base⁰): Unknown {
+//│ define baseIntoUnion⁰ as fun baseIntoUnion¹(b: Base⁰): Unit⁰ {
 //│   return takesUnion¹(b)
 //│ };
-//│ define unionIntoSubtype⁰ as fun unionIntoSubtype¹(x: Base⁰): Unknown {
+//│ define unionIntoSubtype⁰ as fun unionIntoSubtype¹(x: Base⁰): Unit⁰ {
 //│   return takesSubtype¹((x as! A⁰))
 //│ };
 //│ define Base¹ as class Base⁰;
@@ -667,9 +667,9 @@ annotHelper(100000)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ @tailrec
 //│ define annotLoop⁰ as fun annotLoop¹(n: Int⁰): Unit⁰ {
-//│   return (annotHelper⁰(n) as! Unit⁰)
+//│   return annotHelper⁰(n)
 //│ };
-//│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unknown {
+//│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unit⁰ {
 //│   let scrut: ?, tmp: Int⁰;
 //│   set scrut = <=⁰(n, 0);
 //│   match scrut
@@ -684,7 +684,7 @@ annotHelper(100000)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let annotLoop_annotHelper;
 //│ @private
-//│ define annotLoop_annotHelper as fun annotLoop_annotHelper⁰(id: Int⁰, param0: ?): Unknown {
+//│ define annotLoop_annotHelper as fun annotLoop_annotHelper⁰(id: Int⁰, param0: ?): Unit⁰ {
 //│   loop loopLabel:
 //│     match id
 //│       0 =>
@@ -709,10 +709,10 @@ annotHelper(100000)
 //│ };
 //│ @inline @tailrec
 //│ define annotLoop⁰ as fun annotLoop¹(n: Int⁰): Unit⁰ {
-//│   return (annotLoop_annotHelper⁰(0, n) as! Unit⁰)
+//│   return annotLoop_annotHelper⁰(0, n)
 //│ };
 //│ @inline
-//│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unknown {
+//│ define annotHelper¹ as fun annotHelper⁰(n: Int⁰): Unit⁰ {
 //│   return annotLoop_annotHelper⁰(1, n)
 //│ };
 //│ return annotLoop_annotHelper⁰(1, 100000)

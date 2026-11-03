@@ -145,7 +145,7 @@ stopped.answer
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╙── Unit value does not contain member 'answer'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ stopped = undefined
+//│ stopped = ()
 
 // Transparent annotations retain the target's value interface.
 :expect 42
