@@ -47,7 +47,7 @@ trailing(1, 2, 3)
 //│ define trailing⁰ as fun trailing¹(x, ...args) {
 //│   let xs, y;
 //│   do runtime⁰.checkVariadicArgs⁰("trailing", 2, 1, args);
-//│   set xs = runtime⁰.Tuple⁰.slice⁰(args, 0, 1);
+//│   set xs = (runtime⁰.Tuple⁰.slice⁰(args, 0, 1) as! Array⁰);
 //│   set y = args.-1;
 //│   return y
 //│ };
@@ -65,7 +65,7 @@ trailing(1, 2, 3)
 //│ define trailing² as fun trailing³(x, ...args) {
 //│   let xs, y;
 //│   do runtime⁰.checkVariadicArgs⁰("trailing", 2, 1, args);
-//│   set xs = runtime⁰.Tuple⁰.slice⁰(args, 0, 1);
+//│   set xs = (runtime⁰.Tuple⁰.slice⁰(args, 0, 1) as! Array⁰);
 //│   set y = args.-1;
 //│   return y
 //│ };

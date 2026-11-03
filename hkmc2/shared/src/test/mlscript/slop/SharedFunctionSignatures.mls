@@ -249,8 +249,8 @@ let lifted = capturedVariadic(30)
 //│     else
 //│       set optional = null;
 //│       end
-//│   set middle = runtime⁰.Tuple⁰.slice⁰(args, 1, 1);
-//│   set last = args.-1;
+//│   set middle = (runtime⁰.Tuple⁰.slice⁰(args, 1, 1) as! Array⁰);
+//│   set last = (args.-1 as! Int⁰);
 //│   set tmp2 = +⁰(base, first);
 //│   match optional
 //│     Int⁰ =>

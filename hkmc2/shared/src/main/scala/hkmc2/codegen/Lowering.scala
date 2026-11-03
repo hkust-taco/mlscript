@@ -600,7 +600,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case (ps :: remainingParams, args :: remainingArgs) =>
         def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
         if isConstructor then lowerConstructorArgs(args, ps, isMlsFun)(next)
-        else lowerArgs(args, expectedParamTypes(ps))(next)
+        else lowerArgs(args, expectedParamTypes(ps, args))(next)
       case (Nil, Nil) =>
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
       case (Nil, args :: remainingArgss) =>
@@ -706,7 +706,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case (arg :: rest, _ :: params) => loop(rest, params, arg :: acc)
         case _ => k(acc.reverse ::: args)
       loop(args, ps.params, Nil)
-    lowerArgs(arg, expectedParamTypes(ps)): args =>
+    lowerArgs(arg, expectedParamTypes(ps, arg)): args =>
       if !ps.params.exists(_.flags.opt) then k(args)
       else if args.forall(_.spread.isEmpty) then
         val padded = if isMls then OptionalParams.pad(ps.params, args).getOrElse(args)
@@ -1923,9 +1923,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
     s.collect { case t: TermSymbol => t.erasedType }.flatten
 
-  /** The declared erased types of a parameter list's fixed parameters (excluding rest params). */
-  private def expectedParamTypes(ps: ParamList): Ls[Opt[ErasedValueType]] =
-    ps.params.map(_.sym.erasedType)
+  /** Match fixed argument positions to their source slots before trailing parameters are packed
+    * into a rest array. With spreads, only the required prefix has a known alignment; the
+    * extraction prologue coerces the remaining values when it binds their destination slots.
+    */
+  private def expectedParamTypes(ps: ParamList, args: Term): Ls[Opt[ErasedValueType]] =
+    if ps.trailingParams.isEmpty then ps.params.map(_.sym.erasedType)
+    else args match
+      case Tup(fields) if fields.forall {
+        case Fld(FldFlags.benign(), _, N) => true
+        case _ => false
+      } =>
+        val leading = ps.params.take((fields.length - ps.trailingParams.length).max(0))
+        val trailing = ps.trailingParams.takeRight(fields.length - leading.length)
+        leading.map(_.sym.erasedType) :::
+          List.fill(fields.length - leading.length - trailing.length)(N) ::: trailing.map(_.sym.erasedType)
+      case _ => ps.params.take(ps.leadingRequiredCount).map(_.sym.erasedType)
 
 
   def program(main: st.Blk, symbolsToPreserve: Set[ScopedSymbol]): Program =
@@ -2018,7 +2031,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           :: trailing.zipWithIndex.map((p, i) => p.sym -> at(args, i - k))
         (optional ::: variadicParam :: trailing).foreach(p => loweringCtx.collectScopedSym(p.sym))
         val extractedRest = extractions.foldRight(body):
-          case ((sym, res), rest) => Assign(sym, res, rest)
+          case ((sym, res), rest) => Assign(sym, castTo(res, sym.erasedType, sym.toLoc), rest)
         // * Exclude trailing arguments before checking optional slot presence, so they cannot
         // * accidentally fill a missing optional parameter.
         val extracted = if optional.isEmpty then extractedRest else
