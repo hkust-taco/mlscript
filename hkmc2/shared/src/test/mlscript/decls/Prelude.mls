@@ -132,6 +132,7 @@ declare class Error {
   constructor(message?, options?)
   val message: Str
   val name: Str
+  // TODO: make accesses to JS properties consistent with functions: convert `undefined` to `()`
   val stack: Str | unsafe.undefined
 }
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Error
@@ -313,6 +314,7 @@ declare module Array {
 }
 
 declare class Symbol {
+  // TODO: make accesses to JS properties consistent with functions: convert `undefined` to `()`
   val description: Str | unsafe.undefined
 }
 declare fun Symbol(...description): Symbol
