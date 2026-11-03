@@ -50,9 +50,10 @@ object DiffTestRunner:
       * Other imported files can be fixtures whose diagnostics the importing test is expected to show.
       */
     def importedModules(file: os.Path): Ls[os.Path] =
-      predefPath :: importPattern.findAllMatchIn(os.read(file)).toList
+      predefPath :: importPattern.findAllMatchIn(os.read(file))
         .map(m => os.Path(m.group(1), file / os.up))
         .filter(module => module.segments.contains("mlscript-compile") && os.isFile(module))
+        .toList
     
     /** Whether runs on this state elaborate the modules their tests import before starting them. */
     def warmsUpImports: Bool = true
