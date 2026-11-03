@@ -198,7 +198,7 @@ object WatBuilder:
       typeUse = TypeUse(funcTy),
       params = params.map(_.resolvedParam),
       locals = Seq.empty,
-      body = body,
+      body = Seq(body),
       resultTypes = Seq(Result(RefType.anyref)),
       exportName = exportName,
     )
@@ -861,32 +861,12 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   private def declaredResultType(sym: BlockMemberSymbol)(using Raise): ValType =
     sym.asTrm.flatMap(_.declaredResultType).flatMap(_.wasmType).getOrElse(RefType.anyref)
 
-  /** Checks that the generated body `bodyWat` for the function/method `sym` conforms to the expected result type as
-    * declared by its placeholder, returning the body to emit.
-    *
-    * If the result types do conform, `bodyWat` is returned unchanged. Otherwise, a poison expression that can be typed
-    * against any result type is returned instead, and an error is raised.
+  /** The physical result slot of the function or method `sym`, whose predeclared signature has the results `declared`.
+    * Each `return` is checked against this slot, and falling off the body materializes `undefined` in it.
     */
-  private def checkBodyRetType(
-      sym: BlockMemberSymbol,
-      bodyWat: Expr,
-      declared: Seq[Result],
-  )(using Raise): Expr =
-    (bodyWat.resultTypes, declared) match
-      case (Seq(ty), Seq(decl)) if !ty.isSubtypeOf(decl.valtype) =>
-        // The IR should already contain a `Cast` if the coercion was representable, so this is a type mismatch that
-        // cannot be reconciled.
-        errExpr(
-          Ls(
-            msg"Wasm function `${sym.nme}` expects result to have type `${
-                decl.valtype.toWat.mkString()
-              }`, but got `${ty.toWat.mkString()}`" -> sym.toLoc,
-          ),
-          extraInfo = S(bodyWat.toWat.mkString()),
-        )
-      case _ =>
-        softAssert(declared.sizeIs == 1, s"Wasm function `${sym.nme}` with multiple declared results not supported yet")
-        bodyWat
+  private def singleResultType(sym: BlockMemberSymbol, declared: Seq[Result])(using Raise): Opt[ValType] =
+    softAssert(declared.sizeIs == 1, s"Wasm function `${sym.nme}` with multiple declared results not supported yet")
+    declared.headOption.map(_.valtype)
 
   /** Returns the shared erased Wasm function signature for a virtual method slot introduced by `baseSym`, with the
     * given non-`this` param types, including a concretely-typed `this`.
@@ -966,7 +946,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       params = params.zip(signature.params).map { case ((symbol, id), param) => symbol -> WasmParam(id, param.valtype) },
       resultTypes = resultTypes,
       locals = Seq.empty,
-      body = ref.`null`(ctx.getType_!(defn.sym)),
+      body = Seq(ref.`null`(ctx.getType_!(defn.sym))),
       exportName = exportName,
     ))
   end predeclareClassFuncWithType
@@ -1082,7 +1062,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       resultTypes = resultTypes,
       locals = Seq.empty,
       // Use `unreachable` as the placeholder body so that the module always remains well-formed.
-      body = unreachable,
+      body = Seq(unreachable),
       exportName = sym.optionIf(_.nameIsMeaningful).map(_.nme),
     ))
   end predeclareTopLevelFun
@@ -1425,7 +1405,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   /** Compiles a class init body under its own Wasm-local frame with explicit `this`. */
   private def setupInitLocals(
       clsLikeDefn: ClsLikeDefn,
-  )(using Raise, SessionExportCtx): (Expr, FunctionCtx) =
+  )(using Raise, SessionExportCtx): (Seq[Expr], FunctionCtx) =
     genFuncBody(
       classCtorParamList(clsLikeDefn) :: Nil,
       thisSym = S(clsLikeDefn.isym),
@@ -1437,9 +1417,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       val typeref = ctx.getType_!(clsLikeDefn.sym)
       val preCtorWat = compilePreCtor(clsLikeDefn, thisVar)
       val ctorWat = block(clsLikeDefn.ctor)
-      val retType = RefType(typeref, nullable = false)
-      val retWat = `return`(S(ref.cast(local.get(thisVar, RefType.anyref), retType)))
-      functionBodyBlock(preCtorWat ++ ctorWat :+ retWat, Seq(Result(retType)))
+      val retWat = `return`(S(ref.cast(local.get(thisVar, RefType.anyref), RefType(typeref, nullable = false))))
+      preCtorWat ++ ctorWat :+ retWat
 
   /** Lowers an inherited pre-constructor by preserving its setup code and rewriting the final `super(...)` into
     * `Parent_init(this, ...)`.
@@ -1501,7 +1480,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   /** MIR blocks contain statements; only `Return` supplies a function result. Falling off the entire body
     * supplies an unspecified value in the function's result representation. An inner `End` only continues
     * after its enclosing block, so matches and labels must not manufacture their own result values.
-    * The caller merges the instructions with [[functionBodyBlock]].
+    *
+    * The instructions form the Wasm function body directly. Wrapping them in a `block` would be redundant, and a block
+    * ending in a control transfer would also need the function's result type to be valid under the core spec.
     */
   private def functionBody(body: Block)(using FunctionCtx, Raise, SessionExportCtx): Vector[Expr] =
     val exprs = block(body)
@@ -1514,18 +1495,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val undefined = Value.Lit(UnitLit(false))(N)
         Vector(summon[FunctionCtx].resultType.fold(result(undefined))(castToValType(undefined, _, N)))
     exprs ++ tail
-
-  /** Merges the instructions of a function body whose declared results are `results`.
-    *
-    * [[mergeAsBlock]] gives a block that ends in a control transfer no results. As a function body, such a block
-    * would leave an empty operand stack that is not stack-polymorphic at the end of the function, which the core
-    * spec rejects, although Binaryen accepts it by typing the block as unreachable. Declaring the function's
-    * results on the block keeps the body valid, whether it ends in a control transfer or in a value.
-    */
-  private def functionBodyBlock(exprs: Seq[Expr], results: Seq[Result]): Expr = exprs match
-    case Seq() => lastWords("A function body must contain at least one instruction")
-    case Seq(expr) => expr
-    case _ => Instructions.block(label = N, children = exprs, resultTypes = results)
 
   /** Validates an IntLit value fits signed 32-bit and delegates codegen to `onValid`.
     */
@@ -2353,7 +2322,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                   if ctx.getFunc(sym).isEmpty then predeclareTopLevelFun(sym, ps)
                   val predeclared = ctx.getFuncInfo_!(sym)
                   val (bodyWat, fnCtx) = setupFunction(N, ps, result,
-                    resultType = predeclared.resultTypes.headOption.map(_.valtype), loc = sym.toLoc)
+                    resultType = singleResultType(sym, predeclared.resultTypes), loc = sym.toLoc)
 
                   val funcInfo = FuncInfo(
                     sym,
@@ -2361,7 +2330,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     params = fnCtx.resolvedParams,
                     resultTypes = predeclared.resultTypes,
                     locals = fnCtx.locals,
-                    body = checkBodyRetType(sym, bodyWat, predeclared.resultTypes),
+                    body = bodyWat,
                     exportName = predeclared.exportName,
                   )
                   softAssert(
@@ -2433,11 +2402,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                         funcCtx.params.map((_, nme) => getLocalAnyref(LocalIdx(nme))),
                       returnTypes = Seq(Result(RefType(typeref, nullable = false))),
                     )
-                    functionBodyBlock(Seq(
+                    Seq(
                       local.set(thisVar, struct.`new`(typeref, instanceFields)),
                       drop(initCall),
                       `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
-                    ), Seq(Result(RefType(typeref, nullable = false))))
+                    )
 
                   val predeclaredInit = ctx.getFuncInfo_!(initFuncRef)
                   ctx.addFunc(FuncInfo(
@@ -2474,7 +2443,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     // Reuse the physical signature, including a non-null receiver and any inherited virtual slot.
                     val paramTypes = S(predeclaredMethod.getSignatureType.params.map(_.valtype))
                     val (bodyWat, fnCtx) = setupFunction(S(clsLikeDefn.isym), ps, bod,
-                      resultType = predeclaredMethod.resultTypes.headOption.map(_.valtype), loc = sym.toLoc,
+                      resultType = singleResultType(sym, predeclaredMethod.resultTypes), loc = sym.toLoc,
                       paramTypes = paramTypes)
                     val funcInfo = FuncInfo(
                       sym,
@@ -2483,7 +2452,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                       params = fnCtx.resolvedParams,
                       resultTypes = predeclaredMethod.resultTypes,
                       locals = fnCtx.locals,
-                      body = checkBodyRetType(sym, bodyWat, predeclaredMethod.resultTypes),
+                      body = bodyWat,
                       exportName = predeclaredMethod.exportName,
                     )
                     softAssert(
@@ -2907,19 +2876,18 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       // during codegen (e.g., via `local.tee`) are declared in the entry function.
       val entryType = ctx.elabCtx.givenIn(Block.returnType(p.main).map(_.canonicalize))
       val entrySlot = entryType.flatMap(_.wasmType)
-      val (entryExprs, entryFnCtx) = genFuncBody(Nil, thisSym = N, resultType = entrySlot, loc = N):
+      val (entryBody, entryFnCtx) = genFuncBody(Nil, thisSym = N, resultType = entrySlot, loc = N):
         functionBody(p.main)
 
       val entrySym = BlockMemberSymbol("entry", Nil)
       // Body generation can register synthetic types such as Unit on first use.
       val entryResultType = entryType.flatMap(_.wasmType).getOrElse(RefType.anyref)
-      val entryBody = functionBodyBlock(entryExprs, Seq(Result(entryResultType)))
 
       val entryFnExpr = ctx.elabCtx.givenIn:
         entryType match
           case S(ErasedType.Incompatible(lhs, rhs)) =>
-            errExpr(Ls(msg"Wasm entry function has incompatible result types `${lhs.describe}` and `${rhs.describe}`" -> N),
-              extraInfo = S(entryBody.toWat.mkString()))
+            Seq(errExpr(Ls(msg"Wasm entry function has incompatible result types `${lhs.describe}` and `${rhs.describe}`" -> N),
+              extraInfo = S(entryBody.map(_.toWat.mkString()).mkString("\n"))))
           // A block with no returns places no constraint on the REPL's single-result signature.
           case _ => entryBody
       val entryResultTypes = Seq(Result(entryResultType))
@@ -2960,14 +2928,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           compType = FunctionType(params = Seq.empty, results = Seq.empty),
           objectTag = N,
         ))
-        val initBody = initActions.mergeAsBlock_!
         val initFn = ctx.addFunc(FuncInfo(
           sym = TempSymbol(N, initErasedType = N, "start"),
           typeUse = TypeUse(initTy),
           params = Seq.empty,
-          resultTypes = initBody.resultTypes.map(ty => Result(ty.asValType_!)),
+          resultTypes = Seq.empty,
           locals = Seq.empty,
-          body = initBody,
+          body = initActions,
           exportName = N,
         ))
         ctx.setStartFunc(initFn)
@@ -3007,10 +2974,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       resultType: Opt[ValType],
       loc: Opt[Loc],
       paramTypes: Opt[Seq[ValType]] = N,
-  )(using Raise, SessionExportCtx): (Expr, FunctionCtx) =
-    val (exprs, funcCtx) =
-      genFuncBody(params :: Nil, thisSym = thisSym, resultType = resultType, loc = loc, paramTypes = paramTypes):
-        functionBody(body)
-    functionBodyBlock(exprs, resultType.map(Result(_)).toSeq) -> funcCtx
+  )(using Raise, SessionExportCtx): (Seq[Expr], FunctionCtx) =
+    genFuncBody(params :: Nil, thisSym = thisSym, resultType = resultType, loc = loc, paramTypes = paramTypes):
+      functionBody(body)
 
 end WatBuilder

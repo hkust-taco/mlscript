@@ -20,18 +20,17 @@ wasm.ref.i31(wasm.i32.add(wasm.i32.const(1), wasm.i32.const(2)))
 //│     (local $tmp i32)
 //│     (local $tmp1 i32)
 //│     (local $tmp2 i32)
-//│     (block (result (ref null i31))
-//│       (local.set $tmp
-//│         (i32.const 1))
-//│       (local.set $tmp1
-//│         (i32.const 2))
-//│       (local.set $tmp2
-//│         (i32.add
-//│           (local.get $tmp)
-//│           (local.get $tmp1)))
-//│       (return
-//│         (ref.i31
-//│           (local.get $tmp2)))))
+//│     (local.set $tmp
+//│       (i32.const 1))
+//│     (local.set $tmp1
+//│       (i32.const 2))
+//│     (local.set $tmp2
+//│       (i32.add
+//│         (local.get $tmp)
+//│         (local.get $tmp1)))
+//│     (return
+//│       (ref.i31
+//│         (local.get $tmp2))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3

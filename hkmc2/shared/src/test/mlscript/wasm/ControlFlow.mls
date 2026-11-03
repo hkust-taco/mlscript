@@ -24,38 +24,37 @@ let i = 0 in
 //│     (local $i (ref null any))
 //│     (local $scrut (ref null any))
 //│     (local $tmp (ref null any))
-//│     (block (result (ref null any))
-//│       (local.set $i
-//│         (ref.i31
-//│           (i32.const 0)))
-//│       (block $lbl
-//│         (loop $lbl_cont
-//│           (block
-//│             (local.set $scrut
-//│               (call $lt_impl
-//│                 (local.get $i)
-//│                 (ref.i31
-//│                   (i32.const 10))))
-//│             (block $match
-//│               (if
-//│                 (i32.eq
-//│                   (i31.get_s
-//│                     (ref.cast (ref null i31)
-//│                       (local.get $scrut)))
-//│                   (i32.const 1))
-//│                 (then
-//│                   (block $arm
-//│                     (block
-//│                       (local.set $tmp
-//│                         (call $plus_impl
-//│                           (local.get $i)
-//│                           (ref.i31
-//│                             (i32.const 1))))
-//│                       (local.set $i
-//│                         (local.get $tmp))
-//│                       (br $lbl_cont)))))))))
-//│       (return
-//│         (local.get $i))))
+//│     (local.set $i
+//│       (ref.i31
+//│         (i32.const 0)))
+//│     (block $lbl
+//│       (loop $lbl_cont
+//│         (block
+//│           (local.set $scrut
+//│             (call $lt_impl
+//│               (local.get $i)
+//│               (ref.i31
+//│                 (i32.const 10))))
+//│           (block $match
+//│             (if
+//│               (i32.eq
+//│                 (i31.get_s
+//│                   (ref.cast (ref null i31)
+//│                     (local.get $scrut)))
+//│                 (i32.const 1))
+//│               (then
+//│                 (block $arm
+//│                   (block
+//│                     (local.set $tmp
+//│                       (call $plus_impl
+//│                         (local.get $i)
+//│                         (ref.i31
+//│                           (i32.const 1))))
+//│                     (local.set $i
+//│                       (local.get $tmp))
+//│                     (br $lbl_cont)))))))))
+//│     (return
+//│       (local.get $i)))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 10
@@ -142,65 +141,63 @@ tailMatchAllValue(1)
 //│   (type $tailMatchAllValue (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null i31))))
 //│   (func $tailMatchAllValue (export "tailMatchAllValue") (type $tailMatchAllValue) (param $x (ref null any)) (result (ref null any))
-//│     (block (result (ref null any))
-//│       (block $match
-//│         (if
-//│           (i32.eq
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $x)))
-//│             (i32.const 0))
-//│           (then
-//│             (block $arm
-//│               (return
-//│                 (ref.i31
-//│                   (i32.const 10))))))
-//│         (if
-//│           (i32.eq
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (local.get $x)))
-//│             (i32.const 1))
-//│           (then
-//│             (block $arm
-//│               (return
-//│                 (ref.i31
-//│                   (i32.const 20))))))
-//│         (return
-//│           (ref.i31
-//│             (i32.const 30))))
-//│       (unreachable)))
+//│     (block $match
+//│       (if
+//│         (i32.eq
+//│           (i31.get_s
+//│             (ref.cast (ref null i31)
+//│               (local.get $x)))
+//│           (i32.const 0))
+//│         (then
+//│           (block $arm
+//│             (return
+//│               (ref.i31
+//│                 (i32.const 10))))))
+//│       (if
+//│         (i32.eq
+//│           (i31.get_s
+//│             (ref.cast (ref null i31)
+//│               (local.get $x)))
+//│           (i32.const 1))
+//│         (then
+//│           (block $arm
+//│             (return
+//│               (ref.i31
+//│                 (i32.const 20))))))
+//│       (return
+//│         (ref.i31
+//│           (i32.const 30))))
+//│     (unreachable))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
-//│     (block (result (ref null i31))
-//│       (block $match
-//│         (if
-//│           (i32.eq
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (ref.i31
-//│                   (i32.const 1))))
-//│             (i32.const 0))
-//│           (then
-//│             (block $arm
-//│               (return
-//│                 (ref.i31
-//│                   (i32.const 10))))))
-//│         (if
-//│           (i32.eq
-//│             (i31.get_s
-//│               (ref.cast (ref null i31)
-//│                 (ref.i31
-//│                   (i32.const 1))))
-//│             (i32.const 1))
-//│           (then
-//│             (block $arm
-//│               (return
-//│                 (ref.i31
-//│                   (i32.const 20))))))
-//│         (return
-//│           (ref.i31
-//│             (i32.const 30))))
-//│       (unreachable)))
+//│     (block $match
+//│       (if
+//│         (i32.eq
+//│           (i31.get_s
+//│             (ref.cast (ref null i31)
+//│               (ref.i31
+//│                 (i32.const 1))))
+//│           (i32.const 0))
+//│         (then
+//│           (block $arm
+//│             (return
+//│               (ref.i31
+//│                 (i32.const 10))))))
+//│       (if
+//│         (i32.eq
+//│           (i31.get_s
+//│             (ref.cast (ref null i31)
+//│               (ref.i31
+//│                 (i32.const 1))))
+//│           (i32.const 1))
+//│         (then
+//│           (block $arm
+//│             (return
+//│               (ref.i31
+//│                 (i32.const 20))))))
+//│       (return
+//│         (ref.i31
+//│           (i32.const 30))))
+//│     (unreachable))
 //│   (elem $tailMatchAllValue declare func $tailMatchAllValue)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
