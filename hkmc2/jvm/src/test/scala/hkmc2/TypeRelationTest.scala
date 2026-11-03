@@ -248,6 +248,35 @@ class TypeRelationTest extends AnyFunSuite:
       assert(fields.toList == List(late))
       assert(h.state.allocatedTypeInstanceCount == 0)
 
+  test("transported references share source subscriptions and retain early and late bounds"):
+    // Diff tests cannot measure source subscriptions. Distinct return paths must
+    // share one source interpretation even as more call sites observe its views.
+    for count <- List(2, 8, 16) do
+      val h = new Harness
+      import h.given
+      val (argument, at) = h.parameter("Argument")
+      val boundary = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("forward")))
+      val sites = List.fill(count)(FlowSymbol.app())
+      val early = IntroShape(Term.UnitVal(), N)
+      val late = DynShape()
+      h.resolver.publishParameter(argument, MarkedShape.enter(early, boundary, S(sites.head)))
+      h.observe(ContextualType(at, Nil))
+      val listeners = at.resolution.inferenceHost.listeners.size
+      assert(listeners > 0)
+      val references = sites.map(site => ContextualType(at, ExitMark(boundary, S(site), NoMarks) :: Nil))
+      val observations = references.map(h.observe)
+      assert(at.resolution.inferenceHost.listeners.size == listeners)
+      assert(observations.head.toList == early :: Nil)
+      assert(observations.tail.forall(_.isEmpty))
+      sites.foreach(site => h.resolver.publishParameter(argument, MarkedShape.enter(late, boundary, S(site))))
+      assert(observations.head.toList == List(early, late))
+      assert(observations.tail.forall(_.toList == late :: Nil))
+      (1 to 100).foreach: _ =>
+        references.lazyZip(observations).foreach: (reference, seen) =>
+          assert(h.observe(reference).toList == seen.toList)
+      assert(at.resolution.inferenceHost.listeners.size == listeners)
+      assert(h.state.allocatedTypeInstanceCount == 0)
+
   test("recursive structural projections preserve bounds and reuse their listeners"):
     val h = new Harness
     import h.given

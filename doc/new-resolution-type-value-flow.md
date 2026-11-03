@@ -458,6 +458,13 @@ on candidates. A wildcard exit can consume an entry carrying a call-site ID.
 Re-entering without an ID does not restore it. Exit followed by entry must not be
 cancelled as an identity, including on deferred references.
 
+Observing a contextual reference without explicit type arguments subscribes to
+the source's cached type views and transports each delivered shape. Distinct
+paths share that source interpretation, including bounds published later. The
+cache installs its host before following references, so recursive observations
+reuse the same endpoint. An application still interprets its arguments in the
+template's source scope before transporting the result.
+
 The relevant scope crossings are:
 
 - Function/method entry and exit, and lexical captures of enclosing definitions.

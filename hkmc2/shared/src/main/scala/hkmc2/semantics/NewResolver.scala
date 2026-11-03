@@ -1456,10 +1456,15 @@ class NewResolver:
                 // Arguments belong to the application scope, whereas the
                 // template belongs to the reference's source scope. Move the
                 // arguments back before substitution, then transport the result.
-                follow(reference.tpe.instantiate(current.instances).withOrigin(current.origin), args.move(inverseMarks(reference.marks)), aliases, source,
-                  shape => shape.exit(reference.marks) match
-                    case value: TermShape => publish(value)
-                    case NoShape => ())
+                val base = reference.tpe.instantiate(current.instances).withOrigin(current.origin)
+                def transfer(shape: TermShape)(using ResolutionContext): Unit = shape.exit(reference.marks) match
+                  case value: TermShape => publish(value)
+                  case NoShape => ()
+                // Share the source's interpretation across transported references.
+                // Its cached host also stops cycles before adding subscriptions.
+                // Applications still bind arguments at the template's endpoint.
+                if args.arguments.isEmpty then listenTypeViews(base, mergeIntersections)(transfer)
+                else follow(base, args.move(inverseMarks(reference.marks)), aliases, source, transfer)
               case TypeShape.Function(params, ret) =>
                 val ps = params match
                   case Tup(fields) =>
