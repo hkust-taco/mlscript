@@ -60,7 +60,7 @@ if Bar(true) is
 //│     (i32.const 2)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Bar_init (type $Bar_init) (param $this (ref $Bar)) (param $y (ref null any)) (result (ref $Bar))
-//│     (block (result (ref $Bar))
+//│     (block
 //│       (struct.set $Bar $y
 //│         (local.get $this)
 //│         (local.get $y))
@@ -69,7 +69,7 @@ if Bar(true) is
 //│           (local.get $this)))))
 //│   (func $Bar_ctor (export "Bar") (type $Bar_ctor) (param $y (ref null any)) (result (ref $Bar))
 //│     (local $this (ref $Bar))
-//│     (block (result (ref $Bar))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Bar
 //│           (global.get $Bar_typeinfo)
@@ -81,7 +81,7 @@ if Bar(true) is
 //│       (return
 //│         (local.get $this))))
 //│   (func $Baz_init (type $Baz_init) (param $this (ref $Baz)) (param $z (ref null any)) (result (ref $Baz))
-//│     (block (result (ref $Baz))
+//│     (block
 //│       (struct.set $Baz $z
 //│         (local.get $this)
 //│         (local.get $z))
@@ -90,7 +90,7 @@ if Bar(true) is
 //│           (local.get $this)))))
 //│   (func $Baz_ctor (export "Baz") (type $Baz_ctor) (param $z (ref null any)) (result (ref $Baz))
 //│     (local $this (ref $Baz))
-//│     (block (result (ref $Baz))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Baz
 //│           (global.get $Baz_typeinfo)
@@ -104,11 +104,9 @@ if Bar(true) is
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $scrut (ref null any))
 //│     (local $arg$Bar$0$ (ref null any))
-//│     (local $matchRes (ref null any))
 //│     (local $currentTypeInfo (ref null any))
 //│     (local $targetTypeInfo (ref null any))
 //│     (local $typeInfoMatch (ref null i31))
-//│     (local $matchRes1 (ref null any))
 //│     (local $currentTypeInfo1 (ref null any))
 //│     (local $targetTypeInfo1 (ref null any))
 //│     (local $typeInfoMatch1 (ref null i31))
@@ -118,8 +116,6 @@ if Bar(true) is
 //│           (ref.i31
 //│             (i32.const 1))))
 //│       (block $match
-//│         (local.set $matchRes
-//│           (ref.null any))
 //│         (if
 //│           (ref.test (ref $Object)
 //│             (local.get $scrut))
@@ -164,28 +160,26 @@ if Bar(true) is
 //│                     (local.get $typeInfoMatch))))
 //│               (then
 //│                 (block $arm
-//│                   (local.set $arg$Bar$0$
-//│                     (struct.get $Bar $y
-//│                       (ref.cast (ref $Bar)
-//│                         (local.get $scrut))))
-//│                   (block $match1
-//│                     (local.set $matchRes1
-//│                       (ref.null any))
-//│                     (if
-//│                       (i32.eq
-//│                         (i31.get_s
-//│                           (ref.cast (ref null i31)
-//│                             (local.get $arg$Bar$0$)))
-//│                         (i32.const 1))
-//│                       (then
-//│                         (block $arm1
-//│                           (return
-//│                             (ref.i31
-//│                               (i32.const 3))))))
-//│                     (return
-//│                       (ref.i31
-//│                         (i32.const 4))))
-//│                   (unreachable))))))
+//│                   (block
+//│                     (local.set $arg$Bar$0$
+//│                       (struct.get $Bar $y
+//│                         (ref.cast (ref $Bar)
+//│                           (local.get $scrut))))
+//│                     (block $match1
+//│                       (if
+//│                         (i32.eq
+//│                           (i31.get_s
+//│                             (ref.cast (ref null i31)
+//│                               (local.get $arg$Bar$0$)))
+//│                           (i32.const 1))
+//│                         (then
+//│                           (block $arm1
+//│                             (return
+//│                               (ref.i31
+//│                                 (i32.const 3))))))
+//│                       (return
+//│                         (ref.i31
+//│                           (i32.const 4))))))))))
 //│         (if
 //│           (ref.test (ref $Object)
 //│             (local.get $scrut))

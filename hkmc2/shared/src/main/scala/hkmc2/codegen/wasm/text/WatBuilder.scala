@@ -1492,19 +1492,21 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     end match
   end compilePreCtor
 
-  /** Normalizes a [[`Vector`]] of expressions such that it always leaves at least one more value on the stack.
-    *
-    * If the expressions do not emit any values on the stack, this method appends a `$Unit` value on the stack for
-    * consumption.
+  /** MIR blocks contain statements; only `Return` supplies a function result. Falling off the entire body
+    * supplies an unspecified value in the function's result representation. An inner `End` only continues
+    * after its enclosing block, so matches and labels must not manufacture their own result values.
     */
-  private def normalizeValueExprs(
-      exprs: Vector[Expr],
-      isAbortive: Bool,
-  )(using FunctionCtx, Raise, SessionExportCtx): Vector[Expr] =
-    if exprs.forall(_.resultTypes.isEmpty) && !isAbortive then
-      exprs.toVector :+ result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))
-    else
-      exprs
+  private def functionBody(body: Block)(using FunctionCtx, Raise, SessionExportCtx): Expr =
+    val exprs = block(body)
+    softAssert(exprs.forall(_.resultTypes.forall(_ is UnreachableType)), "MIR statements must not leave Wasm values on the stack")
+    val tail =
+      if exprs.lastOption.exists(_.isControlTransfer) then Vector.empty
+      // Wasm cannot infer that every branch of a statement match returns or throws.
+      else if body.isAbortive then Vector(unreachable)
+      else
+        val undefined = Value.Lit(UnitLit(false))(N)
+        Vector(summon[FunctionCtx].resultType.fold(result(undefined))(castToValType(undefined, _)))
+    (exprs ++ tail).mergeAsBlock_!
 
   /** Validates an IntLit value fits signed 32-bit and delegates codegen to `onValid`.
     */
@@ -1770,8 +1772,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       )
     case Value.Lit(UnitLit(true)) => ref.`null`(HeapType.Any)
     case Value.Lit(UnitLit(false)) =>
-      // `undefined` is the IR's canonical "no meaningful value", so it lowers to `$Unit` (similar to
-      // `normalizeValueExprs`).
+      // Without a destination representation, use the Unit singleton for an unspecified value.
       result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))
     case Value.SimpleRef(l) => l match
       case l: LocalVarSymbol => getVar(l, r.toLoc)
@@ -2170,7 +2171,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
   extension (expr: Expr)
     private def isControlTransfer: Bool =
-      expr.resultType.contains(UnreachableType) || expr.mnemonic == "return"
+      expr.resultType.contains(UnreachableType)
 
   private def asStatement(expr: Expr): Expr =
     if expr.isControlTransfer then expr
@@ -2416,7 +2417,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     wrapId = S(clsLikeDefn.sym.nme) -> N,
                     typeUse = predeclaredInit.typeUse,
                     params = initFnCtx.resolvedParams,
-                    resultTypes = initWat.resultTypes.map(ty => Result(ty.asValType_!)),
+                    resultTypes = predeclaredInit.resultTypes,
                     locals = initFnCtx.locals,
                     body = initWat,
                     exportName = predeclaredInit.exportName,
@@ -2429,7 +2430,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     wrapId = S(clsLikeDefn.sym.nme) -> N,
                     typeUse = predeclaredCtor.typeUse,
                     params = ctorFnCtx.resolvedParams,
-                    resultTypes = ctorCode.resultTypes.map(ty => Result(ty.asValType_!)),
+                    resultTypes = predeclaredCtor.resultTypes,
                     locals = ctorFnCtx.locals,
                     body = ctorCode,
                     exportName = predeclaredCtor.exportName,
@@ -2538,7 +2539,10 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               case _ => resWat
           case _ => resWat
 
-        Vector(`return`(S(returned)))
+        // Check each return against the physical signature. A return makes the surrounding expression
+        // stack-polymorphic, so checking only the complete body's type misses incompatible operands.
+        val checked = funcCtx.resultType.fold(returned)(castConserve(returned, _, res.toLoc))
+        Vector(`return`(S(checked)))
 
       case Scoped(syms, body) =>
         blockPreamble(syms)
@@ -2600,10 +2604,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         val rstExpr = returningTerm(rst)
         labeledRegion +: rstExpr
       case Match(scrut, arms, dflt, rst) =>
-        val tailMode = rst.isInstanceOf[End]
-        val matchResLocal =
-          if tailMode then S(mkTempLocal("matchRes", erasedType = N))
-          else N
         val scrutLocalResult = scrut match
           case _: (Value.RefLike | Value.Lit) => N
           case _ => S(mkTempLocal("scrut", erasedType = N))
@@ -2613,36 +2613,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
         def getScrutExpr: Expr =
           scrutLocalResult.fold(result(scrut))(getLocalAnyref)
-
-        def assignTailResult(target: LocalIdx, exprs: Vector[Expr]): Vector[Expr] =
-          if exprs.lastOption.forall(_.isControlTransfer) then exprs
-          else
-            (exprs.mergeAsBlock, exprs.flatMap(_.resultTypes)) match
-              case (S(expr), Seq(_)) => Vector(local.set(target, expr))
-              case (S(expr), Seq()) => exprs :+
-                  local.set(target, result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol)))
-              case (S(expr), _) => Vector(errExpr(
-                  Ls(
-                    msg"WatBuilder::assignTailResult expected 0 or 1 values on the stack, but got ${
-                        exprs.flatMap(_.resultTypes).size
-                      }" -> N,
-                  ),
-                  extraInfo = S(exprs.map(_.toString).mkString(", ")),
-                ))
-              case (N, _) => Vector.empty
-
-        def lowerMatchBody(exprs: Vector[Expr]): Vector[Expr] =
-          matchResLocal match
-            case S(localIdx) =>
-              assignTailResult(localIdx, exprs)
-            case N => asStatement(exprs).toVector
-
-        val matchResInitExpr = matchResLocal.map: localIdx =>
-          local.set(localIdx, ref.`null`(HeapType.Any))
-
-        // * Whether the tail expression of this `match` is readable - If it is, then the match block must produce a
-        // * value on the stack.
-        var isMatchTailReachable = false
 
         // Compile each match arm
         val matchBlock = funcCtx.withLabel(LabelSymbol(N, "match"), hasContinueLabel = false):
@@ -2654,12 +2624,10 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                   funcCtx.withLabel(LabelSymbol(N, "arm"), hasContinueLabel = false):
                     case LabelTarget(armLabel, _) =>
                       val bodyExpr = returningTerm(body)
-                      val armBodyExpr = lowerMatchBody(bodyExpr)
-                      val armIsCtrlXfer = armBodyExpr.lastOption.exists(_.isControlTransfer)
-                      isMatchTailReachable ||= !armIsCtrlXfer
+                      val armBodyExpr = asStatement(bodyExpr).toVector
                       blockInstr(
                         label = S(armLabel),
-                        children = armBodyExpr ++ br(matchLabel).optionUnless(armIsCtrlXfer).toVector,
+                        children = armBodyExpr ++ br(matchLabel).optionUnless(body.isAbortive).toVector,
                         resultTypes = Seq.empty,
                       )
                 
@@ -2777,29 +2745,16 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     ))
                 end match
 
-              val defaultExpr = lowerMatchBody(dflt.toVector.flatMap(returningTerm))
-              isMatchTailReachable ||= !defaultExpr.lastOption.exists(_.isControlTransfer)
+              val defaultExpr = asStatement(dflt.toVector.flatMap(returningTerm)).toVector
 
               // Generate the match block
               blockInstr(
                 label = S(matchLabel),
-                children = scrutInitExpr.toVector ++ matchResInitExpr.toVector ++ armExprs ++ defaultExpr,
+                children = scrutInitExpr.toVector ++ armExprs ++ defaultExpr,
                 resultTypes = Seq.empty,
               )
 
-        if tailMode then
-          if isMatchTailReachable then
-            Vector(
-              matchBlock,
-              local.get(matchResLocal.get, RefType.anyref),
-            )
-          else
-            // Every path of the match is a control transfer, so the tail (and any subsequent reads of `$matchRes`)
-            // is dead. Emit `unreachable` to type the enclosing block as bottom.
-            Vector(matchBlock, unreachable)
-        else
-          val rstExpr = returningTerm(rst)
-          matchBlock +: rstExpr
+        matchBlock +: returningTerm(rst)
 
       // * Try/finally lowering is intentionally rejected for now: the previous implementation required `exnref` support
       // * which can only be enabled with the `--experimental-wasm-exnref` flag.
@@ -2924,7 +2879,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       val entryType = ctx.elabCtx.givenIn(Block.returnType(p.main).map(_.canonicalize))
       val entrySlot = entryType.flatMap(_.wasmType)
       val (entryBody, entryFnCtx) = genFuncBody(Nil, thisSym = N, resultType = entrySlot):
-        normalizeValueExprs(block(p.main), p.main.isAbortive).mergeAsBlock.getOrElse(nop)
+        functionBody(p.main)
 
       val entrySym = BlockMemberSymbol("entry", Nil)
       // Body generation can register synthetic types such as Unit on first use.
@@ -3023,6 +2978,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       paramTypes: Opt[Seq[ValType]] = N,
   )(using Raise, SessionExportCtx): (Expr, FunctionCtx) =
     genFuncBody(params :: Nil, thisSym = thisSym, resultType = resultType, paramTypes = paramTypes):
-      block(body).mergeAsBlock.getOrElse(nop)
+      functionBody(body)
 
 end WatBuilder

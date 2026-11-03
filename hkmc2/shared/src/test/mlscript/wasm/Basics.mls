@@ -116,7 +116,7 @@ addOne(41) + useIt(41)
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
-//│     (block (result (ref null any))
+//│     (block
 //│       (local.set $tmp
 //│         (call $addOne
 //│           (ref.i31
@@ -158,7 +158,7 @@ new Foo(42).Foo#a
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $a (ref null any)) (result (ref $Foo))
-//│     (block (result (ref $Foo))
+//│     (block
 //│       (struct.set $Foo $a
 //│         (local.get $this)
 //│         (local.get $a))
@@ -167,7 +167,7 @@ new Foo(42).Foo#a
 //│           (local.get $this)))))
 //│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $a (ref null any)) (result (ref $Foo))
 //│     (local $this (ref $Foo))
-//│     (block (result (ref $Foo))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Foo
 //│           (global.get $Foo_typeinfo)
@@ -180,7 +180,7 @@ new Foo(42).Foo#a
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null $Foo))
-//│     (block (result (ref null any))
+//│     (block
 //│       (local.set $tmp
 //│         (call $Foo_ctor
 //│           (ref.i31
@@ -230,7 +230,7 @@ getX(Foo(Bar(42)))
 //│     (i32.const 2)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Bar_init (type $Bar_init) (param $this (ref $Bar)) (param $x (ref null any)) (result (ref $Bar))
-//│     (block (result (ref $Bar))
+//│     (block
 //│       (struct.set $Bar $x
 //│         (local.get $this)
 //│         (local.get $x))
@@ -239,7 +239,7 @@ getX(Foo(Bar(42)))
 //│           (local.get $this)))))
 //│   (func $Bar_ctor (export "Bar") (type $Bar_ctor) (param $x (ref null any)) (result (ref $Bar))
 //│     (local $this (ref $Bar))
-//│     (block (result (ref $Bar))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Bar
 //│           (global.get $Bar_typeinfo)
@@ -251,7 +251,7 @@ getX(Foo(Bar(42)))
 //│       (return
 //│         (local.get $this))))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $bar (ref null $Bar)) (result (ref $Foo))
-//│     (block (result (ref $Foo))
+//│     (block
 //│       (struct.set $Foo $bar
 //│         (local.get $this)
 //│         (local.get $bar))
@@ -260,7 +260,7 @@ getX(Foo(Bar(42)))
 //│           (local.get $this)))))
 //│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $bar (ref null $Bar)) (result (ref $Foo))
 //│     (local $this (ref $Foo))
-//│     (block (result (ref $Foo))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Foo
 //│           (global.get $Foo_typeinfo)
@@ -281,7 +281,7 @@ getX(Foo(Bar(42)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
-//│     (block (result (ref null any))
+//│     (block
 //│       (local.set $tmp
 //│         (call $Bar_ctor
 //│           (ref.i31
@@ -331,7 +331,7 @@ new Foo(42).Foo#y
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $x (ref null any)) (result (ref $Foo))
-//│     (block (result (ref $Foo))
+//│     (block
 //│       (struct.set $Foo $x
 //│         (local.get $this)
 //│         (local.get $x))
@@ -344,7 +344,7 @@ new Foo(42).Foo#y
 //│           (local.get $this)))))
 //│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $x (ref null any)) (result (ref $Foo))
 //│     (local $this (ref $Foo))
-//│     (block (result (ref $Foo))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Foo
 //│           (global.get $Foo_typeinfo)
@@ -358,7 +358,7 @@ new Foo(42).Foo#y
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null $Foo))
-//│     (block (result (ref null any))
+//│     (block
 //│       (local.set $tmp
 //│         (call $Foo_ctor
 //│           (ref.i31
@@ -394,7 +394,7 @@ O.y
 //│     (ref.null $TypeInfoBase)))
 //│   (global $O$inst (export "O$inst") (mut (ref null $O)) (ref.null $O))
 //│   (func $O_init (type $O_init) (param $this (ref $O)) (result (ref $O))
-//│     (block (result (ref $O))
+//│     (block
 //│       (struct.set $O $x
 //│         (local.get $this)
 //│         (ref.i31
@@ -408,7 +408,7 @@ O.y
 //│           (local.get $this)))))
 //│   (func $O_ctor (type $O_ctor) (result (ref $O))
 //│     (local $this (ref $O))
-//│     (block (result (ref $O))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $O
 //│           (global.get $O_typeinfo)
@@ -457,6 +457,6 @@ takeTop(1)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Int32'
 //│ ║  l.+2: 	takeTop(1)
 //│ ╙──      	        ^
-//│ ╔══[COMPILATION ERROR] Wasm function `takeTop` expects result to have type `(ref null any)`, but got `i32`
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ║  l.+1: 	fun takeTop(m: Int32) = m
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	                        ^

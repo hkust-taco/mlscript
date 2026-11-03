@@ -24,7 +24,7 @@ a.A#get() + A(2).get()
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $A_init (type $A_init) (param $this (ref $A)) (param $x (ref null any)) (result (ref $A))
-//│     (block (result (ref $A))
+//│     (block
 //│       (struct.set $A $x
 //│         (local.get $this)
 //│         (local.get $x))
@@ -33,7 +33,7 @@ a.A#get() + A(2).get()
 //│           (local.get $this)))))
 //│   (func $A_ctor (export "A") (type $A_ctor) (param $x (ref null any)) (result (ref $A))
 //│     (local $this (ref $A))
-//│     (block (result (ref $A))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $A
 //│           (global.get $A_typeinfo)
@@ -52,7 +52,7 @@ a.A#get() + A(2).get()
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
 //│     (local $tmp2 (ref null any))
-//│     (block (result (ref null any))
+//│     (block
 //│       (global.set $a
 //│         (call $A_ctor
 //│           (ref.i31
@@ -226,7 +226,7 @@ Prim(0).take(n32)
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Prim_init (type $Prim_init) (param $this (ref $Prim)) (param $v (ref null any)) (result (ref $Prim))
-//│     (block (result (ref $Prim))
+//│     (block
 //│       (struct.set $Prim $v
 //│         (local.get $this)
 //│         (local.get $v))
@@ -235,7 +235,7 @@ Prim(0).take(n32)
 //│           (local.get $this)))))
 //│   (func $Prim_ctor (export "Prim") (type $Prim_ctor) (param $v (ref null any)) (result (ref $Prim))
 //│     (local $this (ref $Prim))
-//│     (block (result (ref $Prim))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Prim
 //│           (global.get $Prim_typeinfo)
@@ -252,7 +252,7 @@ Prim(0).take(n32)
 //│   (func $entry (export "entry") (type $entry) (result i32)
 //│     (local $tmp i32)
 //│     (local $tmp1 (ref null any))
-//│     (block (result i32)
+//│     (block
 //│       (local.set $tmp
 //│         (i32.const 7))
 //│       (global.set $n32

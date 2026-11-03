@@ -27,7 +27,7 @@ useBox(id(new Box(42)))
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Box_init (type $Box_init) (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))
-//│     (block (result (ref $Box))
+//│     (block
 //│       (struct.set $Box $v
 //│         (local.get $this)
 //│         (local.get $v))
@@ -36,7 +36,7 @@ useBox(id(new Box(42)))
 //│           (local.get $this)))))
 //│   (func $Box_ctor (export "Box") (type $Box_ctor) (param $v (ref null i31)) (result (ref $Box))
 //│     (local $this (ref $Box))
-//│     (block (result (ref $Box))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Box
 //│           (global.get $Box_typeinfo)
@@ -58,7 +58,7 @@ useBox(id(new Box(42)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref null $Box))
 //│     (local $tmp1 (ref null any))
-//│     (block (result (ref null i31))
+//│     (block
 //│       (local.set $tmp
 //│         (call $Box_ctor
 //│           (ref.i31

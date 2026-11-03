@@ -31,7 +31,7 @@ Bar.y
 //│   (global $Foo$inst (export "Foo$inst") (mut (ref null $Foo)) (ref.null $Foo))
 //│   (global $Bar$inst (export "Bar$inst") (mut (ref null $Bar)) (ref.null $Bar))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (result (ref $Foo))
-//│     (block (result (ref $Foo))
+//│     (block
 //│       (struct.set $Foo $x
 //│         (local.get $this)
 //│         (ref.i31
@@ -41,7 +41,7 @@ Bar.y
 //│           (local.get $this)))))
 //│   (func $Foo_ctor (type $Foo_ctor) (result (ref $Foo))
 //│     (local $this (ref $Foo))
-//│     (block (result (ref $Foo))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Foo
 //│           (global.get $Foo_typeinfo)
@@ -52,7 +52,7 @@ Bar.y
 //│       (return
 //│         (local.get $this))))
 //│   (func $Bar_init (type $Bar_init) (param $this (ref $Bar)) (result (ref $Bar))
-//│     (block (result (ref $Bar))
+//│     (block
 //│       (struct.set $Bar $y
 //│         (local.get $this)
 //│         (ref.i31
@@ -62,7 +62,7 @@ Bar.y
 //│           (local.get $this)))))
 //│   (func $Bar_ctor (type $Bar_ctor) (result (ref $Bar))
 //│     (local $this (ref $Bar))
-//│     (block (result (ref $Bar))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Bar
 //│           (global.get $Bar_typeinfo)

@@ -16,7 +16,7 @@ topA + topB
 //│   (global $topA (export "topA") (mut (ref null any)) (ref.null any))
 //│   (global $topB (export "topB") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (block (result (ref null any))
+//│     (block
 //│       (global.set $topA
 //│         (ref.i31
 //│           (i32.const 1)))
@@ -51,7 +51,7 @@ chain(1)
 //│   (func $chain (export "chain") (type $chain) (param $x (ref null any)) (result (ref null any))
 //│     (local $a (ref null any))
 //│     (local $b (ref null any))
-//│     (block (result (ref null any))
+//│     (block
 //│       (local.set $a
 //│         (call $plus_impl
 //│           (local.get $x)
@@ -69,7 +69,7 @@ chain(1)
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $a (ref null any))
 //│     (local $b (ref null any))
-//│     (block (result (ref null any))
+//│     (block
 //│       (local.set $a
 //│         (call $plus_impl
 //│           (ref.i31
@@ -154,7 +154,7 @@ new Foo(42, 1).Foo#a
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (type $Foo_init) (param $this (ref $Foo)) (param $a (ref null any)) (param $b (ref null any)) (result (ref $Foo))
-//│     (block (result (ref $Foo))
+//│     (block
 //│       (struct.set $Foo $a
 //│         (local.get $this)
 //│         (local.get $a))
@@ -166,7 +166,7 @@ new Foo(42, 1).Foo#a
 //│           (local.get $this)))))
 //│   (func $Foo_ctor (export "Foo") (type $Foo_ctor) (param $a (ref null any)) (param $b (ref null any)) (result (ref $Foo))
 //│     (local $this (ref $Foo))
-//│     (block (result (ref $Foo))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Foo
 //│           (global.get $Foo_typeinfo)
@@ -181,7 +181,7 @@ new Foo(42, 1).Foo#a
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null $Foo))
-//│     (block (result (ref null any))
+//│     (block
 //│       (local.set $tmp
 //│         (call $Foo_ctor
 //│           (ref.i31

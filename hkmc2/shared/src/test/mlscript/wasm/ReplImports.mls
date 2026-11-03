@@ -92,7 +92,7 @@ val copied: Int32 = idI32(typed)
 //│         (local.get $this))))
 //│   (func $Unit_Unit (type $Unit_ctor) (result (ref $Unit))
 //│     (local $this (ref $Unit))
-//│     (block (result (ref $Unit))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Unit
 //│           (global.get $Unit_typeinfo)))

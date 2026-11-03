@@ -52,7 +52,7 @@ callF(B())
 //│         (local.get $this))))
 //│   (func $A_ctor (export "A") (type $A_ctor) (result (ref $A))
 //│     (local $this (ref $A))
-//│     (block (result (ref $A))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $A
 //│           (global.get $A_typeinfo)))
@@ -68,7 +68,7 @@ callF(B())
 //│         (ref.i31
 //│           (i32.const 1)))))
 //│   (func $B_init (type $B_init) (param $this (ref $B)) (result (ref $B))
-//│     (block (result (ref $B))
+//│     (block
 //│       (drop
 //│         (call $A_init
 //│           (local.get $this)))
@@ -77,7 +77,7 @@ callF(B())
 //│           (local.get $this)))))
 //│   (func $B_ctor (export "B") (type $B_ctor) (result (ref $B))
 //│     (local $this (ref $B))
-//│     (block (result (ref $B))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $B
 //│           (global.get $B_typeinfo)))
@@ -112,7 +112,7 @@ callF(B())
 //│     (local $tmp (ref null any))
 //│     (local $a (ref null $A))
 //│     (local $receiver (ref null any))
-//│     (block (result (ref null any))
+//│     (block
 //│       (local.set $tmp
 //│         (call $B_ctor))
 //│       (local.set $a
@@ -208,7 +208,7 @@ callPrim(W())
 //│         (local.get $this))))
 //│   (func $V_ctor (export "V") (type $V_ctor) (result (ref $V))
 //│     (local $this (ref $V))
-//│     (block (result (ref $V))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $V
 //│           (global.get $V_typeinfo)))
@@ -221,7 +221,7 @@ callPrim(W())
 //│     (return
 //│       (local.get $m)))
 //│   (func $W_init (type $W_init) (param $this (ref $W)) (result (ref $W))
-//│     (block (result (ref $W))
+//│     (block
 //│       (drop
 //│         (call $V_init
 //│           (local.get $this)))
@@ -230,7 +230,7 @@ callPrim(W())
 //│           (local.get $this)))))
 //│   (func $W_ctor (export "W") (type $W_ctor) (result (ref $W))
 //│     (local $this (ref $W))
-//│     (block (result (ref $W))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $W
 //│           (global.get $W_typeinfo)))
@@ -262,7 +262,7 @@ callPrim(W())
 //│     (local $tmp1 (ref null any))
 //│     (local $a (ref null $V))
 //│     (local $receiver (ref null any))
-//│     (block (result i32)
+//│     (block
 //│       (local.set $tmp
 //│         (i32.const 7))
 //│       (global.set $n32
@@ -389,7 +389,7 @@ readChild(new Child())
 //│         (local.get $this))))
 //│   (func $Parent_ctor (export "Parent") (type $Parent_ctor) (result (ref $Parent))
 //│     (local $this (ref $Parent))
-//│     (block (result (ref $Parent))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Parent
 //│           (global.get $Parent_typeinfo)))
@@ -402,7 +402,7 @@ readChild(new Child())
 //│     (return
 //│       (call $Parent_ctor)))
 //│   (func $Child_init (type $Child_init) (param $this (ref $Child)) (result (ref $Child))
-//│     (block (result (ref $Child))
+//│     (block
 //│       (drop
 //│         (call $Parent_init
 //│           (local.get $this)))
@@ -411,7 +411,7 @@ readChild(new Child())
 //│           (local.get $this)))))
 //│   (func $Child_ctor (export "Child") (type $Child_ctor) (result (ref $Child))
 //│     (local $this (ref $Child))
-//│     (block (result (ref $Child))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Child
 //│           (global.get $Child_typeinfo)))
@@ -440,7 +440,7 @@ readChild(new Child())
 //│                     (local.get $receiver))))))))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null $Child))
 //│     (local $tmp (ref null $Child))
-//│     (block (result (ref null $Child))
+//│     (block
 //│       (local.set $tmp
 //│         (call $Child_ctor))
 //│       (return

@@ -63,47 +63,55 @@ conditional(true)
 //│ = 42
 
 
-// FIXME: Top-level lowering drops the undefined branch's implicit return. Wasm then
-// generates an anyref fallthrough value for an i32 entry function.
-:fixme
+// Top-level undefined is implicit fallthrough. Its result slot still follows the concrete branch.
 :noInline
 :expect 42
 private fun flag(): Bool = true
 if flag() then wasm.i32.const(42) else unsafe.undefined
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] Error: Assertion failed (mlscript-compile/wasm/Wasm.mls:12)
-//│ // Standard Error:
-//│ [wasm-validator error in function entry] function body type must match, if function returns, on 
-//│ (block (result anyref)
-//│  (local.set $0
-//│   (call $flag)
-//│  )
-//│  (block $match
-//│   (local.set $1
-//│    (ref.null none)
-//│   )
-//│   (if
-//│    (i32.eq
-//│     (i31.get_s
-//│      (ref.cast i31ref
-//│       (local.get $0)
-//│      )
-//│     )
-//│     (i32.const 1)
-//│    )
-//│    (then
-//│     (block $arm
-//│      (return
-//│       (i32.const 42)
-//│      )
-//│     )
-//│    )
-//│   )
-//│  )
-//│  (local.get $1)
-//│ )
-//│ Assertion failed
-//│ 
+//│ = 42
+
+// Execute the fallthrough too; its value is unspecified, but the module must validate and run.
+:noInline
+private fun flag(): Bool = false
+if flag() then wasm.i32.const(42) else unsafe.undefined
+//│ Wasm result:
+//│ = 0
+
+:noInline
+private class FallthroughToken()
+private fun flag(): Bool = false
+private fun token(): FallthroughToken = FallthroughToken()
+if flag() then token() else unsafe.undefined
+//│ Wasm result:
+//│ = null
+
+// Unannotated functions use the reference calling convention; an unboxed return is rejected
+// even when it occurs inside a conditional. It must not escape to the Wasm validator.
+:e
+:soir
+private fun flag(): Bool = true
+fun test() = if flag() do return wasm.i32.const(42)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.+2: 	fun test() = if flag() do return wasm.i32.const(42)
+//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define flag⁰ as fun flag¹() {
+//│   return true
+//│ };
+//│ define test⁰ as fun test¹() {
+//│   match true
+//│     true =>
+//│       return wasm⁰.i32⁰.const⁰(42)
+//│     else
+//│       return runtime⁰.Unit⁰
+//│   end
+//│ };
+//│ end
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ║  l.+2: 	fun test() = if flag() do return wasm.i32.const(42)
+//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^
 
 
 // Dead-parameter elimination introduces undefined after lowering. The functions'
@@ -127,7 +135,7 @@ discard()
 //│ @private
 //│ define discard⁰ as fun discard¹() {
 //│   let f32, f64, i64, i32;
-//│   define i32 as fun i32⁰() {
+//│   define i32 as fun i32¹() {
 //│     return undefined
 //│   };
 //│   define i64 as fun i64⁰() {
@@ -139,8 +147,8 @@ discard()
 //│   define f64 as fun f64⁰() {
 //│     return undefined
 //│   };
-//│   do wasm⁰.i32¹.const⁰(1);
-//│   do i32⁰();
+//│   do wasm⁰.i32⁰.const⁰(1);
+//│   do i32¹();
 //│   do wasm⁰.i64¹.const¹(2);
 //│   do i64⁰();
 //│   do wasm⁰.f32¹.const²(3.0);
@@ -188,9 +196,9 @@ private fun badNull(): Int32 = null
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ║  l.+1: 	private fun badNull(): Int32 = null
 //│ ╙──      	                               ^^^^
-//│ ╔══[COMPILATION ERROR] Wasm function `badNull` expects result to have type `i32`, but got `(ref null any)`
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
 //│ ║  l.+1: 	private fun badNull(): Int32 = null
-//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	                               ^^^^
 
 
 // Undefined cannot make an intrinsically incompatible declaration representable.

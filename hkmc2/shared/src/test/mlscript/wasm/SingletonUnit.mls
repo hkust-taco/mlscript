@@ -23,7 +23,7 @@
 //│         (local.get $this))))
 //│   (func $Unit_Unit (type $Unit_ctor) (result (ref $Unit))
 //│     (local $this (ref $Unit))
-//│     (block (result (ref $Unit))
+//│     (block
 //│       (local.set $this
 //│         (struct.new $Unit
 //│           (global.get $Unit_typeinfo)))
@@ -87,7 +87,7 @@ x
 //│   (type $entry (func (result (ref null i31))))
 //│   (global $x (export "x") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
-//│     (block (result (ref null i31))
+//│     (block
 //│       (global.set $x
 //│         (ref.i31
 //│           (i32.const 1)))

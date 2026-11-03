@@ -20,7 +20,7 @@ wasm.ref.i31(wasm.i32.add(wasm.i32.const(1), wasm.i32.const(2)))
 //│     (local $tmp i32)
 //│     (local $tmp1 i32)
 //│     (local $tmp2 i32)
-//│     (block (result (ref null i31))
+//│     (block
 //│       (local.set $tmp
 //│         (i32.const 1))
 //│       (local.set $tmp1
