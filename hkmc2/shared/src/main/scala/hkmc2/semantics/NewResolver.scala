@@ -3576,9 +3576,11 @@ class NewResolver:
             rctx.recordResolution(ref, ref.dynamicPrefixes.contains(prefix))(ref.dynamicPrefixes ::= prefix)
             publishDynamic(ref, marks)
           case MemberLookup.Missing =>
-            // A known miss in one wildcard source is not an error: another may
-            // provide the name. Lowering diagnoses references with no candidates.
-            ()
+            // Ignore wholly nonmatching sources, but eager lookup must retain
+            // misses from alternatives of a source that also supplies a target.
+            if config.language.eagerResolution && rctx.canResolve(ref) then
+              rctx.missingWildcardMember(ref, prefix):
+                shape.diagnostic(msg"${shape.describe.capitalize} does not contain member '${ref.id.name}'")
           case MemberLookup.Unknown(reason, fromPublicInterface, provenance) =>
             unknownMember(ref, ref.id.name, reason, fromPublicInterface, provenance)
 

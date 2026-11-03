@@ -61,9 +61,15 @@ observations so inferred arguments cannot change the interface of an annotation.
 
 Opaque declared types expose an empty member interface. An intersection can use
 members supplied by its other components, and an opaque wildcard-open contributes
-no candidates. A union still requires each alternative to provide the selected
-member. The `()` type exposes the same Unit shape as its literal, retaining that
-literal as the diagnostic witness through aliases and scope transport.
+no candidates. Eager resolution requires each union alternative of a selected
+receiver to provide the member; loose resolution permits a known missing
+alternative when another supplies a target. For wildcard opens, this check
+applies only to sources that supply a candidate. One missing-member witness per
+reference and opened source survives until block completion, so arrival order
+does not hide a partially matching source. Unknown inputs from exposed interfaces
+still require checking even when another alternative or open supplies a target.
+The `()` type exposes the same Unit shape as its literal, retaining that literal
+as the diagnostic witness through aliases and scope transport.
 
 An empty declared interface makes no claim about runtime fields. Record spreads
 of opaque values remain unknown overwrite barriers, and unresolved inferred values

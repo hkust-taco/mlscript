@@ -29,7 +29,7 @@ fun opened(value: HiddenAlias) =
 opened(answer: 99)
 //│ = 45
 
-// A union still requires the member on every alternative.
+// Eager resolution requires the member on every union alternative.
 :ge
 fun union(value: Hidden | {value: Int}) = value.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
