@@ -72,7 +72,7 @@ object DiffTestRunner:
       import java.util.concurrent.{Callable, Executors}
       import scala.jdk.CollectionConverters.*
       val start = System.currentTimeMillis()
-      val modules = files.iterator.flatMap(importedModules).toList.distinct.sortBy(_.toString)
+      val modules = files.iterator.flatMap(importedModules).distinct.toList.sortBy(_.toString)
       // * Modules are warmed up in parallel; synchronizing each report keeps its lines together.
       val report = ReportFormatter(System.out.println, dir, colorize = true, wrap = S(body => this.synchronized(body)))
       def warmUp[A](path: os.Path)(obtain: (TL, Raise) ?=> A): Opt[A] =
@@ -181,7 +181,7 @@ class DiffTestRunnerBase(val state: DiffTestRunner.State) extends TimeOutTests:
     basePath.map(_ + "/").mkString + file.baseName
   
   private lazy val diffTestFilesByName: Map[Str, os.Path] =
-    diffTestFiles.map(file => relativeName(file) -> file).toMap
+    diffTestFiles.iterator.map(file => relativeName(file) -> file).toMap
   
   /** Elaborates the modules imported by the tests this run selects, such as with `-z`, before starting
     * them (see `DiffTestRunner.State.warmUpImports`), so that no test's time limit covers them.
