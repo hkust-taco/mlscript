@@ -1,0 +1,28 @@
+#lang(0.3.x, useNewResolution: false)
+#config(effectHandlers: Some(EffectHandlers()))
+
+fun abs(i: Int) = if i < 0 then -i else i
+
+abstract class Operator with
+  fun operator(x: Int): ()
+
+fun loop(i: Int, s: Int, h: Operator) =
+  let =i
+  while i > 0 do
+    h.operator(i)
+    set i -= 1
+  s
+
+fun run(n: Int, s: Int) =
+  handle h = Operator with
+    fun operator(x)(k) =
+      let y = k(())
+      abs(x - 503 * y + 37) % 1009
+  loop(n, s, h)
+
+fun repeat(n: Int) =
+  let i = 0
+  let res = 0
+  while i < 1000 do
+    run(n, 0)
+  res

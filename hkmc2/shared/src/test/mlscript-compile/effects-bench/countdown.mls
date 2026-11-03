@@ -1,0 +1,22 @@
+#lang(0.3.x, useNewResolution: false)
+#config(effectHandlers: Some(EffectHandlers()))
+
+abstract class Eff with
+  fun get(): Int
+  fun setVal(x: Int): ()
+
+fun countdown(h: Eff) =
+  let i = h.get()
+  if i === 0 then i
+  else
+    h.setVal(i - 1)
+    countdown(h)
+
+fun run(n) =
+  let s = 0
+  handle h = Eff with
+    fun get()(k) = k(s)
+    fun setVal(i)(k) =
+      set s = i
+      k()
+  countdown(h)

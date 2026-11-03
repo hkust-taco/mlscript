@@ -1,0 +1,21 @@
+#lang(0.3.x, useNewResolution: false)
+#config(effectHandlers: Some(EffectHandlers()))
+
+abstract class Prime with
+  fun isPrime(e: Int): Bool
+
+fun primes(i: Int, n: Int, a: Int, h: Prime) =
+  if i >= n then a
+  else
+    if h.isPrime(i) then
+      handle h' = Prime with
+        fun isPrime(e)(k) =
+          if e % i === 0 then k(false)
+          else h.isPrime(e)
+      primes(i + 1, n, a + i, h')
+    else primes(i + 1, n, a, h)
+
+fun run(n) =
+  handle h = Prime with
+    fun isPrime(e)(k) = k(true)
+  primes(2, n, 0, h)
