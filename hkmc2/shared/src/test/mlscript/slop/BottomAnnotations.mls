@@ -1,0 +1,20 @@
+:.
+
+
+// A Nothing-annotated result accepts abortive bodies and calls typed Nothing.
+fun fail(msg: Str): Nothing = throw Error(msg)
+fun todo(): Nothing = fail("todo")
+
+:re
+todo()
+//│ ═══[RUNTIME ERROR] Error: todo
+
+
+// A value of unknown representation cannot be narrowed to Nothing, even when the
+// unannotated callee never returns.
+:ge
+fun untypedFail(msg) = throw Error(msg)
+fun untypedTodo(): Nothing = untypedFail("todo")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Nothing'
+//│ ║  l.+2: 	fun untypedTodo(): Nothing = untypedFail("todo")
+//│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^

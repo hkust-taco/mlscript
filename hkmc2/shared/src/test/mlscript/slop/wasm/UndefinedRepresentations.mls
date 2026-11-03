@@ -282,3 +282,22 @@ castCalls + 41
 //│ return wasm⁰.plus_impl﹖(castCalls⁰, 41)
 //│ Wasm result:
 //│ = 42
+
+
+// Undefined in an annotation leaves the representation of the other alternatives unchanged.
+:noInline
+:expect 3
+private fun takeI32(value: Int32 | unsafe.undefined): Int32 = value
+takeI32(unsafe.undefined)
+takeI32(wasm.i32.const(3))
+//│ Wasm result:
+//│ = 3
+
+
+// A valueless break gives its label the result undefined, without any unsafe operation in the source.
+// The Wasm backend materializes that result as a null reference in the unannotated result slot.
+:noInline
+fun breakWithoutValue() = do lbl: lbl.break
+breakWithoutValue()
+//│ Wasm result:
+//│ = null
