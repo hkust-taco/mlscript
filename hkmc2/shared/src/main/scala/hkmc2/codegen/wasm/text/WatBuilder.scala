@@ -149,6 +149,25 @@ object WatBuilder:
   /** The maximum number of characters taken to be part of the identifier asscoiated with string constants. */
   val StringConstantIdentMaxLength = 16
 
+  private val binaryIntrinsicNames: Map[Str, Str] = Map(
+    "+" -> "plus_impl",
+    "-" -> "minus_impl",
+    "*" -> "times_impl",
+    "/" -> "div_impl",
+    "%" -> "mod_impl",
+    "===" -> "eq_impl",
+    "!==" -> "neq_impl",
+    "<" -> "lt_impl",
+    "<=" -> "le_impl",
+    ">" -> "gt_impl",
+    ">=" -> "ge_impl"
+  )
+  private val unaryIntrinsicNames: Map[Str, Str] = Map(
+    "-" -> "neg_impl",
+    "+" -> "pos_impl",
+    "!" -> "not_impl"
+  )
+
   object ExternIntrinsics:
     val SystemModule = "system"
     val SystemMemoryImportName = "mem"
@@ -1773,6 +1792,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     case Value.Lit(UnitLit(false)) =>
       // Without a destination representation, use the Unit singleton for an unspecified value.
       result(State.unitBlockMemberSymbol.asMemberRef(State.unitSymbol))
+    case Value.SimpleRef(sym) if sym is State.runtimeSymbol =>
+      errExpr(Ls(msg"This runtime operation is not supported by the WebAssembly backend" -> r.toLoc))
     case Value.SimpleRef(l) => l match
       case l: LocalVarSymbol => getVar(l, r.toLoc)
       case bs: BuiltinSymbol => errExpr(
@@ -1807,20 +1828,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             ),
             r.toLoc,
           )
-
-    case Call(Value.SimpleRef(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
-      if l.binary then
-        errExpr(
-          Ls(
-            msg"WatBuilder::result encountered builtin '${
-                l.nme
-              }' which should be lowered to an intrinsic function" ->
-              r.toLoc,
-          ),
-          extraInfo = S(r.toString),
-        )
-      else
-        errExpr(Ls(msg"Cannot call non-binary builtin symbol '${l.nme}'" -> r.toLoc))
 
     case Call(sel @ Select(qual, _), argss) if sel.symbol.flatMap(predeclaredClassMethodSym).nonEmpty =>
       if argss.length > 1 then
@@ -1970,15 +1977,16 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
         case S(selSym: MemberSymbol) =>
           val qualRes = result(qual)
-          val ownerInfo = fieldOwner(selSym)
-          val selCls = fieldOwner(selSym) getOrElse:
-            lastWords(
-              s"Expected resolved class for Select(...) expression to be a BlockMemberSymbol, but got ${ownerInfo.fold("(none)")(
-                  _.toString,
-                )}",
-            )
+          if qualRes.resultType.contains(UnreachableType) then return qualRes
+          val selCls = fieldOwner(selSym) match
+            case S(owner) => owner
+            case N => return errExpr(Ls(
+              msg"Selecting member '${id.name}' is not supported by the WebAssembly backend" -> sel.toLoc))
+          val structInfo = ctx.getTypeInfo(selCls) match
+            case S(info) => info
+            case N => return errExpr(Ls(
+              msg"Selecting member '${id.name}' of '${selCls.nme}' is not supported by the WebAssembly backend" -> sel.toLoc))
           val fieldidx = fieldSelect(selCls, selSym)
-          val structInfo = ctx.getTypeInfo_!(selCls)
           val fieldTy = structInfo.compType match
             case st: StructType => classField(selCls, selSym).ty
             case other => lastWords(s"Expected struct type for $selCls, found ${other.toWat.mkString()}")
@@ -2106,7 +2114,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       )
   end result
 
-  /** Returns the intrinsic name if `path` refers to a builtin under `wasm`, or `N` otherwise.
+  /** Selects a Wasm implementation for a shared MIR operator or an explicit `wasm` intrinsic.
+    * Operator calls retain their builtin symbols through lowering and optimization on every target.
     */
   private def wasmIntrinsicName(path: Path): Opt[Str] =
     def loop(p: Path, acc: Ls[Str]): Opt[Str] = p match
@@ -2115,7 +2124,12 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       case Select(qual, ident) =>
         loop(qual, ident.name :: acc)
       case _ => N
-    loop(path, Nil)
+    path match
+      case Value.SimpleRef(sym: BuiltinSymbol) => sym.arity match
+        case BuiltinSymbol.Arity.Unary => WatBuilder.unaryIntrinsicNames.get(sym.nme)
+        case BuiltinSymbol.Arity.Binary => WatBuilder.binaryIntrinsicNames.get(sym.nme)
+        case BuiltinSymbol.Arity.Variadic => N
+      case _ => loop(path, Nil)
 
   /** Resolves the argument at position `idx` as an [[IntrinsicArg]], recovering the numeric literal it was written
     * as, if it was written as one.
@@ -2409,7 +2423,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                         funcCtx.params.map((_, nme) => getLocalAnyref(LocalIdx(nme))),
                       returnTypes = Seq(Result(RefType(typeref, nullable = false))),
                     )
-                    Seq(
+                    Vector(
                       local.set(thisVar, struct.`new`(typeref, instanceFields)),
                       drop(initCall),
                       `return`(S(local.get(thisVar, RefType(typeref, nullable = false)))),
@@ -2973,7 +2987,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   def block(t: Block)(using FunctionCtx, Raise, SessionExportCtx): Vector[Expr] =
     nonNestedScoped(t)(returningTerm)
 
-  /** Compiles a function's IR body to one Wasm expression and returns the context that records its
+  /** Compiles a function's IR body to Wasm instructions and returns the context that records its
     * parameters and locals. `paramTypes` describes the registered function signature's parameter slots,
     * including the shared virtual signature for an override; [[FunctionCtx]] defines the fallback when
     * it is absent.

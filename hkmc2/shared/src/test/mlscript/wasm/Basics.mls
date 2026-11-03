@@ -60,20 +60,15 @@ foo() + foo()
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
 //│   (type $foo (func (result (ref null any))))
-//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry (func (result (ref null any))))
-//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
+//│   (type $entry (func (result (ref null i31))))
 //│   (func $foo (export "foo") (type $foo) (result (ref null any))
 //│     (return
 //│       (ref.i31
 //│         (i32.const 42))))
-//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (return
-//│       (call $plus_impl
-//│         (ref.i31
-//│           (i32.const 42))
-//│         (ref.i31
-//│           (i32.const 42)))))
+//│       (ref.i31
+//│         (i32.const 84))))
 //│   (elem $foo declare func $foo)
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
@@ -104,10 +99,11 @@ addOne(41) + useIt(41)
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
 //│   (func $addOne (export "addOne") (type $addOne) (param $x (ref null i31)) (result (ref null any))
 //│     (return
-//│       (call $plus_impl
-//│         (local.get $x)
-//│         (ref.i31
-//│           (i32.const 1)))))
+//│       (ref.cast (ref null i31)
+//│         (call $plus_impl
+//│           (local.get $x)
+//│           (ref.i31
+//│             (i32.const 1))))))
 //│   (func $useIt (export "useIt") (type $useIt) (param $v (ref null any)) (result (ref null any))
 //│     (return
 //│       (call $addOne

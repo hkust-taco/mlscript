@@ -151,32 +151,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case Ref(sym: BuiltinSymbol) => S(sym)
       case _ => N
 
-  private lazy val wasmBinaryIntrinsicMap: Map[Str, Str] = Map(
-    "+" -> "plus_impl",
-    "-" -> "minus_impl",
-    "*" -> "times_impl",
-    "/" -> "div_impl",
-    "%" -> "mod_impl",
-    "===" -> "eq_impl",
-    "!==" -> "neq_impl",
-    "<" -> "lt_impl",
-    "<=" -> "le_impl",
-    ">" -> "gt_impl",
-    ">=" -> "ge_impl"
-  )
-  private lazy val wasmUnaryIntrinsicMap: Map[Str, Str] = Map(
-    "-" -> "neg_impl",
-    "+" -> "pos_impl",
-    "!" -> "not_impl"
-  )
-  private def wasmIntrinsicPath(sym: BuiltinSymbol): Opt[Path] =
-    if config.target is CompilationTarget.Wasm then
-      val map = sym.arity match
-        case BuiltinSymbol.Arity.Unary => wasmUnaryIntrinsicMap
-        case BuiltinSymbol.Arity.Binary => wasmBinaryIntrinsicMap
-        case BuiltinSymbol.Arity.Variadic => Map.empty[Str, Str]
-      map.get(sym.nme).map(name => State.wasmSymbol.asSimpleRef.selN(Tree.Ident(name)))
-    else N
   private lazy val virtualModuleSymbols: Set[BlockMemberSymbol] =
     val blt = ctx.builtins
     Set(blt.source.bms, blt.js.bms, blt.wasm.bms, blt.debug.bms, blt.annotations.bms)
@@ -998,11 +972,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val sym = ref.sym
     sym match
       case sym: BlockMemberSymbol if virtualModuleSymbols.exists(_ is sym) =>
-        if !((sym is ctx.builtins.wasm.bms) && (config.target is CompilationTarget.Wasm)) then
-          return fail:
-            ErrorReport(
-              msg"Module '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used directly" -> ref.toLoc ::
-              Nil, S(ref), source = Diagnostic.Source.Compilation)
+        return fail:
+          ErrorReport(
+            msg"Module '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used directly" -> ref.toLoc ::
+            Nil, S(ref), source = Diagnostic.Source.Compilation)
       case sym if sym.asCls.exists(ctx.builtins.virtualClasses) =>
         return fail:
           ErrorReport(
@@ -1243,9 +1216,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             msg"Builtin '${sym.nme}' is not a unary operator" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg): ar =>
-          val target = wasmIntrinsicPath(sym)
-            .getOrElse(sym.asSimpleRef.withLocOf(ref))
-          k(Call(target, (Arg(N, ar) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
+          k(Call(sym.asSimpleRef.withLocOf(ref), (Arg(N, ar) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
         if !sym.binary then raise:
           ErrorReport(
@@ -1276,9 +1247,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case State.orSymbol => mkBooleanMatch(false)
           case _ =>
             subTerm_nonTail(arg2): ar2 =>
-              val target = wasmIntrinsicPath(sym)
-                .getOrElse(sym.asSimpleRef.withLocOf(ref))
-              k(Call(target, (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
+              k(Call(sym.asSimpleRef.withLocOf(ref), (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
       case _ => fail:
         ErrorReport(
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
@@ -1333,13 +1302,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case S(SpecialBuiltin.RuntimeIntrinsic(runtimeName)) =>
             return conclude(State.runtimeSymbol.asSimpleRef.selN(Tree.Ident(runtimeName)))
           case S(SpecialBuiltin.WasmIntrinsic) =>
-            val compileTarget = config.target
-            if compileTarget != CompilationTarget.Wasm then return fail:
-              ErrorReport(
-                msg"WebAssembly intrinsics are not available when targeting ${compileTarget.displayName}"
-                  -> t.toLoc :: Nil,
-                source = Diagnostic.Source.Compilation,
-              )
             def wasmIntrinsicSubterm(owner: Opt[InnerSymbol]): Path = owner match
               case S(mod: ModuleOrObjectSymbol) =>
                 if mod is ctx.builtins.wasm.module then
@@ -2033,9 +1995,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case S(Variadic(variadicParam, trailing @ (_ :: _))) =>
       val (required, optional) = ps.params.splitAt(ps.leadingRequiredCount)
       val argsSym = loweredParams.restParam.get.sym
-      // * The WebAssembly backend rejects variadic parameters (see `wasm.text.genFuncBody`) and lacks
-      // * the JavaScript runtime functions used to extract the arguments, so the body is not generated.
-      if config.target is CompilationTarget.Wasm then return (loweredParams, _ => compError)
       val args = argsSym.asSimpleRef
       def int(n: Int): Path = Value.Lit(Tree.IntLit(n))(N)
       val tupleSlice = State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("Tuple"), State.tupleSymbol)

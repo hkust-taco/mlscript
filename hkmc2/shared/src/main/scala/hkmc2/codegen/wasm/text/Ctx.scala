@@ -627,16 +627,16 @@ end FunctionCtx
   * parameters and locals for the function declaration. `paramTypes` supplies physical slot types,
   * including any implicit receiver, as in [[FunctionCtx]].
   *
-  * Reports unsupported rest parameters before invoking `mkBody`. Optional fixed parameters retain
+  * Rejects unsupported rest parameters without compiling their bodies. Optional fixed parameters retain
   * their slots: callers supply null for omitted arguments when the slot's type permits it.
   */
-def genFuncBody[T](
+def genFuncBody(
     params: Ls[LoweredParamList],
     thisSym: Opt[InnerSymbol],
     resultType: Opt[ValType],
     loc: Opt[Loc],
     paramTypes: Opt[Seq[ValType]] = N,
-)(mkBody: FunctionCtx ?=> T)(using Ctx, Raise, State): T -> FunctionCtx =
+)(mkBody: FunctionCtx ?=> Vector[Expr])(using Ctx, Raise, State): Vector[Expr] -> FunctionCtx =
   // * Calls pad omitted optional arguments with null to preserve Wasm's fixed arity.
   // * Variadic parameters still need argument packing: binding one as a plain parameter would
   // * pass a single argument rather than an array of the remaining ones.
@@ -647,7 +647,7 @@ def genFuncBody[T](
         msg"Variadic parameters are not supported by the WebAssembly backend." -> p.toLoc.orElse(ps.toLoc) :: Nil,
         source = Diagnostic.Source.Compilation))
   val funcCtx = FunctionCtx(params, thisSym, resultType, loc, paramTypes)
-  val result = mkBody(using funcCtx)
+  val result = if params.exists(_.restParam.nonEmpty) then Vector(unreachable) else mkBody(using funcCtx)
   result -> funcCtx
 
 object Ctx:

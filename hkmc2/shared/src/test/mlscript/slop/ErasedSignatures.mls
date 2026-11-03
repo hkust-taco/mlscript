@@ -54,7 +54,7 @@ specializeCapture("unused", 41)
 //│   return inner²(value, 1)
 //│ };
 //│ define inner as fun inner²(value: Int⁰, n: Int⁰): Int⁰ {
-//│   return (wasm⁰.plus_impl﹖(n, value) as! Int⁰)
+//│   return +⁰(n, value)
 //│ };
 //│ define specializeCapture⁰ as fun specializeCapture¹(unused: Str⁰, value: Int⁰): Int⁰ {
 //│   return inner²(value, 1)
