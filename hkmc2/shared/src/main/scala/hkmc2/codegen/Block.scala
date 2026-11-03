@@ -1408,17 +1408,16 @@ case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: I
   *
   * Invariants:
   * - `value` is not a `Cast`.
-  * - `value` is not `undefined`, which the smart constructor returns unchanged.
-  * - `target` must be a proper subtype of `value`'s erased type. In particular, `value` does not have type
-  *   `Nothing`, which fits every slot without a cast; the Wasm backend asserts this.
+  * - The smart constructor preserves `Nothing`-typed paths, including `undefined`, unchanged.
+  * - Semantic construction narrows to a proper subtype of `value`'s erased type. Substitution can expose a
+  *   `Nothing`-typed operand later; a non-path operand must retain the cast wrapper to fit a path position.
+  *   Backends must evaluate that operand's effects before materializing a value of the target representation.
   */
 case class Cast private(value: Result, target: ErasedValueType, check: Bool)(val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): Cast = if loc == toLoc then this else copy()(loc)
 
 object Cast:
-  /** Builds a cast while collapsing a nested cast and preserving `undefined` unchanged.
-    *
-    * This node is malformed if the target type is not a proper subtype of the value's erased type.
+  /** Builds a cast while collapsing a nested cast and preserving `Nothing`-typed paths unchanged.
     *
     * Collapsing `Cast(Cast(v, T), U)` to `Cast(v, U)` drops the inner test. The `T`-typed intermediate goes with it,
     * so no value is left in a wrongly-typed slot. However, an unchecked failure *can be lost* - if a cast is
@@ -1426,12 +1425,13 @@ object Cast:
     * `State` wherever `Cast` nodes need to be built.
     *
     * Note that explicitly-checked casts are never lost to preserve the semantics of eagerly failing when casts fail.
-    * The exception is a cast of `undefined`, which can inhabit every representation and so never fails.
+    * The exception is a cast of a bottom-typed path, which fits every representation without a test. Returning
+    * that path preserves its effects, including when it is itself a cast to `Nothing`.
     */
   def apply(value: Result, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc]): Path =
     value match
-      case lit @ Value.Lit(Tree.UnitLit(false)) => lit
-      case Cast(inner, _, innerCheck) => new Cast(inner, target, check || innerCheck)(toLoc)
+      case path: Path if path.erasedType.contains(ErasedType.Nothing) => path
+      case Cast(inner, _, innerCheck) => Cast(inner, target, check || innerCheck)(toLoc)
       case _ => new Cast(value, target, check)(toLoc)
 
 case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:

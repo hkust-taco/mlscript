@@ -751,7 +751,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       case ((actual, expected), idx) =>
         if !conformsToSlotType(actual, expected) then report(s"parameter ${idx + 1}", actual, expected)
     val actualResult = declaredResultType(methodDef.sym)
-    if !conformsToSlotType(actualResult, slotInfo.resultType) then
+    // A bottom result places no constraint on the inherited slot; its body materializes undefined in that slot.
+    if !hasBottomResult(methodDef.sym) && !conformsToSlotType(actualResult, slotInfo.resultType) then
       report("result", actualResult, slotInfo.resultType)
   end checkOverrideSignature
 
@@ -860,6 +861,10 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     */
   private def declaredResultType(sym: BlockMemberSymbol)(using Raise): ValType =
     sym.asTrm.flatMap(_.declaredResultType).flatMap(_.wasmType).getOrElse(RefType.anyref)
+
+  /** Bottom has no physical result type of its own; an override can use any inherited result slot. */
+  private def hasBottomResult(sym: BlockMemberSymbol): Bool =
+    ctx.elabCtx.givenIn(sym.asTrm.flatMap(_.declaredResultType).exists(_.canonicalize == ErasedType.Nothing))
 
   /** The physical result slot of the function or method `sym`, whose predeclared signature has the results `declared`.
     * Each `return` is checked against this slot, and falling off the body materializes `undefined` in it.
@@ -1736,7 +1741,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         // The slot carries the *base* declaration's result type, but the resolved method's declared result may be
         // overridden to be narrower. Restore the slot's result value to the resolved method's declared type here -
         // the checked cast ensures that a value that doesn't conform will trap at runtime.
-        val adaptedCall = castConserve(virtualCall, declaredResultType(methodSym), qual.toLoc)
+        // Nothing has no representation to restore: consumers evaluate the call and supply their own value.
+        val adaptedCall = if hasBottomResult(methodSym) then virtualCall
+          else castConserve(virtualCall, declaredResultType(methodSym), qual.toLoc)
         Ls(receiverExpr, adaptedCall)
       case N =>
         val funcTypeInfo = ctx.getTypeInfo_!(ctx.getFuncTypeUse_!(methodSym).typeIdx)
@@ -1744,7 +1751,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         Ls(call(
           funcidx = ctx.getFunc_!(methodSym),
           operands = operands,
-          returnTypes = Seq(Result(declaredResultType(methodSym))),
+          returnTypes = funcTypeInfo.asFunctionType_!.sigType.results,
         ))
     end match
   end lowerClassMethodCall
@@ -2078,11 +2085,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       array.new_fixed(tupleArrayType(mut), tupleValues)
 
     case cast @ Cast(value, target, _) =>
-      // `Nothing` fits every slot without a cast, and the smart constructor returns `undefined` unchanged.
-      softAssert(!isBottom(value), s"cast to `${target.describe}` of an operand of type Nothing")
       target.wasmType match
-        // Nullable storage admits undefined, but an ordinary nominal cast must still reject null.
-        case S(ty @ RefType(_: TypeIdx, _)) => castToValType(value, ty.copy(nullable = false), cast.toLoc)
+        // Substitution can expose a bottom operand whose effects must run before filling the nullable slot.
+        // Ordinary nominal casts still reject null.
+        case S(ty @ RefType(_: TypeIdx, _)) if !isBottom(value) =>
+          castToValType(value, ty.copy(nullable = false), cast.toLoc)
         case S(ty) => castToValType(value, ty, cast.toLoc)
         case N =>
           target.canonicalize match
@@ -2875,7 +2882,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       // Compile the entry function under a dedicated local scope so that any temp locals introduced
       // during codegen (e.g., via `local.tee`) are declared in the entry function.
       val entryType = ctx.elabCtx.givenIn(Block.returnType(p.main).map(_.canonicalize))
-      val entrySlot = entryType.flatMap(_.wasmType)
+      // A bottom-typed entry still exports an anyref result. Give returns that slot before lowering their
+      // operands, which can have another representation underneath a cast to Nothing.
+      val entrySlot = entryType match
+        case S(ErasedType.Nothing) => S(RefType.anyref)
+        case _ => entryType.flatMap(_.wasmType)
       val (entryBody, entryFnCtx) = genFuncBody(Nil, thisSym = N, resultType = entrySlot, loc = N):
         functionBody(p.main)
 

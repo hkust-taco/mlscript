@@ -18,3 +18,13 @@ fun untypedTodo(): Nothing = untypedFail("todo")
 :re
 untypedTodo()
 //│ ═══[RUNTIME ERROR] Error: todo
+
+
+// Removing a cast of a bottom-typed temporary after inlining must retain the throwing call in JS too.
+:re
+open annotations
+private class CastTarget()
+@noInline private fun bottomForCast(): Nothing = throw Error("bottom cast")
+@inline private fun narrowBottom(value: Any): CastTarget = value
+narrowBottom(bottomForCast())
+//│ ═══[RUNTIME ERROR] Error: bottom cast

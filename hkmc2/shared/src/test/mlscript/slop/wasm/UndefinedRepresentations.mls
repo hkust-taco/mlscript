@@ -312,3 +312,80 @@ private fun discardI32(value: Int32): Int = 42
 discardI32(claimNothing())
 //│ Wasm result:
 //│ = 42
+
+
+// Inlining a narrowing function can expose a Nothing-typed temporary under its checked cast.
+// Keep the bottom call's effects without requiring a non-null value for the cast target.
+:soir
+:expect 42
+private class BottomCastTarget()
+let bottomCastCalls = 0
+@noInline private fun bottomForCast(): Nothing =
+  set bottomCastCalls = bottomCastCalls + 1
+  unsafe.undefined
+@inline private fun narrowBottom(value: Any): BottomCastTarget = value
+narrowBottom(bottomForCast())
+bottomCastCalls + 41
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @noInline @private
+//│ define bottomForCast⁰ as fun bottomForCast¹() {
+//│   let tmp;
+//│   set tmp = wasm⁰.plus_impl﹖(bottomCastCalls⁰, 1);
+//│   set bottomCastCalls⁰ = tmp;
+//│   return undefined
+//│ };
+//│ @inline @private
+//│ define narrowBottom⁰ as fun narrowBottom¹(value) {
+//│   return (value as! BottomCastTarget⁰)
+//│ };
+//│ @private
+//│ define BottomCastTarget¹ as class BottomCastTarget⁰ {
+//│   constructor BottomCastTarget²
+//│ };
+//│ set bottomCastCalls⁰ = 0;
+//│ do bottomForCast¹();
+//│ return wasm⁰.plus_impl﹖(bottomCastCalls⁰, 41)
+//│ Wasm result:
+//│ = 42
+
+
+// Inlining through Nothing must retain the bottom boundary when the operand has a scalar representation.
+:soir
+:expect 42
+private class ScalarCastTarget()
+@inline private fun narrowScalarBottom(value: Any): ScalarCastTarget = value
+@inline private fun scalarBottom(): Nothing = wasm.i32.const(7)
+narrowScalarBottom(scalarBottom())
+42
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline @private
+//│ define narrowScalarBottom⁰ as fun narrowScalarBottom¹(value) {
+//│   return (value as! ScalarCastTarget⁰)
+//│ };
+//│ @inline @private
+//│ define scalarBottom⁰ as fun scalarBottom¹() {
+//│   return (wasm⁰.i32⁰.const⁰(7) as! Nothing)
+//│ };
+//│ @private
+//│ define ScalarCastTarget¹ as class ScalarCastTarget⁰ {
+//│   constructor ScalarCastTarget²
+//│ };
+//│ do (wasm⁰.i32⁰.const⁰(7) as! Nothing);
+//│ return 42
+//│ Wasm result:
+//│ = 42
+
+
+// A bottom-typed entry still needs its physical reference result slot before lowering an inlined scalar cast.
+// The returned value is unspecified; validation and execution must succeed.
+:soir
+@inline private fun entryBottom(): Nothing = wasm.i32.const(7)
+entryBottom()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline @private
+//│ define entryBottom⁰ as fun entryBottom¹() {
+//│   return (wasm⁰.i32⁰.const⁰(7) as! Nothing)
+//│ };
+//│ return (wasm⁰.i32⁰.const⁰(7) as! Nothing)
+//│ Wasm result:
+//│ = null

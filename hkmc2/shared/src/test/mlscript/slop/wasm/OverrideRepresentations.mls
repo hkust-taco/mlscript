@@ -45,6 +45,32 @@ readNumber(NumberChild())
 //│ = 42
 
 
+// Nothing-returning overrides share the inherited scalar result slot. Calls through either declaration,
+// including a direct super call, must preserve effects even when their result has no semantic representation.
+:noInline
+:expect 42
+let bottomOverrideCalls = 0
+private class ScalarBase() with
+  open fun read(): Int32 = wasm.i32.const(1)
+private class BottomChild() extends ScalarBase() with
+  open override fun read(): Nothing =
+    set bottomOverrideCalls = bottomOverrideCalls + 1
+    unsafe.undefined
+private class BottomGrandchild() extends BottomChild() with
+  override fun read(): Nothing = super.read()
+private fun readScalarBase(receiver: ScalarBase): Int32 = receiver.read()
+private fun readBottomChild(receiver: BottomChild): Nothing = receiver.read()
+private fun ignoreBottomI64(value: Int64): Int = 0
+readScalarBase(BottomChild())
+readBottomChild(BottomChild())
+BottomChild().read()
+BottomGrandchild().read()
+ignoreBottomI64(BottomChild().read())
+bottomOverrideCalls + 37
+//│ Wasm result:
+//│ = 42
+
+
 // An optional override additionally accepts a missing argument on direct subclass calls.
 // Its default-capable representation must still fit the required base slot.
 :ge
