@@ -1,7 +1,5 @@
 package hkmc2
 
-import scala.collection.mutable
-
 import org.scalatest.{funsuite, Args, ParallelTestExecution, Status}
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 import os.up
@@ -58,12 +56,6 @@ object DiffTestRunner:
     /** Whether runs on this state elaborate the modules their tests import before starting them. */
     def warmsUpImports: Bool = true
     
-    // * The artifact obtained for each warmed-up path, with the diagnostics raised while obtaining it.
-    // * `warmUpImports` writes it before a run starts its tests, which read it on other runner instances
-    // * (see `ParallelTestExecution`). Comparing artifacts tells a file elaborated anew, whose diagnostics
-    // * replace the recorded ones, from a cached artifact, which raises none when it is obtained again.
-    private val warmUps = scala.collection.concurrent.TrieMap.empty[os.Path, (Opt[AnyRef], Ls[Str])]
-    
     /** Elaborates the Prelude and the modules imported by the diff tests `files` in `cctx`, before
       * these tests start.
       *
@@ -73,41 +65,33 @@ object DiffTestRunner:
       * timed out on slow CI runners while `LazyArray.mls` was being elaborated, and stopping its thread
       * discarded that elaboration, so that the next test importing it timed out too.
       *
-      * The compile tests check that library modules elaborate without diagnostics. Any raised here are
-      * recorded, and the tests importing the module report them (see `warmUpDiagnostics`).
+      * The tests importing a module do not see the diagnostics raised while elaborating it here, so the
+      * warm-up prints them. The compile tests fail on them.
       */
     def warmUpImports(files: Iterable[os.Path]): Unit =
       import java.util.concurrent.{Callable, Executors}
       import scala.jdk.CollectionConverters.*
       val start = System.currentTimeMillis()
       val modules = files.iterator.flatMap(importedModules).toList.distinct.sortBy(_.toString)
-      def warmUp[A <: AnyRef](path: os.Path)(obtain: (TL, Raise) ?=> A): Opt[A] =
-        val diagnostics = mutable.Buffer.empty[Str]
+      // * Modules are warmed up in parallel; synchronizing each report keeps its lines together.
+      val report = ReportFormatter(System.out.println, dir, colorize = true, wrap = S(body => this.synchronized(body)))
+      def warmUp[A](path: os.Path)(obtain: (TL, Raise) ?=> A): Opt[A] =
         given DebugPrinter = new DebugPrinter(N)
         given TL = TraceLogger.silent
-        given Raise = d =>
-          diagnostics += d.toString
-          ()
-        val artifact =
-          try S(obtain) catch case err: Throwable =>
-            diagnostics += s"Uncaught $err"
-            N
-        if !artifact.exists(a => warmUps.get(path).exists(_._1.exists(_ eq a))) then
-          warmUps(path) = (artifact, diagnostics.toList)
-        artifact
+        given Raise = report.mkRaise(path)
+        try S(obtain) catch case err: Throwable =>
+          this.synchronized:
+            System.err.println(s"Uncaught exception while warming up ${path.relativeTo(dir)}:")
+            err.printStackTrace()
+          N
       warmUp(preludePath)(cctx.getPrelude(preludePath)).foreach: prelude =>
         // * Modules sharing a dependency wait on its path lock, as tests importing them would.
         val tasks = modules.map[Callable[Unit]]: module =>
-          () => warmUp(module)(cctx.getElaboratedBlock(module, prelude.ctx)).fold(())(_ => ())
+          () => warmUp(module)(cctx.getElaboratedBlock(module, prelude.ctx)): Unit
         val pool = Executors.newFixedThreadPool(Runtime.getRuntime.availableProcessors)
         try pool.invokeAll(tasks.asJava) finally pool.shutdown()
       println(s"Warmed up the Prelude and ${modules.size} imported module(s) in ${
         System.currentTimeMillis() - start} ms")
-    
-    /** The diagnostics recorded by `warmUpImports` for the Prelude and the modules that `file` imports. */
-    def warmUpDiagnostics(file: os.Path): Ls[Str] =
-      (preludePath :: importedModules(file)).flatMap: path =>
-        warmUps.get(path).toList.flatMap(_._2).map(d => s"${path.relativeTo(dir)}: $d")
     
     // To be overridden in subproject-specific State classes
     def testDir: os.Path = dir
@@ -218,11 +202,6 @@ class DiffTestRunnerBase(val state: DiffTestRunner.State) extends TimeOutTests:
       val dm = createDiffMaker(file, preludePath, predefPath, relativeName)
       
       dm.run()
-      
-      // * The warm-up elaborated the modules that this test shares with others, so report their diagnostics.
-      val importDiagnostics = warmUpDiagnostics(file)
-      if importDiagnostics.nonEmpty then
-        fail(s"Diagnostics while elaborating imported modules:" + importDiagnostics.map("\n\t" + _).mkString)
       
       if dm.failures.nonEmpty then
         fail(s"Unexpected test outcome(s) at: " +
