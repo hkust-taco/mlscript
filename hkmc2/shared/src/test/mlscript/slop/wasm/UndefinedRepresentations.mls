@@ -294,10 +294,21 @@ takeI32(wasm.i32.const(3))
 //│ = 3
 
 
-// A valueless break gives its label the result undefined, without any unsafe operation in the source.
-// The Wasm backend materializes that result as a null reference in the unannotated result slot.
+// A valueless break gives its label the Unit result, like a plain `do` block.
 :noInline
 fun breakWithoutValue() = do lbl: lbl.break
 breakWithoutValue()
 //│ Wasm result:
-//│ = null
+//│ = {}
+
+
+// Narrowing a value of unknown representation to Nothing is a cast. An unboxed slot receiving the cast's
+// result materializes an unspecified value, which this test discards.
+:noInline
+:expect 42
+private fun unknownResult() = 1
+private fun claimNothing(): Nothing = unknownResult()
+private fun discardI32(value: Int32): Int = 42
+discardI32(claimNothing())
+//│ Wasm result:
+//│ = 42

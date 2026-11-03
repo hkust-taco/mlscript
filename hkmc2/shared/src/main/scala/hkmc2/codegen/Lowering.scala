@@ -1186,7 +1186,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case st.Break(label, result, value) =>
       value match
         case S(v) => term(v)(r => Assign(result, r, Break(label)))
-        case N => Assign(result, Value.Lit(Tree.UnitLit(false))(trm.toLoc), Break(label))
+        // * A valueless break makes the label's result Unit, like a plain `do` block. Using `undefined` would let
+        // * safe code read an unspecified value.
+        case N => Assign(result, unit, Break(label))
     case st.Continue(label) =>
       Continue(label)
     case st.Asc(lhs, rhs) =>

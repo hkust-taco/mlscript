@@ -10,11 +10,11 @@ todo()
 //│ ═══[RUNTIME ERROR] Error: todo
 
 
-// A value of unknown representation cannot be narrowed to Nothing, even when the
-// unannotated callee never returns.
-:ge
+// A value of unknown representation narrows to Nothing through a cast. This lets a Nothing-annotated
+// function return the result of an unannotated function that always throws.
 fun untypedFail(msg) = throw Error(msg)
 fun untypedTodo(): Nothing = untypedFail("todo")
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Nothing'
-//│ ║  l.+2: 	fun untypedTodo(): Nothing = untypedFail("todo")
-//│ ╙──      	                             ^^^^^^^^^^^^^^^^^^^
+
+:re
+untypedTodo()
+//│ ═══[RUNTIME ERROR] Error: todo

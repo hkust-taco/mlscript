@@ -28,7 +28,7 @@ let dup2 = "dup"
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tuple (ref null any))
-//│     (block
+//│     (block (result (ref null any))
 //│       (global.set $dup1
 //│         (call $mlx_str_from_utf16
 //│           (ref.i31

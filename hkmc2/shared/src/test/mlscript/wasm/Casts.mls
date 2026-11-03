@@ -27,7 +27,7 @@ useBox(id(new Box(42)))
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Box_init (type $Box_init) (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))
-//│     (block
+//│     (block (result (ref $Box))
 //│       (struct.set $Box $v
 //│         (local.get $this)
 //│         (local.get $v))
@@ -36,7 +36,7 @@ useBox(id(new Box(42)))
 //│           (local.get $this)))))
 //│   (func $Box_ctor (export "Box") (type $Box_ctor) (param $v (ref null i31)) (result (ref $Box))
 //│     (local $this (ref $Box))
-//│     (block
+//│     (block (result (ref $Box))
 //│       (local.set $this
 //│         (struct.new $Box
 //│           (global.get $Box_typeinfo)
@@ -53,12 +53,11 @@ useBox(id(new Box(42)))
 //│   (func $useBox (export "useBox") (type $useBox) (param $b (ref null $Box)) (result (ref null i31))
 //│     (return
 //│       (struct.get $Box $v
-//│         (ref.cast (ref $Box)
-//│           (local.get $b)))))
+//│         (local.get $b))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref null $Box))
 //│     (local $tmp1 (ref null any))
-//│     (block
+//│     (block (result (ref null i31))
 //│       (local.set $tmp
 //│         (call $Box_ctor
 //│           (ref.i31
@@ -156,7 +155,9 @@ wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
 //│ ║  l.+1: 	wasm.ref.i31(id(wasm.i32.const(7)))
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ║  l.+1: 	wasm.ref.i31(id(wasm.i32.const(7)))
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] Operand #1 of wasm intrinsic 'ref.i31' must be of type 'Int32'
 
 

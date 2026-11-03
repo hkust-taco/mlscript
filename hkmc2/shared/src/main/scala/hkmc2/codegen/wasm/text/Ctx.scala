@@ -510,6 +510,9 @@ object FunctionCtx:
   *   The implicit `this` parameter symbol if this function is generated from a non-static method, or `N` otherwise.
   * @param resultType
   *   The physical result slot in which undefined returns must materialize a value.
+  * @param loc
+  *   The location of the function's definition, which locates a result-type error for a return that has no
+  *   location of its own, such as one introduced by an optimization.
   * @param paramTypes
   *   Physical types for parameter slots, with the receiver first when `thisSym` is present. Slots
   *   without an entry derive their type from the parameter symbol. Methods pass their registered
@@ -519,6 +522,7 @@ class FunctionCtx(
     _params: Ls[LoweredParamList],
     thisSym: Opt[InnerSymbol],
     val resultType: Opt[ValType],
+    val loc: Opt[Loc],
     paramTypes: Opt[Seq[ValType]] = N,
 )(using Ctx, Raise, State):
 
@@ -630,6 +634,7 @@ def genFuncBody[T](
     params: Ls[LoweredParamList],
     thisSym: Opt[InnerSymbol],
     resultType: Opt[ValType],
+    loc: Opt[Loc],
     paramTypes: Opt[Seq[ValType]] = N,
 )(mkBody: FunctionCtx ?=> T)(using Ctx, Raise, State): T -> FunctionCtx =
   // * Calls pad omitted optional arguments with null to preserve Wasm's fixed arity.
@@ -641,7 +646,7 @@ def genFuncBody[T](
       raise(ErrorReport(
         msg"Variadic parameters are not supported by the WebAssembly backend." -> p.toLoc.orElse(ps.toLoc) :: Nil,
         source = Diagnostic.Source.Compilation))
-  val funcCtx = FunctionCtx(params, thisSym, resultType, paramTypes)
+  val funcCtx = FunctionCtx(params, thisSym, resultType, loc, paramTypes)
   val result = mkBody(using funcCtx)
   result -> funcCtx
 

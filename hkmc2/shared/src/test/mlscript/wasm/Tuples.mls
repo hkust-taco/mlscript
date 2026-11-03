@@ -58,7 +58,7 @@ c.[3]
 //│   (global $c (export "c") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tuple (ref null any))
-//│     (block
+//│     (block (result (ref null any))
 //│       (global.set $c
 //│         (array.new_fixed $TupleArray 4
 //│           (ref.i31

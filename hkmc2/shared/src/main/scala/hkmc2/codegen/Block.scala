@@ -1409,7 +1409,8 @@ case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: I
   * Invariants:
   * - `value` is not a `Cast`.
   * - `value` is not `undefined`, which the smart constructor returns unchanged.
-  * - `target` must be a proper subtype of `value`'s erased type.
+  * - `target` must be a proper subtype of `value`'s erased type. In particular, `value` does not have type
+  *   `Nothing`, which fits every slot without a cast; the Wasm backend asserts this.
   */
 case class Cast private(value: Result, target: ErasedValueType, check: Bool)(val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): Cast = if loc == toLoc then this else copy()(loc)
@@ -1425,6 +1426,7 @@ object Cast:
     * `State` wherever `Cast` nodes need to be built.
     *
     * Note that explicitly-checked casts are never lost to preserve the semantics of eagerly failing when casts fail.
+    * The exception is a cast of `undefined`, which can inhabit every representation and so never fails.
     */
   def apply(value: Result, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc]): Path =
     value match

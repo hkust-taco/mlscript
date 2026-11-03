@@ -24,7 +24,7 @@ let i = 0 in
 //│     (local $i (ref null any))
 //│     (local $scrut (ref null any))
 //│     (local $tmp (ref null any))
-//│     (block
+//│     (block (result (ref null any))
 //│       (local.set $i
 //│         (ref.i31
 //│           (i32.const 0)))
@@ -142,7 +142,7 @@ tailMatchAllValue(1)
 //│   (type $tailMatchAllValue (func (param $x (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null i31))))
 //│   (func $tailMatchAllValue (export "tailMatchAllValue") (type $tailMatchAllValue) (param $x (ref null any)) (result (ref null any))
-//│     (block
+//│     (block (result (ref null any))
 //│       (block $match
 //│         (if
 //│           (i32.eq
@@ -171,7 +171,7 @@ tailMatchAllValue(1)
 //│             (i32.const 30))))
 //│       (unreachable)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
-//│     (block
+//│     (block (result (ref null i31))
 //│       (block $match
 //│         (if
 //│           (i32.eq

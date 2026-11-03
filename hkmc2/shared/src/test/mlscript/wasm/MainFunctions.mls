@@ -36,7 +36,7 @@ throw x
 //│   (tag $mlx_exn (export "mlx_exn") (type $mlx_exn))
 //│   (global $x (export "x") (mut (ref null any)) (ref.null any))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (block
+//│     (block (result (ref null any))
 //│       (global.set $x
 //│         (ref.i31
 //│           (i32.const 2)))

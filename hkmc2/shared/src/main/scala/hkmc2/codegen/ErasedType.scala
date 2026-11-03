@@ -319,8 +319,12 @@ object ErasedType:
       // * it - not even widened into the top type.
       case (_: Incompatible, _) | (_, _: Incompatible) => N
       case (Nothing, _) => S(false)
-      // * Bottom has no representation into which an ordinary value could be narrowed.
-      case (_, Nothing) => N
+      // * Bottom lies below every representable type, so narrowing to it is a downcast like `Unknown -> T`.
+      // * No ordinary value has type `Nothing`, so the cast is only reached by values that break their
+      // * annotation; it usually guards code that never runs, such as the result of a call to an unannotated
+      // * function that always throws. Backends do not test it: the cast has type `Nothing`, so its consumers
+      // * materialize an unspecified value of their own representation.
+      case (_, Nothing) => S(true)
       case (Primitive(a), Primitive(b)) => if a == b then S(false) else N
       // * A primitive is compatible only with the same primitive in either direction.
       case (Primitive(_), _) | (_, Primitive(_)) => N

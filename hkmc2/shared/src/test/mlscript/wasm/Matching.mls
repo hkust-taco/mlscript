@@ -60,7 +60,7 @@ if Bar(true) is
 //│     (i32.const 2)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Bar_init (type $Bar_init) (param $this (ref $Bar)) (param $y (ref null any)) (result (ref $Bar))
-//│     (block
+//│     (block (result (ref $Bar))
 //│       (struct.set $Bar $y
 //│         (local.get $this)
 //│         (local.get $y))
@@ -69,7 +69,7 @@ if Bar(true) is
 //│           (local.get $this)))))
 //│   (func $Bar_ctor (export "Bar") (type $Bar_ctor) (param $y (ref null any)) (result (ref $Bar))
 //│     (local $this (ref $Bar))
-//│     (block
+//│     (block (result (ref $Bar))
 //│       (local.set $this
 //│         (struct.new $Bar
 //│           (global.get $Bar_typeinfo)
@@ -81,7 +81,7 @@ if Bar(true) is
 //│       (return
 //│         (local.get $this))))
 //│   (func $Baz_init (type $Baz_init) (param $this (ref $Baz)) (param $z (ref null any)) (result (ref $Baz))
-//│     (block
+//│     (block (result (ref $Baz))
 //│       (struct.set $Baz $z
 //│         (local.get $this)
 //│         (local.get $z))
@@ -90,7 +90,7 @@ if Bar(true) is
 //│           (local.get $this)))))
 //│   (func $Baz_ctor (export "Baz") (type $Baz_ctor) (param $z (ref null any)) (result (ref $Baz))
 //│     (local $this (ref $Baz))
-//│     (block
+//│     (block (result (ref $Baz))
 //│       (local.set $this
 //│         (struct.new $Baz
 //│           (global.get $Baz_typeinfo)
@@ -110,7 +110,7 @@ if Bar(true) is
 //│     (local $currentTypeInfo1 (ref null any))
 //│     (local $targetTypeInfo1 (ref null any))
 //│     (local $typeInfoMatch1 (ref null i31))
-//│     (block
+//│     (block (result (ref null any))
 //│       (local.set $scrut
 //│         (call $Bar_ctor
 //│           (ref.i31
@@ -163,7 +163,7 @@ if Bar(true) is
 //│                   (block
 //│                     (local.set $arg$Bar$0$
 //│                       (struct.get $Bar $y
-//│                         (ref.cast (ref $Bar)
+//│                         (ref.cast (ref null $Bar)
 //│                           (local.get $scrut))))
 //│                     (block $match1
 //│                       (if
@@ -226,7 +226,7 @@ if Bar(true) is
 //│                 (block $arm
 //│                   (return
 //│                     (struct.get $Baz $z
-//│                       (ref.cast (ref $Baz)
+//│                       (ref.cast (ref null $Baz)
 //│                         (local.get $scrut)))))))))
 //│         (return
 //│           (ref.i31

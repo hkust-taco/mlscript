@@ -102,12 +102,12 @@ FieldChild().x
 //│   (import "repl" "FieldChild_typeinfo" (global $FieldChild_typeinfo (ref $FieldChild_typeinfo)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref null any))
-//│     (block
+//│     (block (result (ref null i31))
 //│       (local.set $tmp
 //│         (call $FieldChild_FieldChild))
 //│       (return
 //│         (struct.get $FieldChild $x
-//│           (ref.cast (ref $FieldChild)
+//│           (ref.cast (ref null $FieldChild)
 //│             (local.get $tmp))))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
