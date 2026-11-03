@@ -280,6 +280,15 @@ never live inference bounds. Applied type-argument counts are recorded when the
 application is interpreted so dependency summaries do not depend on observation
 order.
 
+Deferred transport and type-view caches project retained instances before
+choosing their keys, using this same support analysis. Otherwise an independent
+arm of `A | ()` would get a fresh observation graph for every instance of `A`,
+and an irrelevant ambient binding would create a distinct contextual reference
+before `InstanceShape` removed that binding. Unknown forward dependencies retain
+the whole environment; known dependencies include transitive instance-site
+requirements even when their bounds have not yet arrived. This projection
+changes neither scope paths nor activation environments.
+
 Activation environments are not projected: they select which body's events a
 listener accepts, independently of what the delivered value can observe.
 

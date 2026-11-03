@@ -1342,7 +1342,10 @@ class NewResolver:
     * Member lookup still merges record intersections, so cache the two kinds of
     * observation separately and retain the choice through deferred references.
     */
-  private def listenTypeViews(tpe: DeclaredType, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit =
+  private def listenTypeViews(input: DeclaredType, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit =
+    // Formula arms can inherit instances that only another arm reads. Project
+    // before caching so those ambient activations share one observation graph.
+    val tpe = projectType(input)
     // Equal types can be observed through different input-only arguments. Reuse
     // their semantic host, but report this observation's witness rather than the
     // parameter declaration retained by the host's first subscriber.
@@ -1767,7 +1770,10 @@ class NewResolver:
       markCarrier.exit(previous).exit(marks) match
         case Marked(_, NoMarks) => base
         case Marked(_, path: SomeMarks) =>
-          val reference = ContextualType(base, path :: Nil)
+          // Project before interning: doing so only when creating InstanceShape
+          // leaves a distinct node for every irrelevant ambient substitution.
+          // Unknown dependencies retain all entries, including future site bounds.
+          val reference = ContextualType(projectType(base), path :: Nil)
           rctx.state.contextualTypes.getOrElseUpdate(reference, {
             val resolution = new TypeResolution(base.resolution.source, base.resolution.fail)
             resolution.publish(TypeShape.Contextual(reference))
