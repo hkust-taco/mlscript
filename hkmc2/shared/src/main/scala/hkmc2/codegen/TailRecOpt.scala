@@ -298,7 +298,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       if param.flags.opt then
         val slot = TempSymbol(N, initErasedType = param.sym.erasedType, "optionalArg")
         prefix = prefix.scopedVars(Set(slot)).chain(rest =>
-          OptionalParams.bindFromTuple(tupleSym.asSimpleRef, index, slot, true, rest))
+          OptionalParams.bindFromTuple(tupleSym.asSimpleRef, index, slot, S(index + 1), rest))
         slot.asSimpleRef
       else DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(N)
     

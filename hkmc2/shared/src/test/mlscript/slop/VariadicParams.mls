@@ -54,24 +54,22 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let h;
 //│ h = function h(x, ...args7) {
-//│   let y7, z2, xs7, w, inlinedVal12, inlinedVal13, tmp14, tmp15, tmp16;
-//│   tmp16 = 1 + args7.length;
-//│   runtime.checkArgs("h", 2, tmp16);
-//│   tmp15 = args7.length - 1;
-//│   inlinedVal12 = runtime.safeCall(args7.slice(0, tmp15));
-//│   if (runtime.Tuple.isArrayLike(inlinedVal12) && inlinedVal12.length >= 1) {
-//│     y7 = inlinedVal12.at(0);
+//│   let y7, z2, xs7, w, inlinedVal12, tmp14, tmp15;
+//│   tmp15 = 1 + args7.length;
+//│   runtime.checkArgs("h", 2, tmp15);
+//│   if (runtime.Tuple.isArrayLike(args7) && args7.length >= 2) {
+//│     y7 = args7.at(0);
 //│   } else {
 //│     y7 = null;
 //│   }
-//│   if (runtime.Tuple.isArrayLike(inlinedVal12) && inlinedVal12.length >= 2) {
-//│     z2 = inlinedVal12.at(1);
+//│   if (runtime.Tuple.isArrayLike(args7) && args7.length >= 3) {
+//│     z2 = args7.at(1);
 //│   } else {
 //│     z2 = null;
 //│   }
 //│   tmp14 = args7.length - 1;
-//│   inlinedVal13 = runtime.safeCall(args7.slice(2, tmp14));
-//│   xs7 = inlinedVal13 /* as! Array */;
+//│   inlinedVal12 = runtime.safeCall(args7.slice(2, tmp14));
+//│   xs7 = inlinedVal12 /* as! Array */;
 //│   w = args7.at(-1);
 //│   return globalThis.Object.freeze([ x, y7, z2, xs7, w ])
 //│ };
