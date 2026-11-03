@@ -203,6 +203,51 @@ class TypeRelationTest extends AnyFunSuite:
     assert((target.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(h.state.allocatedTypeInstanceCount == 0)
 
+  test("nullable open record views do not multiply across call-site round trips"):
+    // Each of n incoming records must return through its own call site. Moving
+    // its entry marks into the fields before returning creates n squared record
+    // candidates. Diff tests cannot measure this growth or listener saturation.
+    for count <- List(2, 8, 16) do
+      val h = new Harness
+      import h.given
+      val (argument, at) = h.parameter("Argument")
+      val (element, et) = h.parameter("Element")
+      val field = RcdField.signature(Term.Lit(Tree.StrLit("value")), Term.UnitVal())
+      val source: Term.Rcd = Term.Rcd(false, List(field))
+      val record = RecordTypeShape(Map("value" -> et), Map.empty)(source, Map("value" -> field))
+      val nullable = h.tpe(TypeShape.Union(at.resolution, h.tpe(TypeShape.Unit).resolution))
+      val boundary = ResolutionBoundary(TermSymbol(Fun, N, Tree.Ident("forward")))
+      val sites = List.fill(count)(FlowSymbol.app())
+      val returned = new TermShapeHost
+      h.resolver.listenInstanceViews(h.resolver.instanceShape(nullable)):
+        case value @ Marked(_: RecordTypeShape, _) => sites.foreach: site =>
+          value.exit(ExitMark(boundary, S(site), NoMarks)) match
+            case result: TermShape => returned.publish(result)
+            case NoShape => ()
+        case _ => ()
+      val inputs = sites.map(site => MarkedShape.enter(record, boundary, S(site)))
+      inputs.foreach(h.resolver.publishParameter(argument, _))
+      withClue(s"$count call sites: "):
+        assert(returned.currentShapes.size == 1)
+      val listeners = argument.inferenceHost.listeners.size
+      (1 to 100).foreach: _ =>
+        inputs.foreach(h.resolver.publishParameter(argument, _))
+      assert(returned.currentShapes.size == 1)
+      assert(argument.inferenceHost.listeners.size == listeners)
+      // The shared result remains open: a field bound published after every
+      // round trip must reach an already installed member observation.
+      val fields = ArrayBuffer.empty[TermShape]
+      returned.listen: value =>
+        value.getMember("value") match
+          case MemberLookup.Typed(_, tpe, marks) =>
+            h.resolver.listenInstanceViews(h.resolver.instanceShape(h.resolver.transportType(tpe, marks)))(fields += _)
+          case _ => fail("Expected a declared record field")
+      assert(fields.isEmpty)
+      val late = DynShape()
+      h.resolver.publishParameter(element, late)
+      assert(fields.toList == List(late))
+      assert(h.state.allocatedTypeInstanceCount == 0)
+
   test("recursive structural projections preserve bounds and reuse their listeners"):
     val h = new Harness
     import h.given

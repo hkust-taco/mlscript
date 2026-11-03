@@ -1376,6 +1376,10 @@ class NewResolver:
             // A cycle that reaches a component again ends at its cached host, so
             // the component starts without the `aliases` of this observation.
             def conjunction(remaining: Ls[DeclaredType], values: Ls[TermShape])(using ResolutionContext): Unit = remaining match
+              // A singleton clause already has its complete view. Rebuilding a
+              // record would move its outer marks into every field and prevent
+              // subsequent scope crossings from filtering the whole candidate.
+              case head :: Nil if values.isEmpty => listenTypeViews(head, mergeIntersections)(publish)
               case head :: tail => listenTypeViews(head, mergeIntersections): value =>
                 conjunction(tail, value :: values)
               case Nil => intersectViews(values.reverse)(publish)
