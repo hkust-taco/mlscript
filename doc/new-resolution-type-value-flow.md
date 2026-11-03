@@ -59,6 +59,17 @@ instead observes each component independently, including through aliases, type
 parameters, and inference holes. The type-view cache distinguishes these two
 observations so inferred arguments cannot change the interface of an annotation.
 
+Opaque declared types expose an empty member interface. An intersection can use
+members supplied by its other components, and an opaque wildcard-open contributes
+no candidates. A union still requires each alternative to provide the selected
+member. The `()` type exposes the same Unit shape as its literal, retaining that
+literal as the diagnostic witness through aliases and scope transport.
+
+An empty declared interface makes no claim about runtime fields. Record spreads
+of opaque values remain unknown overwrite barriers, and unresolved inferred values
+retain their uncertainty. Neither may silently reveal an earlier field or remove
+a potentially competing wildcard-open candidate.
+
 A `DeclaredType` contains:
 
 - A source `TypeResolution` node.

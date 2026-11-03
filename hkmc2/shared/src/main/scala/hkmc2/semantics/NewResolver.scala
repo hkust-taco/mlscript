@@ -1542,7 +1542,13 @@ class NewResolver:
                 clauses.foreach: clause =>
                   conjunction(formula.orderedAtoms.filter(clause).map(_.instantiate(current.instances)).toList, Nil)
               case TypeShape.Negation(_) => publish(OpaqueTypeShape(source)(TypeInterfaceReason.Negated(current.resolution.source)))
-              case TypeShape.Unit | TypeShape.Abstract =>
+              case TypeShape.Unit =>
+                // Unit interpretations originate at a literal; alias captures
+                // can forward that interpretation with the capture as its source.
+                current.resolution.source.withoutCaptures match
+                  case unit: UnitVal => listenTerm(unit)(publish)
+                  case _ => lastWords("A Unit type interpretation must retain its literal source")
+              case TypeShape.Abstract =>
                 publish(OpaqueTypeShape(source)(TypeInterfaceReason.Unavailable(current.resolution.source)))
         withCanonicalType(tpe)(follow(_, noTypeArguments, Set.empty, tpe.resolution.source, host.publish))
 

@@ -887,17 +887,20 @@ enum TypeInterfaceReason:
       case AbstractDeclaration(_, source) => result.withTypeOrigin(source)
       case _ => result
 
-/** A type view that authorizes no member operations. The diagnostic reason is
-  * excluded from the semantic key so alternative witnesses do not add inference flow.
+/** A declared type with an empty member interface. Lookup contributes no candidates
+  * to intersections or wildcard opens; hidden runtime fields remain inaccessible.
+  * Spreading such a value can still overwrite fields, so record spreads retain
+  * their separate unknown-value barrier. The diagnostic reason is excluded from
+  * the semantic key so alternative witnesses do not add inference flow.
   */
 final class OpaqueTypeShape(val source: Term)(val reason: TypeInterfaceReason) extends CoreHeadShape:
   override def isSelfContained: Bool = true
-  def describe: Str = "value with no known interface"
+  def describe: Str = "value with an empty interface"
   override def toString: Str = s"OpaqueTypeShape($source)"
   def toLoc: Opt[Loc] = source.toLoc
   def provenance: ShapeProvenance = reason.provenance
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
-    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, false, provenance)
+    MemberLookup.Missing
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadShape:
   /** Instance lookup is shared by constructor calls and explicit `new`.
