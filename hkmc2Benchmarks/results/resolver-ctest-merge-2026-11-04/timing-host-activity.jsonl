@@ -1,0 +1,62 @@
+{"time": "2026-11-04T21:53:53.791011+08:00", "benchmark_cpu": 0.0, "other_cpu": 41.0, "other_active": []}
+{"time": "2026-11-04T21:54:08.819801+08:00", "benchmark_cpu": 100.7, "other_cpu": 9.4, "other_active": []}
+{"time": "2026-11-04T21:54:23.848691+08:00", "benchmark_cpu": 98.9, "other_cpu": 14.5, "other_active": []}
+{"time": "2026-11-04T21:54:38.878576+08:00", "benchmark_cpu": 101.5, "other_cpu": 211.0, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 207.8, "program": "java"}]}
+{"time": "2026-11-04T21:54:53.905126+08:00", "benchmark_cpu": 100.1, "other_cpu": 52.1, "other_active": []}
+{"time": "2026-11-04T21:55:08.934986+08:00", "benchmark_cpu": 101.9, "other_cpu": 19.9, "other_active": []}
+{"time": "2026-11-04T21:55:23.965229+08:00", "benchmark_cpu": 100.1, "other_cpu": 38.0, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 24.2, "program": "java"}]}
+{"time": "2026-11-04T21:55:38.994972+08:00", "benchmark_cpu": 99.2, "other_cpu": 8.1, "other_active": []}
+{"time": "2026-11-04T21:55:54.024149+08:00", "benchmark_cpu": 98.0, "other_cpu": 6.3, "other_active": []}
+{"time": "2026-11-04T21:56:09.053401+08:00", "benchmark_cpu": 98.6, "other_cpu": 9.9, "other_active": []}
+{"time": "2026-11-04T21:56:24.082753+08:00", "benchmark_cpu": 99.6, "other_cpu": 140.0, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 125.6, "program": "java"}]}
+{"time": "2026-11-04T21:56:39.112056+08:00", "benchmark_cpu": 101.3, "other_cpu": 19.3, "other_active": []}
+{"time": "2026-11-04T21:56:54.141201+08:00", "benchmark_cpu": 99.8, "other_cpu": 18.8, "other_active": []}
+{"time": "2026-11-04T21:57:09.171862+08:00", "benchmark_cpu": 99.2, "other_cpu": 14.2, "other_active": []}
+{"time": "2026-11-04T21:57:24.200947+08:00", "benchmark_cpu": 100.1, "other_cpu": 402.4, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 393.2, "program": "java"}]}
+{"time": "2026-11-04T21:57:39.231263+08:00", "benchmark_cpu": 100.7, "other_cpu": 5.7, "other_active": []}
+{"time": "2026-11-04T21:57:54.261992+08:00", "benchmark_cpu": 98.2, "other_cpu": 25.7, "other_active": []}
+{"time": "2026-11-04T21:58:09.291666+08:00", "benchmark_cpu": 99.7, "other_cpu": 21.6, "other_active": []}
+{"time": "2026-11-04T21:58:24.323847+08:00", "benchmark_cpu": 99.5, "other_cpu": 163.5, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 152.7, "program": "java"}]}
+{"time": "2026-11-04T21:58:39.353189+08:00", "benchmark_cpu": 99.7, "other_cpu": 4.9, "other_active": []}
+{"time": "2026-11-04T21:58:54.382358+08:00", "benchmark_cpu": 100.2, "other_cpu": 39.8, "other_active": []}
+{"time": "2026-11-04T21:59:09.411917+08:00", "benchmark_cpu": 100.1, "other_cpu": 31.6, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 23.8, "program": "java"}]}
+{"time": "2026-11-04T21:59:24.442954+08:00", "benchmark_cpu": 99.4, "other_cpu": 39.0, "other_active": [{"pid": 594, "ppid": 1, "cpu": 17.5, "program": "WindowServer"}]}
+{"time": "2026-11-04T21:59:39.473444+08:00", "benchmark_cpu": 100.3, "other_cpu": 16.599999999999998, "other_active": []}
+{"time": "2026-11-04T21:59:54.503434+08:00", "benchmark_cpu": 100.2, "other_cpu": 20.900000000000002, "other_active": [{"pid": 594, "ppid": 1, "cpu": 10.3, "program": "WindowServer"}]}
+{"time": "2026-11-04T22:00:09.533781+08:00", "benchmark_cpu": 99.6, "other_cpu": 120.39999999999999, "other_active": [{"pid": 594, "ppid": 1, "cpu": 10.4, "program": "WindowServer"}, {"pid": 6349, "ppid": 1, "cpu": 103.8, "program": "java"}]}
+{"time": "2026-11-04T22:00:24.565170+08:00", "benchmark_cpu": 98.9, "other_cpu": 12.9, "other_active": []}
+{"time": "2026-11-04T22:00:39.594692+08:00", "benchmark_cpu": 98.7, "other_cpu": 6.2, "other_active": []}
+{"time": "2026-11-04T22:00:54.614923+08:00", "benchmark_cpu": 99.2, "other_cpu": 12.5, "other_active": []}
+{"time": "2026-11-04T22:01:09.646377+08:00", "benchmark_cpu": 100.1, "other_cpu": 405.20000000000005, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 399.1, "program": "java"}]}
+{"time": "2026-11-04T22:01:24.676066+08:00", "benchmark_cpu": 98.3, "other_cpu": 2.4, "other_active": []}
+{"time": "2026-11-04T22:01:39.705139+08:00", "benchmark_cpu": 100.8, "other_cpu": 8.4, "other_active": []}
+{"time": "2026-11-04T22:01:54.735063+08:00", "benchmark_cpu": 98.9, "other_cpu": 26.6, "other_active": []}
+{"time": "2026-11-04T22:02:09.771830+08:00", "benchmark_cpu": 98.1, "other_cpu": 61.0, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 39.2, "program": "java"}]}
+{"time": "2026-11-04T22:02:24.802291+08:00", "benchmark_cpu": 100.2, "other_cpu": 19.4, "other_active": []}
+{"time": "2026-11-04T22:02:39.832223+08:00", "benchmark_cpu": 99.8, "other_cpu": 17.2, "other_active": []}
+{"time": "2026-11-04T22:02:54.862236+08:00", "benchmark_cpu": 98.5, "other_cpu": 49.2, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 33.0, "program": "java"}]}
+{"time": "2026-11-04T22:03:09.892272+08:00", "benchmark_cpu": 101.7, "other_cpu": 19.099999999999998, "other_active": []}
+{"time": "2026-11-04T22:03:24.921432+08:00", "benchmark_cpu": 98.8, "other_cpu": 22.4, "other_active": []}
+{"time": "2026-11-04T22:03:39.950870+08:00", "benchmark_cpu": 98.7, "other_cpu": 31.0, "other_active": []}
+{"time": "2026-11-04T22:03:54.980612+08:00", "benchmark_cpu": 99.0, "other_cpu": 166.89999999999998, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 134.2, "program": "java"}]}
+{"time": "2026-11-04T22:04:10.011052+08:00", "benchmark_cpu": 99.2, "other_cpu": 30.2, "other_active": []}
+{"time": "2026-11-04T22:04:25.041674+08:00", "benchmark_cpu": 99.1, "other_cpu": 25.6, "other_active": []}
+{"time": "2026-11-04T22:04:40.071555+08:00", "benchmark_cpu": 99.4, "other_cpu": 30.0, "other_active": []}
+{"time": "2026-11-04T22:04:55.102820+08:00", "benchmark_cpu": 98.3, "other_cpu": 358.5, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 324.9, "program": "java"}]}
+{"time": "2026-11-04T22:05:10.132471+08:00", "benchmark_cpu": 96.9, "other_cpu": 21.0, "other_active": []}
+{"time": "2026-11-04T22:05:25.162433+08:00", "benchmark_cpu": 101.7, "other_cpu": 41.9, "other_active": [{"pid": 26855, "ppid": 26461, "cpu": 16.2, "program": "Codex (Renderer)"}]}
+{"time": "2026-11-04T22:05:40.197297+08:00", "benchmark_cpu": 99.1, "other_cpu": 28.2, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 13.0, "program": "java"}]}
+{"time": "2026-11-04T22:05:55.232491+08:00", "benchmark_cpu": 100.0, "other_cpu": 18.6, "other_active": []}
+{"time": "2026-11-04T22:06:10.263419+08:00", "benchmark_cpu": 100.6, "other_cpu": 20.7, "other_active": []}
+{"time": "2026-11-04T22:06:25.294781+08:00", "benchmark_cpu": 100.1, "other_cpu": 20.900000000000002, "other_active": []}
+{"time": "2026-11-04T22:06:40.324886+08:00", "benchmark_cpu": 99.0, "other_cpu": 84.10000000000001, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 55.1, "program": "java"}]}
+{"time": "2026-11-04T22:06:55.354598+08:00", "benchmark_cpu": 98.0, "other_cpu": 24.7, "other_active": []}
+{"time": "2026-11-04T22:07:10.384047+08:00", "benchmark_cpu": 99.1, "other_cpu": 21.599999999999998, "other_active": []}
+{"time": "2026-11-04T22:07:25.413636+08:00", "benchmark_cpu": 99.8, "other_cpu": 21.6, "other_active": []}
+{"time": "2026-11-04T22:07:40.443259+08:00", "benchmark_cpu": 100.3, "other_cpu": 246.0, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 217.3, "program": "java"}]}
+{"time": "2026-11-04T22:07:55.473782+08:00", "benchmark_cpu": 100.2, "other_cpu": 18.1, "other_active": []}
+{"time": "2026-11-04T22:08:10.504374+08:00", "benchmark_cpu": 98.4, "other_cpu": 19.4, "other_active": []}
+{"time": "2026-11-04T22:08:25.535071+08:00", "benchmark_cpu": 99.0, "other_cpu": 25.099999999999998, "other_active": []}
+{"time": "2026-11-04T22:08:40.569469+08:00", "benchmark_cpu": 98.1, "other_cpu": 311.2, "other_active": [{"pid": 6349, "ppid": 1, "cpu": 293.5, "program": "java"}]}
+{"time": "2026-11-04T22:08:55.599532+08:00", "benchmark_cpu": 97.9, "other_cpu": 18.5, "other_active": []}
+{"time": "2026-11-04T22:09:10.630159+08:00", "benchmark_cpu": 98.5, "other_cpu": 18.7, "other_active": []}

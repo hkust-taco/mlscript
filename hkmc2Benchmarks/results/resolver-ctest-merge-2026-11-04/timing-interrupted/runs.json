@@ -1,0 +1,20 @@
+[
+  {
+    "fork": 0,
+    "build_index": 1,
+    "phase": "01",
+    "name": "00-phase-01-fork-0",
+    "started": "2026-11-04T21:43:55.669867+08:00",
+    "elapsed_seconds": 178.81985395797528,
+    "returncode": 0
+  },
+  {
+    "fork": 0,
+    "build_index": 0,
+    "phase": "00",
+    "name": "01-phase-00-fork-0",
+    "started": "2026-11-04T21:46:54.587885+08:00",
+    "elapsed_seconds": 197.0557769589359,
+    "returncode": 0
+  }
+]

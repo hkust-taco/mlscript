@@ -1,0 +1,7 @@
+{
+  "status": "interrupted",
+  "reason": "Concurrent Scala CLI Bloop JVM PID 6349 observed at 380.5% CPU while the benchmark JVM used 99.0%; do not use this attempt for controlled timing estimates.",
+  "observed_competitor_cwd": "/Users/parreaux/Library/Caches/ScalaCli/bloop",
+  "restart_policy": "Restart all timing forks after competing work is idle; retain this attempt as audit data.",
+  "recorded_at": "2026-11-04T21:50:17.209886+08:00"
+}

@@ -1,0 +1,107 @@
+{
+  "created": "2026-11-04T21:41:18.296597+08:00",
+  "harness_revision": "173fb9cd4dcbc538f76fc8c1f9bb589cfafe04dc",
+  "jvm": "java version \"21.0.8\" 2025-07-15 LTS\nJava(TM) SE Runtime Environment (build 21.0.8+12-LTS-250)\nJava HotSpot(TM) 64-Bit Server VM (build 21.0.8+12-LTS-250, mixed mode, sharing)",
+  "platform": "macOS-26.7.1-arm64-arm-64bit-Mach-O",
+  "jvm_flags": [
+    "-Xms1g",
+    "-Xmx1g",
+    "-Xss8m",
+    "-XX:ActiveProcessorCount=1",
+    "-XX:+UseSerialGC",
+    "-Xbatch",
+    "-XX:MarkSweepAlwaysCompactCount=1"
+  ],
+  "warmups": 0,
+  "samples": 0,
+  "forks": 3,
+  "mode": "heap",
+  "heap_samples": 1,
+  "test_order": "sorted names, sequential ScalaTest run without Distributor",
+  "active_processors": 1,
+  "physical_cpu_affinity": "not pinned; macOS scheduler controls core placement",
+  "background_jit": false,
+  "suite": "every hkmc2.CompileTestRunner case, fresh CompilerCtx per batch",
+  "builds": [
+    {
+      "phase": "00",
+      "revision": "control-namespace-upstream-20261104",
+      "label": "Namespace-only control + hkmc2",
+      "sha256": "091a8dd20fb71343535bfb124030ab5af6496895fe0bbbb2852610bb701995b9",
+      "compiler_source_sha256": "57f757b03809b164a9c3099a6edf9cd0f11e111790d90715967d50c3faecb893",
+      "upstream_revision": "6a2b58bff0e56ccba907a72fdafad4ac4c89feae",
+      "jar": "/private/tmp/resolver-merge-20261104/builds/phase-00.jar"
+    },
+    {
+      "phase": "01",
+      "revision": "173fb9cd4dcbc538f76fc8c1f9bb589cfafe04dc",
+      "label": "Retained cleanups + hkmc2",
+      "sha256": "a757378e140260a2ff4a94e66bcc07b4663d2cf8ea5beb6878399b1b04d60305",
+      "compiler_source_sha256": "a97b6bd741a9211509e08db9cb32b03b65258bd6eca81df7766b46e7e2fc4b5a",
+      "upstream_revision": "6a2b58bff0e56ccba907a72fdafad4ac4c89feae",
+      "jar": "/private/tmp/resolver-merge-20261104/builds/phase-01.jar"
+    }
+  ],
+  "schedule": [
+    {
+      "fork": 0,
+      "build_index": 1,
+      "phase": "01"
+    },
+    {
+      "fork": 0,
+      "build_index": 0,
+      "phase": "00"
+    },
+    {
+      "fork": 1,
+      "build_index": 1,
+      "phase": "01"
+    },
+    {
+      "fork": 1,
+      "build_index": 0,
+      "phase": "00"
+    },
+    {
+      "fork": 2,
+      "build_index": 1,
+      "phase": "01"
+    },
+    {
+      "fork": 2,
+      "build_index": 0,
+      "phase": "00"
+    }
+  ],
+  "common_archives": [
+    {
+      "classpath_index": 0,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/hkmc2Benchmarks/target/scala-3.8.4/test-classes",
+      "file": "common-00.jar",
+      "sha256": "6aff7cd38de521febe44f33d4c546993cf877a132a43554c47a7d7b12671532a"
+    },
+    {
+      "classpath_index": 3,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/core/jvm/target/scala-2.13/classes",
+      "file": "common-03.jar",
+      "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+    },
+    {
+      "classpath_index": 4,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/hkmc2DiffTests/target/scala-3.8.4/test-classes",
+      "file": "common-04.jar",
+      "sha256": "1b85e88108c02e93a87f6e3d2cd5b0d1167fab6e5bdbb9bca64c4c0f7334ece6"
+    },
+    {
+      "classpath_index": 6,
+      "source": "/Users/parreaux/work/Research/code/mlscript-forks/hkmc2/jvm/target/scala-3.8.4/test-classes",
+      "file": "common-06.jar",
+      "sha256": "eb452471919cfd299c0db84a8c4bfabac49c22938b96c10ab244c8f18595bab3"
+    }
+  ],
+  "mls_corpus_sha256": "e37cf231ecdfec9e7eff04306dc5bc8e670c9a76f0a25408db35aa8f0fbc946e",
+  "allocation_api": "com.sun.management.ThreadMXBean.getTotalThreadAllocatedBytes (all JVM threads)",
+  "heap_method": "heap-pool collection snapshots after fully compacting GC with context held, then released; weak-reference check",
+  "measurement_gc": "natural for timing; explicit full compaction for separate heap batches"
+}
