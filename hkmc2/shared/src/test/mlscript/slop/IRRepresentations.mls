@@ -29,26 +29,12 @@ checked
 //│ = 43
 //│ checked = 43
 
-// TODO: The variadic prologue assigns tuple reads and slices to typed slots without coercing them.
-// A missing value annotation denotes Unknown, so the checker must report the missing casts.
-:fixme
+// Variadic extraction narrows dynamic tuple reads before assigning typed parameter slots.
 :checkIR
 :noOpt
 :expect 42
 fun extractedLast(...middle: Array[Any], last: Int): Int = last
 extractedLast(1, 42)
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'middle'
-//│ ║  l.+1: 	fun extractedLast(...middle: Array[Any], last: Int): Int = last
-//│ ║        	                     ^^^^^^
-//│ ╟── The value has type 'Unknown', but its destination requires 'Array'
-//│ ║  l.+1: 	fun extractedLast(...middle: Array[Any], last: Int): Int = last
-//│ ╙──      	                     ^^^^^^
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'last'
-//│ ║  l.+1: 	fun extractedLast(...middle: Array[Any], last: Int): Int = last
-//│ ║        	                                         ^^^^
-//│ ╟── The value has type 'Unknown', but its destination requires 'Int'
-//│ ║  l.+1: 	fun extractedLast(...middle: Array[Any], last: Int): Int = last
-//│ ╙──      	                                         ^^^^
 //│ = 42
 
 // Missing body-result information and undefined do not prove an incompatible representation.

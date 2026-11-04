@@ -20,7 +20,7 @@ hi(0)
 //│   let scrut, tmp1, curDepth;
 //│   runtime.checkDepth();
 //│   if (runtime.curEffect === null) {
-//│     curDepth = runtime.stackDepth + 1;
+//│     curDepth = runtime.stackDepth /* as! Int */ + 1;
 //│     scrut = n === 0;
 //│     if (scrut === true) {
 //│       return 0
@@ -57,12 +57,12 @@ sum(10000)
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     pc = runtime.resumePc;
+//│     pc = runtime.resumePc /* as! Int */;
 //│     runtime.resumePc = -1;
 //│   }
 //│   runtime.checkDepth();
 //│   if (runtime.curEffect === null) {
-//│     curDepth = runtime.stackDepth + 1;
+//│     curDepth = runtime.stackDepth /* as! Int */ + 1;
 //│     switch (pc) {
 //│       case 0:
 //│         scrut = n === 0;

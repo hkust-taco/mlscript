@@ -21,7 +21,7 @@ fun asynchronous() = 2
 //│ asynchronous = function asynchronous() {
 //│   let tmp;
 //│   tmp = asynchronous1();
-//│   return runtime.toJsAsync(tmp)
+//│   return runtime.toJsAsync(tmp) /* as! Promise */
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

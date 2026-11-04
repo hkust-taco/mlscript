@@ -41,7 +41,7 @@ updateInitialized(40)
 //│ deforest > 	fields: box⁰.value¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let updateInitialized$updateInitialized, updateInitialized$box_MutableInputBox, updateInitialized$box_rest, updateInitialized$box_MutableInputBox1, updateInitialized$box_rest1;
+//│ let updateInitialized$box_MutableInputBox, updateInitialized$box_rest, updateInitialized$box_MutableInputBox1, updateInitialized$box_rest1, updateInitialized$updateInitialized;
 //│ @private @noInline
 //│ define updateInitialized$updateInitialized as fun updateInitialized$updateInitialized⁰(n) {
 //│   let current, box, value, arg$MutableInputBox$0$, tmp, MutableInputBox_value;

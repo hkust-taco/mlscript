@@ -40,7 +40,7 @@ hi(0)
 //│     let scrut, tmp2, curDepth;
 //│     runtime.checkDepth();
 //│     if (runtime.curEffect === null) {
-//│       curDepth = runtime.stackDepth + 1;
+//│       curDepth = runtime.stackDepth /* as! Int */ + 1;
 //│       scrut = n === 0;
 //│       if (scrut === true) {
 //│         return 0

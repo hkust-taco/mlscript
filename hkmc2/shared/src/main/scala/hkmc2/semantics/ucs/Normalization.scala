@@ -372,7 +372,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
-              Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym), N)(false)),
+              Case.Cls(objectSym, State.globalThisSymbol.asThis.sel(objectSym)),
               entries.foldRight(lowerSplit(tail, cont)):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
@@ -427,7 +427,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * match failure in the future.
     */
   private def throwMatchErrorBlock(using Config) =
-    Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error), N)(false),
+    Throw(Instantiate(mut = false, State.globalThisSymbol.asThis.sel(ctx.builtins.Error),
         (Value.Lit(syntax.Tree.StrLit("match error"))(N).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, N), // TODO add failed-match scrutinee info
       annotations = if config.aggressive then Annot.Pure()(N) :: Nil else Nil)
 
@@ -496,8 +496,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         outerCtx.collectScopedSym(res)
         res
       // * The loop function takes one empty parameter list and returns either a body result or Runtime.LoopEnd.
-      lazy val tSym = TermSymbol.fromFunBms(f, N,
-        erasedSignature = S(codegen.ErasedFuncSignature.Signature(paramLists = Nil :: Nil, result = codegen.ErasedResult.Direct(N))))
+      lazy val loopSignature = FunDefn.Signature.fromParams(codegen.LoweredParamList.plain(Nil)(N) :: Nil, codegen.ErasedResult.Direct(N))
+      lazy val tSym = TermSymbol(syntax.Fun, N, Tree.Ident(f.nme), S(loopSignature.erasure))
       val normalized = tl.scoped("ucs:normalize"):
         normalize(inputSplit)(using VarSet())
       tl.scoped("ucs:normalized"):
@@ -555,9 +555,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =
-              Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol), N)(false)
+              State.runtimeSymbol.asSimpleRef.sel(State.loopEndSymbol)
             val blk = blockBuilder
-              .define(FunDefn(N, f, tSym, codegen.LoweredParamList.plain(Nil)(N) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
+              .define(FunDefn(N, f, tSym, loopSignature, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
               .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, N))
             if summon[LoweringCtx].mayRet then
               blk

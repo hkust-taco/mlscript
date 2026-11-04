@@ -19,7 +19,7 @@ abstract class FlowAnalysisSolverResult:
 end FlowAnalysisSolverResult
 
 
-type RewrittenFunDefn = (params: Ls[LoweredParamList], body: Block, annotations: Ls[Annot])
+type RewrittenFunDefn = (signature: FunDefn.Signature, body: Block, annotations: Ls[Annot])
 
 
 abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolver):
@@ -34,7 +34,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   
   // the rewriter for the program as seen from `instId`: in place if `refreshSymbolMappingForCopy` is `N`,
   // otherwise into a copy whose symbols are refreshed by the map
-  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]]): Rewriter
+  def mkRewriter(instId: InstantiationId, refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]]): Rewriter
   
   // the rewriter for the main block, which may change fun defns in place
   def mkRootRewriter(rewrittenInPlace: Map[TermSymbol, RewrittenFunDefn]): Rewriter
@@ -42,8 +42,9 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   // definitions this rewrite introduces besides the specialized copies
   def otherNewFunDefns: Iterable[FunDefn]
   
-  // Rewrites that remove parameters must keep the copied symbol's erased signature in sync.
-  def specializedSignature(fun: TermSymbol, instId: InstantiationId, sig: ErasedFuncSignature): ErasedFuncSignature = sig
+  // Complete signatures after parameter removal or eta expansion. Copied and in-place definitions
+  // must use the same convention without mutating the source symbol's write-once signature.
+  def rewrittenSignatures: Map[(InstantiationId, TermSymbol), FunDefn.Signature]
   // ====== the abstract members ======
   
   
@@ -55,6 +56,31 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   given pre: FlowPreAnalyzer = constraintSolver.preAnalyzer
   
   
+  private def inPlaceInstId(fun: TermSymbol): InstantiationId =
+    collector.synthesizedInstIdToFunSym.collectFirst:
+      case (instId, f) if f is fun => instId
+    .getOrElse(Nil)
+  
+  protected def signatureAt(instId: InstantiationId, fun: TermSymbol): FunDefn.Signature =
+    rewrittenSignatures.get(instId -> fun).orElse(rewrittenSignatures.get(Nil -> fun))
+      .getOrElse(pre.res.funSymToFunDefn(fun).signature)
+  
+  private lazy val rewrittenFunctionSymbols: Map[TermSymbol, TermSymbol] =
+    pre.res.rootFunDefns.keysIterator.flatMap: sym =>
+      rewrittenSignatures.get(inPlaceInstId(sym) -> sym).collect:
+        case sig if sig.erasure isnt pre.res.funSymToFunDefn(sym).signature.erasure =>
+          sym -> SymbolRefresher.copyTermSymbol(sym, sym.owner, S(sig.erasure))
+    .toMap
+  
+  // Nested definitions can also be rewritten in place; copied bodies override these identities below.
+  private lazy val rewrittenNestedSymbols = rewrittenSignatures.collect:
+    case ((instId, sym), sig) if !pre.res.rootFunDefns.contains(sym)
+      && (sig.erasure isnt pre.res.funSymToFunDefn(sym).signature.erasure) =>
+      (instId -> sym) -> SymbolRefresher.copyTermSymbol(sym, sym.owner, S(sig.erasure))
+  
+  private def nestedSymbolsAt(instId: InstantiationId): Map[TermSymbol, TermSymbol] =
+    rewrittenNestedSymbols.collect { case ((id, sym), rewritten) if id == instId => sym -> rewritten }
+  
   final def apply(): Program =
     if !solvers.exists(_.hasWorkToDo) then pre.pgrm
     else
@@ -62,7 +88,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
       if newBody is pre.pgrm.main then pre.pgrm
       else Program(pre.pgrm.imports, newBody)
   
-  val newPolyFnSyms : LinkedHashMap[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]] =
+  lazy val newPolyFnSyms : LinkedHashMap[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]] =
     val res = LinkedHashMap.empty[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]]
     def funSymsToBeCopiedAt(path: InstantiationId): Iterator[TermSymbol] =
       collector.synthesizedInstIdToFunSym.get(path) match
@@ -80,7 +106,7 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
           val name = path.mkFunName + s"$$${f.nme}"
           f -> (
             new BlockMemberSymbol(name, Nil, true),
-            f.withMappedErasure(Fun, N, Tree.Ident(name))(specializedSignature(f, path, _)))
+            new TermSymbol(Fun, N, Tree.Ident(name), S(signatureAt(path, f).erasure)))
         .toMap
     res
   end newPolyFnSyms
@@ -93,8 +119,8 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
         (referringFun, (bms, tSym)) <- funSymMap.toList.sortBy(_._1.uid)
       yield
         val original = pre.res.funSymToFunDefn(referringFun)
-        val (params, body, annotations) = mkCopyRewriter(instId, original.params, original.body, Map.empty).rewriteFunDefn(original)
-        FunDefn(N, bms, tSym, params, body)(original.configOverride, Annot.Private :: annotations)
+        val (signature, body, annotations) = mkCopyRewriter(instId, signatureAt(instId, referringFun).params, original.body, Map.empty).rewriteFunDefn(original)
+        FunDefn(N, bms, tSym, signature, body)(original.configOverride, Annot.Private :: annotations)
     
     val newFuns = newPolyFuns ++ otherNewFunDefns
     
@@ -114,8 +140,9 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   // the rewriter of a copy of `params` and `body`, which maps symbol defined in `initMapping`
   // and refreshes symbols bound in `body` so that a copy never rebinds an original symbol
   protected final def mkCopyRewriter(instId: InstantiationId, params: Ls[LoweredParamList], body: Block, initMapping: Map[LocalVarSymbol, LocalVarSymbol]): Rewriter =
-    val mapping = MutMap.from(initMapping)
-    val walker = SymbolRefresherWalker(mapping.asInstanceOf)
+    val mapping = MutMap.from[Symbol, Symbol](initMapping)
+    val walker = new SymbolRefresherWalker(mapping):
+      override protected def functionSignature(fun: FunDefn): FunDefn.Signature = signatureAt(instId, fun.dSym)
     params.foreach(walker.refreshParamList)
     walker.applyBlock(body)
     mkRewriter(instId, S(mapping))
@@ -124,8 +151,11 @@ abstract class PolyInstantiationRewrite(val constraintSolver: FlowConstraintSolv
   // rewrites the program as seen from one instantiation path `instId`: in place if `refreshSymbolMappingForCopy` is `N`,
   // otherwise into a copy whose symbols are refreshed by the map
   // helps subclass compute the symbol for the instantiated fun defns
-  protected abstract class InstantiationRewriter(val instId: InstantiationId, val refreshSymbolMappingForCopy: Opt[collection.Map[LocalVarSymbol, LocalVarSymbol]])
-    extends SymbolMapTransformer(refreshSymbolMappingForCopy.getOrElse(Map.empty).asInstanceOf):
+  protected abstract class InstantiationRewriter(val instId: InstantiationId, val refreshSymbolMappingForCopy: Opt[collection.Map[Symbol, Symbol]])
+    extends SymbolMapTransformer(
+      Map.from[Symbol, Symbol](rewrittenFunctionSymbols)
+      ++ nestedSymbolsAt(Nil) ++ nestedSymbolsAt(instId)
+      ++ refreshSymbolMappingForCopy.getOrElse(Map.empty)):
     
     def rewriteFunDefn(fun: FunDefn): RewrittenFunDefn
     

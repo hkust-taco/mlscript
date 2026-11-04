@@ -17,6 +17,7 @@ fun passing(f: Function, ...args) = f.bind(null, ...args)
 fun map[A, B](f: A -> B)(...xs: Array[A]): Array[B] = xs.map(pass1(f))
 
 fun fold[A, B](f: (A, B) -> A)(init: A, ...rest: Array[B]): A =
+  let =init
   let
     i = 0
     len = rest.length

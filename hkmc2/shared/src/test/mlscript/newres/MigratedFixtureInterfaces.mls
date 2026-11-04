@@ -15,7 +15,7 @@ class Box(val value: Int)
 Rendering.render([1, 2]).length
 //│ = 6
 
-// Lazy splices expose indexing and iteration before and after materialization.
+// Lazy collections expose iteration, and materialization guarantees indexing.
 :expect [0, 1, 2, 3]
 [...LazyFingerTree.concat(LazyFingerTree.mk(0, 1), [2, 3])]
 //│ = [0, 1, 2, 3]
@@ -72,13 +72,14 @@ Term.showPattern(Term.LitPattern(unsafe.undefined), termContext)
 //│ = "undefined"
 
 // Shared read interfaces retain element types without invariant Array[Any] annotations.
-:expect [4, 5, 6]
+:expect [4, 5, 6, 7]
 class Item(val value: Int)
 fun firstValue(xs: Indexable[Item]) = xs.at(0).value
 fun iteratedValue(xs: IterableIndexable[Item]) = xs.iterator().next().value.value
 [firstValue([Item(4)]), firstValue(LazyFingerTree.mk(Item(5))),
- iteratedValue(LazyFingerTree.concat([Item(6)]).materialize())]
-//│ = [4, 5, 6]
+ firstValue(LazyFingerTree.concat([Item(6)]).materialize()),
+ iteratedValue(LazyFingerTree.concat([Item(7)]))]
+//│ = [4, 5, 6, 7]
 
 // Iterator is covariant: a more specific iterator remains usable through its base interface.
 :expect 7

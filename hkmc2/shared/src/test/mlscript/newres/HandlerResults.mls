@@ -6,7 +6,7 @@
 // handler aborts: its record, not the rest of the handled body, is the result.
 :fixme
 :expect 42
-abstract class AnswerEffect with
+private abstract class AnswerEffect with
   fun answer()
 fun handled() =
   handle h = AnswerEffect with

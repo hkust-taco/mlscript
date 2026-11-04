@@ -8,34 +8,19 @@ open annotations
 
 // Non-local returns synthesize handlers; their methods and resume symbols are
 // bindings too, even though the transformation's source only contains a closure.
-// TODO: Lifting must add captured parameters to the copied body's erased signature.
-:fixme
 pattern Escaping = x =>
   fun body() =
     let exit = () => return x + 1
     exit()
     0
   body()
-//│ ╔══[INTERNAL ERROR] Invalid IR: parameter lists of 'body' disagree with its erased signature
-//│ ║  l.+2: 	  fun body() =
-//│ ╙──      	      ^^^^
-//│ ╔══[INTERNAL ERROR] Invalid IR: parameter lists of 'body' disagree with its erased signature
-//│ ║  l.+2: 	  fun body() =
-//│ ╙──      	      ^^^^
 
-// TODO: The compiled pattern copies inherit the same stale lifted signature.
-:fixme
+// Compiled pattern copies retain the lifted signature, including captured parameters.
 :noOpt
 fun escaping(x) =
   if x is (@compile Escaping) as first then
     if first is (@compile Escaping) as second then second else 0
   else 0
-//│ ╔══[INTERNAL ERROR] Invalid IR: parameter lists of 'body' disagree with its erased signature
-//│ ║  l.XX: 	  fun body() =
-//│ ╙──      	      ^^^^
-//│ ╔══[INTERNAL ERROR] Invalid IR: parameter lists of 'body' disagree with its erased signature
-//│ ║  l.XX: 	  fun body() =
-//│ ╙──      	      ^^^^
 
 :expect [3, 4]
 [escaping(1), escaping(2)]

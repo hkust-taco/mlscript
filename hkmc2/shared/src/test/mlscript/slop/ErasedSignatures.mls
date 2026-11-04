@@ -37,8 +37,6 @@ specialize("unused", 41)
 
 // Wasm requires lifting the capturing helper. Its parameter types and the specialized caller's return
 // type must survive lifting and specialization so the backend uses the right calling convention.
-// TODO: Lifting must include captured parameters in the lifted function's erased signature.
-:fixme
 :!js
 :wasm
 :lift
@@ -49,9 +47,6 @@ fun specializeCapture(unused: Str, value: Int): Int =
   fun inner(n: Int): Int = n + value
   inner(1)
 specializeCapture("unused", 41)
-//│ ╔══[INTERNAL ERROR] Invalid IR: parameter lists of 'inner' disagree with its erased signature
-//│ ║  l.+2: 	  fun inner(n: Int): Int = n + value
-//│ ╙──      	      ^^^^^
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let inner, specializeCapture$specializeCapture;
 //│ @private
@@ -59,7 +54,7 @@ specializeCapture("unused", 41)
 //│   return inner²(value, 1)
 //│ };
 //│ define inner as fun inner²(value: Int⁰, n: Int⁰): Int⁰ {
-//│   return (wasm⁰.plus_impl﹖(n, value) as! Int⁰)
+//│   return +⁰(n, value)
 //│ };
 //│ define specializeCapture⁰ as fun specializeCapture¹(unused: Str⁰, value: Int⁰): Int⁰ {
 //│   return inner²(value, 1)

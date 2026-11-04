@@ -4,6 +4,7 @@
 // Exhaustive loop branches repeat or return; they never supply a Unit result.
 :expect 42
 private fun loop(flag: Bool): Int32 =
+  let =flag
   while flag
     then set flag = false
     else return wasm.i32.const(42)

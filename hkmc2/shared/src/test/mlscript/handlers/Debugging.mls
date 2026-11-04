@@ -35,8 +35,8 @@ fun f() =
 //│     pc = 0;
 //│   } else {
 //│     let saveOffset;
-//│     pc = runtime.resumePc;
-//│     saveOffset = runtime.resumeIdx;
+//│     pc = runtime.resumePc /* as! Int */;
+//│     saveOffset = runtime.resumeIdx /* as! Int */;
 //│     i = runtime.resumeArr.at(saveOffset);
 //│     saveOffset = saveOffset + 1;
 //│     j = runtime.resumeArr.at(saveOffset);
@@ -61,7 +61,7 @@ fun f() =
 //│         return runtime.Unit
 //│       }
 //│     case 3:
-//│       scrut = runtime.resumeValue;
+//│       scrut = runtime.resumeValue /* as! Bool */;
 //│       if (scrut === true) {
 //│         let inlinedVal1;
 //│         inlinedVal1 = runtime.safeCall(Runtime.mkEffect(Runtime.FatalEffect, null));

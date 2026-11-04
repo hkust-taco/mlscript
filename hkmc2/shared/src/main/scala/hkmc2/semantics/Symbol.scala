@@ -489,6 +489,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def showPrefix(using Scope, ShowCfg, Raise): Str =
     "term:" + owner.map(_.showName + "/").getOrElse("")
   def isExplicitlyPrivate: Bool = defn.exists(_.visibility is Visibility.Private)
+  def isLetOrParamBinding: Bool = (k is LetBind) || (k is ParamBind)
   def isPrivate: Bool =
     // Note: Top-level definitions have no owner and do not use JS private fields;
     //    They are not directly accessible from other modules in source code,
@@ -497,7 +498,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     owner.isDefined &&
       // Refreshed IR symbols have no source definition. Their current definition
       // retains visibility, including after a method is copied by the inliner.
-      ((k is LetBind) || irDefn.fold(isExplicitlyPrivate)(_.visibility is Visibility.Private))
+      (isLetOrParamBinding || irDefn.fold(isExplicitlyPrivate)(_.visibility is Visibility.Private))
   
   /** The erased type of what a reference to this term evaluates to.
     *
@@ -514,18 +515,6 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   def erasedSignature: Opt[ErasedFuncSignature] = erasure match
     case S(sig: ErasedFuncSignature) => S(sig)
     case S(_: ErasedValueType | _: ErasedGetterSignature) | N => N
-  
-  /** Creates a symbol with the same erased type or signature as this one. */
-  def withSameErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)(using State): TermSymbol =
-    withMappedErasure(k, owner, id)(identity)
-  
-  /** Creates a symbol with the same erased type as this one, or its erased signature mapped by `f`. */
-  def withMappedErasure(k: TermDefKind, owner: Opt[InnerSymbol], id: Tree.Ident)
-      (f: ErasedFuncSignature => ErasedFuncSignature)(using State): TermSymbol =
-    val erasure = this.erasure match
-      case S(sig: ErasedFuncSignature) => S(f(sig))
-      case other => other
-    new TermSymbol(k, owner, id, erasure)
   
   /** The complete result behavior. Value slots have a direct result; getters retain
     * their wrapper kind without acquiring a first-class function representation.

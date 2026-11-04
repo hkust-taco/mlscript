@@ -18,6 +18,7 @@ type StackT[A] = Cons[A] | Nil
 module RecursiveDescent with ...
 
 fun parse(tokens) =
+  let =tokens
   fun advance = if tokens is
     Token.Space :: tail then
       set tokens = tail

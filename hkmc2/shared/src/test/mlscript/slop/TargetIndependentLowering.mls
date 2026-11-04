@@ -1,0 +1,90 @@
+:.
+:noOpt
+:noInline
+
+
+// Both backends receive builtin operators in the MIR, including unary operators.
+:soir
+:expect 42
+private fun arithmetic(x: Int, y: Int): Int = -(x + y)
+arithmetic(-40, -2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define arithmetic⁰ as fun arithmetic¹(x, y) {
+//│   let tmp;
+//│   set tmp = +⁰(x, y);
+//│   return -⁰(tmp)
+//│ };
+//│ return arithmetic¹(-40, -2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+:!js
+:wasm
+:soir
+:expect 42
+private fun arithmetic(x: Int, y: Int): Int = -(x + y)
+arithmetic(-40, -2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define arithmetic² as fun arithmetic³(x, y) {
+//│   let tmp;
+//│   set tmp = +⁰(x, y);
+//│   return -⁰(tmp)
+//│ };
+//│ return arithmetic³(-40, -2)
+//│ Wasm result:
+//│ = 42
+
+
+// Both targets lower the trailing-parameter prologue; Wasm rejects its unsupported signature.
+// JS calls the runtime helper that the MIR selection names.
+:js
+:soir
+:sjs
+:expect 3
+fun trailing(x, ...xs, y) = y
+trailing(1, 2, 3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define trailing⁰ as fun trailing¹(x, ...args) {
+//│   let xs, y;
+//│   do runtime⁰.checkVariadicArgs⁰("trailing", 2, 1, args);
+//│   set xs = runtime⁰.Tuple⁰.sliceArray⁰(args, 0, 1);
+//│   set y = args.-1;
+//│   return y
+//│ };
+//│ return trailing¹(1, 2, 3)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let trailing;
+//│ trailing = function trailing(x, ...args) {
+//│   let xs, y;
+//│   runtime.checkVariadicArgs("trailing", 2, 1, args);
+//│   xs = runtime.Tuple.sliceArray(args, 0, 1);
+//│   y = args.at(-1);
+//│   return y
+//│ };
+//│ return trailing(1, 2, 3)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+:!js
+:wasm
+:soir
+:e
+fun trailing(x, ...xs, y) = y
+trailing(1, 2, 3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define trailing² as fun trailing³(x, ...args) {
+//│   let xs, y;
+//│   do runtime⁰.checkVariadicArgs⁰("trailing", 2, 1, args);
+//│   set xs = runtime⁰.Tuple⁰.sliceArray⁰(args, 0, 1);
+//│   set y = args.-1;
+//│   return y
+//│ };
+//│ return trailing³(1, 2, 3)
+//│ ╔══[COMPILATION ERROR] Variadic parameters are not supported by the WebAssembly backend.
+//│ ║  l.+1: 	fun trailing(x, ...xs, y) = y
+//│ ╙──      	            ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] More arguments were supplied than the WebAssembly call supports.
+//│ ║  l.+2: 	trailing(1, 2, 3)
+//│ ╙──      	^^^^^^^^^^^^^^^^^

@@ -34,7 +34,7 @@ class BufferableTransform()(using State, Raise):
                   (sym, VarSymbol(sym.id, erasedType = N, mut = sym.mut))
                 .toMap
               def mapParam(p: Param) =
-                Param(p.flags, varMap(p.sym), p.sign, p.modulefulness)(p.toLoc)
+                Param(p.flags, varMap(p.sym), p.sign, p.modulefulness, p.annotations)(p.toLoc)
               (params.map(pl => LoweredParamList(pl.flags, pl.params.map(mapParam), pl.restParam.map(mapParam))(pl.toLoc)), varMap.toMap)
             def mkFieldReplacer(buf: VarSymbol, baseIdx: VarSymbol, symMap: Map[SimpleSymbol, SimpleSymbol]) =
               def getOffset(off: Int, loc: Opt[Loc])(k: Path => Block): Block =
@@ -78,9 +78,11 @@ class BufferableTransform()(using State, Raise):
               val idx = VarSymbol(new Tree.Ident("idx"), erasedType = S(ErasedType.Int), mut = false)
               val (newParams, symMap) = mkSymbolReplacer(f.params)
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
-              FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id, erasure = N), LoweredParamList.plain(
-                Param.simple(buf) :: Param.simple(idx) :: Nil)(N) :: newParams,
-                if isCtor then Begin(blk, Return(idx.asSimpleRef)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
+              val signature = FunDefn.Signature.fromParams(LoweredParamList.plain(
+                Param.simple(buf) :: Param.simple(idx) :: Nil)(N) :: newParams, ErasedResult.fromAnnotations(N, f.annotations))
+              val dSym = SymbolRefresher.copyTermSymbol(f.dSym, f.owner, S(signature.erasure))
+              FunDefn(f.owner, f.sym, dSym, signature,
+                if isCtor then Begin(blk, Return(idx.asSimpleRef)) else blk)(f.configOverride, f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 

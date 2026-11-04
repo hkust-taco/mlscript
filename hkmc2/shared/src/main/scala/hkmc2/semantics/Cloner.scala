@@ -65,7 +65,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
   private def canonicalType(source: CanonicalErasedValueType): CanonicalErasedValueType = source match
     case ErasedType.AnyRef(rsc, symbol) => ErasedType.AnyRef(rsc, mapType(symbol))
     case ErasedType.Incompatible(left, right) => ErasedType.Incompatible(canonicalType(left), canonicalType(right))
-    case source @ (_: ErasedType.Primitive | ErasedType.Unknown) => source
+    case source @ (_: ErasedType.Primitive | ErasedType.Unknown | ErasedType.Nothing) => source
 
   private def valueType(source: ErasedValueType): ErasedValueType = source match
     case source: CanonicalErasedValueType => canonicalType(source)
@@ -249,7 +249,8 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     Modulefulness(source.msym.map(_.subst))(source.modified)
 
   private def parameter(source: Param): Param =
-    val copy = Param(source.flags, source.sym.subst, source.sign.map(term), modulefulness(source.modulefulness))(source.toLoc)
+    val copy = Param(source.flags, source.sym.subst, source.sign.map(term), modulefulness(source.modulefulness),
+      source.annotations.map(annotation))(source.toLoc)
     copy.fldSym = source.fldSym.map(_.subst)
     copy.sym.decl = S(copy)
     source.fldSym.toList.flatMap:

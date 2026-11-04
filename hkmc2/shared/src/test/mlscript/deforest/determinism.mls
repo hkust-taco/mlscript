@@ -75,7 +75,7 @@ c2 of A(A(A(A(A(A(1))))))
 //│ deforest > 	fields: arg$A$0$⁴.a¹
 //│ deforest > <<< fusing <<<
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2$c2, c2$x_A, c2$x_rest, c2$arg$A$0$_A, c2$arg$A$0$_rest, c2$arg$A$0$_A1, c2$arg$A$0$_rest1, c2$arg$A$0$_A2, c2$arg$A$0$_rest2, c2$arg$A$0$_A3, c2$arg$A$0$_rest3, c2$arg$A$0$_A4, c2$arg$A$0$_rest4, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, c2$x_A, c2$x_rest, c2$arg$A$0$_A, c2$arg$A$0$_rest, c2$arg$A$0$_A1, c2$arg$A$0$_rest1, c2$arg$A$0$_A2, c2$arg$A$0$_rest2, c2$arg$A$0$_A3, c2$arg$A$0$_rest3, c2$arg$A$0$_A4, c2$arg$A$0$_rest4, c2$c2, A_a, A_a1, A_a2, A_a3, A_a4, A_a5;
 //│ @private
 //│ define c2$c2 as fun c2$c2⁰(x) {
 //│   let a, arg$A$0$, arg$A$0$1, arg$A$0$2, arg$A$0$3, arg$A$0$4, arg$A$0$5;

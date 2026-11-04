@@ -30,13 +30,18 @@ object Inheritance:
 
   def isOpen(d: TermDefinition): Bool = d.body.isEmpty || hasModifier(d, Keyword.`open`)
 
+  /** Whether other compilation units may extend `cls`: only `open` and `abstract` classes allow it.
+    * Objects cannot be extended yet, but an `open` object marks the same intent for its members.
+    */
+  def isExtensible(cls: ClassLikeDef): Bool =
+    hasModifier(cls, Keyword.`open`) || hasModifier(cls, Keyword.`abstract`)
+  
   /** Symbol states identify compilation units, including all blocks of a worksheet. Source
     * locations cannot establish this boundary: generated classes may have no source location,
     * and imported aliases must retain the defining class's unit rather than the alias's unit.
     */
   def validateParent(child: ClassLikeDef, parent: ClassLikeDef, site: Term.New)(using Erasure, Raise): Unit =
-    if parent.isInstanceOf[ClassDef] && (parent.sym.getState isnt child.sym.getState) &&
-        !hasModifier(parent, Keyword.`open`) && !hasModifier(parent, Keyword.`abstract`) then
+    if parent.isInstanceOf[ClassDef] && (parent.sym.getState isnt child.sym.getState) && !isExtensible(parent) then
       raise(ErrorReport(
         msg"Cannot extend sealed class '${parent.sym.nme}' outside its compilation unit" -> site.toLoc ::
           (msg"Class '${parent.sym.nme}' is defined here; declare it 'open' or 'abstract' to allow external subclasses" -> parent.toLoc) :: Nil,
@@ -61,6 +66,15 @@ object Inheritance:
           case target :: Nil => S(target)
           case _ => N
 
+  /** Whether an override of `inherited` uses a different kind of definition, such as a `fun` overriding
+    * a `val`, or a `mut val` overriding a `val`. A value is computed once when its object is constructed,
+    * a mutable value can also be reassigned, and a function is evaluated on each access, so a selection
+    * typed through the inherited member would assume the wrong evaluation. Functions with different
+    * parameter lists, including a function without any overriding one with a parameter list, are
+    * rejected by [[codegen.OverrideLayout]]'s parameter list comparison.
+    */
+  def changesMemberKind(td: TermDefinition, inherited: TermDefinition): Bool = td.k != inherited.k
+  
   /** Check only completed edges; an empty list during resolution can still acquire a parent. */
   def validateMember(td: TermDefinition)(using Erasure, Raise): Unit =
     val bases = td.tsym.overriddenMembers
@@ -69,6 +83,10 @@ object Inheritance:
       source = Diagnostic.Source.Compilation))
     if hasModifier(td, Keyword.`override`) && bases.isEmpty then
       fail(msg"Member '${td.tsym.nme}' is marked 'override' but overrides no inherited member", N)
+    // Private members are never overridden: a subclass member with the same name is a distinct member.
+    if hasModifier(td, Keyword.`open`) && td.owner.isDefined && td.tsym.isExplicitlyPrivate then
+      raise(WarningReport(msg"Private member '${td.tsym.nme}' cannot be overridden, so 'open' has no effect" -> td.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation))
     bases.foreach: base =>
       base.defn.foreach: inherited =>
         if !isOpen(inherited) then
@@ -77,8 +95,10 @@ object Inheritance:
           fail(msg"Overriding member '${base.nme}' requires the 'override' modifier", S(base))
         if td.tsym.isPrivate then
           fail(msg"Overriding member '${base.nme}' cannot be private", S(base))
-        // Getter evaluation and method selection have different effects and calling conventions.
-        // A shared target symbol must never cause a getter read to be treated as a pure method value.
-        if !isExternal(td) && (td.k != inherited.k ||
-            td.params.nonEmpty != inherited.params.nonEmpty) then
-          fail(msg"Overriding member '${base.nme}' must preserve whether the member is a field, getter, or method", S(base))
+        if changesMemberKind(td, inherited) then
+          fail(msg"Overriding member '${base.nme}' is a ${td.k.desc}, but the member it overrides is a ${inherited.k.desc}", S(base))
+        // Mixing a data property with an inherited accessor changes initialization and freezing behavior.
+        if (td.k is syntax.MutVal) && (inherited.k is syntax.MutVal) &&
+            td.annotations.exists(_.isInstanceOf[Annot.PlainField]) !=
+              inherited.annotations.exists(_.isInstanceOf[Annot.PlainField]) then
+          fail(msg"Overriding mutable field '${base.nme}' must preserve the @js.plainField annotation", S(base))

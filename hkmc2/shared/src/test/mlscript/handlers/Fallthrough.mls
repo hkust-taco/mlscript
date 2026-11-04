@@ -24,8 +24,8 @@ fun f() =
 //│     pc = 0;
 //│   } else {
 //│     let saveOffset;
-//│     pc = runtime.resumePc;
-//│     saveOffset = runtime.resumeIdx;
+//│     pc = runtime.resumePc /* as! Int */;
+//│     saveOffset = runtime.resumeIdx /* as! Int */;
 //│     tmp = runtime.resumeArr.at(saveOffset);
 //│     runtime.resumePc = -1;
 //│   }

@@ -383,13 +383,15 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
     val sym = f.owner.get.asThis.selSN(genSymName)
 
     // turn into fundefn
-    val dSym = TermSymbol(f.dSym.k, f.dSym.owner, Tree.Ident(f.sym.nme + "_instr"), erasure = N)
+    val dSym = TermSymbol(f.dSym.k, f.dSym.owner, Tree.Ident(f.sym.nme + "_instr"))
     val argSyms = f.params.flatMap(_.params).map(_.sym)
     val newBody = Scoped(Set(argSyms*), transformFunDefn(f)(using new HashMap)(Return(_)))
 
     // TODO: remove it. only for test
     val debug = (k: Block) => call(sym, Nil)(fnPrintCode(_)(k))
-    val newFun = f.copy(sym = genSym, dSym = dSym, params = Ls(LoweredParamList.plain(Nil)(N)), body = newBody)(f.configOverride, f.annotations)
+    val newFun = f.copy(owner = f.owner, sym = genSym, dSym = dSym,
+      signature = FunDefn.Signature.fromParams(Ls(LoweredParamList.plain(Nil)(N)), ErasedResult.fromAnnotations(N, f.annotations)),
+      body = newBody)(f.configOverride, f.annotations)
     (newFun, debug)
 
   override def applyBlock(b: Block): Block = super.applyBlock(b) match

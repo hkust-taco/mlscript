@@ -82,6 +82,12 @@ private fun comma(value) = (;)(0, value)
 [comma(() => 41)(), comma(() => 42)()]
 //│ = [41, 42]
 
+// Disabling cast comments must preserve the same builtin-result resolution.
+:noCastComments
+:expect 42
+(;)(0, () => 42)()
+//│ = 42
+
 // Short-circuiting operators retain both their Boolean and right-operand alternatives.
 :e
 let conjunction = true && {left: 42}

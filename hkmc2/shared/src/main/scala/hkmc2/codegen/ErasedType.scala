@@ -95,10 +95,17 @@ object ErasedType:
     // * No symbol denotes this type: `Anything` is the surface top, which is a different thing.
     override def sym(using Ctx, State): NoSymbol = NoSymbol
 
+  /** The bottom type: a value supplies no constraint on its destination's representation.
+    * `undefined` has this type and can inhabit every representable slot. It does not imply that evaluation
+    * diverges or has no effects; backends must evaluate the operand before materializing an unspecified value.
+    */
+  case object Nothing extends ErasedValueType, CanonicalErasedValueType:
+    override def sym(using Ctx, State): NoSymbol = NoSymbol
+
   /** Two types with no common upper bound.
     *
-    * The erased types form a forest rather than a lattice: an unboxed primitive is a root of its own, so a union
-    * mixing one with a distinct type has nothing to erase to.
+    * Unboxed primitives have no common upper bound with references or other primitives. `Nothing` lies below
+    * every representable type, but a union mixing distinct representations still has nothing to erase to.
     *
     * Writing such a type is not itself an error - the error is raised wherever a value has to be coerced into or
     * out of it, by [[Result.coerceTo]]. Both members are carried so that the diagnostic can name them at that use
@@ -234,14 +241,16 @@ object ErasedType:
       // * conflict worth reporting, rather than whichever type happened to be folded in last.
       case (i: Incompatible, _) => i
       case (_, i: Incompatible) => i
-      // * A primitive is a root of its own: it shares no supertype with any distinct type - the `Unknown` type
+      case (Nothing, tpe) => tpe
+      case (tpe, Nothing) => tpe
+      // * A primitive shares no supertype with any other non-bottom type - the `Unknown` type
       // * included.
       case (_: Primitive, _) | (_, _: Primitive) => Incompatible(lhs, rhs)
       // * The top type absorbs every reference type.
       case (Unknown, _) | (_, Unknown) => Unknown
       // * Two reference types: their nearest common ancestor, at worst `Object`.
       case _ => (lhs.sym, rhs.sym) match
-        // * `Unknown` and `Incompatible` are the only symbol-less canonical types, and both are absorbed above.
+        // * The symbol-less canonical types are handled above.
         case (NoSymbol, _) | (_, NoSymbol) =>
           lastWords(s"no upper bound is defined for '$lhs' and '$rhs'")
         case (l: TypeSymbol, r: TypeSymbol) => CanonicalErasedValueType(rsc = S(false), lubSym(l, r))
@@ -309,6 +318,13 @@ object ErasedType:
       // * A type with no upper bound has no representation of its own, so nothing can be coerced into or out of
       // * it - not even widened into the top type.
       case (_: Incompatible, _) | (_, _: Incompatible) => N
+      case (Nothing, _) => S(false)
+      // * Bottom lies below every representable type, so narrowing to it is a downcast like `Unknown -> T`.
+      // * No ordinary value has type `Nothing`, so the cast is only reached by values that break their
+      // * annotation; it usually guards code that never runs, such as the result of a call to an unannotated
+      // * function that always throws. Backends do not test it: the cast has type `Nothing`, so its consumers
+      // * materialize an unspecified value of their own representation.
+      case (_, Nothing) => S(true)
       case (Primitive(a), Primitive(b)) => if a == b then S(false) else N
       // * A primitive is compatible only with the same primitive in either direction.
       case (Primitive(_), _) | (_, Primitive(_)) => N
@@ -316,7 +332,7 @@ object ErasedType:
       case (_, Unknown) => S(false)
       case (Unknown, _) => S(true)
       case (da, de) => (da.sym, de.sym) match
-        // * `Unknown` and `Incompatible` are the only symbol-less canonical types, and both are decided above.
+        // * The symbol-less canonical types are handled above.
         case (NoSymbol, _) | (_, NoSymbol) =>
           lastWords(s"no cast is defined from '$da' to '$de'")
         case (a: TypeSymbol, e: TypeSymbol) =>
@@ -370,8 +386,8 @@ sealed trait Canonicalizable:
 sealed abstract class ErasedValueType extends Canonicalizable:
   type Canonical <: CanonicalErasedValueType
 
-  /** The symbol denoting this erased type, or `NoSymbol` for [[ErasedType.Union]], [[ErasedType.Unknown]] and
-    * [[ErasedType.Incompatible]].
+  /** The symbol denoting this erased type, or `NoSymbol` for [[ErasedType.Union]], [[ErasedType.Unknown]],
+    * [[ErasedType.Nothing]], and [[ErasedType.Incompatible]].
     */
   def sym(using Ctx, State): TypeSymbol | NoSymbol
 
@@ -390,6 +406,7 @@ sealed abstract class ErasedValueType extends Canonicalizable:
       ownerOf(s).fold(s.nme :: acc)(o => qualify(o, s.nme :: acc))
     canonicalize match
       case ErasedType.Unknown => "Unknown"
+      case ErasedType.Nothing => "Nothing"
       case ErasedType.Incompatible(l, r) => s"‹incompatible(${l.describe}, ${r.describe})›"
       case cet => cet.sym match
         case NoSymbol => lastWords(s"no name is defined for '$cet'")
@@ -420,6 +437,12 @@ enum ErasedResult[+T <: ErasedValueType](val bodyType: Opt[T]):
     case Generator(tpe) => Generator(tpe.map(f))
 end ErasedResult
 
+object ErasedResult:
+  def fromAnnotations(bodyType: Opt[ErasedValueType], annotations: Ls[semantics.Annot]): ErasedResult[ErasedValueType] =
+    if annotations.exists(_.isInstanceOf[semantics.Annot.Async]) then Async(bodyType)
+    else if annotations.exists(_.isInstanceOf[semantics.Annot.Generator]) then Generator(bodyType)
+    else Direct(bodyType)
+
 
 /** Immutable result information shared by parameterized definitions and getters.
   * TermSymbol publishes the complete signature once, before lowering or importing it.
@@ -435,9 +458,6 @@ sealed abstract class ErasedCallableSignature extends Canonicalizable:
       ErasedFuncSignature.Signature(sig.paramLists.map(_.map(_.map(f))), result.map(f))
     case _: ErasedGetterSignature => ErasedGetterSignature.Signature(result.map(f))
 
-  def withResult(result: ErasedResult[ErasedValueType]): ErasedCallableSignature = this match
-    case sig: ErasedFuncSignature => ErasedFuncSignature.Signature(sig.paramLists, result)
-    case _: ErasedGetterSignature => ErasedGetterSignature.Signature(result)
 end ErasedCallableSignature
 
 
@@ -547,13 +567,7 @@ object CanonicalErasedValueType:
     // * An unresolvable alias becomes the top type.
     case _: TypeAliasSymbol => ErasedType.Unknown
     case base =>
-      // * `Unknown` drops `rsc`, which is meaningless on the top type. Every construction site passes
-      // * `rsc = false` today; a future resource-type implementation must revisit this.
-      // *
-      // * Note that `base is ctx.builtins.Anything` is only necessary for `InvalMLPrelude.mls` - the `Anything` type
-      // * is `declare class`-ed there (since `declare type` is not supported in `invalml`).
-      if base is ctx.builtins.Anything then ErasedType.Unknown
-      else PrimitiveType.values.find(_.sym === base) match
+      PrimitiveType.values.find(_.sym === base) match
         case S(prim) => ErasedType.Primitive(prim)
         case _ => ErasedType.AnyRef(rsc, base)
 

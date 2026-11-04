@@ -83,7 +83,7 @@ result
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     pc = runtime.resumePc;
+//│     pc = runtime.resumePc /* as! Int */;
 //│     runtime.resumePc = -1;
 //│   }
 //│   switch (pc) {
@@ -126,7 +126,7 @@ result
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     pc = runtime.resumePc;
+//│     pc = runtime.resumePc /* as! Int */;
 //│     runtime.resumePc = -1;
 //│   }
 //│   switch (pc) {

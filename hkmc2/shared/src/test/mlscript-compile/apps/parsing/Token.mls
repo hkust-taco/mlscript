@@ -47,6 +47,7 @@ abstract class Token with
 
 class LineLookupTable(lines: Array[Int]) with
   fun lookup(index: Int): [Int, Int] =
+    let =index
     if index < 0 do
       set index = 0
     let

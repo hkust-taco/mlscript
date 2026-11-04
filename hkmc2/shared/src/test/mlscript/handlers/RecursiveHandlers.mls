@@ -164,7 +164,7 @@ str
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     pc = runtime.resumePc;
+//│     pc = runtime.resumePc /* as! Int */;
 //│     runtime.resumePc = -1;
 //│   }
 //│   switch (pc) {
@@ -195,7 +195,7 @@ str
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     pc = runtime.resumePc;
+//│     pc = runtime.resumePc /* as! Int */;
 //│     runtime.resumePc = -1;
 //│   }
 //│   switch (pc) {
@@ -246,7 +246,7 @@ str
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     pc = runtime.resumePc;
+//│     pc = runtime.resumePc /* as! Int */;
 //│     runtime.resumePc = -1;
 //│   }
 //│   switch (pc) {
@@ -294,7 +294,7 @@ str
 //│       return runtime.Unit
 //│     }
 //│   } else {
-//│     pc = runtime.resumePc;
+//│     pc = runtime.resumePc /* as! Int */;
 //│     runtime.resumePc = -1;
 //│     if (pc === 0) {
 //│       h22 = new Handler$h2$3();

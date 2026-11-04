@@ -20,7 +20,7 @@ Captures.Nested.run(3)
 // The import alias is immutable, even though fields of the imported module may change.
 :e
 set Captures = Captures
-//│ ╔══[COMPILATION ERROR] Cannot assign to symbol 'Captures'
+//│ ╔══[COMPILATION ERROR] Cannot assign to an immutable binding
 //│ ║  l.+1: 	set Captures = Captures
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Defined here:
