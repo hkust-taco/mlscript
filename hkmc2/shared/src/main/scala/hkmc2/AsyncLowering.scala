@@ -84,7 +84,7 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
               msg"Only await inside of async bodies are allowed if effect handlers are not enabled." ->
               p.toLoc :: Nil,
               source = Diagnostic.Source.Compilation))
-          k(State.runtimeSymbol.asSimpleRef.sel(new Tree.Ident("await"), ctx.builtins.handlers.await))
+          k(State.runtimeSymbol.asSimpleRef.sel(ctx.builtins.handlers.await))
         case _ =>
           super.applyPath(p)(k)
   

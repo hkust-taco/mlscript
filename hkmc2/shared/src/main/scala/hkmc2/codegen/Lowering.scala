@@ -188,10 +188,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     ) ++ blt.wasm.instrIntrinsics.map(_ -> SpecialBuiltin.WasmIntrinsic)
   
   lazy val unreachableFn =
-    Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("unreachable"))(S(State.unreachableSymbol), N)(false)
+    State.runtimeSymbol.asSimpleRef.sel(State.unreachableSymbol)
   
   def unit: Path =
-    Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("Unit"))(S(State.unitSymbol), N)(false)
+    State.runtimeSymbol.asSimpleRef.sel(State.unitSymbol)
   
   /** MIR property names may differ from source aliases. Reuse an actual matching
     * token; a renamed property has no written identifier. The selection carries its use-site location. */
@@ -424,7 +424,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               ))
           def lowerClass(parent: Opt[Path], parentParams: ConstructorParams)(define: ClsLikeDefn => Block): Block =
             val base = parent.getOrElse(
-              Select(State.globalThisSymbol.asThis, Tree.Ident("Object"))(S(ctx.builtins.Object), defn.toLoc)(false))
+              State.globalThisSymbol.asThis.sel(ctx.builtins.Object).withLoc(defn.toLoc))
             val bodies = defn.companion.flatMap(_.defn).collect:
               case mod: ModuleOrObjectDef => mod.body
             def companionKeys(k: Map[TermSymbol, Path] => Block): Block = bodies match
@@ -1307,12 +1307,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 if mod is ctx.builtins.wasm.module then
                   State.wasmSymbol.asSimpleRef
                 else
-                  wasmIntrinsicSubterm(mod.defn.flatMap(_.owner)).sel(mod.id, mod)
+                  wasmIntrinsicSubterm(mod.defn.flatMap(_.owner)).sel(mod)
               case _ => lastWords(s"Unexpected owner '$owner' while traversing wasm intrinsic path")
             val tsym = ms.tsym.getOrElse:
               lastWords(s"wasm intrinsic `${ms.nme}` has a missing `TermSymbol`")
             return conclude:
-              wasmIntrinsicSubterm(tsym.owner).sel(Tree.Ident(ms.nme), tsym)
+              wasmIntrinsicSubterm(tsym.owner).sel(tsym)
           case S(SpecialBuiltin.DebugPrintStack) =>
             if !config.effectHandlers.exists(_.debug) then
               return fail:
@@ -2003,15 +2003,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       val argsSym = loweredParams.restParam.get.sym
       val args = argsSym.asSimpleRef
       def int(n: Int): Path = Value.Lit(Tree.IntLit(n))(N)
-      val tupleSlice = State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("Tuple"), State.tupleSymbol)
-        .sel(Tree.Ident("sliceArray"), State.tupleSliceArraySymbol)
+      val tupleSlice = State.runtimeSymbol.asSimpleRef.sel(State.tupleSymbol).sel(State.tupleSliceArraySymbol)
       // * `Tuple.sliceArray(xs, i, j)` drops the first `i` and the last `j` elements of `xs`.
       def slice(xs: Path, i: Int, j: Int): Result =
         Call(tupleSlice, (xs :: int(i) :: int(j) :: Nil).map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
       // * The sanity check emitted by the code generator only knows about the lowered parameter list,
       // * so we check that the arguments of the trailing parameters are present here.
       val check = Option.when(config.sanityChecks.isDefined):
-        Call(State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("checkVariadicArgs"), State.checkVariadicArgsSymbol),
+        Call(State.runtimeSymbol.asSimpleRef.sel(State.checkVariadicArgsSymbol),
           (Value.Lit(Tree.StrLit(name.getOrElse("")))(N) :: int(layout.minimumCount) :: int(layout.required.length) :: args :: Nil)
             .map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
       val prologue: LoweringCtx ?=> Block => Block = body =>
