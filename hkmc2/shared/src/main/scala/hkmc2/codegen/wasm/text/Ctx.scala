@@ -35,11 +35,10 @@ sealed trait SessionBinding:
 object SessionBinding:
   val ReplModuleName: Str = "repl"
 
-  /** Dependencies to look up among previously exported session bindings.
-    * MIR `freeVars` describes lexical bindings, which cannot distinguish a class from
-    * its function companion. Follow resolved references and cast targets instead.
-    * Symbols defined in this block cannot match earlier exports: their identities
-    * are distinct, including after inlining refreshes local definitions.
+  /** Dependencies to look up among previously exported session bindings. MIR `freeVars` describes lexical bindings,
+    * which cannot distinguish a class from its function companion. Follow resolved references and cast targets instead.
+    * Symbols defined in this block cannot match earlier exports: their identities are distinct, including after
+    * inlining refreshes local definitions.
     */
   def referencedSymbols(block: Block)(using Elaborator.Ctx, State): Ls[Symbol] =
     val symbols = LinkedHashSet.empty[Symbol]
@@ -71,6 +70,8 @@ object SessionBinding:
         case _ => super.applyPath(path)
     .applyBlock(block)
     symbols.toList
+  end referencedSymbols
+end SessionBinding
 
 /** Metadata for an exported function that later Wasm REPL modules can import.
   *
@@ -353,8 +354,11 @@ final class TypeInfo(
   * @param sym
   *   The source [[LocalVarSymbol]] which this tag is generated from.
   */
-class TagInfo(val typeUse: TypeUse, val sym: LocalVarSymbol, val wrapId: Opt[Str] -> Opt[Str] = N -> N)(using Ctx, Raise)
-    extends ToWat:
+class TagInfo(
+    val typeUse: TypeUse,
+    val sym: LocalVarSymbol,
+    val wrapId: Opt[Str] -> Opt[Str] = N -> N,
+)(using Ctx, Raise) extends ToWat:
 
   /** Symbolic identifier for the tag. */
   val id: SymIdx = SymIdx(summon[Ctx].tagScp.allocateOrGetNameWrapped(sym, wrapId))
@@ -449,10 +453,10 @@ class IntrinsicArg(
 
   /** This argument as an `f32` immediate, which must be written as a numeric literal at the call site.
     *
-    * An integer literal is accepted alongside a decimal one, since `1` and `1.0` denote the same float. A literal of
-    * a magnitude no `f32` can hold is reported rather than silently emitted as an infinity; one that merely needs
-    * more precision than an `f32` has is rounded, as Wasm itself specifies - including one too small to hold at all,
-    * which rounds to zero.
+    * An integer literal is accepted alongside a decimal one, since `1` and `1.0` denote the same float. A literal of a
+    * magnitude no `f32` can hold is reported rather than silently emitted as an infinity; one that merely needs more
+    * precision than an `f32` has is rounded, as Wasm itself specifies - including one too small to hold at all, which
+    * rounds to zero.
     */
   def asImmF32(using Raise): Float = numericLit match
     case S(value) =>
@@ -500,9 +504,8 @@ object FunctionCtx:
     */
   private case class ControlFlowCtx(scp: Scope, breakLabel: LabelSymbol, continueLabel: Opt[LabelSymbol])
 
-/** Tracks the parameter slots, local variables, and jump labels used while generating one Wasm
-  * function body. Slot types describe the emitted function signature: virtual overrides use their
-  * inherited parameter slots.
+/** Tracks the parameter slots, local variables, and jump labels used while generating one Wasm function body. Slot
+  * types describe the emitted function signature: virtual overrides use their inherited parameter slots.
   *
   * @param _params
   *   The parameters of this function.
@@ -511,12 +514,12 @@ object FunctionCtx:
   * @param resultType
   *   The physical result slot in which undefined returns must materialize a value.
   * @param loc
-  *   The location of the function's definition, which locates a result-type error for a return that has no
-  *   location of its own, such as one introduced by an optimization.
+  *   The location of the function's definition, which locates a result-type error for a return that has no location of
+  *   its own, such as one introduced by an optimization.
   * @param paramTypes
-  *   Physical types for parameter slots, with the receiver first when `thisSym` is present. Slots
-  *   without an entry derive their type from the parameter symbol. Methods pass their registered
-  *   signature so loads, calls, and the emitted function declaration agree on the inherited slots.
+  *   Physical types for parameter slots, with the receiver first when `thisSym` is present. Slots without an entry
+  *   derive their type from the parameter symbol. Methods pass their registered signature so loads, calls, and the
+  *   emitted function declaration agree on the inherited slots.
   */
 class FunctionCtx(
     _params: Ls[LoweredParamList],
@@ -549,7 +552,7 @@ class FunctionCtx(
 
   /** The parameters of this function with their identifiers and resolved Wasm types, ready to hand to a [[FuncInfo]].
     */
-  val resolvedParams: Seq[SlotSymbol-> WasmParam] =
+  val resolvedParams: Seq[SlotSymbol -> WasmParam] =
     params.map:
       case (sym, idx) => sym -> WasmParam(idx, resolvedParamTypes(sym))
   private val _locals = ArrayBuf.empty[SlotSymbol]
@@ -623,12 +626,12 @@ class FunctionCtx(
         )
 end FunctionCtx
 
-/** Generates a body in a fresh [[FunctionCtx]] and returns it with the context that records its
-  * parameters and locals for the function declaration. `paramTypes` supplies physical slot types,
-  * including any implicit receiver, as in [[FunctionCtx]].
+/** Generates a body in a fresh [[FunctionCtx]] and returns it with the context that records its parameters and locals
+  * for the function declaration. `paramTypes` supplies physical slot types, including any implicit receiver, as in
+  * [[FunctionCtx]].
   *
-  * Rejects unsupported rest parameters without compiling their bodies. Optional fixed parameters retain
-  * their slots: callers supply null for omitted arguments when the slot's type permits it.
+  * Rejects unsupported rest parameters without compiling their bodies. Optional fixed parameters retain their slots:
+  * callers supply null for omitted arguments when the slot's type permits it.
   */
 def genFuncBody(
     params: Ls[LoweredParamList],
@@ -645,10 +648,12 @@ def genFuncBody(
       // * The rest parameter introduced when lowering trailing parameters has no location of its own.
       raise(ErrorReport(
         msg"Variadic parameters are not supported by the WebAssembly backend." -> p.toLoc.orElse(ps.toLoc) :: Nil,
-        source = Diagnostic.Source.Compilation))
+        source = Diagnostic.Source.Compilation,
+      ))
   val funcCtx = FunctionCtx(params, thisSym, resultType, loc, paramTypes)
   val result = if params.exists(_.restParam.nonEmpty) then Vector(unreachable) else mkBody(using funcCtx)
   result -> funcCtx
+end genFuncBody
 
 object Ctx:
   case class SingletonInfo(
@@ -889,10 +894,9 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
       case (_, imp: Import[ExternType.Mem]) => imp
     (importedFuncs ++ importedGlobals ++ importedMems).toSeq
 
-  private def globalExternType(globalEntry: GlobalInfo | Import[ExternType.Global])(using
-      Ctx,
-      Raise,
-  ): ExternType.Global =
+  private def globalExternType(
+      globalEntry: GlobalInfo | Import[ExternType.Global],
+  )(using Ctx, Raise): ExternType.Global =
     globalEntry match
       case globalInfo: GlobalInfo => ExternType.Global(globalInfo.globalType, globalInfo.sym)
       case globalImport: Import[ExternType.Global] => globalImport.externType
@@ -1009,7 +1013,11 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
         val id = SymIdx(name)
         memories = memories +
           (id ->
-            Import(module, name, ExternType.Mem(MemType(Limits(minPages)), sym = TempSymbol(N, initErasedType = N, name))))
+            Import(
+              module,
+              name,
+              ExternType.Mem(MemType(Limits(minPages)), sym = TempSymbol(N, initErasedType = N, name)),
+            ))
         cachedMemoryImport(key) = SymIdx(name)
     end match
   end ensureMemoryImport
@@ -1183,10 +1191,10 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
 
   /** Groups the recursive types into the order they must be declared in.
     *
-    * Wasm requires every type a definition references to be declared before it, so class layouts are ordered by
-    * the classes their parents and fields mention. A cycle cannot be ordered, so each strongly connected
-    * component holding more than one type is emitted as one `(rec ...)` group. Within a group, field references
-    * may point forward, but a superclass must still precede its subclasses.
+    * Wasm requires every type a definition references to be declared before it, so class layouts are ordered by the
+    * classes their parents and fields mention. A cycle cannot be ordered, so each strongly connected component holding
+    * more than one type is emitted as one `(rec ...)` group. Within a group, field references may point forward, but a
+    * superclass must still precede its subclasses.
     */
   private def orderedRecursiveTypes: Ls[Ls[SymIdx]] =
     def named(idx: TypeIdx): Opt[SymIdx] = idx.idx match
@@ -1207,8 +1215,10 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
       // A field can lead the first traversal to a descendant before its immediate superclass. Order the
       // component again using only inheritance edges; these must be acyclic even inside a recursive group.
       SccAnalysis.sccsFrom((id: SymIdx) => parents(id).filter(members), component).flatMap: inheritanceComponent =>
-        assert(inheritanceComponent.size === 1 && !parents(inheritanceComponent.head).contains(inheritanceComponent.head),
-          s"Cyclic superclass dependencies in recursive type group: $inheritanceComponent")
+        assert(
+          inheritanceComponent.size === 1 && !parents(inheritanceComponent.head).contains(inheritanceComponent.head),
+          s"Cyclic superclass dependencies in recursive type group: $inheritanceComponent",
+        )
         inheritanceComponent
   end orderedRecursiveTypes
 
