@@ -1275,24 +1275,52 @@ sealed abstract class Result extends Located:
     *
     * This is the only place where [[Config.checkCasts]] is consulted: it fixes each cast's `check` flag at the
     * point the coercion is introduced, so that the transformers rebuilding casts downstream need not carry a
-    * [[Config]] of their own.
+    * [[Config]] of their own. [[coerceToKnown]] builds the unchecked casts of generated code instead.
     */
   def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): this.type | Path =
+    coerceWith(expected, loc, config.checkCasts): (actual, declared) =>
+      // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
+      def membersOf(et: CanonicalErasedValueType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
+        case ErasedType.Incompatible(l, r) => S(l -> r)
+        case _ => N
+      def reported(et: CanonicalErasedValueType): Bool = et match
+        case i: ErasedType.Incompatible => i.reported
+        case _ => false
+      val message = membersOf(actual).orElse(membersOf(declared)) match
+        case S((l, r)) => msg"Types '${l.describe}' and '${r.describe}' have no common representation"
+        case N => msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'"
+      // * Erasure already rejected the declaration of a reported type where it is written.
+      if !reported(actual) && !reported(declared) then
+        raise:
+          ErrorReport(message -> loc :: Nil, source = Diagnostic.Source.Compilation)
+  
+  /** Coerces a value that the compiler knows to have `expected`'s representation, such as a
+    * temporary that generated code binds to the result of an untyped runtime helper.
+    *
+    * The cast asserts that knowledge rather than testing it, so it is never checked. Unchecked
+    * casts are pure, so the simplifier can still propagate and eliminate them. A value of an
+    * unrelated type contradicts the claim and is reported as an internal error.
+    */
+  def coerceToKnown(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise): this.type | Path =
+    coerceWith(expected, loc, check = false): (actual, declared) =>
+      raise:
+        InternalError(
+          msg"A value of type '${actual.describe}' was expected to have type '${declared.describe}'" -> loc :: Nil,
+          extraInfo = S(this),
+        )
+  
+  /** Yields this result unchanged when no coercion is needed, or a cast with the given `check`
+    * flag when narrowing is needed. Otherwise, `onUnrelated` reports the canonical types and this
+    * result is yielded unchanged. */
+  private def coerceWith(expected: ErasedValueType, loc: Opt[Loc], check: Bool)
+      (onUnrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => Unit)(using Ctx, State): this.type | Path =
     val actual = erasedType_!.canonicalize
     val declared = expected.canonicalize
     ErasedType.needsCast(actual, declared) match
       case S(false) => this
-      case S(true) => Cast(this, expected, config.checkCasts)(loc)
+      case S(true) => Cast(this, expected, check)(loc)
       case N =>
-        // * An `Incompatible` side is not an unrelated type but an unrepresentable one, so it gets its own message.
-        def membersOf(et: CanonicalErasedValueType): Opt[(CanonicalErasedValueType, CanonicalErasedValueType)] = et match
-          case ErasedType.Incompatible(l, r) => S(l -> r)
-          case _ => N
-        val message = membersOf(actual).orElse(membersOf(declared)) match
-          case S((l, r)) => msg"Types '${l.describe}' and '${r.describe}' have no common representation"
-          case N => msg"Cannot use a value of type '${actual.describe}' at an unrelated type '${declared.describe}'"
-        raise:
-          ErrorReport(message -> loc :: Nil, source = Diagnostic.Source.Compilation)
+        onUnrelated(actual, declared)
         this
 
 /* mayRaiseEffects indicates whether this call may raise effect (algebraic effect),
@@ -1402,16 +1430,19 @@ case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: I
   * `check` records whether the coercion is meant to be verified at runtime. No pass expands it into a type test
   * yet, so a checked cast currently generates the same code as an unchecked one.
   *
-  * `check` is decided once, at the sole semantic construction site [[Result.coerceTo]], which reads
-  * [[Config.checkCasts]]. Every other site that rebuilds a cast must *copy* the flag rather than re-derive it, so
-  * that the configuration does not have to be threaded through the IR transformers.
+  * `check` is decided once, where the coercion is introduced: [[Result.coerceTo]] reads [[Config.checkCasts]], and
+  * [[Result.coerceToKnown]] builds unchecked casts for values whose representation the compiler knows. Every other
+  * site that rebuilds a cast must *copy* the flag rather than re-derive it, so that the configuration does not have
+  * to be threaded through the IR transformers.
   *
   * Invariants:
   * - `value` is not a `Cast`.
   * - The smart constructor preserves `Nothing`-typed paths, including `undefined`, unchanged.
-  * - Semantic construction narrows to a proper subtype of `value`'s erased type. Substitution can expose a
-  *   `Nothing`-typed operand later; a non-path operand must retain the cast wrapper to fit a path position.
-  *   Backends must evaluate that operand's effects before materializing a value of the target representation.
+  * - Semantic construction narrows to a proper subtype of `value`'s erased type. Substitution can later expose a
+  *   more precise operand: [[Cast.refined]] drops a cast whose operand path already fits, and an operand of an
+  *   unrelated reference type yields a cast that fails at run time. A `Nothing`-typed non-path operand must retain
+  *   the cast wrapper to fit a path position. Backends must evaluate that operand's effects before materializing a
+  *   value of the target representation.
   */
 case class Cast private(value: Result, target: ErasedValueType, check: Bool)(val toLoc: Opt[Loc]) extends Path:
   def withLoc(loc: Opt[Loc]): Cast = if loc == toLoc then this else copy()(loc)
@@ -1433,6 +1464,21 @@ object Cast:
       case path: Path if path.erasedType.contains(ErasedType.Nothing) => path
       case Cast(inner, _, innerCheck) => Cast(inner, target, check || innerCheck)(toLoc)
       case _ => new Cast(value, target, check)(toLoc)
+  
+  /** Builds a cast like `apply`, and also drops it when the operand path already fits `target`.
+    *
+    * Semantic construction never builds such a cast (see `Result.coerceTo`), but substituting a
+    * more precise operand into an existing cast can make it redundant: inlining `h(5)` with
+    * `fun h(y) = g(y)` and `fun g(x: Int)` yields `5 as! Int`. A redundant check cannot fail,
+    * so even a checked cast can be dropped. A non-path operand keeps the cast, which is how it
+    * fits a path position.
+    */
+  def refined(value: Result, target: ErasedValueType, check: Bool)(toLoc: Opt[Loc])(using Ctx, State): Path =
+    Cast(value, target, check)(toLoc) match
+      case Cast(operand: Path, target, _)
+        if ErasedType.needsCast(operand.erasedType_!.canonicalize, target.canonicalize).contains(false)
+        => operand
+      case cast => cast
 
 case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
   def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(annot, loc)

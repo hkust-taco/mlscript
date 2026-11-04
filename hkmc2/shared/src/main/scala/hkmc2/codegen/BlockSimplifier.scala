@@ -120,6 +120,12 @@ class BlockSimplifier
     
   end Helper
   
+  /** Simplifier rewrites substitute values into existing casts, which can make them redundant.
+    * Dropping those casts exposes literals and known values to folding and propagation. */
+  trait RefinesCasts extends BlockTransformer:
+    override protected def rebuildCast(cast: Cast, value: Result): Path =
+      Cast.refined(value, cast.target, cast.check)(cast.toLoc)
+  
   
   // * Only such variables can be assigned directly in the IR
   type LocalVar = LocalVarSymbol
@@ -149,7 +155,7 @@ class BlockSimplifier
   
   /** A simple pass to eliminate the most obvious kind of dead code;
     * hopefully allows more expensive passes such as DataFlowAnalysis to do less work. */
-  class DeadCodeElim() extends BlockTransformer(SymbolSubst.Id), Helper:
+  class DeadCodeElim() extends BlockTransformer(SymbolSubst.Id), Helper, RefinesCasts:
     
     var analysisDone = false
     
@@ -197,7 +203,11 @@ class BlockSimplifier
           */
         def markCastTarget(target: ErasedValueType): Unit =
           target.canonicalize match
-            case ErasedType.AnyRef(_, tpeSym) => usedVars += tpeSym.bms.get
+            case ErasedType.AnyRef(_, tpeSym) =>
+              // Lifted captures and handlers can use classes created directly in IR.
+              // Such classes have no source definition from which to obtain a binding.
+              usedVars += tpeSym.irClsLikeDefn.map(_.sym).orElse(tpeSym.bms).getOrElse:
+                lastWords(s"Missing binding for cast target '${tpeSym.nme}'")
             case _ =>
 
         override def applyResult(r: Result): Unit =
@@ -447,7 +457,7 @@ class BlockSimplifier
     * Note that if the program tree is changed, it is imperative to register the change,
     * otherwise dead assignment removal (which runs when no change was detected) will not work correctly,
     * as it relies on object identity. */
-  class DataFlowAnalysis(localVars: Set[LocalVar]) extends BlockTransformer(SymbolSubst.Id), Helper:
+  class DataFlowAnalysis(localVars: Set[LocalVar]) extends BlockTransformer(SymbolSubst.Id), Helper, RefinesCasts:
     
     
     val capturedVars = MutSet.empty[LocalVar]
@@ -1238,7 +1248,7 @@ class BlockSimplifier
     * - all the statements between the two matches are pure and can thus be moved out of the way,
     *   similar to how `MergeMatchArmTransformer` works (in `Lowering.scala`) – we reuse `TrivialStatementsAndMatch`.
     * See examples in [test:case-of-case]. */
-  class CaseOfCase(using cfg: Config.Inliner) extends BlockTransformer(SymbolSubst.Id), Helper:
+  class CaseOfCase(using cfg: Config.Inliner) extends BlockTransformer(SymbolSubst.Id), Helper, RefinesCasts:
     
     type Shape = Literal | ClassLikeSymbol
     
@@ -1832,7 +1842,7 @@ class BlockSimplifier
         def applyBlock(blk: Block) =
           Label(lblSym, false, Copier.apply(blk), _)
       
-      class Transformer(m: InlinerMap) extends BlockTransformer(SymbolSubst()):
+      class Transformer(m: InlinerMap) extends BlockTransformer(SymbolSubst()), RefinesCasts:
         
         // The call graph may be cyclic, in which case we break the infinite loop using this map by
         // assuring that the block corresponding to a term symbol may only be transformed once.

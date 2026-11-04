@@ -261,14 +261,22 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       case S(args) => args.map(_.value)
       case N => return CallArgsResult.ForceSpread
     
-    if paramList.restParam.isDefined then
-      val rest =
-        restArgs match
-          case Arg(S(SpreadKind.Eager), value) :: Nil => value
-          case _ => Tuple(true, restArgs)(N)
-      CallArgsResult.Success(hdPadded.appended(rest))
-    else
-      CallArgsResult.Success(hdPadded)
+    paramList.restParam match
+      case S(restParam) =>
+        val restType = restParam.sym.erasedType.getOrElse(ErasedType.Unknown)
+        val rest =
+          restArgs match
+            // Reusing a lone spread operand as the rest array skips the copy that a call
+            // makes. The operand is not statically an array, so restore the rest
+            // parameter's representation with a cast. An operand of an unrelated type,
+            // such as a string, is copied into a fresh tuple, as the call would do.
+            case Arg(S(SpreadKind.Eager), value) :: Nil
+              if ErasedType.needsCast(value.erasedType_!.canonicalize, restType.canonicalize).isDefined =>
+                value.coerceTo(restType, N)
+            case _ => Tuple(true, restArgs)(N)
+        CallArgsResult.Success(hdPadded.appended(rest))
+      case N =>
+        CallArgsResult.Success(hdPadded)
   
   /**
     * Applies a parameter list to an argument list, both of which could contain arbitrary spreads.

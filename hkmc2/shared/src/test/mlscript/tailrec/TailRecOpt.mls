@@ -471,7 +471,7 @@ typedSpread(0, 1, 2, 3, 4)
 //│       Array(1+) =>
 //│         let argList: Array⁰, optionalArg: Unknown, sliceRes: Array⁰;
 //│         do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│         set middleElements = runtime⁰.Tuple⁰.slice¹(z, 1, 0);
+//│         set middleElements = (runtime⁰.Tuple⁰.slice¹(z, 1, 0) as!! Array⁰);
 //│         set tmp = +⁰(a, 1);
 //│         set tmp1 = [tmp, b, ...middleElements];
 //│         set argList = [...tmp1];

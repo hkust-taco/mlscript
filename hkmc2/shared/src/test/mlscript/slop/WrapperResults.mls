@@ -26,7 +26,7 @@ Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
 //│ define answer¹ as fun answer²(early: Bool⁰, value: Unknown): Promise⁰ {
 //│   let tmp5: Function⁰;
 //│   set tmp5 = answer⁰(early, value);
-//│   return runtime⁰.toJsAsync﹖(tmp5)
+//│   return (runtime⁰.toJsAsync﹖(tmp5) as! Promise⁰)
 //│ };
 //│ define asPromise⁰ as fun asPromise¹(value: Promise⁰): Promise⁰ {
 //│   return value
@@ -161,7 +161,7 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│   method wrapped¹ = fun wrapped²: Promise⁰ {
 //│     let tmp2: Function⁰;
 //│     set tmp2 = wrapped⁰(ResultGetters⁰.this);
-//│     return runtime⁰.toJsAsync﹖(tmp2)
+//│     return (runtime⁰.toJsAsync﹖(tmp2) as! Promise⁰)
 //│   }
 //│   method direct⁰ = fun direct¹: Promise⁰ {
 //│     return globalThis⁰.Promise¹.resolve⁰(43)
