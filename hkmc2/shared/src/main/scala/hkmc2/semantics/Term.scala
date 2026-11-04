@@ -115,6 +115,15 @@ object Annot:
     /** Like `Annot.noEffect`, but an error: in an expression, a resource modifier must take effect. */
     def noEffect(annotLoc: Opt[Loc], receiver: Term, reason: Opt[Message]): ErrorReport =
       ErrorReport(noEffectMessages(annotLoc, receiver, reason))
+    
+    /** Rejects a resource modifier on the call at `loc`, which is not known to be a partial application.
+      */
+    def notPartial(loc: Opt[Loc], calleeKnown: Bool): ErrorReport =
+      val message =
+        if calleeKnown then
+          msg"This call fully applies its callee's parameter lists, so its resource modifier has no effect."
+        else msg"The parameter lists of this call's callee are not known, so its resource modifier has no effect."
+      ErrorReport(message -> loc :: Nil)
   
   /** Reports that an annotation written at `annotLoc` has no effect on `receiver`,
     * because of `reason` or, by default, because `receiver` does not support it.

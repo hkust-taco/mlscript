@@ -607,12 +607,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val (rscAnnots, callAnnots) = annotations.partition:
       case Annot.Resource(_) => true
       case _ => false
+    // * The parameter lists of the callee, if it is known.
+    val calleeParamss = fr.targetSymbol match
+      case S(fs: TermSymbol) => fs.defn.map(_.params)
+      case _ => N
     // * Only a call known to leave some parameter lists unapplied is a function value that can be a resource.
-    def warnNotPartial(): Unit =
-      if rscAnnots.nonEmpty then raise(WarningReport(
-        msg"This call is not known to leave some parameter lists unapplied, so its resource modifier has no effect." ->
-          loc :: Nil,
-        source = Diagnostic.Source.Compilation))
+    def rejectNotPartial: Unit =
+      if rscAnnots.nonEmpty then raise(Annot.Resource.notPartial(loc, calleeKnown = calleeParamss.isDefined))
     val isConstructor = fr.targetSymbol.exists:
       case _: ClassCtorSymbol => true
       case _ => false
@@ -623,10 +624,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         if isConstructor then lowerConstructorArgs(args, ps, isMlsFun)(next)
         else lowerArgs(args, expectedParamTypes(ps, args))(next)
       case (Nil, Nil) =>
-        warnNotPartial()
+        rejectNotPartial
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, callAnnots), rsc = false, loc))
       case (Nil, args :: remainingArgss) =>
-        warnNotPartial()
+        rejectNotPartial
         acc.reverse match
         case Nil => lowerRemainingCalls(fr, args, remainingArgss, callAnnots, loc)(k)
         case acc: NELs[Ls[Arg]] =>
@@ -638,13 +639,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // * This relies on `td` having the same number of paramlists as its erased signature.
         val rsc = functionValueRsc(rscAnnots)
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, callAnnots), rsc, loc))
-    fr.targetSymbol match
-    case S(fs: TermSymbol) =>
-      fs.defn match
-      case S(td: TermDefinition) =>
-        zipArgs(td.params, args, Nil, fs.mayRaiseEffects)
-      case _ => zipArgs(Nil, args, Nil, fs.mayRaiseEffects)
-    case _ => zipArgs(Nil, args, Nil, true)
+    val mayRaiseEffects = fr.targetSymbol match
+      case S(fs: TermSymbol) => fs.mayRaiseEffects
+      case _ => true
+    zipArgs(calleeParamss.getOrElse(Nil), args, Nil, mayRaiseEffects)
   
   def lowerRemainingCalls(base: Path, args: Term, remainingArgss: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])
         (k: Result => Block)(using LoweringCtx): Block =
@@ -2198,8 +2196,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case st.Resolved(_, defnSym) if isImplicitNullaryCall(defnSym) => ()
         case _ => warn(annot)
       case annot @ Annot.Resource(_) => receiver match
+        // * A call to a built-in symbol is never partial, and is lowered without `lowerMultiCall`.
+        case st.App(BuiltinRef(_), _) => raise(Annot.Resource.notPartial(receiver.toLoc, calleeKnown = true))
         // * Whether a call is a partial application is only known once its callee is lowered (see `lowerMultiCall`).
-        case st.App(Ref(_: BuiltinSymbol), _) => reject(annot)
         case New(_, _, N) | Mut(New(_, _, N)) | st.Lam(_, _) | st.App(_, _) => ()
         case memberRef: st.MemberRef
         if memberRef.resolvedTargets.distinct.foldSingleton(_ => false)(rscExpandable(_).isDefined) => ()

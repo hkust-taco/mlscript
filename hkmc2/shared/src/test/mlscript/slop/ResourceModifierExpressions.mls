@@ -59,3 +59,69 @@ rsc? (new C())
 //│ ╙──      	      ^^^^^^^
 //│ = C
 
+
+// * A call is a function value only when it is known to leave some of its callee's parameter lists unapplied.
+
+fun g(x) = x
+fun curried(x)(y) = x
+class P(x)
+module M with
+  fun m(x) = x
+class E(val k) with
+  fun get(x) = k
+let e = E(1)
+//│ e = E(1)
+
+rsc curried(1)
+//│ = fun
+
+:e
+rsc curried(1)(2)
+//│ ╔══[COMPILATION ERROR] This call fully applies its callee's parameter lists, so its resource modifier has no effect.
+//│ ║  l.+1: 	rsc curried(1)(2)
+//│ ╙──      	    ^^^^^^^^^^^^^
+//│ = 1
+
+:e
+fun unknownCallee(h, a) = rsc h(a)
+//│ ╔══[COMPILATION ERROR] The parameter lists of this call's callee are not known, so its resource modifier has no effect.
+//│ ║  l.+1: 	fun unknownCallee(h, a) = rsc h(a)
+//│ ╙──      	                              ^^^^
+
+:e
+rsc g(y => y)(1)
+//│ ╔══[COMPILATION ERROR] This call fully applies its callee's parameter lists, so its resource modifier has no effect.
+//│ ║  l.+1: 	rsc g(y => y)(1)
+//│ ╙──      	    ^^^^^^^^^^^^
+//│ = 1
+
+:e
+rsc M.m(1)
+//│ ╔══[COMPILATION ERROR] This call fully applies its callee's parameter lists, so its resource modifier has no effect.
+//│ ║  l.+1: 	rsc M.m(1)
+//│ ╙──      	    ^^^^^^
+//│ = 1
+
+:e
+rsc e.get(1)
+//│ ╔══[COMPILATION ERROR] This call fully applies its callee's parameter lists, so its resource modifier has no effect.
+//│ ║  l.+1: 	rsc e.get(1)
+//│ ╙──      	    ^^^^^^^^
+//│ = 1
+
+:e
+rsc P(1)
+//│ ╔══[COMPILATION ERROR] This call fully applies its callee's parameter lists, so its resource modifier has no effect.
+//│ ║  l.+1: 	rsc P(1)
+//│ ╙──      	    ^^^^
+//│ = P(_)
+
+// * A call to a built-in symbol is never partial.
+
+:e
+rsc (1 + 2)
+//│ ╔══[COMPILATION ERROR] This call fully applies its callee's parameter lists, so its resource modifier has no effect.
+//│ ║  l.+1: 	rsc (1 + 2)
+//│ ╙──      	     ^^^^^
+//│ = 3
+

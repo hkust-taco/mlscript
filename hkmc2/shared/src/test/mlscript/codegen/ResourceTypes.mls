@@ -657,8 +657,8 @@ fun maybeLam() = rsc? (x => x)
 //│ };
 //│ end
 
-// A partial application states its resource-ness with a modifier, like a lambda. The modifier has no effect on a
-// call that is not known to leave some parameter lists unapplied.
+// A partial application states its resource-ness with a modifier, like a lambda. The modifier has no effect and is an
+// error on a call that is not known to leave some parameter lists unapplied.
 
 fun rscPartialIntoRsc(a) = useRscFn(rsc curried(a))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -699,17 +699,17 @@ fun maybePartial(a) = useRscFn(rsc? curried(a))
 //│ };
 //│ end
 
-:w
+:e
 fun rscSaturated(a) = rsc curried(a)(a)
-//│ ╔══[WARNING] This call is not known to leave some parameter lists unapplied, so its resource modifier has no effect.
+//│ ╔══[COMPILATION ERROR] This call fully-applies its callee's parameter lists, so its resource modifier has no effect.
 //│ ║  l.+1: 	fun rscSaturated(a) = rsc curried(a)(a)
 //│ ╙──      	                          ^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rscSaturated⁰ as fun rscSaturated¹(a: ?): ? { return curried¹(a)(a) }; end
 
-:w
+:e
 fun rscUnknownCallee(h, a) = rsc h(a)
-//│ ╔══[WARNING] This call is not known to leave some parameter lists unapplied, so its resource modifier has no effect.
+//│ ╔══[COMPILATION ERROR] The parameter lists of this call's callee are not known, so its resource modifier has no effect.
 //│ ║  l.+1: 	fun rscUnknownCallee(h, a) = rsc h(a)
 //│ ╙──      	                                 ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
