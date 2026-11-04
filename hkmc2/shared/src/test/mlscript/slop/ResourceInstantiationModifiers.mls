@@ -1,0 +1,108 @@
+:.
+:js
+
+
+class C() with
+  val foo = 1
+
+
+// * The modifiers of an instantiation, `[mut] [rsc | rsc?]`, apply to the class alone, as `new` does.
+
+new rsc C().foo
+//│ = 1
+
+new mut rsc C().foo
+//│ = 1
+
+:sir
+new mut rsc C()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ return new mut rsc C⁰()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = C()
+
+:e
+new! rsc C().foo
+//│ ╔══[COMPILATION ERROR] Resource instantiation with 'new!' is not supported yet.
+//│ ║  l.+1: 	new! rsc C().foo
+//│ ╙──      	     ^^^
+//│ = 1
+
+// * Any other modifier is rejected: a repeated one, or one written out of order.
+
+:e
+new rsc mut C()
+//│ ╔══[COMPILATION ERROR] Instantiation modifiers belong as part of 'new' or 'new!', each at most once, 'mut' before 'rsc' or 'rsc?'.
+//│ ║  l.+1: 	new rsc mut C()
+//│ ╙──      	        ^^^
+//│ = C()
+
+:e
+new rsc rsc C()
+//│ ╔══[COMPILATION ERROR] Instantiation modifiers belong as part of 'new' or 'new!', each at most once, 'mut' before 'rsc' or 'rsc?'.
+//│ ║  l.+1: 	new rsc rsc C()
+//│ ╙──      	        ^^^
+//│ = C()
+
+:e
+new rsc rsc? C()
+//│ ╔══[COMPILATION ERROR] Instantiation modifiers belong as part of 'new' or 'new!', each at most once, 'mut' before 'rsc' or 'rsc?'.
+//│ ║  l.+1: 	new rsc rsc? C()
+//│ ╙──      	        ^^^^
+//│ = C()
+
+:e
+new mut mut C()
+//│ ╔══[COMPILATION ERROR] Instantiation modifiers belong as part of 'new' or 'new!', each at most once, 'mut' before 'rsc' or 'rsc?'.
+//│ ║  l.+1: 	new mut mut C()
+//│ ╙──      	        ^^^
+//│ = C()
+
+:e
+new! rsc mut C()
+//│ ╔══[COMPILATION ERROR] Instantiation modifiers belong as part of 'new' or 'new!', each at most once, 'mut' before 'rsc' or 'rsc?'.
+//│ ║  l.+1: 	new! rsc mut C()
+//│ ╙──      	         ^^^
+//│ ╔══[COMPILATION ERROR] Resource instantiation with 'new!' is not supported yet.
+//│ ║  l.+1: 	new! rsc mut C()
+//│ ╙──      	     ^^^
+//│ = C()
+
+// * A modifier is followed by the class.
+
+:pe
+:re
+new rsc
+//│ ╔══[PARSE ERROR] Expected expression or block after resource modifier of 'new'; found end of input instead
+//│ ║  l.+1: 	new rsc
+//│ ╙──      	       ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:pe
+:re
+new! mut
+//│ ╔══[PARSE ERROR] Expected 'rsc' keyword, 'rsc?' keyword, or expression after 'mut' modifier of 'new!'; found end of input instead
+//│ ║  l.+1: 	new! mut
+//│ ╙──      	        ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// * A parent class takes no instantiation modifiers.
+
+:e
+class D1 extends rsc C()
+//│ ╔══[COMPILATION ERROR] A parent class takes no instantiation modifiers.
+//│ ║  l.+1: 	class D1 extends rsc C()
+//│ ╙──      	                 ^^^
+
+:e
+class D2 extends mut C()
+//│ ╔══[COMPILATION ERROR] A parent class takes no instantiation modifiers.
+//│ ║  l.+1: 	class D2 extends mut C()
+//│ ╙──      	                 ^^^
+
+:e
+class D3 extends rsc? C()
+//│ ╔══[COMPILATION ERROR] A parent class takes no instantiation modifiers.
+//│ ║  l.+1: 	class D3 extends rsc? C()
+//│ ╙──      	                 ^^^^
+

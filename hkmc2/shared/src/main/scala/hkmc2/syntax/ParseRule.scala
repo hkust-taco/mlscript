@@ -14,7 +14,9 @@ import semantics.Elaborator.State
 // * TODO: add lookahead to Expr as a PartialFunction[Ls[Token], Bool]
 
 enum Alt[+A]:
-  case Kw[Rest, +Res](kw: Keyword)(val rest: ParseRule[Rest])(val k: (Keywrd[kw.type], Rest) => Res) extends Alt[Res]
+  /** `rest` is parsed at `restPrec`, or by default at `kw.rightPrec` (see `ParseRule.kwAltPrec`). */
+  case Kw[Rest, +Res](kw: Keyword, restPrec: Opt[Int])(val rest: ParseRule[Rest])(val k: (Keywrd[kw.type], Rest) => Res)
+    extends Alt[Res]
   case Expr[Rest, +Res](rest: ParseRule[Rest])(val k: (Tree, Rest) => Res) extends Alt[Res]
   // A closed block can admit selected infix continuations before parsing the rest of its rule.
   case Blk[Rest, +Res](rest: ParseRule[Rest], infixes: Set[Keyword])(val k: (Tree, Rest) => Res) extends Alt[Res]
@@ -22,7 +24,7 @@ enum Alt[+A]:
   
   def map[B](f: A => B): Alt[B] = 
     this match
-    case k: Kw[rest, A] => Kw(k.kw)(k.rest)((kw, rest) => f(k.k(kw, rest)))
+    case k: Kw[rest, A] => Kw(k.kw, k.restPrec)(k.rest)((kw, rest) => f(k.k(kw, rest)))
     case e: Expr[rest, A] => Expr(e.rest)((tree, rest) => f(e.k(tree, rest)))
     case e: End[?] => End()(() => f(e.a()))
     case b: Blk[rest, A] => Blk(b.rest, b.infixes)((tree, rest) => f(b.k(tree, rest)))
@@ -34,9 +36,9 @@ def discard[A]: (A, Unit) => A = { case (a, _) => a }
 def extendLoc[T <: Tree]: (Keywrd[?], T) => T = { case (k, a) => a.mkLocWith(k) }
 
 def discardKw[Rest](kw: Keyword)(rest: ParseRule[Rest]): Alt[Rest] =
-  Alt.Kw(kw)(rest)((_, rest) => rest)
+  Alt.Kw(kw, N)(rest)((_, rest) => rest)
 def keepKw[Rest](kw: Keyword)(rest: ParseRule[Rest]): Alt[Keywrd[kw.type] -> Rest] = 
-  Alt.Kw(kw)(rest)((k, rest) => k -> rest)
+  Alt.Kw(kw, N)(rest)((k, rest) => k -> rest)
 
 class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[A]*):
   def map[B](f: A => B): ParseRule[B] =
@@ -52,6 +54,10 @@ class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[
     kwAlts.get(k.name).map: kwAlt => 
       kwAlt.rest.map(a => kwAlt.k(new Keywrd(k.asInstanceOf[kwAlt.kw.type]).withLoc(loc), a))
   
+  /** The precedence at which the rest of the alternative of keyword `k` is parsed. */
+  def kwAltPrec(k: Keyword): Opt[Int] =
+    kwAlts.get(k.name).flatMap(_.restPrec).orElse(k.rightPrec)
+  
   lazy val exprAlt = alts.collectFirst { case alt: Alt.Expr[rst, A] => alt }
   lazy val blkAlt = alts.collectFirst { case alt: Alt.Blk[rst, A] => alt }
   
@@ -59,7 +65,7 @@ class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[
   
   def whatComesAfter: Str = if omitAltsStr then name else
     alts.map:
-      case Alt.Kw(kw) => s"'${kw.name}' keyword"
+      case Alt.Kw(kw, _) => s"'${kw.name}' keyword"
       case Alt.Expr(rest) => "expression"
       case Alt.Blk(rest, _) => "block"
       case Alt.End() => "end of input"
@@ -83,17 +89,33 @@ class ParseRules(using State):
   
   def prefixed(kw: Keyword.Prefix): Alt[Tree] = prefixed(kw, standaloneExpr)
   def prefixed(kw: Keyword.Prefix, body: Alt[Tree]*) =
-    Kw(kw)(ParseRule(s"prefix keyword '${kw.name}'")(body*))((k, r) => Tree.PrefixApp(k, r))
+    Kw(kw, N)(ParseRule(s"prefix keyword '${kw.name}'")(body*))((k, r) => Tree.PrefixApp(k, r))
   
   def modified(kw: Keyword.Modifier): Alt[Tree] = modified(kw, standaloneExpr)
   def modified(kw: Keyword.Modifier, body: Alt[Tree]) =
-    Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(body)):
+    Kw(kw, N)(ParseRule(s"modifier keyword '${kw.name}'")(body)):
       case (k: Keywrd[Keyword.Modifier], r) => Tree.Modified(k, r)
   
   def exprOrBlk[Rest, Res](body: ParseRule[Rest])(k: (Tree, Rest) => Res): List[Alt[Res]] =
     Expr(body)(k) ::
     Blk(body, Set.empty)(k) ::
     Nil
+  
+  /** The alternatives of the modifiers `[mut] [rsc | rsc?]` of an instantiation by `newKw`, followed by one of `cls`.
+    *
+    * Modifiers that do not adhere to the `new`-modifier syntax, such as `mut` in `new rsc mut C()`, are parsed as if
+    * they modify the class (`new rsc (mut C)()`) and are rejected by the elaborator.
+    */
+  def newModifiers[A, R](newKw: Keyword)(cls: List[Alt[A]])
+      (k: (Opt[Keywrd[`mut`.type]], Opt[Keywrd[RscLike]], A) => R): List[Alt[R]] =
+    val afterRsc = ParseRule(s"resource modifier of '${newKw.name}'")(cls*)
+    def rscAlt(kw: RscLike): Alt[Opt[Keywrd[RscLike]] -> A] =
+      Kw(kw, newRightPrec)(afterRsc)((rsc, a) => S(rsc) -> a)
+    val rscThenCls = rscAlt(`rsc`) :: rscAlt(`rsc?`) :: cls.map(_.map(a => N -> a))
+    Kw(`mut`, N)(ParseRule(s"'mut' modifier of '${newKw.name}'")(rscThenCls*)) { case (mut, (rsc, a)) =>
+      k(S(mut), rsc, a)
+    } ::
+      rscThenCls.map(_.map((rsc, a) => k(N, rsc, a)))
   
   def standaloneExprOrBlk[Rest, Res]: List[Alt[Tree]] =
     standaloneExpr ::
@@ -179,7 +201,7 @@ class ParseRules(using State):
       case (kw, (lhs, rhs, body)) => LetLike(kw, lhs, rhs, body)
   
   def ifLike(kw: Keyword.IfLike): Alt[Tree] =
-    val elseClause = Kw(`else`)(
+    val elseClause = Kw(`else`, N)(
       ParseRule("`else` keyword")(
         exprOrBlk(ParseRule("`else` expression")(end(())))(discard)*
       )
@@ -194,7 +216,7 @@ class ParseRules(using State):
           case _ => split :: clause :: Nil
         Block(items)
       case N => split
-    Kw(kw)(
+    Kw(kw, N)(
       ParseRule(s"'${kw.name}' keyword")(
         Expr(optionalElse)(withDefault),
         Blk(optionalElse, Set(`then`, `do`))(withDefault),
@@ -257,20 +279,27 @@ class ParseRules(using State):
         )
       ParseRule("`new` keyword")(
         (
-          withRefinement.map(rfto => LexicalNew(N, rfto)) ::
-          exprOrBlk(ParseRule("`new` expression")(
+          withRefinement.map(rfto => LexicalNew(N, rfto, N, N)) ::
+          newModifiers(`new`)(exprOrBlk(ParseRule("`new` expression")(
             withRefinement,
             end(N),
-          ))((body, rfto) => LexicalNew(S(body), rfto))
+          ))((body, rfto) => body -> rfto)):
+            case (mut, rsc, (body, rfto)) => LexicalNew(S(body), rfto, mut, rsc)
         )*
       )
     .map { case (kw, nu) => nu.mkLocWith(kw) }
     ,
-    Kw(`in`)(
+    keepKw(`new!`):
+      ParseRule("`new!` keyword")(
+        newModifiers(`new!`)(standaloneExpr :: Nil)((mut, rsc, cls) => LexicalDynamicNew(cls, mut, rsc))*
+      )
+    .map { case (kw, nu) => nu.mkLocWith(kw) }
+    ,
+    Kw(`in`, N)(
       ParseRule("modifier keyword `in`"):
         Expr(
           ParseRule("`in` expression")(
-            Kw(`out`)(ParseRule(s"modifier keyword `out`")(standaloneExpr)):
+            Kw(`out`, N)(ParseRule(s"modifier keyword `out`")(standaloneExpr)):
               case (kw, s) => S(Tree.Modified(kw, s)),
             end(N),
           )
@@ -285,12 +314,12 @@ class ParseRules(using State):
     ifLike(`if`),
     ifLike(`while`),
     ifLike(`when`),
-    Kw(`assert`)(
+    Kw(`assert`, N)(
       ParseRule(s"'assert' keyword")(
         exprOrBlk(
           ParseRule(s"'assert' expression")(
             end(N),
-            Kw(`else`)(
+            Kw(`else`, N)(
               ParseRule(s"`else` keyword")(
                 exprOrBlk(ParseRule(s"`else` expression")(end(()))):
                   discard
@@ -303,7 +332,7 @@ class ParseRules(using State):
     ):
       case (kw, (rhs, els)) => Assert(kw, rhs, N, els)
     ,
-    Kw(`else`)(
+    Kw(`else`, N)(
       ParseRule("`else` clause")(
         Expr(ParseRule("`else` expression")(end(())))(discard),
         Blk(ParseRule("`else` expression")(end(())), Set.empty)(discard)
@@ -358,15 +387,15 @@ class ParseRules(using State):
       )
     .map { case (kw, c) => c.mkLocWith(kw) }
     ,
-    Kw(`fun`)(termDefBody(Fun))(extendLoc),
-    Kw(`val`)(termDefBody(ImmutVal))(extendLoc),
-    Kw(`using`)(termDefBody(Ins))(extendLoc),
+    Kw(`fun`, N)(termDefBody(Fun))(extendLoc),
+    Kw(`val`, N)(termDefBody(ImmutVal))(extendLoc),
+    Kw(`using`, N)(termDefBody(Ins))(extendLoc),
     typeAliasLike(`type`, Als),
     typeAliasLike(`pattern`, Pat),
-    Kw(`class`)(typeDeclBody(Cls))(extendLoc),
-    Kw(`trait`)(typeDeclBody(Trt))(extendLoc),
-    Kw(`module`)(typeDeclBody(Mod))(extendLoc),
-    Kw(`object`)(typeDeclBody(Obj))(extendLoc),
+    Kw(`class`, N)(typeDeclBody(Cls))(extendLoc),
+    Kw(`trait`, N)(typeDeclBody(Trt))(extendLoc),
+    Kw(`module`, N)(typeDeclBody(Mod))(extendLoc),
+    Kw(`object`, N)(typeDeclBody(Obj))(extendLoc),
     keepKw(`open`):
       ParseRule("'open' keyword")(
         exprOrBlk(ParseRule("'open' declaration")(end(()))){
@@ -374,16 +403,16 @@ class ParseRules(using State):
     .map { case (kw, o) => o.mkLocWith(kw) }
     ,
     modified(`abstract`, keepKw(`class`)(typeDeclBody(Cls)).map { case (kw, c) => c.mkLocWith(kw) }),
-    Kw(`mut`)(ParseRule(s"'mut' keyword")(standaloneExprOrBlk*)) {
+    Kw(`mut`, N)(ParseRule(s"'mut' keyword")(standaloneExprOrBlk*)) {
       case (kw, body) => Tree.Modified(kw, body)
     },
-    Kw(`do`)(
+    Kw(`do`, N)(
       ParseRule(s"'do' keyword")(
         exprOrBlk(ParseRule(s"'do' body")(end(()))):
           discard
         *)
     ) { case (kw, body) => Tree.PrefixApp(kw, body) },
-    Kw(`return`)(
+    Kw(`return`, N)(
       ParseRule(s"'return' keyword")(
         // * The Block alternative is important, otherwise
         // *   > return
@@ -398,7 +427,6 @@ class ParseRules(using State):
     prefixed(`&`),
     prefixed(`drop`),
     prefixed(`not`),
-    prefixed(`new!`),
     prefixed(`throw`),
     prefixed(`yield`),
     prefixed(`yield*`),
@@ -427,7 +455,7 @@ class ParseRules(using State):
     singleKw(`this`)(Keywrd(Keyword.`this`)),
     singleKw(`super`)(Keywrd(Keyword.`super`)),
     singleKw(Keyword.__)(Under()),
-    Kw(`#`)(
+    Kw(`#`, N)(
       ParseRule(s"'#' directive keyword")(
         Expr(ParseRule(s"'#' directive body")(end(()))){ case (body, ()) => body }
       )
@@ -440,7 +468,7 @@ class ParseRules(using State):
   )
   
   def singleKw[T <: Tree](kw: Keyword)(v: => T): Alt[T] =
-    Kw(kw)(ParseRule(s"'${kw.name}' keyword")(end(v)))((kwrd, v) => v.withLocOf(kwrd))
+    Kw(kw, N)(ParseRule(s"'${kw.name}' keyword")(end(v)))((kwrd, v) => v.withLocOf(kwrd))
   
   
   val prefixRulesAllowIndentedBlock: ParseRule[Tree] =

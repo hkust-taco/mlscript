@@ -99,11 +99,16 @@ enum Tree extends AutoLocated:
   case PrefixApp(kw: Keywrd[Keyword.Prefix], rhs: Tree)
   case InfixApp(lhs: Tree, kw: Keywrd[Keyword.Infix], rhs: Tree)
   case TryFinally(tryBody: Tree, finallyBody: Tree)
-  case LexicalNew(body: Opt[Tree], rft: Opt[Block]) // * New as it is parsed, with its weird precedence – eg (new C)(123)
+  // * New as it is parsed, with its weird precedence – eg (new C)(123). In all versions of New, `mut` and `rsc` are
+  // * its modifiers, as in `new mut rsc C(123)`.
+  case LexicalNew(
+    body: Opt[Tree], rft: Opt[Block], mut: Opt[Keywrd[Keyword.`mut`.type]], rsc: Opt[Keywrd[Keyword.RscLike]])
+  case LexicalDynamicNew(cls: Tree, mut: Opt[Keywrd[Keyword.`mut`.type]], rsc: Opt[Keywrd[Keyword.RscLike]])
   // * A desugared version of New that sets it right – eg new(C(123)).
-  // * In both desugared versions, `rsc` is the resource modifier split off the body.
-  case ProperNew(body: Opt[Tree], rft: Opt[Block], rsc: Opt[Keywrd[Keyword.RscLike]])
-  case DynamicNew(cls: Tree, rsc: Opt[Keywrd[Keyword.RscLike]]) // * Dynamic version – eg new! C(123)
+  case ProperNew(
+    body: Opt[Tree], rft: Opt[Block], mut: Opt[Keywrd[Keyword.`mut`.type]], rsc: Opt[Keywrd[Keyword.RscLike]])
+  // * Dynamic version – eg new! C(123)
+  case DynamicNew(cls: Tree, mut: Opt[Keywrd[Keyword.`mut`.type]], rsc: Opt[Keywrd[Keyword.RscLike]])
   case IfLike(kw: Keywrd[Keyword.IfLike], split: Tree)
   case Assert(kw: Keywrd[Keyword.`assert`], cond: Tree, thn: Opt[Tree], els: Opt[Keywrd[Keyword.`else`] -> Tree])
   case SplitPoint()
@@ -161,9 +166,10 @@ enum Tree extends AutoLocated:
     case PrefixApp(kw, rhs) => Vector.double(kw, rhs)
     case InfixApp(lhs, kw, rhs) => Vector.triple(lhs, kw, rhs)
     case TermDef(k, head, rhs) => head +: rhs.toVector
-    case LexicalNew(body, rft) => body.toVector ++ rft.toVector
-    case ProperNew(body, rft, _) => body.toVector ++ rft.toVector
-    case DynamicNew(body, _) => Vector.single(body)
+    case LexicalNew(body, rft, _, _) => body.toVector ++ rft.toVector
+    case LexicalDynamicNew(cls, _, _) => Vector.single(cls)
+    case ProperNew(body, rft, _, _) => body.toVector ++ rft.toVector
+    case DynamicNew(body, _, _) => Vector.single(body)
     case IfLike(_, split) => Vector.single(split)
     case Assert(_, cond, thn, els) => cond +: (thn.toVector ++ els.toList.map(_._2))
     case Case(_, bs) => Vector.single(bs)
@@ -220,9 +226,10 @@ enum Tree extends AutoLocated:
     case DynAccess(prefix, name, _) => "dynamic field access"
     case PrefixApp(kw, body) => s"prefix operator '${kw.name}'"
     case InfixApp(lhs, kw, rhs) => s"infix operator '${kw.name}'"
-    case LexicalNew(body, _) => "new"
-    case ProperNew(body, _, _) => "new"
-    case DynamicNew(body, _) => "dynamic new"
+    case LexicalNew(body, _, _, _) => "new"
+    case LexicalDynamicNew(cls, _, _) => "dynamic new"
+    case ProperNew(body, _, _, _) => "new"
+    case DynamicNew(body, _, _) => "dynamic new"
     case IfLike(Keywrd(Keyword.`if`), split) => "if expression"
     case IfLike(Keywrd(Keyword.`while`), split) => "while expression"
     case IfLike(Keywrd(Keyword.`when`), split) => "when expression"
@@ -392,19 +399,14 @@ enum Tree extends AutoLocated:
       // TODO only do this if the lhs is non-expansive/a valid assignment receiver?
       PossiblyAnnotated(anns, LetLike(letLike, lhs, S(OpApp(lhs, Ident(nme.init), rhss)), bodo).withLocOf(this).desugared)
     
-    case Apps(PrefixApp(Keywrd(Keyword.`new!`), cls), argss) =>
-      val (cls2, rsc) = Tree.splitNewRsc(cls)
-      DynamicNew(Apps(cls2, argss), rsc).withLocOf(this)
-    case Apps(LexicalNew(S(body), N), argss) =>
-      val (body2, rsc) = Tree.splitNewRsc(body)
-      ProperNew(S(Apps(body2, argss)), N, rsc).withLocOf(this)
-    case LexicalNew(S(body), rfto) =>
-      val (body2, rsc) = Tree.splitNewRsc(body)
-      ProperNew(S(body2), rfto, rsc).withLocOf(this)
-    case LexicalNew(N, rfto) =>
-      ProperNew(N, rfto, N).withLocOf(this)
-    case InfixApp(Desugared(ProperNew(bodo, N, rsc)), Keywrd(Keyword.`with`), rhs: Block) =>
-      ProperNew(bodo, S(rhs), rsc).withLocOf(this)
+    case Apps(LexicalDynamicNew(cls, mut, rsc), argss) =>
+      DynamicNew(Apps(cls, argss), mut, rsc).withLocOf(this)
+    case Apps(LexicalNew(S(body), N, mut, rsc), argss) =>
+      ProperNew(S(Apps(body, argss)), N, mut, rsc).withLocOf(this)
+    case LexicalNew(bodo, rfto, mut, rsc) =>
+      ProperNew(bodo, rfto, mut, rsc).withLocOf(this)
+    case InfixApp(Desugared(ProperNew(bodo, N, mut, rsc)), Keywrd(Keyword.`with`), rhs: Block) =>
+      ProperNew(bodo, S(rhs), mut, rsc).withLocOf(this)
     
     case _ => this
   
@@ -530,17 +532,6 @@ object Tree:
     def unapply(t: Tree): Opt[Keywrd[Keyword.RscLike]] = t match
       case kw @ Keywrd(rsc: Keyword.RscLike) => S(new Keywrd[Keyword.RscLike](rsc).withLocOf(kw))
       case _ => N
-  
-  /** Splits the resource modifier off the body of a `new`.
-    *
-    * `rsc` parses looser than application, and `mut` tighter, so a `mut` written before `rsc` is moved back onto the
-    * class, as in `new mut C()`.
-    */
-  def splitNewRsc(body: Tree): (Tree, Opt[Keywrd[Keyword.RscLike]]) = body match
-    case Modified(RscModifier(kw), inner) => (inner, S(kw))
-    case Modified(mut @ Keywrd(Keyword.`mut`), Modified(RscModifier(kw), Apps(base, argss))) =>
-      (Apps(Modified(mut, base), argss), S(kw))
-    case _ => (body, N)
   
   extension (kw: Tree.Keywrd[?])
     def name = kw.kw.name

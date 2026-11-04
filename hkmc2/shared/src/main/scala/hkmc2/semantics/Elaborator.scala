@@ -937,6 +937,17 @@ extends Importer:
     // * The modifier wraps the instantiation in an annotation, just as it wraps a type.
     case _ => Term.Annotated(Annot.Modifier(kw)(kwLoc), inst)
   
+  /** Message for misplaced instantiation modifiers on the class of an instantiation. */
+  private val misplacedNewModifiersMsg: Message =
+    msg"Instantiation modifiers belong as part of 'new' or 'new!', each at most once, 'mut' before 'rsc' or 'rsc?'."
+  
+  /** Rejects instantiation modifiers at the head of `cls` with `message` and returns `cls` without them. */
+  def rejectMisplacedNewModifiers(cls: Tree, message: Message): Tree = cls match
+    case Apps(Modified(kw @ Keywrd(Keyword.`mut` | Keyword.`rsc` | Keyword.`rsc?`), inner), argss) =>
+      raise(ErrorReport(message -> kw.toLoc :: Nil))
+      Apps(rejectMisplacedNewModifiers(inner, message), argss)
+    case _ => cls
+  
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
     case Keywrd(kw @ (
       Keyword.`abstract`
@@ -2093,17 +2104,15 @@ extends Importer:
     case tree @ Tup(fields) =>
       withTypeBinders(Term.Tup(fields.map(fld(_, interp.elements)))(tree))
       
-    case DynamicNew(Apps(c, args), rsc) =>
-      val (mut, c2) = c match
-        case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
-        case c => (false, c)
-      val base = new Term.DynNew(subterm(c2), args.map(subterm(_))).withLocOf(tree)
-      val withMut = if mut then Term.Mut(base) else base
+    case DynamicNew(cls, mut, rsc) =>
+      val Apps(c, args) = rejectMisplacedNewModifiers(cls, misplacedNewModifiersMsg)
+      val base = new Term.DynNew(subterm(c), args.map(subterm(_))).withLocOf(tree)
+      val withMut = if mut.isDefined then Term.Mut(base) else base
       rsc.fold(withMut)(kw => rscInstantiation(kw.kw, kw.toLoc, withMut))
     // case New(c, rfto) =>
     //   assert(rfto.isEmpty)
     //   Term.New(cls(subterm(c), inAppPrefix = inAppPrefix), params.map(subterm(_)), bodo).withLocOf(tree)
-    case ProperNew(body, rfto, rscKw) => // TODO handle Under
+    case ProperNew(body, rfto, mut, rscKw) => // TODO handle Under
       lazy val bodo = rfto.map: rft =>
         val clsSym = new ClassSymbol(DummyTypeDef(syntax.Cls), Ident("$anon"))
         recordDefinitionScope(clsSym)
@@ -2112,17 +2121,14 @@ extends Importer:
             // TODO integrate context inherited from cls
             // TODO make context with var symbols for class parameters
             ObjBody(block(rft, hasResult = false, resultInterp = Trm)._1)
-      body match
+      body.map(rejectMisplacedNewModifiers(_, misplacedNewModifiersMsg)) match
       case S(Apps(c, args)) =>
-        val (mut, c2) = c match
-          case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
-          case c => (false, c)
         val inner = mkNew(
-          subterm(c2, Clss), // * Note: we'll catch bad `new` targets during type checking
+          subterm(c, Clss), // * Note: we'll catch bad `new` targets during type checking
           args.map(subterm(_)),
           bodo
         )(N)
-        val withMut = if mut then Term.Mut(inner) else inner
+        val withMut = if mut.isDefined then Term.Mut(inner) else inner
         rscKw.fold(withMut)(kw => rscInstantiation(kw.kw, kw.toLoc, withMut))
       case N =>
         val objectRef = Ctx.RefElem(ctx.builtins.Object.bms.get).ref(N)
@@ -2341,7 +2347,7 @@ extends Importer:
     case Reft(base, body) =>
       raise(ErrorReport(msg"Unsupported refinement in this position." -> tree.toLoc :: Nil))
       error
-    case Dummy | _: SplitPoint | _: LexicalNew | _: Region | _: Effectful =>
+    case Dummy | _: SplitPoint | _: LexicalNew | _: LexicalDynamicNew | _: Region | _: Effectful =>
       lastWords(s"Unexpected ${tree.describe} in subterm position: $tree")
     case Dummy | _: SplitPoint | _: Pun | _: LetLike | _: TyTup | _: Directive =>
       raise(ErrorReport(msg"Unsupported term in this position (${tree.describe})." -> tree.toLoc :: Nil))
@@ -3306,7 +3312,9 @@ extends Importer:
   def newOf(td: TypeDef): Ctxl[Opt[Term.New]] =
     td.extension
     match
-    case S(ext) => S(term(ProperNew(S(ext), N, N), Trm))
+    case S(ext) =>
+      val cls = rejectMisplacedNewModifiers(ext, msg"A parent class takes no instantiation modifiers.")
+      S(term(ProperNew(S(cls), N, N, N), Trm))
     case N => N
     match
     case S(n: Term.New) => S(n)

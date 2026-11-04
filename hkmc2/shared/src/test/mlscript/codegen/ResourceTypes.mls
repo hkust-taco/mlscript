@@ -172,9 +172,15 @@ fun mkMutNew() = new mut rsc C()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define mkMutNew⁰ as fun mkMutNew¹(): ? { return new mut rsc C²() }; end
 
+// The modifiers of an instantiation come in a fixed order: `mut`, then `rsc`.
+
+:e
 fun mkRscMutNew() = new rsc mut C()
+//│ ╔══[COMPILATION ERROR] Instantiation modifiers belong as part of 'new' or 'new!', each at most once, 'mut' before 'rsc' or 'rsc?'.
+//│ ║  l.+1: 	fun mkRscMutNew() = new rsc mut C()
+//│ ╙──      	                            ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define mkRscMutNew⁰ as fun mkRscMutNew¹(): ? { return new mut rsc C²() }; end
+//│ define mkRscMutNew⁰ as fun mkRscMutNew¹(): ? { return new rsc C²() }; end
 
 :e
 fun newMaybe() = new rsc? C()
@@ -701,7 +707,7 @@ fun maybePartial(a) = useRscFn(rsc? curried(a))
 
 :e
 fun rscSaturated(a) = rsc curried(a)(a)
-//│ ╔══[COMPILATION ERROR] This call fully-applies its callee's parameter lists, so its resource modifier has no effect.
+//│ ╔══[COMPILATION ERROR] This call fully applies its callee's parameter lists, so its resource modifier has no effect.
 //│ ║  l.+1: 	fun rscSaturated(a) = rsc curried(a)(a)
 //│ ╙──      	                          ^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————

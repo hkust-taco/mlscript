@@ -5,7 +5,7 @@
 :pe
 :re
 new
-//│ ╔══[PARSE ERROR] Expected 'with' keyword, expression, or block after `new` keyword; found end of input instead
+//│ ╔══[PARSE ERROR] Expected 'with' keyword, 'mut' keyword, 'rsc' keyword, 'rsc?' keyword, expression, or block after `new` keyword; found end of input instead
 //│ ║  l.+1: 	new
 //│ ╙──      	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -66,7 +66,7 @@ new {}
 
 :pe
 new! {}
-//│ ╔══[PARSE ERROR] Expected expression after prefix keyword 'new!'; found end of block instead
+//│ ╔══[PARSE ERROR] Expected 'mut' keyword, 'rsc' keyword, 'rsc?' keyword, or expression after `new!` keyword; found end of block instead
 //│ ║  l.+1: 	new! {}
 //│ ╙──      	     ^^
 
@@ -95,7 +95,7 @@ new { x = 1 }
 
 :e
 new! { x = 1 }
-//│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'new!'
+//│ ╔══[COMPILATION ERROR] Unrecognized definitional assignment left-hand side: dynamic new
 //│ ║  l.+1: 	new! { x = 1 }
 //│ ╙──      	^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

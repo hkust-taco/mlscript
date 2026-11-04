@@ -815,7 +815,8 @@ new Foo          // create (static class required)
 new Foo()        // with empty args
 new Foo(1, 2)    // with args
 new mut Foo      // mutable instance (not frozen)
-new rsc Foo      // resource instance (in either order with `mut`)
+new rsc Foo      // resource instance
+new mut rsc Foo  // modifiers come right after `new`, `mut` first
 new! c           // dynamic instantiation (class value at runtime)
 new Foo(...xs)   // spread args
 ```
@@ -2553,7 +2554,7 @@ decl      ::= 'declare' def
 
 expr      ::= literal | name | app | lambda | if | case | while
             | let | set | 'return' | 'throw' | 'drop' | 'do'
-            | 'new' (mut | rsc)* class args | 'handle' | 'using'
+            | 'new' ['mut'] ['rsc' | 'rsc?'] class args | 'handle' | 'using'
             | annotation expr | prefix | infix | block
 
 if        ::= 'if' scrutinee? branches

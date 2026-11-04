@@ -92,37 +92,37 @@ abstract class List[rsc? A]
 //│ 	Modified(Keywrd(keyword 'abstract'),TypeDef(Cls,App(Ident(List),TyTup(List(Modified(Keywrd(keyword 'rsc?'),Ident(A))))),None))
 
 
-// Instantiation. Unlike `mut`, `rsc` parses looser than application, so its operand is the
-// class together with its argument lists.
+// Instantiation. After `new`, `mut` and `rsc` are fields of the instantiation, and apply to the
+// class alone, as `new` does.
 
 new rsc C()
 //│ Parsed:
-//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),App(Ident(C),Tup(List())))),None)
+//│ 	App(LexicalNew(Some(Ident(C)),None,None,Some(Keywrd(keyword 'rsc'))),Tup(List()))
 
 new rsc C
 //│ Parsed:
-//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),Ident(C))),None)
+//│ 	LexicalNew(Some(Ident(C)),None,None,Some(Keywrd(keyword 'rsc')))
 
 new rsc C(1)(2)
 //│ Parsed:
-//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),App(App(Ident(C),Tup(List(IntLit(1)))),Tup(List(IntLit(2)))))),None)
+//│ 	App(App(LexicalNew(Some(Ident(C)),None,None,Some(Keywrd(keyword 'rsc'))),Tup(List(IntLit(1)))),Tup(List(IntLit(2))))
 
 new rsc? C()
 //│ Parsed:
-//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc?'),App(Ident(C),Tup(List())))),None)
+//│ 	App(LexicalNew(Some(Ident(C)),None,None,Some(Keywrd(keyword 'rsc?'))),Tup(List()))
 
 new mut rsc C()
 //│ Parsed:
-//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'mut'),Modified(Keywrd(keyword 'rsc'),App(Ident(C),Tup(List()))))),None)
+//│ 	App(LexicalNew(Some(Ident(C)),None,Some(Keywrd(keyword 'mut')),Some(Keywrd(keyword 'rsc'))),Tup(List()))
 
 new rsc mut C()
 //│ Parsed:
-//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),App(Modified(Keywrd(keyword 'mut'),Ident(C)),Tup(List())))),None)
+//│ 	App(LexicalNew(Some(Modified(Keywrd(keyword 'mut'),Ident(C))),None,None,Some(Keywrd(keyword 'rsc'))),Tup(List()))
 
 new! rsc C()
 //│ Parsed:
-//│ 	PrefixApp(Keywrd(keyword 'new!'),Modified(Keywrd(keyword 'rsc'),App(Ident(C),Tup(List()))))
+//│ 	App(LexicalDynamicNew(Ident(C),None,Some(Keywrd(keyword 'rsc'))),Tup(List()))
 
 new rsc C with {}
 //│ Parsed:
-//│ 	LexicalNew(Some(Modified(Keywrd(keyword 'rsc'),Ident(C))),Some(Block(List())))
+//│ 	LexicalNew(Some(Ident(C)),Some(Block(List())),None,Some(Keywrd(keyword 'rsc')))

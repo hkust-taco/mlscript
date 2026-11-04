@@ -418,7 +418,7 @@ abstract class Parser(
               errExpr
             blk.map(annotations.annotate) ::: blockContOf(rule)
           case _ =>
-            val p = kw.rightPrec.getOrElse(CommaPrecNext)
+            val p = rule.kwAltPrec(kw).getOrElse(CommaPrecNext)
             val res = parseRule(p, subRule, allowNewlines = allowNewlines).getOrElse(errExpr)
             blockEntry(exprCont(res, CommaPrecNext, allowNewlines = allowNewlines))
         case N =>
@@ -539,9 +539,9 @@ abstract class Parser(
           case (tok @ Bracketed(_: Indent_Curly, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
             consume
             rec(toks, S(tok.innerLoc), tok.describe)
-              .concludeWith(_.parseRule(kw.rightPrec.getOrElse(CommaPrecNext), subRule, allowNewlines = true))
+              .concludeWith(_.parseRule(rule.kwAltPrec(kw).getOrElse(CommaPrecNext), subRule, allowNewlines = true))
           case _ =>
-            parseRule(kw.rightPrec.getOrElse(CommaPrecNext), subRule, allowNewlines = allowNewlines)
+            parseRule(rule.kwAltPrec(kw).getOrElse(CommaPrecNext), subRule, allowNewlines = allowNewlines)
         case N =>
           if verbose then printDbg(s"$$ cannot find a rule starting with: ${id.name}")
           rule.exprAlt match
