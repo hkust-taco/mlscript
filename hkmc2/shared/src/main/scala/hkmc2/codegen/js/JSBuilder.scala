@@ -734,7 +734,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   else
                     ownr match
                     case S(owner) =>
-                      val target = Select(owner.asThis, Tree.Ident(sym.nme))(S(isym), isym.toLoc)(false)
+                      val target = owner.asThis.sel(isym).withLoc(isym.toLoc)
                       doc" # ${result(target)} = $v"
                     case N =>
                       doc" # ${result(sym.asMemberRef(isym))} = $v"

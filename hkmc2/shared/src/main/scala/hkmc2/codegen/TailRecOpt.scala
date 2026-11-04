@@ -311,9 +311,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         val sliceResSym = TempSymbol(N, initErasedType = S(ErasedType.Array), "sliceRes")
         // runtime.Tuple.sliceArray(tupleSym, paramList.length, 0)
         val sliceRes = Call(
-          State.runtimeSymbol.asSimpleRef
-            .sel(Tree.Ident("Tuple"), State.tupleSymbol)
-            .sel(Tree.Ident("sliceArray"), State.tupleSliceArraySymbol),
+          State.runtimeSymbol.asSimpleRef.sel(State.tupleSymbol).sel(State.tupleSliceArraySymbol),
           (tupleSym.asSimpleRef.asArg
             :: Value.Lit(Tree.IntLit(paramList.length))(N).asArg
             :: Value.Lit(Tree.IntLit(0))(N).asArg
@@ -497,7 +495,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val loopSym = LabelSymbol(N, "loopLabel")
     
     val loopDefnPath = owner match
-      case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym), N)(false)
+      case Some(value) => value.asThis.sel(dSym)
       case None => bms.asMemberRef(dSym)
     
     def rewriteKnownCall(callee: FunDefn, flattenedArgs: List[Path]) =

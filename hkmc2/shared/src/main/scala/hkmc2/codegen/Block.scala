@@ -1470,7 +1470,13 @@ sealed abstract class Path extends TrivialResult:
     case Cast(path: Path, _, false) => path.isStable
     case _ => false
   def selN(id: Tree.Ident): Path = Select(this, id)(N, N)(false)
-  def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym), N)(false)
+  /** A compiler-generated selection of the member defined by `sym`. The JS backend emits a selection
+    * by its identifier, while the IR printer and the Wasm backend identify it by its symbol, so the
+    * identifier takes the symbol's name to keep both views in sync. Selections from source code build
+    * a `Select` directly: their identifier keeps its source location for diagnostics, and their symbol
+    * is the resolved target, which may be named differently from the member read. For instance, with
+    * `let constructors = {make: Direct}`, `constructors.make` reads field `make` but resolves to class `Direct`. */
+  def sel(sym: DefinitionSymbol[?]): Select = Select(this, Tree.Ident(sym.nme))(S(sym), N)(false)
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(spread = N, this)
   def targetSymbol: Opt[DefinitionSymbol[?]] = this match
