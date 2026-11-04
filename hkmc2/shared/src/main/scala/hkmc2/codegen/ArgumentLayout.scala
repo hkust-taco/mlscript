@@ -21,19 +21,22 @@ private[codegen] final class ArgumentLayout private (
     val count = required.length
     bindings.iterator.drop(count).map((param, source) => param -> source.dropPrefix(count)).toList
 
-  /** Unknown spread lengths leave only the required prefix at fixed argument positions. */
+  /** Unknown spread lengths leave only the required prefix at fixed argument positions.
+    * So do counts below `minimumCount`: resolution already reports the arity error, and resolving
+    * trailing slots from the end would check leading arguments against unrelated trailing types. */
   def expectedTypes(count: Opt[Int]): Ls[Opt[ErasedValueType]] = count match
-    case N => required.map(_.sym.erasedType)
-    case S(n) =>
+    case S(n) if n >= minimumCount =>
       val types = bindings.iterator.flatMap: (param, source) =>
         source.argumentIndex(n).map(_ -> param.sym.erasedType)
       .toMap
       List.tabulate(n)(index => types.get(index).flatten)
+    case _ => required.map(_.sym.erasedType)
 
 private[codegen] object ArgumentLayout:
   enum Source:
     /** Negative indices count from the end. A presence threshold supplies null below that length;
-      * it applies to leading slots, whose arguments must precede all trailing arguments. */
+      * it applies to optional leading slots, whose arguments must precede all trailing arguments.
+      * Elements of the required prefix and trailing elements have none: the arity check ensures them. */
     case Element(index: Int, minimumLength: Opt[Int])
     /** Drop `start` leading arguments and `trailing` trailing arguments. */
     case Slice(start: Int, trailing: Int)
@@ -59,7 +62,7 @@ private[codegen] object ArgumentLayout:
       val required = LoweredParamList.fixedPrefix(ps)
       val trailingCount = suffix.length
       val leading = ps.params.iterator.zipWithIndex.map: (param, index) =>
-        param -> Source.Element(index, S(index + trailingCount + 1))
+        param -> Source.Element(index, Option.when(index >= required.length)(index + trailingCount + 1))
       val trailing = suffix.iterator.zipWithIndex.map: (param, index) =>
         param -> Source.Element(index - trailingCount, N)
       val bindings = leading.toList :::

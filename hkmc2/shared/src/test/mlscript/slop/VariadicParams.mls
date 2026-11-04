@@ -258,6 +258,19 @@ private fun typedLayout(head?: Int, ...rest, text: Str, count: Int) = [head, tex
 [typedLayout("A", 1), typedLayout(2, "B", 3), typedLayout(4, false, "C", 5)]
 //│ = [[null, "A", 1], [2, "B", 3], [4, "C", 5]]
 
+// An under-applied call checks its arguments against the required prefix only,
+// so its arity error is not followed by a mismatch against a trailing slot.
+:e
+private fun mixedTail(count: Int, ...rest, text: Str) = text
+mixedTail(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	mixedTail(1)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Function 'mixedTail' expected at least 2 arguments, but got 1
+//│ ║  l.+1: 	private fun mixedTail(count: Int, ...rest, text: Str) = text
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'mixedTail' expected at least 2 arguments but got 1
+
 // Unknown-length calls still coerce the dynamically extracted value into its typed destination.
 :noInline
 :expect 7
