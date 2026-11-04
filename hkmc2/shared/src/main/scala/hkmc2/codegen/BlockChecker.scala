@@ -213,13 +213,25 @@ class BlockChecker()(using DebugPrinter, State, Ctx, Raise) extends BindingCheck
       checkArgs(inst.argss, paramTypes, msg"a constructor argument")
   
   private def checkCast(cast: Cast): Unit =
-    (cast.value.erasedType_!.canonicalize, cast.target.canonicalize) match
+    val from = cast.value.erasedType_!.canonicalize
+    val to = cast.target.canonicalize
+    (cast.value, from, to) match
+      // Semantic construction never casts a value that already fits its target, and
+      // `Cast.refined` drops a cast that substitution makes redundant. A non-path operand,
+      // such as a lambda, keeps its cast, which is how it fits a path position.
+      case (_: Path, _, _) if ErasedType.needsCast(from, to).contains(false) =>
+        raise:
+          InternalError(
+            (msg"Invalid IR: a redundant cast" -> cast.toLoc) ::
+              (msg"The value already has type '${from.describe}', which fits '${to.describe}'" -> cast.toLoc) :: Nil,
+            extraInfo = S((from, to)),
+          )
       // Substitution can move a value of a more precise type into an existing cast:
       // inlining `asWrapper(fortyTwo)` yields `42 as! Wrapper`. A cast between unrelated
       // reference types fails at run time, but backends can still emit it. Only a type
       // without a representation shared with the operand makes a cast invalid.
-      case (_: ErasedType.AnyRef, _: ErasedType.AnyRef) => ()
-      case (from, to) => checkTypes(from, to, msg"a cast", cast.toLoc, allowNarrowing = true)
+      case (_, _: ErasedType.AnyRef, _: ErasedType.AnyRef) => ()
+      case _ => checkTypes(from, to, msg"a cast", cast.toLoc, allowNarrowing = true)
   
   override def applyResult(result: Result): Unit =
     result match

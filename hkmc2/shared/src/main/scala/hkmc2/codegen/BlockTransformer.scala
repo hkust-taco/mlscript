@@ -199,8 +199,14 @@ class BlockTransformer(subst: SymbolSubst):
         k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2, p.toLoc)(p.sanitize))
     case c @ Cast(value, target, check) =>
       applyResult(value): value2 =>
-        k(if value2 is value then c else Cast(value2, target, check)(c.toLoc))
+        k(if value2 is value then c else rebuildCast(c, value2))
     case v: Value => applyValue(v)(k)
+  
+  /** Rebuilds `cast` around its transformed operand. Transformers that can compare
+    * representations override this to drop a cast that substitution made redundant
+    * (see `Cast.refined`); the context-free `Cast.apply` cannot decide that. */
+  protected def rebuildCast(cast: Cast, value: Result): Path =
+    Cast(value, cast.target, cast.check)(cast.toLoc)
   
   def applyValue(v: Value)(k: Value => Block) = v match
     case Value.SimpleRef(l) =>

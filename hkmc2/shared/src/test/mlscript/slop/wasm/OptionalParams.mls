@@ -255,6 +255,6 @@ keep(3, ())
 fun test(x?: Int32) = x
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	fun test(x?: Int32) = x
-//│ ╙──      	                      ^
+//│ ╙──      	         ^^^^^^^^^
 //│ Wasm result:
 //│ = {}

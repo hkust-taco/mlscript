@@ -113,10 +113,30 @@ fun mismatch() = asWrapper(fortyTwo)
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
-// Declaring a parameter whose type has no common representation is legal; moving a value into it
-// is the error. The binding and the signature agree on that type, so the definition is valid.
-:checkIR
+// A type without a common representation is rejected where a declaration writes it.
+// Passing a value into the declared parameter does not repeat the error.
+:ge
 fun mixed(value: Int32 | Str) = 0
+fun intoMixed(n: Int32) = mixed(n)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	fun mixed(value: Int32 | Str) = 0
+//│ ╙──      	                 ^^^^^^^^^^^
+
+// Inlining makes the coercion of `5` to the parameter's Int redundant, so the simplifier drops it.
+:checkIR
+:soir
+@noInline fun takeInt(value: Int): Int = value
+fun forward(value) = takeInt(value)
+forward(5)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @noInline
+//│ define takeInt⁰ as fun takeInt¹(value) {
+//│   return value
+//│ };
+//│ define forward⁰ as fun forward¹(value) { return takeInt¹((value as! Int⁰)) };
+//│ return takeInt¹(5)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 5
 
 // TODO: SymbolRefresher must rename nominal types alongside the classes it copies.
 // Each inlined construction must agree with its own temporary and parameter slots.
@@ -133,16 +153,12 @@ fun mixed(value: Int32 | Str) = 0
 //│ ╙── The value and its destination refer to different copies of type 'Local'
 //│ = [Local, Local]
 
-// TODO: Pattern lowering binds typed temporaries, such as a string's head, to calls of
-// untyped runtime helpers without a cast. Coercing every `Split.Let` value fixes this,
-// but the simplifier then stops folding and propagating through the new checked casts.
-:fixme
+// Pattern lowering binds typed temporaries, such as a string's head, to calls of untyped
+// runtime helpers. Their casts are unchecked, so the simplifier still sees through them.
 :checkIR
 :expect [true, false]
 pattern Lower = "a"..="z"
 ["q" is Lower, "Q" is Lower]
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'stringHead'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Str'
 //│ = [true, false]
 
 // Tail-call rewriting reuses the spread operand as the Array-typed rest parameter.
