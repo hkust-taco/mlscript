@@ -2077,7 +2077,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       annots.foreach:
         case annot @ Annot.Resource(_) =>
           // * Report if the `rsc` annotation on this target has no effect, which is only known after the selection lowers.
-          raise(Annot.noEffect(annot.toLoc, receiver, N))
+          raise(Annot.Resource.noEffect(annot.toLoc, receiver, N))
         case _ => ()
       setupNamedSelection(prefix, nme, target, keyAccess, loc)(k)
 
@@ -2184,6 +2184,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =
     def warn(annot: Annot, msg: Opt[Message] = N) =
       raise(Annot.noEffect(annot.toLoc, receiver, msg))
+    def reject(annot: Annot) =
+      raise(Annot.Resource.noEffect(annot.toLoc, receiver, N))
     
     annotations.foreach:
       case Annot.Untyped() => ()
@@ -2197,7 +2199,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case _ => warn(annot)
       case annot @ Annot.Resource(_) => receiver match
         // * Whether a call is a partial application is only known once its callee is lowered (see `lowerMultiCall`).
-        case st.App(Ref(_: BuiltinSymbol), _) => warn(annot)
+        case st.App(Ref(_: BuiltinSymbol), _) => reject(annot)
         case New(_, _, N) | Mut(New(_, _, N)) | st.Lam(_, _) | st.App(_, _) => ()
         case memberRef: st.MemberRef
         if memberRef.resolvedTargets.distinct.foldSingleton(_ => false)(rscExpandable(_).isDefined) => ()
@@ -2207,7 +2209,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // * Class values and tuple indices are lowered without it.
         case sel: NewSel if !sel.isClassValue && sel.tupleIndex.isEmpty => ()
         case _: UnresolvedRef => ()
-        case _ => warn(annot)
+        case _ => reject(annot)
       case a @ Annot.TailCall() => receiver match
         case st.App(BuiltinRef(_), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))
         case st.App(_, _) => ()

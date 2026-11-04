@@ -1,0 +1,61 @@
+:.
+:js
+
+
+class C
+
+
+// * A resource modifier in an expression is an error where it has no effect.
+
+:e
+rsc 1
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
+//│ ║  l.+1: 	rsc 1
+//│ ║        	^^^
+//│ ╟── This annotation is not supported on integer literal terms.
+//│ ║  l.+1: 	rsc 1
+//│ ╙──      	    ^
+//│ = 1
+
+:e
+rsc (if true then 1 else 2)
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
+//│ ║  l.+1: 	rsc (if true then 1 else 2)
+//│ ║        	^^^
+//│ ╟── This annotation is not supported on `if` expression terms.
+//│ ║  l.+1: 	rsc (if true then 1 else 2)
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^
+//│ = 1
+
+:e
+rsc? 1
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
+//│ ║  l.+1: 	rsc? 1
+//│ ║        	^^^^
+//│ ╟── This annotation is not supported on integer literal terms.
+//│ ║  l.+1: 	rsc? 1
+//│ ╙──      	     ^
+//│ = 1
+
+// * An instance's modifier goes inside the instantiation.
+
+:e
+rsc (new C())
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
+//│ ║  l.+1: 	rsc (new C())
+//│ ║        	^^^
+//│ ╟── This annotation is not supported on object instantiation terms.
+//│ ║  l.+1: 	rsc (new C())
+//│ ╙──      	     ^^^^^^^
+//│ = C
+
+:e
+rsc? (new C())
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
+//│ ║  l.+1: 	rsc? (new C())
+//│ ║        	^^^^
+//│ ╟── This annotation is not supported on object instantiation terms.
+//│ ║  l.+1: 	rsc? (new C())
+//│ ╙──      	      ^^^^^^^
+//│ = C
+

@@ -2244,7 +2244,7 @@ extends Importer:
         case _ => t
       underlying(trm) match
       case inst @ (Term.New(_, _, _) | Term.DynNew(_, _) | Term.Mut(_: Term.New | _: Term.DynNew)) =>
-        raise(Annot.noEffect(kwt.toLoc, inst, N))
+        raise(Annot.Resource.noEffect(kwt.toLoc, inst, N))
         trm
       case Term.Lam(_, _) | Term.App(_, _) | Term.NewSel(_, _, _) | Term.Ref(_) | Term.MemberRef(_) |
         Term.SelfRef(_) | Term.SimpleRef(_) | Term.Sel(_, _) | Term.Super(_, _, _) | Term.SynthSel(_, _) |

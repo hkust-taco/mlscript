@@ -111,17 +111,23 @@ object Annot:
     /** Reports the use of `rsc?` on a value that requires a known resource-ness. */
     def maybeRscOnVal(loc: Opt[Loc]): ErrorReport =
       ErrorReport(msg"This value cannot be 'rsc?': it either is a resource or is not." -> loc :: Nil)
+    
+    /** Like `Annot.noEffect`, but an error: in an expression, a resource modifier must take effect. */
+    def noEffect(annotLoc: Opt[Loc], receiver: Term, reason: Opt[Message]): ErrorReport =
+      ErrorReport(noEffectMessages(annotLoc, receiver, reason))
   
   /** Reports that an annotation written at `annotLoc` has no effect on `receiver`,
     * because of `reason` or, by default, because `receiver` does not support it.
     */
   def noEffect(annotLoc: Opt[Loc], receiver: Term, reason: Opt[Message]): WarningReport =
+    WarningReport(noEffectMessages(annotLoc, receiver, reason))
+  
+  private def noEffectMessages(annotLoc: Opt[Loc], receiver: Term, reason: Opt[Message]): Ls[Message -> Opt[Loc]] =
     val message = reason match
       case N => msg"This annotation is not supported on ${receiver.describe} terms."
       case S(value) => value
-    WarningReport(
-      msg"This annotation has no effect." -> annotLoc ::
-      message -> receiver.toLoc :: Nil)
+    msg"This annotation has no effect." -> annotLoc ::
+      message -> receiver.toLoc :: Nil
   
   /** The `declare` modifier in `annotations`, if present. */
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:

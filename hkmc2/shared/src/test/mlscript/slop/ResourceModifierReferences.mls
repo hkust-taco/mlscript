@@ -188,9 +188,9 @@ useRsc(rsc m2)
 
 // * Class values and tuple indices are not functions with parameter lists.
 
-:w
+:e
 rsc M2.K
-//│ ╔══[WARNING] This annotation has no effect.
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
 //│ ║  l.+1: 	rsc M2.K
 //│ ║        	^^^
 //│ ╟── This annotation is not supported on selection terms.
@@ -201,9 +201,9 @@ rsc M2.K
 let t = [g]
 //│ t = [fun g]
 
-:w
+:e
 rsc t.0
-//│ ╔══[WARNING] This annotation has no effect.
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
 //│ ║  l.+1: 	rsc t.0
 //│ ║        	^^^
 //│ ╟── This annotation is not supported on selection terms.
@@ -287,14 +287,14 @@ fun wrap2() =
   fun inner(z) = z
   useRsc(rsc inner)
 
-// * Other references are not known functions with parameter lists, so the modifier has no effect.
+// * Other references are not known functions with parameter lists, so the modifier has no effect and is an error.
 
 module N with
   fun n = 1
 
-:w
+:e
 rsc h
-//│ ╔══[WARNING] This annotation has no effect.
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
 //│ ║  l.+1: 	rsc h
 //│ ║        	^^^
 //│ ╟── This annotation is not supported on reference terms.
@@ -302,9 +302,9 @@ rsc h
 //│ ╙──      	    ^
 //│ = fun h
 
-:w
+:e
 rsc N.n
-//│ ╔══[WARNING] This annotation has no effect.
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
 //│ ║  l.+1: 	rsc N.n
 //│ ║        	^^^
 //│ ╟── This annotation is not supported on selection terms.
@@ -312,9 +312,9 @@ rsc N.n
 //│ ╙──      	    ^^^
 //│ = 1
 
-:w
+:e
 fun wrap3(y) = rsc y
-//│ ╔══[WARNING] This annotation has no effect.
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
 //│ ║  l.+1: 	fun wrap3(y) = rsc y
 //│ ║        	               ^^^
 //│ ╟── This annotation is not supported on reference terms.
