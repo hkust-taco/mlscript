@@ -189,10 +189,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           transformPath(qual): x =>
             transformPath(fld): y =>
               blockCtor("DynSelect", Ls(x, y, toValue(kind.isArrayIdx)), "dynsel")(k)
-        case Cast(value, target, check) =>
-          transformResult(value): v =>
-            blockCtor("Symbol", Ls(toValue(target.describe)), "target"): t =>
-              blockCtor("Cast", Ls(v, t, toValue(check)), "cast")(k)
+        case cast: CastPath => transformCast(cast)(k)
         case _: SuperSelect =>
           raise(ErrorReport(msg"Super selection is not supported in staged modules." -> p.toLoc :: Nil))
           End()
@@ -200,8 +197,15 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           raise(ErrorReport(msg"Value.This not supported in staged module." -> p.toLoc :: Nil))
           End()
 
+  /** The reflected `Block.Cast` accepts any result, so both forms of IR casts map to it. */
+  private def transformCast(cast: Cast)(using Context)(k: Path => Block): Block =
+    transformResult(cast.value): v =>
+      blockCtor("Symbol", Ls(toValue(cast.target.describe)), "target"): t =>
+        blockCtor("Cast", Ls(v, t, toValue(cast.check)), "cast")(k)
+
   def transformResult(r: Result)(using Context)(k: Path => Block): Block = r match
     case p: Path => transformPath(p)(k)
+    case cast: CastResult => transformCast(cast)(k)
     case Tuple(mut, elems) =>
       assert(!mut, "mutable tuple not supported")
       transformArgs(elems): xs =>

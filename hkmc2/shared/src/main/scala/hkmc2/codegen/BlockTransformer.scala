@@ -178,6 +178,9 @@ class BlockTransformer(subst: SymbolSubst):
     case Record(mut, fields) =>
       applyRcdArgs(fields): fields2 =>
         k(if fields2 is fields then r else Record(mut, fields2)(r.toLoc))
+    case c @ CastResult(value, _, _) =>
+      applyResult(value): value2 =>
+        k(if value2 is value then c else rebuildCast(c, value2))
     case p: Path => applyPath(p)(k)
   
   def applyPath(p: Path)(k: Path => Block): Block = p match
@@ -197,16 +200,21 @@ class BlockTransformer(subst: SymbolSubst):
       applyPath(qual): qual2 =>
         val sym2 = p.symbol.mapConserve(_.subst)
         k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2, p.toLoc)(p.sanitize))
-    case c @ Cast(value, target, check) =>
-      applyResult(value): value2 =>
-        k(if value2 is value then c else rebuildCast(c, value2))
+    // * The operand of a path cast is itself in a path position, so substitution cannot turn it into a computation.
+    case c @ CastPath(value, _, _) =>
+      applyPath(value): value2 =>
+        k(if value2 is value then c else rebuildCastPath(c, value2))
     case v: Value => applyValue(v)(k)
   
   /** Rebuilds `cast` around its transformed operand. Transformers that can compare
     * representations override this to drop a cast that substitution made redundant
     * (see `Cast.refined`); the context-free `Cast.apply` cannot decide that. */
-  protected def rebuildCast(cast: Cast, value: Result): Path =
+  protected def rebuildCast(cast: CastResult, value: Result): Result =
     Cast(value, cast.target, cast.check)(cast.toLoc)
+  
+  /** Rebuilds a path cast around its transformed operand, like [[rebuildCast]]. */
+  protected def rebuildCastPath(cast: CastPath, value: Path): Path =
+    Cast.path(value, cast.target, cast.check)(cast.toLoc)
   
   def applyValue(v: Value)(k: Value => Block) = v match
     case Value.SimpleRef(l) =>

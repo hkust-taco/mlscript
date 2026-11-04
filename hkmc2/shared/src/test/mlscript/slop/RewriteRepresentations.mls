@@ -182,3 +182,20 @@ pattern Lower = "a"..="z"
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [true, false]
+
+// The operand of a cast in a path position is itself a path. Propagating the partial
+// application `curriedAdd(123)` into the callee's cast would disguise a call as a path.
+:soir
+:expect 124
+fun curriedAdd(x)(a) = x + a
+123 |> curriedAdd <| 1
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ @inline
+//│ define curriedAdd⁰ as fun curriedAdd¹(x)(a) {
+//│   return +⁰(x, a)
+//│ };
+//│ set tmp = curriedAdd¹(123);
+//│ return (tmp as! Function⁰)(1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 124

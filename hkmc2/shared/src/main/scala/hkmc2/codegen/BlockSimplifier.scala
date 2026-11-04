@@ -123,8 +123,10 @@ class BlockSimplifier
   /** Simplifier rewrites substitute values into existing casts, which can make them redundant.
     * Dropping those casts exposes literals and known values to folding and propagation. */
   trait RefinesCasts extends BlockTransformer:
-    override protected def rebuildCast(cast: Cast, value: Result): Path =
+    override protected def rebuildCast(cast: CastResult, value: Result): Result =
       Cast.refined(value, cast.target, cast.check)(cast.toLoc)
+    override protected def rebuildCastPath(cast: CastPath, value: Path): Path =
+      Cast.refinedPath(value, cast.target, cast.check)(cast.toLoc)
   
   
   // * Only such variables can be assigned directly in the IR
@@ -198,8 +200,8 @@ class BlockSimplifier
           * backend a cast it cannot emit. This cannot live in `Result.freeVars`: resolving a target to its
           * `BlockMemberSymbol` needs a `Ctx` that the context-free `lazy val` does not have.
           *
-          * Both traversal entry points must call this: `applyResult` matches `Cast` before its `Path` case, so
-          * `applyPath` never sees a returned or assigned cast, only the ones a `ValDefn` binds.
+          * Both traversal entry points must call this: `applyResult` matches every cast before its `Path` case,
+          * so `applyPath` only sees the path casts in path positions, such as arguments.
           */
         def markCastTarget(target: ErasedValueType): Unit =
           target.canonicalize match
@@ -565,8 +567,8 @@ class BlockSimplifier
     // *   - `false` means no known value.
     // *   - `true` means definitely uninitialized,
     // *     meaning any variable access can be replaced by `undefined`, ie, `Value.Lit(UnitLit(false))`.
-    // *   - `Value`/`Cast` means this exact value is still available for propagation.
-    type KnownValue = Bool | Value | Cast
+    // *   - `Value`/`CastPath` means this exact value is still available for propagation.
+    type KnownValue = Bool | Value | CastPath
     
     // * The propagated value fact for an assignment, plus equivalent
     // * references that could be substituted while their requirements hold.
@@ -581,9 +583,9 @@ class BlockSimplifier
         (l, r) match
         case (false, _) | (_, false) => false
         case (true, true) => true
-        case (true, v: (Value | Cast)) => v
-        case (v: (Value | Cast), true) => v
-        case (v1: (Value | Cast), v2: (Value | Cast)) if v1 === v2 => v1
+        case (true, v: (Value | CastPath)) => v
+        case (v: (Value | CastPath), true) => v
+        case (v1: (Value | CastPath), v2: (Value | CastPath)) if v1 === v2 => v1
         case _ => false
       
       def mergeRefs(l: List[TrackedRef], r: List[TrackedRef]): List[TrackedRef] =
@@ -694,7 +696,7 @@ class BlockSimplifier
             // * slot - a `return`, which Wasm validates against the declared result instead of coercing into it.
             // * Consumers wanting the literal look through the cast with `litThroughUncheckedCasts`.
             // * A *checked* cast is excluded: propagating it would duplicate a test that can throw.
-            case c @ Cast(Value.Lit(_), _, false) => c
+            case c @ CastPath(Value.Lit(_), _, false) => c
             case _ => false
           val refs = opt match
             case S((r @ Value.SimpleRef(lv: LocalVar)) -> rhs) =>
@@ -1168,7 +1170,7 @@ class BlockSimplifier
         case true =>
           registerChange(s"${loc.showDbg} ~> undefined")
           return k(Value.Lit(syntax.Tree.UnitLit(false))(v.toLoc))
-        case lit: (Value | Cast) =>
+        case lit: (Value | CastPath) =>
           registerChange(s"${loc.showDbg} ~> ${lit.showDbg}")
           return k(lit)
         case false =>

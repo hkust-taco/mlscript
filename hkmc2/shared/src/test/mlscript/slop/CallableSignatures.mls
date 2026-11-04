@@ -90,7 +90,7 @@ capture(39)
 //│   return +⁰(tmp, second)
 //│ };
 //│ define capture⁰ as fun capture¹(value: Int⁰): Int⁰ {
-//│   return (addCaptured⁰(value, 1)(2) as! Int⁰)
+//│   return addCaptured⁰(value, 1)(2)
 //│ };
 //│ return capture¹(39)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
