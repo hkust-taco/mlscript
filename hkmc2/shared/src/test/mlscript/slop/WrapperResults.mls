@@ -3,6 +3,7 @@
 open annotations
 
 // Call sites use Promise, while both return paths coerce the body's annotated payload.
+:checkIR
 :noInline
 :sir
 :siret
@@ -26,7 +27,7 @@ Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
 //│ define answer¹ as fun answer²(early: Bool⁰, value: Unknown): Promise⁰ {
 //│   let tmp5: Function⁰;
 //│   set tmp5 = answer⁰(early, value);
-//│   return runtime⁰.toJsAsync﹖(tmp5)
+//│   return (runtime⁰.toJsAsync﹖(tmp5) as! Promise⁰)
 //│ };
 //│ define asPromise⁰ as fun asPromise¹(value: Promise⁰): Promise⁰ {
 //│   return value
@@ -41,6 +42,7 @@ Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
 //│ = [42, 43]
 
 // A generator override's callable returns Iterator, but its body's payload can have any representation.
+:checkIR
 :noInline
 :sir
 :siret
@@ -115,6 +117,7 @@ curried(20).next()
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // A nominal method interface hides its body but still describes the returned iterator.
+:checkIR
 class Methods with
   @generator fun values[T](value: T): T = value
 fun fromMethod(receiver: Methods) = receiver.values[Int](44).next()
@@ -126,6 +129,7 @@ fromMethod(new Methods)
 // Imported pattern bodies retain their payload metadata when cloned in a later unit.
 import "../../mlscript-compile/AsyncLibrary.mls"
 
+:checkIR
 :noOpt
 fun importedAsync(x) =
   if x is (@compile AsyncLibrary.Result) as result then result else Promise.resolve(0)
@@ -136,6 +140,7 @@ Promise.all([importedAsync(3), importedAsync(4)])
 //│ = [42, 42]
 
 // Async and ordinary getters both expose Promise, but only the async body returns Int.
+:checkIR
 :sir
 :siret
 :await
@@ -161,7 +166,7 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│   method wrapped¹ = fun wrapped²: Promise⁰ {
 //│     let tmp2: Function⁰;
 //│     set tmp2 = wrapped⁰(ResultGetters⁰.this);
-//│     return runtime⁰.toJsAsync﹖(tmp2)
+//│     return (runtime⁰.toJsAsync﹖(tmp2) as! Promise⁰)
 //│   }
 //│   method direct⁰ = fun direct¹: Promise⁰ {
 //│     return globalThis⁰.Promise¹.resolve⁰(43)

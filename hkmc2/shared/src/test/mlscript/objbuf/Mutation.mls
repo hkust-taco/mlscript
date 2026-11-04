@@ -11,7 +11,7 @@ open annotations
 class A() with
   let z = 0
   set z += 1
-//│ ═══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol tmp:tmp⁰ is bound more than once
+//│ ═══[INTERNAL ERROR] Invalid IR: binding 'tmp' is introduced more than once
 
 
 :sjs

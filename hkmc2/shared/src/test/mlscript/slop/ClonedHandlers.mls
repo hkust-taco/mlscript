@@ -15,6 +15,7 @@ pattern Escaping = x =>
     0
   body()
 
+// Compiled pattern copies retain the lifted signature, including captured parameters.
 :noOpt
 fun escaping(x) =
   if x is (@compile Escaping) as first then

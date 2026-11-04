@@ -17,7 +17,7 @@ pattern Foo(pattern T) = null | T
 :fixme // TODO: fix IR rebinding issue (each symbol should be bound at most once)
 :checkIR
 pattern Foo(pattern T) = null | T
-//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol T⁰ is bound more than once
+//│ ╔══[INTERNAL ERROR] Invalid IR: binding 'T' is introduced more than once
 //│ ║  l.+1: 	pattern Foo(pattern T) = null | T
 //│ ╙──      	                    ^
 

@@ -58,7 +58,7 @@ x => x
 :checkIR
 :noInline
 x => x
-//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
+//│ ╔══[INTERNAL ERROR] Invalid IR: binding 'x' is introduced more than once
 //│ ║  l.+1: 	x => x
 //│ ╙──      	^
 //│ = class anonymous
@@ -302,7 +302,7 @@ y => x + y
 //│ let lambda, Function$, tmp;
 //│ @private
 //│ define lambda as fun lambda⁵(y) {
-//│   return +⁰(x¹, y)
+//│   return +⁰(x⁰, y)
 //│ };
 //│ define Function$ as class Function$⁵ extends globalThis⁰.Function⁰ {
 //│   method call¹⁰ = fun call¹¹(y) { return lambda⁵(y) }
@@ -490,15 +490,15 @@ fun foo(x)(y) = x + y
 //│   return +⁰(x, y)
 //│ };
 //│ define Function$ as class Function$⁶ extends globalThis⁰.Function⁰ {
-//│   private val x²;
+//│   private val x¹;
 //│   constructor(x) {
 //│     do super⁰();
 //│     end;
-//│     set Function$⁶.this.x² = x;
+//│     set Function$⁶.this.x¹ = x;
 //│     end
 //│   }
 //│   method call¹² = fun call¹³(y) {
-//│     return lambda$⁰(Function$⁶.this.x², y)
+//│     return lambda$⁰(Function$⁶.this.x¹, y)
 //│   }
 //│ };
 //│ define foo⁵ as fun foo⁶(x) { let tmp; set tmp = new Function$⁶(x); return tmp };

@@ -1,0 +1,44 @@
+:.
+:js
+
+import "../../mlscript-compile/FingerTreeList.mls"
+import "../../mlscript-compile/LazyArray.mls"
+
+// Tuple.slice returns an Indexable. The remainder slot must keep that structural
+// representation, with no Array cast even before the optimizer propagates it.
+:checkIR
+:noOpt
+:sir
+fun middle(values: Indexable[Int]): Indexable[Int] =
+  if values is [_, ...items, _] then items else []
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define middle⁰ as fun middle¹(values) {
+//│   let items, lastElement1$, middleElements, element0$;
+//│   match values
+//│     Array(2+) =>
+//│       set element0$ = runtime⁰.Tuple⁰.get⁰(values, 0);
+//│       set middleElements = runtime⁰.Tuple⁰.slice⁰(values, 1, 1);
+//│       set lastElement1$ = runtime⁰.Tuple⁰.get⁰(values, -1);
+//│       set items = middleElements;
+//│       return items
+//│     else
+//│       return []
+//│   end
+//│ };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Pattern remainders preserve non-array collections as well as their contents.
+:checkIR
+:expect [true, false, true, false, 2, 3, 2, 3]
+let arrayMiddle = middle([1, 2, 3, 4])
+let treeMiddle = middle(FingerTreeList.mk(1, 2, 3, 4))
+let lazyMiddle = middle(LazyArray.mk(1, 2, 3, 4))
+[
+  arrayMiddle is Array, treeMiddle is Array, treeMiddle FingerTreeList.isFingerTree(), lazyMiddle is Array,
+  treeMiddle.at(0), treeMiddle.at(1), lazyMiddle.at(0), lazyMiddle.at(1)
+]
+//│ = [true, false, true, false, 2, 3, 2, 3]
+//│ arrayMiddle = [2, 3]
+//│ lazyMiddle = [2, 3]
+//│ treeMiddle = [2, 3]

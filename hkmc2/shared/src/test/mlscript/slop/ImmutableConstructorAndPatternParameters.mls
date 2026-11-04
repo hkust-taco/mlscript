@@ -179,7 +179,7 @@ pattern WritePattern(pattern P) = P where {set P = P, true}
 //│ ╟── Defined here:
 //│ ║  l.+1: 	pattern WritePattern(pattern P) = P where {set P = P, true}
 //│ ╙──      	                             ^
-//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol P⁰ is bound more than once
+//│ ╔══[INTERNAL ERROR] Invalid IR: binding 'P' is introduced more than once
 //│ ║  l.+1: 	pattern WritePattern(pattern P) = P where {set P = P, true}
 //│ ╙──      	                             ^
 

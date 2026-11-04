@@ -8,7 +8,7 @@ staged module Expressions with
   fun lit() =
     let x = 42
     x
-//│ ╔══[INTERNAL ERROR] [BlockChecker] Invalid IR: symbol x⁰ is bound more than once
+//│ ╔══[INTERNAL ERROR] Invalid IR: binding 'x' is introduced more than once
 //│ ║  l.+3: 	    let x = 42
 //│ ╙──      	        ^
 //│ > fun ctor_() = ()

@@ -292,7 +292,7 @@ fun f(a)(...z) = if z is
 //│         set inlinedVal = z.slice¹(1, tmp1);
 //│         set tmp = +⁰(a, 1);
 //│         set a = tmp;
-//│         set z = inlinedVal;
+//│         set z = (inlinedVal as! Array⁰);
 //│         continue loopLabel
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
@@ -511,7 +511,7 @@ fun f(n)(a)(...z) =
 //│             set tmp2 = -¹(z.length¹, 0);
 //│             set inlinedVal = z.slice¹(1, tmp2);
 //│             set tmp1 = +⁰(a, 1);
-//│             set res = f$tailrec³(n, tmp1, inlinedVal);
+//│             set res = f$tailrec³(n, tmp1, (inlinedVal as! Array⁰));
 //│             do Predef⁰.print⁰("hi!");
 //│             return res
 //│           else

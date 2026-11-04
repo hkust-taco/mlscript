@@ -464,7 +464,7 @@ typedSpread(0, 1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define typedSpread⁰ as fun typedSpread¹(a: Int⁰, b?: Unknown, ...z: Array⁰): ? {
 //│   loop loopLabel:
-//│     let middleElements: Array⁰, tmp: Int⁰, tmp1: Array⁰;
+//│     let middleElements: Unknown, tmp: Int⁰, tmp1: Array⁰;
 //│     match z
 //│       Array(0) =>
 //│         return a

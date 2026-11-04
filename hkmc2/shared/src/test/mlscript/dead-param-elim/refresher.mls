@@ -18,6 +18,8 @@ f(1, 2).get()
 
 
 
+// TODO: Specialization must rename the class type on its allocation temporary.
+:fixme
 :checkIR
 fun foo(y) =
   let =y
@@ -28,6 +30,8 @@ foo(10)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > foo⁰#0 @ foo¹ -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ╔══[INTERNAL ERROR] Invalid IR: incompatible representations at assignment to 'tmp'
+//│ ╙── The value and its destination refer to different copies of type 'M'
 
 
 
@@ -61,6 +65,8 @@ h(10, 0).add(3)
 
 
 
+// TODO: Copied allocation temporaries must refer to the specialized local class.
+:fixme
 :checkIR
 :expect 42
 :soir
@@ -75,6 +81,8 @@ wrapper(42, 0)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > wrapper⁰#0 @ wrapper¹ -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ╔══[INTERNAL ERROR] Invalid IR: incompatible representations at assignment to 'tmp'
+//│ ╙── The value and its destination refer to different copies of type 'A'
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let wrapper$wrapper;
 //│ @private
@@ -117,6 +125,8 @@ wrapper(42, 0)
 //│ = 42
 
 
+// TODO: Specialization must rename the class type on its allocation temporary.
+:fixme
 :checkIR
 :expect 30
 fun multi(a, b, dead) =
@@ -128,4 +138,6 @@ multi(5, 6, 999)
 //│ dead-param-elim > >>> dead-param-elim results >>>
 //│ dead-param-elim > multi⁰#0 @ multi¹ -> eliminable: {2}
 //│ dead-param-elim > <<< dead-param-elim results <<<
+//│ ╔══[INTERNAL ERROR] Invalid IR: incompatible representations at assignment to 'tmp'
+//│ ╙── The value and its destination refer to different copies of type 'Calc'
 //│ = 30

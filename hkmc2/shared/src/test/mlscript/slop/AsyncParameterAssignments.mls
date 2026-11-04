@@ -1,5 +1,6 @@
 :.
 :js
+:checkIR
 
 
 // Async lowering moves the body to a helper with fresh bindings.
@@ -37,3 +38,34 @@ fun incrementInClosure(n: Int): Int =
   n
 incrementInClosure(41)
 //│ = 42
+
+// The runtime preserves typed call results and live locals across an actual suspension.
+:await
+:noOpt
+:expect [41, "saved", 2]
+fun savedNumber(): Int = 41
+fun savedText(): Str = "saved"
+@annotations.async
+fun restoreTyped(): Array[Any] =
+  let number = savedNumber()
+  let text = savedText()
+  let result = handlers.await(Promise.resolve(2))
+  [number, text, result]
+restoreTyped()
+//│ = [41, "saved", 2]
+
+// Debug restoration saves every local; stack-safe calls use the same typed boundaries.
+:effectHandlers debug
+:stackSafe 6
+:lift
+:await
+:noOpt
+:expect [41, "saved", 2]
+@annotations.async
+fun restoreTypedDebug(): Array[Any] =
+  let number = savedNumber()
+  let text = savedText()
+  let result = handlers.await(Promise.resolve(2))
+  [number, text, result]
+restoreTypedDebug()
+//│ = [41, "saved", 2]

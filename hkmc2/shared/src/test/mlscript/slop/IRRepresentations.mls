@@ -1,0 +1,198 @@
+:.
+:js
+open annotations
+
+// Known representations agree across definitions, calls, assignments and returns.
+// Widening to a parent, explicit narrowing, and unannotated reference slots are all legitimate.
+:checkIR
+:noInline
+:expect [42, 43, 44]
+class Parent
+class Child extends Parent
+fun widen(value: Child): Parent = value
+fun narrow(value: Any): Int = value
+fun unknown(value) = value
+val result: Int = narrow(42)
+[if widen(new Child) is Parent then result else 0, narrow(43), unknown(44)]
+//│ = [42, 43, 44]
+//│ result = 42
+
+// Dynamic tuple reads enter annotated slots through an explicit narrowing cast.
+:checkIR
+:noOpt
+:expect 43
+fun checkedRead(values: Array[Any]): Int =
+  val element: Int = values.[0]
+  element
+val checked: Int = checkedRead([43])
+checked
+//│ = 43
+//│ checked = 43
+
+// Variadic extraction narrows dynamic tuple reads before assigning typed parameter slots.
+:checkIR
+:noOpt
+:expect 42
+fun extractedLast(...middle: Array[Any], last: Int): Int = last
+extractedLast(1, 42)
+//│ = 42
+
+// Missing body-result information and undefined do not prove an incompatible representation.
+:checkIR
+:noInline
+fun unconstrained(value) = value
+fun undefinedResult(): Int = unsafe.undefined
+fun acceptUndefined(value: Int): Int = 0
+acceptUndefined(unsafe.undefined)
+//│ = 0
+
+// Returning a local nominal value is valid even outside the class's lexical scope.
+:checkIR
+:noInline
+fun escaping() =
+  class Local
+  new Local
+escaping()
+//│ = Local
+
+// A spread ends the known positional prefix. The following Bool is the last
+// argument, not the Str slot immediately after the first argument.
+:checkIR
+:noInline
+:expect [true, false]
+fun spreadTarget(first: Int, second: Str, last: Bool): Bool = last
+fun spreadAll(values: Array[Any]) = spreadTarget(...values, true)
+fun spreadAfterFirst(values: Array[Any]) = spreadTarget(1, ...values, false)
+[spreadAll([1, "two"]), spreadAfterFirst(["two"])]
+//│ = [true, false]
+
+// Nested closures and constructors have their own return boundaries.
+:checkIR
+:noOpt
+:expect 42
+fun nestedReturns(): Int =
+  let text = (value: Str) => value
+  class Nested with
+    fun text(): Str = "hello"
+  if text(new Nested().text()) == "hello" then 42 else 0
+nestedReturns()
+//│ = 42
+
+// Constructor arguments enter the class's typed parameter slots through a cast,
+// including in auxiliary parameter lists.
+:checkIR
+:noInline
+:expect [1, "two"]
+class Pair(val first: Int)(val second: Str)
+fun pair(first: Any, second: Any) = new Pair(first)(second)
+let made = pair(1, "two")
+[made.first, made.second]
+//│ = [1, "two"]
+//│ made = Pair(1)
+
+// Inlining propagates the literal into the coercion to the parameter's class. A cast between
+// unrelated reference types fails at run time but still has a representation, unlike a cast
+// involving an unboxed primitive.
+:checkIR
+:soir
+class Wrapper
+fun fortyTwo = 42
+fun asWrapper(value: Wrapper): Wrapper = value
+fun mismatch() = asWrapper(fortyTwo)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define fortyTwo⁰ as fun fortyTwo¹() {
+//│   return 42
+//│ };
+//│ define asWrapper⁰ as fun asWrapper¹(value) {
+//│   return value
+//│ };
+//│ define mismatch⁰ as fun mismatch¹() {
+//│   return (42 as! Wrapper⁰)
+//│ };
+//│ define Wrapper¹ as class Wrapper⁰;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// A type without a common representation is rejected where a declaration writes it.
+// Passing a value into the declared parameter does not repeat the error.
+:ge
+fun mixed(value: Int32 | Str) = 0
+fun intoMixed(n: Int32) = mixed(n)
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	fun mixed(value: Int32 | Str) = 0
+//│ ╙──      	                 ^^^^^^^^^^^
+
+// Inlining makes the coercion of `5` to the parameter's Int redundant, so the simplifier drops it.
+:checkIR
+:soir
+@noInline fun takeInt(value: Int): Int = value
+fun forward(value) = takeInt(value)
+forward(5)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @noInline
+//│ define takeInt⁰ as fun takeInt¹(value) {
+//│   return value
+//│ };
+//│ define forward⁰ as fun forward¹(value) { return takeInt¹((value as! Int⁰)) };
+//│ return takeInt¹(5)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 5
+
+// TODO: SymbolRefresher must rename nominal types alongside the classes it copies.
+// Each inlined construction must agree with its own temporary and parameter slots.
+:fixme
+:checkIR
+@inline fun copiedNominal() =
+  class Local
+  @noInline fun identity(value: Local): Local = value
+  identity(new Local)
+[copiedNominal(), copiedNominal()]
+//│ ╔══[INTERNAL ERROR] Invalid IR: incompatible representations at assignment to 'tmp'
+//│ ╙── The value and its destination refer to different copies of type 'Local'
+//│ ╔══[INTERNAL ERROR] Invalid IR: incompatible representations at assignment to 'tmp'
+//│ ╙── The value and its destination refer to different copies of type 'Local'
+//│ = [Local, Local]
+
+// Pattern lowering binds typed temporaries, such as a string's head, to calls of untyped
+// runtime helpers. Their casts are unchecked, so the simplifier still sees through them.
+:checkIR
+:expect [true, false]
+pattern Lower = "a"..="z"
+["q" is Lower, "Q" is Lower]
+//│ = [true, false]
+
+// Tail-call rewriting reuses the spread operand as the Array-typed rest parameter.
+:checkIR
+:expect 3
+@tailrec fun count(n)(...rest) = if rest is
+  [] then n
+  [_, ...more] then count(n + 1)(...more)
+count(0)(1, 2, 3)
+//│ = 3
+
+// A spread operand of another type is copied into a fresh rest array, as the call would do.
+:checkIR
+@tailrec fun chars(n)(...rest) = if n > 0 then chars(n - 1)(..."ab") else rest
+chars(1)()
+//│ = ["a", "b"]
+
+// TODO: Inlining `|>` turns a call of a function value into a direct call to `describe`,
+// but does not coerce the argument to the type of the callee's parameter.
+:fixme
+:checkIR
+@noInline fun describe(text: Str): Str = text
+@noInline fun produce(value) = value
+produce("a") |> describe
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at a call argument
+//│ ╙── The value has type 'Unknown', but its destination requires 'Str'
+//│ = "a"
+
+// Lifting replaces the closure argument by a temporary holding the partially applied
+// lifted function, which keeps the Function representation of the constructor slot.
+:checkIR
+:lift
+:expect 42
+class Thunk(val run: () -> Int)
+fun delay(value: Int) = new Thunk(() => value)
+delay(42).run()
+//│ = 42
