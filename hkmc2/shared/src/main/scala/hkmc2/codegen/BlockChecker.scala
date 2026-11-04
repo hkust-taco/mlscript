@@ -15,12 +15,14 @@ import syntax.Tree
 
 /** An invariant of the IR is that each symbol should be bound at most once
   * (this simplifies various analyses and transformations).
-  * Known erased representations must also agree at the boundaries that move values
-  * into slots. Missing type evidence is allowed; it cannot establish a mismatch.
+  * Erased representations must also agree at the boundaries that move values into
+  * slots. An absent value or slot type denotes Unknown, which requires a cast when
+  * narrowed to a more specific reference type and cannot hold an unboxed primitive.
   */
 class BlockChecker()(using DebugPrinter, State, Ctx, Raise) extends BlockTraverser:
   
   val definedSyms = MutSet.empty[ScopedSymbol]
+  // N here means no enclosing return contract, unlike an unannotated storage slot.
   private var resultType: Opt[ErasedValueType] = N
   
   override def applyProgram(prog: Program): Unit =
@@ -81,8 +83,9 @@ class BlockChecker()(using DebugPrinter, State, Ctx, Raise) extends BlockTravers
 
   private def checkValue(value: Result, expected: Opt[ErasedValueType], boundary: Message, loc: Opt[Loc]): Unit =
     if !isUndefined(value) then
-      for actual <- value.erasedType; expected <- expected do
-        checkTypes(actual, expected, boundary, loc, allowNarrowing = false)
+      // Erasure initializes unannotated slots to N; dynamic reads also yield N.
+      // Both denote Unknown, so neither may bypass the same cast rules as coerceTo.
+      checkTypes(value.erasedType_!, expected.getOrElse(ErasedType.Unknown), boundary, loc, allowNarrowing = false)
 
   private def withResultType(tpe: Opt[ErasedValueType])(body: => Unit): Unit =
     val saved = resultType
@@ -95,7 +98,8 @@ class BlockChecker()(using DebugPrinter, State, Ctx, Raise) extends BlockTravers
       syms.foreach(checkSymbol(_, b))
     case Assign(sym: LocalVarSymbol, value, _) =>
       checkValue(value, sym.erasedType, msg"assignment to '${sym.nme}'", sym.toLoc)
-    case Return(value) => checkValue(value, resultType, msg"a function return", value.toLoc)
+    case Return(value) => resultType.foreach: expected =>
+      checkValue(value, S(expected), msg"a function return", value.toLoc)
     case assign: AssignField => assign.symbol.foreach:
       case sym: TermSymbol => checkValue(assign.rhs, sym.erasedType, msg"assignment to '${sym.nme}'", sym.toLoc)
       case _ => ()
@@ -159,8 +163,8 @@ class BlockChecker()(using DebugPrinter, State, Ctx, Raise) extends BlockTravers
           checkValue(arg.value, expected, msg"a call argument", arg.value.toLoc)
 
   private def checkCast(cast: Cast): Unit =
-    if !isUndefined(cast.value) then cast.value.erasedType.foreach: actual =>
-      checkTypes(actual, cast.target, msg"a cast", cast.toLoc, allowNarrowing = true)
+    if !isUndefined(cast.value) then
+      checkTypes(cast.value.erasedType_!, cast.target, msg"a cast", cast.toLoc, allowNarrowing = true)
 
   override def applyResult(result: Result): Unit =
     result match

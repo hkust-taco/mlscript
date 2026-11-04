@@ -203,13 +203,23 @@ fun clonedGenerator(x) =
 [clonedGenerator(3), clonedGenerator(4)]
 //│ = [[3, 42], [4, 42]]
 
+// TODO: AsyncLowering must coerce the toJsAsync result before it enters a Promise slot.
+:fixme
 pattern AsyncResult = x =>
   @async fun answer(): Int = 42
   answer()
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'inlinedVal'
+//│ ╙── The value has type 'Unknown', but its destination requires 'Promise'
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'inlinedVal'
+//│ ╙── The value has type 'Unknown', but its destination requires 'Promise'
 
+// TODO: The compiled pattern retains the same uncoerced toJsAsync result.
+:fixme
 :noOpt
 fun clonedAsync(x) =
   if x is (@compile AsyncResult) as result then result else Promise.resolve(0)
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'inlinedVal'
+//│ ╙── The value has type 'Unknown', but its destination requires 'Promise'
 
 :await
 :expect [42, 42]
@@ -218,6 +228,7 @@ Promise.all([clonedAsync(3), clonedAsync(4)])
 
 // Getter signatures retain the wrapper kind and rename a locally declared payload class.
 // TODO: MIR cloning must rename the async helper's receiver and temporary types.
+// AsyncLowering must also coerce the toJsAsync result to Promise.
 :fixme
 pattern AsyncGetterResult = x =>
   class Payload with
@@ -226,16 +237,24 @@ pattern AsyncGetterResult = x =>
   new Payload().wrapped.then(payload => payload.answer)
 //│ ╔══[INTERNAL ERROR] Invalid IR: incompatible representations at a call argument
 //│ ╙── The value and its destination refer to different copies of type 'Payload'
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at a function return
+//│ ╙── The value has type 'Unknown', but its destination requires 'Promise'
 //│ ╔══[INTERNAL ERROR] Invalid IR: incompatible representations at assignment to 'tmp'
 //│ ╙── The value and its destination refer to different copies of type 'Payload'
 //│ ╔══[INTERNAL ERROR] Invalid IR: incompatible representations at a call argument
 //│ ╙── The value and its destination refer to different copies of type 'Payload'
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at a function return
+//│ ╙── The value has type 'Unknown', but its destination requires 'Promise'
 //│ ╔══[INTERNAL ERROR] Invalid IR: incompatible representations at assignment to 'tmp'
 //│ ╙── The value and its destination refer to different copies of type 'Payload'
 
+// TODO: The compiled getter wrapper returns toJsAsync's unknown result without a Promise cast.
+:fixme
 :noOpt
 fun clonedAsyncGetter(x) =
   if x is (@compile AsyncGetterResult) as result then result else Promise.resolve(0)
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at a function return
+//│ ╙── The value has type 'Unknown', but its destination requires 'Promise'
 
 :await
 :expect [42, 42]

@@ -49,6 +49,7 @@ fun fromSpread(xs: Array[Any]) = withRest(...xs)
 
 // Optional slots must not consume required trailing arguments.
 // TODO: Lowering moves optional slots into the rest tuple but leaves them in the erased signature.
+// It also assigns the unknown Tuple.slice result to the leadingArgs Array slot without a cast.
 :fixme
 :checkIR
 :noInline
@@ -58,6 +59,8 @@ fun trailingSpread(xs: Array[Any]) = trailing(...xs, 3)
 //│ ╔══[INTERNAL ERROR] Invalid IR: parameter lists of 'trailing' disagree with its erased signature
 //│ ║  l.+1: 	fun trailing(x?, ...xs, last) = [x is null, xs.length, last]
 //│ ╙──      	    ^^^^^^^^
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'leadingArgs'
+//│ ╙── The value has type 'Unknown', but its destination requires 'Array'
 //│ = [[true, 0, 3], [false, 0, 3], [false, 1, 3], [true, 0, 3], [false, 0, 3]]
 
 // Tail-call jumps bind null again when the next iteration omits an earlier value.

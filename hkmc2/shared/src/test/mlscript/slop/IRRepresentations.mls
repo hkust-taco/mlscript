@@ -3,7 +3,7 @@
 open annotations
 
 // Known representations agree across definitions, calls, assignments and returns.
-// Widening to a parent, explicit narrowing, and missing evidence are all legitimate.
+// Widening to a parent, explicit narrowing, and unannotated reference slots are all legitimate.
 :checkIR
 :noInline
 :expect [42, 43, 44]
@@ -16,6 +16,40 @@ val result: Int = narrow(42)
 [if widen(new Child) is Parent then result else 0, narrow(43), unknown(44)]
 //│ = [42, 43, 44]
 //│ result = 42
+
+// Dynamic tuple reads enter annotated slots through an explicit narrowing cast.
+:checkIR
+:noOpt
+:expect 43
+fun checkedRead(values: Array[Any]): Int =
+  val element: Int = values.[0]
+  element
+val checked: Int = checkedRead([43])
+checked
+//│ = 43
+//│ checked = 43
+
+// TODO: The variadic prologue assigns tuple reads and slices to typed slots without coercing them.
+// A missing value annotation denotes Unknown, so the checker must report the missing casts.
+:fixme
+:checkIR
+:noOpt
+:expect 42
+fun extractedLast(...middle: Array[Any], last: Int): Int = last
+extractedLast(1, 42)
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'middle'
+//│ ║  l.+1: 	fun extractedLast(...middle: Array[Any], last: Int): Int = last
+//│ ║        	                     ^^^^^^
+//│ ╟── The value has type 'Unknown', but its destination requires 'Array'
+//│ ║  l.+1: 	fun extractedLast(...middle: Array[Any], last: Int): Int = last
+//│ ╙──      	                     ^^^^^^
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'last'
+//│ ║  l.+1: 	fun extractedLast(...middle: Array[Any], last: Int): Int = last
+//│ ║        	                                         ^^^^
+//│ ╟── The value has type 'Unknown', but its destination requires 'Int'
+//│ ║  l.+1: 	fun extractedLast(...middle: Array[Any], last: Int): Int = last
+//│ ╙──      	                                         ^^^^
+//│ = 42
 
 // Missing body-result information and undefined do not prove an incompatible representation.
 :checkIR
