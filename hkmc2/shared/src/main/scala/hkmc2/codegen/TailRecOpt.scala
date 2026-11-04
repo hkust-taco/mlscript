@@ -310,7 +310,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         val sliceRes = Call(
           State.runtimeSymbol.asSimpleRef
             .sel(Tree.Ident("Tuple"), State.tupleSymbol)
-            .sel(Tree.Ident("slice"), State.tupleSliceSymbol),
+            .sel(Tree.Ident("slice"), State.tupleSliceArraySymbol),
           (tupleSym.asSimpleRef.asArg
             :: Value.Lit(Tree.IntLit(paramList.length))(N).asArg
             :: Value.Lit(Tree.IntLit(0))(N).asArg

@@ -9,14 +9,13 @@ fun f(x, ...xs, y) = [x, xs, y]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f(x, ...args) {
-//│   let xs, y, inlinedVal, tmp, tmp1;
+//│   let y, inlinedVal, tmp, tmp1;
 //│   tmp1 = 1 + args.length;
 //│   runtime.checkArgs("f", 2, tmp1);
 //│   tmp = args.length - 1;
 //│   inlinedVal = runtime.safeCall(args.slice(0, tmp));
-//│   xs = inlinedVal /* as! Array */;
 //│   y = args.at(-1);
-//│   return globalThis.Object.freeze([ x, xs, y ])
+//│   return globalThis.Object.freeze([ x, inlinedVal, y ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -54,7 +53,7 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let h;
 //│ h = function h(x, ...args7) {
-//│   let y7, z2, xs7, w, inlinedVal12, tmp14, tmp15;
+//│   let y7, z2, w, inlinedVal12, tmp14, tmp15;
 //│   tmp15 = 1 + args7.length;
 //│   runtime.checkArgs("h", 2, tmp15);
 //│   if (runtime.Tuple.isArrayLike(args7) && args7.length >= 2) {
@@ -69,9 +68,8 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│   }
 //│   tmp14 = args7.length - 1;
 //│   inlinedVal12 = runtime.safeCall(args7.slice(2, tmp14));
-//│   xs7 = inlinedVal12 /* as! Array */;
 //│   w = args7.at(-1);
-//│   return globalThis.Object.freeze([ x, y7, z2, xs7, w ])
+//│   return globalThis.Object.freeze([ x, y7, z2, inlinedVal12, w ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -246,7 +244,7 @@ integerTail(0, 1, "wrong")
 //│ define integerTail⁰ as fun integerTail¹(...args: Array⁰): ? {
 //│   let rest: Array⁰, value: Int⁰;
 //│   do runtime⁰.checkVariadicArgs⁰("integerTail", 1, 0, args);
-//│   set rest = (runtime⁰.Tuple⁰.slice⁰(args, 0, 1) as! Array⁰);
+//│   set rest = runtime⁰.Tuple⁰.sliceArray⁰(args, 0, 1);
 //│   set value = (args.-1 as! Int⁰);
 //│   return value
 //│ };

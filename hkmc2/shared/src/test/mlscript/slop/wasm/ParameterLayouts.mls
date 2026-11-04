@@ -31,12 +31,12 @@ trailing(1, 2, 3)
 //│ ║  l.XX: 	  checkArgs(functionName, expected, leading + args.length)
 //│ ╙──      	                                              ^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] This runtime operation is not supported by the WebAssembly backend
-//│ ╔══[COMPILATION ERROR] Selecting member 'length' is not supported by the WebAssembly backend
-//│ ║  l.XX: 	  fun slice(xs: Indexable, i: Int, j: Int) = xs.slice(i, xs.length - j)
-//│ ╙──      	                                                         ^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Selecting member 'slice' is not supported by the WebAssembly backend
-//│ ║  l.XX: 	  fun slice(xs: Indexable, i: Int, j: Int) = xs.slice(i, xs.length - j)
-//│ ╙──      	                                             ^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Selecting member 'length' of 'Array' is not supported by the WebAssembly backend
+//│ ║  l.XX: 	  fun sliceArray[A](xs: Array[A], i: Int, j: Int): Array[A] = xs.slice(i, xs.length - j)
+//│ ╙──      	                                                                          ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Selecting member 'slice' of 'Array' is not supported by the WebAssembly backend
+//│ ║  l.XX: 	  fun sliceArray[A](xs: Array[A], i: Int, j: Int): Array[A] = xs.slice(i, xs.length - j)
+//│ ╙──      	                                                              ^^^^^^^^
 
 // * Constructors bind omitted optional fields to null.
 :expect null
