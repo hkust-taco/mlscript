@@ -265,7 +265,7 @@ fun f() = case [...x, y, z] then x
 //│   let x, y, z, lastElement1$, lastElement2$, middleElements;
 //│   match caseScrut
 //│     Array(2+) =>
-//│       set middleElements = (runtime⁰.Tuple⁰.slice⁰(caseScrut, 0, 2) as!! Array⁰);
+//│       set middleElements = runtime⁰.Tuple⁰.slice⁰(caseScrut, 0, 2);
 //│       set lastElement2$ = runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
 //│       set lastElement1$ = runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
 //│       set y = lastElement1$;

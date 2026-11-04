@@ -188,16 +188,14 @@ fun f() = case [...x, y, z] then x
 //│ do runtime⁰.resetEffects﹖();
 //│ @private
 //│ define lambda as fun lambda⁰(caseScrut) {
-//│   let middleElements;
 //│   match caseScrut
 //│     Array(2+) =>
 //│       let inlinedVal, tmp;
 //│       set tmp = -⁰(caseScrut.length⁰, 2);
 //│       set inlinedVal = caseScrut.slice⁰(0, tmp);
-//│       set middleElements = (inlinedVal as!! Array⁰);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
-//│       return middleElements
+//│       return inlinedVal
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end

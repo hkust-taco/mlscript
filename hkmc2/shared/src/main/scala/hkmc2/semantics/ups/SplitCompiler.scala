@@ -766,7 +766,9 @@ class SplitCompiler(using codegen.Erasure)(using tl: TL)(using State, Ctx, Raise
         val trailingSize = trailing.size
         val (trailSubScrutinees, makeConsequent0) = trailing.folded(makeConsequent):
           index => scrutinee.getTupleLastSubScrutinee(trailingSize - index)
-        val spreadSubScrutinee = TempSymbol(N, initErasedType = S(ErasedType.Array), "middleElements")
+        // Tuple.slice can return non-array Indexable implementations, including trees and
+        // lazy collections. Its structural result has no nominal Array representation.
+        val spreadSubScrutinee = TempSymbol(N, initErasedType = S(ErasedType.Unknown), "middleElements")
         val makeConsequent1: MakeConsequent = (outerOutput, outerBindings) =>
           makeMatchSplit(spreadSubScrutinee.toScrut, spread, false)(
             (spreadOutput, spreadBindings) => makeConsequent0(

@@ -464,14 +464,14 @@ typedSpread(0, 1, 2, 3, 4)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define typedSpread⁰ as fun typedSpread¹(a: Int⁰, b?: Unknown, ...z: Array⁰): ? {
 //│   loop loopLabel:
-//│     let middleElements: Array⁰, tmp: Int⁰, tmp1: Array⁰;
+//│     let middleElements: Unknown, tmp: Int⁰, tmp1: Array⁰;
 //│     match z
 //│       Array(0) =>
 //│         return a
 //│       Array(1+) =>
 //│         let argList: Array⁰, optionalArg: Unknown, sliceRes: Array⁰;
 //│         do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│         set middleElements = (runtime⁰.Tuple⁰.slice¹(z, 1, 0) as!! Array⁰);
+//│         set middleElements = runtime⁰.Tuple⁰.slice¹(z, 1, 0);
 //│         set tmp = +⁰(a, 1);
 //│         set tmp1 = [tmp, b, ...middleElements];
 //│         set argList = [...tmp1];
