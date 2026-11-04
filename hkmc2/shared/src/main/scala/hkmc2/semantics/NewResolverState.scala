@@ -75,6 +75,10 @@ final class NewResolverState(val owner: Elaborator.State):
 
   val context: ResolutionContext = new ResolutionContext(this, N, TypeSubstitution.empty)
   def isOwnedSym(symbol: Symbol): Bool = symbol.getState is owner
+  /** How [[InterfaceExposure]] first reached `member`, if `member` is an exposed overridable member
+    * of an extensible class or object of this compilation unit.
+    */
+  def exposedOpenMember(member: TermSymbol): Opt[ShapeProvenance] = workspace.exposedOpenMembers.get(member)
   private[semantics] val copies = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
   private var activeWorkspace: ResolutionWorkspace | Null = new ResolutionWorkspace(owner)
   private[hkmc2] def workspace: ResolutionWorkspace =
@@ -85,7 +89,8 @@ final class NewResolverState(val owner: Elaborator.State):
     */
   private[hkmc2] def finish(): Unit =
     assert(workspace.reporter == null, "Finish only after the active resolution pass has returned")
-    assert(workspace.pending.isEmpty && workspace.resolutionProblems.isEmpty && workspace.accessSites.isEmpty && workspace.exposureInputs.isEmpty,
+    assert(workspace.pending.isEmpty && workspace.resolutionProblems.isEmpty && workspace.wildcardMisses.isEmpty &&
+      workspace.accessSites.isEmpty && workspace.exposureInputs.isEmpty,
       "Module finalization must not discard unfinished resolution work")
     workspace.pendingDependencies.valuesIterator.foreach(_.cancel())
     activeWorkspace = null
@@ -372,6 +377,17 @@ final class ResolutionContext private[semantics] (
           case application: App => application.callableTargets.currentShapes(using this).isEmpty
         if eager || unresolved then messages else Nil)
 
+  /** A wildcard source can publish a matching alternative after its first miss.
+    * Keep one witness per reference and opened source until the block completes;
+    * a source with no matching alternatives contributes nothing to the lookup.
+    * Only eager lookup records these misses. Unknown public inputs retain their
+    * separate error path, even when a different source supplies a candidate.
+    */
+  def missingWildcardMember(ref: UnresolvedRef, prefix: Term)(messages: => Ls[(Message, Opt[Loc])]): Unit =
+    if !hasError(ref) then
+      state.workspace.wildcardMisses.getOrElseUpdate(new Identity(ref), mutable.LinkedHashMap.empty)
+        .getOrElseUpdate(new Identity(prefix), () => messages)
+
   /** Seal the decisions and original host data read by erasure/lowering. The
     * inference graph keeps private, live host data and all its listeners, so
     * later calls can still transport arguments and results through these nodes.
@@ -402,6 +418,17 @@ final class ResolutionContext private[semantics] (
         case _ => ()
       ResolutionSources.children(statement)(visit, pattern)
     visit(block)
+    state.workspace.wildcardMisses.foreach: (key, sources) =>
+      val ref = key.value
+      if !hasError(ref) then
+        val messages = sources.iterator.flatMap: (prefix, witness) =>
+          if ref.resolvedMembers.exists(_._1 eq prefix.value) || ref.dynamicPrefixes.exists(_ eq prefix.value)
+          then witness() else Nil
+        .toList.distinct
+        if messages.nonEmpty then
+          markError(ref)
+          reportResolutionError(ref, messages)
+    state.workspace.wildcardMisses.clear()
     state.workspace.resolutionProblems.foreach: (key, problems) =>
       val term = key.value
       val messages = problems.iterator.flatMap(_()).toList.distinct
@@ -480,7 +507,7 @@ final class ResolutionContext private[semantics] (
     def checkPrivate(kind: Str, definition: Definition, owner: Opt[InnerSymbol]): Ls[Diagnostic] =
       if definition.visibility isnt Visibility.Private then Nil else owner match
         // File-private definitions are handled by compilation-unit exports.
-        case S(_: TopLevelSymbol) | N => Nil
+        case N => Nil
         case S(owner) => owner.asDefnSym.defn match
           case S(ownerDefn) if !scope.canAccessPrivatesOf(ownerDefn) =>
             ErrorReport(msg"Cannot access private $kind '${definition.bsym.nme}' outside its declaring owner" -> loc ::

@@ -88,16 +88,6 @@ if 2
 
 // ——— ——— ———
 
-:w
-:fixme // * Should be a call of two arguments, not a sequenced expression
-+(1,2)
-//│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.+1: 	+(1,2)
-//│ ╙──      	  ^
-//│ = 2
-
-// ——— ——— ———
-
 :fixme
 pattern ShapeArea =
   | (:radius) => 0
@@ -128,5 +118,3 @@ pattern P = (:radius) => radius
 //│ ╔══[WARNING] Unused pattern binding: radius.
 //│ ║  l.+1: 	pattern P = (:radius) => radius
 //│ ╙──      	              ^^^^^^
-
-// ——— ——— ———

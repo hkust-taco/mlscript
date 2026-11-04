@@ -1,0 +1,204 @@
+:.
+#lang(strictResolution: true, eagerResolution: true)
+
+declare type Hidden
+type MaybeAnswer = Hidden | {answer: Int}
+
+// Eager wildcard lookup checks missing alternatives of a matching source.
+:ge
+private fun missingFirst(value: MaybeAnswer) =
+  open value
+  answer
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.+3: 	  answer
+//│ ║        	  ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'answer'
+//│ ║  l.XX: 	type MaybeAnswer = Hidden | {answer: Int}
+//│ ║        	                   ^^^^^^
+//│ ╟── Type 'Hidden' is declared without a member interface.
+//│ ║  l.XX: 	declare type Hidden
+//│ ╙──      	             ^^^^^^
+
+:ge
+private fun missingLast(value: {answer: Int} | Hidden) =
+  open value
+  answer
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.+3: 	  answer
+//│ ║        	  ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'answer'
+//│ ║  l.+1: 	private fun missingLast(value: {answer: Int} | Hidden) =
+//│ ║        	                                               ^^^^^^
+//│ ╟── Type 'Hidden' is declared without a member interface.
+//│ ║  l.XX: 	declare type Hidden
+//│ ╙──      	             ^^^^^^
+
+// The same rule applies to concrete records and Unit, not only opaque types.
+:ge
+private fun concrete(value: {other: Int} | {answer: Int}) =
+  open value
+  answer
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.+3: 	  answer
+//│ ║        	  ^^^^^^
+//│ ╟── Record type does not contain member 'answer'
+//│ ║  l.+1: 	private fun concrete(value: {other: Int} | {answer: Int}) =
+//│ ╙──      	                             ^^^^^^^^^^
+
+:ge
+private fun nullable(value: () | {answer: Int}) =
+  open value
+  answer
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.+3: 	  answer
+//│ ║        	  ^^^^^^
+//│ ╟── Unit value does not contain member 'answer'
+//│ ║  l.+1: 	private fun nullable(value: () | {answer: Int}) =
+//│ ╙──      	                            ^^
+
+// A dynamic alternative counts as a matching source too.
+:ge
+private fun dynamic(value: Hidden | dyn) =
+  open value
+  answer
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.+3: 	  answer
+//│ ║        	  ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'answer'
+//│ ║  l.+1: 	private fun dynamic(value: Hidden | dyn) =
+//│ ║        	                           ^^^^^^
+//│ ╟── Type 'Hidden' is declared without a member interface.
+//│ ║  l.XX: 	declare type Hidden
+//│ ╙──      	             ^^^^^^
+
+// Inferred alternatives can arrive in either order, after the open is visited.
+:e
+private fun laterMatch(value) =
+  open value
+  answer
+[laterMatch(other: 0), laterMatch(answer: 1)]
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.+3: 	  answer
+//│ ║        	  ^^^^^^
+//│ ╟── Record literal does not contain member 'answer'
+//│ ║  l.+4: 	[laterMatch(other: 0), laterMatch(answer: 1)]
+//│ ╙──      	           ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+private fun laterMiss(value) =
+  open value
+  answer
+[laterMiss(answer: 2), laterMiss(other: 0)]
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.+3: 	  answer
+//│ ║        	  ^^^^^^
+//│ ╟── Record literal does not contain member 'answer'
+//│ ║  l.+4: 	[laterMiss(answer: 2), laterMiss(other: 0)]
+//│ ╙──      	                                ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Neither order of opening a wholly nonmatching union obscures another source.
+:expect [3, 4]
+private fun ignoredFirst(value: Hidden | {other: Int}) =
+  let known = {answer: 3}
+  open value
+  open known
+  answer
+private fun ignoredLast(value: Hidden | {other: Int}) =
+  let known = {answer: 4}
+  open known
+  open value
+  answer
+[ignoredFirst({}), ignoredLast(other: 0)]
+//│ = [3, 4]
+
+// A missing intersection component does not make the whole receiver a miss.
+:expect 5
+private fun intersection(value: Hidden & {answer: Int}) =
+  open value
+  answer
+intersection(answer: 5)
+//│ = 5
+
+// With no matching source, lowering retains its ordinary missing-name error.
+:ge
+private fun absent(value: Hidden | {other: Int}) =
+  open value
+  answer
+//│ ╔══[COMPILATION ERROR] Name not found: answer
+//│ ║  l.+3: 	  answer
+//│ ╙──      	  ^^^^^^
+
+// Loose resolution allows a partial match for both explicit and wildcard lookup.
+:expect [6, undefined, 7, undefined]
+#lang(strictResolution: false, eagerResolution: false)
+private fun looseSelect(value: MaybeAnswer) = value.answer
+private fun looseOpen(value: MaybeAnswer) =
+  open value
+  answer
+[looseSelect(answer: 6), looseSelect({}), looseOpen(answer: 7), looseOpen({})]
+//│ = [6, undefined, 7, undefined]
+
+// Requiring a unique target does not enable eager checking of missing arms.
+:expect 8
+#lang(strictResolution: true, eagerResolution: false)
+private fun unique(value: MaybeAnswer) =
+  open value
+  answer
+unique(answer: 8)
+//│ = 8
+
+// Later calls use the completed lookup without replaying earlier witnesses.
+:expect 9
+unique(answer: 9)
+//│ = 9
+
+// Eager checking does not depend on requiring a unique target.
+:ge
+#lang(strictResolution: false, eagerResolution: true)
+private fun eager(value: MaybeAnswer) =
+  open value
+  answer
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.+4: 	  answer
+//│ ║        	  ^^^^^^
+//│ ╟── Value with an empty interface does not contain member 'answer'
+//│ ║  l.XX: 	type MaybeAnswer = Hidden | {answer: Int}
+//│ ║        	                   ^^^^^^
+//│ ╟── Type 'Hidden' is declared without a member interface.
+//│ ║  l.XX: 	declare type Hidden
+//│ ╙──      	             ^^^^^^
+
+// A real compilation unit must retain the exposure probe with both flags off.
+// The fixture's local calls already supply valid targets through generic unions.
+:ge
+:!js
+#lang(strictResolution: false, eagerResolution: false)
+import "./WildcardUnionExposure.mls"
+//│ ╔══[COMPILATION ERROR] Resolution error in wildcard-open reference
+//│ ║  l.XX: 	    answer
+//│ ║        	    ^^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.XX: 	  fun opened(x) =
+//│ ║        	             ^
+//│ ╟── Member 'opened' is accessible here.
+//│ ║  l.XX: 	  fun opened(x) =
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╟── 'WildcardUnionExposure' is exposed by this compilation unit.
+//│ ║  l.XX: 	module WildcardUnionExposure with
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Cannot resolve member 'answer' of a value with unknown shape.
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.XX: 	  fun selected(x) = nullable(x).answer
+//│ ║        	                    ^^^^^^^^^^^^^^^^^^
+//│ ╟── Parameter 'x' admits values of unknown shape.
+//│ ║  l.XX: 	  fun selected(x) = nullable(x).answer
+//│ ║        	               ^
+//│ ╟── Member 'selected' is accessible here.
+//│ ║  l.XX: 	  fun selected(x) = nullable(x).answer
+//│ ║        	  ^^^^^^^^^^^^^^^
+//│ ╟── 'WildcardUnionExposure' is exposed by this compilation unit.
+//│ ║  l.XX: 	module WildcardUnionExposure with
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Cannot resolve member 'answer' of a value with unknown shape.

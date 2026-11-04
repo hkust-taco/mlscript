@@ -44,17 +44,11 @@ let tokens
 // Works:
 if tokens is @compile Parse as stack do print(stack)
 
-:fixme // Should be a "name not found"
+// Aliases inside the compiled pattern remain available to the branch.
 if tokens is
   @compile Parse as stack do print(stack)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'stack'
-//│ ║  l.+2: 	  @compile Parse as stack do print(stack)
-//│ ║        	                                   ^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.+2: 	  @compile Parse as stack do print(stack)
-//│ ╙──      	                    ^^^^^
 
-// What's actually intended:
+// The alias can also sit outside the annotation.
 if tokens is
   (@compile Parse) as stack do print(stack)
 

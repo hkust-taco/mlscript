@@ -216,7 +216,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val importedSymbols: Set[ScopedSymbol] = pgrm.imports.iterator.map(_._1).toSet
       val exportedScoped = symbolsToPreserve -- importedSymbols
       
-      val resSym = new TempSymbol(N, erasedType = N, "block$res")
+      val resSym = new TempSymbol(N, initErasedType = N, "block$res")
       
       val resNme = nestedScp.allocateName(resSym)
       

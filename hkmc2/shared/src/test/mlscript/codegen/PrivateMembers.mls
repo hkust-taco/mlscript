@@ -159,3 +159,36 @@ Strange.odd
 //│ ╙──      	                     ^^^
 
 
+// * The field compiles to a plain private property
+:sjs
+object Example {
+  private mut val x = 1
+  fun test = {set Example.x += 1, Example.x}
+}
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let Example1;
+//│ (class Example {
+//│   static {
+//│     new this
+//│   }
+//│   constructor() {
+//│     Example1 = this;
+//│     this.#x = 1;
+//│     Object.defineProperty(this, "class", {
+//│       value: Example
+//│     });
+//│     globalThis.Object.freeze(this);
+//│   }
+//│   #x;
+//│   get test() {
+//│     let tmp1;
+//│     tmp1 = Example1.#x + 1;
+//│     Example1.#x = tmp1;
+//│     return Example1.#x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "Example"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+

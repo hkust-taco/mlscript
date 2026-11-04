@@ -145,11 +145,14 @@ staged module CallSubst with
 :ftc
 staged module Arguments with
   fun f(x) =
+    let =x
     x = 1
     x
   fun g(x)(y, z)() = z
 //│ > fun ctor_() = ()
 //│ > fun f(x) =
+//│ >   let {x}
+//│ >   x = x1
 //│ >   x = 1
 //│ >   x
 //│ > fun g(x) =
@@ -170,10 +173,10 @@ staged module BadArguments with
 :fixme
 staged module OtherBlocks with
   fun scope() =
-    scope.locally of (
+    scope.locally of {
       let a = 1
       a
-    )
+    }
   fun breakAndLabel() =
     if 1 is
       2 then 0

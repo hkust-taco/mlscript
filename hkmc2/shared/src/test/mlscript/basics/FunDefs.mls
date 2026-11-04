@@ -59,21 +59,9 @@ fun (>>) foo(a, b) = a * b
 
 :e
 fun ~ concat(a, b) = a + b
-//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found application
+//│ ╔══[COMPILATION ERROR] Expected a valid function definition head; found prefix operator application instead
 //│ ║  l.+1: 	fun ~ concat(a, b) = a + b
-//│ ╙──      	      ^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Name not found: a
-//│ ║  l.+1: 	fun ~ concat(a, b) = a + b
-//│ ╙──      	                     ^
-//│ ╔══[COMPILATION ERROR] Name not found: b
-//│ ║  l.+1: 	fun ~ concat(a, b) = a + b
-//│ ╙──      	                         ^
-//│ ╔══[COMPILATION ERROR] Resolution error in application
-//│ ║  l.+1: 	fun ~ concat(a, b) = a + b
-//│ ║        	                     ^^^^^
-//│ ╟── Value of type 'Int' cannot be called like a function.
-//│ ║  l.XX: 	fun (+) : Int
-//│ ╙──      	          ^^^
+//│ ╙──      	    ^^^^^^^^^^^^^^
 
 // * Note the strange parsing
 :pt

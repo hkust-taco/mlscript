@@ -1,0 +1,16 @@
+:.
+
+// The global receiver has no Wasm local slot, even inside a function.
+:ge
+globalThis
+//│ ╔══[COMPILATION ERROR] The global object is not supported in Wasm.
+//│ ║  l.+1: 	globalThis
+//│ ╙──      	^^^^^^^^^^
+
+:ge
+:noInline
+fun globalReceiver() = globalThis
+globalReceiver()
+//│ ╔══[COMPILATION ERROR] The global object is not supported in Wasm.
+//│ ║  l.+1: 	fun globalReceiver() = globalThis
+//│ ╙──      	                       ^^^^^^^^^^

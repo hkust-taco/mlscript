@@ -1,0 +1,16 @@
+:.
+
+
+// * [todo:effectful-spreads]
+// * From https://github.com/hkust-taco/mlscript/pull/562#discussion_r4216649253
+// * Spreads can be stateful and even have side effects (we can spread arbitrary iterables)...
+let xs = mut [1]
+fun id(a) = a
+fun g(xs) =
+  let y = id(...xs)
+  @affine(0) (x) => y + x
+let h = g(xs)
+set xs.[0] = 2
+h(4)
+
+

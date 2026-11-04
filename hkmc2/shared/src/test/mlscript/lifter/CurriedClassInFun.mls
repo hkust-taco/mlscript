@@ -4,6 +4,7 @@
 
 :expect 2
 fun f(x) =
+  let =x
   class A()() with
     fun newA() = A()()
     fun foo() =
@@ -24,6 +25,7 @@ a.getX()
 // * Notice how the capture parameter `f$cap` is inserted before the aux param `z` but after the main param `y`
 :soir
 fun f(x) =
+  let =x
   class A(val y)(val z) with
     fun newA() = new A(y + 1)(z + 1)
     fun foo() =
@@ -32,17 +34,23 @@ fun f(x) =
     fun getX() = x
   [new A(x + 1)(x + 2), A, A(x + 1), A(x + 1)(x + 2)]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let A, Capture$f, A$;
+//│ let A, Capture$scope0, A$;
+//│ define Capture$scope0 as class Capture$scope0¹ {
+//│   constructor Capture$scope0⁰(x$0) {
+//│     define x$0⁰ as val x$0¹ = x$0;
+//│     end
+//│   }
+//│ };
 //│ @inline
-//│ define A$ as fun A$⁰(f$cap)(y)(z) {
-//│   return new A⁰(y, f$cap, z)
+//│ define A$ as fun A$⁰(scope0$cap)(y)(z) {
+//│   return new A⁰(y, scope0$cap, z)
 //│ };
 //│ define A as class A⁰ {
-//│   private val f$cap⁰;
+//│   private val scope0$cap⁰;
 //│   val y⁰;
 //│   val z⁰;
-//│   constructor A¹(y, f$cap, z) {
-//│     set A⁰.this.f$cap⁰ = f$cap;
+//│   constructor A¹(y, scope0$cap, z) {
+//│     set A⁰.this.scope0$cap⁰ = scope0$cap;
 //│     define y⁰ as val y¹ = y;
 //│     define z⁰ as val z¹ = z;
 //│     end
@@ -51,36 +59,31 @@ fun f(x) =
 //│     let tmp, tmp1;
 //│     set tmp = +⁰(A⁰.this.y¹, 1);
 //│     set tmp1 = +⁰(A⁰.this.z¹, 1);
-//│     return new A⁰(tmp, A⁰.this.f$cap⁰, tmp1)
+//│     return new A⁰(tmp, A⁰.this.scope0$cap⁰, tmp1)
 //│   }
 //│   method foo⁰ = fun foo¹() {
 //│     let tmp;
-//│     set tmp = +⁰(A⁰.this.f$cap⁰.x$0⁰, 1);
-//│     set A⁰.this.f$cap⁰.x$0⁰ = tmp;
-//│     return A⁰.this.f$cap⁰.x$0⁰
+//│     set tmp = +⁰(A⁰.this.scope0$cap⁰.x$0¹, 1);
+//│     set A⁰.this.scope0$cap⁰.x$0¹ = tmp;
+//│     return A⁰.this.scope0$cap⁰.x$0¹
 //│   }
 //│   method getX⁰ = fun getX¹() {
-//│     return A⁰.this.f$cap⁰.x$0⁰
-//│   }
-//│ };
-//│ define Capture$f as class Capture$f¹ {
-//│   constructor Capture$f⁰(x$0) {
-//│     define x$0¹ as val x$0⁰ = x$0;
-//│     end
+//│     return A⁰.this.scope0$cap⁰.x$0¹
 //│   }
 //│ };
 //│ define f⁰ as fun f¹(x) {
-//│   let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, f$cap, A$here;
-//│   set f$cap = new mut Capture$f¹(x);
-//│   set tmp = +⁰(f$cap.x$0⁰, 1);
-//│   set tmp1 = +⁰(f$cap.x$0⁰, 2);
-//│   set tmp2 = new A⁰(tmp, f$cap, tmp1);
-//│   set tmp3 = +⁰(f$cap.x$0⁰, 1);
-//│   set tmp4 = A$⁰(f$cap)(tmp3);
-//│   set tmp5 = +⁰(f$cap.x$0⁰, 1);
-//│   set tmp6 = +⁰(f$cap.x$0⁰, 2);
-//│   set tmp7 = new A⁰(tmp5, f$cap, tmp6);
-//│   set A$here = A$⁰(f$cap);
+//│   let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, scope0$cap, A$here;
+//│   set scope0$cap = new mut Capture$scope0¹(undefined);
+//│   set scope0$cap.x$0¹ = x;
+//│   set tmp = +⁰(scope0$cap.x$0¹, 1);
+//│   set tmp1 = +⁰(scope0$cap.x$0¹, 2);
+//│   set tmp2 = new A⁰(tmp, scope0$cap, tmp1);
+//│   set tmp3 = +⁰(scope0$cap.x$0¹, 1);
+//│   set tmp4 = A$⁰(scope0$cap)(tmp3);
+//│   set tmp5 = +⁰(scope0$cap.x$0¹, 1);
+//│   set tmp6 = +⁰(scope0$cap.x$0¹, 2);
+//│   set tmp7 = new A⁰(tmp5, scope0$cap, tmp6);
+//│   set A$here = A$⁰(scope0$cap);
 //│   return [tmp2, A$here, tmp4, tmp7]
 //│ };
 //│ end

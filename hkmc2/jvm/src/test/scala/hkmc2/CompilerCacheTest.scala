@@ -17,7 +17,7 @@ class CompilerCacheTest extends AnyFunSuite:
 
   // Allow more time for both worker startup and completion on shared CI runners.
   private val (startupTimeout, completionTimeout) =
-    if sys.env.contains("CI") then (15.seconds, 15.seconds)
+    if TimeOutTests.OnCI then (15.seconds, 15.seconds)
     else (5.seconds, 10.seconds)
 
   private final class Entry

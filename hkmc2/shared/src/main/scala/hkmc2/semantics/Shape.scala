@@ -119,7 +119,7 @@ object ShapeIdentity:
       case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.observation.hashCode), parentHash(view.parent))
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
-        view.declaration.fold(0)(System.identityHashCode), view.asyncResult.hashCode, callableUses(view).hashCode)
+        view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode, callableUses(view).hashCode)
       case view: RecordTypeShape => ValueKey.hash(
         ValueKey.mapHash(view.fields)(_.hashCode, _.observation.hashCode), view.aliases.hashCode)
       case view: IntersectionView => view.values.map(_.comparison).hashCode
@@ -147,7 +147,7 @@ object ShapeIdentity:
         case a: CallableTypeShape => that.shape match
           case b: CallableTypeShape => (a.source eq b.source) && a.paramLists == b.paramLists && a.result == b.result &&
             a.scheme == b.scheme && a.supplied == b.supplied && callableUses(a) == callableUses(b) &&
-            a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.asyncResult == b.asyncResult
+            a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.wrappedResult == b.wrappedResult
           case _ => false
         case a: RecordTypeShape => that.shape match
           case b: RecordTypeShape => sameTypeUses(a.fields, b.fields) && a.aliases == b.aliases
@@ -825,15 +825,19 @@ final class DeclaredParams(val params: Ls[DeclaredParam], val variadic: Opt[Vari
   def mapTypes(f: DeclaredType => DeclaredType): DeclaredParams =
     DeclaredParams(params.map(_.mapType(f)), variadic.map(_.map(_.mapType(f))))
 
-/** Async lowering wraps the result only after all written parameter lists have
-  * been applied. A separate signature can encode those lists as nested arrows,
+/** Async and generator lowering wrap the result only after all written parameter lists
+  * have been applied. A separate signature can encode those lists as nested arrows,
   * so the pending wrapper must survive observing the next callable interface.
   */
-final case class AsyncResult(annotation: Annot.Async, remainingLists: Int) extends ValueKey:
-  // Every async annotation wraps the result in Promise. Its span is evidence.
-  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), remainingLists.hashCode)
+final case class WrappedResult(annotation: Annot.Async | Annot.Generator, remainingLists: Int) extends ValueKey:
+  // Every async annotation wraps the result in Promise and every generator annotation
+  // in Iterator, so only the annotation's kind matters. Its span is evidence.
+  private def isAsync: Bool = annotation match
+    case _: Annot.Async => true
+    case _: Annot.Generator => false
+  protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), isAsync.hashCode, remainingLists.hashCode)
   protected def sameValue(other: ValueKey): Bool = other match
-    case that: AsyncResult => remainingLists == that.remainingLists
+    case that: WrappedResult => isAsync == that.isAsync && remainingLists == that.remainingLists
     case _ => false
   require(remainingLists > 0)
 
@@ -847,7 +851,7 @@ final case class AsyncResult(annotation: Annot.Async, remainingLists: Int) exten
   */
 final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams],
     result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[DeclaredType]],
-    declaration: Opt[TermDefinition], asyncResult: Opt[AsyncResult]) extends CoreHeadShape:
+    declaration: Opt[TermDefinition], wrappedResult: Opt[WrappedResult]) extends CoreHeadShape:
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
   def toLoc: Opt[Loc] = declaration.fold(source.toLoc)(_.headerLoc)
@@ -891,17 +895,20 @@ enum TypeInterfaceReason:
       case AbstractDeclaration(_, source) => result.withTypeOrigin(source)
       case _ => result
 
-/** A type view that authorizes no member operations. The diagnostic reason is
-  * excluded from the semantic key so alternative witnesses do not add inference flow.
+/** A declared type with an empty member interface. Lookup contributes no candidates
+  * to intersections or wildcard opens; hidden runtime fields remain inaccessible.
+  * Spreading such a value can still overwrite fields, so record spreads retain
+  * their separate unknown-value barrier. The diagnostic reason is excluded from
+  * the semantic key so alternative witnesses do not add inference flow.
   */
 final class OpaqueTypeShape(val source: Term)(val reason: TypeInterfaceReason) extends CoreHeadShape:
   override def isSelfContained: Bool = true
-  def describe: Str = "value with no known interface"
+  def describe: Str = "value with an empty interface"
   override def toString: Str = s"OpaqueTypeShape($source)"
   def toLoc: Opt[Loc] = source.toLoc
   def provenance: ShapeProvenance = reason.provenance
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
-    MemberLookup.Unknown(MemberLookup.Uncertainty.ValueShape, false, provenance)
+    MemberLookup.Missing
 
 class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadShape:
   /** Instance lookup is shared by constructor calls and explicit `new`.
@@ -953,7 +960,7 @@ class DefnShape(val defn: Definition, val ext: Opt[TermShape]) extends CoreHeadS
         name -> RecordMember(RcdField(Term.Lit(syntax.Tree.StrLit(name)), value), false)
       def withBuffer(body: Term): Term =
         val params = PlainParamList(List("buffer", "index").map: name =>
-          Param.simple(VarSymbol(new syntax.Tree.Ident(name), erasedType = N)))(cls.toLoc)
+          Param.simple(VarSymbol(new syntax.Tree.Ident(name), erasedType = N, mut = false)))(cls.toLoc)
         scoped(Term.Lam(params, body))
       // Constructors return the allocated index after all their original lists.
       val ctor = (cls.paramsOpt.toList ::: cls.auxParams).foldRight[Term](Term.Lit(syntax.Tree.IntLit(0))):

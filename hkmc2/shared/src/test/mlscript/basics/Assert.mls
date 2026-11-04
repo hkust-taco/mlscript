@@ -82,10 +82,10 @@ ys
 (assert true else 2) + 3
 //│ = "()3"
 
-(assert true else 2, 1) + 3
+{assert true else 2, 1} + 3
 //│ = 4
 
-(assert false else 2, 1) + 3
+{assert false else 2, 1} + 3
 //│ = 5
 
 :re

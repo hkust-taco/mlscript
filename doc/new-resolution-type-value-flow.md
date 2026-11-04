@@ -59,6 +59,23 @@ instead observes each component independently, including through aliases, type
 parameters, and inference holes. The type-view cache distinguishes these two
 observations so inferred arguments cannot change the interface of an annotation.
 
+Opaque declared types expose an empty member interface. An intersection can use
+members supplied by its other components, and an opaque wildcard-open contributes
+no candidates. Eager resolution requires each union alternative of a selected
+receiver to provide the member; loose resolution permits a known missing
+alternative when another supplies a target. For wildcard opens, this check
+applies only to sources that supply a candidate. One missing-member witness per
+reference and opened source survives until block completion, so arrival order
+does not hide a partially matching source. Unknown inputs from exposed interfaces
+still require checking even when another alternative or open supplies a target.
+The `()` type exposes the same Unit shape as its literal, retaining that literal
+as the diagnostic witness through aliases and scope transport.
+
+An empty declared interface makes no claim about runtime fields. Record spreads
+of opaque values remain unknown overwrite barriers, and unresolved inferred values
+retain their uncertainty. Neither may silently reveal an earlier field or remove
+a potentially competing wildcard-open candidate.
+
 A `DeclaredType` contains:
 
 - A source `TypeResolution` node.
@@ -280,6 +297,15 @@ never live inference bounds. Applied type-argument counts are recorded when the
 application is interpreted so dependency summaries do not depend on observation
 order.
 
+Deferred transport and type-view caches project retained instances before
+choosing their keys, using this same support analysis. Otherwise an independent
+arm of `A | ()` would get a fresh observation graph for every instance of `A`,
+and an irrelevant ambient binding would create a distinct contextual reference
+before `InstanceShape` removed that binding. Unknown forward dependencies retain
+the whole environment; known dependencies include transitive instance-site
+requirements even when their bounds have not yet arrived. This projection
+changes neither scope paths nor activation environments.
+
 Activation environments are not projected: they select which body's events a
 listener accepts, independently of what the delivered value can observe.
 
@@ -457,6 +483,13 @@ directions for constraint transport; it is not a mathematical inverse
 on candidates. A wildcard exit can consume an entry carrying a call-site ID.
 Re-entering without an ID does not restore it. Exit followed by entry must not be
 cancelled as an identity, including on deferred references.
+
+Observing a contextual reference without explicit type arguments subscribes to
+the source's cached type views and transports each delivered shape. Distinct
+paths share that source interpretation, including bounds published later. The
+cache installs its host before following references, so recursive observations
+reuse the same endpoint. An application still interprets its arguments in the
+template's source scope before transporting the result.
 
 The relevant scope crossings are:
 

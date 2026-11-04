@@ -108,7 +108,7 @@ fun stillUnknown(value: Any) =
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+2: 	  if value is ~TextBox as other then other.text else ""
 //│ ║        	                                     ^^^^^^^^^^
-//│ ╟── Cannot resolve member 'text' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'text'
 //│ ║  l.+1: 	fun stillUnknown(value: Any) =
 //│ ║        	                        ^^^
 //│ ╟── Type 'Any' is declared without a member interface.

@@ -54,9 +54,12 @@ object Bar extends Foo!class
 
 :fixme // Support?
 object Bar extends! Foo!class
-//│ ╔══[COMPILATION ERROR] Cannot resolve the class referenced here
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
 //│ ║  l.+1: 	object Bar extends! Foo!class
-//│ ╙──      	                  ^
+//│ ║        	                  ^^^^^^^^^^^
+//│ ╟── Invalid class expression: dereference
+//│ ║  l.+1: 	object Bar extends! Foo!class
+//│ ╙──      	                    ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

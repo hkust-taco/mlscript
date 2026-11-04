@@ -2,16 +2,17 @@
 :js
 
 
-:e
 :sjs
 while {} do()
-//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
-//│ ║  l.+1: 	while {} do()
-//│ ╙──      	         ^^^^
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ throw "This code cannot be run as its compilation yielded an error."
+//│ lbl: while (true) {
+//│   let scrut;
+//│   scrut = runtime.Unit;
+//│   if (scrut === true) { continue lbl }
+//│   break;
+//│ }
+//│ return runtime.Unit
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // * Warn about pure expressions in statement position in `while` branches

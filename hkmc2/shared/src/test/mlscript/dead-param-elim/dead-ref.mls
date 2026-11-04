@@ -7,6 +7,7 @@
 
 :soir
 private fun f(a) =
+  let =a
   a = 3
   g(a)
 private fun g(a) = 2

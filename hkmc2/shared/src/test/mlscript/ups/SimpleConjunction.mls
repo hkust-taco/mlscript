@@ -121,8 +121,8 @@ pattern UnionRecords = (a: 1, b: 2) & (a: 3, b: 4)
 
 fun test(rcd) = rcd is @compile UnionRecords
 
-test of (a: 1, b: 2)
+test of {a: 1, b: 2}
 //│ = false
 
-test of (a: 3, b: 4)
+test of {a: 3, b: 4}
 //│ = false

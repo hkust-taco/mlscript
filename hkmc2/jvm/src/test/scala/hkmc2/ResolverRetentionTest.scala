@@ -102,6 +102,8 @@ class ResolverRetentionTest extends AnyFunSuite:
         |  fun annotated(callback: Int -> Int): Int = callback(1)
         |  fun rest(...values: Array[Int]): Int = values.length
         |  fun optional(value?: Int) = value
+        |  open class Extensible with
+        |    open fun increment(value: Int): Int = value + 1
         |  @annotations.bufferable
         |  class Buffered with
         |    fun read(): Int = 1
@@ -115,6 +117,8 @@ class ResolverRetentionTest extends AnyFunSuite:
         |import "./Library.mls"
         |module Consumer with
         |  fun read(): Int = Library.Buffered.read(null, 0)()
+        |  class Extended extends Library.Extensible with
+        |    override fun increment(value) = value + 2
         |""".stripMargin)
     val imported = cctx.getElaboratedBlock(consumer, prelude)(using trace, summon[Raise])
     assert(collector.diagnostics.isEmpty, collector.diagnostics.map(_.theMsg).mkString("\n"))

@@ -1,9 +1,17 @@
 :.
 
 :expect 10
-class Base() { open fun f(x) = x + 1 }
+class Base() { open fun f(x: Int): Int = x + 1 }
 class Child() extends Base() { override fun f(x) = super.f(x + 1) * 2 }
 Child().f(3)
+//│ Wasm result:
+//│ = 10
+
+// Unannotated base members publish no representations, so their overrides inherit none.
+:expect 10
+class UnannotatedBase() { open fun f(x) = x + 1 }
+class UnannotatedChild() extends UnannotatedBase() { override fun f(x) = super.f(x + 1) * 2 }
+UnannotatedChild().f(3)
 //│ Wasm result:
 //│ = 10
 
@@ -17,7 +25,7 @@ read(Leaf())
 //│ = 21
 
 :expect 7
-abstract class Abstract() { fun f() }
+abstract class Abstract() { fun f(): Int }
 class Concrete() extends Abstract() { fun f() = 7 }
 fun readAbstract(x: Abstract) = x.f()
 readAbstract(Concrete())
@@ -25,9 +33,16 @@ readAbstract(Concrete())
 //│ = 7
 
 :expect 10
-class GetterBase() { open fun value = 5 }
+class GetterBase() { open fun value: Int = 5 }
 class GetterChild() extends GetterBase() { override fun value = super.value * 2 }
 GetterChild().value
+//│ Wasm result:
+//│ = 10
+
+:expect 10
+class UnannotatedGetterBase() { open fun value = 5 }
+class UnannotatedGetterChild() extends UnannotatedGetterBase() { override fun value = super.value * 2 }
+UnannotatedGetterChild().value
 //│ Wasm result:
 //│ = 10
 
@@ -51,7 +66,7 @@ abstractField(ConcreteField())
 :inlineThreshold 10000
 :expect 10
 fun local() = {
-  class Base() { open fun f(x) = x + 1 }
+  class Base() { open fun f(x: Int): Int = x + 1 }
   class Child() extends Base() { override fun f(x) = super.f(x) * 2 }
   Child().f(4)
 }
@@ -87,13 +102,12 @@ FieldChild().x
 //│   (import "repl" "FieldChild_typeinfo" (global $FieldChild_typeinfo (ref $FieldChild_typeinfo)))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref null any))
-//│     (block (result (ref null i31))
-//│       (local.set $tmp
-//│         (call $FieldChild_FieldChild))
-//│       (return
-//│         (struct.get $FieldChild $x
-//│           (ref.cast (ref $FieldChild)
-//│             (local.get $tmp))))))
+//│     (local.set $tmp
+//│       (call $FieldChild_FieldChild))
+//│     (return
+//│       (struct.get $FieldChild $x
+//│         (ref.cast (ref null $FieldChild)
+//│           (local.get $tmp)))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 9

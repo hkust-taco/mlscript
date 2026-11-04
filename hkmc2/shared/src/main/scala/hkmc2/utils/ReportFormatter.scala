@@ -32,6 +32,10 @@ class ReportFormatter(
     output(if colorize then fansi.Color.LightRed(str).toString else str)
   
   val badLines = mutable.Buffer.empty[Int]
+  private var diagnosticReported = false
+  
+  /** Internal errors and other diagnostics can lack source locations. */
+  def hasDiagnostics: Bool = diagnosticReported
   
   /** Create a `Raise` dedicated to reporting diagnostics for `file`. */
   def mkRaise(file: io.Path): Raise =
@@ -52,6 +56,7 @@ class ReportFormatter(
       else globalLineNum.toString
     
     diags.foreach { diag =>
+      diagnosticReported = true
       val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
       val onlyOneLine = diag.allMsgs.size =:= 1 && diag.allMsgs.head._2.isEmpty
       val headStr =

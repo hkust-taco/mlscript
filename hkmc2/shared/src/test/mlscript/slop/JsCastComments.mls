@@ -1,0 +1,93 @@
+:.
+:js
+
+
+// Turning comments off preserves the ordinary JS output even when the IR still contains a cast.
+:noCastComments
+:noInline
+:sir
+:sjs
+:expect 42
+fun quiet(x: Num, y: Int): Int = x + y
+quiet(40, 2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define quiet⁰ as fun quiet¹(x, y) { return (+⁰(x, y) as! Int⁰) }; return quiet¹(40, 2)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let quiet; quiet = function quiet(x, y) { return x + y }; return quiet(40, 2)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// Cast comments stay attached to callees, constructor arguments, and returned values after inlining.
+:sjs
+:expect 42
+class Box(val value: Int)
+fun asFunction(value): Function = value
+fun read(box: Box): Int = box.value
+fun invoke(f, x) = asFunction(f)(x)
+invoke(x => read(new Box(x)), 42)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let asFunction, read, invoke, Box1, lambda;
+//│ asFunction = function asFunction(value) {
+//│   return value /* as! Function */
+//│ };
+//│ read = function read(box) {
+//│   return box.value
+//│ };
+//│ invoke = function invoke(f, x) {
+//│   return runtime.safeCall(f /* as! Function */(x))
+//│ };
+//│ Box1 = function Box(value) {
+//│   return globalThis.Object.freeze(new Box.class(value));
+//│ };
+//│ (class Box {
+//│   static {
+//│     Box1.class = this
+//│   }
+//│   constructor(value) {
+//│     this.value = value;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Box", ["value"]];
+//│ });
+//│ lambda = (undefined, function (x) {
+//│   let tmp;
+//│   tmp = globalThis.Object.freeze(new Box1.class(x /* as! Int */));
+//│   return tmp.value
+//│ });
+//│ return runtime.safeCall(lambda /* as! Function */(42))
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// Looking through a commented cast must still parenthesize a negative literal used as a receiver.
+:noCheckCasts
+:sjs
+:expect "-1"
+fun asInt(value): Int = value
+asInt(-1).toString()
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let asInt;
+//│ asInt = function asInt(value) {
+//│   return value /* as!! Int */
+//│ };
+//│ return runtime.safeCall((-1 /* as!! Int */).toString())
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "-1"
+
+
+// Type names can contain comment terminators and line separators through escaped identifiers.
+// The generated comment must contain the entire name without terminating early or splitting the line.
+:sjs
+:expect 42
+declare class id"Odd*/\n\u2028Type"
+fun castOdd(value): id"Odd*/\n\u2028Type" = value
+castOdd(42)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let castOdd;
+//│ castOdd = function castOdd(value) {
+//│   return value /* as! Odd* /\n\u2028Type */
+//│ };
+//│ return 42 /* as! Odd* /\n\u2028Type */
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42

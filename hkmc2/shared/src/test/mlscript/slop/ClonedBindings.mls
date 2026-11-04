@@ -84,6 +84,23 @@ fun localClass(x) =
 [localClass(1), localClass(2)]
 //│ = [3, 4]
 
+// The erased return signature must name the same cloned class as the parameter.
+// Copying the signature unchanged compares the fresh Box with the original Box
+// and rejects the valid return from identity.
+pattern LocalIdentity = x =>
+  class Box
+  fun identity(box: Box): Box = box
+  identity(new Box)
+  x
+
+:noOpt
+fun cloneIdentity(x) =
+  if x is (@compile LocalIdentity) as result then result else 0
+
+:expect 42
+cloneIdentity(42)
+//│ = 42
+
 // Nominal metadata must follow cloned owners, including override edges and
 // symbols reached through a stored constructor, a module or a type alias.
 pattern LocalMembers = x =>
@@ -141,3 +158,52 @@ fun distribute(x) = if produce(x) is
 :expect [10, 9, 12]
 [distribute(0)(10), distribute(1)(10), distribute(2)(10)]
 //│ = [10, 9, 12]
+
+// A cloned wrapper still coerces its body's returns to the payload type, while
+// calls expose the iterator or promise. Both explicit and implicit returns matter.
+pattern GeneratorResult = x =>
+  data class Payload(value: Int)
+  @generator fun values(): Payload =
+    yield x
+    return Payload(42)
+  let iterator = values()
+  let first = iterator.next().value
+  let last = if iterator.next().value is Payload(value) then value else 0
+  [first, last]
+
+:noOpt
+fun clonedGenerator(x) =
+  if x is (@compile GeneratorResult) as result then result else []
+
+:expect [[3, 42], [4, 42]]
+[clonedGenerator(3), clonedGenerator(4)]
+//│ = [[3, 42], [4, 42]]
+
+pattern AsyncResult = x =>
+  @async fun answer(): Int = 42
+  answer()
+
+:noOpt
+fun clonedAsync(x) =
+  if x is (@compile AsyncResult) as result then result else Promise.resolve(0)
+
+:await
+:expect [42, 42]
+Promise.all([clonedAsync(3), clonedAsync(4)])
+//│ = [42, 42]
+
+// Getter signatures retain the wrapper kind and rename a locally declared payload class.
+pattern AsyncGetterResult = x =>
+  class Payload with
+    fun answer: Int = 42
+    @async fun wrapped: Payload = this
+  new Payload().wrapped.then(payload => payload.answer)
+
+:noOpt
+fun clonedAsyncGetter(x) =
+  if x is (@compile AsyncGetterResult) as result then result else Promise.resolve(0)
+
+:await
+:expect [42, 42]
+Promise.all([clonedAsyncGetter(3), clonedAsyncGetter(4)])
+//│ = [42, 42]

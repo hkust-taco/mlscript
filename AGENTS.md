@@ -49,6 +49,11 @@ Before adding new diff tests, make sure they are not already covered by existing
 All new diff-test files you create should go into `hkmc2/shared/src/test/mlscript/slop/`
 unless there is a good reason to put them elsewhere.
 
+The legacy resolver (the `0.2.x` language, used whenever new resolution is disabled,
+including diff tests that do not import their directory's `.mls` configuration with `:.`)
+will be sunset soon. Do not spend effort fixing, extending, or adding tests for behavior
+specific to it; keep its existing tests passing and focus on new-resolution behavior.
+
 When you create a commit, author it under your (the agent's) own identity,
 not under the user's identity.
 Set this identity for the commit command only
@@ -101,6 +106,10 @@ consider refactoring it into a reusable function or class.
 The goal of minimizing code duplication is to improve maintainability:
 the logic for handling cases that ought to be similar should be centralized.
 
+Long positional patterns containing `_, _, _, ...` are a code smell.
+Use named field patterns when matching a few fields of a case class or extractor,
+and preserve named patterns when refactoring the representation they match.
+
 **Document your code**:
 Use comments to explain the intent behind complex logic,
 especially if it is not immediately clear from the code itself.
@@ -118,6 +127,28 @@ after commits are squashed.
 Do NOT include comments that simply describe what the code is doing
 without adding any additional insight, or comments that talk about
 parts of the system that are not directly related to the code being commented on.
+
+Avoid passive tense, words like "actually", "just", etc.,
+avoid needlessly contrasting presently irrelevant things with expressions like "instead of",
+and use clear language and terminology.
+
+
+## Performance Gotchas
+
+Be careful not to materialize intermediate collections needlessly:
+instead of `someCollection.toList.map(...).filter(...)` or `someList.map(...).filter(...)`,
+use, eg, `someCollection.iterator.map(...).filter(...).toList`.
+When repeated concatenation with potentially long prefixes is required,
+prefer a `Vector` over a `List`. Generally avoid introducing new uses of `Seq`.
+
+Prefer `Set.single(1)` and `1 :: Nil` instead of the variadic constructors,
+ie, instead of `Set(1)` and `List(1)`,
+as the latter may allocate an array for the arguments.
+
+Use `lazyZip` instead of `zip`, and always make sure that either
+(1) zipped collections have the same length; or
+(2) dropping elements from the longer one is the intended behavior,
+in which case this should be explained clearly in a comment.
 
 
 ## User-Facing Diagnostics

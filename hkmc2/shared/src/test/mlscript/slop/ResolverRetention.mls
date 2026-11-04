@@ -1,6 +1,6 @@
 :.
 
-// These are compiled artifacts: their workspaces and disconnected listeners
+// These are compiled artifacts: their workspaces and temporary observers
 // have been released before these calls install any consumer-local inference.
 import "../../mlscript-compile/ResolverRetentionLibrary.mls" as Library
 import "../../mlscript-compile/ResolverRetentionMiddle.mls" as Middle

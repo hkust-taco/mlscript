@@ -59,9 +59,16 @@ private[hkmc2] final class ResolutionWorkspace(owner: Elaborator.State):
   var reporter: Raise | Null = null
   var traceLogger: TraceLogger = TraceLogger.silent(using new DebugPrinter(S(owner)))
   val exposureInputs = mutable.LinkedHashMap.empty[(ShapeIdentity.Key, ResolutionContext), InterfaceExposure.Input]
+  /** Erasure checks signatures of the overridable members reached by interface
+    * exposure. Keep their first exposure paths through erasure and across worksheet
+    * blocks; compiled units release them with the rest of this workspace.
+    */
+  val exposedOpenMembers = mutable.Map.empty[TermSymbol, ShapeProvenance]
   val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
   val resolutionProblems =
     mutable.LinkedHashMap.empty[Identity[NewSel | App], mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]
+  val wildcardMisses =
+    mutable.LinkedHashMap.empty[Identity[UnresolvedRef], mutable.LinkedHashMap[Identity[Term], () => Ls[(Message, Opt[Loc])]]]
   // The references, selections, and instantiations written in this unit's current block,
   // in elaboration order, with the lexical scope in which each is written (see
   // ResolutionContext.checkAccess). Its references without explicit bindings are also
