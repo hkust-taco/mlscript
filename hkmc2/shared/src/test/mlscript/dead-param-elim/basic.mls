@@ -298,11 +298,12 @@ fun f(c) = Runtime.Tuple.get(c, 1) + 1
 //│   do runtime⁰.checkDepth﹖();
 //│   match runtime⁰.curEffect﹖
 //│     null =>
-//│       set curDepth = +⁰(runtime⁰.stackDepth﹖, 1);
+//│       set curDepth = +⁰((runtime⁰.stackDepth﹖ as! Int⁰), 1);
 //│       set tmp = Runtime⁰.Tuple⁰.get⁰(c, 1);
 //│       return +⁰(tmp, 1)
 //│     else
-//│       return runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:292:1", null, null, 1, 1, c, 0)
+//│       do runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:292:1", null, null, 1, 1, c, 0);
+//│       return undefined
 //│   end
 //│ };
 //│ end

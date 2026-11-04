@@ -3,8 +3,6 @@
 open annotations
 
 // Call sites use Promise, while both return paths coerce the body's annotated payload.
-// TODO: AsyncLowering must coerce the toJsAsync result to the wrapper's Promise return type.
-:fixme
 :checkIR
 :noInline
 :sir
@@ -29,7 +27,7 @@ Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
 //│ define answer¹ as fun answer²(early: Bool⁰, value: Unknown): Promise⁰ {
 //│   let tmp5: Function⁰;
 //│   set tmp5 = answer⁰(early, value);
-//│   return runtime⁰.toJsAsync﹖(tmp5)
+//│   return (runtime⁰.toJsAsync﹖(tmp5) as! Promise⁰)
 //│ };
 //│ define asPromise⁰ as fun asPromise¹(value: Promise⁰): Promise⁰ {
 //│   return value
@@ -40,8 +38,6 @@ Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
 //│ set tmp3 = asPromise¹(tmp2);
 //│ set tmp4 = [tmp1, tmp3];
 //│ return globalThis⁰.Promise¹.all⁰(tmp4)
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at a function return
-//│ ╙── The value has type 'Unknown', but its destination requires 'Promise'
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43]
 
@@ -133,14 +129,10 @@ fromMethod(new Methods)
 // Imported pattern bodies retain their payload metadata when cloned in a later unit.
 import "../../mlscript-compile/AsyncLibrary.mls"
 
-// TODO: The cloned async wrapper assigns toJsAsync's unknown result to a Promise slot without a cast.
-:fixme
 :checkIR
 :noOpt
 fun importedAsync(x) =
   if x is (@compile AsyncLibrary.Result) as result then result else Promise.resolve(0)
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'inlinedVal'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Promise'
 
 :await
 :expect [42, 42]
@@ -148,8 +140,6 @@ Promise.all([importedAsync(3), importedAsync(4)])
 //│ = [42, 42]
 
 // Async and ordinary getters both expose Promise, but only the async body returns Int.
-// TODO: The async getter wrapper must coerce the toJsAsync result to Promise.
-:fixme
 :checkIR
 :sir
 :siret
@@ -176,7 +166,7 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│   method wrapped¹ = fun wrapped²: Promise⁰ {
 //│     let tmp2: Function⁰;
 //│     set tmp2 = wrapped⁰(ResultGetters⁰.this);
-//│     return runtime⁰.toJsAsync﹖(tmp2)
+//│     return (runtime⁰.toJsAsync﹖(tmp2) as! Promise⁰)
 //│   }
 //│   method direct⁰ = fun direct¹: Promise⁰ {
 //│     return globalThis⁰.Promise¹.resolve⁰(43)
@@ -189,8 +179,6 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│ set tmp = results⁰.ordinary¹();
 //│ set tmp1 = [results⁰.wrapped², results⁰.direct¹, tmp];
 //│ return globalThis⁰.Promise¹.all⁰(tmp1)
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at a function return
-//│ ╙── The value has type 'Unknown', but its destination requires 'Promise'
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [42, 43, 44]
 //│ results = ResultGetters(_)

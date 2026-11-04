@@ -9,7 +9,6 @@ open annotations
 // Non-local returns synthesize handlers; their methods and resume symbols are
 // bindings too, even though the transformation's source only contains a closure.
 // TODO: Lifting must add captured parameters to the copied body's erased signature.
-// HandlerLowering must also coerce dynamic runtime reads when restoring typed state and local slots.
 :fixme
 pattern Escaping = x =>
   fun body() =
@@ -17,57 +16,26 @@ pattern Escaping = x =>
     exit()
     0
   body()
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
 //│ ╔══[INTERNAL ERROR] Invalid IR: parameter lists of 'body' disagree with its erased signature
 //│ ║  l.+2: 	  fun body() =
 //│ ╙──      	      ^^^^
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
 //│ ╔══[INTERNAL ERROR] Invalid IR: parameter lists of 'body' disagree with its erased signature
 //│ ║  l.+2: 	  fun body() =
 //│ ╙──      	      ^^^^
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'saveOffset'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'emptyString'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Str'
 
 // TODO: The compiled pattern copies inherit the same stale lifted signature.
-// Their handler code also restores typed slots from dynamic runtime reads without casts.
 :fixme
 :noOpt
 fun escaping(x) =
   if x is (@compile Escaping) as first then
     if first is (@compile Escaping) as second then second else 0
   else 0
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
 //│ ╔══[INTERNAL ERROR] Invalid IR: parameter lists of 'body' disagree with its erased signature
 //│ ║  l.XX: 	  fun body() =
 //│ ╙──      	      ^^^^
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
 //│ ╔══[INTERNAL ERROR] Invalid IR: parameter lists of 'body' disagree with its erased signature
 //│ ║  l.XX: 	  fun body() =
 //│ ╙──      	      ^^^^
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'pc'
-//│ ╙── The value has type 'Unknown', but its destination requires 'Int'
 
 :expect [3, 4]
 [escaping(1), escaping(2)]

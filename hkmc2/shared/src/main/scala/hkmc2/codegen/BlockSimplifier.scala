@@ -197,7 +197,11 @@ class BlockSimplifier
           */
         def markCastTarget(target: ErasedValueType): Unit =
           target.canonicalize match
-            case ErasedType.AnyRef(_, tpeSym) => usedVars += tpeSym.bms.get
+            case ErasedType.AnyRef(_, tpeSym) =>
+              // Lifted captures and handlers can use classes created directly in IR.
+              // Such classes have no source definition from which to obtain a binding.
+              usedVars += tpeSym.irClsLikeDefn.map(_.sym).orElse(tpeSym.bms).getOrElse:
+                lastWords(s"Missing binding for cast target '${tpeSym.nme}'")
             case _ =>
 
         override def applyResult(r: Result): Unit =

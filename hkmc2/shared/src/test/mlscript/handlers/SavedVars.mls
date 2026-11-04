@@ -39,7 +39,8 @@ fun g() =
 //│         if (runtime.curEffect === null) {
 //│           pc = 3;
 //│         } else {
-//│           return runtime.unwind(g, 3, "SavedVars.mls:18:8", null, null, 1, 0, 0)
+//│           runtime.unwind(g, 3, "SavedVars.mls:18:8", null, null, 1, 0, 0);
+//│           return runtime.Unit
 //│         }
 //│       case 3:
 //│         scrut = runtime.resumeValue;
@@ -51,7 +52,8 @@ fun g() =
 //│             pc = 2;
 //│             continue main
 //│           }
-//│           return runtime.unwind(g, 2, "SavedVars.mls:19:7", null, null, 1, 0, 0);
+//│           runtime.unwind(g, 2, "SavedVars.mls:19:7", null, null, 1, 0, 0);
+//│           return runtime.Unit;
 //│         }
 //│         tmp = 2;
 //│         pc = 1;

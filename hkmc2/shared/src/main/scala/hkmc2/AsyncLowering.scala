@@ -72,10 +72,14 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
       val callArgs = (fun.owner.iterator.map(s => Arg(N, Value.This(s)(N))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym)(N))))).toList
       val outerCall = Call(Value.MemberRef(outerBms, outerDsym)(N), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val tmp = TempSymbol(N, initErasedType = outerCall.erasedType, "tmp")
+      val wrapperSym = subst.mapTermSym(fun.dSym)
+      val wrapped = Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+      // The dynamic runtime helper has no result annotation. Reestablish the wrapper's
+      // return representation here so it survives both ordinary returns and inlining.
       val wrapperBody = blockBuilder
         .assignScoped(tmp, outerCall)
-        .ret(Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N))
-      FunDefn(fun.owner, fun.sym, subst.mapTermSym(fun.dSym), fun.params, wrapperBody)(fun.configOverride, noAsync)
+        .ret(wrapped.coerceTo(wrapperSym.erasedResult.bodyType.getOrElse(ErasedType.Unknown), fun.dSym.toLoc))
+      FunDefn(fun.owner, fun.sym, wrapperSym, fun.params, wrapperBody)(fun.configOverride, noAsync)
     
     override def applyMainBlock(main: Block): Block =
       collectedFunDefn.foldRight(super.applyMainBlock(main)): (defn, acc) =>

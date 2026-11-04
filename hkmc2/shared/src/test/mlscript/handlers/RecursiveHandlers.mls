@@ -175,7 +175,8 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:144:7", null, null, 1, 2, arg, k, 0)
+//│         runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:144:7", null, null, 1, 2, arg, k, 0);
+//│         return runtime.Unit
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
@@ -206,7 +207,8 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:149:7", null, null, 1, 2, arg, k, 0)
+//│         runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:149:7", null, null, 1, 2, arg, k, 0);
+//│         return runtime.Unit
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
@@ -253,7 +255,8 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:151:3", null, null, 1, 1, h22, 0)
+//│         runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:151:3", null, null, 1, 1, h22, 0);
+//│         return runtime.Unit
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
@@ -287,7 +290,8 @@ str
 //│     if (runtime.curEffect === null) {
 //│       pc = 1;
 //│     } else {
-//│       return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
+//│       runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0);
+//│       return runtime.Unit
 //│     }
 //│   } else {
 //│     pc = runtime.resumePc;
@@ -299,7 +303,8 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
+//│         runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0);
+//│         return runtime.Unit
 //│       }
 //│     }
 //│   }

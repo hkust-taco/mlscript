@@ -50,7 +50,8 @@ hi(0)
 //│       n = tmp2;
 //│       continue loopLabel;
 //│     }
-//│     return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0);
+//│     runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0);
+//│     return runtime.Unit;
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {

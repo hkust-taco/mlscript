@@ -29,7 +29,8 @@ hi(0)
 //│     runtime.stackDepth = curDepth;
 //│     return hi(tmp1);
 //│   }
-//│   return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0);
+//│   runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0);
+//│   return runtime.Unit;
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
@@ -74,14 +75,16 @@ sum(10000)
 //│         if (runtime.curEffect === null) {
 //│           pc = 1;
 //│         } else {
-//│           return runtime.unwind(sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 0)
+//│           runtime.unwind(sum, 1, "StackSafety.mls:50:9", null, null, 1, 1, n, 0);
+//│           return runtime.Unit
 //│         }
 //│       case 1:
 //│         tmp3 = runtime.resumeValue;
 //│         return n + tmp3;
 //│     }
 //│   } else {
-//│     return runtime.unwind(sum, pc, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
+//│     runtime.unwind(sum, pc, "StackSafety.mls:47:1", null, null, 1, 1, n, 0);
+//│     return runtime.Unit
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {

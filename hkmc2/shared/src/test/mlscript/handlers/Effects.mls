@@ -81,28 +81,24 @@ result
 //│ Handler$h$perform5 = function Handler$h$perform(arg, k) {
 //│   let v, pc;
 //│   if (runtime.resumePc === -1) {
-//│     runtime.resumeValue = runtime.safeCall(k(arg));
-//│     if (runtime.curEffect === null) {
-//│       pc = 1;
-//│     } else {
-//│       return runtime.unwind(Handler$h$perform5, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
-//│     }
+//│     pc = 0;
 //│   } else {
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
-//│     if (pc === 0) {
+//│   }
+//│   switch (pc) {
+//│     case 0:
 //│       runtime.resumeValue = runtime.safeCall(k(arg));
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(Handler$h$perform5, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
+//│         runtime.unwind(Handler$h$perform5, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0);
+//│         return runtime.Unit
 //│       }
-//│     }
-//│   }
-//│   if (pc === 1) {
-//│     v = runtime.resumeValue;
-//│     result = result + arg;
-//│     return v
+//│     case 1:
+//│       v = runtime.resumeValue;
+//│       result = result + arg;
+//│       return v;
 //│   }
 //│ };
 //│ result = "";
@@ -128,32 +124,28 @@ result
 //│ handleBlock$7 = (undefined, function () {
 //│   let pc;
 //│   if (runtime.resumePc === -1) {
-//│     runtime.resumeValue = runtime.safeCall(h7.perform("1"));
-//│     if (runtime.curEffect === null) {
-//│       pc = 4;
-//│     } else {
-//│       return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
-//│     }
+//│     pc = 0;
 //│   } else {
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
-//│     if (pc === 0) {
+//│   }
+//│   switch (pc) {
+//│     case 0:
 //│       runtime.resumeValue = runtime.safeCall(h7.perform("1"));
 //│       if (runtime.curEffect === null) {
 //│         pc = 4;
 //│       } else {
-//│         return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
+//│         runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0);
+//│         return runtime.Unit
 //│       }
-//│     }
-//│   }
-//│   switch (pc) {
 //│     case 4:
 //│       runtime.resumeValue;
 //│       runtime.resumeValue = runtime.safeCall(h7.perform("2"));
 //│       if (runtime.curEffect === null) {
 //│         pc = 3;
 //│       } else {
-//│         return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
+//│         runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0);
+//│         return runtime.Unit
 //│       }
 //│     case 3:
 //│       runtime.resumeValue;
@@ -161,7 +153,8 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 2;
 //│       } else {
-//│         return runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
+//│         runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0);
+//│         return runtime.Unit
 //│       }
 //│     case 2:
 //│       runtime.resumeValue;
@@ -169,7 +162,8 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
+//│         runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0);
+//│         return runtime.Unit
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
