@@ -312,9 +312,10 @@ object ErasedType:
     // * A type parameter has no erased counterpart, so a reference to one erases to the top type under the modifier
     // * written on it. `rsc` starts as `S(false)` and no syntax writes a non-resource modifier, so `S(false)` here
     // * means that the reference is unannotated: it then erases to nothing, as it did before resource modifiers.
-    case _ if symbolOf(sign).exists:
-      case sym: VarSymbol => ModuleChecker.isTypeParam(sym)
-      case _ => false
+    case _ if
+      symbolOf(sign).exists:
+        case sym: VarSymbol => ModuleChecker.isTypeParam(sym)
+        case _ => false
     => if rsc =/= S(false) then S(ErasedType.Unknown(rsc)) else N
     case _ => symbolOf(sign).flatMap(_.asTpe).map(sym => ErasedType.ValueLike(rsc, sym))
 
