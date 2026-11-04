@@ -42,7 +42,9 @@ fun allResources(cell: rsc MixedCell): Int = read(cell)
 
 :ge
 fun rejectResource(cell: rsc Cell): Cell = cell
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'rsc Cell' at an unrelated type 'Cell'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc Cell' at an unrelated type 'Cell'
+//│ ║  l.+1: 	fun rejectResource(cell: rsc Cell): Cell = cell
+//│ ╙──      	                                           ^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define rejectResource⁰ as fun rejectResource¹(cell: rsc Cell⁰): Cell⁰ { return cell }; end
 

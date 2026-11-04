@@ -8,9 +8,10 @@ undefined
 //│ ╙──      	^^^^^^^^^
 
 
+:noOpt
 fun oops = unsafe.undefined
 
-// * This used to throw, but we now emit `Unit` upon compiling MIR's `return undefined`
+// * The JS backend preserves its Unit return convention even with optimization disabled.
 :noInline
 print(oops)
 //│ > ()

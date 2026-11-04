@@ -54,7 +54,7 @@ if
 //│ Normalized:
 //│ >  ‹if|while›
 //│ >    let-split σ = y is []=1 and
-//│ >      let tmp:element0$ = tmp:runtime⁰.Tuple‹module:Tuple⁰›.get‹term:Tuple⁰/get⁰›(y⁰, 0)
+//│ >      let tmp:element0$ = runtime⁰.Tuple‹module:Tuple⁰›.get‹term:Tuple⁰/get⁰›(y⁰, 0)
 //│ >      let b = tmp:element0$⁰
 //│ >      else
 //│ >        let x⁰
@@ -74,7 +74,7 @@ if
 //│     }
 //│   }
 //│   if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│     element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
+//│     element0$ = runtime.checkCall(runtime.Tuple.get(y /* as! Unknown */, 0));
 //│     tmp = 1 + element0$;
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }

@@ -110,7 +110,7 @@ module Tree with
           "match " + go(scrutinee) + " with "
         branches Iter.fromStack() Iter.mapping(go) Iter.joined(" | ")
       // Function application for binary operators.
-      App(Ident(op, true), lhs :: rhs :: Nil) then
+      App(Ident(op, true), Tuple(lhs :: rhs :: Nil)) then
         if opPrec(op) is [leftPrec, rightPrec] then fold(+) of
           par of go(lhs), prec(lhs, false) < leftPrec
           " ", op, " "

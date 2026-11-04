@@ -103,8 +103,8 @@ if xs is
 //│ let element0$;
 //│ if (runtime.Tuple.isArrayLike(xs2) && xs2.length >= 1) {
 //│   let xs3, inlinedVal27, tmp16;
-//│   element0$ = runtime.Tuple.get(xs2, 0);
-//│   xs3 = xs2;
+//│   element0$ = runtime.Tuple.get(xs2 /* as! Unknown */, 0);
+//│   xs3 = xs2 /* as! Unknown */;
 //│   tmp16 = xs3.length - 0;
 //│   inlinedVal27 = runtime.safeCall(xs3.slice(1, tmp16));
 //│   return globalThis.Object.freeze([

@@ -28,7 +28,7 @@ class Importer extends NewResolver:
     val nme = file.baseName
     val id = alias.getOrElse(new syntax.Tree.Ident(nme)) // TODO loc
     
-    lazy val sym = VarSymbol(id, erasedType = N)
+    lazy val sym = VarSymbol(id, erasedType = N, mut = false)
     
     if path.startsWith(".") || path.startsWith("/") then // leave alone imports like "fs"
       log(dbg"importing $file")
@@ -60,7 +60,7 @@ class Importer extends NewResolver:
               artifact.compilationUnit.defaultExport.getOrElse:
                 lastWords(s"File $file does not define a symbol named $nme")
             val sym: VarSymbol | BlockMemberSymbol = alias.fold(importedSym): alias =>
-              VarSymbol(alias, erasedType = N)
+              VarSymbol(alias, erasedType = N, mut = false)
 
             // An import alias denotes the imported value, just like a local
             // binding. Publish its shapes so selection and opens can follow it.

@@ -145,7 +145,7 @@ stopped.answer
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╙── Unit value does not contain member 'answer'
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ stopped = undefined
+//│ stopped = ()
 
 // Transparent annotations retain the target's value interface.
 :expect 42
@@ -201,4 +201,22 @@ fun guardedReturn() =
   if 0 is (_ where (return {answer: 42})) then throw new Error("unreachable")
   else throw new Error("unreachable")
 guardedReturn().answer
+//│ = 42
+
+// Exhaustive loops expose their explicit returns without an additional Unit result.
+:expect 42
+private fun exhaustive(flag) =
+  let =flag
+  while flag
+    then set flag = false
+    else return {answer: 42}
+exhaustive(true).answer
+//│ = 42
+
+// An irrefutable imperative branch cannot fall through to the unrelated tail value.
+:expect 42
+private fun wildcard(value) =
+  if value is _ do return {answer: 42}
+  {other: 0}
+wildcard(0).answer
 //│ = 42

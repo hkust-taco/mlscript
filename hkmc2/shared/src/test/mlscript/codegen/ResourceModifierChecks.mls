@@ -44,7 +44,9 @@ fun p4(x: rsc U) = x
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
 //│ ║  l.+1: 	fun p4(x: rsc U) = x
 //│ ╙──      	              ^
-//│ ═══[COMPILATION ERROR] Types 'Int32' and 'rsc C' have no common representation
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'rsc C' have no common representation
+//│ ║  l.+1: 	fun p4(x: rsc U) = x
+//│ ╙──      	                   ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define p4⁰ as fun p4¹(x: ‹incompatible(Int32, rsc C²)›): ? { return x }; end
 
@@ -53,7 +55,9 @@ fun p5(x: rsc (C | Int32)) = x
 //│ ╔══[COMPILATION ERROR] Primitive type 'Int32' cannot be a resource.
 //│ ║  l.+1: 	fun p5(x: rsc (C | Int32)) = x
 //│ ╙──      	                   ^^^^^
-//│ ═══[COMPILATION ERROR] Types 'rsc C' and 'Int32' have no common representation
+//│ ╔══[COMPILATION ERROR] Types 'rsc C' and 'Int32' have no common representation
+//│ ║  l.+1: 	fun p5(x: rsc (C | Int32)) = x
+//│ ╙──      	                             ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define p5⁰ as fun p5¹(x: ‹incompatible(rsc C², Int32)›): ? { return x }; end
 
@@ -376,7 +380,7 @@ fun fs1(using rsc ...a) = 0
 //│ ║  l.+1: 	fun fs1(using rsc ...a) = 0
 //│ ╙──      	              ^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define fs1⁰ as fun fs1¹(...a: ?): ? { return 0 }; end
+//│ define fs1⁰ as fun fs1¹(...a: Array⁰): ? { return 0 }; end
 
 
 // A `val` parameter carries its modifier as a lifted annotation rather than a modifier

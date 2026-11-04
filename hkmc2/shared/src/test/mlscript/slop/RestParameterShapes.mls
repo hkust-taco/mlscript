@@ -103,7 +103,7 @@ private fun opaque(...xs) = xs.length
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+2: 	private fun opaque(...xs) = xs.length
 //│ ║        	                            ^^^^^^^^^
-//│ ╟── Cannot resolve member 'length' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'length'
 //│ ║  l.+1: 	private fun opaque: (...Any) -> Int
 //│ ║        	                        ^^^
 //│ ╟── Type 'Any' is declared without a member interface.

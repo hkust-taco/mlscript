@@ -64,7 +64,7 @@ object ScopeData:
   type ScopedObject = ScopedObject.ScopedObject[?]
   type TScopedObject[T] = ScopedObject.ScopedObject[T]
   
-  type LiftedSym = DefinitionSymbol[?]
+  type LiftedSym = TermSymbol | ClassLikeDefSymbol
   
   extension (d: DefinitionSymbol[?])
     def asBmsRef = d.asBlkMember.get.asMemberRef(d)
@@ -101,17 +101,17 @@ object ScopeData:
         case ValDef(v) => v.tsym.nme
       
       // Locals defined by a scoped object.
-      lazy val definedLocals: Set[ScopedOrInnerSymbol] = this match
+      lazy val definedLocals: Set[LocalOrReceiverSymbol] = this match
         // we want definedLocals for the top level scope to be empty, because otherwise,
         // the lifter may try to capture those locals.
         case Top(b) => Set.empty
         case Class(cls, _) =>
           // Public/private fields are not included, as they are accessed using
           // a field selection rather than directly using the symbol.
-          val paramsSet: Set[ScopedOrInnerSymbol] = cls.paramsOpt match
+          val paramsSet: Set[LocalOrReceiverSymbol] = cls.paramsOpt match
             case Some(value) => value.params.map(_.sym).toSet
             case None => Set.empty
-          val auxSet: Set[ScopedOrInnerSymbol] = cls.auxParams.flatMap: p =>
+          val auxSet: Set[LocalOrReceiverSymbol] = cls.auxParams.flatMap: p =>
               p.params.map(_.sym)
             .toSet
           paramsSet ++ auxSet + cls.isym
@@ -120,7 +120,8 @@ object ScopeData:
         case Func(fun, _) => fun.params.flatMap: p =>
             p.paramSyms
           .toSet
-        case ScopedBlock(_, block) => block.syms.toSet
+        // Definitions have their own nodes and are tracked through `refdDefns`, never as local slots.
+        case ScopedBlock(_, block) => block.syms.collect { case s: LocalVarSymbol => s }.toSet
         case _: Loop => Set.empty
         case ValDef(_) => Set.empty
     
@@ -234,7 +235,7 @@ object ScopeData:
       lazy val allChildren: List[ScopedObject] = allChildNodes.map(_.obj)
       
       // does not include variables introduced by itself
-      lazy val existingVars: Set[ScopedOrInnerSymbol] = ancestor match
+      lazy val existingVars: Set[LocalOrReceiverSymbol] = ancestor match
         case Some(value) => value.existingVars ++ value.obj.definedLocals ++ value.nestedModObjSyms
         case None => Set.empty
       
@@ -245,15 +246,7 @@ object ScopeData:
           case _ => false
         case None => true
       
-      // Scoped blocks include the BlockMemberSymbols of their nested definitions. This removes them.
-      lazy val localsWithoutBms: Set[ScopedOrInnerSymbol] = obj match
-        case s: ScopedObject.ScopedBlock =>
-          val rmv = children.collect:
-            case c @ ScopeNode(obj = s: ScopedObject.Referencable[?]) => s.bsym
-          obj.definedLocals -- rmv
-        case _ => obj.definedLocals
-      
-      lazy val nestedModObjSyms: Set[InnerSymbol] = children.collect:
+      lazy val nestedModObjSyms: Set[ClassLikeDefSymbol] = children.collect:
           case ScopeNode(obj = c: ScopedObject.Class) if c.isObj => c.cls.isym
           case ScopeNode(obj = c: ScopedObject.Companion) => c.clsBody.isym
         .toSet

@@ -1,17 +1,25 @@
 :.
+:js
+
+
 let id"of" = 42
 fun id"fun"(x: Int) = x + 1
+//│ of = 42
 
 id"fun"(id"of")
+//│ = 43
 
 let id"if" = 1
 id"if" + 1
+//│ = 2
+//│ if = 1
 
 module id"object" with
   object id"class"
   class id"module"(x: Int)
 
 :pe
+:re
 id""
 //│ ╔══[LEXICAL ERROR] unexpected identifier escape
 //│ ║  l.+1: 	id""
@@ -22,6 +30,7 @@ id""
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
 //│ ║  l.+1: 	id""
 //│ ╙──      	^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 // Quoted names need not follow ordinary identifier syntax.
 :js
@@ -51,6 +60,13 @@ fun id"quote\" and backslash\\" = 42
 id"quote\u0022 and backslash\u005c"
 //│ = 42
 
+// * Doesn't need escaping
+let 我 = null
+set 我 ??= 41
+print \ 我 + 1
+//│ > 42
+//│ 我 = 41
+
 :js
 :expect 42
 fun id"hello\t世界\u{1F600}" = 42
@@ -59,6 +75,7 @@ id"hello\u0009世界😀"
 
 // Malformed names must report lexical errors without reading past the input or consuming a newline.
 :pe
+:re
 id"
 //│ ╔══[LEXICAL ERROR] unclosed quotation mark
 //│ ║  l.+1: 	id"
@@ -69,8 +86,10 @@ id"
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
 //│ ║  l.+1: 	id"
 //│ ╙──      	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
+:re
 id"unterminated
 //│ ╔══[LEXICAL ERROR] unclosed quotation mark
 //│ ║  l.+1: 	id"unterminated
@@ -81,8 +100,10 @@ id"unterminated
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
 //│ ║  l.+1: 	id"unterminated
 //│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
+:re
 id"trailing escape\
 //│ ╔══[LEXICAL ERROR] Expected an escape character
 //│ ║  l.+1: 	id"trailing escape\
@@ -96,8 +117,10 @@ id"trailing escape\
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
 //│ ║  l.+1: 	id"trailing escape\
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :pe
+:re
 id"unterminated
 let afterUnterminated = 1
 //│ ╔══[LEXICAL ERROR] unclosed quotation mark
@@ -111,3 +134,6 @@ let afterUnterminated = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
 //│ ║  l.+1: 	id"unterminated
 //│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+

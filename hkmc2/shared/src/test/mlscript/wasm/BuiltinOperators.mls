@@ -20,18 +20,17 @@ wasm.ref.i31(wasm.i32.add(wasm.i32.const(1), wasm.i32.const(2)))
 //│     (local $tmp i32)
 //│     (local $tmp1 i32)
 //│     (local $tmp2 i32)
-//│     (block (result (ref null i31))
-//│       (local.set $tmp
-//│         (i32.const 1))
-//│       (local.set $tmp1
-//│         (i32.const 2))
-//│       (local.set $tmp2
-//│         (i32.add
-//│           (local.get $tmp)
-//│           (local.get $tmp1)))
-//│       (return
-//│         (ref.i31
-//│           (local.get $tmp2)))))
+//│     (local.set $tmp
+//│       (i32.const 1))
+//│     (local.set $tmp1
+//│       (i32.const 2))
+//│     (local.set $tmp2
+//│       (i32.add
+//│         (local.get $tmp)
+//│         (local.get $tmp1)))
+//│     (return
+//│       (ref.i31
+//│         (local.get $tmp2))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -81,14 +80,11 @@ fun constOf(x: Int) = wasm.ref.i31(wasm.i32.const(x))
 //│ ╙──      	                                                  ^
 
 
-// Negative literals are elaborated as a call to `Call(BuiltinSymbol("-"), 1)`.
-// TODO(Derppening): This probably should be lowered as an `IntLit(-1)`, then converted on-demand to the call iff it is
-// not used as an immediate (or just do it away entirely).
-:ge
+// Shared constant folding turns unary negation of a literal into an intrinsic immediate.
+:expect -1
 wasm.i32.const(-1)
-//│ ╔══[COMPILATION ERROR] Wasm intrinsic 'i32.const' expects an integer literal immediate
-//│ ║  l.+1: 	wasm.i32.const(-1)
-//│ ╙──      	               ^^
+//│ Wasm result:
+//│ = -1
 
 
 // The remaining arithmetic instructions. Each runs on operands whose result identifies it - `-1`, `42`, `3`
@@ -113,7 +109,7 @@ wasm.i32.rem_s(wasm.i32.const(7), wasm.i32.const(2))
 //│ = 1
 
 
-// The shifts, each on `-16` (written `0 - 16`, as there are no negative literals) by `2`: the three results differ.
+// The shifts, each on `-16` (computed as `0 - 16`) by `2`: the three results differ.
 wasm.i32.shl(wasm.i32.sub(wasm.i32.const(0), wasm.i32.const(16)), wasm.i32.const(2))
 //│ Wasm result:
 //│ = -64
@@ -252,16 +248,11 @@ wasm.i31.get_u(2147483647)
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry (func (result (ref null any))))
-//│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
-//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│   (type $entry (func (result (ref null i31))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (return
-//│       (call $plus_impl
-//│         (ref.i31
-//│           (i32.const 1))
-//│         (ref.i31
-//│           (i32.const 2)))))
+//│       (ref.i31
+//│         (i32.const 3))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 3
@@ -272,14 +263,11 @@ wasm.i31.get_u(2147483647)
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $neg_impl (func (param $arg (ref null any)) (result (ref null any))))
-//│   (type $entry (func (result (ref null any))))
-//│   (import "system" "neg_impl" (func $neg_impl (type $neg_impl)))
-//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│   (type $entry (func (result (ref null i31))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (return
-//│       (call $neg_impl
-//│         (ref.i31
-//│           (i32.const 2)))))
+//│       (ref.i31
+//│         (i32.const -2))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = -2
@@ -310,16 +298,11 @@ not true
 //│ (module
 //│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
 //│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $eq_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
-//│   (type $entry (func (result (ref null any))))
-//│   (import "system" "eq_impl" (func $eq_impl (type $eq_impl)))
-//│   (func $entry (export "entry") (type $entry) (result (ref null any))
+//│   (type $entry (func (result (ref null i31))))
+//│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (return
-//│       (call $eq_impl
-//│         (ref.i31
-//│           (i32.const 1))
-//│         (ref.i31
-//│           (i32.const 1)))))
+//│       (ref.i31
+//│         (i32.const 1))))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = 1
@@ -403,3 +386,14 @@ not true
 not false
 //│ Wasm result:
 //│ = 1
+
+
+// Operators are implemented by dynamically typed runtime intrinsics, so the slots their results flow into
+// keep the default reference representation, even when other inputs are integers (see `BuiltinOperatorResults`).
+:noInline
+:expect 43
+private fun pass(a) = a
+let unused = pass(1)
+pass(42 + 1)
+//│ Wasm result:
+//│ = 43

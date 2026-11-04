@@ -430,8 +430,8 @@ fun rscModOf = M
 // A written function type's parameter list becomes the definition's own, which has no
 // resource-ness to state, so a modifier on that function type is rejected. `kControl` is
 // the same shape without one; `kForall` puts a quantifier between the modifier and the
-// function type, `kMaybe` uses `rsc?`, and the paramless `declare`d `kDeclared` consumes
-// every parameter list its signature has.
+// function type, and `kMaybe` uses `rsc?`. The paramless `declare`d `kDeclared` consumes no
+// parameter list, so its modifier is kept.
 
 :e
 fun k: rsc (C) -> C
@@ -465,11 +465,9 @@ fun kMaybe(x) = x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define kMaybe⁰ as fun kMaybe¹(x: ?): C² { return (x as! C²) }; end
 
-:e
+// A `declare`d `fun` writing no parameter lists has no parameter lists of its own: the arrows of its type describe
+// the function value that a reference to it yields, so the modifier applies to that value.
 declare fun kDeclared: rsc (C) -> C
-//│ ╔══[COMPILATION ERROR] Resource modifiers apply to function values, not to a function definition's parameter lists.
-//│ ║  l.+1: 	declare fun kDeclared: rsc (C) -> C
-//│ ╙──      	                           ^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ end
 

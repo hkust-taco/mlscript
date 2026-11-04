@@ -77,7 +77,7 @@ rsc rsc? A
 
 rsc ? A
 //│ Parsed:
-//│ 	Modified(Keywrd(keyword 'rsc'),Jux(Ident(?),Ident(A)))
+//│ 	Modified(Keywrd(keyword 'rsc'),PrefixOpApp(Ident(?),Ident(A)))
 
 
 // Resource modifiers on a type-parameter *declaration* are deferred along with the

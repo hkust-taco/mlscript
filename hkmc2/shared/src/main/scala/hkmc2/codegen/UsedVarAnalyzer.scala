@@ -19,7 +19,7 @@ import scala.collection.mutable.Buffer
 
 object UsedVarAnalyzer:
   case class MutAccessInfo(
-    accessed: MutSet[ScopedOrInnerSymbol], 
+    accessed: MutSet[LocalOrReceiverSymbol], 
     mutated: MutSet[LocalVarSymbol], 
     refdDefns: MutSet[ScopedInfo]
   ):
@@ -109,7 +109,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
                 case _ => ()
               case _ => super.applyPath(p)
         
-        case Value.RefLike(sym: ScopedOrInnerSymbol) =>
+        // Definition references were handled above; the top-level receiver never needs capturing.
+        case Value.RefLike(sym: LocalOrReceiverSymbol) =>
           accessed.accessed.add(sym)
         case _ => super.applyPath(p)
     accessed.toIMut
@@ -291,24 +292,23 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
     b: Block,
     superClass: Opt[DefinitionSymbol[?]],
     nextNodes: List[ScopeNode],
-    startingVars: Set[ScopedOrInnerSymbol],
-    thisVars: Set[ScopedOrInnerSymbol]
+    startingVars: Set[LocalOrReceiverSymbol],
+    thisVars: Set[LocalOrReceiverSymbol]
   ): Set[LocalVarSymbol] =
     val scopeInfos: Map[ScopedInfo, ScopeNode] = nextNodes.map(node => node.obj.toInfo -> node).toMap
 
-    case class CaptureInfo(reqCapture: Set[LocalVarSymbol], hasReader: Set[ScopedOrInnerSymbol], hasMutator: Set[LocalVarSymbol], mutated: Set[LocalVarSymbol])
+    case class CaptureInfo(reqCapture: Set[LocalVarSymbol], hasReader: Set[LocalOrReceiverSymbol], hasMutator: Set[LocalVarSymbol], mutated: Set[LocalVarSymbol])
     
     // linearVars denotes the variables defined inside the scopes up to the nearest loop or the top level block.
     // If a loop modifies a non-linear variable and then one of its nested definitions accesses it, we must put put
     // that variable in a capture.
-    def go(b: Block, reqCapture_ : Set[LocalVarSymbol], hasReader_ : Set[ScopedOrInnerSymbol], hasMutator_ : Set[LocalVarSymbol], mutated_ : Set[LocalVarSymbol])(using linearVars: Set[ScopedOrInnerSymbol]): CaptureInfo =
+    def go(b: Block, reqCapture_ : Set[LocalVarSymbol], hasReader_ : Set[LocalOrReceiverSymbol], hasMutator_ : Set[LocalVarSymbol], mutated_ : Set[LocalVarSymbol])(using linearVars: Set[LocalOrReceiverSymbol]): CaptureInfo =
       var reqCapture = reqCapture_
       var hasReader = hasReader_
       var hasMutator = hasMutator_
       // note: the meaning of `mutated` is a bit strange: it basically means variables which are currently not linear that have been mutated
       // if a variable is in this set but is linear, then it's ignored
       var mutated = mutated_
-      def linearValueVars = linearVars.map(s => s: ValueSymbol)
 
       inline def merge(c: CaptureInfo) =
         reqCapture ++= c.reqCapture
@@ -316,7 +316,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         hasMutator ++= c.hasMutator
         mutated ++= c.mutated
 
-      def rec(blk: Block)(using linearVars: Set[ScopedOrInnerSymbol]) =
+      def rec(blk: Block)(using linearVars: Set[LocalOrReceiverSymbol]) =
         go(blk, reqCapture, hasReader, hasMutator, mutated_)
       
       new BlockTraverserShallow:
@@ -324,7 +324,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         override def applyBlock(b: Block): Unit = b match
           // Note that we traverse directly into scoped blocks without using handleCalledScope
           case s: Scoped =>
-            rec(s.body)(using linearVars = linearVars ++ s.syms) |> merge
+            rec(s.body)(using linearVars = linearVars ++ s.syms.collect { case l: LocalVarSymbol => l }) |> merge
           case l: Label if l.loop =>
             rec(l.body)(using linearVars = Set.empty) |> merge
             applySubBlock(l.rest)
@@ -334,7 +334,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             case NoSymbol => ()
             case lhs: LocalVarSymbol =>
               if hasReader.contains(lhs) || hasMutator.contains(lhs) then reqCapture += lhs
-              if !linearValueVars.contains(lhs) then mutated += lhs
+              if !linearVars.contains(lhs) then mutated += lhs
             applySubBlock(rest)
           case Define(c @ ClsLikeDefn(k = syntax.Obj), rest) =>
             handleCalledScope(c.isym)
@@ -387,7 +387,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             // so the "one writer" rule applies.
             // However, if the control flow is not linear, we are forced to add all the mutated variables
             for l <- muts do
-              if hasReader.contains(l) || hasMutator.contains(l) || !linearValueVars.contains(l) then
+              if hasReader.contains(l) || hasMutator.contains(l) || !linearVars.contains(l) then
                 reqCapture += l
               hasReader += l
               hasMutator += l
@@ -395,9 +395,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
             for l <- reads do
               l match
                 case l: LocalVarSymbol =>
-                  if hasMutator.contains(l) || (mutated.contains(l) && !linearValueVars.contains(l)) then
+                  if hasMutator.contains(l) || (mutated.contains(l) && !linearVars.contains(l)) then
                     reqCapture += l
-                case _: ScopedOrInnerSymbol =>
+                case _: ClassLikeDefSymbol =>
               hasReader += l
             // if this defn calls another defn that creates a class or has a naked reference to a
             // function, we must capture the latter's mutated variables in a capture, as arbitrarily
@@ -428,9 +428,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
               for l <- reads do
                 l match
                   case l: LocalVarSymbol =>
-                    if hasMutator.contains(l) || (mutated.contains(l) && !linearValueVars.contains(l)) then
+                    if hasMutator.contains(l) || (mutated.contains(l) && !linearVars.contains(l)) then
                       reqCapture += l
-                  case _: ScopedOrInnerSymbol =>
+                  case _: ClassLikeDefSymbol =>
                 hasReader += l
               // if this defn calls another defn that creates a class or has a naked reference to a
               // function, we must capture the latter's mutated variables in a capture, as arbitrarily
@@ -468,9 +468,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State):
         
         override def applyPath(p: Path): Unit = p match
           case RefOfDefn(SDSym(d), _) => handleScopeRef(d)
-          case Value.RefLike(sym: ScopedOrInnerSymbol) => sym match
+          case Value.RefLike(sym: LocalOrReceiverSymbol) => sym match
             case l: LocalVarSymbol => if hasMutator.contains(l) then reqCapture += l
-            case _: ScopedOrInnerSymbol =>
+            case _: ClassLikeDefSymbol =>
           case _ => super.applyPath(p)
         
         override def applyDefn(defn: Defn): Unit = defn match

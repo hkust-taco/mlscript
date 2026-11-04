@@ -41,12 +41,12 @@ add@1@2
 //│ = fun apply
 
 :sjs
-:fixme
+:expect 123
 @(id, 123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let args13; args13 = []; return runtime.safeCall(123(...args13))
+//│ let f5, args13; f5 = Predef.id; args13 = [ 123 ]; return runtime.safeCall(f5(...args13))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ ═══[RUNTIME ERROR] TypeError: 123 is not a function
+//│ = 123
 
 (@)(id, 123)
 //│ = 123
@@ -123,7 +123,7 @@ pipeInto @ 1, inc
 // * This is a bit surprising... parses as `(inc @ (1 . pipeInto)) @ inc`
 :re
 inc @ 1 |.pipeInto @ inc
-//│ ═══[RUNTIME ERROR] TypeError: f8 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: f9 is not a function
 
 (inc @ 1) |.pipeInto @ inc
 //│ = 3

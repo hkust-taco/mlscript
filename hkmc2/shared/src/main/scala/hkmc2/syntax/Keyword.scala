@@ -75,7 +75,17 @@ object Keyword:
   val whereLhsPrec = nextPrec
   
   val `then` = Keyword("then", thenPrec, eqPrec)
-  val `do` = Keyword("do", thenPrec, eqPrec)
+  
+  // * While `do` can be used infix, as in `if x > 0 do f(x)`, it can also start a statement.
+  // * So, it cannot be used infix on a non-indented newline, otherwise we would mis-parse things like:
+  // *   ```
+  // *   if x >
+  // *     0 then "null"
+  // *     do console.log("non-null")
+  // *     1 then ...
+  // *   ```
+  val `do` = Keyword("do", thenPrec, eqPrec, canStartInfixOnNewLine = false)
+  
   val `drop` = Keyword("drop", thenPrec, eqPrec)
   
   val `else` = Keyword("else", N, eqPrec)

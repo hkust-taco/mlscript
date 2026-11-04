@@ -76,12 +76,13 @@ t.01
 //│ = 2
 
 
-:w
-:fixme // * Strange that this is treated as a statement
+:ge
 !(1,2)
-//│ ╔══[WARNING] Pure expression in statement position
+//│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
 //│ ║  l.+1: 	!(1,2)
-//│ ╙──      	  ^
+//│ ╙──      	^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot call non-binary builtin symbol '!'
+//│ ═══[RUNTIME ERROR] Error: Cannot call non-binary builtin symbol '!'
 
 :ge
 (!)(1,2)

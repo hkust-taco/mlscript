@@ -25,9 +25,9 @@ x => if x is [[0]] then 1
 //│ lambda1 = (undefined, function (x) {
 //│   let element0$, element0$1;
 //│   if (runtime.Tuple.isArrayLike(x) && x.length === 1) {
-//│     element0$ = runtime.Tuple.get(x, 0);
+//│     element0$ = runtime.Tuple.get(x /* as! Unknown */, 0);
 //│     if (runtime.Tuple.isArrayLike(element0$) && element0$.length === 1) {
-//│       element0$1 = runtime.Tuple.get(element0$, 0);
+//│       element0$1 = runtime.Tuple.get(element0$ /* as! Unknown */, 0);
 //│       if (element0$1 === 0) {
 //│         return 1
 //│       }

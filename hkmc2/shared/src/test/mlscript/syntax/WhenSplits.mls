@@ -33,6 +33,7 @@ class Foo {
     Foo then -1
   fun test2(x) =
     print \ when Bar as y then y.r else x
+  fun test3() = when { Baz then 2 } else 0
 }
 class Bar(val r) extends Foo {
   fun bar() = 1
@@ -56,5 +57,8 @@ baz.test2(34)
 //│ bar = Bar(456)
 //│ baz = Baz { r: 123 }
 //│ foo = Foo
+
+[foo.test3(), bar.test3(), baz.test3()]
+//│ = [0, 0, 2]
 
 

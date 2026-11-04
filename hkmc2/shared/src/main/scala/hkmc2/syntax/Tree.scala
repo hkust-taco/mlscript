@@ -87,6 +87,10 @@ enum Tree extends AutoLocated:
   case Tup(fields: Ls[Tree])
   case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
+  /** Retain prefix syntax to allow operators ending in `>` (except `>` itself) to delimit implicit lambdas during elaboration,
+    * similarly to how it works with OpApp.
+    * Do note that `>> _ + 1` is a prefix op app but `>>(_ + 1)` is a normal app that does not delimit the `_`. */
+  case PrefixOpApp(op: Ident, rhs: Tree)
   case OpApp(lhs: Tree, op: Tree, rhss: Ls[Tree])
   case Jux(lhs: Tree, rhs: Tree)
   case Reft(base: Tree, body: Block)
@@ -120,7 +124,10 @@ enum Tree extends AutoLocated:
    *  into a `Term`, so we need to embed `Term` into `Tree` using `Trm`. */
   case Trm(term: semantics.Term)
   
-  def splitOn(acc: Tree): Tree = this match
+  /** Substitute the shared prefix into an operator continuation. Conditional branches
+   *  such as `else` can also occur in an `OpSplit`, but only UCS elaboration handles
+   *  them: using that split as an ordinary term must report invalid source syntax. */
+  def splitOn(acc: Tree)(using Raise): Tree = this match
     case SplitPoint() => acc
     case Sel(pre, id) => Sel(pre.splitOn(acc), id)
     case App(lhs, rhs) => App(lhs.splitOn(acc), rhs)
@@ -128,7 +135,9 @@ enum Tree extends AutoLocated:
     case OpSplit(lhs, rhss) => OpSplit(lhs.splitOn(acc), rhss)
     case InfixApp(lhs, kw, rhs) => InfixApp(lhs.splitOn(acc), kw, rhs)
     case _: (Ident | Literal | Error) => acc
-    case _ => die
+    case _ =>
+      raise(ErrorReport(msg"Unexpected ${describe} in an operator continuation." -> toLoc :: Nil))
+      Error().withLocOf(this)
   
   def children: Vector[Located] = this match
     case _: Empty | _: Error | _: Ident | _: Literal | _: Under | _: Unt => Vector.empty
@@ -145,6 +154,7 @@ enum Tree extends AutoLocated:
     case Unquoted(body) => Vector.single(body)
     case Tup(fields) => fields.toVector
     case App(lhs, rhs) => Vector.double(lhs, rhs)
+    case PrefixOpApp(op, rhs) => Vector.double(op, rhs)
     case OpApp(lhs, op, rhss) => lhs +: op +: rhss.toVector
     case Jux(lhs, rhs) => Vector.double(lhs, rhs)
     case Reft(base, reft) => Vector.double(base, reft)
@@ -202,6 +212,7 @@ enum Tree extends AutoLocated:
     case Tup(fields) => "tuple"
     case TyTup(tys) => "type tuple"
     case App(lhs, rhs) => "application"
+    case PrefixOpApp(op, rhs) => "prefix operator application"
     case OpApp(lhs, op, rhss) => "operator application"
     case Jux(lhs, rhs) => "juxtaposition"
     case Reft(base, reft) => "refinement"
@@ -331,6 +342,9 @@ enum Tree extends AutoLocated:
     case Pun(false, id) =>
       InfixApp(id, Keywrd(Keyword.`:`), id)
     
+    case LetLike(kw @ Keywrd(Keyword.`let`), Pun(true, id), N, body) =>
+      LetLike(kw, id, S(id), body)
+    
     case LetLike(kw, group: Block, N, S(body)) =>
       // Nest scoped bindings so `set` restores every assigned value after the body.
       group.stmts.foldRight(body): (binding, body) =>
@@ -406,63 +420,67 @@ enum Tree extends AutoLocated:
       case InfixApp(_: Ident, Keywrd(Keyword.`:`), _) | SpreadParam(_, _) => true
       case _ => false)
     @tailrec
-    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind], rscMods: Ls[Keywrd[Keyword.RscLike]]): Diagnostic \/ ParamTree = t match
+    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind], annotations: Ls[Tree],
+        rscMods: Ls[Keywrd[Keyword.RscLike]]): Diagnostic \/ ParamTree = t match
       // * Base Cases.
       // fun f(_)
       case und: Under => 
-        R(ParamTree(flags, new Ident("_").withLocOf(und), N, N, modifiers, rscMods))
+        R(ParamTree(flags, new Ident("_").withLocOf(und), N, N, modifiers, annotations, rscMods))
       // fun f(a)
       case id: Ident if !inUsing =>
-        R(ParamTree(flags, id, N, N, modifiers, rscMods))
+        R(ParamTree(flags, id, N, N, modifiers, annotations, rscMods))
       // fun f(a: A)
       case InfixApp(id: Ident, Keywrd(Keyword.`:`), sign) =>
-        R(ParamTree(flags, id, S(sign), N, modifiers, rscMods))
+        R(ParamTree(flags, id, S(sign), N, modifiers, annotations, rscMods))
       // The annotation describes the rest tuple, just as for an ordinary parameter.
       case InfixApp(SpreadParam(id, spd), Keywrd(Keyword.`:`), sign) =>
-        R(ParamTree(flags, id, S(sign), S(spd), modifiers, rscMods))
+        R(ParamTree(flags, id, S(sign), S(spd), modifiers, annotations, rscMods))
       case Spread(kw, S(InfixApp(id: Ident, Keywrd(Keyword.`:`), sign))) =>
-        R(ParamTree(flags, id, S(sign), S(SpreadKind.fromKw(kw)), modifiers, rscMods))
+        R(ParamTree(flags, id, S(sign), S(SpreadKind.fromKw(kw)), modifiers, annotations, rscMods))
       // fun f(..a) | fun f(...a)
       case SpreadParam(id, spd) =>
-        R(ParamTree(flags, id, N, S(spd), modifiers, rscMods))
+        R(ParamTree(flags, id, N, S(spd), modifiers, annotations, rscMods))
       
       // * Unwrapping Cases
+      // class C(rsc val <...>)
+      // * As for `rsc <...>` below, for a `val` parameter, off which `desugared` lifts the modifier to an annotation.
+      // * This arm must precede the general annotation arm, which would otherwise record the modifier as an annotation.
+      case Annotated(RscModifier(kw), inner) =>
+        go(inner, flags, modifiers, annotations, rscMods :+ kw)
+      case Annotated(annotation, inner) =>
+        go(inner.desugared, flags, modifiers, annotations :+ annotation, rscMods)
       // fun f(module <...>)
       case TypeDef(Mod, inner, N) =>
-        go(inner, flags, modifiers + Mod, rscMods)
+        go(inner, flags, modifiers + Mod, annotations, rscMods)
       // fun f(pattern <...>)
       case TypeDef(Pat, inner, N) =>
-        go(inner, flags.copy(pat = true), modifiers + Pat, rscMods)
+        go(inner, flags.copy(pat = true), modifiers + Pat, annotations, rscMods)
       // class C(val <...>)
       case TermDef(ImmutVal, inner, _) =>
-        go(inner, flags.copy(isVal = true), modifiers + ImmutVal, rscMods)
+        go(inner, flags.copy(isVal = true), modifiers + ImmutVal, annotations, rscMods)
       // class C(mut val <...>)
       case TermDef(MutVal, inner, _) =>
-        go(inner, flags.copy(isVal = true, mut = true), modifiers + MutVal, rscMods)
+        go(inner, flags.copy(isVal = true, mut = true), modifiers + MutVal, annotations, rscMods)
       // fun f(using <...>)
       case TermDef(Ins, inner, N) =>
-        go(inner, flags, modifiers + Ins, rscMods)
+        go(inner, flags, modifiers + Ins, annotations, rscMods)
       // fun f(rsc <...>)
       // * This arm catches invalid usages of `rsc` in parameters - the `rsc` modifier is recorded in the `ParamTree`
       // * (to preserve class/function parameters for later stages) and the elaborator will reject it as invalid.
       case Modified(RscModifier(kw), inner) if modifiesParam(inner) =>
-        go(inner, flags, modifiers, rscMods :+ kw)
-      // class C(rsc val <...>)
-      // * As above, for a `val` parameter, off which `desugared` lifts the modifier to an annotation.
-      case Annotated(RscModifier(kw), inner) =>
-        go(inner, flags, modifiers, rscMods :+ kw)
+        go(inner, flags, modifiers, annotations, rscMods :+ kw)
       // fun f(a?)
       case Optional(inner) =>
-        go(inner, flags.copy(opt = true), modifiers, rscMods)
+        go(inner, flags.copy(opt = true), modifiers, annotations, rscMods)
       // fun f(a?: A)
       case InfixApp(Optional(inner), kw @ Keywrd(Keyword.`:`), sign) =>
-        go(InfixApp(inner, kw, sign), flags.copy(opt = true), modifiers, rscMods)
+        go(InfixApp(inner, kw, sign), flags.copy(opt = true), modifiers, annotations, rscMods)
       // fun f(...a?), which is reported during elaboration
       case Spread(kw, S(Optional(inner))) =>
-        go(Spread(kw, S(inner)), flags.copy(opt = true), modifiers, rscMods)
+        go(Spread(kw, S(inner)), flags.copy(opt = true), modifiers, annotations, rscMods)
       // fun f(drop a)
       case PrefixApp(Keywrd(Keyword.`drop`), inner) =>
-        go(inner, flags.copy(droppable = true), modifiers, rscMods)
+        go(inner, flags.copy(droppable = true), modifiers, annotations, rscMods)
       
       // * Base Case (for `using` clause)
       // fun f(using A)
@@ -471,14 +489,14 @@ enum Tree extends AutoLocated:
         // understood as a type for unnamed contextual parameters, as
         // opposed to that an identifier is understood as the identifier
         // for a regular parameter list.
-        R(ParamTree(flags, Ident(""), S(ty), N, modifiers, rscMods))
+        R(ParamTree(flags, Ident(""), S(ty), N, modifiers, annotations, rscMods))
       
       // * Default Case
       case _ => L:
         ErrorReport:
           msg"Expected a valid parameter, found ${this.describe}" -> this.toLoc :: Nil
     
-    go(this, flags = FldFlags.empty, modifiers = Set.empty, rscMods = Nil)
+    go(this, flags = FldFlags.empty, modifiers = Set.empty, annotations = Nil, rscMods = Nil)
 
   def isModified(modifier: Keyword | DeclKind): Bool = this match
     case td @ Tree.TypeDef(m, head, N) =>
@@ -524,8 +542,11 @@ object Tree:
       (Apps(Modified(mut, base), argss), S(kw))
     case _ => (body, N)
   
-  extension [T <: Keyword & Singleton](kw: Tree.Keywrd[T])
+  extension (kw: Tree.Keywrd[?])
     def name = kw.kw.name
+  
+  extension (prefix: PrefixOpApp)
+    def toApp: App = new App(prefix.op, PlainTup(prefix.rhs)).withLocOf(prefix)
 
 /**
  * A parameter yet to be elaborated, which is different from
@@ -537,7 +558,8 @@ object Tree:
  */
 case class ParamTree(
   flags: FldFlags, ident: Ident, sign: Opt[Tree], 
-  spd: Opt[SpreadKind], modifiers: Set[DeclKind], rscModifiers: Ls[Keywrd[Keyword.RscLike]]
+  spd: Opt[SpreadKind], modifiers: Set[DeclKind], annotations: Ls[Tree],
+  rscModifiers: Ls[Keywrd[Keyword.RscLike]],
 )
 
 object SpreadParam:
@@ -601,6 +623,8 @@ case object ImmutVal extends Val("val", "value")
 case object MutVal extends Val("mut val", "mutable value")
 case object RecordField extends ValLike("field", "record field")
 case object LetBind extends ValLike("let", "let binding")
+// Constructor parameters can have lexical storage without declaring a selectable member.
+case object ParamBind extends ValLike("parameter", "immutable parameter")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object Fun extends TermDefKind("fun", "function")
 case object Ins extends Val("using", "implicit instance")

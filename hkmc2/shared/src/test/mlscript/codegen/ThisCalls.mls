@@ -19,7 +19,7 @@ s(123)
 :sjs
 ex |>. s(123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f, args; f = s; args = [ 123 ]; return runtime.safeCall(f.call(ex, ...args))
+//│ let f, args; f = s /* as! Unknown */; args = [ 123 ]; return runtime.safeCall(f.call(ex, ...args))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [123, 456]
 

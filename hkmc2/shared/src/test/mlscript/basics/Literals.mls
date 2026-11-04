@@ -13,19 +13,21 @@
 (1,)
 //│ = 1
 
-:w
+:e
+:re
 (1, 2)
-//│ ╔══[WARNING] Pure expression in statement position
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
 //│ ║  l.+1: 	(1, 2)
-//│ ╙──      	 ^
-//│ = 2
+//│ ╙──      	^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
-:w
+:e
+:re
 (1, 2,)
-//│ ╔══[WARNING] Pure expression in statement position
+//│ ╔══[COMPILATION ERROR] Parentheses must contain a single expression; use '{ ... }' for a block or record
 //│ ║  l.+1: 	(1, 2,)
-//│ ╙──      	 ^
-//│ = 2
+//│ ╙──      	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 []
 //│ = []

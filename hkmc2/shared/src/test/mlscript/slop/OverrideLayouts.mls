@@ -1,0 +1,297 @@
+:.
+open annotations
+
+
+// Renaming parameters preserves a complete optional/rest/trailing binding layout.
+:noInline
+:expect [[1, null, [], 9], [1, 2, [3], 9]]
+private class LayoutBase() with
+  open fun collect(first: Any, optional?: Any, ...middle: Array[Any], last: Any): Any = [first, optional, middle, last]
+private class RenamedLayout() extends LayoutBase() with
+  override fun collect(a: Any, b?: Any, ...c: Array[Any], d: Any): Any = [a, b, c, d]
+private fun throughLayout(base: LayoutBase) = [base.collect(1, 9), base.collect(1, 2, 3, 9)]
+throughLayout(RenamedLayout())
+//│ = [[1, null, [], 9], [1, 2, [3], 9]]
+
+// An unused optional suffix does not redistribute the base member's arguments.
+// Its retained input inherits the representation despite the differing list lengths.
+:noInline
+:expect [3, 4]
+private class FixedInput() with
+  open fun pick(value: Int): Int = value
+private class ExtraOptional() extends FixedInput() with
+  override fun pick(renamed, extra?) = renamed
+private fun throughFixed(base: FixedInput) = base.pick(3)
+[throughFixed(ExtraOptional()), ExtraOptional().pick(4, 9)]
+//│ = [3, 4]
+
+// Widening requiredness preserves base calls and admits null on direct calls.
+:expect [2, null]
+private class RequiredInput() with
+  open fun pick(value: Int): Any = value
+private class OptionalInput() extends RequiredInput() with
+  override fun pick(renamed?) = renamed
+[OptionalInput().pick(2), OptionalInput().pick()]
+//│ = [2, null]
+
+// A fixed base has only one legal count. Moving its scalars to trailing slots is
+// harmless when the new rest tuple is empty on every base call.
+:noInline
+:expect [1, 2, []]
+private class FixedPair() with
+  open fun pair(first: Any, second: Any): Any = [first, second]
+private class TrailingPair() extends FixedPair() with
+  override fun pair(...empty: Array[Any], first: Any, second: Any): Any = [first, second, empty]
+private fun throughPair(base: FixedPair) = base.pair(1, 2)
+throughPair(TrailingPair())
+//│ = [1, 2, []]
+
+// An optional inherited parameter cannot become required in an override.
+:ge
+private class OptionalBase() with
+  open fun pick(value?: Any): Any = value
+private class RequiredOverride() extends OptionalBase() with
+  override fun pick(value: Any): Any = value
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 1 argument, but the overridden member permits 0
+//│ ║  l.+4: 	  override fun pick(value: Any): Any = value
+//│ ║        	                   ^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  open fun pick(value?: Any): Any = value
+//│ ╙──      	           ^^^^
+
+// Equal minimum arities do not preserve which actual argument fills a trailing slot.
+:ge
+private class LeadingBase() with
+  open fun pick(first: Any, second?: Any): Any = second
+private class ReboundTail() extends LeadingBase() with
+  override fun pick(...middle: Array[Any], last: Any): Any = last
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'first'
+//│ ║  l.+4: 	  override fun pick(...middle: Array[Any], last: Any): Any = last
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  open fun pick(first: Any, second?: Any): Any = second
+//│ ╙──      	           ^^^^
+
+// Extra optional slots must not consume the inherited rest tuple's elements.
+:ge
+private class RestBase() with
+  open fun collect(...values: Array[Any]): Any = values
+private class StolenRest() extends RestBase() with
+  override fun collect(first?: Any, ...values: Array[Any]): Any = values
+//│ ╔══[COMPILATION ERROR] Overriding member 'collect' must preserve the arguments bound to inherited parameter 'values'
+//│ ║  l.+4: 	  override fun collect(first?: Any, ...values: Array[Any]): Any = values
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'collect' is defined here
+//│ ║  l.+2: 	  open fun collect(...values: Array[Any]): Any = values
+//│ ╙──      	           ^^^^^^^
+
+// Keeping the trailing slot does not permit stealing an element from the middle slice.
+:ge
+private class StolenMiddle() extends LayoutBase() with
+  override fun collect(first: Any, optional?: Any, extra?: Any, ...middle: Array[Any], last: Any): Any = middle
+//│ ╔══[COMPILATION ERROR] Overriding member 'collect' must preserve the arguments bound to inherited parameter 'middle'
+//│ ║  l.+2: 	  override fun collect(first: Any, optional?: Any, extra?: Any, ...middle: Array[Any], last: Any): Any = middle
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'collect' is defined here
+//│ ║  l.XX: 	  open fun collect(first: Any, optional?: Any, ...middle: Array[Any], last: Any): Any = [first, optional, middle, last]
+//│ ╙──      	           ^^^^^^^
+
+// Implementations may ignore inherited drop slots without shifting the retained inputs.
+:noInline
+:expect 5
+private class DropSuffix() with
+  open fun pick(value: Int, drop ignored: Any): Int = value
+private class DroppedSuffix() extends DropSuffix() with
+  override fun pick(renamed) = renamed
+private fun throughDrop(base: DropSuffix) = base.pick(5, "ignored")
+throughDrop(DroppedSuffix())
+//│ = 5
+
+// Dropping a middle slot would redirect its argument into a retained parameter.
+:ge
+private class DropMiddle() with
+  open fun pick(first: Any, drop ignored: Any, last: Any): Any = last
+private class ShiftedAfterDrop() extends DropMiddle() with
+  override fun pick(first: Any, last: Any): Any = last
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'last'
+//│ ║  l.+4: 	  override fun pick(first: Any, last: Any): Any = last
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  open fun pick(first: Any, drop ignored: Any, last: Any): Any = last
+//│ ╙──      	           ^^^^
+
+// A rest channel may be ignored only when no retained suffix changes its binding.
+:noInline
+:expect 6
+private class DropRest() with
+  open fun pick(first: Int, drop ...ignored: Array[Any]): Int = first
+private class DroppedRest() extends DropRest() with
+  override fun pick(first) = first
+private fun throughRest(base: DropRest) = base.pick(6, 7, 8, 9)
+throughRest(DroppedRest())
+//│ = 6
+
+:ge
+private class DropMiddleRest() with
+  open fun pick(first: Any, drop ...ignored: Array[Any], last: Any): Any = last
+private class ShiftedAfterRest() extends DropMiddleRest() with
+  override fun pick(first: Any, last: Any): Any = last
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'last'
+//│ ║  l.+4: 	  override fun pick(first: Any, last: Any): Any = last
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  open fun pick(first: Any, drop ...ignored: Array[Any], last: Any): Any = last
+//│ ╙──      	           ^^^^
+
+// A retained non-droppable argument cannot disappear, even though JS ignores extras.
+:ge
+private class LostInput() extends FixedPair() with
+  override fun pair(first: Any): Any = first
+//│ ╔══[COMPILATION ERROR] Overriding member 'pair' must preserve the arguments bound to inherited parameter 'second'
+//│ ║  l.+2: 	  override fun pair(first: Any): Any = first
+//│ ║        	                   ^^^^^^^^^^^^
+//│ ╟── The overridden member 'pair' is defined here
+//│ ║  l.XX: 	  open fun pair(first: Any, second: Any): Any = [first, second]
+//│ ╙──      	           ^^^^
+
+// Application stages cannot be combined or split by an override.
+:ge
+private class CurriedBase() with
+  open fun pick(first: Any)(second: Any): Any = second
+private class FlattenedOverride() extends CurriedBase() with
+  override fun pick(first: Any, second: Any): Any = second
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
+//│ ║  l.+4: 	  override fun pick(first: Any, second: Any): Any = second
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  open fun pick(first: Any)(second: Any): Any = second
+//│ ╙──      	           ^^^^
+
+// Abstract declarations must be checked before executable code is selected.
+:ge
+private abstract class AbstractLayout() with
+  fun pick(value?: Any): Any
+private abstract class AbstractNarrowing() extends AbstractLayout() with
+  override fun pick(value: Any): Any
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' requires at least 1 argument, but the overridden member permits 0
+//│ ║  l.+4: 	  override fun pick(value: Any): Any
+//│ ║        	                   ^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  fun pick(value?: Any): Any
+//│ ╙──      	      ^^^^
+
+// Declarations without bodies carry the same optional/rest binding contract
+// as executable methods.
+:ge
+declare class DeclaredBase {
+  declare fun pick(first: Any, second?: Any): Any
+}
+declare class DeclaredRebinding extends DeclaredBase {
+  declare override fun pick(...middle: Array[Any], last: Any): Any
+}
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'first'
+//│ ║  l.+5: 	  declare override fun pick(...middle: Array[Any], last: Any): Any
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  declare fun pick(first: Any, second?: Any): Any
+//│ ╙──      	              ^^^^
+
+// The same declaration-only path checks scalar representations after correspondence.
+:ge
+declare class DeclaredTypedBase {
+  declare fun pick(value: Int): Int
+}
+declare class DeclaredNarrowing extends DeclaredTypedBase {
+  declare override fun pick(value: Str): Int
+}
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'pick' is represented as 'Str', which cannot hold the values represented as 'Int' that the member it overrides accepts
+//│ ║  l.+5: 	  declare override fun pick(value: Str): Int
+//│ ║        	                            ^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  declare fun pick(value: Int): Int
+//│ ╙──      	              ^^^^
+
+// A written method can override a declared method that has the same parameter lists.
+// A call through the declared base passes its argument list to the overriding method.
+:noInline
+:expect 40
+set globalThis.RuntimeDeclaredBase = globalThis.eval("(class RuntimeDeclaredBase { pick(x) { return x + 1 } })")
+declare class RuntimeDeclaredBase {
+  declare fun pick(value: Int): Int
+}
+private class WrittenOverDeclared() extends RuntimeDeclaredBase with
+  override fun pick(value: Int): Int = value * 10
+private fun throughDeclared(base: RuntimeDeclaredBase) = base.pick(4)
+throughDeclared(WrittenOverDeclared())
+//│ = 40
+
+// A function without parameter lists cannot override a declared method's list.
+:ge
+private class ParameterlessOverDeclared() extends DeclaredTypedBase with
+  override fun pick = 1
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
+//│ ║  l.+2: 	  override fun pick = 1
+//│ ║        	               ^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.XX: 	  declare fun pick(value: Int): Int
+//│ ╙──      	              ^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+
+// The arrows in the type of a declared or abstract member without parameter lists describe
+// the function value it holds; they are not parameter lists, so a method cannot override it.
+:ge
+declare class DeclaredFunctionValue {
+  declare fun pick: (Int) -> Int
+}
+declare class MethodOverDeclaredValue extends DeclaredFunctionValue {
+  declare override fun pick(value: Int): Int
+}
+private abstract class AbstractFunctionValue() with
+  fun pick: (Int) -> Int
+private class MethodOverAbstractValue() extends AbstractFunctionValue() with
+  override fun pick(value: Int): Int = value
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
+//│ ║  l.+5: 	  declare override fun pick(value: Int): Int
+//│ ║        	                           ^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  declare fun pick: (Int) -> Int
+//│ ╙──      	              ^^^^
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the number of parameter lists
+//│ ║  l.+10: 	  override fun pick(value: Int): Int = value
+//│ ║         	                   ^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+8: 	  fun pick: (Int) -> Int
+//│ ╙──      	      ^^^^
+
+// A member holding a function value implements such a member, and calls apply that value.
+:noInline
+:expect 40
+private class ValueOverAbstractValue() extends AbstractFunctionValue() with
+  fun pick = (value: Int) => value * 10
+private fun throughValue(base: AbstractFunctionValue) = base.pick(4)
+throughValue(ValueOverAbstractValue())
+//│ = 40
+
+// A function without parameter lists returns its whole annotated function value;
+// the arrows of that value are not parameter lists of the member itself.
+:expect 7
+private class FunctionGetter() with
+  open fun get: (Int) -> Int = (value: Int) => value
+private class RenamedGetter() extends FunctionGetter() with
+  override fun get: (Int) -> Int = (renamed: Int) => renamed
+RenamedGetter().get(7)
+//│ = 7
+
+
+// Dropping a fixed slot must preserve an optional successor's absence too.
+:ge
+private class DropBeforeOptional() with
+  open fun pick(first: Any, drop ignored: Any, last?: Any): Any = last
+private class FilledAbsentOptional() extends DropBeforeOptional() with
+  override fun pick(first: Any, last?: Any): Any = last
+//│ ╔══[COMPILATION ERROR] Overriding member 'pick' must preserve the arguments bound to inherited parameter 'last'
+//│ ║  l.+4: 	  override fun pick(first: Any, last?: Any): Any = last
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The overridden member 'pick' is defined here
+//│ ║  l.+2: 	  open fun pick(first: Any, drop ignored: Any, last?: Any): Any = last
+//│ ╙──      	           ^^^^

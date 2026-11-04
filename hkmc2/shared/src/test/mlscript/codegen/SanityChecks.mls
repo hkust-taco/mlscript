@@ -50,7 +50,7 @@ fun f2(x, y) = x + y
 unchecked(f2)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let f21;
-//│ f21 = function f2(x2, y) { return x2 + y }; block$res6 = runtime.safeCall(f21(2));
+//│ f21 = function f2(x2, y) { return x2 + y }; block$res6 = runtime.safeCall(f21 /* as! Unknown */(2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = NaN
 
@@ -59,7 +59,7 @@ unchecked(f2)(2)
 unchecked(f)(2)
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let x2;
-//│ x2 = f1; block$res7 = runtime.safeCall(x2(2));
+//│ x2 = f1; block$res7 = runtime.safeCall(x2 /* as! Unknown */(2));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected at least 2 arguments but got 1
 
@@ -78,7 +78,7 @@ unchecked(f)(3)(4)
 //│     return tmp + z
 //│   }
 //│ };
-//│ inlinedVal = f3;
+//│ inlinedVal = f3 /* as! Unknown */;
 //│ callPrefix = runtime.safeCall(inlinedVal(3));
 //│ block$res8 = runtime.safeCall(callPrefix(4));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -150,7 +150,7 @@ unchecked(Cls(1, 2)).f(3, 4)(5)
 //│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]];
 //│ });
 //│ tmp2 = runtime.checkCall(Cls5(1, 2));
-//│ inlinedVal3 = tmp2;
+//│ inlinedVal3 = tmp2 /* as! Unknown */;
 //│ callPrefix1 = runtime.safeCall(inlinedVal3.f(3, 4));
 //│ block$res13 = runtime.safeCall(callPrefix1(5));
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -188,9 +188,9 @@ if unchecked(M.A(1)).y is
 //│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
 //│ let scrut, scrut1, tmp3, inlinedVal4;
 //│ tmp3 = runtime.checkCall(M1.A(1));
-//│ inlinedVal4 = tmp3;
+//│ inlinedVal4 = tmp3 /* as! Unknown */;
 //│ scrut = runtime.checkSelect(inlinedVal4.y, "y", inlinedVal4);
-//│ scrut1 = runtime.checkCall(Predef.equals(scrut, 1));
+//│ scrut1 = runtime.checkCall(Predef.equals(scrut /* as! Unknown */, 1));
 //│ if (scrut1 === true) { block$res18 = scrut; } else { block$res18 = 0; }
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'

@@ -53,7 +53,7 @@ fun f() =
 //│       i = 0;
 //│       j = 100;
 //│       k = 2000;
-//│       runtime.resumeValue = Predef.equals(0, 0);
+//│       runtime.resumeValue = Predef.equals(0 /* as! Unknown */, 0);
 //│       if (runtime.curEffect === null) {
 //│         pc = 3;
 //│       } else {
