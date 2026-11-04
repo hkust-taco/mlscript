@@ -480,6 +480,23 @@ getValue(...)
   |> _.someOtherField
 ```
 
+**Resource function values** — a function value is not a resource unless marked as one:
+```mlscript
+rsc (x => x)     // a resource function value
+fun add(x)(y) = x + y
+rsc add(1)       // a resource partial application
+rsc add          // a resource function value, as `rsc (x => add(x))`
+```
+These are the only expressions a modifier applies to: written on any other one, it has no effect and is an error.
+This includes a call that is not known to leave some of its callee's parameter lists unapplied (such as `add(1)(2)`,
+or `f(1)` where `f` is a parameter), an instantiation (whose modifier goes inside the `new`, see *Instantiation*) and
+a reference or selection (such as `M.add` or `obj.method`) that does not resolve to a non-`declare` `fun` with
+parameter lists.
+
+Note that marking lambdas, calls or references as `rsc?` is a compilation error -
+lambdas, partially applied calls and references to `fun`s with parameter lists create function values and therefore
+must decide their resource-ness, while all other calls and references already have their resource-ness determined.
+
 ### Function Declarations (without definition)
 
 ```mlscript
@@ -798,6 +815,8 @@ new Foo          // create (static class required)
 new Foo()        // with empty args
 new Foo(1, 2)    // with args
 new mut Foo      // mutable instance (not frozen)
+new rsc Foo      // resource instance
+new mut rsc Foo  // modifiers come right after `new`, `mut` first
 new! c           // dynamic instantiation (class value at runtime)
 new Foo(...xs)   // spread args
 ```
@@ -1819,6 +1838,51 @@ app(x => x)              // error: the optional parameter is not droppable
 A separate signature, as in `fun f: (Int, Int?) -> Int` followed by `fun f(x, y?) = x`,
 must agree with the definition on which parameters are required, optional, and variadic.
 
+### Resource Types
+
+`rsc` marks a type as a resource; `rsc?` leaves it to a runtime check:
+```mlscript
+fun f(x: rsc Foo): Int = 0
+fun g(x: rsc? Foo): Int = 0
+type Handle = rsc Foo
+```
+
+`rsc` binds tighter than `|` and `&`, and covers a whole function type:
+```mlscript
+type A = rsc Foo | Bar     // only `Foo`; the union becomes `rsc?`
+type B = rsc (Foo | Bar)   // both
+type F = rsc Foo -> Bar    // the whole function type, not just `Foo`
+```
+
+A modifier on a reference to an alias combines with the modifiers written inside the alias: `rsc` overrides them,
+while `rsc?` keeps them:
+```mlscript
+type List = Cons | Nil
+type U = rsc Foo | Bar
+fun f(x: rsc List): Int = 0    // both members
+fun g(x: rsc? U): Int = 0      // `rsc Foo | rsc? Bar`, so the union becomes `rsc?`
+fun h(x: rsc U): Int = 0       // both members
+```
+
+The same holds for a union written in place, whose members combine with a modifier written on it:
+```mlscript
+fun f(x: rsc ((rsc? Foo) | Bar)): Int = 0     // both members
+fun g(x: rsc? ((rsc Foo) | Bar)): Int = 0     // `rsc Foo | rsc? Bar`, so the union becomes `rsc?`
+```
+
+A modifier is only supported on a type that keeps it once erased, so it is rejected on a negation, a tuple, a
+literal type and `()`, whether written on them directly or on a union reaching them:
+```mlscript
+fun f(x: rsc [Foo, Bar]): Int = 0   // error: not supported yet
+fun g(x: rsc (~Foo | Bar)): Int = 0 // error: not supported yet
+```
+
+A modifier may be written on a use of a type parameter, but not on its declaration:
+```mlscript
+fun f[A](x: rsc A): Int = 0    // OK
+class Box[rsc A]               // error: not supported yet
+```
+
 ### `forall` (Universal Quantification)
 
 ```mlscript
@@ -2490,7 +2554,7 @@ decl      ::= 'declare' def
 
 expr      ::= literal | name | app | lambda | if | case | while
             | let | set | 'return' | 'throw' | 'drop' | 'do'
-            | 'new' [mut] class args | 'handle' | 'using'
+            | 'new' ['mut'] ['rsc' | 'rsc?'] class args | 'handle' | 'using'
             | annotation expr | prefix | infix | block
 
 if        ::= 'if' scrutinee? branches

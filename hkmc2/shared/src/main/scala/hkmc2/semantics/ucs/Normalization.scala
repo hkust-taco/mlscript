@@ -427,8 +427,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * match failure in the future.
     */
   private def throwMatchErrorBlock(using Config) =
-    Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error), N)(false),
-        (Value.Lit(syntax.Tree.StrLit("match error"))(N).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, N), // TODO add failed-match scrutinee info
+    Throw(Instantiate(Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error), N)(false),
+        (Value.Lit(syntax.Tree.StrLit("match error"))(N).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, mut = false, rsc = false, N), // TODO add failed-match scrutinee info
       annotations = if config.aggressive then Annot.Pure()(N) :: Nil else Nil)
 
   /** Gives a lowering temp the join of the representations of the results stored into it.
@@ -514,7 +514,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
       // as shouldRewriteWhile is always true when effect handler lowering is on
       lazy val loopCont = if config.shouldRewriteWhile
-        then Return(Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, N))
+        then Return(Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N))
         else Continue(loopLabel)
       val cont =
         form match
@@ -558,11 +558,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
               Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol), N)(false)
             val blk = blockBuilder
               .define(FunDefn(N, f, tSym, loopSignature, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
-              .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, N))
+              .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N))
             if summon[LoweringCtx].mayRet then
               blk
                 .assign(isReturned, Call(State.builtinOpsMap("!==").asSimpleRef,
-                  (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N))
+                  (loopResult.asPath.asArg :: loopEnd.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, N))
                 .ifthen(isReturned.asSimpleRef, Case.Lit(Tree.BoolLit(true)),
                   Return(loopResult.asSimpleRef),
                   N

@@ -97,6 +97,47 @@ object Annot:
   
   val Private = Modifier(Keyword.`private`)(N)
   
+  /** Matches a resource modifier, yielding the resource-ness it denotes. */
+  object Resource:
+    def unapply(annot: Annot): Opt[Opt[Bool]] = annot match
+      case Modifier(Keyword.`rsc`) => S(S(true))
+      case Modifier(Keyword.`rsc?`) => S(N)
+      case _ => N
+    
+    /** Reports the resource modifier `kw` on the declaration of a type parameter. */
+    def unsupportedOnTyParam(kw: Keyword, loc: Opt[Loc]): ErrorReport =
+      ErrorReport(msg"'${kw.name}' modifiers on type parameters are not supported yet." -> loc :: Nil)
+    
+    /** Reports the use of `rsc?` on a value that requires a known resource-ness. */
+    def maybeRscOnVal(loc: Opt[Loc]): ErrorReport =
+      ErrorReport(msg"This value cannot be 'rsc?': it either is a resource or is not." -> loc :: Nil)
+    
+    /** Like `Annot.noEffect`, but an error: in an expression, a resource modifier must take effect. */
+    def noEffect(annotLoc: Opt[Loc], receiver: Term, reason: Opt[Message]): ErrorReport =
+      ErrorReport(noEffectMessages(annotLoc, receiver, reason))
+    
+    /** Rejects a resource modifier on the call at `loc`, which is not known to be a partial application.
+      */
+    def notPartial(loc: Opt[Loc], calleeKnown: Bool): ErrorReport =
+      val message =
+        if calleeKnown then
+          msg"This call fully applies its callee's parameter lists, so its resource modifier has no effect."
+        else msg"The parameter lists of this call's callee are not known, so its resource modifier has no effect."
+      ErrorReport(message -> loc :: Nil)
+  
+  /** Reports that an annotation written at `annotLoc` has no effect on `receiver`,
+    * because of `reason` or, by default, because `receiver` does not support it.
+    */
+  def noEffect(annotLoc: Opt[Loc], receiver: Term, reason: Opt[Message]): WarningReport =
+    WarningReport(noEffectMessages(annotLoc, receiver, reason))
+  
+  private def noEffectMessages(annotLoc: Opt[Loc], receiver: Term, reason: Opt[Message]): Ls[Message -> Opt[Loc]] =
+    val message = reason match
+      case N => msg"This annotation is not supported on ${receiver.describe} terms."
+      case S(value) => value
+    msg"This annotation has no effect." -> annotLoc ::
+      message -> receiver.toLoc :: Nil
+  
   /** The `declare` modifier in `annotations`, if present. */
   def declareModifierOf(annotations: Ls[Annot]): Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`declare`) => mod
@@ -777,12 +818,8 @@ final case class TermDefinition(
     * includes the arrows corresponding to the definition's written parameter lists.
     */
   def resultSignature: Opt[Term] =
-    def strip(sign: Term, count: Int): Term = (sign, count) match
-      case (Term.Forall(_, _, body), _) => strip(body, count)
-      case (Term.FunTy(_, rhs, _), n) if n > 0 => strip(rhs, n - 1)
-      case _ => sign
     sign.map: sign =>
-      if (k is syntax.Fun) && !flags.hasResultAnnotation then strip(sign, params.length)
+      if (k is syntax.Fun) && !flags.hasResultAnnotation then Elaborator.Sig.parse(sign).stripParams(params.length)._1
       else sign
   lazy val mayRaiseEffects: Bool =
     annotations.forall:

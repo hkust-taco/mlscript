@@ -19,7 +19,7 @@ wasm.ref.i31(f(wasm.i32.const(42)))
 //│ deforest > Empty⁰() ->
 //│ deforest > 	match: b⁰
 //│ deforest > <<< fusing <<<
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ═══[COMPILATION ERROR] Cannot use a value of type 'rsc? Unknown' at an unrelated type 'Int32'
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Int32, tmp1: Int32, $b_Empty, $b_rest;
 //│ @affine(1) @private

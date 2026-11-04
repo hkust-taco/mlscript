@@ -265,9 +265,9 @@ fun f() = case [...x, y, z] then x
 //│   let x, y, z, lastElement1$, lastElement2$, middleElements;
 //│   match caseScrut
 //│     Array(2+) =>
-//│       set middleElements = runtime⁰.Tuple⁰.slice⁰(caseScrut, 0, 2);
-//│       set lastElement2$ = runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
-//│       set lastElement1$ = runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
+//│       set middleElements = runtime⁰.Tuple⁰.slice⁰((caseScrut as! Unknown), 0, 2);
+//│       set lastElement2$ = runtime⁰.Tuple⁰.get⁰((caseScrut as! Unknown), -2);
+//│       set lastElement1$ = runtime⁰.Tuple⁰.get⁰((caseScrut as! Unknown), -1);
 //│       set y = lastElement1$;
 //│       set z = lastElement2$;
 //│       set x = middleElements;
@@ -299,7 +299,7 @@ fun f(c) = Runtime.Tuple.get(c, 1) + 1
 //│   match runtime⁰.curEffect﹖
 //│     null =>
 //│       set curDepth = +⁰(runtime⁰.stackDepth﹖, 1);
-//│       set tmp = Runtime⁰.Tuple⁰.get⁰(c, 1);
+//│       set tmp = Runtime⁰.Tuple⁰.get⁰((c as! Unknown), 1);
 //│       return +⁰(tmp, 1)
 //│     else
 //│       return runtime⁰.unwind﹖(f²⁴, -1, "basic.mls:292:1", null, null, 1, 1, c, 0)

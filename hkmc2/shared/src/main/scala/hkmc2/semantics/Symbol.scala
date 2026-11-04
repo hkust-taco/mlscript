@@ -506,7 +506,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     * `Function`. The signature describes calls to the definition, not the type of that closure.
     */
   def erasedType: Opt[ErasedValueType] = erasure match
-    case S(_: ErasedFuncSignature) => S(ErasedType.Function(rsc = S(false)))
+    case S(_: ErasedFuncSignature) => S(ErasedType.Function(rsc = S(irFunDefn.exists(_.rsc))))
     case S(sig: ErasedGetterSignature) => sig.ret
     case S(tpe: ErasedValueType) => S(tpe)
     case N => N

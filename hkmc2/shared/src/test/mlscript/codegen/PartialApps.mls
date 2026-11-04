@@ -331,7 +331,7 @@ fun f(x) =
 //│ let f14;
 //│ f14 = function f(x3) {
 //│   let scrut;
-//│   scrut = Predef.equals(x3, 0);
+//│   scrut = Predef.equals(x3 /* as! Unknown */, 0);
 //│   if (scrut === true) { return 1 }
 //│   return 2;
 //│ };

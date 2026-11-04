@@ -95,8 +95,8 @@ fun traverse(tree) =
 //│ traverse = function* traverse(tree) {
 //│   let element1$, element0$, tmp5, tmp6;
 //│   if (runtime.Tuple.isArrayLike(tree) && tree.length === 2) {
-//│     element0$ = runtime.Tuple.get(tree, 0);
-//│     element1$ = runtime.Tuple.get(tree, 1);
+//│     element0$ = runtime.Tuple.get(tree /* as! Unknown */, 0);
+//│     element1$ = runtime.Tuple.get(tree /* as! Unknown */, 1);
 //│     tmp5 = traverse(element0$);
 //│     yield* tmp5;
 //│     tmp6 = traverse(element1$);

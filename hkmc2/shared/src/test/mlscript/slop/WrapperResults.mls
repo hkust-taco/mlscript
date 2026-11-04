@@ -148,7 +148,7 @@ let results = new ResultGetters(42)
 Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let tmp: Promise⁰, tmp1: Array⁰, wrapped;
-//│ define wrapped as fun wrapped⁰(this1: ResultGetters⁰)(): Int⁰ {
+//│ define wrapped as fun wrapped⁰(this1: rsc? ResultGetters⁰)(): Int⁰ {
 //│   return (this1.value⁰ as! Int⁰)
 //│ };
 //│ define ResultGetters¹ as class ResultGetters⁰ {

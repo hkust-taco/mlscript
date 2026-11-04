@@ -265,7 +265,7 @@ fun f(x, y) =
 //│   let x1, scrut;
 //│   x1 = x;
 //│   if (x === 0) {
-//│     scrut = Predef.equals(y, 0);
+//│     scrut = Predef.equals(y /* as! Unknown */, 0);
 //│     if (scrut === true) {
 //│       x1 = 1000;
 //│     } else { x1 = 1; }
@@ -306,7 +306,7 @@ fun f(x, y) =
 //│   x1 = x;
 //│   switch (x1) {
 //│     case 0:
-//│       scrut = Predef.equals(y, 0);
+//│       scrut = Predef.equals(y /* as! Unknown */, 0);
 //│       if (scrut === true) { x1 = 1; } else { x1 = 1; }
 //│     case 1:
 //│       return "x = 1";

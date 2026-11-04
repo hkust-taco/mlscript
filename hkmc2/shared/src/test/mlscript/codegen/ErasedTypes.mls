@@ -352,7 +352,7 @@ fun f(o: Object, i: Int, x: Int32) =
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Object' at an unrelated type 'Int32'
 //│ ║  l.+8: 	  useInt32(o)
 //│ ╙──      	           ^
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'rsc? Unknown'
 //│ ║  l.+8: 	  useInt32(o)
 //│ ╙──      	  ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -905,12 +905,13 @@ fun badInst() = useInt(new Bar("x"))
 //│ end
 
 
-// A reference to a `fun` is already a function value, so returning one at `Function` takes no coercion. An
-// instantiation is typed as its class instead, so the same annotation makes the coercion real.
+// A reference to a `fun` is a non-resource `Function`, so no cast is required returning one at `Function`.
 fun test: Function = id
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define test² as fun test³(): Function⁰ { return id¹ }; end
 
+// A cast is inserted at the return value to downcast the `Object` into `Function` - `Function` and `Object`
+// are related in the erased type hierarchy.
 fun test: Function = new Object()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define test⁴ as fun test⁵(): Function⁰ {
@@ -919,7 +920,7 @@ fun test: Function = new Object()
 //│ end
 
 
-// A written arrow type erases to `Function` in every position it can be written - parameter, result and `val`
+// A written function type erases to `Function` in every position it can be written - parameter, result and `val`
 // alike - and the parameter and result shapes erase away with it. A returned lambda needs no cast; a lambda
 // first bound to a generated definition with an unknown signature still needs one.
 fun applyF(f: Int -> Int): Int = f(1)
@@ -950,7 +951,8 @@ val g: Int -> Int = (x: Int) => x
 //│ end
 
 
-// The narrowing is what makes an arrow-annotated slot *typed*: without it this would pass as `Unknown`.
+// The narrowing is what makes a slot annotated with a function type *typed*: without it this would pass as
+// `Unknown`.
 :ge
 fun badFn() = applyF(42)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Function'
@@ -1030,8 +1032,9 @@ fun badParse() = useStr(parseIt("1", 10))
 //│ end
 
 
-// A *non*-`declare`d `fun` writing no parameter lists is a getter: referencing it calls it, so its arrows
-// are the *result*. Reading them as parameters would type `getFn` as `Int` when it yields a function.
+// A *non*-`declare`d `fun` writing no parameter lists is a getter: referencing it calls it, so its function
+// type is the *result*. Reading its parameter list as the getter's would type `getFn` as `Int` when it yields a
+// function.
 fun getFn: Int -> Int
 fun useGetFn() = useFn(getFn)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -1048,7 +1051,7 @@ fun useGetFn() = useFn(getFn)
 fun viaUntyped(s, radix): Str = @untyped parseIt(s, radix)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define viaUntyped⁰ as fun viaUntyped¹(s: ?, radix: ?): Str⁰ {
-//│   let tmp: Unknown;
+//│   let tmp: rsc? Unknown;
 //│   set tmp = globalThis⁰.parseIt⁰((s as! Str⁰), (radix as! Int⁰));
 //│   return (tmp as! Str⁰)
 //│ };
@@ -1139,7 +1142,7 @@ fun applyGetFn() = useInt(getFn(1))
 fun refUntyped(x: Int): Str = @untyped x
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define refUntyped⁰ as fun refUntyped¹(x: Int⁰): Str⁰ {
-//│   let tmp: Unknown;
+//│   let tmp: rsc? Unknown;
 //│   set tmp = x;
 //│   return (tmp as! Str⁰)
 //│ };
@@ -1159,7 +1162,7 @@ fun refTyped(x: Int): Str = x
 fun selUntyped(): Int = @untyped Plain.f
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define selUntyped⁰ as fun selUntyped¹(): Int⁰ {
-//│   let tmp: Unknown;
+//│   let tmp: rsc? Unknown;
 //│   set tmp = Plain².f⁷;
 //│   return (tmp as! Int⁰)
 //│ };
@@ -1179,7 +1182,7 @@ fun selTyped(): Int = Plain.f
 fun lamUntyped(): Int = @untyped ((x: Int) => x)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define lamUntyped⁰ as fun lamUntyped¹(): Int⁰ {
-//│   let tmp: Unknown, lambda;
+//│   let tmp: rsc? Unknown, lambda;
 //│   @private
 //│   define lambda as fun lambda⁵(x: Int⁰): ? {
 //│     return x
@@ -1241,8 +1244,8 @@ if asWrapper(fortyTwo) is
 //│ set scrut = asWrapper¹((tmp as!! Wrapper⁰));
 //│ match scrut
 //│   Array(2) =>
-//│     set element0$ = runtime⁰.Tuple⁰.get²(scrut, 0);
-//│     set element1$ = runtime⁰.Tuple⁰.get²(scrut, 1);
+//│     set element0$ = runtime⁰.Tuple⁰.get²((scrut as!! Unknown), 0);
+//│     set element1$ = runtime⁰.Tuple⁰.get²((scrut as!! Unknown), 1);
 //│     set b = element1$;
 //│     set a = element0$;
 //│     return "pair"
@@ -1251,8 +1254,8 @@ if asWrapper(fortyTwo) is
 //│ end
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ if (runtime.Tuple.isArrayLike(42 /* as!! Wrapper */) && (42 /* as!! Wrapper */).length === 2) {
-//│   runtime.Tuple.get(42 /* as!! Wrapper */, 0);
-//│   runtime.Tuple.get(42 /* as!! Wrapper */, 1);
+//│   runtime.Tuple.get(42 /* as!! Unknown */, 0);
+//│   runtime.Tuple.get(42 /* as!! Unknown */, 1);
 //│   return "pair"
 //│ }
 //│ return "other";
@@ -1269,7 +1272,7 @@ class Box(content: Int) with
     peek()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let peek;
-//│ define peek as fun peek⁰(Box: Box⁰): ? {
+//│ define peek as fun peek⁰(Box: rsc? Box⁰): ? {
 //│   return Box
 //│ };
 //│ define Box¹ as class Box⁰ {
@@ -1342,6 +1345,34 @@ fun mk() =
 //│   };
 //│   return new Holder⁰(Tag²)
 //│ };
+//│ end
+
+
+// The flattened constructor `C$` of a lifted class returns the instance of `C` it builds.
+:lift
+fun mkCtor(x) =
+  class C(y) with
+    fun get = x + y
+  C
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let C, C$;
+//│ define C$ as fun C$⁰(x: ?)(y: ?): C⁰ {
+//│   return new C⁰(y, x)
+//│ };
+//│ define C as class C⁰ {
+//│   private val x⁴: ?;
+//│   private val y²: ?;
+//│   constructor C¹(y: ?, x: ?) {
+//│     set C⁰.this.x⁴ = x;
+//│     @private
+//│     define y³ as val y²: ? = y;
+//│     end
+//│   }
+//│   method get⁵ = fun get⁶: ? {
+//│     return +⁰(C⁰.this.x⁴, C⁰.this.y²)
+//│   }
+//│ };
+//│ define mkCtor⁰ as fun mkCtor¹(x: ?): ? { let C$here: ?; set C$here = C$⁰(x); return C$here };
 //│ end
 
 

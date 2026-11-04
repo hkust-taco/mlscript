@@ -85,7 +85,7 @@ A.sum(20000)
 //│   static sum_impl(n, acc) {
 //│     loopLabel: while (true) {
 //│       let scrut, tmp, tmp1;
-//│       scrut = Predef.equals(n, 0);
+//│       scrut = Predef.equals(n /* as! Unknown */, 0);
 //│       if (scrut === true) {
 //│         return acc
 //│       }
@@ -235,7 +235,7 @@ fun f(x, y) =
 //│   loop loopLabel:
 //│     let scrut, tmp;
 //│     do Predef⁰.print⁰(y);
-//│     set scrut = Predef⁰.equals⁰(x, 0);
+//│     set scrut = Predef⁰.equals⁰((x as! Unknown), 0);
 //│     match scrut
 //│       true =>
 //│         return 0
@@ -477,10 +477,10 @@ typedSpread(0, 1, 2, 3, 4)
 //│         set argList = [...tmp1];
 //│         match argList
 //│           Array(2+) =>
-//│             set optionalArg = argList.1;
+//│             set optionalArg = (argList.1 as! Unknown);
 //│             end
 //│           else
-//│             set optionalArg = null;
+//│             set optionalArg = (null as! Unknown);
 //│             end
 //│         set sliceRes = runtime⁰.Tuple⁰.sliceArray⁰(argList, 2, 0);
 //│         set a = (argList.0 as! Int⁰);

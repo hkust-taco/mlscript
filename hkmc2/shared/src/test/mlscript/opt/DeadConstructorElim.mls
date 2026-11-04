@@ -411,8 +411,8 @@ w(new O)
 //│   set b = [y.z⁰, 1];
 //│   match b
 //│     Array(2) =>
-//│       do runtime⁰.Tuple⁰.get⁰(b, 0);
-//│       return runtime⁰.Tuple⁰.get⁰(b, 1)
+//│       do runtime⁰.Tuple⁰.get⁰((b as! Unknown), 0);
+//│       return runtime⁰.Tuple⁰.get⁰((b as! Unknown), 1)
 //│     else
 //│       return 0
 //│   end

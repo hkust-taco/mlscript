@@ -303,7 +303,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           OptionalParams.bindFromTuple(tupleSym.asSimpleRef, index, slot, S(index + 1), rest))
         slot.asSimpleRef
       else DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(N)
-        .coerceTo(param.sym.erasedType.getOrElse(ErasedType.Unknown), N)
+        .coerceTo(param.sym.erasedType.getOrElse(ErasedType.Unknown(N)), N)
     
     // If the rest param exists, append a slice
     val (initialBlk: (Block => Block), pathList: List[Path]) =
@@ -318,7 +318,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
             :: Value.Lit(Tree.IntLit(paramList.length))(N).asArg
             :: Value.Lit(Tree.IntLit(0))(N).asArg
             :: Nil) ne_:: Nil
-        )(CallMetadata.defaultMlsFun, N)
+        )(CallMetadata.defaultMlsFun, rsc = false, N)
         val blk = prefix.assignScoped(sliceResSym, sliceRes)
         (blk, mainArgs :+ sliceResSym.asSimpleRef)
       else
@@ -511,7 +511,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           case Some(pth) => Arg(N, pth)
           case None => Arg(N, Value.Lit(Tree.UnitLit(false))(N))
       val argsWithId = if funsLen > 1 then Value.Lit(Tree.IntLit(dSymIds(callee.dSym)))(N).asArg :: args else args
-      Call(loopDefnPath, argsWithId ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+      Call(loopDefnPath, argsWithId ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, N)
     
     class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst.Id):
       val params = f.allParamSyms

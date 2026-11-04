@@ -35,10 +35,10 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     if tpeSym.asMod.isDefined then doc"module ${print(tpeSym)}" else print(tpeSym)
 
   def print(cet: CanonicalErasedValueType)(using Scope): Document = cet match
-    case ErasedType.Unknown => doc"Unknown"
+    case ErasedType.Unknown(rsc) => doc"${ErasedType.rscPrefix(rsc)}Unknown"
     case ErasedType.Nothing => doc"Nothing"
     case ErasedType.Incompatible(lhs, rhs) => doc"‹incompatible(${print(lhs)}, ${print(rhs)})›"
-    case ErasedType.AnyRef(rsc, tpeSym: TypeSymbol) => doc"${rsc.fold("rsc? ")(if _ then "rsc " else "")}${printTpe(tpeSym)}"
+    case ErasedType.AnyRef(rsc, tpeSym: TypeSymbol) => doc"${ErasedType.rscPrefix(rsc)}${printTpe(tpeSym)}"
     case ErasedType.Primitive(prim) => doc"${prim.toString}"
 
   def print(et: ErasedValueType)(using Scope): Document = et match
@@ -246,14 +246,14 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     result.match
     case call @ Call(fun, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
-      doc"${printAnnotations(call.metadata.annotations, doc" ")}${print(fun)}${chainedArgs}"
-    case inst @ Instantiate(mut, cls, argss) =>
+      doc"${printAnnotations(call.metadata.annotations, doc" ")}${if call.rsc then "rsc " else ""}${print(fun)}${chainedArgs}"
+    case inst @ Instantiate(cls, argss) =>
       val chainedArgs = argss.map(args => doc"(${args.map(print).mkDocument(", ")})").mkDocument("")
-      doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if mut then "mut " else ""}${print(cls)}${chainedArgs}"
-    case Lambda(params, body) =>
+      doc"${printAnnotations(inst.metadata.annotations, doc" ")}new ${if inst.mut then "mut " else ""}${if inst.rsc then "rsc " else ""}${print(cls)}${chainedArgs}"
+    case lam @ Lambda(params, body) =>
       scope.nest.givenIn:
         val docParams = printParamLists(params :: Nil)
-        doc"$docParams => ${bracedbk(print(body))}"
+        doc"${if lam.rsc then "rsc " else ""}$docParams => ${bracedbk(print(body))}"
     case Tuple(mut, elems) =>
       val docElems = elems.map(x => print(x)).mkDocument(", ")
       doc"${if mut then "mut " else ""}[${docElems}]"

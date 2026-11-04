@@ -182,7 +182,7 @@ object OverrideChecks:
   private def describe(tpe: Opt[ErasedValueType])(using Ctx, State): Str = canonical(tpe).describe
   
   private def canonical(tpe: Opt[ErasedValueType])(using Ctx, State): CanonicalErasedValueType =
-    tpe.getOrElse(ErasedType.Unknown).canonicalize
+    tpe.getOrElse(ErasedType.Unknown(N)).canonicalize
   
   /** Reports an override incompatibility at `loc` and points at the overridden member's declaration. */
   private def report(base: TermSymbol, message: Message, loc: Opt[Loc])(using Raise): Unit =

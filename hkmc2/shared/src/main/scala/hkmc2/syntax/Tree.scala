@@ -99,9 +99,16 @@ enum Tree extends AutoLocated:
   case PrefixApp(kw: Keywrd[Keyword.Prefix], rhs: Tree)
   case InfixApp(lhs: Tree, kw: Keywrd[Keyword.Infix], rhs: Tree)
   case TryFinally(tryBody: Tree, finallyBody: Tree)
-  case LexicalNew(body: Opt[Tree], rft: Opt[Block]) // * New as it is parsed, with its weird precedence – eg (new C)(123)
-  case ProperNew(body: Opt[Tree], rft: Opt[Block]) // * A desugared version of New that sets it right – eg new(C(123))
-  case DynamicNew(cls: Tree) // * Dynamic version – eg new! C(123)
+  // * New as it is parsed, with its weird precedence – eg (new C)(123). In all versions of New, `mut` and `rsc` are
+  // * its modifiers, as in `new mut rsc C(123)`.
+  case LexicalNew(
+    body: Opt[Tree], rft: Opt[Block], mut: Opt[Keywrd[Keyword.`mut`.type]], rsc: Opt[Keywrd[Keyword.RscLike]])
+  case LexicalDynamicNew(cls: Tree, mut: Opt[Keywrd[Keyword.`mut`.type]], rsc: Opt[Keywrd[Keyword.RscLike]])
+  // * A desugared version of New that sets it right – eg new(C(123)).
+  case ProperNew(
+    body: Opt[Tree], rft: Opt[Block], mut: Opt[Keywrd[Keyword.`mut`.type]], rsc: Opt[Keywrd[Keyword.RscLike]])
+  // * Dynamic version – eg new! C(123)
+  case DynamicNew(cls: Tree, mut: Opt[Keywrd[Keyword.`mut`.type]], rsc: Opt[Keywrd[Keyword.RscLike]])
   case IfLike(kw: Keywrd[Keyword.IfLike], split: Tree)
   case Assert(kw: Keywrd[Keyword.`assert`], cond: Tree, thn: Opt[Tree], els: Opt[Keywrd[Keyword.`else`] -> Tree])
   case SplitPoint()
@@ -159,9 +166,10 @@ enum Tree extends AutoLocated:
     case PrefixApp(kw, rhs) => Vector.double(kw, rhs)
     case InfixApp(lhs, kw, rhs) => Vector.triple(lhs, kw, rhs)
     case TermDef(k, head, rhs) => head +: rhs.toVector
-    case LexicalNew(body, rft) => body.toVector ++ rft.toVector
-    case ProperNew(body, rft) => body.toVector ++ rft.toVector
-    case DynamicNew(body) => Vector.single(body)
+    case LexicalNew(body, rft, _, _) => body.toVector ++ rft.toVector
+    case LexicalDynamicNew(cls, _, _) => Vector.single(cls)
+    case ProperNew(body, rft, _, _) => body.toVector ++ rft.toVector
+    case DynamicNew(body, _, _) => Vector.single(body)
     case IfLike(_, split) => Vector.single(split)
     case Assert(_, cond, thn, els) => cond +: (thn.toVector ++ els.toList.map(_._2))
     case Case(_, bs) => Vector.single(bs)
@@ -218,9 +226,10 @@ enum Tree extends AutoLocated:
     case DynAccess(prefix, name, _) => "dynamic field access"
     case PrefixApp(kw, body) => s"prefix operator '${kw.name}'"
     case InfixApp(lhs, kw, rhs) => s"infix operator '${kw.name}'"
-    case LexicalNew(body, _) => "new"
-    case ProperNew(body, _) => "new"
-    case DynamicNew(body) => "dynamic new"
+    case LexicalNew(body, _, _, _) => "new"
+    case LexicalDynamicNew(cls, _, _) => "dynamic new"
+    case ProperNew(body, _, _, _) => "new"
+    case DynamicNew(body, _, _) => "dynamic new"
     case IfLike(Keywrd(Keyword.`if`), split) => "if expression"
     case IfLike(Keywrd(Keyword.`while`), split) => "while expression"
     case IfLike(Keywrd(Keyword.`when`), split) => "when expression"
@@ -376,6 +385,10 @@ enum Tree extends AutoLocated:
           Annotated(kw, s.desugared)
         case Modified(kw @ Keywrd(Keyword.`private`), s) =>
           Annotated(kw, s.desugared)
+        // * A resource modifier applies to a type. One written on a definition is lifted here, so that the definition
+        // * is still found under it, allowing the modifier to be rejected there.
+        case Modified(kw @ Keywrd(_: Keyword.RscLike), Desugared(d @ PossiblyAnnotated(_, _: TypeOrTermDef))) =>
+          Annotated(kw, d)
         case Modified(kw @ Keywrd(Keyword.`mut`), TermDef(ImmutVal, anme, rhs)) =>
           TermDef(MutVal, anme, rhs).withLocOf(this).desugared
         case _ => m
@@ -386,14 +399,14 @@ enum Tree extends AutoLocated:
       // TODO only do this if the lhs is non-expansive/a valid assignment receiver?
       PossiblyAnnotated(anns, LetLike(letLike, lhs, S(OpApp(lhs, Ident(nme.init), rhss)), bodo).withLocOf(this).desugared)
     
-    case Apps(PrefixApp(Keywrd(Keyword.`new!`), cls), argss) =>
-      DynamicNew(Apps(cls, argss)).withLocOf(this)
-    case Apps(LexicalNew(S(body), N), argss) =>
-      ProperNew(S(Apps(body, argss)), N).withLocOf(this)
-    case LexicalNew(bodo, rfto) =>
-      ProperNew(bodo, rfto).withLocOf(this)
-    case InfixApp(Desugared(ProperNew(bodo, N)), Keywrd(Keyword.`with`), rhs: Block) =>
-      ProperNew(bodo, S(rhs)).withLocOf(this)
+    case Apps(LexicalDynamicNew(cls, mut, rsc), argss) =>
+      DynamicNew(Apps(cls, argss), mut, rsc).withLocOf(this)
+    case Apps(LexicalNew(S(body), N, mut, rsc), argss) =>
+      ProperNew(S(Apps(body, argss)), N, mut, rsc).withLocOf(this)
+    case LexicalNew(bodo, rfto, mut, rsc) =>
+      ProperNew(bodo, rfto, mut, rsc).withLocOf(this)
+    case InfixApp(Desugared(ProperNew(bodo, N, mut, rsc)), Keywrd(Keyword.`with`), rhs: Block) =>
+      ProperNew(bodo, S(rhs), mut, rsc).withLocOf(this)
     
     case _ => this
   
@@ -402,57 +415,74 @@ enum Tree extends AutoLocated:
    * @param inUsing whether the parameter is in a `using` parameter list
    */
   def asParam(inUsing: Bool): Diagnostic \/ ParamTree =
+    // * Whether a modifier wrapping `t` modifies the parameter rather than its type. Outside a contextual
+    // * parameter list it always does; inside one, only a named parameter is unambiguous - anything else is
+    // * written as a bare type, so the modifier belongs to that type instead.
+    def modifiesParam(t: Tree): Bool = !inUsing || (t match
+      case InfixApp(_: Ident, Keywrd(Keyword.`:`), _) | SpreadParam(_, _) => true
+      case _ => false)
     @tailrec
-    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind], annotations: Ls[Tree]): Diagnostic \/ ParamTree = t match
+    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind], annotations: Ls[Tree],
+        rscMods: Ls[Keywrd[Keyword.RscLike]]): Diagnostic \/ ParamTree = t match
       // * Base Cases.
       // fun f(_)
       case und: Under => 
-        R(ParamTree(flags, new Ident("_").withLocOf(und), N, N, modifiers, annotations))
+        R(ParamTree(flags, new Ident("_").withLocOf(und), N, N, modifiers, annotations, rscMods))
       // fun f(a)
       case id: Ident if !inUsing =>
-        R(ParamTree(flags, id, N, N, modifiers, annotations))
+        R(ParamTree(flags, id, N, N, modifiers, annotations, rscMods))
       // fun f(a: A)
       case InfixApp(id: Ident, Keywrd(Keyword.`:`), sign) =>
-        R(ParamTree(flags, id, S(sign), N, modifiers, annotations))
+        R(ParamTree(flags, id, S(sign), N, modifiers, annotations, rscMods))
       // The annotation describes the rest tuple, just as for an ordinary parameter.
       case InfixApp(SpreadParam(id, spd), Keywrd(Keyword.`:`), sign) =>
-        R(ParamTree(flags, id, S(sign), S(spd), modifiers, annotations))
+        R(ParamTree(flags, id, S(sign), S(spd), modifiers, annotations, rscMods))
       case Spread(kw, S(InfixApp(id: Ident, Keywrd(Keyword.`:`), sign))) =>
-        R(ParamTree(flags, id, S(sign), S(SpreadKind.fromKw(kw)), modifiers, annotations))
+        R(ParamTree(flags, id, S(sign), S(SpreadKind.fromKw(kw)), modifiers, annotations, rscMods))
       // fun f(..a) | fun f(...a)
       case SpreadParam(id, spd) =>
-        R(ParamTree(flags, id, N, S(spd), modifiers, annotations))
+        R(ParamTree(flags, id, N, S(spd), modifiers, annotations, rscMods))
       
       // * Unwrapping Cases
+      // class C(rsc val <...>)
+      // * As for `rsc <...>` below, for a `val` parameter, off which `desugared` lifts the modifier to an annotation.
+      // * This arm must precede the general annotation arm, which would otherwise record the modifier as an annotation.
+      case Annotated(RscModifier(kw), inner) =>
+        go(inner, flags, modifiers, annotations, rscMods :+ kw)
       case Annotated(annotation, inner) =>
-        go(inner.desugared, flags, modifiers, annotations :+ annotation)
+        go(inner.desugared, flags, modifiers, annotations :+ annotation, rscMods)
       // fun f(module <...>)
       case TypeDef(Mod, inner, N) =>
-        go(inner, flags, modifiers + Mod, annotations)
+        go(inner, flags, modifiers + Mod, annotations, rscMods)
       // fun f(pattern <...>)
       case TypeDef(Pat, inner, N) =>
-        go(inner, flags.copy(pat = true), modifiers + Pat, annotations)
+        go(inner, flags.copy(pat = true), modifiers + Pat, annotations, rscMods)
       // class C(val <...>)
       case TermDef(ImmutVal, inner, _) =>
-        go(inner, flags.copy(isVal = true), modifiers + ImmutVal, annotations)
+        go(inner, flags.copy(isVal = true), modifiers + ImmutVal, annotations, rscMods)
       // class C(mut val <...>)
       case TermDef(MutVal, inner, _) =>
-        go(inner, flags.copy(isVal = true, mut = true), modifiers + MutVal, annotations)
+        go(inner, flags.copy(isVal = true, mut = true), modifiers + MutVal, annotations, rscMods)
       // fun f(using <...>)
       case TermDef(Ins, inner, N) =>
-        go(inner, flags, modifiers + Ins, annotations)
+        go(inner, flags, modifiers + Ins, annotations, rscMods)
+      // fun f(rsc <...>)
+      // * This arm catches invalid usages of `rsc` in parameters - the `rsc` modifier is recorded in the `ParamTree`
+      // * (to preserve class/function parameters for later stages) and the elaborator will reject it as invalid.
+      case Modified(RscModifier(kw), inner) if modifiesParam(inner) =>
+        go(inner, flags, modifiers, annotations, rscMods :+ kw)
       // fun f(a?)
       case Optional(inner) =>
-        go(inner, flags.copy(opt = true), modifiers, annotations)
+        go(inner, flags.copy(opt = true), modifiers, annotations, rscMods)
       // fun f(a?: A)
       case InfixApp(Optional(inner), kw @ Keywrd(Keyword.`:`), sign) =>
-        go(InfixApp(inner, kw, sign), flags.copy(opt = true), modifiers, annotations)
+        go(InfixApp(inner, kw, sign), flags.copy(opt = true), modifiers, annotations, rscMods)
       // fun f(...a?), which is reported during elaboration
       case Spread(kw, S(Optional(inner))) =>
-        go(Spread(kw, S(inner)), flags.copy(opt = true), modifiers, annotations)
+        go(Spread(kw, S(inner)), flags.copy(opt = true), modifiers, annotations, rscMods)
       // fun f(drop a)
       case PrefixApp(Keywrd(Keyword.`drop`), inner) =>
-        go(inner, flags.copy(droppable = true), modifiers, annotations)
+        go(inner, flags.copy(droppable = true), modifiers, annotations, rscMods)
       
       // * Base Case (for `using` clause)
       // fun f(using A)
@@ -461,14 +491,14 @@ enum Tree extends AutoLocated:
         // understood as a type for unnamed contextual parameters, as
         // opposed to that an identifier is understood as the identifier
         // for a regular parameter list.
-        R(ParamTree(flags, Ident(""), S(ty), N, modifiers, annotations))
+        R(ParamTree(flags, Ident(""), S(ty), N, modifiers, annotations, rscMods))
       
       // * Default Case
       case _ => L:
         ErrorReport:
           msg"Expected a valid parameter, found ${this.describe}" -> this.toLoc :: Nil
     
-    go(this, flags = FldFlags.empty, modifiers = Set.empty, annotations = Nil)
+    go(this, flags = FldFlags.empty, modifiers = Set.empty, annotations = Nil, rscMods = Nil)
 
   def isModified(modifier: Keyword | DeclKind): Bool = this match
     case td @ Tree.TypeDef(m, head, N) =>
@@ -497,6 +527,12 @@ object Tree:
       case App(lhs, TyTup(targs)) => S(lhs, targs)
       case _ => N
   
+  /** Matches a resource modifier keyword, typed as one. */
+  object RscModifier:
+    def unapply(t: Tree): Opt[Keywrd[Keyword.RscLike]] = t match
+      case kw @ Keywrd(rsc: Keyword.RscLike) => S(new Keywrd[Keyword.RscLike](rsc).withLocOf(kw))
+      case _ => N
+  
   extension (kw: Tree.Keywrd[?])
     def name = kw.kw.name
   
@@ -507,10 +543,14 @@ object Tree:
  * A parameter yet to be elaborated, which is different from
  * semantics.Param. It merely contains the information directly
  * extracted from the syntax tree.
+ *
+ * @param rscModifiers the resource modifiers written on the parameter itself rather than on its type. `asParam`
+ *                     strips them so that the parameter is kept, and the elaborator rejects them.
  */
 case class ParamTree(
   flags: FldFlags, ident: Ident, sign: Opt[Tree], 
-  spd: Opt[SpreadKind], modifiers: Set[DeclKind], annotations: Ls[Tree]
+  spd: Opt[SpreadKind], modifiers: Set[DeclKind], annotations: Ls[Tree],
+  rscModifiers: Ls[Keywrd[Keyword.RscLike]],
 )
 
 object SpreadParam:

@@ -52,7 +52,7 @@ object OptionalParams:
     // Tuple reads are dynamically typed even when the destination slot has a precise representation.
     // Preserve that boundary for constructor fields, extracted parameters, and tail-call assignments.
     def bind(value: Result, rest: Block): Block =
-      Assign(sym, value.coerceTo(sym.erasedType.getOrElse(ErasedType.Unknown), sym.toLoc), rest)
+      Assign(sym, value.coerceTo(sym.erasedType.getOrElse(ErasedType.Unknown(N)), sym.toLoc), rest)
     minimumLength match
       case N => bind(value, rest)
       case S(length) =>

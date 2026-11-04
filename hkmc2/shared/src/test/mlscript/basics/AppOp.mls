@@ -16,7 +16,7 @@ inc @ 1
 
 :re
 inc @ inc @ 1
-//│ ═══[RUNTIME ERROR] TypeError: inlinedVal is not a function
+//│ ═══[RUNTIME ERROR] TypeError: f2 is not a function
 
 inc @ (inc @ 1)
 //│ = 3
@@ -44,7 +44,7 @@ add@1@2
 :expect 123
 @(id, 123)
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let f2, args13; f2 = Predef.id; args13 = [ 123 ]; return runtime.safeCall(f2(...args13))
+//│ let f5, args13; f5 = Predef.id; args13 = [ 123 ]; return runtime.safeCall(f5(...args13))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 123
 
@@ -123,7 +123,7 @@ pipeInto @ 1, inc
 // * This is a bit surprising... parses as `(inc @ (1 . pipeInto)) @ inc`
 :re
 inc @ 1 |.pipeInto @ inc
-//│ ═══[RUNTIME ERROR] TypeError: inlinedVal6 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: f9 is not a function
 
 (inc @ 1) |.pipeInto @ inc
 //│ = 3

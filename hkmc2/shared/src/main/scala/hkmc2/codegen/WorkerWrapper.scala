@@ -87,7 +87,7 @@ class WorkerWrapper
     val workerArgs = fun.params.flatMap(_.params).map: param =>
       Arg(N, param.sym.asSimpleRef)
     val wrapperBody = Return(
-      Call(worker.asPath, workerArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N),
+      Call(worker.asPath, workerArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N),
     )
     // The generator body now belongs to the worker. The wrapper returns its Iterator
     // directly, while the source symbol keeps the payload for later source cloning.

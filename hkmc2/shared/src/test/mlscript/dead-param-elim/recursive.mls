@@ -18,7 +18,7 @@ countdown(5, 42)
 //│ @private
 //│ define countdown⁰ as fun countdown¹(n) {
 //│   let scrut, tmp;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│   match scrut
 //│     true =>
 //│       return 0
@@ -45,7 +45,7 @@ countdown(5)
 //│ define countdown² as fun countdown³(n) {
 //│   loop loopLabel:
 //│     let scrut, tmp;
-//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│     match scrut
 //│       true =>
 //│         return 0
@@ -84,7 +84,7 @@ ping(5, 99)
 //│ @private
 //│ define ping⁰ as fun ping¹(n) {
 //│   let scrut, tmp;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│   match scrut
 //│     true =>
 //│       return 0
@@ -96,7 +96,7 @@ ping(5, 99)
 //│ @private
 //│ define pong¹ as fun pong⁰(n) {
 //│   let scrut, tmp;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│   match scrut
 //│     true =>
 //│       return 0
@@ -121,7 +121,7 @@ ping(5, 99)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ define ping² as fun ping³(n, unused) {
 //│   let scrut, tmp;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│   match scrut
 //│     true =>
 //│       return 0
@@ -132,7 +132,7 @@ ping(5, 99)
 //│ };
 //│ define pong³ as fun pong²(n, unused) {
 //│   let scrut, tmp;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│   match scrut
 //│     true =>
 //│       return 0
@@ -191,7 +191,7 @@ ping(5)(99)
 //│ @private
 //│ define ping⁴ as fun ping⁵(n)() {
 //│   let scrut, tmp;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│   match scrut
 //│     true =>
 //│       return 0
@@ -203,7 +203,7 @@ ping(5)(99)
 //│ @private
 //│ define pong⁵ as fun pong⁴(n)() {
 //│   let scrut, tmp;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│   match scrut
 //│     true =>
 //│       return 0
@@ -249,7 +249,7 @@ class Test(a) with
 //│ @private
 //│ define pong⁶ as fun pong⁷(n) {
 //│   let scrut, tmp;
-//│   set scrut = Predef⁰.equals⁰(n, 0);
+//│   set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│   match scrut
 //│     true =>
 //│       return 0
@@ -262,7 +262,7 @@ class Test(a) with
 //│ module M⁰ {
 //│   method ping⁷ = fun ping⁶(n, unused) {
 //│     let scrut, tmp;
-//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│     match scrut
 //│       true =>
 //│         return 0

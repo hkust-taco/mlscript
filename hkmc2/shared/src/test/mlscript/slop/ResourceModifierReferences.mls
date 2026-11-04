@@ -1,0 +1,322 @@
+:.
+:js
+
+
+class C
+fun g(x) = x
+fun g2(x)(y) = x
+module M with
+  fun m(x) = x
+let h = x => x
+//│ h = fun h
+
+
+// * `rsc?` on a value that is created by a reference is an error, as for lambdas and calls.
+
+:e
+rsc? g
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+1: 	rsc? g
+//│ ╙──      	^^^^
+//│ = fun g
+
+:e
+rsc? M.m
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+1: 	rsc? M.m
+//│ ╙──      	^^^^
+//│ = fun m
+
+:e
+rsc? h
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+1: 	rsc? h
+//│ ╙──      	^^^^
+//│ = fun h
+
+:e
+open M { m }
+rsc? m
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+2: 	rsc? m
+//│ ╙──      	^^^^
+//│ = fun m
+
+:e
+fun wrap(y) =
+  fun inner() = rsc? y
+  inner
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+2: 	  fun inner() = rsc? y
+//│ ╙──      	                ^^^^
+
+:e
+class D with
+  fun self() = rsc? this
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+2: 	  fun self() = rsc? this
+//│ ╙──      	               ^^^^
+
+:e
+class Base with
+  fun m(x) = x
+class Derived extends Base with
+  fun m2() = rsc? super.m
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+4: 	  fun m2() = rsc? super.m
+//│ ╙──      	             ^^^^
+
+:e
+open M
+rsc? m
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+2: 	rsc? m
+//│ ╙──      	^^^^
+//│ = fun m
+
+
+// * Controls, already errors under new resolution (A1).
+
+:e
+rsc? (x => x)
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+1: 	rsc? (x => x)
+//│ ╙──      	^^^^
+//│ = fun
+
+:e
+rsc? g2(1)
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+1: 	rsc? g2(1)
+//│ ╙──      	^^^^
+//│ = fun
+
+
+// * Type positions keep `rsc?`.
+
+type T = rsc? C
+fun k(x: rsc? C) = x
+
+
+// * `rsc` on a reference to a `fun` with parameter lists eta-expands it into a resource function value.
+
+fun useRsc(f: rsc (C) -> C) = f
+fun usePlain(f: (C) -> C) = f
+
+:sir
+rsc g
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda; @private @rsc define lambda as fun lambda⁰(x) { return g⁰(x) }; return lambda⁰
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+useRsc(rsc g)
+//│ = fun
+
+:ge
+usePlain(rsc g)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'rsc Function' at an unrelated type 'Function'
+//│ ║  l.+1: 	usePlain(rsc g)
+//│ ╙──      	             ^
+//│ = fun
+
+(rsc g)(1)
+//│ = 1
+
+// * Only the first parameter list is expanded: the inner partial application stays a plain function value.
+
+:sir
+rsc g2
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda; @private @rsc define lambda as fun lambda¹(x) { return g2⁰(x) }; return lambda¹
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+(rsc g2)(1)(2)
+//│ = 1
+
+// * Selections of module members and of instance methods. The expansion calls the method on its receiver.
+
+useRsc(rsc M.m)
+//│ = fun
+
+class E(val k) with
+  fun get(x) = k
+let e = E(1)
+//│ e = E(1)
+
+:sir
+rsc e.get
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda; @private @rsc define lambda as fun lambda²(x) { return e⁰.get⁰(x) }; return lambda²
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+// * The receiver is evaluated once, when the function value is created.
+
+fun mkE(): E = E(2)
+
+:sir
+rsc mkE().get
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, lambda;
+//│ set tmp = mkE⁰();
+//│ @private @rsc
+//│ define lambda as fun lambda³(x) { return tmp.get⁰(x) };
+//│ return lambda³
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+// * A wildcard `open` resolves the reference to a selection.
+
+module M2 with
+  fun m2(x) = x
+  class K
+
+open M2
+
+:sir
+useRsc(rsc m2)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp, lambda;
+//│ @private @rsc
+//│ define lambda as fun lambda⁴(x) { return M2⁰.m2⁰(x) };
+//│ set tmp = lambda⁴;
+//│ return useRsc⁰(tmp)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+// * Class values and tuple indices are not functions with parameter lists.
+
+:e
+rsc M2.K
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
+//│ ║  l.+1: 	rsc M2.K
+//│ ║        	^^^
+//│ ╟── This annotation is not supported on selection terms.
+//│ ║  l.+1: 	rsc M2.K
+//│ ╙──      	    ^^^^
+//│ = class K
+
+let t = [g]
+//│ t = [fun g]
+
+:e
+rsc t.0
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
+//│ ║  l.+1: 	rsc t.0
+//│ ║        	^^^
+//│ ╟── This annotation is not supported on selection terms.
+//│ ║  l.+1: 	rsc t.0
+//│ ╙──      	    ^^^
+//│ = fun g
+
+// * Optional and rest parameters are forwarded.
+
+fun opt(x, y?) = [x, y]
+fun rest(x, ...xs) = [x, xs]
+
+(rsc opt)(1)
+//│ = [1, null]
+
+(rsc opt)(1, 2)
+//│ = [1, 2]
+
+(rsc rest)(1, 2, 3)
+//│ = [1, [2, 3]]
+
+// * The expansion passes its arguments as the lambda `x => gi(x)` does, coerced to `gi`'s parameter types.
+
+fun gi(x: Int) = x + 1
+
+:sir
+rsc (x => gi(x))
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private @rsc
+//│ define lambda as fun lambda⁵(x) { return gi⁰((x as! Int⁰)) };
+//│ return lambda⁵
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+:sir
+rsc gi
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private @rsc
+//│ define lambda as fun lambda⁶(x) { return gi⁰((x as! Int⁰)) };
+//│ return lambda⁶
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+(rsc gi)(1)
+//│ = 2
+
+// * Optional parameters are forwarded in a spread, so only the required ones are cast here.
+
+fun opti(x: Int, y?: Int) = [x, y]
+fun trail(x: Int, ...xs, y: Int) = [x, xs, y]
+
+:sir
+rsc opti
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private @rsc
+//│ define lambda as fun lambda⁷(x, ...args) { return opti⁰((x as! Int⁰), ...args) };
+//│ return lambda⁷
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+:sir
+rsc trail
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda;
+//│ @private @rsc
+//│ define lambda as fun lambda⁸(x, ...args) { return trail⁰((x as! Int⁰), ...args) };
+//│ return lambda⁸
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = fun
+
+(rsc opti)(1, 2)
+//│ = [1, 2]
+
+(rsc trail)(1, 2, 3)
+//│ = [1, [2], 3]
+
+fun wrap2() =
+  fun inner(z) = z
+  useRsc(rsc inner)
+
+// * Other references are not known functions with parameter lists, so the modifier has no effect and is an error.
+
+module N with
+  fun n = 1
+
+:e
+rsc h
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
+//│ ║  l.+1: 	rsc h
+//│ ║        	^^^
+//│ ╟── This annotation is not supported on reference terms.
+//│ ║  l.+1: 	rsc h
+//│ ╙──      	    ^
+//│ = fun h
+
+:e
+rsc N.n
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
+//│ ║  l.+1: 	rsc N.n
+//│ ║        	^^^
+//│ ╟── This annotation is not supported on selection terms.
+//│ ║  l.+1: 	rsc N.n
+//│ ╙──      	    ^^^
+//│ = 1
+
+:e
+fun wrap3(y) = rsc y
+//│ ╔══[COMPILATION ERROR] This annotation has no effect.
+//│ ║  l.+1: 	fun wrap3(y) = rsc y
+//│ ║        	               ^^^
+//│ ╟── This annotation is not supported on reference terms.
+//│ ║  l.+1: 	fun wrap3(y) = rsc y
+//│ ╙──      	                   ^

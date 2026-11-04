@@ -243,10 +243,10 @@ let lifted = capturedVariadic(30)
 //│   do runtime⁰.checkVariadicArgs⁰("sum", 2, 1, args);
 //│   match args
 //│     Array(2+) =>
-//│       set optional = args.0;
+//│       set optional = (args.0 as! Unknown);
 //│       end
 //│     else
-//│       set optional = null;
+//│       set optional = (null as! Unknown);
 //│       end
 //│   set middle = runtime⁰.Tuple⁰.sliceArray⁰(args, 1, 1);
 //│   set last = (args.-1 as! Int⁰);

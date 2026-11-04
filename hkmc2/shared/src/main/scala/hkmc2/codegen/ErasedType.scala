@@ -21,23 +21,23 @@ enum PrimitiveType:
     case Float32 => ctx.builtins.Float32
     case Float64 => ctx.builtins.Float64
 
+object PrimitiveType:
+  /** The primitive type whose symbol is `sym`, if any. */
+  def of(sym: TypeSymbol)(using Ctx, State): Opt[PrimitiveType] = values.find(_.sym === sym)
+
 object ErasedType:
   /** A canonicalized reference type.
     *
     * Instances should be created using [[CanonicalErasedValueType.apply]] or [[ValueLike]] to ensure the correct
     * representation is used for a given type symbol.
     *
-    * - `rsc` is true if this reference is a resource class.
-    *
     * Implementation Note: This type should **not** be used to represent references of type aliases or the top type -
     * [[ValueLike]] and [[Unknown]] should be used instead.
     */
-  case class AnyRef(rsc: Opt[Bool], tpeSym: TypeSymbol) extends ErasedValueType, CanonicalErasedValueType:
+  case class AnyRef(rsc: Opt[Bool], tpeSym: TypeSymbol) extends ErasedValueType, CanonicalErasedValueType, HasRsc:
     override def sym(using Ctx, State): TypeSymbol = tpeSym
 
   /** A value type that is not yet canonicalized.
-    *
-    * - `rsc` is true if this reference is a resource type.
     *
     * Implementation Notes:
     *
@@ -46,11 +46,21 @@ object ErasedType:
     * - This type implements identity equality, so that two instances with the same `getTpeSym` function are not
     *   considered equal - Use the canonicalized type for equality comparisons.
     */
-  final class ValueLike(val rsc: Opt[Bool], getTpeSym: (Ctx, State) ?=> TypeSymbol) extends ErasedValueType:
+  final class ValueLike(val rsc: Opt[Bool], getTpeSym: (Ctx, State) ?=> TypeSymbol) extends ErasedValueType, HasRsc:
     type Canonical = CanonicalErasedValueType
     override def sym(using Ctx, State): TypeSymbol = getTpeSym
     override protected def computeCanonicalize(using Ctx, State): CanonicalErasedValueType =
-      CanonicalErasedValueType(rsc, sym)
+      val canon = CanonicalErasedValueType(rsc, sym)
+      // * A canonical type with resource-ness takes it from this reference if it is `rsc`, which overrides the
+      // * modifiers written inside the alias referred to. Otherwise, it can only differ from this reference's
+      // * resource-ness because of such a modifier.
+      canon match
+      case h: HasRsc if h.rsc =/= rsc =>
+        assert(rsc =/= S(true) && CanonicalErasedValueType.resolveTpeSymAlias(sym).exists(_.ownRsc.isDefined),
+          s"the resource-ness of '$canon' must come from this reference ($rsc), or from a modifier inside '$sym' " +
+            "when this reference is not `rsc`")
+      case _ => ()
+      canon
     // Ensures `toString` returns a stable string
     override def toString: Str = "ValueLike(?)"
 
@@ -88,10 +98,10 @@ object ErasedType:
 
   /** The top type of reference types, i.e. any value on JS and `anyref` on Wasm.
     *
-    * Reached by an absent annotation (`erasedType_!` folds `N` here), by an alias the IR cannot resolve, and
-    * by the surface top `Anything`, which has no erased counterpart of its own.
+    * Reached by an absent annotation, an alias the IR cannot resolve, a resource-modified type-parameter reference,
+    * and by the surface top `Anything`, which has no erased counterpart of its own.
     */
-  case object Unknown extends ErasedValueType, CanonicalErasedValueType:
+  case class Unknown(rsc: Opt[Bool]) extends ErasedValueType, CanonicalErasedValueType, HasRsc:
     // * No symbol denotes this type: `Anything` is the surface top, which is a different thing.
     override def sym(using Ctx, State): NoSymbol = NoSymbol
 
@@ -136,10 +146,7 @@ object ErasedType:
   /** The builtin `Int31` reference type. */
   def Int31: ErasedValueType = ErasedType.ValueLike(rsc = S(false), ctx.builtins.Int31)
 
-  /** The builtin `Function` reference type, used as the value type of a first-class function.
-    *
-    * - `rsc` is true if this reference is a resource function.
-    */
+  /** The builtin `Function` reference type, used as the value type of a first-class function. */
   def Function(rsc: Opt[Bool]): ErasedValueType = ErasedType.ValueLike(rsc, ctx.builtins.Function)
 
   /** WORKAROUND (see [[semantics.BuiltinOperatorResults]]): the representation of an application of the builtin
@@ -233,6 +240,17 @@ object ErasedType:
   def union(lhs: ErasedValueType, rhs: ErasedValueType): ErasedValueType =
     Union.mk(lhs :: rhs :: Nil)
 
+  /** The prefix naming a resource-ness in rendered output.
+    *
+    * A non-resource prints nothing: it is both the common case and the unannotated default, so spelling it
+    * out would put a prefix on almost every type in a dump.
+    */
+  private[codegen] def rscPrefix(rsc: Opt[Bool]): Str = rsc.fold("rsc? ")(if _ then "rsc " else "")
+
+  /** The least upper bound of two types' resource-ness. */
+  private[codegen] def lubRsc(lhs: Opt[Bool], rhs: Opt[Bool]): Opt[Bool] =
+    if lhs === rhs then lhs else N
+
   /** The least upper bound of two canonical erased types. */
   def lub(lhs: CanonicalErasedValueType, rhs: CanonicalErasedValueType)(using Ctx, State): CanonicalErasedValueType =
     (lhs, rhs) match
@@ -246,39 +264,60 @@ object ErasedType:
       // * A primitive shares no supertype with any other non-bottom type - the `Unknown` type
       // * included.
       case (_: Primitive, _) | (_, _: Primitive) => Incompatible(lhs, rhs)
-      // * The top type absorbs every reference type.
-      case (Unknown, _) | (_, Unknown) => Unknown
+      // * The top type absorbs every reference type, while the resource-ness joins.
+      case (l: Unknown, r: HasRsc) => Unknown(lubRsc(l.rsc, r.rsc))
+      case (l: HasRsc, r: Unknown) => Unknown(lubRsc(l.rsc, r.rsc))
       // * Two reference types: their nearest common ancestor, at worst `Object`.
-      case _ => (lhs.sym, rhs.sym) match
-        // * The symbol-less canonical types are handled above.
-        case (NoSymbol, _) | (_, NoSymbol) =>
-          lastWords(s"no upper bound is defined for '$lhs' and '$rhs'")
-        case (l: TypeSymbol, r: TypeSymbol) => CanonicalErasedValueType(rsc = S(false), lubSym(l, r))
+      case (l: AnyRef, r: AnyRef) => CanonicalErasedValueType(lubRsc(l.rsc, r.rsc), lubSym(l.tpeSym, r.tpeSym))
 
   /** Erases a type-annotated term to an [[ErasedValueType]].
     *
     * Used by the legacy resolver after resolution. Canonicalization is separate and may inspect the
     * nominal hierarchy published by Erasure.
     */
-  def eraseSign(sign: Term)(using Erasure): Opt[ErasedValueType] = sign match
-    case Capture(base, _) => eraseSign(base)
+  def eraseSign(sign: Term)(using Erasure): Opt[ErasedValueType] = eraseSign(sign, S(false), _.resolvedSym)
+
+  /** Whether erasing the `target` term under a resource modifier denoting `rsc` keeps the modifier.
+    *
+    * The modifier is dropped when `target` has no erased counterpart (e.g. a negation type), or when `target` erases to
+    * a type that is never a resource (`()`).
+    */
+  def keepsRsc(target: Term, rsc: Opt[Bool], symbolOf: Term => Opt[Symbol]): Bool = eraseSign(target, rsc, symbolOf).exists:
+    case h: HasRsc => h.rsc === rsc
+    case _ => false
+
+  /** Erases `sign` under the resource-ness gathered from the modifiers wrapping it so far. */
+  private def eraseSign(sign: Term, rsc: Opt[Bool], symbolOf: Term => Opt[Symbol]): Opt[ErasedValueType] = sign match
+    // * The resource modifiers reach here as annotations.
+    // * Note that this arm has to be part of the recursion: a union erases its members by recursive call, and each
+    // * carries its own modifier, so `rsc C | rsc D` would otherwise erase to nothing at all.
+    case Term.Annotated(Annot.Resource(own), target) =>
+      eraseSign(target, CanonicalErasedValueType.combineRsc(rsc, S(own)), symbolOf)
+    case Capture(base, _) => eraseSign(base, rsc, symbolOf)
     case CompType(lhs, rhs, true) =>
       // * A union is kept as a transient `Union` surface form; `canonicalize` collapses it to the members' LUB.
       for
-        l <- eraseSign(lhs)
-        r <- eraseSign(rhs)
+        l <- eraseSign(lhs, rsc, symbolOf)
+        r <- eraseSign(rhs, rsc, symbolOf)
       yield ErasedType.union(l, r)
     // * An intersection is never decomposed: narrowing to one member would call for a GLB, which this lattice
     // * cannot express.
-    case CompType(_, _, false) => S(ErasedType.Unknown)
-    case DynTy() => S(ErasedType.Unknown)
+    case CompType(_, _, false) => S(ErasedType.Unknown(rsc))
+    case DynTy() => S(ErasedType.Unknown(rsc))
     case UnitVal() => S(ErasedType.Unit)
-    // * A written arrow denotes a function value, and every function value is a `Function`.
-    case FunTy(_, _, _) => S(ErasedType.Function(rsc = S(false)))
+    // * A written function type denotes a function value, and every function value is a `Function`.
+    case FunTy(_, _, _) => S(ErasedType.Function(rsc))
     // * Quantification erases away: what a `forall` denotes is what its body denotes.
-    case Forall(_, _, body) => eraseSign(body)
-    case _ =>
-      sign.symbol.flatMap(_.asTpe).map(sym => ErasedType.ValueLike(rsc = S(false), sym))
+    case Forall(_, _, body) => eraseSign(body, rsc, symbolOf)
+    // * A type parameter has no erased counterpart, so a reference to one erases to the top type under the modifier
+    // * written on it. `rsc` starts as `S(false)` and no syntax writes a non-resource modifier, so `S(false)` here
+    // * means that the reference is unannotated: it then erases to nothing, as it did before resource modifiers.
+    case _ if
+      symbolOf(sign).exists:
+        case sym: VarSymbol => ModuleChecker.isTypeParam(sym)
+        case _ => false
+    => if rsc =/= S(false) then S(ErasedType.Unknown(rsc)) else N
+    case _ => symbolOf(sign).flatMap(_.asTpe).map(sym => ErasedType.ValueLike(rsc, sym))
 
   /** Whether `actual` is a subtype of `expected`, walking the class hierarchy.
     *
@@ -314,6 +353,31 @@ object ErasedType:
     * Returns `S(true)` if a cast is needed, `S(false)` if no cast is needed, or `N` if the two types are unrelated.
     */
   def needsCast(actual: CanonicalErasedValueType, expected: CanonicalErasedValueType)(using Ctx, State): Opt[Bool] =
+    // * A value has to fit the slot in both its identity and its resource-ness: a cast is needed when either
+    // * dimension calls for one, and the coercion is impossible when either says it is.
+    needsClassCast(actual, expected).flatMap: byClass =>
+      (actual, expected) match
+      case (a: HasRsc, e: HasRsc) => needsRscCast(a.rsc, e.rsc).map(byClass || _)
+      // * The class dimension only admits a primitive into the same primitive, which has no resource-ness.
+      case (_: Primitive, _: Primitive) => S(byClass)
+      // * The bottom type has no resource-ness: it fits every slot, and narrowing to it is decided by class alone.
+      case (Nothing, _) | (_, Nothing) => S(byClass)
+      case _ => lastWords(s"a coercion from '$actual' to '$expected' passed the class dimension")
+
+  /** Whether the resource-ness dimension of a coercion needs a cast.
+    *
+    * A resource and a non-resource have different resource-tracking strategies, so neither can be coerced to the other.
+    * Both widen freely into the undetermined layout, and narrowing back out of it is the runtime ref-count test.
+    */
+  private def needsRscCast(actual: Opt[Bool], expected: Opt[Bool]): Opt[Bool] =
+    (actual, expected) match
+    case _ if actual === expected => S(false)
+    case (_, N) => S(false)
+    case (N, _) => S(true)
+    case (S(_), S(_)) => N
+
+  /** Whether the class dimension of a coercion needs a cast, ignoring resource-ness. */
+  private def needsClassCast(actual: CanonicalErasedValueType, expected: CanonicalErasedValueType)(using Ctx, State): Opt[Bool] =
     (actual, expected) match
       // * A type with no upper bound has no representation of its own, so nothing can be coerced into or out of
       // * it - not even widened into the top type.
@@ -329,8 +393,8 @@ object ErasedType:
       // * A primitive is compatible only with the same primitive in either direction.
       case (Primitive(_), _) | (_, Primitive(_)) => N
       // * `T -> Unknown` needs no cast; `Unknown -> T` needs a checked downcast.
-      case (_, Unknown) => S(false)
-      case (Unknown, _) => S(true)
+      case (_, _: Unknown) => S(false)
+      case (_: Unknown, _) => S(true)
       case (da, de) => (da.sym, de.sym) match
         // * The symbol-less canonical types are handled above.
         case (NoSymbol, _) | (_, NoSymbol) =>
@@ -405,14 +469,17 @@ sealed abstract class ErasedValueType extends Canonicalizable:
     def qualify(s: Symbol, acc: Ls[Str]): Ls[Str] =
       ownerOf(s).fold(s.nme :: acc)(o => qualify(o, s.nme :: acc))
     canonicalize match
-      case ErasedType.Unknown => "Unknown"
+      case ErasedType.Unknown(rsc) => s"${ErasedType.rscPrefix(rsc)}Unknown"
       case ErasedType.Nothing => "Nothing"
       case ErasedType.Incompatible(l, r) => s"‹incompatible(${l.describe}, ${r.describe})›"
       case cet => cet.sym match
         case NoSymbol => lastWords(s"no name is defined for '$cet'")
         case tpeSym: TypeSymbol =>
           val name = qualify(tpeSym, Nil).mkString(".")
-          if tpeSym.asMod.isDefined then s"module $name" else name
+          val rscPrefix = cet match
+            case r: HasRsc => ErasedType.rscPrefix(r.rsc)
+            case _ => ""
+          if tpeSym.asMod.isDefined then s"${rscPrefix}module $name" else s"$rscPrefix$name"
 
 
 /** The result behavior of a definition, before any async or generator wrapping.
@@ -525,49 +592,92 @@ sealed trait CanonicalErasedValueType extends ErasedValueType:
   type Canonical = this.type
   override protected def computeCanonicalize(using Ctx, State): this.type = this
 
-object CanonicalErasedValueType:
-  /** Creates an instance with the given type symbol, canonicalizing it if needed.
+/** An [[ErasedValueType]] that may be associated with resource-ness. */
+sealed trait HasRsc extends ErasedValueType:
+  /** Whether this type is a resource, or `N` if that is not known statically.
     *
-    * - `rsc` is true if this is a resource type.
+    * Note that `rsc?` (represented by `N`) and non-`rsc` (represented by `S(false)`) represent two different things:
+    * `N` indicates that the resource-ness is not known statically and requires a runtime test, while `S(false)`
+    * indicates that it is not a resource.
     */
+  val rsc: Opt[Bool]
+
+object CanonicalErasedValueType:
+  /** A member of what a type alias denotes (see [[resolveTpeSymAlias]]).
+    *
+    * - `sym` is the member's type symbol, or `N` if the member cannot be resolved: a recursive occurrence of an
+    *   alias, a type parameter, or an alias without a definition.
+    * - `ownRsc` is the resource modifier written on the member inside the alias - the outer `Opt` representing whether
+    *   a resource modifier is present, and the inner `Opt` the resource-ness it denotes, encoded as in `HasRsc.rsc`.
+    */
+  case class AliasMember(sym: Opt[TypeSymbol], ownRsc: Opt[Opt[Bool]])
+
+  /** Creates an instance with the given type symbol, canonicalizing it if needed. */
   def apply(rsc: Opt[Bool], tpeSym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType =
-    /** Resolves through an arbitrary chain of type aliases to the type symbols the alias denotes.
-      *
-      * A union alias denotes each of its members, so the result is a list; every other resolvable alias denotes a
-      * single symbol. Type arguments are erased along the way, so `type Opt[A] = Some[A] | None` resolves to
-      * `Some :: None :: Nil`.
-      *
-      * If the chain is not defined (e.g. in `declare type ...`), is cyclic, or contains a member that is itself
-      * unresolvable, `sym` is returned unchanged.
-      */
-    def resolveTpeSymAlias: Ls[TypeSymbol] =
-      // * Resolves a single type symbol, or `N` if it is an alias that cannot be resolved.
-      def loop(cur: TypeSymbol, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = cur match
-        case als: TypeAliasSymbol =>
-          if seen(als) then N
-          else als.defn.flatMap(_.rhs).flatMap(alternatives(_, seen + als))
-        case base => S(base :: Nil)
-      // * Resolves the alternatives denoted by the right-hand side of an alias, flattening nested unions.
-      // * Only unions are expanded: an intersection would call for a GLB, which the erased lattice cannot express.
-      def alternatives(tpe: Term, seen: Set[TypeSymbol]): Opt[Ls[TypeSymbol]] = tpe match
-        case Term.CompType(lhs, rhs, true) =>
-          for
-            ls <- alternatives(lhs, seen)
-            rs <- alternatives(rhs, seen)
-          yield ls ::: rs
-        case _ => tpe.symbol.flatMap(_.asTpe).flatMap(loop(_, seen))
-      loop(tpeSym, Set.empty).getOrElse(tpeSym :: Nil)
-    
-    // * A union alias denotes each of its members, and erases to their LUB; every other symbol resolves to itself
-    // * or to a single alias target.
-    resolveTpeSymAlias.map(resolved(rsc, _)).reduceLeft((lhs, rhs) => ErasedType.lub(lhs, rhs))
+    val members = resolveTpeSymAlias(tpeSym)
+    // * An unannotated reference has `rsc = S(false)`, which a member's own modifier takes precedence over.
+    def rscOf(m: AliasMember): Opt[Bool] = combineRsc(rsc, m.ownRsc)
+    if members.forall(_.sym.isDefined) then
+      // * A union alias denotes each of its members, and erases to their LUB; every other symbol resolves to itself
+      // * or to a single alias target.
+      members.flatMap(m => m.sym.map(resolved(rscOf(m), _))).reduceLeft((lhs, rhs) => ErasedType.lub(lhs, rhs))
+    else
+      // * An alias with a member that cannot be resolved erases to the top type while preserving its resource-ness.
+      val rscs = members.filterNot(_.sym.exists(PrimitiveType.of(_).isDefined)).map(rscOf)
+      ErasedType.Unknown(rscs.reduceLeft(ErasedType.lubRsc))
+
+  /** Resolves through an arbitrary chain of type aliases to the members the alias denotes.
+    *
+    * A union alias denotes each of its members, so the result is a list; every other alias denotes a single member.
+    * Type arguments are erased along the way, so `type Opt[A] = Some[A] | None` resolves to `Some :: None :: Nil`.
+    *
+    * A member that cannot be resolved has its resource modifier kept. A modifier on a reference to an alias combines
+    * with the ones written inside it as described in [[combineRsc]].
+    */
+  def resolveTpeSymAlias(tpeSym: TypeSymbol)(using Ctx): Ls[AliasMember] =
+    resolveTpeSymAlias(tpeSym, _.symbol)
+
+  def resolveTpeSymAlias(tpeSym: TypeSymbol, symbolOf: Term => Opt[Symbol])(using Ctx): Ls[AliasMember] =
+    def resolveSym(cur: TypeSymbol, seen: Set[TypeAliasSymbol]): Ls[AliasMember] = cur match
+      case als: TypeAliasSymbol => als.defn.flatMap(_.rhs) match
+        case S(rhs) if !seen(als) => alternatives(rhs, seen + als, N)
+        case _ => AliasMember(N, N) :: Nil
+      case base => AliasMember(S(base), N) :: Nil
+    // * Resolves the alternatives denoted by the right-hand side of an alias under the resource modifier written
+    // * around it, flattening nested unions.
+    // * Only unions are expanded: an intersection would call for a GLB, which the erased lattice cannot express.
+    def alternatives(tpe: Term, seen: Set[TypeAliasSymbol], ownRsc: Opt[Opt[Bool]]): Ls[AliasMember] = tpe match
+      case Term.Annotated(Annot.Resource(own), target) =>
+        alternatives(target, seen, S(ownRsc.fold(own)(combineRsc(_, S(own)))))
+      case Term.CompType(lhs, rhs, true) => alternatives(lhs, seen, ownRsc) ::: alternatives(rhs, seen, ownRsc)
+      // * As in `ErasedType.eraseSign`, quantification erases away, and a written function type denotes a function
+      // * value, which is a `Function`.
+      case Term.Forall(_, _, body) => alternatives(body, seen, ownRsc)
+      case Term.Capture(base, _) => alternatives(base, seen, ownRsc)
+      case Term.FunTy(_, _, _) => AliasMember(S(ctx.builtins.Function), ownRsc) :: Nil
+      case _ =>
+        symbolOf(tpe).flatMap(_.asTpe).fold(AliasMember(N, N) :: Nil)(resolveSym(_, seen))
+          .map(m => m.copy(ownRsc = ownRsc.map(combineRsc(_, m.ownRsc)).orElse(m.ownRsc)))
+    resolveSym(tpeSym, Set.empty)
+
+  /** The resource-ness of a member of an alias or of a written union, given the resource-ness `outer` stated around it
+    * (on a reference to the alias, or on the union) and the resource modifier `own` written on the member itself
+    * (encoded as in [[AliasMember.ownRsc]]).
+    *
+    * `rsc` asserts that the whole type is a resource, so it overrides the member's own modifier: `rsc List` is a
+    * resource where `type List = Cons | Nil`. Any other resource-ness leaves the member's own modifier in place:
+    * `rsc? U` where `type U = rsc A | B` is `rsc A | rsc? B`, which erases to `rsc? lub(A, B)`.
+    */
+  private[codegen] def combineRsc(outer: Opt[Bool], own: Opt[Opt[Bool]]): Opt[Bool] =
+    if outer === S(true) then outer else own.getOrElse(outer)
 
   /** Creates an instance from an already-resolved symbol. */
   private def resolved(rsc: Opt[Bool], sym: TypeSymbol)(using Ctx, State): CanonicalErasedValueType = sym match
-    // * An unresolvable alias becomes the top type.
-    case _: TypeAliasSymbol => ErasedType.Unknown
+    // * `resolveTpeSymAlias` resolves every alias, or yields a member without a symbol for it.
+    case als: TypeAliasSymbol => lastWords(s"the type alias '$als' was not resolved")
     case base =>
-      PrimitiveType.values.find(_.sym === base) match
+      PrimitiveType.of(base) match
+        // * A primitive has no resource-ness, so `rsc` is dropped.
         case S(prim) => ErasedType.Primitive(prim)
         case _ => ErasedType.AnyRef(rsc, base)
 

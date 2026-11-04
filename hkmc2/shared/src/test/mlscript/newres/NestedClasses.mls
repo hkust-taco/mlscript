@@ -29,7 +29,6 @@ let x = new Foo.Bar
 //│   main = Assign:
 //│     lhs = x⁰
 //│     rhs = Instantiate:
-//│       mut = false
 //│       cls = Select{sym=class:Bar¹}:
 //│         qual = MemberRef{disamb=module:Foo²}:
 //│           bms = member:Foo⁰

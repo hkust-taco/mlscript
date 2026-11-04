@@ -62,7 +62,7 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   // isMlsFun is probably always true?
   def call(fun: Path, args: Ls[ArgWrappable], isMlsFun: Bool = true, symName: Str = "tmp")(k: Path => Block): Block =
-    assign(Call(fun, args.map(asArg) ne_:: Nil)(CallMetadata(isMlsFun, false, Nil), N), symName)(k)
+    assign(Call(fun, args.map(asArg) ne_:: Nil)(CallMetadata(isMlsFun, false, Nil), rsc = false, N), symName)(k)
 
   // helpers for instrumenting Block
 
@@ -207,8 +207,11 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
       transformArgs(elems): xs =>
         tuple(xs.map(_._1)): codes =>
           blockCtor("Tuple", Ls(codes), "tup")(k)
-    case Instantiate(mut, cls, argss) =>
-      assert(!mut, "mutable instantiation not supported")
+    case inst: Instantiate if inst.rsc =>
+      raise(ErrorReport(msg"Resource instantiation not supported in staged module." -> r.toLoc :: Nil))
+      End()
+    case inst @ Instantiate(cls, argss) =>
+      assert(!inst.mut, "mutable instantiation not supported")
       argss match
         case Nil =>
           raise(ErrorReport(msg"Instantiate with no argument lists not supported in staged module." -> r.toLoc :: Nil))

@@ -79,7 +79,7 @@ private class RequiredInputContract() with
 private class OptionalInput() extends RequiredInputContract() with
   override fun pick(value?): Int = 0
 OptionalInput().pick()
-//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'pick' receives values represented as 'Unknown', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as 'Int'
+//│ ╔══[COMPILATION ERROR] Parameter 'value' of overriding member 'pick' receives values represented as 'rsc? Unknown', but Wasm calls it through the signature of the member it overrides, whose parameter is represented as 'Int'
 //│ ║  l.+4: 	  override fun pick(value?): Int = 0
 //│ ║        	                    ^^^^^^
 //│ ╟── The overridden member 'pick' is defined here

@@ -77,6 +77,53 @@ object Elaborator:
       case InnerScope(inner) => S(inner)
       case _ => N
   
+  /** An elaborated signature, parsed into the chain of function types it describes. */
+  enum Sig:
+    /** A possibly-quantified function type `params -> ret`, together with the resource modifiers written around it
+      * (outermost first).
+      */
+    case Arrow(tpe: Term, mods: Ls[Term], params: Term, ret: Sig)
+    /** Anything else, including a resource-modified type that is not a function type. */
+    case Result(tpe: Term)
+    
+    /** The signature as written, including its quantifiers and resource modifiers. */
+    val tpe: Term
+    
+    /** Remove a definition's quantifiers and consumed arrows, retaining modifiers on its result. */
+    def stripParams(count: Int): (Term, Ls[Term]) = this match
+      case Arrow(_, mods, _, ret) if count > 0 =>
+        val (result, retMods) = ret.stripParams(count - 1)
+        (result, mods ::: retMods)
+      case _ => tpe match
+        // A standalone signature quantifies the definition even when it is by-name. Leaving
+        // these binders on its result would instantiate a fresh scheme on each later call.
+        case Term.Forall(_, _, body) => Sig.parse(body).stripParams(0)
+        case _ => (tpe, Nil)
+  
+  object Sig:
+    def parse(sign: Term): Sig =
+      def go(t: Term, mods: Ls[Term]): Sig = t match
+        case Term.Forall(_, _, body) => go(body, mods)
+        case Term.Capture(base, _) => go(base, mods)
+        case mod @ Term.Annotated(Annot.Resource(_), target) => go(target, mods :+ mod)
+        case Term.FunTy(params, ret, _) => Sig.Arrow(sign, mods, params, parse(ret))
+        case _ => Sig.Result(sign)
+      go(sign, Nil)
+  
+  /** The definition of `sym` that shares the elaborated signature of its separately written declaration, if any.
+    *
+    * A declaration such as `fun f: Int -> Int` followed by a definition `fun f(x) = x` would otherwise have that
+    * signature elaborated and resolved once for each, reporting every diagnostic in it twice. The signature is not
+    * shared with a definition that has type parameters of its own, as the signature may then refer to them.
+    */
+  def sharedSignatureDefinition(sym: BlockMemberSymbol): Opt[Tree.TermDef] =
+    val hasSeparateSignature = sym.trees.exists:
+      case td: Tree.TermDef => td.rhs.isEmpty && td.annotatedResultType.isDefined && td.paramLists.isEmpty
+      case _ => false
+    if !hasSeparateSignature then N
+    else sym.trees.collectFirst:
+      case td: Tree.TermDef if td.rhs.isDefined && td.annotatedResultType.isEmpty && td.typeParams.isEmpty => td
+  
   /** Label metadata threaded through elaboration. */
   final case class LabelBinding(
       labelSymbol: LabelSymbol,
@@ -872,6 +919,35 @@ extends Importer:
         N
     case _ => N
   
+  /** Applies the resource modifier `kw`, written at `kwLoc` inside an instantiation (`new rsc C()`),
+    * to the elaborated instantiation `inst`. A modifier has no effect if written outside one (`rsc (new C())`).
+    */
+  def rscInstantiation(kw: Keyword.RscLike, kwLoc: Opt[Loc], inst: Term): Term =
+    def reject(msg: Message): Term =
+      raise(ErrorReport(msg -> kwLoc :: Nil))
+      inst
+    inst match
+    case Term.DynNew(_, _) | Term.Mut(_: Term.DynNew) =>
+      reject(msg"Resource instantiation with 'new!' is not supported yet.")
+    case _ if kw == Keyword.`rsc?` =>
+      raise(Annot.Resource.maybeRscOnVal(kwLoc))
+      inst
+    case Term.New(_, _, S(_)) | Term.Mut(Term.New(_, _, S(_))) =>
+      reject(msg"Resource instantiation with a refinement is not supported yet.")
+    // * The modifier wraps the instantiation in an annotation, just as it wraps a type.
+    case _ => Term.Annotated(Annot.Modifier(kw)(kwLoc), inst)
+  
+  /** Message for misplaced instantiation modifiers on the class of an instantiation. */
+  private val misplacedNewModifiersMsg: Message =
+    msg"Instantiation modifiers belong as part of 'new' or 'new!', each at most once, 'mut' before 'rsc' or 'rsc?'."
+  
+  /** Rejects instantiation modifiers at the head of `cls` with `message` and returns `cls` without them. */
+  def rejectMisplacedNewModifiers(cls: Tree, message: Message): Tree = cls match
+    case Apps(Modified(kw @ Keywrd(Keyword.`mut` | Keyword.`rsc` | Keyword.`rsc?`), inner), argss) =>
+      raise(ErrorReport(message -> kw.toLoc :: Nil))
+      Apps(rejectMisplacedNewModifiers(inner, message), argss)
+    case _ => cls
+  
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
     case Keywrd(kw @ (
       Keyword.`abstract`
@@ -883,6 +959,8 @@ extends Importer:
       | Keyword.`override`
       | Keyword.`public`
       | Keyword.`private`
+      | Keyword.`rsc`
+      | Keyword.`rsc?`
     )) => S(Annot.Modifier(kw)(tree.toLoc))
     case App(Ident("config"), Tup(args)) =>
       val modify = ConfigParser.parseOverrides(args)
@@ -1793,6 +1871,10 @@ extends Importer:
         sym
       val syms = (tvs.collect:
         case id: Tree.Ident => (genSym(id), N, N)
+        // * The binder is still declared, so its uses in the body resolve.
+        case Modified(kw @ Keywrd(_: Keyword.RscLike), id: Tree.Ident) =>
+          raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
+          (genSym(id), N, N)
         case InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub) => (genSym(id), S(ub), N)
         case InfixApp(id: Tree.Ident, Keywrd(Keyword.`restricts`), lb) => (genSym(id), N, S(lb))
         case InfixApp(InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub), Keywrd(Keyword.`restricts`), lb) =>
@@ -2022,16 +2104,15 @@ extends Importer:
     case tree @ Tup(fields) =>
       withTypeBinders(Term.Tup(fields.map(fld(_, interp.elements)))(tree))
       
-    case DynamicNew(Apps(c, args)) =>
-      val (mut, c2) = c match
-        case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
-        case c => (false, c)
-      val base = new Term.DynNew(subterm(c2), args.map(subterm(_))).withLocOf(tree)
-      if mut then Term.Mut(base) else base
+    case DynamicNew(cls, mut, rsc) =>
+      val Apps(c, args) = rejectMisplacedNewModifiers(cls, misplacedNewModifiersMsg)
+      val base = new Term.DynNew(subterm(c), args.map(subterm(_))).withLocOf(tree)
+      val withMut = if mut.isDefined then Term.Mut(base) else base
+      rsc.fold(withMut)(kw => rscInstantiation(kw.kw, kw.toLoc, withMut))
     // case New(c, rfto) =>
     //   assert(rfto.isEmpty)
     //   Term.New(cls(subterm(c), inAppPrefix = inAppPrefix), params.map(subterm(_)), bodo).withLocOf(tree)
-    case ProperNew(body, rfto) => // TODO handle Under
+    case ProperNew(body, rfto, mut, rscKw) => // TODO handle Under
       lazy val bodo = rfto.map: rft =>
         val clsSym = new ClassSymbol(DummyTypeDef(syntax.Cls), Ident("$anon"))
         recordDefinitionScope(clsSym)
@@ -2040,17 +2121,15 @@ extends Importer:
             // TODO integrate context inherited from cls
             // TODO make context with var symbols for class parameters
             ObjBody(block(rft, hasResult = false, resultInterp = Trm)._1)
-      body match
+      body.map(rejectMisplacedNewModifiers(_, misplacedNewModifiersMsg)) match
       case S(Apps(c, args)) =>
-        val (mut, c2) = c match
-          case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
-          case c => (false, c)
         val inner = mkNew(
-          subterm(c2, Clss), // * Note: we'll catch bad `new` targets during type checking
+          subterm(c, Clss), // * Note: we'll catch bad `new` targets during type checking
           args.map(subterm(_)),
           bodo
         )(N)
-        if mut then Term.Mut(inner) else inner
+        val withMut = if mut.isDefined then Term.Mut(inner) else inner
+        rscKw.fold(withMut)(kw => rscInstantiation(kw.kw, kw.toLoc, withMut))
       case N =>
         val objectRef = Ctx.RefElem(ctx.builtins.Object.bms.get).ref(N)
         // An anonymous object invokes Object's constructor, rather than
@@ -2161,6 +2240,26 @@ extends Importer:
         raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
         blk
       case (rcd: Rcd, ctx) => withTypeBinders(rcd.copy(mut = true)).withLocOf(rcd)
+    case Modified(kwt @ Keywrd(kw: Keyword.RscLike), body) =>
+      val trm = subterm(body, interp)
+      // * An instance's resource modifier is written inside the instantiation, so one written outside has no effect.
+      // * This is reported here, as `Lowering` sees both forms as the same term.
+      def underlying(t: Term): Term = t match
+        case Term.Annotated(_, t) => underlying(t)
+        case Term.Capture(base, _) => underlying(base)
+        case _ => t
+      underlying(trm) match
+      case inst @ (Term.New(_, _, _) | Term.DynNew(_, _) | Term.Mut(_: Term.New | _: Term.DynNew)) =>
+        raise(Annot.Resource.noEffect(kwt.toLoc, inst, N))
+        trm
+      case Term.Lam(_, _) | Term.App(_, _) | Term.NewSel(_, _, _) | Term.Ref(_) | Term.MemberRef(_) |
+        Term.SelfRef(_) | Term.SimpleRef(_) | Term.Sel(_, _) | Term.Super(_, _, _) | Term.SynthSel(_, _) |
+        Term.UnresolvedRef(_, _)
+      if kw == Keyword.`rsc?` && interp != Tpe =>
+        raise(Annot.Resource.maybeRscOnVal(kwt.toLoc))
+        // * Drop the `rsc?` annotation, so that `Lowering` only sees `rsc` (or the lack thereof)
+        trm
+      case _ => Term.Annotated(Annot.Modifier(kw)(kwt.toLoc), trm)
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
@@ -2248,7 +2347,7 @@ extends Importer:
     case Reft(base, body) =>
       raise(ErrorReport(msg"Unsupported refinement in this position." -> tree.toLoc :: Nil))
       error
-    case Dummy | _: SplitPoint | _: LexicalNew | _: Region | _: Effectful =>
+    case Dummy | _: SplitPoint | _: LexicalNew | _: LexicalDynamicNew | _: Region | _: Effectful =>
       lastWords(s"Unexpected ${tree.describe} in subterm position: $tree")
     case Dummy | _: SplitPoint | _: Pun | _: LetLike | _: TyTup | _: Directive =>
       raise(ErrorReport(msg"Unsupported term in this position (${tree.describe})." -> tree.toLoc :: Nil))
@@ -2322,6 +2421,9 @@ extends Importer:
       then member.complete()
     val fieldInterpretation = resultInterp.elements
     val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures
+    // * Signatures elaborated once for both a declaration and its definition
+    val sharedSignatures = mutable.Map.empty[Str, Opt[Term]]
+    val sharedSignatureOwners = mutable.Map.empty[Str, TermSymbol]
     
     // * Check for double/incompatible definitions and declarations
     blk.definedSymbols.foreach: (name, sym) =>
@@ -2658,7 +2760,14 @@ extends Importer:
               case pss => pss
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             
-            val tsym = TermSymbol(k, owner, id) // TODO?
+            val sharedDefinition = Elaborator.sharedSignatureDefinition(sym)
+            // A separately written signature belongs to the implementation's lexical boundary.
+            // Allocate that identity before either declaration is elaborated so sharing its term
+            // cannot retain the other declaration's capture marks in the new resolver.
+            val signatureOwner = sharedDefinition.map: definition =>
+              sharedSignatureOwners.getOrElseUpdate(id.name, TermSymbol(definition.k, owner, id))
+            val tsym = if sharedDefinition.exists(_ is td) then signatureOwner.get else TermSymbol(k, owner, id)
+            val signatureCtx = signatureOwner.map(s => ctx.nest(OuterCtx.NonReturnContext(S(s))))
             val bindingScope = ctx.scope
             // Recorded before the definition's own type parameters enter scope.
             rctx.state.lexicalTypeBinders(tsym) = ctx.typeBinders
@@ -2681,13 +2790,21 @@ extends Importer:
                 res
               
               // * Elaborate signature
-              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name)) // FIXME: may elaborate external sig twice!!
-              val s = st.map:
+              val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
+              val sharesSignature = sharedDefinition.exists: defn =>
+                (defn is td) || td.rhs.isEmpty && td.paramLists.isEmpty && td.annotatedResultType.isDefined
+              val signCtx = if sharesSignature then signatureCtx.get else newCtx
+              def elabSignature = st.map:
                 // unwrap possible module modifier
                 // e.g, `fun f: module M`
                 //              ^^^^^^
-                case TypeDef(Mod, st, N) => term(st, Tpe)(using newCtx)
-                case st => term(st, Tpe)(using newCtx)
+                case TypeDef(Mod, st, N) => term(st, Tpe)(using signCtx)
+                case st => term(st, Tpe)(using signCtx)
+              // * A declaration and the definition that consumes its signature share its elaboration, whichever comes
+              // * first in the block.
+              val s =
+                if sharesSignature then sharedSignatures.getOrElseUpdate(id.name, elabSignature)
+                else elabSignature
               
               if td.annotatedResultType.isEmpty then
                 s.foreach: sign =>
@@ -2729,7 +2846,8 @@ extends Importer:
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, 
                 TermDefFlags.empty.copy(isMethod = isMethod, hasResultAnnotation = td.annotatedResultType.isDefined), mfn, annotations, N)(
                 statementLoc, definitionHeaderLoc(td, annotations, statementLoc), S(bindingScope))
-              sym.tsym = S(tsym)
+              // A later standalone declaration must not replace the implementation selected by the member.
+              sym.tsym = signatureOwner.orElse(S(tsym))
               tsym.defn = S(tdf)
               if newResolution then checkDeclaredResult(tdf)
               
@@ -2790,16 +2908,22 @@ extends Importer:
                 val res = TyParam(FldFlags.empty, vce, vs)(targ.toLoc)
                 vs.decl = S(res)
                 res :: Nil
-              targ match
+              // * A variance and a resource modifier may each be written at most once, in either order.
+              def go(t: Tree, vce: Opt[Bool], rscd: Bool): Ls[TyParam] = t match
                 case id: Ident =>
-                  mk(id, N)
-                case Modified(Keywrd(Keyword.`in`), id: Ident) =>
-                  mk(id, S(false))
-                case Modified(Keywrd(Keyword.`out`), id: Ident) =>
-                  mk(id, S(true))
+                  mk(id, vce)
+                case Modified(Keywrd(Keyword.`in`), body) if vce.isEmpty =>
+                  go(body, S(false), rscd)
+                case Modified(Keywrd(Keyword.`out`), body) if vce.isEmpty =>
+                  go(body, S(true), rscd)
+                // * The parameter is still declared, so its uses resolve.
+                case Modified(kw @ Keywrd(_: Keyword.RscLike), body) if !rscd =>
+                  raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
+                  go(body, vce, rscd = true)
                 case _ =>
                   raise(ErrorReport(msg"Unsupported type parameter shape: ${targ.describe}" -> targ.toLoc :: Nil))
                   Nil
+              go(targ, N, rscd = false)
           case N => Nil
         
         newCtx ++= tps.map(tp => tp.sym.name -> tp.sym) // TODO: correct ++?
@@ -3074,6 +3198,11 @@ extends Importer:
         )
         completeIfReady(sym)
         go(sts, Nil, defn :: acc)(N)
+      // * `Tree.desugared` lifts a resource modifier written on a definition to an annotation. It is rejected here,
+      // * where the definition is known, and dropped, keeping the definition.
+      case Annotated(kw @ Keywrd(_: Keyword.RscLike), target @ PossiblyAnnotated(_, d: TypeOrTermDef)) :: sts =>
+        raise(ErrorReport(msg"Resource modifiers apply to types, not to ${d.k.desc} definitions." -> kw.toLoc :: Nil))
+        go(target :: sts, annotations, acc)(statementLoc)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)(statementLoc)
       // * With tight right precedence, `#config(args)` is parsed as `App(Directive(config, Tup()), Tup(args))`.
@@ -3183,7 +3312,9 @@ extends Importer:
   def newOf(td: TypeDef): Ctxl[Opt[Term.New]] =
     td.extension
     match
-    case S(ext) => S(term(ProperNew(S(ext), N), Trm))
+    case S(ext) =>
+      val cls = rejectMisplacedNewModifiers(ext, msg"A parent class takes no instantiation modifiers.")
+      S(term(ProperNew(S(cls), N, N, N), Trm))
     case N => N
     match
     case S(n: Term.New) => S(n)
@@ -3200,8 +3331,10 @@ extends Importer:
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool, inConstructor: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind], Ls[Str])] =
     t.desugared.asParam(inUsing).map:
-      case pt @ ParamTree(flags, id, sign, spd, modifiers, annotations) =>
+      case pt @ ParamTree(flags, id, sign, spd, modifiers, annotations, rscModifiers) =>
         log(dbg"Elaborating ParamTree: ${pt}")
+        rscModifiers.foreach: kw =>
+          raise(ErrorReport(msg"Resource modifiers apply to types, not to parameters." -> kw.toLoc :: Nil))
         val flg = flags.copy(isVal = flags.isVal || inDataClass)
         val (canonicalId, aliases) = symbolicSuffixBase(id.name) match
           case S(base) =>
@@ -3600,11 +3733,16 @@ extends Importer:
   
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case TyTup(ps) =>
+      def mk(id: Ident): Ls[Param] =
+        val sym = VarSymbol(id, erasedType = N, mut = false)
+        sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
+        Param.simple(sym) :: Nil
       val vs = ps.flatMap:
-        case id: Ident =>
-          val sym = VarSymbol(id, erasedType = N, mut = false)
-          sym.decl = S(TyParam(FldFlags.empty, N, sym)(id.toLoc))
-          Param.simple(sym) :: Nil
+        case id: Ident => mk(id)
+        // * The parameter is still declared, so its uses resolve.
+        case Modified(kw @ Keywrd(_: Keyword.RscLike), id: Ident) =>
+          raise(Annot.Resource.unsupportedOnTyParam(kw.kw, kw.toLoc))
+          mk(id)
         case t =>
           raise(ErrorReport(msg"Unsupported type parameter shape: ${t.describe}" -> t.toLoc :: Nil))
           Nil

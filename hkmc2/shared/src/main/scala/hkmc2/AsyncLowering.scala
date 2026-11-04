@@ -64,11 +64,11 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
       val newBody = transformer.applyBlock(wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))
       collectedFunDefn += FunDefn(N, outerBms, outerDsym, outerSignature, newBody)(fun.configOverride, noAsync)
       val callArgs = (fun.owner.iterator.map(s => Arg(N, Value.This(s)(N))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym)(N))))).toList
-      val outerCall = Call(Value.MemberRef(outerBms, outerDsym)(N), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
+      val outerCall = Call(Value.MemberRef(outerBms, outerDsym)(N), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N)
       val tmp = TempSymbol(N, initErasedType = outerCall.erasedType, "tmp")
       val wrapperBody = blockBuilder
         .assignScoped(tmp, outerCall)
-        .ret(Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N))
+        .ret(Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, N))
       val wrapper = wrappers(fun.dSym)
       FunDefn(fun.owner, fun.sym, wrapper.symbol, wrapper.signature, wrapperBody)(fun.configOverride, noAsync)
     

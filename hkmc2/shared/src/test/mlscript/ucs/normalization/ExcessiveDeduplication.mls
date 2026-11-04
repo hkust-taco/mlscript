@@ -74,7 +74,7 @@ if
 //│     }
 //│   }
 //│   if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│     element0$ = runtime.checkCall(runtime.Tuple.get(y, 0));
+//│     element0$ = runtime.checkCall(runtime.Tuple.get(y /* as! Unknown */, 0));
 //│     tmp = 1 + element0$;
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }

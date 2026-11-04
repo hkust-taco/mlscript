@@ -345,7 +345,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     // calls `fun` with possibly remapped `args`
     def mkCall(fun: Path, args: Ls[LocalVarSymbol])(k: Result => Block): Block =
       applyArgs(args.map(s => Arg(N, s.asPath))): args2 =>
-        k(Call(fun, args2 ne_:: Nil)(CallMetadata.defaultMlsFun, N))
+        k(Call(fun, args2 ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, N))
     
     override def applyResult(r: Result)(k: Result => Block): Block =
       r match

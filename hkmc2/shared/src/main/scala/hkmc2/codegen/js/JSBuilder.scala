@@ -269,9 +269,9 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     paramLists match
     case Nil => body
     case params :: Nil =>
-      Return(Lambda(params, body)(if generator then Annot.Generator()(N) :: Nil else Nil, N))
+      Return(Lambda(params, body)(if generator then Annot.Generator()(N) :: Nil else Nil, rsc = false, N))
     case params :: rest =>
-      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil, N))
+      Return(Lambda(params, curriedFunctionBody(rest, body, generator))(Nil, rsc = false, N))
 
   /** Looks through the casts that a JS program does not materialize. */
   @tailrec
@@ -405,11 +405,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       // * `resultQual` parenthesizes a literal receiver, notably a negative number such as `-1`,
       // * which would otherwise bind more loosely than the following bracket.
       case DynSelectKind.Member(_) | DynSelectKind.Unknown => doc"${resultQual(qual)}[${result(fld)}]"
-    case Instantiate(mut, cls, argss) =>
+    // * TODO: handle `rsc`
+    case inst @ Instantiate(cls, argss) =>
       val calls = argss.foldLeft(resultInst(cls)): (acc, args) =>
         doc"${acc}(${args.map(argument).mkDocument(", ")})"
       val inner = doc"new $calls"
-      if mut then inner else doc"$freeze(${inner})"
+      if inst.mut then inner else doc"$freeze(${inner})"
     case Tuple(mut, es) if es.isEmpty => if mut then "[]" else doc"$freeze([])"
     case Tuple(mut, es) =>
       val inner =

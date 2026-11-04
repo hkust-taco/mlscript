@@ -101,7 +101,8 @@ extension (sym: WasmSlotSymbol)
     summon[Ctx].elabCtx.givenIn:
       sym match
         case l: LocalVarSymbol => l.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
-        case cls: ClassSymbol => CanonicalErasedValueType(rsc = S(false), cls).wasmType.getOrElse(RefType.anyref)
+        // * Any class can be instantiated with `new rsc`, so its `this` is `rsc?`.
+        case cls: ClassSymbol => CanonicalErasedValueType(rsc = N, cls).wasmType.getOrElse(RefType.anyref)
         case mod: ModuleOrObjectSymbol => mod.erasedType.flatMap(_.wasmType).getOrElse(RefType.anyref)
         case _: (PatternSymbol | TopLevelSymbol | BlockMemberSymbol) => RefType.anyref
 
@@ -1829,6 +1830,14 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             r.toLoc,
           )
 
+    // * Only a partial application can be a resource. As functions with multiple parameter lists are not supported yet,
+    // * no program with one compiles anyway.
+    case call: Call if call.rsc =>
+      errExpr(
+        Ls(msg"WatBuilder::result for a resource Call(...) is not implemented yet" -> r.toLoc),
+        extraInfo = S(r.toString),
+      )
+
     case Call(sel @ Select(qual, _), argss) if sel.symbol.flatMap(predeclaredClassMethodSym).nonEmpty =>
       if argss.length > 1 then
         return errExpr(
@@ -2030,7 +2039,13 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           extraInfo = S(dyn),
         )
 
-    case Instantiate(_, cls, argss) =>
+    case inst: Instantiate if inst.rsc =>
+      errExpr(
+        Ls(msg"WatBuilder::result for a resource Instantiate(...) is not implemented yet" -> r.toLoc),
+        extraInfo = S(r.toString),
+      )
+
+    case Instantiate(cls, argss) =>
       if argss.length > 1 then
         return errExpr(
           Ls(msg"WatBuilder::result for Instantiate(...) with multiple argument lists is not supported yet" -> r.toLoc),
@@ -2337,7 +2352,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
-                      Return(Lambda(ps, block)(Nil, N))
+                      Return(Lambda(ps, block)(Nil, rsc = false, N))
                   // Nested functions are not predeclared in `program` - declare them now.
                   // Note that predeclaring functions twice causes an orphaned type to be duplicated in the module.
                   if ctx.getFunc(sym).isEmpty then predeclareTopLevelFun(sym, ps)

@@ -49,7 +49,7 @@ class LoweringCtx(
   def collectScopedSym(s: ScopedSymbol) = definedSymsDuringLowering.add(s)
   def collectScopedSyms(s: ScopedSymbol*) = definedSymsDuringLowering.addAll(s)
   def registerTempSymbol(trm: Option[Term], erasedType: Opt[ErasedValueType], dbgNme: Str = "tmp")(using State) =
-    val tmp = new TempSymbol(trm, erasedType, dbgNme)
+    val tmp = TempSymbol(trm, erasedType, dbgNme)
     definedSymsDuringLowering.add(tmp)
     tmp
   def getCollectedSym: collection.Set[ScopedSymbol] = definedSymsDuringLowering
@@ -578,7 +578,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             raise(ErrorReport(
               msg"Extending a partially applied class is not supported" -> loc :: Nil,
               source = Diagnostic.Source.Compilation))
-          k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, true, Nil), loc))
+          k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, true, Nil), rsc = false, loc))
       zipArgs(ctorParamLists.lists, args, Nil)
     case Nil =>
       if !ctorParamLists.lists.isEmpty then
@@ -586,12 +586,34 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           msg"Extending a partially applied class is not supported" -> loc :: Nil,
           source = Diagnostic.Source.Compilation))
       // * No arguments to a super ctor means a nullary call, e.g., `extends C` means `extends C()`
-      k(Call(fr, Nil ne_:: Nil)(CallMetadata(isMlsFun, true, Nil), loc))
+      k(Call(fr, Nil ne_:: Nil)(CallMetadata(isMlsFun, true, Nil), rsc = false, loc))
   
+  /** Whether the resource modifiers in `annots` make a function value (a lambda or a partial application) a resource.
+    * A function value is not a resource unless stated otherwise.
+    */
+  def functionValueRsc(annots: Ls[Annot]): Bool =
+    annots.exists:
+      case Annot.Resource(S(annotRsc)) => annotRsc
+      case Annot.Resource(N) =>
+        softAssert(false, "`rsc?` on function values should be dropped during elaboration")
+        false
+      case _ => false
+
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
     * when they correspond to parameter lists of the same callee. */
   def lowerMultiCall(fr: Path, isMlsFun: Bool, annotations: Ls[Annot], args: Ls[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+    // * `Elaborator` records the modifier of `rsc f(x)` as an annotation on the call, as for `rsc (x => ...)`.
+    val (rscAnnots, callAnnots) = annotations.partition:
+      case Annot.Resource(_) => true
+      case _ => false
+    // * The parameter lists of the callee, if it is known.
+    val calleeParamss = fr.targetSymbol match
+      case S(fs: TermSymbol) => fs.defn.map(_.params)
+      case _ => N
+    // * Only a call known to leave some parameter lists unapplied is a function value that can be a resource.
+    def rejectNotPartial: Unit =
+      if rscAnnots.nonEmpty then raise(Annot.Resource.notPartial(loc, calleeKnown = calleeParamss.isDefined))
     val isConstructor = fr.targetSymbol.exists:
       case _: ClassCtorSymbol => true
       case _ => false
@@ -602,28 +624,30 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         if isConstructor then lowerConstructorArgs(args, ps, isMlsFun)(next)
         else lowerArgs(args, expectedParamTypes(ps, args))(next)
       case (Nil, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
+        rejectNotPartial
+        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, callAnnots), rsc = false, loc))
       case (Nil, args :: remainingArgss) =>
+        rejectNotPartial
         acc.reverse match
-        case Nil => lowerRemainingCalls(fr, args, remainingArgss, annotations, loc)(k)
+        case Nil => lowerRemainingCalls(fr, args, remainingArgss, callAnnots, loc)(k)
         case acc: NELs[Ls[Arg]] =>
-          val call = Call(fr, acc)(CallMetadata(isMlsFun, mayRaiseEffects, Nil), loc)
+          val call = Call(fr, acc)(CallMetadata(isMlsFun, mayRaiseEffects, Nil), rsc = false, loc)
           val tmp = loweringCtx.registerTempSymbol(N, erasedType = call.erasedType, "baseCall")
-          Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, annotations, loc)(k))
+          Assign(tmp, call, lowerRemainingCalls(tmp.asSimpleRef, args, remainingArgss, callAnnots, loc)(k))
       case (_ :: _, Nil) =>
-        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
-    fr.targetSymbol match
-    case S(fs: TermSymbol) =>
-      fs.defn match
-      case S(td: TermDefinition) =>
-        zipArgs(td.params, args, Nil, fs.mayRaiseEffects)
-      case _ => zipArgs(Nil, args, Nil, fs.mayRaiseEffects)
-    case _ => zipArgs(Nil, args, Nil, true)
+        // * `Result.erasedType` asserts this flag against the callee's erased signature rather than via `td.params`.
+        // * This relies on `td` having the same number of paramlists as its erased signature.
+        val rsc = functionValueRsc(rscAnnots)
+        k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, callAnnots), rsc, loc))
+    val mayRaiseEffects = fr.targetSymbol match
+      case S(fs: TermSymbol) => fs.mayRaiseEffects
+      case _ => true
+    zipArgs(calleeParamss.getOrElse(Nil), args, Nil, mayRaiseEffects)
   
   def lowerRemainingCalls(base: Path, args: Term, remainingArgss: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])
         (k: Result => Block)(using LoweringCtx): Block =
     lowerArgs(args, Nil): as =>
-      val call = Call(base, as ne_:: Nil)(CallMetadata(false, true, annotations), loc)
+      val call = Call(base, as ne_:: Nil)(CallMetadata(false, true, annotations), rsc = false, loc)
       remainingArgss match
       case Nil => k(call)
       case args :: remainingArgss =>
@@ -636,10 +660,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * when they correspond to constructor parameter lists of the same class.
     * If fewer argument lists are provided than constructor parameter lists, eta-expands
     * the missing ones with fresh lambdas (avoiding reliance on mutable JS class curry semantics). */
-  def lowerMultiInstantiate(mut: Bool, cls: Path, ctorParamLists: ConstructorParams, args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
+  def lowerMultiInstantiate(mut: Bool, rsc: Bool, cls: Path, ctorParamLists: ConstructorParams, args: Ls[Term], annotations: Ls[Annot], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
     // Nullary instantiations are represented with one empty argument list, matching existing `Instantiate` usage.
     def buildInstantiate(argss: Ls[Ls[Arg]]): Instantiate =
-      Instantiate(mut, cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations), loc)
+      Instantiate(cls, if argss.isEmpty then Nil :: Nil else argss)(InstantiateMetadata(annotations), mut, rsc, loc)
     // * Zip constructor param lists with argument lists, accumulating lowered args.
     // * Consumes one argument list per constructor param list; when all ctor params are
     // * consumed but extra args remain, falls back to `Call` nodes on the result.
@@ -668,11 +692,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             val freshParamList = LoweredParamList(ps.flags, freshParams, N)(ps.toLoc)
             if ctorParamLists.isMls then
               val freshArgs = freshSyms.map(s => Arg(N, s.asSimpleRef))
-              Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil, loc)
+              Lambda(freshParamList, Return(etaExpand(rest, accArgss :+ freshArgs)))(Nil, rsc = false, loc)
             else
               val forwarding = OptionalParams.forwarding(freshParamList, fixedArity = true)
               Lambda(forwarding.params,
-                Return(etaExpand(rest, accArgss :+ forwarding.args)))(Nil, loc)
+                Return(etaExpand(rest, accArgss :+ forwarding.args)))(Nil, rsc = false, loc)
         k(etaExpand(remainingParamss, acc.reverse))
     if ctorParamLists.lists.isEmpty then
       // * Need to specially handle no-param classes
@@ -790,6 +814,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     defnSym.defn.exists:
       case td: TermDefinition => (td.k is syntax.Fun) && td.params.isEmpty
       case _ => false
+
+  /** The definition of `defnSym` if a `rsc` annotation can create a function value. */
+  private def rscExpandable(defnSym: DefinitionSymbol[?]): Opt[TermDefinition] =
+    defnSym.defn.collect:
+      case td: TermDefinition if (td.k is syntax.Fun) && td.params.nonEmpty && td.hasDeclareModifier.isEmpty => td
   
   /** Consume wildcard lookup results, retaining the receiver selected by resolution. */
   private def openSelection(ref: UnresolvedRef)(k: (Term, Opt[BlockMemberSymbol], Opt[DefinitionSymbol[?]]) => Block)(using LoweringCtx): Block =
@@ -965,6 +994,42 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               msg"target: ${t.describe}" -> t.loc
             , S(sel), source = Diagnostic.Source.Compilation)
       N
+
+  /** Creates a resource lambda accepting the same arguments as the callee's first parameter list, and calls `callee`.
+    *
+    * The lambda's parameters are all untyped, but each non-rest argument is cast to the corresponding erased type of
+    * the callee function's parameter.
+    */
+  private def rscFunctionValue(callee: Path, td: TermDefinition, loc: Opt[Loc])(using LoweringCtx): Lambda =
+    val physical = LoweredParamList.callingConvention(td.params.head)
+    def fresh(p: Param, isRest: Bool): Param =
+      Param(
+        p.flags,
+        // TODO(Derppening): `erasedType = N` for non-rest parameters matches the semantics of lambdas with untyped parameters.
+        // We can change this when erased signatures for lambdas (and function values in general) is implemented.
+        VarSymbol(p.sym.id, erasedType = if isRest then p.sym.erasedType else N, mut = false),
+        N,
+        p.modulefulness,
+        p.annotations,
+      )(p.toLoc)
+    val freshParams =
+      LoweredParamList(
+        physical.flags,
+        physical.params.map(fresh(_, false)),
+        physical.restParam.map(fresh(_, true)),
+      )(physical.toLoc)
+    val forwarding = OptionalParams.forwarding(freshParams, fixedArity = false)
+    val (fixedArgs, spreadArgs) = forwarding.args.span(_.spread.isEmpty)
+    // * `lazyZip` used here since `fixedArgs` may be shorter than `physical.params`,
+    // e.g. when optional params are not provided and are therefore passed via `spreadArgs`
+    val castArgs = fixedArgs.lazyZip(physical.params).map: (arg, p) =>
+      Arg(N, castTo(arg.value, p.sym.erasedType, loc))
+    val call = Call(callee, (castArgs ::: spreadArgs) ne_:: Nil)(
+      CallMetadata(isMlsFun = true, td.tsym.mayRaiseEffects, Nil),
+      rsc = false,
+      loc,
+    )
+    Lambda(forwarding.params, Return(call))(Nil, rsc = true, loc)
   
   def ref(ref: AnyRef_, annots: List[Annot], disamb: Opt[DefinitionSymbol[?]], inStmtPos: Bool)(k: Result => Block)(using LoweringCtx): Block =
     def warnStmt = if inStmtPos then warnPureExprInStmtPos(ref.toLoc, S(ref))
@@ -1002,9 +1067,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme), sig.ret)
         tl.log(dbg"Ref builtin $sym")
         assert(paramLists.length === 1)
-        return k(Lambda(paramLists.head, bodyBlock)(Nil, ref.toLoc))
+        return k(Lambda(paramLists.head, bodyBlock)(Nil, rsc = false, ref.toLoc))
       case N => ()
     case bs: BlockMemberSymbol =>
+      disamb match
+      case S(target) if functionValueRsc(annots) => rscExpandable(target) match
+        case S(td) =>
+          warnStmt
+          return k(rscFunctionValue(bs.asMemberRef(target).withLocOf(ref), td, ref.toLoc))
+        case N => ()
+      case _ => ()
       disamb.flatMap(_.defn) match
       case S(d) if d.hasDeclareModifier.isDefined =>
         // The global property comes from the declaration; a reference may use
@@ -1018,7 +1090,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         if isImplicitNullaryCall(td.tsym) then
           return k(Call(
               bs.asMemberRef(disamb.get).withLocOf(ref), Nil ne_:: Nil
-            )(CallMetadata(isMlsFun = true, mayRaiseEffects = true, annots), ref.toLoc))
+            )(CallMetadata(isMlsFun = true, mayRaiseEffects = true, annots), rsc = false, ref.toLoc))
       case S(td: TermDefinition) =>
         td.tsym.owner match
         case S(owner) =>
@@ -1108,7 +1180,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val k: Result => Block =
       if !isUntyped then k0
       else r =>
-        val l = loweringCtx.registerTempSymbol(N, erasedType = S(ErasedType.Unknown))
+        val l = loweringCtx.registerTempSymbol(N, erasedType = S(ErasedType.Unknown(N)))
         // TODO: Does `@untyped` on a primitive make sense? How should be handle it?
         Assign(l, r, k0(l.asSimpleRef))
     
@@ -1141,7 +1213,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 Call(
                   State.builtinOpsMap("===").asSimpleRef,
                   (bodyResult.asSimpleRef.asArg :: State.runtimeSymbol.asSimpleRef.selSN("Continue").asArg :: Nil) ne_:: Nil,
-                )(CallMetadata.defaultMlsFun, trm.toLoc),
+                )(CallMetadata.defaultMlsFun, rsc = false, trm.toLoc),
                 Match(
                   isContinue.asSimpleRef,
                   (Case.Lit(Tree.BoolLit(true)) -> Continue(label)) :: Nil,
@@ -1195,7 +1267,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         else ref(t, annots, N, inStmtPos = inStmtPos)(k)
     case ref: UnresolvedRef =>
       openSelection(ref)((prefix, member, target) =>
-        setupNamedSelection(prefix, memberIdent(ref.id, member), target, ref.keyAccess, ref.toLoc)(k))
+        setupRscSelection(ref, annots, prefix, memberIdent(ref.id, member), target, ref.keyAccess, ref.toLoc)(k))
     case Capture(base, thru) =>
       term(base, inStmtPos = inStmtPos)(k)
     case t @ st.Ref(sym) =>
@@ -1216,7 +1288,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             msg"Builtin '${sym.nme}' is not a unary operator" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg): ar =>
-          k(Call(sym.asSimpleRef.withLocOf(ref), (Arg(N, ar) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
+          k(Call(sym.asSimpleRef.withLocOf(ref), (Arg(N, ar) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, trm.toLoc))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
         if !sym.binary then raise:
           ErrorReport(
@@ -1247,7 +1319,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case State.orSymbol => mkBooleanMatch(false)
           case _ =>
             subTerm_nonTail(arg2): ar2 =>
-              k(Call(sym.asSimpleRef.withLocOf(ref), (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, trm.toLoc))
+              k(Call(sym.asSimpleRef.withLocOf(ref), (Arg(N, ar1) :: Arg(N, ar2) :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, trm.toLoc))
       case _ => fail:
         ErrorReport(
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
@@ -1494,15 +1566,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       
     case st.Lam(params, body) =>
       warnStmt
+      // * `Elaborator` records the modifier of `rsc (x => ...)` as an annotation on the lambda, as for `new rsc C()`.
+      val rsc = functionValueRsc(annots)
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N, N)
       val affineAnnots = annots.collect:
         case a @ Annot.Affine(0) => a
+      val lam = Lambda(paramLists.head, bodyBlock)(affineAnnots, rsc, trm.toLoc)
       if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
-      then k(Lambda(paramLists.head, bodyBlock)(affineAnnots, trm.toLoc))
+      then k(lam)
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(configOverride = N, annotations = affineAnnots)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(configOverride = N, annotations = lam.liftedAnnotations)
         Define(
           lamDef,
           k(lamDef.asPath))
@@ -1518,7 +1593,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case sup: st.Super => superReference(sup)(k)
     case sel: NewSel => newSelection(sel): (prefix, name, target) =>
       if sel.tupleIndex.nonEmpty then subTerm_nonTail(prefix)(p => selectionPath(sel, p, name, target)(k))
-      else setupNamedSelection(prefix, name, target, sel.keyAccess, sel.toLoc)(k)
+      else setupRscSelection(sel, annots, prefix, name, target, sel.keyAccess, sel.toLoc)(k)
     
     case sel @ Sel(prefix, nme) =>
       if sel.isErroneous then compError else
@@ -1552,18 +1627,31 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       
       
     case DynNew(cls, args) =>
-      subTerm(cls)(sr => lowerMultiInstantiate(false, sr, getClassParamLists(sr), args, annots, trm.toLoc)(k))
+      subTerm(cls)(sr => lowerMultiInstantiate(false, false, sr, getClassParamLists(sr), args, annots, trm.toLoc)(k))
     case Mut(DynNew(cls, args)) =>
-      subTerm(cls)(sr => lowerMultiInstantiate(true, sr, getClassParamLists(sr), args, annots, trm.toLoc)(k))
+      subTerm(cls)(sr => lowerMultiInstantiate(true, false, sr, getClassParamLists(sr), args, annots, trm.toLoc)(k))
     case nw @ (_: New | Mut(_: New)) =>
       val (mut, cls, as, rft, nwtrm) = nw match
         case nwtrm @ New(c, a, r) => (false, c, a, r, nwtrm)
         case Mut(nwtrm @ New(c, a, r)) => (true, c, a, r, nwtrm)
         case _ => spuriousWarning
+      // * The elaborator records the modifier of `new rsc C(...)` as an annotation on the `new` term, and rejects it
+      // * on `new!` and on a refined instantiation, as well as `rsc?` on any instantiation.
+      val (rscAnnots, instAnnots) = annots.partition:
+        case Annot.Resource(_) => true
+        case _ => false
+      val rscAnnotsWellFormed = rscAnnots.forall:
+        case Annot.Resource(S(true)) => nw match
+          case New(_, _, N) | Mut(New(_, _, N)) => true
+          case _ => false
+        case _ => false
+      softAssert(rscAnnotsWellFormed, "only an unrefined `new` can be a resource, and it cannot be `rsc?`")
+      val rsc = rscAnnots.nonEmpty
       classOf(cls, nwtrm): (sr, params) =>
         rft match
-        case N => lowerMultiInstantiate(mut, sr, params, as, annots, trm.toLoc)(k)
+        case N => lowerMultiInstantiate(mut, rsc, sr, params, as, instAnnots, trm.toLoc)(k)
         case S((isym, rft)) =>
+          softAssert(!rsc, "a refined instantiation cannot be a resource")
           val sym = isym.defn.get.bsym
           loweringCtx.collectScopedSym(sym)
           withClassParent(sr): parent =>
@@ -1594,11 +1682,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case Resolved(inner, sym) => TODO(s"lowering for Resolved($inner)")
     case Region(reg, body) =>
       loweringCtx.collectScopedSym(reg)
-      Assign(reg, Instantiate(mut = true, Select(State.globalThisSymbol.asThis, Tree.Ident("Region"))(N, trm.toLoc)(false), Nil :: Nil)(InstantiateMetadata.empty, trm.toLoc),
+      Assign(reg, Instantiate(Select(State.globalThisSymbol.asThis, Tree.Ident("Region"))(N, trm.toLoc)(false), Nil :: Nil)(InstantiateMetadata.empty, mut = true, rsc = false, trm.toLoc),
         term_nonTail(body)(k))
     case RegRef(reg, value) =>
       plainArgs(reg :: value :: Nil): args =>
-        k(Instantiate(mut = true, Select(State.globalThisSymbol.asThis, Tree.Ident("Ref"))(N, trm.toLoc)(false), args :: Nil)(InstantiateMetadata.empty, trm.toLoc))
+        k(Instantiate(Select(State.globalThisSymbol.asThis, Tree.Ident("Ref"))(N, trm.toLoc)(false), args :: Nil)(InstantiateMetadata.empty, mut = true, rsc = false, trm.toLoc))
     case Drop(ref) =>
       subTerm(ref): _ =>
         k(unit)
@@ -1633,14 +1721,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     //   subTerm(t)(k)
   
   def setupTerm(name: Str, args: Ls[Path])(k: Result => Block)(using LoweringCtx): Block =
-    k(Instantiate(mut = false, State.termSymbol.asSimpleRef.selSN(name), args.map(_.asArg) :: Nil)(InstantiateMetadata.empty, N))
+    k(Instantiate(State.termSymbol.asSimpleRef.selSN(name), args.map(_.asArg) :: Nil)(InstantiateMetadata.empty, mut = false, rsc = false, N))
 
   def setupQuotedKeyword(kw: Str): Path =
     State.termSymbol.asSimpleRef.selSN("Keyword").selSN(kw)
 
   def setupSymbol(symbol: ValueSymbol)(k: Result => Block)(using LoweringCtx): Block =
-    k(Instantiate(mut = false, State.termSymbol.asSimpleRef.selSN("Symbol"),
-      (Value.Lit(Tree.StrLit(symbol.nme))(N).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, N))
+    k(Instantiate(State.termSymbol.asSimpleRef.selSN("Symbol"),
+      (Value.Lit(Tree.StrLit(symbol.nme))(N).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, mut = false, rsc = false, N))
 
   def quotePattern(p: FlatPattern)(k: Result => Block)(using LoweringCtx): Block = p match
     case FlatPattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit)(N) :: Nil)(k)
@@ -1896,10 +1984,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     term(t, inStmtPos = inStmtPos):
       case v: Value => k(v)
       case p: Path => k(p)
-      case lam @ Lambda(params, body) =>
+      // * A resource lambda is left as a lambda.
+      case lam @ Lambda(params, body) if !lam.rsc =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         loweringCtx.collectScopedSym(lamSym)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.annot)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(configOverride = N, annotations = lam.liftedAnnotations)
         Define(lamDef, k(lamDef.asPath))
       case r =>
         val l = loweringCtx.registerTempSymbol(N, erasedType = r.erasedType)
@@ -1917,7 +2006,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * the coerced value itself.
     */
   def castTo[R <: Result](r: R, expected: Opt[ErasedValueType], loc: Opt[Loc]): (R | Path) =
-    r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(r.toLoc))
+    r.coerceTo(expected.getOrElse(ErasedType.Unknown(N)), loc.orElse(r.toLoc))
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
@@ -1961,14 +2050,35 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     setupNamedSelection(prefix, disamb.fold(memberIdent(nme, N))(definitionIdent(nme, _)), disamb, N, loc)(k)
 
   private def setupNamedSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]], keyAccess: Opt[Term], loc: Opt[Loc])
-      (k: Result => Block)(using LoweringCtx): Block =
+      (k: Path => Block)(using LoweringCtx): Block =
     subTerm(prefix): p =>
       namedSelection(p, nme, disamb, keyAccess, loc,
         !disamb.isDefined
         // * ^ We assume that resolved selections are well-behaved (will not yield undefined or debind a method)
         // || disamb.exists(_.defn.exists(_.hasDeclareModifier.isEmpty)) // * This checks `declare` members, which is normally unwanted
       )(k)
-  
+
+  /** Lowers a possibly-`rsc`-annotated named selection of `target`. */
+  private def setupRscSelection(
+    receiver: Term,
+    annots: Ls[Annot],
+    prefix: Term,
+    nme: Tree.Ident,
+    target: Opt[DefinitionSymbol[?]],
+    keyAccess: Opt[Term], 
+    loc: Opt[Loc],
+  )(k: Result => Block)(using LoweringCtx): Block =
+    target.filter(_ => functionValueRsc(annots)).flatMap(rscExpandable) match
+    case S(td) =>
+      setupNamedSelection(prefix, nme, target, keyAccess, loc)(callee => k(rscFunctionValue(callee, td, loc)))
+    case N =>
+      annots.foreach:
+        case annot @ Annot.Resource(_) =>
+          // * Report if the `rsc` annotation on this target has no effect, which is only known after the selection lowers.
+          raise(Annot.Resource.noEffect(annot.toLoc, receiver, N))
+        case _ => ()
+      setupNamedSelection(prefix, nme, target, keyAccess, loc)(k)
+
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedValueType])
       (using LoweringCtx): (List[LoweredParamList], Block) =
     val physicalParams = paramLists match
@@ -2007,13 +2117,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         .sel(Tree.Ident("sliceArray"), State.tupleSliceArraySymbol)
       // * `Tuple.sliceArray(xs, i, j)` drops the first `i` and the last `j` elements of `xs`.
       def slice(xs: Path, i: Int, j: Int): Result =
-        Call(tupleSlice, (xs :: int(i) :: int(j) :: Nil).map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+        Call(tupleSlice, (xs :: int(i) :: int(j) :: Nil).map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, N)
       // * The sanity check emitted by the code generator only knows about the lowered parameter list,
       // * so we check that the arguments of the trailing parameters are present here.
       val check = Option.when(config.sanityChecks.isDefined):
         Call(State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("checkVariadicArgs"), State.checkVariadicArgsSymbol),
           (Value.Lit(Tree.StrLit(name.getOrElse("")))(N) :: int(layout.minimumCount) :: int(layout.required.length) :: args :: Nil)
-            .map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+            .map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, N)
       val prologue: LoweringCtx ?=> Block => Block = body =>
         layout.extracted.foreach((param, _) => loweringCtx.collectScopedSym(param.sym))
         val extracted = layout.extracted.foldRight(body):
@@ -2071,13 +2181,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   
   def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =
     def warn(annot: Annot, msg: Opt[Message] = N) =
-      val message = msg match
-        case N => msg"This annotation is not supported on ${receiver.describe} terms."
-        case S(value) => value
-      raise:
-        WarningReport(
-          msg"This annotation has no effect." -> annot.toLoc ::
-          message -> receiver.toLoc :: Nil)
+      raise(Annot.noEffect(annot.toLoc, receiver, msg))
+    def reject(annot: Annot) =
+      raise(Annot.Resource.noEffect(annot.toLoc, receiver, N))
     
     annotations.foreach:
       case Annot.Untyped() => ()
@@ -2089,6 +2195,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case st.App(_, _) | New(_, _, _) | DynNew(_, _) | Mut(_: New | _: DynNew) => ()
         case st.Resolved(_, defnSym) if isImplicitNullaryCall(defnSym) => ()
         case _ => warn(annot)
+      case annot @ Annot.Resource(_) => receiver match
+        // * A call to a built-in symbol is never partial, and is lowered without `lowerMultiCall`.
+        case st.App(BuiltinRef(_), _) => raise(Annot.Resource.notPartial(receiver.toLoc, calleeKnown = true))
+        // * Whether a call is a partial application is only known once its callee is lowered (see `lowerMultiCall`).
+        case New(_, _, N) | Mut(New(_, _, N)) | st.Lam(_, _) | st.App(_, _) => ()
+        case memberRef: st.MemberRef
+        if memberRef.resolvedTargets.distinct.foldSingleton(_ => false)(rscExpandable(_).isDefined) => ()
+        // * Only references: `ref` does not receive the annotations of a resolved selection.
+        case st.Resolved(st.Ref(_: BlockMemberSymbol), defnSym) if rscExpandable(defnSym).isDefined => ()
+        // * A selection's target is only known once it is lowered: `setupRscSelection` reports a modifier without effect.
+        // * Class values and tuple indices are lowered without it.
+        case sel: NewSel if !sel.isClassValue && sel.tupleIndex.isEmpty => ()
+        case _: UnresolvedRef => ()
+        case _ => reject(annot)
       case a @ Annot.TailCall() => receiver match
         case st.App(BuiltinRef(_), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))
         case st.App(_, _) => ()
@@ -2113,7 +2233,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       case ((sym, res), acc) => Assign(sym, res, acc)
   
   private def pureCall(fn: Path, args: Ls[Arg]): Result =
-    Call(fn, args ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+    Call(fn, args ne_:: Nil)(CallMetadata.defaultMlsFun, rsc = false, N)
   
   extension (k: Block => Block)
     def |>: (b: Block): Block = k(b)

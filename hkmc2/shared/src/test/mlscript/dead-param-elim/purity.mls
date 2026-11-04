@@ -16,9 +16,11 @@ g(null)
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
-//│ define f⁰ as fun f¹() { return 0 };
+//│ define f⁰ as fun f¹() {
+//│   return 0
+//│ };
 //│ define g⁰ as fun g¹(o) { do o.x﹖; return f¹() };
-//│ return g¹(null)
+//│ return g¹((null as! Unknown))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'x')
 
@@ -42,7 +44,7 @@ g(null, null)
 //│   do p.y﹖;
 //│   return f³(arg)
 //│ };
-//│ return g³(null, null)
+//│ return g³((null as! Unknown), (null as! Unknown))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of null (reading 'x')
 

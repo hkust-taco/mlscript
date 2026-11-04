@@ -229,12 +229,12 @@ sum(3)
 //│ define last⁰ as fun last¹(n, prev?) {
 //│   loop loopLabel:
 //│     let scrut, scrut1, tmp2, tmp3;
-//│     set scrut = Predef⁰.equals⁰(n, 0);
+//│     set scrut = Predef⁰.equals⁰((n as! Unknown), 0);
 //│     match scrut
 //│       true =>
 //│         return [prev]
 //│       else
-//│         set scrut1 = Predef⁰.equals⁰(n, 1);
+//│         set scrut1 = Predef⁰.equals⁰((n as! Unknown), 1);
 //│         match scrut1
 //│           true =>
 //│             set tmp2 = -⁰(n, 1);

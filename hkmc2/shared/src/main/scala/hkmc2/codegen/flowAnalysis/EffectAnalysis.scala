@@ -40,7 +40,7 @@ object EffectAnalysis:
       val (exprId, whichArgList) = id.exprId
       val call = exprId.getResult match
         case Call(fun, _) => s"call ${showPath(fun)}@${exprId.showRefSite}"
-        case Instantiate(_, cls, _) => s"instantiate ${showPath(cls)}@${exprId.showRefSite}"
+        case Instantiate(cls, _) => s"instantiate ${showPath(cls)}@${exprId.showRefSite}"
         case other => s"call $other@${exprId.showRefSite}"
       s"$call#$whichArgList @ ${id.instId.showInstId}"
     

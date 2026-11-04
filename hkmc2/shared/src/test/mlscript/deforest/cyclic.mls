@@ -166,13 +166,5 @@ fun zipWith(xsys, f) = if xsys is
   [Nil, Nil] then Nil
 zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > >>> fusing >>>
-//│ deforest > [tx⁰, ty⁰] ->
-//│ deforest > 	match: xsys⁰
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 0)
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 1)
-//│ deforest > [tmp², tmp³] ->
-//│ deforest > 	match: xsys⁰
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 0)
-//│ deforest > 	fields: runtime⁰.Tuple⁰.get⁰(xsys⁰, 1)
 //│ deforest > <<< fusing <<<
 //│ = Nil

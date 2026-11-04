@@ -226,7 +226,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       override def applyResult(r: Result): Unit = r match
         // do not search the ref to the class
-        case Instantiate(mut, RefOfDefn(S(d), _), argss) =>
+        case Instantiate(RefOfDefn(S(d), _), argss) =>
           argss.flatten.foreach(applyArg)
         // for class constructors
         case Call(RefOfDefn(S(d), _), argss) =>
@@ -375,11 +375,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                   def join2: Block =
                     // Resolve reference to unlifted object
                     resolveDefnRef(d, r) match
-                      case Some(value) => k(c.copy(fun = value, argss = newArgss.ne_!)(c.metadata, c.toLoc))
+                      case Some(value) => k(c.copy(fun = value, argss = newArgss.ne_!)(c.metadata, c.rsc, c.toLoc))
                       case None => super.applyPath(c.fun): fun2 =>
                         // Nothing to rewrite
                         if (fun2 is c.fun) && (argss is newArgss) then k(c)
-                        else k(c.copy(fun = fun2, argss = newArgss.ne_!)(c.metadata, c.toLoc))
+                        else k(c.copy(fun = fun2, argss = newArgss.ne_!)(c.metadata, c.rsc, c.toLoc))
                   r match
                     // Call to lifted function: Rewrite using the efficient version
                     case f: LiftedFunc => k(f.rewriteCall(c, newArgss))
@@ -389,16 +389,16 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                         cls.rewriteCall(c, newArgss)(k)
                       case _ => join2
                     case _ => join2
-          case inst @ Instantiate(mut, RefOfDefn(S(d), _), argss) =>
+          case inst @ Instantiate(RefOfDefn(S(d), _), argss) =>
             applyArgss(argss): newArgss =>
               def join =
                 if argss is newArgss then inst
-                else inst.copy(argss = newArgss)(inst.metadata, inst.toLoc)
+                else inst.copy(argss = newArgss)(inst.metadata, inst.mut, inst.rsc, inst.toLoc)
               ctx.rewrittenScopes.get(d) match
                 case N => k(join)
                 case S(c: LiftedClass) => c.rewriteInstantiate(inst, newArgss)(k)
                 case S(r) => resolveDefnRef(d, r) match
-                  case Some(value) => k(Instantiate(inst.mut, value, newArgss)(inst.metadata, inst.toLoc))
+                  case Some(value) => k(Instantiate(value, newArgss)(inst.metadata, inst.mut, inst.rsc, inst.toLoc))
                   case None => k(join)
           case _ => super.applyResult(r)(k)
         
@@ -693,11 +693,17 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     protected final def instantiateCapture: Instantiate =
       if hasCapture then
         Instantiate(
-          true,
           captureClass.sym.asMemberRef(captureClass.isym),
           captureInfo._2.map(
             (sym, _) => sym.asPath.asArg) :: Nil
-        )(InstantiateMetadata.empty, N)
+        )(
+          InstantiateMetadata.empty,
+          mut = true,
+          // TODO(Derppening): Determine the resource-ness from everything that the capture class *captures* -
+          //                   this should be done after the new resolver has landed and no captures are `rsc?`.
+          rsc = false,
+          N,
+        )
       else lastWords("tried to instantiate an empty capture")
     
     protected final def addExtraSyms(b: Block, captureSym: => LocalVarSymbol, objSyms: Iterable[ScopedSymbol]): Block =
@@ -1116,7 +1122,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           syms.map(sym => Arg(N, sym.asSimpleRef)) ::: Arg(S(SpreadKind.Eager), value.asSimpleRef) :: Nil
         case None => syms.map(s => Arg(N, s.asSimpleRef))
       
-      val call = Call(mainSym.asMemberRef(mainDsym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
+      val call = Call(mainSym.asMemberRef(mainDsym), args ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N)
       val bod = Return(call)
       // The wrapper forwards a Promise, Iterator, or remaining function directly. Its Direct signature
       // must not be lowered as another async or generator body. The added capture list still shifts
@@ -1138,12 +1144,12 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     def rewriteCall(c: Call, argss: NELs[List[Arg]])(using ctx: LifterCtxNew): Call =
       if isTrivial then
         if argss is c.argss then c
-        else c.copy(argss = argss)(c.metadata, c.toLoc)
+        else c.copy(argss = argss)(c.metadata, c.rsc, c.toLoc)
       else
         Call.raw(
           mainSym.asMemberRef(mainDsym),
           (formatArgs ::: argss.head) ne_:: argss.tail
-        )(c.metadata.copy(isMlsFun = true), c.toLoc)
+        )(c.metadata.copy(isMlsFun = true), c.rsc, c.toLoc)
     
     def rewriteRef(using ctx: LifterCtxNew): Call =
       if isTrivial then lastWords("tried to rewrite a ref to a trivial function")
@@ -1151,7 +1157,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       Call.raw(
         auxSym.asMemberRef(auxDsym),
         formatArgs ne_:: Nil
-      )(CallMetadata.defaultMlsFun, N)
+      )(CallMetadata.defaultMlsFun, rsc = false, N)
     
     def rewriteImpl: LifterResult[FunDefn] =
       val LifterResult(lifted, extra) = mkFlattenedDefn
@@ -1252,14 +1258,14 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val argsList = appliedMainAndAuxArgs(appliedClsAuxArgs)
       
       val ref = obj.cls.sym.asMemberRef(obj.cls.isym)
-      val inst = Instantiate(false, ref, argsList)(InstantiateMetadata.empty, N)
+      val inst = Instantiate(ref, argsList)(InstantiateMetadata.empty, mut = false, rsc = false, N)
       val bod = Return(inst)
       
       FunDefn(N, flattenedSym, flattenedDSym, FunDefn.Signature.fromParams(allParamLists, ErasedResult.Direct(inst.erasedType)), bod)(N, Nil)
     
     private val flat = Lazy[Defn](mkFlattenedDefn)
     
-    def instObject = Instantiate(false, cls.sym.asMemberRef(cls.isym), formatArgs :: Nil)(InstantiateMetadata.empty, N)
+    def instObject = Instantiate(cls.sym.asMemberRef(cls.isym), formatArgs :: Nil)(InstantiateMetadata.empty, mut = false, rsc = false, N)
     
     // Rewrite a naked reference to a parameterized class constructor.
     // Returns a Call to the curried C$ wrapper partially applied with formatArgs.
@@ -1269,30 +1275,30 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       Call.raw(
         flattenedSym.asMemberRef(flattenedDSym),
         formatArgs ne_:: Nil
-      )(CallMetadata.defaultMlsFun, N)
+      )(CallMetadata.defaultMlsFun, rsc = false, N)
     
     def rewriteInstantiate(inst: Instantiate, argss: List[List[Arg]])(k: Result => Block): Block =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
       val path = cls.sym.asMemberRef(cls.isym)
       if isTrivial then
         if (inst.cls === path) && (inst.argss is argss) then k(inst)
-        else k(inst.copy(cls = path, argss = argss)(inst.metadata, inst.toLoc))
+        else k(inst.copy(cls = path, argss = argss)(inst.metadata, inst.mut, inst.rsc, inst.toLoc))
       else if cls.paramsOpt.isEmpty && cls.auxParams.isEmpty then
         // Paramless class: lifter args go directly into the Instantiate constructor
-        k(Instantiate(inst.mut, path, (formatArgs ::: argss.head) :: argss.tail)(inst.metadata, inst.toLoc))
+        k(Instantiate(path, (formatArgs ::: argss.head) :: argss.tail)(inst.metadata, inst.mut, inst.rsc, inst.toLoc))
       else
         // Parameterized class: use Instantiate with original args + lifter args inserted after the first list
-        k(Instantiate(inst.mut, path, argss.head :: formatArgs :: argss.tail)(inst.metadata, inst.toLoc))
+        k(Instantiate(path, argss.head :: formatArgs :: argss.tail)(inst.metadata, inst.mut, inst.rsc, inst.toLoc))
     
     def rewriteSuperCall(superCall: Call, argss: List[List[Arg]])(k: Result => Block): Block =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
       if isTrivial then k(superCall)
       else if cls.paramsOpt.isEmpty && cls.auxParams.isEmpty then
         // Paramless class: lifter args go directly into the Instantiate constructor
-        k(Call(superCall.fun, (formatArgs ::: argss.head) ne_:: argss.tail)(CallMetadata.defaultMlsFun, superCall.toLoc))
+        k(Call(superCall.fun, (formatArgs ::: argss.head) ne_:: argss.tail)(CallMetadata.defaultMlsFun, rsc = false, superCall.toLoc))
       else
         // Parameterized class: use Instantiate with original args + lifter args inserted after the first list
-        k(Call(superCall.fun, argss.head ne_:: formatArgs ne_:: argss.tail)(CallMetadata.mlsFunWithEffect, superCall.toLoc))
+        k(Call(superCall.fun, argss.head ne_:: formatArgs ne_:: argss.tail)(CallMetadata.mlsFunWithEffect, rsc = false, superCall.toLoc))
     
     def rewriteCall(c: Call, argss: NELs[List[Arg]])(k: Result => Block)(using ctx: LifterCtxNew): Block =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
@@ -1303,16 +1309,16 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         Call.raw(
           flattenedSym.asMemberRef(flattenedDSym),
           (formatArgs :: argss).ne_!
-        )(c.metadata.copy(isMlsFun = true, mayRaiseEffects = false), c.toLoc)
+        )(c.metadata.copy(isMlsFun = true, mayRaiseEffects = false), c.rsc, c.toLoc)
       if isTrivial then
         if c.argss is argss then k(c)
-        else k(c.copy(argss = argss)(c.metadata, c.toLoc))
+        else k(c.copy(argss = argss)(c.metadata, c.rsc, c.toLoc))
       else if cls.paramsOpt.isEmpty && cls.auxParams.isEmpty then
         // Paramless class: unreachable
         lastWords("Call to paramless class")
       else if argss.lengthCompare(clsParamLists.length) === 0 then
         // Parameterized class: Same as Instantiate case
-        k(Instantiate(false, path, argss.head :: formatArgs :: argss.tail)(InstantiateMetadata(c.metadata.annotations), c.toLoc))
+        k(Instantiate(path, argss.head :: formatArgs :: argss.tail)(InstantiateMetadata(c.metadata.annotations), mut = false, rsc = false, c.toLoc))
       else
         // Unsaturated constructor calls must remain ordinary curried calls to
         // the lifted wrapper; only saturated constructor applications may

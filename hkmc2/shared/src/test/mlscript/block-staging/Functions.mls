@@ -66,8 +66,8 @@ staged module Expressions with
 //│ >   if x1 is
 //│ >     [] then 1
 //│ >     [_, _] then
-//│ >       element0_ = x1.0
-//│ >       element1_ = x1.1
+//│ >       element0_ = (x1 as! Unknown).0
+//│ >       element1_ = (x1 as! Unknown).1
 //│ >       if element0_ is
 //│ >         1 then
 //│ >           if element1_ is

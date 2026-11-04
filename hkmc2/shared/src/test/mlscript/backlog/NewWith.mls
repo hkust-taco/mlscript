@@ -4,7 +4,7 @@
 :pe
 :re
 new
-//│ ╔══[PARSE ERROR] Expected 'with' keyword, expression, or block after `new` keyword; found end of input instead
+//│ ╔══[PARSE ERROR] Expected 'with' keyword, 'mut' keyword, 'rsc' keyword, 'rsc?' keyword, expression, or block after `new` keyword; found end of input instead
 //│ ║  l.+1: 	new
 //│ ╙──      	   ^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

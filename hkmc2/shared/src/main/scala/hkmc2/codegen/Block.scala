@@ -414,10 +414,9 @@ object Throw:
     * stack trace and can be caught as an `Error` like any other.
     */
   def error(msg: Str)(using State): Throw = Throw(Instantiate(
-    mut = false,
     State.globalThisSymbol.asThis.selN(Tree.Ident("Error")),
     (Value.Lit(Tree.StrLit(msg))(N).asArg :: Nil) :: Nil,
-  )(InstantiateMetadata.empty, N), annotations = Nil)
+  )(InstantiateMetadata.empty, mut = false, rsc = false, N), annotations = Nil)
 
 case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block)
 extends Block with NonBlockTail with ProductWithTail
@@ -570,11 +569,11 @@ object HandleBlock:
 
   def suspend(tag: Path, handlerFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.suspend
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: handlerFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N)
 
   def handleSuspension(tag: Path, bodyFun: Path)(using Elaborator.Ctx): Result =
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
-    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
+    Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N)
   
   private def create(
       lhs: LocalVarSymbol,
@@ -614,7 +613,7 @@ object HandleBlock:
       N, Nil,
       S(par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Assign(NoSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N), End()),
+      Assign(NoSymbol, Call(State.builtinOpsMap("super").asSimpleRef, args.map(_.asArg) ne_:: Nil)(CallMetadata.mlsFunWithEffect, rsc = false, N), End()),
       End(),
       N,
       N,
@@ -625,7 +624,7 @@ object HandleBlock:
     blockBuilder
       .scopedVars(Set(clsDefn.sym, sym))
       .define(clsDefn)
-      .assign(lhs, Instantiate(mut = true, clsDefn.sym.asMemberRef(cls), Nil :: Nil)(InstantiateMetadata.empty, N))
+      .assign(lhs, Instantiate(clsDefn.sym.asMemberRef(cls), Nil :: Nil)(InstantiateMetadata.empty, mut = true, rsc = false, N))
       .define(bodyDefn)
       .assign(res, handleSuspension(lhs.asSimpleRef, bodyDefn.sym.asMemberRef(bodyDefn.dSym)))
       .rest(rest)
@@ -736,6 +735,9 @@ final case class FunDefn private(
   lazy val noInline: Bool = annotations.exists(_.isInstanceOf[Annot.NoInline]) || generator || async
   lazy val generator: Bool = annotations.exists(_.isInstanceOf[Annot.Generator])
   lazy val async: Bool = annotations.exists(_.isInstanceOf[Annot.Async])
+  lazy val rsc: Bool = annotations.exists:
+    case Annot.Resource(S(true)) => true
+    case _ => false
   lazy val affineInfo: Ls[Int] =
     annotations.collect:
       case Annot.Affine(whichParamList) => whichParamList
@@ -890,7 +892,9 @@ object FunDefn:
     val signature = Signature.fromParams(params, ErasedResult.fromAnnotations(N, annotations))
     val tSym = TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme))
     sym.tsym = S(tSym)
-    FunDefn(owner, sym, tSym, signature, body)(configOverride, annotations)
+    val fd = FunDefn(owner, sym, tSym, signature, body)(configOverride, annotations)
+    tSym.irDefn = S(fd)
+    fd
 
 final case class ValDefn(
     tsym: TermSymbol,
@@ -1109,13 +1113,13 @@ sealed abstract class Result extends Located:
     case Select(q, n) => s"Select(${q.showDbg}, ${n.showDbg})"
     case SuperSelect(q, base, n) => s"SuperSelect(${q.showDbg}, ${base.showDbg}, ${n.showDbg})"
     case DynSelect(q, fld, kind) => s"DynSelect(${q.showDbg}, ${fld.showDbg}, ${kind.showDbg})"
-    case Call(fun, argss) => s"Call(${fun.showDbg}, [${
+    case call @ Call(fun, argss) => s"Call(${if call.rsc then "rsc, " else ""}${fun.showDbg}, [${
       argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
-    case Lambda(params, body) => s"Lambda(${params.showDbg}, ${body.showDbg})"
+    case lam @ Lambda(params, body) => s"Lambda(${params.showDbg}, ${body.showDbg})(rsc = ${lam.rsc})"
     case Record(mut, args) => s"Record($mut, [${args.map(a => s"${a.showDbg} = ${a.value.showDbg}").mkString(", ")}])"
     case Tuple(mut, elems) => s"Tuple($mut, [${elems.map(_.value.showDbg).mkString(", ")}])"
-    case Instantiate(mut, cls, argss) => s"Instantiate($mut, ${cls.showDbg}, [${
-      argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])"
+    case inst @ Instantiate(cls, argss) => s"Instantiate(${cls.showDbg}, [${
+      argss.map(_.map(a => a.value.showDbg).mkString("[", ", ", "]")).mkString(", ")}])(mut = ${inst.mut}, rsc = ${inst.rsc})"
     case Cast(value, target, check) => s"Cast(${value.showDbg}, $target${if check then ", checked" else ""})"
   
   /** The literal underneath any number of *unchecked* casts, or `N` if this result is not one.
@@ -1152,7 +1156,7 @@ sealed abstract class Result extends Located:
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match
     case Call(fun, argss) => fun.subBlocks ::: argss.flatten.flatMap(_.value.subBlocks)
-    case Instantiate(mut, cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
+    case Instantiate(cls, argss) => argss.flatten.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
     case DynSelect(qual, fld, _) => qual.subBlocks ::: fld.subBlocks
     case SuperSelect(qual, base, key) => qual.subBlocks ::: base.subBlocks ::: key.subBlocks
@@ -1162,7 +1166,7 @@ sealed abstract class Result extends Located:
   
   lazy val freeVars: Set[FreeSymbol] = this match
     case Call(fun, argss) => fun.freeVars ++ argss.iterator.flatten.flatMap(_.value.freeVars).toSet
-    case Instantiate(mut, cls, argss) => cls.freeVars ++ argss.iterator.flatten.flatMap(_.value.freeVars).toSet
+    case Instantiate(cls, argss) => cls.freeVars ++ argss.iterator.flatten.flatMap(_.value.freeVars).toSet
     case Cast(value, _, _) => value.freeVars
     case Select(qual, name) => qual.freeVars
     case SuperSelect(qual, base, key) => qual.freeVars ++ base.freeVars ++ key.freeVars
@@ -1178,7 +1182,7 @@ sealed abstract class Result extends Located:
   
   lazy val size: Int = this match
     case Call(fun, argss) => fun.size + argss.iterator.flatten.map(_.value.size).sum
-    case Instantiate(mut, cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
+    case Instantiate(cls, argss) => cls.size + argss.iterator.flatten.map(_.value.size).sum
     case Cast(value, _, _) => value.size
     case Select(qual, name) => qual.size
     case SuperSelect(qual, base, key) => qual.size + base.size + key.size
@@ -1204,7 +1208,8 @@ sealed abstract class Result extends Located:
     // * A `val` or `fun` is a block *member*, so its references are `MemberRef`s rather than `SimpleRef`s, and
     // * its declared type lives on the associated `TermSymbol` - the same shape `Select` reads below.
     case Value.MemberRef(_, disamb: TermSymbol) => disamb.erasedType
-    case Value.This(cls: ClassSymbol) => S(ErasedType.ValueLike(rsc = S(false), cls))
+    // * Any class can be instantiated with `new rsc`, so its `this` is `rsc?`; a module or object is never a resource.
+    case Value.This(cls: ClassSymbol) => S(ErasedType.ValueLike(rsc = N, cls))
     case Value.This(mod: ModuleOrObjectSymbol) => mod.erasedType
     case Value.Lit(_: Tree.IntLit) => S(ErasedType.Int)
     case Value.Lit(_: Tree.DecLit) => S(ErasedType.Num)
@@ -1216,18 +1221,25 @@ sealed abstract class Result extends Located:
     // * express operand-dependent results, which resolution approximates from their representations.
     case Call(Value.SimpleRef(op: BuiltinSymbol), args :: Nil) if args.forall(_.spread.isEmpty) =>
       ErasedType.builtinOperatorResult(op.nme, args.map(_.value)).orElse(op.erasedSignature.flatMap(_.ret))
-    case Call(fun, argss) =>
+    case call @ Call(fun, argss) =>
       val signature = fun match
         case Value.SimpleRef(bs: BuiltinSymbol) => bs.erasedSignature
         case _ => fun.targetSymbol.flatMap:
           case ts: TermSymbol => ts.erasedSignature
           case _ => N
       signature match
-        case S(sig) => argss.sizeCompare(sig.paramLists) match
+        case S(sig) =>
+          val sizeCmp = argss.sizeCompare(sig.paramLists)
+          // * Only a partial application is a function value, so only it can be a resource.
+          // * A definition that writes paramlists must have the same number of paramlists as its erased signature.
+          // * This is required by `Lowering.lowerMultiCall` to check the resource-ness of the call result.
+          assert(sizeCmp < 0 || !call.rsc, s"A call that is not under-applied cannot be 'rsc' (callee '$fun')")
+          sizeCmp match
           // * An exactly-applied call yields the function's result type.
           case 0 => sig.ret
-          // * An under-applied call yields a closure, not a residual definition signature.
-          case c if c < 0 => S(ErasedType.Function(rsc = S(false)))
+          // * An under-applied call yields a closure, not a residual definition signature. It is a resource if the
+          // * call is marked `rsc`.
+          case c if c < 0 => S(ErasedType.Function(rsc = S(call.rsc)))
           // * An over-applied call applies arguments to whatever the function returns, which the function's
           // * signature is oblivious about.
           case _ => N
@@ -1247,14 +1259,15 @@ sealed abstract class Result extends Located:
     case Cast(_, target, _) => S(target)
     // * `Instantiate` always yields an instance of the class, since the constructor is guaranteed to be fully-applied
     // * after lowering.
-    case Instantiate(_, cls, _) =>
+    case inst @ Instantiate(cls, _) =>
       val clsSym = cls.targetSymbol.flatMap:
         case ctor: ClassCtorSymbol => S(ctor.associatedCls)
         case sym => sym.asCls
-      clsSym.map(sym => ErasedType.ValueLike(rsc = S(false), sym))
+      clsSym.map(sym => ErasedType.ValueLike(S(inst.rsc), sym))
     // * A tuple literal is typed as `Array` at runtime.
     case Tuple(_, _) => S(ErasedType.Array)
-    case _: Lambda => S(ErasedType.Function(rsc = S(false)))
+    // * A lambda is a function value. It is a resource if the lambda is marked `rsc`.
+    case lam: Lambda => S(ErasedType.Function(rsc = S(lam.rsc)))
     case _ => N
 
   /** `undefined` is an unspecified value of any representation, including unboxed primitives.
@@ -1267,7 +1280,7 @@ sealed abstract class Result extends Located:
     case _ => false
 
   /** The value type, using the top type when no representation is known. */
-  lazy val erasedType_! : ErasedValueType = erasedType.getOrElse(ErasedType.Unknown)
+  lazy val erasedType_! : ErasedValueType = erasedType.getOrElse(ErasedType.Unknown(N))
 
   /** Coerces this result to `expected`, yielding it unchanged when no coercion is required.
     *
@@ -1312,8 +1325,8 @@ object CallMetadata:
   val mlsFunWithEffect = CallMetadata(true, true, Nil)
 
 
-case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata, val toLoc: Opt[Loc]) extends Result:
-  def withLoc(loc: Opt[Loc]): Call = if loc == toLoc then this else copy()(metadata, loc)
+case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata, val rsc: Bool, val toLoc: Opt[Loc]) extends Result:
+  def withLoc(loc: Opt[Loc]): Call = if loc == toLoc then this else copy()(metadata, rsc, loc)
   lazy val isKnownUnsaturatedCall: Bool =
     fun.targetSymbol match
     case S(ts: TermSymbol) =>
@@ -1321,23 +1334,24 @@ case class Call(fun: Path, argss: NELs[Ls[Arg]])(val metadata: CallMetadata, val
         case fd: FunDefn => argss.lengthCompare(fd.params.length) < 0
         case _ => false
     case _ => false
-  // `metadata` lives in a secondary constructor list, so case-class equality
-  // would otherwise ignore annotations such as @tailcall.
+  // `metadata` and `rsc` live in a secondary constructor list, so case-class equality
+  // would otherwise ignore annotations such as @tailcall and the resource-ness.
   override def equals(obj: Any): Bool = obj match
     case that: Call =>
       fun == that.fun &&
         argss == that.argss &&
-        metadata == that.metadata
+        metadata == that.metadata &&
+        rsc == that.rsc
     case _ => false
   override def hashCode: Int =
-    (fun, argss, metadata).hashCode
+    (fun, argss, metadata, rsc).hashCode
 
 object Call:
   
-  def raw(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Call =
-    new Call(fun, argss)(metadata, toLoc)
+  def raw(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata, rsc: Bool, toLoc: Opt[Loc]): Call =
+    new Call(fun, argss)(metadata, rsc, toLoc)
   
-  def apply(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata, toLoc: Opt[Loc]): Result =
+  def apply(fun: Path, argss: NELs[Ls[Arg]])(metadata: CallMetadata, rsc: Bool, toLoc: Opt[Loc]): Result =
     fun match
     case Value.SimpleRef(sym: BuiltinSymbol) =>
       argss match
@@ -1347,7 +1361,7 @@ object Call:
         evalBuiltin(sym, arg1)(toLoc)(return _)
       case _ =>
     case _ =>
-    raw(fun, argss)(metadata, toLoc)
+    raw(fun, argss)(metadata, rsc, toLoc)
   
   private def literalArgValues(args: Ls[Arg]): Opt[Ls[Value]] =
     args.foldRight[Opt[Ls[Value]]](S(Nil)):
@@ -1391,8 +1405,20 @@ case class InstantiateMetadata(
 object InstantiateMetadata:
   def empty: InstantiateMetadata = InstantiateMetadata(Nil)
 
-case class Instantiate(mut: Bool, cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata, val toLoc: Opt[Loc]) extends Result:
-  def withLoc(loc: Opt[Loc]): Instantiate = if loc == toLoc then this else copy()(metadata, loc)
+case class Instantiate(cls: Path, argss: Ls[Ls[Arg]])(val metadata: InstantiateMetadata, val mut: Bool, val rsc: Bool, val toLoc: Opt[Loc]) extends Result:
+  def withLoc(loc: Opt[Loc]): Instantiate = if loc == toLoc then this else copy()(metadata, mut, rsc, loc)
+  // `metadata`, `mut` and `rsc` live in a secondary constructor list, so case-class equality would otherwise ignore
+  // them.
+  override def equals(obj: Any): Bool = obj match
+    case that: Instantiate =>
+      cls == that.cls &&
+        argss == that.argss &&
+        metadata == that.metadata &&
+        mut == that.mut &&
+        rsc == that.rsc
+    case _ => false
+  override def hashCode: Int =
+    (cls, argss, metadata, mut, rsc).hashCode
 
 /** A coercion of `value` to `target`.
   *
@@ -1434,9 +1460,21 @@ object Cast:
       case Cast(inner, _, innerCheck) => Cast(inner, target, check || innerCheck)(toLoc)
       case _ => new Cast(value, target, check)(toLoc)
 
-case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], val toLoc: Opt[Loc]) extends Result:
-  def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(annot, loc)
+case class Lambda(params: LoweredParamList, body: Block)(val annot: Ls[Annot], val rsc: Bool, val toLoc: Opt[Loc]) extends Result:
+  def withLoc(loc: Opt[Loc]): Lambda = if loc == toLoc then this else copy()(annot, rsc, loc)
   lazy val affine: Bool = annot.exists(_.isInstanceOf[Annot.Affine])
+  def liftedAnnotations: Ls[Annot] = if rsc then Annot.Modifier(Keyword.`rsc`)(toLoc) :: annot else annot
+
+  // `annot` and `rsc` live in a secondary constructor list, so case-class equality would otherwise ignore them
+  override def equals(obj: Any): Bool = obj match
+    case that: Lambda =>
+      params == that.params &&
+        body == that.body &&
+        annot == that.annot &&
+        rsc == that.rsc
+    case _ => false
+  override def hashCode: Int =
+    (params, body, annot, rsc).hashCode
 
 
 case class Tuple(mut: Bool, elems: Ls[Arg])(val toLoc: Opt[Loc]) extends Result:
