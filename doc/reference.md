@@ -480,19 +480,22 @@ getValue(...)
   |> _.someOtherField
 ```
 
-**Resource lambdas and partial applications** — a function value is not a resource unless marked as one:
+**Resource function values** — a function value is not a resource unless marked as one:
 ```mlscript
 rsc (x => x)     // a resource function value
 fun add(x)(y) = x + y
 rsc add(1)       // a resource partial application
+rsc add          // a resource function value, as `rsc (x => add(x))`
 ```
-The modifier has no effect on a call that is not known to leave some of its callee's parameter lists unapplied.
+The modifier has no effect on a call that is not known to leave some of its callee's parameter lists unapplied,
+nor on a reference or selection (such as `M.add` or `obj.method`) that does not resolve to a non-`declare` `fun`
+with parameter lists.
 These are the only expressions a modifier applies to: written on any other one, including an instantiation (whose
 modifier goes inside the `new`, see *Instantiation*), it has no effect and is reported as such.
 
 Note that marking lambdas, calls or references as `rsc?` is a compilation error -
-lambdas and partially applied calls create function values and therefore must decide their resource-ness,
-while all other calls and references already have their resource-ness determined.
+lambdas, partially applied calls and references to `fun`s with parameter lists create function values and therefore
+must decide their resource-ness, while all other calls and references already have their resource-ness determined.
 
 ### Function Declarations (without definition)
 

@@ -816,6 +816,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     defnSym.defn.exists:
       case td: TermDefinition => (td.k is syntax.Fun) && td.params.isEmpty
       case _ => false
+
+  /** The definition of `defnSym` if a `rsc` annotation can create a function value. */
+  private def rscExpandable(defnSym: DefinitionSymbol[?]): Opt[TermDefinition] =
+    defnSym.defn.collect:
+      case td: TermDefinition if (td.k is syntax.Fun) && td.params.nonEmpty && td.hasDeclareModifier.isEmpty => td
   
   /** Consume wildcard lookup results, retaining the receiver selected by resolution. */
   private def openSelection(ref: UnresolvedRef)(k: (Term, Opt[BlockMemberSymbol], Opt[DefinitionSymbol[?]]) => Block)(using LoweringCtx): Block =
@@ -991,6 +996,42 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
               msg"target: ${t.describe}" -> t.loc
             , S(sel), source = Diagnostic.Source.Compilation)
       N
+
+  /** Creates a resource lambda accepting the same arguments as the callee's first parameter list, and calls `callee`.
+    *
+    * The lambda's parameters are all untyped, but each non-rest argument is cast to the corresponding erased type of
+    * the callee function's parameter.
+    */
+  private def rscFunctionValue(callee: Path, td: TermDefinition, loc: Opt[Loc])(using LoweringCtx): Lambda =
+    val physical = LoweredParamList.callingConvention(td.params.head)
+    def fresh(p: Param, isRest: Bool): Param =
+      Param(
+        p.flags,
+        // TODO(Derppening): `erasedType = N` for non-rest parameters matches the semantics of lambdas with untyped parameters.
+        // We can change this when erased signatures for lambdas (and function values in general) is implemented.
+        VarSymbol(p.sym.id, erasedType = if isRest then p.sym.erasedType else N, mut = false),
+        N,
+        p.modulefulness,
+        p.annotations,
+      )(p.toLoc)
+    val freshParams =
+      LoweredParamList(
+        physical.flags,
+        physical.params.map(fresh(_, false)),
+        physical.restParam.map(fresh(_, true)),
+      )(physical.toLoc)
+    val forwarding = OptionalParams.forwarding(freshParams, fixedArity = false)
+    val (fixedArgs, spreadArgs) = forwarding.args.span(_.spread.isEmpty)
+    // * `lazyZip` used here since `fixedArgs` may be shorter than `physical.params`,
+    // e.g. when optional params are not provided and are therefore passed via `spreadArgs`
+    val castArgs = fixedArgs.lazyZip(physical.params).map: (arg, p) =>
+      Arg(N, castTo(arg.value, p.sym.erasedType, loc))
+    val call = Call(callee, (castArgs ::: spreadArgs) ne_:: Nil)(
+      CallMetadata(isMlsFun = true, td.tsym.mayRaiseEffects, Nil),
+      rsc = false,
+      loc,
+    )
+    Lambda(forwarding.params, Return(call))(Nil, rsc = true, loc)
   
   def ref(ref: AnyRef_, annots: List[Annot], disamb: Opt[DefinitionSymbol[?]], inStmtPos: Bool)(k: Result => Block)(using LoweringCtx): Block =
     def warnStmt = if inStmtPos then warnPureExprInStmtPos(ref.toLoc, S(ref))
@@ -1031,6 +1072,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         return k(Lambda(paramLists.head, bodyBlock)(Nil, rsc = false, ref.toLoc))
       case N => ()
     case bs: BlockMemberSymbol =>
+      disamb match
+      case S(target) if functionValueRsc(annots) => rscExpandable(target) match
+        case S(td) =>
+          warnStmt
+          return k(rscFunctionValue(bs.asMemberRef(target).withLocOf(ref), td, ref.toLoc))
+        case N => ()
+      case _ => ()
       disamb.flatMap(_.defn) match
       case S(d) if d.hasDeclareModifier.isDefined =>
         // The global property comes from the declaration; a reference may use
@@ -1221,7 +1269,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         else ref(t, annots, N, inStmtPos = inStmtPos)(k)
     case ref: UnresolvedRef =>
       openSelection(ref)((prefix, member, target) =>
-        setupNamedSelection(prefix, memberIdent(ref.id, member), target, ref.keyAccess, ref.toLoc)(k))
+        setupRscSelection(ref, annots, prefix, memberIdent(ref.id, member), target, ref.keyAccess, ref.toLoc)(k))
     case Capture(base, thru) =>
       term(base, inStmtPos = inStmtPos)(k)
     case t @ st.Ref(sym) =>
@@ -1547,7 +1595,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case sup: st.Super => superReference(sup)(k)
     case sel: NewSel => newSelection(sel): (prefix, name, target) =>
       if sel.tupleIndex.nonEmpty then subTerm_nonTail(prefix)(p => selectionPath(sel, p, name, target)(k))
-      else setupNamedSelection(prefix, name, target, sel.keyAccess, sel.toLoc)(k)
+      else setupRscSelection(sel, annots, prefix, name, target, sel.keyAccess, sel.toLoc)(k)
     
     case sel @ Sel(prefix, nme) =>
       if sel.isErroneous then compError else
@@ -2004,14 +2052,35 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     setupNamedSelection(prefix, disamb.fold(memberIdent(nme, N))(definitionIdent(nme, _)), disamb, N, loc)(k)
 
   private def setupNamedSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]], keyAccess: Opt[Term], loc: Opt[Loc])
-      (k: Result => Block)(using LoweringCtx): Block =
+      (k: Path => Block)(using LoweringCtx): Block =
     subTerm(prefix): p =>
       namedSelection(p, nme, disamb, keyAccess, loc,
         !disamb.isDefined
         // * ^ We assume that resolved selections are well-behaved (will not yield undefined or debind a method)
         // || disamb.exists(_.defn.exists(_.hasDeclareModifier.isEmpty)) // * This checks `declare` members, which is normally unwanted
       )(k)
-  
+
+  /** Lowers a possibly-`rsc`-annotated named selection of `target`. */
+  private def setupRscSelection(
+    receiver: Term,
+    annots: Ls[Annot],
+    prefix: Term,
+    nme: Tree.Ident,
+    target: Opt[DefinitionSymbol[?]],
+    keyAccess: Opt[Term], 
+    loc: Opt[Loc],
+  )(k: Result => Block)(using LoweringCtx): Block =
+    target.filter(_ => functionValueRsc(annots)).flatMap(rscExpandable) match
+    case S(td) =>
+      setupNamedSelection(prefix, nme, target, keyAccess, loc)(callee => k(rscFunctionValue(callee, td, loc)))
+    case N =>
+      annots.foreach:
+        case annot @ Annot.Resource(_) =>
+          // * Report if the `rsc` annotation on this target has no effect, which is only known after the selection lowers.
+          raise(Annot.noEffect(annot.toLoc, receiver, N))
+        case _ => ()
+      setupNamedSelection(prefix, nme, target, keyAccess, loc)(k)
+
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str], returnType: Opt[ErasedValueType])
       (using LoweringCtx): (List[LoweredParamList], Block) =
     val physicalParams = paramLists match
@@ -2130,6 +2199,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         // * Whether a call is a partial application is only known once its callee is lowered (see `lowerMultiCall`).
         case st.App(Ref(_: BuiltinSymbol), _) => warn(annot)
         case New(_, _, N) | Mut(New(_, _, N)) | st.Lam(_, _) | st.App(_, _) => ()
+        case memberRef: st.MemberRef
+        if memberRef.resolvedTargets.distinct.foldSingleton(_ => false)(rscExpandable(_).isDefined) => ()
+        // * Only references: `ref` does not receive the annotations of a resolved selection.
+        case st.Resolved(st.Ref(_: BlockMemberSymbol), defnSym) if rscExpandable(defnSym).isDefined => ()
+        // * A selection's target is only known once it is lowered: `setupRscSelection` reports a modifier without effect.
+        // * Class values and tuple indices are lowered without it.
+        case sel: NewSel if !sel.isClassValue && sel.tupleIndex.isEmpty => ()
+        case _: UnresolvedRef => ()
         case _ => warn(annot)
       case a @ Annot.TailCall() => receiver match
         case st.App(BuiltinRef(_), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))
