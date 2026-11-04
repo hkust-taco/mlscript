@@ -49,7 +49,9 @@ end BindingChecker
   */
 class BlockChecker()(using DebugPrinter, State, Ctx, Raise) extends BindingChecker:
   
-  // N here means no enclosing return contract, unlike an unannotated storage slot.
+  // The representation that a `Return` in the current body must have. Callers of a lambda
+  // or of a function without a declared result see Unknown. N stands for the top-level
+  // program, whose result backends present directly, whatever its representation.
   private var resultType: Opt[ErasedValueType] = N
   
   override def applyProgram(prog: Program): Unit =
@@ -110,9 +112,9 @@ class BlockChecker()(using DebugPrinter, State, Ctx, Raise) extends BindingCheck
     checkTypes(value.erasedType_!.canonicalize, expected.getOrElse(ErasedType.Unknown).canonicalize,
       boundary, loc, allowNarrowing = false)
   
-  private def withResultType(tpe: Opt[ErasedValueType])(body: => Unit): Unit =
+  private def withResultType(tpe: ErasedValueType)(body: => Unit): Unit =
     val saved = resultType
-    resultType = tpe
+    resultType = S(tpe)
     try body finally resultType = saved
   
   override def applyBlock(b: Block): Unit =
@@ -169,12 +171,27 @@ class BlockChecker()(using DebugPrinter, State, Ctx, Raise) extends BindingCheck
     // A generator body returns its payload, while its caller receives an Iterator.
     // Lowered async helpers and forwarding wrappers each carry their own descriptor,
     // so the current definition's body type is the return contract in every case.
-    withResultType(fun.signature.result.bodyType):
+    withResultType(fun.signature.result.bodyType.getOrElse(ErasedType.Unknown)):
       super.applyFunDefn(fun)
   
-  override def applyLam(lam: Lambda): Unit = withResultType(N)(super.applyLam(lam))
-  override def applyClsLikeDefn(cls: ClsLikeDefn): Unit = withResultType(N)(super.applyClsLikeDefn(cls))
-  override def applyCompanionModule(body: ClsLikeBody): Unit = withResultType(N)(super.applyCompanionModule(body))
+  override def applyLam(lam: Lambda): Unit = withResultType(ErasedType.Unknown)(super.applyLam(lam))
+  override def applyClsLikeDefn(cls: ClsLikeDefn): Unit = withResultType(ErasedType.Unknown)(super.applyClsLikeDefn(cls))
+  override def applyCompanionModule(body: ClsLikeBody): Unit = withResultType(ErasedType.Unknown)(super.applyCompanionModule(body))
+  
+  /** Checks arguments against the fixed parameter types of their destination's lists.
+    * A source signature alone does not identify physical slots: lowering may move
+    * optional and trailing parameters into a rest tuple. Only the current MIR
+    * definition (or a builtin's fixed signature) establishes a positional prefix. */
+  private def checkArgs(argss: Ls[Ls[Arg]], paramTypes: Ls[Ls[Opt[ErasedValueType]]], boundary: Message): Unit =
+    // Argument lists beyond the definition's apply to its result, and missing ones
+    // leave a closure, so only the parameter lists present on both sides are checked.
+    argss.lazyZip(paramTypes).foreach: (args, params) =>
+      // A spread makes subsequent positional indices unknown; the preceding fixed
+      // arguments still have a well-defined destination. Additional arguments fill a
+      // rest parameter and omitted ones leave optional parameters unset, so only the
+      // common prefix of arguments and fixed parameters is checked.
+      args.iterator.takeWhile(_.spread.isEmpty).zip(params).foreach: (arg, expected) =>
+        checkValue(arg.value, expected, boundary, arg.value.toLoc)
   
   private def checkCall(call: Call): Unit =
     val paramTypes = call.fun match
@@ -183,19 +200,17 @@ class BlockChecker()(using DebugPrinter, State, Ctx, Raise) extends BindingCheck
         case sym: TermSymbol => sym.irDefn.collect:
           case fun: FunDefn => fixedParamTypes(fun)
         case _ => N
-    // A source signature alone does not identify physical slots: lowering may move
-    // optional and trailing parameters into a rest tuple. Only the current MIR
-    // definition (or a builtin's fixed signature) establishes a positional prefix.
-    paramTypes.foreach: lists =>
-      // Argument lists beyond the definition's apply to its result, and missing ones
-      // leave a closure, so only the parameter lists present on both sides are checked.
-      call.argss.lazyZip(lists).foreach: (args, params) =>
-        // A spread makes subsequent positional indices unknown; the preceding fixed
-        // arguments still have a well-defined destination. Additional arguments fill a
-        // rest parameter and omitted ones leave optional parameters unset, so only the
-        // common prefix of arguments and fixed parameters is checked.
-        args.iterator.takeWhile(_.spread.isEmpty).zip(params).foreach: (arg, expected) =>
-          checkValue(arg.value, expected, msg"a call argument", arg.value.toLoc)
+    paramTypes.foreach(checkArgs(call.argss, _, msg"a call argument"))
+  
+  private def checkInstantiate(inst: Instantiate): Unit =
+    val cls = inst.cls.targetSymbol.flatMap:
+      case ctor: ClassCtorSymbol => S(ctor.associatedCls)
+      case sym => sym.asCls
+    // Instantiation argument lists correspond to the main parameter list followed by
+    // the auxiliary ones, as `Lowering.lowerMultiInstantiate` builds them.
+    cls.flatMap(_.irClsLikeDefn).foreach: defn =>
+      val paramTypes = (defn.paramsOpt.iterator ++ defn.auxParams).map(_.params.map(_.sym.erasedType)).toList
+      checkArgs(inst.argss, paramTypes, msg"a constructor argument")
   
   private def checkCast(cast: Cast): Unit =
     (cast.value.erasedType_!.canonicalize, cast.target.canonicalize) match
@@ -209,6 +224,7 @@ class BlockChecker()(using DebugPrinter, State, Ctx, Raise) extends BindingCheck
   override def applyResult(result: Result): Unit =
     result match
       case call: Call => checkCall(call)
+      case inst: Instantiate => checkInstantiate(inst)
       case cast: Cast => checkCast(cast)
       case _ => ()
     super.applyResult(result)

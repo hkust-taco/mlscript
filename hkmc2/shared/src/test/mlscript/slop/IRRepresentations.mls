@@ -78,6 +78,18 @@ fun nestedReturns(): Int =
 nestedReturns()
 //│ = 42
 
+// Constructor arguments enter the class's typed parameter slots through a cast,
+// including in auxiliary parameter lists.
+:checkIR
+:noInline
+:expect [1, "two"]
+class Pair(val first: Int)(val second: Str)
+fun pair(first: Any, second: Any) = new Pair(first)(second)
+let made = pair(1, "two")
+[made.first, made.second]
+//│ = [1, "two"]
+//│ made = Pair(1)
+
 // Inlining propagates the literal into the coercion to the parameter's class. A cast between
 // unrelated reference types fails at run time but still has a representation, unlike a cast
 // involving an unboxed primitive.
@@ -121,25 +133,32 @@ fun mixed(value: Int32 | Str) = 0
 //│ ╙── The value and its destination refer to different copies of type 'Local'
 //│ = [Local, Local]
 
-// TODO: String range patterns store the extracted head in a Str temporary without a cast.
+// TODO: Pattern lowering binds typed temporaries, such as a string's head, to calls of
+// untyped runtime helpers without a cast. Coercing every `Split.Let` value fixes this,
+// but the simplifier then stops folding and propagating through the new checked casts.
 :fixme
 :checkIR
+:expect [true, false]
 pattern Lower = "a"..="z"
+["q" is Lower, "Q" is Lower]
 //│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'stringHead'
 //│ ╙── The value has type 'Unknown', but its destination requires 'Str'
+//│ = [true, false]
 
-// TODO: Tail-call rewriting assigns the spread argument to the Array-typed rest parameter without a cast.
-:fixme
+// Tail-call rewriting reuses the spread operand as the Array-typed rest parameter.
 :checkIR
+:expect 3
 @tailrec fun count(n)(...rest) = if rest is
   [] then n
   [_, ...more] then count(n + 1)(...more)
-//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'rest'
-//│ ║  l.+1: 	@tailrec fun count(n)(...rest) = if rest is
-//│ ║        	                         ^^^^
-//│ ╟── The value has type 'Unknown', but its destination requires 'Array'
-//│ ║  l.+1: 	@tailrec fun count(n)(...rest) = if rest is
-//│ ╙──      	                         ^^^^
+count(0)(1, 2, 3)
+//│ = 3
+
+// A spread operand of another type is copied into a fresh rest array, as the call would do.
+:checkIR
+@tailrec fun chars(n)(...rest) = if n > 0 then chars(n - 1)(..."ab") else rest
+chars(1)()
+//│ = ["a", "b"]
 
 // TODO: Inlining `|>` turns a call of a function value into a direct call to `describe`,
 // but does not coerce the argument to the type of the callee's parameter.
@@ -151,3 +170,13 @@ produce("a") |> describe
 //│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at a call argument
 //│ ╙── The value has type 'Unknown', but its destination requires 'Str'
 //│ = "a"
+
+// Lifting replaces the closure argument by a temporary holding the partially applied
+// lifted function, which keeps the Function representation of the constructor slot.
+:checkIR
+:lift
+:expect 42
+class Thunk(val run: () -> Int)
+fun delay(value: Int) = new Thunk(() => value)
+delay(42).run()
+//│ = 42
