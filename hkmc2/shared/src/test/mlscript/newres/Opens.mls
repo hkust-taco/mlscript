@@ -141,7 +141,7 @@ open Later { absent }
 module Overloaded {
   class Item { fun answer() = 9 }
   fun Item() = 11
-  mut val value = 11
+  mut val value: Int = 11
 }
 fun overload() = {
   open Overloaded

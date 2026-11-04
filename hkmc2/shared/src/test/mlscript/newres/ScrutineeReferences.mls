@@ -69,6 +69,7 @@ private fun reader[A](value: Box[A] | null) =
 // Reading a captured loop condition again must observe assignments in the body.
 :sir
 fun drain(flag) =
+  let =flag
   fun run() =
     while flag do
       set flag = false
@@ -76,20 +77,21 @@ fun drain(flag) =
   flag
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define drain⁰ as fun drain¹(flag) {
-//│   let run;
+//│   let run, flag1;
 //│   define run as fun run⁰() {
 //│     loop lbl:
-//│       match flag
+//│       match flag1
 //│         true =>
-//│           set flag = false;
+//│           set flag1 = false;
 //│           continue lbl
 //│         else
 //│           end
 //│       end
 //│     return runtime⁰.Unit⁰
 //│   };
+//│   set flag1 = flag;
 //│   do run⁰();
-//│   return flag
+//│   return flag1
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

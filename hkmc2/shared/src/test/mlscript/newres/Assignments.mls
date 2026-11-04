@@ -9,7 +9,7 @@ module Later {
   class ItemClass {
     fun answer() = 42
   }
-  mut val Item = 0
+  mut val Item: Int = 0
 }
 writeLater(7)
 
@@ -58,8 +58,8 @@ replace(0)
 
 // Resolving an l-value must preserve receiver-before-RHS evaluation, once each.
 module Order {
-  mut val trace = ""
-  mut val value = 0
+  mut val trace: Str = ""
+  mut val value: Int = 0
 }
 fun receiver() = {
   set Order.trace = Order.trace + "receiver;"

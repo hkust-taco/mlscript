@@ -255,9 +255,9 @@ class CompilerCtx(
     val checked = collection.mutable.Set.empty[Artifact]
     def checkTargets(art: Artifact): Unit =
       if checked.add(art) then art.sourceImports.foreach: dep =>
-        if dep.artifact.config.target =/= art.config.target then
+        if !dep.artifact.config.target.sameBackend(art.config.target) then
           raise(ErrorReport(
-            msg"Cannot import ${dep.artifact.config.target.toString} source '${dep.path.toString}' from a ${art.config.target.toString} compilation unit" -> dep.sym.toLoc :: Nil,
+            msg"Cannot import ${dep.artifact.config.target.displayName} source '${dep.path.toString}' from a ${art.config.target.displayName} compilation unit" -> dep.sym.toLoc :: Nil,
             source = Diagnostic.Source.Compilation))
         checkTargets(dep.artifact)
     checkTargets(artifact)

@@ -1,0 +1,68 @@
+:.
+:js
+
+
+// The initializer sees the outer binding; assignments affect only the new local.
+:expect [42, 41]
+fun shadow(x) =
+  let getOriginal() = x
+  let =x
+  set x += 1
+  [x, getOriginal()]
+shadow(41)
+//│ = [42, 41]
+
+
+:expect [3, 2]
+let x = 2
+let result = let =x in
+  set x += 1
+  x
+[result, x]
+//│ = [3, 2]
+//│ result = 3
+//│ x = 2
+
+
+// Binding groups use the same shorthand and preserve sequential scope.
+:expect [2, 3, 1, 2]
+let a = 1
+let b = 2
+let result = let
+  =a
+  =b
+in
+  set a += 1
+  set b += 1
+  [a, b]
+[...result, a, b]
+//│ = [2, 3, 1, 2]
+//│ a = 1
+//│ b = 2
+//│ result = [2, 3]
+
+
+:expect 42
+fun grouped(x) =
+  let
+    =x
+  set x += 1
+  x
+grouped(41)
+//│ = 42
+
+
+// Lookup errors still identify the source name in the initializer.
+:e
+fun missing() = let =unknown in unknown
+//│ ╔══[COMPILATION ERROR] Name not found: unknown
+//│ ║  l.+1: 	fun missing() = let =unknown in unknown
+//│ ╙──      	                     ^^^^^^^
+
+
+// The shorthand cannot also supply an explicit initializer.
+:e
+fun invalid(x) = let =x = 1 in x
+//│ ╔══[COMPILATION ERROR] Unsupported let binding shape
+//│ ║  l.+1: 	fun invalid(x) = let =x = 1 in x
+//│ ╙──      	                      ^^^^^

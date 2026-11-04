@@ -28,7 +28,7 @@ class Importer extends NewResolver:
     val nme = file.baseName
     val id = alias.getOrElse(new syntax.Tree.Ident(nme)) // TODO loc
     
-    lazy val sym = VarSymbol(id, erasedType = N)
+    lazy val sym = VarSymbol(id, erasedType = N, mut = false)
     
     if path.startsWith(".") || path.startsWith("/") then // leave alone imports like "fs"
       log(dbg"importing $file")

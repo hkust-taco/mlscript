@@ -16,26 +16,24 @@
     (ref.null $TypeInfoBase)
     (ref.func $Box_answer)))
   (func $Box_init (export "Box_init") (type $Box_init) (param $this (ref $Box)) (param $value (ref null any)) (result (ref $Box))
-    (block (result (ref $Box))
-      (struct.set $Box 1
-        (local.get $this)
-        (local.get $value))
-      (return
-        (ref.cast (ref $Box)
-          (local.get $this)))))
+    (struct.set $Box 1
+      (local.get $this)
+      (local.get $value))
+    (return
+      (ref.cast (ref $Box)
+        (local.get $this))))
   (func $Box_ctor (export "Box_ctor") (type $Box_ctor) (param $value (ref null any)) (result (ref $Box))
     (local $this (ref $Box))
-    (block (result (ref $Box))
-      (local.set $this
-        (struct.new $Box
-          (global.get $Box_typeinfo)
-          (ref.null any)))
-      (drop
-        (call $Box_init
-          (local.get $this)
-          (local.get $value)))
-      (return
-        (local.get $this))))
+    (local.set $this
+      (struct.new $Box
+        (global.get $Box_typeinfo)
+        (ref.null any)))
+    (drop
+      (call $Box_init
+        (local.get $this)
+        (local.get $value)))
+    (return
+      (local.get $this)))
   (func $Box_answer (export "Box_answer") (type $virtual1) (param $this (ref $Box)) (result (ref null any))
     (return
       (struct.get $Box 1

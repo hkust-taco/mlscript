@@ -74,7 +74,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     // Accessor symbols are shared only within this emitted module. Allocating a
     // fresh symbol in an importer cannot reach the defining module's accessor.
     softAssert(ts.getState is State, s"Cannot generate a cross-file access to private member '${ts.nme}'")
-    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, erasedType = N, s"${ts.nme}$$accessorSymbol"))
+    privateAccessorSymbols.getOrElseUpdate(ts, semantics.TempSymbol(N, initErasedType = N, s"${ts.nme}$$accessorSymbol"))
   
   /** Private names belong to the containing IR class, shared by its instance and static members.
     * Accesses outside that class's lexical scope need an accessor. */
@@ -214,13 +214,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       * in definitions, assignments, or metadata must not become imports. `VarSymbol` and
       * `TempSymbol` references can be transitive default imports left in copied IR, while member
       * references can denote either the default export or a private member of a foreign unit. */
-    (new BlockTraverser:
+    new BlockTraverser:
+      applyBlock(p.main)
       override def applyValue(value: Value): Unit = value match
-        case Value.SimpleRef(sym: TempSymbol) => note(sym)
         case Value.SimpleRef(sym: VarSymbol) => note(sym)
         case Value.MemberRef(sym, _) => note(sym)
         case _ =>
-    ).applyBlock(p.main)
     
     // Maps deduplicate repeated references; sorting makes output deterministic across independently
     // elaborated states, where symbol UIDs alone are not globally unique.
@@ -302,6 +301,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case s: Select if s.sanitize => doc"(${res})"
     case _ => res
   
+  @tailrec
+  private def isWasmIntrinsic(path: Path): Bool = path match
+    case Select(qual, _) => isWasmIntrinsic(qual)
+    case Value.SimpleRef(sym) => sym is State.wasmSymbol
+    case _ => false
+
   def result(r: Result)(using Raise, Scope): Document = r match
     case Value.This(ts: semantics.ModuleOrObjectSymbol) if ts.asMod.isDefined =>
       // * Module self-references use the module name itself instead of `this`
@@ -313,10 +318,17 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if disamb.shouldBeLifted then doc"${scope.lookup_!(bms, bms.toLoc)}.class"
       else scope.lookup_!(bms, r.toLoc)
     case Value.SimpleRef(l: BuiltinSymbol) =>
-      if l.nullary then l.nme
-      else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
+      errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.SimpleRef(l) => scope.lookup_!(l, r.toLoc)
-    case Cast(value, _, _) => result(value)
+    case Cast(value, target, check) =>
+      val valueDoc = result(value)
+      config.target match
+        case CompilationTarget.JS(true) =>
+          // Escaped source identifiers can contain line breaks and comment terminators. Keep the annotation
+          // on one line and inside its comment, without adding expression wrappers that affect JS syntax.
+          val name = escapeStringCharacters(target.describe).replace("*/", "* /")
+          doc"${valueDoc} /* as${if check then "!" else "!!"} $name */"
+        case _ => valueDoc
     case Call(Value.SimpleRef(l: BuiltinSymbol), (lhs :: rhs :: Nil) :: Nil) if !l.functionLike =>
       if l.binary then
         val res = doc"${operand(lhs)} ${l.nme} ${operand(rhs)}"
@@ -344,6 +356,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if c.metadata.isMlsFun then
         if checkMLsCalls then doc"$runtimeVar.checkCall($calls)" else calls
       else doc"$runtimeVar.safeCall($calls)"
+    case c @ Call(fun, _) if isWasmIntrinsic(fun) =>
+      val message = msg"WebAssembly intrinsics are not available when targeting JavaScript"
+      raise(ErrorReport(message -> c.toLoc :: Nil, source = Diagnostic.Source.Compilation))
+      doc"(()=>{${mkErr(message)}})()"
     case c @ Call(fun, argss) =>
       val base = subexpression(fun)
       val calls = argss.foldLeft(base): (acc, args) =>
@@ -495,10 +511,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     t match
     case Assign(NoSymbol, r, rst) =>
       doc" # ${result(r)};${returningTerm(rst, endSemi)}"
-    case Assign(l: (LocalVarSymbol | TermSymbol), r, rst) =>
+    case assign @ Assign(l: (LocalVarSymbol | TermSymbol), r, rst) =>
       doc" # ${
           result(l.asPath.withLoc(N)) // TODO: improve location
-        } = ${result(r)};${returningTerm(rst, endSemi)}"
+        } = ${result(r)};${returningTerm(SpecializedSwitch.followingAssignment(assign), endSemi)}"
     case assign @ AssignField(p, n, r, rst) =>
       val field = assign.symbol match
         case S(member: DefinitionSymbol[?]) => selectPrivateField(member, n.toLoc)
@@ -612,12 +628,18 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
                   methods: Ls[FunDefn], ctor: Block,
                   mtdPrefix: Str, owner: InnerSymbol)(using Scope): Document =
+              def isPlainField(sym: TermSymbol): Bool =
+                // Refreshed symbols carry annotations on their current IR definition.
+                // Declared fields without initializers retain their source definition.
+                val annotations = sym.irDefn.map(_.annotations).orElse(sym.defn.map(_.annotations))
+                softAssert(annotations.nonEmpty, s"Missing definition for mutable field '${sym.nme}'")
+                annotations.exists(_.exists(_.isInstanceOf[Annot.PlainField]))
               // * Note: the non-mut-val parts of `pubFlds` are not used because in JS, fields are not declared
               val mutPubFields =
                 pubFlds.collect:
-                  case (_, sym) if sym.k is MutVal =>
+                  case (_, sym) if (sym.k is MutVal) && !isPlainField(sym) =>
                     sym -> TermSymbol(
-                      syntax.LetBind, S(owner), Tree.Ident(sym.nme), erasedType = sym.erasedType)
+                      syntax.LetBind, S(owner), Tree.Ident(sym.nme), erasure = sym.erasedType)
               // Explicit function companions already declare their private method slots.
               // Other nested class bindings need fields declared in this receiver's class.
               val classFields = collection.mutable.ListBuffer.empty[DefinitionSymbol[?]]
@@ -712,7 +734,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   else
                     ownr match
                     case S(owner) =>
-                      val target = Select(owner.asThis, Tree.Ident(sym.nme))(S(isym), isym.toLoc)(false)
+                      val target = owner.asThis.sel(isym).withLoc(isym.toLoc)
                       doc" # ${result(target)} = $v"
                     case N =>
                       doc" # ${result(sym.asMemberRef(isym))} = $v"
@@ -1215,7 +1237,7 @@ trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
   override def checkSelections: Bool = instrument
   override def freezeDefinitions: Bool = instrument
   
-  val functionParamVarargSymbol = semantics.TempSymbol(N, erasedType = N, "args")
+  val functionParamVarargSymbol = semantics.TempSymbol(N, initErasedType = N, "args")
   
   override def setupFunction(name: Option[Str], params: LoweredParamList, body: Block, isLambda: Bool)(using Raise, Scope): (Document, Document) =
     // * We used to instrument `fun f(x, y) = x + y` into something like

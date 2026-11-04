@@ -111,7 +111,7 @@ object Instructions:
     mnemonic = "return",
     instrargs = Seq.empty,
     stackargs = value.toSeq,
-    resultTypes = value.fold(Seq.empty)(_.resultTypes),
+    resultType = S(UnreachableType),
   )
 
   /** Creates a `throw` instruction. */
@@ -140,12 +140,12 @@ object Instructions:
 
   /** The instructions shared by every Wasm numeric type family (`i32`, `i64`, `f32` and `f64`).
     *
-    * All four families have the same instruction shape: the mnemonic is the type's own prefix followed by the
-    * operation name, the operands are the stack arguments, and the result is a value of either the family's own type
-    * (arithmetic) or `i32` (comparisons and tests). Deriving the families from a common base keeps them from drifting
-    * apart as instructions are added, and leaves only the genuinely per-family parts spelled out: the `const`
-    * immediate, the conversions from another family's type, and the operations one of the integer and floating-point
-    * types has and the other does not.
+    * All four families have the same instruction shape: the mnemonic is the type's own prefix followed by the operation
+    * name, the operands are the stack arguments, and the result is a value of either the family's own type (arithmetic)
+    * or `i32` (comparisons and tests). Deriving the families from a common base keeps them from drifting apart as
+    * instructions are added, and leaves only the genuinely per-family parts spelled out: the `const` immediate, the
+    * conversions from another family's type, and the operations one of the integer and floating-point types has and the
+    * other does not.
     *
     * Each instruction below is created by the method of the same name, on the object of the family it belongs to:
     * `i32.add(l, r)` creates an `i32.add`, `f64.add(l, r)` an `f64.add`, and so on.
@@ -212,8 +212,8 @@ object Instructions:
 
   /** The instructions of an integer type family (`i32` and `i64`).
     *
-    * Integer division, remainder, right shift and ordering come in a signed and an unsigned flavor; only the ones
-    * the backend currently emits are exposed.
+    * Integer division, remainder, right shift and ordering come in a signed and an unsigned flavor; only the ones the
+    * backend currently emits are exposed.
     */
   sealed abstract class IntInstrs(valType: NumType) extends NumInstrs(valType):
 

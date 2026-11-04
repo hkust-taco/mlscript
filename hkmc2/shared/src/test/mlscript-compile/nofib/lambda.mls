@@ -6,6 +6,9 @@ open NofibPrelude
 
 module lambda with ...
 
+// The port uses Haskell strings, represented by linked lists of characters.
+type String = List[Char]
+
 
 
 fun lookup(k, t) = if t is

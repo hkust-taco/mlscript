@@ -6,7 +6,9 @@ package text
 import hkmc2.utils.*, shorthands.*
 
 import document.*
-import semantics.{BlockMemberSymbol, ClassCtorSymbol, ClassSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol}, Elaborator.State
+import semantics.{
+  BlockMemberSymbol, ClassCtorSymbol, ClassSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol,
+}, Elaborator.State
 import utils.Scope
 
 import scala.collection.Map
@@ -15,8 +17,9 @@ import scala.collection.Map
 private[text] type ExternSymbol = BlockMemberSymbol | ClassSymbol | TempSymbol
 
 private[text] object ExternSymbol:
-  /** Class constructors and explicit function companions share a source name but
-    * have distinct Wasm functions. Imports and calls must use the same identity. */
+  /** Class constructors and explicit function companions share a source name but have distinct Wasm functions. Imports
+    * and calls must use the same identity.
+    */
   def forReference(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?]): BlockMemberSymbol | ClassSymbol =
     disamb match
       case cls: ClassSymbol => cls
@@ -44,7 +47,7 @@ private[text] final class WasmScope(using State):
     bindings.getOrElseUpdate((sym, wrap), {
       val hint = wrap._1.fold("")(_ + "_") + sym.nme + wrap._2.fold("")("_" + _)
       val ascii = hint.flatMap(c => if c <= 127 then c.toString else f"_u${c.toInt}%04x")
-      scope.allocateName(TempSymbol(N, erasedType = N, ascii))
+      scope.allocateName(TempSymbol(N, initErasedType = N, ascii))
     })
 
 /** Trait indicating a WAT representation is available. */

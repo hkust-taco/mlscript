@@ -7,10 +7,14 @@ import Config.*
 import Message.MessageContext
 
 
-/** The compilation target of a program. */
-enum CompilationTarget:
-  case JS
-  case Wasm
+/** The compilation target of a program, with a name for diagnostics independent of its backend options. */
+enum CompilationTarget(val displayName: Str):
+  // Cast comments expose the IR coercions that JavaScript otherwise erases.
+  case JS(emitCastComments: Bool) extends CompilationTarget("JavaScript")
+  case Wasm extends CompilationTarget("Wasm")
+
+  /** Emission options do not change which backend owns a compilation unit's bindings. */
+  def sameBackend(that: CompilationTarget): Bool = ordinal == that.ordinal
 
 
 def config(using Config): Config = summon
@@ -81,7 +85,7 @@ object Config:
     effectHandlers = N,
     liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
-    target = CompilationTarget.JS,
+    target = CompilationTarget.JS(emitCastComments = false),
     rewriteWhileLoops = false,
     stageCode = false,
     qqEnabled = false,
@@ -476,7 +480,7 @@ object ConfigParser:
 
   private def parseCompilationTarget(tree: Tree)(using Raise): Opt[CompilationTarget] = tree.deparenthesized match
     case Sel(Ident("CompilationTarget"), Ident("JS")) | Ident("JS") =>
-      S(CompilationTarget.JS)
+      S(CompilationTarget.JS(emitCastComments = false))
     case Sel(Ident("CompilationTarget"), Ident("Wasm")) | Ident("Wasm") =>
       S(CompilationTarget.Wasm)
     case _ =>

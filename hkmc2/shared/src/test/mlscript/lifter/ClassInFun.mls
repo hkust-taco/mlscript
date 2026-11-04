@@ -65,6 +65,7 @@ f(1, 2).get()
 
 :expect 2
 fun f(x) =
+  let =x
   class A() with
     fun f() = set x = 2
   A().f()
@@ -189,6 +190,7 @@ f().get()
 // Parameterized class constructor used as a first-class function
 :expect 43
 fun foo2(x) =
+  let =x
   class C(y) with
     fun get = x + y
   [C, set x += 1]
@@ -426,6 +428,7 @@ test(0).toString()
 
 :sir
 fun f(x, y, z) =
+  let =y
   data class C(a) with
     fun getX = x
     fun getY = y
@@ -433,14 +436,20 @@ fun f(x, y, z) =
   class D extends C(y)
   [new C(0), new D]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C, D, Capture$f;
+//│ let C, D, Capture$scope0;
+//│ define Capture$scope0 as class Capture$scope0³ {
+//│   constructor Capture$scope0²(y$0) {
+//│     define y$0⁰ as val y$0¹ = y$0;
+//│     end
+//│   }
+//│ };
 //│ @data
 //│ define C as class C⁶ {
-//│   private val f$cap⁰;
+//│   private val scope0$cap²;
 //│   private val x³;
 //│   val a⁴;
-//│   constructor C⁵(a, f$cap, x) {
-//│     set C⁶.this.f$cap⁰ = f$cap;
+//│   constructor C⁵(a, scope0$cap, x) {
+//│     set C⁶.this.scope0$cap² = scope0$cap;
 //│     set C⁶.this.x³ = x;
 //│     define a⁴ as val a⁵ = a;
 //│     end
@@ -449,37 +458,32 @@ fun f(x, y, z) =
 //│     return C⁶.this.x³
 //│   }
 //│   method getY⁰ = fun getY¹ {
-//│     return C⁶.this.f$cap⁰.y$0⁰
+//│     return C⁶.this.scope0$cap².y$0¹
 //│   }
 //│   method setY⁰ = fun setY¹ {
 //│     let tmp;
-//│     set tmp = +⁰(C⁶.this.f$cap⁰.y$0⁰, 1);
-//│     set C⁶.this.f$cap⁰.y$0⁰ = tmp;
+//│     set tmp = +⁰(C⁶.this.scope0$cap².y$0¹, 1);
+//│     set C⁶.this.scope0$cap².y$0¹ = tmp;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };
 //│ define D as class D⁰ extends C⁶ {
-//│   private val f$cap¹;
+//│   private val scope0$cap³;
 //│   private val x⁴;
-//│   constructor(f$cap, x) {
-//│     do super⁰(f$cap.y$0⁰, f$cap, x);
+//│   constructor(scope0$cap, x) {
+//│     do super⁰(scope0$cap.y$0¹, scope0$cap, x);
 //│     end;
-//│     set D⁰.this.f$cap¹ = f$cap;
+//│     set D⁰.this.scope0$cap³ = scope0$cap;
 //│     set D⁰.this.x⁴ = x;
 //│     end
 //│   }
 //│ };
-//│ define Capture$f as class Capture$f¹ {
-//│   constructor Capture$f⁰(y$0) {
-//│     define y$0¹ as val y$0⁰ = y$0;
-//│     end
-//│   }
-//│ };
 //│ define f⁴ as fun f⁵(x, y, z) {
-//│   let tmp, tmp1, f$cap;
-//│   set f$cap = new mut Capture$f¹(y);
-//│   set tmp = new C⁶(0, f$cap, x);
-//│   set tmp1 = new D⁰(f$cap, x);
+//│   let y1, tmp, tmp1, scope0$cap;
+//│   set scope0$cap = new mut Capture$scope0³(y1);
+//│   set scope0$cap.y$0¹ = y;
+//│   set tmp = new C⁶(0, scope0$cap, x);
+//│   set tmp1 = new D⁰(scope0$cap, x);
 //│   return [tmp, tmp1]
 //│ };
 //│ end
@@ -510,6 +514,7 @@ class B extends A(1)(2)
 :w
 :sir
 fun f(x, y, z) =
+  let =y
   data class C(a) with
     fun getX = x
     fun getY = y
@@ -519,14 +524,20 @@ fun f(x, y, z) =
   [new C(0), new D]
 //│ ═══[WARNING] Cannot yet lift class `D` as it is used as a first-class class.
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let C, Capture$f;
+//│ let C, Capture$scope0;
+//│ define Capture$scope0 as class Capture$scope0⁵ {
+//│   constructor Capture$scope0⁴(y$0) {
+//│     define y$0² as val y$0³ = y$0;
+//│     end
+//│   }
+//│ };
 //│ @data
 //│ define C as class C⁸ {
-//│   private val f$cap²;
+//│   private val scope0$cap⁴;
 //│   private val x⁵;
 //│   val a⁶;
-//│   constructor C⁷(a, f$cap, x) {
-//│     set C⁸.this.f$cap² = f$cap;
+//│   constructor C⁷(a, scope0$cap, x) {
+//│     set C⁸.this.scope0$cap⁴ = scope0$cap;
 //│     set C⁸.this.x⁵ = x;
 //│     define a⁶ as val a⁷ = a;
 //│     end
@@ -535,27 +546,22 @@ fun f(x, y, z) =
 //│     return C⁸.this.x⁵
 //│   }
 //│   method getY² = fun getY³ {
-//│     return C⁸.this.f$cap².y$0²
+//│     return C⁸.this.scope0$cap⁴.y$0³
 //│   }
 //│   method setY² = fun setY³ {
 //│     let tmp;
-//│     set tmp = +⁰(C⁸.this.f$cap².y$0², 1);
-//│     set C⁸.this.f$cap².y$0² = tmp;
+//│     set tmp = +⁰(C⁸.this.scope0$cap⁴.y$0³, 1);
+//│     set C⁸.this.scope0$cap⁴.y$0³ = tmp;
 //│     return runtime⁰.Unit⁰
 //│   }
 //│ };
-//│ define Capture$f as class Capture$f³ {
-//│   constructor Capture$f²(y$0) {
-//│     define y$0³ as val y$0² = y$0;
-//│     end
-//│   }
-//│ };
 //│ define f⁶ as fun f⁷(x, y, z) {
-//│   let D, x1, tmp, tmp1, f$cap;
-//│   set f$cap = new mut Capture$f³(y);
+//│   let D, y1, x1, tmp, tmp1, scope0$cap;
+//│   set scope0$cap = new mut Capture$scope0⁵(y1);
+//│   set scope0$cap.y$0³ = y;
 //│   define D as class D¹ extends C⁸ {};
 //│   set x1 = D¹;
-//│   set tmp = new C⁸(0, f$cap, x);
+//│   set tmp = new C⁸(0, scope0$cap, x);
 //│   set tmp1 = new D¹();
 //│   return [tmp, tmp1]
 //│ };
@@ -574,6 +580,7 @@ let d = res.1
 
 :w
 fun f(x, y, z) =
+  let =y
   data class C(a) with
     fun getX = x
     fun getY = y

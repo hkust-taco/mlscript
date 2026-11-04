@@ -49,7 +49,7 @@ final class FileExportNames(using State):
   private val names = mutable.Map.empty[(ValueSymbol, Str, Opt[Str] -> Opt[Str]), Str]
   def apply(sym: ScopedSymbol | ClassSymbol, kind: Str, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
     names.getOrElseUpdate((sym, kind, wrap),
-      scope.allocateName(TempSymbol(N, erasedType = N, wrap._1.fold("")(_ + "_") + sym.nme + wrap._2.fold("")("_" + _))))
+      scope.allocateName(TempSymbol(N, initErasedType = N, wrap._1.fold("")(_ + "_") + sym.nme + wrap._2.fold("")("_" + _))))
 
 /** Relocation is deliberately exhaustive over the WASM type algebra. New ABI-bearing type
   * forms must extend this traversal rather than accidentally retaining an exporting index. */

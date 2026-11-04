@@ -25,7 +25,7 @@ val mkProject = Project
 
 
 data class Line(val name: Str, val proj: Project, val starting_balance: Num, val isMatchable: Bool) with
-  mut val balance = starting_balance
+  mut val balance: Num = starting_balance
   fun expense(amt) =
     set balance = balance -. amt
   fun mustBeEmpty() =

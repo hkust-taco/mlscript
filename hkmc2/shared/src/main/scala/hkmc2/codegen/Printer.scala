@@ -34,31 +34,39 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
   def printTpe(tpeSym: TypeSymbol)(using Scope): Document =
     if tpeSym.asMod.isDefined then doc"module ${print(tpeSym)}" else print(tpeSym)
 
-  def print(cet: CanonicalErasedType)(using Scope): Document = cet match
+  def print(cet: CanonicalErasedValueType)(using Scope): Document = cet match
     case ErasedType.Unknown => doc"Unknown"
+    case ErasedType.Nothing => doc"Nothing"
     case ErasedType.Incompatible(lhs, rhs) => doc"‹incompatible(${print(lhs)}, ${print(rhs)})›"
     case ErasedType.AnyRef(rsc, tpeSym: TypeSymbol) => doc"${rsc.fold("rsc? ")(if _ then "rsc " else "")}${printTpe(tpeSym)}"
-    case ErasedType.CanonicalFuncRef(rsc, paramLists, ret) =>
-      // * Curried functions are rendered as `(A) => (B) => R`, so that an under-applied call reads as the residual
-      // * function type it actually has.
-      val sig = paramLists.foldRight(ret.fold(doc"?")(print)): (ps, acc) =>
-        doc"(${ps.map(_.fold(doc"?")(print)).mkDocument(sep = doc", ")}) => $acc"
-      doc"${rsc.fold("rsc? ")(if _ then "rsc " else "")}$sig"
     case ErasedType.Primitive(prim) => doc"${prim.toString}"
 
-  def print(et: ErasedType)(using Scope): Document = et match
-    case cet: CanonicalErasedType => print(cet)
+  def print(et: ErasedValueType)(using Scope): Document = et match
+    case cet: CanonicalErasedValueType => print(cet)
     case _ => print(et.canonicalize)
 
-  /** Renders the type annotation for a symbol with an [[ErasedType]]. */
-  def erasedTypeAnnot(x: HasErasedType)(using Scope): Document =
+  def print(result: ErasedResult[ErasedValueType])(using Scope): Document =
+    val payload = result.bodyType.fold(doc"?")(print)
+    result match
+      case ErasedResult.Direct(_) => payload
+      case ErasedResult.Async(_) => doc"async $payload"
+      case ErasedResult.Generator(_) => doc"generator $payload"
+
+  def print(sig: ErasedFuncSignature)(using Scope): Document =
+    val canon = sig.canonicalize
+    // * Curried functions are rendered as `(A) => (B) => R`, one arrow per parameter list.
+    canon.paramLists.foldRight(print(canon.result)): (ps, acc) =>
+      doc"(${ps.map(_.fold(doc"?")(print)).mkDocument(sep = doc", ")}) => $acc"
+
+  /** Renders the type annotation for a symbol of erased type `tpe`. */
+  def erasedTypeAnnot(tpe: Opt[ErasedValueType])(using Scope): Document =
     if !summon[ShowCfg].showErasedTypes then doc""
-    else doc": ${x.erasedType.fold(doc"?")(print)}"
+    else doc": ${tpe.fold(doc"?")(print)}"
 
   /** Renders a function's return type, as declared by its definition symbol. */
   def returnTypeAnnot(dSym: TermSymbol)(using Scope): Document =
     if !summon[ShowCfg].showErasedTypes || !(dSym.k is syntax.Fun) then doc""
-    else doc": ${dSym.declaredResultType.fold(doc"?")(print)}"
+    else doc": ${print(dSym.erasedResult)}"
   
   def print(blk: Block)(using Scope): Document = blk match
     case Match(scrut, arms, dflt, rest) =>
@@ -91,7 +99,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case Assign(lhs: (LocalVarSymbol | TermSymbol), rhs, rest) =>
       doc"set ${print(lhs)} = ${print(rhs)}; # ${print(rest)}"
     case asf @ AssignField(lhs, nme, rhs, rest) =>
-      doc"set ${print(lhs)}.${showMemberSymbol(nme.name, asf.symbol)} = ${print(rhs)}; # ${print(rest)}"
+      doc"set ${print(lhs)}.${showRefSymbol(nme.name, asf.symbol)} = ${print(rhs)}; # ${print(rest)}"
     case AssignDynField(lhs, fld, kind, rhs, rest) =>
       doc"set ${printDynSelection(lhs, fld, kind)} = ${print(rhs)}; # ${print(rest)}"
     case Define(defn, rest) =>
@@ -100,7 +108,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       scope.nest.givenIn:
         import hkmc2.given_Ordering_Uid // Not sure why needed...
         val names = syms.toList.sortBy(_.uid).map:
-          case sym: LocalVarSymbol => doc"${scope.allocateName(sym)}${erasedTypeAnnot(sym)}"
+          case sym: LocalVarSymbol => doc"${scope.allocateName(sym)}${erasedTypeAnnot(sym.erasedType)}"
           case bms: BlockMemberSymbol => doc"${scope.allocateName(bms)}"
         doc"let ${names.mkDocument(", ")}; # ${print(body)}"
     case End(msg) if msg.nonEmpty && config.commentGeneratedCode => doc"end /* ${msg} */"
@@ -134,8 +142,8 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       ctor: Block,
       ctorSym: Opt[TermSymbol],
   )(using Scope): Document =
-    val privFields = privateFields.map(x => doc"private val ${print(x)}${erasedTypeAnnot(x)};").mkDocument(sep = doc" # ")
-    val pubFields = publicFields.map(x => doc"val ${print(x._1)}${erasedTypeAnnot(x._2)};").mkDocument(sep = doc" # ")
+    val privFields = privateFields.map(x => doc"private val ${print(x)}${erasedTypeAnnot(x.erasedType)};").mkDocument(sep = doc" # ")
+    val pubFields = publicFields.map(x => doc"val ${print(x._1)}${erasedTypeAnnot(x._2.erasedType)};").mkDocument(sep = doc" # ")
     val docPrivFlds = if privateFields.isEmpty then doc"" else doc" # ${privFields}"
     val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
     val docCtor = ctor match
@@ -167,8 +175,8 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     paramss
       .map: pl =>
         val allParams =
-          pl.params.map(x => doc"${scope.allocateName(x.sym)}${if x.flags.opt then "?" else ""}${erasedTypeAnnot(x.sym)}") ++
-          pl.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym)}")
+          pl.params.map(x => doc"${scope.allocateName(x.sym)}${if x.flags.opt then "?" else ""}${erasedTypeAnnot(x.sym.erasedType)}") ++
+          pl.restParam.map(x => doc"...${scope.allocateName(x.sym)}${erasedTypeAnnot(x.sym.erasedType)}")
         allParams.mkDocument("(", ", ", ")")
       .mkDocument("")
   
@@ -180,7 +188,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
         val docStaged = if fun.isStaged then doc"staged " else doc""
         doc"${docStaged}fun ${print(dSym)}${docParams}${returnTypeAnnot(dSym)} ${bracedbk(docBody)}"
     case ValDefn(tsym, sym, rhs) =>
-      doc"val ${print(tsym)}${erasedTypeAnnot(tsym)} = ${print(rhs)}"
+      doc"val ${print(tsym)}${erasedTypeAnnot(tsym.erasedType)} = ${print(rhs)}"
     case cls @ ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable, termCompanion, _)
     => scope.nest.givenIn:
@@ -197,7 +205,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
         case None => doc""
       doc"${docCls}${docModule}"
   
-  private def showMemberSymbol(name: Str, sym: Opt[MemberSymbol]): Document =
+  private def showRefSymbol(name: Str, sym: Opt[Symbol]): Document =
     sym.fold(doc"${name}﹖")(sym =>
       if summon[ShowCfg].debug then doc"‹${sym.toString}›" else summon[SymbolPrinter].printSymbol(sym))
   
@@ -209,8 +217,8 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
   
   def print(value: Value)(using Scope): Document = value match
     case Value.SimpleRef(l) => print(l)
-    case Value.MemberRef(bms, disamb) => showMemberSymbol(bms.nme, S(disamb))
-    case Value.This(sym) if sym === State.globalThisSymbol => showMemberSymbol(sym.nme, S(sym.asDefnSym))
+    case Value.MemberRef(bms, disamb) => showRefSymbol(bms.nme, S(disamb))
+    case Value.This(sym: TopLevelSymbol) => showRefSymbol(sym.nme, S(sym))
     case Value.This(sym) => doc"${print(sym)}.this"
     case Value.Lit(lit) => doc"${lit.idStr}"
   
@@ -225,7 +233,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       doc"super[${print(base)}](${print(qual)}).[${print(key)}]"
     case sel @ Select(qual, name) =>
       val docQual = print(qual)
-      doc"${docQual}.${showMemberSymbol(name.name, sel.symbol)}"
+      doc"${docQual}.${showRefSymbol(name.name, sel.symbol)}"
     case DynSelect(qual, fld, kind) => printDynSelection(qual, fld, kind)
     case x: Value => print(x)
     case Cast(value, target, check) =>
@@ -257,7 +265,8 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
   
   def print(imports: Ls[ImportSymbol -> Str])(using Scope): Document =
     imports.map: (local, path) =>
-        val docLocal = scope.allocateName(local)
+        // Source imports retain their definition's identity, including aliases and repeated worksheet imports.
+        val docLocal = scope.allocateOrGetName(local)
         doc"""import "..." as ${docLocal}; # """
       .mkDocument()
   

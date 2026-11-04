@@ -157,10 +157,10 @@ o1
 //│ = [2, 3, 4]
 
 :expect [2, 3, 4]
-o1.materialize()
+o1.toArray()
 //│ = [2, 3, 4]
 
-let o2 = o1.concat([5, 6, 7])
+let o2 = concat(o1, [5, 6, 7])
 //│ o2 = [2, 3, 4, 5, 6, 7]
 
 :silent
@@ -181,7 +181,7 @@ equals([...o2], [...o5])
 //│ = true
 
 :expect true
-equals(o2.materialize(), o5.materialize())
+equals(o2.materialize(), o5.toArray())
 //│ = true
 
 

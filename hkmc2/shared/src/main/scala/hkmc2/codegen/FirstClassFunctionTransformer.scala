@@ -31,7 +31,7 @@ class FirstClassFunctionTransformer
     val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), forwarding.params :: Nil,
       Return(Call(p, forwarding.args ne_:: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
-      Some(Select(State.globalThisSymbol.asThis, Tree.Ident("Function"))(Some(ctx.builtins.Function), N)(false)),
+      Some(State.globalThisSymbol.asThis.sel(ctx.builtins.Function)),
       callDef :: Nil, Nil, Nil, Assign.discard(
         Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun, N),
         End()), End(), None, None, None, methodKeys = Map.empty)(N, annotations = Nil)
@@ -60,7 +60,7 @@ class FirstClassFunctionTransformer
   
   private def etaExpandPath(p: Path, params: LoweredParamList)(k: Path => Block): Block =
     val clsDef = generateFCFunctionClass(p, params)
-    val tmp = new TempSymbol(None, erasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)))
+    val tmp = new TempSymbol(None, initErasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)))
     val cls = clsDef.sym.asMemberRef(clsDef.isym)
     Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil)(InstantiateMetadata.empty, p.toLoc), k(tmp.asSimpleRef.withLoc(p.toLoc)))))
   

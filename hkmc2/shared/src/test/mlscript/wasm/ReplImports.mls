@@ -53,12 +53,11 @@ unit
 //│   (type $TypeInfoBase1 (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase1)))))
 //│   (type $Object1 (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
 //│   (type $Unit (sub $Object1 (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
-//│   (type $entry (func (result (ref $Unit))))
+//│   (type $entry (func (result (ref null $Unit))))
 //│   (import "system" "Unit$inst" (global $Unit$inst (mut (ref null $Unit))))
-//│   (func $entry (export "entry") (type $entry) (result (ref $Unit))
+//│   (func $entry (export "entry") (type $entry) (result (ref null $Unit))
 //│     (return
-//│       (ref.cast (ref $Unit)
-//│         (global.get $Unit$inst))))
+//│       (global.get $Unit$inst)))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = {}
@@ -83,10 +82,9 @@ val copied: Int32 = idI32(typed)
 //│   (import "system" "Unit$inst" (global $Unit$inst (mut (ref null $Unit))))
 //│   (global $copied (export "copied") (mut i32) (i32.const 0))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
-//│     (block (result (ref null $Unit))
-//│       (global.set $copied
-//│         (global.get $typed))
-//│       (global.get $Unit$inst)))
+//│     (global.set $copied
+//│       (global.get $typed))
+//│     (global.get $Unit$inst))
 //│   (elem $entry declare func $entry))
 //│ Wasm result:
 //│ = {}

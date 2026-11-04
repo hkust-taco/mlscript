@@ -9,17 +9,20 @@ import utils.Scope
 
 abstract class InvalMLDiffMaker extends JSBackendDiffMaker:
   
-  val invalPreludeFile = io.Path(rootPath) / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "invalml" / "InvalMLPrelude.mls"
+  val invalPredefFile = io.Path(rootPath) / "hkmc2" / "shared" / "src" / "test" / "mlscript" / "invalml" / "InvalMLPredef.mls"
   
   val invalmlOpt = new NullaryCommand("invalml"):
     override def onSet(): Unit =
       super.onSet()
       noSanityCheck.isGlobal = true
       noSanityCheck.set
-      if file =/= invalPreludeFile then
-        curCtx = Elaborator.State.init
+      if file =/= invalPredefFile then
+        curCtx = prelude
         given Config = mkConfig
-        importFile(invalPreludeFile, verbose = false, includeDirectives = false)
+        importFile(invalPredefFile, verbose = false, includeDirectives = false)
+        // The JS backend recognizes InvalML's typed operator declarations in the builtin scope.
+        // Extend this worksheet's prelude without recreating or changing the shared host symbols.
+        curCtx = prelude.copy(env = prelude.env ++ curCtx.env)
   
   
   override def init(): Unit =

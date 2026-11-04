@@ -27,9 +27,8 @@ trailing(1, 2, 3)
 //│ ╔══[COMPILATION ERROR] Variadic parameters are not supported by the WebAssembly backend.
 //│ ║  l.+1: 	fun trailing(x, ...xs, y) = y
 //│ ╙──      	            ^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] More arguments were supplied than the WebAssembly call supports.
-//│ ║  l.+2: 	trailing(1, 2, 3)
-//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] This runtime operation is not supported by the WebAssembly backend
+//│ ═══[COMPILATION ERROR] WatBuilder::result for object selection `Tuple` not implemented yet
 
 // * Constructors bind omitted optional fields to null.
 :expect null

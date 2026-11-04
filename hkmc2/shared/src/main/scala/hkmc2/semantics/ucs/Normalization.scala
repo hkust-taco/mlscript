@@ -372,7 +372,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
-              Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym), N)(false)),
+              Case.Cls(objectSym, State.globalThisSymbol.asThis.sel(objectSym)),
               entries.foldRight(lowerSplit(tail, cont)):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
@@ -404,14 +404,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         // the Label body into the rest. Wrap with an exit label and temp variable so every path stores its
         // result, breaks to exitLabel, then the original cont runs once.
         val exitLabel = new LabelSymbol(N, sym.nme + "$x")
-        val tmp = new TempSymbol(N, erasedType = N)
+        val tmp = new TempSymbol(N, initErasedType = N)
         LoweringCtx.loweringCtx.collectScopedSym(tmp)
         // The representations of the results stored into `tmp`, recorded as each path is lowered. As with the
         // `if`-result temp below, `tmp` is named before those paths are lowered, so the join can only be
         // applied once both have been seen - here, before `cont` reads it.
         var pathTypes: Ls[Opt[codegen.ErasedValueType]] = Nil
         val exitCont: Result => Block = r =>
-          pathTypes ::= r.erasedValueType
+          pathTypes ::= r.erasedType
           Assign(tmp, r, Break(exitLabel))
         val bodyBlock = lowerSplit(sym.body, exitCont)
         val tailBlock = lowerSplit(tail, exitCont)
@@ -427,7 +427,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * match failure in the future.
     */
   private def throwMatchErrorBlock(using Config) =
-    Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error), N)(false),
+    Throw(Instantiate(mut = false, State.globalThisSymbol.asThis.sel(ctx.builtins.Error),
         (Value.Lit(syntax.Tree.StrLit("match error"))(N).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, N), // TODO add failed-match scrutinee info
       annotations = if config.aggressive then Annot.Pure()(N) :: Nil else Nil)
 
@@ -444,7 +444,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     if branchTypes.nonEmpty && branchTypes.forall(_.isDefined) then
       branchTypes.flatten.map(_.canonicalize).reduce(ErasedType.lub) match
       case _: ErasedType.Incompatible => ()
-      case joined => sym.populateErasedType(joined)
+      case joined => sym.erasedType = S(joined)
 
   import syntax.Keyword.{`if`, `while`}
   
@@ -486,7 +486,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // 3. The term is a `while` and the result is used.
       lazy val l =
         usesResTmp = true
-        val res = new TempSymbol(t, erasedType = N)
+        val res = new TempSymbol(t, initErasedType = N)
         outerCtx.collectScopedSym(res)
         res
       // The symbol for the loop label if the term is a `while`.
@@ -495,7 +495,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         val res = new BlockMemberSymbol("while", Nil, false)
         outerCtx.collectScopedSym(res)
         res
-      lazy val tSym = TermSymbol.fromFunBms(f, N, erasedType = N)
+      // * The loop function takes one empty parameter list and returns either a body result or Runtime.LoopEnd.
+      lazy val loopSignature = FunDefn.Signature.fromParams(codegen.LoweredParamList.plain(Nil)(N) :: Nil, codegen.ErasedResult.Direct(N))
+      lazy val tSym = TermSymbol(syntax.Fun, N, Tree.Ident(f.nme), S(loopSignature.erasure))
       val normalized = tl.scoped("ucs:normalize"):
         normalize(inputSplit)(using VarSet())
       tl.scoped("ucs:normalized"):
@@ -505,7 +507,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
         case IfLikeForm.ReturningIf =>
           if (k is Ret) || (k is Thrw) then k(r)
           else
-            branchTypes ::= r.erasedValueType
+            branchTypes ::= r.erasedType
             Assign(l, r, End())
         case IfLikeForm.ImperativeIf => Assign.discard(r, End())
         case IfLikeForm.While => Assign(NoSymbol, r, loopCont)
@@ -538,20 +540,24 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
       // it, instead of forcing the branches through the top type and rejecting the read.
       if usesResTmp then joinTempType(l, branchTypes)
       // Embed the `body` into `Label` if the term is a `while`.
-      lazy val rest = if usesResTmp then k(l.asSimpleRef) else k(lowering.unit)
+      lazy val rest =
+        // The loop label is generated here and can only be continued, never
+        // broken to by source code. An abortive body therefore cannot reach k.
+        if form === IfLikeForm.While && body.isAbortive then End()
+        else if usesResTmp then k(l.asSimpleRef) else k(lowering.unit)
       val block =
         if form === IfLikeForm.While then
           // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
           // as shouldRewriteWhile is always true when effect handler lowering is on
           if config.shouldRewriteWhile then
-            val loopResult = TempSymbol(N, erasedType = N)
-            val isReturned = TempSymbol(N, erasedType = S(ErasedType.Bool))
+            val loopResult = TempSymbol(N, initErasedType = N)
+            val isReturned = TempSymbol(N, initErasedType = S(ErasedType.Bool))
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =
-              Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol), N)(false)
+              State.runtimeSymbol.asSimpleRef.sel(State.loopEndSymbol)
             val blk = blockBuilder
-              .define(FunDefn(N, f, tSym, codegen.LoweredParamList.plain(Nil)(N) :: Nil, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
+              .define(FunDefn(N, f, tSym, loopSignature, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
               .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, N))
             if summon[LoweringCtx].mayRet then
               blk
@@ -566,6 +572,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
               blk.rest(rest)
           else
             Begin(Label(loopLabel, true, body, End()), rest)
+        else if body.isAbortive then
+          // Do not lower the continuation of an exhaustive returning split.
+          // Its unreachable result need not inhabit the function's representation.
+          body
         else if k.isInstanceOf[TailOp]
           && !form.isImperative
             // * ^ Generated imperative `if` branches do not always yield a value, so if we removed this,
