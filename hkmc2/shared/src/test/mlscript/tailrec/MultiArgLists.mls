@@ -288,8 +288,8 @@ fun f(a)(...z) = if z is
 //│       Array(1+) =>
 //│         let inlinedVal, tmp1;
 //│         do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│         set tmp1 = -¹(z.length⁰, 0);
-//│         set inlinedVal = z.slice⁰(1, tmp1);
+//│         set tmp1 = -¹(z.length¹, 0);
+//│         set inlinedVal = (z.slice¹(1, tmp1) as! Unknown);
 //│         set tmp = +⁰(a, 1);
 //│         set a = tmp;
 //│         set z = inlinedVal;
@@ -508,8 +508,8 @@ fun f(n)(a)(...z) =
 //│           Array(1+) =>
 //│             let inlinedVal, tmp2;
 //│             do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│             set tmp2 = -¹(z.length⁰, 0);
-//│             set inlinedVal = z.slice⁰(1, tmp2);
+//│             set tmp2 = -¹(z.length¹, 0);
+//│             set inlinedVal = (z.slice¹(1, tmp2) as! Unknown);
 //│             set tmp1 = +⁰(a, 1);
 //│             set res = f$tailrec³(n, tmp1, inlinedVal);
 //│             do Predef⁰.print⁰("hi!");

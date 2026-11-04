@@ -613,6 +613,7 @@ object Elaborator:
       toJsAsync: TermSymbol,
       tupleGet: TermSymbol,
       tupleSlice: TermSymbol,
+      tupleSliceArray: TermSymbol,
       tupleLazySlice: TermSymbol,
       strStartsWith: TermSymbol,
       strGet: TermSymbol,
@@ -666,6 +667,7 @@ object Elaborator:
         toJsAsync = term("toJsAsync"),
         tupleGet = moduleMember(tuple, "get"),
         tupleSlice = moduleMember(tuple, "slice"),
+        tupleSliceArray = moduleMember(tuple, "sliceArray"),
         tupleLazySlice = moduleMember(tuple, "lazySlice"),
         strStartsWith = moduleMember(str, "startsWith"),
         strGet = moduleMember(str, "get"),
@@ -782,6 +784,7 @@ object Elaborator:
     def toJsAsyncSymbol: TermSymbol = runtimeSymbols.toJsAsync
     def tupleGetSymbol: TermSymbol = runtimeSymbols.tupleGet
     def tupleSliceSymbol: TermSymbol = runtimeSymbols.tupleSlice
+    def tupleSliceArraySymbol: TermSymbol = runtimeSymbols.tupleSliceArray
     def tupleLazySliceSymbol: TermSymbol = runtimeSymbols.tupleLazySlice
     def strStartsWithSymbol: TermSymbol = runtimeSymbols.strStartsWith
     def strGetSymbol: TermSymbol = runtimeSymbols.strGet

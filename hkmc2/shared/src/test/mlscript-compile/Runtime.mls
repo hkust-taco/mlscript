@@ -99,7 +99,9 @@ type Pattern[A, B] = { unapply: A -> MatchResult[B] }
 module Tuple with
   
   @pure
-  fun slice(xs: Indexable, i: Int, j: Int) = xs.slice(i, xs.length - j)
+  fun slice[A](xs: Indexable[A], i: Int, j: Int): Indexable[A] = xs.slice(i, xs.length - j)
+  @pure
+  fun sliceArray[A](xs: Array[A], i: Int, j: Int): Array[A] = xs.slice(i, xs.length - j)
   
   @pure
   fun lazySlice(xs: Indexable, i: Int, j: Int) = LazyArray.dropLeftRight(i, j)(xs)

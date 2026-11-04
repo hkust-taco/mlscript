@@ -199,7 +199,7 @@ fun f() = case [...x, y, z] then x
 //│       let xs, inlinedVal, tmp;
 //│       set xs = (caseScrut as! Unknown);
 //│       set tmp = -⁰(xs.length⁰, 2);
-//│       set inlinedVal = xs.slice⁰(0, tmp);
+//│       set inlinedVal = (xs.slice⁰(0, tmp) as! Unknown);
 //│       do runtime⁰.Tuple⁰.get⁰((caseScrut as! Unknown), -2);
 //│       do runtime⁰.Tuple⁰.get⁰((caseScrut as! Unknown), -1);
 //│       return inlinedVal

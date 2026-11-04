@@ -3,7 +3,7 @@ package codegen
 
 import hkmc2.utils.*, shorthands.*
 import semantics.*
-import semantics.Elaborator.State
+import semantics.Elaborator.{Ctx, State}
 import syntax.{Tree, SpreadKind}
 
 
@@ -43,19 +43,26 @@ object OptionalParams:
     Option.when(missing.forall(_.flags.opt)):
       args ::: missing.map(p => Value.Lit(Tree.UnitLit(true))(p.toLoc).asArg)
   
-  /** Bind a slot from an already evaluated argument tuple. The tuple-length guard prevents an
-    * out-of-bounds read from manufacturing an uninitialized value for an absent optional argument. */
-  def bindFromTuple(args: Path, index: Int, sym: LocalVarSymbol, optional: Bool, rest: Block): Block =
+  /** Bind a slot from an already evaluated argument tuple. A presence threshold binds null below
+    * that length, preventing an out-of-bounds read or consumption of a reserved trailing argument.
+    * An absent threshold denotes a required slot, whose presence the call's arity check validates. */
+  def bindFromTuple(args: Path, index: Int, sym: LocalVarSymbol, minimumLength: Opt[Int], rest: Block)
+      (using Config, Ctx, State, Raise): Block =
     val value = DynSelect(args, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(sym.toLoc)
-    if !optional then Assign(sym, value, rest)
-    else
-      assert(index >= 0, "Optional slots are indexed from the start of the argument tuple")
-      Match(args, Case.Tup(index + 1, true) -> Assign(sym, value, End()) :: Nil,
-        S(Assign(sym, Value.Lit(Tree.UnitLit(true))(sym.toLoc), End())), rest)
+    // Tuple reads are dynamically typed even when the destination slot has a precise representation.
+    // Preserve that boundary for constructor fields, extracted parameters, and tail-call assignments.
+    def bind(value: Result, rest: Block): Block =
+      Assign(sym, value.coerceTo(sym.erasedType.getOrElse(ErasedType.Unknown(N)), sym.toLoc), rest)
+    minimumLength match
+      case N => bind(value, rest)
+      case S(length) =>
+        assert(index >= 0 && length > index, "Optional slots must fit within their presence threshold")
+        Match(args, Case.Tup(length, true) -> bind(value, End()) :: Nil,
+          S(bind(Value.Lit(Tree.UnitLit(true))(sym.toLoc), End())), rest)
   
   /** Evaluate a constructor slot once before optimizers can replace field reads with arguments. */
   def argument(value: Path)(k: Path => Block)(using State): Block = value match
     case _: Value.Lit => k(value)
     case _ =>
-      val slot = TempSymbol(N, initErasedType = N, "optionalArg")
+      val slot = TempSymbol(N, initErasedType = value.erasedType, "optionalArg")
       Scoped(Set(slot), Assign(slot, value, k(slot.asSimpleRef)))

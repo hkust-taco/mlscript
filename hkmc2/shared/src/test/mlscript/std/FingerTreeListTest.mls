@@ -106,7 +106,7 @@ if xs is
 //│   element0$ = runtime.Tuple.get(xs2 /* as! Unknown */, 0);
 //│   xs3 = xs2 /* as! Unknown */;
 //│   tmp16 = xs3.length - 0;
-//│   inlinedVal27 = runtime.safeCall(xs3.slice(1, tmp16));
+//│   inlinedVal27 = runtime.safeCall(xs3.slice(1, tmp16)) /* as! Unknown */;
 //│   return globalThis.Object.freeze([
 //│     element0$,
 //│     inlinedVal27

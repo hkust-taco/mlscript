@@ -294,23 +294,26 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     var prefix = blockBuilder.assignScoped(tupleSym, tupleRes)
     // Materialize optional slots before assigning any loop parameter, so missing arguments reset
     // the slots to null and reads remain independent of parameter assignment order.
+    // Tuple reads are dynamically typed, so required slots are coerced to their parameters'
+    // representations, as `OptionalParams.bindFromTuple` does for the optional ones.
     val mainArgs = paramList.zipWithIndex.map: (param, index) =>
       if param.flags.opt then
         val slot = TempSymbol(N, initErasedType = param.sym.erasedType, "optionalArg")
         prefix = prefix.scopedVars(Set(slot)).chain(rest =>
-          OptionalParams.bindFromTuple(tupleSym.asSimpleRef, index, slot, true, rest))
+          OptionalParams.bindFromTuple(tupleSym.asSimpleRef, index, slot, S(index + 1), rest))
         slot.asSimpleRef
       else DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(N)
+        .coerceTo(param.sym.erasedType.getOrElse(ErasedType.Unknown(N)), N)
     
     // If the rest param exists, append a slice
     val (initialBlk: (Block => Block), pathList: List[Path]) =
       if restParam.isDefined then
         val sliceResSym = TempSymbol(N, initErasedType = S(ErasedType.Array), "sliceRes")
-        // runtime.Tuple.slice(tupleSym, paramList.length, 0)
+        // runtime.Tuple.sliceArray(tupleSym, paramList.length, 0)
         val sliceRes = Call(
           State.runtimeSymbol.asSimpleRef
             .sel(Tree.Ident("Tuple"), State.tupleSymbol)
-            .sel(Tree.Ident("slice"), State.tupleSliceSymbol),
+            .sel(Tree.Ident("sliceArray"), State.tupleSliceArraySymbol),
           (tupleSym.asSimpleRef.asArg
             :: Value.Lit(Tree.IntLit(paramList.length))(N).asArg
             :: Value.Lit(Tree.IntLit(0))(N).asArg
