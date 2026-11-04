@@ -600,7 +600,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       case (ps :: remainingParams, args :: remainingArgs) =>
         def next(as: Ls[Arg]): Block = zipArgs(remainingParams, remainingArgs, as :: acc, mayRaiseEffects)
         if isConstructor then lowerConstructorArgs(args, ps, isMlsFun)(next)
-        else lowerArgs(args, expectedParamTypes(ps))(next)
+        else lowerArgs(args, expectedParamTypes(ps, args))(next)
       case (Nil, Nil) =>
         k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, mayRaiseEffects, annotations), loc))
       case (Nil, args :: remainingArgss) =>
@@ -706,7 +706,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         case (arg :: rest, _ :: params) => loop(rest, params, arg :: acc)
         case _ => k(acc.reverse ::: args)
       loop(args, ps.params, Nil)
-    lowerArgs(arg, expectedParamTypes(ps)): args =>
+    lowerArgs(arg, expectedParamTypes(ps, arg)): args =>
       if !ps.params.exists(_.flags.opt) then k(args)
       else if args.forall(_.spread.isEmpty) then
         val padded = if isMls then OptionalParams.pad(ps.params, args).getOrElse(args)
@@ -718,7 +718,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         def bind(params: Ls[(Param, Int)], acc: Ls[Arg]): Block = params match
           case (param, index) :: rest =>
             val slot = loweringCtx.registerTempSymbol(S(arg), erasedType = param.sym.erasedType, "constructorArg")
-            OptionalParams.bindFromTuple(tuple.asSimpleRef, index, slot, isMls && param.flags.opt,
+            OptionalParams.bindFromTuple(tuple.asSimpleRef, index, slot, Option.when(isMls && param.flags.opt)(index + 1),
               bind(rest, slot.asSimpleRef.asArg :: acc))
           case Nil => k(acc.reverse)
         Assign(tuple, Tuple(false, args)(arg.toLoc), bind(ps.params.zipWithIndex, Nil))
@@ -1923,9 +1923,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
     s.collect { case t: TermSymbol => t.erasedType }.flatten
 
-  /** The declared erased types of a parameter list's fixed parameters (excluding rest params). */
-  private def expectedParamTypes(ps: ParamList): Ls[Opt[ErasedValueType]] =
-    ps.params.map(_.sym.erasedType)
+  /** Resolve the shared argument binding plan at a statically known argument count. */
+  private def expectedParamTypes(ps: ParamList, args: Term): Ls[Opt[ErasedValueType]] =
+    ArgumentLayout.trailing(ps) match
+      case N => ps.params.map(_.sym.erasedType)
+      case S(layout) =>
+        val count = args match
+          case Tup(fields) if fields.forall {
+            case Fld(FldFlags.benign(), _, N) => true
+            case _ => false
+          } => S(fields.length)
+          case _ => N
+        layout.expectedTypes(count)
 
 
   def program(main: st.Blk, symbolsToPreserve: Set[ScopedSymbol]): Program =
@@ -1985,47 +1994,33 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
   /** Lower a parameter list whose variadic parameter has trailing parameters, as in `fun f(x, y?, ...xs, z)`,
     * which JavaScript does not support. The lowered parameter list keeps the required leading parameters (`x`)
     * and gathers all the other arguments into a fresh rest parameter `args`, from which the returned prologue
-    * extracts the other parameters, following the assignment described in `Elaborator.params`:
-    * the trailing parameters (`z`) take the last arguments, the optional parameters (`y`) take the remaining
-    * ones from left to right, and the variadic parameter (`xs`) takes the rest.
+    * extracts the other parameters using the same [[ArgumentLayout]] as call-site coercions.
     * Passes running after lowering thus only see `LoweredParamList`, which cannot contain trailing parameters. */
   protected def lowerTrailingParams(ps: ParamList, name: Opt[Str]): (LoweredParamList, LoweringCtx ?=> Block => Block) =
     val loweredParams = LoweredParamList.callingConvention(ps)
-    ps.variadic match
-    case S(Variadic(variadicParam, trailing @ (_ :: _))) =>
-      val (required, optional) = ps.params.splitAt(ps.leadingRequiredCount)
+    ArgumentLayout.trailing(ps) match
+    case S(layout) =>
       val argsSym = loweredParams.restParam.get.sym
       val args = argsSym.asSimpleRef
       def int(n: Int): Path = Value.Lit(Tree.IntLit(n))(N)
       val tupleSlice = State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("Tuple"), State.tupleSymbol)
-        .sel(Tree.Ident("slice"), State.tupleSliceSymbol)
-      // * `Tuple.slice(xs, i, j)` drops the first `i` and the last `j` elements of `xs`.
+        .sel(Tree.Ident("sliceArray"), State.tupleSliceArraySymbol)
+      // * `Tuple.sliceArray(xs, i, j)` drops the first `i` and the last `j` elements of `xs`.
       def slice(xs: Path, i: Int, j: Int): Result =
         Call(tupleSlice, (xs :: int(i) :: int(j) :: Nil).map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
-      // * Required trailing parameters are indexed from the end after the arity check.
-      // * Optional slots are guarded by the leading tuple's length before they are read.
-      def at(xs: Path, i: Int): Path = DynSelect(xs, int(i), DynSelectKind.ArrayIdx)(N)
-      val k = trailing.length
       // * The sanity check emitted by the code generator only knows about the lowered parameter list,
       // * so we check that the arguments of the trailing parameters are present here.
       val check = Option.when(config.sanityChecks.isDefined):
         Call(State.runtimeSymbol.asSimpleRef.sel(Tree.Ident("checkVariadicArgs"), State.checkVariadicArgsSymbol),
-          (Value.Lit(Tree.StrLit(name.getOrElse("")))(N) :: int(ps.paramCountLB) :: int(required.length) :: args :: Nil)
+          (Value.Lit(Tree.StrLit(name.getOrElse("")))(N) :: int(layout.minimumCount) :: int(layout.required.length) :: args :: Nil)
             .map(_.asArg) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
       val prologue: LoweringCtx ?=> Block => Block = body =>
-        val extractions: Ls[(LocalVarSymbol, Result)] =
-          (variadicParam.sym -> slice(args, optional.length, k))
-          :: trailing.zipWithIndex.map((p, i) => p.sym -> at(args, i - k))
-        (optional ::: variadicParam :: trailing).foreach(p => loweringCtx.collectScopedSym(p.sym))
-        val extractedRest = extractions.foldRight(body):
-          case ((sym, res), rest) => Assign(sym, res, rest)
-        // * Exclude trailing arguments before checking optional slot presence, so they cannot
-        // * accidentally fill a missing optional parameter.
-        val extracted = if optional.isEmpty then extractedRest else
-          val leading = loweringCtx.registerTempSymbol(N, erasedType = S(ErasedType.Array), "leadingArgs")
-          Assign(leading, slice(args, 0, k), optional.zipWithIndex.foldRight(extractedRest):
-            case ((param, index), rest) =>
-              OptionalParams.bindFromTuple(leading.asSimpleRef, index, param.sym, true, rest))
+        layout.extracted.foreach((param, _) => loweringCtx.collectScopedSym(param.sym))
+        val extracted = layout.extracted.foldRight(body):
+          case ((param, ArgumentLayout.Source.Element(index, minimumLength)), rest) =>
+            OptionalParams.bindFromTuple(args, index, param.sym, minimumLength, rest)
+          case ((param, ArgumentLayout.Source.Slice(start, trailing)), rest) =>
+            Assign(param.sym, castTo(slice(args, start, trailing), param.sym.erasedType, param.toLoc), rest)
         check.fold(extracted)(Assign.discard(_, extracted))
       (loweredParams, prologue)
     case _ => (loweredParams, body => body)
