@@ -78,6 +78,34 @@ fun nestedReturns(): Int =
 nestedReturns()
 //│ = 42
 
+// Inlining propagates the literal into the coercion to the parameter's class. A cast between
+// unrelated reference types fails at run time but still has a representation, unlike a cast
+// involving an unboxed primitive.
+:checkIR
+:soir
+class Wrapper
+fun fortyTwo = 42
+fun asWrapper(value: Wrapper): Wrapper = value
+fun mismatch() = asWrapper(fortyTwo)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define fortyTwo⁰ as fun fortyTwo¹() {
+//│   return 42
+//│ };
+//│ define asWrapper⁰ as fun asWrapper¹(value) {
+//│   return value
+//│ };
+//│ define mismatch⁰ as fun mismatch¹() {
+//│   return (42 as! Wrapper⁰)
+//│ };
+//│ define Wrapper¹ as class Wrapper⁰;
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Declaring a parameter whose type has no common representation is legal; moving a value into it
+// is the error. The binding and the signature agree on that type, so the definition is valid.
+:checkIR
+fun mixed(value: Int32 | Str) = 0
+
 // TODO: SymbolRefresher must rename nominal types alongside the classes it copies.
 // Each inlined construction must agree with its own temporary and parameter slots.
 :fixme
@@ -92,3 +120,34 @@ nestedReturns()
 //│ ╔══[INTERNAL ERROR] Invalid IR: incompatible representations at assignment to 'tmp'
 //│ ╙── The value and its destination refer to different copies of type 'Local'
 //│ = [Local, Local]
+
+// TODO: String range patterns store the extracted head in a Str temporary without a cast.
+:fixme
+:checkIR
+pattern Lower = "a"..="z"
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'stringHead'
+//│ ╙── The value has type 'Unknown', but its destination requires 'Str'
+
+// TODO: Tail-call rewriting assigns the spread argument to the Array-typed rest parameter without a cast.
+:fixme
+:checkIR
+@tailrec fun count(n)(...rest) = if rest is
+  [] then n
+  [_, ...more] then count(n + 1)(...more)
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at assignment to 'rest'
+//│ ║  l.+1: 	@tailrec fun count(n)(...rest) = if rest is
+//│ ║        	                         ^^^^
+//│ ╟── The value has type 'Unknown', but its destination requires 'Array'
+//│ ║  l.+1: 	@tailrec fun count(n)(...rest) = if rest is
+//│ ╙──      	                         ^^^^
+
+// TODO: Inlining `|>` turns a call of a function value into a direct call to `describe`,
+// but does not coerce the argument to the type of the callee's parameter.
+:fixme
+:checkIR
+@noInline fun describe(text: Str): Str = text
+@noInline fun produce(value) = value
+produce("a") |> describe
+//│ ╔══[INTERNAL ERROR] Invalid IR: a missing cast at a call argument
+//│ ╙── The value has type 'Unknown', but its destination requires 'Str'
+//│ = "a"
