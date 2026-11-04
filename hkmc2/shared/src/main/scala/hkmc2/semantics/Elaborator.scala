@@ -2238,14 +2238,17 @@ extends Importer:
       val trm = subterm(body, interp)
       // * An instance's resource modifier is written inside the instantiation, so one written outside has no effect.
       // * This is reported here, as `Lowering` sees both forms as the same term.
-      def unannotated(t: Term): Term = t match
-        case Term.Annotated(_, t) => unannotated(t)
+      def underlying(t: Term): Term = t match
+        case Term.Annotated(_, t) => underlying(t)
+        case Term.Capture(base, _) => underlying(base)
         case _ => t
-      unannotated(trm) match
+      underlying(trm) match
       case inst @ (Term.New(_, _, _) | Term.DynNew(_, _) | Term.Mut(_: Term.New | _: Term.DynNew)) =>
         raise(Annot.noEffect(kwt.toLoc, inst, N))
         trm
-      case Term.Lam(_, _) | Term.App(_, _) | Term.Ref(_) | Term.Sel(_, _) | Term.SynthSel(_, _)
+      case Term.Lam(_, _) | Term.App(_, _) | Term.NewSel(_, _, _) | Term.Ref(_) | Term.MemberRef(_) |
+        Term.SelfRef(_) | Term.SimpleRef(_) | Term.Sel(_, _) | Term.Super(_, _, _) | Term.SynthSel(_, _) |
+        Term.UnresolvedRef(_, _)
       if kw == Keyword.`rsc?` && interp != Tpe =>
         raise(Annot.Resource.maybeRscOnVal(kwt.toLoc))
         // * Drop the `rsc?` annotation, so that `Lowering` only sees `rsc` (or the lack thereof)

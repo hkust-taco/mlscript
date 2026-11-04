@@ -1,0 +1,111 @@
+:.
+:js
+
+
+class C
+fun g(x) = x
+fun g2(x)(y) = x
+module M with
+  fun m(x) = x
+let h = x => x
+//│ h = fun h
+
+
+// * `rsc?` on a value that is created by a reference is an error, as for lambdas and calls.
+
+:e
+rsc? g
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+1: 	rsc? g
+//│ ╙──      	^^^^
+//│ = fun g
+
+:e
+rsc? M.m
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+1: 	rsc? M.m
+//│ ╙──      	^^^^
+//│ = fun m
+
+:e
+rsc? h
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+1: 	rsc? h
+//│ ╙──      	^^^^
+//│ = fun h
+
+:e
+open M { m }
+rsc? m
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+2: 	rsc? m
+//│ ╙──      	^^^^
+//│ = fun m
+
+:e
+fun wrap(y) =
+  fun inner() = rsc? y
+  inner
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+2: 	  fun inner() = rsc? y
+//│ ╙──      	                ^^^^
+
+:e
+class D with
+  fun self() = rsc? this
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+2: 	  fun self() = rsc? this
+//│ ╙──      	               ^^^^
+
+:e
+class Base with
+  fun m(x) = x
+class Derived extends Base with
+  fun m2() = rsc? super.m
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+4: 	  fun m2() = rsc? super.m
+//│ ╙──      	             ^^^^
+
+:e
+open M
+rsc? m
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+2: 	rsc? m
+//│ ╙──      	^^^^
+//│ = fun m
+
+
+// * Controls, already errors under new resolution (A1).
+
+:e
+rsc? (x => x)
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+1: 	rsc? (x => x)
+//│ ╙──      	^^^^
+//│ = fun
+
+:e
+rsc? g2(1)
+//│ ╔══[COMPILATION ERROR] This value cannot be 'rsc?': it either is a resource or is not.
+//│ ║  l.+1: 	rsc? g2(1)
+//│ ╙──      	^^^^
+//│ = fun
+
+
+// * Type positions keep `rsc?`.
+
+type T = rsc? C
+fun k(x: rsc? C) = x
+
+
+// * Plain `rsc` on a reference is A2's; still the no-effect warning here.
+
+:w
+rsc g
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.+1: 	rsc g
+//│ ║        	^^^
+//│ ╟── This annotation is not supported on member reference terms.
+//│ ║  l.+1: 	rsc g
+//│ ╙──      	    ^
+//│ = fun g
