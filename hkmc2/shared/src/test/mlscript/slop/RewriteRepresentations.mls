@@ -59,12 +59,6 @@ count(0)(1, 2, 3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
-// A spread operand of another type is copied into a fresh rest array, as the call would do.
-:expect ["a", "b"]
-@tailrec fun chars(n)(...rest) = if n > 0 then chars(n - 1)(..."ab") else rest
-chars(1)()
-//│ = ["a", "b"]
-
 // Lifting replaces the closure argument by a temporary holding the partially applied lifted
 // function, which keeps the Function representation of the constructor's parameter.
 :lift

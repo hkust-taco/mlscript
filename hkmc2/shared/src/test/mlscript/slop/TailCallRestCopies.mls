@@ -10,6 +10,12 @@ open annotations
 chars(1, "ab")()
 //│ = ["a", "b"]
 
+// The same holds for a spread operand statically known to be a string.
+:expect ["a", "b"]
+@noInline @tailrec fun literalChars(n)(...rest) = if n > 0 then literalChars(n - 1)(..."ab") else rest
+literalChars(1)()
+//│ = ["a", "b"]
+
 // A rest array must be fresh even when the spread operand already has an Array representation.
 :expect false
 @noInline @tailrec fun aliases(n, values: Array[Int])(...rest) =
