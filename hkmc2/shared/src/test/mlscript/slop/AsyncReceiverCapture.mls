@@ -1,0 +1,20 @@
+:.
+:js
+
+
+// Import under an alias so an escaped receiver cannot accidentally resolve to
+// a global with the module's generated name. Both enclosing modules and the
+// instance receiver must survive extraction and suspension of the async body.
+import "../../mlscript-compile/AsyncLibrary.mls" as Library
+
+:await
+:expect 42
+new Library.Nested.Reader(1).read()
+//│ = 42
+
+:await
+:expect 43
+set Library.offset = 2
+new Library.Nested.Reader(1).read()
+//│ = 43
+

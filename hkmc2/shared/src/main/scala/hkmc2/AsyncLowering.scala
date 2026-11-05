@@ -44,12 +44,18 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
           val nv = VarSymbol(v.id, erasedType = v.erasedType, mut = v.mut)
           (p, p.copy(sym = nv)(p.toLoc))
       val symMap = outerParams.iterator.map(p => p._1.sym -> p._2.sym).toMap
-      val thisVar = VarSymbol(Tree.Ident("this"), erasedType = fun.owner.flatMap(_.asThis.erasedType), mut = false)
-      val thisParam = fun.owner.map(_ => Param.simple(thisVar))
+      // Extraction moves the helper outside every enclosing class and module, not
+      // just the method's immediate owner. Pass all free receivers explicitly so
+      // nested async methods retain access to enclosing module state after await.
+      val receivers = fun.owner.toList ::: (fun.body.freeReceivers -- fun.owner).toList.sortBy(_.uid)
+      val receiverVars = receivers.map: sym =>
+        sym -> VarSymbol(Tree.Ident(if fun.owner.contains(sym) then "this" else "receiver"),
+          erasedType = sym.asThis.erasedType, mut = false)
+      val receiverMap = receiverVars.toMap
       val outerDsym = TermSymbol(syntax.Fun, N, fun.dSym.id)
       val noAsync = fun.annotations.filterNot(_.isInstanceOf[Annot.Async])
       val outerSignature = FunDefn.Signature.fromParams(
-        LoweredParamList.plain((thisParam.iterator ++ outerParams.iterator.map(_._2)).toList)(N) ::
+        LoweredParamList.plain((receiverVars.iterator.map((_, sym) => Param.simple(sym)) ++ outerParams.iterator.map(_._2)).toList)(N) ::
           LoweredParamList.plain(Nil)(N) :: Nil,
         ErasedResult.fromAnnotations(fun.signature.result.bodyType, noAsync))
       // The extracted helper has fresh parameter bindings. Substitute assignment
@@ -58,12 +64,12 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
         override def mapVarSym(sym: VarSymbol): VarSymbol = symMap.getOrElse(sym, sym)
       val transformer = new BlockTransformer(paramSubst):
         override def applyValue(v: Value)(k: Value => Block): Block = v match
-          case Value.This(sym) if fun.owner.contains(sym) =>
-            k(Value.SimpleRef(thisVar)(v.toLoc))
+          case Value.This(sym: InnerSymbol) if receiverMap.contains(sym) =>
+            k(Value.SimpleRef(receiverMap(sym))(v.toLoc))
           case _ => super.applyValue(v)(k)
       val newBody = transformer.applyBlock(wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))
       collectedFunDefn += FunDefn(N, outerBms, outerDsym, outerSignature, newBody)(fun.configOverride, noAsync)
-      val callArgs = (fun.owner.iterator.map(s => Arg(N, Value.This(s)(N))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym)(N))))).toList
+      val callArgs = (receivers.iterator.map(s => Arg(N, Value.This(s)(N))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym)(N))))).toList
       val outerCall = Call(Value.MemberRef(outerBms, outerDsym)(N), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
       val tmp = TempSymbol(N, initErasedType = outerCall.erasedType, "tmp")
       val wrapper = wrappers(fun.dSym)
