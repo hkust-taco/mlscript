@@ -207,7 +207,7 @@ private fun incompatible(): Int32 | Int64 = unsafe.undefined
 42
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
 //│ ║  l.+1: 	private fun incompatible(): Int32 | Int64 = unsafe.undefined
-//│ ╙──      	                                            ^^^^^^^^^^^^^^^^
+//│ ╙──      	                            ^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 42
 

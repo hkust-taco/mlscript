@@ -281,7 +281,7 @@ fun f(a)(...z) = if z is
 //│ @private
 //│ define f$tailrec as fun f$tailrec⁰(a, z) {
 //│   loop loopLabel:
-//│     let tmp;
+//│     let middleElements, tmp;
 //│     match z
 //│       Array(0) =>
 //│         return a
@@ -290,9 +290,10 @@ fun f(a)(...z) = if z is
 //│         do runtime⁰.Tuple⁰.get⁰(z, 0);
 //│         set tmp1 = -¹(z.length¹, 0);
 //│         set inlinedVal = z.slice¹(1, tmp1);
+//│         set middleElements = (inlinedVal as!! Array⁰);
 //│         set tmp = +⁰(a, 1);
 //│         set a = tmp;
-//│         set z = inlinedVal;
+//│         set z = mut [...middleElements];
 //│         continue loopLabel
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
@@ -494,24 +495,27 @@ fun f(n)(a)(...z) =
 //│ @private
 //│ define f$tailrec as fun f$tailrec³(n, a, z) {
 //│   loop loopLabel:
-//│     let scrut, res, tmp, tmp1;
+//│     let scrut, res, tmp, middleElements, tmp1;
 //│     set scrut = >⁰(n, 0);
 //│     match scrut
 //│       true =>
 //│         set tmp = -⁰(n, 1);
 //│         set n = tmp;
+//│         set z = mut [...z];
 //│         continue loopLabel
 //│       else
 //│         match z
 //│           Array(0) =>
 //│             return a
 //│           Array(1+) =>
-//│             let inlinedVal, tmp2;
+//│             let tmp2, inlinedVal, tmp3;
 //│             do runtime⁰.Tuple⁰.get⁰(z, 0);
-//│             set tmp2 = -¹(z.length¹, 0);
-//│             set inlinedVal = z.slice¹(1, tmp2);
+//│             set tmp3 = -¹(z.length¹, 0);
+//│             set inlinedVal = z.slice¹(1, tmp3);
+//│             set middleElements = (inlinedVal as!! Array⁰);
 //│             set tmp1 = +⁰(a, 1);
-//│             set res = f$tailrec³(n, tmp1, inlinedVal);
+//│             set tmp2 = mut [...middleElements];
+//│             set res = f$tailrec³(n, tmp1, tmp2);
 //│             do Predef⁰.print⁰("hi!");
 //│             return res
 //│           else

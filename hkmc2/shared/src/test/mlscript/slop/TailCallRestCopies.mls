@@ -1,0 +1,31 @@
+:.
+:js
+open annotations
+
+
+// A dynamically typed iterable still needs to be spread into the recursive call's rest array.
+:expect ["a", "b"]
+@noInline @tailrec fun chars(n, text)(...rest) =
+  if n > 0 then chars(n - 1, text)(...text) else rest
+chars(1, "ab")()
+//│ = ["a", "b"]
+
+// The same holds for a spread operand statically known to be a string.
+:expect ["a", "b"]
+@noInline @tailrec fun literalChars(n)(...rest) = if n > 0 then literalChars(n - 1)(..."ab") else rest
+literalChars(1)()
+//│ = ["a", "b"]
+
+// A rest array must be fresh even when the spread operand already has an Array representation.
+:expect false
+@noInline @tailrec fun aliases(n, values: Array[Int])(...rest) =
+  if n > 0 then aliases(n - 1, values)(...values) else rest === values
+aliases(1, [1, 2])()
+//│ = false
+
+// Each recursive call gets its own rest array; a reference saved by the caller must stay distinct.
+:expect false
+@noInline @tailrec fun retains(n, previous)(...rest) =
+  if n > 0 then retains(n - 1, rest)(...rest) else rest === previous
+retains(1, null)(1, 2)
+//│ = false

@@ -19,15 +19,17 @@ quiet(40, 2)
 
 
 // Cast comments stay attached to callees, constructor arguments, and returned values after inlining.
+// The operands come from a function that is not inlined, so the casts remain needed.
 :sjs
 :expect 42
 class Box(val value: Int)
 fun asFunction(value): Function = value
 fun read(box: Box): Int = box.value
 fun invoke(f, x) = asFunction(f)(x)
-invoke(x => read(new Box(x)), 42)
+@annotations.noInline fun opaque(value) = value
+invoke(opaque(x => read(new Box(x))), opaque(42))
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let asFunction, read, invoke, Box1, lambda;
+//│ let read, asFunction, Box1, invoke, opaque, lambda, tmp, tmp1;
 //│ asFunction = function asFunction(value) {
 //│   return value /* as! Function */
 //│ };
@@ -36,6 +38,9 @@ invoke(x => read(new Box(x)), 42)
 //│ };
 //│ invoke = function invoke(f, x) {
 //│   return runtime.safeCall(f /* as! Function */(x))
+//│ };
+//│ opaque = function opaque(value) {
+//│   return value
 //│ };
 //│ Box1 = function Box(value) {
 //│   return globalThis.Object.freeze(new Box.class(value));
@@ -51,27 +56,31 @@ invoke(x => read(new Box(x)), 42)
 //│   static [definitionMetadata] = ["class", "Box", ["value"]];
 //│ });
 //│ lambda = (undefined, function (x) {
-//│   let tmp;
-//│   tmp = globalThis.Object.freeze(new Box1.class(x /* as! Int */));
-//│   return tmp.value
+//│   let tmp2;
+//│   tmp2 = globalThis.Object.freeze(new Box1.class(x /* as! Int */));
+//│   return tmp2.value
 //│ });
-//│ return runtime.safeCall(lambda /* as! Function */(42))
+//│ tmp = opaque(lambda);
+//│ tmp1 = opaque(42);
+//│ return runtime.safeCall(tmp /* as! Function */(tmp1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
 
 // Looking through a commented cast must still parenthesize a negative literal used as a receiver.
+// The simplifier drops a cast that the literal already fits, so the target here is unrelated
+// to Int; the JS backend erases the cast, so the call still runs on the number.
 :noCheckCasts
 :sjs
 :expect "-1"
-fun asInt(value): Int = value
-asInt(-1).toString()
+fun asStr(value): Str = value
+asStr(-1).toString()
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let asInt;
-//│ asInt = function asInt(value) {
-//│   return value /* as!! Int */
+//│ let asStr;
+//│ asStr = function asStr(value) {
+//│   return value /* as!! Str */
 //│ };
-//│ return runtime.safeCall((-1 /* as!! Int */).toString())
+//│ return runtime.safeCall((-1 /* as!! Str */).toString())
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = "-1"
 

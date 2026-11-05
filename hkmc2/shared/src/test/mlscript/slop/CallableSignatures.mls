@@ -90,7 +90,7 @@ capture(39)
 //│   return +⁰(tmp, second)
 //│ };
 //│ define capture⁰ as fun capture¹(value: Int⁰): Int⁰ {
-//│   return (addCaptured⁰(value, 1)(2) as! Int⁰)
+//│   return addCaptured⁰(value, 1)(2)
 //│ };
 //│ return capture¹(39)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
@@ -218,7 +218,7 @@ capturedAsyncFunction(40)(2)
 //│ define add as fun add³(value: Int⁰, n: Int⁰): Promise⁰ {
 //│   let tmp: Function⁰;
 //│   set tmp = add²(value, n);
-//│   return runtime⁰.toJsAsync﹖(tmp)
+//│   return (runtime⁰.toJsAsync﹖(tmp) as! Promise⁰)
 //│ };
 //│ define capturedAsyncFunction⁰ as fun capturedAsyncFunction¹(value: Int⁰): ? {
 //│   return add$⁰(value)
@@ -254,7 +254,7 @@ capturedCurriedAsyncFunction(39)(1)(2)
 //│ define add as fun add⁵(value: Int⁰, first: Int⁰)(second: Int⁰): Promise⁰ {
 //│   let tmp: Function⁰;
 //│   set tmp = add⁴(value, first, second);
-//│   return runtime⁰.toJsAsync﹖(tmp)
+//│   return (runtime⁰.toJsAsync﹖(tmp) as! Promise⁰)
 //│ };
 //│ define capturedCurriedAsyncFunction⁰ as fun capturedCurriedAsyncFunction¹(value: Int⁰): ? {
 //│   return add$¹(value)

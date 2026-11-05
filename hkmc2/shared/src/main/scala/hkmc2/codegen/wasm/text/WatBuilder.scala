@@ -65,10 +65,10 @@ extension (et: ErasedValueType)
             S(RefType.i31ref)
           else
             // The Unit singleton's struct is registered under the synthetic `unitBlockMemberSymbol`, not under the
-            // `unit` module's own block member that `asBlkMember` resolves to. Cf. `localType` below.
+            // `unit` module's own block member that `bms` resolves to. Cf. `localType` below.
             val structSym =
               if tpeSym eq State.unitSymbol then S(State.unitBlockMemberSymbol)
-              else tpeSym.asBlkMember
+              else tpeSym.bms
             // Source slots also admit undefined, represented by a null reference.
             // Known receivers and newly allocated instances can still use non-null references.
             structSym.flatMap(ctx.getType).map(RefType(_, nullable = true))
@@ -88,7 +88,7 @@ extension (sym: WasmSlotSymbol)
       case isym: InnerSymbol =>
         val structSym =
           if isym eq State.unitSymbol then S(State.unitBlockMemberSymbol)
-          else isym.asBlkMember
+          else isym.bms
         structSym.flatMap(ctx.getType).fold(RefType.anyref)(RefType(_, nullable = false))
       case bms: BlockMemberSymbol =>
         // A BMS's erased type lives in its associated TermSymbol
@@ -735,10 +735,11 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
     defn.parentPath match
       case N => N
-      case S(Value.MemberRef(sym, _)) =>
-        sym.asCls.flatMap(_.asBlkMember).orElse(unsupportedParent())
-      case S(sel: Select) =>
-        sel.symbol.flatMap(_.asCls).flatMap(_.asBlkMember).orElse(unsupportedParent())
+      // Lowering keeps a parent path only when it denotes a class (see `Lowering.withClassParent`).
+      case S(Value.MemberRef(bms, _: ClassSymbol)) => S(bms)
+      case S(sel: Select) => sel.symbol match
+        case S(cls: ClassSymbol) => cls.bms.orElse(unsupportedParent())
+        case _ => unsupportedParent()
       case S(_) =>
         unsupportedParent()
 
@@ -1811,8 +1812,8 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
   /** Returns the owning class symbol for a resolved field/member symbol, when available. */
   private def fieldOwner(sym: MemberSymbol): Opt[BlockMemberSymbol] = sym match
-    case ts: TermSymbol => ts.owner.flatMap(_.asBlkMember)
-    case ms: MemberSymbol => ms.asTrm.flatMap(_.owner.flatMap(_.asBlkMember))
+    case ts: TermSymbol => ts.owner.flatMap(_.bms)
+    case ms: MemberSymbol => ms.asTrm.flatMap(_.owner.flatMap(_.bms))
 
   /** Resolve the layout slot once for both its physical offset and its declared type. */
   private def classField(thisSym: BlockMemberSymbol | TypeIdx, sym: DefinitionSymbol[?])(using Ctx): (FieldIdx, Field) =
@@ -1842,7 +1843,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
   /** Resolves `sym` to a predeclared class method symbol, if any. */
   private def predeclaredClassMethodSym(sym: DefinitionSymbol[?]): Opt[BlockMemberSymbol] =
-    sym.asBlkMember.filter: methodSym =>
+    sym.bms.filter: methodSym =>
       methodSym.asTrm.exists(_.owner.exists(_.asCls.isDefined)) &&
         (ctx.getFunc(methodSym).nonEmpty ||
           fieldOwner(methodSym).flatMap(ctx.getVirtualTable).exists(_.slotOf.contains(methodSym)))
@@ -1964,7 +1965,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
           castConserve(
             local.get(funcCtx.lookupLocal_!(sym, sym.toLoc), funcCtx.slotType(sym)),
             RefType(
-              sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
+              sym.bms.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
               nullable = false,
             ),
             r.toLoc,
@@ -2373,7 +2374,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
               case S(fieldSym) =>
                 val selOwner = fieldSym.owner getOrElse
                   lastWords(s"Expected resolved AssignField(...) expression `$fieldSym` to have an owner")
-                val selCls = selOwner.asBlkMember getOrElse
+                val selCls = selOwner.bms getOrElse
                   lastWords(
                     s"Expected resolved class for AssignField(...) expression to be a BlockMemberSymbol, but got $selOwner (${
                         selOwner.getClass.getName
@@ -2444,7 +2445,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                 val rstWat = returningTerm(rst)
                 defineExpr +: rstWat
               case S(owner) =>
-                val ownerBlkMem = owner.asBlkMember.get
+                val ownerBlkMem = owner.bms.get
                 val (fieldIdx, field) = classField(ownerBlkMem, tsym)
                 val pCasted = castToValType(p, field.ty, defn.sym.toLoc)
                 val assignInstr = struct.set(
@@ -2849,7 +2850,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                     ))
 
                   case Case.Cls(cls, _) =>
-                    val clsBlkMemberSym = cls.asBlkMember getOrElse:
+                    val clsBlkMemberSym = cls.bms getOrElse:
                       break(errExpr(
                         Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
                         extraInfo = S(s"ClassLikeSymbol: ${cls.toString}"),
