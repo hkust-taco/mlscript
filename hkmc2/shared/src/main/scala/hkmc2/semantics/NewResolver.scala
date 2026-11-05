@@ -598,17 +598,15 @@ class NewResolver:
         case R(binders) => bindings.filter((symbol, _) => binders(symbol))
         case L(_) => bindings
       def retain: DeclaredType = DeclaredType(resolution, relevant, TypeSubstitution.empty, positive)(N)
-      def combined(left: DeclaredType, right: DeclaredType, union: Bool): DeclaredType =
-        combinedType(resolution, left, right, union).withNamespaces(namespacePlan(left, aliases).union(namespacePlan(right, aliases)))
       resolution.currentShapes.toList match
         case TypeShape.Parameter(symbol, _) :: Nil if bindings.contains(symbol) => selectArgument(bindings(symbol), positive)
         case (reference: TypeShape.Reference) :: Nil =>
           transportType(loop(reference.base, bindings ++ reference.bindings, aliases, positive)
             .instantiate(reference.instances), reference.marks)
         case TypeShape.Union(left, right) :: Nil =>
-          combined(loop(left, bindings, aliases, positive), loop(right, bindings, aliases, positive), true)
+          combinedType(resolution, loop(left, bindings, aliases, positive), loop(right, bindings, aliases, positive), true)
         case TypeShape.Intersection(left, right) :: Nil =>
-          combined(loop(left, bindings, aliases, positive), loop(right, bindings, aliases, positive), false)
+          combinedType(resolution, loop(left, bindings, aliases, positive), loop(right, bindings, aliases, positive), false)
         case TypeShape.Wildcard(input, output) :: Nil =>
           // Normalize both parts before retaining the argument. Otherwise even
           // out A keeps another A-to-wildcard environment at each recursive
@@ -627,8 +625,9 @@ class NewResolver:
                   // interpretation. Retaining a partial forwarding application
                   // would nest its environment at each recursive projection.
                   val result = loop(rhs, aliasBindings(base, supplied, parameters, positive), aliases + symbol, positive)
-                  S(result.withNamespaces(namespacePlan(result, aliases + symbol).through(
-                    if ownNamespaces(symbol.defn.get).isEmpty then N else S(symbol), NamespaceWitness.Written(resolution.source))))
+                  S(if ownNamespaces(symbol.defn.get).isEmpty then result else
+                    result.withNamespaces(namespacePlan(result, aliases + symbol).through(
+                      S(symbol), NamespaceWitness.Written(resolution.source))))
               case TypeShape.Contextual(reference) :: Nil =>
                 // Use exactly the interpreter's application rule: move caller
                 // arguments to the template endpoint, substitute there, then
@@ -673,10 +672,19 @@ class NewResolver:
         // Different written occurrences of A are the same lattice atom. Limit
         // this canonicalization to combinations, so ordinary annotation and
         // storage references retain their precise diagnostic source location.
-        TypeFormula.atom(parameterType(parameter).withPolarity(tpe.positive).withOrigin(tpe.origin).instantiate(tpe.instances))
+        val canonical = parameterType(parameter).withPolarity(tpe.positive).withOrigin(tpe.origin).instantiate(tpe.instances)
+        TypeFormula.atom(tpe.namespaces.fold(canonical)(canonical.withNamespaces))
       case TypeShape.Combined(formula) :: Nil => mapTypeFormula(formula, _.instantiate(tpe.instances))
       case TypeShape.Contextual(reference) :: Nil =>
-        mapTypeFormula(typeFormula(reference.tpe.instantiate(tpe.instances).withOrigin(tpe.origin)), transportType(_, reference.marks))
+        mapTypeFormula(typeFormula(reference.tpe.instantiate(tpe.instances).withOrigin(tpe.origin)), atom =>
+          val moved = transportType(atom, reference.marks)
+          tpe.namespaces.fold(moved)(moved.withNamespaces))
+      case TypeShape.Alias(symbol, _) :: Nil if symbol is prelude.builtins.Any => TypeFormula.top
+      case (alias @ TypeShape.Alias(symbol, S(_))) :: Nil if symbol.defn.exists(_.tparams.isEmpty) =>
+        // Recognize aliases of the lattice identities without replacing the
+        // written witness of an alias whose body still contributes an atom.
+        val body = typeFormula(reduceType(tpe, noTypeArguments, alias).get.tpe)
+        if body.orderedAtoms.isEmpty then body else TypeFormula.atom(tpe)
       case TypeShape.Top :: Nil => TypeFormula.top
       case TypeShape.Bottom :: Nil => TypeFormula.bottom
       case _ => TypeFormula.atom(tpe)
@@ -1318,8 +1326,8 @@ class NewResolver:
     * considered: the free binders of its source graph (instanceDependencies),
     * or N while a forward source target is still unresolved, and the support of
     * the types bound to its formals. The formals themselves need no instance.
-    * Namespace plans can still read binders erased from the semantic interface,
-    * as in Any | A, so their retained inputs and observed children count too.
+    * Namespace plans can follow deferred applications, whose saved arguments
+    * and instances must remain available until their source is resolved.
     */
   private def typeDependencySet(tpe: DeclaredType)(using ResolutionContext): Binders =
     instanceDependencies(tpe.resolution) match
@@ -3803,7 +3811,7 @@ class NewResolver:
       case _ => N
     case _ => N
 
-  /** Capture root lookup behavior before alias and Boolean normalization erase it.
+  /** Capture root lookup behavior when expanding aliases in a normalized type.
     * Structural children retain their observations in bindings, not in this plan:
     * Array[A] names Array independently of A. Retaining A here would let an absorbed
     * recursive argument A | (A & Array[A]) grow a namespace history without bound.
@@ -3821,13 +3829,14 @@ class NewResolver:
         val witness = NamespaceWitness.Written(current.resolution.source)
         if seen(current.resolution) || current.shapes.isEmpty then N else
           val next = seen + current.resolution
-          def child(res: TypeResolution): Opt[TypeNamespaces] = follow(declaredType(res, current), noTypeArguments, next)
           def leaf(shape: TypeShape): Opt[TypeNamespaces] = shape match
             case TypeShape.Nominal(cls) => S(TypeNamespaces.target(TypeNamespaces.Target.Class(cls), witness))
             case TypeShape.Alias(symbol, N) => S(
               TypeNamespaces.empty.through(if symbol.defn.exists(ownNamespaces(_).nonEmpty) then S(symbol) else N, witness))
-            case TypeShape.Union(left, right) => child(left).flatMap(a => child(right).map(a.union))
-            case TypeShape.Intersection(left, right) => child(left).flatMap(a => child(right).map(a.union))
+            case TypeShape.Union(left, right) =>
+              follow(combinedType(current.resolution, declaredType(left, current), declaredType(right, current), true), noTypeArguments, next)
+            case TypeShape.Intersection(left, right) =>
+              follow(combinedType(current.resolution, declaredType(left, current), declaredType(right, current), false), noTypeArguments, next)
             case TypeShape.Combined(formula) => formula.orderedAtoms.foldLeft[Opt[TypeNamespaces]](S(TypeNamespaces.empty)): (plan, atom) =>
               plan.flatMap(a => follow(atom.instantiate(current.instances), noTypeArguments, next).map(a.union))
             case TypeShape.Polymorphic(params, _, body) =>

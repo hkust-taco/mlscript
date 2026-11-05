@@ -1,0 +1,49 @@
+:.
+#lang(eagerResolution: true)
+
+class Kept(val value: Int)
+module Kept with
+  val Pick = Kept(1)
+class Discarded(val value: Int)
+module Discarded with
+  val Pick = Discarded(2)
+
+// Both absorption laws remove Discarded before resolving the argument's name.
+fun union[A](value: A | (A & Discarded)) = if value is Kept(n) then n else 0
+fun intersection[A](value: A & (A | Discarded)) = if value is Kept(n) then n else 0
+
+:expect [1, 1]
+[union[Kept](Pick), intersection[Kept](Pick)]
+//│ = [1, 1]
+
+type Empty = Nothing
+module Empty with
+  val Pick = Discarded(3)
+type Full = Any
+module Full with
+  val Pick = Discarded(4)
+
+// Namespace-bearing aliases of lattice identities disappear with their types.
+fun bottom(value: Kept | Empty) = value.value
+fun top(value: Kept & Full) = value.value
+
+:expect [1, 1]
+[bottom(Pick), top(Pick)]
+//│ = [1, 1]
+
+// An alias used directly still supplies its companion, even with an Any body.
+fun full(value: Full) = value
+
+:expect 4
+if full(Pick) is Discarded(n) then n else 0
+//│ = 4
+
+// The same alias disappears when a Boolean combination normalizes to Any.
+fun erased(value: Any | Full) = value
+
+:e
+erased(Pick)
+//│ ╔══[COMPILATION ERROR] Name not found: Pick
+//│ ║  l.+1: 	erased(Pick)
+//│ ╙──      	       ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

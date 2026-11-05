@@ -100,20 +100,32 @@ type Later[A] = Box[A]
 delayed(Box(First.Some(11)), Box(Second.Some(12)))
 //│ = [11, 12]
 
-// An erased semantic interface can still read a call's type argument to discover
-// namespaces. Projecting its substitution must keep that namespace-only dependency.
+// Boolean normalization discards A and its namespace contribution. The returned
+// value's runtime class must not bypass the declared Any interface.
 fun erased[A](value: A): Any | A = value
 fun erasedField[A](value: A): {payload: Any | A} = {payload: value}
 
-:expect [13, 14]
+:e
 [if erased(First.Some(13)) is Some(v) then v else 0,
   if erased(Second.Some(14)) is Some(v) then v else 0]
-//│ = [13, 14]
+//│ ╔══[COMPILATION ERROR] Name not found: Some
+//│ ║  l.+1: 	[if erased(First.Some(13)) is Some(v) then v else 0,
+//│ ╙──      	                              ^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: Some
+//│ ║  l.+2: 	  if erased(Second.Some(14)) is Some(v) then v else 0]
+//│ ╙──      	                                ^^^^
+//│ = [0, 0]
 
-:expect [15, 16]
+:e
 [if erasedField(First.Some(15)).payload is Some(v) then v else 0,
   if erasedField(Second.Some(16)).payload is Some(v) then v else 0]
-//│ = [15, 16]
+//│ ╔══[COMPILATION ERROR] Name not found: Some
+//│ ║  l.+1: 	[if erasedField(First.Some(15)).payload is Some(v) then v else 0,
+//│ ╙──      	                                           ^^^^
+//│ ╔══[COMPILATION ERROR] Name not found: Some
+//│ ║  l.+2: 	  if erasedField(Second.Some(16)).payload is Some(v) then v else 0]
+//│ ╙──      	                                             ^^^^
+//│ = [0, 0]
 
 import "../../mlscript-compile/Option.mls"
 

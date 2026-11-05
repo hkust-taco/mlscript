@@ -303,6 +303,7 @@ object Elaborator:
         assumeBuiltin(nme).asMod.getOrElse(throw new NoSuchElementException(
           s"builtin module symbol $nme"))
       val Anything = assumeBuiltinTpe("Anything")
+      lazy val Any = assumeBuiltinTpe("Any")
       val Int = assumeBuiltinCls("Int")
       val Int31 = assumeBuiltinCls("Int31")
       val Int32 = assumeBuiltinCls("Int32")

@@ -308,7 +308,7 @@ excludes diagnostic witnesses. Its equality compares shared children once, inclu
 across imports. Synthesized applications share a constructor template and supply their
 observed arguments through ordinary bindings.
 
-Before alias and Boolean normalization erase declarations, `namespacePlan` uses the same
+When expanding aliases, `namespacePlan` uses the same
 `reduceType` steps as other type interpreters to retain just their root lookup behavior.
 A `TypeNamespaces` plan is a set of independent fallback paths: each tries aliases in order
 before a class or a symbolic inference input. The first occurrence of an alias on a path
@@ -323,10 +323,12 @@ graphs defer the whole application, preserving its pending arguments until compl
 following inference inputs only for provided values. Each class or alias contributes the
 first of its own namespaces (its companion, then its declaring module) that provides an
 accessible member (`firstProvider`), and otherwise those of its parent or body. Boolean
-components contribute independently. When Boolean normalization merges equal semantic
+components that survive normalization contribute independently. Discarded components
+contribute no namespaces: `Any | A` has the namespace behavior of `Any`, and
+`A | (A & B)` has that of `A`. When Boolean normalization merges equal semantic
 atoms, their corresponding child observations are joined; unrelated uses are never joined
-merely because they share an interned reference. Scope projection also retains dependencies
-used only by namespace plans, such as the parameter erased from the interface of `Any | A`.
+merely because they share an interned reference. Deferred namespace applications retain
+their arguments until their source resolves.
 `ImplicitNamespaces.consulted` decides each namespace once per reference: it is pending
 until defined, then missing the name, inaccessible, selected through a path from
 `AccessPath.valuePath` (whose paths carry the same `Capture`s as written references),
