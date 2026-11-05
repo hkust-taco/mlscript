@@ -1662,6 +1662,10 @@ extends Importer:
       // * so parentheses are transparent, and `x |> (_ + 1)` means `x |> (y => y + 1)`.
       if lang.newUnderscoreAndApplicationSyntax then subterm(e, interp)
       else term(e, interp)
+    // Empty braces in term or type position denote a record. Statement bodies
+    // use `block` directly and still produce Unit; its expression spelling is `()`.
+    case Block(Nil) =>
+      withTypeBinders(Term.Rcd(mut = false, Nil)).withLocOf(tree)
     case b: Block =>
       ctx.nestLocal("‹block›").givenIn:
         block(b, hasResult = true, resultInterp = interp)._1 match
