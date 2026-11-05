@@ -16,4 +16,6 @@
 -J-Xmx4G
 
 #-J-XX:+UseG1GC # does not seem to make much of a difference
+-J-XX:+UseCompactObjectHeaders
+-J-XX:+UseStringDeduplication
 
