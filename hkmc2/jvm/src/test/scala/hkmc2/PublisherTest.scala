@@ -65,6 +65,41 @@ class PublisherTest extends AnyFunSuite:
       if value < 6 then candidates.add(value + 1)
     assert(visited.toList == List(1, 2, 3, 4, 5, 6))
 
+  test("candidate snapshots stay exhausted when publication appends more values"):
+    given ResolutionContext = new Elaborator.State().newResolverState.context
+    val candidates = Candidates(summon[CandidateKey[Int]])
+    val empty = candidates.snapshot
+    candidates.add(1)
+    assert(!empty.hasNext)
+    intercept[NoSuchElementException](empty.next())
+    val one = candidates.iterator
+    candidates.add(2)
+    assert(one.hasNext)
+    assert(one.next() == 1)
+    assert(!one.hasNext)
+    candidates.add(3)
+    assert(!one.hasNext)
+    intercept[NoSuchElementException](one.next())
+
+  test("candidate existence checks are bounded under publication and short-circuit"):
+    given ResolutionContext = new Elaborator.State().newResolverState.context
+    val candidates = Candidates(summon[CandidateKey[Int]])
+    assert(!candidates.exists(_ => fail("An empty host has no candidates")))
+    candidates.add(1)
+    candidates.add(2)
+    val visited = ArrayBuffer.empty[Int]
+    val found = candidates.exists: value =>
+      visited += value
+      candidates.add(value + 2)
+      value == 3
+    assert(!found)
+    assert(visited.toList == List(1, 2))
+    visited.clear()
+    assert(candidates.exists: value =>
+      visited += value
+      value == 2)
+    assert(visited.toList == List(1, 2))
+
   test("subscribing during notification replays each shape exactly once"):
     given ResolutionContext = new Elaborator.State().newResolverState.context
     val host = new IntHost
