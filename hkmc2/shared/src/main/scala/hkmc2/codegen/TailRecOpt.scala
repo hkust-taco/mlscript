@@ -262,19 +262,11 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       case N => return CallArgsResult.ForceSpread
     
     paramList.restParam match
-      case S(restParam) =>
-        val restType = restParam.sym.erasedType.getOrElse(ErasedType.Unknown)
-        val rest =
-          restArgs match
-            // Reusing a lone spread operand as the rest array skips the copy that a call
-            // makes. The operand is not statically an array, so restore the rest
-            // parameter's representation with a cast. An operand of an unrelated type,
-            // such as a string, is copied into a fresh tuple, as the call would do.
-            case Arg(S(SpreadKind.Eager), value) :: Nil
-              if ErasedType.needsCast(value.erasedType_!.canonicalize, restType.canonicalize).isDefined =>
-                value.coerceTo(restType, N)
-            case _ => Tuple(true, restArgs)(N)
-        CallArgsResult.Success(hdPadded.appended(rest))
+      case S(_) =>
+        // A call collects its rest arguments into a fresh array. A lone spread can
+        // contain another iterable, and even an Array operand can remain reachable
+        // through aliases or an earlier iteration's parameters.
+        CallArgsResult.Success(hdPadded.appended(Tuple(true, restArgs)(N)))
       case N =>
         CallArgsResult.Success(hdPadded)
   

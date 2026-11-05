@@ -18,8 +18,8 @@ forward(5)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 5
 
-// Tail-call rewriting reuses a lone spread operand as the rest array. The pattern's rest
-// binding already has the Array representation, so no cast is needed.
+// Tail-call rewriting copies a lone spread operand into a fresh rest array. The pattern's
+// rest binding keeps its Array representation through the slice helper's unchecked cast.
 :soir
 :expect 3
 @tailrec fun count(n)(...rest) = if rest is
@@ -43,7 +43,7 @@ count(0)(1, 2, 3)
 //│         set middleElements = (inlinedVal as!! Array⁰);
 //│         set tmp = +⁰(n, 1);
 //│         set n = tmp;
-//│         set rest1 = middleElements;
+//│         set rest1 = mut [...middleElements];
 //│         continue loopLabel
 //│       else
 //│         throw new globalThis⁰.Error⁰("match error")
