@@ -67,6 +67,42 @@ class TypeRelationTest extends AnyFunSuite:
 
   // The worksheets cannot count canonical references, candidates, or subscriptions.
   // Repeated substitutions exercise the same source graph beyond any finite test depth.
+  test("probe-bearing parameter cycles share bounded flow with value-only consumers"):
+    for probeFirst <- false :: true :: Nil do
+      val h = new Harness
+      import h.given
+      val (a, at) = h.parameter("A")
+      val (b, bt) = h.parameter("B")
+      val ar = ContextualType(at, Nil)
+      val br = ContextualType(bt, Nil)
+      val ref = Term.UnresolvedRef(Nil, Tree.Ident("Missing"))(FlowSymbol.pat(), NameLookup.LeadingDot)
+      val probe = ref.namespaceProbe
+      val concrete = IntroShape(Term.UnitVal(), N)
+      if probeFirst then h.resolver.publishParameter(a, probe)
+      h.resolver.constrainTypes(ar, br, N)
+      h.resolver.constrainTypes(br, ar, N)
+      val seen = h.observe(br)
+      if !probeFirst then h.resolver.publishParameter(a, probe)
+      h.resolver.publishParameter(a, concrete)
+      assert(seen.toList == concrete :: Nil)
+      // Value-only observation must not filter the shared hosts: a namespace
+      // constraint can subscribe to those same views after this observation.
+      val hosts = (at :: bt :: Nil).iterator.flatMap: tpe =>
+        (false :: true :: Nil).iterator.flatMap(merge => h.state.state.typeViews.get((tpe.observation, merge)))
+      .toList
+      assert(hosts.nonEmpty && hosts.forall(_.currentShapes.exists(_ is probe)))
+      def counts = (a.inferenceHost.listeners.size, b.inferenceHost.listeners.size,
+        h.state.allocatedShapeViewCount,
+        hosts.map(host => (host.inferenceHost.listeners.size, host.currentShapes.size)))
+      val before = counts
+      (1 to 1000).foreach: _ =>
+        h.resolver.constrainTypes(ar, br, N)
+        h.resolver.constrainTypes(br, ar, N)
+        h.resolver.publishParameter(a, probe)
+        h.resolver.publishParameter(a, concrete)
+      assert(counts == before)
+      assert(seen.toList == concrete :: Nil)
+
   test("namespace-bearing alias and Boolean forwarding saturate without growing either graph"):
     for combination <- 0 to 3 do
       val h = new Harness

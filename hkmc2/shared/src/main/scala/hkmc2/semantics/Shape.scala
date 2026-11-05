@@ -1086,7 +1086,7 @@ object DynShape:
   * other consumers of values ignore probes. When it reaches a declared type, the implicit
   * namespaces of that type provide candidates of the reference (see
   * NewResolver.inferTypeArguments). It is not an actual value: the consumers of values
-  * ignore it rather than diagnose it (see NewResolver.listenInstanceViewsOrProbe). It refers
+  * ignore it rather than diagnose it (see ShapeObserver). It refers
   * to nothing, so it records no scope exits; entries still restrict where it can return.
   */
 final class NamespaceProbe(val ref: Term.UnresolvedRef) extends CoreHeadShape:

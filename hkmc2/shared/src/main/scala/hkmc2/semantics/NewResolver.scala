@@ -24,6 +24,7 @@ class NewResolver:
   self: Elaborator =>
   import tl.*
   import ResolutionContext.Listener
+  import ShapeObserver.{ValueListener, ProbeListener}
   
   private def appShapes(using rs: ResolutionContext) = rs.state.appShapes
   private def newShapes(using rs: ResolutionContext) = rs.state.newShapes
@@ -1029,8 +1030,8 @@ class NewResolver:
     * observations before following parameters so recursive interfaces reach the
     * same graph nodes instead of allocating fresh inference variables.
     */
-  private[semantics] def listenInstanceViews(value: TermShape)(listener: Listener)(using ResolutionContext): Unit =
-    listenInstanceViewsOrProbe(value)(listener, _ => ())
+  private[semantics] def listenInstanceViews(value: TermShape)(listener: ValueListener)(using ResolutionContext): Unit =
+    listenInstanceFlow(value, mergeIntersections = true)(ShapeObserver.values(listener))
 
   /** A namespace probe (see NamespaceProbe) is not a value, wherever it arrives: as a value,
     * or as the view of a type variable that it reached. Consumers of actual values ignore it.
@@ -1038,28 +1039,26 @@ class NewResolver:
     * constraints observe it (see inferTypeArguments), whereas type views must retain it:
     * their hosts are shared by all their consumers.
     */
-  private def listenInstanceViewsOrProbe(value: TermShape)(listener: Listener, probe: Listener)(using ResolutionContext): Unit =
-    listenInstanceViews(value, mergeIntersections = true):
-      case view @ Marked(_: NamespaceProbe, _) => probe(view)
-      case view => listener(view)
+  private def listenInstanceViewsOrProbe(value: TermShape)(listener: ValueListener, probe: ProbeListener)(using ResolutionContext): Unit =
+    listenInstanceFlow(value, mergeIntersections = true)(ShapeObserver(listener, probe))
 
-  private def listenConstraintViews(value: TermShape)(listener: Listener)(using ResolutionContext): Unit =
-    listenInstanceViews(value, mergeIntersections = false)(listener)
+  private def listenConstraintViews(value: TermShape)(listener: ValueListener)(using ResolutionContext): Unit =
+    listenInstanceFlow(value, mergeIntersections = false)(ShapeObserver.values(listener))
 
-  private def listenInstanceViews(value: TermShape, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit = value match
+  private def listenInstanceFlow(value: TermShape, mergeIntersections: Bool)(listener: Listener)(using ResolutionContext): Unit = value match
     case Marked(view: IntersectionView, marks) if !mergeIntersections =>
       view.values.foreach: value =>
         transportShape(value, marks :: Nil) match
-          case value: TermShape => listenInstanceViews(value, mergeIntersections)(listener)
+          case value: TermShape => listenInstanceFlow(value, mergeIntersections)(listener)
           case NoShape => ()
     case Marked(instance: InstanceShape, marks) =>
       listenTypeViews(transportType(instance.tpe, marks :: Nil), mergeIntersections)(listener)
     case _ => listener(value)
 
-  private def listenTermViews(term: Term)(listener: Listener)(using ResolutionContext): Unit =
+  private def listenTermViews(term: Term)(listener: ValueListener)(using ResolutionContext): Unit =
     listenTermViewsOrProbe(term)(listener, _ => ())
 
-  private def listenTermViewsOrProbe(term: Term)(listener: Listener, probe: Listener)(using ResolutionContext): Unit =
+  private def listenTermViewsOrProbe(term: Term)(listener: ValueListener, probe: ProbeListener)(using ResolutionContext): Unit =
     listenTerm(term)(shape => listenInstanceViewsOrProbe(shape)(listener, probe))
 
   /** Apply a value's binder substitution without copying the source inference
@@ -1484,9 +1483,9 @@ class NewResolver:
                 if !aliases(current.resolution) then
                   listenArgumentParts(argument.instantiate(current.instances)): parts =>
                     follow(if positive then parts.output else parts.input, args, aliases + current.resolution, source, publish)
-              case TypeShape.Inferred(value) => listenInstanceViews(instantiateShape(value, current.instances), mergeIntersections)(publish)
+              case TypeShape.Inferred(value) => listenInstanceFlow(instantiateShape(value, current.instances), mergeIntersections)(publish)
               case TypeShape.Hole(host) => host.subscribe: value =>
-                listenInstanceViews(instantiateShape(value, current.instances), mergeIntersections)(publish)
+                listenInstanceFlow(instantiateShape(value, current.instances), mergeIntersections)(publish)
               case TypeShape.Nominal(defn) =>
                 val enclosing = lexicalBinders(defn.sym)
                 val own = defn.tparams.map(_.sym).toSet
@@ -1534,7 +1533,7 @@ class NewResolver:
                         UnknownValueShape(unknown.source, unknown.fromPublicInterface)(unknown.provenance.withTypeOrigin(source)).exit(marks)
                       case _ => value
                     annotated match
-                      case value: TermShape => listenInstanceViews(instantiateShape(value, current.instances), mergeIntersections)(publish)
+                      case value: TermShape => listenInstanceFlow(instantiateShape(value, current.instances), mergeIntersections)(publish)
                       case NoShape => ()
               case reference: TypeShape.Reference =>
                 follow(referenceType(reference, current), args, aliases, source, publish)
@@ -2089,25 +2088,13 @@ class NewResolver:
   private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks],
       site: Opt[Term])(using ResolutionContext): Unit =
     if !rctx.addTypeConstraint(tpe, value, marks) then return
-    value match
-      case Marked(probe: NamespaceProbe, _) => requireTypeNamespaces(probe, tpe)
-      case Marked(_: (InstanceShape | IntersectionView), _) =>
-        listenConstraintViews(value):
-          case Marked(probe: NamespaceProbe, _) => requireTypeNamespaces(probe, tpe)
-          case _ => ()
-      case _ => ()
+    listenInstanceFlow(value, mergeIntersections = false)(ShapeObserver.probes(requireTypeNamespaces(_, tpe)))
     val annotation = tpe.resolution.source
     def follow(tpe: DeclaredType, args: TypeApplication, captures: Ls[Marks],
         seen: Set[TypeResolution])(using ResolutionContext): Unit = if !seen(tpe.resolution) then
       val next = seen + tpe.resolution
-      // Concrete constraints relate the structure of actual values to that of the type,
-      // so they ignore the probes observed above.
-      def concrete(listener: Listener)(using ResolutionContext): Unit =
-        listenConstraintViews(value):
-          case Marked(_: NamespaceProbe, _) => ()
-          case actual => listener(actual)
       def observe(listener: Listener)(using ResolutionContext): Unit =
-        concrete: actual =>
+        listenConstraintViews(value): actual =>
           actual.enter(captures) match
             case actual: TermShape => listener(actual)
             case NoShape => ()
@@ -2153,7 +2140,7 @@ class NewResolver:
         case TypeShape.SelectedArgument(argument, positive) =>
           listenArgumentParts(argument.instantiate(tpe.instances)): parts =>
             follow(if positive then parts.output else parts.input, args, captures, next)
-        case TypeShape.Nominal(cls) => concrete: value =>
+        case TypeShape.Nominal(cls) => listenConstraintViews(value): value =>
           // Erasing a callback's signature must not erase the obligation to
           // check its implementation. Its unannotated inputs can receive any
           // value, independently of the calls observed through Function.
@@ -2206,7 +2193,7 @@ class NewResolver:
           // A concrete target stays fixed, but must receive bounds that arrive
           // through a symbolic source later. Concrete mismatch reporting is
           // separate from retaining this obligation in the graph.
-          case Marked(_: InstanceShape, _) => concrete(inferTypeArguments(tpe, _, marks, site))
+          case Marked(_: InstanceShape, _) => listenConstraintViews(value)(inferTypeArguments(tpe, _, marks, site))
           case _ => ()
       tpe.listen: shape =>
         reduceType(tpe, args, shape).fold(leaf(shape)): step =>
@@ -2954,11 +2941,9 @@ class NewResolver:
       else
         rctx.recordResolution(res, false)(res.resolvedTargets ::= sym)
         true
-    def reject(sh: TermShape)(using ResolutionContext): Unit = sh match
-      case Marked(_: NamespaceProbe, _) => () // Not a value; see NamespaceProbe.
-      case _ =>
-        rctx.markError(res)
-        resolError(res, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a constructor pattern."))
+    def reject(sh: ShapeObserver.Value)(using ResolutionContext): Unit =
+      rctx.markError(res)
+      resolError(res, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a constructor pattern."))
     def classPattern(cls: ClassDef | ModuleOrObjectDef)(using ResolutionContext): Unit = if select(cls.sym) then
       val assoc = res.arguments match
         case N => Nil
@@ -3010,7 +2995,7 @@ class NewResolver:
             if ref.definition eq cls then publish(ref.marks)
           , _ => (), _ => ())
           case _: ModuleOrObjectDef => publish(Nil)
-    def valuePattern(sh: TermShape)(using ResolutionContext): Unit = shapeParts(sh).value match
+    def valuePattern(sh: ShapeObserver.Value)(using ResolutionContext): Unit = shapeParts(sh).value match
       case Marked(ds: DefnShape, _) => ds.defn match
         case cls: ClassDef => classPattern(cls)
         case obj: ModuleOrObjectDef if obj.sym.asObj.isDefined => classPattern(obj)
@@ -3039,8 +3024,8 @@ class NewResolver:
                 case N =>
                   val site = FlowSymbol.pat()(using rctx.owner)
                   lexicalBinders(lhs).foreach(rctx.recordSiteBinders(site, _))
-                  fromBMS(bms, site, sh.markss, valuePattern, lhs, _ => (), false)
-          case sh: TermShape => valuePattern(sh)
+                  fromBMS(bms, site, sh.markss, ShapeObserver.values(valuePattern), lhs, _ => (), false)
+          case sh: TermShape => ShapeObserver.dispatch(sh)(valuePattern, _ => ())
   
   /** Pattern bodies are resolved before their runtime matching code is generated.
     * Check their bindings against an arbitrary input, so a local caller cannot
@@ -3491,6 +3476,10 @@ class NewResolver:
     applyShape(source, args, res, checked = true)
 
   private def applyShape(source: TermShape, args: Term, res: App, checked: Bool)(using ResolutionContext): Unit =
+    // A call passes on the probe of its callee, without recording it as a callable target.
+    ShapeObserver.dispatch(source)(applyValue(_, args, res, checked), probe => publishViewed(res, probe, rctx.instances))
+
+  private def applyValue(source: ShapeObserver.Value, args: Term, res: App, checked: Bool)(using ResolutionContext): Unit =
     val callerInstances = rctx.instances
     val ShapeParts(lhs, lexical, supplied) = shapeParts(source)
     val captured = callerInstances.withOverrides(lexical)
@@ -3510,7 +3499,7 @@ class NewResolver:
             case NoShape => ()
         return
       case Marked(_: InstanceShape, _) =>
-        listenInstanceViews(instantiateShape(lhs, instances), mergeIntersections = checked)(applyShape(_, args, res, checked))
+        listenInstanceFlow(instantiateShape(lhs, instances), mergeIntersections = checked)(applyShape(_, args, res, checked))
         return
       case _ => ()
     // Explicit calls require a known interface or an explicitly dynamic value.
@@ -3519,12 +3508,6 @@ class NewResolver:
     lhs match
       case Marked(_: DynShape, _) =>
         if checked then res.callableTargets.currentShapes.add(source)
-        publish(lhs)
-        return
-      // Applying a reference whose namespace flow is to determine produces the value whose
-      // type determines it: in `Some(1)`, the namespace is the one required of the result.
-      // The probe is not a callable target, so it neither satisfies nor fails the call's checks.
-      case Marked(_: NamespaceProbe, _) =>
         publish(lhs)
         return
       case _ => ()
@@ -3783,11 +3766,12 @@ class NewResolver:
         TypeSubstitution.empty)
 
   /** Flow requires the value of the reference of `probe` to have type `tpe` (see inferTypeArguments). */
-  private def requireTypeNamespaces(probe: NamespaceProbe, tpe: DeclaredType)(using ResolutionContext): Unit =
+  private def requireTypeNamespaces(probe: ShapeObserver.Probe, tpe: DeclaredType)(using ResolutionContext): Unit =
     // Imported graphs can carry the probes of other units' references to this
     // unit's types. Those units settled their references by themselves.
-    rctx.state.implicitNamespaces.get(new Identity(probe.ref)).foreach: namespaces =>
-      typeNamespaces(probe.ref, namespaces, tpe, writtenWitness(tpe), refine = true, provided = false)
+    val ref = ShapeObserver.reference(probe)
+    rctx.state.implicitNamespaces.get(new Identity(ref)).foreach: namespaces =>
+      typeNamespaces(ref, namespaces, tpe, writtenWitness(tpe), refine = true, provided = false)
 
   /** `value` reaches the scrutinee of the constructor pattern whose head is `ref`. Like a value
     * required to have a type, a value of a declared type has the namespaces of that type, while
@@ -3796,12 +3780,12 @@ class NewResolver:
     */
   private def valueNamespaces(ref: UnresolvedRef, namespaces: ImplicitNamespaces, value: TermShape)
       (using ResolutionContext): Unit =
-    shapeParts(value).value match
+    ShapeObserver.dispatch(value)(value => shapeParts(value).value match
       case Marked(instance: InstanceShape, _) =>
         typeNamespaces(ref, namespaces, instance.tpe, writtenWitness(instance.tpe), refine = true, provided = true)
-      case Marked(_: NamespaceProbe, _) => () // Not a value; see NamespaceProbe.
       case core => instanceClass(core).foreach: cls =>
         classNamespaces(ref, namespaces, cls, NamespaceWitness.Instance(cls, core.toLoc), provided = true)
+    , _ => ())
 
   private def writtenWitness(tpe: DeclaredType): NamespaceWitness =
     tpe.namespaces.flatMap(_.paths.headOption.map(_._2)).getOrElse(NamespaceWitness.Written(tpe.resolution.source))
@@ -4099,16 +4083,15 @@ class NewResolver:
   // Declaration references choose their class overload. Stored values instead
   // retain their runtime representation, whether a class or its constructor.
   // A namespace probe (see NamespaceProbe) is no class: it goes to `probe`, not `reject`.
-  private def listenClass(trm: Term, recordTargets: Bool)(selected: ShapeListener[ClassReference], reject: ShapeListener[TermShape],
-      probe: Listener)(using ResolutionContext): Unit =
+  private def listenClass(trm: Term, recordTargets: Bool)(selected: ShapeListener[ClassReference], reject: ValueListener,
+      probe: ProbeListener)(using ResolutionContext): Unit =
     def select(ref: ClassReference)(using ResolutionContext): Unit =
       if recordTargets then recordValueTarget(trm.classHead, ref.definition.sym)
       selected(ref)
-    def value(sh: TermShape)(using ResolutionContext): Unit =
+    def value(sh: ShapeObserver.Value)(using ResolutionContext): Unit =
       val ShapeParts(source, instances, supplied) = shapeParts(sh)
       val marks = source.applicationHead._2
       source match
-        case Marked(_: NamespaceProbe, _) => probe(sh)
         case Marked(ds: DefnShape, _) => ds.clsDef match
           case S(cls: ClassDef) =>
             val target: ClassValueTarget = ds.defn match
@@ -4123,7 +4106,7 @@ class NewResolver:
     trm match
       // Local variables store the term interpretation of their initializer, even
       // when their flow still contains its unconverted overload-set shape.
-      case _: SimpleRef => listenTerm(trm)(value)
+      case _: SimpleRef => listenTerm(trm)(ShapeObserver(value, probe))
       case application @ TyApp(base, args) => listenClass(base, recordTargets)(ref =>
         val count = if ref.supplied.nonEmpty then 0 else ref.definition.tparams.length
         if count != args.length && rctx.state.typeArgumentArityErrors.add((new Identity(application), count)) then
@@ -4148,8 +4131,8 @@ class NewResolver:
               case contextual: ContextualSymShape => contextual.instances
               case _ => TypeSubstitution.empty
             , N)),
-            () => fromSymbol(sh, value, trm, sym => if recordTargets then recordValueTarget(trm, sym), false))
-        case sh: TermShape => value(sh)
+            () => fromSymbol(sh, ShapeObserver(value, probe), trm, sym => if recordTargets then recordValueTarget(trm, sym), false))
+        case sh: TermShape => ShapeObserver.dispatch(sh)(value, probe)
 
   /** Locate a projected declaration in the actual receiver's class ancestry.
     * Each parent shape carries the crossing from its class into the child, so
@@ -4172,7 +4155,7 @@ class NewResolver:
     * Projection qualifiers use this same representation without evaluating it.
     * The caller decides whether non-class values permit ordinary field selection.
     */
-  private def classSelection(sel: NewSel)(selected: ShapeListener[ClassReference], reject: ShapeListener[TermShape])(using ResolutionContext): Unit =
+  private def classSelection(sel: NewSel)(selected: ShapeListener[ClassReference], reject: ValueListener)(using ResolutionContext): Unit =
     listenClass(sel.prefix, recordTargets = true)(ref =>
       val cls = ref.definition.sym
       rctx.recordResolution(sel, sel.resolvedTargets.contains(cls))(sel.resolvedTargets ::= cls)
@@ -4302,8 +4285,8 @@ class NewResolver:
                 , probe => publishActivated(sel, probe))
               case _ => member(info, msg"Class '${cd.sym.nme}'", message => (message -> cd.headerLoc) :: Nil, TypeSubstitution.empty))
         , sh =>
-            rctx.markError(sel)
-            resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
+          rctx.markError(sel)
+          resolError(sel, sh.diagnostic(msg"${sh.describe.capitalize} cannot be used as a projection class."))
         )
   
   /** Both constructor references and explicit `new` use the same definition and
@@ -4941,10 +4924,10 @@ class NewResolver:
 
   /** Member lookups only receive actual values. A namespace probe (see NamespaceProbe) has no
     * members: wildcard opens ignore it, and selections pass it on (see newSel). */
-  def listenReceiver(trm: Term)(listener: Listener)(using ResolutionContext): Unit =
+  def listenReceiver(trm: Term)(listener: ValueListener)(using ResolutionContext): Unit =
     listenReceiverOrProbe(trm)(listener, _ => ())
 
-  private def listenReceiverOrProbe(trm: Term)(listener: Listener, probe: Listener)(using ResolutionContext): Unit =
+  private def listenReceiverOrProbe(trm: Term)(listener: ValueListener, probe: ProbeListener)(using ResolutionContext): Unit =
     listenValue(trm, true)(listenInstanceViewsOrProbe(_)(listener, probe))
 
   private def listenValue(trm: Term, receiver: Bool)(listener: Listener)(using ResolutionContext): Unit = trm match

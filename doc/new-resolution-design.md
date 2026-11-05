@@ -281,10 +281,12 @@ selection receivers (`Receiver(chained = true)`) and the classes instantiated by
 only consult explicit bindings and wildcard opens.
 
 The probe is not a value, wherever it arrives: as a value, or as the view of a type
-variable that it reached. `listenInstanceViews`, `listenTermViews`, `listenReceiver`,
-and `listenClass` hide it from the consumers of actual values, and deliver it to the
-chains that pass it on. Type views retain it, as their hosts are shared by all their
-consumers. `inferTypeArguments` records an observation before following either endpoint,
+variable that it reached. `ShapeObserver` dispatches observed shapes to distinct value
+and probe callback types, preserving the original shape and marks without a wrapper.
+`listenInstanceViews`, `listenTermViews`, `listenReceiver`, and `listenClass` use it to
+hide probes from value consumers and deliver them to the chains that pass them on.
+`listenInstanceFlow` and type-view hosts retain both kinds of flow, as their consumers
+can need either. `inferTypeArguments` records an observation before following either endpoint,
 then observes probes reaching a declared type, directly or as the view of a type variable.
 A probe stands for a value of the whole required type, whose namespaces `typeNamespaces`
 discovers. The same observation key governs structural constraints and namespace discovery;
