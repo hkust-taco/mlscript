@@ -268,9 +268,10 @@ can make generated patterns test a constructor function instead of its class.
 
 User-facing rules are in the [language reference](reference.md#implicit-namespaces).
 An unbound capitalized value is an `UnresolvedRef` with `NameLookup.NamespacesThenOpens`;
-a leading-dot selection is one with `NameLookup.LeadingDot` and no wildcard prefixes. Until
-its block is settled, it publishes only a `NamespaceProbe`, like the legacy flow
-analysis's leading-dot producer. The probe travels along ordinary value edges and
+a leading-dot selection is one with `NameLookup.LeadingDot` and no wildcard prefixes. It
+initially publishes a `NamespaceProbe`; as flow reveals namespaces, it immediately
+looks up and publishes their candidates. Block settlement decides wildcard fallback
+and diagnoses the resulting candidates. The probe travels along ordinary value edges and
 through the operations of the chains rooted at the reference, which derive their result
 from an operand: selections (including projections and checked or dynamic accesses),
 applications, type applications, and instantiations (with `new` or `new!`).

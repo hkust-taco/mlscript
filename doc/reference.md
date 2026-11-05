@@ -1953,9 +1953,11 @@ bindings, including selective opens such as `open AltOption { Some }`. A name
 whose value flows into types whose namespaces provide distinct members, such as
 `Option[Int]` and `AltOption[Int]`, is ambiguous.
 
-Resolution settles each such name once the rest of its block (a file or a
-worksheet block) is resolved. If no namespace is known for the name by then, its
-wildcard opens supply it. Names are settled in source order, so the definitions
+Resolution looks up implicit namespaces as flow reveals them, immediately
+propagating the candidates they supply. It settles each such name once the rest
+of its block (a file or a worksheet block) is resolved. If no namespace supplies
+a candidate for the name by then, its wildcard opens supply it. Names are settled
+in source order, so the definitions
 supplied to earlier names can reveal the namespaces of later ones: in
 `Wrap(Some(1))`, where an open supplies `Wrap`, its parameter type can be the
 namespace of `Some`. A namespace revealed later, for instance by a later
