@@ -74,4 +74,5 @@ module Multiple with
 :ge
 import "../../mlscript-compile/wasm/modules/NoDefault.mls"
 //│ ═══[COMPILATION ERROR] File '../../mlscript-compile/wasm/modules/NoDefault.mls' does not define a default export named 'NoDefault'
-//│ ═══[COMPILATION ERROR] Import of symbol `../../mlscript-compile/wasm/modules/NoDefault.mjs` not implemented yet
+//│ Wasm result:
+//│ = {}

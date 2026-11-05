@@ -34,7 +34,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
   private val worksheetInterfaces = mutable.ArrayBuffer.empty[FileInterface]
   private var wasmSessionInitialized = false
   private val linkedFiles = mutable.LinkedHashMap.empty[CompilerCache.Artifact, (io.Path, CompiledWasmFile)]
-  private val fileAliases = mutable.Map.empty[ScopedSymbol, ScopedSymbol]
+  private val sourceImports = mutable.Set.empty[semantics.ImportSymbol]
   private val wasmFileRuntimeNme = s"${wasmSuppNme}FileRuntime"
   private var initializingPrelude = false
 
@@ -65,9 +65,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
               val graph = compiler.compile(imp.file, artifact, _ => summon[Raise])
               graph.files.foreach: (art, path, compiled) =>
                 linkedFiles(art) = path -> compiled
-                art.sourceImports.foreach: dep =>
-                  dep.artifact.compilationUnit.defaultExport.foreach(sym => fileAliases(dep.sym) = sym)
-              artifact.compilationUnit.defaultExport.foreach(sym => fileAliases(imp.sym) = sym)
+              sourceImports += imp.sym
           case _ => ()
         statement.subStatements.foreach(collect)
       try collect(blk)(using throwingRaise)
@@ -125,7 +123,7 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
           linkedFiles.values.toVector.zipWithIndex.map { case ((_, compiled), i) => FileImport(s"module$i", compiled.interface) } ++
           worksheetInterfaces.toVector.zipWithIndex.map((abi, i) => FileImport(s"repl$i", abi))
         WatBuilder.fresh.worksheetModule(pgrm, wd, symbolsToPreserve,
-          FileCompilation(fileImports, fileAliases.toMap, runtime = false))
+          FileCompilation(fileImports, sourceImports.toSet, runtime = false))
       val modWat = compiled.module.wat
       val mainFnNme = compiled.module.entryName
       val systemMemMinPages = compiled.module.systemMemMinPages

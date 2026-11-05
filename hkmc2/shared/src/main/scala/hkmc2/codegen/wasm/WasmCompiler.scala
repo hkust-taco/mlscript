@@ -40,7 +40,7 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
       given State = artifact.state
       given Elaborator.Ctx = artifact.ctx
       WatBuilder.fresh.fileModule(Program(Nil, End()), N, source.up,
-        FileCompilation(Vector.empty, Map.empty, runtime = true))
+        FileCompilation(Vector.empty, Set.empty, runtime = true))
     artifact.materializeWasm(Ls(wat -> compiled.module.wat.mkString(100),
       path -> runtimeLoader(specifier(wat, path.up), compiled.module.entryName)))
     WasmRuntime(path, compiled)
@@ -74,9 +74,6 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
           val imported = dependencies.values.toVector
           val bindings = FileImport("system", runtime.interface) +:
             imported.zipWithIndex.map { case ((_, compiled), i) => FileImport(s"module$i", compiled.interface) }
-          val aliases = (art +: dependencies.keys.toVector).flatMap(_.sourceImports).flatMap: dep =>
-            dep.artifact.compilationUnit.defaultExport.map(sym => (dep.sym: ScopedSymbol) -> (sym: ScopedSymbol))
-          .toMap
           val compiled = art.compiledWasm(runtime = false):
             given State = art.state
             given Elaborator.Ctx = art.ctx
@@ -86,7 +83,7 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
                 raise(ErrorReport(msg"JavaScript import '$importedPath' is not supported in WASM source" -> sym.toLoc :: Nil,
                   source = Diagnostic.Source.Compilation))
             WatBuilder.fresh.fileModule(art.ir.copy(imports = art.ir.imports.filterNot(_._1 == State.runtimeSymbol)), art.compilationUnit.defaultExport, path.up,
-              FileCompilation(bindings, aliases, runtime = false))
+              FileCompilation(bindings, sourceSymbols, runtime = false))
           val out = output(path, ".mjs")
           val watPath = output(path, ".wat")
           val imports = imported.zipWithIndex.map:

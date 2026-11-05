@@ -2213,10 +2213,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         case _ => N
       val ctorClsSymOpt = cls match
         case ref: Value.MemberRef => instantiated(ref.disamb)
-        // A default import refers to the imported file's exported binding; its IR names no definition.
-        case Value.SimpleRef(sym: LocalVarSymbol) => fileCompilation.flatMap(_.aliases.get(sym)).flatMap:
-          case bms: BlockMemberSymbol => bms.asCls
-          case _ => N
         case sel: Select => sel.symbol.flatMap(instantiated)
         case cls => return errExpr(
             Ls(
@@ -2979,7 +2975,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
       sessionImports: Seq[SessionBinding],
       preservedSessionSymbols: Set[ScopedSymbol],
   )(using Raise): CompiledWasmModule =
-    for imprt <- p.imports if fileCompilation.isEmpty || !fileCompilation.get.aliases.contains(imprt._1) do
+    for imprt <- p.imports if fileCompilation.isEmpty || !fileCompilation.get.sourceImports.contains(imprt._1) do
       val displayPath = if imprt._2.startsWith("/") then
         io.Path(imprt._2).relativeTo(wd).fold(imprt._2)(_.toString)
       else imprt._2
@@ -3062,9 +3058,6 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             case (_, S(_)) => lastWords(s"Imported singleton `${cls.sym.nme}` is not an object")
             case (_, N) => ()
         dep.interface.namespaces.foreach(registerNamespace)
-      linking.aliases.foreach: (alias, original) =>
-        ctx.aliasBinding(alias, original)
-        namespaces.get(original).foreach(namespaces(alias) = _)
       predeclareFileMembers(p.main)
 
     registerSessionImports(sessionImports)

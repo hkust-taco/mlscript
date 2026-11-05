@@ -896,13 +896,6 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     (relocate, index => globals.getOrElse(index,
       lastWords(s"WASM interface has an unbound global edge: $index"))())
 
-  /** Aliases refer to the same imported storage/function, never to a copied value. */
-  def aliasBinding(alias: ScopedSymbol, original: ScopedSymbol): Unit =
-    namedFuncs.get(original).foreach(namedFuncs(alias) = _)
-    namedGlobals.get(original).foreach(namedGlobals(alias) = _)
-    pendingFunctions.get(original).foreach(pendingFunctions(alias) = _)
-    pendingGlobals.get(original).foreach(pendingGlobals(alias) = _)
-
   /** [[Scope]] for generating WAT identifiers of types. */
   private[text] val typeScp = new WasmScope
 
