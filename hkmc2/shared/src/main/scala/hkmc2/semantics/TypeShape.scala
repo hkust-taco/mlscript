@@ -334,11 +334,17 @@ object DeclaredType:
       case _ => L(tpe.interpretedTypes.map(_.observation))
     private val namespaces = tpe.namespaces.map(_.key)
     protected val valueHash: Int = ValueKey.hash(tpe.hashCode, bindings.hashCode, children.hashCode, namespaces.hashCode)
+    // Alias paths and class targets can distinguish leaves without containing another
+    // observation. Deferred type targets are edges and must share the traversal memo.
+    private def isLeaf: Bool = bindings.isEmpty && children.fold(_.isEmpty, _.isEmpty) &&
+      namespaces.forall(_.forall(_.target match
+        case S(TypeNamespaces.Target.Type(_)) => false
+        case _ => true))
     protected def sameValue(other: ValueKey): Bool = other match
       case that: Observation =>
         // Observations are DAGs too: two bindings to the same child must not double
         // equality work at every layer, including when the child was imported.
-        val compared = new java.util.IdentityHashMap[Observation, java.util.IdentityHashMap[Observation, java.lang.Boolean]]
+        lazy val compared = new java.util.IdentityHashMap[Observation, java.util.IdentityHashMap[Observation, java.lang.Boolean]]
         def sameMap[K](a: Map[K, Observation], b: Map[K, Observation]): Bool =
           a.size == b.size && a.forall((key, child) => b.get(key).exists(loop(child, _)))
         def samePath(a: TypeNamespaces.Path, b: TypeNamespaces.Path): Bool =
@@ -348,6 +354,8 @@ object DeclaredType:
         def loop(a: Observation, b: Observation): Bool =
           if a eq b then true
           else if a.hashCode != b.hashCode then false
+          else if a.isLeaf && b.isLeaf then
+            a.tpe == b.tpe && a.children == b.children && a.namespaces == b.namespaces
           else
             var partners = compared.get(a)
             if partners == null then
