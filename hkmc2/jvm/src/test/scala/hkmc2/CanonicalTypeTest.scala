@@ -77,6 +77,33 @@ class CanonicalTypeTest extends AnyFunSuite:
       assert(equal == repetitions)
       assert(bytes <= 4096L, s"Depth $depth comparisons allocated $bytes bytes")
 
+  test("callable comparisons do not copy their parameter types"):
+    val allocation = allocationCounter
+    given owner: Elaborator.State = new Elaborator.State
+    given context: ResolutionContext = owner.newResolverState.context
+    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val tpe = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
+    for arity <- 1 :: 64 :: Nil do
+      val parameters = List.fill(arity)(DeclaredParam(S(tpe), FldFlags.empty))
+      val callable = CallableTypeShape(Term.UnitVal(), new ::(DeclaredParams(parameters, N), Nil), S(tpe), N, N, N, N)
+      val left = callable.comparison
+      val right = callable.copy().comparison
+      val repetitions = 1000
+      def compare(): Int =
+        var equal = 0
+        var index = 0
+        while index < repetitions do
+          if left == right then equal += 1
+          index += 1
+        equal
+      assert(compare() == repetitions)
+      val before = allocation.getCurrentThreadAllocatedBytes
+      val equal = compare()
+      val bytes = allocation.getCurrentThreadAllocatedBytes - before
+      assert(equal == repetitions)
+      // Allow fixed comparison bookkeeping, but no list proportional to arity.
+      assert(bytes <= repetitions * 64L, s"Arity $arity comparisons allocated $bytes bytes")
+
   test("independent constructions share a bounded canonical type DAG"):
     given owner: Elaborator.State = new Elaborator.State
     given context: ResolutionContext = owner.newResolverState.context

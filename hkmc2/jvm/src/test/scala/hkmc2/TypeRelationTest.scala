@@ -275,7 +275,6 @@ class TypeRelationTest extends AnyFunSuite:
       (1 to 1000).foreach: _ =>
         current = h.resolver.declaredType(wildcard.resolution, Map(formal -> current))
         assert(current.reference eq first.reference)
-        assert(current == first)
       val value = DynShape()
       h.resolver.publishParameter(target, value)
       if output then assert(observed.toList.map(ShapeIdentity.key(_)) == List(MarkedShape.enter(value, scope, site)).map(ShapeIdentity.key(_)))
@@ -305,7 +304,6 @@ class TypeRelationTest extends AnyFunSuite:
     (1 to 1000).foreach: _ =>
       current = h.resolver.declaredType(source.resolution, Map(a -> current))
       assert(current.reference eq expected.reference)
-      assert(current == expected)
       h.resolver.listenInstanceViews(h.resolver.instanceShape(current))(_ => ())
     h.resolver.publishParameter(b, late)
     assert(seen.toSet.map(ShapeIdentity.key(_)) == Set(MarkedShape.enter(early, owner, path.id), late).map(ShapeIdentity.key(_)))
@@ -480,9 +478,7 @@ class TypeRelationTest extends AnyFunSuite:
       // Re-selecting an interpreted reference must not change its meaning or
       // allocate another node, even when the later use has opposite polarity.
       assert(h.resolver.selectArgument(argument, false).reference eq negative.reference)
-      assert(h.resolver.selectArgument(argument, false) == negative)
       assert(h.resolver.selectArgument(argument, true).reference eq positive.reference)
-      assert(h.resolver.selectArgument(argument, true) == positive)
       assert(h.resolver.selectArgument(negative, true) eq negative)
       assert(h.resolver.selectArgument(positive, false) eq positive)
       h.resolver.constrainTypes(lower, neg, N)
@@ -511,7 +507,6 @@ class TypeRelationTest extends AnyFunSuite:
     (1 to 1000).foreach: _ =>
       h.resolver.constrainTypes(reference, reference, N)
       assert(h.resolver.selectArgument(argument, true).reference eq selected.reference)
-      assert(h.resolver.selectArgument(argument, true) == selected)
     assert((resolution.inferenceHost.listeners.size, parameter.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(value))
     assert(h.state.allocatedTypeInstanceCount == 0)

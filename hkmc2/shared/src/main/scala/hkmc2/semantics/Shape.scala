@@ -101,10 +101,6 @@ object ShapeIdentity:
     case _: (TupleShape | RecordShape | IntroShape | DefnShape | BaseShape |
         AppShape | NewShape | SymShape | ErrShape | DynShape | NamespaceProbe) => shape
 
-  private def callableUses(callable: CallableTypeShape): Ls[DeclaredType] =
-    (callable.paramLists.flatMap(_.allParams.flatMap(_.tpe)) ::: callable.result.toList :::
-      callable.supplied.toList.flatten ::: callable.tparams.flatMap(p => p.lower.toList ::: p.upper.toList))
-
   /** Only one pointer to the existing view; no copied fields or product key. */
   final class View private[ShapeIdentity] (private val shape: ShapeEvent) extends ValueKey:
     private def parentHash(parent: Opt[TermShape]): Int = parent.fold(0)(_.comparison.hashCode)
@@ -118,7 +114,7 @@ object ShapeIdentity:
       case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.hashCode), parentHash(view.parent))
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
-        view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode, callableUses(view).hashCode)
+        view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode)
       case view: RecordTypeShape => ValueKey.hash(
         ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.aliases.hashCode)
       case view: IntersectionView => view.values.map(_.comparison).hashCode
@@ -145,7 +141,7 @@ object ShapeIdentity:
           case _ => false
         case a: CallableTypeShape => that.shape match
           case b: CallableTypeShape => (a.source eq b.source) && a.paramLists == b.paramLists && a.result == b.result &&
-            a.scheme == b.scheme && a.supplied == b.supplied && callableUses(a) == callableUses(b) &&
+            a.scheme == b.scheme && a.supplied == b.supplied &&
             a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.wrappedResult == b.wrappedResult
           case _ => false
         case a: RecordTypeShape => that.shape match
