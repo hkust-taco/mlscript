@@ -4,7 +4,7 @@ package semantics
 import scala.collection.mutable
 
 import hkmc2.utils.*, shorthands.*
-import syntax.*, Elaborator.State, codegen.{Erasure, ErasedType, ErasedValueType, ErasedFuncType, CanonicalErasedValueType}
+import syntax.*, Elaborator.State, codegen.{Erasure, ErasedType, ErasedValueType, ErasedCallableSignature, CanonicalErasedValueType}
 import Term.*
 import ucs.FlatPattern
 
@@ -65,7 +65,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
   private def canonicalType(source: CanonicalErasedValueType): CanonicalErasedValueType = source match
     case ErasedType.AnyRef(rsc, symbol) => ErasedType.AnyRef(rsc, mapType(symbol))
     case ErasedType.Incompatible(left, right) => ErasedType.Incompatible(canonicalType(left), canonicalType(right))
-    case source @ (_: ErasedType.Primitive | ErasedType.Unknown) => source
+    case source @ (_: ErasedType.Primitive | ErasedType.Unknown | ErasedType.Nothing) => source
 
   private def valueType(source: ErasedValueType): ErasedValueType = source match
     case source: CanonicalErasedValueType => canonicalType(source)
@@ -73,11 +73,6 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       val symbol = mapType(summon[Erasure].typeSymbol(source))
       new ErasedType.ValueLike(source.rsc, symbol)
     case ErasedType.Union(members) => ErasedType.Union(members.map(valueType))
-
-  private def erasedType(source: ErasedType): ErasedType = source match
-    case source: ErasedValueType => valueType(source)
-    case source: ErasedFuncType => ErasedType.FuncRef(source.rsc,
-      source.paramLists.map(_.map(_.map(valueType))), source.ret.map(valueType))
 
   private def located[A <: AutoLocated](source: AutoLocated, copy: A): A =
     if source is copy then copy else copy.withLoc(source.getLoc)
@@ -94,7 +89,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
 
   private def bindLocal(symbol: LocalVarSymbol): Unit = symbol match
     case s: VarSymbol => variables.getOrElseUpdate(s, {
-      val copy = new VarSymbol(s.id)
+      val copy = new VarSymbol(s.id, mut = s.mut)
       if s.isErased then copy.erasedType = s.erasedType.map(valueType)
       copy.sourceAliases = s.sourceAliases
       copy.decl = s.decl
@@ -102,7 +97,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
       copy
     })
     case s: TempSymbol => temporaries.getOrElseUpdate(s, {
-      val copy = new TempSymbol(s.trm, s.erasedType.map(erasedType), s.nme)
+      val copy = new TempSymbol(s.trm, s.erasedType.map(valueType), s.nme)
       copy.shapes.copyFrom(s.shapes)
       copy
     })
@@ -174,7 +169,6 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     stats.foreach:
       case d: ClassLikeDef => d.sym match
         case s: (ClassSymbol | ModuleOrObjectSymbol | PatternSymbol) => bindInner(s)
-        case _: TopLevelSymbol => lastWords("A top-level compilation unit is not a nested declaration")
       case d: TypeDef => aliases.getOrElseUpdate(d.sym, new TypeAliasSymbol(d.sym.id))
       case _ => ()
     stats.foreach:
@@ -199,10 +193,11 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
   private def prepare(stats: Ls[Statement]): Unit =
     prepareDefinitions(stats)
     prepareLocals(stats)
-    // An annotation can name a class nested in a later declaration. Wait until
-    // all nominal symbols are allocated before renaming erased signatures.
     terms.foreach: (source, copy) =>
-      if source.isErased then copy.erasedType = source.erasedType.map(erasedType)
+      copy.initializeErasure:
+        source.erasure.map:
+          case sig: ErasedCallableSignature => sig.mapTypes(valueType)
+          case tpe: ErasedValueType => valueType(tpe)
     // All member names, including nested classes' methods, now have replacements.
     // Override edges must follow them for common-member selection during lowering.
     (members.iterator ++ terms.iterator).foreach: (source, copy) =>
@@ -224,7 +219,6 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     case imp: Import =>
       val sym: ImportSymbol = imp.sym match
         case s: VarSymbol => s.subst
-        case s: TempSymbol => s.subst
         case s: BlockMemberSymbol => s.subst
       Import(sym, imp.str, imp.file)(imp.toLoc)
     case LetDecl(sym, annotations) =>
@@ -255,7 +249,8 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     Modulefulness(source.msym.map(_.subst))(source.modified)
 
   private def parameter(source: Param): Param =
-    val copy = Param(source.flags, source.sym.subst, source.sign.map(term), modulefulness(source.modulefulness))(source.toLoc)
+    val copy = Param(source.flags, source.sym.subst, source.sign.map(term), modulefulness(source.modulefulness),
+      source.annotations.map(annotation))(source.toLoc)
     copy.fldSym = source.fldSym.map(_.subst)
     copy.sym.decl = S(copy)
     source.fldSym.toList.flatMap:

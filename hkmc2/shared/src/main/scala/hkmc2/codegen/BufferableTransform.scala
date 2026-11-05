@@ -22,7 +22,7 @@ class BufferableTransform()(using State, Raise):
           cls.bufferable.fold(super.applyDefn(defn)(k)): bufferable =>
             val companionSym = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), new Tree.Ident(cls.sym.nme))
             val clsSizeSym = BlockMemberSymbol("size", Nil, false)
-            val clsSizeTermSym = TermSymbol(syntax.ImmutVal, S(companionSym), new Tree.Ident("size"), erasedType = S(ErasedType.Int))
+            val clsSizeTermSym = TermSymbol(syntax.ImmutVal, S(companionSym), new Tree.Ident("size"), erasure = S(ErasedType.Int))
             val pubFieldMap: Map[Symbol, Symbol] = cls.publicFields.toMap
             val fields = cls.privateFields ++ cls.publicFields.map(_._2)
             val fieldMap: Map[Symbol, Int] = fields.zipWithIndex.toMap
@@ -31,18 +31,18 @@ class BufferableTransform()(using State, Raise):
               // TODO: https://github.com/hkust-taco/mlscript/pull/504#discussion_r3827173721
               val varMap = allVars
                 .map: sym =>
-                  (sym, VarSymbol(sym.id, erasedType = N))
+                  (sym, VarSymbol(sym.id, erasedType = N, mut = sym.mut))
                 .toMap
               def mapParam(p: Param) =
-                Param(p.flags, varMap(p.sym), p.sign, p.modulefulness)(p.toLoc)
+                Param(p.flags, varMap(p.sym), p.sign, p.modulefulness, p.annotations)(p.toLoc)
               (params.map(pl => LoweredParamList(pl.flags, pl.params.map(mapParam), pl.restParam.map(mapParam))(pl.toLoc)), varMap.toMap)
             def mkFieldReplacer(buf: VarSymbol, baseIdx: VarSymbol, symMap: Map[SimpleSymbol, SimpleSymbol]) =
               def getOffset(off: Int, loc: Opt[Loc])(k: Path => Block): Block =
-                val idxSymbol = new TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
+                val idxSymbol = new TempSymbol(N, initErasedType = S(ErasedType.Int), "idx")
                 Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off))(N).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N),
                   k(DynSelect(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, DynSelectKind.ArrayIdx)(loc))))
               def assignToOffset(off: Int, r: Result, rst: Block) =
-                val idxSymbol = new TempSymbol(N, erasedType = S(ErasedType.Int), "idx")
+                val idxSymbol = new TempSymbol(N, initErasedType = S(ErasedType.Int), "idx")
                 Scoped(Set.single(idxSymbol), Assign(idxSymbol, Call(State.builtinOpsMap("+").asSimpleRef, (baseIdx.asSimpleRef.asArg :: Value.Lit(Tree.IntLit(off))(N).asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N),
                   AssignDynField(buf.asSimpleRef.selSN("buf"), idxSymbol.asSimpleRef, DynSelectKind.ArrayIdx, r, applyBlock(rst))))
               new BlockTransformer(SymbolSubst.Id):
@@ -74,13 +74,15 @@ class BufferableTransform()(using State, Raise):
                         k(res)
                   case _ => super.applyPath(p)(k)
             def transformFunDefn(f: FunDefn, isCtor: Bool): FunDefn =
-              val buf = VarSymbol(new Tree.Ident("buf"), erasedType = N)
-              val idx = VarSymbol(new Tree.Ident("idx"), erasedType = S(ErasedType.Int))
+              val buf = VarSymbol(new Tree.Ident("buf"), erasedType = N, mut = false)
+              val idx = VarSymbol(new Tree.Ident("idx"), erasedType = S(ErasedType.Int), mut = false)
               val (newParams, symMap) = mkSymbolReplacer(f.params)
               val blk = mkFieldReplacer(buf, idx, symMap).applyBlock(f.body)
-              FunDefn(f.owner, f.sym, TermSymbol(f.dSym.k, f.dSym.owner, f.dSym.id, erasedType = N), LoweredParamList.plain(
-                Param.simple(buf) :: Param.simple(idx) :: Nil)(N) :: newParams,
-                if isCtor then Begin(blk, Return(idx.asSimpleRef)) else blk)(configOverride = f.configOverride, annotations = f.annotations)
+              val signature = FunDefn.Signature.fromParams(LoweredParamList.plain(
+                Param.simple(buf) :: Param.simple(idx) :: Nil)(N) :: newParams, ErasedResult.fromAnnotations(N, f.annotations))
+              val dSym = SymbolRefresher.copyTermSymbol(f.dSym, f.owner, S(signature.erasure))
+              FunDefn(f.owner, f.sym, dSym, signature,
+                if isCtor then Begin(blk, Return(idx.asSimpleRef)) else blk)(f.configOverride, f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 

@@ -1,18 +1,32 @@
 :.
 
 // A generator call returns an iterator even when its body returns a literal.
-// Resolution currently propagates that literal instead of the iterator shape.
 @annotations.generator
 fun generated() = 1
 
-:fixme
 :expect {value: 1, done: true}
 generated().next()
-//│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+1: 	generated().next()
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── Integer literal does not contain member 'next'
-//│ ║  l.XX: 	fun generated() = 1
-//│ ╙──      	                  ^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
-//│ ═══[RUNTIME ERROR] Expected: '{value: 1, done: true}', got: 'undefined'
+//│ = {value: 1, done: true}
+
+
+// The callable's representation is the iterator; the body's result is only the payload
+// of the final step. Bindings of the call therefore hold an iterator, not an integer.
+:sir
+:siret
+@annotations.generator
+fun counted(): Int =
+  yield 0
+  1
+let iterator = counted()
+iterator.next()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @generator
+//│ define counted⁰ as fun counted¹(): generator Int⁰ {
+//│   do yield⁰(0);
+//│   return 1
+//│ };
+//│ set iterator⁰ = counted¹();
+//│ return iterator⁰.next⁰()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = {value: 0, done: false}
+//│ iterator =  {}

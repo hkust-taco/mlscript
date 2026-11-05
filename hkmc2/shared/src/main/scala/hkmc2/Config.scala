@@ -7,10 +7,11 @@ import Config.*
 import Message.MessageContext
 
 
-/** The compilation target of a program. */
-enum CompilationTarget:
-  case JS
-  case Wasm
+/** The compilation target of a program, with a name for diagnostics independent of its backend options. */
+enum CompilationTarget(val displayName: Str):
+  // Cast comments expose the IR coercions that JavaScript otherwise erases.
+  case JS(emitCastComments: Bool) extends CompilationTarget("JavaScript")
+  case Wasm extends CompilationTarget("Wasm")
 
 
 def config(using Config): Config = summon
@@ -33,6 +34,7 @@ case class Config(
   commentGeneratedCode: Bool,
   noFreeze: Bool,
   noModuleCheck: Bool,
+  aggressive: Bool,
   debug: Debug,
   optimizer: Optimizer,
   // Check internal invariants whose checks are too costly to always run, such as MemberStorage.privateOwner's.
@@ -80,7 +82,7 @@ object Config:
     effectHandlers = N,
     liftDefns = S(LiftDefns()),
     patMatConsequentSharingThreshold = default.patMatConsequentSharingThreshold, // minimum: 1
-    target = CompilationTarget.JS,
+    target = CompilationTarget.JS(emitCastComments = false),
     rewriteWhileLoops = false,
     stageCode = false,
     qqEnabled = false,
@@ -88,6 +90,7 @@ object Config:
     commentGeneratedCode = false,
     noFreeze = false,
     noModuleCheck = false,
+    aggressive = false,
     debug = Debug.default,
     optimizer = Optimizer.FastOpt,
     checkInvariants = false,
@@ -264,6 +267,7 @@ object Config:
     debugEta: Bool = false,
     debugDpe: Bool = false,
     debugDce: Bool = false,
+    logEffects: Bool = false,
   ):
     def effectiveDebugEta: Bool = debug || debugEta
     def effectiveDebugDpe: Bool = debug || debugDpe
@@ -719,6 +723,7 @@ object ConfigParser:
       var debugEta = base.debugEta
       var debugDpe = base.debugDpe
       var debugDce = base.debugDce
+      var logEffects = base.logEffects
       args.foreach:
         case NamedArg("debug", value) =>
           setFrom(value)(parseBool)(v => debug = v)
@@ -738,6 +743,8 @@ object ConfigParser:
           setFrom(value)(parseBool)(v => debugDpe = v)
         case NamedArg("debugDce", value) =>
           setFrom(value)(parseBool)(v => debugDce = v)
+        case NamedArg("logEffects", value) =>
+          setFrom(value)(parseBool)(v => logEffects = v)
         case other =>
           unsupported(passName, other)
       S(Config.FlowAnalysisConfig(
@@ -750,6 +757,7 @@ object ConfigParser:
         debugEta,
         debugDpe,
         debugDce,
+        logEffects,
       ))
     case _ =>
       expect(s"${passName}(...)")(tree)
@@ -784,6 +792,8 @@ object ConfigParser:
       parsedField(value)(parseBool)(v => _.copy(noFreeze = v))
     case "noModuleCheck" =>
       parsedField(value)(parseBool)(v => _.copy(noModuleCheck = v))
+    case "aggressive" =>
+      parsedField(value)(parseBool)(v => _.copy(aggressive = v))
     case "rewriteWhileLoops" =>
       parsedField(value)(parseBool)(v => _.copy(rewriteWhileLoops = v))
     case "stageCode" =>

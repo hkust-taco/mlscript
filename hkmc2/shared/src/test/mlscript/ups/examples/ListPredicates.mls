@@ -35,14 +35,14 @@ list1 is Unique(_)
 list1 is Unique((Num as x) => x.toString().length)
 //│ = false
 
-fun addProperty(obj, k, v) = (...obj, (k): v)
+fun addProperty(obj, k, v) = {...obj, (k): v}
 addProperty of (a: 1), "b", 2
 //│ = {a: 1, b: 2}
 
 // A workaround for the above issue.
 fun addProperty(obj, k, v) =
   let newObj = Object.fromEntries of [[k, v]]
-  (...obj, ...newObj)
+  {...obj, ...newObj}
 addProperty of (a: 1), "b", 2
 //│ = {a: 1, b: 2}
 

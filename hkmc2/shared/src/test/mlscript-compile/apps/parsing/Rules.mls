@@ -209,7 +209,7 @@ val termRule: ParseRule.ParseRule[Tree] = rule of
         Tree.Infix(Keywords._equalequal, lhs, rhs)
       // Comparison: <expr> * <expr>
       makeInfixChoice of Keywords._asterisk, "term", (lhs, rhs) =>
-        Tree.App(Tree.Ident("*", true), lhs :: rhs :: Nil)
+        Tree.App(Tree.Ident("*", true), Tree.Tuple(lhs :: rhs :: Nil))
       // Selection: <expr> "." <identifier>
       // Access: <expr> "." "(" <expr> ")"
       keyword(Keywords._period) of

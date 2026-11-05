@@ -86,8 +86,11 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   val noSanityCheck = NullaryCommand("noSanityCheck")
   val noCheckCasts = NullaryCommand("noCheckCasts")
+  val noCastComments = NullaryCommand("noCastComments")
   val noFreeze = NullaryCommand("noFreeze")
   val noModuleCheck = NullaryCommand("noModuleCheck")
+  val aggressive = NullaryCommand("aggressive")
+  val noAggressive = NullaryCommand("noAggressive")
   val effectHandlers = Command("effectHandlers")(_.trim)
   val effectHandlersOptions = Set("debug", "")
   val stackSafe = Command("stackSafe")(_.trim)
@@ -171,7 +174,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       patMatConsequentSharingThreshold = patMatConsequentSharingThreshold.get
         .orElse(Config.default.patMatConsequentSharingThreshold),
       stageCode = stageCode.isSet,
-      target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
+      target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS(emitCastComments = !noCastComments.isSet),
       rewriteWhileLoops = rewriteWhile.isSet,
 
       qqEnabled = importQQ.isSet,
@@ -179,6 +182,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       commentGeneratedCode = debug.isSet,
       noFreeze = noFreeze.isSet,
       noModuleCheck = noModuleCheck.isSet,
+      aggressive = aggressive.isSet && noAggressive.isUnset,
       debug = Config.Debug.default,
       optimizer = Optimizer(
         deforest = Opt.when(deforest.isSet):
@@ -327,7 +331,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       val cfg = mkConfig
       // The synthetic Predef import bootstraps the host environment; it is not
       // a WASM test block, even when :wasm is enabled at the top of the file.
-      given Config = cfg.copy(target = CompilationTarget.JS, optimizer = cfg.optimizer.copy(
+      given Config = cfg.copy(target = CompilationTarget.JS(emitCastComments = !noCastComments.isSet), optimizer = cfg.optimizer.copy(
         deforest = cfg.deforest.map: d =>
           d.copy(config = d.config.copy(
             debug = false,
@@ -342,6 +346,7 @@ abstract class MLsDiffMaker extends DiffMaker:
             debugEta = false,
             debugDpe = false,
             debugDce = false,
+            logEffects = false,
           ))
       ))
       processTrees(

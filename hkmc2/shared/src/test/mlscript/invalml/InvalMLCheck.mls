@@ -38,7 +38,9 @@ fun bar(x) = let t = x + 1 in "aaa"
 :e
 fun baz: Int -> Int
 fun baz(x) = "bbb"
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+2: 	fun baz(x) = "bbb"
+//│ ╙──      	             ^^^^^
 //│ ╔══[COMPILATION ERROR] Type error in string literal with expected type Int
 //│ ║  l.+2: 	fun baz(x) = "bbb"
 //│ ║        	             ^^^^^

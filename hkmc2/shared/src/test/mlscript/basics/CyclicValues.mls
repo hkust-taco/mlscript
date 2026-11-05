@@ -7,7 +7,7 @@ data class Foo(x)
 let foo = new mut Foo(null)
 //│ foo = Foo(null)
 
-set foo.x = foo
+@unsafe set foo.x = foo
 
 foo
 //│ = Foo(ref'1) as ref'1

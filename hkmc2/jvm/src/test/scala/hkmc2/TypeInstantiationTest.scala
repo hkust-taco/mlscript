@@ -12,8 +12,8 @@ class TypeInstantiationTest extends AnyFunSuite:
     val state = owner.newResolverState.context
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     val otherScheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val a = new VarSymbol(new syntax.Tree.Ident("A"))
-    val b = new VarSymbol(new syntax.Tree.Ident("B"))
+    val a = new VarSymbol(new syntax.Tree.Ident("A"), mut = false)
+    val b = new VarSymbol(new syntax.Tree.Ident("B"), mut = false)
     val firstSite = FlowSymbol.app()
     val secondSite = FlowSymbol.app()
     val first = state.instantiateTypeParameters(scheme, firstSite, List(a, b), None)
@@ -36,7 +36,7 @@ class TypeInstantiationTest extends AnyFunSuite:
     given owner: Elaborator.State = new Elaborator.State
     given state: ResolutionContext = owner.newResolverState.context
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val parameter = new VarSymbol(new syntax.Tree.Ident("A"))
+    val parameter = new VarSymbol(new syntax.Tree.Ident("A"), mut = false)
     parameter.inferenceHost.publish(DynShape())
     parameter.subscribeToShapes(_ => ())
     val instance = state.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter), None)(parameter)
@@ -57,7 +57,7 @@ class TypeInstantiationTest extends AnyFunSuite:
     val site = source.fieldProjectionSite(field)
     assert(consumer.inGraph(source).fieldProjectionSite(field) eq site)
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val parameter = new VarSymbol(new syntax.Tree.Ident("A"))
+    val parameter = new VarSymbol(new syntax.Tree.Ident("A"), mut = false)
     val instances = consumer.instantiateTypeParameters(scheme, site, List(parameter), None)
     val views = List(consumer, consumer.withInstances(instances), consumer.inGraph(source),
       consumer.withInstances(instances).inGraph(source))
@@ -74,7 +74,7 @@ class TypeInstantiationTest extends AnyFunSuite:
     val first = new Elaborator.State().newResolverState.context
     val second = new Elaborator.State().newResolverState.context
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val parameter = new VarSymbol(new syntax.Tree.Ident("A"))
+    val parameter = new VarSymbol(new syntax.Tree.Ident("A"), mut = false)
     val site = FlowSymbol.app()
     val left = first.instantiateTypeParameters(scheme, site, List(parameter), None)(parameter)
     val right = second.instantiateTypeParameters(scheme, site, List(parameter), None)(parameter)
@@ -88,8 +88,8 @@ class TypeInstantiationTest extends AnyFunSuite:
     given owner: Elaborator.State = new Elaborator.State
     val source = owner.newResolverState.context
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val parameter = new VarSymbol(new syntax.Tree.Ident("A"))
-    val local = new VarSymbol(new syntax.Tree.Ident("value"))
+    val parameter = new VarSymbol(new syntax.Tree.Ident("A"), mut = false)
+    val local = new VarSymbol(new syntax.Tree.Ident("value"), mut = false)
     val first = source.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter), None)
     val second = source.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter), None)
     val left = source.withInstances(first)
@@ -110,7 +110,7 @@ class TypeInstantiationTest extends AnyFunSuite:
     given owner: Elaborator.State = new Elaborator.State
     val source = owner.newResolverState.context
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val parameter = new VarSymbol(new syntax.Tree.Ident("A"))
+    val parameter = new VarSymbol(new syntax.Tree.Ident("A"), mut = false)
     val first = source.withInstances(source.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter), None))
     val second = source.withInstances(source.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter), None))
     val key = new Object
@@ -129,8 +129,8 @@ class TypeInstantiationTest extends AnyFunSuite:
     val consumer = new Elaborator.State().newResolverState.context
     val other = new Elaborator.State().newResolverState.context
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-    val parameter = new VarSymbol(new syntax.Tree.Ident("A"))
-    val local = new VarSymbol(new syntax.Tree.Ident("value"))
+    val parameter = new VarSymbol(new syntax.Tree.Ident("A"), mut = false)
+    val local = new VarSymbol(new syntax.Tree.Ident("value"), mut = false)
     val sourceSubstitution = source.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter), None)
     val substitution = consumer.instantiateTypeParameters(scheme, FlowSymbol.app(), List(parameter), None)
     local.inferenceHost(using source).publish(UnknownValueShape.at(Term.UnitVal()))(using source)

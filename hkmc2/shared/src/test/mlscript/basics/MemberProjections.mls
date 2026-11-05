@@ -36,12 +36,12 @@ M.Foo ::n (foo, 2)
 
 :e
 M.Foo:: n(foo, 2)
-//│ ╔══[COMPILATION ERROR] Name not found: ::
-//│ ║  l.+1: 	M.Foo:: n(foo, 2)
-//│ ╙──      	     ^^
 //│ ╔══[COMPILATION ERROR] Name not found: n
 //│ ║  l.+1: 	M.Foo:: n(foo, 2)
 //│ ╙──      	        ^
+//│ ╔══[COMPILATION ERROR] Name not found: ::
+//│ ║  l.+1: 	M.Foo:: n(foo, 2)
+//│ ╙──      	     ^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

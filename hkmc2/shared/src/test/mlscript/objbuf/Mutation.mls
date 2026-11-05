@@ -17,6 +17,7 @@ class A() with
 :sjs
 @bufferable
 class A(x) with
+  let =x
   mut val z = x
   fun f(y) =
     set x += 1
@@ -33,48 +34,53 @@ class A(x) with
 //│   }
 //│   constructor(x) {
 //│     this.#x = x;
-//│     this.z = this.#x;
+//│     this.#x1 = this.#x;
+//│     this.z = this.#x1;
 //│   }
 //│   static {
-//│     A2.size = 2;
+//│     A2.size = 3;
 //│   }
 //│   static ctor(buf, idx) {
 //│     return (x) => {
-//│       let idx1, idx2, idx3;
-//│       idx3 = idx + 0;
-//│       buf.buf[idx3] = x;
+//│       let idx1, idx2, idx3, idx4, idx5;
+//│       idx5 = idx + 0;
+//│       buf.buf[idx5] = x;
 //│       idx1 = idx + 0;
+//│       idx4 = idx + 1;
+//│       buf.buf[idx4] = buf.buf.at(idx1);
 //│       idx2 = idx + 1;
-//│       buf.buf[idx2] = buf.buf.at(idx1);
+//│       idx3 = idx + 2;
+//│       buf.buf[idx3] = buf.buf.at(idx2);
 //│       return idx
 //│     }
 //│   }
 //│   static f(buf, idx) {
 //│     return (y) => {
 //│       let tmp, tmp1, idx1, idx2, idx3, idx4, idx5;
-//│       idx1 = idx + 0;
+//│       idx1 = idx + 1;
 //│       tmp = buf.buf.at(idx1) + 1;
-//│       idx5 = idx + 0;
+//│       idx5 = idx + 1;
 //│       buf.buf[idx5] = tmp;
-//│       idx2 = idx + 1;
+//│       idx2 = idx + 2;
 //│       tmp1 = buf.buf.at(idx2) + 2;
-//│       idx4 = idx + 1;
+//│       idx4 = idx + 2;
 //│       buf.buf[idx4] = tmp1;
-//│       idx3 = idx + 0;
+//│       idx3 = idx + 1;
 //│       return buf.buf.at(idx3)
 //│     }
 //│   }
 //│   #x;
+//│   #x1;
 //│   #z;
 //│   get z() { return this.#z; }
 //│   set z(value) { this.#z = value; }
 //│   f(y) {
 //│     let tmp, tmp1;
-//│     tmp = this.#x + 1;
-//│     this.#x = tmp;
+//│     tmp = this.#x1 + 1;
+//│     this.#x1 = tmp;
 //│     tmp1 = this.z + 2;
 //│     this.z = tmp1;
-//│     return this.#x
+//│     return this.#x1
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", [null]];
@@ -89,7 +95,7 @@ let obj1 = buf.mkNew(A.class)(3)
 //│ obj1 = 0
 
 let obj2 = buf.mkNew(A.class)(5)
-//│ obj2 = 2
+//│ obj2 = 4
 
 A.class.f(buf, obj1)(1)
 //│ = 4

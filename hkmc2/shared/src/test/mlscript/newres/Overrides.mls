@@ -50,7 +50,7 @@ class SpuriousOverride { override fun missing() = 2 }
 //│ ║  l.+1: 	class SpuriousOverride { override fun missing() = 2 }
 //│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-abstract class Abstract { fun foo() }
+abstract class Abstract { fun foo(): Int }
 class Implemented extends Abstract { fun foo() = 4 }
 
 :expect 4
@@ -63,7 +63,7 @@ class Incomplete extends Abstract
 //│ ║  l.+1: 	class Incomplete extends Abstract
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 
 :e
@@ -72,13 +72,14 @@ new Abstract
 //│ ║  l.+1: 	new Abstract
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sir
 :expect 10
-class SuperBase { open fun foo(x) = x + 1 }
+// Unannotated overrides inherit the base member's declared signature.
+class SuperBase { open fun foo(x: Int): Int = x + 1 }
 class SuperChild extends SuperBase { override fun foo(x) = super.foo(x + 1) * 2 }
 new SuperChild().foo(3)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
@@ -99,6 +100,13 @@ new SuperChild().foo(3)
 //│ set tmp = new SuperChild¹();
 //│ return tmp.foo⁴(3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 10
+
+// An unannotated base publishes no signature to inherit.
+:expect 10
+class UnannotatedSuperBase { open fun foo(x) = x + 1 }
+class UnannotatedSuperChild extends UnannotatedSuperBase { override fun foo(x) = super.foo(x + 1) * 2 }
+new UnannotatedSuperChild().foo(3)
 //│ = 10
 
 :expect 11
@@ -145,7 +153,7 @@ class GenericChild[A](x: A) extends GenericBase[A](x) {
 :fixme
 :expect 8
 class ForwardChild extends ForwardBase { override fun f(x) = super.f(x) + 1 }
-class ForwardBase { open fun f(x) = x + 2 }
+class ForwardBase { open fun f(x: Int): Int = x + 2 }
 new ForwardChild().f(5)
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 //│ ═══[RUNTIME ERROR] Expected: '8', got: 'undefined'
@@ -172,7 +180,7 @@ class AbstractSuper extends Abstract { fun foo() = super.foo() }
 //│ ║  l.+1: 	class AbstractSuper extends Abstract { fun foo() = super.foo() }
 //│ ║        	                                                   ^^^^^^^^^
 //│ ╟── Candidate 'foo' is declared here
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 
 :e
@@ -200,15 +208,15 @@ object MissingObject extends Abstract
 //│ ║  l.+1: 	object MissingObject extends Abstract
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 
 :e
 class BadKind extends Base { override fun foo = 1 }
-//│ ╔══[COMPILATION ERROR] Overriding member 'foo' must preserve whether the member is a field, getter, or method
+//│ ╔══[COMPILATION ERROR] Overriding member 'foo' must preserve the number of parameter lists
 //│ ║  l.+1: 	class BadKind extends Base { override fun foo = 1 }
-//│ ║        	                             ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Inherited member 'foo' is defined here
+//│ ║        	                                          ^^^
+//│ ╟── The overridden member 'foo' is defined here
 //│ ║  l.XX: 	class Base { open fun foo() = 1 }
 //│ ╙──      	                      ^^^
 
@@ -222,14 +230,14 @@ class AbstractCall() { fun f() }
 //│ ╙──      	                           ^
 
 :e
-abstract class AbstractCallable() { fun f() }
+abstract class AbstractCallable() { fun f(): Int }
 AbstractCallable()
 //│ ╔══[COMPILATION ERROR] Cannot instantiate abstract class 'AbstractCallable'
 //│ ║  l.+2: 	AbstractCallable()
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.+1: 	abstract class AbstractCallable() { fun f() }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	abstract class AbstractCallable() { fun f(): Int }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :expect 6
@@ -248,7 +256,7 @@ new Abstract with { fun other() = 9 }
 //│ ║  l.+1: 	new Abstract with { fun other() = 9 }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 //│ = $anon
 
@@ -313,7 +321,7 @@ class StillMissing extends MissingInherited
 //│ ║  l.+2: 	class StillMissing extends MissingInherited
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 
 :expect 4
@@ -345,8 +353,8 @@ new abstractValue
 //│ ║  l.+2: 	new abstractValue
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ abstractValue = class Abstract
 
@@ -357,8 +365,8 @@ abstractCtor()
 //│ ║  l.+2: 	abstractCtor()
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Abstract class defined here
-//│ ║  l.XX: 	abstract class AbstractCallable() { fun f() }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	abstract class AbstractCallable() { fun f(): Int }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ abstractCtor = fun AbstractCallable { class: class AbstractCallable }
 
@@ -369,7 +377,7 @@ class StoredIncomplete extends abstractParent
 //│ ║  l.+2: 	class StoredIncomplete extends abstractParent
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Member 'foo' requires an implementation
-//│ ║  l.XX: 	abstract class Abstract { fun foo() }
+//│ ║  l.XX: 	abstract class Abstract { fun foo(): Int }
 //│ ╙──      	                              ^^^
 //│ abstractParent = class Abstract
 
@@ -434,7 +442,7 @@ let changingParent = makeParent(4)
 class SavedParent extends changingParent { override fun f() = super.f() }
 set changingParent = makeParent(9)
 new SavedParent().f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:4195'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:4324'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 4
@@ -449,7 +457,7 @@ let changingHolder = Holder(5)
 class SavedNestedParent extends changingHolder.Parent { override fun f() = super.f() }
 set changingHolder = Holder(11)
 new SavedNestedParent().f()
-//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:4195'
+//│ ╔══[INTERNAL ERROR] Compiler reached an unexpected state at 'NewResolver.scala:4324'
 //│ ╟── The compilation result may be incorrect.
 //│ ╙── This is a compiler bug; please report it to the maintainers.
 //│ = 5

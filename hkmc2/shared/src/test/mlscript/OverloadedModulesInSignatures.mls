@@ -25,7 +25,9 @@ module TrmMod with
 
 :e
 fun f: ClsMod = 42
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'ClsMod'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'ClsMod'
+//│ ║  l.+1: 	fun f: ClsMod = 42
+//│ ╙──      	                ^^
 
 :rt
 f
@@ -79,7 +81,9 @@ fun f: TrmMod = 42
 //│ ║  l.+1: 	fun f: TrmMod = 42
 //│ ║        	       ^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'module TrmMod'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'module TrmMod'
+//│ ║  l.+1: 	fun f: TrmMod = 42
+//│ ╙──      	                ^^
 
 :sjs
 fun f = TrmMod
@@ -102,9 +106,12 @@ fun assertModule(module m: ClsMod): module ClsMod = m
 assertModule(ClsMod).whoami
 //│ = "module"
 
+// FIXME: It should be a resolver error or so. 
+// Now the flow analyzer just treat this as an internal error.
 :breakme
+:fixme
 assertModule(TypMod).whoami
-//│ = "module"
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: type aliases should not occur as runtime member references
 
 :noInline
 print(assertModule(TrmMod).whoami)
@@ -123,9 +130,12 @@ assertNonModule(ClsMod).whoami
 //│ = "module"
 
 // FIXME: should not resolve to module's `.whoami`, hence should be an error
+// FIXME: It should be a resolver error or so. 
+// Now the flow analyzer just treat this as an internal error.
 :breakme
+:fixme
 assertNonModule(TypMod).whoami
-//│ = "module"
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: type aliases should not occur as runtime member references
 
 // FIXME: should not resolve to module's `.whoami`, hence should be an error
 // FIXME: Should module-check as the term module (or probably we will remove module-checks before that)

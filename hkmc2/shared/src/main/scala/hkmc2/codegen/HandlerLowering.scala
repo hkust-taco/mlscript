@@ -331,7 +331,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
           msg"`try`-`finally` blocks are not currently supported with effect handlers enabled." ->
           N :: Nil,
           source = Diagnostic.Source.Compilation))
-      case Throw(_) => blk
+      case Throw(_, _) => blk
       case Scoped(_, body) => go(body) // PreHandlerLowering
 
     val initId = allocId()
@@ -569,7 +569,7 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
         DebugInfo(debugNme, if debugEnabled then debugInfoSym.asSimpleRef else unit), thisPath.isDefined && fun.params.isEmpty, fun.async))
       val bod2 = translateBlock(fun.body, newCtx, scopedVars)
       val fun2 = if fun.body is bod2 then fun else
-        FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.configOverride, fun.annotations)
+        fun.withBody(bod2)
       (debugInfoSym, debugInfo, fun2)
 
     // transform inner function/class and effect handler intrinsics to the runtime functions.
@@ -591,13 +591,13 @@ class HandlerLowering(paths: HandlerPaths, opt: Opt[EffectHandlers])(using TL, R
             raise(lifterReport(msg"Unexpected nested class: lambdas may not function correctly." -> isym.toLoc :: Nil))
           val debugInfos = mutable.ArrayBuffer.empty[(TempSymbol, List[Arg])]
           val newMtds = methods.mapConserve: f =>
-            val (debugInfoSym, debugInfo, fun2) = translateFunLike(f, isym.asThis.sel(new Tree.Ident(f.sym.nme), f.dSym),
+            val (debugInfoSym, debugInfo, fun2) = translateFunLike(f, isym.asThis.sel(f.dSym),
               S(isym.asThis), s"${sym.nme}#${f.sym.nme}")
             debugInfos += debugInfoSym -> debugInfo
             fun2
           val companion2 = companion.mapConserve: bod =>
             val newMtds = bod.methods.mapConserve: f =>
-              val (debugInfoSym, debugInfo, fun2) = translateFunLike(f, bod.isym.asThis.sel(new Tree.Ident(f.sym.nme), f.dSym),
+              val (debugInfoSym, debugInfo, fun2) = translateFunLike(f, bod.isym.asThis.sel(f.dSym),
                 S(bod.isym.asThis), s"${sym.nme}.${f.sym.nme}")
               debugInfos += debugInfoSym -> debugInfo
               fun2

@@ -65,6 +65,8 @@ fun lex(str: Str, options: {noWhitespace: Bool}) =
   // Consume a sequence of characters that satisfy a predicate.
   // The function returns the accumulated string and the following index.
   fun take(pred: Str -> Bool, idx: Int, acc: Str): [Int, Str] =
+    let =idx
+    let =acc
     while (char of idx) is Some(ch) and pred(ch) do
       set
         idx += 1
@@ -72,23 +74,30 @@ fun lex(str: Str, options: {noWhitespace: Bool}) =
     [idx, acc]
   
   fun whitespace(idx: Int): Int =
+    let =idx
     while char(idx) is Some(Char.Whitespace) do
       set idx = idx + 1
     idx
   
   fun digits(idx: Int, acc: Str) =
+    let =idx
+    let =acc
     while char(idx) is Some(Char.Digit as ch) do
       set idx = idx + 1
       set acc = acc + ch
     [idx, acc]
   
   fun hex(idx: Int, acc: Str) =
+    let =idx
+    let =acc
     while char(idx) is Some(Char.Digit as ch) do
       set idx = idx + 1
       set acc = acc + ch
     [idx, acc]
   
   fun identifier(idx: Int, acc: Str) =
+    let =idx
+    let =acc
     while char(idx) is Some(IdentifierBody as ch) do
       set idx = idx + 1
       set acc = acc + ch
@@ -100,12 +109,15 @@ fun lex(str: Str, options: {noWhitespace: Bool}) =
         else Token.identifier(acc, idx)
   
   fun operator(idx: Int, acc: Str) =
+    let =idx
+    let =acc
     while char(idx) is Some(Operator as ch) do
       set idx = idx + 1
       set acc = acc + ch
     [idx, Token.symbol(acc, idx)]
     
   fun comment(idx: Int) =
+    let =idx
     let start = idx
     let content = ""
     if char(idx) is
@@ -169,6 +181,7 @@ fun lex(str: Str, options: {noWhitespace: Bool}) =
     None then [idx, None]
   
   fun string(idx: Int): [Int, Token.Literal] =
+    let =idx
     let
       startIndex = idx
       content = ""

@@ -5,11 +5,11 @@ fun max(a, b) = if a < b then b else a
 
 module ObjectBuffer with
   abstract class ObjectBuffer with
-    val buf
+    val buf: Any
     fun mkNew[A](cls: { size: Int, ctor: (ObjectBuffer, Int) -> A }): A
-    fun del(cls: { size: Int }, inst)
-    fun read(idx)
-    fun write(idx, v)
+    fun del(cls: { size: Int }, inst: Int): Any
+    fun read(idx: Int): Any
+    fun write(idx: Int, v: Any): Any
 
   class DefaultObjectBuffer(initLength) extends ObjectBuffer with
     val buf = new mut Array(max(16, initLength))
@@ -43,7 +43,7 @@ module ObjectBuffer with
           // compute closest power of 2 enough for 2 * needed
           Math.pow(2, Math.ceil(Math.log2(needed)) + 1)
       set
-        buf.length = newLen
+        @unsafe buf.length = newLen
       // Add the new block to head of free list
       _free(oldLen, newLen - oldLen)
 

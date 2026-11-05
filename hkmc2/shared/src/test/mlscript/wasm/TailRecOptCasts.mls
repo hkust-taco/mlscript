@@ -43,7 +43,7 @@ broad(1)
 //│         continue loopLabel
 //│       1 =>
 //│         let scrut, tmp;
-//│         set scrut = wasm⁰.le_impl﹖(param0, 0);
+//│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>
 //│             let exitResult;
@@ -55,8 +55,8 @@ broad(1)
 //│                 return exitResult
 //│             end
 //│           else
-//│             set tmp = wasm⁰.minus_impl﹖(param0, 1);
-//│             set param0 = (tmp as! Int⁰);
+//│             set tmp = -⁰(param0, 1);
+//│             set param0 = tmp;
 //│             set id = 0;
 //│             continue loopLabel
 //│         end
@@ -138,8 +138,8 @@ wideOf(2)
 //│         set id = 2;
 //│         continue loopLabel
 //│       2 =>
-//│         let scrut: ?, w: Wide⁰, tmp: ?;
-//│         set scrut = wasm⁰.le_impl﹖(param0, 0);
+//│         let scrut: ?, w: Wide⁰, tmp: Int⁰;
+//│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>
 //│             let exitResult: Wide⁰;
@@ -156,8 +156,8 @@ wideOf(2)
 //│                 return exitResult
 //│             end
 //│           else
-//│             set tmp = wasm⁰.minus_impl﹖(param0, 1);
-//│             set param0 = (tmp as! Int⁰);
+//│             set tmp = -⁰(param0, 1);
+//│             set param0 = tmp;
 //│             set id = 0;
 //│             continue loopLabel
 //│         end
@@ -216,7 +216,7 @@ broadExit(1)
 //│         continue loopLabel
 //│       1 =>
 //│         let scrut, tmp;
-//│         set scrut = wasm⁰.le_impl﹖(param0, 0);
+//│         set scrut = <=⁰(param0, 0);
 //│         match scrut
 //│           true =>
 //│             let exitResult;
@@ -228,8 +228,8 @@ broadExit(1)
 //│                 return exitResult
 //│             end
 //│           else
-//│             set tmp = wasm⁰.minus_impl﹖(param0, 1);
-//│             set param0 = (tmp as! Int⁰);
+//│             set tmp = -⁰(param0, 1);
+//│             set param0 = tmp;
 //│             set id = 0;
 //│             continue loopLabel
 //│         end
@@ -269,7 +269,9 @@ broadExit(1)
 :ge
 fun sccF(): Int31 = wasm.ref.i31(sccG())
 fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
-//│ ═══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ║  l.+2: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ║  l.+2: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──      	    ^^^^
@@ -287,10 +289,7 @@ fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ═══[COMPILATION ERROR] Types 'Int31' and 'Int32' have no common representation
 //│ ═══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
-//│ ╔══[COMPILATION ERROR] Wasm function `sccF` expects result to have type `(ref null i31)`, but got `(ref null any)`
-//│ ║  l.+1: 	fun sccF(): Int31 = wasm.ref.i31(sccG())
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Wasm function `sccG` expects result to have type `i32`, but got `(ref null any)`
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
 //│ ║  l.+2: 	fun sccG(): Int32 = wasm.i31.get_s(sccF()) + wasm.i32.const(1)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

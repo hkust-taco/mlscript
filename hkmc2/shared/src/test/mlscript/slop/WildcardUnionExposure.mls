@@ -1,0 +1,16 @@
+// This file also serves as a compilation-unit fixture for WildcardUnionInterfaces.
+// Loose worksheet checking accepts its local calls; importing it must check
+// the public inputs even though both resolution flags remain disabled.
+#lang(0.3.x)
+#lang(strictResolution: false, eagerResolution: false)
+
+private fun nullable[A](x: A): A | () = x
+
+module WildcardUnionExposure with
+  fun selected(x) = nullable(x).answer
+  fun opened(x) =
+    let value = nullable(x)
+    open value
+    answer
+  val localSelected = selected(answer: 10)
+  val localOpened = opened(answer: 11)

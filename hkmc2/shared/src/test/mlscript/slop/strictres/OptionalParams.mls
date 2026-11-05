@@ -252,8 +252,8 @@ sum(3)
 //│     end
 //│   unreachable /* Rest of abortive labelled block */
 //│ };
-//│ set tmp = last¹(1, null);
-//│ set tmp1 = last¹(3, null);
+//│ set tmp = last¹(1);
+//│ set tmp1 = last¹(3);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [[null], [null]]

@@ -113,11 +113,11 @@ fun (#@) generic[A](x: A): A = x
 //│ = 2
 
 
-// A prefix application has no argument list for '\' to extend.
+// Parentheses delimit the call result, so '\' applies the returned function.
 fun (#<) addLater(x)(y) = x + y
 
 :expect 3
-{ #< 1 } \ 2
+(#< 1) \ 2
 //│ = 3
 
 

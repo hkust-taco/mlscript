@@ -86,14 +86,39 @@ class SubstitutionGrowthTest extends AnyFunSuite:
 
   // Constructor patterns synthesize omitted type arguments in the pattern's
   // lexical scope. Missing that scope made recursive FingerTreeList patterns
-  // retain unrelated callers' binders, allocating over 15000 views instead of
-  // about 1400. Allow headroom while checking graph size independently of the
-  // machine-dependent timeout; the .mls tests cover observable behavior.
+  // retain unrelated callers' binders, allocating over 15000 views. The generic
+  // IterableBase signatures add views at the tree's constructor-pattern sites;
+  // skipping wildcard field reads keeps the current fixture near 3200 views.
+  // Check allocations independently of machine-dependent timeouts; the .mls
+  // tests cover observable behavior.
   test("FingerTreeList constructor-pattern inference stays bounded"):
     val m = measure(TestFolders.compileTestDir(os.pwd) / "FingerTreeList.mls")
     withClue(s"FingerTreeList inference: $m"):
       assert(m.largestSubstitution <= 4)
-      assert(m.views < 3000)
+      assert(m.views < 3500)
+
+  // A constructor test still refines the input when every field is a wildcard,
+  // but it needs none of those fields' values. Reading each ignored field used
+  // to allocate a view per field and construction site. Keep the cost bounded
+  // by the number of constructions as the number of ignored fields grows.
+  test("wildcard constructor fields do not allocate substitution views"):
+    val callSites = 10
+    for width <- List(2, 6, 10, 14) do
+      val fields = (1 to width).map(i => s"val field$i: A").mkString(", ")
+      val wildcards = List.fill(width)("_").mkString(", ")
+      val arguments = List.fill(width)("Item(42)").mkString(", ")
+      val calls = List.fill(callSites)(s"discard(new Box[Item]($arguments))").mkString(", ")
+      val m = measure(s"IgnoredFields_$width",
+        s"""#lang(0.3.x)
+           |
+           |class Item(val value: Int)
+           |class Box[A]($fields)
+           |private fun discard(box) = if box is Box($wildcards) then 1 else 0
+           |fun use() = [$calls]
+           |""".stripMargin)
+      withClue(s"$width ignored fields at $callSites construction sites: $m"):
+        assert(m.largestSubstitution <= 1)
+        assert(m.views <= 2 * callSites)
 
   // The branching chain above, passing a promise produced outside every generic
   // scope. Its views are projected onto the support of its payload, which is
@@ -154,7 +179,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     val resolver = Elaborator(trace, TestFolders.mainTestDir(os.pwd), Elaborator.Ctx.empty)
     val scheme = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     def binder(name: Str): VarSymbol =
-      val symbol = VarSymbol(Tree.Ident(name))
+      val symbol = VarSymbol(Tree.Ident(name), mut = false)
       symbol.decl = S(TyParam(FldFlags.empty, N, symbol)(N))
       symbol
     def instance(binder: VarSymbol): TypeParameterInstance = instanceAt(binder, Set.empty)
@@ -312,6 +337,77 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     val value = DynShape()
     h.resolver.publishParameter(b1, value)
     assert(seen.toList == List(value))
+
+  test("transport interning projects irrelevant instances while retaining late dependencies"):
+    val h = new Harness
+    import h.given
+    val (a, b, c, unused) = (h.binder("A"), h.binder("B"), h.binder("C"), h.binder("Unused"))
+    val a1 = h.instanceAt(a, Set.single(b))
+    val b1 = h.instanceAt(b, Set.single(c))
+    val c1 = h.instance(c)
+    val captured = h.typeOf(a).instantiate(TypeSubstitution(a1 :: Nil))
+    val relevant = TypeSubstitution(List(b1, c1))
+    val boundary = ResolutionBoundary(TermSymbol(syntax.Fun, N, Tree.Ident("scope")))
+    val path = EntryMark(boundary, S(FlowSymbol.app()), NoMarks)
+    // Interning must also project the retained source graph: the first caller's
+    // irrelevant instances must not survive behind the shared transport node.
+    val irrelevant = (1 to 100).iterator.map(i => h.instance(h.binder(s"Unused$i"))).toList
+    val initial = relevant.withOverrides(TypeSubstitution(irrelevant))
+    val canonical = h.resolver.transportType(captured.instantiate(initial), path :: Nil)
+    val retainedSizes = canonical.resolution.currentShapes.collect:
+      case TypeShape.Contextual(reference) => reference.tpe.instances.size
+    assert(retainedSizes.nonEmpty && retainedSizes.forall(_ <= 3))
+    // Only Unused varies. Keeping it in the transport key would allocate one
+    // contextual reference per ambient activation before instanceShape projects it.
+    (1 to 100).foreach: _ =>
+      val incoming = relevant.withOverrides(TypeSubstitution(List(h.instance(a), h.instance(unused))))
+      val moved = h.resolver.transportType(captured.instantiate(incoming), path :: Nil)
+      assert(moved.resolution eq canonical.resolution)
+    val seen = ArrayBuffer.empty[TermShape]
+    h.resolver.listenInstanceViews(h.instanceOf(canonical))(seen += _)
+    assert(seen.isEmpty)
+    h.resolver.publishParameter(a1, h.instanceOf(h.typeOf(b)))
+    h.resolver.publishParameter(b1, h.instanceOf(h.typeOf(c)))
+    val value = DynShape()
+    h.resolver.publishParameter(c1, value)
+    assert(seen.toList.map(ShapeIdentity.key(_)) == List(ShapeIdentity.key(Marked(value, path))))
+
+    // A forward source has no fixed support yet. Its two environments must
+    // remain distinct and both must receive the target when it becomes known.
+    val forward = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val pending = DeclaredType(forward, Map.empty, TypeSubstitution.empty, true)(N)
+    val instances = List(h.instance(a), h.instance(a))
+    val observations = instances.map: instance =>
+      val moved = h.resolver.transportType(pending.instantiate(TypeSubstitution(instance :: Nil)), path :: Nil)
+      val seen = ArrayBuffer.empty[TermShape]
+      h.resolver.listenInstanceViews(h.instanceOf(moved))(seen += _)
+      seen
+    assert(observations.forall(_.isEmpty))
+    forward.publish(TypeShape.Parameter(a, a.inferenceHost))
+    instances.lazyZip(observations).foreach: (instance, seen) =>
+      val late = DynShape()
+      h.resolver.publishParameter(instance, late)
+      assert(seen.toList.map(ShapeIdentity.key(_)) == List(ShapeIdentity.key(Marked(late, path))))
+    assert(observations.forall(_.size == 1))
+
+  test("an independent union arm shares its view cache across ambient substitutions"):
+    val h = new Harness
+    import h.given
+    val a = h.binder("A")
+    val unit = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    unit.publish(TypeShape.Unit)
+    val union = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    union.publish(TypeShape.Union(h.typeOf(a).resolution, unit))
+    val tpe = h.resolver.declaredType(union, Map.empty)
+    def observe(): Unit =
+      val seen = ArrayBuffer.empty[TermShape]
+      h.resolver.listenInstanceViews(h.instanceOf(tpe.instantiate(TypeSubstitution(h.instance(a) :: Nil))))(seen += _)
+      assert(seen.size == 1)
+    observe()
+    val listeners = unit.inferenceHost.listeners.size
+    assert(listeners > 0)
+    (1 to 100).foreach(_ => observe())
+    assert(unit.inferenceHost.listeners.size == listeners)
 
   // A generic type use that omits arguments reads holes whose bounds are
   // written at the use, so its scope counts. Whether a use applies arguments is
