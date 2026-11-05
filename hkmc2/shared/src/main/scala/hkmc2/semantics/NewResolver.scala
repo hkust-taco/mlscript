@@ -1418,12 +1418,16 @@ class NewResolver:
     // Equal types can be observed through different input-only arguments. Reuse
     // their semantic host, but report this observation's witness rather than the
     // parameter declaration retained by the host's first subscriber.
-    def observe(shape: TermShape)(using ResolutionContext): Unit =
-      val origin = tpe.origin.orElse:
-        if tpe.resolution.currentShapes.exists(_ == TypeShape.Top) then S(TypeInterfaceReason.Unrestricted(tpe.resolution.source)) else N
-      (shape, origin) match
-        case (Marked(opaque: OpaqueTypeShape, marks), S(reason)) => listener(Marked(OpaqueTypeShape(opaque.source)(reason), marks))
-        case _ => listener(shape)
+    def observe(shape: TermShape)(using ResolutionContext): Unit = shape match
+      case Marked(opaque: OpaqueTypeShape, marks) =>
+        // Only opaque views use a replacement witness. Concrete views need no
+        // diagnostic lookup in the type's source graph on each delivery.
+        val origin = tpe.origin.orElse:
+          if tpe.resolution.currentShapes.exists(_ == TypeShape.Top) then S(TypeInterfaceReason.Unrestricted(tpe.resolution.source)) else N
+        origin match
+          case S(reason) => listener(Marked(OpaqueTypeShape(opaque.source)(reason), marks))
+          case N => listener(shape)
+      case _ => listener(shape)
     val key = (tpe, mergeIntersections)
     typeViews.get(key) match
       case S(host) => host.listen(observe)
