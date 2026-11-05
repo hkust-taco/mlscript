@@ -1304,8 +1304,10 @@ class NewResolver:
     instanceDependencies(tpe.resolution) match
       case L(_) => N
       case R(binders) =>
-        val children = tpe.bindings.valuesIterator ++ tpe.interpretedTypes.iterator
-        children.foldLeft(binders)((acc, bound) => union(acc, typeSupport(bound)))
+        // Synthesized children already contribute through instanceDependencies.
+        // Per-use interpretations preserve their canonical types, changing only
+        // witnesses and operand order; revisiting them expands shared DAG paths.
+        tpe.bindings.valuesIterator.foldLeft(binders)((acc, bound) => union(acc, typeSupport(bound)))
 
   /** The ambient binders a type nested in another value can still read; see shapeSupport. */
   private def typeSupport(tpe: DeclaredType)(using ResolutionContext): Binders =

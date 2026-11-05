@@ -282,16 +282,6 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
     rebuilt(bindings, instances, positive, S(plan))
   private[semantics] def withoutNamespaces(using ResolutionContext): DeclaredType =
     if namespaces.isEmpty then this else rebuilt(bindings, instances, positive, N)
-  /** Closed children of synthesized nodes retain their per-use witnesses and
-    * operand order. Source nodes read their children through lexical bindings.
-    */
-  private[semantics] def interpretedTypes: Ls[DeclaredType] = interpretation.toList.flatMap:
-    case TypeShape.Argument(parts) => parts.input :: parts.output :: Nil
-    case TypeShape.SelectedArgument(argument, _) => argument :: Nil
-    case TypeShape.Contextual(reference) => reference.tpe :: Nil
-    case TypeShape.Combined(formula) => formula.orderedAtoms.toList
-    case _ => lastWords("Only synthesized type nodes have a per-use interpretation")
-
   /** Witnesses belong to this observation and do not multiply inference candidates. */
   def withOrigin(witness: Opt[TypeInterfaceReason]): DeclaredType =
     if witness.isEmpty then this else new DeclaredType(reference, bindings)(witness, namespaces, interpretation)

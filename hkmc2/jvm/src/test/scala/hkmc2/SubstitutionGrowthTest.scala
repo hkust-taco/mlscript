@@ -206,6 +206,41 @@ class SubstitutionGrowthTest extends AnyFunSuite:
       state.recordLexicalBinders(source, binders)
       TupleShape(source, TupleShape.Field(Fld(FldFlags.empty, Term.UnitVal(), N), Nil) :: Nil)(resolver)
 
+  // Diff tests cannot distinguish a shared dependency DAG from a traversal of
+  // all its paths. Each argument below has two edges to the same child, while
+  // its captured instance requires B even before a bound mentioning B arrives.
+  test("synthesized dependency queries do not expand shared interpretation paths"):
+    val allocation = java.lang.management.ManagementFactory.getThreadMXBean match
+      case bean: com.sun.management.ThreadMXBean if bean.isThreadAllocatedMemorySupported => bean
+      case _ => cancel("This JVM does not expose thread allocation counters")
+    allocation.setThreadAllocatedMemoryEnabled(true)
+    val h = new Harness
+    import h.given
+    val (a, b, unused) = (h.binder("A"), h.binder("B"), h.binder("Unused"))
+    val a1 = h.instanceAt(a, Set.single(b))
+    val b1 = h.instance(b)
+    val extra = h.instance(unused)
+    val leaf = h.typeOf(a).instantiate(TypeSubstitution(a1 :: Nil))
+    for depth <- 8 :: 16 :: Nil do
+      val root = (1 to depth).foldLeft(leaf): (child, _) =>
+        val shape = TypeShape.Argument(TypeArgument(child, child))
+        val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+        resolution.publish(shape)
+        DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N).withInterpretation(shape)
+      val input = root.instantiate(TypeSubstitution(b1 :: extra :: Nil))
+      val expected = root.instantiate(TypeSubstitution(b1 :: Nil))
+      val repetitions = 100
+      def project(): Unit =
+        var index = 0
+        while index < repetitions do
+          assert(h.resolver.projectType(input) == expected)
+          index += 1
+      project()
+      val before = allocation.getCurrentThreadAllocatedBytes
+      project()
+      val bytes = allocation.getCurrentThreadAllocatedBytes - before
+      assert(bytes <= repetitions * 2048L, s"Depth $depth dependency queries allocated $bytes bytes")
+
   test("a substitution that a value cannot observe allocates no view"):
     val h = new Harness
     import h.given
