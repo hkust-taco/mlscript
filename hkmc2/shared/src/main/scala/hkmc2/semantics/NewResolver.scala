@@ -2060,13 +2060,21 @@ class NewResolver:
   private def inferTypeArguments(tpe: DeclaredType, value: TermShape, marks: Ls[Marks],
       site: Opt[Term])(using ResolutionContext): Unit =
     if !rctx.addTypeConstraint(tpe, value, marks) then return
-    listenInstanceFlow(value, mergeIntersections = false)(ShapeObserver.probes(requireTypeNamespaces(_, tpe)))
+    def observeValue(listener: ValueListener)(using ResolutionContext): Unit =
+      listenInstanceFlow(value, mergeIntersections = false)(ShapeObserver(listener, requireTypeNamespaces(_, tpe)))
+    // Structural constraints already observe the lower endpoint. Bare parameters
+    // and holes forward it symbolically, including probes arriving later, without
+    // expanding its interface. An alias can contribute a namespace even when its
+    // body only forwards a parameter, so it independently demands this observation.
+    def observeNamespaces(using ResolutionContext): Unit =
+      listenInstanceFlow(value, mergeIntersections = false)(ShapeObserver.probes(requireTypeNamespaces(_, tpe)))
     val annotation = tpe.resolution.source
     def follow(tpe: DeclaredType, args: TypeApplication, captures: Ls[Marks],
         seen: Set[TypeResolution])(using ResolutionContext): Unit = if !seen(tpe.resolution) then
       val next = seen + tpe.resolution
+      if tpe.namespaces.nonEmpty then observeNamespaces
       def observe(listener: Listener)(using ResolutionContext): Unit =
-        listenConstraintViews(value): actual =>
+        observeValue: actual =>
           actual.enter(captures) match
             case actual: TermShape => listener(actual)
             case NoShape => ()
@@ -2112,7 +2120,7 @@ class NewResolver:
         case TypeShape.SelectedArgument(argument, positive) =>
           listenArgumentParts(argument.instantiate(tpe.instances)): parts =>
             follow(if positive then parts.output else parts.input, args, captures, next)
-        case TypeShape.Nominal(cls) => listenConstraintViews(value): value =>
+        case TypeShape.Nominal(cls) => observeValue: value =>
           // Erasing a callback's signature must not erase the obligation to
           // check its implementation. Its unannotated inputs can receive any
           // value, independently of the calls observed through Function.
@@ -2160,15 +2168,17 @@ class NewResolver:
               case tuple: TupleShape => parent(tuple.arrayParent)
               case _ => ()
           constrainNominal(value)
+        case TypeShape.Alias(_, N) => observeNamespaces
         case TypeShape.Top => ()
         case _ => value match
           // A concrete target stays fixed, but must receive bounds that arrive
           // through a symbolic source later. Concrete mismatch reporting is
           // separate from retaining this obligation in the graph.
-          case Marked(_: InstanceShape, _) => listenConstraintViews(value)(inferTypeArguments(tpe, _, marks, site))
+          case Marked(_: InstanceShape, _) => observeValue(inferTypeArguments(tpe, _, marks, site))
           case _ => ()
       tpe.listen: shape =>
         reduceType(tpe, args, shape).fold(leaf(shape)): step =>
+          if step.alias.nonEmpty then observeNamespaces
           follow(step.tpe, step.args, step.marks ::: captures, next)
     // Alias expansion guards only unproductive cycles. Descending into a tuple,
     // nominal argument, or arrow installs another edge with its own cycle guard.

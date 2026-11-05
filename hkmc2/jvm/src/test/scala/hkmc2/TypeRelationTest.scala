@@ -65,6 +65,28 @@ class TypeRelationTest extends AnyFunSuite:
     assert((a.inferenceHost.listeners.size, b.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(first, second))
 
+  // Symbolic forwarding alone must not construct views of every reachable lower
+  // interface. Diff tests cover the resulting namespace choices; these bounds
+  // check the observation graph before and after a consumer demands those views.
+  test("constraints share probe observations and leave symbolic forwarding unexpanded"):
+    val h = new Harness
+    import h.given
+    val parameters = (1 to 64).map(index => h.parameter(s"T$index"))
+    parameters.sliding(2).foreach: pair =>
+      h.resolver.constrainTypes(ContextualType(pair(0)._2, Nil), ContextualType(pair(1)._2, Nil), N)
+    assert(parameters.forall((_, tpe) => h.state.state.typeViews.get((tpe, false)).isEmpty))
+    val (symbol, input) = parameters.head
+    val tuple = h.tpe(TypeShape.Tuple(Nil))
+    h.resolver.constrainTypes(ContextualType(input, Nil), ContextualType(tuple, Nil), N)
+    val view = h.state.state.typeViews.get((input, false)).get
+    assert(view.inferenceHost.listeners.size == 1)
+    val ref = Term.UnresolvedRef(Nil, Tree.Ident("Missing"))(FlowSymbol.pat(), NameLookup.LeadingDot)
+    h.resolver.publishParameter(symbol, ref.namespaceProbe)
+    assert(view.currentShapes.exists(_ is ref.namespaceProbe))
+    (1 to 1000).foreach: _ =>
+      h.resolver.constrainTypes(ContextualType(input, Nil), ContextualType(tuple, Nil), N)
+    assert(view.inferenceHost.listeners.size == 1)
+
   // The worksheets cannot count canonical references, candidates, or subscriptions.
   // Repeated substitutions exercise the same source graph beyond any finite test depth.
   test("probe-bearing parameter cycles share bounded flow with value-only consumers"):

@@ -38,3 +38,14 @@ fun combined[A, B](value: Either[Other[A], Other[B]] | Nothing) =
 :expect 3
 combined(First.Some(3))
 //│ = 3
+
+// Forwarding a probe through a bare parameter needs no interface observation.
+// The alias still supplies its own namespace when its body is that parameter.
+fun identity[A](value: A): A = value
+fun preferred[A](value: Preferred[A]) = value
+
+:expect 99
+let pending = identity(.Pick)
+preferred(pending).value
+//│ = 99
+//│ pending = Some(99)
