@@ -855,9 +855,12 @@ private[semantics] final class ImplicitNamespaces(val scope: SrcScope):
   /** Whether the reference is the head of a constructor pattern, whose namespaces are those of
     * its scrutinees rather than of the types required of its value. */
   var scrutinized: Bool = false
-  /** The namespace whose candidate path is `prefix`, if any (see NewResolver.resolveThrough). */
-  def selectedThrough(prefix: Term): Opt[ModuleOrObjectSymbol] = consulted.collectFirst:
-    case (module, namespace) if namespace.status.selectedPath.exists(_ is prefix) => module
+  /** Diagnostic provenance indexed by candidate path. Build this only when reporting an error:
+    * resolution already stores each selection in `consulted`, and compiled terms need no index. */
+  def selectedOrigins: Map[Identity[Term], (ModuleOrObjectSymbol, Namespace)] =
+    consulted.iterator.flatMap: (module, namespace) =>
+      namespace.status.selectedPath.map(path => new Identity(path) -> (module, namespace))
+    .toMap
 
 /** A namespace consulted for a reference, first because `witness` names `definition`, of
   * which the namespace is the companion (if `companion` holds) or the declaring module. */

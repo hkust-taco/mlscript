@@ -3725,9 +3725,10 @@ class NewResolver:
     * applications, such as `Red.lighter` or `Hex("f00").lighter`, whose result determines the
     * namespace. Implicit namespaces take precedence over wildcard opens, so the opens of these
     * references are only consulted once the rest of their block is resolved, and only if no
-    * namespace was found. Until then, the reference only publishes its NamespaceProbe, whose
-    * arrival at declared types reveals the namespaces (see requireTypeNamespaces). The head of
-    * a constructor pattern instead names a member of an implicit namespace of the values that
+    * namespace was found. The reference initially publishes its NamespaceProbe, whose arrival
+    * at declared types reveals namespaces and immediately publishes their candidates (see
+    * requireTypeNamespaces and consultNamespace). A constructor pattern's head names a member
+    * of an implicit namespace of the values that
     * reach its scrutinee (see scrutineeNamespaces). A leading-dot selection `.name`
     * (NameLookup.LeadingDot) has no opens: it only names members of implicit namespaces,
     * whatever its capitalization.
@@ -3991,11 +3992,12 @@ class NewResolver:
     val name = ref.id.name
     if !rctx.hasError(ref) && !ref.resolvedMembers.exists(_._2 is member) then
       rctx.markError(ref)
+      val selected = namespaces.selectedOrigins
       val candidates = ref.resolvedMembers.reverse.map: (prefix, _) =>
-        namespaces.selectedThrough(prefix) match
-          case S(selected) =>
-            msg"It was resolved to '${selected.nme}.${name}', selected by this ${witnessKind(namespaces.consulted(selected).witness)}." ->
-              namespaces.consulted(selected).witness.toLoc
+        selected.get(new Identity(prefix)) match
+          case S((selected, origin)) =>
+            msg"It was resolved to '${selected.nme}.${name}', selected by this ${witnessKind(origin.witness)}." ->
+              origin.witness.toLoc
           case N => msg"It was resolved to the '${name}' of this wildcard open." -> prefix.toLoc
       val reason =
         if namespaces.fellBack then
