@@ -9,7 +9,7 @@ import hkmc2.utils.*
 import document.*
 import document.Document
 import semantics.{
-  BlockMemberSymbol, ClassSymbol, ClassLikeSymbol, ClassCtorSymbol, Elaborator,
+  BaseTypeSymbol, BlockMemberSymbol, ClassSymbol, ClassLikeSymbol, ClassCtorSymbol, Elaborator,
   InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, Symbol, TempSymbol, TermSymbol,
 },
   Elaborator.State
@@ -85,7 +85,7 @@ end SessionBinding
   *   The Wasm function type expected by the import.
   */
 final case class SessionFunc(
-    sym: BlockMemberSymbol | ClassSymbol,
+    sym: BlockMemberSymbol | BaseTypeSymbol,
     wrapId: Opt[Str] -> Opt[Str],
     moduleName: Str,
     exportName: Str,
@@ -120,7 +120,7 @@ final case class SessionGlobal(
 /** Metadata for a class type made visible to later Wasm REPL modules.
   *
   * @param sym
-  *   The block member symbol of the class.
+  *   The symbol of the class or object.
   * @param wrapId
   *   Identifier wrapping metadata for recreating the class type in importing modules.
   * @param compType
@@ -135,7 +135,7 @@ final case class SessionGlobal(
   *   Additional symbols that should resolve to this class binding.
   */
 final case class SessionClass(
-    sym: BlockMemberSymbol,
+    sym: BaseTypeSymbol,
     wrapId: Opt[Str] -> Opt[Str],
     compType: CompType,
     objectTag: Opt[Int],
@@ -152,7 +152,7 @@ final case class SessionClass(
   * @param blockSym
   *   The block member symbol of the singleton object.
   * @param objectSym
-  *   Optional object/module symbol that should also resolve to this singleton binding.
+  *   The symbol of the singleton object, which identifies its backing global.
   * @param moduleName
   *   The Wasm module name used by the import.
   * @param exportName
@@ -162,14 +162,14 @@ final case class SessionClass(
   */
 final case class SessionSingleton(
     blockSym: BlockMemberSymbol,
-    objectSym: Opt[ModuleOrObjectSymbol],
+    objectSym: ModuleOrObjectSymbol,
     wrapId: Opt[Str] -> Opt[Str],
     moduleName: Str,
     exportName: Str,
     globalTy: RefType,
 ) extends SessionBinding:
   def bindingKey: Str = s"singleton:$moduleName:$exportName"
-  def bindingSyms: Ls[SlotSymbol] = blockSym +: objectSym.toList
+  def bindingSyms: Ls[SlotSymbol] = blockSym :: objectSym :: Nil
   override def exportNameOpt: Opt[Str] = S(exportName)
 
 /** The emitted Wasm module together with REPL/session export metadata.
@@ -383,7 +383,7 @@ enum WasmIntrinsicType:
     * types, including a concretely-typed `this`. Keyed on the full param-type vector (not just arity) and the result
     * type so distinct virtual methods of the same arity on the same base class don't collide.
     */
-  case VirtualMethod(baseSym: BlockMemberSymbol, paramTypes: List[ValType], resultType: ValType)
+  case VirtualMethod(baseSym: BaseTypeSymbol, paramTypes: List[ValType], resultType: ValType)
 
 /** An argument passed to a Wasm intrinsic function.
   *
@@ -683,8 +683,8 @@ object Ctx:
     *   share the slot's Wasm function type.
     */
   case class VirtualMethodInfo(
-      sym: BlockMemberSymbol,
-      owner: BlockMemberSymbol,
+      sym: TermSymbol,
+      owner: BaseTypeSymbol,
       paramTypes: Seq[ValType],
       resultType: ValType,
   )
@@ -698,7 +698,7 @@ object Ctx:
     */
   case class VirtualTable(
       slots: List[VirtualMethodInfo],
-      slotOf: Map[BlockMemberSymbol, Int],
+      slotOf: Map[TermSymbol, Int],
   )
 
   val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(
@@ -825,13 +825,13 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
 
   private var fileNames: Opt[FileExportNames] = N
   private val importedTypes = MutMap.empty[(ValueSymbol, Opt[Str] -> Opt[Str]), TypeIdx]
-  private val pendingTypes = MutMap.empty[BlockMemberSymbol, () => TypeInfo]
-  private val pendingFunctions = MutMap.empty[ScopedSymbol | ClassSymbol, () => Import[ExternType.Func]]
+  private val pendingTypes = MutMap.empty[BaseTypeSymbol, () => TypeInfo]
+  private val pendingFunctions = MutMap.empty[WasmSymbol, () => Import[ExternType.Func]]
   private val pendingGlobals = MutMap.empty[ScopedSymbol, () => Import[ExternType.Global]]
 
   def enableFileExports(): Unit = fileNames = S(new FileExportNames)
 
-  def fileExportName(sym: ScopedSymbol | ClassSymbol, kind: Str, wrap: Opt[Str] -> Opt[Str], requested: Opt[Str])
+  def fileExportName(sym: WasmSymbol, kind: Str, wrap: Opt[Str] -> Opt[Str], requested: Opt[Str])
         (using Raise): Opt[Str] =
     fileNames.fold(requested)(names => S(names(sym, kind, wrap)))
 
@@ -876,7 +876,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
       }))
     dep.interface.types.foreach: ty =>
       ty.sym match
-        case sym: BlockMemberSymbol if ty.wrap == (N -> N) =>
+        case sym: BaseTypeSymbol if ty.wrap == (N -> N) =>
           pendingTypes.getOrElseUpdate(sym, () => getTypeInfo_!(relocate.index(ty.index)))
         case _ => ()
     dep.interface.functions.foreach: f =>
@@ -896,10 +896,6 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     (relocate, index => globals.getOrElse(index,
       lastWords(s"WASM interface has an unbound global edge: $index"))())
 
-  /** Give a synthetic local class symbol the originating class's lazy type binding. */
-  def aliasType(alias: BlockMemberSymbol, original: BlockMemberSymbol): Unit =
-    pendingTypes(alias) = () => getTypeInfo_!(original)
-
   /** Aliases refer to the same imported storage/function, never to a copied value. */
   def aliasBinding(alias: ScopedSymbol, original: ScopedSymbol): Unit =
     namedFuncs.get(original).foreach(namedFuncs(alias) = _)
@@ -917,7 +913,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   private val importedTypeGroups = MutMap.empty[SymIdx, Vector[SymIdx]]
 
   /** [[MutMap]] containing type symbols mapped to their corresponding [[TypeInfo]] instance. */
-  private val namedTypes = MutMap.empty[BlockMemberSymbol, TypeInfo]
+  private val namedTypes = MutMap.empty[TypeKey, TypeInfo]
   
   /** [[Scope]] for generating WAT identifiers of data segments. */
   private[text] val dataSegmentScp = new WasmScope
@@ -938,7 +934,7 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   private var funcs = ListMap.empty[SymIdx, FuncInfo | Import[ExternType.Func]]
 
   /** [[MutMap]] containing function symbols mapped to the corresponding [[FuncInfo]] or [[Import]] instance. */
-  private val namedFuncs = MutMap.empty[ScopedSymbol | ClassSymbol, FuncInfo | Import[ExternType.Func]]
+  private val namedFuncs = MutMap.empty[WasmSymbol, FuncInfo | Import[ExternType.Func]]
 
   /** [[Scope]] for generating WAT identifiers of memories. */
   private[text] val memoryScp = new WasmScope
@@ -974,10 +970,9 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   private val cachedFunctionImports = MutMap.empty[(Str, Str), FuncIdx]
   private val cachedGlobalImports = MutMap.empty[(Str, Str), GlobalIdx]
 
-  private val singletonByBms = MutMap.empty[BlockMemberSymbol, () => Ctx.SingletonInfo]
-  private val singletonByIsym = MutMap.empty[ModuleOrObjectSymbol, () => Ctx.SingletonInfo]
+  private val singletons = MutMap.empty[ModuleOrObjectSymbol, () => Ctx.SingletonInfo]
   private val singletonInitActions = ArrayBuf.empty[Expr]
-  private val virtualTables = MutMap.empty[BlockMemberSymbol, () => Ctx.VirtualTable]
+  private val virtualTables = MutMap.empty[BaseTypeSymbol, () => Ctx.VirtualTable]
   private def imports: Seq[Import[?]] =
     val importedFuncs = funcs.collect:
       case (_, imp: Import[ExternType.Func]) => imp
@@ -1007,38 +1002,39 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     val id = typeInfo.id
     types += (id -> typeInfo)
     typeInfo.sym match
-      case bms: BlockMemberSymbol => namedTypes(bms) = typeInfo
+      case key: TypeKey => namedTypes(key) = typeInfo
       case _ =>
     TypeIdx(id)
 
   /** Returns the [[TypeIdx]] of the given `typeref`.
     */
-  def getType(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeIdx] = typeref match
+  def getType(typeref: TypeIdx | TypeKey): Opt[TypeIdx] = typeref match
     case typeidx: TypeIdx => S(typeidx)
-    case sym: BlockMemberSymbol => getTypeInfo(typeref).map(ti => TypeIdx(ti.id))
+    case sym: TypeKey => getTypeInfo(typeref).map(ti => TypeIdx(ti.id))
 
   /** Same as [[getType]] but throws an exception when the `typeref` is not found. */
-  def getType_!(typeref: TypeIdx | BlockMemberSymbol): TypeIdx =
+  def getType_!(typeref: TypeIdx | TypeKey): TypeIdx =
     getType(typeref).getOrElse:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
 
   /** Returns the [[TypeInfo]] instance associated with the given `typeref`. */
-  def getTypeInfo(typeref: TypeIdx | BlockMemberSymbol): Opt[TypeInfo] = typeref match
+  def getTypeInfo(typeref: TypeIdx | TypeKey): Opt[TypeInfo] = typeref match
     case TypeIdx(idx @ SymIdx(nme)) => types.get(idx)
-    case sym: BlockMemberSymbol => namedTypes.get(sym).orElse(pendingTypes.get(sym).map(_()))
+    case sym: BaseTypeSymbol => namedTypes.get(sym).orElse(pendingTypes.get(sym).map(_()))
+    case sym: BlockMemberSymbol => namedTypes.get(sym)
 
   /** Same as [[getTypeInfo]] but throws an exception when the `typeref` is not found. */
-  def getTypeInfo_!(typeref: TypeIdx | BlockMemberSymbol): TypeInfo =
+  def getTypeInfo_!(typeref: TypeIdx | TypeKey): TypeInfo =
     getTypeInfo(typeref).getOrElse:
       lastWords(s"Missing type definition for ${typeref.prettyString}")
 
   /** Records the derived virtual-dispatch layout for `sym`. */
-  def registerVirtualTable(sym: BlockMemberSymbol, info: => Ctx.VirtualTable): Unit =
+  def registerVirtualTable(sym: BaseTypeSymbol, info: => Ctx.VirtualTable): Unit =
     lazy val cached = info
     virtualTables(sym) = () => cached
 
   /** Returns the derived virtual-dispatch layout for `sym`. */
-  def getVirtualTable(sym: BlockMemberSymbol): Opt[Ctx.VirtualTable] =
+  def getVirtualTable(sym: BaseTypeSymbol): Opt[Ctx.VirtualTable] =
     virtualTables.get(sym).map(_())
 
   /** Adds a function import into this context.
@@ -1146,40 +1142,40 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
 
   /** Returns the [[FuncIdx]] of the given `funcref`.
     */
-  def getFunc(funcref: FuncIdx | ScopedSymbol | ClassSymbol): Opt[FuncIdx] = funcref match
+  def getFunc(funcref: FuncIdx | WasmSymbol): Opt[FuncIdx] = funcref match
     case idx: FuncIdx => S(idx)
-    case sym: (ScopedSymbol | ClassSymbol) =>
+    case sym: WasmSymbol =>
       getFuncEntry(sym).map:
         case fi: FuncInfo => FuncIdx(fi.id)
         case imp: Import[ExternType.Func] => FuncIdx(imp.externType.id)
 
   /** Same as [[getFunc]] but throws an exception when the `funcref` is not found. */
-  def getFunc_!(funcref: FuncIdx | ScopedSymbol | ClassSymbol): FuncIdx =
+  def getFunc_!(funcref: FuncIdx | WasmSymbol): FuncIdx =
     getFunc(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
-  private def getFuncEntry(funcref: FuncIdx | ScopedSymbol | ClassSymbol): Opt[FuncInfo | Import[ExternType.Func]] = funcref match
+  private def getFuncEntry(funcref: FuncIdx | WasmSymbol): Opt[FuncInfo | Import[ExternType.Func]] = funcref match
     case FuncIdx(idx @ SymIdx(_)) => funcs.get(idx)
-    case funcref: (ScopedSymbol | ClassSymbol) => namedFuncs.get(funcref).orElse(pendingFunctions.get(funcref).map(_()))
+    case funcref: WasmSymbol => namedFuncs.get(funcref).orElse(pendingFunctions.get(funcref).map(_()))
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
-  def getFuncInfo(funcref: FuncIdx | ScopedSymbol | ClassSymbol): Opt[FuncInfo] =
+  def getFuncInfo(funcref: FuncIdx | WasmSymbol): Opt[FuncInfo] =
     getFuncEntry(funcref).collect:
       case funcInfo: FuncInfo => funcInfo
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
-  def getFuncInfo_!(funcref: FuncIdx | ScopedSymbol | ClassSymbol): FuncInfo =
+  def getFuncInfo_!(funcref: FuncIdx | WasmSymbol): FuncInfo =
     getFuncInfo(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
   /** Returns the type use associated with the given `funcref`, whether it is a definition or an import. */
-  def getFuncTypeUse(funcref: FuncIdx | ScopedSymbol | ClassSymbol): Opt[TypeUse] =
+  def getFuncTypeUse(funcref: FuncIdx | WasmSymbol): Opt[TypeUse] =
     getFuncEntry(funcref).map:
       case funcInfo: FuncInfo => funcInfo.typeUse
       case funcImport: Import[ExternType.Func] => funcImport.externType.typeUse
 
   /** Same as [[getFuncTypeUse]] but throws an exception when the `funcref` is not found. */
-  def getFuncTypeUse_!(funcref: FuncIdx | ScopedSymbol | ClassSymbol): TypeUse =
+  def getFuncTypeUse_!(funcref: FuncIdx | WasmSymbol): TypeUse =
     getFuncTypeUse(funcref).getOrElse:
       lastWords(s"Missing function definition for ${funcref.prettyString}")
 
@@ -1236,28 +1232,20 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   /** Returns all globals in this context. */
   def getGlobals: Seq[ScopedSymbol] = namedGlobals.keys.toSeq
 
-  /** Checks whether singleton metadata has been registered for class symbol `sym`. */
-  def containsSingleton(sym: BlockMemberSymbol): Bool = singletonByBms.contains(sym)
+  /** Checks whether singleton metadata has been registered for object symbol `sym`. */
+  def containsSingleton(sym: ModuleOrObjectSymbol): Bool = singletons.contains(sym)
 
-  /** Returns singleton metadata for `sym` when it resolves to either the block-member symbol or module/object symbol
-    * used during singleton registration.
-    */
-  def getSingletonInfo(sym: BlockMemberSymbol | InnerSymbol): Opt[Ctx.SingletonInfo] = sym match
-    case bms: BlockMemberSymbol => singletonByBms.get(bms).map(_())
-    case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym).map(_())
-    case _: InnerSymbol => N
+  /** Returns singleton metadata for `sym` when it denotes a registered singleton object. */
+  def getSingletonInfo(sym: InnerSymbol): Opt[Ctx.SingletonInfo] = sym match
+    case obj: ModuleOrObjectSymbol => singletons.get(obj).map(_())
+    case _ => N
 
-  /** Registers singleton metadata under both its block-member symbol and optional module/object symbol alias.
+  /** Registers singleton metadata for object symbol `sym`.
     * Delay resolving imported storage and its types until the singleton is actually used.
     */
-  def registerSingleton(
-      bms: BlockMemberSymbol,
-      isym: Opt[ModuleOrObjectSymbol],
-      info: => Ctx.SingletonInfo,
-  ): Unit =
+  def registerSingleton(sym: ModuleOrObjectSymbol, info: => Ctx.SingletonInfo): Unit =
     lazy val cached = info
-    singletonByBms(bms) = () => cached
-    isym.foreach(singletonByIsym(_) = () => cached)
+    singletons(sym) = () => cached
 
   /** Appends one eager singleton initialization action for synthesized module start code. */
   def addSingletonInitAction(action: Expr): Unit =

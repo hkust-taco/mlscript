@@ -7,14 +7,32 @@ import hkmc2.utils.*, shorthands.*
 
 import document.*
 import semantics.{
-  BlockMemberSymbol, ClassCtorSymbol, ClassSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol,
+  BaseTypeSymbol, BlockMemberSymbol, ClassCtorSymbol, ClassLikeSymbol, ClassSymbol, DefinitionSymbol, Elaborator,
+  InnerSymbol, LocalVarSymbol, ModuleOrObjectSymbol, TempSymbol, TermSymbol,
 }, Elaborator.State
 import utils.Scope
 
 import scala.collection.Map
 
-/** Symbols that can represent an importable or exportable Wasm construct. */
-private[text] type ExternSymbol = BlockMemberSymbol | ClassSymbol | TempSymbol
+/** Symbols that can represent an importable or exportable Wasm construct.
+  *
+  * A class or object symbol identifies its struct type and constructor, and a term symbol identifies a class method:
+  * the IR names these definitions directly, while their block members can be shared with other definitions.
+  */
+private[text] type ExternSymbol = BlockMemberSymbol | BaseTypeSymbol | TermSymbol | TempSymbol
+
+/** Symbols that identify a Wasm function, global, or type and supply the base of its WAT name. */
+private[text] type WasmSymbol = ScopedSymbol | BaseTypeSymbol | TermSymbol
+
+/** Symbols that identify a named Wasm type: a class or object definition, or a synthetic block member that the
+  * backend creates for one of its built-in layouts (such as the object header).
+  */
+private[text] type TypeKey = BaseTypeSymbol | BlockMemberSymbol
+
+/** The symbol of the class or object that owns `cls`'s Wasm type, RTTI, and virtual table. */
+private[text] def baseTypeSymbol(cls: ClassLikeSymbol): BaseTypeSymbol = cls match
+  case cls: ClassSymbol => cls
+  case obj: ModuleOrObjectSymbol => obj
 
 private[text] object ExternSymbol:
   /** Class constructors and explicit function companions share a source name but have distinct Wasm functions. Imports
@@ -42,8 +60,8 @@ extension (doc: Document)
   * use the same allocator as ordinary names: a suffix is not a reservation of that spelling. */
 private[text] final class WasmScope(using State):
   private val scope = Scope.empty(Scope.Cfg.default)
-  private val bindings = scala.collection.mutable.Map.empty[(ScopedSymbol | ClassSymbol, Opt[Str] -> Opt[Str]), Str]
-  def allocateOrGetNameWrapped(sym: ScopedSymbol | ClassSymbol, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
+  private val bindings = scala.collection.mutable.Map.empty[(WasmSymbol, Opt[Str] -> Opt[Str]), Str]
+  def allocateOrGetNameWrapped(sym: WasmSymbol, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
     bindings.getOrElseUpdate((sym, wrap), {
       val hint = wrap._1.fold("")(_ + "_") + sym.nme + wrap._2.fold("")("_" + _)
       val ascii = hint.flatMap(c => if c <= 127 then c.toString else f"_u${c.toInt}%04x")
@@ -327,7 +345,7 @@ object ExternType:
     def toWat: Document = doc"(tag ${id.toWat} ${typeUse.toWat})"
 end ExternType
 
-sealed abstract class ExternType(val sym: ScopedSymbol | ClassSymbol) extends ToWat:
+sealed abstract class ExternType(val sym: WasmSymbol) extends ToWat:
 
   /** Symbolic identifier for the extern declaration. */
   val id: SymIdx

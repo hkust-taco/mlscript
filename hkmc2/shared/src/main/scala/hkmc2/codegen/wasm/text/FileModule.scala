@@ -20,13 +20,15 @@ final case class AbiType(
 /** Optional slot indices retain source omission semantics after parameter types are erased. */
 final case class AbiFunction(sym: ExternSymbol, wrap: Opt[Str] -> Opt[Str], name: Str, ty: TypeIdx, optionalParams: Set[Int])
 final case class AbiGlobal(index: GlobalIdx, sym: ScopedSymbol, wrap: Opt[Str] -> Opt[Str], name: Str, ty: GlobalType)
+/** A class or object exported with its layout, RTTI, initializer, and virtual table.
+  * Only an object has a `singleton`: the global that holds its instance and that global's type. */
 final case class AbiClass(
-    sym: BlockMemberSymbol,
+    sym: BaseTypeSymbol,
     rttiType: TypeIdx,
     rttiGlobal: GlobalIdx,
     initializer: BlockMemberSymbol,
     virtualTable: Ctx.VirtualTable,
-    singleton: Opt[(Opt[ModuleOrObjectSymbol], GlobalIdx, RefType)],
+    singleton: Opt[(GlobalIdx, RefType)],
 )
 final case class AbiNamespace(sym: BlockMemberSymbol, owner: InnerSymbol, members: Map[Str, BlockMemberSymbol], storage: Map[TermSymbol, ScopedSymbol])
 final case class FileInterface(
@@ -47,7 +49,7 @@ final case class FileCompilation(imports: Vector[FileImport], aliases: Map[Scope
 final class FileExportNames(using State):
   private val scope = utils.Scope.empty(utils.Scope.Cfg.default)
   private val names = mutable.Map.empty[(ValueSymbol, Str, Opt[Str] -> Opt[Str]), Str]
-  def apply(sym: ScopedSymbol | ClassSymbol, kind: Str, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
+  def apply(sym: WasmSymbol, kind: Str, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
     names.getOrElseUpdate((sym, kind, wrap),
       scope.allocateName(TempSymbol(N, initErasedType = N, wrap._1.fold("")(_ + "_") + sym.nme + wrap._2.fold("")("_" + _))))
 

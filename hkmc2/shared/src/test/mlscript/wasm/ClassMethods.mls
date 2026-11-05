@@ -196,7 +196,7 @@ GetterOnly().f
 class A(val x) with
   fun get() = x
 A(1).get
-//│ ╔══[COMPILATION ERROR] `member:get` is neither a field access nor a callable method
+//│ ╔══[COMPILATION ERROR] `get` is neither a field access nor a callable method
 //│ ║  l.+3: 	A(1).get
 //│ ╙──      	^^^^^^^^
 

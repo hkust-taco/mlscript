@@ -125,7 +125,8 @@ export default $default;
         val padding = f.optionalParams.toVector.sorted.map(i => s"if (args.length <= $i) args[$i] = null;").mkString(" ")
         s"((...args) => { $padding return $invoke; })"
     def value(sym: ValueSymbol): Str =
-      val singleton = abi.classes.find(_.sym == sym).flatMap(_.singleton).flatMap { case (_, idx, _) =>
+      // The default export is a binding; exported classes are identified by their definitions.
+      val singleton = abi.classes.find(_.sym.bms.contains(sym)).flatMap(_.singleton).flatMap { case (idx, _) =>
         abi.globals.find(_.index == idx).map(g => s"wasmExports[${makeStringLiteral(g.name)}].value")
       }
       singleton.getOrElse:
