@@ -1,0 +1,59 @@
+:.
+:js
+
+import "../../mlscript-compile/Runtime.mls"
+
+
+// Empty braces allocate a record, independently of the canonical Unit value.
+:expect [false, false, true, "{}", "()"]
+let first = {}
+let second = { /* no fields */ }
+[first === (), first === second, () === (), Runtime.render(first), Runtime.render(())]
+//│ = [false, false, true, "{}", "()"]
+//│ first = {}
+//│ second = {}
+
+:expect ["{}", "{}", "{}"]
+fun empty(): {} = {}
+[Runtime.render(empty()), Runtime.render({ ...{} }), Runtime.render({
+  // A multiline empty record has the same meaning.
+})]
+//│ = ["{}", "{}", "{}"]
+
+// Mutable empty records have independent storage, just like nonempty records.
+:expect [42, 0]
+let first = mut {}
+let second = mut {}
+set first.("answer") = 42
+[first.("answer"), Object.entries(second).length]
+//│ = [42, 0]
+//│ first = {answer: 42}
+//│ second = {}
+
+// Empty statement bodies and explicit Unit expressions still produce Unit.
+:expect [true, true, true]
+fun nothing() = ()
+fun block() = { let unused = 1 }
+[nothing() === (), block() === (), (do {}) === ()]
+//│ = [true, true, true]
+
+// Desugaring statement continuations must not synthesize record expressions.
+:expect [true, true]
+fun checked(): () = assert true
+fun assigned(): () = set {}
+[checked() === (), assigned() === ()]
+//│ = [true, true]
+
+// The empty-record type accepts records but does not claim missing fields.
+:expect 42
+fun accepts(value: {}): Int = 42
+accepts({answer: 1})
+//│ = 42
+
+:e
+fun missing(value: {}) = value.answer
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	fun missing(value: {}) = value.answer
+//│ ║        	                         ^^^^^^^^^^^^
+//│ ╙── Record type does not contain member 'answer'
+
