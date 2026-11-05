@@ -1,0 +1,12 @@
+:.
+:js
+
+// After the first application, the transformed function returns an object whose call method accepts the next list.
+// Each remaining application must use that method, including when the definition is inlined in the same block.
+:ftc
+:fixme // The second application invokes the function object directly and returns undefined.
+:expect 42
+fun add(first: Int)(second: Int): Int = first + second
+add(40)(2)
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
