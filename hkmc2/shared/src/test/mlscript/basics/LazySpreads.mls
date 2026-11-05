@@ -52,7 +52,7 @@ fun sum2 = case
 //│ sum2 = function sum2() {
 //│   let lambda;
 //│   lambda = (undefined, function (caseScrut) {
-//│     let lastElement1$3, element0$, tmp5, tmp6, tmp7;
+//│     let lastElement1$3, middleElements3, element0$, tmp5, tmp6, tmp7;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return 0
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
@@ -60,10 +60,11 @@ fun sum2 = case
 //│       element0$ = runtime.Tuple.get(caseScrut, 0);
 //│       tmp8 = caseScrut.length - 1;
 //│       inlinedVal = runtime.safeCall(caseScrut.slice(1, tmp8));
+//│       middleElements3 = inlinedVal /* as!! Array */;
 //│       lastElement1$3 = runtime.Tuple.get(caseScrut, -1);
 //│       tmp5 = element0$ + lastElement1$3;
 //│       tmp6 = sum2();
-//│       tmp7 = runtime.safeCall(tmp6(inlinedVal));
+//│       tmp7 = runtime.safeCall(tmp6(middleElements3));
 //│       return tmp5 + tmp7
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));

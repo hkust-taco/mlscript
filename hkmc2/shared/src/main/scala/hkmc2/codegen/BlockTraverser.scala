@@ -76,7 +76,7 @@ class BlockTraverser:
       applyPath(qual); applyPath(fld); applyDynSelectKind(kind)
     case p @ Select(qual, name) =>
       applyPath(qual); p.symbol.foreach(_.traverse)
-    case c @ Cast(value, _, _) => applyResult(value)
+    case CastPath(value, _, _) => applyPath(value)
     case v: Value => applyValue(v)
   
   def applyValue(v: Value): Unit = v match

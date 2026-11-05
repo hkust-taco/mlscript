@@ -348,7 +348,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   Define(
                     // A field synthesized from a constructor parameter has an unlocated body (the parameter
                     // reference); its declared name then locates diagnostics about the field's representation.
-                    ValDefn(td.tsym, td.sym, castTo(r, td.tsym.erasedType, bod.toLoc.orElse(td.tsym.toLoc)))(cfgOverride, td.annotations),
+                    ValDefn(td.tsym, td.sym, castPathTo(r, td.tsym.erasedType, bod.toLoc.orElse(td.tsym.toLoc)))(cfgOverride, td.annotations),
                     continueBlock(stats, res),
                   )
             case syntax.Fun =>
@@ -1423,7 +1423,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             case S(sym: TermSymbol) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
-                  assignNamedField(p, memberIdent(ref.id, member), castTo(r, sym.erasedType, ref.toLoc),
+                  assignNamedField(p, memberIdent(ref.id, member), castPathTo(r, sym.erasedType, ref.toLoc),
                     k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets)
             case N if ref.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
               subTerm_nonTail(prefix): p =>
@@ -1441,7 +1441,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case S(sym: TermSymbol) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                assignNamedField(p, name, castTo(r, sym.erasedType, sel.toLoc), k(unit), sel.keyAccess, unsafe)(S(sym), sel.resolvedTargets)
+                assignNamedField(p, name, castPathTo(r, sym.erasedType, sel.toLoc), k(unit), sel.keyAccess, unsafe)(S(sym), sel.resolvedTargets)
           case N if sel.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
@@ -1455,7 +1455,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             assignNamedField(
               p,
               nme,
-              castTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc),
+              castPathTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc),
               k(unit),
               N,
               unsafe,
@@ -1470,7 +1470,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         softAssert(sym.nonEmpty, s"Missing symbol for synthetic assignment target ${sel.showDbg}")
         subTerm(prefix): p =>
           subTerm_nonTail(rhs): r =>
-            assignNamedField(p, memberIdent(nme, sel.sym), castTo(r, fieldErasedType(sym), sel.toLoc), k(unit), N, unsafe)(sym, Nil)
+            assignNamedField(p, memberIdent(nme, sel.sym), castPathTo(r, fieldErasedType(sym), sel.toLoc), k(unit), N, unsafe)(sym, Nil)
       case sel @ DynSel(prefix, fld, ai, _) =>
         subTerm(prefix): p =>
           subTerm_nonTail(fld): f =>
@@ -1482,7 +1482,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             assignNamedField(
               p,
               memberIdent(proj, sel.sym),
-              castTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc),
+              castPathTo(r, fieldErasedType(resolvedSelectionSymbol), sel.toLoc),
               k(unit),
               N,
               unsafe,
@@ -1564,7 +1564,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         rft match
         case N => lowerMultiInstantiate(mut, sr, params, as, annots, trm.toLoc)(k)
         case S((isym, rft)) =>
-          val sym = isym.defn.get.bsym
+          val sym = isym.bms.get
           loweringCtx.collectScopedSym(sym)
           withClassParent(sr): parent =>
             methodKeys(rft): keys =>
@@ -1853,7 +1853,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                 val (expTy, expRest) = expected match
                   case e :: es => (e, es)
                   case Nil => (N, Nil)
-                asr ::= Arg(N, castTo(ar, expTy, a.toLoc))
+                asr ::= Arg(N, castPathTo(ar, expTy, a.toLoc))
                 rec(as, expRest)
               case S(_) =>
                 asr ::= Arg(spd, ar)
@@ -1916,8 +1916,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     * When the caller has no better location for the coercion (e.g., an implicit return), diagnostics point at
     * the coerced value itself.
     */
-  def castTo[R <: Result](r: R, expected: Opt[ErasedValueType], loc: Opt[Loc]): (R | Path) =
+  def castTo(r: Result, expected: Opt[ErasedValueType], loc: Opt[Loc]): Result =
     r.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(r.toLoc))
+  
+  /** Like [[castTo]], for a path that flows into a path position: a cast of a path is itself a path. */
+  def castPathTo(p: Path, expected: Opt[ErasedValueType], loc: Opt[Loc]): Path =
+    p.coerceTo(expected.getOrElse(ErasedType.Unknown), loc.orElse(p.toLoc))
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
