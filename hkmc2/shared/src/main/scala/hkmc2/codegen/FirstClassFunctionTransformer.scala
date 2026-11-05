@@ -107,30 +107,18 @@ class FirstClassFunctionTransformer
           case _ => function(fun2).isDefined
         if direct then applyArgss(argss): argss2 =>
           k(if (fun2 is fun) && (argss2 is argss) then c else Call(fun2, argss2)(c.metadata, c.toLoc))
-        else withReceiver(fun2): (callee, receiver) =>
-          // Preserve callee lookup before transformations of argument values introduce their own bindings.
-          save(callee, "callee"): callee =>
-            applyArgss(argss): argss2 =>
-              k(Call(callee.selSN("call"), (receiver.asArg :: argss2.head) ne_:: argss2.tail)(c.metadata, c.toLoc))
+        else
+          // Lowering separates applications of unknown callees. Each returned function value needs its own
+          // dispatch through `.call`, since it may be a native function or a generated closure.
+          softAssert(argss.tail.isEmpty, "Unknown callees must be lowered to separate calls")
+          withReceiver(fun2): (callee, receiver) =>
+            // Preserve callee lookup before transformations of argument values introduce their own bindings.
+            save(callee, "callee"): callee =>
+              applyArgs(argss.head): args =>
+                k(Call(callee.selSN("call"), (receiver.asArg :: args) ne_:: Nil)(c.metadata, c.toLoc))
     case _: Lambda => lastWords("Lambda functions should be rewritten into function definitions first.")
     case _ => super.applyResult(r)(k)
   
-  class DesugarMultipleParamList extends BlockTransformer(new SymbolSubst):
-    override def applyFunDefn(fd: FunDefn): FunDefn = fd.params match
-      case Nil => fd
-      case _ :: Nil => fd
-      case head :: tail =>
-        def rec(params: List[LoweredParamList]): Block = params match
-          case head :: rest =>
-            val newBody = rec(rest)
-            val funSym = new BlockMemberSymbol("lambda$", Nil, false)
-            val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(N, annotations = Nil)
-            Scoped(Set(funSym), Define(funDef, Return(funDef.sym.asMemberRef(funDef.dSym))))
-          case Nil => fd.body
-        // The curried definition keeps its symbol under its new signature (see `TermSymbol.irErasure`).
-        val signature = FunDefn.Signature.fromParams(head :: Nil, ErasedResult.fromAnnotations(N, fd.annotations))
-        FunDefn(fd.owner, fd.sym, fd.dSym, signature, rec(tail))(fd.configOverride, fd.annotations)
-  
-  def transform(b: Block): Block =
-    val desugared = new DesugarMultipleParamList().applyBlock(b)
-    applyBlock(desugared)
+  // Preserve curried signatures and multi-calls for saturation analysis, inlining, and worker-wrapper optimization.
+  // Escaping partial applications return native functions, which accept the same `.call(thisArg, ...)` convention.
+  def transform(b: Block): Block = applyBlock(b)

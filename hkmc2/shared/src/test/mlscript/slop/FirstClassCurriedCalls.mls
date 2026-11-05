@@ -1,12 +1,94 @@
 :.
 :js
-
-// After the first application, the transformed function returns an object whose call method accepts the next list.
-// Each remaining application must use that method, including when the definition is inlined in the same block.
 :ftc
-:fixme // The second application invokes the function object directly and returns undefined.
+
+// Keep the definition and its saturated multi-call intact until optimization.
+:sir
+:soir
+:checkIR
 :expect 42
 fun add(first: Int)(second: Int): Int = first + second
 add(40)(2)
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define add⁰ as fun add¹(first)(second) { return +⁰(first, second) }; return add¹(40)(2)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline define add⁰ as fun add¹(first)(second) { return +⁰(first, second) }; return 42
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+
+// The same call remains valid across compilation blocks, with inlining disabled.
+:noOpt
+:checkIR
+:expect 42
+add(40)(2)
+//│ = 42
+
+// Escaped function values and partial applications share the native call convention.
+:noOpt
+:checkIR
+:expect [42, 42, 42]
+fun triple(first: Int)(second: Int)(third: Int): Int = first + second + third
+let partial = triple(1)
+let firstClass = triple
+[triple(1)(2)(39), partial(2)(39), firstClass(1)(2)(39)]
+//│ = [42, 42, 42]
+//│ firstClass = class anonymous
+//│ partial = fun
+
+// Recursive calls retain all their argument lists too.
+:checkIR
+:expect 42
+fun sum(n: Int)(acc: Int): Int =
+  if n is 0 then acc else sum(n - 1)(acc + n)
+sum(6)(21)
+//│ = 42
+
+// Both forms of partial application retain the method's original receiver.
+:noOpt
+:checkIR
+:expect [42, 42, 52]
+class Counter(val base: Int) with
+  fun add(first: Int)(second: Int): Int = base + first + second
+let counter = new Counter(40)
+let bound = counter.add
+let methodPartial = counter.add(1)
+set counter = new Counter(50)
+[bound(1)(1), methodPartial(1), counter.add(1)(1)]
+//│ = [42, 42, 52]
+//│ bound = class anonymous
+//│ counter = Counter(50)
+//│ methodPartial = fun
+
+// Incoming curried JS values receive undefined at every bare application.
+:noOpt
+:expect [42, 42]
+val native: Int -> Int -> Int = globalThis.eval("(function (x) { 'use strict'; if (this !== undefined) throw new Error('outer receiver'); return function (y) { if (this !== undefined) throw new Error('inner receiver'); return x + y; }; })")
+fun apply(f: Int -> Int -> Int, x: Int) = f(x)
+[native(40)(2), apply(native, 40)(2)]
+//│ = [42, 42]
+//│ native = fun
+
+// Optional and variadic layouts belong to their respective curried lists.
+:noOpt
+:checkIR
+:expect [[null, [], 1, null, [], 2], [1, [2], 3, 4, [5], 6]]
+fun collect(first?, ...middle, last)(second?, ...rest, final) = [first, middle, last, second, rest, final]
+let collectValue = collect
+[collect(1)(2), collectValue(1, 2, 3)(4, 5, 6)]
+//│ = [[null, [], 1, null, [], 2], [1, [2], 3, 4, [5], 6]]
+//│ collectValue = class anonymous
+
+// Generator annotations apply at the final application, including through a function value.
+:noOpt
+:checkIR
+:expect [{value: 40, done: false}, {value: 2, done: true}]
+@annotations.generator fun generate(first: Int)(second: Int): Int =
+  yield first
+  second
+let generateValue = generate
+let iterator = generateValue(40)(2)
+[iterator.next(), iterator.next()]
+//│ = [{value: 40, done: false}, {value: 2, done: true}]
+//│ generateValue = class anonymous
+//│ iterator =  {}

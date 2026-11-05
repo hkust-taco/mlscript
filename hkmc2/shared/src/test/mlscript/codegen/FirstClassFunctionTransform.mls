@@ -468,28 +468,7 @@ f(1)(2)
 :sir
 fun foo(x)(y) = x + y
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let lambda$, Function$;
-//│ define lambda$ as fun lambda$⁰(x, y) {
-//│   return +⁰(x, y)
-//│ };
-//│ define Function$ as class Function$⁶ extends globalThis⁰.Function⁰ {
-//│   private val x¹;
-//│   constructor(x) {
-//│     do super⁰();
-//│     end;
-//│     set Function$⁶.this.x¹ = x;
-//│     end
-//│   }
-//│   method call¹² = fun call¹³(thisArg, y) {
-//│     return lambda$⁰(Function$⁶.this.x¹, y)
-//│   }
-//│ };
-//│ define foo⁵ as fun foo⁶(x) {
-//│   let function1;
-//│   set function1 = new Function$⁶(x);
-//│   return function1
-//│ };
-//│ end
+//│ define foo⁵ as fun foo⁶(x)(y) { return +⁰(x, y) }; end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
@@ -530,12 +509,12 @@ foo(tuple)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ let method, Function$, function1;
 //│ set method = Predef⁰.tuple⁰;
-//│ define Function$ as class Function$⁷ extends globalThis⁰.Function⁰ {
-//│   method call¹⁴ = fun call¹⁵(thisArg, ...xs) {
+//│ define Function$ as class Function$⁶ extends globalThis⁰.Function⁰ {
+//│   method call¹² = fun call¹³(thisArg, ...xs) {
 //│     return method.call﹖(Predef⁰, ...xs)
 //│   }
 //│ };
-//│ set function1 = new Function$⁷();
+//│ set function1 = new Function$⁶();
 //│ return foo⁷(function1)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = ["abc"]

@@ -370,8 +370,6 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
 
   def transformFunDefn(f: FunDefn)(using Context)(k: Path => Block): Block =
     transformBlock(f.body): body =>
-      if f.params.length != 1 then
-        raise(ErrorReport(msg":ftc must be enabled to desugar functions with multiple parameter lists." -> f.sym.toLoc :: Nil))
       // maintain parameter names in instrumented code
       f.params.map(
         _.params.map(p => blockCtor("Symbol", Ls(toValue(p.sym.nme)))).collectApply
