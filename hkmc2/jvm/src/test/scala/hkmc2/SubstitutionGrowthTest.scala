@@ -338,6 +338,70 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     h.resolver.publishParameter(b1, value)
     assert(seen.toList == List(value))
 
+  test("transport interning projects irrelevant instances while retaining late dependencies"):
+    val h = new Harness
+    import h.given
+    val (a, b, c, unused) = (h.binder("A"), h.binder("B"), h.binder("C"), h.binder("Unused"))
+    val a1 = h.instanceAt(a, Set.single(b))
+    val b1 = h.instanceAt(b, Set.single(c))
+    val c1 = h.instance(c)
+    val captured = h.typeOf(a).instantiate(TypeSubstitution(a1 :: Nil))
+    val relevant = TypeSubstitution(List(b1, c1))
+    val boundary = ResolutionBoundary(TermSymbol(syntax.Fun, N, Tree.Ident("scope")))
+    val path = EntryMark(boundary, S(FlowSymbol.app()), NoMarks)
+    val canonical = h.resolver.transportType(captured.instantiate(relevant), path :: Nil)
+    // Only Unused varies. Keeping it in the transport key would allocate one
+    // contextual reference per ambient activation before instanceShape projects it.
+    (1 to 100).foreach: _ =>
+      val incoming = relevant.withOverrides(TypeSubstitution(List(h.instance(a), h.instance(unused))))
+      val moved = h.resolver.transportType(captured.instantiate(incoming), path :: Nil)
+      assert(moved.resolution eq canonical.resolution)
+    val seen = ArrayBuffer.empty[TermShape]
+    h.resolver.listenInstanceViews(h.instanceOf(canonical))(seen += _)
+    assert(seen.isEmpty)
+    h.resolver.publishParameter(a1, h.instanceOf(h.typeOf(b)))
+    h.resolver.publishParameter(b1, h.instanceOf(h.typeOf(c)))
+    val value = DynShape()
+    h.resolver.publishParameter(c1, value)
+    assert(seen.toList.map(ShapeIdentity.key(_)) == List(ShapeIdentity.key(Marked(value, path))))
+
+    // A forward source has no fixed support yet. Its two environments must
+    // remain distinct and both must receive the target when it becomes known.
+    val forward = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val pending = DeclaredType(forward, Map.empty, TypeSubstitution.empty, true)(N)
+    val instances = List(h.instance(a), h.instance(a))
+    val observations = instances.map: instance =>
+      val moved = h.resolver.transportType(pending.instantiate(TypeSubstitution(instance :: Nil)), path :: Nil)
+      val seen = ArrayBuffer.empty[TermShape]
+      h.resolver.listenInstanceViews(h.instanceOf(moved))(seen += _)
+      seen
+    assert(observations.forall(_.isEmpty))
+    forward.publish(TypeShape.Parameter(a, a.inferenceHost))
+    instances.lazyZip(observations).foreach: (instance, seen) =>
+      val late = DynShape()
+      h.resolver.publishParameter(instance, late)
+      assert(seen.toList.map(ShapeIdentity.key(_)) == List(ShapeIdentity.key(Marked(late, path))))
+    assert(observations.forall(_.size == 1))
+
+  test("an independent union arm shares its view cache across ambient substitutions"):
+    val h = new Harness
+    import h.given
+    val a = h.binder("A")
+    val unit = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    unit.publish(TypeShape.Unit)
+    val union = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    union.publish(TypeShape.Union(h.typeOf(a).resolution, unit))
+    val tpe = h.resolver.declaredType(union, Map.empty)
+    def observe(): Unit =
+      val seen = ArrayBuffer.empty[TermShape]
+      h.resolver.listenInstanceViews(h.instanceOf(tpe.instantiate(TypeSubstitution(h.instance(a) :: Nil))))(seen += _)
+      assert(seen.size == 1)
+    observe()
+    val listeners = unit.inferenceHost.listeners.size
+    assert(listeners > 0)
+    (1 to 100).foreach(_ => observe())
+    assert(unit.inferenceHost.listeners.size == listeners)
+
   // A generic type use that omits arguments reads holes whose bounds are
   // written at the use, so its scope counts. Whether a use applies arguments is
   // recorded when the application is interpreted, not discovered by the

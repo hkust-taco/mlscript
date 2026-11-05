@@ -326,7 +326,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     case Split.Let(sym, trm, tl) =>
       LoweringCtx.loweringCtx.collectScopedSym(sym)
       term_nonTail(trm): r =>
-        Assign(sym, r, lowerSplit(tl, cont))
+        val bound = sym match
+          // Pattern compilation declares the types of its temporaries, such as a string's head
+          // or a matcher's Boolean result, and binds them to calls of untyped runtime helpers.
+          // Such values have the declared representation by construction.
+          case sym: TempSymbol => r.coerceToKnown(sym.erasedType.getOrElse(ErasedType.Unknown), trm.toLoc)
+          case _ => lowering.castTo(r, sym.erasedType, trm.toLoc)
+        Assign(sym, bound, lowerSplit(tl, cont))
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
       subTerm_nonTail(scrut): sr =>
         tl.log(dbg"Binding scrut $scrut to $sr (${summon[LoweringCtx].localVals})")
@@ -372,7 +378,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
-              Case.Cls(objectSym, Select(State.globalThisSymbol.asThis, Tree.Ident(objectSym.nme))(S(objectSym), N)(false)),
+              Case.Cls(objectSym, State.globalThisSymbol.asThis.sel(objectSym)),
               entries.foldRight(lowerSplit(tail, cont)):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
@@ -427,7 +433,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     * match failure in the future.
     */
   private def throwMatchErrorBlock(using Config) =
-    Throw(Instantiate(mut = false, Select(State.globalThisSymbol.asThis, Tree.Ident("Error"))(S(ctx.builtins.Error), N)(false),
+    Throw(Instantiate(mut = false, State.globalThisSymbol.asThis.sel(ctx.builtins.Error),
         (Value.Lit(syntax.Tree.StrLit("match error"))(N).asArg :: Nil) :: Nil)(InstantiateMetadata.empty, N), // TODO add failed-match scrutinee info
       annotations = if config.aggressive then Annot.Pure()(N) :: Nil else Nil)
 
@@ -555,7 +561,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
             outerCtx.collectScopedSym(loopResult)
             outerCtx.collectScopedSym(isReturned)
             val loopEnd: Path =
-              Select(State.runtimeSymbol.asSimpleRef, Tree.Ident("LoopEnd"))(S(State.loopEndSymbol), N)(false)
+              State.runtimeSymbol.asSimpleRef.sel(State.loopEndSymbol)
             val blk = blockBuilder
               .define(FunDefn(N, f, tSym, loopSignature, Begin(body, Return(loopEnd)))(configOverride = N, annotations = Nil))
               .assign(loopResult, Call(f.asMemberRef(tSym), Nil ne_:: Nil)(CallMetadata.mlsFunWithEffect, N))

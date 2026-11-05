@@ -301,6 +301,12 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
     case s: Select if s.sanitize => doc"(${res})"
     case _ => res
   
+  @tailrec
+  private def isWasmIntrinsic(path: Path): Bool = path match
+    case Select(qual, _) => isWasmIntrinsic(qual)
+    case Value.SimpleRef(sym) => sym is State.wasmSymbol
+    case _ => false
+
   def result(r: Result)(using Raise, Scope): Document = r match
     case Value.This(ts: semantics.ModuleOrObjectSymbol) if ts.asMod.isDefined =>
       // * Module self-references use the module name itself instead of `this`
@@ -350,6 +356,10 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
       if c.metadata.isMlsFun then
         if checkMLsCalls then doc"$runtimeVar.checkCall($calls)" else calls
       else doc"$runtimeVar.safeCall($calls)"
+    case c @ Call(fun, _) if isWasmIntrinsic(fun) =>
+      val message = msg"WebAssembly intrinsics are not available when targeting JavaScript"
+      raise(ErrorReport(message -> c.toLoc :: Nil, source = Diagnostic.Source.Compilation))
+      doc"(()=>{${mkErr(message)}})()"
     case c @ Call(fun, argss) =>
       val base = subexpression(fun)
       val calls = argss.foldLeft(base): (acc, args) =>
@@ -621,7 +631,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               def isPlainField(sym: TermSymbol): Bool =
                 // Refreshed symbols carry annotations on their current IR definition.
                 // Declared fields without initializers retain their source definition.
-                val annotations = sym.irDefn.map(_.annotations).orElse(sym.defn.map(_.annotations))
+                val annotations = sym.annotations
                 softAssert(annotations.nonEmpty, s"Missing definition for mutable field '${sym.nme}'")
                 annotations.exists(_.exists(_.isInstanceOf[Annot.PlainField]))
               // * Note: the non-mut-val parts of `pubFlds` are not used because in JS, fields are not declared
@@ -724,7 +734,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   else
                     ownr match
                     case S(owner) =>
-                      val target = Select(owner.asThis, Tree.Ident(sym.nme))(S(isym), isym.toLoc)(false)
+                      val target = owner.asThis.sel(isym).withLoc(isym.toLoc)
                       doc" # ${result(target)} = $v"
                     case N =>
                       doc" # ${result(sym.asMemberRef(isym))} = $v"

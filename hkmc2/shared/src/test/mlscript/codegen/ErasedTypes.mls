@@ -255,10 +255,10 @@ class Cell(mut val v: Int) with
 //│ end
 
 
-// A rest parameter has no annotation to erase, so both it and the list it binds stay `?`.
+// A rest parameter binds an Array even without an annotation; the unannotated result stays `?`.
 fun rest(a, ...xs) = xs
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define rest⁰ as fun rest¹(a: ?, ...xs: ?): ? { return xs }; end
+//│ define rest⁰ as fun rest¹(a: ?, ...xs: Array⁰): ? { return xs }; end
 
 
 // Closure capture (`:lift`): the captured local `n` is unannotated, so the generated capture class and its
@@ -567,12 +567,22 @@ fun unionIntoSubtype(x: A | B) = takesSubtype(x)
 
 
 // The primitives are roots of the erased hierarchy, so a union mixing one with any distinct type - another
-// primitive included - has no upper bound to erase to. Note that declaring such a slot is legal, only
-// passing an argument into it is not. With a third member, the pair that *first* had no upper bound is the one
-// kept, not the last one folded in.
+// primitive included - has no upper bound to erase to. Erasure rejects such a declaration where its type is
+// written. With a third member, the pair that *first* had no upper bound is the one kept, not the last one
+// folded in.
+:ge
 fun mixed(x: Int32 | Str) = 0
 fun twoPrims(x: Int32 | Int64) = 0
 fun mixedThree(x: Int32 | Str | Bool) = 0
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	fun mixed(x: Int32 | Str) = 0
+//│ ╙──      	             ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+2: 	fun twoPrims(x: Int32 | Int64) = 0
+//│ ╙──      	                ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+3: 	fun mixedThree(x: Int32 | Str | Bool) = 0
+//│ ╙──      	                  ^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define mixed⁰ as fun mixed¹(x: ‹incompatible(Int32, Str⁰)›): ? {
 //│   return 0
@@ -584,28 +594,23 @@ fun mixedThree(x: Int32 | Str | Bool) = 0
 //│ end
 
 
-// The error lands where a value crosses the slot, not where the type is written: the LUB is computed inside
-// `canonicalize`, which cannot report anything.
-:ge
+// The declaration was rejected where its type is written, so passing a value into the slot does not report
+// the error again.
 fun intoMixed(n: Int32) = mixed(n)
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+1: 	fun intoMixed(n: Int32) = mixed(n)
-//│ ╙──      	                                ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define intoMixed⁰ as fun intoMixed¹(n: Int32): ? { return mixed¹(n) }; end
 
 
-// Widening fails too: an unrepresentable value cannot enter an `Object` slot either. Both errors are
-// unlocated - `returnedTerm` passes no location to `castTo`, a pre-existing gap that affects every return.
+// Widening an unrepresentable value into a `Str` or `Object` result does not report the declaration again.
 :ge
 fun outOfMixed(x: Int32 | Str): Str = x
 fun mixedIntoObject(x: Int32 | Str): Object = x
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+1: 	fun outOfMixed(x: Int32 | Str): Str = x
-//│ ╙──      	                                      ^
+//│ ╙──      	                  ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+2: 	fun mixedIntoObject(x: Int32 | Str): Object = x
-//│ ╙──      	                                              ^
+//│ ╙──      	                       ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define outOfMixed⁰ as fun outOfMixed¹(x: ‹incompatible(Int32, Str⁰)›): Str⁰ {
 //│   return x
@@ -967,56 +972,29 @@ fun useStr(s: Str) = s
 
 
 // A `declare`d function is never auto-invoked - `Lowering.ref` lowers the reference to a `globalThis`
-// selection - so its arrows are *its own parameter lists*, and the chain's last component is its result.
+// selection. Its parameter lists are its written ones: with none, the arrows of its type describe the
+// function value that the selection yields, so a call applies that value, whose result is not erased.
 declare fun addInts: (Int, Int) -> Int
 fun useAdd() = useInt(addInts(1, 2))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useAdd⁰ as fun useAdd¹(): ? {
-//│   let tmp: Int⁰;
+//│   let tmp: ?;
 //│   set tmp = globalThis⁰.addInts⁰(1, 2);
-//│   return useInt¹(tmp)
+//│   return useInt¹((tmp as! Int⁰))
 //│ };
 //│ end
 
 
-// That result is genuinely typed, so a wrong use is rejected rather than silently accepted.
-:ge
-fun badAdd() = useStr(addInts(1, 2))
-//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
-//│ ║  l.+1: 	fun badAdd() = useStr(addInts(1, 2))
-//│ ╙──      	                      ^^^^^^^^^^^^^
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define badAdd⁰ as fun badAdd¹(): ? {
-//│   let tmp: Int⁰;
-//│   set tmp = globalThis⁰.addInts⁰(1, 2);
-//│   return useStr¹(tmp)
-//│ };
-//│ end
-
-
-// An unparenthesized left-hand side is a single parameter, as in `declare fun log: Str -> Any`.
-declare fun showInt: Int -> Str
-fun useShow() = useStr(showInt(1))
-//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define useShow⁰ as fun useShow¹(): ? {
-//│   let tmp: Str⁰;
-//│   set tmp = globalThis⁰.showInt⁰(1);
-//│   return useStr¹(tmp)
-//│ };
-//│ end
-
-
-// Each arrow is a separate parameter list, so an under-applied call yields a function over those remaining.
-// A local's slot holds an erased *value* type, which cannot carry them, so `useCurried`'s intermediate is
-// only a `Function` and its final application still needs a cast.
-declare fun curried: Int -> Int -> Int
+// Each written parameter list is a separate physical list, so an under-applied call yields a function over
+// those remaining. A local's slot holds an erased *value* type, which cannot carry them, so `useCurried`'s
+// intermediate is only a `Function` and its final application still needs a cast.
+declare fun curried(x: Int)(y: Int): Int
 fun useCurried() = useInt(curried(1)(2))
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define useCurried⁰ as fun useCurried¹(): ? {
-//│   let callPrefix: Function⁰, tmp: ?;
-//│   set callPrefix = globalThis⁰.curried²(1);
-//│   set tmp = callPrefix(2);
-//│   return useInt¹((tmp as! Int⁰))
+//│   let tmp: Int⁰;
+//│   set tmp = globalThis⁰.curried²(1)(2);
+//│   return useInt¹(tmp)
 //│ };
 //│ end
 
@@ -1042,6 +1020,21 @@ fun useParse() = useInt(parseIt("1", 10))
 //│ end
 
 
+// That result is genuinely typed, so a wrong use is rejected rather than silently accepted.
+:ge
+fun badParse() = useStr(parseIt("1", 10))
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
+//│ ║  l.+1: 	fun badParse() = useStr(parseIt("1", 10))
+//│ ╙──      	                        ^^^^^^^^^^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ define badParse⁰ as fun badParse¹(): ? {
+//│   let tmp: Int⁰;
+//│   set tmp = globalThis⁰.parseIt⁰("1", 10);
+//│   return useStr¹(tmp)
+//│ };
+//│ end
+
+
 // A *non*-`declare`d `fun` writing no parameter lists is a getter: referencing it calls it, so its arrows
 // are the *result*. Reading them as parameters would type `getFn` as `Int` when it yields a function.
 fun getFn: Int -> Int
@@ -1057,11 +1050,11 @@ fun useGetFn() = useFn(getFn)
 
 // `@untyped` disclaims the callee's declared result, so the call erases to the top type and reaches a
 // differently-typed slot as a checked downcast. This is what lets an interop body call a mistyped operator.
-fun viaUntyped(x, y): Str = @untyped addInts(x, y)
+fun viaUntyped(s, radix): Str = @untyped parseIt(s, radix)
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define viaUntyped⁰ as fun viaUntyped¹(x: ?, y: ?): Str⁰ {
+//│ define viaUntyped⁰ as fun viaUntyped¹(s: ?, radix: ?): Str⁰ {
 //│   let tmp: Unknown;
-//│   set tmp = globalThis⁰.addInts⁰(x, y);
+//│   set tmp = globalThis⁰.parseIt⁰((s as! Str⁰), (radix as! Int⁰));
 //│   return (tmp as! Str⁰)
 //│ };
 //│ end
@@ -1069,12 +1062,15 @@ fun viaUntyped(x, y): Str = @untyped addInts(x, y)
 
 // Without the annotation the same body is rejected - the guard rail doing its job.
 :ge
-fun viaTyped(x, y): Str = addInts(x, y)
+fun viaTyped(s, radix): Str = parseIt(s, radix)
 //│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int' at an unrelated type 'Str'
-//│ ║  l.+1: 	fun viaTyped(x, y): Str = addInts(x, y)
-//│ ╙──      	                          ^^^^^^^^^^^^^
+//│ ║  l.+1: 	fun viaTyped(s, radix): Str = parseIt(s, radix)
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ define viaTyped⁰ as fun viaTyped¹(x: ?, y: ?): Str⁰ { return globalThis⁰.addInts⁰(x, y) }; end
+//│ define viaTyped⁰ as fun viaTyped¹(s: ?, radix: ?): Str⁰ {
+//│   return globalThis⁰.parseIt⁰((s as! Str⁰), (radix as! Int⁰))
+//│ };
+//│ end
 
 
 // A member is reached by *selection*, which - unlike a bare reference - is never auto-invoked, so its

@@ -569,6 +569,7 @@ object Elaborator:
       toJsAsync: TermSymbol,
       tupleGet: TermSymbol,
       tupleSlice: TermSymbol,
+      tupleSliceArray: TermSymbol,
       tupleLazySlice: TermSymbol,
       strStartsWith: TermSymbol,
       strGet: TermSymbol,
@@ -622,6 +623,7 @@ object Elaborator:
         toJsAsync = term("toJsAsync"),
         tupleGet = moduleMember(tuple, "get"),
         tupleSlice = moduleMember(tuple, "slice"),
+        tupleSliceArray = moduleMember(tuple, "sliceArray"),
         tupleLazySlice = moduleMember(tuple, "lazySlice"),
         strStartsWith = moduleMember(str, "startsWith"),
         strGet = moduleMember(str, "get"),
@@ -698,6 +700,9 @@ object Elaborator:
     def initRuntimeSymbolsFromFile(file: io.Path, prelude: Ctx)(using TL, Raise, CompilerCtx): Unit =
       if cachedRuntimeSymbols.isEmpty then
         cachedRuntimeSymbols = S(RuntimeSymbols.fromBlock(CompilerCtx.get.getElaboratedBlock(file, prelude).term))
+    /** Whether the runtime's symbols are available. The Prelude and the runtime itself are
+      * elaborated and erased before they are. */
+    def runtimeSymbolsInitialized: Bool = cachedRuntimeSymbols.isDefined
     private def runtimeSymbols: RuntimeSymbols =
       cachedRuntimeSymbols.getOrElse:
         lastWords("Runtime symbols have not been initialized from Runtime.mls.")
@@ -738,6 +743,7 @@ object Elaborator:
     def toJsAsyncSymbol: TermSymbol = runtimeSymbols.toJsAsync
     def tupleGetSymbol: TermSymbol = runtimeSymbols.tupleGet
     def tupleSliceSymbol: TermSymbol = runtimeSymbols.tupleSlice
+    def tupleSliceArraySymbol: TermSymbol = runtimeSymbols.tupleSliceArray
     def tupleLazySliceSymbol: TermSymbol = runtimeSymbols.tupleLazySlice
     def strStartsWithSymbol: TermSymbol = runtimeSymbols.strStartsWith
     def strGetSymbol: TermSymbol = runtimeSymbols.strGet
@@ -1731,7 +1737,7 @@ extends Importer:
             params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
-                  raise(ErrorReport(msg"Handler function cannot be a getter" -> td.toLoc :: Nil))
+                  raise(ErrorReport(msg"Handler function must have a parameter list before its continuation parameter list" -> td.toLoc :: Nil))
                 val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)(td.toLoc, td.headerLoc, td.scope)
                 S(HandlerTermDefinition(value.sym, newTd))
               case _ =>
@@ -1903,12 +1909,13 @@ extends Importer:
           mkNonLabelSelectionApp(tree, sel, args)
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
+          // * As with a local break, a valueless break gives the label the Unit result.
           mkNonLocalEffectInvocation(
             binding.nonLocalHandlerSymbol,
             "break",
             nme,
             args,
-            value.toList,
+            value.getOrElse(unit) :: Nil,
           )
       case LabelLookup.NotFound =>
         mkNonLabelSelectionApp(tree, sel, args)
@@ -1951,7 +1958,7 @@ extends Importer:
           error
         else
           markEffectMethodUsed(binding.nonLocalBreakMethodMarker, nme)
-          mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", nme, Nil, Nil)
+          mkNonLocalEffectInvocation(binding.nonLocalHandlerSymbol, "break", nme, Nil, unit :: Nil)
       case LabelLookup.NotFound =>
         elaborateSelection(sel)
     case sel @ Sel(labelId @ Ident(labelName), nme @ Ident("continue")) =>

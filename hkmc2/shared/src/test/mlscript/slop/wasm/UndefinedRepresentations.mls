@@ -1,0 +1,391 @@
+:.
+
+
+// Undefined can fill scalar and nominal slots. Discard the unspecified values,
+// but retain the calls' effects and compile the unused stores without optimization.
+:noOpt
+:expect 6
+private class Token()
+private class Slots(mut val a: Int32, val b: Int64, val c: Float32, val d: Float64, val ref: Token)
+let calls = 0
+private fun absentI32(): Int32 =
+  set calls = calls + 1
+  unsafe.undefined
+private fun absentI64(): Int64 =
+  set calls = calls + 1
+  unsafe.undefined
+private fun absentF32(): Float32 =
+  set calls = calls + 1
+  unsafe.undefined
+private fun absentF64(): Float64 =
+  set calls = calls + 1
+  unsafe.undefined
+private fun absentRef(): Token =
+  set calls = calls + 1
+  unsafe.undefined
+private fun accept(a: Int32, b: Int64, c: Float32, d: Float64, ref: Token): Int =
+  val local: Int32 = unsafe.undefined
+  val slots = new mut Slots(unsafe.undefined, unsafe.undefined, unsafe.undefined, unsafe.undefined, unsafe.undefined)
+  set slots.a = unsafe.undefined
+  wasm.i32.add(unsafe.undefined, wasm.i32.const(0))
+  set calls = calls + 1
+  0
+absentI32()
+absentI64()
+absentF32()
+absentF64()
+absentRef()
+accept(unsafe.undefined, unsafe.undefined, unsafe.undefined, unsafe.undefined, unsafe.undefined)
+calls
+//│ Wasm result:
+//│ = 6
+
+
+// An undefined return must not constrain the concrete branch's representation.
+:noInline
+:expect 42
+private fun choose(flag: Bool, value: Int32): Int32 =
+  if flag do return value
+  unsafe.undefined
+choose(false, wasm.i32.const(1))
+choose(true, wasm.i32.const(42))
+//│ Wasm result:
+//│ = 42
+
+
+// The conditional temporary must keep the concrete branch's unboxed representation.
+:noInline
+:expect 42
+private fun conditional(flag: Bool): Int32 =
+  wasm.i32.add((if flag then wasm.i32.const(42) else unsafe.undefined), wasm.i32.const(0))
+conditional(true)
+//│ Wasm result:
+//│ = 42
+
+
+// Top-level undefined is implicit fallthrough. Its result slot still follows the concrete branch.
+:noInline
+:expect 42
+private fun flag(): Bool = true
+if flag() then wasm.i32.const(42) else unsafe.undefined
+//│ Wasm result:
+//│ = 42
+
+// Execute the fallthrough too; its value is unspecified, but the module must validate and run.
+:noInline
+private fun flag(): Bool = false
+if flag() then wasm.i32.const(42) else unsafe.undefined
+//│ Wasm result:
+//│ = 0
+
+:noInline
+private class FallthroughToken()
+private fun flag(): Bool = false
+private fun token(): FallthroughToken = FallthroughToken()
+if flag() then token() else unsafe.undefined
+//│ Wasm result:
+//│ = null
+
+// Unannotated functions use the reference calling convention; an unboxed return is rejected
+// even when it occurs inside a conditional. It must not escape to the Wasm validator.
+:e
+:soir
+private fun flag(): Bool = true
+fun test() = if flag() do return wasm.i32.const(42)
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Int32' at an unrelated type 'Unknown'
+//│ ║  l.+2: 	fun test() = if flag() do return wasm.i32.const(42)
+//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define flag⁰ as fun flag¹() {
+//│   return true
+//│ };
+//│ define test⁰ as fun test¹() {
+//│   match true
+//│     true =>
+//│       return wasm⁰.i32⁰.const⁰(42)
+//│     else
+//│       return runtime⁰.Unit⁰
+//│   end
+//│ };
+//│ end
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
+//│ ║  l.+2: 	fun test() = if flag() do return wasm.i32.const(42)
+//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^
+
+
+// Dead-parameter elimination introduces undefined after lowering. The functions'
+// declared unboxed result slots must survive even when their results are unused.
+:noInline
+:flowBasedOpt mono
+:soir
+:expect 42
+private fun discard(): Int =
+  fun i32(value: Int32): Int32 = value
+  fun i64(value: Int64): Int64 = value
+  fun f32(value: Float32): Float32 = value
+  fun f64(value: Float64): Float64 = value
+  i32(wasm.i32.const(1))
+  i64(wasm.i64.const(2))
+  f32(wasm.f32.const(3.0))
+  f64(wasm.f64.const(4.0))
+  42
+discard()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define discard⁰ as fun discard¹() {
+//│   let f32, f64, i64, i32;
+//│   define i32 as fun i32¹() {
+//│     return undefined
+//│   };
+//│   define i64 as fun i64⁰() {
+//│     return undefined
+//│   };
+//│   define f32 as fun f32⁰() {
+//│     return undefined
+//│   };
+//│   define f64 as fun f64⁰() {
+//│     return undefined
+//│   };
+//│   do wasm⁰.i32⁰.const⁰(1);
+//│   do i32¹();
+//│   do wasm⁰.i64¹.const¹(2);
+//│   do i64⁰();
+//│   do wasm⁰.f32¹.const²(3.0);
+//│   do f32⁰();
+//│   do wasm⁰.f64¹.const³(4.0);
+//│   do f64⁰();
+//│   return 42
+//│ };
+//│ return discard¹()
+//│ Wasm result:
+//│ = 42
+
+
+// Calls returning undefined still run when used as arguments to another call.
+:noInline
+:expect 42
+let effects = 0
+private fun absent(): Int64 =
+  set effects = effects + 1
+  unsafe.undefined
+private fun consume(value: Int64): Int = effects
+consume(absent()) + 41
+//│ Wasm result:
+//│ = 42
+
+
+// Virtual and super calls use the declared parameter and result slots.
+:noInline
+:expect 42
+private class Base() with
+  open fun take(value: Int32): Int32 = unsafe.undefined
+private class Child() extends Base() with
+  override fun take(value): Int32 = super.take(unsafe.undefined)
+private fun dispatch(receiver: Base): Int32 = receiver.take(unsafe.undefined)
+dispatch(Child())
+42
+//│ Wasm result:
+//│ = 42
+
+
+// Null remains an ordinary value and cannot fill an unboxed result slot.
+:ge
+private fun badNull(): Int32 = null
+42
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Unknown' at an unrelated type 'Int32'
+//│ ║  l.+1: 	private fun badNull(): Int32 = null
+//│ ╙──      	                               ^^^^
+//│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `(ref null any)` to `i32` in a different type hierarchy
+//│ ║  l.+1: 	private fun badNull(): Int32 = null
+//│ ╙──      	                               ^^^^
+
+
+// Undefined cannot make an intrinsically incompatible declaration representable.
+:ge
+private fun incompatible(): Int32 | Int64 = unsafe.undefined
+42
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+1: 	private fun incompatible(): Int32 | Int64 = unsafe.undefined
+//│ ╙──      	                            ^^^^^^^^^^^^^
+//│ Wasm result:
+//│ = 42
+
+
+// Nullable storage for undefined must preserve checked nominal casts for ordinary null.
+:noInline
+:re
+private class NonNull()
+private fun needToken(value: NonNull): Int = 42
+needToken(null)
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+
+// A temporary joining only undefined branches has type Nothing. Its destination
+// supplies the unboxed representation; evaluating the condition still has effects.
+:noOpt
+:expect 42
+let branchCalls = 0
+private fun branchFlag(): Bool =
+  set branchCalls = branchCalls + 1
+  true
+private fun ignoreI32(value: Int32): Int = 41
+ignoreI32(if branchFlag() then unsafe.undefined else unsafe.undefined) + branchCalls
+//│ Wasm result:
+//│ = 42
+
+
+// A Nothing-returning call still executes when used in an unboxed result or argument slot.
+:noInline
+:expect 42
+let bottomCalls = 0
+private fun bottom(): Nothing =
+  set bottomCalls = bottomCalls + 1
+  unsafe.undefined
+private fun bottomResult(): Float64 = bottom()
+private fun ignoreI64(value: Int64): Int = 40
+bottomResult()
+ignoreI64(bottom()) + bottomCalls
+//│ Wasm result:
+//│ = 42
+
+
+// Inlining substitutes undefined into an existing checked cast. Smart construction
+// must collapse that cast while retaining the effects before the return.
+:soir
+:expect 42
+open annotations
+private class CastTarget()
+let castCalls = 0
+@inline private fun narrow(value: Any): CastTarget =
+  set castCalls = castCalls + 1
+  value
+narrow(unsafe.undefined)
+castCalls + 41
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ @inline @private
+//│ define narrow⁰ as fun narrow¹(value) {
+//│   let tmp1;
+//│   set tmp1 = +⁰(castCalls⁰, 1);
+//│   set castCalls⁰ = tmp1;
+//│   return (value as! CastTarget⁰)
+//│ };
+//│ @private
+//│ define CastTarget¹ as class CastTarget⁰ {
+//│   constructor CastTarget²
+//│ };
+//│ set castCalls⁰ = 0;
+//│ set tmp = +⁰(castCalls⁰, 1);
+//│ set castCalls⁰ = tmp;
+//│ return +⁰(castCalls⁰, 41)
+//│ Wasm result:
+//│ = 42
+
+
+// Undefined in an annotation leaves the representation of the other alternatives unchanged.
+:noInline
+:expect 3
+private fun takeI32(value: Int32 | unsafe.undefined): Int32 = value
+takeI32(unsafe.undefined)
+takeI32(wasm.i32.const(3))
+//│ Wasm result:
+//│ = 3
+
+
+// A valueless break gives its label the Unit result, like a plain `do` block.
+:noInline
+fun breakWithoutValue() = do lbl: lbl.break
+breakWithoutValue()
+//│ Wasm result:
+//│ = {}
+
+
+// Narrowing a value of unknown representation to Nothing is a cast. An unboxed slot receiving the cast's
+// result materializes an unspecified value, which this test discards.
+:noInline
+:expect 42
+private fun unknownResult() = 1
+private fun claimNothing(): Nothing = unknownResult()
+private fun discardI32(value: Int32): Int = 42
+discardI32(claimNothing())
+//│ Wasm result:
+//│ = 42
+
+
+// Inlining a narrowing function can expose a Nothing-typed temporary under its checked cast.
+// Keep the bottom call's effects without requiring a non-null value for the cast target.
+:soir
+:expect 42
+private class BottomCastTarget()
+let bottomCastCalls = 0
+@noInline private fun bottomForCast(): Nothing =
+  set bottomCastCalls = bottomCastCalls + 1
+  unsafe.undefined
+@inline private fun narrowBottom(value: Any): BottomCastTarget = value
+narrowBottom(bottomForCast())
+bottomCastCalls + 41
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @noInline @private
+//│ define bottomForCast⁰ as fun bottomForCast¹() {
+//│   let tmp;
+//│   set tmp = +⁰(bottomCastCalls⁰, 1);
+//│   set bottomCastCalls⁰ = tmp;
+//│   return undefined
+//│ };
+//│ @inline @private
+//│ define narrowBottom⁰ as fun narrowBottom¹(value) {
+//│   return (value as! BottomCastTarget⁰)
+//│ };
+//│ @private
+//│ define BottomCastTarget¹ as class BottomCastTarget⁰ {
+//│   constructor BottomCastTarget²
+//│ };
+//│ set bottomCastCalls⁰ = 0;
+//│ do bottomForCast¹();
+//│ return +⁰(bottomCastCalls⁰, 41)
+//│ Wasm result:
+//│ = 42
+
+
+// Inlining through Nothing must retain the bottom boundary when the operand has a scalar representation.
+:soir
+:expect 42
+private class ScalarCastTarget()
+@inline private fun narrowScalarBottom(value: Any): ScalarCastTarget = value
+@inline private fun scalarBottom(): Nothing = wasm.i32.const(7)
+narrowScalarBottom(scalarBottom())
+42
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline @private
+//│ define narrowScalarBottom⁰ as fun narrowScalarBottom¹(value) {
+//│   return (value as! ScalarCastTarget⁰)
+//│ };
+//│ @inline @private
+//│ define scalarBottom⁰ as fun scalarBottom¹() {
+//│   return (wasm⁰.i32⁰.const⁰(7) as! Nothing)
+//│ };
+//│ @private
+//│ define ScalarCastTarget¹ as class ScalarCastTarget⁰ {
+//│   constructor ScalarCastTarget²
+//│ };
+//│ do (wasm⁰.i32⁰.const⁰(7) as! Nothing);
+//│ return 42
+//│ Wasm result:
+//│ = 42
+
+
+// A bottom-typed entry still needs its physical reference result slot before lowering an inlined scalar cast.
+// The returned value is unspecified; validation and execution must succeed.
+:soir
+@inline private fun entryBottom(): Nothing = wasm.i32.const(7)
+entryBottom()
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @inline @private
+//│ define entryBottom⁰ as fun entryBottom¹() {
+//│   return (wasm⁰.i32⁰.const⁰(7) as! Nothing)
+//│ };
+//│ return (wasm⁰.i32⁰.const⁰(7) as! Nothing)
+//│ Wasm result:
+//│ = null

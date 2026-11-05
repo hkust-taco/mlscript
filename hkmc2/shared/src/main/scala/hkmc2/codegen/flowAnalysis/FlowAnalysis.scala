@@ -1073,6 +1073,12 @@ class FlowConstraintsCollector(
       val instId = cc.instId
       def isShapeMatch(fun: Path): Bool =
         fun.targetSymbol.flatMap(_.asBlkMember).contains(ctx.builtins.shape.`match`)
+      // * A cast passes its operand through; a checked one may also throw.
+      def processCast(value: Result, check: Bool): ProdStrat =
+        if check then markUnsafeEta()
+        val valueStrat = processResult(value)
+        cc.constrain(valueStrat, UnknownCons)
+        valueStrat
       def freshCallEffect(): StratVar =
         val effect = freshVar("call_effect", cc.forFun)
         // A call's effect contributes to the enclosing function's latent effect.
@@ -1169,6 +1175,7 @@ class FlowConstraintsCollector(
               idx.foreach(p => cc.constrain(processResult(p), UnknownCons))
               cc.constrain(processResult(value), UnknownCons)
           UnknownProd
+        case CastResult(value, _, check) => processCast(value, check)
         case p: Path =>
           p match
           case refSite @ FunRef(f, selectedFrom) =>
@@ -1206,11 +1213,7 @@ class FlowConstraintsCollector(
             kind match
               case DynSelectKind.Member(sym) => generatedVars(sym)
               case DynSelectKind.ArrayIdx | DynSelectKind.Unknown => UnknownProd
-          case Cast(value, _, check) =>
-            if check then markUnsafeEta()
-            val valueStrat = processResult(value)
-            cc.constrain(valueStrat, UnknownCons)
-            valueStrat
+          case CastPath(value, _, check) => processCast(value, check)
           case Value.MemberRef(_, disamb) =>
             disamb match
             case _: ClassSymbol | _: PatternSymbol =>

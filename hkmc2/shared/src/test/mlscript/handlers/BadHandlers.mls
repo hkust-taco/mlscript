@@ -24,13 +24,13 @@ x
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
-// Getter
+// The continuation cannot be a handler function's only parameter list.
 // :expect 3
 :e
 handle h = Object with
   fun lol(k) = k(())
 h.lol
-//│ ╔══[COMPILATION ERROR] Handler function cannot be a getter
+//│ ╔══[COMPILATION ERROR] Handler function must have a parameter list before its continuation parameter list
 //│ ║  l.+2: 	  fun lol(k) = k(())
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised in a getter

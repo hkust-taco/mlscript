@@ -53,25 +53,23 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let h;
 //│ h = function h(x, ...args7) {
-//│   let y7, z2, w, inlinedVal12, inlinedVal13, tmp14, tmp15, tmp16;
-//│   tmp16 = 1 + args7.length;
-//│   runtime.checkArgs("h", 2, tmp16);
-//│   tmp15 = args7.length - 1;
-//│   inlinedVal12 = runtime.safeCall(args7.slice(0, tmp15));
-//│   if (runtime.Tuple.isArrayLike(inlinedVal12) && inlinedVal12.length >= 1) {
-//│     y7 = inlinedVal12.at(0);
+//│   let y7, z2, w, inlinedVal12, tmp14, tmp15;
+//│   tmp15 = 1 + args7.length;
+//│   runtime.checkArgs("h", 2, tmp15);
+//│   if (runtime.Tuple.isArrayLike(args7) && args7.length >= 2) {
+//│     y7 = args7.at(0);
 //│   } else {
 //│     y7 = null;
 //│   }
-//│   if (runtime.Tuple.isArrayLike(inlinedVal12) && inlinedVal12.length >= 2) {
-//│     z2 = inlinedVal12.at(1);
+//│   if (runtime.Tuple.isArrayLike(args7) && args7.length >= 3) {
+//│     z2 = args7.at(1);
 //│   } else {
 //│     z2 = null;
 //│   }
 //│   tmp14 = args7.length - 1;
-//│   inlinedVal13 = runtime.safeCall(args7.slice(2, tmp14));
+//│   inlinedVal12 = runtime.safeCall(args7.slice(2, tmp14));
 //│   w = args7.at(-1);
-//│   return globalThis.Object.freeze([ x, y7, z2, inlinedVal13, w ])
+//│   return globalThis.Object.freeze([ x, y7, z2, inlinedVal12, w ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -227,6 +225,58 @@ viaSeveral([Tail(5)], [Tail(6)])
 private fun optional(x?, ...middle, y) = [if x is Head as x then x.head else unsafe.undefined, y.tail]
 [optional(Tail(7)), optional(Head(8), Tail(9))]
 //│ = [[undefined, 7], [8, 9]]
+
+
+// *** Erased representations of extracted parameters ***
+
+// Known arguments are checked against trailing slots, counting from the right.
+:ge
+:noInline
+:sir
+:siret
+private fun integerTail(...rest, value: Int) = value
+integerTail(0, 1, "wrong")
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+2: 	integerTail(0, 1, "wrong")
+//│ ╙──      	                  ^^^^^^^
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ @private
+//│ define integerTail⁰ as fun integerTail¹(...args: Array⁰): ? {
+//│   let rest: Array⁰, value: Int⁰;
+//│   do runtime⁰.checkVariadicArgs⁰("integerTail", 1, 0, args);
+//│   set rest = runtime⁰.Tuple⁰.sliceArray⁰(args, 0, 1);
+//│   set value = (args.-1 as! Int⁰);
+//│   return value
+//│ };
+//│ return integerTail¹(0, 1, "wrong")
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = "wrong"
+
+// Optional leading slots yield to both typed trailing slots before their representations are checked.
+:expect [[null, "A", 1], [2, "B", 3], [4, "C", 5]]
+private fun typedLayout(head?: Int, ...rest, text: Str, count: Int) = [head, text, count]
+[typedLayout("A", 1), typedLayout(2, "B", 3), typedLayout(4, false, "C", 5)]
+//│ = [[null, "A", 1], [2, "B", 3], [4, "C", 5]]
+
+// An under-applied call checks its arguments against the required prefix only,
+// so its arity error is not followed by a mismatch against a trailing slot.
+:e
+private fun mixedTail(count: Int, ...rest, text: Str) = text
+mixedTail(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	mixedTail(1)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Function 'mixedTail' expected at least 2 arguments, but got 1
+//│ ║  l.+1: 	private fun mixedTail(count: Int, ...rest, text: Str) = text
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'mixedTail' expected at least 2 arguments but got 1
+
+// Unknown-length calls still coerce the dynamically extracted value into its typed destination.
+:noInline
+:expect 7
+fun forwardedTail(values: Array[Int]) = integerTail(...values)
+forwardedTail([7])
+//│ = 7
 
 
 // *** Errors ***

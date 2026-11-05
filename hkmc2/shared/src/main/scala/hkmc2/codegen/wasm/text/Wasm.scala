@@ -6,7 +6,9 @@ package text
 import hkmc2.utils.*, shorthands.*
 
 import document.*
-import semantics.{BlockMemberSymbol, ClassCtorSymbol, ClassSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol}, Elaborator.State
+import semantics.{
+  BlockMemberSymbol, ClassCtorSymbol, ClassSymbol, DefinitionSymbol, Elaborator, InnerSymbol, LocalVarSymbol, TempSymbol,
+}, Elaborator.State
 import utils.Scope
 
 import scala.collection.Map
@@ -15,8 +17,9 @@ import scala.collection.Map
 private[text] type ExternSymbol = BlockMemberSymbol | ClassSymbol | TempSymbol
 
 private[text] object ExternSymbol:
-  /** Class constructors and explicit function companions share a source name but
-    * have distinct Wasm functions. Imports and calls must use the same identity. */
+  /** Class constructors and explicit function companions share a source name but have distinct Wasm functions. Imports
+    * and calls must use the same identity.
+    */
   def forReference(bms: BlockMemberSymbol, disamb: DefinitionSymbol[?]): BlockMemberSymbol | ClassSymbol =
     disamb match
       case cls: ClassSymbol => cls
@@ -37,7 +40,10 @@ extension (doc: Document)
 
 extension (scp: Scope)
   /** Convenience function for [[Scope.allocateOrGetName]] with an optional prefix and suffix. */
-  private[text] def allocateOrGetNameWrapped(sym: ScopedSymbol | ClassSymbol, wrapId: Opt[Str] -> Opt[Str])(using Raise): Str =
+  private[text] def allocateOrGetNameWrapped(
+    sym: ScopedSymbol | ClassSymbol,
+    wrapId: Opt[Str] -> Opt[Str],
+  )(using Raise): Str =
     val prefix = wrapId._1.fold("")(prefix => s"${prefix}_")
     wrapId._2 match
       case S(suffix) =>

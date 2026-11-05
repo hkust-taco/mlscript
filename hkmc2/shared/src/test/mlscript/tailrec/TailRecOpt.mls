@@ -451,3 +451,47 @@ new A().f(10)
 //│ ║  l.+3: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──      	                                             ^^^^^^^^
 //│ = 0
+
+// Slots read back from a spread tail call are coerced to their parameters' representations.
+:noInline
+:soir
+:siret
+:expect 3
+fun typedSpread(a: Int, b?: Int, ...z) = if z is
+  [] then a
+  [x, ...xs] then typedSpread(...[a + 1, b, ...xs])
+typedSpread(0, 1, 2, 3, 4)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ define typedSpread⁰ as fun typedSpread¹(a: Int⁰, b?: Unknown, ...z: Array⁰): ? {
+//│   loop loopLabel:
+//│     let middleElements: Array⁰, tmp: Int⁰, tmp1: Array⁰;
+//│     match z
+//│       Array(0) =>
+//│         return a
+//│       Array(1+) =>
+//│         let argList: Array⁰, optionalArg: Unknown, sliceRes: Array⁰;
+//│         do runtime⁰.Tuple⁰.get⁰(z, 0);
+//│         set middleElements = (runtime⁰.Tuple⁰.slice¹(z, 1, 0) as!! Array⁰);
+//│         set tmp = +⁰(a, 1);
+//│         set tmp1 = [tmp, b, ...middleElements];
+//│         set argList = [...tmp1];
+//│         match argList
+//│           Array(2+) =>
+//│             set optionalArg = argList.1;
+//│             end
+//│           else
+//│             set optionalArg = null;
+//│             end
+//│         set sliceRes = runtime⁰.Tuple⁰.sliceArray⁰(argList, 2, 0);
+//│         set a = (argList.0 as! Int⁰);
+//│         set b = optionalArg;
+//│         set z = sliceRes;
+//│         continue loopLabel
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ return typedSpread¹(0, 1, 2, 3, 4)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3

@@ -1,0 +1,30 @@
+:.
+
+
+// A Nothing-annotated result accepts abortive bodies and calls typed Nothing.
+fun fail(msg: Str): Nothing = throw Error(msg)
+fun todo(): Nothing = fail("todo")
+
+:re
+todo()
+//│ ═══[RUNTIME ERROR] Error: todo
+
+
+// A value of unknown representation narrows to Nothing through a cast. This lets a Nothing-annotated
+// function return the result of an unannotated function that always throws.
+fun untypedFail(msg) = throw Error(msg)
+fun untypedTodo(): Nothing = untypedFail("todo")
+
+:re
+untypedTodo()
+//│ ═══[RUNTIME ERROR] Error: todo
+
+
+// Removing a cast of a bottom-typed temporary after inlining must retain the throwing call in JS too.
+:re
+open annotations
+private class CastTarget()
+@noInline private fun bottomForCast(): Nothing = throw Error("bottom cast")
+@inline private fun narrowBottom(value: Any): CastTarget = value
+narrowBottom(bottomForCast())
+//│ ═══[RUNTIME ERROR] Error: bottom cast

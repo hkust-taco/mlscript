@@ -102,7 +102,7 @@ characters("ab")
 // Inherited source aliases dispatch through the overriding symbol property.
 :expect [10, 10, 11]
 open class Parent {
-  @annotations.jsSymbol(Symbol.iterator) open fun iterator() = [Box(0)].iterator()
+  @annotations.jsSymbol(Symbol.iterator) open fun iterator(): Iterator[Box] = [Box(0)].iterator()
 }
 class Child extends Parent {
   @annotations.jsSymbol(Symbol.iterator) override fun iterator() = [Box(10)].iterator()

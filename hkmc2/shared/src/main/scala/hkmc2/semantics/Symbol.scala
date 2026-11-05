@@ -129,10 +129,7 @@ abstract class Symbol(using ownerState: State) extends MaybeSymbol with Located:
   
   def asBlkMember: Opt[BlockMemberSymbol] = this match
     case mem: BlockMemberSymbol => S(mem)
-    case mem: DefinitionSymbol[?] => mem.defn match
-      case S(defn: TypeLikeDef) => S(defn.bsym)
-      case S(defn: TermDefinition) => S(defn.bsym)
-      case N => N
+    case mem: DefinitionSymbol[?] => mem.bms
     case _ => N
   
   /** Get the symbol corresponding to the "representative" of a set of overloaded definitions,
@@ -498,7 +495,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     owner.isDefined &&
       // Refreshed IR symbols have no source definition. Their current definition
       // retains visibility, including after a method is copied by the inliner.
-      (isLetOrParamBinding || irDefn.fold(isExplicitlyPrivate)(_.visibility is Visibility.Private))
+      (isLetOrParamBinding || visibility.exists(_ is Visibility.Private))
   
   /** The erased type of what a reference to this term evaluates to.
     *
@@ -601,6 +598,12 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol:
   var irClassHeader: Opt[codegen.ClassHeader] = N
   def irTermCompanion: Opt[TermSymbol] = irClassHeader.flatMap(_.termCompanion)
 
+  /** Provided by [[DefinitionSymbol.bms]], which the self type does not expose to clients. */
+  def bms: Opt[BlockMemberSymbol]
+  /** The innermost class-like definition containing this one, read like [[DefinitionSymbol.bms]]:
+    * lifting can move a class to another owner. */
+  def owner: Opt[InnerSymbol] = irClsLikeDefn.fold(this.defn.flatMap(_.owner))(_.owner)
+
 
 type AnyDefinitionSymbol = DefinitionSymbol[?]
 
@@ -626,7 +629,19 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
     defnListeners = null // free memory and prevent further listening
   
   var decl: Opt[Declaration] = N // NOTE: currently only assigned for class params and only used by deforestation; may want to just remove it once deforestation is improved
-  def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) 
+  
+  // * The following accessors read the current IR definition, which owns this symbol once lowering
+  // * or a later rewrite has produced it (see `irDefn`), and otherwise the source definition: before
+  // * lowering, and for external declarations, which have no IR definition.
+  
+  def bms: Opt[BlockMemberSymbol] =
+    // Lifted captures and handlers can use classes created directly in IR.
+    // Such classes have no source definition from which to obtain a binding.
+    irDefn.fold(defn.map(_.bsym))(_.sym |> some)
+  
+  def annotations: Opt[Ls[Annot]] = irDefn.fold(defn.map(_.annotations))(_.annotations |> some)
+  
+  def visibility: Opt[Visibility] = irDefn.fold(defn.map(_.visibility))(_.visibility |> some)
   
   // TODO: rm
   private[semantics] var defnListeners: Buffer[Defn => Unit] = Buffer.empty
@@ -688,6 +703,8 @@ sealed trait InnerSymbol(using State) extends ThisSymbol, ShapePublisher:
   // TODO(Derppening): Can we meaningfully infer the erased type of `this` from the definition?
   val thisProxy: TempSymbol = TempSymbol(N, initErasedType = N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol
+  /** Provided by [[DefinitionSymbol.bms]], which the self type does not expose to clients. */
+  def bms: Opt[BlockMemberSymbol]
   def asDefnSym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol = this match
     case d: DefinitionSymbol[? <: ClassLikeDef] => d
 

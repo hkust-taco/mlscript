@@ -261,14 +261,14 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       case S(args) => args.map(_.value)
       case N => return CallArgsResult.ForceSpread
     
-    if paramList.restParam.isDefined then
-      val rest =
-        restArgs match
-          case Arg(S(SpreadKind.Eager), value) :: Nil => value
-          case _ => Tuple(true, restArgs)(N)
-      CallArgsResult.Success(hdPadded.appended(rest))
-    else
-      CallArgsResult.Success(hdPadded)
+    paramList.restParam match
+      case S(_) =>
+        // A call collects its rest arguments into a fresh array. A lone spread can
+        // contain another iterable, and even an Array operand can remain reachable
+        // through aliases or an earlier iteration's parameters.
+        CallArgsResult.Success(hdPadded.appended(Tuple(true, restArgs)(N)))
+      case N =>
+        CallArgsResult.Success(hdPadded)
   
   /**
     * Applies a parameter list to an argument list, both of which could contain arbitrary spreads.
@@ -294,23 +294,24 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     var prefix = blockBuilder.assignScoped(tupleSym, tupleRes)
     // Materialize optional slots before assigning any loop parameter, so missing arguments reset
     // the slots to null and reads remain independent of parameter assignment order.
+    // Tuple reads are dynamically typed, so required slots are coerced to their parameters'
+    // representations, as `OptionalParams.bindFromTuple` does for the optional ones.
     val mainArgs = paramList.zipWithIndex.map: (param, index) =>
       if param.flags.opt then
         val slot = TempSymbol(N, initErasedType = param.sym.erasedType, "optionalArg")
         prefix = prefix.scopedVars(Set(slot)).chain(rest =>
-          OptionalParams.bindFromTuple(tupleSym.asSimpleRef, index, slot, true, rest))
+          OptionalParams.bindFromTuple(tupleSym.asSimpleRef, index, slot, S(index + 1), rest))
         slot.asSimpleRef
       else DynSelect(tupleSym.asSimpleRef, Value.Lit(Tree.IntLit(index))(N), DynSelectKind.ArrayIdx)(N)
+        .coerceTo(param.sym.erasedType.getOrElse(ErasedType.Unknown), N)
     
     // If the rest param exists, append a slice
     val (initialBlk: (Block => Block), pathList: List[Path]) =
       if restParam.isDefined then
         val sliceResSym = TempSymbol(N, initErasedType = S(ErasedType.Array), "sliceRes")
-        // runtime.Tuple.slice(tupleSym, paramList.length, 0)
+        // runtime.Tuple.sliceArray(tupleSym, paramList.length, 0)
         val sliceRes = Call(
-          State.runtimeSymbol.asSimpleRef
-            .sel(Tree.Ident("Tuple"), State.tupleSymbol)
-            .sel(Tree.Ident("slice"), State.tupleSliceSymbol),
+          State.runtimeSymbol.asSimpleRef.sel(State.tupleSymbol).sel(State.tupleSliceArraySymbol),
           (tupleSym.asSimpleRef.asArg
             :: Value.Lit(Tree.IntLit(paramList.length))(N).asArg
             :: Value.Lit(Tree.IntLit(0))(N).asArg
@@ -494,7 +495,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     val loopSym = LabelSymbol(N, "loopLabel")
     
     val loopDefnPath = owner match
-      case Some(value) => Select(value.asThis, Tree.Ident(bms.nme))(S(dSym), N)(false)
+      case Some(value) => value.asThis.sel(dSym)
       case None => bms.asMemberRef(dSym)
     
     def rewriteKnownCall(callee: FunDefn, flattenedArgs: List[Path]) =

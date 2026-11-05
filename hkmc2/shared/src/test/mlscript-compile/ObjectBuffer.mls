@@ -5,7 +5,7 @@ fun max(a, b) = if a < b then b else a
 
 module ObjectBuffer with
   abstract class ObjectBuffer with
-    val buf
+    val buf: Any
     fun mkNew[A](cls: { size: Int, ctor: (ObjectBuffer, Int) -> A }): A
     fun del(cls: { size: Int }, inst: Int): Any
     fun read(idx: Int): Any

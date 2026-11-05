@@ -40,11 +40,14 @@ abstract class TimeOutTests
 end TimeOutTests
 
 object TimeOutTests:
+  /** Whether tests run on a CI runner. GitHub Actions sets `CI`. */
+  val OnCI: Bool = sys.env.contains("CI")
+  
   /** The default wall-clock limit of each test. CI runners are several times slower than
     * development machines, and their speed varies between runs by tens of percent,
-    * so tests get a longer limit there. GitHub Actions sets `CI`.
+    * so tests get a longer limit there.
     */
   val TimeLimit: Span =
-    if sys.env.get("CI").isDefined then Span(60, Seconds)
+    if OnCI then Span(60, Seconds)
     else Span(25, Seconds)
 

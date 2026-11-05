@@ -1,0 +1,195 @@
+:.
+:js
+open annotations
+
+
+// Inlining makes the coercion of `5` to the parameter's Int redundant, so the simplifier drops it.
+:soir
+@noInline fun takeInt(value: Int): Int = value
+fun forward(value) = takeInt(value)
+forward(5)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ @noInline
+//│ define takeInt⁰ as fun takeInt¹(value) {
+//│   return value
+//│ };
+//│ define forward⁰ as fun forward¹(value) { return takeInt¹((value as! Int⁰)) };
+//│ return takeInt¹(5)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 5
+
+// Tail-call rewriting copies a lone spread operand into a fresh rest array. The pattern's
+// rest binding keeps its Array representation through the slice helper's unchecked cast.
+:soir
+:expect 3
+@tailrec fun count(n)(...rest) = if rest is
+  [] then n
+  [_, ...more] then count(n + 1)(...more)
+count(0)(1, 2, 3)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let count$tailrec, rest;
+//│ @private
+//│ define count$tailrec as fun count$tailrec⁰(n, rest1) {
+//│   loop loopLabel:
+//│     let middleElements, tmp;
+//│     match rest1
+//│       Array(0) =>
+//│         return n
+//│       Array(1+) =>
+//│         let inlinedVal, tmp1;
+//│         do runtime⁰.Tuple⁰.get⁰(rest1, 0);
+//│         set tmp1 = -⁰(rest1.length⁰, 0);
+//│         set inlinedVal = rest1.slice⁰(1, tmp1);
+//│         set middleElements = (inlinedVal as!! Array⁰);
+//│         set tmp = +⁰(n, 1);
+//│         set n = tmp;
+//│         set rest1 = mut [...middleElements];
+//│         continue loopLabel
+//│       else
+//│         throw new globalThis⁰.Error⁰("match error")
+//│     end
+//│   unreachable /* Rest of abortive labelled block */
+//│ };
+//│ @inline @tailrec
+//│ define count⁰ as fun count¹(n)(...rest1) {
+//│   return count$tailrec⁰(n, rest1)
+//│ };
+//│ set rest = mut [1, 2, 3];
+//│ return count$tailrec⁰(0, rest)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 3
+
+// Lifting replaces the closure argument by a temporary holding the partially applied lifted
+// function, which keeps the Function representation of the constructor's parameter.
+:lift
+:sir
+:siret
+:expect 42
+class Thunk(val run: () -> Int)
+fun delay(value: Int) = new Thunk(() => value)
+delay(42).run()
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let lambda, tmp: ?, lambda$;
+//│ @inline
+//│ define lambda$ as fun lambda$⁰(value: Int⁰)(): ? {
+//│   return lambda⁰(value)
+//│ };
+//│ define lambda as fun lambda⁰(value: Int⁰): ? {
+//│   return value
+//│ };
+//│ define delay⁰ as fun delay¹(value: Int⁰): ? {
+//│   let lambda$here: Function⁰;
+//│   set lambda$here = lambda$⁰(value);
+//│   return new Thunk⁰(lambda$here)
+//│ };
+//│ define Thunk¹ as class Thunk⁰ {
+//│   val run⁰: Function⁰;
+//│   constructor Thunk²(run: Function⁰) {
+//│     define run⁰ as val run¹: Function⁰ = run;
+//│     end
+//│   }
+//│ };
+//│ set tmp = delay¹(42);
+//│ return tmp.run¹()
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// Pattern lowering binds typed temporaries, such as a string's head, to calls of untyped
+// runtime helpers through unchecked casts.
+:sir
+:siret
+:expect [true, false]
+pattern Lower = "a"..="z"
+["q" is Lower, "Q" is Lower]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let scrut: ?, scrut1: ?, unapplyResult: ?, output: ?, bindings: ?, tmp: Bool⁰, unapplyResult1: ?, output1: ?, bindings1: ?, tmp1: Bool⁰;
+//│ define Lower⁰ as pattern Lower¹ {
+//│   method unapply⁰ = fun unapply¹(input: ?): ? {
+//│     let isGreaterThanLower: ?, isLessThanUpper: ?;
+//│     set isGreaterThanLower = <=⁰("a", input);
+//│     match isGreaterThanLower
+//│       true =>
+//│         set isLessThanUpper = <=⁰(input, "z");
+//│         match isLessThanUpper
+//│           true =>
+//│             return new runtime⁰.MatchSuccess⁰(input, null)
+//│           else
+//│             return new runtime⁰.MatchFailure⁰(null)
+//│         end
+//│       else
+//│         return new runtime⁰.MatchFailure⁰(null)
+//│     end
+//│   }
+//│   method unapplyStringPrefix⁰ = fun unapplyStringPrefix¹(input: ?): ? {
+//│     let stringHead: Str⁰, stringTail: Str⁰, nonEmpty: Bool⁰, isGreaterThanLower: ?, isLessThanUpper: ?, tmp2: Array⁰;
+//│     match input
+//│       Str⁰ =>
+//│         set nonEmpty = <⁰(0, input.length﹖);
+//│         match nonEmpty
+//│           true =>
+//│             set stringHead = (runtime⁰.StrOps⁰.get¹((input as! Str⁰), 0) as!! Str⁰);
+//│             set stringTail = (runtime⁰.StrOps⁰.leaveOut⁰((input as! Str⁰), 1) as!! Str⁰);
+//│             set isGreaterThanLower = <=⁰("a", stringHead);
+//│             match isGreaterThanLower
+//│               true =>
+//│                 set isLessThanUpper = <=⁰(stringHead, "z");
+//│                 match isLessThanUpper
+//│                   true =>
+//│                     set tmp2 = [stringHead, stringTail];
+//│                     return new runtime⁰.MatchSuccess⁰(tmp2, null)
+//│                   else
+//│                     return new runtime⁰.MatchFailure⁰(null)
+//│                 end
+//│               else
+//│                 return new runtime⁰.MatchFailure⁰(null)
+//│             end
+//│           else
+//│             return new runtime⁰.MatchFailure⁰(null)
+//│         end
+//│       else
+//│         return new runtime⁰.MatchFailure⁰(null)
+//│     end
+//│   }
+//│ };
+//│ set scrut = "q";
+//│ set unapplyResult = Lower¹.unapply﹖(scrut);
+//│ match unapplyResult
+//│   MatchSuccess⁰ =>
+//│     set output = unapplyResult.output⁰;
+//│     set bindings = unapplyResult.bindings⁰;
+//│     set tmp = true;
+//│     end
+//│   else
+//│     set tmp = false;
+//│     end
+//│ set scrut1 = "Q";
+//│ set unapplyResult1 = Lower¹.unapply﹖(scrut1);
+//│ match unapplyResult1
+//│   MatchSuccess⁰ =>
+//│     set output1 = unapplyResult1.output⁰;
+//│     set bindings1 = unapplyResult1.bindings⁰;
+//│     set tmp1 = true;
+//│     return [tmp, tmp1]
+//│   else
+//│     set tmp1 = false;
+//│     return [tmp, tmp1]
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [true, false]
+
+// The operand of a cast in a path position is itself a path. Propagating the partial
+// application `curriedAdd(123)` into the callee's cast would disguise a call as a path.
+:soir
+:expect 124
+fun curriedAdd(x)(a) = x + a
+123 |> curriedAdd <| 1
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let tmp;
+//│ @inline
+//│ define curriedAdd⁰ as fun curriedAdd¹(x)(a) {
+//│   return +⁰(x, a)
+//│ };
+//│ set tmp = curriedAdd¹(123);
+//│ return (tmp as! Function⁰)(1)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 124

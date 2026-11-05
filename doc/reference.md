@@ -114,7 +114,7 @@ true        // Boolean literal
 false       // Boolean literal
 ()          // Unit literal (empty tuple/record)
 null        // Null
-undefined   // Undefined
+undefined   // Undefined: an unspecified value (see Runtime Representations)
 ```
 
 **String escape sequences:**
@@ -233,6 +233,22 @@ fun foo() =
   val result = compute()
   result + 1
 ```
+
+### Runtime Representations
+
+Type annotations can require a particular runtime representation, including the unboxed
+Wasm types `Int32`, `Int64`, `Float32`, and `Float64`.
+
+`undefined` denotes an unspecified value of any representation. It can be stored in or passed
+to any slot, but reading it back is undefined behavior: the JavaScript backend produces JS
+`undefined` (or `()` for a function returning it), while the Wasm backend may produce any value
+of the slot's representation, such as zero or a null reference. Compiler-generated placeholders,
+such as those left by dead-parameter elimination, rely on this rule. `null` remains an ordinary
+value and does not have this freedom to inhabit unboxed representations.
+
+In the IR, `undefined` has type `Nothing`: joining it with another representation leaves that
+representation unchanged, and casting the literal leaves it unchanged. This type does not imply
+unreachable control flow; evaluating an expression of type `Nothing` can still have effects.
 
 ---
 
@@ -738,6 +754,35 @@ abstract class Shape with
 class Circle(radius: Num) extends Shape with
   fun area = Math.PI * radius * radius
 ```
+
+An overriding method must preserve argument binding for every call permitted by the inherited
+method. Parameter names may change, but corresponding parameters must receive the same arguments,
+omitted-argument defaults, and rest slices. A parameter marked `drop` in the inherited contract may
+be omitted only when this leaves the other parameters' bindings unchanged. Additional optional
+parameters are permitted only when they cannot consume arguments belonging to inherited parameters.
+Equal parameter counts alone do not establish compatibility: moving a trailing parameter or changing
+where a rest slice begins can change which argument a parameter receives. A member's parameter lists
+are the ones it writes: an abstract or `declare`d `fun f: (Int) -> Int` has none and holds a function
+value, so only a member without parameter lists can override it, while `fun f(x: Int): Int` has one.
+
+An override must accept the runtime representations of the inherited parameters, and its results
+must fit the inherited result representation. Unannotated parameters inherit their representations;
+an ordinary member without a result annotation uses the inherited result representation too.
+An annotated parameter may accept a wider representation on JavaScript. Wasm compiles overrides
+with the introducing method's physical signature, so their parameter representations must match.
+For the same reason, Wasm also requires an override to keep the introducing method's number of
+parameters, rejecting the additional optional parameters that JavaScript permits.
+A representation mismatch is a compilation error.
+
+Because overrides inherit these representations, an overridable member (one marked `open`, or an
+abstract member) of an `open` or `abstract` class, or of an `open` object, must specify the types
+of all its parameters and its result when its compilation unit exposes it, that is, when it can be
+reached from the unit's exported definitions. Each type can come from an annotation, a separate
+full signature such as `fun f: (Int) -> Int`, or the corresponding part of an overridden member's
+signature, which an override inherits unchanged without refining it. Other members need no such
+annotations. This exemption includes members of private and local classes that remain unexposed;
+an exported function can expose such a class by returning its constructor.
+Private members cannot be overridden at all, so marking one `open` causes a warning.
 
 ### Covariant/Contravariant Type Parameters
 

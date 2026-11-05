@@ -393,13 +393,20 @@ abstract class DiffMaker:
   
   
   def run(): Unit =
+    // * The CPU time of this thread excludes time spent blocked, such as on another test elaborating
+    // * a shared import, and time spent waiting for a core while other tests run in parallel.
+    val threads = java.lang.management.ManagementFactory.getThreadMXBean
     val starttime = System.currentTimeMillis()
+    val startCpu = threads.getCurrentThreadCpuTime
     try processLines(allLines, reprintCommands = true) finally
       val endtime = System.currentTimeMillis()
       val duration = (endtime - starttime).toString
+      val cpuDuration = ((threads.getCurrentThreadCpuTime - startCpu) / 1000000).toString
       println(s"${fansi.Color.Cyan.escape}Processed in ${Console.BOLD}${
           " " * (5 - duration.length) + duration
-        } ms${Console.RESET}  ${
+        } ms${Console.RESET}${fansi.Color.Cyan.escape} (CPU ${
+          " " * (5 - cpuDuration.length) + cpuDuration
+        } ms)${Console.RESET}  ${
           Console.YELLOW + relativeName + "." + file.ext + Console.RESET
         }")
       out.close()
