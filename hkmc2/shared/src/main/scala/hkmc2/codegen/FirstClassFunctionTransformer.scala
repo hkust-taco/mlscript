@@ -6,120 +6,112 @@ import utils.*
 import semantics.*
 import syntax.Tree
 import semantics.Elaborator.{ctx, State}
-import hkmc2.Message.MessageContext
-
-import collection.mutable.HashMap
 
 
 class FirstClassFunctionTransformer
       (using Elaborator.State, Elaborator.Ctx, Raise, DebugPrinter)
-    extends BlockTransformer(new SymbolSubst):
-  // Anonymous lambdas' parameter lists cannot be retrieved from the term symbol
-  private val funDefns = HashMap.empty[BlockMemberSymbol, FunDefn] 
-  class CollectFunDefns extends BlockTraverser:
-    override def applyFunDefn(fun: FunDefn) =
-      funDefns += (fun.sym -> fun)
-      super.applyFunDefn(fun)
-
-  private def generateFCFunctionClass(p: Path, params: LoweredParamList) =
+    extends BlockTransformer(SymbolSubst.Id):
+  
+  // A binding may also name a class or module. Only the resolved definition identifies the function and its layout.
+  // External declarations have no IR body, but still supply the physical layout of their forwarding wrappers.
+  private def paramLists(sym: TermSymbol): Opt[Ls[LoweredParamList]] =
+    sym.irFunDefn.map(_.params).orElse:
+      sym.defn.map(_.params.map(LoweredParamList.callingConvention))
+  
+  private def function(p: Path): Opt[(TermSymbol, LoweredParamList)] =
+    p.targetSymbol.collect { case sym: TermSymbol if sym.k is syntax.Fun => sym }.flatMap: sym =>
+      paramLists(sym).flatMap(_.headOption).map(sym -> _)
+  
+  private def freshParam(p: Param): Param =
+    val sym = VarSymbol(p.sym.id, erasedType = p.sym.erasedType, mut = p.sym.mut)
+    p.copy(sym = sym)(p.toLoc).withSignTypeOf(p)
+  
+  private def save(p: Path, name: Str)(k: Path => Block): Block =
+    val tmp = TempSymbol(N, initErasedType = p.erasedType, name)
+    Scoped(Set.single(tmp), Assign(tmp, p, k(tmp.asSimpleRef.withLocOf(p))))
+  
+  private def stable(p: Path, name: Str)(k: Path => Block): Block =
+    if p.isStable then k(p) else save(p, name)(k)
+  
+  private def undefined: Path = Value.Lit(Tree.UnitLit(false))(N)
+  
+  /** Save a receiver before both selecting its function and passing it as the explicit JS receiver.
+    * Array indexing produces a value through the runtime's indexing operation, not a JS property reference.
+    */
+  private def withReceiver(p: Path)(k: (Path, Path) => Block): Block = p match
+    case sel: Select => stable(sel.qual, "receiver"): qual =>
+      k(sel.copy(qual = qual)(sel.symbol, sel.toLoc)(sel.sanitize), qual)
+    case sel: SuperSelect => stable(sel.qual, "receiver"): qual =>
+      k(sel.copy(qual = qual)(sel.symbol, sel.toLoc), qual)
+    case sel @ DynSelect(qual, fld, kind) if !kind.isArrayIdx => stable(qual, "receiver"): qual =>
+      k(sel.copy(qual = qual)(sel.toLoc), qual)
+    case cast: CastPath => withReceiver(cast.value): (value, receiver) =>
+      k(Cast.path(value, cast.target, cast.check)(cast.toLoc), receiver)
+    case _ => k(p, undefined)
+  
+  private def generateFCFunctionClass(params: LoweredParamList, body: Ls[Arg] => Block) =
     val clsSym = ClassSymbol(
       syntax.Tree.DummyTypeDef(syntax.Cls),
       syntax.Tree.Ident("Function$")
     )
     val defSym = new BlockMemberSymbol("Function$", Nil, false)
-    val forwarding = OptionalParams.forwarding(params, fixedArity = false)
-    val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), forwarding.params :: Nil,
-      Return(Call(p, forwarding.args ne_:: Nil)(CallMetadata.defaultMlsFun, N)))(N, annotations = Nil)
+    // Forwarding parameters bind independently of the original definition. Optional arguments remain raw so a
+    // foreign callee, rather than this wrapper, decides what omitted arguments mean.
+    val fresh = params.copy(params = params.params.map(freshParam), restParam = params.restParam.map(freshParam))(params.toLoc)
+    val forwarding = OptionalParams.forwarding(fresh, fixedArity = false)
+    val thisArg = Param.simple(VarSymbol(Tree.Ident("thisArg"), erasedType = N, mut = false))
+    val callParams = forwarding.params.copy(params = thisArg :: forwarding.params.params)(forwarding.params.toLoc)
+    // Native functions consume thisArg through Function.prototype.call. A closure already captures its receiver;
+    // its call method ignores the explicit argument and uses its own `this` to access captured values.
+    val callDef = FunDefn.withFreshSymbol(Some(clsSym), new BlockMemberSymbol("call", Nil, true), callParams :: Nil,
+      body(forwarding.args))(N, annotations = Nil)
     ClsLikeDefn(None, clsSym, defSym, None, syntax.Cls, None, Nil,
       Some(State.globalThisSymbol.asThis.sel(ctx.builtins.Function)),
       callDef :: Nil, Nil, Nil, Assign.discard(
         Call(State.builtinOpsMap("super").asSimpleRef, Nil ne_:: Nil)(CallMetadata.defaultFun, N),
         End()), End(), None, None, None, methodKeys = Map.empty)(N, annotations = Nil)
-
-  private def getParamList(l: BlockMemberSymbol): Option[LoweredParamList] = funDefns.get(l) match
-    case Some(fd) => fd.params.headOption
-    case _ => l.tsym.flatMap(getParamList)
-
-  private def getParamList(ts: TermSymbol): Option[LoweredParamList] =
-    ts.irFunDefn.flatMap(_.params.headOption).orElse:
-      // FIXME: remove this fallback once imported functions have their `irFunDefn` properly linked.
-      ts.defn.collectFirst:
-        case TermDefinition(k = syntax.Fun, params = params @ (_ :: _)) =>
-          LoweredParamList.callingConvention(params.head)
   
-  private def isGetter(l: BlockMemberSymbol): Bool = funDefns.get(l) match
-    case Some(fd) => fd.params.isEmpty
-    case _ => l.tsym.exists(isGetter)
+  private def etaExpand(p: Path, sym: TermSymbol, params: LoweredParamList)(k: Path => Block): Block =
+    // Methods in a declared class may lack their own declare modifier; only an implementation promises
+    // the MLscript result convention. Generated functions supply that implementation through their IR definition.
+    val isMlsFun = sym.irFunDefn.isDefined || sym.defn.exists(d =>
+      d.hasDeclareModifier.isEmpty && (d.body.isDefined || sym.isInstanceOf[ClassCtorSymbol]))
+    val metadata = CallMetadata(isMlsFun, true, Nil)
+    def wrap(body: Ls[Arg] => Block): Block =
+      val clsDef = generateFCFunctionClass(params, body)
+      val tmp = TempSymbol(N, initErasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)), "function")
+      Scoped(Set(clsDef.sym, tmp), Define(clsDef,
+        Assign(tmp, Instantiate(false, clsDef.sym.asMemberRef(clsDef.isym), Nil :: Nil)(InstantiateMetadata.empty, p.toLoc),
+          k(tmp.asSimpleRef.withLocOf(p)))))
+    p match
+      case _: Value.MemberRef => wrap(args => Return(Call(p, args ne_:: Nil)(metadata, p.toLoc)))
+      case _ => withReceiver(p): (callee, receiver) =>
+        // Reading a method value binds both the current function and its receiver now, even if the receiver variable
+        // or a foreign method property changes before the closure is invoked.
+        save(callee, "method"): method =>
+          val thisArg = if sym.owner.isEmpty then undefined else receiver
+          wrap(args => Return(Call(method.selSN("call"), (thisArg.asArg :: args) ne_:: Nil)(metadata, p.toLoc)))
   
-  private def isGetter(ts: TermSymbol): Bool =
-    ts.irFunDefn.exists(_.params.isEmpty) ||
-      // FIXME: remove this fallback once imported functions have their `irFunDefn` properly linked.
-      ts.defn.exists:
-        case TermDefinition(k = syntax.Fun, params = Nil) => true
-        case _ => false
+  override def applyPath(p: Path)(k: Path => Block): Block =
+    super.applyPath(p): p2 =>
+      function(p2) match
+        case S((sym, params)) => etaExpand(p2, sym, params)(k)
+        case N => k(p2)
   
-  private def etaExpandPath(p: Path, params: LoweredParamList)(k: Path => Block): Block =
-    val clsDef = generateFCFunctionClass(p, params)
-    val tmp = new TempSymbol(None, initErasedType = S(ErasedType.ValueLike(rsc = S(false), clsDef.isym.asClsOrMod.get)))
-    val cls = clsDef.sym.asMemberRef(clsDef.isym)
-    Scoped(Set(clsDef.sym, tmp), Define(clsDef, Assign(tmp, Instantiate(false, cls, Nil :: Nil)(InstantiateMetadata.empty, p.toLoc), k(tmp.asSimpleRef.withLoc(p.toLoc)))))
-  
-  override def applyPath(p: Path)(k: Path => Block): Block = p match
-    case ref @ Value.MemberRef(l, disamb) => disamb match
-      case s: TermSymbol if s.k is syntax.Fun =>
-        if isGetter(l) then k(p)
-        else etaExpandPath(ref, getParamList(l).getOrElse(lastWords(s"Cannot get ${l.nme}'s parameter list.")))(k)
-      case _ => k(p)
-    case sel: Select => sel.symbol match
-      case Some(s: TermSymbol) if (s.k is syntax.Fun) => etaExpandMethod(sel, s)(k)
-      case Some(_) => k(p)
-      case _ =>
-        raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function." -> sel.toLoc :: Nil,
-          source = Diagnostic.Source.Compilation))
-        k(p)
-    // * A member selected through its runtime key, such as an `@jsSymbol` method, is a method
-    // * reference just like a resolved `Select`.
-    case DynSelect(_, _, DynSelectKind.Member(s)) if s.k is syntax.Fun => etaExpandMethod(p, s)(k)
-    case _ => k(p)
-  
-  private def etaExpandMethod(p: Path, s: TermSymbol)(k: Path => Block): Block =
-    if isGetter(s) then k(p)
-    else
-      val params = getParamList(s).getOrElse:
-        raise:
-          ErrorReport(msg"Cannot get ${s.nme}'s parameter list."
-            -> p.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation)
-        LoweredParamList.plain(Nil)(N)
-      etaExpandPath(p, params)(k)
-  
-  /** A resolved function member is called directly; any other term member holds a function object. */
-  private def resolvedCallee(fun: Path, s: TermSymbol): Path =
-    if s.k is syntax.Fun then fun else fun.selSN("call")
-
   override def applyResult(r: Result)(k: Result => Block): Block = r match
-    case c @ Call(fun, argss) => applyListOf(argss, (args, k2) => applyArgs(args)(k2)): argss2 =>
-      def call(f: Path) =
-        if (f is fun) && (argss is argss2)
-        then c
-        else Call(f, argss2.ne_!)(c.metadata, c.toLoc)
-      fun match
-        case ref @ Value.SimpleRef(sym) => sym match
-          case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))
-          case _ => k(call(fun))
-        case ref @ Value.MemberRef(_, _) => k(call(fun))
-        case sel: Select => sel.symbol match
-          case Some(s: TermSymbol) => k(call(resolvedCallee(fun, s)))
-          case _ =>
-            raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
-                source = Diagnostic.Source.Compilation))
-            k(call(fun))
-        case DynSelect(_, _, DynSelectKind.Member(s)) => k(call(resolvedCallee(fun, s)))
-        case s: DynSelect =>
-          raise(ErrorReport(msg"Cannot determine if the dynamic selection is a function object." -> s.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation))
-          k(call(fun))
-        case _ => k(call(fun))
+    case c @ Call(fun, argss) =>
+      // Transform the receiver and computed key without turning the callee itself into a function object.
+      super.applyPath(fun): fun2 =>
+        val direct = fun2 match
+          case Value.SimpleRef(_: BuiltinSymbol) => true
+          case _ => function(fun2).isDefined
+        if direct then applyArgss(argss): argss2 =>
+          k(if (fun2 is fun) && (argss2 is argss) then c else Call(fun2, argss2)(c.metadata, c.toLoc))
+        else withReceiver(fun2): (callee, receiver) =>
+          // Preserve callee lookup before transformations of argument values introduce their own bindings.
+          save(callee, "callee"): callee =>
+            applyArgss(argss): argss2 =>
+              k(Call(callee.selSN("call"), (receiver.asArg :: argss2.head) ne_:: argss2.tail)(c.metadata, c.toLoc))
     case _: Lambda => lastWords("Lambda functions should be rewritten into function definitions first.")
     case _ => super.applyResult(r)(k)
   
@@ -141,5 +133,4 @@ class FirstClassFunctionTransformer
   
   def transform(b: Block): Block =
     val desugared = new DesugarMultipleParamList().applyBlock(b)
-    new CollectFunDefns().applyBlock(desugared)
     applyBlock(desugared)

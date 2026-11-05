@@ -32,12 +32,10 @@ fun abstractFunction()
 //│ ║  l.+1: 	@inline
 //│ ╙──      	^^^^^^^
 
-// This error is emitted from lowered IR after the prefix has become a temporary.
+// A dynamic callee remains callable after lowering its prefix to a temporary.
 :ftc
-:ge
+:expect 1
 let index = 0
 [(x => x)].(index)(1)
-//│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.+2: 	[(x => x)].(index)(1)
-//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ = 1
 //│ index = 0

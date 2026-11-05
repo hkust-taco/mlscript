@@ -74,13 +74,13 @@ staged module M with
   fun g()() = 1
 //│ > fun ctor_() = ()
 //│ > fun f() =
-//│ >   let {tmp}
-//│ >   tmp = new Function_
-//│ >   tmp
+//│ >   let {function1}
+//│ >   function1 = new Function_
+//│ >   function1
 //│ > fun g() =
-//│ >   let {tmp1}
-//│ >   tmp1 = new Function_1
-//│ >   tmp1
+//│ >   let {function2}
+//│ >   function2 = new Function_1
+//│ >   function2
 
 // TODO: these need to be printed, somehow:
 :noModuleCheck
@@ -88,5 +88,5 @@ let x = M."f_instr"().body.rest.rhs.cls.l.value
 let y = M."g_instr"().body.rest.rhs.cls.l.value
 //│ x = class Function$
 //│ y = class Function$
-new x().call(2)
+new x().call(unsafe.undefined, 2)
 //│ = 2

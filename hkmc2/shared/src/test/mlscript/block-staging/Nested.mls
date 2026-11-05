@@ -82,7 +82,7 @@ staged module LiftedLambda with
 //│     set Function$⁰.this.x⁰ = x;
 //│     end
 //│   }
-//│   method call⁰ = fun call¹(y) {
+//│   method call⁰ = fun call¹(thisArg, y) {
 //│     return lambda⁰(Function$⁰.this.x⁰, y)
 //│   }
 //│ };
@@ -106,46 +106,46 @@ staged module LiftedLambda with
 //│     return tmp3
 //│   }
 //│   method foo⁰ = fun foo¹(x) {
-//│     let tmp;
-//│     set tmp = new Function$⁰(x);
-//│     return tmp
+//│     let function1;
+//│     set function1 = new Function$⁰(x);
+//│     return function1
 //│   }
 //│   method foo_instr⁰ = fun foo_instr¹() {
-//│     let x, tmp, sym, tmp1, sym1, var1, tmp2, tmp3, sym2, tmp4, tmp5, sym3, var2, tmp6, inst, sym4, tmp7, return1, assign, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
-//│     set sym = Block⁰.Symbol﹖("tmp");
-//│     set tmp1 = [sym];
+//│     let x, function1, sym, tmp, sym1, var1, tmp1, tmp2, sym2, tmp3, tmp4, sym3, var2, tmp5, inst, sym4, tmp6, return1, assign, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
+//│     set sym = Block⁰.Symbol﹖("function1");
+//│     set tmp = [sym];
 //│     set sym1 = Block⁰.Symbol﹖("x");
 //│     set var1 = Block⁰.ValueSimpleRef﹖(sym1);
-//│     set tmp2 = Block⁰.Arg﹖(var1);
-//│     set tmp3 = option⁰.None﹖;
+//│     set tmp1 = Block⁰.Arg﹖(var1);
+//│     set tmp2 = option⁰.None﹖;
 //│     set sym2 = Block⁰.Symbol﹖("x1");
-//│     set tmp4 = [sym2];
-//│     set tmp5 = [tmp4];
-//│     set sym3 = Block⁰.ConcreteClassSymbol﹖("Function$", Function$⁰, tmp3, tmp5);
+//│     set tmp3 = [sym2];
+//│     set tmp4 = [tmp3];
+//│     set sym3 = Block⁰.ConcreteClassSymbol﹖("Function$", Function$⁰, tmp2, tmp4);
 //│     set var2 = Block⁰.ValueMemberRef﹖(sym3);
-//│     set tmp6 = [tmp2];
-//│     set inst = Block⁰.Instantiate﹖(var2, tmp6);
-//│     set sym4 = Block⁰.Symbol﹖("tmp");
-//│     set tmp7 = Block⁰.ValueSimpleRef﹖(sym4);
-//│     set tmp = tmp7;
-//│     set return1 = Block⁰.Return﹖(tmp7);
+//│     set tmp5 = [tmp1];
+//│     set inst = Block⁰.Instantiate﹖(var2, tmp5);
+//│     set sym4 = Block⁰.Symbol﹖("function1");
+//│     set tmp6 = Block⁰.ValueSimpleRef﹖(sym4);
+//│     set function1 = tmp6;
+//│     set return1 = Block⁰.Return﹖(tmp6);
 //│     set assign = Block⁰.Assign﹖(sym4, inst, return1);
-//│     set tmp8 = Block⁰.Scoped﹖(tmp1, assign);
-//│     set tmp9 = Block⁰.Symbol﹖("x");
-//│     set tmp10 = Block⁰.Symbol﹖("foo");
-//│     set tmp11 = [tmp9];
-//│     set tmp12 = [tmp11];
-//│     set tmp13 = Block⁰.FunDefn﹖(tmp10, tmp12, tmp8, true);
-//│     return tmp13
+//│     set tmp7 = Block⁰.Scoped﹖(tmp, assign);
+//│     set tmp8 = Block⁰.Symbol﹖("x");
+//│     set tmp9 = Block⁰.Symbol﹖("foo");
+//│     set tmp10 = [tmp8];
+//│     set tmp11 = [tmp10];
+//│     set tmp12 = Block⁰.FunDefn﹖(tmp9, tmp11, tmp7, true);
+//│     return tmp12
 //│   }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > fun ctor_() = ()
 //│ > fun foo(x) =
-//│ >   let {tmp}
-//│ >   tmp = new Function_(x)
-//│ >   tmp
+//│ >   let {function1}
+//│ >   function1 = new Function_(x)
+//│ >   function1
 
 
 staged module LiftedMultParams with
@@ -165,7 +165,7 @@ staged module LiftedMultParams with
 //│     set Function$¹.this.x¹ = x;
 //│     end
 //│   }
-//│   method call² = fun call³(y) {
+//│   method call² = fun call³(thisArg, y) {
 //│     return lambda$⁰(Function$¹.this.x¹, y)
 //│   }
 //│ };
@@ -189,43 +189,43 @@ staged module LiftedMultParams with
 //│     return tmp3
 //│   }
 //│   method foo² = fun foo³(x) {
-//│     let tmp;
-//│     set tmp = new Function$¹(x);
-//│     return tmp
+//│     let function1;
+//│     set function1 = new Function$¹(x);
+//│     return function1
 //│   }
 //│   method foo_instr² = fun foo_instr³() {
-//│     let x, tmp, sym, tmp1, sym1, var1, tmp2, tmp3, sym2, tmp4, tmp5, sym3, var2, tmp6, inst, sym4, tmp7, return1, assign, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
-//│     set sym = Block⁰.Symbol﹖("tmp");
-//│     set tmp1 = [sym];
+//│     let x, function1, sym, tmp, sym1, var1, tmp1, tmp2, sym2, tmp3, tmp4, sym3, var2, tmp5, inst, sym4, tmp6, return1, assign, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
+//│     set sym = Block⁰.Symbol﹖("function1");
+//│     set tmp = [sym];
 //│     set sym1 = Block⁰.Symbol﹖("x");
 //│     set var1 = Block⁰.ValueSimpleRef﹖(sym1);
-//│     set tmp2 = Block⁰.Arg﹖(var1);
-//│     set tmp3 = option⁰.None﹖;
+//│     set tmp1 = Block⁰.Arg﹖(var1);
+//│     set tmp2 = option⁰.None﹖;
 //│     set sym2 = Block⁰.Symbol﹖("x1");
-//│     set tmp4 = [sym2];
-//│     set tmp5 = [tmp4];
-//│     set sym3 = Block⁰.ConcreteClassSymbol﹖("Function$", Function$¹, tmp3, tmp5);
+//│     set tmp3 = [sym2];
+//│     set tmp4 = [tmp3];
+//│     set sym3 = Block⁰.ConcreteClassSymbol﹖("Function$", Function$¹, tmp2, tmp4);
 //│     set var2 = Block⁰.ValueMemberRef﹖(sym3);
-//│     set tmp6 = [tmp2];
-//│     set inst = Block⁰.Instantiate﹖(var2, tmp6);
-//│     set sym4 = Block⁰.Symbol﹖("tmp");
-//│     set tmp7 = Block⁰.ValueSimpleRef﹖(sym4);
-//│     set tmp = tmp7;
-//│     set return1 = Block⁰.Return﹖(tmp7);
+//│     set tmp5 = [tmp1];
+//│     set inst = Block⁰.Instantiate﹖(var2, tmp5);
+//│     set sym4 = Block⁰.Symbol﹖("function1");
+//│     set tmp6 = Block⁰.ValueSimpleRef﹖(sym4);
+//│     set function1 = tmp6;
+//│     set return1 = Block⁰.Return﹖(tmp6);
 //│     set assign = Block⁰.Assign﹖(sym4, inst, return1);
-//│     set tmp8 = Block⁰.Scoped﹖(tmp1, assign);
-//│     set tmp9 = Block⁰.Symbol﹖("x");
-//│     set tmp10 = Block⁰.Symbol﹖("foo");
-//│     set tmp11 = [tmp9];
-//│     set tmp12 = [tmp11];
-//│     set tmp13 = Block⁰.FunDefn﹖(tmp10, tmp12, tmp8, true);
-//│     return tmp13
+//│     set tmp7 = Block⁰.Scoped﹖(tmp, assign);
+//│     set tmp8 = Block⁰.Symbol﹖("x");
+//│     set tmp9 = Block⁰.Symbol﹖("foo");
+//│     set tmp10 = [tmp8];
+//│     set tmp11 = [tmp10];
+//│     set tmp12 = Block⁰.FunDefn﹖(tmp9, tmp11, tmp7, true);
+//│     return tmp12
 //│   }
 //│ };
 //│ end
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ > fun ctor_() = ()
 //│ > fun foo(x) =
-//│ >   let {tmp}
-//│ >   tmp = new Function_(x)
-//│ >   tmp
+//│ >   let {function1}
+//│ >   function1 = new Function_(x)
+//│ >   function1
