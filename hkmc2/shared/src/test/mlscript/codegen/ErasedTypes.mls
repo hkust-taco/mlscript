@@ -1383,7 +1383,7 @@ fun capturingLoop(n: Int, acc: Str) =
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define capturingLoop⁰ as fun capturingLoop²(n: Int⁰, acc: Str⁰): ? {
+//│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): ? {
 //│   loop loopLabel:
 //│     let scrut: ?, tmp: Int⁰, tmp1: ?, acc1: Str⁰;
 //│     set acc1 = acc;

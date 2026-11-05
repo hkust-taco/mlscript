@@ -720,9 +720,9 @@ final case class FunDefn private(
     val configOverride: Opt[Config],
     val annotations: Ls[Annot],
 ) extends Defn:
-  // Keep this in the constructor so both `apply` and `copy` enforce it.
+  // A symbol generated in the IR without an erasure adopts the signature of its first definition. Passes can then
+  // give the definition another signature under the same symbol (see `TermSymbol.irErasure`).
   if !dSym.isErased then dSym.initializeErasure(S(signature.erasure))
-  else assert(dSym.erasure.exists(_ is signature.erasure), s"Conflicting signature for '${dSym.nme}'")
   def params: Ls[LoweredParamList] = signature.params
   def copy(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, dSym: TermSymbol,
       signature: FunDefn.Signature, body: Block)(configOverride: Opt[Config], annotations: Ls[Annot]): FunDefn =
@@ -843,8 +843,9 @@ private[codegen] object InlinerBodySummary:
     InlinerBodySummary(entries.toList, transitiveCallTargets)
 
 object FunDefn:
-  /** Parameter bindings and the immutable erasure shared with the definition symbol. Copies refresh
-    * their symbols and bindings; a change of parameter types, arity, or result also needs a new erasure.
+  /** Parameter bindings and the immutable erasure of a function definition, which `TermSymbol.irErasure` exposes for
+    * the definition's symbol. Copies refresh their symbols and bindings; a change of parameter types, arity, or result
+    * also needs a new erasure, but not a new symbol.
     */
   final case class Signature(
     params: Ls[LoweredParamList],
@@ -868,13 +869,12 @@ object FunDefn:
     /** Adopt the declaration header once, at the source-to-IR boundary. Legacy erasure may still
       * describe an async/generator body with a Direct result; subsequent rewrites retain that header.
       */
-    def fromLowering(params: Ls[LoweredParamList], sym: TermSymbol)(using Ctx, State): Signature =
-      val erasure = sym.erasure match
+    def fromLowering(params: Ls[LoweredParamList], sym: TermSymbol)(using Ctx, State, Erasure): Signature =
+      val erasure = sym.sourceErasure match
         case S(sig: ErasedCallableSignature) => sig
         case _ => lastWords(s"Missing callable signature for '${sym.nme}'")
       // Source cloning may reconstruct nominal types independently in the header and bindings.
-      // Compare their canonical representations once here; constructing or copying FunDefn only
-      // compares the shared erasure object, without traversing the parameters or their types.
+      // Compare their canonical representations once here, where the IR adopts the source signature.
       assert(matchesParams(erasure, params)((l, r) => (l is r) || l.canonicalize == r.canonicalize),
         s"Lowered parameters disagree with the signature of '${sym.nme}'")
       Signature(params, erasure)

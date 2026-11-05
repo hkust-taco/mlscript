@@ -114,7 +114,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
         // then reports any other base whose result the override does not fit.
         if config.language.useNewResolution && td.resultWrapperAnnotation.nonEmpty then N
         else overrides.validatedBases.getOrElse(td.tsym, Nil).iterator.filter(_.isErased)
-          .flatMap(_.declaredResultType).nextOption()
+          .flatMap(_.sourceDeclaredResultType).nextOption()
     val resultType = candidateResultType.map:
       representable(_, td.resultSignature.orElse(td.sign).flatMap(_.toLoc).orElse(td.tsym.toLoc))
     // The body produces the payload; callers receive the wrapper object instead.
