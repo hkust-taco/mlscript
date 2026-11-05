@@ -88,7 +88,7 @@ class TypeRelationTest extends AnyFunSuite:
       // Value-only observation must not filter the shared hosts: a namespace
       // constraint can subscribe to those same views after this observation.
       val hosts = (at :: bt :: Nil).iterator.flatMap: tpe =>
-        (false :: true :: Nil).iterator.flatMap(merge => h.state.state.typeViews.get((tpe.observation, merge)))
+        (false :: true :: Nil).iterator.flatMap(merge => h.state.state.typeViews.get((tpe, merge)))
       .toList
       assert(hosts.nonEmpty && hosts.forall(_.currentShapes.exists(_ is probe)))
       def counts = (a.inferenceHost.listeners.size, b.inferenceHost.listeners.size,
@@ -103,7 +103,7 @@ class TypeRelationTest extends AnyFunSuite:
       assert(counts == before)
       assert(seen.toList == concrete :: Nil)
 
-  test("namespace-bearing alias and Boolean forwarding saturate without growing either graph"):
+  test("namespace-bearing alias and Boolean forwarding saturate without growing the type or value graph"):
     for combination <- 0 to 3 do
       val h = new Harness
       import h.given
@@ -126,21 +126,21 @@ class TypeRelationTest extends AnyFunSuite:
         h.resolver.constrainTypes(ContextualType(current, Nil), ContextualType(current, Nil), N)
       (1 to 10).foreach(_ => step())
       val before = (h.state.state.typeReferences.size, h.state.allocatedShapeViewCount, host.currentShapes.size)
-      val observation = current.observation
+      val observation = current
       (1 to 1000).foreach: _ =>
         step()
-        assert(current.observation == observation)
+        assert(current == observation)
       assert((h.state.state.typeReferences.size, h.state.allocatedShapeViewCount, host.currentShapes.size) == before)
       assert(host.currentShapes.size <= 2)
 
-  test("permuting equal arguments retains two observations without growing projection views"):
+  test("permuting annotated arguments retains two type uses without growing projection views"):
     val h = new Harness
     import h.given
     val (argument, at) = h.parameter("A")
     val (_, target) = h.parameter("Target")
     val first = h.resolver.declaredType(h.forwarding("First", at).resolution, Map(argument -> target))
     val second = h.resolver.declaredType(h.forwarding("Second", at).resolution, Map(argument -> target))
-    assert(first == second && first.observation != second.observation)
+    assert(first != second)
     val (left, lt) = h.parameter("Left")
     val (right, rt) = h.parameter("Right")
     val wildcard = h.tpe(TypeShape.Wildcard(S(lt.resolution), S(rt.resolution)))
@@ -275,7 +275,7 @@ class TypeRelationTest extends AnyFunSuite:
       (1 to 1000).foreach: _ =>
         current = h.resolver.declaredType(wildcard.resolution, Map(formal -> current))
         assert(current.reference eq first.reference)
-        assert(current.observation == first.observation)
+        assert(current == first)
       val value = DynShape()
       h.resolver.publishParameter(target, value)
       if output then assert(observed.toList.map(ShapeIdentity.key(_)) == List(MarkedShape.enter(value, scope, site)).map(ShapeIdentity.key(_)))
@@ -305,7 +305,7 @@ class TypeRelationTest extends AnyFunSuite:
     (1 to 1000).foreach: _ =>
       current = h.resolver.declaredType(source.resolution, Map(a -> current))
       assert(current.reference eq expected.reference)
-      assert(current.observation == expected.observation)
+      assert(current == expected)
       h.resolver.listenInstanceViews(h.resolver.instanceShape(current))(_ => ())
     h.resolver.publishParameter(b, late)
     assert(seen.toSet.map(ShapeIdentity.key(_)) == Set(MarkedShape.enter(early, owner, path.id), late).map(ShapeIdentity.key(_)))
@@ -480,9 +480,9 @@ class TypeRelationTest extends AnyFunSuite:
       // Re-selecting an interpreted reference must not change its meaning or
       // allocate another node, even when the later use has opposite polarity.
       assert(h.resolver.selectArgument(argument, false).reference eq negative.reference)
-      assert(h.resolver.selectArgument(argument, false).observation == negative.observation)
+      assert(h.resolver.selectArgument(argument, false) == negative)
       assert(h.resolver.selectArgument(argument, true).reference eq positive.reference)
-      assert(h.resolver.selectArgument(argument, true).observation == positive.observation)
+      assert(h.resolver.selectArgument(argument, true) == positive)
       assert(h.resolver.selectArgument(negative, true) eq negative)
       assert(h.resolver.selectArgument(positive, false) eq positive)
       h.resolver.constrainTypes(lower, neg, N)
@@ -511,7 +511,7 @@ class TypeRelationTest extends AnyFunSuite:
     (1 to 1000).foreach: _ =>
       h.resolver.constrainTypes(reference, reference, N)
       assert(h.resolver.selectArgument(argument, true).reference eq selected.reference)
-      assert(h.resolver.selectArgument(argument, true).observation == selected.observation)
+      assert(h.resolver.selectArgument(argument, true) == selected)
     assert((resolution.inferenceHost.listeners.size, parameter.inferenceHost.listeners.size) == counts)
     assert(seen.toList == List(value))
     assert(h.state.allocatedTypeInstanceCount == 0)

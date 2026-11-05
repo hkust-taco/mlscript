@@ -298,37 +298,35 @@ values, including the values that reach their type parameters, and the classes o
 instances. Record patterns read the fields of their input with the member lookups of
 selections, at a site that the elaborator records.
 
-Semantic type identity and namespace observations are separate. Interned references and
-synthesized nodes contain only semantic children. Each `DeclaredType` use retains observed
-bindings and, for synthesized nodes, an interpretation with its own observed children.
-Thus `Box[FirstAlias[X] | Nothing]` and `Box[SecondAlias[X] | Nothing]` share an interface
-without exchanging the namespaces of their fields. Views and constraints use
-`DeclaredType.Observation`, which includes these children and namespace behavior but
-excludes diagnostic witnesses. Its equality compares shared children once, including
-across imports. Synthesized applications share a constructor template and supply their
-observed arguments through ordinary bindings.
+Interned type references include local alias annotations and the identities of their
+arguments. Ordinary types carry no namespace annotation and serve directly as view and
+constraint keys. There is no parallel observation graph. Thus `Box[FirstAlias[X]]` and
+`Box[SecondAlias[X]]` retain different argument references without attaching the argument's
+namespaces to `Box` itself. Projecting a field exposes that argument's annotated type.
+Diagnostic locations do not participate in interning. Per-use interpretations of synthesized
+nodes preserve diagnostic witnesses and operand order, and must have the same child types
+as the interned source.
 
-When expanding aliases, `namespacePlan` uses the same
-`reduceType` steps as other type interpreters to retain just their root lookup behavior.
-A `TypeNamespaces` plan is a set of independent fallback paths: each tries aliases in order
-before a class or a symbolic inference input. The first occurrence of an alias on a path
-is enough: for a fixed reference name and lexical scope, a second occurrence cannot change
-whether that alias provides an accessible member. Paths are therefore bounded by the
-number of declarations, and repeated identity forwarding reaches a fixed point. A nominal
-leaf keeps its class, not its argument history; a Boolean absorption that erases a nested
-`Array[A]` cannot retain an ever-growing tree of those erased arguments. Incomplete source
-graphs defer the whole application, preserving its pending arguments until completion.
+Expanding an alias with a companion or declaring namespace prepends its identity to a local
+`TypeNamespaces` priority list. The first occurrence of an alias is enough: for a fixed
+name and lexical scope, trying it again cannot discover a different provider. Repeated
+`Identity[Identity[A]]` forwarding therefore reaches the same annotated reference. Aliases
+with no namespaces add no metadata. Eager argument reduction remains necessary for the
+current recursive cache scheme, so suspended alias applications cannot accumulate in its
+substitution environments. The interner stores child references without diagnostic payloads
+and imports each shared reference once into the consuming unit.
 
-`typeNamespaces` evaluates these paths, selecting argument endpoints according to flow and
-following inference inputs only for provided values. Each class or alias contributes the
-first of its own namespaces (its companion, then its declaring module) that provides an
-accessible member (`firstProvider`), and otherwise those of its parent or body. Boolean
-components that survive normalization contribute independently. Discarded components
-contribute no namespaces: `Any | A` has the namespace behavior of `Any`, and
-`A | (A & B)` has that of `A`. When Boolean normalization merges equal semantic
-atoms, their corresponding child observations are joined; unrelated uses are never joined
-merely because they share an interned reference. Deferred namespace applications retain
-their arguments until their source resolves.
+`typeNamespaces` follows the type graph using the ordinary `reduceType` application rules.
+It first tries the type's local alias priorities, then its head constructor, body, or inferred
+values. Each class or alias contributes the first of its own namespaces (its companion,
+then its declaring module) that provides an accessible member (`firstProvider`). Required
+types constrain probes; provided type parameters additionally observe incoming values.
+
+Boolean components that survive normalization contribute independently. An annotation on
+a Boolean formula distributes its priorities over the surviving atoms when the formula is
+combined again. Distinct annotated atoms remain distinct; recursive normalization needs no
+separate merge of namespace observations. Discarded components contribute no namespaces:
+`Any | A` has the namespace behavior of `Any`, and `A | (A & B)` has that of `A`.
 `ImplicitNamespaces.consulted` decides each namespace once per reference: it is pending
 until defined, then missing the name, inaccessible, selected through a path from
 `AccessPath.valuePath` (whose paths carry the same `Capture`s as written references),
