@@ -1,3 +1,4 @@
+#lang(0.3.x)
 
 :global
 :wasm
@@ -38,8 +39,8 @@ Ops.count
 // The virtual slot includes a concrete Base reference in both its parameter and
 // result, so importing its metadata must relocate those type edges too.
 class Leaf(val ownLeaf: Int64) extends DerivedAlias(ownLeaf) with
-  fun add(x: Int64): Int64 = wasm.i64.add(ownLeaf, x)
-  fun choose(x: BaseAlias): BaseAlias = x
+  override fun add(x: Int64): Int64 = wasm.i64.add(ownLeaf, x)
+  override fun choose(x: BaseAlias): BaseAlias = x
 let leaf = new Leaf(wasm.i64.const(30))
 //│ Wasm result:
 //│ = {}

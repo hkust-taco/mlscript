@@ -1,4 +1,4 @@
-#lang(0.2.x)
+#lang(0.3.x)
 
 #config(target: CompilationTarget.Wasm)
 
@@ -7,6 +7,6 @@ import "./Base.mls"
 import "./Call.mls"
 
 class Child() extends Base() with
-  fun answer(x) = x * 2
+  override fun answer(x) = x * 2
 
 fun Virtual() = Call(new Child())

@@ -200,6 +200,25 @@ sealed abstract class Block extends Product:
         case _ => super.applyBlock(b)
     .applyBlock(this)
   
+  /** Receivers required from outside this block's class and module definitions.
+    * `This` references are not lexical variables and are absent from `freeVars`. */
+  def freeReceivers: Set[InnerSymbol] =
+    val referenced = collection.mutable.Set.empty[InnerSymbol]
+    val defined = collection.mutable.Set.empty[InnerSymbol]
+    new BlockTraverser:
+      applyBlock(Block.this)
+      override def applyValue(value: Value): Unit = value match
+        case Value.This(_: TopLevelSymbol) => ()
+        case Value.This(sym: InnerSymbol) => referenced += sym
+        case _ => super.applyValue(value)
+      override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
+        defined += defn.isym
+        super.applyClsLikeDefn(defn)
+      override def applyCompanionModule(body: ClsLikeBody): Unit =
+        defined += body.isym
+        super.applyCompanionModule(body)
+    referenced.toSet -- defined
+  
   lazy val freeVars: Set[FreeSymbol] = this match
     case Match(scrut, arms, dflt, rest) =>
       scrut.freeVars ++ dflt.iterator.flatMap(_.freeVars) ++ rest.freeVars

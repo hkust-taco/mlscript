@@ -1,3 +1,4 @@
+#lang(0.3.x)
 
 :global
 :wasm
@@ -55,10 +56,6 @@ import "../../mlscript-compile/Example.mls"
 module M with
   val value = 42
 fun Dynamic() = M
-//│ ╔══[COMPILATION ERROR] Unexpected moduleful reference of type M.
-//│ ║  l.+3: 	fun Dynamic() = M
-//│ ║        	                ^
-//│ ╙── Function must be marked as returning a 'module' in order to return a module.
 //│ ╔══[COMPILATION ERROR] First-class module values are not supported by the WASM backend
 //│ ║  l.+3: 	fun Dynamic() = M
 //│ ╙──      	                ^

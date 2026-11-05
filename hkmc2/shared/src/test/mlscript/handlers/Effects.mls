@@ -7,6 +7,7 @@ abstract class Effect with
   fun perform(arg: Str): Str
 
 
+:expect ()
 handle h = Effect with
   fun perform()(k) = "b"
 
@@ -92,7 +93,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(Handler$h$perform5, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0);
+//│         runtime.unwind(Handler$h$perform5, 1, "Effects.mls:64:13", null, null, 1, 2, arg, k, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
@@ -135,7 +136,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 4;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 4, "Effects.mls:68:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 4:
@@ -144,7 +145,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 3;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 3, "Effects.mls:69:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 3:
@@ -153,7 +154,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 2;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 2, "Effects.mls:70:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 2:
@@ -162,7 +163,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 1, "Effects.mls:71:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:

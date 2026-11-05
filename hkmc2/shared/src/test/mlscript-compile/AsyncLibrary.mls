@@ -14,6 +14,15 @@ module AsyncLibrary with
     @annotations.async
     fun result(value: Int): Int = value
 
+  mut val offset: Int = 1
+  module Nested with
+    val base = 40
+    class Reader(val extra: Int) with
+      @annotations.async
+      fun read(): Int =
+        handlers.await(Promise.resolve(()))
+        base + offset + extra
+
   // Consumers compile this body in their own unit, after the defining erasure pass.
   pattern Result = x =>
     @annotations.async fun answer(): Int = 42

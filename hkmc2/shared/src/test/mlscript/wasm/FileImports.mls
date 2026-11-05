@@ -1,3 +1,4 @@
+#lang(0.3.x)
 
 :global
 :wasm
@@ -46,7 +47,7 @@ Alias.unit()
 
 import "../../mlscript-compile/wasm/Box.mls" as BoxAlias
 class Child(x) extends BoxAlias(x) with
-  fun answer() = x + 1
+  override fun answer() = x + 1
 //│ Wasm result:
 //│ = {}
 

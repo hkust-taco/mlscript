@@ -1,3 +1,4 @@
+#lang(0.3.x)
 
 :global
 :wasm
@@ -12,8 +13,8 @@ import "../../mlscript-compile/wasm/modules/inheritance/Operations.mls"
 //│ = {}
 
 class Grandchild(val own) extends DerivedAlias(own + 1) with
-  fun answer(x) = own - x
-  fun extra(x) = own + x
+  override fun answer(x) = own - x
+  override fun extra(x) = own + x
 let child = new Grandchild(20)
 //│ Wasm result:
 //│ = {}

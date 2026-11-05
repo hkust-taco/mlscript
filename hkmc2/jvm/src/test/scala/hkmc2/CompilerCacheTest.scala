@@ -233,11 +233,11 @@ class CompilerCacheTest extends AnyFunSuite:
     try
       // These requests exercise cache/error state, not source-language diagnostic wording
       // (which is covered by the normal ModuleErrors diff test).
-      os.write(tempDir/"Nested.mls", "fun Nested() =\n  #config(target: Wasm)\n  42")
-      os.write(tempDir/"Dynamic.mls", "#config(target: Wasm)\nmodule M with\n  val value = 42\nfun Dynamic() = M")
+      os.write(tempDir/"Nested.mls", "#lang(0.3.x)\nfun Nested() =\n  #config(target: Wasm)\n  42")
+      os.write(tempDir/"Dynamic.mls", "#lang(0.3.x)\n#config(target: Wasm)\nmodule M with\n  val value = 42\nfun Dynamic() = M")
       val wasmSource = TestFolders.compileTestDir(os.pwd)/"wasm"/"modules"/"Answer.mls"
       val quoted = codegen.js.JSBuilder.makeStringLiteral(wasmSource.toString)
-      os.write(tempDir/"Mixed.mls", s"import $quoted\nfun Mixed() = Answer()")
+      os.write(tempDir/"Mixed.mls", s"#lang(0.3.x)\nimport $quoted\nfun Mixed() = Answer()")
       given CompilerCtx = TestFolders.compilerCtx(os.pwd)
       val diagnostics = collection.mutable.ArrayBuffer.empty[Diagnostic]
       val compiler = MLsCompiler(_ => diagnostic => { diagnostics += diagnostic; () })

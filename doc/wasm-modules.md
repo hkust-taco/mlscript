@@ -5,6 +5,7 @@ are accepted; a nested directive or an `@config` annotation cannot change target
 
 ```mls
 // Numbers.mls
+#lang(0.3.x)
 #config(target: CompilationTarget.Wasm)
 
 module Numbers with
@@ -14,6 +15,7 @@ module Numbers with
 
 ```mls
 // Main.mls
+#lang(0.3.x)
 #config(target: Wasm)
 
 import "./Numbers.mls" as N
@@ -143,20 +145,32 @@ correct cross-file inlining over minimal export sets. The raw `wasmExports` obje
 is an internal compiler ABI, not a stable source-level API. No persistent interface
 format or compatibility guarantee between compiler versions is implied.
 
-The shared runtime is generated as `RuntimeWasm.wat` and `RuntimeWasm.mjs` beside
-the configured runtime source. It owns intrinsic implementations, canonical Unit
-storage/RTTI, and the exception tag. Each file and worksheet instance receives its
-own literal memory and decoder closure. A later module cannot overwrite strings
-used by an earlier module.
+The shared WASM runtime is generated as `RuntimeWasm.wat` beside the configured
+runtime source. It owns intrinsic implementations, canonical Unit storage/RTTI,
+and the exception tag. The host library `RuntimeWasm.mjs` is compiled by the
+ordinary JavaScript backend from `RuntimeWasm.mls` in that directory. Its MLscript
+source handles Binaryen validation and disposal, runtime initialization, dependency
+loading, export wrappers, and worksheet sessions. Each file and worksheet instance
+receives its own literal memory and decoder closure. A later module cannot
+overwrite strings used by an earlier module.
 
-`RuntimeWasm.mjs` in that directory is reserved for runtime support; a source
+`RuntimeWasm.mjs` in that directory is reserved for the host library; a WASM source
 module that would overwrite it is rejected.
+
+Generated loaders contain ABI metadata and a small native ES-module bridge to
+`RuntimeWasm.loadModule`. The bridge supplies `import.meta.url`, dynamic `import()`,
+and boxed raw calls that preserve JavaScript `undefined` results and exception
+payloads across MLscript's foreign-call boundary. All loading and wrapping logic
+lives in MLscript.
 
 Loaders resolve sibling WAT and dependencies relative to `import.meta.url`, with
 URL escaping separate from JavaScript string escaping. Dependencies are awaited
 sequentially in source order: static sibling imports with top-level await would
 allow observable initialization to run concurrently. ES-module caching provides
-once-only initialization, including diamonds. Move the runtime, module outputs,
+once-only file initialization, including diamonds. The host library caches the
+runtime initialization promise by canonical WAT URL, including rejection, so
+concurrent files and worksheets share the same Unit and exception tag. Move the
+runtime sources' compiled JavaScript support, WAT, module outputs,
 and dependency tree together while retaining their relative locations, and keep
 the pinned Binaryen package resolvable from the runtime loader.
 
@@ -164,7 +178,9 @@ the pinned Binaryen package resolvable from the runtime loader.
 
 Backend results are memoized on the authoritative frontend artifact. A changed
 source dependency invalidates its importers through the existing cache. Runtime
-and ordinary emission have separate cache slots. The compiler version and session
+and ordinary WASM emission have separate cache slots; successful JavaScript
+emission is also cached on its source artifact. Changes to `RuntimeWasm.mls`
+invalidate its generated host library. The compiler version and session
 configuration are fixed for these in-process artifacts; there is no disk cache.
 
 Dependency requests happen before acquiring a backend artifact's lock. Concurrent

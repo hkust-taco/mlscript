@@ -396,9 +396,16 @@ object CompilerCache:
     // requested before entering this lock; failures throw without publishing a cache entry.
     private var wasmFile: Opt[codegen.wasm.text.CompiledWasmFile] = N
     private var wasmRuntime: Opt[codegen.wasm.text.CompiledWasmFile] = N
-    def materializeWasm(outputs: Ls[(io.Path, Str)])(using cctx: CompilerCtx): Unit = synchronized:
+    private var javaScript: Opt[Str] = N
+    def materialize(outputs: Ls[(io.Path, Str)])(using cctx: CompilerCtx): Unit = synchronized:
       outputs.foreach: (path, content) =>
         if !cctx.fs.exists(path) || cctx.fs.read(path) =/= content then cctx.fs.write(path, content)
+
+    /** Reuse successful JavaScript emission when many Wasm files request the same host library.
+      * An unsuccessful build returns None so its diagnostics are reported on the next request. */
+    def compiledJavaScript(build: => Opt[Str]): Opt[Str] = synchronized:
+      if javaScript.isEmpty then javaScript = build
+      javaScript
 
     def compiledWasm(runtime: Bool)(build: => codegen.wasm.text.CompiledWasmFile): codegen.wasm.text.CompiledWasmFile = synchronized:
       (if runtime then wasmRuntime else wasmFile) match
