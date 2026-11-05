@@ -3,17 +3,28 @@ package hkmc2
 import java.util.concurrent.{ConcurrentLinkedQueue, CountDownLatch, Executors, ThreadFactory, TimeUnit, TimeoutException}
 import java.util.concurrent.atomic.AtomicInteger
 import collection.concurrent.TrieMap
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.BeforeAndAfterAll
 
 import hkmc2.CompilerCache.{ActiveDependencyGraph, ArtifactCache}
 
 
-class CompilerCacheTest extends AnyFunSuite:
-  private given ExecutionContext = ExecutionContext.global
+class CompilerCacheTest extends AnyFunSuite with BeforeAndAfterAll:
+  // Global executor threads inherit the test class loader and keep its compiled-module caches
+  // reachable after SBT finishes this run. Terminating this suite's workers releases that loader.
+  private given executionContext: ExecutionContextExecutorService =
+    ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(2))
+
+  override protected def afterAll(): Unit =
+    try
+      executionContext.shutdownNow()
+      assert(executionContext.awaitTermination(completionTimeout.toMillis, TimeUnit.MILLISECONDS),
+        "Compiler cache test workers should terminate when their suite finishes")
+    finally super.afterAll()
 
   // Allow more time for both worker startup and completion on shared CI runners.
   private val (startupTimeout, completionTimeout) =
