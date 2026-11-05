@@ -10,11 +10,15 @@ import hkmc2.utils.*, shorthands.*
   * extends the exporter's tables.
   */
 class CanonicalTypeTest extends AnyFunSuite:
-  test("leaf observation comparisons keep scratch allocation bounded"):
+  private def allocationCounter: com.sun.management.ThreadMXBean =
     val allocation = java.lang.management.ManagementFactory.getThreadMXBean match
       case bean: com.sun.management.ThreadMXBean if bean.isThreadAllocatedMemorySupported => bean
       case _ => cancel("This JVM does not expose thread allocation counters")
     allocation.setThreadAllocatedMemoryEnabled(true)
+    allocation
+
+  test("leaf observation comparisons keep scratch allocation bounded"):
+    val allocation = allocationCounter
     given owner: Elaborator.State = new Elaborator.State
     given context: ResolutionContext = owner.newResolverState.context
     val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
@@ -43,6 +47,38 @@ class CanonicalTypeTest extends AnyFunSuite:
     // Allow small closures and collection iterators, without requiring JIT escape
     // analysis. Two default-sized traversal maps per leaf exceed this allowance.
     assert(bytes <= repetitions * 256L, s"Leaf comparisons allocated $bytes bytes")
+
+  test("shared observation comparisons keep allocation proportional to distinct pairs"):
+    val allocation = allocationCounter
+    given owner: Elaborator.State = new Elaborator.State
+    given context: ResolutionContext = owner.newResolverState.context
+    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val a = new VarSymbol(syntax.Tree.Ident("A"), mut = false)
+    val b = new VarSymbol(syntax.Tree.Ident("B"), mut = false)
+    def tree(depth: Int): DeclaredType.Observation =
+      val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
+      (1 to depth).foldLeft(leaf): (child, _) =>
+        DeclaredType(resolution, Map(a -> child, b -> child), TypeSubstitution.empty, true)(N)
+      .observation
+    for depth <- 16 :: 64 :: Nil do
+      val left = tree(depth)
+      val right = tree(depth)
+      val repetitions = 100
+      def compare(): Int =
+        var equal = 0
+        var index = 0
+        while index < repetitions do
+          if left == right then equal += 1
+          index += 1
+        equal
+      assert(compare() == repetitions)
+      val before = allocation.getCurrentThreadAllocatedBytes
+      val equal = compare()
+      val bytes = allocation.getCurrentThreadAllocatedBytes - before
+      assert(equal == repetitions)
+      // A pair needs a small memo entry and traversal bookkeeping. Allow a generous
+      // fixed cost per node, while rejecting a default-sized hash table for every pair.
+      assert(bytes <= repetitions * (depth + 1) * 512L, s"Depth $depth comparisons allocated $bytes bytes")
 
   test("independent constructions share a bounded canonical type DAG"):
     given owner: Elaborator.State = new Elaborator.State

@@ -344,7 +344,9 @@ object DeclaredType:
       case that: Observation =>
         // Observations are DAGs too: two bindings to the same child must not double
         // equality work at every layer, including when the child was imported.
-        lazy val compared = new java.util.IdentityHashMap[Observation, java.util.IdentityHashMap[Observation, java.lang.Boolean]]
+        // Most comparisons visit few children, and each left observation usually has one
+        // counterpart. Namespace alternatives can add pairs, so both tables may grow.
+        lazy val compared = new java.util.IdentityHashMap[Observation, java.util.IdentityHashMap[Observation, java.lang.Boolean]](1)
         def sameMap[K](a: Map[K, Observation], b: Map[K, Observation]): Bool =
           a.size == b.size && a.forall((key, child) => b.get(key).exists(loop(child, _)))
         def samePath(a: TypeNamespaces.Path, b: TypeNamespaces.Path): Bool =
@@ -359,7 +361,7 @@ object DeclaredType:
           else
             var partners = compared.get(a)
             if partners == null then
-              partners = new java.util.IdentityHashMap
+              partners = new java.util.IdentityHashMap(1)
               compared.put(a, partners)
             val known = partners.get(b)
             if known != null then known.booleanValue else
