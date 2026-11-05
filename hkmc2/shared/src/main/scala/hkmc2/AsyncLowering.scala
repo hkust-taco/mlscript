@@ -2,7 +2,6 @@ package hkmc2
 package codegen
 
 import scala.annotation.tailrec
-import scala.collection.mutable
 import scala.util.boundary
 import sourcecode.{ Line, FileName, Name }
 
@@ -20,10 +19,7 @@ import hkmc2.Config.EffectHandlers
 
 class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
   
-  private type Wrapper = (symbol: TermSymbol, signature: FunDefn.Signature)
-  
-  private class Rewriter(wrappers: collection.Map[TermSymbol, Wrapper]) extends BlockTransformer(new SymbolSubst:
-    override def mapTermSym(sym: TermSymbol): TermSymbol = wrappers.get(sym).fold(sym)(_.symbol)):
+  private class Rewriter extends BlockTransformer(SymbolSubst.Id):
     var inAsyncFun: Bool = false
     
     inline def wrapAwait[T](innerAllowAwait: Bool)(inline thunk: => T): T =
@@ -50,14 +46,17 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
       // whose state machine restores the suspended locals.
       val body = FunDefn(N, bodySym, bodyDsym, bodySignature,
         wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))(fun.configOverride, bodyAnnotations)
-      val wrapper = wrappers(fun.dSym)
+      // Keep the wrapper's definition symbol so imported and recursive calls see
+      // its current IR signature. The source erasure retains the async body result.
+      val wrapperSignature = FunDefn.Signature.fromParams(fun.params,
+        ErasedResult.fromAnnotations(fun.signature.erasure.ret, noAsync))
       val wrapped = Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"),
         (body.asPath.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
       // The dynamic runtime helper has no result annotation. Reestablish the wrapper's
       // return representation here so it survives both ordinary returns and inlining.
       val wrapperBody = Scoped(Set.single(bodySym), Define(body,
-        Return(wrapped.coerceTo(wrapper.signature.result.bodyType.getOrElse(ErasedType.Unknown), fun.dSym.toLoc))))
-      FunDefn(fun.owner, fun.sym, wrapper.symbol, wrapper.signature, wrapperBody)(fun.configOverride, noAsync)
+        Return(wrapped.coerceTo(wrapperSignature.result.bodyType.getOrElse(ErasedType.Unknown), fun.dSym.toLoc))))
+      FunDefn(fun.owner, fun.sym, fun.dSym, wrapperSignature, wrapperBody)(fun.configOverride, noAsync)
     
     override def applyPath(p: Path)(k: Path => Block): Block =
       p match
@@ -71,19 +70,4 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
         case _ =>
           super.applyPath(p)(k)
   
-  def transform(prog: Program): Program =
-    // The source symbol's Async result remains available to imported or cloned source
-    // bodies. The lowered wrapper returns Promise directly and needs a fresh symbol.
-    // Allocate every replacement first so forward and recursive calls see the same one.
-    val wrappers = mutable.Map.empty[TermSymbol, Wrapper]
-    new BlockTraverser:
-      applyProgram(prog)
-      override def applyFunDefn(fun: FunDefn): Unit =
-        if fun.async then
-          val result = ErasedResult.fromAnnotations(fun.signature.erasure.ret,
-            fun.annotations.filterNot(_.isInstanceOf[Annot.Async]))
-          val signature = FunDefn.Signature.fromParams(fun.params, result)
-          assert(!wrappers.contains(fun.dSym), "An async symbol must have only one definition")
-          wrappers(fun.dSym) = (SymbolRefresher.copyTermSymbol(fun.dSym, fun.owner, S(signature.erasure)), signature)
-        super.applyFunDefn(fun)
-    new Rewriter(wrappers).applyProgram(prog)
+  def transform(prog: Program): Program = new Rewriter().applyProgram(prog)
