@@ -30,7 +30,22 @@ final case class AbiClass(
     virtualTable: Ctx.VirtualTable,
     singleton: Opt[(GlobalIdx, RefType)],
 )
-final case class AbiNamespace(sym: BlockMemberSymbol, owner: InnerSymbol, members: Map[Str, BlockMemberSymbol], storage: Map[TermSymbol, ScopedSymbol])
+/** A standalone module, whose members are static.
+  *
+  * @param sym
+  *   The module's binding, which a default export names.
+  * @param members
+  *   The bindings of the public fields and of the methods by source name, which the module's JavaScript facade exports.
+  *   A method's binding identifies its function.
+  * @param storage
+  *   The global that holds each field: a public field's binding, or a backend slot for a private field.
+  */
+final case class AbiNamespace(
+    sym: BlockMemberSymbol,
+    module: ModuleOrObjectSymbol,
+    members: Map[Str, BlockMemberSymbol],
+    storage: Map[TermSymbol, ScopedSymbol],
+)
 final case class FileInterface(
     types: Vector[AbiType],
     typeGroups: Vector[Vector[TypeIdx]],

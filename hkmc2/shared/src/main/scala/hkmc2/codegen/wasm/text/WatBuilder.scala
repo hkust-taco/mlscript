@@ -311,9 +311,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
   private var fileCompilation: Opt[FileCompilation] = N
   private var emittedInterface: Opt[FileInterface] = N
   private val fileSingletonActions = LinkedHashMap.empty[ModuleOrObjectSymbol, Expr]
-  private val namespaces = LinkedHashMap.empty[ValueSymbol, AbiNamespace]
-  private val localNamespaces = scala.collection.mutable.Set.empty[ValueSymbol]
-  private val staticBindings = LinkedHashMap.empty[Symbol, ScopedSymbol]
+  private val namespaces = LinkedHashMap.empty[ModuleOrObjectSymbol, AbiNamespace]
+  private val localNamespaces = scala.collection.mutable.Set.empty[ModuleOrObjectSymbol]
+  private val staticBindings = LinkedHashMap.empty[TermSymbol, ScopedSymbol]
 
   def fileModule(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path, linking: FileCompilation)
         (using Raise): CompiledWasmFile =
@@ -332,35 +332,53 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
     val module = program(p, N, wd, Nil, preserved)
     CompiledWasmFile(module, emittedInterface.get)
 
+  /** The module namespace that `path` denotes, if any. */
   private def namespace(path: Path): Opt[AbiNamespace] = path match
-    case Value.MemberRef(sym, _) => namespaces.get(sym)
-    case Value.SimpleRef(sym) => namespaces.get(sym)
-    case Value.This(sym) => namespaces.get(sym)
+    case Value.MemberRef(disamb = mod: ModuleOrObjectSymbol) => namespaces.get(mod)
+    case Value.This(mod: ModuleOrObjectSymbol) => namespaces.get(mod)
     case _ => N
 
+  /** The global or function that holds the static module member selected by `sel`, if any. */
   private def staticSelection(sel: Select): Opt[ScopedSymbol] =
-    sel match
-      case Select(qual, name) => namespace(qual).flatMap: ns =>
-        sel.symbol.flatMap(staticBindings.get).orElse(ns.members.get(name.name))
+    namespace(sel.qual).flatMap(ns => sel.symbol.flatMap(staticMember(ns, _)))
+
+  /** The global or function that holds `member` of the module namespace `ns`, if it is one.
+    *
+    * A field is identified by its term symbol. A method is a function identified by its binding: optimizations such as
+    * tail-call elimination can give a method's definition a new term symbol, which only the IR of the method's own file
+    * refers to, whereas other files select the method by its original term symbol, which has the same binding.
+    */
+  private def staticMember(ns: AbiNamespace, member: Symbol): Opt[ScopedSymbol] = member match
+    case method: TermSymbol if method.k is syntax.Fun =>
+      method.bms.filter(bms => ns.members.valuesIterator.exists(_ is bms))
+    case field: TermSymbol => ns.storage.get(field)
+    case _ => N
 
   private def registerNamespace(ns: AbiNamespace): Unit =
-    namespaces(ns.sym) = ns
-    namespaces(ns.owner) = ns
-    ns.members.values.foreach(sym => staticBindings(sym) = sym)
+    namespaces(ns.module) = ns
     staticBindings ++= ns.storage
+
+  /** Whether `body` belongs to a standalone module, which the backend compiles as a static namespace.
+    *
+    * Lowering represents a standalone module by a class without members whose companion holds the module's body, the
+    * same shape as a class with a companion module. Only the module's definition records whether a source class is its
+    * companion; when none is, Lowering creates the class (see `Lowering`). The backend does not support classes with
+    * companion modules, and compiling one as a namespace would drop the class.
+    */
+  private def isStandaloneModule(body: ClsLikeBody): Bool =
+    body.isym.defn.exists(mod => (mod.kind is syntax.Mod) && mod.classCompanion.isEmpty)
 
   private def predeclareFileMembers(b: Block)(using Ctx, Raise, SessionExportCtx): Unit =
     new BlockTraverserShallow:
       override def applyDefn(d: Defn): Unit = d match
-        case cls: ClsLikeDefn if cls.sym.asMod.nonEmpty && cls.companion.nonEmpty =>
-          val body = cls.companion.get
+        case cls @ ClsLikeDefn(companion = S(body)) if isStandaloneModule(body) =>
           val members = body.publicFields.map((bms, ts) => ts.nme -> bms) ++ body.methods.map(m => m.sym.nme -> m.sym)
           // Private fields have no scoped binding in typed IR. Allocate backend-owned slots
           // carrying their erased types; public fields retain their originating block members.
           val storage = body.publicFields.map((bms, ts) => ts -> (bms: ScopedSymbol)) ++
             body.privateFields.map(ts => ts -> (TempSymbol(N, ts.erasedType, ts.nme): ScopedSymbol))
           registerNamespace(AbiNamespace(cls.sym, body.isym, members.toMap, storage.toMap))
-          localNamespaces += cls.sym
+          localNamespaces += body.isym
           applyBlock(body.ctor)
         case _ => ()
     .applyBlock(b)
@@ -564,8 +582,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
   /** Static module members have no enclosing instance to capture, so their classes
     * use the same representation as top-level classes. Instance-owned classes do not. */
-  private def hasStaticOwner(defn: ClsLikeDefn): Bool =
-    defn.owner.forall(namespaces.contains)
+  private def hasStaticOwner(defn: ClsLikeDefn): Bool = defn.owner.forall:
+    case mod: ModuleOrObjectSymbol => namespaces.contains(mod)
+    case _ => false
 
   /** True if this statically owned class can be declared as a Wasm struct type. */
   private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
@@ -704,9 +723,9 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         case TryBlock(_, _, rst) => applySubBlock(rst)
         case _ => super.applyBlock(b)
       override def applyDefn(defn: Defn): Unit = defn match
-        case cls: ClsLikeDefn if localNamespaces(cls.sym) && cls.companion.nonEmpty =>
-          funAcc ++= cls.companion.get.methods
-          applyBlock(cls.companion.get.ctor)
+        case ClsLikeDefn(companion = S(body)) if localNamespaces(body.isym) =>
+          funAcc ++= body.methods
+          applyBlock(body.ctor)
         case clsLikeDefn: ClsLikeDefn =>
           clsLikeDefn.optionIf(isSupportedTopLevelClass).foreach(clsAcc += _)
         case funDefn: FunDefn =>
@@ -2227,8 +2246,12 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
             Ls(msg"Class path for an Instantiate(...) expression must be resolved" -> cls.toLoc),
             extraInfo = S(s"Block IR of `cls` expression: ${cls.toString}"),
           )
-      val ctorFuncIdx = ctx.getFunc(ctorClsSym).getOrElse:
-        lastWords(s"Missing constructor definition for class ${ctorClsSym.toString}")
+      // A class has a constructor only when the backend compiled its definition. The definition of an
+      // unsupported class reports why it was not compiled; builtin classes have no definition here.
+      val ctorFuncIdx = ctx.getFunc(ctorClsSym) match
+        case S(idx) => idx
+        case N => return errExpr(Ls(
+          msg"Instantiating class `${ctorClsSym.nme}` is not supported by the WebAssembly backend" -> r.toLoc))
       val ctorTypeIdx = ctx.getTypeInfo(ctx.getFuncTypeUse_!(ctorFuncIdx).typeIdx).getOrElse:
         lastWords(s"Missing type definition for class constructor ${ctorClsSym.toString}")
       val ctorClsTypeIdx = ctx.getType(ctorClsSym).getOrElse:
@@ -2363,7 +2386,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         assignExpr +: rstBlk
 
       case assign @ AssignField(lhs, nme, rhs, rst) if namespace(lhs).nonEmpty =>
-        val storage = assign.symbol.flatMap(staticBindings.get).orElse(namespace(lhs).flatMap(_.members.get(nme.name)))
+        val storage = namespace(lhs).flatMap(ns => assign.symbol.flatMap(staticMember(ns, _)))
         val expr = storage match
           case S(sym) => setVar(sym, rhs, rhs.toLoc)
           case N => errExpr(Ls(msg"Unknown WASM module field '${nme.name}'" -> nme.toLoc))
@@ -2454,8 +2477,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
                 val rstWat = returningTerm(rst)
                 assignInstr +: rstWat
 
-          case cls: ClsLikeDefn if namespaces.contains(cls.sym) && cls.companion.nonEmpty =>
-            val body = cls.companion.get
+          case ClsLikeDefn(companion = S(body)) if localNamespaces(body.isym) =>
             body.methods.foreach: fd =>
               val ps = fd.params.headOption.getOrElse(LoweredParamList.plain(Nil)(fd.sym.toLoc))
               val declared = ctx.getFuncInfo_!(fd.sym)
@@ -3011,7 +3033,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
 
     def compiledModule(entryName: Str): CompiledWasmModule =
       if fileCompilation.nonEmpty then
-        emittedInterface = S(ctx.fileInterface(fileClasses, namespaces.values.toVector.distinct.filter(ns => localNamespaces(ns.sym)), exprt))
+        emittedInterface = S(ctx.fileInterface(fileClasses, namespaces.valuesIterator.filter(ns => localNamespaces(ns.module)).toVector, exprt))
       // Legacy session records contain TypeInfo objects tied to this Ctx. The relocated
       // interface replaces them for files and worksheets; do not retain both in the cache.
       val sessionExports = if fileCompilation.isEmpty then sessionExportCtx.collectedBindings.toVector else Vector.empty
@@ -3091,7 +3113,7 @@ class WatBuilder(private val ctx: Ctx)(using TraceLogger, State) extends CodeBui
         // Slot types may mention classes from this module. Resolve them only after all
         // class identities and layouts are available, just like function signatures.
         collectSessionGlobalSymbols(p.main, sessionExportCtx).toVector.sortBy(_.uid).foreach(registerSessionGlobal)
-        namespaces.valuesIterator.filter(ns => localNamespaces(ns.sym)).toVector.distinct.foreach: ns =>
+        namespaces.valuesIterator.filter(ns => localNamespaces(ns.module)).foreach: ns =>
           ns.storage.values.foreach(registerSessionGlobal)
 
       // Compile the entry function under a dedicated local scope so that any temp locals introduced

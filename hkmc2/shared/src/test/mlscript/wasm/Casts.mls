@@ -182,7 +182,9 @@ fun test: Function = id
 
 :fixme
 fun test: Function = new Object()
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing constructor definition for class class:Object
+//│ ╔══[COMPILATION ERROR] Instantiating class `Object` is not supported by the WebAssembly backend
+//│ ║  l.+1: 	fun test: Function = new Object()
+//│ ╙──      	                     ^^^^^^^^^^^^
 
 class C
 //│ Wasm result:
