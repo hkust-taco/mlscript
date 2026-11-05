@@ -48,6 +48,40 @@ class CanonicalTypeTest extends AnyFunSuite:
     // The fixed allowance covers counter/JIT bookkeeping, not per-comparison data.
     assert(bytes <= 4096L, s"Leaf comparisons allocated $bytes bytes")
 
+  // Changing an enclosing type must not copy its unchanged binding map. Exercise
+  // both local and imported references: worksheets cannot measure this allocation
+  // or detect accidental writes to an exporter's interning tables.
+  test("reference updates allocate independently of the number of bound arguments"):
+    val allocation = allocationCounter
+    given owner: Elaborator.State = new Elaborator.State
+    val source = owner.newResolverState.context
+    val consumer = new Elaborator.State().newResolverState.context
+    val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val alias = TypeAliasSymbol(syntax.Tree.Ident("Alias"))
+    val annotation = TypeNamespaces.single(alias, NamespaceWitness.Written(Term.UnitVal()))
+    val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)(using source)
+    for size <- 8 :: 128 :: Nil do
+      val bindings = (1 to size).iterator.map: index =>
+        VarSymbol(syntax.Tree.Ident(s"T$index"), mut = false) -> leaf
+      .toMap
+      val tpe = DeclaredType(resolution, bindings, TypeSubstitution.empty, true)(N)(using source)
+      def update()(using ResolutionContext): DeclaredType =
+        tpe.withPolarity(false).withNamespaces(annotation).withoutNamespaces.withPolarity(true)
+      for context <- source :: consumer :: Nil do
+        assert(update()(using context) == tpe)
+        val sourceSize = source.state.typeReferences.size
+        val repetitions = 100
+        val before = allocation.getCurrentThreadAllocatedBytes
+        var result = tpe
+        var index = 0
+        while index < repetitions do
+          result = update()(using context)
+          index += 1
+        val bytes = allocation.getCurrentThreadAllocatedBytes - before
+        assert(result == tpe)
+        assert(bytes <= repetitions * 1024L, s"Updating $size bindings allocated $bytes bytes")
+        assert(source.state.typeReferences.size == sourceSize)
+
   test("canonical DAG comparisons allocate independently of graph depth"):
     val allocation = allocationCounter
     given owner: Elaborator.State = new Elaborator.State

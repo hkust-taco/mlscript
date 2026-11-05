@@ -311,7 +311,11 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
 
   private def rebuilt(bindings: Map[VarSymbol, DeclaredType], instances: TypeSubstitution, positive: Bool,
       plans: Opt[TypeNamespaces])(using ResolutionContext): DeclaredType =
-    new DeclaredType(rctx.state.typeReferences(resolution, bindings, instances, positive, plans.fold(Nil)(_.aliases)), bindings)(origin, plans, interpretation)
+    val references = rctx.state.typeReferences
+    val aliases = plans.fold(Nil)(_.aliases)
+    val updated = if bindings is this.bindings then references.updated(reference, instances, positive, aliases)
+      else references(resolution, bindings, instances, positive, aliases)
+    new DeclaredType(updated, bindings)(origin, plans, interpretation)
 
   /** Instantiation changes references to source binders, never expands their bounds.
     * A reference already interpreted in another call retains that interpretation.
@@ -374,21 +378,28 @@ object DeclaredType:
         val known = imported.get(reference)
         if known != null then known
         else
-          val result = intern(reference.resolution, reference.bindings.values.view.mapValues(local).toMap,
+          val children = reference.bindings.values.iterator.map((symbol, child) => symbol -> local(child)).toMap
+          val result = intern(reference.resolution, internBindings(children),
             reference.instances, reference.positive, reference.namespaces)
           imported.put(reference, result)
           result
     def apply(resolution: TypeResolution, values: Map[VarSymbol, DeclaredType], instances: TypeSubstitution,
         positive: Bool, namespaces: Ls[TypeAliasSymbol]): Reference =
-      val children = if values.isEmpty then Map.empty else values.view.mapValues(tpe => local(tpe.reference)).toMap
-      intern(resolution, children, instances, positive, namespaces)
-    private def intern(resolution: TypeResolution, values: Map[VarSymbol, Reference], instances: TypeSubstitution,
-        positive: Bool, namespaces: Ls[TypeAliasSymbol]): Reference =
-      val canonical = if values.isEmpty then emptyBindings else
+      val children = if values.isEmpty then Map.empty else values.iterator.map((symbol, tpe) => symbol -> local(tpe.reference)).toMap
+      intern(resolution, internBindings(children), instances, positive, namespaces)
+    /** Polarity, instances, and local namespaces do not change bound children.
+      * Reuse their canonical map, importing it once if the source is foreign.
+      */
+    def updated(reference: Reference, instances: TypeSubstitution, positive: Bool, namespaces: Ls[TypeAliasSymbol]): Reference =
+      intern(reference.resolution, local(reference).bindings, instances, positive, namespaces)
+    private def internBindings(values: Map[VarSymbol, Reference]): Bindings =
+      if values.isEmpty then emptyBindings else
         val binding = new Bindings(values)
         bindings.getOrElseUpdate(binding, binding)
+    private def intern(resolution: TypeResolution, bindings: Bindings, instances: TypeSubstitution,
+        positive: Bool, namespaces: Ls[TypeAliasSymbol]): Reference =
       val environment = if instances.isEmpty then TypeSubstitution.empty else substitutions.getOrElseUpdate(instances, instances)
-      val reference = new Reference(resolution, canonical, environment, positive, namespaces, this)
+      val reference = new Reference(resolution, bindings, environment, positive, namespaces, this)
       references.getOrElseUpdate(reference, reference)
 
   def apply(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType],
