@@ -34,7 +34,8 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
       passHook(passName, before, result)
     
     runPass("LambdaRewriter")(LambdaRewriter.desugar)
-    // deforestation only supports lifted programs
+    // Deforestation requires lifted definitions. Handler lowering also needs
+    // nested definitions lifted before computing saved locals and resumption calls.
     runPass("Lifter"): prog =>
       if config.liftDefns.isDefined || config.deforest.isDefined then
         if config.deforest.isDefined && config.liftDefns.isEmpty then
@@ -55,6 +56,8 @@ class CompilationPipeline(using Config, Raise, State, Ctx, SymbolPrinter):
               symbolsToPreserve.collect{case s: semantics.LocalVarSymbol => s})
     runPass("HandlerLowering"): prog =>
       HandlerLowering(new HandlerPaths, config.effectHandlers).translateProgram(prog)
+    // Create wrapper-local async thunks after handler lowering has recorded the
+    // source function's argument lists and receiver for resumption.
     runPass("AsyncLowering")(AsyncLowering().transform)
     runPass("Flattening")(blockPass(_.flattened))
     runPass("BufferableTransform")(BufferableTransform().transform)

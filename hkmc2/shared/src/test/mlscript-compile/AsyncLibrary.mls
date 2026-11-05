@@ -23,6 +23,17 @@ module AsyncLibrary with
         handlers.await(Promise.resolve(()))
         base + offset + extra
 
+  @annotations.async
+  fun nested(start: Int): Int =
+    let value = start
+    @annotations.async
+    fun next(): Int =
+      handlers.await(Promise.resolve(()))
+      set value += 1
+      value
+    handlers.await(next())
+    handlers.await(next())
+
   // Consumers compile this body in their own unit, after the defining erasure pass.
   pattern Result = x =>
     @annotations.async fun answer(): Int = 42

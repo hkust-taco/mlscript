@@ -16,7 +16,6 @@ import semantics.*
 import semantics.Elaborator.ctx
 import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
-import scala.collection.mutable.ArrayBuffer
 
 
 class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
@@ -25,7 +24,6 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
   
   private class Rewriter(wrappers: collection.Map[TermSymbol, Wrapper]) extends BlockTransformer(new SymbolSubst:
     override def mapTermSym(sym: TermSymbol): TermSymbol = wrappers.get(sym).fold(sym)(_.symbol)):
-    val collectedFunDefn: ArrayBuffer[FunDefn] = new ArrayBuffer
     var inAsyncFun: Bool = false
     
     inline def wrapAwait[T](innerAllowAwait: Bool)(inline thunk: => T): T =
@@ -37,53 +35,29 @@ class AsyncLowering(using TL, Raise, Elaborator.State, Elaborator.Ctx, Config):
     
     override def applyFunDefn(fun: FunDefn): FunDefn =
       if !fun.async then return wrapAwait(false)(super.applyFunDefn(fun))
-      val outerBms = BlockMemberSymbol(fun.sym.nme, Nil, fun.sym.nameIsMeaningful)
-      val outerParams = fun.params.flatMap: pl =>
-        pl.allParams.map: p =>
-          val v = p.sym
-          val nv = VarSymbol(v.id, erasedType = v.erasedType, mut = v.mut)
-          (p, p.copy(sym = nv)(p.toLoc))
-      val symMap = outerParams.iterator.map(p => p._1.sym -> p._2.sym).toMap
-      // Extraction moves the helper outside every enclosing class and module, not
-      // just the method's immediate owner. Pass all free receivers explicitly so
-      // nested async methods retain access to enclosing module state after await.
-      val receivers = fun.owner.toList ::: (fun.body.freeReceivers -- fun.owner).toList.sortBy(_.uid)
-      val receiverVars = receivers.map: sym =>
-        sym -> VarSymbol(Tree.Ident(if fun.owner.contains(sym) then "this" else "receiver"),
-          erasedType = sym.asThis.erasedType, mut = false)
-      val receiverMap = receiverVars.toMap
-      val outerDsym = TermSymbol(syntax.Fun, N, fun.dSym.id)
+      val bodySym = BlockMemberSymbol(fun.sym.nme + "$async", Nil, fun.sym.nameIsMeaningful)
+      val bodyDsym = TermSymbol(syntax.Fun, N, fun.dSym.id)
       val noAsync = fun.annotations.filterNot(_.isInstanceOf[Annot.Async])
-      val outerSignature = FunDefn.Signature.fromParams(
-        LoweredParamList.plain((receiverVars.iterator.map((_, sym) => Param.simple(sym)) ++ outerParams.iterator.map(_._2)).toList)(N) ::
-          LoweredParamList.plain(Nil)(N) :: Nil,
+      // Only the wrapper has the source argument lists; their affine annotations
+      // cannot describe the zero-argument thunk.
+      val bodyAnnotations = noAsync.filterNot(_.isInstanceOf[Annot.Affine])
+      val bodySignature = FunDefn.Signature.fromParams(
+        LoweredParamList.plain(Nil)(N) :: Nil,
         ErasedResult.fromAnnotations(fun.signature.result.bodyType, noAsync))
-      // The extracted helper has fresh parameter bindings. Substitute assignment
-      // destinations as well as reads, including assignments inside nested closures.
-      val paramSubst = new SymbolSubst:
-        override def mapVarSym(sym: VarSymbol): VarSymbol = symMap.getOrElse(sym, sym)
-      val transformer = new BlockTransformer(paramSubst):
-        override def applyValue(v: Value)(k: Value => Block): Block = v match
-          case Value.This(sym: InnerSymbol) if receiverMap.contains(sym) =>
-            k(Value.SimpleRef(receiverMap(sym))(v.toLoc))
-          case _ => super.applyValue(v)(k)
-      val newBody = transformer.applyBlock(wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))
-      collectedFunDefn += FunDefn(N, outerBms, outerDsym, outerSignature, newBody)(fun.configOverride, noAsync)
-      val callArgs = (receivers.iterator.map(s => Arg(N, Value.This(s)(N))) ++ fun.params.iterator.flatMap(_.allParams.iterator.map(p => Arg(N, Value.SimpleRef(p.sym)(N))))).toList
-      val outerCall = Call(Value.MemberRef(outerBms, outerDsym)(N), callArgs ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
-      val tmp = TempSymbol(N, initErasedType = outerCall.erasedType, "tmp")
+      // The thunk stays inside the wrapper, so it shares the wrapper's parameter
+      // bindings and lexical receivers. Handler lowering saved the wrapper's
+      // arguments and receiver for resumption; reentering it creates a new thunk
+      // whose state machine restores the suspended locals.
+      val body = FunDefn(N, bodySym, bodyDsym, bodySignature,
+        wrapAwait(true)(applyFunBodyLikeBlock(fun.body)))(fun.configOverride, bodyAnnotations)
       val wrapper = wrappers(fun.dSym)
-      val wrapped = Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"), (tmp.asSimpleRef.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
+      val wrapped = Call(Value.SimpleRef(State.runtimeSymbol)(N).selSN("toJsAsync"),
+        (body.asPath.asArg :: Nil) ne_:: Nil)(CallMetadata.defaultMlsFun, N)
       // The dynamic runtime helper has no result annotation. Reestablish the wrapper's
       // return representation here so it survives both ordinary returns and inlining.
-      val wrapperBody = blockBuilder
-        .assignScoped(tmp, outerCall)
-        .ret(wrapped.coerceTo(wrapper.signature.result.bodyType.getOrElse(ErasedType.Unknown), fun.dSym.toLoc))
+      val wrapperBody = Scoped(Set.single(bodySym), Define(body,
+        Return(wrapped.coerceTo(wrapper.signature.result.bodyType.getOrElse(ErasedType.Unknown), fun.dSym.toLoc))))
       FunDefn(fun.owner, fun.sym, wrapper.symbol, wrapper.signature, wrapperBody)(fun.configOverride, noAsync)
-    
-    override def applyMainBlock(main: Block): Block =
-      collectedFunDefn.foldRight(super.applyMainBlock(main)): (defn, acc) =>
-        Scoped(Set.single(defn.sym), Define(defn, acc))
     
     override def applyPath(p: Path)(k: Path => Block): Block =
       p match
