@@ -946,17 +946,63 @@ class ClassTagsTransformer private (
     * `shape.match` would silently take the `A` branch. The error is what prevents that:
     * the constructions are still rewritten, but a program with an error is not run. */
   private def rejectMutableFields(): Unit =
-    val classes = taggedResultIds.iterator.flatMap: resultId =>
+    for cls <- taggedClasses; field <- cls.classFields.getOrElse(Nil) if field.k is syntax.MutVal do
+      summon[Raise].apply(ErrorReport(
+        msg"Class tags do not support mutable fields yet." -> field.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation,
+      ))
+
+  private lazy val taggedClasses: List[ClassSymbol] =
+    taggedResultIds.iterator.flatMap: resultId =>
       val result = resultId.getResult
       result match
         case CtorProducer(cls: ClassSymbol, _, _) if orderedCandidates(result).nonEmpty => S(cls)
         case _ => N
     .toList.distinct
-    for cls <- classes; field <- cls.classFields.getOrElse(Nil) if field.k is syntax.MutVal do
-      summon[Raise].apply(ErrorReport(
-        msg"Class tags do not support mutable fields yet." -> field.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation,
-      ))
+
+  private def rejectWritableInstances(): Unit =
+    for cls <- taggedClasses; defn <- programDefinitions.get(cls) do
+      def ancestry(defn: ClsLikeDefn, acc: List[ClsLikeDefn]): (List[ClsLikeDefn], Opt[Path]) =
+        defn.parentPath match
+          case N => (defn :: acc, N)
+          case S(MemberRefTo(parent: ClassSymbol, _)) if programDefinitions.contains(parent) =>
+            ancestry(programDefinitions(parent), defn :: acc)
+          case S(parentPath) => (defn :: acc, S(parentPath))
+      val (classes, uninspectableParent) = ancestry(defn, Nil)
+      val selves: Set[Symbol] = classes.iterator.map(_.isym).toSet
+      val thisUses = ListBuffer.empty[Opt[Loc]]
+      class Checker(reportWrites: Bool) extends BlockTraverser:
+        override def applyBlock(b: Block): Unit = b match
+          case write @ AssignField(self @ Value.This(sym), nme, rhs, rest) if selves.contains(sym) =>
+            if reportWrites && write.symbol.isEmpty then thisUses += self.toLoc.orElse(nme.toLoc)
+            applyResult(rhs)
+            applyBlock(rest)
+          case AssignDynField(self @ Value.This(sym), fld, kind, rhs, rest) if selves.contains(sym) =>
+            if reportWrites then thisUses += self.toLoc
+            applyPath(fld)
+            applyDynSelectKind(kind)
+            applyResult(rhs)
+            applyBlock(rest)
+          case _ => super.applyBlock(b)
+        override def applyPath(p: Path): Unit = p match
+          case Select(Value.This(sym), _) if selves.contains(sym) => ()
+          case DynSelect(Value.This(sym), fld, kind) if selves.contains(sym) =>
+            applyPath(fld); applyDynSelectKind(kind)
+          case SuperSelect(Value.This(sym), base, key) if selves.contains(sym) =>
+            applyPath(base); applyPath(key)
+          case self @ Value.This(sym) if selves.contains(sym) => thisUses += self.toLoc
+          case _ => super.applyPath(p)
+      val ctorChecker = Checker(reportWrites = true)
+      val methodChecker = Checker(reportWrites = false)
+      for cls <- classes do
+        ctorChecker.applyBlock(cls.preCtor)
+        ctorChecker.applyBlock(cls.ctor)
+        cls.methods.foreach(method => methodChecker.applyBlock(method.body))
+      if thisUses.nonEmpty || uninspectableParent.isDefined then
+        summon[Raise].apply(ErrorReport(
+          msg"Class tags do not support mutable fields yet." -> cls.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation,
+        ))
 
   private lazy val tagReadResultIds: Set[ResultId] =
     matchedResultIds ++ argProducersByResultId.iterator.flatMap: (outer, inner) =>
@@ -1134,6 +1180,7 @@ class ClassTagsTransformer private (
       logger.log(">>> start class-tags transform-phase")
     rejectUnsupportedShapeMatches(program)
     rejectMutableFields()
+    rejectWritableInstances()
     // * allocate every tag before any of them is looked up
     if tagOfShape.isEmpty && debug then
       logger.log("class-tags transform-phase > no shapes to tag")
@@ -1307,10 +1354,15 @@ class ClassTagsTransformer private (
 
       override def applyResult(result: Result)(k: Result => Block): Block =
         result match
-          case call @ Call(fun, (Arg(N, scrutinee) :: branches) :: Nil) if branches.nonEmpty && isShapeMatch(fun) =>
-            // Rewrite annotated shape.match calls
+          case call @ Call(fun, (Arg(N, scrutinee) :: branches) :: Nil) if isShapeMatch(fun) =>
             rewriteShapeMatch(call, scrutinee, branches)(k).getOrElse:
               super.applyResult(result)(k)
+          case call @ Call(fun, _) if isShapeMatch(fun) =>
+            summon[Raise].apply(ErrorReport(
+              msg"shape.match takes its scrutinee and then its branches." -> N :: Nil,
+              source = Diagnostic.Source.Compilation,
+            ))
+            super.applyResult(result)(k)
           case CtorProducer(_, _, _) =>
             // Insert tags for instantiations
             if taggedResultIds.contains(result.uid) then

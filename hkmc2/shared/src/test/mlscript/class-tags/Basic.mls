@@ -1007,3 +1007,38 @@ tupleLength(false, 1, 2, 3)
 //│ <<< end class-tags transform-phase
 //│ = "three"
 
+
+
+class A(val x)
+class B(val x)
+class Reader(val x) with
+  fun get() = this.x
+  fun twice() = [this.get(), this.("x")]
+fun readsOnly() =
+  let value = new Reader(new A(0))
+  @matchShapes(Reader(A(_)), Reader(B(_))) shape.match of value, () => 1, () => 2
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Reader@2023 in readsOnly
+//│ class-tags collection-phase > track consumption at match@2030 in readsOnly
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: A@2022, Reader@2023
+//│ class-tags web-computation-phase >   pattern matches: match@2030
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for A(x: 0)
+//│ class-tags transform-phase > allocated tag 1 for Reader(x: A(x: 0))
+//│ class-tags transform-phase > duplicated A as A__Tagged
+//│ class-tags transform-phase > duplicated Reader as Reader__Tagged
+//│ class-tags transform-phase > match shapes Reader(x: A(x: _))->1, Reader(x: B(x: _))-><none>
+//│ <<< end class-tags transform-phase
+
+:expect 1
+readsOnly()
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
+//│ <<< end class-tags transform-phase
+//│ = 1

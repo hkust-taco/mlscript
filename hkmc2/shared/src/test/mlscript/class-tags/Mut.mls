@@ -1,0 +1,86 @@
+:classTags
+:js
+
+
+:ge
+class A(val x)
+class B(val x)
+class Rewritten(val x) with
+  set this.("x") = new B(0)
+fun rewrittenConstructor() =
+  let value = new Rewritten(new A(0))
+  @matchShapes(Rewritten(A(_)), Rewritten(B(_))) shape.match of value, () => 1, () => 2
+//│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
+//│ ║  l.+3: 	class Rewritten(val x) with
+//│ ╙──      	      ^^^^^^^^^
+
+
+:ge
+class Resettable(val x) with
+  fun reset() = set this.("x") = new B(0)
+fun methodWrite() =
+  let value = new Resettable(new A(0))
+  @matchShapes(Resettable(A(_)), Resettable(B(_))) shape.match of value, () => 1, () => 2
+//│ ╔══[COMPILATION ERROR] Class tags do not support set operations yet.
+//│ ║  l.+2: 	  fun reset() = set this.("x") = new B(0)
+//│ ╙──      	                    ^^^^
+
+
+:ge
+class Leaky(val x) with
+  val self = this
+fun escapingThis() =
+  let value = new Leaky(new A(0))
+  @matchShapes(Leaky(A(_)), Leaky(B(_))) shape.match of value, () => 1, () => 2
+//│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
+//│ ║  l.+1: 	class Leaky(val x) with
+//│ ╙──      	      ^^^^^
+
+
+:ge
+class Base(val x) with
+  set this.("x") = new B(0)
+class Derived(x) extends Base(x)
+fun inheritedWrite() =
+  let value = new Derived(new A(0))
+  @matchShapes(Derived(A(_)), Derived(B(_))) shape.match of value, () => 1, () => 2
+//│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
+//│ ║  l.+3: 	class Derived(x) extends Base(x)
+//│ ╙──      	      ^^^^^^^
+
+
+// A tag derived from constructor arguments becomes stale after a field write.
+// The flow analysis marks the escape, but web traversal still admits this producer.
+:ge
+class MutableBox(mut val x)
+class A(val x)
+class B(val x)
+fun mutatedField() =
+  let value = new MutableBox(new A(0))
+  set value.MutableBox#x = new B(0)
+  @matchShapes(MutableBox(A(_)), MutableBox(B(_))) shape.match of value, () => 1, () => 2
+//│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
+//│ ║  l.+1: 	class MutableBox(mut val x)
+//│ ╙──      	                         ^
+//│ ╔══[COMPILATION ERROR] This construction needs a class tag, but the tag cannot be attached to it.
+//│ ║  l.+5: 	  let value = new MutableBox(new A(0))
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── The constructed value can flow to code outside this module, which must not see a tagged copy of its class.
+//│ ╔══[COMPILATION ERROR] Class tags do not support set operations yet.
+//│ ║  l.+6: 	  set value.MutableBox#x = new B(0)
+//│ ╙──      	      ^^^^^
+
+
+// Constructor bodies can change fields even before the tag is first assigned.
+:ge
+class A(val x)
+class B(val x)
+class Altered(mut val x) with
+  set x = new B(0)
+fun constructorMutation() =
+  let value = new Altered(new A(0))
+  @matchShapes(Altered(A(_)), Altered(B(_))) shape.match of value, () => 1, () => 2
+//│ ╔══[COMPILATION ERROR] Class tags do not support mutable fields yet.
+//│ ║  l.+3: 	class Altered(mut val x) with
+//│ ╙──      	                      ^
+

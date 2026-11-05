@@ -1624,3 +1624,88 @@ fun foo() =
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 
+// Anonymous branches preserve an ordinary recursive call without expanding it indefinitely.
+class Box(val x)
+fun recursiveLambdaBranch(n) =
+  if n > 0 then
+    let value = new Box(0)
+    @matchShapes(Box(_)) shape.match of value, () => recursiveLambdaBranch(n - 1)
+  else 42
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Box@3139 in recursiveLambdaBranch
+//│ class-tags collection-phase > track consumption at match@3149 in recursiveLambdaBranch
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Box@3139
+//│ class-tags web-computation-phase >   pattern matches: match@3149
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
+//│ class-tags transform-phase > duplicated Box as Box__Tagged
+//│ class-tags transform-phase > match shapes Box(x: _)->0
+//│ <<< end class-tags transform-phase
+
+:expect 42
+recursiveLambdaBranch(2)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
+//│ <<< end class-tags transform-phase
+//│ = 42
+
+class Box(val x)
+fun returnedThunk() =
+  let value = new Box(0)
+  let result = @matchShapes(Box(_)) shape.match of value, () => () => 42
+  result()
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Box@3257 in returnedThunk
+//│ class-tags collection-phase > track consumption at match@3264 in returnedThunk
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Box@3257
+//│ class-tags web-computation-phase >   pattern matches: match@3264
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
+//│ class-tags transform-phase > duplicated Box as Box__Tagged
+//│ class-tags transform-phase > match shapes Box(x: _)->0
+//│ <<< end class-tags transform-phase
+
+:expect 42
+returnedThunk()
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
+//│ <<< end class-tags transform-phase
+//│ = 42
+
+
+
+class Box(val x)
+class A(val x)
+fun dynamicField(flag, external) =
+  let field = if flag then new A(0) else external
+  let value = new Box(field)
+  @matchShapes(Box(_)) shape.match of value, () => 1
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Box@3381 in dynamicField
+//│ class-tags collection-phase > track consumption at match@3385 in dynamicField
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: A@3380, Box@3381
+//│ class-tags web-computation-phase >   pattern matches: match@3385
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for A(x: 0)
+//│ class-tags transform-phase > allocated tag 1 for Box(x: _)
+//│ class-tags transform-phase > duplicated A as A__Tagged
+//│ class-tags transform-phase > duplicated Box as Box__Tagged
+//│ class-tags transform-phase > match shapes Box(x: _)->1
+//│ <<< end class-tags transform-phase
+

@@ -81,3 +81,21 @@ fun foo(x) = x
 //│ >>> start class-tags transform-phase
 //│ class-tags transform-phase > no shapes to tag
 //│ <<< end class-tags transform-phase
+
+
+:ge
+class Box(val x)
+fun zeroBranches() =
+  let value = new Box(0)
+  @matchShapes(Box(_)) shape.match of value
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Box(x: 0)
+//│ ╔══[COMPILATION ERROR] Malformed annotated shape.match call.
+//│ ║  l.+4: 	  @matchShapes(Box(_)) shape.match of value
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── The number of @matchShapes patterns (1) does not match the number of shape.match branches (0).
+//│ ║  l.+4: 	  @matchShapes(Box(_)) shape.match of value
+//│ ╙──      	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ <<< end class-tags transform-phase
