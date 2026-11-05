@@ -1564,7 +1564,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
         rft match
         case N => lowerMultiInstantiate(mut, sr, params, as, annots, trm.toLoc)(k)
         case S((isym, rft)) =>
-          val sym = isym.defn.get.bsym
+          val sym = isym.bms.get
           loweringCtx.collectScopedSym(sym)
           withClassParent(sr): parent =>
             methodKeys(rft): keys =>

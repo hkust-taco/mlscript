@@ -403,8 +403,9 @@ sealed abstract class ErasedValueType extends Canonicalizable:
     * backends reporting these diagnostics do not have.
     */
   final def describe(using Ctx, State): Str =
-    def ownerOf(s: Symbol): Opt[InnerSymbol] = s.asClsOrMod.flatMap: s =>
-      s.irClsLikeDefn.map(_.owner).orElse(s.defn.map(_.owner)).flatten
+    def ownerOf(s: Symbol): Opt[InnerSymbol] = s match
+      case s: (ClassSymbol | ModuleOrObjectSymbol) => s.owner
+      case _ => N
     def qualify(s: Symbol, acc: Ls[Str]): Ls[Str] =
       ownerOf(s).fold(s.nme :: acc)(o => qualify(o, s.nme :: acc))
     canonicalize match
