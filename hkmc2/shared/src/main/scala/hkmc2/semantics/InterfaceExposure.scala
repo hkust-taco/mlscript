@@ -44,7 +44,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
   private type Path = ShapeProvenance
 
   private def term(value: Term, marks: Ls[Marks], path: Path)(using ResolutionContext): Unit =
-    watch((new Identity(value), marks))(resolver.listenTerm(value)): shape =>
+    watch((value, marks))(resolver.listenTerm(value)): shape =>
       emit(shape.exit(marks), path)
 
   private def emit(shape: TermShape | NoShape, path: Path)(using ResolutionContext): Unit = shape match
@@ -128,7 +128,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
 
   private def result(body: Term, sign: Opt[Term], marks: Ls[Marks], path: Path)(using ResolutionContext): Unit = sign match
     case N =>
-      watch((new Identity(body), marks, "result"))(resolver.listenResult(body)): shape =>
+      watch((body, marks, "result"))(resolver.listenResult(body)): shape =>
         emit(shape.exit(marks), path.via(msg"This value is returned here." -> body.toLoc))
     case S(sign) =>
       // checkDeclaredResult already checks the body during elaboration.
@@ -143,7 +143,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
     val (head, marks) = shape.applicationHead
     def contextualTerm(value: Term, context: Ls[Marks], path: Path,
         substitution: TypeSubstitution)(using ResolutionContext): Unit =
-      watch((new Identity(value), context, substitution))(
+      watch((value, context, substitution))(
         listener => resolver.listenTerm(value)(listener)(using rctx.withInstances(substitution))): shape =>
           emit(resolver.instantiateShape(shape, substitution).exit(context), path)
     head match
@@ -175,7 +175,7 @@ final class InterfaceExposure(resolver: NewResolver)(using ResolutionContext, TL
       case intro: IntroShape => intro.trm match
         case Lam(_, body) =>
           parameters(shape.unappliedParams, path)
-          watch((new Identity(body), marks, instances, "result"))(
+          watch((body, marks, instances, "result"))(
             listener => resolver.listenResult(body)(listener)(using rctx.withInstances(instances))): shape =>
               emit(resolver.instantiateShape(shape, instances).exit(marks),
                 path.via(msg"This value is returned here." -> body.toLoc))

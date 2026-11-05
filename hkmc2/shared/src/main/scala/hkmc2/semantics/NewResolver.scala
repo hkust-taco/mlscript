@@ -44,14 +44,14 @@ class NewResolver:
   
   /** Interpret types through completed symbolic candidates, independently of term overloads. */
   def typeResolution(term: Term)(using rs: ResolutionContext): TypeResolution =
-    rs.state.typeInterpretations.get(new Identity(term)).orElse(term.typeInterpretation) match
+    rs.state.typeInterpretations.get(term).orElse(term.typeInterpretation) match
       case S(result) => result
       case N =>
         val result = new TypeResolution(term, messages => resolError(term, messages))
         // Cache before following a recursive alias. Imported legacy annotations
         // have no stored interpretation: their new inference graph must remain
         // private to this consumer, including listeners on synthesized hosts.
-        rs.state.typeInterpretations(new Identity(term)) = result
+        rs.state.typeInterpretations(term) = result
         def selectInto(symbol: TypeSymbol, publish: ShapeListener[TypeShape])(using ResolutionContext): Unit =
           term.withoutCaptures match
             case ref: NewResolvable =>
@@ -84,7 +84,7 @@ class NewResolver:
             // A symbol identity determines erasure, but not the environment of
             // its free binders. Keep the selected declaration at its own endpoint
             // and transport it just as a syntactic Capture transports a type.
-            val key = (new Identity(term), symbol)
+            val key = (term, symbol)
             val base = rctx.state.selectedTypes.get(key).getOrElse:
               val base = new TypeResolution(term, result.fail)
               rctx.state.selectedTypes(key) = base
@@ -1706,7 +1706,7 @@ class NewResolver:
     */
   private def resultType(source: Term, scope: Binders, instances: TypeSubstitution)(connect: Listener => Unit)
       (using ResolutionContext): DeclaredType =
-    val key = (new Identity(source), instances)
+    val key = (source, instances)
     rctx.state.resultTypes.get(key) match
       case S(tpe) => tpe
       case N =>
@@ -2488,7 +2488,7 @@ class NewResolver:
     * own Array interface while one of those fields is still being resolved.
     */
   private[semantics] def tupleArrayParent(tuple: TupleShape)(using ResolutionContext): NominalInstanceView =
-    tupleArrayParents.get(new Identity(tuple)) match
+    tupleArrayParents.get(tuple) match
       case S(parent) => parent
       case N =>
         val cls = prelude.builtins.Array.defn.get
@@ -2498,7 +2498,7 @@ class NewResolver:
         // through the substitution the tuple retains.
         rctx.recordTemplateBinders(elements, shapeSupport(tuple))
         val parent = NominalInstanceView(cls, Map(cls.tparams.head.sym -> declaredType(elements, Map.empty)), implicitParent(cls))(N, ShapeProvenance.empty)(this)
-        tupleArrayParents(new Identity(tuple)) = parent
+        tupleArrayParents(tuple) = parent
         tuple.segments.foreach: segment =>
           listenTupleField(segment.element): value =>
             elements.publish(TypeShape.Inferred(value))
@@ -2510,7 +2510,7 @@ class NewResolver:
     * can receive writes. No positions or lengths survive this conversion.
     */
   private def mutableArray(source: Term.Mut, underlying: Tup)(using ResolutionContext): TermShape =
-    rctx.state.mutableArrays.get(new Identity(source)) match
+    rctx.state.mutableArrays.get(source) match
       case S(array) => array
       case N =>
         val cls = prelude.builtins.Array.defn.get
@@ -2529,7 +2529,7 @@ class NewResolver:
         // twice, once here and once in NominalInstanceView.getMemberImpl.
         val element = transportType(declaredType(elements, Map.empty), context :: Nil)
         val shape = NominalInstanceView(cls, Map(param -> element), implicitParent(cls))(N, ShapeProvenance.empty)(this)
-        rctx.state.mutableArrays(new Identity(source)) = shape
+        rctx.state.mutableArrays(source) = shape
         listenTerm(underlying): tuple =>
           listenArrayElements(tuple): element =>
             publishParameter(param, element.enter(context :: Nil))
@@ -2662,7 +2662,7 @@ class NewResolver:
               case value: TermShape => listener(value)
               case NoShape => ()
         case _ =>
-          if rctx.state.arrayIndexErrors.add(new Identity(sel)) then
+          if rctx.state.arrayIndexErrors.add(sel) then
             resolError(sel, receiver.diagnostic(msg"${receiver.describe.capitalize} does not support checked array indexing.") :::
               (msg"Use '![...]' for a dynamic access." -> N) :: Nil)
     , listener)
@@ -2929,7 +2929,7 @@ class NewResolver:
   def constructorPattern(res: Pattern.Constructor)(using ResolutionContext): Unit = if newResolution then
     val lhs = res.target
     // The namespaces of a pattern head come from its scrutinees (see scrutineeNamespaces).
-    chainRoot(lhs).foreach(ref => rctx.state.implicitNamespaces.get(new Identity(ref)).foreach(_.scrutinized = true))
+    chainRoot(lhs).foreach(ref => rctx.state.implicitNamespaces.get(ref).foreach(_.scrutinized = true))
     def select(sym: DefinitionSymbol[?])(using ResolutionContext): Bool =
       lhs.withoutCaptures match
         case trm: NewResolvable =>
@@ -3233,7 +3233,7 @@ class NewResolver:
             // inside C, testing against C must not place the refined value
             // outside C's scope before a subsequent field read leaves it.
             def testedClass(using ResolutionContext): DeclaredType =
-              rctx.state.patternTypes.getOrElseUpdate((new Identity(ctor), cls.sym), {
+              rctx.state.patternTypes.getOrElseUpdate((ctor, cls.sym), {
                 val resolution = new TypeResolution(ctor.target, messages => resolError(ctor.target, messages))
                 resolution.publish(TypeShape.Nominal(cls))
                 declaredType(resolution, Map.empty)
@@ -3258,7 +3258,7 @@ class NewResolver:
                 // feed the same unknown back to this test through Array[T].
                 // Fresh argument hosts would make each otherwise identical
                 // refined Array a new candidate and prevent a fixed point.
-                val refined = rctx.state.patternRefinements.getOrElseUpdate((new Identity(ctor), cls.sym, context, ShapeIdentity.key(sh)), {
+                val refined = rctx.state.patternRefinements.getOrElseUpdate((ctor, cls.sym, context, ShapeIdentity.key(sh)), {
                   val base = testedClass.resolution
                   val arg = new TypeResolution(unknown.source, messages => resolError(unknown.source, messages))
                   // An unknown value has no dependencies.
@@ -3335,7 +3335,7 @@ class NewResolver:
   private def scrutineeNamespaces(scrutinee: Shape, pattern: Pattern)(using ResolutionContext): Unit = pattern match
     case ctor: Pattern.Constructor => (chainRoot(ctor.target), scrutinee) match
       case (S(ref), value: TermShape) =>
-        rctx.state.implicitNamespaces.get(new Identity(ref)).foreach(valueNamespaces(ref, _, value))
+        rctx.state.implicitNamespaces.get(ref).foreach(valueNamespaces(ref, _, value))
       case _ => ()
     case Pattern.Alias(inner, _) => scrutineeNamespaces(scrutinee, inner)
     case Pattern.Annotated(inner, _) => scrutineeNamespaces(scrutinee, inner)
@@ -3716,7 +3716,7 @@ class NewResolver:
     */
   def unresolvedRef(ref: UnresolvedRef, scope: SrcScope)(using ResolutionContext): Unit =
     if ref.implicitNamespacing then
-      rctx.state.implicitNamespaces(new Identity(ref)) = ImplicitNamespaces(scope)
+      rctx.state.implicitNamespaces(ref) = ImplicitNamespaces(scope)
       publishActivated(ref, ref.namespaceProbe)
     else ref.prefixes.foreach(resolveThrough(ref, _, scope))
 
@@ -3768,7 +3768,7 @@ class NewResolver:
     // Imported graphs can carry the probes of other units' references to this
     // unit's types. Those units settled their references by themselves.
     val ref = ShapeObserver.reference(probe)
-    rctx.state.implicitNamespaces.get(new Identity(ref)).foreach: namespaces =>
+    rctx.state.implicitNamespaces.get(ref).foreach: namespaces =>
       typeNamespaces(ref, namespaces, tpe, writtenWitness(tpe), refine = true, provided = false)
 
   /** `value` reaches the scrutinee of the constructor pattern whose head is `ref`. Like a value
@@ -3947,7 +3947,7 @@ class NewResolver:
       rctx.markError(ref)
       val selected = namespaces.selectedOrigins
       val candidates = ref.resolvedMembers.reverse.map: (prefix, _) =>
-        selected.get(new Identity(prefix)) match
+        selected.get(prefix) match
           case S((selected, origin)) =>
             msg"It was resolved to '${selected.nme}.${name}', selected by this ${witnessKind(origin.witness)}." ->
               origin.witness.toLoc
@@ -3998,10 +3998,10 @@ class NewResolver:
   def settleUnboundReferences()(using ResolutionContext): Unit =
     val pending = rctx.unboundReferences
     pending.foreach: ref =>
-      rctx.state.implicitNamespaces.get(new Identity(ref)).foreach(fallBack(ref, _))
+      rctx.state.implicitNamespaces.get(ref).foreach(fallBack(ref, _))
     pending.foreach: ref =>
       val name = ref.id.name
-      val namespaces = rctx.state.implicitNamespaces.get(new Identity(ref))
+      val namespaces = rctx.state.implicitNamespaces.get(ref)
       namespaces.foreach(_.settled = true)
       if !rctx.hasError(ref) then
         if ref.resolvedMembers.isEmpty && ref.dynamicPrefixes.isEmpty then
@@ -4078,7 +4078,7 @@ class NewResolver:
       case _: SimpleRef => listenTerm(trm)(ShapeObserver(value, probe))
       case application @ TyApp(base, args) => listenClass(base, recordTargets)(ref =>
         val count = if ref.supplied.nonEmpty then 0 else ref.definition.tparams.length
-        if count != args.length && rctx.state.typeArgumentArityErrors.add((new Identity(application), count)) then
+        if count != args.length && rctx.state.typeArgumentArityErrors.add((application, count)) then
           resolError(trm, msg"Class '${ref.definition.sym.nme}' expected ${count} type ${
             "argument".pluralized(count)}, but got ${args.length}" -> ref.definition.headerLoc :: Nil)
         val supplied = args.map(arg => declaredType(typeResolution(arg), Map.empty).instantiate(rctx.instances))
@@ -4922,7 +4922,7 @@ class NewResolver:
     */
   private def listenAggregate(aggregate: Tup | CtxTup | Rcd, listener: ShapeListener[ShapeEvent])
       (start: (Listener) => Unit)(using ResolutionContext): Unit =
-    val first = aggregateProducers.add(new Identity(aggregate))
+    val first = aggregateProducers.add(aggregate)
     // An imported definition can already have shapes computed by its own elaborator.
     // Send those shapes to this listener even if first is true; recomputing the same
     // shapes below will not notify it, because shapes.add rejects duplicates.
@@ -4973,7 +4973,7 @@ class NewResolver:
       listenTermViewsOrProbe(cls)(_ => (), listener)
     case application @ TyApp(underlying, args) =>
       def checkArity(callee: TermShape, count: Int)(using ResolutionContext): Unit =
-        if count != args.length && rctx.state.typeArgumentArityErrors.add((new Identity(application), count)) then
+        if count != args.length && rctx.state.typeArgumentArityErrors.add((application, count)) then
           resolError(trm, callee.diagnostic(msg"${callee.describe.capitalize} expected ${count} type ${
             "argument".pluralized(count)}, but got ${args.length}"))
       // Like an application (see applyShape), a type application passes on probes.
@@ -5050,7 +5050,7 @@ class NewResolver:
           val graph = tuple.originalData.owner
           assert(graph != null, "A tuple producer must have an inference owner")
           val defining = rctx.inGraph(graph.nn.context)
-          val record = defining.state.namedTupleRecords.getOrElseUpdate(new Identity(tuple), {
+          val record = defining.state.namedTupleRecords.getOrElseUpdate(tuple, {
             val record: Rcd = Rcd(false, fields.map((key, value) => RcdField(key, value)(using rctx.owner)))
             record.withLocOf(tuple)
             // The record's fields are the tuple's own field expressions, so its
@@ -5152,7 +5152,7 @@ class NewResolver:
         case _: Lam => S(prelude.builtins.Function)
         case _ => N
       def publish(parent: Opt[NominalInstanceView])(using ResolutionContext): Unit =
-        listener(introShapes.getOrElseUpdate(new Identity(intro), {
+        listener(introShapes.getOrElseUpdate(intro, {
           log(dbg"introShape: intro = $intro")
           IntroShape(intro, parent)
         }))

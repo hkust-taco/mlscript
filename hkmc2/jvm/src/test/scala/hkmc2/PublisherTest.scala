@@ -13,6 +13,40 @@ class PublisherTest extends AnyFunSuite:
     def publish(shape: Int)(using ResolutionContext): Unit =
       if currentShapes.add(shape) then notifyShapeListeners(shape)
 
+  // Diff tests cannot observe graph-copy growth or exercise a publisher whose
+  // own equality compares values. Completion and imports must distinguish hosts
+  // independently of that equality, and reuse their private copies afterwards.
+  test("equal publishers have independent completion and bounded private copies"):
+    case class EqualHost(name: String) extends IntHost
+    given source: ResolutionContext = new Elaborator.State().newResolverState.context
+    val first = EqualHost("same")
+    first.publish(1)
+    source.completeBlock(Term.UnitVal())
+    val second = EqualHost("same")
+    assert(first == second)
+    assert(!source.canResolve(first))
+    assert(source.canResolve(second))
+    second.publish(2)
+    source.completeBlock(Term.UnitVal())
+    assert(!source.canResolve(second))
+    val consumer = new Elaborator.State().newResolverState.context
+    for context <- source :: consumer :: Nil do
+      val left = first.inferenceHost(using context)
+      val right = second.inferenceHost(using context)
+      assert(!(left eq right))
+      (1 to 1000).foreach: _ =>
+        assert(first.inferenceHost(using context) eq left)
+        assert(second.inferenceHost(using context) eq right)
+      assert(context.copiedHostCount == 2)
+    first.publish(3)
+    second.publish(4)(using consumer)
+    assert(first.shapes.toList == List(1))
+    assert(second.shapes.toList == List(2))
+    assert(first.currentShapes.toList == List(1, 3))
+    assert(second.currentShapes.toList == List(2))
+    assert(first.currentShapes(using consumer).toList == List(1))
+    assert(second.currentShapes(using consumer).toList == List(2, 4))
+
   test("candidate iteration distinguishes a snapshot from draining appended values"):
     given ResolutionContext = new Elaborator.State().newResolverState.context
     val candidates = Candidates(summon[CandidateKey[Int]])
