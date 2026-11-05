@@ -626,7 +626,11 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
     defnListeners = null // free memory and prevent further listening
   
   var decl: Opt[Declaration] = N // NOTE: currently only assigned for class params and only used by deforestation; may want to just remove it once deforestation is improved
-  def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) 
+  
+  def bms: Opt[BlockMemberSymbol] =
+    // Lifted captures and handlers can use classes created directly in IR.
+    // Such classes have no source definition from which to obtain a binding.
+    irDefn.fold(defn.map(_.bsym))(_.sym |> some)
   
   // TODO: rm
   private[semantics] var defnListeners: Buffer[Defn => Unit] = Buffer.empty

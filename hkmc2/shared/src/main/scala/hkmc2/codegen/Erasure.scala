@@ -63,7 +63,7 @@ final class Erasure(root: Statement)(using Config, Ctx, State)(using Raise):
     * that each coercion into or out of the slot would report. Class headers are published
     * before declarations are erased, so canonicalizing here sees complete parent chains.
     *
-    * The Prelude and the runtime are erased before the runtime's symbols exist, and
+    * The Prelude and Runtime are erased before the runtime's symbols exist, and
     * canonicalizing a type such as `Unit` requires them. Those library declarations are not
     * checked; every other compilation unit is erased after the runtime is loaded.
     */

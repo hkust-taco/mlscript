@@ -197,7 +197,8 @@ class ReflectionInstrumenter(using State, Raise, Ctx) extends BlockTransformer(n
           raise(ErrorReport(msg"Value.This not supported in staged module." -> p.toLoc :: Nil))
           End()
 
-  /** The reflected `Block.Cast` accepts any result, so both forms of IR casts map to it. */
+  /** The reflected `Block.Cast` accepts any result, so both forms of IR casts map to it.
+    * TODO: update the reflection library to actually mirror the IR. */
   private def transformCast(cast: Cast)(using Context)(k: Path => Block): Block =
     transformResult(cast.value): v =>
       blockCtor("Symbol", Ls(toValue(cast.target.describe)), "target"): t =>
