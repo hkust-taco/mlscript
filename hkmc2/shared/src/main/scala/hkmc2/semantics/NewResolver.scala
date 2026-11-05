@@ -654,11 +654,9 @@ class NewResolver:
     declaredType(resolution, context.bindings, positive, asArgument = true).instantiate(context.instances).withOrigin(context.origin)
 
   private def normalizedArgument(source: TypeResolution, parts: TypeArgument)(using ResolutionContext): DeclaredType =
-    rctx.state.argumentTypes.getOrElseUpdate((source, parts), {
-      val normalized = new TypeResolution(source.source, source.fail)
-      normalized.publish(TypeShape.Argument(parts))
-      DeclaredType(normalized, Map.empty, TypeSubstitution.empty, true)(N)
-    }).withInterpretation(TypeShape.Argument(parts))
+    val shape = TypeShape.Argument(parts)
+    rctx.state.argumentTypes.getOrElseUpdate((source, parts), DeclaredType.synthesized(source, shape))
+      .withInterpretation(shape)
 
   /** Normalize Boolean combinations without observing an atom's candidates.
     * Transport distributes over components using the ordinary transportType
@@ -717,11 +715,9 @@ class NewResolver:
     else
       if formula.clauses.size == 1 && formula.orderedAtoms.size == 1 then formula.orderedAtoms.head
       else
-        rctx.state.combinedTypes.getOrElseUpdate(formula, {
-          val resolution = new TypeResolution(source.source, source.fail)
-          resolution.publish(TypeShape.Combined(formula))
-          DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
-        }).withInterpretation(TypeShape.Combined(formula))
+        val shape = TypeShape.Combined(formula)
+        rctx.state.combinedTypes.getOrElseUpdate(formula, DeclaredType.synthesized(source, shape))
+          .withInterpretation(shape)
 
   private def declaredType(resolution: TypeResolution, context: DeclaredType)(using ResolutionContext): DeclaredType =
     declaredType(resolution, context.bindings, context.positive).instantiate(context.instances).withOrigin(context.origin)
@@ -733,11 +729,9 @@ class NewResolver:
     */
   private[semantics] def selectArgument(argument: DeclaredType, positive: Bool)(using ResolutionContext): DeclaredType =
     def deferred(using ResolutionContext): DeclaredType =
-      rctx.state.selectedArguments.getOrElseUpdate((argument, positive), {
-        val resolution = new TypeResolution(argument.resolution.source, argument.resolution.fail)
-        resolution.publish(TypeShape.SelectedArgument(argument, positive))
-        declaredType(resolution, Map.empty)
-      }).withInterpretation(TypeShape.SelectedArgument(argument, positive))
+      val shape = TypeShape.SelectedArgument(argument, positive)
+      rctx.state.selectedArguments.getOrElseUpdate((argument, positive), DeclaredType.synthesized(argument.resolution, shape))
+        .withInterpretation(shape)
     rctx.state.selectedArguments.get((argument, positive)) match
       case S(selected) => selected.withInterpretation(TypeShape.SelectedArgument(argument, positive))
       case N => argument.shapes match
@@ -1848,12 +1842,9 @@ class NewResolver:
           // leaves a distinct node for every irrelevant ambient substitution.
           // Unknown dependencies retain all entries, including future site bounds.
           val reference = ContextualType(projectType(base), path :: Nil)
-          rctx.state.contextualTypes.getOrElseUpdate(reference, {
-            val resolution = new TypeResolution(base.resolution.source, base.resolution.fail)
-            // The published graph must retain the same projected environment as the key.
-            resolution.publish(TypeShape.Contextual(ContextualType(reference.tpe, path :: Nil)))
-            declaredType(resolution, Map.empty)
-          }).withInterpretation(TypeShape.Contextual(reference)).withOrigin(base.origin)
+          val shape = TypeShape.Contextual(reference)
+          rctx.state.contextualTypes.getOrElseUpdate(reference, DeclaredType.synthesized(base.resolution, shape))
+            .withInterpretation(shape).withOrigin(base.origin)
         case NoShape => extremeType(false)
 
   private def inverseMarks(marks: Ls[Marks])(using ResolutionContext): Ls[Marks] =

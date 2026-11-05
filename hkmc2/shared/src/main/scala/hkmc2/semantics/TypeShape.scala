@@ -271,13 +271,36 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
     interpretation.fold(resolution.currentShapes.toList)(_ :: Nil)
   private[semantics] def listen(listener: ShapeListener[TypeShape])(using ResolutionContext): Unit =
     interpretation.fold(resolution.listen(listener))(listener(_))
+  /** Evidence is shared only when its immediate payloads are identical. Looking
+    * through bound arguments here would expand shared DAG paths on cache hits.
+    * A conservative miss retains the caller's witnesses without merging them.
+    */
+  private def sameUse(that: DeclaredType): Bool =
+    (this is that) || this == that && (bindings is that.bindings) &&
+      (origin is that.origin) && (namespaces is that.namespaces) && (interpretation is that.interpretation)
   /** Synthesized nodes share an interned source, while each use keeps its own
     * diagnostic witnesses and Boolean operand order. Those differences cannot
     * change the child types that identify the source.
     */
-  private[semantics] def withInterpretation(shape: TypeShape)(using ResolutionContext): DeclaredType =
-    assert(resolution.currentShapes.exists(_ == shape), "An interpretation must preserve the interned type")
-    new DeclaredType(reference, bindings)(origin, namespaces, S(shape))
+  private[semantics] def withInterpretation(shape: TypeShape): DeclaredType =
+    val canonical = interpretation.getOrElse(lastWords("A synthesized type must have one fixed interpretation"))
+    assert(canonical == shape, "An interpretation must preserve the interned type")
+    val shared = (canonical, shape) match
+      case (TypeShape.Contextual(previous), TypeShape.Contextual(current)) =>
+        if previous.tpe.sameUse(current.tpe) then canonical else
+          // Scope paths carry no diagnostic evidence. Even distinct witnesses
+          // share the cached path, rather than retaining a freshly rebuilt one.
+          TypeShape.Contextual(ContextualType(current.tpe, previous.marks))
+      case (TypeShape.Argument(previous), TypeShape.Argument(current)) =>
+        if previous.input.sameUse(current.input) && previous.output.sameUse(current.output) then canonical else shape
+      case (TypeShape.SelectedArgument(previous, _), TypeShape.SelectedArgument(current, _)) =>
+        if previous.sameUse(current) then canonical else shape
+      case (TypeShape.Combined(previous), TypeShape.Combined(current)) =>
+        val left = previous.orderedAtoms
+        val right = current.orderedAtoms
+        if left.size == right.size && left.lazyZip(right).forall(_.sameUse(_)) then canonical else shape
+      case _ => lastWords("Only synthesized type nodes have a per-use interpretation")
+    if shared is canonical then this else new DeclaredType(reference, bindings)(origin, namespaces, S(shared))
   private[semantics] def withNamespaces(plan: TypeNamespaces)(using ResolutionContext): DeclaredType =
     rebuilt(bindings, instances, positive, S(plan))
   private[semantics] def withoutNamespaces(using ResolutionContext): DeclaredType =
@@ -308,6 +331,14 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
     if origin.isEmpty then this else new DeclaredType(reference, bindings)(N, namespaces, interpretation)
 
 object DeclaredType:
+  /** A closed synthesized node retains its shape directly. Cache hits can reuse
+    * it without subscribing to, or looking up, its already fixed source host.
+    */
+  private[semantics] def synthesized(source: TypeResolution, shape: TypeShape)(using ResolutionContext): DeclaredType =
+    val resolution = new TypeResolution(source.source, source.fail)
+    resolution.publish(shape)
+    new DeclaredType(rctx.state.typeReferences(resolution, Map.empty, TypeSubstitution.empty, true, Nil), Map.empty)(N, N, S(shape))
+
   /** Canonical bindings retain only interned references. Per-use diagnostic
     * witnesses stay on DeclaredType and cannot keep extra data in the interner.
     */

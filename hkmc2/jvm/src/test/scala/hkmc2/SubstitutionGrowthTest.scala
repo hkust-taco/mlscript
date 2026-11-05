@@ -224,9 +224,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     for depth <- 8 :: 16 :: Nil do
       val root = (1 to depth).foldLeft(leaf): (child, _) =>
         val shape = TypeShape.Argument(TypeArgument(child, child))
-        val resolution = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
-        resolution.publish(shape)
-        DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N).withInterpretation(shape)
+        DeclaredType.synthesized(child.resolution, shape)
       val input = root.instantiate(TypeSubstitution(b1 :: extra :: Nil))
       val expected = root.instantiate(TypeSubstitution(b1 :: Nil))
       val repetitions = 100
@@ -372,6 +370,27 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     val value = DynShape()
     h.resolver.publishParameter(b1, value)
     assert(seen.toList == List(value))
+
+  // Retain every returned view, so semantic key equality alone cannot hide a
+  // fresh per-use wrapper or scope path on each hit of the transport cache.
+  test("transported observations share views and scope paths across cache hits"):
+    val h = new Harness
+    import h.given
+    val source = h.typeOf(h.binder("A")).resolution
+    val boundary = ResolutionBoundary(TermSymbol(syntax.Fun, N, Tree.Ident("scope")))
+    val site = S(FlowSymbol.app())
+    val views = scala.collection.mutable.Set.empty[Identity[DeclaredType]]
+    val paths = scala.collection.mutable.Set.empty[Identity[Ls[Marks]]]
+    for index <- 0 until 1000 do
+      val plain = DeclaredType(source, Map.empty, TypeSubstitution.empty, true)(N)
+      val path = EntryMark(boundary, site, NoMarks) :: Nil
+      views += new Identity(h.resolver.transportType(plain, path))
+      val witnessed = plain.withOrigin(S(TypeInterfaceReason.Unrestricted(Term.UnitVal())))
+      h.resolver.transportType(witnessed, path).shapes.foreach:
+        case TypeShape.Contextual(reference) => paths += new Identity(reference.marks)
+        case _ => fail("Expected a transported type")
+    assert(views.size == 1)
+    assert(paths.size == 1)
 
   test("transport interning projects irrelevant instances while retaining late dependencies"):
     val h = new Harness

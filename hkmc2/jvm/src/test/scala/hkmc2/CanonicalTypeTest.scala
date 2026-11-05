@@ -120,6 +120,25 @@ class CanonicalTypeTest extends AnyFunSuite:
       assert(first == repeated && first.hashCode == repeated.hashCode)
     assert(context.state.typeReferences.size == 65)
 
+  // Canonical keys alone do not bound retained memory: a cache hit can still
+  // rebuild a per-use tree around the shared references. Count distinct retained
+  // views as the same two-edge DAG is reconstructed by independent observations.
+  test("synthesized observations share a bounded graph of per-use views"):
+    given owner: Elaborator.State = new Elaborator.State
+    given context: ResolutionContext = owner.newResolverState.context
+    val source = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
+    val leaf = DeclaredType(source, Map.empty, TypeSubstitution.empty, true)(N)
+    val depth = 32
+    val layers = (1 to depth).scanLeft(leaf): (child, _) =>
+      DeclaredType.synthesized(source, TypeShape.Argument(TypeArgument(child, child)))
+    val retained = scala.collection.mutable.Set.empty[Identity[DeclaredType]]
+    for _ <- 0 until 100 do
+      var current = DeclaredType(source, Map.empty, TypeSubstitution.empty, true)(N)
+      layers.tail.foreach: cached =>
+        current = cached.withInterpretation(TypeShape.Argument(TypeArgument(current, current)))
+        retained += new Identity(current)
+    assert(retained.size <= depth)
+
   test("cross-unit equality and import traverse shared children without expanding paths"):
     given owner: Elaborator.State = new Elaborator.State
     val source = owner.newResolverState.context
