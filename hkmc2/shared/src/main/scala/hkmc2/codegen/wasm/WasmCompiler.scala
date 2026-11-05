@@ -45,8 +45,8 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
     val compiled = artifact.compiledWasm(runtime = true):
       given State = artifact.state
       given Elaborator.Ctx = artifact.ctx
-      WatBuilder.fresh.fileModule(Program(Nil, End()), N, source.up,
-        FileCompilation(Vector.empty, Set.empty, runtime = true))
+      WatBuilder.fresh(FileCompilation(Vector.empty, Set.empty, runtime = true))
+        .fileModule(Program(Nil, End()), N, source.up)
     // Compile the host library through the ordinary JavaScript backend, including on
     // cache hits so a missing or overwritten output is restored from its source artifact.
     new MLsCompiler(_ => summon[Raise]).compileModule(source.up / "RuntimeWasm.mls")
@@ -90,8 +90,8 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
               if !sourceSymbols(sym) && sym != State.runtimeSymbol then
                 raise(ErrorReport(msg"JavaScript import '$importedPath' is not supported in WASM source" -> sym.toLoc :: Nil,
                   source = Diagnostic.Source.Compilation))
-            WatBuilder.fresh.fileModule(art.ir.copy(imports = art.ir.imports.filterNot(_._1 == State.runtimeSymbol)), art.compilationUnit.defaultExport, path.up,
-              FileCompilation(bindings, sourceSymbols, runtime = false))
+            WatBuilder.fresh(FileCompilation(bindings, sourceSymbols, runtime = false)).fileModule(
+              art.ir.copy(imports = art.ir.imports.filterNot(_._1 == State.runtimeSymbol)), art.compilationUnit.defaultExport, path.up)
           val out = output(path, ".mjs")
           val watPath = output(path, ".wat")
           val dependencyPaths = imported.iterator.map { case (source, _) =>

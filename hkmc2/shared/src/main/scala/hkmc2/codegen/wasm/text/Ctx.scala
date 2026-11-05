@@ -9,8 +9,8 @@ import hkmc2.utils.*
 import document.*
 import document.Document
 import semantics.{
-  BaseTypeSymbol, BlockMemberSymbol, ClassSymbol, ClassLikeSymbol, ClassCtorSymbol, Elaborator,
-  InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, Symbol, TempSymbol, TermSymbol,
+  BaseTypeSymbol, BlockMemberSymbol, Elaborator, InnerSymbol, LabelSymbol, LocalVarSymbol, ModuleOrObjectSymbol, Symbol,
+  TempSymbol, TermSymbol,
 },
   Elaborator.State
 import text.Param as WasmParam
@@ -18,161 +18,10 @@ import Instructions.*
 import Message.MessageContext
 
 import scala.collection.immutable.ListMap
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashSet, Map as MutMap}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
 import scala.reflect.ClassTag
 
-/** Metadata for a REPL binding that can be imported by later Wasm modules. */
-sealed trait SessionBinding:
-  /** Returns the deduplication key for this binding. */
-  def bindingKey: Str
-
-  /** Returns the symbols that should resolve to this binding. */
-  def bindingSyms: Seq[SlotSymbol]
-
-  /** Returns the export name if this binding is re-exported. */
-  def exportNameOpt: Opt[Str] = N
-
-object SessionBinding:
-  val ReplModuleName: Str = "repl"
-
-  /** Dependencies to look up among previously exported session bindings. MIR `freeVars` describes lexical bindings,
-    * which cannot distinguish a class from its function companion. Follow resolved references and cast targets instead.
-    * Symbols defined in this block cannot match earlier exports: their identities are distinct, including after
-    * inlining refreshes local definitions.
-    */
-  def referencedSymbols(block: Block)(using Elaborator.Ctx, State): Ls[Symbol] =
-    val symbols = LinkedHashSet.empty[Symbol]
-    val visited = scala.collection.mutable.Set.empty[Symbol]
-    new BlockTraverser:
-      override def applySymbol(sym: Symbol): Unit = if visited.add(sym) then
-        // An imported subclass layout refers to its ancestors even when no source expression
-        // names them. Parents must precede children in Wasm's type declaration order.
-        sym match
-          case cls: ClassLikeSymbol => cls.irClassHeader.flatMap(_.parent.knownSymbol).foreach(applySymbol)
-          case ctor: ClassCtorSymbol => applySymbol(ctor.associatedCls)
-          case member: BlockMemberSymbol => member.asClsOrMod.foreach(applySymbol)
-          case member: TermSymbol => member.owner.foreach(applySymbol)
-          case _ => ()
-        symbols += sym
-      override def applyValue(value: Value): Unit = value match
-        case Value.MemberRef(bms, disamb) => applySymbol(ExternSymbol.forReference(bms, disamb))
-        case _ => super.applyValue(value)
-      override def applyResult(result: codegen.Result): Unit =
-        result match
-          case Cast(_, target, _) => target.canonicalize match
-            case ErasedType.AnyRef(_, tpeSym) => applySymbol(tpeSym)
-            case _ => ()
-          case _ => ()
-        super.applyResult(result)
-      override def applyPath(path: Path): Unit = path match
-        // ValDefn traverses its RHS as a Path, whereas Return and Assign use Result.
-        case cast: Cast => applyResult(cast)
-        case _ => super.applyPath(path)
-    .applyBlock(block)
-    symbols.toList
-  end referencedSymbols
-end SessionBinding
-
-/** Metadata for an exported function that later Wasm REPL modules can import.
-  *
-  * @param sym
-  *   The source symbol associated with the exported function.
-  * @param moduleName
-  *   The Wasm module name used by the import.
-  * @param exportName
-  *   The exported function name within `moduleName`.
-  * @param funcType
-  *   The Wasm function type expected by the import.
-  */
-final case class SessionFunc(
-    sym: BlockMemberSymbol | BaseTypeSymbol,
-    wrapId: Opt[Str] -> Opt[Str],
-    moduleName: Str,
-    exportName: Str,
-    funcType: FunctionType,
-) extends SessionBinding:
-  def bindingKey: Str = s"func:$moduleName:$exportName"
-  def bindingSyms: Seq[SlotSymbol] = sym :: Nil
-  override def exportNameOpt: Opt[Str] = S(exportName)
-
-/** Metadata for an exported global that later Wasm REPL modules can import.
-  *
-  * @param sym
-  *   The source symbol associated with the exported global.
-  * @param moduleName
-  *   The Wasm module name used by the import.
-  * @param exportName
-  *   The exported global name within `moduleName`.
-  * @param globalType
-  *   The Wasm global type expected by the import.
-  */
-final case class SessionGlobal(
-    sym: ScopedSymbol,
-    wrapId: Opt[Str] -> Opt[Str],
-    moduleName: Str,
-    exportName: Str,
-    globalType: GlobalType,
-) extends SessionBinding:
-  def bindingKey: Str = s"global:$moduleName:$exportName"
-  def bindingSyms: Seq[SlotSymbol] = sym :: Nil
-  override def exportNameOpt: Opt[Str] = S(exportName)
-
-/** Metadata for a class type made visible to later Wasm REPL modules.
-  *
-  * @param sym
-  *   The symbol of the class or object.
-  * @param wrapId
-  *   Identifier wrapping metadata for recreating the class type in importing modules.
-  * @param compType
-  *   The class composite type that must be recreated in importing modules.
-  * @param objectTag
-  *   The runtime object tag assigned to the class type.
-  * @param rttiTypeInfo
-  *   The RTTI struct type information that must be recreated in importing modules.
-  * @param rttiGlobalExportName
-  *   The export name of the per-class RTTI global to import from prior REPL modules.
-  * @param aliasSyms
-  *   Additional symbols that should resolve to this class binding.
-  */
-final case class SessionClass(
-    sym: BaseTypeSymbol,
-    wrapId: Opt[Str] -> Opt[Str],
-    compType: CompType,
-    objectTag: Opt[Int],
-    rttiTypeInfo: TypeInfo,
-    rttiGlobalExportName: Str,
-    aliasSyms: Seq[SlotSymbol] = Nil,
-) extends SessionBinding:
-  def bindingKey: Str = s"class:${sym.uid}"
-  def bindingSyms: Seq[SlotSymbol] = sym +: aliasSyms
-  override def exportNameOpt: Opt[Str] = S(rttiGlobalExportName)
-
-/** Metadata for a singleton object's backing global made visible to later Wasm REPL modules.
-  *
-  * @param blockSym
-  *   The block member symbol of the singleton object.
-  * @param objectSym
-  *   The symbol of the singleton object, which identifies its backing global.
-  * @param moduleName
-  *   The Wasm module name used by the import.
-  * @param exportName
-  *   The exported global name within `moduleName`.
-  * @param globalTy
-  *   The Wasm reference type of the singleton backing global.
-  */
-final case class SessionSingleton(
-    blockSym: BlockMemberSymbol,
-    objectSym: ModuleOrObjectSymbol,
-    wrapId: Opt[Str] -> Opt[Str],
-    moduleName: Str,
-    exportName: Str,
-    globalTy: RefType,
-) extends SessionBinding:
-  def bindingKey: Str = s"singleton:$moduleName:$exportName"
-  def bindingSyms: Ls[SlotSymbol] = blockSym :: objectSym :: Nil
-  override def exportNameOpt: Opt[Str] = S(exportName)
-
-/** The emitted Wasm module together with REPL/session export metadata.
+/** The emitted Wasm module.
   *
   * @param wat
   *   The generated WAT for the module.
@@ -180,34 +29,12 @@ final case class SessionSingleton(
   *   The name of the module entry function.
   * @param systemMemMinPages
   *   The minimum number of imported system-memory pages required by the module.
-  * @param sessionExports
-  *   Session bindings exported by this module for use by later REPL blocks.
   */
 final case class CompiledWasmModule(
     wat: Document,
     entryName: Str,
     systemMemMinPages: Int,
-    sessionExports: Seq[SessionBinding],
 )
-
-/** Context used while collecting REPL/session exports for a single Wasm module.
-  *
-  * @param symbolsToExport
-  *   The symbols from the current module that should be recorded as session exports.
-  * @param collectedBindings
-  *   The session bindings accumulated while compiling the current module.
-  */
-final class SessionExportCtx(
-    val symbolsToExport: Set[ScopedSymbol],
-    val collectedBindings: ArrayBuf[SessionBinding],
-):
-  def shouldExport(sym: ScopedSymbol): Bool = symbolsToExport(sym)
-
-  def emit(binding: SessionBinding): Unit =
-    collectedBindings += binding
-
-  def freshCollector(): SessionExportCtx =
-    SessionExportCtx(symbolsToExport, ArrayBuf.empty)
 
 /** A Wasm function and its associated information.
   *
@@ -223,8 +50,6 @@ final class SessionExportCtx(
   *   [[Seq]] of local variables (excluding parameters) and their names.
   * @param body
   *   The instructions of the function body. The last one leaves the function's results or transfers control.
-  * @param exportName
-  *   Optional export name.
   * @param optionalParams
   *   Physical parameter indices that host wrappers must supply as null when omitted.
   * @param wrapId
@@ -237,7 +62,6 @@ class FuncInfo(
     val resultTypes: Seq[Result],
     val locals: Seq[SlotSymbol -> SymIdx],
     val body: Seq[Expr],
-    val exportName: Opt[Str],
     val optionalParams: Set[Int],
     val wrapId: Opt[Str] -> Opt[Str] = N -> N,
 )(using Ctx, Raise, State) extends ToWat:
@@ -253,13 +77,11 @@ class FuncInfo(
     results = resultTypes,
   )
 
-  def emittedExportName: Opt[Str] = summon[Ctx].fileExportName(sym, "func", wrapId, exportName)
+  /** The name under which the module exports this function; see [[Ctx.fileExportName]]. */
+  def exportName: Str = summon[Ctx].fileExportName(sym, "func", wrapId)
 
   def toWat: Document =
-    doc"""(func ${id.toWat}${
-        emittedExportName.fold(doc""): e =>
-          doc""" (export "$e")"""
-      } ${typeUse.toWat}${
+    doc"""(func ${id.toWat} (export "$exportName") ${typeUse.toWat}${
         getSignatureType.toWat.surroundUnlessEmpty(doc" ")
       } #{ ${
         locals.map: p =>
@@ -276,8 +98,6 @@ end FuncInfo
   *   The type of the global.
   * @param init
   *   The initializer expression for the global.
-  * @param exportName
-  *   Optional export name.
   * @param sym
   *   The source [[ScopedSymbol]] which this global is generated from.
   * @param wrapId
@@ -286,7 +106,6 @@ end FuncInfo
 class GlobalInfo(
     val globalType: GlobalType,
     val init: Expr,
-    val exportName: Opt[Str],
     val sym: ScopedSymbol,
     val wrapId: Opt[Str] -> Opt[Str] = N -> N,
 )(using Ctx, Raise) extends ToWat:
@@ -294,13 +113,11 @@ class GlobalInfo(
   /** Symbolic identifier for the global. */
   val id: SymIdx = SymIdx(summon[Ctx].globalScp.allocateOrGetNameWrapped(sym, wrapId))
 
-  def emittedExportName: Opt[Str] = summon[Ctx].fileExportName(sym, "global", wrapId, exportName)
+  /** The name under which the module exports this global; see [[Ctx.fileExportName]]. */
+  def exportName: Str = summon[Ctx].fileExportName(sym, "global", wrapId)
 
   def toWat: Document =
-    doc"""(global ${id.toWat}${
-        emittedExportName.fold(doc""): name =>
-          doc""" (export "$name")"""
-      } ${globalType.toWat} ${init.toWat})"""
+    doc"""(global ${id.toWat} (export "$exportName") ${globalType.toWat} ${init.toWat})"""
 end GlobalInfo
 
 /** A WebAssembly memory and its associated information.
@@ -823,17 +640,17 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   /** The [[Elaborator.Ctx]] associated with this instance. */
   def elabCtx: Elaborator.Ctx = summon[Elaborator.Ctx]
 
-  private var fileNames: Opt[FileExportNames] = N
+  private val fileNames = new FileExportNames
   private val importedTypes = MutMap.empty[(ValueSymbol, Opt[Str] -> Opt[Str]), TypeIdx]
   private val pendingTypes = MutMap.empty[BaseTypeSymbol, () => TypeInfo]
   private val pendingFunctions = MutMap.empty[WasmSymbol, () => Import[ExternType.Func]]
   private val pendingGlobals = MutMap.empty[ScopedSymbol, () => Import[ExternType.Global]]
 
-  def enableFileExports(): Unit = fileNames = S(new FileExportNames)
-
-  def fileExportName(sym: WasmSymbol, kind: Str, wrap: Opt[Str] -> Opt[Str], requested: Opt[Str])
-        (using Raise): Opt[Str] =
-    fileNames.fold(requested)(names => S(names(sym, kind, wrap)))
+  /** File modules export every function and global, so that importing modules can link to any definition. Names are
+    * allocated on first request for each symbol, kind, and identifier wrapping.
+    */
+  def fileExportName(sym: WasmSymbol, kind: Str, wrap: Opt[Str] -> Opt[Str])(using Raise): Str =
+    fileNames(sym, kind, wrap)
 
   /** Capture definitions only; dependency interfaces retain ownership of imported bindings. */
   def fileInterface(classes: Vector[AbiClass], namespaces: Vector[AbiNamespace], defaultExport: Opt[BlockMemberSymbol])
@@ -842,10 +659,10 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
       types.valuesIterator.map(t => AbiType(TypeIdx(t.id), t.sym, t.wrapId, t.compType, t.objectTag)).toVector,
       orderedTypeGroups.map(_.map(TypeIdx(_)).toVector).toVector,
       funcs.valuesIterator.collect:
-        case f: FuncInfo => AbiFunction(f.sym, f.wrapId, f.emittedExportName.get, f.typeUse.typeIdx, f.optionalParams)
+        case f: FuncInfo => AbiFunction(f.sym, f.wrapId, f.exportName, f.typeUse.typeIdx, f.optionalParams)
       .toVector,
       globals.valuesIterator.collect:
-        case g: GlobalInfo => AbiGlobal(GlobalIdx(g.id), g.sym, g.wrapId, g.emittedExportName.get, g.globalType)
+        case g: GlobalInfo => AbiGlobal(GlobalIdx(g.id), g.sym, g.wrapId, g.exportName, g.globalType)
       .toVector,
       classes, namespaces, defaultExport,
     )

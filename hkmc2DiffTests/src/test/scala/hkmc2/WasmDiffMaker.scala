@@ -120,8 +120,8 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
         val fileImports = Vector(FileImport("system", runtime.compiled.interface)) ++
           linkedFiles.values.toVector.zipWithIndex.map { case ((_, compiled), i) => FileImport(s"module$i", compiled.interface) } ++
           worksheetInterfaces.toVector.zipWithIndex.map((abi, i) => FileImport(s"repl$i", abi))
-        WatBuilder.fresh.worksheetModule(pgrm, wd, symbolsToPreserve,
-          FileCompilation(fileImports, sourceImports.toSet, runtime = false))
+        WatBuilder.fresh(FileCompilation(fileImports, sourceImports.toSet, runtime = false))
+          .worksheetModule(pgrm, wd, symbolsToPreserve)
       val modWat = compiled.module.wat
       val mainFnNme = compiled.module.entryName
       val systemMemMinPages = compiled.module.systemMemMinPages
