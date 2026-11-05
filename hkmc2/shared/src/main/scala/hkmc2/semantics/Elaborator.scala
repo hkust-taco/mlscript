@@ -733,6 +733,9 @@ object Elaborator:
     def initRuntimeSymbolsFromFile(file: io.Path, prelude: Ctx)(using TL, Raise, CompilerCtx): Unit =
       if cachedRuntimeSymbols.isEmpty then
         cachedRuntimeSymbols = S(RuntimeSymbols.fromBlock(CompilerCtx.get.getElaboratedBlock(file, prelude).term))
+    /** Whether the runtime's symbols are available. The Prelude and the runtime itself are
+      * elaborated and erased before they are. */
+    def runtimeSymbolsInitialized: Bool = cachedRuntimeSymbols.isDefined
     private def runtimeSymbols: RuntimeSymbols =
       cachedRuntimeSymbols.getOrElse:
         lastWords("Runtime symbols have not been initialized from Runtime.mls.")

@@ -64,7 +64,8 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
 
   private def canonicalType(source: CanonicalErasedValueType): CanonicalErasedValueType = source match
     case ErasedType.AnyRef(rsc, symbol) => ErasedType.AnyRef(rsc, mapType(symbol))
-    case ErasedType.Incompatible(left, right) => ErasedType.Incompatible(canonicalType(left), canonicalType(right))
+    case source @ ErasedType.Incompatible(left, right) =>
+      ErasedType.Incompatible(canonicalType(left), canonicalType(right))(source.reported)
     case source @ (_: ErasedType.Primitive | ErasedType.Unknown | ErasedType.Nothing) => source
 
   private def valueType(source: ErasedValueType): ErasedValueType = source match

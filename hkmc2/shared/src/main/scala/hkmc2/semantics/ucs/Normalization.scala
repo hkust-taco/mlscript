@@ -326,7 +326,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State, C
     case Split.Let(sym, trm, tl) =>
       LoweringCtx.loweringCtx.collectScopedSym(sym)
       term_nonTail(trm): r =>
-        Assign(sym, r, lowerSplit(tl, cont))
+        val bound = sym match
+          // Pattern compilation declares the types of its temporaries, such as a string's head
+          // or a matcher's Boolean result, and binds them to calls of untyped runtime helpers.
+          // Such values have the declared representation by construction.
+          case sym: TempSymbol => r.coerceToKnown(sym.erasedType.getOrElse(ErasedType.Unknown), trm.toLoc)
+          case _ => lowering.castTo(r, sym.erasedType, trm.toLoc)
+        Assign(sym, bound, lowerSplit(tl, cont))
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
       subTerm_nonTail(scrut): sr =>
         tl.log(dbg"Binding scrut $scrut to $sr (${summon[LoweringCtx].localVals})")

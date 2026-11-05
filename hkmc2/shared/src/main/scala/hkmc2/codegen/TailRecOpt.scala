@@ -261,14 +261,14 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       case S(args) => args.map(_.value)
       case N => return CallArgsResult.ForceSpread
     
-    if paramList.restParam.isDefined then
-      val rest =
-        restArgs match
-          case Arg(S(SpreadKind.Eager), value) :: Nil => value
-          case _ => Tuple(true, restArgs)(N)
-      CallArgsResult.Success(hdPadded.appended(rest))
-    else
-      CallArgsResult.Success(hdPadded)
+    paramList.restParam match
+      case S(_) =>
+        // A call collects its rest arguments into a fresh array. A lone spread can
+        // contain another iterable, and even an Array operand can remain reachable
+        // through aliases or an earlier iteration's parameters.
+        CallArgsResult.Success(hdPadded.appended(Tuple(true, restArgs)(N)))
+      case N =>
+        CallArgsResult.Success(hdPadded)
   
   /**
     * Applies a parameter list to an argument list, both of which could contain arbitrary spreads.
