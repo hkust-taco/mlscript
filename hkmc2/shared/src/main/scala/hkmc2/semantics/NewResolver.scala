@@ -777,22 +777,34 @@ class NewResolver:
     * already been interpreted in both polarities; declaration variance keeps the
     * appropriate endpoint and supplies an extreme for the unused one.
     */
-  private def argumentType(tpe: DeclaredType, parameter: TyParam)(using ResolutionContext): DeclaredType =
+  private[semantics] def argumentType(tpe: DeclaredType, parameter: TyParam)(using ResolutionContext): DeclaredType =
     val variance = parameter.vce
     // SelectedArgument fixes one endpoint of a type argument. If the argument
     // was a wildcard, its source survives for diagnostics even though it no
     // longer denotes an input/output pair. Treating that retained syntax as a
     // fresh use-site override would wrongly skip this parameter's variance.
     // Only an unselected written wildcard overrides declaration-site variance.
-    val selected = tpe.resolution.currentShapes.exists:
-      case TypeShape.SelectedArgument(_, _) => true
-      case _ => false
-    if variance.isEmpty || (!selected && tpe.resolution.source.withoutCaptures.isInstanceOf[WildcardTy]) then tpe else
+    def writtenWildcard = tpe.resolution.source.withoutCaptures.isInstanceOf[WildcardTy] &&
+      !tpe.shapes.exists:
+        case TypeShape.SelectedArgument(_, _) => true
+        case _ => false
+    if variance.isEmpty || writtenWildcard then tpe else
       val varianceValue = variance.get
-      val selected = selectArgument(tpe, varianceValue)
-      val parts = if varianceValue then TypeArgument(extremeType(false), selected)
-        else TypeArgument(selected, extremeType(true))
-      val variant = normalizedArgument(tpe.resolution, parts)
+      def compute: DeclaredType =
+        val selected = selectArgument(tpe, varianceValue)
+        val parts = if varianceValue then TypeArgument(extremeType(false), selected)
+          else TypeArgument(selected, extremeType(true))
+        normalizedArgument(tpe.resolution, parts)
+      val key = (tpe, varianceValue)
+      val variant = rctx.state.variantTypes.get(key) match
+        case S((input, result)) if input.sameUse(tpe) => result
+        // Different witnesses share the semantic result, but keep their own
+        // interpretation. Do not accumulate cache entries for those witnesses.
+        case S(_) => compute
+        case N =>
+          val result = compute
+          rctx.state.variantTypes(key) = (tpe, result)
+          result
       // Different parameters can share the same semantic argument pair.
       // Keep the declaration witness on this use, outside the interned pair.
       if varianceValue then variant else variant.withOrigin(

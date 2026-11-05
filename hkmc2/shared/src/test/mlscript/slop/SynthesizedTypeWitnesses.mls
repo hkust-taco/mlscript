@@ -8,6 +8,16 @@ type Right[A] = A
 module Right with
   val Pick = 2
 
+// Repeated variance interpretation must keep equal underlying types' different
+// alias namespaces, including when the order of the calls is reversed.
+class Box[out A](val value: A)
+fun left(box: Box[Left[Int]]) = box.value
+fun right(box: Box[Right[Int]]) = box.value
+
+:expect [1, 2, 2, 1]
+[left(Box(Pick)), right(Box(Pick)), right(Box(Pick)), left(Box(Pick))]
+//│ = [1, 2, 2, 1]
+
 // These annotations have equal canonical formulas. Their observations must
 // retain both their own written witnesses and their reversed operand order.
 :e

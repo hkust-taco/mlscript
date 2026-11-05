@@ -276,6 +276,10 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.extremeTypes, identity)
   val selectedArguments: Cache[(DeclaredType, Bool), DeclaredType] =
     new Cache(_.selectedArguments, identity)
+  // Keep one input/result pair per semantic type and variance. The input lets a
+  // hit check its diagnostic evidence without retaining a key for every witness.
+  val variantTypes: Cache[(DeclaredType, Bool), (DeclaredType, DeclaredType)] =
+    new Cache(_.variantTypes, identity)
   val abstractTypes: Cache[TypeResolution, DeclaredType] =
     new Cache(_.abstractTypes, identity)
   val omittedTypes: Cache[(TypeResolution, VarSymbol), DeclaredType] =

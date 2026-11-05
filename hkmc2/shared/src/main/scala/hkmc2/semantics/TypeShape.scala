@@ -275,7 +275,7 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
     * through bound arguments here would expand shared DAG paths on cache hits.
     * A conservative miss retains the caller's witnesses without merging them.
     */
-  private def sameUse(that: DeclaredType): Bool =
+  private[semantics] def sameUse(that: DeclaredType): Bool =
     (this is that) || this == that && (bindings is that.bindings) &&
       (origin is that.origin) && (namespaces is that.namespaces) && (interpretation is that.interpretation)
   /** Synthesized nodes share an interned source, while each use keeps its own

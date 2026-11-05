@@ -50,6 +50,13 @@ class SubstitutionGrowthTest extends AnyFunSuite:
   private given DebugPrinter = new DebugPrinter()
   private val tl = TraceLogger.silent
 
+  private def allocationCounter: com.sun.management.ThreadMXBean =
+    val allocation = java.lang.management.ManagementFactory.getThreadMXBean match
+      case bean: com.sun.management.ThreadMXBean if bean.isThreadAllocatedMemorySupported => bean
+      case _ => cancel("This JVM does not expose thread allocation counters")
+    allocation.setThreadAllocatedMemoryEnabled(true)
+    allocation
+
   /** Resolves a generated unit through ordinary elaboration, in a fresh state. */
   private def measure(name: Str, source: Str): Measurement =
     val dir = os.temp.dir(prefix = "substitution-growth-")
@@ -210,10 +217,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
   // all its paths. Each argument below has two edges to the same child, while
   // its captured instance requires B even before a bound mentioning B arrives.
   test("synthesized dependency queries do not expand shared interpretation paths"):
-    val allocation = java.lang.management.ManagementFactory.getThreadMXBean match
-      case bean: com.sun.management.ThreadMXBean if bean.isThreadAllocatedMemorySupported => bean
-      case _ => cancel("This JVM does not expose thread allocation counters")
-    allocation.setThreadAllocatedMemoryEnabled(true)
+    val allocation = allocationCounter
     val h = new Harness
     import h.given
     val (a, b, unused) = (h.binder("A"), h.binder("B"), h.binder("Unused"))
@@ -370,6 +374,33 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     val value = DynShape()
     h.resolver.publishParameter(b1, value)
     assert(seen.toList == List(value))
+
+  // Equal argument uses must share variance interpretation work, even when the
+  // selected endpoint lies behind nested contextual references. This checks
+  // allocation independently of depth; diff tests cover namespaces and witnesses.
+  test("variance cache hits allocate independently of contextual argument depth"):
+    val allocation = allocationCounter
+    for depth <- 8 :: 32 :: Nil do
+      val h = new Harness
+      import h.given
+      val leaf = h.typeOf(h.binder("A"))
+      val root = (1 to depth).foldLeft(leaf): (child, _) =>
+        DeclaredType.synthesized(child.resolution, TypeShape.Contextual(ContextualType(child, Nil)))
+      val inputs = Vector.tabulate(4)(_ => root.withPolarity(false).withPolarity(true))
+      for positive <- false :: true :: Nil do
+        val parameter = TyParam(FldFlags.empty, S(positive), h.binder("T"))(N)
+        val expected = h.resolver.argumentType(root, parameter)
+        inputs.foreach(input => assert(h.resolver.argumentType(input, parameter) == expected))
+        val repetitions = 1000
+        val before = allocation.getCurrentThreadAllocatedBytes
+        var result = expected
+        var index = 0
+        while index < repetitions do
+          result = h.resolver.argumentType(inputs(index % inputs.size), parameter)
+          index += 1
+        val bytes = allocation.getCurrentThreadAllocatedBytes - before
+        assert(result == expected)
+        assert(bytes <= repetitions * 512L, s"Variance at depth $depth allocated $bytes bytes")
 
   // Retain every returned view, so semantic key equality alone cannot hide a
   // fresh per-use wrapper or scope path on each hit of the transport cache.
