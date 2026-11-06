@@ -268,7 +268,8 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
   
   def print(imports: Ls[ImportSymbol -> Str])(using Scope): Document =
     imports.map: (local, path) =>
-        // Source imports retain their definition's identity, including aliases and repeated worksheet imports.
+        // Source imports retain their definition's identity, including aliases and repeated worksheet imports,
+        // so `scope.allocateName` could crash, here.
         val docLocal = scope.allocateOrGetName(local)
         doc"""import "..." as ${docLocal}; # """
       .mkDocument()

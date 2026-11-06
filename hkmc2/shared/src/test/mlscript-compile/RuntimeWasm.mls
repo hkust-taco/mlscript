@@ -1,6 +1,8 @@
 #lang(0.3.x)
 #config(target: CompilationTarget.JS, noFreeze: true)
 
+open annotations { async }
+
 import "binaryen"
 import "node:fs/promises" as fs
 import "./Runtime.mls"
@@ -79,7 +81,7 @@ fun instanceImports(imports: dyn, pages: Int): dyn =
     mlx_str_from_utf16: (ptr: Int, length: Int) => decoder.decode(new Uint8Array(memory.buffer, ptr, length))
   } }
 
-@annotations.async
+@async
 fun instantiate(url: Str, imports: dyn, pages: Int): dyn =
   let wat = handlers.await(fs.readFile(new URL(url), "utf8").catch of (error: dyn) =>
     if error.code === "ENOENT" then
@@ -113,7 +115,7 @@ fun loadRuntime(url: Str, entry: Str, native: dyn): Promise[dyn] =
     runtimes.set(url, new RuntimeLoad(entry, promise))
     promise
 
-@annotations.async
+@async
 fun loadImports(base: Str, paths: Array[Str], imports: dyn, native: dyn): dyn =
   let i = 0
   // Await siblings sequentially: parallel imports can reorder their initialization
@@ -156,7 +158,7 @@ fun facade(exports: dyn, tag: dyn, descriptor: dyn, native: dyn): dyn =
       set i += 1
     result
 
-@annotations.async
+@async
 fun loadModule(base: Str, metadata: dyn, native: dyn): dyn =
   let system = handlers.await(loadRuntime(relativeUrl(metadata.runtime.path, base), metadata.runtime.entry, native))
   let imports = handlers.await(loadImports(base, metadata.dependencies, {system: system}, native))
@@ -173,7 +175,7 @@ fun loadModule(base: Str, metadata: dyn, native: dyn): dyn =
 class Worksheet(val system: dyn, val native: dyn) with
   private val imports: dyn = {system: system}
 
-  @annotations.async
+  @async
   fun loadFiles(paths: Array[Str]): () =
     handlers.await(loadImports("file:///", paths, imports, native))
     ()
@@ -186,7 +188,7 @@ class Worksheet(val system: dyn, val native: dyn) with
     set imports.("repl" + index) = instance.exports
     result
 
-@annotations.async
+@async
 fun worksheet(url: Str, entry: Str, native: dyn): Worksheet =
   let system = handlers.await(loadRuntime(url, entry, native))
   new Worksheet(system, native)

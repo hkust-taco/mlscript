@@ -54,9 +54,11 @@ class Importer extends NewResolver:
           reportCycle(cctx.allFilesBeingImported :+ file)
         else
           cctx.withActiveDependency(file)(reportCycle):
+            
             val artifact = tl.trace(dbg">>> Importing $file"):
               given TL = tl
               cctx.getElaboratedBlock(file, prelude)
+            
             // Source imports link the bindings that each unit's own backend compiles. Reporting a mismatch here
             // makes it an error of the importing unit, which its artifact records like any other.
             if !artifact.config.target.sameBackend(cfg.target) then raise(ErrorReport(
@@ -66,13 +68,14 @@ class Importer extends NewResolver:
             val importedSym = artifact.compilationUnit.defaultExport.getOrElse:
               raise(ErrorReport(msg"File '$path' does not define a default export named '$nme'" -> id.toLoc :: Nil))
               BlockMemberSymbol(nme, Nil)
-            // An alias changes the lexical binding, not the imported definition's identity.
+            
+            // An import alias changes the lexical binding, not the imported definition's identity.
             // Keeping its symbol also preserves statically known class/module information.
             val sym = importedSym
-
+            
             // New resolution also follows this original symbol's published shapes directly;
             // no local alias symbol needs a separate shape subscription.
-
+            
             val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
             cctx.recordSourceImport(sym, file, artifact, loc)
             Import(sym, jsFile.toString, file)(loc)
