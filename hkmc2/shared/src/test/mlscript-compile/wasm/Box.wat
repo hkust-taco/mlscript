@@ -1,14 +1,14 @@
 (module
-  (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-  (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-  (type $Box (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $value (mut (ref null any))))))
+  (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+  (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
+  (type $Box (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $value@1 (mut (ref null any))))))
   (type $virtual1 (func (param $this (ref $Box)) (result (ref null any))))
-  (type $Box_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)) (field $slot0 (mut (ref null $virtual1))))))
+  (type $Box_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)) (field $slot0@2 (mut (ref null $virtual1))))))
   (type $Box_init (func (param $this (ref $Box)) (param $value (ref null any)) (result (ref $Box))))
   (type $Box_ctor (func (param $value (ref null any)) (result (ref $Box))))
-  (type $TypeInfoBase1 (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase1)))))
-  (type $Object1 (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
-  (type $Unit (sub $Object1 (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
+  (type $TypeInfoBase1 (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase1)))))
+  (type $Object1 (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase1))))))
+  (type $Unit (sub $Object1 (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase1))))))
   (type $entry (func (result (ref null any))))
   (import "system" "Unit$inst" (global $Unit$inst (mut (ref null $Unit))))
   (global $Box_typeinfo (export "Box_typeinfo") (ref $Box_typeinfo) (struct.new $Box_typeinfo
@@ -16,7 +16,7 @@
     (ref.null $TypeInfoBase)
     (ref.func $Box_answer)))
   (func $Box_init (export "Box_init") (type $Box_init) (param $this (ref $Box)) (param $value (ref null any)) (result (ref $Box))
-    (struct.set $Box 1
+    (struct.set $Box $value@1
       (local.get $this)
       (local.get $value))
     (return
@@ -36,7 +36,7 @@
       (local.get $this)))
   (func $Box_answer (export "Box_answer") (type $virtual1) (param $this (ref $Box)) (result (ref null any))
     (return
-      (struct.get $Box 1
+      (struct.get $Box $value@1
         (local.get $this))))
   (func $entry (export "entry") (type $entry) (result (ref null any))
     (global.get $Unit$inst))

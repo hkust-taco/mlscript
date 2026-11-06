@@ -14,10 +14,10 @@ fun useBox(b: Box): Int = b.v
 useBox(id(new Box(42)))
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Box (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $v (mut (ref null i31))))))
-//│   (type $Box_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $Box (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $v@1 (mut (ref null i31))))))
+//│   (type $Box_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Box_init (func (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))))
 //│   (type $Box_ctor (func (param $v (ref null i31)) (result (ref $Box))))
 //│   (type $id (func (param $a (ref null any)) (result (ref null any))))
@@ -27,7 +27,7 @@ useBox(id(new Box(42)))
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Box_init (export "Box_init") (type $Box_init) (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))
-//│     (struct.set $Box 1
+//│     (struct.set $Box $v@1
 //│       (local.get $this)
 //│       (local.get $v))
 //│     (return
@@ -50,7 +50,7 @@ useBox(id(new Box(42)))
 //│       (local.get $a)))
 //│   (func $useBox (export "useBox") (type $useBox) (param $b (ref null $Box)) (result (ref null i31))
 //│     (return
-//│       (struct.get $Box 1
+//│       (struct.get $Box $v@1
 //│         (local.get $b))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref null $Box))

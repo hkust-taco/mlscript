@@ -170,9 +170,18 @@ case class FunctionType(sigType: SignatureType) extends ToWat:
     doc"(func${sigType.toWat.surroundUnlessEmpty(doc" ")})"
 
 /** A type representing a struct field. */
-case class Field(ty: ValType, mutable: Bool, id: Str) extends ToWat:
-  def toWat: Document =
-    doc"(field $$$id ${if mutable then doc"(mut ${ty.toWat})" else ty.toWat})"
+case class Field(ty: ValType, mutable: Bool, id: Str):
+  /** Keeps names readable while making a shared identifier imply the same layout slot.
+    * Binaryen versions 131 through 133 merge field name maps for structurally equal types before
+    * resolving accesses; a bare name reused at different offsets can silently select the wrong field.
+    * The suffix also distinguishes shadowed fields in inherited layouts. Both declarations
+    * and accesses must use this identifier, with the offset in the complete struct layout. */
+  def index(offset: Int): FieldIdx =
+    require(offset >= 0)
+    FieldIdx(SymIdx(s"$id@$offset"))
+
+  def toWat(offset: Int): Document =
+    doc"(field ${index(offset).toWat} ${if mutable then doc"(mut ${ty.toWat})" else ty.toWat})"
 
 /** A type representing a structure type. */
 case class StructType(
@@ -184,7 +193,8 @@ case class StructType(
   lazy val fieldsBySym: Map[DefinitionSymbol[?], Field] = fields.toMap
 
   def toWat: Document =
-    val structWat = doc"(struct${fields.map(_._2.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
+    val fieldDocs = fields.iterator.zipWithIndex.map((entry, offset) => entry._2.toWat(offset))
+    val structWat = doc"(struct${fieldDocs.mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
     if parents.isEmpty && isFinal then
       structWat
     else
@@ -248,11 +258,6 @@ sealed abstract class Index extends ToWat
 case class SymIdx(val id: Str) extends Index:
   def toWat: Document = doc"$$$id"
 
-/** A numeric index, used for field offsets whose names are only debug information. */
-case class NumIdx(value: Int) extends Index:
-  require(value >= 0)
-  def toWat: Document = doc"$value"
-
 /** An index that is bound to an index space. */
 sealed abstract class CtxIdx(idx: Index) extends ToWat:
   def toWat: Document = idx.toWat
@@ -273,7 +278,7 @@ case class FuncIdx(idx: SymIdx) extends CtxIdx(idx)
 case class LocalIdx(idx: SymIdx) extends CtxIdx(idx)
 
 /** An index bound to the ''fields'' index space. */
-case class FieldIdx(idx: Index) extends CtxIdx(idx)
+case class FieldIdx(idx: SymIdx) extends CtxIdx(idx)
 
 /** An index bound to the ''tags'' index space. */
 case class TagIdx(idx: SymIdx) extends CtxIdx(idx)

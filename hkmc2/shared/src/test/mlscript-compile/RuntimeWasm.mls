@@ -47,7 +47,10 @@ private val runtimes = new Map[Str, RuntimeLoad]()
 fun relativeUrl(path: Str, base: Str): Str = new URL(path, base).href
 
 fun withWat(wat: Str, description: Str, use: dyn -> dyn): dyn =
-  let mod = binaryen.parseText(wat, binaryen.Features.All)
+  // Binaryen 132 can emit compact import groups when this feature is enabled.
+  // Node 22 rejects that binary encoding, so keep the standard import entries.
+  let features = binaryen.Features.All - binaryen.Features.CompactImports
+  let mod = binaryen.parseText(wat, features)
   let result = Runtime.try_catch of
     () =>
       // Binaryen may return 1 rather than true from validate().

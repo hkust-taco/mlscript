@@ -141,10 +141,28 @@ deduplicate types by origin and representation.
 Internal names and external names are allocated separately; neither depends on
 global uniqueness of source names or state-local UIDs.
 
-Field accesses use numeric layout offsets. Classes with equal WASM layouts can
-give different names to the same offsets; Binaryen's type canonicalization can
-misresolve symbolic field accesses in that case. Numeric accesses preserve the
-compiler's resolved field identity through assembly.
+Field declarations and accesses use symbolic identifiers with a zero-based layout
+slot suffix, such as `(field $value@2 ...)` and `(struct.get $Box $value@2 ...)`.
+The suffix keeps WAT readable while avoiding a Binaryen parser bug: after
+canonicalizing structurally equal types, Binaryen
+[merges their field name maps](https://github.com/WebAssembly/binaryen/blob/version_133/src/parser/parse-2-typedefs.cpp#L40-L49)
+and keeps the first slot associated with each name. For example, two structs with
+the same field types but names `{x, y}` and `{y, x}` can make an access to the
+second struct's `x` silently read or write its `y` field. This reproduces in
+Binaryen 131, 132 (the pinned version), and 133, as checked on 2026-11-06.
+
+Appending the slot makes such collisions harmless: equal identifiers necessarily
+refer to equal slots, while `$x@0` and `$x@1` remain distinct. It also distinguishes
+shadowed inherited fields in a single layout. `Field.index` supplies the same
+identifier for declarations and accesses, using the slot in the complete layout,
+including inherited fields. The layout and type identity remain unchanged.
+The `FieldLayouts` compilation fixture and
+`slop/wasm/FieldNames.mls` cover colliding layouts, mutation, and shadowed fields.
+
+Binaryen 132 also [automatically emits compact import groups when enabled](https://github.com/WebAssembly/binaryen/blob/version_132/CHANGELOG.md#v132).
+Node 22 rejects that binary encoding with `unknown import kind 0x7e`.
+`RuntimeWasm.withWat` disables `CompactImports` so the binary writer retains the
+standard import entries, including for worksheets importing an earlier block.
 
 Files currently export all their defined backend functions and globals, including
 private helpers, and snapshot the complete type table. This deliberately favors

@@ -24,8 +24,8 @@ set counter += step
 counter
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type $entry (func (result (ref null any))))
 //│   (import "system" "plus_impl" (func $plus_impl (type $plus_impl)))
@@ -48,11 +48,11 @@ unit
 ()
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $TypeInfoBase1 (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase1)))))
-//│   (type $Object1 (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
-//│   (type $Unit (sub $Object1 (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase1 (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase1)))))
+//│   (type $Object1 (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase1))))))
+//│   (type $Unit (sub $Object1 (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase1))))))
 //│   (type $entry (func (result (ref null $Unit))))
 //│   (import "system" "Unit$inst" (global $Unit$inst (mut (ref null $Unit))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null $Unit))
@@ -72,11 +72,11 @@ fun idI32(n: Int32): Int32 = n
 val copied: Int32 = idI32(typed)
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $TypeInfoBase1 (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase1)))))
-//│   (type $Object1 (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
-//│   (type $Unit (sub $Object1 (struct (field $$typeinfo (mut (ref $TypeInfoBase1))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase1 (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase1)))))
+//│   (type $Object1 (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase1))))))
+//│   (type $Unit (sub $Object1 (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase1))))))
 //│   (type $entry (func (result (ref null any))))
 //│   (import "repl6" "typed" (global $typed (mut i32)))
 //│   (import "system" "Unit$inst" (global $Unit$inst (mut (ref null $Unit))))
@@ -94,8 +94,8 @@ val copied: Int32 = idI32(typed)
 idI32(typed)
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $entry (func (result i32)))
 //│   (import "repl6" "typed" (global $typed (mut i32)))
 //│   (func $entry (export "entry") (type $entry) (result i32)

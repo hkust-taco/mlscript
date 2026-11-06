@@ -9,10 +9,10 @@ let a = A(1)
 a.A#get() + A(2).get()
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $A (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))
-//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $A (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $x@1 (mut (ref null any))))))
+//│   (type $A_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
 //│   (type $A_init (func (param $this (ref $A)) (param $x (ref null any)) (result (ref $A))))
 //│   (type $A_ctor (func (param $x (ref null any)) (result (ref $A))))
 //│   (type $A_get (func (param $this (ref $A)) (result (ref null any))))
@@ -24,7 +24,7 @@ a.A#get() + A(2).get()
 //│     (ref.null $TypeInfoBase)))
 //│   (global $a (export "a") (mut (ref null any)) (ref.null any))
 //│   (func $A_init (export "A_init") (type $A_init) (param $this (ref $A)) (param $x (ref null any)) (result (ref $A))
-//│     (struct.set $A 1
+//│     (struct.set $A $x@1
 //│       (local.get $this)
 //│       (local.get $x))
 //│     (return
@@ -44,7 +44,7 @@ a.A#get() + A(2).get()
 //│       (local.get $this)))
 //│   (func $A_get (export "A_get") (type $A_get) (param $this (ref $A)) (result (ref null any))
 //│     (return
-//│       (struct.get $A 1
+//│       (struct.get $A $x@1
 //│         (local.get $this))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
@@ -213,10 +213,10 @@ class Prim(val v) with
 Prim(0).take(n32)
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Prim (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $v (mut (ref null any))))))
-//│   (type $Prim_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $Prim (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $v@1 (mut (ref null any))))))
+//│   (type $Prim_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Prim_init (func (param $this (ref $Prim)) (param $v (ref null any)) (result (ref $Prim))))
 //│   (type $Prim_ctor (func (param $v (ref null any)) (result (ref $Prim))))
 //│   (type $Prim_take (func (param $this (ref $Prim)) (param $m i32) (result i32)))
@@ -226,7 +226,7 @@ Prim(0).take(n32)
 //│     (ref.null $TypeInfoBase)))
 //│   (global $n32 (export "n32") (mut i32) (i32.const 0))
 //│   (func $Prim_init (export "Prim_init") (type $Prim_init) (param $this (ref $Prim)) (param $v (ref null any)) (result (ref $Prim))
-//│     (struct.set $Prim 1
+//│     (struct.set $Prim $v@1
 //│       (local.get $this)
 //│       (local.get $v))
 //│     (return

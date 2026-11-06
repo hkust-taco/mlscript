@@ -1749,11 +1749,8 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
             case _ => false
         case _ => -1
     assert(offset >= 0, s"Missing field $sym in struct $thisSym")
-    // Binaryen canonicalizes equal layouts before resolving field names. Two classes
-    // can have the same layout but put the same field name at different offsets;
-    // symbolic accesses can then silently select the other class's field. Layout
-    // offsets are unambiguous and also handle shadowed inherited field names.
-    (FieldIdx(NumIdx(offset)), fields(offset)._2)
+    val field = fields(offset)._2
+    (field.index(offset), field)
   end classField
 
   def fieldSelect(thisSym: TypeKey | TypeIdx, sym: DefinitionSymbol[?])(using Ctx): FieldIdx =

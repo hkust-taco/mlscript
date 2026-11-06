@@ -57,8 +57,8 @@ fun foo() = 42
 foo() + foo()
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $foo (func (result (ref null any))))
 //│   (type $entry (func (result (ref null i31))))
 //│   (func $foo (export "foo") (type $foo) (result (ref null any))
@@ -90,8 +90,8 @@ fun useIt(v) = addOne(v)
 addOne(41) + useIt(41)
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $addOne (func (param $x (ref null i31)) (result (ref null any))))
 //│   (type $useIt (func (param $v (ref null any)) (result (ref null any))))
 //│   (type $plus_impl (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
@@ -142,10 +142,10 @@ class Foo(val a)
 new Foo(42).Foo#a
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $a (mut (ref null any))))))
-//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $a@1 (mut (ref null any))))))
+//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Foo_init (func (param $this (ref $Foo)) (param $a (ref null any)) (result (ref $Foo))))
 //│   (type $Foo_ctor (func (param $a (ref null any)) (result (ref $Foo))))
 //│   (type $entry (func (result (ref null any))))
@@ -153,7 +153,7 @@ new Foo(42).Foo#a
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (export "Foo_init") (type $Foo_init) (param $this (ref $Foo)) (param $a (ref null any)) (result (ref $Foo))
-//│     (struct.set $Foo 1
+//│     (struct.set $Foo $a@1
 //│       (local.get $this)
 //│       (local.get $a))
 //│     (return
@@ -178,7 +178,7 @@ new Foo(42).Foo#a
 //│         (ref.i31
 //│           (i32.const 42))))
 //│     (return
-//│       (struct.get $Foo 1
+//│       (struct.get $Foo $a@1
 //│         (local.get $tmp))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
@@ -202,14 +202,14 @@ fun getX(f: Foo) = f.bar.Bar#x
 getX(Foo(Bar(42)))
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Bar (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))))))
-//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $bar (mut (ref null $Bar))))))
-//│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $Bar (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $x@1 (mut (ref null any))))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $bar@1 (mut (ref null $Bar))))))
+//│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Bar_init (func (param $this (ref $Bar)) (param $x (ref null any)) (result (ref $Bar))))
 //│   (type $Bar_ctor (func (param $x (ref null any)) (result (ref $Bar))))
-//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Foo_init (func (param $this (ref $Foo)) (param $bar (ref null $Bar)) (result (ref $Foo))))
 //│   (type $Foo_ctor (func (param $bar (ref null $Bar)) (result (ref $Foo))))
 //│   (type $getX (func (param $f (ref null $Foo)) (result (ref null any))))
@@ -221,7 +221,7 @@ getX(Foo(Bar(42)))
 //│     (i32.const 2)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Bar_init (export "Bar_init") (type $Bar_init) (param $this (ref $Bar)) (param $x (ref null any)) (result (ref $Bar))
-//│     (struct.set $Bar 1
+//│     (struct.set $Bar $x@1
 //│       (local.get $this)
 //│       (local.get $x))
 //│     (return
@@ -240,7 +240,7 @@ getX(Foo(Bar(42)))
 //│     (return
 //│       (local.get $this)))
 //│   (func $Foo_init (export "Foo_init") (type $Foo_init) (param $this (ref $Foo)) (param $bar (ref null $Bar)) (result (ref $Foo))
-//│     (struct.set $Foo 1
+//│     (struct.set $Foo $bar@1
 //│       (local.get $this)
 //│       (local.get $bar))
 //│     (return
@@ -260,8 +260,8 @@ getX(Foo(Bar(42)))
 //│       (local.get $this)))
 //│   (func $getX (export "getX") (type $getX) (param $f (ref null $Foo)) (result (ref null any))
 //│     (return
-//│       (struct.get $Bar 1
-//│         (struct.get $Foo 1
+//│       (struct.get $Bar $x@1
+//│         (struct.get $Foo $bar@1
 //│           (local.get $f)))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null any))
 //│     (local $tmp (ref null any))
@@ -304,10 +304,10 @@ class Foo(val x) with
 new Foo(42).Foo#y
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Foo (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
-//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $Foo (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $x@1 (mut (ref null any))) (field $y@2 (mut (ref null any))))))
+//│   (type $Foo_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Foo_init (func (param $this (ref $Foo)) (param $x (ref null any)) (result (ref $Foo))))
 //│   (type $Foo_ctor (func (param $x (ref null any)) (result (ref $Foo))))
 //│   (type $entry (func (result (ref null any))))
@@ -315,12 +315,12 @@ new Foo(42).Foo#y
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
 //│   (func $Foo_init (export "Foo_init") (type $Foo_init) (param $this (ref $Foo)) (param $x (ref null any)) (result (ref $Foo))
-//│     (struct.set $Foo 1
+//│     (struct.set $Foo $x@1
 //│       (local.get $this)
 //│       (local.get $x))
-//│     (struct.set $Foo 2
+//│     (struct.set $Foo $y@2
 //│       (local.get $this)
-//│       (struct.get $Foo 1
+//│       (struct.get $Foo $x@1
 //│         (local.get $this)))
 //│     (return
 //│       (ref.cast (ref $Foo)
@@ -345,7 +345,7 @@ new Foo(42).Foo#y
 //│         (ref.i31
 //│           (i32.const 42))))
 //│     (return
-//│       (struct.get $Foo 2
+//│       (struct.get $Foo $y@2
 //│         (local.get $tmp))))
 //│   (elem $Foo_init declare func $Foo_init)
 //│   (elem $Foo_ctor declare func $Foo_ctor)
@@ -361,10 +361,10 @@ object O with
 O.y
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $O (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $x (mut (ref null any))) (field $y (mut (ref null any))))))
-//│   (type $O_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $O (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $x@1 (mut (ref null any))) (field $y@2 (mut (ref null any))))))
+//│   (type $O_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
 //│   (type $O_init (func (param $this (ref $O)) (result (ref $O))))
 //│   (type $O_ctor (func (result (ref $O))))
 //│   (type $entry (func (result (ref null any))))
@@ -373,13 +373,13 @@ O.y
 //│     (ref.null $TypeInfoBase)))
 //│   (global $O$inst (export "O$inst") (mut (ref null $O)) (ref.null $O))
 //│   (func $O_init (export "O_init") (type $O_init) (param $this (ref $O)) (result (ref $O))
-//│     (struct.set $O 1
+//│     (struct.set $O $x@1
 //│       (local.get $this)
 //│       (ref.i31
 //│         (i32.const 1)))
-//│     (struct.set $O 2
+//│     (struct.set $O $y@2
 //│       (local.get $this)
-//│       (struct.get $O 1
+//│       (struct.get $O $x@1
 //│         (local.get $this)))
 //│     (return
 //│       (ref.cast (ref $O)
@@ -400,7 +400,7 @@ O.y
 //│     (global.set $O$inst
 //│       (call $O_ctor))
 //│     (return
-//│       (struct.get $O 2
+//│       (struct.get $O $y@2
 //│         (global.get $O$inst))))
 //│   (elem $O_init declare func $O_init)
 //│   (elem $O_ctor declare func $O_ctor)
