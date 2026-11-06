@@ -246,6 +246,8 @@ object Config:
     // One specific scenario is Rendering.mls, which Runtime.mls depends on, and hence using stack safety will
     // reference Runtime.mls during construction of the Rendering module, causing a cyclic dependency error.
     doNotInstrumentTopLevelModCtor: Bool = false,
+    // Whether tail resumptive handlers should be optimized.
+    optTailResumptiveHandlers: Bool = true
   )
   
   case class StackSafety(stackLimit: Int)
@@ -687,6 +689,7 @@ object ConfigParser:
       var checkInstantiateEffect = base.checkInstantiateEffect
       var softLifterError = base.softLifterError
       var doNotInstrumentTopLevelModCtor = base.doNotInstrumentTopLevelModCtor
+      var optTailResumptiveHandlers = base.optTailResumptiveHandlers
       args.foreach:
         case NamedArg("debug", value) =>
           setFrom(value)(parseBool)(v => debug = v)
@@ -698,9 +701,11 @@ object ConfigParser:
           setFrom(value)(parseBool)(v => softLifterError = v)
         case NamedArg("doNotInstrumentTopLevelModCtor", value) =>
           setFrom(value)(parseBool)(v => doNotInstrumentTopLevelModCtor = v)
+        case NamedArg("optTailResumptiveHandlers", value) =>
+          setFrom(value)(parseBool)(v => optTailResumptiveHandlers = v)
         case other =>
           unsupported("EffectHandlers", other)
-      S(Config.EffectHandlers(debug, stackSafety, checkInstantiateEffect, softLifterError, doNotInstrumentTopLevelModCtor))
+      S(Config.EffectHandlers(debug, stackSafety, checkInstantiateEffect, softLifterError, doNotInstrumentTopLevelModCtor, optTailResumptiveHandlers))
     case _ =>
       expect("EffectHandlers(...)")(tree)
       N

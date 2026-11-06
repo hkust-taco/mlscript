@@ -90,6 +90,7 @@ oops
 
 
 :fixme
+#config(effectHandlers: Some(EffectHandlers(optTailResumptiveHandlers:false)))
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =

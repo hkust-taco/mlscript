@@ -613,7 +613,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
           // Abortive handlers also expose these same definitions in their synthetic
           // class body. They are one binding, with the resumption symbol in scope.
           scope.definitions(Identity(handler.td)) = definition
-          HandlerTermDefinition(handlerScope.mapVarSym(handler.resumeSym), definition)
+          HandlerTermDefinition(handlerScope.mapVarSym(handler.resumeSym), definition, handler.annots)
         derivedClsSym.defn.foreach(scope.definition)
         Handle(scope.mapLocal(lhs), rhs.cloned, args.map(_.cloned), scope.mapClsSym(derivedClsSym), handlers, scope.term(body))(handle.isAbortive)
     copyMetadata(source, that)

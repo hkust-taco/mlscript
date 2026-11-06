@@ -1,0 +1,187 @@
+:js
+:effectHandlers
+:lift
+
+// Tail resumptive
+:sir
+handle h = Object with
+  fun perform(x)(k) =
+    k(x)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let h, tmp, handleBlock$, Handler$h$;
+//│ do runtime⁰.resetEffects﹖();
+//│ define Handler$h$ as class Handler$h$⁰ extends globalThis⁰.Object⁰ {
+//│   method perform⁰ = fun perform¹(x) {
+//│     return x
+//│   }
+//│ };
+//│ set h = new mut Handler$h$⁰();
+//│ define handleBlock$ as fun handleBlock$⁰() {
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ set tmp = runtime⁰.enterHandleBlock﹖(h, handleBlock$⁰);
+//│ match runtime⁰.curEffect﹖
+//│   null =>
+//│     return tmp
+//│   else
+//│     set tmp = runtime⁰.topLevelEffect﹖(false);
+//│     return tmp
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Tail resumptive
+:sir
+handle h = Object with
+  fun perform(x)(k) =
+    if x ===
+      0 then k(0)
+      1 then k(1)
+      2 then k(3)
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let h, tmp, handleBlock$, Handler$h$;
+//│ do runtime⁰.resetEffects﹖();
+//│ define Handler$h$ as class Handler$h$¹ extends globalThis⁰.Object⁰ {
+//│   method perform² = fun perform³(x) {
+//│     let scrut, scrut1, scrut2;
+//│     set scrut = ===⁰(x, 0);
+//│     match scrut
+//│       true =>
+//│         return 0
+//│       else
+//│         set scrut1 = ===⁰(x, 1);
+//│         match scrut1
+//│           true =>
+//│             return 1
+//│           else
+//│             set scrut2 = ===⁰(x, 2);
+//│             match scrut2
+//│               true =>
+//│                 return 3
+//│               else
+//│                 throw new globalThis⁰.Error⁰("match error")
+//│             end
+//│         end
+//│     end
+//│   }
+//│ };
+//│ set h = new mut Handler$h$¹();
+//│ define handleBlock$ as fun handleBlock$¹() {
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ set tmp = runtime⁰.enterHandleBlock﹖(h, handleBlock$¹);
+//│ match runtime⁰.curEffect﹖
+//│   null =>
+//│     return tmp
+//│   else
+//│     set tmp = runtime⁰.topLevelEffect﹖(false);
+//│     return tmp
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Tail resumptive
+:soir
+handle h = Object with
+  fun perform(x)(k) =
+    fun f = x + x
+    k(f)
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let h, tmp, handleBlock$, Handler$h$;
+//│ do runtime⁰.resetEffects﹖();
+//│ define Handler$h$ as class Handler$h$² extends globalThis⁰.Object⁰ {
+//│   method perform⁴ = fun perform⁵(x) {
+//│     let pc;
+//│     match runtime⁰.resumePc﹖
+//│       -1 =>
+//│         set pc = 0;
+//│         end
+//│       else
+//│         set pc = (runtime⁰.resumePc﹖ as! Int⁰);
+//│         set runtime⁰.resumePc﹖ = -1;
+//│         end
+//│     match pc
+//│       0 =>
+//│         let inlinedVal;
+//│         set inlinedVal = +⁰(x, x);
+//│         set runtime⁰.resumeValue﹖ = inlinedVal;
+//│         match runtime⁰.curEffect﹖
+//│           null =>
+//│             set pc = 1;
+//│             end
+//│           else
+//│             do runtime⁰.unwind﹖(Handler$h$².this.perform⁵, 1, "TailResumptiveHandlers.mls:86:7", null, Handler$h$².this, 1, 1, x, 0);
+//│             return undefined
+//│         end
+//│     match pc
+//│       1 =>
+//│         return runtime⁰.resumeValue﹖
+//│       else
+//│         end
+//│     end
+//│   }
+//│ };
+//│ set h = new mut Handler$h$²();
+//│ define handleBlock$ as fun handleBlock$²() {
+//│   return runtime⁰.Unit⁰
+//│ };
+//│ set tmp = runtime⁰.enterHandleBlock﹖(h, handleBlock$²);
+//│ match runtime⁰.curEffect﹖
+//│   null =>
+//│     return tmp
+//│   else
+//│     return runtime⁰.topLevelEffect﹖(false)
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+// Non-tail resumptive
+:expect 42
+fun f() =
+  handle h = Object with
+    fun perform(x)(k) =
+      let x = () => return 42
+      k(x())
+  h.perform(0) + 1000
+f()
+//│ = 42
+
+// Non tail resumptive
+:expect 100
+handle h = Object with
+  fun perform(x)(k) =
+    if x ===
+      0 then k(0)
+      1 then k(1)
+      2 then k(3)
+    else 100
+h.perform(3)
+//│ = 100
+
+// Non tail resumptive
+:expect "lol"
+handle h = Object with
+  fun perform(x)(k) =
+    if x === 0 do return k(0)
+    "lol"
+h.perform(1)
+//│ = "lol"
+
+// Non tail resumptive
+:expect "lol"
+let x =
+  handle h = Object with
+    fun perform(x)(k) =
+      if x === 0 then k(0)
+      else k
+  in
+    h.perform(1)
+    "lol"
+x()
+//│ = "lol"
+//│ x = fun
+
+// Non tail resumptive
+:expect 1
+handle h = Object with
+  fun perform(x)(k) =
+    k(0) + 1
+h.perform(0)
+//│ = 1

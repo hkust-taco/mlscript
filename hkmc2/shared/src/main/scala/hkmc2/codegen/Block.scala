@@ -15,6 +15,7 @@ import syntax.{Literal, Tree, SpreadKind, Keyword}
 import semantics.*
 import semantics.Term.*
 import sem.Elaborator.{Ctx, State}
+import scala.util.boundary
 
 
 /* Important design notes.
@@ -576,6 +577,45 @@ object HandleBlock:
     val bms = Elaborator.ctx.builtins.runtime.handle_suspension
     Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
   
+  def optTailResumptive(resumeSym: VarSymbol, body: Block)(using Config): Opt[Block] =
+    if !config.effectHandlers.map(_.optTailResumptiveHandlers).getOrElse(false) then N
+    else
+      var failed = false
+      val transformer = new BlockTransformerShallow(SymbolSubst()):
+        def fail =
+          failed = true
+          End()
+        override def applyPath(p: Path)(k: Path => Block): Block = p match
+          case Value.SimpleRef(`resumeSym`) => fail
+          case _ => super.applyPath(p)(k)
+        override def applyBlock(b: Block): Block = b match
+          case Return(Call(Value.SimpleRef(`resumeSym`), (arg :: Nil) :: Nil)) => Return(arg.value)
+          case Return(_) => fail // non tail resumptive
+          case _ => super.applyBlock(b)
+      val res = transformer.applyBlock(body)
+      if failed then N
+      else S(res)
+  
+  def createHandlerMtd(cls: ClassSymbol)(handler: Handler)(using Config, Elaborator.State, Elaborator.Ctx) =
+    val body = optTailResumptive(handler.resumeSym, handler.body) match
+      case Some(value) => value
+      case None =>
+        val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
+        val fDef = FunDefn.withFreshSymbol(
+          N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
+          handler.body
+          )(N, annotations = Nil)
+        val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
+        Scoped(Set(sym, rSym), Define(
+          fDef,
+          Return(suspend(cls.asThis, sym.asMemberRef(fDef.dSym)))))
+    FunDefn.withFreshSymbol(
+      S(cls),
+      handler.sym,
+      handler.params,
+      body
+    )(N, annotations = Nil)
+
   private def create(
       lhs: LocalVarSymbol,
       res: LocalVarSymbol,
@@ -585,25 +625,12 @@ object HandleBlock:
       handlers: Ls[Handler],
       body: Block,
       rest: Block
-  )(using Elaborator.State, Elaborator.Ctx) =
+  )(using Config, Elaborator.State, Elaborator.Ctx) =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
     val bodyDefn = FunDefn.withFreshSymbol(N, sym, LoweredParamList.plain(Nil)(N) :: Nil, body)(N, annotations = Nil)
     
-    val handlerMtds = handlers.map: handler =>
-      val sym = BlockMemberSymbol(cls.nme + handler.sym.nme, Nil, true)
-      val fDef = FunDefn.withFreshSymbol(
-        N, sym, LoweredParamList.plain(Param.simple(handler.resumeSym) :: Nil)(N) :: Nil,
-        handler.body
-        )(N, annotations = Nil)
-      val rSym = TempSymbol(N, initErasedType = N, "suspendRes")
-      FunDefn.withFreshSymbol(
-        S(cls),
-        handler.sym,
-        handler.params,
-        Scoped(Set(sym, rSym), Define(
-          fDef,
-          Return(suspend(cls.asThis, sym.asMemberRef(fDef.dSym))))))(N, annotations = Nil)
+    val handlerMtds = handlers.map(createHandlerMtd(cls))
 
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -639,7 +666,7 @@ object HandleBlock:
       handlers: Ls[Handler],
       body: Block,
       rest: Block
-    )(using Elaborator.State, Elaborator.Ctx) =
+    )(using Config, Elaborator.State, Elaborator.Ctx) =
   rest match
   case Scoped(syms, rest) =>
     Scoped(syms, create(lhs, res, par, args, cls, handlers, body, rest))
