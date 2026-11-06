@@ -5,7 +5,7 @@ import org.scalajs.linker.interface.OutputPatterns
 enablePlugins(ScalaJSPlugin)
 
 val scala3Version = "3.8.4"
-val directoryWatcherVersion = "0.18.0"
+val directoryWatcherVersion = "0.19.0"
 val scalaTestVersion = "3.2.20"
 
 ThisBuild / scalaVersion     := "2.13.18"
@@ -54,9 +54,9 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     
     libraryDependencies += "io.methvin" % "directory-watcher" % directoryWatcherVersion,
     libraryDependencies += "io.methvin" %% "directory-watcher-better-files" % directoryWatcherVersion,
-    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.5.0", // Scala.js or Scala-Native
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.4.2", // Scala.js / Scala Native
-    libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.9.3",
+    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.5.1", // Scala.js or Scala-Native
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.4.4", // Scala.js / Scala Native
+    libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.11.10",
     
     libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
     libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
@@ -75,7 +75,7 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
       _.withModuleKind(ModuleKind.ESModule)
         .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
     },
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.8.1",
   )
   .dependsOn(core)
 
