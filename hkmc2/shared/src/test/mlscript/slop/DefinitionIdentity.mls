@@ -1,0 +1,77 @@
+:.
+:js
+:checkIR
+open annotations
+
+
+// Tail-call optimization makes the parameters of a self-recursive function mutable. The function keeps its symbol,
+// through which later blocks and other files refer to it.
+:expect 3
+fun count(n, acc) = if n is 0 then acc else count(n - 1, acc + 1)
+count(3, 0)
+//│ = 3
+
+:expect 3
+count(3, 0)
+//│ = 3
+
+:expect 3
+module Counter with
+  fun count(n, acc) = if n is 0 then acc else count(n - 1, acc + 1)
+Counter.count(3, 0)
+//│ = 3
+
+:expect 3
+Counter.count(3, 0)
+//│ = 3
+
+
+// Splitting a curried generator leaves a wrapper that returns the iterator directly, under the generator's symbol.
+:soir
+@generator fun pairs(x)(y) =
+  yield x
+  y
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let pairs$worker;
+//│ @inline
+//│ define pairs⁰ as fun pairs¹(x)(y) {
+//│   return pairs$worker⁰(x, y)
+//│ };
+//│ @generator
+//│ define pairs$worker as fun pairs$worker⁰(x, y) { do yield⁰(x); return y };
+//│ end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+:expect [{value: 1, done: false}, {value: 2, done: true}]
+let iterator = pairs(1)(2)
+[iterator.next(), iterator.next()]
+//│ = [{value: 1, done: false}, {value: 2, done: true}]
+//│ iterator =  {}
+
+
+// Async lowering replaces an async definition by a wrapper that returns a promise, under the same symbol.
+:await
+:expect 42
+@async fun answer(x: Int): Int = x + 1
+answer(41)
+//│ = 42
+
+:await
+:expect 42
+answer(41)
+//│ = 42
+
+
+// Eta expansion gives a function another parameter list under the same symbol.
+:noInline
+:flowBasedOpt poly
+:lift
+:expect 3
+@affine(1) fun add(first: Int)(second: Int): Int = first + second
+fun partiallyApply(value: Int): Int -> Int = add(value)
+partiallyApply(1)(2)
+//│ = 3
+
+:expect 3
+partiallyApply(1)(2)
+//│ = 3

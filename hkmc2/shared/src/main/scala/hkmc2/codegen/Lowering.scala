@@ -264,7 +264,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     val localVals = stats.collect:
       case td: TermDefinition if td.k.isInstanceOf[syntax.Val] && td.owner.isEmpty && td.body.isDefined
           && td.hasDeclareModifier.isEmpty && !loweringCtx.symbolsToPreserve(td.sym) =>
-        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.erasedType, mut = td.k is syntax.MutVal)
+        val newSym = new VarSymbol(td.tsym.id, erasedType = td.tsym.sourceErasedType, mut = td.k is syntax.MutVal)
         loweringCtx.collectScopedSym(newSym)
         td.tsym -> newSym
     
@@ -348,13 +348,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
                   Define(
                     // A field synthesized from a constructor parameter has an unlocated body (the parameter
                     // reference); its declared name then locates diagnostics about the field's representation.
-                    ValDefn(td.tsym, td.sym, castPathTo(r, td.tsym.erasedType, bod.toLoc.orElse(td.tsym.toLoc)))(cfgOverride, td.annotations),
+                    ValDefn(td.tsym, td.sym, castPathTo(r, td.tsym.sourceErasedType, bod.toLoc.orElse(td.tsym.toLoc)))(cfgOverride, td.annotations),
                     continueBlock(stats, res),
                   )
             case syntax.Fun =>
               val cfgOverride = definitionConfigOverride(td.extraAnnotations)
               val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
-                setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.erasedResult.bodyType)
+                setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme), td.tsym.sourceErasedResult.bodyType)
               Define(FunDefn(td.owner, td.sym, td.tsym,
                 FunDefn.Signature.fromLowering(paramLists, td.tsym), bodyBlock)(cfgOverride, td.annotations),
                 continueBlock(stats, res))
@@ -769,7 +769,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     target match
     case sym: TermSymbol if (sym.k is MutVal) || (sym.k is LetBind) =>
       sym.owner match
-      case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.erasedType, loco), rest)(S(sym))
+      case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.sourceErasedType, loco), rest)(S(sym))
       case N => nope
     case sym: LocalVarSymbol =>
       if !sym.mut then nope else Assign(sym, castTo(rhs, sym.erasedType, loco), rest)
@@ -779,7 +779,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     sym match
     case sym: TermSymbol =>
       sym.owner match
-      case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.erasedType, sym.toLoc), rest)(S(sym))
+      case S(owner) => AssignField(owner.asThis, sym.id, castTo(rhs, sym.sourceErasedType, sym.toLoc), rest)(S(sym))
       case N => lastWords(s"tried to define top-level symbol ${sym.showDbg} in a local scope")
     case sym: LocalVarSymbol =>
       Assign(sym, castTo(rhs, sym.erasedType, sym.toLoc), rest)
@@ -1380,7 +1380,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             N
           case Some(bod) =>
             reportAnnotations(td, td.annotations)
-            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.erasedResult.bodyType)
+            val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.sourceErasedResult.bodyType)
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
       loweringCtx.collectScopedSym(lhs)
@@ -1423,7 +1423,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             case S(sym: TermSymbol) =>
               subTerm_nonTail(prefix): p =>
                 subTerm_nonTail(rhs): r =>
-                  assignNamedField(p, memberIdent(ref.id, member), castPathTo(r, sym.erasedType, ref.toLoc),
+                  assignNamedField(p, memberIdent(ref.id, member), castPathTo(r, sym.sourceErasedType, ref.toLoc),
                     k(unit), ref.keyAccess, unsafe)(S(sym), ref.resolvedTargets)
             case N if ref.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
               subTerm_nonTail(prefix): p =>
@@ -1441,7 +1441,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           case S(sym: TermSymbol) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
-                assignNamedField(p, name, castPathTo(r, sym.erasedType, sel.toLoc), k(unit), sel.keyAccess, unsafe)(S(sym), sel.resolvedTargets)
+                assignNamedField(p, name, castPathTo(r, sym.sourceErasedType, sel.toLoc), k(unit), sel.keyAccess, unsafe)(S(sym), sel.resolvedTargets)
           case N if sel.resolvedTargets.forall(_.isInstanceOf[TermSymbol]) =>
             subTerm_nonTail(prefix): p =>
               subTerm_nonTail(rhs): r =>
@@ -1803,7 +1803,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       .flatMap: td =>
         td.body.map: bod =>
           val (paramLists, bodyBlock) = debugLowering(td.extraAnnotations):
-            setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.erasedResult.bodyType)
+            setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.sourceErasedResult.bodyType)
           reportAnnotations(td, td.extraAnnotations)
           val cfgOverride = definitionConfigOverride(td.extraAnnotations)
           FunDefn(td.owner, td.sym, td.tsym,
@@ -1925,7 +1925,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
 
   /** The declared erased type of the field a selection resolves to, if it is an annotated `TermSymbol`. */
   private def fieldErasedType(s: Opt[Symbol]): Opt[ErasedValueType] =
-    s.collect { case t: TermSymbol => t.erasedType }.flatten
+    s.collect { case t: TermSymbol => t.sourceErasedType }.flatten
 
   /** Resolve the shared argument binding plan at a statically known argument count. */
   private def expectedParamTypes(ps: ParamList, args: Term): Ls[Opt[ErasedValueType]] =

@@ -135,7 +135,9 @@ class FirstClassFunctionTransformer
             val funDef = FunDefn.withFreshSymbol(None, funSym, head :: Nil, newBody)(N, annotations = Nil)
             Scoped(Set(funSym), Define(funDef, Return(funDef.sym.asMemberRef(funDef.dSym))))
           case Nil => fd.body
-        FunDefn.withFreshSymbol(fd.owner, fd.sym, head :: Nil, rec(tail))(fd.configOverride, fd.annotations)
+        // The curried definition keeps its symbol under its new signature (see `TermSymbol.irErasure`).
+        val signature = FunDefn.Signature.fromParams(head :: Nil, ErasedResult.fromAnnotations(N, fd.annotations))
+        FunDefn(fd.owner, fd.sym, fd.dSym, signature, rec(tail))(fd.configOverride, fd.annotations)
   
   def transform(b: Block): Block =
     val desugared = new DesugarMultipleParamList().applyBlock(b)

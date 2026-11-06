@@ -1,0 +1,96 @@
+:.
+:js
+
+#config(liftDefns: None, inlining: None)
+
+
+// Without lifting, escaped async closures must retain their lexical storage.
+:silent
+fun counter(start: Int) =
+  let value = start
+  @annotations.async
+  fun step(delta: Int): Int =
+    set value += delta
+    handlers.await(Promise.resolve(()))
+    value
+  {step: step, read: () => value}
+let first = counter(40)
+let second = counter(100)
+
+:await
+:expect [41, 102]
+Promise.all([first.step(1), second.step(2)])
+//│ = [41, 102]
+
+:await
+:expect 42
+first.step(1)
+//│ = 42
+
+:expect [42, 102]
+[first.read(), second.read()]
+//│ = [42, 102]
+
+// A captured variable can change while the async body is suspended.
+:await
+:expect 42
+fun duringAwait() =
+  let value = 40
+  @annotations.async
+  fun read(): Int =
+    handlers.await(Promise.resolve(()))
+    value
+  let pending = read()
+  set value = 42
+  pending
+duringAwait()
+//│ = 42
+
+// Resumption reenters the wrapper through all its original argument lists.
+:await
+:expect 42
+fun curried: (Int, ...Array[Int]) -> (Int, ...Array[Int]) -> Int
+@annotations.async
+fun curried(x, ...xs)(y, ...ys) =
+  let base = x + y + xs.[0] + ys.[0]
+  let delta = handlers.await(Promise.resolve(1))
+  let more = handlers.await(Promise.resolve(1))
+  base + delta + more
+curried(10, 11)(12, 7)
+//│ = 42
+
+// Reusing a partial application must keep each invocation's mutable copy separate.
+:silent
+fun increment: Int -> Int -> Int
+@annotations.async
+fun increment(start)(delta) =
+  let =start
+  set start += handlers.await(Promise.resolve(delta))
+  start
+let fromForty = increment(40)
+
+:await
+:expect [41, 42]
+Promise.all([fromForty(1), fromForty(2)])
+//│ = [41, 42]
+
+// TODO: Without source-level lifting, handler lowering does not preserve local
+// function definitions across suspension. Resumption skips the definition of inner.
+:fixme
+:await
+:expect [41, 42]
+@annotations.async
+fun nested(start: Int) =
+  let value = start
+  @annotations.async
+  fun inner(): Int =
+    handlers.await(Promise.resolve(()))
+    set value += 1
+    value
+  let first = handlers.await(inner())
+  let second = handlers.await(inner())
+  [first, second]
+nested(40)
+//│ ═══[RUNTIME ERROR] TypeError: inner is not a function
+//│ ═══[RUNTIME ERROR] Expected: '[41, 42]', got: 'Promise {}'
+//│ = Promise {}
