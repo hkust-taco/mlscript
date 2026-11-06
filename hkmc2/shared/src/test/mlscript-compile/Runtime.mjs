@@ -1248,15 +1248,6 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     }
     return tmp
   }
-  static plus_impl(lhs, rhs) {
-    if (lhs instanceof Runtime.Int31.class) {
-      if (rhs instanceof Runtime.Int31.class) {
-        return lhs + rhs
-      }
-      return Runtime.unreachable;
-    }
-    return Runtime.unreachable;
-  }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Runtime"];
 });
