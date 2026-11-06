@@ -108,11 +108,7 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
             given Raise = raise
             given State = art.state
             given Elaborator.Ctx = art.ctx
-            val sourceSymbols = art.sourceImports.map(_.sym).toSet
-            art.ir.imports.foreach: (sym, importedPath) =>
-              if !sourceSymbols(sym) && sym != State.runtimeSymbol then
-                raise(ErrorReport(msg"JavaScript import '$importedPath' is not supported in WASM source" -> sym.toLoc :: Nil,
-                  source = Diagnostic.Source.Compilation))
+            val sourceSymbols = art.sourceImports.iterator.map(_.sym).toSet
             WatBuilder.fresh(FileCompilation(bindings, sourceSymbols)).fileModule(
               art.ir.copy(imports = art.ir.imports.filterNot(_._1 == State.runtimeSymbol)), art.compilationUnit.defaultExport, path.up)
         .map: compiled =>

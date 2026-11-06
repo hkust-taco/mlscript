@@ -767,8 +767,6 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   /** [[MutMap]] containing global symbols mapped to their corresponding [[GlobalInfo]] or [[Import]] instance. */
   private val namedGlobals = MutMap.empty[ScopedSymbol, GlobalInfo | Import[ExternType.Global]]
 
-  private var startFunc = N: Opt[FuncIdx]
-
   /** Counter for generating object tags. */
   private var objectTagNum = 0
 
@@ -778,7 +776,6 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
 
   private val cachedMemoryImport = MutMap.empty[(Str, Str), SymIdx]
   private val cachedFunctionImports = MutMap.empty[(Str, Str), FuncIdx]
-  private val cachedGlobalImports = MutMap.empty[(Str, Str), GlobalIdx]
 
   private val singletons = MutMap.empty[ModuleOrObjectSymbol, () => Ctx.SingletonInfo]
   private val virtualTables = MutMap.empty[BaseTypeSymbol, () => Ctx.VirtualTable]
@@ -873,14 +870,6 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     globals = globals + (id -> globalImport)
     namedGlobals(globalImport.externType.sym) = globalImport
     GlobalIdx(id)
-
-  /** Returns the cached global import for (`module`, `name`), creating it with `createImport` if needed.
-    */
-  def getOrCreateGlobalImport(
-      module: Str,
-      name: Str,
-  )(createImport: => Import[ExternType.Global]): GlobalIdx =
-    cachedGlobalImports.getOrElseUpdate((module, name), addGlobalImport(createImport))
 
   /** Adds or updates a memory import. If the import already exists, its minimum pages are increased to at least
     * `minPages`.
@@ -1056,10 +1045,6 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
     lazy val cached = info
     singletons(sym) = () => cached
 
-  /** Configures the module start function. */
-  def setStartFunc(funcIdx: FuncIdx): Unit =
-    startFunc = S(funcIdx)
-
   /** Returns the cached [[FuncIdx]] for the intrinsic named `name`, creating it with `createIntrinsic` if it does not
     * yet exist in this context.
     */
@@ -1131,7 +1116,6 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
             ++ funcDefns
             ++ dataSegments.valuesIterator.map(_.toWat)
             ++ elemSegments.valuesIterator.map(_.toWat)
-            ++ startFunc.iterator.map(funcIdx => doc"(start ${funcIdx.toWat})")
         ).toSeq.mkDocument(doc" # ")
       } #} )"
   end toWat

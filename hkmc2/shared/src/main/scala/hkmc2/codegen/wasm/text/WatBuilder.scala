@@ -304,8 +304,7 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
   given Ctx = ctx
   given elabCtx: Elaborator.Ctx = ctx.elabCtx
 
-  // File emission owns these tables; the cached MIR and its symbols are never rewritten.
-  private var emittedInterface: Opt[FileInterface] = N
+  // These tables carry per-file linkage metadata without adding it to cached MIR symbols.
   private val fileSingletonActions = LinkedHashMap.empty[ModuleOrObjectSymbol, Expr]
   private val namespaces = LinkedHashMap.empty[ModuleOrObjectSymbol, AbiNamespace]
   private val localNamespaces = scala.collection.mutable.Set.empty[ModuleOrObjectSymbol]
@@ -316,13 +315,11 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
       case Scoped(syms, _) => syms.toSet
       case _ => Set.empty
     checkImports(p, wd)
-    val module = program(p, exprt, preserved)
-    CompiledWasmFile(module, emittedInterface.get)
+    program(p, exprt, preserved)
 
   def worksheetModule(p: Program, wd: io.Path, preserved: Set[ScopedSymbol])(using Raise): CompiledWasmFile =
     checkImports(p, wd)
-    val module = program(p, N, preserved)
-    CompiledWasmFile(module, emittedInterface.get)
+    program(p, N, preserved)
 
   /** Compiles the module that defines the bindings every other module imports from [[ExternIntrinsics.SystemModule]]:
     * the intrinsics and the exception tag, which importers import by name, and the `Unit` object. The `Unit` object is
@@ -333,8 +330,9 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
   def runtimeModule()(using Raise): CompiledWasmFile =
     wasmIntrinsicNameSet.toVector.sorted.foreach(name => WatBuilder.createIntrinsic(name))
     exnTag((ty, sym) => ctx.addTag(TagInfo(ty, sym)))
-    val module = program(Program(Nil, Define(syntheticUnitDefn, End())), N, Set.empty)
-    CompiledWasmFile(module, emittedInterface.get)
+    // FIXME: Define replaces the cached JavaScript runtime's Unit definition through their shared symbol.
+    // The Wasm representation must leave the source runtime's IR definition intact.
+    program(Program(Nil, Define(syntheticUnitDefn, End())), N, Set.empty)
 
   /** The module namespace that `path` denotes, if any. */
   private def namespace(path: Path): Opt[AbiNamespace] = path match
@@ -630,7 +628,7 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
     case obj: ModuleOrObjectSymbol => obj
     case other => lastWords(s"Singleton `${clsLikeDefn.sym.nme}` is not defined by an object symbol: $other")
 
-  /** Registers eager singleton runtime state by creating its global and start-init action. */
+  /** Registers eager singleton runtime state by creating its global and entry-function initialization action. */
   private def registerSingletonInit(
       clsLikeDefn: ClsLikeDefn,
       typeref: TypeIdx,
@@ -2826,16 +2824,17 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
       p: Program,
       exprt: Opt[BlockMemberSymbol],
       preserved: Set[ScopedSymbol],
-  )(using Raise): CompiledWasmModule =
+  )(using Raise): CompiledWasmFile =
     def systemMemMinPages: Int =
       ctx.getMemoryImport(
         ExternIntrinsics.SystemModule,
         ExternIntrinsics.SystemMemoryImportName,
       ).fold(0)(_.memType.lim.min)
 
-    def compiledModule(entryName: Str): CompiledWasmModule =
-      emittedInterface = S(ctx.fileInterface(fileClasses, namespaces.valuesIterator.filter(ns => localNamespaces(ns.module)).toVector, exprt))
-      CompiledWasmModule(ctx.toWat, entryName, systemMemMinPages)
+    def compiledModule(entryName: Str): CompiledWasmFile =
+      val interface = ctx.fileInterface(fileClasses,
+        namespaces.valuesIterator.filter(ns => localNamespaces(ns.module)).toVector, exprt)
+      CompiledWasmFile(CompiledWasmModule(ctx.toWat, entryName, systemMemMinPages), interface)
 
     // Create the two Wasm intrinsic struct types shared across class lowering:
     // the base RTTI layout (`TypeInfoBase`) and the base object layout (`Object`).
@@ -2879,7 +2878,7 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
       dep.interface.namespaces.foreach(registerNamespace)
     predeclareFileMembers(p.main)
 
-    boundary[CompiledWasmModule]:
+    boundary[CompiledWasmFile]:
       val outerRaise = summon[Raise]
 
       // Early registration scheme: collect supported top-level classes from main block,
@@ -2923,7 +2922,6 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
         functionBody(p.main)
 
       val entrySym = BlockMemberSymbol("entry", Nil)
-      // Body generation can register synthetic types such as Unit on first use.
       val entryResultType = entryType.flatMap(_.wasmType).getOrElse(RefType.anyref)
 
       val entryFnExpr = ctx.elabCtx.givenIn:

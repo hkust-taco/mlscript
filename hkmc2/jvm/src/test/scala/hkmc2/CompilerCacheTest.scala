@@ -238,6 +238,22 @@ class CompilerCacheTest extends AnyFunSuite with BeforeAndAfterAll:
       executionContext.shutdownNow()
       os.remove.all(tempDir)
 
+  test("WASM runtime compilation preserves the cached runtime IR"):
+    // Cross-backend cache isolation is not observable through source-language diff tests.
+    given CompilerCtx = TestFolders.compilerCtx(os.pwd)
+    given DebugPrinter = new DebugPrinter(None)
+    given utils.TraceLogger = utils.TraceLogger.silent
+    given Raise = diagnostic => fail(diagnostic.toString)
+    val cctx = summon[CompilerCtx]
+    val prelude = cctx.getPrelude(cctx.paths.preludeFile).ctx
+    val runtime = cctx.getElaboratedBlock(cctx.paths.runtimeSourceFile, prelude)
+    val originalUnit = runtime.state.unitSymbol.irClsLikeDefn.get
+    assert(new codegen.wasm.WasmCompiler().runtime().nonEmpty)
+    // FIXME: WatBuilder.runtimeModule republishes a synthetic definition on the source runtime's Unit symbol.
+    pendingUntilFixed:
+      assert(runtime.state.unitSymbol.irClsLikeDefn.exists(_ eq originalUnit),
+        "Generating Wasm support must preserve the cached JavaScript runtime's Unit definition")
+
   test("WASM units with errors are not emitted, and their importers say why on every request"):
     import io.PlatformPath.given
     val tempDir = os.temp.dir(prefix = "compiler-cached-errors-")

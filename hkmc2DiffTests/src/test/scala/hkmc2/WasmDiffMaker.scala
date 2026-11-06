@@ -103,8 +103,6 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
 
     if wasm.isSet && config.target == CompilationTarget.Wasm && !initializingPrelude then
 
-      val reportedMessages = mutable.Set.empty[Str]
-
       loadWasm
 
       var errored = false
