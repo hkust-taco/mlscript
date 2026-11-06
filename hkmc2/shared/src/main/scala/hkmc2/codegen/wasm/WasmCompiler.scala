@@ -47,9 +47,6 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
       given Elaborator.Ctx = artifact.ctx
       WatBuilder.fresh(FileCompilation(Vector.empty, Set.empty, runtime = true))
         .fileModule(Program(Nil, End()), N, source.up)
-    // Compile the host library through the ordinary JavaScript backend, including on
-    // cache hits so a missing or overwritten output is restored from its source artifact.
-    new MLsCompiler(_ => summon[Raise]).compileModule(source.up / "RuntimeWasm.mls")
     artifact.materialize(Ls(wat -> compiled.module.wat.mkString(100)))
     WasmRuntime(path, wat, compiled)
 

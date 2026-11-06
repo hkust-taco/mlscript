@@ -87,22 +87,20 @@ class MLsCompiler
         new codegen.wasm.WasmCompiler(using cctx, compilerTL).compile(file, artifact, mkRaise)
       catch case _: Diagnostic => () // Already reported with the dependency's source path.
       return
+    given Elaborator.Ctx = artifact.ctx
+    val jsb = compilerTL.givenIn:
+      codegen.js.JSBuilder()
+    val baseScp: utils.Scope =
+      utils.Scope.empty(utils.Scope.Cfg.default)
+    // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
+    // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
+    baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
+    val nestedScp = baseScp.nest
     val out = file.up / io.RelPath(file.baseName + ".mjs")
-    val jsStr = artifact.compiledJavaScript:
-      given Elaborator.Ctx = artifact.ctx
-      val jsb = compilerTL.givenIn:
-        codegen.js.JSBuilder()
-      val baseScp: utils.Scope =
-        utils.Scope.empty(utils.Scope.Cfg.default)
-      // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
-      // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
-      baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
-      val nestedScp = baseScp.nest
-      val je = nestedScp.givenIn:
-        jsb.program(artifact.ir, exportedSymbol, out)
-      val result = je.stripBreaks.mkString(100)
-      if failed then N else S(result)
-    jsStr.foreach(content => artifact.materialize(Ls(out -> content)))
+    val je = nestedScp.givenIn:
+      jsb.program(artifact.ir, exportedSymbol, out)
+    val jsStr = je.stripBreaks.mkString(100)
+    cctx.fs.write(out, jsStr)
   
   
 end MLsCompiler
