@@ -80,7 +80,7 @@ object FlowAnalysis:
     nonAffineTracking: Bool,
     accumulatorTracking: Bool,
     logEffects: Bool,
-  )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
+  )(using Config, TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
     val collector = new FlowConstraintsCollector(
@@ -92,7 +92,7 @@ object FlowAnalysis:
     val solver = new FlowConstraintSolver(collector)(collector.globalScope)
     solver.solve()
     solver.log()
-    solver.assertConcrete()
+    if config.checkInvariants then solver.assertConcrete()
     val tl = summon[TraceLogger]
     if logEffects then tl.scoped(TraceScope.Effects):
       if tl.isTracing then EffectAnalysis.logResults(solver)
@@ -947,8 +947,8 @@ class FlowConstraintsCollector(
       copiesOfStratVar.getOrElseUpdate(s, locally:
         val copy = freshVar(s.name, s.sourceSymbol, cc.forFun)
         callbacks.push: () =>
-          copy.lowerBounds ++= s.lowerBounds.iterator.map(duplicateProdStrat)
-          copy.upperBounds ++= s.upperBounds.iterator.map(duplicateConsStrat)
+          for lower <- s.lowerBounds do copy.lowerBounds += duplicateProdStrat(lower)
+          for upper <- s.upperBounds do copy.upperBounds += duplicateConsStrat(upper)
         copy
       )
     
@@ -963,7 +963,7 @@ class FlowConstraintsCollector(
       )
       cc.strategies += copy
       callbacks.push: () =>
-        copy.dests ++= p.dests.iterator.map(duplicateConsStrat)
+        for dest <- p.dests do copy.dests += duplicateConsStrat(dest)
       copy
     )
 
@@ -975,7 +975,7 @@ class FlowConstraintsCollector(
       )
       cc.strategies += copy
       callbacks.push: () =>
-        copy.srcs ++= c.srcs.iterator.map(duplicateProdStrat)
+        for src <- c.srcs do copy.srcs += duplicateProdStrat(src)
       copy
     )
 
@@ -986,7 +986,7 @@ class FlowConstraintsCollector(
       ))
       cc.strategies += copy
       callbacks.push: () =>
-        copy.dests ++= c.dests.iterator.map(duplicateConsStrat)
+        for dest <- c.dests do copy.dests += duplicateConsStrat(dest)
       copy
     )
 
@@ -994,7 +994,7 @@ class FlowConstraintsCollector(
       val copy = new Dtor(c.exprId, S(newInstantiation(c.instantiationId)))
       cc.strategies += copy
       callbacks.push: () =>
-        copy.srcs ++= c.srcs.iterator.map(duplicateProdStrat)
+        for src <- c.srcs do copy.srcs += duplicateProdStrat(src)
       copy
     )
 
@@ -1006,7 +1006,7 @@ class FlowConstraintsCollector(
       )
       cc.strategies += copy
       callbacks.push: () =>
-        copy.srcs ++= c.srcs.iterator.map(duplicateProdStrat)
+        for src <- c.srcs do copy.srcs += duplicateProdStrat(src)
       copy
     )
 
@@ -1528,17 +1528,13 @@ class FlowConstraintSolver(
     case _ => ()
   
   private def addCtorDest(c: Ctor, d: ConcreteCtorConsumer | MarkerConsStrat): Unit =
-    c.dests += d
-    register(c)
+    if c.dests.add(d) && c.dests.size == 1 then register(c)
   private def addDtorSrc(d: ConcreteCtorConsumer, p: Ctor | MarkerProdStrat): Unit =
-    d.srcs += p
-    register(d)
+    if d.srcs.add(p) && d.srcs.size == 1 then register(d)
   private def addFunDest(p: ProdFun, c: ConsFun | MarkerConsStrat): Unit =
-    p.dests += c
-    register(p)
+    if p.dests.add(c) && p.dests.size == 1 then register(p)
   private def addFunSrc(c: ConsFun, p: ProdFun | MarkerProdStrat): Unit =
-    c.srcs += p
-    register(c)
+    if c.srcs.add(p) && c.srcs.size == 1 then register(c)
   
   /** Whether instances of `cls` may have the fields of `ancestor` through inheritance.
     * A class whose parent chain is not known is assumed to possibly inherit them.
@@ -1702,7 +1698,12 @@ class FlowConstraintSolver(
       case (p: StratVar, c: StratVar) =>
         if p.upperBounds.add(c) then
           for l <- p.lowerBounds do handle(l, c)
-          for u <- c.upperBounds do handle(p, u)
+          for u <- c.upperBounds do u match
+            // ! given p <: c and c <: u, it follows that p <: u, 
+            // ! so skip handling the case p <: u.
+            // ! this is an important optimization...
+            case u: StratVar if p.upperBounds.contains(u) => ()
+            case u => handle(p, u)
       case (p: StratVar, c) => if p.upperBounds.add(c) then
         c match
           case pAcc: PossibleAccumulator if p is pAcc.s =>
