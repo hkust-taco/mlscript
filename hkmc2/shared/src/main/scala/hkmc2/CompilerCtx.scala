@@ -384,9 +384,12 @@ object CompilerCache:
     val hasErrors: Bool,
     val lastChangedTimestamp: Long,
   ):
-    // Backend memoization is owned by the artifact, not its symbols. Dependencies must be
-    // requested before entering this lock.
-    private var wasmFile: Opt[codegen.wasm.text.CompiledWasmFile] = N
+    // Wasm importers need the backend interface, including symbols allocated during code generation.
+    // Retain the module and its interface on the artifact so repeated requests share those identities
+    // and avoid rebuilding shared dependencies. JS import names already live in the cached frontend
+    // artifact, so importers do not need the generated JS.
+    // Request dependencies before entering this artifact's lock.
+    private var cachedWasm: Opt[codegen.wasm.text.CompiledWasmFile] = N
     def materialize(outputs: Ls[(io.Path, Str)])(using cctx: CompilerCtx): Unit = synchronized:
       outputs.foreach: (path, content) =>
         if !cctx.fs.exists(path) || cctx.fs.read(path) =/= content then cctx.fs.write(path, content)
@@ -398,8 +401,8 @@ object CompilerCache:
       * JavaScript, and no Wasm file can import it, so it has no Wasm module of its own. */
     def compiledWasm(build: => Opt[codegen.wasm.text.CompiledWasmFile]): Opt[codegen.wasm.text.CompiledWasmFile] =
       synchronized:
-        if wasmFile.isEmpty then wasmFile = build
-        wasmFile
+        if cachedWasm.isEmpty then cachedWasm = build
+        cachedWasm
 
   /** @param loc The location of the import statement in the importing unit. */
   final case class SourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact, loc: Opt[Loc])
