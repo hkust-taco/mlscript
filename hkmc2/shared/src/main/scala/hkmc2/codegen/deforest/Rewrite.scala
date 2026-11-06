@@ -16,7 +16,9 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   extends PolyInstantiationRewrite(solver.constraintSolver):
   
   type MatchOrLabelId = ResultId | LabelSymbol
-  type BranchId = CtorDtorId -> Opt[CtorCls]
+  // The producer determines the branch closure's field parameters even when several producers
+  // select the same default body. Different constructor layouts cannot share that closure.
+  type BranchId = CtorDtorId -> CtorCls
   type LabelId = LabelSymbol -> InstantiationId
   type RestFunId = CtorDtorId | LabelId
   
@@ -94,7 +96,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   val restFunSyms = LinkedHashMap.empty[RestFunId, (BlockMemberSymbol, TermSymbol)]
   
   // original bodies of a branch
-  val branchOriginalBodies = MutMap.empty[ResultId -> Opt[CtorCls], Block]
+  val branchOriginalBodies = MutMap.empty[ResultId -> CtorCls, Block]
   // original rest function bodies and their parent matches (if any)
   val restOriginalBodiesAndParentRest = MutMap.empty[MatchOrLabelId, Block -> Opt[MatchOrLabelId]]
   
@@ -121,19 +123,10 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           )
         
         // ctor dest branch function computations
-        val matchBlk = pre.res.matchScrutToMatchBlock(dest._1)
-        val (whichBranch, whichBranchPreBody) =
-          val tmp =
-            val ctorCls = ctorInfo.ctor
-            matchBlk.arms
-              .find: (cse, _) =>
-                cse match
-                case Case.Cls(cls, path) => cls === ctorCls
-                case Case.Tup(len, inf) => len === ctorCls
-                case _ => die
-              .map(b => ctorCls -> b._2)
-          tmp.map(_._1) ->
-          tmp.fold(matchBlk.dflt.get)(_._2)
+        val whichBranch = ctorInfo.ctor
+        val whichBranchPreBody =
+          solver.selectedBranch(ctorInfo.ctor, dest).getOrElse(
+            lastWords("Fusion requires a statically determined match branch"))
         val destBranchId: BranchId = dest -> whichBranch
         // identify the dest branchid for a ctor
         ctorWhichBranch(ctor) = destBranchId
@@ -141,7 +134,7 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
         branchFunSyms.getOrElseUpdate(
           destBranchId,
           locally:
-            val branchName = whichBranch.fold("_dflt")(c => s"_${c.ctorClsName}")
+            val branchName = s"_${whichBranch.ctorClsName}"
             val scrutName = dest._1.getReferredSym.nme
             val branchFnNme = s"${dest.instId.mkFunName}$$$scrutName$branchName"
             new BlockMemberSymbol(branchFnNme, Nil, true)
