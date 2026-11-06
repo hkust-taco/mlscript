@@ -172,7 +172,7 @@ class CompilerCacheTest extends AnyFunSuite with BeforeAndAfterAll:
         Config.default(TestFolders.mainTestDir(os.pwd)),
       )
 
-      def compile(file: io.Path): Future[Unit] = Future({
+      def compile(file: io.Path): Future[Boolean] = Future({
         val compiler = MLsCompiler(mkRaise = _ => diagnostic =>
           diagnostics.add(diagnostic)
           ())
@@ -189,3 +189,122 @@ class CompilerCacheTest extends AnyFunSuite with BeforeAndAfterAll:
     finally
       executionContext.shutdownNow()
       os.remove.all(tempDir)
+
+
+  test("WASM roots share cached dependencies and restore deleted outputs"):
+    import io.PlatformPath.given
+    val tempDir = os.temp.dir(prefix = "wasm-cache-")
+    val fixtures = TestFolders.compileTestDir(os.pwd)/"wasm"/"modules"/"diamond"
+    val executor = Executors.newFixedThreadPool(2)
+    val executionContext = ExecutionContext.fromExecutorService(executor)
+    try
+      os.list(fixtures).filter(_.ext == "mls").foreach: source =>
+        os.copy(source, tempDir/source.last)
+      val left: io.Path = tempDir/"Left.mls"
+      val right: io.Path = tempDir/"Right.mls"
+      val counterWat: io.Path = tempDir/"Counter.wat"
+      val reads = TrieMap.empty[io.Path, AtomicInteger]
+      val writes = TrieMap.empty[io.Path, AtomicInteger]
+      val bothRootsLocked = new CountDownLatch(2)
+      val fs = new io.FileSystem:
+        def read(path: io.Path): String =
+          reads.getOrElseUpdate(path, new AtomicInteger).incrementAndGet()
+          if path == left || path == right then
+            bothRootsLocked.countDown()
+            assert(bothRootsLocked.await(startupTimeout.toMillis, TimeUnit.MILLISECONDS))
+          io.FileSystem.default.read(path)
+        def write(path: io.Path, content: String): Unit =
+          writes.getOrElseUpdate(path, new AtomicInteger).incrementAndGet()
+          io.FileSystem.default.write(path, content)
+        def append(path: io.Path, content: String): Unit = io.FileSystem.default.append(path, content)
+        def exists(path: io.Path): Boolean = io.FileSystem.default.exists(path)
+        def getLastChangedTimestamp(path: io.Path): Long = io.FileSystem.default.getLastChangedTimestamp(path)
+      given CompilerCtx = CompilerCtx.fresh(fs, TestFolders.compilerPaths(os.pwd), Config.default(TestFolders.mainTestDir(os.pwd)))
+      val compiler = MLsCompiler(_ => diagnostic => fail(diagnostic.toString))
+      val requests = List(left, right).map: root =>
+        Future(compiler.compileModule(root))(using executionContext)
+      Await.result(Future.sequence(requests), 30.seconds)
+      assert(writes(counterWat).get() == 1, "Concurrent roots should materialize their shared dependency once")
+      val oldCounter = os.read(tempDir/"Counter.wat")
+      val oldLeft = os.read(tempDir/"Left.mjs")
+      os.remove(tempDir/"Counter.wat")
+      os.remove(tempDir/"Left.mjs")
+      compiler.compileModule(left)
+      assert(reads.filter(_._1.ext == "mls").values.forall(_.get() == 1),
+        "Regenerating backend outputs must reuse frontend artifacts")
+      assert(os.read(tempDir/"Counter.wat") == oldCounter)
+      assert(os.read(tempDir/"Left.mjs") == oldLeft)
+    finally
+      executionContext.shutdownNow()
+      os.remove.all(tempDir)
+
+  test("JavaScript and WASM compilation preserve the shared runtime IR"):
+    // Cross-backend cache isolation is not observable through source-language diff tests.
+    import io.PlatformPath.given
+    val tempDir = os.temp.dir(prefix = "wasm-runtime-isolation-")
+    try
+      val jsFile: io.Path = tempDir/"JavaScriptUnit.mls"
+      val wasmFile: io.Path = tempDir/"WasmUnit.mls"
+      os.write(tempDir/"JavaScriptUnit.mls", "#lang(0.3.x)\nfun JavaScriptUnit() = ()")
+      os.write(tempDir/"WasmUnit.mls", "#lang(0.3.x)\n#config(target: Wasm)\nfun WasmUnit() = ()")
+      given CompilerCtx = TestFolders.compilerCtx(os.pwd)
+      given DebugPrinter = new DebugPrinter(None)
+      given utils.TraceLogger = utils.TraceLogger.silent
+      given Raise = diagnostic => fail(diagnostic.toString)
+      val cctx = summon[CompilerCtx]
+      val prelude = cctx.getPrelude(cctx.paths.preludeFile).ctx
+      val runtime = cctx.getElaboratedBlock(cctx.paths.runtimeSourceFile, prelude)
+      val unit = runtime.state.unitSymbol
+      val originalUnit = unit.irClsLikeDefn.get
+      val originalHeader = unit.irClassHeader.get
+      val compiler = MLsCompiler(_ => summon[Raise])
+      assert(compiler.compileModule(jsFile))
+      val jsArtifact = cctx.getElaboratedBlock(jsFile, prelude)
+      val originalJs = os.read(tempDir/"JavaScriptUnit.mjs")
+
+      val bothStarted = new CountDownLatch(2)
+      val requests = List(jsFile, wasmFile).map: file =>
+        Future:
+          bothStarted.countDown()
+          assert(bothStarted.await(startupTimeout.toMillis, TimeUnit.MILLISECONDS))
+          assert(compiler.compileModule(file))
+      Await.result(Future.sequence(requests), completionTimeout)
+
+      assert(unit.irClsLikeDefn.exists(_ eq originalUnit),
+        "Generating Wasm support must preserve the cached JavaScript runtime's Unit definition")
+      assert(unit.irClassHeader.exists(_ eq originalHeader),
+        "Generating Wasm support must preserve the cached JavaScript runtime's Unit class header")
+      assert(cctx.getElaboratedBlock(cctx.paths.runtimeSourceFile, prelude) eq runtime)
+      assert(cctx.getElaboratedBlock(jsFile, prelude) eq jsArtifact)
+      assert(compiler.compileModule(jsFile))
+      assert(os.read(tempDir/"JavaScriptUnit.mjs") == originalJs,
+        "Reusing the JavaScript artifact after Wasm compilation must produce the same output")
+    finally os.remove.all(tempDir)
+
+  test("WASM units with errors are not emitted, and their importers say why on every request"):
+    import io.PlatformPath.given
+    val tempDir = os.temp.dir(prefix = "compiler-cached-errors-")
+    try
+      // These requests exercise cache/error state, not source-language diagnostic wording
+      // (which is covered by the WasmFailedImports and ModuleErrors diff tests).
+      os.write(tempDir/"Broken.mls", "#lang(0.3.x)\n#config(target: Wasm)\nfun Broken() = missing")
+      os.write(tempDir/"Importer.mls", "#lang(0.3.x)\n#config(target: Wasm)\nimport \"./Broken.mls\"\nfun Importer() = Broken()")
+      os.write(tempDir/"Dynamic.mls", "#lang(0.3.x)\n#config(target: Wasm)\nmodule M with\n  val value = 42\nfun Dynamic() = M")
+      given CompilerCtx = TestFolders.compilerCtx(os.pwd)
+      val diagnostics = collection.mutable.ArrayBuffer.empty[Diagnostic]
+      val compiler = MLsCompiler(_ => diagnostic => { diagnostics += diagnostic; () })
+      def reportsErrors(name: String): Boolean =
+        diagnostics.clear()
+        compiler.compileModule(tempDir/s"$name.mls")
+        diagnostics.exists(_.isInstanceOf[ErrorReport])
+      assert(reportsErrors("Broken"), "Building an artifact must report its errors")
+      // Every request after the first reuses the frontend artifacts. `Importer` has no errors itself, but its import
+      // cannot be compiled, and the backend failure of `Dynamic` is not memoized.
+      for _ <- 0 until 2 do
+        assert(reportsErrors("Importer"), "A module must report an import that cannot be compiled on every request")
+        assert(reportsErrors("Dynamic"), "A backend failure must be reported on every request")
+      assert(!compiler.compileModule(tempDir/"Broken.mls"), "Reusing an artifact with errors must not compile it")
+      for name <- List("Broken", "Importer", "Dynamic") do
+        assert(os.exists(tempDir/s"$name.mjs") && !os.exists(tempDir/s"$name.wat"),
+          s"The failed WASM unit $name must have a diagnostic loader and no WAT")
+    finally os.remove.all(tempDir)

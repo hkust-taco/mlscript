@@ -138,6 +138,10 @@ def hkmc2TestSubproject(dirName: String, compileRunner: Option[String], diffRunn
 lazy val hkmc2NofibTests = hkmc2TestSubproject("hkmc2NofibTests", Some("NofibCompileTestRunner"), "NofibDiffTestRunner")
 lazy val hkmc2AppsTests = hkmc2TestSubproject("hkmc2AppsTests", Some("AppsCompileTestRunner"), "AppsDiffTestRunner")
 lazy val hkmc2WasmTests = hkmc2TestSubproject("hkmc2WasmTests", Some("WasmCompileTestRunner"), "WasmDiffTestRunner")
+  .settings(
+    // WASM loaders import RuntimeWasm.mjs, which the main compilation tests generate.
+    Test / test := (Test / test).dependsOn(hkmc2JVM / Test / test).value,
+  )
 lazy val hkmc2SlopTests = hkmc2TestSubproject("hkmc2SlopTests", None, "SlopDiffTestRunner")
   .settings(
     // These worksheets load main-suite fixtures such as Iter.mjs and the Wasm.mjs

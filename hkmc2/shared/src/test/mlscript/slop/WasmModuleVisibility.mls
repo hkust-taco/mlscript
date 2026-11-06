@@ -1,0 +1,24 @@
+:.
+
+
+// Private methods remain callable inside the compiled module, including when a source importer calls its public API.
+:!js
+:wasm
+:expect 42
+import "../../mlscript-compile/wasm/modules/PrivateHelpers.mls"
+PrivateHelpers.withPrivateMethod(40)
+//│ Wasm result:
+//│ = 42
+
+
+// The host facade exposes public members. Private methods and fields belong only to the internal Wasm ABI.
+:js
+import "../../mlscript-compile/wasm/modules/PrivateHelpers.mjs" as Host
+
+:expect 42
+Host.withPrivateMethod(40)
+//│ = 42
+
+:expect ["answer", "withPrivateMethod"]
+Object.entries(Host).map(pair => pair.[0])
+//│ = ["answer", "withPrivateMethod"]

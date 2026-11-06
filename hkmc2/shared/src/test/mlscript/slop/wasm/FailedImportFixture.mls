@@ -1,0 +1,9 @@
+// A compilation unit for FailedImports.mls whose WASM backend rejects its first-class module value.
+// Run on its own, this worksheet uses the JavaScript backend, which accepts it.
+#lang(0.3.x)
+#config(target: Wasm)
+
+module M with
+  val value = 42
+
+fun FailedImportFixture() = M
