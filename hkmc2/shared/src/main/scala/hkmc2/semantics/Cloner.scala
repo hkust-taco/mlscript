@@ -196,7 +196,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     prepareLocals(stats)
     terms.foreach: (source, copy) =>
       copy.initializeErasure:
-        source.erasure.map:
+        source.sourceErasure.map:
           case sig: ErasedCallableSignature => sig.mapTypes(valueType)
           case tpe: ErasedValueType => valueType(tpe)
     // All member names, including nested classes' methods, now have replacements.

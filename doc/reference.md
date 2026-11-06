@@ -112,7 +112,8 @@ let x = 1 in
 "hello"     // String literal
 true        // Boolean literal
 false       // Boolean literal
-()          // Unit literal (empty tuple/record)
+()          // Unit literal
+{}          // Empty record (distinct from Unit)
 null        // Null
 undefined   // Undefined: an unspecified value (see Runtime Representations)
 ```
@@ -881,8 +882,13 @@ Modules cannot extend classes. Objects can extend classes.
 ```mlscript
 {a: 1, b: 2}          // immutable (frozen) record
 mut {a: 1, b: 2}      // mutable record
+{}                   // fresh empty immutable record
+mut {}               // fresh empty mutable record
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
+
+`{}` denotes an empty record in expression and type positions. It is distinct
+from Unit, written `()`. Empty statement bodies such as `do {}` still return Unit.
 
 ### Field Access
 

@@ -148,8 +148,8 @@ final class OverrideChecks(definitions: Ls[TermDefinition])(using Config, Ctx, S
       val td = edge.overriding
       val base = edge.inherited.tsym
       if td.tsym.isErased && base.isErased then
-        val actualResult = td.tsym.declaredResultType
-        val baseResult = base.declaredResultType
+        val actualResult = td.tsym.sourceDeclaredResultType
+        val baseResult = base.sourceDeclaredResultType
         if !within(actualResult, baseResult) then report(base,
           msg"Overriding member '${td.tsym.nme}' produces values represented as '${describe(actualResult)
             }', which the member it overrides cannot produce: its results are represented as '${describe(baseResult)}'",
