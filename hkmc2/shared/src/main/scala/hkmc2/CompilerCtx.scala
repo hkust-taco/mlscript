@@ -383,17 +383,19 @@ object CompilerCache:
     // Backend memoization is owned by the artifact, not its symbols. Dependencies must be
     // requested before entering this lock; failures throw without publishing a cache entry.
     private var wasmFile: Opt[codegen.wasm.text.CompiledWasmFile] = N
-    private var wasmRuntime: Opt[codegen.wasm.text.CompiledWasmFile] = N
     def materialize(outputs: Ls[(io.Path, Str)])(using cctx: CompilerCtx): Unit = synchronized:
       outputs.foreach: (path, content) =>
         if !cctx.fs.exists(path) || cctx.fs.read(path) =/= content then cctx.fs.write(path, content)
 
-    def compiledWasm(runtime: Bool)(build: => codegen.wasm.text.CompiledWasmFile): codegen.wasm.text.CompiledWasmFile = synchronized:
-      (if runtime then wasmRuntime else wasmFile) match
+    /** The Wasm module of this artifact, built by `build` on the first request. The artifact of the runtime unit,
+      * which is a JavaScript compilation unit that no Wasm file can import, holds the Wasm runtime module (see
+      * `WasmCompiler.runtime`). */
+    def compiledWasm(build: => codegen.wasm.text.CompiledWasmFile): codegen.wasm.text.CompiledWasmFile = synchronized:
+      wasmFile match
         case S(result) => result
         case N =>
           val result = build
-          if runtime then wasmRuntime = S(result) else wasmFile = S(result)
+          wasmFile = S(result)
           result
 
   final case class SourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact)

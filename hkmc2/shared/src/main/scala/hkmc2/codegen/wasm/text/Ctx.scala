@@ -781,7 +781,6 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   private val cachedGlobalImports = MutMap.empty[(Str, Str), GlobalIdx]
 
   private val singletons = MutMap.empty[ModuleOrObjectSymbol, () => Ctx.SingletonInfo]
-  private val singletonInitActions = ArrayBuf.empty[Expr]
   private val virtualTables = MutMap.empty[BaseTypeSymbol, () => Ctx.VirtualTable]
   private def imports: Seq[Import[?]] =
     val importedFuncs = funcs.collect:
@@ -1056,13 +1055,6 @@ class Ctx(using Elaborator.Ctx, State) extends ToWat:
   def registerSingleton(sym: ModuleOrObjectSymbol, info: => Ctx.SingletonInfo): Unit =
     lazy val cached = info
     singletons(sym) = () => cached
-
-  /** Appends one eager singleton initialization action for synthesized module start code. */
-  def addSingletonInitAction(action: Expr): Unit =
-    singletonInitActions += action
-
-  /** Returns the singleton initialization actions in deterministic insertion order. */
-  def getSingletonInitActions: Seq[Expr] = singletonInitActions.toSeq
 
   /** Configures the module start function. */
   def setStartFunc(funcIdx: FuncIdx): Unit =

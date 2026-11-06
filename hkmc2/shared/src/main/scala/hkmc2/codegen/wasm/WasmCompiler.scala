@@ -36,17 +36,21 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
     .mkString
     if encoded.startsWith(".") then encoded else "./" + encoded
 
+  /** The runtime module, which every Wasm module imports.
+    *
+    * Modules refer to the runtime's bindings through the symbols of its interface, and a module merges the bindings
+    * that the interfaces it imports share by these symbols. So all the modules of a session must be compiled against
+    * one runtime module: it is held by the artifact of the runtime unit, from which it takes its elaboration state. All
+    * artifacts depend on the runtime unit, so they are rebuilt with the runtime module when that unit changes.
+    */
   def runtime()(using Raise): WasmRuntime =
     val source = cctx.paths.runtimeSourceFile
     val prelude = cctx.getPrelude(cctx.paths.preludeFile).ctx
     val artifact = cctx.getElaboratedBlock(source, prelude)
     val path = source.up / "RuntimeWasm.mjs"
     val wat = source.up / "RuntimeWasm.wat"
-    val compiled = artifact.compiledWasm(runtime = true):
-      given State = artifact.state
-      given Elaborator.Ctx = artifact.ctx
-      WatBuilder.fresh(FileCompilation(Vector.empty, Set.empty, runtime = true))
-        .fileModule(Program(Nil, End()), N, source.up)
+    val compiled = artifact.compiledWasm:
+      WatBuilder.runtimeModule(using artifact.ctx, tl, artifact.state)
     artifact.materialize(Ls(wat -> compiled.module.wat.mkString(100)))
     WasmRuntime(path, wat, compiled)
 
@@ -79,7 +83,7 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
           val imported = dependencies.values.toVector
           val bindings = FileImport("system", runtime.interface) +:
             imported.zipWithIndex.map { case ((_, compiled), i) => FileImport(s"module$i", compiled.interface) }
-          val compiled = art.compiledWasm(runtime = false):
+          val compiled = art.compiledWasm:
             given State = art.state
             given Elaborator.Ctx = art.ctx
             val sourceSymbols = art.sourceImports.map(_.sym).toSet
@@ -87,7 +91,7 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
               if !sourceSymbols(sym) && sym != State.runtimeSymbol then
                 raise(ErrorReport(msg"JavaScript import '$importedPath' is not supported in WASM source" -> sym.toLoc :: Nil,
                   source = Diagnostic.Source.Compilation))
-            WatBuilder.fresh(FileCompilation(bindings, sourceSymbols, runtime = false)).fileModule(
+            WatBuilder.fresh(FileCompilation(bindings, sourceSymbols)).fileModule(
               art.ir.copy(imports = art.ir.imports.filterNot(_._1 == State.runtimeSymbol)), art.compilationUnit.defaultExport, path.up)
           val out = output(path, ".mjs")
           val watPath = output(path, ".wat")

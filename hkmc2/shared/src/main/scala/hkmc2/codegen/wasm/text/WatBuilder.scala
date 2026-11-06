@@ -171,6 +171,12 @@ object WatBuilder:
   def fresh(linking: FileCompilation)(using Elaborator.Ctx, TraceLogger, State): WatBuilder =
     new WatBuilder(Ctx.empty, linking)
 
+  /** Compiles the runtime module, which every file module and worksheet imports as [[ExternIntrinsics.SystemModule]].
+    * See [[WatBuilder.runtimeModule]].
+    */
+  def runtimeModule(using Elaborator.Ctx, TraceLogger, State, Raise): CompiledWasmFile =
+    new WatBuilder(Ctx.empty, FileCompilation(Vector.empty, Set.empty)).runtimeModule()
+
   /** Creates the intrinsic definition for `name`.
     */
   private def createIntrinsic(name: Str)(using Ctx, Raise, State): FuncIdx =
@@ -286,7 +292,7 @@ object WatBuilder:
     createIntrinsicFunc(name, params, body)
 end WatBuilder
 
-/** Compiles one program, with `linking` describing the files it imports and whether it is the Wasm runtime. */
+/** Compiles one program, with `linking` describing the files it imports. */
 class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogger, State) extends CodeBuilder:
   import Ctx.{SingletonInfo, wasmIntrinsicArities, wasmIntrinsicNameSet}
   import FunctionCtx.funcCtx
@@ -309,12 +315,25 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
     val preserved: Set[ScopedSymbol] = p.main match
       case Scoped(syms, _) => syms.toSet
       case _ => Set.empty
-    val module = program(p, exprt, wd, preserved)
+    checkImports(p, wd)
+    val module = program(p, exprt, preserved)
     CompiledWasmFile(module, emittedInterface.get)
 
   def worksheetModule(p: Program, wd: io.Path, preserved: Set[ScopedSymbol])(using Raise): CompiledWasmFile =
-    assert(!linking.runtime)
-    val module = program(p, N, wd, preserved)
+    checkImports(p, wd)
+    val module = program(p, N, preserved)
+    CompiledWasmFile(module, emittedInterface.get)
+
+  /** Compiles the module that defines the bindings every other module imports from [[ExternIntrinsics.SystemModule]]:
+    * the intrinsics and the exception tag, which importers import by name, and the `Unit` object. The `Unit` object is
+    * defined by the module's main block, so the module's entry function initializes it, like the entry function of a
+    * file module initializes that file's singletons. The loader runs the runtime module's entry function before it
+    * instantiates any importer.
+    */
+  def runtimeModule()(using Raise): CompiledWasmFile =
+    wasmIntrinsicNameSet.toVector.sorted.foreach(name => WatBuilder.createIntrinsic(name))
+    exnTag((ty, sym) => ctx.addTag(TagInfo(ty, sym)))
+    val module = program(Program(Nil, Define(syntheticUnitDefn, End())), N, Set.empty)
     CompiledWasmFile(module, emittedInterface.get)
 
   /** The module namespace that `path` denotes, if any. */
@@ -603,23 +622,6 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
       methodKeys = Map.empty,
     )(N, Nil)
 
-  /** Registers the synthetic `Unit` singleton. */
-  private def RegisterUnitSingleton()(using Ctx, FunctionCtx, Raise): Unit =
-    // Avoid constructing a synthetic IR definition when the runtime already supplies Unit.
-    if ctx.containsSingleton(State.unitSymbol) then return
-    val unitDefn = syntheticUnitDefn
-
-    if ctx.getType(State.unitSymbol).isEmpty then
-      predeclareClassTypeInfoType(unitDefn)
-      predeclareClassType(unitDefn)
-      predeclareClassInit(unitDefn)
-      predeclareClassConstructor(unitDefn)
-      predeclareClassTypeInfoGlobal(unitDefn)
-
-    returningTerm(Define(unitDefn, End("")))
-    assert(ctx.containsSingleton(State.unitSymbol), "Missing singleton metadata for synthetic Unit object")
-  end RegisterUnitSingleton
-
   /** The object symbol that identifies the singleton defined by `clsLikeDefn`. */
   private def singletonSym(clsLikeDefn: ClsLikeDefn): ModuleOrObjectSymbol = clsLikeDefn.isym match
     case obj: ModuleOrObjectSymbol => obj
@@ -651,9 +653,7 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
       operands = Seq.empty,
       returnTypes = Seq(Result(globalTy)),
     )
-    val action = global.set(globalIdx, ctorCall)
-    if !linking.runtime then fileSingletonActions(obj) = action
-    else ctx.addSingletonInitAction(action)
+    fileSingletonActions(obj) = global.set(globalIdx, ctorCall)
   end registerSingletonInit
 
   /** Whether `defn` is a top-level function that may be predeclared.
@@ -1317,16 +1317,18 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
         ))
       case _ => ()
 
-  /** Gets (and caches) the exception tag used for MLX `throw`. */
-  private def exnTagIdx(using Ctx, Raise): TagIdx =
+  /** Gets (and caches) the exception tag used for MLX `throw`, creating it with `create` from its type and symbol. */
+  private def exnTag(create: (TypeUse, TempSymbol) => TagIdx)(using Raise): TagIdx =
     val sym = TempSymbol(N, initErasedType = N, "mlx_exn")
     ctx.getOrCreateWasmIntrinsicTag("mlx_exn", {
       val ty = TypeUse(ctx.addType(TypeInfo(sym,
         FunctionType(params = Seq(WasmParam(SymIdx("ex"), RefType.anyref)), results = Seq.empty), N)))
-      if !linking.runtime then
-        ctx.addTagImport(WasmImport("system", "mlx_exn", ExternType.Tag(ty, sym)))
-      else ctx.addTag(TagInfo(ty, sym))
+      create(ty, sym)
     })
+
+  /** The exception tag used for MLX `throw`, which the runtime module defines (see [[runtimeModule]]). */
+  private def exnTagIdx(using Ctx, Raise): TagIdx =
+    exnTag((ty, sym) => ctx.addTagImport(WasmImport("system", "mlx_exn", ExternType.Tag(ty, sym))))
 
   /** Returns (and caches) string literal data metadata, allocating data-segment space on first use.
     */
@@ -1819,7 +1821,6 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
     case r: Path if namespace(r).nonEmpty =>
       errExpr(Ls(msg"First-class module values are not supported by the WASM backend" -> r.toLoc))
     case Value.MemberRef(bms, disamb) =>
-      if disamb is State.unitSymbol then RegisterUnitSingleton()
       val singleton = disamb match
         case obj: ModuleOrObjectSymbol => singletonInfoFor(obj)
         case _ => N
@@ -1974,8 +1975,6 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
     case sel @ Select(qual, id) =>
       sel.symbol match
         case S(selObj: ModuleOrObjectSymbol) =>
-          if selObj is State.unitSymbol then
-            RegisterUnitSingleton()
           singletonInfoFor(selObj) match
             case S(info) => singletonGlobalGet(info)
             case N =>
@@ -2537,8 +2536,9 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
                       lastWords(
                         s"Class method `$methodDefn` with multiple parameter lists should be rejected in predeclaration pass",
                       )
-                  if isSingletonObj then registerSingletonInit(clsLikeDefn, typeref)
-                  if !linking.runtime && isSingletonObj then S(fileSingletonActions(singletonSym(clsLikeDefn)))
+                  if isSingletonObj then
+                    registerSingletonInit(clsLikeDefn, typeref)
+                    S(fileSingletonActions(singletonSym(clsLikeDefn)))
                   else N
 
                 case defn =>
@@ -2805,12 +2805,8 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
     end match
   end returningTerm
 
-  private def program(
-      p: Program,
-      exprt: Opt[BlockMemberSymbol],
-      wd: io.Path,
-      preserved: Set[ScopedSymbol],
-  )(using Raise): CompiledWasmModule =
+  /** Reports the imports of `p` that are not source imports, which the Wasm backend does not support. */
+  private def checkImports(p: Program, wd: io.Path)(using Raise): Unit =
     for imprt <- p.imports if !linking.sourceImports.contains(imprt._1) do
       val displayPath = if imprt._2.startsWith("/") then
         io.Path(imprt._2).relativeTo(wd).fold(imprt._2)(_.toString)
@@ -2823,6 +2819,11 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
         ),
       )
 
+  private def program(
+      p: Program,
+      exprt: Opt[BlockMemberSymbol],
+      preserved: Set[ScopedSymbol],
+  )(using Raise): CompiledWasmModule =
     def systemMemMinPages: Int =
       ctx.getMemoryImport(
         ExternIntrinsics.SystemModule,
@@ -2916,10 +2917,6 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
         case S(ErasedType.Nothing) => S(RefType.anyref)
         case _ => entryType.flatMap(_.wasmType)
       val (entryBody, entryFnCtx) = genFuncBody(Nil, thisSym = N, resultType = entrySlot, loc = N):
-        if linking.runtime then
-          RegisterUnitSingleton()
-          wasmIntrinsicNameSet.toVector.sorted.foreach(name => WatBuilder.createIntrinsic(name))
-          exnTagIdx
         functionBody(p.main)
 
       val entrySym = BlockMemberSymbol("entry", Nil)
@@ -2965,25 +2962,6 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
                 s.take(WatBuilder.StringConstantIdentMaxLength),
               ),
             ))
-
-      val initActions = ctx.getSingletonInitActions
-      if initActions.nonEmpty then
-        val initTy = ctx.addType(TypeInfo(
-          sym = TempSymbol(N, initErasedType = N, "start"),
-          compType = FunctionType(params = Seq.empty, results = Seq.empty),
-          objectTag = N,
-        ))
-        val initFn = ctx.addFunc(FuncInfo(
-          sym = TempSymbol(N, initErasedType = N, "start"),
-          typeUse = TypeUse(initTy),
-          params = Seq.empty,
-          resultTypes = Seq.empty,
-          locals = Seq.empty,
-          body = initActions,
-          optionalParams = Set.empty,
-        ))
-        ctx.setStartFunc(initFn)
-      end if
 
       ctx.addFunc(entryFnInfo)
 

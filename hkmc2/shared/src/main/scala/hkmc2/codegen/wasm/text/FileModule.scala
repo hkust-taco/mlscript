@@ -64,7 +64,7 @@ final case class FileImport(name: Str, interface: FileInterface)
   *   The symbols bound by the program's `.mls` imports. Each is the imported file's default export itself, even under
   *   an alias (see `Importer`), so the interfaces in `imports` already define it and these imports emit no code.
   */
-final case class FileCompilation(imports: Vector[FileImport], sourceImports: Set[ImportSymbol], runtime: Bool)
+final case class FileCompilation(imports: Vector[FileImport], sourceImports: Set[ImportSymbol])
 
 /** One export namespace, independent of internal WAT scopes and state-local UIDs. */
 final class FileExportNames(using State):
