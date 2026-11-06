@@ -2,7 +2,6 @@
 !/Predef.mjs
 !/Runtime.mjs
 !/RuntimeJS.mjs
-!/RuntimeWasm.mjs
 !/apps/parsing/vendors/railroad/railroad.mjs
 !/NoFreeze.mjs
 
