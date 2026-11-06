@@ -53,7 +53,7 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
 export const wasmExports = undefined;
 export default undefined;
 """
-      artifact.materialize((out -> loader) :: Nil, overwrite = false)
+      artifact.materialize((out -> loader) :: Nil)
 
   private def specifier(path: io.Path, from: io.Path): Str =
     val relative = path.relativeTo(from).getOrElse:
@@ -87,7 +87,7 @@ export default undefined;
       WasmCompiler.unlessFailed(summon[Raise]): raise =>
         WatBuilder.runtimeModule(using artifact.ctx, tl, artifact.state, raise)
     .map: compiled =>
-      artifact.materialize((wat -> compiled.module.wat.mkString(100)) :: Nil, overwrite = true)
+      artifact.materialize((wat -> compiled.module.wat.mkString(100)) :: Nil)
       WasmRuntime(runtimeLoaderPath, wat, compiled)
 
   /** Compiles the Wasm modules of `artifact` and of the artifacts it imports, transitively, and writes their outputs.
@@ -96,7 +96,7 @@ export default undefined;
     * The result is `None` if the module of `artifact` could not be compiled. A module is not compiled if its artifact
     * has errors, which the request that built the artifact reported, if compiling it reports an error, or if the
     * module of one of its imports could not be compiled, which it reports at that import.
-    * Failed modules keep their previous output; a missing loader becomes a diagnostic loader that throws on import.
+    * Failed modules replace their loaders with diagnostic loaders that throw on import, retaining any existing WAT.
     */
   def compile(file: io.Path, artifact: Artifact, report: io.Path => Raise): Opt[WasmGraph] =
     val runtimeResult = runtime()(using report(cctx.paths.runtimeSourceFile))
@@ -144,7 +144,7 @@ const loaded = await RuntimeWasm.loadModule(import.meta.url, $metadata, ${WasmCo
 export const wasmExports = loaded.wasmExports;
 export default loaded.defaultExport;
 """
-          art.materialize(Ls(watPath -> compiled.module.wat.mkString(100), out -> loader), overwrite = true)
+          art.materialize(Ls(watPath -> compiled.module.wat.mkString(100), out -> loader))
           compiled
       end build
 

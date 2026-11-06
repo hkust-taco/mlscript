@@ -481,19 +481,21 @@ class CompilerTest extends AnyFunSuite:
     fs.write("/Broken.mls", "#lang(0.3.x)\n#config(target: Wasm)\nfun Broken() = missing")
     val first = compiler.compile("/Broken.mls")
     assert(!first.compiled && first.diagnostics.nonEmpty, js.JSON.stringify(first))
+    val failureLoader = fs.read(Path("/Broken.mjs"))
+    fs.write("/Broken.mjs", "export default () => 42;")
     // The second request reuses the artifact that the first one built and reported the errors of.
     val second = compiler.compile("/Broken.mls")
     assert(!second.compiled && second.diagnostics.isEmpty, js.JSON.stringify(second))
-    assert(fs.exists(Path("/Broken.mjs")), "A failed WASM module must have a diagnostic loader")
+    assert(fs.read(Path("/Broken.mjs")) == failureLoader, "A cached failure must replace an existing loader")
     assert(!fs.exists(Path("/Broken.wat")), "A WASM module with errors must not produce WAT")
 
-  test("WASM runtime errors block fresh and cached requests without replacing existing outputs"):
+  test("WASM runtime errors replace existing loaders on fresh and cached requests"):
     // Diff tests cannot replace the shared runtime source between requests or observe cached failure results
-    // and output preservation. The virtual filesystem also gives source edits deterministic cache versions.
+    // and output replacement. The virtual filesystem also gives source edits deterministic cache versions.
     val (fs, compiler) = createCompiler()
     val runtime = fs.read(paths.runtimeSourceFile)
     val brokenRuntime = runtime + "\nfun brokenRuntime() = missing\n"
-    val outputs = Vector(Path("/std/RuntimeWasm.wat"), Path("/Main.wat"), Path("/Main.mjs"))
+    val watOutputs = Vector(Path("/std/RuntimeWasm.wat"), Path("/Main.wat"))
     fs.write("/Main.mls", "#lang(0.3.x)\n#config(target: Wasm)\nfun Main() = ()")
     fs.write(paths.runtimeSourceFile, brokenRuntime)
 
@@ -504,7 +506,7 @@ class CompilerTest extends AnyFunSuite:
       assert(!cached.compiled && cached.diagnostics.isEmpty, js.JSON.stringify(cached))
 
     checkFailure()
-    assert(outputs.iterator.filter(_.ext == "wat").forall(path => !fs.exists(path)),
+    assert(watOutputs.forall(path => !fs.exists(path)),
       "An erroneous runtime must block runtime and module WAT emission")
     val failureLoader = fs.read(Path("/Main.mjs"))
     assert(!fs.exists(Path("/std/RuntimeWasm.mjs")), "A runtime error must not create the host library")
@@ -514,12 +516,13 @@ class CompilerTest extends AnyFunSuite:
     val repaired = compiler.compile("/Main.mls")
     assert(repaired.compiled && repaired.diagnostics.isEmpty, js.JSON.stringify(repaired))
     assert(fs.read(Path("/Main.mjs")) != failureLoader, "A successful compilation must replace the diagnostic loader")
-    val existingOutputs = outputs.map(path => path -> fs.read(path))
+    val existingWat = watOutputs.map(path => path -> fs.read(path))
 
     fs.write(paths.runtimeSourceFile, brokenRuntime)
     checkFailure()
-    existingOutputs.foreach: (path, content) =>
-      assert(fs.read(path) == content, s"A failed compilation must preserve existing output at $path")
+    assert(fs.read(Path("/Main.mjs")) == failureLoader, "A failed rebuild must replace the previous successful loader")
+    existingWat.foreach: (path, content) =>
+      assert(fs.read(path) == content, s"A failed compilation must preserve existing WAT at $path")
 
   test("WASM failure loaders preserve the reserved host runtime path"):
     // A real filesystem diff test cannot replace the host library source without affecting other tests.

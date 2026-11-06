@@ -217,23 +217,24 @@ that import on every request, even when the imported artifact's own errors were
 reported by an earlier request. A backend failure is not memoized, so the next
 request compiles the module again and reports its errors again.
 
-Failed compilation preserves existing `.wat` and `.mjs` files for the failed
-module. A runtime compilation failure also preserves any existing `RuntimeWasm.wat`.
-If a failed module has no `.mjs`, the compiler writes a diagnostic loader that
+Failed compilation replaces the failed module's `.mjs` with a diagnostic loader that
 throws `Cannot run <source>.mls because its compilation failed.` on import. It
 exports the usual default and `wasmExports` bindings so static imports reach that
 error, and it does not load the runtime or dependencies. The compilation result
 remains `false`, and no WAT is emitted for the failed module. A successful rebuild
-replaces the diagnostic loader. The reserved `RuntimeWasm.mjs` host library never
-receives a diagnostic loader, even when a source module collides with its path.
+replaces the diagnostic loader. Failed compilation retains existing `.wat` files,
+including `RuntimeWasm.wat` when runtime compilation fails. The reserved
+`RuntimeWasm.mjs` host library never receives a diagnostic loader, even when a
+source module collides with its path.
 
 Dependencies compiled successfully during the request may already have been written;
 failure does not roll back those writes. Existing output can therefore be stale or
 mix build generations. Callers should check the result of `compileModule`, or the
 `compiled` field returned by `Compiler.compile`, before automatically loading output.
 A cached source or runtime error can make this result `false` without reporting
-diagnostics again. Users may still choose to run existing files at their own risk;
-WASM validation does not establish that those files match the current sources.
+diagnostics again; that request also replaces any existing module loader with the
+diagnostic loader. Retained WAT may be stale: WASM validation does not establish
+that it matches the current sources.
 
 When a loader cannot find its WAT file, it reports the missing compiled output
 and asks the user to rebuild before running. The error retains the filesystem
@@ -241,5 +242,7 @@ exception as its `cause`; other filesystem errors pass through unchanged.
 
 Failed entry execution does not publish a worksheet interface. A failed file
 loader remains failed according to normal ES-module semantics; retrying requires
-a fresh host session. Editing a source already imported into a running worksheet
-also requires a fresh session to avoid mixing new interfaces with cached instances.
+a fresh host session. Replacing a loader on disk also cannot revoke an older
+instance that the host has already imported. Editing a source already imported
+into a running worksheet also requires a fresh session to avoid mixing new
+interfaces with cached instances.

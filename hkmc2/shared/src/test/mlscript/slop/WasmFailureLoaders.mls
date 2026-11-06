@@ -5,7 +5,8 @@
 import "node:fs" as fs
 import "node:url" as urls
 let fixturePath = "hkmc2/shared/src/test/mlscript/slop/wasm/FailedImportFixture.mjs"
-fs.rmSync(fixturePath, {force: true})
+// A failed rebuild must invalidate an existing executable loader.
+fs.writeFileSync(fixturePath, "export const wasmExports = {}; export default () => 42;")
 // A static default and named import must reach the compilation failure, with no missing-export error.
 let importStatically = globalThis.eval("""url => import("data:text/javascript," + encodeURIComponent(
   "import value, {wasmExports} from " + JSON.stringify(url) + "; export default value;"))""")

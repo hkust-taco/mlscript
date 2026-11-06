@@ -62,9 +62,9 @@ class MLsCompiler
   
   /** Compiles `file` with its configured target, returning whether it emitted the requested module's code.
     * A JavaScript module is written even if its source has errors. WASM code is not emitted if its source has errors or if compiling
-    * it, its runtime, or one of its imports fails. A failed compilation preserves existing `.wat` and `.mjs` files
-    * for the failed module; dependencies compiled successfully during the request may already have been written.
-    * If the failed module's `.mjs` is missing, a diagnostic loader throws on import; the result remains `false`.
+    * it, its runtime, or one of its imports fails. A failed WASM compilation replaces the failed module's `.mjs`
+    * with a diagnostic loader that throws on import, retaining existing WAT; the result remains `false`.
+    * Dependencies compiled successfully during the request may already have been written.
     * The reserved `RuntimeWasm.mjs` host library is never replaced by a diagnostic loader.
     * Callers must check the result before automatically loading output, since existing files may be stale.
     *
