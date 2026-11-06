@@ -387,9 +387,10 @@ object CompilerCache:
     // Backend memoization is owned by the artifact, not its symbols. Dependencies must be
     // requested before entering this lock.
     private var wasmFile: Opt[codegen.wasm.text.CompiledWasmFile] = N
-    def materialize(outputs: Ls[(io.Path, Str)])(using cctx: CompilerCtx): Unit = synchronized:
+    /** Failed builds use `overwrite = false` to provide diagnostic loaders without replacing earlier outputs. */
+    def materialize(outputs: Ls[(io.Path, Str)], overwrite: Bool)(using cctx: CompilerCtx): Unit = synchronized:
       outputs.foreach: (path, content) =>
-        if !cctx.fs.exists(path) || cctx.fs.read(path) =/= content then cctx.fs.write(path, content)
+        if !cctx.fs.exists(path) || overwrite && cctx.fs.read(path) =/= content then cctx.fs.write(path, content)
 
     /** The Wasm module of this artifact, built by `build` on the first request that builds it. A
       * failed build returns `None`, which is not memoized, so that the next request reports its

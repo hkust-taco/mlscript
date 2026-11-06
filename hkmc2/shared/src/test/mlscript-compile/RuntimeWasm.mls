@@ -81,7 +81,10 @@ fun instanceImports(imports: dyn, pages: Int): dyn =
 
 @annotations.async
 fun instantiate(url: Str, imports: dyn, pages: Int): dyn =
-  let wat = handlers.await(fs.readFile(new URL(url), "utf8"))
+  let wat = handlers.await(fs.readFile(new URL(url), "utf8").catch of (error: dyn) =>
+    if error.code === "ENOENT" then
+      throw Error("Cannot load WASM module " + url + ": compiled WAT output is missing. Rebuild before running.", {cause: error})
+    else throw error)
   compileWat(wat, instanceImports(imports, pages), url)
 
 // The native bridge boxes call results to preserve JavaScript undefined. Ordinary

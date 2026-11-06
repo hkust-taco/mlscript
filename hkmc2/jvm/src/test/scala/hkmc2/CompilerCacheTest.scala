@@ -305,6 +305,6 @@ class CompilerCacheTest extends AnyFunSuite with BeforeAndAfterAll:
         assert(reportsErrors("Dynamic"), "A backend failure must be reported on every request")
       assert(!compiler.compileModule(tempDir/"Broken.mls"), "Reusing an artifact with errors must not compile it")
       for name <- List("Broken", "Importer", "Dynamic") do
-        assert(!os.exists(tempDir/s"$name.mjs") && !os.exists(tempDir/s"$name.wat"),
-          s"The WASM unit $name must not be emitted")
+        assert(os.exists(tempDir/s"$name.mjs") && !os.exists(tempDir/s"$name.wat"),
+          s"The failed WASM unit $name must have a diagnostic loader and no WAT")
     finally os.remove.all(tempDir)
