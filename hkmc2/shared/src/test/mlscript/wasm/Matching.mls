@@ -42,14 +42,14 @@ if Bar(true) is
   else 2
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
-//│   (type $Bar (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $y@1 (mut (ref null any))))))
-//│   (type $Baz (sub $Object (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))) (field $z@1 (mut (ref null any))))))
-//│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $Bar (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $y@1 (mut (ref null any))))))
+//│   (type $Baz (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $z@1 (mut (ref null any))))))
+//│   (type $Bar_typeinfo (sub $TypeInfoBase (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Bar_init (func (param $this (ref $Bar)) (param $y (ref null any)) (result (ref $Bar))))
 //│   (type $Bar_ctor (func (param $y (ref null any)) (result (ref $Bar))))
-//│   (type $Baz_typeinfo (sub $TypeInfoBase (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Baz_typeinfo (sub $TypeInfoBase (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Baz_init (func (param $this (ref $Baz)) (param $z (ref null any)) (result (ref $Baz))))
 //│   (type $Baz_ctor (func (param $z (ref null any)) (result (ref $Baz))))
 //│   (type $entry (func (result (ref null any))))
@@ -118,7 +118,7 @@ if Bar(true) is
 //│           (if
 //│             (block (result i32)
 //│               (local.set $currentTypeInfo
-//│                 (struct.get $Object $$typeinfo@0
+//│                 (struct.get $Object $typeinfo@0
 //│                   (ref.cast (ref $Object)
 //│                     (local.get $scrut))))
 //│               (local.set $targetTypeInfo
@@ -146,7 +146,7 @@ if Bar(true) is
 //│                             (i32.const 1)))
 //│                         (br $typeInfo))))
 //│                   (local.set $currentTypeInfo
-//│                     (struct.get $TypeInfoBase $$parent@1
+//│                     (struct.get $TypeInfoBase $parent@1
 //│                       (ref.cast (ref $TypeInfoBase)
 //│                         (local.get $currentTypeInfo))))
 //│                   (br $typeInfo_cont)))
@@ -182,7 +182,7 @@ if Bar(true) is
 //│           (if
 //│             (block (result i32)
 //│               (local.set $currentTypeInfo1
-//│                 (struct.get $Object $$typeinfo@0
+//│                 (struct.get $Object $typeinfo@0
 //│                   (ref.cast (ref $Object)
 //│                     (local.get $scrut))))
 //│               (local.set $targetTypeInfo1
@@ -210,7 +210,7 @@ if Bar(true) is
 //│                             (i32.const 1)))
 //│                         (br $typeInfo))))
 //│                   (local.set $currentTypeInfo1
-//│                     (struct.get $TypeInfoBase $$parent@1
+//│                     (struct.get $TypeInfoBase $parent@1
 //│                       (ref.cast (ref $TypeInfoBase)
 //│                         (local.get $currentTypeInfo1))))
 //│                   (br $typeInfo_cont)))

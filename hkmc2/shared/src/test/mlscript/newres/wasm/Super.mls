@@ -87,12 +87,12 @@ readNarrow(NarrowField())
 FieldChild().x
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase))))))
-//│   (type $TypeInfoBase1 (sub (struct (field $$tag@0 i32) (field $$parent@1 (ref null $TypeInfoBase1)))))
-//│   (type $Object1 (sub (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase1))))))
-//│   (type $FieldBase (sub $Object1 (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase1))) (field $x@1 (mut (ref null i31))))))
-//│   (type $FieldChild (sub $FieldBase (struct (field $$typeinfo@0 (mut (ref $TypeInfoBase1))) (field $x@1 (mut (ref null i31))))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase1 (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase1)))))
+//│   (type $Object1 (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase1))))))
+//│   (type $FieldBase (sub $Object1 (struct (field $typeinfo@0 (mut (ref $TypeInfoBase1))) (field $x@1 (mut (ref null i31))))))
+//│   (type $FieldChild (sub $FieldBase (struct (field $typeinfo@0 (mut (ref $TypeInfoBase1))) (field $x@1 (mut (ref null i31))))))
 //│   (type $FieldChild_ctor (func (result (ref $FieldChild))))
 //│   (type $entry (func (result (ref null i31))))
 //│   (import "repl6" "FieldChild_ctor" (func $FieldChild_ctor (type $FieldChild_ctor)))

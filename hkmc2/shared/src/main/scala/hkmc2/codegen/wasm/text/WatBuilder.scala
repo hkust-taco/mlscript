@@ -2803,11 +2803,11 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
     ctx.addType(TypeInfo(
       sym = typeInfoBaseSym,
       compType = StructType(Seq(
-        tagFieldSym -> Field(I32Type, mutable = false, id = "$tag"),
+        tagFieldSym -> Field(I32Type, mutable = false, id = "tag"),
         parentFieldSym -> Field(
           RefType(TypeIdx(SymIdx("TypeInfoBase")), nullable = true),
           mutable = false,
-          id = "$parent",
+          id = "parent",
         ),
       )),
       objectTag = N,
@@ -2816,7 +2816,7 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
     ctx.addType(TypeInfo(
       sym = baseObjectSym,
       compType = StructType(Seq(
-        typeInfoFieldSym -> Field(RefType(typeInfoBaseTypeIdx, nullable = false), mutable = true, id = "$typeinfo"),
+        typeInfoFieldSym -> Field(RefType(typeInfoBaseTypeIdx, nullable = false), mutable = true, id = "typeinfo"),
       )),
       objectTag = S(ctx.getFreshObjectTag() ensuring (_ == 0)),
     ))
