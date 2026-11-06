@@ -36,15 +36,17 @@ final case class AbiClass(
   *   The module's binding, which a default export names.
   * @param members
   *   The bindings of the public fields and of the methods by source name, which the module's JavaScript facade exports.
-  *   A method's binding identifies its function.
   * @param storage
   *   The global that holds each field: a public field's binding, or a backend slot for a private field.
+  * @param methods
+  *   The binding that identifies the function of each method.
   */
 final case class AbiNamespace(
     sym: BlockMemberSymbol,
     module: ModuleOrObjectSymbol,
     members: Map[Str, BlockMemberSymbol],
     storage: Map[TermSymbol, ScopedSymbol],
+    methods: Map[TermSymbol, BlockMemberSymbol],
 )
 final case class FileInterface(
     types: Vector[AbiType],

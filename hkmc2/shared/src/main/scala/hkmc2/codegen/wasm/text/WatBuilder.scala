@@ -327,16 +327,9 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
   private def staticSelection(sel: Select): Opt[ScopedSymbol] =
     namespace(sel.qual).flatMap(ns => sel.symbol.flatMap(staticMember(ns, _)))
 
-  /** The global or function that holds `member` of the module namespace `ns`, if it is one.
-    *
-    * A field is identified by its term symbol. A method is a function identified by its binding: optimizations such as
-    * tail-call elimination can give a method's definition a new term symbol, which only the IR of the method's own file
-    * refers to, whereas other files select the method by its original term symbol, which has the same binding.
-    */
+  /** The global or function that holds `member` of the module namespace `ns`, if it is one. */
   private def staticMember(ns: AbiNamespace, member: Symbol): Opt[ScopedSymbol] = member match
-    case method: TermSymbol if method.k is syntax.Fun =>
-      method.bms.filter(bms => ns.members.valuesIterator.exists(_ is bms))
-    case field: TermSymbol => ns.storage.get(field)
+    case member: TermSymbol => ns.storage.get(member).orElse(ns.methods.get(member))
     case _ => N
 
   private def registerNamespace(ns: AbiNamespace): Unit =
@@ -362,7 +355,8 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
           // carrying their erased types; public fields retain their originating block members.
           val storage = body.publicFields.map((bms, ts) => ts -> (bms: ScopedSymbol)) ++
             body.privateFields.map(ts => ts -> (TempSymbol(N, ts.erasedType, ts.nme): ScopedSymbol))
-          registerNamespace(AbiNamespace(cls.sym, body.isym, members.toMap, storage.toMap))
+          val methods = body.methods.map(m => m.dSym -> m.sym)
+          registerNamespace(AbiNamespace(cls.sym, body.isym, members.toMap, storage.toMap, methods.toMap))
           localNamespaces += body.isym
           applyBlock(body.ctor)
         case _ => ()
