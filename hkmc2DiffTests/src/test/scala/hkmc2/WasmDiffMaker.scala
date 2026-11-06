@@ -46,29 +46,24 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
   override def processTerm(blk: Blk, inImport: Bool)(using Config, Raise): Unit =
     if wasm.isSet && config.target == CompilationTarget.Wasm && !inImport && !initializingPrelude then
       val compiler = new WasmCompiler(using cctx, ltl)
-      val report = summon[Raise]
-      val throwingRaise: Raise = diagnostic =>
-        report(diagnostic)
-        diagnostic match
-          case _: ErrorReport => throw diagnostic
-          case _ => ()
-      // The importer reports a source import of another target. The block cannot link against it, so it is not
-      // compiled, like a block whose imported files fail to compile.
+      // A block is compiled only if the files it imports are. Elaborating the block requested their artifacts and
+      // reported their diagnostics, including the importer's error for a source import of another target, so
+      // retrieving the artifacts here reports nothing.
       var linkable = true
-      def collect(statement: semantics.Statement)(using Raise): Unit =
+      def collect(statement: semantics.Statement): Unit =
         statement match
           case imp: semantics.Import if imp.file.ext == "mls" =>
-            val artifact = cctx.getElaboratedBlock(imp.file, prelude)(using ltl, summon[Raise])
-            if artifact.config.target.sameBackend(config.target) then
-              val graph = compiler.compile(imp.file, artifact, _ => summon[Raise])
-              graph.files.foreach: (art, path, compiled) =>
-                linkedFiles(art) = path -> compiled
-              sourceImports += imp.sym
-            else linkable = false
+            val artifact = cctx.getElaboratedBlock(imp.file, prelude)(using ltl, _ => ())
+            if !artifact.config.target.sameBackend(config.target) then linkable = false
+            else compiler.compile(imp.file, artifact, _ => summon[Raise]) match
+              case S(graph) =>
+                graph.files.foreach: (art, path, compiled) =>
+                  linkedFiles(art) = path -> compiled
+                sourceImports += imp.sym
+              case N => linkable = false
           case _ => ()
         statement.subStatements.foreach(collect)
-      try collect(blk)(using throwingRaise)
-      catch case _: Diagnostic => return // The emitter has already reported this diagnostic.
+      collect(blk)
       if !linkable then return
     super.processTerm(blk, inImport)
 
@@ -117,7 +112,9 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
           errored = true
           outerRaise(d)
         case d => outerRaise(d)
-      val runtime = new WasmCompiler(using cctx, ltl).runtime()
+      val runtime = new WasmCompiler(using cctx, ltl).runtime() match
+        case S(runtime) => runtime
+        case N => return
       val compiled = ltl.givenIn:
         val fileImports = Vector(FileImport("system", runtime.compiled.interface)) ++
           linkedFiles.values.toVector.zipWithIndex.map { case ((_, compiled), i) => FileImport(s"module$i", compiled.interface) } ++

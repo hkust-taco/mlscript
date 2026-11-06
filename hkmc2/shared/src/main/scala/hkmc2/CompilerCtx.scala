@@ -70,25 +70,29 @@ class CompilerCtx(
     * elaboration must depend only on the unit itself, or importers would keep invalidating each
     * other's cached artifact — and a single worksheet could then observe symbols from two different
     * elaborations of the same file (say, `State.tupleSymbol` from one and the symbols reached
-    * through an `import` statement from another), which is silently inconsistent. */
+    * through an `import` statement from another), which is silently inconsistent.
+    *
+    * The given `Raise` receives the diagnostics of a root request, which is one made outside of
+    * any artifact build; see [[CompilerCtx.RequestReporter]] for which diagnostics these are.
+    * A nested request, which an artifact build makes for an import, reports to the `Raise` of its
+    * root request too. The importer's `Raise` records the importer's own diagnostics in its
+    * artifact, and the imported artifact records its own. */
   def getElaboratedBlock
         (file: io.Path, prelude: Ctx)
         (using TL, Raise)
         : Artifact =
     
     val lastMod = fs.getLastChangedTimestamp(file)
-    val outerRaise = summon[Raise]
+    val reporter = dependencyRecorder.fold(new CompilerCtx.RequestReporter(summon[Raise]))(_.reporter)
     var created = false
     
     def mk =
       created = true
-      val errors = collection.mutable.ArrayBuffer.empty[ErrorReport]
+      val diagnostics = collection.mutable.ArrayBuffer.empty[Diagnostic]
       given Raise = diagnostic =>
-        diagnostic match
-          case error: ErrorReport => errors += error
-          case _ => ()
-        outerRaise(diagnostic)
-      val dependencies = new CompilerCtx.DependencyRecorder
+        diagnostics += diagnostic
+        reporter.raise(diagnostic)
+      val dependencies = new CompilerCtx.DependencyRecorder(reporter)
       val modulePath = (file.up / io.RelPath(file.baseName + ".mjs")).toString
       val debug = new DebugContext
       val state = new Elaborator.State
@@ -226,7 +230,7 @@ class CompilerCtx(
         CompilationUnitAbi:
           CompilerCtx.allocateModulePrivateExportNames(ir)(using state, summon[Raise])
       Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig,
-        dependencies.result, dependencies.sourceImports.toList, errors.toList, lastMod)
+        dependencies.result, dependencies.sourceImports.toList, diagnostics.toList, lastMod)
     
     val artifact = cache.upsert(file)(
       isCurrent = (cachedFile, art) =>
@@ -246,9 +250,7 @@ class CompilerCtx(
           && art.dependencies.forall(dep => sourceIsCurrent(dep.path, dep.lastChangedTimestamp)),
       create = mk,
     )
-    // An artifact retains its symbol identity even when elaboration reported errors. Replaying
-    // those errors prevents a later backend request from treating that artifact as valid.
-    if !created then artifact.errors.foreach(outerRaise)
+    if created then reporter.built(artifact) else reporter.reused(artifact)
     dependencyRecorder.foreach(_.note(file, artifact))
     artifact
 
@@ -324,7 +326,24 @@ object CompilerCtx:
   def fresh(fs: io.FileSystem, paths: MLsCompiler.Paths, rootConfig: Config): CompilerCtx =
     CompilerCtx(N, Set.empty, fs, new PlatformCompilerCache, N, paths, rootConfig)
 
-  private[hkmc2] final class DependencyRecorder:
+  /** Reports the diagnostics of one root artifact request and of the nested requests made while
+    * building the artifacts it needs. These are the diagnostics recorded by the artifacts in the
+    * source-import closure of the requested one, each reported once: as they are raised when the
+    * request builds an artifact, or from its record when the request reuses a cached artifact.
+    * So the diagnostics of a request do not depend on what earlier requests cached, and an
+    * artifact that several imports of the request share reports its diagnostics once. */
+  private[hkmc2] final class RequestReporter(val raise: Raise):
+    private val reported = MutSet.empty[Artifact]
+
+    def built(artifact: Artifact): Unit = reported += artifact
+
+    def reused(artifact: Artifact): Unit =
+      if reported.add(artifact) then
+        artifact.sourceImports.foreach(dep => reused(dep.artifact))
+        artifact.diagnostics.foreach(raise)
+
+  /** @param reporter The reporter of the root request of the build that owns this recorder. */
+  private[hkmc2] final class DependencyRecorder(val reporter: RequestReporter):
     val sourceImports = collection.mutable.ArrayBuffer.empty[SourceImport]
     // Keep the timestamp in the set element rather than mapping paths to timestamps. If a source
     // changes while one artifact is being built and two branches observe different versions, both
@@ -377,26 +396,31 @@ object CompilerCache:
     val rootConfig: Config,
     val dependencies: Set[SourceDependency],
     val sourceImports: Ls[SourceImport],
-    val errors: Ls[ErrorReport],
+    /** The diagnostics raised while building this artifact, excluding those of the artifacts it imports. */
+    val diagnostics: Ls[Diagnostic],
     val lastChangedTimestamp: Long,
   ):
+    /** Whether neither this artifact nor the artifacts it imports, transitively, have errors. The
+      * Wasm backend compiles only valid artifacts: the IR of an invalid one may be incomplete, and
+      * a module cannot link against an import that is not compiled. */
+    val valid: Bool =
+      diagnostics.forall(_.kind is Diagnostic.Kind.Warning) && sourceImports.forall(_.artifact.valid)
+
     // Backend memoization is owned by the artifact, not its symbols. Dependencies must be
-    // requested before entering this lock; failures throw without publishing a cache entry.
+    // requested before entering this lock.
     private var wasmFile: Opt[codegen.wasm.text.CompiledWasmFile] = N
     def materialize(outputs: Ls[(io.Path, Str)])(using cctx: CompilerCtx): Unit = synchronized:
       outputs.foreach: (path, content) =>
         if !cctx.fs.exists(path) || cctx.fs.read(path) =/= content then cctx.fs.write(path, content)
 
-    /** The Wasm module of this artifact, built by `build` on the first request. The artifact of the runtime unit,
-      * which is a JavaScript compilation unit that no Wasm file can import, holds the Wasm runtime module (see
-      * `WasmCompiler.runtime`). */
-    def compiledWasm(build: => codegen.wasm.text.CompiledWasmFile): codegen.wasm.text.CompiledWasmFile = synchronized:
-      wasmFile match
-        case S(result) => result
-        case N =>
-          val result = build
-          wasmFile = S(result)
-          result
+    /** The Wasm module of this artifact, built by `build` on the first request that builds it. A
+      * failed build returns `None`, which is not memoized, so that the next request reports its
+      * errors again. The artifact of the runtime unit, which is a JavaScript compilation unit that
+      * no Wasm file can import, holds the Wasm runtime module (see `WasmCompiler.runtime`). */
+    def compiledWasm(build: => Opt[codegen.wasm.text.CompiledWasmFile]): Opt[codegen.wasm.text.CompiledWasmFile] =
+      synchronized:
+        if wasmFile.isEmpty then wasmFile = build
+        wasmFile
 
   final case class SourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact)
 

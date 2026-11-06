@@ -191,9 +191,16 @@ are fixed for these in-process artifacts; there is no disk cache.
 Dependency requests happen before acquiring a backend artifact's lock. Concurrent
 roots can therefore share a dependency without recursively holding backend locks.
 Output materialization has its own synchronized step on that artifact and restores
-missing or changed output files even on a cache hit. Backend errors do not publish
-a successful memoized result. Cached frontend errors are replayed so an invalid
-unit does not appear valid on the next request.
+missing or changed output files even on a cache hit.
+
+Each artifact records the diagnostics raised while elaborating its own unit, and
+is valid if neither it nor its transitive source imports have errors. Only valid
+artifacts are compiled to WASM, and a module is compiled only if its imports are.
+A backend failure is not memoized, so the next request compiles the module again
+and reports its errors again. A request reports the recorded diagnostics of every
+artifact in its source-import closure once, whether it builds that artifact or
+reuses it from the cache: an invalid unit reports its errors on every request,
+and a unit shared by several imports reports them once.
 
 Failed entry execution does not publish a worksheet interface. A failed file
 loader remains failed according to normal ES-module semantics; retrying requires
