@@ -23,7 +23,8 @@ fun Main() = N.answer()
 ```
 
 `MLsCompiler.compileModule` compiles the requested source and its source dependency
-graph. It writes a `.wat` and `.mjs` beside each source. As with JavaScript
+graph. It writes a `.wat` and `.mjs` beside each source, and returns whether it
+wrote the requested module. As with JavaScript
 compilation, a definition named after the file is its default export. A root
 without such a definition is an entry-only module; importing it as MLscript source
 reports a missing-default diagnostic.

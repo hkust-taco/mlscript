@@ -172,7 +172,7 @@ class CompilerCacheTest extends AnyFunSuite with BeforeAndAfterAll:
         Config.default(TestFolders.mainTestDir(os.pwd)),
       )
 
-      def compile(file: io.Path): Future[Unit] = Future({
+      def compile(file: io.Path): Future[Boolean] = Future({
         val compiler = MLsCompiler(mkRaise = _ => diagnostic =>
           diagnostics.add(diagnostic)
           ())
@@ -260,7 +260,7 @@ class CompilerCacheTest extends AnyFunSuite with BeforeAndAfterAll:
       for _ <- 0 until 2 do
         assert(reportsErrors("Importer"), "A module must report an import that cannot be compiled on every request")
         assert(reportsErrors("Dynamic"), "A backend failure must be reported on every request")
-      compiler.compileModule(tempDir/"Broken.mls")
+      assert(!compiler.compileModule(tempDir/"Broken.mls"), "Reusing an artifact with errors must not compile it")
       for name <- List("Broken", "Importer", "Dynamic") do
         assert(!os.exists(tempDir/s"$name.mjs") && !os.exists(tempDir/s"$name.wat"),
           s"The WASM unit $name must not be emitted")

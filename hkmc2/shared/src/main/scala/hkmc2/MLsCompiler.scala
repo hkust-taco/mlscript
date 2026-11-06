@@ -60,7 +60,15 @@ class MLsCompiler
   import cctx.paths.*
   
   
-  def compileModule(file: io.Path): Unit =
+  /** Compiles `file` with its configured target and writes the output, returning whether it did. A JavaScript module
+    * is written even if its source has errors. A WASM module is not written if its source has errors or if compiling
+    * it or one of its imports fails.
+    *
+    * The request reports the diagnostics of the artifacts that it builds, but not those of the artifacts that it
+    * reuses from the cache (see `CompilerCtx.getElaboratedBlock`). So a request for an unchanged WASM source with
+    * errors reports nothing and returns `false`.
+    */
+  def compileModule(file: io.Path): Bool =
     
     given Raise = mkRaise(file)
     given DebugPrinter = new DebugPrinter(N)
@@ -79,8 +87,7 @@ class MLsCompiler
         WarningReport(msg"Missing language version specification for file `${file.relativeToOrSame(config.baseDir).toString}`" -> artifact.tree.toLoc.map(_.left)
           :: msg"Specify a version with #lang; the latest available is #lang(${Config.Language.latestVersion.name})" -> N :: Nil)
     if artifact.config.target is CompilationTarget.Wasm then
-      new codegen.wasm.WasmCompiler(using cctx, compilerTL).compile(file, artifact, mkRaise)
-      return
+      return new codegen.wasm.WasmCompiler(using cctx, compilerTL).compile(file, artifact, mkRaise).isDefined
     given Elaborator.Ctx = artifact.ctx
     val jsb = compilerTL.givenIn:
       codegen.js.JSBuilder()
@@ -95,6 +102,7 @@ class MLsCompiler
       jsb.program(artifact.ir, exportedSymbol, out)
     val jsStr = je.stripBreaks.mkString(100)
     cctx.fs.write(out, jsStr)
+    true
   
   
 end MLsCompiler
