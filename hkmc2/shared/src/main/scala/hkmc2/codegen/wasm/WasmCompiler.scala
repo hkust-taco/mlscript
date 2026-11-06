@@ -19,6 +19,13 @@ object WasmCompiler:
   val nativeBridge: Str =
     "{ importModule: url => import(url), apply: (fn, receiver, args) => ({ value: Reflect.apply(fn, receiver, args) }) }"
 
+  /** The error of a module that cannot be compiled because the module of the source import at `loc`, from `file`,
+    * could not be compiled. */
+  def failedImport(file: io.Path, loc: Opt[Loc]): ErrorReport =
+    ErrorReport(
+      msg"Cannot compile this module: the imported file `${file.last}` could not be compiled due to an error" -> loc :: Nil,
+      source = Diagnostic.Source.Compilation)
+
   /** Runs `build` with a `Raise` that forwards the diagnostics to `report`. The result is `None` if `build` reported
     * an error, since the module it returns is then incomplete. */
   private def unlessFailed[A](report: Raise)(build: Raise => A): Opt[A] =
@@ -48,10 +55,13 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
 
   /** The runtime module, which every Wasm module imports, or `None` if building it reported an error.
     *
-    * Modules refer to the runtime's bindings through the symbols of its interface, and a module merges the bindings
-    * that the interfaces it imports share by these symbols. So all the modules of a session must be compiled against
-    * one runtime module: it is held by the artifact of the runtime unit, from which it takes its elaboration state. All
-    * artifacts depend on the runtime unit, so they are rebuilt with the runtime module when that unit changes.
+    * The runtime module defines the `Unit` object of the runtime unit (`Runtime.mls`), identified by that object's
+    * symbol: the elaboration state of every artifact takes it from the runtime unit's artifact (see
+    * `State.unitSymbol`). So the runtime module is built with the elaboration state of that artifact and memoized on it.
+    * Rebuilding the runtime unit's artifact, when the runtime unit, a file it imports, or the Prelude changes, creates
+    * a new `Unit` symbol, and every artifact depends on the runtime unit, so all of them are rebuilt with a new runtime
+    * module. Otherwise, the runtime module is built once: the modules that are linked together refer to the bindings
+    * of the runtime by the symbols of its interface, so they must all be compiled against the same runtime module.
     */
   def runtime()(using Raise): Opt[WasmRuntime] =
     val source = cctx.paths.runtimeSourceFile
@@ -68,13 +78,12 @@ final class WasmCompiler(using cctx: CompilerCtx, tl: TraceLogger):
   /** Compiles the Wasm modules of `artifact` and of the artifacts it imports, transitively, and writes their outputs.
     * Each module reports its diagnostics to `report` applied to its source path.
     *
-    * The result is `None` if `artifact` is invalid, in which case requesting it reported its errors, or if compiling
-    * one of the modules reported an error. A module is compiled only if the modules it imports are, but all of these
-    * are compiled even after one of them fails, so that each one reports its errors.
+    * The result is `None` if the module of `artifact` could not be compiled. A module is not compiled if its artifact
+    * has errors, which the request that built the artifact reported, if compiling it reports an error, or if the
+    * module of one of its imports could not be compiled, which it reports at that import.
     */
   def compile(file: io.Path, artifact: Artifact, report: io.Path => Raise): Opt[WasmGraph] =
-    if !artifact.valid then N
-    else runtime()(using report(cctx.paths.runtimeSourceFile)).flatMap: support =>
+    runtime()(using report(cctx.paths.runtimeSourceFile)).flatMap: support =>
       val done = mutable.LinkedHashMap.empty[Artifact, (io.Path, CompiledWasmFile)]
       val failed = mutable.Set.empty[Artifact]
 
@@ -130,8 +139,13 @@ export default loaded.defaultExport;
           case S((_, compiled)) => S(compiled)
           case N if failed(art) => N
           case N =>
-            val imports = art.sourceImports.map(dep => emit(dep.path, dep.artifact))
-            val result = if imports.contains(N) then N else build(path, art)
+            val result =
+              if art.hasErrors then N
+              else
+                // Compile every import, even after one fails, so that each one reports why it cannot be compiled.
+                val failedImports = art.sourceImports.filter(dep => emit(dep.path, dep.artifact).isEmpty)
+                failedImports.foreach(dep => report(path)(WasmCompiler.failedImport(dep.path, dep.loc)))
+                if failedImports.isEmpty then build(path, art) else N
             result match
               case S(compiled) => done(art) = path -> compiled
               case N => failed += art

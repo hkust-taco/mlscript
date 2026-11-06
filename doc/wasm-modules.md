@@ -182,25 +182,33 @@ the pinned Binaryen package resolvable from the runtime loader.
 
 Backend results are memoized on the authoritative frontend artifact. A changed
 source dependency invalidates its importers through the existing cache. The
-runtime module is memoized on the artifact of the runtime source, which is a
-JavaScript compilation unit that no WASM source can import. Every artifact
-depends on the runtime source, so the runtime module is rebuilt together with the
-modules that link against it. The compiler version and session configuration
-are fixed for these in-process artifacts; there is no disk cache.
+compiler version and session configuration are fixed for these in-process
+artifacts; there is no disk cache.
+
+The runtime module defines the Unit object of the runtime source and identifies
+it by that object's symbol, which every artifact takes from the runtime source's
+artifact. So the runtime module is built from that artifact and memoized on it.
+Rebuilding the runtime source's artifact, when the runtime source, a file it
+imports, or the Prelude changes, creates a new Unit symbol; every artifact
+depends on the runtime source, so all of them are rebuilt with a new runtime
+module. Otherwise, the runtime module is built once per compilation session, as
+the modules linked together refer to its bindings by the symbols of its
+interface. The runtime source compiles to JavaScript and no WASM source can
+import it, so it has no WASM module of its own.
 
 Dependency requests happen before acquiring a backend artifact's lock. Concurrent
 roots can therefore share a dependency without recursively holding backend locks.
 Output materialization has its own synchronized step on that artifact and restores
 missing or changed output files even on a cache hit.
 
-Each artifact records the diagnostics raised while elaborating its own unit, and
-is valid if neither it nor its transitive source imports have errors. Only valid
-artifacts are compiled to WASM, and a module is compiled only if its imports are.
-A backend failure is not memoized, so the next request compiles the module again
-and reports its errors again. A request reports the recorded diagnostics of every
-artifact in its source-import closure once, whether it builds that artifact or
-reuses it from the cache: an invalid unit reports its errors on every request,
-and a unit shared by several imports reports them once.
+Each artifact records whether elaborating its own unit reported an error; the
+request that builds an artifact reports its diagnostics, and a request that
+reuses it reports nothing. A module is compiled only if its artifact has no
+errors and the modules of its imports are compiled. A module whose import could
+not be compiled reports an error at that import on every request, so a request
+that produces no output says why, even when the errors of the import were
+reported by an earlier request. A backend failure is not memoized, so the next
+request compiles the module again and reports its errors again.
 
 Failed entry execution does not publish a worksheet interface. A failed file
 loader remains failed according to normal ES-module semantics; retrying requires

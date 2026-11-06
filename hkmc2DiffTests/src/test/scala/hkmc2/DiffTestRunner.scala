@@ -62,9 +62,8 @@ object DiffTestRunner:
       * timed out on slow CI runners while `LazyArray.mls` was being elaborated, and stopping its thread
       * discarded that elaboration, so that the next test importing it timed out too.
       *
-      * Requesting a cached artifact reports the diagnostics that it records, so the tests importing a
-      * module report the diagnostics raised while elaborating it here. The warm-up prints them too,
-      * along with those of the Prelude, which the tests do not report. The compile tests fail on them.
+      * The tests importing a module do not see the diagnostics raised while elaborating it here, so the
+      * warm-up prints them. The compile tests fail on them.
       */
     def warmUpImports(files: Iterable[os.Path]): Unit =
       import java.util.concurrent.{Callable, Executors}

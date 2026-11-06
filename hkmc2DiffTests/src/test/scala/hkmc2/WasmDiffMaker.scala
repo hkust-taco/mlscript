@@ -46,21 +46,22 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
   override def processTerm(blk: Blk, inImport: Bool)(using Config, Raise): Unit =
     if wasm.isSet && config.target == CompilationTarget.Wasm && !inImport && !initializingPrelude then
       val compiler = new WasmCompiler(using cctx, ltl)
-      // A block is compiled only if the files it imports are. Elaborating the block requested their artifacts and
-      // reported their diagnostics, including the importer's error for a source import of another target, so
-      // retrieving the artifacts here reports nothing.
+      // A block is compiled only if the files it imports are. The importer reported a source import of another
+      // target when elaborating the block.
       var linkable = true
       def collect(statement: semantics.Statement): Unit =
         statement match
           case imp: semantics.Import if imp.file.ext == "mls" =>
-            val artifact = cctx.getElaboratedBlock(imp.file, prelude)(using ltl, _ => ())
+            val artifact = cctx.getElaboratedBlock(imp.file, prelude)(using ltl, summon[Raise])
             if !artifact.config.target.sameBackend(config.target) then linkable = false
             else compiler.compile(imp.file, artifact, _ => summon[Raise]) match
               case S(graph) =>
                 graph.files.foreach: (art, path, compiled) =>
                   linkedFiles(art) = path -> compiled
                 sourceImports += imp.sym
-              case N => linkable = false
+              case N =>
+                raise(WasmCompiler.failedImport(imp.file, imp.toLoc))
+                linkable = false
           case _ => ()
         statement.subStatements.foreach(collect)
       collect(blk)

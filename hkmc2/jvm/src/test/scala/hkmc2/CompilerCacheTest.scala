@@ -238,49 +238,30 @@ class CompilerCacheTest extends AnyFunSuite with BeforeAndAfterAll:
       executionContext.shutdownNow()
       os.remove.all(tempDir)
 
-  test("cached failures are reported on every request and keep WASM units from being emitted"):
+  test("WASM units with errors are not emitted, and their importers say why on every request"):
     import io.PlatformPath.given
     val tempDir = os.temp.dir(prefix = "compiler-cached-errors-")
     try
       // These requests exercise cache/error state, not source-language diagnostic wording
-      // (which is covered by the normal ModuleErrors diff test).
-      os.write(tempDir/"Nested.mls", "#lang(0.3.x)\nfun Nested() =\n  #config(target: Wasm)\n  42")
-      val wasmSource = TestFolders.compileTestDir(os.pwd)/"wasm"/"modules"/"Answer.mls"
-      val quoted = codegen.js.JSBuilder.makeStringLiteral(wasmSource.toString)
-      os.write(tempDir/"Mixed.mls", s"#lang(0.3.x)\nimport $quoted\nfun Mixed() = Answer()")
+      // (which is covered by the WasmFailedImports and ModuleErrors diff tests).
       os.write(tempDir/"Broken.mls", "#lang(0.3.x)\n#config(target: Wasm)\nfun Broken() = missing")
       os.write(tempDir/"Importer.mls", "#lang(0.3.x)\n#config(target: Wasm)\nimport \"./Broken.mls\"\nfun Importer() = Broken()")
       os.write(tempDir/"Dynamic.mls", "#lang(0.3.x)\n#config(target: Wasm)\nmodule M with\n  val value = 42\nfun Dynamic() = M")
       given CompilerCtx = TestFolders.compilerCtx(os.pwd)
       val diagnostics = collection.mutable.ArrayBuffer.empty[Diagnostic]
       val compiler = MLsCompiler(_ => diagnostic => { diagnostics += diagnostic; () })
-      // The second round reuses every frontend artifact. `Importer` is valid itself but imports the
-      // invalid `Broken`, and `Dynamic` fails in the WASM backend, which does not memoize failures.
-      for _ <- 0 until 2; name <- List("Nested", "Mixed", "Broken", "Importer", "Dynamic") do
+      def reportsErrors(name: String): Boolean =
         diagnostics.clear()
         compiler.compileModule(tempDir/s"$name.mls")
-        assert(diagnostics.exists(_.isInstanceOf[ErrorReport]), s"Errors for $name must be reported on every request")
+        diagnostics.exists(_.isInstanceOf[ErrorReport])
+      assert(reportsErrors("Broken"), "Building an artifact must report its errors")
+      // Every request after the first reuses the frontend artifacts. `Importer` has no errors itself, but its import
+      // cannot be compiled, and the backend failure of `Dynamic` is not memoized.
+      for _ <- 0 until 2 do
+        assert(reportsErrors("Importer"), "A module must report an import that cannot be compiled on every request")
+        assert(reportsErrors("Dynamic"), "A backend failure must be reported on every request")
+      compiler.compileModule(tempDir/"Broken.mls")
       for name <- List("Broken", "Importer", "Dynamic") do
         assert(!os.exists(tempDir/s"$name.mjs") && !os.exists(tempDir/s"$name.wat"),
           s"The WASM unit $name must not be emitted")
-    finally os.remove.all(tempDir)
-
-  test("a request reports the diagnostics of an artifact shared by its imports once"):
-    import io.PlatformPath.given
-    val tempDir = os.temp.dir(prefix = "compiler-diamond-errors-")
-    try
-      os.write(tempDir/"Shared.mls", "#lang(0.3.x)\nfun Shared() = missing")
-      os.write(tempDir/"Left.mls", "#lang(0.3.x)\nimport \"./Shared.mls\"\nfun Left() = Shared()")
-      os.write(tempDir/"Right.mls", "#lang(0.3.x)\nimport \"./Shared.mls\"\nfun Right() = Shared()")
-      os.write(tempDir/"Root.mls", "#lang(0.3.x)\nimport \"./Left.mls\"\nimport \"./Right.mls\"\nfun Root() = [Left(), Right()]")
-      def errors(file: os.Path)(using CompilerCtx): Int =
-        var count = 0
-        MLsCompiler(_ => diagnostic => if diagnostic.kind == Diagnostic.Kind.Error then count += 1).compileModule(file)
-        count
-      val expected = errors(tempDir/"Shared.mls")(using TestFolders.compilerCtx(os.pwd))
-      assert(expected > 0)
-      given CompilerCtx = TestFolders.compilerCtx(os.pwd)
-      // The first request builds `Shared` for `Left` and reuses it for `Right`; the second reuses every artifact.
-      assert(errors(tempDir/"Root.mls") == expected, "Building an import diamond must report its shared errors once")
-      assert(errors(tempDir/"Root.mls") == expected, "Reusing an import diamond must report its shared errors once")
     finally os.remove.all(tempDir)

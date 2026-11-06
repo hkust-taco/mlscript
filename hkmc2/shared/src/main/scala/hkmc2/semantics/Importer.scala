@@ -74,7 +74,7 @@ class Importer extends NewResolver:
             // no local alias symbol needs a separate shape subscription.
 
             val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
-            cctx.recordSourceImport(sym, file, artifact)
+            cctx.recordSourceImport(sym, file, artifact, loc)
             Import(sym, jsFile.toString, file)(loc)
         
       case _ =>

@@ -600,7 +600,8 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
   private def singletonGlobalGet(info: SingletonInfo): Expr =
     global.get(GlobalIdx(SymIdx(info.globalName)), info.globalTy)
 
-  /** The runtime representation of Unit as a singleton object. */
+  /** The runtime representation of Unit as a singleton object. Its symbol is the `Unit` object of the runtime unit,
+    * which the runtime module defines (see [[runtimeModule]]). */
   private lazy val syntheticUnitDefn: ClsLikeDefn =
     ClsLikeDefn(
       owner = N,

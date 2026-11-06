@@ -61,8 +61,8 @@ class CompilerCtx(
 
   /** Record explicit source imports separately from internal runtime/cache dependencies.
     * Keep the artifact itself: its symbols, rather than a second path lookup, own the import. */
-  private[hkmc2] def recordSourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact): Unit =
-    dependencyRecorder.foreach(_.sourceImports += SourceImport(sym, path, artifact))
+  private[hkmc2] def recordSourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact, loc: Opt[Loc]): Unit =
+    dependencyRecorder.foreach(_.sourceImports += SourceImport(sym, path, artifact, loc))
   
   /** Elaborate (and, when compiler paths are set, lower) a compilation unit, caching the result.
     *
@@ -72,27 +72,25 @@ class CompilerCtx(
     * elaborations of the same file (say, `State.tupleSymbol` from one and the symbols reached
     * through an `import` statement from another), which is silently inconsistent.
     *
-    * The given `Raise` receives the diagnostics of a root request, which is one made outside of
-    * any artifact build; see [[CompilerCtx.RequestReporter]] for which diagnostics these are.
-    * A nested request, which an artifact build makes for an import, reports to the `Raise` of its
-    * root request too. The importer's `Raise` records the importer's own diagnostics in its
-    * artifact, and the imported artifact records its own. */
+    * The given `Raise` receives the diagnostics of the artifacts that the request builds. A request
+    * made while building an importer reports them to the `Raise` of the outermost request instead:
+    * the importer's `Raise` notes whether the importer has errors, and must not count those of the
+    * artifacts it imports (see [[Artifact.hasErrors]]). A request that reuses a cached artifact
+    * reports nothing. */
   def getElaboratedBlock
         (file: io.Path, prelude: Ctx)
         (using TL, Raise)
         : Artifact =
     
     val lastMod = fs.getLastChangedTimestamp(file)
-    val reporter = dependencyRecorder.fold(new CompilerCtx.RequestReporter(summon[Raise]))(_.reporter)
-    var created = false
+    val report = dependencyRecorder.fold(summon[Raise])(_.report)
     
     def mk =
-      created = true
-      val diagnostics = collection.mutable.ArrayBuffer.empty[Diagnostic]
+      var hasErrors = false
       given Raise = diagnostic =>
-        diagnostics += diagnostic
-        reporter.raise(diagnostic)
-      val dependencies = new CompilerCtx.DependencyRecorder(reporter)
+        if !(diagnostic.kind is Diagnostic.Kind.Warning) then hasErrors = true
+        report(diagnostic)
+      val dependencies = new CompilerCtx.DependencyRecorder(report)
       val modulePath = (file.up / io.RelPath(file.baseName + ".mjs")).toString
       val debug = new DebugContext
       val state = new Elaborator.State
@@ -230,7 +228,7 @@ class CompilerCtx(
         CompilationUnitAbi:
           CompilerCtx.allocateModulePrivateExportNames(ir)(using state, summon[Raise])
       Artifact(parsed, blk0, ir, artifactConfig, prelude, state, compilationUnit, rootConfig,
-        dependencies.result, dependencies.sourceImports.toList, diagnostics.toList, lastMod)
+        dependencies.result, dependencies.sourceImports.toList, hasErrors, lastMod)
     
     val artifact = cache.upsert(file)(
       isCurrent = (cachedFile, art) =>
@@ -250,7 +248,6 @@ class CompilerCtx(
           && art.dependencies.forall(dep => sourceIsCurrent(dep.path, dep.lastChangedTimestamp)),
       create = mk,
     )
-    if created then reporter.built(artifact) else reporter.reused(artifact)
     dependencyRecorder.foreach(_.note(file, artifact))
     artifact
 
@@ -326,24 +323,9 @@ object CompilerCtx:
   def fresh(fs: io.FileSystem, paths: MLsCompiler.Paths, rootConfig: Config): CompilerCtx =
     CompilerCtx(N, Set.empty, fs, new PlatformCompilerCache, N, paths, rootConfig)
 
-  /** Reports the diagnostics of one root artifact request and of the nested requests made while
-    * building the artifacts it needs. These are the diagnostics recorded by the artifacts in the
-    * source-import closure of the requested one, each reported once: as they are raised when the
-    * request builds an artifact, or from its record when the request reuses a cached artifact.
-    * So the diagnostics of a request do not depend on what earlier requests cached, and an
-    * artifact that several imports of the request share reports its diagnostics once. */
-  private[hkmc2] final class RequestReporter(val raise: Raise):
-    private val reported = MutSet.empty[Artifact]
-
-    def built(artifact: Artifact): Unit = reported += artifact
-
-    def reused(artifact: Artifact): Unit =
-      if reported.add(artifact) then
-        artifact.sourceImports.foreach(dep => reused(dep.artifact))
-        artifact.diagnostics.foreach(raise)
-
-  /** @param reporter The reporter of the root request of the build that owns this recorder. */
-  private[hkmc2] final class DependencyRecorder(val reporter: RequestReporter):
+  /** @param report The `Raise` of the outermost request, to which the artifacts requested while
+    *   building the recorder's artifact report their diagnostics. */
+  private[hkmc2] final class DependencyRecorder(val report: Raise):
     val sourceImports = collection.mutable.ArrayBuffer.empty[SourceImport]
     // Keep the timestamp in the set element rather than mapping paths to timestamps. If a source
     // changes while one artifact is being built and two branches observe different versions, both
@@ -396,16 +378,12 @@ object CompilerCache:
     val rootConfig: Config,
     val dependencies: Set[SourceDependency],
     val sourceImports: Ls[SourceImport],
-    /** The diagnostics raised while building this artifact, excluding those of the artifacts it imports. */
-    val diagnostics: Ls[Diagnostic],
+    /** Whether building this artifact reported an error, not counting the errors of the artifacts
+      * it imports. The Wasm backend compiles only artifacts without errors whose imports it
+      * compiles too: the IR of an artifact with errors may be incomplete. */
+    val hasErrors: Bool,
     val lastChangedTimestamp: Long,
   ):
-    /** Whether neither this artifact nor the artifacts it imports, transitively, have errors. The
-      * Wasm backend compiles only valid artifacts: the IR of an invalid one may be incomplete, and
-      * a module cannot link against an import that is not compiled. */
-    val valid: Bool =
-      diagnostics.forall(_.kind is Diagnostic.Kind.Warning) && sourceImports.forall(_.artifact.valid)
-
     // Backend memoization is owned by the artifact, not its symbols. Dependencies must be
     // requested before entering this lock.
     private var wasmFile: Opt[codegen.wasm.text.CompiledWasmFile] = N
@@ -415,14 +393,16 @@ object CompilerCache:
 
     /** The Wasm module of this artifact, built by `build` on the first request that builds it. A
       * failed build returns `None`, which is not memoized, so that the next request reports its
-      * errors again. The artifact of the runtime unit, which is a JavaScript compilation unit that
-      * no Wasm file can import, holds the Wasm runtime module (see `WasmCompiler.runtime`). */
+      * errors again. The artifact of the runtime unit holds the Wasm runtime module, which defines
+      * the `Unit` object of that unit (see `WasmCompiler.runtime`). The runtime unit compiles to
+      * JavaScript, and no Wasm file can import it, so it has no Wasm module of its own. */
     def compiledWasm(build: => Opt[codegen.wasm.text.CompiledWasmFile]): Opt[codegen.wasm.text.CompiledWasmFile] =
       synchronized:
         if wasmFile.isEmpty then wasmFile = build
         wasmFile
 
-  final case class SourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact)
+  /** @param loc The location of the import statement in the importing unit. */
+  final case class SourceImport(sym: ImportSymbol, path: io.Path, artifact: Artifact, loc: Opt[Loc])
 
   /** The version of one transitive source dependency observed while building an artifact. */
   final case class SourceDependency(path: io.Path, lastChangedTimestamp: Long)
