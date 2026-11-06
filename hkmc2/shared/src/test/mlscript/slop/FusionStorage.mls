@@ -1,0 +1,189 @@
+:.
+:global
+:lift
+:noInline
+:deforest mono
+:sir
+:siret
+
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ import "..." as Predef; end
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+// An unfused container retains its declared field representation.
+:expect 42
+data class Box(value: Int)
+data class Holder(box: Box, other: Int)
+private fun read(holder, choose) =
+  if choose then (if holder.Holder#box is Box(value) then value else 0)
+  else holder.Holder#other
+read(Holder(Box(42), 1), true)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ?, tmp1: ?;
+//│ @private
+//│ define read⁰ as fun read¹(holder: ?, choose: ?): ? {
+//│   let scrut: ?, value: ?, arg$Box$0$: ?;
+//│   match choose
+//│     true =>
+//│       set scrut = holder.box⁰;
+//│       match scrut
+//│         Box⁰ =>
+//│           set arg$Box$0$ = scrut.value⁰;
+//│           set value = arg$Box$0$;
+//│           return value
+//│         else
+//│           return 0
+//│       end
+//│     else
+//│       return holder.other⁰
+//│   end
+//│ };
+//│ @data
+//│ define Box¹ as class Box⁰ {
+//│   val value¹: Int⁰;
+//│   constructor Box²(value: Int⁰) {
+//│     define value¹ as val value⁰: Int⁰ = value;
+//│     end
+//│   }
+//│ };
+//│ @data
+//│ define Holder⁰ as class Holder² {
+//│   val box¹: Box⁰;
+//│   val other¹: Int⁰;
+//│   constructor Holder¹(box: Box⁰, other: Int⁰) {
+//│     define box¹ as val box⁰: Box⁰ = box;
+//│     define other¹ as val other⁰: Int⁰ = other;
+//│     end
+//│   }
+//│ };
+//│ set tmp = Box²(42);
+//│ set tmp1 = Holder¹((tmp as! Box⁰), 1);
+//│ return read¹(tmp1, true)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// A top-typed field can store the closure replacing a matched constructor.
+:expect 42
+data class Holder(box: Any, other: Int)
+private fun read(holder, choose) =
+  if choose then (if holder.Holder#box is Box(value) then value else 0)
+  else holder.Holder#other
+read(Holder(Box(42), 1), true)
+//│ deforest > >>> fusing >>>
+//│ deforest > Box²(42) ->
+//│ deforest > 	match: scrut⁰
+//│ deforest > 	fields: scrut⁰.value⁰
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ?, tmp1: ?, $scrut_Box, $scrut_rest, $choose_rest, Box_value: Int⁰;
+//│ @affine(1) @private
+//│ define $scrut_Box as fun $scrut_Box⁰(Box_value1: Int⁰)(fv_arg$Box$0$: ?, fv_value: ?): ? {
+//│   set fv_arg$Box$0$ = Box_value1;
+//│   set fv_value = fv_arg$Box$0$;
+//│   return fv_value
+//│ };
+//│ @private
+//│ define $scrut_rest as fun $scrut_rest⁰(): ? {
+//│   return $choose_rest⁰()
+//│ };
+//│ @private
+//│ define $choose_rest as fun $choose_rest⁰(): ? {
+//│   return null
+//│ };
+//│ @private
+//│ define read² as fun read³(holder: ?, choose: ?): ? {
+//│   let scrut: ?, value: ?, arg$Box$0$: ?;
+//│   match choose
+//│     true =>
+//│       set scrut = holder.box²;
+//│       return scrut(arg$Box$0$, value)
+//│     else
+//│       return holder.other²
+//│   end
+//│ };
+//│ @data
+//│ define Holder³ as class Holder⁵ {
+//│   val box³: Unknown;
+//│   val other³: Int⁰;
+//│   constructor Holder⁴(box: Unknown, other: Int⁰) {
+//│     define box³ as val box²: Unknown = box;
+//│     define other³ as val other²: Int⁰ = other;
+//│     end
+//│   }
+//│ };
+//│ set Box_value = 42;
+//│ set tmp = $scrut_Box⁰(Box_value);
+//│ set tmp1 = Holder⁴(tmp, 1);
+//│ return read³(tmp1, true)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42
+
+// Storage constraints propagate through several unfused containers.
+:expect 42
+data class Inner(box: Box, other: Int)
+data class Outer(inner: Inner, other: Int)
+private fun readInner(inner: Inner, choose: Bool) =
+  if choose then (if inner.Inner#box is Box(value) then value else 0)
+  else inner.Inner#other
+private fun readOuter(container: Outer, choose: Bool) =
+  if choose then readInner(container.Outer#inner, choose)
+  else container.Outer#other
+readOuter(Outer(Inner(Box(42), 1), 2), true)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: ?, tmp1: ?, tmp2: ?;
+//│ @private
+//│ define readInner⁰ as fun readInner¹(inner: Inner⁰, choose: Bool⁰): ? {
+//│   let scrut: ?, value: ?, arg$Box$0$: ?;
+//│   match choose
+//│     true =>
+//│       set scrut = inner.box⁴;
+//│       match scrut
+//│         Box⁰ =>
+//│           set arg$Box$0$ = scrut.value⁰;
+//│           set value = arg$Box$0$;
+//│           return value
+//│         else
+//│           return 0
+//│       end
+//│     else
+//│       return inner.other⁴
+//│   end
+//│ };
+//│ @private
+//│ define readOuter⁰ as fun readOuter¹(container: Outer⁰, choose: Bool⁰): ? {
+//│   match choose
+//│     true =>
+//│       return readInner¹(container.inner⁰, choose)
+//│     else
+//│       return container.other⁵
+//│   end
+//│ };
+//│ @data
+//│ define Inner¹ as class Inner⁰ {
+//│   val box⁵: Box⁰;
+//│   val other⁶: Int⁰;
+//│   constructor Inner²(box: Box⁰, other: Int⁰) {
+//│     define box⁵ as val box⁴: Box⁰ = box;
+//│     define other⁶ as val other⁴: Int⁰ = other;
+//│     end
+//│   }
+//│ };
+//│ @data
+//│ define Outer¹ as class Outer⁰ {
+//│   val inner¹: Inner⁰;
+//│   val other⁷: Int⁰;
+//│   constructor Outer²(inner: Inner⁰, other: Int⁰) {
+//│     define inner¹ as val inner⁰: Inner⁰ = inner;
+//│     define other⁷ as val other⁵: Int⁰ = other;
+//│     end
+//│   }
+//│ };
+//│ set tmp = Box²(42);
+//│ set tmp1 = Inner²((tmp as! Box⁰), 1);
+//│ set tmp2 = Outer²((tmp1 as! Inner⁰), 2);
+//│ return readOuter¹((tmp2 as! Outer⁰), true)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 42

@@ -39,9 +39,6 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
   extension (f: SelField) def fieldName: String = f match
     case tSym: TermSymbol => tSym.nme
     case n: Int => n.toString
-  extension (f: SelField) def erasedFieldType: Opt[ErasedValueType] = f match
-    case tSym: TermSymbol => tSym.erasedType
-    case _: Int => N
 
   private def getParentLabelOrMatchesAndRestBefore(
     matchOrLabelId: MatchOrLabelId
