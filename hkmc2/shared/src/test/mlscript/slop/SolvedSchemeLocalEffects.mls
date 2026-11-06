@@ -1,0 +1,25 @@
+:.
+:js
+
+#config(inlining: None, liftDefns: None, flowBasedOpt: Some(FlowBasedOpt(mono: false)))
+
+
+// Keep the class inside its function scheme: solving method and constructor
+// effects must not write abstract strategies into the shared effect slot.
+:checkIR
+:expect [43, 2]
+let localCalls = 0
+private fun useLocal(callback) =
+  class Local with
+    val value = callback()
+    fun invoke() = callback()
+  let local = new Local()
+  local.invoke()
+private fun localCallback() =
+  set localCalls += 1
+  21
+let localResult = useLocal(localCallback) + useLocal(() => 22)
+[localResult, localCalls]
+//│ = [43, 2]
+//│ localCalls = 2
+//│ localResult = 43

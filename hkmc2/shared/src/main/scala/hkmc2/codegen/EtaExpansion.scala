@@ -97,7 +97,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
                       EtaTargets(a.paramCount, a.requiredParamCount, a.hasRestParam, a.prodFuns ++ b.prodFuns)
                 go(S(mergedRes))
               else Nil
-            case UnknownProd | UnsafeEta | NoProd => Nil
+            case UnknownProd | UnsafeEta => Nil
             case _: Ctor => Nil
         end go
         
@@ -107,7 +107,7 @@ class EtaExpansionSolver(val constraintSolver: FlowConstraintSolver, tl: TraceLo
           case _ => false
         then go(N)
         else Nil
-      case UnknownProd | UnsafeEta | NoProd => Nil
+      case UnknownProd | UnsafeEta => Nil
       case _: Ctor => Nil
     end funResShape
 

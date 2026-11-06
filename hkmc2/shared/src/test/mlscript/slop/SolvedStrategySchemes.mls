@@ -1,0 +1,151 @@
+:.
+:js
+:noInline
+:lift
+:deforest
+
+data class SchemeBox(value: Int)
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+
+
+// The boxes stay inside their callees. Their fusion metadata and local slot
+// types must survive both instantiation steps, even though only Ints escape.
+:checkIR
+:soir
+:siret
+:expect 41
+private fun localField(n: Int): Int =
+  let box = SchemeBox(n)
+  box.value
+private fun localMatch(n: Int): Int =
+  let box = SchemeBox(n)
+  if box is SchemeBox(value) then value else 0
+private fun nested(n: Int): Int = localField(n) + localMatch(n + 1)
+nested(20)
+//│ deforest > >>> fusing >>>
+//│ deforest > SchemeBox⁰(n⁰) ->
+//│ deforest > 	select: value
+//│ deforest > SchemeBox⁰(n¹) ->
+//│ deforest > 	match: box⁰
+//│ deforest > 	fields: box⁰.value⁰
+//│ deforest > SchemeBox⁰(n⁰) ->
+//│ deforest > 	select: value
+//│ deforest > SchemeBox⁰(n¹) ->
+//│ deforest > 	match: box⁰
+//│ deforest > 	fields: box⁰.value⁰
+//│ deforest > SchemeBox⁰(n⁰) ->
+//│ deforest > 	select: value
+//│ deforest > SchemeBox⁰(n¹) ->
+//│ deforest > 	match: box⁰
+//│ deforest > 	fields: box⁰.value⁰
+//│ deforest > <<< fusing <<<
+//│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
+//│ let nested_localMatch$box_SchemeBox, localMatch$box_SchemeBox, nested_localMatch$box_SchemeBox1, nested_localField$localField, nested$nested, nested_localMatch$localMatch, nested_localField$localField1, nested_localMatch$localMatch1;
+//│ @private @private
+//│ define nested_localField$localField as fun nested_localField$localField⁰(n: Int⁰): Int⁰ {
+//│   return n
+//│ };
+//│ @private @private
+//│ define nested$nested as fun nested$nested⁰(n: Int⁰): Int⁰ {
+//│   let tmp: Int⁰, tmp1: Int⁰, tmp2: Int⁰;
+//│   set tmp = nested_localField$localField⁰(n);
+//│   set tmp1 = +⁰(n, 1);
+//│   set tmp2 = nested_localMatch$localMatch⁰(tmp1);
+//│   return +⁰(tmp, tmp2)
+//│ };
+//│ @private @private
+//│ define nested_localMatch$localMatch as fun nested_localMatch$localMatch⁰(n: Int⁰): Int⁰ {
+//│   return (nested_localMatch$box_SchemeBox⁰(n)(undefined, undefined) as! Int⁰)
+//│ };
+//│ @private @private
+//│ define nested_localField$localField1 as fun nested_localField$localField¹(n: Int⁰): Int⁰ {
+//│   return n
+//│ };
+//│ @private @private
+//│ define nested_localMatch$localMatch1 as fun nested_localMatch$localMatch¹(n: Int⁰): Int⁰ {
+//│   return (nested_localMatch$box_SchemeBox¹(n)(undefined, undefined) as! Int⁰)
+//│ };
+//│ @affine(1) @private
+//│ define nested_localMatch$box_SchemeBox as fun nested_localMatch$box_SchemeBox⁰(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: ?, fv_value: ?): ? {
+//│   return SchemeBox_value
+//│ };
+//│ @affine(1) @private
+//│ define localMatch$box_SchemeBox as fun localMatch$box_SchemeBox⁰(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: ?, fv_value: ?): ? {
+//│   return SchemeBox_value
+//│ };
+//│ @affine(1) @private
+//│ define nested_localMatch$box_SchemeBox1 as fun nested_localMatch$box_SchemeBox¹(SchemeBox_value: Int⁰)(fv_arg$SchemeBox$0$: ?, fv_value: ?): ? {
+//│   return SchemeBox_value
+//│ };
+//│ @private
+//│ define localField⁰ as fun localField¹(n: Int⁰): Int⁰ {
+//│   return n
+//│ };
+//│ @private
+//│ define localMatch⁰ as fun localMatch¹(n: Int⁰): Int⁰ {
+//│   return (localMatch$box_SchemeBox⁰(n)(undefined, undefined) as! Int⁰)
+//│ };
+//│ @private
+//│ define nested⁰ as fun nested¹(n: Int⁰): Int⁰ {
+//│   let tmp: Int⁰, tmp1: Int⁰, tmp2: Int⁰;
+//│   set tmp = nested_localField$localField¹(n);
+//│   set tmp1 = +⁰(n, 1);
+//│   set tmp2 = nested_localMatch$localMatch¹(tmp1);
+//│   return +⁰(tmp, tmp2)
+//│ };
+//│ return nested$nested⁰(20)
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = 41
+
+
+// Recursive members share one solved scheme graph, while separate references
+// to that group still get independent instantiations.
+:checkIR
+:expect 42
+private fun evenBox(n: Int): SchemeBox =
+  if n == 0 then SchemeBox(21) else oddBox(n - 1)
+private fun oddBox(n: Int): SchemeBox = evenBox(n)
+let fromMatch = if oddBox(1) is SchemeBox(value) then value else 0
+evenBox(2).value + fromMatch
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = 42
+//│ fromMatch = 21
+
+
+// Bounds crossing into a shared top-level value must remain connected when
+// several function schemes are instantiated in different contexts.
+:checkIR
+:expect [40, 20]
+val sharedSchemeBox = SchemeBox(20)
+private fun sharedField(): Int = sharedSchemeBox.value
+private fun sharedMatch(): Int =
+  if sharedSchemeBox is SchemeBox(value) then value else 0
+private fun sumShared(): Int = sharedField() + sharedMatch()
+[sumShared(), sharedField()]
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = [40, 20]
+//│ sharedSchemeBox = SchemeBox(20)
+
+
+// A higher-order call is instantiated with both a pure and an effectful
+// callback. The effectful callback must still run exactly once.
+:checkIR
+:expect [20, 21, 1]
+let calls = 0
+private fun applyCallback(callback, value: Int) = callback(value)
+private fun pureCallback(value: Int): Int = value
+private fun effectfulCallback(value: Int): Int =
+  set calls += 1
+  value + 1
+let first = applyCallback(pureCallback, 20)
+let second = applyCallback(effectfulCallback, 20)
+[first, second, calls]
+//│ deforest > >>> fusing >>>
+//│ deforest > <<< fusing <<<
+//│ = [20, 21, 1]
+//│ calls = 1
+//│ first = 20
+//│ second = 21

@@ -175,9 +175,6 @@ fun c(x, d) = if x is
   X(a) then c(X(a), d)
 () => c(X(3), 2)
 //│ deforest > >>> fusing >>>
-//│ deforest > X⁰(a²) ->
-//│ deforest > 	match: x⁴
-//│ deforest > 	fields: x⁴.a⁰
 //│ deforest > X⁰(3) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
@@ -185,6 +182,9 @@ fun c(x, d) = if x is
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
 //│ deforest > X⁰(3) ->
+//│ deforest > 	match: x⁴
+//│ deforest > 	fields: x⁴.a⁰
+//│ deforest > X⁰(a²) ->
 //│ deforest > 	match: x⁴
 //│ deforest > 	fields: x⁴.a⁰
 //│ deforest > <<< fusing <<<
@@ -301,10 +301,10 @@ fun f(x) = if x is
   A(x) then 2
 f(A(2)) + f(A(3))
 //│ deforest > >>> fusing >>>
-//│ deforest > A⁰(3) ->
+//│ deforest > A⁰(2) ->
 //│ deforest > 	match: x¹⁰
 //│ deforest > 	fields: x¹⁰.x⁸
-//│ deforest > A⁰(2) ->
+//│ deforest > A⁰(3) ->
 //│ deforest > 	match: x¹⁰
 //│ deforest > 	fields: x¹⁰.x⁸
 //│ deforest > <<< fusing <<<

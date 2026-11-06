@@ -161,10 +161,10 @@ fun ping(n, unused) = if n == 0 then 0 else pong(n - 1, unused)
 fun pong(n, unused) = if n == 0 then 0 else ping(n - 1, unused)
 ping(5, 99)
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > ping⁴#0 @ pong⁴ -> eliminable: {1}
-//│ dead-param-elim > pong⁵#0 @ ping⁵ -> eliminable: {1}
-//│ dead-param-elim > ping⁴#0 @ ping⁶ -> eliminable: {1}
-//│ dead-param-elim > pong⁵#0 @ ping⁶ -> eliminable: {1}
+//│ dead-param-elim > ping⁴#0 @ ping⁵ -> eliminable: {1}
+//│ dead-param-elim > pong⁴#0 @ ping⁵ -> eliminable: {1}
+//│ dead-param-elim > pong⁴#0 @ ping⁶ -> eliminable: {1}
+//│ dead-param-elim > ping⁴#0 @ pong⁵ -> eliminable: {1}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ = 0
 

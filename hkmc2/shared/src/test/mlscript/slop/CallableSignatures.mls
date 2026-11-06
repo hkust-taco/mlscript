@@ -141,21 +141,21 @@ fun capturedGenerator(value: Int) =
   generate("unused", 2)
 capturedGenerator(40).next().value
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: Unknown, capturedGenerator_generate$generate, capturedGenerator_generate$generate1, capturedGenerator$capturedGenerator;
+//│ let tmp: ?, tmp1: Unknown, capturedGenerator_generate$generate, capturedGenerator$capturedGenerator, capturedGenerator_generate$generate1;
 //│ @private @generator
 //│ define capturedGenerator_generate$generate as fun capturedGenerator_generate$generate⁰(value: Int⁰, n: Int⁰): generator Int⁰ {
 //│   return +⁰(value, n)
+//│ };
+//│ @private
+//│ define capturedGenerator$capturedGenerator as fun capturedGenerator$capturedGenerator⁰(value: Int⁰): ? {
+//│   return capturedGenerator_generate$generate⁰(value, 2)
 //│ };
 //│ @private @generator
 //│ define capturedGenerator_generate$generate1 as fun capturedGenerator_generate$generate¹(value: Int⁰, n: Int⁰): generator Int⁰ {
 //│   return +⁰(value, n)
 //│ };
-//│ @private
-//│ define capturedGenerator$capturedGenerator as fun capturedGenerator$capturedGenerator⁰(value: Int⁰): ? {
-//│   return capturedGenerator_generate$generate¹(value, 2)
-//│ };
 //│ define capturedGenerator⁰ as fun capturedGenerator¹(value: Int⁰): ? {
-//│   return capturedGenerator_generate$generate⁰(value, 2)
+//│   return capturedGenerator_generate$generate¹(value, 2)
 //│ };
 //│ set tmp = capturedGenerator$capturedGenerator⁰(40);
 //│ set tmp1 = tmp.next⁰();
