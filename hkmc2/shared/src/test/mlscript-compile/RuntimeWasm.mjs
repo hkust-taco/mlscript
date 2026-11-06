@@ -241,7 +241,7 @@ lambda1 = (undefined, function (mod, error) {
               if (runtime.curEffect === null) {
                 pc = 2;
               } else {
-                runtime.unwind(this$Worksheet.loadFiles, 2, "RuntimeWasm.mls:177:20", null, this$Worksheet, 1, 1, paths, 0);
+                runtime.unwind(this$Worksheet.loadFiles, 2, "RuntimeWasm.mls:179:20", null, this$Worksheet, 1, 1, paths, 0);
                 return runtime.Unit
               }
             case 2:
@@ -250,7 +250,7 @@ lambda1 = (undefined, function (mod, error) {
               if (runtime.curEffect === null) {
                 pc = 1;
               } else {
-                runtime.unwind(this$Worksheet.loadFiles, 1, "RuntimeWasm.mls:177:5", null, this$Worksheet, 1, 1, paths, 0);
+                runtime.unwind(this$Worksheet.loadFiles, 1, "RuntimeWasm.mls:179:5", null, this$Worksheet, 1, 1, paths, 0);
                 return runtime.Unit
               }
             case 1:
@@ -300,7 +300,7 @@ lambda1 = (undefined, function (mod, error) {
       tmp = (new globalThis.WebAssembly.Module(binary));
       return (new globalThis.WebAssembly.Instance(tmp, imports))
     }
-    return runtime.assertFail("mlscript-compile/RuntimeWasm.mls", "64");
+    return runtime.assertFail("mlscript-compile/RuntimeWasm.mls", "66");
   }
   static compileWat(wat, imports, description) {
     let binary;
@@ -345,7 +345,7 @@ lambda1 = (undefined, function (mod, error) {
           if (runtime.curEffect === null) {
             pc = 4;
           } else {
-            runtime.unwind(RuntimeWasm.instantiate, 4, "RuntimeWasm.mls:83:28", null, RuntimeWasm, 1, 3, url, imports, pages, 1, wat);
+            runtime.unwind(RuntimeWasm.instantiate, 4, "RuntimeWasm.mls:85:28", null, RuntimeWasm, 1, 3, url, imports, pages, 1, wat);
             return runtime.Unit
           }
         case 4:
@@ -355,7 +355,7 @@ lambda1 = (undefined, function (mod, error) {
           if (runtime.curEffect === null) {
             pc = 3;
           } else {
-            runtime.unwind(RuntimeWasm.instantiate, 3, "RuntimeWasm.mls:83:28", null, RuntimeWasm, 1, 3, url, imports, pages, 1, wat);
+            runtime.unwind(RuntimeWasm.instantiate, 3, "RuntimeWasm.mls:85:28", null, RuntimeWasm, 1, 3, url, imports, pages, 1, wat);
             return runtime.Unit
           }
         case 3:
@@ -364,7 +364,7 @@ lambda1 = (undefined, function (mod, error) {
           if (runtime.curEffect === null) {
             pc = 2;
           } else {
-            runtime.unwind(RuntimeWasm.instantiate, 2, "RuntimeWasm.mls:83:13", null, RuntimeWasm, 1, 3, url, imports, pages, 1, wat);
+            runtime.unwind(RuntimeWasm.instantiate, 2, "RuntimeWasm.mls:85:13", null, RuntimeWasm, 1, 3, url, imports, pages, 1, wat);
             return runtime.Unit
           }
         case 2:
@@ -373,7 +373,7 @@ lambda1 = (undefined, function (mod, error) {
           if (runtime.curEffect === null) {
             pc = 1;
           } else {
-            runtime.unwind(RuntimeWasm.instantiate, 1, "RuntimeWasm.mls:87:19", null, RuntimeWasm, 1, 3, url, imports, pages, 1, wat);
+            runtime.unwind(RuntimeWasm.instantiate, 1, "RuntimeWasm.mls:89:19", null, RuntimeWasm, 1, 3, url, imports, pages, 1, wat);
             return runtime.Unit
           }
         case 1:
@@ -399,7 +399,7 @@ lambda1 = (undefined, function (mod, error) {
       if (scrut1 === true) {
         return loaded.exports
       }
-      return runtime.assertFail("mlscript-compile/RuntimeWasm.mls", "106");
+      return runtime.assertFail("mlscript-compile/RuntimeWasm.mls", "108");
     }
     tmp = ({});
     tmp1 = RuntimeWasm.instantiate(url, tmp, 0);
@@ -432,7 +432,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 4;
             } else {
-              runtime.unwind(RuntimeWasm.loadImports, 4, "RuntimeWasm.mls:121:33", null, RuntimeWasm, 1, 4, base, paths, imports, native1, 1, i);
+              runtime.unwind(RuntimeWasm.loadImports, 4, "RuntimeWasm.mls:123:33", null, RuntimeWasm, 1, 4, base, paths, imports, native1, 1, i);
               return runtime.Unit
             }
           case 4:
@@ -441,7 +441,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 3;
             } else {
-              runtime.unwind(RuntimeWasm.loadImports, 3, "RuntimeWasm.mls:121:18", null, RuntimeWasm, 1, 4, base, paths, imports, native1, 1, i);
+              runtime.unwind(RuntimeWasm.loadImports, 3, "RuntimeWasm.mls:123:18", null, RuntimeWasm, 1, 4, base, paths, imports, native1, 1, i);
               return runtime.Unit
             }
           case 3:
@@ -465,7 +465,7 @@ lambda1 = (undefined, function (mod, error) {
                 pc = 5;
                 continue main
               }
-              runtime.unwind(RuntimeWasm.loadImports, 5, "RuntimeWasm.mls:121:53", null, RuntimeWasm, 1, 4, base, paths, imports, native1, 1, i);
+              runtime.unwind(RuntimeWasm.loadImports, 5, "RuntimeWasm.mls:123:53", null, RuntimeWasm, 1, 4, base, paths, imports, native1, 1, i);
               return runtime.Unit;
             }
             pc = 6;
@@ -536,7 +536,7 @@ lambda1 = (undefined, function (mod, error) {
       }
       return result
     }
-    return runtime.assertFail("mlscript-compile/RuntimeWasm.mls", "147");
+    return runtime.assertFail("mlscript-compile/RuntimeWasm.mls", "149");
   }
   static loadModule(base, metadata, native1) {
     let loadModule$async;
@@ -562,7 +562,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 11;
             } else {
-              runtime.unwind(RuntimeWasm.loadModule, 11, "RuntimeWasm.mls:160:43", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
+              runtime.unwind(RuntimeWasm.loadModule, 11, "RuntimeWasm.mls:162:43", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
               return runtime.Unit
             }
           case 11:
@@ -571,7 +571,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 10;
             } else {
-              runtime.unwind(RuntimeWasm.loadModule, 10, "RuntimeWasm.mls:160:31", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
+              runtime.unwind(RuntimeWasm.loadModule, 10, "RuntimeWasm.mls:162:31", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
               return runtime.Unit
             }
           case 10:
@@ -580,7 +580,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 9;
             } else {
-              runtime.unwind(RuntimeWasm.loadModule, 9, "RuntimeWasm.mls:160:16", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
+              runtime.unwind(RuntimeWasm.loadModule, 9, "RuntimeWasm.mls:162:16", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
               return runtime.Unit
             }
           case 9:
@@ -592,7 +592,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 8;
             } else {
-              runtime.unwind(RuntimeWasm.loadModule, 8, "RuntimeWasm.mls:161:32", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
+              runtime.unwind(RuntimeWasm.loadModule, 8, "RuntimeWasm.mls:163:32", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
               return runtime.Unit
             }
           case 8:
@@ -601,7 +601,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 7;
             } else {
-              runtime.unwind(RuntimeWasm.loadModule, 7, "RuntimeWasm.mls:161:17", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
+              runtime.unwind(RuntimeWasm.loadModule, 7, "RuntimeWasm.mls:163:17", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
               return runtime.Unit
             }
           case 7:
@@ -610,7 +610,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 6;
             } else {
-              runtime.unwind(RuntimeWasm.loadModule, 6, "RuntimeWasm.mls:162:45", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
+              runtime.unwind(RuntimeWasm.loadModule, 6, "RuntimeWasm.mls:164:45", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
               return runtime.Unit
             }
           case 6:
@@ -619,7 +619,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 5;
             } else {
-              runtime.unwind(RuntimeWasm.loadModule, 5, "RuntimeWasm.mls:162:33", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
+              runtime.unwind(RuntimeWasm.loadModule, 5, "RuntimeWasm.mls:164:33", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
               return runtime.Unit
             }
           case 5:
@@ -628,7 +628,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 4;
             } else {
-              runtime.unwind(RuntimeWasm.loadModule, 4, "RuntimeWasm.mls:162:18", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
+              runtime.unwind(RuntimeWasm.loadModule, 4, "RuntimeWasm.mls:164:18", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
               return runtime.Unit
             }
           case 4:
@@ -639,7 +639,7 @@ lambda1 = (undefined, function (mod, error) {
             if (runtime.curEffect === null) {
               pc = 3;
             } else {
-              runtime.unwind(RuntimeWasm.loadModule, 3, "RuntimeWasm.mls:164:3", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
+              runtime.unwind(RuntimeWasm.loadModule, 3, "RuntimeWasm.mls:166:3", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
               return runtime.Unit
             }
           case 3:
@@ -655,7 +655,7 @@ lambda1 = (undefined, function (mod, error) {
               pc = 2;
               continue main
             }
-            runtime.unwind(RuntimeWasm.loadModule, 2, "RuntimeWasm.mls:169:10", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
+            runtime.unwind(RuntimeWasm.loadModule, 2, "RuntimeWasm.mls:171:10", null, RuntimeWasm, 1, 3, base, metadata, native1, 3, system, imports, exports);
             return runtime.Unit;
           case 2:
             tmp7 = runtime.resumeValue;
@@ -688,7 +688,7 @@ lambda1 = (undefined, function (mod, error) {
           if (runtime.curEffect === null) {
             pc = 2;
           } else {
-            runtime.unwind(RuntimeWasm.worksheet, 2, "RuntimeWasm.mls:190:31", null, RuntimeWasm, 1, 3, url, entry, native1, 0);
+            runtime.unwind(RuntimeWasm.worksheet, 2, "RuntimeWasm.mls:192:31", null, RuntimeWasm, 1, 3, url, entry, native1, 0);
             return runtime.Unit
           }
         case 2:
@@ -697,7 +697,7 @@ lambda1 = (undefined, function (mod, error) {
           if (runtime.curEffect === null) {
             pc = 1;
           } else {
-            runtime.unwind(RuntimeWasm.worksheet, 1, "RuntimeWasm.mls:190:16", null, RuntimeWasm, 1, 3, url, entry, native1, 0);
+            runtime.unwind(RuntimeWasm.worksheet, 1, "RuntimeWasm.mls:192:16", null, RuntimeWasm, 1, 3, url, entry, native1, 0);
             return runtime.Unit
           }
         case 1:

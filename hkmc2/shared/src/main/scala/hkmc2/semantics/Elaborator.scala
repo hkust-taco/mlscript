@@ -48,14 +48,14 @@ object Elaborator:
   enum OuterCtx:
     case Function(returnHandlerSymbol: TempSymbol, sym: Opt[DefinitionSymbol[?]])(val isGenerator: Bool, val isAsync: Bool)
     case InnerScope(innerSymbol: InnerSymbol)
-    case LocalScope(nameHint: Str)
+    case LocalScope(nameHint: Str, isTopLevel: Bool)
     case LambdaOrHandlerBlock
     case NonReturnContext(sym: Opt[DefinitionSymbol[?]])
     
     def showDbg: Str = this match
       case Function(retSym, sym) => s"fun:${retSym.nme}${sym.fold("")(s => s"‹${s}›")}"
       case InnerScope(inner) => inner.toString
-      case LocalScope(hint) => hint
+      case LocalScope(nameHint = hint) => hint
       case LambdaOrHandlerBlock => "LambdaOrHandlerBlock"
       case NonReturnContext(sym) => s"NonReturnContext(${sym})"
     
@@ -168,7 +168,7 @@ object Elaborator:
     
     def nest(outerCtx: OuterCtx): Ctx =
       Ctx(SrcScope(outerCtx, S(scope)), Some(this), Map.empty, mode, Map.empty, Nil)
-    def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
+    def nestLocal(nameHint: Str, isTopLevel: Bool): Ctx = nest(OuterCtx.LocalScope(nameHint, isTopLevel))
     def nestInner(inner: InnerSymbol): Ctx = nest(OuterCtx.InnerScope(inner))
     
     /** Explicit bindings in any enclosing scope take precedence over every wildcard open. */
@@ -527,7 +527,7 @@ object Elaborator:
       def nme: Str = base.nme
     given Conversion[RefSymbol, Elem] = RefElem(_)
     val empty: Ctx =
-      val outer = OuterCtx.LocalScope("top-level")
+      val outer = OuterCtx.LocalScope("top-level", isTopLevel = true)
       Ctx(SrcScope(outer, N), N, Map.empty, Mode.Full, Map.empty, Nil)
     
   /** The interpretation required by the enclosing syntax. Class and pattern
@@ -1665,8 +1665,8 @@ extends Importer:
     case Block(Nil) =>
       withTypeBinders(Term.Rcd(mut = false, Nil)).withLocOf(tree)
     case b: Block =>
-      ctx.nestLocal("‹block›").givenIn:
-        block(b, hasResult = true, resultInterp = interp, isTopLevel = false)._1 match
+      ctx.nestLocal("‹block›", isTopLevel = false).givenIn:
+        block(b, hasResult = true, resultInterp = interp)._1 match
         case Term.Blk(Nil, res) => res
         case res => res
     case lit: Literal =>
@@ -1846,7 +1846,7 @@ extends Importer:
       if newResolution then checkAscription(body, sign)
       Term.Asc(body, sign)
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
-      block(Block(tree :: Nil), hasResult = false, resultInterp = interp, isTopLevel = false)._1
+      block(Block(tree :: Nil), hasResult = false, resultInterp = interp)._1
     case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>
       app(Ctx.RefElem(State.builtinOpsMap("!")).ref(S(new Ident("not").withLocOf(kw))), withTypeBinders(Term.Tup(
         PlainFld(subterm(rhs)) :: Nil)(DummyTup)))(DummyApp, N, FlowSymbol("not-app"))
@@ -2044,7 +2044,7 @@ extends Importer:
           clsSym ->
             // TODO integrate context inherited from cls
             // TODO make context with var symbols for class parameters
-            ObjBody(block(rft, hasResult = false, resultInterp = Trm, isTopLevel = false)._1)
+            ObjBody(block(rft, hasResult = false, resultInterp = Trm)._1)
       body match
       case S(Apps(c, args)) =>
         val (mut, c2) = c match
@@ -2159,13 +2159,14 @@ extends Importer:
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       error
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
-      blockOrRcd(body, hasResult = true, resultInterp = interp, isTopLevel = false) match
-      case (Blk(Nil, Term.UnitVal()), ctx) =>
-        withTypeBinders(Rcd(mut = true, Nil)).withLocOf(body)
-      case (blk: Blk, ctx) =>
-        raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
-        blk
-      case (rcd: Rcd, ctx) => withTypeBinders(rcd.copy(mut = true)).withLocOf(rcd)
+      ctx.nestLocal("‹block›", isTopLevel = false).givenIn:
+        blockOrRcd(body, hasResult = true, resultInterp = interp) match
+        case (Blk(Nil, Term.UnitVal()), ctx) =>
+          withTypeBinders(Rcd(mut = true, Nil)).withLocOf(body)
+        case (blk: Blk, ctx) =>
+          raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
+          blk
+        case (rcd: Rcd, ctx) => withTypeBinders(rcd.copy(mut = true)).withLocOf(rcd)
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
@@ -2281,10 +2282,10 @@ extends Importer:
   
   
   def block(sts: Ls[Tree], hasResult: Bool)(using UnderCtx): Ctxl[(Blk, Ctx)] =
-    block(new Block(sts), hasResult, Trm, isTopLevel = false)
+    block(new Block(sts), hasResult, Trm)
   
-  private def block(blk: Block, hasResult: Bool, resultInterp: Interpretation, isTopLevel: Bool)(using UnderCtx): Ctxl[(Blk, Ctx)] =
-    blockOrRcd(blk, hasResult, resultInterp, isTopLevel) match
+  def block(blk: Block, hasResult: Bool, resultInterp: Interpretation)(using UnderCtx): Ctxl[(Blk, Ctx)] =
+    blockOrRcd(blk, hasResult, resultInterp) match
     case (blk: Blk, ctx) => (blk, ctx)
     case (rcd: Rcd, ctx) => (Blk(Nil, rcd), ctx)
   
@@ -2306,7 +2307,7 @@ extends Importer:
   // * for these, elaborate with `hasResult = false`, which uses `undefined` as the result
   // * when there is no other result available. This is fine since the value is never used.
   // * These useless trailing `undefined`s are then removed by `Lowering`.
-  def blockOrRcd(blk: Block, hasResult: Bool, resultInterp: Interpretation, isTopLevel: Bool)(using UnderCtx)
+  def blockOrRcd(blk: Block, hasResult: Bool, resultInterp: Interpretation)(using UnderCtx)
     : Ctxl[(Blk | Rcd, Ctx)]
     = trace[(Blk | Rcd, Ctx)](
         pre = dbg"Elab block ${blk.desugStmts.showAsPlain.truncate(100, "[...]")} ${ctx.outer}", r => s"~> ${r._1.showDbg}"
@@ -2921,7 +2922,7 @@ extends Importer:
         def mkBody(extraParams: Ls[ParamList])(using Ctx) = withFields(extraParams):
           body match
           case N | S(Error()) => (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
-          case S(b: Block) => block(b, hasResult = false, resultInterp = Trm, isTopLevel = false)
+          case S(b: Block) => block(b, hasResult = false, resultInterp = Trm)
           case S(t) =>
             raise(ErrorReport(
               msg"Illegal body of ${k.desc} definition (should be a block; found ${t.describe})." -> t.toLoc :: Nil))
@@ -3087,6 +3088,9 @@ extends Importer:
         go(Directive(prefix, args) :: sts, annotations, acc)(statementLoc)
       case (directive @ Directive(Ident("config"), Tup(args))) :: sts =>
         reportUnusedAnnotations
+        val isTopLevel = ctx.outer match
+          case scope: OuterCtx.LocalScope => scope.isTopLevel
+          case _ => false
         val modify = ConfigParser.parseOverrides(args, allowCompilationTarget = isTopLevel)
         go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case (directive @ Directive(Ident("lang"), Tup(args))) :: sts =>
@@ -3622,7 +3626,7 @@ extends Importer:
   
   def importFrom(sts: Block, exports: Ls[BlockMemberSymbol]): Ctxl[(Blk, Ctx)] =
     given UnderCtx = UnderCtx.none
-    val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm, isTopLevel = true)
+    val (res, newCtx) = block(sts, hasResult = false, resultInterp = Trm)
     // TODO handle name clashes
     if newResolution then
       InterfaceExposure(this).check(exports, Nil)
@@ -3631,7 +3635,7 @@ extends Importer:
   
   def topLevel(sts: Block): Ctxl[(Blk, Ctx)] =
     given UnderCtx = UnderCtx.none
-    val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm, isTopLevel = true)
+    val (res, ctx) = block(sts, hasResult = false, resultInterp = Trm)
     if newResolution then
       if config.language.strictResolution then
         val exports = res.stats.collect:

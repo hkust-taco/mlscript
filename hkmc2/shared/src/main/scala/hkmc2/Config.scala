@@ -13,7 +13,7 @@ enum CompilationTarget(val displayName: Str):
   case JS(emitCastComments: Bool) extends CompilationTarget("JavaScript")
   case Wasm extends CompilationTarget("Wasm")
 
-  /** Emission options do not change which backend owns a compilation unit's bindings. */
+  /** Compares backend choices, ignoring options such as JavaScript cast comments. */
   def sameBackend(that: CompilationTarget): Bool = ordinal == that.ordinal
 
 

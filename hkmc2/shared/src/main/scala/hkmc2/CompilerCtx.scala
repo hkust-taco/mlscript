@@ -284,7 +284,7 @@ class CompilerCtx(
         // The prelude defines the builtins consulted during its own resolution.
         // Seed lookup with the block's original symbols, as block elaboration does,
         // so those lookups share the declarations that are being elaborated.
-        val initCtx = State.init.nestLocal("prelude").withMembers(parse.resultBlk.definedSymbols)
+        val initCtx = State.init.nestLocal("prelude", isTopLevel = true).withMembers(parse.resultBlk.definedSymbols)
         val elab =
           given Config = elaborationConfig
           Elaborator(etl, file.up, initCtx)
