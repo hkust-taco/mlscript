@@ -1,8 +1,11 @@
 # Extraction plan for PR #575
 
-Status updated 2026-11-06: E01–E03, B01–B05, E08, E14 and E17–E18 are merged
-upstream. Upstream's cast refactor also covers E19. E35's test consolidation,
-the remaining B07–B10 work and the reduced #575 remain.
+Status updated 2026-11-07: E01–E03, B01–B05, E08, E14 and E17–E18 are merged
+upstream; upstream's cast refactor covers E19. E20–E24, E27, E31, E35, E36
+and the approved structural Iterator follow-up now have independent local
+extraction branches. They are validated but have not been pushed or submitted
+as PRs. E12, E29–E30, E32–E34 and the final shape-erasure feature still await
+prerequisites described below.
 
 ## Scope and baseline
 
@@ -76,12 +79,85 @@ the full suite ran 1,172 tests. The incoming JS cast-comment fixtures use broad
 input annotations and an unchecked nominal receiver so inference and redundant
 cast elimination preserve the coercions those rendering tests exercise.
 
+## Independent local extractions ready for review
+
+Every branch below starts directly at `hkmc2` / `hkust-taco/hkmc2` commit
+`bae948bd5896748e7fde850785d9fdefd585c925`; none targets or depends on another
+extraction branch. The Scala counts include comments and whitespace and count
+additions and removals separately. MLscript regressions and regenerated golden
+outputs are additional. All commits use the command-scoped Codex identity.
+
+| Work | Local branch | Commit | Scala files | Scala + / − | Full-suite tests |
+| --- | --- | --- | ---: | ---: | ---: |
+| E20: partial-call argument evaluation | `codex/pr575-partial-call-arguments` | `4de7425e1` | 1 | 24 / 0 | 1,285 |
+| E21–E23: constructor and match safety | `codex/pr575-constructor-safety` | `d0fae1ded` | 3 | 132 / 38 | 1,285 |
+| E24: fusion across container storage | `codex/pr575-fusion-storage` | `c286e0c13` | 4 | 35 / 5 | 1,286 |
+| E27: separate getter effects from values | `codex/pr575-effect-value-flows` | `8aabacb73` | 1 | 4 / 1 | 1,285 |
+| E31: shadow-aware record exposure | `codex/pr575-record-exposure` | `fb52c50ff` | 1 | 20 / 6 | 1,285 |
+| E35: optional-binding regression consolidation | `codex/pr575-optional-binding-tests` | `b848576fa` | 0 | 0 / 0 | 1,284 |
+| E36: unused runtime helper removal | `codex/pr575-runtime-helper-cleanup` | `3ec7507bb` | 0 | 0 / 0 | 1,284 |
+| Approved structural Iterator follow-up | `codex/pr575-structural-iterator` | `a374b7027` | 2 | 10 / 12 | 1,285 |
+
+Each branch passed `hkmc2AllTests/test`; the Scala extractions also received
+Metals compilation feedback. A temporary branch combining all eight extractions
+passed **1,291 tests**. The Scala patches merged without conflicts. The only merge conflicts between
+E21–E23 and E24 were in two existing golden files: `deforest/relaxedPrograms.mls`
+and `deforest/todos.mls`. Regenerate those outputs when combining the branches,
+since their diagnostic line numbers depend on both patches.
+
+The constructor regressions fail on the base in four distinct ways: dropping
+superclass effects, substituting the original argument after a constructor
+changes its field, crashing on optional-field fusion, and selecting the wrong
+match arm. The extraction passes all four. Its other cases retain tuple-match,
+producer-specific default-branch layout, and pure-superclass elimination coverage.
+
+The storage extraction keeps nominal fields compatible with their declared
+representation while still allowing match closures in `Any` fields. Its Wasm
+singleton regression fails on the base after unsafe fusion introduces a closure.
+The stored-producer check classifies match consumers directly; constructor
+eligibility remains in the fusion solver. This keeps E24 independent of the
+constructor-safety helper and its changed `mergeDests` signature. Unmergeable
+producers already root the exclusion graph, so their classification cannot
+enable fusion.
+
+E31 now has a standalone boundary: reverse traversal, contextual substitutions
+and memoization, without enabling precise mutable reads. Three regression blocks
+fail on the base because overwritten callbacks receive unknown external inputs.
+Controls preserve exposure through unknown keys and surviving fields, and keep
+distinct generic callback interfaces. Assigned values and externally permitted
+writes remain together with E32.
+
+E35 preserves the original raw-value and unsafe-call probes in addition to the
+consolidated assertions for omitted and supplied values, lambdas, curried lists,
+spreads, tail recursion, captured parameters, methods, and constructors. Its
+duplicate optional-reset case is covered by the consolidated tail-call cases.
+E36's public-helper removal was explicitly approved on 2026-11-07. Repository
+search found no callers of `Runtime.plus_impl`; the distinct Wasm intrinsic
+remains. The structural Iterator contract was explicitly approved earlier and
+has now been extracted with its generator adaptation and protocol regressions.
+
+### Work waiting for earlier extractions
+
+| Remaining work | Needed earlier work | Reason to keep it together |
+| --- | --- | --- |
+| E12: constructor-companion signatures | E21–E22 | Typed constructor results remove casts that previously hid unsafe constructor fusion. |
+| E29: representation-changing deforestation | E21–E24, E27 (E15/E25/E26/E28 are already merged) | Parameters, locals, captures, results, instance copies and caller coercions must change together. |
+| E30: flow-proved casts | E29 | Removing representation-observing casts is safe only with complete retyping of the fused value's uses. |
+| E32: mutable-field resolution and exposure | E31 | All assignment paths, assigned-value exposure and structural input/output bounds must accompany precise reads. |
+| E33–E34: mutable-record declarations | E32 | Explicit bounds and per-field mutability need the complete read/write constraint model. |
+| Final shape-erasure feature | Remaining optimizer and mutable-field prerequisites | Observe all source-slot inputs before erasure and preserve physical representation boundaries. |
+
+After each extraction merges upstream, merge the actual `hkmc2` commit back
+into this source branch and recompute the remaining diff. Do not delete the
+extracted implementation from the source branch while it awaits integration.
+
 ## Consolidated batches
 
-**Four batches remain, plus E35's test consolidation and the final shape-erasure PR.** E01–E03 and B01–B05 are merged,
+**The table below groups the original themes; the ready local branches and remaining prerequisites are listed above.** E01–E03 and B01–B05 are merged,
 including E04's nofib aliases in the library/fixture batch. There is no
 additional tiny nofib PR. The E-numbers remain stable references to individual
-work items; B01–B10 below define the actual PR boundaries.
+work items; B01–B10 group the broader themes. The ready branches above define
+the review boundaries for this wave.
 
 B01 is merged as #597 (extracted locally as `771a80b9f` on
 `codex/pr575-fixture-corrections`). B02 is merged as #598 (extracted locally
@@ -89,12 +165,12 @@ as `aef07eead` on `codex/pr575-expression-results`). B03 is merged as #599
 (extracted locally as `9afbadaf7` on `codex/pr575-async-generator-results`).
 B04 is merged as #600. E08 and E14 were extracted separately from B05 as #601
 and #602. E15 completed B05 as #606; E17–E18 completed B06's implementation as
-#610. E19 is covered by #614; the rest of B07–B10 is not yet extracted.
+#610. E19 is covered by #614. E20–E24, E27 and E31 have local extraction branches; E12, E29–E30 and E32–E34 await the prerequisites listed above.
 A prerequisite names a batch that must be merged first.
 
 | Batch | Review theme | Work items | Prerequisites | Scope |
 | --- | --- | --- | --- | --- |
-| B01 | Library and fixture corrections | E04–E07 | — | Remaining nofib character-list aliases, class-object references, open-method signatures and exported mutable-storage annotations. E36 remains deferred in the residual PR. |
+| B01 | Library and fixture corrections | E04–E07 | — | Remaining nofib character-list aliases, class-object references, open-method signatures and exported mutable-storage annotations. E36 now has a separate approved extraction. |
 | B02 | Expression-result resolution | E09, E16 | — | Builtin result information and correct treatment of returns, abortive branches and loops. |
 | B03 | Async and generator results | E10–E11 | — | Body payloads versus Promise/Iterator results, including cloning and currying. |
 | B04 | Callable signatures through transformations | E13, E25–E26, E28 | — | Generated functions, cloned symbols, eta expansion, DPE and deforestation-generated callables. |
@@ -310,7 +386,7 @@ after another value can have replaced it.
 
 | ID | Work item | Implementation dependencies | Scope and regression checks |
 | --- | --- | --- | --- |
-| E31 | Follow only surviving record fields during interface exposure | — | The reverse, shadow-aware traversal and contextual memoization in InterfaceExposure's record case, including initializer exposure. Preserve unknown-key conservatism and nested spread contexts. Re-express overwrittenSource, direct/spread replacement, and computed-key cases from T/slop/strictres/MutableFields.mls using escaping callbacks, so they test resolution/exposure without the later missing-field-annotation diagnostic. Include E32's assignment-flow handling in the same B09 batch. |
+| E31 | Follow only surviving record fields during interface exposure | — | The reverse, shadow-aware traversal and contextual memoization in InterfaceExposure's record case, including initializer exposure. Preserve unknown-key conservatism and nested spread contexts. Re-express overwrittenSource, direct/spread replacement, and computed-key cases from T/slop/strictres/MutableFields.mls using escaping callbacks, so they test resolution/exposure without the later missing-field-annotation diagnostic. E31 is now extracted independently while mutable reads remain conservative; add assignment-flow handling with E32. |
 | E32 | Account for every write when resolving and exposing mutable fields | E31 | NewResolver's `assignField/writeField/listenAssignedValues/assignableTargets`, projected lookup, class/record read paths, Elaborator's assignment hook, owned caches, and InterfaceExposure's unknown writes and assigned-value traversal. Include the structural input/output representation and constraints: RecordTypeShape/MemberLookup.Typed carry TypeArgument pairs through identity, substitution, support, transport, intersections and reads; `declaredField`, `constrainRecord` and `listenFieldInput` propagate writes negatively and reads positively. Exercise classes and existing `mut {f: T}` syntax, including existing interval type arguments, before introducing per-field syntax. Test projections, all receiver forms, multiple classes, escaping callbacks, late assignments, nested spreads, immutable-copy controls and both structural constraint directions. Adapt TypeRelationTest while preserving its bounded-growth property. Exclude erasure observations and the requirement to annotate exposed fields. |
 | E33 | Support explicit input/output bounds on mutable record fields | E32 | The typeArgument elaboration helper, direct field-bound syntax, missing-output provenance, and immutable-field rejection. Test `mut {f: in S out T}`, parenthesized bounds, input-only/output-only fields, nested negative positions, aliases and recursive interfaces. Use the relevant MutableFieldVariance blocks with both whole-record and per-field mutability alongside E34 in B10. Do not claim complete structural subtype checking or add it in this extraction. |
 | E34 | Allow individual record fields to be declared mutable | E32, E33 | The `RcdField.mut` metadata, value/type elaboration, pretty-printing, cloning, RecordShape lookup, exposure and structural-interface flag threading, and Lowering's `allocatesMutable`. Support `{mut f: value, label: other}` end to end, including its type form and spread copies. Extract the mixed-field and copied-record tests from MutableFields, the MutableRecord pattern from ClonedBindings, and the BadMut expectation change. Move the corresponding reference documentation here. Keep source erasure deferral for record slots in #575. |
@@ -349,15 +425,13 @@ as fixmes rather than weakening their expectations.
 
 | ID | Work item | Implementation dependencies | Scope and regression checks |
 | --- | --- | --- | --- |
-| E35 | Consolidate optional-binding regressions without losing coverage | E15, E17, E18 | Reconcile T/slop/OptionalBinding.mls and T/slop/strictres/OptionalNull.mls into T/slop/strictres/OptionalBinding.mls, along with the duplicated tail-recursive case removed from strictres/OptionalParams.mls. Audit cases one by one: omission, supplied null/undefined, lambdas, currying, spreads, tail recursion, closures, constructor elimination and dynamic construction. Consolidate these tests with the E17/E18 typed-extraction changes in B06. Do not copy current golden output into an older compiler or treat unsafe.undefined observations as new semantics. |
-| E36 (conditional) | Remove the unused Runtime Int31 addition prototype | — | The deletion of `Runtime.plus_impl` at the end of C/Runtime.mls and its generated output. First check callers on the extraction base and confirm removal of the exported helper is intended. The `wasm.plus_impl` intrinsic is a different symbol and must remain. If the public-contract removal is not intended, omit this extraction and resolve the three-line deletion explicitly in the residual PR. |
+| E35 | Consolidate optional-binding regressions without losing coverage | E15, E17, E18 | Reconcile T/slop/OptionalBinding.mls and T/slop/strictres/OptionalNull.mls into T/slop/strictres/OptionalBinding.mls, along with the duplicated tail-recursive case removed from strictres/OptionalParams.mls. Audit cases one by one: omission, supplied null/undefined, lambdas, currying, spreads, tail recursion, closures, constructor elimination and dynamic construction. E17/E18 are already merged; the standalone consolidation is validated above. Do not copy current golden output into an older compiler or treat unsafe.undefined observations as new semantics. |
+| E36 (approved) | Remove the unused Runtime Int31 addition prototype | — | The deletion of `Runtime.plus_impl` at the end of C/Runtime.mls and its generated output. No callers were found on the extraction base, and removal was explicitly approved on 2026-11-07. The `wasm.plus_impl` intrinsic is a different symbol and remains. |
 
-E35 belongs to B06 with its behavior changes; it does not need a separate PR.
-Account for every removed scenario when consolidating the tests. E36 was left
-out of B01 because removal of the exported helper was not confirmed. Leave
-that decision in the residual PR rather than creating a cleanup PR; it is not
-a prerequisite for the compiler improvements. Neither item justifies dropping
-regression coverage.
+E35 originally belonged to B06, whose implementation has since merged; its audited
+consolidation now has an independent branch. E36 was initially deferred pending
+approval; the user approved removal on 2026-11-07 and its independent branch is
+now validated. Neither item is a prerequisite for compiler implementation work.
 
 ## 6. What remains in #575
 
@@ -545,25 +619,19 @@ expectations use the runner's BigInt rendering.
 Metals compilation and `hkmc2AllTests/test` passed; the full suite ran 1,294 tests
 with an 8 GB SBT heap. All resulting golden-output changes accompany the merge.
 
-The next candidate is **E20: preserve checked argument evaluation when propagating
-partial calls**. Against `bae948bd5`, the remaining BlockSimplifier.scala patch is
-**24 additions and no removals in one Scala file**, including its comments and
-spacing. It evaluates checked/effectful arguments at the original partial-call
-site and captures earlier arguments before later effects. This is one focused
-optimizer change, independent of shape-based inference and constructor fusion.
-Extract the checkedPrefix/capturePrefix and discardPartial regressions with it;
-test inputs and regenerated goldens are additional to the Scala count. The
-standalone extraction has not yet been built, so adaptations may change that count.
+The independent local branches and measured Scala counts are listed above.
+E20 and the other ready work have now been extracted and validated on `bae948bd5`.
 
 A practical order is:
 
 1. B01–B04 are merged: library/fixture corrections, result resolution, wrappers
    and callable signatures.
 2. E15/B05 is merged: undefined representations and Wasm placeholders.
-3. E17–E18/B06 implementation is merged; retain E35's test consolidation for a
-   later review. Extract E20 next, then the remaining optimizer safety work and
-   representation-changing deforestation after its prerequisites have landed.
-4. B09, then B10: mutable-field resolution before the declaration extensions.
+3. E17–E18/B06 implementation is merged. Review the independent optimizer branches
+   and E35 consolidation, then extract constructor signatures and representation-changing
+   deforestation after their prerequisites land.
+4. Merge E31, then extract E32/B09 and E33–E34/B10: complete mutable-field
+   resolution before the declaration extensions.
 5. Review the reduced #575 as the final shape-erasure feature.
 
 The optimizer and mutable-record sequences need not block one another.
