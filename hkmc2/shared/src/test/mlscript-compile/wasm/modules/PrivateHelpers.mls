@@ -12,3 +12,6 @@ fun helper(x) =
 
 module PrivateHelpers with
   fun answer(x) = helper(x)
+  private val adjustment = 1
+  @annotations.noInline private fun hidden(x) = x + 1
+  fun withPrivateMethod(x) = hidden(x) + adjustment

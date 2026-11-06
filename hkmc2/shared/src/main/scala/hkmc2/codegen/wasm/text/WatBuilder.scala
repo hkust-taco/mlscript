@@ -369,7 +369,9 @@ class WatBuilder(private val ctx: Ctx, linking: FileCompilation)(using TraceLogg
     new BlockTraverserShallow:
       override def applyDefn(d: Defn): Unit = d match
         case cls @ ClsLikeDefn(companion = S(body)) if isStandaloneModule(body) =>
-          val members = body.publicFields.map((bms, ts) => ts.nme -> bms) ++ body.methods.map(m => m.sym.nme -> m.sym)
+          // The host facade follows source visibility; internal calls still need every method in the Wasm ABI.
+          val members = body.publicFields.iterator.map((bms, ts) => ts.nme -> bms) ++
+            body.methods.iterator.filterNot(_.dSym.isPrivate).map(m => m.sym.nme -> m.sym)
           // Private fields have no scoped binding in typed IR. Allocate backend-owned slots
           // carrying their erased types; public fields retain their originating block members.
           val storage = body.publicFields.map((bms, ts) => ts -> (bms: ScopedSymbol)) ++
