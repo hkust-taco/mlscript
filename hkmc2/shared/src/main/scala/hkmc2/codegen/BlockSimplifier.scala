@@ -1453,6 +1453,25 @@ class BlockSimplifier
             (prefix, evaluated + (path -> bound), updatedMapping)
         (acc, mapping)
 
+      /** Receivers that a copied method body needs from outside its own definitions.
+        * Unlike lexical variables, `This` references are not included in `Block.freeVars`. */
+      def freeReceivers(blk: Block): Set[InnerSymbol] =
+        val referenced = MutSet.empty[InnerSymbol]
+        val defined = MutSet.empty[InnerSymbol]
+        new BlockTraverser:
+          applyBlock(blk)
+          override def applyValue(value: Value): Unit = value match
+            case Value.This(_: TopLevelSymbol) => ()
+            case Value.This(sym: InnerSymbol) => referenced += sym
+            case _ => super.applyValue(value)
+          override def applyClsLikeDefn(defn: ClsLikeDefn): Unit =
+            defined += defn.isym
+            super.applyClsLikeDefn(defn)
+          override def applyCompanionModule(body: ClsLikeBody): Unit =
+            defined += body.isym
+            super.applyCompanionModule(body)
+        referenced.toSet -- defined
+
       def accessesPrivateMembers(blk: Block): Bool =
         var found = false
         new BlockTraverser:
@@ -1911,7 +1930,7 @@ class BlockSimplifier
             info.inlineCost(blk, threshold) match
             case N =>
               super.applyResult(call)(k)
-            case S(_) if info.isMethod && !blk.freeReceivers.forall(receiverMapping.contains) =>
+            case S(_) if info.isMethod && !freeReceivers(blk).forall(receiverMapping.contains) =>
               // A captured nested module may have lost the qualifier path to its enclosing receivers.
               // Keep the call when those receivers cannot be rebound: copying the body would let
               // its lexical `This` references escape their defining class or module.
