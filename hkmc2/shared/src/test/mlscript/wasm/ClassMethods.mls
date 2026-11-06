@@ -147,6 +147,10 @@ c.Counter#inc().Counter#double().Counter#get()
 //│ Wasm result:
 //│ = 4
 
+c.inc().get()
+//│ Wasm result:
+//│ = 2
+
 
 class Box(val x) with
     fun mk() = Next(x + 1).get()
