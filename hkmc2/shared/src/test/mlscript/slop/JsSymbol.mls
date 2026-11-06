@@ -560,22 +560,25 @@ let ftcKeyed = new FtcKeyed
 let ftcNext = ftcKeyed.next
 [ftcKeyed.next(73), ftcNext(74)]
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp, tmp1, Function$, tmp2;
+//│ let tmp, tmp1, receiver, method, Function$, function1, callee;
 //│ define FtcKeyed⁰ as class FtcKeyed¹ {
 //│   method next⁰ = fun next¹(x) {
 //│     return +⁰(x, 1)
 //│   }
 //│ };
 //│ set ftcKeyed⁰ = new FtcKeyed¹();
+//│ set receiver = ftcKeyed⁰;
+//│ set method = receiver.[Keys⁰.second⁰];
 //│ define Function$ as class Function$⁰ extends globalThis⁰.Function⁰ {
-//│   method call⁰ = fun call¹(x) {
-//│     return ftcKeyed⁰.[Keys⁰.second⁰](x)
+//│   method call⁰ = fun call¹(thisArg, x) {
+//│     return method.call﹖(receiver, x)
 //│   }
 //│ };
-//│ set tmp2 = new Function$⁰();
-//│ set ftcNext⁰ = tmp2;
+//│ set function1 = new Function$⁰();
+//│ set ftcNext⁰ = function1;
 //│ set tmp = ftcKeyed⁰.[Keys⁰.second⁰](73);
-//│ set tmp1 = ftcNext⁰.call﹖(74);
+//│ set callee = ftcNext⁰;
+//│ set tmp1 = callee.call﹖(undefined, 74);
 //│ return [tmp, tmp1]
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = [74, 75]

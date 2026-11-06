@@ -59,12 +59,8 @@ staged module M with
 //│ >   class E
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
-:e
 staged module M with
   fun g()() = 1
-//│ ╔══[COMPILATION ERROR] :ftc must be enabled to desugar functions with multiple parameter lists.
-//│ ║  l.+2: 	  fun g()() = 1
-//│ ╙──      	  ^^^^^^^^^^^^^
 //│ > fun ctor_() = ()
 //│ > fun g()() = 1
 
@@ -74,19 +70,16 @@ staged module M with
   fun g()() = 1
 //│ > fun ctor_() = ()
 //│ > fun f() =
-//│ >   let {tmp}
-//│ >   tmp = new Function_
-//│ >   tmp
-//│ > fun g() =
-//│ >   let {tmp1}
-//│ >   tmp1 = new Function_1
-//│ >   tmp1
+//│ >   let {function1}
+//│ >   function1 = new Function_
+//│ >   function1
+//│ > fun g()() = 1
 
 // TODO: these need to be printed, somehow:
 :noModuleCheck
 let x = M."f_instr"().body.rest.rhs.cls.l.value
-let y = M."g_instr"().body.rest.rhs.cls.l.value
+let y = M."g_instr"().params
 //│ x = class Function$
-//│ y = class Function$
-new x().call(2)
+//│ y = [[], []]
+new x().call(unsafe.undefined, 2)
 //│ = 2
