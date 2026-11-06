@@ -96,7 +96,7 @@ class CompilerTest extends AnyFunSuite:
     
     fs.write(inputPath, code)
     
-    val diagnostics = compiler.compile(inputPath)
+    val diagnostics = compiler.compile(inputPath).diagnostics
     
     val hasErrors = diagnostics.exists: perFile =>
       val fileDiagnostics = perFile.diagnostics.asInstanceOf[scala.scalajs.js.Array[scala.scalajs.js.Dynamic]]
@@ -116,8 +116,8 @@ class CompilerTest extends AnyFunSuite:
     val fields = (0 until 80).map(i => s"val field$i = {value: $i}").mkString("\n")
     fs.write("/Large.mls", s"#lang(0.3.x)\n\nmodule Large with ...\n$fields\n")
 
-    val diagnostics = compiler.compile("/Large.mls")
-    assert(diagnostics.isEmpty, js.JSON.stringify(diagnostics))
+    val result = compiler.compile("/Large.mls")
+    assert(result.compiled && result.diagnostics.isEmpty, js.JSON.stringify(result))
     assert(fs.exists(Path("/Large.mjs")), "Compilation should produce the module")
 
   test("compiler can compile two files that import each other"):
@@ -466,7 +466,7 @@ class CompilerTest extends AnyFunSuite:
     
     fs.write("/test.mls", """fun f(x) = x + y""") // `y` is not defined.
     
-    val diagnostics = compiler.compile("/test.mls")
+    val diagnostics = compiler.compile("/test.mls").diagnostics
     
     assert(diagnostics.length is 1, "Should report diagnostics for only one file")
     
@@ -475,3 +475,13 @@ class CompilerTest extends AnyFunSuite:
       fileDiagnostics.exists(_.kind is "error")
     
     assert(hasErrors, "Compilation should report errors")
+
+  test("compiler says whether it wrote a WASM module whose cached errors it does not report again"):
+    val (fs, compiler) = createCompiler()
+    fs.write("/Broken.mls", "#lang(0.3.x)\n#config(target: Wasm)\nfun Broken() = missing")
+    val first = compiler.compile("/Broken.mls")
+    assert(!first.compiled && first.diagnostics.nonEmpty, js.JSON.stringify(first))
+    // The second request reuses the artifact that the first one built and reported the errors of.
+    val second = compiler.compile("/Broken.mls")
+    assert(!second.compiled && second.diagnostics.isEmpty, js.JSON.stringify(second))
+    assert(!fs.exists(Path("/Broken.mjs")), "A WASM module with errors must not be written")
