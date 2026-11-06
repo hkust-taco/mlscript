@@ -705,8 +705,6 @@ object Elaborator:
         lastWords("Runtime symbols have not been initialized from Runtime.mls.")
     def runtimeModuleSymbol: BlockMemberSymbol = runtimeSymbols.module
     def unitSymbol: ModuleOrObjectSymbol = runtimeSymbols.unit
-    // Stable symbol for the synthetic Wasm Unit singleton
-    val unitBlockMemberSymbol = BlockMemberSymbol("Unit", Nil)
     def loopEndSymbol: ModuleOrObjectSymbol = runtimeSymbols.loopEnd
     def tupleSymbol: ModuleOrObjectSymbol = runtimeSymbols.tuple
     def strSymbol: ModuleOrObjectSymbol = runtimeSymbols.str

@@ -238,21 +238,48 @@ class CompilerCacheTest extends AnyFunSuite with BeforeAndAfterAll:
       executionContext.shutdownNow()
       os.remove.all(tempDir)
 
-  test("WASM runtime compilation preserves the cached runtime IR"):
+  test("JavaScript and WASM compilation preserve the shared runtime IR"):
     // Cross-backend cache isolation is not observable through source-language diff tests.
-    given CompilerCtx = TestFolders.compilerCtx(os.pwd)
-    given DebugPrinter = new DebugPrinter(None)
-    given utils.TraceLogger = utils.TraceLogger.silent
-    given Raise = diagnostic => fail(diagnostic.toString)
-    val cctx = summon[CompilerCtx]
-    val prelude = cctx.getPrelude(cctx.paths.preludeFile).ctx
-    val runtime = cctx.getElaboratedBlock(cctx.paths.runtimeSourceFile, prelude)
-    val originalUnit = runtime.state.unitSymbol.irClsLikeDefn.get
-    assert(new codegen.wasm.WasmCompiler().runtime().nonEmpty)
-    // FIXME: WatBuilder.runtimeModule republishes a synthetic definition on the source runtime's Unit symbol.
-    pendingUntilFixed:
-      assert(runtime.state.unitSymbol.irClsLikeDefn.exists(_ eq originalUnit),
+    import io.PlatformPath.given
+    val tempDir = os.temp.dir(prefix = "wasm-runtime-isolation-")
+    try
+      val jsFile: io.Path = tempDir/"JavaScriptUnit.mls"
+      val wasmFile: io.Path = tempDir/"WasmUnit.mls"
+      os.write(tempDir/"JavaScriptUnit.mls", "#lang(0.3.x)\nfun JavaScriptUnit() = ()")
+      os.write(tempDir/"WasmUnit.mls", "#lang(0.3.x)\n#config(target: Wasm)\nfun WasmUnit() = ()")
+      given CompilerCtx = TestFolders.compilerCtx(os.pwd)
+      given DebugPrinter = new DebugPrinter(None)
+      given utils.TraceLogger = utils.TraceLogger.silent
+      given Raise = diagnostic => fail(diagnostic.toString)
+      val cctx = summon[CompilerCtx]
+      val prelude = cctx.getPrelude(cctx.paths.preludeFile).ctx
+      val runtime = cctx.getElaboratedBlock(cctx.paths.runtimeSourceFile, prelude)
+      val unit = runtime.state.unitSymbol
+      val originalUnit = unit.irClsLikeDefn.get
+      val originalHeader = unit.irClassHeader.get
+      val compiler = MLsCompiler(_ => summon[Raise])
+      assert(compiler.compileModule(jsFile))
+      val jsArtifact = cctx.getElaboratedBlock(jsFile, prelude)
+      val originalJs = os.read(tempDir/"JavaScriptUnit.mjs")
+
+      val bothStarted = new CountDownLatch(2)
+      val requests = List(jsFile, wasmFile).map: file =>
+        Future:
+          bothStarted.countDown()
+          assert(bothStarted.await(startupTimeout.toMillis, TimeUnit.MILLISECONDS))
+          assert(compiler.compileModule(file))
+      Await.result(Future.sequence(requests), completionTimeout)
+
+      assert(unit.irClsLikeDefn.exists(_ eq originalUnit),
         "Generating Wasm support must preserve the cached JavaScript runtime's Unit definition")
+      assert(unit.irClassHeader.exists(_ eq originalHeader),
+        "Generating Wasm support must preserve the cached JavaScript runtime's Unit class header")
+      assert(cctx.getElaboratedBlock(cctx.paths.runtimeSourceFile, prelude) eq runtime)
+      assert(cctx.getElaboratedBlock(jsFile, prelude) eq jsArtifact)
+      assert(compiler.compileModule(jsFile))
+      assert(os.read(tempDir/"JavaScriptUnit.mjs") == originalJs,
+        "Reusing the JavaScript artifact after Wasm compilation must produce the same output")
+    finally os.remove.all(tempDir)
 
   test("WASM units with errors are not emitted, and their importers say why on every request"):
     import io.PlatformPath.given
