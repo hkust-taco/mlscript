@@ -78,8 +78,8 @@ session and filesystem.
 ## Source and host boundaries
 
 - Source imports use `.mls` and require both files to select the same target.
-  The check runs even if optimization removes every use of the import, and is
-  repeated on cache hits. Aliases retain the definition's symbol and therefore
+  The importing unit reports a mismatch when it elaborates the import, even if
+  optimization later removes every use of it, so the error is one of that unit's. Aliases retain the definition's symbol and therefore
   preserve statically known class and module information.
 - Functions and constructors cross file boundaries as WASM function imports.
   Globals, singleton storage, and class RTTI retain their defining instance.

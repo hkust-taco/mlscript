@@ -40,17 +40,9 @@ import "../../mlscript-compile/wasm/Shared.mjs"
 
 :ge
 import "../../mlscript-compile/Example.mls"
-//│ ╔══[COMPILATION ERROR] Cannot import JavaScript source into a WASM worksheet
-//│ ║  l.XX: 	module Example with ...
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.XX: 	
-//│ ║        	^
-//│ ║  l.XX: 	
-//│ ║        	^
-//│ ║  l.XX: 	fun pubFun = privFun
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.XX: 	... (more lines omitted) ...
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Cannot import JavaScript source '../../mlscript-compile/Example.mls' from a Wasm compilation unit
+//│ ║  l.+1: 	import "../../mlscript-compile/Example.mls"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :ge
 module M with

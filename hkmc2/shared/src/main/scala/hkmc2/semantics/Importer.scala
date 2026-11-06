@@ -57,6 +57,12 @@ class Importer extends NewResolver:
             val artifact = tl.trace(dbg">>> Importing $file"):
               given TL = tl
               cctx.getElaboratedBlock(file, prelude)
+            // Source imports link the bindings that each unit's own backend compiles. Reporting a mismatch here
+            // makes it an error of the importing unit, which its artifact records like any other.
+            if !artifact.config.target.sameBackend(cfg.target) then raise(ErrorReport(
+              msg"Cannot import ${artifact.config.target.displayName} source '$path' from a ${cfg.target.displayName} compilation unit" ->
+                loc :: Nil,
+              source = Diagnostic.Source.Compilation))
             val importedSym = artifact.compilationUnit.defaultExport.getOrElse:
               raise(ErrorReport(msg"File '$path' does not define a default export named '$nme'" -> id.toLoc :: Nil))
               BlockMemberSymbol(nme, Nil)

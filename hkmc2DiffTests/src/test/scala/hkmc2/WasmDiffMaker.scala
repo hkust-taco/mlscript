@@ -52,22 +52,24 @@ abstract class WasmDiffMaker extends InvalMLDiffMaker:
         diagnostic match
           case _: ErrorReport => throw diagnostic
           case _ => ()
+      // The importer reports a source import of another target. The block cannot link against it, so it is not
+      // compiled, like a block whose imported files fail to compile.
+      var linkable = true
       def collect(statement: semantics.Statement)(using Raise): Unit =
         statement match
           case imp: semantics.Import if imp.file.ext == "mls" =>
             val artifact = cctx.getElaboratedBlock(imp.file, prelude)(using ltl, summon[Raise])
-            if artifact.config.target != CompilationTarget.Wasm then
-              raise(ErrorReport(msg"Cannot import JavaScript source into a WASM worksheet" -> imp.sym.toLoc :: Nil,
-                source = Source.Compilation))
-            else
+            if artifact.config.target.sameBackend(config.target) then
               val graph = compiler.compile(imp.file, artifact, _ => summon[Raise])
               graph.files.foreach: (art, path, compiled) =>
                 linkedFiles(art) = path -> compiled
               sourceImports += imp.sym
+            else linkable = false
           case _ => ()
         statement.subStatements.foreach(collect)
       try collect(blk)(using throwingRaise)
       catch case _: Diagnostic => return // The emitter has already reported this diagnostic.
+      if !linkable then return
     super.processTerm(blk, inImport)
 
 

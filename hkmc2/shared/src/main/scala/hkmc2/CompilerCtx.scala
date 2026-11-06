@@ -3,7 +3,6 @@ package hkmc2
 import collection.mutable.{Map as MutMap, Set as MutSet}
 
 import hkmc2.utils.*, shorthands.*
-import hkmc2.Message.MessageContext
 import hkmc2.io
 import utils.TraceLogger
 
@@ -250,17 +249,6 @@ class CompilerCtx(
     // An artifact retains its symbol identity even when elaboration reported errors. Replaying
     // those errors prevents a later backend request from treating that artifact as valid.
     if !created then artifact.errors.foreach(outerRaise)
-    // Recheck on cache hits too: an invalid source graph must not emit output merely because
-    // an earlier request already reported its target mismatch.
-    val checked = collection.mutable.Set.empty[Artifact]
-    def checkTargets(art: Artifact): Unit =
-      if checked.add(art) then art.sourceImports.foreach: dep =>
-        if !dep.artifact.config.target.sameBackend(art.config.target) then
-          raise(ErrorReport(
-            msg"Cannot import ${dep.artifact.config.target.displayName} source '${dep.path.toString}' from a ${art.config.target.displayName} compilation unit" -> dep.sym.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation))
-        checkTargets(dep.artifact)
-    checkTargets(artifact)
     dependencyRecorder.foreach(_.note(file, artifact))
     artifact
 
