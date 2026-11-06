@@ -22,6 +22,17 @@ ThisBuild / scalacOptions ++= Seq(
   else                "-Wconf:any:warning",
 )
 
+// Published dependencies (including ScalaTest, fansi, and better-files) still use
+// sun.misc.Unsafe for Scala 3 lazy vals. Temporarily suppress JDK 24+ warnings until
+// the dependencies and their transitives ship VarHandle-based implementations:
+// https://github.com/scalatest/scalatest/issues/2448
+// .sbtopts handles sbt itself; forked Test / run runners need this option separately.
+// Older JDKs need no suppression and do not all recognize the option.
+ThisBuild / Test / run / javaOptions ++= {
+  if (scala.util.Properties.isJavaAtLeast("24")) "--sun-misc-unsafe-memory-access=allow" :: Nil
+  else Nil
+}
+
 // CI runners have few physical cores. Compile tests have a wall-clock time limit
 // (see TimeOutTests), which measures contention as much as compilation time when
 // other test tasks run at the same time: the dependencies of `hkmc2AllTests/test`
