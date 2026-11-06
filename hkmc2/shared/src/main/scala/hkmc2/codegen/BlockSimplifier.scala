@@ -1534,6 +1534,8 @@ class BlockSimplifier
           // freezing policy. Moving a body across compilation units with a different
           // policy could silently turn mutable values into frozen values, or vice versa.
           // Cross-target bodies may reference bindings emitted by a different backend.
+          // * TODO: instead of hacks like this, in the future, we should make sure to
+          // * produce artifacts in taregt folders keyed by the config options that alter bin. compat.
           if defn.dSym.getState.compilationUnitConfig.exists(cfg =>
             cfg.noFreeze =/= config.noFreeze || !cfg.target.sameBackend(config.target))
           then return false
