@@ -13,8 +13,8 @@ wasm.ref.i31(k)
 wasm.ref.i31(wasm.i32.add(wasm.i32.const(1), wasm.i32.const(2)))
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $entry (func (result (ref null i31))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp i32)
@@ -256,8 +256,8 @@ wasm.i31.get_u(2147483647)
 1 + 2
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $entry (func (result (ref null i31))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (return
@@ -271,8 +271,8 @@ wasm.i31.get_u(2147483647)
 -2
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $entry (func (result (ref null i31))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (return
@@ -306,8 +306,8 @@ not true
 1 === 1
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $entry (func (result (ref null i31))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (return

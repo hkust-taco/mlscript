@@ -1,0 +1,77 @@
+:.
+:noInline
+
+#lang(0.3.x)
+//│ Wasm result:
+//│ = {}
+
+import "../../mlscript-compile/wasm/modules/Overloaded.mls" as Alias
+//│ Wasm result:
+//│ = {}
+
+:expect 42
+Alias(41)
+//│ Wasm result:
+//│ = 42
+
+:expect 41
+(new Alias(41)).answer()
+//│ Wasm result:
+//│ = 41
+
+// A later block imports both the constructor and the inherited field layout.
+open class Child extends Alias(40) {
+  override fun answer(): Int = this.value + 2
+  fun baseAnswer(): Int = super.answer()
+}
+let child = new Child
+//│ Wasm result:
+//│ = {}
+
+:expect 42
+fun dispatch(x: Alias): Int = x.answer()
+dispatch(child)
+//│ Wasm result:
+//│ = 42
+
+:expect 40
+child.value
+//│ Wasm result:
+//│ = 40
+
+:expect 40
+child.baseAnswer()
+//│ Wasm result:
+//│ = 40
+
+// Repeated aliases retain the same class and callable identities.
+import "../../mlscript-compile/wasm/modules/Overloaded.mls" as Again
+//│ Wasm result:
+//│ = {}
+
+:expect 42
+Again(41)
+//│ Wasm result:
+//│ = 42
+
+:expect 1
+if child is Again then 1 else 0
+//│ Wasm result:
+//│ = 1
+
+// Overridden public fields share the original slot, even when its layout is
+// imported from an earlier worksheet block and the selection uses a new symbol.
+class FieldBase { open val x: Int = 1 }
+fun readBase(x: FieldBase): Int = x.x
+//│ Wasm result:
+//│ = {}
+
+class FieldChild extends FieldBase { override val x: Int = 9 }
+let field = new FieldChild
+//│ Wasm result:
+//│ = {}
+
+:expect 18
+field.x + readBase(field)
+//│ Wasm result:
+//│ = 18

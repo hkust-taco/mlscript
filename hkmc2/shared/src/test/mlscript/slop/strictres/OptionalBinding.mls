@@ -195,6 +195,43 @@ let supplied = new Box(...makeArgs(true))
 //│ missing = Box(1, null)
 //│ supplied = Box(1, ())
 
+// Constructor slot extraction evaluates the source tuple once.
+:expect [null, 23, 2]
+let calls = 0
+fun values(present) =
+  set calls = calls + 1
+  if present then [1, 23] else [1]
+[new Box(...values(false)).value, new Box(...values(true)).value, calls]
+//│ = [null, 23, 2]
+//│ calls = 2
+
+// Capturing a supplied optional argument keeps its representation and evaluates it once.
+:noInline
+:sir
+:siret
+:expect [23, 1]
+let evaluated = 0
+fun argument(): Int =
+  set evaluated = evaluated + 1
+  23
+[(new Box(1, argument())).value, evaluated]
+//│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
+//│ let tmp: Int⁰, optionalArg: Int⁰, tmp1: Box²;
+//│ define argument⁰ as fun argument¹(): Int⁰ {
+//│   let tmp2: Int⁰;
+//│   set tmp2 = +⁰(evaluated⁰, 1);
+//│   set evaluated⁰ = tmp2;
+//│   return 23
+//│ };
+//│ set evaluated⁰ = 0;
+//│ set tmp = argument¹();
+//│ set optionalArg = tmp;
+//│ set tmp1 = new Box²(1, optionalArg);
+//│ return [tmp1.value¹, evaluated⁰]
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+//│ = [23, 1]
+//│ evaluated = 1
+
 // Eliminating constructors must still bind missing fields to null.
 :lift
 :deforest

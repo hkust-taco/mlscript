@@ -561,12 +561,22 @@ fun unionIntoSubtype(x: A | B) = takesSubtype(x)
 
 
 // The primitives are roots of the erased hierarchy, so a union mixing one with any distinct type - another
-// primitive included - has no upper bound to erase to. Note that declaring such a slot is legal, only
-// passing an argument into it is not. With a third member, the pair that *first* had no upper bound is the one
-// kept, not the last one folded in.
+// primitive included - has no upper bound to erase to. Erasure rejects such a declaration where its type is
+// written. With a third member, the pair that *first* had no upper bound is the one kept, not the last one
+// folded in.
+:ge
 fun mixed(x: Int32 | Str) = 0
 fun twoPrims(x: Int32 | Int64) = 0
 fun mixedThree(x: Int32 | Str | Bool) = 0
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+1: 	fun mixed(x: Int32 | Str) = 0
+//│ ╙──      	             ^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
+//│ ║  l.+2: 	fun twoPrims(x: Int32 | Int64) = 0
+//│ ╙──      	                ^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+3: 	fun mixedThree(x: Int32 | Str | Bool) = 0
+//│ ╙──      	                  ^^^^^^^^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define mixed⁰ as fun mixed¹(x: ‹incompatible(Int32, Str⁰)›): Int⁰ {
 //│   return 0
@@ -578,28 +588,23 @@ fun mixedThree(x: Int32 | Str | Bool) = 0
 //│ end
 
 
-// The error lands where a value crosses the slot, not where the type is written: the LUB is computed inside
-// `canonicalize`, which cannot report anything.
-:ge
+// The declaration was rejected where its type is written, so passing a value into the slot does not report
+// the error again.
 fun intoMixed(n: Int32) = mixed(n)
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+1: 	fun intoMixed(n: Int32) = mixed(n)
-//│ ╙──      	                                ^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define intoMixed⁰ as fun intoMixed¹(n: Int32): Int⁰ { return mixed¹(n) }; end
 
 
-// Widening fails too: an unrepresentable value cannot enter an `Object` slot either. Both errors are
-// unlocated - `returnedTerm` passes no location to `castTo`, a pre-existing gap that affects every return.
+// Widening an unrepresentable value into a `Str` or `Object` result does not report the declaration again.
 :ge
 fun outOfMixed(x: Int32 | Str): Str = x
 fun mixedIntoObject(x: Int32 | Str): Object = x
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+1: 	fun outOfMixed(x: Int32 | Str): Str = x
-//│ ╙──      	                                      ^
+//│ ╙──      	                  ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+2: 	fun mixedIntoObject(x: Int32 | Str): Object = x
-//│ ╙──      	                                              ^
+//│ ╙──      	                       ^^^^^^^^^^^
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
 //│ define outOfMixed⁰ as fun outOfMixed¹(x: ‹incompatible(Int32, Str⁰)›): Str⁰ {
 //│   return x
@@ -1373,7 +1378,7 @@ fun capturingLoop(n: Int, acc: Str) =
 //│ };
 //│ end
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ define capturingLoop⁰ as fun capturingLoop²(n: Int⁰, acc: Str⁰): Str⁰ {
+//│ define capturingLoop⁰ as fun capturingLoop¹(n: Int⁰, acc: Str⁰): Str⁰ {
 //│   loop loopLabel:
 //│     let scrut: ?, tmp: Int⁰, tmp1: ?, acc1: Str⁰;
 //│     set acc1 = acc;

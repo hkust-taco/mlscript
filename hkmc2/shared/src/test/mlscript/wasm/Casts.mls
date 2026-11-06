@@ -14,10 +14,10 @@ fun useBox(b: Box): Int = b.v
 useBox(id(new Box(42)))
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Box (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $v (mut (ref null i31))))))
-//│   (type $Box_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $Box (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $v@1 (mut (ref null i31))))))
+//│   (type $Box_typeinfo (sub $TypeInfoBase (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Box_init (func (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))))
 //│   (type $Box_ctor (func (param $v (ref null i31)) (result (ref $Box))))
 //│   (type $id (func (param $a (ref null any)) (result (ref null any))))
@@ -26,14 +26,14 @@ useBox(id(new Box(42)))
 //│   (global $Box_typeinfo (export "Box_typeinfo") (ref $Box_typeinfo) (struct.new $Box_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $Box_init (type $Box_init) (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))
-//│     (struct.set $Box $v
+//│   (func $Box_init (export "Box_init") (type $Box_init) (param $this (ref $Box)) (param $v (ref null i31)) (result (ref $Box))
+//│     (struct.set $Box $v@1
 //│       (local.get $this)
 //│       (local.get $v))
 //│     (return
 //│       (ref.cast (ref $Box)
 //│         (local.get $this))))
-//│   (func $Box_ctor (export "Box") (type $Box_ctor) (param $v (ref null i31)) (result (ref $Box))
+//│   (func $Box_ctor (export "Box_ctor") (type $Box_ctor) (param $v (ref null i31)) (result (ref $Box))
 //│     (local $this (ref $Box))
 //│     (local.set $this
 //│       (struct.new $Box
@@ -50,7 +50,7 @@ useBox(id(new Box(42)))
 //│       (local.get $a)))
 //│   (func $useBox (export "useBox") (type $useBox) (param $b (ref null $Box)) (result (ref null i31))
 //│     (return
-//│       (struct.get $Box $v
+//│       (struct.get $Box $v@1
 //│         (local.get $b))))
 //│   (func $entry (export "entry") (type $entry) (result (ref null i31))
 //│     (local $tmp (ref null $Box))
@@ -182,7 +182,9 @@ fun test: Function = id
 
 :fixme
 fun test: Function = new Object()
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing constructor definition for class member:Object
+//│ ╔══[COMPILATION ERROR] Instantiating class `Object` is not supported by the WebAssembly backend
+//│ ║  l.+1: 	fun test: Function = new Object()
+//│ ╙──      	                     ^^^^^^^^^^^^
 
 class C
 //│ Wasm result:

@@ -2,13 +2,13 @@
 :js
 
 
-// * Note that this currently denotes unit, not an empty record...
-// * (we could make them the same thing) 
+// Empty braces denote a fresh record; Unit is written `()`.
 
 {}
+//│ = {}
 
 let r = {}
-//│ r = ()
+//│ r = {}
 
 
 {1}

@@ -120,6 +120,14 @@ class BlockSimplifier
     
   end Helper
   
+  /** Simplifier rewrites substitute values into existing casts, which can make them redundant.
+    * Dropping those casts exposes literals and known values to folding and propagation. */
+  trait RefinesCasts extends BlockTransformer:
+    override protected def rebuildCast(cast: CastResult, value: Result): Result =
+      Cast.refined(value, cast.target, cast.check)(cast.toLoc)
+    override protected def rebuildCastPath(cast: CastPath, value: Path): Path =
+      Cast.refinedPath(value, cast.target, cast.check)(cast.toLoc)
+  
   
   // * Only such variables can be assigned directly in the IR
   type LocalVar = LocalVarSymbol
@@ -149,7 +157,7 @@ class BlockSimplifier
   
   /** A simple pass to eliminate the most obvious kind of dead code;
     * hopefully allows more expensive passes such as DataFlowAnalysis to do less work. */
-  class DeadCodeElim() extends BlockTransformer(SymbolSubst.Id), Helper:
+  class DeadCodeElim() extends BlockTransformer(SymbolSubst.Id), Helper, RefinesCasts:
     
     var analysisDone = false
     
@@ -192,12 +200,14 @@ class BlockSimplifier
           * backend a cast it cannot emit. This cannot live in `Result.freeVars`: resolving a target to its
           * `BlockMemberSymbol` needs a `Ctx` that the context-free `lazy val` does not have.
           *
-          * Both traversal entry points must call this: `applyResult` matches `Cast` before its `Path` case, so
-          * `applyPath` never sees a returned or assigned cast, only the ones a `ValDefn` binds.
+          * Both traversal entry points must call this: `applyResult` matches every cast before its `Path` case,
+          * so `applyPath` only sees the path casts in path positions, such as arguments.
           */
         def markCastTarget(target: ErasedValueType): Unit =
           target.canonicalize match
-            case ErasedType.AnyRef(_, tpeSym) => usedVars += tpeSym.bms.get
+            case ErasedType.AnyRef(_, tpeSym) =>
+              usedVars += tpeSym.bms.getOrElse:
+                lastWords(s"Missing binding for cast target '${tpeSym.nme}'")
             case _ =>
 
         override def applyResult(r: Result): Unit =
@@ -447,7 +457,7 @@ class BlockSimplifier
     * Note that if the program tree is changed, it is imperative to register the change,
     * otherwise dead assignment removal (which runs when no change was detected) will not work correctly,
     * as it relies on object identity. */
-  class DataFlowAnalysis(localVars: Set[LocalVar]) extends BlockTransformer(SymbolSubst.Id), Helper:
+  class DataFlowAnalysis(localVars: Set[LocalVar]) extends BlockTransformer(SymbolSubst.Id), Helper, RefinesCasts:
     
     
     val capturedVars = MutSet.empty[LocalVar]
@@ -555,8 +565,8 @@ class BlockSimplifier
     // *   - `false` means no known value.
     // *   - `true` means definitely uninitialized,
     // *     meaning any variable access can be replaced by `undefined`, ie, `Value.Lit(UnitLit(false))`.
-    // *   - `Value`/`Cast` means this exact value is still available for propagation.
-    type KnownValue = Bool | Value | Cast
+    // *   - `Value`/`CastPath` means this exact value is still available for propagation.
+    type KnownValue = Bool | Value | CastPath
     
     // * The propagated value fact for an assignment, plus equivalent
     // * references that could be substituted while their requirements hold.
@@ -571,9 +581,9 @@ class BlockSimplifier
         (l, r) match
         case (false, _) | (_, false) => false
         case (true, true) => true
-        case (true, v: (Value | Cast)) => v
-        case (v: (Value | Cast), true) => v
-        case (v1: (Value | Cast), v2: (Value | Cast)) if v1 === v2 => v1
+        case (true, v: (Value | CastPath)) => v
+        case (v: (Value | CastPath), true) => v
+        case (v1: (Value | CastPath), v2: (Value | CastPath)) if v1 === v2 => v1
         case _ => false
       
       def mergeRefs(l: List[TrackedRef], r: List[TrackedRef]): List[TrackedRef] =
@@ -684,7 +694,7 @@ class BlockSimplifier
             // * slot - a `return`, which Wasm validates against the declared result instead of coercing into it.
             // * Consumers wanting the literal look through the cast with `litThroughUncheckedCasts`.
             // * A *checked* cast is excluded: propagating it would duplicate a test that can throw.
-            case c @ Cast(Value.Lit(_), _, false) => c
+            case c @ CastPath(Value.Lit(_), _, false) => c
             case _ => false
           val refs = opt match
             case S((r @ Value.SimpleRef(lv: LocalVar)) -> rhs) =>
@@ -1145,12 +1155,6 @@ class BlockSimplifier
     
     override def applyPath(v: Path)(k: Path => Block): Block =
       v match
-      case c: Cast if !inDryRun =>
-        applyResult(c):
-          case p: Path => k(p)
-          case r =>
-            val tmp = TempSymbol(N, initErasedType = r.erasedType, "cast")
-            Scoped(Set.single(tmp), Assign(tmp, r, k(tmp.asPath)))
       case Value.SimpleRef(loc: LocalVar) if !inDryRun && !capturedVars(loc) =>
         
         val rs = accessAssignedResults(loc)
@@ -1164,7 +1168,7 @@ class BlockSimplifier
         case true =>
           registerChange(s"${loc.showDbg} ~> undefined")
           return k(Value.Lit(syntax.Tree.UnitLit(false))(v.toLoc))
-        case lit: (Value | Cast) =>
+        case lit: (Value | CastPath) =>
           registerChange(s"${loc.showDbg} ~> ${lit.showDbg}")
           return k(lit)
         case false =>
@@ -1188,16 +1192,6 @@ class BlockSimplifier
     override def applyResult(r: Result)(k: Result => Block): Block =
       // Some partial evaluation – TODO: move to IR smart constructors
       r match
-      
-      // * Propagation and inlining can expose an operand already below the cast target.
-      // * Recheck after rewriting the operand, including checked casts: the subtype proof
-      // * makes that check redundant. Keep every narrowing cast and its evaluation order.
-      case c @ Cast(value, target, check) if !inDryRun =>
-        applyResult(value): value2 =>
-          if ErasedType.needsCast(value2.erasedType_!.canonicalize, target.canonicalize).contains(false) then
-            registerChange(s"rm redundant cast ${c.showDbg}")
-            k(value2)
-          else k(if value2 is value then c else Cast(value2, target, check)(c.toLoc))
       
       // * Try to propagate pure calls
       case Value.SimpleRef(loc: LocalVar) if !inDryRun && !capturedVars(loc) =>
@@ -1278,7 +1272,7 @@ class BlockSimplifier
     * - all the statements between the two matches are pure and can thus be moved out of the way,
     *   similar to how `MergeMatchArmTransformer` works (in `Lowering.scala`) – we reuse `TrivialStatementsAndMatch`.
     * See examples in [test:case-of-case]. */
-  class CaseOfCase(using cfg: Config.Inliner) extends BlockTransformer(SymbolSubst.Id), Helper:
+  class CaseOfCase(using cfg: Config.Inliner) extends BlockTransformer(SymbolSubst.Id), Helper, RefinesCasts:
     
     type Shape = Literal | ClassLikeSymbol
     
@@ -1582,7 +1576,11 @@ class BlockSimplifier
           // Instantiate nodes are rendered according to the receiving JS builder's
           // freezing policy. Moving a body across compilation units with a different
           // policy could silently turn mutable values into frozen values, or vice versa.
-          if defn.dSym.getState.compilationUnitConfig.exists(_.noFreeze =/= config.noFreeze)
+          // Cross-target bodies may reference bindings emitted by a different backend.
+          // * TODO: instead of hacks like this, in the future, we should make sure to
+          // * produce artifacts in taregt folders keyed by the config options that alter bin. compat.
+          if defn.dSym.getState.compilationUnitConfig.exists(cfg =>
+            cfg.noFreeze =/= config.noFreeze || !cfg.target.sameBackend(config.target))
           then return false
           true
 
@@ -1872,7 +1870,7 @@ class BlockSimplifier
         def applyBlock(blk: Block) =
           Label(lblSym, false, Copier.apply(blk), _)
       
-      class Transformer(m: InlinerMap) extends BlockTransformer(SymbolSubst()):
+      class Transformer(m: InlinerMap) extends BlockTransformer(SymbolSubst()), RefinesCasts:
         
         // The call graph may be cyclic, in which case we break the infinite loop using this map by
         // assuring that the block corresponding to a term symbol may only be transformed once.

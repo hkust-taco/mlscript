@@ -1016,11 +1016,12 @@ f(3)
 //│   end
 //│ };
 //│ define g⁰ as fun g¹(a) {
-//│   let arg$A$0$, tmp;
+//│   let y, arg$A$0$, tmp;
 //│   match a
 //│     A² =>
 //│       set arg$A$0$ = a.x⁹;
-//│       set tmp = -⁰(arg$A$0$, 1);
+//│       set y = (arg$A$0$ as! Int⁰);
+//│       set tmp = -⁰(y, 1);
 //│       return f⁰(tmp)
 //│     else
 //│       return 1

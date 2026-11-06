@@ -208,17 +208,16 @@ fun capturedAsyncFunction(value: Int) =
   add
 capturedAsyncFunction(40)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add, baseCall: Function⁰, add$, add1;
-//│ define add1 as fun add²(value: Int⁰, n: Int⁰)(): Int⁰ {
-//│   return +⁰(value, n)
-//│ };
+//│ let add, baseCall: Function⁰, add$;
 //│ define add$ as fun add$⁰(value: Int⁰)(n: Int⁰): Promise⁰ {
-//│   return add³(value, n)
+//│   return add²(value, n)
 //│ };
-//│ define add as fun add³(value: Int⁰, n: Int⁰): Promise⁰ {
-//│   let tmp: Function⁰;
-//│   set tmp = add²(value, n);
-//│   return runtime⁰.toJsAsync﹖(tmp)
+//│ define add as fun add²(value: Int⁰, n: Int⁰): Promise⁰ {
+//│   let add$async;
+//│   define add$async as fun add³(): Int⁰ {
+//│     return +⁰(value, n)
+//│   };
+//│   return (runtime⁰.toJsAsync﹖(add³) as! Promise⁰)
 //│ };
 //│ define capturedAsyncFunction⁰ as fun capturedAsyncFunction¹(value: Int⁰): Function⁰ {
 //│   return add$⁰(value)
@@ -242,19 +241,18 @@ fun capturedCurriedAsyncFunction(value: Int) =
   add
 capturedCurriedAsyncFunction(39)(1)(2)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let add, baseCall: Function⁰, callPrefix: ?, add$, add1;
-//│ define add1 as fun add⁴(value: Int⁰, first: Int⁰, second: Int⁰)(): Int⁰ {
-//│   let tmp: Int⁰;
-//│   set tmp = +⁰(value, first);
-//│   return +⁰(tmp, second)
-//│ };
+//│ let add, baseCall: Function⁰, callPrefix: ?, add$;
 //│ define add$ as fun add$¹(value: Int⁰)(first: Int⁰): Function⁰ {
-//│   return add⁵(value, first)
+//│   return add⁴(value, first)
 //│ };
-//│ define add as fun add⁵(value: Int⁰, first: Int⁰)(second: Int⁰): Promise⁰ {
-//│   let tmp: Function⁰;
-//│   set tmp = add⁴(value, first, second);
-//│   return runtime⁰.toJsAsync﹖(tmp)
+//│ define add as fun add⁴(value: Int⁰, first: Int⁰)(second: Int⁰): Promise⁰ {
+//│   let add$async;
+//│   define add$async as fun add⁵(): Int⁰ {
+//│     let tmp: Int⁰;
+//│     set tmp = +⁰(value, first);
+//│     return +⁰(tmp, second)
+//│   };
+//│   return (runtime⁰.toJsAsync﹖(add⁵) as! Promise⁰)
 //│ };
 //│ define capturedCurriedAsyncFunction⁰ as fun capturedCurriedAsyncFunction¹(value: Int⁰): Function⁰ {
 //│   return add$¹(value)
@@ -327,7 +325,7 @@ continuation(42, "done")
 //│ @affine(1) @private
 //│ define $item_Item as fun $item_Item⁰(Item_value: Int⁰)(fv_arg$Item$0$: ?, fv_x: Int⁰, fv_tmp: Int⁰, fv_ignored: Int⁰, fv_result: Str⁰): ? {
 //│   set fv_arg$Item$0$ = Item_value;
-//│   set fv_x = fv_arg$Item$0$;
+//│   set fv_x = (fv_arg$Item$0$ as! Int⁰);
 //│   set fv_tmp = fv_x;
 //│   return $item_rest⁰(fv_ignored, fv_tmp, fv_result)
 //│ };

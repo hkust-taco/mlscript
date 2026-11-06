@@ -92,10 +92,9 @@ if flag() then token() else unsafe.undefined
 :soir
 private fun flag(): Bool = true
 fun test() = if flag() do return wasm.i32.const(42)
-//│ ╔══[COMPILATION ERROR] Types 'Unit' and 'Int32' have no common representation
+//│ ╔══[COMPILATION ERROR] Types 'Runtime.Unit' and 'Int32' have no common representation
 //│ ║  l.+2: 	fun test() = if flag() do return wasm.i32.const(42)
-//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] Types 'Unit' and 'Int32' have no common representation
+//│ ╙──      	    ^^^^
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ @private
 //│ define flag⁰ as fun flag¹() {
@@ -208,7 +207,7 @@ private fun incompatible(): Int32 | Int64 = unsafe.undefined
 42
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
 //│ ║  l.+1: 	private fun incompatible(): Int32 | Int64 = unsafe.undefined
-//│ ╙──      	                                            ^^^^^^^^^^^^^^^^
+//│ ╙──      	                            ^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 42
 

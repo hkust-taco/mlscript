@@ -12,16 +12,13 @@ fun generated() = yield 1
 @annotations.async
 fun asynchronous() = 2
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let asynchronous, asynchronous1;
-//│ asynchronous1 = function asynchronous() {
-//│   return () => {
-//│     return 2
-//│   }
-//│ };
+//│ let asynchronous;
 //│ asynchronous = function asynchronous() {
-//│   let tmp;
-//│   tmp = asynchronous1();
-//│   return runtime.toJsAsync(tmp)
+//│   let asynchronous$async;
+//│   asynchronous$async = function asynchronous$async() {
+//│     return 2
+//│   };
+//│   return runtime.toJsAsync(asynchronous$async) /* as! Promise */
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 

@@ -31,11 +31,11 @@ private fun increment() =
   counter.count
 increment()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
+//│ ║  l.+2: 	private fun increment() =
+//│ ╙──      	            ^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+4: 	  set counter.count += 1
 //│ ╙──      	      ^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.+5: 	  counter.count
-//│ ╙──      	  ^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	private class Counter(mut val count)
 //│ ╙──      	                              ^^^^^
@@ -53,11 +53,11 @@ private fun mix() =
   mixed.value
 mix()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+2: 	private fun mix() =
+//│ ╙──      	            ^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+4: 	  set mixed.value = "hello"
 //│ ╙──      	      ^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+5: 	  mixed.value
-//│ ╙──      	  ^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+1: 	private class Mixed(mut val value)
 //│ ╙──      	                            ^^^^^
@@ -117,11 +117,11 @@ private fun setTyped(cell: Typed) = set cell.value = "hello"
 private fun typed() = Typed(const(1)).value
 typed()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+3: 	private fun typed() = Typed(const(1)).value
+//│ ╙──      	            ^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+2: 	private fun setTyped(cell: Typed) = set cell.value = "hello"
 //│ ╙──      	                                        ^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+3: 	private fun typed() = Typed(const(1)).value
-//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+1: 	private class Typed(mut val value)
 //│ ╙──      	                            ^^^^^
@@ -138,14 +138,11 @@ private class Named with
 private fun named() = (new Named).value
 named()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+4: 	private fun named() = (new Named).value
-//│ ╙──      	                      ^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
-//│ ║  l.+3: 	  fun rename() = set value = "renamed"
-//│ ╙──      	                     ^^^^^
-//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
 //│ ║  l.+2: 	  mut val value = const(1)
-//│ ╙──      	                  ^^^^^^^^
+//│ ╙──      	          ^^^^^
+//│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Str' have no common representation
+//│ ║  l.+4: 	private fun named() = (new Named).value
+//│ ╙──      	            ^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot cast a Wasm value of type `i32` to `(ref null any)` in a different type hierarchy
 //│ ║  l.+2: 	  mut val value = const(1)
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^

@@ -68,11 +68,11 @@ print of Box(foo()).value
 :sjs
 fun foo() = {}
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let foo6; foo6 = function foo() { return runtime.Unit };
+//│ let foo6; foo6 = function foo() { return globalThis.Object.freeze({}) };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
 print of Box(foo()).value
-//│ > ()
+//│ > {}
 
 
 :sjs

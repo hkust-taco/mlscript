@@ -58,7 +58,7 @@ fun selected(n: Int, k: Str) =
 //│ @affine(1) @private
 //│ define selected$b_Box as fun selected$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_x: Int⁰, fv_k: Str⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
-//│   set fv_x = fv_arg$Box$0$;
+//│   set fv_x = (fv_arg$Box$0$ as! Int⁰);
 //│   return [fv_x, fv_k]
 //│ };
 //│ @private
@@ -93,7 +93,7 @@ fun withRest(n: Int, k: Str) =
 //│ @affine(1) @private
 //│ define withRest$b_Box as fun withRest$b_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_x: Int⁰, fv_tmp: Int⁰, fv_r: Int⁰, fv_k: Str⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
-//│   set fv_x = fv_arg$Box$0$;
+//│   set fv_x = (fv_arg$Box$0$ as! Int⁰);
 //│   set fv_tmp = fv_x;
 //│   return withRest$b_rest⁰(fv_r, fv_tmp, fv_k)
 //│ };
@@ -159,7 +159,7 @@ consume(produce(2))
 //│ @affine(1) @private
 //│ define $box_Box as fun $box_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_value: Int⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
-//│   set fv_value = fv_arg$Box$0$;
+//│   set fv_value = (fv_arg$Box$0$ as! Int⁰);
 //│   return fv_value
 //│ };
 //│ @private
@@ -177,7 +177,7 @@ consume(produce(2))
 //│       return $box_Box⁰(Box_v)
 //│     else
 //│       set tmp1 = -⁰(n, 1);
-//│       return produce¹(tmp1)
+//│       return (produce¹(tmp1) as!! Function⁰)
 //│   end
 //│ };
 //│ @private
@@ -185,7 +185,7 @@ consume(produce(2))
 //│   let value: Int⁰, arg$Box$0$: ?;
 //│   return (box(arg$Box$0$, value) as! Int⁰)
 //│ };
-//│ set tmp = produce¹(2);
+//│ set tmp = (produce¹(2) as!! Function⁰);
 //│ return consume¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -207,9 +207,9 @@ pass(Box(42)).v
 //│   return box
 //│ };
 //│ set Box_v = 42;
-//│ set tmp = Box_v;
-//│ set tmp1 = pass¹(tmp);
-//│ return tmp1
+//│ set tmp1 = Box_v;
+//│ set tmp = (pass¹(tmp1) as!! Int⁰);
+//│ return tmp
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
@@ -238,7 +238,7 @@ projectOpaqueBox(makeOpaqueBox())
 //│ define projectOpaqueBox⁰ as fun projectOpaqueBox¹(box: Int⁰): Int⁰ {
 //│   return box
 //│ };
-//│ set tmp = makeOpaqueBox¹();
+//│ set tmp = (makeOpaqueBox¹() as!! Int⁰);
 //│ return projectOpaqueBox¹(tmp)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -325,7 +325,7 @@ get(H(Box(42), 1), true)
 //│       match scrut
 //│         Box² =>
 //│           set arg$Box$0$ = scrut.v¹;
-//│           set v = arg$Box$0$;
+//│           set v = (arg$Box$0$ as! Int⁰);
 //│           return v
 //│         else
 //│           throw new globalThis⁰.Error⁰("match error")
@@ -367,7 +367,7 @@ get(H(Box(42), 1), true)
 //│ @affine(1) @private
 //│ define $scrut_Box as fun $scrut_Box⁰(Box_v1: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v1;
-//│   set fv_v = fv_arg$Box$0$;
+//│   set fv_v = (fv_arg$Box$0$ as! Int⁰);
 //│   return fv_v
 //│ };
 //│ @private
@@ -435,7 +435,7 @@ get(idpoly(Box(42)))
 //│ @affine(1) @private
 //│ define get$b_Box as fun get$b_Box⁰(Box_v1: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v1;
-//│   set fv_v = fv_arg$Box$0$;
+//│   set fv_v = (fv_arg$Box$0$ as! Int⁰);
 //│   return fv_v
 //│ };
 //│ @private
@@ -452,7 +452,7 @@ get(idpoly(Box(42)))
 //│   match b
 //│     Box² =>
 //│       set arg$Box$0$ = b.v¹;
-//│       set v = arg$Box$0$;
+//│       set v = (arg$Box$0$ as! Int⁰);
 //│       return v
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -496,7 +496,7 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│ @affine(1) @private
 //│ define get$b_Box as fun get$b_Box¹(Box_v2: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v2;
-//│   set fv_v = fv_arg$Box$0$;
+//│   set fv_v = (fv_arg$Box$0$ as! Int⁰);
 //│   return fv_v
 //│ };
 //│ @private
@@ -513,7 +513,7 @@ get(idpoly(Box(42))) + idpoly(Box(1)).v
 //│   match b
 //│     Box² =>
 //│       set arg$Box$0$ = b.v¹;
-//│       set v = arg$Box$0$;
+//│       set v = (arg$Box$0$ as! Int⁰);
 //│       return v
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -568,7 +568,7 @@ get(idTwice(Box(42)))
 //│ @affine(1) @private
 //│ define get$b_Box as fun get$b_Box²(Box_v1: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v1;
-//│   set fv_v = fv_arg$Box$0$;
+//│   set fv_v = (fv_arg$Box$0$ as! Int⁰);
 //│   return fv_v
 //│ };
 //│ @private
@@ -591,7 +591,7 @@ get(idTwice(Box(42)))
 //│   match b
 //│     Box² =>
 //│       set arg$Box$0$ = b.v¹;
-//│       set v = arg$Box$0$;
+//│       set v = (arg$Box$0$ as! Int⁰);
 //│       return v
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
@@ -710,13 +710,13 @@ test(false, true)
 //│ @affine(1) @private
 //│ define test_cons$x_Box as fun test_cons$x_Box¹(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
-//│   set fv_v = fv_arg$Box$0$;
+//│   set fv_v = (fv_arg$Box$0$ as! Int⁰);
 //│   return fv_v
 //│ };
 //│ @affine(1) @private
 //│ define test_cons$x_Box1 as fun test_cons$x_Box⁰(Box_v: Int⁰)(fv_arg$Box$0$: ?, fv_v: Int⁰): ? {
 //│   set fv_arg$Box$0$ = Box_v;
-//│   set fv_v = fv_arg$Box$0$;
+//│   set fv_v = (fv_arg$Box$0$ as! Int⁰);
 //│   return fv_v
 //│ };
 //│ @private
@@ -733,7 +733,7 @@ test(false, true)
 //│   match x
 //│     Box² =>
 //│       set arg$Box$0$ = x.v¹;
-//│       set v = arg$Box$0$;
+//│       set v = (arg$Box$0$ as! Int⁰);
 //│       return v
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")

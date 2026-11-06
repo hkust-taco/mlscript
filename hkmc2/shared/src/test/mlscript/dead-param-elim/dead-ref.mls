@@ -37,17 +37,18 @@ data class Box(x)
 private fun f(a) = Box(a)
 if f(42) is Box(v) then 0
 //│ dead-param-elim > >>> dead-param-elim results >>>
-//│ dead-param-elim > f²#0 @ <root> -> eliminable: {0}
 //│ dead-param-elim > <<< dead-param-elim results <<<
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let scrut;
+//│ let scrut, arg$Box$0$;
 //│ @private
-//│ define f² as fun f³() {
-//│   return Box⁰(undefined)
+//│ define f² as fun f³(a) {
+//│   return Box⁰(a)
 //│ };
-//│ set scrut = f³();
+//│ set scrut = f³(42);
 //│ match scrut
 //│   Box¹ =>
+//│     set arg$Box$0$ = scrut.x⁰;
+//│     do (arg$Box$0$ as! Int⁰);
 //│     return 0
 //│   else
 //│     throw new globalThis⁰.Error⁰("match error")

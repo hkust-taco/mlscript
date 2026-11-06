@@ -404,14 +404,14 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
     
     // a slot that fusion retypes takes the type the flow gives it
     // the flow analysis proves the value has the slot's type, so the cast should never fail
-    private def intoRetypedSlot[R <: Result](r: R, slot: SlotType)(k: (R | Path) => Block): Block =
+    private def intoRetypedSlot(r: Result, slot: SlotType)(k: Result => Block): Block =
       if slot.retyped == slot.original then k(r)
       else coerceIntoFlowTypedSlot(r, slot.retyped.getOrElse(ErasedType.Unknown))(k)
     
     // as the flow proves that a value reaching a slot typed from the flow has the slot's type, a value whose type is
     // unrelated to it is never produced (it is read in a dead branch, or is the result of a call that never
     // returns): its effects are kept, and `undefined` stands in for it
-    private def coerceIntoFlowTypedSlot[R <: Result](r: R, tpe: ErasedValueType)(k: (R | Path) => Block): Block =
+    private def coerceIntoFlowTypedSlot(r: Result, tpe: ErasedValueType)(k: Result => Block): Block =
       r.coerceToOr(tpe, N)(k): (_, _) =>
         Assign.discard(r, k(Value.Lit(Tree.UnitLit(false))(N).coerceTo(tpe, N)))
     
@@ -458,37 +458,49 @@ class DeforestRewriter(val solver: DeforestFusionSolver, additionalTopLevelSymbo
           val (branchFunBms, branchFunTSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))
           fillFieldSyms(fieldSyms, mkCall(branchFunBms.asMemberRef(branchFunTSym), fieldSyms)(k))
       case c @ Call(FunRef(f, _), _) => super.applyResult(c):
-        // a copy that fusion does not retype keeps the original calling signature
-        case Call(fun2 @ FunRef(f2, _), argss2) if f2.erasedSignature != f.erasedSignature =>
-          val original = pre.res.funSymToFunDefn(f).signature.erasure match
-            case sig: ErasedFuncSignature => sig.paramLists
-            case _: ErasedGetterSignature => Nil
-          val retyped = f2.erasedSignature match
-            case S(sig) => sig.paramLists
-            case _ => Nil
-          val slotss = original.iterator.zip(retyped).map(_.iterator.zip(_))
-          // truncating `slotss` only drops the lists a partial application leaves unapplied
-          val argss3 = argss2.iterator.zip(slotss).map: (args, slots) =>
-            if args.exists(_.spread.isDefined) then args.map(_ -> N)
-            else args.map(_ -> slots.nextOption())
-          .toList
-          applyListOf(argss3, applyListOf(_, (arg, k2) => arg match
-            case (a, S(slot)) => intoRetypedSlot(a.value, slot)(value => k2(Arg(N, value) -> N))
-            case _ => k2(arg)
-          )(_)): argss4 =>
-            k(Call(fun2, argss4.map(_.map(_._1)).ne_!)(c.metadata, c.toLoc))
+        case call2 @ Call(fun2 @ FunRef(f2, _), argss2) =>
+          // In-place rewrites keep the definition symbol. Its current IR signature can
+          // already have changed, so compare the saved definition with the planned signature.
+          val original = pre.res.funSymToFunDefn.get(f).map(_.signature.erasure)
+          val rewritten =
+            if (f2 is f) && original.nonEmpty then
+              val targetInstId = if pre.res.rootFunDefns.contains(f) then inPlaceInstId(f) else instId
+              S(signatureAt(targetInstId, f).erasure)
+            else f2.erasedSignature
+          (original, rewritten) match
+            case (S(originalSignature: ErasedFuncSignature), S(rewrittenSignature: ErasedFuncSignature))
+                if originalSignature != rewrittenSignature =>
+              val original = originalSignature.paramLists
+              val retyped = rewrittenSignature.paramLists
+              val slotss = original.iterator.zip(retyped).map(_.iterator.zip(_))
+              // truncating `slotss` only drops the lists a partial application leaves unapplied
+              val argss3 = argss2.iterator.zip(slotss).map: (args, slots) =>
+                if args.exists(_.spread.isDefined) then args.map(_ -> N)
+                else args.map(_ -> slots.nextOption())
+              .toList
+              applyListOf(argss3, applyListOf(_, (arg, k2) => arg match
+                case (a, S(slot)) => intoRetypedSlot(a.value, slot):
+                  case value: Path => k2(Arg(N, value) -> N)
+                  case value =>
+                    val tmp = TempSymbol(N, value.erasedType, "arg")
+                    Scoped(Set.single(tmp), Assign(tmp, value, k2(Arg(N, tmp.asPath) -> N)))
+                case _ => k2(arg)
+              )(_)): argss4 =>
+                val call = Call(fun2, argss4.map(_.map(_._1)).ne_!)(c.metadata, c.toLoc)
+                // Bodies are rewritten before their definitions publish the new signatures.
+                // Record the planned result on a fresh call so slot coercions cannot cache
+                // the old result type through the retained definition symbol.
+                if (f2 is f) && originalSignature.ret != rewrittenSignature.ret && argss4.sizeCompare(rewrittenSignature.paramLists) == 0 then
+                  k(Cast(call, rewrittenSignature.ret.getOrElse(ErasedType.Unknown), check = false)(c.toLoc))
+                else k(call)
+            case _ => k(call2)
         case c2 => k(c2)
       case _ => super.applyResult(r)(k)
     
     override def applyPath(p: Path)(k: Path => Block): Block =
       p match
       case PolyFnRef(specializedRef) => k(specializedRef)
-      case c: Cast if fusedCasts(c.uid.concreteId) =>
-        applyResult(c.value):
-          case p: Path => k(p)
-          case r =>
-            val tmp = TempSymbol(N, r.erasedType, "fused")
-            Scoped(Set.single(tmp), Assign(tmp, r, k(tmp.asPath)))
+      case c: CastPath if fusedCasts(c.uid.concreteId) => applyPath(c.value)(k)
       case ctor@CtorProducer(_, args, _) if solver.finalCtorDests.isDefinedAt(ctor.uid.concreteId) =>
         assert(args.isEmpty)
         val (branchFunBms, branchFunTSym) = branchFunSyms(ctorWhichBranch(ctor.uid.concreteId))

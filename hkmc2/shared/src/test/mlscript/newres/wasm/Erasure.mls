@@ -43,7 +43,7 @@ roundtrip(input)
 
 // i64: infer bindings, function inputs/results, and constructor fields together.
 :noInline
-:expect 4294967296
+:expect 4294967296n
 private class Slot(val value)
 private fun roundtrip(value) =
   let saved = value
@@ -183,10 +183,10 @@ fun exported(value) = value
 exported(const(42))
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
 //│ ║  l.+1: 	fun exported(value) = value
-//│ ╙──      	                      ^^^^^
+//│ ╙──      	             ^^^^^
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation
-//│ ║  l.+2: 	exported(const(42))
-//│ ╙──      	         ^^^^^^^^^
+//│ ║  l.+1: 	fun exported(value) = value
+//│ ╙──      	    ^^^^^^^^
 //│ Wasm result:
 //│ = 42
 

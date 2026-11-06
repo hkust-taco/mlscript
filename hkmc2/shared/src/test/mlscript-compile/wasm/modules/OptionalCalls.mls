@@ -1,0 +1,9 @@
+#lang(0.3.x)
+#config(target: CompilationTarget.Wasm, inlining: None)
+
+import "./Optional.mls"
+
+module OptionalCalls with
+  fun read(value: Optional): Int = value.choose()
+  fun choose(value: Int, first?: Int, second?: Int): Int =
+    value + (if first is null then 10 else first) + (if second is null then 20 else second)

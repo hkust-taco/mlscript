@@ -112,7 +112,8 @@ let x = 1 in
 "hello"     // String literal
 true        // Boolean literal
 false       // Boolean literal
-()          // Unit literal (empty tuple/record)
+()          // Unit literal
+{}          // Empty record (distinct from Unit)
 null        // Null
 undefined   // Undefined: an unspecified value (see Runtime Representations)
 ```
@@ -882,12 +883,17 @@ Modules cannot extend classes. Objects can extend classes.
 {a: 1, b: 2}          // immutable (frozen) record
 {mut a: 1, b: 2}      // record whose field `a` is mutable
 mut {a: 1, b: 2}      // mutable record: all its fields are mutable
+{}                   // fresh empty immutable record
+mut {}               // fresh empty mutable record
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
 
 Only mutable fields can be assigned. Fields are immutable unless they are declared `mut` or
 their whole record is mutable. A mutable record also makes mutable the fields it copies from
 the records it spreads. A record spreading another one copies the current values of its fields.
+
+`{}` denotes an empty record in expression and type positions. It is distinct
+from Unit, written `()`. Empty statement bodies such as `do {}` still return Unit.
 
 ### Field Access
 

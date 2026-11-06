@@ -1,7 +1,8 @@
 # Extraction plan for PR #575
 
-Status updated 2026-11-03: E01–E03, B01–B05, E08 and E14 are merged upstream.
-B06–B10 and the reduced #575 remain.
+Status updated 2026-11-06: E01–E03, B01–B05, E08, E14 and E17–E18 are merged
+upstream. Upstream's cast refactor also covers E19. E35's test consolidation,
+the remaining B07–B10 work and the reduced #575 remain.
 
 ## Scope and baseline
 
@@ -55,6 +56,8 @@ change. Do not split a theme into tiny PRs solely to reduce its snapshot diff.
 | E08 | [#601](https://github.com/hkust-taco/mlscript/pull/601) | Located representation-conversion diagnostics at their source. |
 | E14 | [#602](https://github.com/hkust-taco/mlscript/pull/602) | Combined representation inheritance with source argument-layout checks, Wasm signature checks and exposed open-member annotation requirements. |
 | E15 / B05 | [#606](https://github.com/hkust-taco/mlscript/pull/606) | Undefined has the representationless `Nothing` type; Wasm materializes placeholders, including non-null nominal references. Upstream also adapted ordinary bottom-typed expressions and return handling. |
+| E17–E18 | [#610](https://github.com/hkust-taco/mlscript/pull/610) | Typed tuple extraction and positional alignment use a shared `ArgumentLayout`, including under-applied calls and optional slots before trailing parameters. E35's test consolidation remains on this branch. |
+| E19 | [#614](https://github.com/hkust-taco/mlscript/pull/614) | Upstream's `CastPath`/`CastResult` split and `RefinesCasts` supersede the original redundant-cast patch. No separate E19 extraction remains. |
 
 E01–E03 and B01 each passed `hkmc2AllTests/test` with 1,155 tests; B02 passed
 with 1,157. The upstream snapshot `1ad11c54c` contains
@@ -63,7 +66,7 @@ branch, including E03's added formatter regressions. Integration commit
 `23aa31d66` passed `hkmc2AllTests/test` with 1,165 tests. The B01 merge preserves the
 implementation and test tree exactly; only this plan changes. The B02
 integration (`5058fd321`) adds its upstream regressions and passed all 1,167 tests.
-The latest upstream snapshot is `5091705f5`, containing B03 (`ca9b82d08`) and
+The B04 integration used upstream snapshot `5091705f5`, containing B03 (`ca9b82d08`) and
 B04 (`5091705f5`). This integration adopts the shared `FunDefn.Signature` and
 `ErasedResult` representation while retaining inferred signatures and the
 representation-changing deforestation work below. The old body-result map is
@@ -75,7 +78,7 @@ cast elimination preserve the coercions those rendering tests exercise.
 
 ## Consolidated batches
 
-**Five batches remain, plus the final shape-erasure PR.** E01–E03 and B01–B05 are merged,
+**Four batches remain, plus E35's test consolidation and the final shape-erasure PR.** E01–E03 and B01–B05 are merged,
 including E04's nofib aliases in the library/fixture batch. There is no
 additional tiny nofib PR. The E-numbers remain stable references to individual
 work items; B01–B10 below define the actual PR boundaries.
@@ -85,7 +88,8 @@ B01 is merged as #597 (extracted locally as `771a80b9f` on
 as `aef07eead` on `codex/pr575-expression-results`). B03 is merged as #599
 (extracted locally as `9afbadaf7` on `codex/pr575-async-generator-results`).
 B04 is merged as #600. E08 and E14 were extracted separately from B05 as #601
-and #602. E15 completed B05 as #606; B06–B10 are not yet extracted.
+and #602. E15 completed B05 as #606; E17–E18 completed B06's implementation as
+#610. E19 is covered by #614; the rest of B07–B10 is not yet extracted.
 A prerequisite names a batch that must be merged first.
 
 | Batch | Review theme | Work items | Prerequisites | Scope |
@@ -95,8 +99,8 @@ A prerequisite names a batch that must be merged first.
 | B03 | Async and generator results | E10–E11 | — | Body payloads versus Promise/Iterator results, including cloning and currying. |
 | B04 | Callable signatures through transformations | E13, E25–E26, E28 | — | Generated functions, cloned symbols, eta expansion, DPE and deforestation-generated callables. |
 | B05 | Undefined values across runtime representations | E15 | E14 (merged) | Merged as #606 with representationless `Nothing` and Wasm placeholders. E08 and E14 are complete. |
-| B06 | Optional and variadic arguments | E17–E18, E35 | B05 | Typed argument extraction, positional alignment and consolidation of the associated regressions. |
-| B07 | Optimizer safety | E12, E19–E24 | — | Type constructor companions; preserve checks and evaluation order; validate constructor effects, field mappings, branch selection and storage compatibility before elimination/fusion. |
+| B06 | Optional and variadic arguments | E17–E18, E35 | B05 | Implementation merged as #610; E35's regression consolidation remains. |
+| B07 | Optimizer safety | E12, E20–E24 | — | E19 is covered by #614. Type constructor companions; preserve checks and evaluation order; validate constructor effects, field mappings, branch selection and storage compatibility before elimination/fusion. |
 | B08 | Representation-changing deforestation | E27, E29–E30 | B04, B05, B07 | Separate effects from values, retype every affected slot and function instance, and prove casts against all incoming producers. |
 | B09 | Mutable-field resolution and exposure | E31–E32 | — | Shadowing, assignments, interface-permitted writes and structural read/write constraints. |
 | B10 | Mutable-record declarations | E33–E34 | B09 | Explicit input/output bounds and per-field mutability, with documentation and regressions. |
@@ -179,7 +183,7 @@ mean targeting another unmerged extraction branch.
 
 A dash means no semantic prerequisite was identified by source inspection.
 It is a standalone candidate, not a claim that the batch has already passed
-tests. B06–B10 have not been built in isolation. The complete original source
+tests. The remaining B07–B10 work has not been built in isolation. The complete original source
 snapshot passed 1,165 tests, and E01–E03 and B01–B04 passed their own full suites,
 but these results do not establish the correctness of the remaining
 intermediate subsets.
@@ -235,8 +239,8 @@ completed batch.
 | E14 | Enforce override representations and their physical Wasm signatures | — | Merged as #602 with the source-layout and exposed-signature fixes. `OverrideChecks` and `OverrideLayout` validate argument correspondence before erasure inherits representations. Unannotated results inherit a specified base result unchanged. Wasm uses inherited physical parameter slots; ordinary returns retain their IR representation checks. Physical result context for undefined emission remains with E15. |
 | E15 | Let undefined inhabit every runtime representation | E14 | Merged as #606. `Nothing` leaves representation joins unconstrained; the Cast smart constructor preserves bottom-typed paths. Wasm materializes placeholders at storage/call/result boundaries, including non-null nominal storage, while preserving effects and ordinary null checks. Keep the upstream implementation when integrating later inference and optimizer work. |
 | E16 | Stop treating abortive splits and exhaustive loops as normal results | — | NewResolver.resultFlow's ordered split traversal, irrefutable patterns and loop continuation handling; Elaborator's guarded Unit publication; and Normalization's unreachable-continuation handling. Test an explicitly typed early return followed by an unrelated unreachable value, an exhaustive repeating/returning loop, and nested returns. Adapt the relevant T/newres/wasm/Erasure.mls blocks and T/codegen/ScopedBlocks.mls. Keep resolver and lowering changes together. |
-| E17 | Coerce tuple-extracted arguments into their declared slots | — | S/codegen/OptionalParams.scala: `bindFromTuple` coercions and the representation of the once-evaluated `optionalArg` temporary; Lowering's rest/trailing extraction assignments. Test required and omitted optional slots, constructor spreads evaluated once, and tail-call rebinding. Use annotated slots, so the boundary error is observable without inference. Keep omission-as-null semantics unchanged. |
-| E18 | Align typed arguments with optional and trailing parameter positions | E17 | `Lowering.expectedParamTypes(ps, args)` and its call sites. Fixed argument lists align from both ends; unknown spreads use only the known required prefix and rely on extraction coercions for other slots. Extract integerTail, typedLayout and forwardedTail from T/slop/VariadicParams.mls. Leave override-specific cases with E14. |
+| E17 | Coerce tuple-extracted arguments into their declared slots | — | Completed in #610. `bindFromTuple` coerces required and optional slots, preserving once-only evaluation and omission-as-null semantics. |
+| E18 | Align typed arguments with optional and trailing parameter positions | E17 | Completed in #610 through shared `ArgumentLayout`, including under-applied calls. The integration keeps the additional source-branch override regressions. |
 
 B03 keeps E10/E11 together: generator result shapes and the callable wrapper
 signature must agree. E14 has landed independently. E15 supplies the physical
@@ -257,7 +261,7 @@ before broadening the set of casts/constructors through which fusion operates.
 
 | ID | Work item | Implementation dependencies | Scope and regression checks |
 | --- | --- | --- | --- |
-| E19 | Eliminate casts made redundant by propagation and inlining | — | Only the Cast handling in BlockSimplifier.applyPath/applyResult. Recheck the rewritten operand, remove a proven redundant checked cast, preserve narrowing checks and evaluation order, and materialize a path temporary when needed. Use cast regressions in T/codegen/ErasedTypes.mls and T/opt/ConstantFolding.mls, adding a focused slop regression only where current coverage is insufficient. |
+| E19 | Eliminate casts made redundant by propagation and inlining | — | Covered by #614's `RefinesCasts` and refined smart constructors. The original special cases in BlockSimplifier.applyPath/applyResult have been removed during integration. |
 | E20 | Preserve checked argument evaluation when propagating partial calls | — | The unsaturated direct-member-call case in BlockSimplifier. Evaluate checked/effectful arguments at the original site and snapshot preceding arguments before later effects. Extract checkedPrefix/capturePrefix from T/opt/PureCallPropagation.mls and discardPartial from T/wasm/Casts.mls. Verify discarded partial applications still execute failing checks and later source-variable mutation does not change captured arguments. |
 | E21 | Preserve constructor and superclass effects during elision | — | `ConstructorElision.isHarmless/harmlessClass`, its DCE use, and fusion's constructor/qualifier/argument-replay eligibility checks. Missing definitions, inheritance cycles, checks, calls and other unproved effects stay conservative. Extract CastEffect and EffectfulParent/Child tests from T/slop/Erasure.mls and exercise both DCE and fusion. Include the E22 field-position proofs in the same B07 batch. |
 | E22 | Validate the parameter-to-field mapping before field fusion | E21 | `ConstructorElision.preservesParameterFields` and its use in fusion eligibility. A constructor can be harmless yet replace or reassign a field, so effect freedom alone is insufficient. Check the current IR layout, pre-constructor, parameter writes and actual field stores. Extract ChangedField and Captured/readCaptured from T/slop/Erasure.mls. |
@@ -506,8 +510,9 @@ The earlier #592 reconciliation used an unchanged-tree merge only after exact
 tree equality was established. Do not apply that strategy blindly to future
 extractions, whose patches may have been adapted to a smaller base.
 
-The upstream synchronization target is `a95f0e1ba0`, including #606–#608 and the
-target-independent MIR lowering changes. Measure each proposed extraction against
+The upstream synchronization target is `bae948bd5896748e7fde850785d9fdefd585c925`,
+including E17–E18 (#610), the cast refactor (#614), retained MIR definition symbols,
+JDK 25 and Wasm file imports (#576). Measure each proposed extraction against
 this updated target before starting it.
 
 The previous integration kept the upstream override checker, source layouts and unchanged
@@ -520,7 +525,7 @@ the upstream representation checks. The updated collection annotations also requ
 change uses the same alias for generator results and library implementations.
 That integration passed `hkmc2AllTests/test` with 1,200 tests.
 
-The current integration adopts upstream's `Nothing` coercion rules, non-null Wasm
+The integration through `a95f0e1ba0` adopted upstream's `Nothing` coercion rules, non-null Wasm
 placeholders and backend-owned calling conventions. The remaining optimizer's
 `coerceToOr` callback now accepts the `Path` returned by the Cast smart constructor.
 The new nullable-record graph-growth test retains its assertions while using this
@@ -529,21 +534,35 @@ now declares its heterogeneous input as `Any`, so later worksheet calls can supp
 Unit after the initial integer call. `hkmc2AllTests/test` passed all 1,210 tests
 with an 8 GB SBT heap.
 
-The next candidate is E17–E18, the implementation portion of B06: typed extraction
-and positional alignment of optional/variadic arguments. A scoped patch against
-`a95f0e1ba0` measures **30 additions and 12 removals (42 changed Scala lines)**:
-Lowering.scala contributes +19/−6, and OptionalParams.scala contributes +11/−6.
-This excludes E35's regression consolidation, new regression inputs and regenerated
-goldens. The candidate preserves target-independent lowering and has not yet been
-built in isolation; allow roughly 40–60 changed Scala lines after extraction.
+The current integration adopts the shared argument layout and both cast forms while
+retaining flow-based cast proofs and representation-changing deforestation. Calls
+whose definitions keep their symbols use saved original signatures and planned
+result representations during rewriting. Erasure visits pattern-local aliases as
+well as exported bindings, including unused transform inputs. New upstream
+optional-binding regressions join the consolidated strict-resolution file. The
+Wasm session-field regression now passes with transitive type imports, and i64
+expectations use the runner's BigInt rendering.
+Metals compilation and `hkmc2AllTests/test` passed; the full suite ran 1,294 tests
+with an 8 GB SBT heap. All resulting golden-output changes accompany the merge.
+
+The next candidate is **E20: preserve checked argument evaluation when propagating
+partial calls**. Against `bae948bd5`, the remaining BlockSimplifier.scala patch is
+**24 additions and no removals in one Scala file**, including its comments and
+spacing. It evaluates checked/effectful arguments at the original partial-call
+site and captures earlier arguments before later effects. This is one focused
+optimizer change, independent of shape-based inference and constructor fusion.
+Extract the checkedPrefix/capturePrefix and discardPartial regressions with it;
+test inputs and regenerated goldens are additional to the Scala count. The
+standalone extraction has not yet been built, so adaptations may change that count.
 
 A practical order is:
 
 1. B01–B04 are merged: library/fixture corrections, result resolution, wrappers
    and callable signatures.
 2. E15/B05 is merged: undefined representations and Wasm placeholders.
-3. B06–B08: optional arguments, optimizer safety, then representation-changing
-   deforestation after its prerequisites have landed.
+3. E17–E18/B06 implementation is merged; retain E35's test consolidation for a
+   later review. Extract E20 next, then the remaining optimizer safety work and
+   representation-changing deforestation after its prerequisites have landed.
 4. B09, then B10: mutable-field resolution before the declaration extensions.
 5. Review the reduced #575 as the final shape-erasure feature.
 

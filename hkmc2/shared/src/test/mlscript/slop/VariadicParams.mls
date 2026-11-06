@@ -9,14 +9,13 @@ fun f(x, ...xs, y) = [x, xs, y]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let f;
 //│ f = function f(x, ...args) {
-//│   let xs, y, inlinedVal, tmp, tmp1;
+//│   let y, inlinedVal, tmp, tmp1;
 //│   tmp1 = 1 + args.length;
 //│   runtime.checkArgs("f", 2, tmp1);
 //│   tmp = args.length - 1;
 //│   inlinedVal = runtime.safeCall(args.slice(0, tmp));
-//│   xs = inlinedVal /* as! Array */;
 //│   y = args.at(-1);
-//│   return globalThis.Object.freeze([ x, xs, y ])
+//│   return globalThis.Object.freeze([ x, inlinedVal, y ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -54,26 +53,23 @@ fun h(x, y?, z?, ...xs, w) = [x, y, z, xs, w]
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
 //│ let h;
 //│ h = function h(x, ...args7) {
-//│   let y7, z2, xs7, w, inlinedVal12, inlinedVal13, tmp14, tmp15, tmp16;
-//│   tmp16 = 1 + args7.length;
-//│   runtime.checkArgs("h", 2, tmp16);
-//│   tmp15 = args7.length - 1;
-//│   inlinedVal12 = runtime.safeCall(args7.slice(0, tmp15));
-//│   if (runtime.Tuple.isArrayLike(inlinedVal12) && inlinedVal12.length >= 1) {
-//│     y7 = inlinedVal12.at(0);
+//│   let y7, z2, w, inlinedVal12, tmp14, tmp15;
+//│   tmp15 = 1 + args7.length;
+//│   runtime.checkArgs("h", 2, tmp15);
+//│   if (runtime.Tuple.isArrayLike(args7) && args7.length >= 2) {
+//│     y7 = args7.at(0);
 //│   } else {
 //│     y7 = null;
 //│   }
-//│   if (runtime.Tuple.isArrayLike(inlinedVal12) && inlinedVal12.length >= 2) {
-//│     z2 = inlinedVal12.at(1);
+//│   if (runtime.Tuple.isArrayLike(args7) && args7.length >= 3) {
+//│     z2 = args7.at(1);
 //│   } else {
 //│     z2 = null;
 //│   }
 //│   tmp14 = args7.length - 1;
-//│   inlinedVal13 = runtime.safeCall(args7.slice(2, tmp14));
-//│   xs7 = inlinedVal13 /* as! Array */;
+//│   inlinedVal12 = runtime.safeCall(args7.slice(2, tmp14));
 //│   w = args7.at(-1);
-//│   return globalThis.Object.freeze([ x, y7, z2, xs7, w ])
+//│   return globalThis.Object.freeze([ x, y7, z2, inlinedVal12, w ])
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 
@@ -248,7 +244,7 @@ integerTail(0, 1, "wrong")
 //│ define integerTail⁰ as fun integerTail¹(...args: Array⁰): Int⁰ {
 //│   let rest: Array⁰, value: Int⁰;
 //│   do runtime⁰.checkVariadicArgs⁰("integerTail", 1, 0, args);
-//│   set rest = (runtime⁰.Tuple⁰.slice⁰(args, 0, 1) as! Array⁰);
+//│   set rest = runtime⁰.Tuple⁰.sliceArray⁰(args, 0, 1);
 //│   set value = (args.-1 as! Int⁰);
 //│   return value
 //│ };
@@ -261,6 +257,19 @@ integerTail(0, 1, "wrong")
 private fun typedLayout(head?: Int, ...rest, text: Str, count: Int) = [head, text, count]
 [typedLayout("A", 1), typedLayout(2, "B", 3), typedLayout(4, false, "C", 5)]
 //│ = [[null, "A", 1], [2, "B", 3], [4, "C", 5]]
+
+// An under-applied call checks its arguments against the required prefix only,
+// so its arity error is not followed by a mismatch against a trailing slot.
+:e
+private fun mixedTail(count: Int, ...rest, text: Str) = text
+mixedTail(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in application
+//│ ║  l.+2: 	mixedTail(1)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── Function 'mixedTail' expected at least 2 arguments, but got 1
+//│ ║  l.+1: 	private fun mixedTail(count: Int, ...rest, text: Str) = text
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'mixedTail' expected at least 2 arguments but got 1
 
 // Unknown-length calls still coerce the dynamically extracted value into its typed destination.
 :noInline

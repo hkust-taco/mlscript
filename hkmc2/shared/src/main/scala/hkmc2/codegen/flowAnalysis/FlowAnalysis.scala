@@ -1109,6 +1109,12 @@ class FlowConstraintsCollector(
     
     def processResult(r: Result)(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): ProdStrat =
       val instId = cc.instId
+      // * A cast passes its operand through; a checked one may also throw.
+      def processCast(cast: Cast): ProdStrat =
+        if cast.check then markUnsafeEta()
+        val valueStrat = processResult(cast.value)
+        cc.constrain(valueStrat, new CastConsumer(cast.uid, instId, cast.target))
+        valueStrat
       def freshCallEffect(): StratVar =
         val effect = freshVar("call_effect", cc.forFun)
         // A call's effect contributes to the enclosing function's latent effect.
@@ -1198,6 +1204,7 @@ class FlowConstraintsCollector(
               idx.foreach(p => cc.constrain(processResult(p), UnknownCons))
               cc.constrain(processResult(value), UnknownCons)
           UnknownProd
+        case cast: CastResult => processCast(cast)
         case p: Path =>
           p match
           case refSite @ FunRef(f, selectedFrom) =>
@@ -1235,11 +1242,7 @@ class FlowConstraintsCollector(
             kind match
               case DynSelectKind.Member(sym) => generatedVars(sym)
               case DynSelectKind.ArrayIdx | DynSelectKind.Unknown => UnknownProd
-          case c @ Cast(value, target, check) =>
-            if check then markUnsafeEta()
-            val valueStrat = processResult(value)
-            cc.constrain(valueStrat, new CastConsumer(c.uid, instId, target))
-            valueStrat
+          case cast: CastPath => processCast(cast)
           case Value.MemberRef(_, disamb) =>
             disamb match
             case _: ClassSymbol | _: PatternSymbol =>

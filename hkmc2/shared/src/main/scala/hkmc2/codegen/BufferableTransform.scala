@@ -81,7 +81,10 @@ class BufferableTransform()(using State, Raise):
               val signature = FunDefn.Signature.fromParams(LoweredParamList.plain(
                 Param.simple(buf) :: Param.simple(idx) :: Nil)(N) :: newParams, ErasedResult.fromAnnotations(N, f.annotations))
               val dSym = SymbolRefresher.copyTermSymbol(f.dSym, f.owner, S(signature.erasure))
-              FunDefn(f.owner, f.sym, dSym, signature,
+              // A buffer-based function has another calling convention than the method it derives from, so it is a new
+              // definition with its own binding; with `@buffered`, it is all that remains of the method.
+              val sym = BlockMemberSymbol(f.sym.nme, Nil, f.sym.nameIsMeaningful)
+              FunDefn(f.owner, sym, dSym, signature,
                 if isCtor then Begin(blk, Return(idx.asSimpleRef)) else blk)(f.configOverride, f.annotations)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 

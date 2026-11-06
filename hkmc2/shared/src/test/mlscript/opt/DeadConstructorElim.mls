@@ -407,12 +407,13 @@ w(new O)
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let tmp;
 //│ define w⁰ as fun w¹(y) {
-//│   let b;
+//│   let b, element1$;
 //│   set b = [y.z⁰, 1];
 //│   match b
 //│     Array(2) =>
 //│       do runtime⁰.Tuple⁰.get⁰(b, 0);
-//│       return runtime⁰.Tuple⁰.get⁰(b, 1)
+//│       set element1$ = runtime⁰.Tuple⁰.get⁰(b, 1);
+//│       return (element1$ as! Int⁰)
 //│     else
 //│       return 0
 //│   end

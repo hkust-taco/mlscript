@@ -67,7 +67,7 @@ object ScopeData:
   type LiftedSym = TermSymbol | ClassLikeDefSymbol
   
   extension (d: DefinitionSymbol[?])
-    def asBmsRef = d.asBlkMember.get.asMemberRef(d)
+    def asBmsRef = d.bms.get.asMemberRef(d)
   
   enum MethodKind:
     case ClsMethod

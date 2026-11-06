@@ -38,8 +38,10 @@ arithmetic(-40, -2)
 
 
 // Both targets lower the trailing-parameter prologue; Wasm rejects its unsupported signature.
+// JS calls the runtime helper that the MIR selection names.
 :js
 :soir
+:sjs
 :expect 3
 fun trailing(x, ...xs, y) = y
 trailing(1, 2, 3)
@@ -47,11 +49,21 @@ trailing(1, 2, 3)
 //│ define trailing⁰ as fun trailing¹(x, ...args) {
 //│   let xs, y;
 //│   do runtime⁰.checkVariadicArgs⁰("trailing", 2, 1, args);
-//│   set xs = (runtime⁰.Tuple⁰.slice⁰(args, 0, 1) as! Array⁰);
+//│   set xs = runtime⁰.Tuple⁰.sliceArray⁰(args, 0, 1);
 //│   set y = (args.-1 as! Int⁰);
 //│   return y
 //│ };
 //│ return trailing¹(1, 2, 3)
+//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
+//│ let trailing;
+//│ trailing = function trailing(x, ...args) {
+//│   let xs, y;
+//│   runtime.checkVariadicArgs("trailing", 2, 1, args);
+//│   xs = runtime.Tuple.sliceArray(args, 0, 1);
+//│   y = args.at(-1) /* as! Int */;
+//│   return y
+//│ };
+//│ return trailing(1, 2, 3)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 3
 
@@ -65,7 +77,7 @@ trailing(1, 2, 3)
 //│ define trailing² as fun trailing³(x, ...args) {
 //│   let xs, y;
 //│   do runtime⁰.checkVariadicArgs⁰("trailing", 2, 1, args);
-//│   set xs = (runtime⁰.Tuple⁰.slice⁰(args, 0, 1) as! Array⁰);
+//│   set xs = runtime⁰.Tuple⁰.sliceArray⁰(args, 0, 1);
 //│   set y = (args.-1 as! Int⁰);
 //│   return y
 //│ };

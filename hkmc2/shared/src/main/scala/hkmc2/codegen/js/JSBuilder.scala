@@ -631,7 +631,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
               def isPlainField(sym: TermSymbol): Bool =
                 // Refreshed symbols carry annotations on their current IR definition.
                 // Declared fields without initializers retain their source definition.
-                val annotations = sym.irDefn.map(_.annotations).orElse(sym.defn.map(_.annotations))
+                val annotations = sym.annotations
                 softAssert(annotations.nonEmpty, s"Missing definition for mutable field '${sym.nme}'")
                 annotations.exists(_.exists(_.isInstanceOf[Annot.PlainField]))
               // * Note: the non-mut-val parts of `pubFlds` are not used because in JS, fields are not declared
@@ -734,7 +734,7 @@ class JSBuilder(using Config, TL, State, Ctx) extends CodeBuilder:
                   else
                     ownr match
                     case S(owner) =>
-                      val target = Select(owner.asThis, Tree.Ident(sym.nme))(S(isym), isym.toLoc)(false)
+                      val target = owner.asThis.sel(isym).withLoc(isym.toLoc)
                       doc" # ${result(target)} = $v"
                     case N =>
                       doc" # ${result(sym.asMemberRef(isym))} = $v"

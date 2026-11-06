@@ -540,9 +540,11 @@ c(mk(7))
 //│   return AA⁰(tmp1)
 //│ };
 //│ define g⁰ as fun g¹(p)() {
+//│   let arg$AA$0$;
 //│   match p
 //│     AA¹ =>
-//│       return p.x⁰
+//│       set arg$AA$0$ = p.x⁰;
+//│       return (arg$AA$0$ as! Int⁰)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -643,9 +645,11 @@ c(mk(7))
 //│   return AA⁰(tmp1)
 //│ };
 //│ define g² as fun g³(p)(q)() {
+//│   let arg$AA$0$;
 //│   match p
 //│     AA¹ =>
-//│       return p.x⁰
+//│       set arg$AA$0$ = p.x⁰;
+//│       return (arg$AA$0$ as! Int⁰)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -717,9 +721,11 @@ c(mk(7))
 //│   return lambda²(p)
 //│ };
 //│ define lambda as fun lambda²(p) {
+//│   let arg$AA$0$;
 //│   match p
 //│     AA¹ =>
-//│       return p.x⁰
+//│       set arg$AA$0$ = p.x⁰;
+//│       return (arg$AA$0$ as! Int⁰)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end

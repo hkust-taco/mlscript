@@ -64,7 +64,8 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
 
   private def canonicalType(source: CanonicalErasedValueType): CanonicalErasedValueType = source match
     case ErasedType.AnyRef(rsc, symbol) => ErasedType.AnyRef(rsc, mapType(symbol))
-    case ErasedType.Incompatible(left, right) => ErasedType.Incompatible(canonicalType(left), canonicalType(right))
+    case source @ ErasedType.Incompatible(left, right) =>
+      ErasedType.Incompatible(canonicalType(left), canonicalType(right))(source.reported)
     case source @ (_: ErasedType.Primitive | ErasedType.Unknown | ErasedType.Nothing) => source
 
   private def valueType(source: ErasedValueType): ErasedValueType = source match
@@ -195,7 +196,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     prepareLocals(stats)
     (terms.iterator ++ constructors.iterator).foreach: (source, copy) =>
       copy.initializeErasure:
-        source.erasure.map:
+        source.sourceErasure.map:
           case sig: ErasedCallableSignature => sig.mapTypes(valueType)
           case tpe: ErasedValueType => valueType(tpe)
     // All member names, including nested classes' methods, now have replacements.

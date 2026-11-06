@@ -5,7 +5,7 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
 import LazyArray from "./LazyArray.mjs";
 import Iter from "./Iter.mjs";
-let continuation, Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda$, lambda$1, Capture$scope311, lambda$2, Capture$scope331, lambda$3, lambda$4, continuation$;
+let continuation, Runtime1, lambda, lambda1, lambda2, lambda3, lambda4, lambda5, lambda$, lambda$1, Capture$scope321, lambda$2, Capture$scope341, lambda$3, lambda$4, continuation$;
 continuation$ = function continuation$(Runtime2, resume) {
   return (value) => {
     return continuation(Runtime2, resume, value)
@@ -33,54 +33,54 @@ lambda3 = (undefined, function (Runtime2, promise, resume) {
   continuation$here = continuation$(Runtime2, resume);
   return runtime.safeCall(promise.then(continuation$here))
 });
-(class Capture$scope33 {
+(class Capture$scope34 {
   static {
-    Capture$scope331 = this
+    Capture$scope341 = this
   }
   constructor(result$0) {
     this.result$0 = result$0;
   }
   toString() { return runtime.render(this); }
-  static [definitionMetadata] = ["class", "Capture$scope33"];
+  static [definitionMetadata] = ["class", "Capture$scope34"];
 });
-lambda$3 = (undefined, function (scope33$cap, cont) {
+lambda$3 = (undefined, function (scope34$cap, cont) {
   return (m, marker, ..._) => {
-    return lambda2(scope33$cap, cont, m, marker, ..._)
+    return lambda2(scope34$cap, cont, m, marker, ..._)
   }
 });
-lambda2 = (undefined, function (scope33$cap, cont, m, marker, ..._) {
+lambda2 = (undefined, function (scope34$cap, cont, m, marker, ..._) {
   let scrut, tmp, tmp1;
   scrut = runtime.safeCall(m.has(cont));
   if (scrut === true) {
     tmp = ", " + marker;
-    tmp1 = scope33$cap.result$0 + tmp;
-    scope33$cap.result$0 = tmp1;
+    tmp1 = scope34$cap.result$0 + tmp;
+    scope34$cap.result$0 = tmp1;
     return runtime.Unit
   }
   return runtime.Unit;
 });
-(class Capture$scope31 {
+(class Capture$scope32 {
   static {
-    Capture$scope311 = this
+    Capture$scope321 = this
   }
   constructor(result$0) {
     this.result$0 = result$0;
   }
   toString() { return runtime.render(this); }
-  static [definitionMetadata] = ["class", "Capture$scope31"];
+  static [definitionMetadata] = ["class", "Capture$scope32"];
 });
-lambda$2 = (undefined, function (scope31$cap, cont) {
+lambda$2 = (undefined, function (scope32$cap, cont) {
   return (m, marker, ..._) => {
-    return lambda1(scope31$cap, cont, m, marker, ..._)
+    return lambda1(scope32$cap, cont, m, marker, ..._)
   }
 });
-lambda1 = (undefined, function (scope31$cap, cont, m, marker, ..._) {
+lambda1 = (undefined, function (scope32$cap, cont, m, marker, ..._) {
   let scrut, tmp, tmp1;
   scrut = runtime.safeCall(m.has(cont));
   if (scrut === true) {
     tmp = ", " + marker;
-    tmp1 = scope31$cap.result$0 + tmp;
-    scope31$cap.result$0 = tmp1;
+    tmp1 = scope32$cap.result$0 + tmp;
+    scope32$cap.result$0 = tmp1;
     return runtime.Unit
   }
   return runtime.Unit;
@@ -252,6 +252,11 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         Tuple.split = LazyArray.__split;
       }
       static slice(xs, i, j) {
+        let tmp;
+        tmp = xs.length - j;
+        return runtime.safeCall(xs.slice(i, tmp))
+      }
+      static sliceArray(xs, i, j) {
         let tmp;
         tmp = xs.length - j;
         return runtime.safeCall(xs.slice(i, tmp))
@@ -863,13 +868,14 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return header;
   }
   static showFunctionContChain(cont, hl, vis, reps) {
-    let reps1, scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope31$cap, lambda$here;
-    scope31$cap = new Capture$scope311(undefined);
+    let reps1, frame, scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, scope32$cap, lambda$here;
+    scope32$cap = new Capture$scope321(undefined);
     reps1 = reps;
     if (cont instanceof Runtime.FunctionContFrame.class) {
-      tmp = cont["constructor"]["name"] + "(pc=";
-      scope31$cap.result$0 = tmp + cont.saved.at(1);
-      lambda$here = lambda$2(scope31$cap, cont);
+      frame = cont;
+      tmp = frame["constructor"]["name"] + "(pc=";
+      scope32$cap.result$0 = tmp + frame.saved.at(1);
+      lambda$here = lambda$2(scope32$cap, cont);
       runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
@@ -879,13 +885,13 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         }
-        tmp2 = scope31$cap.result$0 + ", REPEAT";
-        scope31$cap.result$0 = tmp2;
+        tmp2 = scope32$cap.result$0 + ", REPEAT";
+        scope32$cap.result$0 = tmp2;
       } else {
         runtime.safeCall(vis.add(cont));
       }
-      tmp3 = scope31$cap.result$0 + ") -> ";
-      tmp4 = Runtime.showFunctionContChain(cont.next, hl, vis, reps1);
+      tmp3 = scope32$cap.result$0 + ") -> ";
+      tmp4 = Runtime.showFunctionContChain(frame.next, hl, vis, reps1);
       return tmp3 + tmp4
     }
     scrut2 = cont === null;
@@ -895,12 +901,13 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return "(NOT CONT)";
   }
   static showHandlerContChain(cont, hl, vis, reps) {
-    let reps1, scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope33$cap, lambda$here;
-    scope33$cap = new Capture$scope331(undefined);
+    let reps1, frame, scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, scope34$cap, lambda$here;
+    scope34$cap = new Capture$scope341(undefined);
     reps1 = reps;
     if (cont instanceof Runtime.HandlerContFrame.class) {
-      scope33$cap.result$0 = cont.handler["constructor"]["name"];
-      lambda$here = lambda$3(scope33$cap, cont);
+      frame = cont;
+      scope34$cap.result$0 = frame.handler["constructor"]["name"];
+      lambda$here = lambda$3(scope34$cap, cont);
       runtime.safeCall(hl.forEach(lambda$here));
       scrut = runtime.safeCall(vis.has(cont));
       if (scrut === true) {
@@ -910,13 +917,13 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
         if (scrut1 === true) {
           throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         }
-        tmp1 = scope33$cap.result$0 + ", REPEAT";
-        scope33$cap.result$0 = tmp1;
+        tmp1 = scope34$cap.result$0 + ", REPEAT";
+        scope34$cap.result$0 = tmp1;
       } else {
         runtime.safeCall(vis.add(cont));
       }
-      tmp2 = scope33$cap.result$0 + " -> ";
-      tmp3 = Runtime.showFunctionContChain(cont.next, hl, vis, reps1);
+      tmp2 = scope34$cap.result$0 + " -> ";
+      tmp3 = Runtime.showFunctionContChain(frame.next, hl, vis, reps1);
       return tmp2 + tmp3
     }
     scrut2 = cont === null;
@@ -940,32 +947,33 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return runtime.safeCall(globalThis.console.log(tmp2))
   }
   static debugContTrace(contTrace) {
-    let scrut, scrut1, vis, hl, cur, tmp, tmp1, tmp2, tmp3, tmp4;
+    let contTrace1, scrut, scrut1, vis, hl, cur, tmp, tmp1, tmp2, tmp3, tmp4;
     if (contTrace instanceof Runtime.ContTrace.class) {
-      runtime.safeCall(globalThis.console.log("resumed: ", contTrace.resumed));
-      scrut = contTrace.last === contTrace;
+      contTrace1 = contTrace;
+      runtime.safeCall(globalThis.console.log("resumed: ", contTrace1.resumed));
+      scrut = contTrace1.last === contTrace1;
       if (scrut === true) {
         runtime.safeCall(globalThis.console.log("<last is self>"));
       }
-      scrut1 = contTrace.lastHandler === contTrace;
+      scrut1 = contTrace1.lastHandler === contTrace1;
       if (scrut1 === true) {
         runtime.safeCall(globalThis.console.log("<lastHandler is self>"));
       }
       vis = globalThis.Object.freeze(new globalThis.Set(undefined));
       hl = globalThis.Object.freeze(new globalThis.Map(undefined));
       tmp = globalThis.Object.freeze([
-        contTrace.last
+        contTrace1.last
       ]);
       tmp1 = globalThis.Object.freeze(new globalThis.Set(tmp));
       runtime.safeCall(hl.set("last", tmp1));
       tmp2 = globalThis.Object.freeze([
-        contTrace.lastHandler
+        contTrace1.lastHandler
       ]);
       tmp3 = globalThis.Object.freeze(new globalThis.Set(tmp2));
       runtime.safeCall(hl.set("last-handler", tmp3));
-      tmp4 = Runtime.showFunctionContChain(contTrace.next, hl, vis, 0);
+      tmp4 = Runtime.showFunctionContChain(contTrace1.next, hl, vis, 0);
       runtime.safeCall(globalThis.console.log(tmp4));
-      cur = contTrace.nextHandler;
+      cur = contTrace1.nextHandler;
       lbl: while (true) {
         let scrut2, tmp5;
         scrut2 = cur !== null;
@@ -983,11 +991,13 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     return runtime.safeCall(globalThis.console.log(contTrace));
   }
   static debugEff(eff) {
+    let eff1;
     if (eff instanceof Runtime.EffectSig.class) {
+      eff1 = eff;
       runtime.safeCall(globalThis.console.log("Debug EffectSig:"));
-      runtime.safeCall(globalThis.console.log("handler: ", eff.handler["constructor"]["name"]));
-      runtime.safeCall(globalThis.console.log("handlerFun: ", eff.handlerFun));
-      return Runtime.debugContTrace(eff.contTrace)
+      runtime.safeCall(globalThis.console.log("handler: ", eff1.handler["constructor"]["name"]));
+      runtime.safeCall(globalThis.console.log("handlerFun: ", eff1.handlerFun));
+      return Runtime.debugContTrace(eff1.contTrace)
     }
     runtime.safeCall(globalThis.console.log("Not an effect:"));
     return runtime.safeCall(globalThis.console.log(eff));
@@ -1029,9 +1039,10 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     let cur1;
     cur1 = cur;
     lbl: while (true) {
-      let nxt, scrut;
+      let effect, nxt, scrut;
       if (cur1 instanceof Runtime.EffectSig.class) {
-        nxt = Runtime.handleEffect(cur1);
+        effect = cur1;
+        nxt = Runtime.handleEffect(effect);
         scrut = cur1 === nxt;
         if (scrut === true) {
           Runtime.curEffect = cur1;
@@ -1127,7 +1138,7 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
     cont = contTrace.next;
     handlerCont = contTrace.nextHandler;
     lbl: while (true) {
-      let old, scrut, scrut1, scrut2, tmp, tmp1, tmp2;
+      let old, scrut, effect, scrut1, scrut2, tmp, tmp1, tmp2;
       if (cont instanceof Runtime.FunctionContFrame.class) {
         Runtime.curEffect = null;
         old = Runtime.stackDepth;
@@ -1145,15 +1156,16 @@ lambda4 = (undefined, function (Runtime2, EffectHandle1, value) {
           value1 = Runtime.curEffect;
         }
         if (value1 instanceof Runtime.EffectSig.class) {
-          value1.contTrace.last.next = cont.next;
-          value1.contTrace.lastHandler.nextHandler = handlerCont;
+          effect = value1;
+          effect.contTrace.last.next = cont.next;
+          effect.contTrace.lastHandler.nextHandler = handlerCont;
           scrut1 = contTrace.last !== cont;
           if (scrut1 === true) {
-            value1.contTrace.last = contTrace.last;
+            effect.contTrace.last = contTrace.last;
           }
           scrut2 = handlerCont !== null;
           if (scrut2 === true) {
-            value1.contTrace.lastHandler = contTrace.lastHandler;
+            effect.contTrace.lastHandler = contTrace.lastHandler;
             return value1
           }
           return value1;
@@ -1256,9 +1268,9 @@ export { lambda4 as _$_modulePrivate_$_lambda4 };
 export { lambda5 as _$_modulePrivate_$_lambda5 };
 export { lambda$ as _$_modulePrivate_$_lambda$ };
 export { lambda$1 as _$_modulePrivate_$_lambda$1 };
-export { Capture$scope311 as _$_modulePrivate_$_Capture$scope31 };
+export { Capture$scope321 as _$_modulePrivate_$_Capture$scope32 };
 export { lambda$2 as _$_modulePrivate_$_lambda$2 };
-export { Capture$scope331 as _$_modulePrivate_$_Capture$scope33 };
+export { Capture$scope341 as _$_modulePrivate_$_Capture$scope34 };
 export { lambda$3 as _$_modulePrivate_$_lambda$3 };
 export { lambda$4 as _$_modulePrivate_$_lambda$4 };
 export { continuation$ as _$_modulePrivate_$_continuation$ };

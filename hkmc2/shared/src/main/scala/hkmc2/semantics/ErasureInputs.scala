@@ -35,8 +35,34 @@ private[hkmc2] final class ErasureDeclarations(root: Statement):
       case _ => ()
 
   private def pattern(pat: Pattern): Unit =
-    pat.variables.symbols.foreach(variable)
-    pat.subTerms.foreach(visit)
+    // Transform bindings are local to their pattern and absent from its exported variables.
+    // Lowering still assigns them, including unused bindings, so erase every allocated alias.
+    pat match
+      case Pattern.Constructor(target, arguments) =>
+        visit(target)
+        arguments.foreach(_.foreach(pattern))
+      case Pattern.Composition(_, left, right) => pattern(left); pattern(right)
+      case Pattern.Negation(inner) => pattern(inner)
+      case _: (Pattern.Wildcard | Pattern.Literal | Pattern.Range) => ()
+      case Pattern.Concatenation(left, right) => pattern(left); pattern(right)
+      case Pattern.Tuple(leading, spread) =>
+        leading.foreach(pattern)
+        spread.foreach: (_, middle, trailing) =>
+          pattern(middle)
+          trailing.foreach(pattern)
+      case Pattern.Record(fields) => fields.foreach((_, inner) => pattern(inner))
+      case Pattern.Chain(first, second) => pattern(first); pattern(second)
+      case alias @ Pattern.Alias(inner, _) =>
+        alias.symbolOption.foreach(variable)
+        pattern(inner)
+      case Pattern.Transform(inner, parameters, transform) =>
+        pattern(inner)
+        parameters.foreach((_, param) => variable(param))
+        visit(transform)
+      case Pattern.Annotated(inner, annotations) =>
+        pattern(inner)
+        annotations.foreach(_.foreach(visit))
+      case Pattern.Guarded(inner, guard) => pattern(inner); visit(guard)
 
   private def split(branches: SimpleSplit): Unit = branches match
     case SimpleSplit.Cons(SimpleSplit.Head.Let(sym: VarSymbol, _), tail) =>

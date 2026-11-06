@@ -1,0 +1,56 @@
+:.
+:noInline
+
+#lang(0.3.x)
+//│ Wasm result:
+//│ = {}
+
+// These hierarchies have equal WASM layouts but put x at different offsets.
+// Updating the child's x must preserve the inherited field written through the base type.
+open class FirstBase(mut val x)
+class FirstChild(mut val y) extends FirstBase(10)
+open class SecondBase(mut val y)
+class SecondChild(mut val x) extends SecondBase(20)
+let first = new FirstChild(12)
+let second = new SecondChild(30)
+//│ Wasm result:
+//│ = {}
+
+:expect 4050
+set second.y = 40
+set second.x = 50
+second.SecondBase#y * 100 + second.x
+//│ Wasm result:
+//│ = 4050
+
+:expect 1113
+set first.x = 11
+set first.y = 13
+first.FirstBase#x * 100 + first.y
+//│ Wasm result:
+//│ = 1113
+
+// Both private fields retain their own slot, even though their source names match.
+open class PrivateBase() with
+  private mut val value = 1
+  fun baseValue() = value
+  fun setBase(n) = set value = n
+class PrivateChild() extends PrivateBase() with
+  private mut val value = 2
+  fun childValue() = value
+  fun setChild(n) = set value = n
+let child = new PrivateChild()
+//│ Wasm result:
+//│ = {}
+
+:expect 102
+child.baseValue() * 100 + child.childValue()
+//│ Wasm result:
+//│ = 102
+
+:expect 304
+child.setBase(3)
+child.setChild(4)
+child.baseValue() * 100 + child.childValue()
+//│ Wasm result:
+//│ = 304

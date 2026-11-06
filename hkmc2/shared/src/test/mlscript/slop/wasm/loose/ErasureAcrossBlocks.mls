@@ -24,9 +24,9 @@ let b = Box(new Foo)
 //│ Wasm result:
 //│ = {}
 
-// Reading a field whose representation is another session class crashes code generation: the session module
-// does not import the types that the struct types it imports refer to. A declared field type (`val v: Foo`)
-// fails the same way; inference makes such fields more common.
-:fixme
+// Reading this field requires the session module to import both Box's struct type and the Foo type
+// used in its inferred field representation.
+:expect {}
 b.v
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Missing type definition for type index `$Foo`
+//│ Wasm result:
+//│ = {}

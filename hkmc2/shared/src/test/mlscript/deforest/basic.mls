@@ -28,8 +28,8 @@ let lsit = [2, 1] in
 //│ define $lsit_tup2 as fun $lsit_tup2⁰(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
-//│   set b = element1$;
-//│   set a = element0$;
+//│   set b = (element1$ as! Int⁰);
+//│   set a = (element0$ as! Int⁰);
 //│   set tmp = 0;
 //│   set useless = tmp;
 //│   return runtime⁰.Unit⁰
@@ -94,7 +94,7 @@ f(p())
 //│ @affine(1) @private
 //│ define f$arg$X$0$_Y as fun f$arg$X$0$_Y⁰(Y_b)(fv_arg$Y$0$, fv_y) {
 //│   set fv_arg$Y$0$ = Y_b;
-//│   set fv_y = fv_arg$Y$0$;
+//│   set fv_y = (fv_arg$Y$0$ as! O⁰);
 //│   return fv_y
 //│ };
 //│ @private
@@ -118,7 +118,7 @@ f(p())
 //│       match arg$X$0$
 //│         Y¹ =>
 //│           set arg$Y$0$ = arg$X$0$.b⁰;
-//│           set y = arg$Y$0$;
+//│           set y = (arg$Y$0$ as! O⁰);
 //│           return y
 //│         else
 //│           throw new globalThis⁰.Error⁰("match error")
@@ -221,8 +221,8 @@ if [1, 2] is
 //│ define $scrut_tup2 as fun $scrut_tup2⁰(tup2_01, tup2_11)() {
 //│   set element0$ = tup2_01;
 //│   set element1$ = tup2_11;
-//│   set b = element1$;
-//│   set a = element0$;
+//│   set b = (element1$ as! Int⁰);
+//│   set a = (element0$ as! Int⁰);
 //│   return +⁰(a, b)
 //│ };
 //│ @private

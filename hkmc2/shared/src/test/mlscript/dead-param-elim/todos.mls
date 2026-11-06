@@ -135,15 +135,17 @@ sumPlus(enum(3))
 //│   end
 //│ };
 //│ define sumPlus⁰ as fun sumPlus¹(ls) {
-//│   let arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
 //│   match ls
 //│     Nil⁰ =>
 //│       return 1
 //│     Cons¹ =>
 //│       set arg$Cons$0$ = ls.h⁰;
 //│       set arg$Cons$1$ = ls.t⁰;
-//│       set tmp1 = sumPlus¹(arg$Cons$1$);
-//│       set tmp = +⁰(arg$Cons$0$, tmp1);
+//│       set t = (arg$Cons$1$ as! Object⁰);
+//│       set h = (arg$Cons$0$ as! Int⁰);
+//│       set tmp1 = sumPlus¹(t);
+//│       set tmp = +⁰(h, tmp1);
 //│       return +⁰(tmp, 1)
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")

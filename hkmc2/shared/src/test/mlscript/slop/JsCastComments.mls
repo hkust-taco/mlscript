@@ -19,7 +19,7 @@ quiet(40, 2)
 
 
 // Cast comments stay attached to callees, constructor arguments, and returned values after inlining.
-// Broad input annotations keep these coercions present when erased types are inferred.
+// Broad annotations and opaque operands keep these coercions present after inference and inlining.
 :sjs
 :expect 42
 class Box(val value: Int)
@@ -27,9 +27,10 @@ fun asFunction(value: Any): Function = value
 fun read(box: Box): Int = box.value
 fun invoke(f: Any, x: Any) = asFunction(f)(x)
 fun construct(x: Any): Int = read(new Box(x))
-invoke(construct, 42)
+@annotations.noInline fun opaque(value: Any): Any = value
+invoke(opaque(construct), opaque(42))
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let read, asFunction, Box1, invoke, construct, tmp;
+//│ let read, asFunction, Box1, invoke, opaque, construct, tmp, tmp1;
 //│ asFunction = function asFunction(value) {
 //│   return value /* as! Function */
 //│ };
@@ -40,9 +41,12 @@ invoke(construct, 42)
 //│   return runtime.safeCall(f /* as! Function */(x))
 //│ };
 //│ construct = function construct(x) {
-//│   let tmp1;
-//│   tmp1 = globalThis.Object.freeze(new Box1.class(x /* as! Int */));
-//│   return tmp1.value
+//│   let tmp2;
+//│   tmp2 = globalThis.Object.freeze(new Box1.class(x /* as! Int */));
+//│   return tmp2.value
+//│ };
+//│ opaque = function opaque(value) {
+//│   return value
 //│ };
 //│ Box1 = function Box(value) {
 //│   return globalThis.Object.freeze(new Box.class(value));
@@ -57,8 +61,9 @@ invoke(construct, 42)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Box", ["value"]];
 //│ });
-//│ tmp = globalThis.Object.freeze(new Box1.class(42));
-//│ return tmp.value
+//│ tmp = opaque(construct);
+//│ tmp1 = opaque(42);
+//│ return runtime.safeCall(tmp /* as! Function */(tmp1))
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
 
