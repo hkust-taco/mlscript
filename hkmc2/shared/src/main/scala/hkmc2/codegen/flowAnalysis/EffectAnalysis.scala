@@ -15,7 +15,7 @@ object EffectAnalysis:
   
   def summarize(effectVar: EffectVar): EffectSummary =
     effectVar.fold(EffectSummary.Pure): v =>
-      if v.lowerBounds.forall(_.isInstanceOf[StratVar])
+      if v.lowerBounds.isEmpty
       then EffectSummary.Pure
       else EffectSummary.UnsafeEta
   
