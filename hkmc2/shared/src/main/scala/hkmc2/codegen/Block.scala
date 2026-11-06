@@ -15,7 +15,6 @@ import syntax.{Literal, Tree, SpreadKind, Keyword}
 import semantics.*
 import semantics.Term.*
 import sem.Elaborator.{Ctx, State}
-import scala.util.boundary
 
 
 /* Important design notes.
