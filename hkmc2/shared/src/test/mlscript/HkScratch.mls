@@ -1,3 +1,4 @@
+:.
 :js
 // :de
 // :sjs
@@ -8,44 +9,5 @@
 // :d
 // :todo
 
-:effectHandlers
-:lift
-:sjs
-let s = 0
-let i = 0
-handle h = Object with
-  fun setVal(i)(k) =
-    set s = i
-    k(())
-//│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let s, i, h, tmp, handleBlock$, Handler$h$1;
-//│ runtime.resetEffects();
-//│ s = 0;
-//│ i = 0;
-//│ (class Handler$h$ extends globalThis.Object {
-//│   static {
-//│     Handler$h$1 = this
-//│   }
-//│   constructor() {
-//│     super();
-//│     if (runtime.curEffect !== null) {
-//│       runtime.illegalEffect("in a constructor");
-//│     }
-//│   }
-//│   setVal(i1) {
-//│     s = i1;
-//│     return runtime.Unit
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Handler$h$"];
-//│ });
-//│ h = new Handler$h$1();
-//│ handleBlock$ = (undefined, function () {
-//│   return runtime.Unit
-//│ });
-//│ tmp = runtime.enterHandleBlock(h, handleBlock$);
-//│ if (runtime.curEffect === null) { return tmp }
-//│ return runtime.topLevelEffect(false);
-//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
-//│ i = 0
-//│ s = 0
+
+
