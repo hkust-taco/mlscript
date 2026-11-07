@@ -13,7 +13,7 @@ handle h = Effect with
 
 // The effect invocation returns the resumed value; the handler returns the block's result.
 :expect ["HELLO!"]
-handle h = Effect {
+handle h = Effect() {
   fun perform(arg)(k) = [k(arg)]
 }
 h.perform("hello").toUpperCase() + "!"
@@ -148,13 +148,84 @@ handle h = Effects.Offset("wrong") { fun perform(arg)(k) = k(arg) }
 //│ ║  l.+1: 	handle h = Effects.Offset("wrong") { fun perform(arg)(k) = k(arg) }
 //│ ╙──      	                          ^^^^^^^
 
-abstract class CurriedEffect(x)(y) {
+abstract class CurriedEffect(val x: Int)(val y: Int) {
   fun perform(): Int
 }
 
+// Handler parents use every constructor argument list, as anonymous `new` does.
+:expect 42
+handle h = CurriedEffect(1)(41) { fun perform()(k) = k(this.x + this.y) }
+h.perform()
+//│ = 42
+
+:expect 42
+val SavedCurried = CurriedEffect
+handle h = SavedCurried(2)(40) with
+  fun perform()(k) = k(this.x + this.y)
+h.perform()
+//│ = 42
+//│ SavedCurried = fun CurriedEffect { class: class CurriedEffect }
+
+// Parent construction must be complete; handlers cannot install a partial constructor.
 :e
 handle h = CurriedEffect(1) { fun perform()(k) = k(42) }
-//│ ╔══[COMPILATION ERROR] Handler classes with multiple constructor parameter lists are not supported
+//│ ╔══[COMPILATION ERROR] Extending a partially applied class is not supported
 //│ ║  l.+1: 	handle h = CurriedEffect(1) { fun perform()(k) = k(42) }
-//│ ╙──      	           ^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ╙──      	           ^^^^^^^^^^^^^^^^
+
+:e
+handle h = CurriedEffect(1)("wrong") { fun perform()(k) = k(42) }
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	handle h = CurriedEffect(1)("wrong") { fun perform()(k) = k(42) }
+//│ ╙──      	                            ^^^^^^^
+
+:e
+handle h = CurriedEffect(1)(2)(3) { fun perform()(k) = k(42) }
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.+1: 	handle h = CurriedEffect(1)(2)(3) { fun perform()(k) = k(42) }
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Class 'CurriedEffect' expected at most 2 argument lists, but got 3
+//│ ║  l.XX: 	abstract class CurriedEffect(val x: Int)(val y: Int) {
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Too many parameter lists for parent class
+//│ ║  l.+1: 	handle h = CurriedEffect(1)(2)(3) { fun perform()(k) = k(42) }
+//│ ╙──      	           ^^^^^^^^^^^^^^^^^^^^^^
+
+abstract class OptionalLists(val first?: Int)(val second: Int) {
+  constructor(val third?: Int)
+  fun perform(): Any
+}
+
+// Empty lists and spreads preserve optional slots before later argument lists.
+:expect [null, 42, null]
+handle h = OptionalLists()(42)() {
+  fun perform()(k) = k([this.first, this.second, this.third])
+}
+h.perform()
+//│ = [null, 42, null]
+
+:expect [null, 42, 43]
+handle h = OptionalLists(...[])(...[42])(...[43]) {
+  fun perform()(k) = k([this.first, this.second, this.third])
+}
+h.perform()
+//│ = [null, 42, 43]
+
+abstract class ArgumentEffect {
+  fun next(): Int
+}
+
+// Argument effects execute once, from left to right, in the enclosing handler.
+:expect [12, 2]
+let count = 0
+handle outerHandler = ArgumentEffect {
+  fun next()(k) =
+    set count += 1
+    k(count)
+}
+handle innerHandler = CurriedEffect(outerHandler.next())(outerHandler.next()) {
+  fun perform()(k) = k(this.x * 10 + this.y)
+}
+[innerHandler.perform(), count]
+//│ = [12, 2]
+//│ count = 2

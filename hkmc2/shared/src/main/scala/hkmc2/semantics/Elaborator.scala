@@ -997,7 +997,7 @@ extends Importer:
     clsSym.defn = S(ClassDef.Plain(ctx.getOuter, Cls, clsSym, BlockMemberSymbol(effectClassName, Nil), Nil, N,
       ObjBody(Blk(htds.map(_.td), unit)), N, Nil, Nil, N, ctorAnnotations = Nil)(body.toLoc, body.toLoc, N))
     val parent = if newResolution then runtimeMember(State.nonLocalReturnSymbol) else state.nonLocalRetHandlerTrm
-    val handle = new Term.Handle(handlerSymbol, parent, Nil, clsSym, htds, body)(isAbortive = true)
+    val handle = new Term.Handle(handlerSymbol, parent, Term.Tup(Nil)(Tree.DummyTup) :: Nil, clsSym, htds, body)(isAbortive = true)
     if newResolution then resolveHandlerReceiver(handle)
     handle
   
@@ -1715,19 +1715,20 @@ extends Importer:
       
       val derivedClsSym = ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident(s"Handler$$${id.name}$$"))
       recordDefinitionScope(derivedClsSym)
-      val (cp, p) = c match
-        case App(c, Tup(params)) =>
-          (subterm(c, Clss), params.map(subterm(_)))
-        case c =>
-          (subterm(c, Clss), Nil)
+      val Apps(base, argss) = c
+      val cp = subterm(base, Clss)
+      // A handler always constructs its parent; omitting arguments invokes its
+      // first parameter list with no arguments, including optional defaults.
+      val args = argss match
+        case Nil => withTypeBinders(Term.Tup(Nil)(Tree.DummyTup)) :: Nil
+        case args => args.map(subterm(_))
       // The handler exposes its parent interface. Its implementations return
       // handled-block results, which are not the results of effect invocations.
       // Keep them out of the instance interface, and resolve the parent before
       // elaborating methods so their `this` references can find inherited fields.
       val parent = if newResolution then
-        val args = withTypeBinders(Term.Tup(p.map(arg => Fld(FldFlags.empty, arg, N)))(Tree.DummyTup))
         val instance = withTypeBinders(new Term.New(
-          Term.Capture(cp, derivedClsSym), Term.Capture(args, derivedClsSym) :: Nil, N
+          Term.Capture(cp, derivedClsSym), args.map(Term.Capture(_, derivedClsSym)), N
         )(FlowSymbol.neww(), N).withLocOf(c))
         rctx.recordAccessSite(instance, ctx.scope)
         resolveNew(instance)
@@ -1765,7 +1766,7 @@ extends Importer:
         }.collect { case Some(x) => x }
       
       (ctx + (id.name -> sym)).givenIn:
-        val handle = new Term.Handle(sym, cp, p, derivedClsSym, tds, subterm(bod, interp))(isAbortive = false)
+        val handle = new Term.Handle(sym, cp, args, derivedClsSym, tds, subterm(bod, interp))(isAbortive = false)
         if newResolution then resolveHandlerReceiver(handle)
         handle
     case h: Hndl =>

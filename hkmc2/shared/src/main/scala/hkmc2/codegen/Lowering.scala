@@ -223,13 +223,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
           override def apply(k: Result): Block = Ret(castTo(k, returnType, N))
   
   def parentConstructor(ctorParamLists: ConstructorParams, args: Ls[Term], loc: Opt[Loc])(using LoweringCtx) =
-    lowerSuperCtorCall(
-      ctorParamLists,
-      State.builtinOpsMap("super").asSimpleRef,
-      isMlsFun = true,
-      args,
-      loc,
-    )(c => Assign(NoSymbol, c, End()))
+    lowerSuperCtorCall(ctorParamLists, args, loc)(c => Assign(NoSymbol, c, End()))
   
   // * Used to work around Scala's @tailrec annotation for those few calls that are not in tail position.
   final def term_nonTail(t: st, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
@@ -559,34 +553,32 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       clsSym.defn.map(classParamLists).getOrElse(ConstructorParams(Nil, false))
     case _ => ConstructorParams(Nil, false)
   
-  // * Lowers the `super(...)(...)` call we get from the `extends C(...)(...)` syntax
-  def lowerSuperCtorCall(ctorParamLists: ConstructorParams, fr: Path, isMlsFun: Bool, args: List[Term], loc: Opt[Loc])(k: Result => Block)(using LoweringCtx): Block =
-    args match
-    case _ :: _ =>
-      def zipArgs(remainingParamss: Ls[ParamList], args: Ls[Term], acc: Ls[Ls[Arg]]): Block = (remainingParamss, args) match
-        case (ps :: remainingParamss2, arg :: remainingArgs) => lowerConstructorArgs(arg, ps, ctorParamLists.isMls): as =>
-          zipArgs(remainingParamss2, remainingArgs, as ne_:: acc)
-        case (Nil, arg :: remainingArgs) =>
-          if remainingArgs.isEmpty then
-            raise(ErrorReport(
-              msg"Too many parameter lists for parent class" -> loc :: Nil,
-              source = Diagnostic.Source.Compilation))
-          lowerArgs(arg, Nil): as =>
-            zipArgs(Nil, remainingArgs, as ne_:: acc)
-        case (remainingParamss2, Nil) =>
-          if !remainingParamss2.isEmpty then
-            raise(ErrorReport(
-              msg"Extending a partially applied class is not supported" -> loc :: Nil,
-              source = Diagnostic.Source.Compilation))
-          k(Call(fr, acc.reverse.ne_!)(CallMetadata(isMlsFun, true, Nil), loc))
-      zipArgs(ctorParamLists.lists, args, Nil)
-    case Nil =>
-      if !ctorParamLists.lists.isEmpty then
-        raise(ErrorReport(
-          msg"Extending a partially applied class is not supported" -> loc :: Nil,
-          source = Diagnostic.Source.Compilation))
-      // * No arguments to a super ctor means a nullary call, e.g., `extends C` means `extends C()`
-      k(Call(fr, Nil ne_:: Nil)(CallMetadata(isMlsFun, true, Nil), loc))
+  /** Lower the parent construction shared by class definitions, anonymous `new`, and handlers.
+    * Parent construction requires all argument lists. The continuation receives only the super call,
+    * so handlers can keep argument evaluation outside their generated constructor. */
+  def lowerSuperCtorCall(ctorParamLists: ConstructorParams, args: Ls[Term], loc: Opt[Loc])(k: Call => Block)(using LoweringCtx): Block =
+    def call(argss: Ls[Ls[Arg]]): Block =
+      val nonEmpty = if argss.isEmpty then Nil ne_:: Nil else argss.ne_!
+      k(Call.raw(State.builtinOpsMap("super").asSimpleRef, nonEmpty)(CallMetadata.mlsFunWithEffect, loc))
+    def zipArgs(remainingParamss: Ls[ParamList], args: Ls[Term], acc: Ls[Ls[Arg]]): Block = (remainingParamss, args) match
+      case (ps :: remainingParamss2, arg :: remainingArgs) => lowerConstructorArgs(arg, ps, ctorParamLists.isMls): as =>
+        zipArgs(remainingParamss2, remainingArgs, as :: acc)
+      case (Nil, arg :: remainingArgs) =>
+        if remainingArgs.isEmpty then
+          raise(ErrorReport(msg"Too many parameter lists for parent class" -> loc :: Nil,
+            source = Diagnostic.Source.Compilation))
+        lowerArgs(arg, Nil)(as => zipArgs(Nil, remainingArgs, as :: acc))
+      case (remainingParamss, Nil) =>
+        if remainingParamss.nonEmpty then
+          raise(ErrorReport(msg"Extending a partially applied class is not supported" -> loc :: Nil,
+            source = Diagnostic.Source.Compilation))
+        call(acc.reverse)
+    (ctorParamLists.lists, args) match
+    // A class without parameter lists accepts one empty argument tuple, as with `new C()`.
+    // Resolution checks the tuple's arity; lowering also accepts the implicit `extends C` form.
+    case (Nil, Nil) => call(Nil)
+    case (Nil, arg :: Nil) => lowerArgs(arg, Nil)(as => call(as :: Nil))
+    case _ => zipArgs(ctorParamLists.lists, args, Nil)
   
   /** Lower a call with multiple argument lists into `Call` nodes,
     * trying to group as many as possible into a single one
@@ -1385,23 +1377,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       }.collect{ case Some(v) => v }
       loweringCtx.collectScopedSym(lhs)
       val resSym = loweringCtx.registerTempSymbol(S(t), erasedType = N)
-      def lowerParent(par: Path, args: Ls[Arg]): Block =
-        HandleBlock(lhs, resSym, par, args, cls, handlers,
-          inScopedBlock(returnedTerm(bod, N)),
-          k(resSym.asSimpleRef))
+      def lowerParent(par: Path, params: ConstructorParams): Block =
+        // Evaluate arguments before installing the handler. Their effects belong
+        // to the enclosing handler, and constructors cannot suspend.
+        lowerSuperCtorCall(params, as, Loc(rhs :: as)): parentCall =>
+          HandleBlock(lhs, resSym, par, parentCall, cls, handlers,
+            inScopedBlock(returnedTerm(bod, N)),
+            k(resSym.asSimpleRef))
       if newResolution && !h.isAbortive then
         val parent = cls.defn.flatMap(_.ext).getOrElse(lastWords("A user handler must have a parent constructor"))
-        classOf(rhs, parent): (par, params) =>
-          val args = parent.args match
-            case arg :: Nil => arg.withoutCaptures
-            case _ => lastWords("A user handler must supply one constructor argument list")
-          params.lists match
-            case ps :: Nil => lowerConstructorArgs(args, ps, params.isMls)(lowerParent(par, _))
-            case Nil => lowerArgs(args, Nil)(lowerParent(par, _))
-            case _ => fail:
-              ErrorReport(msg"Handler classes with multiple constructor parameter lists are not supported" ->
-                rhs.toLoc :: Nil, source = Diagnostic.Source.Compilation)
-      else subTerm(rhs)(par => subTerms(as)(args => lowerParent(par, args.map(_.asArg))))
+        classOf(rhs, parent)(lowerParent)
+      else subTerm(rhs)(par => lowerParent(par, getClassParamLists(par)))
     case st.Blk(sts, res) => block(sts, R(res), inStmtPos = inStmtPos)(k)
     case Assgn(lhs, rhs) =>
       // The permission belongs to this write, not to assignments in its receiver or RHS.
