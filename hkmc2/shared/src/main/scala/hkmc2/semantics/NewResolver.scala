@@ -22,7 +22,7 @@ import Elaborator.*
   */
 final class NewResolver(prelude: Ctx, config: Config):
   private given (using ResolutionContext): TraceLogger = rctx.trace
-  private given (using ResolutionContext): Raise = rctx.report
+  private given (using ResolutionContext): Raise = rctx.diagnosticReporter
   private given (using ResolutionContext): Elaborator.State = rctx.owner
   private val newResolution = config.language.useNewResolution
   import ResolutionContext.Listener

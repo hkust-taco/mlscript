@@ -300,6 +300,10 @@ final class ResolutionContext private[semantics] (
       state.workspace.reporter = previousReporter
       state.workspace.traceLogger = previousTrace
   def trace: TraceLogger = state.workspace.traceLogger
+  // One adapter serves every operation in this context. It reads the active
+  // workspace's reporter on each call, so successive resolution passes can
+  // install different diagnostic collectors without retaining an earlier one.
+  private[semantics] lazy val diagnosticReporter: Raise = report
   def report(diagnostic: Diagnostic): Unit =
     assert(state.workspace.reporter != null, "Resolution requires a diagnostic collector")
     state.workspace.reporter.nn(diagnostic)
