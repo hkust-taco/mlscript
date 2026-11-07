@@ -2441,12 +2441,17 @@ class NewResolver:
     * reads its symbolic arguments through ordinary bindings. Each application supplies
     * its own observed arguments, so caching the template cannot capture the first use's
     * namespaces. Inference inputs remain symbolic and retain later flows.
+    * For the same reason, no node of the template has the source term or the error reporter
+    * of an application: a diagnostic about an application must cite its arguments and its
+    * own witnesses, not the first application of the same constructor. The template is
+    * complete by construction, so validating it cannot report an error.
     */
   private def appliedType(symbol: ClassSymbol | TypeAliasSymbol, arguments: NELs[DeclaredType])
       (using ResolutionContext): DeclaredType =
     val parameters = symbol.defn.get.tparams
     val template = rctx.state.appliedTypeTemplates.getOrElseUpdate(symbol, {
-      val source = arguments.head.resolution
+      def unexpected(messages: Ls[(Message, Opt[Loc])]): Unit =
+        softAssert(false, "A synthesized type application cannot fail validation")
       val member = symbol.defn.get.bsym
       // The constructor has no written identifier; its arguments retain their own source origins.
       val head = Term.MemberRef(member)(N, FlowSymbol.memSym(member))
@@ -2454,17 +2459,18 @@ class NewResolver:
       // This head is fully applied and has no lexical binders. Reusing an argument's
       // source would misclassify it as a bare generic use in that argument's scope.
       rctx.recordLexicalBinders(head, Set.empty)
-      rctx.recordAppliedTypeArguments(head, arguments.length)
-      val constructor = new TypeResolution(head, source.fail)
+      rctx.recordAppliedTypeArguments(head, parameters.length)
+      val constructor = new TypeResolution(head, unexpected)
       symbol match
         case cls: ClassSymbol => constructor.publish(TypeShape.Nominal(cls.defn.get))
         case alias: TypeAliasSymbol =>
           constructor.publish(TypeShape.Alias(alias, alias.defn.get.rhs.map(typeResolution)))
       val args = parameters.map: parameter =>
-        val resolution = new TypeResolution(Term.SimpleRef(parameter.sym)(N), source.fail)
+        val resolution = new TypeResolution(Term.SimpleRef(parameter.sym)(N), unexpected)
         resolution.publish(TypeShape.Parameter(parameter.sym, parameter.sym.inferenceHost))
         resolution
-      val resolution = new TypeResolution(source.source, source.fail)
+      // The application has no written source either: its root denotes the fully applied head.
+      val resolution = new TypeResolution(head, unexpected)
       resolution.publish(TypeShape.Applied(constructor, args))
       resolution
     })
