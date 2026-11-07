@@ -230,9 +230,12 @@ final class NewResolverState(val owner: Elaborator.State):
     new Cache(_.unguardedTypeDependencies, identity)
   val regularTypes: Cache[TypeResolution, Bool] =
     new Cache(_.regularTypes, identity)
+  // Shared by every use of the same formula, so the combinations have no source (see DeclaredType.shared).
   val combinedTypes: Cache[TypeFormula[DeclaredType], DeclaredType] =
     new Cache(_.combinedTypes, identity)
-  val argumentTypes: Cache[(TypeResolution, TypeArgument), DeclaredType] =
+  // Keyed by the type use whose source the argument keeps, and by its shape, which records
+  // whether it is a written wildcard.
+  val argumentTypes: Cache[(TypeResolution, TypeShape.Argument), DeclaredType] =
     new Cache(_.argumentTypes, identity)
   val pendingTypeDependencies: Cache[TypeResolution, TypeDependencyHost] =
     new Cache(_.pendingTypeDependencies, identity)

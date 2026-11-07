@@ -90,10 +90,12 @@ object TypeShape:
       case that: Wildcard => input == that.input && output == that.output
       case _ => false
   // Interpreted arguments retain both polarities in the argument's lexical environment.
-  final case class Argument(parts: TypeArgument) extends TypeShape:
-    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), parts.hashCode)
+  // The parts of a written wildcard (`in T`, `out T`) override declaration-site variance,
+  // whereas those of other arguments are still subject to it (see NewResolver.argumentType).
+  final case class Argument(parts: TypeArgument, wildcard: Bool) extends TypeShape:
+    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), parts.hashCode, wildcard.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
-      case that: Argument => parts == that.parts
+      case that: Argument => parts == that.parts && wildcard == that.wildcard
       case _ => false
   // Substitution selects one part before the type is used in further constraints.
   // The argument stays in its own lexical environment, including delayed parts.
@@ -231,7 +233,7 @@ final class TypeResolution(val source: Term, report: Ls[(Message, Opt[Loc])] => 
             case _ => ()
         checkArity(base, Set.empty)
       case Wildcard(input, output) => input.foreach(_.validate(visited)); output.foreach(_.validate(visited))
-      case Argument(parts) => parts.input.resolution.validate(visited); parts.output.resolution.validate(visited)
+      case Argument(parts, _) => parts.input.resolution.validate(visited); parts.output.resolution.validate(visited)
       case SelectedArgument(argument, _) => argument.resolution.validate(visited)
       case Contextual(reference) => reference.tpe.resolution.validate(visited)
       case Function(_, result) => result.validate(visited)
@@ -271,6 +273,9 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
     interpretation.fold(resolution.currentShapes.toList)(_ :: Nil)
   private[semantics] def listen(listener: ShapeListener[TypeShape])(using ResolutionContext): Unit =
     interpretation.fold(resolution.listen(listener))(listener(_))
+  /** Like `shapes.exists(p)`, without building the list of shapes. */
+  private[semantics] def existsShape(p: TypeShape => Bool)(using ResolutionContext): Bool =
+    interpretation.fold(resolution.currentShapes.exists(p))(p)
   /** Evidence is shared only when its immediate payloads are identical. Looking
     * through bound arguments here would expand shared DAG paths on cache hits.
     * A conservative miss retains the caller's witnesses without merging them.
@@ -291,7 +296,7 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
           // Scope paths carry no diagnostic evidence. Even distinct witnesses
           // share the cached path, rather than retaining a freshly rebuilt one.
           TypeShape.Contextual(ContextualType(current.tpe, previous.marks))
-      case (TypeShape.Argument(previous), TypeShape.Argument(current)) =>
+      case (TypeShape.Argument(previous, _), TypeShape.Argument(current, _)) =>
         if previous.input.sameUse(current.input) && previous.output.sameUse(current.output) then canonical else shape
       case (TypeShape.SelectedArgument(previous, _), TypeShape.SelectedArgument(current, _)) =>
         if previous.sameUse(current) then canonical else shape
@@ -337,9 +342,24 @@ final class DeclaredType private (private[semantics] val reference: DeclaredType
 object DeclaredType:
   /** A closed synthesized node retains its shape directly. Cache hits can reuse
     * it without subscribing to, or looking up, its already fixed source host.
+    * The node keeps the location and the error reporter of `source`, which must be
+    * the type use that the node's cache key identifies. A node shared by uses with
+    * different sources has no source instead (see `shared`).
     */
   private[semantics] def synthesized(source: TypeResolution, shape: TypeShape)(using ResolutionContext): DeclaredType =
-    val resolution = new TypeResolution(source.source, source.fail)
+    closed(new TypeResolution(source.source, source.fail), shape)
+
+  /** A closed synthesized node that every use with the same cache key shares, such as a
+    * Boolean combination of the same atoms. No use is its source, so its first use cannot
+    * become the location or the error reporter of the others: diagnostics about a use cite
+    * that use's own types and witnesses. Such a node is complete by construction, so
+    * validating it can only report an internal error (`invalid`).
+    */
+  private[semantics] def shared(shape: TypeShape)(invalid: Ls[(Message, Opt[Loc])] => Unit)
+      (using ResolutionContext): DeclaredType =
+    closed(new TypeResolution(Term.Missing, invalid), shape)
+
+  private def closed(resolution: TypeResolution, shape: TypeShape)(using ResolutionContext): DeclaredType =
     resolution.publish(shape)
     new DeclaredType(rctx.state.typeReferences(resolution, Map.empty, TypeSubstitution.empty, true, Nil), Map.empty)(N, N, S(shape))
 
