@@ -588,7 +588,8 @@ object HandleBlock:
           case Value.SimpleRef(`resumeSym`) => fail
           case _ => super.applyPath(p)(k)
         override def applyBlock(b: Block): Block = b match
-          case Return(Call(Value.SimpleRef(`resumeSym`), (arg :: Nil) :: Nil)) => Return(arg.value)
+          // A spread argument holds a container whose elements supply the resumption's arguments.
+          case Return(Call(Value.SimpleRef(`resumeSym`), (Arg(N, value) :: Nil) :: Nil)) => Return(value)
           case Return(_) => fail // non tail resumptive
           case _ => super.applyBlock(b)
       val res = transformer.applyBlock(body)

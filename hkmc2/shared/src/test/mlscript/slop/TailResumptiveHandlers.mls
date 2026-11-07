@@ -1,0 +1,17 @@
+:js
+:effectHandlers
+:lift
+
+// Resumable handlers currently require legacy resolution; these tests cover their MIR optimization.
+
+abstract class Effect with
+  fun perform(arg): Any
+
+
+// A single spread node supplies the continuation's arguments, not the resumed value itself.
+:expect 42
+handle h = Effect with
+  fun perform(xs)(k) = k(...xs)
+h.perform([42])
+//│ = 42
+
