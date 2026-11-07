@@ -12,6 +12,7 @@ invariants in `new-resolution-design.md`; this file should then be deleted.
 | Decisions D1–D4 (§2) | Confirmed by the user. |
 | Language rules in §3.1–§3.7 | Approved by the user, including the extensions and deviations in §3.9. |
 | Derived instances (§3.8) | Approved by the user, including the `using fun` syntax and the divergence check. |
+| Provider heads, parameter-query consultation keys, and recursive instance agreement (§3.1, §3.3, §3.8) | Confirmed by the user. |
 
 Line numbers in this document are approximate; search by the function names given.
 
@@ -117,7 +118,12 @@ callees. Each callee's queries are resolved separately, in that callee's own cal
 - **Same convention.** All callees at a site have the same contextual calling convention (see
   above), so they have the same Supply and Abstract steps.
 - **Same selection.** For each supplied parameter, every callee's query must select the same
-  candidate. A later callee is checked against the earlier selections.
+  candidate. For an instance function (§3.8), agreement includes the function and, recursively,
+  the candidates selected for all its nested `using` arguments. A later callee is checked against
+  the earlier selections at every level; none of those selections changes.
+  For example, queries `Show[List[Int]]` and `Show[List[Str]]` can select the same `list` instance
+  function but different element instances. That is a selection mismatch: one generated argument
+  cannot supply both constructions merely because their outer function is the same.
 - **Errors.** A convention mismatch, a selection mismatch, or a contextual callee together with a
   dynamic callee at the same site is an error.
 
@@ -180,11 +186,22 @@ innermost tier outward:
     they are the namespaces of the values reaching it, as `valueNamespaces` computes them
     ("If `T` is of the form `List[S]`, also look into the implicit namespace of `S`");
   - a parameter query consults the namespaces of the values reaching the parameter.
-- **"Provides" (first-provider rule).** For a named query, a namespace provides when it declares an
-  accessible instance whose head is `N`. For a parameter query, it provides when it declares an
-  accessible instance whose head is the class or alias that named this namespace. This depends
-  only on declarations, never on flow, so each namespace is decided once per query, as
-  `ImplicitNamespaces.consulted` does for names.
+- **"Provides" (first-provider rule).** For a named query `N[Q1, …, Qn]`, a namespace provides
+  when it declares an accessible instance whose head, after alias expansion, is `N` or a subclass
+  of `N`. This includes an instance-function result type (§3.8). For example, a `Foo` companion
+  containing only `using IntFoo = …`, where `IntFoo extends Foo[Int]`, provides for `Foo[Int]`.
+  Argument compatibility does not determine whether a namespace provides: an instance with a
+  qualifying head still cuts off the walk when its arguments do not match the query.
+  For a parameter query, a namespace provides when it declares an accessible instance whose head
+  is the class or alias that named this namespace.
+- **Consultation keys.** A provider decision depends only on declarations for the given query
+  and triggering class or alias, never on the values at query positions. A named query decides
+  once per namespace. A parameter query decides once per **(namespace, triggering class or
+  alias)** pair, because different definitions can name the same declaring module. For example,
+  if `M` declares `A`, `B extends A`, and an instance of `A`, consulting `M` through `B` finds no
+  provider, but consulting it through parent `A` finds that instance. The first negative answer
+  must not suppress the second consultation. Both use the same cached instance-member index of
+  `M`. Name requests retain their existing per-namespace consultation and behavior.
 
 ### 3.4 Matching (D3)
 
@@ -300,7 +317,8 @@ Suggested messages:
   parameter lists." Each member is listed with its parameter lists' declaration. Use the same
   message for the callees of a site.
 - *Callee selection mismatch*: "The callees of this call require different instances for
-  contextual parameter 'm'." Each callee's selection is listed.
+  contextual parameter 'm'." Each callee's selection is listed. For derived instances, identify
+  the differing nested selections and the instance functions that require them.
 - *Dynamic callee*: "Contextual arguments cannot be supplied to a dynamically accessed callee
   together with these contextual callees."
 - *Late value*: "This value reaches the type of contextual parameter 'm' after its instance was
@@ -347,6 +365,9 @@ Rules:
   3. resolves the function's `using` lists as **nested queries** of the same site, with the same
      scope and rules. They are decided depth-first, before the next query of the enclosing site;
   4. supplies the application's result as the argument.
+- **Several callees.** Apply §3.1's agreement rule recursively to the selected function and its
+  nested arguments. Each callee uses its own query bindings; equality of the outer function
+  alone does not establish agreement on the generated argument.
 - **Divergence.** An instance function is not a match for a nested query for which it would
   diverge (see below). There is no depth limit.
 
@@ -460,6 +481,7 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   named. Keep `0.2.x` unchanged.
 - **Instance index.** Give each module or object definition a cached list of its instance members
   (declaration, candidate type, visibility). Namespace lookup must not scan bodies repeatedly.
+  All queries and triggering classes or aliases reuse this one index per module or object.
 - **Lexical instance environment.** `Ctx` carries a persistent (shared) list of tiers. The
   following push a tier:
   - a `using` parameter clause, when its body is elaborated: function, method, lambda, or class body;
@@ -485,8 +507,14 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   Prefer materializing a site's values at the site itself, with the site's own role (`receiver`
   or not). Then deliver the shapes that need no completion directly, and hold the contextual
   callables, together with their delivering `ResolutionContext`, for settlement. Do not wrap
-  every term: allocate per-site state only when a contextual callable first arrives. Check
-  whether the callable is contextual using `unappliedParams` (`Shape.scala`) and `ParamList.flags.ctx`.
+  every term: allocate per-site state only when a contextual callable first arrives.
+  Centralize access to the remaining parameter lists, their contextual flags, and their
+  instantiated annotations for both definition shapes and declared callable interfaces.
+  `unappliedParams` (`Shape.scala`) and `ParamList.flags.ctx` cover definition shapes, but the
+  current `unappliedParams` returns no lists for `CallableTypeShape`. Annotated member access can
+  produce that shape, so preserve contextual-list metadata and the declaring definition through
+  `DeclaredParams` / `CallableTypeShape` construction, instantiation, and partial application.
+  Completion must use those declared interfaces without recovering hidden implementation flow.
 - **Calling-convention check.** Compare the contextual calling convention (§3.1) of each target
   with the reference's existing targets when the target is recorded: `recordValueTarget`,
   `resolveThrough`, and the selection paths that append to `resolvedTargets` or `resolvedMembers`.
@@ -499,15 +527,19 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   - one `InstanceArg` per supplied parameter, shared by all callees.
 
   Decide callees in arrival order. The first callee's selection fills an `InstanceArg`; each later
-  callee's query must select the same candidate (§3.1). Each callee is applied to the same
-  synthesized flow sites, under its own activation, as an ordinary application receives several
-  callee shapes.
+  callee's query must select the same candidate (§3.1). For instance functions, retain the nested
+  `InstanceArg`s and check agreement recursively under each callee's query bindings. Comparing
+  only the outer instance-function symbol would miss incompatible nested arguments. Each callee
+  is applied to the same synthesized flow sites, under its own activation, as an ordinary
+  application receives several callee shapes.
 - **Settlement.** Extend `settleUnboundReferences` to process the ordered worklist (§3.6). Rename
   it if its name becomes misleading, and update the doc comments that reference it.
 - **Flow model of a completion.** Model each **Supply** step as a synthesized application flow site,
   as `iterationFlow` does: an `App(Term.Missing, CtxTup(args))` with recorded lexical binders,
   driven by `applyShape(raw, args, app, checked = true)`. This makes argument zipping, arity
-  checking, parameter constraints, and type-argument inference reuse `zipArgsIn`.
+  checking, parameter constraints, and type-argument inference reuse the ordinary application
+  paths: `zipArgsIn` for definition shapes and `applyValue`'s declared-interface handling for
+  `CallableTypeShape`.
   - The completed value the consumers receive is the shapes of the last step.
   - Model **Abstract** steps with a synthesized `Lam` whose body is the next step's flow site. The
     `Lam` is a flow model only; lowering does not lower it (§4.4).
@@ -518,13 +550,14 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
   - It is a `ShapeHost`. Once a candidate is selected, it forwards the shapes of the selected
     argument expression (`var selected: Opt[Term]`).
   - Publishing as each query is decided lets later queries of the same clause observe earlier
-    selections through the ordinary `zipArgsIn` path (§3.2). Do not constrain parameters through
+    selections through the ordinary application paths (§3.2). Do not constrain parameters through
     a second path.
   - Handle it in `TermImpl` (describe, `subTerms` = the selected term, `show`, `showDbg`), `Cloner`,
     `resultFlow`, `listen`, Lowering, and the legacy `Resolver`, where it is unreachable.
-- **Query construction.** Interpret the parameter's annotation in the site's call activation: the
-  instances that `applyValue` computes for the step's flow site, through `instantiateDefinition`
-  or the captured substitution. Then classify it per §3.2.
+- **Query construction.** Interpret the parameter's annotation in the site's call activation.
+  Use the activation that `applyValue` computes for the step's flow site: `instantiateDefinition`
+  and the captured substitution for definition shapes, or `instantiateCallable` and the
+  instantiated `CallableTypeShape` annotations for declared interfaces. Then classify it per §3.2.
   - Observe the position values with `listenInstanceViews` and `listenTypeParameterValues` on the
     instantiated position types, in the base context, which observes the values of every
     activation. There is no activation-specific matching rule (§3.4).
@@ -541,15 +574,23 @@ to this section. Escalate (see §7) if a principle in §3 cannot be met.
 
   The functions to generalize are `ImplicitNamespaces`, `typeNamespaces`, `classNamespaces`,
   `valueNamespaces`, `ownNamespaces`, `firstProvider`, `consultNamespace`, and `lateNamespace`.
-  The request decides what "provides" means (§3.3), what a candidate is, and how candidates are
-  published. For an instance request, publishing means adding the candidate to the namespace tier
-  of the query; for a name request, it is `resolveThrough`. The name request's behavior must stay
-  identical: all `ImplicitNamespace*.mls` and `LeadingDotSelections.mls` outputs unchanged. Add the
+  The request decides what "provides" means (§3.3), its consultation key, what a candidate is,
+  and how candidates are published. Name requests and named instance queries key consultation by
+  module; parameter queries key it by module and triggering class or alias. A module-only key
+  would reuse a negative provider decision for another definition that names the same namespace.
+  Provider tests use the cached instance index and declaration heads, including subclasses for
+  named queries, without testing argument flows.
+  For an instance request, publishing means adding the candidate to the namespace tier of the
+  query; deduplicate the same instance declaration reached through multiple consultations. For a
+  name request, publishing is `resolveThrough`. The name request's behavior must stay identical:
+  all `ImplicitNamespace*.mls` and `LeadingDotSelections.mls` outputs unchanged. Add the
   type-argument extension of §3.3 only for instance requests. Do not copy and adapt the walk.
 - **Matching.** Implement "may be a value of" (§3.4) as one function, used both for decisions and
   for late-value checks.
 - **Nested sites (Phase 6).** An instance-function argument is a synthesized application chain,
   driven like a site completion, with nested queries decided in place.
+  - Share the selected argument chain across callees only when its function and all nested
+    selections agree (§3.1). Retain the first selections and report any later mismatch.
   - Keep the derivation path as an explicit, immutable stack, passed down through the nested
     decisions. Do not store it in global mutable state.
   - Each stack entry holds the selected instance function and the query's flow type, together with
@@ -601,7 +642,9 @@ Centralize the lowering of sites with completions:
 
 - Programs that do not use `using` must allocate no new per-term state.
 - Recording a site is one buffer entry, like `accessSites`.
-- Per-module instance indexes are cached; per-query namespace consultation is bounded, as for names.
+- Per-module instance indexes are cached. Within a query, provider decisions are bounded by the
+  consulted modules for named queries, or by the (module, triggering class or alias) pairs for
+  parameter queries (§3.3). Name-request consultation remains unchanged.
 - Before finishing Phase 2 and Phase 3, compare time and allocated bytes against the base commit:
   - use `git worktree` checkouts in a scratch directory, `sbt -batch`, and the `ThreadMXBean`
     allocation counter;
@@ -631,11 +674,15 @@ includes the golden outputs. Commits use the agent's own identity (AGENTS.md).
 - Implement interception, settlement, Supply steps, `InstanceArg`, query construction, matching,
   lexical candidates, completion storage, and lowering of Supply steps. This covers value sites,
   application heads (X1), class constructors, `new`, callees revealed through flow-typed receivers,
-  and sites with several callees (X8), including the agreement checks of §3.1.
-- Report the errors of §3.7, except for late namespaces and divergence.
-- Exit when the lexical-only parts of the `TypeClasses`, `ExplicitlySpec`, `ClassCtxParams`,
-  `NestedUsingInstances`, `Summon`, `ForwardTypeClassUses`, `BadTypeClasses`, `SymbolResolution`,
-  and `Debugging` ports pass. `newres/LexerMigration.mls` must lose its `:fixme`.
+  declared callable interfaces, and sites with several callees (X8), including the agreement checks
+  of §3.1 for direct instances.
+- Report the errors of §3.7, except for late namespaces and divergence. This includes unsupported
+  query/declaration types and late-value and late-callee checks for direct insertion; Phase 4
+  extends their coverage to eta-expansion and generic-body cases.
+- Exit when the lexical-only direct-insertion parts of the `TypeClasses`, `ExplicitlySpec`,
+  `ClassCtxParams`, `NestedUsingInstances`, `Summon`, `ForwardTypeClassUses`, `BadTypeClasses`,
+  `SymbolResolution`, and `Debugging` ports pass. `newres/LexerMigration.mls` must lose its `:fixme`.
+  Cases requiring Abstract steps remain marked `:fixme` or `:todo` until Phase 4.
 
 ### Phase 3: namespace instances
 
@@ -645,6 +692,11 @@ includes the golden outputs. Commits use the agent's own identity (AGENTS.md).
   - type-class companions and data-type companions;
   - declaring modules;
   - the first-provider cutoff;
+  - a namespace whose only instance has a subclass head, including an aliased annotation; it
+    provides even when argument incompatibility later rejects the candidate;
+  - a parameter query that consults one declaring module through multiple classes or aliases,
+    including `B extends A` with only an `A` instance; a negative decision for `B` must not hide
+    the provider for `A`, and repeated discovery of that instance must not cause ambiguity;
   - type-argument namespaces (`Show[List[Point]]` finds `Point`'s companion);
   - private instance members;
   - instances in imported files (`import` of a `slop/contextual` helper module, or of an existing
@@ -655,8 +707,10 @@ includes the golden outputs. Commits use the agent's own identity (AGENTS.md).
 
 ### Phase 4: eta-expansion, cascading, and late values
 
-- Implement Abstract steps in flow and lowering (X4), the `EtaExpansion` port, the `Cascading`
-  and `Tricky` ports, the late-value and late-callee errors, and the unsupported-type errors.
+- Implement Abstract steps in flow and lowering (X4), complete the `EtaExpansion`, `Cascading`,
+  and `Tricky` ports, and enable the eta-expansion cases deferred from the other ports in Phase 2.
+- Extend coverage of the late-value, late-callee, and unsupported-type errors implemented in
+  Phase 2 to eta-expansion and generic-body cases.
 - Add generic-body tests (§3.4):
   - a lexical instance shadowing namespace instances inside a generic function whose callers
     pass types that have namespace instances;
@@ -679,7 +733,7 @@ includes the golden outputs. Commits use the agent's own identity (AGENTS.md).
 ### Phase 6: derived instances
 
 - Parse and elaborate `using fun`. Implement instance-function candidates, nested queries, and
-  the divergence check (§3.8).
+  the divergence check (§3.8), including recursive agreement across callees (§3.1).
 - Add tests:
   - `Show[List[Int]]`;
   - `Show[List[List[Int]]]`, which needs two levels of the same instance function;
@@ -687,6 +741,10 @@ includes the golden outputs. Commits use the agent's own identity (AGENTS.md).
   - ambiguity between a derived and a direct instance in the same tier;
   - lexical instance functions;
   - imported instance functions;
+  - several callees selecting the same instance function with recursively identical nested
+    arguments (success);
+  - several callees selecting the same instance function but different nested arguments (selection
+    mismatch), including a mismatch below two levels of derivation and a callee arriving late;
   - divergence by equality with an alternative: `loop` from §3.8, where the `Show[Int]` instance is
     selected for the nested query;
   - divergence by equality without an alternative, which is a missing-instance error with the
@@ -717,7 +775,7 @@ where it differs from the legacy expectation, add a short comment citing §3 or 
 | `ctx/ExplicitlySpec.mls` | Explicit `using` arguments mixed with insertion and eta-expansion. |
 | `ctx/ForwardTypeClassUses.mls` | Forward references to modules defined later in the block. |
 | `ctx/NestedUsingInstances.mls` | Local blocks, objects, and modules; `:lift` with handlers. |
-| `ctx/Summon.mls` | `use[T]`; the `use[Num]` missing case; the undetermined `f` case. |
+| `ctx/Summon.mls` | `use[T]`; `use[Num]` succeeds with `using Int = 42` because `Int extends Num` (§3.4); use an unrelated type for missing-instance coverage; keep the undetermined `f` case. |
 | `ctx/SymbolResolution.mls` (using parts) | Moduleful results of contextual functions. |
 | `basics/BadTypeClasses.mls` | Declaration errors (X5); the `M.foo()` `:breakme` case should now work (a value site supplies the trailing `using` list, §3.1). |
 | `basics/CompanionModules_Classes.mls` (using part) | `bar` with a local `using Int` calling `Foo.foo`. |
@@ -728,7 +786,9 @@ New tests (in `slop/contextual/`):
 
 - **Namespace instances.** Type-class companion; data-type companion; declaring module;
   type-argument namespaces; first-provider cutoff; private members; imports; ambiguity; late
-  namespace; lexical shadowing of namespaces.
+  namespace; lexical shadowing of namespaces. Include subclass-only providers (also through
+  aliases), argument incompatibility that does not undo the cutoff, and parameter queries that
+  consult the same module through different classes or aliases (§3.3, Phase 3).
 - **Matching.**
   - Top-level subclass candidates (`using IntFoo = …` for `Foo[Int]`) match, using the arguments
     inherited from the query head.
@@ -749,9 +809,13 @@ New tests (in `slop/contextual/`):
 - **Application heads (X1)** and `new` with `using` lists.
 - **Flow-revealed callees (X8).**
   - A method with a `using` list selected through a parameter whose class only flow determines.
+  - A method with a `using` list selected through an annotated receiver, exercising the
+    `CallableTypeShape` interface, including explicit type arguments and partial applications.
   - Overriding targets that agree on the selected instance.
   - Overriding targets whose `using` annotations select different instances (selection
     mismatch error).
+  - Several callees selecting the same instance function with equal or different nested arguments,
+    including deeper derivations and late callees (Phase 6).
   - Targets with different contextual calling conventions: a selection on a receiver that can be
     one of two unrelated classes, only one of whose `foo` has a `using` list, or whose `using`
     lists have different lengths. It is an error both where an instance would be supplied and
@@ -798,8 +862,8 @@ that diff tests cannot observe; state that property in the test.
     `listenTypeParameterValues`, `inferTypeArguments`.
 - `semantics/NewResolverState.scala`: `accessSites`, `unboundReferences`, `completeBlock`, and
   `ImplicitNamespaces` / `Namespace` / `NamespaceWitness`.
-- `semantics/Shape.scala`: `unappliedParamLists` / `unappliedParams`, `AppShape`, `DefnShape`, and
-  `RigidTypeShape`.
+- `semantics/Shape.scala`: `unappliedParamLists` / `unappliedParams`, `AppShape`, `DefnShape`,
+  `DeclaredParams`, `CallableTypeShape`, and `RigidTypeShape`.
 - `semantics/TermImpl.scala`: `NewResolvableImpl.keyAccess` (the precedent for resolver-built
   terms) and `subTerms`.
 - `codegen/Lowering.scala`: the `App` chain case (`collectAppChain`, `lowerMultiCall`) and the
