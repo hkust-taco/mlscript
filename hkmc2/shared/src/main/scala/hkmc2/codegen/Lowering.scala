@@ -1374,12 +1374,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
             h.toLoc :: Nil,
             source = Diagnostic.Source.Compilation)
       val handlers = defs.map {
-        case HandlerTermDefinition(resumeSym, td) => td.body match
+        case htd @ HandlerTermDefinition(resumeSym, td, annots) => td.body match
           case None =>
             raise(ErrorReport(msg"Handler function definitions cannot be empty" -> td.toLoc :: Nil))
             N
           case Some(bod) =>
             reportAnnotations(td, td.annotations)
+            reportAnnotations(htd, annots)
             val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme), td.tsym.sourceErasedResult.bodyType)
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
@@ -2029,7 +2030,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
     case _ => (loweredParams, body => body)
   
   
-  // TODO: reduce duplication between the two `reportAnnotations`
+  // TODO: reduce duplication between the `reportAnnotations` methods
+  
+  def reportAnnotations(target: HandlerTermDefinition, annotations: Ls[Annot]): Unit =
+    def warn(annot: Annot, msg: Opt[Message] = N) = raise:
+      msg match
+        case S(value) => WarningReport(value -> annot.toLoc :: Nil)
+        case N => WarningReport(msg"This annotation has no effect." -> annot.toLoc :: Nil)
+    annotations.foreach:
+      case Annot.Untyped() => ()
+      case a @ (Annot.TailRec() | Annot.Inline() | Annot.NoInline() | Annot.Generator() | Annot.Async() | Annot.RaiseEffects()) =>
+        warn(a, S(msg"This annotation has no effect on handler methods."))
+      case annot => warn(annot)
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
     def warn(annot: Annot, msg: Opt[Message] = N) = raise:
