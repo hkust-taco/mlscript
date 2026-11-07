@@ -25,8 +25,8 @@ Every function body in a valid executable IR program must return a value explici
 that completes normally. This includes FunDefn and Lambda bodies, generated functions, and functions
 returning Unit. Lowering.returnedTerm establishes this property for source functions and handler bodies;
 subsequent IR transformations must preserve it.
-End only falls through the current statement block; it never supplies an implicit Unit result.
-Inner End nodes and unreachable tails are legal, and functions that only throw or diverge need not contain Return.
+`End` nodes only fall through the current statement block; they should never supply an implicit Unit result.
+Inner and unreachable End nodes are legal, and functions that only throw or diverge need not contain Return.
 
 Program.main and class/module preCtor and ctor blocks are statement blocks that may fall through.
 BufferableTransform and ReflectionInstrumenter temporarily wrap constructor blocks in FunDefn to reuse
