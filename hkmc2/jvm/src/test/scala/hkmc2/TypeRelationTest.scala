@@ -470,7 +470,7 @@ class TypeRelationTest extends AnyFunSuite:
     late.publish(TypeShape.Tuple(List(at.resolution, early).map(TypeShape.TupleField(_, spread = false))))
     def firstField(values: ArrayBuffer[TermShape]): Set[TermShape] = values.toList match
       case (tuple: TupleShape) :: Nil => tuple.elements.head match
-        case TupleShape.TypedField(tpe, marks) => h.observe(ContextualType(tpe, marks)).toSet
+        case TupleShape.TypedField(bounds, marks) => h.observe(ContextualType(bounds.output, marks)).toSet
         case _ => fail("Expected a declared tuple field")
       case _ => fail("Expected one declared tuple")
     assert(firstField(leftSeen) == Set(first))
@@ -754,7 +754,7 @@ class TypeRelationTest extends AnyFunSuite:
     import h.given
     val (a, at) = h.parameter("A")
     val substitution = h.state.instantiateTypeParameters(at.resolution, FlowSymbol.app(), List(a), None)
-    val tuple = TupleShape(Term.UnitVal(), TupleShape.TypedField(at, Nil) :: Nil)(h.resolver)
+    val tuple = TupleShape(Term.UnitVal(), TupleShape.TypedField(TypeArgument.invariant(at), Nil) :: Nil)(h.resolver)
     val view = h.resolver.instantiateShape(tuple, substitution)
     (1 to 1000).foreach: _ =>
       assert(h.resolver.instantiateShape(tuple, substitution) eq view)

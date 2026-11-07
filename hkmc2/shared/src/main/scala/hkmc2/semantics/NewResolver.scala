@@ -1246,8 +1246,7 @@ class NewResolver:
     def segmentSupport(segment: TupleShape.Segment): Binders = segment match
       case TupleShape.Field(_, _) => lexicalBinders(tuple.source)
       case TupleShape.ValueField(value, _) => shapeSupport(value)
-      case TupleShape.TypedField(tpe, _) => typeSupport(tpe)
-      case TupleShape.ArgumentField(argument, _) => argumentSupport(argument)
+      case TupleShape.TypedField(bounds, _) => argumentSupport(bounds)
       case TupleShape.UnknownField(_, _) => S(Set.empty)
       case TupleShape.ViewedField(source, instances, _) => ambientSupport(segmentSupport(source), instances)
       case TupleShape.Unknown(_, element) => segmentSupport(element)
@@ -1543,7 +1542,7 @@ class NewResolver:
                 def expand(rest: Ls[TypeShape.TupleField], reversed: Ls[TupleShape.Element])(using ResolutionContext): Unit = rest match
                   case Nil => publish(TupleShape(current.resolution.source, reversed.reverse)(this))
                   case TypeShape.TupleField(field, false) :: tail =>
-                    expand(tail, TupleShape.TypedField(declaredType(field, current), Nil) :: reversed)
+                    expand(tail, TupleShape.TypedField(TypeArgument.invariant(declaredType(field, current)), Nil) :: reversed)
                   case TypeShape.TupleField(field, true) :: tail =>
                     listenTypeViews(declaredType(field, current), mergeIntersections = false):
                       case Marked(tuple: TupleShape, marks) =>
@@ -1551,7 +1550,7 @@ class NewResolver:
                       case Marked(array: NominalInstanceView, marks) if arrayElementType(array).nonEmpty =>
                         // Retain the symbolic element endpoint: sampling its
                         // current values would lose inference from later calls.
-                        val element = TupleShape.ArgumentField(arrayElementType(array).get, marks :: Nil)
+                        val element = TupleShape.TypedField(arrayElementType(array).get, marks :: Nil)
                         expand(tail, TupleShape.Unknown(field.source, element) :: reversed)
                       case shape @ Marked(_: DynShape | _: UnknownValueShape | _: OpaqueTypeShape, _) =>
                         expand(tail, TupleShape.Unknown(field.source, TupleShape.ValueField(shape, Nil)) :: reversed)
@@ -1609,8 +1608,8 @@ class NewResolver:
         declaredType(resolution, Map.empty)
       val interface = TypeArgument(endpoint(), endpoint())
       signatureParameters(param.sym) = interface
-      val shape = instanceShape(interface.output.instantiate(rctx.instances))
-      if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
+      listenTypeInstances(interface.output): shape =>
+        if param.sym.currentShapes.add(shape) then param.sym.notifyShapeListeners(shape)
     // Check only signatures that explicitly specify one calling convention,
     // following aliases and quantifiers. Compound signatures still contribute
     // every component's flows, but rejecting one possible layout would turn this
@@ -1640,9 +1639,9 @@ class NewResolver:
                 msg"Implementation parameter list does not match its separate signature." -> ps.toLoc ::
                 msg"The signature has different required, optional, variadic, or trailing parameter positions." -> sign.toLoc :: Nil))
           val params = ps.allParams
-          zipDeclaredParameters(Arity(ps), declared): (index, input, output) =>
+          zipDeclaredParameters(Arity(ps), declared): (index, bounds) =>
             val param = params(index)
-            val component = TypeArgument(input, output).map(transportType(_, marks :: Nil))
+            val component = bounds.map(transportType(_, marks :: Nil))
             if param.sign.isEmpty then
               val target = signatureParameters.get(param.sym).get
               target.input.resolution.publish(TypeShape.Combined(TypeFormula.atom(component.input)))
@@ -1941,19 +1940,15 @@ class NewResolver:
         val unknown = RigidTypeShape(param, ref)
         publishParameter(param, MarkedShape.enter(unknown, ResolutionBoundary(owner), S(site)))
 
-  /** Read inferred candidates and derive explicit outputs from their bindings.
-    * The derived publisher merges equal outputs and keeps each consumer's candidates
-    * private through ordinary graph copying. Different bindings still retain their
-    * separate input obligations in `arguments`; `host` receives only inferred values.
+  /** Read the values of a type parameter: its inferred candidates and the output types of
+    * its explicit bindings, which bindTypeArguments publishes into the same host. The host
+    * delivers an output shared by several bindings once; the input bounds of those bindings
+    * remain in `parameter.arguments` for constraints (see inferTypeArguments).
     */
   private[semantics] def listenTypeParameterValues(parameter: TypeShape.Parameter)(listener: Listener)(using ResolutionContext): Unit =
-    val values = new TermShapeHost
-    values.listen(listener)
     parameter.host.subscribe:
-      case value: TermShape => values.publish(value)
+      case value: TermShape => listener(value)
       case _ => softAssert(false, "A type parameter's value host cannot contain activation envelopes")
-    parameter.arguments.subscribe: binding =>
-      values.publish(Marked(instanceShape(binding.argument.output), binding.marks))
 
   private[semantics] def publishParameter(symbol: VarSymbol, shape: TermShape | NoShape)(using ResolutionContext): Unit =
     shape match
@@ -1978,6 +1973,9 @@ class NewResolver:
       case Marked(_, context) => parameters.zip(arguments).foreach: (parameter, argument) =>
         val projected = argument.map(projectType)
         parameter.arguments.publish(TypeArgumentBinding(projected, context))
+        // Reads observe only the output bound. Publishing it once here lets every read
+        // subscribe to the value host directly (see listenTypeParameterValues).
+        publishParameter(parameter.host, Marked(instanceShape(projected.output), context))
       case NoShape => ()
 
   /** Bounds constrain the instantiated references, never the shared checking
@@ -2348,13 +2346,13 @@ class NewResolver:
     * annotations. Otherwise align a guaranteed prefix and suffix, and join all
     * remaining flows at every possible middle position. In particular, an unknown
     * position must not erase a known element type or a symbolic inference endpoint.
-    * Publish each position's input and output types separately: an array element
-    * can have different bounds even though a scalar annotation supplies one type.
+    * Publish both bounds of each position: an array element can have different bounds
+    * even though a scalar annotation supplies one type.
     */
   private def zipDeclaredParameters(arity: Arity, declared: DeclaredParams)(
-      publish: (Int, DeclaredType, DeclaredType) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
-    def assign(index: Int, param: DeclaredParam): Unit = param.tpe.foreach(tpe => publish(index, tpe, tpe))
-    def rest(tpe: DeclaredType)(using ResolutionContext): Unit = publish(arity.leading, tpe, tpe)
+      publish: (Int, TypeArgument) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
+    def assign(index: Int, param: DeclaredParam): Unit = param.tpe.foreach(tpe => publish(index, TypeArgument.invariant(tpe)))
+    def rest(tpe: DeclaredType)(using ResolutionContext): Unit = publish(arity.leading, TypeArgument.invariant(tpe))
     if arity == Arity(declared) then
       declared.allParams.zipWithIndex.foreach((sign, index) => assign(index, sign))
     else
@@ -2371,7 +2369,7 @@ class NewResolver:
       middle.foreach(sign => positions.foreach(assign(_, sign)))
       def restElement(element: TypeArgument, marks: Marks)(using ResolutionContext): Unit =
         val argument = element.map(transportType(_, marks :: Nil))
-        positions.foreach(index => publish(index, argument.input, argument.output))
+        positions.foreach(index => publish(index, argument))
         if arity.hasRest then rest(arrayType(argument))
       declared.rest.foreach: rest =>
         listenTypeViews(rest, mergeIntersections = false):
@@ -2445,14 +2443,13 @@ class NewResolver:
       publish: (Int, TermShape | NoShape) => ResolutionContext ?=> Unit)(using ResolutionContext): Unit =
     def fields(params: Ls[DeclaredParam]): Ls[TupleShape.Fixed] = params.map: param =>
       param.tpe match
-        case S(tpe) => TupleShape.TypedField(tpe, Nil)
+        case S(tpe) => TupleShape.TypedField(TypeArgument.invariant(tpe), Nil)
         case N => TupleShape.UnknownField(source, Nil)
     if !declared.hasRest && declared.leadingRequired == declared.params.length && arity.required <= declared.params.length then
       zipTupleShapes(mss, arity, TupleShape(source, fields(declared.params))(this), marks)(publish)
     else
-      zipDeclaredParameters(arity, declared): (index, _, output) =>
-        val shape = instanceShape(output.instantiate(rctx.instances))
-        publish(index, shape.exit(marks).enter(mss))
+      zipDeclaredParameters(arity, declared): (index, bounds) =>
+        listenTypeInstances(bounds.output)(shape => publish(index, shape.exit(marks).enter(mss)))
   
   private def listenSignatureResult(tpe: DeclaredType, count: Int)(listener: Listener)(using ResolutionContext): Unit =
     if count == 0 then listenTypeInstances(tpe)(listener)
@@ -2542,7 +2539,7 @@ class NewResolver:
       (MemberKey.index(name), arrayElementType(view)) match
         // An element's value keeps its whole path, including its provenance.
         case (S(index), S(element)) if index >= 0 =>
-          MemberLookup.Indexed(TupleShape.ArgumentField(element, Nil) :: Nil, Nil).withMarks(receiver :: Nil)
+          MemberLookup.Indexed(TupleShape.TypedField(element, Nil) :: Nil, Nil).withMarks(receiver :: Nil)
         case _ =>
           // The parent is referenced inside the class, like its own members'
           // annotations: `class Int extends Num` captures `Num` into Int's
@@ -2699,8 +2696,7 @@ class NewResolver:
       argument(bound.map(tpe => transportType(projectType(tpe), field.marks)))
     field match
       case TupleShape.Field(field, _) => listenTerm(field.term)(receive)
-      case TupleShape.TypedField(tpe, _) => declared(TypeArgument.invariant(tpe.instantiate(rctx.instances)))
-      case TupleShape.ArgumentField(bound, _) => declared(bound.instantiate(rctx.instances))
+      case TupleShape.TypedField(bounds, _) => declared(bounds.instantiate(rctx.instances))
       case TupleShape.UnknownField(source, _) => receive(UnknownValueShape.at(source))
       case TupleShape.ValueField(shape, _) => receive(shape)
       case TupleShape.ViewedField(source, instances, _) =>
@@ -2791,7 +2787,7 @@ class NewResolver:
         case S(instance) =>
           instance.bindings.get(param) match
             case S(bound) =>
-              receive(instanceShape(bound.output.instantiate(instances).instantiate(rctx.instances)))
+              listenTypeInstances(bound.output.instantiate(instances))(receive)
               true
             case N => false
         case N => false
@@ -3325,7 +3321,7 @@ class NewResolver:
             // further rest views and Array interfaces.
             arrayElementType(nominal).foreach: element =>
               tupleBindings(TupleShape(element.output.resolution.source,
-                TupleShape.Unknown(element.output.resolution.source, TupleShape.ArgumentField(element, Nil)) :: Nil)(this), marks)
+                TupleShape.Unknown(element.output.resolution.source, TupleShape.TypedField(element, Nil)) :: Nil)(this), marks)
           case _ => ()
         shape match
           case value: TermShape => narrow(value)
@@ -5111,7 +5107,7 @@ class NewResolver:
                   // between their element values, so no information is lost.
                   val flow = iterationFlow(term, lexicalBinders(tuple))
                   listenIterableElements(shape, flow)
-                  val element = TupleShape.TypedField(declaredType(flow.elements, Map.empty), Nil)
+                  val element = TupleShape.TypedField(TypeArgument.invariant(declaredType(flow.elements, Map.empty)), Nil)
                   val spread = TupleShape(term, TupleShape.Unknown(term, element) :: Nil)(this)
                   if rctx.state.spreadInputs.getOrElseUpdate(spreadKey, mutable.Set.empty).add(ShapeIdentity.key(spread)) then
                     expand(rest, TupleShape.Spread(spread, NoMarks) :: reversed)

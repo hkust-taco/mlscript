@@ -248,12 +248,11 @@ callee's binding environment.
 
 Explicit parameter bindings live in a separate publisher of `TypeArgumentBinding`.
 Each binding records both bounds and the normalized path into the parameter's
-scope. Reads combine inferred values from `TypeShape.Parameter.host` with
-`InstanceShape`s derived directly from the bindings' output types. Explicit outputs
-never enter the inferred-value host. Each read connects both sources to an ordinary
-`TermShapeHost`, which deduplicates outputs and uses the publishers' existing graph
-copying to keep consumers independent. Different bindings with the same output
-retain their input obligations without repeating value flow. Constraints on the
+scope. Binding a parameter also publishes an `InstanceShape` of the output type
+into `TypeShape.Parameter.host`, so reads subscribe to that one host for both
+inferred values and explicit outputs. The host delivers an output shared by
+different bindings once, while those bindings retain their input obligations
+without repeating value flow. Constraints on the
 parameter subscribe to bindings and use their input types. The same entry/exit
 marks filter both operations, so another activation cannot constrain the binding.
 `TypeShape.Parameter` retains both originating hosts, allowing importers to copy

@@ -94,7 +94,8 @@ object TypeShape:
   // The same third-party symbol can have different inference in two exporters.
   // Retain both originating hosts so a consumer sees the exporter's inferred values
   // and explicit bindings, including bindings added privately by an intermediate exporter.
-  // `host` holds only inferred values; reads derive explicit outputs from `arguments`.
+  // `host` holds the values that reads observe: inferred candidates and the output types
+  // of explicit bindings. `arguments` keeps both bounds of each binding for constraints.
   final case class Parameter(symbol: VarSymbol, host: Publisher.Data[ShapeEvent],
       arguments: Publisher.Data[TypeArgumentBinding]) extends TypeShape:
     protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), System.identityHashCode(symbol),
@@ -501,9 +502,9 @@ object TypeArgument:
 
 /** An explicit binding at a parameter's declaration scope. `marks` records the
   * path taken into that scope, so constraints leaving through another activation
-  * cannot reach this argument. Reads derive instances of `argument.output` directly
-  * from this binding; incoming constraints use `argument.input`. Neither operation
-  * writes explicit outputs into the parameter's inferred-value host.
+  * cannot reach this argument. Reads observe an instance of `argument.output`, which
+  * NewResolver.bindTypeArguments publishes into the parameter's value host; incoming
+  * constraints use `argument.input`, which a value host cannot represent.
   */
 final case class TypeArgumentBinding(argument: TypeArgument, marks: Marks)
 

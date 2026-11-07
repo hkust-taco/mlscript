@@ -1183,8 +1183,7 @@ object TupleShape:
     def marks: Ls[Marks]
     def withMarks(outer: Ls[Marks]): Fixed = this match
       case Field(field, inner) => Field(field, inner ::: outer)
-      case TypedField(tpe, inner) => TypedField(tpe, inner ::: outer)
-      case ArgumentField(argument, inner) => ArgumentField(argument, inner ::: outer)
+      case TypedField(bounds, inner) => TypedField(bounds, inner ::: outer)
       case UnknownField(source, inner) => UnknownField(source, inner ::: outer)
       case ValueField(value, inner) => ValueField(value, inner ::: outer)
       case ViewedField(source, instances, inner) => ViewedField(source, instances, inner ::: outer)
@@ -1207,16 +1206,13 @@ object TupleShape:
     protected def sameValue(other: ValueKey): Bool = other match
       case that: ValueField => value.comparison == that.value.comparison && marks == that.marks
       case _ => false
-  final case class TypedField(tpe: DeclaredType, marks: Ls[Marks]) extends Fixed:
-    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), tpe.hashCode, marks.hashCode)
+  /** A field whose contents a type declares. Reads observe `bounds.output`, and constraints
+    * on the field's contents use `bounds.input`. A tuple type's field has one type for both;
+    * an Array element can have two, as in `Array[in A out B]`. */
+  final case class TypedField(bounds: TypeArgument, marks: Ls[Marks]) extends Fixed:
+    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), bounds.hashCode, marks.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
-      case that: TypedField => tpe == that.tpe && marks == that.marks
-      case _ => false
-  /** An Array's element argument retains both its readable and writable bounds. */
-  final case class ArgumentField(argument: TypeArgument, marks: Ls[Marks]) extends Fixed:
-    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), argument.hashCode, marks.hashCode)
-    protected def sameValue(other: ValueKey): Bool = other match
-      case that: ArgumentField => argument == that.argument && marks == that.marks
+      case that: TypedField => bounds == that.bounds && marks == that.marks
       case _ => false
   // Mutable tuple slots retain their positions, but their initializer cannot
   // supply the shape of later reads (including reads through a spread copy).

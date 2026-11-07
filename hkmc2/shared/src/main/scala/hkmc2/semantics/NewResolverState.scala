@@ -284,9 +284,10 @@ final class NewResolverState(val owner: Elaborator.State):
     new Seen(_.exposedTypeHoles)
   val signatureParameters: Cache[VarSymbol, TypeArgument] =
     new Cache(_.signatureParameters, identity)
-  // Keep explicit bindings outside value hosts: two arguments can have the same
-  // readable output and different input obligations. Publisher data supplies the
-  // same consumer-local copying and deferred delivery as inferred parameter values.
+  // Keep explicit bindings in their own hosts: two arguments can have the same
+  // readable output, which the parameter's value host merges, and different input
+  // obligations. Publisher data supplies the same consumer-local copying and deferred
+  // delivery as inferred parameter values.
   private[semantics] val typeArgumentBindings: Cache[VarSymbol, Host[TypeArgumentBinding]] =
     new Cache(_.typeArgumentBindings, identity)
   // Synthesized applications share their type graph, including the symbolic arguments.
