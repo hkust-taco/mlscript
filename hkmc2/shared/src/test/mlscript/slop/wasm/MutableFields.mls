@@ -289,7 +289,7 @@ makeReadLater().value
 // type: here, values of the unknown representation, which an unboxed field cannot hold.
 :ge
 private class Described(mut val value)
-private fun describe(described: mut {value: Any}) = ()
+private fun describe(described: {mut value: Any}) = ()
 private fun mutableView() = describe(Described(const(1)))
 mutableView()
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Unknown' have no common representation

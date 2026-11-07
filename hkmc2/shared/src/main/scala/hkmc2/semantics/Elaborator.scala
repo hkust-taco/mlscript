@@ -1405,7 +1405,16 @@ extends Importer:
     rctx.state.lexicalTypeBinders(field.tsym) = ctx.typeBinders
     if newResolution then field.tsym.defn.foreach(_.sign.foreach(registerSignature))
     val key = field.key.orElse(symbolKey(field.field, required = false))
-    field.copy()(key)
+    field.copy()(field.mut, key)
+  
+  /** Type arguments and mutable record fields share the same input/output interval syntax. */
+  private def typeArgument(tree: Tree)(using Ctx, UnderCtx): Term = tree match
+    case Bra(Round, inner) => typeArgument(inner)
+    case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
+    case Modified(kw @ Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe))).mkLocWith(kw)
+    case Tup(Modified(in @ Keywrd(Keyword.`in`), arg1) :: Modified(out @ Keywrd(Keyword.`out`), arg2) :: Nil) =>
+      Term.WildcardTy(S(subterm(arg1, Tpe)), S(subterm(arg2, Tpe))).mkLocWith(in, out)
+    case arg => subterm(arg, Tpe)
   
   /** An async expression wraps the values of `target` in a promise, whose payload
     * reads the binders in scope where the expression is written (see
@@ -1783,13 +1792,7 @@ extends Importer:
       val baseInterp = interp match
         case Trm | Receiver | Specialization => Specialization
         case _ => interp
-      val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map {
-        case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
-        case Modified(kw @ Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg, Tpe))).mkLocWith(kw)
-        case Tup(Modified(in @ Keywrd(Keyword.`in`), arg1) :: Modified(out @ Keywrd(Keyword.`out`), arg2) :: Nil) =>
-          Term.WildcardTy(S(subterm(arg1, Tpe)), S(subterm(arg2, Tpe))).mkLocWith(in, out)
-        case arg => subterm(arg, Tpe)
-      })(N).withLocOf(tree))
+      val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map(typeArgument))(N).withLocOf(tree))
       // A term specialization must validate its arguments even when unused.
       // Type and constructor interpretations have their own argument checks.
       if newResolution && interp == Trm then listenTerm(result)(_ => ())
@@ -2535,8 +2538,12 @@ extends Importer:
       case Spread(Keywrd(Keyword.`...`), S(body)) :: sts =>
         reportUnusedAnnotations
         go(sts, Nil, RcdSpread(term(body, fieldInterpretation)) :: acc)(N)
-      case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) :: sts =>
+      case InfixApp(key, Keywrd(Keyword.`:`), rhs) :: sts =>
         var newCtx = ctx
+        // A field written `mut f: ...` can be assigned (see RcdField).
+        val (mutField, lhs) = key match
+          case Modified(Keywrd(Keyword.`mut`), lhs) => (true, lhs)
+          case lhs => (false, lhs)
         val (rlhs, rhs_t) = rhs match
           case _: Under => (lhs, subterm(rhs, fieldInterpretation))
           case _ =>
@@ -2544,19 +2551,18 @@ extends Importer:
             case Apps(base, tups) =>
               val rrhs = tups.foldRight(rhs):
                 InfixApp(_, Keywrd(Keyword.`=>`), _)
-              (base, term(rrhs, fieldInterpretation))
+              (base, if fieldInterpretation == Tpe then typeArgument(rrhs) else term(rrhs, fieldInterpretation))
         val newAcc = rlhs match
           case id: Ident if fieldInterpretation == Tpe =>
             // Record type fields declare interfaces, not local value bindings.
             // Keep their types directly so lookup never follows initializer flow.
             reportUnused(annotations.filterNot(_.isInstanceOf[Annot.JsSymbol]))
             val field = Term.Lit(StrLit(id.name)).withLocOf(id)
-            recordFieldScope(MemberKey.symbol(annotations).fold(RcdField.signature(field, rhs_t))(
-              key => RcdField.signature(field, rhs_t, key))) :: acc
+            recordFieldScope(RcdField.signature(field, rhs_t, mutField, MemberKey.symbol(annotations))) :: acc
           case id: Ident =>
             val sym = new VarSymbol(id, mut = true)
             newCtx += id.name -> sym
-            recordFieldScope(RcdField.source(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym).ref(S(id))))
+            recordFieldScope(RcdField.source(Term.Lit(StrLit(id.name)).withLocOf(id), Ctx.RefElem(sym).ref(S(id)), mutField))
               :: defineVar(sym, rhs_t)(Loc(rlhs, rhs))
               :: LetDecl(sym, annotations)(id.toLoc)
               :: acc
@@ -2564,17 +2570,17 @@ extends Importer:
             reportUnusedAnnotations
             val field = Term.Lit(lit).withLocOf(lit)
             recordFieldScope(if fieldInterpretation == Tpe
-              then RcdField.signature(field, rhs_t)
-              else RcdField.source(field, rhs_t)
+              then RcdField.signature(field, rhs_t, mutField, N)
+              else RcdField.source(field, rhs_t, mutField)
             ) :: acc
           case Bra(Round, inner) =>
             reportUnusedAnnotations
             val key = term(inner, Trm)
-            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t)
-              else RcdField.source(key, rhs_t)) :: acc
+            recordFieldScope(if fieldInterpretation == Tpe then RcdField.signature(key, rhs_t, mutField, N)
+              else RcdField.source(key, rhs_t, mutField)) :: acc
           case _ =>
             raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
-            recordFieldScope(RcdField.source(Term.Error().withLocOf(rlhs), rhs_t)) :: acc
+            recordFieldScope(RcdField.source(Term.Error().withLocOf(rlhs), rhs_t, mutField)) :: acc
         newCtx.givenIn:
           go(sts, Nil, newAcc)(N)
       case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts

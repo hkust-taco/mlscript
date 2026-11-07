@@ -193,6 +193,9 @@ class NewResolver:
                 case Spd(_, sign, _) => TypeShape.TupleField(typeResolution(sign), spread = true)
           case record: Rcd =>
             val fields = record.stats.collect { case field: RcdField => field }
+            fields.foreach: field =>
+              if !record.mut && !field.mut && field.rhs.withoutCaptures.isInstanceOf[WildcardTy] then
+                result.fail(msg"A field with input/output bounds must be declared 'mut'." -> field.toLoc :: Nil)
             if fields.length != record.stats.length || fields.exists(_.key.isEmpty)
             then
               result.fail(msg"A record type requires statically named fields." -> record.toLoc :: Nil)
@@ -696,14 +699,17 @@ class NewResolver:
     declaredType(resolution, context.bindings, positive, asArgument = true).instantiate(context.instances).withOrigin(context.origin)
 
   /** Split a field before substitution selects either endpoint. Flipping an already substituted read type
-    * cannot recover its write type: mut {f: A} under A = in S out T has input S and output T.
+    * cannot recover its write type: {mut f: A} under A = in S out T has input S and output T.
     * The enclosing polarity also applies inside explicit bounds and function types.
     */
   private def declaredField(resolution: TypeResolution, context: DeclaredType, mutable: Bool)
       (using ResolutionContext): TypeArgument =
     val argument = declaredArgument(resolution, context, context.positive)
     val output = selectArgument(argument, true)
-    TypeArgument(if mutable then selectArgument(argument, false) else extremeType(false), output)
+    val read = resolution.source.withoutCaptures match
+      case WildcardTy(_, N) => output.withOrigin(S(TypeInterfaceReason.MissingFieldOutput(resolution.source)))
+      case _ => output
+    TypeArgument(if mutable then selectArgument(argument, false) else extremeType(false), read)
 
   private def normalizedArgument(source: TypeResolution, parts: TypeArgument)(using ResolutionContext): DeclaredType =
     rctx.state.argumentTypes.getOrElseUpdate((source, parts), {
@@ -1587,8 +1593,8 @@ class NewResolver:
                     case key: SymbolKey => name -> Set(key)
                   case _ => N
                 publish(RecordTypeShape(fields.map((field, sign) =>
-                  field.key.get -> declaredField(sign, current, source.mut)).toMap,
-                  fields.collect { case (field, _) if source.mut => field.key.get }.toSet, aliases.toMap)(
+                  field.key.get -> declaredField(sign, current, field.mut || source.mut)).toMap,
+                  fields.collect { case (field, _) if field.mut || source.mut => field.key.get }.toSet, aliases.toMap)(
                   source, fields.map((field, _) => field.key.get -> field).toMap))
               case TypeShape.Union(left, right) => next(left); next(right)
               case TypeShape.Intersection(left, right) if !mergeIntersections => next(left); next(right)
@@ -2106,7 +2112,7 @@ class NewResolver:
         case TypeShape.Combined(formula) =>
           formula.orderedAtoms.foreach(atom => follow(atom.instantiate(tpe.instances), noTypeArguments, captures, next))
         case TypeShape.Record(source, fields) => observe(constrainRecord(fields.map((field, sign) =>
-          (field, declaredField(sign, tpe, source.mut), source.mut)), _, marks, site))
+          (field, declaredField(sign, tpe, field.mut || source.mut), field.mut || source.mut)), _, marks, site))
         case TypeShape.Function(_, _) => observe(constrainFunction(tpe, _, marks, site))
         case TypeShape.Polymorphic(_, _, body) =>
           follow(declaredType(body, tpe), args, captures, next)
@@ -4806,7 +4812,7 @@ class NewResolver:
           val record = defining.state.namedTupleRecords.getOrElseUpdate(new Identity(tuple), {
             val record: Rcd = Rcd(false, fields.map((key, value) =>
               // Like the record they are packed into at run time, named tuple fields are immutable.
-              val field = RcdField.source(key, value)(using rctx.owner)
+              val field = RcdField.source(key, value, false)(using rctx.owner)
               lexicalBinders(tuple).foreach(binders => rctx.state.lexicalTypeBinders(field.tsym) = binders)
               observeErasureDefinition(field.tsym.defn.get)
               field))
