@@ -4,3 +4,7 @@
 !/RuntimeJS.mjs
 !/apps/parsing/vendors/railroad/railroad.mjs
 !/NoFreeze.mjs
+
+*.wat
+!/wasm/Box.mjs
+!/wasm/Box.wat

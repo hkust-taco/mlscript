@@ -13,6 +13,9 @@ enum CompilationTarget(val displayName: Str):
   case JS(emitCastComments: Bool) extends CompilationTarget("JavaScript")
   case Wasm extends CompilationTarget("Wasm")
 
+  /** Compares backend choices, ignoring options such as JavaScript cast comments. */
+  def sameBackend(that: CompilationTarget): Bool = ordinal == that.ordinal
+
 
 def config(using Config): Config = summon
 
@@ -336,7 +339,7 @@ object Config:
     given Raise = _ => ()
     def modifier(tree: syntax.Tree): Config => Config = tree match
       case App(Directive(prefix, _), args) => modifier(Directive(prefix, args))
-      case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args)
+      case Directive(Ident("config"), Tup(args)) => ConfigParser.parseOverrides(args, allowCompilationTarget = true)
       case Directive(Ident("lang"), Tup(args)) => ConfigParser.parseLanguageDirective(args)
       case Directive(Ident("dbg"), Tup(args)) => ConfigParser.parseDebugDirective(args, definitionLocal = false, sourceDir)
       case _ => identity
@@ -441,9 +444,15 @@ object ConfigParser:
         case N => cfg
   
   /** Parse a list of config override arguments (from the Tup tree) into a Config modification function. */
-  def parseOverrides(args: Ls[Tree])(using Raise): Config => Config =
+  def parseOverrides(args: Ls[Tree], allowCompilationTarget: Bool)(using Raise): Config => Config =
     args.foldLeft(identity[Config]): (acc, arg) =>
-      val override_ = parseOverride(arg)
+      val override_ = arg match
+        case NamedArg("target", _) if !allowCompilationTarget =>
+          raise(ErrorReport(
+            msg"Compilation target can only be set by a top-level '#config' directive" -> arg.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+          identity[Config]
+        case _ => parseOverride(arg)
       cfg => override_(acc(cfg))
   
   /** Parse a single config override argument. */
@@ -469,6 +478,15 @@ object ConfigParser:
     case PrefixOpApp(Ident("-"), IntLit(v)) => S(-v.toInt)
     case _ =>
       expect("an integer value")(tree)
+      N
+
+  private def parseCompilationTarget(tree: Tree)(using Raise): Opt[CompilationTarget] = tree.deparenthesized match
+    case Sel(Ident("CompilationTarget"), Ident("JS")) | Ident("JS") =>
+      S(CompilationTarget.JS(emitCastComments = false))
+    case Sel(Ident("CompilationTarget"), Ident("Wasm")) | Ident("Wasm") =>
+      S(CompilationTarget.Wasm)
+    case _ =>
+      expect("CompilationTarget.JS or CompilationTarget.Wasm")(tree)
       N
 
   private def parseVersionName(tree: Tree)(using Raise): Opt[Str] = tree match
@@ -789,6 +807,8 @@ object ConfigParser:
   /** Parse a single field override like `tailRecOpt: false`. */
   private def parseField(name: Str, value: Tree)(using Raise): Config => Config = name match
     case "language" => parseLanguageOverride(value)
+    case "target" =>
+      parsedField(value)(parseCompilationTarget)(v => _.copy(target = v))
     case "noOpt" =>
       parsedField(value)(parseBool)(v => _.mapOptimizer(_ => Optimizer.NoOpt))
     case "tailRecOpt" =>
