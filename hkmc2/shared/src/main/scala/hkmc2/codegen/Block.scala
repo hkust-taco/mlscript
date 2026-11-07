@@ -1254,7 +1254,9 @@ sealed abstract class Result extends Located:
       clsSym.map(sym => ErasedType.ValueLike(rsc = S(false), sym))
     // * A tuple literal is typed as `Array` at runtime.
     case Tuple(_, _) => S(ErasedType.Array)
-    case _: Lambda => S(ErasedType.Function(rsc = S(false)))
+    // * Avoid a redundant cast around a function literal: in JavaScript that
+    // * would also prevent assignment from supplying the function's inferred name.
+    case _: Lambda => S(ErasedType.Function(S(false)))
     case _ => N
 
   /** `undefined` is an unspecified value of any representation, including unboxed primitives.
@@ -1279,6 +1281,20 @@ sealed abstract class Result extends Located:
     */
   def coerceTo(expected: ErasedValueType, loc: Opt[Loc])(using Ctx, State, Raise, Config): Result =
     if needsCastTo(expected, reportUnrelated(loc)) then Cast(this, expected, config.checkCasts)(loc) else this
+  
+  /** Coerces this result, handing unrelated representations to the caller. Unrepresentable
+    * unions still report the declaration error; they cannot justify substituting a value. */
+  def coerceToOr[R](expected: ErasedValueType, loc: Opt[Loc])(coerced: Result => R)
+      (unrelated: (CanonicalErasedValueType, CanonicalErasedValueType) => R)(using Ctx, State, Raise, Config): R =
+    val actual = erasedType_!.canonicalize
+    val declared = expected.canonicalize
+    ErasedType.needsCast(actual, declared) match
+      case S(false) => coerced(this)
+      case S(true) => coerced(Cast(this, expected, config.checkCasts)(loc))
+      case N if actual.isInstanceOf[ErasedType.Incompatible] || declared.isInstanceOf[ErasedType.Incompatible] =>
+        reportUnrelated(loc)(actual, declared)
+        coerced(this)
+      case N => unrelated(actual, declared)
   
   /** Coerces a value that the compiler knows to have `expected`'s representation, such as a
     * temporary that generated code binds to the result of an untyped runtime helper.
