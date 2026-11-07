@@ -149,7 +149,7 @@ fun noCandidate(x) = x.absent
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	fun noCandidate(x) = x.absent
 //│ ║        	                     ^^^^^^^^
-//│ ╟── Cannot resolve member 'absent' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'absent'
 //│ ║  l.+2: 	[noCandidate(M2 as Any), noCandidate(M1)]
 //│ ║        	                   ^^^
 //│ ╟── Type 'Any' is declared without a member interface.
@@ -189,7 +189,7 @@ eagerUnknown.u
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+3: 	eagerUnknown.u
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'u' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'u'
 //│ ║  l.+2: 	let eagerUnknown = if hide(true) then M1 else (M2 as Any)
 //│ ║        	                                                     ^^^
 //│ ╟── Type 'Any' is declared without a member interface.

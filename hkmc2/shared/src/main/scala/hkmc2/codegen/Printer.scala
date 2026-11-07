@@ -236,10 +236,12 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
       doc"${docQual}.${showRefSymbol(name.name, sel.symbol)}"
     case DynSelect(qual, fld, kind) => printDynSelection(qual, fld, kind)
     case x: Value => print(x)
-    case Cast(value, target, check) =>
-      // * `as!` and `as!!` mark a cast asserted with and without a runtime check respectively.
-      doc"(${print(value)} as${if check then "!" else "!!"} ${print(target)})"
+    case cast: CastPath => printCast(cast)
     // case _ => TODO(path)
+  
+  // * `as!` and `as!!` mark a cast asserted with and without a runtime check respectively.
+  private def printCast(cast: Cast)(using Scope): Document =
+    doc"(${print(cast.value)} as${if cast.check then "!" else "!!"} ${print(cast.target)})"
   
   def print(result: Result)(using Scope): Document =
     (if !showPurity || result.isPure then "" else "!") ::
@@ -257,6 +259,7 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
     case Tuple(mut, elems) =>
       val docElems = elems.map(x => print(x)).mkDocument(", ")
       doc"${if mut then "mut " else ""}[${docElems}]"
+    case cast: CastResult => printCast(cast)
     case Record(mut, args) =>
       doc"${if mut then "mut " else ""}{ ${
         args.map(x => x.idx.fold(doc"...")(p => print(p) :: ": ") :: print(x.value)).mkDocument(", ")
@@ -265,7 +268,9 @@ class Printer(using Config, Ctx, Raise, ShowCfg, State, SymbolPrinter):
   
   def print(imports: Ls[ImportSymbol -> Str])(using Scope): Document =
     imports.map: (local, path) =>
-        val docLocal = scope.allocateName(local)
+        // Source imports retain their definition's identity, including aliases and repeated worksheet imports,
+        // so `scope.allocateName` could crash, here.
+        val docLocal = scope.allocateOrGetName(local)
         doc"""import "..." as ${docLocal}; # """
       .mkDocument()
   

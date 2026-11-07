@@ -1,6 +1,8 @@
 #lang(0.3.x)
 
+// TODO: make it `type Any = Anything`
 declare type Any
+
 declare type Anything
 declare type Nothing
 
@@ -109,9 +111,7 @@ declare class Map[K, V] {
   fun forEach(f: (V, drop K, drop Map[K, V]) -> Any): ()
 }
 
-declare class Iterator[out T] {
-  fun next(): { value: T, done: Bool }
-}
+type Iterator[out T] = { next: () -> ({ value: T, done: Bool }) }
 type Iterable[out A] = {@annotations.jsSymbol(Symbol.iterator) iterator: () -> Iterator[A]}
 type IterableIterator[out A] = Iterator[A] & Iterable[A]
 

@@ -153,9 +153,9 @@ fun locallyUnoptimizedCurried(x)(y)(z) =
 //│ locallyUnoptimizedCurried = function locallyUnoptimizedCurried(x) {
 //│   return (y) => {
 //│     return (function* (z) {
-//│       let tmp11;
-//│       tmp11 = globalThis.Object.freeze([ x, y, z ]);
-//│       return yield tmp11
+//│       let tmp9;
+//│       tmp9 = globalThis.Object.freeze([ x, y, z ]);
+//│       return yield tmp9
 //│     }).bind(this)
 //│   }
 //│ };
@@ -176,9 +176,9 @@ fun unoptimizedCurried(x)(y) =
 //│ let unoptimizedCurried;
 //│ unoptimizedCurried = function unoptimizedCurried(x) {
 //│   return (function* (y) {
-//│     let tmp12;
-//│     tmp12 = globalThis.Object.freeze([ x, y ]);
-//│     return yield tmp12
+//│     let tmp10;
+//│     tmp10 = globalThis.Object.freeze([ x, y ]);
+//│     return yield tmp10
 //│   }).bind(this)
 //│ };
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————

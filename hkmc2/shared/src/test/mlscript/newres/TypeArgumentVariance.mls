@@ -17,7 +17,7 @@ xs.0.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+4: 	xs.0.value
 //│ ║        	^^^^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.+2: 	let xs = (mut [] as Array[in Item])
 //│ ║        	                          ^^^^^^^
@@ -65,7 +65,7 @@ box.item.value
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+4: 	box.item.value
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.+3: 	let box = (new Box(Item(6)) as Box[in Item])
 //│ ║        	                                   ^^^^^^^
@@ -93,7 +93,7 @@ box.apply(x => x.value)
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+5: 	box.apply(x => x.value)
 //│ ║        	               ^^^^^^^
-//│ ╟── Cannot resolve member 'value' of a value with unknown shape.
+//│ ╟── Value with an empty interface does not contain member 'value'
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.+4: 	let box = (new Box(Item(8)) as Box[in Item])
 //│ ║        	                                   ^^^^^^^

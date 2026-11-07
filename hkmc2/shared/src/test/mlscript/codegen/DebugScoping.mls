@@ -46,7 +46,7 @@ DebugMethods.selected(7)
 :noCodeGen
 :de
 @dbg('lowering) fun command_elaboration(x) = x
-//│ Elab block List(Annotated(App(Ident(dbg),Tup(List(Ident('lowering)))),TermDef(Fun,App(Ident(command_elaboration[...] LocalScope(block:6)
+//│ Elab block List(Annotated(App(Ident(dbg),Tup(List(Ident('lowering)))),TermDef(Fun,App(Ident(command_elaboration[...] LocalScope(block:6,true)
 //│ | Processing term definition App(Ident(command_elaboration),Tup(List(Ident(x))))
 //│ | Elaborating ParamTree: ParamTree(‹›,Ident(x),None,None,Set(),List())
 //│ | Elab term Ident(x)

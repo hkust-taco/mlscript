@@ -211,14 +211,14 @@ open Hidden
 
 :e
 Alone
-//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: Alone
+//│ ╔══[COMPILATION ERROR] Name not found: Alone
 //│ ║  l.+1: 	Alone
 //│ ╙──      	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 Point(5)
-//│ ╔══[COMPILATION ERROR] Name not found in wildcard opens: Point
+//│ ╔══[COMPILATION ERROR] Name not found: Point
 //│ ║  l.+1: 	Point(5)
 //│ ╙──      	^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

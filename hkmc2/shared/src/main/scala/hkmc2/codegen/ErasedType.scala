@@ -107,11 +107,14 @@ object ErasedType:
     * Unboxed primitives have no common upper bound with references or other primitives. `Nothing` lies below
     * every representable type, but a union mixing distinct representations still has nothing to erase to.
     *
-    * Writing such a type is not itself an error - the error is raised wherever a value has to be coerced into or
-    * out of it, by [[Result.coerceTo]]. Both members are carried so that the diagnostic can name them at that use
-    * site.
+    * Erasure rejects such a type where a declaration writes it. A type joined from other representations, such as
+    * a loop's exits, is reported wherever a value has to be coerced into or out of it, by [[Result.coerceTo]].
+    * Both members are carried so that each diagnostic can name them.
+    *
+    * `reported` records that a declaration of this type was already rejected, so coercions into or out of it do
+    * not report it again. It does not take part in equality.
     */
-  case class Incompatible(lhs: CanonicalErasedValueType, rhs: CanonicalErasedValueType)
+  case class Incompatible(lhs: CanonicalErasedValueType, rhs: CanonicalErasedValueType)(val reported: Bool)
       extends ErasedValueType, CanonicalErasedValueType:
     override def sym(using Ctx, State): NoSymbol = NoSymbol
 
@@ -245,7 +248,7 @@ object ErasedType:
       case (tpe, Nothing) => tpe
       // * A primitive shares no supertype with any other non-bottom type - the `Unknown` type
       // * included.
-      case (_: Primitive, _) | (_, _: Primitive) => Incompatible(lhs, rhs)
+      case (_: Primitive, _) | (_, _: Primitive) => Incompatible(lhs, rhs)(reported = false)
       // * The top type absorbs every reference type.
       case (Unknown, _) | (_, Unknown) => Unknown
       // * Two reference types: their nearest common ancestor, at worst `Object`.
@@ -400,8 +403,9 @@ sealed abstract class ErasedValueType extends Canonicalizable:
     * backends reporting these diagnostics do not have.
     */
   final def describe(using Ctx, State): Str =
-    def ownerOf(s: Symbol): Opt[InnerSymbol] = s.asClsOrMod.flatMap: s =>
-      s.irClsLikeDefn.map(_.owner).orElse(s.defn.map(_.owner)).flatten
+    def ownerOf(s: Symbol): Opt[InnerSymbol] = s match
+      case s: (ClassSymbol | ModuleOrObjectSymbol) => s.owner
+      case _ => N
     def qualify(s: Symbol, acc: Ls[Str]): Ls[Str] =
       ownerOf(s).fold(s.nme :: acc)(o => qualify(o, s.nme :: acc))
     canonicalize match

@@ -207,7 +207,7 @@ private fun incompatible(): Int32 | Int64 = unsafe.undefined
 42
 //│ ╔══[COMPILATION ERROR] Types 'Int32' and 'Int64' have no common representation
 //│ ║  l.+1: 	private fun incompatible(): Int32 | Int64 = unsafe.undefined
-//│ ╙──      	                                            ^^^^^^^^^^^^^^^^
+//│ ╙──      	                            ^^^^^^^^^^^^^
 //│ Wasm result:
 //│ = 42
 
@@ -268,7 +268,7 @@ castCalls + 41
 //│ @inline @private
 //│ define narrow⁰ as fun narrow¹(value) {
 //│   let tmp1;
-//│   set tmp1 = wasm⁰.plus_impl﹖(castCalls⁰, 1);
+//│   set tmp1 = +⁰(castCalls⁰, 1);
 //│   set castCalls⁰ = tmp1;
 //│   return (value as! CastTarget⁰)
 //│ };
@@ -277,9 +277,9 @@ castCalls + 41
 //│   constructor CastTarget²
 //│ };
 //│ set castCalls⁰ = 0;
-//│ set tmp = wasm⁰.plus_impl﹖(castCalls⁰, 1);
+//│ set tmp = +⁰(castCalls⁰, 1);
 //│ set castCalls⁰ = tmp;
-//│ return wasm⁰.plus_impl﹖(castCalls⁰, 41)
+//│ return +⁰(castCalls⁰, 41)
 //│ Wasm result:
 //│ = 42
 
@@ -330,7 +330,7 @@ bottomCastCalls + 41
 //│ @noInline @private
 //│ define bottomForCast⁰ as fun bottomForCast¹() {
 //│   let tmp;
-//│   set tmp = wasm⁰.plus_impl﹖(bottomCastCalls⁰, 1);
+//│   set tmp = +⁰(bottomCastCalls⁰, 1);
 //│   set bottomCastCalls⁰ = tmp;
 //│   return undefined
 //│ };
@@ -344,7 +344,7 @@ bottomCastCalls + 41
 //│ };
 //│ set bottomCastCalls⁰ = 0;
 //│ do bottomForCast¹();
-//│ return wasm⁰.plus_impl﹖(bottomCastCalls⁰, 41)
+//│ return +⁰(bottomCastCalls⁰, 41)
 //│ Wasm result:
 //│ = 42
 

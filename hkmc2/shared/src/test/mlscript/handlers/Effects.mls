@@ -7,6 +7,7 @@ abstract class Effect with
   fun perform(arg: Str): Str
 
 
+:expect ()
 handle h = Effect with
   fun perform()(k) = "b"
 
@@ -71,38 +72,34 @@ in
   h.perform("5")
 result
 //│ ————————————| JS (unsanitized) |————————————————————————————————————————————————————————————————————
-//│ let result, h7, handleBlock$7, Handler$h$perform5, Handler$h$15, Handler$h$perform$4;
+//│ let result, h7, handleBlock$7, Handler$h$perform2, Handler$h$15, Handler$h$perform$1;
 //│ runtime.resetEffects();
-//│ Handler$h$perform$4 = function Handler$h$perform$(arg) {
+//│ Handler$h$perform$1 = function Handler$h$perform$(arg) {
 //│   return (k) => {
-//│     return Handler$h$perform5(arg, k)
+//│     return Handler$h$perform2(arg, k)
 //│   }
 //│ };
-//│ Handler$h$perform5 = function Handler$h$perform(arg, k) {
+//│ Handler$h$perform2 = function Handler$h$perform(arg, k) {
 //│   let v, pc;
 //│   if (runtime.resumePc === -1) {
-//│     runtime.resumeValue = runtime.safeCall(k(arg));
-//│     if (runtime.curEffect === null) {
-//│       pc = 1;
-//│     } else {
-//│       return runtime.unwind(Handler$h$perform5, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
-//│     }
+//│     pc = 0;
 //│   } else {
-//│     pc = runtime.resumePc;
+//│     pc = runtime.resumePc /* as! Int */;
 //│     runtime.resumePc = -1;
-//│     if (pc === 0) {
+//│   }
+//│   switch (pc) {
+//│     case 0:
 //│       runtime.resumeValue = runtime.safeCall(k(arg));
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(Handler$h$perform5, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
+//│         runtime.unwind(Handler$h$perform2, 1, "Effects.mls:64:13", null, null, 1, 2, arg, k, 0);
+//│         return runtime.Unit
 //│       }
-//│     }
-//│   }
-//│   if (pc === 1) {
-//│     v = runtime.resumeValue;
-//│     result = result + arg;
-//│     return v
+//│     case 1:
+//│       v = runtime.resumeValue;
+//│       result = result + arg;
+//│       return v;
 //│   }
 //│ };
 //│ result = "";
@@ -118,7 +115,7 @@ result
 //│   }
 //│   perform(arg) {
 //│     let Handler$h$perform$here;
-//│     Handler$h$perform$here = Handler$h$perform$4(arg);
+//│     Handler$h$perform$here = Handler$h$perform$1(arg);
 //│     return runtime.mkEffect(this, Handler$h$perform$here)
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -128,32 +125,28 @@ result
 //│ handleBlock$7 = (undefined, function () {
 //│   let pc;
 //│   if (runtime.resumePc === -1) {
-//│     runtime.resumeValue = runtime.safeCall(h7.perform("1"));
-//│     if (runtime.curEffect === null) {
-//│       pc = 4;
-//│     } else {
-//│       return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
-//│     }
+//│     pc = 0;
 //│   } else {
-//│     pc = runtime.resumePc;
+//│     pc = runtime.resumePc /* as! Int */;
 //│     runtime.resumePc = -1;
-//│     if (pc === 0) {
+//│   }
+//│   switch (pc) {
+//│     case 0:
 //│       runtime.resumeValue = runtime.safeCall(h7.perform("1"));
 //│       if (runtime.curEffect === null) {
 //│         pc = 4;
 //│       } else {
-//│         return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
+//│         runtime.unwind(handleBlock$7, 4, "Effects.mls:68:3", null, null, 1, 0, 0);
+//│         return runtime.Unit
 //│       }
-//│     }
-//│   }
-//│   switch (pc) {
 //│     case 4:
 //│       runtime.resumeValue;
 //│       runtime.resumeValue = runtime.safeCall(h7.perform("2"));
 //│       if (runtime.curEffect === null) {
 //│         pc = 3;
 //│       } else {
-//│         return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
+//│         runtime.unwind(handleBlock$7, 3, "Effects.mls:69:3", null, null, 1, 0, 0);
+//│         return runtime.Unit
 //│       }
 //│     case 3:
 //│       runtime.resumeValue;
@@ -161,7 +154,8 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 2;
 //│       } else {
-//│         return runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
+//│         runtime.unwind(handleBlock$7, 2, "Effects.mls:70:3", null, null, 1, 0, 0);
+//│         return runtime.Unit
 //│       }
 //│     case 2:
 //│       runtime.resumeValue;
@@ -169,7 +163,8 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         return runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
+//│         runtime.unwind(handleBlock$7, 1, "Effects.mls:71:3", null, null, 1, 0, 0);
+//│         return runtime.Unit
 //│       }
 //│     case 1:
 //│       runtime.resumeValue;
@@ -194,14 +189,16 @@ fun f() = case [...x, y, z] then x
 //│ do runtime⁰.resetEffects﹖();
 //│ @private
 //│ define lambda as fun lambda⁰(caseScrut) {
+//│   let middleElements;
 //│   match caseScrut
 //│     Array(2+) =>
 //│       let inlinedVal, tmp;
 //│       set tmp = -⁰(caseScrut.length⁰, 2);
 //│       set inlinedVal = caseScrut.slice⁰(0, tmp);
+//│       set middleElements = (inlinedVal as!! Array⁰);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -2);
 //│       do runtime⁰.Tuple⁰.get⁰(caseScrut, -1);
-//│       return inlinedVal
+//│       return middleElements
 //│     else
 //│       throw new globalThis⁰.Error⁰("match error")
 //│   end
@@ -381,6 +378,7 @@ sum(0, 100)
 
 // stack safe recursion
 :expect 450015000
+#config(effectHandlers: Some(EffectHandlers(optTailResumptiveHandlers:false)))
 handle h = StackDelay with
   fun raise()(k) =
     k(10)
@@ -391,6 +389,8 @@ fun sum(depth, x) =
   else 0
 sum(0, 30000)
 //│ = 450015000
+
+#config(effectHandlers: Some(EffectHandlers()))
 
 :re
 fun sum(x) =

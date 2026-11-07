@@ -40,7 +40,7 @@ hi(0)
 //│     let scrut, tmp2, curDepth;
 //│     runtime.checkDepth();
 //│     if (runtime.curEffect === null) {
-//│       curDepth = runtime.stackDepth + 1;
+//│       curDepth = runtime.stackDepth /* as! Int */ + 1;
 //│       scrut = n === 0;
 //│       if (scrut === true) {
 //│         return 0
@@ -50,7 +50,8 @@ hi(0)
 //│       n = tmp2;
 //│       continue loopLabel;
 //│     }
-//│     return runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0);
+//│     runtime.unwind(hi, -1, "TailCallOptimization.mls:31:1", null, null, 1, 1, n, 0);
+//│     return runtime.Unit;
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {

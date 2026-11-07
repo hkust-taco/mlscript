@@ -400,7 +400,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val res = p.parseAll(p.block(allowNewlines = true))
     val imprtSymbol =
       semantics.TopLevelSymbol("import#"+file.baseName)
-    given Elaborator.Ctx = curCtx.nestLocal("import:"+file.baseName)
+    given Elaborator.Ctx = curCtx.nestLocal("import:"+file.baseName, isTopLevel = true)
     val elab = Elaborator(etl, wd, Ctx.empty)
     try
       val resBlk = new syntax.Tree.Block(res)
@@ -482,7 +482,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     // given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
-    given Elaborator.Ctx = curCtx.nestLocal(s"block:${blockNum}")
+    given Elaborator.Ctx = curCtx.nestLocal(s"block:${blockNum}", isTopLevel = true)
     // Match the compiler's prelude bootstrap: builtin lookup uses the original
     // declaration symbols, including while those declarations are elaborated.
     if file == preludeFile then prelude = summon[Elaborator.Ctx].withMembers(blk.definedSymbols)

@@ -14,19 +14,18 @@ open annotations
 fun asPromise(value: Promise[Int]): Promise[Int] = value
 Promise.all([asPromise(answer(true, 42)), asPromise(answer(false, 43))])
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Promise⁰, tmp1: Promise⁰, tmp2: Promise⁰, tmp3: Promise⁰, tmp4: Array⁰, answer;
-//│ define answer as fun answer⁰(early: Bool⁰, value: Unknown)(): Int⁰ {
-//│   match early
-//│     true =>
-//│       return (value as! Int⁰)
-//│     else
-//│       return (value as! Int⁰)
-//│   end
-//│ };
-//│ define answer¹ as fun answer²(early: Bool⁰, value: Unknown): Promise⁰ {
-//│   let tmp5: Function⁰;
-//│   set tmp5 = answer⁰(early, value);
-//│   return runtime⁰.toJsAsync﹖(tmp5)
+//│ let tmp: Promise⁰, tmp1: Promise⁰, tmp2: Promise⁰, tmp3: Promise⁰, tmp4: Array⁰;
+//│ define answer⁰ as fun answer²(early: Bool⁰, value: Unknown): Promise⁰ {
+//│   let answer$async;
+//│   define answer$async as fun answer¹(): Int⁰ {
+//│     match early
+//│       true =>
+//│         return (value as! Int⁰)
+//│       else
+//│         return (value as! Int⁰)
+//│     end
+//│   };
+//│   return (runtime⁰.toJsAsync﹖(answer¹) as! Promise⁰)
 //│ };
 //│ define asPromise⁰ as fun asPromise¹(value: Promise⁰): Promise⁰ {
 //│   return value
@@ -53,7 +52,7 @@ private class GeneratorChild() extends GeneratorBase() with
   override fun generate(value: Any) = value
 GeneratorChild().generate("payload").next()
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: ?, tmp1: Iterator⁰;
+//│ let tmp: ?, tmp1: Unknown;
 //│ @private
 //│ define GeneratorBase⁰ as class GeneratorBase² {
 //│   constructor GeneratorBase¹
@@ -85,7 +84,7 @@ fun curried: Int -> Int -> Int
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
 //│ let curried$worker;
 //│ @inline
-//│ define curried⁰ as fun curried¹(x: ?)(y: ?): Iterator⁰ {
+//│ define curried⁰ as fun curried¹(x: ?)(y: ?): Unknown {
 //│   return curried$worker⁰(x, y)
 //│ };
 //│ @generator
@@ -147,21 +146,20 @@ class ResultGetters(value: Any) with
 let results = new ResultGetters(42)
 Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│ ———————————————| Lowered IR |———————————————————————————————————————————————————————————————————————
-//│ let tmp: Promise⁰, tmp1: Array⁰, wrapped;
-//│ define wrapped as fun wrapped⁰(this1: ResultGetters⁰)(): Int⁰ {
-//│   return (this1.value⁰ as! Int⁰)
-//│ };
-//│ define ResultGetters¹ as class ResultGetters⁰ {
+//│ let tmp: Promise⁰, tmp1: Array⁰;
+//│ define ResultGetters⁰ as class ResultGetters² {
 //│   private val value⁰: Unknown;
-//│   constructor ResultGetters²(value: Unknown) {
+//│   constructor ResultGetters¹(value: Unknown) {
 //│     @private
 //│     define value¹ as val value⁰: Unknown = value;
 //│     end
 //│   }
-//│   method wrapped¹ = fun wrapped²: Promise⁰ {
-//│     let tmp2: Function⁰;
-//│     set tmp2 = wrapped⁰(ResultGetters⁰.this);
-//│     return runtime⁰.toJsAsync﹖(tmp2)
+//│   method wrapped⁰ = fun wrapped²: Promise⁰ {
+//│     let wrapped$async;
+//│     define wrapped$async as fun wrapped¹(): Int⁰ {
+//│       return (ResultGetters².this.value⁰ as! Int⁰)
+//│     };
+//│     return (runtime⁰.toJsAsync﹖(wrapped¹) as! Promise⁰)
 //│   }
 //│   method direct⁰ = fun direct¹: Promise⁰ {
 //│     return globalThis⁰.Promise¹.resolve⁰(43)
@@ -170,7 +168,7 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 //│     return globalThis⁰.Promise¹.resolve⁰(44)
 //│   }
 //│ };
-//│ set results⁰ = new ResultGetters⁰(42);
+//│ set results⁰ = new ResultGetters²(42);
 //│ set tmp = results⁰.ordinary¹();
 //│ set tmp1 = [results⁰.wrapped², results⁰.direct¹, tmp];
 //│ return globalThis⁰.Promise¹.all⁰(tmp1)
@@ -191,13 +189,13 @@ Promise.all([results.wrapped, results.direct, results.ordinary()])
 let recursiveIterator = forward()
 [recursiveIterator.next(), recursiveIterator.next(), recursiveIterator.next()]
 //│ ——————————————| Optimized IR |——————————————————————————————————————————————————————————————————————
-//│ let tmp: Unknown, tmp1: Unknown, tmp2: Unknown, recursive$worker;
+//│ let tmp: ?, tmp1: ?, tmp2: ?, recursive$worker;
 //│ @noInline
-//│ define forward⁰ as fun forward¹(): Iterator⁰ {
+//│ define forward⁰ as fun forward¹(): Unknown {
 //│   return recursive$worker⁰(1, 42)
 //│ };
 //│ @inline
-//│ define recursive⁰ as fun recursive¹(count: Int⁰)(result: Int⁰): Iterator⁰ {
+//│ define recursive⁰ as fun recursive¹(count: Int⁰)(result: Int⁰): Unknown {
 //│   return recursive$worker⁰(count, result)
 //│ };
 //│ @generator
@@ -207,7 +205,7 @@ let recursiveIterator = forward()
 //│   set scrut = >⁰(count, 0);
 //│   match scrut
 //│     true =>
-//│       let inlinedVal: Iterator⁰;
+//│       let inlinedVal: Unknown;
 //│       set tmp3 = -⁰(count, 1);
 //│       set inlinedVal = recursive$worker⁰(tmp3, result);
 //│       do yield*⁰(inlinedVal);
@@ -225,8 +223,7 @@ let recursiveIterator = forward()
 //│ = [{value: 1, done: false}, {value: 0, done: false}, {value: 42, done: true}]
 //│ recursiveIterator =  {}
 
-// TODO: AsyncLowering hoists the helper out of the local constructor's scope.
-:fixme
+// Async bodies retain access to constructors defined in their lexical scope.
 :await
 :expect 42
 fun localAsyncPayload() =
@@ -234,15 +231,4 @@ fun localAsyncPayload() =
   @async fun answer(): Payload = Payload(42)
   answer().then(payload => payload.value)
 localAsyncPayload()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Payload'
-//│ ║  l.+3: 	  @async fun answer(): Payload = Payload(42)
-//│ ║        	                                 ^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.+2: 	  data class Payload(value: Int)
-//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'answer'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.+3: 	  @async fun answer(): Payload = Payload(42)
-//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: Payload is not defined
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+//│ = 42

@@ -218,9 +218,10 @@ private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+1: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
 //│ ║        	                                                       ^^^^^^^^^^^^^^^^^
-//│ ╟── Value of type 'Iterator' does not contain member 'iterator'
-//│ ║  l.+1: 	private fun requireIterable(iterator: Iterator[Int]) = iterator.iterator()
-//│ ╙──      	                                      ^^^^^^^^^^^^^
+//│ ╟── Record type does not contain member 'iterator'
+//│ ║  in ../../decls/Prelude.mls
+//│ ║  l.XX: 	type Iterator[out T] = { next: () -> ({ value: T, done: Bool }) }
+//│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 // Abstract members retain their source name and runtime key in implementations.
 :expect [17]
