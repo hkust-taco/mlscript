@@ -64,13 +64,8 @@ g(f(p()))
 //│ deforest > X⁰(tmp⁰) ->
 //│ deforest > 	match: x³
 //│ deforest > 	fields: x³.a⁰
-//│ deforest > Y⁰(O⁰) ->
-//│ deforest > 	match: y⁰
-//│ deforest > 	fields: y⁰.b⁰
 //│ deforest > <<< fusing <<<
 //│ eta-expansion > >>> eta-expansion targets shapes >>>
-//│ eta-expansion > p$p⁰#0 @ <root>: [0, 2, 2]
-//│ eta-expansion > f$x_X⁰#0 @ <root>: [1, 2, 2]
 //│ eta-expansion > <<< eta-expansion targets shapes <<<
 //│ = O
 

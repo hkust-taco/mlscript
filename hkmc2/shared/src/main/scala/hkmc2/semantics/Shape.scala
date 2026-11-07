@@ -661,7 +661,7 @@ class BaseShape(val defn: ClassLikeDef, val ext: Opt[TermShape]) extends CoreHea
   * part of semantic equality: a merged field may have several such witnesses.
   * Each field retains its read (output) and write (input) types separately: substitution can
   * select different bounds for them, even when both were written as the same type variable.
-  * Immutable fields have Nothing as their input. The `mutable` fields (see RcdField) are
+  * Immutable fields have Nothing as their input. Fields of a mutable record type are
   * part of the interface: values constrained by it admit their inputs as writes.
   */
 final class RecordTypeShape(val fields: Map[MemberKey, TypeArgument], val mutable: Set[MemberKey], val aliases: Map[Str, Set[SymbolKey]])(
@@ -860,7 +860,6 @@ final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams
   */
 enum TypeInterfaceReason:
   case MissingOutput(source: Term)
-  case MissingFieldOutput(source: Term)
   case ContravariantParameter(parameter: TyParam, source: Term)
   case Unrestricted(source: Term)
   case AbstractDeclaration(symbol: TypeAliasSymbol, source: Term)
@@ -869,12 +868,10 @@ enum TypeInterfaceReason:
   case Unavailable(source: Term)
 
   def provenance: ShapeProvenance =
-    def missingOutput(source: Term, subject: Str): Ls[(Message, Opt[Loc])] =
-      (msg"This $subject specifies only an input bound." -> source.toLoc) ::
-        (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
     val result = ShapeProvenance(this match
-      case MissingOutput(source) => missingOutput(source, "type argument")
-      case MissingFieldOutput(source) => missingOutput(source, "field")
+      case MissingOutput(source) =>
+        (msg"This type argument specifies only an input bound." -> source.toLoc) ::
+          (msg"Values read through it have no output bound more specific than 'Any'." -> N) :: Nil
       case ContravariantParameter(parameter, source) =>
         (msg"This type argument supplies only an input bound for '${parameter.sym.nme}'." -> source.toLoc) ::
           (msg"Type parameter '${parameter.sym.nme}' is declared contravariant here." -> parameter.sym.toLoc) ::
@@ -1245,8 +1242,7 @@ object TupleShape:
   * its field symbols, but writes can change the copied values even if r is immutable.
   * Store mutability on this lookup result: reads through the mutable copy also return
   * the values assigned to the field, while reads from an immutable r can only return its
-  * initializer. Reads through any copy of r of a field declared `mut` (see RcdField) are mutable
-  * lookups too, as a copy reads the value that r holds when it is made.
+  * initializer. A copy reads the values that its source holds when the copy is made.
   */
 final case class RecordMember(field: RcdField, mutable: Bool)
 
@@ -1267,7 +1263,7 @@ final class RecordShape private (val source: Term.Rcd, val elements: Ls[RecordSh
       case Nil => Missing
       case RecordShape.Field(field) :: rest => field.key match
         case S(key) =>
-          if key == name then Found(RecordMember(field, field.mut || source.mut), Nil) else loop(rest)
+          if key == name then Found(RecordMember(field, source.mut), Nil) else loop(rest)
         case _ => unknown(field.field)
       case RecordShape.Unknown(shape) :: _ => Unknown(Uncertainty.RecordOverwrite, shape.fromPublicInterface, shape.provenance)
       case RecordShape.Dynamic(marks) :: _ => Dynamic(marks)

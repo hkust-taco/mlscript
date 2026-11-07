@@ -212,7 +212,7 @@ class TypeRelationTest extends AnyFunSuite:
       import h.given
       val (argument, at) = h.parameter("Argument")
       val (element, et) = h.parameter("Element")
-      val field = RcdField.signature(Term.Lit(Tree.StrLit("value")), Term.UnitVal(), mut = false, symbol = N)
+      val field = RcdField.signature(Term.Lit(Tree.StrLit("value")), Term.UnitVal())
       val source: Term.Rcd = Term.Rcd(false, List(field))
       val record = RecordTypeShape(Map("value" -> TypeArgument(h.tpe(TypeShape.Bottom), et)),
         Set.empty, Map.empty)(source, Map("value" -> field))
@@ -289,8 +289,8 @@ class TypeRelationTest extends AnyFunSuite:
       value.typeInterpretation = S(element.resolution)
       val next = Term.UnitVal()
       next.typeInterpretation = S(resolution)
-      val valueField = RcdField.signature(Term.Lit(Tree.StrLit("value")), value, false, N)
-      val nextField = RcdField.signature(Term.Lit(Tree.StrLit("next")), next, false, N)
+      val valueField = RcdField.signature(Term.Lit(Tree.StrLit("value")), value)
+      val nextField = RcdField.signature(Term.Lit(Tree.StrLit("next")), next)
       val source: Term.Rcd = Term.Rcd(false, List(valueField, nextField))
       resolution.publish(TypeShape.Record(source, List(valueField -> element.resolution, nextField -> resolution)))
       DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)
@@ -649,7 +649,7 @@ class TypeRelationTest extends AnyFunSuite:
     val left = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     val right = new TypeResolution(Term.UnitVal(), _ => fail("Unexpected type error"))
     def recursive(resolution: TypeResolution): Unit =
-      val next = RcdField.signature(Term.Lit(Tree.StrLit("next")), Term.UnitVal(), false, N)
+      val next = RcdField.signature(Term.Lit(Tree.StrLit("next")), Term.UnitVal())
       val source: Term.Rcd = Term.Rcd(false, List(next))
       resolution.publish(TypeShape.Record(source, List(next -> resolution)))
     recursive(left)

@@ -64,7 +64,7 @@ set record.count = "many"
 //│ ║  l.+1: 	set record.count = "many"
 //│ ╙──      	    ^^^^^^^^^^^^
 
-let fields = {mut count: 0, label: "count"}
+let fields = mut {count: 0, label: "count"}
 //│ fields = {count: 0, label: "count"}
 
 :ge
@@ -76,7 +76,7 @@ set fields.count = "many"
 // The values that a record type describes can be assigned values of the types of its mutable fields.
 class Holder(mut val item)
 let holder = Holder(1)
-fun accept(described: {mut item: Str}) = ()
+fun accept(described: mut {item: Str}) = ()
 accept(holder)
 //│ holder = Holder(1)
 

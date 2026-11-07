@@ -44,7 +44,7 @@ updateInitialized(40)
 //│ let updateInitialized$box_MutableInputBox, updateInitialized$box_rest, updateInitialized$box_MutableInputBox1, updateInitialized$box_rest1, updateInitialized$updateInitialized;
 //│ @private @noInline
 //│ define updateInitialized$updateInitialized as fun updateInitialized$updateInitialized⁰(n) {
-//│   let current, value, arg$MutableInputBox$0$, tmp, box, MutableInputBox_value;
+//│   let current, box, value, arg$MutableInputBox$0$, tmp, MutableInputBox_value;
 //│   set current = n;
 //│   set MutableInputBox_value = 1;
 //│   set box = updateInitialized$box_MutableInputBox⁰(MutableInputBox_value);
@@ -76,7 +76,7 @@ updateInitialized(40)
 //│ };
 //│ @noInline
 //│ define updateInitialized⁰ as fun updateInitialized¹(n) {
-//│   let current, value, arg$MutableInputBox$0$, tmp, box, MutableInputBox_value;
+//│   let current, box, value, arg$MutableInputBox$0$, tmp, MutableInputBox_value;
 //│   set current = n;
 //│   set MutableInputBox_value = 1;
 //│   set box = updateInitialized$box_MutableInputBox¹(MutableInputBox_value);

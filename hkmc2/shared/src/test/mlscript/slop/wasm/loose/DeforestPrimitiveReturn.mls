@@ -32,12 +32,12 @@ wasm.ref.i31(f(wasm.i32.const(42)))
 //│ };
 //│ @private
 //│ define f⁰ as fun f¹(n: Int32): Int32 {
-//│   let b: Function⁰;
+//│   let b: Empty¹;
 //│   set b = $b_Empty⁰();
 //│   return b(n)
 //│ };
 //│ @data
-//│ define Empty¹ as class Empty² {
+//│ define Empty² as class Empty¹ {
 //│   constructor Empty⁰
 //│ };
 //│ set tmp = wasm⁰.i32⁰.const⁰(42);

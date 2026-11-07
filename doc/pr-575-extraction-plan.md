@@ -1,13 +1,12 @@
 # Extraction plan for PR #575
 
 Status updated 2026-11-07: E01–E03, B01–B05, E08, E14, E17–E18, structural
-Iterator and E27 are merged upstream; upstream's cast refactor covers E19.
-The branch incorporates `hkmc2` through `e62a8c172`. The approved reduction
-retains E12, E29–E30, E32 and E33–E34 and defers E20–E24, E31, E35 and E36.
-No remaining extraction is a prerequisite for the retained feature with the
-agreed targeted fixmes, but the remaining Scala diff is still too large to call
-a small extraction. The historical batch dependencies below describe the
-original extraction order, subject to this revised scope.
+Iterator, E27, E31, E35 and E36 are merged upstream; upstream's cast refactor
+covers E19. The branch incorporates `hkmc2` through `4967bcd7d`. The approved
+split retains E12 and E32 with shape-based erasure and moves E29–E30 and E33–E34
+to separate follow-ups after #575. E20–E24 remain independent fixes. The
+historical batch dependencies below describe the original extraction order,
+subject to this revised scope.
 
 ## Scope and baseline
 
@@ -83,7 +82,43 @@ cast elimination preserve the coercions those rendering tests exercise.
 
 ## Reduced #575 and independent follow-ups
 
-### Latest upstream integration
+### Current split for review
+
+The core branch retains inference, constructor-companion signatures and the
+complete mutable-field read/write model. Its record tests use the existing
+whole-record `mut {...}` syntax and interval type arguments through aliases.
+The new field declaration syntax and the optimizer transformation belong to
+separate follow-ups:
+
+| Work | Branch | Merge order |
+| --- | --- | --- |
+| E29–E30: deforestation retyping and cast proofs | `codex/pr575-deforestation-retyping` | After #575 |
+| E33–E34: mutable-record declarations | `codex/pr575-mutable-record-syntax` | After #575 |
+| E20: partial-call arguments | `codex/pr575-partial-call-arguments` | Independent, targeting `hkmc2` |
+| E21–E23: constructor and match safety | `codex/pr575-constructor-safety` | Independent, targeting `hkmc2` |
+| E24: fusion across container storage | `codex/pr575-fusion-storage` | Independent, targeting `hkmc2` |
+
+The two new follow-ups share the reduced #575 as their review base. Their PRs
+must be retargeted to `hkmc2` after #575 merges. They do not depend on each other.
+Keep all E29–E30 slot and caller adaptations together when integrating the
+deforestation follow-up.
+
+Against `4967bcd7d`, the core contains **832 changed compiler Scala lines across
+14 files** (668 additions, 164 deletions), plus **42 changed Scala test lines
+across two files**. E31 removes the three overwritten-record exposure fixmes.
+Without E30's cast proofs, five constructor regressions pass conservatively
+again. The remaining constructor/match failures retain their assertions and
+targeted E21–E23 fixmes, including the optional-field fusion case newly exposed
+by the upstream optional-binding consolidation and its dependent worksheet
+check. Reconcile those markers when the constructor-safety PR lands. A fourth
+targeted fixme in `T/deforest/simple.mls` records the recursive result-slot
+failure that E29 resolves. E24's nominal-storage regression moves with the
+deforestation follow-up.
+
+The reduced core passed Metals compilation and `hkmc2AllTests/test`; all
+regenerated golden output accompanies the split.
+
+### Previous Iterator and E27 integration
 
 The latest merge incorporates structural Iterator (`015668cf4`) and E27
 (`e62a8c172`). It adopts upstream's typed alias lookup for Iterator and Awaited.
@@ -117,7 +152,7 @@ Removing only its assignment tracking or interface-write exposure would make
 that inference unsound. The branch is independently validated with the agreed
 known failures, but it still combines these themes with shape-based erasure.
 
-### Reduction and independently validated follow-ups
+### Previous reduction and independently validated follow-ups
 
 The reduction removes the E20 partial-call optimization, E21–E23 constructor
 and match fixes, E24 storage constraints, and E31 shadow-aware exposure. E32
@@ -211,7 +246,7 @@ inference branch, removing E27 makes the same fixture fail with an effect
 producer reaching E29's runtime-slot retyping. Restoring E27 makes it pass.
 E27 prepares the flow-analysis invariant consumed by E29.
 
-### Coupled work retained in #575
+### Coupled work retained before the final split
 
 | Retained work | Relationship to deferred fixes | Reason to keep it together |
 | --- | --- | --- |
@@ -661,9 +696,9 @@ The earlier #592 reconciliation used an unchanged-tree merge only after exact
 tree equality was established. Do not apply that strategy blindly to future
 extractions, whose patches may have been adapted to a smaller base.
 
-The upstream synchronization target is `e62a8c172ca516cd9e9f2ff7d1aa2ee30748d73d`,
+The upstream synchronization target is `4967bcd7d8c525e310c3dfcccd7da0ba88fb8bbd`,
 including E17–E18 (#610), the cast refactor (#614), retained MIR definition symbols,
-JDK 25, Wasm file imports (#576), structural Iterator and E27. Measure each
+JDK 25, Wasm file imports (#576), structural Iterator, E27, E31, E35 and E36. Measure each
 proposed extraction against this updated target before starting it.
 
 The previous integration kept the upstream override checker, source layouts and unchanged
@@ -699,11 +734,11 @@ with an 8 GB SBT heap. All resulting golden-output changes accompany the merge.
 The independent local branches and measured Scala counts are listed above.
 E20 and the other ready work have now been extracted and validated on `bae948bd5`.
 
-The current order is to review the reduced #575 with E32 retained and Iterator
-and E27 upstream, then land the six deferred branches. E21–E24 restore constructor,
-match and storage correctness; E31 removes conservative exposure diagnostics;
-E20, E35 and E36 restore the optional optimization, test consolidation and cleanup.
-Regenerate shared golden outputs when combining the follow-ups.
+The current order is to review the reduced #575 with E12 and E32 retained,
+then land E29–E30 and E33–E34 separately. E20–E24 also have independent PRs;
+adapt their temporary-failure markers if they land after #575. E31, E35 and E36
+are already upstream. Regenerate shared golden outputs when combining the
+follow-ups.
 
 ## 9. Validation and review gates
 

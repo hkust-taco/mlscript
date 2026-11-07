@@ -3,11 +3,12 @@
 
 // The write bound is Child; the read bound Base must not be fed back into the local field.
 :expect 1
+type IntervalCell[T] = mut {item: T}
 class Base
 class Child(val value: Int) extends Base
-private fun accept(record: {mut item: in Child out Base}) = ()
+private fun accept(record: IntervalCell[in Child out Base]) = ()
 private fun test() =
-  let record = {mut item: Child(1)}
+  let record = mut {item: Child(1)}
   accept(record)
   record.item.value
 test()
@@ -16,16 +17,17 @@ test()
 
 // Reads through the split interface expose only Base.
 :ge
+type IntervalCell[T] = mut {item: T}
 class Base
 class Child(val value: Int) extends Base
-private fun read(record: {mut item: in Child out Base}) = record.item.value
-read({mut item: Child(2)})
+private fun read(record: IntervalCell[in Child out Base]) = record.item.value
+read(mut {item: Child(2)})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+3: 	private fun read(record: {mut item: in Child out Base}) = record.item.value
-//│ ║        	                                                          ^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	private fun read(record: IntervalCell[in Child out Base]) = record.item.value
+//│ ║        	                                                            ^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.+3: 	private fun read(record: {mut item: in Child out Base}) = record.item.value
-//│ ╙──      	                                                 ^^^^
+//│ ║  l.+4: 	private fun read(record: IntervalCell[in Child out Base]) = record.item.value
+//│ ╙──      	                                                   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -35,10 +37,10 @@ read({mut item: Child(2)})
 class Base
 class Child(val value: Int) extends Base
 class Receiver[T] with
-  fun accept(record: {mut item: T}): () = ()
+  fun accept(record: mut {item: T}): () = ()
 private fun test() =
   let receiver = (new Receiver as Receiver[in Child out Base])
-  let record = {mut item: Child(3)}
+  let record = mut {item: Child(3)}
   receiver.accept(record)
   record.item.value
 test()
@@ -70,12 +72,12 @@ test()
 :ge
 class Base
 class Child(val value: Int) extends Base
-type Cell[T] = {mut item: T}
+type Cell[T] = mut {item: T}
 class Receiver[T] with
   fun accept(record: Cell[T]): () = ()
 private fun test() =
   let receiver = (new Receiver as Receiver[in Child out Base])
-  let record = {mut item: Child(5)}
+  let record = mut {item: Child(5)}
   receiver.accept(record)
   record.item.value
 test()
@@ -92,9 +94,9 @@ test()
 :expect 6
 class Base
 class Child(val value: Int) extends Base
-type Cell[T] = {mut item: T}
+type Cell[T] = mut {item: T}
 private fun test() =
-  let record = {mut item: Child(6)}
+  let record = mut {item: Child(6)}
   let view = record as Cell[in Child out Base]
   record.item.value
 test()
@@ -103,11 +105,12 @@ test()
 
 // An output-only field admits no writes; Nothing must not become an unknown input.
 :expect 7
+type IntervalCell[T] = mut {item: T}
 class Base
 class Child(val value: Int) extends Base
-private fun accept(record: {mut item: out Base}) = ()
+private fun accept(record: IntervalCell[out Base]) = ()
 private fun test() =
-  let record = {mut item: Child(7)}
+  let record = mut {item: Child(7)}
   accept(record)
   record.item.value
 test()
@@ -117,37 +120,38 @@ test()
 // An input-only field has no usable read interface.
 :ge
 class Child(val value: Int)
-private fun read(record: {mut item: in Child}) = record.item.value
-read({mut item: Child(8)})
+private fun read(record: IntervalCell[in Child]) = record.item.value
+read(mut {item: Child(8)})
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+2: 	private fun read(record: {mut item: in Child}) = record.item.value
-//│ ║        	                                                 ^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	private fun read(record: IntervalCell[in Child]) = record.item.value
+//│ ║        	                                                   ^^^^^^^^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'value'
-//│ ╟── This field specifies only an input bound.
-//│ ║  l.+2: 	private fun read(record: {mut item: in Child}) = record.item.value
-//│ ║        	                                    ^^^^^^^^
+//│ ╟── This type argument specifies only an input bound.
+//│ ║  l.+2: 	private fun read(record: IntervalCell[in Child]) = record.item.value
+//│ ║        	                                      ^^^^^^^^
 //│ ╙── Values read through it have no output bound more specific than 'Any'.
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Writes through a split interface check callbacks against the input bound, not its read bound.
 :ge
+type IntervalCallback[T] = mut {callback: T}
 class Base
 class Child(val value: Int) extends Base
 private fun assigned(value) = value.value
-private fun store(record: {mut callback: in (Base -> Int) out (Child -> Int)}) =
+private fun store(record: IntervalCallback[in (Base -> Int) out (Child -> Int)]) =
   set record.callback = assigned
 private fun test() =
-  let record = {mut callback: assigned}
+  let record = mut {callback: assigned}
   store(record)
   assigned(Child(9))
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+3: 	private fun assigned(value) = value.value
+//│ ║  l.+4: 	private fun assigned(value) = value.value
 //│ ║        	                              ^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.+4: 	private fun store(record: {mut callback: in (Base -> Int) out (Child -> Int)}) =
-//│ ╙──      	                                             ^^^^
+//│ ║  l.+5: 	private fun store(record: IntervalCallback[in (Base -> Int) out (Child -> Int)]) =
+//│ ╙──      	                                               ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -174,30 +178,31 @@ test()
 
 // Intersected mutable interfaces accept writes from either component.
 :ge
+type IntervalCell[T] = mut {item: T}
 class Base
 class Child(val value: Int) extends Base
-type Both = ({mut item: Child} & {mut item: in Base out Child})
+type Both = (mut {item: Child} & IntervalCell[in Base out Child])
 private fun accept(record: Both) = ()
 private fun test() =
-  let record = {mut item: Child(11)}
+  let record = mut {item: Child(11)}
   accept(record)
   record.item.value
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+8: 	  record.item.value
+//│ ║  l.+9: 	  record.item.value
 //│ ║        	  ^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.+3: 	type Both = ({mut item: Child} & {mut item: in Base out Child})
-//│ ╙──      	                                               ^^^^
+//│ ║  l.+4: 	type Both = (mut {item: Child} & IntervalCell[in Base out Child])
+//│ ╙──      	                                                 ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // Merging field reads intersects their output types, and an immutable component adds no writes.
 :expect 12
-type Both = ({item: {left: Int}} & {mut item: {left: Int, right: Int}})
+type Both = ({item: {left: Int}} & mut {item: {left: Int, right: Int}})
 private fun read(record: Both) = record.item.left + record.item.right
 private fun test() =
-  let record = {mut item: {left: 5, right: 7}}
+  let record = mut {item: {left: 5, right: 7}}
   read(record)
 test()
 //│ = 12
@@ -205,40 +210,25 @@ test()
 
 // Whole-record mutability and parenthesized bounds use the same field interval.
 :expect 13
+type IntervalCell[T] = mut {item: T}
 class Base
 class Child(val value: Int) extends Base
-private fun accept(record: mut {item: (in Child out Base)}) = ()
+private fun accept(record: IntervalCell[in Child out Base]) = ()
 private fun test() =
-  let record = {mut item: Child(13)}
+  let record = mut {item: Child(13)}
   accept(record)
   record.item.value
 test()
 //│ = 13
 
 
-// A field needs a write interface before it can declare an input bound.
-:ge
-class Base
-class Child extends Base
-type Immutable = {item: in Child out Base}
-private fun read(record: Immutable) = record.item
-read({item: new Child})
-//│ ╔══[COMPILATION ERROR] Resolution error in record literal
-//│ ║  l.+3: 	type Immutable = {item: in Child out Base}
-//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── A field with input/output bounds must be declared 'mut'.
-//│ ║  l.+3: 	type Immutable = {item: in Child out Base}
-//│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^^
-//│ = Child
-
-
 // Recursive fields retain finite, substituted input and output references.
 :expect 14
-type Chain[T] = {mut next: Chain[T], value: T}
+type Chain[T] = mut {next: Chain[T], value: T}
 private fun read[T](chain: Chain[T], count: Int): T =
   if count == 0 then chain.value else read(chain.next, count - 1)
 private fun test() =
-  let chain = {mut next: unsafe.undefined, value: 14}
+  let chain = mut {next: unsafe.undefined, value: 14}
   set chain.next = chain
   read(chain, 2)
 test()
@@ -247,24 +237,25 @@ test()
 
 // Forwarding a mutable structural interface must preserve its write constraints.
 :ge
+type IntervalCallback[T] = mut {callback: T}
 class Base
 class Child(val value: Int) extends Base
 private fun assigned(value) = value.value
-private fun store(record: {mut callback: in (Base -> Int) out (Child -> Int)}) =
+private fun store(record: IntervalCallback[in (Base -> Int) out (Child -> Int)]) =
   fun write() = set record.callback = assigned
   write()
-private fun forward(record: {mut callback: in (Base -> Int) out (Child -> Int)}) = store(record)
+private fun forward(record: IntervalCallback[in (Base -> Int) out (Child -> Int)]) = store(record)
 private fun test() =
-  let record = {mut callback: assigned}
+  let record = mut {callback: assigned}
   forward(record)
   assigned(Child(15))
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
-//│ ║  l.+3: 	private fun assigned(value) = value.value
+//│ ║  l.+4: 	private fun assigned(value) = value.value
 //│ ║        	                              ^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.+4: 	private fun store(record: {mut callback: in (Base -> Int) out (Child -> Int)}) =
-//│ ╙──      	                                             ^^^^
+//│ ║  l.+5: 	private fun store(record: IntervalCallback[in (Base -> Int) out (Child -> Int)]) =
+//│ ╙──      	                                               ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -272,16 +263,16 @@ test()
 :ge
 class Base
 class Child(val value: Int) extends Base
-private fun read[T](record: {mut f: T}): T = record.f
+private fun read[T](record: mut {f: T}): T = record.f
 private fun test() =
-  let record = ({mut f: Child(1)} as {mut f: Base})
+  let record = (mut {f: Child(1)} as mut {f: Base})
   read(record).value
 test()
 //│ ╔══[COMPILATION ERROR] Resolution error in selection
 //│ ║  l.+6: 	  read(record).value
 //│ ║        	  ^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.+5: 	  let record = ({mut f: Child(1)} as {mut f: Base})
+//│ ║  l.+5: 	  let record = (mut {f: Child(1)} as mut {f: Base})
 //│ ╙──      	                                             ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -291,10 +282,10 @@ test()
 :ge
 class Base
 class Child(val value: Int) extends Base
-class Holder[S](val record: {mut f: S})
-private fun accept(record: {mut f: Base}) = ()
+class Holder[S](val record: mut {f: S})
+private fun accept(record: mut {f: Base}) = ()
 private fun test() =
-  let holder = Holder({mut f: Child(2)})
+  let holder = Holder(mut {f: Child(2)})
   accept(holder.record)
   holder.record.f.value
 test()
@@ -302,7 +293,7 @@ test()
 //│ ║  l.+8: 	  holder.record.f.value
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Value of type 'Base' does not contain member 'value'
-//│ ║  l.+4: 	private fun accept(record: {mut f: Base}) = ()
+//│ ║  l.+4: 	private fun accept(record: mut {f: Base}) = ()
 //│ ╙──      	                                   ^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
@@ -349,10 +340,10 @@ test()
 :expect 5
 class Base
 class Child(val value: Int) extends Base
-class Holder[S](val record: {mut f: S})
+class Holder[S](val record: mut {f: S})
 private fun accept(record: {f: Base}) = ()
 private fun test() =
-  let holder = Holder({mut f: Child(5)})
+  let holder = Holder(mut {f: Child(5)})
   accept(holder.record)
   holder.record.f.value
 test()

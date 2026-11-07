@@ -287,8 +287,6 @@ class FlowAnalysisBasedRewrite(
   
   def otherNewFunDefns: Iterable[FunDefn] = Nil
   
-  def retypedVariables: LinkedHashMap[(InstantiationId, ValueSymbol), ErasedValueType] = LinkedHashMap.empty
-  
   private case class FunctionRewrite(signature: FunDefn.Signature, removed: Set[VarSymbol], etaCount: Int)
   
   // Compute the rewritten parameters and signatures before rewriting function bodies.
@@ -335,7 +333,6 @@ object FlowAnalysisBasedRewrite:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
-    eCtx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program = cfg.flowBasedOpt.fold(p)(rewriteWith(p, _))
   
@@ -351,7 +348,6 @@ object FlowAnalysisBasedRewrite:
     tl: TL,
     raise: Raise,
     eState: Elaborator.State,
-    eCtx: Elaborator.Ctx,
     symbolPrinter: SymbolPrinter,
   ): Program =
     def mkTl(prefix: Str, debug: Bool) =

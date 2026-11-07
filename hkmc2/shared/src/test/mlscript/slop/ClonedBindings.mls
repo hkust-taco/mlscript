@@ -210,7 +210,7 @@ Promise.all([clonedAsyncGetter(3), clonedAsyncGetter(4)])
 
 // Per-field mutability survives copying even when the whole record is immutable.
 pattern MutableRecord = x =>
-  let record = {mut value: x}
+  let record = mut {value: x}
   set record.value = x + 1
   record.value
 

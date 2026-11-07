@@ -291,12 +291,12 @@ singleton(42)
 //│   return null
 //│ };
 //│ define singleton⁰ as fun singleton¹(value: Int⁰): Int⁰ {
-//│   let empty: Function⁰;
+//│   let empty: Empty¹;
 //│   set empty = $empty_Empty⁰();
 //│   return (empty(value) as! Int⁰)
 //│ };
 //│ @data
-//│ define Empty¹ as class Empty² { constructor Empty⁰ };
+//│ define Empty² as class Empty¹ { constructor Empty⁰ };
 //│ return singleton¹(42)
 //│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
 //│ = 42
@@ -335,13 +335,13 @@ continuation(42, "done")
 //│   return fv_result
 //│ };
 //│ define continuation⁰ as fun continuation¹(value: Int⁰, result: Str⁰): Str⁰ {
-//│   let ignored: Int⁰, x: Int⁰, arg$Item$0$: ?, tmp: Int⁰, item: Function⁰, Item_value: Int⁰;
+//│   let item: Item¹, ignored: Int⁰, x: Int⁰, arg$Item$0$: ?, tmp: Int⁰, Item_value: Int⁰;
 //│   set Item_value = value;
 //│   set item = $item_Item⁰(Item_value);
 //│   return (item(arg$Item$0$, x, tmp, ignored, result) as! Str⁰)
 //│ };
 //│ @data
-//│ define Item¹ as class Item² {
+//│ define Item² as class Item¹ {
 //│   val value³: Int⁰;
 //│   constructor Item⁰(value: Int⁰) {
 //│     define value³ as val value²: Int⁰ = value;
