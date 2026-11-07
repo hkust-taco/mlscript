@@ -1,8 +1,11 @@
 #lang(0.3.x, useNewResolution: false)
 #config(effectHandlers: Some(EffectHandlers()))
 
-abstract class Emit with
-  fun emit(e: Int): ()
+import "./BaseEffects.mls"
+open BaseEffects
+open IteratorEffects
+
+module iterator with ...
 
 fun range(l: Int, u: Int, h: Emit) =
   if l > u then ()
@@ -16,3 +19,5 @@ fun run(n: Int) =
     fun emit(e)(k) =
       set s = s + e
       k()
+  range(0, n, h)
+  s

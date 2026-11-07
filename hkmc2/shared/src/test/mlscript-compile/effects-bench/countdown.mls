@@ -1,9 +1,11 @@
 #lang(0.3.x, useNewResolution: false)
 #config(effectHandlers: Some(EffectHandlers()))
 
-abstract class Eff with
-  fun get(): Int
-  fun setVal(x: Int): ()
+import "./BaseEffects.mls"
+open BaseEffects
+open CountdownEffects
+
+module countdown with ...
 
 fun countdown(h: Eff) =
   let i = h.get()

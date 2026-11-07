@@ -1,6 +1,8 @@
 #lang(0.3.x, useNewResolution: false)
 #config(effectHandlers: Some(EffectHandlers()))
 
+module fibonacci_recursive with ...
+
 fun fibonacci(n) =
   if n ===
     0 then 0

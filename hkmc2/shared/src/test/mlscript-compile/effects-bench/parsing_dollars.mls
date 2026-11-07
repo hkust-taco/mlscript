@@ -1,16 +1,11 @@
 #lang(0.3.x, useNewResolution: false)
 #config(effectHandlers: Some(EffectHandlers()))
 
-type Chr = Int
+import "./BaseEffects.mls"
+open BaseEffects
+open ParsingDollarsEffects
 
-abstract class Read with
-  fun read(): Chr
-
-abstract class Emit with
-  fun emit(e: Int): ()
-
-abstract class Stop with
-  fun stop(): Nothing
+module parsing_dollars with ...
 
 val newLine = 10
 fun isNewLine(c: Chr) = c === 10
@@ -50,6 +45,7 @@ fun feed(n: Int, action: Function[Read, ()], e: Emit, s: Stop) =
       else if j === 0 then
         set i += 1
         set j = i
+        k(newLine)
       else
         set j -= 1
         k(dollar)

@@ -1,0 +1,10 @@
+:js
+:effectHandlers
+:lift
+
+// Note: computes the sum of positive integers <= the input
+
+import "../../../mlscript-compile/effects-bench/iterator.mls"
+iterator.run(10)
+//│ = 55
+

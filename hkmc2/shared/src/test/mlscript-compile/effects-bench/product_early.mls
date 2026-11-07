@@ -1,21 +1,24 @@
 #lang(0.3.x, useNewResolution: false)
 #config(effectHandlers: Some(EffectHandlers()))
 
+import "./BaseEffects.mls"
+open BaseEffects
+open ProductEarlyEffects
+
+module product_early with ...
+
 type List[A] = Nil | Cons[A]
 object Nil
 data class Cons[A](x: A, xs: List[A])
 
-abstract class Abort with
-  fun done[A](i: Int): A
-
 fun product(xs: List[Int], h: Abort) = if xs is
-  Nil then 0
+  Nil then 1 // Note: Bug in the original implementation, this should be 1 instead of 0.
   Cons(y, ys) and
     y === 0 then h.done(0)
     else y * product(ys, h)
 
 fun enumerate(i: Int): List[Int] =
-  if i === 0 then Nil else Cons(i, enumerate(i - 1))
+  if i < 0 then Nil else Cons(i, enumerate(i - 1))
 
 fun runProduct(xs: List[Int]) =
   handle h = Abort with
@@ -24,8 +27,7 @@ fun runProduct(xs: List[Int]) =
 
 fun run(n: Int) =
   let xs = enumerate(1000)
-  let total = 0
-  let i = 0
-  while i < n do
-    set total += runProduct(xs)
-  total
+  fun loop(i, a) =
+    if i === 0 then a
+    else loop(i - 1, a + runProduct(xs))
+  loop(n, 0)

@@ -1,8 +1,11 @@
 #lang(0.3.x, useNewResolution: false)
 #config(effectHandlers: Some(EffectHandlers()))
 
-abstract class Eff with
-  fun yld(x: Int): ()
+import "./BaseEffects.mls"
+open BaseEffects
+open GeneratorEffects
+
+module generator with ...
 
 data class Leaf
 data class Node(left: Tree, value: Int, right: Tree)
@@ -14,7 +17,7 @@ type Generator = Empty | Thunk
 
 fun make(n: Int): Tree =
   if n ===
-    0 then Leaf
+    0 then new Leaf
     else
       let t = make(n - 1)
       Node(t, n, t)
@@ -23,14 +26,14 @@ fun iterate(h: Eff, t: Tree): () = if t is
   Leaf then ()
   Node(l, v, r) then
     iterate(h, l)
-    h.yield(v)
+    h.yld(v)
     iterate(h, r)
 
 fun generate(f: Function[(), ()]): Generator =
   handle h = Eff with
     fun yld(x)(k) = Thunk(x, k)
   f(h)
-  Empty
+  new Empty
 
 fun sum(a: Int)(g: Generator) = if g is
   Empty then 0
