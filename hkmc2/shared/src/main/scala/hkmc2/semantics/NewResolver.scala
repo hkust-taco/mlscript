@@ -2469,7 +2469,7 @@ class NewResolver:
       resolution.publish(TypeShape.Applied(constructor, args))
       resolution
     })
-    declaredType(template, parameters.zip(arguments).map((parameter, argument) => parameter.sym -> argument).toMap)
+    declaredType(template, parameters.iterator.map(_.sym).zip(arguments).toMap)
 
   /** Fixed callback interfaces describe an ordinary argument tuple. Variable
     * layouts use the same flow approximation as separate signatures.
