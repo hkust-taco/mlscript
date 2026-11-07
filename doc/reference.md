@@ -881,15 +881,16 @@ Modules cannot extend classes. Objects can extend classes.
 
 ```mlscript
 {a: 1, b: 2}          // immutable (frozen) record
+{mut a: 1, b: 2}      // record whose field `a` is mutable
 mut {a: 1, b: 2}      // mutable record: all its fields are mutable
 {}                   // fresh empty immutable record
 mut {}               // fresh empty mutable record
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
 
-Only mutable fields can be assigned. Fields are immutable unless their whole record is mutable.
-A mutable record also makes mutable the fields it copies from the records it spreads.
-A record spreading another one copies the current values of its fields.
+Only mutable fields can be assigned. Fields are immutable unless they are declared `mut` or
+their whole record is mutable. A mutable record also makes mutable the fields it copies from
+the records it spreads. A record spreading another one copies the current values of its fields.
 
 `{}` denotes an empty record in expression and type positions. It is distinct
 from Unit, written `()`. Empty statement bodies such as `do {}` still return Unit.
@@ -1827,18 +1828,23 @@ lookup still combines the fields of record intersections.
 
 ```mlscript
 type Point = { x: Num, y: Num }
-type Cursor[T] = mut { position: T }
-type CursorView = Cursor[in Int out (Int | Str)]
+type Cursor = { mut position: Int }
+type CursorView = { mut position: in Int out (Int | Str) }
 ```
 
-The values that a mutable record type describes can receive writes through its fields.
-Field outputs are covariant and field inputs are contravariant. Thus `mut { f: S } <: mut { f: T }`
-contributes both `S <: T` for reads and `T <: S` for writes. An immutable `{ f: U }` has only a
-read interface. For `type Cell[A] = mut { f: A }`, `Cell[in S out T]` accepts `S` on writes and
-exposes `T` on reads. The two positions are interpreted separately before substituting type
-arguments; enclosing negative positions reverse these choices, as for function inputs.
-Intersecting record interfaces intersects their shared fields' output types and unions their
-input types. Assigning a callback constrains it against the input type independently of reads.
+The values that a record type describes can be assigned values of the input types of its mutable
+fields through it, but not values of its other fields. In `{ mut f: in S out T }`, writes accept `S`
+and reads expose `T`. Omitting `in` gives `Nothing` as the input; omitting `out` gives `Any` as the
+output. `{ mut f: U }` uses `U` in both positions, while `{ f: U }` has only a read interface.
+
+Field outputs are covariant and field inputs are contravariant. Thus `{ mut f: S } <: { mut f: T }`
+contributes both `S <: T` for reads and `T <: S` for writes; `mut { f: S }` follows the same rule.
+The two occurrences are interpreted separately before substituting type arguments:
+for `type Cell[A] = { mut f: A }`, `Cell[in S out T]` exposes
+`{ mut f: in S out T }`, not a single invariant occurrence of either bound. Enclosing negative
+positions reverse these choices, just as for function inputs. Intersecting record interfaces
+intersects their shared fields' output types and unions their input types. Assigning a callback
+through a mutable field constrains it against the input type, independently of the read interface.
 
 New resolution propagates these constraints for type-argument inference and callback checking.
 It does not perform complete structural subtyping checks; InvalML does not yet support record types.
