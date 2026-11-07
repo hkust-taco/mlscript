@@ -90,7 +90,6 @@ class DeadParamElimSolver(val constraintSolver: FlowConstraintSolver, traceLogge
         case c: ConsFun => (c, idx),
       (consFun, idx) => consFun.srcs.collect:
         case p: ProdFun => (p, idx),
-      _ => Nil,
       prodRoots,
       consRoots,
     )

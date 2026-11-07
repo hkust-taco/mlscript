@@ -1,11 +1,13 @@
 # Extraction plan for PR #575
 
 Status updated 2026-11-07: E01–E03, B01–B05, E08, E14 and E17–E18 are merged
-upstream; upstream's cast refactor covers E19. E20–E24, E27, E31, E35, E36
-and the approved structural Iterator follow-up now have independent local
-extraction branches. They are validated but have not been pushed or submitted
-as PRs. E12, E29–E30, E32–E34 and the final shape-erasure feature still await
-prerequisites described below.
+upstream; upstream's cast refactor covers E19. The approved reduction keeps
+structural Iterator, E27 and E32 in #575 and defers the other ready extractions:
+E20–E24, E31, E35 and E36. Their independent local branches remain available
+for later PRs. E12, E29–E30 and E33–E34 also remain in #575; this reduction does
+not split those coupled implementations. No extraction PR is a merge gate for
+the retained feature. The historical batch dependencies below describe the
+original extraction order, subject to this revised scope.
 
 ## Scope and baseline
 
@@ -79,7 +81,38 @@ the full suite ran 1,172 tests. The incoming JS cast-comment fixtures use broad
 input annotations and an unchecked nominal receiver so inference and redundant
 cast elimination preserve the coercions those rendering tests exercise.
 
-## Independent local extractions ready for review
+## Reduced #575 and independent follow-ups
+
+The reduction removes the E20 partial-call optimization, E21–E23 constructor
+and match fixes, E24 storage constraints, and E31 shadow-aware exposure. E32
+still observes assigned values and external writes through contextual record
+copies; its traversal conservatively exposes overwritten fields until E31 lands.
+The original optional-binding test files and `Runtime.plus_impl` are restored,
+deferring E35's consolidation and E36's cleanup.
+
+Regressions for deferred compiler bugs retain their assertions. Targeted `:fixme`s identify the
+deferred failures and name their E-number so the corresponding follow-up can
+remove them. Passing cases retain their normal expectations. Iterator, E27,
+mutable-write tracking, and the complete E29/E30 transformation stay together
+with shape-based erasure.
+
+The reduced branch passed `hkmc2AllTests/test` with **1,293 tests**. Its ten new
+fixmes cover six constructor/match regressions in `T/slop/Erasure.mls` (E21–E23),
+one nominal-storage regression in `T/deforest/erasedTypes.mls` (E24), and three
+overwritten-field regressions in `T/slop/strictres/MutableFields.mls` (E31).
+All affected failure cases retain their original `:expect` assertions. E20's regressions still pass with the
+older, less aggressive optimization, and E35/E36 require no new fixmes.
+
+Against `bae948bd5`, the Scala diff shrinks from 29 files with 1,347 additions
+and 324 deletions to 26 files with 1,139 additions and 271 deletions: **261 fewer
+changed Scala lines**, counting additions and removals. These counts include
+the two retained Scala test files. The commit includes regenerated goldens and
+the restored runtime helper's generated JavaScript.
+
+The following branch counts and test results describe their independently
+validated versions on the old base. After #575 merges, adapt the deferred fixes
+to the retained inference code and regenerate goldens, including removing their
+temporary `:fixme`s. E27 and Iterator need no separate PR if they land in #575.
 
 Every branch below starts directly at `hkmc2` / `hkust-taco/hkmc2` commit
 `bae948bd5896748e7fde850785d9fdefd585c925`; none targets or depends on another
@@ -136,24 +169,25 @@ search found no callers of `Runtime.plus_impl`; the distinct Wasm intrinsic
 remains. The structural Iterator contract was explicitly approved earlier and
 has now been extracted with its generator adaptation and protocol regressions.
 
-### Work waiting for earlier extractions
+### Coupled work retained in #575
 
-| Remaining work | Needed earlier work | Reason to keep it together |
+| Retained work | Relationship to deferred fixes | Reason to keep it together |
 | --- | --- | --- |
-| E12: constructor-companion signatures | E21–E22 | Typed constructor results remove casts that previously hid unsafe constructor fusion. |
-| E29: representation-changing deforestation | E21–E24, E27 (E15/E25/E26/E28 are already merged) | Parameters, locals, captures, results, instance copies and caller coercions must change together. |
-| E30: flow-proved casts | E29 | Removing representation-observing casts is safe only with complete retyping of the fused value's uses. |
-| E32: mutable-field resolution and exposure | E31 | All assignment paths, assigned-value exposure and structural input/output bounds must accompany precise reads. |
-| E33–E34: mutable-record declarations | E32 | Explicit bounds and per-field mutability need the complete read/write constraint model. |
-| Final shape-erasure feature | Remaining optimizer and mutable-field prerequisites | Observe all source-slot inputs before erasure and preserve physical representation boundaries. |
+| E12: constructor-companion signatures | E21–E22 failures have targeted fixmes | Typed constructor results remove casts that previously hid unsafe constructor fusion. |
+| E29: representation-changing deforestation | Keep E27; defer E21–E24 bugs with targeted fixmes | Parameters, locals, captures, results, instance copies and caller coercions must change together. |
+| E30: flow-proved casts | Keep E29 | Removing representation-observing casts requires complete retyping of the fused value's uses. |
+| E32: mutable-field resolution and exposure | E31's precision improvement can follow | All assignment paths, assigned-value exposure and structural input/output bounds must accompany precise reads. |
+| E33–E34: mutable-record declarations | Keep E32 | Explicit bounds and per-field mutability need the complete read/write constraint model. |
+| Shape-erasure feature | Retained in this PR | Observe all source-slot inputs before erasure and preserve physical representation boundaries. |
 
-After each extraction merges upstream, merge the actual `hkmc2` commit back
-into this source branch and recompute the remaining diff. Do not delete the
-extracted implementation from the source branch while it awaits integration.
+The six deferred branches can follow #575. When integrating them, preserve the
+retained implementation in shared files and remove only the fixmes their fixes
+resolve. The original independent validation does not replace validation on the
+new base.
 
 ## Consolidated batches
 
-**The table below groups the original themes; the ready local branches and remaining prerequisites are listed above.** E01–E03 and B01–B05 are merged,
+**The table below groups the original themes; the revised scope above controls what lands in #575.** E01–E03 and B01–B05 are merged,
 including E04's nofib aliases in the library/fixture batch. There is no
 additional tiny nofib PR. The E-numbers remain stable references to individual
 work items; B01–B10 group the broader themes. The ready branches above define
@@ -165,8 +199,9 @@ as `aef07eead` on `codex/pr575-expression-results`). B03 is merged as #599
 (extracted locally as `9afbadaf7` on `codex/pr575-async-generator-results`).
 B04 is merged as #600. E08 and E14 were extracted separately from B05 as #601
 and #602. E15 completed B05 as #606; E17–E18 completed B06's implementation as
-#610. E19 is covered by #614. E20–E24, E27 and E31 have local extraction branches; E12, E29–E30 and E32–E34 await the prerequisites listed above.
-A prerequisite names a batch that must be merged first.
+#610. E19 is covered by #614. E20–E24, E27 and E31 have local extraction branches.
+The prerequisite column records the original order for extracting all themes
+before inference; it does not require postponing #575 for the deferred fixes.
 
 | Batch | Review theme | Work items | Prerequisites | Scope |
 | --- | --- | --- | --- | --- |
@@ -252,10 +287,9 @@ retyped parameter bindings and specialized functions to shared signatures.
 
 ## What independently mergeable means
 
-Every batch targets `hkmc2`, includes its own tests and current golden outputs,
-and must work without unmerged parts of #575. A prerequisite in the batch table
-means **wait for that PR to merge, then branch from updated hkmc2**. It does not
-mean targeting another unmerged extraction branch.
+Every standalone batch targets `hkmc2`, includes its own tests and current golden
+outputs, and must work on its target. Once #575 lands, later fixes can use its
+retained implementation. Do not target another unmerged extraction branch.
 
 A dash means no semantic prerequisite was identified by source inspection.
 It is a standalone candidate, not a claim that the batch has already passed
@@ -280,7 +314,7 @@ Paths below use these repository-relative roots:
 
 The following sections retain the detailed work-item scopes and regression
 checks. Their E-number dependencies describe implementation relationships;
-the consolidated batch table above controls PR boundaries and merge order.
+the revised scope above controls which work remains in #575.
 
 ## 1. Source and diagnostic work items
 
@@ -568,10 +602,10 @@ Do not collect all these cases into a generic “update tests” PR.
    and commit it using a command-scoped Codex identity. Each PR description
    states the trigger, changed behavior, invariant, tests and any retained
    fixme. Do not add new public contracts under the guise of conflict resolution.
-5. After that PR merges, fetch the actual new `hkmc2` commit and merge it into
-   this branch. Resolve adaptations by preserving both the extracted fix and
-   the remaining inference logic. Do not delete the implementation from this
-   branch to shrink the diff.
+5. For extractions that land before #575, merge the actual new `hkmc2` commit
+   into this branch and preserve both the fix and remaining inference logic.
+   The explicitly deferred fixes follow the reduced #575; adapt their shared
+   files and remove the corresponding temporary fixmes when they land.
 6. Recompute `git diff hkust-taco/hkmc2...HEAD`, record the merged PR link/status
    in this plan, and inspect what remains. Validate any retained code/test
    changes from synchronization, including new upstream regressions. The
@@ -608,7 +642,7 @@ now declares its heterogeneous input as `Any`, so later worksheet calls can supp
 Unit after the initial integer call. `hkmc2AllTests/test` passed all 1,210 tests
 with an 8 GB SBT heap.
 
-The current integration adopts the shared argument layout and both cast forms while
+The pre-reduction integration adopted the shared argument layout and both cast forms while
 retaining flow-based cast proofs and representation-changing deforestation. Calls
 whose definitions keep their symbols use saved original signatures and planned
 result representations during rewriting. Erasure visits pattern-local aliases as
@@ -622,21 +656,11 @@ with an 8 GB SBT heap. All resulting golden-output changes accompany the merge.
 The independent local branches and measured Scala counts are listed above.
 E20 and the other ready work have now been extracted and validated on `bae948bd5`.
 
-A practical order is:
-
-1. B01–B04 are merged: library/fixture corrections, result resolution, wrappers
-   and callable signatures.
-2. E15/B05 is merged: undefined representations and Wasm placeholders.
-3. E17–E18/B06 implementation is merged. Review the independent optimizer branches
-   and E35 consolidation, then extract constructor signatures and representation-changing
-   deforestation after their prerequisites land.
-4. Merge E31, then extract E32/B09 and E33–E34/B10: complete mutable-field
-   resolution before the declaration extensions.
-5. Review the reduced #575 as the final shape-erasure feature.
-
-The optimizer and mutable-record sequences need not block one another.
-Whenever two ready entries only share golden output, merge one and regenerate
-the other's outputs rather than creating an artificial dependency.
+The current order is to review the reduced #575 with Iterator, E27 and E32
+retained, then land the six deferred branches. E21–E24 restore constructor,
+match and storage correctness; E31 removes conservative exposure diagnostics;
+E20, E35 and E36 restore the optional optimization, test consolidation and cleanup.
+Regenerate shared golden outputs when combining the follow-ups.
 
 ## 9. Validation and review gates
 
