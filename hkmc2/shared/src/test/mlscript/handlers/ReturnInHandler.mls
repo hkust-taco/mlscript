@@ -5,7 +5,7 @@
 
 
 abstract class Effect with
-  fun f(): ()
+  fun foo(): ()
 
 // `return` within handle blocks is implemented as a non-local return
 fun f() =
@@ -14,7 +14,7 @@ fun f() =
       let m = r(())
       print("Bye!") // This never executes because `r` returns from `f`
       m
-  h.'foo()
+  h.foo()
   return 3 // Note: changing this to just `3` leads to `print("Bye!")` executing
 f()
 //│ = 3
@@ -26,7 +26,7 @@ fun f() =
       print("Bye!")
       m
   in
-    h.'foo()
+    h.foo()
     return 3
   10
 
@@ -55,7 +55,7 @@ handle h1 = Effect with
 let l = () =>
   handle h2 = Effect with
     fun bar()(r) = r(())
-  h1.'foo()
+  h1.foo()
   return 3
   4
 l()

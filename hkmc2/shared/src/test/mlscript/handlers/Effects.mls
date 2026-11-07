@@ -12,10 +12,13 @@ abstract class Effect with
 handle h = Effect with
   fun perform()(k) = "b"
 
+abstract class NullaryEffect with
+  fun perform(): Int
+
 :expect 42
-handle h = Effect with
+handle h = NullaryEffect with
   fun perform()(k) = k(42)
-h.'perform()
+h.perform()
 //│ = 42
 
 :expect "b"
@@ -94,7 +97,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(Handler$h$perform5, 1, "Effects.mls:65:13", null, null, 1, 2, arg, k, 0);
+//│         runtime.unwind(Handler$h$perform5, 1, "Effects.mls:68:13", null, null, 1, 2, arg, k, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
@@ -137,7 +140,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 4;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 4, "Effects.mls:69:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 4, "Effects.mls:72:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 4:
@@ -146,7 +149,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 3;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 3, "Effects.mls:70:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 3, "Effects.mls:73:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 3:
@@ -155,7 +158,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 2;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 2, "Effects.mls:71:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 2, "Effects.mls:74:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 2:
@@ -164,7 +167,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 1, "Effects.mls:72:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 1, "Effects.mls:75:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
@@ -311,11 +314,11 @@ if true do
 module A with
   data abstract class Effect(x) with
     fun test() = x
-    fun perform(arg)
+    fun perform()
 
 handle h = A.Effect(3) with
   fun perform()(k) = 0
-h.'perform()
+h.perform()
 //│ = 0
 
 fun f(perform) =
@@ -398,9 +401,12 @@ fun sum(x) =
 sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
+abstract class Eff with
+  fun perform(): ()
+
 :expect 2
 fun foo(h) =
-  h.'perform()
+  h.perform()
   if true then
     fun g() = 2
     g()
@@ -414,7 +420,7 @@ foo(h)
 
 :expect 3
 fun foo(h) =
-  h.'perform()
+  h.perform()
   if false then
     fun g() = 2
     g()
@@ -428,7 +434,7 @@ foo(h)
 
 :expect 123
 fun foo(h) =
-  h.'perform()
+  h.perform()
   fun A() = 1
   let a = if true then
     class A() with
@@ -455,7 +461,7 @@ foo(h)
 :fixme
 :expect 123
 fun foo(h) =
-  h.'perform()
+  h.perform()
   fun A() = 1
   let a = if true then
     module A with

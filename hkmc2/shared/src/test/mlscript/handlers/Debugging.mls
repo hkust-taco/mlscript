@@ -127,7 +127,7 @@ Runtime.debugEff(res.reified)
 //│ > 
 
 :expect Infinity
-res.'resumeWith(42)
+res.resumeWith(42)
 //│ > 42
 //│ = Infinity
 
@@ -148,30 +148,129 @@ module Test with
 
 // :rt
 // :lot
-let res =
+let res = ({
   handle h = Debugger with
     fun break(payload)(resume) = resume
   using Debugger = h
   Runtime._try(() => Test.main()(using h))
+} as Runtime.EffectHandle)
 //│ res = EffectHandle(_)
 
 :re
-res.'raise()
+res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
 //│ 	at Test.test (Debugging.mls:144:15)
 //│ 	at Test.main (Debugging.mls:147:5)
 
-set res = res.'resumeWith(42)
+set res = res.resumeWith(42)
 
 :re
-res.'raise()
+res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
 //│ 	at Test.test (Debugging.mls:144:15)
 //│ 	at Test.main (Debugging.mls:147:27)
 
 :expect 0.33676533676533676
-res.'resumeWith(666)
+res.resumeWith(666)
 //│ = 0.33676533676533676
+
+// TODO: New resolution does not yet insert implicit arguments. Keep the
+// original implicit calls alongside the explicit calls above.
+module Test with
+  fun test(j)(using dbg: Debugger) =
+    let i = 0
+    let k = 2000
+    if i == 0 do
+      set i = dbg.break("whoops")
+    j / i
+  fun main()(using Debugger) =
+    test(12) + test(34)
+
+// :rt
+// :lot
+:todo
+:expect EffectHandle(_)
+let res =
+  handle h = Debugger with
+    fun break(payload)(resume) = resume
+  using Debugger = h
+  Runtime._try(() => Test.main())
+res
+//│ ═══[RUNTIME ERROR] Expected: 'EffectHandle(_)', got: 'fun'
+//│ = fun
+//│ res = fun
+
+:todo
+:re
+res.raise()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	res.raise()
+//│ ║        	^^^^^^^^^
+//│ ╟── Cannot resolve member 'raise' of a value with unknown shape.
+//│ ╟── An effect handler can replace the handled body's result.
+//│ ║  l.XX: 	  handle h = Debugger with
+//│ ║        	             ^^^^^^^^^^^^^
+//│ ║  l.XX: 	    fun break(payload)(resume) = resume
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  using Debugger = h
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  Runtime._try(() => Test.main())
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:todo
+set res = res.resumeWith(42)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	set res = res.resumeWith(42)
+//│ ║        	          ^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'resumeWith' of a value with unknown shape.
+//│ ╟── An effect handler can replace the handled body's result.
+//│ ║  l.XX: 	  handle h = Debugger with
+//│ ║        	             ^^^^^^^^^^^^^
+//│ ║  l.XX: 	    fun break(payload)(resume) = resume
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  using Debugger = h
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  Runtime._try(() => Test.main())
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:todo
+:re
+res.raise()
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	res.raise()
+//│ ║        	^^^^^^^^^
+//│ ╟── Cannot resolve member 'raise' of a value with unknown shape.
+//│ ╟── An effect handler can replace the handled body's result.
+//│ ║  l.XX: 	  handle h = Debugger with
+//│ ║        	             ^^^^^^^^^^^^^
+//│ ║  l.XX: 	    fun break(payload)(resume) = resume
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  using Debugger = h
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  Runtime._try(() => Test.main())
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:todo
+:expect 0.33676533676533676
+res.resumeWith(666)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+1: 	res.resumeWith(666)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Cannot resolve member 'resumeWith' of a value with unknown shape.
+//│ ╟── An effect handler can replace the handled body's result.
+//│ ║  l.XX: 	  handle h = Debugger with
+//│ ║        	             ^^^^^^^^^^^^^
+//│ ║  l.XX: 	    fun break(payload)(resume) = resume
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  using Debugger = h
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.XX: 	  Runtime._try(() => Test.main())
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+//│ ═══[RUNTIME ERROR] Expected: '0.33676533676533676', got: 'undefined'
 
 let i = 100
 fun f() =
@@ -187,8 +286,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:181:3) with locals: j=200
+//│ > 	at f (Debugging.mls:280:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:183:3)
+//│ > 	at f (Debugging.mls:282:3)
 //│ > Stack Trace:
 //│ > 	at tail position

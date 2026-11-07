@@ -4,8 +4,8 @@
 :lift
 
 abstract class PrintEffect with
-  fun p(s: String): ()
-  fun aux(s: String): ()
+  fun p(s: Int): ()
+  fun aux(s: Int): ()
 
 :e
 // :sjs
@@ -17,7 +17,7 @@ handle h = PrintEffect with
     h.p(x)
     k(())
     h.p(x)
-h.'aux(3)
+h.aux(3)
 //│ ╔══[COMPILATION ERROR] Name not found: h
 //│ ║  l.+6: 	    h.p(x)
 //│ ╙──      	    ^
@@ -42,9 +42,9 @@ handle h2 = PrintEffect with
     h1.p(x)
     k(())
     h1.p(x)
-h1.'p(4)
-h2.'aux(3)
-h1.'p(4)
+h1.p(4)
+h2.aux(3)
+h1.p(4)
 //│ > 4
 //│ > 3
 //│ > 4

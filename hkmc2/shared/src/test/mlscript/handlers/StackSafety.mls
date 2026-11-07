@@ -144,12 +144,12 @@ foo
 //│ foo = 50005000
 
 abstract class Eff with
-  fun perform(a): ()
+  fun perform(): Int
 
 // functions and lambdas inside handlers
 :stackSafe 100
 :expect 50005000
-fun foo(h) = h.'perform()
+fun foo(h) = h.perform()
 handle h = Eff with
   fun perform()(resume) =
     let f = ()
@@ -171,7 +171,7 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 in
-  fun foo(h) = h.'perform()
+  fun foo(h) = h.perform()
   foo(h)
 //│ = 50005000
 
@@ -184,6 +184,9 @@ module A with
   val x = f(10000)
 A.x
 //│ = 50005000
+
+abstract class Eff with
+  fun perform(a): Int
 
 :re
 fun foo(h) = h.perform(2)

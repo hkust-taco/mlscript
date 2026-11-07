@@ -6,7 +6,7 @@
 
 abstract class ThreadEffect with
   val tasks = mut []
-  fun start(thread: () -> ()): ()
+  fun start(thread: ThreadEffect -> ()): ()
   fun fork(thread: () -> ()): ()
   fun yld(): ()
 
@@ -18,18 +18,18 @@ class Lock(mut val locked) with
   fun unlock() =
     set locked = false
 
-fun f(h, x) =
+fun f(h: ThreadEffect, x) =
   print("f " + x)
-  h.'yld()
+  h.yld()
   print("f " + x)
-  h.'yld()
+  h.yld()
   print("f " + x)
 
-fun main(h) =
+fun main(h: ThreadEffect) =
   print("main start")
-  h.'fork(() => f(h, 0))
-  h.'fork(() => f(h, 1))
-  h.'fork(() => f(h, 2))
+  h.fork(() => f(h, 0))
+  h.fork(() => f(h, 1))
+  h.fork(() => f(h, 2))
   print("main end")
 
 
@@ -40,14 +40,14 @@ handle h = ThreadEffect with
     k(())
   fun yld()(k) =
     this.tasks.push(() => k(()))
-    enterHandleBlock(this, () => this.tasks.'shift()())
+    enterHandleBlock(this, () => if this.tasks.shift() is Function as task then task() else ())
   fun start(main)(k) =
     this.tasks.push(() => main(this))
     while this.tasks.length != 0 do
-      enterHandleBlock(this, () => this.tasks.'shift()())
+      enterHandleBlock(this, () => if this.tasks.shift() is Function as task then task() else ())
     k(())
 in
-  h.'start(main)
+  h.start(main)
 //│ > main start
 //│ > main end
 //│ > f 2
@@ -68,14 +68,14 @@ handle h = ThreadEffect with
     k(())
   fun yld()(k) =
     this.tasks.push(() => k(()))
-    enterHandleBlock(this, () => this.tasks.'shift()())
+    enterHandleBlock(this, () => if this.tasks.shift() is Function as task then task() else ())
   fun start(main)(k) =
     this.tasks.push(() => main(this))
     while this.tasks.length != 0 do
-      enterHandleBlock(this, () => this.tasks.'shift()())
+      enterHandleBlock(this, () => if this.tasks.shift() is Function as task then task() else ())
     k(())
 in
-  h.'start(main)
+  h.start(main)
 //│ > main start
 //│ > main end
 //│ > f 0
@@ -98,23 +98,23 @@ abstract class ThreadEffect with
 val tasks = mut []
 //│ tasks = []
 
-fun f(x)(h) =
+fun f(x)(h: ThreadEffect) =
   print("f " + x)
-  h.'yld()
+  h.yld()
   print("f " + x)
-  h.'yld()
+  h.yld()
   print("f " + x)
 
-fun main(h) =
+fun main(h: ThreadEffect) =
   print("main start")
-  h.'fork(f(0))
-  h.'fork(f(1))
-  h.'fork(f(2))
+  h.fork(f(0))
+  h.fork(f(1))
+  h.fork(f(2))
   print("main end")
 
 fun dequeue() =
   if tasks.length != 0 do
-    tasks.'shift()(())
+    if tasks.shift() is Function as task do task(())
 
 fun start(thread: ThreadEffect -> ()) =
   handle h = ThreadEffect with
@@ -155,7 +155,7 @@ fun enqueue(k, x) =
   tasks.push(() => k(x))
 fun dequeue() =
   if tasks.length != 0 do
-    tasks.'shift()()
+    if tasks.shift() is Function as task do task()
 //│ tasks = []
 
 let exchanger = None
@@ -182,15 +182,15 @@ fun start(thread: ThreadEffect -> ()) =
     thread(h)
   dequeue()
 
-fun main(h) =
-  h.'fork(h =>
+fun main(h: ThreadEffect) =
+  h.fork(h =>
     print("[t1] Sending 0")
-    let v = h.'xchg(0)
-    print("[t1] received " + v.'toString()))
-  h.'fork(h =>
+    let v = h.xchg(0)
+    print("[t1] received " + v.toString()))
+  h.fork(h =>
     print("[t2] Sending 1")
-    let v = h.'xchg(1)
-    print("[t2] received " + v.'toString()))
+    let v = h.xchg(1)
+    print("[t2] received " + v.toString()))
 
 start(main)
 //│ > [t1] Sending 0

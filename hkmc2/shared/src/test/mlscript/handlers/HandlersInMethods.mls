@@ -5,7 +5,7 @@
 
 
 abstract class Effect with
-  fun perform(arg: Str): Str
+  fun perform(arg: Str, x: Int): Int
 
 
 class Test with
@@ -14,7 +14,7 @@ class Test with
       fun perform(arg, x)(k) =
         print(arg)
         k(x * 2)
-    h.'perform("A", x) + h.'perform("B", x + 1)
+    h.perform("A", x) + h.perform("B", x + 1)
 let t = new Test
 //│ t = Test
 
