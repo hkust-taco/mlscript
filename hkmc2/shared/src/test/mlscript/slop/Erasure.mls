@@ -38,6 +38,7 @@ GeneratorChild().generate("payload").next()
 
 
 // Removing a checked cast can expose a subclass producer to fusion. Its base-class arm must still match.
+:fixme // E23: fusion must match subclass producers against superclass arms.
 :noInline
 :lift
 :deforest
@@ -49,8 +50,11 @@ private fun classify(value: Any) =
   if parent is Parent then 1 else 0
 classify(Child(42))
 //│ deforest > >>> fusing >>>
+//│ deforest > Child⁰(42) ->
+//│ deforest > 	match: scrut⁰
 //│ deforest > <<< fusing <<<
-//│ = 1
+//│ ═══[RUNTIME ERROR] Expected: '1', got: '0'
+//│ = 0
 
 
 // Tuple producers have Array's class identity and the implicit Object supertype.
@@ -75,6 +79,7 @@ private fun objectKind(value: Any) = if value is Object then 1 else 0
 
 
 // Default branches must specialize their field parameters separately for constructors of different arities.
+:fixme // E23: default branch closures must distinguish producer field layouts.
 :noInline
 :lift
 :deforest
@@ -95,10 +100,11 @@ private fun fallback(value: Any) = if value is Target then 1 else 0
 //│ deforest > B⁰() ->
 //│ deforest > 	match: value²
 //│ deforest > <<< fusing <<<
-//│ = [0, 0]
+//│ /!!!\ Uncaught error: java.lang.IndexOutOfBoundsException: 0
 
 
 // Passing a checked cast does not justify dropping the constructor body and its effects.
+:fixme // E21: fusion must preserve constructor effects.
 :noInline
 :lift
 :deforest
@@ -111,11 +117,15 @@ private fun consumeCastEffect(value: Any) =
   if instance is CastEffect then 1 else 0
 [consumeCastEffect(CastEffect(42)), castCount]
 //│ deforest > >>> fusing >>>
+//│ deforest > CastEffect⁰(42) ->
+//│ deforest > 	match: scrut¹
 //│ deforest > <<< fusing <<<
-//│ = [1, 1]
-//│ castCount = 1
+//│ ═══[RUNTIME ERROR] Expected: '[1, 1]', got: '[1, 0]'
+//│ = [1, 0]
+//│ castCount = 0
 
 // A harmless subclass body cannot justify dropping effects in its superclass constructor.
+:fixme // E21: fusion must preserve superclass constructor effects.
 :noInline
 :lift
 :deforest
@@ -129,11 +139,15 @@ private fun consumeInheritedEffect(value: Any) =
   if instance is EffectfulChild then 1 else 0
 [consumeInheritedEffect(EffectfulChild(42)), inheritedCount]
 //│ deforest > >>> fusing >>>
+//│ deforest > EffectfulChild⁰(42) ->
+//│ deforest > 	match: scrut²
 //│ deforest > <<< fusing <<<
-//│ = [1, 1]
-//│ inheritedCount = 1
+//│ ═══[RUNTIME ERROR] Expected: '[1, 1]', got: '[1, 0]'
+//│ = [1, 0]
+//│ inheritedCount = 0
 
 // Constructor-local writes can change a projected parameter field even without external effects.
+:fixme // E22: field fusion must account for constructor assignments.
 :noInline
 :lift
 :deforest
@@ -145,8 +159,11 @@ private fun readChanged(value: Any) =
   instance.value
 readChanged(ChangedField(1, 2))
 //│ deforest > >>> fusing >>>
+//│ deforest > ChangedField⁰(1, 2) ->
+//│ deforest > 	select: value
 //│ deforest > <<< fusing <<<
-//│ = 2
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '1'
+//│ = 1
 
 // Lifting can add constructor captures beyond the source parameter list.
 :noInline
@@ -162,5 +179,9 @@ private fun readCaptured(captured: Int) =
   read(Captured(2))
 readCaptured(1)
 //│ deforest > >>> fusing >>>
+//│ deforest > new Captured⁰(2)(captured⁰) ->
+//│ deforest > 	select: value
+//│ deforest > new Captured⁰(2)(captured⁰) ->
+//│ deforest > 	select: value
 //│ deforest > <<< fusing <<<
 //│ = 2
