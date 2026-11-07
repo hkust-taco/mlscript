@@ -1385,11 +1385,23 @@ class Lowering()(using Config, TL, Raise, State, Ctx, SymbolPrinter)(using Erasu
       }.collect{ case Some(v) => v }
       loweringCtx.collectScopedSym(lhs)
       val resSym = loweringCtx.registerTempSymbol(S(t), erasedType = N)
-      subTerm(rhs): par =>
-        subTerms(as): asr =>
-          HandleBlock(lhs, resSym, par, asr, cls, handlers,
-            inScopedBlock(returnedTerm(bod, N)),
-            k(resSym.asSimpleRef))
+      def lowerParent(par: Path, args: Ls[Arg]): Block =
+        HandleBlock(lhs, resSym, par, args, cls, handlers,
+          inScopedBlock(returnedTerm(bod, N)),
+          k(resSym.asSimpleRef))
+      if newResolution && !h.isAbortive then
+        val parent = cls.defn.flatMap(_.ext).getOrElse(lastWords("A user handler must have a parent constructor"))
+        classOf(rhs, parent): (par, params) =>
+          val args = parent.args match
+            case arg :: Nil => arg.withoutCaptures
+            case _ => lastWords("A user handler must supply one constructor argument list")
+          params.lists match
+            case ps :: Nil => lowerConstructorArgs(args, ps, params.isMls)(lowerParent(par, _))
+            case Nil => lowerArgs(args, Nil)(lowerParent(par, _))
+            case _ => fail:
+              ErrorReport(msg"Handler classes with multiple constructor parameter lists are not supported" ->
+                rhs.toLoc :: Nil, source = Diagnostic.Source.Compilation)
+      else subTerm(rhs)(par => subTerms(as)(args => lowerParent(par, args.map(_.asArg))))
     case st.Blk(sts, res) => block(sts, R(res), inStmtPos = inStmtPos)(k)
     case Assgn(lhs, rhs) =>
       // The permission belongs to this write, not to assignments in its receiver or RHS.

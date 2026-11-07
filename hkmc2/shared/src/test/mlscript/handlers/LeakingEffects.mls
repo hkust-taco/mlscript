@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -15,15 +16,15 @@ fun main() =
     fun perform(arg1)(k1) =
       print("B " + arg1)
       xs.push(k1)
-  print(g.perform("a"))
+  print(g.'perform("a"))
   print("—")
-  print(g.perform("b"))
+  print(g.'perform("b"))
   print("—")
-  print(g.perform("c"))
+  print(g.'perform("c"))
 main()
 while
   do print(xs)
-  let f = xs.pop()
+  let f = xs.'pop()
   f !== () then
     set count += 1
     f(count)
@@ -55,7 +56,7 @@ while
 //│ = true
 
 
-// g is non-resumptive, which means g.perform("a") does not resume
+// g is non-resumptive, which means g.'perform("a") does not resume
 // hence it should exit the entire handle block with the return value of xs.push(k1)
 :expect 1
 handle h = Effect with
@@ -69,19 +70,19 @@ handle h = Effect with
         print("B " + arg + " " + arg1)
         xs.push(k1)
     k(g)
-    while xs.pop() is
+    while xs.'pop() is
       null then print("Done.")
       f then
         set count += 1
         f(count)
 let g = h.perform("hi")
-print(g.perform("a"))
+print(g.'perform("a"))
 print("—")
-print(g.perform("b"))
+print(g.'perform("b"))
 print("—")
-print(g.perform("c"))
+print(g.'perform("c"))
 // set g = h.perform("hola")
-// g.perform("adios")
+// g.'perform("adios")
 //│ > A hi
 //│ > B hi a
 //│ = 1

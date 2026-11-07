@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers debug
 :lift
@@ -8,23 +9,23 @@ abstract class ThreadEffect with
   val tasks = mut []
   fun drain() =
     while tasks.length != 0 do
-      tasks.pop()()
+      tasks.'pop()()
   fun fork(thread: () -> ()): ()
   fun yld(): ()
 
 
 fun f(h, x)() =
   print("f " + x)
-  h.yld()
+  h.'yld()
   print("f " + x)
-  h.yld()
+  h.'yld()
   print("f " + x)
 
 fun main(h) =
   print("main start")
-  h.fork(f(h, 0))
-  h.fork(f(h, 1))
-  h.fork(f(h, 2))
+  h.'fork(f(h, 0))
+  h.'fork(f(h, 1))
+  h.'fork(f(h, 2))
   print("main end")
 
 
@@ -44,10 +45,10 @@ in
 //│ > main end
 //│ > f 2
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at f (UserThreadsSafe.mls:18:3)
-//│ 	at ThreadEffect#drain (UserThreadsSafe.mls:11:7)
-//│ 	at Handler$h$fork (UserThreadsSafe.mls:36:5)
-//│ 	at Handler$h$fork (UserThreadsSafe.mls:36:5)
+//│ 	at f (UserThreadsSafe.mls:19:3)
+//│ 	at ThreadEffect#drain (UserThreadsSafe.mls:12:7)
+//│ 	at Handler$h$fork (UserThreadsSafe.mls:37:5)
+//│ 	at Handler$h$fork (UserThreadsSafe.mls:37:5)
 
 
 // FIFO
@@ -66,9 +67,9 @@ in
 //│ > main end
 //│ > f 0
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$2
-//│ 	at f (UserThreadsSafe.mls:18:3)
-//│ 	at ThreadEffect#drain (UserThreadsSafe.mls:11:7)
-//│ 	at Handler$h$fork (UserThreadsSafe.mls:58:5)
-//│ 	at Handler$h$fork (UserThreadsSafe.mls:58:5)
+//│ 	at f (UserThreadsSafe.mls:19:3)
+//│ 	at ThreadEffect#drain (UserThreadsSafe.mls:12:7)
+//│ 	at Handler$h$fork (UserThreadsSafe.mls:59:5)
+//│ 	at Handler$h$fork (UserThreadsSafe.mls:59:5)
 
 

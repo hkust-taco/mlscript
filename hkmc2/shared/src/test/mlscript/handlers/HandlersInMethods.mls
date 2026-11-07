@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -13,7 +14,7 @@ class Test with
       fun perform(arg, x)(k) =
         print(arg)
         k(x * 2)
-    h.perform("A", x) + h.perform("B", x + 1)
+    h.'perform("A", x) + h.'perform("B", x + 1)
 let t = new Test
 //│ t = Test
 

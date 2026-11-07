@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers debug
 :lift
@@ -57,7 +58,7 @@ fun f() =
 //│       if (runtime.curEffect === null) {
 //│         pc = 3;
 //│       } else {
-//│         runtime.unwind(f, 3, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 5, 0, 100, 2000, scrut, tmp);
+//│         runtime.unwind(f, 3, "Debugging.mls:18:6", f$debugInfo, null, 1, 0, 5, 0, 100, 2000, scrut, tmp);
 //│         return runtime.Unit
 //│       }
 //│     case 3:
@@ -69,7 +70,7 @@ fun f() =
 //│         if (runtime.curEffect === null) {
 //│           pc = 2;
 //│         } else {
-//│           runtime.unwind(f, 2, "Debugging.mls:18:14", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp);
+//│           runtime.unwind(f, 2, "Debugging.mls:19:14", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp);
 //│           return runtime.Unit
 //│         }
 //│       } else {
@@ -81,7 +82,7 @@ fun f() =
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(f, 1, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp);
+//│         runtime.unwind(f, 1, "Debugging.mls:19:5", f$debugInfo, null, 1, 0, 5, i, j, k, scrut, tmp);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
@@ -94,7 +95,7 @@ fun f() =
 :re
 f()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at f (Debugging.mls:18:14)
+//│ 	at f (Debugging.mls:19:14)
 
 :re
 fun lambda_test(f) =
@@ -104,8 +105,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:104:3)
-//│ 	at lambda_test (Debugging.mls:101:3)
+//│ 	at lambda (Debugging.mls:105:3)
+//│ 	at lambda_test (Debugging.mls:102:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -126,7 +127,7 @@ Runtime.debugEff(res.reified)
 //│ > 
 
 :expect Infinity
-res.resumeWith(42)
+res.'resumeWith(42)
 //│ > 42
 //│ = Infinity
 
@@ -142,8 +143,8 @@ module Test with
     if i == 0 do
       set i = dbg.break("whoops")
     j / i
-  fun main()(using Debugger) =
-    test(12) + test(34)
+  fun main()(using dbg: Debugger) =
+    test(12)(using dbg) + test(34)(using dbg)
 
 // :rt
 // :lot
@@ -151,25 +152,25 @@ let res =
   handle h = Debugger with
     fun break(payload)(resume) = resume
   using Debugger = h
-  Runtime._try(() => Test.main())
+  Runtime._try(() => Test.main()(using h))
 //│ res = EffectHandle(_)
 
 :re
-res.raise()
+res.'raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:143:15)
-//│ 	at Test.main (Debugging.mls:146:5)
+//│ 	at Test.test (Debugging.mls:144:15)
+//│ 	at Test.main (Debugging.mls:147:5)
 
-set res = res.resumeWith(42)
+set res = res.'resumeWith(42)
 
 :re
-res.raise()
+res.'raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:143:15)
-//│ 	at Test.main (Debugging.mls:146:16)
+//│ 	at Test.test (Debugging.mls:144:15)
+//│ 	at Test.main (Debugging.mls:147:27)
 
 :expect 0.33676533676533676
-res.resumeWith(666)
+res.'resumeWith(666)
 //│ = 0.33676533676533676
 
 let i = 100
@@ -186,8 +187,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:180:3) with locals: j=200
+//│ > 	at f (Debugging.mls:181:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:182:3)
+//│ > 	at f (Debugging.mls:183:3)
 //│ > Stack Trace:
 //│ > 	at tail position

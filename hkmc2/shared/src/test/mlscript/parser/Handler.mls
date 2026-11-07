@@ -14,7 +14,7 @@ handle h
 
 :pe
 handle h = Eff
-//│ ╔══[PARSE ERROR] Expected 'with' keyword after 'handle' binding class name; found end of input instead
+//│ ╔══[PARSE ERROR] Expected 'with' or a braced handler body
 //│ ║  l.+1: 	handle h = Eff
 //│ ╙──      	              ^
 

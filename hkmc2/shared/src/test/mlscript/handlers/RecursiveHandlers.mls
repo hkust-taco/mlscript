@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -28,34 +29,37 @@ h1.perform("oops")
 //│ ╔══[COMPILATION ERROR] Name not found: h1
 //│ ║  l.+1: 	h1.perform("oops")
 //│ ╙──      	^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'perform' has no resolved target
+//│ ║  l.+1: 	h1.perform("oops")
+//│ ╙──      	^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
 handle h = Object with
   fun write(x)(k) =
-    if x < 10 do write(10)
+    if x < 10 do this.'write(10)
     [x, k(())]
-h.write(1)
-h.write(2)
+h.'write(1)
+h.'write(2)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
 
 handle h = Object with
   fun write(x)(k) =
     if x < 10 do
-      print(enterHandleBlock(this, () => write(10)))
+      print(enterHandleBlock(this, () => this.'write(10)))
     [x, k(())]
-h.write(1)
-h.write(2)
+h.'write(1)
+h.'write(2)
 //│ > [10, ()]
 //│ > [10, ()]
 //│ = [1, [2, ()]]
 
 handle h = Object with
   fun write(x)(k) = enterHandleBlock of this, () =>
-    if x < 10 do write(10)
+    if x < 10 do this.'write(10)
     [x, k(())]
-h.write(1)
-h.write(2)
+h.'write(1)
+h.'write(2)
 //│ = [10, [1, [10, [2, ()]]]]
 
 // deep handler
@@ -75,6 +79,9 @@ handle h2 = Effect with
 //│ ╔══[COMPILATION ERROR] Name not found: h2
 //│ ║  l.+5: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
+//│ ╔══[COMPILATION ERROR] This selection of member 'perform' has no resolved target
+//│ ║  l.+5: 	      then h2.perform(arg - 1) + " " + arg
+//│ ╙──      	           ^^^^^^^^^^
 //│ > –––
 //│ > performing 2
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
@@ -91,12 +98,12 @@ let res =
           ["‹", k1(arg), arg1, "›"]
       [k(g)]
   let g = h.perform("hi")
-  g.perform("bye")
-  g.perform("friend")
+  g.'perform("bye")
+  g.'perform("friend")
   set g = h.perform("hola")
-  g.perform("adios")
-  g.perform("amigos")
-in res.toString()
+  g.'perform("adios")
+  g.'perform("amigos")
+in res.'toString()
 //│ > A hi
 //│ > B hi bye
 //│ > B hi friend
@@ -114,8 +121,8 @@ let res =
       print("B " + "hi" + " " + arg1)
       ["‹", k1("hi"), arg1, "›"]
   [(() =>
-    g.perform("bye")
-    g.perform("friend")
+    g.'perform("bye")
+    g.'perform("friend")
     print("A " + "hola")
     handle g2 = Effect with
       fun perform(arg1)(k1) =
@@ -126,7 +133,7 @@ let res =
       g2.perform("amigos")
     )()]
   )()]
-in res.toString()
+in res.'toString()
 //│ > A hi
 //│ > B hi bye
 //│ > B hi friend
@@ -175,7 +182,7 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:144:7", null, null, 1, 2, arg, k, 0);
+//│         runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:151:7", null, null, 1, 2, arg, k, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
@@ -207,7 +214,7 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:149:7", null, null, 1, 2, arg, k, 0);
+//│         runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:156:7", null, null, 1, 2, arg, k, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
@@ -255,7 +262,7 @@ str
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:151:3", null, null, 1, 1, h22, 0);
+//│         runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:158:3", null, null, 1, 1, h22, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:

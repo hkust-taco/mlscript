@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -10,7 +11,7 @@ abstract class Effect with
 
 class Test with
   fun p(h, x) =
-    h.perform("A", x) + h.perform("B", x + 1)
+    h.'perform("A", x) + h.'perform("B", x + 1)
 let t = new Test
 //│ t = Test
 

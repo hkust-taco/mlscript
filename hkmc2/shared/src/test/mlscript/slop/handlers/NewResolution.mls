@@ -1,0 +1,160 @@
+:.
+:effectHandlers
+:lift
+
+
+abstract class Effect with
+  fun perform(arg: Str): Str
+
+// Handler installation does not invoke the handler method.
+:expect ()
+handle h = Effect with
+  fun perform(arg)(k) = "unused"
+
+// The effect invocation returns the resumed value; the handler returns the block's result.
+:expect ["HELLO!"]
+handle h = Effect {
+  fun perform(arg)(k) = [k(arg)]
+}
+h.perform("hello").toUpperCase() + "!"
+//│ = ["HELLO!"]
+
+:expect "resumed"
+handle h = Effect { fun perform(arg)(k) = k(arg) } in h.perform("resumed")
+//│ = "resumed"
+
+:expect "aborted"
+handle h = Effect { fun perform(arg)(k) = "aborted" } in {
+  h.perform("ignored")
+  "unreachable"
+}
+//│ = "aborted"
+
+// Parent construction resolves qualified classes and argument expressions.
+module Effects with
+  data abstract class Offset(value: Int) with
+    fun perform(arg: Int): Int
+
+:expect 42
+let initial = 40
+handle h = Effects.Offset(initial + 1) {
+  fun perform(arg)(k) = k(this.value + 1)
+}
+h.perform(0)
+//│ = 42
+//│ initial = 40
+
+// Stored constructors use their class value when creating the handler subclass.
+:expect 43
+let SavedEffect = Effects.Offset
+handle h = SavedEffect(42) {
+  fun perform(arg)(k) = k(this.value + 1)
+}
+h.perform(0)
+//│ = 43
+//│ SavedEffect = fun Offset { class: class Offset }
+
+// Generic parent signatures preserve the effect result's interface.
+abstract class Identity[A] {
+  fun perform(arg: A): A
+}
+
+:expect "GENERIC"
+handle h = Identity[Str] { fun perform(arg)(k) = k(arg) }
+h.perform("generic").toUpperCase()
+//│ = "GENERIC"
+
+// FIXME: Lifting moves the handler subclass before its parent's initialization
+// when both classes are declared in the same block.
+:fixme
+:expect 42
+private abstract class PrivateAnswer {
+  fun answer(): Int
+}
+fun privateHandled() =
+  handle h = PrivateAnswer { fun answer()(k) = 42 }
+  h.answer()
+  0
+privateHandled()
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
+
+// Omitted optional arguments keep the ordinary constructor's null default.
+data abstract class OptionalEffect(value?: Int) {
+  fun perform(): Any
+}
+
+:expect null
+handle h = OptionalEffect { fun perform()(k) = k(this.value) }
+h.perform()
+//│ = null
+
+// Methods introduced only by a handler require an explicit dynamic selection.
+:expect 42
+handle h = Object { fun perform(arg)(k) = k(arg + 1) }
+h.'perform(41)
+//│ = 42
+
+:e
+handle h = Object { fun perform(arg)(k) = k(arg) }
+h.perform(1)
+//│ ╔══[COMPILATION ERROR] Resolution error in selection
+//│ ║  l.+2: 	h.perform(1)
+//│ ║        	^^^^^^^^^
+//│ ╟── Instance of class 'Object' does not contain member 'perform'
+//│ ║  l.+1: 	handle h = Object { fun perform(arg)(k) = k(arg) }
+//│ ╙──      	           ^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Class lookup must reject a non-class and check constructor arguments.
+:e
+handle h = 42 { fun perform()(k) = k(()) }
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.+1: 	handle h = 42 { fun perform()(k) = k(()) }
+//│ ║        	           ^^
+//│ ╟── Invalid class expression: integer literal
+//│ ║  l.+1: 	handle h = 42 { fun perform()(k) = k(()) }
+//│ ╙──      	           ^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+:e
+handle h = Effects.Offset() { fun perform(arg)(k) = k(arg) }
+//│ ╔══[COMPILATION ERROR] Resolution error in object instantiation
+//│ ║  l.+1: 	handle h = Effects.Offset() { fun perform(arg)(k) = k(arg) }
+//│ ║        	           ^^^^^^^^^^^^^^^^
+//│ ╟── Constructor of class 'Offset' expected 1 argument, but got 0
+//│ ║  l.XX: 	  data abstract class Offset(value: Int) with
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+abstract class PrivateEffect {
+  private constructor
+  fun perform(): Int
+}
+
+:e
+handle h = PrivateEffect { fun perform()(k) = k(42) }
+//│ ╔══[COMPILATION ERROR] Cannot access the private constructor of class 'PrivateEffect' outside the class
+//│ ║  l.+1: 	handle h = PrivateEffect { fun perform()(k) = k(42) }
+//│ ║        	           ^^^^^^^^^^^^^
+//│ ╟── private constructor declared here
+//│ ║  l.XX: 	  private constructor
+//│ ╙──      	  ^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
+
+// Constructor arguments use the parent's declared representation.
+:e
+handle h = Effects.Offset("wrong") { fun perform(arg)(k) = k(arg) }
+//│ ╔══[COMPILATION ERROR] Cannot use a value of type 'Str' at an unrelated type 'Int'
+//│ ║  l.+1: 	handle h = Effects.Offset("wrong") { fun perform(arg)(k) = k(arg) }
+//│ ╙──      	                          ^^^^^^^
+
+abstract class CurriedEffect(x)(y) {
+  fun perform(): Int
+}
+
+:e
+handle h = CurriedEffect(1) { fun perform()(k) = k(42) }
+//│ ╔══[COMPILATION ERROR] Handler classes with multiple constructor parameter lists are not supported
+//│ ║  l.+1: 	handle h = CurriedEffect(1) { fun perform()(k) = k(42) }
+//│ ╙──      	           ^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.

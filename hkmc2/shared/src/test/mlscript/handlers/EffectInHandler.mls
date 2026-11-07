@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -16,13 +17,16 @@ handle h = PrintEffect with
     h.p(x)
     k(())
     h.p(x)
-h.aux(3)
+h.'aux(3)
 //│ ╔══[COMPILATION ERROR] Name not found: h
 //│ ║  l.+6: 	    h.p(x)
 //│ ╙──      	    ^
 //│ ╔══[COMPILATION ERROR] Name not found: h
 //│ ║  l.+8: 	    h.p(x)
 //│ ╙──      	    ^
+//│ ╔══[COMPILATION ERROR] This selection of member 'p' has no resolved target
+//│ ║  l.+6: 	    h.p(x)
+//│ ╙──      	    ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 handle h1 = PrintEffect with
@@ -38,9 +42,9 @@ handle h2 = PrintEffect with
     h1.p(x)
     k(())
     h1.p(x)
-h1.p(4)
-h2.aux(3)
-h1.p(4)
+h1.'p(4)
+h2.'aux(3)
+h1.'p(4)
 //│ > 4
 //│ > 3
 //│ > 4

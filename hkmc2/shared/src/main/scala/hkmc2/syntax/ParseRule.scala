@@ -73,7 +73,7 @@ class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[
 end ParseRule
 
 
-class ParseRules(using State):
+class ParseRules(using State, Raise):
   import Keyword.*
   import Alt.*
   import Tree.*
@@ -224,26 +224,34 @@ class ParseRules(using State):
     letLike(`set`),
     
     keepKw(`handle`):
+      val body: ParseRule[Opt[Tree]] = ParseRule("'handle' definitions")(
+        discardKw(`in`):
+          ParseRule("'handle' binding `in` clause")(
+            exprOrBlk(ParseRule("'handle' binding body")(end(())))((body, _: Unit) => S(body))*
+          ),
+        end(N))
       ParseRule("'handle' binding keyword"):
         Expr(
           ParseRule("'handle' binding head"):
             discardKw(`=`):
               ParseRule("'handle' binding equals sign"):
                 Expr(
-                  ParseRule("'handle' binding class name"):
-                    discardKw(`with`):
-                      ParseRule("type declaration body")(
-                        Blk(
-                          ParseRule("type declaration block")(
-                            discardKw(`in`):
-                              ParseRule(s"'handle' binding `in` clause")(
-                                exprOrBlk(ParseRule(s"'handle' binding body")(end(())))((body, _: Unit) => S(body))*
-                              ),
-                            end(N)), Set.empty
-                        ) { case (res, t) => (S(res), t) }
-                      )
-                ) { case (rhs, (S(defs), body)) => (rhs, defs, body) }
-        ) { case (lhs, (rhs, defs, body)) => Hndl(lhs, rhs, defs, body) }
+                  ParseRule("'handle' binding class name")(
+                    (discardKw(`with`)(ParseRule("'handle' body")(
+                      Blk(body, Set.empty) { case (defs, body) => (defs, body) }
+                    )) :: body.alts.iterator.map(_.map(body => (Empty(), body))).toList)*
+                  )
+                ) {
+                  case (Reft(rhs, defs), (_: Empty, body)) => (rhs, defs, body)
+                  case (rhs, (defs, body)) => (rhs, defs, body)
+                }
+        ) {
+          case (_, (rhs, _: Empty, _)) =>
+            raise(ErrorReport(msg"Expected 'with' or a braced handler body" -> rhs.toLoc.map(_.right) :: Nil,
+              source = Diagnostic.Source.Parsing))
+            Error().withLocOf(rhs)
+          case (lhs, (rhs, defs, body)) => Hndl(lhs, rhs, defs, body)
+        }
     .map { case (kw, h) => h.mkLocWith(kw) }
     ,
     keepKw(`new`):

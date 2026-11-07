@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -10,7 +11,7 @@ fun permutations_impl(gen, l1, l2) =
     [f, ...t] do
       handle genWithPrefix = Generator with
         fun produce(result)(resume) =
-          result.unshift(f)
+          result.'unshift(f)
           gen.produce(result)
           resume(())
       permutations_impl(genWithPrefix, mut [], l1.concat(t))

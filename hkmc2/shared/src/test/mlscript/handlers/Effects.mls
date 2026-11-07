@@ -1,3 +1,4 @@
+:.
 :js
 :effectHandlers
 :lift
@@ -14,7 +15,7 @@ handle h = Effect with
 :expect 42
 handle h = Effect with
   fun perform()(k) = k(42)
-h.perform()
+h.'perform()
 //│ = 42
 
 :expect "b"
@@ -45,7 +46,7 @@ foo(h)
 //│ > hi
 //│ = "hi"
 
-fun foo(e) = e.perform("hi")
+fun foo(e: Effect) = e.perform("hi")
 
 :expect "Hello World!"
 handle h = Effect with
@@ -93,7 +94,7 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(Handler$h$perform5, 1, "Effects.mls:64:13", null, null, 1, 2, arg, k, 0);
+//│         runtime.unwind(Handler$h$perform5, 1, "Effects.mls:65:13", null, null, 1, 2, arg, k, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
@@ -136,38 +137,38 @@ result
 //│       if (runtime.curEffect === null) {
 //│         pc = 4;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 4, "Effects.mls:68:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 4, "Effects.mls:69:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 4:
-//│       runtime.resumeValue;
+//│       runtime.resumeValue /* as! Str */;
 //│       runtime.resumeValue = runtime.safeCall(h7.perform("2"));
 //│       if (runtime.curEffect === null) {
 //│         pc = 3;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 3, "Effects.mls:69:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 3, "Effects.mls:70:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 3:
-//│       runtime.resumeValue;
+//│       runtime.resumeValue /* as! Str */;
 //│       runtime.resumeValue = runtime.safeCall(h7.perform("3"));
 //│       if (runtime.curEffect === null) {
 //│         pc = 2;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 2, "Effects.mls:70:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 2, "Effects.mls:71:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 2:
-//│       runtime.resumeValue;
+//│       runtime.resumeValue /* as! Str */;
 //│       runtime.resumeValue = runtime.safeCall(h7.perform("4"));
 //│       if (runtime.curEffect === null) {
 //│         pc = 1;
 //│       } else {
-//│         runtime.unwind(handleBlock$7, 1, "Effects.mls:71:3", null, null, 1, 0, 0);
+//│         runtime.unwind(handleBlock$7, 1, "Effects.mls:72:3", null, null, 1, 0, 0);
 //│         return runtime.Unit
 //│       }
 //│     case 1:
-//│       runtime.resumeValue;
+//│       runtime.resumeValue /* as! Str */;
 //│       return runtime.safeCall(h7.perform("5"));
 //│   }
 //│ });
@@ -314,7 +315,7 @@ module A with
 
 handle h = A.Effect(3) with
   fun perform()(k) = 0
-h.perform()
+h.'perform()
 //│ = 0
 
 fun f(perform) =
@@ -399,7 +400,7 @@ sum(10000)
 
 :expect 2
 fun foo(h) =
-  h.perform()
+  h.'perform()
   if true then
     fun g() = 2
     g()
@@ -413,7 +414,7 @@ foo(h)
 
 :expect 3
 fun foo(h) =
-  h.perform()
+  h.'perform()
   if false then
     fun g() = 2
     g()
@@ -427,7 +428,7 @@ foo(h)
 
 :expect 123
 fun foo(h) =
-  h.perform()
+  h.'perform()
   fun A() = 1
   let a = if true then
     class A() with
@@ -454,7 +455,7 @@ foo(h)
 :fixme
 :expect 123
 fun foo(h) =
-  h.perform()
+  h.'perform()
   fun A() = 1
   let a = if true then
     module A with
@@ -509,5 +510,5 @@ class A with
   val x = 2
 handle h2 = A with
   fun perf()(k) = k(this.x)
-h2.perf()
+h2.'perf()
 //│ = 2
