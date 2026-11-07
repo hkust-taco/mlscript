@@ -358,7 +358,7 @@ class NewResolver:
               // These synthesized nodes retain their own interpreted references
               // or inference hosts; none reads the surrounding binding map.
               case TypeShape.Combined(formula) => formula.orderedAtoms.foreach(reference)
-              case TypeShape.Argument(parts, _) => reference(parts.input); reference(parts.output)
+              case TypeShape.Argument(parts) => reference(parts.input); reference(parts.output)
               case TypeShape.SelectedArgument(argument, _) => reference(argument)
               case TypeShape.Contextual(context) => reference(context.tpe)
               case TypeShape.Inferred(_) | TypeShape.Hole(_) =>
@@ -426,7 +426,7 @@ class NewResolver:
           case TypeShape.Negation(base) => visit(base)
           case TypeShape.Wildcard(input, output) => input.foreach(visit); output.foreach(visit)
           case TypeShape.Combined(formula) => formula.orderedAtoms.foreach(atom => visit(atom.resolution))
-          case TypeShape.Argument(parts, _) => visit(parts.input.resolution); visit(parts.output.resolution)
+          case TypeShape.Argument(parts) => visit(parts.input.resolution); visit(parts.output.resolution)
           case TypeShape.SelectedArgument(argument, _) => visit(argument.resolution)
           case TypeShape.Contextual(reference) => visit(reference.tpe.resolution)
           case _ => ()
@@ -476,7 +476,7 @@ class NewResolver:
                 param.upper.foreach(follow)
               follow(body)
             case TypeShape.Combined(formula) => formula.orderedAtoms.foreach(atom => follow(atom.resolution))
-            case TypeShape.Argument(parts, _) => follow(parts.input.resolution); follow(parts.output.resolution)
+            case TypeShape.Argument(parts) => follow(parts.input.resolution); follow(parts.output.resolution)
             case TypeShape.SelectedArgument(argument, _) => follow(argument.resolution)
             case TypeShape.Contextual(reference) => follow(reference.tpe.resolution)
             case _ => ()
@@ -502,7 +502,7 @@ class NewResolver:
             case TypeShape.Wildcard(input, output) :: Nil =>
               input.toSet.flatMap(part => uses(declaredType(part, tpe.withPolarity(!tpe.positive)), wrapped, next, aliases)) ++
                 output.toSet.flatMap(part => uses(declaredType(part, tpe), wrapped, next, aliases))
-            case TypeShape.Argument(parts, _) :: Nil => uses(parts.input, wrapped, next, aliases) ++ uses(parts.output, wrapped, next, aliases)
+            case TypeShape.Argument(parts) :: Nil => uses(parts.input, wrapped, next, aliases) ++ uses(parts.output, wrapped, next, aliases)
             case TypeShape.SelectedArgument(argument, _) :: Nil => uses(argument, wrapped, next, aliases)
             case TypeShape.Applied(base, args) :: Nil => alias(base) match
               case S((symbol, rhs)) if !aliases(symbol) =>
@@ -589,9 +589,9 @@ class NewResolver:
     val normalized = mutable.Map.empty[(TypeResolution, Map[VarSymbol, DeclaredType], Set[TypeAliasSymbol], Bool), DeclaredType]
     def argument(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], aliases: Set[TypeAliasSymbol], positive: Bool): DeclaredType =
       resolution.currentShapes.toList match
-        case TypeShape.Wildcard(_, _) :: Nil | TypeShape.Argument(_, _) :: Nil => loop(resolution, bindings, aliases, positive)
+        case TypeShape.Wildcard(_, _) :: Nil | TypeShape.Argument(_) :: Nil => loop(resolution, bindings, aliases, positive)
         case _ => normalizedArgument(resolution, TypeArgument(
-          loop(resolution, bindings, aliases, !positive), loop(resolution, bindings, aliases, positive)), wildcard = false)
+          loop(resolution, bindings, aliases, !positive), loop(resolution, bindings, aliases, positive)))
     def loop(resolution: TypeResolution, bindings: Map[VarSymbol, DeclaredType], aliases: Set[TypeAliasSymbol], positive: Bool): DeclaredType =
       normalized.getOrElseUpdate((resolution, bindings, aliases, positive),
         interpret(resolution, bindings, aliases, positive))
@@ -612,10 +612,10 @@ class NewResolver:
         case TypeShape.Wildcard(input, output) :: Nil =>
           // Normalize both parts before retaining the argument. Otherwise even
           // out A keeps another A-to-wildcard environment at each recursive
-          // step. Mark it as written: it overrides declaration variance (see writtenWildcard).
+          // step.
           val parts = TypeArgument(input.fold(extremeType(false))(loop(_, bindings, aliases, !positive)),
             output.fold(missingOutput(resolution))(loop(_, bindings, aliases, positive)))
-          normalizedArgument(resolution, parts, wildcard = true)
+          normalizedArgument(resolution, parts)
         case TypeShape.Applied(base, arguments) :: Nil =>
           def applyAlias(base: DeclaredType, arguments: => TypeApplication, seen: Set[TypeResolution]): Opt[DeclaredType] =
             lazy val supplied = arguments
@@ -640,8 +640,7 @@ class NewResolver:
           // Reduce arguments in their caller environment before binding formals.
           // The alias guard grows only on body expansion, so nested Identity
           // applications reduce while unproductive recursive aliases stop.
-          lazy val supplied = TypeApplication(arguments.map(res => AppliedTypeArgument(
-            argument(res, bindings, aliases, false), argument(res, bindings, aliases, true))))
+          lazy val supplied = TypeApplication(arguments.map(res => appliedTypeArgument(res)(argument(res, bindings, aliases, _))))
           applyAlias(loop(base, bindings, aliases, positive), supplied, Set.empty).getOrElse(retain)
         case _ => retain
     if asArgument then argument(resolution, bindings, expanding, positive)
@@ -655,12 +654,9 @@ class NewResolver:
       (using ResolutionContext): DeclaredType =
     declaredType(resolution, context.bindings, positive, asArgument = true, Set.empty).instantiate(context.instances).withOrigin(context.origin)
 
-  /** `wildcard` holds for a written wildcard (see TypeShape.Argument): it is part of the
-    * interned shape, so that it does not depend on which type use created the node. */
-  private def normalizedArgument(source: TypeResolution, parts: TypeArgument, wildcard: Bool)
-      (using ResolutionContext): DeclaredType =
-    val shape = TypeShape.Argument(parts, wildcard)
-    rctx.state.argumentTypes.getOrElseUpdate((source, shape), DeclaredType.synthesized(source, shape))
+  private def normalizedArgument(source: TypeResolution, parts: TypeArgument)(using ResolutionContext): DeclaredType =
+    val shape = TypeShape.Argument(parts)
+    rctx.state.argumentTypes.getOrElseUpdate((source, parts), DeclaredType.synthesized(source, shape))
       .withInterpretation(shape)
 
   /** Normalize Boolean combinations without observing an atom's candidates.
@@ -751,7 +747,7 @@ class NewResolver:
       case S(selected) => selected.withInterpretation(TypeShape.SelectedArgument(argument, positive))
       case N => argument.shapes match
         case TypeShape.SelectedArgument(_, _) :: Nil => argument
-        case TypeShape.Argument(parts, _) :: Nil =>
+        case TypeShape.Argument(parts) :: Nil =>
           val selected = (if positive then parts.output else parts.input).instantiate(argument.instances)
           if positive then selected.withOrigin(argument.origin) else selected
         case TypeShape.Wildcard(input, output) :: Nil =>
@@ -788,19 +784,19 @@ class NewResolver:
   private def missingOutput(source: TypeResolution)(using ResolutionContext): DeclaredType =
     extremeType(true).withOrigin(S(TypeInterfaceReason.MissingOutput(source.source)))
 
-  /** Written wildcards override declaration variance. Unqualified arguments have
-    * already been interpreted in both polarities; declaration variance keeps the
-    * appropriate endpoint and supplies an extreme for the unused one.
+  /** Apply the declaration variance of `parameter` to a plain argument (see variantArguments).
+    * The argument has already been interpreted in both polarities; declaration variance keeps
+    * the appropriate endpoint and supplies an extreme for the unused one.
     */
   private[semantics] def argumentType(tpe: DeclaredType, parameter: TyParam)(using ResolutionContext): DeclaredType =
     val variance = parameter.vce
-    if variance.isEmpty || writtenWildcard(tpe) then tpe else
+    if variance.isEmpty then tpe else
       val varianceValue = variance.get
       def compute: DeclaredType =
         val selected = selectArgument(tpe, varianceValue)
         val parts = if varianceValue then TypeArgument(extremeType(false), selected)
           else TypeArgument(selected, extremeType(true))
-        normalizedArgument(tpe.resolution, parts, wildcard = false)
+        normalizedArgument(tpe.resolution, parts)
       val key = (tpe, varianceValue)
       val variant = rctx.state.variantTypes.get(key) match
         case S((input, result)) if input.sameUse(tpe) => result
@@ -816,28 +812,12 @@ class NewResolver:
       if varianceValue then variant else variant.withOrigin(
         S(TypeInterfaceReason.ContravariantParameter(parameter, tpe.resolution.source)))
 
-  /** Whether `tpe` is a written wildcard (`in T`, `out T`), possibly transported into another
-    * scope. Only such an argument overrides declaration-site variance. Selecting one of its
-    * parts (SelectedArgument) yields an ordinary type, which is subject to that variance.
-    * This reads the structure of the type rather than the term of its type use, which
-    * a synthesized node shared by several uses does not identify (see DeclaredType.shared).
-    * Transport never wraps a transported type (see transportSemanticType), so one level
-    * of Contextual suffices, and the check does not depend on the depth of the type.
-    */
-  private def writtenWildcard(tpe: DeclaredType)(using ResolutionContext): Bool =
-    def wildcard(shape: TypeShape): Bool = shape match
-      case TypeShape.Wildcard(_, _) | TypeShape.Argument(_, true) => true
-      case _ => false
-    tpe.existsShape:
-      case TypeShape.Contextual(reference) => reference.tpe.existsShape(wildcard)
-      case shape => wildcard(shape)
-
   private def listenArgumentParts(tpe: DeclaredType)(listener: ShapeListener[TypeArgument])(using ResolutionContext): Unit =
     tpe.listen:
       case TypeShape.Wildcard(input, output) =>
         listener(TypeArgument(input.fold(extremeType(false))(declaredType(_, tpe.withPolarity(!tpe.positive))),
           output.fold(missingOutput(tpe.resolution))(declaredType(_, tpe))))
-      case TypeShape.Argument(parts, _) =>
+      case TypeShape.Argument(parts) =>
         listener(TypeArgument(parts.input.instantiate(tpe.instances), parts.output.instantiate(tpe.instances).withOrigin(tpe.origin)))
       case reference: TypeShape.Reference =>
         listenArgumentParts(referenceType(reference, tpe))(listener)
@@ -894,11 +874,22 @@ class NewResolver:
     * to the source type reference: all views must read and constrain their shared
     * host in that same scope. Rebasing an omitted host with each observation's
     * path would reinterpret its bounds in unrelated callers' lexical scopes.
+    *
+    * `wildcard` holds if the argument is written with `in`/`out` modifiers, which exempt
+    * it from declaration-site variance (see variantArguments).
     */
-  private case class AppliedTypeArgument(negative: DeclaredType, positive: DeclaredType):
+  private case class AppliedTypeArgument(negative: DeclaredType, positive: DeclaredType, wildcard: Bool):
     def at(polarity: Bool): DeclaredType = if polarity then positive else negative
     def move(marks: Ls[Marks])(using ResolutionContext): AppliedTypeArgument =
-      AppliedTypeArgument(transportType(negative, marks), transportType(positive, marks))
+      AppliedTypeArgument(transportType(negative, marks), transportType(positive, marks), wildcard)
+
+  /** An argument interpreted in both caller polarities, as written at `res`. */
+  private def appliedTypeArgument(res: TypeResolution)(interpret: Bool => DeclaredType)(using ResolutionContext)
+      : AppliedTypeArgument =
+    val wildcard = res.currentShapes.exists:
+      case TypeShape.Wildcard(_, _) => true
+      case _ => false
+    AppliedTypeArgument(interpret(false), interpret(true), wildcard)
 
   private case class TypeApplication(arguments: Ls[AppliedTypeArgument]):
     def move(marks: Ls[Marks])(using ResolutionContext): TypeApplication =
@@ -906,8 +897,7 @@ class NewResolver:
   private val noTypeArguments = TypeApplication(Nil)
 
   private def typeApplication(arguments: Ls[TypeResolution], context: DeclaredType)(using ResolutionContext): TypeApplication =
-    TypeApplication(arguments.map(res => AppliedTypeArgument(
-      declaredArgument(res, context, false), declaredArgument(res, context, true))))
+    TypeApplication(arguments.map(res => appliedTypeArgument(res)(declaredArgument(res, context, _))))
 
   /** A step of the interpretation of a type applied to arguments, which the type interpreters
     * share: `tpe` applied to `args` is what the interpreted type denotes. `marks` are the scope
@@ -940,13 +930,29 @@ class NewResolver:
   private def typeArguments(source: DeclaredType, application: TypeApplication, parameters: Ls[TyParam], positive: Bool)
       (using ResolutionContext): Ls[DeclaredType] =
     parameters.zipWithIndex.map: (parameter, index) =>
-      application.arguments.lift(index).map(_.at(positive)).getOrElse(
-        omittedType(source.resolution, parameter.sym).instantiate(source.instances))
+      application.arguments.lift(index).map(_.at(positive)).getOrElse(omittedArgument(source, parameter))
+
+  private def omittedArgument(source: DeclaredType, parameter: TyParam)(using ResolutionContext): DeclaredType =
+    omittedType(source.resolution, parameter.sym).instantiate(source.instances)
+
+  /** The arguments of `application` for `parameters`, with the declaration variance of each
+    * parameter applied to them. A plain written argument, such as `Item` in `Box[Item]` where
+    * `Box` declares `out T`, becomes `in Nothing out Item` (see argumentType), and so does an
+    * omitted argument. A written wildcard, which has `in`/`out` modifiers, keeps the bounds
+    * written: they override the declaration. This decides on the argument as written, since
+    * the interpretation of `Item` in both polarities is the same pair as that of `in Item out Item`.
+    */
+  private def variantArguments(source: DeclaredType, application: TypeApplication, parameters: Ls[TyParam], positive: Bool)
+      (using ResolutionContext): Ls[DeclaredType] =
+    parameters.zipWithIndex.map: (parameter, index) =>
+      application.arguments.lift(index) match
+        case S(argument) if argument.wildcard => argument.at(positive)
+        case S(argument) => argumentType(argument.at(positive), parameter)
+        case N => argumentType(omittedArgument(source, parameter), parameter)
 
   private def typeBindings(source: DeclaredType, arguments: TypeApplication, parameters: Ls[TyParam], positive: Bool)
       (using ResolutionContext): Map[VarSymbol, DeclaredType] =
-    effectiveBindings(source) ++ parameters.zip(typeArguments(source, arguments, parameters, positive)).map: (parameter, argument) =>
-      parameter.sym -> argumentType(argument, parameter)
+    effectiveBindings(source) ++ parameters.iterator.map(_.sym).zip(variantArguments(source, arguments, parameters, positive))
 
   /** Interpret arguments in the caller's polarity, but select their bounds
     * relative to the alias body. The body retains the caller's polarity for its
@@ -957,10 +963,9 @@ class NewResolver:
     */
   private def aliasBindings(source: DeclaredType, arguments: TypeApplication, parameters: Ls[TyParam], positive: Bool)
       (using ResolutionContext): Map[VarSymbol, DeclaredType] =
-    effectiveBindings(source) ++ parameters.zip(typeArguments(source, arguments, parameters, positive)).map: (parameter, argument) =>
-      val bound = argumentType(argument, parameter)
+    effectiveBindings(source) ++ parameters.lazyZip(variantArguments(source, arguments, parameters, positive)).map: (parameter, bound) =>
       parameter.sym -> (if positive then bound else normalizedArgument(bound.resolution,
-        TypeArgument(selectArgument(bound, true), selectArgument(bound, false)), writtenWildcard(bound)))
+        TypeArgument(selectArgument(bound, true), selectArgument(bound, false))))
 
   /** External inputs contribute unknowns only to missing annotation parts.
     * A written binder still denotes its declared type, including after a partial
@@ -980,8 +985,8 @@ class NewResolver:
           case value: TermShape => host.publish(value)
           case NoShape => ()
         case TypeShape.Nominal(cls) =>
-          cls.tparams.zip(typeArguments(current, args, cls.tparams, current.positive)).foreach: (param, argument) =>
-            listenArgumentParts(argumentType(argument, param)): parts =>
+          variantArguments(current, args, cls.tparams, current.positive).foreach: argument =>
+            listenArgumentParts(argument): parts =>
               exposeTypeHoles(transportType(parts.output, captures), unknown, marks)
         case TypeShape.Tuple(fields) => fields.foreach(field => descend(declaredType(field.tpe, current)))
         case TypeShape.Record(_, fields) => fields.foreach((_, field) => descend(declaredType(field, current)))
@@ -991,7 +996,7 @@ class NewResolver:
           val lexical = current.withoutBinders(symbols)
           follow(declaredType(body, lexical), args, captures, next)
         case TypeShape.Wildcard(_, output) => output.foreach(res => follow(declaredType(res, current), args, captures, next))
-        case TypeShape.Argument(parts, _) => follow(parts.output.instantiate(current.instances).withOrigin(current.origin), args, captures, next)
+        case TypeShape.Argument(parts) => follow(parts.output.instantiate(current.instances).withOrigin(current.origin), args, captures, next)
         case TypeShape.SelectedArgument(argument, positive) =>
           listenArgumentParts(argument.instantiate(current.instances)): parts =>
             follow(if positive then parts.output else parts.input, args, captures, next)
@@ -1488,7 +1493,7 @@ class NewResolver:
               case TypeShape.Bottom => ()
               case TypeShape.Wildcard(_, output) =>
                 output.fold(publish(OpaqueTypeShape(source)(TypeInterfaceReason.MissingOutput(current.resolution.source))))(next)
-              case TypeShape.Argument(parts, _) => follow(parts.output.instantiate(current.instances).withOrigin(current.origin), noTypeArguments, aliases, source, publish)
+              case TypeShape.Argument(parts) => follow(parts.output.instantiate(current.instances).withOrigin(current.origin), noTypeArguments, aliases, source, publish)
               case TypeShape.SelectedArgument(argument, positive) =>
                 // An argument cycle can forward this selection without exposing
                 // an interface. Keep the subscription for later parts, but stop
@@ -2154,7 +2159,7 @@ class NewResolver:
         case TypeShape.Polymorphic(_, _, body) =>
           follow(declaredType(body, tpe), args, captures, next)
         case TypeShape.Wildcard(input, _) => input.foreach(res => follow(declaredType(res, tpe.withPolarity(!tpe.positive)), args, captures, next))
-        case TypeShape.Argument(parts, _) => follow(parts.input.instantiate(tpe.instances), args, captures, next)
+        case TypeShape.Argument(parts) => follow(parts.input.instantiate(tpe.instances), args, captures, next)
         case TypeShape.SelectedArgument(argument, positive) =>
           listenArgumentParts(argument.instantiate(tpe.instances)): parts =>
             follow(if positive then parts.output else parts.input, args, captures, next)
@@ -2171,18 +2176,18 @@ class NewResolver:
                   rctx.exposeValue(instantiateShape(actual, rctx.instances), provenance)
                 case NoShape => ()
             case _ => ()
-          val arguments = typeArguments(tpe, args, cls.tparams, tpe.positive).map(transportType(_, captures))
+          val arguments = variantArguments(tpe, args, cls.tparams, tpe.positive).map(transportType(_, captures))
           def constrainNominal(value: TermShape)(using ResolutionContext): Unit =
             val ShapeParts(actual, instances, _) = shapeParts(value)
             val (head, context) = actual.applicationHead
-            def constrain(param: TyParam, bound: DeclaredType, pattern: DeclaredType)(using ResolutionContext): Unit =
+            def constrain(bound: DeclaredType, pattern: DeclaredType)(using ResolutionContext): Unit =
               listenArgumentParts(bound.instantiate(instances)): actual =>
-                listenArgumentParts(argumentType(pattern, param)): expected =>
+                listenArgumentParts(pattern): expected =>
                   constrainTypes(ContextualType(actual.output, context), ContextualType(expected.output, Nil), site)
                   constrainTypes(ContextualType(expected.input, Nil), ContextualType(actual.input, context), site)
             def originalParameters()(using ResolutionContext): Unit = cls.tparams.zip(arguments).foreach: (param, pattern) =>
               val bound = parameterType(TypeShape.Parameter(param.sym, param.sym.inferenceHost))
-              constrain(param, argumentType(bound, param), pattern)
+              constrain(argumentType(bound, param), pattern)
             def parent(ext: TermShape)(using ResolutionContext): Unit =
               // Parent arguments live at the parent's endpoint, which can cross
               // both class and enclosing scopes. Preserve those marks together
@@ -2192,8 +2197,8 @@ class NewResolver:
                 case NoShape => ()
             head match
               case _: UnknownValueShape =>
-                cls.tparams.zip(arguments).foreach: (param, argument) =>
-                  listenArgumentParts(argumentType(argument, param)): parts =>
+                arguments.foreach: argument =>
+                  listenArgumentParts(argument): parts =>
                     inferTypeArguments(parts.output, value, marks, site)
               case ds: DefnShape =>
                 if ds.clsDef.contains(cls) then originalParameters() else ds.ext.foreach(parent)
@@ -2201,7 +2206,7 @@ class NewResolver:
                 if base.defn is cls then originalParameters() else base.ext.foreach(parent)
               case nominal: NominalInstanceView =>
                 if nominal.defn is cls then cls.tparams.zip(arguments).foreach: (param, pattern) =>
-                  nominal.bindings.get(param.sym).foreach(constrain(param, _, pattern))
+                  nominal.bindings.get(param.sym).foreach(constrain(_, pattern))
                 else nominalParent(nominal).foreach(parent)
               case tuple: TupleShape => parent(tuple.arrayParent)
               case _ => ()
@@ -3876,7 +3881,7 @@ class NewResolver:
             case TypeShape.Wildcard(input, output) =>
               if provided then output.foreach(res => follow(declaredType(res, current), reason, refine))
               else input.foreach(res => follow(declaredType(res, current.withPolarity(!current.positive)), reason, refine))
-            case TypeShape.Argument(parts, _) =>
+            case TypeShape.Argument(parts) =>
               follow((if provided then parts.output else parts.input).instantiate(current.instances), reason, refine)
             case TypeShape.SelectedArgument(argument, positive) =>
               listenArgumentParts(argument.instantiate(current.instances)): parts =>

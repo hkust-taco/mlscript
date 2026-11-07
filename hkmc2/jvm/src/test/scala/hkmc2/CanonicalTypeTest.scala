@@ -164,12 +164,12 @@ class CanonicalTypeTest extends AnyFunSuite:
     val leaf = DeclaredType(source, Map.empty, TypeSubstitution.empty, true)(N)
     val depth = 32
     val layers = (1 to depth).scanLeft(leaf): (child, _) =>
-      DeclaredType.synthesized(source, TypeShape.Argument(TypeArgument(child, child), wildcard = false))
+      DeclaredType.synthesized(source, TypeShape.Argument(TypeArgument(child, child)))
     val retained = scala.collection.mutable.Set.empty[Identity[DeclaredType]]
     for _ <- 0 until 100 do
       var current = DeclaredType(source, Map.empty, TypeSubstitution.empty, true)(N)
       layers.tail.foreach: cached =>
-        current = cached.withInterpretation(TypeShape.Argument(TypeArgument(current, current), wildcard = false))
+        current = cached.withInterpretation(TypeShape.Argument(TypeArgument(current, current)))
         retained += new Identity(current)
     assert(retained.size <= depth)
 

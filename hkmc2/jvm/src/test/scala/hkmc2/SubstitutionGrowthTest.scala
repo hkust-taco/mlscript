@@ -227,7 +227,7 @@ class SubstitutionGrowthTest extends AnyFunSuite:
     val leaf = h.typeOf(a).instantiate(TypeSubstitution(a1 :: Nil))
     for depth <- 8 :: 16 :: Nil do
       val root = (1 to depth).foldLeft(leaf): (child, _) =>
-        val shape = TypeShape.Argument(TypeArgument(child, child), wildcard = false)
+        val shape = TypeShape.Argument(TypeArgument(child, child))
         DeclaredType.synthesized(child.resolution, shape)
       val input = root.instantiate(TypeSubstitution(b1 :: extra :: Nil))
       val expected = root.instantiate(TypeSubstitution(b1 :: Nil))
