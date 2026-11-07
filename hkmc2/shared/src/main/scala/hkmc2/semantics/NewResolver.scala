@@ -927,11 +927,6 @@ class NewResolver:
         noTypeArguments, Nil, N))
     case _ => N
 
-  private def typeArguments(source: DeclaredType, application: TypeApplication, parameters: Ls[TyParam], positive: Bool)
-      (using ResolutionContext): Ls[DeclaredType] =
-    parameters.zipWithIndex.map: (parameter, index) =>
-      application.arguments.lift(index).map(_.at(positive)).getOrElse(omittedArgument(source, parameter))
-
   private def omittedArgument(source: DeclaredType, parameter: TyParam)(using ResolutionContext): DeclaredType =
     omittedType(source.resolution, parameter.sym).instantiate(source.instances)
 
@@ -1522,7 +1517,7 @@ class NewResolver:
                       listenTypeViews(declaredType(parentType, local), mergeIntersections): ext =>
                         publish(NominalInstanceView(defn, bindings, S(ext))(S(source), ShapeProvenance.empty)(this))
               case TypeShape.Alias(symbol, _) if symbol is prelude.builtins.Awaited =>
-                val arguments = typeArguments(current, args, symbol.defn.get.tparams, true)
+                val arguments = variantArguments(current, args, symbol.defn.get.tparams, current.positive)
                 softAssert(arguments.length == 1)
                 listenTypeViews(arguments.head)(value => listenAwaitedValue(value, source)(publish))
               case TypeShape.Alias(symbol, rhs) =>
