@@ -2445,7 +2445,6 @@ class NewResolver:
   private def appliedType(symbol: ClassSymbol | TypeAliasSymbol, arguments: NELs[DeclaredType])
       (using ResolutionContext): DeclaredType =
     val parameters = symbol.defn.get.tparams
-    softAssert(parameters.length == arguments.length, "A synthesized type application must supply every parameter")
     val template = rctx.state.appliedTypeTemplates.getOrElseUpdate(symbol, {
       val source = arguments.head.resolution
       val member = symbol.defn.get.bsym
@@ -2469,6 +2468,7 @@ class NewResolver:
       resolution.publish(TypeShape.Applied(constructor, args))
       resolution
     })
+    softAssert(parameters.length == arguments.length, "A synthesized type application must supply every parameter")
     declaredType(template, parameters.iterator.map(_.sym).zip(arguments).toMap)
 
   /** Fixed callback interfaces describe an ordinary argument tuple. Variable
