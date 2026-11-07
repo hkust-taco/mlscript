@@ -577,23 +577,18 @@ object HandleBlock:
     Call(bms.asMemberRef(bms.asPrincipal.get), (tag.asArg :: bodyFun.asArg :: Nil) ne_:: Nil)(CallMetadata.mlsFunWithEffect, N)
   
   def optTailResumptive(resumeSym: VarSymbol, body: Block)(using Config): Opt[Block] =
-    if !config.effectHandlers.map(_.optTailResumptiveHandlers).getOrElse(false) then N
+    if !config.effectHandlers.exists(_.optTailResumptiveHandlers) then N
     else
-      var failed = false
-      val transformer = new BlockTransformerShallow(SymbolSubst()):
-        def fail =
-          failed = true
-          End()
-        override def applyPath(p: Path)(k: Path => Block): Block = p match
-          case Value.SimpleRef(`resumeSym`) => fail
-          case _ => super.applyPath(p)(k)
-        override def applyBlock(b: Block): Block = b match
-          // A spread argument holds a container whose elements supply the resumption's arguments.
-          case Return(Call(Value.SimpleRef(`resumeSym`), (Arg(N, value) :: Nil) :: Nil)) => Return(value)
-          case Return(_) => fail // non tail resumptive
-          case _ => super.applyBlock(b)
-      val res = transformer.applyBlock(body)
-      if failed then N
+      var hasOtherReturn = false
+      // Nested functions have independent returns, so mapReturn keeps the rewrite shallow.
+      // The recursive free-variable check still covers their captures and the rewritten calls' arguments.
+      val res = body.mapReturn:
+        // A spread argument holds a container whose elements supply the resumption's arguments.
+        case Return(Call(Value.SimpleRef(`resumeSym`), (Arg(N, value) :: Nil) :: Nil)) => Return(value)
+        case ret =>
+          hasOtherReturn = true
+          ret
+      if hasOtherReturn || res.freeVars.contains(resumeSym) then N
       else S(res)
   
   def createHandlerMtd(cls: ClassSymbol)(handler: Handler)(using Config, Elaborator.State, Elaborator.Ctx) =
