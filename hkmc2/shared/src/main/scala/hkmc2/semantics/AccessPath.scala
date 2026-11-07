@@ -160,7 +160,8 @@ object AccessPath:
       case sym: TermSymbol => sym
       case sym: ModuleOrObjectSymbol => sym
       case _ => lastWords("Invalid symbol path root")
-    key.path.tail.zipWithIndex.foldLeft(plan(src, target(key.path.head, key.path.tail.nonEmpty))): (prefix, entry) =>
-      val (sym, index) = entry
-      prefix.flatMap(select(_, target(sym, index < key.path.length - 2)))
-    .map(resolvedPath)
+    key.path.tail.iterator.zipWithIndex
+      .foldLeft(plan(src, target(key.path.head, key.path.tail.nonEmpty))): (prefix, entry) =>
+        val (sym, index) = entry
+        prefix.flatMap(select(_, target(sym, index < key.path.length - 2)))
+      .map(resolvedPath)
