@@ -86,13 +86,17 @@ object Publisher:
     private[hkmc2] var completed = false
     val listeners: ArrayBuffer[ShapeListener[A]] = ArrayBuffer.empty
     val shapes: Candidates[A] = Candidates(key)
-    // Pass-local observers never become part of a copied inference graph.
-    private val observers: ArrayBuffer[ShapeListener[A]] = ArrayBuffer.empty
+    // Most hosts have no pass-local observers. An immutable sequence shares its
+    // empty storage and keeps notification snapshots valid across cancellation.
+    // Observers never become part of a copied inference graph.
+    private var observers = Vector.empty[ShapeListener[A]]
     def observe(listener: ShapeListener[A])(using state: ResolutionContext): () => Unit =
       val data = state.local(this)
-      data.observers += listener
+      data.observers :+= listener
       data.replay(listener)
-      () => { data.observers -= listener; () }
+      () =>
+        val index = data.observers.indexOf(listener)
+        if index >= 0 then data.observers = data.observers.patch(index, Nil, 1)
     def copy(state: NewResolverState): Data[A] =
       val result = new Data[A](key)
       result.owner = state
@@ -113,7 +117,7 @@ object Publisher:
       val count = listeners.size
       // Temporary analyses can detach their observers during notification.
       // Snapshot before invoking listeners, since newly added observers replay.
-      val observed = observers.toList
+      val observed = observers
       var i = 0
       while i < count do
         listeners(i)(shape)

@@ -301,6 +301,25 @@ class PublisherTest extends AnyFunSuite:
     assert(second.toList == List(1, 2))
     assert(added.toList == List(1, 2))
 
+  // The current notification owns its observer snapshot even when an ordinary
+  // listener cancels a registration before the observer phase starts. Reusing
+  // one callback for two registrations must still cancel only one occurrence.
+  test("observer snapshots survive cancellation by ordinary listeners"):
+    given ResolutionContext = new Elaborator.State().newResolverState.context
+    val host = new IntHost
+    val observed = ArrayBuffer.empty[Int]
+    val observer: ShapeListener[Int] = observed += _
+    var detach: () => Unit = () => ()
+    host.subscribeToShapes: shape =>
+      if shape == 1 then detach()
+    detach = host.inferenceHost.observe(observer)
+    val detachSecond = host.inferenceHost.observe(observer)
+    host.publish(1)
+    host.publish(2)
+    detachSecond()
+    host.publish(3)
+    assert(observed.toList == List(1, 1, 2))
+
   test("unknown provenance is lazy and does not affect shape identity"):
     import semantics.{ShapeProvenance, UnknownValueShape, RecordShape}
     import Message.MessageContext
