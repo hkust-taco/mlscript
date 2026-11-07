@@ -752,8 +752,10 @@ class FlowConstraintsCollector(
   
   private val generatedVars: collection.Map[Symbol, StratVar] = // TODO: tighten `Symbol` type!
     preAnalyzer.res.generatedVars.withDefaultValue(preAnalyzer.res.primitiveStratVar)
+  // Unknown getter effects must not enter primitiveStratVar: it also describes runtime values.
+  private val unknownEffect = freshVar("unknown_effect")
   private val generatedEffects: collection.Map[Symbol, StratVar] = // TODO: tighten `Symbol` type! // TODO: use at access sites of getters!
-    preAnalyzer.res.generatedEffects.withDefaultValue(preAnalyzer.res.primitiveStratVar)
+    preAnalyzer.res.generatedEffects.withDefaultValue(unknownEffect)
 
   // * This is for effect analysis. The nonlocal variables that are potentially shared. 
   // * If a function accesses a nonlocal, it is conservatively considered unsafe for eta-expansion. 
@@ -802,6 +804,7 @@ class FlowConstraintsCollector(
     globalCollector.givenIn: cc ?=>
       cc.constrain(preAnalyzer.res.primitiveStratVar, UnknownCons)
       cc.constrain(UnknownProd, preAnalyzer.res.primitiveStratVar)
+      cc.constrain(UnsafeEta, unknownEffect)
       processBlock(preAnalyzer.pgrm.main)(using cc, UnknownCons, N)
 
       // this places non-affine constraints correctly:
