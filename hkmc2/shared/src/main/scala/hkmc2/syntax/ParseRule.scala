@@ -73,7 +73,7 @@ class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[
 end ParseRule
 
 
-class ParseRules(using State, Raise):
+class ParseRules(using State):
   import Keyword.*
   import Alt.*
   import Tree.*
@@ -245,13 +245,7 @@ class ParseRules(using State, Raise):
                   case (Reft(rhs, defs), (_: Empty, body)) => (rhs, defs, body)
                   case (rhs, (defs, body)) => (rhs, defs, body)
                 }
-        ) {
-          case (_, (rhs, _: Empty, _)) =>
-            raise(ErrorReport(msg"Expected 'with' or a braced handler body" -> rhs.toLoc.map(_.right) :: Nil,
-              source = Diagnostic.Source.Parsing))
-            Error().withLocOf(rhs)
-          case (lhs, (rhs, defs, body)) => Hndl(lhs, rhs, defs, body)
-        }
+        ) { case (lhs, (rhs, defs, body)) => Hndl(lhs, rhs, defs, body) }
     .map { case (kw, h) => h.mkLocWith(kw) }
     ,
     keepKw(`new`):
