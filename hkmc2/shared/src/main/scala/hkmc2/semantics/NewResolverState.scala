@@ -100,10 +100,13 @@ final class NewResolverState(val owner: Elaborator.State):
   private[hkmc2] def isFinished: Bool = activeWorkspace == null
   private[semantics] var allocatedActivationContexts: Int = 0
   private[semantics] def intern(context: ResolutionContext): ResolutionContext =
-    if context == this.context then this.context else workspace.contexts.getOrElseUpdate(context, {
-      if context.instances.nonEmpty then allocatedActivationContexts += 1
-      context
-    })
+    if context == this.context then this.context else
+      val contexts = workspace.contexts
+      val previous = contexts.getOrElse(context, null)
+      if previous != null then previous else
+        if context.instances.nonEmpty then allocatedActivationContexts += 1
+        contexts(context) = context
+        context
   // Shape components of cache keys use ShapeIdentity.key, like hosts' candidates.
   val spreadInputs: Cache[Object, mutable.Set[ShapeIdentity.Key]] =
     new Cache(_.spreadInputs, _.clone())
@@ -347,7 +350,11 @@ final class ResolutionContext private[semantics] (
     else
       // Each key and its copy share A; recover that type when looking up the
       // heterogeneous graph-node map.
-      state.copies.getOrElseUpdate(origin, origin.copy(state)).asInstanceOf[Publisher.Data[A]]
+      val previous = state.copies.getOrElse(origin, null)
+      if previous != null then previous.asInstanceOf[Publisher.Data[A]] else
+        val copied = origin.copy(state)
+        state.copies(origin) = copied
+        copied
 
   private def peekReference[A](ref: Publisher.Data[A]): Publisher.Data[A] =
     val origin = source.fold(ref)(_.peekReference(ref))
