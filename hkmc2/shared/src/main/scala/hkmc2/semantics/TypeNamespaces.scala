@@ -3,47 +3,24 @@ package semantics
 
 import hkmc2.utils.*, shorthands.*
 
-/** The namespace behavior of a type use, independently of its interface. Each path tries
-  * aliases in order before reaching a class, an inference input, or a still-deferred type.
-  * Paths contribute independently, as the components of a union or intersection do.
-  *
-  * A reference has one name and lexical scope: trying the same alias again cannot change
-  * whether its companion or declaring module provides that name. Keeping only its first
-  * occurrence bounds a path by the number of declarations, even for Identity[Identity[A]].
-  * Witnesses explain a use; they do not distinguish its namespace behavior.
+/** The aliases expanded at this type's head, in lookup priority order. Ordinary
+  * types have no annotation; their constructors and children already describe
+  * their namespaces. Each alias occurs once: for a fixed name and lexical scope,
+  * trying it again cannot discover a different provider. Repeated Identity[A]
+  * forwarding therefore retains one priority step, rather than expansion history.
+  * The witness explains this use and does not participate in type identity.
   */
 private[semantics] final class TypeNamespaces private (
-    val paths: Ls[(TypeNamespaces.Path, NamespaceWitness)]):
-  import TypeNamespaces.*
-  val key: Set[Path] = paths.iterator.map(_._1).toSet
-  def types: Iterator[DeclaredType] = paths.iterator.flatMap:
-    case (Path(_, S(Target.Type(tpe))), _) => Iterator.single(tpe.tpe)
-    case _ => Iterator.empty
+    val aliases: Ls[TypeAliasSymbol], val witness: NamespaceWitness):
+  def through(alias: TypeAliasSymbol, written: NamespaceWitness): TypeNamespaces =
+    new TypeNamespaces(alias :: aliases.filterNot(_ is alias), written)
 
-  def union(that: TypeNamespaces): TypeNamespaces =
-    new TypeNamespaces(paths ::: that.paths.filterNot((path, _) => key(path)))
-
-  def through(alias: Opt[TypeAliasSymbol], witness: NamespaceWitness): TypeNamespaces =
-    val bodies = if paths.isEmpty then (Path(Nil, N) -> witness) :: Nil else paths
-    val prefixed = bodies.map: (path, _) =>
-      Path(alias.fold(path.aliases)(a => a :: path.aliases.filterNot(_ is a)), path.target) -> witness
-    TypeNamespaces.distinct(prefixed)
-
-  def mapTypes(f: DeclaredType => DeclaredType): TypeNamespaces = TypeNamespaces.distinct(paths.map:
-    case (Path(aliases, S(Target.Type(tpe))), witness) =>
-      Path(aliases, S(Target.Type(f(tpe.tpe).observation))) -> witness
-    case entry => entry)
+  /** Outer aliases take priority; their occurrences in the inner path add no
+    * further fallback. Boolean components retain their own independent paths.
+    */
+  def precededBy(outer: TypeNamespaces): TypeNamespaces =
+    new TypeNamespaces(outer.aliases ::: aliases.filterNot(outer.aliases.contains), outer.witness)
 
 private[semantics] object TypeNamespaces:
-  enum Target:
-    case Class(definition: ClassLikeDef)
-    case Type(tpe: DeclaredType.Observation)
-  final case class Path(aliases: Ls[TypeAliasSymbol], target: Opt[Target])
-
-  val empty: TypeNamespaces = new TypeNamespaces(Nil)
-  def target(target: Target, witness: NamespaceWitness): TypeNamespaces =
-    new TypeNamespaces((Path(Nil, S(target)) -> witness) :: Nil)
-  private def distinct(paths: Ls[(Path, NamespaceWitness)]): TypeNamespaces =
-    val seen = scala.collection.mutable.HashSet.empty[Path]
-    new TypeNamespaces(paths.filter((path, _) =>
-      (path.aliases.nonEmpty || path.target.nonEmpty) && seen.add(path)))
+  def single(alias: TypeAliasSymbol, witness: NamespaceWitness): TypeNamespaces =
+    new TypeNamespaces(alias :: Nil, witness)

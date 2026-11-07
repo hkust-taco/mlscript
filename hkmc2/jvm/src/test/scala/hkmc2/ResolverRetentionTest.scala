@@ -102,6 +102,13 @@ class ResolverRetentionTest extends AnyFunSuite:
         |  fun annotated(callback: Int -> Int): Int = callback(1)
         |  fun rest(...values: Array[Int]): Int = values.length
         |  fun optional(value?: Int) = value
+        |  type Preferred[A] = A
+        |  module Preferred with
+        |    val Pick = Item(2)
+        |  class Box[A](val value: A)
+        |  fun boxed(value: Box[Preferred[Item]]): Int = value.value.value
+        |  fun callbackResults: (...Array[in (Item -> Int) out (Child -> Int)]) -> Int
+        |  fun callbackResults(...callbacks) = callbacks.0(Child(3))
         |  open class Extensible with
         |    open fun increment(value: Int): Int = value + 1
         |  @annotations.bufferable
@@ -117,6 +124,8 @@ class ResolverRetentionTest extends AnyFunSuite:
         |import "./Library.mls"
         |module Consumer with
         |  fun read(): Int = Library.Buffered.read(null, 0)()
+        |  fun readBoxed(): Int = Library.boxed(Library.Box(.Pick))
+        |  fun readCallbacks(): Int = Library.callbackResults(value => value.value)
         |  class Extended extends Library.Extensible with
         |    override fun increment(value) = value + 2
         |""".stripMargin)
@@ -128,4 +137,37 @@ class ResolverRetentionTest extends AnyFunSuite:
       val retained = retainingPath(root): value =>
         value.isInstanceOf[Elaborator] || value.isInstanceOf[CompilerCtx] ||
           value.isInstanceOf[ResolutionWorkspace] || value.isInstanceOf[DeclaredType.References] || (value eq collector)
+      assert(retained.isEmpty, retained.getOrElse(""))
+
+  // Diff tests cannot detect a retained interner or count imports of shared DAGs.
+  test("annotated type DAGs remain bounded and importable after releasing their workspace"):
+    given owner: Elaborator.State = new Elaborator.State
+    val source = owner.newResolverState.context
+    val consumer = new Elaborator.State().newResolverState.context
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
+    resolution.publish(TypeShape.Unit)(using source)
+    val alias = TypeAliasSymbol(syntax.Tree.Ident("Alias"))
+    val first = VarSymbol(syntax.Tree.Ident("First"), mut = false)
+    val second = VarSymbol(syntax.Tree.Ident("Second"), mut = false)
+    val leaf = DeclaredType(resolution, Map.empty, TypeSubstitution.empty, true)(N)(using source)
+      .withNamespaces(TypeNamespaces.single(alias, NamespaceWitness.Written(Term.UnitVal())))(using source)
+    val depth = 64
+    val root = (1 to depth).foldLeft(leaf): (child, _) =>
+      val argument = TypeArgument.invariant(child)
+      DeclaredType(resolution, Map(first -> argument, second -> argument), TypeSubstitution.empty, true)(N)(using source)
+    source.completeBlock(Term.UnitVal())
+    source.state.finish()
+    assert(source.state.isFinished)
+    val imported = root.withPolarity(false)(using consumer)
+    (1 to 1000).foreach: _ =>
+      val repeated = root.withPolarity(false)(using consumer)
+      assert(repeated.reference eq imported.reference)
+      assert(repeated.withPolarity(true)(using consumer) == root)
+    assert(consumer.state.workspace.typeReferences.size <= depth + 3)
+    assert(consumer.state.workspace.typeReferences.importedCount <= depth + 1)
+    consumer.completeBlock(Term.UnitVal())
+    consumer.state.finish()
+    (root :: imported :: Nil).foreach: tpe =>
+      val retained = retainingPath(tpe): value =>
+        value.isInstanceOf[ResolutionWorkspace] || value.isInstanceOf[DeclaredType.References]
       assert(retained.isEmpty, retained.getOrElse(""))

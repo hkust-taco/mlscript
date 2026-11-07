@@ -18,8 +18,6 @@ xs.0.value
 //│ ║  l.+4: 	xs.0.value
 //│ ║        	^^^^^^^^^^
 //│ ╟── Value with an empty interface does not contain member 'value'
-//│ ║  l.+2: 	let xs = (mut [] as Array[in Item])
-//│ ║        	                          ^^^^^^^
 //│ ╟── This type argument specifies only an input bound.
 //│ ║  l.+2: 	let xs = (mut [] as Array[in Item])
 //│ ║        	                          ^^^^^^^

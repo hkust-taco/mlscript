@@ -48,14 +48,14 @@ object Elaborator:
   enum OuterCtx:
     case Function(returnHandlerSymbol: TempSymbol, sym: Opt[DefinitionSymbol[?]])(val isGenerator: Bool, val isAsync: Bool)
     case InnerScope(innerSymbol: InnerSymbol)
-    case LocalScope(nameHint: Str)
+    case LocalScope(nameHint: Str, isTopLevel: Bool)
     case LambdaOrHandlerBlock
     case NonReturnContext(sym: Opt[DefinitionSymbol[?]])
     
     def showDbg: Str = this match
       case Function(retSym, sym) => s"fun:${retSym.nme}${sym.fold("")(s => s"‹${s}›")}"
       case InnerScope(inner) => inner.toString
-      case LocalScope(hint) => hint
+      case LocalScope(nameHint = hint) => hint
       case LambdaOrHandlerBlock => "LambdaOrHandlerBlock"
       case NonReturnContext(sym) => s"NonReturnContext(${sym})"
     
@@ -168,7 +168,7 @@ object Elaborator:
     
     def nest(outerCtx: OuterCtx): Ctx =
       Ctx(SrcScope(outerCtx, S(scope)), Some(this), Map.empty, mode, Map.empty, Nil)
-    def nestLocal(nameHint: Str): Ctx = nest(OuterCtx.LocalScope(nameHint))
+    def nestLocal(nameHint: Str, isTopLevel: Bool): Ctx = nest(OuterCtx.LocalScope(nameHint, isTopLevel))
     def nestInner(inner: InnerSymbol): Ctx = nest(OuterCtx.InnerScope(inner))
     
     /** Explicit bindings in any enclosing scope take precedence over every wildcard open. */
@@ -293,6 +293,9 @@ object Elaborator:
       private def assumeBuiltinTpe(nme: Str): TypeSymbol =
         assumeBuiltin(nme).asTpe.getOrElse(throw new NoSuchElementException(
           s"builtin type symbol $nme"))
+      private def assumeBuiltinAls(nme: Str): TypeAliasSymbol =
+        assumeBuiltin(nme).asAls.getOrElse(throw new NoSuchElementException(
+          s"builtin type symbol $nme"))
       private def assumeBuiltinCls(nme: Str): ClassSymbol =
         assumeBuiltin(nme).asCls.getOrElse(throw new NoSuchElementException(
           s"builtin class symbol $nme"))
@@ -303,6 +306,7 @@ object Elaborator:
         assumeBuiltin(nme).asMod.getOrElse(throw new NoSuchElementException(
           s"builtin module symbol $nme"))
       val Anything = assumeBuiltinTpe("Anything")
+      lazy val Any = assumeBuiltinTpe("Any")
       val Int = assumeBuiltinCls("Int")
       val Int31 = assumeBuiltinCls("Int31")
       val Int32 = assumeBuiltinCls("Int32")
@@ -314,8 +318,8 @@ object Elaborator:
       val BigInt = assumeBuiltinCls("BigInt")
       val Function = assumeBuiltinCls("Function")
       lazy val Promise = assumeBuiltinCls("Promise")
-      lazy val Iterator = assumeBuiltinCls("Iterator")
-      lazy val Awaited = assumeBuiltinTpe("Awaited")
+      lazy val Iterator = assumeBuiltinAls("Iterator")
+      lazy val Awaited = assumeBuiltinAls("Awaited")
       lazy val Nothing = assumeBuiltinTpe("Nothing")
       val Error = assumeBuiltinCls("Error")
       val Bool = assumeBuiltinCls("Bool")
@@ -533,7 +537,7 @@ object Elaborator:
       def nme: Str = base.nme
     given Conversion[RefSymbol, Elem] = RefElem(_)
     val empty: Ctx =
-      val outer = OuterCtx.LocalScope("top-level")
+      val outer = OuterCtx.LocalScope("top-level", isTopLevel = true)
       Ctx(SrcScope(outer, N), N, Map.empty, Mode.Full, Map.empty, Nil)
     
   /** The interpretation required by the enclosing syntax. Class and pattern
@@ -541,13 +545,13 @@ object Elaborator:
     * a runtime value merely because they use the same reference syntax.
     */
   enum Interpretation:
-    case Trm, Specialization, Ptrn, Tpe
+    case Trm, Ptrn, Tpe
     /** The receiver of a selection. The root of a chain of selections of a value or a
       * pattern is `chained`: like the value or pattern head itself, it can name a member
       * of an implicit namespace (see NewResolver.unresolvedRef). The selections of types
       * and annotations are paths through explicit bindings and wildcard opens only.
       */
-    case Receiver(chained: Bool)
+    case Rcvr(chained: Bool)
     /** A class operand. The class `instantiated` by `new` can name a member of an implicit
       * namespace. Other class operands, such as those of `extends` clauses, are needed
       * while their class is elaborated, before flow can reveal a namespace (see newOf).
@@ -555,22 +559,22 @@ object Elaborator:
     case Clss(instantiated: Bool)
     /** An annotation, which is interpreted as soon as it is elaborated (see annotationSymbol),
       * before flow can reveal implicit namespaces. Otherwise as Trm. */
-    case Annotation
+    case Annt
 
     /** Whether a name without an explicit binding can name a member of an implicit namespace
       * (see NewResolver.unresolvedRef), rather than only consult the visible wildcard opens. */
     def implicitNamespacing: Bool = this match
-      case Trm | Specialization | Ptrn => true
-      case Receiver(chained) => chained
+      case Trm | Ptrn => true
+      case Rcvr(chained) => chained
       case Clss(instantiated) => instantiated
-      case Tpe | Annotation => false
+      case Tpe | Annt => false
 
     /** The interpretation of the receiver of a selection with this interpretation. */
-    def selectionReceiver: Interpretation = Receiver(implicitNamespacing)
+    def selectionReceiver: Interpretation = Rcvr(implicitNamespacing)
 
     /** The interpretation of the head of an application with this interpretation. */
     def applicationHead: Interpretation = this match
-      case Annotation => Annotation
+      case Annt => Annt
       case _ => Trm
     
     /** The interpretation of the elements of a tuple or record with this interpretation.
@@ -734,13 +738,14 @@ object Elaborator:
     def initRuntimeSymbolsFromFile(file: io.Path, prelude: Ctx)(using TL, Raise, CompilerCtx): Unit =
       if cachedRuntimeSymbols.isEmpty then
         cachedRuntimeSymbols = S(RuntimeSymbols.fromBlock(CompilerCtx.get.getElaboratedBlock(file, prelude).term))
+    /** Whether the runtime's symbols are available. The Prelude and the runtime itself are
+      * elaborated and erased before they are. */
+    def runtimeSymbolsInitialized: Bool = cachedRuntimeSymbols.isDefined
     private def runtimeSymbols: RuntimeSymbols =
       cachedRuntimeSymbols.getOrElse:
         lastWords("Runtime symbols have not been initialized from Runtime.mls.")
     def runtimeModuleSymbol: BlockMemberSymbol = runtimeSymbols.module
     def unitSymbol: ModuleOrObjectSymbol = runtimeSymbols.unit
-    // Stable symbol for the synthetic Wasm Unit singleton
-    val unitBlockMemberSymbol = BlockMemberSymbol("Unit", Nil)
     def loopEndSymbol: ModuleOrObjectSymbol = runtimeSymbols.loopEnd
     def tupleSymbol: ModuleOrObjectSymbol = runtimeSymbols.tuple
     def strSymbol: ModuleOrObjectSymbol = runtimeSymbols.str
@@ -866,7 +871,7 @@ end Elaborator
 
 
 import Elaborator.*
-import Elaborator.Interpretation.{Trm, Receiver, Specialization, Clss, Ptrn, Tpe, Annotation}
+import Elaborator.Interpretation.{Trm, Rcvr, Clss, Ptrn, Tpe, Annt}
 
 
 class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
@@ -924,14 +929,14 @@ extends Importer:
       | Keyword.`private`
     )) => S(Annot.Modifier(kw)(tree.toLoc))
     case App(Ident("config"), Tup(args)) =>
-      val modify = ConfigParser.parseOverrides(args)
+      val modify = ConfigParser.parseOverrides(args, allowCompilationTarget = false)
       S(Annot.Config(modify)(tree.toLoc))
     case App(Ident("dbg"), Tup(args)) =>
       val modify = ConfigParser.parseDebugDirective(args, definitionLocal = true, wd)
       S(Annot.Debug(modify)(tree.toLoc))
     case App(Ident("affine"), Tup(IntLit(whichParamList) :: Nil)) =>
       S(Annot.Affine(whichParamList.toInt)(tree.toLoc))
-    case _ => term(tree, Annotation) match
+    case _ => term(tree, Annt) match
       case Term.Error() => N
       case trm =>
         val symbol = if newResolution then annotationSymbol(trm) else trm.symbol
@@ -1031,7 +1036,7 @@ extends Importer:
       mtdSym.tsym = S(tsym)
       tsym.defn = S(td)
       mtdSym.complete()
-      HandlerTermDefinition(resumeSym, td)
+      HandlerTermDefinition(resumeSym, td, Nil)
     clsSym.defn = S(ClassDef.Plain(ctx.getOuter, Cls, clsSym, BlockMemberSymbol(effectClassName, Nil), Nil, N,
       ObjBody(Blk(htds.map(_.td), unit)), N, Nil, Nil, N, ctorAnnotations = Nil)(body.toLoc, body.toLoc, N))
     val parent = if newResolution then runtimeMember(State.nonLocalReturnSymbol) else state.nonLocalRetHandlerTrm
@@ -1556,8 +1561,8 @@ extends Importer:
     */
   private def interpretRef(ref: Term, interp: Interpretation): Term =
     if newResolution then interp match
-      case Trm | Annotation => requireTerm(ref)
-      case Receiver(_) => listenReceiver(ref)(_ => ())
+      case Trm | Annt => requireTerm(ref)
+      case Rcvr(_) => listenReceiver(ref)(_ => ())
       case Tpe => ref.typeInterpretation = S(typeResolution(ref))
       case _ => ()
     ref
@@ -1694,8 +1699,12 @@ extends Importer:
       // * so parentheses are transparent, and `x |> (_ + 1)` means `x |> (y => y + 1)`.
       if lang.newUnderscoreAndApplicationSyntax then subterm(e, interp)
       else term(e, interp)
+    // Empty braces in term or type position denote a record. Statement bodies
+    // use `block` directly and still produce Unit; its expression spelling is `()`.
+    case Block(Nil) =>
+      withTypeBinders(Term.Rcd(mut = false, Nil)).withLocOf(tree)
     case b: Block =>
-      ctx.nestLocal("‹block›").givenIn:
+      ctx.nestLocal("‹block›", isTopLevel = false).givenIn:
         block(b, hasResult = true, resultInterp = interp)._1 match
         case Term.Blk(Nil, res) => res
         case res => res
@@ -1765,8 +1774,8 @@ extends Importer:
               case ParamList(_, value :: Nil, _) :: newParams =>
                 if newParams.isEmpty then
                   raise(ErrorReport(msg"Handler function must have a parameter list before its continuation parameter list" -> td.toLoc :: Nil))
-                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, annotations, comp)(td.toLoc, td.headerLoc, td.scope)
-                S(HandlerTermDefinition(value.sym, newTd))
+                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, flags, mf, Nil, comp)(td.toLoc, td.headerLoc, td.scope)
+                S(HandlerTermDefinition(value.sym, newTd, annotations))
               case _ =>
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
                 None
@@ -1806,7 +1815,7 @@ extends Importer:
       // The whole type application owns a by-name invocation's binder group.
       // Do not observe its underlying reference before its arguments are available.
       val baseInterp = interp match
-        case Trm | Receiver(_) | Specialization => Specialization
+        case Trm | Rcvr(_) => Trm
         case _ => interp
       val result = withTypeBinders(Term.TyApp(subterm(lhs, baseInterp), targs.map {
         case Modified(kw @ Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg, Tpe)), N).mkLocWith(kw)
@@ -1978,7 +1987,7 @@ extends Importer:
       if interp.implicitNamespacing then
         interpretRef(Ctx.unresolvedRef(Nil, nme, NameLookup.LeadingDot, tree), interp)
       else
-        raise(ErrorReport(msg"A leading-dot selection must denote a value or pattern, whose type determines its namespace." ->
+        raise(ErrorReport(msg"Leading-dot selection can only be used on term or pattern position." ->
           tree.toLoc :: Nil))
         error
     case Sel(Empty(), nme) =>
@@ -2201,13 +2210,14 @@ extends Importer:
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       error
     case Modified(Keywrd(Keyword.`mut`), body: Block) =>
-      blockOrRcd(body, hasResult = true, resultInterp = interp) match
-      case (Blk(Nil, Term.UnitVal()), ctx) =>
-        withTypeBinders(Rcd(mut = true, Nil)).withLocOf(body)
-      case (blk: Blk, ctx) =>
-        raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
-        blk
-      case (rcd: Rcd, ctx) => withTypeBinders(rcd.copy(mut = true)).withLocOf(rcd)
+      ctx.nestLocal("‹block›", isTopLevel = false).givenIn:
+        blockOrRcd(body, hasResult = true, resultInterp = interp) match
+        case (Blk(Nil, Term.UnitVal()), ctx) =>
+          withTypeBinders(Rcd(mut = true, Nil)).withLocOf(body)
+        case (blk: Blk, ctx) =>
+          raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
+          blk
+        case (rcd: Rcd, ctx) => withTypeBinders(rcd.copy(mut = true)).withLocOf(rcd)
     case Modified(kw, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
@@ -2556,7 +2566,7 @@ extends Importer:
         val (newCtx, newAcc) = pathAndAlias match
           case S((StrLit(path), alias)) =>
             val stmt = importPath(path, alias)(statementLoc)
-            (ctx + (stmt.sym.nme -> stmt.sym),
+            (ctx + (alias.fold(stmt.sym.nme)(_.name) -> stmt.sym),
               stmt :: acc)
           case S((pathArg, _)) =>
             raise(ErrorReport(
@@ -3129,7 +3139,10 @@ extends Importer:
         go(Directive(prefix, args) :: sts, annotations, acc)(statementLoc)
       case (directive @ Directive(Ident("config"), Tup(args))) :: sts =>
         reportUnusedAnnotations
-        val modify = ConfigParser.parseOverrides(args)
+        val isTopLevel = ctx.outer match
+          case scope: OuterCtx.LocalScope => scope.isTopLevel
+          case _ => false
+        val modify = ConfigParser.parseOverrides(args, allowCompilationTarget = isTopLevel)
         go(sts, Nil, SetConfig(modify)(statementLoc) :: acc)(N)
       case (directive @ Directive(Ident("lang"), Tup(args))) :: sts =>
         reportUnusedAnnotations
@@ -3320,7 +3333,7 @@ extends Importer:
     * Call after registering separate signatures so those interfaces remain authoritative.
     */
   private def seedRestParameter(ps: ParamList)(using Ctx): Unit = if newResolution then
-    ps.variadic.map(_.param).filter(parameterSignature(_).isEmpty).foreach: p =>
+    ps.variadic.map(_.param).filter(parameterSignature(_, positive = true).isEmpty).foreach: p =>
       def builtin(name: Str): Term =
         prelude.getBuiltin(name).get.ref(N)
       val initial = Term.TyApp(builtin("Array"), builtin("Nothing") :: Nil)(N).withLoc(p.toLoc)
@@ -3546,7 +3559,9 @@ extends Importer:
           raise(ErrorReport(msg"Unexpected record property pattern." -> t.toLoc :: Nil))
           acc
       val res = new Record(entries.reverse)
-      // Field reads can invoke by-name members, with the type binders in scope here.
+      // Record patterns implicitly select their input's members. These selections
+      // may invoke generic parameterless functions, so record the enclosing type
+      // parameters that their inferred type arguments can depend on.
       if newResolution && res.fields.nonEmpty then rctx.recordPatternReads(res, ctx.typeBinders)
       res
     /** Elaborate a pattern argument. */

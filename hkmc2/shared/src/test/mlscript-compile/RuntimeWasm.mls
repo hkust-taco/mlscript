@@ -1,0 +1,197 @@
+#lang(0.3.x)
+#config(target: CompilationTarget.JS, noFreeze: true)
+
+open annotations { async }
+
+import "binaryen"
+import "node:fs/promises" as fs
+import "./Runtime.mls"
+
+// These declarations describe the host objects used by this runtime. In particular,
+// typed-array views must remain unfrozen so they can expose each instance's literal memory.
+declare class TextDecoder {
+  constructor(label: Str)
+  fun decode(bytes): Str
+}
+declare class URL {
+  constructor(url: Str, base?: Str)
+  val href: Str
+}
+declare object WebAssembly {
+  declare class Memory {
+    constructor(descriptor)
+    val buffer: dyn
+  }
+  declare class Module { constructor(bytes) }
+  declare class Instance {
+    constructor(compiledModule: Module, imports)
+    val exports: dyn
+  }
+  declare class Exception {
+    fun id"is"(tag): Bool
+    fun getArg(tag, index: Int): dyn
+  }
+  fun validate(bytes): Bool
+}
+
+
+module RuntimeWasm with ...
+
+
+// File modules and worksheets must share one Unit object and exception tag. Cache
+// the initialization promise before awaiting it, including failures, so concurrent
+// importers cannot instantiate a second runtime for the same canonical WAT URL.
+class RuntimeLoad(val entry: Str, val exports: Promise[dyn])
+private val runtimes = new Map[Str, RuntimeLoad]()
+
+fun relativeUrl(path: Str, base: Str): Str = new URL(path, base).href
+
+fun withWat(wat: Str, description: Str, use: dyn -> dyn): dyn =
+  // Binaryen 132 can emit compact import groups when this feature is enabled.
+  // Node 22 rejects that binary encoding, so keep the standard import entries.
+  let features = binaryen.Features.All - binaryen.Features.CompactImports
+  let mod = binaryen.parseText(wat, features)
+  let result = Runtime.try_catch of
+    () =>
+      // Binaryen may return 1 rather than true from validate().
+      if not mod.validate() do throw Error("Invalid generated WASM module: " + description)
+      use(mod)
+    error =>
+      mod.dispose()
+      throw error
+  mod.dispose()
+  result
+
+fun formatWat(wat: Str, folded: Bool): Str =
+  withWat(wat, "worksheet", mod => if folded then mod.emitText() else mod.emitStackIR())
+
+fun instantiateBinary(binary: dyn, imports: dyn): dyn =
+  assert WebAssembly.validate(binary)
+  new WebAssembly.Instance(new WebAssembly.Module(binary), imports)
+
+fun compileWat(wat: Str, imports: dyn, description: Str): dyn =
+  let binary = withWat(wat, description, mod => mod.emitBinary())
+  instantiateBinary(binary, imports)
+
+fun instanceImports(imports: dyn, pages: Int): dyn =
+  let memory = new WebAssembly.Memory({initial: pages})
+  let decoder = new TextDecoder("utf-16le")
+  // Each decoder closes over its own memory; loading a later file or worksheet
+  // block must not change the string pool used by an earlier instance.
+  { ...imports, system: {
+    ...imports.system,
+    mem: memory,
+    mlx_str_from_utf16: (ptr: Int, length: Int) => decoder.decode(new Uint8Array(memory.buffer, ptr, length))
+  } }
+
+@async
+fun instantiate(url: Str, imports: dyn, pages: Int): dyn =
+  let wat = handlers.await(fs.readFile(new URL(url), "utf8").catch of (error: dyn) =>
+    if error.code === "ENOENT" then
+      throw Error("Cannot load WASM module " + url + ": compiled WAT output is missing. Rebuild before running.", {cause: error})
+    else throw error)
+  compileWat(wat, instanceImports(imports, pages), url)
+
+// The native bridge boxes call results to preserve JavaScript undefined. Ordinary
+// foreign calls in MLscript convert undefined to Unit, including exception payloads.
+fun invoke(native: dyn, tag: dyn, fn: dyn, args: Array[dyn]): dyn =
+  let result = Runtime.try_catch of
+    () => native.apply(fn, unsafe.undefined, args)
+    (error: dyn) =>
+      if error is WebAssembly.Exception and error.is(tag)
+      then
+        let payload = native.apply(error.("getArg"), error, [tag, 0])
+        throw payload.value
+      else throw error
+  result.value
+
+fun loadRuntime(url: Str, entry: Str, native: dyn): Promise[dyn] =
+  if runtimes.has(url) then
+    let loaded = runtimes.get(url) as RuntimeLoad
+    assert loaded.entry === entry
+    loaded.exports
+  else
+    let promise = instantiate(url, {}, 0).then of (instance: dyn) =>
+      let exports = instance.exports
+      invoke(native, exports.mlx_exn, exports.(entry), [])
+      exports
+    runtimes.set(url, new RuntimeLoad(entry, promise))
+    promise
+
+@async
+fun loadImports(base: Str, paths: Array[Str], imports: dyn, native: dyn): dyn =
+  let i = 0
+  // Await siblings sequentially: parallel imports can reorder their initialization
+  // side effects even though ES-module caching still deduplicates a diamond.
+  while i < paths.length do
+    let loaded = handlers.await(native.importModule(relativeUrl(paths.[i], base))) as dyn
+    set imports.("module" + i) = loaded.wasmExports
+    set i += 1
+  imports
+
+private fun callable(exports: dyn, tag: dyn, descriptor: dyn, native: dyn): dyn =
+  (...args) =>
+    let padded = mut [...args]
+    let i = 0
+    while i < descriptor.optionalParams.length do
+      let index = descriptor.optionalParams.[i]
+      // Preserve explicit undefined and required omissions. Only absent optional
+      // arguments receive the Wasm null representation.
+      if args.length <= index do set padded.[index] = null
+      set i += 1
+    invoke(native, tag, exports.(descriptor.name), padded)
+
+fun facade(exports: dyn, tag: dyn, descriptor: dyn, native: dyn): dyn =
+  if descriptor.kind === "function" then
+    let fn = callable(exports, tag, descriptor, native)
+    if descriptor.constructor !== null do
+      set fn.("class") = callable(exports, tag, descriptor.constructor, native)
+    fn
+  else if descriptor.kind === "global" then exports.(descriptor.name).value
+  else
+    assert descriptor.kind === "namespace"
+    let result = {}
+    let i = 0
+    while i < descriptor.members.length do
+      let member = descriptor.members.[i]
+      let property = if member.getter
+        then {get: () => facade(exports, tag, member.value, native), enumerable: true, configurable: true}
+        else {value: facade(exports, tag, member.value, native), writable: true, enumerable: true, configurable: true}
+      Object.defineProperty(result, member.name, property)
+      set i += 1
+    result
+
+@async
+fun loadModule(base: Str, metadata: dyn, native: dyn): dyn =
+  let system = handlers.await(loadRuntime(relativeUrl(metadata.runtime.path, base), metadata.runtime.entry, native))
+  let imports = handlers.await(loadImports(base, metadata.dependencies, {system: system}, native))
+  let instance = handlers.await(instantiate(relativeUrl(metadata.wat, base), imports, metadata.pages))
+  let exports = instance.exports
+  invoke(native, system.mlx_exn, exports.(metadata.entry), [])
+  // Keep an absent export in a field: returning the undefined literal directly
+  // from an MLscript function would apply its Unit return convention.
+  let defaultExport = if metadata.export.kind === "undefined"
+    then unsafe.undefined
+    else facade(exports, system.mlx_exn, metadata.export, native)
+  {wasmExports: exports, defaultExport: defaultExport}
+
+class Worksheet(val system: dyn, val native: dyn) with
+  private val imports: dyn = {system: system}
+
+  @async
+  fun loadFiles(paths: Array[Str]): () =
+    handlers.await(loadImports("file:///", paths, imports, native))
+    ()
+
+  fun run(wat: Str, entry: Str, pages: Int, index: Int): dyn =
+    let instance = compileWat(wat, instanceImports(imports, pages), "worksheet")
+    let result = invoke(native, system.mlx_exn, instance.exports.(entry), [])
+    // Publish only after entry execution succeeds; later blocks must never import
+    // storage from an initializer that failed halfway through.
+    set imports.("repl" + index) = instance.exports
+    result
+
+@async
+fun worksheet(url: Str, entry: Str, native: dyn): Worksheet =
+  let system = handlers.await(loadRuntime(url, entry, native))
+  new Worksheet(system, native)

@@ -20,7 +20,10 @@ object AccessPath:
   private enum Base:
     /** A reference to `target`, bound in `binding`, or at file or global level if `binding` is absent. */
     case Reference(target: DefinitionSymbol[?], binding: Opt[SrcScope])
-    /** The receiver of `owner`'s body, which is the scope `binding`. */
+    /** The `this` receiver for `owner`. `binding` is the scope of `owner`'s body,
+      * where this receiver is bound. `valuePath` uses that scope to determine which
+      * resolution boundaries require captures when referring to the receiver from a nested scope.
+      */
     case Receiver(owner: InnerSymbol, binding: SrcScope)
 
   /** A path is planned before any of its terms is built, so that an inaccessible step
@@ -28,13 +31,13 @@ object AccessPath:
     */
   private final case class Plan(base: Base, selections: Ls[DefinitionSymbol[?]])
 
-  private def checked(target: DefinitionSymbol[?])(using state: State): Either[Failure, Unit] =
+  private def accessFailure(target: DefinitionSymbol[?])(using state: State): Opt[Failure] =
     if (target.getState isnt state) && codegen.MemberStorage.sourcePrivateDefinition(target).nonEmpty
-    then L(Failure.PrivateMember(target))
-    else R(())
+    then S(Failure.PrivateMember(target))
+    else N
 
   private def select(plan: Plan, target: DefinitionSymbol[?])(using State): Either[Failure, Plan] =
-    checked(target).map(_ => plan.copy(selections = plan.selections :+ target))
+    accessFailure(target).toLeft(plan.copy(selections = plan.selections :+ target))
 
   private def member(target: DefinitionSymbol[?]): BlockMemberSymbol =
     target.bms.getOrElse(lastWords("An access path requires a block member"))
@@ -81,13 +84,13 @@ object AccessPath:
         case S(_: Elaborator.ExternalModuleImport.Private) => sym.getState.compilationUnitPrivateName(sym).nonEmpty
         case N => false
     val global = scope.exists(_.outer.inner.isEmpty) && target.defn.exists(_.hasDeclareModifier.nonEmpty)
-    if global || imported then checked(target).map(_ => Plan(Base.Reference(target, N), Nil))
+    if global || imported then accessFailure(target).toLeft(Plan(Base.Reference(target, N), Nil))
     else scope.toRight(Failure.OutOfScope).flatMap: dst =>
       // Different files may share a prelude scope, but only their exported
       // bindings are available to one another, not their lexical receivers.
       if (target.getState is state) && encloses(dst) then dst.outer.inner match
-        case S(owner) => checked(target).map(_ => Plan(Base.Receiver(owner, dst), target :: Nil))
-        case N => checked(target).map(_ => Plan(Base.Reference(target, S(dst)), Nil))
+        case S(owner) => accessFailure(target).toLeft(Plan(Base.Receiver(owner, dst), target :: Nil))
+        case N => accessFailure(target).toLeft(Plan(Base.Reference(target, S(dst)), Nil))
       else dst.outer.inner match
         case S(owner: ModuleOrObjectSymbol) => plan(src, owner).flatMap(select(_, target))
         case _ => L(Failure.OutOfScope)
@@ -160,7 +163,8 @@ object AccessPath:
       case sym: TermSymbol => sym
       case sym: ModuleOrObjectSymbol => sym
       case _ => lastWords("Invalid symbol path root")
-    key.path.tail.zipWithIndex.foldLeft(plan(src, target(key.path.head, key.path.tail.nonEmpty))): (prefix, entry) =>
-      val (sym, index) = entry
-      prefix.flatMap(select(_, target(sym, index < key.path.length - 2)))
-    .map(resolvedPath)
+    key.path.tail.iterator.zipWithIndex
+      .foldLeft(plan(src, target(key.path.head, key.path.tail.nonEmpty))): (prefix, entry) =>
+        val (sym, index) = entry
+        prefix.flatMap(select(_, target(sym, index < key.path.length - 2)))
+      .map(resolvedPath)

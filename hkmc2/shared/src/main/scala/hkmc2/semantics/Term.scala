@@ -624,7 +624,9 @@ end ShowCfg
 
 object ShowCfg:
   // * For use when displaying things for internal use (not for end users)
-  val internal = ShowCfg(
+  // Each display must collect its own symbols: sharing this set across compilations retains
+  // their owner states and resolver graphs, and lets parallel displays mutate the same set.
+  def internal: ShowCfg = ShowCfg(
     showErasedTypes = true,
     showFlowSymbols = true,
     showExpansionMappings = false,
@@ -816,7 +818,8 @@ final case class TermDefinition(
 
 final case class HandlerTermDefinition(
   resumeSym: VarSymbol,
-  td: TermDefinition
+  td: TermDefinition,
+  annots: Ls[Annot],
 )
 
 object ObjBody:

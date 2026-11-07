@@ -26,3 +26,18 @@ module ResolverRetentionLibrary with
   @annotations.bufferable
   class Buffered with
     fun read(): Int = 13
+
+  type FirstValue[A] = A
+  module FirstValue with
+    val Pick = 18
+  type SecondValue[A] = A
+  module SecondValue with
+    val Pick = 19
+  fun firstBox(box: Box[FirstValue[Int]]): Int = box.value
+  fun secondBox(box: Box[SecondValue[Int]]): Int = box.value
+
+  class Parent(val value: Int)
+  class Child(val extra: Int) extends Parent(extra)
+  fun identity[A](value: A): A = value
+  fun callbackResults: (...Array[in (Parent -> Int) out (Child -> Int)]) -> Int
+  fun callbackResults(...callbacks) = callbacks.0(Child(20))

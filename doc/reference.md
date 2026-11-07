@@ -112,7 +112,8 @@ let x = 1 in
 "hello"     // String literal
 true        // Boolean literal
 false       // Boolean literal
-()          // Unit literal (empty tuple/record)
+()          // Unit literal
+{}          // Empty record (distinct from Unit)
 null        // Null
 undefined   // Undefined: an unspecified value (see Runtime Representations)
 ```
@@ -881,8 +882,13 @@ Modules cannot extend classes. Objects can extend classes.
 ```mlscript
 {a: 1, b: 2}          // immutable (frozen) record
 mut {a: 1, b: 2}      // mutable record
+{}                   // fresh empty immutable record
+mut {}               // fresh empty mutable record
 (a: 1, b: 2)          // record in parentheses (same thing)
 ```
+
+`{}` denotes an empty record in expression and type positions. It is distinct
+from Unit, written `()`. Empty statement bodies such as `do {}` still return Unit.
 
 ### Field Access
 
@@ -1953,9 +1959,11 @@ bindings, including selective opens such as `open AltOption { Some }`. A name
 whose value flows into types whose namespaces provide distinct members, such as
 `Option[Int]` and `AltOption[Int]`, is ambiguous.
 
-Resolution settles each such name once the rest of its block (a file or a
-worksheet block) is resolved. If no namespace is known for the name by then, its
-wildcard opens supply it. Names are settled in source order, so the definitions
+Resolution looks up implicit namespaces as flow reveals them, immediately
+propagating the candidates they supply. It settles each such name once the rest
+of its block (a file or a worksheet block) is resolved. If no namespace supplies
+a candidate for the name by then, its wildcard opens supply it. Names are settled
+in source order, so the definitions
 supplied to earlier names can reveal the namespaces of later ones: in
 `Wrap(Some(1))`, where an open supplies `Wrap`, its parameter type can be the
 namespace of `Some`. A namespace revealed later, for instance by a later

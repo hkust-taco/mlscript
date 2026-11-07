@@ -64,11 +64,11 @@ private[hkmc2] final class ResolutionWorkspace(owner: Elaborator.State):
     * blocks; compiled units release them with the rest of this workspace.
     */
   val exposedOpenMembers = mutable.Map.empty[TermSymbol, ShapeProvenance]
-  val pending = mutable.Map.empty[Identity[Publisher[?]], Publisher.Data[?]]
+  val pending = mutable.Map.empty[Publisher.Data[?], Publisher.Data[?]]
   val resolutionProblems =
-    mutable.LinkedHashMap.empty[Identity[NewSel | App], mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]
+    mutable.LinkedHashMap.empty[NewSel | App, mutable.ListBuffer[() => Ls[(Message, Opt[Loc])]]]
   val wildcardMisses =
-    mutable.LinkedHashMap.empty[Identity[UnresolvedRef], mutable.LinkedHashMap[Identity[Term], () => Ls[(Message, Opt[Loc])]]]
+    mutable.LinkedHashMap.empty[UnresolvedRef, mutable.LinkedHashMap[Term, () => Ls[(Message, Opt[Loc])]]]
   // The references, selections, and instantiations written in this unit's current block,
   // in elaboration order, with the lexical scope in which each is written (see
   // ResolutionContext.checkAccess). Its references without explicit bindings are also
@@ -78,7 +78,7 @@ private[hkmc2] final class ResolutionWorkspace(owner: Elaborator.State):
   // (see NewResolver.unresolvedRef). Unlike the block-local tables, this outlives the
   // reference's block: a later worksheet block can still reveal a namespace, which
   // must be diagnosed against the settled reference.
-  val implicitNamespaces = mutable.HashMap.empty[Identity[UnresolvedRef], ImplicitNamespaces]
+  val implicitNamespaces = mutable.HashMap.empty[UnresolvedRef, ImplicitNamespaces]
   val errors = mutable.Set.empty[Identity[PossiblyErroneous]]
   val substitutions = mutable.HashMap.empty[TypeSubstitution, TypeSubstitution]
   val typeReferences = new DeclaredType.References(substitutions)

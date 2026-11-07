@@ -160,14 +160,15 @@ staged module Arguments with
 //│ >   tmp = new Function_
 //│ >   tmp
 
-// :e
+// Staging does not support calls with several argument lists yet.
+:fixme
 staged module BadArguments with
   fun f() = Arguments.g(1)(2, 3)
+//│ ╔══[COMPILATION ERROR] Call with multiple argument lists not supported in staged module.
+//│ ║  l.+2: 	  fun f() = Arguments.g(1)(2, 3)
+//│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^
 //│ > fun ctor_() = ()
-//│ > fun f() =
-//│ >   let {callPrefix}
-//│ >   callPrefix = Arguments.g_gen(1)
-//│ >   callPrefix(2, 3)
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
 :fixme

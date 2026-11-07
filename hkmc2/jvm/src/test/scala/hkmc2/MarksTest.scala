@@ -23,7 +23,7 @@ class MarksTest extends AnyFunSuite:
     given TraceLogger = TraceLogger.silent
     // Path normalization needs a value that retains scope exits. Dynamic values
     // omit those exits because they carry no references into their source scope.
-    val resolution = new TypeResolution(Term.UnitVal(), N)
+    val resolution = new TypeResolution(Term.UnitVal(), TypeResolution.Diagnostic.Source)
     resolution.publish(TypeShape.Bottom)
     given Config = Config.default(TestFolders.mainTestDir(os.pwd))
     given CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, TestFolders.compilerPaths(os.pwd), summon[Config])

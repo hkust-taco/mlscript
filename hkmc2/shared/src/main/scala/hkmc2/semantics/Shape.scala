@@ -99,13 +99,6 @@ object ShapeIdentity:
     case _: (TupleShape | RecordShape | IntroShape | DefnShape | BaseShape |
         AppShape | NewShape | SymShape | ErrShape | DynShape | NamespaceProbe) => shape
 
-  private def sameTypeUses[K](left: Map[K, DeclaredType], right: Map[K, DeclaredType]): Bool =
-    left.size == right.size && left.forall((key, tpe) => right.get(key).exists(_.observation == tpe.observation))
-
-  private def callableUses(callable: CallableTypeShape): Ls[DeclaredType.Observation] =
-    (callable.paramLists.flatMap(_.allParams.flatMap(_.tpe)) ::: callable.result.toList :::
-      callable.supplied.toList.flatten ::: callable.tparams.flatMap(p => p.lower.toList ::: p.upper.toList)).map(_.observation)
-
   /** Only one pointer to the existing view; no copied fields or product key. */
   final class View private[ShapeIdentity] (private val shape: ShapeEvent) extends ValueKey:
     private def parentHash(parent: Opt[TermShape]): Int = parent.fold(0)(_.comparison.hashCode)
@@ -116,15 +109,15 @@ object ShapeIdentity:
       case MarkedShape(base, marks) => ValueKey.hash(base.comparison.hashCode, marks.hashCode)
       case ContextualShape(source, instances) => ValueKey.hash(source.comparison.hashCode, instances.hashCode)
       case view: ClassValueShape => ValueKey.hash(System.identityHashCode(view.target), parentHash(view.parent))
-      case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.observation.hashCode), parentHash(view.parent))
+      case view: NominalInstanceView => ValueKey.hash(System.identityHashCode(view.defn), ValueKey.mapHash(view.bindings)(System.identityHashCode, _.hashCode), parentHash(view.parent))
       case view: CallableTypeShape => ValueKey.hash(System.identityHashCode(view.source), view.paramLists.hashCode,
         view.result.hashCode, view.scheme.hashCode, view.supplied.hashCode,
-        view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode, callableUses(view).hashCode)
+        view.declaration.fold(0)(System.identityHashCode), view.wrappedResult.hashCode)
       case view: RecordTypeShape => ValueKey.hash(
-        ValueKey.mapHash(view.fields)(_.hashCode, _.observation.hashCode), view.aliases.hashCode)
+        ValueKey.mapHash(view.fields)(_.hashCode, _.hashCode), view.aliases.hashCode)
       case view: IntersectionView => view.values.map(_.comparison).hashCode
       case view: SpecializedShape => ValueKey.hash(view.declaration.comparison.hashCode,
-        view.arguments.map(_.observation).hashCode, view.instances.hashCode)
+        view.arguments.hashCode, view.instances.hashCode)
       case view: UnknownValueShape => ValueKey.hash(System.identityHashCode(view.source), view.fromPublicInterface.hashCode)
       case view: OpaqueTypeShape => System.identityHashCode(view.source)
       case view: RigidTypeShape => ValueKey.hash(System.identityHashCode(view.parameter), System.identityHashCode(view.source))
@@ -142,22 +135,22 @@ object ShapeIdentity:
           case b: ClassValueShape => (a.target eq b.target) && sameParent(a.parent, b.parent)
           case _ => false
         case a: NominalInstanceView => that.shape match
-          case b: NominalInstanceView => (a.defn eq b.defn) && sameTypeUses(a.bindings, b.bindings) && sameParent(a.parent, b.parent)
+          case b: NominalInstanceView => (a.defn eq b.defn) && a.bindings == b.bindings && sameParent(a.parent, b.parent)
           case _ => false
         case a: CallableTypeShape => that.shape match
           case b: CallableTypeShape => (a.source eq b.source) && a.paramLists == b.paramLists && a.result == b.result &&
-            a.scheme == b.scheme && a.supplied == b.supplied && callableUses(a) == callableUses(b) &&
+            a.scheme == b.scheme && a.supplied == b.supplied &&
             a.declaration.fold(b.declaration.isEmpty)(x => b.declaration.exists(_ eq x)) && a.wrappedResult == b.wrappedResult
           case _ => false
         case a: RecordTypeShape => that.shape match
-          case b: RecordTypeShape => sameTypeUses(a.fields, b.fields) && a.aliases == b.aliases
+          case b: RecordTypeShape => a.fields == b.fields && a.aliases == b.aliases
           case _ => false
         case a: IntersectionView => that.shape match
           case b: IntersectionView => a.values.map(_.comparison) == b.values.map(_.comparison)
           case _ => false
         case a: SpecializedShape => that.shape match
           case b: SpecializedShape => a.declaration.comparison == b.declaration.comparison &&
-            a.arguments.map(_.observation) == b.arguments.map(_.observation) && a.instances == b.instances
+            a.arguments == b.arguments && a.instances == b.instances
           case _ => false
         case a: UnknownValueShape => that.shape match
           case b: UnknownValueShape => (a.source eq b.source) && a.fromPublicInterface == b.fromPublicInterface
@@ -215,7 +208,7 @@ type ContextualSource = AppShape | NewShape | DefnShape | BaseShape | IntroShape
   * Removing these views preserves the full application chain and its marks.
   */
 final case class ShapeParts(value: CoreTermShape, instances: TypeSubstitution,
-    supplied: Opt[Ls[DeclaredType]])
+    supplied: Opt[Ls[TypeArgument]])
 
 /** A lexical resolution boundary, independent of a definition's term/type interpretation.
   * A class and its companion constructor enter the same instance scope. Keeping their
@@ -466,7 +459,7 @@ enum MemberLookup:
   case Found(member: BlockMemberSymbol | RecordMember, marks: Ls[Marks])
   // Declared members expose signatures only. Their marks transport dependent
   // type arguments; they never authorize reading an implementation's value flow.
-  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, DeclaredType], marks: Ls[Marks], annotation: Opt[Term], positive: Bool)
+  case Declared(member: BlockMemberSymbol, bindings: Map[VarSymbol, TypeArgument], marks: Ls[Marks], annotation: Opt[Term], positive: Bool)
   // A structural field already has its lexical bindings and intersection applied.
   case Typed(field: RcdField, tpe: DeclaredType, marks: Ls[Marks])
   // A preceding spread can place several different fields at the same index.
@@ -584,7 +577,7 @@ class AppShape(val receiver: CoreTermShape, val args: Term, val src: Term.App)(u
   override def toString: String = s"AppShape($receiver, ${args.showDbg})"
 
 class NewShape(val receiver: DefnShape, val classTarget: ClassValueTarget, val clsMarks: Ls[Marks], val argss: Ls[Term], val src: Term.New,
-    val supplied: Opt[Ls[DeclaredType]])(using DebugPrinter) extends CoreShape:
+    val supplied: Opt[Ls[TypeArgument]])(using DebugPrinter) extends CoreShape:
   def cls: ClassSymbol = ClassValueShape.definitionOf(classTarget).sym
   protected def getMemberImpl(name: MemberKey)(using ResolutionContext): MemberLookup =
     if isSaturated then receiver.getInstanceMember(name).withMarks(clsMarks)
@@ -648,7 +641,7 @@ extends SymShape(source.sym, source.resSym, source.markss)
   * type, and constructor interpretations of the same overload set.
   */
 final class DeclaredSymShape(symbol: BlockMemberSymbol, site: FlowSymbol, marks: Ls[Marks],
-    val bindings: Map[VarSymbol, DeclaredType], val annotation: Opt[Term], val positive: Bool) extends CoreSymShape(symbol, site, marks)
+    val bindings: Map[VarSymbol, TypeArgument], val annotation: Opt[Term], val positive: Bool) extends CoreSymShape(symbol, site, marks)
 
 
 // TODO: make it not a TermShape?
@@ -716,8 +709,8 @@ object InstanceShape:
     * reports the first annotation's location. Witness wrappers are not interned;
     * retaining them in a cache would duplicate entries for the same semantic
     * value. All views share the origin-free reference's candidate identity,
-    * so diagnostic evidence cannot multiply inference flow. Namespace plans and
-    * observed arguments do distinguish candidates: equal interfaces can name
+    * so diagnostic evidence cannot multiply inference flow. Local alias annotations and
+    * argument references do distinguish candidates: equal interfaces can name
     * different namespaces, including those exposed by their fields and results.
     */
   def apply(tpe: DeclaredType)(resolver: NewResolver)(using state: ResolutionContext): InstanceShape =
@@ -753,7 +746,7 @@ final case class ContextualShape(source: ContextualSource, instances: TypeSubsti
   * A ContextualShape alone does not record scheme consumption. Complete annotated
   * CallableTypeShape views record consumption by substituting and clearing `scheme`.
   */
-final case class SpecializedShape(declaration: DefnShape, arguments: Ls[DeclaredType],
+final case class SpecializedShape(declaration: DefnShape, arguments: Ls[TypeArgument],
     instances: TypeSubstitution) extends NonAppTermShape:
   def describe: Str = declaration.describe
   def toLoc: Opt[Loc] = declaration.toLoc
@@ -781,7 +774,7 @@ final case class ActivatedShapeEvent(value: Shape, instances: TypeSubstitution) 
   * Provenance can instead identify the construct that introduces an interface,
   * such as the async annotation that creates a Promise result.
   */
-final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSymbol, DeclaredType],
+final class NominalInstanceView(val defn: ClassLikeDef, val bindings: Map[VarSymbol, TypeArgument],
     val parent: Opt[TermShape])(val annotation: Opt[Term], val provenance: ShapeProvenance)(resolver: NewResolver) extends CoreHeadShape:
   def describe: Str = s"value of type '${defn.sym.nme}'"
   override def toString: Str = s"NominalInstanceView(${defn.sym}, $bindings, $parent)"
@@ -850,7 +843,7 @@ final case class WrappedResult(annotation: Annot.Async | Annot.Generator, remain
   * counterpart of SpecializedShape, not an inference-event activation.
   */
 final case class CallableTypeShape(source: Term, paramLists: NELs[DeclaredParams],
-    result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[DeclaredType]],
+    result: Opt[DeclaredType], scheme: Opt[TypeScheme], supplied: Opt[Ls[TypeArgument]],
     declaration: Opt[TermDefinition], wrappedResult: Opt[WrappedResult]) extends CoreHeadShape:
   def tparams: Ls[DeclaredTypeParameter] = scheme.toList.flatMap(_.parameters)
   def describe: Str = declaration.fold("function with a declared signature")(d => s"function '${d.bsym.nme}'")
@@ -1081,7 +1074,7 @@ object DynShape:
   * other consumers of values ignore probes. When it reaches a declared type, the implicit
   * namespaces of that type provide candidates of the reference (see
   * NewResolver.inferTypeArguments). It is not an actual value: the consumers of values
-  * ignore it rather than diagnose it (see NewResolver.listenInstanceViewsOrProbe). It refers
+  * ignore it rather than diagnose it (see ShapeObserver). It refers
   * to nothing, so it records no scope exits; entries still restrict where it can return.
   */
 final class NamespaceProbe(val ref: Term.UnresolvedRef) extends CoreHeadShape:
@@ -1185,7 +1178,7 @@ object TupleShape:
     def marks: Ls[Marks]
     def withMarks(outer: Ls[Marks]): Fixed = this match
       case Field(field, inner) => Field(field, inner ::: outer)
-      case TypedField(tpe, inner) => TypedField(tpe, inner ::: outer)
+      case TypedField(bounds, inner) => TypedField(bounds, inner ::: outer)
       case UnknownField(source, inner) => UnknownField(source, inner ::: outer)
       case ValueField(value, inner) => ValueField(value, inner ::: outer)
       case ViewedField(source, instances, inner) => ViewedField(source, instances, inner ::: outer)
@@ -1208,10 +1201,13 @@ object TupleShape:
     protected def sameValue(other: ValueKey): Bool = other match
       case that: ValueField => value.comparison == that.value.comparison && marks == that.marks
       case _ => false
-  final case class TypedField(tpe: DeclaredType, marks: Ls[Marks]) extends Fixed:
-    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), tpe.observation.hashCode, marks.hashCode)
+  /** A field whose contents a type declares. Reads observe `bounds.output`, and constraints
+    * on the field's contents use `bounds.input`. A tuple type's field has one type for both;
+    * an Array element can have two, as in `Array[in A out B]`. */
+  final case class TypedField(bounds: TypeArgument, marks: Ls[Marks]) extends Fixed:
+    protected val valueHash: Int = ValueKey.hash(ValueKey.tag(this), bounds.hashCode, marks.hashCode)
     protected def sameValue(other: ValueKey): Bool = other match
-      case that: TypedField => tpe.observation == that.tpe.observation && marks == that.marks
+      case that: TypedField => bounds == that.bounds && marks == that.marks
       case _ => false
   // Mutable tuple slots retain their positions, but their initializer cannot
   // supply the shape of later reads (including reads through a spread copy).

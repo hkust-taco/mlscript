@@ -188,8 +188,8 @@ val x: Float32 = wasm.f32.const(1.5)
 x
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
 //│   (type $entry (func (result f32)))
 //│   (global $x (export "x") (mut f32) (f32.const 0.0))
 //│   (func $entry (export "entry") (type $entry) (result f32)
@@ -249,27 +249,27 @@ class Boxed(val i: Int64, val f: Float64)
 wasm.f64.add(Boxed(wasm.i64.const(1), wasm.f64.const(1.5)).f, wasm.f64.const(0.25))
 //│ Wat:
 //│ (module
-//│   (type $TypeInfoBase (sub (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
-//│   (type $Object (sub (struct (field $$typeinfo (mut (ref $TypeInfoBase))))))
-//│   (type $Boxed (sub $Object (struct (field $$typeinfo (mut (ref $TypeInfoBase))) (field $i (mut i64)) (field $f (mut f64)))))
-//│   (type $Boxed_typeinfo (sub $TypeInfoBase (struct (field $$tag i32) (field $$parent (ref null $TypeInfoBase)))))
+//│   (type $TypeInfoBase (sub (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
+//│   (type $Object (sub (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))))))
+//│   (type $Boxed (sub $Object (struct (field $typeinfo@0 (mut (ref $TypeInfoBase))) (field $i@1 (mut i64)) (field $f@2 (mut f64)))))
+//│   (type $Boxed_typeinfo (sub $TypeInfoBase (struct (field $tag@0 i32) (field $parent@1 (ref null $TypeInfoBase)))))
 //│   (type $Boxed_init (func (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))))
 //│   (type $Boxed_ctor (func (param $i i64) (param $f f64) (result (ref $Boxed))))
 //│   (type $entry (func (result f64)))
 //│   (global $Boxed_typeinfo (export "Boxed_typeinfo") (ref $Boxed_typeinfo) (struct.new $Boxed_typeinfo
 //│     (i32.const 1)
 //│     (ref.null $TypeInfoBase)))
-//│   (func $Boxed_init (type $Boxed_init) (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))
-//│     (struct.set $Boxed $i
+//│   (func $Boxed_init (export "Boxed_init") (type $Boxed_init) (param $this (ref $Boxed)) (param $i i64) (param $f f64) (result (ref $Boxed))
+//│     (struct.set $Boxed $i@1
 //│       (local.get $this)
 //│       (local.get $i))
-//│     (struct.set $Boxed $f
+//│     (struct.set $Boxed $f@2
 //│       (local.get $this)
 //│       (local.get $f))
 //│     (return
 //│       (ref.cast (ref $Boxed)
 //│         (local.get $this))))
-//│   (func $Boxed_ctor (export "Boxed") (type $Boxed_ctor) (param $i i64) (param $f f64) (result (ref $Boxed))
+//│   (func $Boxed_ctor (export "Boxed_ctor") (type $Boxed_ctor) (param $i i64) (param $f f64) (result (ref $Boxed))
 //│     (local $this (ref $Boxed))
 //│     (local.set $this
 //│       (struct.new $Boxed
@@ -300,7 +300,7 @@ wasm.f64.add(Boxed(wasm.i64.const(1), wasm.f64.const(1.5)).f, wasm.f64.const(0.2
 //│       (f64.const 0.25))
 //│     (return
 //│       (f64.add
-//│         (struct.get $Boxed $f
+//│         (struct.get $Boxed $f@2
 //│           (ref.cast (ref null $Boxed)
 //│             (local.get $tmp2)))
 //│         (local.get $tmp3))))

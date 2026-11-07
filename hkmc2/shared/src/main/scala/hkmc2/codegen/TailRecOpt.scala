@@ -261,14 +261,14 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       case S(args) => args.map(_.value)
       case N => return CallArgsResult.ForceSpread
     
-    if paramList.restParam.isDefined then
-      val rest =
-        restArgs match
-          case Arg(S(SpreadKind.Eager), value) :: Nil => value
-          case _ => Tuple(true, restArgs)(N)
-      CallArgsResult.Success(hdPadded.appended(rest))
-    else
-      CallArgsResult.Success(hdPadded)
+    paramList.restParam match
+      case S(_) =>
+        // A call collects its rest arguments into a fresh array. A lone spread can
+        // contain another iterable, and even an Array operand can remain reachable
+        // through aliases or an earlier iteration's parameters.
+        CallArgsResult.Success(hdPadded.appended(Tuple(true, restArgs)(N)))
+      case N =>
+        CallArgsResult.Success(hdPadded)
   
   /**
     * Applies a parameter list to an argument list, both of which could contain arbitrary spreads.
@@ -324,7 +324,10 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     end val
     (initialBlk, pathList)
   
-  def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol])(using accessInfo: (ScopeData, AccessMap)): (Opt[FunDefn], List[(TermSymbol, FunDefn)]) =
+  /** Returns the new loop function, if any, and the functions of `scc` as they replace the original ones. Each keeps
+    * the symbol of the function it replaces, which other compilation units and the rest of this one refer to.
+    */
+  def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol])(using accessInfo: (ScopeData, AccessMap)): (Opt[FunDefn], List[FunDefn]) =
     // sort the functions so the order is more predictable
     val funs = scc.funs.sortBy(f => f.dSym.uid)
     val fSyms = funs.iterator.map(_.dSym).toSet
@@ -344,7 +347,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     if calls.isEmpty then
       if checkAnnotations then for f <- funs if f.tailRec do
         raise(WarningReport(msg"This function is marked @tailrec but has no direct self-recursion." -> f.dSym.toLoc :: Nil))
-      return (N, funs.map(f => f.dSym -> f))
+      return (N, funs)
     
     if !nonTailCalls.isEmpty then
       if checkAnnotations then for f <- funs if f.tailRec do
@@ -414,10 +417,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
       else if funsLen == 1 && funs.head.inline then Annot.Inline()(N) :: Annot.Private :: Nil
       else Annot.Private :: Nil
     val dSym =
-      if !hasWrapper then
-        val f = funs.head
-        if loopSignature is f.signature then f.dSym
-        else SymbolRefresher.copyTermSymbol(f.dSym, owner, S(loopSignature.erasure))
+      if !hasWrapper then funs.head.dSym
       else
         val res = TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme), S(loopSignature.erasure))
         bms.tsym = S(res)
@@ -766,7 +766,7 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     
     if !hasWrapper then
       val defn = FunDefn(owner, bms, dSym, loopSignature, loop)(N, loopAnnotations)
-      (N, (funs.head.dSym -> defn) :: Nil)
+      (N, defn :: Nil)
     else
       val wrappers = funs.map: f =>
         val paramArgs = f.allParamSyms.map(s => s.asSimpleRef)
@@ -777,20 +777,19 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
           coerceToDeclaredReturn(rewriteKnownCall(f, paramArgs), f.dSym),
         )
         val annots = if f.inline then f.annotations else Annot.Inline()(N) :: f.annotations
-        f.dSym -> FunDefn(f.owner, f.sym, f.dSym, f.signature, newBod)(N, annots)
+        FunDefn(f.owner, f.sym, f.dSym, f.signature, newBod)(N, annots)
       val loopDefn = FunDefn(owner, bms, dSym, loopSignature, loop)(N, loopAnnotations)
       (S(loopDefn), wrappers)
   
   def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol])(using (ScopeData, AccessMap)) =
-    val (newFsOpt, fsOpt) = partFns(fs).map(optScc(_, owner)).foldLeft[(List[FunDefn], List[(TermSymbol, FunDefn)])](Nil, Nil):
+    val (newFsOpt, fsOpt) = partFns(fs).map(optScc(_, owner)).foldLeft[(List[FunDefn], List[FunDefn])](Nil, Nil):
       case ((newFns, fns), (newFnOpt, fns_)) => newFnOpt match
         case Some(value) => (value :: newFns, fns_ ::: fns)
         case None => (newFns, fns_ ::: fns)
     // preserve the order of function defns
-    val fMap = fsOpt.toMap
+    val fMap = fsOpt.iterator.map(f => f.dSym -> f).toMap
     val fsRet = fs.mapConserve(f => fMap(f.dSym))
-    val replacements = fsOpt.collect { case (sym, f) if sym isnt f.dSym => sym -> f.dSym }.toMap
-    (newFsOpt, fsRet, replacements)
+    (newFsOpt, fsRet)
   
   def reportClassesTailrec(c: ClsLikeDefn) =
     new BlockTraverserShallow():
@@ -804,25 +803,23 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         case _ => super.applyResult(r)
   
   def optFunctionsFlat(fs: List[FunDefn], owner: Opt[InnerSymbol])(using (ScopeData, AccessMap)) =
-    val (a, b, replacements) = optFunctions(fs, owner)
-    (a ::: b, replacements)
+    val (a, b) = optFunctions(fs, owner)
+    a ::: b
     
   def optClasses(cs: List[ClsLikeDefn])(using (ScopeData, AccessMap)) =
-    val rewritten = cs.map: c =>
+    cs.map: c =>
       // Class methods cannot yet be optimized as they cannot yet be marked final.
-      val (mtds, replacements) = if c.k is syntax.Cls then
+      val mtds = if c.k is syntax.Cls then
         if checkAnnotations then reportClassesTailrec(c)
-        (c.methods, Map.empty[TermSymbol, TermSymbol])
+        c.methods
       else optFunctionsFlat(c.methods, S(c.isym))
-      val (companion, companionReplacements) = c.companion match
+      val companion = c.companion match
         case S(comp) =>
-          val (cMtds, replacements) = optFunctionsFlat(comp.methods, S(comp.isym))
-          (if cMtds is comp.methods then c.companion else S(comp.copy(methods = cMtds)), replacements)
-        case N => (N, Map.empty[TermSymbol, TermSymbol])
-      val cls = if (c.methods is mtds) && (c.companion is companion) then c
-        else c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations)
-      cls -> (replacements ++ companionReplacements)
-    (rewritten.map(_._1), rewritten.iterator.flatMap(_._2).toMap)
+          val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
+          if cMtds is comp.methods then c.companion else S(comp.copy(methods = cMtds))
+        case N => N
+      if (c.methods is mtds) && (c.companion is companion) then c
+      else c.copy(methods = mtds, companion = companion)(c.configOverride, c.annotations)
   
   def transform(prog: Program): Program =
     if !config.tailRecOpt then return prog
@@ -852,8 +849,8 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
     // Filter out functions that should not be tail-rec optimized
     val (tailRecFuns, _) = funs.partition: f =>
       f.configOverride.forall(_.tailRecOpt) && !f.generator
-    val (optFNew, optF, funReplacements) = optFunctions(tailRecFuns, N)
-    val (optC, methodReplacements) = optClasses(clses)
+    val (optFNew, optF) = optFunctions(tailRecFuns, N)
+    val optC = optClasses(clses)
     
     val fMap = tailRecFuns.iterator.zip(optF).map((before, after) => before.dSym -> after).toMap
     // Scala needs this annotation to type check for some reason
@@ -873,17 +870,10 @@ class TailRecOpt(checkAnnotations: Bool)(using Config, State, TL, Raise, Ctx):
         
         case _ => super.applyDefn(defn)(k)
     
-    val rewritten = Scoped(
+    val result = Scoped(
       optFNew.map(_.sym).toSet,
       optFNew.foldLeft(transformer.applyBlock(b)):
         case (acc, f) => Define(f, acc))
-    // Fresh mutable parameter bindings also get a fresh definition symbol. Update all references,
-    // including forward references and calls in nested functions outside the optimized SCC.
-    val replacements = funReplacements ++ methodReplacements
-    val result = if replacements.isEmpty then rewritten else
-      val subst = new SymbolSubst:
-        override def mapTermSym(sym: TermSymbol): TermSymbol = replacements.getOrElse(sym, sym)
-      BlockTransformer(subst).applyBlock(rewritten)
     
     if checkAnnotations then
       // Report @tailrec on functions that weren't processed by the optimization above,

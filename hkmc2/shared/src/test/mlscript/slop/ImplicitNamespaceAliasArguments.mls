@@ -42,10 +42,10 @@ let shared = Pick
 //│ ║        	             ^^^^
 //│ ╟── This type selects 'Left.Pick'.
 //│ ║  l.XX: 	fun left(x: Wrapped[Left]) = x.n
-//│ ║        	            ^^^^^^^^^^^^^
+//│ ║        	                    ^^^^
 //│ ╟── This type selects 'Right.Pick'.
 //│ ║  l.XX: 	fun right(x: Wrapped[Right]) = x.n
-//│ ╙──      	             ^^^^^^^^^^^^^^
+//│ ╙──      	                     ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ shared = undefined
 
@@ -57,10 +57,10 @@ wrappedUnion(Pick)
 //│ ║        	             ^^^^
 //│ ╟── This type selects 'Left.Pick'.
 //│ ║  l.+1: 	fun wrappedUnion(x: Wrapped[Left] | Wrapped[Right]) = x.n
-//│ ║        	                    ^^^^^^^^^^^^^
+//│ ║        	                            ^^^^
 //│ ╟── This type selects 'Right.Pick'.
 //│ ║  l.+1: 	fun wrappedUnion(x: Wrapped[Left] | Wrapped[Right]) = x.n
-//│ ╙──      	                                    ^^^^^^^^^^^^^^
+//│ ╙──      	                                            ^^^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
@@ -92,7 +92,7 @@ fun wrappedPattern(x: Wrapped[Option[Int]] | Wrapped[OtherOption[Int]]) =
 //│ ║        	          ^^^^
 //│ ╟── This type selects 'Option.Some'.
 //│ ║  l.+1: 	fun wrappedPattern(x: Wrapped[Option[Int]] | Wrapped[OtherOption[Int]]) =
-//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                              ^^^^^^^^^^^
 //│ ╟── This type selects 'OtherOption.Some'.
 //│ ║  l.+1: 	fun wrappedPattern(x: Wrapped[Option[Int]] | Wrapped[OtherOption[Int]]) =
-//│ ╙──      	                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	                                                     ^^^^^^^^^^^^^^^^

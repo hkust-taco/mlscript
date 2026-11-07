@@ -64,7 +64,8 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
 
   private def canonicalType(source: CanonicalErasedValueType): CanonicalErasedValueType = source match
     case ErasedType.AnyRef(rsc, symbol) => ErasedType.AnyRef(rsc, mapType(symbol))
-    case ErasedType.Incompatible(left, right) => ErasedType.Incompatible(canonicalType(left), canonicalType(right))
+    case source @ ErasedType.Incompatible(left, right) =>
+      ErasedType.Incompatible(canonicalType(left), canonicalType(right))(source.reported)
     case source @ (_: ErasedType.Primitive | ErasedType.Unknown | ErasedType.Nothing) => source
 
   private def valueType(source: ErasedValueType): ErasedValueType = source match
@@ -195,7 +196,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
     prepareLocals(stats)
     terms.foreach: (source, copy) =>
       copy.initializeErasure:
-        source.erasure.map:
+        source.sourceErasure.map:
           case sig: ErasedCallableSignature => sig.mapTypes(valueType)
           case tpe: ErasedValueType => valueType(tpe)
     // All member names, including nested classes' methods, now have replacements.
@@ -617,7 +618,7 @@ private[semantics] final class Cloner(outer: SymbolSubst)(using State, Erasure) 
           // Abortive handlers also expose these same definitions in their synthetic
           // class body. They are one binding, with the resumption symbol in scope.
           scope.definitions(Identity(handler.td)) = definition
-          HandlerTermDefinition(handlerScope.mapVarSym(handler.resumeSym), definition)
+          HandlerTermDefinition(handlerScope.mapVarSym(handler.resumeSym), definition, handler.annots)
         derivedClsSym.defn.foreach(scope.definition)
         Handle(scope.mapLocal(lhs), rhs.cloned, args.map(_.cloned), scope.mapClsSym(derivedClsSym), handlers, scope.term(body))(handle.isAbortive)
     copyMetadata(source, that)

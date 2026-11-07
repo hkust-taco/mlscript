@@ -64,5 +64,5 @@ final class ResolutionSources:
   import ResolutionSources.Scope
   val definitions = mutable.Map.empty[AnyDefinitionSymbol, Scope]
   val sites = mutable.Map.empty[FlowSymbol, Set[VarSymbol]]
-  val parameterSignatures = mutable.Map.empty[VarSymbol, DeclaredType]
-  val recordReads = mutable.Map.empty[Identity[Pattern.Record], (FlowSymbol, Term)]
+  val parameterSignatures = mutable.Map.empty[VarSymbol, TypeArgument]
+  val recordReads = mutable.Map.empty[Pattern.Record, (FlowSymbol, Term)]

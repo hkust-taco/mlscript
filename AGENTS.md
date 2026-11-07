@@ -54,6 +54,11 @@ including diff tests that do not import their directory's `.mls` configuration w
 will be sunset soon. Do not spend effort fixing, extending, or adding tests for behavior
 specific to it; keep its existing tests passing and focus on new-resolution behavior.
 
+Always commit the changes for each completed self-contained task after its required
+validation passes, without waiting for a separate commit request. Include all code,
+documentation, and golden-output changes belonging to the task, and leave unrelated
+changes out of the commit.
+
 When you create a commit, author it under your (the agent's) own identity,
 not under the user's identity.
 Set this identity for the commit command only

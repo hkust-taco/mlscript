@@ -129,10 +129,7 @@ abstract class Symbol(using ownerState: State) extends MaybeSymbol with Located:
   
   def asBlkMember: Opt[BlockMemberSymbol] = this match
     case mem: BlockMemberSymbol => S(mem)
-    case mem: DefinitionSymbol[?] => mem.defn match
-      case S(defn: TypeLikeDef) => S(defn.bsym)
-      case S(defn: TermDefinition) => S(defn.bsym)
-      case N => N
+    case mem: DefinitionSymbol[?] => mem.bms
     case _ => N
   
   /** Get the symbol corresponding to the "representative" of a set of overloaded definitions,
@@ -459,8 +456,14 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     initializeErasure(erasure)
   
   def isErased: Bool = assignedErasure != null
-  /** The erased signature stored for this definition. `N` denotes an initialized unknown erasure;
-    * reading this before `initializeErasure` is an error.
+  
+  private def assigned: Opt[ErasedValueType | ErasedCallableSignature] =
+    assert(isErased, s"Erasure of '$nme' read before initialization")
+    assignedErasure
+  
+  /** The erased signature that `Erasure` assigned to this source definition, or that its creator assigned to a
+    * definition generated in the IR. `N` denotes an initialized unknown erasure; reading this before
+    * `initializeErasure` is an error.
     *
     * Stored value definitions use the `ErasedValueType` arm, including function-valued slots whose
     * representation is `Function`. Function definitions use the `ErasedCallableSignature` arm:
@@ -471,10 +474,19 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     * records the body's result and wrapper kind. For example, an async getter's body returns `Int`
     * but a read yields `Promise`; retaining only `Promise` would lose the payload representation
     * needed when lowering or cloning the body.
+    *
+    * Only erasure and lowering, which have the `Erasure` capability, read the source erasure. A pass after lowering
+    * can give the definition another signature without giving it another symbol, as when async lowering turns its
+    * body into a wrapper that returns a promise; code that works on the IR reads [[irErasure]].
     */
-  def erasure: Opt[ErasedValueType | ErasedCallableSignature] =
-    assert(isErased, s"Erasure of '$nme' read before initialization")
-    assignedErasure
+  def sourceErasure(using codegen.Erasure): Opt[ErasedValueType | ErasedCallableSignature] = assigned
+  
+  /** The erased signature of this definition in the current IR: that of its current IR function definition, if it
+    * has one, and otherwise the assigned erasure. Values and declarations without bodies keep their assigned erasure.
+    */
+  def irErasure: Opt[ErasedValueType | ErasedCallableSignature] = irFunDefn match
+    case S(fun) => S(fun.signature.erasure)
+    case N => assigned
   def initializeErasure(value: Opt[ErasedValueType | ErasedCallableSignature]): Unit =
     assert(!isErased, "Erasure initialized more than once")
     assert(value != null, "An initialized erasure cannot be null")
@@ -498,34 +510,28 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     owner.isDefined &&
       // Refreshed IR symbols have no source definition. Their current definition
       // retains visibility, including after a method is copied by the inliner.
-      (isLetOrParamBinding || irDefn.fold(isExplicitlyPrivate)(_.visibility is Visibility.Private))
+      (isLetOrParamBinding || visibility.exists(_ is Visibility.Private))
   
-  /** The erased type of what a reference to this term evaluates to.
+  /** The erased type of what a reference to this term evaluates to in the current IR (see [[irErasure]]).
     *
     * A definition with an [[erasedSignature]] evaluates to a closure the compiler builds, i.e. a first-class
     * `Function`. The signature describes calls to the definition, not the type of that closure.
     */
-  def erasedType: Opt[ErasedValueType] = erasure match
-    case S(_: ErasedFuncSignature) => S(ErasedType.Function(rsc = S(false)))
-    case S(sig: ErasedGetterSignature) => sig.ret
-    case S(tpe: ErasedValueType) => S(tpe)
-    case N => N
+  def erasedType: Opt[ErasedValueType] = TermSymbol.referenceType(irErasure)
+  def sourceErasedType(using codegen.Erasure): Opt[ErasedValueType] = TermSymbol.referenceType(sourceErasure)
   
-  /** The erased signature of a `fun` definition with parameter lists, or `N` if this term has none. */
-  def erasedSignature: Opt[ErasedFuncSignature] = erasure match
-    case S(sig: ErasedFuncSignature) => S(sig)
-    case S(_: ErasedValueType | _: ErasedGetterSignature) | N => N
+  /** The erased signature of a `fun` definition with parameter lists in the current IR, or `N` if it has none. */
+  def erasedSignature: Opt[ErasedFuncSignature] = TermSymbol.funcSignature(irErasure)
   
-  /** The complete result behavior. Value slots have a direct result; getters retain
+  /** The complete result behavior in the current IR. Value slots have a direct result; getters retain
     * their wrapper kind without acquiring a first-class function representation.
     */
-  def erasedResult: ErasedResult[ErasedValueType] = erasure match
-    case S(sig: ErasedCallableSignature) => sig.result
-    case S(tpe: ErasedValueType) => ErasedResult.Direct(S(tpe))
-    case N => ErasedResult.Direct(N)
+  def erasedResult: ErasedResult[ErasedValueType] = TermSymbol.result(irErasure)
+  def sourceErasedResult(using codegen.Erasure): ErasedResult[ErasedValueType] = TermSymbol.result(sourceErasure)
 
-  /** The representation seen by a caller, including async/generator wrapping. */
+  /** The representation seen by a caller in the current IR, including async/generator wrapping. */
   def declaredResultType: Opt[ErasedValueType] = erasedResult.callType
+  def sourceDeclaredResultType(using codegen.Erasure): Opt[ErasedValueType] = sourceErasedResult.callType
 
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
   def mayRaiseEffects(using Config) =
@@ -534,6 +540,24 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
 object TermSymbol:
   def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol], erasedSignature: Opt[ErasedFuncSignature])(using State) =
     TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme), erasedSignature)
+  
+  private def referenceType(erasure: Opt[ErasedValueType | ErasedCallableSignature]): Opt[ErasedValueType] =
+    erasure match
+    case S(_: ErasedFuncSignature) => S(ErasedType.Function(rsc = S(false)))
+    case S(sig: ErasedGetterSignature) => sig.ret
+    case S(tpe: ErasedValueType) => S(tpe)
+    case N => N
+  
+  private def funcSignature(erasure: Opt[ErasedValueType | ErasedCallableSignature]): Opt[ErasedFuncSignature] =
+    erasure match
+    case S(sig: ErasedFuncSignature) => S(sig)
+    case S(_: ErasedValueType | _: ErasedGetterSignature) | N => N
+  
+  private def result(erasure: Opt[ErasedValueType | ErasedCallableSignature]): ErasedResult[ErasedValueType] =
+    erasure match
+    case S(sig: ErasedCallableSignature) => sig.result
+    case S(tpe: ErasedValueType) => ErasedResult.Direct(S(tpe))
+    case N => ErasedResult.Direct(N)
 
 
 /** Represents the companion constructor function of parameterized classes,
@@ -601,6 +625,12 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol:
   var irClassHeader: Opt[codegen.ClassHeader] = N
   def irTermCompanion: Opt[TermSymbol] = irClassHeader.flatMap(_.termCompanion)
 
+  /** Provided by [[DefinitionSymbol.bms]], which the self type does not expose to clients. */
+  def bms: Opt[BlockMemberSymbol]
+  /** The innermost class-like definition containing this one, read like [[DefinitionSymbol.bms]]:
+    * lifting can move a class to another owner. */
+  def owner: Opt[InnerSymbol] = irClsLikeDefn.fold(this.defn.flatMap(_.owner))(_.owner)
+
 
 type AnyDefinitionSymbol = DefinitionSymbol[?]
 
@@ -626,7 +656,19 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends MemberSymbol:
     defnListeners = null // free memory and prevent further listening
   
   var decl: Opt[Declaration] = N // NOTE: currently only assigned for class params and only used by deforestation; may want to just remove it once deforestation is improved
-  def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) 
+  
+  // * The following accessors read the current IR definition, which owns this symbol once lowering
+  // * or a later rewrite has produced it (see `irDefn`), and otherwise the source definition: before
+  // * lowering, and for external declarations, which have no IR definition.
+  
+  def bms: Opt[BlockMemberSymbol] =
+    // Lifted captures and handlers can use classes created directly in IR.
+    // Such classes have no source definition from which to obtain a binding.
+    irDefn.fold(defn.map(_.bsym))(_.sym |> some)
+  
+  def annotations: Opt[Ls[Annot]] = irDefn.fold(defn.map(_.annotations))(_.annotations |> some)
+  
+  def visibility: Opt[Visibility] = irDefn.fold(defn.map(_.visibility))(_.visibility |> some)
   
   // TODO: rm
   private[semantics] var defnListeners: Buffer[Defn => Unit] = Buffer.empty
@@ -688,6 +730,8 @@ sealed trait InnerSymbol(using State) extends ThisSymbol, ShapePublisher:
   // TODO(Derppening): Can we meaningfully infer the erased type of `this` from the definition?
   val thisProxy: TempSymbol = TempSymbol(N, initErasedType = N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol
+  /** Provided by [[DefinitionSymbol.bms]], which the self type does not expose to clients. */
+  def bms: Opt[BlockMemberSymbol]
   def asDefnSym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol = this match
     case d: DefinitionSymbol[? <: ClassLikeDef] => d
 

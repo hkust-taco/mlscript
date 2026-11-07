@@ -63,7 +63,7 @@ fun isCompiledCross(x) = x is @compile Cross
 //│     end
 //│   };
 //│   set matcher__Cross$ = lambda⁰;
-//│   set matchSuccess = matcher__Cross$(x);
+//│   set matchSuccess = (matcher__Cross$(x) as!! Bool⁰);
 //│   match matchSuccess
 //│     true =>
 //│       return true

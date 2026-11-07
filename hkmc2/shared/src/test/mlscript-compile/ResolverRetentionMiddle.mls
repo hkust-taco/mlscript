@@ -5,3 +5,7 @@ module ResolverRetentionMiddle with
   fun choose[A](first: Bool, value: A) = ResolverRetentionLibrary.choose(first, value)
   fun captured[A](value: A) = ResolverRetentionLibrary.captured(value)
   fun callbacks[A](value: A) = ResolverRetentionLibrary.callbacks(value)
+  fun firstBox(box: ResolverRetentionLibrary.Box[ResolverRetentionLibrary.FirstValue[Int]]): Int =
+    ResolverRetentionLibrary.firstBox(box)
+  fun secondBox(box: ResolverRetentionLibrary.Box[ResolverRetentionLibrary.SecondValue[Int]]): Int =
+    ResolverRetentionLibrary.secondBox(box)
