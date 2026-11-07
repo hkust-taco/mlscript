@@ -1,0 +1,561 @@
+:classTags debug mono
+:js
+
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
+//│ <<< end class-tags transform-phase
+:ssjs
+class Cons(val x, val xs)
+object Nil
+fun foo(x, y, z) =
+  let ls = new Cons(1, new Cons(2, new Cons(3, new Cons(x, new Cons(y, new Cons(z, Nil))))))
+  bar(ls)
+private fun bar(ls) =
+  @matchShapes(Cons(1, Cons(2, Cons(3, Cons(_, Cons(_, Cons(_, Nil)))))))
+  shape.match of ls, () => ls.Cons#xs.Cons#xs.Cons#xs.Cons#x + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x + + ls.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#xs.Cons#x 
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Cons@143, Cons@144, Cons@145, Cons@146, Cons@147, Cons@148 in foo
+//│ class-tags collection-phase > track consumption at match@182 in bar
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: Nil@142, Cons@143, Cons@144, Cons@145, Cons@146, Cons@147, Cons@148
+//│ class-tags web-computation-phase >   field accesses: Cons.x@120, Cons.xs@121, Cons.xs@122, Cons.xs@123, Cons.x@124, Cons.xs@125, Cons.xs@126, Cons.xs@127, Cons.xs@128, Cons.x@129, Cons.xs@130, Cons.xs@131, Cons.xs@132, Cons.xs@133, Cons.xs@134
+//│ class-tags web-computation-phase >   pattern matches: match@182
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for Cons(x: _, xs: Nil)
+//│ class-tags transform-phase > allocated tag 1 for Cons(x: _, xs: Cons(x: _, xs: Nil))
+//│ class-tags transform-phase > allocated tag 2 for Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))
+//│ class-tags transform-phase > allocated tag 3 for Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))
+//│ class-tags transform-phase > allocated tag 4 for Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil)))))
+//│ class-tags transform-phase > allocated tag 5 for Cons(x: 1, xs: Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))))
+//│ class-tags transform-phase > duplicated Cons as Cons__Tagged
+//│ class-tags transform-phase > match shapes Cons(x: 1, xs: Cons(x: 2, xs: Cons(x: 3, xs: Cons(x: _, xs: Cons(x: _, xs: Cons(x: _, xs: Nil))))))->5
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let Nil1, Cons1, bar, foo, Cons__Tagged1;
+//│ foo = function foo(x, y, z) {
+//│   runtime.checkArgs("foo", 3, arguments.length);
+//│   let ls, tmp, tmp1, tmp2, tmp3, tmp4;
+//│   tmp = globalThis.Object.freeze(new Cons__Tagged1.class(z, Nil1, 0));
+//│   tmp1 = globalThis.Object.freeze(new Cons__Tagged1.class(y, tmp, 1));
+//│   tmp2 = globalThis.Object.freeze(new Cons__Tagged1.class(x, tmp1, 2));
+//│   tmp3 = globalThis.Object.freeze(new Cons__Tagged1.class(3, tmp2, 3));
+//│   tmp4 = globalThis.Object.freeze(new Cons__Tagged1.class(2, tmp3, 4));
+//│   ls = globalThis.Object.freeze(new Cons__Tagged1.class(1, tmp4, 5));
+//│   return runtime.checkCall(bar(ls))
+//│ };
+//│ bar = function bar(ls) {
+//│   runtime.checkArgs("bar", 1, arguments.length);
+//│   if (ls.__tag$ === 5) {
+//│     let tmp, tmp1;
+//│     tmp = ls.xs.xs.xs.x + ls.xs.xs.xs.xs.x;
+//│     tmp1 = + ls.xs.xs.xs.xs.xs.x;
+//│     return tmp + tmp1
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
+//│ };
+//│ Cons1 = function Cons(x, xs) {
+//│   return globalThis.Object.freeze(new Cons.class(x, xs));
+//│ };
+//│ globalThis.Object.freeze(class Cons {
+//│   static {
+//│     Cons1.class = this
+//│   }
+//│   constructor(x, xs) {
+//│     this.x = x;
+//│     this.xs = xs;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Cons", ["x", "xs"]];
+//│ });
+//│ Cons__Tagged1 = function Cons__Tagged(x, xs, __tag$) {
+//│   return globalThis.Object.freeze(new Cons__Tagged.class(x, xs, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Cons__Tagged extends Cons1.class {
+//│   static {
+//│     Cons__Tagged1.class = this
+//│   }
+//│   constructor(x, xs, __tag$) {
+//│     super(x, xs);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Cons__Tagged", ["x", "xs", "__tag$"]];
+//│ });
+//│ globalThis.Object.freeze(class Nil {
+//│   static {
+//│     new this
+//│   }
+//│   constructor() {
+//│     Nil1 = this;
+//│     Object.defineProperty(this, "class", {
+//│       value: Nil
+//│     });
+//│     globalThis.Object.freeze(this);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "Nil"];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+class C(val x)
+class D(val x)
+class E(val x)
+fun foo(x, y) =
+  let t = if y then new C(new D(x)) else new C(new E(1))
+  foofoo(t)
+private fun foofoo(t) =
+  @matchShapes(C(D(_)), C(E(1))) shape.match of t,
+    () => t.C#x.D#x + 1
+    () => 0
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of D@385, C@386, C@388 in foo
+//│ class-tags collection-phase > track consumption at match@406 in foofoo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: D@385, C@386, E@387, C@388
+//│ class-tags web-computation-phase >   field accesses: D.x@373, C.x@374
+//│ class-tags web-computation-phase >   pattern matches: match@406
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for D(x: _)
+//│ class-tags transform-phase > allocated tag 1 for C(x: D(x: _))
+//│ class-tags transform-phase > allocated tag 2 for E(x: 1)
+//│ class-tags transform-phase > allocated tag 3 for C(x: E(x: 1))
+//│ class-tags transform-phase > duplicated D as D__Tagged
+//│ class-tags transform-phase > duplicated C as C__Tagged
+//│ class-tags transform-phase > duplicated E as E__Tagged
+//│ class-tags transform-phase > match shapes C(x: D(x: _))->1, C(x: E(x: 1))->3
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let E1, foofoo, C1, D1, foo1, D__Tagged1, C__Tagged1, E__Tagged1;
+//│ foo1 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, arguments.length);
+//│   let tmp, tmp1, tmp2;
+//│   if (y === true) {
+//│     tmp = globalThis.Object.freeze(new D__Tagged1.class(x, 0));
+//│     tmp1 = globalThis.Object.freeze(new C__Tagged1.class(tmp, 1));
+//│     return runtime.checkCall(foofoo(tmp1))
+//│   }
+//│   tmp2 = globalThis.Object.freeze(new E__Tagged1.class(1, 2));
+//│   tmp1 = globalThis.Object.freeze(new C__Tagged1.class(tmp2, 3));
+//│   return runtime.checkCall(foofoo(tmp1));
+//│ };
+//│ foofoo = function foofoo(t) {
+//│   runtime.checkArgs("foofoo", 1, arguments.length);
+//│   if (t.__tag$ === 1) {
+//│     return t.x.x + 1
+//│   } else if (t.__tag$ === 3) {
+//│     return 0
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
+//│ };
+//│ C1 = function C(x) {
+//│   return globalThis.Object.freeze(new C.class(x));
+//│ };
+//│ globalThis.Object.freeze(class C {
+//│   static {
+//│     C1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C", ["x"]];
+//│ });
+//│ C__Tagged1 = function C__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new C__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class C__Tagged extends C1.class {
+//│   static {
+//│     C__Tagged1.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C__Tagged", ["x", "__tag$"]];
+//│ });
+//│ D1 = function D(x) {
+//│   return globalThis.Object.freeze(new D.class(x));
+//│ };
+//│ globalThis.Object.freeze(class D {
+//│   static {
+//│     D1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "D", ["x"]];
+//│ });
+//│ D__Tagged1 = function D__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new D__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class D__Tagged extends D1.class {
+//│   static {
+//│     D__Tagged1.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "D__Tagged", ["x", "__tag$"]];
+//│ });
+//│ E1 = function E(x) {
+//│   return globalThis.Object.freeze(new E.class(x));
+//│ };
+//│ globalThis.Object.freeze(class E {
+//│   static {
+//│     E1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "E", ["x"]];
+//│ });
+//│ E__Tagged1 = function E__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new E__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class E__Tagged extends E1.class {
+//│   static {
+//│     E__Tagged1.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "E__Tagged", ["x", "__tag$"]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+class C(val x)
+class D(val x)
+class E(val x)
+fun foo(x, y) =
+  let t = new C(if y then new D(x) else new E(1))
+  foofoo(t)
+private fun foofoo(t) =
+  @matchShapes(C(D(_)), C(E(1))) shape.match of t,
+    () => t.C#x.D#x + 1
+    () => 0
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of D@580, C@582 in foo
+//│ class-tags collection-phase > track consumption at match@600 in foofoo
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: D@580, E@581, C@582
+//│ class-tags web-computation-phase >   field accesses: D.x@568, C.x@569
+//│ class-tags web-computation-phase >   pattern matches: match@600
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for D(x: _)
+//│ class-tags transform-phase > allocated tag 1 for E(x: 1)
+//│ class-tags transform-phase > allocated tag 2 for C(x: E(x: 1))
+//│ class-tags transform-phase > allocated tag 3 for C(x: D(x: _))
+//│ class-tags transform-phase > duplicated D as D__Tagged
+//│ class-tags transform-phase > duplicated E as E__Tagged
+//│ class-tags transform-phase > duplicated C as C__Tagged
+//│ class-tags transform-phase > match shapes C(x: D(x: _))->3, C(x: E(x: 1))->2
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let E3, foofoo1, C3, D3, foo2, D__Tagged3, E__Tagged3, C__Tagged3;
+//│ foo2 = function foo(x, y) {
+//│   runtime.checkArgs("foo", 2, arguments.length);
+//│   let t, tmp, shapeTag, tmp1;
+//│   if (y === true) {
+//│     tmp = globalThis.Object.freeze(new D__Tagged3.class(x, 0));
+//│   } else {
+//│     tmp = globalThis.Object.freeze(new E__Tagged3.class(1, 1));
+//│   }
+//│   tmp1 = tmp.__tag$ === 1;
+//│   if (tmp1 === true) {
+//│     shapeTag = 2;
+//│   } else {
+//│     shapeTag = 3;
+//│   }
+//│   t = globalThis.Object.freeze(new C__Tagged3.class(tmp, shapeTag));
+//│   return runtime.checkCall(foofoo1(t))
+//│ };
+//│ foofoo1 = function foofoo(t) {
+//│   runtime.checkArgs("foofoo", 1, arguments.length);
+//│   if (t.__tag$ === 3) {
+//│     return t.x.x + 1
+//│   } else if (t.__tag$ === 2) {
+//│     return 0
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
+//│ };
+//│ C3 = function C(x) {
+//│   return globalThis.Object.freeze(new C.class(x));
+//│ };
+//│ globalThis.Object.freeze(class C2 {
+//│   static {
+//│     C3.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C", ["x"]];
+//│ });
+//│ C__Tagged3 = function C__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new C__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class C__Tagged2 extends C3.class {
+//│   static {
+//│     C__Tagged3.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C__Tagged", ["x", "__tag$"]];
+//│ });
+//│ D3 = function D(x) {
+//│   return globalThis.Object.freeze(new D.class(x));
+//│ };
+//│ globalThis.Object.freeze(class D2 {
+//│   static {
+//│     D3.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "D", ["x"]];
+//│ });
+//│ D__Tagged3 = function D__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new D__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class D__Tagged2 extends D3.class {
+//│   static {
+//│     D__Tagged3.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "D__Tagged", ["x", "__tag$"]];
+//│ });
+//│ E3 = function E(x) {
+//│   return globalThis.Object.freeze(new E.class(x));
+//│ };
+//│ globalThis.Object.freeze(class E2 {
+//│   static {
+//│     E3.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "E", ["x"]];
+//│ });
+//│ E__Tagged3 = function E__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new E__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class E__Tagged2 extends E3.class {
+//│   static {
+//│     E__Tagged3.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "E__Tagged", ["x", "__tag$"]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:ssjs
+class D(val x)
+class E(val x)
+class Pair(val x, val y)
+fun pair(x, y) =
+  let p = new Pair(
+    if x then new D(1) else new E(2),
+    if y then new D(3) else new E(4))
+  @matchShapes(Pair(D(_), D(_)), Pair(D(_), E(_)), Pair(E(_), D(_)), Pair(E(_), E(_)))
+  shape.match of p,
+    () => 0
+    () => 1
+    () => 2
+    () => 3
+//│ >>> start class-tags collection-phase
+//│ class-tags collection-phase > track construction of Pair@787 in pair
+//│ class-tags collection-phase > track consumption at match@800 in pair
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags web-computation-phase
+//│ class-tags web-computation-phase > web 0:
+//│ class-tags web-computation-phase >   producers: D@783, E@784, D@785, E@786, Pair@787
+//│ class-tags web-computation-phase >   pattern matches: match@800
+//│ <<< end class-tags web-computation-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > allocated tag 0 for D(x: 1)
+//│ class-tags transform-phase > allocated tag 1 for E(x: 2)
+//│ class-tags transform-phase > allocated tag 2 for D(x: 3)
+//│ class-tags transform-phase > allocated tag 3 for E(x: 4)
+//│ class-tags transform-phase > allocated tag 4 for Pair(x: E(x: 2), y: E(x: 4))
+//│ class-tags transform-phase > allocated tag 5 for Pair(x: E(x: 2), y: D(x: 3))
+//│ class-tags transform-phase > allocated tag 6 for Pair(x: D(x: 1), y: E(x: 4))
+//│ class-tags transform-phase > allocated tag 7 for Pair(x: D(x: 1), y: D(x: 3))
+//│ class-tags transform-phase > duplicated D as D__Tagged
+//│ class-tags transform-phase > duplicated E as E__Tagged
+//│ class-tags transform-phase > duplicated Pair as Pair__Tagged
+//│ class-tags transform-phase > match shapes Pair(x: D(x: _), y: D(x: _))->7, Pair(x: D(x: _), y: E(x: _))->6, Pair(x: E(x: _), y: D(x: _))->5, Pair(x: E(x: _), y: E(x: _))->4
+//│ <<< end class-tags transform-phase
+//│ —————————————| JS (sanitized) |—————————————————————————————————————————————————————————————————————
+//│ let D5, E5, pair, Pair1, D__Tagged5, E__Tagged5, Pair__Tagged1;
+//│ pair = function pair(x, y) {
+//│   runtime.checkArgs("pair", 2, arguments.length);
+//│   let p, tmp, tmp1, shapeTag, tmp2, tmp3, tmp4, tmp5, tmp6;
+//│   if (x === true) {
+//│     tmp = globalThis.Object.freeze(new D__Tagged5.class(1, 0));
+//│   } else {
+//│     tmp = globalThis.Object.freeze(new E__Tagged5.class(2, 1));
+//│   }
+//│   if (y === true) {
+//│     tmp1 = globalThis.Object.freeze(new D__Tagged5.class(3, 2));
+//│   } else {
+//│     tmp1 = globalThis.Object.freeze(new E__Tagged5.class(4, 3));
+//│   }
+//│   tmp2 = tmp.__tag$ === 1;
+//│   tmp3 = tmp1.__tag$ === 3;
+//│   tmp4 = tmp2 && tmp3;
+//│   tmp5 = tmp.__tag$ === 1;
+//│   tmp6 = tmp1.__tag$ === 3;
+//│   if (tmp4 === true) {
+//│     shapeTag = 4;
+//│   } else {
+//│     if (tmp5 === true) {
+//│       shapeTag = 5;
+//│     } else {
+//│       if (tmp6 === true) {
+//│         shapeTag = 6;
+//│       } else {
+//│         shapeTag = 7;
+//│       }
+//│     }
+//│   }
+//│   p = globalThis.Object.freeze(new Pair__Tagged1.class(tmp, tmp1, shapeTag));
+//│   if (p.__tag$ === 7) {
+//│     return 0
+//│   } else if (p.__tag$ === 6) {
+//│     return 1
+//│   } else if (p.__tag$ === 5) {
+//│     return 2
+//│   } else if (p.__tag$ === 4) {
+//│     return 3
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("Unhandled shape tag in shape.match"));
+//│ };
+//│ D5 = function D(x) {
+//│   return globalThis.Object.freeze(new D.class(x));
+//│ };
+//│ globalThis.Object.freeze(class D4 {
+//│   static {
+//│     D5.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "D", ["x"]];
+//│ });
+//│ D__Tagged5 = function D__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new D__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class D__Tagged4 extends D5.class {
+//│   static {
+//│     D__Tagged5.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "D__Tagged", ["x", "__tag$"]];
+//│ });
+//│ E5 = function E(x) {
+//│   return globalThis.Object.freeze(new E.class(x));
+//│ };
+//│ globalThis.Object.freeze(class E4 {
+//│   static {
+//│     E5.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "E", ["x"]];
+//│ });
+//│ E__Tagged5 = function E__Tagged(x, __tag$) {
+//│   return globalThis.Object.freeze(new E__Tagged.class(x, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class E__Tagged4 extends E5.class {
+//│   static {
+//│     E__Tagged5.class = this
+//│   }
+//│   constructor(x, __tag$) {
+//│     super(x);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "E__Tagged", ["x", "__tag$"]];
+//│ });
+//│ Pair1 = function Pair(x, y) {
+//│   return globalThis.Object.freeze(new Pair.class(x, y));
+//│ };
+//│ globalThis.Object.freeze(class Pair {
+//│   static {
+//│     Pair1.class = this
+//│   }
+//│   constructor(x, y) {
+//│     this.x = x;
+//│     this.y = y;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Pair", ["x", "y"]];
+//│ });
+//│ Pair__Tagged1 = function Pair__Tagged(x, y, __tag$) {
+//│   return globalThis.Object.freeze(new Pair__Tagged.class(x, y, __tag$));
+//│ };
+//│ globalThis.Object.freeze(class Pair__Tagged extends Pair1.class {
+//│   static {
+//│     Pair__Tagged1.class = this
+//│   }
+//│   constructor(x, y, __tag$) {
+//│     super(x, y);
+//│     this.__tag$ = __tag$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Pair__Tagged", ["x", "y", "__tag$"]];
+//│ });
+//│ —————————————————| Output |—————————————————————————————————————————————————————————————————————————
+
+
+:expect 6
+pair(true, true) + pair(true, false) + pair(false, true) + pair(false, false)
+//│ >>> start class-tags collection-phase
+//│ <<< end class-tags collection-phase
+//│ >>> start class-tags transform-phase
+//│ class-tags transform-phase > no shapes to tag
+//│ <<< end class-tags transform-phase
+//│ = 6

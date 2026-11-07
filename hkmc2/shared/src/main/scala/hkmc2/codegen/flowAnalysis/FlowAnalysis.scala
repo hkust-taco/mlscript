@@ -80,7 +80,7 @@ object FlowAnalysis:
     nonAffineTracking: Bool,
     accumulatorTracking: Bool,
     logEffects: Bool,
-  )(using TraceLogger, Elaborator.State, Raise, SymbolPrinter) =
+  )(using TraceLogger, Elaborator.State, Elaborator.Ctx, Raise, SymbolPrinter) =
     given State = new State
     val pre = new FlowPreAnalyzer(pgrm)
     val constrCol = new FlowConstraintsCollector(
@@ -713,7 +713,7 @@ class FlowConstraintsCollector(
   val mono: Bool,
   val nonAffineTracking: Bool,
   val accumulatorTracking: Bool,
-):
+)(using ctx: Elaborator.Ctx):
   given FlowPreAnalyzer = preAnalyzer
   given Raise = preAnalyzer.raise
   given fState: FlowAnalysis.State = preAnalyzer.fState
@@ -1071,6 +1071,8 @@ class FlowConstraintsCollector(
     
     def processResult(r: Result)(using cc: ConstraintsCollector, currentEffect: Opt[StratVar]): ProdStrat =
       val instId = cc.instId
+      def isShapeMatch(fun: Path): Bool =
+        fun.targetSymbol.flatMap(_.asBlkMember).contains(ctx.builtins.shape.`match`)
       // * A cast passes its operand through; a checked one may also throw.
       def processCast(value: Result, check: Bool): ProdStrat =
         if check then markUnsafeEta()
@@ -1147,6 +1149,13 @@ class FlowConstraintsCollector(
             cc.constrain(processResult(qual), UnknownCons)
           args.foreach(arg => cc.constrain(processResult(arg.value), UnknownCons))
           UnknownProd
+        case c@Call(fun, (Arg(N, scrutinee) :: branches) :: Nil)
+            if isShapeMatch(fun) && branches.nonEmpty && branches.forall(_.spread.isEmpty) =>
+          cc.constrain(processResult(scrutinee), new Dtor(c.uid, instId))
+          val matchResult = freshVar("shape_match_res", cc.forFunGroup)
+          for Arg(_, branch) <- branches do
+            cc.constrain(processResult(branch), new ConsFun((c.uid, 0), instId)(Nil, matchResult, freshCallEffect()))
+          matchResult
         case c@Call(fun, argss) =>
           // each later arg list applies the result of the previous one
           argss.iterator.zipWithIndex.foldLeft(processResult(fun)):
