@@ -20,7 +20,10 @@ object AccessPath:
   private enum Base:
     /** A reference to `target`, bound in `binding`, or at file or global level if `binding` is absent. */
     case Reference(target: DefinitionSymbol[?], binding: Opt[SrcScope])
-    /** The receiver of `owner`'s body, which is the scope `binding`. */
+    /** The `this` receiver for `owner`. `binding` is the scope of `owner`'s body,
+      * where this receiver is bound. `valuePath` uses that scope to determine which
+      * resolution boundaries require captures when referring to the receiver from a nested scope.
+      */
     case Receiver(owner: InnerSymbol, binding: SrcScope)
 
   /** A path is planned before any of its terms is built, so that an inaccessible step
