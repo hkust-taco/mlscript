@@ -1,10 +1,11 @@
+:.
 :js
 :effectHandlers
 :lift
 
 abstract class PrintEffect with
-  fun p(s: String): ()
-  fun aux(s: String): ()
+  fun p(s: Int): ()
+  fun aux(s: Int): ()
 
 :e
 // :sjs
@@ -23,6 +24,9 @@ h.aux(3)
 //│ ╔══[COMPILATION ERROR] Name not found: h
 //│ ║  l.+8: 	    h.p(x)
 //│ ╙──      	    ^
+//│ ╔══[COMPILATION ERROR] This selection of member 'p' has no resolved target
+//│ ║  l.+6: 	    h.p(x)
+//│ ╙──      	    ^^^
 //│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 handle h1 = PrintEffect with

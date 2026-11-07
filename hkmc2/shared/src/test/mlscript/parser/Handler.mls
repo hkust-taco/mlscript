@@ -12,11 +12,11 @@ handle h
 //│ ║  l.+1: 	handle h
 //│ ╙──      	        ^
 
-:pe
+:e
 handle h = Eff
-//│ ╔══[PARSE ERROR] Expected 'with' keyword after 'handle' binding class name; found end of input instead
+//│ ╔══[COMPILATION ERROR] Unsupported handle binding shape
 //│ ║  l.+1: 	handle h = Eff
-//│ ╙──      	              ^
+//│ ╙──      	       ^^^^^^^
 
 :parseOnly
 fun foo(x) = 1

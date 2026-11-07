@@ -997,8 +997,8 @@ extends Importer:
     clsSym.defn = S(ClassDef.Plain(ctx.getOuter, Cls, clsSym, BlockMemberSymbol(effectClassName, Nil), Nil, N,
       ObjBody(Blk(htds.map(_.td), unit)), N, Nil, Nil, N, ctorAnnotations = Nil)(body.toLoc, body.toLoc, N))
     val parent = if newResolution then runtimeMember(State.nonLocalReturnSymbol) else state.nonLocalRetHandlerTrm
-    val handle = new Term.Handle(handlerSymbol, parent, Nil, clsSym, htds, body)(isAbortive = true)
-    if newResolution then resolveAbortiveHandler(handle)
+    val handle = new Term.Handle(handlerSymbol, parent, Term.Tup(Nil)(Tree.DummyTup) :: Nil, clsSym, htds, body)(isAbortive = true)
+    if newResolution then resolveHandlerReceiver(handle)
     handle
   
   /** Build a non-local effect invocation on `handlerSymbol`. */
@@ -1715,10 +1715,29 @@ extends Importer:
       
       val derivedClsSym = ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident(s"Handler$$${id.name}$$"))
       recordDefinitionScope(derivedClsSym)
+      val Apps(base, argss) = c
+      val cp = subterm(base, Clss)
+      // A handler always constructs its parent; omitting arguments invokes its
+      // first parameter list with no arguments, including optional defaults.
+      val args = argss match
+        case Nil => withTypeBinders(Term.Tup(Nil)(Tree.DummyTup)) :: Nil
+        case args => args.map(subterm(_))
+      // The handler exposes its parent interface. Its implementations return
+      // handled-block results, which are not the results of effect invocations.
+      // Keep them out of the instance interface, and resolve the parent before
+      // elaborating methods so their `this` references can find inherited fields.
+      val parent = if newResolution then
+        val instance = withTypeBinders(new Term.New(
+          Term.Capture(cp, derivedClsSym), args.map(Term.Capture(_, derivedClsSym)), N
+        )(FlowSymbol.neww(), N).withLocOf(c))
+        rctx.recordAccessSite(instance, ctx.scope)
+        resolveNew(instance)
+        S(instance)
+      else N
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil), N,
-        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil, ctorAnnotations = Nil)(
+        Nil, Nil, parent, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N, auxCtorParams = Nil, ctorAnnotations = Nil)(
           // The header of the handler class is `handle id = c`, without the handler definitions and body.
           hd.toLoc, hd.toLoc.map(_.left ++ Loc(id, c)), N))
       
@@ -1746,14 +1765,10 @@ extends Importer:
             None
         }.collect { case Some(x) => x }
       
-      val (cp, p) = c match
-        case App(c, Tup(params)) =>
-          (subterm(c, Clss), params.map(subterm(_)))
-        case c =>
-          (subterm(c, Clss), Nil)
-      
       (ctx + (id.name -> sym)).givenIn:
-        Term.Handle(sym, cp, p, derivedClsSym, tds, subterm(bod, interp))(isAbortive = false)
+        val handle = new Term.Handle(sym, cp, args, derivedClsSym, tds, subterm(bod, interp))(isAbortive = false)
+        if newResolution then resolveHandlerReceiver(handle)
+        handle
     case h: Hndl =>
       raise(ErrorReport(
         msg"Unsupported handle binding shape" ->
